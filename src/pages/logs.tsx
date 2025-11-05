@@ -60,7 +60,7 @@ const LogPage = () => {
   return (
     <BasePage
       full
-      title={t("logs.page.header.title")}
+      title={t("logs.page.title")}
       contentStyle={{
         height: "100%",
         display: "flex",

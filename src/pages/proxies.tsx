@@ -142,8 +142,8 @@ const ProxyPage = () => {
       contentStyle={{ height: "101.5%" }}
       title={
         isChainMode
-          ? t("proxies.page.header.title.chainMode")
-          : t("proxies.page.header.title.default")
+          ? t("proxies.page.title.chainMode")
+          : t("proxies.page.title.default")
       }
       header={
         <Box display="flex" alignItems="center" gap={1}>

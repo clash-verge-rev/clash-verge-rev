@@ -129,9 +129,6 @@
   },
   "profiles": {
     "page": {
-      "header": {
-        "title": "프로필"
-      },
       "actions": {
         "updateAll": "모든 프로필 업데이트",
         "viewRuntimeConfig": "런타임 설정 보기",
@@ -139,9 +136,6 @@
         "import": "가져오기"
       },
       "batch": {
-        "header": {
-          "title": "Batch Operations"
-        },
         "actions": {
           "delete": "Delete Selected Profiles",
           "selectAll": "Select All",
@@ -151,7 +145,8 @@
         "summary": {
           "selected": "Selected",
           "items": "items"
-        }
+        },
+        "title": "Batch Operations"
       },
       "importForm": {
         "placeholder": "프로필 URL",
@@ -179,7 +174,8 @@
           "forceRefreshCompleted": "Force refresh completed",
           "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
         }
-      }
+      },
+      "title": "프로필"
     },
     "components": {
       "card": {
@@ -377,11 +373,9 @@
       "messages": {
         "directMode": "Direct Mode"
       },
-      "header": {
-        "title": {
-          "default": "프록시 그룹",
-          "chainMode": "Proxy Chain Mode"
-        }
+      "title": {
+        "default": "프록시 그룹",
+        "chainMode": "Proxy Chain Mode"
       }
     },
     "feedback": {
@@ -415,9 +409,7 @@
   },
   "connections": {
     "page": {
-      "header": {
-        "title": "연결"
-      }
+      "title": "연결"
     },
     "components": {
       "fields": {
@@ -450,9 +442,7 @@
       "actions": {
         "testAll": "모두 테스트"
       },
-      "header": {
-        "title": "테스트"
-      }
+      "title": "테스트"
     },
     "components": {
       "item": {
@@ -472,28 +462,24 @@
         }
       }
     },
-    "feedback": {
-      "statuses": {
-        "test": {
-          "pending": "Pending",
-          "yes": "Yes",
-          "no": "No",
-          "failed": "실패",
-          "completed": "Completed",
-          "disallowedIsp": "Disallowed ISP",
-          "originalsOnly": "Originals Only",
-          "noDisney": "No (IP Banned By Disney+)",
-          "unsupportedRegion": "Unsupported Country/Region",
-          "failedNetwork": "Failed (Network Connection)"
-        }
+    "statuses": {
+      "test": {
+        "pending": "Pending",
+        "yes": "Yes",
+        "no": "No",
+        "failed": "실패",
+        "completed": "Completed",
+        "disallowedIsp": "Disallowed ISP",
+        "originalsOnly": "Originals Only",
+        "noDisney": "No (IP Banned By Disney+)",
+        "unsupportedRegion": "Unsupported Country/Region",
+        "failedNetwork": "Failed (Network Connection)"
       }
     }
   },
   "logs": {
     "page": {
-      "header": {
-        "title": "로그"
-      }
+      "title": "로그"
     }
   },
   "rules": {
@@ -506,9 +492,7 @@
           "update": "업데이트"
         }
       },
-      "header": {
-        "title": "규칙"
-      }
+      "title": "규칙"
     },
     "feedback": {
       "notifications": {
@@ -576,9 +560,7 @@
           "NOT": "논리 NOT",
           "MATCH": "모든 요청과 일치"
         },
-        "header": {
-          "title": "규칙 편집"
-        }
+        "title": "규칙 편집"
       }
     }
   },
@@ -606,13 +588,9 @@
           "clashInfo": "Clash Info Cards",
           "systemInfo": "System Info Cards"
         },
-        "header": {
-          "title": "Home Settings"
-        }
+        "title": "Home Settings"
       },
-      "header": {
-        "title": "홈"
-      }
+      "title": "홈"
     },
     "components": {
       "proxyTun": {
@@ -735,21 +713,17 @@
       "messages": {
         "detectionTimeout": "Detection timeout or failed"
       },
-      "header": {
-        "title": "Unlock Test"
-      }
+      "title": "Unlock Test"
     }
   },
   "settings": {
     "page": {
-      "header": {
-        "title": "설정"
-      },
       "actions": {
         "manual": "Manual",
         "telegram": "Telegram Channel",
         "github": "Github Repo"
-      }
+      },
+      "title": "설정"
     },
     "sections": {
       "system": {
@@ -872,7 +846,16 @@
       "verge": {
         "basic": {
           "title": "Verge 기본 설정",
-          "items": {
+          "actions": {
+            "browse": "Browse",
+            "clear": "지우기"
+          },
+          "trayOptions": {
+            "showMainWindow": "메인 창 표시",
+            "showTrayMenu": "트레이 메뉴 표시",
+            "disable": "비활성화"
+          },
+          "fields": {
             "language": "언어",
             "themeMode": "테마 모드",
             "trayClickEvent": "트레이 클릭 이벤트",
@@ -883,32 +866,10 @@
             "layoutSetting": "레이아웃 설정",
             "misc": "Miscellaneous",
             "hotkeySetting": "단축키 설정"
-          },
-          "actions": {
-            "browse": "Browse",
-            "clear": "지우기"
-          },
-          "trayOptions": {
-            "showMainWindow": "메인 창 표시",
-            "showTrayMenu": "트레이 메뉴 표시",
-            "disable": "비활성화"
           }
         },
         "advanced": {
           "title": "Verge Advanced Setting",
-          "items": {
-            "backupSetting": "Backup Setting",
-            "runtimeConfig": "Runtime Config",
-            "openConfDir": "Open Conf Dir",
-            "openCoreDir": "Open Core Dir",
-            "openLogsDir": "Open Logs Dir",
-            "checkUpdates": "Check for Updates",
-            "openDevTools": "Dev Tools",
-            "liteModeSettings": "LightWeight Mode Settings",
-            "exit": "Exit",
-            "exportDiagnostics": "Export Diagnostic Info",
-            "vergeVersion": "Verge Version"
-          },
           "tooltips": {
             "backupInfo": "Support local or WebDAV backup of configuration files",
             "openConfDir": "If the software runs abnormally, BACKUP and delete all files in this folder then restart the software",
@@ -920,6 +881,19 @@
           "notifications": {
             "latestVersion": "Currently on the Latest Version",
             "versionCopied": "Version copied to clipboard"
+          },
+          "fields": {
+            "backupSetting": "Backup Setting",
+            "runtimeConfig": "Runtime Config",
+            "openConfDir": "Open Conf Dir",
+            "openCoreDir": "Open Core Dir",
+            "openLogsDir": "Open Logs Dir",
+            "checkUpdates": "Check for Updates",
+            "openDevTools": "Dev Tools",
+            "liteModeSettings": "LightWeight Mode Settings",
+            "exit": "Exit",
+            "exportDiagnostics": "Export Diagnostic Info",
+            "vergeVersion": "Verge Version"
           }
         },
         "theme": {
@@ -1289,17 +1263,13 @@
       }
     },
     "feedback": {
-      "messages": {
-        "clash": {
-          "geoDataUpdated": "GeoData Updated"
-        }
-      },
       "notifications": {
         "clash": {
           "restartSuccess": "Clash Core Restarted",
           "versionUpdated": "Core Version Updated",
           "changeSuccess": "코어 변경 성공",
-          "changeFailed": "코어 변경 실패"
+          "changeFailed": "코어 변경 실패",
+          "geoDataUpdated": "GeoData Updated"
         },
         "clashService": {
           "installSuccess": "Service Installed Successfully",
@@ -1309,16 +1279,16 @@
           "withClashProxySuccess": "Clash 프록시로 업데이트 성공",
           "withClashProxyFailed": "Clash 프록시로도 업데이트 실패"
         }
+      }
+    },
+    "statuses": {
+      "clash": {
+        "stopping": "Stopping Core...",
+        "restarting": "Restarting Core..."
       },
-      "statuses": {
-        "clash": {
-          "stopping": "Stopping Core...",
-          "restarting": "Restarting Core..."
-        },
-        "clashService": {
-          "installing": "Installing Service...",
-          "uninstalling": "Uninstalling Service..."
-        }
+      "clashService": {
+        "installing": "Installing Service...",
+        "uninstalling": "Uninstalling Service..."
       }
     }
   },

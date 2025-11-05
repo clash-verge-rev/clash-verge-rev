@@ -129,9 +129,6 @@
   },
   "profiles": {
     "page": {
-      "header": {
-        "title": "订阅"
-      },
       "actions": {
         "updateAll": "更新所有订阅",
         "viewRuntimeConfig": "查看运行时订阅",
@@ -139,9 +136,6 @@
         "import": "导入"
       },
       "batch": {
-        "header": {
-          "title": "批量操作"
-        },
         "actions": {
           "delete": "删除选中订阅",
           "selectAll": "全选",
@@ -151,7 +145,8 @@
         "summary": {
           "selected": "已选中",
           "items": "项目"
-        }
+        },
+        "title": "批量操作"
       },
       "importForm": {
         "placeholder": "订阅文件链接",
@@ -179,7 +174,8 @@
           "forceRefreshCompleted": "数据已强制刷新",
           "emergencyRefreshFailed": "紧急刷新失败: {{message}}"
         }
-      }
+      },
+      "title": "订阅"
     },
     "components": {
       "card": {
@@ -377,11 +373,9 @@
       "messages": {
         "directMode": "直连模式"
       },
-      "header": {
-        "title": {
-          "default": "代理组",
-          "chainMode": "链式代理模式"
-        }
+      "title": {
+        "default": "代理组",
+        "chainMode": "链式代理模式"
       }
     },
     "feedback": {
@@ -415,9 +409,7 @@
   },
   "connections": {
     "page": {
-      "header": {
-        "title": "连接"
-      }
+      "title": "连接"
     },
     "components": {
       "fields": {
@@ -450,9 +442,7 @@
       "actions": {
         "testAll": "测试全部"
       },
-      "header": {
-        "title": "测试"
-      }
+      "title": "测试"
     },
     "components": {
       "item": {
@@ -472,28 +462,24 @@
         }
       }
     },
-    "feedback": {
-      "statuses": {
-        "test": {
-          "pending": "待检测",
-          "yes": "支持",
-          "no": "不支持",
-          "failed": "测试失败",
-          "completed": "检测完成",
-          "disallowedIsp": "不允许的 ISP",
-          "originalsOnly": "仅限原创",
-          "noDisney": "不支持（IP被Disney+禁止）",
-          "unsupportedRegion": "不支持的国家/地区",
-          "failedNetwork": "测试失败（网络连接问题）"
-        }
+    "statuses": {
+      "test": {
+        "pending": "待检测",
+        "yes": "支持",
+        "no": "不支持",
+        "failed": "测试失败",
+        "completed": "检测完成",
+        "disallowedIsp": "不允许的 ISP",
+        "originalsOnly": "仅限原创",
+        "noDisney": "不支持（IP被Disney+禁止）",
+        "unsupportedRegion": "不支持的国家/地区",
+        "failedNetwork": "测试失败（网络连接问题）"
       }
     }
   },
   "logs": {
     "page": {
-      "header": {
-        "title": "日志"
-      }
+      "title": "日志"
     }
   },
   "rules": {
@@ -506,9 +492,7 @@
           "update": "更新"
         }
       },
-      "header": {
-        "title": "规则"
-      }
+      "title": "规则"
     },
     "feedback": {
       "notifications": {
@@ -576,9 +560,7 @@
           "NOT": "逻辑非 (NOT)",
           "MATCH": "匹配所有请求 (MATCH)"
         },
-        "header": {
-          "title": "编辑规则"
-        }
+        "title": "编辑规则"
       }
     }
   },
@@ -606,13 +588,9 @@
           "clashInfo": "Clash 信息卡",
           "systemInfo": "系统信息卡"
         },
-        "header": {
-          "title": "首页设置"
-        }
+        "title": "首页设置"
       },
-      "header": {
-        "title": "首页"
-      }
+      "title": "首页"
     },
     "components": {
       "proxyTun": {
@@ -735,21 +713,17 @@
       "messages": {
         "detectionTimeout": "检测超时或失败"
       },
-      "header": {
-        "title": "解锁测试"
-      }
+      "title": "解锁测试"
     }
   },
   "settings": {
     "page": {
-      "header": {
-        "title": "设置"
-      },
       "actions": {
         "manual": "使用手册",
         "telegram": "Telegram 频道",
         "github": "GitHub 项目地址"
-      }
+      },
+      "title": "设置"
     },
     "sections": {
       "system": {
@@ -872,7 +846,16 @@
       "verge": {
         "basic": {
           "title": "Verge 基础设置",
-          "items": {
+          "actions": {
+            "browse": "浏览",
+            "clear": "清除"
+          },
+          "trayOptions": {
+            "showMainWindow": "显示主窗口",
+            "showTrayMenu": "显示托盘菜单",
+            "disable": "禁用"
+          },
+          "fields": {
             "language": "语言设置",
             "themeMode": "主题模式",
             "trayClickEvent": "托盘点击事件",
@@ -883,32 +866,10 @@
             "layoutSetting": "界面设置",
             "misc": "杂项设置",
             "hotkeySetting": "热键设置"
-          },
-          "actions": {
-            "browse": "浏览",
-            "clear": "清除"
-          },
-          "trayOptions": {
-            "showMainWindow": "显示主窗口",
-            "showTrayMenu": "显示托盘菜单",
-            "disable": "禁用"
           }
         },
         "advanced": {
           "title": "Verge 高级设置",
-          "items": {
-            "backupSetting": "备份设置",
-            "runtimeConfig": "当前配置",
-            "openConfDir": "配置目录",
-            "openCoreDir": "内核目录",
-            "openLogsDir": "日志目录",
-            "checkUpdates": "检查更新",
-            "openDevTools": "开发者工具",
-            "liteModeSettings": "轻量模式设置",
-            "exit": "退出",
-            "exportDiagnostics": "导出诊断信息",
-            "vergeVersion": "Verge 版本"
-          },
           "tooltips": {
             "backupInfo": "支持本地或 WebDAV 方式备份配置文件",
             "openConfDir": "如果软件运行异常，!备份!并删除此文件夹下的所有文件，重启软件",
@@ -920,6 +881,19 @@
           "notifications": {
             "latestVersion": "当前已是最新版本",
             "versionCopied": "Verge 版本已复制到剪贴板"
+          },
+          "fields": {
+            "backupSetting": "备份设置",
+            "runtimeConfig": "当前配置",
+            "openConfDir": "配置目录",
+            "openCoreDir": "内核目录",
+            "openLogsDir": "日志目录",
+            "checkUpdates": "检查更新",
+            "openDevTools": "开发者工具",
+            "liteModeSettings": "轻量模式设置",
+            "exit": "退出",
+            "exportDiagnostics": "导出诊断信息",
+            "vergeVersion": "Verge 版本"
           }
         },
         "theme": {
@@ -1289,17 +1263,13 @@
       }
     },
     "feedback": {
-      "messages": {
-        "clash": {
-          "geoDataUpdated": "已更新 GeoData"
-        }
-      },
       "notifications": {
         "clash": {
           "restartSuccess": "已重启 Clash 内核",
           "versionUpdated": "内核版本已更新",
           "changeSuccess": "内核切换成功",
-          "changeFailed": "无法切换内核"
+          "changeFailed": "无法切换内核",
+          "geoDataUpdated": "已更新 GeoData"
         },
         "clashService": {
           "installSuccess": "已成功安装服务",
@@ -1309,16 +1279,16 @@
           "withClashProxySuccess": "使用 Clash 代理更新成功",
           "withClashProxyFailed": "使用 Clash 代理更新也失败"
         }
+      }
+    },
+    "statuses": {
+      "clash": {
+        "stopping": "停止内核中...",
+        "restarting": "重启内核中..."
       },
-      "statuses": {
-        "clash": {
-          "stopping": "停止内核中...",
-          "restarting": "重启内核中..."
-        },
-        "clashService": {
-          "installing": "安装服务中...",
-          "uninstalling": "卸载服务中..."
-        }
+      "clashService": {
+        "installing": "安装服务中...",
+        "uninstalling": "卸载服务中..."
       }
     }
   },

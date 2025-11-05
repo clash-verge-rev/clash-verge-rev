@@ -88,7 +88,7 @@ const SettingVergeAdvanced = ({ onError: _ }: Props) => {
 
       <SettingItem
         onClick={() => backupRef.current?.open()}
-        label={t("settings.components.verge.advanced.items.backupSetting")}
+        label={t("settings.components.verge.advanced.fields.backupSetting")}
         extra={
           <TooltipIcon
             title={t("settings.components.verge.advanced.tooltips.backupInfo")}
@@ -99,12 +99,12 @@ const SettingVergeAdvanced = ({ onError: _ }: Props) => {
 
       <SettingItem
         onClick={() => configRef.current?.open()}
-        label={t("settings.components.verge.advanced.items.runtimeConfig")}
+        label={t("settings.components.verge.advanced.fields.runtimeConfig")}
       />
 
       <SettingItem
         onClick={openAppDir}
-        label={t("settings.components.verge.advanced.items.openConfDir")}
+        label={t("settings.components.verge.advanced.fields.openConfDir")}
         extra={
           <TooltipIcon
             title={t("settings.components.verge.advanced.tooltips.openConfDir")}
@@ -115,26 +115,26 @@ const SettingVergeAdvanced = ({ onError: _ }: Props) => {
 
       <SettingItem
         onClick={openCoreDir}
-        label={t("settings.components.verge.advanced.items.openCoreDir")}
+        label={t("settings.components.verge.advanced.fields.openCoreDir")}
       />
 
       <SettingItem
         onClick={openLogsDir}
-        label={t("settings.components.verge.advanced.items.openLogsDir")}
+        label={t("settings.components.verge.advanced.fields.openLogsDir")}
       />
 
       <SettingItem
         onClick={onCheckUpdate}
-        label={t("settings.components.verge.advanced.items.checkUpdates")}
+        label={t("settings.components.verge.advanced.fields.checkUpdates")}
       />
 
       <SettingItem
         onClick={openDevTools}
-        label={t("settings.components.verge.advanced.items.openDevTools")}
+        label={t("settings.components.verge.advanced.fields.openDevTools")}
       />
 
       <SettingItem
-        label={t("settings.components.verge.advanced.items.liteModeSettings")}
+        label={t("settings.components.verge.advanced.fields.liteModeSettings")}
         extra={
           <TooltipIcon
             title={t("settings.components.verge.advanced.tooltips.liteMode")}
@@ -148,11 +148,11 @@ const SettingVergeAdvanced = ({ onError: _ }: Props) => {
         onClick={() => {
           exitApp();
         }}
-        label={t("settings.components.verge.advanced.items.exit")}
+        label={t("settings.components.verge.advanced.fields.exit")}
       />
 
       <SettingItem
-        label={t("settings.components.verge.advanced.items.exportDiagnostics")}
+        label={t("settings.components.verge.advanced.fields.exportDiagnostics")}
         extra={
           <TooltipIcon
             icon={ContentCopyRounded}
@@ -162,7 +162,7 @@ const SettingVergeAdvanced = ({ onError: _ }: Props) => {
       ></SettingItem>
 
       <SettingItem
-        label={t("settings.components.verge.advanced.items.vergeVersion")}
+        label={t("settings.components.verge.advanced.fields.vergeVersion")}
         extra={
           <TooltipIcon
             icon={ContentCopyRounded}

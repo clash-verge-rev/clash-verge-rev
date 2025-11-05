@@ -129,9 +129,6 @@
   },
   "profiles": {
     "page": {
-      "header": {
-        "title": "Suscripciones"
-      },
       "actions": {
         "updateAll": "Actualizar todas las suscripciones",
         "viewRuntimeConfig": "Ver configuración en tiempo de ejecución",
@@ -139,9 +136,6 @@
         "import": "Importar"
       },
       "batch": {
-        "header": {
-          "title": "Batch Operations"
-        },
         "actions": {
           "delete": "Delete Selected Profiles",
           "selectAll": "Select All",
@@ -151,7 +145,8 @@
         "summary": {
           "selected": "Selected",
           "items": "items"
-        }
+        },
+        "title": "Batch Operations"
       },
       "importForm": {
         "placeholder": "Enlace del archivo de suscripción",
@@ -179,7 +174,8 @@
           "forceRefreshCompleted": "Force refresh completed",
           "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
         }
-      }
+      },
+      "title": "Suscripciones"
     },
     "components": {
       "card": {
@@ -377,11 +373,9 @@
       "messages": {
         "directMode": "Modo de conexión directa"
       },
-      "header": {
-        "title": {
-          "default": "Grupos de proxies",
-          "chainMode": "Proxy Chain Mode"
-        }
+      "title": {
+        "default": "Grupos de proxies",
+        "chainMode": "Proxy Chain Mode"
       }
     },
     "feedback": {
@@ -415,9 +409,7 @@
   },
   "connections": {
     "page": {
-      "header": {
-        "title": "Conexiones"
-      }
+      "title": "Conexiones"
     },
     "components": {
       "fields": {
@@ -450,9 +442,7 @@
       "actions": {
         "testAll": "Probar todo"
       },
-      "header": {
-        "title": "Prueba"
-      }
+      "title": "Prueba"
     },
     "components": {
       "item": {
@@ -472,28 +462,24 @@
         }
       }
     },
-    "feedback": {
-      "statuses": {
-        "test": {
-          "pending": "Pendiente de detección",
-          "yes": "Soportado",
-          "no": "No soportado",
-          "failed": "Prueba fallida",
-          "completed": "Detección completada",
-          "disallowedIsp": "Proveedor de servicios de Internet no permitido",
-          "originalsOnly": "Solo originales",
-          "noDisney": "No (IP Banned By Disney+)",
-          "unsupportedRegion": "País/región no soportado",
-          "failedNetwork": "Failed (Network Connection)"
-        }
+    "statuses": {
+      "test": {
+        "pending": "Pendiente de detección",
+        "yes": "Soportado",
+        "no": "No soportado",
+        "failed": "Prueba fallida",
+        "completed": "Detección completada",
+        "disallowedIsp": "Proveedor de servicios de Internet no permitido",
+        "originalsOnly": "Solo originales",
+        "noDisney": "No (IP Banned By Disney+)",
+        "unsupportedRegion": "País/región no soportado",
+        "failedNetwork": "Failed (Network Connection)"
       }
     }
   },
   "logs": {
     "page": {
-      "header": {
-        "title": "Registros"
-      }
+      "title": "Registros"
     }
   },
   "rules": {
@@ -506,9 +492,7 @@
           "update": "Actualizar"
         }
       },
-      "header": {
-        "title": "Reglas"
-      }
+      "title": "Reglas"
     },
     "feedback": {
       "notifications": {
@@ -576,9 +560,7 @@
           "NOT": "No lógico",
           "MATCH": "Coincidir con todas las solicitudes"
         },
-        "header": {
-          "title": "Editar reglas"
-        }
+        "title": "Editar reglas"
       }
     }
   },
@@ -606,13 +588,9 @@
           "clashInfo": "Tarjetas de información de Clash",
           "systemInfo": "Tarjetas de información del sistema"
         },
-        "header": {
-          "title": "Configuración de la página de inicio"
-        }
+        "title": "Configuración de la página de inicio"
       },
-      "header": {
-        "title": "Hogar"
-      }
+      "title": "Hogar"
     },
     "components": {
       "proxyTun": {
@@ -735,21 +713,17 @@
       "messages": {
         "detectionTimeout": "Detection timeout or failed"
       },
-      "header": {
-        "title": "Prueba de desbloqueo"
-      }
+      "title": "Prueba de desbloqueo"
     }
   },
   "settings": {
     "page": {
-      "header": {
-        "title": "Ajustes"
-      },
       "actions": {
         "manual": "Manual de uso",
         "telegram": "Canal de Telegram",
         "github": "Dirección del proyecto en GitHub"
-      }
+      },
+      "title": "Ajustes"
     },
     "sections": {
       "system": {
@@ -872,7 +846,16 @@
       "verge": {
         "basic": {
           "title": "Ajustes básicos de Verge",
-          "items": {
+          "actions": {
+            "browse": "Examinar",
+            "clear": "Limpiar"
+          },
+          "trayOptions": {
+            "showMainWindow": "Mostrar ventana principal",
+            "showTrayMenu": "Mostrar menú de la bandeja",
+            "disable": "Deshabilitar"
+          },
+          "fields": {
             "language": "Configuración de idioma",
             "themeMode": "Modo de tema",
             "trayClickEvent": "Evento de clic en el icono de la bandeja",
@@ -883,32 +866,10 @@
             "layoutSetting": "Configuración de la interfaz",
             "misc": "Ajustes varios",
             "hotkeySetting": "Configuración de atajos de teclado"
-          },
-          "actions": {
-            "browse": "Examinar",
-            "clear": "Limpiar"
-          },
-          "trayOptions": {
-            "showMainWindow": "Mostrar ventana principal",
-            "showTrayMenu": "Mostrar menú de la bandeja",
-            "disable": "Deshabilitar"
           }
         },
         "advanced": {
           "title": "Ajustes avanzados de Verge",
-          "items": {
-            "backupSetting": "Configuración de copia de seguridad",
-            "runtimeConfig": "Configuración actual",
-            "openConfDir": "Directorio de configuración",
-            "openCoreDir": "Directorio del núcleo",
-            "openLogsDir": "Directorio de registros",
-            "checkUpdates": "Comprobar actualizaciones",
-            "openDevTools": "Abrir herramientas de desarrollo",
-            "liteModeSettings": "Configuración del modo ligero",
-            "exit": "Salir",
-            "exportDiagnostics": "Exportar información de diagnóstico",
-            "vergeVersion": "Versión de Verge"
-          },
           "tooltips": {
             "backupInfo": "Soporte para la copia de seguridad de archivos de configuración a través de WebDAV",
             "openConfDir": "Si el software no funciona correctamente, !realice una copia de seguridad! y elimine todos los archivos de esta carpeta, luego reinicie el software.",
@@ -920,6 +881,19 @@
           "notifications": {
             "latestVersion": "Actualmente está en la última versión",
             "versionCopied": "Version copied to clipboard"
+          },
+          "fields": {
+            "backupSetting": "Configuración de copia de seguridad",
+            "runtimeConfig": "Configuración actual",
+            "openConfDir": "Directorio de configuración",
+            "openCoreDir": "Directorio del núcleo",
+            "openLogsDir": "Directorio de registros",
+            "checkUpdates": "Comprobar actualizaciones",
+            "openDevTools": "Abrir herramientas de desarrollo",
+            "liteModeSettings": "Configuración del modo ligero",
+            "exit": "Salir",
+            "exportDiagnostics": "Exportar información de diagnóstico",
+            "vergeVersion": "Versión de Verge"
           }
         },
         "theme": {
@@ -1289,17 +1263,13 @@
       }
     },
     "feedback": {
-      "messages": {
-        "clash": {
-          "geoDataUpdated": "GeoData actualizado"
-        }
-      },
       "notifications": {
         "clash": {
           "restartSuccess": "Núcleo de Clash reiniciado",
           "versionUpdated": "Versión del núcleo actualizada",
           "changeSuccess": "Núcleo cambiado con éxito",
-          "changeFailed": "No se pudo cambiar el núcleo"
+          "changeFailed": "No se pudo cambiar el núcleo",
+          "geoDataUpdated": "GeoData actualizado"
         },
         "clashService": {
           "installSuccess": "Servicio instalado con éxito",
@@ -1309,16 +1279,16 @@
           "withClashProxySuccess": "Actualización con el proxy de Clash exitosa",
           "withClashProxyFailed": "Error al actualizar incluso con el proxy de Clash"
         }
+      }
+    },
+    "statuses": {
+      "clash": {
+        "stopping": "Deteniendo núcleo...",
+        "restarting": "Reiniciando núcleo..."
       },
-      "statuses": {
-        "clash": {
-          "stopping": "Deteniendo núcleo...",
-          "restarting": "Reiniciando núcleo..."
-        },
-        "clashService": {
-          "installing": "Instalando servicio...",
-          "uninstalling": "Desinstalando servicio..."
-        }
+      "clashService": {
+        "installing": "Instalando servicio...",
+        "uninstalling": "Desinstalando servicio..."
       }
     }
   },

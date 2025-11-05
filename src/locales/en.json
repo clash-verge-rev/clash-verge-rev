@@ -129,9 +129,6 @@
   },
   "profiles": {
     "page": {
-      "header": {
-        "title": "Profiles"
-      },
       "actions": {
         "updateAll": "Update All Profiles",
         "viewRuntimeConfig": "View Runtime Config",
@@ -139,9 +136,6 @@
         "import": "Import"
       },
       "batch": {
-        "header": {
-          "title": "Batch Operations"
-        },
         "actions": {
           "delete": "Delete Selected Profiles",
           "selectAll": "Select All",
@@ -151,7 +145,8 @@
         "summary": {
           "selected": "Selected",
           "items": "items"
-        }
+        },
+        "title": "Batch Operations"
       },
       "importForm": {
         "placeholder": "Profile URL",
@@ -179,7 +174,8 @@
           "forceRefreshCompleted": "Force refresh completed",
           "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
         }
-      }
+      },
+      "title": "Profiles"
     },
     "components": {
       "card": {
@@ -377,11 +373,9 @@
       "messages": {
         "directMode": "Direct Mode"
       },
-      "header": {
-        "title": {
-          "default": "Proxy Groups",
-          "chainMode": "Proxy Chain Mode"
-        }
+      "title": {
+        "default": "Proxy Groups",
+        "chainMode": "Proxy Chain Mode"
       }
     },
     "feedback": {
@@ -415,9 +409,7 @@
   },
   "connections": {
     "page": {
-      "header": {
-        "title": "Connections"
-      }
+      "title": "Connections"
     },
     "components": {
       "fields": {
@@ -450,9 +442,7 @@
       "actions": {
         "testAll": "Test All"
       },
-      "header": {
-        "title": "Test"
-      }
+      "title": "Test"
     },
     "components": {
       "item": {
@@ -472,28 +462,24 @@
         }
       }
     },
-    "feedback": {
-      "statuses": {
-        "test": {
-          "pending": "Pending",
-          "yes": "Yes",
-          "no": "No",
-          "failed": "Failed",
-          "completed": "Completed",
-          "disallowedIsp": "Disallowed ISP",
-          "originalsOnly": "Originals Only",
-          "noDisney": "No (IP Banned By Disney+)",
-          "unsupportedRegion": "Unsupported Country/Region",
-          "failedNetwork": "Failed (Network Connection)"
-        }
+    "statuses": {
+      "test": {
+        "pending": "Pending",
+        "yes": "Yes",
+        "no": "No",
+        "failed": "Failed",
+        "completed": "Completed",
+        "disallowedIsp": "Disallowed ISP",
+        "originalsOnly": "Originals Only",
+        "noDisney": "No (IP Banned By Disney+)",
+        "unsupportedRegion": "Unsupported Country/Region",
+        "failedNetwork": "Failed (Network Connection)"
       }
     }
   },
   "logs": {
     "page": {
-      "header": {
-        "title": "Logs"
-      }
+      "title": "Logs"
     }
   },
   "rules": {
@@ -506,9 +492,7 @@
           "update": "Update"
         }
       },
-      "header": {
-        "title": "Rules"
-      }
+      "title": "Rules"
     },
     "feedback": {
       "notifications": {
@@ -576,9 +560,7 @@
           "NOT": "Logical NOT (NOT)",
           "MATCH": "Match all requests (MATCH)"
         },
-        "header": {
-          "title": "Edit Rules"
-        }
+        "title": "Edit Rules"
       }
     }
   },
@@ -606,13 +588,9 @@
           "clashInfo": "Clash Info Cards",
           "systemInfo": "System Info Cards"
         },
-        "header": {
-          "title": "Home Settings"
-        }
+        "title": "Home Settings"
       },
-      "header": {
-        "title": "Home"
-      }
+      "title": "Home"
     },
     "components": {
       "proxyTun": {
@@ -735,21 +713,17 @@
       "messages": {
         "detectionTimeout": "Detection timeout or failed"
       },
-      "header": {
-        "title": "Unlock Test"
-      }
+      "title": "Unlock Test"
     }
   },
   "settings": {
     "page": {
-      "header": {
-        "title": "Settings"
-      },
       "actions": {
         "manual": "Manual",
         "telegram": "Telegram Channel",
         "github": "Github Repo"
-      }
+      },
+      "title": "Settings"
     },
     "sections": {
       "system": {
@@ -872,7 +846,16 @@
       "verge": {
         "basic": {
           "title": "Verge Basic Setting",
-          "items": {
+          "actions": {
+            "browse": "Browse",
+            "clear": "Clear"
+          },
+          "trayOptions": {
+            "showMainWindow": "Show Main Window",
+            "showTrayMenu": "Show Tray Menu",
+            "disable": "Disable"
+          },
+          "fields": {
             "language": "Language",
             "themeMode": "Theme Mode",
             "trayClickEvent": "Tray Click Event",
@@ -883,32 +866,10 @@
             "layoutSetting": "Layout Setting",
             "misc": "Miscellaneous",
             "hotkeySetting": "Hotkey Setting"
-          },
-          "actions": {
-            "browse": "Browse",
-            "clear": "Clear"
-          },
-          "trayOptions": {
-            "showMainWindow": "Show Main Window",
-            "showTrayMenu": "Show Tray Menu",
-            "disable": "Disable"
           }
         },
         "advanced": {
           "title": "Verge Advanced Setting",
-          "items": {
-            "backupSetting": "Backup Setting",
-            "runtimeConfig": "Runtime Config",
-            "openConfDir": "Open Conf Dir",
-            "openCoreDir": "Open Core Dir",
-            "openLogsDir": "Open Logs Dir",
-            "checkUpdates": "Check for Updates",
-            "openDevTools": "Dev Tools",
-            "liteModeSettings": "LightWeight Mode Settings",
-            "exit": "Exit",
-            "exportDiagnostics": "Export Diagnostic Info",
-            "vergeVersion": "Verge Version"
-          },
           "tooltips": {
             "backupInfo": "Support local or WebDAV backup of configuration files",
             "openConfDir": "If the software runs abnormally, BACKUP and delete all files in this folder then restart the software",
@@ -920,6 +881,19 @@
           "notifications": {
             "latestVersion": "Currently on the Latest Version",
             "versionCopied": "Version copied to clipboard"
+          },
+          "fields": {
+            "backupSetting": "Backup Setting",
+            "runtimeConfig": "Runtime Config",
+            "openConfDir": "Open Conf Dir",
+            "openCoreDir": "Open Core Dir",
+            "openLogsDir": "Open Logs Dir",
+            "checkUpdates": "Check for Updates",
+            "openDevTools": "Dev Tools",
+            "liteModeSettings": "LightWeight Mode Settings",
+            "exit": "Exit",
+            "exportDiagnostics": "Export Diagnostic Info",
+            "vergeVersion": "Verge Version"
           }
         },
         "theme": {
@@ -1289,17 +1263,13 @@
       }
     },
     "feedback": {
-      "messages": {
-        "clash": {
-          "geoDataUpdated": "GeoData Updated"
-        }
-      },
       "notifications": {
         "clash": {
           "restartSuccess": "Clash Core Restarted",
           "versionUpdated": "Core Version Updated",
           "changeSuccess": "Core changed successfully",
-          "changeFailed": "Failed to change core"
+          "changeFailed": "Failed to change core",
+          "geoDataUpdated": "GeoData Updated"
         },
         "clashService": {
           "installSuccess": "Service Installed Successfully",
@@ -1309,16 +1279,16 @@
           "withClashProxySuccess": "Update with Clash proxy successfully",
           "withClashProxyFailed": "Update failed even with Clash proxy"
         }
+      }
+    },
+    "statuses": {
+      "clash": {
+        "stopping": "Stopping Core...",
+        "restarting": "Restarting Core..."
       },
-      "statuses": {
-        "clash": {
-          "stopping": "Stopping Core...",
-          "restarting": "Restarting Core..."
-        },
-        "clashService": {
-          "installing": "Installing Service...",
-          "uninstalling": "Uninstalling Service..."
-        }
+      "clashService": {
+        "installing": "Installing Service...",
+        "uninstalling": "Uninstalling Service..."
       }
     }
   },

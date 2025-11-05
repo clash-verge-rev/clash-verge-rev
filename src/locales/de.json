@@ -129,9 +129,6 @@
   },
   "profiles": {
     "page": {
-      "header": {
-        "title": "Abonnement"
-      },
       "actions": {
         "updateAll": "Alle Abonnements aktualisieren",
         "viewRuntimeConfig": "Laufzeit-Abonnement anzeigen",
@@ -139,9 +136,6 @@
         "import": "Importieren"
       },
       "batch": {
-        "header": {
-          "title": "Batch Operations"
-        },
         "actions": {
           "delete": "Delete Selected Profiles",
           "selectAll": "Select All",
@@ -151,7 +145,8 @@
         "summary": {
           "selected": "Selected",
           "items": "items"
-        }
+        },
+        "title": "Batch Operations"
       },
       "importForm": {
         "placeholder": "Abonnement-Datei-Link",
@@ -179,7 +174,8 @@
           "forceRefreshCompleted": "Force refresh completed",
           "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
         }
-      }
+      },
+      "title": "Abonnement"
     },
     "components": {
       "card": {
@@ -377,11 +373,9 @@
       "messages": {
         "directMode": "Direktverbindungs-Modus"
       },
-      "header": {
-        "title": {
-          "default": "Proxy-Gruppen",
-          "chainMode": "Proxy Chain Mode"
-        }
+      "title": {
+        "default": "Proxy-Gruppen",
+        "chainMode": "Proxy Chain Mode"
       }
     },
     "feedback": {
@@ -415,9 +409,7 @@
   },
   "connections": {
     "page": {
-      "header": {
-        "title": "Verbindungen"
-      }
+      "title": "Verbindungen"
     },
     "components": {
       "fields": {
@@ -450,9 +442,7 @@
       "actions": {
         "testAll": "Alle testen"
       },
-      "header": {
-        "title": "Testen"
-      }
+      "title": "Testen"
     },
     "components": {
       "item": {
@@ -472,28 +462,24 @@
         }
       }
     },
-    "feedback": {
-      "statuses": {
-        "test": {
-          "pending": "Wartend auf Prüfung",
-          "yes": "Unterstützt",
-          "no": "Nicht unterstützt",
-          "failed": "Test fehlgeschlagen",
-          "completed": "Prüfung abgeschlossen",
-          "disallowedIsp": "Nicht zugelassener Internetdienstanbieter",
-          "originalsOnly": "Nur Original",
-          "noDisney": "No (IP Banned By Disney+)",
-          "unsupportedRegion": "Nicht unterstütztes Land/Region",
-          "failedNetwork": "Failed (Network Connection)"
-        }
+    "statuses": {
+      "test": {
+        "pending": "Wartend auf Prüfung",
+        "yes": "Unterstützt",
+        "no": "Nicht unterstützt",
+        "failed": "Test fehlgeschlagen",
+        "completed": "Prüfung abgeschlossen",
+        "disallowedIsp": "Nicht zugelassener Internetdienstanbieter",
+        "originalsOnly": "Nur Original",
+        "noDisney": "No (IP Banned By Disney+)",
+        "unsupportedRegion": "Nicht unterstütztes Land/Region",
+        "failedNetwork": "Failed (Network Connection)"
       }
     }
   },
   "logs": {
     "page": {
-      "header": {
-        "title": "Protokolle"
-      }
+      "title": "Protokolle"
     }
   },
   "rules": {
@@ -506,9 +492,7 @@
           "update": "Aktualisieren"
         }
       },
-      "header": {
-        "title": "Regeln"
-      }
+      "title": "Regeln"
     },
     "feedback": {
       "notifications": {
@@ -576,9 +560,7 @@
           "NOT": "Logisches NICHT",
           "MATCH": "Alle Anfragen übereinstimmen"
         },
-        "header": {
-          "title": "Regeln bearbeiten"
-        }
+        "title": "Regeln bearbeiten"
       }
     }
   },
@@ -606,13 +588,9 @@
           "clashInfo": "Clash-Informationen-Karten",
           "systemInfo": "Systeminformationen-Karten"
         },
-        "header": {
-          "title": "Startseite-Einstellungen"
-        }
+        "title": "Startseite-Einstellungen"
       },
-      "header": {
-        "title": "Startseite"
-      }
+      "title": "Startseite"
     },
     "components": {
       "proxyTun": {
@@ -735,21 +713,17 @@
       "messages": {
         "detectionTimeout": "Detection timeout or failed"
       },
-      "header": {
-        "title": "Entsperrungstest"
-      }
+      "title": "Entsperrungstest"
     }
   },
   "settings": {
     "page": {
-      "header": {
-        "title": "Einstellungen"
-      },
       "actions": {
         "manual": "Bedienungsanleitung",
         "telegram": "Telegram-Kanal",
         "github": "GitHub-Projektadresse"
-      }
+      },
+      "title": "Einstellungen"
     },
     "sections": {
       "system": {
@@ -872,7 +846,16 @@
       "verge": {
         "basic": {
           "title": "Verge-Grundeinstellungen",
-          "items": {
+          "actions": {
+            "browse": "Durchsuchen",
+            "clear": "Löschen"
+          },
+          "trayOptions": {
+            "showMainWindow": "Hauptfenster anzeigen",
+            "showTrayMenu": "Tray-Menü anzeigen",
+            "disable": "Deaktivieren"
+          },
+          "fields": {
             "language": "Spracheinstellungen",
             "themeMode": "Thema",
             "trayClickEvent": "Tray-Klickereignis",
@@ -883,32 +866,10 @@
             "layoutSetting": "Layout-Einstellungen",
             "misc": "Sonstige Einstellungen",
             "hotkeySetting": "Tastenkombinationseinstellungen"
-          },
-          "actions": {
-            "browse": "Durchsuchen",
-            "clear": "Löschen"
-          },
-          "trayOptions": {
-            "showMainWindow": "Hauptfenster anzeigen",
-            "showTrayMenu": "Tray-Menü anzeigen",
-            "disable": "Deaktivieren"
           }
         },
         "advanced": {
           "title": "Verge-Erweiterte Einstellungen",
-          "items": {
-            "backupSetting": "Sicherungseinstellungen",
-            "runtimeConfig": "Aktuelle Konfiguration",
-            "openConfDir": "Konfigurationsverzeichnis",
-            "openCoreDir": "Kernverzeichnis",
-            "openLogsDir": "Protokollverzeichnis",
-            "checkUpdates": "Auf Updates prüfen",
-            "openDevTools": "Entwicklertools öffnen",
-            "liteModeSettings": "Einstellungen für den Leichtgewichtigen Modus",
-            "exit": "Beenden",
-            "exportDiagnostics": "Diagnoseinformationen exportieren",
-            "vergeVersion": "Verge-Version"
-          },
           "tooltips": {
             "backupInfo": "Unterstützt die Sicherung von Konfigurationsdateien über WebDAV",
             "openConfDir": "Wenn die Software fehlerhaft funktioniert, !sichern Sie! alle Dateien in diesem Verzeichnis, löschen Sie sie und starten Sie die Software neu.",
@@ -920,6 +881,19 @@
           "notifications": {
             "latestVersion": "Sie verwenden bereits die neueste Version",
             "versionCopied": "Version copied to clipboard"
+          },
+          "fields": {
+            "backupSetting": "Sicherungseinstellungen",
+            "runtimeConfig": "Aktuelle Konfiguration",
+            "openConfDir": "Konfigurationsverzeichnis",
+            "openCoreDir": "Kernverzeichnis",
+            "openLogsDir": "Protokollverzeichnis",
+            "checkUpdates": "Auf Updates prüfen",
+            "openDevTools": "Entwicklertools öffnen",
+            "liteModeSettings": "Einstellungen für den Leichtgewichtigen Modus",
+            "exit": "Beenden",
+            "exportDiagnostics": "Diagnoseinformationen exportieren",
+            "vergeVersion": "Verge-Version"
           }
         },
         "theme": {
@@ -1289,17 +1263,13 @@
       }
     },
     "feedback": {
-      "messages": {
-        "clash": {
-          "geoDataUpdated": "Geo-Daten wurden aktualisiert"
-        }
-      },
       "notifications": {
         "clash": {
           "restartSuccess": "Clash-Kern wurde neu gestartet",
           "versionUpdated": "Kernversion wurde aktualisiert",
           "changeSuccess": "Kern erfolgreich gewechselt",
-          "changeFailed": "Kernwechsel fehlgeschlagen"
+          "changeFailed": "Kernwechsel fehlgeschlagen",
+          "geoDataUpdated": "Geo-Daten wurden aktualisiert"
         },
         "clashService": {
           "installSuccess": "Service erfolgreich installiert",
@@ -1309,16 +1279,16 @@
           "withClashProxySuccess": "Aktualisierung mit Clash-Proxy erfolgreich",
           "withClashProxyFailed": "Aktualisierung auch mit Clash-Proxy fehlgeschlagen"
         }
+      }
+    },
+    "statuses": {
+      "clash": {
+        "stopping": "Kern wird gestoppt...",
+        "restarting": "Kern wird neu gestartet..."
       },
-      "statuses": {
-        "clash": {
-          "stopping": "Kern wird gestoppt...",
-          "restarting": "Kern wird neu gestartet..."
-        },
-        "clashService": {
-          "installing": "Service wird installiert...",
-          "uninstalling": "Service wird deinstalliert..."
-        }
+      "clashService": {
+        "installing": "Service wird installiert...",
+        "uninstalling": "Service wird deinstalliert..."
       }
     }
   },

@@ -129,9 +129,6 @@
   },
   "profiles": {
     "page": {
-      "header": {
-        "title": "Профильләр"
-      },
       "actions": {
         "updateAll": "Барлык профильләрне яңарту",
         "viewRuntimeConfig": "Кулланылган конфигурацияне карау",
@@ -139,9 +136,6 @@
         "import": "Импорт"
       },
       "batch": {
-        "header": {
-          "title": "Batch Operations"
-        },
         "actions": {
           "delete": "Delete Selected Profiles",
           "selectAll": "Select All",
@@ -151,7 +145,8 @@
         "summary": {
           "selected": "Selected",
           "items": "items"
-        }
+        },
+        "title": "Batch Operations"
       },
       "importForm": {
         "placeholder": "Профиль URL-ы",
@@ -179,7 +174,8 @@
           "forceRefreshCompleted": "Force refresh completed",
           "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
         }
-      }
+      },
+      "title": "Профильләр"
     },
     "components": {
       "card": {
@@ -377,11 +373,9 @@
       "messages": {
         "directMode": "Туры режим"
       },
-      "header": {
-        "title": {
-          "default": "Прокси төркемнәре",
-          "chainMode": "Proxy Chain Mode"
-        }
+      "title": {
+        "default": "Прокси төркемнәре",
+        "chainMode": "Proxy Chain Mode"
       }
     },
     "feedback": {
@@ -415,9 +409,7 @@
   },
   "connections": {
     "page": {
-      "header": {
-        "title": "Тоташулар"
-      }
+      "title": "Тоташулар"
     },
     "components": {
       "fields": {
@@ -450,9 +442,7 @@
       "actions": {
         "testAll": "Барчасын тестлау"
       },
-      "header": {
-        "title": "Тест"
-      }
+      "title": "Тест"
     },
     "components": {
       "item": {
@@ -472,28 +462,24 @@
         }
       }
     },
-    "feedback": {
-      "statuses": {
-        "test": {
-          "pending": "Pending",
-          "yes": "Yes",
-          "no": "No",
-          "failed": "Failed",
-          "completed": "Completed",
-          "disallowedIsp": "Disallowed ISP",
-          "originalsOnly": "Originals Only",
-          "noDisney": "No (IP Banned By Disney+)",
-          "unsupportedRegion": "Unsupported Country/Region",
-          "failedNetwork": "Failed (Network Connection)"
-        }
+    "statuses": {
+      "test": {
+        "pending": "Pending",
+        "yes": "Yes",
+        "no": "No",
+        "failed": "Failed",
+        "completed": "Completed",
+        "disallowedIsp": "Disallowed ISP",
+        "originalsOnly": "Originals Only",
+        "noDisney": "No (IP Banned By Disney+)",
+        "unsupportedRegion": "Unsupported Country/Region",
+        "failedNetwork": "Failed (Network Connection)"
       }
     }
   },
   "logs": {
     "page": {
-      "header": {
-        "title": "Логлар"
-      }
+      "title": "Логлар"
     }
   },
   "rules": {
@@ -506,9 +492,7 @@
           "update": "Яңарту"
         }
       },
-      "header": {
-        "title": "Кагыйдәләр"
-      }
+      "title": "Кагыйдәләр"
     },
     "feedback": {
       "notifications": {
@@ -576,9 +560,7 @@
           "NOT": "Логик ТҮГЕЛ",
           "MATCH": "Барлык сорауларга туры килә"
         },
-        "header": {
-          "title": "Кагыйдәләрне үзгәртү"
-        }
+        "title": "Кагыйдәләрне үзгәртү"
       }
     }
   },
@@ -606,13 +588,9 @@
           "clashInfo": "Clash Info Cards",
           "systemInfo": "System Info Cards"
         },
-        "header": {
-          "title": "Home Settings"
-        }
+        "title": "Home Settings"
       },
-      "header": {
-        "title": "Home"
-      }
+      "title": "Home"
     },
     "components": {
       "proxyTun": {
@@ -735,21 +713,17 @@
       "messages": {
         "detectionTimeout": "Detection timeout or failed"
       },
-      "header": {
-        "title": "Unlock Test"
-      }
+      "title": "Unlock Test"
     }
   },
   "settings": {
     "page": {
-      "header": {
-        "title": "Көйләүләр"
-      },
       "actions": {
         "manual": "Документация",
         "telegram": "Telegram каналы",
         "github": "GitHub репозиториясе"
-      }
+      },
+      "title": "Көйләүләр"
     },
     "sections": {
       "system": {
@@ -872,7 +846,16 @@
       "verge": {
         "basic": {
           "title": "Verge Төп көйләүләр",
-          "items": {
+          "actions": {
+            "browse": "Карау",
+            "clear": "Чистарту"
+          },
+          "trayOptions": {
+            "showMainWindow": "Төп тәрәзәне күрсәтү",
+            "showTrayMenu": "Show Tray Menu",
+            "disable": "Сүндерү"
+          },
+          "fields": {
             "language": "Тел",
             "themeMode": "Теманың режимы",
             "trayClickEvent": "Трейдагы басу вакыйгасы",
@@ -883,32 +866,10 @@
             "layoutSetting": "Расположение көйләүләре",
             "misc": "Өстәмә көйләүләр",
             "hotkeySetting": "Клавиатура төймәләре (hotkey) көйләүләре"
-          },
-          "actions": {
-            "browse": "Карау",
-            "clear": "Чистарту"
-          },
-          "trayOptions": {
-            "showMainWindow": "Төп тәрәзәне күрсәтү",
-            "showTrayMenu": "Show Tray Menu",
-            "disable": "Сүндерү"
           }
         },
         "advanced": {
           "title": "Verge Киңәйтелгән көйләүләр",
-          "items": {
-            "backupSetting": "Резерв копия көйләүләре",
-            "runtimeConfig": "Агымдагы конфигурация",
-            "openConfDir": "Кушымта папкасын ачу",
-            "openCoreDir": "Ядро сакланган папканы ачу",
-            "openLogsDir": "Логлар папкасын ачу",
-            "checkUpdates": "Яңартуларны тикшерү",
-            "openDevTools": "Разработчик коралларын ачу",
-            "liteModeSettings": "LightWeight Mode Settings",
-            "exit": "Чыгу",
-            "exportDiagnostics": "Export Diagnostic Info",
-            "vergeVersion": "Verge версиясе"
-          },
           "tooltips": {
             "backupInfo": "WebDAV аша конфигурация файлын саклауны хуплый",
             "openConfDir": "Әгәр программада хаталар чыкса, бу папкадагы файлларны саклап калыгыз да, аннары барысын да бетереп, программаны яңадан башлагыз",
@@ -920,6 +881,19 @@
           "notifications": {
             "latestVersion": "Сездә иң соңгы версия урнаштырылган",
             "versionCopied": "Version copied to clipboard"
+          },
+          "fields": {
+            "backupSetting": "Резерв копия көйләүләре",
+            "runtimeConfig": "Агымдагы конфигурация",
+            "openConfDir": "Кушымта папкасын ачу",
+            "openCoreDir": "Ядро сакланган папканы ачу",
+            "openLogsDir": "Логлар папкасын ачу",
+            "checkUpdates": "Яңартуларны тикшерү",
+            "openDevTools": "Разработчик коралларын ачу",
+            "liteModeSettings": "LightWeight Mode Settings",
+            "exit": "Чыгу",
+            "exportDiagnostics": "Export Diagnostic Info",
+            "vergeVersion": "Verge версиясе"
           }
         },
         "theme": {
@@ -1289,17 +1263,13 @@
       }
     },
     "feedback": {
-      "messages": {
-        "clash": {
-          "geoDataUpdated": "GeoData яңартылды"
-        }
-      },
       "notifications": {
         "clash": {
           "restartSuccess": "Clash ядросы яңадан башланды",
           "versionUpdated": "Ядро версиясе яңартылды",
           "changeSuccess": "Ядро уңышлы алыштырылды",
-          "changeFailed": "Ядро алыштыру уңышсыз булды"
+          "changeFailed": "Ядро алыштыру уңышсыз булды",
+          "geoDataUpdated": "GeoData яңартылды"
         },
         "clashService": {
           "installSuccess": "Сервис уңышлы урнаштырылды",
@@ -1309,16 +1279,16 @@
           "withClashProxySuccess": "Update with Clash proxy successfully",
           "withClashProxyFailed": "Update failed even with Clash proxy"
         }
+      }
+    },
+    "statuses": {
+      "clash": {
+        "stopping": "Stopping Core...",
+        "restarting": "Restarting Core..."
       },
-      "statuses": {
-        "clash": {
-          "stopping": "Stopping Core...",
-          "restarting": "Restarting Core..."
-        },
-        "clashService": {
-          "installing": "Хезмәт урнаштырыла...",
-          "uninstalling": "Uninstalling Service..."
-        }
+      "clashService": {
+        "installing": "Хезмәт урнаштырыла...",
+        "uninstalling": "Uninstalling Service..."
       }
     }
   },

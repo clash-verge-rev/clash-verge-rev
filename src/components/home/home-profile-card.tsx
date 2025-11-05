@@ -268,7 +268,7 @@ const EmptyProfile = ({ onClick }: { onClick: () => void }) => {
         sx={{ fontSize: 60, color: "primary.main", mb: 2 }}
       />
       <Typography variant="h6" gutterBottom>
-        {t("profiles.page.actions.import")} {t("profiles.page.header.title")}
+        {t("profiles.page.actions.import")} {t("profiles.page.title")}
       </Typography>
       <Typography variant="body2" color="text.secondary">
         {t("profiles.components.card.labels.clickToImport")}
@@ -312,7 +312,7 @@ export const HomeProfileCard = ({
 
   // 卡片标题
   const cardTitle = useMemo(() => {
-    if (!current) return t("profiles.page.header.title");
+    if (!current) return t("profiles.page.title");
 
     if (!current.home) return current.name;
 

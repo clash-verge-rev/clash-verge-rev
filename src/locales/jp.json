@@ -129,9 +129,6 @@
   },
   "profiles": {
     "page": {
-      "header": {
-        "title": "プロファイル"
-      },
       "actions": {
         "updateAll": "すべてのプロファイルを更新",
         "viewRuntimeConfig": "実行時のプロファイルを表示",
@@ -139,9 +136,6 @@
         "import": "インポート"
       },
       "batch": {
-        "header": {
-          "title": "バッチ操作"
-        },
         "actions": {
           "delete": "選択したプロファイルを削除",
           "selectAll": "すべて選択",
@@ -151,7 +145,8 @@
         "summary": {
           "selected": "選択済み",
           "items": "アイテム"
-        }
+        },
+        "title": "バッチ操作"
       },
       "importForm": {
         "placeholder": "プロファイルファイルのURL",
@@ -179,7 +174,8 @@
           "forceRefreshCompleted": "Force refresh completed",
           "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
         }
-      }
+      },
+      "title": "プロファイル"
     },
     "components": {
       "card": {
@@ -377,11 +373,9 @@
       "messages": {
         "directMode": "直接接続モード"
       },
-      "header": {
-        "title": {
-          "default": "プロキシグループ",
-          "chainMode": "Proxy Chain Mode"
-        }
+      "title": {
+        "default": "プロキシグループ",
+        "chainMode": "Proxy Chain Mode"
       }
     },
     "feedback": {
@@ -415,9 +409,7 @@
   },
   "connections": {
     "page": {
-      "header": {
-        "title": "接続"
-      }
+      "title": "接続"
     },
     "components": {
       "fields": {
@@ -450,9 +442,7 @@
       "actions": {
         "testAll": "すべてテスト"
       },
-      "header": {
-        "title": "テスト"
-      }
+      "title": "テスト"
     },
     "components": {
       "item": {
@@ -472,28 +462,24 @@
         }
       }
     },
-    "feedback": {
-      "statuses": {
-        "test": {
-          "pending": "検査待ち",
-          "yes": "サポートする",
-          "no": "サポートしない",
-          "failed": "テストに失敗しました。",
-          "completed": "検査完了",
-          "disallowedIsp": "許可されていないインターネットサービスプロバイダー",
-          "originalsOnly": "オリジナルのみ",
-          "noDisney": "No (IP Banned By Disney+)",
-          "unsupportedRegion": "サポートされていない国/地域",
-          "failedNetwork": "Failed (Network Connection)"
-        }
+    "statuses": {
+      "test": {
+        "pending": "検査待ち",
+        "yes": "サポートする",
+        "no": "サポートしない",
+        "failed": "テストに失敗しました。",
+        "completed": "検査完了",
+        "disallowedIsp": "許可されていないインターネットサービスプロバイダー",
+        "originalsOnly": "オリジナルのみ",
+        "noDisney": "No (IP Banned By Disney+)",
+        "unsupportedRegion": "サポートされていない国/地域",
+        "failedNetwork": "Failed (Network Connection)"
       }
     }
   },
   "logs": {
     "page": {
-      "header": {
-        "title": "ログ"
-      }
+      "title": "ログ"
     }
   },
   "rules": {
@@ -506,9 +492,7 @@
           "update": "更新"
         }
       },
-      "header": {
-        "title": "ルール"
-      }
+      "title": "ルール"
     },
     "feedback": {
       "notifications": {
@@ -576,9 +560,7 @@
           "NOT": "論理否定",
           "MATCH": "すべてのリクエストを一致させる"
         },
-        "header": {
-          "title": "ルールを編集"
-        }
+        "title": "ルールを編集"
       }
     }
   },
@@ -606,13 +588,9 @@
           "clashInfo": "Clash情報カード",
           "systemInfo": "システム情報カード"
         },
-        "header": {
-          "title": "ホーム設定"
-        }
+        "title": "ホーム設定"
       },
-      "header": {
-        "title": "ホーム"
-      }
+      "title": "ホーム"
     },
     "components": {
       "proxyTun": {
@@ -735,21 +713,17 @@
       "messages": {
         "detectionTimeout": "Detection timeout or failed"
       },
-      "header": {
-        "title": "ロック解除テスト"
-      }
+      "title": "ロック解除テスト"
     }
   },
   "settings": {
     "page": {
-      "header": {
-        "title": "設定"
-      },
       "actions": {
         "manual": "マニュアル",
         "telegram": "Telegramチャンネル",
         "github": "GitHubリポジトリ"
-      }
+      },
+      "title": "設定"
     },
     "sections": {
       "system": {
@@ -872,7 +846,16 @@
       "verge": {
         "basic": {
           "title": "Verge基本設定",
-          "items": {
+          "actions": {
+            "browse": "参照",
+            "clear": "クリア"
+          },
+          "trayOptions": {
+            "showMainWindow": "メインウィンドウを表示",
+            "showTrayMenu": "トレイメニューを表示",
+            "disable": "無効にする"
+          },
+          "fields": {
             "language": "言語設定",
             "themeMode": "テーマモード",
             "trayClickEvent": "トレイアイコンクリックイベント",
@@ -883,32 +866,10 @@
             "layoutSetting": "レイアウト設定",
             "misc": "その他の設定",
             "hotkeySetting": "ホットキー設定"
-          },
-          "actions": {
-            "browse": "参照",
-            "clear": "クリア"
-          },
-          "trayOptions": {
-            "showMainWindow": "メインウィンドウを表示",
-            "showTrayMenu": "トレイメニューを表示",
-            "disable": "無効にする"
           }
         },
         "advanced": {
           "title": "Verge詳細設定",
-          "items": {
-            "backupSetting": "バックアップ設定",
-            "runtimeConfig": "現在の設定",
-            "openConfDir": "設定ディレクトリを開く",
-            "openCoreDir": "コアディレクトリを開く",
-            "openLogsDir": "ログディレクトリを開く",
-            "checkUpdates": "更新を確認",
-            "openDevTools": "開発者ツールを開く",
-            "liteModeSettings": "軽量モード設定",
-            "exit": "終了",
-            "exportDiagnostics": "診断情報をエクスポート",
-            "vergeVersion": "Vergeバージョン"
-          },
           "tooltips": {
             "backupInfo": "WebDAVを使用した設定ファイルのバックアップをサポートします。",
             "openConfDir": "アプリケーションが正常に動作しない場合は、このフォルダ内のすべてのファイルを!バックアップ!して削除し、アプリケーションを再起動してください。",
@@ -920,6 +881,19 @@
           "notifications": {
             "latestVersion": "現在は最新バージョンです。",
             "versionCopied": "Version copied to clipboard"
+          },
+          "fields": {
+            "backupSetting": "バックアップ設定",
+            "runtimeConfig": "現在の設定",
+            "openConfDir": "設定ディレクトリを開く",
+            "openCoreDir": "コアディレクトリを開く",
+            "openLogsDir": "ログディレクトリを開く",
+            "checkUpdates": "更新を確認",
+            "openDevTools": "開発者ツールを開く",
+            "liteModeSettings": "軽量モード設定",
+            "exit": "終了",
+            "exportDiagnostics": "診断情報をエクスポート",
+            "vergeVersion": "Vergeバージョン"
           }
         },
         "theme": {
@@ -1289,17 +1263,13 @@
       }
     },
     "feedback": {
-      "messages": {
-        "clash": {
-          "geoDataUpdated": "GeoDataが更新されました。"
-        }
-      },
       "notifications": {
         "clash": {
           "restartSuccess": "Clashコアが再起動されました。",
           "versionUpdated": "コアバージョンが更新されました。",
           "changeSuccess": "コアの切り替えに成功しました。",
-          "changeFailed": "コアの切り替えに失敗しました。"
+          "changeFailed": "コアの切り替えに失敗しました。",
+          "geoDataUpdated": "GeoDataが更新されました。"
         },
         "clashService": {
           "installSuccess": "サービスのインストールに成功しました。",
@@ -1309,16 +1279,16 @@
           "withClashProxySuccess": "Clashプロキシを使用して更新に成功しました。",
           "withClashProxyFailed": "Clashプロキシを使用しても更新に失敗しました。"
         }
+      }
+    },
+    "statuses": {
+      "clash": {
+        "stopping": "コアを停止中...",
+        "restarting": "コアを再起動中..."
       },
-      "statuses": {
-        "clash": {
-          "stopping": "コアを停止中...",
-          "restarting": "コアを再起動中..."
-        },
-        "clashService": {
-          "installing": "サービスをインストール中...",
-          "uninstalling": "サービスをアンインストール中..."
-        }
+      "clashService": {
+        "installing": "サービスをインストール中...",
+        "uninstalling": "サービスをアンインストール中..."
       }
     }
   },

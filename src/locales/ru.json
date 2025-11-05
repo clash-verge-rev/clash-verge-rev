@@ -129,9 +129,6 @@
   },
   "profiles": {
     "page": {
-      "header": {
-        "title": "Профили"
-      },
       "actions": {
         "updateAll": "Обновить все профили",
         "viewRuntimeConfig": "Просмотреть используемый конфиг",
@@ -139,9 +136,6 @@
         "import": "Импорт"
       },
       "batch": {
-        "header": {
-          "title": "Пакетные операции"
-        },
         "actions": {
           "delete": "Удалить выбранные профили",
           "selectAll": "Выбрать все",
@@ -151,7 +145,8 @@
         "summary": {
           "selected": "Выбрано",
           "items": "элементы"
-        }
+        },
+        "title": "Пакетные операции"
       },
       "importForm": {
         "placeholder": "URL профиля",
@@ -179,7 +174,8 @@
           "forceRefreshCompleted": "Force refresh completed",
           "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
         }
-      }
+      },
+      "title": "Профили"
     },
     "components": {
       "card": {
@@ -377,11 +373,9 @@
       "messages": {
         "directMode": "Прямой режим"
       },
-      "header": {
-        "title": {
-          "default": "Группы прокси",
-          "chainMode": "Proxy Chain Mode"
-        }
+      "title": {
+        "default": "Группы прокси",
+        "chainMode": "Proxy Chain Mode"
       }
     },
     "feedback": {
@@ -415,9 +409,7 @@
   },
   "connections": {
     "page": {
-      "header": {
-        "title": "Соединения"
-      }
+      "title": "Соединения"
     },
     "components": {
       "fields": {
@@ -450,9 +442,7 @@
       "actions": {
         "testAll": "Тестировать все"
       },
-      "header": {
-        "title": "Тест"
-      }
+      "title": "Тест"
     },
     "components": {
       "item": {
@@ -472,28 +462,24 @@
         }
       }
     },
-    "feedback": {
-      "statuses": {
-        "test": {
-          "pending": "В ожидании",
-          "yes": "Да",
-          "no": "Нет",
-          "failed": "Ошибка",
-          "completed": "Завершено",
-          "disallowedIsp": "ISP заблокирован",
-          "originalsOnly": "Только Originals",
-          "noDisney": "Нет (IP забанен Disney+)",
-          "unsupportedRegion": "Страна/регион не поддерживается",
-          "failedNetwork": "Ошибка подключения"
-        }
+    "statuses": {
+      "test": {
+        "pending": "В ожидании",
+        "yes": "Да",
+        "no": "Нет",
+        "failed": "Ошибка",
+        "completed": "Завершено",
+        "disallowedIsp": "ISP заблокирован",
+        "originalsOnly": "Только Originals",
+        "noDisney": "Нет (IP забанен Disney+)",
+        "unsupportedRegion": "Страна/регион не поддерживается",
+        "failedNetwork": "Ошибка подключения"
       }
     }
   },
   "logs": {
     "page": {
-      "header": {
-        "title": "Логи"
-      }
+      "title": "Логи"
     }
   },
   "rules": {
@@ -506,9 +492,7 @@
           "update": "Обновить"
         }
       },
-      "header": {
-        "title": "Правила"
-      }
+      "title": "Правила"
     },
     "feedback": {
       "notifications": {
@@ -576,9 +560,7 @@
           "NOT": "Логическое НЕ",
           "MATCH": "Соответствует всем запросам"
         },
-        "header": {
-          "title": "Редактировать правила"
-        }
+        "title": "Редактировать правила"
       }
     }
   },
@@ -606,13 +588,9 @@
           "clashInfo": "Информация о Clash",
           "systemInfo": "Информация о системе"
         },
-        "header": {
-          "title": "Настройки главной страницы"
-        }
+        "title": "Настройки главной страницы"
       },
-      "header": {
-        "title": "Главная"
-      }
+      "title": "Главная"
     },
     "components": {
       "proxyTun": {
@@ -735,21 +713,17 @@
       "messages": {
         "detectionTimeout": "Detection timeout or failed"
       },
-      "header": {
-        "title": "Тест доступности веб-сайтов"
-      }
+      "title": "Тест доступности веб-сайтов"
     }
   },
   "settings": {
     "page": {
-      "header": {
-        "title": "Настройки"
-      },
       "actions": {
         "manual": "Документация",
         "telegram": "Telegram-канал",
         "github": "GitHub репозиторий"
-      }
+      },
+      "title": "Настройки"
     },
     "sections": {
       "system": {
@@ -872,7 +846,16 @@
       "verge": {
         "basic": {
           "title": "Основные настройки Verge",
-          "items": {
+          "actions": {
+            "browse": "Просмотреть",
+            "clear": "Очистить"
+          },
+          "trayOptions": {
+            "showMainWindow": "Показать главное окно",
+            "showTrayMenu": "Показать меню в трее",
+            "disable": "Отключить"
+          },
+          "fields": {
             "language": "Язык",
             "themeMode": "Цветовая тема",
             "trayClickEvent": "Событие при щелчке по иконке в трее",
@@ -883,32 +866,10 @@
             "layoutSetting": "Настройки раскладки",
             "misc": "Расширенные настройки",
             "hotkeySetting": "Настройки сочетаний клавиш"
-          },
-          "actions": {
-            "browse": "Просмотреть",
-            "clear": "Очистить"
-          },
-          "trayOptions": {
-            "showMainWindow": "Показать главное окно",
-            "showTrayMenu": "Показать меню в трее",
-            "disable": "Отключить"
           }
         },
         "advanced": {
           "title": "Расширенные настройки Verge",
-          "items": {
-            "backupSetting": "Настройки резервного копирования",
-            "runtimeConfig": "Используемый конфиг",
-            "openConfDir": "Открыть папку приложения",
-            "openCoreDir": "Открыть папку ядра",
-            "openLogsDir": "Открыть папку логов",
-            "checkUpdates": "Проверить обновления",
-            "openDevTools": "Открыть Dev Tools",
-            "liteModeSettings": "Настройки LightWeight Mode",
-            "exit": "Выход",
-            "exportDiagnostics": "Экспорт диагностической информации",
-            "vergeVersion": "Версия Clash Verge Rev"
-          },
           "tooltips": {
             "backupInfo": "Поддерживает файлы конфигурации резервного копирования WebDAV",
             "openConfDir": "Если программное обеспечение работает неправильно, сделайте резервную копию и удалите все файлы в этой папке, а затем перезапустите ПО",
@@ -920,6 +881,19 @@
           "notifications": {
             "latestVersion": "Обновление не требуется",
             "versionCopied": "Version copied to clipboard"
+          },
+          "fields": {
+            "backupSetting": "Настройки резервного копирования",
+            "runtimeConfig": "Используемый конфиг",
+            "openConfDir": "Открыть папку приложения",
+            "openCoreDir": "Открыть папку ядра",
+            "openLogsDir": "Открыть папку логов",
+            "checkUpdates": "Проверить обновления",
+            "openDevTools": "Открыть Dev Tools",
+            "liteModeSettings": "Настройки LightWeight Mode",
+            "exit": "Выход",
+            "exportDiagnostics": "Экспорт диагностической информации",
+            "vergeVersion": "Версия Clash Verge Rev"
           }
         },
         "theme": {
@@ -1289,17 +1263,13 @@
       }
     },
     "feedback": {
-      "messages": {
-        "clash": {
-          "geoDataUpdated": "Файлы GeoData обновлены"
-        }
-      },
       "notifications": {
         "clash": {
           "restartSuccess": "Ядро перезапущено",
           "versionUpdated": "Ядро обновлено до последней версии",
           "changeSuccess": "Ядро успешно изменено",
-          "changeFailed": "Не удалось сменить ядро"
+          "changeFailed": "Не удалось сменить ядро",
+          "geoDataUpdated": "Файлы GeoData обновлены"
         },
         "clashService": {
           "installSuccess": "Служба успешно установлена",
@@ -1309,16 +1279,16 @@
           "withClashProxySuccess": "Update with Clash proxy successfully",
           "withClashProxyFailed": "Update failed even with Clash proxy"
         }
+      }
+    },
+    "statuses": {
+      "clash": {
+        "stopping": "Stopping Core...",
+        "restarting": "Restarting Core..."
       },
-      "statuses": {
-        "clash": {
-          "stopping": "Stopping Core...",
-          "restarting": "Restarting Core..."
-        },
-        "clashService": {
-          "installing": "Установка службы...",
-          "uninstalling": "Uninstalling Service..."
-        }
+      "clashService": {
+        "installing": "Установка службы...",
+        "uninstalling": "Uninstalling Service..."
       }
     }
   },

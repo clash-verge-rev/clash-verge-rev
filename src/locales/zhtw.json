@@ -129,9 +129,6 @@
   },
   "profiles": {
     "page": {
-      "header": {
-        "title": "訂閱"
-      },
       "actions": {
         "updateAll": "更新所有訂閱",
         "viewRuntimeConfig": "查看執行時訂閱",
@@ -139,9 +136,6 @@
         "import": "匯入"
       },
       "batch": {
-        "header": {
-          "title": "批次操作"
-        },
         "actions": {
           "delete": "刪除選取訂閱",
           "selectAll": "全選",
@@ -151,7 +145,8 @@
         "summary": {
           "selected": "已選取",
           "items": "項目"
-        }
+        },
+        "title": "批次操作"
       },
       "importForm": {
         "placeholder": "訂閱檔網址",
@@ -179,7 +174,8 @@
           "forceRefreshCompleted": "Force refresh completed",
           "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
         }
-      }
+      },
+      "title": "訂閱"
     },
     "components": {
       "card": {
@@ -377,11 +373,9 @@
       "messages": {
         "directMode": "直連模式"
       },
-      "header": {
-        "title": {
-          "default": "代理組",
-          "chainMode": "鏈式代理模式"
-        }
+      "title": {
+        "default": "代理組",
+        "chainMode": "鏈式代理模式"
       }
     },
     "feedback": {
@@ -415,9 +409,7 @@
   },
   "connections": {
     "page": {
-      "header": {
-        "title": "連線"
-      }
+      "title": "連線"
     },
     "components": {
       "fields": {
@@ -450,9 +442,7 @@
       "actions": {
         "testAll": "測試全部"
       },
-      "header": {
-        "title": "測試"
-      }
+      "title": "測試"
     },
     "components": {
       "item": {
@@ -472,28 +462,24 @@
         }
       }
     },
-    "feedback": {
-      "statuses": {
-        "test": {
-          "pending": "待檢測",
-          "yes": "支援",
-          "no": "不支援",
-          "failed": "測試失敗",
-          "completed": "檢測完成",
-          "disallowedIsp": "不允許的網際網路服務供應商",
-          "originalsOnly": "僅限原創",
-          "noDisney": "不支援（IP被Disney+禁止）",
-          "unsupportedRegion": "不支援的國家/地區",
-          "failedNetwork": "測試失敗（網路連線問題）"
-        }
+    "statuses": {
+      "test": {
+        "pending": "待檢測",
+        "yes": "支援",
+        "no": "不支援",
+        "failed": "測試失敗",
+        "completed": "檢測完成",
+        "disallowedIsp": "不允許的網際網路服務供應商",
+        "originalsOnly": "僅限原創",
+        "noDisney": "不支援（IP被Disney+禁止）",
+        "unsupportedRegion": "不支援的國家/地區",
+        "failedNetwork": "測試失敗（網路連線問題）"
       }
     }
   },
   "logs": {
     "page": {
-      "header": {
-        "title": "日誌"
-      }
+      "title": "日誌"
     }
   },
   "rules": {
@@ -506,9 +492,7 @@
           "update": "更新"
         }
       },
-      "header": {
-        "title": "規則"
-      }
+      "title": "規則"
     },
     "feedback": {
       "notifications": {
@@ -576,9 +560,7 @@
           "NOT": "邏輯非 (NOT)",
           "MATCH": "配對所有請求 (MATCH)"
         },
-        "header": {
-          "title": "編輯規則"
-        }
+        "title": "編輯規則"
       }
     }
   },
@@ -606,13 +588,9 @@
           "clashInfo": "Clash 資訊卡",
           "systemInfo": "系統資訊卡"
         },
-        "header": {
-          "title": "首頁設定"
-        }
+        "title": "首頁設定"
       },
-      "header": {
-        "title": "首頁"
-      }
+      "title": "首頁"
     },
     "components": {
       "proxyTun": {
@@ -735,21 +713,17 @@
       "messages": {
         "detectionTimeout": "檢測逾時或失敗"
       },
-      "header": {
-        "title": "解鎖測試"
-      }
+      "title": "解鎖測試"
     }
   },
   "settings": {
     "page": {
-      "header": {
-        "title": "設定"
-      },
       "actions": {
         "manual": "使用手冊",
         "telegram": "Telegram 頻道",
         "github": "GitHub 專案位址"
-      }
+      },
+      "title": "設定"
     },
     "sections": {
       "system": {
@@ -872,7 +846,16 @@
       "verge": {
         "basic": {
           "title": "Verge 基礎設定",
-          "items": {
+          "actions": {
+            "browse": "瀏覽",
+            "clear": "清除"
+          },
+          "trayOptions": {
+            "showMainWindow": "顯示主視窗",
+            "showTrayMenu": "顯示系統匣選單",
+            "disable": "停用"
+          },
+          "fields": {
             "language": "語言設定",
             "themeMode": "主題模式",
             "trayClickEvent": "系統匣點擊事件",
@@ -883,32 +866,10 @@
             "layoutSetting": "介面設定",
             "misc": "雜項設定",
             "hotkeySetting": "快速鍵設定"
-          },
-          "actions": {
-            "browse": "瀏覽",
-            "clear": "清除"
-          },
-          "trayOptions": {
-            "showMainWindow": "顯示主視窗",
-            "showTrayMenu": "顯示系統匣選單",
-            "disable": "停用"
           }
         },
         "advanced": {
           "title": "Verge 進階設定",
-          "items": {
-            "backupSetting": "備份設定",
-            "runtimeConfig": "執行期設定",
-            "openConfDir": "配置目錄",
-            "openCoreDir": "內核目錄",
-            "openLogsDir": "日誌目錄",
-            "checkUpdates": "檢查更新",
-            "openDevTools": "開發人員工具",
-            "liteModeSettings": "輕量模式設定",
-            "exit": "離開",
-            "exportDiagnostics": "匯出診斷資訊",
-            "vergeVersion": "Verge 版本"
-          },
           "tooltips": {
             "backupInfo": "支援本機或 WebDAV 方式備份配置檔案",
             "openConfDir": "如果軟體執行異常，!備份!並刪除此資料夾下的所有檔案，重新啟動軟體",
@@ -920,6 +881,19 @@
           "notifications": {
             "latestVersion": "目前已是最新版本",
             "versionCopied": "Verge版本已複製到剪貼簿"
+          },
+          "fields": {
+            "backupSetting": "備份設定",
+            "runtimeConfig": "執行期設定",
+            "openConfDir": "配置目錄",
+            "openCoreDir": "內核目錄",
+            "openLogsDir": "日誌目錄",
+            "checkUpdates": "檢查更新",
+            "openDevTools": "開發人員工具",
+            "liteModeSettings": "輕量模式設定",
+            "exit": "離開",
+            "exportDiagnostics": "匯出診斷資訊",
+            "vergeVersion": "Verge 版本"
           }
         },
         "theme": {
@@ -1289,17 +1263,13 @@
       }
     },
     "feedback": {
-      "messages": {
-        "clash": {
-          "geoDataUpdated": "已更新 GeoData"
-        }
-      },
       "notifications": {
         "clash": {
           "restartSuccess": "已重啟 Clash 內核",
           "versionUpdated": "內核版本已更新",
           "changeSuccess": "內核切換成功",
-          "changeFailed": "無法切換內核"
+          "changeFailed": "無法切換內核",
+          "geoDataUpdated": "已更新 GeoData"
         },
         "clashService": {
           "installSuccess": "已成功安裝服務",
@@ -1309,16 +1279,16 @@
           "withClashProxySuccess": "使用 Clash 代理更新成功",
           "withClashProxyFailed": "使用 Clash 代理更新也失敗"
         }
+      }
+    },
+    "statuses": {
+      "clash": {
+        "stopping": "內核停止中...",
+        "restarting": "內核重啟中..."
       },
-      "statuses": {
-        "clash": {
-          "stopping": "內核停止中...",
-          "restarting": "內核重啟中..."
-        },
-        "clashService": {
-          "installing": "安裝服務中...",
-          "uninstalling": "服務解除安裝中..."
-        }
+      "clashService": {
+        "installing": "安裝服務中...",
+        "uninstalling": "服務解除安裝中..."
       }
     }
   },

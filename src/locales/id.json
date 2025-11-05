@@ -129,9 +129,6 @@
   },
   "profiles": {
     "page": {
-      "header": {
-        "title": "Profil"
-      },
       "actions": {
         "updateAll": "Perbarui Semua Profil",
         "viewRuntimeConfig": "Lihat Konfigurasi Runtime",
@@ -139,9 +136,6 @@
         "import": "Impor"
       },
       "batch": {
-        "header": {
-          "title": "Batch Operations"
-        },
         "actions": {
           "delete": "Delete Selected Profiles",
           "selectAll": "Select All",
@@ -151,7 +145,8 @@
         "summary": {
           "selected": "Selected",
           "items": "items"
-        }
+        },
+        "title": "Batch Operations"
       },
       "importForm": {
         "placeholder": "URL Profil",
@@ -179,7 +174,8 @@
           "forceRefreshCompleted": "Force refresh completed",
           "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
         }
-      }
+      },
+      "title": "Profil"
     },
     "components": {
       "card": {
@@ -377,11 +373,9 @@
       "messages": {
         "directMode": "Mode Langsung"
       },
-      "header": {
-        "title": {
-          "default": "Grup Proksi",
-          "chainMode": "Proxy Chain Mode"
-        }
+      "title": {
+        "default": "Grup Proksi",
+        "chainMode": "Proxy Chain Mode"
       }
     },
     "feedback": {
@@ -415,9 +409,7 @@
   },
   "connections": {
     "page": {
-      "header": {
-        "title": "Koneksi"
-      }
+      "title": "Koneksi"
     },
     "components": {
       "fields": {
@@ -450,9 +442,7 @@
       "actions": {
         "testAll": "Tes Semua"
       },
-      "header": {
-        "title": "Tes"
-      }
+      "title": "Tes"
     },
     "components": {
       "item": {
@@ -472,28 +462,24 @@
         }
       }
     },
-    "feedback": {
-      "statuses": {
-        "test": {
-          "pending": "Pending",
-          "yes": "Yes",
-          "no": "No",
-          "failed": "Failed",
-          "completed": "Completed",
-          "disallowedIsp": "Disallowed ISP",
-          "originalsOnly": "Originals Only",
-          "noDisney": "No (IP Banned By Disney+)",
-          "unsupportedRegion": "Unsupported Country/Region",
-          "failedNetwork": "Failed (Network Connection)"
-        }
+    "statuses": {
+      "test": {
+        "pending": "Pending",
+        "yes": "Yes",
+        "no": "No",
+        "failed": "Failed",
+        "completed": "Completed",
+        "disallowedIsp": "Disallowed ISP",
+        "originalsOnly": "Originals Only",
+        "noDisney": "No (IP Banned By Disney+)",
+        "unsupportedRegion": "Unsupported Country/Region",
+        "failedNetwork": "Failed (Network Connection)"
       }
     }
   },
   "logs": {
     "page": {
-      "header": {
-        "title": "Log"
-      }
+      "title": "Log"
     }
   },
   "rules": {
@@ -506,9 +492,7 @@
           "update": "Perbarui"
         }
       },
-      "header": {
-        "title": "Aturan"
-      }
+      "title": "Aturan"
     },
     "feedback": {
       "notifications": {
@@ -576,9 +560,7 @@
           "NOT": "Logika TIDAK",
           "MATCH": "Cocok dengan semua permintaan"
         },
-        "header": {
-          "title": "Ubah Aturan"
-        }
+        "title": "Ubah Aturan"
       }
     }
   },
@@ -606,13 +588,9 @@
           "clashInfo": "Clash Info Cards",
           "systemInfo": "System Info Cards"
         },
-        "header": {
-          "title": "Home Settings"
-        }
+        "title": "Home Settings"
       },
-      "header": {
-        "title": "Home"
-      }
+      "title": "Home"
     },
     "components": {
       "proxyTun": {
@@ -735,21 +713,17 @@
       "messages": {
         "detectionTimeout": "Detection timeout or failed"
       },
-      "header": {
-        "title": "Unlock Test"
-      }
+      "title": "Unlock Test"
     }
   },
   "settings": {
     "page": {
-      "header": {
-        "title": "Pengaturan"
-      },
       "actions": {
         "manual": "Manual",
         "telegram": "Saluran Telegram",
         "github": "Repositori Github"
-      }
+      },
+      "title": "Pengaturan"
     },
     "sections": {
       "system": {
@@ -872,7 +846,16 @@
       "verge": {
         "basic": {
           "title": "Pengaturan Dasar Verge",
-          "items": {
+          "actions": {
+            "browse": "Jelajahi",
+            "clear": "Bersihkan"
+          },
+          "trayOptions": {
+            "showMainWindow": "Tampilkan Jendela Utama",
+            "showTrayMenu": "Show Tray Menu",
+            "disable": "Nonaktifkan"
+          },
+          "fields": {
             "language": "Bahasa",
             "themeMode": "Mode Tema",
             "trayClickEvent": "Acara Klik Tray",
@@ -883,32 +866,10 @@
             "layoutSetting": "Pengaturan Tata Letak",
             "misc": "Lain-lain",
             "hotkeySetting": "Pengaturan Pintasan"
-          },
-          "actions": {
-            "browse": "Jelajahi",
-            "clear": "Bersihkan"
-          },
-          "trayOptions": {
-            "showMainWindow": "Tampilkan Jendela Utama",
-            "showTrayMenu": "Show Tray Menu",
-            "disable": "Nonaktifkan"
           }
         },
         "advanced": {
           "title": "Pengaturan Lanjutan Verge",
-          "items": {
-            "backupSetting": "Pengaturan Cadangan",
-            "runtimeConfig": "Konfigurasi Runtime",
-            "openConfDir": "Buka Direktori Konfigurasi",
-            "openCoreDir": "Buka Direktori Core",
-            "openLogsDir": "Buka Direktori Log",
-            "checkUpdates": "Periksa Pembaruan",
-            "openDevTools": "Buka Alat Pengembang",
-            "liteModeSettings": "LightWeight Mode Settings",
-            "exit": "Keluar",
-            "exportDiagnostics": "Export Diagnostic Info",
-            "vergeVersion": "Versi Verge"
-          },
           "tooltips": {
             "backupInfo": "Mendukung file konfigurasi cadangan WebDAV",
             "openConfDir": "Jika perangkat lunak berjalan tidak normal, CADANGKAN dan hapus semua file di folder ini lalu mulai ulang perangkat lunak",
@@ -920,6 +881,19 @@
           "notifications": {
             "latestVersion": "Saat ini pada Versi Terbaru",
             "versionCopied": "Version copied to clipboard"
+          },
+          "fields": {
+            "backupSetting": "Pengaturan Cadangan",
+            "runtimeConfig": "Konfigurasi Runtime",
+            "openConfDir": "Buka Direktori Konfigurasi",
+            "openCoreDir": "Buka Direktori Core",
+            "openLogsDir": "Buka Direktori Log",
+            "checkUpdates": "Periksa Pembaruan",
+            "openDevTools": "Buka Alat Pengembang",
+            "liteModeSettings": "LightWeight Mode Settings",
+            "exit": "Keluar",
+            "exportDiagnostics": "Export Diagnostic Info",
+            "vergeVersion": "Versi Verge"
           }
         },
         "theme": {
@@ -1289,17 +1263,13 @@
       }
     },
     "feedback": {
-      "messages": {
-        "clash": {
-          "geoDataUpdated": "GeoData Diperbarui"
-        }
-      },
       "notifications": {
         "clash": {
           "restartSuccess": "Core Clash Dimulai Ulang",
           "versionUpdated": "Versi Core Diperbarui",
           "changeSuccess": "Inti berhasil diubah",
-          "changeFailed": "Gagal mengubah inti"
+          "changeFailed": "Gagal mengubah inti",
+          "geoDataUpdated": "GeoData Diperbarui"
         },
         "clashService": {
           "installSuccess": "Layanan Berhasil Diinstal",
@@ -1309,16 +1279,16 @@
           "withClashProxySuccess": "Update with Clash proxy successfully",
           "withClashProxyFailed": "Update failed even with Clash proxy"
         }
+      }
+    },
+    "statuses": {
+      "clash": {
+        "stopping": "Stopping Core...",
+        "restarting": "Restarting Core..."
       },
-      "statuses": {
-        "clash": {
-          "stopping": "Stopping Core...",
-          "restarting": "Restarting Core..."
-        },
-        "clashService": {
-          "installing": "Memasang Layanan...",
-          "uninstalling": "Uninstalling Service..."
-        }
+      "clashService": {
+        "installing": "Memasang Layanan...",
+        "uninstalling": "Uninstalling Service..."
       }
     }
   },

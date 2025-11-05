@@ -129,9 +129,6 @@
   },
   "profiles": {
     "page": {
-      "header": {
-        "title": "Profiller"
-      },
       "actions": {
         "updateAll": "Tüm Profilleri Güncelle",
         "viewRuntimeConfig": "Çalışma Zamanı Yapılandırmasını Görüntüle",
@@ -139,9 +136,6 @@
         "import": "İçe Aktar"
       },
       "batch": {
-        "header": {
-          "title": "Toplu İşlemler"
-        },
         "actions": {
           "delete": "Seçili Profilleri Sil",
           "selectAll": "Tümünü Seç",
@@ -151,7 +145,8 @@
         "summary": {
           "selected": "Seçildi",
           "items": "öğeler"
-        }
+        },
+        "title": "Toplu İşlemler"
       },
       "importForm": {
         "placeholder": "Profil URL'si",
@@ -179,7 +174,8 @@
           "forceRefreshCompleted": "Force refresh completed",
           "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
         }
-      }
+      },
+      "title": "Profiller"
     },
     "components": {
       "card": {
@@ -377,11 +373,9 @@
       "messages": {
         "directMode": "Doğrudan Mod"
       },
-      "header": {
-        "title": {
-          "default": "Vekil Grupları",
-          "chainMode": "Proxy Chain Mode"
-        }
+      "title": {
+        "default": "Vekil Grupları",
+        "chainMode": "Proxy Chain Mode"
       }
     },
     "feedback": {
@@ -415,9 +409,7 @@
   },
   "connections": {
     "page": {
-      "header": {
-        "title": "Bağlantılar"
-      }
+      "title": "Bağlantılar"
     },
     "components": {
       "fields": {
@@ -450,9 +442,7 @@
       "actions": {
         "testAll": "Tümünü Test Et"
       },
-      "header": {
-        "title": "Test"
-      }
+      "title": "Test"
     },
     "components": {
       "item": {
@@ -472,28 +462,24 @@
         }
       }
     },
-    "feedback": {
-      "statuses": {
-        "test": {
-          "pending": "Beklemede",
-          "yes": "Evet",
-          "no": "Hayır",
-          "failed": "Başarısız",
-          "completed": "Tamamlandı",
-          "disallowedIsp": "İzin Verilmeyen ISP",
-          "originalsOnly": "Yalnızca Orijinaller",
-          "noDisney": "Hayır (IP Disney+ Tarafından Yasaklandı)",
-          "unsupportedRegion": "Desteklenmeyen Ülke/Bölge",
-          "failedNetwork": "Başarısız (Ağ Bağlantısı)"
-        }
+    "statuses": {
+      "test": {
+        "pending": "Beklemede",
+        "yes": "Evet",
+        "no": "Hayır",
+        "failed": "Başarısız",
+        "completed": "Tamamlandı",
+        "disallowedIsp": "İzin Verilmeyen ISP",
+        "originalsOnly": "Yalnızca Orijinaller",
+        "noDisney": "Hayır (IP Disney+ Tarafından Yasaklandı)",
+        "unsupportedRegion": "Desteklenmeyen Ülke/Bölge",
+        "failedNetwork": "Başarısız (Ağ Bağlantısı)"
       }
     }
   },
   "logs": {
     "page": {
-      "header": {
-        "title": "Günlükler"
-      }
+      "title": "Günlükler"
     }
   },
   "rules": {
@@ -506,9 +492,7 @@
           "update": "Güncelle"
         }
       },
-      "header": {
-        "title": "Kurallar"
-      }
+      "title": "Kurallar"
     },
     "feedback": {
       "notifications": {
@@ -576,9 +560,7 @@
           "NOT": "Mantıksal DEĞİL",
           "MATCH": "Tüm isteklerle eşleşir"
         },
-        "header": {
-          "title": "Kuralları Düzenle"
-        }
+        "title": "Kuralları Düzenle"
       }
     }
   },
@@ -606,13 +588,9 @@
           "clashInfo": "Clash Bilgi Kartları",
           "systemInfo": "Sistem Bilgi Kartları"
         },
-        "header": {
-          "title": "Ana Sayfa Ayarları"
-        }
+        "title": "Ana Sayfa Ayarları"
       },
-      "header": {
-        "title": "Ana Sayfa"
-      }
+      "title": "Ana Sayfa"
     },
     "components": {
       "proxyTun": {
@@ -735,21 +713,17 @@
       "messages": {
         "detectionTimeout": "Detection timeout or failed"
       },
-      "header": {
-        "title": "Kilit Açma Testi"
-      }
+      "title": "Kilit Açma Testi"
     }
   },
   "settings": {
     "page": {
-      "header": {
-        "title": "Ayarlar"
-      },
       "actions": {
         "manual": "Kılavuz",
         "telegram": "Telegram Kanalı",
         "github": "Github Repo"
-      }
+      },
+      "title": "Ayarlar"
     },
     "sections": {
       "system": {
@@ -872,7 +846,16 @@
       "verge": {
         "basic": {
           "title": "Verge Temel Ayarı",
-          "items": {
+          "actions": {
+            "browse": "Gözat",
+            "clear": "Temizle"
+          },
+          "trayOptions": {
+            "showMainWindow": "Ana Pencereyi Göster",
+            "showTrayMenu": "Tepsi Menüsünü Göster",
+            "disable": "Devre Dışı Bırak"
+          },
+          "fields": {
             "language": "Dil",
             "themeMode": "Tema Modu",
             "trayClickEvent": "Sistem Tepsisi Tıklama Olayı",
@@ -883,32 +866,10 @@
             "layoutSetting": "Düzen Ayarı",
             "misc": "Çeşitli",
             "hotkeySetting": "Kısayol Tuşu Ayarı"
-          },
-          "actions": {
-            "browse": "Gözat",
-            "clear": "Temizle"
-          },
-          "trayOptions": {
-            "showMainWindow": "Ana Pencereyi Göster",
-            "showTrayMenu": "Tepsi Menüsünü Göster",
-            "disable": "Devre Dışı Bırak"
           }
         },
         "advanced": {
           "title": "Verge Gelişmiş Ayarı",
-          "items": {
-            "backupSetting": "Yedekleme Ayarı",
-            "runtimeConfig": "Çalışma Zamanı Yapılandırması",
-            "openConfDir": "Yapılandırma Dizinini Aç",
-            "openCoreDir": "Çekirdek Dizinini Aç",
-            "openLogsDir": "Günlük Dizinini Aç",
-            "checkUpdates": "Güncellemeleri Kontrol Et",
-            "openDevTools": "Geliştirici Araçları",
-            "liteModeSettings": "Hafif Mod Ayarları",
-            "exit": "Çıkış",
-            "exportDiagnostics": "Tanılama Bilgilerini Dışa Aktar",
-            "vergeVersion": "Verge Sürümü"
-          },
           "tooltips": {
             "backupInfo": "WebDAV yedekleme yapılandırma dosyalarını destekler",
             "openConfDir": "Yazılım anormal çalışıyorsa, bu klasördeki tüm dosyaları YEDEKLEYİN ve silin, ardından yazılımı yeniden başlatın",
@@ -920,6 +881,19 @@
           "notifications": {
             "latestVersion": "Şu Anda En Son Sürümdesiniz",
             "versionCopied": "Version copied to clipboard"
+          },
+          "fields": {
+            "backupSetting": "Yedekleme Ayarı",
+            "runtimeConfig": "Çalışma Zamanı Yapılandırması",
+            "openConfDir": "Yapılandırma Dizinini Aç",
+            "openCoreDir": "Çekirdek Dizinini Aç",
+            "openLogsDir": "Günlük Dizinini Aç",
+            "checkUpdates": "Güncellemeleri Kontrol Et",
+            "openDevTools": "Geliştirici Araçları",
+            "liteModeSettings": "Hafif Mod Ayarları",
+            "exit": "Çıkış",
+            "exportDiagnostics": "Tanılama Bilgilerini Dışa Aktar",
+            "vergeVersion": "Verge Sürümü"
           }
         },
         "theme": {
@@ -1289,17 +1263,13 @@
       }
     },
     "feedback": {
-      "messages": {
-        "clash": {
-          "geoDataUpdated": "GeoData Güncellendi"
-        }
-      },
       "notifications": {
         "clash": {
           "restartSuccess": "Clash Çekirdeği Yeniden Başlatıldı",
           "versionUpdated": "Çekirdek Sürümü Güncellendi",
           "changeSuccess": "Çekirdek başarıyla değiştirildi",
-          "changeFailed": "Çekirdek değiştirilemedi"
+          "changeFailed": "Çekirdek değiştirilemedi",
+          "geoDataUpdated": "GeoData Güncellendi"
         },
         "clashService": {
           "installSuccess": "Hizmet Başarıyla Kuruldu",
@@ -1309,16 +1279,16 @@
           "withClashProxySuccess": "Clash vekil ile güncelleme başarılı",
           "withClashProxyFailed": "Clash vekil ile bile güncelleme başarısız oldu"
         }
+      }
+    },
+    "statuses": {
+      "clash": {
+        "stopping": "Stopping Core...",
+        "restarting": "Restarting Core..."
       },
-      "statuses": {
-        "clash": {
-          "stopping": "Stopping Core...",
-          "restarting": "Restarting Core..."
-        },
-        "clashService": {
-          "installing": "Hizmet Kuruluyor...",
-          "uninstalling": "Uninstalling Service..."
-        }
+      "clashService": {
+        "installing": "Hizmet Kuruluyor...",
+        "uninstalling": "Uninstalling Service..."
       }
     }
   },

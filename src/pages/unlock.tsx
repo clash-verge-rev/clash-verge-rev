@@ -38,17 +38,16 @@ const UNLOCK_RESULTS_STORAGE_KEY = "clash_verge_unlock_results";
 const UNLOCK_RESULTS_TIME_KEY = "clash_verge_unlock_time";
 
 const STATUS_LABEL_KEYS: Record<string, string> = {
-  Pending: "tests.feedback.statuses.test.pending",
-  Yes: "tests.feedback.statuses.test.yes",
-  No: "tests.feedback.statuses.test.no",
-  Failed: "tests.feedback.statuses.test.failed",
-  Completed: "tests.feedback.statuses.test.completed",
-  "Disallowed ISP": "tests.feedback.statuses.test.disallowedIsp",
-  "Originals Only": "tests.feedback.statuses.test.originalsOnly",
-  "No (IP Banned By Disney+)": "tests.feedback.statuses.test.noDisney",
-  "Unsupported Country/Region":
-    "tests.feedback.statuses.test.unsupportedRegion",
-  "Failed (Network Connection)": "tests.feedback.statuses.test.failedNetwork",
+  Pending: "tests.statuses.test.pending",
+  Yes: "tests.statuses.test.yes",
+  No: "tests.statuses.test.no",
+  Failed: "tests.statuses.test.failed",
+  Completed: "tests.statuses.test.completed",
+  "Disallowed ISP": "tests.statuses.test.disallowedIsp",
+  "Originals Only": "tests.statuses.test.originalsOnly",
+  "No (IP Banned By Disney+)": "tests.statuses.test.noDisney",
+  "Unsupported Country/Region": "tests.statuses.test.unsupportedRegion",
+  "Failed (Network Connection)": "tests.statuses.test.failedNetwork",
 };
 
 const UnlockPage = () => {
@@ -264,7 +263,7 @@ const UnlockPage = () => {
 
   return (
     <BasePage
-      title={t("unlock.page.header.title")}
+      title={t("unlock.page.title")}
       header={
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <Button

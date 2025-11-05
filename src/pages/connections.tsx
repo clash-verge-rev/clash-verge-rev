@@ -150,7 +150,7 @@ const ConnectionsPage = () => {
       full
       title={
         <span style={{ whiteSpace: "nowrap" }}>
-          {t("connections.page.header.title")}
+          {t("connections.page.title")}
         </span>
       }
       contentStyle={{

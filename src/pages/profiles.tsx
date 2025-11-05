@@ -804,7 +804,7 @@ const ProfilePage = () => {
   return (
     <BasePage
       full
-      title={t("profiles.page.header.title")}
+      title={t("profiles.page.title")}
       contentStyle={{ height: "100%" }}
       header={
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -814,7 +814,7 @@ const ProfilePage = () => {
               <IconButton
                 size="small"
                 color="inherit"
-                title={t("profiles.page.batch.header.title")}
+                title={t("profiles.page.batch.title")}
                 onClick={toggleBatchMode}
               >
                 <CheckBoxOutlineBlankRounded />

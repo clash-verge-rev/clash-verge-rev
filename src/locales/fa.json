@@ -129,9 +129,6 @@
   },
   "profiles": {
     "page": {
-      "header": {
-        "title": "پروفایل‌ها"
-      },
       "actions": {
         "updateAll": "به‌روزرسانی همه پروفایل‌ها",
         "viewRuntimeConfig": "مشاهده پیکربندی زمان اجرا",
@@ -139,9 +136,6 @@
         "import": "وارد کردن"
       },
       "batch": {
-        "header": {
-          "title": "Batch Operations"
-        },
         "actions": {
           "delete": "Delete Selected Profiles",
           "selectAll": "Select All",
@@ -151,7 +145,8 @@
         "summary": {
           "selected": "Selected",
           "items": "items"
-        }
+        },
+        "title": "Batch Operations"
       },
       "importForm": {
         "placeholder": "آدرس پروفایل",
@@ -179,7 +174,8 @@
           "forceRefreshCompleted": "Force refresh completed",
           "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
         }
-      }
+      },
+      "title": "پروفایل‌ها"
     },
     "components": {
       "card": {
@@ -377,11 +373,9 @@
       "messages": {
         "directMode": "حالت مستقیم"
       },
-      "header": {
-        "title": {
-          "default": "گروه‌های پراکسی",
-          "chainMode": "Proxy Chain Mode"
-        }
+      "title": {
+        "default": "گروه‌های پراکسی",
+        "chainMode": "Proxy Chain Mode"
       }
     },
     "feedback": {
@@ -415,9 +409,7 @@
   },
   "connections": {
     "page": {
-      "header": {
-        "title": "اتصالات"
-      }
+      "title": "اتصالات"
     },
     "components": {
       "fields": {
@@ -450,9 +442,7 @@
       "actions": {
         "testAll": "آزمون همه"
       },
-      "header": {
-        "title": "آزمون"
-      }
+      "title": "آزمون"
     },
     "components": {
       "item": {
@@ -472,28 +462,24 @@
         }
       }
     },
-    "feedback": {
-      "statuses": {
-        "test": {
-          "pending": "Pending",
-          "yes": "Yes",
-          "no": "No",
-          "failed": "Failed",
-          "completed": "Completed",
-          "disallowedIsp": "Disallowed ISP",
-          "originalsOnly": "Originals Only",
-          "noDisney": "No (IP Banned By Disney+)",
-          "unsupportedRegion": "Unsupported Country/Region",
-          "failedNetwork": "Failed (Network Connection)"
-        }
+    "statuses": {
+      "test": {
+        "pending": "Pending",
+        "yes": "Yes",
+        "no": "No",
+        "failed": "Failed",
+        "completed": "Completed",
+        "disallowedIsp": "Disallowed ISP",
+        "originalsOnly": "Originals Only",
+        "noDisney": "No (IP Banned By Disney+)",
+        "unsupportedRegion": "Unsupported Country/Region",
+        "failedNetwork": "Failed (Network Connection)"
       }
     }
   },
   "logs": {
     "page": {
-      "header": {
-        "title": "لاگ‌ها"
-      }
+      "title": "لاگ‌ها"
     }
   },
   "rules": {
@@ -506,9 +492,7 @@
           "update": "به‌روزرسانی"
         }
       },
-      "header": {
-        "title": "قوانین"
-      }
+      "title": "قوانین"
     },
     "feedback": {
       "notifications": {
@@ -576,9 +560,7 @@
           "NOT": "منطق NOT",
           "MATCH": "مطابقت با تمام درخواست‌ها"
         },
-        "header": {
-          "title": "ویرایش قوانین"
-        }
+        "title": "ویرایش قوانین"
       }
     }
   },
@@ -606,13 +588,9 @@
           "clashInfo": "Clash Info Cards",
           "systemInfo": "System Info Cards"
         },
-        "header": {
-          "title": "Home Settings"
-        }
+        "title": "Home Settings"
       },
-      "header": {
-        "title": "Home"
-      }
+      "title": "Home"
     },
     "components": {
       "proxyTun": {
@@ -735,21 +713,17 @@
       "messages": {
         "detectionTimeout": "Detection timeout or failed"
       },
-      "header": {
-        "title": "Unlock Test"
-      }
+      "title": "Unlock Test"
     }
   },
   "settings": {
     "page": {
-      "header": {
-        "title": "تنظیمات"
-      },
       "actions": {
         "manual": "راهنما",
         "telegram": "کانال تلگرام",
         "github": "مخزن GitHub"
-      }
+      },
+      "title": "تنظیمات"
     },
     "sections": {
       "system": {
@@ -872,7 +846,16 @@
       "verge": {
         "basic": {
           "title": "تنظیمات پایه Verge",
-          "items": {
+          "actions": {
+            "browse": "مرور کردن",
+            "clear": "پاک کردن"
+          },
+          "trayOptions": {
+            "showMainWindow": "نمایش پنجره اصلی",
+            "showTrayMenu": "Show Tray Menu",
+            "disable": "غیرفعال کردن"
+          },
+          "fields": {
             "language": "زبان",
             "themeMode": "حالت تم",
             "trayClickEvent": "رویداد کلیک در سینی سیستم",
@@ -883,32 +866,10 @@
             "layoutSetting": "تنظیمات چیدمان",
             "misc": "متفرقه",
             "hotkeySetting": "تنظیمات کلیدهای میانبر"
-          },
-          "actions": {
-            "browse": "مرور کردن",
-            "clear": "پاک کردن"
-          },
-          "trayOptions": {
-            "showMainWindow": "نمایش پنجره اصلی",
-            "showTrayMenu": "Show Tray Menu",
-            "disable": "غیرفعال کردن"
           }
         },
         "advanced": {
           "title": "تنظیمات پیشرفته Verge",
-          "items": {
-            "backupSetting": "تنظیمات پشتیبان گیری",
-            "runtimeConfig": "پیکربندی زمان اجرا",
-            "openConfDir": "باز کردن پوشه برنامه",
-            "openCoreDir": "باز کردن پوشه هسته",
-            "openLogsDir": "باز کردن پوشه لاگ‌ها",
-            "checkUpdates": "بررسی برای به‌روزرسانی‌ها",
-            "openDevTools": "باز کردن ابزارهای توسعه‌دهنده",
-            "liteModeSettings": "LightWeight Mode Settings",
-            "exit": "خروج",
-            "exportDiagnostics": "Export Diagnostic Info",
-            "vergeVersion": "نسخه Verge"
-          },
           "tooltips": {
             "backupInfo": "از فایل های پیکربندی پشتیبان WebDAV پشتیبانی می کند",
             "openConfDir": "اگر نرم‌افزار به‌طور غیرعادی اجرا می‌شود، از تمام فایل‌های موجود در این پوشه نسخه پشتیبان تهیه و پاک کنید تا نرم‌افزار را مجدداً راه‌اندازی کنید",
@@ -920,6 +881,19 @@
           "notifications": {
             "latestVersion": "در حال حاضر در آخرین نسخه",
             "versionCopied": "Version copied to clipboard"
+          },
+          "fields": {
+            "backupSetting": "تنظیمات پشتیبان گیری",
+            "runtimeConfig": "پیکربندی زمان اجرا",
+            "openConfDir": "باز کردن پوشه برنامه",
+            "openCoreDir": "باز کردن پوشه هسته",
+            "openLogsDir": "باز کردن پوشه لاگ‌ها",
+            "checkUpdates": "بررسی برای به‌روزرسانی‌ها",
+            "openDevTools": "باز کردن ابزارهای توسعه‌دهنده",
+            "liteModeSettings": "LightWeight Mode Settings",
+            "exit": "خروج",
+            "exportDiagnostics": "Export Diagnostic Info",
+            "vergeVersion": "نسخه Verge"
           }
         },
         "theme": {
@@ -1289,17 +1263,13 @@
       }
     },
     "feedback": {
-      "messages": {
-        "clash": {
-          "geoDataUpdated": "GeoData به‌روزرسانی شد"
-        }
-      },
       "notifications": {
         "clash": {
           "restartSuccess": "هسته Clash مجدداً راه‌اندازی شد",
           "versionUpdated": "نسخه هسته به‌روزرسانی شد",
           "changeSuccess": "هسته با موفقیت تغییر کرد",
-          "changeFailed": "تغییر هسته ناموفق بود"
+          "changeFailed": "تغییر هسته ناموفق بود",
+          "geoDataUpdated": "GeoData به‌روزرسانی شد"
         },
         "clashService": {
           "installSuccess": "سرویس با موفقیت نصب شد",
@@ -1309,16 +1279,16 @@
           "withClashProxySuccess": "Update with Clash proxy successfully",
           "withClashProxyFailed": "Update failed even with Clash proxy"
         }
+      }
+    },
+    "statuses": {
+      "clash": {
+        "stopping": "Stopping Core...",
+        "restarting": "Restarting Core..."
       },
-      "statuses": {
-        "clash": {
-          "stopping": "Stopping Core...",
-          "restarting": "Restarting Core..."
-        },
-        "clashService": {
-          "installing": "در حال نصب سرویس...",
-          "uninstalling": "Uninstalling Service..."
-        }
+      "clashService": {
+        "installing": "در حال نصب سرویس...",
+        "uninstalling": "Uninstalling Service..."
       }
     }
   },
