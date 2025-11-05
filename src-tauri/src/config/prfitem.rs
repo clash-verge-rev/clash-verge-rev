@@ -446,12 +446,11 @@ impl PrfItem {
     /// ## Merge type (enhance)
     /// create the enhanced item by using `merge` rule
     pub fn from_merge(uid: Option<String>) -> Result<PrfItem> {
-        let mut id = help::get_uid("m").into();
-        let mut template = tmpl::ITEM_MERGE_EMPTY.into();
-        if let Some(uid) = uid {
-            id = uid;
-            template = tmpl::ITEM_MERGE.into();
-        }
+        let (id, template) = if let Some(uid) = uid {
+            (uid, tmpl::ITEM_MERGE.into())
+        } else {
+            (help::get_uid("m").into(), tmpl::ITEM_MERGE_EMPTY.into())
+        };
         let file = format!("{id}.yaml").into();
 
         Ok(PrfItem {
@@ -473,12 +472,12 @@ impl PrfItem {
     /// ## Script type (enhance)
     /// create the enhanced item by using javascript quick.js
     pub fn from_script(uid: Option<String>) -> Result<PrfItem> {
-        let mut id = help::get_uid("s").into();
-        if let Some(uid) = uid {
-            id = uid;
-        }
+        let id = if let Some(uid) = uid {
+            uid
+        } else {
+            help::get_uid("s").into()
+        };
         let file = format!("{id}.js").into(); // js ext
-
         Ok(PrfItem {
             uid: Some(id),
             itype: Some("script".into()),

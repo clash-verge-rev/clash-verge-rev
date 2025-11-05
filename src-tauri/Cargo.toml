@@ -226,3 +226,4 @@ needless_raw_string_hashes = "deny" # Too many in existing code
 
 or_fun_call = "deny"
 cognitive_complexity = "deny"
+useless_let_if_seq = "deny"
