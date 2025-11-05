@@ -50,6 +50,7 @@ PR checklist
 - Keep JSON files UTF-8 encoded.
 - Follow the repo’s locale file structure and naming conventions.
 - Run `pnpm format:i18n` to align with the baseline file for minimal diffs.
+- Run `pnpm i18n:validate` to ensure locale structure & namespace rules still hold.
 - Test translations in a local dev build before opening a PR.
 - Reference related issues and explain any context for translations or changes.
 
@@ -61,36 +62,60 @@ Notes
 
 ## Locale Key Structure Guidelines
 
-- **Top-level scope** — Map each locale namespace to a route-level feature or domain module, mirroring folder names in `src/pages`/`src/services`. Prefer plural nouns for resource pages (`profiles`, `connections`) and reuse existing slugs where possible (`home`, `settings`).
-- **Common strings** — Put reusable actions, statuses, and units in `common.*`. Before adding a new key elsewhere, check whether an equivalent entry already lives under `common`.
-- **Feature layout** — Inside a namespace, group strings by their UI role using consistent buckets such as `page`, `actions`, `labels`, `tooltips`, `notifications`, `errors`, and `placeholders`. Avoid duplicating the same bucket at multiple levels.
-- **Components and dialogs** — When a feature needs component-specific copy, nest it under `components.<ComponentName>` or `dialogs.<DialogName>` instead of leaking implementation names like `proxyTunCard`.
-- **Naming style** — Use lower camelCase for keys, align with the feature’s UI wording, and keep names semantic (`systemProxy` rather than `switch1`). Reserve template placeholders for dynamic values (e.g., `{{name}}`).
-- **Example**
+The locale files now follow a two-namespace layout designed to mirror the React/Rust feature tree:
+
+- **`shared.*`** — cross-cutting vocabulary (buttons, statuses, validation hints, window chrome, etc.).
+  - Buckets to prefer: `actions`, `labels`, `statuses`, `messages`, `placeholders`, `units`, `validation`, `window`, `editorModes`.
+  - Add to `shared` only when the copy is used (or is expected to be reused) by two or more features. Otherwise keep it in the owning feature under `entities`.
+- **`entities.<feature>.*`** — route-level or domain-level strings scoped to a single feature.
+  - Top-level nodes generally match folders under `src/pages`, `src/components`, or service domains (`settings`, `proxy`, `profile`, `home`, `validation`, `unlock`, …).
+  - Within a feature namespace, prefer consistent buckets like `view`, `page`, `sections`, `forms`, `fields`, `actions`, `tooltips`, `notifications`, `errors`, `dialogs`, `tables`, `components`. Choose the minimum depth needed to describe the UI.
+
+### Authoring guidelines
+
+1. **Follow the shared/feature split** — before inventing a new key, check whether an equivalent exists under `shared.*`.
+2. **Use camelCase leaf keys** — keep names semantic (`systemProxy`, `updateInterval`) and avoid positional names (`item1`, `btn_ok`).
+3. **Group by UI responsibility** — for example:
+   - `entities.settings.dns.fields.listen`
+   - `entities.settings.dns.dialog.title`
+   - `entities.settings.dns.sections.general`
+4. **Component-specific copy** — nest under `components.<ComponentName>` or `dialogs.<DialogName>` to keep implementation-specific strings organized but still discoverable.
+5. **Dynamic placeholders** — continue using `{{placeholder}}` syntax and document required params in code when possible.
+
+### Minimal example
 
 ```json
 {
-  "profiles": {
-    "page": {
-      "title": "Profiles",
-      "description": "Manage subscription sources"
-    },
+  "shared": {
     "actions": {
-      "import": "Import"
-    },
-    "notifications": {
-      "importSuccess": "Profile imported successfully"
-    },
-    "components": {
-      "batchDialog": {
-        "title": "Batch Operations"
+      "save": "Save",
+      "cancel": "Cancel"
+    }
+  },
+  "entities": {
+    "profile": {
+      "view": {
+        "title": "Profiles",
+        "actions": {
+          "import": "Import",
+          "updateAll": "Update All Profiles"
+        },
+        "notifications": {
+          "importSuccess": "Profile imported successfully"
+        }
+      },
+      "components": {
+        "batchDialog": {
+          "title": "Batch Operations",
+          "items": "items"
+        }
       }
     }
   }
 }
 ```
 
-Reuse shared verbs (e.g., “New”, “Save”) directly from `common.actions.*` in the application code rather than duplicating them inside feature namespaces.
+Whenever you need a common verb or label, reference `shared.*` directly in the code (`shared.actions.save`, `shared.labels.name`, …) instead of duplicating the copy in a feature namespace.
 
 ## Feedback & Contributions
 

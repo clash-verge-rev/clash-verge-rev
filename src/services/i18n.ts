@@ -1,8 +1,6 @@
 import i18n from "i18next";
 import { initReactI18next } from "react-i18next";
 
-export const defaultNS = "translation" as const;
-
 export const supportedLanguages = [
   "en",
   "ru",
@@ -44,17 +42,15 @@ i18n.use(initReactI18next).init({
   resources: {},
   lng: "zh",
   fallbackLng: "zh",
-  defaultNS,
-  ns: [defaultNS],
   interpolation: {
     escapeValue: false,
   },
 });
 
 export const changeLanguage = async (language: string) => {
-  if (!i18n.hasResourceBundle(language, defaultNS)) {
+  if (!i18n.hasResourceBundle(language, "translation")) {
     const resources = await loadLanguage(language);
-    i18n.addResourceBundle(language, defaultNS, resources);
+    i18n.addResourceBundle(language, "translation", resources);
   }
 
   await i18n.changeLanguage(language);

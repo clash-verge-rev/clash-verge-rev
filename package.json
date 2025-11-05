@@ -29,8 +29,9 @@
     "lint": "eslint -c eslint.config.ts --max-warnings=0 --cache --cache-location .eslintcache src",
     "lint:fix": "eslint -c eslint.config.ts --max-warnings=0 --cache --cache-location .eslintcache --fix src",
     "format": "prettier --write .",
-    "format:i18n": "node scripts/cleanup-unused-i18n.mjs --align --apply",
     "format:check": "prettier --check .",
+    "format:i18n": "node scripts/cleanup-unused-i18n.mjs --align --apply && pnpm i18n:validate",
+    "i18n:validate": "node scripts/validate-i18n-structure.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },
