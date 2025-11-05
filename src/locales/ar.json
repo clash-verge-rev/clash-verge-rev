@@ -1,10 +1,4 @@
 {
-  "common": {
-    "editorModes": {
-      "visualization": "تصور",
-      "advanced": "متقدم"
-    }
-  },
   "shared": {
     "actions": {
       "cancel": "إلغاء",
@@ -72,6 +66,10 @@
     "window": {
       "maximize": "تكبير",
       "minimize": "تصغير"
+    },
+    "editorModes": {
+      "visualization": "تصور",
+      "advanced": "متقدم"
     }
   },
   "entities": {
@@ -1234,50 +1232,45 @@
           }
         }
       }
-    }
-  },
-  "theme": {
-    "light": "Light",
-    "dark": "Dark",
-    "system": "System"
-  },
-  "unlock": {
-    "page": {
-      "title": "Unlock Test",
-      "actions": {
-        "testing": "Testing..."
-      },
-      "empty": "No unlock test items",
-      "messages": {
-        "detectionTimeout": "Detection timeout or failed"
+    },
+    "unlock": {
+      "page": {
+        "title": "Unlock Test",
+        "actions": {
+          "testing": "Testing..."
+        },
+        "empty": "No unlock test items",
+        "messages": {
+          "detectionTimeout": "Detection timeout or failed"
+        }
       }
-    }
-  },
-  "validation": {
-    "config": {
-      "failed": "فشل التحقق من تكوين الاشتراك، يرجى فحص ملف التكوين، تم التراجع عن التغييرات، تفاصيل الخطأ:",
-      "bootFailed": "فشل التحقق من التكوين عند الإقلاع، تم استخدام التكوين الافتراضي، يرجى فحص ملف التكوين، تفاصيل الخطأ:",
-      "coreChangeFailed": "فشل التحقق من التكوين عند تغيير النواة، تم استخدام التكوين الافتراضي، يرجى فحص ملف التكوين، تفاصيل الخطأ:",
-      "processTerminated": "تم إنهاء عملية التحقق"
     },
-    "script": {
-      "syntaxError": "خطأ في بناء جملة السكريبت، تم التراجع عن التغييرات",
-      "missingMain": "خطأ في السكريبت، تم التراجع عن التغييرات",
-      "fileNotFound": "الملف غير موجود، تم التراجع عن التغييرات",
-      "fileError": "خطأ في ملف السكريبت، تم التراجع عن التغييرات"
-    },
-    "yaml": {
-      "syntaxError": "YAML syntax error, changes reverted",
-      "readError": "YAML read error, changes reverted",
-      "mappingError": "YAML mapping error, changes reverted",
-      "keyError": "YAML key error, changes reverted",
-      "generalError": "YAML error, changes reverted"
-    },
-    "merge": {
-      "syntaxError": "Merge file syntax error, changes reverted",
-      "mappingError": "Merge file mapping error, changes reverted",
-      "keyError": "Merge file key error, changes reverted",
-      "generalError": "Merge file error, changes reverted"
+    "validation": {
+      "config": {
+        "failed": "فشل التحقق من تكوين الاشتراك، يرجى فحص ملف التكوين، تم التراجع عن التغييرات، تفاصيل الخطأ:",
+        "bootFailed": "فشل التحقق من التكوين عند الإقلاع، تم استخدام التكوين الافتراضي، يرجى فحص ملف التكوين، تفاصيل الخطأ:",
+        "coreChangeFailed": "فشل التحقق من التكوين عند تغيير النواة، تم استخدام التكوين الافتراضي، يرجى فحص ملف التكوين، تفاصيل الخطأ:",
+        "processTerminated": "تم إنهاء عملية التحقق"
+      },
+      "script": {
+        "syntaxError": "خطأ في بناء جملة السكريبت، تم التراجع عن التغييرات",
+        "missingMain": "خطأ في السكريبت، تم التراجع عن التغييرات",
+        "fileNotFound": "الملف غير موجود، تم التراجع عن التغييرات",
+        "fileError": "خطأ في ملف السكريبت، تم التراجع عن التغييرات"
+      },
+      "yaml": {
+        "syntaxError": "YAML syntax error, changes reverted",
+        "readError": "YAML read error, changes reverted",
+        "mappingError": "YAML mapping error, changes reverted",
+        "keyError": "YAML key error, changes reverted",
+        "generalError": "YAML error, changes reverted"
+      },
+      "merge": {
+        "syntaxError": "Merge file syntax error, changes reverted",
+        "mappingError": "Merge file mapping error, changes reverted",
+        "keyError": "Merge file key error, changes reverted",
+        "generalError": "Merge file error, changes reverted"
+      }
     }
   }
 }

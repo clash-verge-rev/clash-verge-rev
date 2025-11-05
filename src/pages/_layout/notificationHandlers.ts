@@ -33,41 +33,41 @@ export const handleNoticeMessage = (
       ),
     update_failed: () => showNotice.error(msg),
     "config_validate::boot_error": () =>
-      showNotice.error("validation.config.bootFailed", msg),
+      showNotice.error("entities.validation.config.bootFailed", msg),
     "config_validate::core_change": () =>
-      showNotice.error("validation.config.coreChangeFailed", msg),
+      showNotice.error("entities.validation.config.coreChangeFailed", msg),
     "config_validate::error": () =>
-      showNotice.error("validation.config.failed", msg),
+      showNotice.error("entities.validation.config.failed", msg),
     "config_validate::process_terminated": () =>
-      showNotice.error("validation.config.processTerminated"),
+      showNotice.error("entities.validation.config.processTerminated"),
     "config_validate::stdout_error": () =>
-      showNotice.error("validation.config.failed", msg),
+      showNotice.error("entities.validation.config.failed", msg),
     "config_validate::script_error": () =>
-      showNotice.error("validation.script.fileError", msg),
+      showNotice.error("entities.validation.script.fileError", msg),
     "config_validate::script_syntax_error": () =>
-      showNotice.error("validation.script.syntaxError", msg),
+      showNotice.error("entities.validation.script.syntaxError", msg),
     "config_validate::script_missing_main": () =>
-      showNotice.error("validation.script.missingMain", msg),
+      showNotice.error("entities.validation.script.missingMain", msg),
     "config_validate::file_not_found": () =>
-      showNotice.error("validation.script.fileNotFound", msg),
+      showNotice.error("entities.validation.script.fileNotFound", msg),
     "config_validate::yaml_syntax_error": () =>
-      showNotice.error("validation.yaml.syntaxError", msg),
+      showNotice.error("entities.validation.yaml.syntaxError", msg),
     "config_validate::yaml_read_error": () =>
-      showNotice.error("validation.yaml.readError", msg),
+      showNotice.error("entities.validation.yaml.readError", msg),
     "config_validate::yaml_mapping_error": () =>
-      showNotice.error("validation.yaml.mappingError", msg),
+      showNotice.error("entities.validation.yaml.mappingError", msg),
     "config_validate::yaml_key_error": () =>
-      showNotice.error("validation.yaml.keyError", msg),
+      showNotice.error("entities.validation.yaml.keyError", msg),
     "config_validate::yaml_error": () =>
-      showNotice.error("validation.yaml.generalError", msg),
+      showNotice.error("entities.validation.yaml.generalError", msg),
     "config_validate::merge_syntax_error": () =>
-      showNotice.error("validation.merge.syntaxError", msg),
+      showNotice.error("entities.validation.merge.syntaxError", msg),
     "config_validate::merge_mapping_error": () =>
-      showNotice.error("validation.merge.mappingError", msg),
+      showNotice.error("entities.validation.merge.mappingError", msg),
     "config_validate::merge_key_error": () =>
-      showNotice.error("validation.merge.keyError", msg),
+      showNotice.error("entities.validation.merge.keyError", msg),
     "config_validate::merge_error": () =>
-      showNotice.error("validation.merge.generalError", msg),
+      showNotice.error("entities.validation.merge.generalError", msg),
     "config_core::change_success": () =>
       showNotice.success(
         "entities.settings.clash.notifications.changeSuccess",

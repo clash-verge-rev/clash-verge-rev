@@ -163,7 +163,10 @@ const UnlockPage = () => {
       invoke<T>(cmd, args),
       new Promise<T>((_, reject) =>
         setTimeout(
-          () => reject(new Error(t("unlock.page.messages.detectionTimeout"))),
+          () =>
+            reject(
+              new Error(t("entities.unlock.page.messages.detectionTimeout")),
+            ),
           timeout,
         ),
       ),
@@ -263,7 +266,7 @@ const UnlockPage = () => {
 
   return (
     <BasePage
-      title={t("unlock.page.title")}
+      title={t("entities.unlock.page.title")}
       header={
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <Button
@@ -280,7 +283,7 @@ const UnlockPage = () => {
             }
           >
             {isCheckingAll
-              ? t("unlock.page.actions.testing")
+              ? t("entities.unlock.page.actions.testing")
               : t("entities.test.page.actions.testAll")}
           </Button>
         </Box>
@@ -295,7 +298,7 @@ const UnlockPage = () => {
             height: "50%",
           }}
         >
-          <BaseEmpty textKey="unlock.page.empty" />
+          <BaseEmpty textKey="entities.unlock.page.empty" />
         </Box>
       ) : (
         <Grid container spacing={1.5} columns={{ xs: 1, sm: 2, md: 3 }}>

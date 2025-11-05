@@ -1,10 +1,4 @@
 {
-  "common": {
-    "editorModes": {
-      "visualization": "Визуализация",
-      "advanced": "Өстәмә"
-    }
-  },
   "shared": {
     "actions": {
       "cancel": "Баш тарту",
@@ -72,6 +66,10 @@
     "window": {
       "maximize": "Зурайту",
       "minimize": "Кечерәйтү"
+    },
+    "editorModes": {
+      "visualization": "Визуализация",
+      "advanced": "Өстәмә"
     }
   },
   "entities": {
@@ -1234,50 +1232,45 @@
           }
         }
       }
-    }
-  },
-  "theme": {
-    "light": "Light",
-    "dark": "Dark",
-    "system": "System"
-  },
-  "unlock": {
-    "page": {
-      "title": "Unlock Test",
-      "actions": {
-        "testing": "Testing..."
-      },
-      "empty": "No unlock test items",
-      "messages": {
-        "detectionTimeout": "Detection timeout or failed"
+    },
+    "unlock": {
+      "page": {
+        "title": "Unlock Test",
+        "actions": {
+          "testing": "Testing..."
+        },
+        "empty": "No unlock test items",
+        "messages": {
+          "detectionTimeout": "Detection timeout or failed"
+        }
       }
-    }
-  },
-  "validation": {
-    "config": {
-      "failed": "Язылу көйләү тикшерүе уңышсыз, көйләү файлын тикшерегез, үзгәрешләр кире кайтарылды, хата:",
-      "bootFailed": "Йөкләү вакытында көйләү тикшерүе уңышсыз, стандарт көйләү кулланылды, көйләү файлын тикшерегез, хата:",
-      "coreChangeFailed": "Ядро алыштырганда көйләү тикшерүе уңышсыз, стандарт көйләү кулланылды, көйләү файлын тикшерегез, хата:",
-      "processTerminated": "Тикшерү процессы туктатылды"
     },
-    "script": {
-      "syntaxError": "Скрипт синтаксик хатасы, үзгәрешләр кире кайтарылды",
-      "missingMain": "Скрипт хатасы, үзгәрешләр кире кайтарылды",
-      "fileNotFound": "Файл табылмады, үзгәрешләр кире кайтарылды",
-      "fileError": "Скрипт файлы хатасы, үзгәрешләр кире кайтарылды"
-    },
-    "yaml": {
-      "syntaxError": "YAML syntax error, changes reverted",
-      "readError": "YAML read error, changes reverted",
-      "mappingError": "YAML mapping error, changes reverted",
-      "keyError": "YAML key error, changes reverted",
-      "generalError": "YAML error, changes reverted"
-    },
-    "merge": {
-      "syntaxError": "Merge file syntax error, changes reverted",
-      "mappingError": "Merge file mapping error, changes reverted",
-      "keyError": "Merge file key error, changes reverted",
-      "generalError": "Merge file error, changes reverted"
+    "validation": {
+      "config": {
+        "failed": "Язылу көйләү тикшерүе уңышсыз, көйләү файлын тикшерегез, үзгәрешләр кире кайтарылды, хата:",
+        "bootFailed": "Йөкләү вакытында көйләү тикшерүе уңышсыз, стандарт көйләү кулланылды, көйләү файлын тикшерегез, хата:",
+        "coreChangeFailed": "Ядро алыштырганда көйләү тикшерүе уңышсыз, стандарт көйләү кулланылды, көйләү файлын тикшерегез, хата:",
+        "processTerminated": "Тикшерү процессы туктатылды"
+      },
+      "script": {
+        "syntaxError": "Скрипт синтаксик хатасы, үзгәрешләр кире кайтарылды",
+        "missingMain": "Скрипт хатасы, үзгәрешләр кире кайтарылды",
+        "fileNotFound": "Файл табылмады, үзгәрешләр кире кайтарылды",
+        "fileError": "Скрипт файлы хатасы, үзгәрешләр кире кайтарылды"
+      },
+      "yaml": {
+        "syntaxError": "YAML syntax error, changes reverted",
+        "readError": "YAML read error, changes reverted",
+        "mappingError": "YAML mapping error, changes reverted",
+        "keyError": "YAML key error, changes reverted",
+        "generalError": "YAML error, changes reverted"
+      },
+      "merge": {
+        "syntaxError": "Merge file syntax error, changes reverted",
+        "mappingError": "Merge file mapping error, changes reverted",
+        "keyError": "Merge file key error, changes reverted",
+        "generalError": "Merge file error, changes reverted"
+      }
     }
   }
 }

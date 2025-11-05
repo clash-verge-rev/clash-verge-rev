@@ -1,10 +1,4 @@
 {
-  "common": {
-    "editorModes": {
-      "visualization": "視覺化",
-      "advanced": "進階"
-    }
-  },
   "shared": {
     "actions": {
       "cancel": "取消",
@@ -72,6 +66,10 @@
     "window": {
       "maximize": "最大化",
       "minimize": "最小化"
+    },
+    "editorModes": {
+      "visualization": "視覺化",
+      "advanced": "進階"
     }
   },
   "entities": {
@@ -1234,50 +1232,45 @@
           }
         }
       }
-    }
-  },
-  "theme": {
-    "light": "淺色",
-    "dark": "深色",
-    "system": "系統"
-  },
-  "unlock": {
-    "page": {
-      "title": "解鎖測試",
-      "actions": {
-        "testing": "測試中..."
-      },
-      "empty": "目前沒有解鎖測試項目",
-      "messages": {
-        "detectionTimeout": "檢測逾時或失敗"
+    },
+    "unlock": {
+      "page": {
+        "title": "解鎖測試",
+        "actions": {
+          "testing": "測試中..."
+        },
+        "empty": "目前沒有解鎖測試項目",
+        "messages": {
+          "detectionTimeout": "檢測逾時或失敗"
+        }
       }
-    }
-  },
-  "validation": {
-    "config": {
-      "failed": "訂閱配置校驗失敗，請檢查訂閱配置文件，變更已撤銷，錯誤詳情：",
-      "bootFailed": "啟動訂閱配置校驗失敗，已使用預設配置啟動；請檢查訂閱配置文件，錯誤詳情：",
-      "coreChangeFailed": "切換內核時配置校驗失敗，已使用預設配置啟動；請檢查訂閱配置文件，錯誤詳情：",
-      "processTerminated": "驗證程序被終止"
     },
-    "script": {
-      "syntaxError": "指令碼語法錯誤，變更已撤銷",
-      "missingMain": "指令碼錯誤，變更已撤銷",
-      "fileNotFound": "檔案遺失，變更已撤銷",
-      "fileError": "指令碼檔案錯誤，變更已撤銷"
-    },
-    "yaml": {
-      "syntaxError": "YAML 語法錯誤，變更已撤銷",
-      "readError": "YAML 讀取錯誤，變更已撤銷",
-      "mappingError": "YAML 映射錯誤，變更已撤銷",
-      "keyError": "YAML 鍵錯誤，變更已撤銷",
-      "generalError": "YAML 錯誤，變更已撤銷"
-    },
-    "merge": {
-      "syntaxError": "覆寫檔案語法錯誤，變更已撤銷",
-      "mappingError": "覆寫檔案映射錯誤，變更已撤銷",
-      "keyError": "覆寫檔案鍵錯誤，變更已撤銷",
-      "generalError": "覆寫檔案錯誤，變更已撤銷"
+    "validation": {
+      "config": {
+        "failed": "訂閱配置校驗失敗，請檢查訂閱配置文件，變更已撤銷，錯誤詳情：",
+        "bootFailed": "啟動訂閱配置校驗失敗，已使用預設配置啟動；請檢查訂閱配置文件，錯誤詳情：",
+        "coreChangeFailed": "切換內核時配置校驗失敗，已使用預設配置啟動；請檢查訂閱配置文件，錯誤詳情：",
+        "processTerminated": "驗證程序被終止"
+      },
+      "script": {
+        "syntaxError": "指令碼語法錯誤，變更已撤銷",
+        "missingMain": "指令碼錯誤，變更已撤銷",
+        "fileNotFound": "檔案遺失，變更已撤銷",
+        "fileError": "指令碼檔案錯誤，變更已撤銷"
+      },
+      "yaml": {
+        "syntaxError": "YAML 語法錯誤，變更已撤銷",
+        "readError": "YAML 讀取錯誤，變更已撤銷",
+        "mappingError": "YAML 映射錯誤，變更已撤銷",
+        "keyError": "YAML 鍵錯誤，變更已撤銷",
+        "generalError": "YAML 錯誤，變更已撤銷"
+      },
+      "merge": {
+        "syntaxError": "覆寫檔案語法錯誤，變更已撤銷",
+        "mappingError": "覆寫檔案映射錯誤，變更已撤銷",
+        "keyError": "覆寫檔案鍵錯誤，變更已撤銷",
+        "generalError": "覆寫檔案錯誤，變更已撤銷"
+      }
     }
   }
 }

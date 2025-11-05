@@ -518,8 +518,8 @@ export const RulesEditorViewer = (props: Props) => {
                 }}
               >
                 {visualization
-                  ? t("common.editorModes.advanced")
-                  : t("common.editorModes.visualization")}
+                  ? t("shared.editorModes.advanced")
+                  : t("shared.editorModes.visualization")}
               </Button>
             </Box>
           </Box>

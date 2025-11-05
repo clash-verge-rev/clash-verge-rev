@@ -1,10 +1,4 @@
 {
-  "common": {
-    "editorModes": {
-      "visualization": "Visualization",
-      "advanced": "Advanced"
-    }
-  },
   "shared": {
     "actions": {
       "cancel": "Cancel",
@@ -72,6 +66,10 @@
     "window": {
       "maximize": "Maximize",
       "minimize": "Minimize"
+    },
+    "editorModes": {
+      "visualization": "Visualization",
+      "advanced": "Advanced"
     }
   },
   "entities": {
@@ -1234,50 +1232,45 @@
           }
         }
       }
-    }
-  },
-  "theme": {
-    "light": "Light",
-    "dark": "Dark",
-    "system": "System"
-  },
-  "unlock": {
-    "page": {
-      "title": "Unlock Test",
-      "actions": {
-        "testing": "Testing..."
-      },
-      "empty": "No unlock test items",
-      "messages": {
-        "detectionTimeout": "Detection timeout or failed"
+    },
+    "unlock": {
+      "page": {
+        "title": "Unlock Test",
+        "actions": {
+          "testing": "Testing..."
+        },
+        "empty": "No unlock test items",
+        "messages": {
+          "detectionTimeout": "Detection timeout or failed"
+        }
       }
-    }
-  },
-  "validation": {
-    "config": {
-      "failed": "Subscription configuration validation failed. Please check the subscription configuration file; modifications have been rolled back.",
-      "bootFailed": "Boot subscription configuration validation failed. Started with the default configuration; please check the subscription configuration file.",
-      "coreChangeFailed": "Configuration validation failed when switching the kernel. Started with the default configuration; please check the subscription configuration file.",
-      "processTerminated": "The validation process has been terminated."
     },
-    "script": {
-      "syntaxError": "Script syntax error, changes reverted",
-      "missingMain": "Script error, changes reverted",
-      "fileNotFound": "File missing, changes reverted",
-      "fileError": "Script file error, changes reverted"
-    },
-    "yaml": {
-      "syntaxError": "YAML syntax error, changes reverted",
-      "readError": "YAML read error, changes reverted",
-      "mappingError": "YAML mapping error, changes reverted",
-      "keyError": "YAML key error, changes reverted",
-      "generalError": "YAML error, changes reverted"
-    },
-    "merge": {
-      "syntaxError": "Merge file syntax error, changes reverted",
-      "mappingError": "Merge file mapping error, changes reverted",
-      "keyError": "Merge file key error, changes reverted",
-      "generalError": "Merge file error, changes reverted"
+    "validation": {
+      "config": {
+        "failed": "Subscription configuration validation failed. Please check the subscription configuration file; modifications have been rolled back.",
+        "bootFailed": "Boot subscription configuration validation failed. Started with the default configuration; please check the subscription configuration file.",
+        "coreChangeFailed": "Configuration validation failed when switching the kernel. Started with the default configuration; please check the subscription configuration file.",
+        "processTerminated": "The validation process has been terminated."
+      },
+      "script": {
+        "syntaxError": "Script syntax error, changes reverted",
+        "missingMain": "Script error, changes reverted",
+        "fileNotFound": "File missing, changes reverted",
+        "fileError": "Script file error, changes reverted"
+      },
+      "yaml": {
+        "syntaxError": "YAML syntax error, changes reverted",
+        "readError": "YAML read error, changes reverted",
+        "mappingError": "YAML mapping error, changes reverted",
+        "keyError": "YAML key error, changes reverted",
+        "generalError": "YAML error, changes reverted"
+      },
+      "merge": {
+        "syntaxError": "Merge file syntax error, changes reverted",
+        "mappingError": "Merge file mapping error, changes reverted",
+        "keyError": "Merge file key error, changes reverted",
+        "generalError": "Merge file error, changes reverted"
+      }
     }
   }
 }

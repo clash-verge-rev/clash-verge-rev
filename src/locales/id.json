@@ -1,10 +1,4 @@
 {
-  "common": {
-    "editorModes": {
-      "visualization": "Visualisasi",
-      "advanced": "Lanjutan"
-    }
-  },
   "shared": {
     "actions": {
       "cancel": "Batal",
@@ -72,6 +66,10 @@
     "window": {
       "maximize": "Maksimalkan",
       "minimize": "Minimalkan"
+    },
+    "editorModes": {
+      "visualization": "Visualisasi",
+      "advanced": "Lanjutan"
     }
   },
   "entities": {
@@ -1234,50 +1232,45 @@
           }
         }
       }
-    }
-  },
-  "theme": {
-    "light": "Light",
-    "dark": "Dark",
-    "system": "System"
-  },
-  "unlock": {
-    "page": {
-      "title": "Unlock Test",
-      "actions": {
-        "testing": "Testing..."
-      },
-      "empty": "No unlock test items",
-      "messages": {
-        "detectionTimeout": "Detection timeout or failed"
+    },
+    "unlock": {
+      "page": {
+        "title": "Unlock Test",
+        "actions": {
+          "testing": "Testing..."
+        },
+        "empty": "No unlock test items",
+        "messages": {
+          "detectionTimeout": "Detection timeout or failed"
+        }
       }
-    }
-  },
-  "validation": {
-    "config": {
-      "failed": "Validasi konfigurasi langganan gagal, periksa file konfigurasi, perubahan dibatalkan, detail kesalahan:",
-      "bootFailed": "Validasi konfigurasi saat boot gagal, menggunakan konfigurasi default, periksa file konfigurasi, detail kesalahan:",
-      "coreChangeFailed": "Validasi konfigurasi saat ganti inti gagal, menggunakan konfigurasi default, periksa file konfigurasi, detail kesalahan:",
-      "processTerminated": "Proses validasi dihentikan"
     },
-    "script": {
-      "syntaxError": "Kesalahan sintaks skrip, perubahan dibatalkan",
-      "missingMain": "Kesalahan skrip, perubahan dibatalkan",
-      "fileNotFound": "File tidak ditemukan, perubahan dibatalkan",
-      "fileError": "Kesalahan file skrip, perubahan dibatalkan"
-    },
-    "yaml": {
-      "syntaxError": "YAML syntax error, changes reverted",
-      "readError": "YAML read error, changes reverted",
-      "mappingError": "YAML mapping error, changes reverted",
-      "keyError": "YAML key error, changes reverted",
-      "generalError": "YAML error, changes reverted"
-    },
-    "merge": {
-      "syntaxError": "Merge file syntax error, changes reverted",
-      "mappingError": "Merge file mapping error, changes reverted",
-      "keyError": "Merge file key error, changes reverted",
-      "generalError": "Merge file error, changes reverted"
+    "validation": {
+      "config": {
+        "failed": "Validasi konfigurasi langganan gagal, periksa file konfigurasi, perubahan dibatalkan, detail kesalahan:",
+        "bootFailed": "Validasi konfigurasi saat boot gagal, menggunakan konfigurasi default, periksa file konfigurasi, detail kesalahan:",
+        "coreChangeFailed": "Validasi konfigurasi saat ganti inti gagal, menggunakan konfigurasi default, periksa file konfigurasi, detail kesalahan:",
+        "processTerminated": "Proses validasi dihentikan"
+      },
+      "script": {
+        "syntaxError": "Kesalahan sintaks skrip, perubahan dibatalkan",
+        "missingMain": "Kesalahan skrip, perubahan dibatalkan",
+        "fileNotFound": "File tidak ditemukan, perubahan dibatalkan",
+        "fileError": "Kesalahan file skrip, perubahan dibatalkan"
+      },
+      "yaml": {
+        "syntaxError": "YAML syntax error, changes reverted",
+        "readError": "YAML read error, changes reverted",
+        "mappingError": "YAML mapping error, changes reverted",
+        "keyError": "YAML key error, changes reverted",
+        "generalError": "YAML error, changes reverted"
+      },
+      "merge": {
+        "syntaxError": "Merge file syntax error, changes reverted",
+        "mappingError": "Merge file mapping error, changes reverted",
+        "keyError": "Merge file key error, changes reverted",
+        "generalError": "Merge file error, changes reverted"
+      }
     }
   }
 }

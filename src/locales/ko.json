@@ -1,10 +1,4 @@
 {
-  "common": {
-    "editorModes": {
-      "visualization": "시각화",
-      "advanced": "고급"
-    }
-  },
   "shared": {
     "actions": {
       "cancel": "취소",
@@ -72,6 +66,10 @@
     "window": {
       "maximize": "최대화",
       "minimize": "최소화"
+    },
+    "editorModes": {
+      "visualization": "시각화",
+      "advanced": "고급"
     }
   },
   "entities": {
@@ -1234,50 +1232,45 @@
           }
         }
       }
-    }
-  },
-  "theme": {
-    "light": "Light",
-    "dark": "Dark",
-    "system": "System"
-  },
-  "unlock": {
-    "page": {
-      "title": "Unlock Test",
-      "actions": {
-        "testing": "테스트 중..."
-      },
-      "empty": "No unlock test items",
-      "messages": {
-        "detectionTimeout": "Detection timeout or failed"
+    },
+    "unlock": {
+      "page": {
+        "title": "Unlock Test",
+        "actions": {
+          "testing": "테스트 중..."
+        },
+        "empty": "No unlock test items",
+        "messages": {
+          "detectionTimeout": "Detection timeout or failed"
+        }
       }
-    }
-  },
-  "validation": {
-    "config": {
-      "failed": "설정 검증 실패",
-      "bootFailed": "부팅 설정 검증 실패",
-      "coreChangeFailed": "코어 변경 설정 검증 실패",
-      "processTerminated": "설정 검증 프로세스 종료됨"
     },
-    "script": {
-      "syntaxError": "스크립트 구문 오류",
-      "missingMain": "스크립트 메인 없음",
-      "fileNotFound": "파일을 찾을 수 없음",
-      "fileError": "스크립트 파일 오류"
-    },
-    "yaml": {
-      "syntaxError": "YAML 구문 오류",
-      "readError": "YAML 읽기 오류",
-      "mappingError": "YAML 매핑 오류",
-      "keyError": "YAML 키 오류",
-      "generalError": "YAML 오류"
-    },
-    "merge": {
-      "syntaxError": "병합 파일 구문 오류",
-      "mappingError": "병합 파일 매핑 오류",
-      "keyError": "병합 파일 키 오류",
-      "generalError": "병합 파일 오류"
+    "validation": {
+      "config": {
+        "failed": "설정 검증 실패",
+        "bootFailed": "부팅 설정 검증 실패",
+        "coreChangeFailed": "코어 변경 설정 검증 실패",
+        "processTerminated": "설정 검증 프로세스 종료됨"
+      },
+      "script": {
+        "syntaxError": "스크립트 구문 오류",
+        "missingMain": "스크립트 메인 없음",
+        "fileNotFound": "파일을 찾을 수 없음",
+        "fileError": "스크립트 파일 오류"
+      },
+      "yaml": {
+        "syntaxError": "YAML 구문 오류",
+        "readError": "YAML 읽기 오류",
+        "mappingError": "YAML 매핑 오류",
+        "keyError": "YAML 키 오류",
+        "generalError": "YAML 오류"
+      },
+      "merge": {
+        "syntaxError": "병합 파일 구문 오류",
+        "mappingError": "병합 파일 매핑 오류",
+        "keyError": "병합 파일 키 오류",
+        "generalError": "병합 파일 오류"
+      }
     }
   }
 }

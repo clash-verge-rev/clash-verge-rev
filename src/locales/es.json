@@ -1,10 +1,4 @@
 {
-  "common": {
-    "editorModes": {
-      "visualization": "Visualización",
-      "advanced": "Avanzado"
-    }
-  },
   "shared": {
     "actions": {
       "cancel": "Cancelar",
@@ -72,6 +66,10 @@
     "window": {
       "maximize": "Maximizar",
       "minimize": "Minimizar"
+    },
+    "editorModes": {
+      "visualization": "Visualización",
+      "advanced": "Avanzado"
     }
   },
   "entities": {
@@ -1234,50 +1232,45 @@
           }
         }
       }
-    }
-  },
-  "theme": {
-    "light": "Light",
-    "dark": "Dark",
-    "system": "System"
-  },
-  "unlock": {
-    "page": {
-      "title": "Prueba de desbloqueo",
-      "actions": {
-        "testing": "Probando..."
-      },
-      "empty": "No unlock test items",
-      "messages": {
-        "detectionTimeout": "Detection timeout or failed"
+    },
+    "unlock": {
+      "page": {
+        "title": "Prueba de desbloqueo",
+        "actions": {
+          "testing": "Probando..."
+        },
+        "empty": "No unlock test items",
+        "messages": {
+          "detectionTimeout": "Detection timeout or failed"
+        }
       }
-    }
-  },
-  "validation": {
-    "config": {
-      "failed": "Error de validación de la configuración de la suscripción. Compruebe el archivo de configuración de la suscripción. Los cambios se han deshecho. Detalles del error: ",
-      "bootFailed": "Error de validación de la configuración de la suscripción de arranque. Se ha iniciado con la configuración predeterminada. Compruebe el archivo de configuración de la suscripción. Detalles del error: ",
-      "coreChangeFailed": "Error de validación de la configuración al cambiar el núcleo. Se ha iniciado con la configuración predeterminada. Compruebe el archivo de configuración de la suscripción. Detalles del error: ",
-      "processTerminated": "Proceso de validación terminado"
     },
-    "script": {
-      "syntaxError": "Error de sintaxis en el script. Los cambios se han deshecho",
-      "missingMain": "Error en el script. Los cambios se han deshecho",
-      "fileNotFound": "Archivo no encontrado. Los cambios se han deshecho",
-      "fileError": "Error en el archivo de script. Los cambios se han deshecho"
-    },
-    "yaml": {
-      "syntaxError": "Error de sintaxis YAML. Los cambios se han deshecho",
-      "readError": "Error al leer el archivo YAML. Los cambios se han deshecho",
-      "mappingError": "Error de mapeo YAML. Los cambios se han deshecho",
-      "keyError": "Error de clave YAML. Los cambios se han deshecho",
-      "generalError": "Error YAML. Los cambios se han deshecho"
-    },
-    "merge": {
-      "syntaxError": "Error de sintaxis en el archivo de sobrescritura. Los cambios se han deshecho",
-      "mappingError": "Error de mapeo en el archivo de sobrescritura. Los cambios se han deshecho",
-      "keyError": "Error de clave en el archivo de sobrescritura. Los cambios se han deshecho",
-      "generalError": "Error en el archivo de sobrescritura. Los cambios se han deshecho"
+    "validation": {
+      "config": {
+        "failed": "Error de validación de la configuración de la suscripción. Compruebe el archivo de configuración de la suscripción. Los cambios se han deshecho. Detalles del error: ",
+        "bootFailed": "Error de validación de la configuración de la suscripción de arranque. Se ha iniciado con la configuración predeterminada. Compruebe el archivo de configuración de la suscripción. Detalles del error: ",
+        "coreChangeFailed": "Error de validación de la configuración al cambiar el núcleo. Se ha iniciado con la configuración predeterminada. Compruebe el archivo de configuración de la suscripción. Detalles del error: ",
+        "processTerminated": "Proceso de validación terminado"
+      },
+      "script": {
+        "syntaxError": "Error de sintaxis en el script. Los cambios se han deshecho",
+        "missingMain": "Error en el script. Los cambios se han deshecho",
+        "fileNotFound": "Archivo no encontrado. Los cambios se han deshecho",
+        "fileError": "Error en el archivo de script. Los cambios se han deshecho"
+      },
+      "yaml": {
+        "syntaxError": "Error de sintaxis YAML. Los cambios se han deshecho",
+        "readError": "Error al leer el archivo YAML. Los cambios se han deshecho",
+        "mappingError": "Error de mapeo YAML. Los cambios se han deshecho",
+        "keyError": "Error de clave YAML. Los cambios se han deshecho",
+        "generalError": "Error YAML. Los cambios se han deshecho"
+      },
+      "merge": {
+        "syntaxError": "Error de sintaxis en el archivo de sobrescritura. Los cambios se han deshecho",
+        "mappingError": "Error de mapeo en el archivo de sobrescritura. Los cambios se han deshecho",
+        "keyError": "Error de clave en el archivo de sobrescritura. Los cambios se han deshecho",
+        "generalError": "Error en el archivo de sobrescritura. Los cambios se han deshecho"
+      }
     }
   }
 }

@@ -1,10 +1,4 @@
 {
-  "common": {
-    "editorModes": {
-      "visualization": "可视化",
-      "advanced": "高级"
-    }
-  },
   "shared": {
     "actions": {
       "cancel": "取消",
@@ -72,6 +66,10 @@
     "window": {
       "maximize": "最大化",
       "minimize": "最小化"
+    },
+    "editorModes": {
+      "visualization": "可视化",
+      "advanced": "高级"
     }
   },
   "entities": {
@@ -1234,50 +1232,45 @@
           }
         }
       }
-    }
-  },
-  "theme": {
-    "light": "浅色",
-    "dark": "深色",
-    "system": "系统"
-  },
-  "unlock": {
-    "page": {
-      "title": "解锁测试",
-      "actions": {
-        "testing": "测试中..."
-      },
-      "empty": "暂无解锁测试项目",
-      "messages": {
-        "detectionTimeout": "检测超时或失败"
+    },
+    "unlock": {
+      "page": {
+        "title": "解锁测试",
+        "actions": {
+          "testing": "测试中..."
+        },
+        "empty": "暂无解锁测试项目",
+        "messages": {
+          "detectionTimeout": "检测超时或失败"
+        }
       }
-    }
-  },
-  "validation": {
-    "config": {
-      "failed": "订阅配置校验失败，请检查订阅配置文件，变更已撤销，错误详情：",
-      "bootFailed": "启动订阅配置校验失败，已使用默认配置启动；请检查订阅配置文件，错误详情：",
-      "coreChangeFailed": "切换内核时配置校验失败，已使用默认配置启动；请检查订阅配置文件，错误详情：",
-      "processTerminated": "验证进程被终止"
     },
-    "script": {
-      "syntaxError": "脚本语法错误，变更已撤销",
-      "missingMain": "脚本错误，变更已撤销",
-      "fileNotFound": "文件丢失，变更已撤销",
-      "fileError": "脚本文件错误，变更已撤销"
-    },
-    "yaml": {
-      "syntaxError": "YAML 语法错误，变更已撤销",
-      "readError": "YAML 读取错误，变更已撤销",
-      "mappingError": "YAML 映射错误，变更已撤销",
-      "keyError": "YAML 键错误，变更已撤销",
-      "generalError": "YAML 错误，变更已撤销"
-    },
-    "merge": {
-      "syntaxError": "覆写文件语法错误，变更已撤销",
-      "mappingError": "覆写文件映射错误，变更已撤销",
-      "keyError": "覆写文件键错误，变更已撤销",
-      "generalError": "覆写文件错误，变更已撤销"
+    "validation": {
+      "config": {
+        "failed": "订阅配置校验失败，请检查订阅配置文件，变更已撤销，错误详情：",
+        "bootFailed": "启动订阅配置校验失败，已使用默认配置启动；请检查订阅配置文件，错误详情：",
+        "coreChangeFailed": "切换内核时配置校验失败，已使用默认配置启动；请检查订阅配置文件，错误详情：",
+        "processTerminated": "验证进程被终止"
+      },
+      "script": {
+        "syntaxError": "脚本语法错误，变更已撤销",
+        "missingMain": "脚本错误，变更已撤销",
+        "fileNotFound": "文件丢失，变更已撤销",
+        "fileError": "脚本文件错误，变更已撤销"
+      },
+      "yaml": {
+        "syntaxError": "YAML 语法错误，变更已撤销",
+        "readError": "YAML 读取错误，变更已撤销",
+        "mappingError": "YAML 映射错误，变更已撤销",
+        "keyError": "YAML 键错误，变更已撤销",
+        "generalError": "YAML 错误，变更已撤销"
+      },
+      "merge": {
+        "syntaxError": "覆写文件语法错误，变更已撤销",
+        "mappingError": "覆写文件映射错误，变更已撤销",
+        "keyError": "覆写文件键错误，变更已撤销",
+        "generalError": "覆写文件错误，变更已撤销"
+      }
     }
   }
 }
