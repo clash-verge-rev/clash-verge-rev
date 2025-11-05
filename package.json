@@ -88,7 +88,7 @@
     "@types/react": "19.2.2",
     "@types/react-dom": "19.2.2",
     "@vitejs/plugin-legacy": "^7.2.1",
-    "@vitejs/plugin-react-swc": "^4.2.0",
+    "@vitejs/plugin-react-swc": "^4.2.1",
     "adm-zip": "^0.5.16",
     "cli-color": "^2.0.4",
     "commander": "^14.0.2",
@@ -115,7 +115,7 @@
     "terser": "^5.44.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.46.3",
-    "vite": "^7.1.12",
+    "vite": "^7.2.0",
     "vite-plugin-monaco-editor-esm": "^2.0.2",
     "vite-plugin-svgr": "^4.5.0",
     "vitest": "^4.0.7"
