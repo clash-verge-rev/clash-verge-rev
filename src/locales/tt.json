@@ -300,10 +300,6 @@
   },
   "proxies": {
     "page": {
-      "title": {
-        "default": "Прокси төркемнәре",
-        "chainMode": "Proxy Chain Mode"
-      },
       "modes": {
         "rule": "Rule",
         "global": "Global",
@@ -321,13 +317,6 @@
         "actions": {
           "updateAll": "Барысын да яңарту",
           "update": "Яңарту"
-        },
-        "notices": {
-          "updateSuccess": "{{name}} updated successfully",
-          "updateFailed": "Failed to update {{name}}: {{message}}",
-          "genericError": "Update failed: {{message}}",
-          "none": "No providers available to update",
-          "allUpdated": "All providers updated successfully"
         }
       },
       "rules": {
@@ -365,27 +354,45 @@
       },
       "messages": {
         "directMode": "Туры режим"
+      },
+      "header": {
+        "title": {
+          "default": "Прокси төркемнәре",
+          "chainMode": "Proxy Chain Mode"
+        }
       }
     },
-    "enums": {
-      "strategies": {
-        "select": "Проксины кулдан сайлау",
-        "url-test": "URL-тест задержкасына карап прокси сайлау",
-        "fallback": "Хата булган очракта башка проксига күчү",
-        "load-balance": "Трафикны баланслау нигезендә прокси тарату",
-        "relay": "Билгеле прокси чылбыры аша тапшыру"
-      },
-      "policies": {
-        "DIRECT": "Туры чыгу",
-        "REJECT": "Сорауларны тоткарлау",
-        "REJECT-DROP": "Сорауларны кире кагу",
-        "PASS": "Туры килсә дә, бу кагыйдәне урап узу"
+    "feedback": {
+      "notifications": {
+        "provider": {
+          "updateSuccess": "{{name}} updated successfully",
+          "updateFailed": "Failed to update {{name}}: {{message}}",
+          "genericError": "Update failed: {{message}}",
+          "none": "No providers available to update",
+          "allUpdated": "All providers updated successfully"
+        }
+      }
+    },
+    "components": {
+      "enums": {
+        "strategies": {
+          "select": "Проксины кулдан сайлау",
+          "url-test": "URL-тест задержкасына карап прокси сайлау",
+          "fallback": "Хата булган очракта башка проксига күчү",
+          "load-balance": "Трафикны баланслау нигезендә прокси тарату",
+          "relay": "Билгеле прокси чылбыры аша тапшыру"
+        },
+        "policies": {
+          "DIRECT": "Туры чыгу",
+          "REJECT": "Сорауларны тоткарлау",
+          "REJECT-DROP": "Сорауларны кире кагу",
+          "PASS": "Туры килсә дә, бу кагыйдәне урап узу"
+        }
       }
     }
   },
   "connections": {
     "page": {
-      "title": "Тоташулар",
       "summary": {
         "downloaded": "Йөкләнгән",
         "uploaded": "Чыгарылган"
@@ -396,69 +403,83 @@
         "pause": "Туктау",
         "resume": "Дәвам",
         "closeAll": "Барысын да ябу"
+      },
+      "header": {
+        "title": "Тоташулар"
       }
     },
-    "fields": {
-      "host": "Хост",
-      "downloaded": "Йөкләнгән",
-      "uploaded": "Чыгарылган",
-      "dlSpeed": "Йөкләү тизл.",
-      "ulSpeed": "Чыгару тизл.",
-      "chains": "Чылбырлар",
-      "rule": "Кагыйдә",
-      "process": "Процесс",
-      "time": "Тоташу вакыты",
-      "source": "Чыганак адресы",
-      "destination": "Максат IP-адресы",
-      "destinationPort": "Барасы порты",
-      "type": "Төр"
-    },
-    "order": {
-      "default": "Default",
-      "uploadSpeed": "Йөкләү (чыгару) тизлеге",
-      "downloadSpeed": "Йөкләү тизлеге"
-    },
-    "actions": {
-      "closeConnection": "Тоташуны ябу"
+    "components": {
+      "fields": {
+        "host": "Хост",
+        "downloaded": "Йөкләнгән",
+        "uploaded": "Чыгарылган",
+        "dlSpeed": "Йөкләү тизл.",
+        "ulSpeed": "Чыгару тизл.",
+        "chains": "Чылбырлар",
+        "rule": "Кагыйдә",
+        "process": "Процесс",
+        "time": "Тоташу вакыты",
+        "source": "Чыганак адресы",
+        "destination": "Максат IP-адресы",
+        "destinationPort": "Барасы порты",
+        "type": "Төр"
+      },
+      "order": {
+        "default": "Default",
+        "uploadSpeed": "Йөкләү (чыгару) тизлеге",
+        "downloadSpeed": "Йөкләү тизлеге"
+      },
+      "actions": {
+        "closeConnection": "Тоташуны ябу"
+      }
     }
   },
   "tests": {
-    "item": {
-      "actions": {
-        "test": "Тест"
-      }
-    },
-    "viewer": {
-      "title": {
-        "create": "Тест булдыру",
-        "edit": "Тестны үзгәртү"
-      },
-      "fields": {
-        "url": "Тест URL-ы"
-      }
-    },
     "page": {
-      "title": "Тест",
       "actions": {
         "testAll": "Барчасын тестлау"
+      },
+      "header": {
+        "title": "Тест"
       }
     },
-    "statuses": {
-      "pending": "Pending",
-      "yes": "Yes",
-      "no": "No",
-      "failed": "Failed",
-      "completed": "Completed",
-      "disallowedIsp": "Disallowed ISP",
-      "originalsOnly": "Originals Only",
-      "noDisney": "No (IP Banned By Disney+)",
-      "unsupportedRegion": "Unsupported Country/Region",
-      "failedNetwork": "Failed (Network Connection)"
+    "components": {
+      "item": {
+        "actions": {
+          "test": "Тест"
+        }
+      }
+    },
+    "modals": {
+      "test": {
+        "title": {
+          "create": "Тест булдыру",
+          "edit": "Тестны үзгәртү"
+        },
+        "fields": {
+          "url": "Тест URL-ы"
+        }
+      }
+    },
+    "feedback": {
+      "statuses": {
+        "test": {
+          "pending": "Pending",
+          "yes": "Yes",
+          "no": "No",
+          "failed": "Failed",
+          "completed": "Completed",
+          "disallowedIsp": "Disallowed ISP",
+          "originalsOnly": "Originals Only",
+          "noDisney": "No (IP Banned By Disney+)",
+          "unsupportedRegion": "Unsupported Country/Region",
+          "failedNetwork": "Failed (Network Connection)"
+        }
+      }
     }
   },
   "logs": {
     "page": {
-      "title": "Логлар",
       "actions": {
         "pause": "Туктау",
         "resume": "Дәвам",
@@ -470,20 +491,29 @@
         "info": "INFO",
         "warn": "WARN",
         "error": "ERROR"
+      },
+      "header": {
+        "title": "Логлар"
       }
     }
   },
   "rules": {
     "page": {
-      "title": "Кагыйдәләр",
       "provider": {
         "trigger": "Кагыйдә провайдеры",
         "dialogTitle": "Кагыйдә провайдеры",
         "actions": {
           "updateAll": "Барысын да яңарту",
           "update": "Яңарту"
-        },
-        "notices": {
+        }
+      },
+      "header": {
+        "title": "Кагыйдәләр"
+      }
+    },
+    "feedback": {
+      "notifications": {
+        "provider": {
           "updateSuccess": "{{name}} updated successfully",
           "updateFailed": "Failed to update {{name}}: {{message}}",
           "genericError": "Update failed: {{message}}",
@@ -492,66 +522,69 @@
         }
       }
     },
-    "editor": {
-      "title": "Кагыйдәләрне үзгәртү",
-      "form": {
-        "labels": {
-          "type": "Кагыйдә төре",
-          "content": "Кагыйдә эчтәлеге",
-          "proxyPolicy": "Прокси сәясәте"
+    "modals": {
+      "editor": {
+        "form": {
+          "labels": {
+            "type": "Кагыйдә төре",
+            "content": "Кагыйдә эчтәлеге",
+            "proxyPolicy": "Прокси сәясәте"
+          },
+          "toggles": {
+            "noResolve": "Резолвсыз"
+          },
+          "actions": {
+            "prependRule": "Кагыйдәне өскә өстәү",
+            "appendRule": "Кагыйдәне аска өстәү"
+          },
+          "validation": {
+            "conditionRequired": "Кагыйдә шарты кирәк",
+            "invalidRule": "Яраксыз кагыйдә"
+          }
         },
-        "toggles": {
-          "noResolve": "Резолвсыз"
+        "ruleTypes": {
+          "DOMAIN": "Домен исеменең тулы туры килүе",
+          "DOMAIN-SUFFIX": "Домен суффиксына туры килү",
+          "DOMAIN-KEYWORD": "Доменда төп сүзгә туры килү",
+          "DOMAIN-REGEX": "Доменны регекс аша туры китерү",
+          "GEOSITE": "Geosite исемлегендәге доменга туры килү",
+          "GEOIP": "IP-адресның ил коды буенча туры килү",
+          "SRC-GEOIP": "Чыганак IP-адресның ил коды буенча туры килү",
+          "IP-ASN": "IP-адрес ASN'ы буенча туры килү",
+          "SRC-IP-ASN": "Чыганак IP-адрес ASN'ы буенча туры килү",
+          "IP-CIDR": "IP-адреслар диапазонына туры килү",
+          "IP-CIDR6": "IPv6 адреслар диапазонына туры килү",
+          "SRC-IP-CIDR": "Чыганак IP-адреслар диапазонына туры килү",
+          "IP-SUFFIX": "IP-адрес суффиксына туры килү",
+          "SRC-IP-SUFFIX": "Чыганак IP-адрес суффиксына туры килү",
+          "SRC-PORT": "Чыганак портлар диапазонына туры килү",
+          "DST-PORT": "Максат портлар диапазонына туры килү",
+          "IN-PORT": "Керүче портка туры килү",
+          "DSCP": "DSCP тамгалавы (tproxy UDP өчен)",
+          "PROCESS-NAME": "Процесс исеменә туры килү (Android пакет исеме)",
+          "PROCESS-PATH": "Процесс юлына туры килү",
+          "PROCESS-NAME-REGEX": "Процесс исемен регекс белән туры китерү (Android пакет исеме)",
+          "PROCESS-PATH-REGEX": "Процесс юлын регекс белән туры китерү",
+          "NETWORK": "Транспорт протоколына (tcp/udp) туры килү",
+          "UID": "Linux USER ID'га туры килү",
+          "IN-TYPE": "Керүче тоташу төренә туры килү",
+          "IN-USER": "Керүче тоташу кулланучысына туры килү",
+          "IN-NAME": "Керүче тоташу исеменә туры килү",
+          "SUB-RULE": "Кушымча кагыйдә",
+          "RULE-SET": "Кагыйдәләр тупланмасына туры килү",
+          "AND": "Логик ҺӘМ",
+          "OR": "Логик ЯКИ",
+          "NOT": "Логик ТҮГЕЛ",
+          "MATCH": "Барлык сорауларга туры килә"
         },
-        "actions": {
-          "prependRule": "Кагыйдәне өскә өстәү",
-          "appendRule": "Кагыйдәне аска өстәү"
-        },
-        "validation": {
-          "conditionRequired": "Кагыйдә шарты кирәк",
-          "invalidRule": "Яраксыз кагыйдә"
+        "header": {
+          "title": "Кагыйдәләрне үзгәртү"
         }
-      },
-      "ruleTypes": {
-        "DOMAIN": "Домен исеменең тулы туры килүе",
-        "DOMAIN-SUFFIX": "Домен суффиксына туры килү",
-        "DOMAIN-KEYWORD": "Доменда төп сүзгә туры килү",
-        "DOMAIN-REGEX": "Доменны регекс аша туры китерү",
-        "GEOSITE": "Geosite исемлегендәге доменга туры килү",
-        "GEOIP": "IP-адресның ил коды буенча туры килү",
-        "SRC-GEOIP": "Чыганак IP-адресның ил коды буенча туры килү",
-        "IP-ASN": "IP-адрес ASN'ы буенча туры килү",
-        "SRC-IP-ASN": "Чыганак IP-адрес ASN'ы буенча туры килү",
-        "IP-CIDR": "IP-адреслар диапазонына туры килү",
-        "IP-CIDR6": "IPv6 адреслар диапазонына туры килү",
-        "SRC-IP-CIDR": "Чыганак IP-адреслар диапазонына туры килү",
-        "IP-SUFFIX": "IP-адрес суффиксына туры килү",
-        "SRC-IP-SUFFIX": "Чыганак IP-адрес суффиксына туры килү",
-        "SRC-PORT": "Чыганак портлар диапазонына туры килү",
-        "DST-PORT": "Максат портлар диапазонына туры килү",
-        "IN-PORT": "Керүче портка туры килү",
-        "DSCP": "DSCP тамгалавы (tproxy UDP өчен)",
-        "PROCESS-NAME": "Процесс исеменә туры килү (Android пакет исеме)",
-        "PROCESS-PATH": "Процесс юлына туры килү",
-        "PROCESS-NAME-REGEX": "Процесс исемен регекс белән туры китерү (Android пакет исеме)",
-        "PROCESS-PATH-REGEX": "Процесс юлын регекс белән туры китерү",
-        "NETWORK": "Транспорт протоколына (tcp/udp) туры килү",
-        "UID": "Linux USER ID'га туры килү",
-        "IN-TYPE": "Керүче тоташу төренә туры килү",
-        "IN-USER": "Керүче тоташу кулланучысына туры килү",
-        "IN-NAME": "Керүче тоташу исеменә туры килү",
-        "SUB-RULE": "Кушымча кагыйдә",
-        "RULE-SET": "Кагыйдәләр тупланмасына туры килү",
-        "AND": "Логик ҺӘМ",
-        "OR": "Логик ЯКИ",
-        "NOT": "Логик ТҮГЕЛ",
-        "MATCH": "Барлык сорауларга туры килә"
       }
     }
   },
   "home": {
     "page": {
-      "title": "Home",
       "tooltips": {
         "lightweightMode": "Җиңел Режим",
         "manual": "Документация",
@@ -563,7 +596,6 @@
         "proxyMode": "Proxy Mode"
       },
       "settings": {
-        "title": "Home Settings",
         "cards": {
           "profile": "Profile Card",
           "currentProxy": "Current Proxy Card",
@@ -574,10 +606,16 @@
           "ip": "IP Information Card",
           "clashInfo": "Clash Info Cards",
           "systemInfo": "System Info Cards"
+        },
+        "header": {
+          "title": "Home Settings"
         }
+      },
+      "header": {
+        "title": "Home"
       }
     },
-    "cards": {
+    "components": {
       "proxyTun": {
         "status": {
           "systemProxyEnabled": "System proxy is enabled, your applications will access the network through the proxy",
@@ -691,13 +729,15 @@
   },
   "unlock": {
     "page": {
-      "title": "Unlock Test",
       "actions": {
         "testing": "Testing..."
       },
       "empty": "No unlock test items",
       "messages": {
         "detectionTimeout": "Detection timeout or failed"
+      },
+      "header": {
+        "title": "Unlock Test"
       }
     }
   },

@@ -36,7 +36,7 @@ type OrderFunc = (list: IConnectionsItem[]) => IConnectionsItem[];
 const ORDER_OPTIONS = [
   {
     id: "default",
-    labelKey: "connections.order.default",
+    labelKey: "connections.components.order.default",
     fn: (list: IConnectionsItem[]) =>
       list.sort(
         (a, b) =>
@@ -46,13 +46,13 @@ const ORDER_OPTIONS = [
   },
   {
     id: "uploadSpeed",
-    labelKey: "connections.order.uploadSpeed",
+    labelKey: "connections.components.order.uploadSpeed",
     fn: (list: IConnectionsItem[]) =>
       list.sort((a, b) => b.curUpload! - a.curUpload!),
   },
   {
     id: "downloadSpeed",
-    labelKey: "connections.order.downloadSpeed",
+    labelKey: "connections.components.order.downloadSpeed",
     fn: (list: IConnectionsItem[]) =>
       list.sort((a, b) => b.curDownload! - a.curDownload!),
   },
@@ -150,7 +150,7 @@ const ConnectionsPage = () => {
       full
       title={
         <span style={{ whiteSpace: "nowrap" }}>
-          {t("connections.page.title")}
+          {t("connections.page.header.title")}
         </span>
       }
       contentStyle={{

@@ -300,10 +300,6 @@
   },
   "proxies": {
     "page": {
-      "title": {
-        "default": "Proxy Groups",
-        "chainMode": "Proxy Chain Mode"
-      },
       "modes": {
         "rule": "Rule",
         "global": "Global",
@@ -321,13 +317,6 @@
         "actions": {
           "updateAll": "Update All",
           "update": "Update"
-        },
-        "notices": {
-          "updateSuccess": "{{name}} updated successfully",
-          "updateFailed": "Failed to update {{name}}: {{message}}",
-          "genericError": "Update failed: {{message}}",
-          "none": "No providers available to update",
-          "allUpdated": "All providers updated successfully"
         }
       },
       "rules": {
@@ -365,27 +354,45 @@
       },
       "messages": {
         "directMode": "Direct Mode"
+      },
+      "header": {
+        "title": {
+          "default": "Proxy Groups",
+          "chainMode": "Proxy Chain Mode"
+        }
       }
     },
-    "enums": {
-      "strategies": {
-        "select": "Select proxy manually",
-        "url-test": "Select proxy based on URL test delay",
-        "fallback": "Switch to another proxy on error",
-        "load-balance": "Distribute proxy based on load balancing",
-        "relay": "Pass through the defined proxy chain"
-      },
-      "policies": {
-        "DIRECT": "Data goes directly outbound (DIRECT)",
-        "REJECT": "Intercepts requests (REJECT)",
-        "REJECT-DROP": "Discards requests (REJECT-DROP)",
-        "PASS": "Skips this rule when matched (PASS)"
+    "feedback": {
+      "notifications": {
+        "provider": {
+          "updateSuccess": "{{name}} updated successfully",
+          "updateFailed": "Failed to update {{name}}: {{message}}",
+          "genericError": "Update failed: {{message}}",
+          "none": "No providers available to update",
+          "allUpdated": "All providers updated successfully"
+        }
+      }
+    },
+    "components": {
+      "enums": {
+        "strategies": {
+          "select": "Select proxy manually",
+          "url-test": "Select proxy based on URL test delay",
+          "fallback": "Switch to another proxy on error",
+          "load-balance": "Distribute proxy based on load balancing",
+          "relay": "Pass through the defined proxy chain"
+        },
+        "policies": {
+          "DIRECT": "Data goes directly outbound (DIRECT)",
+          "REJECT": "Intercepts requests (REJECT)",
+          "REJECT-DROP": "Discards requests (REJECT-DROP)",
+          "PASS": "Skips this rule when matched (PASS)"
+        }
       }
     }
   },
   "connections": {
     "page": {
-      "title": "Connections",
       "summary": {
         "downloaded": "Downloaded",
         "uploaded": "Uploaded"
@@ -396,69 +403,83 @@
         "pause": "Pause",
         "resume": "Resume",
         "closeAll": "Close All"
+      },
+      "header": {
+        "title": "Connections"
       }
     },
-    "fields": {
-      "host": "Host",
-      "downloaded": "Downloaded",
-      "uploaded": "Uploaded",
-      "dlSpeed": "DL Speed",
-      "ulSpeed": "UL Speed",
-      "chains": "Chains",
-      "rule": "Rule",
-      "process": "Process",
-      "time": "Time",
-      "source": "Source",
-      "destination": "Destination",
-      "destinationPort": "Destination Port",
-      "type": "Type"
-    },
-    "order": {
-      "default": "Default",
-      "uploadSpeed": "Upload Speed",
-      "downloadSpeed": "Download Speed"
-    },
-    "actions": {
-      "closeConnection": "Close Connection"
+    "components": {
+      "fields": {
+        "host": "Host",
+        "downloaded": "Downloaded",
+        "uploaded": "Uploaded",
+        "dlSpeed": "DL Speed",
+        "ulSpeed": "UL Speed",
+        "chains": "Chains",
+        "rule": "Rule",
+        "process": "Process",
+        "time": "Time",
+        "source": "Source",
+        "destination": "Destination",
+        "destinationPort": "Destination Port",
+        "type": "Type"
+      },
+      "order": {
+        "default": "Default",
+        "uploadSpeed": "Upload Speed",
+        "downloadSpeed": "Download Speed"
+      },
+      "actions": {
+        "closeConnection": "Close Connection"
+      }
     }
   },
   "tests": {
-    "item": {
-      "actions": {
-        "test": "Test"
-      }
-    },
-    "viewer": {
-      "title": {
-        "create": "Create Test",
-        "edit": "Edit Test"
-      },
-      "fields": {
-        "url": "Test URL"
-      }
-    },
     "page": {
-      "title": "Test",
       "actions": {
         "testAll": "Test All"
+      },
+      "header": {
+        "title": "Test"
       }
     },
-    "statuses": {
-      "pending": "Pending",
-      "yes": "Yes",
-      "no": "No",
-      "failed": "Failed",
-      "completed": "Completed",
-      "disallowedIsp": "Disallowed ISP",
-      "originalsOnly": "Originals Only",
-      "noDisney": "No (IP Banned By Disney+)",
-      "unsupportedRegion": "Unsupported Country/Region",
-      "failedNetwork": "Failed (Network Connection)"
+    "components": {
+      "item": {
+        "actions": {
+          "test": "Test"
+        }
+      }
+    },
+    "modals": {
+      "test": {
+        "title": {
+          "create": "Create Test",
+          "edit": "Edit Test"
+        },
+        "fields": {
+          "url": "Test URL"
+        }
+      }
+    },
+    "feedback": {
+      "statuses": {
+        "test": {
+          "pending": "Pending",
+          "yes": "Yes",
+          "no": "No",
+          "failed": "Failed",
+          "completed": "Completed",
+          "disallowedIsp": "Disallowed ISP",
+          "originalsOnly": "Originals Only",
+          "noDisney": "No (IP Banned By Disney+)",
+          "unsupportedRegion": "Unsupported Country/Region",
+          "failedNetwork": "Failed (Network Connection)"
+        }
+      }
     }
   },
   "logs": {
     "page": {
-      "title": "Logs",
       "actions": {
         "pause": "Pause",
         "resume": "Resume",
@@ -470,20 +491,29 @@
         "info": "INFO",
         "warn": "WARN",
         "error": "ERROR"
+      },
+      "header": {
+        "title": "Logs"
       }
     }
   },
   "rules": {
     "page": {
-      "title": "Rules",
       "provider": {
         "trigger": "Rule Provider",
         "dialogTitle": "Rule Providers",
         "actions": {
           "updateAll": "Update All",
           "update": "Update"
-        },
-        "notices": {
+        }
+      },
+      "header": {
+        "title": "Rules"
+      }
+    },
+    "feedback": {
+      "notifications": {
+        "provider": {
           "updateSuccess": "{{name}} updated successfully",
           "updateFailed": "Failed to update {{name}}: {{message}}",
           "genericError": "Update failed: {{message}}",
@@ -492,66 +522,69 @@
         }
       }
     },
-    "editor": {
-      "title": "Edit Rules",
-      "form": {
-        "labels": {
-          "type": "Rule Type",
-          "content": "Rule Content",
-          "proxyPolicy": "Proxy Policy"
+    "modals": {
+      "editor": {
+        "form": {
+          "labels": {
+            "type": "Rule Type",
+            "content": "Rule Content",
+            "proxyPolicy": "Proxy Policy"
+          },
+          "toggles": {
+            "noResolve": "No Resolve"
+          },
+          "actions": {
+            "prependRule": "Prepend Rule",
+            "appendRule": "Append Rule"
+          },
+          "validation": {
+            "conditionRequired": "Rule Condition Required",
+            "invalidRule": "Invalid Rule"
+          }
         },
-        "toggles": {
-          "noResolve": "No Resolve"
+        "ruleTypes": {
+          "DOMAIN": "Match full domain (DOMAIN)",
+          "DOMAIN-SUFFIX": "Match domain suffix (DOMAIN-SUFFIX)",
+          "DOMAIN-KEYWORD": "Match domain keyword (DOMAIN-KEYWORD)",
+          "DOMAIN-REGEX": "Match domain using regex (DOMAIN-REGEX)",
+          "GEOSITE": "Match domains in Geosite (GEOSITE)",
+          "GEOIP": "Match IP country code (GEOIP)",
+          "SRC-GEOIP": "Match source IP country code (SRC-GEOIP)",
+          "IP-ASN": "Match IP ASN (IP-ASN)",
+          "SRC-IP-ASN": "Match source IP ASN (SRC-IP-ASN)",
+          "IP-CIDR": "Match IP address range (IP-CIDR)",
+          "IP-CIDR6": "Match IPv6 address range (IP-CIDR6)",
+          "SRC-IP-CIDR": "Match source IP address range (SRC-IP-CIDR)",
+          "IP-SUFFIX": "Match IP suffix range (IP-SUFFIX)",
+          "SRC-IP-SUFFIX": "Match source IP suffix range (SRC-IP-SUFFIX)",
+          "SRC-PORT": "Match source port range (SRC-PORT)",
+          "DST-PORT": "Match destination port range (DST-PORT)",
+          "IN-PORT": "Match inbound port (IN-PORT)",
+          "DSCP": "DSCP tag (TPROXY UDP inbound only) (DSCP)",
+          "PROCESS-NAME": "Match process name (PROCESS-NAME)",
+          "PROCESS-PATH": "Match full process path (PROCESS-PATH)",
+          "PROCESS-NAME-REGEX": "Match process name using regex (PROCESS-NAME-REGEX)",
+          "PROCESS-PATH-REGEX": "Match full process path using regex (PROCESS-PATH-REGEX)",
+          "NETWORK": "Match network protocol (TCP/UDP) (NETWORK)",
+          "UID": "Match Linux user ID (UID)",
+          "IN-TYPE": "Match inbound type (IN-TYPE)",
+          "IN-USER": "Match inbound username (IN-USER)",
+          "IN-NAME": "Match inbound name (IN-NAME)",
+          "SUB-RULE": "Sub-rule (SUB-RULE)",
+          "RULE-SET": "Match rule set (RULE-SET)",
+          "AND": "Logical AND (AND)",
+          "OR": "Logical OR (OR)",
+          "NOT": "Logical NOT (NOT)",
+          "MATCH": "Match all requests (MATCH)"
         },
-        "actions": {
-          "prependRule": "Prepend Rule",
-          "appendRule": "Append Rule"
-        },
-        "validation": {
-          "conditionRequired": "Rule Condition Required",
-          "invalidRule": "Invalid Rule"
+        "header": {
+          "title": "Edit Rules"
         }
-      },
-      "ruleTypes": {
-        "DOMAIN": "Match full domain (DOMAIN)",
-        "DOMAIN-SUFFIX": "Match domain suffix (DOMAIN-SUFFIX)",
-        "DOMAIN-KEYWORD": "Match domain keyword (DOMAIN-KEYWORD)",
-        "DOMAIN-REGEX": "Match domain using regex (DOMAIN-REGEX)",
-        "GEOSITE": "Match domains in Geosite (GEOSITE)",
-        "GEOIP": "Match IP country code (GEOIP)",
-        "SRC-GEOIP": "Match source IP country code (SRC-GEOIP)",
-        "IP-ASN": "Match IP ASN (IP-ASN)",
-        "SRC-IP-ASN": "Match source IP ASN (SRC-IP-ASN)",
-        "IP-CIDR": "Match IP address range (IP-CIDR)",
-        "IP-CIDR6": "Match IPv6 address range (IP-CIDR6)",
-        "SRC-IP-CIDR": "Match source IP address range (SRC-IP-CIDR)",
-        "IP-SUFFIX": "Match IP suffix range (IP-SUFFIX)",
-        "SRC-IP-SUFFIX": "Match source IP suffix range (SRC-IP-SUFFIX)",
-        "SRC-PORT": "Match source port range (SRC-PORT)",
-        "DST-PORT": "Match destination port range (DST-PORT)",
-        "IN-PORT": "Match inbound port (IN-PORT)",
-        "DSCP": "DSCP tag (TPROXY UDP inbound only) (DSCP)",
-        "PROCESS-NAME": "Match process name (PROCESS-NAME)",
-        "PROCESS-PATH": "Match full process path (PROCESS-PATH)",
-        "PROCESS-NAME-REGEX": "Match process name using regex (PROCESS-NAME-REGEX)",
-        "PROCESS-PATH-REGEX": "Match full process path using regex (PROCESS-PATH-REGEX)",
-        "NETWORK": "Match network protocol (TCP/UDP) (NETWORK)",
-        "UID": "Match Linux user ID (UID)",
-        "IN-TYPE": "Match inbound type (IN-TYPE)",
-        "IN-USER": "Match inbound username (IN-USER)",
-        "IN-NAME": "Match inbound name (IN-NAME)",
-        "SUB-RULE": "Sub-rule (SUB-RULE)",
-        "RULE-SET": "Match rule set (RULE-SET)",
-        "AND": "Logical AND (AND)",
-        "OR": "Logical OR (OR)",
-        "NOT": "Logical NOT (NOT)",
-        "MATCH": "Match all requests (MATCH)"
       }
     }
   },
   "home": {
     "page": {
-      "title": "Home",
       "tooltips": {
         "lightweightMode": "Lightweight Mode",
         "manual": "Manual",
@@ -563,7 +596,6 @@
         "proxyMode": "Proxy Mode"
       },
       "settings": {
-        "title": "Home Settings",
         "cards": {
           "profile": "Profile Card",
           "currentProxy": "Current Proxy Card",
@@ -574,10 +606,16 @@
           "ip": "IP Information Card",
           "clashInfo": "Clash Info Cards",
           "systemInfo": "System Info Cards"
+        },
+        "header": {
+          "title": "Home Settings"
         }
+      },
+      "header": {
+        "title": "Home"
       }
     },
-    "cards": {
+    "components": {
       "proxyTun": {
         "status": {
           "systemProxyEnabled": "System Proxy Enabled",
@@ -691,13 +729,15 @@
   },
   "unlock": {
     "page": {
-      "title": "Unlock Test",
       "actions": {
         "testing": "Testing..."
       },
       "empty": "No unlock test items",
       "messages": {
         "detectionTimeout": "Detection timeout or failed"
+      },
+      "header": {
+        "title": "Unlock Test"
       }
     }
   },

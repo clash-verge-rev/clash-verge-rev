@@ -300,10 +300,6 @@
   },
   "proxies": {
     "page": {
-      "title": {
-        "default": "گروه‌های پراکسی",
-        "chainMode": "Proxy Chain Mode"
-      },
       "modes": {
         "rule": "Rule",
         "global": "Global",
@@ -321,13 +317,6 @@
         "actions": {
           "updateAll": "به‌روزرسانی همه",
           "update": "به‌روزرسانی"
-        },
-        "notices": {
-          "updateSuccess": "{{name}} updated successfully",
-          "updateFailed": "Failed to update {{name}}: {{message}}",
-          "genericError": "Update failed: {{message}}",
-          "none": "No providers available to update",
-          "allUpdated": "All providers updated successfully"
         }
       },
       "rules": {
@@ -365,27 +354,45 @@
       },
       "messages": {
         "directMode": "حالت مستقیم"
+      },
+      "header": {
+        "title": {
+          "default": "گروه‌های پراکسی",
+          "chainMode": "Proxy Chain Mode"
+        }
       }
     },
-    "enums": {
-      "strategies": {
-        "select": "انتخاب پروکسی به صورت دستی",
-        "url-test": "انتخاب پروکسی بر اساس تأخیر آزمایش URL",
-        "fallback": "تعویض به پروکسی دیگر در صورت بروز خطا",
-        "load-balance": "توزیع پراکسی بر اساس توازن بار",
-        "relay": "عبور از زنجیره پروکسی تعریف شده"
-      },
-      "policies": {
-        "DIRECT": "داده‌ها به صورت مستقیم خروجی می‌شوند",
-        "REJECT": "درخواست‌ها را متوقف می‌کند",
-        "REJECT-DROP": "درخواست‌ها را نادیده می‌گیرد",
-        "PASS": "این قانون را در صورت تطابق نادیده می‌گیرد"
+    "feedback": {
+      "notifications": {
+        "provider": {
+          "updateSuccess": "{{name}} updated successfully",
+          "updateFailed": "Failed to update {{name}}: {{message}}",
+          "genericError": "Update failed: {{message}}",
+          "none": "No providers available to update",
+          "allUpdated": "All providers updated successfully"
+        }
+      }
+    },
+    "components": {
+      "enums": {
+        "strategies": {
+          "select": "انتخاب پروکسی به صورت دستی",
+          "url-test": "انتخاب پروکسی بر اساس تأخیر آزمایش URL",
+          "fallback": "تعویض به پروکسی دیگر در صورت بروز خطا",
+          "load-balance": "توزیع پراکسی بر اساس توازن بار",
+          "relay": "عبور از زنجیره پروکسی تعریف شده"
+        },
+        "policies": {
+          "DIRECT": "داده‌ها به صورت مستقیم خروجی می‌شوند",
+          "REJECT": "درخواست‌ها را متوقف می‌کند",
+          "REJECT-DROP": "درخواست‌ها را نادیده می‌گیرد",
+          "PASS": "این قانون را در صورت تطابق نادیده می‌گیرد"
+        }
       }
     }
   },
   "connections": {
     "page": {
-      "title": "اتصالات",
       "summary": {
         "downloaded": "دانلود شده",
         "uploaded": "بارگذاری شده"
@@ -396,69 +403,83 @@
         "pause": "توقف",
         "resume": "از سرگیری",
         "closeAll": "بستن همه"
+      },
+      "header": {
+        "title": "اتصالات"
       }
     },
-    "fields": {
-      "host": "میزبان",
-      "downloaded": "دانلود شده",
-      "uploaded": "بارگذاری شده",
-      "dlSpeed": "سرعت دانلود",
-      "ulSpeed": "سرعت بارگذاری",
-      "chains": "زنجیره‌ها",
-      "rule": "قانون",
-      "process": "فرآیند",
-      "time": "زمان",
-      "source": "منبع",
-      "destination": "آدرس IP مقصد",
-      "destinationPort": "بندر هدف",
-      "type": "نوع"
-    },
-    "order": {
-      "default": "Default",
-      "uploadSpeed": "سرعت بارگذاری",
-      "downloadSpeed": "سرعت دانلود"
-    },
-    "actions": {
-      "closeConnection": "بستن اتصال"
+    "components": {
+      "fields": {
+        "host": "میزبان",
+        "downloaded": "دانلود شده",
+        "uploaded": "بارگذاری شده",
+        "dlSpeed": "سرعت دانلود",
+        "ulSpeed": "سرعت بارگذاری",
+        "chains": "زنجیره‌ها",
+        "rule": "قانون",
+        "process": "فرآیند",
+        "time": "زمان",
+        "source": "منبع",
+        "destination": "آدرس IP مقصد",
+        "destinationPort": "بندر هدف",
+        "type": "نوع"
+      },
+      "order": {
+        "default": "Default",
+        "uploadSpeed": "سرعت بارگذاری",
+        "downloadSpeed": "سرعت دانلود"
+      },
+      "actions": {
+        "closeConnection": "بستن اتصال"
+      }
     }
   },
   "tests": {
-    "item": {
-      "actions": {
-        "test": "آزمون"
-      }
-    },
-    "viewer": {
-      "title": {
-        "create": "ایجاد آزمون",
-        "edit": "ویرایش آزمون"
-      },
-      "fields": {
-        "url": "آدرس آزمون"
-      }
-    },
     "page": {
-      "title": "آزمون",
       "actions": {
         "testAll": "آزمون همه"
+      },
+      "header": {
+        "title": "آزمون"
       }
     },
-    "statuses": {
-      "pending": "Pending",
-      "yes": "Yes",
-      "no": "No",
-      "failed": "Failed",
-      "completed": "Completed",
-      "disallowedIsp": "Disallowed ISP",
-      "originalsOnly": "Originals Only",
-      "noDisney": "No (IP Banned By Disney+)",
-      "unsupportedRegion": "Unsupported Country/Region",
-      "failedNetwork": "Failed (Network Connection)"
+    "components": {
+      "item": {
+        "actions": {
+          "test": "آزمون"
+        }
+      }
+    },
+    "modals": {
+      "test": {
+        "title": {
+          "create": "ایجاد آزمون",
+          "edit": "ویرایش آزمون"
+        },
+        "fields": {
+          "url": "آدرس آزمون"
+        }
+      }
+    },
+    "feedback": {
+      "statuses": {
+        "test": {
+          "pending": "Pending",
+          "yes": "Yes",
+          "no": "No",
+          "failed": "Failed",
+          "completed": "Completed",
+          "disallowedIsp": "Disallowed ISP",
+          "originalsOnly": "Originals Only",
+          "noDisney": "No (IP Banned By Disney+)",
+          "unsupportedRegion": "Unsupported Country/Region",
+          "failedNetwork": "Failed (Network Connection)"
+        }
+      }
     }
   },
   "logs": {
     "page": {
-      "title": "لاگ‌ها",
       "actions": {
         "pause": "توقف",
         "resume": "از سرگیری",
@@ -470,20 +491,29 @@
         "info": "INFO",
         "warn": "WARN",
         "error": "ERROR"
+      },
+      "header": {
+        "title": "لاگ‌ها"
       }
     }
   },
   "rules": {
     "page": {
-      "title": "قوانین",
       "provider": {
         "trigger": "تأمین‌کننده قانون",
         "dialogTitle": "تأمین‌کننده قانون",
         "actions": {
           "updateAll": "به‌روزرسانی همه",
           "update": "به‌روزرسانی"
-        },
-        "notices": {
+        }
+      },
+      "header": {
+        "title": "قوانین"
+      }
+    },
+    "feedback": {
+      "notifications": {
+        "provider": {
           "updateSuccess": "{{name}} updated successfully",
           "updateFailed": "Failed to update {{name}}: {{message}}",
           "genericError": "Update failed: {{message}}",
@@ -492,66 +522,69 @@
         }
       }
     },
-    "editor": {
-      "title": "ویرایش قوانین",
-      "form": {
-        "labels": {
-          "type": "نوع قانون",
-          "content": "محتوای قانون",
-          "proxyPolicy": "سیاست پروکسی"
+    "modals": {
+      "editor": {
+        "form": {
+          "labels": {
+            "type": "نوع قانون",
+            "content": "محتوای قانون",
+            "proxyPolicy": "سیاست پروکسی"
+          },
+          "toggles": {
+            "noResolve": "بدون حل"
+          },
+          "actions": {
+            "prependRule": "اضافه کردن قانون به ابتدا",
+            "appendRule": "اضافه کردن قانون به انتها"
+          },
+          "validation": {
+            "conditionRequired": "شرط قانون الزامی است",
+            "invalidRule": "قانون نامعتبر"
+          }
         },
-        "toggles": {
-          "noResolve": "بدون حل"
+        "ruleTypes": {
+          "DOMAIN": "مطابقت با نام کامل دامنه",
+          "DOMAIN-SUFFIX": "مطابقت با پسوند دامنه",
+          "DOMAIN-KEYWORD": "مطابقت با کلمه کلیدی دامنه",
+          "DOMAIN-REGEX": "مطابقت با دامنه با استفاده از عبارات منظم",
+          "GEOSITE": "مطابقت با دامنه‌های درون Geosite",
+          "GEOIP": "مطابقت با کد کشور IP",
+          "SRC-GEOIP": "مطابقت با کد کشور IP مبدا",
+          "IP-ASN": "مطابقت با ASN آدرس IP",
+          "SRC-IP-ASN": "مطابقت با ASN آدرس IP مبدا",
+          "IP-CIDR": "مطابقت با محدوده آدرس IP",
+          "IP-CIDR6": "مطابقت با محدوده آدرس IPv6",
+          "SRC-IP-CIDR": "مطابقت با محدوده آدرس IP مبدا",
+          "IP-SUFFIX": "مطابقت با محدوده پسوند آدرس IP",
+          "SRC-IP-SUFFIX": "مطابقت با محدوده پسوند آدرس IP مبدا",
+          "SRC-PORT": "مطابقت با محدوده پورت مبدا",
+          "DST-PORT": "مطابقت با محدوده پورت مقصد",
+          "IN-PORT": "مطابقت با پورت ورودی",
+          "DSCP": "علامت‌گذاری DSCP (فقط برای tproxy UDP ورودی)",
+          "PROCESS-NAME": "مطابقت با نام فرآیند (نام بسته Android)",
+          "PROCESS-PATH": "مطابقت با مسیر کامل فرآیند",
+          "PROCESS-NAME-REGEX": "مطابقت با نام فرآیند با استفاده از عبارات منظم (نام بسته Android)",
+          "PROCESS-PATH-REGEX": "مطابقت با مسیر کامل فرآیند با استفاده از عبارات منظم",
+          "NETWORK": "مطابقت با پروتکل انتقال (tcp/udp)",
+          "UID": "مطابقت با شناسه کاربری Linux",
+          "IN-TYPE": "مطابقت با نوع ورودی",
+          "IN-USER": "مطابقت با نام کاربری ورودی",
+          "IN-NAME": "مطابقت با نام ورودی",
+          "SUB-RULE": "قانون فرعی",
+          "RULE-SET": "مطابقت با مجموعه قوانین",
+          "AND": "منطق AND",
+          "OR": "منطق OR",
+          "NOT": "منطق NOT",
+          "MATCH": "مطابقت با تمام درخواست‌ها"
         },
-        "actions": {
-          "prependRule": "اضافه کردن قانون به ابتدا",
-          "appendRule": "اضافه کردن قانون به انتها"
-        },
-        "validation": {
-          "conditionRequired": "شرط قانون الزامی است",
-          "invalidRule": "قانون نامعتبر"
+        "header": {
+          "title": "ویرایش قوانین"
         }
-      },
-      "ruleTypes": {
-        "DOMAIN": "مطابقت با نام کامل دامنه",
-        "DOMAIN-SUFFIX": "مطابقت با پسوند دامنه",
-        "DOMAIN-KEYWORD": "مطابقت با کلمه کلیدی دامنه",
-        "DOMAIN-REGEX": "مطابقت با دامنه با استفاده از عبارات منظم",
-        "GEOSITE": "مطابقت با دامنه‌های درون Geosite",
-        "GEOIP": "مطابقت با کد کشور IP",
-        "SRC-GEOIP": "مطابقت با کد کشور IP مبدا",
-        "IP-ASN": "مطابقت با ASN آدرس IP",
-        "SRC-IP-ASN": "مطابقت با ASN آدرس IP مبدا",
-        "IP-CIDR": "مطابقت با محدوده آدرس IP",
-        "IP-CIDR6": "مطابقت با محدوده آدرس IPv6",
-        "SRC-IP-CIDR": "مطابقت با محدوده آدرس IP مبدا",
-        "IP-SUFFIX": "مطابقت با محدوده پسوند آدرس IP",
-        "SRC-IP-SUFFIX": "مطابقت با محدوده پسوند آدرس IP مبدا",
-        "SRC-PORT": "مطابقت با محدوده پورت مبدا",
-        "DST-PORT": "مطابقت با محدوده پورت مقصد",
-        "IN-PORT": "مطابقت با پورت ورودی",
-        "DSCP": "علامت‌گذاری DSCP (فقط برای tproxy UDP ورودی)",
-        "PROCESS-NAME": "مطابقت با نام فرآیند (نام بسته Android)",
-        "PROCESS-PATH": "مطابقت با مسیر کامل فرآیند",
-        "PROCESS-NAME-REGEX": "مطابقت با نام فرآیند با استفاده از عبارات منظم (نام بسته Android)",
-        "PROCESS-PATH-REGEX": "مطابقت با مسیر کامل فرآیند با استفاده از عبارات منظم",
-        "NETWORK": "مطابقت با پروتکل انتقال (tcp/udp)",
-        "UID": "مطابقت با شناسه کاربری Linux",
-        "IN-TYPE": "مطابقت با نوع ورودی",
-        "IN-USER": "مطابقت با نام کاربری ورودی",
-        "IN-NAME": "مطابقت با نام ورودی",
-        "SUB-RULE": "قانون فرعی",
-        "RULE-SET": "مطابقت با مجموعه قوانین",
-        "AND": "منطق AND",
-        "OR": "منطق OR",
-        "NOT": "منطق NOT",
-        "MATCH": "مطابقت با تمام درخواست‌ها"
       }
     }
   },
   "home": {
     "page": {
-      "title": "Home",
       "tooltips": {
         "lightweightMode": "در فارسی",
         "manual": "راهنما",
@@ -563,7 +596,6 @@
         "proxyMode": "Proxy Mode"
       },
       "settings": {
-        "title": "Home Settings",
         "cards": {
           "profile": "Profile Card",
           "currentProxy": "Current Proxy Card",
@@ -574,10 +606,16 @@
           "ip": "IP Information Card",
           "clashInfo": "Clash Info Cards",
           "systemInfo": "System Info Cards"
+        },
+        "header": {
+          "title": "Home Settings"
         }
+      },
+      "header": {
+        "title": "Home"
       }
     },
-    "cards": {
+    "components": {
       "proxyTun": {
         "status": {
           "systemProxyEnabled": "System proxy is enabled, your applications will access the network through the proxy",
@@ -691,13 +729,15 @@
   },
   "unlock": {
     "page": {
-      "title": "Unlock Test",
       "actions": {
         "testing": "Testing..."
       },
       "empty": "No unlock test items",
       "messages": {
         "detectionTimeout": "Detection timeout or failed"
+      },
+      "header": {
+        "title": "Unlock Test"
       }
     }
   },

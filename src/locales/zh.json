@@ -300,10 +300,6 @@
   },
   "proxies": {
     "page": {
-      "title": {
-        "default": "代理组",
-        "chainMode": "链式代理模式"
-      },
       "modes": {
         "rule": "规则",
         "global": "全局",
@@ -321,13 +317,6 @@
         "actions": {
           "updateAll": "更新全部",
           "update": "更新"
-        },
-        "notices": {
-          "updateSuccess": "{{name}} 更新成功",
-          "updateFailed": "{{name}} 更新失败: {{message}}",
-          "genericError": "更新失败: {{message}}",
-          "none": "没有可更新的 provider",
-          "allUpdated": "所有 provider 均已更新"
         }
       },
       "rules": {
@@ -365,27 +354,45 @@
       },
       "messages": {
         "directMode": "直连模式"
+      },
+      "header": {
+        "title": {
+          "default": "代理组",
+          "chainMode": "链式代理模式"
+        }
       }
     },
-    "enums": {
-      "strategies": {
-        "select": "手动选择代理",
-        "url-test": "根据 URL 测试延迟选择代理",
-        "fallback": "不可用时切换到另一个代理",
-        "load-balance": "根据负载均衡分配代理",
-        "relay": "根据定义的代理链传递"
-      },
-      "policies": {
-        "DIRECT": "直连 (DIRECT)",
-        "REJECT": "拦截请求 (REJECT)",
-        "REJECT-DROP": "抛弃请求 (REJECT-DROP)",
-        "PASS": "跳过此规则 (PASS)"
+    "feedback": {
+      "notifications": {
+        "provider": {
+          "updateSuccess": "{{name}} 更新成功",
+          "updateFailed": "{{name}} 更新失败: {{message}}",
+          "genericError": "更新失败: {{message}}",
+          "none": "没有可更新的 provider",
+          "allUpdated": "所有 provider 均已更新"
+        }
+      }
+    },
+    "components": {
+      "enums": {
+        "strategies": {
+          "select": "手动选择代理",
+          "url-test": "根据 URL 测试延迟选择代理",
+          "fallback": "不可用时切换到另一个代理",
+          "load-balance": "根据负载均衡分配代理",
+          "relay": "根据定义的代理链传递"
+        },
+        "policies": {
+          "DIRECT": "直连 (DIRECT)",
+          "REJECT": "拦截请求 (REJECT)",
+          "REJECT-DROP": "抛弃请求 (REJECT-DROP)",
+          "PASS": "跳过此规则 (PASS)"
+        }
       }
     }
   },
   "connections": {
     "page": {
-      "title": "连接",
       "summary": {
         "downloaded": "下载量",
         "uploaded": "上传量"
@@ -396,69 +403,83 @@
         "pause": "暂停",
         "resume": "继续",
         "closeAll": "关闭全部"
+      },
+      "header": {
+        "title": "连接"
       }
     },
-    "fields": {
-      "host": "主机",
-      "downloaded": "下载量",
-      "uploaded": "上传量",
-      "dlSpeed": "下载速度",
-      "ulSpeed": "上传速度",
-      "chains": "链路",
-      "rule": "规则",
-      "process": "进程",
-      "time": "连接时间",
-      "source": "源地址",
-      "destination": "目标地址",
-      "destinationPort": "目标端口",
-      "type": "类型"
-    },
-    "order": {
-      "default": "默认",
-      "uploadSpeed": "上传速度",
-      "downloadSpeed": "下载速度"
-    },
-    "actions": {
-      "closeConnection": "关闭连接"
+    "components": {
+      "fields": {
+        "host": "主机",
+        "downloaded": "下载量",
+        "uploaded": "上传量",
+        "dlSpeed": "下载速度",
+        "ulSpeed": "上传速度",
+        "chains": "链路",
+        "rule": "规则",
+        "process": "进程",
+        "time": "连接时间",
+        "source": "源地址",
+        "destination": "目标地址",
+        "destinationPort": "目标端口",
+        "type": "类型"
+      },
+      "order": {
+        "default": "默认",
+        "uploadSpeed": "上传速度",
+        "downloadSpeed": "下载速度"
+      },
+      "actions": {
+        "closeConnection": "关闭连接"
+      }
     }
   },
   "tests": {
-    "item": {
-      "actions": {
-        "test": "测试"
-      }
-    },
-    "viewer": {
-      "title": {
-        "create": "新建测试",
-        "edit": "编辑测试"
-      },
-      "fields": {
-        "url": "测试地址"
-      }
-    },
     "page": {
-      "title": "测试",
       "actions": {
         "testAll": "测试全部"
+      },
+      "header": {
+        "title": "测试"
       }
     },
-    "statuses": {
-      "pending": "待检测",
-      "yes": "支持",
-      "no": "不支持",
-      "failed": "测试失败",
-      "completed": "检测完成",
-      "disallowedIsp": "不允许的 ISP",
-      "originalsOnly": "仅限原创",
-      "noDisney": "不支持（IP被Disney+禁止）",
-      "unsupportedRegion": "不支持的国家/地区",
-      "failedNetwork": "测试失败（网络连接问题）"
+    "components": {
+      "item": {
+        "actions": {
+          "test": "测试"
+        }
+      }
+    },
+    "modals": {
+      "test": {
+        "title": {
+          "create": "新建测试",
+          "edit": "编辑测试"
+        },
+        "fields": {
+          "url": "测试地址"
+        }
+      }
+    },
+    "feedback": {
+      "statuses": {
+        "test": {
+          "pending": "待检测",
+          "yes": "支持",
+          "no": "不支持",
+          "failed": "测试失败",
+          "completed": "检测完成",
+          "disallowedIsp": "不允许的 ISP",
+          "originalsOnly": "仅限原创",
+          "noDisney": "不支持（IP被Disney+禁止）",
+          "unsupportedRegion": "不支持的国家/地区",
+          "failedNetwork": "测试失败（网络连接问题）"
+        }
+      }
     }
   },
   "logs": {
     "page": {
-      "title": "日志",
       "actions": {
         "pause": "暂停",
         "resume": "继续",
@@ -470,20 +491,29 @@
         "info": "INFO",
         "warn": "WARN",
         "error": "ERROR"
+      },
+      "header": {
+        "title": "日志"
       }
     }
   },
   "rules": {
     "page": {
-      "title": "规则",
       "provider": {
         "trigger": "规则集合",
         "dialogTitle": "规则集合",
         "actions": {
           "updateAll": "更新全部",
           "update": "更新"
-        },
-        "notices": {
+        }
+      },
+      "header": {
+        "title": "规则"
+      }
+    },
+    "feedback": {
+      "notifications": {
+        "provider": {
           "updateSuccess": "{{name}} 更新成功",
           "updateFailed": "{{name}} 更新失败: {{message}}",
           "genericError": "更新失败: {{message}}",
@@ -492,66 +522,69 @@
         }
       }
     },
-    "editor": {
-      "title": "编辑规则",
-      "form": {
-        "labels": {
-          "type": "规则类型",
-          "content": "规则内容",
-          "proxyPolicy": "代理策略"
+    "modals": {
+      "editor": {
+        "form": {
+          "labels": {
+            "type": "规则类型",
+            "content": "规则内容",
+            "proxyPolicy": "代理策略"
+          },
+          "toggles": {
+            "noResolve": "跳过 DNS 解析"
+          },
+          "actions": {
+            "prependRule": "添加前置规则",
+            "appendRule": "添加后置规则"
+          },
+          "validation": {
+            "conditionRequired": "规则条件缺失",
+            "invalidRule": "无效规则"
+          }
         },
-        "toggles": {
-          "noResolve": "跳过 DNS 解析"
+        "ruleTypes": {
+          "DOMAIN": "匹配完整域名 (DOMAIN)",
+          "DOMAIN-SUFFIX": "匹配域名后缀 (DOMAIN-SUFFIX)",
+          "DOMAIN-KEYWORD": "匹配域名关键字 (DOMAIN-KEYWORD)",
+          "DOMAIN-REGEX": "匹配域名正则表达式 (DOMAIN-REGEX)",
+          "GEOSITE": "匹配 Geosite 内的域名 (GEOSITE)",
+          "GEOIP": "匹配 IP 所属国家代码 (GEOIP)",
+          "SRC-GEOIP": "匹配来源 IP 所属国家代码 (SRC-GEOIP)",
+          "IP-ASN": "匹配 IP 所属 ASN (IP-ASN)",
+          "SRC-IP-ASN": "匹配来源 IP 所属 ASN (SRC-IP-ASN)",
+          "IP-CIDR": "匹配 IP 地址范围 (IP-CIDR)",
+          "IP-CIDR6": "匹配 IP 地址范围 (IP-CIDR6)",
+          "SRC-IP-CIDR": "匹配来源 IP 地址范围 (SRC-IP-CIDR)",
+          "IP-SUFFIX": "匹配 IP 后缀范围 (IP-SUFFIX)",
+          "SRC-IP-SUFFIX": "匹配来源 IP 后缀范围 (SRC-IP-SUFFIX)",
+          "SRC-PORT": "匹配请求来源端口范围 (SRC-PORT)",
+          "DST-PORT": "匹配请求目标端口范围 (DST-PORT)",
+          "IN-PORT": "匹配入站端口 (IN-PORT)",
+          "DSCP": "DSCP 标记（仅限 TPROXY UDP 入站）(DSCP)",
+          "PROCESS-NAME": "匹配进程名称 (PROCESS-NAME)",
+          "PROCESS-PATH": "匹配完整进程路径 (PROCESS-PATH)",
+          "PROCESS-NAME-REGEX": "正则匹配完整进程名称 (PROCESS-NAME-REGEX)",
+          "PROCESS-PATH-REGEX": "正则匹配完整进程路径 (PROCESS-PATH-REGEX)",
+          "NETWORK": "匹配传输协议 (TCP/UDP) (NETWORK)",
+          "UID": "匹配 Linux USER ID (UID)",
+          "IN-TYPE": "匹配入站类型 (IN-TYPE)",
+          "IN-USER": "匹配入站用户名 (IN-USER)",
+          "IN-NAME": "匹配入站名称 (IN-NAME)",
+          "SUB-RULE": "子规则 (SUB-RULE)",
+          "RULE-SET": "匹配规则集 (RULE-SET)",
+          "AND": "逻辑与 (AND)",
+          "OR": "逻辑或 (OR)",
+          "NOT": "逻辑非 (NOT)",
+          "MATCH": "匹配所有请求 (MATCH)"
         },
-        "actions": {
-          "prependRule": "添加前置规则",
-          "appendRule": "添加后置规则"
-        },
-        "validation": {
-          "conditionRequired": "规则条件缺失",
-          "invalidRule": "无效规则"
+        "header": {
+          "title": "编辑规则"
         }
-      },
-      "ruleTypes": {
-        "DOMAIN": "匹配完整域名 (DOMAIN)",
-        "DOMAIN-SUFFIX": "匹配域名后缀 (DOMAIN-SUFFIX)",
-        "DOMAIN-KEYWORD": "匹配域名关键字 (DOMAIN-KEYWORD)",
-        "DOMAIN-REGEX": "匹配域名正则表达式 (DOMAIN-REGEX)",
-        "GEOSITE": "匹配 Geosite 内的域名 (GEOSITE)",
-        "GEOIP": "匹配 IP 所属国家代码 (GEOIP)",
-        "SRC-GEOIP": "匹配来源 IP 所属国家代码 (SRC-GEOIP)",
-        "IP-ASN": "匹配 IP 所属 ASN (IP-ASN)",
-        "SRC-IP-ASN": "匹配来源 IP 所属 ASN (SRC-IP-ASN)",
-        "IP-CIDR": "匹配 IP 地址范围 (IP-CIDR)",
-        "IP-CIDR6": "匹配 IP 地址范围 (IP-CIDR6)",
-        "SRC-IP-CIDR": "匹配来源 IP 地址范围 (SRC-IP-CIDR)",
-        "IP-SUFFIX": "匹配 IP 后缀范围 (IP-SUFFIX)",
-        "SRC-IP-SUFFIX": "匹配来源 IP 后缀范围 (SRC-IP-SUFFIX)",
-        "SRC-PORT": "匹配请求来源端口范围 (SRC-PORT)",
-        "DST-PORT": "匹配请求目标端口范围 (DST-PORT)",
-        "IN-PORT": "匹配入站端口 (IN-PORT)",
-        "DSCP": "DSCP 标记（仅限 TPROXY UDP 入站）(DSCP)",
-        "PROCESS-NAME": "匹配进程名称 (PROCESS-NAME)",
-        "PROCESS-PATH": "匹配完整进程路径 (PROCESS-PATH)",
-        "PROCESS-NAME-REGEX": "正则匹配完整进程名称 (PROCESS-NAME-REGEX)",
-        "PROCESS-PATH-REGEX": "正则匹配完整进程路径 (PROCESS-PATH-REGEX)",
-        "NETWORK": "匹配传输协议 (TCP/UDP) (NETWORK)",
-        "UID": "匹配 Linux USER ID (UID)",
-        "IN-TYPE": "匹配入站类型 (IN-TYPE)",
-        "IN-USER": "匹配入站用户名 (IN-USER)",
-        "IN-NAME": "匹配入站名称 (IN-NAME)",
-        "SUB-RULE": "子规则 (SUB-RULE)",
-        "RULE-SET": "匹配规则集 (RULE-SET)",
-        "AND": "逻辑与 (AND)",
-        "OR": "逻辑或 (OR)",
-        "NOT": "逻辑非 (NOT)",
-        "MATCH": "匹配所有请求 (MATCH)"
       }
     }
   },
   "home": {
     "page": {
-      "title": "首页",
       "tooltips": {
         "lightweightMode": "轻量模式",
         "manual": "使用手册",
@@ -563,7 +596,6 @@
         "proxyMode": "代理模式"
       },
       "settings": {
-        "title": "首页设置",
         "cards": {
           "profile": "订阅卡",
           "currentProxy": "当前代理卡",
@@ -574,10 +606,16 @@
           "ip": "IP 信息卡",
           "clashInfo": "Clash 信息卡",
           "systemInfo": "系统信息卡"
+        },
+        "header": {
+          "title": "首页设置"
         }
+      },
+      "header": {
+        "title": "首页"
       }
     },
-    "cards": {
+    "components": {
       "proxyTun": {
         "status": {
           "systemProxyEnabled": "系统代理已启用，您的应用将通过代理访问网络",
@@ -691,13 +729,15 @@
   },
   "unlock": {
     "page": {
-      "title": "解锁测试",
       "actions": {
         "testing": "测试中..."
       },
       "empty": "暂无解锁测试项目",
       "messages": {
         "detectionTimeout": "检测超时或失败"
+      },
+      "header": {
+        "title": "解锁测试"
       }
     }
   },

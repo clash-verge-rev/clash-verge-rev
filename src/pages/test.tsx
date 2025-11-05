@@ -141,7 +141,7 @@ const TestPage = () => {
   return (
     <BasePage
       full
-      title={t("tests.page.title")}
+      title={t("tests.page.header.title")}
       header={
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <Button

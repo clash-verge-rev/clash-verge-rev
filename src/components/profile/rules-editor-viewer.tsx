@@ -241,7 +241,10 @@ const rules: {
 ];
 
 const RULE_TYPE_LABEL_KEYS: Record<string, string> = Object.fromEntries(
-  rules.map((rule) => [rule.name, `rules.editor.ruleTypes.${rule.name}`]),
+  rules.map((rule) => [
+    rule.name,
+    `rules.modals.editor.ruleTypes.${rule.name}`,
+  ]),
 );
 
 const builtinProxyPolicies = ["DIRECT", "REJECT", "REJECT-DROP", "PASS"];
@@ -475,10 +478,12 @@ export const RulesEditorViewer = (props: Props) => {
 
   const validateRule = () => {
     if ((ruleType.required ?? true) && !ruleContent) {
-      throw new Error(t("rules.editor.form.validation.conditionRequired"));
+      throw new Error(
+        t("rules.modals.editor.form.validation.conditionRequired"),
+      );
     }
     if (ruleType.validator && !ruleType.validator(ruleContent)) {
-      throw new Error(t("rules.editor.form.validation.invalidRule"));
+      throw new Error(t("rules.modals.editor.form.validation.invalidRule"));
     }
 
     const condition = (ruleType.required ?? true) ? ruleContent : "";
@@ -503,7 +508,7 @@ export const RulesEditorViewer = (props: Props) => {
       <DialogTitle>
         {
           <Box display="flex" justifyContent="space-between">
-            {t("rules.editor.title")}
+            {t("rules.modals.editor.header.title")}
             <Box>
               <Button
                 variant="contained"
@@ -533,7 +538,9 @@ export const RulesEditorViewer = (props: Props) => {
               }}
             >
               <Item>
-                <ListItemText primary={t("rules.editor.form.labels.type")} />
+                <ListItemText
+                  primary={t("rules.modals.editor.form.labels.type")}
+                />
                 <Autocomplete
                   size="small"
                   sx={{ minWidth: "240px" }}
@@ -559,7 +566,9 @@ export const RulesEditorViewer = (props: Props) => {
               <Item
                 sx={{ display: !(ruleType.required ?? true) ? "none" : "" }}
               >
-                <ListItemText primary={t("rules.editor.form.labels.content")} />
+                <ListItemText
+                  primary={t("rules.modals.editor.form.labels.content")}
+                />
 
                 {ruleType.name === "RULE-SET" && (
                   <Autocomplete
@@ -597,7 +606,7 @@ export const RulesEditorViewer = (props: Props) => {
               </Item>
               <Item>
                 <ListItemText
-                  primary={t("rules.editor.form.labels.proxyPolicy")}
+                  primary={t("rules.modals.editor.form.labels.proxyPolicy")}
                 />
                 <Autocomplete
                   size="small"
@@ -622,7 +631,7 @@ export const RulesEditorViewer = (props: Props) => {
               {ruleType.noResolve && (
                 <Item>
                   <ListItemText
-                    primary={t("rules.editor.form.toggles.noResolve")}
+                    primary={t("rules.modals.editor.form.toggles.noResolve")}
                   />
                   <Switch
                     checked={noResolve}
@@ -645,7 +654,7 @@ export const RulesEditorViewer = (props: Props) => {
                     }
                   }}
                 >
-                  {t("rules.editor.form.actions.prependRule")}
+                  {t("rules.modals.editor.form.actions.prependRule")}
                 </Button>
               </Item>
               <Item>
@@ -663,7 +672,7 @@ export const RulesEditorViewer = (props: Props) => {
                     }
                   }}
                 >
-                  {t("rules.editor.form.actions.appendRule")}
+                  {t("rules.modals.editor.form.actions.appendRule")}
                 </Button>
               </Item>
             </List>

@@ -300,10 +300,6 @@
   },
   "proxies": {
     "page": {
-      "title": {
-        "default": "Группы прокси",
-        "chainMode": "Proxy Chain Mode"
-      },
       "modes": {
         "rule": "Rule",
         "global": "Global",
@@ -321,13 +317,6 @@
         "actions": {
           "updateAll": "Обновить все",
           "update": "Обновить"
-        },
-        "notices": {
-          "updateSuccess": "{{name}} updated successfully",
-          "updateFailed": "Failed to update {{name}}: {{message}}",
-          "genericError": "Update failed: {{message}}",
-          "none": "No providers available to update",
-          "allUpdated": "All providers updated successfully"
         }
       },
       "rules": {
@@ -365,27 +354,45 @@
       },
       "messages": {
         "directMode": "Прямой режим"
+      },
+      "header": {
+        "title": {
+          "default": "Группы прокси",
+          "chainMode": "Proxy Chain Mode"
+        }
       }
     },
-    "enums": {
-      "strategies": {
-        "select": "Выбор прокси вручную",
-        "url-test": "Выбор прокси на основе задержки теста URL",
-        "fallback": "Переключение на другой прокси при ошибке",
-        "load-balance": "Распределение прокси на основе балансировки нагрузки",
-        "relay": "Передача через определенную цепочку прокси"
-      },
-      "policies": {
-        "DIRECT": "Данные направляются напрямую наружу",
-        "REJECT": "Перехватывает запросы",
-        "REJECT-DROP": "Отклоняет запросы",
-        "PASS": "Пропускает это правило при совпадении"
+    "feedback": {
+      "notifications": {
+        "provider": {
+          "updateSuccess": "{{name}} updated successfully",
+          "updateFailed": "Failed to update {{name}}: {{message}}",
+          "genericError": "Update failed: {{message}}",
+          "none": "No providers available to update",
+          "allUpdated": "All providers updated successfully"
+        }
+      }
+    },
+    "components": {
+      "enums": {
+        "strategies": {
+          "select": "Выбор прокси вручную",
+          "url-test": "Выбор прокси на основе задержки теста URL",
+          "fallback": "Переключение на другой прокси при ошибке",
+          "load-balance": "Распределение прокси на основе балансировки нагрузки",
+          "relay": "Передача через определенную цепочку прокси"
+        },
+        "policies": {
+          "DIRECT": "Данные направляются напрямую наружу",
+          "REJECT": "Перехватывает запросы",
+          "REJECT-DROP": "Отклоняет запросы",
+          "PASS": "Пропускает это правило при совпадении"
+        }
       }
     }
   },
   "connections": {
     "page": {
-      "title": "Соединения",
       "summary": {
         "downloaded": "Скачано",
         "uploaded": "Загружено"
@@ -396,69 +403,83 @@
         "pause": "Пауза",
         "resume": "Возобновить",
         "closeAll": "Закрыть всё"
+      },
+      "header": {
+        "title": "Соединения"
       }
     },
-    "fields": {
-      "host": "Хост",
-      "downloaded": "Скачано",
-      "uploaded": "Загружено",
-      "dlSpeed": "Скорость скачивания",
-      "ulSpeed": "Скорость загрузки",
-      "chains": "Цепочки",
-      "rule": "Правило",
-      "process": "Процесс",
-      "time": "Время подключения",
-      "source": "Исходный адрес",
-      "destination": "IP-адрес назначения",
-      "destinationPort": "Целевой порт",
-      "type": "Тип"
-    },
-    "order": {
-      "default": "Default",
-      "uploadSpeed": "Скорость загрузки",
-      "downloadSpeed": "Скорость скачивания"
-    },
-    "actions": {
-      "closeConnection": "Закрыть соединение"
+    "components": {
+      "fields": {
+        "host": "Хост",
+        "downloaded": "Скачано",
+        "uploaded": "Загружено",
+        "dlSpeed": "Скорость скачивания",
+        "ulSpeed": "Скорость загрузки",
+        "chains": "Цепочки",
+        "rule": "Правило",
+        "process": "Процесс",
+        "time": "Время подключения",
+        "source": "Исходный адрес",
+        "destination": "IP-адрес назначения",
+        "destinationPort": "Целевой порт",
+        "type": "Тип"
+      },
+      "order": {
+        "default": "Default",
+        "uploadSpeed": "Скорость загрузки",
+        "downloadSpeed": "Скорость скачивания"
+      },
+      "actions": {
+        "closeConnection": "Закрыть соединение"
+      }
     }
   },
   "tests": {
-    "item": {
-      "actions": {
-        "test": "Тест"
-      }
-    },
-    "viewer": {
-      "title": {
-        "create": "Создать тест",
-        "edit": "Редактировать тест"
-      },
-      "fields": {
-        "url": "URL проверка"
-      }
-    },
     "page": {
-      "title": "Тест",
       "actions": {
         "testAll": "Тестировать все"
+      },
+      "header": {
+        "title": "Тест"
       }
     },
-    "statuses": {
-      "pending": "В ожидании",
-      "yes": "Да",
-      "no": "Нет",
-      "failed": "Ошибка",
-      "completed": "Завершено",
-      "disallowedIsp": "ISP заблокирован",
-      "originalsOnly": "Только Originals",
-      "noDisney": "Нет (IP забанен Disney+)",
-      "unsupportedRegion": "Страна/регион не поддерживается",
-      "failedNetwork": "Ошибка подключения"
+    "components": {
+      "item": {
+        "actions": {
+          "test": "Тест"
+        }
+      }
+    },
+    "modals": {
+      "test": {
+        "title": {
+          "create": "Создать тест",
+          "edit": "Редактировать тест"
+        },
+        "fields": {
+          "url": "URL проверка"
+        }
+      }
+    },
+    "feedback": {
+      "statuses": {
+        "test": {
+          "pending": "В ожидании",
+          "yes": "Да",
+          "no": "Нет",
+          "failed": "Ошибка",
+          "completed": "Завершено",
+          "disallowedIsp": "ISP заблокирован",
+          "originalsOnly": "Только Originals",
+          "noDisney": "Нет (IP забанен Disney+)",
+          "unsupportedRegion": "Страна/регион не поддерживается",
+          "failedNetwork": "Ошибка подключения"
+        }
+      }
     }
   },
   "logs": {
     "page": {
-      "title": "Логи",
       "actions": {
         "pause": "Пауза",
         "resume": "Возобновить",
@@ -470,20 +491,29 @@
         "info": "INFO",
         "warn": "WARN",
         "error": "ERROR"
+      },
+      "header": {
+        "title": "Логи"
       }
     }
   },
   "rules": {
     "page": {
-      "title": "Правила",
       "provider": {
         "trigger": "Провайдеры правил",
         "dialogTitle": "Провайдеры правил",
         "actions": {
           "updateAll": "Обновить все",
           "update": "Обновить"
-        },
-        "notices": {
+        }
+      },
+      "header": {
+        "title": "Правила"
+      }
+    },
+    "feedback": {
+      "notifications": {
+        "provider": {
           "updateSuccess": "{{name}} updated successfully",
           "updateFailed": "Failed to update {{name}}: {{message}}",
           "genericError": "Update failed: {{message}}",
@@ -492,66 +522,69 @@
         }
       }
     },
-    "editor": {
-      "title": "Редактировать правила",
-      "form": {
-        "labels": {
-          "type": "Тип правила",
-          "content": "Содержимое правила",
-          "proxyPolicy": "Политика прокси"
+    "modals": {
+      "editor": {
+        "form": {
+          "labels": {
+            "type": "Тип правила",
+            "content": "Содержимое правила",
+            "proxyPolicy": "Политика прокси"
+          },
+          "toggles": {
+            "noResolve": "Без разрешения"
+          },
+          "actions": {
+            "prependRule": "Добавить правило в начало",
+            "appendRule": "Добавить правило в конец"
+          },
+          "validation": {
+            "conditionRequired": "Требуется условие правила",
+            "invalidRule": "Недействительное правило"
+          }
         },
-        "toggles": {
-          "noResolve": "Без разрешения"
+        "ruleTypes": {
+          "DOMAIN": "Соответствует полному доменному имени",
+          "DOMAIN-SUFFIX": "Соответствует суффиксу домена",
+          "DOMAIN-KEYWORD": "Соответствует ключевому слову домена",
+          "DOMAIN-REGEX": "Соответствует домену с использованием регулярных выражений",
+          "GEOSITE": "Соответствует доменам в Geosite",
+          "GEOIP": "Соответствует коду страны IP-адреса",
+          "SRC-GEOIP": "Соответствует коду страны исходного IP-адреса",
+          "IP-ASN": "Соответствует ASN IP-адреса",
+          "SRC-IP-ASN": "Соответствует ASN исходного IP-адреса",
+          "IP-CIDR": "Соответствует диапазону IP-адресов",
+          "IP-CIDR6": "Соответствует диапазону IPv6-адресов",
+          "SRC-IP-CIDR": "Соответствует диапазону исходных IP-адресов",
+          "IP-SUFFIX": "Соответствует диапазону суффиксов IP-адресов",
+          "SRC-IP-SUFFIX": "Соответствует диапазону суффиксов исходных IP-адресов",
+          "SRC-PORT": "Соответствует диапазону исходных портов",
+          "DST-PORT": "Соответствует диапазону целевых портов",
+          "IN-PORT": "Соответствует входящему порту",
+          "DSCP": "Маркировка DSCP (только для tproxy UDP входящего)",
+          "PROCESS-NAME": "Соответствует имени процесса (имя пакета Android)",
+          "PROCESS-PATH": "Соответствует полному пути процесса",
+          "PROCESS-NAME-REGEX": "Соответствует имени процесса с использованием регулярных выражений (имя пакета Android)",
+          "PROCESS-PATH-REGEX": "Соответствует полному пути процесса с использованием регулярных выражений",
+          "NETWORK": "Соответствует транспортному протоколу (tcp/udp)",
+          "UID": "Соответствует USER ID в Linux",
+          "IN-TYPE": "Соответствует типу входящего соединения",
+          "IN-USER": "Соответствует имени пользователя входящего соединения",
+          "IN-NAME": "Соответствует имени входящего соединения",
+          "SUB-RULE": "Подправило",
+          "RULE-SET": "Соответствует набору правил",
+          "AND": "Логическое И",
+          "OR": "Логическое ИЛИ",
+          "NOT": "Логическое НЕ",
+          "MATCH": "Соответствует всем запросам"
         },
-        "actions": {
-          "prependRule": "Добавить правило в начало",
-          "appendRule": "Добавить правило в конец"
-        },
-        "validation": {
-          "conditionRequired": "Требуется условие правила",
-          "invalidRule": "Недействительное правило"
+        "header": {
+          "title": "Редактировать правила"
         }
-      },
-      "ruleTypes": {
-        "DOMAIN": "Соответствует полному доменному имени",
-        "DOMAIN-SUFFIX": "Соответствует суффиксу домена",
-        "DOMAIN-KEYWORD": "Соответствует ключевому слову домена",
-        "DOMAIN-REGEX": "Соответствует домену с использованием регулярных выражений",
-        "GEOSITE": "Соответствует доменам в Geosite",
-        "GEOIP": "Соответствует коду страны IP-адреса",
-        "SRC-GEOIP": "Соответствует коду страны исходного IP-адреса",
-        "IP-ASN": "Соответствует ASN IP-адреса",
-        "SRC-IP-ASN": "Соответствует ASN исходного IP-адреса",
-        "IP-CIDR": "Соответствует диапазону IP-адресов",
-        "IP-CIDR6": "Соответствует диапазону IPv6-адресов",
-        "SRC-IP-CIDR": "Соответствует диапазону исходных IP-адресов",
-        "IP-SUFFIX": "Соответствует диапазону суффиксов IP-адресов",
-        "SRC-IP-SUFFIX": "Соответствует диапазону суффиксов исходных IP-адресов",
-        "SRC-PORT": "Соответствует диапазону исходных портов",
-        "DST-PORT": "Соответствует диапазону целевых портов",
-        "IN-PORT": "Соответствует входящему порту",
-        "DSCP": "Маркировка DSCP (только для tproxy UDP входящего)",
-        "PROCESS-NAME": "Соответствует имени процесса (имя пакета Android)",
-        "PROCESS-PATH": "Соответствует полному пути процесса",
-        "PROCESS-NAME-REGEX": "Соответствует имени процесса с использованием регулярных выражений (имя пакета Android)",
-        "PROCESS-PATH-REGEX": "Соответствует полному пути процесса с использованием регулярных выражений",
-        "NETWORK": "Соответствует транспортному протоколу (tcp/udp)",
-        "UID": "Соответствует USER ID в Linux",
-        "IN-TYPE": "Соответствует типу входящего соединения",
-        "IN-USER": "Соответствует имени пользователя входящего соединения",
-        "IN-NAME": "Соответствует имени входящего соединения",
-        "SUB-RULE": "Подправило",
-        "RULE-SET": "Соответствует набору правил",
-        "AND": "Логическое И",
-        "OR": "Логическое ИЛИ",
-        "NOT": "Логическое НЕ",
-        "MATCH": "Соответствует всем запросам"
       }
     }
   },
   "home": {
     "page": {
-      "title": "Главная",
       "tooltips": {
         "lightweightMode": "LightWeight Mode",
         "manual": "Документация",
@@ -563,7 +596,6 @@
         "proxyMode": "Режим работы"
       },
       "settings": {
-        "title": "Настройки главной страницы",
         "cards": {
           "profile": "Карточка профиля",
           "currentProxy": "Карточка текущего прокси",
@@ -574,10 +606,16 @@
           "ip": "Информация об IP",
           "clashInfo": "Информация о Clash",
           "systemInfo": "Информация о системе"
+        },
+        "header": {
+          "title": "Настройки главной страницы"
         }
+      },
+      "header": {
+        "title": "Главная"
       }
     },
-    "cards": {
+    "components": {
       "proxyTun": {
         "status": {
           "systemProxyEnabled": "Системный прокси включен, ваши приложения будут получать доступ к сети через него",
@@ -691,13 +729,15 @@
   },
   "unlock": {
     "page": {
-      "title": "Тест доступности веб-сайтов",
       "actions": {
         "testing": "Тестирование ..."
       },
       "empty": "No unlock test items",
       "messages": {
         "detectionTimeout": "Detection timeout or failed"
+      },
+      "header": {
+        "title": "Тест доступности веб-сайтов"
       }
     }
   },

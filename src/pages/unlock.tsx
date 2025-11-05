@@ -38,16 +38,17 @@ const UNLOCK_RESULTS_STORAGE_KEY = "clash_verge_unlock_results";
 const UNLOCK_RESULTS_TIME_KEY = "clash_verge_unlock_time";
 
 const STATUS_LABEL_KEYS: Record<string, string> = {
-  Pending: "tests.statuses.pending",
-  Yes: "tests.statuses.yes",
-  No: "tests.statuses.no",
-  Failed: "tests.statuses.failed",
-  Completed: "tests.statuses.completed",
-  "Disallowed ISP": "tests.statuses.disallowedIsp",
-  "Originals Only": "tests.statuses.originalsOnly",
-  "No (IP Banned By Disney+)": "tests.statuses.noDisney",
-  "Unsupported Country/Region": "tests.statuses.unsupportedRegion",
-  "Failed (Network Connection)": "tests.statuses.failedNetwork",
+  Pending: "tests.feedback.statuses.test.pending",
+  Yes: "tests.feedback.statuses.test.yes",
+  No: "tests.feedback.statuses.test.no",
+  Failed: "tests.feedback.statuses.test.failed",
+  Completed: "tests.feedback.statuses.test.completed",
+  "Disallowed ISP": "tests.feedback.statuses.test.disallowedIsp",
+  "Originals Only": "tests.feedback.statuses.test.originalsOnly",
+  "No (IP Banned By Disney+)": "tests.feedback.statuses.test.noDisney",
+  "Unsupported Country/Region":
+    "tests.feedback.statuses.test.unsupportedRegion",
+  "Failed (Network Connection)": "tests.feedback.statuses.test.failedNetwork",
 };
 
 const UnlockPage = () => {
@@ -263,7 +264,7 @@ const UnlockPage = () => {
 
   return (
     <BasePage
-      title={t("unlock.page.title")}
+      title={t("unlock.page.header.title")}
       header={
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <Button
@@ -337,7 +338,7 @@ const UnlockPage = () => {
                     >
                       {item.name}
                     </Typography>
-                    <Tooltip title={t("tests.item.actions.test")}>
+                    <Tooltip title={t("tests.components.item.actions.test")}>
                       <span>
                         <Button
                           size="small"

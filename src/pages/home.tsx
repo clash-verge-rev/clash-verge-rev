@@ -112,7 +112,7 @@ const HomeSettingsDialog = ({
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
-      <DialogTitle>{t("home.page.settings.title")}</DialogTitle>
+      <DialogTitle>{t("home.page.settings.header.title")}</DialogTitle>
       <DialogContent>
         <FormGroup>
           <FormControlLabel
@@ -364,7 +364,7 @@ const HomePage = () => {
   );
   return (
     <BasePage
-      title={t("home.page.title")}
+      title={t("home.page.header.title")}
       contentStyle={{ padding: 2 }}
       header={
         <Box sx={{ display: "flex", alignItems: "center" }}>

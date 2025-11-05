@@ -300,10 +300,6 @@
   },
   "proxies": {
     "page": {
-      "title": {
-        "default": "プロキシグループ",
-        "chainMode": "Proxy Chain Mode"
-      },
       "modes": {
         "rule": "Rule",
         "global": "Global",
@@ -321,13 +317,6 @@
         "actions": {
           "updateAll": "すべて更新",
           "update": "更新"
-        },
-        "notices": {
-          "updateSuccess": "{{name}} updated successfully",
-          "updateFailed": "Failed to update {{name}}: {{message}}",
-          "genericError": "Update failed: {{message}}",
-          "none": "No providers available to update",
-          "allUpdated": "All providers updated successfully"
         }
       },
       "rules": {
@@ -365,27 +354,45 @@
       },
       "messages": {
         "directMode": "直接接続モード"
+      },
+      "header": {
+        "title": {
+          "default": "プロキシグループ",
+          "chainMode": "Proxy Chain Mode"
+        }
       }
     },
-    "enums": {
-      "strategies": {
-        "select": "手動でプロキシを選択",
-        "url-test": "URLテストによる遅延でプロキシを選択",
-        "fallback": "利用不可の場合は別のプロキシに切り替える",
-        "load-balance": "負荷分散によりプロキシを割り当てる",
-        "relay": "定義されたプロキシチェーンに沿って転送する"
-      },
-      "policies": {
-        "DIRECT": "直接接続",
-        "REJECT": "リクエストを拒否",
-        "REJECT-DROP": "リクエストを破棄",
-        "PASS": "このルールをスキップ"
+    "feedback": {
+      "notifications": {
+        "provider": {
+          "updateSuccess": "{{name}} updated successfully",
+          "updateFailed": "Failed to update {{name}}: {{message}}",
+          "genericError": "Update failed: {{message}}",
+          "none": "No providers available to update",
+          "allUpdated": "All providers updated successfully"
+        }
+      }
+    },
+    "components": {
+      "enums": {
+        "strategies": {
+          "select": "手動でプロキシを選択",
+          "url-test": "URLテストによる遅延でプロキシを選択",
+          "fallback": "利用不可の場合は別のプロキシに切り替える",
+          "load-balance": "負荷分散によりプロキシを割り当てる",
+          "relay": "定義されたプロキシチェーンに沿って転送する"
+        },
+        "policies": {
+          "DIRECT": "直接接続",
+          "REJECT": "リクエストを拒否",
+          "REJECT-DROP": "リクエストを破棄",
+          "PASS": "このルールをスキップ"
+        }
       }
     }
   },
   "connections": {
     "page": {
-      "title": "接続",
       "summary": {
         "downloaded": "ダウンロード量",
         "uploaded": "アップロード量"
@@ -396,69 +403,83 @@
         "pause": "一時停止",
         "resume": "再開",
         "closeAll": "すべて閉じる"
+      },
+      "header": {
+        "title": "接続"
       }
     },
-    "fields": {
-      "host": "ホスト",
-      "downloaded": "ダウンロード量",
-      "uploaded": "アップロード量",
-      "dlSpeed": "ダウンロード速度",
-      "ulSpeed": "アップロード速度",
-      "chains": "チェーン",
-      "rule": "ルール",
-      "process": "プロセス",
-      "time": "接続時間",
-      "source": "送信元アドレス",
-      "destination": "宛先アドレス",
-      "destinationPort": "宛先ポート",
-      "type": "タイプ"
-    },
-    "order": {
-      "default": "Default",
-      "uploadSpeed": "アップロード速度",
-      "downloadSpeed": "ダウンロード速度"
-    },
-    "actions": {
-      "closeConnection": "接続を閉じる"
+    "components": {
+      "fields": {
+        "host": "ホスト",
+        "downloaded": "ダウンロード量",
+        "uploaded": "アップロード量",
+        "dlSpeed": "ダウンロード速度",
+        "ulSpeed": "アップロード速度",
+        "chains": "チェーン",
+        "rule": "ルール",
+        "process": "プロセス",
+        "time": "接続時間",
+        "source": "送信元アドレス",
+        "destination": "宛先アドレス",
+        "destinationPort": "宛先ポート",
+        "type": "タイプ"
+      },
+      "order": {
+        "default": "Default",
+        "uploadSpeed": "アップロード速度",
+        "downloadSpeed": "ダウンロード速度"
+      },
+      "actions": {
+        "closeConnection": "接続を閉じる"
+      }
     }
   },
   "tests": {
-    "item": {
-      "actions": {
-        "test": "テスト"
-      }
-    },
-    "viewer": {
-      "title": {
-        "create": "新規テストを作成",
-        "edit": "テストを編集"
-      },
-      "fields": {
-        "url": "テストURL"
-      }
-    },
     "page": {
-      "title": "テスト",
       "actions": {
         "testAll": "すべてテスト"
+      },
+      "header": {
+        "title": "テスト"
       }
     },
-    "statuses": {
-      "pending": "検査待ち",
-      "yes": "サポートする",
-      "no": "サポートしない",
-      "failed": "テストに失敗しました。",
-      "completed": "検査完了",
-      "disallowedIsp": "許可されていないインターネットサービスプロバイダー",
-      "originalsOnly": "オリジナルのみ",
-      "noDisney": "No (IP Banned By Disney+)",
-      "unsupportedRegion": "サポートされていない国/地域",
-      "failedNetwork": "Failed (Network Connection)"
+    "components": {
+      "item": {
+        "actions": {
+          "test": "テスト"
+        }
+      }
+    },
+    "modals": {
+      "test": {
+        "title": {
+          "create": "新規テストを作成",
+          "edit": "テストを編集"
+        },
+        "fields": {
+          "url": "テストURL"
+        }
+      }
+    },
+    "feedback": {
+      "statuses": {
+        "test": {
+          "pending": "検査待ち",
+          "yes": "サポートする",
+          "no": "サポートしない",
+          "failed": "テストに失敗しました。",
+          "completed": "検査完了",
+          "disallowedIsp": "許可されていないインターネットサービスプロバイダー",
+          "originalsOnly": "オリジナルのみ",
+          "noDisney": "No (IP Banned By Disney+)",
+          "unsupportedRegion": "サポートされていない国/地域",
+          "failedNetwork": "Failed (Network Connection)"
+        }
+      }
     }
   },
   "logs": {
     "page": {
-      "title": "ログ",
       "actions": {
         "pause": "一時停止",
         "resume": "再開",
@@ -470,20 +491,29 @@
         "info": "INFO",
         "warn": "WARN",
         "error": "ERROR"
+      },
+      "header": {
+        "title": "ログ"
       }
     }
   },
   "rules": {
     "page": {
-      "title": "ルール",
       "provider": {
         "trigger": "ルールプロバイダー",
         "dialogTitle": "ルールプロバイダー",
         "actions": {
           "updateAll": "すべて更新",
           "update": "更新"
-        },
-        "notices": {
+        }
+      },
+      "header": {
+        "title": "ルール"
+      }
+    },
+    "feedback": {
+      "notifications": {
+        "provider": {
           "updateSuccess": "{{name}} updated successfully",
           "updateFailed": "Failed to update {{name}}: {{message}}",
           "genericError": "Update failed: {{message}}",
@@ -492,66 +522,69 @@
         }
       }
     },
-    "editor": {
-      "title": "ルールを編集",
-      "form": {
-        "labels": {
-          "type": "ルールタイプ",
-          "content": "ルール内容",
-          "proxyPolicy": "プロキシポリシー"
+    "modals": {
+      "editor": {
+        "form": {
+          "labels": {
+            "type": "ルールタイプ",
+            "content": "ルール内容",
+            "proxyPolicy": "プロキシポリシー"
+          },
+          "toggles": {
+            "noResolve": "DNS解決をスキップ"
+          },
+          "actions": {
+            "prependRule": "前置ルールを追加",
+            "appendRule": "後置ルールを追加"
+          },
+          "validation": {
+            "conditionRequired": "ルール条件が必要です",
+            "invalidRule": "無効なルール"
+          }
         },
-        "toggles": {
-          "noResolve": "DNS解決をスキップ"
+        "ruleTypes": {
+          "DOMAIN": "完全なドメイン名を一致させる",
+          "DOMAIN-SUFFIX": "ドメインサフィックスを一致させる",
+          "DOMAIN-KEYWORD": "ドメインキーワードを一致させる",
+          "DOMAIN-REGEX": "ドメイン正規表現を一致させる",
+          "GEOSITE": "Geosite内のドメインを一致させる",
+          "GEOIP": "IPの所属国コードを一致させる",
+          "SRC-GEOIP": "送信元IPの所属国コードを一致させる",
+          "IP-ASN": "IPの所属ASNを一致させる",
+          "SRC-IP-ASN": "送信元IPの所属ASNを一致させる",
+          "IP-CIDR": "IPアドレス範囲を一致させる",
+          "IP-CIDR6": "IPアドレス範囲を一致させる",
+          "SRC-IP-CIDR": "送信元IPアドレス範囲を一致させる",
+          "IP-SUFFIX": "IPサフィックス範囲を一致させる",
+          "SRC-IP-SUFFIX": "送信元IPサフィックス範囲を一致させる",
+          "SRC-PORT": "送信元ポート範囲を一致させる",
+          "DST-PORT": "宛先ポート範囲を一致させる",
+          "IN-PORT": "入力ポートを一致させる",
+          "DSCP": "DSCPマーク（TPROXY UDP入力のみ）",
+          "PROCESS-NAME": "プロセス名を一致させる（Androidパッケージ名）",
+          "PROCESS-PATH": "完全なプロセスパスを一致させる",
+          "PROCESS-NAME-REGEX": "完全なプロセス名を正規表現で一致させる（Androidパッケージ名）",
+          "PROCESS-PATH-REGEX": "完全なプロセスパスを正規表現で一致させる",
+          "NETWORK": "トランスポートプロトコルを一致させる (TCP/UDP)",
+          "UID": "LinuxユーザーIDを一致させる",
+          "IN-TYPE": "入力タイプを一致させる",
+          "IN-USER": "入力ユーザー名を一致させる",
+          "IN-NAME": "入力名を一致させる",
+          "SUB-RULE": "サブルール",
+          "RULE-SET": "ルールセットを一致させる",
+          "AND": "論理積",
+          "OR": "論理和",
+          "NOT": "論理否定",
+          "MATCH": "すべてのリクエストを一致させる"
         },
-        "actions": {
-          "prependRule": "前置ルールを追加",
-          "appendRule": "後置ルールを追加"
-        },
-        "validation": {
-          "conditionRequired": "ルール条件が必要です",
-          "invalidRule": "無効なルール"
+        "header": {
+          "title": "ルールを編集"
         }
-      },
-      "ruleTypes": {
-        "DOMAIN": "完全なドメイン名を一致させる",
-        "DOMAIN-SUFFIX": "ドメインサフィックスを一致させる",
-        "DOMAIN-KEYWORD": "ドメインキーワードを一致させる",
-        "DOMAIN-REGEX": "ドメイン正規表現を一致させる",
-        "GEOSITE": "Geosite内のドメインを一致させる",
-        "GEOIP": "IPの所属国コードを一致させる",
-        "SRC-GEOIP": "送信元IPの所属国コードを一致させる",
-        "IP-ASN": "IPの所属ASNを一致させる",
-        "SRC-IP-ASN": "送信元IPの所属ASNを一致させる",
-        "IP-CIDR": "IPアドレス範囲を一致させる",
-        "IP-CIDR6": "IPアドレス範囲を一致させる",
-        "SRC-IP-CIDR": "送信元IPアドレス範囲を一致させる",
-        "IP-SUFFIX": "IPサフィックス範囲を一致させる",
-        "SRC-IP-SUFFIX": "送信元IPサフィックス範囲を一致させる",
-        "SRC-PORT": "送信元ポート範囲を一致させる",
-        "DST-PORT": "宛先ポート範囲を一致させる",
-        "IN-PORT": "入力ポートを一致させる",
-        "DSCP": "DSCPマーク（TPROXY UDP入力のみ）",
-        "PROCESS-NAME": "プロセス名を一致させる（Androidパッケージ名）",
-        "PROCESS-PATH": "完全なプロセスパスを一致させる",
-        "PROCESS-NAME-REGEX": "完全なプロセス名を正規表現で一致させる（Androidパッケージ名）",
-        "PROCESS-PATH-REGEX": "完全なプロセスパスを正規表現で一致させる",
-        "NETWORK": "トランスポートプロトコルを一致させる (TCP/UDP)",
-        "UID": "LinuxユーザーIDを一致させる",
-        "IN-TYPE": "入力タイプを一致させる",
-        "IN-USER": "入力ユーザー名を一致させる",
-        "IN-NAME": "入力名を一致させる",
-        "SUB-RULE": "サブルール",
-        "RULE-SET": "ルールセットを一致させる",
-        "AND": "論理積",
-        "OR": "論理和",
-        "NOT": "論理否定",
-        "MATCH": "すべてのリクエストを一致させる"
       }
     }
   },
   "home": {
     "page": {
-      "title": "ホーム",
       "tooltips": {
         "lightweightMode": "軽量モード",
         "manual": "マニュアル",
@@ -563,7 +596,6 @@
         "proxyMode": "プロキシモード"
       },
       "settings": {
-        "title": "ホーム設定",
         "cards": {
           "profile": "プロファイルカード",
           "currentProxy": "現在のプロキシカード",
@@ -574,10 +606,16 @@
           "ip": "IP情報カード",
           "clashInfo": "Clash情報カード",
           "systemInfo": "システム情報カード"
+        },
+        "header": {
+          "title": "ホーム設定"
         }
+      },
+      "header": {
+        "title": "ホーム"
       }
     },
-    "cards": {
+    "components": {
       "proxyTun": {
         "status": {
           "systemProxyEnabled": "システムプロキシが有効になっています。アプリケーションはプロキシを通じてネットワークにアクセスします。",
@@ -691,13 +729,15 @@
   },
   "unlock": {
     "page": {
-      "title": "ロック解除テスト",
       "actions": {
         "testing": "テスト中..."
       },
       "empty": "アンロックテスト項目はありません",
       "messages": {
         "detectionTimeout": "Detection timeout or failed"
+      },
+      "header": {
+        "title": "ロック解除テスト"
       }
     }
   },

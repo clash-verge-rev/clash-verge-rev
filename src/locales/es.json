@@ -300,10 +300,6 @@
   },
   "proxies": {
     "page": {
-      "title": {
-        "default": "Grupos de proxies",
-        "chainMode": "Proxy Chain Mode"
-      },
       "modes": {
         "rule": "Rule",
         "global": "Global",
@@ -321,13 +317,6 @@
         "actions": {
           "updateAll": "Actualizar todo",
           "update": "Actualizar"
-        },
-        "notices": {
-          "updateSuccess": "{{name}} updated successfully",
-          "updateFailed": "Failed to update {{name}}: {{message}}",
-          "genericError": "Update failed: {{message}}",
-          "none": "No providers available to update",
-          "allUpdated": "All providers updated successfully"
         }
       },
       "rules": {
@@ -365,27 +354,45 @@
       },
       "messages": {
         "directMode": "Modo de conexión directa"
+      },
+      "header": {
+        "title": {
+          "default": "Grupos de proxies",
+          "chainMode": "Proxy Chain Mode"
+        }
       }
     },
-    "enums": {
-      "strategies": {
-        "select": "Seleccionar proxy manualmente",
-        "url-test": "Seleccionar proxy según la prueba de latencia de la URL",
-        "fallback": "Cambiar a otro proxy cuando no esté disponible",
-        "load-balance": "Asignar proxy según el equilibrio de carga",
-        "relay": "Transferir según la cadena de proxy definida"
-      },
-      "policies": {
-        "DIRECT": "Conexión directa",
-        "REJECT": "Rechazar solicitud",
-        "REJECT-DROP": "Descartar solicitud",
-        "PASS": "Saltar esta regla"
+    "feedback": {
+      "notifications": {
+        "provider": {
+          "updateSuccess": "{{name}} updated successfully",
+          "updateFailed": "Failed to update {{name}}: {{message}}",
+          "genericError": "Update failed: {{message}}",
+          "none": "No providers available to update",
+          "allUpdated": "All providers updated successfully"
+        }
+      }
+    },
+    "components": {
+      "enums": {
+        "strategies": {
+          "select": "Seleccionar proxy manualmente",
+          "url-test": "Seleccionar proxy según la prueba de latencia de la URL",
+          "fallback": "Cambiar a otro proxy cuando no esté disponible",
+          "load-balance": "Asignar proxy según el equilibrio de carga",
+          "relay": "Transferir según la cadena de proxy definida"
+        },
+        "policies": {
+          "DIRECT": "Conexión directa",
+          "REJECT": "Rechazar solicitud",
+          "REJECT-DROP": "Descartar solicitud",
+          "PASS": "Saltar esta regla"
+        }
       }
     }
   },
   "connections": {
     "page": {
-      "title": "Conexiones",
       "summary": {
         "downloaded": "Descargado",
         "uploaded": "Subido"
@@ -396,69 +403,83 @@
         "pause": "Pausar",
         "resume": "Reanudar",
         "closeAll": "Cerrar todas"
+      },
+      "header": {
+        "title": "Conexiones"
       }
     },
-    "fields": {
-      "host": "Host",
-      "downloaded": "Descargado",
-      "uploaded": "Subido",
-      "dlSpeed": "Velocidad de descarga",
-      "ulSpeed": "Velocidad de subida",
-      "chains": "Cadenas",
-      "rule": "Regla",
-      "process": "Proceso",
-      "time": "Tiempo de conexión",
-      "source": "Dirección de origen",
-      "destination": "Dirección de destino",
-      "destinationPort": "Puerto de destino",
-      "type": "Tipo"
-    },
-    "order": {
-      "default": "Default",
-      "uploadSpeed": "Velocidad de subida",
-      "downloadSpeed": "Velocidad de descarga"
-    },
-    "actions": {
-      "closeConnection": "Cerrar conexión"
+    "components": {
+      "fields": {
+        "host": "Host",
+        "downloaded": "Descargado",
+        "uploaded": "Subido",
+        "dlSpeed": "Velocidad de descarga",
+        "ulSpeed": "Velocidad de subida",
+        "chains": "Cadenas",
+        "rule": "Regla",
+        "process": "Proceso",
+        "time": "Tiempo de conexión",
+        "source": "Dirección de origen",
+        "destination": "Dirección de destino",
+        "destinationPort": "Puerto de destino",
+        "type": "Tipo"
+      },
+      "order": {
+        "default": "Default",
+        "uploadSpeed": "Velocidad de subida",
+        "downloadSpeed": "Velocidad de descarga"
+      },
+      "actions": {
+        "closeConnection": "Cerrar conexión"
+      }
     }
   },
   "tests": {
-    "item": {
-      "actions": {
-        "test": "Prueba"
-      }
-    },
-    "viewer": {
-      "title": {
-        "create": "Crear prueba",
-        "edit": "Editar prueba"
-      },
-      "fields": {
-        "url": "URL de prueba"
-      }
-    },
     "page": {
-      "title": "Prueba",
       "actions": {
         "testAll": "Probar todo"
+      },
+      "header": {
+        "title": "Prueba"
       }
     },
-    "statuses": {
-      "pending": "Pendiente de detección",
-      "yes": "Soportado",
-      "no": "No soportado",
-      "failed": "Prueba fallida",
-      "completed": "Detección completada",
-      "disallowedIsp": "Proveedor de servicios de Internet no permitido",
-      "originalsOnly": "Solo originales",
-      "noDisney": "No (IP Banned By Disney+)",
-      "unsupportedRegion": "País/región no soportado",
-      "failedNetwork": "Failed (Network Connection)"
+    "components": {
+      "item": {
+        "actions": {
+          "test": "Prueba"
+        }
+      }
+    },
+    "modals": {
+      "test": {
+        "title": {
+          "create": "Crear prueba",
+          "edit": "Editar prueba"
+        },
+        "fields": {
+          "url": "URL de prueba"
+        }
+      }
+    },
+    "feedback": {
+      "statuses": {
+        "test": {
+          "pending": "Pendiente de detección",
+          "yes": "Soportado",
+          "no": "No soportado",
+          "failed": "Prueba fallida",
+          "completed": "Detección completada",
+          "disallowedIsp": "Proveedor de servicios de Internet no permitido",
+          "originalsOnly": "Solo originales",
+          "noDisney": "No (IP Banned By Disney+)",
+          "unsupportedRegion": "País/región no soportado",
+          "failedNetwork": "Failed (Network Connection)"
+        }
+      }
     }
   },
   "logs": {
     "page": {
-      "title": "Registros",
       "actions": {
         "pause": "Pausar",
         "resume": "Reanudar",
@@ -470,20 +491,29 @@
         "info": "INFO",
         "warn": "WARN",
         "error": "ERROR"
+      },
+      "header": {
+        "title": "Registros"
       }
     }
   },
   "rules": {
     "page": {
-      "title": "Reglas",
       "provider": {
         "trigger": "Proveedor de reglas",
         "dialogTitle": "Proveedor de reglas",
         "actions": {
           "updateAll": "Actualizar todo",
           "update": "Actualizar"
-        },
-        "notices": {
+        }
+      },
+      "header": {
+        "title": "Reglas"
+      }
+    },
+    "feedback": {
+      "notifications": {
+        "provider": {
           "updateSuccess": "{{name}} updated successfully",
           "updateFailed": "Failed to update {{name}}: {{message}}",
           "genericError": "Update failed: {{message}}",
@@ -492,66 +522,69 @@
         }
       }
     },
-    "editor": {
-      "title": "Editar reglas",
-      "form": {
-        "labels": {
-          "type": "Tipo de regla",
-          "content": "Contenido de la regla",
-          "proxyPolicy": "Política de proxy"
+    "modals": {
+      "editor": {
+        "form": {
+          "labels": {
+            "type": "Tipo de regla",
+            "content": "Contenido de la regla",
+            "proxyPolicy": "Política de proxy"
+          },
+          "toggles": {
+            "noResolve": "Omitir resolución DNS"
+          },
+          "actions": {
+            "prependRule": "Agregar regla previa",
+            "appendRule": "Agregar regla posterior"
+          },
+          "validation": {
+            "conditionRequired": "Falta la condición de la regla",
+            "invalidRule": "Regla no válida"
+          }
         },
-        "toggles": {
-          "noResolve": "Omitir resolución DNS"
+        "ruleTypes": {
+          "DOMAIN": "Coincidir con el nombre de dominio completo",
+          "DOMAIN-SUFFIX": "Coincidir con el sufijo del nombre de dominio",
+          "DOMAIN-KEYWORD": "Coincidir con la palabra clave del nombre de dominio",
+          "DOMAIN-REGEX": "Coincidir con la expresión regular del nombre de dominio",
+          "GEOSITE": "Coincidir con los nombres de dominio en Geosite",
+          "GEOIP": "Coincidir con el código de país del IP",
+          "SRC-GEOIP": "Coincidir con el código de país del IP de origen",
+          "IP-ASN": "Coincidir con el ASN del IP",
+          "SRC-IP-ASN": "Coincidir con el ASN del IP de origen",
+          "IP-CIDR": "Coincidir con el rango de direcciones IP",
+          "IP-CIDR6": "Coincidir con el rango de direcciones IP",
+          "SRC-IP-CIDR": "Coincidir con el rango de direcciones IP de origen",
+          "IP-SUFFIX": "Coincidir con el rango de sufijos de IP",
+          "SRC-IP-SUFFIX": "Coincidir con el rango de sufijos de IP de origen",
+          "SRC-PORT": "Coincidir con el rango de puertos de origen de la solicitud",
+          "DST-PORT": "Coincidir con el rango de puertos de destino de la solicitud",
+          "IN-PORT": "Coincidir con el puerto de entrada",
+          "DSCP": "Etiqueta DSCP (solo para entradas UDP TPROXY)",
+          "PROCESS-NAME": "Coincidir con el nombre del proceso (nombre del paquete de Android)",
+          "PROCESS-PATH": "Coincidir con la ruta completa del proceso",
+          "PROCESS-NAME-REGEX": "Coincidir con el nombre completo del proceso mediante expresiones regulares (nombre del paquete de Android)",
+          "PROCESS-PATH-REGEX": "Coincidir con la ruta completa del proceso mediante expresiones regulares",
+          "NETWORK": "Coincidir con el protocolo de transporte (TCP/UDP)",
+          "UID": "Coincidir con el ID de usuario de Linux",
+          "IN-TYPE": "Coincidir con el tipo de entrada",
+          "IN-USER": "Coincidir con el nombre de usuario de entrada",
+          "IN-NAME": "Coincidir con el nombre de entrada",
+          "SUB-RULE": "Subregla",
+          "RULE-SET": "Coincidir con el conjunto de reglas",
+          "AND": "Y lógico",
+          "OR": "O lógico",
+          "NOT": "No lógico",
+          "MATCH": "Coincidir con todas las solicitudes"
         },
-        "actions": {
-          "prependRule": "Agregar regla previa",
-          "appendRule": "Agregar regla posterior"
-        },
-        "validation": {
-          "conditionRequired": "Falta la condición de la regla",
-          "invalidRule": "Regla no válida"
+        "header": {
+          "title": "Editar reglas"
         }
-      },
-      "ruleTypes": {
-        "DOMAIN": "Coincidir con el nombre de dominio completo",
-        "DOMAIN-SUFFIX": "Coincidir con el sufijo del nombre de dominio",
-        "DOMAIN-KEYWORD": "Coincidir con la palabra clave del nombre de dominio",
-        "DOMAIN-REGEX": "Coincidir con la expresión regular del nombre de dominio",
-        "GEOSITE": "Coincidir con los nombres de dominio en Geosite",
-        "GEOIP": "Coincidir con el código de país del IP",
-        "SRC-GEOIP": "Coincidir con el código de país del IP de origen",
-        "IP-ASN": "Coincidir con el ASN del IP",
-        "SRC-IP-ASN": "Coincidir con el ASN del IP de origen",
-        "IP-CIDR": "Coincidir con el rango de direcciones IP",
-        "IP-CIDR6": "Coincidir con el rango de direcciones IP",
-        "SRC-IP-CIDR": "Coincidir con el rango de direcciones IP de origen",
-        "IP-SUFFIX": "Coincidir con el rango de sufijos de IP",
-        "SRC-IP-SUFFIX": "Coincidir con el rango de sufijos de IP de origen",
-        "SRC-PORT": "Coincidir con el rango de puertos de origen de la solicitud",
-        "DST-PORT": "Coincidir con el rango de puertos de destino de la solicitud",
-        "IN-PORT": "Coincidir con el puerto de entrada",
-        "DSCP": "Etiqueta DSCP (solo para entradas UDP TPROXY)",
-        "PROCESS-NAME": "Coincidir con el nombre del proceso (nombre del paquete de Android)",
-        "PROCESS-PATH": "Coincidir con la ruta completa del proceso",
-        "PROCESS-NAME-REGEX": "Coincidir con el nombre completo del proceso mediante expresiones regulares (nombre del paquete de Android)",
-        "PROCESS-PATH-REGEX": "Coincidir con la ruta completa del proceso mediante expresiones regulares",
-        "NETWORK": "Coincidir con el protocolo de transporte (TCP/UDP)",
-        "UID": "Coincidir con el ID de usuario de Linux",
-        "IN-TYPE": "Coincidir con el tipo de entrada",
-        "IN-USER": "Coincidir con el nombre de usuario de entrada",
-        "IN-NAME": "Coincidir con el nombre de entrada",
-        "SUB-RULE": "Subregla",
-        "RULE-SET": "Coincidir con el conjunto de reglas",
-        "AND": "Y lógico",
-        "OR": "O lógico",
-        "NOT": "No lógico",
-        "MATCH": "Coincidir con todas las solicitudes"
       }
     }
   },
   "home": {
     "page": {
-      "title": "Hogar",
       "tooltips": {
         "lightweightMode": "Modo ligero",
         "manual": "Manual de uso",
@@ -563,7 +596,6 @@
         "proxyMode": "Modo de proxy"
       },
       "settings": {
-        "title": "Configuración de la página de inicio",
         "cards": {
           "profile": "Tarjeta de suscripción",
           "currentProxy": "Tarjeta de proxy actual",
@@ -574,10 +606,16 @@
           "ip": "Tarjeta de información de IP",
           "clashInfo": "Tarjetas de información de Clash",
           "systemInfo": "Tarjetas de información del sistema"
+        },
+        "header": {
+          "title": "Configuración de la página de inicio"
         }
+      },
+      "header": {
+        "title": "Hogar"
       }
     },
-    "cards": {
+    "components": {
       "proxyTun": {
         "status": {
           "systemProxyEnabled": "El proxy del sistema está habilitado. Sus aplicaciones accederán a Internet a través del proxy.",
@@ -691,13 +729,15 @@
   },
   "unlock": {
     "page": {
-      "title": "Prueba de desbloqueo",
       "actions": {
         "testing": "Probando..."
       },
       "empty": "No unlock test items",
       "messages": {
         "detectionTimeout": "Detection timeout or failed"
+      },
+      "header": {
+        "title": "Prueba de desbloqueo"
       }
     }
   },

@@ -192,7 +192,7 @@ export const TestItem = ({
                 ":hover": { bgcolor: alpha(palette.primary.main, 0.15) },
               })}
             >
-              {t("tests.item.actions.test")}
+              {t("tests.components.item.actions.test")}
             </Widget>
           )}
 

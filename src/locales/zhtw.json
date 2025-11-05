@@ -300,10 +300,6 @@
   },
   "proxies": {
     "page": {
-      "title": {
-        "default": "代理組",
-        "chainMode": "鏈式代理模式"
-      },
       "modes": {
         "rule": "規則",
         "global": "全局",
@@ -321,13 +317,6 @@
         "actions": {
           "updateAll": "全部更新",
           "update": "更新"
-        },
-        "notices": {
-          "updateSuccess": "{{name}} updated successfully",
-          "updateFailed": "Failed to update {{name}}: {{message}}",
-          "genericError": "Update failed: {{message}}",
-          "none": "No providers available to update",
-          "allUpdated": "All providers updated successfully"
         }
       },
       "rules": {
@@ -365,27 +354,45 @@
       },
       "messages": {
         "directMode": "直連模式"
+      },
+      "header": {
+        "title": {
+          "default": "代理組",
+          "chainMode": "鏈式代理模式"
+        }
       }
     },
-    "enums": {
-      "strategies": {
-        "select": "手動選擇代理",
-        "url-test": "根據網址測試延遲選擇代理",
-        "fallback": "切換至另一個備用代理",
-        "load-balance": "根據負載平衡分配代理",
-        "relay": "根據定義的代理鏈傳送"
-      },
-      "policies": {
-        "DIRECT": "直連 (DIRECT)",
-        "REJECT": "拒絕請求 (REJECT)",
-        "REJECT-DROP": "丟棄請求 (REJECT-DROP)",
-        "PASS": "跳過此規則 (PASS)"
+    "feedback": {
+      "notifications": {
+        "provider": {
+          "updateSuccess": "{{name}} updated successfully",
+          "updateFailed": "Failed to update {{name}}: {{message}}",
+          "genericError": "Update failed: {{message}}",
+          "none": "No providers available to update",
+          "allUpdated": "All providers updated successfully"
+        }
+      }
+    },
+    "components": {
+      "enums": {
+        "strategies": {
+          "select": "手動選擇代理",
+          "url-test": "根據網址測試延遲選擇代理",
+          "fallback": "切換至另一個備用代理",
+          "load-balance": "根據負載平衡分配代理",
+          "relay": "根據定義的代理鏈傳送"
+        },
+        "policies": {
+          "DIRECT": "直連 (DIRECT)",
+          "REJECT": "拒絕請求 (REJECT)",
+          "REJECT-DROP": "丟棄請求 (REJECT-DROP)",
+          "PASS": "跳過此規則 (PASS)"
+        }
       }
     }
   },
   "connections": {
     "page": {
-      "title": "連線",
       "summary": {
         "downloaded": "下載量",
         "uploaded": "上傳量"
@@ -396,69 +403,83 @@
         "pause": "暫停",
         "resume": "繼續",
         "closeAll": "關閉全部"
+      },
+      "header": {
+        "title": "連線"
       }
     },
-    "fields": {
-      "host": "主機",
-      "downloaded": "下載量",
-      "uploaded": "上傳量",
-      "dlSpeed": "下載速度",
-      "ulSpeed": "上傳速度",
-      "chains": "鏈路",
-      "rule": "規則",
-      "process": "處理程序",
-      "time": "連線時間",
-      "source": "來源位址",
-      "destination": "目標位址",
-      "destinationPort": "目標連接埠",
-      "type": "類型"
-    },
-    "order": {
-      "default": "Default",
-      "uploadSpeed": "上傳速度",
-      "downloadSpeed": "下載速度"
-    },
-    "actions": {
-      "closeConnection": "關閉連線"
+    "components": {
+      "fields": {
+        "host": "主機",
+        "downloaded": "下載量",
+        "uploaded": "上傳量",
+        "dlSpeed": "下載速度",
+        "ulSpeed": "上傳速度",
+        "chains": "鏈路",
+        "rule": "規則",
+        "process": "處理程序",
+        "time": "連線時間",
+        "source": "來源位址",
+        "destination": "目標位址",
+        "destinationPort": "目標連接埠",
+        "type": "類型"
+      },
+      "order": {
+        "default": "Default",
+        "uploadSpeed": "上傳速度",
+        "downloadSpeed": "下載速度"
+      },
+      "actions": {
+        "closeConnection": "關閉連線"
+      }
     }
   },
   "tests": {
-    "item": {
-      "actions": {
-        "test": "測試"
-      }
-    },
-    "viewer": {
-      "title": {
-        "create": "新增測試",
-        "edit": "編輯測試"
-      },
-      "fields": {
-        "url": "測試網址"
-      }
-    },
     "page": {
-      "title": "測試",
       "actions": {
         "testAll": "測試全部"
+      },
+      "header": {
+        "title": "測試"
       }
     },
-    "statuses": {
-      "pending": "待檢測",
-      "yes": "支援",
-      "no": "不支援",
-      "failed": "測試失敗",
-      "completed": "檢測完成",
-      "disallowedIsp": "不允許的網際網路服務供應商",
-      "originalsOnly": "僅限原創",
-      "noDisney": "不支援（IP被Disney+禁止）",
-      "unsupportedRegion": "不支援的國家/地區",
-      "failedNetwork": "測試失敗（網路連線問題）"
+    "components": {
+      "item": {
+        "actions": {
+          "test": "測試"
+        }
+      }
+    },
+    "modals": {
+      "test": {
+        "title": {
+          "create": "新增測試",
+          "edit": "編輯測試"
+        },
+        "fields": {
+          "url": "測試網址"
+        }
+      }
+    },
+    "feedback": {
+      "statuses": {
+        "test": {
+          "pending": "待檢測",
+          "yes": "支援",
+          "no": "不支援",
+          "failed": "測試失敗",
+          "completed": "檢測完成",
+          "disallowedIsp": "不允許的網際網路服務供應商",
+          "originalsOnly": "僅限原創",
+          "noDisney": "不支援（IP被Disney+禁止）",
+          "unsupportedRegion": "不支援的國家/地區",
+          "failedNetwork": "測試失敗（網路連線問題）"
+        }
+      }
     }
   },
   "logs": {
     "page": {
-      "title": "日誌",
       "actions": {
         "pause": "暫停",
         "resume": "繼續",
@@ -470,20 +491,29 @@
         "info": "INFO",
         "warn": "WARN",
         "error": "ERROR"
+      },
+      "header": {
+        "title": "日誌"
       }
     }
   },
   "rules": {
     "page": {
-      "title": "規則",
       "provider": {
         "trigger": "規則集合",
         "dialogTitle": "規則集合",
         "actions": {
           "updateAll": "全部更新",
           "update": "更新"
-        },
-        "notices": {
+        }
+      },
+      "header": {
+        "title": "規則"
+      }
+    },
+    "feedback": {
+      "notifications": {
+        "provider": {
           "updateSuccess": "{{name}} updated successfully",
           "updateFailed": "Failed to update {{name}}: {{message}}",
           "genericError": "Update failed: {{message}}",
@@ -492,66 +522,69 @@
         }
       }
     },
-    "editor": {
-      "title": "編輯規則",
-      "form": {
-        "labels": {
-          "type": "規則類型",
-          "content": "規則內容",
-          "proxyPolicy": "代理策略"
+    "modals": {
+      "editor": {
+        "form": {
+          "labels": {
+            "type": "規則類型",
+            "content": "規則內容",
+            "proxyPolicy": "代理策略"
+          },
+          "toggles": {
+            "noResolve": "跳過 DNS 解析"
+          },
+          "actions": {
+            "prependRule": "新增前置規則",
+            "appendRule": "新增後置規則"
+          },
+          "validation": {
+            "conditionRequired": "規則條件為必填",
+            "invalidRule": "無效規則"
+          }
         },
-        "toggles": {
-          "noResolve": "跳過 DNS 解析"
+        "ruleTypes": {
+          "DOMAIN": "配對完整網域 (DOMAIN)",
+          "DOMAIN-SUFFIX": "配對網域後綴 (DOMAIN-SUFFIX)",
+          "DOMAIN-KEYWORD": "配對網域關鍵字 (DOMAIN-KEYWORD)",
+          "DOMAIN-REGEX": "配對網域正規表示式 (DOMAIN-REGEX)",
+          "GEOSITE": "配對 Geosite 內的網域 (GEOSITE)",
+          "GEOIP": "配對 IP 所屬國家代碼 (GEOIP)",
+          "SRC-GEOIP": "配對來源 IP 所屬國家代碼 (SRC-GEOIP)",
+          "IP-ASN": "配對 IP 所屬 ASN (IP-ASN)",
+          "SRC-IP-ASN": "配對來源 IP 所屬 ASN (SRC-IP-ASN)",
+          "IP-CIDR": "配對 IP 位址範圍 (IP-CIDR)",
+          "IP-CIDR6": "配對 IP 位址範圍 (IP-CIDR6)",
+          "SRC-IP-CIDR": "配對來源 IP 位址範圍 (SRC-IP-CIDR)",
+          "IP-SUFFIX": "配對 IP 後綴範圍 (IP-SUFFIX)",
+          "SRC-IP-SUFFIX": "配對來源 IP 後綴範圍 (SRC-IP-SUFFIX)",
+          "SRC-PORT": "配對請求來源連接埠範圍 (SRC-PORT)",
+          "DST-PORT": "配對請求目標連接埠範圍 (DST-PORT)",
+          "IN-PORT": "配對傳入連接埠 (IN-PORT)",
+          "DSCP": "DSCP標記（僅限 TPROXY UDP 傳入）(DSCP)",
+          "PROCESS-NAME": "配對程序名稱 (PROCESS-NAME)",
+          "PROCESS-PATH": "配對完整程序路徑 (PROCESS-PATH)",
+          "PROCESS-NAME-REGEX": "正規表示式配對完整程序名稱 (PROCESS-NAME-REGEX)",
+          "PROCESS-PATH-REGEX": "正規表示式配對完整程序路徑 (PROCESS-PATH-REGEX)",
+          "NETWORK": "配對傳輸協定 (TCP/UDP) (NETWORK)",
+          "UID": "配對 Linux 使用者 ID (UID)",
+          "IN-TYPE": "配對傳入類型 (IN-TYPE)",
+          "IN-USER": "配對傳入使用者名稱 (IN-USER)",
+          "IN-NAME": "配對傳入名稱 (IN-NAME)",
+          "SUB-RULE": "子規則 (SUB-RULE)",
+          "RULE-SET": "配對規則集 (RULE-SET)",
+          "AND": "邏輯與 (AND)",
+          "OR": "邏輯或 (OR)",
+          "NOT": "邏輯非 (NOT)",
+          "MATCH": "配對所有請求 (MATCH)"
         },
-        "actions": {
-          "prependRule": "新增前置規則",
-          "appendRule": "新增後置規則"
-        },
-        "validation": {
-          "conditionRequired": "規則條件為必填",
-          "invalidRule": "無效規則"
+        "header": {
+          "title": "編輯規則"
         }
-      },
-      "ruleTypes": {
-        "DOMAIN": "配對完整網域 (DOMAIN)",
-        "DOMAIN-SUFFIX": "配對網域後綴 (DOMAIN-SUFFIX)",
-        "DOMAIN-KEYWORD": "配對網域關鍵字 (DOMAIN-KEYWORD)",
-        "DOMAIN-REGEX": "配對網域正規表示式 (DOMAIN-REGEX)",
-        "GEOSITE": "配對 Geosite 內的網域 (GEOSITE)",
-        "GEOIP": "配對 IP 所屬國家代碼 (GEOIP)",
-        "SRC-GEOIP": "配對來源 IP 所屬國家代碼 (SRC-GEOIP)",
-        "IP-ASN": "配對 IP 所屬 ASN (IP-ASN)",
-        "SRC-IP-ASN": "配對來源 IP 所屬 ASN (SRC-IP-ASN)",
-        "IP-CIDR": "配對 IP 位址範圍 (IP-CIDR)",
-        "IP-CIDR6": "配對 IP 位址範圍 (IP-CIDR6)",
-        "SRC-IP-CIDR": "配對來源 IP 位址範圍 (SRC-IP-CIDR)",
-        "IP-SUFFIX": "配對 IP 後綴範圍 (IP-SUFFIX)",
-        "SRC-IP-SUFFIX": "配對來源 IP 後綴範圍 (SRC-IP-SUFFIX)",
-        "SRC-PORT": "配對請求來源連接埠範圍 (SRC-PORT)",
-        "DST-PORT": "配對請求目標連接埠範圍 (DST-PORT)",
-        "IN-PORT": "配對傳入連接埠 (IN-PORT)",
-        "DSCP": "DSCP標記（僅限 TPROXY UDP 傳入）(DSCP)",
-        "PROCESS-NAME": "配對程序名稱 (PROCESS-NAME)",
-        "PROCESS-PATH": "配對完整程序路徑 (PROCESS-PATH)",
-        "PROCESS-NAME-REGEX": "正規表示式配對完整程序名稱 (PROCESS-NAME-REGEX)",
-        "PROCESS-PATH-REGEX": "正規表示式配對完整程序路徑 (PROCESS-PATH-REGEX)",
-        "NETWORK": "配對傳輸協定 (TCP/UDP) (NETWORK)",
-        "UID": "配對 Linux 使用者 ID (UID)",
-        "IN-TYPE": "配對傳入類型 (IN-TYPE)",
-        "IN-USER": "配對傳入使用者名稱 (IN-USER)",
-        "IN-NAME": "配對傳入名稱 (IN-NAME)",
-        "SUB-RULE": "子規則 (SUB-RULE)",
-        "RULE-SET": "配對規則集 (RULE-SET)",
-        "AND": "邏輯與 (AND)",
-        "OR": "邏輯或 (OR)",
-        "NOT": "邏輯非 (NOT)",
-        "MATCH": "配對所有請求 (MATCH)"
       }
     }
   },
   "home": {
     "page": {
-      "title": "首頁",
       "tooltips": {
         "lightweightMode": "輕量模式",
         "manual": "使用手冊",
@@ -563,7 +596,6 @@
         "proxyMode": "代理模式"
       },
       "settings": {
-        "title": "首頁設定",
         "cards": {
           "profile": "訂閱卡",
           "currentProxy": "目前代理卡",
@@ -574,10 +606,16 @@
           "ip": "IP資訊卡",
           "clashInfo": "Clash 資訊卡",
           "systemInfo": "系統資訊卡"
+        },
+        "header": {
+          "title": "首頁設定"
         }
+      },
+      "header": {
+        "title": "首頁"
       }
     },
-    "cards": {
+    "components": {
       "proxyTun": {
         "status": {
           "systemProxyEnabled": "系統代理已啟用，您的應用程式將透過代理存取網路",
@@ -691,13 +729,15 @@
   },
   "unlock": {
     "page": {
-      "title": "解鎖測試",
       "actions": {
         "testing": "測試中..."
       },
       "empty": "目前沒有解鎖測試項目",
       "messages": {
         "detectionTimeout": "檢測逾時或失敗"
+      },
+      "header": {
+        "title": "解鎖測試"
       }
     }
   },

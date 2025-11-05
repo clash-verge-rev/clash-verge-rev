@@ -300,10 +300,6 @@
   },
   "proxies": {
     "page": {
-      "title": {
-        "default": "Grup Proksi",
-        "chainMode": "Proxy Chain Mode"
-      },
       "modes": {
         "rule": "Rule",
         "global": "Global",
@@ -321,13 +317,6 @@
         "actions": {
           "updateAll": "Perbarui Semua",
           "update": "Perbarui"
-        },
-        "notices": {
-          "updateSuccess": "{{name}} updated successfully",
-          "updateFailed": "Failed to update {{name}}: {{message}}",
-          "genericError": "Update failed: {{message}}",
-          "none": "No providers available to update",
-          "allUpdated": "All providers updated successfully"
         }
       },
       "rules": {
@@ -365,27 +354,45 @@
       },
       "messages": {
         "directMode": "Mode Langsung"
+      },
+      "header": {
+        "title": {
+          "default": "Grup Proksi",
+          "chainMode": "Proxy Chain Mode"
+        }
       }
     },
-    "enums": {
-      "strategies": {
-        "select": "Pilih proksi secara manual",
-        "url-test": "Pilih proksi berdasarkan keterlambatan tes URL",
-        "fallback": "Beralih ke proksi lain saat terjadi kesalahan",
-        "load-balance": "Distribusikan proksi berdasarkan penyeimbangan beban",
-        "relay": "Lewatkan melalui rantai proksi yang ditentukan"
-      },
-      "policies": {
-        "DIRECT": "Data langsung keluar",
-        "REJECT": "Mencegat permintaan",
-        "REJECT-DROP": "Membuang permintaan",
-        "PASS": "Lewati aturan ini saat cocok"
+    "feedback": {
+      "notifications": {
+        "provider": {
+          "updateSuccess": "{{name}} updated successfully",
+          "updateFailed": "Failed to update {{name}}: {{message}}",
+          "genericError": "Update failed: {{message}}",
+          "none": "No providers available to update",
+          "allUpdated": "All providers updated successfully"
+        }
+      }
+    },
+    "components": {
+      "enums": {
+        "strategies": {
+          "select": "Pilih proksi secara manual",
+          "url-test": "Pilih proksi berdasarkan keterlambatan tes URL",
+          "fallback": "Beralih ke proksi lain saat terjadi kesalahan",
+          "load-balance": "Distribusikan proksi berdasarkan penyeimbangan beban",
+          "relay": "Lewatkan melalui rantai proksi yang ditentukan"
+        },
+        "policies": {
+          "DIRECT": "Data langsung keluar",
+          "REJECT": "Mencegat permintaan",
+          "REJECT-DROP": "Membuang permintaan",
+          "PASS": "Lewati aturan ini saat cocok"
+        }
       }
     }
   },
   "connections": {
     "page": {
-      "title": "Koneksi",
       "summary": {
         "downloaded": "Diunduh",
         "uploaded": "Diunggah"
@@ -396,69 +403,83 @@
         "pause": "Jeda",
         "resume": "Lanjut",
         "closeAll": "Tutup Semua"
+      },
+      "header": {
+        "title": "Koneksi"
       }
     },
-    "fields": {
-      "host": "Host",
-      "downloaded": "Diunduh",
-      "uploaded": "Diunggah",
-      "dlSpeed": "Kecepatan Unduh",
-      "ulSpeed": "Kecepatan Unggah",
-      "chains": "Rantai",
-      "rule": "Aturan",
-      "process": "Proses",
-      "time": "Waktu",
-      "source": "Sumber",
-      "destination": "IP Tujuan",
-      "destinationPort": "Port Tujuan",
-      "type": "Jenis"
-    },
-    "order": {
-      "default": "Default",
-      "uploadSpeed": "Kecepatan Unggah",
-      "downloadSpeed": "Kecepatan Unduh"
-    },
-    "actions": {
-      "closeConnection": "Tutup Koneksi"
+    "components": {
+      "fields": {
+        "host": "Host",
+        "downloaded": "Diunduh",
+        "uploaded": "Diunggah",
+        "dlSpeed": "Kecepatan Unduh",
+        "ulSpeed": "Kecepatan Unggah",
+        "chains": "Rantai",
+        "rule": "Aturan",
+        "process": "Proses",
+        "time": "Waktu",
+        "source": "Sumber",
+        "destination": "IP Tujuan",
+        "destinationPort": "Port Tujuan",
+        "type": "Jenis"
+      },
+      "order": {
+        "default": "Default",
+        "uploadSpeed": "Kecepatan Unggah",
+        "downloadSpeed": "Kecepatan Unduh"
+      },
+      "actions": {
+        "closeConnection": "Tutup Koneksi"
+      }
     }
   },
   "tests": {
-    "item": {
-      "actions": {
-        "test": "Tes"
-      }
-    },
-    "viewer": {
-      "title": {
-        "create": "Buat Tes",
-        "edit": "Ubah Tes"
-      },
-      "fields": {
-        "url": "URL Tes"
-      }
-    },
     "page": {
-      "title": "Tes",
       "actions": {
         "testAll": "Tes Semua"
+      },
+      "header": {
+        "title": "Tes"
       }
     },
-    "statuses": {
-      "pending": "Pending",
-      "yes": "Yes",
-      "no": "No",
-      "failed": "Failed",
-      "completed": "Completed",
-      "disallowedIsp": "Disallowed ISP",
-      "originalsOnly": "Originals Only",
-      "noDisney": "No (IP Banned By Disney+)",
-      "unsupportedRegion": "Unsupported Country/Region",
-      "failedNetwork": "Failed (Network Connection)"
+    "components": {
+      "item": {
+        "actions": {
+          "test": "Tes"
+        }
+      }
+    },
+    "modals": {
+      "test": {
+        "title": {
+          "create": "Buat Tes",
+          "edit": "Ubah Tes"
+        },
+        "fields": {
+          "url": "URL Tes"
+        }
+      }
+    },
+    "feedback": {
+      "statuses": {
+        "test": {
+          "pending": "Pending",
+          "yes": "Yes",
+          "no": "No",
+          "failed": "Failed",
+          "completed": "Completed",
+          "disallowedIsp": "Disallowed ISP",
+          "originalsOnly": "Originals Only",
+          "noDisney": "No (IP Banned By Disney+)",
+          "unsupportedRegion": "Unsupported Country/Region",
+          "failedNetwork": "Failed (Network Connection)"
+        }
+      }
     }
   },
   "logs": {
     "page": {
-      "title": "Log",
       "actions": {
         "pause": "Jeda",
         "resume": "Lanjut",
@@ -470,20 +491,29 @@
         "info": "INFO",
         "warn": "WARN",
         "error": "ERROR"
+      },
+      "header": {
+        "title": "Log"
       }
     }
   },
   "rules": {
     "page": {
-      "title": "Aturan",
       "provider": {
         "trigger": "Penyedia Aturan",
         "dialogTitle": "Penyedia Aturan",
         "actions": {
           "updateAll": "Perbarui Semua",
           "update": "Perbarui"
-        },
-        "notices": {
+        }
+      },
+      "header": {
+        "title": "Aturan"
+      }
+    },
+    "feedback": {
+      "notifications": {
+        "provider": {
           "updateSuccess": "{{name}} updated successfully",
           "updateFailed": "Failed to update {{name}}: {{message}}",
           "genericError": "Update failed: {{message}}",
@@ -492,66 +522,69 @@
         }
       }
     },
-    "editor": {
-      "title": "Ubah Aturan",
-      "form": {
-        "labels": {
-          "type": "Jenis Aturan",
-          "content": "Konten Aturan",
-          "proxyPolicy": "Kebijakan Proksi"
+    "modals": {
+      "editor": {
+        "form": {
+          "labels": {
+            "type": "Jenis Aturan",
+            "content": "Konten Aturan",
+            "proxyPolicy": "Kebijakan Proksi"
+          },
+          "toggles": {
+            "noResolve": "Tidak Menyelesaikan"
+          },
+          "actions": {
+            "prependRule": "Tambahkan Aturan di Awal",
+            "appendRule": "Tambahkan Aturan di Akhir"
+          },
+          "validation": {
+            "conditionRequired": "Kondisi Aturan Diperlukan",
+            "invalidRule": "Aturan Tidak Valid"
+          }
         },
-        "toggles": {
-          "noResolve": "Tidak Menyelesaikan"
+        "ruleTypes": {
+          "DOMAIN": "Cocok dengan nama domain lengkap",
+          "DOMAIN-SUFFIX": "Cocok dengan sufiks domain",
+          "DOMAIN-KEYWORD": "Cocok dengan kata kunci domain",
+          "DOMAIN-REGEX": "Cocok dengan domain menggunakan ekspresi reguler",
+          "GEOSITE": "Cocok dengan domain dalam Geosite",
+          "GEOIP": "Cocok dengan kode negara alamat IP",
+          "SRC-GEOIP": "Cocok dengan kode negara alamat IP sumber",
+          "IP-ASN": "Cocok dengan ASN alamat IP",
+          "SRC-IP-ASN": "Cocok dengan ASN alamat IP sumber",
+          "IP-CIDR": "Cocok dengan rentang alamat IP",
+          "IP-CIDR6": "Cocok dengan rentang alamat IPv6",
+          "SRC-IP-CIDR": "Cocok dengan rentang alamat IP sumber",
+          "IP-SUFFIX": "Cocok dengan rentang sufiks alamat IP",
+          "SRC-IP-SUFFIX": "Cocok dengan rentang sufiks alamat IP sumber",
+          "SRC-PORT": "Cocok dengan rentang port sumber",
+          "DST-PORT": "Cocok dengan rentang port tujuan",
+          "IN-PORT": "Cocok dengan port masuk",
+          "DSCP": "Penandaan DSCP (hanya untuk tproxy UDP masuk)",
+          "PROCESS-NAME": "Cocok dengan nama proses (nama paket Android)",
+          "PROCESS-PATH": "Cocok dengan jalur proses lengkap",
+          "PROCESS-NAME-REGEX": "Cocok dengan nama proses lengkap menggunakan ekspresi reguler (nama paket Android)",
+          "PROCESS-PATH-REGEX": "Cocok dengan jalur proses lengkap menggunakan ekspresi reguler",
+          "NETWORK": "Cocok dengan protokol transportasi (tcp/udp)",
+          "UID": "Cocok dengan ID PENGGUNA Linux",
+          "IN-TYPE": "Cocok dengan jenis masuk",
+          "IN-USER": "Cocok dengan nama pengguna masuk",
+          "IN-NAME": "Cocok dengan nama masuk",
+          "SUB-RULE": "Sub-aturan",
+          "RULE-SET": "Cocok dengan set aturan",
+          "AND": "Logika DAN",
+          "OR": "Logika ATAU",
+          "NOT": "Logika TIDAK",
+          "MATCH": "Cocok dengan semua permintaan"
         },
-        "actions": {
-          "prependRule": "Tambahkan Aturan di Awal",
-          "appendRule": "Tambahkan Aturan di Akhir"
-        },
-        "validation": {
-          "conditionRequired": "Kondisi Aturan Diperlukan",
-          "invalidRule": "Aturan Tidak Valid"
+        "header": {
+          "title": "Ubah Aturan"
         }
-      },
-      "ruleTypes": {
-        "DOMAIN": "Cocok dengan nama domain lengkap",
-        "DOMAIN-SUFFIX": "Cocok dengan sufiks domain",
-        "DOMAIN-KEYWORD": "Cocok dengan kata kunci domain",
-        "DOMAIN-REGEX": "Cocok dengan domain menggunakan ekspresi reguler",
-        "GEOSITE": "Cocok dengan domain dalam Geosite",
-        "GEOIP": "Cocok dengan kode negara alamat IP",
-        "SRC-GEOIP": "Cocok dengan kode negara alamat IP sumber",
-        "IP-ASN": "Cocok dengan ASN alamat IP",
-        "SRC-IP-ASN": "Cocok dengan ASN alamat IP sumber",
-        "IP-CIDR": "Cocok dengan rentang alamat IP",
-        "IP-CIDR6": "Cocok dengan rentang alamat IPv6",
-        "SRC-IP-CIDR": "Cocok dengan rentang alamat IP sumber",
-        "IP-SUFFIX": "Cocok dengan rentang sufiks alamat IP",
-        "SRC-IP-SUFFIX": "Cocok dengan rentang sufiks alamat IP sumber",
-        "SRC-PORT": "Cocok dengan rentang port sumber",
-        "DST-PORT": "Cocok dengan rentang port tujuan",
-        "IN-PORT": "Cocok dengan port masuk",
-        "DSCP": "Penandaan DSCP (hanya untuk tproxy UDP masuk)",
-        "PROCESS-NAME": "Cocok dengan nama proses (nama paket Android)",
-        "PROCESS-PATH": "Cocok dengan jalur proses lengkap",
-        "PROCESS-NAME-REGEX": "Cocok dengan nama proses lengkap menggunakan ekspresi reguler (nama paket Android)",
-        "PROCESS-PATH-REGEX": "Cocok dengan jalur proses lengkap menggunakan ekspresi reguler",
-        "NETWORK": "Cocok dengan protokol transportasi (tcp/udp)",
-        "UID": "Cocok dengan ID PENGGUNA Linux",
-        "IN-TYPE": "Cocok dengan jenis masuk",
-        "IN-USER": "Cocok dengan nama pengguna masuk",
-        "IN-NAME": "Cocok dengan nama masuk",
-        "SUB-RULE": "Sub-aturan",
-        "RULE-SET": "Cocok dengan set aturan",
-        "AND": "Logika DAN",
-        "OR": "Logika ATAU",
-        "NOT": "Logika TIDAK",
-        "MATCH": "Cocok dengan semua permintaan"
       }
     }
   },
   "home": {
     "page": {
-      "title": "Home",
       "tooltips": {
         "lightweightMode": "Mode Ringan",
         "manual": "Manual",
@@ -563,7 +596,6 @@
         "proxyMode": "Proxy Mode"
       },
       "settings": {
-        "title": "Home Settings",
         "cards": {
           "profile": "Profile Card",
           "currentProxy": "Current Proxy Card",
@@ -574,10 +606,16 @@
           "ip": "IP Information Card",
           "clashInfo": "Clash Info Cards",
           "systemInfo": "System Info Cards"
+        },
+        "header": {
+          "title": "Home Settings"
         }
+      },
+      "header": {
+        "title": "Home"
       }
     },
-    "cards": {
+    "components": {
       "proxyTun": {
         "status": {
           "systemProxyEnabled": "System proxy is enabled, your applications will access the network through the proxy",
@@ -691,13 +729,15 @@
   },
   "unlock": {
     "page": {
-      "title": "Unlock Test",
       "actions": {
         "testing": "Testing..."
       },
       "empty": "No unlock test items",
       "messages": {
         "detectionTimeout": "Detection timeout or failed"
+      },
+      "header": {
+        "title": "Unlock Test"
       }
     }
   },

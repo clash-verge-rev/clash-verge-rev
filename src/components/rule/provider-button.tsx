@@ -58,11 +58,14 @@ export const ProviderButton = () => {
       await refreshRules();
       await refreshRuleProviders();
 
-      showNotice.success("rules.page.provider.notices.updateSuccess", {
-        name,
-      });
+      showNotice.success(
+        "rules.feedback.notifications.provider.updateSuccess",
+        {
+          name,
+        },
+      );
     } catch (err) {
-      showNotice.error("rules.page.provider.notices.updateFailed", {
+      showNotice.error("rules.feedback.notifications.provider.updateFailed", {
         name,
         message: String(err),
       });
@@ -78,7 +81,7 @@ export const ProviderButton = () => {
       // 获取所有provider的名称
       const allProviders = Object.keys(ruleProviders || {});
       if (allProviders.length === 0) {
-        showNotice.info("rules.page.provider.notices.none");
+        showNotice.info("rules.feedback.notifications.provider.none");
         return;
       }
 
@@ -108,9 +111,9 @@ export const ProviderButton = () => {
       await refreshRules();
       await refreshRuleProviders();
 
-      showNotice.success("rules.page.provider.notices.allUpdated");
+      showNotice.success("rules.feedback.notifications.provider.allUpdated");
     } catch (err) {
-      showNotice.error("rules.page.provider.notices.genericError", {
+      showNotice.error("rules.feedback.notifications.provider.genericError", {
         message: String(err),
       });
     } finally {

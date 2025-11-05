@@ -300,10 +300,6 @@
   },
   "proxies": {
     "page": {
-      "title": {
-        "default": "Proxy-Gruppen",
-        "chainMode": "Proxy Chain Mode"
-      },
       "modes": {
         "rule": "Rule",
         "global": "Global",
@@ -321,13 +317,6 @@
         "actions": {
           "updateAll": "Alle aktualisieren",
           "update": "Aktualisieren"
-        },
-        "notices": {
-          "updateSuccess": "{{name}} updated successfully",
-          "updateFailed": "Failed to update {{name}}: {{message}}",
-          "genericError": "Update failed: {{message}}",
-          "none": "No providers available to update",
-          "allUpdated": "All providers updated successfully"
         }
       },
       "rules": {
@@ -365,27 +354,45 @@
       },
       "messages": {
         "directMode": "Direktverbindungs-Modus"
+      },
+      "header": {
+        "title": {
+          "default": "Proxy-Gruppen",
+          "chainMode": "Proxy Chain Mode"
+        }
       }
     },
-    "enums": {
-      "strategies": {
-        "select": "Proxy manuell auswählen",
-        "url-test": "Proxy basierend auf URL-Latenztest auswählen",
-        "fallback": "Bei Nichtverfügbarkeit zu einem anderen Proxy wechseln",
-        "load-balance": "Proxy basierend auf Lastverteilung zuweisen",
-        "relay": "Basierend auf definiertem Proxy-Kette weiterleiten"
-      },
-      "policies": {
-        "DIRECT": "Direktverbindung",
-        "REJECT": "Anfrage ablehnen",
-        "REJECT-DROP": "Anfrage verwerfen",
-        "PASS": "Diese Regel überspringen"
+    "feedback": {
+      "notifications": {
+        "provider": {
+          "updateSuccess": "{{name}} updated successfully",
+          "updateFailed": "Failed to update {{name}}: {{message}}",
+          "genericError": "Update failed: {{message}}",
+          "none": "No providers available to update",
+          "allUpdated": "All providers updated successfully"
+        }
+      }
+    },
+    "components": {
+      "enums": {
+        "strategies": {
+          "select": "Proxy manuell auswählen",
+          "url-test": "Proxy basierend auf URL-Latenztest auswählen",
+          "fallback": "Bei Nichtverfügbarkeit zu einem anderen Proxy wechseln",
+          "load-balance": "Proxy basierend auf Lastverteilung zuweisen",
+          "relay": "Basierend auf definiertem Proxy-Kette weiterleiten"
+        },
+        "policies": {
+          "DIRECT": "Direktverbindung",
+          "REJECT": "Anfrage ablehnen",
+          "REJECT-DROP": "Anfrage verwerfen",
+          "PASS": "Diese Regel überspringen"
+        }
       }
     }
   },
   "connections": {
     "page": {
-      "title": "Verbindungen",
       "summary": {
         "downloaded": "Heruntergeladen",
         "uploaded": "Hochgeladen"
@@ -396,69 +403,83 @@
         "pause": "Pausieren",
         "resume": "Fortsetzen",
         "closeAll": "Alle schließen"
+      },
+      "header": {
+        "title": "Verbindungen"
       }
     },
-    "fields": {
-      "host": "Host",
-      "downloaded": "Heruntergeladen",
-      "uploaded": "Hochgeladen",
-      "dlSpeed": "Download-Geschwindigkeit",
-      "ulSpeed": "Upload-Geschwindigkeit",
-      "chains": "Ketten",
-      "rule": "Regel",
-      "process": "Prozess",
-      "time": "Verbindungszeit",
-      "source": "Quelladresse",
-      "destination": "Zieladresse",
-      "destinationPort": "Zielport",
-      "type": "Typ"
-    },
-    "order": {
-      "default": "Default",
-      "uploadSpeed": "Upload-Geschwindigkeit",
-      "downloadSpeed": "Download-Geschwindigkeit"
-    },
-    "actions": {
-      "closeConnection": "Verbindung schließen"
+    "components": {
+      "fields": {
+        "host": "Host",
+        "downloaded": "Heruntergeladen",
+        "uploaded": "Hochgeladen",
+        "dlSpeed": "Download-Geschwindigkeit",
+        "ulSpeed": "Upload-Geschwindigkeit",
+        "chains": "Ketten",
+        "rule": "Regel",
+        "process": "Prozess",
+        "time": "Verbindungszeit",
+        "source": "Quelladresse",
+        "destination": "Zieladresse",
+        "destinationPort": "Zielport",
+        "type": "Typ"
+      },
+      "order": {
+        "default": "Default",
+        "uploadSpeed": "Upload-Geschwindigkeit",
+        "downloadSpeed": "Download-Geschwindigkeit"
+      },
+      "actions": {
+        "closeConnection": "Verbindung schließen"
+      }
     }
   },
   "tests": {
-    "item": {
-      "actions": {
-        "test": "Testen"
-      }
-    },
-    "viewer": {
-      "title": {
-        "create": "Neuen Test erstellen",
-        "edit": "Test bearbeiten"
-      },
-      "fields": {
-        "url": "Test-URL"
-      }
-    },
     "page": {
-      "title": "Testen",
       "actions": {
         "testAll": "Alle testen"
+      },
+      "header": {
+        "title": "Testen"
       }
     },
-    "statuses": {
-      "pending": "Wartend auf Prüfung",
-      "yes": "Unterstützt",
-      "no": "Nicht unterstützt",
-      "failed": "Test fehlgeschlagen",
-      "completed": "Prüfung abgeschlossen",
-      "disallowedIsp": "Nicht zugelassener Internetdienstanbieter",
-      "originalsOnly": "Nur Original",
-      "noDisney": "No (IP Banned By Disney+)",
-      "unsupportedRegion": "Nicht unterstütztes Land/Region",
-      "failedNetwork": "Failed (Network Connection)"
+    "components": {
+      "item": {
+        "actions": {
+          "test": "Testen"
+        }
+      }
+    },
+    "modals": {
+      "test": {
+        "title": {
+          "create": "Neuen Test erstellen",
+          "edit": "Test bearbeiten"
+        },
+        "fields": {
+          "url": "Test-URL"
+        }
+      }
+    },
+    "feedback": {
+      "statuses": {
+        "test": {
+          "pending": "Wartend auf Prüfung",
+          "yes": "Unterstützt",
+          "no": "Nicht unterstützt",
+          "failed": "Test fehlgeschlagen",
+          "completed": "Prüfung abgeschlossen",
+          "disallowedIsp": "Nicht zugelassener Internetdienstanbieter",
+          "originalsOnly": "Nur Original",
+          "noDisney": "No (IP Banned By Disney+)",
+          "unsupportedRegion": "Nicht unterstütztes Land/Region",
+          "failedNetwork": "Failed (Network Connection)"
+        }
+      }
     }
   },
   "logs": {
     "page": {
-      "title": "Protokolle",
       "actions": {
         "pause": "Pausieren",
         "resume": "Fortsetzen",
@@ -470,20 +491,29 @@
         "info": "INFO",
         "warn": "WARN",
         "error": "ERROR"
+      },
+      "header": {
+        "title": "Protokolle"
       }
     }
   },
   "rules": {
     "page": {
-      "title": "Regeln",
       "provider": {
         "trigger": "Regelsammlung",
         "dialogTitle": "Regelsammlung",
         "actions": {
           "updateAll": "Alle aktualisieren",
           "update": "Aktualisieren"
-        },
-        "notices": {
+        }
+      },
+      "header": {
+        "title": "Regeln"
+      }
+    },
+    "feedback": {
+      "notifications": {
+        "provider": {
           "updateSuccess": "{{name}} updated successfully",
           "updateFailed": "Failed to update {{name}}: {{message}}",
           "genericError": "Update failed: {{message}}",
@@ -492,66 +522,69 @@
         }
       }
     },
-    "editor": {
-      "title": "Regeln bearbeiten",
-      "form": {
-        "labels": {
-          "type": "Regeltyp",
-          "content": "Regelinhalt",
-          "proxyPolicy": "Proxy-Strategie"
+    "modals": {
+      "editor": {
+        "form": {
+          "labels": {
+            "type": "Regeltyp",
+            "content": "Regelinhalt",
+            "proxyPolicy": "Proxy-Strategie"
+          },
+          "toggles": {
+            "noResolve": "DNS-Auflösung überspringen"
+          },
+          "actions": {
+            "prependRule": "Vorherige Regel hinzufügen",
+            "appendRule": "Nachfolgende Regel hinzufügen"
+          },
+          "validation": {
+            "conditionRequired": "Regelbedingung fehlt",
+            "invalidRule": "Ungültige Regel"
+          }
         },
-        "toggles": {
-          "noResolve": "DNS-Auflösung überspringen"
+        "ruleTypes": {
+          "DOMAIN": "Vollständigen Domainnamen übereinstimmen",
+          "DOMAIN-SUFFIX": "Domain-Suffix übereinstimmen",
+          "DOMAIN-KEYWORD": "Domain-Schlüsselwort übereinstimmen",
+          "DOMAIN-REGEX": "Domain-Regulärer Ausdruck übereinstimmen",
+          "GEOSITE": "Domainnamen in Geosite übereinstimmen",
+          "GEOIP": "IP-Ländercode übereinstimmen",
+          "SRC-GEOIP": "Quell-IP-Ländercode übereinstimmen",
+          "IP-ASN": "IP-ASN übereinstimmen",
+          "SRC-IP-ASN": "Quell-IP-ASN übereinstimmen",
+          "IP-CIDR": "IP-Adressbereich übereinstimmen",
+          "IP-CIDR6": "IP-Adressbereich übereinstimmen",
+          "SRC-IP-CIDR": "Quell-IP-Adressbereich übereinstimmen",
+          "IP-SUFFIX": "IP-Suffix-Bereich übereinstimmen",
+          "SRC-IP-SUFFIX": "Quell-IP-Suffix-Bereich übereinstimmen",
+          "SRC-PORT": "Quellportbereich der Anfrage übereinstimmen",
+          "DST-PORT": "Zielportbereich der Anfrage übereinstimmen",
+          "IN-PORT": "Eingangsport übereinstimmen",
+          "DSCP": "DSCP-Markierung (nur für TPROXY UDP-Eingang)",
+          "PROCESS-NAME": "Prozessnamen übereinstimmen (Android-Paketname)",
+          "PROCESS-PATH": "Vollständigen Prozesspfad übereinstimmen",
+          "PROCESS-NAME-REGEX": "Regulärer Ausdruck für vollständigen Prozessnamen übereinstimmen (Android-Paketname)",
+          "PROCESS-PATH-REGEX": "Regulärer Ausdruck für vollständigen Prozesspfad übereinstimmen",
+          "NETWORK": "Übertragungsprotokoll übereinstimmen (TCP/UDP)",
+          "UID": "Linux-USER-ID übereinstimmen",
+          "IN-TYPE": "Eingangstyp übereinstimmen",
+          "IN-USER": "Eingangsbenutzername übereinstimmen",
+          "IN-NAME": "Eingangsname übereinstimmen",
+          "SUB-RULE": "Unterregel",
+          "RULE-SET": "Regelsatz übereinstimmen",
+          "AND": "Logisches UND",
+          "OR": "Logisches ODER",
+          "NOT": "Logisches NICHT",
+          "MATCH": "Alle Anfragen übereinstimmen"
         },
-        "actions": {
-          "prependRule": "Vorherige Regel hinzufügen",
-          "appendRule": "Nachfolgende Regel hinzufügen"
-        },
-        "validation": {
-          "conditionRequired": "Regelbedingung fehlt",
-          "invalidRule": "Ungültige Regel"
+        "header": {
+          "title": "Regeln bearbeiten"
         }
-      },
-      "ruleTypes": {
-        "DOMAIN": "Vollständigen Domainnamen übereinstimmen",
-        "DOMAIN-SUFFIX": "Domain-Suffix übereinstimmen",
-        "DOMAIN-KEYWORD": "Domain-Schlüsselwort übereinstimmen",
-        "DOMAIN-REGEX": "Domain-Regulärer Ausdruck übereinstimmen",
-        "GEOSITE": "Domainnamen in Geosite übereinstimmen",
-        "GEOIP": "IP-Ländercode übereinstimmen",
-        "SRC-GEOIP": "Quell-IP-Ländercode übereinstimmen",
-        "IP-ASN": "IP-ASN übereinstimmen",
-        "SRC-IP-ASN": "Quell-IP-ASN übereinstimmen",
-        "IP-CIDR": "IP-Adressbereich übereinstimmen",
-        "IP-CIDR6": "IP-Adressbereich übereinstimmen",
-        "SRC-IP-CIDR": "Quell-IP-Adressbereich übereinstimmen",
-        "IP-SUFFIX": "IP-Suffix-Bereich übereinstimmen",
-        "SRC-IP-SUFFIX": "Quell-IP-Suffix-Bereich übereinstimmen",
-        "SRC-PORT": "Quellportbereich der Anfrage übereinstimmen",
-        "DST-PORT": "Zielportbereich der Anfrage übereinstimmen",
-        "IN-PORT": "Eingangsport übereinstimmen",
-        "DSCP": "DSCP-Markierung (nur für TPROXY UDP-Eingang)",
-        "PROCESS-NAME": "Prozessnamen übereinstimmen (Android-Paketname)",
-        "PROCESS-PATH": "Vollständigen Prozesspfad übereinstimmen",
-        "PROCESS-NAME-REGEX": "Regulärer Ausdruck für vollständigen Prozessnamen übereinstimmen (Android-Paketname)",
-        "PROCESS-PATH-REGEX": "Regulärer Ausdruck für vollständigen Prozesspfad übereinstimmen",
-        "NETWORK": "Übertragungsprotokoll übereinstimmen (TCP/UDP)",
-        "UID": "Linux-USER-ID übereinstimmen",
-        "IN-TYPE": "Eingangstyp übereinstimmen",
-        "IN-USER": "Eingangsbenutzername übereinstimmen",
-        "IN-NAME": "Eingangsname übereinstimmen",
-        "SUB-RULE": "Unterregel",
-        "RULE-SET": "Regelsatz übereinstimmen",
-        "AND": "Logisches UND",
-        "OR": "Logisches ODER",
-        "NOT": "Logisches NICHT",
-        "MATCH": "Alle Anfragen übereinstimmen"
       }
     }
   },
   "home": {
     "page": {
-      "title": "Startseite",
       "tooltips": {
         "lightweightMode": "Leichtgewichtiger Modus",
         "manual": "Bedienungsanleitung",
@@ -563,7 +596,6 @@
         "proxyMode": "Proxy-Modus"
       },
       "settings": {
-        "title": "Startseite-Einstellungen",
         "cards": {
           "profile": "Abonnement-Karte",
           "currentProxy": "Aktueller Proxy-Karte",
@@ -574,10 +606,16 @@
           "ip": "IP-Informationen-Karte",
           "clashInfo": "Clash-Informationen-Karten",
           "systemInfo": "Systeminformationen-Karten"
+        },
+        "header": {
+          "title": "Startseite-Einstellungen"
         }
+      },
+      "header": {
+        "title": "Startseite"
       }
     },
-    "cards": {
+    "components": {
       "proxyTun": {
         "status": {
           "systemProxyEnabled": "Der Systemproxy ist aktiviert. Ihre Anwendungen werden über den Proxy auf das Netzwerk zugreifen.",
@@ -691,13 +729,15 @@
   },
   "unlock": {
     "page": {
-      "title": "Entsperrungstest",
       "actions": {
         "testing": "Wird getestet..."
       },
       "empty": "No unlock test items",
       "messages": {
         "detectionTimeout": "Detection timeout or failed"
+      },
+      "header": {
+        "title": "Entsperrungstest"
       }
     }
   },
