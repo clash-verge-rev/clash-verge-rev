@@ -6,9 +6,14 @@ use aes_gcm::{
 use base64::{Engine, engine::general_purpose::STANDARD};
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 use std::cell::Cell;
+use std::future::Future;
 
 const NONCE_LENGTH: usize = 12;
-thread_local!(static ENCRYPTION_CONTEXT: Cell<bool> = const { Cell::new(false) });
+
+// Use task-local context so the flag follows the async task across threads
+tokio::task_local! {
+    static ENCRYPTION_ACTIVE: Cell<bool>;
+}
 
 /// Encrypt data
 #[allow(deprecated)]
@@ -92,31 +97,14 @@ where
     }
 }
 
-pub struct EncryptionGuard;
-
-impl EncryptionGuard {
-    pub fn new() -> Self {
-        ENCRYPTION_CONTEXT.with(|ctx| {
-            ctx.set(true);
-        });
-        EncryptionGuard
-    }
-}
-
-impl Default for EncryptionGuard {
-    fn default() -> Self {
-        Self::new()
-    }
-}
-
-impl Drop for EncryptionGuard {
-    fn drop(&mut self) {
-        ENCRYPTION_CONTEXT.with(|ctx| {
-            ctx.set(false);
-        });
-    }
+pub async fn with_encryption<F, Fut, R>(f: F) -> R
+where
+    F: FnOnce() -> Fut,
+    Fut: Future<Output = R>,
+{
+    ENCRYPTION_ACTIVE.scope(Cell::new(true), f()).await
 }
 
 fn is_encryption_active() -> bool {
-    ENCRYPTION_CONTEXT.with(|ctx| ctx.get())
+    ENCRYPTION_ACTIVE.try_with(|c| c.get()).unwrap_or(false)
 }
