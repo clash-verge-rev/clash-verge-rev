@@ -24,6 +24,8 @@ use futures::future::join_all;
 use parking_lot::Mutex;
 use smartstring::alias::String;
 use std::collections::HashMap;
+use std::future::Future;
+use std::pin::Pin;
 use std::sync::Arc;
 use std::{
     sync::atomic::{AtomicBool, Ordering},
@@ -574,9 +576,6 @@ impl Tray {
                     if !should_handle_tray_click() {
                         return;
                     }
-
-                    use std::future::Future;
-                    use std::pin::Pin;
 
                     let fut: Pin<Box<dyn Future<Output = ()> + Send>> = match tray_event.as_str() {
                         "system_proxy" => Box::pin(async move {
@@ -1226,7 +1225,14 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
                 };
                 feat::switch_proxy_node(group_name, proxy_name).await;
             }
-            _ => {}
+            _ => {
+                logging!(
+                    debug,
+                    Type::Tray,
+                    "Unhandled tray menu event: {:?}",
+                    event.id
+                );
+            }
         }
 
         // We dont expected to refresh tray state here

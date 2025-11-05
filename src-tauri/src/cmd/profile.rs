@@ -292,8 +292,7 @@ async fn restore_previous_profile(prev_profile: &String) -> CmdResult<()> {
     };
     Config::profiles()
         .await
-        .edit_draft(|d| d.patch_config(&restore_profiles))
-        .stringify_err()?;
+        .edit_draft(|d| d.patch_config(&restore_profiles));
     Config::profiles().await.apply();
     crate::process::AsyncHandler::spawn(|| async move {
         if let Err(e) = profiles_save_file_safe().await {
@@ -412,7 +411,7 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
         CURRENT_SWITCHING_PROFILE.store(false, Ordering::Release);
         return Ok(false);
     }
-    let _ = Config::profiles()
+    Config::profiles()
         .await
         .edit_draft(|d| d.patch_config(&profiles));
 

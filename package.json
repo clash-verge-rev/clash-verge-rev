@@ -55,7 +55,7 @@
     "@tauri-apps/plugin-updater": "2.9.0",
     "@types/json-schema": "^7.0.15",
     "ahooks": "^3.9.6",
-    "axios": "^1.13.1",
+    "axios": "^1.13.2",
     "dayjs": "1.11.19",
     "foxact": "^0.2.49",
     "i18next": "^25.6.0",
@@ -82,7 +82,7 @@
     "@actions/github": "^6.0.1",
     "@eslint-react/eslint-plugin": "^2.3.1",
     "@eslint/js": "^9.39.1",
-    "@tauri-apps/cli": "2.9.2",
+    "@tauri-apps/cli": "2.9.3",
     "@types/js-yaml": "^4.0.9",
     "@types/lodash-es": "^4.17.12",
     "@types/node": "^24.10.0",
@@ -119,7 +119,7 @@
     "vite": "^7.1.12",
     "vite-plugin-monaco-editor-esm": "^2.0.2",
     "vite-plugin-svgr": "^4.5.0",
-    "vitest": "^4.0.6"
+    "vitest": "^4.0.7"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": [
