@@ -56,7 +56,9 @@ export const WebUIItem = (props: Props) => {
             size="small"
             value={editValue}
             onChange={(e) => setEditValue(e.target.value)}
-            placeholder={t("settings.webUI.messages.supportedPlaceholders")}
+            placeholder={t(
+              "settings.modals.webUI.messages.supportedPlaceholders",
+            )}
           />
           <IconButton
             size="small"
@@ -127,7 +129,7 @@ export const WebUIItem = (props: Props) => {
         </Typography>
         <IconButton
           size="small"
-          title={t("settings.webUI.actions.openUrl")}
+          title={t("settings.modals.webUI.actions.openUrl")}
           color="inherit"
           onClick={() => onOpenUrl?.(value)}
         >

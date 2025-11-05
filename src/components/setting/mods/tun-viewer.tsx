@@ -80,7 +80,7 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
       );
       try {
         await enhanceProfiles();
-        showNotice.success("settings.tun.messages.applied");
+        showNotice.success("settings.modals.tun.messages.applied");
       } catch (err: any) {
         showNotice.error(err);
       }
@@ -95,7 +95,7 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
       open={open}
       title={
         <Box display="flex" justifyContent="space-between" gap={1}>
-          <Typography variant="h6">{t("settings.tun.title")}</Typography>
+          <Typography variant="h6">{t("settings.modals.tun.title")}</Typography>
           <Button
             variant="outlined"
             size="small"
@@ -128,7 +128,7 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
               );
             }}
           >
-            {t("settings.tun.actions.reset")}
+            {t("settings.modals.tun.actions.reset")}
           </Button>
         </Box>
       }
@@ -141,7 +141,7 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
     >
       <List>
         <ListItem sx={{ padding: "5px 2px" }}>
-          <ListItemText primary={t("settings.tun.fields.stack")} />
+          <ListItemText primary={t("settings.modals.tun.fields.stack")} />
           <StackModeSwitch
             value={values.stack}
             onChange={(value) => {
@@ -154,7 +154,7 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
         </ListItem>
 
         <ListItem sx={{ padding: "5px 2px" }}>
-          <ListItemText primary={t("settings.tun.fields.device")} />
+          <ListItemText primary={t("settings.modals.tun.fields.device")} />
           <TextField
             autoComplete="new-password"
             size="small"
@@ -171,7 +171,7 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
         </ListItem>
 
         <ListItem sx={{ padding: "5px 2px" }}>
-          <ListItemText primary={t("settings.tun.fields.autoRoute")} />
+          <ListItemText primary={t("settings.modals.tun.fields.autoRoute")} />
           <Switch
             edge="end"
             checked={values.autoRoute}
@@ -180,7 +180,7 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
         </ListItem>
 
         <ListItem sx={{ padding: "5px 2px" }}>
-          <ListItemText primary={t("settings.tun.fields.strictRoute")} />
+          <ListItemText primary={t("settings.modals.tun.fields.strictRoute")} />
           <Switch
             edge="end"
             checked={values.strictRoute}
@@ -190,7 +190,7 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
 
         <ListItem sx={{ padding: "5px 2px" }}>
           <ListItemText
-            primary={t("settings.tun.fields.autoDetectInterface")}
+            primary={t("settings.modals.tun.fields.autoDetectInterface")}
           />
           <Switch
             edge="end"
@@ -202,7 +202,7 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
         </ListItem>
 
         <ListItem sx={{ padding: "5px 2px" }}>
-          <ListItemText primary={t("settings.tun.fields.dnsHijack")} />
+          <ListItemText primary={t("settings.modals.tun.fields.dnsHijack")} />
           <TextField
             autoComplete="new-password"
             size="small"
@@ -211,7 +211,7 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
             spellCheck="false"
             sx={{ width: 250 }}
             value={values.dnsHijack.join(",")}
-            placeholder={t("settings.tun.tooltips.dnsHijack")}
+            placeholder={t("settings.modals.tun.tooltips.dnsHijack")}
             onChange={(e) =>
               setValues((v) => ({ ...v, dnsHijack: e.target.value.split(",") }))
             }
@@ -219,7 +219,7 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
         </ListItem>
 
         <ListItem sx={{ padding: "5px 2px" }}>
-          <ListItemText primary={t("settings.tun.fields.mtu")} />
+          <ListItemText primary={t("settings.modals.tun.fields.mtu")} />
           <TextField
             autoComplete="new-password"
             size="small"

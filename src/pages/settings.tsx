@@ -36,7 +36,7 @@ const SettingPage = () => {
 
   return (
     <BasePage
-      title={t("settings.page.title")}
+      title={t("settings.page.header.title")}
       header={
         <ButtonGroup variant="contained" aria-label="Basic button group">
           <IconButton

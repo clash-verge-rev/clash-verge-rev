@@ -509,7 +509,7 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
         // 使用YAML编辑器的值
         const parsedConfig = yaml.load(yamlContent);
         if (typeof parsedConfig !== "object" || parsedConfig === null) {
-          throw new Error(t("settings.dns.errors.invalid"));
+          throw new Error(t("settings.modals.dns.errors.invalid"));
         }
         config = parsedConfig as Record<string, any>;
       }
@@ -547,7 +547,10 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
           }
         }
 
-        showNotice.error("settings.dns.messages.configError", cleanErrorMsg);
+        showNotice.error(
+          "settings.modals.dns.messages.configError",
+          cleanErrorMsg,
+        );
         return;
       }
 
@@ -558,7 +561,7 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
       }
 
       setOpen(false);
-      showNotice.success("settings.dns.messages.saved");
+      showNotice.success("settings.modals.dns.messages.saved");
     } catch (err) {
       showNotice.error(err);
     }
@@ -610,7 +613,7 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
       open={open}
       title={
         <Box display="flex" justifyContent="space-between" alignItems="center">
-          {t("settings.dns.dialog.title")}
+          {t("settings.modals.dns.dialog.title")}
           <Box display="flex" alignItems="center" gap={1}>
             <Button
               variant="outlined"
@@ -654,7 +657,7 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
         color="warning.main"
         sx={{ mb: 2, mt: 0, fontStyle: "italic" }}
       >
-        {t("settings.dns.dialog.warning")}
+        {t("settings.modals.dns.dialog.warning")}
       </Typography>
 
       {visualization ? (
@@ -663,11 +666,11 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
             variant="subtitle1"
             sx={{ mt: 1, mb: 1, fontWeight: "bold" }}
           >
-            {t("settings.dns.sections.general")}
+            {t("settings.modals.dns.sections.general")}
           </Typography>
 
           <Item>
-            <ListItemText primary={t("settings.dns.fields.enable")} />
+            <ListItemText primary={t("settings.modals.dns.fields.enable")} />
             <Switch
               edge="end"
               checked={values.enable}
@@ -676,7 +679,7 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
           </Item>
 
           <Item>
-            <ListItemText primary={t("settings.dns.fields.listen")} />
+            <ListItemText primary={t("settings.modals.dns.fields.listen")} />
             <TextField
               size="small"
               autoComplete="off"
@@ -688,7 +691,9 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
           </Item>
 
           <Item>
-            <ListItemText primary={t("settings.dns.fields.enhancedMode")} />
+            <ListItemText
+              primary={t("settings.modals.dns.fields.enhancedMode")}
+            />
             <FormControl size="small" sx={{ width: 150 }}>
               <Select
                 value={values.enhancedMode}
@@ -701,7 +706,9 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
           </Item>
 
           <Item>
-            <ListItemText primary={t("settings.dns.fields.fakeIpRange")} />
+            <ListItemText
+              primary={t("settings.modals.dns.fields.fakeIpRange")}
+            />
             <TextField
               size="small"
               autoComplete="off"
@@ -713,7 +720,9 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
           </Item>
 
           <Item>
-            <ListItemText primary={t("settings.dns.fields.fakeIpFilterMode")} />
+            <ListItemText
+              primary={t("settings.modals.dns.fields.fakeIpFilterMode")}
+            />
             <FormControl size="small" sx={{ width: 150 }}>
               <Select
                 value={values.fakeIpFilterMode}
@@ -727,8 +736,8 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
 
           <Item>
             <ListItemText
-              primary={t("settings.dns.fields.ipv6.label")}
-              secondary={t("settings.dns.fields.ipv6.description")}
+              primary={t("settings.modals.dns.fields.ipv6.label")}
+              secondary={t("settings.modals.dns.fields.ipv6.description")}
             />
             <Switch
               edge="end"
@@ -739,8 +748,8 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
 
           <Item>
             <ListItemText
-              primary={t("settings.dns.fields.preferH3.label")}
-              secondary={t("settings.dns.fields.preferH3.description")}
+              primary={t("settings.modals.dns.fields.preferH3.label")}
+              secondary={t("settings.modals.dns.fields.preferH3.description")}
             />
             <Switch
               edge="end"
@@ -751,8 +760,10 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
 
           <Item>
             <ListItemText
-              primary={t("settings.dns.fields.respectRules.label")}
-              secondary={t("settings.dns.fields.respectRules.description")}
+              primary={t("settings.modals.dns.fields.respectRules.label")}
+              secondary={t(
+                "settings.modals.dns.fields.respectRules.description",
+              )}
             />
             <Switch
               edge="end"
@@ -763,8 +774,8 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
 
           <Item>
             <ListItemText
-              primary={t("settings.dns.fields.useHosts.label")}
-              secondary={t("settings.dns.fields.useHosts.description")}
+              primary={t("settings.modals.dns.fields.useHosts.label")}
+              secondary={t("settings.modals.dns.fields.useHosts.description")}
             />
             <Switch
               edge="end"
@@ -775,8 +786,10 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
 
           <Item>
             <ListItemText
-              primary={t("settings.dns.fields.useSystemHosts.label")}
-              secondary={t("settings.dns.fields.useSystemHosts.description")}
+              primary={t("settings.modals.dns.fields.useSystemHosts.label")}
+              secondary={t(
+                "settings.modals.dns.fields.useSystemHosts.description",
+              )}
             />
             <Switch
               edge="end"
@@ -787,8 +800,10 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
 
           <Item>
             <ListItemText
-              primary={t("settings.dns.fields.directPolicy.label")}
-              secondary={t("settings.dns.fields.directPolicy.description")}
+              primary={t("settings.modals.dns.fields.directPolicy.label")}
+              secondary={t(
+                "settings.modals.dns.fields.directPolicy.description",
+              )}
             />
             <Switch
               edge="end"
@@ -799,8 +814,10 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
 
           <Item sx={{ flexDirection: "column", alignItems: "flex-start" }}>
             <ListItemText
-              primary={t("settings.dns.fields.defaultNameserver.label")}
-              secondary={t("settings.dns.fields.defaultNameserver.description")}
+              primary={t("settings.modals.dns.fields.defaultNameserver.label")}
+              secondary={t(
+                "settings.modals.dns.fields.defaultNameserver.description",
+              )}
             />
             <TextField
               fullWidth
@@ -816,8 +833,8 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
 
           <Item sx={{ flexDirection: "column", alignItems: "flex-start" }}>
             <ListItemText
-              primary={t("settings.dns.fields.nameserver.label")}
-              secondary={t("settings.dns.fields.nameserver.description")}
+              primary={t("settings.modals.dns.fields.nameserver.label")}
+              secondary={t("settings.modals.dns.fields.nameserver.description")}
             />
             <TextField
               fullWidth
@@ -833,8 +850,8 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
 
           <Item sx={{ flexDirection: "column", alignItems: "flex-start" }}>
             <ListItemText
-              primary={t("settings.dns.fields.fallback.label")}
-              secondary={t("settings.dns.fields.fallback.description")}
+              primary={t("settings.modals.dns.fields.fallback.label")}
+              secondary={t("settings.modals.dns.fields.fallback.description")}
             />
             <TextField
               fullWidth
@@ -850,8 +867,8 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
 
           <Item sx={{ flexDirection: "column", alignItems: "flex-start" }}>
             <ListItemText
-              primary={t("settings.dns.fields.proxy.label")}
-              secondary={t("settings.dns.fields.proxy.description")}
+              primary={t("settings.modals.dns.fields.proxy.label")}
+              secondary={t("settings.modals.dns.fields.proxy.description")}
             />
             <TextField
               fullWidth
@@ -867,8 +884,10 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
 
           <Item sx={{ flexDirection: "column", alignItems: "flex-start" }}>
             <ListItemText
-              primary={t("settings.dns.fields.directNameserver.label")}
-              secondary={t("settings.dns.fields.directNameserver.description")}
+              primary={t("settings.modals.dns.fields.directNameserver.label")}
+              secondary={t(
+                "settings.modals.dns.fields.directNameserver.description",
+              )}
             />
             <TextField
               fullWidth
@@ -884,8 +903,10 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
 
           <Item sx={{ flexDirection: "column", alignItems: "flex-start" }}>
             <ListItemText
-              primary={t("settings.dns.fields.fakeIpFilter.label")}
-              secondary={t("settings.dns.fields.fakeIpFilter.description")}
+              primary={t("settings.modals.dns.fields.fakeIpFilter.label")}
+              secondary={t(
+                "settings.modals.dns.fields.fakeIpFilter.description",
+              )}
             />
             <TextField
               fullWidth
@@ -901,8 +922,10 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
 
           <Item sx={{ flexDirection: "column", alignItems: "flex-start" }}>
             <ListItemText
-              primary={t("settings.dns.fields.nameserverPolicy.label")}
-              secondary={t("settings.dns.fields.nameserverPolicy.description")}
+              primary={t("settings.modals.dns.fields.nameserverPolicy.label")}
+              secondary={t(
+                "settings.modals.dns.fields.nameserverPolicy.description",
+              )}
             />
             <TextField
               fullWidth
@@ -920,13 +943,15 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
             variant="subtitle2"
             sx={{ mt: 2, mb: 1, fontWeight: "bold" }}
           >
-            {t("settings.dns.sections.fallbackFilter")}
+            {t("settings.modals.dns.sections.fallbackFilter")}
           </Typography>
 
           <Item>
             <ListItemText
-              primary={t("settings.dns.fields.geoipFiltering.label")}
-              secondary={t("settings.dns.fields.geoipFiltering.description")}
+              primary={t("settings.modals.dns.fields.geoipFiltering.label")}
+              secondary={t(
+                "settings.modals.dns.fields.geoipFiltering.description",
+              )}
             />
             <Switch
               edge="end"
@@ -936,7 +961,7 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
           </Item>
 
           <Item>
-            <ListItemText primary={t("settings.dns.fields.geoipCode")} />
+            <ListItemText primary={t("settings.modals.dns.fields.geoipCode")} />
             <TextField
               size="small"
               autoComplete="off"
@@ -949,8 +974,10 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
 
           <Item sx={{ flexDirection: "column", alignItems: "flex-start" }}>
             <ListItemText
-              primary={t("settings.dns.fields.fallbackIpCidr.label")}
-              secondary={t("settings.dns.fields.fallbackIpCidr.description")}
+              primary={t("settings.modals.dns.fields.fallbackIpCidr.label")}
+              secondary={t(
+                "settings.modals.dns.fields.fallbackIpCidr.description",
+              )}
             />
             <TextField
               fullWidth
@@ -966,8 +993,10 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
 
           <Item sx={{ flexDirection: "column", alignItems: "flex-start" }}>
             <ListItemText
-              primary={t("settings.dns.fields.fallbackDomain.label")}
-              secondary={t("settings.dns.fields.fallbackDomain.description")}
+              primary={t("settings.modals.dns.fields.fallbackDomain.label")}
+              secondary={t(
+                "settings.modals.dns.fields.fallbackDomain.description",
+              )}
             />
             <TextField
               fullWidth
@@ -986,13 +1015,13 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
             variant="subtitle1"
             sx={{ mt: 3, mb: 0, fontWeight: "bold" }}
           >
-            {t("settings.dns.sections.hosts")}
+            {t("settings.modals.dns.sections.hosts")}
           </Typography>
 
           <Item sx={{ flexDirection: "column", alignItems: "flex-start" }}>
             <ListItemText
-              primary={t("settings.dns.fields.hosts.label")}
-              secondary={t("settings.dns.fields.hosts.description")}
+              primary={t("settings.modals.dns.fields.hosts.label")}
+              secondary={t("settings.modals.dns.fields.hosts.description")}
             />
             <TextField
               fullWidth

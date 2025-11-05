@@ -23,55 +23,64 @@ export const handleNoticeMessage = (
     "set_config::error": () => showNotice.error(msg),
     update_with_clash_proxy: () =>
       showNotice.success(
-        "settings.updater.notifications.withClashProxySuccess",
+        "settings.feedback.notifications.updater.withClashProxySuccess",
         msg,
       ),
     update_failed_even_with_clash: () =>
       showNotice.error(
-        "settings.updater.notifications.withClashProxyFailed",
+        "settings.feedback.notifications.updater.withClashProxyFailed",
         msg,
       ),
     update_failed: () => showNotice.error(msg),
     "config_validate::boot_error": () =>
-      showNotice.error("settings.validation.config.bootFailed", msg),
+      showNotice.error("shared.feedback.validation.config.bootFailed", msg),
     "config_validate::core_change": () =>
-      showNotice.error("settings.validation.config.coreChangeFailed", msg),
+      showNotice.error(
+        "shared.feedback.validation.config.coreChangeFailed",
+        msg,
+      ),
     "config_validate::error": () =>
-      showNotice.error("settings.validation.config.failed", msg),
+      showNotice.error("shared.feedback.validation.config.failed", msg),
     "config_validate::process_terminated": () =>
-      showNotice.error("settings.validation.config.processTerminated"),
+      showNotice.error("shared.feedback.validation.config.processTerminated"),
     "config_validate::stdout_error": () =>
-      showNotice.error("settings.validation.config.failed", msg),
+      showNotice.error("shared.feedback.validation.config.failed", msg),
     "config_validate::script_error": () =>
-      showNotice.error("settings.validation.script.fileError", msg),
+      showNotice.error("shared.feedback.validation.script.fileError", msg),
     "config_validate::script_syntax_error": () =>
-      showNotice.error("settings.validation.script.syntaxError", msg),
+      showNotice.error("shared.feedback.validation.script.syntaxError", msg),
     "config_validate::script_missing_main": () =>
-      showNotice.error("settings.validation.script.missingMain", msg),
+      showNotice.error("shared.feedback.validation.script.missingMain", msg),
     "config_validate::file_not_found": () =>
-      showNotice.error("settings.validation.script.fileNotFound", msg),
+      showNotice.error("shared.feedback.validation.script.fileNotFound", msg),
     "config_validate::yaml_syntax_error": () =>
-      showNotice.error("settings.validation.yaml.syntaxError", msg),
+      showNotice.error("shared.feedback.validation.yaml.syntaxError", msg),
     "config_validate::yaml_read_error": () =>
-      showNotice.error("settings.validation.yaml.readError", msg),
+      showNotice.error("shared.feedback.validation.yaml.readError", msg),
     "config_validate::yaml_mapping_error": () =>
-      showNotice.error("settings.validation.yaml.mappingError", msg),
+      showNotice.error("shared.feedback.validation.yaml.mappingError", msg),
     "config_validate::yaml_key_error": () =>
-      showNotice.error("settings.validation.yaml.keyError", msg),
+      showNotice.error("shared.feedback.validation.yaml.keyError", msg),
     "config_validate::yaml_error": () =>
-      showNotice.error("settings.validation.yaml.generalError", msg),
+      showNotice.error("shared.feedback.validation.yaml.generalError", msg),
     "config_validate::merge_syntax_error": () =>
-      showNotice.error("settings.validation.merge.syntaxError", msg),
+      showNotice.error("shared.feedback.validation.merge.syntaxError", msg),
     "config_validate::merge_mapping_error": () =>
-      showNotice.error("settings.validation.merge.mappingError", msg),
+      showNotice.error("shared.feedback.validation.merge.mappingError", msg),
     "config_validate::merge_key_error": () =>
-      showNotice.error("settings.validation.merge.keyError", msg),
+      showNotice.error("shared.feedback.validation.merge.keyError", msg),
     "config_validate::merge_error": () =>
-      showNotice.error("settings.validation.merge.generalError", msg),
+      showNotice.error("shared.feedback.validation.merge.generalError", msg),
     "config_core::change_success": () =>
-      showNotice.success("settings.clash.notifications.changeSuccess", msg),
+      showNotice.success(
+        "settings.feedback.notifications.clash.changeSuccess",
+        msg,
+      ),
     "config_core::change_error": () =>
-      showNotice.error("settings.clash.notifications.changeFailed", msg),
+      showNotice.error(
+        "settings.feedback.notifications.clash.changeFailed",
+        msg,
+      ),
   };
 
   const handler = handlers[status];

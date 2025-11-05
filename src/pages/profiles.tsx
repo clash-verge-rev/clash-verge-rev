@@ -1018,7 +1018,7 @@ const ProfilePage = () => {
                         if (prev !== curr && profiles.current === item.uid) {
                           await onEnhance(false);
                           //  await restartCore();
-                          //   Notice.success(t("settings.clash.notifications.restartSuccess"), 1000);
+                          //   Notice.success(t("settings.feedback.notifications.clash.restartSuccess"), 1000);
                         }
                       }}
                       onDelete={() => {

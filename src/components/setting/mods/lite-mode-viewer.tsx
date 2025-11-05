@@ -53,7 +53,7 @@ export function LiteModeViewer({ ref }: { ref?: Ref<DialogRef> }) {
   return (
     <BaseDialog
       open={open}
-      title={t("settings.liteMode.title")}
+      title={t("settings.modals.liteMode.title")}
       contentSx={{ width: 450 }}
       okBtn={t("shared.actions.save")}
       cancelBtn={t("shared.actions.cancel")}
@@ -63,7 +63,9 @@ export function LiteModeViewer({ ref }: { ref?: Ref<DialogRef> }) {
     >
       <List>
         <ListItem sx={{ padding: "5px 2px" }}>
-          <ListItemText primary={t("settings.liteMode.actions.enterNow")} />
+          <ListItemText
+            primary={t("settings.modals.liteMode.actions.enterNow")}
+          />
           <Typography
             variant="button"
             sx={{
@@ -79,11 +81,11 @@ export function LiteModeViewer({ ref }: { ref?: Ref<DialogRef> }) {
 
         <ListItem sx={{ padding: "5px 2px" }}>
           <ListItemText
-            primary={t("settings.liteMode.toggles.autoEnter")}
+            primary={t("settings.modals.liteMode.toggles.autoEnter")}
             sx={{ maxWidth: "fit-content" }}
           />
           <TooltipIcon
-            title={t("settings.liteMode.tooltips.autoEnter")}
+            title={t("settings.modals.liteMode.tooltips.autoEnter")}
             sx={{ opacity: "0.7" }}
           />
           <Switch
@@ -99,7 +101,9 @@ export function LiteModeViewer({ ref }: { ref?: Ref<DialogRef> }) {
         {values.autoEnterLiteMode && (
           <>
             <ListItem sx={{ padding: "5px 2px" }}>
-              <ListItemText primary={t("settings.liteMode.fields.delay")} />
+              <ListItemText
+                primary={t("settings.modals.liteMode.fields.delay")}
+              />
               <TextField
                 autoComplete="off"
                 size="small"
@@ -133,7 +137,7 @@ export function LiteModeViewer({ ref }: { ref?: Ref<DialogRef> }) {
                 color="text.secondary"
                 sx={{ fontStyle: "italic" }}
               >
-                {t("settings.liteMode.messages.autoEnterHint", {
+                {t("settings.modals.liteMode.messages.autoEnterHint", {
                   n: values.autoEnterLiteModeDelay,
                 })}
               </Typography>

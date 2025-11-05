@@ -29,19 +29,19 @@ export const useServiceUninstaller = () => {
     try {
       await executeWithErrorHandling(
         () => stopCore(),
-        "settings.clash.status.stopping",
+        "settings.feedback.statuses.clash.stopping",
       );
       await executeWithErrorHandling(
         () => uninstallService(),
-        "settings.clash.service.status.uninstalling",
-        "settings.clash.service.notifications.uninstallSuccess",
+        "settings.feedback.statuses.clashService.uninstalling",
+        "settings.feedback.notifications.clashService.uninstallSuccess",
       );
     } catch (ignore) {
     } finally {
       await executeWithErrorHandling(
         () => restartCore(),
-        "settings.clash.status.restarting",
-        "settings.clash.notifications.restartSuccess",
+        "settings.feedback.statuses.clash.restarting",
+        "settings.feedback.notifications.clash.restartSuccess",
       );
       await mutateSystemState();
     }

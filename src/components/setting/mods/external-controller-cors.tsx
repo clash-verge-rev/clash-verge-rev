@@ -140,10 +140,12 @@ export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
         manual: true,
         onSuccess: () => {
           setOpen(false);
-          showNotice.success("settings.common.notifications.saveSuccess");
+          showNotice.success(
+            "settings.feedback.notifications.common.saveSuccess",
+          );
         },
         onError: () => {
-          showNotice.error("settings.common.notifications.saveFailed");
+          showNotice.error("settings.feedback.notifications.common.saveFailed");
         },
       },
     );
@@ -181,7 +183,7 @@ export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
     return (
       <BaseDialog
         open={open}
-        title={t("settings.externalCors.title")}
+        title={t("settings.sections.externalCors.title")}
         contentSx={{ width: 500 }}
         okBtn={loading ? t("shared.statuses.saving") : t("shared.actions.save")}
         cancelBtn={t("shared.actions.cancel")}
@@ -198,7 +200,7 @@ export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
               width="100%"
             >
               <span style={{ fontWeight: "normal" }}>
-                {t("settings.externalCors.fields.allowPrivateNetwork")}
+                {t("settings.sections.externalCors.fields.allowPrivateNetwork")}
               </span>
               <Switch
                 edge="end"
@@ -218,7 +220,7 @@ export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
           <ListItem sx={{ padding: "8px 0" }}>
             <div style={{ width: "100%" }}>
               <div style={{ marginBottom: 8, fontWeight: "bold" }}>
-                {t("settings.externalCors.fields.allowedOrigins")}
+                {t("settings.sections.externalCors.fields.allowedOrigins")}
               </div>
               {originEntries.map(({ origin, index, key }) => (
                 <div
@@ -235,7 +237,9 @@ export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
                     sx={{ fontSize: 14, marginRight: 2 }}
                     value={origin}
                     onChange={(e) => handleUpdateOrigin(index, e.target.value)}
-                    placeholder={t("settings.externalCors.placeholders.origin")}
+                    placeholder={t(
+                      "settings.sections.externalCors.placeholders.origin",
+                    )}
                     inputProps={{ style: { fontSize: 14 } }}
                   />
                   <Button
@@ -256,7 +260,7 @@ export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
                 onClick={handleAddOrigin}
                 sx={addButtonStyle}
               >
-                {t("settings.externalCors.actions.add")}
+                {t("settings.sections.externalCors.actions.add")}
               </Button>
 
               <div
@@ -270,7 +274,7 @@ export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
                 <div
                   style={{ color: "#666", fontSize: 12, fontStyle: "italic" }}
                 >
-                  {t("settings.externalCors.messages.alwaysIncluded", {
+                  {t("settings.sections.externalCors.messages.alwaysIncluded", {
                     urls: DEV_URLS.join(", "),
                   })}
                 </div>

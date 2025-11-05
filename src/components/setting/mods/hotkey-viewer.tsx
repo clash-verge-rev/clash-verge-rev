@@ -27,13 +27,15 @@ const HOTKEY_FUNC = [
 ] as const;
 
 const HOTKEY_FUNC_LABELS: Record<(typeof HOTKEY_FUNC)[number], string> = {
-  open_or_close_dashboard: "settings.hotkey.functions.openOrCloseDashboard",
-  clash_mode_rule: "settings.hotkey.functions.rule",
-  clash_mode_global: "settings.hotkey.functions.global",
-  clash_mode_direct: "settings.hotkey.functions.direct",
-  toggle_system_proxy: "settings.hotkey.functions.toggleSystemProxy",
-  toggle_tun_mode: "settings.hotkey.functions.toggleTunMode",
-  entry_lightweight_mode: "settings.hotkey.functions.entryLightweightMode",
+  open_or_close_dashboard:
+    "settings.modals.hotkey.functions.openOrCloseDashboard",
+  clash_mode_rule: "settings.modals.hotkey.functions.rule",
+  clash_mode_global: "settings.modals.hotkey.functions.global",
+  clash_mode_direct: "settings.modals.hotkey.functions.direct",
+  toggle_system_proxy: "settings.modals.hotkey.functions.toggleSystemProxy",
+  toggle_tun_mode: "settings.modals.hotkey.functions.toggleTunMode",
+  entry_lightweight_mode:
+    "settings.modals.hotkey.functions.entryLightweightMode",
 };
 
 export const HotkeyViewer = forwardRef<DialogRef>((props, ref) => {
@@ -99,7 +101,7 @@ export const HotkeyViewer = forwardRef<DialogRef>((props, ref) => {
   return (
     <BaseDialog
       open={open}
-      title={t("settings.hotkey.title")}
+      title={t("settings.modals.hotkey.title")}
       contentSx={{ width: 450, maxHeight: 380 }}
       okBtn={t("shared.actions.save")}
       cancelBtn={t("shared.actions.cancel")}
@@ -108,7 +110,9 @@ export const HotkeyViewer = forwardRef<DialogRef>((props, ref) => {
       onOk={onSave}
     >
       <ItemWrapper style={{ marginBottom: 16 }}>
-        <Typography>{t("settings.hotkey.toggles.enableGlobal")}</Typography>
+        <Typography>
+          {t("settings.modals.hotkey.toggles.enableGlobal")}
+        </Typography>
         <Switch
           edge="end"
           checked={enableGlobalHotkey}

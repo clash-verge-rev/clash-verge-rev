@@ -41,25 +41,27 @@ const SettingSystem = ({ onError }: Props) => {
   };
 
   return (
-    <SettingList title={t("settings.system.title")}>
+    <SettingList title={t("settings.sections.system.title")}>
       <SysproxyViewer ref={sysproxyRef} />
       <TunViewer ref={tunRef} />
 
       <ProxyControlSwitches
-        label={t("settings.system.toggles.tunMode")}
+        label={t("settings.sections.system.toggles.tunMode")}
         onError={onError}
       />
 
       <ProxyControlSwitches
-        label={t("settings.system.toggles.systemProxy")}
+        label={t("settings.sections.system.toggles.systemProxy")}
         onError={onError}
       />
 
       <SettingItem
-        label={t("settings.system.fields.autoLaunch")}
+        label={t("settings.sections.system.fields.autoLaunch")}
         extra={
           isAdminMode && (
-            <Tooltip title={t("settings.system.tooltips.autoLaunchAdmin")}>
+            <Tooltip
+              title={t("settings.sections.system.tooltips.autoLaunchAdmin")}
+            >
               <WarningRounded sx={{ color: "warning.main", mr: 1 }} />
             </Tooltip>
           )
@@ -76,7 +78,9 @@ const SettingSystem = ({ onError }: Props) => {
           }}
           onGuard={async (e) => {
             if (isAdminMode) {
-              showNotice.info("settings.system.tooltips.autoLaunchAdmin");
+              showNotice.info(
+                "settings.sections.system.tooltips.autoLaunchAdmin",
+              );
             }
 
             try {
@@ -97,10 +101,10 @@ const SettingSystem = ({ onError }: Props) => {
       </SettingItem>
 
       <SettingItem
-        label={t("settings.system.fields.silentStart")}
+        label={t("settings.sections.system.fields.silentStart")}
         extra={
           <TooltipIcon
-            title={t("settings.system.tooltips.silentStart")}
+            title={t("settings.sections.system.tooltips.silentStart")}
             sx={{ opacity: "0.7" }}
           />
         }

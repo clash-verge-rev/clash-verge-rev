@@ -28,14 +28,14 @@ export const useServiceInstaller = () => {
   const installServiceAndRestartCore = useCallback(async () => {
     await executeWithErrorHandling(
       () => installService(),
-      "settings.clash.service.status.installing",
-      "settings.clash.service.notifications.installSuccess",
+      "settings.feedback.statuses.clashService.installing",
+      "settings.feedback.notifications.clashService.installSuccess",
     );
 
     await executeWithErrorHandling(
       () => restartCore(),
-      "settings.clash.status.restarting",
-      "settings.clash.notifications.restartSuccess",
+      "settings.feedback.statuses.clash.restarting",
+      "settings.feedback.notifications.clash.restartSuccess",
     );
 
     await mutateSystemState();

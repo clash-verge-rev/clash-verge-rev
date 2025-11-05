@@ -35,7 +35,7 @@ export function NetworkInterfaceViewer({ ref }: { ref?: Ref<DialogRef> }) {
       open={open}
       title={
         <Box display="flex" justifyContent="space-between">
-          {t("settings.networkInterface.title")}
+          {t("settings.modals.networkInterface.title")}
           <Box>
             <Button
               variant="contained"
@@ -66,13 +66,17 @@ export function NetworkInterfaceViewer({ ref }: { ref?: Ref<DialogRef> }) {
                     address.V4 && (
                       <AddressDisplay
                         key={address.V4.ip}
-                        label={t("settings.networkInterface.fields.ipAddress")}
+                        label={t(
+                          "settings.modals.networkInterface.fields.ipAddress",
+                        )}
                         content={address.V4.ip}
                       />
                     ),
                 )}
                 <AddressDisplay
-                  label={t("settings.networkInterface.fields.macAddress")}
+                  label={t(
+                    "settings.modals.networkInterface.fields.macAddress",
+                  )}
                   content={item.mac_addr ?? ""}
                 />
               </>
@@ -84,13 +88,17 @@ export function NetworkInterfaceViewer({ ref }: { ref?: Ref<DialogRef> }) {
                     address.V6 && (
                       <AddressDisplay
                         key={address.V6.ip}
-                        label={t("settings.networkInterface.fields.ipAddress")}
+                        label={t(
+                          "settings.modals.networkInterface.fields.ipAddress",
+                        )}
                         content={address.V6.ip}
                       />
                     ),
                 )}
                 <AddressDisplay
-                  label={t("settings.networkInterface.fields.macAddress")}
+                  label={t(
+                    "settings.modals.networkInterface.fields.macAddress",
+                  )}
                   content={item.mac_addr ?? ""}
                 />
               </>
@@ -133,7 +141,9 @@ const AddressDisplay = ({
           size="small"
           onClick={async () => {
             await writeText(content);
-            showNotice.success("settings.common.notifications.copySuccess");
+            showNotice.success(
+              "settings.feedback.notifications.common.copySuccess",
+            );
           }}
         >
           <ContentCopyRounded sx={{ fontSize: "18px" }} />
