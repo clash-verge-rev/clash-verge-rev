@@ -16,7 +16,13 @@
       "retry": "Retry",
       "refreshPage": "Refresh Page",
       "showDetails": "Show Details",
-      "hideDetails": "Hide Details"
+      "hideDetails": "Hide Details",
+      "listView": "Исемлек күзаллау",
+      "tableView": "Таблица күзаллау",
+      "pause": "Туктау",
+      "resume": "Дәвам",
+      "closeAll": "Барысын да ябу",
+      "clear": "Чистарту"
     },
     "labels": {
       "updateAt": "Яңартылган вакыт",
@@ -29,7 +35,9 @@
       "usedTotal": "Кулланылган / Барлыгы",
       "from": "Каян",
       "password": "Пароль",
-      "retryAttempts": "Retry attempts"
+      "retryAttempts": "Retry attempts",
+      "downloaded": "Йөкләнгән",
+      "uploaded": "Чыгарылган"
     },
     "statuses": {
       "enabled": "Кушылган",
@@ -107,6 +115,15 @@
           "keyError": "Merge file key error, changes reverted",
           "generalError": "Merge file error, changes reverted"
         }
+      }
+    },
+    "filters": {
+      "logLevels": {
+        "all": "ALL",
+        "debug": "DEBUG",
+        "info": "INFO",
+        "warn": "WARN",
+        "error": "ERROR"
       }
     }
   },
@@ -398,17 +415,6 @@
   },
   "connections": {
     "page": {
-      "summary": {
-        "downloaded": "Йөкләнгән",
-        "uploaded": "Чыгарылган"
-      },
-      "actions": {
-        "listView": "Исемлек күзаллау",
-        "tableView": "Таблица күзаллау",
-        "pause": "Туктау",
-        "resume": "Дәвам",
-        "closeAll": "Барысын да ябу"
-      },
       "header": {
         "title": "Тоташулар"
       }
@@ -485,18 +491,6 @@
   },
   "logs": {
     "page": {
-      "actions": {
-        "pause": "Туктау",
-        "resume": "Дәвам",
-        "clear": "Чистарту"
-      },
-      "filters": {
-        "all": "ALL",
-        "debug": "DEBUG",
-        "info": "INFO",
-        "warn": "WARN",
-        "error": "ERROR"
-      },
       "header": {
         "title": "Логлар"
       }

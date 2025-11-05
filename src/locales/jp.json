@@ -16,7 +16,13 @@
       "retry": "Retry",
       "refreshPage": "Refresh Page",
       "showDetails": "Show Details",
-      "hideDetails": "Hide Details"
+      "hideDetails": "Hide Details",
+      "listView": "リストビュー",
+      "tableView": "テーブルビュー",
+      "pause": "一時停止",
+      "resume": "再開",
+      "closeAll": "すべて閉じる",
+      "clear": "クリア"
     },
     "labels": {
       "updateAt": "更新日時",
@@ -29,7 +35,9 @@
       "usedTotal": "使用済み / 合計",
       "from": "から",
       "password": "パスワード",
-      "retryAttempts": "Retry attempts"
+      "retryAttempts": "Retry attempts",
+      "downloaded": "ダウンロード量",
+      "uploaded": "アップロード量"
     },
     "statuses": {
       "enabled": "有効",
@@ -107,6 +115,15 @@
           "keyError": "上書きファイルのキーエラーがあります。変更は取り消されました。",
           "generalError": "上書きファイルにエラーがあります。変更は取り消されました。"
         }
+      }
+    },
+    "filters": {
+      "logLevels": {
+        "all": "ALL",
+        "debug": "DEBUG",
+        "info": "INFO",
+        "warn": "WARN",
+        "error": "ERROR"
       }
     }
   },
@@ -398,17 +415,6 @@
   },
   "connections": {
     "page": {
-      "summary": {
-        "downloaded": "ダウンロード量",
-        "uploaded": "アップロード量"
-      },
-      "actions": {
-        "listView": "リストビュー",
-        "tableView": "テーブルビュー",
-        "pause": "一時停止",
-        "resume": "再開",
-        "closeAll": "すべて閉じる"
-      },
       "header": {
         "title": "接続"
       }
@@ -485,18 +491,6 @@
   },
   "logs": {
     "page": {
-      "actions": {
-        "pause": "一時停止",
-        "resume": "再開",
-        "clear": "クリア"
-      },
-      "filters": {
-        "all": "ALL",
-        "debug": "DEBUG",
-        "info": "INFO",
-        "warn": "WARN",
-        "error": "ERROR"
-      },
       "header": {
         "title": "ログ"
       }

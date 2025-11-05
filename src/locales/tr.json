@@ -16,7 +16,13 @@
       "retry": "Retry",
       "refreshPage": "Refresh Page",
       "showDetails": "Show Details",
-      "hideDetails": "Hide Details"
+      "hideDetails": "Hide Details",
+      "listView": "Liste Görünümü",
+      "tableView": "Tablo Görünümü",
+      "pause": "Duraklat",
+      "resume": "Sürdür",
+      "closeAll": "Tümünü Kapat",
+      "clear": "Temizle"
     },
     "labels": {
       "updateAt": "Güncelleme Zamanı",
@@ -29,7 +35,9 @@
       "usedTotal": "Kullanılan / Toplam",
       "from": "Kaynak",
       "password": "Şifre",
-      "retryAttempts": "Retry attempts"
+      "retryAttempts": "Retry attempts",
+      "downloaded": "İndirilen",
+      "uploaded": "Yüklenen"
     },
     "statuses": {
       "enabled": "Etkin",
@@ -107,6 +115,15 @@
           "keyError": "Birleştirme dosyası anahtar hatası, değişiklikler geri alındı",
           "generalError": "Birleştirme dosyası hatası, değişiklikler geri alındı"
         }
+      }
+    },
+    "filters": {
+      "logLevels": {
+        "all": "ALL",
+        "debug": "DEBUG",
+        "info": "INFO",
+        "warn": "WARN",
+        "error": "ERROR"
       }
     }
   },
@@ -398,17 +415,6 @@
   },
   "connections": {
     "page": {
-      "summary": {
-        "downloaded": "İndirilen",
-        "uploaded": "Yüklenen"
-      },
-      "actions": {
-        "listView": "Liste Görünümü",
-        "tableView": "Tablo Görünümü",
-        "pause": "Duraklat",
-        "resume": "Sürdür",
-        "closeAll": "Tümünü Kapat"
-      },
       "header": {
         "title": "Bağlantılar"
       }
@@ -485,18 +491,6 @@
   },
   "logs": {
     "page": {
-      "actions": {
-        "pause": "Duraklat",
-        "resume": "Sürdür",
-        "clear": "Temizle"
-      },
-      "filters": {
-        "all": "ALL",
-        "debug": "DEBUG",
-        "info": "INFO",
-        "warn": "WARN",
-        "error": "ERROR"
-      },
       "header": {
         "title": "Günlükler"
       }

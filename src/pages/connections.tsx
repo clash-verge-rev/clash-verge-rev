@@ -163,11 +163,11 @@ const ConnectionsPage = () => {
       header={
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
           <Box sx={{ mx: 1 }}>
-            {t("connections.page.summary.downloaded")}:{" "}
+            {t("shared.labels.downloaded")}:{" "}
             {parseTraffic(displayData.downloadTotal)}
           </Box>
           <Box sx={{ mx: 1 }}>
-            {t("connections.page.summary.uploaded")}:{" "}
+            {t("shared.labels.uploaded")}:{" "}
             {parseTraffic(displayData.uploadTotal)}
           </Box>
           <IconButton
@@ -182,13 +182,9 @@ const ConnectionsPage = () => {
             }
           >
             {isTableLayout ? (
-              <TableRowsRounded
-                titleAccess={t("connections.page.actions.listView")}
-              />
+              <TableRowsRounded titleAccess={t("shared.actions.listView")} />
             ) : (
-              <TableChartRounded
-                titleAccess={t("connections.page.actions.tableView")}
-              />
+              <TableChartRounded titleAccess={t("shared.actions.tableView")} />
             )}
           </IconButton>
           <IconButton
@@ -196,9 +192,7 @@ const ConnectionsPage = () => {
             size="small"
             onClick={handlePauseToggle}
             title={
-              isPaused
-                ? t("connections.page.actions.resume")
-                : t("connections.page.actions.pause")
+              isPaused ? t("shared.actions.resume") : t("shared.actions.pause")
             }
           >
             {isPaused ? (
@@ -209,7 +203,7 @@ const ConnectionsPage = () => {
           </IconButton>
           <Button size="small" variant="contained" onClick={onCloseAll}>
             <span style={{ whiteSpace: "nowrap" }}>
-              {t("connections.page.actions.closeAll")}
+              {t("shared.actions.closeAll")}
             </span>
           </Button>
         </Box>

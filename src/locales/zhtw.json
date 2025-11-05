@@ -16,7 +16,13 @@
       "retry": "重試",
       "refreshPage": "重新整理頁面",
       "showDetails": "顯示詳情",
-      "hideDetails": "隱藏詳情"
+      "hideDetails": "隱藏詳情",
+      "listView": "列表檢視",
+      "tableView": "表格檢視",
+      "pause": "暫停",
+      "resume": "繼續",
+      "closeAll": "關閉全部",
+      "clear": "清除"
     },
     "labels": {
       "updateAt": "更新於",
@@ -29,7 +35,9 @@
       "usedTotal": "已使用 / 總量",
       "from": "來自",
       "password": "密碼",
-      "retryAttempts": "重試次數"
+      "retryAttempts": "重試次數",
+      "downloaded": "下載量",
+      "uploaded": "上傳量"
     },
     "statuses": {
       "enabled": "已啟用",
@@ -107,6 +115,15 @@
           "keyError": "覆寫檔案鍵錯誤，變更已撤銷",
           "generalError": "覆寫檔案錯誤，變更已撤銷"
         }
+      }
+    },
+    "filters": {
+      "logLevels": {
+        "all": "ALL",
+        "debug": "DEBUG",
+        "info": "INFO",
+        "warn": "WARN",
+        "error": "ERROR"
       }
     }
   },
@@ -398,17 +415,6 @@
   },
   "connections": {
     "page": {
-      "summary": {
-        "downloaded": "下載量",
-        "uploaded": "上傳量"
-      },
-      "actions": {
-        "listView": "列表檢視",
-        "tableView": "表格檢視",
-        "pause": "暫停",
-        "resume": "繼續",
-        "closeAll": "關閉全部"
-      },
       "header": {
         "title": "連線"
       }
@@ -485,18 +491,6 @@
   },
   "logs": {
     "page": {
-      "actions": {
-        "pause": "暫停",
-        "resume": "繼續",
-        "clear": "清除"
-      },
-      "filters": {
-        "all": "ALL",
-        "debug": "DEBUG",
-        "info": "INFO",
-        "warn": "WARN",
-        "error": "ERROR"
-      },
       "header": {
         "title": "日誌"
       }

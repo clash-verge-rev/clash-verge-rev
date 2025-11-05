@@ -16,7 +16,13 @@
       "retry": "Retry",
       "refreshPage": "Refresh Page",
       "showDetails": "Show Details",
-      "hideDetails": "Hide Details"
+      "hideDetails": "Hide Details",
+      "listView": "Vista de lista",
+      "tableView": "Vista de tabla",
+      "pause": "Pausar",
+      "resume": "Reanudar",
+      "closeAll": "Cerrar todas",
+      "clear": "Limpiar"
     },
     "labels": {
       "updateAt": "Actualizado el",
@@ -29,7 +35,9 @@
       "usedTotal": "Utilizado / Total",
       "from": "De",
       "password": "Contraseña",
-      "retryAttempts": "Retry attempts"
+      "retryAttempts": "Retry attempts",
+      "downloaded": "Descargado",
+      "uploaded": "Subido"
     },
     "statuses": {
       "enabled": "Habilitado",
@@ -107,6 +115,15 @@
           "keyError": "Error de clave en el archivo de sobrescritura. Los cambios se han deshecho",
           "generalError": "Error en el archivo de sobrescritura. Los cambios se han deshecho"
         }
+      }
+    },
+    "filters": {
+      "logLevels": {
+        "all": "ALL",
+        "debug": "DEBUG",
+        "info": "INFO",
+        "warn": "WARN",
+        "error": "ERROR"
       }
     }
   },
@@ -398,17 +415,6 @@
   },
   "connections": {
     "page": {
-      "summary": {
-        "downloaded": "Descargado",
-        "uploaded": "Subido"
-      },
-      "actions": {
-        "listView": "Vista de lista",
-        "tableView": "Vista de tabla",
-        "pause": "Pausar",
-        "resume": "Reanudar",
-        "closeAll": "Cerrar todas"
-      },
       "header": {
         "title": "Conexiones"
       }
@@ -485,18 +491,6 @@
   },
   "logs": {
     "page": {
-      "actions": {
-        "pause": "Pausar",
-        "resume": "Reanudar",
-        "clear": "Limpiar"
-      },
-      "filters": {
-        "all": "ALL",
-        "debug": "DEBUG",
-        "info": "INFO",
-        "warn": "WARN",
-        "error": "ERROR"
-      },
       "header": {
         "title": "Registros"
       }

@@ -16,7 +16,13 @@
       "retry": "Retry",
       "refreshPage": "Refresh Page",
       "showDetails": "Show Details",
-      "hideDetails": "Hide Details"
+      "hideDetails": "Hide Details",
+      "listView": "Listenansicht",
+      "tableView": "Tabellenansicht",
+      "pause": "Pausieren",
+      "resume": "Fortsetzen",
+      "closeAll": "Alle schließen",
+      "clear": "Löschen"
     },
     "labels": {
       "updateAt": "Aktualisiert am",
@@ -29,7 +35,9 @@
       "usedTotal": "Verwendet / Gesamt",
       "from": "Von",
       "password": "Passwort",
-      "retryAttempts": "Retry attempts"
+      "retryAttempts": "Retry attempts",
+      "downloaded": "Heruntergeladen",
+      "uploaded": "Hochgeladen"
     },
     "statuses": {
       "enabled": "Aktiviert",
@@ -107,6 +115,15 @@
           "keyError": "Schlüsselfehler in der Überdeckungsdatei. Die Änderungen wurden rückgängig gemacht.",
           "generalError": "Fehler in der Überdeckungsdatei. Die Änderungen wurden rückgängig gemacht."
         }
+      }
+    },
+    "filters": {
+      "logLevels": {
+        "all": "ALL",
+        "debug": "DEBUG",
+        "info": "INFO",
+        "warn": "WARN",
+        "error": "ERROR"
       }
     }
   },
@@ -398,17 +415,6 @@
   },
   "connections": {
     "page": {
-      "summary": {
-        "downloaded": "Heruntergeladen",
-        "uploaded": "Hochgeladen"
-      },
-      "actions": {
-        "listView": "Listenansicht",
-        "tableView": "Tabellenansicht",
-        "pause": "Pausieren",
-        "resume": "Fortsetzen",
-        "closeAll": "Alle schließen"
-      },
       "header": {
         "title": "Verbindungen"
       }
@@ -485,18 +491,6 @@
   },
   "logs": {
     "page": {
-      "actions": {
-        "pause": "Pausieren",
-        "resume": "Fortsetzen",
-        "clear": "Löschen"
-      },
-      "filters": {
-        "all": "ALL",
-        "debug": "DEBUG",
-        "info": "INFO",
-        "warn": "WARN",
-        "error": "ERROR"
-      },
       "header": {
         "title": "Protokolle"
       }

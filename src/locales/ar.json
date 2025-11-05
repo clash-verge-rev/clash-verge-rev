@@ -16,7 +16,13 @@
       "retry": "Retry",
       "refreshPage": "Refresh Page",
       "showDetails": "Show Details",
-      "hideDetails": "Hide Details"
+      "hideDetails": "Hide Details",
+      "listView": "عرض القائمة",
+      "tableView": "عرض الجدول",
+      "pause": "إيقاف مؤقت",
+      "resume": "استأنف",
+      "closeAll": "إغلاق الكل",
+      "clear": "مسح"
     },
     "labels": {
       "updateAt": "التحديث عند",
@@ -29,7 +35,9 @@
       "usedTotal": "المستخدم / الإجمالي",
       "from": "من",
       "password": "كلمة المرور",
-      "retryAttempts": "Retry attempts"
+      "retryAttempts": "Retry attempts",
+      "downloaded": "تم التنزيل",
+      "uploaded": "تم الرفع"
     },
     "statuses": {
       "enabled": "ممكّن",
@@ -107,6 +115,15 @@
           "keyError": "Merge file key error, changes reverted",
           "generalError": "Merge file error, changes reverted"
         }
+      }
+    },
+    "filters": {
+      "logLevels": {
+        "all": "ALL",
+        "debug": "DEBUG",
+        "info": "INFO",
+        "warn": "WARN",
+        "error": "ERROR"
       }
     }
   },
@@ -398,17 +415,6 @@
   },
   "connections": {
     "page": {
-      "summary": {
-        "downloaded": "تم التنزيل",
-        "uploaded": "تم الرفع"
-      },
-      "actions": {
-        "listView": "عرض القائمة",
-        "tableView": "عرض الجدول",
-        "pause": "إيقاف مؤقت",
-        "resume": "استأنف",
-        "closeAll": "إغلاق الكل"
-      },
       "header": {
         "title": "الاتصالات"
       }
@@ -485,18 +491,6 @@
   },
   "logs": {
     "page": {
-      "actions": {
-        "pause": "إيقاف مؤقت",
-        "resume": "استأنف",
-        "clear": "مسح"
-      },
-      "filters": {
-        "all": "ALL",
-        "debug": "DEBUG",
-        "info": "INFO",
-        "warn": "WARN",
-        "error": "ERROR"
-      },
       "header": {
         "title": "السجلات"
       }

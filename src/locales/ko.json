@@ -16,7 +16,13 @@
       "retry": "Retry",
       "refreshPage": "Refresh Page",
       "showDetails": "Show Details",
-      "hideDetails": "Hide Details"
+      "hideDetails": "Hide Details",
+      "listView": "목록 보기",
+      "tableView": "테이블 보기",
+      "pause": "일시 정지",
+      "resume": "재개",
+      "closeAll": "모두 닫기",
+      "clear": "지우기"
     },
     "labels": {
       "updateAt": "업데이트 시간",
@@ -29,7 +35,9 @@
       "usedTotal": "사용됨 / 전체",
       "from": "출처",
       "password": "비밀번호",
-      "retryAttempts": "Retry attempts"
+      "retryAttempts": "Retry attempts",
+      "downloaded": "다운로드됨",
+      "uploaded": "업로드됨"
     },
     "statuses": {
       "enabled": "Enabled",
@@ -107,6 +115,15 @@
           "keyError": "병합 파일 키 오류",
           "generalError": "병합 파일 오류"
         }
+      }
+    },
+    "filters": {
+      "logLevels": {
+        "all": "ALL",
+        "debug": "DEBUG",
+        "info": "INFO",
+        "warn": "WARN",
+        "error": "ERROR"
       }
     }
   },
@@ -398,17 +415,6 @@
   },
   "connections": {
     "page": {
-      "summary": {
-        "downloaded": "다운로드됨",
-        "uploaded": "업로드됨"
-      },
-      "actions": {
-        "listView": "목록 보기",
-        "tableView": "테이블 보기",
-        "pause": "일시 정지",
-        "resume": "재개",
-        "closeAll": "모두 닫기"
-      },
       "header": {
         "title": "연결"
       }
@@ -485,18 +491,6 @@
   },
   "logs": {
     "page": {
-      "actions": {
-        "pause": "일시 정지",
-        "resume": "재개",
-        "clear": "지우기"
-      },
-      "filters": {
-        "all": "ALL",
-        "debug": "DEBUG",
-        "info": "INFO",
-        "warn": "WARN",
-        "error": "ERROR"
-      },
       "header": {
         "title": "로그"
       }

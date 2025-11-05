@@ -16,7 +16,13 @@
       "retry": "Retry",
       "refreshPage": "Refresh Page",
       "showDetails": "Show Details",
-      "hideDetails": "Hide Details"
+      "hideDetails": "Hide Details",
+      "listView": "نمای لیستی",
+      "tableView": "نمای جدولی",
+      "pause": "توقف",
+      "resume": "از سرگیری",
+      "closeAll": "بستن همه",
+      "clear": "پاک کردن"
     },
     "labels": {
       "updateAt": "به‌روزرسانی در",
@@ -29,7 +35,9 @@
       "usedTotal": "استفاده‌شده / کل",
       "from": "از",
       "password": "رمز عبور",
-      "retryAttempts": "Retry attempts"
+      "retryAttempts": "Retry attempts",
+      "downloaded": "دانلود شده",
+      "uploaded": "بارگذاری شده"
     },
     "statuses": {
       "enabled": "توانایی فعال شد",
@@ -107,6 +115,15 @@
           "keyError": "Merge file key error, changes reverted",
           "generalError": "Merge file error, changes reverted"
         }
+      }
+    },
+    "filters": {
+      "logLevels": {
+        "all": "ALL",
+        "debug": "DEBUG",
+        "info": "INFO",
+        "warn": "WARN",
+        "error": "ERROR"
       }
     }
   },
@@ -398,17 +415,6 @@
   },
   "connections": {
     "page": {
-      "summary": {
-        "downloaded": "دانلود شده",
-        "uploaded": "بارگذاری شده"
-      },
-      "actions": {
-        "listView": "نمای لیستی",
-        "tableView": "نمای جدولی",
-        "pause": "توقف",
-        "resume": "از سرگیری",
-        "closeAll": "بستن همه"
-      },
       "header": {
         "title": "اتصالات"
       }
@@ -485,18 +491,6 @@
   },
   "logs": {
     "page": {
-      "actions": {
-        "pause": "توقف",
-        "resume": "از سرگیری",
-        "clear": "پاک کردن"
-      },
-      "filters": {
-        "all": "ALL",
-        "debug": "DEBUG",
-        "info": "INFO",
-        "warn": "WARN",
-        "error": "ERROR"
-      },
       "header": {
         "title": "لاگ‌ها"
       }

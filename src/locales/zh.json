@@ -16,7 +16,13 @@
       "retry": "重试",
       "refreshPage": "刷新页面",
       "showDetails": "显示详情",
-      "hideDetails": "隐藏详情"
+      "hideDetails": "隐藏详情",
+      "listView": "列表视图",
+      "tableView": "表格视图",
+      "pause": "暂停",
+      "resume": "继续",
+      "closeAll": "关闭全部",
+      "clear": "清除"
     },
     "labels": {
       "updateAt": "更新于",
@@ -29,7 +35,9 @@
       "usedTotal": "已使用 / 总量",
       "from": "来自",
       "password": "密码",
-      "retryAttempts": "重试次数"
+      "retryAttempts": "重试次数",
+      "downloaded": "下载量",
+      "uploaded": "上传量"
     },
     "statuses": {
       "enabled": "已启用",
@@ -107,6 +115,15 @@
           "keyError": "覆写文件键错误，变更已撤销",
           "generalError": "覆写文件错误，变更已撤销"
         }
+      }
+    },
+    "filters": {
+      "logLevels": {
+        "all": "ALL",
+        "debug": "DEBUG",
+        "info": "INFO",
+        "warn": "WARN",
+        "error": "ERROR"
       }
     }
   },
@@ -398,17 +415,6 @@
   },
   "connections": {
     "page": {
-      "summary": {
-        "downloaded": "下载量",
-        "uploaded": "上传量"
-      },
-      "actions": {
-        "listView": "列表视图",
-        "tableView": "表格视图",
-        "pause": "暂停",
-        "resume": "继续",
-        "closeAll": "关闭全部"
-      },
       "header": {
         "title": "连接"
       }
@@ -485,18 +491,6 @@
   },
   "logs": {
     "page": {
-      "actions": {
-        "pause": "暂停",
-        "resume": "继续",
-        "clear": "清除"
-      },
-      "filters": {
-        "all": "ALL",
-        "debug": "DEBUG",
-        "info": "INFO",
-        "warn": "WARN",
-        "error": "ERROR"
-      },
       "header": {
         "title": "日志"
       }
