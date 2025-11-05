@@ -87,7 +87,7 @@ impl WebDavClient {
                 (*cfg_arc).clone()
             } else {
                 // 释放锁后获取异步配置
-                let verge = Config::verge().await.latest_arc();
+                let verge = Config::verge().await.data_arc();
                 if verge.webdav_url.is_none()
                     || verge.webdav_username.is_none()
                     || verge.webdav_password.is_none()
