@@ -72,1178 +72,1159 @@
       "advanced": "Advanced"
     }
   },
-  "entities": {
-    "profile": {
-      "page": {
-        "title": "Profiles",
+  "profiles": {
+    "page": {
+      "title": "Profiles",
+      "actions": {
+        "updateAll": "Update All Profiles",
+        "viewRuntimeConfig": "View Runtime Config",
+        "reactivate": "Reactivate Profiles",
+        "import": "Import"
+      },
+      "batch": {
+        "title": "Batch Operations",
+        "delete": "Delete Selected Profiles",
+        "selectAll": "Select All",
+        "deselectAll": "Deselect All",
+        "done": "Done",
+        "selected": "Selected",
+        "items": "items"
+      },
+      "import": {
+        "placeholder": "Profile URL",
+        "paste": "Paste",
+        "clear": "Clear"
+      },
+      "errors": {
+        "invalidUrl": "Invalid profile URL. Please enter a URL starting with http:// or https://",
+        "onlyYaml": "Only YAML Files Supported"
+      },
+      "notifications": {
+        "importRetry": "Import failed, retrying with Clash proxy...",
+        "importFail": "Import failed even with Clash proxy",
+        "importNeedsRefresh": "Profile imported but may need manual refresh",
+        "importSuccess": "Profile imported successfully, please restart if not visible",
+        "profileSwitched": "Profile Switched",
+        "profileReactivated": "Profile Reactivated",
+        "switchInterrupted": "Profile switch interrupted by new selection",
+        "batchDeleted": "Selected profiles deleted successfully"
+      },
+      "notices": {
+        "forceRefreshCompleted": "Force refresh completed",
+        "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
+      }
+    },
+    "notifications": {
+      "importSuccess": "Profile Imported Successfully",
+      "importSubscriptionSuccess": "Import subscription successful",
+      "importWithClashProxy": "Profile Imported with Clash proxy",
+      "saved": "Saved successfully"
+    },
+    "viewer": {
+      "title": {
+        "create": "Create Profile",
+        "edit": "Edit Profile"
+      },
+      "fields": {
+        "type": "Type",
+        "name": "Name",
+        "description": "Descriptions",
+        "subscriptionUrl": "Subscription URL",
+        "httpTimeout": "HTTP Request Timeout",
+        "updateInterval": "Update Interval",
+        "useSystemProxy": "Use System Proxy",
+        "useClashProxy": "Use Clash Proxy",
+        "acceptInvalidCerts": "Allows Invalid Certificates (Danger)",
+        "allowAutoUpdate": "Allow Auto Update"
+      },
+      "notifications": {
+        "creationRetry": "Profile creation failed, retrying with Clash proxy...",
+        "creationSuccess": "Profile creation succeeded with Clash proxy"
+      }
+    },
+    "menu": {
+      "home": "Home",
+      "select": "Select",
+      "editInfo": "Edit Info",
+      "editFile": "Edit File",
+      "editRules": "Edit Rules",
+      "editProxies": "Edit Proxies",
+      "editGroups": "Edit Proxy Groups",
+      "extendConfig": "Extend Config",
+      "extendScript": "Extend Script",
+      "openFile": "Open File",
+      "update": "Update",
+      "updateViaProxy": "Update via proxy"
+    },
+    "proxiesEditor": {
+      "title": "Edit Proxies",
+      "placeholders": {
+        "multiUri": "Use newlines for multiple uri(Base64 encoding supported)"
+      },
+      "actions": {
+        "prepend": "Prepend Proxy",
+        "append": "Append Proxy"
+      }
+    },
+    "groupsEditor": {
+      "title": "Edit Proxy Groups",
+      "errors": {
+        "nameRequired": "Group Name Required",
+        "nameExists": "Group Name Already Exists"
+      },
+      "fields": {
+        "type": "Group Type",
+        "name": "Group Name",
+        "icon": "Proxy Group Icon",
+        "proxies": "Use Proxies",
+        "provider": "Use Provider",
+        "healthCheckUrl": "Health Check Url",
+        "expectedStatus": "Expected Status",
+        "interval": "Interval",
+        "timeout": "Timeout",
+        "maxFailedTimes": "Max Failed Times",
+        "interfaceName": "Interface Name",
+        "routingMark": "Routing Mark",
+        "filter": "Filter",
+        "excludeFilter": "Exclude Filter",
+        "excludeType": "Exclude Type",
+        "includeAll": "Include All Proxies and Providers",
+        "includeAllProxies": "Include All Proxies",
+        "includeAllProviders": "Include All Providers"
+      },
+      "toggles": {
+        "lazy": "Lazy",
+        "disableUdp": "Disable UDP",
+        "hidden": "Hidden"
+      },
+      "actions": {
+        "prepend": "Prepend Group",
+        "append": "Append Group"
+      }
+    },
+    "fileInput": {
+      "chooseFile": "Choose File"
+    },
+    "more": {
+      "global": {
+        "merge": "Global Merge",
+        "script": "Global Script"
+      },
+      "chips": {
+        "merge": "Merge",
+        "script": "Script"
+      }
+    },
+    "item": {
+      "tooltips": {
+        "showLast": "Click to show last update time",
+        "showNext": "Click to show next update"
+      },
+      "status": {
+        "lastUpdateFailed": "Last Update failed",
+        "nextUp": "Next Up",
+        "noSchedule": "No schedule",
+        "unknown": "Unknown",
+        "autoUpdateDisabled": "Auto update disabled"
+      }
+    },
+    "confirm": {
+      "delete": {
+        "title": "Confirm deletion",
+        "message": "This operation is not reversible"
+      }
+    },
+    "editor": {
+      "format": "Format document",
+      "readOnlyMessage": "Cannot edit in read-only editor"
+    },
+    "logViewer": {
+      "title": "Script Console"
+    },
+    "card": {
+      "labels": {
+        "from": "From",
+        "updateTime": "Update Time",
+        "usedTotal": "Used / Total",
+        "expireTime": "Expire Time",
+        "clickToImport": "Click to import subscription"
+      }
+    }
+  },
+  "proxies": {
+    "page": {
+      "title": {
+        "default": "Proxy Groups",
+        "chainMode": "Proxy Chain Mode"
+      },
+      "modes": {
+        "rule": "Rule",
+        "global": "Global",
+        "direct": "Direct"
+      },
+      "actions": {
+        "toggleChain": "🔗 Chain Proxy",
+        "connect": "Connect",
+        "disconnect": "Disconnect",
+        "connecting": "Connecting...",
+        "clearChainConfig": "Delete Chain Config"
+      },
+      "provider": {
+        "title": "Proxy Provider",
         "actions": {
-          "updateAll": "Update All Profiles",
-          "viewRuntimeConfig": "View Runtime Config",
-          "reactivate": "Reactivate Profiles",
-          "import": "Import"
-        },
-        "batch": {
-          "title": "Batch Operations",
-          "delete": "Delete Selected Profiles",
-          "selectAll": "Select All",
-          "deselectAll": "Deselect All",
-          "done": "Done",
-          "selected": "Selected",
-          "items": "items"
-        },
-        "import": {
-          "placeholder": "Profile URL",
-          "paste": "Paste",
-          "clear": "Clear"
-        },
-        "errors": {
-          "invalidUrl": "Invalid profile URL. Please enter a URL starting with http:// or https://",
-          "onlyYaml": "Only YAML Files Supported"
-        },
-        "notifications": {
-          "importRetry": "Import failed, retrying with Clash proxy...",
-          "importFail": "Import failed even with Clash proxy",
-          "importNeedsRefresh": "Profile imported but may need manual refresh",
-          "importSuccess": "Profile imported successfully, please restart if not visible",
-          "profileSwitched": "Profile Switched",
-          "profileReactivated": "Profile Reactivated",
-          "switchInterrupted": "Profile switch interrupted by new selection",
-          "batchDeleted": "Selected profiles deleted successfully"
+          "updateAll": "Update All",
+          "update": "Update"
         },
         "notices": {
-          "forceRefreshCompleted": "Force refresh completed",
-          "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
+          "updateSuccess": "{{name}} updated successfully",
+          "updateFailed": "Failed to update {{name}}: {{message}}",
+          "genericError": "Update failed: {{message}}",
+          "none": "No providers available to update",
+          "allUpdated": "All providers updated successfully"
+        }
+      },
+      "rules": {
+        "title": "Proxy Rules",
+        "select": "Select Rules"
+      },
+      "labels": {
+        "proxyCount": "Proxy Count",
+        "delayCheckReset": "Delay check to cancel fixed"
+      },
+      "tooltips": {
+        "locate": "locate",
+        "delayCheck": "Delay check",
+        "sortDefault": "Sort by default",
+        "sortDelay": "Sort by delay",
+        "sortName": "Sort by name",
+        "delayCheckUrl": "Delay check URL",
+        "showBasic": "Proxy basic",
+        "showDetail": "Proxy detail",
+        "filter": "Filter"
+      },
+      "placeholders": {
+        "filter": "Filter conditions",
+        "delayCheckUrl": "Delay check URL"
+      },
+      "chain": {
+        "header": "Chain Proxy Config",
+        "empty": "No proxy chain configured",
+        "instruction": "Click nodes in order to add to proxy chain",
+        "minimumNodes": "Chain proxy requires at least 2 nodes",
+        "minimumNodesHint": "Chain proxy requires at least 2 nodes. Please add one more node.",
+        "connectFailed": "Failed to connect to proxy chain",
+        "disconnectFailed": "Failed to disconnect from proxy chain",
+        "duplicateNode": "Proxy node already exists in chain"
+      },
+      "messages": {
+        "directMode": "Direct Mode"
+      }
+    },
+    "enums": {
+      "strategies": {
+        "select": "Select proxy manually",
+        "url-test": "Select proxy based on URL test delay",
+        "fallback": "Switch to another proxy on error",
+        "load-balance": "Distribute proxy based on load balancing",
+        "relay": "Pass through the defined proxy chain"
+      },
+      "policies": {
+        "DIRECT": "Data goes directly outbound (DIRECT)",
+        "REJECT": "Intercepts requests (REJECT)",
+        "REJECT-DROP": "Discards requests (REJECT-DROP)",
+        "PASS": "Skips this rule when matched (PASS)"
+      }
+    }
+  },
+  "connections": {
+    "page": {
+      "title": "Connections",
+      "summary": {
+        "downloaded": "Downloaded",
+        "uploaded": "Uploaded"
+      },
+      "actions": {
+        "listView": "List View",
+        "tableView": "Table View",
+        "pause": "Pause",
+        "resume": "Resume",
+        "closeAll": "Close All"
+      }
+    },
+    "fields": {
+      "host": "Host",
+      "downloaded": "Downloaded",
+      "uploaded": "Uploaded",
+      "dlSpeed": "DL Speed",
+      "ulSpeed": "UL Speed",
+      "chains": "Chains",
+      "rule": "Rule",
+      "process": "Process",
+      "time": "Time",
+      "source": "Source",
+      "destination": "Destination",
+      "destinationPort": "Destination Port",
+      "type": "Type"
+    },
+    "order": {
+      "default": "Default",
+      "uploadSpeed": "Upload Speed",
+      "downloadSpeed": "Download Speed"
+    },
+    "actions": {
+      "closeConnection": "Close Connection"
+    }
+  },
+  "tests": {
+    "item": {
+      "actions": {
+        "test": "Test"
+      }
+    },
+    "viewer": {
+      "title": {
+        "create": "Create Test",
+        "edit": "Edit Test"
+      },
+      "fields": {
+        "url": "Test URL"
+      }
+    },
+    "page": {
+      "title": "Test",
+      "actions": {
+        "testAll": "Test All"
+      }
+    },
+    "statuses": {
+      "pending": "Pending",
+      "yes": "Yes",
+      "no": "No",
+      "failed": "Failed",
+      "completed": "Completed",
+      "disallowedIsp": "Disallowed ISP",
+      "originalsOnly": "Originals Only",
+      "noDisney": "No (IP Banned By Disney+)",
+      "unsupportedRegion": "Unsupported Country/Region",
+      "failedNetwork": "Failed (Network Connection)"
+    }
+  },
+  "logs": {
+    "page": {
+      "title": "Logs",
+      "actions": {
+        "pause": "Pause",
+        "resume": "Resume",
+        "clear": "Clear"
+      },
+      "filters": {
+        "all": "ALL",
+        "debug": "DEBUG",
+        "info": "INFO",
+        "warn": "WARN",
+        "error": "ERROR"
+      }
+    }
+  },
+  "rules": {
+    "page": {
+      "title": "Rules",
+      "provider": {
+        "trigger": "Rule Provider",
+        "dialogTitle": "Rule Providers",
+        "actions": {
+          "updateAll": "Update All",
+          "update": "Update"
+        },
+        "notices": {
+          "updateSuccess": "{{name}} updated successfully",
+          "updateFailed": "Failed to update {{name}}: {{message}}",
+          "genericError": "Update failed: {{message}}",
+          "none": "No providers available to update",
+          "allUpdated": "All providers updated successfully"
+        }
+      }
+    },
+    "editor": {
+      "title": "Edit Rules",
+      "form": {
+        "labels": {
+          "type": "Rule Type",
+          "content": "Rule Content",
+          "proxyPolicy": "Proxy Policy"
+        },
+        "toggles": {
+          "noResolve": "No Resolve"
+        },
+        "actions": {
+          "prependRule": "Prepend Rule",
+          "appendRule": "Append Rule"
+        },
+        "validation": {
+          "conditionRequired": "Rule Condition Required",
+          "invalidRule": "Invalid Rule"
+        }
+      },
+      "ruleTypes": {
+        "DOMAIN": "Match full domain (DOMAIN)",
+        "DOMAIN-SUFFIX": "Match domain suffix (DOMAIN-SUFFIX)",
+        "DOMAIN-KEYWORD": "Match domain keyword (DOMAIN-KEYWORD)",
+        "DOMAIN-REGEX": "Match domain using regex (DOMAIN-REGEX)",
+        "GEOSITE": "Match domains in Geosite (GEOSITE)",
+        "GEOIP": "Match IP country code (GEOIP)",
+        "SRC-GEOIP": "Match source IP country code (SRC-GEOIP)",
+        "IP-ASN": "Match IP ASN (IP-ASN)",
+        "SRC-IP-ASN": "Match source IP ASN (SRC-IP-ASN)",
+        "IP-CIDR": "Match IP address range (IP-CIDR)",
+        "IP-CIDR6": "Match IPv6 address range (IP-CIDR6)",
+        "SRC-IP-CIDR": "Match source IP address range (SRC-IP-CIDR)",
+        "IP-SUFFIX": "Match IP suffix range (IP-SUFFIX)",
+        "SRC-IP-SUFFIX": "Match source IP suffix range (SRC-IP-SUFFIX)",
+        "SRC-PORT": "Match source port range (SRC-PORT)",
+        "DST-PORT": "Match destination port range (DST-PORT)",
+        "IN-PORT": "Match inbound port (IN-PORT)",
+        "DSCP": "DSCP tag (TPROXY UDP inbound only) (DSCP)",
+        "PROCESS-NAME": "Match process name (PROCESS-NAME)",
+        "PROCESS-PATH": "Match full process path (PROCESS-PATH)",
+        "PROCESS-NAME-REGEX": "Match process name using regex (PROCESS-NAME-REGEX)",
+        "PROCESS-PATH-REGEX": "Match full process path using regex (PROCESS-PATH-REGEX)",
+        "NETWORK": "Match network protocol (TCP/UDP) (NETWORK)",
+        "UID": "Match Linux user ID (UID)",
+        "IN-TYPE": "Match inbound type (IN-TYPE)",
+        "IN-USER": "Match inbound username (IN-USER)",
+        "IN-NAME": "Match inbound name (IN-NAME)",
+        "SUB-RULE": "Sub-rule (SUB-RULE)",
+        "RULE-SET": "Match rule set (RULE-SET)",
+        "AND": "Logical AND (AND)",
+        "OR": "Logical OR (OR)",
+        "NOT": "Logical NOT (NOT)",
+        "MATCH": "Match all requests (MATCH)"
+      }
+    }
+  },
+  "home": {
+    "page": {
+      "title": "Home",
+      "tooltips": {
+        "lightweightMode": "Lightweight Mode",
+        "manual": "Manual",
+        "settings": "Home Settings"
+      },
+      "cards": {
+        "trafficStats": "Traffic Stats",
+        "networkSettings": "Network Settings",
+        "proxyMode": "Proxy Mode"
+      },
+      "settings": {
+        "title": "Home Settings",
+        "cards": {
+          "profile": "Profile Card",
+          "currentProxy": "Current Proxy Card",
+          "network": "Network Settings Card",
+          "proxyMode": "Proxy Mode Card",
+          "traffic": "Traffic Stats Card",
+          "tests": "Website Tests Card",
+          "ip": "IP Information Card",
+          "clashInfo": "Clash Info Cards",
+          "systemInfo": "System Info Cards"
+        }
+      }
+    },
+    "cards": {
+      "proxyTun": {
+        "status": {
+          "systemProxyEnabled": "System Proxy Enabled",
+          "systemProxyDisabled": "System Proxy Disabled",
+          "tunModeServiceRequired": "TUN Mode Service Required",
+          "tunModeEnabled": "TUN Mode Enabled",
+          "tunModeDisabled": "TUN Mode Disabled"
+        },
+        "tooltips": {
+          "systemProxy": "System Proxy Info",
+          "tunMode": "TUN Mode Intercept Info"
+        }
+      },
+      "clashInfo": {
+        "title": "Clash Info",
+        "fields": {
+          "coreVersion": "Core Version",
+          "systemProxyAddress": "System Proxy Address",
+          "mixedPort": "Mixed Port",
+          "uptime": "Uptime",
+          "rulesCount": "Rules Count"
+        }
+      },
+      "systemInfo": {
+        "title": "System Info",
+        "fields": {
+          "osInfo": "OS Info",
+          "autoLaunch": "Auto Launch",
+          "runningMode": "Running Mode",
+          "lastCheckUpdate": "Last Check Update",
+          "vergeVersion": "Verge Version"
+        },
+        "actions": {
+          "settings": "Settings"
+        },
+        "tooltips": {
+          "autoLaunchAdmin": "Administrator mode may not support auto launch"
+        },
+        "badges": {
+          "adminMode": "Administrator Mode",
+          "serviceMode": "Service Mode",
+          "sidecarMode": "User Mode",
+          "adminServiceMode": "Admin + Service Mode"
+        }
+      },
+      "ipInfo": {
+        "title": "IP Information",
+        "labels": {
+          "ip": "IP",
+          "asn": "ASN",
+          "isp": "ISP",
+          "org": "ORG",
+          "location": "Location",
+          "timezone": "Timezone",
+          "autoRefresh": "Auto refresh",
+          "unknown": "Unknown"
+        },
+        "errors": {
+          "load": "Failed to get IP info"
+        }
+      },
+      "currentProxy": {
+        "title": "Current Node",
+        "actions": {
+          "refreshDelay": "Delay check"
+        },
+        "labels": {
+          "globalMode": "Global Mode",
+          "directMode": "Direct Mode",
+          "group": "Group",
+          "proxy": "Proxy",
+          "noActiveNode": "No active proxy node"
+        }
+      },
+      "tests": {
+        "title": "Website Tests"
+      },
+      "traffic": {
+        "metrics": {
+          "uploadSpeed": "Upload Speed",
+          "downloadSpeed": "Download Speed",
+          "activeConnections": "Active Connections",
+          "uploaded": "Uploaded",
+          "downloaded": "Downloaded",
+          "memoryUsage": "Core Usage"
+        },
+        "legends": {
+          "upload": "Upload",
+          "download": "Download"
+        },
+        "patterns": {
+          "minutes": "{{time}} Minutes"
+        }
+      },
+      "clashMode": {
+        "errors": {
+          "communication": "Core communication error"
+        },
+        "labels": {
+          "rule": "Rule Mode",
+          "global": "Global Mode",
+          "direct": "Direct Mode"
+        },
+        "descriptions": {
+          "rule": "Automatically choose proxies according to the rule set.",
+          "global": "Forward all network requests through the selected proxy.",
+          "direct": "Bypass the proxy and connect to the internet directly."
+        }
+      }
+    }
+  },
+  "unlock": {
+    "page": {
+      "title": "Unlock Test",
+      "actions": {
+        "testing": "Testing..."
+      },
+      "empty": "No unlock test items",
+      "messages": {
+        "detectionTimeout": "Detection timeout or failed"
+      }
+    }
+  },
+  "settings": {
+    "system": {
+      "title": "System Setting",
+      "toggles": {
+        "tunMode": "Tun Mode",
+        "systemProxy": "System Proxy"
+      },
+      "tooltips": {
+        "autoLaunchAdmin": "Administrator mode may not support auto launch",
+        "silentStart": "Start the program in background mode without displaying the panel"
+      },
+      "fields": {
+        "autoLaunch": "Auto Launch",
+        "silentStart": "Silent Start"
+      },
+      "notifications": {
+        "tunMode": {
+          "autoDisabled": "TUN Mode automatically disabled due to service unavailable",
+          "autoDisableFailed": "Failed to disable TUN Mode automatically"
+        }
+      }
+    },
+    "proxyControl": {
+      "tooltips": {
+        "systemProxy": "Enable to modify the operating system's proxy settings. If enabling fails, modify the operating system's proxy settings manually",
+        "tunMode": "Tun (Virtual NIC) mode: Captures all system traffic, when enabled, there is no need to enable system proxy.",
+        "tunUnavailable": "TUN requires Service Mode or Admin Mode"
+      },
+      "actions": {
+        "installService": "Install Service",
+        "uninstallService": "Uninstall Service"
+      },
+      "fields": {
+        "systemProxy": "System Proxy",
+        "tunMode": "Tun Mode"
+      }
+    },
+    "externalController": {
+      "title": "External Controller",
+      "fields": {
+        "enable": "Enable External Controller",
+        "address": "External Controller",
+        "secret": "Core Secret"
+      },
+      "placeholders": {
+        "address": "Required",
+        "secret": "Recommended"
+      },
+      "tooltips": {
+        "copy": "Copy to clipboard"
+      },
+      "messages": {
+        "addressRequired": "Controller address cannot be empty",
+        "secretRequired": "Secret cannot be empty",
+        "copyFailed": "Failed to copy",
+        "controllerCopied": "Controller address copied to clipboard",
+        "secretCopied": "Secret copied to clipboard"
+      }
+    },
+    "externalCors": {
+      "title": "External Cors Configuration",
+      "fields": {
+        "allowPrivateNetwork": "Allow private network access",
+        "allowedOrigins": "Allowed Origins"
+      },
+      "placeholders": {
+        "origin": "Please enter a valid url"
+      },
+      "actions": {
+        "add": "Add"
+      },
+      "messages": {
+        "alwaysIncluded": "Always included origins: {{urls}}"
+      },
+      "tooltips": {
+        "open": "External Cors Settings"
+      }
+    },
+    "clash": {
+      "title": "Clash Setting",
+      "items": {
+        "allowLan": "Allow LAN",
+        "dnsOverwrite": "DNS Overwrite",
+        "ipv6": "IPv6",
+        "unifiedDelay": "Unified Delay",
+        "logLevel": "Log Level",
+        "portConfig": "Port Config",
+        "external": "External",
+        "webUI": "Web UI",
+        "clashCore": "Clash Core",
+        "openUwpTool": "Open UWP tool",
+        "updateGeoData": "Update GeoData"
+      },
+      "tooltips": {
+        "networkInterface": "Network Interface",
+        "unifiedDelay": "When unified delay is turned on, two delay tests will be performed to eliminate the delay differences between different types of nodes caused by connection handshakes, etc",
+        "logLevel": "This parameter is valid only for kernel log files in the log directory Service folder",
+        "openUwpTool": "Since Windows 8, UWP apps (such as Microsoft Store) are restricted from directly accessing local host network services, and this tool can be used to bypass this restriction"
+      },
+      "options": {
+        "logLevel": {
+          "debug": "Debug",
+          "info": "Info",
+          "warning": "Warn",
+          "error": "Error",
+          "silent": "Silent"
+        }
+      },
+      "messages": {
+        "geoDataUpdated": "GeoData Updated"
+      },
+      "port": {
+        "title": "Port Config",
+        "fields": {
+          "mixed": "Mixed Port",
+          "socks": "Socks Port",
+          "http": "Http(s) Port",
+          "redir": "Redir Port",
+          "tproxy": "Tproxy Port"
+        },
+        "actions": {
+          "random": "Random Port"
+        },
+        "messages": {
+          "saved": "Port settings saved",
+          "saveFailed": "Failed to save port settings"
         }
       },
       "notifications": {
-        "importSuccess": "Profile Imported Successfully",
-        "importSubscriptionSuccess": "Import subscription successful",
-        "importWithClashProxy": "Profile Imported with Clash proxy",
-        "saved": "Saved successfully"
+        "restartSuccess": "Clash Core Restarted",
+        "versionUpdated": "Core Version Updated",
+        "changeSuccess": "Core changed successfully",
+        "changeFailed": "Failed to change core"
       },
-      "viewer": {
-        "title": {
-          "create": "Create Profile",
-          "edit": "Edit Profile"
-        },
-        "fields": {
-          "type": "Type",
-          "name": "Name",
-          "description": "Descriptions",
-          "subscriptionUrl": "Subscription URL",
-          "httpTimeout": "HTTP Request Timeout",
-          "updateInterval": "Update Interval",
-          "useSystemProxy": "Use System Proxy",
-          "useClashProxy": "Use Clash Proxy",
-          "acceptInvalidCerts": "Allows Invalid Certificates (Danger)",
-          "allowAutoUpdate": "Allow Auto Update"
+      "status": {
+        "stopping": "Stopping Core...",
+        "restarting": "Restarting Core..."
+      },
+      "service": {
+        "status": {
+          "installing": "Installing Service...",
+          "uninstalling": "Uninstalling Service..."
         },
         "notifications": {
-          "creationRetry": "Profile creation failed, retrying with Clash proxy...",
-          "creationSuccess": "Profile creation succeeded with Clash proxy"
+          "installSuccess": "Service Installed Successfully",
+          "uninstallSuccess": "Service Uninstalled Successfully"
         }
       },
-      "menu": {
-        "home": "Home",
-        "select": "Select",
-        "editInfo": "Edit Info",
-        "editFile": "Edit File",
-        "editRules": "Edit Rules",
-        "editProxies": "Edit Proxies",
-        "editGroups": "Edit Proxy Groups",
-        "extendConfig": "Extend Config",
-        "extendScript": "Extend Script",
-        "openFile": "Open File",
-        "update": "Update",
-        "updateViaProxy": "Update via proxy"
-      },
-      "proxiesEditor": {
-        "title": "Edit Proxies",
-        "placeholders": {
-          "multiUri": "Use newlines for multiple uri(Base64 encoding supported)"
-        },
-        "actions": {
-          "prepend": "Prepend Proxy",
-          "append": "Append Proxy"
-        }
-      },
-      "groupsEditor": {
-        "title": "Edit Proxy Groups",
-        "errors": {
-          "nameRequired": "Group Name Required",
-          "nameExists": "Group Name Already Exists"
-        },
-        "fields": {
-          "type": "Group Type",
-          "name": "Group Name",
-          "icon": "Proxy Group Icon",
-          "proxies": "Use Proxies",
-          "provider": "Use Provider",
-          "healthCheckUrl": "Health Check Url",
-          "expectedStatus": "Expected Status",
-          "interval": "Interval",
-          "timeout": "Timeout",
-          "maxFailedTimes": "Max Failed Times",
-          "interfaceName": "Interface Name",
-          "routingMark": "Routing Mark",
-          "filter": "Filter",
-          "excludeFilter": "Exclude Filter",
-          "excludeType": "Exclude Type",
-          "includeAll": "Include All Proxies and Providers",
-          "includeAllProxies": "Include All Proxies",
-          "includeAllProviders": "Include All Providers"
-        },
-        "toggles": {
-          "lazy": "Lazy",
-          "disableUdp": "Disable UDP",
-          "hidden": "Hidden"
-        },
-        "actions": {
-          "prepend": "Prepend Group",
-          "append": "Append Group"
-        }
-      },
-      "fileInput": {
-        "chooseFile": "Choose File"
-      },
-      "more": {
-        "global": {
-          "merge": "Global Merge",
-          "script": "Global Script"
-        },
-        "chips": {
-          "merge": "Merge",
-          "script": "Script"
-        }
-      },
-      "item": {
-        "tooltips": {
-          "showLast": "Click to show last update time",
-          "showNext": "Click to show next update"
-        },
-        "status": {
-          "lastUpdateFailed": "Last Update failed",
-          "nextUp": "Next Up",
-          "noSchedule": "No schedule",
-          "unknown": "Unknown",
-          "autoUpdateDisabled": "Auto update disabled"
-        }
-      },
-      "confirm": {
-        "delete": {
-          "title": "Confirm deletion",
-          "message": "This operation is not reversible"
-        }
-      },
-      "editor": {
-        "format": "Format document",
-        "readOnlyMessage": "Cannot edit in read-only editor"
-      },
-      "logViewer": {
-        "title": "Script Console"
-      },
-      "card": {
-        "labels": {
-          "from": "From",
-          "updateTime": "Update Time",
-          "usedTotal": "Used / Total",
-          "expireTime": "Expire Time",
-          "clickToImport": "Click to import subscription"
-        }
+      "variants": {
+        "release": "Release Version",
+        "alpha": "Alpha Version"
       }
     },
-    "proxy": {
-      "page": {
-        "title": {
-          "default": "Proxy Groups",
-          "chainMode": "Proxy Chain Mode"
-        },
-        "modes": {
-          "rule": "Rule",
-          "global": "Global",
-          "direct": "Direct"
-        },
-        "actions": {
-          "toggleChain": "🔗 Chain Proxy",
-          "connect": "Connect",
-          "disconnect": "Disconnect",
-          "connecting": "Connecting...",
-          "clearChainConfig": "Delete Chain Config"
-        },
-        "provider": {
-          "title": "Proxy Provider",
-          "actions": {
-            "updateAll": "Update All",
-            "update": "Update"
-          },
-          "notices": {
-            "updateSuccess": "{{name}} updated successfully",
-            "updateFailed": "Failed to update {{name}}: {{message}}",
-            "genericError": "Update failed: {{message}}",
-            "none": "No providers available to update",
-            "allUpdated": "All providers updated successfully"
-          }
-        },
-        "rules": {
-          "title": "Proxy Rules",
-          "select": "Select Rules"
-        },
-        "labels": {
-          "proxyCount": "Proxy Count",
-          "delayCheckReset": "Delay check to cancel fixed"
-        },
-        "tooltips": {
-          "locate": "locate",
-          "delayCheck": "Delay check",
-          "sortDefault": "Sort by default",
-          "sortDelay": "Sort by delay",
-          "sortName": "Sort by name",
-          "delayCheckUrl": "Delay check URL",
-          "showBasic": "Proxy basic",
-          "showDetail": "Proxy detail",
-          "filter": "Filter"
-        },
-        "placeholders": {
-          "filter": "Filter conditions",
-          "delayCheckUrl": "Delay check URL"
-        },
-        "chain": {
-          "header": "Chain Proxy Config",
-          "empty": "No proxy chain configured",
-          "instruction": "Click nodes in order to add to proxy chain",
-          "minimumNodes": "Chain proxy requires at least 2 nodes",
-          "minimumNodesHint": "Chain proxy requires at least 2 nodes. Please add one more node.",
-          "connectFailed": "Failed to connect to proxy chain",
-          "disconnectFailed": "Failed to disconnect from proxy chain",
-          "duplicateNode": "Proxy node already exists in chain"
-        },
-        "messages": {
-          "directMode": "Direct Mode"
-        }
+    "liteMode": {
+      "title": "LightWeight Mode Settings",
+      "actions": {
+        "enterNow": "Enter LightWeight Mode Now"
       },
-      "enums": {
-        "strategies": {
-          "select": "Select proxy manually",
-          "url-test": "Select proxy based on URL test delay",
-          "fallback": "Switch to another proxy on error",
-          "load-balance": "Distribute proxy based on load balancing",
-          "relay": "Pass through the defined proxy chain"
-        },
-        "policies": {
-          "DIRECT": "Data goes directly outbound (DIRECT)",
-          "REJECT": "Intercepts requests (REJECT)",
-          "REJECT-DROP": "Discards requests (REJECT-DROP)",
-          "PASS": "Skips this rule when matched (PASS)"
-        }
-      }
-    },
-    "connection": {
-      "page": {
-        "title": "Connections",
-        "summary": {
-          "downloaded": "Downloaded",
-          "uploaded": "Uploaded"
-        },
-        "actions": {
-          "listView": "List View",
-          "tableView": "Table View",
-          "pause": "Pause",
-          "resume": "Resume",
-          "closeAll": "Close All"
-        }
+      "toggles": {
+        "autoEnter": "Auto Enter LightWeight Mode"
+      },
+      "tooltips": {
+        "autoEnter": "Enable to automatically activate LightWeight Mode after the window is closed for a period of time"
       },
       "fields": {
-        "host": "Host",
-        "downloaded": "Downloaded",
-        "uploaded": "Uploaded",
-        "dlSpeed": "DL Speed",
-        "ulSpeed": "UL Speed",
-        "chains": "Chains",
-        "rule": "Rule",
-        "process": "Process",
-        "time": "Time",
-        "source": "Source",
-        "destination": "Destination",
-        "destinationPort": "Destination Port",
-        "type": "Type"
+        "delay": "Auto Enter LightWeight Mode Delay"
       },
-      "order": {
-        "default": "Default",
-        "uploadSpeed": "Upload Speed",
-        "downloadSpeed": "Download Speed"
+      "messages": {
+        "autoEnterHint": "When closing the window, LightWeight Mode will be automatically activated after {{n}} minutes"
+      }
+    },
+    "backup": {
+      "title": "Backup Setting",
+      "tabs": {
+        "local": "Local backup",
+        "webdav": "WebDAV backup"
       },
       "actions": {
-        "closeConnection": "Close Connection"
+        "selectTarget": "Select backup target",
+        "backup": "Backup",
+        "export": "Export",
+        "exportBackup": "Export Backup",
+        "deleteBackup": "Delete Backup",
+        "restore": "Restore",
+        "restoreBackup": "Restore Backup"
+      },
+      "fields": {
+        "webdavUrl": "WebDAV Server URL",
+        "username": "Username",
+        "password": "Password",
+        "info": "Backups are stored locally in the application data directory. Use the list below to restore or delete backups."
+      },
+      "messages": {
+        "webdavUrlRequired": "WebDAV URL cannot be empty",
+        "invalidWebdavUrl": "Invalid WebDAV URL format",
+        "usernameRequired": "Username cannot be empty",
+        "passwordRequired": "Password cannot be empty",
+        "webdavConfigSaved": "WebDAV configuration saved successfully",
+        "webdavConfigSaveFailed": "Failed to save WebDAV configuration: {{error}}",
+        "backupCreated": "Backup created successfully",
+        "backupFailed": "Backup failed: {{error}}",
+        "localBackupCreated": "Local backup created successfully",
+        "localBackupFailed": "Local backup failed",
+        "restoreSuccess": "Restore Success, App will restart in 1s",
+        "localBackupExported": "Local backup exported successfully",
+        "localBackupExportFailed": "Failed to export local backup",
+        "confirmDelete": "Confirm to delete this backup file?",
+        "confirmRestore": "Confirm to restore this backup file?"
+      },
+      "table": {
+        "filename": "Filename",
+        "backupTime": "Backup Time",
+        "actions": "Actions",
+        "noBackups": "No backups available",
+        "rowsPerPage": "Rows per page"
       }
     },
-    "test": {
-      "item": {
-        "actions": {
-          "test": "Test"
-        }
-      },
-      "viewer": {
-        "title": {
-          "create": "Create Test",
-          "edit": "Edit Test"
+    "verge": {
+      "basic": {
+        "title": "Verge Basic Setting",
+        "items": {
+          "language": "Language",
+          "themeMode": "Theme Mode",
+          "trayClickEvent": "Tray Click Event",
+          "copyEnvType": "Copy Env Type",
+          "startPage": "Start Page",
+          "startupScript": "Startup Script",
+          "themeSetting": "Theme Setting",
+          "layoutSetting": "Layout Setting",
+          "misc": "Miscellaneous",
+          "hotkeySetting": "Hotkey Setting"
         },
-        "fields": {
-          "url": "Test URL"
-        }
-      },
-      "page": {
-        "title": "Test",
         "actions": {
-          "testAll": "Test All"
+          "browse": "Browse",
+          "clear": "Clear"
+        },
+        "trayOptions": {
+          "showMainWindow": "Show Main Window",
+          "showTrayMenu": "Show Tray Menu",
+          "disable": "Disable"
         }
       },
-      "statuses": {
-        "pending": "Pending",
-        "yes": "Yes",
-        "no": "No",
-        "failed": "Failed",
-        "completed": "Completed",
-        "disallowedIsp": "Disallowed ISP",
-        "originalsOnly": "Originals Only",
-        "noDisney": "No (IP Banned By Disney+)",
-        "unsupportedRegion": "Unsupported Country/Region",
-        "failedNetwork": "Failed (Network Connection)"
+      "advanced": {
+        "title": "Verge Advanced Setting",
+        "items": {
+          "backupSetting": "Backup Setting",
+          "runtimeConfig": "Runtime Config",
+          "openConfDir": "Open Conf Dir",
+          "openCoreDir": "Open Core Dir",
+          "openLogsDir": "Open Logs Dir",
+          "checkUpdates": "Check for Updates",
+          "openDevTools": "Dev Tools",
+          "liteModeSettings": "LightWeight Mode Settings",
+          "exit": "Exit",
+          "exportDiagnostics": "Export Diagnostic Info",
+          "vergeVersion": "Verge Version"
+        },
+        "tooltips": {
+          "backupInfo": "Support local or WebDAV backup of configuration files",
+          "openConfDir": "If the software runs abnormally, BACKUP and delete all files in this folder then restart the software",
+          "liteMode": "Close the GUI and keep only the kernel running"
+        },
+        "actions": {
+          "copyVersion": "Copy Version"
+        },
+        "notifications": {
+          "latestVersion": "Currently on the Latest Version",
+          "versionCopied": "Version copied to clipboard"
+        }
+      },
+      "theme": {
+        "title": "Theme Setting",
+        "fields": {
+          "primaryColor": "Primary Color",
+          "secondaryColor": "Secondary Color",
+          "primaryText": "Primary Text",
+          "secondaryText": "Secondary Text",
+          "infoColor": "Info Color",
+          "warningColor": "Warning Color",
+          "errorColor": "Error Color",
+          "successColor": "Success Color",
+          "fontFamily": "Font Family",
+          "cssInjection": "CSS Injection"
+        },
+        "actions": {
+          "editCss": "Edit CSS"
+        },
+        "dialogs": {
+          "editCssTitle": "Edit CSS"
+        }
+      },
+      "layout": {
+        "title": "Layout Setting",
+        "fields": {
+          "preferSystemTitlebar": "Prefer System Titlebar",
+          "trafficGraph": "Traffic Graph",
+          "memoryUsage": "Core Usage",
+          "proxyGroupIcon": "Proxy Group Icon",
+          "hoverNavigator": "Hover Jump Navigator",
+          "hoverNavigatorDelay": "Hover Jump Navigator Delay",
+          "navIcon": "Nav Icon",
+          "trayIcon": "Tray Icon",
+          "showProxyGroupsInline": "Show Proxy Groups Inline",
+          "commonTrayIcon": "Common Tray Icon",
+          "systemProxyTrayIcon": "System Proxy Tray Icon",
+          "tunTrayIcon": "Tun Tray Icon",
+          "enableTrayIcon": "Enable Tray Icon",
+          "enableTraySpeed": "Enable Tray Speed"
+        },
+        "tooltips": {
+          "hoverNavigator": "Automatically scroll to the corresponding proxy group when hovering over alphabet letters",
+          "hoverNavigatorDelay": "Delay before auto scrolling when hovering, in milliseconds"
+        },
+        "options": {
+          "icon": {
+            "monochrome": "Monochrome",
+            "colorful": "Colorful",
+            "disable": "Disable"
+          }
+        }
       }
     },
-    "theme": {
+    "common": {
+      "notifications": {
+        "copySuccess": "Copy Success",
+        "saveSuccess": "Configuration saved successfully",
+        "saveFailed": "Failed to save configuration"
+      }
+    },
+    "misc": {
+      "title": "Miscellaneous",
+      "fields": {
+        "appLogLevel": "App Log Level",
+        "appLogMaxSize": "App Log Max Size",
+        "appLogMaxCount": "App Log Max Count",
+        "autoCloseConnections": "Auto Close Connections",
+        "autoCheckUpdate": "Auto Check Update",
+        "enableBuiltinEnhanced": "Enable Builtin Enhanced",
+        "proxyLayoutColumns": "Proxy Layout Columns",
+        "autoLogClean": "Auto Log Clean",
+        "autoDelayDetection": "Auto Delay Detection",
+        "defaultLatencyTest": "Default Latency Test",
+        "defaultLatencyTimeout": "Default Latency Timeout"
+      },
+      "tooltips": {
+        "autoCloseConnections": "Terminate established connections when the proxy group selection or proxy mode changes",
+        "enableBuiltinEnhanced": "Compatibility handling for the configuration file",
+        "autoDelayDetection": "Periodically test the current node latency in the background",
+        "defaultLatencyTest": "Used for HTTP client request testing only and won't make a difference to the configuration file"
+      },
+      "options": {
+        "proxyLayoutColumns": {
+          "auto": "Auto Columns"
+        },
+        "autoLogClean": {
+          "never": "Never Clean",
+          "retainDays": "Retain {{n}} Days"
+        }
+      }
+    },
+    "update": {
+      "title": "New Version v{{version}}",
+      "actions": {
+        "goToRelease": "Go to Release Page",
+        "update": "Update"
+      },
+      "messages": {
+        "portableError": "The portable version does not support in-app updates. Please manually download and replace it",
+        "breakChangeError": "This version is a major update and does not support in-app updates. Please uninstall it and manually download and install the new version"
+      }
+    },
+    "sysproxy": {
+      "title": "System Proxy Setting",
+      "fieldsets": {
+        "currentStatus": "Current System Proxy"
+      },
+      "fields": {
+        "enableStatus": "Enable Status:",
+        "serverAddr": "Server Addr: ",
+        "pacUrl": "PAC URL: ",
+        "proxyHost": "Proxy Host",
+        "usePacMode": "Use PAC Mode",
+        "proxyGuard": "Proxy Guard",
+        "guardDuration": "Guard Duration",
+        "alwaysUseDefaultBypass": "Always use Default Bypass",
+        "proxyBypass": "Proxy Bypass Settings: ",
+        "bypass": "Bypass: ",
+        "pacScriptContent": "PAC Script Content"
+      },
+      "tooltips": {
+        "proxyGuard": "Enable to prevent other software from modifying the operating system's proxy settings"
+      },
+      "messages": {
+        "durationTooShort": "Proxy Daemon Duration Cannot be Less than 1 Second",
+        "invalidBypass": "Invalid Bypass Format",
+        "invalidProxyHost": "Invalid Proxy Host Format"
+      },
+      "actions": {
+        "editPac": "Edit PAC"
+      }
+    },
+    "tun": {
+      "title": "Tun Mode",
+      "actions": {
+        "reset": "Reset to Default"
+      },
+      "fields": {
+        "stack": "Tun Stack",
+        "device": "Device Name",
+        "autoRoute": "Auto Route",
+        "strictRoute": "Strict Route",
+        "autoDetectInterface": "Auto Detect Interface",
+        "dnsHijack": "DNS Hijack",
+        "mtu": "Max Transmission Unit"
+      },
+      "tooltips": {
+        "dnsHijack": "Please use , to separate multiple DNS servers"
+      },
+      "messages": {
+        "applied": "Settings Applied"
+      }
+    },
+    "dns": {
+      "dialog": {
+        "title": "DNS Overwrite",
+        "warning": "If you are not familiar with these settings, please do not modify them and keep DNS Overwrite enabled"
+      },
+      "sections": {
+        "general": "DNS Settings",
+        "fallbackFilter": "Fallback Filter Settings",
+        "hosts": "Hosts Settings"
+      },
+      "fields": {
+        "enable": "Enable DNS",
+        "listen": "DNS Listen",
+        "enhancedMode": "Enhanced Mode",
+        "fakeIpRange": "Fake IP Range",
+        "fakeIpFilterMode": "Fake IP Filter Mode",
+        "ipv6": {
+          "label": "IPv6",
+          "description": "Enable IPv6 DNS resolution"
+        },
+        "preferH3": {
+          "label": "Prefer H3",
+          "description": "DNS DOH uses HTTP/3"
+        },
+        "respectRules": {
+          "label": "Respect Rules",
+          "description": "DNS connections follow routing rules"
+        },
+        "useHosts": {
+          "label": "Use Hosts",
+          "description": "Enable to resolve hosts through hosts file"
+        },
+        "useSystemHosts": {
+          "label": "Use System Hosts",
+          "description": "Enable to resolve hosts through system hosts file"
+        },
+        "directPolicy": {
+          "label": "Direct Nameserver Follow Policy",
+          "description": "Whether to follow nameserver policy"
+        },
+        "defaultNameserver": {
+          "label": "Default Nameserver",
+          "description": "Default DNS servers used to resolve DNS servers"
+        },
+        "nameserver": {
+          "label": "Nameserver",
+          "description": "List of DNS servers, comma separated"
+        },
+        "fallback": {
+          "label": "Fallback",
+          "description": "List of fallback DNS servers, comma separated"
+        },
+        "proxy": {
+          "label": "Proxy Server Nameserver",
+          "description": "DNS servers for proxy node domain resolution"
+        },
+        "directNameserver": {
+          "label": "Direct Nameserver",
+          "description": "DNS servers for direct exit domain resolution, supports 'system' keyword, comma separated"
+        },
+        "fakeIpFilter": {
+          "label": "Fake IP Filter",
+          "description": "Domains that skip fake IP resolution, comma separated"
+        },
+        "nameserverPolicy": {
+          "label": "Nameserver Policy",
+          "description": "Domain-specific DNS server, multiple servers separated by semicolons, format: domain=server1;server2"
+        },
+        "geoipFiltering": {
+          "label": "GeoIP Filtering",
+          "description": "Enable GeoIP filtering for fallback"
+        },
+        "geoipCode": "GeoIP Code",
+        "fallbackIpCidr": {
+          "label": "Fallback IP CIDR",
+          "description": "IP CIDRs not using fallback servers, comma separated"
+        },
+        "fallbackDomain": {
+          "label": "Fallback Domain",
+          "description": "Domains using fallback servers, comma separated"
+        },
+        "hosts": {
+          "label": "Hosts",
+          "description": "Custom domain to IP or domain mapping"
+        }
+      },
+      "messages": {
+        "saved": "DNS settings saved",
+        "configError": "DNS configuration error:"
+      },
+      "errors": {
+        "invalid": "Invalid configuration"
+      }
+    },
+    "page": {
+      "title": "Settings",
+      "actions": {
+        "manual": "Manual",
+        "telegram": "Telegram Channel",
+        "github": "Github Repo"
+      }
+    },
+    "webUI": {
+      "actions": {
+        "openUrl": "Open URL"
+      },
+      "title": "Web UI",
+      "messages": {
+        "supportedPlaceholders": "Support %host, %port, %secret",
+        "placeholderInstruction": "Replace host, port, secret with %host, %port, %secret"
+      }
+    },
+    "hotkey": {
+      "toggles": {
+        "enableGlobal": "Enable Global Hotkey"
+      },
+      "title": "Hotkey Setting",
+      "functions": {
+        "rule": "Rule Mode",
+        "global": "Global Mode",
+        "openOrCloseDashboard": "Open/Close Dashboard",
+        "toggleSystemProxy": "Enable/Disable System Proxy",
+        "toggleTunMode": "Enable/Disable Tun Mode",
+        "entryLightweightMode": "Entry Lightweight Mode",
+        "direct": "Direct Mode"
+      }
+    },
+    "password": {
+      "prompts": {
+        "enterRoot": "Please enter your root password"
+      }
+    },
+    "networkInterface": {
+      "title": "Network Interface",
+      "fields": {
+        "ipAddress": "IP Address",
+        "macAddress": "MAC Address"
+      }
+    },
+    "updater": {
+      "notifications": {
+        "withClashProxySuccess": "Update with Clash proxy successfully",
+        "withClashProxyFailed": "Update failed even with Clash proxy"
+      }
+    },
+    "appearance": {
       "light": "Light",
       "dark": "Dark",
       "system": "System"
-    },
-    "log": {
-      "page": {
-        "title": "Logs",
-        "actions": {
-          "pause": "Pause",
-          "resume": "Resume",
-          "clear": "Clear"
-        },
-        "filters": {
-          "all": "ALL",
-          "debug": "DEBUG",
-          "info": "INFO",
-          "warn": "WARN",
-          "error": "ERROR"
-        }
-      }
-    },
-    "navigation": {
-      "tabs": {
-        "home": "Home",
-        "proxies": "Proxies",
-        "profiles": "Profiles",
-        "connections": "Connections",
-        "rules": "Rules",
-        "logs": "Logs",
-        "unlock": "Test",
-        "settings": "Settings"
-      },
-      "menu": {
-        "reorderMode": "Menu reorder mode",
-        "unlock": "Unlock menu order",
-        "lock": "Lock menu order"
-      }
-    },
-    "settings": {
-      "system": {
-        "title": "System Setting",
-        "toggles": {
-          "tunMode": "Tun Mode",
-          "systemProxy": "System Proxy"
-        },
-        "tooltips": {
-          "autoLaunchAdmin": "Administrator mode may not support auto launch",
-          "silentStart": "Start the program in background mode without displaying the panel"
-        },
-        "fields": {
-          "autoLaunch": "Auto Launch",
-          "silentStart": "Silent Start"
-        },
-        "notifications": {
-          "tunMode": {
-            "autoDisabled": "TUN Mode automatically disabled due to service unavailable",
-            "autoDisableFailed": "Failed to disable TUN Mode automatically"
-          }
-        }
-      },
-      "proxyControl": {
-        "tooltips": {
-          "systemProxy": "Enable to modify the operating system's proxy settings. If enabling fails, modify the operating system's proxy settings manually",
-          "tunMode": "Tun (Virtual NIC) mode: Captures all system traffic, when enabled, there is no need to enable system proxy.",
-          "tunUnavailable": "TUN requires Service Mode or Admin Mode"
-        },
-        "actions": {
-          "installService": "Install Service",
-          "uninstallService": "Uninstall Service"
-        },
-        "fields": {
-          "systemProxy": "System Proxy",
-          "tunMode": "Tun Mode"
-        }
-      },
-      "externalController": {
-        "title": "External Controller",
-        "fields": {
-          "enable": "Enable External Controller",
-          "address": "External Controller",
-          "secret": "Core Secret"
-        },
-        "placeholders": {
-          "address": "Required",
-          "secret": "Recommended"
-        },
-        "tooltips": {
-          "copy": "Copy to clipboard"
-        },
-        "messages": {
-          "addressRequired": "Controller address cannot be empty",
-          "secretRequired": "Secret cannot be empty",
-          "copyFailed": "Failed to copy",
-          "controllerCopied": "Controller address copied to clipboard",
-          "secretCopied": "Secret copied to clipboard"
-        }
-      },
-      "externalCors": {
-        "title": "External Cors Configuration",
-        "fields": {
-          "allowPrivateNetwork": "Allow private network access",
-          "allowedOrigins": "Allowed Origins"
-        },
-        "placeholders": {
-          "origin": "Please enter a valid url"
-        },
-        "actions": {
-          "add": "Add"
-        },
-        "messages": {
-          "alwaysIncluded": "Always included origins: {{urls}}"
-        },
-        "tooltips": {
-          "open": "External Cors Settings"
-        }
-      },
-      "clash": {
-        "title": "Clash Setting",
-        "items": {
-          "allowLan": "Allow LAN",
-          "dnsOverwrite": "DNS Overwrite",
-          "ipv6": "IPv6",
-          "unifiedDelay": "Unified Delay",
-          "logLevel": "Log Level",
-          "portConfig": "Port Config",
-          "external": "External",
-          "webUI": "Web UI",
-          "clashCore": "Clash Core",
-          "openUwpTool": "Open UWP tool",
-          "updateGeoData": "Update GeoData"
-        },
-        "tooltips": {
-          "networkInterface": "Network Interface",
-          "unifiedDelay": "When unified delay is turned on, two delay tests will be performed to eliminate the delay differences between different types of nodes caused by connection handshakes, etc",
-          "logLevel": "This parameter is valid only for kernel log files in the log directory Service folder",
-          "openUwpTool": "Since Windows 8, UWP apps (such as Microsoft Store) are restricted from directly accessing local host network services, and this tool can be used to bypass this restriction"
-        },
-        "options": {
-          "logLevel": {
-            "debug": "Debug",
-            "info": "Info",
-            "warning": "Warn",
-            "error": "Error",
-            "silent": "Silent"
-          }
-        },
-        "messages": {
-          "geoDataUpdated": "GeoData Updated"
-        },
-        "port": {
-          "title": "Port Config",
-          "fields": {
-            "mixed": "Mixed Port",
-            "socks": "Socks Port",
-            "http": "Http(s) Port",
-            "redir": "Redir Port",
-            "tproxy": "Tproxy Port"
-          },
-          "actions": {
-            "random": "Random Port"
-          },
-          "messages": {
-            "saved": "Port settings saved",
-            "saveFailed": "Failed to save port settings"
-          }
-        },
-        "notifications": {
-          "restartSuccess": "Clash Core Restarted",
-          "versionUpdated": "Core Version Updated",
-          "changeSuccess": "Core changed successfully",
-          "changeFailed": "Failed to change core"
-        },
-        "status": {
-          "stopping": "Stopping Core...",
-          "restarting": "Restarting Core..."
-        },
-        "service": {
-          "status": {
-            "installing": "Installing Service...",
-            "uninstalling": "Uninstalling Service..."
-          },
-          "notifications": {
-            "installSuccess": "Service Installed Successfully",
-            "uninstallSuccess": "Service Uninstalled Successfully"
-          }
-        },
-        "variants": {
-          "release": "Release Version",
-          "alpha": "Alpha Version"
-        }
-      },
-      "liteMode": {
-        "title": "LightWeight Mode Settings",
-        "actions": {
-          "enterNow": "Enter LightWeight Mode Now"
-        },
-        "toggles": {
-          "autoEnter": "Auto Enter LightWeight Mode"
-        },
-        "tooltips": {
-          "autoEnter": "Enable to automatically activate LightWeight Mode after the window is closed for a period of time"
-        },
-        "fields": {
-          "delay": "Auto Enter LightWeight Mode Delay"
-        },
-        "messages": {
-          "autoEnterHint": "When closing the window, LightWeight Mode will be automatically activated after {{n}} minutes"
-        }
-      },
-      "backup": {
-        "title": "Backup Setting",
-        "tabs": {
-          "local": "Local backup",
-          "webdav": "WebDAV backup"
-        },
-        "actions": {
-          "selectTarget": "Select backup target",
-          "backup": "Backup",
-          "export": "Export",
-          "exportBackup": "Export Backup",
-          "deleteBackup": "Delete Backup",
-          "restore": "Restore",
-          "restoreBackup": "Restore Backup"
-        },
-        "fields": {
-          "webdavUrl": "WebDAV Server URL",
-          "username": "Username",
-          "password": "Password",
-          "info": "Backups are stored locally in the application data directory. Use the list below to restore or delete backups."
-        },
-        "messages": {
-          "webdavUrlRequired": "WebDAV URL cannot be empty",
-          "invalidWebdavUrl": "Invalid WebDAV URL format",
-          "usernameRequired": "Username cannot be empty",
-          "passwordRequired": "Password cannot be empty",
-          "webdavConfigSaved": "WebDAV configuration saved successfully",
-          "webdavConfigSaveFailed": "Failed to save WebDAV configuration: {{error}}",
-          "backupCreated": "Backup created successfully",
-          "backupFailed": "Backup failed: {{error}}",
-          "localBackupCreated": "Local backup created successfully",
-          "localBackupFailed": "Local backup failed",
-          "restoreSuccess": "Restore Success, App will restart in 1s",
-          "localBackupExported": "Local backup exported successfully",
-          "localBackupExportFailed": "Failed to export local backup",
-          "confirmDelete": "Confirm to delete this backup file?",
-          "confirmRestore": "Confirm to restore this backup file?"
-        },
-        "table": {
-          "filename": "Filename",
-          "backupTime": "Backup Time",
-          "actions": "Actions",
-          "noBackups": "No backups available",
-          "rowsPerPage": "Rows per page"
-        }
-      },
-      "verge": {
-        "basic": {
-          "title": "Verge Basic Setting",
-          "items": {
-            "language": "Language",
-            "themeMode": "Theme Mode",
-            "trayClickEvent": "Tray Click Event",
-            "copyEnvType": "Copy Env Type",
-            "startPage": "Start Page",
-            "startupScript": "Startup Script",
-            "themeSetting": "Theme Setting",
-            "layoutSetting": "Layout Setting",
-            "misc": "Miscellaneous",
-            "hotkeySetting": "Hotkey Setting"
-          },
-          "actions": {
-            "browse": "Browse",
-            "clear": "Clear"
-          },
-          "trayOptions": {
-            "showMainWindow": "Show Main Window",
-            "showTrayMenu": "Show Tray Menu",
-            "disable": "Disable"
-          }
-        },
-        "advanced": {
-          "title": "Verge Advanced Setting",
-          "items": {
-            "backupSetting": "Backup Setting",
-            "runtimeConfig": "Runtime Config",
-            "openConfDir": "Open Conf Dir",
-            "openCoreDir": "Open Core Dir",
-            "openLogsDir": "Open Logs Dir",
-            "checkUpdates": "Check for Updates",
-            "openDevTools": "Dev Tools",
-            "liteModeSettings": "LightWeight Mode Settings",
-            "exit": "Exit",
-            "exportDiagnostics": "Export Diagnostic Info",
-            "vergeVersion": "Verge Version"
-          },
-          "tooltips": {
-            "backupInfo": "Support local or WebDAV backup of configuration files",
-            "openConfDir": "If the software runs abnormally, BACKUP and delete all files in this folder then restart the software",
-            "liteMode": "Close the GUI and keep only the kernel running"
-          },
-          "actions": {
-            "copyVersion": "Copy Version"
-          },
-          "notifications": {
-            "latestVersion": "Currently on the Latest Version",
-            "versionCopied": "Version copied to clipboard"
-          }
-        },
-        "theme": {
-          "title": "Theme Setting",
-          "fields": {
-            "primaryColor": "Primary Color",
-            "secondaryColor": "Secondary Color",
-            "primaryText": "Primary Text",
-            "secondaryText": "Secondary Text",
-            "infoColor": "Info Color",
-            "warningColor": "Warning Color",
-            "errorColor": "Error Color",
-            "successColor": "Success Color",
-            "fontFamily": "Font Family",
-            "cssInjection": "CSS Injection"
-          },
-          "actions": {
-            "editCss": "Edit CSS"
-          },
-          "dialogs": {
-            "editCssTitle": "Edit CSS"
-          }
-        },
-        "layout": {
-          "title": "Layout Setting",
-          "fields": {
-            "preferSystemTitlebar": "Prefer System Titlebar",
-            "trafficGraph": "Traffic Graph",
-            "memoryUsage": "Core Usage",
-            "proxyGroupIcon": "Proxy Group Icon",
-            "hoverNavigator": "Hover Jump Navigator",
-            "hoverNavigatorDelay": "Hover Jump Navigator Delay",
-            "navIcon": "Nav Icon",
-            "trayIcon": "Tray Icon",
-            "showProxyGroupsInline": "Show Proxy Groups Inline",
-            "commonTrayIcon": "Common Tray Icon",
-            "systemProxyTrayIcon": "System Proxy Tray Icon",
-            "tunTrayIcon": "Tun Tray Icon",
-            "enableTrayIcon": "Enable Tray Icon",
-            "enableTraySpeed": "Enable Tray Speed"
-          },
-          "tooltips": {
-            "hoverNavigator": "Automatically scroll to the corresponding proxy group when hovering over alphabet letters",
-            "hoverNavigatorDelay": "Delay before auto scrolling when hovering, in milliseconds"
-          },
-          "options": {
-            "icon": {
-              "monochrome": "Monochrome",
-              "colorful": "Colorful",
-              "disable": "Disable"
-            }
-          }
-        }
-      },
-      "common": {
-        "notifications": {
-          "copySuccess": "Copy Success",
-          "saveSuccess": "Configuration saved successfully",
-          "saveFailed": "Failed to save configuration"
-        }
-      },
-      "misc": {
-        "title": "Miscellaneous",
-        "fields": {
-          "appLogLevel": "App Log Level",
-          "appLogMaxSize": "App Log Max Size",
-          "appLogMaxCount": "App Log Max Count",
-          "autoCloseConnections": "Auto Close Connections",
-          "autoCheckUpdate": "Auto Check Update",
-          "enableBuiltinEnhanced": "Enable Builtin Enhanced",
-          "proxyLayoutColumns": "Proxy Layout Columns",
-          "autoLogClean": "Auto Log Clean",
-          "autoDelayDetection": "Auto Delay Detection",
-          "defaultLatencyTest": "Default Latency Test",
-          "defaultLatencyTimeout": "Default Latency Timeout"
-        },
-        "tooltips": {
-          "autoCloseConnections": "Terminate established connections when the proxy group selection or proxy mode changes",
-          "enableBuiltinEnhanced": "Compatibility handling for the configuration file",
-          "autoDelayDetection": "Periodically test the current node latency in the background",
-          "defaultLatencyTest": "Used for HTTP client request testing only and won't make a difference to the configuration file"
-        },
-        "options": {
-          "proxyLayoutColumns": {
-            "auto": "Auto Columns"
-          },
-          "autoLogClean": {
-            "never": "Never Clean",
-            "retainDays": "Retain {{n}} Days"
-          }
-        }
-      },
-      "update": {
-        "title": "New Version v{{version}}",
-        "actions": {
-          "goToRelease": "Go to Release Page",
-          "update": "Update"
-        },
-        "messages": {
-          "portableError": "The portable version does not support in-app updates. Please manually download and replace it",
-          "breakChangeError": "This version is a major update and does not support in-app updates. Please uninstall it and manually download and install the new version"
-        }
-      },
-      "sysproxy": {
-        "title": "System Proxy Setting",
-        "fieldsets": {
-          "currentStatus": "Current System Proxy"
-        },
-        "fields": {
-          "enableStatus": "Enable Status:",
-          "serverAddr": "Server Addr: ",
-          "pacUrl": "PAC URL: ",
-          "proxyHost": "Proxy Host",
-          "usePacMode": "Use PAC Mode",
-          "proxyGuard": "Proxy Guard",
-          "guardDuration": "Guard Duration",
-          "alwaysUseDefaultBypass": "Always use Default Bypass",
-          "proxyBypass": "Proxy Bypass Settings: ",
-          "bypass": "Bypass: ",
-          "pacScriptContent": "PAC Script Content"
-        },
-        "tooltips": {
-          "proxyGuard": "Enable to prevent other software from modifying the operating system's proxy settings"
-        },
-        "messages": {
-          "durationTooShort": "Proxy Daemon Duration Cannot be Less than 1 Second",
-          "invalidBypass": "Invalid Bypass Format",
-          "invalidProxyHost": "Invalid Proxy Host Format"
-        },
-        "actions": {
-          "editPac": "Edit PAC"
-        }
-      },
-      "tun": {
-        "title": "Tun Mode",
-        "actions": {
-          "reset": "Reset to Default"
-        },
-        "fields": {
-          "stack": "Tun Stack",
-          "device": "Device Name",
-          "autoRoute": "Auto Route",
-          "strictRoute": "Strict Route",
-          "autoDetectInterface": "Auto Detect Interface",
-          "dnsHijack": "DNS Hijack",
-          "mtu": "Max Transmission Unit"
-        },
-        "tooltips": {
-          "dnsHijack": "Please use , to separate multiple DNS servers"
-        },
-        "messages": {
-          "applied": "Settings Applied"
-        }
-      },
-      "dns": {
-        "dialog": {
-          "title": "DNS Overwrite",
-          "warning": "If you are not familiar with these settings, please do not modify them and keep DNS Overwrite enabled"
-        },
-        "sections": {
-          "general": "DNS Settings",
-          "fallbackFilter": "Fallback Filter Settings",
-          "hosts": "Hosts Settings"
-        },
-        "fields": {
-          "enable": "Enable DNS",
-          "listen": "DNS Listen",
-          "enhancedMode": "Enhanced Mode",
-          "fakeIpRange": "Fake IP Range",
-          "fakeIpFilterMode": "Fake IP Filter Mode",
-          "ipv6": {
-            "label": "IPv6",
-            "description": "Enable IPv6 DNS resolution"
-          },
-          "preferH3": {
-            "label": "Prefer H3",
-            "description": "DNS DOH uses HTTP/3"
-          },
-          "respectRules": {
-            "label": "Respect Rules",
-            "description": "DNS connections follow routing rules"
-          },
-          "useHosts": {
-            "label": "Use Hosts",
-            "description": "Enable to resolve hosts through hosts file"
-          },
-          "useSystemHosts": {
-            "label": "Use System Hosts",
-            "description": "Enable to resolve hosts through system hosts file"
-          },
-          "directPolicy": {
-            "label": "Direct Nameserver Follow Policy",
-            "description": "Whether to follow nameserver policy"
-          },
-          "defaultNameserver": {
-            "label": "Default Nameserver",
-            "description": "Default DNS servers used to resolve DNS servers"
-          },
-          "nameserver": {
-            "label": "Nameserver",
-            "description": "List of DNS servers, comma separated"
-          },
-          "fallback": {
-            "label": "Fallback",
-            "description": "List of fallback DNS servers, comma separated"
-          },
-          "proxy": {
-            "label": "Proxy Server Nameserver",
-            "description": "DNS servers for proxy node domain resolution"
-          },
-          "directNameserver": {
-            "label": "Direct Nameserver",
-            "description": "DNS servers for direct exit domain resolution, supports 'system' keyword, comma separated"
-          },
-          "fakeIpFilter": {
-            "label": "Fake IP Filter",
-            "description": "Domains that skip fake IP resolution, comma separated"
-          },
-          "nameserverPolicy": {
-            "label": "Nameserver Policy",
-            "description": "Domain-specific DNS server, multiple servers separated by semicolons, format: domain=server1;server2"
-          },
-          "geoipFiltering": {
-            "label": "GeoIP Filtering",
-            "description": "Enable GeoIP filtering for fallback"
-          },
-          "geoipCode": "GeoIP Code",
-          "fallbackIpCidr": {
-            "label": "Fallback IP CIDR",
-            "description": "IP CIDRs not using fallback servers, comma separated"
-          },
-          "fallbackDomain": {
-            "label": "Fallback Domain",
-            "description": "Domains using fallback servers, comma separated"
-          },
-          "hosts": {
-            "label": "Hosts",
-            "description": "Custom domain to IP or domain mapping"
-          }
-        },
-        "messages": {
-          "saved": "DNS settings saved",
-          "configError": "DNS configuration error:"
-        },
-        "errors": {
-          "invalid": "Invalid configuration"
-        }
-      },
-      "page": {
-        "title": "Settings",
-        "actions": {
-          "manual": "Manual",
-          "telegram": "Telegram Channel",
-          "github": "Github Repo"
-        }
-      },
-      "webUI": {
-        "actions": {
-          "openUrl": "Open URL"
-        },
-        "title": "Web UI",
-        "messages": {
-          "supportedPlaceholders": "Support %host, %port, %secret",
-          "placeholderInstruction": "Replace host, port, secret with %host, %port, %secret"
-        }
-      },
-      "hotkey": {
-        "toggles": {
-          "enableGlobal": "Enable Global Hotkey"
-        },
-        "title": "Hotkey Setting",
-        "functions": {
-          "rule": "Rule Mode",
-          "global": "Global Mode",
-          "openOrCloseDashboard": "Open/Close Dashboard",
-          "toggleSystemProxy": "Enable/Disable System Proxy",
-          "toggleTunMode": "Enable/Disable Tun Mode",
-          "entryLightweightMode": "Entry Lightweight Mode",
-          "direct": "Direct Mode"
-        }
-      },
-      "password": {
-        "prompts": {
-          "enterRoot": "Please enter your root password"
-        }
-      },
-      "networkInterface": {
-        "title": "Network Interface",
-        "fields": {
-          "ipAddress": "IP Address",
-          "macAddress": "MAC Address"
-        }
-      },
-      "updater": {
-        "notifications": {
-          "withClashProxySuccess": "Update with Clash proxy successfully",
-          "withClashProxyFailed": "Update failed even with Clash proxy"
-        }
-      }
-    },
-    "rule": {
-      "page": {
-        "title": "Rules",
-        "provider": {
-          "trigger": "Rule Provider",
-          "dialogTitle": "Rule Providers",
-          "actions": {
-            "updateAll": "Update All",
-            "update": "Update"
-          },
-          "notices": {
-            "updateSuccess": "{{name}} updated successfully",
-            "updateFailed": "Failed to update {{name}}: {{message}}",
-            "genericError": "Update failed: {{message}}",
-            "none": "No providers available to update",
-            "allUpdated": "All providers updated successfully"
-          }
-        }
-      },
-      "editor": {
-        "title": "Edit Rules",
-        "form": {
-          "labels": {
-            "type": "Rule Type",
-            "content": "Rule Content",
-            "proxyPolicy": "Proxy Policy"
-          },
-          "toggles": {
-            "noResolve": "No Resolve"
-          },
-          "actions": {
-            "prependRule": "Prepend Rule",
-            "appendRule": "Append Rule"
-          },
-          "validation": {
-            "conditionRequired": "Rule Condition Required",
-            "invalidRule": "Invalid Rule"
-          }
-        },
-        "ruleTypes": {
-          "DOMAIN": "Match full domain (DOMAIN)",
-          "DOMAIN-SUFFIX": "Match domain suffix (DOMAIN-SUFFIX)",
-          "DOMAIN-KEYWORD": "Match domain keyword (DOMAIN-KEYWORD)",
-          "DOMAIN-REGEX": "Match domain using regex (DOMAIN-REGEX)",
-          "GEOSITE": "Match domains in Geosite (GEOSITE)",
-          "GEOIP": "Match IP country code (GEOIP)",
-          "SRC-GEOIP": "Match source IP country code (SRC-GEOIP)",
-          "IP-ASN": "Match IP ASN (IP-ASN)",
-          "SRC-IP-ASN": "Match source IP ASN (SRC-IP-ASN)",
-          "IP-CIDR": "Match IP address range (IP-CIDR)",
-          "IP-CIDR6": "Match IPv6 address range (IP-CIDR6)",
-          "SRC-IP-CIDR": "Match source IP address range (SRC-IP-CIDR)",
-          "IP-SUFFIX": "Match IP suffix range (IP-SUFFIX)",
-          "SRC-IP-SUFFIX": "Match source IP suffix range (SRC-IP-SUFFIX)",
-          "SRC-PORT": "Match source port range (SRC-PORT)",
-          "DST-PORT": "Match destination port range (DST-PORT)",
-          "IN-PORT": "Match inbound port (IN-PORT)",
-          "DSCP": "DSCP tag (TPROXY UDP inbound only) (DSCP)",
-          "PROCESS-NAME": "Match process name (PROCESS-NAME)",
-          "PROCESS-PATH": "Match full process path (PROCESS-PATH)",
-          "PROCESS-NAME-REGEX": "Match process name using regex (PROCESS-NAME-REGEX)",
-          "PROCESS-PATH-REGEX": "Match full process path using regex (PROCESS-PATH-REGEX)",
-          "NETWORK": "Match network protocol (TCP/UDP) (NETWORK)",
-          "UID": "Match Linux user ID (UID)",
-          "IN-TYPE": "Match inbound type (IN-TYPE)",
-          "IN-USER": "Match inbound username (IN-USER)",
-          "IN-NAME": "Match inbound name (IN-NAME)",
-          "SUB-RULE": "Sub-rule (SUB-RULE)",
-          "RULE-SET": "Match rule set (RULE-SET)",
-          "AND": "Logical AND (AND)",
-          "OR": "Logical OR (OR)",
-          "NOT": "Logical NOT (NOT)",
-          "MATCH": "Match all requests (MATCH)"
-        }
-      }
-    },
-    "home": {
-      "page": {
-        "title": "Home",
-        "tooltips": {
-          "lightweightMode": "Lightweight Mode",
-          "manual": "Manual",
-          "settings": "Home Settings"
-        },
-        "cards": {
-          "trafficStats": "Traffic Stats",
-          "networkSettings": "Network Settings",
-          "proxyMode": "Proxy Mode"
-        },
-        "settings": {
-          "title": "Home Settings",
-          "cards": {
-            "profile": "Profile Card",
-            "currentProxy": "Current Proxy Card",
-            "network": "Network Settings Card",
-            "proxyMode": "Proxy Mode Card",
-            "traffic": "Traffic Stats Card",
-            "tests": "Website Tests Card",
-            "ip": "IP Information Card",
-            "clashInfo": "Clash Info Cards",
-            "systemInfo": "System Info Cards"
-          }
-        }
-      },
-      "cards": {
-        "proxyTun": {
-          "status": {
-            "systemProxyEnabled": "System Proxy Enabled",
-            "systemProxyDisabled": "System Proxy Disabled",
-            "tunModeServiceRequired": "TUN Mode Service Required",
-            "tunModeEnabled": "TUN Mode Enabled",
-            "tunModeDisabled": "TUN Mode Disabled"
-          },
-          "tooltips": {
-            "systemProxy": "System Proxy Info",
-            "tunMode": "TUN Mode Intercept Info"
-          }
-        },
-        "clashInfo": {
-          "title": "Clash Info",
-          "fields": {
-            "coreVersion": "Core Version",
-            "systemProxyAddress": "System Proxy Address",
-            "mixedPort": "Mixed Port",
-            "uptime": "Uptime",
-            "rulesCount": "Rules Count"
-          }
-        },
-        "systemInfo": {
-          "title": "System Info",
-          "fields": {
-            "osInfo": "OS Info",
-            "autoLaunch": "Auto Launch",
-            "runningMode": "Running Mode",
-            "lastCheckUpdate": "Last Check Update",
-            "vergeVersion": "Verge Version"
-          },
-          "actions": {
-            "settings": "Settings"
-          },
-          "tooltips": {
-            "autoLaunchAdmin": "Administrator mode may not support auto launch"
-          },
-          "badges": {
-            "adminMode": "Administrator Mode",
-            "serviceMode": "Service Mode",
-            "sidecarMode": "User Mode",
-            "adminServiceMode": "Admin + Service Mode"
-          }
-        },
-        "ipInfo": {
-          "title": "IP Information",
-          "labels": {
-            "ip": "IP",
-            "asn": "ASN",
-            "isp": "ISP",
-            "org": "ORG",
-            "location": "Location",
-            "timezone": "Timezone",
-            "autoRefresh": "Auto refresh",
-            "unknown": "Unknown"
-          },
-          "errors": {
-            "load": "Failed to get IP info"
-          }
-        },
-        "currentProxy": {
-          "title": "Current Node",
-          "actions": {
-            "refreshDelay": "Delay check"
-          },
-          "labels": {
-            "globalMode": "Global Mode",
-            "directMode": "Direct Mode",
-            "group": "Group",
-            "proxy": "Proxy",
-            "noActiveNode": "No active proxy node"
-          }
-        },
-        "tests": {
-          "title": "Website Tests"
-        },
-        "traffic": {
-          "metrics": {
-            "uploadSpeed": "Upload Speed",
-            "downloadSpeed": "Download Speed",
-            "activeConnections": "Active Connections",
-            "uploaded": "Uploaded",
-            "downloaded": "Downloaded",
-            "memoryUsage": "Core Usage"
-          },
-          "legends": {
-            "upload": "Upload",
-            "download": "Download"
-          },
-          "patterns": {
-            "minutes": "{{time}} Minutes"
-          }
-        },
-        "clashMode": {
-          "errors": {
-            "communication": "Core communication error"
-          },
-          "labels": {
-            "rule": "Rule Mode",
-            "global": "Global Mode",
-            "direct": "Direct Mode"
-          },
-          "descriptions": {
-            "rule": "Automatically choose proxies according to the rule set.",
-            "global": "Forward all network requests through the selected proxy.",
-            "direct": "Bypass the proxy and connect to the internet directly."
-          }
-        }
-      }
-    },
-    "unlock": {
-      "page": {
-        "title": "Unlock Test",
-        "actions": {
-          "testing": "Testing..."
-        },
-        "empty": "No unlock test items",
-        "messages": {
-          "detectionTimeout": "Detection timeout or failed"
-        }
-      }
     },
     "validation": {
       "config": {
@@ -1270,6 +1251,25 @@
         "mappingError": "Merge file mapping error, changes reverted",
         "keyError": "Merge file key error, changes reverted",
         "generalError": "Merge file error, changes reverted"
+      }
+    }
+  },
+  "layout": {
+    "navigation": {
+      "tabs": {
+        "home": "Home",
+        "proxies": "Proxies",
+        "profiles": "Profiles",
+        "connections": "Connections",
+        "rules": "Rules",
+        "logs": "Logs",
+        "unlock": "Test",
+        "settings": "Settings"
+      },
+      "menu": {
+        "reorderMode": "Menu reorder mode",
+        "unlock": "Unlock menu order",
+        "lock": "Lock menu order"
       }
     }
   }

@@ -72,1178 +72,1159 @@
       "advanced": "詳細設定"
     }
   },
-  "entities": {
-    "profile": {
-      "page": {
-        "title": "プロファイル",
+  "profiles": {
+    "page": {
+      "title": "プロファイル",
+      "actions": {
+        "updateAll": "すべてのプロファイルを更新",
+        "viewRuntimeConfig": "実行時のプロファイルを表示",
+        "reactivate": "プロファイルを再アクティブ化",
+        "import": "インポート"
+      },
+      "batch": {
+        "title": "バッチ操作",
+        "delete": "選択したプロファイルを削除",
+        "selectAll": "すべて選択",
+        "deselectAll": "すべての選択を解除",
+        "done": "完了",
+        "selected": "選択済み",
+        "items": "アイテム"
+      },
+      "import": {
+        "placeholder": "プロファイルファイルのURL",
+        "paste": "貼り付け",
+        "clear": "クリア"
+      },
+      "errors": {
+        "invalidUrl": "Invalid profile URL. Please enter a URL starting with http:// or https://",
+        "onlyYaml": "YAMLファイルのみサポートされています。"
+      },
+      "notifications": {
+        "importRetry": "インポートに失敗しました。Clashプロキシを使用して再試行します...",
+        "importFail": "Clashプロキシを使用してもインポートに失敗しました。",
+        "importNeedsRefresh": "Profile imported but may need manual refresh",
+        "importSuccess": "Profile imported successfully, please restart if not visible",
+        "profileSwitched": "プロファイルが切り替えられました。",
+        "profileReactivated": "プロファイルが再アクティブ化されました。",
+        "switchInterrupted": "Profile switch interrupted by new selection",
+        "batchDeleted": "選択したプロファイルが正常に削除されました"
+      },
+      "notices": {
+        "forceRefreshCompleted": "Force refresh completed",
+        "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
+      }
+    },
+    "notifications": {
+      "importSuccess": "プロファイルのインポートに成功しました。",
+      "importSubscriptionSuccess": "サブスクリプションのインポートに成功しました。",
+      "importWithClashProxy": "Clashプロキシを使用してプロファイルのインポートに成功しました。",
+      "saved": "Saved successfully"
+    },
+    "viewer": {
+      "title": {
+        "create": "新規プロファイルを作成",
+        "edit": "プロファイルを編集"
+      },
+      "fields": {
+        "type": "タイプ",
+        "name": "名前",
+        "description": "説明",
+        "subscriptionUrl": "サブスクリプションURL",
+        "httpTimeout": "HTTP Request Timeout",
+        "updateInterval": "更新間隔",
+        "useSystemProxy": "システムプロキシを使用して更新",
+        "useClashProxy": "クラッシュプロキシを使用して更新",
+        "acceptInvalidCerts": "Allows Invalid Certificates (Danger)",
+        "allowAutoUpdate": "Allow Auto Update"
+      },
+      "notifications": {
+        "creationRetry": "プロファイルの作成に失敗しました。Clashプロキシを使用して再試行します...",
+        "creationSuccess": "Clashプロキシを使用してプロファイルの作成に成功しました。"
+      }
+    },
+    "menu": {
+      "home": "ホーム",
+      "select": "使用する",
+      "editInfo": "情報を編集",
+      "editFile": "ファイルを編集",
+      "editRules": "ルールを編集",
+      "editProxies": "ノードを編集",
+      "editGroups": "プロキシグループを編集",
+      "extendConfig": "拡張上書き設定",
+      "extendScript": "拡張スクリプト",
+      "openFile": "ファイルを開く",
+      "update": "更新",
+      "updateViaProxy": "Update via proxy"
+    },
+    "proxiesEditor": {
+      "title": "ノードを編集",
+      "placeholders": {
+        "multiUri": "複数のURIは改行で区切ってください（Base64エンコードに対応）"
+      },
+      "actions": {
+        "prepend": "前置プロキシノードを追加",
+        "append": "後置プロキシノードを追加"
+      }
+    },
+    "groupsEditor": {
+      "title": "プロキシグループを編集",
+      "errors": {
+        "nameRequired": "プロキシグループ名は必須です",
+        "nameExists": "プロキシグループ名はすでに存在します"
+      },
+      "fields": {
+        "type": "プロキシグループタイプ",
+        "name": "プロキシグループ名",
+        "icon": "プロキシグループアイコン",
+        "proxies": "プロキシを導入",
+        "provider": "プロキシプロバイダーを導入",
+        "healthCheckUrl": "ヘルスチェックURL",
+        "expectedStatus": "期待するステータスコード",
+        "interval": "チェック間隔",
+        "timeout": "タイムアウト時間",
+        "maxFailedTimes": "最大失敗回数",
+        "interfaceName": "出力インターフェース",
+        "routingMark": "ルーティングマーク",
+        "filter": "ノードをフィルタリング",
+        "excludeFilter": "除外ノード",
+        "excludeType": "除外ノードタイプ",
+        "includeAll": "すべての出力プロキシ、プロキシプロバイダーを導入",
+        "includeAllProxies": "すべての出力プロキシを導入",
+        "includeAllProviders": "すべてのプロキシプロバイダーを導入"
+      },
+      "toggles": {
+        "lazy": "遅延モード",
+        "disableUdp": "UDPを無効にする",
+        "hidden": "プロキシグループを隠す"
+      },
+      "actions": {
+        "prepend": "前置プロキシグループを追加",
+        "append": "後置プロキシグループを追加"
+      }
+    },
+    "fileInput": {
+      "chooseFile": "ファイルを選択"
+    },
+    "more": {
+      "global": {
+        "merge": "Global Merge",
+        "script": "Global Script"
+      },
+      "chips": {
+        "merge": "Merge",
+        "script": "Script"
+      }
+    },
+    "item": {
+      "tooltips": {
+        "showLast": "Click to show last update time",
+        "showNext": "Click to show next update"
+      },
+      "status": {
+        "lastUpdateFailed": "前回の更新に失敗しました。",
+        "nextUp": "次回の更新",
+        "noSchedule": "予定がありません。",
+        "unknown": "不明",
+        "autoUpdateDisabled": "自動更新が無効になっています。"
+      }
+    },
+    "confirm": {
+      "delete": {
+        "title": "削除を確認",
+        "message": "この操作は元に戻せません"
+      }
+    },
+    "editor": {
+      "format": "文書を整形する",
+      "readOnlyMessage": "読み取り専用モードでは編集できません。"
+    },
+    "logViewer": {
+      "title": "スクリプトコンソール出力"
+    },
+    "card": {
+      "labels": {
+        "from": "から",
+        "updateTime": "更新時間",
+        "usedTotal": "使用済み / 合計",
+        "expireTime": "有効期限",
+        "clickToImport": "クリックしてサブスクリプションをインポート"
+      }
+    }
+  },
+  "proxies": {
+    "page": {
+      "title": {
+        "default": "プロキシグループ",
+        "chainMode": "Proxy Chain Mode"
+      },
+      "modes": {
+        "rule": "Rule",
+        "global": "Global",
+        "direct": "Direct"
+      },
+      "actions": {
+        "toggleChain": "🔗 チェーンプロキシ",
+        "connect": "Connect",
+        "disconnect": "Disconnect",
+        "connecting": "Connecting...",
+        "clearChainConfig": "Delete Chain Config"
+      },
+      "provider": {
+        "title": "プロキシプロバイダー",
         "actions": {
-          "updateAll": "すべてのプロファイルを更新",
-          "viewRuntimeConfig": "実行時のプロファイルを表示",
-          "reactivate": "プロファイルを再アクティブ化",
-          "import": "インポート"
-        },
-        "batch": {
-          "title": "バッチ操作",
-          "delete": "選択したプロファイルを削除",
-          "selectAll": "すべて選択",
-          "deselectAll": "すべての選択を解除",
-          "done": "完了",
-          "selected": "選択済み",
-          "items": "アイテム"
-        },
-        "import": {
-          "placeholder": "プロファイルファイルのURL",
-          "paste": "貼り付け",
-          "clear": "クリア"
-        },
-        "errors": {
-          "invalidUrl": "Invalid profile URL. Please enter a URL starting with http:// or https://",
-          "onlyYaml": "YAMLファイルのみサポートされています。"
-        },
-        "notifications": {
-          "importRetry": "インポートに失敗しました。Clashプロキシを使用して再試行します...",
-          "importFail": "Clashプロキシを使用してもインポートに失敗しました。",
-          "importNeedsRefresh": "Profile imported but may need manual refresh",
-          "importSuccess": "Profile imported successfully, please restart if not visible",
-          "profileSwitched": "プロファイルが切り替えられました。",
-          "profileReactivated": "プロファイルが再アクティブ化されました。",
-          "switchInterrupted": "Profile switch interrupted by new selection",
-          "batchDeleted": "選択したプロファイルが正常に削除されました"
+          "updateAll": "すべて更新",
+          "update": "更新"
         },
         "notices": {
-          "forceRefreshCompleted": "Force refresh completed",
-          "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
+          "updateSuccess": "{{name}} updated successfully",
+          "updateFailed": "Failed to update {{name}}: {{message}}",
+          "genericError": "Update failed: {{message}}",
+          "none": "No providers available to update",
+          "allUpdated": "All providers updated successfully"
+        }
+      },
+      "rules": {
+        "title": "Proxy Rules",
+        "select": "Select Rules"
+      },
+      "labels": {
+        "proxyCount": "ノード数",
+        "delayCheckReset": "遅延テストを実行して固定を解除する"
+      },
+      "tooltips": {
+        "locate": "現在のノード",
+        "delayCheck": "遅延テスト",
+        "sortDefault": "デフォルトでソート",
+        "sortDelay": "遅延でソート",
+        "sortName": "名前でソート",
+        "delayCheckUrl": "遅延テストURL",
+        "showBasic": "ノードの詳細を隠す",
+        "showDetail": "ノードの詳細を表示する",
+        "filter": "ノードをフィルタリング"
+      },
+      "placeholders": {
+        "filter": "フィルタリング条件",
+        "delayCheckUrl": "遅延テストURL"
+      },
+      "chain": {
+        "header": "Chain Proxy Config",
+        "empty": "No proxy chain configured",
+        "instruction": "Click nodes in order to add to proxy chain",
+        "minimumNodes": "Chain proxy requires at least 2 nodes",
+        "minimumNodesHint": "Chain proxy requires at least 2 nodes. Please add one more node.",
+        "connectFailed": "Failed to connect to proxy chain",
+        "disconnectFailed": "Failed to disconnect from proxy chain",
+        "duplicateNode": "Proxy node already exists in chain"
+      },
+      "messages": {
+        "directMode": "直接接続モード"
+      }
+    },
+    "enums": {
+      "strategies": {
+        "select": "手動でプロキシを選択",
+        "url-test": "URLテストによる遅延でプロキシを選択",
+        "fallback": "利用不可の場合は別のプロキシに切り替える",
+        "load-balance": "負荷分散によりプロキシを割り当てる",
+        "relay": "定義されたプロキシチェーンに沿って転送する"
+      },
+      "policies": {
+        "DIRECT": "直接接続",
+        "REJECT": "リクエストを拒否",
+        "REJECT-DROP": "リクエストを破棄",
+        "PASS": "このルールをスキップ"
+      }
+    }
+  },
+  "connections": {
+    "page": {
+      "title": "接続",
+      "summary": {
+        "downloaded": "ダウンロード量",
+        "uploaded": "アップロード量"
+      },
+      "actions": {
+        "listView": "リストビュー",
+        "tableView": "テーブルビュー",
+        "pause": "一時停止",
+        "resume": "再開",
+        "closeAll": "すべて閉じる"
+      }
+    },
+    "fields": {
+      "host": "ホスト",
+      "downloaded": "ダウンロード量",
+      "uploaded": "アップロード量",
+      "dlSpeed": "ダウンロード速度",
+      "ulSpeed": "アップロード速度",
+      "chains": "チェーン",
+      "rule": "ルール",
+      "process": "プロセス",
+      "time": "接続時間",
+      "source": "送信元アドレス",
+      "destination": "宛先アドレス",
+      "destinationPort": "宛先ポート",
+      "type": "タイプ"
+    },
+    "order": {
+      "default": "Default",
+      "uploadSpeed": "アップロード速度",
+      "downloadSpeed": "ダウンロード速度"
+    },
+    "actions": {
+      "closeConnection": "接続を閉じる"
+    }
+  },
+  "tests": {
+    "item": {
+      "actions": {
+        "test": "テスト"
+      }
+    },
+    "viewer": {
+      "title": {
+        "create": "新規テストを作成",
+        "edit": "テストを編集"
+      },
+      "fields": {
+        "url": "テストURL"
+      }
+    },
+    "page": {
+      "title": "テスト",
+      "actions": {
+        "testAll": "すべてテスト"
+      }
+    },
+    "statuses": {
+      "pending": "検査待ち",
+      "yes": "サポートする",
+      "no": "サポートしない",
+      "failed": "テストに失敗しました。",
+      "completed": "検査完了",
+      "disallowedIsp": "許可されていないインターネットサービスプロバイダー",
+      "originalsOnly": "オリジナルのみ",
+      "noDisney": "No (IP Banned By Disney+)",
+      "unsupportedRegion": "サポートされていない国/地域",
+      "failedNetwork": "Failed (Network Connection)"
+    }
+  },
+  "logs": {
+    "page": {
+      "title": "ログ",
+      "actions": {
+        "pause": "一時停止",
+        "resume": "再開",
+        "clear": "クリア"
+      },
+      "filters": {
+        "all": "ALL",
+        "debug": "DEBUG",
+        "info": "INFO",
+        "warn": "WARN",
+        "error": "ERROR"
+      }
+    }
+  },
+  "rules": {
+    "page": {
+      "title": "ルール",
+      "provider": {
+        "trigger": "ルールプロバイダー",
+        "dialogTitle": "ルールプロバイダー",
+        "actions": {
+          "updateAll": "すべて更新",
+          "update": "更新"
+        },
+        "notices": {
+          "updateSuccess": "{{name}} updated successfully",
+          "updateFailed": "Failed to update {{name}}: {{message}}",
+          "genericError": "Update failed: {{message}}",
+          "none": "No providers available to update",
+          "allUpdated": "All providers updated successfully"
+        }
+      }
+    },
+    "editor": {
+      "title": "ルールを編集",
+      "form": {
+        "labels": {
+          "type": "ルールタイプ",
+          "content": "ルール内容",
+          "proxyPolicy": "プロキシポリシー"
+        },
+        "toggles": {
+          "noResolve": "DNS解決をスキップ"
+        },
+        "actions": {
+          "prependRule": "前置ルールを追加",
+          "appendRule": "後置ルールを追加"
+        },
+        "validation": {
+          "conditionRequired": "ルール条件が必要です",
+          "invalidRule": "無効なルール"
+        }
+      },
+      "ruleTypes": {
+        "DOMAIN": "完全なドメイン名を一致させる",
+        "DOMAIN-SUFFIX": "ドメインサフィックスを一致させる",
+        "DOMAIN-KEYWORD": "ドメインキーワードを一致させる",
+        "DOMAIN-REGEX": "ドメイン正規表現を一致させる",
+        "GEOSITE": "Geosite内のドメインを一致させる",
+        "GEOIP": "IPの所属国コードを一致させる",
+        "SRC-GEOIP": "送信元IPの所属国コードを一致させる",
+        "IP-ASN": "IPの所属ASNを一致させる",
+        "SRC-IP-ASN": "送信元IPの所属ASNを一致させる",
+        "IP-CIDR": "IPアドレス範囲を一致させる",
+        "IP-CIDR6": "IPアドレス範囲を一致させる",
+        "SRC-IP-CIDR": "送信元IPアドレス範囲を一致させる",
+        "IP-SUFFIX": "IPサフィックス範囲を一致させる",
+        "SRC-IP-SUFFIX": "送信元IPサフィックス範囲を一致させる",
+        "SRC-PORT": "送信元ポート範囲を一致させる",
+        "DST-PORT": "宛先ポート範囲を一致させる",
+        "IN-PORT": "入力ポートを一致させる",
+        "DSCP": "DSCPマーク（TPROXY UDP入力のみ）",
+        "PROCESS-NAME": "プロセス名を一致させる（Androidパッケージ名）",
+        "PROCESS-PATH": "完全なプロセスパスを一致させる",
+        "PROCESS-NAME-REGEX": "完全なプロセス名を正規表現で一致させる（Androidパッケージ名）",
+        "PROCESS-PATH-REGEX": "完全なプロセスパスを正規表現で一致させる",
+        "NETWORK": "トランスポートプロトコルを一致させる (TCP/UDP)",
+        "UID": "LinuxユーザーIDを一致させる",
+        "IN-TYPE": "入力タイプを一致させる",
+        "IN-USER": "入力ユーザー名を一致させる",
+        "IN-NAME": "入力名を一致させる",
+        "SUB-RULE": "サブルール",
+        "RULE-SET": "ルールセットを一致させる",
+        "AND": "論理積",
+        "OR": "論理和",
+        "NOT": "論理否定",
+        "MATCH": "すべてのリクエストを一致させる"
+      }
+    }
+  },
+  "home": {
+    "page": {
+      "title": "ホーム",
+      "tooltips": {
+        "lightweightMode": "軽量モード",
+        "manual": "マニュアル",
+        "settings": "ホーム設定"
+      },
+      "cards": {
+        "trafficStats": "トラフィック統計",
+        "networkSettings": "ネットワーク設定",
+        "proxyMode": "プロキシモード"
+      },
+      "settings": {
+        "title": "ホーム設定",
+        "cards": {
+          "profile": "プロファイルカード",
+          "currentProxy": "現在のプロキシカード",
+          "network": "ネットワーク設定カード",
+          "proxyMode": "プロキシモードカード",
+          "traffic": "トラフィック統計カード",
+          "tests": "ウェブサイトテストカード",
+          "ip": "IP情報カード",
+          "clashInfo": "Clash情報カード",
+          "systemInfo": "システム情報カード"
+        }
+      }
+    },
+    "cards": {
+      "proxyTun": {
+        "status": {
+          "systemProxyEnabled": "システムプロキシが有効になっています。アプリケーションはプロキシを通じてネットワークにアクセスします。",
+          "systemProxyDisabled": "システムプロキシが無効になっています。ほとんどのユーザーはこのオプションをオンにすることをお勧めします。",
+          "tunModeServiceRequired": "TUNモードはサービスモードが必要です。まずサービスをインストールしてください。",
+          "tunModeEnabled": "TUNモードが有効になっています。アプリケーションは仮想ネットワークカードを通じてネットワークにアクセスします。",
+          "tunModeDisabled": "TUNモードが無効になっています。特殊なアプリケーションに適しています。"
+        },
+        "tooltips": {
+          "systemProxy": "オペレーティングシステムのプロキシ設定を変更します。有効にできない場合は、手動でオペレーティングシステムのプロキシ設定を変更してください。",
+          "tunMode": "TUNモードは全てのアプリケーションのトラフィックを制御できます。システムプロキシ設定に従わない特殊なアプリケーションに適しています。"
+        }
+      },
+      "clashInfo": {
+        "title": "Clash情報",
+        "fields": {
+          "coreVersion": "コアバージョン",
+          "systemProxyAddress": "システムプロキシアドレス",
+          "mixedPort": "Mixed Port",
+          "uptime": "稼働時間",
+          "rulesCount": "ルール数"
+        }
+      },
+      "systemInfo": {
+        "title": "システム情報",
+        "fields": {
+          "osInfo": "オペレーティングシステム情報",
+          "autoLaunch": "起動時に自動起動",
+          "runningMode": "実行モード",
+          "lastCheckUpdate": "最後の更新チェック",
+          "vergeVersion": "Vergeバージョン"
+        },
+        "actions": {
+          "settings": "設定"
+        },
+        "tooltips": {
+          "autoLaunchAdmin": "管理者モードでは起動時の自動起動がサポートされない場合があります。"
+        },
+        "badges": {
+          "adminMode": "管理者モード",
+          "serviceMode": "サービスモード",
+          "sidecarMode": "ユーザーモード",
+          "adminServiceMode": "Admin + Service Mode"
+        }
+      },
+      "ipInfo": {
+        "title": "IP情報",
+        "labels": {
+          "ip": "IP",
+          "asn": "自治システム番号",
+          "isp": "インターネットサービスプロバイダー",
+          "org": "組織",
+          "location": "位置",
+          "timezone": "タイムゾーン",
+          "autoRefresh": "自動更新",
+          "unknown": "不明"
+        },
+        "errors": {
+          "load": "IP情報の取得に失敗しました"
+        }
+      },
+      "currentProxy": {
+        "title": "現在のノード",
+        "actions": {
+          "refreshDelay": "遅延テスト"
+        },
+        "labels": {
+          "globalMode": "グローバルモード",
+          "directMode": "直接接続モード",
+          "group": "プロキシグループ",
+          "proxy": "ノード",
+          "noActiveNode": "アクティブなプロキシノードがありません。"
+        }
+      },
+      "tests": {
+        "title": "ウェブサイトテスト"
+      },
+      "traffic": {
+        "metrics": {
+          "uploadSpeed": "アップロード速度",
+          "downloadSpeed": "ダウンロード速度",
+          "activeConnections": "アクティブな接続",
+          "uploaded": "アップロード量",
+          "downloaded": "ダウンロード量",
+          "memoryUsage": "コアメモリ使用量"
+        },
+        "legends": {
+          "upload": "アップロード",
+          "download": "ダウンロード"
+        },
+        "patterns": {
+          "minutes": "{{time}} Minutes"
+        }
+      },
+      "clashMode": {
+        "errors": {
+          "communication": "Core communication error"
+        },
+        "labels": {
+          "rule": "ルールモード",
+          "global": "グローバルモード",
+          "direct": "直接接続モード"
+        },
+        "descriptions": {
+          "rule": "Automatically choose proxies according to the rule set.",
+          "global": "Forward all network requests through the selected proxy.",
+          "direct": "Bypass the proxy and connect to the internet directly."
+        }
+      }
+    }
+  },
+  "unlock": {
+    "page": {
+      "title": "ロック解除テスト",
+      "actions": {
+        "testing": "テスト中..."
+      },
+      "empty": "アンロックテスト項目はありません",
+      "messages": {
+        "detectionTimeout": "Detection timeout or failed"
+      }
+    }
+  },
+  "settings": {
+    "system": {
+      "title": "システム設定",
+      "toggles": {
+        "tunMode": "仮想ネットワークカードモード",
+        "systemProxy": "システムプロキシ"
+      },
+      "tooltips": {
+        "autoLaunchAdmin": "管理者モードでは起動時の自動起動がサポートされない場合があります。",
+        "silentStart": "アプリケーションを起動すると、バックグラウンドモードで実行され、アプリケーションパネルは表示されません。"
+      },
+      "fields": {
+        "autoLaunch": "自動起動",
+        "silentStart": "サイレント起動"
+      },
+      "notifications": {
+        "tunMode": {
+          "autoDisabled": "TUN Mode automatically disabled due to service unavailable",
+          "autoDisableFailed": "Failed to disable TUN Mode automatically"
+        }
+      }
+    },
+    "proxyControl": {
+      "tooltips": {
+        "systemProxy": "オペレーティングシステムのプロキシ設定を変更します。有効にできない場合は、手動でオペレーティングシステムのプロキシ設定を変更してください。",
+        "tunMode": "TUN（仮想ネットワークカード）モードはシステムのすべてのトラフィックを制御します。有効にすると、システムプロキシを開く必要はありません。",
+        "tunUnavailable": "TUNモードはサービスモードまたは管理者モードが必要です"
+      },
+      "actions": {
+        "installService": "サービスをインストール",
+        "uninstallService": "サービスのアンインストール"
+      },
+      "fields": {
+        "systemProxy": "システムプロキシ",
+        "tunMode": "仮想ネットワークカードモード"
+      }
+    },
+    "externalController": {
+      "title": "外部コントローラーの監視アドレス",
+      "fields": {
+        "enable": "外部コントローラーを有効化",
+        "address": "外部コントローラーの監視アドレス",
+        "secret": "APIアクセスキー"
+      },
+      "placeholders": {
+        "address": "必須",
+        "secret": "推奨設定"
+      },
+      "tooltips": {
+        "copy": "クリップボードにコピー"
+      },
+      "messages": {
+        "addressRequired": "コントローラーのアドレスは空にできません",
+        "secretRequired": "シークレットを空にすることはできません",
+        "copyFailed": "コピーに失敗しました",
+        "controllerCopied": "API ポートがクリップボードにコピーされました",
+        "secretCopied": "API キーがクリップボードにコピーされました"
+      }
+    },
+    "externalCors": {
+      "title": "外部 CORS 設定",
+      "fields": {
+        "allowPrivateNetwork": "プライベートネットワークへのアクセスを許可",
+        "allowedOrigins": "許可されたオリジン"
+      },
+      "placeholders": {
+        "origin": "有効なURLを入力してください"
+      },
+      "actions": {
+        "add": "追加"
+      },
+      "messages": {
+        "alwaysIncluded": "常に含まれるオリジン: {{urls}}"
+      },
+      "tooltips": {
+        "open": "外部 CORS 設定"
+      }
+    },
+    "clash": {
+      "title": "Clash設定",
+      "items": {
+        "allowLan": "LAN接続を許可",
+        "dnsOverwrite": "DNS上書き",
+        "ipv6": "IPv6",
+        "unifiedDelay": "統一遅延",
+        "logLevel": "ログレベル",
+        "portConfig": "ポート設定",
+        "external": "外部制御",
+        "webUI": "Webインターフェース",
+        "clashCore": "Clashコア",
+        "openUwpTool": "UWPツールを開く",
+        "updateGeoData": "GeoDataを更新"
+      },
+      "tooltips": {
+        "networkInterface": "ネットワークインターフェース",
+        "unifiedDelay": "統一遅延を有効にすると、2回の遅延テストが行われ、接続ハンドシェイクなどによる異なるタイプのノードの遅延差を解消します。",
+        "logLevel": "ログディレクトリのServiceフォルダ内のコアログファイルにのみ適用されます。",
+        "openUwpTool": "Windows 8以降では、UWPアプリケーション（Microsoft Storeなど）がローカルホストのネットワークサービスに直接アクセスすることが制限されています。このツールを使用すると、この制限を回避できます。"
+      },
+      "options": {
+        "logLevel": {
+          "debug": "Debug",
+          "info": "Info",
+          "warning": "Warn",
+          "error": "Error",
+          "silent": "Silent"
+        }
+      },
+      "messages": {
+        "geoDataUpdated": "GeoDataが更新されました。"
+      },
+      "port": {
+        "title": "ポート設定",
+        "fields": {
+          "mixed": "混合プロキシポート",
+          "socks": "SOCKSプロキシポート",
+          "http": "HTTP(S)プロキシポート",
+          "redir": "Redir透明プロキシポート",
+          "tproxy": "TPROXY透明プロキシポート"
+        },
+        "actions": {
+          "random": "ランダムポート"
+        },
+        "messages": {
+          "saved": "Port settings saved",
+          "saveFailed": "Failed to save port settings"
         }
       },
       "notifications": {
-        "importSuccess": "プロファイルのインポートに成功しました。",
-        "importSubscriptionSuccess": "サブスクリプションのインポートに成功しました。",
-        "importWithClashProxy": "Clashプロキシを使用してプロファイルのインポートに成功しました。",
-        "saved": "Saved successfully"
+        "restartSuccess": "Clashコアが再起動されました。",
+        "versionUpdated": "コアバージョンが更新されました。",
+        "changeSuccess": "コアの切り替えに成功しました。",
+        "changeFailed": "コアの切り替えに失敗しました。"
       },
-      "viewer": {
-        "title": {
-          "create": "新規プロファイルを作成",
-          "edit": "プロファイルを編集"
-        },
-        "fields": {
-          "type": "タイプ",
-          "name": "名前",
-          "description": "説明",
-          "subscriptionUrl": "サブスクリプションURL",
-          "httpTimeout": "HTTP Request Timeout",
-          "updateInterval": "更新間隔",
-          "useSystemProxy": "システムプロキシを使用して更新",
-          "useClashProxy": "クラッシュプロキシを使用して更新",
-          "acceptInvalidCerts": "Allows Invalid Certificates (Danger)",
-          "allowAutoUpdate": "Allow Auto Update"
+      "status": {
+        "stopping": "コアを停止中...",
+        "restarting": "コアを再起動中..."
+      },
+      "service": {
+        "status": {
+          "installing": "サービスをインストール中...",
+          "uninstalling": "サービスをアンインストール中..."
         },
         "notifications": {
-          "creationRetry": "プロファイルの作成に失敗しました。Clashプロキシを使用して再試行します...",
-          "creationSuccess": "Clashプロキシを使用してプロファイルの作成に成功しました。"
+          "installSuccess": "サービスのインストールに成功しました。",
+          "uninstallSuccess": "サービスのアンインストールに成功しました。"
         }
       },
-      "menu": {
-        "home": "ホーム",
-        "select": "使用する",
-        "editInfo": "情報を編集",
-        "editFile": "ファイルを編集",
-        "editRules": "ルールを編集",
-        "editProxies": "ノードを編集",
-        "editGroups": "プロキシグループを編集",
-        "extendConfig": "拡張上書き設定",
-        "extendScript": "拡張スクリプト",
-        "openFile": "ファイルを開く",
-        "update": "更新",
-        "updateViaProxy": "Update via proxy"
-      },
-      "proxiesEditor": {
-        "title": "ノードを編集",
-        "placeholders": {
-          "multiUri": "複数のURIは改行で区切ってください（Base64エンコードに対応）"
-        },
-        "actions": {
-          "prepend": "前置プロキシノードを追加",
-          "append": "後置プロキシノードを追加"
-        }
-      },
-      "groupsEditor": {
-        "title": "プロキシグループを編集",
-        "errors": {
-          "nameRequired": "プロキシグループ名は必須です",
-          "nameExists": "プロキシグループ名はすでに存在します"
-        },
-        "fields": {
-          "type": "プロキシグループタイプ",
-          "name": "プロキシグループ名",
-          "icon": "プロキシグループアイコン",
-          "proxies": "プロキシを導入",
-          "provider": "プロキシプロバイダーを導入",
-          "healthCheckUrl": "ヘルスチェックURL",
-          "expectedStatus": "期待するステータスコード",
-          "interval": "チェック間隔",
-          "timeout": "タイムアウト時間",
-          "maxFailedTimes": "最大失敗回数",
-          "interfaceName": "出力インターフェース",
-          "routingMark": "ルーティングマーク",
-          "filter": "ノードをフィルタリング",
-          "excludeFilter": "除外ノード",
-          "excludeType": "除外ノードタイプ",
-          "includeAll": "すべての出力プロキシ、プロキシプロバイダーを導入",
-          "includeAllProxies": "すべての出力プロキシを導入",
-          "includeAllProviders": "すべてのプロキシプロバイダーを導入"
-        },
-        "toggles": {
-          "lazy": "遅延モード",
-          "disableUdp": "UDPを無効にする",
-          "hidden": "プロキシグループを隠す"
-        },
-        "actions": {
-          "prepend": "前置プロキシグループを追加",
-          "append": "後置プロキシグループを追加"
-        }
-      },
-      "fileInput": {
-        "chooseFile": "ファイルを選択"
-      },
-      "more": {
-        "global": {
-          "merge": "Global Merge",
-          "script": "Global Script"
-        },
-        "chips": {
-          "merge": "Merge",
-          "script": "Script"
-        }
-      },
-      "item": {
-        "tooltips": {
-          "showLast": "Click to show last update time",
-          "showNext": "Click to show next update"
-        },
-        "status": {
-          "lastUpdateFailed": "前回の更新に失敗しました。",
-          "nextUp": "次回の更新",
-          "noSchedule": "予定がありません。",
-          "unknown": "不明",
-          "autoUpdateDisabled": "自動更新が無効になっています。"
-        }
-      },
-      "confirm": {
-        "delete": {
-          "title": "削除を確認",
-          "message": "この操作は元に戻せません"
-        }
-      },
-      "editor": {
-        "format": "文書を整形する",
-        "readOnlyMessage": "読み取り専用モードでは編集できません。"
-      },
-      "logViewer": {
-        "title": "スクリプトコンソール出力"
-      },
-      "card": {
-        "labels": {
-          "from": "から",
-          "updateTime": "更新時間",
-          "usedTotal": "使用済み / 合計",
-          "expireTime": "有効期限",
-          "clickToImport": "クリックしてサブスクリプションをインポート"
-        }
+      "variants": {
+        "release": "正式版",
+        "alpha": "アルファ版"
       }
     },
-    "proxy": {
-      "page": {
-        "title": {
-          "default": "プロキシグループ",
-          "chainMode": "Proxy Chain Mode"
-        },
-        "modes": {
-          "rule": "Rule",
-          "global": "Global",
-          "direct": "Direct"
-        },
-        "actions": {
-          "toggleChain": "🔗 チェーンプロキシ",
-          "connect": "Connect",
-          "disconnect": "Disconnect",
-          "connecting": "Connecting...",
-          "clearChainConfig": "Delete Chain Config"
-        },
-        "provider": {
-          "title": "プロキシプロバイダー",
-          "actions": {
-            "updateAll": "すべて更新",
-            "update": "更新"
-          },
-          "notices": {
-            "updateSuccess": "{{name}} updated successfully",
-            "updateFailed": "Failed to update {{name}}: {{message}}",
-            "genericError": "Update failed: {{message}}",
-            "none": "No providers available to update",
-            "allUpdated": "All providers updated successfully"
-          }
-        },
-        "rules": {
-          "title": "Proxy Rules",
-          "select": "Select Rules"
-        },
-        "labels": {
-          "proxyCount": "ノード数",
-          "delayCheckReset": "遅延テストを実行して固定を解除する"
-        },
-        "tooltips": {
-          "locate": "現在のノード",
-          "delayCheck": "遅延テスト",
-          "sortDefault": "デフォルトでソート",
-          "sortDelay": "遅延でソート",
-          "sortName": "名前でソート",
-          "delayCheckUrl": "遅延テストURL",
-          "showBasic": "ノードの詳細を隠す",
-          "showDetail": "ノードの詳細を表示する",
-          "filter": "ノードをフィルタリング"
-        },
-        "placeholders": {
-          "filter": "フィルタリング条件",
-          "delayCheckUrl": "遅延テストURL"
-        },
-        "chain": {
-          "header": "Chain Proxy Config",
-          "empty": "No proxy chain configured",
-          "instruction": "Click nodes in order to add to proxy chain",
-          "minimumNodes": "Chain proxy requires at least 2 nodes",
-          "minimumNodesHint": "Chain proxy requires at least 2 nodes. Please add one more node.",
-          "connectFailed": "Failed to connect to proxy chain",
-          "disconnectFailed": "Failed to disconnect from proxy chain",
-          "duplicateNode": "Proxy node already exists in chain"
-        },
-        "messages": {
-          "directMode": "直接接続モード"
-        }
+    "liteMode": {
+      "title": "軽量モード設定",
+      "actions": {
+        "enterNow": "今すぐ軽量モードに入る"
       },
-      "enums": {
-        "strategies": {
-          "select": "手動でプロキシを選択",
-          "url-test": "URLテストによる遅延でプロキシを選択",
-          "fallback": "利用不可の場合は別のプロキシに切り替える",
-          "load-balance": "負荷分散によりプロキシを割り当てる",
-          "relay": "定義されたプロキシチェーンに沿って転送する"
-        },
-        "policies": {
-          "DIRECT": "直接接続",
-          "REJECT": "リクエストを拒否",
-          "REJECT-DROP": "リクエストを破棄",
-          "PASS": "このルールをスキップ"
-        }
-      }
-    },
-    "connection": {
-      "page": {
-        "title": "接続",
-        "summary": {
-          "downloaded": "ダウンロード量",
-          "uploaded": "アップロード量"
-        },
-        "actions": {
-          "listView": "リストビュー",
-          "tableView": "テーブルビュー",
-          "pause": "一時停止",
-          "resume": "再開",
-          "closeAll": "すべて閉じる"
-        }
+      "toggles": {
+        "autoEnter": "自動的に軽量モードに入る"
+      },
+      "tooltips": {
+        "autoEnter": "有効にすると、ウィンドウを閉じてから一定時間後に自動的に軽量モードが有効になります。"
       },
       "fields": {
-        "host": "ホスト",
-        "downloaded": "ダウンロード量",
-        "uploaded": "アップロード量",
-        "dlSpeed": "ダウンロード速度",
-        "ulSpeed": "アップロード速度",
-        "chains": "チェーン",
-        "rule": "ルール",
-        "process": "プロセス",
-        "time": "接続時間",
-        "source": "送信元アドレス",
-        "destination": "宛先アドレス",
-        "destinationPort": "宛先ポート",
-        "type": "タイプ"
+        "delay": "自動的に軽量モードに入るまでの遅延時間"
       },
-      "order": {
-        "default": "Default",
-        "uploadSpeed": "アップロード速度",
-        "downloadSpeed": "ダウンロード速度"
+      "messages": {
+        "autoEnterHint": "ウィンドウを閉じると、{{n}}分後に自動的に軽量モードが有効になります。"
+      }
+    },
+    "backup": {
+      "title": "バックアップ設定",
+      "tabs": {
+        "local": "Local backup",
+        "webdav": "WebDAV backup"
       },
       "actions": {
-        "closeConnection": "接続を閉じる"
+        "selectTarget": "Select backup target",
+        "backup": "バックアップ",
+        "export": "Export",
+        "exportBackup": "Export Backup",
+        "deleteBackup": "バックアップを削除",
+        "restore": "復元",
+        "restoreBackup": "バックアップを復元"
+      },
+      "fields": {
+        "webdavUrl": "WebDAVサーバーのURL http(s)://",
+        "username": "ユーザー名",
+        "password": "パスワード",
+        "info": "Backups are stored locally in the application data directory. Use the list below to restore or delete backups."
+      },
+      "messages": {
+        "webdavUrlRequired": "WebDAVサーバーのURLは必須です。",
+        "invalidWebdavUrl": "無効なWebDAVサーバーのURL形式",
+        "usernameRequired": "ユーザー名は必須です。",
+        "passwordRequired": "パスワードは必須です。",
+        "webdavConfigSaved": "WebDAV設定が保存されました。",
+        "webdavConfigSaveFailed": "WebDAV設定の保存に失敗しました: {{error}}",
+        "backupCreated": "バックアップが作成されました。",
+        "backupFailed": "バックアップに失敗しました: {{error}}",
+        "localBackupCreated": "Local backup created successfully",
+        "localBackupFailed": "Local backup failed",
+        "restoreSuccess": "復元に成功しました。アプリケーションは1秒後に再起動します。",
+        "localBackupExported": "Local backup exported successfully",
+        "localBackupExportFailed": "Failed to export local backup",
+        "confirmDelete": "Confirm to delete this backup file?",
+        "confirmRestore": "Confirm to restore this backup file?"
+      },
+      "table": {
+        "filename": "ファイル名",
+        "backupTime": "バックアップ時間",
+        "actions": "操作",
+        "noBackups": "バックアップがありません。",
+        "rowsPerPage": "Rows per page"
       }
     },
-    "test": {
-      "item": {
-        "actions": {
-          "test": "テスト"
-        }
-      },
-      "viewer": {
-        "title": {
-          "create": "新規テストを作成",
-          "edit": "テストを編集"
+    "verge": {
+      "basic": {
+        "title": "Verge基本設定",
+        "items": {
+          "language": "言語設定",
+          "themeMode": "テーマモード",
+          "trayClickEvent": "トレイアイコンクリックイベント",
+          "copyEnvType": "環境変数タイプをコピー",
+          "startPage": "起動ページ",
+          "startupScript": "起動スクリプト",
+          "themeSetting": "テーマ設定",
+          "layoutSetting": "レイアウト設定",
+          "misc": "その他の設定",
+          "hotkeySetting": "ホットキー設定"
         },
-        "fields": {
-          "url": "テストURL"
-        }
-      },
-      "page": {
-        "title": "テスト",
         "actions": {
-          "testAll": "すべてテスト"
+          "browse": "参照",
+          "clear": "クリア"
+        },
+        "trayOptions": {
+          "showMainWindow": "メインウィンドウを表示",
+          "showTrayMenu": "トレイメニューを表示",
+          "disable": "無効にする"
         }
       },
-      "statuses": {
-        "pending": "検査待ち",
-        "yes": "サポートする",
-        "no": "サポートしない",
-        "failed": "テストに失敗しました。",
-        "completed": "検査完了",
-        "disallowedIsp": "許可されていないインターネットサービスプロバイダー",
-        "originalsOnly": "オリジナルのみ",
-        "noDisney": "No (IP Banned By Disney+)",
-        "unsupportedRegion": "サポートされていない国/地域",
-        "failedNetwork": "Failed (Network Connection)"
+      "advanced": {
+        "title": "Verge詳細設定",
+        "items": {
+          "backupSetting": "バックアップ設定",
+          "runtimeConfig": "現在の設定",
+          "openConfDir": "設定ディレクトリを開く",
+          "openCoreDir": "コアディレクトリを開く",
+          "openLogsDir": "ログディレクトリを開く",
+          "checkUpdates": "更新を確認",
+          "openDevTools": "開発者ツールを開く",
+          "liteModeSettings": "軽量モード設定",
+          "exit": "終了",
+          "exportDiagnostics": "診断情報をエクスポート",
+          "vergeVersion": "Vergeバージョン"
+        },
+        "tooltips": {
+          "backupInfo": "WebDAVを使用した設定ファイルのバックアップをサポートします。",
+          "openConfDir": "アプリケーションが正常に動作しない場合は、このフォルダ内のすべてのファイルを!バックアップ!して削除し、アプリケーションを再起動してください。",
+          "liteMode": "GUIを閉じて、コアのみを実行します。"
+        },
+        "actions": {
+          "copyVersion": "Copy Version"
+        },
+        "notifications": {
+          "latestVersion": "現在は最新バージョンです。",
+          "versionCopied": "Version copied to clipboard"
+        }
+      },
+      "theme": {
+        "title": "テーマ設定",
+        "fields": {
+          "primaryColor": "主要色",
+          "secondaryColor": "次要色",
+          "primaryText": "テキスト主要色",
+          "secondaryText": "テキスト次要色",
+          "infoColor": "情報色",
+          "warningColor": "警告色",
+          "errorColor": "エラー色",
+          "successColor": "成功色",
+          "fontFamily": "フォントファミリー",
+          "cssInjection": "CSSインジェクション"
+        },
+        "actions": {
+          "editCss": "Edit CSS"
+        },
+        "dialogs": {
+          "editCssTitle": "Edit CSS"
+        }
+      },
+      "layout": {
+        "title": "レイアウト設定",
+        "fields": {
+          "preferSystemTitlebar": "Prefer System Titlebar",
+          "trafficGraph": "トラフィックグラフ",
+          "memoryUsage": "コアメモリ使用量",
+          "proxyGroupIcon": "プロキシグループアイコン",
+          "hoverNavigator": "Hover Jump Navigator",
+          "hoverNavigatorDelay": "Hover Jump Navigator Delay",
+          "navIcon": "ナビゲーションバーアイコン",
+          "trayIcon": "トレイアイコン",
+          "showProxyGroupsInline": "Show Proxy Groups Inline",
+          "commonTrayIcon": "通常のトレイアイコン",
+          "systemProxyTrayIcon": "システムプロキシトレイアイコン",
+          "tunTrayIcon": "TUNモードトレイアイコン",
+          "enableTrayIcon": "トレイアイコンを有効にする",
+          "enableTraySpeed": "トレイの速度表示を有効にする"
+        },
+        "tooltips": {
+          "hoverNavigator": "Automatically scroll to the corresponding proxy group when hovering over alphabet letters",
+          "hoverNavigatorDelay": "Delay before auto scrolling when hovering, in milliseconds"
+        },
+        "options": {
+          "icon": {
+            "monochrome": "モノクロアイコン",
+            "colorful": "カラーアイコン",
+            "disable": "無効にする"
+          }
+        }
       }
     },
-    "theme": {
+    "common": {
+      "notifications": {
+        "copySuccess": "コピー成功",
+        "saveSuccess": "ランダム設定を保存完了",
+        "saveFailed": "Failed to save configuration"
+      }
+    },
+    "misc": {
+      "title": "その他の設定",
+      "fields": {
+        "appLogLevel": "アプリケーションログレベル",
+        "appLogMaxSize": "App Log Max Size",
+        "appLogMaxCount": "App Log Max Count",
+        "autoCloseConnections": "接続を自動的に閉じる",
+        "autoCheckUpdate": "自動更新チェック",
+        "enableBuiltinEnhanced": "組み込み拡張機能を有効にする",
+        "proxyLayoutColumns": "プロキシページのレイアウト列数",
+        "autoLogClean": "ログを自動的にクリーンアップ",
+        "autoDelayDetection": "自動遅延検出",
+        "defaultLatencyTest": "デフォルトの遅延テストURL",
+        "defaultLatencyTimeout": "テストタイムアウト時間"
+      },
+      "tooltips": {
+        "autoCloseConnections": "プロキシグループで選択されたノードまたはプロキシモードが変更されたときに、既存の接続を閉じます。",
+        "enableBuiltinEnhanced": "設定ファイルの互換性処理",
+        "autoDelayDetection": "バックグラウンドで現在のノードのレイテンシーを定期的にテストします",
+        "defaultLatencyTest": "HTTPクライアントリクエストテストにのみ使用され、設定ファイルには影響しません。"
+      },
+      "options": {
+        "proxyLayoutColumns": {
+          "auto": "自動列数"
+        },
+        "autoLogClean": {
+          "never": "クリーンアップしない",
+          "retainDays": "{{n}}日間保持"
+        }
+      }
+    },
+    "update": {
+      "title": "New Version v{{version}}",
+      "actions": {
+        "goToRelease": "リリースページに移動",
+        "update": "更新"
+      },
+      "messages": {
+        "portableError": "ポータブル版ではアプリケーション内での更新はサポートされていません。手動でダウンロードして置き換えてください。",
+        "breakChangeError": "このバージョンは重大な更新であり、アプリケーション内での更新はサポートされていません。アンインストールしてから手動でダウンロードしてインストールしてください。"
+      }
+    },
+    "sysproxy": {
+      "title": "システムプロキシ設定",
+      "fieldsets": {
+        "currentStatus": "現在のシステムプロキシ"
+      },
+      "fields": {
+        "enableStatus": "有効状態：",
+        "serverAddr": "サーバーアドレス：",
+        "pacUrl": "PACアドレス：",
+        "proxyHost": "プロキシホスト",
+        "usePacMode": "PACモードを使用",
+        "proxyGuard": "システムプロキシガード",
+        "guardDuration": "プロキシガード間隔",
+        "alwaysUseDefaultBypass": "常にデフォルトのバイパスを使用",
+        "proxyBypass": "プロキシバイパス設定：",
+        "bypass": "現在のバイパス：",
+        "pacScriptContent": "PACスクリプト内容"
+      },
+      "tooltips": {
+        "proxyGuard": "他のソフトウェアがオペレーティングシステムのプロキシ設定を変更するのを防ぐために有効にします。"
+      },
+      "messages": {
+        "durationTooShort": "プロキシデーモンの間隔は1秒以上に設定する必要があります。",
+        "invalidBypass": "無効なバイパス形式",
+        "invalidProxyHost": "プロキシホストの形式が無効です"
+      },
+      "actions": {
+        "editPac": "編集 PAC"
+      }
+    },
+    "tun": {
+      "title": "仮想ネットワークカードモード",
+      "actions": {
+        "reset": "デフォルト値にリセット"
+      },
+      "fields": {
+        "stack": "TUNモードスタック",
+        "device": "Device Name",
+        "autoRoute": "グローバルルートを自動設定",
+        "strictRoute": "厳格なルート",
+        "autoDetectInterface": "トラフィックの出口インターフェースを自動選択",
+        "dnsHijack": "DNSハイジャック",
+        "mtu": "最大転送単位"
+      },
+      "tooltips": {
+        "dnsHijack": "Please use , to separate multiple DNS servers"
+      },
+      "messages": {
+        "applied": "設定が適用されました。"
+      }
+    },
+    "dns": {
+      "dialog": {
+        "title": "DNS上書き",
+        "warning": "ここの設定がわからない場合は、変更しないでください。DNS上書きを有効にしたままにしてください。"
+      },
+      "sections": {
+        "general": "DNS設定",
+        "fallbackFilter": "フォールバックフィルター設定",
+        "hosts": "Hosts設定"
+      },
+      "fields": {
+        "enable": "DNSを有効にする",
+        "listen": "DNS監視アドレス",
+        "enhancedMode": "拡張モード",
+        "fakeIpRange": "Fake IP範囲",
+        "fakeIpFilterMode": "Fake IPフィルターモード",
+        "ipv6": {
+          "label": "IPv6",
+          "description": "IPv6 DNS解決を有効にする"
+        },
+        "preferH3": {
+          "label": "HTTP/3を優先する",
+          "description": "DNS DOHでHTTP/3プロトコルを使用する"
+        },
+        "respectRules": {
+          "label": "ルートルールに従う",
+          "description": "DNS接続はルートルールに従います。"
+        },
+        "useHosts": {
+          "label": "Hostsファイルを使用する",
+          "description": "Hostsファイルを使用してホスト名を解決する"
+        },
+        "useSystemHosts": {
+          "label": "システムのHostsファイルを使用する",
+          "description": "システムのHostsファイルを使用してホスト名を解決する"
+        },
+        "directPolicy": {
+          "label": "直接接続の名前解決サーバーはポリシーに従う",
+          "description": "名前解決サーバーのポリシーに従うかどうか"
+        },
+        "defaultNameserver": {
+          "label": "デフォルトの名前解決サーバー",
+          "description": "名前解決サーバーを解決するために使用されるデフォルトのDNSサーバー"
+        },
+        "nameserver": {
+          "label": "名前解決サーバー",
+          "description": "DNSサーバーのリスト。カンマで区切って指定します。"
+        },
+        "fallback": {
+          "label": "フォールバックサーバー",
+          "description": "フォールバックDNSサーバーのリスト。カンマで区切って指定します。"
+        },
+        "proxy": {
+          "label": "プロキシサーバーの名前解決サーバー",
+          "description": "プロキシノードの名前解決サーバー。プロキシノードのドメイン名を解決するためにのみ使用されます。カンマで区切って指定します。"
+        },
+        "directNameserver": {
+          "label": "直接接続の名前解決サーバー",
+          "description": "直接接続の出口名前解決サーバー。systemキーワードをサポートします。カンマで区切って指定します。"
+        },
+        "fakeIpFilter": {
+          "label": "Fake IPフィルター",
+          "description": "Fake IP解決をスキップするドメイン名。カンマで区切って指定します。"
+        },
+        "nameserverPolicy": {
+          "label": "名前解決サーバーのポリシー",
+          "description": "特定のドメインのDNSサーバー。複数のサーバーはセミコロンで区切って指定します。形式: domain=server1;server2"
+        },
+        "geoipFiltering": {
+          "label": "GeoIPフィルタリング",
+          "description": "フォールバックのGeoIPフィルタリングを有効にする"
+        },
+        "geoipCode": "GeoIP国コード",
+        "fallbackIpCidr": {
+          "label": "フォールバックIP CIDR",
+          "description": "フォールバックサーバーを使用しないIP CIDR。カンマで区切って指定します。"
+        },
+        "fallbackDomain": {
+          "label": "フォールバックドメイン",
+          "description": "フォールバックサーバーを使用するドメイン名。カンマで区切って指定します。"
+        },
+        "hosts": {
+          "label": "Hosts",
+          "description": "カスタムのドメイン名からIPまたはドメイン名へのマッピング。カンマで区切って指定します。"
+        }
+      },
+      "messages": {
+        "saved": "DNS設定が保存されました。",
+        "configError": "DNS configuration error:"
+      },
+      "errors": {
+        "invalid": "Invalid configuration"
+      }
+    },
+    "page": {
+      "title": "設定",
+      "actions": {
+        "manual": "マニュアル",
+        "telegram": "Telegramチャンネル",
+        "github": "GitHubリポジトリ"
+      }
+    },
+    "webUI": {
+      "actions": {
+        "openUrl": "URLを開く"
+      },
+      "title": "Webインターフェース",
+      "messages": {
+        "supportedPlaceholders": "%host, %port, %secretをサポートします。",
+        "placeholderInstruction": "%host, %port, %secretを使用してホスト、ポート、アクセスキーを表します。"
+      }
+    },
+    "hotkey": {
+      "toggles": {
+        "enableGlobal": "グローバルホットキーを有効にする"
+      },
+      "title": "ホットキー設定",
+      "functions": {
+        "rule": "ルールモード",
+        "global": "グローバルモード",
+        "openOrCloseDashboard": "ダッシュボードを開く/閉じる",
+        "toggleSystemProxy": "システムプロキシを開く/閉じる",
+        "toggleTunMode": "TUNモードを開く/閉じる",
+        "entryLightweightMode": "軽量モードに入る",
+        "direct": "直接接続モード"
+      }
+    },
+    "password": {
+      "prompts": {
+        "enterRoot": "ルートパスワードを入力してください。"
+      }
+    },
+    "networkInterface": {
+      "title": "ネットワークインターフェース",
+      "fields": {
+        "ipAddress": "IPアドレス",
+        "macAddress": "MACアドレス"
+      }
+    },
+    "updater": {
+      "notifications": {
+        "withClashProxySuccess": "Clashプロキシを使用して更新に成功しました。",
+        "withClashProxyFailed": "Clashプロキシを使用しても更新に失敗しました。"
+      }
+    },
+    "appearance": {
       "light": "Light",
       "dark": "Dark",
       "system": "System"
-    },
-    "log": {
-      "page": {
-        "title": "ログ",
-        "actions": {
-          "pause": "一時停止",
-          "resume": "再開",
-          "clear": "クリア"
-        },
-        "filters": {
-          "all": "ALL",
-          "debug": "DEBUG",
-          "info": "INFO",
-          "warn": "WARN",
-          "error": "ERROR"
-        }
-      }
-    },
-    "navigation": {
-      "tabs": {
-        "home": "ホーム",
-        "proxies": "プロキシ",
-        "profiles": "プロファイル",
-        "connections": "接続",
-        "rules": "ルール",
-        "logs": "ログ",
-        "unlock": "テスト",
-        "settings": "設定"
-      },
-      "menu": {
-        "reorderMode": "Menu reorder mode",
-        "unlock": "Unlock menu order",
-        "lock": "Lock menu order"
-      }
-    },
-    "settings": {
-      "system": {
-        "title": "システム設定",
-        "toggles": {
-          "tunMode": "仮想ネットワークカードモード",
-          "systemProxy": "システムプロキシ"
-        },
-        "tooltips": {
-          "autoLaunchAdmin": "管理者モードでは起動時の自動起動がサポートされない場合があります。",
-          "silentStart": "アプリケーションを起動すると、バックグラウンドモードで実行され、アプリケーションパネルは表示されません。"
-        },
-        "fields": {
-          "autoLaunch": "自動起動",
-          "silentStart": "サイレント起動"
-        },
-        "notifications": {
-          "tunMode": {
-            "autoDisabled": "TUN Mode automatically disabled due to service unavailable",
-            "autoDisableFailed": "Failed to disable TUN Mode automatically"
-          }
-        }
-      },
-      "proxyControl": {
-        "tooltips": {
-          "systemProxy": "オペレーティングシステムのプロキシ設定を変更します。有効にできない場合は、手動でオペレーティングシステムのプロキシ設定を変更してください。",
-          "tunMode": "TUN（仮想ネットワークカード）モードはシステムのすべてのトラフィックを制御します。有効にすると、システムプロキシを開く必要はありません。",
-          "tunUnavailable": "TUNモードはサービスモードまたは管理者モードが必要です"
-        },
-        "actions": {
-          "installService": "サービスをインストール",
-          "uninstallService": "サービスのアンインストール"
-        },
-        "fields": {
-          "systemProxy": "システムプロキシ",
-          "tunMode": "仮想ネットワークカードモード"
-        }
-      },
-      "externalController": {
-        "title": "外部コントローラーの監視アドレス",
-        "fields": {
-          "enable": "外部コントローラーを有効化",
-          "address": "外部コントローラーの監視アドレス",
-          "secret": "APIアクセスキー"
-        },
-        "placeholders": {
-          "address": "必須",
-          "secret": "推奨設定"
-        },
-        "tooltips": {
-          "copy": "クリップボードにコピー"
-        },
-        "messages": {
-          "addressRequired": "コントローラーのアドレスは空にできません",
-          "secretRequired": "シークレットを空にすることはできません",
-          "copyFailed": "コピーに失敗しました",
-          "controllerCopied": "API ポートがクリップボードにコピーされました",
-          "secretCopied": "API キーがクリップボードにコピーされました"
-        }
-      },
-      "externalCors": {
-        "title": "外部 CORS 設定",
-        "fields": {
-          "allowPrivateNetwork": "プライベートネットワークへのアクセスを許可",
-          "allowedOrigins": "許可されたオリジン"
-        },
-        "placeholders": {
-          "origin": "有効なURLを入力してください"
-        },
-        "actions": {
-          "add": "追加"
-        },
-        "messages": {
-          "alwaysIncluded": "常に含まれるオリジン: {{urls}}"
-        },
-        "tooltips": {
-          "open": "外部 CORS 設定"
-        }
-      },
-      "clash": {
-        "title": "Clash設定",
-        "items": {
-          "allowLan": "LAN接続を許可",
-          "dnsOverwrite": "DNS上書き",
-          "ipv6": "IPv6",
-          "unifiedDelay": "統一遅延",
-          "logLevel": "ログレベル",
-          "portConfig": "ポート設定",
-          "external": "外部制御",
-          "webUI": "Webインターフェース",
-          "clashCore": "Clashコア",
-          "openUwpTool": "UWPツールを開く",
-          "updateGeoData": "GeoDataを更新"
-        },
-        "tooltips": {
-          "networkInterface": "ネットワークインターフェース",
-          "unifiedDelay": "統一遅延を有効にすると、2回の遅延テストが行われ、接続ハンドシェイクなどによる異なるタイプのノードの遅延差を解消します。",
-          "logLevel": "ログディレクトリのServiceフォルダ内のコアログファイルにのみ適用されます。",
-          "openUwpTool": "Windows 8以降では、UWPアプリケーション（Microsoft Storeなど）がローカルホストのネットワークサービスに直接アクセスすることが制限されています。このツールを使用すると、この制限を回避できます。"
-        },
-        "options": {
-          "logLevel": {
-            "debug": "Debug",
-            "info": "Info",
-            "warning": "Warn",
-            "error": "Error",
-            "silent": "Silent"
-          }
-        },
-        "messages": {
-          "geoDataUpdated": "GeoDataが更新されました。"
-        },
-        "port": {
-          "title": "ポート設定",
-          "fields": {
-            "mixed": "混合プロキシポート",
-            "socks": "SOCKSプロキシポート",
-            "http": "HTTP(S)プロキシポート",
-            "redir": "Redir透明プロキシポート",
-            "tproxy": "TPROXY透明プロキシポート"
-          },
-          "actions": {
-            "random": "ランダムポート"
-          },
-          "messages": {
-            "saved": "Port settings saved",
-            "saveFailed": "Failed to save port settings"
-          }
-        },
-        "notifications": {
-          "restartSuccess": "Clashコアが再起動されました。",
-          "versionUpdated": "コアバージョンが更新されました。",
-          "changeSuccess": "コアの切り替えに成功しました。",
-          "changeFailed": "コアの切り替えに失敗しました。"
-        },
-        "status": {
-          "stopping": "コアを停止中...",
-          "restarting": "コアを再起動中..."
-        },
-        "service": {
-          "status": {
-            "installing": "サービスをインストール中...",
-            "uninstalling": "サービスをアンインストール中..."
-          },
-          "notifications": {
-            "installSuccess": "サービスのインストールに成功しました。",
-            "uninstallSuccess": "サービスのアンインストールに成功しました。"
-          }
-        },
-        "variants": {
-          "release": "正式版",
-          "alpha": "アルファ版"
-        }
-      },
-      "liteMode": {
-        "title": "軽量モード設定",
-        "actions": {
-          "enterNow": "今すぐ軽量モードに入る"
-        },
-        "toggles": {
-          "autoEnter": "自動的に軽量モードに入る"
-        },
-        "tooltips": {
-          "autoEnter": "有効にすると、ウィンドウを閉じてから一定時間後に自動的に軽量モードが有効になります。"
-        },
-        "fields": {
-          "delay": "自動的に軽量モードに入るまでの遅延時間"
-        },
-        "messages": {
-          "autoEnterHint": "ウィンドウを閉じると、{{n}}分後に自動的に軽量モードが有効になります。"
-        }
-      },
-      "backup": {
-        "title": "バックアップ設定",
-        "tabs": {
-          "local": "Local backup",
-          "webdav": "WebDAV backup"
-        },
-        "actions": {
-          "selectTarget": "Select backup target",
-          "backup": "バックアップ",
-          "export": "Export",
-          "exportBackup": "Export Backup",
-          "deleteBackup": "バックアップを削除",
-          "restore": "復元",
-          "restoreBackup": "バックアップを復元"
-        },
-        "fields": {
-          "webdavUrl": "WebDAVサーバーのURL http(s)://",
-          "username": "ユーザー名",
-          "password": "パスワード",
-          "info": "Backups are stored locally in the application data directory. Use the list below to restore or delete backups."
-        },
-        "messages": {
-          "webdavUrlRequired": "WebDAVサーバーのURLは必須です。",
-          "invalidWebdavUrl": "無効なWebDAVサーバーのURL形式",
-          "usernameRequired": "ユーザー名は必須です。",
-          "passwordRequired": "パスワードは必須です。",
-          "webdavConfigSaved": "WebDAV設定が保存されました。",
-          "webdavConfigSaveFailed": "WebDAV設定の保存に失敗しました: {{error}}",
-          "backupCreated": "バックアップが作成されました。",
-          "backupFailed": "バックアップに失敗しました: {{error}}",
-          "localBackupCreated": "Local backup created successfully",
-          "localBackupFailed": "Local backup failed",
-          "restoreSuccess": "復元に成功しました。アプリケーションは1秒後に再起動します。",
-          "localBackupExported": "Local backup exported successfully",
-          "localBackupExportFailed": "Failed to export local backup",
-          "confirmDelete": "Confirm to delete this backup file?",
-          "confirmRestore": "Confirm to restore this backup file?"
-        },
-        "table": {
-          "filename": "ファイル名",
-          "backupTime": "バックアップ時間",
-          "actions": "操作",
-          "noBackups": "バックアップがありません。",
-          "rowsPerPage": "Rows per page"
-        }
-      },
-      "verge": {
-        "basic": {
-          "title": "Verge基本設定",
-          "items": {
-            "language": "言語設定",
-            "themeMode": "テーマモード",
-            "trayClickEvent": "トレイアイコンクリックイベント",
-            "copyEnvType": "環境変数タイプをコピー",
-            "startPage": "起動ページ",
-            "startupScript": "起動スクリプト",
-            "themeSetting": "テーマ設定",
-            "layoutSetting": "レイアウト設定",
-            "misc": "その他の設定",
-            "hotkeySetting": "ホットキー設定"
-          },
-          "actions": {
-            "browse": "参照",
-            "clear": "クリア"
-          },
-          "trayOptions": {
-            "showMainWindow": "メインウィンドウを表示",
-            "showTrayMenu": "トレイメニューを表示",
-            "disable": "無効にする"
-          }
-        },
-        "advanced": {
-          "title": "Verge詳細設定",
-          "items": {
-            "backupSetting": "バックアップ設定",
-            "runtimeConfig": "現在の設定",
-            "openConfDir": "設定ディレクトリを開く",
-            "openCoreDir": "コアディレクトリを開く",
-            "openLogsDir": "ログディレクトリを開く",
-            "checkUpdates": "更新を確認",
-            "openDevTools": "開発者ツールを開く",
-            "liteModeSettings": "軽量モード設定",
-            "exit": "終了",
-            "exportDiagnostics": "診断情報をエクスポート",
-            "vergeVersion": "Vergeバージョン"
-          },
-          "tooltips": {
-            "backupInfo": "WebDAVを使用した設定ファイルのバックアップをサポートします。",
-            "openConfDir": "アプリケーションが正常に動作しない場合は、このフォルダ内のすべてのファイルを!バックアップ!して削除し、アプリケーションを再起動してください。",
-            "liteMode": "GUIを閉じて、コアのみを実行します。"
-          },
-          "actions": {
-            "copyVersion": "Copy Version"
-          },
-          "notifications": {
-            "latestVersion": "現在は最新バージョンです。",
-            "versionCopied": "Version copied to clipboard"
-          }
-        },
-        "theme": {
-          "title": "テーマ設定",
-          "fields": {
-            "primaryColor": "主要色",
-            "secondaryColor": "次要色",
-            "primaryText": "テキスト主要色",
-            "secondaryText": "テキスト次要色",
-            "infoColor": "情報色",
-            "warningColor": "警告色",
-            "errorColor": "エラー色",
-            "successColor": "成功色",
-            "fontFamily": "フォントファミリー",
-            "cssInjection": "CSSインジェクション"
-          },
-          "actions": {
-            "editCss": "Edit CSS"
-          },
-          "dialogs": {
-            "editCssTitle": "Edit CSS"
-          }
-        },
-        "layout": {
-          "title": "レイアウト設定",
-          "fields": {
-            "preferSystemTitlebar": "Prefer System Titlebar",
-            "trafficGraph": "トラフィックグラフ",
-            "memoryUsage": "コアメモリ使用量",
-            "proxyGroupIcon": "プロキシグループアイコン",
-            "hoverNavigator": "Hover Jump Navigator",
-            "hoverNavigatorDelay": "Hover Jump Navigator Delay",
-            "navIcon": "ナビゲーションバーアイコン",
-            "trayIcon": "トレイアイコン",
-            "showProxyGroupsInline": "Show Proxy Groups Inline",
-            "commonTrayIcon": "通常のトレイアイコン",
-            "systemProxyTrayIcon": "システムプロキシトレイアイコン",
-            "tunTrayIcon": "TUNモードトレイアイコン",
-            "enableTrayIcon": "トレイアイコンを有効にする",
-            "enableTraySpeed": "トレイの速度表示を有効にする"
-          },
-          "tooltips": {
-            "hoverNavigator": "Automatically scroll to the corresponding proxy group when hovering over alphabet letters",
-            "hoverNavigatorDelay": "Delay before auto scrolling when hovering, in milliseconds"
-          },
-          "options": {
-            "icon": {
-              "monochrome": "モノクロアイコン",
-              "colorful": "カラーアイコン",
-              "disable": "無効にする"
-            }
-          }
-        }
-      },
-      "common": {
-        "notifications": {
-          "copySuccess": "コピー成功",
-          "saveSuccess": "ランダム設定を保存完了",
-          "saveFailed": "Failed to save configuration"
-        }
-      },
-      "misc": {
-        "title": "その他の設定",
-        "fields": {
-          "appLogLevel": "アプリケーションログレベル",
-          "appLogMaxSize": "App Log Max Size",
-          "appLogMaxCount": "App Log Max Count",
-          "autoCloseConnections": "接続を自動的に閉じる",
-          "autoCheckUpdate": "自動更新チェック",
-          "enableBuiltinEnhanced": "組み込み拡張機能を有効にする",
-          "proxyLayoutColumns": "プロキシページのレイアウト列数",
-          "autoLogClean": "ログを自動的にクリーンアップ",
-          "autoDelayDetection": "自動遅延検出",
-          "defaultLatencyTest": "デフォルトの遅延テストURL",
-          "defaultLatencyTimeout": "テストタイムアウト時間"
-        },
-        "tooltips": {
-          "autoCloseConnections": "プロキシグループで選択されたノードまたはプロキシモードが変更されたときに、既存の接続を閉じます。",
-          "enableBuiltinEnhanced": "設定ファイルの互換性処理",
-          "autoDelayDetection": "バックグラウンドで現在のノードのレイテンシーを定期的にテストします",
-          "defaultLatencyTest": "HTTPクライアントリクエストテストにのみ使用され、設定ファイルには影響しません。"
-        },
-        "options": {
-          "proxyLayoutColumns": {
-            "auto": "自動列数"
-          },
-          "autoLogClean": {
-            "never": "クリーンアップしない",
-            "retainDays": "{{n}}日間保持"
-          }
-        }
-      },
-      "update": {
-        "title": "New Version v{{version}}",
-        "actions": {
-          "goToRelease": "リリースページに移動",
-          "update": "更新"
-        },
-        "messages": {
-          "portableError": "ポータブル版ではアプリケーション内での更新はサポートされていません。手動でダウンロードして置き換えてください。",
-          "breakChangeError": "このバージョンは重大な更新であり、アプリケーション内での更新はサポートされていません。アンインストールしてから手動でダウンロードしてインストールしてください。"
-        }
-      },
-      "sysproxy": {
-        "title": "システムプロキシ設定",
-        "fieldsets": {
-          "currentStatus": "現在のシステムプロキシ"
-        },
-        "fields": {
-          "enableStatus": "有効状態：",
-          "serverAddr": "サーバーアドレス：",
-          "pacUrl": "PACアドレス：",
-          "proxyHost": "プロキシホスト",
-          "usePacMode": "PACモードを使用",
-          "proxyGuard": "システムプロキシガード",
-          "guardDuration": "プロキシガード間隔",
-          "alwaysUseDefaultBypass": "常にデフォルトのバイパスを使用",
-          "proxyBypass": "プロキシバイパス設定：",
-          "bypass": "現在のバイパス：",
-          "pacScriptContent": "PACスクリプト内容"
-        },
-        "tooltips": {
-          "proxyGuard": "他のソフトウェアがオペレーティングシステムのプロキシ設定を変更するのを防ぐために有効にします。"
-        },
-        "messages": {
-          "durationTooShort": "プロキシデーモンの間隔は1秒以上に設定する必要があります。",
-          "invalidBypass": "無効なバイパス形式",
-          "invalidProxyHost": "プロキシホストの形式が無効です"
-        },
-        "actions": {
-          "editPac": "編集 PAC"
-        }
-      },
-      "tun": {
-        "title": "仮想ネットワークカードモード",
-        "actions": {
-          "reset": "デフォルト値にリセット"
-        },
-        "fields": {
-          "stack": "TUNモードスタック",
-          "device": "Device Name",
-          "autoRoute": "グローバルルートを自動設定",
-          "strictRoute": "厳格なルート",
-          "autoDetectInterface": "トラフィックの出口インターフェースを自動選択",
-          "dnsHijack": "DNSハイジャック",
-          "mtu": "最大転送単位"
-        },
-        "tooltips": {
-          "dnsHijack": "Please use , to separate multiple DNS servers"
-        },
-        "messages": {
-          "applied": "設定が適用されました。"
-        }
-      },
-      "dns": {
-        "dialog": {
-          "title": "DNS上書き",
-          "warning": "ここの設定がわからない場合は、変更しないでください。DNS上書きを有効にしたままにしてください。"
-        },
-        "sections": {
-          "general": "DNS設定",
-          "fallbackFilter": "フォールバックフィルター設定",
-          "hosts": "Hosts設定"
-        },
-        "fields": {
-          "enable": "DNSを有効にする",
-          "listen": "DNS監視アドレス",
-          "enhancedMode": "拡張モード",
-          "fakeIpRange": "Fake IP範囲",
-          "fakeIpFilterMode": "Fake IPフィルターモード",
-          "ipv6": {
-            "label": "IPv6",
-            "description": "IPv6 DNS解決を有効にする"
-          },
-          "preferH3": {
-            "label": "HTTP/3を優先する",
-            "description": "DNS DOHでHTTP/3プロトコルを使用する"
-          },
-          "respectRules": {
-            "label": "ルートルールに従う",
-            "description": "DNS接続はルートルールに従います。"
-          },
-          "useHosts": {
-            "label": "Hostsファイルを使用する",
-            "description": "Hostsファイルを使用してホスト名を解決する"
-          },
-          "useSystemHosts": {
-            "label": "システムのHostsファイルを使用する",
-            "description": "システムのHostsファイルを使用してホスト名を解決する"
-          },
-          "directPolicy": {
-            "label": "直接接続の名前解決サーバーはポリシーに従う",
-            "description": "名前解決サーバーのポリシーに従うかどうか"
-          },
-          "defaultNameserver": {
-            "label": "デフォルトの名前解決サーバー",
-            "description": "名前解決サーバーを解決するために使用されるデフォルトのDNSサーバー"
-          },
-          "nameserver": {
-            "label": "名前解決サーバー",
-            "description": "DNSサーバーのリスト。カンマで区切って指定します。"
-          },
-          "fallback": {
-            "label": "フォールバックサーバー",
-            "description": "フォールバックDNSサーバーのリスト。カンマで区切って指定します。"
-          },
-          "proxy": {
-            "label": "プロキシサーバーの名前解決サーバー",
-            "description": "プロキシノードの名前解決サーバー。プロキシノードのドメイン名を解決するためにのみ使用されます。カンマで区切って指定します。"
-          },
-          "directNameserver": {
-            "label": "直接接続の名前解決サーバー",
-            "description": "直接接続の出口名前解決サーバー。systemキーワードをサポートします。カンマで区切って指定します。"
-          },
-          "fakeIpFilter": {
-            "label": "Fake IPフィルター",
-            "description": "Fake IP解決をスキップするドメイン名。カンマで区切って指定します。"
-          },
-          "nameserverPolicy": {
-            "label": "名前解決サーバーのポリシー",
-            "description": "特定のドメインのDNSサーバー。複数のサーバーはセミコロンで区切って指定します。形式: domain=server1;server2"
-          },
-          "geoipFiltering": {
-            "label": "GeoIPフィルタリング",
-            "description": "フォールバックのGeoIPフィルタリングを有効にする"
-          },
-          "geoipCode": "GeoIP国コード",
-          "fallbackIpCidr": {
-            "label": "フォールバックIP CIDR",
-            "description": "フォールバックサーバーを使用しないIP CIDR。カンマで区切って指定します。"
-          },
-          "fallbackDomain": {
-            "label": "フォールバックドメイン",
-            "description": "フォールバックサーバーを使用するドメイン名。カンマで区切って指定します。"
-          },
-          "hosts": {
-            "label": "Hosts",
-            "description": "カスタムのドメイン名からIPまたはドメイン名へのマッピング。カンマで区切って指定します。"
-          }
-        },
-        "messages": {
-          "saved": "DNS設定が保存されました。",
-          "configError": "DNS configuration error:"
-        },
-        "errors": {
-          "invalid": "Invalid configuration"
-        }
-      },
-      "page": {
-        "title": "設定",
-        "actions": {
-          "manual": "マニュアル",
-          "telegram": "Telegramチャンネル",
-          "github": "GitHubリポジトリ"
-        }
-      },
-      "webUI": {
-        "actions": {
-          "openUrl": "URLを開く"
-        },
-        "title": "Webインターフェース",
-        "messages": {
-          "supportedPlaceholders": "%host, %port, %secretをサポートします。",
-          "placeholderInstruction": "%host, %port, %secretを使用してホスト、ポート、アクセスキーを表します。"
-        }
-      },
-      "hotkey": {
-        "toggles": {
-          "enableGlobal": "グローバルホットキーを有効にする"
-        },
-        "title": "ホットキー設定",
-        "functions": {
-          "rule": "ルールモード",
-          "global": "グローバルモード",
-          "openOrCloseDashboard": "ダッシュボードを開く/閉じる",
-          "toggleSystemProxy": "システムプロキシを開く/閉じる",
-          "toggleTunMode": "TUNモードを開く/閉じる",
-          "entryLightweightMode": "軽量モードに入る",
-          "direct": "直接接続モード"
-        }
-      },
-      "password": {
-        "prompts": {
-          "enterRoot": "ルートパスワードを入力してください。"
-        }
-      },
-      "networkInterface": {
-        "title": "ネットワークインターフェース",
-        "fields": {
-          "ipAddress": "IPアドレス",
-          "macAddress": "MACアドレス"
-        }
-      },
-      "updater": {
-        "notifications": {
-          "withClashProxySuccess": "Clashプロキシを使用して更新に成功しました。",
-          "withClashProxyFailed": "Clashプロキシを使用しても更新に失敗しました。"
-        }
-      }
-    },
-    "rule": {
-      "page": {
-        "title": "ルール",
-        "provider": {
-          "trigger": "ルールプロバイダー",
-          "dialogTitle": "ルールプロバイダー",
-          "actions": {
-            "updateAll": "すべて更新",
-            "update": "更新"
-          },
-          "notices": {
-            "updateSuccess": "{{name}} updated successfully",
-            "updateFailed": "Failed to update {{name}}: {{message}}",
-            "genericError": "Update failed: {{message}}",
-            "none": "No providers available to update",
-            "allUpdated": "All providers updated successfully"
-          }
-        }
-      },
-      "editor": {
-        "title": "ルールを編集",
-        "form": {
-          "labels": {
-            "type": "ルールタイプ",
-            "content": "ルール内容",
-            "proxyPolicy": "プロキシポリシー"
-          },
-          "toggles": {
-            "noResolve": "DNS解決をスキップ"
-          },
-          "actions": {
-            "prependRule": "前置ルールを追加",
-            "appendRule": "後置ルールを追加"
-          },
-          "validation": {
-            "conditionRequired": "ルール条件が必要です",
-            "invalidRule": "無効なルール"
-          }
-        },
-        "ruleTypes": {
-          "DOMAIN": "完全なドメイン名を一致させる",
-          "DOMAIN-SUFFIX": "ドメインサフィックスを一致させる",
-          "DOMAIN-KEYWORD": "ドメインキーワードを一致させる",
-          "DOMAIN-REGEX": "ドメイン正規表現を一致させる",
-          "GEOSITE": "Geosite内のドメインを一致させる",
-          "GEOIP": "IPの所属国コードを一致させる",
-          "SRC-GEOIP": "送信元IPの所属国コードを一致させる",
-          "IP-ASN": "IPの所属ASNを一致させる",
-          "SRC-IP-ASN": "送信元IPの所属ASNを一致させる",
-          "IP-CIDR": "IPアドレス範囲を一致させる",
-          "IP-CIDR6": "IPアドレス範囲を一致させる",
-          "SRC-IP-CIDR": "送信元IPアドレス範囲を一致させる",
-          "IP-SUFFIX": "IPサフィックス範囲を一致させる",
-          "SRC-IP-SUFFIX": "送信元IPサフィックス範囲を一致させる",
-          "SRC-PORT": "送信元ポート範囲を一致させる",
-          "DST-PORT": "宛先ポート範囲を一致させる",
-          "IN-PORT": "入力ポートを一致させる",
-          "DSCP": "DSCPマーク（TPROXY UDP入力のみ）",
-          "PROCESS-NAME": "プロセス名を一致させる（Androidパッケージ名）",
-          "PROCESS-PATH": "完全なプロセスパスを一致させる",
-          "PROCESS-NAME-REGEX": "完全なプロセス名を正規表現で一致させる（Androidパッケージ名）",
-          "PROCESS-PATH-REGEX": "完全なプロセスパスを正規表現で一致させる",
-          "NETWORK": "トランスポートプロトコルを一致させる (TCP/UDP)",
-          "UID": "LinuxユーザーIDを一致させる",
-          "IN-TYPE": "入力タイプを一致させる",
-          "IN-USER": "入力ユーザー名を一致させる",
-          "IN-NAME": "入力名を一致させる",
-          "SUB-RULE": "サブルール",
-          "RULE-SET": "ルールセットを一致させる",
-          "AND": "論理積",
-          "OR": "論理和",
-          "NOT": "論理否定",
-          "MATCH": "すべてのリクエストを一致させる"
-        }
-      }
-    },
-    "home": {
-      "page": {
-        "title": "ホーム",
-        "tooltips": {
-          "lightweightMode": "軽量モード",
-          "manual": "マニュアル",
-          "settings": "ホーム設定"
-        },
-        "cards": {
-          "trafficStats": "トラフィック統計",
-          "networkSettings": "ネットワーク設定",
-          "proxyMode": "プロキシモード"
-        },
-        "settings": {
-          "title": "ホーム設定",
-          "cards": {
-            "profile": "プロファイルカード",
-            "currentProxy": "現在のプロキシカード",
-            "network": "ネットワーク設定カード",
-            "proxyMode": "プロキシモードカード",
-            "traffic": "トラフィック統計カード",
-            "tests": "ウェブサイトテストカード",
-            "ip": "IP情報カード",
-            "clashInfo": "Clash情報カード",
-            "systemInfo": "システム情報カード"
-          }
-        }
-      },
-      "cards": {
-        "proxyTun": {
-          "status": {
-            "systemProxyEnabled": "システムプロキシが有効になっています。アプリケーションはプロキシを通じてネットワークにアクセスします。",
-            "systemProxyDisabled": "システムプロキシが無効になっています。ほとんどのユーザーはこのオプションをオンにすることをお勧めします。",
-            "tunModeServiceRequired": "TUNモードはサービスモードが必要です。まずサービスをインストールしてください。",
-            "tunModeEnabled": "TUNモードが有効になっています。アプリケーションは仮想ネットワークカードを通じてネットワークにアクセスします。",
-            "tunModeDisabled": "TUNモードが無効になっています。特殊なアプリケーションに適しています。"
-          },
-          "tooltips": {
-            "systemProxy": "オペレーティングシステムのプロキシ設定を変更します。有効にできない場合は、手動でオペレーティングシステムのプロキシ設定を変更してください。",
-            "tunMode": "TUNモードは全てのアプリケーションのトラフィックを制御できます。システムプロキシ設定に従わない特殊なアプリケーションに適しています。"
-          }
-        },
-        "clashInfo": {
-          "title": "Clash情報",
-          "fields": {
-            "coreVersion": "コアバージョン",
-            "systemProxyAddress": "システムプロキシアドレス",
-            "mixedPort": "Mixed Port",
-            "uptime": "稼働時間",
-            "rulesCount": "ルール数"
-          }
-        },
-        "systemInfo": {
-          "title": "システム情報",
-          "fields": {
-            "osInfo": "オペレーティングシステム情報",
-            "autoLaunch": "起動時に自動起動",
-            "runningMode": "実行モード",
-            "lastCheckUpdate": "最後の更新チェック",
-            "vergeVersion": "Vergeバージョン"
-          },
-          "actions": {
-            "settings": "設定"
-          },
-          "tooltips": {
-            "autoLaunchAdmin": "管理者モードでは起動時の自動起動がサポートされない場合があります。"
-          },
-          "badges": {
-            "adminMode": "管理者モード",
-            "serviceMode": "サービスモード",
-            "sidecarMode": "ユーザーモード",
-            "adminServiceMode": "Admin + Service Mode"
-          }
-        },
-        "ipInfo": {
-          "title": "IP情報",
-          "labels": {
-            "ip": "IP",
-            "asn": "自治システム番号",
-            "isp": "インターネットサービスプロバイダー",
-            "org": "組織",
-            "location": "位置",
-            "timezone": "タイムゾーン",
-            "autoRefresh": "自動更新",
-            "unknown": "不明"
-          },
-          "errors": {
-            "load": "IP情報の取得に失敗しました"
-          }
-        },
-        "currentProxy": {
-          "title": "現在のノード",
-          "actions": {
-            "refreshDelay": "遅延テスト"
-          },
-          "labels": {
-            "globalMode": "グローバルモード",
-            "directMode": "直接接続モード",
-            "group": "プロキシグループ",
-            "proxy": "ノード",
-            "noActiveNode": "アクティブなプロキシノードがありません。"
-          }
-        },
-        "tests": {
-          "title": "ウェブサイトテスト"
-        },
-        "traffic": {
-          "metrics": {
-            "uploadSpeed": "アップロード速度",
-            "downloadSpeed": "ダウンロード速度",
-            "activeConnections": "アクティブな接続",
-            "uploaded": "アップロード量",
-            "downloaded": "ダウンロード量",
-            "memoryUsage": "コアメモリ使用量"
-          },
-          "legends": {
-            "upload": "アップロード",
-            "download": "ダウンロード"
-          },
-          "patterns": {
-            "minutes": "{{time}} Minutes"
-          }
-        },
-        "clashMode": {
-          "errors": {
-            "communication": "Core communication error"
-          },
-          "labels": {
-            "rule": "ルールモード",
-            "global": "グローバルモード",
-            "direct": "直接接続モード"
-          },
-          "descriptions": {
-            "rule": "Automatically choose proxies according to the rule set.",
-            "global": "Forward all network requests through the selected proxy.",
-            "direct": "Bypass the proxy and connect to the internet directly."
-          }
-        }
-      }
-    },
-    "unlock": {
-      "page": {
-        "title": "ロック解除テスト",
-        "actions": {
-          "testing": "テスト中..."
-        },
-        "empty": "アンロックテスト項目はありません",
-        "messages": {
-          "detectionTimeout": "Detection timeout or failed"
-        }
-      }
     },
     "validation": {
       "config": {
@@ -1270,6 +1251,25 @@
         "mappingError": "上書きファイルのマッピングエラーがあります。変更は取り消されました。",
         "keyError": "上書きファイルのキーエラーがあります。変更は取り消されました。",
         "generalError": "上書きファイルにエラーがあります。変更は取り消されました。"
+      }
+    }
+  },
+  "layout": {
+    "navigation": {
+      "tabs": {
+        "home": "ホーム",
+        "proxies": "プロキシ",
+        "profiles": "プロファイル",
+        "connections": "接続",
+        "rules": "ルール",
+        "logs": "ログ",
+        "unlock": "テスト",
+        "settings": "設定"
+      },
+      "menu": {
+        "reorderMode": "Menu reorder mode",
+        "unlock": "Unlock menu order",
+        "lock": "Lock menu order"
       }
     }
   }

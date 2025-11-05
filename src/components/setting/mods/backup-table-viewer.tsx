@@ -75,7 +75,7 @@ export const BackupTableViewer = memo(
 
     const handleRestore = useLockFn(async (filename: string) => {
       await onRestore(filename).then(() => {
-        showNotice.success("entities.settings.backup.messages.restoreSuccess");
+        showNotice.success("settings.backup.messages.restoreSuccess");
       });
       await restartApp();
     });
@@ -92,14 +92,10 @@ export const BackupTableViewer = memo(
           return;
         }
         await onExport(filename, savePath);
-        showNotice.success(
-          "entities.settings.backup.messages.localBackupExported",
-        );
+        showNotice.success("settings.backup.messages.localBackupExported");
       } catch (error) {
         console.error(error);
-        showNotice.error(
-          "entities.settings.backup.messages.localBackupExportFailed",
-        );
+        showNotice.error("settings.backup.messages.localBackupExportFailed");
       }
     });
 
@@ -108,14 +104,10 @@ export const BackupTableViewer = memo(
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>
-                {t("entities.settings.backup.table.filename")}
-              </TableCell>
-              <TableCell>
-                {t("entities.settings.backup.table.backupTime")}
-              </TableCell>
+              <TableCell>{t("settings.backup.table.filename")}</TableCell>
+              <TableCell>{t("settings.backup.table.backupTime")}</TableCell>
               <TableCell align="right">
-                {t("entities.settings.backup.table.actions")}
+                {t("settings.backup.table.actions")}
               </TableCell>
             </TableRow>
           </TableHead>
@@ -150,13 +142,9 @@ export const BackupTableViewer = memo(
                           <>
                             <IconButton
                               color="primary"
-                              aria-label={t(
-                                "entities.settings.backup.actions.export",
-                              )}
+                              aria-label={t("settings.backup.actions.export")}
                               size="small"
-                              title={t(
-                                "entities.settings.backup.actions.exportBackup",
-                              )}
+                              title={t("settings.backup.actions.exportBackup")}
                               onClick={async (e: React.MouseEvent) => {
                                 e.preventDefault();
                                 await handleExport(file.filename);
@@ -175,15 +163,11 @@ export const BackupTableViewer = memo(
                           color="secondary"
                           aria-label={t("shared.actions.delete")}
                           size="small"
-                          title={t(
-                            "entities.settings.backup.actions.deleteBackup",
-                          )}
+                          title={t("settings.backup.actions.deleteBackup")}
                           onClick={async (e: React.MouseEvent) => {
                             e.preventDefault();
                             const confirmed = await confirmAsync(
-                              t(
-                                "entities.settings.backup.messages.confirmDelete",
-                              ),
+                              t("settings.backup.messages.confirmDelete"),
                             );
                             if (confirmed) {
                               await handleDelete(file.filename);
@@ -199,20 +183,14 @@ export const BackupTableViewer = memo(
                         />
                         <IconButton
                           color="primary"
-                          aria-label={t(
-                            "entities.settings.backup.actions.restore",
-                          )}
+                          aria-label={t("settings.backup.actions.restore")}
                           size="small"
-                          title={t(
-                            "entities.settings.backup.actions.restoreBackup",
-                          )}
+                          title={t("settings.backup.actions.restoreBackup")}
                           disabled={!file.allow_apply}
                           onClick={async (e: React.MouseEvent) => {
                             e.preventDefault();
                             const confirmed = await confirmAsync(
-                              t(
-                                "entities.settings.backup.messages.confirmRestore",
-                              ),
+                              t("settings.backup.messages.confirmRestore"),
                             );
                             if (confirmed) {
                               await handleRestore(file.filename);
@@ -243,7 +221,7 @@ export const BackupTableViewer = memo(
                       color="textSecondary"
                       align="center"
                     >
-                      {t("entities.settings.backup.table.noBackups")}
+                      {t("settings.backup.table.noBackups")}
                     </Typography>
                   </Box>
                 </TableCell>
@@ -258,7 +236,7 @@ export const BackupTableViewer = memo(
           rowsPerPage={DEFAULT_ROWS_PER_PAGE}
           page={page}
           onPageChange={onPageChange}
-          labelRowsPerPage={t("entities.settings.backup.table.rowsPerPage")}
+          labelRowsPerPage={t("settings.backup.table.rowsPerPage")}
         />
       </TableContainer>
     );

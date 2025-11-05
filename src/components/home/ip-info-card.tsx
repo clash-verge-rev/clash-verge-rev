@@ -70,9 +70,7 @@ export const IpInfoCard = () => {
       setCountdown(IP_REFRESH_SECONDS);
     } catch (err) {
       setError(
-        err instanceof Error
-          ? err.message
-          : t("entities.home.cards.ipInfo.errors.load"),
+        err instanceof Error ? err.message : t("home.cards.ipInfo.errors.load"),
       );
     } finally {
       setLoading(false);
@@ -118,7 +116,7 @@ export const IpInfoCard = () => {
   if (loading) {
     return (
       <EnhancedCard
-        title={t("entities.home.cards.ipInfo.title")}
+        title={t("home.cards.ipInfo.title")}
         icon={<LocationOnOutlined />}
         iconColor="info"
         action={
@@ -141,7 +139,7 @@ export const IpInfoCard = () => {
   if (error) {
     return (
       <EnhancedCard
-        title={t("entities.home.cards.ipInfo.title")}
+        title={t("home.cards.ipInfo.title")}
         icon={<LocationOnOutlined />}
         iconColor="info"
         action={
@@ -174,7 +172,7 @@ export const IpInfoCard = () => {
   // 渲染正常数据
   return (
     <EnhancedCard
-      title={t("entities.home.cards.ipInfo.title")}
+      title={t("home.cards.ipInfo.title")}
       icon={<LocationOnOutlined />}
       iconColor="info"
       action={
@@ -226,8 +224,7 @@ export const IpInfoCard = () => {
                   maxWidth: "100%",
                 }}
               >
-                {ipInfo?.country ||
-                  t("entities.home.cards.ipInfo.labels.unknown")}
+                {ipInfo?.country || t("home.cards.ipInfo.labels.unknown")}
               </Typography>
             </Box>
 
@@ -237,7 +234,7 @@ export const IpInfoCard = () => {
                 color="text.secondary"
                 sx={{ flexShrink: 0 }}
               >
-                {t("entities.home.cards.ipInfo.labels.ip")}:
+                {t("home.cards.ipInfo.labels.ip")}:
               </Typography>
               <Box
                 sx={{
@@ -271,7 +268,7 @@ export const IpInfoCard = () => {
             </Box>
 
             <InfoItem
-              label={t("entities.home.cards.ipInfo.labels.asn")}
+              label={t("home.cards.ipInfo.labels.asn")}
               value={ipInfo?.asn ? `AS${ipInfo.asn}` : "N/A"}
             />
           </Box>
@@ -279,19 +276,19 @@ export const IpInfoCard = () => {
           {/* 右侧：组织、ISP和位置信息 */}
           <Box sx={{ width: "60%", overflow: "auto" }}>
             <InfoItem
-              label={t("entities.home.cards.ipInfo.labels.isp")}
+              label={t("home.cards.ipInfo.labels.isp")}
               value={ipInfo?.isp}
             />
             <InfoItem
-              label={t("entities.home.cards.ipInfo.labels.org")}
+              label={t("home.cards.ipInfo.labels.org")}
               value={ipInfo?.asn_organization}
             />
             <InfoItem
-              label={t("entities.home.cards.ipInfo.labels.location")}
+              label={t("home.cards.ipInfo.labels.location")}
               value={[ipInfo?.city, ipInfo?.region].filter(Boolean).join(", ")}
             />
             <InfoItem
-              label={t("entities.home.cards.ipInfo.labels.timezone")}
+              label={t("home.cards.ipInfo.labels.timezone")}
               value={ipInfo?.timezone}
             />
           </Box>
@@ -311,7 +308,7 @@ export const IpInfoCard = () => {
           }}
         >
           <Typography variant="caption">
-            {t("entities.home.cards.ipInfo.labels.autoRefresh")}: {countdown}s
+            {t("home.cards.ipInfo.labels.autoRefresh")}: {countdown}s
           </Typography>
           <Typography
             variant="caption"

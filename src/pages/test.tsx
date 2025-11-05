@@ -141,7 +141,7 @@ const TestPage = () => {
   return (
     <BasePage
       full
-      title={t("entities.test.page.title")}
+      title={t("tests.page.title")}
       header={
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <Button
@@ -149,7 +149,7 @@ const TestPage = () => {
             size="small"
             onClick={() => emit("verge://test-all")}
           >
-            {t("entities.test.page.actions.testAll")}
+            {t("tests.page.actions.testAll")}
           </Button>
           <Button
             variant="contained"

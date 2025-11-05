@@ -72,1178 +72,1159 @@
       "advanced": "متقدم"
     }
   },
-  "entities": {
-    "profile": {
-      "page": {
-        "title": "الملفات الشخصية",
+  "profiles": {
+    "page": {
+      "title": "الملفات الشخصية",
+      "actions": {
+        "updateAll": "تحديث جميع الملفات الشخصية",
+        "viewRuntimeConfig": "عرض تكوين وقت التشغيل",
+        "reactivate": "إعادة تنشيط الملفات الشخصية",
+        "import": "استيراد"
+      },
+      "batch": {
+        "title": "Batch Operations",
+        "delete": "Delete Selected Profiles",
+        "selectAll": "Select All",
+        "deselectAll": "Deselect All",
+        "done": "Done",
+        "selected": "Selected",
+        "items": "items"
+      },
+      "import": {
+        "placeholder": "رابط الملف الشخصي",
+        "paste": "لصق",
+        "clear": "مسح"
+      },
+      "errors": {
+        "invalidUrl": "Invalid profile URL. Please enter a URL starting with http:// or https://",
+        "onlyYaml": "لا يتم دعم سوى ملفات YAML"
+      },
+      "notifications": {
+        "importRetry": "Import failed, retrying with Clash proxy...",
+        "importFail": "Import failed even with Clash proxy",
+        "importNeedsRefresh": "Profile imported but may need manual refresh",
+        "importSuccess": "Profile imported successfully, please restart if not visible",
+        "profileSwitched": "تم التبديل إلى الملف الشخصي",
+        "profileReactivated": "تم إعادة تنشيط الملف الشخصي",
+        "switchInterrupted": "Profile switch interrupted by new selection",
+        "batchDeleted": "Selected profiles deleted successfully"
+      },
+      "notices": {
+        "forceRefreshCompleted": "Force refresh completed",
+        "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
+      }
+    },
+    "notifications": {
+      "importSuccess": "تم استيراد الملف الشخصي بنجاح",
+      "importSubscriptionSuccess": "تم استيراد الاشتراك بنجاح",
+      "importWithClashProxy": "Profile Imported with Clash proxy",
+      "saved": "Saved successfully"
+    },
+    "viewer": {
+      "title": {
+        "create": "إنشاء ملف شخصي",
+        "edit": "تعديل الملف الشخصي"
+      },
+      "fields": {
+        "type": "النوع",
+        "name": "الاسم",
+        "description": "الوصف",
+        "subscriptionUrl": "رابط الاشتراك",
+        "httpTimeout": "HTTP Request Timeout",
+        "updateInterval": "فاصل التحديث",
+        "useSystemProxy": "استخدام وكيل النظام",
+        "useClashProxy": "استخدام وكيل Clash",
+        "acceptInvalidCerts": "قبول الشهادات غير الصالحة (خطر)",
+        "allowAutoUpdate": "Allow Auto Update"
+      },
+      "notifications": {
+        "creationRetry": "Profile creation failed, retrying with Clash proxy...",
+        "creationSuccess": "Profile creation succeeded with Clash proxy"
+      }
+    },
+    "menu": {
+      "home": "Home",
+      "select": "اختيار",
+      "editInfo": "تعديل المعلومات",
+      "editFile": "تعديل الملف",
+      "editRules": "تعديل القواعد",
+      "editProxies": "تعديل الوكلاء",
+      "editGroups": "تعديل مجموعات الوكلاء",
+      "extendConfig": "توسيع الإعدادات",
+      "extendScript": "توسيع السكربت",
+      "openFile": "فتح الملف",
+      "update": "تحديث",
+      "updateViaProxy": "Update via proxy"
+    },
+    "proxiesEditor": {
+      "title": "تعديل الوكلاء",
+      "placeholders": {
+        "multiUri": "استخدم أسطرًا جديدة لعدّة عناوين URI (يدعم التشفير Base64)"
+      },
+      "actions": {
+        "prepend": "إضافة وكيل في البداية",
+        "append": "إضافة وكيل في النهاية"
+      }
+    },
+    "groupsEditor": {
+      "title": "تعديل مجموعات الوكلاء",
+      "errors": {
+        "nameRequired": "اسم المجموعة مطلوب",
+        "nameExists": "اسم المجموعة موجود بالفعل"
+      },
+      "fields": {
+        "type": "نوع المجموعة",
+        "name": "اسم المجموعة",
+        "icon": "أيقونة مجموعة الوكلاء",
+        "proxies": "استخدام الوكلاء",
+        "provider": "استخدام المزود",
+        "healthCheckUrl": "رابط فحص الصحة",
+        "expectedStatus": "الحالة المتوقعة",
+        "interval": "الفاصل الزمني",
+        "timeout": "مهلة",
+        "maxFailedTimes": "الحد الأقصى لمحاولات الفشل",
+        "interfaceName": "اسم الواجهة",
+        "routingMark": "علامة التوجيه",
+        "filter": "تصفية",
+        "excludeFilter": "استبعاد المرشح",
+        "excludeType": "استبعاد النوع",
+        "includeAll": "تضمين جميع الوكلاء والمزودين",
+        "includeAllProxies": "تضمين جميع الوكلاء",
+        "includeAllProviders": "تضمين جميع المزودين"
+      },
+      "toggles": {
+        "lazy": "كسول",
+        "disableUdp": "تعطيل UDP",
+        "hidden": "مخفي"
+      },
+      "actions": {
+        "prepend": "إضافة مجموعة في البداية",
+        "append": "إضافة مجموعة في النهاية"
+      }
+    },
+    "fileInput": {
+      "chooseFile": "اختر ملف"
+    },
+    "more": {
+      "global": {
+        "merge": "Global Merge",
+        "script": "Global Script"
+      },
+      "chips": {
+        "merge": "Merge",
+        "script": "Script"
+      }
+    },
+    "item": {
+      "tooltips": {
+        "showLast": "Click to show last update time",
+        "showNext": "Click to show next update"
+      },
+      "status": {
+        "lastUpdateFailed": "Last Update failed",
+        "nextUp": "Next Up",
+        "noSchedule": "No schedule",
+        "unknown": "Unknown",
+        "autoUpdateDisabled": "Auto update disabled"
+      }
+    },
+    "confirm": {
+      "delete": {
+        "title": "تأكيد الحذف",
+        "message": "لا يمكن التراجع عن هذه العملية"
+      }
+    },
+    "editor": {
+      "format": "تنسيق المستند",
+      "readOnlyMessage": "لا يمكن التعديل في محرر القراءة فقط"
+    },
+    "logViewer": {
+      "title": "وحدة التحكم للسكريبت"
+    },
+    "card": {
+      "labels": {
+        "from": "من",
+        "updateTime": "وقت التحديث",
+        "usedTotal": "المستخدم / الإجمالي",
+        "expireTime": "وقت الانتهاء",
+        "clickToImport": "Click to import subscription"
+      }
+    }
+  },
+  "proxies": {
+    "page": {
+      "title": {
+        "default": "مجموعات الوكلاء",
+        "chainMode": "Proxy Chain Mode"
+      },
+      "modes": {
+        "rule": "Rule",
+        "global": "Global",
+        "direct": "Direct"
+      },
+      "actions": {
+        "toggleChain": "🔗 بروكسي السلسلة",
+        "connect": "Connect",
+        "disconnect": "Disconnect",
+        "connecting": "Connecting...",
+        "clearChainConfig": "Delete Chain Config"
+      },
+      "provider": {
+        "title": "مزود الوكيل",
         "actions": {
-          "updateAll": "تحديث جميع الملفات الشخصية",
-          "viewRuntimeConfig": "عرض تكوين وقت التشغيل",
-          "reactivate": "إعادة تنشيط الملفات الشخصية",
-          "import": "استيراد"
-        },
-        "batch": {
-          "title": "Batch Operations",
-          "delete": "Delete Selected Profiles",
-          "selectAll": "Select All",
-          "deselectAll": "Deselect All",
-          "done": "Done",
-          "selected": "Selected",
-          "items": "items"
-        },
-        "import": {
-          "placeholder": "رابط الملف الشخصي",
-          "paste": "لصق",
-          "clear": "مسح"
-        },
-        "errors": {
-          "invalidUrl": "Invalid profile URL. Please enter a URL starting with http:// or https://",
-          "onlyYaml": "لا يتم دعم سوى ملفات YAML"
-        },
-        "notifications": {
-          "importRetry": "Import failed, retrying with Clash proxy...",
-          "importFail": "Import failed even with Clash proxy",
-          "importNeedsRefresh": "Profile imported but may need manual refresh",
-          "importSuccess": "Profile imported successfully, please restart if not visible",
-          "profileSwitched": "تم التبديل إلى الملف الشخصي",
-          "profileReactivated": "تم إعادة تنشيط الملف الشخصي",
-          "switchInterrupted": "Profile switch interrupted by new selection",
-          "batchDeleted": "Selected profiles deleted successfully"
+          "updateAll": "تحديث الكل",
+          "update": "تحديث"
         },
         "notices": {
-          "forceRefreshCompleted": "Force refresh completed",
-          "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
+          "updateSuccess": "{{name}} updated successfully",
+          "updateFailed": "Failed to update {{name}}: {{message}}",
+          "genericError": "Update failed: {{message}}",
+          "none": "No providers available to update",
+          "allUpdated": "All providers updated successfully"
+        }
+      },
+      "rules": {
+        "title": "Proxy Rules",
+        "select": "Select Rules"
+      },
+      "labels": {
+        "proxyCount": "Proxy Count",
+        "delayCheckReset": "فحص التأخير لإلغاء الثابت"
+      },
+      "tooltips": {
+        "locate": "الموقع",
+        "delayCheck": "فحص التأخير",
+        "sortDefault": "الترتيب الافتراضي",
+        "sortDelay": "الترتيب حسب التأخير",
+        "sortName": "الترتيب حسب الاسم",
+        "delayCheckUrl": "رابط فحص التأخير",
+        "showBasic": "إعدادات الوكيل الأساسية",
+        "showDetail": "تفاصيل الوكيل",
+        "filter": "تصفية"
+      },
+      "placeholders": {
+        "filter": "شروط التصفية",
+        "delayCheckUrl": "رابط فحص التأخير"
+      },
+      "chain": {
+        "header": "Chain Proxy Config",
+        "empty": "No proxy chain configured",
+        "instruction": "Click nodes in order to add to proxy chain",
+        "minimumNodes": "Chain proxy requires at least 2 nodes",
+        "minimumNodesHint": "Chain proxy requires at least 2 nodes. Please add one more node.",
+        "connectFailed": "Failed to connect to proxy chain",
+        "disconnectFailed": "Failed to disconnect from proxy chain",
+        "duplicateNode": "Proxy node already exists in chain"
+      },
+      "messages": {
+        "directMode": "الوضع المباشر"
+      }
+    },
+    "enums": {
+      "strategies": {
+        "select": "اختيار الوكيل يدويًا",
+        "url-test": "اختيار الوكيل بناءً على تأخير اختبار الرابط",
+        "fallback": "التبديل إلى وكيل آخر عند حدوث خطأ",
+        "load-balance": "توزيع التحميل بين الوكلاء",
+        "relay": "التمرير عبر سلسلة الوكلاء المحددة"
+      },
+      "policies": {
+        "DIRECT": "البيانات تخرج مباشرة",
+        "REJECT": "رفض الطلبات",
+        "REJECT-DROP": "تجاهل الطلبات",
+        "PASS": "تخطي هذه القاعدة عند المطابقة"
+      }
+    }
+  },
+  "connections": {
+    "page": {
+      "title": "الاتصالات",
+      "summary": {
+        "downloaded": "تم التنزيل",
+        "uploaded": "تم الرفع"
+      },
+      "actions": {
+        "listView": "عرض القائمة",
+        "tableView": "عرض الجدول",
+        "pause": "إيقاف مؤقت",
+        "resume": "استأنف",
+        "closeAll": "إغلاق الكل"
+      }
+    },
+    "fields": {
+      "host": "المضيف",
+      "downloaded": "تم التنزيل",
+      "uploaded": "تم الرفع",
+      "dlSpeed": "سرعة التنزيل",
+      "ulSpeed": "سرعة الرفع",
+      "chains": "السلاسل",
+      "rule": "قاعدة",
+      "process": "عملية",
+      "time": "الوقت",
+      "source": "المصدر",
+      "destination": "عنوان IP الوجهة",
+      "destinationPort": "ميناء الوجهة",
+      "type": "النوع"
+    },
+    "order": {
+      "default": "Default",
+      "uploadSpeed": "سرعة الرفع",
+      "downloadSpeed": "سرعة التنزيل"
+    },
+    "actions": {
+      "closeConnection": "إغلاق الاتصال"
+    }
+  },
+  "tests": {
+    "item": {
+      "actions": {
+        "test": "اختبار"
+      }
+    },
+    "viewer": {
+      "title": {
+        "create": "إنشاء اختبار",
+        "edit": "تعديل الاختبار"
+      },
+      "fields": {
+        "url": "رابط الاختبار"
+      }
+    },
+    "page": {
+      "title": "اختبار",
+      "actions": {
+        "testAll": "اختبار الكل"
+      }
+    },
+    "statuses": {
+      "pending": "Pending",
+      "yes": "Yes",
+      "no": "No",
+      "failed": "Failed",
+      "completed": "Completed",
+      "disallowedIsp": "Disallowed ISP",
+      "originalsOnly": "Originals Only",
+      "noDisney": "No (IP Banned By Disney+)",
+      "unsupportedRegion": "Unsupported Country/Region",
+      "failedNetwork": "Failed (Network Connection)"
+    }
+  },
+  "logs": {
+    "page": {
+      "title": "السجلات",
+      "actions": {
+        "pause": "إيقاف مؤقت",
+        "resume": "استأنف",
+        "clear": "مسح"
+      },
+      "filters": {
+        "all": "ALL",
+        "debug": "DEBUG",
+        "info": "INFO",
+        "warn": "WARN",
+        "error": "ERROR"
+      }
+    }
+  },
+  "rules": {
+    "page": {
+      "title": "القواعد",
+      "provider": {
+        "trigger": "مزود القواعد",
+        "dialogTitle": "مزود القواعد",
+        "actions": {
+          "updateAll": "تحديث الكل",
+          "update": "تحديث"
+        },
+        "notices": {
+          "updateSuccess": "{{name}} updated successfully",
+          "updateFailed": "Failed to update {{name}}: {{message}}",
+          "genericError": "Update failed: {{message}}",
+          "none": "No providers available to update",
+          "allUpdated": "All providers updated successfully"
+        }
+      }
+    },
+    "editor": {
+      "title": "تعديل القواعد",
+      "form": {
+        "labels": {
+          "type": "نوع القاعدة",
+          "content": "محتوى القاعدة",
+          "proxyPolicy": "سياسة الوكيل"
+        },
+        "toggles": {
+          "noResolve": "لا يوجد حل"
+        },
+        "actions": {
+          "prependRule": "إضافة قاعدة في البداية",
+          "appendRule": "إضافة قاعدة في النهاية"
+        },
+        "validation": {
+          "conditionRequired": "شرط القاعدة مطلوب",
+          "invalidRule": "قاعدة غير صالحة"
+        }
+      },
+      "ruleTypes": {
+        "DOMAIN": "مطابقة اسم المجال الكامل",
+        "DOMAIN-SUFFIX": "مطابقة لاحقة المجال",
+        "DOMAIN-KEYWORD": "مطابقة كلمة مفتاحية في المجال",
+        "DOMAIN-REGEX": "مطابقة المجال باستخدام التعبيرات العادية",
+        "GEOSITE": "مطابقة المجالات ضمن Geosite",
+        "GEOIP": "مطابقة رمز البلد لعنوان IP",
+        "SRC-GEOIP": "مطابقة رمز البلد لعنوان IP المصدر",
+        "IP-ASN": "مطابقة ASN لعنوان IP",
+        "SRC-IP-ASN": "مطابقة ASN لعنوان IP المصدر",
+        "IP-CIDR": "مطابقة نطاق عنوان IP",
+        "IP-CIDR6": "مطابقة نطاق عناوين IPv6",
+        "SRC-IP-CIDR": "مطابقة نطاق عنوان IP المصدر",
+        "IP-SUFFIX": "مطابقة لاحقة عنوان IP",
+        "SRC-IP-SUFFIX": "مطابقة لاحقة عنوان IP المصدر",
+        "SRC-PORT": "مطابقة نطاق المنفذ المصدر",
+        "DST-PORT": "مطابقة نطاق المنفذ الوجهة",
+        "IN-PORT": "مطابقة المنفذ الوارد",
+        "DSCP": "علامة DSCP (لـ tproxy على UDP فقط)",
+        "PROCESS-NAME": "مطابقة اسم العملية (اسم حزمة Android)",
+        "PROCESS-PATH": "مطابقة المسار الكامل للعملية",
+        "PROCESS-NAME-REGEX": "مطابقة اسم العملية باستخدام التعبيرات العادية (اسم حزمة Android)",
+        "PROCESS-PATH-REGEX": "مطابقة المسار الكامل للعملية باستخدام التعبيرات العادية",
+        "NETWORK": "مطابقة بروتوكول النقل (TCP/UDP)",
+        "UID": "مطابقة معرف المستخدم في Linux",
+        "IN-TYPE": "مطابقة نوع الإدخال",
+        "IN-USER": "مطابقة اسم المستخدم للإدخال",
+        "IN-NAME": "مطابقة اسم الإدخال",
+        "SUB-RULE": "قاعدة فرعية",
+        "RULE-SET": "مطابقة مجموعة القواعد",
+        "AND": "منطقي AND",
+        "OR": "منطقي OR",
+        "NOT": "منطقي NOT",
+        "MATCH": "مطابقة جميع الطلبات"
+      }
+    }
+  },
+  "home": {
+    "page": {
+      "title": "Home",
+      "tooltips": {
+        "lightweightMode": "وضع الأداء الخفيف",
+        "manual": "دليل",
+        "settings": "Home Settings"
+      },
+      "cards": {
+        "trafficStats": "Traffic Stats",
+        "networkSettings": "Network Settings",
+        "proxyMode": "Proxy Mode"
+      },
+      "settings": {
+        "title": "Home Settings",
+        "cards": {
+          "profile": "Profile Card",
+          "currentProxy": "Current Proxy Card",
+          "network": "Network Settings Card",
+          "proxyMode": "Proxy Mode Card",
+          "traffic": "Traffic Stats Card",
+          "tests": "Website Tests Card",
+          "ip": "IP Information Card",
+          "clashInfo": "Clash Info Cards",
+          "systemInfo": "System Info Cards"
+        }
+      }
+    },
+    "cards": {
+      "proxyTun": {
+        "status": {
+          "systemProxyEnabled": "System proxy is enabled, your applications will access the network through the proxy",
+          "systemProxyDisabled": "System proxy is disabled, it is recommended for most users to turn on this option",
+          "tunModeServiceRequired": "TUN mode requires service mode, please install the service first",
+          "tunModeEnabled": "TUN mode is enabled, applications will access the network through the virtual network card",
+          "tunModeDisabled": "TUN mode is disabled, suitable for special applications"
+        },
+        "tooltips": {
+          "systemProxy": "عند التمكين، سيتم تعديل إعدادات الوكيل في نظام التشغيل. إذا فشل التمكين، فقم بتعديل إعدادات الوكيل في النظام يدويًا.",
+          "tunMode": "TUN mode can take over all application traffic, suitable for special applications that do not follow the system proxy settings"
+        }
+      },
+      "clashInfo": {
+        "title": "Clash Info",
+        "fields": {
+          "coreVersion": "Core Version",
+          "systemProxyAddress": "System Proxy Address",
+          "mixedPort": "Mixed Port",
+          "uptime": "Uptime",
+          "rulesCount": "Rules Count"
+        }
+      },
+      "systemInfo": {
+        "title": "System Info",
+        "fields": {
+          "osInfo": "OS Info",
+          "autoLaunch": "إطلاق تلقائي",
+          "runningMode": "Running Mode",
+          "lastCheckUpdate": "Last Check Update",
+          "vergeVersion": "إصدار Verge"
+        },
+        "actions": {
+          "settings": "الإعدادات"
+        },
+        "tooltips": {
+          "autoLaunchAdmin": "Administrator mode may not support auto launch"
+        },
+        "badges": {
+          "adminMode": "Administrator Mode",
+          "serviceMode": "وضع الخدمة",
+          "sidecarMode": "User Mode",
+          "adminServiceMode": "Admin + Service Mode"
+        }
+      },
+      "ipInfo": {
+        "title": "IP Information",
+        "labels": {
+          "ip": "IP",
+          "asn": "ASN",
+          "isp": "ISP",
+          "org": "ORG",
+          "location": "Location",
+          "timezone": "Timezone",
+          "autoRefresh": "Auto refresh",
+          "unknown": "Unknown"
+        },
+        "errors": {
+          "load": "فشل الحصول على معلومات الـ IP"
+        }
+      },
+      "currentProxy": {
+        "title": "Current Node",
+        "actions": {
+          "refreshDelay": "فحص التأخير"
+        },
+        "labels": {
+          "globalMode": "الوضع العالمي",
+          "directMode": "الوضع المباشر",
+          "group": "Group",
+          "proxy": "Proxy",
+          "noActiveNode": "No active proxy node"
+        }
+      },
+      "tests": {
+        "title": "Website Tests"
+      },
+      "traffic": {
+        "metrics": {
+          "uploadSpeed": "سرعة الرفع",
+          "downloadSpeed": "سرعة التنزيل",
+          "activeConnections": "Active Connections",
+          "uploaded": "تم الرفع",
+          "downloaded": "تم التنزيل",
+          "memoryUsage": "استهلاك الذاكرة"
+        },
+        "legends": {
+          "upload": "Upload",
+          "download": "Download"
+        },
+        "patterns": {
+          "minutes": "{{time}} Minutes"
+        }
+      },
+      "clashMode": {
+        "errors": {
+          "communication": "Core communication error"
+        },
+        "labels": {
+          "rule": "وضع القواعد",
+          "global": "الوضع العالمي",
+          "direct": "الوضع المباشر"
+        },
+        "descriptions": {
+          "rule": "Automatically choose proxies according to the rule set.",
+          "global": "Forward all network requests through the selected proxy.",
+          "direct": "Bypass the proxy and connect to the internet directly."
+        }
+      }
+    }
+  },
+  "unlock": {
+    "page": {
+      "title": "Unlock Test",
+      "actions": {
+        "testing": "Testing..."
+      },
+      "empty": "No unlock test items",
+      "messages": {
+        "detectionTimeout": "Detection timeout or failed"
+      }
+    }
+  },
+  "settings": {
+    "system": {
+      "title": "إعدادات النظام",
+      "toggles": {
+        "tunMode": "وضع TUN",
+        "systemProxy": "وكيل النظام"
+      },
+      "tooltips": {
+        "autoLaunchAdmin": "Administrator mode may not support auto launch",
+        "silentStart": "بدء البرنامج في الخلفية دون عرض الواجهة"
+      },
+      "fields": {
+        "autoLaunch": "تشغيل تلقائي",
+        "silentStart": "تشغيل صامت"
+      },
+      "notifications": {
+        "tunMode": {
+          "autoDisabled": "TUN Mode automatically disabled due to service unavailable",
+          "autoDisableFailed": "Failed to disable TUN Mode automatically"
+        }
+      }
+    },
+    "proxyControl": {
+      "tooltips": {
+        "systemProxy": "عند التمكين، سيتم تعديل إعدادات الوكيل في نظام التشغيل. إذا فشل التمكين، فقم بتعديل إعدادات الوكيل في النظام يدويًا.",
+        "tunMode": "وضع TUN (بطاقة شبكة افتراضية): يلتقط كل حركة المرور في النظام. عند تمكينه، لا حاجة لتفعيل وكيل النظام.",
+        "tunUnavailable": "TUN requires Service Mode or Admin Mode"
+      },
+      "actions": {
+        "installService": "تثبيت الخدمة ",
+        "uninstallService": "Uninstall Service"
+      },
+      "fields": {
+        "systemProxy": "وكيل النظام",
+        "tunMode": "وضع TUN"
+      }
+    },
+    "externalController": {
+      "title": "وحدة التحكم الخارجية",
+      "fields": {
+        "enable": "Enable External Controller",
+        "address": "وحدة التحكم الخارجية",
+        "secret": "المفتاح السري للنواة"
+      },
+      "placeholders": {
+        "address": "Required",
+        "secret": "موصى به"
+      },
+      "tooltips": {
+        "copy": "Copy to clipboard"
+      },
+      "messages": {
+        "addressRequired": "Controller address cannot be empty",
+        "secretRequired": "Secret cannot be empty",
+        "copyFailed": "Failed to copy",
+        "controllerCopied": "Controller address copied to clipboard",
+        "secretCopied": "Secret copied to clipboard"
+      }
+    },
+    "externalCors": {
+      "title": "External Cors Configuration",
+      "fields": {
+        "allowPrivateNetwork": "Allow private network access",
+        "allowedOrigins": "Allowed Origins"
+      },
+      "placeholders": {
+        "origin": "Please enter a valid url"
+      },
+      "actions": {
+        "add": "Add"
+      },
+      "messages": {
+        "alwaysIncluded": "Always included origins: {{urls}}"
+      },
+      "tooltips": {
+        "open": "External Cors Settings"
+      }
+    },
+    "clash": {
+      "title": "إعدادات Clash",
+      "items": {
+        "allowLan": "السماح بالشبكة المحلية",
+        "dnsOverwrite": "DNS Overwrite",
+        "ipv6": "IPv6",
+        "unifiedDelay": "تأخير موحد",
+        "logLevel": "مستوى السجلات",
+        "portConfig": "تكوين المنافذ",
+        "external": "خارجي",
+        "webUI": "واجهة الويب",
+        "clashCore": "نواة Clash",
+        "openUwpTool": "فتح أداة UWP",
+        "updateGeoData": "تحديث البيانات الجغرافية"
+      },
+      "tooltips": {
+        "networkInterface": "واجهة الشبكة",
+        "unifiedDelay": "عند تفعيل التأخير الموحد، سيتم إجراء اختبارين للتأخير لتقليل الفروقات الناتجة عن مفاوضات الاتصال",
+        "logLevel": "This parameter is valid only for kernel log files in the log directory Service folder",
+        "openUwpTool": "منذ نظام ويندوز 8، يتم تقييد تطبيقات UWP من الوصول المباشر إلى المضيف المحلي. هذه الأداة تتيح تجاوز هذا التقييد"
+      },
+      "options": {
+        "logLevel": {
+          "debug": "Debug",
+          "info": "Info",
+          "warning": "Warn",
+          "error": "Error",
+          "silent": "Silent"
+        }
+      },
+      "messages": {
+        "geoDataUpdated": "تم تحديث البيانات الجغرافية"
+      },
+      "port": {
+        "title": "تكوين المنافذ",
+        "fields": {
+          "mixed": "منفذ مختلط",
+          "socks": "منفذ SOCKS",
+          "http": "منفذ HTTP(S)",
+          "redir": "منفذ إعادة التوجيه",
+          "tproxy": "منفذ Tproxy"
+        },
+        "actions": {
+          "random": "منفذ عشوائي"
+        },
+        "messages": {
+          "saved": "Port settings saved",
+          "saveFailed": "Failed to save port settings"
         }
       },
       "notifications": {
-        "importSuccess": "تم استيراد الملف الشخصي بنجاح",
-        "importSubscriptionSuccess": "تم استيراد الاشتراك بنجاح",
-        "importWithClashProxy": "Profile Imported with Clash proxy",
-        "saved": "Saved successfully"
+        "restartSuccess": "تم إعادة تشغيل نواة Clash",
+        "versionUpdated": "تم تحديث إصدار النواة",
+        "changeSuccess": "تم تغيير النواة بنجاح",
+        "changeFailed": "فشل تغيير النواة"
       },
-      "viewer": {
-        "title": {
-          "create": "إنشاء ملف شخصي",
-          "edit": "تعديل الملف الشخصي"
-        },
-        "fields": {
-          "type": "النوع",
-          "name": "الاسم",
-          "description": "الوصف",
-          "subscriptionUrl": "رابط الاشتراك",
-          "httpTimeout": "HTTP Request Timeout",
-          "updateInterval": "فاصل التحديث",
-          "useSystemProxy": "استخدام وكيل النظام",
-          "useClashProxy": "استخدام وكيل Clash",
-          "acceptInvalidCerts": "قبول الشهادات غير الصالحة (خطر)",
-          "allowAutoUpdate": "Allow Auto Update"
+      "status": {
+        "stopping": "Stopping Core...",
+        "restarting": "Restarting Core..."
+      },
+      "service": {
+        "status": {
+          "installing": "جاري تثبيت الخدمة...",
+          "uninstalling": "Uninstalling Service..."
         },
         "notifications": {
-          "creationRetry": "Profile creation failed, retrying with Clash proxy...",
-          "creationSuccess": "Profile creation succeeded with Clash proxy"
+          "installSuccess": "تم تثبيت الخدمة بنجاح",
+          "uninstallSuccess": "تم إلغاء تثبيت الخدمة بنجاح"
         }
       },
-      "menu": {
-        "home": "Home",
-        "select": "اختيار",
-        "editInfo": "تعديل المعلومات",
-        "editFile": "تعديل الملف",
-        "editRules": "تعديل القواعد",
-        "editProxies": "تعديل الوكلاء",
-        "editGroups": "تعديل مجموعات الوكلاء",
-        "extendConfig": "توسيع الإعدادات",
-        "extendScript": "توسيع السكربت",
-        "openFile": "فتح الملف",
-        "update": "تحديث",
-        "updateViaProxy": "Update via proxy"
-      },
-      "proxiesEditor": {
-        "title": "تعديل الوكلاء",
-        "placeholders": {
-          "multiUri": "استخدم أسطرًا جديدة لعدّة عناوين URI (يدعم التشفير Base64)"
-        },
-        "actions": {
-          "prepend": "إضافة وكيل في البداية",
-          "append": "إضافة وكيل في النهاية"
-        }
-      },
-      "groupsEditor": {
-        "title": "تعديل مجموعات الوكلاء",
-        "errors": {
-          "nameRequired": "اسم المجموعة مطلوب",
-          "nameExists": "اسم المجموعة موجود بالفعل"
-        },
-        "fields": {
-          "type": "نوع المجموعة",
-          "name": "اسم المجموعة",
-          "icon": "أيقونة مجموعة الوكلاء",
-          "proxies": "استخدام الوكلاء",
-          "provider": "استخدام المزود",
-          "healthCheckUrl": "رابط فحص الصحة",
-          "expectedStatus": "الحالة المتوقعة",
-          "interval": "الفاصل الزمني",
-          "timeout": "مهلة",
-          "maxFailedTimes": "الحد الأقصى لمحاولات الفشل",
-          "interfaceName": "اسم الواجهة",
-          "routingMark": "علامة التوجيه",
-          "filter": "تصفية",
-          "excludeFilter": "استبعاد المرشح",
-          "excludeType": "استبعاد النوع",
-          "includeAll": "تضمين جميع الوكلاء والمزودين",
-          "includeAllProxies": "تضمين جميع الوكلاء",
-          "includeAllProviders": "تضمين جميع المزودين"
-        },
-        "toggles": {
-          "lazy": "كسول",
-          "disableUdp": "تعطيل UDP",
-          "hidden": "مخفي"
-        },
-        "actions": {
-          "prepend": "إضافة مجموعة في البداية",
-          "append": "إضافة مجموعة في النهاية"
-        }
-      },
-      "fileInput": {
-        "chooseFile": "اختر ملف"
-      },
-      "more": {
-        "global": {
-          "merge": "Global Merge",
-          "script": "Global Script"
-        },
-        "chips": {
-          "merge": "Merge",
-          "script": "Script"
-        }
-      },
-      "item": {
-        "tooltips": {
-          "showLast": "Click to show last update time",
-          "showNext": "Click to show next update"
-        },
-        "status": {
-          "lastUpdateFailed": "Last Update failed",
-          "nextUp": "Next Up",
-          "noSchedule": "No schedule",
-          "unknown": "Unknown",
-          "autoUpdateDisabled": "Auto update disabled"
-        }
-      },
-      "confirm": {
-        "delete": {
-          "title": "تأكيد الحذف",
-          "message": "لا يمكن التراجع عن هذه العملية"
-        }
-      },
-      "editor": {
-        "format": "تنسيق المستند",
-        "readOnlyMessage": "لا يمكن التعديل في محرر القراءة فقط"
-      },
-      "logViewer": {
-        "title": "وحدة التحكم للسكريبت"
-      },
-      "card": {
-        "labels": {
-          "from": "من",
-          "updateTime": "وقت التحديث",
-          "usedTotal": "المستخدم / الإجمالي",
-          "expireTime": "وقت الانتهاء",
-          "clickToImport": "Click to import subscription"
-        }
+      "variants": {
+        "release": "الإصدار المستقر",
+        "alpha": "الإصدار التجريبي"
       }
     },
-    "proxy": {
-      "page": {
-        "title": {
-          "default": "مجموعات الوكلاء",
-          "chainMode": "Proxy Chain Mode"
-        },
-        "modes": {
-          "rule": "Rule",
-          "global": "Global",
-          "direct": "Direct"
-        },
-        "actions": {
-          "toggleChain": "🔗 بروكسي السلسلة",
-          "connect": "Connect",
-          "disconnect": "Disconnect",
-          "connecting": "Connecting...",
-          "clearChainConfig": "Delete Chain Config"
-        },
-        "provider": {
-          "title": "مزود الوكيل",
-          "actions": {
-            "updateAll": "تحديث الكل",
-            "update": "تحديث"
-          },
-          "notices": {
-            "updateSuccess": "{{name}} updated successfully",
-            "updateFailed": "Failed to update {{name}}: {{message}}",
-            "genericError": "Update failed: {{message}}",
-            "none": "No providers available to update",
-            "allUpdated": "All providers updated successfully"
-          }
-        },
-        "rules": {
-          "title": "Proxy Rules",
-          "select": "Select Rules"
-        },
-        "labels": {
-          "proxyCount": "Proxy Count",
-          "delayCheckReset": "فحص التأخير لإلغاء الثابت"
-        },
-        "tooltips": {
-          "locate": "الموقع",
-          "delayCheck": "فحص التأخير",
-          "sortDefault": "الترتيب الافتراضي",
-          "sortDelay": "الترتيب حسب التأخير",
-          "sortName": "الترتيب حسب الاسم",
-          "delayCheckUrl": "رابط فحص التأخير",
-          "showBasic": "إعدادات الوكيل الأساسية",
-          "showDetail": "تفاصيل الوكيل",
-          "filter": "تصفية"
-        },
-        "placeholders": {
-          "filter": "شروط التصفية",
-          "delayCheckUrl": "رابط فحص التأخير"
-        },
-        "chain": {
-          "header": "Chain Proxy Config",
-          "empty": "No proxy chain configured",
-          "instruction": "Click nodes in order to add to proxy chain",
-          "minimumNodes": "Chain proxy requires at least 2 nodes",
-          "minimumNodesHint": "Chain proxy requires at least 2 nodes. Please add one more node.",
-          "connectFailed": "Failed to connect to proxy chain",
-          "disconnectFailed": "Failed to disconnect from proxy chain",
-          "duplicateNode": "Proxy node already exists in chain"
-        },
-        "messages": {
-          "directMode": "الوضع المباشر"
-        }
+    "liteMode": {
+      "title": "LightWeight Mode Settings",
+      "actions": {
+        "enterNow": "Enter LightWeight Mode Now"
       },
-      "enums": {
-        "strategies": {
-          "select": "اختيار الوكيل يدويًا",
-          "url-test": "اختيار الوكيل بناءً على تأخير اختبار الرابط",
-          "fallback": "التبديل إلى وكيل آخر عند حدوث خطأ",
-          "load-balance": "توزيع التحميل بين الوكلاء",
-          "relay": "التمرير عبر سلسلة الوكلاء المحددة"
-        },
-        "policies": {
-          "DIRECT": "البيانات تخرج مباشرة",
-          "REJECT": "رفض الطلبات",
-          "REJECT-DROP": "تجاهل الطلبات",
-          "PASS": "تخطي هذه القاعدة عند المطابقة"
-        }
-      }
-    },
-    "connection": {
-      "page": {
-        "title": "الاتصالات",
-        "summary": {
-          "downloaded": "تم التنزيل",
-          "uploaded": "تم الرفع"
-        },
-        "actions": {
-          "listView": "عرض القائمة",
-          "tableView": "عرض الجدول",
-          "pause": "إيقاف مؤقت",
-          "resume": "استأنف",
-          "closeAll": "إغلاق الكل"
-        }
+      "toggles": {
+        "autoEnter": "Auto Enter LightWeight Mode"
+      },
+      "tooltips": {
+        "autoEnter": "Enable to automatically activate LightWeight Mode after the window is closed for a period of time"
       },
       "fields": {
-        "host": "المضيف",
-        "downloaded": "تم التنزيل",
-        "uploaded": "تم الرفع",
-        "dlSpeed": "سرعة التنزيل",
-        "ulSpeed": "سرعة الرفع",
-        "chains": "السلاسل",
-        "rule": "قاعدة",
-        "process": "عملية",
-        "time": "الوقت",
-        "source": "المصدر",
-        "destination": "عنوان IP الوجهة",
-        "destinationPort": "ميناء الوجهة",
-        "type": "النوع"
+        "delay": "Auto Enter LightWeight Mode Delay"
       },
-      "order": {
-        "default": "Default",
-        "uploadSpeed": "سرعة الرفع",
-        "downloadSpeed": "سرعة التنزيل"
+      "messages": {
+        "autoEnterHint": "When closing the window, LightWeight Mode will be automatically activated after {{n}} minutes"
+      }
+    },
+    "backup": {
+      "title": "إعداد النسخ الاحتياطي",
+      "tabs": {
+        "local": "Local backup",
+        "webdav": "WebDAV backup"
       },
       "actions": {
-        "closeConnection": "إغلاق الاتصال"
+        "selectTarget": "Select backup target",
+        "backup": "نسخ احتياطي",
+        "export": "Export",
+        "exportBackup": "Export Backup",
+        "deleteBackup": "حذف النسخة الاحتياطية",
+        "restore": "استعادة",
+        "restoreBackup": "استعادة النسخة الاحتياطية"
+      },
+      "fields": {
+        "webdavUrl": "عنوان خادم WebDAV",
+        "username": "اسم المستخدم",
+        "password": "كلمة المرور",
+        "info": "Backups are stored locally in the application data directory. Use the list below to restore or delete backups."
+      },
+      "messages": {
+        "webdavUrlRequired": "لا يمكن ترك رابط WebDAV فارغًا",
+        "invalidWebdavUrl": "تنسيق رابط WebDAV غير صالح",
+        "usernameRequired": "لا يمكن ترك اسم المستخدم فارغًا",
+        "passwordRequired": "لا يمكن ترك كلمة المرور فارغة",
+        "webdavConfigSaved": "تم حفظ إعدادات WebDAV بنجاح",
+        "webdavConfigSaveFailed": "فشل حفظ إعدادات WebDAV: {{error}}",
+        "backupCreated": "تم إنشاء النسخة الاحتياطية بنجاح",
+        "backupFailed": "فشل في النسخ الاحتياطي: {{error}}",
+        "localBackupCreated": "Local backup created successfully",
+        "localBackupFailed": "Local backup failed",
+        "restoreSuccess": "تمت الاستعادة بنجاح، سيعاد تشغيل التطبيق خلال ثانية واحدة",
+        "localBackupExported": "Local backup exported successfully",
+        "localBackupExportFailed": "Failed to export local backup",
+        "confirmDelete": "هل تريد بالتأكيد حذف ملف النسخة الاحتياطية هذا؟",
+        "confirmRestore": "هل تريد بالتأكيد استعادة ملف النسخة الاحتياطية هذا؟"
+      },
+      "table": {
+        "filename": "اسم الملف",
+        "backupTime": "وقت النسخ الاحتياطي",
+        "actions": "الإجراءات",
+        "noBackups": "لا توجد نسخ احتياطية متاحة",
+        "rowsPerPage": "Rows per page"
       }
     },
-    "test": {
-      "item": {
-        "actions": {
-          "test": "اختبار"
-        }
-      },
-      "viewer": {
-        "title": {
-          "create": "إنشاء اختبار",
-          "edit": "تعديل الاختبار"
+    "verge": {
+      "basic": {
+        "title": "الإعدادات الأساسية  Verge",
+        "items": {
+          "language": "اللغة",
+          "themeMode": "وضع السمة",
+          "trayClickEvent": "حدث النقر على الأيقونة في شريط المهام",
+          "copyEnvType": "نسخ نوع البيئة",
+          "startPage": "صفحة البدء",
+          "startupScript": "سكريبت بدء التشغيل",
+          "themeSetting": "إعدادات السمة",
+          "layoutSetting": "إعدادات التخطيط",
+          "misc": "متفرقات",
+          "hotkeySetting": "إعدادات الاختصارات"
         },
-        "fields": {
-          "url": "رابط الاختبار"
-        }
-      },
-      "page": {
-        "title": "اختبار",
         "actions": {
-          "testAll": "اختبار الكل"
+          "browse": "استعراض",
+          "clear": "مسح"
+        },
+        "trayOptions": {
+          "showMainWindow": "إظهار النافذة الرئيسية",
+          "showTrayMenu": "Show Tray Menu",
+          "disable": "تعطيل"
         }
       },
-      "statuses": {
-        "pending": "Pending",
-        "yes": "Yes",
-        "no": "No",
-        "failed": "Failed",
-        "completed": "Completed",
-        "disallowedIsp": "Disallowed ISP",
-        "originalsOnly": "Originals Only",
-        "noDisney": "No (IP Banned By Disney+)",
-        "unsupportedRegion": "Unsupported Country/Region",
-        "failedNetwork": "Failed (Network Connection)"
+      "advanced": {
+        "title": "الإعدادات الأساسية  Verge",
+        "items": {
+          "backupSetting": "إعداد النسخ الاحتياطي",
+          "runtimeConfig": "تكوين وقت التشغيل",
+          "openConfDir": "فتح مجلد التكوين",
+          "openCoreDir": "فتح مجلد النواة",
+          "openLogsDir": "فتح مجلد السجلات",
+          "checkUpdates": "التحقق من وجود تحديثات",
+          "openDevTools": "أدوات المطور",
+          "liteModeSettings": "LightWeight Mode Settings",
+          "exit": "خروج",
+          "exportDiagnostics": "Export Diagnostic Info",
+          "vergeVersion": "إصدار Verge"
+        },
+        "tooltips": {
+          "backupInfo": "Support local or WebDAV backup of configuration files",
+          "openConfDir": "إذا عمل البرنامج بشكل غير طبيعي، قم بالنسخ الاحتياطي ثم حذف جميع الملفات في هذا المجلد ثم أعد تشغيل البرنامج",
+          "liteMode": "إيقاف الواجهة الرسومية والإبقاء على تشغيل النواة"
+        },
+        "actions": {
+          "copyVersion": "Copy Version"
+        },
+        "notifications": {
+          "latestVersion": "أنت على أحدث إصدار حاليًا",
+          "versionCopied": "Version copied to clipboard"
+        }
+      },
+      "theme": {
+        "title": "إعدادات السمة",
+        "fields": {
+          "primaryColor": "اللون الأساسي",
+          "secondaryColor": "اللون الثانوي",
+          "primaryText": "النص الأساسي",
+          "secondaryText": "النص الثانوي",
+          "infoColor": "لون المعلومات",
+          "warningColor": "لون التحذير",
+          "errorColor": "لون الخطأ",
+          "successColor": "لون النجاح",
+          "fontFamily": "عائلة الخط",
+          "cssInjection": "حقن CSS"
+        },
+        "actions": {
+          "editCss": "Edit CSS"
+        },
+        "dialogs": {
+          "editCssTitle": "Edit CSS"
+        }
+      },
+      "layout": {
+        "title": "إعدادات التخطيط",
+        "fields": {
+          "preferSystemTitlebar": "Prefer System Titlebar",
+          "trafficGraph": "مخطط حركة المرور",
+          "memoryUsage": "استهلاك الذاكرة",
+          "proxyGroupIcon": "أيقونة مجموعة الوكلاء",
+          "hoverNavigator": "Hover Jump Navigator",
+          "hoverNavigatorDelay": "Hover Jump Navigator Delay",
+          "navIcon": "أيقونة التنقل",
+          "trayIcon": "أيقونة شريط المهام",
+          "showProxyGroupsInline": "Show Proxy Groups Inline",
+          "commonTrayIcon": "أيقونة شريط مهام عامة",
+          "systemProxyTrayIcon": "أيقونة شريط المهام لوكيل النظام",
+          "tunTrayIcon": "أيقونة شريط المهام لـ TUN",
+          "enableTrayIcon": "Enable Tray Icon",
+          "enableTraySpeed": "تفعيل سرعة التراي"
+        },
+        "tooltips": {
+          "hoverNavigator": "Automatically scroll to the corresponding proxy group when hovering over alphabet letters",
+          "hoverNavigatorDelay": "Delay before auto scrolling when hovering, in milliseconds"
+        },
+        "options": {
+          "icon": {
+            "monochrome": "أحادي اللون",
+            "colorful": "ملون",
+            "disable": "تعطيل"
+          }
+        }
       }
     },
-    "theme": {
+    "common": {
+      "notifications": {
+        "copySuccess": "تم النسخ بنجاح",
+        "saveSuccess": "Configuration saved successfully",
+        "saveFailed": "Failed to save configuration"
+      }
+    },
+    "misc": {
+      "title": "متفرقات",
+      "fields": {
+        "appLogLevel": "مستوى سجلات التطبيق",
+        "appLogMaxSize": "App Log Max Size",
+        "appLogMaxCount": "App Log Max Count",
+        "autoCloseConnections": "إغلاق الاتصالات تلقائيًا",
+        "autoCheckUpdate": "فحص التحديث تلقائيًا",
+        "enableBuiltinEnhanced": "تفعيل التحسين المدمج",
+        "proxyLayoutColumns": "أعمدة عرض الوكيل",
+        "autoLogClean": "تنظيف السجلات تلقائيًا",
+        "autoDelayDetection": "اكتشاف التأخير التلقائي",
+        "defaultLatencyTest": "اختبار التأخير الافتراضي",
+        "defaultLatencyTimeout": "مهلة التأخير الافتراضية"
+      },
+      "tooltips": {
+        "autoCloseConnections": "إنهاء الاتصالات القائمة عند تغيير اختيار مجموعة الوكيل أو وضع الوكيل",
+        "enableBuiltinEnhanced": "معالجة توافق ملف التكوين",
+        "autoDelayDetection": "يختبر زمن استجابة العقدة الحالية على نحو دوري في الخلفية",
+        "defaultLatencyTest": "يُستخدم فقط لاختبار طلب HTTP العميل. لن يؤثر على ملف التكوين"
+      },
+      "options": {
+        "proxyLayoutColumns": {
+          "auto": "أعمدة تلقائية"
+        },
+        "autoLogClean": {
+          "never": "عدم التنظيف أبدًا",
+          "retainDays": "الاحتفاظ لمدة {{n}} يومًا"
+        }
+      }
+    },
+    "update": {
+      "title": "New Version v{{version}}",
+      "actions": {
+        "goToRelease": "الانتقال إلى صفحة الإصدارات",
+        "update": "تحديث"
+      },
+      "messages": {
+        "portableError": "الإصدار المحمول لا يدعم التحديث داخل التطبيق. يرجى التنزيل والاستبدال يدويًا",
+        "breakChangeError": "هذا الإصدار هو تحديث رئيسي ولا يدعم التحديث داخل التطبيق. يرجى إلغاء التثبيت وتنزيل الإصدار الجديد وتثبيته يدويًا"
+      }
+    },
+    "sysproxy": {
+      "title": "إعداد وكيل النظام",
+      "fieldsets": {
+        "currentStatus": "الوكيل الحالي للنظام"
+      },
+      "fields": {
+        "enableStatus": "حالة التمكين:",
+        "serverAddr": "عنوان الخادم:",
+        "pacUrl": "رابط PAC:",
+        "proxyHost": "مضيف الوكيل",
+        "usePacMode": "استخدام وضع PAC",
+        "proxyGuard": "حماية الوكيل",
+        "guardDuration": "مدة الحماية",
+        "alwaysUseDefaultBypass": "استخدام التخطي الافتراضي دائمًا",
+        "proxyBypass": "إعدادات تخطي الوكيل:",
+        "bypass": "تخطي:",
+        "pacScriptContent": "محتوى سكريبت PAC"
+      },
+      "tooltips": {
+        "proxyGuard": "عند التمكين، يمنع برامج أخرى من تعديل إعدادات وكيل النظام"
+      },
+      "messages": {
+        "durationTooShort": "لا يمكن أن تقل مدة خادم الوكيل عن ثانية واحدة",
+        "invalidBypass": "تنسيق التخطي غير صالح",
+        "invalidProxyHost": "تنسيق مضيف الوكيل غير صالح"
+      },
+      "actions": {
+        "editPac": "تعديل PAC"
+      }
+    },
+    "tun": {
+      "title": "وضع TUN",
+      "actions": {
+        "reset": "إعادة تعيين إلى الافتراضي"
+      },
+      "fields": {
+        "stack": "مكدس TUN",
+        "device": "Device Name",
+        "autoRoute": "توجيه تلقائي",
+        "strictRoute": "توجيه صارم",
+        "autoDetectInterface": "الكشف التلقائي عن الواجهة",
+        "dnsHijack": "اختطاف DNS",
+        "mtu": "وحدة الإرسال القصوى"
+      },
+      "tooltips": {
+        "dnsHijack": "Please use , to separate multiple DNS servers"
+      },
+      "messages": {
+        "applied": "تم تطبيق الإعدادات"
+      }
+    },
+    "dns": {
+      "dialog": {
+        "title": "DNS Overwrite",
+        "warning": "If you are not familiar with these settings, please do not modify them and keep DNS Overwrite enabled"
+      },
+      "sections": {
+        "general": "DNS Settings",
+        "fallbackFilter": "Fallback Filter Settings",
+        "hosts": "Hosts Settings"
+      },
+      "fields": {
+        "enable": "Enable DNS",
+        "listen": "DNS Listen",
+        "enhancedMode": "Enhanced Mode",
+        "fakeIpRange": "Fake IP Range",
+        "fakeIpFilterMode": "Fake IP Filter Mode",
+        "ipv6": {
+          "label": "IPv6",
+          "description": "Enable IPv6 DNS resolution"
+        },
+        "preferH3": {
+          "label": "Prefer H3",
+          "description": "DNS DOH uses HTTP/3"
+        },
+        "respectRules": {
+          "label": "Respect Rules",
+          "description": "DNS connections follow routing rules"
+        },
+        "useHosts": {
+          "label": "Use Hosts",
+          "description": "Enable to resolve hosts through hosts file"
+        },
+        "useSystemHosts": {
+          "label": "Use System Hosts",
+          "description": "Enable to resolve hosts through system hosts file"
+        },
+        "directPolicy": {
+          "label": "Direct Nameserver Follow Policy",
+          "description": "Whether to follow nameserver policy"
+        },
+        "defaultNameserver": {
+          "label": "Default Nameserver",
+          "description": "Default DNS servers used to resolve DNS servers"
+        },
+        "nameserver": {
+          "label": "Nameserver",
+          "description": "List of DNS servers, comma separated"
+        },
+        "fallback": {
+          "label": "Fallback",
+          "description": "List of fallback DNS servers, comma separated"
+        },
+        "proxy": {
+          "label": "Proxy Server Nameserver",
+          "description": "DNS servers for proxy node domain resolution"
+        },
+        "directNameserver": {
+          "label": "Direct Nameserver",
+          "description": "DNS servers for direct exit domain resolution, supports 'system' keyword, comma separated"
+        },
+        "fakeIpFilter": {
+          "label": "Fake IP Filter",
+          "description": "Domains that skip fake IP resolution, comma separated"
+        },
+        "nameserverPolicy": {
+          "label": "Nameserver Policy",
+          "description": "Domain-specific DNS server, multiple servers separated by semicolons, format: domain=server1;server2"
+        },
+        "geoipFiltering": {
+          "label": "GeoIP Filtering",
+          "description": "Enable GeoIP filtering for fallback"
+        },
+        "geoipCode": "GeoIP Code",
+        "fallbackIpCidr": {
+          "label": "Fallback IP CIDR",
+          "description": "IP CIDRs not using fallback servers, comma separated"
+        },
+        "fallbackDomain": {
+          "label": "Fallback Domain",
+          "description": "Domains using fallback servers, comma separated"
+        },
+        "hosts": {
+          "label": "Hosts",
+          "description": "Custom domain to IP or domain mapping"
+        }
+      },
+      "messages": {
+        "saved": "DNS settings saved",
+        "configError": "DNS configuration error:"
+      },
+      "errors": {
+        "invalid": "Invalid configuration"
+      }
+    },
+    "page": {
+      "title": "الإعدادات",
+      "actions": {
+        "manual": "دليل",
+        "telegram": "قناة تيليجرام",
+        "github": "مستودع Github"
+      }
+    },
+    "webUI": {
+      "actions": {
+        "openUrl": "فتح الرابط"
+      },
+      "title": "واجهة الويب",
+      "messages": {
+        "supportedPlaceholders": "يدعم %host و%port و%secret",
+        "placeholderInstruction": "استبدل المضيف والمنفذ والمفتاح بـ %host و%port و%secret"
+      }
+    },
+    "hotkey": {
+      "toggles": {
+        "enableGlobal": "تمكين مفتاح التشغيل السريع العالمي"
+      },
+      "title": "إعدادات الاختصارات",
+      "functions": {
+        "rule": "وضع القواعد",
+        "global": "الوضع العالمي",
+        "openOrCloseDashboard": "فتح/إغلاق لوحة التحكم",
+        "toggleSystemProxy": "تفعيل/تعطيل وكيل النظام",
+        "toggleTunMode": "تفعيل/تعطيل وضع TUN",
+        "entryLightweightMode": "Entry Lightweight Mode",
+        "direct": "الوضع المباشر"
+      }
+    },
+    "password": {
+      "prompts": {
+        "enterRoot": "يرجى إدخال كلمة مرور الرووت"
+      }
+    },
+    "networkInterface": {
+      "title": "واجهة الشبكة",
+      "fields": {
+        "ipAddress": "عنوان IP",
+        "macAddress": "عنوان MAC"
+      }
+    },
+    "updater": {
+      "notifications": {
+        "withClashProxySuccess": "Update with Clash proxy successfully",
+        "withClashProxyFailed": "Update failed even with Clash proxy"
+      }
+    },
+    "appearance": {
       "light": "Light",
       "dark": "Dark",
       "system": "System"
-    },
-    "log": {
-      "page": {
-        "title": "السجلات",
-        "actions": {
-          "pause": "إيقاف مؤقت",
-          "resume": "استأنف",
-          "clear": "مسح"
-        },
-        "filters": {
-          "all": "ALL",
-          "debug": "DEBUG",
-          "info": "INFO",
-          "warn": "WARN",
-          "error": "ERROR"
-        }
-      }
-    },
-    "navigation": {
-      "tabs": {
-        "home": "Home",
-        "proxies": "الوكلاء",
-        "profiles": "الملفات الشخصية",
-        "connections": "الاتصالات",
-        "rules": "القواعد",
-        "logs": "السجلات",
-        "unlock": "Test",
-        "settings": "الإعدادات"
-      },
-      "menu": {
-        "reorderMode": "Menu reorder mode",
-        "unlock": "Unlock menu order",
-        "lock": "Lock menu order"
-      }
-    },
-    "settings": {
-      "system": {
-        "title": "إعدادات النظام",
-        "toggles": {
-          "tunMode": "وضع TUN",
-          "systemProxy": "وكيل النظام"
-        },
-        "tooltips": {
-          "autoLaunchAdmin": "Administrator mode may not support auto launch",
-          "silentStart": "بدء البرنامج في الخلفية دون عرض الواجهة"
-        },
-        "fields": {
-          "autoLaunch": "تشغيل تلقائي",
-          "silentStart": "تشغيل صامت"
-        },
-        "notifications": {
-          "tunMode": {
-            "autoDisabled": "TUN Mode automatically disabled due to service unavailable",
-            "autoDisableFailed": "Failed to disable TUN Mode automatically"
-          }
-        }
-      },
-      "proxyControl": {
-        "tooltips": {
-          "systemProxy": "عند التمكين، سيتم تعديل إعدادات الوكيل في نظام التشغيل. إذا فشل التمكين، فقم بتعديل إعدادات الوكيل في النظام يدويًا.",
-          "tunMode": "وضع TUN (بطاقة شبكة افتراضية): يلتقط كل حركة المرور في النظام. عند تمكينه، لا حاجة لتفعيل وكيل النظام.",
-          "tunUnavailable": "TUN requires Service Mode or Admin Mode"
-        },
-        "actions": {
-          "installService": "تثبيت الخدمة ",
-          "uninstallService": "Uninstall Service"
-        },
-        "fields": {
-          "systemProxy": "وكيل النظام",
-          "tunMode": "وضع TUN"
-        }
-      },
-      "externalController": {
-        "title": "وحدة التحكم الخارجية",
-        "fields": {
-          "enable": "Enable External Controller",
-          "address": "وحدة التحكم الخارجية",
-          "secret": "المفتاح السري للنواة"
-        },
-        "placeholders": {
-          "address": "Required",
-          "secret": "موصى به"
-        },
-        "tooltips": {
-          "copy": "Copy to clipboard"
-        },
-        "messages": {
-          "addressRequired": "Controller address cannot be empty",
-          "secretRequired": "Secret cannot be empty",
-          "copyFailed": "Failed to copy",
-          "controllerCopied": "Controller address copied to clipboard",
-          "secretCopied": "Secret copied to clipboard"
-        }
-      },
-      "externalCors": {
-        "title": "External Cors Configuration",
-        "fields": {
-          "allowPrivateNetwork": "Allow private network access",
-          "allowedOrigins": "Allowed Origins"
-        },
-        "placeholders": {
-          "origin": "Please enter a valid url"
-        },
-        "actions": {
-          "add": "Add"
-        },
-        "messages": {
-          "alwaysIncluded": "Always included origins: {{urls}}"
-        },
-        "tooltips": {
-          "open": "External Cors Settings"
-        }
-      },
-      "clash": {
-        "title": "إعدادات Clash",
-        "items": {
-          "allowLan": "السماح بالشبكة المحلية",
-          "dnsOverwrite": "DNS Overwrite",
-          "ipv6": "IPv6",
-          "unifiedDelay": "تأخير موحد",
-          "logLevel": "مستوى السجلات",
-          "portConfig": "تكوين المنافذ",
-          "external": "خارجي",
-          "webUI": "واجهة الويب",
-          "clashCore": "نواة Clash",
-          "openUwpTool": "فتح أداة UWP",
-          "updateGeoData": "تحديث البيانات الجغرافية"
-        },
-        "tooltips": {
-          "networkInterface": "واجهة الشبكة",
-          "unifiedDelay": "عند تفعيل التأخير الموحد، سيتم إجراء اختبارين للتأخير لتقليل الفروقات الناتجة عن مفاوضات الاتصال",
-          "logLevel": "This parameter is valid only for kernel log files in the log directory Service folder",
-          "openUwpTool": "منذ نظام ويندوز 8، يتم تقييد تطبيقات UWP من الوصول المباشر إلى المضيف المحلي. هذه الأداة تتيح تجاوز هذا التقييد"
-        },
-        "options": {
-          "logLevel": {
-            "debug": "Debug",
-            "info": "Info",
-            "warning": "Warn",
-            "error": "Error",
-            "silent": "Silent"
-          }
-        },
-        "messages": {
-          "geoDataUpdated": "تم تحديث البيانات الجغرافية"
-        },
-        "port": {
-          "title": "تكوين المنافذ",
-          "fields": {
-            "mixed": "منفذ مختلط",
-            "socks": "منفذ SOCKS",
-            "http": "منفذ HTTP(S)",
-            "redir": "منفذ إعادة التوجيه",
-            "tproxy": "منفذ Tproxy"
-          },
-          "actions": {
-            "random": "منفذ عشوائي"
-          },
-          "messages": {
-            "saved": "Port settings saved",
-            "saveFailed": "Failed to save port settings"
-          }
-        },
-        "notifications": {
-          "restartSuccess": "تم إعادة تشغيل نواة Clash",
-          "versionUpdated": "تم تحديث إصدار النواة",
-          "changeSuccess": "تم تغيير النواة بنجاح",
-          "changeFailed": "فشل تغيير النواة"
-        },
-        "status": {
-          "stopping": "Stopping Core...",
-          "restarting": "Restarting Core..."
-        },
-        "service": {
-          "status": {
-            "installing": "جاري تثبيت الخدمة...",
-            "uninstalling": "Uninstalling Service..."
-          },
-          "notifications": {
-            "installSuccess": "تم تثبيت الخدمة بنجاح",
-            "uninstallSuccess": "تم إلغاء تثبيت الخدمة بنجاح"
-          }
-        },
-        "variants": {
-          "release": "الإصدار المستقر",
-          "alpha": "الإصدار التجريبي"
-        }
-      },
-      "liteMode": {
-        "title": "LightWeight Mode Settings",
-        "actions": {
-          "enterNow": "Enter LightWeight Mode Now"
-        },
-        "toggles": {
-          "autoEnter": "Auto Enter LightWeight Mode"
-        },
-        "tooltips": {
-          "autoEnter": "Enable to automatically activate LightWeight Mode after the window is closed for a period of time"
-        },
-        "fields": {
-          "delay": "Auto Enter LightWeight Mode Delay"
-        },
-        "messages": {
-          "autoEnterHint": "When closing the window, LightWeight Mode will be automatically activated after {{n}} minutes"
-        }
-      },
-      "backup": {
-        "title": "إعداد النسخ الاحتياطي",
-        "tabs": {
-          "local": "Local backup",
-          "webdav": "WebDAV backup"
-        },
-        "actions": {
-          "selectTarget": "Select backup target",
-          "backup": "نسخ احتياطي",
-          "export": "Export",
-          "exportBackup": "Export Backup",
-          "deleteBackup": "حذف النسخة الاحتياطية",
-          "restore": "استعادة",
-          "restoreBackup": "استعادة النسخة الاحتياطية"
-        },
-        "fields": {
-          "webdavUrl": "عنوان خادم WebDAV",
-          "username": "اسم المستخدم",
-          "password": "كلمة المرور",
-          "info": "Backups are stored locally in the application data directory. Use the list below to restore or delete backups."
-        },
-        "messages": {
-          "webdavUrlRequired": "لا يمكن ترك رابط WebDAV فارغًا",
-          "invalidWebdavUrl": "تنسيق رابط WebDAV غير صالح",
-          "usernameRequired": "لا يمكن ترك اسم المستخدم فارغًا",
-          "passwordRequired": "لا يمكن ترك كلمة المرور فارغة",
-          "webdavConfigSaved": "تم حفظ إعدادات WebDAV بنجاح",
-          "webdavConfigSaveFailed": "فشل حفظ إعدادات WebDAV: {{error}}",
-          "backupCreated": "تم إنشاء النسخة الاحتياطية بنجاح",
-          "backupFailed": "فشل في النسخ الاحتياطي: {{error}}",
-          "localBackupCreated": "Local backup created successfully",
-          "localBackupFailed": "Local backup failed",
-          "restoreSuccess": "تمت الاستعادة بنجاح، سيعاد تشغيل التطبيق خلال ثانية واحدة",
-          "localBackupExported": "Local backup exported successfully",
-          "localBackupExportFailed": "Failed to export local backup",
-          "confirmDelete": "هل تريد بالتأكيد حذف ملف النسخة الاحتياطية هذا؟",
-          "confirmRestore": "هل تريد بالتأكيد استعادة ملف النسخة الاحتياطية هذا؟"
-        },
-        "table": {
-          "filename": "اسم الملف",
-          "backupTime": "وقت النسخ الاحتياطي",
-          "actions": "الإجراءات",
-          "noBackups": "لا توجد نسخ احتياطية متاحة",
-          "rowsPerPage": "Rows per page"
-        }
-      },
-      "verge": {
-        "basic": {
-          "title": "الإعدادات الأساسية  Verge",
-          "items": {
-            "language": "اللغة",
-            "themeMode": "وضع السمة",
-            "trayClickEvent": "حدث النقر على الأيقونة في شريط المهام",
-            "copyEnvType": "نسخ نوع البيئة",
-            "startPage": "صفحة البدء",
-            "startupScript": "سكريبت بدء التشغيل",
-            "themeSetting": "إعدادات السمة",
-            "layoutSetting": "إعدادات التخطيط",
-            "misc": "متفرقات",
-            "hotkeySetting": "إعدادات الاختصارات"
-          },
-          "actions": {
-            "browse": "استعراض",
-            "clear": "مسح"
-          },
-          "trayOptions": {
-            "showMainWindow": "إظهار النافذة الرئيسية",
-            "showTrayMenu": "Show Tray Menu",
-            "disable": "تعطيل"
-          }
-        },
-        "advanced": {
-          "title": "الإعدادات الأساسية  Verge",
-          "items": {
-            "backupSetting": "إعداد النسخ الاحتياطي",
-            "runtimeConfig": "تكوين وقت التشغيل",
-            "openConfDir": "فتح مجلد التكوين",
-            "openCoreDir": "فتح مجلد النواة",
-            "openLogsDir": "فتح مجلد السجلات",
-            "checkUpdates": "التحقق من وجود تحديثات",
-            "openDevTools": "أدوات المطور",
-            "liteModeSettings": "LightWeight Mode Settings",
-            "exit": "خروج",
-            "exportDiagnostics": "Export Diagnostic Info",
-            "vergeVersion": "إصدار Verge"
-          },
-          "tooltips": {
-            "backupInfo": "Support local or WebDAV backup of configuration files",
-            "openConfDir": "إذا عمل البرنامج بشكل غير طبيعي، قم بالنسخ الاحتياطي ثم حذف جميع الملفات في هذا المجلد ثم أعد تشغيل البرنامج",
-            "liteMode": "إيقاف الواجهة الرسومية والإبقاء على تشغيل النواة"
-          },
-          "actions": {
-            "copyVersion": "Copy Version"
-          },
-          "notifications": {
-            "latestVersion": "أنت على أحدث إصدار حاليًا",
-            "versionCopied": "Version copied to clipboard"
-          }
-        },
-        "theme": {
-          "title": "إعدادات السمة",
-          "fields": {
-            "primaryColor": "اللون الأساسي",
-            "secondaryColor": "اللون الثانوي",
-            "primaryText": "النص الأساسي",
-            "secondaryText": "النص الثانوي",
-            "infoColor": "لون المعلومات",
-            "warningColor": "لون التحذير",
-            "errorColor": "لون الخطأ",
-            "successColor": "لون النجاح",
-            "fontFamily": "عائلة الخط",
-            "cssInjection": "حقن CSS"
-          },
-          "actions": {
-            "editCss": "Edit CSS"
-          },
-          "dialogs": {
-            "editCssTitle": "Edit CSS"
-          }
-        },
-        "layout": {
-          "title": "إعدادات التخطيط",
-          "fields": {
-            "preferSystemTitlebar": "Prefer System Titlebar",
-            "trafficGraph": "مخطط حركة المرور",
-            "memoryUsage": "استهلاك الذاكرة",
-            "proxyGroupIcon": "أيقونة مجموعة الوكلاء",
-            "hoverNavigator": "Hover Jump Navigator",
-            "hoverNavigatorDelay": "Hover Jump Navigator Delay",
-            "navIcon": "أيقونة التنقل",
-            "trayIcon": "أيقونة شريط المهام",
-            "showProxyGroupsInline": "Show Proxy Groups Inline",
-            "commonTrayIcon": "أيقونة شريط مهام عامة",
-            "systemProxyTrayIcon": "أيقونة شريط المهام لوكيل النظام",
-            "tunTrayIcon": "أيقونة شريط المهام لـ TUN",
-            "enableTrayIcon": "Enable Tray Icon",
-            "enableTraySpeed": "تفعيل سرعة التراي"
-          },
-          "tooltips": {
-            "hoverNavigator": "Automatically scroll to the corresponding proxy group when hovering over alphabet letters",
-            "hoverNavigatorDelay": "Delay before auto scrolling when hovering, in milliseconds"
-          },
-          "options": {
-            "icon": {
-              "monochrome": "أحادي اللون",
-              "colorful": "ملون",
-              "disable": "تعطيل"
-            }
-          }
-        }
-      },
-      "common": {
-        "notifications": {
-          "copySuccess": "تم النسخ بنجاح",
-          "saveSuccess": "Configuration saved successfully",
-          "saveFailed": "Failed to save configuration"
-        }
-      },
-      "misc": {
-        "title": "متفرقات",
-        "fields": {
-          "appLogLevel": "مستوى سجلات التطبيق",
-          "appLogMaxSize": "App Log Max Size",
-          "appLogMaxCount": "App Log Max Count",
-          "autoCloseConnections": "إغلاق الاتصالات تلقائيًا",
-          "autoCheckUpdate": "فحص التحديث تلقائيًا",
-          "enableBuiltinEnhanced": "تفعيل التحسين المدمج",
-          "proxyLayoutColumns": "أعمدة عرض الوكيل",
-          "autoLogClean": "تنظيف السجلات تلقائيًا",
-          "autoDelayDetection": "اكتشاف التأخير التلقائي",
-          "defaultLatencyTest": "اختبار التأخير الافتراضي",
-          "defaultLatencyTimeout": "مهلة التأخير الافتراضية"
-        },
-        "tooltips": {
-          "autoCloseConnections": "إنهاء الاتصالات القائمة عند تغيير اختيار مجموعة الوكيل أو وضع الوكيل",
-          "enableBuiltinEnhanced": "معالجة توافق ملف التكوين",
-          "autoDelayDetection": "يختبر زمن استجابة العقدة الحالية على نحو دوري في الخلفية",
-          "defaultLatencyTest": "يُستخدم فقط لاختبار طلب HTTP العميل. لن يؤثر على ملف التكوين"
-        },
-        "options": {
-          "proxyLayoutColumns": {
-            "auto": "أعمدة تلقائية"
-          },
-          "autoLogClean": {
-            "never": "عدم التنظيف أبدًا",
-            "retainDays": "الاحتفاظ لمدة {{n}} يومًا"
-          }
-        }
-      },
-      "update": {
-        "title": "New Version v{{version}}",
-        "actions": {
-          "goToRelease": "الانتقال إلى صفحة الإصدارات",
-          "update": "تحديث"
-        },
-        "messages": {
-          "portableError": "الإصدار المحمول لا يدعم التحديث داخل التطبيق. يرجى التنزيل والاستبدال يدويًا",
-          "breakChangeError": "هذا الإصدار هو تحديث رئيسي ولا يدعم التحديث داخل التطبيق. يرجى إلغاء التثبيت وتنزيل الإصدار الجديد وتثبيته يدويًا"
-        }
-      },
-      "sysproxy": {
-        "title": "إعداد وكيل النظام",
-        "fieldsets": {
-          "currentStatus": "الوكيل الحالي للنظام"
-        },
-        "fields": {
-          "enableStatus": "حالة التمكين:",
-          "serverAddr": "عنوان الخادم:",
-          "pacUrl": "رابط PAC:",
-          "proxyHost": "مضيف الوكيل",
-          "usePacMode": "استخدام وضع PAC",
-          "proxyGuard": "حماية الوكيل",
-          "guardDuration": "مدة الحماية",
-          "alwaysUseDefaultBypass": "استخدام التخطي الافتراضي دائمًا",
-          "proxyBypass": "إعدادات تخطي الوكيل:",
-          "bypass": "تخطي:",
-          "pacScriptContent": "محتوى سكريبت PAC"
-        },
-        "tooltips": {
-          "proxyGuard": "عند التمكين، يمنع برامج أخرى من تعديل إعدادات وكيل النظام"
-        },
-        "messages": {
-          "durationTooShort": "لا يمكن أن تقل مدة خادم الوكيل عن ثانية واحدة",
-          "invalidBypass": "تنسيق التخطي غير صالح",
-          "invalidProxyHost": "تنسيق مضيف الوكيل غير صالح"
-        },
-        "actions": {
-          "editPac": "تعديل PAC"
-        }
-      },
-      "tun": {
-        "title": "وضع TUN",
-        "actions": {
-          "reset": "إعادة تعيين إلى الافتراضي"
-        },
-        "fields": {
-          "stack": "مكدس TUN",
-          "device": "Device Name",
-          "autoRoute": "توجيه تلقائي",
-          "strictRoute": "توجيه صارم",
-          "autoDetectInterface": "الكشف التلقائي عن الواجهة",
-          "dnsHijack": "اختطاف DNS",
-          "mtu": "وحدة الإرسال القصوى"
-        },
-        "tooltips": {
-          "dnsHijack": "Please use , to separate multiple DNS servers"
-        },
-        "messages": {
-          "applied": "تم تطبيق الإعدادات"
-        }
-      },
-      "dns": {
-        "dialog": {
-          "title": "DNS Overwrite",
-          "warning": "If you are not familiar with these settings, please do not modify them and keep DNS Overwrite enabled"
-        },
-        "sections": {
-          "general": "DNS Settings",
-          "fallbackFilter": "Fallback Filter Settings",
-          "hosts": "Hosts Settings"
-        },
-        "fields": {
-          "enable": "Enable DNS",
-          "listen": "DNS Listen",
-          "enhancedMode": "Enhanced Mode",
-          "fakeIpRange": "Fake IP Range",
-          "fakeIpFilterMode": "Fake IP Filter Mode",
-          "ipv6": {
-            "label": "IPv6",
-            "description": "Enable IPv6 DNS resolution"
-          },
-          "preferH3": {
-            "label": "Prefer H3",
-            "description": "DNS DOH uses HTTP/3"
-          },
-          "respectRules": {
-            "label": "Respect Rules",
-            "description": "DNS connections follow routing rules"
-          },
-          "useHosts": {
-            "label": "Use Hosts",
-            "description": "Enable to resolve hosts through hosts file"
-          },
-          "useSystemHosts": {
-            "label": "Use System Hosts",
-            "description": "Enable to resolve hosts through system hosts file"
-          },
-          "directPolicy": {
-            "label": "Direct Nameserver Follow Policy",
-            "description": "Whether to follow nameserver policy"
-          },
-          "defaultNameserver": {
-            "label": "Default Nameserver",
-            "description": "Default DNS servers used to resolve DNS servers"
-          },
-          "nameserver": {
-            "label": "Nameserver",
-            "description": "List of DNS servers, comma separated"
-          },
-          "fallback": {
-            "label": "Fallback",
-            "description": "List of fallback DNS servers, comma separated"
-          },
-          "proxy": {
-            "label": "Proxy Server Nameserver",
-            "description": "DNS servers for proxy node domain resolution"
-          },
-          "directNameserver": {
-            "label": "Direct Nameserver",
-            "description": "DNS servers for direct exit domain resolution, supports 'system' keyword, comma separated"
-          },
-          "fakeIpFilter": {
-            "label": "Fake IP Filter",
-            "description": "Domains that skip fake IP resolution, comma separated"
-          },
-          "nameserverPolicy": {
-            "label": "Nameserver Policy",
-            "description": "Domain-specific DNS server, multiple servers separated by semicolons, format: domain=server1;server2"
-          },
-          "geoipFiltering": {
-            "label": "GeoIP Filtering",
-            "description": "Enable GeoIP filtering for fallback"
-          },
-          "geoipCode": "GeoIP Code",
-          "fallbackIpCidr": {
-            "label": "Fallback IP CIDR",
-            "description": "IP CIDRs not using fallback servers, comma separated"
-          },
-          "fallbackDomain": {
-            "label": "Fallback Domain",
-            "description": "Domains using fallback servers, comma separated"
-          },
-          "hosts": {
-            "label": "Hosts",
-            "description": "Custom domain to IP or domain mapping"
-          }
-        },
-        "messages": {
-          "saved": "DNS settings saved",
-          "configError": "DNS configuration error:"
-        },
-        "errors": {
-          "invalid": "Invalid configuration"
-        }
-      },
-      "page": {
-        "title": "الإعدادات",
-        "actions": {
-          "manual": "دليل",
-          "telegram": "قناة تيليجرام",
-          "github": "مستودع Github"
-        }
-      },
-      "webUI": {
-        "actions": {
-          "openUrl": "فتح الرابط"
-        },
-        "title": "واجهة الويب",
-        "messages": {
-          "supportedPlaceholders": "يدعم %host و%port و%secret",
-          "placeholderInstruction": "استبدل المضيف والمنفذ والمفتاح بـ %host و%port و%secret"
-        }
-      },
-      "hotkey": {
-        "toggles": {
-          "enableGlobal": "تمكين مفتاح التشغيل السريع العالمي"
-        },
-        "title": "إعدادات الاختصارات",
-        "functions": {
-          "rule": "وضع القواعد",
-          "global": "الوضع العالمي",
-          "openOrCloseDashboard": "فتح/إغلاق لوحة التحكم",
-          "toggleSystemProxy": "تفعيل/تعطيل وكيل النظام",
-          "toggleTunMode": "تفعيل/تعطيل وضع TUN",
-          "entryLightweightMode": "Entry Lightweight Mode",
-          "direct": "الوضع المباشر"
-        }
-      },
-      "password": {
-        "prompts": {
-          "enterRoot": "يرجى إدخال كلمة مرور الرووت"
-        }
-      },
-      "networkInterface": {
-        "title": "واجهة الشبكة",
-        "fields": {
-          "ipAddress": "عنوان IP",
-          "macAddress": "عنوان MAC"
-        }
-      },
-      "updater": {
-        "notifications": {
-          "withClashProxySuccess": "Update with Clash proxy successfully",
-          "withClashProxyFailed": "Update failed even with Clash proxy"
-        }
-      }
-    },
-    "rule": {
-      "page": {
-        "title": "القواعد",
-        "provider": {
-          "trigger": "مزود القواعد",
-          "dialogTitle": "مزود القواعد",
-          "actions": {
-            "updateAll": "تحديث الكل",
-            "update": "تحديث"
-          },
-          "notices": {
-            "updateSuccess": "{{name}} updated successfully",
-            "updateFailed": "Failed to update {{name}}: {{message}}",
-            "genericError": "Update failed: {{message}}",
-            "none": "No providers available to update",
-            "allUpdated": "All providers updated successfully"
-          }
-        }
-      },
-      "editor": {
-        "title": "تعديل القواعد",
-        "form": {
-          "labels": {
-            "type": "نوع القاعدة",
-            "content": "محتوى القاعدة",
-            "proxyPolicy": "سياسة الوكيل"
-          },
-          "toggles": {
-            "noResolve": "لا يوجد حل"
-          },
-          "actions": {
-            "prependRule": "إضافة قاعدة في البداية",
-            "appendRule": "إضافة قاعدة في النهاية"
-          },
-          "validation": {
-            "conditionRequired": "شرط القاعدة مطلوب",
-            "invalidRule": "قاعدة غير صالحة"
-          }
-        },
-        "ruleTypes": {
-          "DOMAIN": "مطابقة اسم المجال الكامل",
-          "DOMAIN-SUFFIX": "مطابقة لاحقة المجال",
-          "DOMAIN-KEYWORD": "مطابقة كلمة مفتاحية في المجال",
-          "DOMAIN-REGEX": "مطابقة المجال باستخدام التعبيرات العادية",
-          "GEOSITE": "مطابقة المجالات ضمن Geosite",
-          "GEOIP": "مطابقة رمز البلد لعنوان IP",
-          "SRC-GEOIP": "مطابقة رمز البلد لعنوان IP المصدر",
-          "IP-ASN": "مطابقة ASN لعنوان IP",
-          "SRC-IP-ASN": "مطابقة ASN لعنوان IP المصدر",
-          "IP-CIDR": "مطابقة نطاق عنوان IP",
-          "IP-CIDR6": "مطابقة نطاق عناوين IPv6",
-          "SRC-IP-CIDR": "مطابقة نطاق عنوان IP المصدر",
-          "IP-SUFFIX": "مطابقة لاحقة عنوان IP",
-          "SRC-IP-SUFFIX": "مطابقة لاحقة عنوان IP المصدر",
-          "SRC-PORT": "مطابقة نطاق المنفذ المصدر",
-          "DST-PORT": "مطابقة نطاق المنفذ الوجهة",
-          "IN-PORT": "مطابقة المنفذ الوارد",
-          "DSCP": "علامة DSCP (لـ tproxy على UDP فقط)",
-          "PROCESS-NAME": "مطابقة اسم العملية (اسم حزمة Android)",
-          "PROCESS-PATH": "مطابقة المسار الكامل للعملية",
-          "PROCESS-NAME-REGEX": "مطابقة اسم العملية باستخدام التعبيرات العادية (اسم حزمة Android)",
-          "PROCESS-PATH-REGEX": "مطابقة المسار الكامل للعملية باستخدام التعبيرات العادية",
-          "NETWORK": "مطابقة بروتوكول النقل (TCP/UDP)",
-          "UID": "مطابقة معرف المستخدم في Linux",
-          "IN-TYPE": "مطابقة نوع الإدخال",
-          "IN-USER": "مطابقة اسم المستخدم للإدخال",
-          "IN-NAME": "مطابقة اسم الإدخال",
-          "SUB-RULE": "قاعدة فرعية",
-          "RULE-SET": "مطابقة مجموعة القواعد",
-          "AND": "منطقي AND",
-          "OR": "منطقي OR",
-          "NOT": "منطقي NOT",
-          "MATCH": "مطابقة جميع الطلبات"
-        }
-      }
-    },
-    "home": {
-      "page": {
-        "title": "Home",
-        "tooltips": {
-          "lightweightMode": "وضع الأداء الخفيف",
-          "manual": "دليل",
-          "settings": "Home Settings"
-        },
-        "cards": {
-          "trafficStats": "Traffic Stats",
-          "networkSettings": "Network Settings",
-          "proxyMode": "Proxy Mode"
-        },
-        "settings": {
-          "title": "Home Settings",
-          "cards": {
-            "profile": "Profile Card",
-            "currentProxy": "Current Proxy Card",
-            "network": "Network Settings Card",
-            "proxyMode": "Proxy Mode Card",
-            "traffic": "Traffic Stats Card",
-            "tests": "Website Tests Card",
-            "ip": "IP Information Card",
-            "clashInfo": "Clash Info Cards",
-            "systemInfo": "System Info Cards"
-          }
-        }
-      },
-      "cards": {
-        "proxyTun": {
-          "status": {
-            "systemProxyEnabled": "System proxy is enabled, your applications will access the network through the proxy",
-            "systemProxyDisabled": "System proxy is disabled, it is recommended for most users to turn on this option",
-            "tunModeServiceRequired": "TUN mode requires service mode, please install the service first",
-            "tunModeEnabled": "TUN mode is enabled, applications will access the network through the virtual network card",
-            "tunModeDisabled": "TUN mode is disabled, suitable for special applications"
-          },
-          "tooltips": {
-            "systemProxy": "عند التمكين، سيتم تعديل إعدادات الوكيل في نظام التشغيل. إذا فشل التمكين، فقم بتعديل إعدادات الوكيل في النظام يدويًا.",
-            "tunMode": "TUN mode can take over all application traffic, suitable for special applications that do not follow the system proxy settings"
-          }
-        },
-        "clashInfo": {
-          "title": "Clash Info",
-          "fields": {
-            "coreVersion": "Core Version",
-            "systemProxyAddress": "System Proxy Address",
-            "mixedPort": "Mixed Port",
-            "uptime": "Uptime",
-            "rulesCount": "Rules Count"
-          }
-        },
-        "systemInfo": {
-          "title": "System Info",
-          "fields": {
-            "osInfo": "OS Info",
-            "autoLaunch": "إطلاق تلقائي",
-            "runningMode": "Running Mode",
-            "lastCheckUpdate": "Last Check Update",
-            "vergeVersion": "إصدار Verge"
-          },
-          "actions": {
-            "settings": "الإعدادات"
-          },
-          "tooltips": {
-            "autoLaunchAdmin": "Administrator mode may not support auto launch"
-          },
-          "badges": {
-            "adminMode": "Administrator Mode",
-            "serviceMode": "وضع الخدمة",
-            "sidecarMode": "User Mode",
-            "adminServiceMode": "Admin + Service Mode"
-          }
-        },
-        "ipInfo": {
-          "title": "IP Information",
-          "labels": {
-            "ip": "IP",
-            "asn": "ASN",
-            "isp": "ISP",
-            "org": "ORG",
-            "location": "Location",
-            "timezone": "Timezone",
-            "autoRefresh": "Auto refresh",
-            "unknown": "Unknown"
-          },
-          "errors": {
-            "load": "فشل الحصول على معلومات الـ IP"
-          }
-        },
-        "currentProxy": {
-          "title": "Current Node",
-          "actions": {
-            "refreshDelay": "فحص التأخير"
-          },
-          "labels": {
-            "globalMode": "الوضع العالمي",
-            "directMode": "الوضع المباشر",
-            "group": "Group",
-            "proxy": "Proxy",
-            "noActiveNode": "No active proxy node"
-          }
-        },
-        "tests": {
-          "title": "Website Tests"
-        },
-        "traffic": {
-          "metrics": {
-            "uploadSpeed": "سرعة الرفع",
-            "downloadSpeed": "سرعة التنزيل",
-            "activeConnections": "Active Connections",
-            "uploaded": "تم الرفع",
-            "downloaded": "تم التنزيل",
-            "memoryUsage": "استهلاك الذاكرة"
-          },
-          "legends": {
-            "upload": "Upload",
-            "download": "Download"
-          },
-          "patterns": {
-            "minutes": "{{time}} Minutes"
-          }
-        },
-        "clashMode": {
-          "errors": {
-            "communication": "Core communication error"
-          },
-          "labels": {
-            "rule": "وضع القواعد",
-            "global": "الوضع العالمي",
-            "direct": "الوضع المباشر"
-          },
-          "descriptions": {
-            "rule": "Automatically choose proxies according to the rule set.",
-            "global": "Forward all network requests through the selected proxy.",
-            "direct": "Bypass the proxy and connect to the internet directly."
-          }
-        }
-      }
-    },
-    "unlock": {
-      "page": {
-        "title": "Unlock Test",
-        "actions": {
-          "testing": "Testing..."
-        },
-        "empty": "No unlock test items",
-        "messages": {
-          "detectionTimeout": "Detection timeout or failed"
-        }
-      }
     },
     "validation": {
       "config": {
@@ -1270,6 +1251,25 @@
         "mappingError": "Merge file mapping error, changes reverted",
         "keyError": "Merge file key error, changes reverted",
         "generalError": "Merge file error, changes reverted"
+      }
+    }
+  },
+  "layout": {
+    "navigation": {
+      "tabs": {
+        "home": "Home",
+        "proxies": "الوكلاء",
+        "profiles": "الملفات الشخصية",
+        "connections": "الاتصالات",
+        "rules": "القواعد",
+        "logs": "السجلات",
+        "unlock": "Test",
+        "settings": "الإعدادات"
+      },
+      "menu": {
+        "reorderMode": "Menu reorder mode",
+        "unlock": "Unlock menu order",
+        "lock": "Lock menu order"
       }
     }
   }

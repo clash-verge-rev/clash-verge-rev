@@ -58,12 +58,12 @@ export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
 
   const onUpdate = useLockFn(async () => {
     if (portableFlag) {
-      showNotice.error("entities.settings.update.messages.portableError");
+      showNotice.error("settings.update.messages.portableError");
       return;
     }
     if (!updateInfo?.body) return;
     if (breakChangeFlag) {
-      showNotice.error("entities.settings.update.messages.breakChangeError");
+      showNotice.error("settings.update.messages.breakChangeError");
       return;
     }
     if (updateState) return;
@@ -113,7 +113,7 @@ export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
       open={open}
       title={
         <Box display="flex" justifyContent="space-between">
-          {t("entities.settings.update.title", {
+          {t("settings.update.title", {
             version: updateInfo?.version ?? "",
           })}
           <Box>
@@ -126,13 +126,13 @@ export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
                 );
               }}
             >
-              {t("entities.settings.update.actions.goToRelease")}
+              {t("settings.update.actions.goToRelease")}
             </Button>
           </Box>
         </Box>
       }
       contentSx={{ minWidth: 360, maxWidth: 400, height: "50vh" }}
-      okBtn={t("entities.settings.update.actions.update")}
+      okBtn={t("settings.update.actions.update")}
       cancelBtn={t("shared.actions.cancel")}
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}

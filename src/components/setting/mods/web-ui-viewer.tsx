@@ -101,7 +101,7 @@ export function WebUIViewer({ ref }: { ref?: Ref<DialogRef> }) {
       open={open}
       title={
         <Box display="flex" justifyContent="space-between">
-          {t("entities.settings.webUI.title")}
+          {t("settings.webUI.title")}
           <Button
             variant="contained"
             size="small"
@@ -128,7 +128,7 @@ export function WebUIViewer({ ref }: { ref?: Ref<DialogRef> }) {
         <BaseEmpty
           extra={
             <Typography mt={2} sx={{ fontSize: "12px" }}>
-              {t("entities.settings.webUI.messages.placeholderInstruction")}
+              {t("settings.webUI.messages.placeholderInstruction")}
             </Typography>
           }
         />

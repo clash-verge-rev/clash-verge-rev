@@ -12,9 +12,7 @@ export const handleNoticeMessage = (
   const handlers: Record<string, () => void> = {
     "import_sub_url::ok": () => {
       navigate("/profile", { state: { current: msg } });
-      showNotice.success(
-        "entities.profile.notifications.importSubscriptionSuccess",
-      );
+      showNotice.success("profiles.notifications.importSubscriptionSuccess");
     },
     "import_sub_url::error": () => {
       navigate("/profile");
@@ -23,61 +21,55 @@ export const handleNoticeMessage = (
     "set_config::error": () => showNotice.error(msg),
     update_with_clash_proxy: () =>
       showNotice.success(
-        "entities.settings.updater.notifications.withClashProxySuccess",
+        "settings.updater.notifications.withClashProxySuccess",
         msg,
       ),
     update_failed_even_with_clash: () =>
       showNotice.error(
-        "entities.settings.updater.notifications.withClashProxyFailed",
+        "settings.updater.notifications.withClashProxyFailed",
         msg,
       ),
     update_failed: () => showNotice.error(msg),
     "config_validate::boot_error": () =>
-      showNotice.error("entities.validation.config.bootFailed", msg),
+      showNotice.error("settings.validation.config.bootFailed", msg),
     "config_validate::core_change": () =>
-      showNotice.error("entities.validation.config.coreChangeFailed", msg),
+      showNotice.error("settings.validation.config.coreChangeFailed", msg),
     "config_validate::error": () =>
-      showNotice.error("entities.validation.config.failed", msg),
+      showNotice.error("settings.validation.config.failed", msg),
     "config_validate::process_terminated": () =>
-      showNotice.error("entities.validation.config.processTerminated"),
+      showNotice.error("settings.validation.config.processTerminated"),
     "config_validate::stdout_error": () =>
-      showNotice.error("entities.validation.config.failed", msg),
+      showNotice.error("settings.validation.config.failed", msg),
     "config_validate::script_error": () =>
-      showNotice.error("entities.validation.script.fileError", msg),
+      showNotice.error("settings.validation.script.fileError", msg),
     "config_validate::script_syntax_error": () =>
-      showNotice.error("entities.validation.script.syntaxError", msg),
+      showNotice.error("settings.validation.script.syntaxError", msg),
     "config_validate::script_missing_main": () =>
-      showNotice.error("entities.validation.script.missingMain", msg),
+      showNotice.error("settings.validation.script.missingMain", msg),
     "config_validate::file_not_found": () =>
-      showNotice.error("entities.validation.script.fileNotFound", msg),
+      showNotice.error("settings.validation.script.fileNotFound", msg),
     "config_validate::yaml_syntax_error": () =>
-      showNotice.error("entities.validation.yaml.syntaxError", msg),
+      showNotice.error("settings.validation.yaml.syntaxError", msg),
     "config_validate::yaml_read_error": () =>
-      showNotice.error("entities.validation.yaml.readError", msg),
+      showNotice.error("settings.validation.yaml.readError", msg),
     "config_validate::yaml_mapping_error": () =>
-      showNotice.error("entities.validation.yaml.mappingError", msg),
+      showNotice.error("settings.validation.yaml.mappingError", msg),
     "config_validate::yaml_key_error": () =>
-      showNotice.error("entities.validation.yaml.keyError", msg),
+      showNotice.error("settings.validation.yaml.keyError", msg),
     "config_validate::yaml_error": () =>
-      showNotice.error("entities.validation.yaml.generalError", msg),
+      showNotice.error("settings.validation.yaml.generalError", msg),
     "config_validate::merge_syntax_error": () =>
-      showNotice.error("entities.validation.merge.syntaxError", msg),
+      showNotice.error("settings.validation.merge.syntaxError", msg),
     "config_validate::merge_mapping_error": () =>
-      showNotice.error("entities.validation.merge.mappingError", msg),
+      showNotice.error("settings.validation.merge.mappingError", msg),
     "config_validate::merge_key_error": () =>
-      showNotice.error("entities.validation.merge.keyError", msg),
+      showNotice.error("settings.validation.merge.keyError", msg),
     "config_validate::merge_error": () =>
-      showNotice.error("entities.validation.merge.generalError", msg),
+      showNotice.error("settings.validation.merge.generalError", msg),
     "config_core::change_success": () =>
-      showNotice.success(
-        "entities.settings.clash.notifications.changeSuccess",
-        msg,
-      ),
+      showNotice.success("settings.clash.notifications.changeSuccess", msg),
     "config_core::change_error": () =>
-      showNotice.error(
-        "entities.settings.clash.notifications.changeFailed",
-        msg,
-      ),
+      showNotice.error("settings.clash.notifications.changeFailed", msg),
   };
 
   const handler = handlers[status];

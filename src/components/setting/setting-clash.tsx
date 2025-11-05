@@ -67,7 +67,7 @@ const SettingClash = ({ onError }: Props) => {
   const onUpdateGeo = async () => {
     try {
       await updateGeo();
-      showNotice.success("entities.settings.clash.messages.geoDataUpdated");
+      showNotice.success("settings.clash.messages.geoDataUpdated");
     } catch (err: any) {
       showNotice.error(err);
     }
@@ -93,7 +93,7 @@ const SettingClash = ({ onError }: Props) => {
   });
 
   return (
-    <SettingList title={t("entities.settings.clash.title")}>
+    <SettingList title={t("settings.clash.title")}>
       <WebUIViewer ref={webRef} />
       <ClashPortViewer ref={portRef} />
       <ControllerViewer ref={ctrlRef} />
@@ -103,10 +103,10 @@ const SettingClash = ({ onError }: Props) => {
       <HeaderConfiguration ref={corsRef} />
 
       <SettingItem
-        label={t("entities.settings.clash.items.allowLan")}
+        label={t("settings.clash.items.allowLan")}
         extra={
           <TooltipIcon
-            title={t("entities.settings.clash.tooltips.networkInterface")}
+            title={t("settings.clash.tooltips.networkInterface")}
             color={"inherit"}
             icon={LanRounded}
             onClick={() => {
@@ -128,7 +128,7 @@ const SettingClash = ({ onError }: Props) => {
       </SettingItem>
 
       <SettingItem
-        label={t("entities.settings.clash.items.dnsOverwrite")}
+        label={t("settings.clash.items.dnsOverwrite")}
         extra={
           <TooltipIcon
             icon={SettingsRounded}
@@ -143,7 +143,7 @@ const SettingClash = ({ onError }: Props) => {
         />
       </SettingItem>
 
-      <SettingItem label={t("entities.settings.clash.items.ipv6")}>
+      <SettingItem label={t("settings.clash.items.ipv6")}>
         <GuardState
           value={ipv6 ?? false}
           valueProps="checked"
@@ -157,10 +157,10 @@ const SettingClash = ({ onError }: Props) => {
       </SettingItem>
 
       <SettingItem
-        label={t("entities.settings.clash.items.unifiedDelay")}
+        label={t("settings.clash.items.unifiedDelay")}
         extra={
           <TooltipIcon
-            title={t("entities.settings.clash.tooltips.unifiedDelay")}
+            title={t("settings.clash.tooltips.unifiedDelay")}
             sx={{ opacity: "0.7" }}
           />
         }
@@ -178,10 +178,10 @@ const SettingClash = ({ onError }: Props) => {
       </SettingItem>
 
       <SettingItem
-        label={t("entities.settings.clash.items.logLevel")}
+        label={t("settings.clash.items.logLevel")}
         extra={
           <TooltipIcon
-            title={t("entities.settings.clash.tooltips.logLevel")}
+            title={t("settings.clash.tooltips.logLevel")}
             sx={{ opacity: "0.7" }}
           />
         }
@@ -198,25 +198,25 @@ const SettingClash = ({ onError }: Props) => {
         >
           <Select size="small" sx={{ width: 100, "> div": { py: "7.5px" } }}>
             <MenuItem value="debug">
-              {t("entities.settings.clash.options.logLevel.debug")}
+              {t("settings.clash.options.logLevel.debug")}
             </MenuItem>
             <MenuItem value="info">
-              {t("entities.settings.clash.options.logLevel.info")}
+              {t("settings.clash.options.logLevel.info")}
             </MenuItem>
             <MenuItem value="warning">
-              {t("entities.settings.clash.options.logLevel.warning")}
+              {t("settings.clash.options.logLevel.warning")}
             </MenuItem>
             <MenuItem value="error">
-              {t("entities.settings.clash.options.logLevel.error")}
+              {t("settings.clash.options.logLevel.error")}
             </MenuItem>
             <MenuItem value="silent">
-              {t("entities.settings.clash.options.logLevel.silent")}
+              {t("settings.clash.options.logLevel.silent")}
             </MenuItem>
           </Select>
         </GuardState>
       </SettingItem>
 
-      <SettingItem label={t("entities.settings.clash.items.portConfig")}>
+      <SettingItem label={t("settings.clash.items.portConfig")}>
         <TextField
           autoComplete="new-password"
           disabled={false}
@@ -231,10 +231,10 @@ const SettingClash = ({ onError }: Props) => {
       </SettingItem>
 
       <SettingItem
-        label={t("entities.settings.clash.items.external")}
+        label={t("settings.clash.items.external")}
         extra={
           <TooltipIcon
-            title={t("entities.settings.externalCors.tooltips.open")}
+            title={t("settings.externalCors.tooltips.open")}
             icon={SettingsRounded}
             onClick={(e) => {
               e.stopPropagation();
@@ -249,11 +249,11 @@ const SettingClash = ({ onError }: Props) => {
 
       <SettingItem
         onClick={() => webRef.current?.open()}
-        label={t("entities.settings.clash.items.webUI")}
+        label={t("settings.clash.items.webUI")}
       />
 
       <SettingItem
-        label={t("entities.settings.clash.items.clashCore")}
+        label={t("settings.clash.items.clashCore")}
         extra={
           <TooltipIcon
             icon={SettingsRounded}
@@ -267,10 +267,10 @@ const SettingClash = ({ onError }: Props) => {
       {isWIN && (
         <SettingItem
           onClick={invoke_uwp_tool}
-          label={t("entities.settings.clash.items.openUwpTool")}
+          label={t("settings.clash.items.openUwpTool")}
           extra={
             <TooltipIcon
-              title={t("entities.settings.clash.tooltips.openUwpTool")}
+              title={t("settings.clash.tooltips.openUwpTool")}
               sx={{ opacity: "0.7" }}
             />
           }
@@ -279,7 +279,7 @@ const SettingClash = ({ onError }: Props) => {
 
       <SettingItem
         onClick={onUpdateGeo}
-        label={t("entities.settings.clash.items.updateGeoData")}
+        label={t("settings.clash.items.updateGeoData")}
       />
     </SettingList>
   );

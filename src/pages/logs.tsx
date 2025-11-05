@@ -60,7 +60,7 @@ const LogPage = () => {
   return (
     <BasePage
       full
-      title={t("entities.log.page.title")}
+      title={t("logs.page.title")}
       contentStyle={{
         height: "100%",
         display: "flex",
@@ -72,13 +72,13 @@ const LogPage = () => {
           <IconButton
             title={t(
               enableLog
-                ? "entities.log.page.actions.pause"
-                : "entities.log.page.actions.resume",
+                ? "logs.page.actions.pause"
+                : "logs.page.actions.resume",
             )}
             aria-label={t(
               enableLog
-                ? "entities.log.page.actions.pause"
-                : "entities.log.page.actions.resume",
+                ? "logs.page.actions.pause"
+                : "logs.page.actions.resume",
             )}
             size="small"
             color="inherit"
@@ -98,7 +98,7 @@ const LogPage = () => {
               refreshGetClashLog(true);
             }}
           >
-            {t("entities.log.page.actions.clear")}
+            {t("logs.page.actions.clear")}
           </Button>
         </Box>
       }
@@ -117,19 +117,11 @@ const LogPage = () => {
           value={logState}
           onChange={(e) => handleLogLevelChange(e.target.value as LogFilter)}
         >
-          <MenuItem value="all">{t("entities.log.page.filters.all")}</MenuItem>
-          <MenuItem value="debug">
-            {t("entities.log.page.filters.debug")}
-          </MenuItem>
-          <MenuItem value="info">
-            {t("entities.log.page.filters.info")}
-          </MenuItem>
-          <MenuItem value="warn">
-            {t("entities.log.page.filters.warn")}
-          </MenuItem>
-          <MenuItem value="err">
-            {t("entities.log.page.filters.error")}
-          </MenuItem>
+          <MenuItem value="all">{t("logs.page.filters.all")}</MenuItem>
+          <MenuItem value="debug">{t("logs.page.filters.debug")}</MenuItem>
+          <MenuItem value="info">{t("logs.page.filters.info")}</MenuItem>
+          <MenuItem value="warn">{t("logs.page.filters.warn")}</MenuItem>
+          <MenuItem value="err">{t("logs.page.filters.error")}</MenuItem>
         </BaseStyledSelect>
         <BaseSearchBox
           onSearch={(matcher, state) => {

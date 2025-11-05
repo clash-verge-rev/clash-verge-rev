@@ -74,17 +74,17 @@ interface Props {
 const builtinProxyPolicies = ["DIRECT", "REJECT", "REJECT-DROP", "PASS"];
 
 const PROXY_STRATEGY_LABEL_KEYS: Record<string, string> = {
-  select: "entities.proxy.enums.strategies.select",
-  "url-test": "entities.proxy.enums.strategies.url-test",
-  fallback: "entities.proxy.enums.strategies.fallback",
-  "load-balance": "entities.proxy.enums.strategies.load-balance",
-  relay: "entities.proxy.enums.strategies.relay",
+  select: "proxies.enums.strategies.select",
+  "url-test": "proxies.enums.strategies.url-test",
+  fallback: "proxies.enums.strategies.fallback",
+  "load-balance": "proxies.enums.strategies.load-balance",
+  relay: "proxies.enums.strategies.relay",
 };
 
 const PROXY_POLICY_LABEL_KEYS: Record<string, string> =
   builtinProxyPolicies.reduce(
     (acc, policy) => {
-      acc[policy] = `entities.proxy.enums.policies.${policy}`;
+      acc[policy] = `proxies.enums.policies.${policy}`;
       return acc;
     },
     {} as Record<string, string>,
@@ -400,7 +400,7 @@ export const GroupsEditorViewer = (props: Props) => {
   const validateGroup = () => {
     const group = formIns.getValues();
     if (group.name === "") {
-      throw new Error(t("entities.profile.groupsEditor.errors.nameRequired"));
+      throw new Error(t("profiles.groupsEditor.errors.nameRequired"));
     }
   };
 
@@ -415,7 +415,7 @@ export const GroupsEditorViewer = (props: Props) => {
       }
 
       await saveProfileFile(property, nextData);
-      showNotice.success("entities.profile.notifications.saved");
+      showNotice.success("profiles.notifications.saved");
       setPrevData(nextData);
       onSave?.(prevData, nextData);
       onClose();
@@ -429,7 +429,7 @@ export const GroupsEditorViewer = (props: Props) => {
       <DialogTitle>
         {
           <Box display="flex" justifyContent="space-between">
-            {t("entities.profile.groupsEditor.title")}
+            {t("profiles.groupsEditor.title")}
             <Box>
               <Button
                 variant="contained"
@@ -470,7 +470,7 @@ export const GroupsEditorViewer = (props: Props) => {
                   render={({ field }) => (
                     <Item>
                       <ListItemText
-                        primary={t("entities.profile.groupsEditor.fields.type")}
+                        primary={t("profiles.groupsEditor.fields.type")}
                       />
                       <Autocomplete
                         size="small"
@@ -501,7 +501,7 @@ export const GroupsEditorViewer = (props: Props) => {
                   render={({ field }) => (
                     <Item>
                       <ListItemText
-                        primary={t("entities.profile.groupsEditor.fields.name")}
+                        primary={t("profiles.groupsEditor.fields.name")}
                       />
                       <TextField
                         autoComplete="new-password"
@@ -520,7 +520,7 @@ export const GroupsEditorViewer = (props: Props) => {
                   render={({ field }) => (
                     <Item>
                       <ListItemText
-                        primary={t("entities.profile.groupsEditor.fields.icon")}
+                        primary={t("profiles.groupsEditor.fields.icon")}
                       />
                       <TextField
                         autoComplete="new-password"
@@ -537,9 +537,7 @@ export const GroupsEditorViewer = (props: Props) => {
                   render={({ field }) => (
                     <Item>
                       <ListItemText
-                        primary={t(
-                          "entities.profile.groupsEditor.fields.proxies",
-                        )}
+                        primary={t("profiles.groupsEditor.fields.proxies")}
                       />
                       <Autocomplete
                         size="small"
@@ -567,9 +565,7 @@ export const GroupsEditorViewer = (props: Props) => {
                   render={({ field }) => (
                     <Item>
                       <ListItemText
-                        primary={t(
-                          "entities.profile.groupsEditor.fields.provider",
-                        )}
+                        primary={t("profiles.groupsEditor.fields.provider")}
                       />
                       <Autocomplete
                         size="small"
@@ -590,7 +586,7 @@ export const GroupsEditorViewer = (props: Props) => {
                     <Item>
                       <ListItemText
                         primary={t(
-                          "entities.profile.groupsEditor.fields.healthCheckUrl",
+                          "profiles.groupsEditor.fields.healthCheckUrl",
                         )}
                       />
                       <TextField
@@ -610,7 +606,7 @@ export const GroupsEditorViewer = (props: Props) => {
                     <Item>
                       <ListItemText
                         primary={t(
-                          "entities.profile.groupsEditor.fields.expectedStatus",
+                          "profiles.groupsEditor.fields.expectedStatus",
                         )}
                       />
                       <TextField
@@ -631,9 +627,7 @@ export const GroupsEditorViewer = (props: Props) => {
                   render={({ field }) => (
                     <Item>
                       <ListItemText
-                        primary={t(
-                          "entities.profile.groupsEditor.fields.interval",
-                        )}
+                        primary={t("profiles.groupsEditor.fields.interval")}
                       />
                       <TextField
                         autoComplete="new-password"
@@ -663,9 +657,7 @@ export const GroupsEditorViewer = (props: Props) => {
                   render={({ field }) => (
                     <Item>
                       <ListItemText
-                        primary={t(
-                          "entities.profile.groupsEditor.fields.timeout",
-                        )}
+                        primary={t("profiles.groupsEditor.fields.timeout")}
                       />
                       <TextField
                         autoComplete="new-password"
@@ -696,7 +688,7 @@ export const GroupsEditorViewer = (props: Props) => {
                     <Item>
                       <ListItemText
                         primary={t(
-                          "entities.profile.groupsEditor.fields.maxFailedTimes",
+                          "profiles.groupsEditor.fields.maxFailedTimes",
                         )}
                       />
                       <TextField
@@ -719,7 +711,7 @@ export const GroupsEditorViewer = (props: Props) => {
                     <Item>
                       <ListItemText
                         primary={t(
-                          "entities.profile.groupsEditor.fields.interfaceName",
+                          "profiles.groupsEditor.fields.interfaceName",
                         )}
                       />
                       <Autocomplete
@@ -739,9 +731,7 @@ export const GroupsEditorViewer = (props: Props) => {
                   render={({ field }) => (
                     <Item>
                       <ListItemText
-                        primary={t(
-                          "entities.profile.groupsEditor.fields.routingMark",
-                        )}
+                        primary={t("profiles.groupsEditor.fields.routingMark")}
                       />
                       <TextField
                         autoComplete="new-password"
@@ -761,9 +751,7 @@ export const GroupsEditorViewer = (props: Props) => {
                   render={({ field }) => (
                     <Item>
                       <ListItemText
-                        primary={t(
-                          "entities.profile.groupsEditor.fields.filter",
-                        )}
+                        primary={t("profiles.groupsEditor.fields.filter")}
                       />
                       <TextField
                         autoComplete="new-password"
@@ -781,7 +769,7 @@ export const GroupsEditorViewer = (props: Props) => {
                     <Item>
                       <ListItemText
                         primary={t(
-                          "entities.profile.groupsEditor.fields.excludeFilter",
+                          "profiles.groupsEditor.fields.excludeFilter",
                         )}
                       />
                       <TextField
@@ -799,9 +787,7 @@ export const GroupsEditorViewer = (props: Props) => {
                   render={({ field }) => (
                     <Item>
                       <ListItemText
-                        primary={t(
-                          "entities.profile.groupsEditor.fields.excludeType",
-                        )}
+                        primary={t("profiles.groupsEditor.fields.excludeType")}
                       />
                       <Autocomplete
                         multiple
@@ -849,9 +835,7 @@ export const GroupsEditorViewer = (props: Props) => {
                   render={({ field }) => (
                     <Item>
                       <ListItemText
-                        primary={t(
-                          "entities.profile.groupsEditor.fields.includeAll",
-                        )}
+                        primary={t("profiles.groupsEditor.fields.includeAll")}
                       />
                       <Switch checked={field.value} {...field} />
                     </Item>
@@ -864,7 +848,7 @@ export const GroupsEditorViewer = (props: Props) => {
                     <Item>
                       <ListItemText
                         primary={t(
-                          "entities.profile.groupsEditor.fields.includeAllProxies",
+                          "profiles.groupsEditor.fields.includeAllProxies",
                         )}
                       />
                       <Switch checked={field.value} {...field} />
@@ -878,7 +862,7 @@ export const GroupsEditorViewer = (props: Props) => {
                     <Item>
                       <ListItemText
                         primary={t(
-                          "entities.profile.groupsEditor.fields.includeAllProviders",
+                          "profiles.groupsEditor.fields.includeAllProviders",
                         )}
                       />
                       <Switch checked={field.value} {...field} />
@@ -891,9 +875,7 @@ export const GroupsEditorViewer = (props: Props) => {
                   render={({ field }) => (
                     <Item>
                       <ListItemText
-                        primary={t(
-                          "entities.profile.groupsEditor.toggles.lazy",
-                        )}
+                        primary={t("profiles.groupsEditor.toggles.lazy")}
                       />
                       <Switch checked={field.value} {...field} />
                     </Item>
@@ -905,9 +887,7 @@ export const GroupsEditorViewer = (props: Props) => {
                   render={({ field }) => (
                     <Item>
                       <ListItemText
-                        primary={t(
-                          "entities.profile.groupsEditor.toggles.disableUdp",
-                        )}
+                        primary={t("profiles.groupsEditor.toggles.disableUdp")}
                       />
                       <Switch checked={field.value} {...field} />
                     </Item>
@@ -919,9 +899,7 @@ export const GroupsEditorViewer = (props: Props) => {
                   render={({ field }) => (
                     <Item>
                       <ListItemText
-                        primary={t(
-                          "entities.profile.groupsEditor.toggles.hidden",
-                        )}
+                        primary={t("profiles.groupsEditor.toggles.hidden")}
                       />
                       <Switch checked={field.value} {...field} />
                     </Item>
@@ -939,9 +917,7 @@ export const GroupsEditorViewer = (props: Props) => {
                       for (const item of [...prependSeq, ...groupList]) {
                         if (item.name === formIns.getValues().name) {
                           throw new Error(
-                            t(
-                              "entities.profile.groupsEditor.errors.nameExists",
-                            ),
+                            t("profiles.groupsEditor.errors.nameExists"),
                           );
                         }
                       }
@@ -951,7 +927,7 @@ export const GroupsEditorViewer = (props: Props) => {
                     }
                   }}
                 >
-                  {t("entities.profile.groupsEditor.actions.prepend")}
+                  {t("profiles.groupsEditor.actions.prepend")}
                 </Button>
               </Item>
               <Item>
@@ -965,9 +941,7 @@ export const GroupsEditorViewer = (props: Props) => {
                       for (const item of [...appendSeq, ...groupList]) {
                         if (item.name === formIns.getValues().name) {
                           throw new Error(
-                            t(
-                              "entities.profile.groupsEditor.errors.nameExists",
-                            ),
+                            t("profiles.groupsEditor.errors.nameExists"),
                           );
                         }
                       }
@@ -977,7 +951,7 @@ export const GroupsEditorViewer = (props: Props) => {
                     }
                   }}
                 >
-                  {t("entities.profile.groupsEditor.actions.append")}
+                  {t("profiles.groupsEditor.actions.append")}
                 </Button>
               </Item>
             </List>

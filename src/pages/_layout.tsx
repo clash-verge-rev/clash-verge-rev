@@ -437,7 +437,7 @@ const Layout = () => {
                         : theme.palette.warning.dark,
                   })}
                 >
-                  {t("entities.navigation.menu.reorderMode")}
+                  {t("layout.navigation.menu.reorderMode")}
                 </Box>
               )}
 
@@ -515,8 +515,8 @@ const Layout = () => {
                   dense
                 >
                   {menuUnlocked
-                    ? t("entities.navigation.menu.lock")
-                    : t("entities.navigation.menu.unlock")}
+                    ? t("layout.navigation.menu.lock")
+                    : t("layout.navigation.menu.unlock")}
                 </MenuItem>
               </Menu>
 

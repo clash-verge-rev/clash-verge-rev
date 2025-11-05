@@ -162,13 +162,13 @@ export const ConnectionTable = (props: Props) => {
     return [
       {
         field: "host",
-        headerName: t("entities.connection.fields.host"),
+        headerName: t("connections.fields.host"),
         width: columnWidths["host"] || 220,
         minWidth: 180,
       },
       {
         field: "download",
-        headerName: t("entities.connection.fields.downloaded"),
+        headerName: t("connections.fields.downloaded"),
         width: columnWidths["download"] || 88,
         align: "right",
         headerAlign: "right",
@@ -176,7 +176,7 @@ export const ConnectionTable = (props: Props) => {
       },
       {
         field: "upload",
-        headerName: t("entities.connection.fields.uploaded"),
+        headerName: t("connections.fields.uploaded"),
         width: columnWidths["upload"] || 88,
         align: "right",
         headerAlign: "right",
@@ -184,7 +184,7 @@ export const ConnectionTable = (props: Props) => {
       },
       {
         field: "dlSpeed",
-        headerName: t("entities.connection.fields.dlSpeed"),
+        headerName: t("connections.fields.dlSpeed"),
         width: columnWidths["dlSpeed"] || 88,
         align: "right",
         headerAlign: "right",
@@ -192,7 +192,7 @@ export const ConnectionTable = (props: Props) => {
       },
       {
         field: "ulSpeed",
-        headerName: t("entities.connection.fields.ulSpeed"),
+        headerName: t("connections.fields.ulSpeed"),
         width: columnWidths["ulSpeed"] || 88,
         align: "right",
         headerAlign: "right",
@@ -200,25 +200,25 @@ export const ConnectionTable = (props: Props) => {
       },
       {
         field: "chains",
-        headerName: t("entities.connection.fields.chains"),
+        headerName: t("connections.fields.chains"),
         width: columnWidths["chains"] || 340,
         minWidth: 180,
       },
       {
         field: "rule",
-        headerName: t("entities.connection.fields.rule"),
+        headerName: t("connections.fields.rule"),
         width: columnWidths["rule"] || 280,
         minWidth: 180,
       },
       {
         field: "process",
-        headerName: t("entities.connection.fields.process"),
+        headerName: t("connections.fields.process"),
         width: columnWidths["process"] || 220,
         minWidth: 180,
       },
       {
         field: "time",
-        headerName: t("entities.connection.fields.time"),
+        headerName: t("connections.fields.time"),
         width: columnWidths["time"] || 120,
         minWidth: 100,
         align: "right",
@@ -229,19 +229,19 @@ export const ConnectionTable = (props: Props) => {
       },
       {
         field: "source",
-        headerName: t("entities.connection.fields.source"),
+        headerName: t("connections.fields.source"),
         width: columnWidths["source"] || 200,
         minWidth: 130,
       },
       {
         field: "remoteDestination",
-        headerName: t("entities.connection.fields.destination"),
+        headerName: t("connections.fields.destination"),
         width: columnWidths["remoteDestination"] || 200,
         minWidth: 130,
       },
       {
         field: "type",
-        headerName: t("entities.connection.fields.type"),
+        headerName: t("connections.fields.type"),
         width: columnWidths["type"] || 160,
         minWidth: 100,
       },

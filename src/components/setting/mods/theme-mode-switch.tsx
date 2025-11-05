@@ -23,7 +23,7 @@ export const ThemeModeSwitch = (props: Props) => {
           onClick={() => onChange?.(mode)}
           sx={{ textTransform: "capitalize" }}
         >
-          {t(`entities.theme.${mode}`)}
+          {t(`settings.appearance.${mode}`)}
         </Button>
       ))}
     </ButtonGroup>

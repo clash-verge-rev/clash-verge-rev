@@ -38,16 +38,16 @@ const UNLOCK_RESULTS_STORAGE_KEY = "clash_verge_unlock_results";
 const UNLOCK_RESULTS_TIME_KEY = "clash_verge_unlock_time";
 
 const STATUS_LABEL_KEYS: Record<string, string> = {
-  Pending: "entities.test.statuses.pending",
-  Yes: "entities.test.statuses.yes",
-  No: "entities.test.statuses.no",
-  Failed: "entities.test.statuses.failed",
-  Completed: "entities.test.statuses.completed",
-  "Disallowed ISP": "entities.test.statuses.disallowedIsp",
-  "Originals Only": "entities.test.statuses.originalsOnly",
-  "No (IP Banned By Disney+)": "entities.test.statuses.noDisney",
-  "Unsupported Country/Region": "entities.test.statuses.unsupportedRegion",
-  "Failed (Network Connection)": "entities.test.statuses.failedNetwork",
+  Pending: "tests.statuses.pending",
+  Yes: "tests.statuses.yes",
+  No: "tests.statuses.no",
+  Failed: "tests.statuses.failed",
+  Completed: "tests.statuses.completed",
+  "Disallowed ISP": "tests.statuses.disallowedIsp",
+  "Originals Only": "tests.statuses.originalsOnly",
+  "No (IP Banned By Disney+)": "tests.statuses.noDisney",
+  "Unsupported Country/Region": "tests.statuses.unsupportedRegion",
+  "Failed (Network Connection)": "tests.statuses.failedNetwork",
 };
 
 const UnlockPage = () => {
@@ -163,10 +163,7 @@ const UnlockPage = () => {
       invoke<T>(cmd, args),
       new Promise<T>((_, reject) =>
         setTimeout(
-          () =>
-            reject(
-              new Error(t("entities.unlock.page.messages.detectionTimeout")),
-            ),
+          () => reject(new Error(t("unlock.page.messages.detectionTimeout"))),
           timeout,
         ),
       ),
@@ -266,7 +263,7 @@ const UnlockPage = () => {
 
   return (
     <BasePage
-      title={t("entities.unlock.page.title")}
+      title={t("unlock.page.title")}
       header={
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <Button
@@ -283,8 +280,8 @@ const UnlockPage = () => {
             }
           >
             {isCheckingAll
-              ? t("entities.unlock.page.actions.testing")
-              : t("entities.test.page.actions.testAll")}
+              ? t("unlock.page.actions.testing")
+              : t("tests.page.actions.testAll")}
           </Button>
         </Box>
       }
@@ -298,7 +295,7 @@ const UnlockPage = () => {
             height: "50%",
           }}
         >
-          <BaseEmpty textKey="entities.unlock.page.empty" />
+          <BaseEmpty textKey="unlock.page.empty" />
         </Box>
       ) : (
         <Grid container spacing={1.5} columns={{ xs: 1, sm: 2, md: 3 }}>
@@ -340,7 +337,7 @@ const UnlockPage = () => {
                     >
                       {item.name}
                     </Typography>
-                    <Tooltip title={t("entities.test.item.actions.test")}>
+                    <Tooltip title={t("tests.item.actions.test")}>
                       <span>
                         <Button
                           size="small"

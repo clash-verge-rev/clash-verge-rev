@@ -27,12 +27,12 @@ const VALID_CORE = [
   {
     name: "Mihomo",
     core: "verge-mihomo",
-    chipKey: "entities.settings.clash.variants.release",
+    chipKey: "settings.clash.variants.release",
   },
   {
     name: "Mihomo Alpha",
     core: "verge-mihomo-alpha",
-    chipKey: "entities.settings.clash.variants.alpha",
+    chipKey: "settings.clash.variants.alpha",
   },
 ];
 
@@ -83,9 +83,7 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
     try {
       setRestarting(true);
       await restartCore();
-      showNotice.success(
-        t("entities.settings.clash.notifications.restartSuccess"),
-      );
+      showNotice.success(t("settings.clash.notifications.restartSuccess"));
       setRestarting(false);
     } catch (err) {
       setRestarting(false);
@@ -98,9 +96,7 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
       setUpgrading(true);
       await upgradeCore();
       setUpgrading(false);
-      showNotice.success(
-        t("entities.settings.clash.notifications.versionUpdated"),
-      );
+      showNotice.success(t("settings.clash.notifications.versionUpdated"));
     } catch (err: any) {
       setUpgrading(false);
       const errMsg = err?.response?.data?.message ?? String(err);
@@ -116,7 +112,7 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
       open={open}
       title={
         <Box display="flex" justifyContent="space-between">
-          {t("entities.settings.clash.items.clashCore")}
+          {t("settings.clash.items.clashCore")}
           <Box>
             <LoadingButton
               variant="contained"

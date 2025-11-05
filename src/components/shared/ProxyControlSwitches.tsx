@@ -132,7 +132,7 @@ const ProxyControlSwitches = ({
 
   const handleTunToggle = async (value: boolean) => {
     if (!isTunModeAvailable) {
-      const msgKey = "entities.settings.proxyControl.tooltips.tunUnavailable";
+      const msgKey = "settings.proxyControl.tooltips.tunUnavailable";
       showErrorNotice(msgKey);
       throw new Error(t(msgKey));
     }
@@ -162,16 +162,16 @@ const ProxyControlSwitches = ({
   });
 
   const isSystemProxyMode =
-    label === t("entities.settings.system.toggles.systemProxy") || !label;
-  const isTunMode = label === t("entities.settings.system.toggles.tunMode");
+    label === t("settings.system.toggles.systemProxy") || !label;
+  const isTunMode = label === t("settings.system.toggles.tunMode");
 
   return (
     <Box sx={{ width: "100%", pr: noRightPadding ? 1 : 2 }}>
       {isSystemProxyMode && (
         <SwitchRow
-          label={t("entities.settings.proxyControl.fields.systemProxy")}
+          label={t("settings.proxyControl.fields.systemProxy")}
           active={systemProxyActualState}
-          infoTitle={t("entities.settings.proxyControl.tooltips.systemProxy")}
+          infoTitle={t("settings.proxyControl.tooltips.systemProxy")}
           onInfoClick={() => sysproxyRef.current?.open()}
           onToggle={(value) => toggleSystemProxy(value)}
           onError={onError}
@@ -181,9 +181,9 @@ const ProxyControlSwitches = ({
 
       {isTunMode && (
         <SwitchRow
-          label={t("entities.settings.proxyControl.fields.tunMode")}
+          label={t("settings.proxyControl.fields.tunMode")}
           active={enable_tun_mode || false}
-          infoTitle={t("entities.settings.proxyControl.tooltips.tunMode")}
+          infoTitle={t("settings.proxyControl.tooltips.tunMode")}
           onInfoClick={() => tunRef.current?.open()}
           onToggle={handleTunToggle}
           onError={onError}
@@ -194,16 +194,12 @@ const ProxyControlSwitches = ({
               {!isTunModeAvailable && (
                 <>
                   <TooltipIcon
-                    title={t(
-                      "entities.settings.proxyControl.tooltips.tunUnavailable",
-                    )}
+                    title={t("settings.proxyControl.tooltips.tunUnavailable")}
                     icon={WarningRounded}
                     sx={{ color: "warning.main", ml: 1 }}
                   />
                   <TooltipIcon
-                    title={t(
-                      "entities.settings.proxyControl.actions.installService",
-                    )}
+                    title={t("settings.proxyControl.actions.installService")}
                     icon={BuildRounded}
                     color="primary"
                     onClick={onInstallService}
@@ -213,9 +209,7 @@ const ProxyControlSwitches = ({
               )}
               {isServiceOk && (
                 <TooltipIcon
-                  title={t(
-                    "entities.settings.proxyControl.actions.uninstallService",
-                  )}
+                  title={t("settings.proxyControl.actions.uninstallService")}
                   icon={DeleteForeverRounded}
                   color="secondary"
                   onClick={onUninstallService}

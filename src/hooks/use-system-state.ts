@@ -65,14 +65,12 @@ export function useSystemState() {
       disablingTunMode = true;
       patchVerge({ enable_tun_mode: false })
         .then(() => {
-          showNotice.info(
-            "entities.settings.system.notifications.tunMode.autoDisabled",
-          );
+          showNotice.info("settings.system.notifications.tunMode.autoDisabled");
         })
         .catch((err) => {
           console.error("[useVerge] 自动关闭TUN模式失败:", err);
           showNotice.error(
-            "entities.settings.system.notifications.tunMode.autoDisableFailed",
+            "settings.system.notifications.tunMode.autoDisableFailed",
           );
         })
         .finally(() => {

@@ -277,11 +277,11 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
 
   const onSave = useLockFn(async () => {
     if (value.duration < 1) {
-      showNotice.error("entities.settings.sysproxy.messages.durationTooShort");
+      showNotice.error("settings.sysproxy.messages.durationTooShort");
       return;
     }
     if (value.bypass && !validReg.test(value.bypass)) {
-      showNotice.error("entities.settings.sysproxy.messages.invalidBypass");
+      showNotice.error("settings.sysproxy.messages.invalidBypass");
       return;
     }
 
@@ -298,7 +298,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
       !ipv6Regex.test(value.proxy_host) &&
       !hostnameRegex.test(value.proxy_host)
     ) {
-      showNotice.error("entities.settings.sysproxy.messages.invalidProxyHost");
+      showNotice.error("settings.sysproxy.messages.invalidProxyHost");
       return;
     }
 
@@ -410,7 +410,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
   return (
     <BaseDialog
       open={open}
-      title={t("entities.settings.sysproxy.title")}
+      title={t("settings.sysproxy.title")}
       contentSx={{ width: 450, maxHeight: 565 }}
       okBtn={t("shared.actions.save")}
       cancelBtn={t("shared.actions.cancel")}
@@ -422,12 +422,12 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
     >
       <List>
         <BaseFieldset
-          label={t("entities.settings.sysproxy.fieldsets.currentStatus")}
+          label={t("settings.sysproxy.fieldsets.currentStatus")}
           padding="15px 10px"
         >
           <FlexBox>
             <Typography className="label">
-              {t("entities.settings.sysproxy.fields.enableStatus")}
+              {t("settings.sysproxy.fields.enableStatus")}
             </Typography>
             <Typography className="value">
               {value.pac
@@ -442,7 +442,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
           {!value.pac && (
             <FlexBox>
               <Typography className="label">
-                {t("entities.settings.sysproxy.fields.serverAddr")}
+                {t("settings.sysproxy.fields.serverAddr")}
               </Typography>
               <Typography className="value">{getSystemProxyAddress}</Typography>
             </FlexBox>
@@ -450,7 +450,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
           {value.pac && (
             <FlexBox>
               <Typography className="label">
-                {t("entities.settings.sysproxy.fields.pacUrl")}
+                {t("settings.sysproxy.fields.pacUrl")}
               </Typography>
               <Typography className="value">
                 {getCurrentPacUrl || "-"}
@@ -459,9 +459,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
           )}
         </BaseFieldset>
         <ListItem sx={{ padding: "5px 2px" }}>
-          <ListItemText
-            primary={t("entities.settings.sysproxy.fields.proxyHost")}
-          />
+          <ListItemText primary={t("settings.sysproxy.fields.proxyHost")} />
           <Autocomplete
             size="small"
             sx={{ width: 150 }}
@@ -486,9 +484,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
           />
         </ListItem>
         <ListItem sx={{ padding: "5px 2px" }}>
-          <ListItemText
-            primary={t("entities.settings.sysproxy.fields.usePacMode")}
-          />
+          <ListItemText primary={t("settings.sysproxy.fields.usePacMode")} />
           <Switch
             edge="end"
             disabled={!enabled}
@@ -499,11 +495,11 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
 
         <ListItem sx={{ padding: "5px 2px" }}>
           <ListItemText
-            primary={t("entities.settings.sysproxy.fields.proxyGuard")}
+            primary={t("settings.sysproxy.fields.proxyGuard")}
             sx={{ maxWidth: "fit-content" }}
           />
           <TooltipIcon
-            title={t("entities.settings.sysproxy.tooltips.proxyGuard")}
+            title={t("settings.sysproxy.tooltips.proxyGuard")}
             sx={{ opacity: "0.7" }}
           />
           <Switch
@@ -516,9 +512,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
         </ListItem>
 
         <ListItem sx={{ padding: "5px 2px" }}>
-          <ListItemText
-            primary={t("entities.settings.sysproxy.fields.guardDuration")}
-          />
+          <ListItemText primary={t("settings.sysproxy.fields.guardDuration")} />
           <TextField
             disabled={!enabled}
             size="small"
@@ -540,9 +534,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
         {!value.pac && (
           <ListItem sx={{ padding: "5px 2px" }}>
             <ListItemText
-              primary={t(
-                "entities.settings.sysproxy.fields.alwaysUseDefaultBypass",
-              )}
+              primary={t("settings.sysproxy.fields.alwaysUseDefaultBypass")}
             />
             <Switch
               edge="end"
@@ -562,9 +554,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
 
         {!value.pac && !value.use_default && (
           <>
-            <ListItemText
-              primary={t("entities.settings.sysproxy.fields.proxyBypass")}
-            />
+            <ListItemText primary={t("settings.sysproxy.fields.proxyBypass")} />
             <TextField
               error={value.bypass ? !validReg.test(value.bypass) : false}
               disabled={!enabled}
@@ -582,9 +572,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
 
         {!value.pac && value.use_default && (
           <>
-            <ListItemText
-              primary={t("entities.settings.sysproxy.fields.bypass")}
-            />
+            <ListItemText primary={t("settings.sysproxy.fields.bypass")} />
             <FlexBox>
               <TextField
                 disabled={true}
@@ -601,7 +589,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
         {value.pac && (
           <ListItem sx={{ padding: "5px 2px", alignItems: "start" }}>
             <ListItemText
-              primary={t("entities.settings.sysproxy.fields.pacScriptContent")}
+              primary={t("settings.sysproxy.fields.pacScriptContent")}
               sx={{ padding: "3px 0" }}
             />
             <Button
@@ -611,12 +599,12 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
                 setEditorOpen(true);
               }}
             >
-              {t("entities.settings.sysproxy.actions.editPac")}
+              {t("settings.sysproxy.actions.editPac")}
             </Button>
             {editorOpen && (
               <EditorViewer
                 open={true}
-                title={t("entities.settings.sysproxy.actions.editPac")}
+                title={t("settings.sysproxy.actions.editPac")}
                 initialData={Promise.resolve(value.pac_content ?? "")}
                 language="javascript"
                 onSave={(_prev, curr) => {

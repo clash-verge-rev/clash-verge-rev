@@ -66,19 +66,19 @@ The locale files now follow a two-namespace layout designed to mirror the React/
 
 - **`shared.*`** — cross-cutting vocabulary (buttons, statuses, validation hints, window chrome, etc.).
   - Buckets to prefer: `actions`, `labels`, `statuses`, `messages`, `placeholders`, `units`, `validation`, `window`, `editorModes`.
-  - Add to `shared` only when the copy is used (or is expected to be reused) by two or more features. Otherwise keep it in the owning feature under `entities`.
-- **`entities.<feature>.*`** — route-level or domain-level strings scoped to a single feature.
-  - Top-level nodes generally match folders under `src/pages`, `src/components`, or service domains (`settings`, `proxy`, `profile`, `home`, `validation`, `unlock`, …).
-  - Within a feature namespace, prefer consistent buckets like `view`, `page`, `sections`, `forms`, `fields`, `actions`, `tooltips`, `notifications`, `errors`, `dialogs`, `tables`, `components`. Choose the minimum depth needed to describe the UI.
+- Add to `shared` only when the copy is used (or is expected to be reused) by two or more features. Otherwise keep it in the owning feature namespace.
+- **`<feature>.*`** — route-level or domain-level strings scoped to a single feature.
+  - Top-level keys mirror folders under `src/pages`, `src/components`, or service domains (`settings`, `proxies`, `profiles`, `home`, `unlock`, `layout`, …).
+  - Within a feature namespace, prefer consistent buckets like `page`, `sections`, `forms`, `fields`, `actions`, `tooltips`, `notifications`, `errors`, `dialogs`, `tables`, `components`. Choose the minimum depth needed to describe the UI.
 
 ### Authoring guidelines
 
 1. **Follow the shared/feature split** — before inventing a new key, check whether an equivalent exists under `shared.*`.
 2. **Use camelCase leaf keys** — keep names semantic (`systemProxy`, `updateInterval`) and avoid positional names (`item1`, `btn_ok`).
 3. **Group by UI responsibility** — for example:
-   - `entities.settings.dns.fields.listen`
-   - `entities.settings.dns.dialog.title`
-   - `entities.settings.dns.sections.general`
+   - `settings.dns.fields.listen`
+   - `settings.dns.dialog.title`
+   - `settings.dns.sections.general`
 4. **Component-specific copy** — nest under `components.<ComponentName>` or `dialogs.<DialogName>` to keep implementation-specific strings organized but still discoverable.
 5. **Dynamic placeholders** — continue using `{{placeholder}}` syntax and document required params in code when possible.
 
@@ -92,23 +92,21 @@ The locale files now follow a two-namespace layout designed to mirror the React/
       "cancel": "Cancel"
     }
   },
-  "entities": {
-    "profile": {
-      "view": {
-        "title": "Profiles",
-        "actions": {
-          "import": "Import",
-          "updateAll": "Update All Profiles"
-        },
-        "notifications": {
-          "importSuccess": "Profile imported successfully"
-        }
+  "profiles": {
+    "page": {
+      "title": "Profiles",
+      "actions": {
+        "import": "Import",
+        "updateAll": "Update All Profiles"
       },
-      "components": {
-        "batchDialog": {
-          "title": "Batch Operations",
-          "items": "items"
-        }
+      "notifications": {
+        "importSuccess": "Profile imported successfully"
+      }
+    },
+    "components": {
+      "batchDialog": {
+        "title": "Batch Operations",
+        "items": "items"
       }
     }
   }

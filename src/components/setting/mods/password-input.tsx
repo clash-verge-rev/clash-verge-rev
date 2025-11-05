@@ -21,9 +21,7 @@ export const PasswordInput = (props: Props) => {
 
   return (
     <Dialog open={true} maxWidth="xs" fullWidth>
-      <DialogTitle>
-        {t("entities.settings.password.prompts.enterRoot")}
-      </DialogTitle>
+      <DialogTitle>{t("settings.password.prompts.enterRoot")}</DialogTitle>
 
       <DialogContent>
         <TextField

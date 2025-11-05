@@ -72,1178 +72,1159 @@
       "advanced": "高级"
     }
   },
-  "entities": {
-    "profile": {
-      "page": {
-        "title": "订阅",
-        "actions": {
-          "updateAll": "更新所有订阅",
-          "viewRuntimeConfig": "查看运行时订阅",
-          "reactivate": "重新激活订阅",
-          "import": "导入"
-        },
-        "batch": {
-          "title": "批量操作",
-          "delete": "删除选中订阅",
-          "selectAll": "全选",
-          "deselectAll": "取消全选",
-          "done": "完成",
-          "selected": "已选中",
-          "items": "项目"
-        },
-        "import": {
-          "placeholder": "订阅文件链接",
-          "paste": "粘贴",
-          "clear": "清除"
-        },
-        "errors": {
-          "invalidUrl": "无效的订阅链接，请输入以 http:// 或 https:// 开头的地址",
-          "onlyYaml": "仅支持 YAML 文件"
-        },
-        "notifications": {
-          "importRetry": "订阅导入失败，尝试使用 Clash 代理导入",
-          "importFail": "使用 Clash 代理导入订阅也失败",
-          "importNeedsRefresh": "订阅已导入，但可能需要手动刷新",
-          "importSuccess": "订阅已成功导入，如未显示请重启应用",
-          "profileSwitched": "订阅已切换",
-          "profileReactivated": "订阅已激活",
-          "switchInterrupted": "订阅切换被新选择中断",
-          "batchDeleted": "选中的订阅已成功删除"
-        },
-        "notices": {
-          "forceRefreshCompleted": "数据已强制刷新",
-          "emergencyRefreshFailed": "紧急刷新失败: {{message}}"
-        }
+  "profiles": {
+    "page": {
+      "title": "订阅",
+      "actions": {
+        "updateAll": "更新所有订阅",
+        "viewRuntimeConfig": "查看运行时订阅",
+        "reactivate": "重新激活订阅",
+        "import": "导入"
+      },
+      "batch": {
+        "title": "批量操作",
+        "delete": "删除选中订阅",
+        "selectAll": "全选",
+        "deselectAll": "取消全选",
+        "done": "完成",
+        "selected": "已选中",
+        "items": "项目"
+      },
+      "import": {
+        "placeholder": "订阅文件链接",
+        "paste": "粘贴",
+        "clear": "清除"
+      },
+      "errors": {
+        "invalidUrl": "无效的订阅链接，请输入以 http:// 或 https:// 开头的地址",
+        "onlyYaml": "仅支持 YAML 文件"
       },
       "notifications": {
-        "importSuccess": "导入订阅成功",
-        "importSubscriptionSuccess": "导入订阅成功",
-        "importWithClashProxy": "使用 Clash 代理导入订阅成功",
-        "saved": "保存成功"
+        "importRetry": "订阅导入失败，尝试使用 Clash 代理导入",
+        "importFail": "使用 Clash 代理导入订阅也失败",
+        "importNeedsRefresh": "订阅已导入，但可能需要手动刷新",
+        "importSuccess": "订阅已成功导入，如未显示请重启应用",
+        "profileSwitched": "订阅已切换",
+        "profileReactivated": "订阅已激活",
+        "switchInterrupted": "订阅切换被新选择中断",
+        "batchDeleted": "选中的订阅已成功删除"
       },
-      "viewer": {
-        "title": {
-          "create": "新建配置",
-          "edit": "编辑配置"
-        },
-        "fields": {
-          "type": "类型",
-          "name": "名称",
-          "description": "描述",
-          "subscriptionUrl": "订阅链接",
-          "httpTimeout": "HTTP 请求超时",
-          "updateInterval": "更新间隔",
-          "useSystemProxy": "使用系统代理更新",
-          "useClashProxy": "使用内核代理更新",
-          "acceptInvalidCerts": "允许无效证书（危险）",
-          "allowAutoUpdate": "允许自动更新"
-        },
-        "notifications": {
-          "creationRetry": "订阅创建失败，尝试使用 Clash 代理创建",
-          "creationSuccess": "使用 Clash 代理创建订阅成功"
-        }
+      "notices": {
+        "forceRefreshCompleted": "数据已强制刷新",
+        "emergencyRefreshFailed": "紧急刷新失败: {{message}}"
+      }
+    },
+    "notifications": {
+      "importSuccess": "导入订阅成功",
+      "importSubscriptionSuccess": "导入订阅成功",
+      "importWithClashProxy": "使用 Clash 代理导入订阅成功",
+      "saved": "保存成功"
+    },
+    "viewer": {
+      "title": {
+        "create": "新建配置",
+        "edit": "编辑配置"
       },
-      "menu": {
-        "home": "首 页",
-        "select": "使用",
-        "editInfo": "编辑信息",
-        "editFile": "编辑文件",
-        "editRules": "编辑规则",
-        "editProxies": "编辑节点",
-        "editGroups": "编辑代理组",
-        "extendConfig": "扩展覆写配置",
-        "extendScript": "扩展脚本",
-        "openFile": "打开文件",
-        "update": "更新",
-        "updateViaProxy": "更新（代理）"
+      "fields": {
+        "type": "类型",
+        "name": "名称",
+        "description": "描述",
+        "subscriptionUrl": "订阅链接",
+        "httpTimeout": "HTTP 请求超时",
+        "updateInterval": "更新间隔",
+        "useSystemProxy": "使用系统代理更新",
+        "useClashProxy": "使用内核代理更新",
+        "acceptInvalidCerts": "允许无效证书（危险）",
+        "allowAutoUpdate": "允许自动更新"
       },
-      "proxiesEditor": {
-        "title": "编辑节点",
-        "placeholders": {
-          "multiUri": "多条 URI 请使用换行分隔（支持 Base64 编码）"
-        },
+      "notifications": {
+        "creationRetry": "订阅创建失败，尝试使用 Clash 代理创建",
+        "creationSuccess": "使用 Clash 代理创建订阅成功"
+      }
+    },
+    "menu": {
+      "home": "首 页",
+      "select": "使用",
+      "editInfo": "编辑信息",
+      "editFile": "编辑文件",
+      "editRules": "编辑规则",
+      "editProxies": "编辑节点",
+      "editGroups": "编辑代理组",
+      "extendConfig": "扩展覆写配置",
+      "extendScript": "扩展脚本",
+      "openFile": "打开文件",
+      "update": "更新",
+      "updateViaProxy": "更新（代理）"
+    },
+    "proxiesEditor": {
+      "title": "编辑节点",
+      "placeholders": {
+        "multiUri": "多条 URI 请使用换行分隔（支持 Base64 编码）"
+      },
+      "actions": {
+        "prepend": "添加前置代理节点",
+        "append": "添加后置代理节点"
+      }
+    },
+    "groupsEditor": {
+      "title": "编辑代理组",
+      "errors": {
+        "nameRequired": "代理组名称不能为空",
+        "nameExists": "代理组名称已存在"
+      },
+      "fields": {
+        "type": "代理组类型",
+        "name": "代理组组名",
+        "icon": "代理组图标",
+        "proxies": "引入代理",
+        "provider": "引入代理集合",
+        "healthCheckUrl": "健康检查测试地址",
+        "expectedStatus": "期望状态码",
+        "interval": "检查间隔",
+        "timeout": "超时时间",
+        "maxFailedTimes": "最大失败次数",
+        "interfaceName": "出站接口",
+        "routingMark": "路由标记",
+        "filter": "过滤节点",
+        "excludeFilter": "排除节点",
+        "excludeType": "排除节点类型",
+        "includeAll": "引入所有出站代理、代理集合",
+        "includeAllProxies": "引入所有出站代理",
+        "includeAllProviders": "引入所有代理集合"
+      },
+      "toggles": {
+        "lazy": "懒惰状态",
+        "disableUdp": "禁用 UDP",
+        "hidden": "隐藏代理组"
+      },
+      "actions": {
+        "prepend": "添加前置代理组",
+        "append": "添加后置代理组"
+      }
+    },
+    "fileInput": {
+      "chooseFile": "选择文件"
+    },
+    "more": {
+      "global": {
+        "merge": "全局扩展覆写配置",
+        "script": "全局扩展脚本"
+      },
+      "chips": {
+        "merge": "Merge",
+        "script": "Script"
+      }
+    },
+    "item": {
+      "tooltips": {
+        "showLast": "点击查看上次更新时间",
+        "showNext": "点击查看下一次更新"
+      },
+      "status": {
+        "lastUpdateFailed": "上次更新失败",
+        "nextUp": "下次更新",
+        "noSchedule": "没有计划",
+        "unknown": "未知",
+        "autoUpdateDisabled": "自动更新已禁用"
+      }
+    },
+    "confirm": {
+      "delete": {
+        "title": "确认删除",
+        "message": "此操作不可逆"
+      }
+    },
+    "editor": {
+      "format": "格式化文档",
+      "readOnlyMessage": "无法在只读模式下编辑"
+    },
+    "logViewer": {
+      "title": "脚本控制台输出"
+    },
+    "card": {
+      "labels": {
+        "from": "来自",
+        "updateTime": "更新时间",
+        "usedTotal": "已使用 / 总量",
+        "expireTime": "到期时间",
+        "clickToImport": "点击导入订阅"
+      }
+    }
+  },
+  "proxies": {
+    "page": {
+      "title": {
+        "default": "代理组",
+        "chainMode": "链式代理模式"
+      },
+      "modes": {
+        "rule": "规则",
+        "global": "全局",
+        "direct": "直连"
+      },
+      "actions": {
+        "toggleChain": "🔗 链式代理",
+        "connect": "连接",
+        "disconnect": "断开",
+        "connecting": "连接中...",
+        "clearChainConfig": "删除链式配置"
+      },
+      "provider": {
+        "title": "代理集合",
         "actions": {
-          "prepend": "添加前置代理节点",
-          "append": "添加后置代理节点"
+          "updateAll": "更新全部",
+          "update": "更新"
+        },
+        "notices": {
+          "updateSuccess": "{{name}} 更新成功",
+          "updateFailed": "{{name}} 更新失败: {{message}}",
+          "genericError": "更新失败: {{message}}",
+          "none": "没有可更新的 provider",
+          "allUpdated": "所有 provider 均已更新"
         }
       },
-      "groupsEditor": {
-        "title": "编辑代理组",
-        "errors": {
-          "nameRequired": "代理组名称不能为空",
-          "nameExists": "代理组名称已存在"
-        },
-        "fields": {
-          "type": "代理组类型",
-          "name": "代理组组名",
-          "icon": "代理组图标",
-          "proxies": "引入代理",
-          "provider": "引入代理集合",
-          "healthCheckUrl": "健康检查测试地址",
-          "expectedStatus": "期望状态码",
-          "interval": "检查间隔",
-          "timeout": "超时时间",
-          "maxFailedTimes": "最大失败次数",
-          "interfaceName": "出站接口",
-          "routingMark": "路由标记",
-          "filter": "过滤节点",
-          "excludeFilter": "排除节点",
-          "excludeType": "排除节点类型",
-          "includeAll": "引入所有出站代理、代理集合",
-          "includeAllProxies": "引入所有出站代理",
-          "includeAllProviders": "引入所有代理集合"
-        },
-        "toggles": {
-          "lazy": "懒惰状态",
-          "disableUdp": "禁用 UDP",
-          "hidden": "隐藏代理组"
-        },
+      "rules": {
+        "title": "代理规则",
+        "select": "选择规则"
+      },
+      "labels": {
+        "proxyCount": "节点数量",
+        "delayCheckReset": "进行延迟测试，以取消固定"
+      },
+      "tooltips": {
+        "locate": "当前节点",
+        "delayCheck": "延迟测试",
+        "sortDefault": "默认排序",
+        "sortDelay": "按延迟排序",
+        "sortName": "按名称排序",
+        "delayCheckUrl": "延迟测试链接",
+        "showBasic": "隐藏节点细节",
+        "showDetail": "展示节点细节",
+        "filter": "过滤节点"
+      },
+      "placeholders": {
+        "filter": "过滤条件",
+        "delayCheckUrl": "延迟测试链接"
+      },
+      "chain": {
+        "header": "代理链配置",
+        "empty": "暂无代理链配置",
+        "instruction": "顺序点击节点添加到代理链中",
+        "minimumNodes": "链式代理至少需要 2 个节点",
+        "minimumNodesHint": "链式代理至少需要 2 个节点，请再添加一个节点。",
+        "connectFailed": "连接链式代理失败",
+        "disconnectFailed": "断开链式代理失败",
+        "duplicateNode": "该节点已在链式代理表中"
+      },
+      "messages": {
+        "directMode": "直连模式"
+      }
+    },
+    "enums": {
+      "strategies": {
+        "select": "手动选择代理",
+        "url-test": "根据 URL 测试延迟选择代理",
+        "fallback": "不可用时切换到另一个代理",
+        "load-balance": "根据负载均衡分配代理",
+        "relay": "根据定义的代理链传递"
+      },
+      "policies": {
+        "DIRECT": "直连 (DIRECT)",
+        "REJECT": "拦截请求 (REJECT)",
+        "REJECT-DROP": "抛弃请求 (REJECT-DROP)",
+        "PASS": "跳过此规则 (PASS)"
+      }
+    }
+  },
+  "connections": {
+    "page": {
+      "title": "连接",
+      "summary": {
+        "downloaded": "下载量",
+        "uploaded": "上传量"
+      },
+      "actions": {
+        "listView": "列表视图",
+        "tableView": "表格视图",
+        "pause": "暂停",
+        "resume": "继续",
+        "closeAll": "关闭全部"
+      }
+    },
+    "fields": {
+      "host": "主机",
+      "downloaded": "下载量",
+      "uploaded": "上传量",
+      "dlSpeed": "下载速度",
+      "ulSpeed": "上传速度",
+      "chains": "链路",
+      "rule": "规则",
+      "process": "进程",
+      "time": "连接时间",
+      "source": "源地址",
+      "destination": "目标地址",
+      "destinationPort": "目标端口",
+      "type": "类型"
+    },
+    "order": {
+      "default": "默认",
+      "uploadSpeed": "上传速度",
+      "downloadSpeed": "下载速度"
+    },
+    "actions": {
+      "closeConnection": "关闭连接"
+    }
+  },
+  "tests": {
+    "item": {
+      "actions": {
+        "test": "测试"
+      }
+    },
+    "viewer": {
+      "title": {
+        "create": "新建测试",
+        "edit": "编辑测试"
+      },
+      "fields": {
+        "url": "测试地址"
+      }
+    },
+    "page": {
+      "title": "测试",
+      "actions": {
+        "testAll": "测试全部"
+      }
+    },
+    "statuses": {
+      "pending": "待检测",
+      "yes": "支持",
+      "no": "不支持",
+      "failed": "测试失败",
+      "completed": "检测完成",
+      "disallowedIsp": "不允许的 ISP",
+      "originalsOnly": "仅限原创",
+      "noDisney": "不支持（IP被Disney+禁止）",
+      "unsupportedRegion": "不支持的国家/地区",
+      "failedNetwork": "测试失败（网络连接问题）"
+    }
+  },
+  "logs": {
+    "page": {
+      "title": "日志",
+      "actions": {
+        "pause": "暂停",
+        "resume": "继续",
+        "clear": "清除"
+      },
+      "filters": {
+        "all": "ALL",
+        "debug": "DEBUG",
+        "info": "INFO",
+        "warn": "WARN",
+        "error": "ERROR"
+      }
+    }
+  },
+  "rules": {
+    "page": {
+      "title": "规则",
+      "provider": {
+        "trigger": "规则集合",
+        "dialogTitle": "规则集合",
         "actions": {
-          "prepend": "添加前置代理组",
-          "append": "添加后置代理组"
-        }
-      },
-      "fileInput": {
-        "chooseFile": "选择文件"
-      },
-      "more": {
-        "global": {
-          "merge": "全局扩展覆写配置",
-          "script": "全局扩展脚本"
+          "updateAll": "更新全部",
+          "update": "更新"
         },
-        "chips": {
-          "merge": "Merge",
-          "script": "Script"
-        }
-      },
-      "item": {
-        "tooltips": {
-          "showLast": "点击查看上次更新时间",
-          "showNext": "点击查看下一次更新"
-        },
-        "status": {
-          "lastUpdateFailed": "上次更新失败",
-          "nextUp": "下次更新",
-          "noSchedule": "没有计划",
-          "unknown": "未知",
-          "autoUpdateDisabled": "自动更新已禁用"
-        }
-      },
-      "confirm": {
-        "delete": {
-          "title": "确认删除",
-          "message": "此操作不可逆"
-        }
-      },
-      "editor": {
-        "format": "格式化文档",
-        "readOnlyMessage": "无法在只读模式下编辑"
-      },
-      "logViewer": {
-        "title": "脚本控制台输出"
-      },
-      "card": {
-        "labels": {
-          "from": "来自",
-          "updateTime": "更新时间",
-          "usedTotal": "已使用 / 总量",
-          "expireTime": "到期时间",
-          "clickToImport": "点击导入订阅"
+        "notices": {
+          "updateSuccess": "{{name}} 更新成功",
+          "updateFailed": "{{name}} 更新失败: {{message}}",
+          "genericError": "更新失败: {{message}}",
+          "none": "没有可更新的 provider",
+          "allUpdated": "所有 provider 均已更新"
         }
       }
     },
-    "proxy": {
-      "page": {
-        "title": {
-          "default": "代理组",
-          "chainMode": "链式代理模式"
+    "editor": {
+      "title": "编辑规则",
+      "form": {
+        "labels": {
+          "type": "规则类型",
+          "content": "规则内容",
+          "proxyPolicy": "代理策略"
         },
-        "modes": {
+        "toggles": {
+          "noResolve": "跳过 DNS 解析"
+        },
+        "actions": {
+          "prependRule": "添加前置规则",
+          "appendRule": "添加后置规则"
+        },
+        "validation": {
+          "conditionRequired": "规则条件缺失",
+          "invalidRule": "无效规则"
+        }
+      },
+      "ruleTypes": {
+        "DOMAIN": "匹配完整域名 (DOMAIN)",
+        "DOMAIN-SUFFIX": "匹配域名后缀 (DOMAIN-SUFFIX)",
+        "DOMAIN-KEYWORD": "匹配域名关键字 (DOMAIN-KEYWORD)",
+        "DOMAIN-REGEX": "匹配域名正则表达式 (DOMAIN-REGEX)",
+        "GEOSITE": "匹配 Geosite 内的域名 (GEOSITE)",
+        "GEOIP": "匹配 IP 所属国家代码 (GEOIP)",
+        "SRC-GEOIP": "匹配来源 IP 所属国家代码 (SRC-GEOIP)",
+        "IP-ASN": "匹配 IP 所属 ASN (IP-ASN)",
+        "SRC-IP-ASN": "匹配来源 IP 所属 ASN (SRC-IP-ASN)",
+        "IP-CIDR": "匹配 IP 地址范围 (IP-CIDR)",
+        "IP-CIDR6": "匹配 IP 地址范围 (IP-CIDR6)",
+        "SRC-IP-CIDR": "匹配来源 IP 地址范围 (SRC-IP-CIDR)",
+        "IP-SUFFIX": "匹配 IP 后缀范围 (IP-SUFFIX)",
+        "SRC-IP-SUFFIX": "匹配来源 IP 后缀范围 (SRC-IP-SUFFIX)",
+        "SRC-PORT": "匹配请求来源端口范围 (SRC-PORT)",
+        "DST-PORT": "匹配请求目标端口范围 (DST-PORT)",
+        "IN-PORT": "匹配入站端口 (IN-PORT)",
+        "DSCP": "DSCP 标记（仅限 TPROXY UDP 入站）(DSCP)",
+        "PROCESS-NAME": "匹配进程名称 (PROCESS-NAME)",
+        "PROCESS-PATH": "匹配完整进程路径 (PROCESS-PATH)",
+        "PROCESS-NAME-REGEX": "正则匹配完整进程名称 (PROCESS-NAME-REGEX)",
+        "PROCESS-PATH-REGEX": "正则匹配完整进程路径 (PROCESS-PATH-REGEX)",
+        "NETWORK": "匹配传输协议 (TCP/UDP) (NETWORK)",
+        "UID": "匹配 Linux USER ID (UID)",
+        "IN-TYPE": "匹配入站类型 (IN-TYPE)",
+        "IN-USER": "匹配入站用户名 (IN-USER)",
+        "IN-NAME": "匹配入站名称 (IN-NAME)",
+        "SUB-RULE": "子规则 (SUB-RULE)",
+        "RULE-SET": "匹配规则集 (RULE-SET)",
+        "AND": "逻辑与 (AND)",
+        "OR": "逻辑或 (OR)",
+        "NOT": "逻辑非 (NOT)",
+        "MATCH": "匹配所有请求 (MATCH)"
+      }
+    }
+  },
+  "home": {
+    "page": {
+      "title": "首页",
+      "tooltips": {
+        "lightweightMode": "轻量模式",
+        "manual": "使用手册",
+        "settings": "首页设置"
+      },
+      "cards": {
+        "trafficStats": "流量统计",
+        "networkSettings": "网络设置",
+        "proxyMode": "代理模式"
+      },
+      "settings": {
+        "title": "首页设置",
+        "cards": {
+          "profile": "订阅卡",
+          "currentProxy": "当前代理卡",
+          "network": "网络设置卡",
+          "proxyMode": "代理模式卡",
+          "traffic": "流量统计卡",
+          "tests": "网站测试卡",
+          "ip": "IP 信息卡",
+          "clashInfo": "Clash 信息卡",
+          "systemInfo": "系统信息卡"
+        }
+      }
+    },
+    "cards": {
+      "proxyTun": {
+        "status": {
+          "systemProxyEnabled": "系统代理已启用，您的应用将通过代理访问网络",
+          "systemProxyDisabled": "系统代理已关闭，建议大多数用户打开此选项",
+          "tunModeServiceRequired": "TUN模式需要服务模式，请先安装服务",
+          "tunModeEnabled": "TUN 模式已启用，应用将通过虚拟网卡访问网络",
+          "tunModeDisabled": "TUN 模式已关闭，适用于特殊应用"
+        },
+        "tooltips": {
+          "systemProxy": "修改操作系统的代理设置，如果开启失败，可手动修改操作系统的代理设置",
+          "tunMode": "TUN模式可以接管所有应用流量，适用于特殊不遵循系统代理设置的应用"
+        }
+      },
+      "clashInfo": {
+        "title": "Clash 信息",
+        "fields": {
+          "coreVersion": "内核版本",
+          "systemProxyAddress": "系统代理地址",
+          "mixedPort": "混合代理端口",
+          "uptime": "运行时间",
+          "rulesCount": "规则数量"
+        }
+      },
+      "systemInfo": {
+        "title": "系统信息",
+        "fields": {
+          "osInfo": "操作系统信息",
+          "autoLaunch": "开机自启",
+          "runningMode": "运行模式",
+          "lastCheckUpdate": "最后检查更新",
+          "vergeVersion": "Verge 版本"
+        },
+        "actions": {
+          "settings": "设置"
+        },
+        "tooltips": {
+          "autoLaunchAdmin": "管理员模式可能不支持开机自启"
+        },
+        "badges": {
+          "adminMode": "管理员模式",
+          "serviceMode": "服务模式",
+          "sidecarMode": "用户模式",
+          "adminServiceMode": "管理员 + 服务模式"
+        }
+      },
+      "ipInfo": {
+        "title": "IP 信息",
+        "labels": {
+          "ip": "IP",
+          "asn": "自治域",
+          "isp": "服务商",
+          "org": "组织",
+          "location": "位置",
+          "timezone": "时区",
+          "autoRefresh": "自动刷新",
+          "unknown": "未知"
+        },
+        "errors": {
+          "load": "获取 IP 信息失败"
+        }
+      },
+      "currentProxy": {
+        "title": "当前节点",
+        "actions": {
+          "refreshDelay": "延迟测试"
+        },
+        "labels": {
+          "globalMode": "全局模式",
+          "directMode": "直连模式",
+          "group": "代理组",
+          "proxy": "节点",
+          "noActiveNode": "暂无激活的代理节点"
+        }
+      },
+      "tests": {
+        "title": "网站测试"
+      },
+      "traffic": {
+        "metrics": {
+          "uploadSpeed": "上传速度",
+          "downloadSpeed": "下载速度",
+          "activeConnections": "活跃连接",
+          "uploaded": "上传量",
+          "downloaded": "下载量",
+          "memoryUsage": "内核占用"
+        },
+        "legends": {
+          "upload": "上传",
+          "download": "下载"
+        },
+        "patterns": {
+          "minutes": "{{time}} 分钟"
+        }
+      },
+      "clashMode": {
+        "errors": {
+          "communication": "内核通信错误"
+        },
+        "labels": {
           "rule": "规则",
           "global": "全局",
           "direct": "直连"
         },
-        "actions": {
-          "toggleChain": "🔗 链式代理",
-          "connect": "连接",
-          "disconnect": "断开",
-          "connecting": "连接中...",
-          "clearChainConfig": "删除链式配置"
-        },
-        "provider": {
-          "title": "代理集合",
-          "actions": {
-            "updateAll": "更新全部",
-            "update": "更新"
-          },
-          "notices": {
-            "updateSuccess": "{{name}} 更新成功",
-            "updateFailed": "{{name}} 更新失败: {{message}}",
-            "genericError": "更新失败: {{message}}",
-            "none": "没有可更新的 provider",
-            "allUpdated": "所有 provider 均已更新"
-          }
-        },
-        "rules": {
-          "title": "代理规则",
-          "select": "选择规则"
-        },
-        "labels": {
-          "proxyCount": "节点数量",
-          "delayCheckReset": "进行延迟测试，以取消固定"
-        },
-        "tooltips": {
-          "locate": "当前节点",
-          "delayCheck": "延迟测试",
-          "sortDefault": "默认排序",
-          "sortDelay": "按延迟排序",
-          "sortName": "按名称排序",
-          "delayCheckUrl": "延迟测试链接",
-          "showBasic": "隐藏节点细节",
-          "showDetail": "展示节点细节",
-          "filter": "过滤节点"
-        },
-        "placeholders": {
-          "filter": "过滤条件",
-          "delayCheckUrl": "延迟测试链接"
-        },
-        "chain": {
-          "header": "代理链配置",
-          "empty": "暂无代理链配置",
-          "instruction": "顺序点击节点添加到代理链中",
-          "minimumNodes": "链式代理至少需要 2 个节点",
-          "minimumNodesHint": "链式代理至少需要 2 个节点，请再添加一个节点。",
-          "connectFailed": "连接链式代理失败",
-          "disconnectFailed": "断开链式代理失败",
-          "duplicateNode": "该节点已在链式代理表中"
-        },
-        "messages": {
-          "directMode": "直连模式"
-        }
-      },
-      "enums": {
-        "strategies": {
-          "select": "手动选择代理",
-          "url-test": "根据 URL 测试延迟选择代理",
-          "fallback": "不可用时切换到另一个代理",
-          "load-balance": "根据负载均衡分配代理",
-          "relay": "根据定义的代理链传递"
-        },
-        "policies": {
-          "DIRECT": "直连 (DIRECT)",
-          "REJECT": "拦截请求 (REJECT)",
-          "REJECT-DROP": "抛弃请求 (REJECT-DROP)",
-          "PASS": "跳过此规则 (PASS)"
+        "descriptions": {
+          "rule": "基于预设规则智能判断流量走向，提供灵活的代理策略",
+          "global": "所有流量均通过代理服务器，适用于需要全局科学上网的场景",
+          "direct": "所有流量不经过代理节点，但经过Clash内核转发连接目标服务器，适用于需要通过内核进行分流的特定场景"
         }
       }
-    },
-    "connection": {
-      "page": {
-        "title": "连接",
-        "summary": {
-          "downloaded": "下载量",
-          "uploaded": "上传量"
-        },
-        "actions": {
-          "listView": "列表视图",
-          "tableView": "表格视图",
-          "pause": "暂停",
-          "resume": "继续",
-          "closeAll": "关闭全部"
-        }
+    }
+  },
+  "unlock": {
+    "page": {
+      "title": "解锁测试",
+      "actions": {
+        "testing": "测试中..."
+      },
+      "empty": "暂无解锁测试项目",
+      "messages": {
+        "detectionTimeout": "检测超时或失败"
+      }
+    }
+  },
+  "settings": {
+    "system": {
+      "title": "系统设置",
+      "toggles": {
+        "tunMode": "虚拟网卡模式",
+        "systemProxy": "系统代理"
+      },
+      "tooltips": {
+        "autoLaunchAdmin": "管理员模式可能不支持开机自启",
+        "silentStart": "程序启动时以后台模式运行，不显示程序面板"
       },
       "fields": {
-        "host": "主机",
-        "downloaded": "下载量",
-        "uploaded": "上传量",
-        "dlSpeed": "下载速度",
-        "ulSpeed": "上传速度",
-        "chains": "链路",
-        "rule": "规则",
-        "process": "进程",
-        "time": "连接时间",
-        "source": "源地址",
-        "destination": "目标地址",
-        "destinationPort": "目标端口",
-        "type": "类型"
+        "autoLaunch": "开机自启",
+        "silentStart": "静默启动"
       },
-      "order": {
-        "default": "默认",
-        "uploadSpeed": "上传速度",
-        "downloadSpeed": "下载速度"
+      "notifications": {
+        "tunMode": {
+          "autoDisabled": "由于服务不可用，TUN 模式已自动关闭",
+          "autoDisableFailed": "自动关闭 TUN 模式失败"
+        }
+      }
+    },
+    "proxyControl": {
+      "tooltips": {
+        "systemProxy": "修改操作系统的代理设置，如果开启失败，可手动修改操作系统的代理设置",
+        "tunMode": "TUN（虚拟网卡）模式接管系统所有流量，启用时无须打开系统代理",
+        "tunUnavailable": "TUN 模式需要安装服务模式或管理员模式"
       },
       "actions": {
-        "closeConnection": "关闭连接"
+        "installService": "安装服务",
+        "uninstallService": "卸载服务"
+      },
+      "fields": {
+        "systemProxy": "系统代理",
+        "tunMode": "虚拟网卡模式"
       }
     },
-    "test": {
-      "item": {
-        "actions": {
-          "test": "测试"
+    "externalController": {
+      "title": "外部控制器监听地址",
+      "fields": {
+        "enable": "启用外部控制器",
+        "address": "外部控制器监听地址",
+        "secret": "API 访问密钥"
+      },
+      "placeholders": {
+        "address": "必填",
+        "secret": "建议设置"
+      },
+      "tooltips": {
+        "copy": "复制到剪贴板"
+      },
+      "messages": {
+        "addressRequired": "控制器地址不能为空",
+        "secretRequired": "访问密钥不能为空",
+        "copyFailed": "复制失败",
+        "controllerCopied": "控制器地址已复制到剪贴板",
+        "secretCopied": "访问密钥已复制到剪贴板"
+      }
+    },
+    "externalCors": {
+      "title": "外部控制跨域设置",
+      "fields": {
+        "allowPrivateNetwork": "允许专用网络访问",
+        "allowedOrigins": "允许的来源"
+      },
+      "placeholders": {
+        "origin": "请输入有效的网址"
+      },
+      "actions": {
+        "add": "添加"
+      },
+      "messages": {
+        "alwaysIncluded": "始终包含来源：{{urls}}"
+      },
+      "tooltips": {
+        "open": "外部控制跨域设置"
+      }
+    },
+    "clash": {
+      "title": "Clash 设置",
+      "items": {
+        "allowLan": "局域网连接",
+        "dnsOverwrite": "DNS 覆写",
+        "ipv6": "IPv6",
+        "unifiedDelay": "统一延迟",
+        "logLevel": "日志等级",
+        "portConfig": "端口设置",
+        "external": "外部控制",
+        "webUI": "网页界面",
+        "clashCore": "Clash 内核",
+        "openUwpTool": "UWP 工具",
+        "updateGeoData": "更新 GeoData"
+      },
+      "tooltips": {
+        "networkInterface": "网络接口",
+        "unifiedDelay": "开启统一延迟时，会进行两次延迟测试，以消除连接握手等带来的不同类型节点的延迟差异",
+        "logLevel": "仅对日志目录 Service 文件夹下的内核日志文件生效",
+        "openUwpTool": "Windows 8 开始限制 UWP 应用（如微软商店）直接访问本地主机的网络服务，使用此工具可绕过该限制"
+      },
+      "options": {
+        "logLevel": {
+          "debug": "Debug",
+          "info": "Info",
+          "warning": "Warn",
+          "error": "Error",
+          "silent": "Silent"
         }
       },
-      "viewer": {
-        "title": {
-          "create": "新建测试",
-          "edit": "编辑测试"
-        },
+      "messages": {
+        "geoDataUpdated": "已更新 GeoData"
+      },
+      "port": {
+        "title": "端口设置",
         "fields": {
-          "url": "测试地址"
-        }
-      },
-      "page": {
-        "title": "测试",
+          "mixed": "混合代理端口",
+          "socks": "SOCKS 代理端口",
+          "http": "HTTP(S) 代理端口",
+          "redir": "Redir 透明代理端口",
+          "tproxy": "Tproxy 透明代理端口"
+        },
         "actions": {
-          "testAll": "测试全部"
+          "random": "随机端口"
+        },
+        "messages": {
+          "saved": "端口设置已保存",
+          "saveFailed": "端口设置保存失败"
         }
       },
-      "statuses": {
-        "pending": "待检测",
-        "yes": "支持",
-        "no": "不支持",
-        "failed": "测试失败",
-        "completed": "检测完成",
-        "disallowedIsp": "不允许的 ISP",
-        "originalsOnly": "仅限原创",
-        "noDisney": "不支持（IP被Disney+禁止）",
-        "unsupportedRegion": "不支持的国家/地区",
-        "failedNetwork": "测试失败（网络连接问题）"
+      "notifications": {
+        "restartSuccess": "已重启 Clash 内核",
+        "versionUpdated": "内核版本已更新",
+        "changeSuccess": "内核切换成功",
+        "changeFailed": "无法切换内核"
+      },
+      "status": {
+        "stopping": "停止内核中...",
+        "restarting": "重启内核中..."
+      },
+      "service": {
+        "status": {
+          "installing": "安装服务中...",
+          "uninstalling": "卸载服务中..."
+        },
+        "notifications": {
+          "installSuccess": "已成功安装服务",
+          "uninstallSuccess": "已成功卸载服务"
+        }
+      },
+      "variants": {
+        "release": "正式版",
+        "alpha": "预览版"
       }
     },
-    "theme": {
+    "liteMode": {
+      "title": "轻量模式设置",
+      "actions": {
+        "enterNow": "立即进入轻量模式"
+      },
+      "toggles": {
+        "autoEnter": "自动进入轻量模式"
+      },
+      "tooltips": {
+        "autoEnter": "启用后，将在窗口关闭一段时间后自动激活轻量模式"
+      },
+      "fields": {
+        "delay": "自动进入轻量模式延迟"
+      },
+      "messages": {
+        "autoEnterHint": "关闭窗口后，轻量模式将在 {{n}} 分钟后自动激活"
+      }
+    },
+    "backup": {
+      "title": "备份设置",
+      "tabs": {
+        "local": "本地备份",
+        "webdav": "WebDAV 备份"
+      },
+      "actions": {
+        "selectTarget": "选择备份目标",
+        "backup": "备份",
+        "export": "导出",
+        "exportBackup": "导出备份",
+        "deleteBackup": "删除备份",
+        "restore": "恢复",
+        "restoreBackup": "恢复备份"
+      },
+      "fields": {
+        "webdavUrl": "WebDAV 服务器地址 http(s)://",
+        "username": "用户名",
+        "password": "密码",
+        "info": "在应用数据目录中创建本地备份，您可以通过下方列表进行恢复或删除。"
+      },
+      "messages": {
+        "webdavUrlRequired": "WebDAV 服务器地址不能为空",
+        "invalidWebdavUrl": "无效的 WebDAV 服务器地址格式",
+        "usernameRequired": "用户名不能为空",
+        "passwordRequired": "密码不能为空",
+        "webdavConfigSaved": "WebDAV 配置保存成功",
+        "webdavConfigSaveFailed": "保存 WebDAV 配置失败: {{error}}",
+        "backupCreated": "备份创建成功",
+        "backupFailed": "备份失败: {{error}}",
+        "localBackupCreated": "本地备份创建成功",
+        "localBackupFailed": "本地备份失败",
+        "restoreSuccess": "恢复成功，应用将在 1 秒后重启",
+        "localBackupExported": "本地备份导出成功",
+        "localBackupExportFailed": "本地备份导出失败",
+        "confirmDelete": "确认删除此备份文件吗？",
+        "confirmRestore": "确认恢复此份文件吗？"
+      },
+      "table": {
+        "filename": "文件名称",
+        "backupTime": "备份时间",
+        "actions": "操作",
+        "noBackups": "暂无备份",
+        "rowsPerPage": "每页行数"
+      }
+    },
+    "verge": {
+      "basic": {
+        "title": "Verge 基础设置",
+        "items": {
+          "language": "语言设置",
+          "themeMode": "主题模式",
+          "trayClickEvent": "托盘点击事件",
+          "copyEnvType": "复制环境变量类型",
+          "startPage": "启动页面",
+          "startupScript": "启动脚本",
+          "themeSetting": "主题设置",
+          "layoutSetting": "界面设置",
+          "misc": "杂项设置",
+          "hotkeySetting": "热键设置"
+        },
+        "actions": {
+          "browse": "浏览",
+          "clear": "清除"
+        },
+        "trayOptions": {
+          "showMainWindow": "显示主窗口",
+          "showTrayMenu": "显示托盘菜单",
+          "disable": "禁用"
+        }
+      },
+      "advanced": {
+        "title": "Verge 高级设置",
+        "items": {
+          "backupSetting": "备份设置",
+          "runtimeConfig": "当前配置",
+          "openConfDir": "配置目录",
+          "openCoreDir": "内核目录",
+          "openLogsDir": "日志目录",
+          "checkUpdates": "检查更新",
+          "openDevTools": "开发者工具",
+          "liteModeSettings": "轻量模式设置",
+          "exit": "退出",
+          "exportDiagnostics": "导出诊断信息",
+          "vergeVersion": "Verge 版本"
+        },
+        "tooltips": {
+          "backupInfo": "支持本地或 WebDAV 方式备份配置文件",
+          "openConfDir": "如果软件运行异常，!备份!并删除此文件夹下的所有文件，重启软件",
+          "liteMode": "关闭GUI界面，仅保留内核运行"
+        },
+        "actions": {
+          "copyVersion": "复制Verge版本号"
+        },
+        "notifications": {
+          "latestVersion": "当前已是最新版本",
+          "versionCopied": "Verge 版本已复制到剪贴板"
+        }
+      },
+      "theme": {
+        "title": "主题设置",
+        "fields": {
+          "primaryColor": "主要颜色",
+          "secondaryColor": "次要颜色",
+          "primaryText": "文本主要颜色",
+          "secondaryText": "文本次要颜色",
+          "infoColor": "信息颜色",
+          "warningColor": "警告颜色",
+          "errorColor": "错误颜色",
+          "successColor": "成功颜色",
+          "fontFamily": "字体系列",
+          "cssInjection": "CSS 注入"
+        },
+        "actions": {
+          "editCss": "编辑 CSS"
+        },
+        "dialogs": {
+          "editCssTitle": "编辑 CSS"
+        }
+      },
+      "layout": {
+        "title": "界面设置",
+        "fields": {
+          "preferSystemTitlebar": "优先使用系统标题栏",
+          "trafficGraph": "流量图显",
+          "memoryUsage": "内核占用",
+          "proxyGroupIcon": "代理组图标",
+          "hoverNavigator": "悬浮跳转导航",
+          "hoverNavigatorDelay": "悬浮跳转导航延迟",
+          "navIcon": "导航栏图标",
+          "trayIcon": "托盘图标",
+          "showProxyGroupsInline": "将代理组显示在托盘一级菜单",
+          "commonTrayIcon": "常规托盘图标",
+          "systemProxyTrayIcon": "系统代理托盘图标",
+          "tunTrayIcon": "TUN 模式托盘图标",
+          "enableTrayIcon": "启用托盘图标",
+          "enableTraySpeed": "启用托盘速率"
+        },
+        "tooltips": {
+          "hoverNavigator": "鼠标悬停在字母上时自动滚动到对应代理组",
+          "hoverNavigatorDelay": "鼠标悬停后触发自动跳转前等待的毫秒数"
+        },
+        "options": {
+          "icon": {
+            "monochrome": "单色图标",
+            "colorful": "彩色图标",
+            "disable": "禁用"
+          }
+        }
+      }
+    },
+    "common": {
+      "notifications": {
+        "copySuccess": "复制成功",
+        "saveSuccess": "配置保存成功",
+        "saveFailed": "配置保存失败"
+      }
+    },
+    "misc": {
+      "title": "杂项设置",
+      "fields": {
+        "appLogLevel": "应用日志等级",
+        "appLogMaxSize": "应用日志最大大小",
+        "appLogMaxCount": "应用日志最大数量",
+        "autoCloseConnections": "自动关闭连接",
+        "autoCheckUpdate": "自动检查更新",
+        "enableBuiltinEnhanced": "内置增强功能",
+        "proxyLayoutColumns": "代理页布局列数",
+        "autoLogClean": "自动清理日志",
+        "autoDelayDetection": "自动延迟检测",
+        "defaultLatencyTest": "默认测试链接",
+        "defaultLatencyTimeout": "测试超时时间"
+      },
+      "tooltips": {
+        "autoCloseConnections": "当代理组选中节点或代理模式变动时，关闭已建立的连接",
+        "enableBuiltinEnhanced": "配置文件的兼容性处理",
+        "autoDelayDetection": "后台定时检测当前节点延迟",
+        "defaultLatencyTest": "仅用于 HTTP 客户端请求测试，不会对配置文件产生影响"
+      },
+      "options": {
+        "proxyLayoutColumns": {
+          "auto": "自动列数"
+        },
+        "autoLogClean": {
+          "never": "不清理",
+          "retainDays": "保留 {{n}} 天"
+        }
+      }
+    },
+    "update": {
+      "title": "新版本 v{{version}}",
+      "actions": {
+        "goToRelease": "前往发布页",
+        "update": "更新"
+      },
+      "messages": {
+        "portableError": "便携版不支持应用内更新，请手动下载替换",
+        "breakChangeError": "此版本为重大更新，不支持应用内更新，请卸载后手动下载安装"
+      }
+    },
+    "sysproxy": {
+      "title": "系统代理设置",
+      "fieldsets": {
+        "currentStatus": "当前系统代理"
+      },
+      "fields": {
+        "enableStatus": "开启状态：",
+        "serverAddr": "服务地址：",
+        "pacUrl": "PAC 地址：",
+        "proxyHost": "代理主机",
+        "usePacMode": "使用 PAC 模式",
+        "proxyGuard": "系统代理守卫",
+        "guardDuration": "代理守卫间隔",
+        "alwaysUseDefaultBypass": "始终使用默认绕过",
+        "proxyBypass": "代理绕过设置：",
+        "bypass": "当前绕过：",
+        "pacScriptContent": "PAC 脚本内容"
+      },
+      "tooltips": {
+        "proxyGuard": "开启以防止其他软件修改操作系统的代理设置"
+      },
+      "messages": {
+        "durationTooShort": "代理守护间隔时间不得低于 1 秒",
+        "invalidBypass": "无效的代理绕过格式",
+        "invalidProxyHost": "代理主机格式无效"
+      },
+      "actions": {
+        "editPac": "编辑 PAC"
+      }
+    },
+    "tun": {
+      "title": "虚拟网卡模式",
+      "actions": {
+        "reset": "重置为默认值"
+      },
+      "fields": {
+        "stack": "TUN 模式堆栈",
+        "device": "虚拟网卡名称",
+        "autoRoute": "自动设置全局路由",
+        "strictRoute": "严格路由",
+        "autoDetectInterface": "自动选择流量出口接口",
+        "dnsHijack": "DNS 劫持",
+        "mtu": "最大传输单元"
+      },
+      "tooltips": {
+        "dnsHijack": "多个 DNS 服务器请使用 , 分隔"
+      },
+      "messages": {
+        "applied": "设置已应用"
+      }
+    },
+    "dns": {
+      "dialog": {
+        "title": "DNS 覆写",
+        "warning": "如果你不清楚这里的设置请不要修改，并保持 DNS 覆写开启"
+      },
+      "sections": {
+        "general": "DNS 设置",
+        "fallbackFilter": "回退过滤设置",
+        "hosts": "Hosts 设置"
+      },
+      "fields": {
+        "enable": "启用 DNS",
+        "listen": "DNS 监听地址",
+        "enhancedMode": "增强模式",
+        "fakeIpRange": "Fake IP 范围",
+        "fakeIpFilterMode": "Fake IP 过滤模式",
+        "ipv6": {
+          "label": "IPv6",
+          "description": "启用 IPv6 DNS 解析"
+        },
+        "preferH3": {
+          "label": "优先使用 HTTP/3",
+          "description": "DNS DOH 使用 HTTP/3 协议"
+        },
+        "respectRules": {
+          "label": "遵循路由规则",
+          "description": "DNS 连接遵循路由规则"
+        },
+        "useHosts": {
+          "label": "使用 Hosts",
+          "description": "启用通过 hosts 文件解析域名"
+        },
+        "useSystemHosts": {
+          "label": "使用系统 Hosts",
+          "description": "启用通过系统 hosts 文件解析域名"
+        },
+        "directPolicy": {
+          "label": "直连域名服务器遵循策略",
+          "description": "是否遵循 nameserver-policy 设置"
+        },
+        "defaultNameserver": {
+          "label": "默认域名服务器",
+          "description": "用于解析 DNS 服务器的默认 DNS 服务器"
+        },
+        "nameserver": {
+          "label": "域名服务器",
+          "description": "DNS 服务器列表，用逗号分隔"
+        },
+        "fallback": {
+          "label": "回退服务器",
+          "description": "回退 DNS 服务器列表，用逗号分隔"
+        },
+        "proxy": {
+          "label": "代理节点DNS",
+          "description": "代理节点域名解析服务器，仅用于解析代理节点的域名，用逗号分隔"
+        },
+        "directNameserver": {
+          "label": "直连域名服务器",
+          "description": "直连出口域名解析服务器，支持 system 关键字，用逗号分隔"
+        },
+        "fakeIpFilter": {
+          "label": "Fake IP 过滤",
+          "description": "跳过 Fake IP 解析的域名，用逗号分隔"
+        },
+        "nameserverPolicy": {
+          "label": "域名服务器策略",
+          "description": "特定域名的 DNS 服务器，多个服务器使用分号分隔，格式: domain=server1;server2"
+        },
+        "geoipFiltering": {
+          "label": "GeoIP 过滤",
+          "description": "启用 GeoIP 回退过滤"
+        },
+        "geoipCode": "GeoIP 国家代码",
+        "fallbackIpCidr": {
+          "label": "回退 IP CIDR",
+          "description": "不使用回退服务器的 IP CIDR，用逗号分隔"
+        },
+        "fallbackDomain": {
+          "label": "回退域名",
+          "description": "使用回退服务器的域名，用逗号分隔"
+        },
+        "hosts": {
+          "label": "Hosts",
+          "description": "自定义域名到 IP 或域名的映射，用逗号分隔"
+        }
+      },
+      "messages": {
+        "saved": "DNS 设置已保存",
+        "configError": "DNS 配置错误："
+      },
+      "errors": {
+        "invalid": "配置无效"
+      }
+    },
+    "page": {
+      "title": "设置",
+      "actions": {
+        "manual": "使用手册",
+        "telegram": "Telegram 频道",
+        "github": "GitHub 项目地址"
+      }
+    },
+    "webUI": {
+      "actions": {
+        "openUrl": "打开链接"
+      },
+      "title": "网页界面",
+      "messages": {
+        "supportedPlaceholders": "支持 %host, %port, %secret",
+        "placeholderInstruction": "使用 %host, %port, %secret 表示 主机, 端口, 访问密钥"
+      }
+    },
+    "hotkey": {
+      "toggles": {
+        "enableGlobal": "启用全局热键"
+      },
+      "title": "热键设置",
+      "functions": {
+        "rule": "规则模式",
+        "global": "全局模式",
+        "openOrCloseDashboard": "打开/关闭面板",
+        "toggleSystemProxy": "打开/关闭系统代理",
+        "toggleTunMode": "打开/关闭 TUN 模式",
+        "entryLightweightMode": "进入轻量模式",
+        "direct": "直连模式"
+      }
+    },
+    "password": {
+      "prompts": {
+        "enterRoot": "请输入您的 root 密码"
+      }
+    },
+    "networkInterface": {
+      "title": "网络接口",
+      "fields": {
+        "ipAddress": "IP 地址",
+        "macAddress": "MAC 地址"
+      }
+    },
+    "updater": {
+      "notifications": {
+        "withClashProxySuccess": "使用 Clash 代理更新成功",
+        "withClashProxyFailed": "使用 Clash 代理更新也失败"
+      }
+    },
+    "appearance": {
       "light": "浅色",
       "dark": "深色",
       "system": "系统"
-    },
-    "log": {
-      "page": {
-        "title": "日志",
-        "actions": {
-          "pause": "暂停",
-          "resume": "继续",
-          "clear": "清除"
-        },
-        "filters": {
-          "all": "ALL",
-          "debug": "DEBUG",
-          "info": "INFO",
-          "warn": "WARN",
-          "error": "ERROR"
-        }
-      }
-    },
-    "navigation": {
-      "tabs": {
-        "home": "首 页",
-        "proxies": "代 理",
-        "profiles": "订 阅",
-        "connections": "连 接",
-        "rules": "规 则",
-        "logs": "日 志",
-        "unlock": "测 试",
-        "settings": "设 置"
-      },
-      "menu": {
-        "reorderMode": "菜单排序模式",
-        "unlock": "解锁菜单排序",
-        "lock": "锁定菜单排序"
-      }
-    },
-    "settings": {
-      "system": {
-        "title": "系统设置",
-        "toggles": {
-          "tunMode": "虚拟网卡模式",
-          "systemProxy": "系统代理"
-        },
-        "tooltips": {
-          "autoLaunchAdmin": "管理员模式可能不支持开机自启",
-          "silentStart": "程序启动时以后台模式运行，不显示程序面板"
-        },
-        "fields": {
-          "autoLaunch": "开机自启",
-          "silentStart": "静默启动"
-        },
-        "notifications": {
-          "tunMode": {
-            "autoDisabled": "由于服务不可用，TUN 模式已自动关闭",
-            "autoDisableFailed": "自动关闭 TUN 模式失败"
-          }
-        }
-      },
-      "proxyControl": {
-        "tooltips": {
-          "systemProxy": "修改操作系统的代理设置，如果开启失败，可手动修改操作系统的代理设置",
-          "tunMode": "TUN（虚拟网卡）模式接管系统所有流量，启用时无须打开系统代理",
-          "tunUnavailable": "TUN 模式需要安装服务模式或管理员模式"
-        },
-        "actions": {
-          "installService": "安装服务",
-          "uninstallService": "卸载服务"
-        },
-        "fields": {
-          "systemProxy": "系统代理",
-          "tunMode": "虚拟网卡模式"
-        }
-      },
-      "externalController": {
-        "title": "外部控制器监听地址",
-        "fields": {
-          "enable": "启用外部控制器",
-          "address": "外部控制器监听地址",
-          "secret": "API 访问密钥"
-        },
-        "placeholders": {
-          "address": "必填",
-          "secret": "建议设置"
-        },
-        "tooltips": {
-          "copy": "复制到剪贴板"
-        },
-        "messages": {
-          "addressRequired": "控制器地址不能为空",
-          "secretRequired": "访问密钥不能为空",
-          "copyFailed": "复制失败",
-          "controllerCopied": "控制器地址已复制到剪贴板",
-          "secretCopied": "访问密钥已复制到剪贴板"
-        }
-      },
-      "externalCors": {
-        "title": "外部控制跨域设置",
-        "fields": {
-          "allowPrivateNetwork": "允许专用网络访问",
-          "allowedOrigins": "允许的来源"
-        },
-        "placeholders": {
-          "origin": "请输入有效的网址"
-        },
-        "actions": {
-          "add": "添加"
-        },
-        "messages": {
-          "alwaysIncluded": "始终包含来源：{{urls}}"
-        },
-        "tooltips": {
-          "open": "外部控制跨域设置"
-        }
-      },
-      "clash": {
-        "title": "Clash 设置",
-        "items": {
-          "allowLan": "局域网连接",
-          "dnsOverwrite": "DNS 覆写",
-          "ipv6": "IPv6",
-          "unifiedDelay": "统一延迟",
-          "logLevel": "日志等级",
-          "portConfig": "端口设置",
-          "external": "外部控制",
-          "webUI": "网页界面",
-          "clashCore": "Clash 内核",
-          "openUwpTool": "UWP 工具",
-          "updateGeoData": "更新 GeoData"
-        },
-        "tooltips": {
-          "networkInterface": "网络接口",
-          "unifiedDelay": "开启统一延迟时，会进行两次延迟测试，以消除连接握手等带来的不同类型节点的延迟差异",
-          "logLevel": "仅对日志目录 Service 文件夹下的内核日志文件生效",
-          "openUwpTool": "Windows 8 开始限制 UWP 应用（如微软商店）直接访问本地主机的网络服务，使用此工具可绕过该限制"
-        },
-        "options": {
-          "logLevel": {
-            "debug": "Debug",
-            "info": "Info",
-            "warning": "Warn",
-            "error": "Error",
-            "silent": "Silent"
-          }
-        },
-        "messages": {
-          "geoDataUpdated": "已更新 GeoData"
-        },
-        "port": {
-          "title": "端口设置",
-          "fields": {
-            "mixed": "混合代理端口",
-            "socks": "SOCKS 代理端口",
-            "http": "HTTP(S) 代理端口",
-            "redir": "Redir 透明代理端口",
-            "tproxy": "Tproxy 透明代理端口"
-          },
-          "actions": {
-            "random": "随机端口"
-          },
-          "messages": {
-            "saved": "端口设置已保存",
-            "saveFailed": "端口设置保存失败"
-          }
-        },
-        "notifications": {
-          "restartSuccess": "已重启 Clash 内核",
-          "versionUpdated": "内核版本已更新",
-          "changeSuccess": "内核切换成功",
-          "changeFailed": "无法切换内核"
-        },
-        "status": {
-          "stopping": "停止内核中...",
-          "restarting": "重启内核中..."
-        },
-        "service": {
-          "status": {
-            "installing": "安装服务中...",
-            "uninstalling": "卸载服务中..."
-          },
-          "notifications": {
-            "installSuccess": "已成功安装服务",
-            "uninstallSuccess": "已成功卸载服务"
-          }
-        },
-        "variants": {
-          "release": "正式版",
-          "alpha": "预览版"
-        }
-      },
-      "liteMode": {
-        "title": "轻量模式设置",
-        "actions": {
-          "enterNow": "立即进入轻量模式"
-        },
-        "toggles": {
-          "autoEnter": "自动进入轻量模式"
-        },
-        "tooltips": {
-          "autoEnter": "启用后，将在窗口关闭一段时间后自动激活轻量模式"
-        },
-        "fields": {
-          "delay": "自动进入轻量模式延迟"
-        },
-        "messages": {
-          "autoEnterHint": "关闭窗口后，轻量模式将在 {{n}} 分钟后自动激活"
-        }
-      },
-      "backup": {
-        "title": "备份设置",
-        "tabs": {
-          "local": "本地备份",
-          "webdav": "WebDAV 备份"
-        },
-        "actions": {
-          "selectTarget": "选择备份目标",
-          "backup": "备份",
-          "export": "导出",
-          "exportBackup": "导出备份",
-          "deleteBackup": "删除备份",
-          "restore": "恢复",
-          "restoreBackup": "恢复备份"
-        },
-        "fields": {
-          "webdavUrl": "WebDAV 服务器地址 http(s)://",
-          "username": "用户名",
-          "password": "密码",
-          "info": "在应用数据目录中创建本地备份，您可以通过下方列表进行恢复或删除。"
-        },
-        "messages": {
-          "webdavUrlRequired": "WebDAV 服务器地址不能为空",
-          "invalidWebdavUrl": "无效的 WebDAV 服务器地址格式",
-          "usernameRequired": "用户名不能为空",
-          "passwordRequired": "密码不能为空",
-          "webdavConfigSaved": "WebDAV 配置保存成功",
-          "webdavConfigSaveFailed": "保存 WebDAV 配置失败: {{error}}",
-          "backupCreated": "备份创建成功",
-          "backupFailed": "备份失败: {{error}}",
-          "localBackupCreated": "本地备份创建成功",
-          "localBackupFailed": "本地备份失败",
-          "restoreSuccess": "恢复成功，应用将在 1 秒后重启",
-          "localBackupExported": "本地备份导出成功",
-          "localBackupExportFailed": "本地备份导出失败",
-          "confirmDelete": "确认删除此备份文件吗？",
-          "confirmRestore": "确认恢复此份文件吗？"
-        },
-        "table": {
-          "filename": "文件名称",
-          "backupTime": "备份时间",
-          "actions": "操作",
-          "noBackups": "暂无备份",
-          "rowsPerPage": "每页行数"
-        }
-      },
-      "verge": {
-        "basic": {
-          "title": "Verge 基础设置",
-          "items": {
-            "language": "语言设置",
-            "themeMode": "主题模式",
-            "trayClickEvent": "托盘点击事件",
-            "copyEnvType": "复制环境变量类型",
-            "startPage": "启动页面",
-            "startupScript": "启动脚本",
-            "themeSetting": "主题设置",
-            "layoutSetting": "界面设置",
-            "misc": "杂项设置",
-            "hotkeySetting": "热键设置"
-          },
-          "actions": {
-            "browse": "浏览",
-            "clear": "清除"
-          },
-          "trayOptions": {
-            "showMainWindow": "显示主窗口",
-            "showTrayMenu": "显示托盘菜单",
-            "disable": "禁用"
-          }
-        },
-        "advanced": {
-          "title": "Verge 高级设置",
-          "items": {
-            "backupSetting": "备份设置",
-            "runtimeConfig": "当前配置",
-            "openConfDir": "配置目录",
-            "openCoreDir": "内核目录",
-            "openLogsDir": "日志目录",
-            "checkUpdates": "检查更新",
-            "openDevTools": "开发者工具",
-            "liteModeSettings": "轻量模式设置",
-            "exit": "退出",
-            "exportDiagnostics": "导出诊断信息",
-            "vergeVersion": "Verge 版本"
-          },
-          "tooltips": {
-            "backupInfo": "支持本地或 WebDAV 方式备份配置文件",
-            "openConfDir": "如果软件运行异常，!备份!并删除此文件夹下的所有文件，重启软件",
-            "liteMode": "关闭GUI界面，仅保留内核运行"
-          },
-          "actions": {
-            "copyVersion": "复制Verge版本号"
-          },
-          "notifications": {
-            "latestVersion": "当前已是最新版本",
-            "versionCopied": "Verge 版本已复制到剪贴板"
-          }
-        },
-        "theme": {
-          "title": "主题设置",
-          "fields": {
-            "primaryColor": "主要颜色",
-            "secondaryColor": "次要颜色",
-            "primaryText": "文本主要颜色",
-            "secondaryText": "文本次要颜色",
-            "infoColor": "信息颜色",
-            "warningColor": "警告颜色",
-            "errorColor": "错误颜色",
-            "successColor": "成功颜色",
-            "fontFamily": "字体系列",
-            "cssInjection": "CSS 注入"
-          },
-          "actions": {
-            "editCss": "编辑 CSS"
-          },
-          "dialogs": {
-            "editCssTitle": "编辑 CSS"
-          }
-        },
-        "layout": {
-          "title": "界面设置",
-          "fields": {
-            "preferSystemTitlebar": "优先使用系统标题栏",
-            "trafficGraph": "流量图显",
-            "memoryUsage": "内核占用",
-            "proxyGroupIcon": "代理组图标",
-            "hoverNavigator": "悬浮跳转导航",
-            "hoverNavigatorDelay": "悬浮跳转导航延迟",
-            "navIcon": "导航栏图标",
-            "trayIcon": "托盘图标",
-            "showProxyGroupsInline": "将代理组显示在托盘一级菜单",
-            "commonTrayIcon": "常规托盘图标",
-            "systemProxyTrayIcon": "系统代理托盘图标",
-            "tunTrayIcon": "TUN 模式托盘图标",
-            "enableTrayIcon": "启用托盘图标",
-            "enableTraySpeed": "启用托盘速率"
-          },
-          "tooltips": {
-            "hoverNavigator": "鼠标悬停在字母上时自动滚动到对应代理组",
-            "hoverNavigatorDelay": "鼠标悬停后触发自动跳转前等待的毫秒数"
-          },
-          "options": {
-            "icon": {
-              "monochrome": "单色图标",
-              "colorful": "彩色图标",
-              "disable": "禁用"
-            }
-          }
-        }
-      },
-      "common": {
-        "notifications": {
-          "copySuccess": "复制成功",
-          "saveSuccess": "配置保存成功",
-          "saveFailed": "配置保存失败"
-        }
-      },
-      "misc": {
-        "title": "杂项设置",
-        "fields": {
-          "appLogLevel": "应用日志等级",
-          "appLogMaxSize": "应用日志最大大小",
-          "appLogMaxCount": "应用日志最大数量",
-          "autoCloseConnections": "自动关闭连接",
-          "autoCheckUpdate": "自动检查更新",
-          "enableBuiltinEnhanced": "内置增强功能",
-          "proxyLayoutColumns": "代理页布局列数",
-          "autoLogClean": "自动清理日志",
-          "autoDelayDetection": "自动延迟检测",
-          "defaultLatencyTest": "默认测试链接",
-          "defaultLatencyTimeout": "测试超时时间"
-        },
-        "tooltips": {
-          "autoCloseConnections": "当代理组选中节点或代理模式变动时，关闭已建立的连接",
-          "enableBuiltinEnhanced": "配置文件的兼容性处理",
-          "autoDelayDetection": "后台定时检测当前节点延迟",
-          "defaultLatencyTest": "仅用于 HTTP 客户端请求测试，不会对配置文件产生影响"
-        },
-        "options": {
-          "proxyLayoutColumns": {
-            "auto": "自动列数"
-          },
-          "autoLogClean": {
-            "never": "不清理",
-            "retainDays": "保留 {{n}} 天"
-          }
-        }
-      },
-      "update": {
-        "title": "新版本 v{{version}}",
-        "actions": {
-          "goToRelease": "前往发布页",
-          "update": "更新"
-        },
-        "messages": {
-          "portableError": "便携版不支持应用内更新，请手动下载替换",
-          "breakChangeError": "此版本为重大更新，不支持应用内更新，请卸载后手动下载安装"
-        }
-      },
-      "sysproxy": {
-        "title": "系统代理设置",
-        "fieldsets": {
-          "currentStatus": "当前系统代理"
-        },
-        "fields": {
-          "enableStatus": "开启状态：",
-          "serverAddr": "服务地址：",
-          "pacUrl": "PAC 地址：",
-          "proxyHost": "代理主机",
-          "usePacMode": "使用 PAC 模式",
-          "proxyGuard": "系统代理守卫",
-          "guardDuration": "代理守卫间隔",
-          "alwaysUseDefaultBypass": "始终使用默认绕过",
-          "proxyBypass": "代理绕过设置：",
-          "bypass": "当前绕过：",
-          "pacScriptContent": "PAC 脚本内容"
-        },
-        "tooltips": {
-          "proxyGuard": "开启以防止其他软件修改操作系统的代理设置"
-        },
-        "messages": {
-          "durationTooShort": "代理守护间隔时间不得低于 1 秒",
-          "invalidBypass": "无效的代理绕过格式",
-          "invalidProxyHost": "代理主机格式无效"
-        },
-        "actions": {
-          "editPac": "编辑 PAC"
-        }
-      },
-      "tun": {
-        "title": "虚拟网卡模式",
-        "actions": {
-          "reset": "重置为默认值"
-        },
-        "fields": {
-          "stack": "TUN 模式堆栈",
-          "device": "虚拟网卡名称",
-          "autoRoute": "自动设置全局路由",
-          "strictRoute": "严格路由",
-          "autoDetectInterface": "自动选择流量出口接口",
-          "dnsHijack": "DNS 劫持",
-          "mtu": "最大传输单元"
-        },
-        "tooltips": {
-          "dnsHijack": "多个 DNS 服务器请使用 , 分隔"
-        },
-        "messages": {
-          "applied": "设置已应用"
-        }
-      },
-      "dns": {
-        "dialog": {
-          "title": "DNS 覆写",
-          "warning": "如果你不清楚这里的设置请不要修改，并保持 DNS 覆写开启"
-        },
-        "sections": {
-          "general": "DNS 设置",
-          "fallbackFilter": "回退过滤设置",
-          "hosts": "Hosts 设置"
-        },
-        "fields": {
-          "enable": "启用 DNS",
-          "listen": "DNS 监听地址",
-          "enhancedMode": "增强模式",
-          "fakeIpRange": "Fake IP 范围",
-          "fakeIpFilterMode": "Fake IP 过滤模式",
-          "ipv6": {
-            "label": "IPv6",
-            "description": "启用 IPv6 DNS 解析"
-          },
-          "preferH3": {
-            "label": "优先使用 HTTP/3",
-            "description": "DNS DOH 使用 HTTP/3 协议"
-          },
-          "respectRules": {
-            "label": "遵循路由规则",
-            "description": "DNS 连接遵循路由规则"
-          },
-          "useHosts": {
-            "label": "使用 Hosts",
-            "description": "启用通过 hosts 文件解析域名"
-          },
-          "useSystemHosts": {
-            "label": "使用系统 Hosts",
-            "description": "启用通过系统 hosts 文件解析域名"
-          },
-          "directPolicy": {
-            "label": "直连域名服务器遵循策略",
-            "description": "是否遵循 nameserver-policy 设置"
-          },
-          "defaultNameserver": {
-            "label": "默认域名服务器",
-            "description": "用于解析 DNS 服务器的默认 DNS 服务器"
-          },
-          "nameserver": {
-            "label": "域名服务器",
-            "description": "DNS 服务器列表，用逗号分隔"
-          },
-          "fallback": {
-            "label": "回退服务器",
-            "description": "回退 DNS 服务器列表，用逗号分隔"
-          },
-          "proxy": {
-            "label": "代理节点DNS",
-            "description": "代理节点域名解析服务器，仅用于解析代理节点的域名，用逗号分隔"
-          },
-          "directNameserver": {
-            "label": "直连域名服务器",
-            "description": "直连出口域名解析服务器，支持 system 关键字，用逗号分隔"
-          },
-          "fakeIpFilter": {
-            "label": "Fake IP 过滤",
-            "description": "跳过 Fake IP 解析的域名，用逗号分隔"
-          },
-          "nameserverPolicy": {
-            "label": "域名服务器策略",
-            "description": "特定域名的 DNS 服务器，多个服务器使用分号分隔，格式: domain=server1;server2"
-          },
-          "geoipFiltering": {
-            "label": "GeoIP 过滤",
-            "description": "启用 GeoIP 回退过滤"
-          },
-          "geoipCode": "GeoIP 国家代码",
-          "fallbackIpCidr": {
-            "label": "回退 IP CIDR",
-            "description": "不使用回退服务器的 IP CIDR，用逗号分隔"
-          },
-          "fallbackDomain": {
-            "label": "回退域名",
-            "description": "使用回退服务器的域名，用逗号分隔"
-          },
-          "hosts": {
-            "label": "Hosts",
-            "description": "自定义域名到 IP 或域名的映射，用逗号分隔"
-          }
-        },
-        "messages": {
-          "saved": "DNS 设置已保存",
-          "configError": "DNS 配置错误："
-        },
-        "errors": {
-          "invalid": "配置无效"
-        }
-      },
-      "page": {
-        "title": "设置",
-        "actions": {
-          "manual": "使用手册",
-          "telegram": "Telegram 频道",
-          "github": "GitHub 项目地址"
-        }
-      },
-      "webUI": {
-        "actions": {
-          "openUrl": "打开链接"
-        },
-        "title": "网页界面",
-        "messages": {
-          "supportedPlaceholders": "支持 %host, %port, %secret",
-          "placeholderInstruction": "使用 %host, %port, %secret 表示 主机, 端口, 访问密钥"
-        }
-      },
-      "hotkey": {
-        "toggles": {
-          "enableGlobal": "启用全局热键"
-        },
-        "title": "热键设置",
-        "functions": {
-          "rule": "规则模式",
-          "global": "全局模式",
-          "openOrCloseDashboard": "打开/关闭面板",
-          "toggleSystemProxy": "打开/关闭系统代理",
-          "toggleTunMode": "打开/关闭 TUN 模式",
-          "entryLightweightMode": "进入轻量模式",
-          "direct": "直连模式"
-        }
-      },
-      "password": {
-        "prompts": {
-          "enterRoot": "请输入您的 root 密码"
-        }
-      },
-      "networkInterface": {
-        "title": "网络接口",
-        "fields": {
-          "ipAddress": "IP 地址",
-          "macAddress": "MAC 地址"
-        }
-      },
-      "updater": {
-        "notifications": {
-          "withClashProxySuccess": "使用 Clash 代理更新成功",
-          "withClashProxyFailed": "使用 Clash 代理更新也失败"
-        }
-      }
-    },
-    "rule": {
-      "page": {
-        "title": "规则",
-        "provider": {
-          "trigger": "规则集合",
-          "dialogTitle": "规则集合",
-          "actions": {
-            "updateAll": "更新全部",
-            "update": "更新"
-          },
-          "notices": {
-            "updateSuccess": "{{name}} 更新成功",
-            "updateFailed": "{{name}} 更新失败: {{message}}",
-            "genericError": "更新失败: {{message}}",
-            "none": "没有可更新的 provider",
-            "allUpdated": "所有 provider 均已更新"
-          }
-        }
-      },
-      "editor": {
-        "title": "编辑规则",
-        "form": {
-          "labels": {
-            "type": "规则类型",
-            "content": "规则内容",
-            "proxyPolicy": "代理策略"
-          },
-          "toggles": {
-            "noResolve": "跳过 DNS 解析"
-          },
-          "actions": {
-            "prependRule": "添加前置规则",
-            "appendRule": "添加后置规则"
-          },
-          "validation": {
-            "conditionRequired": "规则条件缺失",
-            "invalidRule": "无效规则"
-          }
-        },
-        "ruleTypes": {
-          "DOMAIN": "匹配完整域名 (DOMAIN)",
-          "DOMAIN-SUFFIX": "匹配域名后缀 (DOMAIN-SUFFIX)",
-          "DOMAIN-KEYWORD": "匹配域名关键字 (DOMAIN-KEYWORD)",
-          "DOMAIN-REGEX": "匹配域名正则表达式 (DOMAIN-REGEX)",
-          "GEOSITE": "匹配 Geosite 内的域名 (GEOSITE)",
-          "GEOIP": "匹配 IP 所属国家代码 (GEOIP)",
-          "SRC-GEOIP": "匹配来源 IP 所属国家代码 (SRC-GEOIP)",
-          "IP-ASN": "匹配 IP 所属 ASN (IP-ASN)",
-          "SRC-IP-ASN": "匹配来源 IP 所属 ASN (SRC-IP-ASN)",
-          "IP-CIDR": "匹配 IP 地址范围 (IP-CIDR)",
-          "IP-CIDR6": "匹配 IP 地址范围 (IP-CIDR6)",
-          "SRC-IP-CIDR": "匹配来源 IP 地址范围 (SRC-IP-CIDR)",
-          "IP-SUFFIX": "匹配 IP 后缀范围 (IP-SUFFIX)",
-          "SRC-IP-SUFFIX": "匹配来源 IP 后缀范围 (SRC-IP-SUFFIX)",
-          "SRC-PORT": "匹配请求来源端口范围 (SRC-PORT)",
-          "DST-PORT": "匹配请求目标端口范围 (DST-PORT)",
-          "IN-PORT": "匹配入站端口 (IN-PORT)",
-          "DSCP": "DSCP 标记（仅限 TPROXY UDP 入站）(DSCP)",
-          "PROCESS-NAME": "匹配进程名称 (PROCESS-NAME)",
-          "PROCESS-PATH": "匹配完整进程路径 (PROCESS-PATH)",
-          "PROCESS-NAME-REGEX": "正则匹配完整进程名称 (PROCESS-NAME-REGEX)",
-          "PROCESS-PATH-REGEX": "正则匹配完整进程路径 (PROCESS-PATH-REGEX)",
-          "NETWORK": "匹配传输协议 (TCP/UDP) (NETWORK)",
-          "UID": "匹配 Linux USER ID (UID)",
-          "IN-TYPE": "匹配入站类型 (IN-TYPE)",
-          "IN-USER": "匹配入站用户名 (IN-USER)",
-          "IN-NAME": "匹配入站名称 (IN-NAME)",
-          "SUB-RULE": "子规则 (SUB-RULE)",
-          "RULE-SET": "匹配规则集 (RULE-SET)",
-          "AND": "逻辑与 (AND)",
-          "OR": "逻辑或 (OR)",
-          "NOT": "逻辑非 (NOT)",
-          "MATCH": "匹配所有请求 (MATCH)"
-        }
-      }
-    },
-    "home": {
-      "page": {
-        "title": "首页",
-        "tooltips": {
-          "lightweightMode": "轻量模式",
-          "manual": "使用手册",
-          "settings": "首页设置"
-        },
-        "cards": {
-          "trafficStats": "流量统计",
-          "networkSettings": "网络设置",
-          "proxyMode": "代理模式"
-        },
-        "settings": {
-          "title": "首页设置",
-          "cards": {
-            "profile": "订阅卡",
-            "currentProxy": "当前代理卡",
-            "network": "网络设置卡",
-            "proxyMode": "代理模式卡",
-            "traffic": "流量统计卡",
-            "tests": "网站测试卡",
-            "ip": "IP 信息卡",
-            "clashInfo": "Clash 信息卡",
-            "systemInfo": "系统信息卡"
-          }
-        }
-      },
-      "cards": {
-        "proxyTun": {
-          "status": {
-            "systemProxyEnabled": "系统代理已启用，您的应用将通过代理访问网络",
-            "systemProxyDisabled": "系统代理已关闭，建议大多数用户打开此选项",
-            "tunModeServiceRequired": "TUN模式需要服务模式，请先安装服务",
-            "tunModeEnabled": "TUN 模式已启用，应用将通过虚拟网卡访问网络",
-            "tunModeDisabled": "TUN 模式已关闭，适用于特殊应用"
-          },
-          "tooltips": {
-            "systemProxy": "修改操作系统的代理设置，如果开启失败，可手动修改操作系统的代理设置",
-            "tunMode": "TUN模式可以接管所有应用流量，适用于特殊不遵循系统代理设置的应用"
-          }
-        },
-        "clashInfo": {
-          "title": "Clash 信息",
-          "fields": {
-            "coreVersion": "内核版本",
-            "systemProxyAddress": "系统代理地址",
-            "mixedPort": "混合代理端口",
-            "uptime": "运行时间",
-            "rulesCount": "规则数量"
-          }
-        },
-        "systemInfo": {
-          "title": "系统信息",
-          "fields": {
-            "osInfo": "操作系统信息",
-            "autoLaunch": "开机自启",
-            "runningMode": "运行模式",
-            "lastCheckUpdate": "最后检查更新",
-            "vergeVersion": "Verge 版本"
-          },
-          "actions": {
-            "settings": "设置"
-          },
-          "tooltips": {
-            "autoLaunchAdmin": "管理员模式可能不支持开机自启"
-          },
-          "badges": {
-            "adminMode": "管理员模式",
-            "serviceMode": "服务模式",
-            "sidecarMode": "用户模式",
-            "adminServiceMode": "管理员 + 服务模式"
-          }
-        },
-        "ipInfo": {
-          "title": "IP 信息",
-          "labels": {
-            "ip": "IP",
-            "asn": "自治域",
-            "isp": "服务商",
-            "org": "组织",
-            "location": "位置",
-            "timezone": "时区",
-            "autoRefresh": "自动刷新",
-            "unknown": "未知"
-          },
-          "errors": {
-            "load": "获取 IP 信息失败"
-          }
-        },
-        "currentProxy": {
-          "title": "当前节点",
-          "actions": {
-            "refreshDelay": "延迟测试"
-          },
-          "labels": {
-            "globalMode": "全局模式",
-            "directMode": "直连模式",
-            "group": "代理组",
-            "proxy": "节点",
-            "noActiveNode": "暂无激活的代理节点"
-          }
-        },
-        "tests": {
-          "title": "网站测试"
-        },
-        "traffic": {
-          "metrics": {
-            "uploadSpeed": "上传速度",
-            "downloadSpeed": "下载速度",
-            "activeConnections": "活跃连接",
-            "uploaded": "上传量",
-            "downloaded": "下载量",
-            "memoryUsage": "内核占用"
-          },
-          "legends": {
-            "upload": "上传",
-            "download": "下载"
-          },
-          "patterns": {
-            "minutes": "{{time}} 分钟"
-          }
-        },
-        "clashMode": {
-          "errors": {
-            "communication": "内核通信错误"
-          },
-          "labels": {
-            "rule": "规则",
-            "global": "全局",
-            "direct": "直连"
-          },
-          "descriptions": {
-            "rule": "基于预设规则智能判断流量走向，提供灵活的代理策略",
-            "global": "所有流量均通过代理服务器，适用于需要全局科学上网的场景",
-            "direct": "所有流量不经过代理节点，但经过Clash内核转发连接目标服务器，适用于需要通过内核进行分流的特定场景"
-          }
-        }
-      }
-    },
-    "unlock": {
-      "page": {
-        "title": "解锁测试",
-        "actions": {
-          "testing": "测试中..."
-        },
-        "empty": "暂无解锁测试项目",
-        "messages": {
-          "detectionTimeout": "检测超时或失败"
-        }
-      }
     },
     "validation": {
       "config": {
@@ -1270,6 +1251,25 @@
         "mappingError": "覆写文件映射错误，变更已撤销",
         "keyError": "覆写文件键错误，变更已撤销",
         "generalError": "覆写文件错误，变更已撤销"
+      }
+    }
+  },
+  "layout": {
+    "navigation": {
+      "tabs": {
+        "home": "首 页",
+        "proxies": "代 理",
+        "profiles": "订 阅",
+        "connections": "连 接",
+        "rules": "规 则",
+        "logs": "日 志",
+        "unlock": "测 试",
+        "settings": "设 置"
+      },
+      "menu": {
+        "reorderMode": "菜单排序模式",
+        "unlock": "解锁菜单排序",
+        "lock": "锁定菜单排序"
       }
     }
   }

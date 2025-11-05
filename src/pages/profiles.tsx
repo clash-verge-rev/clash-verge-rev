@@ -146,7 +146,7 @@ const ProfilePage = () => {
 
       setActivatings((prev) => prev.filter((id) => id !== previousSwitching));
       showNotice.info(
-        "entities.profile.page.notifications.switchInterrupted",
+        "profiles.page.notifications.switchInterrupted",
         `${previousSwitching} → ${newProfile}`,
         3000,
       );
@@ -191,7 +191,7 @@ const ProfilePage = () => {
 
           for (const file of paths) {
             if (!file.endsWith(".yaml") && !file.endsWith(".yml")) {
-              showNotice.error("entities.profile.page.errors.onlyYaml");
+              showNotice.error("profiles.page.errors.onlyYaml");
               continue;
             }
             const item = {
@@ -239,14 +239,11 @@ const ProfilePage = () => {
       await new Promise((resolve) => setTimeout(resolve, 500));
       await onEnhance(false);
 
-      showNotice.success(
-        "entities.profile.page.notices.forceRefreshCompleted",
-        2000,
-      );
+      showNotice.success("profiles.page.notices.forceRefreshCompleted", 2000);
     } catch (error) {
       console.error("[紧急刷新] 失败:", error);
       showNotice.error(
-        "entities.profile.page.notices.emergencyRefreshFailed",
+        "profiles.page.notices.emergencyRefreshFailed",
         { message: String(error) },
         4000,
       );
@@ -278,7 +275,7 @@ const ProfilePage = () => {
     if (!url) return;
     // 校验url是否为http/https
     if (!/^https?:\/\//i.test(url)) {
-      showNotice.error("entities.profile.page.errors.invalidUrl");
+      showNotice.error("profiles.page.errors.invalidUrl");
       return;
     }
     setLoading(true);
@@ -292,11 +289,11 @@ const ProfilePage = () => {
     try {
       // 尝试正常导入
       await importProfile(url);
-      await handleImportSuccess("entities.profile.notifications.importSuccess");
+      await handleImportSuccess("profiles.notifications.importSuccess");
     } catch (initialErr) {
       console.warn("[订阅导入] 首次导入失败:", initialErr);
 
-      showNotice.info("entities.profile.page.notifications.importRetry");
+      showNotice.info("profiles.page.notifications.importRetry");
       try {
         // 使用自身代理尝试导入
         await importProfile(url, {
@@ -304,12 +301,12 @@ const ProfilePage = () => {
           self_proxy: true,
         });
         await handleImportSuccess(
-          "entities.profile.notifications.importWithClashProxy",
+          "profiles.notifications.importWithClashProxy",
         );
       } catch (retryErr) {
         // 回退导入也失败
         showNotice.error(
-          "entities.profile.page.notifications.importFail",
+          "profiles.page.notifications.importFail",
           String(retryErr),
         );
       }
@@ -357,16 +354,10 @@ const ProfilePage = () => {
       // 清除SWR缓存并重新获取
       await mutate("getProfiles", getProfiles(), { revalidate: true });
       await onEnhance(false);
-      showNotice.error(
-        "entities.profile.page.notifications.importNeedsRefresh",
-        3000,
-      );
+      showNotice.error("profiles.page.notifications.importNeedsRefresh", 3000);
     } catch (finalError) {
       console.error(`[导入刷新] 最终刷新尝试失败:`, finalError);
-      showNotice.error(
-        "entities.profile.page.notifications.importSuccess",
-        5000,
-      );
+      showNotice.error("profiles.page.notifications.importSuccess", 5000);
     }
   };
 
@@ -484,7 +475,7 @@ const ProfilePage = () => {
 
         if (notifySuccess && success) {
           showNotice.success(
-            "entities.profile.page.notifications.profileSwitched",
+            "profiles.page.notifications.profileSwitched",
             1000,
           );
         }
@@ -583,7 +574,7 @@ const ProfilePage = () => {
       mutateLogs();
       if (notifySuccess) {
         showNotice.success(
-          "entities.profile.page.notifications.profileReactivated",
+          "profiles.page.notifications.profileReactivated",
           1000,
         );
       }
@@ -724,7 +715,7 @@ const ProfilePage = () => {
       setSelectedProfiles(new Set());
       setBatchMode(false);
 
-      showNotice.success("entities.profile.page.notifications.batchDeleted");
+      showNotice.success("profiles.page.notifications.batchDeleted");
     } catch (err: any) {
       showNotice.error(err);
     } finally {
@@ -804,7 +795,7 @@ const ProfilePage = () => {
   return (
     <BasePage
       full
-      title={t("entities.profile.page.title")}
+      title={t("profiles.page.title")}
       contentStyle={{ height: "100%" }}
       header={
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -814,7 +805,7 @@ const ProfilePage = () => {
               <IconButton
                 size="small"
                 color="inherit"
-                title={t("entities.profile.page.batch.title")}
+                title={t("profiles.page.batch.title")}
                 onClick={toggleBatchMode}
               >
                 <CheckBoxOutlineBlankRounded />
@@ -823,7 +814,7 @@ const ProfilePage = () => {
               <IconButton
                 size="small"
                 color="inherit"
-                title={t("entities.profile.page.actions.updateAll")}
+                title={t("profiles.page.actions.updateAll")}
                 onClick={onUpdateAll}
               >
                 <RefreshRounded />
@@ -832,7 +823,7 @@ const ProfilePage = () => {
               <IconButton
                 size="small"
                 color="inherit"
-                title={t("entities.profile.page.actions.viewRuntimeConfig")}
+                title={t("profiles.page.actions.viewRuntimeConfig")}
                 onClick={() => configRef.current?.open()}
               >
                 <TextSnippetOutlined />
@@ -841,7 +832,7 @@ const ProfilePage = () => {
               <IconButton
                 size="small"
                 color="primary"
-                title={t("entities.profile.page.actions.reactivate")}
+                title={t("profiles.page.actions.reactivate")}
                 onClick={() => onEnhance(true)}
               >
                 <LocalFireDepartmentRounded />
@@ -875,8 +866,8 @@ const ProfilePage = () => {
                 color="inherit"
                 title={
                   isAllSelected()
-                    ? t("entities.profile.page.batch.deselectAll")
-                    : t("entities.profile.page.batch.selectAll")
+                    ? t("profiles.page.batch.deselectAll")
+                    : t("profiles.page.batch.selectAll")
                 }
                 onClick={
                   isAllSelected() ? clearAllSelections : selectAllProfiles
@@ -893,20 +884,20 @@ const ProfilePage = () => {
               <IconButton
                 size="small"
                 color="error"
-                title={t("entities.profile.page.batch.delete")}
+                title={t("profiles.page.batch.delete")}
                 onClick={deleteSelectedProfiles}
                 disabled={selectedProfiles.size === 0}
               >
                 <DeleteRounded />
               </IconButton>
               <Button size="small" variant="outlined" onClick={toggleBatchMode}>
-                {t("entities.profile.page.batch.done")}
+                {t("profiles.page.batch.done")}
               </Button>
               <Box
                 sx={{ flex: 1, textAlign: "right", color: "text.secondary" }}
               >
-                {t("entities.profile.page.batch.selected")}{" "}
-                {selectedProfiles.size} {t("entities.profile.page.batch.items")}
+                {t("profiles.page.batch.selected")} {selectedProfiles.size}{" "}
+                {t("profiles.page.batch.items")}
               </Box>
             </Box>
           )}
@@ -939,7 +930,7 @@ const ProfilePage = () => {
             event.preventDefault();
             void onImport();
           }}
-          placeholder={t("entities.profile.page.import.placeholder")}
+          placeholder={t("profiles.page.import.placeholder")}
           slotProps={{
             input: {
               sx: { pr: 1 },
@@ -947,7 +938,7 @@ const ProfilePage = () => {
                 <IconButton
                   size="small"
                   sx={{ p: 0.5 }}
-                  title={t("entities.profile.page.import.paste")}
+                  title={t("profiles.page.import.paste")}
                   onClick={onCopyLink}
                 >
                   <ContentPasteRounded fontSize="inherit" />
@@ -956,7 +947,7 @@ const ProfilePage = () => {
                 <IconButton
                   size="small"
                   sx={{ p: 0.5 }}
-                  title={t("entities.profile.page.import.clear")}
+                  title={t("profiles.page.import.clear")}
                   onClick={() => setUrl("")}
                 >
                   <ClearRounded fontSize="inherit" />
@@ -973,7 +964,7 @@ const ProfilePage = () => {
           sx={{ borderRadius: "6px" }}
           onClick={onImport}
         >
-          {t("entities.profile.page.actions.import")}
+          {t("profiles.page.actions.import")}
         </LoadingButton>
         <Button
           variant="contained"
@@ -1018,7 +1009,7 @@ const ProfilePage = () => {
                         if (prev !== curr && profiles.current === item.uid) {
                           await onEnhance(false);
                           //  await restartCore();
-                          //   Notice.success(t("entities.settings.clash.notifications.restartSuccess"), 1000);
+                          //   Notice.success(t("settings.clash.notifications.restartSuccess"), 1000);
                         }
                       }}
                       onDelete={() => {

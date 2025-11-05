@@ -29,49 +29,49 @@ import UnlockPage from "./unlock";
 
 export const navItems = [
   {
-    label: "entities.navigation.tabs.home",
+    label: "layout.navigation.tabs.home",
     path: "/",
     icon: [<HomeRoundedIcon key="mui" />, <HomeSvg key="svg" />],
     Component: HomePage,
   },
   {
-    label: "entities.navigation.tabs.proxies",
+    label: "layout.navigation.tabs.proxies",
     path: "/proxies",
     icon: [<WifiRoundedIcon key="mui" />, <ProxiesSvg key="svg" />],
     Component: ProxiesPage,
   },
   {
-    label: "entities.navigation.tabs.profiles",
+    label: "layout.navigation.tabs.profiles",
     path: "/profile",
     icon: [<DnsRoundedIcon key="mui" />, <ProfilesSvg key="svg" />],
     Component: ProfilesPage,
   },
   {
-    label: "entities.navigation.tabs.connections",
+    label: "layout.navigation.tabs.connections",
     path: "/connections",
     icon: [<LanguageRoundedIcon key="mui" />, <ConnectionsSvg key="svg" />],
     Component: ConnectionsPage,
   },
   {
-    label: "entities.navigation.tabs.rules",
+    label: "layout.navigation.tabs.rules",
     path: "/rules",
     icon: [<ForkRightRoundedIcon key="mui" />, <RulesSvg key="svg" />],
     Component: RulesPage,
   },
   {
-    label: "entities.navigation.tabs.logs",
+    label: "layout.navigation.tabs.logs",
     path: "/logs",
     icon: [<SubjectRoundedIcon key="mui" />, <LogsSvg key="svg" />],
     Component: LogsPage,
   },
   {
-    label: "entities.navigation.tabs.unlock",
+    label: "layout.navigation.tabs.unlock",
     path: "/unlock",
     icon: [<LockOpenRoundedIcon key="mui" />, <UnlockSvg key="svg" />],
     Component: UnlockPage,
   },
   {
-    label: "entities.navigation.tabs.settings",
+    label: "layout.navigation.tabs.settings",
     path: "/settings",
     icon: [<SettingsRoundedIcon key="mui" />, <SettingsSvg key="svg" />],
     Component: SettingsPage,

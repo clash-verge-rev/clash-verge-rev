@@ -113,7 +113,7 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
   return (
     <BaseDialog
       open={open}
-      title={t("entities.settings.verge.layout.title")}
+      title={t("settings.verge.layout.title")}
       contentSx={{ width: 450 }}
       disableOk
       cancelBtn={t("shared.actions.close")}
@@ -123,9 +123,7 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
       <List>
         <Item>
           <ListItemText
-            primary={t(
-              "entities.settings.verge.layout.fields.preferSystemTitlebar",
-            )}
+            primary={t("settings.verge.layout.fields.preferSystemTitlebar")}
           />
           <GuardState
             value={decorated}
@@ -142,7 +140,7 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
 
         <Item>
           <ListItemText
-            primary={t("entities.settings.verge.layout.fields.trafficGraph")}
+            primary={t("settings.verge.layout.fields.trafficGraph")}
           />
           <GuardState
             value={verge?.traffic_graph ?? true}
@@ -158,7 +156,7 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
 
         <Item>
           <ListItemText
-            primary={t("entities.settings.verge.layout.fields.memoryUsage")}
+            primary={t("settings.verge.layout.fields.memoryUsage")}
           />
           <GuardState
             value={verge?.enable_memory_usage ?? true}
@@ -174,7 +172,7 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
 
         <Item>
           <ListItemText
-            primary={t("entities.settings.verge.layout.fields.proxyGroupIcon")}
+            primary={t("settings.verge.layout.fields.proxyGroupIcon")}
           />
           <GuardState
             value={verge?.enable_group_icon ?? true}
@@ -192,13 +190,9 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
           <ListItemText
             primary={
               <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-                <span>
-                  {t("entities.settings.verge.layout.fields.hoverNavigator")}
-                </span>
+                <span>{t("settings.verge.layout.fields.hoverNavigator")}</span>
                 <TooltipIcon
-                  title={t(
-                    "entities.settings.verge.layout.tooltips.hoverNavigator",
-                  )}
+                  title={t("settings.verge.layout.tooltips.hoverNavigator")}
                   sx={{ opacity: "0.7" }}
                 />
               </Box>
@@ -221,13 +215,11 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
             primary={
               <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
                 <span>
-                  {t(
-                    "entities.settings.verge.layout.fields.hoverNavigatorDelay",
-                  )}
+                  {t("settings.verge.layout.fields.hoverNavigatorDelay")}
                 </span>
                 <TooltipIcon
                   title={t(
-                    "entities.settings.verge.layout.tooltips.hoverNavigatorDelay",
+                    "settings.verge.layout.tooltips.hoverNavigatorDelay",
                   )}
                   sx={{ opacity: "0.7" }}
                 />
@@ -276,9 +268,7 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
         </Item>
 
         <Item>
-          <ListItemText
-            primary={t("entities.settings.verge.layout.fields.navIcon")}
-          />
+          <ListItemText primary={t("settings.verge.layout.fields.navIcon")} />
           <GuardState
             value={verge?.menu_icon ?? "monochrome"}
             onCatch={onError}
@@ -288,13 +278,13 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
           >
             <Select size="small" sx={{ width: 140, "> div": { py: "7.5px" } }}>
               <MenuItem value="monochrome">
-                {t("entities.settings.verge.layout.options.icon.monochrome")}
+                {t("settings.verge.layout.options.icon.monochrome")}
               </MenuItem>
               <MenuItem value="colorful">
-                {t("entities.settings.verge.layout.options.icon.colorful")}
+                {t("settings.verge.layout.options.icon.colorful")}
               </MenuItem>
               <MenuItem value="disable">
-                {t("entities.settings.verge.layout.options.icon.disable")}
+                {t("settings.verge.layout.options.icon.disable")}
               </MenuItem>
             </Select>
           </GuardState>
@@ -303,7 +293,7 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
         {OS === "macos" && (
           <Item>
             <ListItemText
-              primary={t("entities.settings.verge.layout.fields.trayIcon")}
+              primary={t("settings.verge.layout.fields.trayIcon")}
             />
             <GuardState
               value={verge?.tray_icon ?? "monochrome"}
@@ -317,10 +307,10 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
                 sx={{ width: 140, "> div": { py: "7.5px" } }}
               >
                 <MenuItem value="monochrome">
-                  {t("entities.settings.verge.layout.options.icon.monochrome")}
+                  {t("settings.verge.layout.options.icon.monochrome")}
                 </MenuItem>
                 <MenuItem value="colorful">
-                  {t("entities.settings.verge.layout.options.icon.colorful")}
+                  {t("settings.verge.layout.options.icon.colorful")}
                 </MenuItem>
               </Select>
             </GuardState>
@@ -328,7 +318,7 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
         )}
         {/* {OS === "macos" && (
           <Item>
-            <ListItemText primary={t("entities.settings.verge.layout.fields.enableTraySpeed")} />
+            <ListItemText primary={t("settings.verge.layout.fields.enableTraySpeed")} />
             <GuardState
               value={verge?.enable_tray_speed ?? false}
               valueProps="checked"
@@ -343,7 +333,7 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
         )} */}
         {/* {OS === "macos" && (
           <Item>
-            <ListItemText primary={t("entities.settings.verge.layout.fields.enableTrayIcon")} />
+            <ListItemText primary={t("settings.verge.layout.fields.enableTrayIcon")} />
             <GuardState
               value={
                 verge?.enable_tray_icon === false &&
@@ -363,9 +353,7 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
         )} */}
         <Item>
           <ListItemText
-            primary={t(
-              "entities.settings.verge.layout.fields.showProxyGroupsInline",
-            )}
+            primary={t("settings.verge.layout.fields.showProxyGroupsInline")}
           />
           <GuardState
             value={verge?.tray_inline_proxy_groups ?? false}
@@ -381,7 +369,7 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
 
         <Item>
           <ListItemText
-            primary={t("entities.settings.verge.layout.fields.commonTrayIcon")}
+            primary={t("settings.verge.layout.fields.commonTrayIcon")}
           />
           <GuardState
             value={verge?.common_tray_icon}
@@ -425,17 +413,15 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
               }}
             >
               {verge?.common_tray_icon
-                ? t("entities.settings.verge.basic.actions.clear")
-                : t("entities.settings.verge.basic.actions.browse")}
+                ? t("settings.verge.basic.actions.clear")
+                : t("settings.verge.basic.actions.browse")}
             </Button>
           </GuardState>
         </Item>
 
         <Item>
           <ListItemText
-            primary={t(
-              "entities.settings.verge.layout.fields.systemProxyTrayIcon",
-            )}
+            primary={t("settings.verge.layout.fields.systemProxyTrayIcon")}
           />
           <GuardState
             value={verge?.sysproxy_tray_icon}
@@ -477,15 +463,15 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
               }}
             >
               {verge?.sysproxy_tray_icon
-                ? t("entities.settings.verge.basic.actions.clear")
-                : t("entities.settings.verge.basic.actions.browse")}
+                ? t("settings.verge.basic.actions.clear")
+                : t("settings.verge.basic.actions.browse")}
             </Button>
           </GuardState>
         </Item>
 
         <Item>
           <ListItemText
-            primary={t("entities.settings.verge.layout.fields.tunTrayIcon")}
+            primary={t("settings.verge.layout.fields.tunTrayIcon")}
           />
           <GuardState
             value={verge?.tun_tray_icon}
@@ -525,8 +511,8 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
               }}
             >
               {verge?.tun_tray_icon
-                ? t("entities.settings.verge.basic.actions.clear")
-                : t("entities.settings.verge.basic.actions.browse")}
+                ? t("settings.verge.basic.actions.clear")
+                : t("settings.verge.basic.actions.browse")}
             </Button>
           </GuardState>
         </Item>

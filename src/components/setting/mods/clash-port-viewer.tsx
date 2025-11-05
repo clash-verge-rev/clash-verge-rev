@@ -69,13 +69,10 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
       manual: true,
       onSuccess: () => {
         setOpen(false);
-        showNotice.success("entities.settings.clash.port.messages.saved");
+        showNotice.success("settings.clash.port.messages.saved");
       },
       onError: (error) => {
-        showNotice.error(
-          "entities.settings.clash.port.messages.saveFailed",
-          error,
-        );
+        showNotice.error("settings.clash.port.messages.saveFailed", error);
       },
     },
   );
@@ -152,7 +149,7 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
   return (
     <BaseDialog
       open={open}
-      title={t("entities.settings.clash.port.title")}
+      title={t("settings.clash.port.title")}
       contentSx={{
         width: 400,
       }}
@@ -174,7 +171,7 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
       <List sx={{ width: "100%" }}>
         <ListItem sx={{ padding: "4px 0", minHeight: 36 }}>
           <ListItemText
-            primary={t("entities.settings.clash.port.fields.mixed")}
+            primary={t("settings.clash.port.fields.mixed")}
             slotProps={{ primary: { sx: { fontSize: 12 } } }}
           />
           <div style={{ display: "flex", alignItems: "center" }}>
@@ -190,7 +187,7 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
             <IconButton
               size="small"
               onClick={() => setMixedPort(generateRandomPort())}
-              title={t("entities.settings.clash.port.actions.random")}
+              title={t("settings.clash.port.actions.random")}
               sx={{ mr: 0.5 }}
             >
               <Shuffle fontSize="small" />
@@ -206,7 +203,7 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
 
         <ListItem sx={{ padding: "4px 0", minHeight: 36 }}>
           <ListItemText
-            primary={t("entities.settings.clash.port.fields.socks")}
+            primary={t("settings.clash.port.fields.socks")}
             slotProps={{ primary: { sx: { fontSize: 12 } } }}
           />
           <div style={{ display: "flex", alignItems: "center" }}>
@@ -223,7 +220,7 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
             <IconButton
               size="small"
               onClick={() => setSocksPort(generateRandomPort())}
-              title={t("entities.settings.clash.port.actions.random")}
+              title={t("settings.clash.port.actions.random")}
               disabled={!socksEnabled}
               sx={{ mr: 0.5 }}
             >
@@ -240,7 +237,7 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
 
         <ListItem sx={{ padding: "4px 0", minHeight: 36 }}>
           <ListItemText
-            primary={t("entities.settings.clash.port.fields.http")}
+            primary={t("settings.clash.port.fields.http")}
             slotProps={{ primary: { sx: { fontSize: 12 } } }}
           />
           <div style={{ display: "flex", alignItems: "center" }}>
@@ -257,7 +254,7 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
             <IconButton
               size="small"
               onClick={() => setHttpPort(generateRandomPort())}
-              title={t("entities.settings.clash.port.actions.random")}
+              title={t("settings.clash.port.actions.random")}
               disabled={!httpEnabled}
               sx={{ mr: 0.5 }}
             >
@@ -275,7 +272,7 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
         {OS !== "windows" && (
           <ListItem sx={{ padding: "4px 0", minHeight: 36 }}>
             <ListItemText
-              primary={t("entities.settings.clash.port.fields.redir")}
+              primary={t("settings.clash.port.fields.redir")}
               slotProps={{ primary: { sx: { fontSize: 12 } } }}
             />
             <div style={{ display: "flex", alignItems: "center" }}>
@@ -292,7 +289,7 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
               <IconButton
                 size="small"
                 onClick={() => setRedirPort(generateRandomPort())}
-                title={t("entities.settings.clash.port.actions.random")}
+                title={t("settings.clash.port.actions.random")}
                 disabled={!redirEnabled}
                 sx={{ mr: 0.5 }}
               >
@@ -311,7 +308,7 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
         {OS === "linux" && (
           <ListItem sx={{ padding: "4px 0", minHeight: 36 }}>
             <ListItemText
-              primary={t("entities.settings.clash.port.fields.tproxy")}
+              primary={t("settings.clash.port.fields.tproxy")}
               slotProps={{ primary: { sx: { fontSize: 12 } } }}
             />
             <div style={{ display: "flex", alignItems: "center" }}>
@@ -328,7 +325,7 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
               <IconButton
                 size="small"
                 onClick={() => setTproxyPort(generateRandomPort())}
-                title={t("entities.settings.clash.port.actions.random")}
+                title={t("settings.clash.port.actions.random")}
                 disabled={!tproxyEnabled}
                 sx={{ mr: 0.5 }}
               >

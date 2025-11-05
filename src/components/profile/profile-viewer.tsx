@@ -144,9 +144,7 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
             }
           } catch {
             // 首次创建/更新失败，尝试使用自身代理
-            showNotice.info(
-              "entities.profile.viewer.notifications.creationRetry",
-            );
+            showNotice.info("profiles.viewer.notifications.creationRetry");
 
             // 使用自身代理的配置
             const retryItem = {
@@ -169,9 +167,7 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
               await patchProfile(form.uid, { option: originalOptions });
             }
 
-            showNotice.success(
-              "entities.profile.viewer.notifications.creationSuccess",
-            );
+            showNotice.success("profiles.viewer.notifications.creationSuccess");
           }
         }
 
@@ -220,8 +216,8 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
       open={open}
       title={
         openType === "new"
-          ? t("entities.profile.viewer.title.create")
-          : t("entities.profile.viewer.title.edit")
+          ? t("profiles.viewer.title.create")
+          : t("profiles.viewer.title.edit")
       }
       contentSx={{ width: 375, pb: 0, maxHeight: "80%" }}
       okBtn={t("shared.actions.save")}
@@ -236,11 +232,11 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
         control={control}
         render={({ field }) => (
           <FormControl size="small" fullWidth sx={{ mt: 1, mb: 1 }}>
-            <InputLabel>{t("entities.profile.viewer.fields.type")}</InputLabel>
+            <InputLabel>{t("profiles.viewer.fields.type")}</InputLabel>
             <Select
               {...field}
               autoFocus
-              label={t("entities.profile.viewer.fields.type")}
+              label={t("profiles.viewer.fields.type")}
             >
               <MenuItem value="remote">Remote</MenuItem>
               <MenuItem value="local">Local</MenuItem>
@@ -256,7 +252,7 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
           <TextField
             {...text}
             {...field}
-            label={t("entities.profile.viewer.fields.name")}
+            label={t("profiles.viewer.fields.name")}
           />
         )}
       />
@@ -268,7 +264,7 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
           <TextField
             {...text}
             {...field}
-            label={t("entities.profile.viewer.fields.description")}
+            label={t("profiles.viewer.fields.description")}
           />
         )}
       />
@@ -283,7 +279,7 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
                 {...text}
                 {...field}
                 multiline
-                label={t("entities.profile.viewer.fields.subscriptionUrl")}
+                label={t("profiles.viewer.fields.subscriptionUrl")}
               />
             )}
           />
@@ -310,7 +306,7 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
                 {...field}
                 type="number"
                 placeholder="60"
-                label={t("entities.profile.viewer.fields.httpTimeout")}
+                label={t("profiles.viewer.fields.httpTimeout")}
                 slotProps={{
                   input: {
                     endAdornment: (
@@ -335,7 +331,7 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
               {...text}
               {...field}
               type="number"
-              label={t("entities.profile.viewer.fields.updateInterval")}
+              label={t("profiles.viewer.fields.updateInterval")}
               slotProps={{
                 input: {
                   endAdornment: (
@@ -367,7 +363,7 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
             render={({ field }) => (
               <StyledBox>
                 <InputLabel>
-                  {t("entities.profile.viewer.fields.useSystemProxy")}
+                  {t("profiles.viewer.fields.useSystemProxy")}
                 </InputLabel>
                 <Switch checked={field.value} {...field} color="primary" />
               </StyledBox>
@@ -380,7 +376,7 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
             render={({ field }) => (
               <StyledBox>
                 <InputLabel>
-                  {t("entities.profile.viewer.fields.useClashProxy")}
+                  {t("profiles.viewer.fields.useClashProxy")}
                 </InputLabel>
                 <Switch checked={field.value} {...field} color="primary" />
               </StyledBox>
@@ -393,7 +389,7 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
             render={({ field }) => (
               <StyledBox>
                 <InputLabel>
-                  {t("entities.profile.viewer.fields.acceptInvalidCerts")}
+                  {t("profiles.viewer.fields.acceptInvalidCerts")}
                 </InputLabel>
                 <Switch checked={field.value} {...field} color="primary" />
               </StyledBox>
@@ -406,7 +402,7 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
             render={({ field }) => (
               <StyledBox>
                 <InputLabel>
-                  {t("entities.profile.viewer.fields.allowAutoUpdate")}
+                  {t("profiles.viewer.fields.allowAutoUpdate")}
                 </InputLabel>
                 <Switch checked={field.value} {...field} color="primary" />
               </StyledBox>
