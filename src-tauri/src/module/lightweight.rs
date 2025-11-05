@@ -86,33 +86,17 @@ async fn refresh_lightweight_tray_state() {
 
 pub async fn auto_lightweight_boot() -> Result<()> {
     let verge_config = Config::verge().await;
-    let enable_auto = verge_config
-        .latest_arc()
+    let is_enable_auto = verge_config
+        .data_arc()
         .enable_auto_light_weight_mode
         .unwrap_or(false);
-    let is_silent_start = verge_config
-        .latest_arc()
-        .enable_silent_start
-        .unwrap_or(false);
-
+    let is_silent_start = verge_config.data_arc().enable_silent_start.unwrap_or(false);
+    if is_enable_auto {
+        enable_auto_light_weight_mode().await;
+    }
     if is_silent_start {
-        logging!(info, Type::Lightweight, "静默启动：直接进入轻量模式");
-        let _ = entry_lightweight_mode().await;
-        return Ok(());
+        entry_lightweight_mode().await;
     }
-
-    if !enable_auto {
-        logging!(info, Type::Lightweight, "未开启自动轻量模式，跳过初始化");
-        return Ok(());
-    }
-
-    logging!(
-        info,
-        Type::Lightweight,
-        "非静默启动：注册自动轻量模式监听器"
-    );
-    enable_auto_light_weight_mode().await;
-
     Ok(())
 }
 
@@ -135,7 +119,7 @@ pub fn disable_auto_light_weight_mode() {
 
 pub async fn entry_lightweight_mode() -> bool {
     if !try_transition(LightweightState::Normal, LightweightState::In) {
-        logging!(info, Type::Lightweight, "无需进入轻量模式，跳过调用");
+        logging!(debug, Type::Lightweight, "无需进入轻量模式，跳过调用");
         refresh_lightweight_tray_state().await;
         return false;
     }
@@ -149,7 +133,7 @@ pub async fn entry_lightweight_mode() -> bool {
 pub async fn exit_lightweight_mode() -> bool {
     if !try_transition(LightweightState::In, LightweightState::Exiting) {
         logging!(
-            info,
+            debug,
             Type::Lightweight,
             "轻量模式不在退出条件（可能已退出或正在退出），跳过调用"
         );
@@ -171,10 +155,6 @@ pub async fn add_light_weight_timer() {
 
 fn setup_window_close_listener() {
     if let Some(window) = handle::Handle::get_window() {
-        let old_id = WINDOW_CLOSE_HANDLER_ID.swap(0, Ordering::AcqRel);
-        if old_id != 0 {
-            window.unlisten(old_id);
-        }
         let handler_id = window.listen("tauri://close-requested", move |_event| {
             std::mem::drop(AsyncHandler::spawn(|| async {
                 if let Err(e) = setup_light_weight_timer().await {
@@ -196,21 +176,17 @@ fn cancel_window_close_listener() {
         let id = WINDOW_CLOSE_HANDLER_ID.swap(0, Ordering::AcqRel);
         if id != 0 {
             window.unlisten(id);
-            logging!(info, Type::Lightweight, "取消了窗口关闭监听");
+            logging!(debug, Type::Lightweight, "取消了窗口关闭监听");
         }
     }
 }
 
 fn setup_webview_focus_listener() {
     if let Some(window) = handle::Handle::get_window() {
-        let old_id = WEBVIEW_FOCUS_HANDLER_ID.swap(0, Ordering::AcqRel);
-        if old_id != 0 {
-            window.unlisten(old_id);
-        }
         let handler_id = window.listen("tauri://focus", move |_event| {
             log_err!(cancel_light_weight_timer());
             logging!(
-                info,
+                debug,
                 Type::Lightweight,
                 "监听到窗口获得焦点，取消轻量模式计时"
             );
@@ -224,7 +200,7 @@ fn cancel_webview_focus_listener() {
         let id = WEBVIEW_FOCUS_HANDLER_ID.swap(0, Ordering::AcqRel);
         if id != 0 {
             window.unlisten(id);
-            logging!(info, Type::Lightweight, "取消了窗口焦点监听");
+            logging!(debug, Type::Lightweight, "取消了窗口焦点监听");
         }
     }
 }
@@ -236,14 +212,14 @@ async fn setup_light_weight_timer() -> Result<()> {
 
     let once_by_minutes = Config::verge()
         .await
-        .latest_arc()
+        .data_arc()
         .auto_light_weight_minutes
         .unwrap_or(10);
 
     {
         let timer_map = Timer::global().timer_map.read();
         if timer_map.contains_key(LIGHT_WEIGHT_TASK_UID) {
-            logging!(warn, Type::Timer, "轻量模式计时器已存在，跳过创建");
+            logging!(debug, Type::Timer, "轻量模式计时器已存在，跳过创建");
             return Ok(());
         }
     }
@@ -299,7 +275,7 @@ fn cancel_light_weight_timer() -> Result<()> {
         delay_timer
             .remove_task(task.task_id)
             .context("failed to remove timer task")?;
-        logging!(info, Type::Timer, "计时器已取消");
+        logging!(debug, Type::Timer, "计时器已取消");
     }
 
     Ok(())
