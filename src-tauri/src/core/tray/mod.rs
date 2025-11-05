@@ -199,7 +199,7 @@ impl TrayState {
 
 impl Default for Tray {
     fn default() -> Self {
-        Tray {
+        Self {
             last_menu_update: Mutex::new(None),
             menu_updating: AtomicBool::new(false),
         }

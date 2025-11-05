@@ -28,9 +28,9 @@ enum LightweightState {
 impl From<u8> for LightweightState {
     fn from(v: u8) -> Self {
         match v {
-            1 => LightweightState::In,
-            2 => LightweightState::Exiting,
-            _ => LightweightState::Normal,
+            1 => Self::In,
+            2 => Self::Exiting,
+            _ => Self::Normal,
         }
     }
 }

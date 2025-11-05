@@ -262,7 +262,7 @@ impl IVerge {
     /// 验证并修正配置文件中的clash_core值
     pub async fn validate_and_fix_config() -> Result<()> {
         let config_path = dirs::verge_path()?;
-        let mut config = match help::read_yaml::<IVerge>(&config_path).await {
+        let mut config = match help::read_yaml::<Self>(&config_path).await {
             Ok(config) => config,
             Err(_) => Self::template(),
         };
@@ -311,7 +311,7 @@ impl IVerge {
     }
 
     /// 配置修正后重新加载配置
-    async fn reload_config_after_fix(updated_config: IVerge) -> Result<()> {
+    async fn reload_config_after_fix(updated_config: Self) -> Result<()> {
         logging!(
             info,
             Type::Config,
@@ -351,7 +351,7 @@ impl IVerge {
 
     pub async fn new() -> Self {
         match dirs::verge_path() {
-            Ok(path) => match help::read_yaml::<IVerge>(&path).await {
+            Ok(path) => match help::read_yaml::<Self>(&path).await {
                 Ok(mut config) => {
                     // compatibility
                     if let Some(start_page) = config.start_page.clone()
@@ -446,7 +446,7 @@ impl IVerge {
     /// patch verge config
     /// only save to file
     #[allow(clippy::cognitive_complexity)]
-    pub fn patch_config(&mut self, patch: &IVerge) {
+    pub fn patch_config(&mut self, patch: &Self) {
         macro_rules! patch {
             ($key: tt) => {
                 if patch.$key.is_some() {

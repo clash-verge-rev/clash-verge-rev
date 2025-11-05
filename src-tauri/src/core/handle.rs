@@ -159,7 +159,7 @@ impl Handle {
             .spawn(move || {
                 thread::sleep(timing::STARTUP_ERROR_DELAY);
 
-                let handle = Handle::global();
+                let handle = Self::global();
                 if handle.is_exiting() {
                     return;
                 }

@@ -46,7 +46,7 @@ singleton!(Timer, TIMER_INSTANCE);
 
 impl Timer {
     fn new() -> Self {
-        Timer {
+        Self {
             delay_timer: Arc::new(RwLock::new(DelayTimerBuilder::default().build())),
             timer_map: Arc::new(RwLock::new(HashMap::new())),
             timer_count: AtomicU64::new(1),
