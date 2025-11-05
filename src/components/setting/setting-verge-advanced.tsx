@@ -61,7 +61,7 @@ const SettingVergeAdvanced = ({ onError: _ }: Props) => {
   const onExportDiagnosticInfo = useCallback(async () => {
     await exportDiagnosticInfo();
     showNotice.success(
-      "settings.feedback.notifications.common.copySuccess",
+      "shared.feedback.notifications.common.copySuccess",
       1000,
     );
   }, []);

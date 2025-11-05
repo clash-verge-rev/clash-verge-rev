@@ -74,7 +74,12 @@
         "importSuccess": "导入订阅成功",
         "importSubscriptionSuccess": "导入订阅成功",
         "importWithClashProxy": "使用 Clash 代理导入订阅成功",
-        "saved": "保存成功"
+        "saved": "保存成功",
+        "common": {
+          "copySuccess": "复制成功",
+          "saveSuccess": "配置保存成功",
+          "saveFailed": "配置保存失败"
+        }
       },
       "validation": {
         "config": {
@@ -1306,11 +1311,6 @@
           "installSuccess": "已成功安装服务",
           "uninstallSuccess": "已成功卸载服务"
         },
-        "common": {
-          "copySuccess": "复制成功",
-          "saveSuccess": "配置保存成功",
-          "saveFailed": "配置保存失败"
-        },
         "updater": {
           "withClashProxySuccess": "使用 Clash 代理更新成功",
           "withClashProxyFailed": "使用 Clash 代理更新也失败"
@@ -1329,21 +1329,23 @@
     }
   },
   "layout": {
-    "navigation": {
-      "tabs": {
-        "home": "首 页",
-        "proxies": "代 理",
-        "profiles": "订 阅",
-        "connections": "连 接",
-        "rules": "规 则",
-        "logs": "日 志",
-        "unlock": "测 试",
-        "settings": "设 置"
-      },
-      "menu": {
-        "reorderMode": "菜单排序模式",
-        "unlock": "解锁菜单排序",
-        "lock": "锁定菜单排序"
+    "components": {
+      "navigation": {
+        "tabs": {
+          "home": "首 页",
+          "proxies": "代 理",
+          "profiles": "订 阅",
+          "connections": "连 接",
+          "rules": "规 则",
+          "logs": "日 志",
+          "unlock": "测 试",
+          "settings": "设 置"
+        },
+        "menu": {
+          "reorderMode": "菜单排序模式",
+          "unlock": "解锁菜单排序",
+          "lock": "锁定菜单排序"
+        }
       }
     }
   }

@@ -141,11 +141,11 @@ export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
         onSuccess: () => {
           setOpen(false);
           showNotice.success(
-            "settings.feedback.notifications.common.saveSuccess",
+            "shared.feedback.notifications.common.saveSuccess",
           );
         },
         onError: () => {
-          showNotice.error("settings.feedback.notifications.common.saveFailed");
+          showNotice.error("shared.feedback.notifications.common.saveFailed");
         },
       },
     );

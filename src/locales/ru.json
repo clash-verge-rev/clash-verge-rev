@@ -74,7 +74,12 @@
         "importSuccess": "Профиль успешно импортирован",
         "importSubscriptionSuccess": "Подписка успешно импортирована",
         "importWithClashProxy": "Profile Imported with Clash proxy",
-        "saved": "Saved successfully"
+        "saved": "Saved successfully",
+        "common": {
+          "copySuccess": "Скопировано",
+          "saveSuccess": "Configuration saved successfully",
+          "saveFailed": "Failed to save configuration"
+        }
       },
       "validation": {
         "config": {
@@ -1306,11 +1311,6 @@
           "installSuccess": "Служба успешно установлена",
           "uninstallSuccess": "Служба успешно удалена"
         },
-        "common": {
-          "copySuccess": "Скопировано",
-          "saveSuccess": "Configuration saved successfully",
-          "saveFailed": "Failed to save configuration"
-        },
         "updater": {
           "withClashProxySuccess": "Update with Clash proxy successfully",
           "withClashProxyFailed": "Update failed even with Clash proxy"
@@ -1329,21 +1329,23 @@
     }
   },
   "layout": {
-    "navigation": {
-      "tabs": {
-        "home": "Главная",
-        "proxies": "Прокси",
-        "profiles": "Профили",
-        "connections": "Соединения",
-        "rules": "Правила",
-        "logs": "Логи",
-        "unlock": "Тест",
-        "settings": "Настройки"
-      },
-      "menu": {
-        "reorderMode": "Menu reorder mode",
-        "unlock": "Unlock menu order",
-        "lock": "Lock menu order"
+    "components": {
+      "navigation": {
+        "tabs": {
+          "home": "Главная",
+          "proxies": "Прокси",
+          "profiles": "Профили",
+          "connections": "Соединения",
+          "rules": "Правила",
+          "logs": "Логи",
+          "unlock": "Тест",
+          "settings": "Настройки"
+        },
+        "menu": {
+          "reorderMode": "Menu reorder mode",
+          "unlock": "Unlock menu order",
+          "lock": "Lock menu order"
+        }
       }
     }
   }

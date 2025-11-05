@@ -74,7 +74,12 @@
         "importSuccess": "پروفایل با موفقیت وارد شد",
         "importSubscriptionSuccess": "وارد کردن اشتراک با موفقیت انجام شد",
         "importWithClashProxy": "Profile Imported with Clash proxy",
-        "saved": "Saved successfully"
+        "saved": "Saved successfully",
+        "common": {
+          "copySuccess": "کپی با موفقیت انجام شد",
+          "saveSuccess": "Configuration saved successfully",
+          "saveFailed": "Failed to save configuration"
+        }
       },
       "validation": {
         "config": {
@@ -1306,11 +1311,6 @@
           "installSuccess": "سرویس با موفقیت نصب شد",
           "uninstallSuccess": "سرویس با موفقیت حذف نصب شد"
         },
-        "common": {
-          "copySuccess": "کپی با موفقیت انجام شد",
-          "saveSuccess": "Configuration saved successfully",
-          "saveFailed": "Failed to save configuration"
-        },
         "updater": {
           "withClashProxySuccess": "Update with Clash proxy successfully",
           "withClashProxyFailed": "Update failed even with Clash proxy"
@@ -1329,21 +1329,23 @@
     }
   },
   "layout": {
-    "navigation": {
-      "tabs": {
-        "home": "Home",
-        "proxies": "پراکسی‌ها",
-        "profiles": "پروفایل‌ها",
-        "connections": "اتصالات",
-        "rules": "قوانین",
-        "logs": "لاگ‌ها",
-        "unlock": "Test",
-        "settings": "تنظیمات"
-      },
-      "menu": {
-        "reorderMode": "Menu reorder mode",
-        "unlock": "Unlock menu order",
-        "lock": "Lock menu order"
+    "components": {
+      "navigation": {
+        "tabs": {
+          "home": "Home",
+          "proxies": "پراکسی‌ها",
+          "profiles": "پروفایل‌ها",
+          "connections": "اتصالات",
+          "rules": "قوانین",
+          "logs": "لاگ‌ها",
+          "unlock": "Test",
+          "settings": "تنظیمات"
+        },
+        "menu": {
+          "reorderMode": "Menu reorder mode",
+          "unlock": "Unlock menu order",
+          "lock": "Lock menu order"
+        }
       }
     }
   }

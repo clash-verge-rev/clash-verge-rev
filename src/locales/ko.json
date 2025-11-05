@@ -74,7 +74,12 @@
         "importSuccess": "Profile Imported Successfully",
         "importSubscriptionSuccess": "구독 가져오기 성공",
         "importWithClashProxy": "Profile Imported with Clash proxy",
-        "saved": "Saved successfully"
+        "saved": "Saved successfully",
+        "common": {
+          "copySuccess": "복사 성공",
+          "saveSuccess": "Configuration saved successfully",
+          "saveFailed": "Failed to save configuration"
+        }
       },
       "validation": {
         "config": {
@@ -1306,11 +1311,6 @@
           "installSuccess": "Service Installed Successfully",
           "uninstallSuccess": "Service Uninstalled Successfully"
         },
-        "common": {
-          "copySuccess": "복사 성공",
-          "saveSuccess": "Configuration saved successfully",
-          "saveFailed": "Failed to save configuration"
-        },
         "updater": {
           "withClashProxySuccess": "Clash 프록시로 업데이트 성공",
           "withClashProxyFailed": "Clash 프록시로도 업데이트 실패"
@@ -1329,21 +1329,23 @@
     }
   },
   "layout": {
-    "navigation": {
-      "tabs": {
-        "home": "홈",
-        "proxies": "프록시",
-        "profiles": "프로필",
-        "connections": "연결",
-        "rules": "규칙",
-        "logs": "로그",
-        "unlock": "테스트",
-        "settings": "설정"
-      },
-      "menu": {
-        "reorderMode": "Menu reorder mode",
-        "unlock": "Unlock menu order",
-        "lock": "Lock menu order"
+    "components": {
+      "navigation": {
+        "tabs": {
+          "home": "홈",
+          "proxies": "프록시",
+          "profiles": "프로필",
+          "connections": "연결",
+          "rules": "규칙",
+          "logs": "로그",
+          "unlock": "테스트",
+          "settings": "설정"
+        },
+        "menu": {
+          "reorderMode": "Menu reorder mode",
+          "unlock": "Unlock menu order",
+          "lock": "Lock menu order"
+        }
       }
     }
   }

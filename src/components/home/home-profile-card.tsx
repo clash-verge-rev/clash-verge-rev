@@ -365,7 +365,7 @@ export const HomeProfileCard = ({
         endIcon={<StorageOutlined fontSize="small" />}
         sx={{ borderRadius: 1.5 }}
       >
-        {t("layout.navigation.tabs.proxies")}
+        {t("layout.components.navigation.tabs.proxies")}
       </Button>
     );
   }, [current, goToProfiles, t]);

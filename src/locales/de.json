@@ -74,7 +74,12 @@
         "importSuccess": "Abonnement erfolgreich importiert",
         "importSubscriptionSuccess": "Abonnement erfolgreich importiert",
         "importWithClashProxy": "Abonnement mit Clash-Proxy importiert",
-        "saved": "Saved successfully"
+        "saved": "Saved successfully",
+        "common": {
+          "copySuccess": "Kopieren erfolgreich",
+          "saveSuccess": "Zufalls-Konfiguration erfolgreich gespeichert",
+          "saveFailed": "Failed to save configuration"
+        }
       },
       "validation": {
         "config": {
@@ -1306,11 +1311,6 @@
           "installSuccess": "Service erfolgreich installiert",
           "uninstallSuccess": "Service erfolgreich deinstalliert"
         },
-        "common": {
-          "copySuccess": "Kopieren erfolgreich",
-          "saveSuccess": "Zufalls-Konfiguration erfolgreich gespeichert",
-          "saveFailed": "Failed to save configuration"
-        },
         "updater": {
           "withClashProxySuccess": "Aktualisierung mit Clash-Proxy erfolgreich",
           "withClashProxyFailed": "Aktualisierung auch mit Clash-Proxy fehlgeschlagen"
@@ -1329,21 +1329,23 @@
     }
   },
   "layout": {
-    "navigation": {
-      "tabs": {
-        "home": "Startseite",
-        "proxies": "Proxy",
-        "profiles": "Abonnement",
-        "connections": "Verbindungen",
-        "rules": "Regeln",
-        "logs": "Protokolle",
-        "unlock": "Testen",
-        "settings": "Einstellungen"
-      },
-      "menu": {
-        "reorderMode": "Menu reorder mode",
-        "unlock": "Unlock menu order",
-        "lock": "Lock menu order"
+    "components": {
+      "navigation": {
+        "tabs": {
+          "home": "Startseite",
+          "proxies": "Proxy",
+          "profiles": "Abonnement",
+          "connections": "Verbindungen",
+          "rules": "Regeln",
+          "logs": "Protokolle",
+          "unlock": "Testen",
+          "settings": "Einstellungen"
+        },
+        "menu": {
+          "reorderMode": "Menu reorder mode",
+          "unlock": "Unlock menu order",
+          "lock": "Lock menu order"
+        }
       }
     }
   }

@@ -870,7 +870,7 @@ export const CurrentProxyCard = () => {
             sx={{ borderRadius: 1.5 }}
             endIcon={<ChevronRight fontSize="small" />}
           >
-            {t("layout.navigation.tabs.proxies")}
+            {t("layout.components.navigation.tabs.proxies")}
           </Button>
         </Box>
       }

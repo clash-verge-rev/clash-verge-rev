@@ -74,7 +74,12 @@
         "importSuccess": "プロファイルのインポートに成功しました。",
         "importSubscriptionSuccess": "サブスクリプションのインポートに成功しました。",
         "importWithClashProxy": "Clashプロキシを使用してプロファイルのインポートに成功しました。",
-        "saved": "Saved successfully"
+        "saved": "Saved successfully",
+        "common": {
+          "copySuccess": "コピー成功",
+          "saveSuccess": "ランダム設定を保存完了",
+          "saveFailed": "Failed to save configuration"
+        }
       },
       "validation": {
         "config": {
@@ -1306,11 +1311,6 @@
           "installSuccess": "サービスのインストールに成功しました。",
           "uninstallSuccess": "サービスのアンインストールに成功しました。"
         },
-        "common": {
-          "copySuccess": "コピー成功",
-          "saveSuccess": "ランダム設定を保存完了",
-          "saveFailed": "Failed to save configuration"
-        },
         "updater": {
           "withClashProxySuccess": "Clashプロキシを使用して更新に成功しました。",
           "withClashProxyFailed": "Clashプロキシを使用しても更新に失敗しました。"
@@ -1329,21 +1329,23 @@
     }
   },
   "layout": {
-    "navigation": {
-      "tabs": {
-        "home": "ホーム",
-        "proxies": "プロキシ",
-        "profiles": "プロファイル",
-        "connections": "接続",
-        "rules": "ルール",
-        "logs": "ログ",
-        "unlock": "テスト",
-        "settings": "設定"
-      },
-      "menu": {
-        "reorderMode": "Menu reorder mode",
-        "unlock": "Unlock menu order",
-        "lock": "Lock menu order"
+    "components": {
+      "navigation": {
+        "tabs": {
+          "home": "ホーム",
+          "proxies": "プロキシ",
+          "profiles": "プロファイル",
+          "connections": "接続",
+          "rules": "ルール",
+          "logs": "ログ",
+          "unlock": "テスト",
+          "settings": "設定"
+        },
+        "menu": {
+          "reorderMode": "Menu reorder mode",
+          "unlock": "Unlock menu order",
+          "lock": "Lock menu order"
+        }
       }
     }
   }

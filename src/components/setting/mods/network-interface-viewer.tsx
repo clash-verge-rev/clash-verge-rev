@@ -142,7 +142,7 @@ const AddressDisplay = ({
           onClick={async () => {
             await writeText(content);
             showNotice.success(
-              "settings.feedback.notifications.common.copySuccess",
+              "shared.feedback.notifications.common.copySuccess",
             );
           }}
         >

@@ -77,7 +77,7 @@ const SettingVergeBasic = ({ onError }: Props) => {
   const onCopyClashEnv = useCallback(async () => {
     await copyClashEnv();
     showNotice.success(
-      "settings.feedback.notifications.common.copySuccess",
+      "shared.feedback.notifications.common.copySuccess",
       1000,
     );
   }, []);

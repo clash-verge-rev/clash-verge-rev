@@ -75,11 +75,11 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
         await patchInfo({ "external-controller": "" });
       }
 
-      showNotice.success("settings.feedback.notifications.common.saveSuccess");
+      showNotice.success("shared.feedback.notifications.common.saveSuccess");
       setOpen(false);
     } catch (err) {
       showNotice.error(
-        "settings.feedback.notifications.common.saveFailed",
+        "shared.feedback.notifications.common.saveFailed",
         err,
         4000,
       );

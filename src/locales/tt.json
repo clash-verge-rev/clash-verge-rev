@@ -74,7 +74,12 @@
         "importSuccess": "Профиль уңышлы импортланды",
         "importSubscriptionSuccess": "Import subscription successful",
         "importWithClashProxy": "Profile Imported with Clash proxy",
-        "saved": "Saved successfully"
+        "saved": "Saved successfully",
+        "common": {
+          "copySuccess": "Күчерелде",
+          "saveSuccess": "Configuration saved successfully",
+          "saveFailed": "Failed to save configuration"
+        }
       },
       "validation": {
         "config": {
@@ -1306,11 +1311,6 @@
           "installSuccess": "Сервис уңышлы урнаштырылды",
           "uninstallSuccess": "Сервис уңышлы салдырылды"
         },
-        "common": {
-          "copySuccess": "Күчерелде",
-          "saveSuccess": "Configuration saved successfully",
-          "saveFailed": "Failed to save configuration"
-        },
         "updater": {
           "withClashProxySuccess": "Update with Clash proxy successfully",
           "withClashProxyFailed": "Update failed even with Clash proxy"
@@ -1329,21 +1329,23 @@
     }
   },
   "layout": {
-    "navigation": {
-      "tabs": {
-        "home": "Home",
-        "proxies": "Прокси",
-        "profiles": "Профильләр",
-        "connections": "Тоташулар",
-        "rules": "Кагыйдәләр",
-        "logs": "Логлар",
-        "unlock": "Test",
-        "settings": "Көйләүләр"
-      },
-      "menu": {
-        "reorderMode": "Menu reorder mode",
-        "unlock": "Unlock menu order",
-        "lock": "Lock menu order"
+    "components": {
+      "navigation": {
+        "tabs": {
+          "home": "Home",
+          "proxies": "Прокси",
+          "profiles": "Профильләр",
+          "connections": "Тоташулар",
+          "rules": "Кагыйдәләр",
+          "logs": "Логлар",
+          "unlock": "Test",
+          "settings": "Көйләүләр"
+        },
+        "menu": {
+          "reorderMode": "Menu reorder mode",
+          "unlock": "Unlock menu order",
+          "lock": "Lock menu order"
+        }
       }
     }
   }
