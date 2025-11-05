@@ -53,16 +53,6 @@
     "validation": {
       "invalidRegex": "Invalid regular expression"
     },
-    "messages": {
-      "errors": {
-        "trafficStats": "Traffic Statistics Error",
-        "trafficStatsDescription": "The traffic statistics component encountered an error and has been disabled to prevent crashes."
-      },
-      "notices": {
-        "raw": "{{message}}",
-        "prefixedRaw": "{{prefix}} {{message}}"
-      }
-    },
     "window": {
       "maximize": "Maximizar",
       "minimize": "Minimizar"
@@ -70,11 +60,29 @@
     "editorModes": {
       "visualization": "Visualización",
       "advanced": "Avanzado"
+    },
+    "feedback": {
+      "errors": {
+        "trafficStats": "Traffic Statistics Error",
+        "trafficStatsDescription": "The traffic statistics component encountered an error and has been disabled to prevent crashes."
+      },
+      "notices": {
+        "raw": "{{message}}",
+        "prefixedRaw": "{{prefix}} {{message}}"
+      },
+      "notifications": {
+        "importSuccess": "Suscripción importada con éxito",
+        "importSubscriptionSuccess": "Suscripción importada con éxito",
+        "importWithClashProxy": "Suscripción importada con el proxy de Clash",
+        "saved": "Saved successfully"
+      }
     }
   },
   "profiles": {
     "page": {
-      "title": "Suscripciones",
+      "header": {
+        "title": "Suscripciones"
+      },
       "actions": {
         "updateAll": "Actualizar todas las suscripciones",
         "viewRuntimeConfig": "Ver configuración en tiempo de ejecución",
@@ -82,172 +90,184 @@
         "import": "Importar"
       },
       "batch": {
-        "title": "Batch Operations",
-        "delete": "Delete Selected Profiles",
-        "selectAll": "Select All",
-        "deselectAll": "Deselect All",
-        "done": "Done",
-        "selected": "Selected",
-        "items": "items"
+        "header": {
+          "title": "Batch Operations"
+        },
+        "actions": {
+          "delete": "Delete Selected Profiles",
+          "selectAll": "Select All",
+          "deselectAll": "Deselect All",
+          "done": "Done"
+        },
+        "summary": {
+          "selected": "Selected",
+          "items": "items"
+        }
       },
-      "import": {
+      "importForm": {
         "placeholder": "Enlace del archivo de suscripción",
-        "paste": "Pegar",
-        "clear": "Limpiar"
+        "actions": {
+          "paste": "Pegar",
+          "clear": "Limpiar"
+        }
       },
-      "errors": {
-        "invalidUrl": "Invalid profile URL. Please enter a URL starting with http:// or https://",
-        "onlyYaml": "Solo se admiten archivos YAML"
-      },
-      "notifications": {
-        "importRetry": "Error al importar la suscripción. Intentando con el proxy de Clash...",
-        "importFail": "Error al importar incluso con el proxy de Clash",
-        "importNeedsRefresh": "Profile imported but may need manual refresh",
-        "importSuccess": "Profile imported successfully, please restart if not visible",
-        "profileSwitched": "Suscripción cambiada",
-        "profileReactivated": "Suscripción reactivada",
-        "switchInterrupted": "Profile switch interrupted by new selection",
-        "batchDeleted": "Selected profiles deleted successfully"
-      },
-      "notices": {
-        "forceRefreshCompleted": "Force refresh completed",
-        "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
+      "feedback": {
+        "errors": {
+          "invalidUrl": "Invalid profile URL. Please enter a URL starting with http:// or https://",
+          "onlyYaml": "Solo se admiten archivos YAML"
+        },
+        "notifications": {
+          "importRetry": "Error al importar la suscripción. Intentando con el proxy de Clash...",
+          "importFail": "Error al importar incluso con el proxy de Clash",
+          "importNeedsRefresh": "Profile imported but may need manual refresh",
+          "importSuccess": "Profile imported successfully, please restart if not visible",
+          "profileSwitched": "Suscripción cambiada",
+          "profileReactivated": "Suscripción reactivada",
+          "switchInterrupted": "Profile switch interrupted by new selection",
+          "batchDeleted": "Selected profiles deleted successfully"
+        },
+        "notices": {
+          "forceRefreshCompleted": "Force refresh completed",
+          "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
+        }
       }
     },
-    "notifications": {
-      "importSuccess": "Suscripción importada con éxito",
-      "importSubscriptionSuccess": "Suscripción importada con éxito",
-      "importWithClashProxy": "Suscripción importada con el proxy de Clash",
-      "saved": "Saved successfully"
-    },
-    "viewer": {
-      "title": {
-        "create": "Crear configuración",
-        "edit": "Editar configuración"
+    "components": {
+      "card": {
+        "labels": {
+          "from": "De",
+          "updateTime": "Hora de actualización",
+          "usedTotal": "Utilizado / Total",
+          "expireTime": "Tiempo de expiración",
+          "clickToImport": "Haga clic para importar una suscripción"
+        }
       },
-      "fields": {
-        "type": "Tipo",
-        "name": "Nombre",
-        "description": "Descripción",
-        "subscriptionUrl": "Enlace de suscripción",
-        "httpTimeout": "HTTP Request Timeout",
-        "updateInterval": "Intervalo de actualización",
-        "useSystemProxy": "Usar proxy del sistema para actualizar",
-        "useClashProxy": "Usar proxy del núcleo para actualizar",
-        "acceptInvalidCerts": "Allows Invalid Certificates (Danger)",
-        "allowAutoUpdate": "Allow Auto Update"
+      "fileInput": {
+        "chooseFile": "Elegir archivo"
       },
-      "notifications": {
-        "creationRetry": "Error al crear la suscripción. Intentando con el proxy de Clash...",
-        "creationSuccess": "Creación de la suscripción con el proxy de Clash exitosa"
+      "menu": {
+        "home": "Hogar",
+        "select": "Usar",
+        "editInfo": "Editar información",
+        "editFile": "Editar archivo",
+        "editRules": "Editar reglas",
+        "editProxies": "Editar nodos",
+        "editGroups": "Editar grupos de proxy",
+        "extendConfig": "Configurar sobrescritura extendida",
+        "extendScript": "Script extendido",
+        "openFile": "Abrir archivo",
+        "update": "Actualizar",
+        "updateViaProxy": "Update via proxy"
+      },
+      "more": {
+        "global": {
+          "merge": "Global Merge",
+          "script": "Global Script"
+        },
+        "chips": {
+          "merge": "Merge",
+          "script": "Script"
+        }
+      },
+      "profileItem": {
+        "tooltips": {
+          "showLast": "Click to show last update time",
+          "showNext": "Click to show next update"
+        },
+        "status": {
+          "lastUpdateFailed": "La última actualización falló",
+          "nextUp": "Próxima actualización",
+          "noSchedule": "Sin programación",
+          "unknown": "Desconocido",
+          "autoUpdateDisabled": "La actualización automática está deshabilitada"
+        }
       }
     },
-    "menu": {
-      "home": "Hogar",
-      "select": "Usar",
-      "editInfo": "Editar información",
-      "editFile": "Editar archivo",
-      "editRules": "Editar reglas",
-      "editProxies": "Editar nodos",
-      "editGroups": "Editar grupos de proxy",
-      "extendConfig": "Configurar sobrescritura extendida",
-      "extendScript": "Script extendido",
-      "openFile": "Abrir archivo",
-      "update": "Actualizar",
-      "updateViaProxy": "Update via proxy"
-    },
-    "proxiesEditor": {
-      "title": "Editar nodos",
-      "placeholders": {
-        "multiUri": "Para múltiples URI, utilice saltos de línea (se admite la codificación Base64)"
+    "modals": {
+      "profileForm": {
+        "title": {
+          "create": "Crear configuración",
+          "edit": "Editar configuración"
+        },
+        "fields": {
+          "type": "Tipo",
+          "name": "Nombre",
+          "description": "Descripción",
+          "subscriptionUrl": "Enlace de suscripción",
+          "httpTimeout": "HTTP Request Timeout",
+          "updateInterval": "Intervalo de actualización",
+          "useSystemProxy": "Usar proxy del sistema para actualizar",
+          "useClashProxy": "Usar proxy del núcleo para actualizar",
+          "acceptInvalidCerts": "Allows Invalid Certificates (Danger)",
+          "allowAutoUpdate": "Allow Auto Update"
+        },
+        "feedback": {
+          "notifications": {
+            "creationRetry": "Error al crear la suscripción. Intentando con el proxy de Clash...",
+            "creationSuccess": "Creación de la suscripción con el proxy de Clash exitosa"
+          }
+        }
       },
-      "actions": {
-        "prepend": "Agregar nodo de proxy previo",
-        "append": "Agregar nodo de proxy posterior"
-      }
-    },
-    "groupsEditor": {
-      "title": "Editar grupos de proxy",
-      "errors": {
-        "nameRequired": "El nombre del grupo de proxy no puede estar vacío",
-        "nameExists": "El nombre del grupo de proxy ya existe"
+      "proxiesEditor": {
+        "title": "Editar nodos",
+        "placeholders": {
+          "multiUri": "Para múltiples URI, utilice saltos de línea (se admite la codificación Base64)"
+        },
+        "actions": {
+          "prepend": "Agregar nodo de proxy previo",
+          "append": "Agregar nodo de proxy posterior"
+        }
       },
-      "fields": {
-        "type": "Tipo de grupo de proxy",
-        "name": "Nombre del grupo de proxy",
-        "icon": "Icono del grupo de proxy",
-        "proxies": "Incluir proxies",
-        "provider": "Incluir proveedor de proxies",
-        "healthCheckUrl": "URL de prueba de salud",
-        "expectedStatus": "Código de estado esperado",
-        "interval": "Intervalo de comprobación",
-        "timeout": "Tiempo de espera",
-        "maxFailedTimes": "Número máximo de fallos",
-        "interfaceName": "Nombre de la interfaz de salida",
-        "routingMark": "Marca de enrutamiento",
-        "filter": "Filtrar nodos",
-        "excludeFilter": "Excluir nodos",
-        "excludeType": "Tipo de nodo a excluir",
-        "includeAll": "Incluir todos los proxies de salida y proveedores de proxies",
-        "includeAllProxies": "Incluir todos los proxies de salida",
-        "includeAllProviders": "Incluir todos los proveedores de proxies"
+      "groupsEditor": {
+        "title": "Editar grupos de proxy",
+        "errors": {
+          "nameRequired": "El nombre del grupo de proxy no puede estar vacío",
+          "nameExists": "El nombre del grupo de proxy ya existe"
+        },
+        "fields": {
+          "type": "Tipo de grupo de proxy",
+          "name": "Nombre del grupo de proxy",
+          "icon": "Icono del grupo de proxy",
+          "proxies": "Incluir proxies",
+          "provider": "Incluir proveedor de proxies",
+          "healthCheckUrl": "URL de prueba de salud",
+          "expectedStatus": "Código de estado esperado",
+          "interval": "Intervalo de comprobación",
+          "timeout": "Tiempo de espera",
+          "maxFailedTimes": "Número máximo de fallos",
+          "interfaceName": "Nombre de la interfaz de salida",
+          "routingMark": "Marca de enrutamiento",
+          "filter": "Filtrar nodos",
+          "excludeFilter": "Excluir nodos",
+          "excludeType": "Tipo de nodo a excluir",
+          "includeAll": "Incluir todos los proxies de salida y proveedores de proxies",
+          "includeAllProxies": "Incluir todos los proxies de salida",
+          "includeAllProviders": "Incluir todos los proveedores de proxies"
+        },
+        "toggles": {
+          "lazy": "Estado de inactividad",
+          "disableUdp": "Deshabilitar UDP",
+          "hidden": "Ocultar grupo de proxy"
+        },
+        "actions": {
+          "prepend": "Agregar grupo de proxy previo",
+          "append": "Agregar grupo de proxy posterior"
+        }
       },
-      "toggles": {
-        "lazy": "Estado de inactividad",
-        "disableUdp": "Deshabilitar UDP",
-        "hidden": "Ocultar grupo de proxy"
+      "editor": {
+        "actions": {
+          "format": "Formatear documento"
+        },
+        "messages": {
+          "readOnly": "No se puede editar en modo de solo lectura"
+        }
       },
-      "actions": {
-        "prepend": "Agregar grupo de proxy previo",
-        "append": "Agregar grupo de proxy posterior"
-      }
-    },
-    "fileInput": {
-      "chooseFile": "Elegir archivo"
-    },
-    "more": {
-      "global": {
-        "merge": "Global Merge",
-        "script": "Global Script"
-      },
-      "chips": {
-        "merge": "Merge",
-        "script": "Script"
-      }
-    },
-    "item": {
-      "tooltips": {
-        "showLast": "Click to show last update time",
-        "showNext": "Click to show next update"
-      },
-      "status": {
-        "lastUpdateFailed": "La última actualización falló",
-        "nextUp": "Próxima actualización",
-        "noSchedule": "Sin programación",
-        "unknown": "Desconocido",
-        "autoUpdateDisabled": "La actualización automática está deshabilitada"
-      }
-    },
-    "confirm": {
-      "delete": {
+      "confirmDelete": {
         "title": "Confirmar eliminación",
         "message": "Esta operación no se puede deshacer"
-      }
-    },
-    "editor": {
-      "format": "Formatear documento",
-      "readOnlyMessage": "No se puede editar en modo de solo lectura"
-    },
-    "logViewer": {
-      "title": "Salida de la consola del script"
-    },
-    "card": {
-      "labels": {
-        "from": "De",
-        "updateTime": "Hora de actualización",
-        "usedTotal": "Utilizado / Total",
-        "expireTime": "Tiempo de expiración",
-        "clickToImport": "Haga clic para importar una suscripción"
+      },
+      "logViewer": {
+        "title": "Salida de la consola del script"
       }
     }
   },

@@ -55,18 +55,18 @@ export const ProfileMore = (props: Props) => {
   const hasError = entries.some(([level]) => level === "exception");
 
   const globalTitles: Record<Props["id"], string> = {
-    Merge: "profiles.more.global.merge",
-    Script: "profiles.more.global.script",
+    Merge: "profiles.components.more.global.merge",
+    Script: "profiles.components.more.global.script",
   };
 
   const chipLabels: Record<Props["id"], string> = {
-    Merge: "profiles.more.chips.merge",
-    Script: "profiles.more.chips.script",
+    Merge: "profiles.components.more.chips.merge",
+    Script: "profiles.components.more.chips.script",
   };
 
   const itemMenu = [
-    { label: "profiles.menu.editFile", handler: onEditFile },
-    { label: "profiles.menu.openFile", handler: onOpenFile },
+    { label: "profiles.components.menu.editFile", handler: onEditFile },
+    { label: "profiles.components.menu.openFile", handler: onOpenFile },
   ];
 
   const boxStyle = {
@@ -121,7 +121,7 @@ export const ProfileMore = (props: Props) => {
                   size="small"
                   edge="start"
                   color="error"
-                  title={t("profiles.logViewer.title")}
+                  title={t("profiles.modals.logViewer.title")}
                   onClick={() => setLogOpen(true)}
                 >
                   <FeaturedPlayListRounded fontSize="inherit" />
@@ -132,7 +132,7 @@ export const ProfileMore = (props: Props) => {
                 size="small"
                 edge="start"
                 color="inherit"
-                title={t("profiles.logViewer.title")}
+                title={t("profiles.modals.logViewer.title")}
                 onClick={() => setLogOpen(true)}
               >
                 <FeaturedPlayListRounded fontSize="inherit" />

@@ -177,7 +177,7 @@ const TrafficErrorFallback: React.FC<TrafficErrorFallbackProps> = ({
       <ErrorOutlineRounded sx={{ fontSize: 48, mb: 2, color: "error.main" }} />
 
       <Typography variant="h6" gutterBottom>
-        {t("shared.messages.errors.trafficStats")}
+        {t("shared.feedback.errors.trafficStats")}
       </Typography>
 
       <Typography
@@ -186,7 +186,7 @@ const TrafficErrorFallback: React.FC<TrafficErrorFallbackProps> = ({
         textAlign="center"
         sx={{ mb: 2 }}
       >
-        {t("shared.messages.errors.trafficStatsDescription")}
+        {t("shared.feedback.errors.trafficStatsDescription")}
       </Typography>
 
       <Alert severity="error" sx={{ mb: 2, maxWidth: 400 }}>

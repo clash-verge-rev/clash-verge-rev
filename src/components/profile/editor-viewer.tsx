@@ -97,7 +97,7 @@ export const EditorViewer = <T extends Language>(props: Props<T>) => {
     onClose,
   } = props;
 
-  const resolvedTitle = title ?? t("profiles.menu.editFile");
+  const resolvedTitle = title ?? t("profiles.components.menu.editFile");
   const resolvedInitialData = useMemo(
     () => initialData ?? Promise.resolve(""),
     [initialData],
@@ -203,7 +203,7 @@ export const EditorViewer = <T extends Language>(props: Props<T>) => {
             mouseWheelZoom: true, // 按住Ctrl滚轮调节缩放比例
             readOnly: readOnly, // 只读模式
             readOnlyMessage: {
-              value: t("profiles.editor.readOnlyMessage"),
+              value: t("profiles.modals.editor.messages.readOnly"),
             }, // 只读模式尝试编辑时的提示信息
             renderValidationDecorations: "on", // 只读模式下显示校验信息
             quickSuggestions: {
@@ -233,7 +233,7 @@ export const EditorViewer = <T extends Language>(props: Props<T>) => {
             size="medium"
             color="inherit"
             sx={{ display: readOnly ? "none" : "" }}
-            title={t("profiles.editor.format")}
+            title={t("profiles.modals.editor.actions.format")}
             onClick={() =>
               editorRef.current
                 ?.getAction("editor.action.formatDocument")

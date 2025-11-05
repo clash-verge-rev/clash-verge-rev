@@ -53,16 +53,6 @@
     "validation": {
       "invalidRegex": "Invalid regular expression"
     },
-    "messages": {
-      "errors": {
-        "trafficStats": "Traffic Statistics Error",
-        "trafficStatsDescription": "The traffic statistics component encountered an error and has been disabled to prevent crashes."
-      },
-      "notices": {
-        "raw": "{{message}}",
-        "prefixedRaw": "{{prefix}} {{message}}"
-      }
-    },
     "window": {
       "maximize": "최대화",
       "minimize": "최소화"
@@ -70,11 +60,29 @@
     "editorModes": {
       "visualization": "시각화",
       "advanced": "고급"
+    },
+    "feedback": {
+      "errors": {
+        "trafficStats": "Traffic Statistics Error",
+        "trafficStatsDescription": "The traffic statistics component encountered an error and has been disabled to prevent crashes."
+      },
+      "notices": {
+        "raw": "{{message}}",
+        "prefixedRaw": "{{prefix}} {{message}}"
+      },
+      "notifications": {
+        "importSuccess": "Profile Imported Successfully",
+        "importSubscriptionSuccess": "구독 가져오기 성공",
+        "importWithClashProxy": "Profile Imported with Clash proxy",
+        "saved": "Saved successfully"
+      }
     }
   },
   "profiles": {
     "page": {
-      "title": "프로필",
+      "header": {
+        "title": "프로필"
+      },
       "actions": {
         "updateAll": "모든 프로필 업데이트",
         "viewRuntimeConfig": "런타임 설정 보기",
@@ -82,172 +90,184 @@
         "import": "가져오기"
       },
       "batch": {
-        "title": "Batch Operations",
-        "delete": "Delete Selected Profiles",
-        "selectAll": "Select All",
-        "deselectAll": "Deselect All",
-        "done": "Done",
-        "selected": "Selected",
-        "items": "items"
+        "header": {
+          "title": "Batch Operations"
+        },
+        "actions": {
+          "delete": "Delete Selected Profiles",
+          "selectAll": "Select All",
+          "deselectAll": "Deselect All",
+          "done": "Done"
+        },
+        "summary": {
+          "selected": "Selected",
+          "items": "items"
+        }
       },
-      "import": {
+      "importForm": {
         "placeholder": "프로필 URL",
-        "paste": "붙여넣기",
-        "clear": "지우기"
+        "actions": {
+          "paste": "붙여넣기",
+          "clear": "지우기"
+        }
       },
-      "errors": {
-        "invalidUrl": "Invalid profile URL. Please enter a URL starting with http:// or https://",
-        "onlyYaml": "Only YAML Files Supported"
-      },
-      "notifications": {
-        "importRetry": "Import failed, retrying with Clash proxy...",
-        "importFail": "Import failed even with Clash proxy",
-        "importNeedsRefresh": "Profile imported but may need manual refresh",
-        "importSuccess": "Profile imported successfully, please restart if not visible",
-        "profileSwitched": "Profile Switched",
-        "profileReactivated": "Profile Reactivated",
-        "switchInterrupted": "Profile switch interrupted by new selection",
-        "batchDeleted": "Selected profiles deleted successfully"
-      },
-      "notices": {
-        "forceRefreshCompleted": "Force refresh completed",
-        "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
+      "feedback": {
+        "errors": {
+          "invalidUrl": "Invalid profile URL. Please enter a URL starting with http:// or https://",
+          "onlyYaml": "Only YAML Files Supported"
+        },
+        "notifications": {
+          "importRetry": "Import failed, retrying with Clash proxy...",
+          "importFail": "Import failed even with Clash proxy",
+          "importNeedsRefresh": "Profile imported but may need manual refresh",
+          "importSuccess": "Profile imported successfully, please restart if not visible",
+          "profileSwitched": "Profile Switched",
+          "profileReactivated": "Profile Reactivated",
+          "switchInterrupted": "Profile switch interrupted by new selection",
+          "batchDeleted": "Selected profiles deleted successfully"
+        },
+        "notices": {
+          "forceRefreshCompleted": "Force refresh completed",
+          "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
+        }
       }
     },
-    "notifications": {
-      "importSuccess": "Profile Imported Successfully",
-      "importSubscriptionSuccess": "구독 가져오기 성공",
-      "importWithClashProxy": "Profile Imported with Clash proxy",
-      "saved": "Saved successfully"
-    },
-    "viewer": {
-      "title": {
-        "create": "프로필 생성",
-        "edit": "프로필 편집"
+    "components": {
+      "card": {
+        "labels": {
+          "from": "출처",
+          "updateTime": "업데이트 시간",
+          "usedTotal": "사용됨 / 전체",
+          "expireTime": "만료 시간",
+          "clickToImport": "Click to import subscription"
+        }
       },
-      "fields": {
-        "type": "유형",
-        "name": "이름",
-        "description": "설명",
-        "subscriptionUrl": "구독 URL",
-        "httpTimeout": "HTTP Request Timeout",
-        "updateInterval": "업데이트 간격",
-        "useSystemProxy": "시스템 프록시 사용",
-        "useClashProxy": "Clash 프록시 사용",
-        "acceptInvalidCerts": "잘못된 인증서 허용(위험)",
-        "allowAutoUpdate": "Allow Auto Update"
+      "fileInput": {
+        "chooseFile": "파일 선택"
       },
-      "notifications": {
-        "creationRetry": "Profile creation failed, retrying with Clash proxy...",
-        "creationSuccess": "Profile creation succeeded with Clash proxy"
+      "menu": {
+        "home": "홈",
+        "select": "선택",
+        "editInfo": "정보 편집",
+        "editFile": "파일 편집",
+        "editRules": "규칙 편집",
+        "editProxies": "프록시 편집",
+        "editGroups": "프록시 그룹 편집",
+        "extendConfig": "설정 확장",
+        "extendScript": "스크립트 확장",
+        "openFile": "파일 열기",
+        "update": "업데이트",
+        "updateViaProxy": "Update via proxy"
+      },
+      "more": {
+        "global": {
+          "merge": "Global Merge",
+          "script": "Global Script"
+        },
+        "chips": {
+          "merge": "Merge",
+          "script": "Script"
+        }
+      },
+      "profileItem": {
+        "tooltips": {
+          "showLast": "Click to show last update time",
+          "showNext": "Click to show next update"
+        },
+        "status": {
+          "lastUpdateFailed": "Last Update failed",
+          "nextUp": "Next Up",
+          "noSchedule": "No schedule",
+          "unknown": "Unknown",
+          "autoUpdateDisabled": "Auto update disabled"
+        }
       }
     },
-    "menu": {
-      "home": "홈",
-      "select": "선택",
-      "editInfo": "정보 편집",
-      "editFile": "파일 편집",
-      "editRules": "규칙 편집",
-      "editProxies": "프록시 편집",
-      "editGroups": "프록시 그룹 편집",
-      "extendConfig": "설정 확장",
-      "extendScript": "스크립트 확장",
-      "openFile": "파일 열기",
-      "update": "업데이트",
-      "updateViaProxy": "Update via proxy"
-    },
-    "proxiesEditor": {
-      "title": "프록시 편집",
-      "placeholders": {
-        "multiUri": "여러 URI의 경우 줄바꿈 사용(Base64 인코딩 지원)"
+    "modals": {
+      "profileForm": {
+        "title": {
+          "create": "프로필 생성",
+          "edit": "프로필 편집"
+        },
+        "fields": {
+          "type": "유형",
+          "name": "이름",
+          "description": "설명",
+          "subscriptionUrl": "구독 URL",
+          "httpTimeout": "HTTP Request Timeout",
+          "updateInterval": "업데이트 간격",
+          "useSystemProxy": "시스템 프록시 사용",
+          "useClashProxy": "Clash 프록시 사용",
+          "acceptInvalidCerts": "잘못된 인증서 허용(위험)",
+          "allowAutoUpdate": "Allow Auto Update"
+        },
+        "feedback": {
+          "notifications": {
+            "creationRetry": "Profile creation failed, retrying with Clash proxy...",
+            "creationSuccess": "Profile creation succeeded with Clash proxy"
+          }
+        }
       },
-      "actions": {
-        "prepend": "프록시 앞에 추가",
-        "append": "프록시 뒤에 추가"
-      }
-    },
-    "groupsEditor": {
-      "title": "프록시 그룹 편집",
-      "errors": {
-        "nameRequired": "그룹 이름 필수",
-        "nameExists": "그룹 이름이 이미 존재함"
+      "proxiesEditor": {
+        "title": "프록시 편집",
+        "placeholders": {
+          "multiUri": "여러 URI의 경우 줄바꿈 사용(Base64 인코딩 지원)"
+        },
+        "actions": {
+          "prepend": "프록시 앞에 추가",
+          "append": "프록시 뒤에 추가"
+        }
       },
-      "fields": {
-        "type": "그룹 유형",
-        "name": "그룹 이름",
-        "icon": "Proxy Group Icon",
-        "proxies": "프록시 사용",
-        "provider": "제공자 사용",
-        "healthCheckUrl": "상태 확인 URL",
-        "expectedStatus": "예상 상태",
-        "interval": "간격",
-        "timeout": "타임아웃",
-        "maxFailedTimes": "최대 실패 횟수",
-        "interfaceName": "인터페이스 이름",
-        "routingMark": "라우팅 마크",
-        "filter": "필터",
-        "excludeFilter": "제외 필터",
-        "excludeType": "제외 유형",
-        "includeAll": "모든 프록시 및 제공자 포함",
-        "includeAllProxies": "모든 프록시 포함",
-        "includeAllProviders": "모든 제공자 포함"
+      "groupsEditor": {
+        "title": "프록시 그룹 편집",
+        "errors": {
+          "nameRequired": "그룹 이름 필수",
+          "nameExists": "그룹 이름이 이미 존재함"
+        },
+        "fields": {
+          "type": "그룹 유형",
+          "name": "그룹 이름",
+          "icon": "Proxy Group Icon",
+          "proxies": "프록시 사용",
+          "provider": "제공자 사용",
+          "healthCheckUrl": "상태 확인 URL",
+          "expectedStatus": "예상 상태",
+          "interval": "간격",
+          "timeout": "타임아웃",
+          "maxFailedTimes": "최대 실패 횟수",
+          "interfaceName": "인터페이스 이름",
+          "routingMark": "라우팅 마크",
+          "filter": "필터",
+          "excludeFilter": "제외 필터",
+          "excludeType": "제외 유형",
+          "includeAll": "모든 프록시 및 제공자 포함",
+          "includeAllProxies": "모든 프록시 포함",
+          "includeAllProviders": "모든 제공자 포함"
+        },
+        "toggles": {
+          "lazy": "지연 로딩",
+          "disableUdp": "UDP 비활성화",
+          "hidden": "숨김"
+        },
+        "actions": {
+          "prepend": "그룹 앞에 추가",
+          "append": "그룹 뒤에 추가"
+        }
       },
-      "toggles": {
-        "lazy": "지연 로딩",
-        "disableUdp": "UDP 비활성화",
-        "hidden": "숨김"
+      "editor": {
+        "actions": {
+          "format": "문서 포맷"
+        },
+        "messages": {
+          "readOnly": "Cannot edit in read-only editor"
+        }
       },
-      "actions": {
-        "prepend": "그룹 앞에 추가",
-        "append": "그룹 뒤에 추가"
-      }
-    },
-    "fileInput": {
-      "chooseFile": "파일 선택"
-    },
-    "more": {
-      "global": {
-        "merge": "Global Merge",
-        "script": "Global Script"
-      },
-      "chips": {
-        "merge": "Merge",
-        "script": "Script"
-      }
-    },
-    "item": {
-      "tooltips": {
-        "showLast": "Click to show last update time",
-        "showNext": "Click to show next update"
-      },
-      "status": {
-        "lastUpdateFailed": "Last Update failed",
-        "nextUp": "Next Up",
-        "noSchedule": "No schedule",
-        "unknown": "Unknown",
-        "autoUpdateDisabled": "Auto update disabled"
-      }
-    },
-    "confirm": {
-      "delete": {
+      "confirmDelete": {
         "title": "삭제 확인",
         "message": "이 작업은 되돌릴 수 없습니다"
-      }
-    },
-    "editor": {
-      "format": "문서 포맷",
-      "readOnlyMessage": "Cannot edit in read-only editor"
-    },
-    "logViewer": {
-      "title": "스크립트 콘솔"
-    },
-    "card": {
-      "labels": {
-        "from": "출처",
-        "updateTime": "업데이트 시간",
-        "usedTotal": "사용됨 / 전체",
-        "expireTime": "만료 시간",
-        "clickToImport": "Click to import subscription"
+      },
+      "logViewer": {
+        "title": "스크립트 콘솔"
       }
     }
   },

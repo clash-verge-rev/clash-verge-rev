@@ -146,7 +146,7 @@ const ProfilePage = () => {
 
       setActivatings((prev) => prev.filter((id) => id !== previousSwitching));
       showNotice.info(
-        "profiles.page.notifications.switchInterrupted",
+        "profiles.page.feedback.notifications.switchInterrupted",
         `${previousSwitching} → ${newProfile}`,
         3000,
       );
@@ -191,7 +191,7 @@ const ProfilePage = () => {
 
           for (const file of paths) {
             if (!file.endsWith(".yaml") && !file.endsWith(".yml")) {
-              showNotice.error("profiles.page.errors.onlyYaml");
+              showNotice.error("profiles.page.feedback.errors.onlyYaml");
               continue;
             }
             const item = {
@@ -239,11 +239,14 @@ const ProfilePage = () => {
       await new Promise((resolve) => setTimeout(resolve, 500));
       await onEnhance(false);
 
-      showNotice.success("profiles.page.notices.forceRefreshCompleted", 2000);
+      showNotice.success(
+        "profiles.page.feedback.notices.forceRefreshCompleted",
+        2000,
+      );
     } catch (error) {
       console.error("[紧急刷新] 失败:", error);
       showNotice.error(
-        "profiles.page.notices.emergencyRefreshFailed",
+        "profiles.page.feedback.notices.emergencyRefreshFailed",
         { message: String(error) },
         4000,
       );
@@ -275,7 +278,7 @@ const ProfilePage = () => {
     if (!url) return;
     // 校验url是否为http/https
     if (!/^https?:\/\//i.test(url)) {
-      showNotice.error("profiles.page.errors.invalidUrl");
+      showNotice.error("profiles.page.feedback.errors.invalidUrl");
       return;
     }
     setLoading(true);
@@ -289,11 +292,11 @@ const ProfilePage = () => {
     try {
       // 尝试正常导入
       await importProfile(url);
-      await handleImportSuccess("profiles.notifications.importSuccess");
+      await handleImportSuccess("shared.feedback.notifications.importSuccess");
     } catch (initialErr) {
       console.warn("[订阅导入] 首次导入失败:", initialErr);
 
-      showNotice.info("profiles.page.notifications.importRetry");
+      showNotice.info("profiles.page.feedback.notifications.importRetry");
       try {
         // 使用自身代理尝试导入
         await importProfile(url, {
@@ -301,12 +304,12 @@ const ProfilePage = () => {
           self_proxy: true,
         });
         await handleImportSuccess(
-          "profiles.notifications.importWithClashProxy",
+          "shared.feedback.notifications.importWithClashProxy",
         );
       } catch (retryErr) {
         // 回退导入也失败
         showNotice.error(
-          "profiles.page.notifications.importFail",
+          "profiles.page.feedback.notifications.importFail",
           String(retryErr),
         );
       }
@@ -354,10 +357,16 @@ const ProfilePage = () => {
       // 清除SWR缓存并重新获取
       await mutate("getProfiles", getProfiles(), { revalidate: true });
       await onEnhance(false);
-      showNotice.error("profiles.page.notifications.importNeedsRefresh", 3000);
+      showNotice.error(
+        "profiles.page.feedback.notifications.importNeedsRefresh",
+        3000,
+      );
     } catch (finalError) {
       console.error(`[导入刷新] 最终刷新尝试失败:`, finalError);
-      showNotice.error("profiles.page.notifications.importSuccess", 5000);
+      showNotice.error(
+        "profiles.page.feedback.notifications.importSuccess",
+        5000,
+      );
     }
   };
 
@@ -475,7 +484,7 @@ const ProfilePage = () => {
 
         if (notifySuccess && success) {
           showNotice.success(
-            "profiles.page.notifications.profileSwitched",
+            "profiles.page.feedback.notifications.profileSwitched",
             1000,
           );
         }
@@ -574,7 +583,7 @@ const ProfilePage = () => {
       mutateLogs();
       if (notifySuccess) {
         showNotice.success(
-          "profiles.page.notifications.profileReactivated",
+          "profiles.page.feedback.notifications.profileReactivated",
           1000,
         );
       }
@@ -715,7 +724,7 @@ const ProfilePage = () => {
       setSelectedProfiles(new Set());
       setBatchMode(false);
 
-      showNotice.success("profiles.page.notifications.batchDeleted");
+      showNotice.success("profiles.page.feedback.notifications.batchDeleted");
     } catch (err: any) {
       showNotice.error(err);
     } finally {
@@ -795,7 +804,7 @@ const ProfilePage = () => {
   return (
     <BasePage
       full
-      title={t("profiles.page.title")}
+      title={t("profiles.page.header.title")}
       contentStyle={{ height: "100%" }}
       header={
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
@@ -805,7 +814,7 @@ const ProfilePage = () => {
               <IconButton
                 size="small"
                 color="inherit"
-                title={t("profiles.page.batch.title")}
+                title={t("profiles.page.batch.header.title")}
                 onClick={toggleBatchMode}
               >
                 <CheckBoxOutlineBlankRounded />
@@ -866,8 +875,8 @@ const ProfilePage = () => {
                 color="inherit"
                 title={
                   isAllSelected()
-                    ? t("profiles.page.batch.deselectAll")
-                    : t("profiles.page.batch.selectAll")
+                    ? t("profiles.page.batch.actions.deselectAll")
+                    : t("profiles.page.batch.actions.selectAll")
                 }
                 onClick={
                   isAllSelected() ? clearAllSelections : selectAllProfiles
@@ -884,20 +893,20 @@ const ProfilePage = () => {
               <IconButton
                 size="small"
                 color="error"
-                title={t("profiles.page.batch.delete")}
+                title={t("profiles.page.batch.actions.delete")}
                 onClick={deleteSelectedProfiles}
                 disabled={selectedProfiles.size === 0}
               >
                 <DeleteRounded />
               </IconButton>
               <Button size="small" variant="outlined" onClick={toggleBatchMode}>
-                {t("profiles.page.batch.done")}
+                {t("profiles.page.batch.actions.done")}
               </Button>
               <Box
                 sx={{ flex: 1, textAlign: "right", color: "text.secondary" }}
               >
-                {t("profiles.page.batch.selected")} {selectedProfiles.size}{" "}
-                {t("profiles.page.batch.items")}
+                {t("profiles.page.batch.summary.selected")}{" "}
+                {selectedProfiles.size} {t("profiles.page.batch.summary.items")}
               </Box>
             </Box>
           )}
@@ -930,7 +939,7 @@ const ProfilePage = () => {
             event.preventDefault();
             void onImport();
           }}
-          placeholder={t("profiles.page.import.placeholder")}
+          placeholder={t("profiles.page.importForm.placeholder")}
           slotProps={{
             input: {
               sx: { pr: 1 },
@@ -938,7 +947,7 @@ const ProfilePage = () => {
                 <IconButton
                   size="small"
                   sx={{ p: 0.5 }}
-                  title={t("profiles.page.import.paste")}
+                  title={t("profiles.page.importForm.actions.paste")}
                   onClick={onCopyLink}
                 >
                   <ContentPasteRounded fontSize="inherit" />
@@ -947,7 +956,7 @@ const ProfilePage = () => {
                 <IconButton
                   size="small"
                   sx={{ p: 0.5 }}
-                  title={t("profiles.page.import.clear")}
+                  title={t("profiles.page.importForm.actions.clear")}
                   onClick={() => setUrl("")}
                 >
                   <ClearRounded fontSize="inherit" />

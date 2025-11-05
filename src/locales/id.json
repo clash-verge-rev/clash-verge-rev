@@ -53,16 +53,6 @@
     "validation": {
       "invalidRegex": "Invalid regular expression"
     },
-    "messages": {
-      "errors": {
-        "trafficStats": "Traffic Statistics Error",
-        "trafficStatsDescription": "The traffic statistics component encountered an error and has been disabled to prevent crashes."
-      },
-      "notices": {
-        "raw": "{{message}}",
-        "prefixedRaw": "{{prefix}} {{message}}"
-      }
-    },
     "window": {
       "maximize": "Maksimalkan",
       "minimize": "Minimalkan"
@@ -70,11 +60,29 @@
     "editorModes": {
       "visualization": "Visualisasi",
       "advanced": "Lanjutan"
+    },
+    "feedback": {
+      "errors": {
+        "trafficStats": "Traffic Statistics Error",
+        "trafficStatsDescription": "The traffic statistics component encountered an error and has been disabled to prevent crashes."
+      },
+      "notices": {
+        "raw": "{{message}}",
+        "prefixedRaw": "{{prefix}} {{message}}"
+      },
+      "notifications": {
+        "importSuccess": "Profil Berhasil Diimpor",
+        "importSubscriptionSuccess": "Berlangganan Berhasil Diimpor",
+        "importWithClashProxy": "Profile Imported with Clash proxy",
+        "saved": "Saved successfully"
+      }
     }
   },
   "profiles": {
     "page": {
-      "title": "Profil",
+      "header": {
+        "title": "Profil"
+      },
       "actions": {
         "updateAll": "Perbarui Semua Profil",
         "viewRuntimeConfig": "Lihat Konfigurasi Runtime",
@@ -82,172 +90,184 @@
         "import": "Impor"
       },
       "batch": {
-        "title": "Batch Operations",
-        "delete": "Delete Selected Profiles",
-        "selectAll": "Select All",
-        "deselectAll": "Deselect All",
-        "done": "Done",
-        "selected": "Selected",
-        "items": "items"
+        "header": {
+          "title": "Batch Operations"
+        },
+        "actions": {
+          "delete": "Delete Selected Profiles",
+          "selectAll": "Select All",
+          "deselectAll": "Deselect All",
+          "done": "Done"
+        },
+        "summary": {
+          "selected": "Selected",
+          "items": "items"
+        }
       },
-      "import": {
+      "importForm": {
         "placeholder": "URL Profil",
-        "paste": "Tempel",
-        "clear": "Bersihkan"
+        "actions": {
+          "paste": "Tempel",
+          "clear": "Bersihkan"
+        }
       },
-      "errors": {
-        "invalidUrl": "Invalid profile URL. Please enter a URL starting with http:// or https://",
-        "onlyYaml": "Hanya File YAML yang Didukung"
-      },
-      "notifications": {
-        "importRetry": "Import failed, retrying with Clash proxy...",
-        "importFail": "Import failed even with Clash proxy",
-        "importNeedsRefresh": "Profile imported but may need manual refresh",
-        "importSuccess": "Profile imported successfully, please restart if not visible",
-        "profileSwitched": "Profil Beralih",
-        "profileReactivated": "Profil Diaktifkan Kembali",
-        "switchInterrupted": "Profile switch interrupted by new selection",
-        "batchDeleted": "Selected profiles deleted successfully"
-      },
-      "notices": {
-        "forceRefreshCompleted": "Force refresh completed",
-        "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
+      "feedback": {
+        "errors": {
+          "invalidUrl": "Invalid profile URL. Please enter a URL starting with http:// or https://",
+          "onlyYaml": "Hanya File YAML yang Didukung"
+        },
+        "notifications": {
+          "importRetry": "Import failed, retrying with Clash proxy...",
+          "importFail": "Import failed even with Clash proxy",
+          "importNeedsRefresh": "Profile imported but may need manual refresh",
+          "importSuccess": "Profile imported successfully, please restart if not visible",
+          "profileSwitched": "Profil Beralih",
+          "profileReactivated": "Profil Diaktifkan Kembali",
+          "switchInterrupted": "Profile switch interrupted by new selection",
+          "batchDeleted": "Selected profiles deleted successfully"
+        },
+        "notices": {
+          "forceRefreshCompleted": "Force refresh completed",
+          "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
+        }
       }
     },
-    "notifications": {
-      "importSuccess": "Profil Berhasil Diimpor",
-      "importSubscriptionSuccess": "Berlangganan Berhasil Diimpor",
-      "importWithClashProxy": "Profile Imported with Clash proxy",
-      "saved": "Saved successfully"
-    },
-    "viewer": {
-      "title": {
-        "create": "Buat Profil",
-        "edit": "Ubah Profil"
+    "components": {
+      "card": {
+        "labels": {
+          "from": "Dari",
+          "updateTime": "Waktu Pembaruan",
+          "usedTotal": "Digunakan / Total",
+          "expireTime": "Waktu Kedaluwarsa",
+          "clickToImport": "Click to import subscription"
+        }
       },
-      "fields": {
-        "type": "Jenis",
-        "name": "Nama",
-        "description": "Deskripsi",
-        "subscriptionUrl": "URL Langganan",
-        "httpTimeout": "HTTP Request Timeout",
-        "updateInterval": "Interval Pembaruan",
-        "useSystemProxy": "Gunakan Proksi Sistem",
-        "useClashProxy": "Gunakan Proksi Clash",
-        "acceptInvalidCerts": "Terima Sertifikat Tidak Valid (Bahaya)",
-        "allowAutoUpdate": "Allow Auto Update"
+      "fileInput": {
+        "chooseFile": "Pilih Berkas"
       },
-      "notifications": {
-        "creationRetry": "Profile creation failed, retrying with Clash proxy...",
-        "creationSuccess": "Profile creation succeeded with Clash proxy"
+      "menu": {
+        "home": "Home",
+        "select": "Pilih",
+        "editInfo": "Ubah Info",
+        "editFile": "Ubah Berkas",
+        "editRules": "Ubah Aturan",
+        "editProxies": "Ubah Proksi",
+        "editGroups": "Ubah Grup Proksi",
+        "extendConfig": "Perluas Konfigurasi",
+        "extendScript": "Perluas Skrip",
+        "openFile": "Buka Berkas",
+        "update": "Perbarui",
+        "updateViaProxy": "Update via proxy"
+      },
+      "more": {
+        "global": {
+          "merge": "Global Merge",
+          "script": "Global Script"
+        },
+        "chips": {
+          "merge": "Merge",
+          "script": "Script"
+        }
+      },
+      "profileItem": {
+        "tooltips": {
+          "showLast": "Click to show last update time",
+          "showNext": "Click to show next update"
+        },
+        "status": {
+          "lastUpdateFailed": "Last Update failed",
+          "nextUp": "Next Up",
+          "noSchedule": "No schedule",
+          "unknown": "Unknown",
+          "autoUpdateDisabled": "Auto update disabled"
+        }
       }
     },
-    "menu": {
-      "home": "Home",
-      "select": "Pilih",
-      "editInfo": "Ubah Info",
-      "editFile": "Ubah Berkas",
-      "editRules": "Ubah Aturan",
-      "editProxies": "Ubah Proksi",
-      "editGroups": "Ubah Grup Proksi",
-      "extendConfig": "Perluas Konfigurasi",
-      "extendScript": "Perluas Skrip",
-      "openFile": "Buka Berkas",
-      "update": "Perbarui",
-      "updateViaProxy": "Update via proxy"
-    },
-    "proxiesEditor": {
-      "title": "Ubah Proksi",
-      "placeholders": {
-        "multiUri": "Gunakan baris baru untuk beberapa URI (mendukung pengkodean Base64)"
+    "modals": {
+      "profileForm": {
+        "title": {
+          "create": "Buat Profil",
+          "edit": "Ubah Profil"
+        },
+        "fields": {
+          "type": "Jenis",
+          "name": "Nama",
+          "description": "Deskripsi",
+          "subscriptionUrl": "URL Langganan",
+          "httpTimeout": "HTTP Request Timeout",
+          "updateInterval": "Interval Pembaruan",
+          "useSystemProxy": "Gunakan Proksi Sistem",
+          "useClashProxy": "Gunakan Proksi Clash",
+          "acceptInvalidCerts": "Terima Sertifikat Tidak Valid (Bahaya)",
+          "allowAutoUpdate": "Allow Auto Update"
+        },
+        "feedback": {
+          "notifications": {
+            "creationRetry": "Profile creation failed, retrying with Clash proxy...",
+            "creationSuccess": "Profile creation succeeded with Clash proxy"
+          }
+        }
       },
-      "actions": {
-        "prepend": "Tambahkan Proksi di Awal",
-        "append": "Tambahkan Proksi di Akhir"
-      }
-    },
-    "groupsEditor": {
-      "title": "Ubah Grup Proksi",
-      "errors": {
-        "nameRequired": "Nama Grup Diperlukan",
-        "nameExists": "Nama Grup Sudah Ada"
+      "proxiesEditor": {
+        "title": "Ubah Proksi",
+        "placeholders": {
+          "multiUri": "Gunakan baris baru untuk beberapa URI (mendukung pengkodean Base64)"
+        },
+        "actions": {
+          "prepend": "Tambahkan Proksi di Awal",
+          "append": "Tambahkan Proksi di Akhir"
+        }
       },
-      "fields": {
-        "type": "Jenis Grup",
-        "name": "Nama Grup",
-        "icon": "Ikon Grup Proksi",
-        "proxies": "Gunakan Proksi",
-        "provider": "Gunakan Penyedia",
-        "healthCheckUrl": "URL Pemeriksaan Kesehatan",
-        "expectedStatus": "Status yang Diharapkan",
-        "interval": "Interval",
-        "timeout": "Waktu Habis",
-        "maxFailedTimes": "Jumlah Gagal Maksimal",
-        "interfaceName": "Nama Antarmuka",
-        "routingMark": "Tanda Routing",
-        "filter": "Filter",
-        "excludeFilter": "Kecualikan Filter",
-        "excludeType": "Kecualikan Jenis",
-        "includeAll": "Sertakan Semua Proksi dan Penyedia",
-        "includeAllProxies": "Sertakan Semua Proksi",
-        "includeAllProviders": "Sertakan Semua Penyedia"
+      "groupsEditor": {
+        "title": "Ubah Grup Proksi",
+        "errors": {
+          "nameRequired": "Nama Grup Diperlukan",
+          "nameExists": "Nama Grup Sudah Ada"
+        },
+        "fields": {
+          "type": "Jenis Grup",
+          "name": "Nama Grup",
+          "icon": "Ikon Grup Proksi",
+          "proxies": "Gunakan Proksi",
+          "provider": "Gunakan Penyedia",
+          "healthCheckUrl": "URL Pemeriksaan Kesehatan",
+          "expectedStatus": "Status yang Diharapkan",
+          "interval": "Interval",
+          "timeout": "Waktu Habis",
+          "maxFailedTimes": "Jumlah Gagal Maksimal",
+          "interfaceName": "Nama Antarmuka",
+          "routingMark": "Tanda Routing",
+          "filter": "Filter",
+          "excludeFilter": "Kecualikan Filter",
+          "excludeType": "Kecualikan Jenis",
+          "includeAll": "Sertakan Semua Proksi dan Penyedia",
+          "includeAllProxies": "Sertakan Semua Proksi",
+          "includeAllProviders": "Sertakan Semua Penyedia"
+        },
+        "toggles": {
+          "lazy": "Malas",
+          "disableUdp": "Nonaktifkan UDP",
+          "hidden": "Tersembunyi"
+        },
+        "actions": {
+          "prepend": "Tambahkan Grup di Awal",
+          "append": "Tambahkan Grup di Akhir"
+        }
       },
-      "toggles": {
-        "lazy": "Malas",
-        "disableUdp": "Nonaktifkan UDP",
-        "hidden": "Tersembunyi"
+      "editor": {
+        "actions": {
+          "format": "Format dokumen"
+        },
+        "messages": {
+          "readOnly": "Tidak dapat mengedit di editor hanya baca"
+        }
       },
-      "actions": {
-        "prepend": "Tambahkan Grup di Awal",
-        "append": "Tambahkan Grup di Akhir"
-      }
-    },
-    "fileInput": {
-      "chooseFile": "Pilih Berkas"
-    },
-    "more": {
-      "global": {
-        "merge": "Global Merge",
-        "script": "Global Script"
-      },
-      "chips": {
-        "merge": "Merge",
-        "script": "Script"
-      }
-    },
-    "item": {
-      "tooltips": {
-        "showLast": "Click to show last update time",
-        "showNext": "Click to show next update"
-      },
-      "status": {
-        "lastUpdateFailed": "Last Update failed",
-        "nextUp": "Next Up",
-        "noSchedule": "No schedule",
-        "unknown": "Unknown",
-        "autoUpdateDisabled": "Auto update disabled"
-      }
-    },
-    "confirm": {
-      "delete": {
+      "confirmDelete": {
         "title": "Konfirmasi penghapusan",
         "message": "Operasi ini tidak dapat dibatalkan"
-      }
-    },
-    "editor": {
-      "format": "Format dokumen",
-      "readOnlyMessage": "Tidak dapat mengedit di editor hanya baca"
-    },
-    "logViewer": {
-      "title": "Konsol Skrip"
-    },
-    "card": {
-      "labels": {
-        "from": "Dari",
-        "updateTime": "Waktu Pembaruan",
-        "usedTotal": "Digunakan / Total",
-        "expireTime": "Waktu Kedaluwarsa",
-        "clickToImport": "Click to import subscription"
+      },
+      "logViewer": {
+        "title": "Konsol Skrip"
       }
     }
   },

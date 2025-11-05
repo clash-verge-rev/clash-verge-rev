@@ -12,7 +12,9 @@ export const handleNoticeMessage = (
   const handlers: Record<string, () => void> = {
     "import_sub_url::ok": () => {
       navigate("/profile", { state: { current: msg } });
-      showNotice.success("profiles.notifications.importSubscriptionSuccess");
+      showNotice.success(
+        "shared.feedback.notifications.importSubscriptionSuccess",
+      );
     },
     "import_sub_url::error": () => {
       navigate("/profile");

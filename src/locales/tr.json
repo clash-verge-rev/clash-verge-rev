@@ -53,16 +53,6 @@
     "validation": {
       "invalidRegex": "Invalid regular expression"
     },
-    "messages": {
-      "errors": {
-        "trafficStats": "Traffic Statistics Error",
-        "trafficStatsDescription": "The traffic statistics component encountered an error and has been disabled to prevent crashes."
-      },
-      "notices": {
-        "raw": "{{message}}",
-        "prefixedRaw": "{{prefix}} {{message}}"
-      }
-    },
     "window": {
       "maximize": "Büyüt",
       "minimize": "Küçült"
@@ -70,11 +60,29 @@
     "editorModes": {
       "visualization": "Görselleştirme",
       "advanced": "Gelişmiş"
+    },
+    "feedback": {
+      "errors": {
+        "trafficStats": "Traffic Statistics Error",
+        "trafficStatsDescription": "The traffic statistics component encountered an error and has been disabled to prevent crashes."
+      },
+      "notices": {
+        "raw": "{{message}}",
+        "prefixedRaw": "{{prefix}} {{message}}"
+      },
+      "notifications": {
+        "importSuccess": "Profil Başarıyla İçe Aktarıldı",
+        "importSubscriptionSuccess": "Abonelik içe aktarımı başarılı",
+        "importWithClashProxy": "Profil Clash vekil ile içe aktarıldı",
+        "saved": "Saved successfully"
+      }
     }
   },
   "profiles": {
     "page": {
-      "title": "Profiller",
+      "header": {
+        "title": "Profiller"
+      },
       "actions": {
         "updateAll": "Tüm Profilleri Güncelle",
         "viewRuntimeConfig": "Çalışma Zamanı Yapılandırmasını Görüntüle",
@@ -82,172 +90,184 @@
         "import": "İçe Aktar"
       },
       "batch": {
-        "title": "Toplu İşlemler",
-        "delete": "Seçili Profilleri Sil",
-        "selectAll": "Tümünü Seç",
-        "deselectAll": "Tüm Seçimi Kaldır",
-        "done": "Tamam",
-        "selected": "Seçildi",
-        "items": "öğeler"
+        "header": {
+          "title": "Toplu İşlemler"
+        },
+        "actions": {
+          "delete": "Seçili Profilleri Sil",
+          "selectAll": "Tümünü Seç",
+          "deselectAll": "Tüm Seçimi Kaldır",
+          "done": "Tamam"
+        },
+        "summary": {
+          "selected": "Seçildi",
+          "items": "öğeler"
+        }
       },
-      "import": {
+      "importForm": {
         "placeholder": "Profil URL'si",
-        "paste": "Yapıştır",
-        "clear": "Temizle"
+        "actions": {
+          "paste": "Yapıştır",
+          "clear": "Temizle"
+        }
       },
-      "errors": {
-        "invalidUrl": "Invalid profile URL. Please enter a URL starting with http:// or https://",
-        "onlyYaml": "Yalnızca YAML Dosyaları Desteklenir"
-      },
-      "notifications": {
-        "importRetry": "İçe aktarma başarısız oldu, Clash vekil ile yeniden deneniyor...",
-        "importFail": "Clash vekil ile bile içe aktarma başarısız oldu",
-        "importNeedsRefresh": "Profile imported but may need manual refresh",
-        "importSuccess": "Profile imported successfully, please restart if not visible",
-        "profileSwitched": "Profil Değiştirildi",
-        "profileReactivated": "Profil Yeniden Etkinleştirildi",
-        "switchInterrupted": "Profile switch interrupted by new selection",
-        "batchDeleted": "Seçili profiller başarıyla silindi"
-      },
-      "notices": {
-        "forceRefreshCompleted": "Force refresh completed",
-        "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
+      "feedback": {
+        "errors": {
+          "invalidUrl": "Invalid profile URL. Please enter a URL starting with http:// or https://",
+          "onlyYaml": "Yalnızca YAML Dosyaları Desteklenir"
+        },
+        "notifications": {
+          "importRetry": "İçe aktarma başarısız oldu, Clash vekil ile yeniden deneniyor...",
+          "importFail": "Clash vekil ile bile içe aktarma başarısız oldu",
+          "importNeedsRefresh": "Profile imported but may need manual refresh",
+          "importSuccess": "Profile imported successfully, please restart if not visible",
+          "profileSwitched": "Profil Değiştirildi",
+          "profileReactivated": "Profil Yeniden Etkinleştirildi",
+          "switchInterrupted": "Profile switch interrupted by new selection",
+          "batchDeleted": "Seçili profiller başarıyla silindi"
+        },
+        "notices": {
+          "forceRefreshCompleted": "Force refresh completed",
+          "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
+        }
       }
     },
-    "notifications": {
-      "importSuccess": "Profil Başarıyla İçe Aktarıldı",
-      "importSubscriptionSuccess": "Abonelik içe aktarımı başarılı",
-      "importWithClashProxy": "Profil Clash vekil ile içe aktarıldı",
-      "saved": "Saved successfully"
-    },
-    "viewer": {
-      "title": {
-        "create": "Profil Oluştur",
-        "edit": "Profili Düzenle"
+    "components": {
+      "card": {
+        "labels": {
+          "from": "Kaynak",
+          "updateTime": "Güncelleme Zamanı",
+          "usedTotal": "Kullanılan / Toplam",
+          "expireTime": "Sona Erme Zamanı",
+          "clickToImport": "Abonelik içe aktarmak için tıklayın"
+        }
       },
-      "fields": {
-        "type": "Tip",
-        "name": "İsim",
-        "description": "Açıklamalar",
-        "subscriptionUrl": "Abonelik URL'si",
-        "httpTimeout": "HTTP Request Timeout",
-        "updateInterval": "Güncelleme Aralığı",
-        "useSystemProxy": "Sistem Vekil'ini Kullan",
-        "useClashProxy": "Clash Vekil'ini Kullan",
-        "acceptInvalidCerts": "Geçersiz Sertifikalara İzin Ver (Tehlikeli)",
-        "allowAutoUpdate": "Allow Auto Update"
+      "fileInput": {
+        "chooseFile": "Dosya Seç"
       },
-      "notifications": {
-        "creationRetry": "Profil oluşturma başarısız oldu, Clash vekil ile yeniden deneniyor...",
-        "creationSuccess": "Clash vekil ile profil oluşturma başarılı oldu"
+      "menu": {
+        "home": "Ana Sayfa",
+        "select": "Seç",
+        "editInfo": "Bilgileri Düzenle",
+        "editFile": "Dosyayı Düzenle",
+        "editRules": "Kuralları Düzenle",
+        "editProxies": "Vekil'leri Düzenle",
+        "editGroups": "Vekil Gruplarını Düzenle",
+        "extendConfig": "Yapılandırma Genişletme",
+        "extendScript": "Betik Genişletme",
+        "openFile": "Dosyayı Aç",
+        "update": "Güncelle",
+        "updateViaProxy": "Update via proxy"
+      },
+      "more": {
+        "global": {
+          "merge": "Global Merge",
+          "script": "Global Script"
+        },
+        "chips": {
+          "merge": "Merge",
+          "script": "Script"
+        }
+      },
+      "profileItem": {
+        "tooltips": {
+          "showLast": "Click to show last update time",
+          "showNext": "Click to show next update"
+        },
+        "status": {
+          "lastUpdateFailed": "Son güncelleme başarısız oldu",
+          "nextUp": "Sıradaki",
+          "noSchedule": "Program yok",
+          "unknown": "Bilinmiyor",
+          "autoUpdateDisabled": "Otomatik güncelleme devre dışı"
+        }
       }
     },
-    "menu": {
-      "home": "Ana Sayfa",
-      "select": "Seç",
-      "editInfo": "Bilgileri Düzenle",
-      "editFile": "Dosyayı Düzenle",
-      "editRules": "Kuralları Düzenle",
-      "editProxies": "Vekil'leri Düzenle",
-      "editGroups": "Vekil Gruplarını Düzenle",
-      "extendConfig": "Yapılandırma Genişletme",
-      "extendScript": "Betik Genişletme",
-      "openFile": "Dosyayı Aç",
-      "update": "Güncelle",
-      "updateViaProxy": "Update via proxy"
-    },
-    "proxiesEditor": {
-      "title": "Vekil'leri Düzenle",
-      "placeholders": {
-        "multiUri": "Birden fazla URI için yeni satırlar kullanın (Base64 kodlaması desteklenir)"
+    "modals": {
+      "profileForm": {
+        "title": {
+          "create": "Profil Oluştur",
+          "edit": "Profili Düzenle"
+        },
+        "fields": {
+          "type": "Tip",
+          "name": "İsim",
+          "description": "Açıklamalar",
+          "subscriptionUrl": "Abonelik URL'si",
+          "httpTimeout": "HTTP Request Timeout",
+          "updateInterval": "Güncelleme Aralığı",
+          "useSystemProxy": "Sistem Vekil'ini Kullan",
+          "useClashProxy": "Clash Vekil'ini Kullan",
+          "acceptInvalidCerts": "Geçersiz Sertifikalara İzin Ver (Tehlikeli)",
+          "allowAutoUpdate": "Allow Auto Update"
+        },
+        "feedback": {
+          "notifications": {
+            "creationRetry": "Profil oluşturma başarısız oldu, Clash vekil ile yeniden deneniyor...",
+            "creationSuccess": "Clash vekil ile profil oluşturma başarılı oldu"
+          }
+        }
       },
-      "actions": {
-        "prepend": "Vekil'in Başına Ekle",
-        "append": "Vekil'in Sonuna Ekle"
-      }
-    },
-    "groupsEditor": {
-      "title": "Vekil Gruplarını Düzenle",
-      "errors": {
-        "nameRequired": "Grup Adı Gerekli",
-        "nameExists": "Grup Adı Zaten Var"
+      "proxiesEditor": {
+        "title": "Vekil'leri Düzenle",
+        "placeholders": {
+          "multiUri": "Birden fazla URI için yeni satırlar kullanın (Base64 kodlaması desteklenir)"
+        },
+        "actions": {
+          "prepend": "Vekil'in Başına Ekle",
+          "append": "Vekil'in Sonuna Ekle"
+        }
       },
-      "fields": {
-        "type": "Grup Tipi",
-        "name": "Grup Adı",
-        "icon": "Vekil Grup Simgesi",
-        "proxies": "Vekil'leri Kullan",
-        "provider": "Sağlayıcı Kullan",
-        "healthCheckUrl": "Sağlık Kontrolü URL'si",
-        "expectedStatus": "Beklenen Durum",
-        "interval": "Aralık",
-        "timeout": "Zaman Aşımı",
-        "maxFailedTimes": "Maksimum Başarısız Deneme",
-        "interfaceName": "Arayüz Adı",
-        "routingMark": "Yönlendirme İşareti",
-        "filter": "Filtre",
-        "excludeFilter": "Hariç Tutma Filtresi",
-        "excludeType": "Hariç Tutma Tipi",
-        "includeAll": "Tüm Vekil'leri ve Sağlayıcıları Dahil Et",
-        "includeAllProxies": "Tüm Vekil'leri Dahil Et",
-        "includeAllProviders": "Tüm Sağlayıcıları Dahil Et"
+      "groupsEditor": {
+        "title": "Vekil Gruplarını Düzenle",
+        "errors": {
+          "nameRequired": "Grup Adı Gerekli",
+          "nameExists": "Grup Adı Zaten Var"
+        },
+        "fields": {
+          "type": "Grup Tipi",
+          "name": "Grup Adı",
+          "icon": "Vekil Grup Simgesi",
+          "proxies": "Vekil'leri Kullan",
+          "provider": "Sağlayıcı Kullan",
+          "healthCheckUrl": "Sağlık Kontrolü URL'si",
+          "expectedStatus": "Beklenen Durum",
+          "interval": "Aralık",
+          "timeout": "Zaman Aşımı",
+          "maxFailedTimes": "Maksimum Başarısız Deneme",
+          "interfaceName": "Arayüz Adı",
+          "routingMark": "Yönlendirme İşareti",
+          "filter": "Filtre",
+          "excludeFilter": "Hariç Tutma Filtresi",
+          "excludeType": "Hariç Tutma Tipi",
+          "includeAll": "Tüm Vekil'leri ve Sağlayıcıları Dahil Et",
+          "includeAllProxies": "Tüm Vekil'leri Dahil Et",
+          "includeAllProviders": "Tüm Sağlayıcıları Dahil Et"
+        },
+        "toggles": {
+          "lazy": "Tembel",
+          "disableUdp": "UDP'yi Devre Dışı Bırak",
+          "hidden": "Gizli"
+        },
+        "actions": {
+          "prepend": "Grubun Başına Ekle",
+          "append": "Grubun Sonuna Ekle"
+        }
       },
-      "toggles": {
-        "lazy": "Tembel",
-        "disableUdp": "UDP'yi Devre Dışı Bırak",
-        "hidden": "Gizli"
+      "editor": {
+        "actions": {
+          "format": "Belgeyi biçimlendir"
+        },
+        "messages": {
+          "readOnly": "Salt okunur düzenleyicide düzenlenemez"
+        }
       },
-      "actions": {
-        "prepend": "Grubun Başına Ekle",
-        "append": "Grubun Sonuna Ekle"
-      }
-    },
-    "fileInput": {
-      "chooseFile": "Dosya Seç"
-    },
-    "more": {
-      "global": {
-        "merge": "Global Merge",
-        "script": "Global Script"
-      },
-      "chips": {
-        "merge": "Merge",
-        "script": "Script"
-      }
-    },
-    "item": {
-      "tooltips": {
-        "showLast": "Click to show last update time",
-        "showNext": "Click to show next update"
-      },
-      "status": {
-        "lastUpdateFailed": "Son güncelleme başarısız oldu",
-        "nextUp": "Sıradaki",
-        "noSchedule": "Program yok",
-        "unknown": "Bilinmiyor",
-        "autoUpdateDisabled": "Otomatik güncelleme devre dışı"
-      }
-    },
-    "confirm": {
-      "delete": {
+      "confirmDelete": {
         "title": "Silmeyi Onayla",
         "message": "Bu işlem geri alınamaz"
-      }
-    },
-    "editor": {
-      "format": "Belgeyi biçimlendir",
-      "readOnlyMessage": "Salt okunur düzenleyicide düzenlenemez"
-    },
-    "logViewer": {
-      "title": "Betik Konsolu"
-    },
-    "card": {
-      "labels": {
-        "from": "Kaynak",
-        "updateTime": "Güncelleme Zamanı",
-        "usedTotal": "Kullanılan / Toplam",
-        "expireTime": "Sona Erme Zamanı",
-        "clickToImport": "Abonelik içe aktarmak için tıklayın"
+      },
+      "logViewer": {
+        "title": "Betik Konsolu"
       }
     }
   },
