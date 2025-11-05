@@ -60,7 +60,6 @@ pub async fn switch_proxy_node(group_name: &str, proxy_name: &str) {
                 group_name,
                 proxy_name
             );
-            let _ = handle::Handle::app_handle().emit("verge://force-refresh-proxies", ());
             let _ = tray::Tray::global().update_menu().await;
         }
         Err(err) => {
@@ -72,7 +71,6 @@ pub async fn switch_proxy_node(group_name: &str, proxy_name: &str) {
                 proxy_name,
                 err
             );
-            let _ = handle::Handle::app_handle().emit("verge://force-refresh-proxies", ());
         }
     }
 }
