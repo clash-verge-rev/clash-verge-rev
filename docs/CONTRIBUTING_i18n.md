@@ -50,7 +50,6 @@ PR checklist
 - Keep JSON files UTF-8 encoded.
 - Follow the repo’s locale file structure and naming conventions.
 - Run `pnpm format:i18n` to align with the baseline file for minimal diffs.
-- Run `pnpm i18n:validate` to ensure locale structure & namespace rules still hold.
 - Test translations in a local dev build before opening a PR.
 - Reference related issues and explain any context for translations or changes.
 
