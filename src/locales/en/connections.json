@@ -1,0 +1,28 @@
+{
+  "page": {
+    "title": "Connections"
+  },
+  "components": {
+    "fields": {
+      "host": "Host",
+      "dlSpeed": "DL Speed",
+      "ulSpeed": "UL Speed",
+      "chains": "Chains",
+      "rule": "Rule",
+      "process": "Process",
+      "time": "Time",
+      "source": "Source",
+      "destination": "Destination",
+      "destinationPort": "Destination Port",
+      "type": "Type"
+    },
+    "order": {
+      "default": "Default",
+      "uploadSpeed": "Upload Speed",
+      "downloadSpeed": "Download Speed"
+    },
+    "actions": {
+      "closeConnection": "Close Connection"
+    }
+  }
+}

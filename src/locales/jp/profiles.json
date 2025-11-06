@@ -1,0 +1,182 @@
+{
+  "page": {
+    "actions": {
+      "updateAll": "すべてのプロファイルを更新",
+      "viewRuntimeConfig": "実行時のプロファイルを表示",
+      "reactivate": "プロファイルを再アクティブ化",
+      "import": "インポート"
+    },
+    "batch": {
+      "actions": {
+        "delete": "選択したプロファイルを削除",
+        "selectAll": "すべて選択",
+        "deselectAll": "すべての選択を解除",
+        "done": "完了"
+      },
+      "summary": {
+        "selected": "選択済み",
+        "items": "アイテム"
+      },
+      "title": "バッチ操作"
+    },
+    "importForm": {
+      "placeholder": "プロファイルファイルのURL",
+      "actions": {
+        "paste": "貼り付け"
+      }
+    },
+    "feedback": {
+      "errors": {
+        "invalidUrl": "Invalid profile URL. Please enter a URL starting with http:// or https://",
+        "onlyYaml": "YAMLファイルのみサポートされています。"
+      },
+      "notifications": {
+        "importRetry": "インポートに失敗しました。Clashプロキシを使用して再試行します...",
+        "importFail": "Clashプロキシを使用してもインポートに失敗しました。",
+        "importNeedsRefresh": "Profile imported but may need manual refresh",
+        "importSuccess": "Profile imported successfully, please restart if not visible",
+        "profileSwitched": "プロファイルが切り替えられました。",
+        "profileReactivated": "プロファイルが再アクティブ化されました。",
+        "switchInterrupted": "Profile switch interrupted by new selection",
+        "batchDeleted": "選択したプロファイルが正常に削除されました"
+      },
+      "notices": {
+        "forceRefreshCompleted": "Force refresh completed",
+        "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
+      }
+    },
+    "title": "プロファイル"
+  },
+  "components": {
+    "card": {
+      "labels": {
+        "clickToImport": "クリックしてサブスクリプションをインポート"
+      }
+    },
+    "fileInput": {
+      "chooseFile": "ファイルを選択"
+    },
+    "menu": {
+      "home": "ホーム",
+      "select": "使用する",
+      "editInfo": "情報を編集",
+      "editFile": "ファイルを編集",
+      "editRules": "ルールを編集",
+      "editProxies": "ノードを編集",
+      "editGroups": "プロキシグループを編集",
+      "extendConfig": "拡張上書き設定",
+      "extendScript": "拡張スクリプト",
+      "openFile": "ファイルを開く",
+      "update": "更新",
+      "updateViaProxy": "Update via proxy"
+    },
+    "more": {
+      "global": {
+        "merge": "Global Merge",
+        "script": "Global Script"
+      },
+      "chips": {
+        "merge": "Merge",
+        "script": "Script"
+      }
+    },
+    "profileItem": {
+      "tooltips": {
+        "showLast": "Click to show last update time",
+        "showNext": "Click to show next update"
+      },
+      "status": {
+        "lastUpdateFailed": "前回の更新に失敗しました。",
+        "nextUp": "次回の更新",
+        "noSchedule": "予定がありません。",
+        "unknown": "不明",
+        "autoUpdateDisabled": "自動更新が無効になっています。"
+      }
+    }
+  },
+  "modals": {
+    "profileForm": {
+      "title": {
+        "create": "新規プロファイルを作成",
+        "edit": "プロファイルを編集"
+      },
+      "fields": {
+        "type": "タイプ",
+        "description": "説明",
+        "subscriptionUrl": "サブスクリプションURL",
+        "httpTimeout": "HTTP Request Timeout",
+        "updateInterval": "更新間隔",
+        "useSystemProxy": "システムプロキシを使用して更新",
+        "useClashProxy": "クラッシュプロキシを使用して更新",
+        "acceptInvalidCerts": "Allows Invalid Certificates (Danger)",
+        "allowAutoUpdate": "Allow Auto Update"
+      },
+      "feedback": {
+        "notifications": {
+          "creationRetry": "プロファイルの作成に失敗しました。Clashプロキシを使用して再試行します...",
+          "creationSuccess": "Clashプロキシを使用してプロファイルの作成に成功しました。"
+        }
+      }
+    },
+    "proxiesEditor": {
+      "title": "ノードを編集",
+      "placeholders": {
+        "multiUri": "複数のURIは改行で区切ってください（Base64エンコードに対応）"
+      },
+      "actions": {
+        "prepend": "前置プロキシノードを追加",
+        "append": "後置プロキシノードを追加"
+      }
+    },
+    "groupsEditor": {
+      "title": "プロキシグループを編集",
+      "errors": {
+        "nameRequired": "プロキシグループ名は必須です",
+        "nameExists": "プロキシグループ名はすでに存在します"
+      },
+      "fields": {
+        "type": "プロキシグループタイプ",
+        "name": "プロキシグループ名",
+        "icon": "プロキシグループアイコン",
+        "proxies": "プロキシを導入",
+        "provider": "プロキシプロバイダーを導入",
+        "healthCheckUrl": "ヘルスチェックURL",
+        "expectedStatus": "期待するステータスコード",
+        "interval": "チェック間隔",
+        "maxFailedTimes": "最大失敗回数",
+        "interfaceName": "出力インターフェース",
+        "routingMark": "ルーティングマーク",
+        "filter": "ノードをフィルタリング",
+        "excludeFilter": "除外ノード",
+        "excludeType": "除外ノードタイプ",
+        "includeAll": "すべての出力プロキシ、プロキシプロバイダーを導入",
+        "includeAllProxies": "すべての出力プロキシを導入",
+        "includeAllProviders": "すべてのプロキシプロバイダーを導入"
+      },
+      "toggles": {
+        "lazy": "遅延モード",
+        "disableUdp": "UDPを無効にする",
+        "hidden": "プロキシグループを隠す"
+      },
+      "actions": {
+        "prepend": "前置プロキシグループを追加",
+        "append": "後置プロキシグループを追加"
+      }
+    },
+    "editor": {
+      "actions": {
+        "format": "文書を整形する"
+      },
+      "messages": {
+        "readOnly": "読み取り専用モードでは編集できません。"
+      }
+    },
+    "confirmDelete": {
+      "title": "削除を確認",
+      "message": "この操作は元に戻せません"
+    },
+    "logViewer": {
+      "title": "スクリプトコンソール出力"
+    }
+  }
+}

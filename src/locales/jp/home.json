@@ -1,0 +1,138 @@
+{
+  "page": {
+    "tooltips": {
+      "lightweightMode": "軽量モード",
+      "manual": "マニュアル",
+      "settings": "ホーム設定"
+    },
+    "cards": {
+      "trafficStats": "トラフィック統計",
+      "networkSettings": "ネットワーク設定",
+      "proxyMode": "プロキシモード"
+    },
+    "settings": {
+      "cards": {
+        "profile": "プロファイルカード",
+        "currentProxy": "現在のプロキシカード",
+        "network": "ネットワーク設定カード",
+        "proxyMode": "プロキシモードカード",
+        "traffic": "トラフィック統計カード",
+        "tests": "ウェブサイトテストカード",
+        "ip": "IP情報カード",
+        "clashInfo": "Clash情報カード",
+        "systemInfo": "システム情報カード"
+      },
+      "title": "ホーム設定"
+    },
+    "title": "ホーム"
+  },
+  "components": {
+    "proxyTun": {
+      "status": {
+        "systemProxyEnabled": "システムプロキシが有効になっています。アプリケーションはプロキシを通じてネットワークにアクセスします。",
+        "systemProxyDisabled": "システムプロキシが無効になっています。ほとんどのユーザーはこのオプションをオンにすることをお勧めします。",
+        "tunModeServiceRequired": "TUNモードはサービスモードが必要です。まずサービスをインストールしてください。",
+        "tunModeEnabled": "TUNモードが有効になっています。アプリケーションは仮想ネットワークカードを通じてネットワークにアクセスします。",
+        "tunModeDisabled": "TUNモードが無効になっています。特殊なアプリケーションに適しています。"
+      },
+      "tooltips": {
+        "systemProxy": "オペレーティングシステムのプロキシ設定を変更します。有効にできない場合は、手動でオペレーティングシステムのプロキシ設定を変更してください。",
+        "tunMode": "TUNモードは全てのアプリケーションのトラフィックを制御できます。システムプロキシ設定に従わない特殊なアプリケーションに適しています。"
+      }
+    },
+    "clashInfo": {
+      "title": "Clash情報",
+      "fields": {
+        "coreVersion": "コアバージョン",
+        "systemProxyAddress": "システムプロキシアドレス",
+        "mixedPort": "Mixed Port",
+        "uptime": "稼働時間",
+        "rulesCount": "ルール数"
+      }
+    },
+    "systemInfo": {
+      "title": "システム情報",
+      "fields": {
+        "osInfo": "オペレーティングシステム情報",
+        "autoLaunch": "起動時に自動起動",
+        "runningMode": "実行モード",
+        "lastCheckUpdate": "最後の更新チェック",
+        "vergeVersion": "Vergeバージョン"
+      },
+      "actions": {
+        "settings": "設定"
+      },
+      "tooltips": {
+        "autoLaunchAdmin": "管理者モードでは起動時の自動起動がサポートされない場合があります。"
+      },
+      "badges": {
+        "adminMode": "管理者モード",
+        "serviceMode": "サービスモード",
+        "sidecarMode": "ユーザーモード",
+        "adminServiceMode": "Admin + Service Mode"
+      }
+    },
+    "ipInfo": {
+      "title": "IP情報",
+      "labels": {
+        "ip": "IP",
+        "asn": "自治システム番号",
+        "isp": "インターネットサービスプロバイダー",
+        "org": "組織",
+        "location": "位置",
+        "timezone": "タイムゾーン",
+        "autoRefresh": "自動更新",
+        "unknown": "不明"
+      },
+      "errors": {
+        "load": "IP情報の取得に失敗しました"
+      }
+    },
+    "currentProxy": {
+      "title": "現在のノード",
+      "actions": {
+        "refreshDelay": "遅延テスト"
+      },
+      "labels": {
+        "globalMode": "グローバルモード",
+        "directMode": "直接接続モード",
+        "group": "プロキシグループ",
+        "proxy": "ノード",
+        "noActiveNode": "アクティブなプロキシノードがありません。"
+      }
+    },
+    "tests": {
+      "title": "ウェブサイトテスト"
+    },
+    "traffic": {
+      "metrics": {
+        "uploadSpeed": "アップロード速度",
+        "downloadSpeed": "ダウンロード速度",
+        "activeConnections": "アクティブな接続",
+        "memoryUsage": "コアメモリ使用量"
+      },
+      "legends": {
+        "upload": "アップロード",
+        "download": "ダウンロード"
+      },
+      "patterns": {
+        "minutes": "{{time}} Minutes"
+      }
+    },
+    "clashMode": {
+      "errors": {
+        "communication": "Core communication error"
+      },
+      "labels": {
+        "rule": "ルールモード",
+        "global": "グローバルモード",
+        "direct": "直接接続モード"
+      },
+      "descriptions": {
+        "rule": "Automatically choose proxies according to the rule set.",
+        "global": "Forward all network requests through the selected proxy.",
+        "direct": "Bypass the proxy and connect to the internet directly."
+      }
+    }
+  }
+}

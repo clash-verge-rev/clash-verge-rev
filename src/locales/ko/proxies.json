@@ -1,0 +1,90 @@
+{
+  "page": {
+    "modes": {
+      "rule": "Rule",
+      "global": "Global",
+      "direct": "Direct"
+    },
+    "actions": {
+      "toggleChain": "🔗 체인 프록시",
+      "connect": "Connect",
+      "disconnect": "Disconnect",
+      "connecting": "Connecting...",
+      "clearChainConfig": "Delete Chain Config"
+    },
+    "provider": {
+      "title": "프록시 제공자",
+      "actions": {
+        "updateAll": "모두 업데이트",
+        "update": "업데이트"
+      }
+    },
+    "rules": {
+      "title": "Proxy Rules",
+      "select": "Select Rules"
+    },
+    "labels": {
+      "proxyCount": "프록시 개수",
+      "delayCheckReset": "고정 취소를 위한 지연 확인"
+    },
+    "tooltips": {
+      "locate": "로케이트",
+      "delayCheck": "지연 확인",
+      "sortDefault": "기본값으로 정렬",
+      "sortDelay": "지연시간으로 정렬",
+      "sortName": "이름으로 정렬",
+      "delayCheckUrl": "지연 확인 URL",
+      "showBasic": "프록시 기본",
+      "showDetail": "프록시 상세",
+      "filter": "필터"
+    },
+    "placeholders": {
+      "delayCheckUrl": "지연 확인 URL"
+    },
+    "chain": {
+      "header": "Chain Proxy Config",
+      "empty": "No proxy chain configured",
+      "instruction": "Click nodes in order to add to proxy chain",
+      "minimumNodes": "Chain proxy requires at least 2 nodes",
+      "minimumNodesHint": "Chain proxy requires at least 2 nodes. Please add one more node.",
+      "connectFailed": "Failed to connect to proxy chain",
+      "disconnectFailed": "Failed to disconnect from proxy chain",
+      "duplicateNode": "Proxy node already exists in chain"
+    },
+    "messages": {
+      "directMode": "Direct Mode"
+    },
+    "title": {
+      "default": "프록시 그룹",
+      "chainMode": "Proxy Chain Mode"
+    }
+  },
+  "feedback": {
+    "notifications": {
+      "provider": {
+        "updateSuccess": "{{name}} updated successfully",
+        "updateFailed": "Failed to update {{name}}: {{message}}",
+        "genericError": "Update failed: {{message}}",
+        "none": "No providers available to update",
+        "allUpdated": "All providers updated successfully"
+      }
+    }
+  },
+  "components": {
+    "enums": {
+      "strategies": {
+        "select": "수동으로 프록시 선택",
+        "url-test": "URL 테스트 지연을 기준으로 프록시 선택",
+        "fallback": "오류 발생 시 다른 프록시로 전환",
+        "load-balance": "부하 분산에 따라 프록시 분배",
+        "relay": "정의된 프록시 체인을 통과"
+      },
+      "policies": {
+        "DIRECT": "데이터가 직접 아웃바운드로 이동",
+        "REJECT": "요청 차단",
+        "REJECT-DROP": "요청 폐기",
+        "PASS": "일치할 경우 이 규칙 건너뛰기"
+      }
+    }
+  }
+}

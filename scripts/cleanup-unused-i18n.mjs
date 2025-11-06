@@ -873,18 +873,79 @@ function loadLocales() {
     throw new Error(`Locales directory not found: ${LOCALES_DIR}`);
   }
 
-  return fs
-    .readdirSync(LOCALES_DIR)
-    .filter(
-      (file) =>
-        /^[a-z0-9\-_]+\.json$/i.test(file) &&
-        !file.endsWith(".bak") &&
-        !file.endsWith(".old"),
-    )
-    .map((file) => ({
-      name: path.basename(file, ".json"),
-      path: path.join(LOCALES_DIR, file),
-    }));
+  const entries = fs.readdirSync(LOCALES_DIR, { withFileTypes: true });
+  const locales = [];
+
+  for (const entry of entries) {
+    if (entry.isFile()) {
+      if (
+        /^[a-z0-9\-_]+\.json$/i.test(entry.name) &&
+        !entry.name.endsWith(".bak") &&
+        !entry.name.endsWith(".old")
+      ) {
+        const localePath = path.join(LOCALES_DIR, entry.name);
+        const name = path.basename(entry.name, ".json");
+        const raw = fs.readFileSync(localePath, "utf8");
+        locales.push({
+          name,
+          dir: LOCALES_DIR,
+          format: "single-file",
+          files: [
+            {
+              namespace: "translation",
+              path: localePath,
+            },
+          ],
+          data: JSON.parse(raw),
+        });
+      }
+      continue;
+    }
+
+    if (!entry.isDirectory()) continue;
+    if (entry.name.startsWith(".")) continue;
+
+    const localeDir = path.join(LOCALES_DIR, entry.name);
+    const namespaceEntries = fs
+      .readdirSync(localeDir, { withFileTypes: true })
+      .filter(
+        (item) =>
+          item.isFile() &&
+          item.name.endsWith(".json") &&
+          !item.name.endsWith(".bak") &&
+          !item.name.endsWith(".old"),
+      )
+      .map((item) => ({
+        namespace: path.basename(item.name, ".json"),
+        path: path.join(localeDir, item.name),
+      }));
+
+    namespaceEntries.sort((a, b) => a.path.localeCompare(b.path));
+
+    const data = {};
+    for (const file of namespaceEntries) {
+      const raw = fs.readFileSync(file.path, "utf8");
+      try {
+        data[file.namespace] = JSON.parse(raw);
+      } catch (error) {
+        console.warn(
+          `Warning: failed to parse ${file.path}: ${error.message}`,
+        );
+        data[file.namespace] = {};
+      }
+    }
+
+    locales.push({
+      name: entry.name,
+      dir: localeDir,
+      format: "multi-file",
+      files: namespaceEntries,
+      data,
+    });
+  }
+
+  locales.sort((a, b) => a.name.localeCompare(b.name));
+  return locales;
 }
 
 function ensureBackup(localePath) {
@@ -899,6 +960,111 @@ function ensureBackup(localePath) {
   return backupPath;
 }
 
+function backupIfNeeded(filePath, backups, options) {
+  if (!options.backup) return;
+  if (!fs.existsSync(filePath)) return;
+  if (backups.has(filePath)) return;
+  const backupPath = ensureBackup(filePath);
+  backups.add(filePath);
+  return backupPath;
+}
+
+function toModuleIdentifier(namespace, seen) {
+  const RESERVED = new Set([
+    "default",
+    "function",
+    "var",
+    "let",
+    "const",
+    "import",
+    "export",
+    "class",
+    "enum",
+  ]);
+
+  const base =
+    namespace
+      .replace(/[^a-zA-Z0-9_$]/g, "_")
+      .replace(/^[^a-zA-Z_$]+/, "") || "ns";
+
+  let candidate = base;
+  let counter = 1;
+  while (RESERVED.has(candidate) || seen.has(candidate)) {
+    candidate = `${base}_${counter}`;
+    counter += 1;
+  }
+  seen.add(candidate);
+  return candidate;
+}
+
+function regenerateLocaleIndex(localeDir, namespaces) {
+  const seen = new Set();
+  const imports = [];
+  const mappings = [];
+
+  for (const namespace of namespaces) {
+    const filePath = path.join(localeDir, `${namespace}.json`);
+    if (!fs.existsSync(filePath)) continue;
+    const identifier = toModuleIdentifier(namespace, seen);
+    imports.push(`import ${identifier} from "./${namespace}.json";`);
+    mappings.push(`  "${namespace}": ${identifier},`);
+  }
+
+  const content = `${imports.join("\n")}
+
+const resources = {
+${mappings.join("\n")}
+};
+
+export default resources;
+`;
+
+  fs.writeFileSync(path.join(localeDir, "index.ts"), content, "utf8");
+}
+
+function writeLocale(locale, data, options) {
+  const backups = new Set();
+
+  if (locale.format === "single-file") {
+    const target = locale.files[0].path;
+    backupIfNeeded(target, backups, options);
+    const serialized = JSON.stringify(data, null, 2);
+    fs.writeFileSync(target, `${serialized}\n`, "utf8");
+    return;
+  }
+
+  const entries = Object.entries(data);
+  const orderedNamespaces = entries.map(([namespace]) => namespace);
+  const existingFiles = new Map(
+    locale.files.map((file) => [file.namespace, file.path]),
+  );
+  const visited = new Set();
+
+  for (const [namespace, value] of entries) {
+    const target =
+      existingFiles.get(namespace) ??
+      path.join(locale.dir, `${namespace}.json`);
+    backupIfNeeded(target, backups, options);
+    const serialized = JSON.stringify(value ?? {}, null, 2);
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.writeFileSync(target, `${serialized}\n`, "utf8");
+    visited.add(namespace);
+  }
+
+  for (const [namespace, filePath] of existingFiles.entries()) {
+    if (!visited.has(namespace) && fs.existsSync(filePath)) {
+      backupIfNeeded(filePath, backups, options);
+      fs.rmSync(filePath);
+    }
+  }
+
+  regenerateLocaleIndex(locale.dir, orderedNamespaces);
+  locale.files = orderedNamespaces.map((namespace) => ({
+    namespace,
+    path: path.join(locale.dir, `${namespace}.json`),
+  }));
+}
+
 function processLocale(
   locale,
   baselineData,
@@ -908,8 +1074,7 @@ function processLocale(
   missingFromSource,
   options,
 ) {
-  const raw = fs.readFileSync(locale.path, "utf8");
-  const data = JSON.parse(raw);
+  const data = JSON.parse(JSON.stringify(locale.data));
   const flattened = flattenLocale(data);
   const expectedTotal = baselineEntries.size;
 
@@ -966,17 +1131,10 @@ function processLocale(
     }
     cleanupEmptyBranches(updated);
 
-    if (options.backup) {
-      const backupPath = ensureBackup(locale.path);
-      console.log(
-        `[${locale.name}] Backup written to ${path.basename(backupPath)}`,
-      );
-    }
-
-    const serialized = JSON.stringify(updated, null, 2);
-    fs.writeFileSync(locale.path, `${serialized}\n`, "utf8");
+    writeLocale(locale, updated, options);
+    locale.data = JSON.parse(JSON.stringify(updated));
     console.log(
-      `[${locale.name}] Updated locale file saved (${removed.length} unused removed${
+      `[${locale.name}] Locale resources updated (${removed.length} unused removed${
         aligned ? ", structure aligned" : ""
       })`,
     );
@@ -984,7 +1142,10 @@ function processLocale(
 
   return {
     locale: locale.name,
-    file: locale.path,
+    file:
+      locale.format === "single-file"
+        ? locale.files[0].path
+        : locale.dir,
     totalKeys: flattened.size,
     expectedKeys: expectedTotal,
     unusedKeys: unused,
@@ -1037,7 +1198,7 @@ function main() {
     );
   }
 
-  const baselineData = JSON.parse(fs.readFileSync(baselineLocale.path, "utf8"));
+  const baselineData = JSON.parse(JSON.stringify(baselineLocale.data));
   const baselineEntries = flattenLocale(baselineData);
   const baselineNamespaces = new Set(Object.keys(baselineData));
   const usage = collectUsedI18nKeys(sourceFiles, baselineNamespaces);

@@ -1,0 +1,40 @@
+{
+  "page": {
+    "actions": {
+      "testAll": "모두 테스트"
+    },
+    "title": "테스트"
+  },
+  "components": {
+    "item": {
+      "actions": {
+        "test": "테스트"
+      }
+    }
+  },
+  "modals": {
+    "test": {
+      "title": {
+        "create": "테스트 생성",
+        "edit": "테스트 편집"
+      },
+      "fields": {
+        "url": "테스트 URL"
+      }
+    }
+  },
+  "statuses": {
+    "test": {
+      "pending": "Pending",
+      "yes": "Yes",
+      "no": "No",
+      "failed": "실패",
+      "completed": "Completed",
+      "disallowedIsp": "Disallowed ISP",
+      "originalsOnly": "Originals Only",
+      "noDisney": "No (IP Banned By Disney+)",
+      "unsupportedRegion": "Unsupported Country/Region",
+      "failedNetwork": "Failed (Network Connection)"
+    }
+  }
+}

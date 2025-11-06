@@ -27,13 +27,13 @@ export const languages: Record<string, any> = supportedLanguages.reduce(
 
 export const loadLanguage = async (language: string) => {
   try {
-    const module = await import(`@/locales/${language}.json`);
+    const module = await import(`@/locales/${language}/index.ts`);
     return module.default;
   } catch (error) {
     console.warn(
       `Failed to load language ${language}, fallback to zh, ${error}`,
     );
-    const fallback = await import("@/locales/zh.json");
+    const fallback = await import("@/locales/zh/index.ts");
     return fallback.default;
   }
 };

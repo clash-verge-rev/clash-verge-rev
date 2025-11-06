@@ -1,0 +1,128 @@
+{
+  "actions": {
+    "cancel": "취소",
+    "close": "닫기",
+    "confirm": "확인",
+    "save": "저장",
+    "delete": "삭제",
+    "edit": "편집",
+    "new": "새로 만들기",
+    "enable": "활성화",
+    "upgrade": "Upgrade",
+    "restart": "Restart",
+    "resetToDefault": "Reset to Default",
+    "refresh": "새로고침",
+    "retry": "Retry",
+    "refreshPage": "Refresh Page",
+    "showDetails": "Show Details",
+    "hideDetails": "Hide Details",
+    "listView": "목록 보기",
+    "tableView": "테이블 보기",
+    "pause": "일시 정지",
+    "resume": "재개",
+    "closeAll": "모두 닫기",
+    "clear": "지우기"
+  },
+  "labels": {
+    "updateAt": "업데이트 시간",
+    "timeout": "Timeout",
+    "icon": "아이콘",
+    "name": "이름",
+    "readOnly": "ReadOnly",
+    "expireTime": "만료 시간",
+    "updateTime": "업데이트 시간",
+    "usedTotal": "사용됨 / 전체",
+    "from": "출처",
+    "password": "비밀번호",
+    "retryAttempts": "Retry attempts",
+    "downloaded": "다운로드됨",
+    "uploaded": "업로드됨"
+  },
+  "statuses": {
+    "enabled": "Enabled",
+    "disabled": "Disabled",
+    "saving": "Saving...",
+    "empty": "비어있음"
+  },
+  "units": {
+    "milliseconds": "밀리초",
+    "seconds": "초",
+    "minutes": "분",
+    "kilobytes": "KB",
+    "files": "Files"
+  },
+  "placeholders": {
+    "filter": "Filter conditions",
+    "matchCase": "Match Case",
+    "matchWholeWord": "Match Whole Word",
+    "useRegex": "Use Regular Expression"
+  },
+  "validation": {
+    "invalidRegex": "Invalid regular expression"
+  },
+  "window": {
+    "maximize": "최대화",
+    "minimize": "최소화"
+  },
+  "editorModes": {
+    "visualization": "시각화",
+    "advanced": "고급"
+  },
+  "feedback": {
+    "errors": {
+      "trafficStats": "Traffic Statistics Error",
+      "trafficStatsDescription": "The traffic statistics component encountered an error and has been disabled to prevent crashes."
+    },
+    "notices": {
+      "raw": "{{message}}",
+      "prefixedRaw": "{{prefix}} {{message}}"
+    },
+    "notifications": {
+      "importSuccess": "Profile Imported Successfully",
+      "importSubscriptionSuccess": "구독 가져오기 성공",
+      "importWithClashProxy": "Profile Imported with Clash proxy",
+      "saved": "Saved successfully",
+      "common": {
+        "copySuccess": "복사 성공",
+        "saveSuccess": "Configuration saved successfully",
+        "saveFailed": "Failed to save configuration"
+      }
+    },
+    "validation": {
+      "config": {
+        "failed": "설정 검증 실패",
+        "bootFailed": "부팅 설정 검증 실패",
+        "coreChangeFailed": "코어 변경 설정 검증 실패",
+        "processTerminated": "설정 검증 프로세스 종료됨"
+      },
+      "script": {
+        "syntaxError": "스크립트 구문 오류",
+        "missingMain": "스크립트 메인 없음",
+        "fileNotFound": "파일을 찾을 수 없음",
+        "fileError": "스크립트 파일 오류"
+      },
+      "yaml": {
+        "syntaxError": "YAML 구문 오류",
+        "readError": "YAML 읽기 오류",
+        "mappingError": "YAML 매핑 오류",
+        "keyError": "YAML 키 오류",
+        "generalError": "YAML 오류"
+      },
+      "merge": {
+        "syntaxError": "병합 파일 구문 오류",
+        "mappingError": "병합 파일 매핑 오류",
+        "keyError": "병합 파일 키 오류",
+        "generalError": "병합 파일 오류"
+      }
+    }
+  },
+  "filters": {
+    "logLevels": {
+      "all": "ALL",
+      "debug": "DEBUG",
+      "info": "INFO",
+      "warn": "WARN",
+      "error": "ERROR"
+    }
+  }
+}

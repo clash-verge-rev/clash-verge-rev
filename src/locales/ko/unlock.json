@@ -1,0 +1,12 @@
+{
+  "page": {
+    "actions": {
+      "testing": "테스트 중..."
+    },
+    "empty": "No unlock test items",
+    "messages": {
+      "detectionTimeout": "Detection timeout or failed"
+    },
+    "title": "Unlock Test"
+  }
+}

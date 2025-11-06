@@ -580,15 +580,25 @@ async function resolveLocales() {
 
   try {
     await fsp.mkdir(targetLocalesDir, { recursive: true });
-    const files = await fsp.readdir(srcLocalesDir);
-    for (const file of files) {
-      const srcPath = path.join(srcLocalesDir, file);
-      const targetPath = path.join(targetLocalesDir, file);
-      if (!(await hasFileChanged(srcPath, targetPath))) continue;
-      await fsp.copyFile(srcPath, targetPath);
-      await updateHashCache(targetPath);
-      log_success(`Copied locale file: ${file}`);
-    }
+    const copyLocaleTree = async (sourceDir, destDir) => {
+      const entries = await fsp.readdir(sourceDir, { withFileTypes: true });
+      for (const entry of entries) {
+        const srcPath = path.join(sourceDir, entry.name);
+        const targetPath = path.join(destDir, entry.name);
+        if (entry.isDirectory()) {
+          await fsp.mkdir(targetPath, { recursive: true });
+          await copyLocaleTree(srcPath, targetPath);
+        } else if (entry.isFile()) {
+          if (!(await hasFileChanged(srcPath, targetPath))) continue;
+          await fsp.mkdir(path.dirname(targetPath), { recursive: true });
+          await fsp.copyFile(srcPath, targetPath);
+          await updateHashCache(targetPath);
+          const relativePath = path.relative(srcLocalesDir, srcPath);
+          log_success(`Copied locale file: ${relativePath}`);
+        }
+      }
+    };
+    await copyLocaleTree(srcLocalesDir, targetLocalesDir);
     log_success("All locale files processed successfully");
   } catch (err) {
     log_error("Error copying locale files:", err.message);

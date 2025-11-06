@@ -1,0 +1,82 @@
+{
+  "page": {
+    "provider": {
+      "trigger": "Kural Sağlayıcısı",
+      "dialogTitle": "Kural Sağlayıcısı",
+      "actions": {
+        "updateAll": "Tümünü Güncelle",
+        "update": "Güncelle"
+      }
+    },
+    "title": "Kurallar"
+  },
+  "feedback": {
+    "notifications": {
+      "provider": {
+        "updateSuccess": "{{name}} updated successfully",
+        "updateFailed": "Failed to update {{name}}: {{message}}",
+        "genericError": "Update failed: {{message}}",
+        "none": "No providers available to update",
+        "allUpdated": "All providers updated successfully"
+      }
+    }
+  },
+  "modals": {
+    "editor": {
+      "form": {
+        "labels": {
+          "type": "Kural Tipi",
+          "content": "Kural İçeriği",
+          "proxyPolicy": "Vekil Politikası"
+        },
+        "toggles": {
+          "noResolve": "Çözümleme Yok"
+        },
+        "actions": {
+          "prependRule": "Kuralın Başına Ekle",
+          "appendRule": "Kuralın Sonuna Ekle"
+        },
+        "validation": {
+          "conditionRequired": "Kural Koşulu Gerekli",
+          "invalidRule": "Geçersiz Kural"
+        }
+      },
+      "ruleTypes": {
+        "DOMAIN": "Tam alan adıyla eşleşir",
+        "DOMAIN-SUFFIX": "Alan adı sonekiyle eşleşir",
+        "DOMAIN-KEYWORD": "Alan adı anahtar kelimesiyle eşleşir",
+        "DOMAIN-REGEX": "Alan adını düzenli ifadeler kullanarak eşleştirir",
+        "GEOSITE": "Geosite içindeki alan adlarıyla eşleşir",
+        "GEOIP": "IP adresinin ülke koduyla eşleşir",
+        "SRC-GEOIP": "Kaynak IP adresinin ülke koduyla eşleşir",
+        "IP-ASN": "IP adresinin ASN'siyle eşleşir",
+        "SRC-IP-ASN": "Kaynak IP adresinin ASN'siyle eşleşir",
+        "IP-CIDR": "IP adresi aralığıyla eşleşir",
+        "IP-CIDR6": "IPv6 adresi aralığıyla eşleşir",
+        "SRC-IP-CIDR": "Kaynak IP adresi aralığıyla eşleşir",
+        "IP-SUFFIX": "IP adresi sonek aralığıyla eşleşir",
+        "SRC-IP-SUFFIX": "Kaynak IP adresi sonek aralığıyla eşleşir",
+        "SRC-PORT": "Kaynak port aralığıyla eşleşir",
+        "DST-PORT": "Hedef port aralığıyla eşleşir",
+        "IN-PORT": "Gelen port ile eşleşir",
+        "DSCP": "DSCP işaretlemesi (sadece tvekil UDP girişi için)",
+        "PROCESS-NAME": "İşlem adıyla eşleşir (Android paket adı)",
+        "PROCESS-PATH": "Tam işlem yoluyla eşleşir",
+        "PROCESS-NAME-REGEX": "Tam işlem adını düzenli ifadeler kullanarak eşleştirir (Android paket adı)",
+        "PROCESS-PATH-REGEX": "Tam işlem yolunu düzenli ifadeler kullanarak eşleştirir",
+        "NETWORK": "Taşıma protokolüyle eşleşir (tcp/udp)",
+        "UID": "Linux KULLANICI ID'siyle eşleşir",
+        "IN-TYPE": "Gelen bağlantı tipiyle eşleşir",
+        "IN-USER": "Gelen bağlantı kullanıcı adıyla eşleşir",
+        "IN-NAME": "Gelen bağlantı adıyla eşleşir",
+        "SUB-RULE": "Alt kural",
+        "RULE-SET": "Kural setiyle eşleşir",
+        "AND": "Mantıksal VE",
+        "OR": "Mantıksal VEYA",
+        "NOT": "Mantıksal DEĞİL",
+        "MATCH": "Tüm isteklerle eşleşir"
+      },
+      "title": "Kuralları Düzenle"
+    }
+  }
+}

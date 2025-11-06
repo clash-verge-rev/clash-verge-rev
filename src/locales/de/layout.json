@@ -1,0 +1,21 @@
+{
+  "components": {
+    "navigation": {
+      "tabs": {
+        "home": "Startseite",
+        "proxies": "Proxy",
+        "profiles": "Abonnement",
+        "connections": "Verbindungen",
+        "rules": "Regeln",
+        "logs": "Protokolle",
+        "unlock": "Testen",
+        "settings": "Einstellungen"
+      },
+      "menu": {
+        "reorderMode": "Menu reorder mode",
+        "unlock": "Unlock menu order",
+        "lock": "Lock menu order"
+      }
+    }
+  }
+}

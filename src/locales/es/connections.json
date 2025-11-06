@@ -1,0 +1,28 @@
+{
+  "page": {
+    "title": "Conexiones"
+  },
+  "components": {
+    "fields": {
+      "host": "Host",
+      "dlSpeed": "Velocidad de descarga",
+      "ulSpeed": "Velocidad de subida",
+      "chains": "Cadenas",
+      "rule": "Regla",
+      "process": "Proceso",
+      "time": "Tiempo de conexión",
+      "source": "Dirección de origen",
+      "destination": "Dirección de destino",
+      "destinationPort": "Puerto de destino",
+      "type": "Tipo"
+    },
+    "order": {
+      "default": "Default",
+      "uploadSpeed": "Velocidad de subida",
+      "downloadSpeed": "Velocidad de descarga"
+    },
+    "actions": {
+      "closeConnection": "Cerrar conexión"
+    }
+  }
+}

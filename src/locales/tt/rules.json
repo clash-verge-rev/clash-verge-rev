@@ -1,0 +1,82 @@
+{
+  "page": {
+    "provider": {
+      "trigger": "Кагыйдә провайдеры",
+      "dialogTitle": "Кагыйдә провайдеры",
+      "actions": {
+        "updateAll": "Барысын да яңарту",
+        "update": "Яңарту"
+      }
+    },
+    "title": "Кагыйдәләр"
+  },
+  "feedback": {
+    "notifications": {
+      "provider": {
+        "updateSuccess": "{{name}} updated successfully",
+        "updateFailed": "Failed to update {{name}}: {{message}}",
+        "genericError": "Update failed: {{message}}",
+        "none": "No providers available to update",
+        "allUpdated": "All providers updated successfully"
+      }
+    }
+  },
+  "modals": {
+    "editor": {
+      "form": {
+        "labels": {
+          "type": "Кагыйдә төре",
+          "content": "Кагыйдә эчтәлеге",
+          "proxyPolicy": "Прокси сәясәте"
+        },
+        "toggles": {
+          "noResolve": "Резолвсыз"
+        },
+        "actions": {
+          "prependRule": "Кагыйдәне өскә өстәү",
+          "appendRule": "Кагыйдәне аска өстәү"
+        },
+        "validation": {
+          "conditionRequired": "Кагыйдә шарты кирәк",
+          "invalidRule": "Яраксыз кагыйдә"
+        }
+      },
+      "ruleTypes": {
+        "DOMAIN": "Домен исеменең тулы туры килүе",
+        "DOMAIN-SUFFIX": "Домен суффиксына туры килү",
+        "DOMAIN-KEYWORD": "Доменда төп сүзгә туры килү",
+        "DOMAIN-REGEX": "Доменны регекс аша туры китерү",
+        "GEOSITE": "Geosite исемлегендәге доменга туры килү",
+        "GEOIP": "IP-адресның ил коды буенча туры килү",
+        "SRC-GEOIP": "Чыганак IP-адресның ил коды буенча туры килү",
+        "IP-ASN": "IP-адрес ASN'ы буенча туры килү",
+        "SRC-IP-ASN": "Чыганак IP-адрес ASN'ы буенча туры килү",
+        "IP-CIDR": "IP-адреслар диапазонына туры килү",
+        "IP-CIDR6": "IPv6 адреслар диапазонына туры килү",
+        "SRC-IP-CIDR": "Чыганак IP-адреслар диапазонына туры килү",
+        "IP-SUFFIX": "IP-адрес суффиксына туры килү",
+        "SRC-IP-SUFFIX": "Чыганак IP-адрес суффиксына туры килү",
+        "SRC-PORT": "Чыганак портлар диапазонына туры килү",
+        "DST-PORT": "Максат портлар диапазонына туры килү",
+        "IN-PORT": "Керүче портка туры килү",
+        "DSCP": "DSCP тамгалавы (tproxy UDP өчен)",
+        "PROCESS-NAME": "Процесс исеменә туры килү (Android пакет исеме)",
+        "PROCESS-PATH": "Процесс юлына туры килү",
+        "PROCESS-NAME-REGEX": "Процесс исемен регекс белән туры китерү (Android пакет исеме)",
+        "PROCESS-PATH-REGEX": "Процесс юлын регекс белән туры китерү",
+        "NETWORK": "Транспорт протоколына (tcp/udp) туры килү",
+        "UID": "Linux USER ID'га туры килү",
+        "IN-TYPE": "Керүче тоташу төренә туры килү",
+        "IN-USER": "Керүче тоташу кулланучысына туры килү",
+        "IN-NAME": "Керүче тоташу исеменә туры килү",
+        "SUB-RULE": "Кушымча кагыйдә",
+        "RULE-SET": "Кагыйдәләр тупланмасына туры килү",
+        "AND": "Логик ҺӘМ",
+        "OR": "Логик ЯКИ",
+        "NOT": "Логик ТҮГЕЛ",
+        "MATCH": "Барлык сорауларга туры килә"
+      },
+      "title": "Кагыйдәләрне үзгәртү"
+    }
+  }
+}

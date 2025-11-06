@@ -1,0 +1,12 @@
+{
+  "page": {
+    "actions": {
+      "testing": "Wird getestet..."
+    },
+    "empty": "No unlock test items",
+    "messages": {
+      "detectionTimeout": "Detection timeout or failed"
+    },
+    "title": "Entsperrungstest"
+  }
+}

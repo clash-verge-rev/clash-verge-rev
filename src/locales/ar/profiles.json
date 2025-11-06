@@ -1,0 +1,182 @@
+{
+  "page": {
+    "actions": {
+      "updateAll": "تحديث جميع الملفات الشخصية",
+      "viewRuntimeConfig": "عرض تكوين وقت التشغيل",
+      "reactivate": "إعادة تنشيط الملفات الشخصية",
+      "import": "استيراد"
+    },
+    "batch": {
+      "actions": {
+        "delete": "Delete Selected Profiles",
+        "selectAll": "Select All",
+        "deselectAll": "Deselect All",
+        "done": "Done"
+      },
+      "summary": {
+        "selected": "Selected",
+        "items": "items"
+      },
+      "title": "Batch Operations"
+    },
+    "importForm": {
+      "placeholder": "رابط الملف الشخصي",
+      "actions": {
+        "paste": "لصق"
+      }
+    },
+    "feedback": {
+      "errors": {
+        "invalidUrl": "Invalid profile URL. Please enter a URL starting with http:// or https://",
+        "onlyYaml": "لا يتم دعم سوى ملفات YAML"
+      },
+      "notifications": {
+        "importRetry": "Import failed, retrying with Clash proxy...",
+        "importFail": "Import failed even with Clash proxy",
+        "importNeedsRefresh": "Profile imported but may need manual refresh",
+        "importSuccess": "Profile imported successfully, please restart if not visible",
+        "profileSwitched": "تم التبديل إلى الملف الشخصي",
+        "profileReactivated": "تم إعادة تنشيط الملف الشخصي",
+        "switchInterrupted": "Profile switch interrupted by new selection",
+        "batchDeleted": "Selected profiles deleted successfully"
+      },
+      "notices": {
+        "forceRefreshCompleted": "Force refresh completed",
+        "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
+      }
+    },
+    "title": "الملفات الشخصية"
+  },
+  "components": {
+    "card": {
+      "labels": {
+        "clickToImport": "Click to import subscription"
+      }
+    },
+    "fileInput": {
+      "chooseFile": "اختر ملف"
+    },
+    "menu": {
+      "home": "Home",
+      "select": "اختيار",
+      "editInfo": "تعديل المعلومات",
+      "editFile": "تعديل الملف",
+      "editRules": "تعديل القواعد",
+      "editProxies": "تعديل الوكلاء",
+      "editGroups": "تعديل مجموعات الوكلاء",
+      "extendConfig": "توسيع الإعدادات",
+      "extendScript": "توسيع السكربت",
+      "openFile": "فتح الملف",
+      "update": "تحديث",
+      "updateViaProxy": "Update via proxy"
+    },
+    "more": {
+      "global": {
+        "merge": "Global Merge",
+        "script": "Global Script"
+      },
+      "chips": {
+        "merge": "Merge",
+        "script": "Script"
+      }
+    },
+    "profileItem": {
+      "tooltips": {
+        "showLast": "Click to show last update time",
+        "showNext": "Click to show next update"
+      },
+      "status": {
+        "lastUpdateFailed": "Last Update failed",
+        "nextUp": "Next Up",
+        "noSchedule": "No schedule",
+        "unknown": "Unknown",
+        "autoUpdateDisabled": "Auto update disabled"
+      }
+    }
+  },
+  "modals": {
+    "profileForm": {
+      "title": {
+        "create": "إنشاء ملف شخصي",
+        "edit": "تعديل الملف الشخصي"
+      },
+      "fields": {
+        "type": "النوع",
+        "description": "الوصف",
+        "subscriptionUrl": "رابط الاشتراك",
+        "httpTimeout": "HTTP Request Timeout",
+        "updateInterval": "فاصل التحديث",
+        "useSystemProxy": "استخدام وكيل النظام",
+        "useClashProxy": "استخدام وكيل Clash",
+        "acceptInvalidCerts": "قبول الشهادات غير الصالحة (خطر)",
+        "allowAutoUpdate": "Allow Auto Update"
+      },
+      "feedback": {
+        "notifications": {
+          "creationRetry": "Profile creation failed, retrying with Clash proxy...",
+          "creationSuccess": "Profile creation succeeded with Clash proxy"
+        }
+      }
+    },
+    "proxiesEditor": {
+      "title": "تعديل الوكلاء",
+      "placeholders": {
+        "multiUri": "استخدم أسطرًا جديدة لعدّة عناوين URI (يدعم التشفير Base64)"
+      },
+      "actions": {
+        "prepend": "إضافة وكيل في البداية",
+        "append": "إضافة وكيل في النهاية"
+      }
+    },
+    "groupsEditor": {
+      "title": "تعديل مجموعات الوكلاء",
+      "errors": {
+        "nameRequired": "اسم المجموعة مطلوب",
+        "nameExists": "اسم المجموعة موجود بالفعل"
+      },
+      "fields": {
+        "type": "نوع المجموعة",
+        "name": "اسم المجموعة",
+        "icon": "أيقونة مجموعة الوكلاء",
+        "proxies": "استخدام الوكلاء",
+        "provider": "استخدام المزود",
+        "healthCheckUrl": "رابط فحص الصحة",
+        "expectedStatus": "الحالة المتوقعة",
+        "interval": "الفاصل الزمني",
+        "maxFailedTimes": "الحد الأقصى لمحاولات الفشل",
+        "interfaceName": "اسم الواجهة",
+        "routingMark": "علامة التوجيه",
+        "filter": "تصفية",
+        "excludeFilter": "استبعاد المرشح",
+        "excludeType": "استبعاد النوع",
+        "includeAll": "تضمين جميع الوكلاء والمزودين",
+        "includeAllProxies": "تضمين جميع الوكلاء",
+        "includeAllProviders": "تضمين جميع المزودين"
+      },
+      "toggles": {
+        "lazy": "كسول",
+        "disableUdp": "تعطيل UDP",
+        "hidden": "مخفي"
+      },
+      "actions": {
+        "prepend": "إضافة مجموعة في البداية",
+        "append": "إضافة مجموعة في النهاية"
+      }
+    },
+    "editor": {
+      "actions": {
+        "format": "تنسيق المستند"
+      },
+      "messages": {
+        "readOnly": "لا يمكن التعديل في محرر القراءة فقط"
+      }
+    },
+    "confirmDelete": {
+      "title": "تأكيد الحذف",
+      "message": "لا يمكن التراجع عن هذه العملية"
+    },
+    "logViewer": {
+      "title": "وحدة التحكم للسكريبت"
+    }
+  }
+}

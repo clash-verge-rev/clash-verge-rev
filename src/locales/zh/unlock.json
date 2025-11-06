@@ -1,0 +1,12 @@
+{
+  "page": {
+    "actions": {
+      "testing": "测试中..."
+    },
+    "empty": "暂无解锁测试项目",
+    "messages": {
+      "detectionTimeout": "检测超时或失败"
+    },
+    "title": "解锁测试"
+  }
+}
