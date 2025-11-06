@@ -36,7 +36,7 @@ impl From<u8> for LightweightState {
 }
 
 impl LightweightState {
-    fn as_u8(self) -> u8 {
+    const fn as_u8(self) -> u8 {
         self as u8
     }
 }

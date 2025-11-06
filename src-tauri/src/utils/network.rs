@@ -26,7 +26,7 @@ pub struct HttpResponse {
 }
 
 impl HttpResponse {
-    pub fn new(status: StatusCode, headers: HeaderMap, body: String) -> Self {
+    pub const fn new(status: StatusCode, headers: HeaderMap, body: String) -> Self {
         Self {
             status,
             headers,
@@ -34,11 +34,11 @@ impl HttpResponse {
         }
     }
 
-    pub fn status(&self) -> StatusCode {
+    pub const fn status(&self) -> StatusCode {
         self.status
     }
 
-    pub fn headers(&self) -> &HeaderMap {
+    pub const fn headers(&self) -> &HeaderMap {
         &self.headers
     }
 

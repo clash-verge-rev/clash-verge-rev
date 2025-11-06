@@ -238,3 +238,4 @@ redundant_clone = "deny"
 # option_if_let_else = "deny" // 过于激进，暂时不开启
 needless_pass_by_ref_mut = "deny"
 needless_collect = "deny"
+missing_const_for_fn = "deny"

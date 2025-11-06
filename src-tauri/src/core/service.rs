@@ -449,7 +449,7 @@ impl ServiceManager {
         Self(ServiceStatus::Unavailable("Need Checks".into()))
     }
 
-    pub fn config() -> Option<clash_verge_service_ipc::IpcConfig> {
+    pub const fn config() -> Option<clash_verge_service_ipc::IpcConfig> {
         Some(clash_verge_service_ipc::IpcConfig {
             default_timeout: Duration::from_millis(30),
             retry_delay: Duration::from_millis(250),

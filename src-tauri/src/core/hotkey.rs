@@ -84,7 +84,7 @@ impl fmt::Display for SystemHotkey {
 
 #[cfg(target_os = "macos")]
 impl SystemHotkey {
-    pub fn function(self) -> HotkeyFunction {
+    pub const fn function(self) -> HotkeyFunction {
         match self {
             Self::CmdQ => HotkeyFunction::Quit,
             Self::CmdW => HotkeyFunction::Hide,

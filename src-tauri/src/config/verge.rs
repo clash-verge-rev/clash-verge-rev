@@ -531,7 +531,7 @@ impl IVerge {
         patch!(enable_external_controller);
     }
 
-    pub fn get_singleton_port() -> u16 {
+    pub const fn get_singleton_port() -> u16 {
         crate::constants::network::ports::SINGLETON_SERVER
     }
 

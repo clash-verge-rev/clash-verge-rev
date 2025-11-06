@@ -102,12 +102,12 @@ impl IProfiles {
         }
     }
 
-    pub fn get_current(&self) -> Option<&String> {
+    pub const fn get_current(&self) -> Option<&String> {
         self.current.as_ref()
     }
 
     /// get items ref
-    pub fn get_items(&self) -> Option<&Vec<PrfItem>> {
+    pub const fn get_items(&self) -> Option<&Vec<PrfItem>> {
         self.items.as_ref()
     }
 
