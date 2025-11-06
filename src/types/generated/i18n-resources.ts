@@ -1294,6 +1294,7 @@ export interface TranslationResources {
           };
           empty: string;
           messages: {
+            detectionFailedWithName: string;
             detectionTimeout: string;
           };
           title: string;

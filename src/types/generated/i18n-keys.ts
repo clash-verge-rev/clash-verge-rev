@@ -717,6 +717,7 @@ export const translationKeys = [
   "tests.statuses.test.failedNetwork",
   "tests.unlock.page.actions.testing",
   "tests.unlock.page.empty",
+  "tests.unlock.page.messages.detectionFailedWithName",
   "tests.unlock.page.messages.detectionTimeout",
   "tests.unlock.page.title",
 ] as const;
