@@ -1,14 +1,16 @@
-import AdmZip from "adm-zip";
 import { execSync } from "child_process";
 import { createHash } from "crypto";
 import fs from "fs";
 import fsp from "fs/promises";
+import path from "path";
+import zlib from "zlib";
+
+import AdmZip from "adm-zip";
 import { glob } from "glob";
 import { HttpsProxyAgent } from "https-proxy-agent";
 import fetch from "node-fetch";
-import path from "path";
 import { extract } from "tar";
-import zlib from "zlib";
+
 import { log_debug, log_error, log_info, log_success } from "./utils.mjs";
 
 /**
@@ -55,7 +57,7 @@ const ARCH_MAP = {
 
 const arg1 = process.argv.slice(2)[0];
 const arg2 = process.argv.slice(2)[1];
-let target = arg1 === "--force" || arg1 === "-f" ? arg2 : arg1;
+const target = arg1 === "--force" || arg1 === "-f" ? arg2 : arg1;
 const { platform, arch } = target
   ? { platform: PLATFORM_MAP[target], arch: ARCH_MAP[target] }
   : process;
@@ -113,7 +115,7 @@ async function calculateFileHash(filePath) {
     const hashSum = createHash("sha256");
     hashSum.update(fileBuffer);
     return hashSum.digest("hex");
-  } catch (err) {
+  } catch (ignoreErr) {
     return null;
   }
 }
@@ -547,9 +549,9 @@ const resolveServicePermission = async () => {
   const hashCache = await loadHashCache();
   let hasChanges = false;
 
-  for (let f of serviceExecutables) {
+  for (const f of serviceExecutables) {
     const files = glob.sync(path.join(resDir, f));
-    for (let filePath of files) {
+    for (const filePath of files) {
       if (fs.existsSync(filePath)) {
         const currentHash = await calculateFileHash(filePath);
         const cacheKey = `${filePath}_chmod`;
@@ -611,24 +613,24 @@ async function resolveLocales() {
 // =======================
 const SERVICE_URL = `https://github.com/clash-verge-rev/clash-verge-service-ipc/releases/download/${SIDECAR_HOST}`;
 const resolveService = () => {
-  let ext = platform === "win32" ? ".exe" : "";
-  let suffix = platform === "linux" ? "-" + SIDECAR_HOST : "";
+  const ext = platform === "win32" ? ".exe" : "";
+  const suffix = platform === "linux" ? "-" + SIDECAR_HOST : "";
   return resolveResource({
     file: "clash-verge-service" + suffix + ext,
     downloadURL: `${SERVICE_URL}/clash-verge-service${ext}`,
   });
 };
 const resolveInstall = () => {
-  let ext = platform === "win32" ? ".exe" : "";
-  let suffix = platform === "linux" ? "-" + SIDECAR_HOST : "";
+  const ext = platform === "win32" ? ".exe" : "";
+  const suffix = platform === "linux" ? "-" + SIDECAR_HOST : "";
   return resolveResource({
     file: "clash-verge-service-install" + suffix + ext,
     downloadURL: `${SERVICE_URL}/clash-verge-service-install${ext}`,
   });
 };
 const resolveUninstall = () => {
-  let ext = platform === "win32" ? ".exe" : "";
-  let suffix = platform === "linux" ? "-" + SIDECAR_HOST : "";
+  const ext = platform === "win32" ? ".exe" : "";
+  const suffix = platform === "linux" ? "-" + SIDECAR_HOST : "";
   return resolveResource({
     file: "clash-verge-service-uninstall" + suffix + ext,
     downloadURL: `${SERVICE_URL}/clash-verge-service-uninstall${ext}`,

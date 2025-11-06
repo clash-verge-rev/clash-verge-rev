@@ -58,7 +58,7 @@ export async function resolveUpdateLogDefault() {
   const reEnd = /^---/;
 
   let isCapturing = false;
-  let content = [];
+  const content = [];
   let firstTag = "";
 
   for (const line of data.split("\n")) {

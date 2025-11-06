@@ -1,5 +1,7 @@
-import axios from "axios";
 import { readFileSync } from "fs";
+
+import axios from "axios";
+
 import { log_error, log_info, log_success } from "./utils.mjs";
 
 const CHAT_ID_RELEASE = "@clash_verge_re"; // 正式发布频道
