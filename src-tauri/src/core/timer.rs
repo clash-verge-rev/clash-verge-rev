@@ -154,7 +154,6 @@ impl Timer {
     /// 每 3 秒更新系统托盘菜单，总共执行 3 次
     pub fn add_update_tray_menu_task(&self) -> Result<()> {
         let tid = self.timer_count.fetch_add(1, Ordering::SeqCst);
-        let delay_timer = self.delay_timer.write();
         let task = TaskBuilder::default()
             .set_task_id(tid)
             .set_maximum_parallel_runnable_num(1)
@@ -164,7 +163,8 @@ impl Timer {
                 crate::core::tray::Tray::global().update_menu().await
             })
             .context("failed to create update tray menu timer task")?;
-        delay_timer
+        self.delay_timer
+            .write()
             .add_task(task)
             .context("failed to add update tray menu timer task")?;
         Ok(())
@@ -193,14 +193,12 @@ impl Timer {
 
         // Perform sync operations while holding locks
         {
-            let mut timer_map = self.timer_map.write();
-            let delay_timer = self.delay_timer.write();
-
             for (uid, diff) in diff_map {
                 match diff {
                     DiffFlag::Del(tid) => {
-                        timer_map.remove(&uid);
-                        if let Err(e) = delay_timer.remove_task(tid) {
+                        self.timer_map.write().remove(&uid);
+                        let value = self.delay_timer.write().remove_task(tid);
+                        if let Err(e) = value {
                             logging!(
                                 warn,
                                 Type::Timer,
@@ -220,12 +218,13 @@ impl Timer {
                             last_run: chrono::Local::now().timestamp(),
                         };
 
-                        timer_map.insert(uid.clone(), task);
+                        self.timer_map.write().insert(uid.clone(), task);
                         operations_to_add.push((uid, tid, interval));
                     }
                     DiffFlag::Mod(tid, interval) => {
                         // Remove old task first
-                        if let Err(e) = delay_timer.remove_task(tid) {
+                        let value = self.delay_timer.write().remove_task(tid);
+                        if let Err(e) = value {
                             logging!(
                                 warn,
                                 Type::Timer,
@@ -243,7 +242,7 @@ impl Timer {
                             last_run: chrono::Local::now().timestamp(),
                         };
 
-                        timer_map.insert(uid.clone(), task);
+                        self.timer_map.write().insert(uid.clone(), task);
                         operations_to_add.push((uid, tid, interval));
                     }
                 }

@@ -80,8 +80,7 @@ impl NetworkManager {
     }
 
     async fn record_connection_error(&self, error: &str) {
-        let mut last_error = self.last_connection_error.lock().await;
-        *last_error = Some((Instant::now(), error.into()));
+        *self.last_connection_error.lock().await = Some((Instant::now(), error.into()));
 
         let mut count = self.connection_error_count.lock().await;
         *count += 1;
@@ -89,13 +88,11 @@ impl NetworkManager {
 
     async fn should_reset_clients(&self) -> bool {
         let count = *self.connection_error_count.lock().await;
-        let last_error_guard = self.last_connection_error.lock().await;
-
         if count > 5 {
             return true;
         }
 
-        if let Some((time, _)) = &*last_error_guard
+        if let Some((time, _)) = &*self.last_connection_error.lock().await
             && time.elapsed() < Duration::from_secs(30)
             && count > 2
         {

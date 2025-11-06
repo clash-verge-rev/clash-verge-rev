@@ -268,11 +268,14 @@ async fn setup_light_weight_timer() -> Result<()> {
 }
 
 fn cancel_light_weight_timer() -> Result<()> {
-    let mut timer_map = Timer::global().timer_map.write();
-    let delay_timer = Timer::global().delay_timer.write();
-
-    if let Some(task) = timer_map.remove(LIGHT_WEIGHT_TASK_UID) {
-        delay_timer
+    let value = Timer::global()
+        .timer_map
+        .write()
+        .remove(LIGHT_WEIGHT_TASK_UID);
+    if let Some(task) = value {
+        Timer::global()
+            .delay_timer
+            .write()
             .remove_task(task.task_id)
             .context("failed to remove timer task")?;
         logging!(debug, Type::Timer, "计时器已取消");

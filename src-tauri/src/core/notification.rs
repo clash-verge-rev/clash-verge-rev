@@ -102,10 +102,13 @@ impl NotificationSystem {
         }
     }
 
+    // Clippy 似乎对 parking lot 的 RwLock 有误报，这里禁用相关警告
+    #[allow(clippy::significant_drop_tightening)]
     fn process_event(handle: &super::handle::Handle, event: FrontendEvent) {
-        let system_guard = handle.notification_system.read();
-        let Some(system) = system_guard.as_ref() else {
-            return;
+        let binding = handle.notification_system.read();
+        let system = match binding.as_ref() {
+            Some(s) => s,
+            None => return,
         };
 
         if system.should_skip_event(&event) {
