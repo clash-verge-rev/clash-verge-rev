@@ -44,6 +44,7 @@
       },
       "empty": "No unlock test items",
       "messages": {
+        "detectionFailedWithName": "Erkennung für {{name}} fehlgeschlagen",
         "detectionTimeout": "Detection timeout or failed"
       },
       "title": "Entsperrungstest"

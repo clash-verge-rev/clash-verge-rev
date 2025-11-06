@@ -44,6 +44,7 @@
       },
       "empty": "暂无解锁测试项目",
       "messages": {
+        "detectionFailedWithName": "{{name}} 检测失败",
         "detectionTimeout": "检测超时或失败"
       },
       "title": "解锁测试"

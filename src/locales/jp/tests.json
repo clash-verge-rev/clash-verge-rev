@@ -44,6 +44,7 @@
       },
       "empty": "アンロックテスト項目はありません",
       "messages": {
+        "detectionFailedWithName": "{{name}} の検出に失敗しました",
         "detectionTimeout": "Detection timeout or failed"
       },
       "title": "ロック解除テスト"

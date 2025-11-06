@@ -44,6 +44,7 @@
       },
       "empty": "No unlock test items",
       "messages": {
+        "detectionFailedWithName": "Fallo en la detección para {{name}}",
         "detectionTimeout": "Detection timeout or failed"
       },
       "title": "Prueba de desbloqueo"

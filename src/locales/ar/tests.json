@@ -44,6 +44,7 @@
       },
       "empty": "No unlock test items",
       "messages": {
+        "detectionFailedWithName": "فشل الكشف لـ {{name}}",
         "detectionTimeout": "Detection timeout or failed"
       },
       "title": "Unlock Test"
