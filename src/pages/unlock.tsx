@@ -217,7 +217,7 @@ const UnlockPage = () => {
       setLoadingItems((prev) => prev.filter((item) => item !== name));
     } catch (err: any) {
       setLoadingItems((prev) => prev.filter((item) => item !== name));
-      showNotice.error("Detection failed for {name}", { name }, err);
+      showNotice.error("Detection failed for {{name}}", { name }, err);
       console.error(`Failed to check ${name}:`, err);
     }
   });
