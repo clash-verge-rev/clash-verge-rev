@@ -351,23 +351,21 @@ pub fn run() {
             });
         }
 
-        pub const fn handle_window_destroyed() {
-            #[cfg(target_os = "macos")]
-            {
-                use crate::core::hotkey::SystemHotkey;
-                AsyncHandler::spawn(move || async move {
-                    let _ = hotkey::Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdQ);
-                    let _ = hotkey::Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdW);
-                    let is_enable_global_hotkey = Config::verge()
-                        .await
-                        .latest_arc()
-                        .enable_global_hotkey
-                        .unwrap_or(true);
-                    if !is_enable_global_hotkey {
-                        let _ = hotkey::Hotkey::global().reset();
-                    }
-                });
-            }
+        #[cfg(target_os = "macos")]
+        pub fn handle_window_destroyed() {
+            use crate::core::hotkey::SystemHotkey;
+            AsyncHandler::spawn(move || async move {
+                let _ = hotkey::Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdQ);
+                let _ = hotkey::Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdW);
+                let is_enable_global_hotkey = Config::verge()
+                    .await
+                    .latest_arc()
+                    .enable_global_hotkey
+                    .unwrap_or(true);
+                if !is_enable_global_hotkey {
+                    let _ = hotkey::Hotkey::global().reset();
+                }
+            });
         }
     }
 
@@ -447,6 +445,7 @@ pub fn run() {
             tauri::WindowEvent::Focused(focused) => {
                 event_handlers::handle_window_focus(focused);
             }
+            #[cfg(target_os = "macos")]
             tauri::WindowEvent::Destroyed => {
                 event_handlers::handle_window_destroyed();
             }
