@@ -84,7 +84,7 @@ async fn execute_sysproxy_command(args: Vec<std::string::String>) -> Result<()> 
 
 impl Default for Sysopt {
     fn default() -> Self {
-        Sysopt {
+        Self {
             initialed: AtomicBool::new(false),
             update_sysproxy: AtomicBool::new(false),
             reset_sysproxy: AtomicBool::new(false),

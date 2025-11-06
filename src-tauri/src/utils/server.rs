@@ -31,6 +31,8 @@ pub async fn check_singleton() -> Result<()> {
         let client = ClientBuilder::new()
             .timeout(Duration::from_millis(500))
             .build()?;
+        // 需要确保 Send
+        #[allow(clippy::needless_collect)]
         let argvs: Vec<std::string::String> = std::env::args().collect();
         if argvs.len() > 1 {
             #[cfg(not(target_os = "macos"))]

@@ -68,7 +68,8 @@ impl CoreManager {
         #[cfg(target_os = "windows")]
         self.wait_for_service_if_needed().await;
 
-        let mode = match SERVICE_MANAGER.lock().await.current() {
+        let value = SERVICE_MANAGER.lock().await.current();
+        let mode = match value {
             ServiceStatus::Ready => RunningMode::Service,
             _ => RunningMode::Sidecar,
         };

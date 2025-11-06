@@ -347,11 +347,12 @@ impl AsyncProxyQuery {
                 &mut buffer_size,
             );
 
-            let mut proxy_server = String::new();
-            if server_result == 0 && value_type == REG_SZ && buffer_size > 0 {
+            let proxy_server = if server_result == 0 && value_type == REG_SZ && buffer_size > 0 {
                 let end_pos = buffer.iter().position(|&x| x == 0).unwrap_or(buffer.len());
-                proxy_server = String::from_utf16_lossy(&buffer[..end_pos]);
-            }
+                String::from_utf16_lossy(&buffer[..end_pos])
+            } else {
+                String::new()
+            };
 
             // 读取代理绕过列表
             let proxy_override_name = "ProxyOverride\0".encode_utf16().collect::<Vec<u16>>();
@@ -368,14 +369,16 @@ impl AsyncProxyQuery {
                 &mut bypass_buffer_size,
             );
 
-            let mut bypass_list = String::new();
-            if override_result == 0 && bypass_value_type == REG_SZ && bypass_buffer_size > 0 {
-                let end_pos = bypass_buffer
-                    .iter()
-                    .position(|&x| x == 0)
-                    .unwrap_or(bypass_buffer.len());
-                bypass_list = String::from_utf16_lossy(&bypass_buffer[..end_pos]);
-            }
+            let bypass_list =
+                if override_result == 0 && bypass_value_type == REG_SZ && bypass_buffer_size > 0 {
+                    let end_pos = bypass_buffer
+                        .iter()
+                        .position(|&x| x == 0)
+                        .unwrap_or(bypass_buffer.len());
+                    String::from_utf16_lossy(&bypass_buffer[..end_pos])
+                } else {
+                    String::new()
+                };
 
             RegCloseKey(hkey);
 

@@ -244,7 +244,7 @@ async fn validate_new_profile(new_profile: &String) -> Result<(), ()> {
                         );
                         handle::Handle::notice_message(
                             "config_validate::yaml_syntax_error",
-                            error_msg.clone(),
+                            error_msg,
                         );
                         Err(())
                     }
@@ -253,7 +253,7 @@ async fn validate_new_profile(new_profile: &String) -> Result<(), ()> {
                         logging!(error, Type::Cmd, "{}", error_msg);
                         handle::Handle::notice_message(
                             "config_validate::yaml_parse_error",
-                            error_msg.clone(),
+                            error_msg,
                         );
                         Err(())
                     }
@@ -262,19 +262,13 @@ async fn validate_new_profile(new_profile: &String) -> Result<(), ()> {
             Ok(Err(err)) => {
                 let error_msg = format!("无法读取目标配置文件: {err}");
                 logging!(error, Type::Cmd, "{}", error_msg);
-                handle::Handle::notice_message(
-                    "config_validate::file_read_error",
-                    error_msg.clone(),
-                );
+                handle::Handle::notice_message("config_validate::file_read_error", error_msg);
                 Err(())
             }
             Err(_) => {
                 let error_msg = "读取配置文件超时(5秒)".to_string();
                 logging!(error, Type::Cmd, "{}", error_msg);
-                handle::Handle::notice_message(
-                    "config_validate::file_read_timeout",
-                    error_msg.clone(),
-                );
+                handle::Handle::notice_message("config_validate::file_read_timeout", error_msg);
                 Err(())
             }
         }

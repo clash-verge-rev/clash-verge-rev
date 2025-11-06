@@ -4,9 +4,9 @@ use smartstring::alias::String;
 use tauri::Url;
 
 use crate::{
-    config::{PrfItem, profiles},
+    config::{Config, PrfItem, profiles},
     core::handle,
-    logging, logging_error,
+    logging,
     utils::logging::Type,
 };
 
@@ -29,57 +29,86 @@ pub(super) async fn resolve_scheme(param: &str) -> Result<()> {
         }
     };
 
-    if link_parsed.scheme() == "clash" || link_parsed.scheme() == "clash-verge" {
-        let name_owned: Option<String> = link_parsed
-            .query_pairs()
-            .find(|(key, _)| key == "name")
-            .map(|(_, value)| value.into_owned().into());
-        let name = name_owned.as_ref();
+    let (url_param, name) =
+        if link_parsed.scheme() == "clash" || link_parsed.scheme() == "clash-verge" {
+            let name_owned: Option<String> = link_parsed
+                .query_pairs()
+                .find(|(key, _)| key == "name")
+                .map(|(_, value)| value.into_owned().into());
 
-        let url_param = if let Some(query) = link_parsed.query() {
-            let prefix = "url=";
-            if let Some(pos) = query.find(prefix) {
-                let raw_url = &query[pos + prefix.len()..];
-                Some(percent_decode_str(raw_url).decode_utf8_lossy().to_string())
+            let url_param = if let Some(query) = link_parsed.query() {
+                let prefix = "url=";
+                if let Some(pos) = query.find(prefix) {
+                    let raw_url = &query[pos + prefix.len()..];
+                    Some(percent_decode_str(raw_url).decode_utf8_lossy().to_string())
+                } else {
+                    None
+                }
             } else {
                 None
-            }
+            };
+            (url_param, name_owned)
         } else {
-            None
+            (None, None)
         };
 
-        match url_param {
-            Some(ref url) => {
-                logging!(info, Type::Config, "decoded subscription url: {url}");
-                match PrfItem::from_url(url.as_ref(), name, None, None).await {
-                    Ok(mut item) => {
-                        let uid = match item.uid.clone() {
-                            Some(uid) => uid,
-                            None => {
-                                logging!(error, Type::Config, "Profile item missing UID");
-                                handle::Handle::notice_message(
-                                    "import_sub_url::error",
-                                    "Profile item missing UID".to_string(),
-                                );
-                                return Ok(());
-                            }
-                        };
-                        let result = profiles::profiles_append_item_safe(&mut item).await;
-                        logging_error!(
-                            Type::Config,
-                            "failed to import subscription url: {:?}",
-                            result
-                        );
-                        handle::Handle::notice_message("import_sub_url::ok", uid);
-                    }
-                    Err(e) => {
-                        handle::Handle::notice_message("import_sub_url::error", e.to_string());
-                    }
-                }
-            }
-            None => bail!("failed to get profile url"),
+    let url = if let Some(ref url) = url_param {
+        url
+    } else {
+        logging!(
+            error,
+            Type::Config,
+            "missing url parameter in deep link: {}",
+            param_str
+        );
+        return Ok(());
+    };
+
+    let mut item = match PrfItem::from_url(url, name.as_ref(), None, None).await {
+        Ok(item) => item,
+        Err(e) => {
+            logging!(
+                error,
+                Type::Config,
+                "failed to parse profile from url: {:?}",
+                e
+            );
+            // TODO 通知系统疑似损坏，前端无法显示通知事件
+            handle::Handle::notice_message("import_sub_url::error", e.to_string());
+            return Ok(());
+        }
+    };
+
+    let uid = item.uid.clone().unwrap_or_default();
+    // TODO 通过 deep link 导入后需要正确调用前端刷新订阅页面，以及通知结果
+    match profiles::profiles_append_item_safe(&mut item).await {
+        Ok(_) => {
+            Config::profiles().await.apply();
+            let _ = Config::profiles().await.data_arc().save_file().await;
+            // TODO 通知系统疑似损坏，前端无法显示通知事件
+            handle::Handle::notice_message(
+                "import_sub_url::ok",
+                item.uid.clone().unwrap_or_default(),
+            );
+            // TODO fuck me this shit is fucking broken as fucked
+            handle::Handle::notify_profile_changed(uid);
+        }
+        Err(e) => {
+            logging!(
+                error,
+                Type::Config,
+                "failed to import subscription url: {:?}",
+                e
+            );
+            Config::profiles().await.discard();
+            // TODO 通知系统疑似损坏，前端无法显示通知事件
+            handle::Handle::notice_message("import_sub_url::error", e.to_string());
+            return Ok(());
         }
     }
+
+    handle::Handle::refresh_verge();
+    handle::Handle::refresh_clash();
 
     Ok(())
 }

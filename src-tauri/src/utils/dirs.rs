@@ -6,6 +6,8 @@ use crate::{
 use anyhow::Result;
 use async_trait::async_trait;
 use once_cell::sync::OnceCell;
+#[cfg(unix)]
+use std::iter;
 use std::{fs, path::PathBuf};
 use tauri::Manager;
 
@@ -226,8 +228,7 @@ pub fn get_encryption_key() -> Result<Vec<u8>> {
 
 #[cfg(unix)]
 pub fn ensure_mihomo_safe_dir() -> Option<PathBuf> {
-    ["/tmp"]
-        .iter()
+    iter::once("/tmp")
         .map(PathBuf::from)
         .find(|path| path.exists())
         .or_else(|| {

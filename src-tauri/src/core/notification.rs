@@ -1,3 +1,4 @@
+use super::handle::Handle;
 use crate::{
     constants::{retry, timing},
     logging,
@@ -91,30 +92,23 @@ impl NotificationSystem {
     }
 
     fn worker_loop(rx: mpsc::Receiver<FrontendEvent>) {
-        use super::handle::Handle;
-
         let handle = Handle::global();
-
         while !handle.is_exiting() {
-            match rx.recv() {
+            match rx.try_recv() {
                 Ok(event) => Self::process_event(handle, event),
-                Err(e) => {
-                    logging!(
-                        error,
-                        Type::System,
-                        "receive event error, stop notification worker: {}",
-                        e
-                    );
-                    break;
-                }
+                Err(mpsc::TryRecvError::Disconnected) => break,
+                Err(mpsc::TryRecvError::Empty) => break,
             }
         }
     }
 
+    // Clippy 似乎对 parking lot 的 RwLock 有误报，这里禁用相关警告
+    #[allow(clippy::significant_drop_tightening)]
     fn process_event(handle: &super::handle::Handle, event: FrontendEvent) {
-        let system_guard = handle.notification_system.read();
-        let Some(system) = system_guard.as_ref() else {
-            return;
+        let binding = handle.notification_system.read();
+        let system = match binding.as_ref() {
+            Some(s) => s,
+            None => return,
         };
 
         if system.should_skip_event(&event) {

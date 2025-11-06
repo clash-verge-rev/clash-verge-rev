@@ -109,8 +109,7 @@ impl Handle {
         let msg_str = msg.into();
 
         if !*handle.startup_completed.read() {
-            let mut errors = handle.startup_errors.write();
-            errors.push(ErrorMessage {
+            handle.startup_errors.write().push(ErrorMessage {
                 status: status_str,
                 message: msg_str,
             });
@@ -159,7 +158,7 @@ impl Handle {
             .spawn(move || {
                 thread::sleep(timing::STARTUP_ERROR_DELAY);
 
-                let handle = Handle::global();
+                let handle = Self::global();
                 if handle.is_exiting() {
                     return;
                 }

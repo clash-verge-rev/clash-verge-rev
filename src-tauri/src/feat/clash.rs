@@ -47,6 +47,7 @@ fn after_change_clash_mode() {
                     for connection in connections_array {
                         let _ = mihomo.close_connection(&connection.id).await;
                     }
+                    drop(mihomo);
                 }
             }
             Err(err) => {
