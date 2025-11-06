@@ -945,10 +945,15 @@ function loadLocales() {
 function ensureBackup(localePath) {
   const backupPath = `${localePath}.bak`;
   if (fs.existsSync(backupPath)) {
-    throw new Error(
-      `Backup file already exists for ${path.basename(localePath)}; ` +
-        "either remove it manually or rerun with --no-backup",
-    );
+    try {
+      fs.rmSync(backupPath);
+    } catch (error) {
+      throw new Error(
+        `Failed to recycle existing backup for ${path.basename(
+          localePath,
+        )}: ${error.message}`,
+      );
+    }
   }
   fs.copyFileSync(localePath, backupPath);
   return backupPath;
@@ -959,8 +964,25 @@ function backupIfNeeded(filePath, backups, options) {
   if (!fs.existsSync(filePath)) return;
   if (backups.has(filePath)) return;
   const backupPath = ensureBackup(filePath);
-  backups.add(filePath);
+  backups.set(filePath, backupPath);
   return backupPath;
+}
+
+function cleanupBackups(backups) {
+  for (const backupPath of backups.values()) {
+    try {
+      if (fs.existsSync(backupPath)) {
+        fs.rmSync(backupPath);
+      }
+    } catch (error) {
+      console.warn(
+        `Warning: failed to remove backup ${path.basename(
+          backupPath,
+        )}: ${error.message}`,
+      );
+    }
+  }
+  backups.clear();
 }
 
 function toModuleIdentifier(namespace, seen) {
@@ -1016,46 +1038,55 @@ export default resources;
 }
 
 function writeLocale(locale, data, options) {
-  const backups = new Set();
+  const backups = new Map();
+  let success = false;
 
-  if (locale.format === "single-file") {
-    const target = locale.files[0].path;
-    backupIfNeeded(target, backups, options);
-    const serialized = JSON.stringify(data, null, 2);
-    fs.writeFileSync(target, `${serialized}\n`, "utf8");
-    return;
-  }
+  try {
+    if (locale.format === "single-file") {
+      const target = locale.files[0].path;
+      backupIfNeeded(target, backups, options);
+      const serialized = JSON.stringify(data, null, 2);
+      fs.writeFileSync(target, `${serialized}\n`, "utf8");
+      success = true;
+      return;
+    }
 
-  const entries = Object.entries(data);
-  const orderedNamespaces = entries.map(([namespace]) => namespace);
-  const existingFiles = new Map(
-    locale.files.map((file) => [file.namespace, file.path]),
-  );
-  const visited = new Set();
+    const entries = Object.entries(data);
+    const orderedNamespaces = entries.map(([namespace]) => namespace);
+    const existingFiles = new Map(
+      locale.files.map((file) => [file.namespace, file.path]),
+    );
+    const visited = new Set();
 
-  for (const [namespace, value] of entries) {
-    const target =
-      existingFiles.get(namespace) ??
-      path.join(locale.dir, `${namespace}.json`);
-    backupIfNeeded(target, backups, options);
-    const serialized = JSON.stringify(value ?? {}, null, 2);
-    fs.mkdirSync(path.dirname(target), { recursive: true });
-    fs.writeFileSync(target, `${serialized}\n`, "utf8");
-    visited.add(namespace);
-  }
+    for (const [namespace, value] of entries) {
+      const target =
+        existingFiles.get(namespace) ??
+        path.join(locale.dir, `${namespace}.json`);
+      backupIfNeeded(target, backups, options);
+      const serialized = JSON.stringify(value ?? {}, null, 2);
+      fs.mkdirSync(path.dirname(target), { recursive: true });
+      fs.writeFileSync(target, `${serialized}\n`, "utf8");
+      visited.add(namespace);
+    }
 
-  for (const [namespace, filePath] of existingFiles.entries()) {
-    if (!visited.has(namespace) && fs.existsSync(filePath)) {
-      backupIfNeeded(filePath, backups, options);
-      fs.rmSync(filePath);
+    for (const [namespace, filePath] of existingFiles.entries()) {
+      if (!visited.has(namespace) && fs.existsSync(filePath)) {
+        backupIfNeeded(filePath, backups, options);
+        fs.rmSync(filePath);
+      }
+    }
+
+    regenerateLocaleIndex(locale.dir, orderedNamespaces);
+    locale.files = orderedNamespaces.map((namespace) => ({
+      namespace,
+      path: path.join(locale.dir, `${namespace}.json`),
+    }));
+    success = true;
+  } finally {
+    if (success) {
+      cleanupBackups(backups);
     }
   }
-
-  regenerateLocaleIndex(locale.dir, orderedNamespaces);
-  locale.files = orderedNamespaces.map((namespace) => ({
-    namespace,
-    path: path.join(locale.dir, `${namespace}.json`),
-  }));
 }
 
 function processLocale(

@@ -44,6 +44,8 @@ const DEFAULT_DURATIONS: Readonly<Record<NoticeType, number>> = {
   error: 8000,
 };
 
+const TRANSLATION_KEY_PATTERN = /^[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)+$/;
+
 let nextId = 0;
 let notices: NoticeItem[] = [];
 const subscribers: Set<NoticeSubscriber> = new Set();
@@ -157,11 +159,16 @@ function createRawDescriptor(message: string): NoticeTranslationDescriptor {
   };
 }
 
+function isLikelyTranslationKey(key: string) {
+  return TRANSLATION_KEY_PATTERN.test(key);
+}
+
 function shouldUseTranslationKey(
   key: string,
   params?: Record<string, unknown>,
 ) {
   if (params && Object.keys(params).length > 0) return true;
+  if (isLikelyTranslationKey(key)) return true;
   if (i18n.isInitialized) {
     return i18n.exists(key);
   }
