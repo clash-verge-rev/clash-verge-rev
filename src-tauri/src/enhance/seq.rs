@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use serde::{Deserialize, Serialize};
 use serde_yaml_ng::{Mapping, Sequence, Value};
 
@@ -15,19 +16,20 @@ pub fn use_seq(seq: SeqMap, mut config: Mapping, field: &str) -> Mapping {
         delete,
     } = seq;
 
+    let delete_set: HashSet<&str> = delete.iter().map(|s| s.as_str()).collect();
+
     let mut new_seq = Sequence::new();
     new_seq.extend(prepend);
 
     if let Some(Value::Sequence(origin)) = config.get(field) {
-        // Filter out deleted items
         let filtered: Sequence = origin
             .iter()
             .filter(|item| {
                 if let Value::String(s) = item {
-                    !delete.contains(s)
+                    !delete_set.contains(s.as_str())
                 } else if let Value::Mapping(m) = item {
                     if let Some(Value::String(name)) = m.get("name") {
-                        !delete.contains(name)
+                        !delete_set.contains(name.as_str())
                     } else {
                         true
                     }
@@ -43,7 +45,6 @@ pub fn use_seq(seq: SeqMap, mut config: Mapping, field: &str) -> Mapping {
     new_seq.extend(append);
     config.insert(Value::String(field.into()), Value::Sequence(new_seq));
 
-    // If this is proxies field, we also need to filter proxy-groups
     if field == "proxies"
         && let Some(Value::Sequence(groups)) = config.get_mut("proxy-groups")
     {
@@ -56,7 +57,7 @@ pub fn use_seq(seq: SeqMap, mut config: Mapping, field: &str) -> Mapping {
                         .iter()
                         .filter(|p| {
                             if let Value::String(name) = p {
-                                !delete.contains(name)
+                                !delete_set.contains(name.as_str())
                             } else {
                                 true
                             }

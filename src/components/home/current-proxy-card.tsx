@@ -345,11 +345,13 @@ export const CurrentProxyCard = () => {
         });
       };
 
+      const groupsMapForLookup = new Map(
+        (proxies.groups || []).map((g: { name: string }) => [g.name, g]),
+      );
+
       if (matchPolicyName) {
         const matchGroup =
-          proxies.groups?.find(
-            (g: { name: string }) => g.name === matchPolicyName,
-          ) ||
+          groupsMapForLookup.get(matchPolicyName) ||
           (proxies.global?.name === matchPolicyName ? proxies.global : null) ||
           proxies.records?.[matchPolicyName];
         registerGroup(matchGroup, matchPolicyName);
@@ -360,6 +362,7 @@ export const CurrentProxyCard = () => {
         .forEach((selectorGroup: any) => registerGroup(selectorGroup));
 
       const filteredGroups = Array.from(groupsMap.values());
+      const filteredGroupsMap = groupsMap;
 
       let newProxy = "";
       let newDisplayProxy = null;
@@ -374,9 +377,7 @@ export const CurrentProxyCard = () => {
         newProxy = proxies.global.now || "";
         newDisplayProxy = proxies.records?.[newProxy] || null;
       } else {
-        const currentGroup = filteredGroups.find(
-          (g: { name: string }) => g.name === prev.selection.group,
-        );
+        const currentGroup = filteredGroupsMap.get(prev.selection.group);
 
         if (!currentGroup && filteredGroups.length > 0) {
           const firstGroup = filteredGroups[0];
@@ -444,17 +445,20 @@ export const CurrentProxyCard = () => {
       writeProfileScopedItem(STORAGE_KEY_GROUP, newGroup);
 
       setState((prev) => {
-        const group = prev.proxyData.groups.find(
-          (g: { name: string }) => g.name === newGroup,
+        const groupsMap = new Map(
+          prev.proxyData.groups.map((g) => [g.name, g]),
         );
-        if (group) {
+        const group = groupsMap.get(newGroup);
+        if (group && "now" in group) {
           return {
             ...prev,
             selection: {
               group: newGroup,
-              proxy: group.now,
+              proxy: group.now || "",
             },
-            displayProxy: prev.proxyData.records[group.now] || null,
+            displayProxy: group.now
+              ? prev.proxyData.records[group.now] || null
+              : null,
           };
         }
         return {
@@ -671,8 +675,8 @@ export const CurrentProxyCard = () => {
         }
       });
     } else {
-      // 规则模式
-      const group = state.proxyData.groups.find((g) => g.name === groupName);
+      const groupsMap = new Map(state.proxyData.groups.map((g) => [g.name, g]));
+      const group = groupsMap.get(groupName);
       if (group) {
         group.all.forEach((name: string) => {
           const proxy = state.proxyData.records[name];
@@ -774,9 +778,9 @@ export const CurrentProxyCard = () => {
       return sortWithLatency(options);
     }
 
-    // 规则模式
+    const groupsMap = new Map(state.proxyData.groups.map((g) => [g.name, g]));
     const group = state.selection.group
-      ? state.proxyData.groups.find((g) => g.name === state.selection.group)
+      ? groupsMap.get(state.selection.group)
       : null;
 
     if (group) {

@@ -85,10 +85,20 @@ export const BaseSearchBox = ({
       if (useRegularExpression && searchText) {
         const isValid = validateRegex(searchText);
         if (!isValid) {
-          // Invalid regex should result in no match
           return () => false;
         }
       }
+
+      const normalizedSearch =
+        !matchCase && searchText ? searchText.toLowerCase() : searchText;
+      const regexCache =
+        useRegularExpression && normalizedSearch
+          ? new RegExp(normalizedSearch)
+          : null;
+      const wholeWordRegexCache =
+        matchWholeWord && normalizedSearch
+          ? new RegExp(`\\b${normalizedSearch}\\b`)
+          : null;
 
       return (content: string) => {
         if (!searchText) {
@@ -96,17 +106,16 @@ export const BaseSearchBox = ({
         }
 
         const item = !matchCase ? content.toLowerCase() : content;
-        const searchItem = !matchCase ? searchText.toLowerCase() : searchText;
 
-        if (useRegularExpression) {
-          return new RegExp(searchItem).test(item);
+        if (regexCache) {
+          return regexCache.test(item);
         }
 
-        if (matchWholeWord) {
-          return new RegExp(`\\b${searchItem}\\b`).test(item);
+        if (wholeWordRegexCache) {
+          return wholeWordRegexCache.test(item);
         }
 
-        return item.includes(searchItem);
+        return item.includes(normalizedSearch);
       };
     };
   }, [matchCase, matchWholeWord, useRegularExpression, validateRegex]);

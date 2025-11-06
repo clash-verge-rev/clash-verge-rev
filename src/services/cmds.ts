@@ -128,43 +128,54 @@ export async function calcuProxies(): Promise<{
   const proxyRecord = proxyResponse.proxies;
   const providerRecord = providerResponse;
 
-  // provider name map
   const providerMap = Object.fromEntries(
     Object.entries(providerRecord).flatMap(([provider, item]) =>
       item!.proxies.map((p) => [p.name, { ...p, provider }]),
     ),
   );
 
-  // compatible with proxy-providers
+  const itemCache = new Map<string, IProxyItem>();
+
   const generateItem = (name: string) => {
-    if (proxyRecord[name]) return proxyRecord[name];
-    if (providerMap[name]) return providerMap[name];
-    return {
-      name,
-      type: "unknown",
-      udp: false,
-      xudp: false,
-      tfo: false,
-      mptcp: false,
-      smux: false,
-      history: [],
-    };
+    if (itemCache.has(name)) {
+      return itemCache.get(name)!;
+    }
+    let item: IProxyItem;
+    if (proxyRecord[name]) {
+      item = proxyRecord[name];
+    } else if (providerMap[name]) {
+      item = providerMap[name];
+    } else {
+      item = {
+        name,
+        type: "unknown",
+        udp: false,
+        xudp: false,
+        tfo: false,
+        mptcp: false,
+        smux: false,
+        history: [],
+      };
+    }
+    itemCache.set(name, item);
+    return item;
   };
 
   const { GLOBAL: global, DIRECT: direct, REJECT: reject } = proxyRecord;
 
-  let groups: IProxyGroupItem[] = Object.values(proxyRecord).reduce<
-    IProxyGroupItem[]
-  >((acc, each) => {
-    if (each?.name !== "GLOBAL" && each?.all) {
-      acc.push({
-        ...each,
-        all: each.all!.map((item) => generateItem(item)),
-      });
-    }
-
-    return acc;
-  }, []);
+  const proxyValues = Object.values(proxyRecord);
+  let groups: IProxyGroupItem[] = proxyValues.reduce<IProxyGroupItem[]>(
+    (acc, each) => {
+      if (each?.name !== "GLOBAL" && each?.all) {
+        acc.push({
+          ...each,
+          all: each.all!.map((item) => generateItem(item)),
+        });
+      }
+      return acc;
+    },
+    [],
+  );
 
   if (global?.all) {
     const globalGroups: IProxyGroupItem[] = global.all.reduce<
@@ -181,14 +192,12 @@ export async function calcuProxies(): Promise<{
 
     const globalNames = new Set(globalGroups.map((each) => each.name));
     groups = groups
-      .filter((group) => {
-        return !globalNames.has(group.name);
-      })
+      .filter((group) => !globalNames.has(group.name))
       .concat(globalGroups);
   }
 
   const proxies = [direct, reject].concat(
-    Object.values(proxyRecord).filter(
+    proxyValues.filter(
       (p) => !p?.all?.length && p?.name !== "DIRECT" && p?.name !== "REJECT",
     ),
   );
@@ -219,13 +228,15 @@ export async function calcuProxyProviders() {
   );
 }
 
+// Pre-compiled regex for log parsing to avoid recreating on every call
+const LOG_LINE_REGEX = /time="(.+?)"\s+level=(.+?)\s+msg="(.+?)"/;
+const LOG_LINE_FALLBACK_REGEX = /(.+?)\s+(.+?)\s+(.+)/;
+
 export async function getClashLogs() {
-  const regex = /time="(.+?)"\s+level=(.+?)\s+msg="(.+?)"/;
-  const newRegex = /(.+?)\s+(.+?)\s+(.+)/;
   const logs = await invoke<string[]>("get_clash_logs");
 
   return logs.reduce<ILogItem[]>((acc, log) => {
-    const result = log.match(regex);
+    const result = log.match(LOG_LINE_REGEX);
     if (result) {
       const [_, _time, type, payload] = result;
       const time = dayjs(_time).format("MM-DD HH:mm:ss");
@@ -233,7 +244,7 @@ export async function getClashLogs() {
       return acc;
     }
 
-    const result2 = log.match(newRegex);
+    const result2 = log.match(LOG_LINE_FALLBACK_REGEX);
     if (result2) {
       const [_, time, type, payload] = result2;
       acc.push({ time, type, payload });

@@ -110,10 +110,11 @@ export const TestCard = () => {
       const { active, over } = event;
       if (!over || active.id === over.id) return;
 
-      const old_index = testList.findIndex((x) => x.uid === active.id);
-      const new_index = testList.findIndex((x) => x.uid === over.id);
+      const uidMap = new Map(testList.map((x, idx) => [x.uid, idx]));
+      const old_index = uidMap.get(active.id as string);
+      const new_index = uidMap.get(over.id as string);
 
-      if (old_index >= 0 && new_index >= 0) {
+      if (old_index !== undefined && new_index !== undefined && old_index >= 0 && new_index >= 0) {
         const newList = [...testList];
         const [removed] = newList.splice(old_index, 1);
         newList.splice(new_index, 0, removed);

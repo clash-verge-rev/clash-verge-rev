@@ -192,11 +192,11 @@ export const useRenderList = (
         ? proxiesData.groups
         : [proxiesData.global!];
 
-      // 如果选择了特定代理组，只显示该组的节点
       if (selectedGroup) {
-        const targetGroup = allGroups.find(
-          (g: any) => g.name === selectedGroup,
+        const groupsMap = new Map<string, ProxyGroup>(
+          allGroups.map((g: ProxyGroup) => [g.name, g]),
         );
+        const targetGroup = groupsMap.get(selectedGroup);
         if (targetGroup) {
           const proxies = filterSort(
             targetGroup.all,
@@ -263,23 +263,21 @@ export const useRenderList = (
         }
       }
 
-      // 如果没有组，显示所有节点
-      const allProxies: IProxyItem[] = allGroups.flatMap(
-        (group: any) => group.all,
-      );
+      const allProxies: IProxyItem[] = [];
+      for (const group of allGroups) {
+        allProxies.push(...(group.all as IProxyItem[]));
+      }
 
-      // 为每个节点获取延迟信息
-      const proxiesWithDelay = allProxies.map((proxy) => {
+      const now = new Date().toISOString();
+      const proxiesWithDelay = new Array<IProxyItem>(allProxies.length);
+      for (let i = 0; i < allProxies.length; i++) {
+        const proxy = allProxies[i];
         const delay = delayManager.getDelay(proxy.name, "chain-mode");
-        return {
+        proxiesWithDelay[i] = {
           ...proxy,
-          // 如果delayManager有延迟数据，更新history
-          history:
-            delay >= 0
-              ? [{ time: new Date().toISOString(), delay }]
-              : proxy.history || [],
+          history: delay >= 0 ? [{ time: now, delay }] : proxy.history || [],
         };
-      });
+      }
 
       // 创建一个虚拟的组来容纳所有节点
       const virtualGroup: ProxyGroup = {
@@ -319,25 +317,24 @@ export const useRenderList = (
       }
     }
 
-    // 链式代理模式下的其他模式（如global）仍显示所有节点
     if (isChainMode && runtimeConfig) {
-      // 从运行时配置直接获取 proxies 列表 (需要类型断言)
-      const allProxies: IProxyItem[] = Object.values(
-        (runtimeConfig as any).proxies || {},
-      );
+      const runtimeProxies = (runtimeConfig as any).proxies || {};
+      const proxyKeys = Object.keys(runtimeProxies);
+      const allProxies: IProxyItem[] = new Array(proxyKeys.length);
+      for (let i = 0; i < proxyKeys.length; i++) {
+        allProxies[i] = runtimeProxies[proxyKeys[i]];
+      }
 
-      // 为每个节点获取延迟信息
-      const proxiesWithDelay = allProxies.map((proxy) => {
+      const now = new Date().toISOString();
+      const proxiesWithDelay = new Array<IProxyItem>(allProxies.length);
+      for (let i = 0; i < allProxies.length; i++) {
+        const proxy = allProxies[i];
         const delay = delayManager.getDelay(proxy.name, "chain-mode");
-        return {
+        proxiesWithDelay[i] = {
           ...proxy,
-          // 如果delayManager有延迟数据，更新history
-          history:
-            delay >= 0
-              ? [{ time: new Date().toISOString(), delay }]
-              : proxy.history || [],
+          history: delay >= 0 ? [{ time: now, delay }] : proxy.history || [],
         };
-      });
+      }
 
       // 创建一个虚拟的组来容纳所有节点
       const virtualGroup: ProxyGroup = {

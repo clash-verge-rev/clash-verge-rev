@@ -174,13 +174,19 @@ export const EnhancedCanvasTrafficGraph = memo(
 
         if (data.length === 0) return bottomY;
 
-        // 获取当前的刻度范围
-        const allValues = [
-          ...data.map((d) => d.up),
-          ...data.map((d) => d.down),
-        ];
-        const maxValue = Math.max(...allValues);
-        const minValue = Math.min(...allValues);
+        let maxValue = 0;
+        let minValue = 0;
+        for (let i = 0; i < data.length; i++) {
+          const up = data[i].up;
+          const down = data[i].down;
+          if (i === 0) {
+            maxValue = Math.max(up, down);
+            minValue = Math.min(up, down);
+          } else {
+            maxValue = Math.max(maxValue, up, down);
+            minValue = Math.min(minValue, up, down);
+          }
+        }
 
         let topValue, bottomValue;
 
@@ -276,13 +282,19 @@ export const EnhancedCanvasTrafficGraph = memo(
       (data: ITrafficDataPoint[], height: number) => {
         if (data.length === 0) return [];
 
-        // 找到数据的最大值和最小值
-        const allValues = [
-          ...data.map((d) => d.up),
-          ...data.map((d) => d.down),
-        ];
-        const maxValue = Math.max(...allValues);
-        const minValue = Math.min(...allValues);
+        let maxValue = 0;
+        let minValue = 0;
+        for (let i = 0; i < data.length; i++) {
+          const up = data[i].up;
+          const down = data[i].down;
+          if (i === 0) {
+            maxValue = Math.max(up, down);
+            minValue = Math.min(up, down);
+          } else {
+            maxValue = Math.max(maxValue, up, down);
+            minValue = Math.min(minValue, up, down);
+          }
+        }
 
         // 格式化流量数值
         const formatTrafficValue = (bytes: number): string => {
@@ -792,10 +804,13 @@ export const EnhancedCanvasTrafficGraph = memo(
       tooltipData,
     ]);
 
-    // 受控的动画循环
     useEffect(() => {
+      if (displayData.length === 0) return;
+
+      let isActive = true;
       const animate = (currentTime: number) => {
-        // 控制帧率，减少不必要的重绘
+        if (!isActive) return;
+
         if (
           currentTime - lastRenderTimeRef.current >=
           1000 / GRAPH_CONFIG.targetFPS
@@ -806,12 +821,10 @@ export const EnhancedCanvasTrafficGraph = memo(
         animationFrameRef.current = requestAnimationFrame(animate);
       };
 
-      // 只有在有数据时才开始动画
-      if (displayData.length > 0) {
-        animationFrameRef.current = requestAnimationFrame(animate);
-      }
+      animationFrameRef.current = requestAnimationFrame(animate);
 
       return () => {
+        isActive = false;
         if (animationFrameRef.current) {
           cancelAnimationFrame(animationFrameRef.current);
         }

@@ -94,11 +94,18 @@ impl NotificationSystem {
     fn worker_loop(rx: mpsc::Receiver<FrontendEvent>) {
         let handle = Handle::global();
         while !handle.is_exiting() {
-            match rx.try_recv() {
+            match rx.recv() {
                 Ok(event) => Self::process_event(handle, event),
-                Err(mpsc::TryRecvError::Disconnected) => break,
-                Err(mpsc::TryRecvError::Empty) => break,
-            }
+                Err(e) => {
+                    logging!(
+                        error,
+                        Type::System,
+                        "receive event error, stop notification worker: {}",
+                        e
+                    );
+                    break;
+                }
+            };
         }
     }
 

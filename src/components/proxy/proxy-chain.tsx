@@ -212,6 +212,18 @@ export const ProxyChain = ({
     },
   );
 
+  const groupsMapRef = useRef<Map<string, any>>(new Map());
+  const lastGroupsRef = useRef<any>(null);
+
+  useEffect(() => {
+    if (currentProxies?.groups && currentProxies.groups !== lastGroupsRef.current) {
+      groupsMapRef.current = new Map(
+        currentProxies.groups.map((group: any) => [group.name, group]),
+      );
+      lastGroupsRef.current = currentProxies.groups;
+    }
+  }, [currentProxies?.groups]);
+
   const isConnected = useMemo(() => {
     if (!currentProxies || proxyChain.length < 2) {
       return false;
@@ -227,9 +239,7 @@ export const ProxyChain = ({
       return false;
     }
 
-    const proxyChainGroup = currentProxies.groups.find(
-      (group) => group.name === selectedGroup,
-    );
+    const proxyChainGroup = groupsMapRef.current.get(selectedGroup);
 
     return proxyChainGroup?.now === lastNode.name;
   }, [currentProxies, proxyChain, mode, selectedGroup]);
@@ -412,16 +422,22 @@ export const ProxyChain = ({
     }
   }, [chainConfigData, onUpdateChain]);
 
-  // 定时更新延迟数据
+  const recordsRef = useRef(proxies?.records);
   useEffect(() => {
-    if (!proxies?.records) return;
+    recordsRef.current = proxies?.records;
+  }, [proxies?.records]);
+
+  useEffect(() => {
+    if (!recordsRef.current) return;
 
     const updateDelays = () => {
       const currentChain = proxyChainRef.current;
       if (currentChain.length === 0) return;
+      const records = recordsRef.current;
+      if (!records) return;
 
       const updatedChain = currentChain.map((item) => {
-        const proxyRecord = proxies.records[item.name];
+        const proxyRecord = records[item.name];
         if (
           proxyRecord &&
           proxyRecord.history &&
@@ -434,7 +450,6 @@ export const ProxyChain = ({
         return item;
       });
 
-      // 只有在延迟数据确实发生变化时才更新
       const hasChanged = updatedChain.some(
         (item, index) => item.delay !== currentChain[index]?.delay,
       );
@@ -444,14 +459,12 @@ export const ProxyChain = ({
       }
     };
 
-    // 立即更新一次延迟
     updateDelays();
 
-    // 设置定时器，每5秒更新一次延迟
     const interval = setInterval(updateDelays, 5000);
 
     return () => clearInterval(interval);
-  }, [proxies?.records]); // 只依赖proxies.records
+  }, []);
 
   return (
     <Paper

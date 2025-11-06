@@ -44,14 +44,21 @@ export const HotkeyViewer = forwardRef<DialogRef>((props, ref) => {
       const map = {} as typeof hotkeyMap;
 
       verge?.hotkeys?.forEach((text) => {
-        const [func, key] = text.split(",").map((e) => e.trim());
+        const commaIndex = text.indexOf(",");
+        if (commaIndex === -1) return;
+
+        const func = text.substring(0, commaIndex).trim();
+        const key = text.substring(commaIndex + 1).trim();
 
         if (!func || !key) return;
 
-        map[func] = key
-          .split("+")
-          .map((e) => e.trim())
-          .map((k) => (k === "PLUS" ? "+" : k));
+        const parts = key.split("+");
+        const keys = new Array(parts.length);
+        for (let i = 0; i < parts.length; i++) {
+          const trimmed = parts[i].trim();
+          keys[i] = trimmed === "PLUS" ? "+" : trimmed;
+        }
+        map[func] = keys;
       });
 
       setHotkeyMap(map);

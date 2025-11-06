@@ -105,16 +105,18 @@ export const ProxiesEditorViewer = (props: Props) => {
     const { active, over } = event;
     if (over) {
       if (active.id !== over.id) {
-        let activeIndex = 0;
-        let overIndex = 0;
-        prependSeq.forEach((item, index) => {
-          if (item.name === active.id) {
+        let activeIndex = -1;
+        let overIndex = -1;
+        for (let index = 0; index < prependSeq.length; index++) {
+          const item = prependSeq[index];
+          if (activeIndex === -1 && item.name === active.id) {
             activeIndex = index;
           }
-          if (item.name === over.id) {
+          if (overIndex === -1 && item.name === over.id) {
             overIndex = index;
           }
-        });
+          if (activeIndex !== -1 && overIndex !== -1) break;
+        }
 
         setPrependSeq(reorder(prependSeq, activeIndex, overIndex));
       }
@@ -124,16 +126,18 @@ export const ProxiesEditorViewer = (props: Props) => {
     const { active, over } = event;
     if (over) {
       if (active.id !== over.id) {
-        let activeIndex = 0;
-        let overIndex = 0;
-        appendSeq.forEach((item, index) => {
-          if (item.name === active.id) {
+        let activeIndex = -1;
+        let overIndex = -1;
+        for (let index = 0; index < appendSeq.length; index++) {
+          const item = appendSeq[index];
+          if (activeIndex === -1 && item.name === active.id) {
             activeIndex = index;
           }
-          if (item.name === over.id) {
+          if (overIndex === -1 && item.name === over.id) {
             overIndex = index;
           }
-        });
+          if (activeIndex !== -1 && overIndex !== -1) break;
+        }
         setAppendSeq(reorder(appendSeq, activeIndex, overIndex));
       }
     }
@@ -141,14 +145,15 @@ export const ProxiesEditorViewer = (props: Props) => {
   // 优化：异步分片解析，避免主线程阻塞，解析完成后批量setState
   const handleParseAsync = (cb: (proxies: IProxyConfig[]) => void) => {
     const proxies: IProxyConfig[] = [];
-    const names: string[] = [];
+    const names = new Set<string>();
     let uris = "";
     try {
       uris = atob(proxyUri);
     } catch {
       uris = proxyUri;
     }
-    const lines = uris.trim().split("\n");
+    const trimmedUris = uris.trim();
+    const lines = trimmedUris.split("\n");
     let idx = 0;
     const batchSize = 50;
     let parseTimer: number | undefined;
@@ -157,11 +162,13 @@ export const ProxiesEditorViewer = (props: Props) => {
       const end = Math.min(idx + batchSize, lines.length);
       for (; idx < end; idx++) {
         const uri = lines[idx];
+        const trimmedUri = uri.trim();
+        if (!trimmedUri) continue;
         try {
-          const proxy = parseUri(uri.trim());
-          if (!names.includes(proxy.name)) {
+          const proxy = parseUri(trimmedUri);
+          if (!names.has(proxy.name)) {
             proxies.push(proxy);
-            names.push(proxy.name);
+            names.add(proxy.name);
           }
         } catch (err: any) {
           console.warn(

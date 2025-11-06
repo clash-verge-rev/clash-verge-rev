@@ -1,5 +1,5 @@
 import { styled, Box } from "@mui/material";
-import type { ReactNode } from "react";
+import { useMemo, type ReactNode } from "react";
 
 import { SearchState } from "@/components/base/base-search-box";
 
@@ -48,8 +48,8 @@ interface Props {
 }
 
 const LogItem = ({ value, searchState }: Props) => {
-  const renderHighlightText = (text: string) => {
-    if (!searchState?.text.trim()) return text;
+  const regexCache = useMemo(() => {
+    if (!searchState?.text.trim()) return null;
 
     try {
       const searchText = searchState.text;
@@ -68,7 +68,17 @@ const LogItem = ({ value, searchState }: Props) => {
       }
 
       const flags = searchState.matchCase ? "g" : "gi";
-      const regex = new RegExp(pattern, flags);
+      return new RegExp(pattern, flags);
+    } catch {
+      return null;
+    }
+  }, [searchState?.text, searchState?.useRegularExpression, searchState?.matchWholeWord, searchState?.matchCase]);
+
+  const renderHighlightText = (text: string) => {
+    if (!regexCache) return text;
+
+    try {
+      const regex = regexCache;
       const elements: ReactNode[] = [];
       let lastIndex = 0;
       let match: RegExpExecArray | null;

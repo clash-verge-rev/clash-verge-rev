@@ -177,16 +177,18 @@ export const GroupsEditorViewer = (props: Props) => {
     const { active, over } = event;
     if (over) {
       if (active.id !== over.id) {
-        let activeIndex = 0;
-        let overIndex = 0;
-        prependSeq.forEach((item, index) => {
-          if (item.name === active.id) {
+        let activeIndex = -1;
+        let overIndex = -1;
+        for (let index = 0; index < prependSeq.length; index++) {
+          const item = prependSeq[index];
+          if (activeIndex === -1 && item.name === active.id) {
             activeIndex = index;
           }
-          if (item.name === over.id) {
+          if (overIndex === -1 && item.name === over.id) {
             overIndex = index;
           }
-        });
+          if (activeIndex !== -1 && overIndex !== -1) break;
+        }
 
         setPrependSeq(reorder(prependSeq, activeIndex, overIndex));
       }
@@ -196,16 +198,18 @@ export const GroupsEditorViewer = (props: Props) => {
     const { active, over } = event;
     if (over) {
       if (active.id !== over.id) {
-        let activeIndex = 0;
-        let overIndex = 0;
-        appendSeq.forEach((item, index) => {
-          if (item.name === active.id) {
+        let activeIndex = -1;
+        let overIndex = -1;
+        for (let index = 0; index < appendSeq.length; index++) {
+          const item = appendSeq[index];
+          if (activeIndex === -1 && item.name === active.id) {
             activeIndex = index;
           }
-          if (item.name === over.id) {
+          if (overIndex === -1 && item.name === over.id) {
             overIndex = index;
           }
-        });
+          if (activeIndex !== -1 && overIndex !== -1) break;
+        }
         setAppendSeq(reorder(appendSeq, activeIndex, overIndex));
       }
     }

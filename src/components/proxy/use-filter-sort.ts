@@ -103,10 +103,15 @@ function filterProxies(
   const res2 = regex2.exec(filterText);
   if (res2) {
     const type = res2[1].toLowerCase();
-    return proxies.filter((p) => p.type.toLowerCase().includes(type));
+    const typeLower = type;
+    return proxies.filter((p) => {
+      const proxyTypeLower = p.type.toLowerCase();
+      return proxyTypeLower.includes(typeLower);
+    });
   }
 
-  return proxies.filter((p) => p.name.includes(filterText.trim()));
+  const trimmedFilter = filterText.trim();
+  return proxies.filter((p) => p.name.includes(trimmedFilter));
 }
 
 /**
@@ -121,13 +126,13 @@ function sortProxies(
   if (!proxies) return [];
   if (sortType === 0) return proxies;
 
-  const list = proxies.slice();
   const effectiveTimeout =
     typeof latencyTimeout === "number" && latencyTimeout > 0
       ? latencyTimeout
       : 10000;
 
   if (sortType === 1) {
+    const list = proxies.slice();
     const categorizeDelay = (delay: number): [number, number] => {
       if (!Number.isFinite(delay)) return [3, Number.MAX_SAFE_INTEGER];
       if (delay > 1e5) return [4, delay];
@@ -135,7 +140,6 @@ function sortProxies(
         return [3, delay || effectiveTimeout];
       }
       if (delay < 0) {
-        // sentinel delays (-1, -2, etc.) should always sort after real measurements
         return [5, Number.MAX_SAFE_INTEGER];
       }
       return [0, delay];
@@ -150,9 +154,10 @@ function sortProxies(
       if (ar !== br) return ar - br;
       return av - bv;
     });
+    return list;
   } else {
+    const list = proxies.slice();
     list.sort((a, b) => a.name.localeCompare(b.name));
+    return list;
   }
-
-  return list;
 }

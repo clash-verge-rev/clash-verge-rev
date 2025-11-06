@@ -47,8 +47,8 @@ const TypeBox = styled("span")(({ theme }) => ({
 export const ProxyItem = (props: Props) => {
   const { group, proxy, selected, showType = true, sx, onClick } = props;
 
-  const presetList = ["DIRECT", "REJECT", "REJECT-DROP", "PASS", "COMPATIBLE"];
-  const isPreset = presetList.includes(proxy.name);
+  const presetSet = new Set(["DIRECT", "REJECT", "REJECT-DROP", "PASS", "COMPATIBLE"]);
+  const isPreset = presetSet.has(proxy.name);
   // -1/<=0 为不显示，-2 为 loading
   const [delayState, setDelayState] = useReducer(
     (_: DelayUpdate, next: DelayUpdate) => next,

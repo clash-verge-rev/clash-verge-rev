@@ -295,8 +295,9 @@ export const RulesEditorViewer = (props: Props) => {
     const { active, over } = event;
     if (over) {
       if (active.id !== over.id) {
-        const activeIndex = prependSeq.indexOf(active.id.toString());
-        const overIndex = prependSeq.indexOf(over.id.toString());
+        const nameToIndex = new Map(prependSeq.map((n, i) => [n, i]));
+        const activeIndex = nameToIndex.get(active.id.toString()) ?? -1;
+        const overIndex = nameToIndex.get(over.id.toString()) ?? -1;
         setPrependSeq(reorder(prependSeq, activeIndex, overIndex));
       }
     }
@@ -305,8 +306,9 @@ export const RulesEditorViewer = (props: Props) => {
     const { active, over } = event;
     if (over) {
       if (active.id !== over.id) {
-        const activeIndex = appendSeq.indexOf(active.id.toString());
-        const overIndex = appendSeq.indexOf(over.id.toString());
+        const nameToIndex = new Map(appendSeq.map((n, i) => [n, i]));
+        const activeIndex = nameToIndex.get(active.id.toString()) ?? -1;
+        const overIndex = nameToIndex.get(over.id.toString()) ?? -1;
         setAppendSeq(reorder(appendSeq, activeIndex, overIndex));
       }
     }
