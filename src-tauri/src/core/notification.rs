@@ -12,7 +12,7 @@ use std::{
         mpsc,
     },
     thread,
-    time::Instant,
+    time::{Duration, Instant},
 };
 use tauri::{Emitter, WebviewWindow};
 
@@ -92,12 +92,15 @@ impl NotificationSystem {
     }
 
     fn worker_loop(rx: mpsc::Receiver<FrontendEvent>) {
-        let handle = Handle::global();
-        while !handle.is_exiting() {
-            match rx.try_recv() {
+        loop {
+            let handle = Handle::global();
+            if handle.is_exiting() {
+                break;
+            }
+            match rx.recv_timeout(Duration::from_millis(1_000)) {
                 Ok(event) => Self::process_event(handle, event),
-                Err(mpsc::TryRecvError::Disconnected) => break,
-                Err(mpsc::TryRecvError::Empty) => break,
+                Err(mpsc::RecvTimeoutError::Timeout) => (),
+                Err(mpsc::RecvTimeoutError::Disconnected) => break,
             }
         }
     }
