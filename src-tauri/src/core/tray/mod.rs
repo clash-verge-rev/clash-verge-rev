@@ -15,7 +15,7 @@ use crate::{
     feat, logging,
     module::lightweight::is_in_lightweight_mode,
     singleton_lazy,
-    utils::{dirs::find_target_icons, i18n::t},
+    utils::{dirs::find_target_icons, i18n},
 };
 
 use super::handle;
@@ -440,6 +440,8 @@ impl Tray {
 
         let app_handle = handle::Handle::app_handle();
 
+        i18n::sync_locale().await;
+
         let verge = Config::verge().await.latest_arc();
         let system_proxy = verge.enable_system_proxy.as_ref().unwrap_or(&false);
         let tun_mode = verge.enable_tun_mode.as_ref().unwrap_or(&false);
@@ -466,9 +468,9 @@ impl Tray {
         }
 
         // Get localized strings before using them
-        let sys_proxy_text = t("SysProxy").await;
-        let tun_text = t("TUN").await;
-        let profile_text = t("Profile").await;
+        let sys_proxy_text = rust_i18n::t!("tray.tooltip.systemProxy");
+        let tun_text = rust_i18n::t!("tray.tooltip.tun");
+        let profile_text = rust_i18n::t!("tray.tooltip.profile");
 
         let v = env!("CARGO_PKG_VERSION");
         let reassembled_version = v.split_once('+').map_or_else(
@@ -639,7 +641,7 @@ async fn create_profile_menu_item(
                 CheckMenuItem::with_id(
                     &app_handle,
                     format!("profiles_{profile_uid}"),
-                    t(profile_name).await,
+                    profile_name.as_str(),
                     true,
                     is_current_profile,
                     None::<&str>,
@@ -834,6 +836,8 @@ async fn create_tray_menu(
 ) -> Result<tauri::menu::Menu<Wry>> {
     let current_proxy_mode = mode.unwrap_or("");
 
+    i18n::sync_locale().await;
+
     // 获取当前配置文件的选中代理组信息
     let current_profile_selected = {
         let profiles_config = Config::profiles().await;
@@ -894,7 +898,7 @@ async fn create_tray_menu(
         create_profile_menu_item(app_handle, profile_uid_and_name).await?;
 
     // Pre-fetch all localized strings
-    let texts = &MenuTexts::new().await;
+    let texts = MenuTexts::new();
     // Convert to references only when needed
     let profile_menu_items_refs: Vec<&dyn IsMenuItem<Wry>> = profile_menu_items
         .iter()

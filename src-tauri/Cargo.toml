@@ -87,6 +87,7 @@ clash_verge_service_ipc = { version = "2.0.21", features = [
   "client",
 ], git = "https://github.com/clash-verge-rev/clash-verge-service-ipc" }
 arc-swap = "1.7.1"
+rust-i18n = "3.1.5"
 
 [target.'cfg(windows)'.dependencies]
 runas = "=1.2.0"
