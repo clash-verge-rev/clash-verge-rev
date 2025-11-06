@@ -351,7 +351,7 @@ pub fn run() {
             });
         }
 
-        pub fn handle_window_destroyed() {
+        pub const fn handle_window_destroyed() {
             #[cfg(target_os = "macos")]
             {
                 use crate::core::hotkey::SystemHotkey;
