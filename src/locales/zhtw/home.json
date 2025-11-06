@@ -124,9 +124,9 @@
         "communication": "內核通信錯誤"
       },
       "labels": {
-        "rule": "規則模式",
-        "global": "全域模式",
-        "direct": "直連模式"
+        "rule": "規則",
+        "global": "全域",
+        "direct": "直連"
       },
       "descriptions": {
         "rule": "依照規則自動選擇代理。",

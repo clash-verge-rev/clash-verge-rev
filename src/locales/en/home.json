@@ -124,9 +124,9 @@
         "communication": "Core communication error"
       },
       "labels": {
-        "rule": "Rule Mode",
-        "global": "Global Mode",
-        "direct": "Direct Mode"
+        "rule": "Rule",
+        "global": "Global",
+        "direct": "Direct"
       },
       "descriptions": {
         "rule": "Automatically choose proxies according to the rule set.",
