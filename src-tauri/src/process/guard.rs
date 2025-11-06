@@ -20,7 +20,7 @@ impl Drop for CommandChildGuard {
 }
 
 impl CommandChildGuard {
-    pub fn new(child: CommandChild) -> Self {
+    pub const fn new(child: CommandChild) -> Self {
         Self(Some(child))
     }
 

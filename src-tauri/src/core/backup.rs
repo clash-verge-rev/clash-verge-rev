@@ -45,7 +45,7 @@ enum Operation {
 }
 
 impl Operation {
-    fn timeout(&self) -> u64 {
+    const fn timeout(&self) -> u64 {
         match self {
             Self::Upload => TIMEOUT_UPLOAD,
             Self::Download => TIMEOUT_DOWNLOAD,

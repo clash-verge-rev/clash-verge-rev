@@ -137,7 +137,7 @@ impl CoreManager {
         }
     }
 
-    fn is_connection_io_error(kind: std::io::ErrorKind) -> bool {
+    const fn is_connection_io_error(kind: std::io::ErrorKind) -> bool {
         matches!(
             kind,
             std::io::ErrorKind::ConnectionAborted
