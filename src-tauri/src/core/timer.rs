@@ -252,8 +252,8 @@ impl Timer {
         // Now perform async operations without holding locks
         for (uid, tid, interval) in operations_to_add {
             // Re-acquire locks for individual operations
-            let mut delay_timer = self.delay_timer.write();
-            if let Err(e) = self.add_task(&mut delay_timer, uid.clone(), tid, interval) {
+            let delay_timer = self.delay_timer.write();
+            if let Err(e) = self.add_task(&delay_timer, uid.clone(), tid, interval) {
                 logging_error!(Type::Timer, "Failed to add task for uid {}: {}", uid, e);
 
                 // Rollback on failure - remove from timer_map
@@ -370,7 +370,7 @@ impl Timer {
     /// Add a timer task with better error handling
     fn add_task(
         &self,
-        delay_timer: &mut DelayTimer,
+        delay_timer: &DelayTimer,
         uid: String,
         tid: TaskID,
         minutes: u64,

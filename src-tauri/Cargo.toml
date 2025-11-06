@@ -235,3 +235,6 @@ string_lit_as_bytes = "deny"
 significant_drop_tightening = "deny"
 significant_drop_in_scrutinee = "deny"
 redundant_clone = "deny"
+# option_if_let_else = "deny" // 过于激进，暂时不开启
+needless_pass_by_ref_mut = "deny"
+needless_collect = "deny"
