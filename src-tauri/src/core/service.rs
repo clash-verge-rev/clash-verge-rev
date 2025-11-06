@@ -136,7 +136,7 @@ async fn uninstall_service() -> Result<()> {
     let elevator = crate::utils::help::linux_elevator();
     let status = match get_effective_uid() {
         0 => StdCommand::new(uninstall_shell).status()?,
-        _ => StdCommand::new(elevator.clone())
+        _ => StdCommand::new(elevator)
             .arg("sh")
             .arg("-c")
             .arg(uninstall_shell)
@@ -177,7 +177,7 @@ async fn install_service() -> Result<()> {
     let elevator = crate::utils::help::linux_elevator();
     let status = match get_effective_uid() {
         0 => StdCommand::new(install_shell).status()?,
-        _ => StdCommand::new(elevator.clone())
+        _ => StdCommand::new(elevator)
             .arg("sh")
             .arg("-c")
             .arg(install_shell)
@@ -449,7 +449,7 @@ impl ServiceManager {
         Self(ServiceStatus::Unavailable("Need Checks".into()))
     }
 
-    pub fn config() -> Option<clash_verge_service_ipc::IpcConfig> {
+    pub const fn config() -> Option<clash_verge_service_ipc::IpcConfig> {
         Some(clash_verge_service_ipc::IpcConfig {
             default_timeout: Duration::from_millis(30),
             retry_delay: Duration::from_millis(250),

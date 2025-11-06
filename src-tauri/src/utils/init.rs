@@ -506,7 +506,7 @@ pub fn init_scheme() -> Result<()> {
     Ok(())
 }
 #[cfg(target_os = "macos")]
-pub fn init_scheme() -> Result<()> {
+pub const fn init_scheme() -> Result<()> {
     Ok(())
 }
 

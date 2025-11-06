@@ -189,7 +189,6 @@ pub async fn apply_dns_config(apply: bool) -> CmdResult {
             })?;
 
         logging!(info, Type::Config, "DNS config successfully applied");
-        handle::Handle::refresh_clash();
     } else {
         // 当关闭DNS设置时，重新生成配置（不加载DNS配置文件）
         logging!(
@@ -212,9 +211,9 @@ pub async fn apply_dns_config(apply: bool) -> CmdResult {
             })?;
 
         logging!(info, Type::Config, "Config regenerated successfully");
-        handle::Handle::refresh_clash();
     }
 
+    handle::Handle::refresh_clash();
     Ok(())
 }
 

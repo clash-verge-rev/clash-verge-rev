@@ -16,7 +16,7 @@ pub struct CoreConfigValidator {
 }
 
 impl CoreConfigValidator {
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             is_processing: AtomicBool::new(false),
         }

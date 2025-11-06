@@ -152,7 +152,7 @@ impl PrfOption {
 impl PrfItem {
     /// From partial item
     /// must contain `itype`
-    pub async fn from(item: &PrfItem, file_data: Option<String>) -> Result<PrfItem> {
+    pub async fn from(item: &Self, file_data: Option<String>) -> Result<Self> {
         if item.itype.is_none() {
             bail!("type should not be null");
         }
@@ -170,13 +170,13 @@ impl PrfItem {
                 let name = item.name.as_ref();
                 let desc = item.desc.as_ref();
                 let option = item.option.as_ref();
-                PrfItem::from_url(url, name, desc, option).await
+                Self::from_url(url, name, desc, option).await
             }
             "local" => {
                 let name = item.name.clone().unwrap_or_else(|| "Local File".into());
                 let desc = item.desc.clone().unwrap_or_else(|| "".into());
                 let option = item.option.as_ref();
-                PrfItem::from_local(name, desc, file_data, option).await
+                Self::from_local(name, desc, file_data, option).await
             }
             typ => bail!("invalid profile item type \"{typ}\""),
         }
@@ -189,7 +189,7 @@ impl PrfItem {
         desc: String,
         file_data: Option<String>,
         option: Option<&PrfOption>,
-    ) -> Result<PrfItem> {
+    ) -> Result<Self> {
         let uid = help::get_uid("L").into();
         let file = format!("{uid}.yaml").into();
         let opt_ref = option.as_ref();
@@ -201,31 +201,31 @@ impl PrfItem {
         let mut groups = opt_ref.and_then(|o| o.groups.clone());
 
         if merge.is_none() {
-            let merge_item = &mut PrfItem::from_merge(None)?;
+            let merge_item = &mut Self::from_merge(None)?;
             profiles::profiles_append_item_safe(merge_item).await?;
             merge = merge_item.uid.clone();
         }
         if script.is_none() {
-            let script_item = &mut PrfItem::from_script(None)?;
+            let script_item = &mut Self::from_script(None)?;
             profiles::profiles_append_item_safe(script_item).await?;
             script = script_item.uid.clone();
         }
         if rules.is_none() {
-            let rules_item = &mut PrfItem::from_rules()?;
+            let rules_item = &mut Self::from_rules()?;
             profiles::profiles_append_item_safe(rules_item).await?;
             rules = rules_item.uid.clone();
         }
         if proxies.is_none() {
-            let proxies_item = &mut PrfItem::from_proxies()?;
+            let proxies_item = &mut Self::from_proxies()?;
             profiles::profiles_append_item_safe(proxies_item).await?;
             proxies = proxies_item.uid.clone();
         }
         if groups.is_none() {
-            let groups_item = &mut PrfItem::from_groups()?;
+            let groups_item = &mut Self::from_groups()?;
             profiles::profiles_append_item_safe(groups_item).await?;
             groups = groups_item.uid.clone();
         }
-        Ok(PrfItem {
+        Ok(Self {
             uid: Some(uid),
             itype: Some("local".into()),
             name: Some(name),
@@ -256,7 +256,7 @@ impl PrfItem {
         name: Option<&String>,
         desc: Option<&String>,
         option: Option<&PrfOption>,
-    ) -> Result<PrfItem> {
+    ) -> Result<Self> {
         let with_proxy = option.is_some_and(|o| o.with_proxy.unwrap_or(false));
         let self_proxy = option.is_some_and(|o| o.self_proxy.unwrap_or(false));
         let accept_invalid_certs =
@@ -393,32 +393,32 @@ impl PrfItem {
         }
 
         if merge.is_none() {
-            let merge_item = &mut PrfItem::from_merge(None)?;
+            let merge_item = &mut Self::from_merge(None)?;
             profiles::profiles_append_item_safe(merge_item).await?;
             merge = merge_item.uid.clone();
         }
         if script.is_none() {
-            let script_item = &mut PrfItem::from_script(None)?;
+            let script_item = &mut Self::from_script(None)?;
             profiles::profiles_append_item_safe(script_item).await?;
             script = script_item.uid.clone();
         }
         if rules.is_none() {
-            let rules_item = &mut PrfItem::from_rules()?;
+            let rules_item = &mut Self::from_rules()?;
             profiles::profiles_append_item_safe(rules_item).await?;
             rules = rules_item.uid.clone();
         }
         if proxies.is_none() {
-            let proxies_item = &mut PrfItem::from_proxies()?;
+            let proxies_item = &mut Self::from_proxies()?;
             profiles::profiles_append_item_safe(proxies_item).await?;
             proxies = proxies_item.uid.clone();
         }
         if groups.is_none() {
-            let groups_item = &mut PrfItem::from_groups()?;
+            let groups_item = &mut Self::from_groups()?;
             profiles::profiles_append_item_safe(groups_item).await?;
             groups = groups_item.uid.clone();
         }
 
-        Ok(PrfItem {
+        Ok(Self {
             uid: Some(uid),
             itype: Some("remote".into()),
             name: Some(name),
@@ -445,16 +445,15 @@ impl PrfItem {
 
     /// ## Merge type (enhance)
     /// create the enhanced item by using `merge` rule
-    pub fn from_merge(uid: Option<String>) -> Result<PrfItem> {
-        let mut id = help::get_uid("m").into();
-        let mut template = tmpl::ITEM_MERGE_EMPTY.into();
-        if let Some(uid) = uid {
-            id = uid;
-            template = tmpl::ITEM_MERGE.into();
-        }
+    pub fn from_merge(uid: Option<String>) -> Result<Self> {
+        let (id, template) = if let Some(uid) = uid {
+            (uid, tmpl::ITEM_MERGE.into())
+        } else {
+            (help::get_uid("m").into(), tmpl::ITEM_MERGE_EMPTY.into())
+        };
         let file = format!("{id}.yaml").into();
 
-        Ok(PrfItem {
+        Ok(Self {
             uid: Some(id),
             itype: Some("merge".into()),
             name: None,
@@ -472,14 +471,14 @@ impl PrfItem {
 
     /// ## Script type (enhance)
     /// create the enhanced item by using javascript quick.js
-    pub fn from_script(uid: Option<String>) -> Result<PrfItem> {
-        let mut id = help::get_uid("s").into();
-        if let Some(uid) = uid {
-            id = uid;
-        }
+    pub fn from_script(uid: Option<String>) -> Result<Self> {
+        let id = if let Some(uid) = uid {
+            uid
+        } else {
+            help::get_uid("s").into()
+        };
         let file = format!("{id}.js").into(); // js ext
-
-        Ok(PrfItem {
+        Ok(Self {
             uid: Some(id),
             itype: Some("script".into()),
             name: None,
@@ -496,11 +495,11 @@ impl PrfItem {
     }
 
     /// ## Rules type (enhance)
-    pub fn from_rules() -> Result<PrfItem> {
+    pub fn from_rules() -> Result<Self> {
         let uid = help::get_uid("r").into();
         let file = format!("{uid}.yaml").into(); // yaml ext
 
-        Ok(PrfItem {
+        Ok(Self {
             uid: Some(uid),
             itype: Some("rules".into()),
             name: None,
@@ -517,11 +516,11 @@ impl PrfItem {
     }
 
     /// ## Proxies type (enhance)
-    pub fn from_proxies() -> Result<PrfItem> {
+    pub fn from_proxies() -> Result<Self> {
         let uid = help::get_uid("p").into();
         let file = format!("{uid}.yaml").into(); // yaml ext
 
-        Ok(PrfItem {
+        Ok(Self {
             uid: Some(uid),
             itype: Some("proxies".into()),
             name: None,
@@ -538,11 +537,11 @@ impl PrfItem {
     }
 
     /// ## Groups type (enhance)
-    pub fn from_groups() -> Result<PrfItem> {
+    pub fn from_groups() -> Result<Self> {
         let uid = help::get_uid("g").into();
         let file = format!("{uid}.yaml").into(); // yaml ext
 
-        Ok(PrfItem {
+        Ok(Self {
             uid: Some(uid),
             itype: Some("groups".into()),
             name: None,
@@ -612,6 +611,6 @@ impl PrfItem {
 }
 
 // 向前兼容，默认为订阅启用自动更新
-fn default_allow_auto_update() -> Option<bool> {
+const fn default_allow_auto_update() -> Option<bool> {
     Some(true)
 }

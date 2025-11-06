@@ -36,8 +36,8 @@ importers:
         specifier: ^7.3.5
         version: 7.3.5(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@mui/x-data-grid':
-        specifier: ^8.16.0
-        version: 8.16.0(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react@19.2.0))(@mui/material@7.3.5(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(@mui/system@7.3.5(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+        specifier: ^8.17.0
+        version: 8.17.0(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react@19.2.0))(@mui/material@7.3.5(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(@mui/system@7.3.5(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@tauri-apps/api':
         specifier: 2.9.0
         version: 2.9.0
@@ -164,10 +164,10 @@ importers:
         version: 19.2.2(@types/react@19.2.2)
       '@vitejs/plugin-legacy':
         specifier: ^7.2.1
-        version: 7.2.1(terser@5.44.0)(vite@7.2.0(@types/node@24.10.0)(jiti@2.6.1)(sass@1.93.3)(terser@5.44.0)(yaml@2.8.1))
+        version: 7.2.1(terser@5.44.1)(vite@7.2.1(@types/node@24.10.0)(jiti@2.6.1)(sass@1.93.3)(terser@5.44.1)(yaml@2.8.1))
       '@vitejs/plugin-react-swc':
         specifier: ^4.2.1
-        version: 4.2.1(vite@7.2.0(@types/node@24.10.0)(jiti@2.6.1)(sass@1.93.3)(terser@5.44.0)(yaml@2.8.1))
+        version: 4.2.1(vite@7.2.1(@types/node@24.10.0)(jiti@2.6.1)(sass@1.93.3)(terser@5.44.1)(yaml@2.8.1))
       adm-zip:
         specifier: ^0.5.16
         version: 0.5.16
@@ -238,8 +238,8 @@ importers:
         specifier: ^7.5.2
         version: 7.5.2
       terser:
-        specifier: ^5.44.0
-        version: 5.44.0
+        specifier: ^5.44.1
+        version: 5.44.1
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -247,17 +247,17 @@ importers:
         specifier: ^8.46.3
         version: 8.46.3(eslint@9.39.1(jiti@2.6.1))(typescript@5.9.3)
       vite:
-        specifier: ^7.2.0
-        version: 7.2.0(@types/node@24.10.0)(jiti@2.6.1)(sass@1.93.3)(terser@5.44.0)(yaml@2.8.1)
+        specifier: ^7.2.1
+        version: 7.2.1(@types/node@24.10.0)(jiti@2.6.1)(sass@1.93.3)(terser@5.44.1)(yaml@2.8.1)
       vite-plugin-monaco-editor-esm:
         specifier: ^2.0.2
         version: 2.0.2(monaco-editor@0.54.0)
       vite-plugin-svgr:
         specifier: ^4.5.0
-        version: 4.5.0(rollup@4.46.2)(typescript@5.9.3)(vite@7.2.0(@types/node@24.10.0)(jiti@2.6.1)(sass@1.93.3)(terser@5.44.0)(yaml@2.8.1))
+        version: 4.5.0(rollup@4.46.2)(typescript@5.9.3)(vite@7.2.1(@types/node@24.10.0)(jiti@2.6.1)(sass@1.93.3)(terser@5.44.1)(yaml@2.8.1))
       vitest:
         specifier: ^4.0.7
-        version: 4.0.7(@types/debug@4.1.12)(@types/node@24.10.0)(jiti@2.6.1)(sass@1.93.3)(terser@5.44.0)(yaml@2.8.1)
+        version: 4.0.7(@types/debug@4.1.12)(@types/node@24.10.0)(jiti@2.6.1)(sass@1.93.3)(terser@5.44.1)(yaml@2.8.1)
 
 packages:
 
@@ -1239,8 +1239,8 @@ packages:
       '@types/react':
         optional: true
 
-  '@mui/x-data-grid@8.16.0':
-    resolution: {integrity: sha512-yJ+v+E1yI1HxrEUdOfgrUTCxobAFvotGggU6cy6MnM7c7/TPPg9d5mDzjzxb0imOCJ6WyiM/vtd5WKbY/5sUNw==}
+  '@mui/x-data-grid@8.17.0':
+    resolution: {integrity: sha512-eIzYM700Er5AKGS7T9NxQfpFNGpGP0NYpJ6RiQWSv904CkzAY0mbMZ6/XKldavbhSwzHVUfv37GK9mFeUl7I5g==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
       '@emotion/react': ^11.9.0
@@ -1255,14 +1255,14 @@ packages:
       '@emotion/styled':
         optional: true
 
-  '@mui/x-internals@8.16.0':
-    resolution: {integrity: sha512-JR53WOFqmQYQzurOpB0H91K7/9uMcte1ooxHxTLGB+97PgB+rKY6siRWvUALGS56XyPV+1a2ALI33hd2E7+Rgg==}
+  '@mui/x-internals@8.17.0':
+    resolution: {integrity: sha512-KvmR0PPX1j2i44y0DXwzs45jIPMu/YZYXYy7xvzo+ZNdYebbW5LbVeG4zdEUnKHyOG02oHdI7MM9AxcZE16TBw==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
       react: ^17.0.0 || ^18.0.0 || ^19.0.0
 
-  '@mui/x-virtualizer@0.2.6':
-    resolution: {integrity: sha512-t45EHhD9kStSwIYMkqYYQIFbZNVQws9LRANktf0e/+j+MxsRTFk41r0rgiazMSOSugJlCuSh/H8xUUuMCZdtow==}
+  '@mui/x-virtualizer@0.2.7':
+    resolution: {integrity: sha512-xcdo+lvlfwuLE2FVAQtOEg078liB/aiVGjEuiyPv02Vzp8Y50qNH0EtV9lk/E/d/lbkkMGnapnk+JFT5HlUB0w==}
     engines: {node: '>=14.0.0'}
     peerDependencies:
       react: ^17.0.0 || ^18.0.0 || ^19.0.0
@@ -3976,8 +3976,8 @@ packages:
     resolution: {tarball: https://codeload.github.com/clash-verge-rev/tauri-plugin-mihomo/tar.gz/dcb6b5a6753233422e7cea23042239c7994c605c}
     version: 0.1.0
 
-  terser@5.44.0:
-    resolution: {integrity: sha512-nIVck8DK+GM/0Frwd+nIhZ84pR/BX7rmXMfYwyg+Sri5oGVE99/E3KvXqpC2xHFxyqXyGHTKBSioxxplrO4I4w==}
+  terser@5.44.1:
+    resolution: {integrity: sha512-t/R3R/n0MSwnnazuPpPNVO60LX0SKL45pyl9YlvxIdkH0Of7D5qM2EVe+yASRIlY5pZ73nclYJfNANGWPwFDZw==}
     engines: {node: '>=10'}
     hasBin: true
 
@@ -4152,8 +4152,8 @@ packages:
     peerDependencies:
       vite: '>=2.6.0'
 
-  vite@7.2.0:
-    resolution: {integrity: sha512-C/Naxf8H0pBx1PA4BdpT+c/5wdqI9ILMdwjSMILw7tVIh3JsxzZqdeTLmmdaoh5MYUEOyBnM9K3o0DzoZ/fe+w==}
+  vite@7.2.1:
+    resolution: {integrity: sha512-qTl3VF7BvOupTR85Zc561sPEgxyUSNSvTQ9fit7DEMP7yPgvvIGm5Zfa1dOM+kOwWGNviK9uFM9ra77+OjK7lQ==}
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
     peerDependencies:
@@ -5481,14 +5481,14 @@ snapshots:
     optionalDependencies:
       '@types/react': 19.2.2
 
-  '@mui/x-data-grid@8.16.0(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react@19.2.0))(@mui/material@7.3.5(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(@mui/system@7.3.5(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)':
+  '@mui/x-data-grid@8.17.0(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react@19.2.0))(@mui/material@7.3.5(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0))(@mui/system@7.3.5(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)':
     dependencies:
       '@babel/runtime': 7.28.4
       '@mui/material': 7.3.5(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@mui/system': 7.3.5(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react@19.2.0))(@types/react@19.2.2)(react@19.2.0)
       '@mui/utils': 7.3.5(@types/react@19.2.2)(react@19.2.0)
-      '@mui/x-internals': 8.16.0(@types/react@19.2.2)(react@19.2.0)
-      '@mui/x-virtualizer': 0.2.6(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
+      '@mui/x-internals': 8.17.0(@types/react@19.2.2)(react@19.2.0)
+      '@mui/x-virtualizer': 0.2.7(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       clsx: 2.1.1
       prop-types: 15.8.1
       react: 19.2.0
@@ -5500,7 +5500,7 @@ snapshots:
     transitivePeerDependencies:
       - '@types/react'
 
-  '@mui/x-internals@8.16.0(@types/react@19.2.2)(react@19.2.0)':
+  '@mui/x-internals@8.17.0(@types/react@19.2.2)(react@19.2.0)':
     dependencies:
       '@babel/runtime': 7.28.4
       '@mui/utils': 7.3.5(@types/react@19.2.2)(react@19.2.0)
@@ -5510,11 +5510,11 @@ snapshots:
     transitivePeerDependencies:
       - '@types/react'
 
-  '@mui/x-virtualizer@0.2.6(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)':
+  '@mui/x-virtualizer@0.2.7(@types/react@19.2.2)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)':
     dependencies:
       '@babel/runtime': 7.28.4
       '@mui/utils': 7.3.5(@types/react@19.2.2)(react@19.2.0)
-      '@mui/x-internals': 8.16.0(@types/react@19.2.2)(react@19.2.0)
+      '@mui/x-internals': 8.17.0(@types/react@19.2.2)(react@19.2.0)
       react: 19.2.0
       react-dom: 19.2.0(react@19.2.0)
     transitivePeerDependencies:
@@ -6160,7 +6160,7 @@ snapshots:
   '@unrs/resolver-binding-win32-x64-msvc@1.11.1':
     optional: true
 
-  '@vitejs/plugin-legacy@7.2.1(terser@5.44.0)(vite@7.2.0(@types/node@24.10.0)(jiti@2.6.1)(sass@1.93.3)(terser@5.44.0)(yaml@2.8.1))':
+  '@vitejs/plugin-legacy@7.2.1(terser@5.44.1)(vite@7.2.1(@types/node@24.10.0)(jiti@2.6.1)(sass@1.93.3)(terser@5.44.1)(yaml@2.8.1))':
     dependencies:
       '@babel/core': 7.28.4
       '@babel/plugin-transform-dynamic-import': 7.27.1(@babel/core@7.28.4)
@@ -6174,16 +6174,16 @@ snapshots:
       magic-string: 0.30.19
       regenerator-runtime: 0.14.1
       systemjs: 6.15.1
-      terser: 5.44.0
-      vite: 7.2.0(@types/node@24.10.0)(jiti@2.6.1)(sass@1.93.3)(terser@5.44.0)(yaml@2.8.1)
+      terser: 5.44.1
+      vite: 7.2.1(@types/node@24.10.0)(jiti@2.6.1)(sass@1.93.3)(terser@5.44.1)(yaml@2.8.1)
     transitivePeerDependencies:
       - supports-color
 
-  '@vitejs/plugin-react-swc@4.2.1(vite@7.2.0(@types/node@24.10.0)(jiti@2.6.1)(sass@1.93.3)(terser@5.44.0)(yaml@2.8.1))':
+  '@vitejs/plugin-react-swc@4.2.1(vite@7.2.1(@types/node@24.10.0)(jiti@2.6.1)(sass@1.93.3)(terser@5.44.1)(yaml@2.8.1))':
     dependencies:
       '@rolldown/pluginutils': 1.0.0-beta.46
       '@swc/core': 1.14.0
-      vite: 7.2.0(@types/node@24.10.0)(jiti@2.6.1)(sass@1.93.3)(terser@5.44.0)(yaml@2.8.1)
+      vite: 7.2.1(@types/node@24.10.0)(jiti@2.6.1)(sass@1.93.3)(terser@5.44.1)(yaml@2.8.1)
     transitivePeerDependencies:
       - '@swc/helpers'
 
@@ -6196,13 +6196,13 @@ snapshots:
       chai: 6.2.0
       tinyrainbow: 3.0.3
 
-  '@vitest/mocker@4.0.7(vite@7.2.0(@types/node@24.10.0)(jiti@2.6.1)(sass@1.93.3)(terser@5.44.0)(yaml@2.8.1))':
+  '@vitest/mocker@4.0.7(vite@7.2.1(@types/node@24.10.0)(jiti@2.6.1)(sass@1.93.3)(terser@5.44.1)(yaml@2.8.1))':
     dependencies:
       '@vitest/spy': 4.0.7
       estree-walker: 3.0.3
       magic-string: 0.30.19
     optionalDependencies:
-      vite: 7.2.0(@types/node@24.10.0)(jiti@2.6.1)(sass@1.93.3)(terser@5.44.0)(yaml@2.8.1)
+      vite: 7.2.1(@types/node@24.10.0)(jiti@2.6.1)(sass@1.93.3)(terser@5.44.1)(yaml@2.8.1)
 
   '@vitest/pretty-format@4.0.7':
     dependencies:
@@ -8620,7 +8620,7 @@ snapshots:
     dependencies:
       '@tauri-apps/api': 2.9.0
 
-  terser@5.44.0:
+  terser@5.44.1:
     dependencies:
       '@jridgewell/source-map': 0.3.6
       acorn: 8.15.0
@@ -8844,18 +8844,18 @@ snapshots:
     dependencies:
       monaco-editor: 0.54.0
 
-  vite-plugin-svgr@4.5.0(rollup@4.46.2)(typescript@5.9.3)(vite@7.2.0(@types/node@24.10.0)(jiti@2.6.1)(sass@1.93.3)(terser@5.44.0)(yaml@2.8.1)):
+  vite-plugin-svgr@4.5.0(rollup@4.46.2)(typescript@5.9.3)(vite@7.2.1(@types/node@24.10.0)(jiti@2.6.1)(sass@1.93.3)(terser@5.44.1)(yaml@2.8.1)):
     dependencies:
       '@rollup/pluginutils': 5.2.0(rollup@4.46.2)
       '@svgr/core': 8.1.0(typescript@5.9.3)
       '@svgr/plugin-jsx': 8.1.0(@svgr/core@8.1.0(typescript@5.9.3))
-      vite: 7.2.0(@types/node@24.10.0)(jiti@2.6.1)(sass@1.93.3)(terser@5.44.0)(yaml@2.8.1)
+      vite: 7.2.1(@types/node@24.10.0)(jiti@2.6.1)(sass@1.93.3)(terser@5.44.1)(yaml@2.8.1)
     transitivePeerDependencies:
       - rollup
       - supports-color
       - typescript
 
-  vite@7.2.0(@types/node@24.10.0)(jiti@2.6.1)(sass@1.93.3)(terser@5.44.0)(yaml@2.8.1):
+  vite@7.2.1(@types/node@24.10.0)(jiti@2.6.1)(sass@1.93.3)(terser@5.44.1)(yaml@2.8.1):
     dependencies:
       esbuild: 0.25.4
       fdir: 6.5.0(picomatch@4.0.3)
@@ -8868,13 +8868,13 @@ snapshots:
       fsevents: 2.3.3
       jiti: 2.6.1
       sass: 1.93.3
-      terser: 5.44.0
+      terser: 5.44.1
       yaml: 2.8.1
 
-  vitest@4.0.7(@types/debug@4.1.12)(@types/node@24.10.0)(jiti@2.6.1)(sass@1.93.3)(terser@5.44.0)(yaml@2.8.1):
+  vitest@4.0.7(@types/debug@4.1.12)(@types/node@24.10.0)(jiti@2.6.1)(sass@1.93.3)(terser@5.44.1)(yaml@2.8.1):
     dependencies:
       '@vitest/expect': 4.0.7
-      '@vitest/mocker': 4.0.7(vite@7.2.0(@types/node@24.10.0)(jiti@2.6.1)(sass@1.93.3)(terser@5.44.0)(yaml@2.8.1))
+      '@vitest/mocker': 4.0.7(vite@7.2.1(@types/node@24.10.0)(jiti@2.6.1)(sass@1.93.3)(terser@5.44.1)(yaml@2.8.1))
       '@vitest/pretty-format': 4.0.7
       '@vitest/runner': 4.0.7
       '@vitest/snapshot': 4.0.7
@@ -8891,7 +8891,7 @@ snapshots:
       tinyexec: 0.3.2
       tinyglobby: 0.2.15
       tinyrainbow: 3.0.3
-      vite: 7.2.0(@types/node@24.10.0)(jiti@2.6.1)(sass@1.93.3)(terser@5.44.0)(yaml@2.8.1)
+      vite: 7.2.1(@types/node@24.10.0)(jiti@2.6.1)(sass@1.93.3)(terser@5.44.1)(yaml@2.8.1)
       why-is-node-running: 2.3.0
     optionalDependencies:
       '@types/debug': 4.1.12

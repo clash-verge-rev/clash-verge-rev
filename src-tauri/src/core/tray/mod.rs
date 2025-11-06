@@ -24,8 +24,6 @@ use futures::future::join_all;
 use parking_lot::Mutex;
 use smartstring::alias::String;
 use std::collections::HashMap;
-use std::future::Future;
-use std::pin::Pin;
 use std::sync::Arc;
 use std::{
     sync::atomic::{AtomicBool, Ordering},
@@ -56,18 +54,17 @@ fn get_tray_click_debounce() -> &'static Mutex<Instant> {
 
 fn should_handle_tray_click() -> bool {
     let debounce_lock = get_tray_click_debounce();
-    let mut last_click = debounce_lock.lock();
     let now = Instant::now();
 
-    if now.duration_since(*last_click) >= Duration::from_millis(TRAY_CLICK_DEBOUNCE_MS) {
-        *last_click = now;
+    if now.duration_since(*debounce_lock.lock()) >= Duration::from_millis(TRAY_CLICK_DEBOUNCE_MS) {
+        *debounce_lock.lock() = now;
         true
     } else {
         logging!(
             debug,
             Type::Tray,
             "托盘点击被防抖机制忽略，距离上次点击 {}ms",
-            now.duration_since(*last_click).as_millis()
+            now.duration_since(*debounce_lock.lock()).as_millis()
         );
         false
     }
@@ -199,7 +196,7 @@ impl TrayState {
 
 impl Default for Tray {
     fn default() -> Self {
-        Tray {
+        Self {
             last_menu_update: Mutex::new(None),
             menu_updating: AtomicBool::new(false),
         }
@@ -551,49 +548,34 @@ impl Tray {
         let tray = builder.build(app_handle)?;
 
         tray.on_tray_icon_event(|_app_handle, event| {
-            // 忽略移动、进入和离开等无需处理的事件，避免不必要的刷新
-            match event {
-                TrayIconEvent::Move { .. }
-                | TrayIconEvent::Enter { .. }
-                | TrayIconEvent::Leave { .. } => {
-                    return;
-                }
-                _ => {}
-            }
+            if let TrayIconEvent::Click {
+                button: MouseButton::Left,
+                button_state: MouseButtonState::Down,
+                ..
+            } = event
+            {
+                AsyncHandler::spawn(|| async move {
+                    let tray_event = { Config::verge().await.latest_arc().tray_event.clone() };
+                    let tray_event: String = tray_event.unwrap_or_else(|| "main_window".into());
+                    logging!(debug, Type::Tray, "tray event: {tray_event:?}");
 
-            AsyncHandler::spawn(|| async move {
-                let tray_event = { Config::verge().await.latest_arc().tray_event.clone() };
-                let tray_event: String = tray_event.unwrap_or_else(|| "main_window".into());
-                logging!(debug, Type::Tray, "tray event: {tray_event:?}");
-
-                if let TrayIconEvent::Click {
-                    button: MouseButton::Left,
-                    button_state: MouseButtonState::Down,
-                    ..
-                } = event
-                {
                     // 添加防抖检查，防止快速连击
                     if !should_handle_tray_click() {
                         return;
                     }
 
-                    let fut: Pin<Box<dyn Future<Output = ()> + Send>> = match tray_event.as_str() {
-                        "system_proxy" => Box::pin(async move {
-                            feat::toggle_system_proxy().await;
-                        }),
-                        "tun_mode" => Box::pin(async move {
-                            feat::toggle_tun_mode(None).await;
-                        }),
-                        "main_window" => Box::pin(async move {
+                    match tray_event.as_str() {
+                        "system_proxy" => feat::toggle_system_proxy().await,
+                        "tun_mode" => feat::toggle_tun_mode(None).await,
+                        "main_window" => {
                             if !lightweight::exit_lightweight_mode().await {
                                 WindowManager::show_main_window().await;
                             };
-                        }),
-                        _ => Box::pin(async move {}),
+                        }
+                        _ => {}
                     };
-                    fut.await;
-                }
-            });
+                });
+            }
         });
         tray.on_menu_event(on_menu_event);
         Ok(())
