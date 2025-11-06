@@ -928,9 +928,7 @@ function loadLocales() {
       try {
         data[file.namespace] = JSON.parse(raw);
       } catch (error) {
-        console.warn(
-          `Warning: failed to parse ${file.path}: ${error.message}`,
-        );
+        console.warn(`Warning: failed to parse ${file.path}: ${error.message}`);
         data[file.namespace] = {};
       }
     }
@@ -983,9 +981,8 @@ function toModuleIdentifier(namespace, seen) {
   ]);
 
   const base =
-    namespace
-      .replace(/[^a-zA-Z0-9_$]/g, "_")
-      .replace(/^[^a-zA-Z_$]+/, "") || "ns";
+    namespace.replace(/[^a-zA-Z0-9_$]/g, "_").replace(/^[^a-zA-Z_$]+/, "") ||
+    "ns";
 
   let candidate = base;
   let counter = 1;
@@ -1142,10 +1139,7 @@ function processLocale(
 
   return {
     locale: locale.name,
-    file:
-      locale.format === "single-file"
-        ? locale.files[0].path
-        : locale.dir,
+    file: locale.format === "single-file" ? locale.files[0].path : locale.dir,
     totalKeys: flattened.size,
     expectedKeys: expectedTotal,
     unusedKeys: unused,

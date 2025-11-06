@@ -16,7 +16,14 @@ async function ensureDir(dirPath) {
   await fs.mkdir(dirPath, { recursive: true });
 }
 
-const RESERVED = new Set(["default", "function", "var", "let", "const", "import"]);
+const RESERVED = new Set([
+  "default",
+  "function",
+  "var",
+  "let",
+  "const",
+  "import",
+]);
 
 function toIdentifier(namespace, taken) {
   let base = namespace
@@ -61,11 +68,7 @@ async function splitLocaleFile(filePath, lang) {
   const taken = new Set();
 
   for (const [namespace, value] of namespaces) {
-    if (
-      typeof value !== "object" ||
-      value === null ||
-      Array.isArray(value)
-    ) {
+    if (typeof value !== "object" || value === null || Array.isArray(value)) {
       throw new Error(
         `Locale ${lang} namespace "${namespace}" must be an object`,
       );
