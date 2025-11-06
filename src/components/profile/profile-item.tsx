@@ -36,6 +36,7 @@ import {
 } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
 import { useLoadingCache, useSetLoadingCache } from "@/services/states";
+import type { TranslationKey } from "@/types/generated/i18n-keys";
 import parseTraffic from "@/utils/parse-traffic";
 
 import { ProfileBox } from "./profile-box";
@@ -372,7 +373,7 @@ export const ProfileItem = (props: Props) => {
     disabled: boolean;
   };
 
-  const menuLabels = {
+  const menuLabels: Record<string, TranslationKey> = {
     home: "profiles.components.menu.home",
     select: "profiles.components.menu.select",
     editInfo: "profiles.components.menu.editInfo",

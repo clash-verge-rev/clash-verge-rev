@@ -8,6 +8,7 @@ import {
   hideNotice,
   getSnapshotNotices,
 } from "@/services/noticeService";
+import type { TranslationKey } from "@/types/generated/i18n-keys";
 
 export const NoticeManager: React.FC = () => {
   const { t } = useTranslation();
@@ -85,7 +86,7 @@ export const NoticeManager: React.FC = () => {
 
                   const resolvedPrefix =
                     typeof prefixKey === "string"
-                      ? t(prefixKey, {
+                      ? t(prefixKey as TranslationKey, {
                           defaultValue: prefixKey,
                           ...(prefixKeyParams ?? {}),
                         })
@@ -110,7 +111,7 @@ export const NoticeManager: React.FC = () => {
                         ? message
                         : undefined;
 
-                  return t(notice.i18n.key, {
+                  return t(notice.i18n.key as TranslationKey, {
                     defaultValue,
                     ...finalParams,
                   });
