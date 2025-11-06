@@ -81,6 +81,7 @@
       "importSuccess": "匯入設定檔成功",
       "importSubscriptionSuccess": "匯入訂閱成功",
       "importWithClashProxy": "使用 Clash 代理匯入訂閱成功",
+      "updateAvailable": "有可用更新",
       "saved": "儲存成功",
       "common": {
         "copySuccess": "複製成功",

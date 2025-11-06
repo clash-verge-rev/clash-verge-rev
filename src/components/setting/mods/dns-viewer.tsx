@@ -424,7 +424,7 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
       skipYamlSyncRef.current = true;
       updateValuesFromConfig(parsedYaml);
     } catch {
-      showNotice.error("Invalid YAML format");
+      showNotice.error("settings.modals.dns.errors.invalidYaml");
     }
   }, [yamlContent, updateValuesFromConfig]);
 

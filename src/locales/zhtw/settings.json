@@ -498,7 +498,8 @@
         "configError": "DNS 設定錯誤："
       },
       "errors": {
-        "invalid": "Invalid configuration"
+        "invalid": "Invalid configuration",
+        "invalidYaml": "YAML 格式無效"
       }
     },
     "webUI": {

@@ -175,10 +175,10 @@ export const SystemInfoCard = () => {
       const info = await checkUpdate();
       if (!info?.available) {
         showNotice.success(
-          t("settings.components.verge.advanced.notifications.latestVersion"),
+          "settings.components.verge.advanced.notifications.latestVersion",
         );
       } else {
-        showNotice.info("Update Available", 2000);
+        showNotice.info("shared.feedback.notifications.updateAvailable", 2000);
         goToSettings();
       }
     } catch (err) {
