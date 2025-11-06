@@ -22,11 +22,11 @@ pub struct Config {
 }
 
 impl Config {
-    pub async fn global() -> &'static Config {
+    pub async fn global() -> &'static Self {
         static CONFIG: OnceCell<Config> = OnceCell::const_new();
         CONFIG
             .get_or_init(|| async {
-                Config {
+                Self {
                     clash_config: Draft::new(IClashTemp::new().await),
                     verge_config: Draft::new(IVerge::new().await),
                     profiles_config: Draft::new(IProfiles::new().await),
@@ -60,7 +60,7 @@ impl Config {
         if !cmd::system::is_admin().unwrap_or_default()
             && service::is_service_available().await.is_err()
         {
-            let verge = Config::verge().await;
+            let verge = Self::verge().await;
             verge.edit_draft(|d| {
                 d.enable_tun_mode = Some(false);
             });
@@ -68,7 +68,7 @@ impl Config {
             let _ = tray::Tray::global().update_menu().await;
 
             // 分离数据获取和异步调用避免Send问题
-            let verge_data = Config::verge().await.latest_arc();
+            let verge_data = Self::verge().await.latest_arc();
             logging_error!(Type::Core, verge_data.save_file().await);
         }
 
@@ -154,7 +154,7 @@ impl Config {
             ConfigType::Check => dirs::app_home_dir()?.join(files::CHECK_CONFIG),
         };
 
-        let runtime = Config::runtime().await;
+        let runtime = Self::runtime().await;
         let runtime_arc = runtime.latest_arc();
         let config = runtime_arc
             .config
@@ -168,7 +168,7 @@ impl Config {
     pub async fn generate() -> Result<()> {
         let (config, exists_keys, logs) = enhance::enhance().await;
 
-        Config::runtime().await.edit_draft(|d| {
+        Self::runtime().await.edit_draft(|d| {
             *d = IRuntime {
                 config: Some(config),
                 exists_keys,
@@ -189,11 +189,11 @@ impl Config {
         };
 
         let operation = || async {
-            if Config::runtime().await.latest_arc().config.is_some() {
+            if Self::runtime().await.latest_arc().config.is_some() {
                 return Ok::<(), BackoffError<anyhow::Error>>(());
             }
 
-            Config::generate().await.map_err(BackoffError::transient)
+            Self::generate().await.map_err(BackoffError::transient)
         };
 
         if let Err(e) = backoff::future::retry(backoff_strategy, operation).await {

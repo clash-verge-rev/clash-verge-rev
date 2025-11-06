@@ -75,7 +75,7 @@ struct ProxyConfig {
 static PROXY_MANAGER: Lazy<EventDrivenProxyManager> = Lazy::new(EventDrivenProxyManager::new);
 
 impl EventDrivenProxyManager {
-    pub fn global() -> &'static EventDrivenProxyManager {
+    pub fn global() -> &'static Self {
         &PROXY_MANAGER
     }
 

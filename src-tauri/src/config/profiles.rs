@@ -87,7 +87,7 @@ impl IProfiles {
     }
 
     /// 只修改current，valid和chain
-    pub fn patch_config(&mut self, patch: &IProfiles) {
+    pub fn patch_config(&mut self, patch: &Self) {
         if self.items.is_none() {
             self.items = Some(vec![]);
         }

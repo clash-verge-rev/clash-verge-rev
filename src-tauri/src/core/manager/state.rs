@@ -62,8 +62,12 @@ impl CoreManager {
                     | tauri_plugin_shell::process::CommandEvent::Stderr(line) => {
                         let mut now = DeferredNow::default();
                         let message = CompactString::from(String::from_utf8_lossy(&line).as_ref());
-                        let w = shared_writer.lock().await;
-                        write_sidecar_log(w, &mut now, Level::Error, &message);
+                        write_sidecar_log(
+                            shared_writer.lock().await,
+                            &mut now,
+                            Level::Error,
+                            &message,
+                        );
                         CLASH_LOGGER.append_log(message).await;
                     }
                     tauri_plugin_shell::process::CommandEvent::Terminated(term) => {
@@ -75,8 +79,12 @@ impl CoreManager {
                         } else {
                             CompactString::from("Process terminated")
                         };
-                        let w = shared_writer.lock().await;
-                        write_sidecar_log(w, &mut now, Level::Info, &message);
+                        write_sidecar_log(
+                            shared_writer.lock().await,
+                            &mut now,
+                            Level::Info,
+                            &message,
+                        );
                         CLASH_LOGGER.clear_logs().await;
                         break;
                     }

@@ -330,7 +330,7 @@ fn process_global_items(
 
     if let ChainType::Script(script) = global_script.data {
         let mut logs = vec![];
-        match use_script(script, config.to_owned(), profile_name.to_owned()) {
+        match use_script(script, config.to_owned(), profile_name) {
             Ok((res_config, res_logs)) => {
                 exists_keys.extend(use_keys(&res_config));
                 config = res_config;

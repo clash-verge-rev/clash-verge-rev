@@ -56,18 +56,17 @@ fn get_tray_click_debounce() -> &'static Mutex<Instant> {
 
 fn should_handle_tray_click() -> bool {
     let debounce_lock = get_tray_click_debounce();
-    let mut last_click = debounce_lock.lock();
     let now = Instant::now();
 
-    if now.duration_since(*last_click) >= Duration::from_millis(TRAY_CLICK_DEBOUNCE_MS) {
-        *last_click = now;
+    if now.duration_since(*debounce_lock.lock()) >= Duration::from_millis(TRAY_CLICK_DEBOUNCE_MS) {
+        *debounce_lock.lock() = now;
         true
     } else {
         logging!(
             debug,
             Type::Tray,
             "托盘点击被防抖机制忽略，距离上次点击 {}ms",
-            now.duration_since(*last_click).as_millis()
+            now.duration_since(*debounce_lock.lock()).as_millis()
         );
         false
     }
@@ -199,7 +198,7 @@ impl TrayState {
 
 impl Default for Tray {
     fn default() -> Self {
-        Tray {
+        Self {
             last_menu_update: Mutex::new(None),
             menu_updating: AtomicBool::new(false),
         }

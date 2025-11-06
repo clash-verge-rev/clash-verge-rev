@@ -28,16 +28,16 @@ pub enum HotkeyFunction {
 impl fmt::Display for HotkeyFunction {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match self {
-            HotkeyFunction::OpenOrCloseDashboard => "open_or_close_dashboard",
-            HotkeyFunction::ClashModeRule => "clash_mode_rule",
-            HotkeyFunction::ClashModeGlobal => "clash_mode_global",
-            HotkeyFunction::ClashModeDirect => "clash_mode_direct",
-            HotkeyFunction::ToggleSystemProxy => "toggle_system_proxy",
-            HotkeyFunction::ToggleTunMode => "toggle_tun_mode",
-            HotkeyFunction::EntryLightweightMode => "entry_lightweight_mode",
-            HotkeyFunction::Quit => "quit",
+            Self::OpenOrCloseDashboard => "open_or_close_dashboard",
+            Self::ClashModeRule => "clash_mode_rule",
+            Self::ClashModeGlobal => "clash_mode_global",
+            Self::ClashModeDirect => "clash_mode_direct",
+            Self::ToggleSystemProxy => "toggle_system_proxy",
+            Self::ToggleTunMode => "toggle_tun_mode",
+            Self::EntryLightweightMode => "entry_lightweight_mode",
+            Self::Quit => "quit",
             #[cfg(target_os = "macos")]
-            HotkeyFunction::Hide => "hide",
+            Self::Hide => "hide",
         };
         write!(f, "{s}")
     }
@@ -48,16 +48,16 @@ impl FromStr for HotkeyFunction {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         match s.trim() {
-            "open_or_close_dashboard" => Ok(HotkeyFunction::OpenOrCloseDashboard),
-            "clash_mode_rule" => Ok(HotkeyFunction::ClashModeRule),
-            "clash_mode_global" => Ok(HotkeyFunction::ClashModeGlobal),
-            "clash_mode_direct" => Ok(HotkeyFunction::ClashModeDirect),
-            "toggle_system_proxy" => Ok(HotkeyFunction::ToggleSystemProxy),
-            "toggle_tun_mode" => Ok(HotkeyFunction::ToggleTunMode),
-            "entry_lightweight_mode" => Ok(HotkeyFunction::EntryLightweightMode),
-            "quit" => Ok(HotkeyFunction::Quit),
+            "open_or_close_dashboard" => Ok(Self::OpenOrCloseDashboard),
+            "clash_mode_rule" => Ok(Self::ClashModeRule),
+            "clash_mode_global" => Ok(Self::ClashModeGlobal),
+            "clash_mode_direct" => Ok(Self::ClashModeDirect),
+            "toggle_system_proxy" => Ok(Self::ToggleSystemProxy),
+            "toggle_tun_mode" => Ok(Self::ToggleTunMode),
+            "entry_lightweight_mode" => Ok(Self::EntryLightweightMode),
+            "quit" => Ok(Self::Quit),
             #[cfg(target_os = "macos")]
-            "hide" => Ok(HotkeyFunction::Hide),
+            "hide" => Ok(Self::Hide),
             _ => bail!("invalid hotkey function: {}", s),
         }
     }
@@ -75,8 +75,8 @@ pub enum SystemHotkey {
 impl fmt::Display for SystemHotkey {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         let s = match self {
-            SystemHotkey::CmdQ => "CMD+Q",
-            SystemHotkey::CmdW => "CMD+W",
+            Self::CmdQ => "CMD+Q",
+            Self::CmdW => "CMD+W",
         };
         write!(f, "{s}")
     }
@@ -86,8 +86,8 @@ impl fmt::Display for SystemHotkey {
 impl SystemHotkey {
     pub fn function(self) -> HotkeyFunction {
         match self {
-            SystemHotkey::CmdQ => HotkeyFunction::Quit,
-            SystemHotkey::CmdW => HotkeyFunction::Hide,
+            Self::CmdQ => HotkeyFunction::Quit,
+            Self::CmdW => HotkeyFunction::Hide,
         }
     }
 }

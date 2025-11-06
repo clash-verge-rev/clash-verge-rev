@@ -47,10 +47,10 @@ enum Operation {
 impl Operation {
     fn timeout(&self) -> u64 {
         match self {
-            Operation::Upload => TIMEOUT_UPLOAD,
-            Operation::Download => TIMEOUT_DOWNLOAD,
-            Operation::List => TIMEOUT_LIST,
-            Operation::Delete => TIMEOUT_DELETE,
+            Self::Upload => TIMEOUT_UPLOAD,
+            Self::Download => TIMEOUT_DOWNLOAD,
+            Self::List => TIMEOUT_LIST,
+            Self::Delete => TIMEOUT_DELETE,
         }
     }
 }
@@ -61,9 +61,9 @@ pub struct WebDavClient {
 }
 
 impl WebDavClient {
-    pub fn global() -> &'static WebDavClient {
+    pub fn global() -> &'static Self {
         static WEBDAV_CLIENT: OnceCell<WebDavClient> = OnceCell::new();
-        WEBDAV_CLIENT.get_or_init(|| WebDavClient {
+        WEBDAV_CLIENT.get_or_init(|| Self {
             config: Arc::new(ArcSwapOption::new(None)),
             clients: Arc::new(ArcSwap::new(Arc::new(HashMap::new()))),
         })

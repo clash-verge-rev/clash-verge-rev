@@ -43,18 +43,20 @@ impl<T: Clone> Draft<T> {
     {
         // 先获得写锁以创建或取出草稿 Arc 的可变引用位置
         let mut guard = self.inner.write();
-        if guard.1.is_none() {
-            // 创建草稿 snapshot（Arc clone，cheap）
-            guard.1 = Some(Arc::clone(&guard.0));
-        }
-        // 此时 guaranteed: guard.1 is Some(Arc<Box<T>>)
-        #[allow(clippy::unwrap_used)]
-        let arc_box = guard.1.as_mut().unwrap();
+        let mut draft_arc = if guard.1.is_none() {
+            Arc::clone(&guard.0)
+        } else {
+            #[allow(clippy::unwrap_used)]
+            guard.1.take().unwrap()
+        };
+        drop(guard);
         // Arc::make_mut: 如果只有一个引用则返回可变引用；否则会克隆底层 Box<T>（要求 T: Clone）
-        let boxed = Arc::make_mut(arc_box); // &mut Box<T>
+        let boxed = Arc::make_mut(&mut draft_arc); // &mut Box<T>
         // 对 Box<T> 解引用得到 &mut T
-
-        f(&mut **boxed)
+        let result = f(&mut **boxed);
+        // 恢复修改后的草稿 Arc
+        self.inner.write().1 = Some(draft_arc);
+        result
     }
 
     /// 将草稿提交到已提交位置（替换），并清除草稿
@@ -90,8 +92,7 @@ impl<T: Clone> Draft<T> {
         let (new_local, res) = f(local).await?;
 
         // 将新的 Box<T> 放到已提交位置（包进 Arc）
-        let mut guard = self.inner.write();
-        guard.0 = Arc::new(new_local);
+        self.inner.write().0 = Arc::new(new_local);
 
         Ok(res)
     }
