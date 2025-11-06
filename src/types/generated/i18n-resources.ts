@@ -752,6 +752,7 @@ export interface TranslationResources {
           };
           errors: {
             invalid: string;
+            invalidYaml: string;
           };
           fields: {
             defaultNameserver: {
@@ -1169,6 +1170,7 @@ export interface TranslationResources {
           importSuccess: string;
           importWithClashProxy: string;
           saved: string;
+          updateAvailable: string;
         };
         validation: {
           config: {
