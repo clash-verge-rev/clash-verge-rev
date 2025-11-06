@@ -214,15 +214,15 @@ impl Hotkey {
             if event.state == ShortcutState::Pressed {
                 logging!(debug, Type::Hotkey, "Hotkey pressed: {:?}", hotkey_event);
                 let hotkey = hotkey_event.key;
-                AsyncHandler::spawn(move || async move {
-                    if hotkey == Code::KeyQ && is_quit {
-                        if let Some(window) = handle::Handle::get_window()
-                            && window.is_focused().unwrap_or(false)
-                        {
-                            logging!(debug, Type::Hotkey, "Executing quit function");
-                            Self::execute_function(function);
-                        }
-                    } else {
+                if hotkey == Code::KeyQ && is_quit {
+                    if let Some(window) = handle::Handle::get_window()
+                        && window.is_focused().unwrap_or(false)
+                    {
+                        logging!(debug, Type::Hotkey, "Executing quit function");
+                        Self::execute_function(function);
+                    }
+                } else {
+                    AsyncHandler::spawn(move || async move {
                         logging!(debug, Type::Hotkey, "Executing function directly");
 
                         let is_enable_global_hotkey = Config::verge()
@@ -242,8 +242,8 @@ impl Hotkey {
                                 Self::execute_function(function);
                             }
                         }
-                    }
-                });
+                    });
+                }
             }
         })?;
 
