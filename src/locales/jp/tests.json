@@ -36,5 +36,17 @@
       "unsupportedRegion": "サポートされていない国/地域",
       "failedNetwork": "Failed (Network Connection)"
     }
+  },
+  "unlock": {
+    "page": {
+      "actions": {
+        "testing": "テスト中..."
+      },
+      "empty": "アンロックテスト項目はありません",
+      "messages": {
+        "detectionTimeout": "Detection timeout or failed"
+      },
+      "title": "ロック解除テスト"
+    }
   }
 }

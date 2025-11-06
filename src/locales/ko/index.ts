@@ -8,20 +8,18 @@ import rules from "./rules.json";
 import settings from "./settings.json";
 import shared from "./shared.json";
 import tests from "./tests.json";
-import unlock from "./unlock.json";
 
 const resources = {
-  shared: shared,
+  connections: connections,
+  home: home,
+  layout: layout,
+  logs: logs,
   profiles: profiles,
   proxies: proxies,
-  connections: connections,
-  tests: tests,
-  logs: logs,
   rules: rules,
-  home: home,
-  unlock: unlock,
   settings: settings,
-  layout: layout,
+  shared: shared,
+  tests: tests,
 };
 
 export default resources;

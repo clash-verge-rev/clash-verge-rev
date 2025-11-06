@@ -36,5 +36,17 @@
       "unsupportedRegion": "不支援的國家/地區",
       "failedNetwork": "測試失敗（網路連線問題）"
     }
+  },
+  "unlock": {
+    "page": {
+      "actions": {
+        "testing": "測試中..."
+      },
+      "empty": "目前沒有解鎖測試項目",
+      "messages": {
+        "detectionTimeout": "檢測逾時或失敗"
+      },
+      "title": "解鎖測試"
+    }
   }
 }

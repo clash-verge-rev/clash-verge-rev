@@ -36,5 +36,17 @@
       "unsupportedRegion": "Unsupported Country/Region",
       "failedNetwork": "Failed (Network Connection)"
     }
+  },
+  "unlock": {
+    "page": {
+      "actions": {
+        "testing": "Testing..."
+      },
+      "empty": "No unlock test items",
+      "messages": {
+        "detectionTimeout": "Detection timeout or failed"
+      },
+      "title": "Unlock Test"
+    }
   }
 }

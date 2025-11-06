@@ -36,5 +36,17 @@
       "unsupportedRegion": "Desteklenmeyen Ülke/Bölge",
       "failedNetwork": "Başarısız (Ağ Bağlantısı)"
     }
+  },
+  "unlock": {
+    "page": {
+      "actions": {
+        "testing": "Test Ediliyor..."
+      },
+      "empty": "No unlock test items",
+      "messages": {
+        "detectionTimeout": "Detection timeout or failed"
+      },
+      "title": "Kilit Açma Testi"
+    }
   }
 }

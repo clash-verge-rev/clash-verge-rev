@@ -36,5 +36,17 @@
       "unsupportedRegion": "不支持的国家/地区",
       "failedNetwork": "测试失败（网络连接问题）"
     }
+  },
+  "unlock": {
+    "page": {
+      "actions": {
+        "testing": "测试中..."
+      },
+      "empty": "暂无解锁测试项目",
+      "messages": {
+        "detectionTimeout": "检测超时或失败"
+      },
+      "title": "解锁测试"
+    }
   }
 }

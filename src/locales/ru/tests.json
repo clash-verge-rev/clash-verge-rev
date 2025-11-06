@@ -36,5 +36,17 @@
       "unsupportedRegion": "Страна/регион не поддерживается",
       "failedNetwork": "Ошибка подключения"
     }
+  },
+  "unlock": {
+    "page": {
+      "actions": {
+        "testing": "Тестирование ..."
+      },
+      "empty": "No unlock test items",
+      "messages": {
+        "detectionTimeout": "Detection timeout or failed"
+      },
+      "title": "Тест доступности веб-сайтов"
+    }
   }
 }
