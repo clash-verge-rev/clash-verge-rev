@@ -88,8 +88,8 @@ export const NoticeManager: React.FC = () => {
                     typeof prefixKey === "string"
                       ? t(prefixKey as TranslationKey, {
                           defaultValue: prefixKey,
-                          ...restParams,
                           ...(prefixKeyParams ?? {}),
+                          ...restParams,
                         })
                       : typeof prefix === "string"
                         ? prefix

@@ -1,9 +1,0 @@
-files:
-  - source: /src/locales/en/*.json
-    translation: /src/locales/%locale_with_underscore%/%original_file_name%
-    preserve_hierarchy: true
-    languages_mapping:
-      locale_with_underscore:
-        zh-CN: zh
-        zh-TW: zhtw
-        ja: jp
