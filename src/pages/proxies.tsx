@@ -170,5 +170,20 @@ const ProxyPage = () => {
     </BasePage>
   );
 };
+proxies:
+  - name: "🇸🇬AWS新加坡02 | 移动联通推荐"
+    type: vless
+    server: pq.aws59.yydjc.top
+    port: 443
+    uuid: 5ff165a3-8c48-49a6-b099-25051909cad9
+    udp: true
+    tls: true
+    skip-cert-verify: false
+    flow: xtls-rprx-vision
+    client-fingerprint: chrome
+    servername: iosapps.itunes.apple.com
+    reality-opts:
+      public-key: mnshlVo5tkzYbmEB9xrgmUHwYETnXLAjjlGAssqaDGI
+      short-id: 436299c6
 
 export default ProxyPage;
