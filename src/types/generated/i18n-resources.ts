@@ -659,6 +659,7 @@ export interface TranslationResources {
       feedback: {
         notifications: {
           clash: {
+            alreadyLatestVersion: string;
             changeFailed: string;
             changeSuccess: string;
             geoDataUpdated: string;

@@ -105,9 +105,9 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
       setUpgrading(false);
       const errMsg = err?.response?.data?.message ?? String(err);
       const showMsg = errMsg.includes("already using latest version")
-        ? "Already Using Latest Core Version"
+        ? t("settings.feedback.notifications.clash.alreadyLatestVersion")
         : errMsg;
-      showNotice.error(showMsg);
+      showNotice.info(showMsg);
     }
   });
 

@@ -544,6 +544,7 @@
       "clash": {
         "restartSuccess": "Clash Çekirdeği Yeniden Başlatıldı",
         "versionUpdated": "Çekirdek Sürümü Güncellendi",
+        "alreadyLatestVersion": "Zaten en yeni çekirdek sürümünü kullanıyorsunuz",
         "changeSuccess": "Çekirdek başarıyla değiştirildi",
         "changeFailed": "Çekirdek değiştirilemedi",
         "geoDataUpdated": "GeoData Güncellendi"

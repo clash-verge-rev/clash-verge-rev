@@ -544,6 +544,7 @@
       "clash": {
         "restartSuccess": "Clash ядросы яңадан башланды",
         "versionUpdated": "Ядро версиясе яңартылды",
+        "alreadyLatestVersion": "Сез инде ядроның соңгы версиясен кулланасыз",
         "changeSuccess": "Ядро уңышлы алыштырылды",
         "changeFailed": "Ядро алыштыру уңышсыз булды",
         "geoDataUpdated": "GeoData яңартылды"

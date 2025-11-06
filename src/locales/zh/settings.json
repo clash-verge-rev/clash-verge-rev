@@ -544,6 +544,7 @@
       "clash": {
         "restartSuccess": "已重启 Clash 内核",
         "versionUpdated": "内核版本已更新",
+        "alreadyLatestVersion": "已经是最新内核版本",
         "changeSuccess": "内核切换成功",
         "changeFailed": "无法切换内核",
         "geoDataUpdated": "已更新 GeoData"

@@ -544,6 +544,7 @@
       "clash": {
         "restartSuccess": "Clash Core Restarted",
         "versionUpdated": "Core Version Updated",
+        "alreadyLatestVersion": "Already Using Latest Core Version",
         "changeSuccess": "Core changed successfully",
         "changeFailed": "Failed to change core",
         "geoDataUpdated": "GeoData Updated"

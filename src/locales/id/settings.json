@@ -544,6 +544,7 @@
       "clash": {
         "restartSuccess": "Core Clash Dimulai Ulang",
         "versionUpdated": "Versi Core Diperbarui",
+        "alreadyLatestVersion": "Sudah menggunakan versi inti terbaru",
         "changeSuccess": "Inti berhasil diubah",
         "changeFailed": "Gagal mengubah inti",
         "geoDataUpdated": "GeoData Diperbarui"

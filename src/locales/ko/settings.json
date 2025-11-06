@@ -544,6 +544,7 @@
       "clash": {
         "restartSuccess": "Clash Core Restarted",
         "versionUpdated": "Core Version Updated",
+        "alreadyLatestVersion": "이미 최신 코어 버전을 사용 중입니다",
         "changeSuccess": "코어 변경 성공",
         "changeFailed": "코어 변경 실패",
         "geoDataUpdated": "GeoData Updated"

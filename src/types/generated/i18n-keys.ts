@@ -602,6 +602,7 @@ export const translationKeys = [
   "settings.modals.networkInterface.fields.macAddress",
   "settings.feedback.notifications.clash.restartSuccess",
   "settings.feedback.notifications.clash.versionUpdated",
+  "settings.feedback.notifications.clash.alreadyLatestVersion",
   "settings.feedback.notifications.clash.changeSuccess",
   "settings.feedback.notifications.clash.changeFailed",
   "settings.feedback.notifications.clash.geoDataUpdated",

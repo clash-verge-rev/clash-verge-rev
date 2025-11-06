@@ -544,6 +544,7 @@
       "clash": {
         "restartSuccess": "Clash-Kern wurde neu gestartet",
         "versionUpdated": "Kernversion wurde aktualisiert",
+        "alreadyLatestVersion": "Bereits die neueste Kernversion in Verwendung",
         "changeSuccess": "Kern erfolgreich gewechselt",
         "changeFailed": "Kernwechsel fehlgeschlagen",
         "geoDataUpdated": "Geo-Daten wurden aktualisiert"

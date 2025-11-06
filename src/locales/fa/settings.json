@@ -544,6 +544,7 @@
       "clash": {
         "restartSuccess": "هسته Clash مجدداً راه‌اندازی شد",
         "versionUpdated": "نسخه هسته به‌روزرسانی شد",
+        "alreadyLatestVersion": "در حال حاضر از آخرین نسخه هسته استفاده می‌کنید",
         "changeSuccess": "هسته با موفقیت تغییر کرد",
         "changeFailed": "تغییر هسته ناموفق بود",
         "geoDataUpdated": "GeoData به‌روزرسانی شد"

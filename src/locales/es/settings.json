@@ -544,6 +544,7 @@
       "clash": {
         "restartSuccess": "Núcleo de Clash reiniciado",
         "versionUpdated": "Versión del núcleo actualizada",
+        "alreadyLatestVersion": "Ya estás utilizando la versión más reciente del núcleo",
         "changeSuccess": "Núcleo cambiado con éxito",
         "changeFailed": "No se pudo cambiar el núcleo",
         "geoDataUpdated": "GeoData actualizado"
