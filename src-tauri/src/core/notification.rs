@@ -1,3 +1,4 @@
+use super::handle::Handle;
 use crate::{
     constants::{retry, timing},
     logging,
@@ -91,22 +92,12 @@ impl NotificationSystem {
     }
 
     fn worker_loop(rx: mpsc::Receiver<FrontendEvent>) {
-        use super::handle::Handle;
-
         let handle = Handle::global();
-
         while !handle.is_exiting() {
-            match rx.recv() {
+            match rx.try_recv() {
                 Ok(event) => Self::process_event(handle, event),
-                Err(e) => {
-                    logging!(
-                        error,
-                        Type::System,
-                        "receive event error, stop notification worker: {}",
-                        e
-                    );
-                    break;
-                }
+                Err(mpsc::TryRecvError::Disconnected) => break,
+                Err(mpsc::TryRecvError::Empty) => break,
             }
         }
     }
