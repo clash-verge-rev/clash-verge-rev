@@ -177,7 +177,7 @@ export const BackupConfigViewer = memo(
               </Grid>
               <Grid size={{ xs: 6 }}>
                 <TextField
-                  label={t("settings.modals.backup.fields.password")}
+                  label={t("shared.labels.password")}
                   type={showPassword ? "text" : "password"}
                   variant="outlined"
                   size="small"

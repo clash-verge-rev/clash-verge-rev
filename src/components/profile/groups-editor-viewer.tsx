@@ -662,11 +662,7 @@ export const GroupsEditorViewer = (props: Props) => {
                   control={control}
                   render={({ field }) => (
                     <Item>
-                      <ListItemText
-                        primary={t(
-                          "profiles.modals.groupsEditor.fields.timeout",
-                        )}
-                      />
+                      <ListItemText primary={t("shared.labels.timeout")} />
                       <TextField
                         autoComplete="new-password"
                         placeholder="5000"

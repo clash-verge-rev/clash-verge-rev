@@ -128,7 +128,7 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
               );
             }}
           >
-            {t("settings.modals.tun.actions.reset")}
+            {t("shared.actions.resetToDefault")}
           </Button>
         </Box>
       }

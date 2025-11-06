@@ -255,11 +255,7 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
         name="name"
         control={control}
         render={({ field }) => (
-          <TextField
-            {...text}
-            {...field}
-            label={t("profiles.modals.profileForm.fields.name")}
-          />
+          <TextField {...text} {...field} label={t("shared.labels.name")} />
         )}
       />
 

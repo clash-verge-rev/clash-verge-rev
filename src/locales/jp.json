@@ -151,8 +151,7 @@
       "importForm": {
         "placeholder": "プロファイルファイルのURL",
         "actions": {
-          "paste": "貼り付け",
-          "clear": "クリア"
+          "paste": "貼り付け"
         }
       },
       "feedback": {
@@ -180,10 +179,6 @@
     "components": {
       "card": {
         "labels": {
-          "from": "から",
-          "updateTime": "更新時間",
-          "usedTotal": "使用済み / 合計",
-          "expireTime": "有効期限",
           "clickToImport": "クリックしてサブスクリプションをインポート"
         }
       },
@@ -236,7 +231,6 @@
         },
         "fields": {
           "type": "タイプ",
-          "name": "名前",
           "description": "説明",
           "subscriptionUrl": "サブスクリプションURL",
           "httpTimeout": "HTTP Request Timeout",
@@ -278,7 +272,6 @@
           "healthCheckUrl": "ヘルスチェックURL",
           "expectedStatus": "期待するステータスコード",
           "interval": "チェック間隔",
-          "timeout": "タイムアウト時間",
           "maxFailedTimes": "最大失敗回数",
           "interfaceName": "出力インターフェース",
           "routingMark": "ルーティングマーク",
@@ -357,7 +350,6 @@
         "filter": "ノードをフィルタリング"
       },
       "placeholders": {
-        "filter": "フィルタリング条件",
         "delayCheckUrl": "遅延テストURL"
       },
       "chain": {
@@ -414,8 +406,6 @@
     "components": {
       "fields": {
         "host": "ホスト",
-        "downloaded": "ダウンロード量",
-        "uploaded": "アップロード量",
         "dlSpeed": "ダウンロード速度",
         "ulSpeed": "アップロード速度",
         "chains": "チェーン",
@@ -675,8 +665,6 @@
           "uploadSpeed": "アップロード速度",
           "downloadSpeed": "ダウンロード速度",
           "activeConnections": "アクティブな接続",
-          "uploaded": "アップロード量",
-          "downloaded": "ダウンロード量",
           "memoryUsage": "コアメモリ使用量"
         },
         "legends": {
@@ -847,8 +835,7 @@
         "basic": {
           "title": "Verge基本設定",
           "actions": {
-            "browse": "参照",
-            "clear": "クリア"
+            "browse": "参照"
           },
           "trayOptions": {
             "showMainWindow": "メインウィンドウを表示",
@@ -1009,7 +996,6 @@
         "fields": {
           "webdavUrl": "WebDAVサーバーのURL http(s)://",
           "username": "ユーザー名",
-          "password": "パスワード",
           "info": "Backups are stored locally in the application data directory. Use the list below to restore or delete backups."
         },
         "messages": {
@@ -1111,9 +1097,6 @@
       },
       "tun": {
         "title": "仮想ネットワークカードモード",
-        "actions": {
-          "reset": "デフォルト値にリセット"
-        },
         "fields": {
           "stack": "TUNモードスタック",
           "device": "Device Name",

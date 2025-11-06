@@ -246,7 +246,7 @@ const SettingVergeBasic = ({ onError }: Props) => {
                       patchVerge({ startup_script: "" });
                     }}
                   >
-                    {t("settings.components.verge.basic.actions.clear")}
+                    {t("shared.actions.clear")}
                   </Button>
                 )}
               </>

@@ -151,8 +151,7 @@
       "importForm": {
         "placeholder": "Abonnement-Datei-Link",
         "actions": {
-          "paste": "Einfügen",
-          "clear": "Löschen"
+          "paste": "Einfügen"
         }
       },
       "feedback": {
@@ -180,10 +179,6 @@
     "components": {
       "card": {
         "labels": {
-          "from": "Von",
-          "updateTime": "Aktualisierungszeit",
-          "usedTotal": "Verwendet / Gesamt",
-          "expireTime": "Ablaufzeit",
           "clickToImport": "Klicken Sie hier, um ein Abonnement zu importieren."
         }
       },
@@ -236,7 +231,6 @@
         },
         "fields": {
           "type": "Typ",
-          "name": "Name",
           "description": "Beschreibung",
           "subscriptionUrl": "Abonnement-Link",
           "httpTimeout": "HTTP Request Timeout",
@@ -278,7 +272,6 @@
           "healthCheckUrl": "URL für Gesundheitstest",
           "expectedStatus": "Erwarteter Statuscode",
           "interval": "Prüfintervall",
-          "timeout": "Timeout",
           "maxFailedTimes": "Maximale Anzahl fehlgeschlagener Versuche",
           "interfaceName": "Ausgangsschnittstelle",
           "routingMark": "Routierungsmarkierung",
@@ -357,7 +350,6 @@
         "filter": "Knoten filtern"
       },
       "placeholders": {
-        "filter": "Filterbedingungen",
         "delayCheckUrl": "Latenztest-URL"
       },
       "chain": {
@@ -414,8 +406,6 @@
     "components": {
       "fields": {
         "host": "Host",
-        "downloaded": "Heruntergeladen",
-        "uploaded": "Hochgeladen",
         "dlSpeed": "Download-Geschwindigkeit",
         "ulSpeed": "Upload-Geschwindigkeit",
         "chains": "Ketten",
@@ -675,8 +665,6 @@
           "uploadSpeed": "Upload-Geschwindigkeit",
           "downloadSpeed": "Download-Geschwindigkeit",
           "activeConnections": "Aktive Verbindungen",
-          "uploaded": "Hochgeladen",
-          "downloaded": "Heruntergeladen",
           "memoryUsage": "Kern-Speichernutzung"
         },
         "legends": {
@@ -847,8 +835,7 @@
         "basic": {
           "title": "Verge-Grundeinstellungen",
           "actions": {
-            "browse": "Durchsuchen",
-            "clear": "Löschen"
+            "browse": "Durchsuchen"
           },
           "trayOptions": {
             "showMainWindow": "Hauptfenster anzeigen",
@@ -1009,7 +996,6 @@
         "fields": {
           "webdavUrl": "WebDAV-Serveradresse http(s)://",
           "username": "Benutzername",
-          "password": "Passwort",
           "info": "Backups are stored locally in the application data directory. Use the list below to restore or delete backups."
         },
         "messages": {
@@ -1111,9 +1097,6 @@
       },
       "tun": {
         "title": "Virtual Network Interface-Modus",
-        "actions": {
-          "reset": "Auf Standardwerte zurücksetzen"
-        },
         "fields": {
           "stack": "TUN-Modus-Stack",
           "device": "Device Name",

@@ -151,8 +151,7 @@
       "importForm": {
         "placeholder": "رابط الملف الشخصي",
         "actions": {
-          "paste": "لصق",
-          "clear": "مسح"
+          "paste": "لصق"
         }
       },
       "feedback": {
@@ -180,10 +179,6 @@
     "components": {
       "card": {
         "labels": {
-          "from": "من",
-          "updateTime": "وقت التحديث",
-          "usedTotal": "المستخدم / الإجمالي",
-          "expireTime": "وقت الانتهاء",
           "clickToImport": "Click to import subscription"
         }
       },
@@ -236,7 +231,6 @@
         },
         "fields": {
           "type": "النوع",
-          "name": "الاسم",
           "description": "الوصف",
           "subscriptionUrl": "رابط الاشتراك",
           "httpTimeout": "HTTP Request Timeout",
@@ -278,7 +272,6 @@
           "healthCheckUrl": "رابط فحص الصحة",
           "expectedStatus": "الحالة المتوقعة",
           "interval": "الفاصل الزمني",
-          "timeout": "مهلة",
           "maxFailedTimes": "الحد الأقصى لمحاولات الفشل",
           "interfaceName": "اسم الواجهة",
           "routingMark": "علامة التوجيه",
@@ -357,7 +350,6 @@
         "filter": "تصفية"
       },
       "placeholders": {
-        "filter": "شروط التصفية",
         "delayCheckUrl": "رابط فحص التأخير"
       },
       "chain": {
@@ -414,8 +406,6 @@
     "components": {
       "fields": {
         "host": "المضيف",
-        "downloaded": "تم التنزيل",
-        "uploaded": "تم الرفع",
         "dlSpeed": "سرعة التنزيل",
         "ulSpeed": "سرعة الرفع",
         "chains": "السلاسل",
@@ -675,8 +665,6 @@
           "uploadSpeed": "سرعة الرفع",
           "downloadSpeed": "سرعة التنزيل",
           "activeConnections": "Active Connections",
-          "uploaded": "تم الرفع",
-          "downloaded": "تم التنزيل",
           "memoryUsage": "استهلاك الذاكرة"
         },
         "legends": {
@@ -847,8 +835,7 @@
         "basic": {
           "title": "الإعدادات الأساسية  Verge",
           "actions": {
-            "browse": "استعراض",
-            "clear": "مسح"
+            "browse": "استعراض"
           },
           "trayOptions": {
             "showMainWindow": "إظهار النافذة الرئيسية",
@@ -1009,7 +996,6 @@
         "fields": {
           "webdavUrl": "عنوان خادم WebDAV",
           "username": "اسم المستخدم",
-          "password": "كلمة المرور",
           "info": "Backups are stored locally in the application data directory. Use the list below to restore or delete backups."
         },
         "messages": {
@@ -1111,9 +1097,6 @@
       },
       "tun": {
         "title": "وضع TUN",
-        "actions": {
-          "reset": "إعادة تعيين إلى الافتراضي"
-        },
         "fields": {
           "stack": "مكدس TUN",
           "device": "Device Name",

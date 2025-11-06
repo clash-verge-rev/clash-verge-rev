@@ -151,8 +151,7 @@
       "importForm": {
         "placeholder": "订阅文件链接",
         "actions": {
-          "paste": "粘贴",
-          "clear": "清除"
+          "paste": "粘贴"
         }
       },
       "feedback": {
@@ -180,10 +179,6 @@
     "components": {
       "card": {
         "labels": {
-          "from": "来自",
-          "updateTime": "更新时间",
-          "usedTotal": "已使用 / 总量",
-          "expireTime": "到期时间",
           "clickToImport": "点击导入订阅"
         }
       },
@@ -236,7 +231,6 @@
         },
         "fields": {
           "type": "类型",
-          "name": "名称",
           "description": "描述",
           "subscriptionUrl": "订阅链接",
           "httpTimeout": "HTTP 请求超时",
@@ -278,7 +272,6 @@
           "healthCheckUrl": "健康检查测试地址",
           "expectedStatus": "期望状态码",
           "interval": "检查间隔",
-          "timeout": "超时时间",
           "maxFailedTimes": "最大失败次数",
           "interfaceName": "出站接口",
           "routingMark": "路由标记",
@@ -357,7 +350,6 @@
         "filter": "过滤节点"
       },
       "placeholders": {
-        "filter": "过滤条件",
         "delayCheckUrl": "延迟测试链接"
       },
       "chain": {
@@ -414,8 +406,6 @@
     "components": {
       "fields": {
         "host": "主机",
-        "downloaded": "下载量",
-        "uploaded": "上传量",
         "dlSpeed": "下载速度",
         "ulSpeed": "上传速度",
         "chains": "链路",
@@ -675,8 +665,6 @@
           "uploadSpeed": "上传速度",
           "downloadSpeed": "下载速度",
           "activeConnections": "活跃连接",
-          "uploaded": "上传量",
-          "downloaded": "下载量",
           "memoryUsage": "内核占用"
         },
         "legends": {
@@ -847,8 +835,7 @@
         "basic": {
           "title": "Verge 基础设置",
           "actions": {
-            "browse": "浏览",
-            "clear": "清除"
+            "browse": "浏览"
           },
           "trayOptions": {
             "showMainWindow": "显示主窗口",
@@ -1009,7 +996,6 @@
         "fields": {
           "webdavUrl": "WebDAV 服务器地址 http(s)://",
           "username": "用户名",
-          "password": "密码",
           "info": "在应用数据目录中创建本地备份，您可以通过下方列表进行恢复或删除。"
         },
         "messages": {
@@ -1111,9 +1097,6 @@
       },
       "tun": {
         "title": "虚拟网卡模式",
-        "actions": {
-          "reset": "重置为默认值"
-        },
         "fields": {
           "stack": "TUN 模式堆栈",
           "device": "虚拟网卡名称",

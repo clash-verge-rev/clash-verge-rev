@@ -151,8 +151,7 @@
       "importForm": {
         "placeholder": "Enlace del archivo de suscripción",
         "actions": {
-          "paste": "Pegar",
-          "clear": "Limpiar"
+          "paste": "Pegar"
         }
       },
       "feedback": {
@@ -180,10 +179,6 @@
     "components": {
       "card": {
         "labels": {
-          "from": "De",
-          "updateTime": "Hora de actualización",
-          "usedTotal": "Utilizado / Total",
-          "expireTime": "Tiempo de expiración",
           "clickToImport": "Haga clic para importar una suscripción"
         }
       },
@@ -236,7 +231,6 @@
         },
         "fields": {
           "type": "Tipo",
-          "name": "Nombre",
           "description": "Descripción",
           "subscriptionUrl": "Enlace de suscripción",
           "httpTimeout": "HTTP Request Timeout",
@@ -278,7 +272,6 @@
           "healthCheckUrl": "URL de prueba de salud",
           "expectedStatus": "Código de estado esperado",
           "interval": "Intervalo de comprobación",
-          "timeout": "Tiempo de espera",
           "maxFailedTimes": "Número máximo de fallos",
           "interfaceName": "Nombre de la interfaz de salida",
           "routingMark": "Marca de enrutamiento",
@@ -357,7 +350,6 @@
         "filter": "Filtrar nodos"
       },
       "placeholders": {
-        "filter": "Condiciones de filtrado",
         "delayCheckUrl": "URL de prueba de latencia"
       },
       "chain": {
@@ -414,8 +406,6 @@
     "components": {
       "fields": {
         "host": "Host",
-        "downloaded": "Descargado",
-        "uploaded": "Subido",
         "dlSpeed": "Velocidad de descarga",
         "ulSpeed": "Velocidad de subida",
         "chains": "Cadenas",
@@ -675,8 +665,6 @@
           "uploadSpeed": "Velocidad de subida",
           "downloadSpeed": "Velocidad de descarga",
           "activeConnections": "Conexiones activas",
-          "uploaded": "Subido",
-          "downloaded": "Descargado",
           "memoryUsage": "Uso de memoria del núcleo"
         },
         "legends": {
@@ -847,8 +835,7 @@
         "basic": {
           "title": "Ajustes básicos de Verge",
           "actions": {
-            "browse": "Examinar",
-            "clear": "Limpiar"
+            "browse": "Examinar"
           },
           "trayOptions": {
             "showMainWindow": "Mostrar ventana principal",
@@ -1009,7 +996,6 @@
         "fields": {
           "webdavUrl": "Dirección del servidor WebDAV http(s)://",
           "username": "Nombre de usuario",
-          "password": "Contraseña",
           "info": "Backups are stored locally in the application data directory. Use the list below to restore or delete backups."
         },
         "messages": {
@@ -1111,9 +1097,6 @@
       },
       "tun": {
         "title": "Modo de interfaz virtual (TUN)",
-        "actions": {
-          "reset": "Restablecer a los valores predeterminados"
-        },
         "fields": {
           "stack": "Pila del modo TUN",
           "device": "Device Name",

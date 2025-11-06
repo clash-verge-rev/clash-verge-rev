@@ -151,8 +151,7 @@
       "importForm": {
         "placeholder": "آدرس پروفایل",
         "actions": {
-          "paste": "چسباندن",
-          "clear": "پاک کردن"
+          "paste": "چسباندن"
         }
       },
       "feedback": {
@@ -180,10 +179,6 @@
     "components": {
       "card": {
         "labels": {
-          "from": "از",
-          "updateTime": "زمان به‌روزرسانی",
-          "usedTotal": "استفاده‌شده / کل",
-          "expireTime": "زمان انقضا",
           "clickToImport": "Click to import subscription"
         }
       },
@@ -236,7 +231,6 @@
         },
         "fields": {
           "type": "نوع",
-          "name": "نام",
           "description": "توضیحات",
           "subscriptionUrl": "آدرس اشتراک",
           "httpTimeout": "HTTP Request Timeout",
@@ -278,7 +272,6 @@
           "healthCheckUrl": "آدرس بررسی سلامت",
           "expectedStatus": "وضعیت مورد انتظار",
           "interval": "فاصله زمانی",
-          "timeout": "زمان قطع",
           "maxFailedTimes": "حداکثر تعداد شکست‌ها",
           "interfaceName": "نام رابط",
           "routingMark": "علامت مسیریابی",
@@ -357,7 +350,6 @@
         "filter": "فیلتر"
       },
       "placeholders": {
-        "filter": "شرایط فیلتر",
         "delayCheckUrl": "آدرس بررسی تأخیر"
       },
       "chain": {
@@ -414,8 +406,6 @@
     "components": {
       "fields": {
         "host": "میزبان",
-        "downloaded": "دانلود شده",
-        "uploaded": "بارگذاری شده",
         "dlSpeed": "سرعت دانلود",
         "ulSpeed": "سرعت بارگذاری",
         "chains": "زنجیره‌ها",
@@ -675,8 +665,6 @@
           "uploadSpeed": "سرعت بارگذاری",
           "downloadSpeed": "سرعت دانلود",
           "activeConnections": "Active Connections",
-          "uploaded": "بارگذاری شده",
-          "downloaded": "دانلود شده",
           "memoryUsage": "استفاده از حافظه"
         },
         "legends": {
@@ -847,8 +835,7 @@
         "basic": {
           "title": "تنظیمات پایه Verge",
           "actions": {
-            "browse": "مرور کردن",
-            "clear": "پاک کردن"
+            "browse": "مرور کردن"
           },
           "trayOptions": {
             "showMainWindow": "نمایش پنجره اصلی",
@@ -1009,7 +996,6 @@
         "fields": {
           "webdavUrl": "http(s):// URL سرور WebDAV",
           "username": "نام کاربری",
-          "password": "رمز عبور",
           "info": "Backups are stored locally in the application data directory. Use the list below to restore or delete backups."
         },
         "messages": {
@@ -1111,9 +1097,6 @@
       },
       "tun": {
         "title": "Tun (کارت شبکه مجازی)",
-        "actions": {
-          "reset": "بازنشانی به پیش‌فرض"
-        },
         "fields": {
           "stack": "انباشته Tun",
           "device": "Device Name",

@@ -151,8 +151,7 @@
       "importForm": {
         "placeholder": "URL Profil",
         "actions": {
-          "paste": "Tempel",
-          "clear": "Bersihkan"
+          "paste": "Tempel"
         }
       },
       "feedback": {
@@ -180,10 +179,6 @@
     "components": {
       "card": {
         "labels": {
-          "from": "Dari",
-          "updateTime": "Waktu Pembaruan",
-          "usedTotal": "Digunakan / Total",
-          "expireTime": "Waktu Kedaluwarsa",
           "clickToImport": "Click to import subscription"
         }
       },
@@ -236,7 +231,6 @@
         },
         "fields": {
           "type": "Jenis",
-          "name": "Nama",
           "description": "Deskripsi",
           "subscriptionUrl": "URL Langganan",
           "httpTimeout": "HTTP Request Timeout",
@@ -278,7 +272,6 @@
           "healthCheckUrl": "URL Pemeriksaan Kesehatan",
           "expectedStatus": "Status yang Diharapkan",
           "interval": "Interval",
-          "timeout": "Waktu Habis",
           "maxFailedTimes": "Jumlah Gagal Maksimal",
           "interfaceName": "Nama Antarmuka",
           "routingMark": "Tanda Routing",
@@ -357,7 +350,6 @@
         "filter": "Filter"
       },
       "placeholders": {
-        "filter": "Kondisi Filter",
         "delayCheckUrl": "URL Periksa Keterlambatan"
       },
       "chain": {
@@ -414,8 +406,6 @@
     "components": {
       "fields": {
         "host": "Host",
-        "downloaded": "Diunduh",
-        "uploaded": "Diunggah",
         "dlSpeed": "Kecepatan Unduh",
         "ulSpeed": "Kecepatan Unggah",
         "chains": "Rantai",
@@ -675,8 +665,6 @@
           "uploadSpeed": "Kecepatan Unggah",
           "downloadSpeed": "Kecepatan Unduh",
           "activeConnections": "Active Connections",
-          "uploaded": "Diunggah",
-          "downloaded": "Diunduh",
           "memoryUsage": "Penggunaan Memori"
         },
         "legends": {
@@ -847,8 +835,7 @@
         "basic": {
           "title": "Pengaturan Dasar Verge",
           "actions": {
-            "browse": "Jelajahi",
-            "clear": "Bersihkan"
+            "browse": "Jelajahi"
           },
           "trayOptions": {
             "showMainWindow": "Tampilkan Jendela Utama",
@@ -1009,7 +996,6 @@
         "fields": {
           "webdavUrl": "URL Server WebDAV",
           "username": "Nama Pengguna",
-          "password": "Kata Sandi",
           "info": "Backups are stored locally in the application data directory. Use the list below to restore or delete backups."
         },
         "messages": {
@@ -1111,9 +1097,6 @@
       },
       "tun": {
         "title": "Mode Tun (NIC Virtual)",
-        "actions": {
-          "reset": "Setel Ulang ke Default"
-        },
         "fields": {
           "stack": "Tumpukan Tun",
           "device": "Device Name",

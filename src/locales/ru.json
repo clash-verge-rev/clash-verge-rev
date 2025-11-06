@@ -151,8 +151,7 @@
       "importForm": {
         "placeholder": "URL профиля",
         "actions": {
-          "paste": "Вставить",
-          "clear": "Очистить"
+          "paste": "Вставить"
         }
       },
       "feedback": {
@@ -180,10 +179,6 @@
     "components": {
       "card": {
         "labels": {
-          "from": "От",
-          "updateTime": "Время обновления",
-          "usedTotal": "Использовано / Всего",
-          "expireTime": "Время окончания",
           "clickToImport": "Нажмите, чтобы импортировать подписку"
         }
       },
@@ -236,7 +231,6 @@
         },
         "fields": {
           "type": "Тип",
-          "name": "Название",
           "description": "Описание",
           "subscriptionUrl": "URL подписки",
           "httpTimeout": "HTTP Request Timeout",
@@ -278,7 +272,6 @@
           "healthCheckUrl": "URL проверки здоровья",
           "expectedStatus": "Ожидаемый статус",
           "interval": "Интервал",
-          "timeout": "Таймаут",
           "maxFailedTimes": "Максимальное количество неудач",
           "interfaceName": "Имя интерфейса",
           "routingMark": "Марка маршрутизации",
@@ -357,7 +350,6 @@
         "filter": "Фильтр"
       },
       "placeholders": {
-        "filter": "Условия фильтрации",
         "delayCheckUrl": "URL проверки задержки"
       },
       "chain": {
@@ -414,8 +406,6 @@
     "components": {
       "fields": {
         "host": "Хост",
-        "downloaded": "Скачано",
-        "uploaded": "Загружено",
         "dlSpeed": "Скорость скачивания",
         "ulSpeed": "Скорость загрузки",
         "chains": "Цепочки",
@@ -675,8 +665,6 @@
           "uploadSpeed": "Скорость загрузки",
           "downloadSpeed": "Скорость скачивания",
           "activeConnections": "Активные соединения",
-          "uploaded": "Загружено",
-          "downloaded": "Скачано",
           "memoryUsage": "Использование памяти"
         },
         "legends": {
@@ -847,8 +835,7 @@
         "basic": {
           "title": "Основные настройки Verge",
           "actions": {
-            "browse": "Просмотреть",
-            "clear": "Очистить"
+            "browse": "Просмотреть"
           },
           "trayOptions": {
             "showMainWindow": "Показать главное окно",
@@ -1009,7 +996,6 @@
         "fields": {
           "webdavUrl": "URL-адрес сервера WebDAV http(s)://",
           "username": "Имя пользователя",
-          "password": "Пароль",
           "info": "Backups are stored locally in the application data directory. Use the list below to restore or delete backups."
         },
         "messages": {
@@ -1111,9 +1097,6 @@
       },
       "tun": {
         "title": "Режим TUN",
-        "actions": {
-          "reset": "Сбросить настройки"
-        },
         "fields": {
           "stack": "Стек",
           "device": "Device Name",

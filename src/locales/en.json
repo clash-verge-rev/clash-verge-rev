@@ -151,8 +151,7 @@
       "importForm": {
         "placeholder": "Profile URL",
         "actions": {
-          "paste": "Paste",
-          "clear": "Clear"
+          "paste": "Paste"
         }
       },
       "feedback": {
@@ -180,10 +179,6 @@
     "components": {
       "card": {
         "labels": {
-          "from": "From",
-          "updateTime": "Update Time",
-          "usedTotal": "Used / Total",
-          "expireTime": "Expire Time",
           "clickToImport": "Click to import subscription"
         }
       },
@@ -236,7 +231,6 @@
         },
         "fields": {
           "type": "Type",
-          "name": "Name",
           "description": "Descriptions",
           "subscriptionUrl": "Subscription URL",
           "httpTimeout": "HTTP Request Timeout",
@@ -278,7 +272,6 @@
           "healthCheckUrl": "Health Check Url",
           "expectedStatus": "Expected Status",
           "interval": "Interval",
-          "timeout": "Timeout",
           "maxFailedTimes": "Max Failed Times",
           "interfaceName": "Interface Name",
           "routingMark": "Routing Mark",
@@ -357,7 +350,6 @@
         "filter": "Filter"
       },
       "placeholders": {
-        "filter": "Filter conditions",
         "delayCheckUrl": "Delay check URL"
       },
       "chain": {
@@ -414,8 +406,6 @@
     "components": {
       "fields": {
         "host": "Host",
-        "downloaded": "Downloaded",
-        "uploaded": "Uploaded",
         "dlSpeed": "DL Speed",
         "ulSpeed": "UL Speed",
         "chains": "Chains",
@@ -675,8 +665,6 @@
           "uploadSpeed": "Upload Speed",
           "downloadSpeed": "Download Speed",
           "activeConnections": "Active Connections",
-          "uploaded": "Uploaded",
-          "downloaded": "Downloaded",
           "memoryUsage": "Core Usage"
         },
         "legends": {
@@ -847,8 +835,7 @@
         "basic": {
           "title": "Verge Basic Setting",
           "actions": {
-            "browse": "Browse",
-            "clear": "Clear"
+            "browse": "Browse"
           },
           "trayOptions": {
             "showMainWindow": "Show Main Window",
@@ -1009,7 +996,6 @@
         "fields": {
           "webdavUrl": "WebDAV Server URL",
           "username": "Username",
-          "password": "Password",
           "info": "Backups are stored locally in the application data directory. Use the list below to restore or delete backups."
         },
         "messages": {
@@ -1111,9 +1097,6 @@
       },
       "tun": {
         "title": "Tun Mode",
-        "actions": {
-          "reset": "Reset to Default"
-        },
         "fields": {
           "stack": "Tun Stack",
           "device": "Device Name",

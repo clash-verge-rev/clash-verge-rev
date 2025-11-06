@@ -956,7 +956,7 @@ const ProfilePage = () => {
                 <IconButton
                   size="small"
                   sx={{ p: 0.5 }}
-                  title={t("profiles.page.importForm.actions.clear")}
+                  title={t("shared.actions.clear")}
                   onClick={() => setUrl("")}
                 >
                   <ClearRounded fontSize="inherit" />

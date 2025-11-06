@@ -160,7 +160,7 @@ export const ProxyHead = ({
           value={filterText}
           size="small"
           variant="outlined"
-          placeholder={t("proxies.page.placeholders.filter")}
+          placeholder={t("shared.placeholders.filter")}
           onChange={(e) => onHeadState({ filterText: e.target.value })}
           sx={{ ml: 0.5, flex: "1 1 auto", input: { py: 0.65, px: 1 } }}
         />

@@ -431,7 +431,7 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
               }}
             >
               {verge?.common_tray_icon
-                ? t("settings.components.verge.basic.actions.clear")
+                ? t("shared.actions.clear")
                 : t("settings.components.verge.basic.actions.browse")}
             </Button>
           </GuardState>
@@ -483,7 +483,7 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
               }}
             >
               {verge?.sysproxy_tray_icon
-                ? t("settings.components.verge.basic.actions.clear")
+                ? t("shared.actions.clear")
                 : t("settings.components.verge.basic.actions.browse")}
             </Button>
           </GuardState>
@@ -531,7 +531,7 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
               }}
             >
               {verge?.tun_tray_icon
-                ? t("settings.components.verge.basic.actions.clear")
+                ? t("shared.actions.clear")
                 : t("settings.components.verge.basic.actions.browse")}
             </Button>
           </GuardState>

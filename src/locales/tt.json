@@ -151,8 +151,7 @@
       "importForm": {
         "placeholder": "Профиль URL-ы",
         "actions": {
-          "paste": "Кую",
-          "clear": "Чистарту"
+          "paste": "Кую"
         }
       },
       "feedback": {
@@ -180,10 +179,6 @@
     "components": {
       "card": {
         "labels": {
-          "from": "Каян",
-          "updateTime": "Яңарту вакыты",
-          "usedTotal": "Кулланылган / Барлыгы",
-          "expireTime": "Тамамлану вакыты",
           "clickToImport": "Click to import subscription"
         }
       },
@@ -236,7 +231,6 @@
         },
         "fields": {
           "type": "Төр",
-          "name": "Исем",
           "description": "Тасвирламалар",
           "subscriptionUrl": "Подписка URL-ы",
           "httpTimeout": "HTTP Request Timeout",
@@ -278,7 +272,6 @@
           "healthCheckUrl": "Сәламәтлекне тикшерү URL-ы",
           "expectedStatus": "Көтелгән статус коды",
           "interval": "Интервал",
-          "timeout": "Таймаут",
           "maxFailedTimes": "Иң күп хаталы тикшерү саны",
           "interfaceName": "Интерфейс исеме",
           "routingMark": "Маршрут билгесе",
@@ -357,7 +350,6 @@
         "filter": "Фильтр"
       },
       "placeholders": {
-        "filter": "Фильтр шартлары",
         "delayCheckUrl": "Задержканы тикшерү URL-ы"
       },
       "chain": {
@@ -414,8 +406,6 @@
     "components": {
       "fields": {
         "host": "Хост",
-        "downloaded": "Йөкләнгән",
-        "uploaded": "Чыгарылган",
         "dlSpeed": "Йөкләү тизл.",
         "ulSpeed": "Чыгару тизл.",
         "chains": "Чылбырлар",
@@ -675,8 +665,6 @@
           "uploadSpeed": "Йөкләү (чыгару) тизлеге",
           "downloadSpeed": "Йөкләү тизлеге",
           "activeConnections": "Active Connections",
-          "uploaded": "Чыгарылган",
-          "downloaded": "Йөкләнгән",
           "memoryUsage": "Хәтер куллану"
         },
         "legends": {
@@ -847,8 +835,7 @@
         "basic": {
           "title": "Verge Төп көйләүләр",
           "actions": {
-            "browse": "Карау",
-            "clear": "Чистарту"
+            "browse": "Карау"
           },
           "trayOptions": {
             "showMainWindow": "Төп тәрәзәне күрсәтү",
@@ -1009,7 +996,6 @@
         "fields": {
           "webdavUrl": "WebDAV сервер URL-ы (http(s)://)",
           "username": "Кулланучы исеме",
-          "password": "Пароль",
           "info": "Backups are stored locally in the application data directory. Use the list below to restore or delete backups."
         },
         "messages": {
@@ -1111,9 +1097,6 @@
       },
       "tun": {
         "title": "Tun режимы (виртуаль челтәр адаптеры)",
-        "actions": {
-          "reset": "Башлангычка кайтару"
-        },
         "fields": {
           "stack": "Стек",
           "device": "Device Name",

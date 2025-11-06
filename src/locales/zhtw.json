@@ -151,8 +151,7 @@
       "importForm": {
         "placeholder": "訂閱檔網址",
         "actions": {
-          "paste": "貼上",
-          "clear": "清除"
+          "paste": "貼上"
         }
       },
       "feedback": {
@@ -180,10 +179,6 @@
     "components": {
       "card": {
         "labels": {
-          "from": "來自",
-          "updateTime": "更新時間",
-          "usedTotal": "已使用 / 總量",
-          "expireTime": "到期時間",
           "clickToImport": "點擊匯入訂閱"
         }
       },
@@ -236,7 +231,6 @@
         },
         "fields": {
           "type": "類型",
-          "name": "名稱",
           "description": "描述",
           "subscriptionUrl": "訂閱網址",
           "httpTimeout": "HTTP Request Timeout",
@@ -278,7 +272,6 @@
           "healthCheckUrl": "健康檢查網址",
           "expectedStatus": "預期狀態碼",
           "interval": "檢查間隔",
-          "timeout": "逾時",
           "maxFailedTimes": "最大失敗次數",
           "interfaceName": "輸出介面",
           "routingMark": "路由標記",
@@ -357,7 +350,6 @@
         "filter": "篩選節點"
       },
       "placeholders": {
-        "filter": "篩選條件",
         "delayCheckUrl": "延遲測試網址"
       },
       "chain": {
@@ -414,8 +406,6 @@
     "components": {
       "fields": {
         "host": "主機",
-        "downloaded": "下載量",
-        "uploaded": "上傳量",
         "dlSpeed": "下載速度",
         "ulSpeed": "上傳速度",
         "chains": "鏈路",
@@ -675,8 +665,6 @@
           "uploadSpeed": "上傳速度",
           "downloadSpeed": "下載速度",
           "activeConnections": "作用中連線",
-          "uploaded": "上傳量",
-          "downloaded": "下載量",
           "memoryUsage": "內核佔用"
         },
         "legends": {
@@ -847,8 +835,7 @@
         "basic": {
           "title": "Verge 基礎設定",
           "actions": {
-            "browse": "瀏覽",
-            "clear": "清除"
+            "browse": "瀏覽"
           },
           "trayOptions": {
             "showMainWindow": "顯示主視窗",
@@ -1009,7 +996,6 @@
         "fields": {
           "webdavUrl": "WebDAV 伺服器位址 http(s)://",
           "username": "使用者名稱",
-          "password": "密碼",
           "info": "在應用程式資料目錄中建立本機備份，您可以透過下方列表進行還原或刪除。"
         },
         "messages": {
@@ -1111,9 +1097,6 @@
       },
       "tun": {
         "title": "虛擬網路介面卡模式",
-        "actions": {
-          "reset": "重設為預設值"
-        },
         "fields": {
           "stack": "虛擬網路介面卡模式堆疊",
           "device": "Device Name",

@@ -151,8 +151,7 @@
       "importForm": {
         "placeholder": "Profil URL'si",
         "actions": {
-          "paste": "Yapıştır",
-          "clear": "Temizle"
+          "paste": "Yapıştır"
         }
       },
       "feedback": {
@@ -180,10 +179,6 @@
     "components": {
       "card": {
         "labels": {
-          "from": "Kaynak",
-          "updateTime": "Güncelleme Zamanı",
-          "usedTotal": "Kullanılan / Toplam",
-          "expireTime": "Sona Erme Zamanı",
           "clickToImport": "Abonelik içe aktarmak için tıklayın"
         }
       },
@@ -236,7 +231,6 @@
         },
         "fields": {
           "type": "Tip",
-          "name": "İsim",
           "description": "Açıklamalar",
           "subscriptionUrl": "Abonelik URL'si",
           "httpTimeout": "HTTP Request Timeout",
@@ -278,7 +272,6 @@
           "healthCheckUrl": "Sağlık Kontrolü URL'si",
           "expectedStatus": "Beklenen Durum",
           "interval": "Aralık",
-          "timeout": "Zaman Aşımı",
           "maxFailedTimes": "Maksimum Başarısız Deneme",
           "interfaceName": "Arayüz Adı",
           "routingMark": "Yönlendirme İşareti",
@@ -357,7 +350,6 @@
         "filter": "Filtre"
       },
       "placeholders": {
-        "filter": "Filtre koşulları",
         "delayCheckUrl": "Gecikme kontrol URL'si"
       },
       "chain": {
@@ -414,8 +406,6 @@
     "components": {
       "fields": {
         "host": "Ana Bilgisayar",
-        "downloaded": "İndirilen",
-        "uploaded": "Yüklenen",
         "dlSpeed": "İndirme Hızı",
         "ulSpeed": "Yükleme Hızı",
         "chains": "Zincirler",
@@ -675,8 +665,6 @@
           "uploadSpeed": "Yükleme Hızı",
           "downloadSpeed": "İndirme Hızı",
           "activeConnections": "Aktif Bağlantılar",
-          "uploaded": "Yüklenen",
-          "downloaded": "İndirilen",
           "memoryUsage": "Çekirdek Kullanımı"
         },
         "legends": {
@@ -847,8 +835,7 @@
         "basic": {
           "title": "Verge Temel Ayarı",
           "actions": {
-            "browse": "Gözat",
-            "clear": "Temizle"
+            "browse": "Gözat"
           },
           "trayOptions": {
             "showMainWindow": "Ana Pencereyi Göster",
@@ -1009,7 +996,6 @@
         "fields": {
           "webdavUrl": "WebDAV Sunucu URL'si",
           "username": "Kullanıcı Adı",
-          "password": "Şifre",
           "info": "Backups are stored locally in the application data directory. Use the list below to restore or delete backups."
         },
         "messages": {
@@ -1111,9 +1097,6 @@
       },
       "tun": {
         "title": "Tun Modu",
-        "actions": {
-          "reset": "Varsayılana Sıfırla"
-        },
         "fields": {
           "stack": "Tun Yığını",
           "device": "Device Name",

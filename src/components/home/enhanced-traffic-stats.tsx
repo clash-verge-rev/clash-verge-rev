@@ -240,14 +240,14 @@ export const EnhancedTrafficStats = () => {
       },
       {
         icon: <CloudUploadRounded fontSize="small" />,
-        title: t("home.components.traffic.metrics.uploaded"),
+        title: t("shared.labels.uploaded"),
         value: parsedData.uploadTotal,
         unit: parsedData.uploadTotalUnit,
         color: "secondary" as const,
       },
       {
         icon: <CloudDownloadRounded fontSize="small" />,
-        title: t("home.components.traffic.metrics.downloaded"),
+        title: t("shared.labels.downloaded"),
         value: parsedData.downloadTotal,
         unit: parsedData.downloadTotalUnit,
         color: "primary" as const,

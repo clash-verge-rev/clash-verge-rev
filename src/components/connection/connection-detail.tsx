@@ -70,11 +70,11 @@ const InnerConnectionDetail = ({ data, onClose }: InnerProps) => {
   const information = [
     { label: t("connections.components.fields.host"), value: host },
     {
-      label: t("connections.components.fields.downloaded"),
+      label: t("shared.labels.downloaded"),
       value: parseTraffic(data.download).join(" "),
     },
     {
-      label: t("connections.components.fields.uploaded"),
+      label: t("shared.labels.uploaded"),
       value: parseTraffic(data.upload).join(" "),
     },
     {

@@ -168,7 +168,7 @@ export const ConnectionTable = (props: Props) => {
       },
       {
         field: "download",
-        headerName: t("connections.components.fields.downloaded"),
+        headerName: t("shared.labels.downloaded"),
         width: columnWidths["download"] || 88,
         align: "right",
         headerAlign: "right",
@@ -176,7 +176,7 @@ export const ConnectionTable = (props: Props) => {
       },
       {
         field: "upload",
-        headerName: t("connections.components.fields.uploaded"),
+        headerName: t("shared.labels.uploaded"),
         width: columnWidths["upload"] || 88,
         align: "right",
         headerAlign: "right",
