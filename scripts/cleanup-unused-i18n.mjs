@@ -10,10 +10,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const LOCALES_DIR = path.resolve(__dirname, "../src/locales");
-const TAURI_LOCALES_DIR = path.resolve(
-  __dirname,
-  "../src-tauri/resources/locales",
-);
+const TAURI_LOCALES_DIR = path.resolve(__dirname, "../src-tauri/locales");
 const DEFAULT_SOURCE_DIRS = [
   path.resolve(__dirname, "../src"),
   path.resolve(__dirname, "../src-tauri"),
