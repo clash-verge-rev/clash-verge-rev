@@ -62,7 +62,7 @@ pub fn use_script(
       });"#,
     ));
 
-    let config = use_lowercase(config.clone());
+    let config = use_lowercase(config);
     let config_str = serde_json::to_string(&config)?;
 
     // 仅处理 name 参数中的特殊字符

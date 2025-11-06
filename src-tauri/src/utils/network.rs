@@ -116,18 +116,15 @@ impl NetworkManager {
         accept_invalid_certs: bool,
         timeout_secs: Option<u64>,
     ) -> Result<HttpClient> {
-        let proxy_uri_clone = proxy_uri.clone();
-        let headers_clone = default_headers.clone();
-
         {
             let mut builder = HttpClient::builder();
 
-            builder = match proxy_uri_clone {
+            builder = match proxy_uri {
                 Some(uri) => builder.proxy(Some(uri)),
                 None => builder.proxy(None),
             };
 
-            for (name, value) in headers_clone.iter() {
+            for (name, value) in default_headers.iter() {
                 builder = builder.default_header(name, value);
             }
 

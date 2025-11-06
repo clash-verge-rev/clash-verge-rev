@@ -35,7 +35,6 @@ pub(super) async fn resolve_scheme(param: &str) -> Result<()> {
                 .query_pairs()
                 .find(|(key, _)| key == "name")
                 .map(|(_, value)| value.into_owned().into());
-            let name = name_owned.to_owned();
 
             let url_param = if let Some(query) = link_parsed.query() {
                 let prefix = "url=";
@@ -48,7 +47,7 @@ pub(super) async fn resolve_scheme(param: &str) -> Result<()> {
             } else {
                 None
             };
-            (url_param, name)
+            (url_param, name_owned)
         } else {
             (None, None)
         };
