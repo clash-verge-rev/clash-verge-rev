@@ -1,125 +1,79 @@
 # CONTRIBUTING — i18n
 
-Thank you for contributing to Clash Verge Rev localization! This guide reflects the current project layout and tooling so you can land translation improvements smoothly.
+Thanks for helping localize Clash Verge Rev. This guide reflects the current architecture, where the React frontend and the Tauri backend keep their translation bundles separate. Follow the steps below to keep both sides in sync without stepping on each other.
 
 ## Quick workflow
 
-- Focus fixes on the language folders inside `src/locales/<lang>/` and use `src/locales/en/` as the baseline for key shape and intent.
-- Keep pull requests small and open draft PRs early if you would like feedback.
-- Run `pnpm format:i18n` to align JSON structure and `pnpm i18n:types` to refresh generated typings before pushing.
-- Preview changes with `pnpm dev` (desktop shell) or `pnpm web:dev` (web only) to verify context and layout.
-- Report missing context, untranslated UI strings, or script bugs via issues so we can track them.
+- Update the language folder under `src/locales/<lang>/`; use `src/locales/en/` as the canonical reference for keys and intent.
+- Run `pnpm format:i18n` to align structure and `pnpm i18n:types` to refresh generated typings.
+- If you touch backend copy, edit the matching YAML file in `src-tauri/locales/<lang>.yml`.
+- Preview UI changes with `pnpm dev` (desktop shell) or `pnpm web:dev` (web only).
+- Keep PRs focused and add screenshots whenever layout could be affected by text length.
 
-## Locale layout
+## Frontend locale structure
 
-Every language lives in its own directory:
+Each locale folder mirrors the namespaces under `src/locales/en/`:
 
 ```
 src/locales/
   en/
     connections.json
     home.json
-    …
     shared.json
-    tests.json
+    ...
     index.ts
   zh/
-    …
+    ...
 ```
 
-- Each JSON file maps to a namespace (`home` → `home.*`, `shared` → `shared.*`, etc.). Keep keys scoped to their file.
-- `shared.json` stores reusable copy (buttons, labels, validation messages). Feature-specific content remains in the relevant namespace file (`profiles.json`, `settings.json`, …).
-- `index.ts` re-exports a `resources` object that aggregates the namespace JSON. When adding files, mirror the pattern used in `src/locales/en/index.ts`.
-- Do **not** edit `src-tauri/resources/locales`; those files are copied from `src/locales` during packaging by `pnpm prebuild`.
-- Rust/Tauri uses a separate set of YAML bundles in `src-tauri/locales/` for system tray text and native notifications. Update those when backend-facing strings change.
+- JSON files map to namespaces (for example `home.json` → `home.*`). Keep keys scoped to the file they belong to.
+- `shared.json` stores reusable vocabulary (buttons, validations, etc.); feature-specific wording should live in the relevant namespace.
+- `index.ts` re-exports a `resources` object that aggregates the namespace JSON files. When adding or removing namespaces, mirror the pattern from `src/locales/en/index.ts`.
+- Frontend bundles are lazy-loaded by `src/services/i18n.ts`. Only languages listed in `supportedLanguages` are fetched at runtime, so append new codes there when you add a locale.
 
-## Locale maintenance script
+Because backend translations now live in their own directory, you no longer need to run `pnpm prebuild` just to sync locales—the frontend folder is the sole source of truth for web bundles.
 
-The repository ships with `scripts/cleanup-unused-i18n.mjs`, a TypeScript-aware analyzer that:
+## Tooling for frontend contributors
 
-- Scans `src/` and `src-tauri/` for `t("...")` usage (including dynamic prefixes) to determine which keys are referenced.
-- Compares locales to the baseline (`en`) to list missing or extra keys.
-- Optionally removes unused keys and aligns key ordering/structure.
-- Emits optional JSON reports for CI or manual review.
+- `pnpm format:i18n` → `node scripts/cleanup-unused-i18n.mjs --align --apply`. It aligns key ordering, removes unused entries, and keeps all locales in lock-step with English.
+- `pnpm node scripts/cleanup-unused-i18n.mjs` (without flags) performs a dry-run audit. Use it to inspect missing or extra keys before committing.
+- `pnpm i18n:types` regenerates `src/types/generated/i18n-keys.ts` and `src/types/generated/i18n-resources.ts`, ensuring TypeScript catches invalid key usage.
+- For dynamic keys that the analyzer cannot statically detect, add explicit references in code or update the script whitelist to avoid false positives.
 
-### Typical commands
+## Backend (Tauri) locale bundles
 
-```bash
-# Dry-run audit (recommended before opening a PR)
-pnpm node scripts/cleanup-unused-i18n.mjs
+Native UI strings (tray menu, notifications, dialogs) use `rust-i18n` with YAML bundles stored in `src-tauri/locales/<lang>.yml`. These files are completely independent from the frontend JSON modules.
 
-# Apply removals and align to the baseline structure (same as pnpm format:i18n)
-pnpm node scripts/cleanup-unused-i18n.mjs --apply --align
-
-# Generate a machine-readable report
-pnpm node scripts/cleanup-unused-i18n.mjs --report ./i18n-report.json
-```
-
-Aliases and flags:
-
-- `pnpm format:i18n` → `node scripts/cleanup-unused-i18n.mjs --align --apply`
-- `pnpm node scripts/cleanup-unused-i18n.mjs -- --help` shows all options (`--baseline`, `--src`, `--keep-extra`, `--no-backup`, `--report`, `--apply`, `--align`, …).
-
-### Before submitting translations
-
-1. Run the script in dry-run mode to inspect missing/unused keys.
-2. Apply alignment if you added or removed keys so diffs stay minimal.
-3. Review `.bak` backups (generated when `--apply` runs) to ensure important strings were not removed; delete the backups once confirmed.
-4. For dynamic keys, add explicit references in code or update the script whitelist so the analyzer recognizes them.
-
-## Typings & runtime integration
-
-- `pnpm i18n:types` regenerates `src/types/generated/i18n-keys.ts` and `src/types/generated/i18n-resources.ts`. Run it whenever keys change so TypeScript enforces valid usages.
-- Supported runtime languages are defined in `src/services/i18n.ts`. Update the `supportedLanguages` array when you add an additional locale.
-- The app defaults to Chinese (`zh`) and lazily loads other bundles. If a bundle fails to load, it falls back to `zh`.
-- Packing (`pnpm build`, `pnpm prebuild`) copies `src/locales` into `src-tauri/resources/locales` so keep the source tree authoritative.
-- Backend (Tauri) strings such as tray menu labels and native notifications use the YAML bundles under `src-tauri/locales/<lang>.yml` via `rust-i18n`. Keep the English file (`en.yml`) aligned with the Simplified Chinese semantics and mirror updates across the remaining languages (繁體 `zhtw` translates the Chinese copy; other locales can temporarily duplicate English until translators step in).
-- When adding a new language to the backend, create a matching `<lang>.yml` in `src-tauri/locales/`, populate the keys used in the existing files, and ensure `src/services/i18n.ts` includes the language code so the frontend can request it.
+- Keep `en.yml` semantically aligned with the Simplified Chinese baseline (`zh.yml`). Other locales may temporarily copy English if no translation is available yet.
+- When a backend feature introduces new strings, update every YAML file to keep the key set consistent. Missing keys fall back to the default language (`zh`), so catching gaps early avoids mixed-language output.
+- Rust code resolves the active language through `src-tauri/src/utils/i18n.rs`. No additional build step is required after editing YAML files; `tauri dev` and `tauri build` pick them up automatically.
 
 ## Adding a new language
 
-1. Duplicate `src/locales/en/` into `src/locales/<new-lang>/` (match the folder name to the language code you intend to serve, e.g. `pt-br`).
-2. Translate the JSON files while preserving the key hierarchy. `shared.json` should stay aligned with the baseline.
-3. Update the new locale’s `index.ts` to import every JSON namespace (use the English file as reference).
-4. Append the language code to `supportedLanguages` in `src/services/i18n.ts`. Adjust `crowdin.yml` if the locale code needs a mapping.
-5. Run `pnpm format:i18n`, `pnpm i18n:types`, and optionally `pnpm node scripts/cleanup-unused-i18n.mjs` (dry-run) to verify structure.
-6. Execute `pnpm dev` to confirm UI translations load, and `pnpm prebuild` if you want to double-check Tauri resource syncing.
+1. Duplicate `src/locales/en/` into `src/locales/<new-lang>/` and translate the JSON files while preserving key structure.
+2. Update the locale’s `index.ts` to import every namespace. Matching the English file is the easiest way to avoid missing exports.
+3. Append the language code to `supportedLanguages` in `src/services/i18n.ts`.
+4. If the backend should expose the language, create `src-tauri/locales/<new-lang>.yml` and translate the keys used in existing YAML files.
+5. Adjust `crowdin.yml` if the locale requires a special mapping for Crowdin.
+6. Run `pnpm format:i18n`, `pnpm i18n:types`, and (optionally) `pnpm node scripts/cleanup-unused-i18n.mjs` in dry-run mode to confirm structure.
 
 ## Authoring guidelines
 
-- **Reuse shared vocabulary**: before creating a new label, check `shared.json` (`actions`, `labels`, `statuses`, `placeholders`, `validation`, `window`, `editorModes`, etc.). Only introduce feature-specific copy when it is unique to that area.
-- **Keep keys semantic**: use camelCase leaves that describe intent (`systemProxy`, `updateInterval`, `autoRefresh`). Avoid positional keys like `item1` or `dialogTitle2`.
-- **Organize by UI responsibility** inside each namespace. Common buckets include:
-  - `page`, `sections`, `forms`, `fields`, `actions`, `tooltips`, `notifications`, `errors`, `dialogs`, `tables`, `components`, `statuses`.
-- **Document dynamic placeholders**: continue using the `{{placeholder}}` syntax and ensure code comments/context explain required parameters.
-- **Example structure** (from `src/locales/en/home.json`):
-
-```json
-{
-  "page": {
-    "title": "Home",
-    "tooltips": {
-      "settings": "Home Settings"
-    }
-  },
-  "components": {
-    "proxyTun": {
-      "status": {
-        "systemProxyEnabled": "System Proxy Enabled"
-      }
-    }
-  }
-}
-```
+- **Reuse shared vocabulary** before introducing new phrases—check `shared.json` for common actions, statuses, and labels.
+- **Prefer semantic keys** (`systemProxy`, `updateInterval`, `autoRefresh`) over positional ones (`item1`, `dialogTitle2`).
+- **Document placeholders** using `{{placeholder}}` and ensure components supply the required values.
+- **Group keys by UI responsibility** inside each namespace (`page`, `sections`, `forms`, `actions`, `tooltips`, `notifications`, `errors`, `tables`, `statuses`, etc.).
+- **Keep strings concise** to avoid layout issues. If a translation needs more context, leave a PR note so reviewers can verify the UI.
 
 ## Testing & QA
 
-- Launch the desktop shell with `pnpm dev` (or `pnpm web:dev` for browser-only checks) to confirm strings display correctly and spacing still works in the UI.
-- Run `pnpm test` if you touched code that relies on translations or formatting logic.
-- Note uncovered scenarios or language-specific concerns (pluralization, truncated text) in your PR description.
+- Launch the desktop shell with `pnpm dev` (or `pnpm web:dev`) and navigate through the affected views to confirm translations load and layouts behave.
+- Run `pnpm test` if you touched code that consumes translations or adjusts formatting logic.
+- For backend changes, trigger the relevant tray actions or notifications to verify the updated copy.
+- Note any remaining untranslated sections or layout concerns in your PR description so maintainers can follow up.
 
 ## Feedback & support
 
-- Open an issue for tooling problems, missing context, or translation bugs so we can track them.
-- For localization contributions (translations, fixes, context notes, etc.), submit a PR with screenshots when layout changes might be impacted.
-- If you need a second pair of eyes, leave a comment on your PR and the team will follow up.
+- File an issue for missing context, tooling bugs, or localization gaps so we can track them.
+- PRs that touch UI should include screenshots or GIFs whenever text length may affect layout.
+- Mention the commands you ran (formatting, type generation, tests) in the PR checklist. If you need extra context or review help, request it via a PR comment.

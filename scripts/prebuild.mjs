@@ -575,39 +575,6 @@ const resolveServicePermission = async () => {
   }
 };
 
-// resolve locales (从 src/locales 复制到 resources/locales，并使用 hash 检查)
-async function resolveLocales() {
-  const srcLocalesDir = path.join(cwd, "src/locales");
-  const targetLocalesDir = path.join(cwd, "src-tauri/resources/locales");
-
-  try {
-    await fsp.mkdir(targetLocalesDir, { recursive: true });
-    const copyLocaleTree = async (sourceDir, destDir) => {
-      const entries = await fsp.readdir(sourceDir, { withFileTypes: true });
-      for (const entry of entries) {
-        const srcPath = path.join(sourceDir, entry.name);
-        const targetPath = path.join(destDir, entry.name);
-        if (entry.isDirectory()) {
-          await fsp.mkdir(targetPath, { recursive: true });
-          await copyLocaleTree(srcPath, targetPath);
-        } else if (entry.isFile()) {
-          if (!(await hasFileChanged(srcPath, targetPath))) continue;
-          await fsp.mkdir(path.dirname(targetPath), { recursive: true });
-          await fsp.copyFile(srcPath, targetPath);
-          await updateHashCache(targetPath);
-          const relativePath = path.relative(srcLocalesDir, srcPath);
-          log_success(`Copied locale file: ${relativePath}`);
-        }
-      }
-    };
-    await copyLocaleTree(srcLocalesDir, targetLocalesDir);
-    log_success("All locale files processed successfully");
-  } catch (err) {
-    log_error("Error copying locale files:", err.message);
-    throw err;
-  }
-}
-
 // =======================
 // Other resource resolvers (service, mmdb, geosite, geoip, enableLoopback, sysproxy)
 // =======================
@@ -727,7 +694,6 @@ const tasks = [
     retry: 5,
     macosOnly: true,
   },
-  { name: "locales", func: resolveLocales, retry: 2 },
 ];
 
 async function runTask() {
