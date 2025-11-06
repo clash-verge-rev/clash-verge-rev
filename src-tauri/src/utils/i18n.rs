@@ -7,22 +7,60 @@ fn supported_languages_internal() -> Vec<&'static str> {
     rust_i18n::available_locales!()
 }
 
-fn is_supported(language: &str) -> bool {
-    let normalized = language.to_lowercase();
-    supported_languages_internal()
-        .iter()
-        .any(|&lang| lang.eq_ignore_ascii_case(&normalized))
-}
-
 const fn fallback_language() -> &'static str {
     DEFAULT_LANGUAGE
 }
 
+fn locale_alias(locale: &str) -> Option<&'static str> {
+    match locale {
+        "ja" | "ja-jp" | "jp" => Some("jp"),
+        "zh" | "zh-cn" | "zh-hans" | "zh-sg" | "zh-my" | "zh-chs" => Some("zh"),
+        "zh-tw" | "zh-hk" | "zh-hant" | "zh-mo" | "zh-cht" => Some("zhtw"),
+        _ => None,
+    }
+}
+
+fn resolve_supported_language(language: &str) -> Option<String> {
+    if language.is_empty() {
+        return None;
+    }
+
+    let normalized = language.to_lowercase().replace('_', "-");
+
+    let mut candidates: Vec<String> = Vec::new();
+    let mut push_candidate = |candidate: String| {
+        if !candidate.is_empty()
+            && !candidates
+                .iter()
+                .any(|existing| existing.eq_ignore_ascii_case(&candidate))
+        {
+            candidates.push(candidate);
+        }
+    };
+
+    let segments: Vec<&str> = normalized.split('-').collect();
+
+    for i in (1..=segments.len()).rev() {
+        let prefix = segments[..i].join("-");
+        if let Some(alias) = locale_alias(&prefix) {
+            push_candidate(alias.to_string());
+        }
+        push_candidate(prefix);
+    }
+
+    let supported = supported_languages_internal();
+
+    candidates.into_iter().find(|candidate| {
+        supported
+            .iter()
+            .any(|&lang| lang.eq_ignore_ascii_case(candidate))
+    })
+}
+
 fn system_language() -> String {
     sys_locale::get_locale()
-        .map(|locale| locale.to_lowercase())
-        .and_then(|locale| locale.split(['_', '-']).next().map(str::to_string))
-        .filter(|lang| is_supported(lang))
+        .as_deref()
+        .and_then(resolve_supported_language)
         .unwrap_or_else(|| fallback_language().to_string())
 }
 
@@ -34,12 +72,8 @@ pub fn get_supported_languages() -> Vec<String> {
 }
 
 pub fn set_locale(language: &str) {
-    let normalized = language.to_lowercase();
-    let lang = if is_supported(&normalized) {
-        normalized
-    } else {
-        fallback_language().to_string()
-    };
+    let lang =
+        resolve_supported_language(language).unwrap_or_else(|| fallback_language().to_string());
     rust_i18n::set_locale(&lang);
 }
 
@@ -50,8 +84,7 @@ pub async fn current_language() -> String {
         .language
         .clone()
         .filter(|lang| !lang.is_empty())
-        .map(|lang| lang.to_lowercase())
-        .filter(|lang| is_supported(lang))
+        .and_then(|lang| resolve_supported_language(&lang))
         .unwrap_or_else(system_language)
 }
 
