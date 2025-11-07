@@ -10,7 +10,7 @@
 </h3>
 
 <p align="center">
-  Languages:
+  언어:
   <a href="../README.md">简体中文</a> ·
   <a href="./README_en.md">English</a> ·
   <a href="./README_es.md">Español</a> ·
