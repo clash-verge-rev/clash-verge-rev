@@ -12,9 +12,9 @@
         "settings": "설정"
       },
       "menu": {
-        "reorderMode": "Menu reorder mode",
-        "unlock": "Unlock menu order",
-        "lock": "Lock menu order"
+        "reorderMode": "메뉴 재정렬 모드",
+        "unlock": "메뉴 순서 잠금 해제",
+        "lock": "메뉴 순서 잠금"
       }
     }
   }

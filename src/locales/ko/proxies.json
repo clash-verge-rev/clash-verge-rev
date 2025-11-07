@@ -1,16 +1,16 @@
 {
   "page": {
     "modes": {
-      "rule": "Rule",
-      "global": "Global",
-      "direct": "Direct"
+      "rule": "규칙",
+      "global": "전역",
+      "direct": "직접"
     },
     "actions": {
       "toggleChain": "🔗 체인 프록시",
-      "connect": "Connect",
-      "disconnect": "Disconnect",
-      "connecting": "Connecting...",
-      "clearChainConfig": "Delete Chain Config"
+      "connect": "연결",
+      "disconnect": "연결 해제",
+      "connecting": "연결 중...",
+      "clearChainConfig": "체인 구성 삭제"
     },
     "provider": {
       "title": "프록시 제공자",
@@ -20,18 +20,18 @@
       }
     },
     "rules": {
-      "title": "Proxy Rules",
-      "select": "Select Rules"
+      "title": "프록시 규칙",
+      "select": "규칙 선택"
     },
     "labels": {
       "proxyCount": "프록시 개수",
       "delayCheckReset": "고정 취소를 위한 지연 확인"
     },
     "tooltips": {
-      "locate": "로케이트",
+      "locate": "위치 찾기",
       "delayCheck": "지연 확인",
-      "sortDefault": "기본값으로 정렬",
-      "sortDelay": "지연시간으로 정렬",
+      "sortDefault": "기본 정렬",
+      "sortDelay": "지연으로 정렬",
       "sortName": "이름으로 정렬",
       "delayCheckUrl": "지연 확인 URL",
       "showBasic": "프록시 기본",
@@ -42,31 +42,31 @@
       "delayCheckUrl": "지연 확인 URL"
     },
     "chain": {
-      "header": "Chain Proxy Config",
-      "empty": "No proxy chain configured",
-      "instruction": "Click nodes in order to add to proxy chain",
-      "minimumNodes": "Chain proxy requires at least 2 nodes",
-      "minimumNodesHint": "Chain proxy requires at least 2 nodes. Please add one more node.",
-      "connectFailed": "Failed to connect to proxy chain",
-      "disconnectFailed": "Failed to disconnect from proxy chain",
-      "duplicateNode": "Proxy node already exists in chain"
+      "header": "체인 프록시 구성",
+      "empty": "구성된 프록시 체인이 없습니다",
+      "instruction": "프록시 체인에 추가하려면 순서대로 노드를 클릭하세요",
+      "minimumNodes": "체인 프록시는 최소 2개의 노드가 필요합니다",
+      "minimumNodesHint": "체인 프록시는 최소 2개의 노드가 필요합니다. 하나 더 추가하세요.",
+      "connectFailed": "프록시 체인 연결 실패",
+      "disconnectFailed": "프록시 체인 연결 해제 실패",
+      "duplicateNode": "프록시 노드가 체인에 이미 존재합니다"
     },
     "messages": {
-      "directMode": "Direct Mode"
+      "directMode": "직접 모드"
     },
     "title": {
       "default": "프록시 그룹",
-      "chainMode": "Proxy Chain Mode"
+      "chainMode": "프록시 체인 모드"
     }
   },
   "feedback": {
     "notifications": {
       "provider": {
-        "updateSuccess": "{{name}} updated successfully",
-        "updateFailed": "Failed to update {{name}}: {{message}}",
-        "genericError": "Update failed: {{message}}",
-        "none": "No providers available to update",
-        "allUpdated": "All providers updated successfully"
+        "updateSuccess": "{{name}} 업데이트 성공",
+        "updateFailed": "{{name}} 업데이트 실패: {{message}}",
+        "genericError": "업데이트 실패: {{message}}",
+        "none": "업데이트할 제공자가 없습니다",
+        "allUpdated": "모든 제공자가 업데이트되었습니다"
       }
     }
   },
