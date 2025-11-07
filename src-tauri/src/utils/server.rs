@@ -28,6 +28,9 @@ static SHUTDOWN_SENDER: OnceCell<Mutex<Option<oneshot::Sender<()>>>> = OnceCell:
 pub async fn check_singleton() -> Result<()> {
     let port = IVerge::get_singleton_port();
     if !local_port_available(port) {
+        let client = ClientBuilder::new()
+            .timeout(Duration::from_millis(500))
+            .build()?;
         // 需要确保 Send
         #[allow(clippy::needless_collect)]
         let argvs: Vec<std::string::String> = std::env::args().collect();
@@ -36,10 +39,7 @@ pub async fn check_singleton() -> Result<()> {
             {
                 let param = argvs[1].as_str();
                 if param.starts_with("clash:") {
-                    // 避免一键导入订阅时, 请求超时过小导致订阅导入时连接断开，使用导入订阅请求的默认超时时间
-                    ClientBuilder::new()
-                        .timeout(Duration::from_secs(20))
-                        .build()?
+                    client
                         .get(format!(
                             "http://127.0.0.1:{port}/commands/scheme?param={param}"
                         ))
@@ -48,9 +48,7 @@ pub async fn check_singleton() -> Result<()> {
                 }
             }
         } else {
-            ClientBuilder::new()
-                .timeout(Duration::from_millis(500))
-                .build()?
+            client
                 .get(format!("http://127.0.0.1:{port}/commands/visible"))
                 .send()
                 .await?;
@@ -115,7 +113,9 @@ pub fn embed_server() {
         let scheme = warp::path!("commands" / "scheme")
             .and(warp::query::<QueryParam>())
             .and_then(|query: QueryParam| async move {
-                logging_error!(Type::Setup, resolve::resolve_scheme(&query.param).await);
+                AsyncHandler::spawn(|| async move {
+                    logging_error!(Type::Setup, resolve::resolve_scheme(&query.param).await);
+                });
                 Ok::<_, warp::Rejection>(warp::reply::with_status::<std::string::String>(
                     "ok".to_string(),
                     warp::http::StatusCode::OK,
