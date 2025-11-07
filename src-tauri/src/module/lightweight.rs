@@ -86,16 +86,21 @@ async fn refresh_lightweight_tray_state() {
 
 pub async fn auto_lightweight_boot() -> Result<()> {
     let verge_config = Config::verge().await;
+    let is_silent_start = verge_config.data_arc().enable_silent_start.unwrap_or(false);
     let is_enable_auto = verge_config
         .data_arc()
         .enable_auto_light_weight_mode
         .unwrap_or(false);
-    let is_silent_start = verge_config.data_arc().enable_silent_start.unwrap_or(false);
-    if is_enable_auto {
-        enable_auto_light_weight_mode().await;
-    }
+
     if is_silent_start {
+        logging!(info, Type::Lightweight, "静默启动，进入轻量模式");
         entry_lightweight_mode().await;
+        return Ok(());
+    }
+
+    if is_enable_auto {
+        logging!(info, Type::Lightweight, "开机自启，监听窗口关闭");
+        enable_auto_light_weight_mode();
     }
     Ok(())
 }
