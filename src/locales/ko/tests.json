@@ -25,16 +25,16 @@
   },
   "statuses": {
     "test": {
-      "pending": "Pending",
-      "yes": "Yes",
-      "no": "No",
+      "pending": "대기 중",
+      "yes": "예",
+      "no": "아니오",
       "failed": "실패",
-      "completed": "Completed",
-      "disallowedIsp": "Disallowed ISP",
-      "originalsOnly": "Originals Only",
-      "noDisney": "No (IP Banned By Disney+)",
-      "unsupportedRegion": "Unsupported Country/Region",
-      "failedNetwork": "Failed (Network Connection)"
+      "completed": "완료",
+      "disallowedIsp": "허용되지 않는 ISP",
+      "originalsOnly": "오리지널만",
+      "noDisney": "아니오 (Disney+에 의해 IP 차단)",
+      "unsupportedRegion": "지원되지 않는 국가/지역",
+      "failedNetwork": "실패 (네트워크 연결)"
     }
   },
   "unlock": {
@@ -42,12 +42,12 @@
       "actions": {
         "testing": "테스트 중..."
       },
-      "empty": "No unlock test items",
+      "empty": "잠금 해제 테스트 항목이 없습니다",
       "messages": {
         "detectionFailedWithName": "{{name}} 감지에 실패했습니다",
-        "detectionTimeout": "Detection timeout or failed"
+        "detectionTimeout": "감지 시간 초과 또는 실패"
       },
-      "title": "Unlock Test"
+      "title": "잠금 해제 테스트"
     }
   }
 }

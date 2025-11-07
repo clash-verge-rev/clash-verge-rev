@@ -17,7 +17,7 @@
       "type": "유형"
     },
     "order": {
-      "default": "Default",
+      "default": "기본",
       "uploadSpeed": "업로드 속도",
       "downloadSpeed": "다운로드 속도"
     },

@@ -1,52 +1,52 @@
 _version: 1
 notifications:
   dashboardToggled:
-    title: Dashboard
-    body: Dashboard visibility has been updated.
+    title: 대시보드
+    body: 대시보드 표시 상태가 업데이트되었습니다.
   clashModeChanged:
-    title: Mode Switch
-    body: Switched to {mode}.
+    title: 모드 전환
+    body: "{mode}(으)로 전환되었습니다."
   systemProxyToggled:
-    title: System Proxy
-    body: System proxy status has been updated.
+    title: 시스템 프록시
+    body: 시스템 프록시 상태가 업데이트되었습니다.
   tunModeToggled:
-    title: TUN Mode
-    body: TUN mode status has been updated.
+    title: TUN 모드
+    body: TUN 모드 상태가 업데이트되었습니다.
   lightweightModeEntered:
-    title: Lightweight Mode
-    body: Entered lightweight mode.
+    title: 경량 모드
+    body: 경량 모드에 진입했습니다.
   appQuit:
-    title: About to Exit
-    body: Clash Verge is about to exit.
+    title: 곧 종료
+    body: Clash Verge가 곧 종료됩니다.
   appHidden:
-    title: Application Hidden
-    body: Clash Verge is running in the background.
+    title: 앱이 숨겨짐
+    body: Clash Verge가 백그라운드에서 실행 중입니다.
 service:
-  adminPrompt: Installing the service requires administrator privileges.
+  adminPrompt: 서비스를 설치하려면 관리자 권한이 필요합니다.
 tray:
-  dashboard: Dashboard
-  ruleMode: Rule Mode
-  globalMode: Global Mode
-  directMode: Direct Mode
-  profiles: Profiles
-  proxies: Proxies
-  systemProxy: System Proxy
-  tunMode: TUN Mode
-  closeAllConnections: Close All Connections
-  lightweightMode: Lightweight Mode
-  copyEnv: Copy Environment Variables
-  confDir: Configuration Directory
-  coreDir: Core Directory
-  logsDir: Log Directory
-  openDir: Open Directory
-  appLog: Application Log
-  coreLog: Core Log
-  restartClash: Restart Clash Core
-  restartApp: Restart Application
-  vergeVersion: Verge Version
-  more: More
-  exit: Exit
+  dashboard: 대시보드
+  ruleMode: 규칙 모드
+  globalMode: 전역 모드
+  directMode: 직접 모드
+  profiles: 프로필
+  proxies: 프록시
+  systemProxy: 시스템 프록시
+  tunMode: TUN 모드
+  closeAllConnections: 모든 연결 닫기
+  lightweightMode: 경량 모드
+  copyEnv: 환경 변수 복사
+  confDir: 구성 디렉터리
+  coreDir: 코어 디렉터리
+  logsDir: 로그 디렉터리
+  openDir: 디렉터리 열기
+  appLog: 애플리케이션 로그
+  coreLog: 코어 로그
+  restartClash: Clash 코어 재시작
+  restartApp: 애플리케이션 재시작
+  vergeVersion: Verge 버전
+  more: 더 보기
+  exit: 종료
   tooltip:
-    systemProxy: System Proxy
+    systemProxy: 시스템 프록시
     tun: TUN
-    profile: Profile
+    profile: 프로필
