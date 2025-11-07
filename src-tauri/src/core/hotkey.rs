@@ -211,28 +211,18 @@ impl Hotkey {
         let is_quit = matches!(function, HotkeyFunction::Quit);
 
         manager.on_shortcut(hotkey, move |_app_handle, hotkey_event, event| {
-            let hotkey_event_owned = *hotkey_event;
-            let event_owned = event;
-            let function_owned = function;
-            let is_quit_owned = is_quit;
-
-            AsyncHandler::spawn(move || async move {
-                if event_owned.state == ShortcutState::Pressed {
-                    logging!(
-                        debug,
-                        Type::Hotkey,
-                        "Hotkey pressed: {:?}",
-                        hotkey_event_owned
-                    );
-
-                    if hotkey_event_owned.key == Code::KeyQ && is_quit_owned {
-                        if let Some(window) = handle::Handle::get_window()
-                            && window.is_focused().unwrap_or(false)
-                        {
-                            logging!(debug, Type::Hotkey, "Executing quit function");
-                            Self::execute_function(function_owned);
-                        }
-                    } else {
+            if event.state == ShortcutState::Pressed {
+                logging!(debug, Type::Hotkey, "Hotkey pressed: {:?}", hotkey_event);
+                let hotkey = hotkey_event.key;
+                if hotkey == Code::KeyQ && is_quit {
+                    if let Some(window) = handle::Handle::get_window()
+                        && window.is_focused().unwrap_or(false)
+                    {
+                        logging!(debug, Type::Hotkey, "Executing quit function");
+                        Self::execute_function(function);
+                    }
+                } else {
+                    AsyncHandler::spawn(move || async move {
                         logging!(debug, Type::Hotkey, "Executing function directly");
 
                         let is_enable_global_hotkey = Config::verge()
@@ -242,19 +232,19 @@ impl Hotkey {
                             .unwrap_or(true);
 
                         if is_enable_global_hotkey {
-                            Self::execute_function(function_owned);
+                            Self::execute_function(function);
                         } else {
                             use crate::utils::window_manager::WindowManager;
                             let is_visible = WindowManager::is_main_window_visible();
                             let is_focused = WindowManager::is_main_window_focused();
 
                             if is_focused && is_visible {
-                                Self::execute_function(function_owned);
+                                Self::execute_function(function);
                             }
                         }
-                    }
+                    });
                 }
-            });
+            }
         })?;
 
         logging!(

@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use anyhow::{Result, bail};
 use percent_encoding::percent_decode_str;
 use smartstring::alias::String;
@@ -73,24 +75,23 @@ pub(super) async fn resolve_scheme(param: &str) -> Result<()> {
                 "failed to parse profile from url: {:?}",
                 e
             );
-            // TODO 通知系统疑似损坏，前端无法显示通知事件
             handle::Handle::notice_message("import_sub_url::error", e.to_string());
             return Ok(());
         }
     };
 
     let uid = item.uid.clone().unwrap_or_default();
-    // TODO 通过 deep link 导入后需要正确调用前端刷新订阅页面，以及通知结果
     match profiles::profiles_append_item_safe(&mut item).await {
         Ok(_) => {
             Config::profiles().await.apply();
             let _ = Config::profiles().await.data_arc().save_file().await;
-            // TODO 通知系统疑似损坏，前端无法显示通知事件
             handle::Handle::notice_message(
                 "import_sub_url::ok",
-                item.uid.clone().unwrap_or_default(),
+                "", // 空 msg 传入，我们不希望导致 后端-前端-后端 死循环，这里只做提醒。
             );
-            // TODO fuck me this shit is fucking broken as fucked
+            handle::Handle::refresh_verge();
+            handle::Handle::notify_profile_changed(uid.clone());
+            tokio::time::sleep(Duration::from_millis(100)).await;
             handle::Handle::notify_profile_changed(uid);
         }
         Err(e) => {
@@ -101,14 +102,10 @@ pub(super) async fn resolve_scheme(param: &str) -> Result<()> {
                 e
             );
             Config::profiles().await.discard();
-            // TODO 通知系统疑似损坏，前端无法显示通知事件
             handle::Handle::notice_message("import_sub_url::error", e.to_string());
             return Ok(());
         }
     }
-
-    handle::Handle::refresh_verge();
-    handle::Handle::refresh_clash();
 
     Ok(())
 }

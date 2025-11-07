@@ -15,7 +15,8 @@
   <a href="./README_en.md">English</a> ·
   <a href="./README_es.md">Español</a> ·
   <a href="./README_ru.md">Русский</a> ·
-  <a href="./README_ja.md">日本語</a>
+  <a href="./README_ja.md">日本語</a> ·
+  <a href="./README_ko.md">한국어</a>
 </p>
 
 ## プレビュー
