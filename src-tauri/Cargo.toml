@@ -112,9 +112,6 @@ windows-sys = { version = "0.61.2", features = [
   "Win32_UI_WindowsAndMessaging",
 ] }
 
-[target.'cfg(target_os = "linux")'.dependencies]
-users = "0.11.0"
-
 [target.'cfg(unix)'.dependencies]
 signal-hook = "0.3.18"
 
