@@ -21,8 +21,8 @@
 
 ## 미리보기
 
-| 다크                                 | 라이트                                |
-| ------------------------------------ | ------------------------------------- |
+| 다크                                 | 라이트                                  |
+| ------------------------------------ | --------------------------------------- |
 | ![다크 미리보기](./preview_dark.png) | ![라이트 미리보기](./preview_light.png) |
 
 ## 설치
@@ -32,10 +32,10 @@ Windows (x64/x86), Linux (x64/arm64), macOS 10.15+ (Intel/Apple)을 지원합니
 
 #### 릴리스 채널 선택
 
-| 채널        | 설명                                                                      | 링크                                                                                   |
-| :---------- | :------------------------------------------------------------------------ | :------------------------------------------------------------------------------------- |
-| Stable      | 안정 릴리스. 신뢰성이 높아 일상 사용에 적합합니다.                         | [Release](https://github.com/clash-verge-rev/clash-verge-rev/releases)                 |
-| Alpha (EOL) | 퍼블리시 파이프라인 검증에 사용되었던 구 테스트 채널입니다.            | [Alpha](https://github.com/clash-verge-rev/clash-verge-rev/releases/tag/alpha)         |
+| 채널        | 설명                                                                                 | 링크                                                                                   |
+| :---------- | :----------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------- |
+| Stable      | 안정 릴리스. 신뢰성이 높아 일상 사용에 적합합니다.                                   | [Release](https://github.com/clash-verge-rev/clash-verge-rev/releases)                 |
+| Alpha (EOL) | 퍼블리시 파이프라인 검증에 사용되었던 구 테스트 채널입니다.                          | [Alpha](https://github.com/clash-verge-rev/clash-verge-rev/releases/tag/alpha)         |
 | AutoBuild   | 롤링 빌드 채널. 테스트와 피드백 용도로 권장되며, 실험적인 변경이 포함될 수 있습니다. | [AutoBuild](https://github.com/clash-verge-rev/clash-verge-rev/releases/tag/autobuild) |
 
 #### 설치 가이드 및 FAQ
