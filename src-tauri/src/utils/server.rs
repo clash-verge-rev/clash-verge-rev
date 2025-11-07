@@ -112,14 +112,14 @@ pub fn embed_server() {
         // Use map instead of and_then to avoid Send issues
         let scheme = warp::path!("commands" / "scheme")
             .and(warp::query::<QueryParam>())
-            .map(|query: QueryParam| {
-                tokio::task::spawn_local(async move {
+            .and_then(|query: QueryParam| async move {
+                AsyncHandler::spawn(|| async move {
                     logging_error!(Type::Setup, resolve::resolve_scheme(&query.param).await);
                 });
-                warp::reply::with_status::<std::string::String>(
+                Ok::<_, warp::Rejection>(warp::reply::with_status::<std::string::String>(
                     "ok".to_string(),
                     warp::http::StatusCode::OK,
-                )
+                ))
             });
 
         let commands = visible.or(scheme).or(pac);
