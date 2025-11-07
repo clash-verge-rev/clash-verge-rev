@@ -13,11 +13,11 @@
   "feedback": {
     "notifications": {
       "provider": {
-        "updateSuccess": "{{name}} updated successfully",
-        "updateFailed": "Failed to update {{name}}: {{message}}",
-        "genericError": "Update failed: {{message}}",
-        "none": "No providers available to update",
-        "allUpdated": "All providers updated successfully"
+        "updateSuccess": "{{name}} 업데이트 성공",
+        "updateFailed": "{{name}} 업데이트 실패: {{message}}",
+        "genericError": "업데이트 실패: {{message}}",
+        "none": "업데이트할 제공자가 없습니다",
+        "allUpdated": "모든 제공자가 업데이트되었습니다"
       }
     }
   },
