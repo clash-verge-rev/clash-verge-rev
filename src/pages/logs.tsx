@@ -33,6 +33,9 @@ const LogPage = () => {
       return [];
     }
 
+    const normalized =
+      logState === "err" ? "error" : logState === "warn" ? "warning" : logState;
+
     // Server-side filtering handles level filtering via query parameters
     // We only need to apply search filtering here
     return logData.filter((data) => {
@@ -43,7 +46,7 @@ const LogPage = () => {
       const matchesSearch = match(searchText);
 
       return (
-        (logState == "all" ? true : data.type.includes(logState)) &&
+        (normalized == "all" ? true : data.type === normalized) &&
         matchesSearch
       );
     });

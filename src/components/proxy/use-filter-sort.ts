@@ -102,12 +102,8 @@ function filterProxies(
 
   const res2 = regex2.exec(filterText);
   if (res2) {
-    const type = res2[1].toLowerCase();
-    const typeLower = type;
-    return proxies.filter((p) => {
-      const proxyTypeLower = p.type.toLowerCase();
-      return proxyTypeLower.includes(typeLower);
-    });
+    const typeLower = res2[1].toLowerCase();
+    return proxies.filter((p) => p.type.toLowerCase().includes(typeLower));
   }
 
   const trimmedFilter = filterText.trim();

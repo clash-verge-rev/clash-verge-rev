@@ -17,13 +17,13 @@ export const useListen = () => {
   const removeAllListeners = () => {
     const errors: Error[] = [];
 
-    unlistenFns.current.forEach((unlisten) => {
+    for (const unlisten of unlistenFns.current) {
       try {
         unlisten();
       } catch (error) {
         errors.push(error instanceof Error ? error : new Error(String(error)));
       }
-    });
+    }
 
     if (errors.length > 0) {
       console.warn(

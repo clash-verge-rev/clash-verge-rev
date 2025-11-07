@@ -51,6 +51,8 @@ interface Props<T extends Language> {
   onClose: () => void;
 }
 
+const SMALL_TAB_LANG_SET = new Set<Language>(["yaml", "javascript", "css"]);
+
 let initialized = false;
 const monacoInitialization = () => {
   if (initialized) return;
@@ -196,7 +198,7 @@ export const EditorViewer = <T extends Language>(props: Props<T>) => {
           language={language}
           theme={themeMode === "light" ? "vs" : "vs-dark"}
           options={{
-            tabSize: ["yaml", "javascript", "css"].includes(language) ? 2 : 4, // 根据语言类型设置缩进大小
+            tabSize: SMALL_TAB_LANG_SET.has(language) ? 2 : 4, // 根据语言类型设置缩进大小
             minimap: {
               enabled: document.documentElement.clientWidth >= 1500, // 超过一定宽度显示minimap滚动条
             },

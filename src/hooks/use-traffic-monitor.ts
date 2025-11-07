@@ -100,11 +100,15 @@ class TrafficDataSampler {
     if (this.compressionQueue.length === 0) return;
 
     // 计算平均值进行压缩
-    const totalUp = this.compressionQueue.reduce((sum, p) => sum + p.up, 0);
-    const totalDown = this.compressionQueue.reduce((sum, p) => sum + p.down, 0);
-    const avgTimestamp =
-      this.compressionQueue.reduce((sum, p) => sum + p.timestamp, 0) /
-      this.compressionQueue.length;
+    let totalUp = 0;
+    let totalDown = 0;
+    let totalTimestamp = 0;
+    for (const p of this.compressionQueue) {
+      totalUp += p.up;
+      totalDown += p.down;
+      totalTimestamp += p.timestamp;
+    }
+    const avgTimestamp = totalTimestamp / this.compressionQueue.length;
 
     const compressedPoint: ICompressedDataPoint = {
       up: totalUp / this.compressionQueue.length,
@@ -146,10 +150,25 @@ class TrafficDataSampler {
           second: "2-digit",
         }),
       }));
+    if (compressedData.length === 0) return rawData;
+    if (rawData.length === 0) return compressedData;
 
-    return [...compressedData, ...rawData].sort(
-      (a, b) => a.timestamp - b.timestamp,
+    const merged: ITrafficDataPoint[] = new Array(
+      compressedData.length + rawData.length,
     );
+    let i = 0;
+    let j = 0;
+    let k = 0;
+    while (i < compressedData.length && j < rawData.length) {
+      if (compressedData[i].timestamp <= rawData[j].timestamp) {
+        merged[k++] = compressedData[i++];
+      } else {
+        merged[k++] = rawData[j++];
+      }
+    }
+    while (i < compressedData.length) merged[k++] = compressedData[i++];
+    while (j < rawData.length) merged[k++] = rawData[j++];
+    return merged;
   }
 
   getStats() {

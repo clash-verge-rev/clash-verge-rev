@@ -66,9 +66,9 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
     },
     edit: (item: IProfileItem) => {
       if (item) {
-        Object.entries(item).forEach(([key, value]) => {
+        for (const [key, value] of Object.entries(item)) {
           setValue(key as any, value);
-        });
+        }
       }
       setOpenType("edit");
       setOpen(true);

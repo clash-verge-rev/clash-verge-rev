@@ -63,9 +63,13 @@ export const useProxySelection = (options: ProxySelectionOptions = {}) => {
         if (current && !skipConfigSave) {
           if (!current.selected) current.selected = [];
 
-          const index = current.selected.findIndex(
-            (item) => item.name === groupName,
-          );
+          let index = -1;
+          for (let i = 0; i < current.selected.length; i++) {
+            if (current.selected[i].name === groupName) {
+              index = i;
+              break;
+            }
+          }
 
           if (index < 0) {
             current.selected.push({ name: groupName, now: proxyName });

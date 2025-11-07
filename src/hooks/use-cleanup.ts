@@ -15,13 +15,13 @@ export const useCleanup = () => {
   };
 
   const cleanup = () => {
-    cleanupFnsRef.current.forEach((fn) => {
+    for (const fn of cleanupFnsRef.current) {
       try {
         fn();
       } catch (error) {
         console.error("[资源清理] 清理失败:", error);
       }
-    });
+    }
     cleanupFnsRef.current.clear();
   };
 

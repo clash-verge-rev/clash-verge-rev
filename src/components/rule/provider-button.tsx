@@ -44,7 +44,15 @@ export const ProviderButton = () => {
   const [updating, setUpdating] = useState<Record<string, boolean>>({});
 
   // 检查是否有提供者
-  const hasProviders = Object.keys(ruleProviders || {}).length > 0;
+  const hasProviders = (() => {
+    const obj = ruleProviders || {};
+    for (const key in obj) {
+      if (Object.prototype.hasOwnProperty.call(obj, key)) {
+        return true;
+      }
+    }
+    return false;
+  })();
 
   // 更新单个规则提供者
   const updateProvider = useLockFn(async (name: string) => {
@@ -81,13 +89,10 @@ export const ProviderButton = () => {
       }
 
       // 设置所有provider为更新中状态
-      const newUpdating = allProviders.reduce(
-        (acc, key) => {
-          acc[key] = true;
-          return acc;
-        },
-        {} as Record<string, boolean>,
-      );
+      const newUpdating: Record<string, boolean> = {};
+      for (const key of allProviders) {
+        newUpdating[key] = true;
+      }
       setUpdating(newUpdating);
 
       // 改为串行逐个更新所有provider
@@ -153,7 +158,7 @@ export const ProviderButton = () => {
         <DialogContent>
           <List sx={{ py: 0, minHeight: 250 }}>
             {Object.entries(ruleProviders || {})
-              .sort()
+              .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
               .map(([key, item]) => {
                 const provider = item;
                 const time = dayjs(provider.updatedAt);

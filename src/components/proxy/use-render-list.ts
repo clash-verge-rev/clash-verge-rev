@@ -82,15 +82,22 @@ const calculateColumns = (width: number, configCol: number): number => {
 
 // 优化分组逻辑
 const groupProxies = <T = any>(list: T[], size: number): T[][] => {
-  return list.reduce((acc, item) => {
-    const lastGroup = acc[acc.length - 1];
-    if (!lastGroup || lastGroup.length >= size) {
-      acc.push([item]);
-    } else {
-      lastGroup.push(item);
+  const result: T[][] = [];
+  let currentGroup: T[] = [];
+
+  for (let i = 0; i < list.length; i++) {
+    currentGroup.push(list[i]);
+    if (currentGroup.length >= size) {
+      result.push(currentGroup);
+      currentGroup = [];
     }
-    return acc;
-  }, [] as T[][]);
+  }
+
+  if (currentGroup.length > 0) {
+    result.push(currentGroup);
+  }
+
+  return result;
 };
 
 export const useRenderList = (

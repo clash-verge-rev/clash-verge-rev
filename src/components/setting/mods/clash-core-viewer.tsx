@@ -92,7 +92,7 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
     } catch (err: any) {
       setUpgrading(false);
       const errMsg = err.response?.data?.message || err.toString();
-      const showMsg = errMsg.includes("already using latest version")
+      const showMsg = errMsg.indexOf("already using latest version") !== -1
         ? "Already Using Latest Core Version"
         : errMsg;
       showNotice("error", t(showMsg));

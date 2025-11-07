@@ -51,9 +51,9 @@ export const TestViewer = forwardRef<TestViewerRef, Props>((props, ref) => {
     },
     edit: (item) => {
       if (item) {
-        Object.entries(item).forEach(([key, value]) => {
+        for (const [key, value] of Object.entries(item)) {
           formIns.setValue(key as any, value);
-        });
+        }
       }
       setOpenType("edit");
       setOpen(true);

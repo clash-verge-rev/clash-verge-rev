@@ -33,15 +33,17 @@ if (!container) {
   );
 }
 
+const FUNCTION_KEYS = new Set(["F5", "F7"]);
+const ALT_NAV_KEYS = new Set(["ArrowLeft", "ArrowRight"]);
+const CTRL_META_KEYS = new Set(["F", "G", "H", "J", "P", "Q", "R", "U"]);
+
 document.addEventListener("keydown", (event) => {
   // Disable WebView keyboard shortcuts
   const disabledShortcuts =
-    ["F5", "F7"].includes(event.key) ||
-    (event.altKey && ["ArrowLeft", "ArrowRight"].includes(event.key)) ||
+    FUNCTION_KEYS.has(event.key) ||
+    (event.altKey && ALT_NAV_KEYS.has(event.key)) ||
     ((event.ctrlKey || event.metaKey) &&
-      ["F", "G", "H", "J", "P", "Q", "R", "U"].includes(
-        event.key.toUpperCase(),
-      ));
+      CTRL_META_KEYS.has(event.key.toUpperCase()));
   if (disabledShortcuts) {
     event.preventDefault();
   }

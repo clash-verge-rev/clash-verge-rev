@@ -155,6 +155,12 @@ pub async fn add_light_weight_timer() {
 
 fn setup_window_close_listener() {
     if let Some(window) = handle::Handle::get_window() {
+        // 清理旧的监听器，避免重复注册导致资源泄漏
+        let old_id = WINDOW_CLOSE_HANDLER_ID.swap(0, Ordering::AcqRel);
+        if old_id != 0 {
+            window.unlisten(old_id);
+            logging!(debug, Type::Lightweight, "取消了旧的窗口关闭监听");
+        }
         let handler_id = window.listen("tauri://close-requested", move |_event| {
             std::mem::drop(AsyncHandler::spawn(|| async {
                 if let Err(e) = setup_light_weight_timer().await {
@@ -183,6 +189,12 @@ fn cancel_window_close_listener() {
 
 fn setup_webview_focus_listener() {
     if let Some(window) = handle::Handle::get_window() {
+        // 清理旧的监听器，避免重复注册导致资源泄漏
+        let old_id = WEBVIEW_FOCUS_HANDLER_ID.swap(0, Ordering::AcqRel);
+        if old_id != 0 {
+            window.unlisten(old_id);
+            logging!(debug, Type::Lightweight, "取消了旧的窗口焦点监听");
+        }
         let handler_id = window.listen("tauri://focus", move |_event| {
             log_err!(cancel_light_weight_timer());
             logging!(

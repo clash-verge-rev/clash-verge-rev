@@ -95,13 +95,13 @@ export const useAppInitialization = () => {
 
     return () => {
       isCancelled = true;
-      timers.forEach((id) => {
+      for (const id of timers) {
         try {
           window.clearTimeout(id);
         } catch (error) {
           console.warn("[初始化] 清理定时器失败:", error);
         }
-      });
+      }
       timers.clear();
     };
   }, []);

@@ -51,6 +51,7 @@ const ProxyPage = () => {
   const { verge } = useVerge();
 
   const modeList = useMemo(() => ["rule", "global", "direct"], []);
+  const modeSet = useMemo(() => new Set(modeList), [modeList]);
 
   const curMode = clashConfig?.mode?.toLowerCase();
 
@@ -124,10 +125,10 @@ const ProxyPage = () => {
   }, [isChainMode, updateChainConfigData]);
 
   useEffect(() => {
-    if (curMode && !modeList.includes(curMode)) {
+    if (curMode && !modeSet.has(curMode)) {
       onChangeMode("rule");
     }
-  }, [curMode, modeList, onChangeMode]);
+  }, [curMode, modeSet, onChangeMode]);
 
   return (
     <BasePage

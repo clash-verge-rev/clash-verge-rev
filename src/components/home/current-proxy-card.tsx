@@ -251,19 +251,17 @@ export const CurrentProxyCard = () => {
     const getPrimaryGroupName = () => {
       if (!proxies?.groups?.length) return "";
 
-      const primaryKeywords = [
-        "auto",
-        "select",
-        "proxy",
-        "节点选择",
-        "自动选择",
-      ];
+      const primaryKeywords = ["auto", "select", "proxy", "节点选择", "自动选择"];
       const primaryGroup =
-        proxies.groups.find((group: { name: string }) =>
-          primaryKeywords.some((keyword) =>
-            group.name.toLowerCase().includes(keyword.toLowerCase()),
-          ),
-        ) ||
+        proxies.groups.find((group: { name: string }) => {
+          const nameLower = group.name.toLowerCase();
+          for (let i = 0; i < primaryKeywords.length; i++) {
+            if (nameLower.includes(primaryKeywords[i])) {
+              return true;
+            }
+          }
+          return false;
+        }) ||
         proxies.groups.filter((g: { name: string }) => g.name !== "GLOBAL")[0];
 
       return primaryGroup?.name || "";
@@ -357,9 +355,13 @@ export const CurrentProxyCard = () => {
         registerGroup(matchGroup, matchPolicyName);
       }
 
-      (proxies.groups || [])
-        .filter((g: { type?: string }) => g?.type === "Selector")
-        .forEach((selectorGroup: any) => registerGroup(selectorGroup));
+      const groupsList = proxies.groups || [];
+      for (let i = 0; i < groupsList.length; i++) {
+        const g = groupsList[i] as { type?: string };
+        if (g?.type === "Selector") {
+          registerGroup(g as any);
+        }
+      }
 
       const filteredGroups = Array.from(groupsMap.values());
       const filteredGroupsMap = groupsMap;
@@ -666,26 +668,28 @@ export const CurrentProxyCard = () => {
         })
         .map((p: any) => (typeof p === "string" ? p : p.name));
 
-      allProxies.forEach((name: string) => {
+      for (let i = 0; i < allProxies.length; i++) {
+        const name = allProxies[i] as string;
         const proxy = state.proxyData.records[name];
         if (proxy?.provider) {
           providers.add(proxy.provider);
         } else {
           proxyNames.push(name);
         }
-      });
+      }
     } else {
       const groupsMap = new Map(state.proxyData.groups.map((g) => [g.name, g]));
       const group = groupsMap.get(groupName);
       if (group) {
-        group.all.forEach((name: string) => {
+        for (let i = 0; i < group.all.length; i++) {
+          const name = group.all[i] as string;
           const proxy = state.proxyData.records[name];
           if (proxy?.provider) {
             providers.add(proxy.provider);
           } else {
             proxyNames.push(name);
           }
-        });
+        }
       }
     }
 

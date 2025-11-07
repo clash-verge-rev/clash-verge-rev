@@ -73,9 +73,9 @@ export function WebUIViewer({ ref }: { ref?: Ref<DialogRef> }) {
     try {
       let url = value.trim().replaceAll("%host", "127.0.0.1");
 
-      if (url.includes("%port") || url.includes("%secret")) {
+      if (url.indexOf("%port") !== -1 || url.indexOf("%secret") !== -1) {
         if (!clashInfo) throw new Error("failed to get clash info");
-        if (!clashInfo.server?.includes(":")) {
+        if (!clashInfo.server || clashInfo.server.indexOf(":") === -1) {
           throw new Error(`failed to parse the server "${clashInfo.server}"`);
         }
 

@@ -57,9 +57,8 @@ function parseNameserverPolicy(str: string): NameserverPolicy {
     const domains = [domainsPart.trim()];
     const servers = serversPart.split(";").map((s) => s.trim());
 
-    domains.forEach((domain) => {
-      result[domain] = servers;
-    });
+    const domain = domains[0];
+    result[domain] = servers;
   }
 
   return result;
@@ -68,12 +67,16 @@ function parseNameserverPolicy(str: string): NameserverPolicy {
 function formatNameserverPolicy(policy: unknown): string {
   if (!policy || typeof policy !== "object") return "";
 
-  return Object.entries(policy as Record<string, unknown>)
-    .map(([domain, servers]) => {
-      const serversStr = Array.isArray(servers) ? servers.join(";") : servers;
-      return `${domain}=${serversStr}`;
-    })
-    .join(", ");
+  const entries = Object.entries(policy as Record<string, unknown>);
+  if (entries.length === 0) return "";
+  const parts = new Array<string>(entries.length);
+  for (let i = 0; i < entries.length; i++) {
+    const domain = entries[i][0];
+    const servers = entries[i][1];
+    const serversStr = Array.isArray(servers) ? (servers as any[]).join(";") : (servers as any);
+    parts[i] = `${domain}=${serversStr}`;
+  }
+  return parts.join(", ");
 }
 
 function formatHosts(hosts: unknown): string {
@@ -81,16 +84,17 @@ function formatHosts(hosts: unknown): string {
 
   const result: string[] = [];
 
-  Object.entries(hosts as Record<string, unknown>).forEach(
-    ([domain, value]) => {
-      if (Array.isArray(value)) {
-        const ipsStr = value.join(";");
-        result.push(`${domain}=${ipsStr}`);
-      } else {
-        result.push(`${domain}=${value}`);
-      }
-    },
-  );
+  const hostEntries = Object.entries(hosts as Record<string, unknown>);
+  for (let i = 0; i < hostEntries.length; i++) {
+    const domain = hostEntries[i][0];
+    const value = hostEntries[i][1];
+    if (Array.isArray(value)) {
+      const ipsStr = (value as any[]).join(";");
+      result.push(`${domain}=${ipsStr}`);
+    } else {
+      result.push(`${domain}=${value}`);
+    }
+  }
 
   return result.join(", ");
 }
@@ -99,32 +103,40 @@ function parseHosts(str: string): NameserverPolicy {
   const result: NameserverPolicy = {};
   if (!str) return result;
 
-  str.split(",").forEach((item) => {
-    const parts = item.trim().split("=");
-    if (parts.length < 2) return;
-
-    const domain = parts[0].trim();
-    const valueStr = parts.slice(1).join("=").trim();
-
-    if (valueStr.includes(";")) {
-      result[domain] = valueStr
-        .split(";")
-        .map((s) => s.trim())
-        .filter(Boolean);
+  const items = str.split(",");
+  for (let i = 0; i < items.length; i++) {
+    const raw = items[i];
+    if (!raw) continue;
+    const eqIndex = raw.indexOf("=");
+    if (eqIndex === -1) continue;
+    const domain = raw.slice(0, eqIndex).trim();
+    const valueStr = raw.slice(eqIndex + 1).trim();
+    if (!domain) continue;
+    if (valueStr.indexOf(";") !== -1) {
+      const parts = valueStr.split(";");
+      const arr: string[] = [];
+      for (let j = 0; j < parts.length; j++) {
+        const v = parts[j].trim();
+        if (v) arr.push(v);
+      }
+      result[domain] = arr;
     } else {
       result[domain] = valueStr;
     }
-  });
+  }
 
   return result;
 }
 
 function parseList(str: string): string[] {
   if (!str?.trim()) return [];
-  return str
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean);
+  const items = str.split(",");
+  const out: string[] = [];
+  for (let i = 0; i < items.length; i++) {
+    const v = items[i].trim();
+    if (v) out.push(v);
+  }
+  return out;
 }
 
 // 默认DNS配置
@@ -356,7 +368,15 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
     };
 
     const policy = parseNameserverPolicy(values.nameserverPolicy);
-    if (Object.keys(policy).length > 0) {
+    const hasPolicyEntries = (() => {
+      for (const key in policy) {
+        if (Object.prototype.hasOwnProperty.call(policy, key)) {
+          return true;
+        }
+      }
+      return false;
+    })();
+    if (hasPolicyEntries) {
       dnsConfig["nameserver-policy"] = policy;
     }
 
@@ -367,12 +387,28 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
     const config: Record<string, any> = {};
 
     const dnsConfig = generateDnsConfig();
-    if (Object.keys(dnsConfig).length > 0) {
+    const hasDnsConfigEntries = (() => {
+      for (const key in dnsConfig) {
+        if (Object.prototype.hasOwnProperty.call(dnsConfig, key)) {
+          return true;
+        }
+      }
+      return false;
+    })();
+    if (hasDnsConfigEntries) {
       config.dns = dnsConfig;
     }
 
     const hosts = parseHosts(values.hosts);
-    if (Object.keys(hosts).length > 0) {
+    const hasHostsEntries = (() => {
+      for (const key in hosts) {
+        if (Object.prototype.hasOwnProperty.call(hosts, key)) {
+          return true;
+        }
+      }
+      return false;
+    })();
+    if (hasHostsEntries) {
       config.hosts = hosts;
     }
 

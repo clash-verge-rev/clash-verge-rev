@@ -71,6 +71,7 @@ export const ProxiesEditorViewer = (props: Props) => {
   const [prependSeq, setPrependSeq] = useState<IProxyConfig[]>([]);
   const [appendSeq, setAppendSeq] = useState<IProxyConfig[]>([]);
   const [deleteSeq, setDeleteSeq] = useState<string[]>([]);
+  const deleteSeqSet = useMemo(() => new Set(deleteSeq), [deleteSeq]);
 
   const filteredPrependSeq = useMemo(
     () => prependSeq.filter((proxy) => match(proxy.name)),
@@ -83,6 +84,14 @@ export const ProxiesEditorViewer = (props: Props) => {
   const filteredAppendSeq = useMemo(
     () => appendSeq.filter((proxy) => match(proxy.name)),
     [appendSeq, match],
+  );
+  const filteredPrependSeqIds = useMemo(
+    () => filteredPrependSeq.map((x) => x.name),
+    [filteredPrependSeq],
+  );
+  const filteredAppendSeqIds = useMemo(
+    () => filteredAppendSeq.map((x) => x.name),
+    [filteredAppendSeq],
   );
 
   const sensors = useSensors(
@@ -382,11 +391,7 @@ export const ProxiesEditorViewer = (props: Props) => {
                         collisionDetection={closestCenter}
                         onDragEnd={onPrependDragEnd}
                       >
-                        <SortableContext
-                          items={filteredPrependSeq.map((x) => {
-                            return x.name;
-                          })}
-                        >
+                        <SortableContext items={filteredPrependSeqIds}>
                           {filteredPrependSeq.map((item) => {
                             return (
                               <ProxyItem
@@ -412,14 +417,14 @@ export const ProxiesEditorViewer = (props: Props) => {
                       <ProxyItem
                         key={filteredProxyList[newIndex].name}
                         type={
-                          deleteSeq.includes(filteredProxyList[newIndex].name)
+                          deleteSeqSet.has(filteredProxyList[newIndex].name)
                             ? "delete"
                             : "original"
                         }
                         proxy={filteredProxyList[newIndex]}
                         onDelete={() => {
                           if (
-                            deleteSeq.includes(filteredProxyList[newIndex].name)
+                            deleteSeqSet.has(filteredProxyList[newIndex].name)
                           ) {
                             setDeleteSeq(
                               deleteSeq.filter(
@@ -442,11 +447,7 @@ export const ProxiesEditorViewer = (props: Props) => {
                         collisionDetection={closestCenter}
                         onDragEnd={onAppendDragEnd}
                       >
-                        <SortableContext
-                          items={filteredAppendSeq.map((x) => {
-                            return x.name;
-                          })}
-                        >
+                        <SortableContext items={filteredAppendSeqIds}>
                           {filteredAppendSeq.map((item) => {
                             return (
                               <ProxyItem

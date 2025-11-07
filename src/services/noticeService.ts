@@ -15,7 +15,10 @@ let notices: NoticeItem[] = [];
 const listeners: Set<Listener> = new Set();
 
 function notifyListeners() {
-  listeners.forEach((listener) => listener([...notices])); // Pass a copy
+  const snapshot = notices.slice();
+  for (const listener of listeners) {
+    listener(snapshot);
+  }
 }
 
 // Shows a notification.
@@ -51,17 +54,26 @@ export function showNotice(
 // Hides a specific notification by its ID.
 
 export function hideNotice(id: number) {
-  const notice = notices.find((n) => n.id === id);
-  if (notice?.timerId) {
-    clearTimeout(notice.timerId); // Clear timeout if manually closed
+  let idx = -1;
+  for (let i = 0; i < notices.length; i++) {
+    if (notices[i].id === id) {
+      idx = i;
+      const timer = notices[i].timerId;
+      if (timer) {
+        clearTimeout(timer); // Clear timeout if manually closed
+      }
+      break;
+    }
   }
-  notices = notices.filter((n) => n.id !== id);
+  if (idx !== -1) {
+    notices = [...notices.slice(0, idx), ...notices.slice(idx + 1)];
+  }
   notifyListeners();
 }
 
 // Subscribes a listener function to notice state changes.
 
-export function subscribeNotices(listener: () => void) {
+export function subscribeNotices(listener: Listener) {
   listeners.add(listener);
   return () => {
     listeners.delete(listener);
@@ -73,9 +85,9 @@ export function getSnapshotNotices() {
 
 // Function to clear all notices at once
 export function clearAllNotices() {
-  notices.forEach((n) => {
+  for (const n of notices) {
     if (n.timerId) clearTimeout(n.timerId);
-  });
+  }
   notices = [];
   notifyListeners();
 }

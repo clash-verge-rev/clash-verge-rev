@@ -34,11 +34,11 @@ class DelayManager {
       const updates = this.pendingItemUpdates;
       this.pendingItemUpdates = new Map();
 
-      updates.forEach((queue, key) => {
+      for (const [key, queue] of updates) {
         const listener = this.listenerMap.get(key);
-        if (!listener) return;
+        if (!listener) continue;
 
-        queue.forEach((update) => {
+        for (const update of queue) {
           try {
             listener(update);
           } catch (error) {
@@ -47,8 +47,8 @@ class DelayManager {
               error,
             );
           }
-        });
-      });
+        }
+      }
     };
 
     if (typeof window !== "undefined") {
@@ -74,9 +74,9 @@ class DelayManager {
       const groups = this.pendingGroupUpdates;
       this.pendingGroupUpdates = new Set();
 
-      groups.forEach((group) => {
+      for (const group of groups) {
         const listener = this.groupListenerMap.get(group);
-        if (!listener) return;
+        if (!listener) continue;
         try {
           listener();
         } catch (error) {
@@ -85,7 +85,7 @@ class DelayManager {
             error,
           );
         }
-      });
+      }
     };
 
     if (typeof window !== "undefined") {
@@ -272,7 +272,9 @@ class DelayManager {
     );
     const names = nameList.filter(Boolean);
     // 设置正在延迟测试中
-    names.forEach((name) => this.setDelay(name, group, -2));
+    for (const name of names) {
+      this.setDelay(name, group, -2);
+    }
 
     let index = 0;
     const startTime = Date.now();

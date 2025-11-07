@@ -194,7 +194,7 @@ const rules: {
   {
     name: "NETWORK",
     example: "udp",
-    validator: (value) => ["tcp", "udp"].includes(value),
+    validator: (value) => NETWORK_TYPES_SET.has(value),
   },
   {
     name: "UID",
@@ -241,6 +241,7 @@ const rules: {
 ];
 
 const builtinProxyPolicies = ["DIRECT", "REJECT", "REJECT-DROP", "PASS"];
+const NETWORK_TYPES_SET = new Set(["tcp", "udp"]);
 
 export const RulesEditorViewer = (props: Props) => {
   const { groupsUid, mergeUid, profileUid, property, open, onClose, onSave } =
@@ -265,6 +266,9 @@ export const RulesEditorViewer = (props: Props) => {
   const [prependSeq, setPrependSeq] = useState<string[]>([]);
   const [appendSeq, setAppendSeq] = useState<string[]>([]);
   const [deleteSeq, setDeleteSeq] = useState<string[]>([]);
+  const deleteSeqSet = useMemo(() => new Set(deleteSeq), [deleteSeq]);
+  const prependSeqSet = useMemo(() => new Set(prependSeq), [prependSeq]);
+  const appendSeqSet = useMemo(() => new Set(appendSeq), [appendSeq]);
 
   const filteredPrependSeq = useMemo(
     () => prependSeq.filter((rule) => match(rule)),
@@ -400,12 +404,19 @@ export const RulesEditorViewer = (props: Props) => {
     )
       ? (rawDeleteGroups as Array<string | { name: string }>)
       : [];
+    const deleteNameSet = new Set<string>();
+    const deleteObjSet = new Set<any>();
+    for (let i = 0; i < moreDeleteGroups.length; i++) {
+      const g = moreDeleteGroups[i] as any;
+      if (typeof g === "string") deleteNameSet.add(g);
+      else deleteObjSet.add(g);
+    }
     const groups = morePrependGroups.concat(
       originGroups.filter((group: any) => {
         if (group.name) {
-          return !moreDeleteGroups.includes(group.name);
+          return !deleteNameSet.has(group.name);
         } else {
-          return !moreDeleteGroups.includes(group);
+          return !deleteObjSet.has(group);
         }
       }),
       moreAppendGroups,
@@ -608,7 +619,7 @@ export const RulesEditorViewer = (props: Props) => {
                   onClick={() => {
                     try {
                       const raw = validateRule();
-                      if (prependSeq.includes(raw)) return;
+                      if (prependSeqSet.has(raw)) return;
                       setPrependSeq([raw, ...prependSeq]);
                     } catch (err: any) {
                       showNotice("error", err.message || err.toString());
@@ -626,7 +637,7 @@ export const RulesEditorViewer = (props: Props) => {
                   onClick={() => {
                     try {
                       const raw = validateRule();
-                      if (appendSeq.includes(raw)) return;
+                      if (appendSeqSet.has(raw)) return;
                       setAppendSeq([...appendSeq, raw]);
                     } catch (err: any) {
                       showNotice("error", err.message || err.toString());
@@ -662,11 +673,7 @@ export const RulesEditorViewer = (props: Props) => {
                         collisionDetection={closestCenter}
                         onDragEnd={onPrependDragEnd}
                       >
-                        <SortableContext
-                          items={filteredPrependSeq.map((x) => {
-                            return x;
-                          })}
-                        >
+                        <SortableContext items={filteredPrependSeq}>
                           {filteredPrependSeq.map((item) => {
                             return (
                               <RuleItem
@@ -690,13 +697,13 @@ export const RulesEditorViewer = (props: Props) => {
                       <RuleItem
                         key={filteredRuleList[newIndex]}
                         type={
-                          deleteSeq.includes(filteredRuleList[newIndex])
+                          deleteSeqSet.has(filteredRuleList[newIndex])
                             ? "delete"
                             : "original"
                         }
                         ruleRaw={filteredRuleList[newIndex]}
                         onDelete={() => {
-                          if (deleteSeq.includes(filteredRuleList[newIndex])) {
+                          if (deleteSeqSet.has(filteredRuleList[newIndex])) {
                             setDeleteSeq(
                               deleteSeq.filter(
                                 (v) => v !== filteredRuleList[newIndex],
@@ -718,11 +725,7 @@ export const RulesEditorViewer = (props: Props) => {
                         collisionDetection={closestCenter}
                         onDragEnd={onAppendDragEnd}
                       >
-                        <SortableContext
-                          items={filteredAppendSeq.map((x) => {
-                            return x;
-                          })}
-                        >
+                        <SortableContext items={filteredAppendSeq}>
                           {filteredAppendSeq.map((item) => {
                             return (
                               <RuleItem

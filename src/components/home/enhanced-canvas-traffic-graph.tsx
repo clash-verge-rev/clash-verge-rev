@@ -376,7 +376,8 @@ export const EnhancedCanvasTrafficGraph = memo(
 
         ctx.save();
 
-        ticks.forEach((tick, index) => {
+        for (let index = 0; index < ticks.length; index++) {
+          const tick = ticks[index];
           const isBottomTick = index === 0; // 最底部的刻度
           const isTopTick = index === ticks.length - 1; // 最顶部的刻度
 
@@ -417,7 +418,7 @@ export const EnhancedCanvasTrafficGraph = memo(
           ctx.globalAlpha = 0.9;
           ctx.fillStyle = colors.text;
           ctx.fillText(tick.label, padding.left - 4, tick.y);
-        });
+        }
 
         ctx.restore();
       },
@@ -553,20 +554,17 @@ export const EnhancedCanvasTrafficGraph = memo(
         }
 
         // 绘制时间标签
-        timePoints.forEach((point, index) => {
+        for (let index = 0; index < timePoints.length; index++) {
+          const point = timePoints[index];
           if (index === 0) {
-            // 第一个标签左对齐
             ctx.textAlign = "left";
           } else if (index === timePoints.length - 1) {
-            // 最后一个标签右对齐
             ctx.textAlign = "right";
           } else {
-            // 中间标签居中对齐
             ctx.textAlign = "center";
           }
-
           ctx.fillText(point.label, point.x, timeAxisY);
-        });
+        }
 
         ctx.restore();
       },

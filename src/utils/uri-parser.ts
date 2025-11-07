@@ -34,6 +34,14 @@ export default function parseUri(uri: string): IProxyConfig {
   }
 }
 
+const IP_VERSION_SET = new Set([
+  "dual",
+  "ipv4",
+  "ipv6",
+  "ipv4-prefer",
+  "ipv6-prefer",
+]);
+
 function getIfNotBlank(
   value: string | undefined,
   dft?: string,
@@ -393,7 +401,11 @@ function URI_VMESS(line: string): IProxyVmessConfig {
       port,
       cipher: getCipher(getIfPresent(params.scy, "auto")),
       uuid: params.id,
-      tls: ["tls", true, 1, "1"].includes(params.tls),
+      tls:
+        params.tls === "tls" ||
+        params.tls === true ||
+        params.tls === 1 ||
+        params.tls === "1",
       "skip-cert-verify": isPresent(params.verify_cert)
         ? !params.verify_cert
         : undefined,
@@ -408,13 +420,9 @@ function URI_VMESS(line: string): IProxyVmessConfig {
     let httpupgrade = false;
     if (params.net === "ws" || params.obfs === "websocket") {
       proxy.network = "ws";
-    } else if (
-      ["http"].includes(params.net) ||
-      ["http"].includes(params.obfs) ||
-      ["http"].includes(params.type)
-    ) {
+    } else if (params.net === "http" || params.obfs === "http" || params.type === "http") {
       proxy.network = "http";
-    } else if (["grpc"].includes(params.net)) {
+    } else if (params.net === "grpc") {
       proxy.network = "grpc";
     } else if (params.net === "httpupgrade") {
       proxy.network = "ws";
@@ -453,7 +461,7 @@ function URI_VMESS(line: string): IProxyVmessConfig {
       }
 
       if (transportPath || transportHost) {
-        if (["grpc"].includes(proxy.network)) {
+        if (proxy.network === "grpc") {
           proxy[`grpc-opts`] = {
             "grpc-service-name": getIfNotBlank(transportPath),
           };
@@ -550,7 +558,7 @@ function URI_VLESS(line: string): IProxyVlessConfig {
   proxy.alpn = params.alpn ? params.alpn.split(",") : undefined;
   proxy["skip-cert-verify"] = /(TRUE)|1/i.test(params.allowInsecure);
 
-  if (["reality"].includes(params.security)) {
+  if (params.security === "reality") {
     const opts: IProxyVlessConfig["reality-opts"] = {};
     if (params.pbk) {
       opts["public-key"] = params.pbk;
@@ -558,7 +566,7 @@ function URI_VLESS(line: string): IProxyVlessConfig {
     if (params.sid) {
       opts["short-id"] = params.sid;
     }
-    if (Object.keys(opts).length > 0) {
+    if (opts["public-key"] || opts["short-id"]) {
       proxy["reality-opts"] = opts;
     }
   }
@@ -581,9 +589,16 @@ function URI_VLESS(line: string): IProxyVlessConfig {
     proxy.network = "ws";
     httpupgrade = true;
   } else {
-    proxy.network = ["tcp", "ws", "http", "grpc", "h2"].includes(params.type)
-      ? (params.type as NetworkType)
-      : "tcp";
+    // avoid array creation; check equality chain
+    const nt = params.type;
+    proxy.network =
+      nt === "tcp" ||
+      nt === "ws" ||
+      nt === "http" ||
+      nt === "grpc" ||
+      nt === "h2"
+        ? (nt as NetworkType)
+        : "tcp";
   }
   if (!proxy.network && isShadowrocket && params.obfs) {
     switch (params.type) {
@@ -604,10 +619,10 @@ function URI_VLESS(line: string): IProxyVlessConfig {
       }
     }
   }
-  if (["websocket"].includes(proxy.network)) {
+  if (proxy.network === "websocket") {
     proxy.network = "ws";
   }
-  if (proxy.network && !["tcp", "none"].includes(proxy.network)) {
+  if (proxy.network && proxy.network !== "tcp" && proxy.network !== "none") {
     const opts: Record<string, any> = {};
     const host = params.host ?? params.obfsParam;
     if (host) {
@@ -630,7 +645,7 @@ function URI_VLESS(line: string): IProxyVlessConfig {
       opts["v2ray-http-upgrade"] = true;
       opts["v2ray-http-upgrade-fast-open"] = true;
     }
-    if (Object.keys(opts).length > 0) {
+    if (opts.headers || opts.path || opts["v2ray-http-upgrade"]) {
       proxy[`ws-opts`] = opts;
     }
   }
@@ -1091,9 +1106,7 @@ function URI_HTTP(line: string): IProxyHttpConfig {
         proxy["skip-cert-verify"] = /(TRUE)|1/i.test(value);
         break;
       case "ip-version":
-        if (
-          ["dual", "ipv4", "ipv6", "ipv4-prefer", "ipv6-prefer"].includes(value)
-        ) {
+        if (IP_VERSION_SET.has(value)) {
           proxy["ip-version"] = value as
             | "dual"
             | "ipv4"
@@ -1159,9 +1172,7 @@ function URI_SOCKS(line: string): IProxySocks5Config {
         proxy["udp"] = /(TRUE)|1/i.test(value);
         break;
       case "ip-version":
-        if (
-          ["dual", "ipv4", "ipv6", "ipv4-prefer", "ipv6-prefer"].includes(value)
-        ) {
+        if (IP_VERSION_SET.has(value)) {
           proxy["ip-version"] = value as
             | "dual"
             | "ipv4"

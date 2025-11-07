@@ -199,9 +199,9 @@ export function BackupViewer({ ref }: { ref?: Ref<DialogRef> }) {
 
     return () => {
       resizeObserver?.disconnect();
-      scrollTargets.forEach((target) => {
+      for (const target of scrollTargets) {
         target.removeEventListener("scroll", updatePosition, true);
-      });
+      }
       window.removeEventListener("resize", updatePosition);
     };
   }, [dialogPaper]);

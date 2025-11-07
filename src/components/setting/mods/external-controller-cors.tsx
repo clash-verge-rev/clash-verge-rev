@@ -17,6 +17,7 @@ const DEV_URLS = [
   "http://tauri.localhost",
   "http://localhost:3000",
 ];
+const DEV_URLS_SET = new Set(DEV_URLS);
 
 // 获取完整的源列表，包括开发URL
 const getFullOrigins = (origins: string[]) => {
@@ -28,7 +29,7 @@ const getFullOrigins = (origins: string[]) => {
 
 // 过滤基础URL(确保后续添加)
 const filterBaseOriginsForUI = (origins: string[]) => {
-  return origins.filter((origin: string) => !DEV_URLS.includes(origin.trim()));
+  return origins.filter((origin: string) => !DEV_URLS_SET.has(origin.trim()));
 };
 
 // 统一使用的按钮样式

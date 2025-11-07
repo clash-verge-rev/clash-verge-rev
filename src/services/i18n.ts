@@ -17,13 +17,10 @@ export const supportedLanguages = [
   "zhtw",
 ];
 
-export const languages: Record<string, any> = supportedLanguages.reduce(
-  (acc, lang) => {
-    acc[lang] = {};
-    return acc;
-  },
-  {} as Record<string, any>,
-);
+export const languages: Record<string, any> = {};
+for (const lang of supportedLanguages) {
+  languages[lang] = {};
+}
 
 export const loadLanguage = async (language: string) => {
   try {

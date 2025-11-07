@@ -5,6 +5,8 @@ import { changeLanguage, supportedLanguages } from "@/services/i18n";
 
 import { useVerge } from "./use-verge";
 
+const SUPPORTED_LANG_SET = new Set(supportedLanguages);
+
 export const useI18n = () => {
   const { i18n, t } = useTranslation();
   const { patchVerge } = useVerge();
@@ -12,7 +14,7 @@ export const useI18n = () => {
 
   const switchLanguage = useCallback(
     async (language: string) => {
-      if (!supportedLanguages.includes(language)) {
+      if (!SUPPORTED_LANG_SET.has(language)) {
         console.warn(`Unsupported language: ${language}`);
         return;
       }

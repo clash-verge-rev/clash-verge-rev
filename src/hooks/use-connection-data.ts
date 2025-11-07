@@ -42,14 +42,17 @@ export const useConnectionData = () => {
                   const data = JSON.parse(msg.data) as IConnections;
                   next(null, (old = initConnData) => {
                     const oldConn = old.connections;
-                    const maxLen = data.connections?.length;
-                    const connections: IConnectionsItem[] = [];
+                    const maxLen = data.connections?.length || 0;
+                    const idToOldIndex = new Map<string, number>(
+                      oldConn.map((o, idx) => [o.id, idx]),
+                    );
+                    const connections: IConnectionsItem[] = new Array(maxLen);
                     const rest = (data.connections || []).filter((each) => {
-                      const index = oldConn.findIndex((o) => o.id === each.id);
-                      if (index >= 0 && index < maxLen) {
-                        const old = oldConn[index];
-                        each.curUpload = each.upload - old.upload;
-                        each.curDownload = each.download - old.download;
+                      const index = idToOldIndex.get(each.id);
+                      if (index !== undefined && index >= 0 && index < maxLen) {
+                        const oldItem = oldConn[index];
+                        each.curUpload = each.upload - oldItem.upload;
+                        each.curDownload = each.download - oldItem.download;
                         connections[index] = each;
                         return false;
                       }
@@ -57,9 +60,10 @@ export const useConnectionData = () => {
                     });
                     for (let i = 0; i < maxLen; ++i) {
                       if (!connections[i] && rest.length > 0) {
-                        connections[i] = rest.shift()!;
-                        connections[i].curUpload = 0;
-                        connections[i].curDownload = 0;
+                        const item = rest.shift()!;
+                        item.curUpload = 0;
+                        item.curDownload = 0;
+                        connections[i] = item;
                       }
                     }
                     return { ...data, connections };

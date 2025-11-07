@@ -269,8 +269,20 @@ export const ProxyChain = ({
       const { active, over } = event;
 
       if (active.id !== over?.id) {
-        const oldIndex = proxyChain.findIndex((item) => item.id === active.id);
-        const newIndex = proxyChain.findIndex((item) => item.id === over?.id);
+        let oldIndex = -1;
+        let newIndex = -1;
+        for (
+          let i = 0;
+          i < proxyChain.length && (oldIndex === -1 || newIndex === -1);
+          i++
+        ) {
+          const id = proxyChain[i].id;
+          if (id === active.id) oldIndex = i;
+          if (id === over?.id) newIndex = i;
+        }
+        if (oldIndex < 0 || newIndex < 0) {
+          return;
+        }
 
         onUpdateChain(arrayMove(proxyChain, oldIndex, newIndex));
         markUnsavedChanges();

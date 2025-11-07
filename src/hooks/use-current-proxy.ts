@@ -2,6 +2,8 @@ import { useMemo } from "react";
 
 import { useAppData } from "@/providers/app-data-context";
 
+const PRIMARY_KEYWORDS_LOWER = ["auto", "select", "proxy", "节点选择", "自动选择"];
+
 // 定义代理组类型
 interface ProxyGroup {
   name: string;
@@ -29,19 +31,27 @@ export const useCurrentProxy = () => {
     // 在规则模式下，寻找主要代理组（通常是第一个或者名字包含特定关键词的组）
     if (currentMode === "rule" && groups.length > 0) {
       // 查找主要的代理组（优先级：包含关键词 > 第一个非GLOBAL组）
-      const primaryKeywords = [
-        "auto",
-        "select",
-        "proxy",
-        "节点选择",
-        "自动选择",
-      ];
-      const primaryGroup =
-        groups.find((group: ProxyGroup) =>
-          primaryKeywords.some((keyword) =>
-            group.name.toLowerCase().includes(keyword.toLowerCase()),
-          ),
-        ) || groups.filter((g: ProxyGroup) => g.name !== "GLOBAL")[0];
+      let primaryGroup: ProxyGroup | undefined;
+      for (let i = 0; i < groups.length; i++) {
+        const group = groups[i] as ProxyGroup;
+        const nameLower = group.name.toLowerCase();
+        for (let k = 0; k < PRIMARY_KEYWORDS_LOWER.length; k++) {
+          if (nameLower.includes(PRIMARY_KEYWORDS_LOWER[k])) {
+            primaryGroup = group;
+            break;
+          }
+        }
+        if (primaryGroup) break;
+      }
+      if (!primaryGroup) {
+        for (let i = 0; i < groups.length; i++) {
+          const g = groups[i] as ProxyGroup;
+          if (g.name !== "GLOBAL") {
+            primaryGroup = g;
+            break;
+          }
+        }
+      }
 
       if (primaryGroup) {
         primaryGroupName = primaryGroup.name;

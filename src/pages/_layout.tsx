@@ -67,6 +67,8 @@ export const portableFlag = false;
 
 type NavItem = (typeof navItems)[number];
 
+const CTX_DENY_TAG_SET = new Set(["input", "textarea"]);
+
 const createNavLookup = (items: NavItem[]) => {
   const map = new Map(items.map((item) => [item.path, item]));
   const defaultOrder = items.map((item) => item.path);
@@ -223,10 +225,13 @@ const Layout = () => {
       const activeId = String(active.id);
       const overId = String(over.id);
 
-      const oldIndex = menuOrder.indexOf(activeId);
-      const newIndex = menuOrder.indexOf(overId);
+      const idToIndex = new Map<string, number>(
+        menuOrder.map((id, index) => [id, index]),
+      );
+      const oldIndex = idToIndex.get(activeId);
+      const newIndex = idToIndex.get(overId);
 
-      if (oldIndex === -1 || newIndex === -1) {
+      if (oldIndex == null || newIndex == null) {
         return;
       }
 
@@ -369,9 +374,7 @@ const Layout = () => {
           onContextMenu={(e) => {
             if (
               OS === "windows" &&
-              !["input", "textarea"].includes(
-                e.currentTarget.tagName.toLowerCase(),
-              ) &&
+              !CTX_DENY_TAG_SET.has(e.currentTarget.tagName.toLowerCase()) &&
               !e.currentTarget.isContentEditable
             ) {
               e.preventDefault();

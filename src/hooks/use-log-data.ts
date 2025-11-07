@@ -10,6 +10,14 @@ import { useClashLog } from "@/services/states";
 
 const MAX_LOG_NUM = 1000;
 
+const LOG_LEVEL_SETS: Record<string, Set<string>> = {
+  debug: new Set(["debug", "info", "warning", "error"]),
+  info: new Set(["info", "warning", "error"]),
+  warning: new Set(["warning", "error"]),
+  error: new Set(["error"]),
+  silent: new Set<string>(),
+};
+
 export const useLogData = () => {
   const [clashLog] = useClashLog();
   const enableLog = clashLog.enable;
@@ -41,22 +49,16 @@ export const useLogData = () => {
             let filterLogs: ILogItem[] = [];
             switch (logLevel) {
               case "debug":
-                filterLogs = logs.filter((i) =>
-                  ["debug", "info", "warning", "error"].includes(i.type),
-                );
+                filterLogs = logs.filter((i) => LOG_LEVEL_SETS.debug.has(i.type));
                 break;
               case "info":
-                filterLogs = logs.filter((i) =>
-                  ["info", "warning", "error"].includes(i.type),
-                );
+                filterLogs = logs.filter((i) => LOG_LEVEL_SETS.info.has(i.type));
                 break;
               case "warning":
-                filterLogs = logs.filter((i) =>
-                  ["warning", "error"].includes(i.type),
-                );
+                filterLogs = logs.filter((i) => LOG_LEVEL_SETS.warning.has(i.type));
                 break;
               case "error":
-                filterLogs = logs.filter((i) => i.type === "error");
+                filterLogs = logs.filter((i) => LOG_LEVEL_SETS.error.has(i.type));
                 break;
               case "silent":
                 filterLogs = [];

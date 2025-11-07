@@ -290,13 +290,14 @@ export const GroupsEditorViewer = (props: Props) => {
     const moreAppendProxies = moreProxiesObj?.append || [];
     const moreDeleteProxies = normalizeDeleteSeq(moreProxiesObj?.delete);
 
+    const moreDeleteProxiesSet = new Set(moreDeleteProxies);
     const proxies = morePrependProxies.concat(
       originProxies.filter((proxy: any) => {
         const proxyName =
           typeof proxy === "string"
             ? proxy
             : (proxy?.name as string | undefined);
-        return proxyName ? !moreDeleteProxies.includes(proxyName) : true;
+        return proxyName ? !moreDeleteProxiesSet.has(proxyName) : true;
       }),
       moreAppendProxies,
     );
@@ -309,11 +310,12 @@ export const GroupsEditorViewer = (props: Props) => {
         (name): name is string => typeof name === "string" && name.length > 0,
       );
 
+    const deleteSeqSet = new Set(deleteSeq);
     const computedPolicyList = builtinProxyPolicies.concat(
       prependSeq.map((group: IProxyGroupConfig) => group.name),
       (originGroupsObj?.["proxy-groups"] || [])
         .map((group: IProxyGroupConfig) => group.name)
-        .filter((name) => !deleteSeq.includes(name)),
+        .filter((name) => !deleteSeqSet.has(name)),
       appendSeq.map((group: IProxyGroupConfig) => group.name),
       proxyNames,
     );

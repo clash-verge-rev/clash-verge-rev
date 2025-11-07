@@ -101,47 +101,46 @@ export function TrafficGraph({ ref }: { ref?: Ref<TrafficRef> }) {
       return 1;
     };
 
-    const drawBezier = (list: number[], offset: number) => {
-      const points = list.map((y, i) => [
-        (dx * (i - 1) - offset + 3) | 0,
-        countY(y),
-      ]);
-
-      let x = points[0][0];
-      let y = points[0][1];
-
-      context.moveTo(x, y);
-
-      for (let i = 1; i < points.length; i++) {
-        const p1 = points[i];
-        const p2 = points[i + 1] || p1;
-
-        const x1 = (p1[0] + p2[0]) / 2;
-        const y1 = (p1[1] + p2[1]) / 2;
-
-        context.quadraticCurveTo(p1[0], p1[1], x1, y1);
-        x = x1;
-        y = y1;
+    const drawBezier = (list: number[], offset: number, length: number) => {
+      if (length === 0) return;
+      const firstX = (dx * -1 - offset + 3) | 0;
+      const firstY = countY(list[0]);
+      context.moveTo(firstX, firstY);
+      for (let i = 1; i < length; i++) {
+        const p1x = (dx * (i - 1) - offset + 3) | 0;
+        const p1y = countY(list[i]);
+        const hasNext = i + 1 < length;
+        const p2x = hasNext ? (dx * i - offset + 3) | 0 : p1x;
+        const p2y = hasNext ? countY(list[i + 1]) : p1y;
+        const x1 = (p1x + p2x) / 2;
+        const y1 = (p1y + p2y) / 2;
+        context.quadraticCurveTo(p1x, p1y, x1, y1);
       }
     };
 
-    const drawLine = (list: number[], offset: number) => {
-      const points = list.map((y, i) => [
-        (dx * (i - 1) - offset) | 0,
-        countY(y),
-      ]);
-
-      context.moveTo(points[0][0], points[0][1]);
-
-      for (let i = 1; i < points.length; i++) {
-        const p = points[i];
-        context.lineTo(p[0], p[1]);
+    const drawLine = (list: number[], offset: number, length: number) => {
+      if (length === 0) return;
+      const startX = (dx * -1 - offset) | 0;
+      const startY = countY(list[0]);
+      context.moveTo(startX, startY);
+      for (let i = 1; i < length; i++) {
+        const x = (dx * (i - 1) - offset) | 0;
+        const y = countY(list[i]);
+        context.lineTo(x, y);
       }
     };
+
+    const listUpArr: number[] = new Array(maxPoint + 2);
+    const listDownArr: number[] = new Array(maxPoint + 2);
 
     const drawGraph = (lastTime: number) => {
-      const listUp = listRef.current.map((v) => v.up);
-      const listDown = listRef.current.map((v) => v.down);
+      const listCurr = listRef.current;
+      const len = listCurr.length;
+      for (let i = 0; i < len; i++) {
+        const v = listCurr[i];
+        listUpArr[i] = v.up;
+        listDownArr[i] = v.down;
+      }
       const lineStyle = styleRef.current;
 
       const now = Date.now();
@@ -173,9 +172,9 @@ export function TrafficGraph({ ref }: { ref?: Ref<TrafficRef> }) {
       context.lineWidth = upLineWidth;
       context.strokeStyle = upLineColor;
       if (lineStyle) {
-        drawBezier(listUp, offset);
+        drawBezier(listUpArr, offset, len);
       } else {
-        drawLine(listUp, offset);
+        drawLine(listUpArr, offset, len);
       }
       context.stroke();
       context.closePath();
@@ -185,9 +184,9 @@ export function TrafficGraph({ ref }: { ref?: Ref<TrafficRef> }) {
       context.lineWidth = downLineWidth;
       context.strokeStyle = downLineColor;
       if (lineStyle) {
-        drawBezier(listDown, offset);
+        drawBezier(listDownArr, offset, len);
       } else {
-        drawLine(listDown, offset);
+        drawLine(listDownArr, offset, len);
       }
       context.stroke();
       context.closePath();

@@ -22,6 +22,13 @@ function isValidBoolean(value: any): value is boolean {
  * 系统监控数据验证器
  */
 export class SystemMonitorValidator implements ISystemMonitorOverviewValidator {
+  private static STATUS_SET = new Set([
+    "active",
+    "inactive",
+    "error",
+    "unknown",
+    "healthy",
+  ]);
   /**
    * 验证数据是否符合ISystemMonitorOverview接口
    */
@@ -138,7 +145,7 @@ export class SystemMonitorValidator implements ISystemMonitorOverviewValidator {
   private validateOverallStatus(status: any): boolean {
     return (
       typeof status === "string" &&
-      ["active", "inactive", "error", "unknown", "healthy"].includes(status)
+      SystemMonitorValidator.STATUS_SET.has(status)
     );
   }
 
@@ -193,7 +200,7 @@ export class SystemMonitorValidator implements ISystemMonitorOverviewValidator {
   ): "active" | "inactive" | "error" | "unknown" | "healthy" {
     if (
       typeof status === "string" &&
-      ["active", "inactive", "error", "unknown", "healthy"].includes(status)
+      SystemMonitorValidator.STATUS_SET.has(status)
     ) {
       return status as "active" | "inactive" | "error" | "unknown" | "healthy";
     }

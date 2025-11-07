@@ -61,6 +61,8 @@ import {
 import { showNotice } from "@/services/noticeService";
 import { useSetLoadingCache, useThemeMode } from "@/services/states";
 
+const PROFILE_TYPE_SET = new Set(["local", "remote"]);
+
 // 记录profile切换状态
 const debugProfileSwitch = (action: string, profile: string, extra?: any) => {
   const timestamp = new Date().toISOString().substring(11, 23);
@@ -258,10 +260,13 @@ const ProfilePage = () => {
   const profileItems = useMemo(() => {
     const items = profiles.items || [];
 
-    const type1 = ["local", "remote"];
-
-    return items.filter((i) => i && type1.includes(i.type!));
+    return items.filter((i) => i && PROFILE_TYPE_SET.has(i.type!));
   }, [profiles]);
+  const profileItemIds = useMemo(
+    () => profileItems.map((x) => x.uid),
+    [profileItems],
+  );
+  const activatingsSet = useMemo(() => new Set(activatings), [activatings]);
 
   const currentActivatings = () => {
     return [...new Set([profiles.current ?? ""])].filter(Boolean);
@@ -434,8 +439,12 @@ const ProfilePage = () => {
       abortControllerRef.current = currentAbortController;
 
       setActivatings((prev) => {
-        if (prev.includes(profile)) return prev;
-        return [...prev, profile];
+        for (let i = 0; i < prev.length; i++) {
+          if (prev[i] === profile) return prev;
+        }
+        const next = prev.slice();
+        next.push(profile);
+        return next;
       });
 
       try {
@@ -984,25 +993,19 @@ const ProfilePage = () => {
         >
           <Box sx={{ mb: 1.5 }}>
             <Grid container spacing={{ xs: 1, lg: 1 }}>
-              <SortableContext
-                items={profileItems.map((x) => {
-                  return x.uid;
-                })}
-              >
+              <SortableContext items={profileItemIds}>
                 {profileItems.map((item) => (
                   <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={item.file}>
                     <ProfileItem
                       id={item.uid}
                       selected={profiles.current === item.uid}
-                      activating={activatings.includes(item.uid)}
+                      activating={activatingsSet.has(item.uid)}
                       itemData={item}
                       onSelect={(f) => onSelect(item.uid, f)}
                       onEdit={() => viewerRef.current?.edit(item)}
                       onSave={async (prev, curr) => {
                         if (prev !== curr && profiles.current === item.uid) {
                           await onEnhance(false);
-                          //  await restartCore();
-                          //   Notice.success(t("Clash Core Restarted"), 1000);
                         }
                       }}
                       onDelete={() => {

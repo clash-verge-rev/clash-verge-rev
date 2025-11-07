@@ -105,7 +105,9 @@ export const AppDataProvider = ({
     };
 
     const clearAllTimeouts = () => {
-      scheduledTimeouts.forEach((timeoutId) => clearTimeout(timeoutId));
+      for (const timeoutId of scheduledTimeouts) {
+        clearTimeout(timeoutId);
+      }
       scheduledTimeouts.clear();
     };
 
@@ -190,9 +192,9 @@ export const AppDataProvider = ({
           ["verge://refresh-proxy-config", handleRefreshProxy],
         ];
 
-        fallbackHandlers.forEach(([eventName, handler]) => {
+        for (const [eventName, handler] of fallbackHandlers) {
           registerCleanup(addWindowListener(eventName, handler));
-        });
+        }
       }
     };
 
@@ -203,7 +205,8 @@ export const AppDataProvider = ({
       clearAllTimeouts();
 
       const errors: Error[] = [];
-      cleanupFns.splice(0).forEach((fn) => {
+      const fns = cleanupFns.splice(0);
+      for (const fn of fns) {
         try {
           fn();
         } catch (error) {
@@ -211,7 +214,7 @@ export const AppDataProvider = ({
             error instanceof Error ? error : new Error(String(error)),
           );
         }
-      });
+      }
 
       if (errors.length > 0) {
         console.error(

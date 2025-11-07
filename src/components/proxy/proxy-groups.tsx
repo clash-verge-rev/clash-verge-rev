@@ -45,6 +45,8 @@ interface ProxyChainItem {
   delay?: number;
 }
 
+const ALLOWED_GROUP_TYPES = new Set(["Selector", "URLTest", "Fallback"]);
+
 const VirtuosoFooter = () => <div style={{ height: "8px" }} />;
 
 export const ProxyGroups = (props: Props) => {
@@ -85,10 +87,13 @@ export const ProxyGroups = (props: Props) => {
 
   const getGroupHeadState = useCallback(
     (groupName: string) => {
-      const headItem = renderList.find(
-        (item) => item.type === 1 && item.group?.name === groupName,
-      );
-      return headItem?.headState;
+      for (let i = 0; i < renderList.length; i++) {
+        const item = renderList[i];
+        if (item.type === 1 && item.group?.name === groupName) {
+          return item.headState;
+        }
+      }
+      return undefined;
     },
     [renderList],
   );
@@ -265,7 +270,7 @@ export const ProxyGroups = (props: Props) => {
         return;
       }
 
-      if (!["Selector", "URLTest", "Fallback"].includes(group.type)) return;
+      if (!ALLOWED_GROUP_TYPES.has(group.type)) return;
 
       handleProxyGroupChange(group, proxy);
     },
@@ -285,7 +290,10 @@ export const ProxyGroups = (props: Props) => {
 
     console.log(`[ProxyGroups] 找到代理数量: ${proxies.length}`);
 
-    const providers = new Set(proxies.map((p) => p!.provider!).filter(Boolean));
+    const providers = new Set<string>();
+    for (const p of proxies) {
+      if (p?.provider) providers.add(p.provider);
+    }
 
     if (providers.size) {
       console.log(`[ProxyGroups] 发现提供者，数量: ${providers.size}`);
@@ -297,7 +305,10 @@ export const ProxyGroups = (props: Props) => {
       });
     }
 
-    const names = proxies.filter((p) => !p!.provider).map((p) => p!.name);
+    const names: string[] = [];
+    for (const p of proxies) {
+      if (!p?.provider && p?.name) names.push(p.name);
+    }
     console.log(`[ProxyGroups] 过滤后需要测试的代理数量: ${names.length}`);
 
     const url = delayManager.getUrl(groupName);
@@ -330,12 +341,18 @@ export const ProxyGroups = (props: Props) => {
     if (!group) return;
     const { name, now } = group;
 
-    const index = renderList.findIndex(
-      (e) =>
+    let index = -1;
+    for (let i = 0; i < renderList.length; i++) {
+      const e = renderList[i];
+      if (
         e.group?.name === name &&
         ((e.type === 2 && e.proxy?.name === now) ||
-          (e.type === 4 && e.proxyCol?.some((p) => p.name === now))),
-    );
+          (e.type === 4 && e.proxyCol?.some((p) => p.name === now)))
+      ) {
+        index = i;
+        break;
+      }
+    }
 
     if (index >= 0) {
       virtuosoRef.current?.scrollToIndex?.({
@@ -349,9 +366,14 @@ export const ProxyGroups = (props: Props) => {
   // 定位到指定的代理组
   const handleGroupLocationByName = useCallback(
     (groupName: string) => {
-      const index = renderList.findIndex(
-        (item) => item.type === 0 && item.group?.name === groupName,
-      );
+      let index = -1;
+      for (let i = 0; i < renderList.length; i++) {
+        const item = renderList[i];
+        if (item.type === 0 && item.group?.name === groupName) {
+          index = i;
+          break;
+        }
+      }
 
       if (index >= 0) {
         virtuosoRef.current?.scrollToIndex?.({

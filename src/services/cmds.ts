@@ -164,31 +164,29 @@ export async function calcuProxies(): Promise<{
   const { GLOBAL: global, DIRECT: direct, REJECT: reject } = proxyRecord;
 
   const proxyValues = Object.values(proxyRecord);
-  let groups: IProxyGroupItem[] = proxyValues.reduce<IProxyGroupItem[]>(
-    (acc, each) => {
-      if (each?.name !== "GLOBAL" && each?.all) {
-        acc.push({
-          ...each,
-          all: each.all!.map((item) => generateItem(item)),
-        });
-      }
-      return acc;
-    },
-    [],
-  );
+  let groups: IProxyGroupItem[] = [];
+  for (let i = 0; i < proxyValues.length; i++) {
+    const each = proxyValues[i];
+    if (each?.name !== "GLOBAL" && each?.all) {
+      groups.push({
+        ...each,
+        all: each.all!.map((item) => generateItem(item)),
+      });
+    }
+  }
 
   if (global?.all) {
-    const globalGroups: IProxyGroupItem[] = global.all.reduce<
-      IProxyGroupItem[]
-    >((acc, name) => {
-      if (proxyRecord[name]?.all) {
-        acc.push({
-          ...proxyRecord[name],
-          all: proxyRecord[name].all!.map((item) => generateItem(item)),
+    const globalGroups: IProxyGroupItem[] = [];
+    for (let i = 0; i < global.all.length; i++) {
+      const name = global.all[i];
+      const rec = proxyRecord[name];
+      if (rec?.all) {
+        globalGroups.push({
+          ...rec,
+          all: rec.all!.map((item) => generateItem(item)),
         });
       }
-      return acc;
-    }, []);
+    }
 
     const globalNames = new Set(globalGroups.map((each) => each.name));
     groups = groups
@@ -196,11 +194,14 @@ export async function calcuProxies(): Promise<{
       .concat(globalGroups);
   }
 
-  const proxies = [direct, reject].concat(
-    proxyValues.filter(
-      (p) => !p?.all?.length && p?.name !== "DIRECT" && p?.name !== "REJECT",
-    ),
-  );
+  const leafProxies: any[] = [];
+  for (let i = 0; i < proxyValues.length; i++) {
+    const p = proxyValues[i] as any;
+    if (!p?.all?.length && p?.name !== "DIRECT" && p?.name !== "REJECT") {
+      leafProxies.push(p);
+    }
+  }
+  const proxies = [direct, reject].concat(leafProxies);
 
   const _global = {
     ...global,
@@ -218,14 +219,16 @@ export async function calcuProxies(): Promise<{
 
 export async function calcuProxyProviders() {
   const providers = await getProxyProviders();
-  return Object.fromEntries(
-    Object.entries(providers.providers)
-      .sort()
-      .filter(
-        ([_, item]) =>
-          item?.vehicleType === "HTTP" || item?.vehicleType === "File",
-      ),
-  );
+  const entries = Object.entries(providers.providers);
+  entries.sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0));
+  const out: Record<string, any> = {};
+  for (let i = 0; i < entries.length; i++) {
+    const [key, item] = entries[i] as any;
+    if (item?.vehicleType === "HTTP" || item?.vehicleType === "File") {
+      out[key] = item;
+    }
+  }
+  return out;
 }
 
 // Pre-compiled regex for log parsing to avoid recreating on every call

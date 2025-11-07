@@ -83,9 +83,14 @@ export const useProfiles = () => {
         return;
       }
 
-      const current = profileData.items?.find(
-        (e) => e && e.uid === profileData.current,
-      );
+      const current = (() => {
+        const items = profileData.items || [];
+        for (let i = 0; i < items.length; i++) {
+          const e = items[i];
+          if (e && e.uid === profileData.current) return e;
+        }
+        return undefined;
+      })();
 
       if (!current) {
         console.log("[ActivateSelected] 未找到当前profile配置");
@@ -103,9 +108,13 @@ export const useProfiles = () => {
         `[ActivateSelected] 当前profile有 ${selected.length} 个代理选择配置`,
       );
 
-      const selectedMap = Object.fromEntries(
-        selected.map((each) => [each.name!, each.now!]),
-      );
+      const selectedMap = new Map<string, string>();
+      for (let i = 0; i < selected.length; i++) {
+        const each = selected[i];
+        if (each?.name && each?.now) {
+          selectedMap.set(each.name, each.now);
+        }
+      }
 
       let hasChange = false;
       const newSelected: typeof selected = [];
@@ -118,13 +127,14 @@ export const useProfiles = () => {
       ]);
 
       // 处理所有代理组
-      [global, ...groups].forEach((group) => {
+      // 处理所有代理组（避免展开数组产生中间副本）
+      const processGroup = (group: any) => {
         if (!group) {
           return;
         }
 
         const { type, name, now } = group;
-        const savedProxy = selectedMap[name];
+        const savedProxy = selectedMap.get(name);
         const availableProxies = Array.isArray(group.all) ? group.all : [];
 
         if (!selectableTypes.has(type)) {
@@ -168,7 +178,11 @@ export const useProfiles = () => {
         }
 
         newSelected.push({ name, now: savedProxy });
-      });
+      };
+      processGroup(global);
+      for (let i = 0; i < groups.length; i++) {
+        processGroup((groups as any)[i]);
+      }
 
       if (!hasChange) {
         console.log("[ActivateSelected] 所有代理选择已经是目标状态，无需更新");

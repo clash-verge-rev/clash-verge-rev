@@ -81,7 +81,7 @@ export const useLayoutEvents = (
       disposed = true;
       const errors: Error[] = [];
 
-      unlisteners.forEach((unlisten) => {
+      for (const unlisten of unlisteners) {
         try {
           unlisten();
         } catch (error) {
@@ -89,7 +89,7 @@ export const useLayoutEvents = (
             error instanceof Error ? error : new Error(String(error)),
           );
         }
-      });
+      }
 
       if (errors.length > 0) {
         console.error(

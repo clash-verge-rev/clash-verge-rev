@@ -80,11 +80,38 @@ interface HomeSettingsDialogProps {
   onSave: (cards: HomeCardsSettings) => void;
 }
 
-const serializeCardFlags = (cards: HomeCardsSettings) =>
-  Object.keys(cards)
-    .sort()
-    .map((key) => `${key}:${cards[key] ? 1 : 0}`)
-    .join("|");
+const CARD_KEYS: readonly string[] = [
+  "clash_version",
+  "connection",
+  "memory_usage",
+  "proxy_chain",
+  "traffic_graph",
+  "uptime",
+];
+const CARD_KEY_WEIGHT = new Map(
+  CARD_KEYS.map((key, index) => [key, index] as const),
+);
+
+const serializeCardFlags = (cards: HomeCardsSettings) => {
+  const keys = Object.keys(cards);
+  keys.sort((a, b) => {
+    const weightA = CARD_KEY_WEIGHT.get(a);
+    const weightB = CARD_KEY_WEIGHT.get(b);
+    if (weightA !== undefined && weightB !== undefined) {
+      return weightA - weightB;
+    }
+    if (weightA !== undefined) return -1;
+    if (weightB !== undefined) return 1;
+    return a < b ? -1 : a > b ? 1 : 0;
+  });
+
+  const parts = new Array(keys.length);
+  for (let i = 0; i < keys.length; i++) {
+    const key = keys[i] as keyof HomeCardsSettings;
+    parts[i] = `${key}:${cards[key] ? 1 : 0}`;
+  }
+  return parts.join("|");
+};
 
 // 首页设置对话框组件
 const HomeSettingsDialog = ({

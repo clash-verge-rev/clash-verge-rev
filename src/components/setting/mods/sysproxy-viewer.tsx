@@ -363,10 +363,16 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
     Promise.resolve().then(async () => {
       try {
         // 乐观更新本地状态
-        if (Object.keys(patch).length > 0) {
+        const hasPatchChanges = (() => {
+          for (const key in patch) {
+            if (Object.prototype.hasOwnProperty.call(patch, key)) {
+              return true;
+            }
+          }
+          return false;
+        })();
+        if (hasPatchChanges) {
           mutateVerge({ ...verge, ...patch }, false);
-        }
-        if (Object.keys(patch).length > 0) {
           await patchVerge(patch);
         }
         setTimeout(async () => {

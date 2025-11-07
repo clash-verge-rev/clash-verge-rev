@@ -64,6 +64,8 @@ const ConnectionsPage = () => {
     }),
     [],
   );
+  
+  const orderOptKeys = useMemo(() => Object.keys(orderOpts), [orderOpts]);
 
   const [isPaused, setIsPaused] = useState(false);
   const [frozenData, setFrozenData] = useState<IConnections | null>(null);
@@ -199,7 +201,7 @@ const ConnectionsPage = () => {
             value={curOrderOpt}
             onChange={(e) => setCurOrderOpt(e.target.value)}
           >
-            {Object.keys(orderOpts).map((opt) => (
+            {orderOptKeys.map((opt) => (
               <MenuItem key={opt} value={opt}>
                 <span style={{ fontSize: 14 }}>{t(opt)}</span>
               </MenuItem>

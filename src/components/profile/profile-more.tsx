@@ -52,12 +52,18 @@ export const ProfileMore = (props: Props) => {
     }
   });
 
-  const hasError = entries.some(([level]) => level === "exception");
+  let hasError = false;
+  for (const [level] of entries) {
+    if (level === "exception") {
+      hasError = true;
+      break;
+    }
+  }
 
   const itemMenu = [
     { label: "Edit File", handler: onEditFile },
     { label: "Open File", handler: onOpenFile },
-  ];
+  ] as const;
 
   const boxStyle = {
     height: 26,
@@ -144,28 +150,26 @@ export const ProfileMore = (props: Props) => {
           e.preventDefault();
         }}
       >
-        {itemMenu
-          .filter((item: any) => item.show !== false)
-          .map((item) => (
-            <MenuItem
-              key={item.label}
-              onClick={item.handler}
-              sx={[
-                { minWidth: 120 },
-                (theme) => {
-                  return {
-                    color:
-                      item.label === "Delete"
-                        ? theme.palette.error.main
-                        : undefined,
-                  };
-                },
-              ]}
-              dense
-            >
-              {t(item.label)}
-            </MenuItem>
-          ))}
+        {itemMenu.map((item) => (
+          <MenuItem
+            key={item.label}
+            onClick={item.handler}
+            sx={[
+              { minWidth: 120 },
+              (theme) => {
+                return {
+                  color:
+                    item.label === "Delete"
+                      ? theme.palette.error.main
+                      : undefined,
+                };
+              },
+            ]}
+            dense
+          >
+            {t(item.label)}
+          </MenuItem>
+        ))}
       </Menu>
       {fileOpen && (
         <EditorViewer

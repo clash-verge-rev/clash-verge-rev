@@ -104,8 +104,9 @@ const TestPage = () => {
     const { active, over } = event;
     if (over) {
       if (active.id !== over.id) {
-        const old_index = testList.findIndex((x) => x.uid === active.id);
-        const new_index = testList.findIndex((x) => x.uid === over.id);
+        const uidMap = new Map(testList.map((x, idx) => [x.uid, idx]));
+        const old_index = uidMap.get(active.id as string) ?? -1;
+        const new_index = uidMap.get(over.id as string) ?? -1;
         if (old_index < 0 || new_index < 0) {
           return;
         }

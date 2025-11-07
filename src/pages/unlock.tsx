@@ -44,6 +44,7 @@ const UnlockPage = () => {
   const [unlockItems, setUnlockItems] = useState<UnlockItem[]>([]);
   const [isCheckingAll, setIsCheckingAll] = useState(false);
   const [loadingItems, setLoadingItems] = useState<string[]>([]);
+  const loadingItemsSet = useMemo(() => new Set(loadingItems), [loadingItems]);
 
   const sortItemsByName = useCallback((items: UnlockItem[]) => {
     return [...items].sort((a, b) => a.name.localeCompare(b.name));
@@ -188,7 +189,14 @@ const UnlockPage = () => {
       const result =
         await invokeWithTimeout<UnlockItem[]>("check_media_unlock");
 
-      const targetItem = result.find((item: UnlockItem) => item.name === name);
+      let targetItem: UnlockItem | undefined;
+      for (let i = 0; i < result.length; i++) {
+        const item = result[i];
+        if (item && item.name === name) {
+          targetItem = item;
+          break;
+        }
+      }
 
       if (targetItem) {
         const updatedItems = sortItemsByName(
@@ -222,7 +230,7 @@ const UnlockPage = () => {
     if (status === "Yes") return "success";
     if (status === "No") return "error";
     if (status === "Soon") return "warning";
-    if (status.includes("Failed")) return "error";
+    if (status.indexOf("Failed") !== -1) return "error";
     if (status === "Completed") return "info";
     if (
       status === "Disallowed ISP" ||
@@ -240,7 +248,7 @@ const UnlockPage = () => {
     if (status === "Yes") return <CheckCircleOutlined />;
     if (status === "No") return <CancelOutlined />;
     if (status === "Soon") return <AccessTimeOutlined />;
-    if (status.includes("Failed")) return <HelpOutline />;
+    if (status.indexOf("Failed") !== -1) return <HelpOutline />;
     return <HelpOutline />;
   };
 
@@ -249,7 +257,7 @@ const UnlockPage = () => {
     if (status === "Yes") return theme.palette.success.main;
     if (status === "No") return theme.palette.error.main;
     if (status === "Soon") return theme.palette.warning.main;
-    if (status.includes("Failed")) return theme.palette.error.main;
+    if (status.indexOf("Failed") !== -1) return theme.palette.error.main;
     if (status === "Completed") return theme.palette.info.main;
     return theme.palette.divider;
   };
@@ -336,9 +344,7 @@ const UnlockPage = () => {
                           size="small"
                           variant="outlined"
                           color="primary"
-                          disabled={
-                            loadingItems.includes(item.name) || isCheckingAll
-                          }
+                          disabled={loadingItemsSet.has(item.name) || isCheckingAll}
                           sx={{
                             minWidth: "32px",
                             width: "32px",
@@ -349,7 +355,7 @@ const UnlockPage = () => {
                         >
                           <RefreshRounded
                             sx={{
-                              animation: loadingItems.includes(item.name)
+                              animation: loadingItemsSet.has(item.name)
                                 ? "spin 1s linear infinite"
                                 : "none",
                               "@keyframes spin": {
