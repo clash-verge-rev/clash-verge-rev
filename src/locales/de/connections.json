@@ -1,0 +1,28 @@
+{
+  "page": {
+    "title": "Verbindungen"
+  },
+  "components": {
+    "fields": {
+      "host": "Host",
+      "dlSpeed": "Download-Geschwindigkeit",
+      "ulSpeed": "Upload-Geschwindigkeit",
+      "chains": "Ketten",
+      "rule": "Regel",
+      "process": "Prozess",
+      "time": "Verbindungszeit",
+      "source": "Quelladresse",
+      "destination": "Zieladresse",
+      "destinationPort": "Zielport",
+      "type": "Typ"
+    },
+    "order": {
+      "default": "Default",
+      "uploadSpeed": "Upload-Geschwindigkeit",
+      "downloadSpeed": "Download-Geschwindigkeit"
+    },
+    "actions": {
+      "closeConnection": "Verbindung schließen"
+    }
+  }
+}

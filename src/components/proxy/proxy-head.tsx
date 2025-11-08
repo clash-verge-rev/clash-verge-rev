@@ -67,7 +67,7 @@ export const ProxyHead = ({
       <IconButton
         size="small"
         color="inherit"
-        title={t("locate")}
+        title={t("proxies.page.tooltips.locate")}
         onClick={onLocation}
       >
         <MyLocationRounded />
@@ -76,7 +76,7 @@ export const ProxyHead = ({
       <IconButton
         size="small"
         color="inherit"
-        title={t("Delay check")}
+        title={t("proxies.page.tooltips.delayCheck")}
         onClick={() => {
           console.log(`[ProxyHead] 点击延迟测试按钮，组: ${groupName}`);
           // Remind the user that it is custom test url
@@ -94,9 +94,11 @@ export const ProxyHead = ({
         size="small"
         color="inherit"
         title={
-          [t("Sort by default"), t("Sort by delay"), t("Sort by name")][
-            sortType
-          ]
+          [
+            t("proxies.page.tooltips.sortDefault"),
+            t("proxies.page.tooltips.sortDelay"),
+            t("proxies.page.tooltips.sortName"),
+          ][sortType]
         }
         onClick={() =>
           onHeadState({ sortType: ((sortType + 1) % 3) as ProxySortType })
@@ -110,7 +112,7 @@ export const ProxyHead = ({
       <IconButton
         size="small"
         color="inherit"
-        title={t("Delay check URL")}
+        title={t("proxies.page.tooltips.delayCheckUrl")}
         onClick={() =>
           onHeadState({ textState: textState === "url" ? null : "url" })
         }
@@ -125,7 +127,11 @@ export const ProxyHead = ({
       <IconButton
         size="small"
         color="inherit"
-        title={showType ? t("Proxy basic") : t("Proxy detail")}
+        title={
+          showType
+            ? t("proxies.page.tooltips.showBasic")
+            : t("proxies.page.tooltips.showDetail")
+        }
         onClick={() => onHeadState({ showType: !showType })}
       >
         {showType ? <VisibilityRounded /> : <VisibilityOffRounded />}
@@ -134,7 +140,7 @@ export const ProxyHead = ({
       <IconButton
         size="small"
         color="inherit"
-        title={t("Filter")}
+        title={t("proxies.page.tooltips.filter")}
         onClick={() =>
           onHeadState({ textState: textState === "filter" ? null : "filter" })
         }
@@ -154,7 +160,7 @@ export const ProxyHead = ({
           value={filterText}
           size="small"
           variant="outlined"
-          placeholder={t("Filter conditions")}
+          placeholder={t("shared.placeholders.filter")}
           onChange={(e) => onHeadState({ filterText: e.target.value })}
           sx={{ ml: 0.5, flex: "1 1 auto", input: { py: 0.65, px: 1 } }}
         />
@@ -169,7 +175,7 @@ export const ProxyHead = ({
           value={testUrl}
           size="small"
           variant="outlined"
-          placeholder={t("Delay check URL")}
+          placeholder={t("proxies.page.placeholders.delayCheckUrl")}
           onChange={(e) => onHeadState({ testUrl: e.target.value })}
           sx={{ ml: 0.5, flex: "1 1 auto", input: { py: 0.65, px: 1 } }}
         />

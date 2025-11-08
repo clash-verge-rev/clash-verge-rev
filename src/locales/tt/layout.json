@@ -1,0 +1,21 @@
+{
+  "components": {
+    "navigation": {
+      "tabs": {
+        "home": "Home",
+        "proxies": "Прокси",
+        "profiles": "Профильләр",
+        "connections": "Тоташулар",
+        "rules": "Кагыйдәләр",
+        "logs": "Логлар",
+        "unlock": "Test",
+        "settings": "Көйләүләр"
+      },
+      "menu": {
+        "reorderMode": "Menu reorder mode",
+        "unlock": "Unlock menu order",
+        "lock": "Lock menu order"
+      }
+    }
+  }
+}

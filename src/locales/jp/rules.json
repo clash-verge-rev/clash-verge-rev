@@ -1,0 +1,82 @@
+{
+  "page": {
+    "provider": {
+      "trigger": "ルールプロバイダー",
+      "dialogTitle": "ルールプロバイダー",
+      "actions": {
+        "updateAll": "すべて更新",
+        "update": "更新"
+      }
+    },
+    "title": "ルール"
+  },
+  "feedback": {
+    "notifications": {
+      "provider": {
+        "updateSuccess": "{{name}} updated successfully",
+        "updateFailed": "Failed to update {{name}}: {{message}}",
+        "genericError": "Update failed: {{message}}",
+        "none": "No providers available to update",
+        "allUpdated": "All providers updated successfully"
+      }
+    }
+  },
+  "modals": {
+    "editor": {
+      "form": {
+        "labels": {
+          "type": "ルールタイプ",
+          "content": "ルール内容",
+          "proxyPolicy": "プロキシポリシー"
+        },
+        "toggles": {
+          "noResolve": "DNS解決をスキップ"
+        },
+        "actions": {
+          "prependRule": "前置ルールを追加",
+          "appendRule": "後置ルールを追加"
+        },
+        "validation": {
+          "conditionRequired": "ルール条件が必要です",
+          "invalidRule": "無効なルール"
+        }
+      },
+      "ruleTypes": {
+        "DOMAIN": "完全なドメイン名を一致させる",
+        "DOMAIN-SUFFIX": "ドメインサフィックスを一致させる",
+        "DOMAIN-KEYWORD": "ドメインキーワードを一致させる",
+        "DOMAIN-REGEX": "ドメイン正規表現を一致させる",
+        "GEOSITE": "Geosite内のドメインを一致させる",
+        "GEOIP": "IPの所属国コードを一致させる",
+        "SRC-GEOIP": "送信元IPの所属国コードを一致させる",
+        "IP-ASN": "IPの所属ASNを一致させる",
+        "SRC-IP-ASN": "送信元IPの所属ASNを一致させる",
+        "IP-CIDR": "IPアドレス範囲を一致させる",
+        "IP-CIDR6": "IPアドレス範囲を一致させる",
+        "SRC-IP-CIDR": "送信元IPアドレス範囲を一致させる",
+        "IP-SUFFIX": "IPサフィックス範囲を一致させる",
+        "SRC-IP-SUFFIX": "送信元IPサフィックス範囲を一致させる",
+        "SRC-PORT": "送信元ポート範囲を一致させる",
+        "DST-PORT": "宛先ポート範囲を一致させる",
+        "IN-PORT": "入力ポートを一致させる",
+        "DSCP": "DSCPマーク（TPROXY UDP入力のみ）",
+        "PROCESS-NAME": "プロセス名を一致させる（Androidパッケージ名）",
+        "PROCESS-PATH": "完全なプロセスパスを一致させる",
+        "PROCESS-NAME-REGEX": "完全なプロセス名を正規表現で一致させる（Androidパッケージ名）",
+        "PROCESS-PATH-REGEX": "完全なプロセスパスを正規表現で一致させる",
+        "NETWORK": "トランスポートプロトコルを一致させる (TCP/UDP)",
+        "UID": "LinuxユーザーIDを一致させる",
+        "IN-TYPE": "入力タイプを一致させる",
+        "IN-USER": "入力ユーザー名を一致させる",
+        "IN-NAME": "入力名を一致させる",
+        "SUB-RULE": "サブルール",
+        "RULE-SET": "ルールセットを一致させる",
+        "AND": "論理積",
+        "OR": "論理和",
+        "NOT": "論理否定",
+        "MATCH": "すべてのリクエストを一致させる"
+      },
+      "title": "ルールを編集"
+    }
+  }
+}

@@ -163,11 +163,11 @@ export const ProxiesEditorViewer = (props: Props) => {
             proxies.push(proxy);
             names.push(proxy.name);
           }
-        } catch (err: any) {
+        } catch (err) {
           console.warn(
             "[ProxiesEditorViewer] parseUri failed for line:",
             uri,
-            err?.message || err,
+            err,
           );
           // 不阻塞主流程
         }
@@ -263,11 +263,11 @@ export const ProxiesEditorViewer = (props: Props) => {
   const handleSave = useLockFn(async () => {
     try {
       await saveProfileFile(property, currData);
-      showNotice("success", t("Saved Successfully"));
+      showNotice.success("shared.feedback.notifications.saved");
       onSave?.(prevData, currData);
       onClose();
-    } catch (err: any) {
-      showNotice("error", err.toString());
+    } catch (err) {
+      showNotice.error(err);
     }
   });
 
@@ -276,7 +276,7 @@ export const ProxiesEditorViewer = (props: Props) => {
       <DialogTitle>
         {
           <Box display="flex" justifyContent="space-between">
-            {t("Edit Proxies")}
+            {t("profiles.modals.proxiesEditor.title")}
             <Box>
               <Button
                 variant="contained"
@@ -285,7 +285,9 @@ export const ProxiesEditorViewer = (props: Props) => {
                   setVisualization((prev) => !prev);
                 }}
               >
-                {visualization ? t("Advanced") : t("Visualization")}
+                {visualization
+                  ? t("shared.editorModes.advanced")
+                  : t("shared.editorModes.visualization")}
               </Button>
             </Box>
           </Box>
@@ -312,7 +314,9 @@ export const ProxiesEditorViewer = (props: Props) => {
                 <Item>
                   <TextField
                     autoComplete="new-password"
-                    placeholder={t("Use newlines for multiple uri")}
+                    placeholder={t(
+                      "profiles.modals.proxiesEditor.placeholders.multiUri",
+                    )}
                     fullWidth
                     rows={9}
                     multiline
@@ -332,7 +336,7 @@ export const ProxiesEditorViewer = (props: Props) => {
                     });
                   }}
                 >
-                  {t("Prepend Proxy")}
+                  {t("profiles.modals.proxiesEditor.actions.prepend")}
                 </Button>
               </Item>
               <Item>
@@ -346,7 +350,7 @@ export const ProxiesEditorViewer = (props: Props) => {
                     });
                   }}
                 >
-                  {t("Append Proxy")}
+                  {t("profiles.modals.proxiesEditor.actions.append")}
                 </Button>
               </Item>
             </List>
@@ -497,11 +501,11 @@ export const ProxiesEditorViewer = (props: Props) => {
 
       <DialogActions>
         <Button onClick={onClose} variant="outlined">
-          {t("Cancel")}
+          {t("shared.actions.cancel")}
         </Button>
 
         <Button onClick={handleSave} variant="contained">
-          {t("Save")}
+          {t("shared.actions.save")}
         </Button>
       </DialogActions>
     </Dialog>

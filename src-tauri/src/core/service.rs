@@ -227,8 +227,6 @@ fn linux_running_as_root() -> bool {
 
 #[cfg(target_os = "macos")]
 async fn uninstall_service() -> Result<()> {
-    use crate::utils::i18n::t;
-
     logging!(info, Type::Service, "uninstall service");
 
     let binary_path = dirs::service_path()?;
@@ -240,7 +238,9 @@ async fn uninstall_service() -> Result<()> {
 
     let uninstall_shell: String = uninstall_path.to_string_lossy().into_owned();
 
-    let prompt = t("Service Administrator Prompt").await;
+    crate::utils::i18n::sync_locale().await;
+
+    let prompt = rust_i18n::t!("service.adminPrompt").to_string();
     let command = format!(
         r#"do shell script "sudo '{uninstall_shell}'" with administrator privileges with prompt "{prompt}""#
     );
@@ -263,8 +263,6 @@ async fn uninstall_service() -> Result<()> {
 
 #[cfg(target_os = "macos")]
 async fn install_service() -> Result<()> {
-    use crate::utils::i18n::t;
-
     logging!(info, Type::Service, "install service");
 
     let binary_path = dirs::service_path()?;
@@ -276,7 +274,9 @@ async fn install_service() -> Result<()> {
 
     let install_shell: String = install_path.to_string_lossy().into_owned();
 
-    let prompt = t("Service Administrator Prompt").await;
+    crate::utils::i18n::sync_locale().await;
+
+    let prompt = rust_i18n::t!("service.adminPrompt").to_string();
     let command = format!(
         r#"do shell script "sudo '{install_shell}'" with administrator privileges with prompt "{prompt}""#
     );

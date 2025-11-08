@@ -69,25 +69,27 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
         auto_log_clean: values.autoLogClean as any,
       });
       setOpen(false);
-    } catch (err: any) {
-      showNotice("error", err.toString());
+    } catch (err) {
+      showNotice.error(err);
     }
   });
 
   return (
     <BaseDialog
       open={open}
-      title={t("Miscellaneous")}
+      title={t("settings.modals.misc.title")}
       contentSx={{ width: 450 }}
-      okBtn={t("Save")}
-      cancelBtn={t("Cancel")}
+      okBtn={t("shared.actions.save")}
+      cancelBtn={t("shared.actions.cancel")}
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}
       onOk={onSave}
     >
       <List>
         <ListItem sx={{ padding: "5px 2px" }}>
-          <ListItemText primary={t("App Log Level")} />
+          <ListItemText
+            primary={t("settings.modals.misc.fields.appLogLevel")}
+          />
           <Select
             size="small"
             sx={{ width: 100, "> div": { py: "7.5px" } }}
@@ -109,7 +111,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
 
         <ListItem sx={{ padding: "5px 2px" }}>
           <ListItemText
-            primary={t("App Log Max Size")}
+            primary={t("settings.modals.misc.fields.appLogMaxSize")}
             sx={{ maxWidth: "fit-content" }}
           />
           <TextField
@@ -130,7 +132,9 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
             slotProps={{
               input: {
                 endAdornment: (
-                  <InputAdornment position="end">{t("KB")}</InputAdornment>
+                  <InputAdornment position="end">
+                    {t("shared.units.kilobytes")}
+                  </InputAdornment>
                 ),
               },
             }}
@@ -139,7 +143,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
 
         <ListItem sx={{ padding: "5px 2px" }}>
           <ListItemText
-            primary={t("App Log Max Count")}
+            primary={t("settings.modals.misc.fields.appLogMaxCount")}
             sx={{ maxWidth: "fit-content" }}
           />
           <TextField
@@ -160,7 +164,9 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
             slotProps={{
               input: {
                 endAdornment: (
-                  <InputAdornment position="end">{t("Files")}</InputAdornment>
+                  <InputAdornment position="end">
+                    {t("shared.units.files")}
+                  </InputAdornment>
                 ),
               },
             }}
@@ -169,11 +175,11 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
 
         <ListItem sx={{ padding: "5px 2px" }}>
           <ListItemText
-            primary={t("Auto Close Connections")}
+            primary={t("settings.modals.misc.fields.autoCloseConnections")}
             sx={{ maxWidth: "fit-content" }}
           />
           <TooltipIcon
-            title={t("Auto Close Connections Info")}
+            title={t("settings.modals.misc.tooltips.autoCloseConnections")}
             sx={{ opacity: "0.7" }}
           />
           <Switch
@@ -187,7 +193,9 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
         </ListItem>
 
         <ListItem sx={{ padding: "5px 2px" }}>
-          <ListItemText primary={t("Auto Check Update")} />
+          <ListItemText
+            primary={t("settings.modals.misc.fields.autoCheckUpdate")}
+          />
           <Switch
             edge="end"
             checked={values.autoCheckUpdate}
@@ -199,11 +207,11 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
 
         <ListItem sx={{ padding: "5px 2px" }}>
           <ListItemText
-            primary={t("Enable Builtin Enhanced")}
+            primary={t("settings.modals.misc.fields.enableBuiltinEnhanced")}
             sx={{ maxWidth: "fit-content" }}
           />
           <TooltipIcon
-            title={t("Enable Builtin Enhanced Info")}
+            title={t("settings.modals.misc.tooltips.enableBuiltinEnhanced")}
             sx={{ opacity: "0.7" }}
           />
           <Switch
@@ -217,7 +225,9 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
         </ListItem>
 
         <ListItem sx={{ padding: "5px 2px" }}>
-          <ListItemText primary={t("Proxy Layout Columns")} />
+          <ListItemText
+            primary={t("settings.modals.misc.fields.proxyLayoutColumns")}
+          />
           <Select
             size="small"
             sx={{ width: 160, "> div": { py: "7.5px" } }}
@@ -230,7 +240,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
             }
           >
             <MenuItem value={6} key={6}>
-              {t("Auto Columns")}
+              {t("settings.modals.misc.options.proxyLayoutColumns.auto")}
             </MenuItem>
             {[1, 2, 3, 4, 5].map((i) => (
               <MenuItem value={i} key={i}>
@@ -241,7 +251,9 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
         </ListItem>
 
         <ListItem sx={{ padding: "5px 2px" }}>
-          <ListItemText primary={t("Auto Log Clean")} />
+          <ListItemText
+            primary={t("settings.modals.misc.fields.autoLogClean")}
+          />
           <Select
             size="small"
             sx={{ width: 160, "> div": { py: "7.5px" } }}
@@ -255,11 +267,34 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
           >
             {/* 1: 1天, 2: 7天, 3: 30天, 4: 90天*/}
             {[
-              { key: t("Never Clean"), value: 0 },
-              { key: t("Retain _n Days", { n: 1 }), value: 1 },
-              { key: t("Retain _n Days", { n: 7 }), value: 2 },
-              { key: t("Retain _n Days", { n: 30 }), value: 3 },
-              { key: t("Retain _n Days", { n: 90 }), value: 4 },
+              {
+                key: t("settings.modals.misc.options.autoLogClean.never"),
+                value: 0,
+              },
+              {
+                key: t("settings.modals.misc.options.autoLogClean.retainDays", {
+                  n: 1,
+                }),
+                value: 1,
+              },
+              {
+                key: t("settings.modals.misc.options.autoLogClean.retainDays", {
+                  n: 7,
+                }),
+                value: 2,
+              },
+              {
+                key: t("settings.modals.misc.options.autoLogClean.retainDays", {
+                  n: 30,
+                }),
+                value: 3,
+              },
+              {
+                key: t("settings.modals.misc.options.autoLogClean.retainDays", {
+                  n: 90,
+                }),
+                value: 4,
+              },
             ].map((i) => (
               <MenuItem key={i.value} value={i.value}>
                 {i.key}
@@ -270,11 +305,11 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
 
         <ListItem sx={{ padding: "5px 2px" }}>
           <ListItemText
-            primary={t("Auto Delay Detection")}
+            primary={t("settings.modals.misc.fields.autoDelayDetection")}
             sx={{ maxWidth: "fit-content" }}
           />
           <TooltipIcon
-            title={t("Auto Delay Detection Info")}
+            title={t("settings.modals.misc.tooltips.autoDelayDetection")}
             sx={{ opacity: "0.7" }}
           />
           <Switch
@@ -289,11 +324,11 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
 
         <ListItem sx={{ padding: "5px 2px" }}>
           <ListItemText
-            primary={t("Default Latency Test")}
+            primary={t("settings.modals.misc.fields.defaultLatencyTest")}
             sx={{ maxWidth: "fit-content" }}
           />
           <TooltipIcon
-            title={t("Default Latency Test Info")}
+            title={t("settings.modals.misc.tooltips.defaultLatencyTest")}
             sx={{ opacity: "0.7" }}
           />
           <TextField
@@ -312,7 +347,9 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
         </ListItem>
 
         <ListItem sx={{ padding: "5px 2px" }}>
-          <ListItemText primary={t("Default Latency Timeout")} />
+          <ListItemText
+            primary={t("settings.modals.misc.fields.defaultLatencyTimeout")}
+          />
           <TextField
             autoComplete="new-password"
             size="small"
@@ -332,7 +369,9 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
             slotProps={{
               input: {
                 endAdornment: (
-                  <InputAdornment position="end">{t("millis")}</InputAdornment>
+                  <InputAdornment position="end">
+                    {t("shared.units.milliseconds")}
+                  </InputAdornment>
                 ),
               },
             }}

@@ -1,0 +1,53 @@
+{
+  "page": {
+    "actions": {
+      "testAll": "اختبار الكل"
+    },
+    "title": "اختبار"
+  },
+  "components": {
+    "item": {
+      "actions": {
+        "test": "اختبار"
+      }
+    }
+  },
+  "modals": {
+    "test": {
+      "title": {
+        "create": "إنشاء اختبار",
+        "edit": "تعديل الاختبار"
+      },
+      "fields": {
+        "url": "رابط الاختبار"
+      }
+    }
+  },
+  "statuses": {
+    "test": {
+      "pending": "Pending",
+      "yes": "Yes",
+      "no": "No",
+      "failed": "Failed",
+      "completed": "Completed",
+      "disallowedIsp": "Disallowed ISP",
+      "originalsOnly": "Originals Only",
+      "noDisney": "No (IP Banned By Disney+)",
+      "unsupportedRegion": "Unsupported Country/Region",
+      "failedNetwork": "Failed (Network Connection)"
+    }
+  },
+  "unlock": {
+    "page": {
+      "actions": {
+        "testing": "Testing..."
+      },
+      "empty": "No unlock test items",
+      "messages": {
+        "detectionFailedWithName": "فشل الكشف لـ {{name}}",
+        "detectionTimeout": "Detection timeout or failed"
+      },
+      "title": "Unlock Test"
+    }
+  }
+}

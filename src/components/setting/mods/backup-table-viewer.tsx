@@ -75,7 +75,7 @@ export const BackupTableViewer = memo(
 
     const handleRestore = useLockFn(async (filename: string) => {
       await onRestore(filename).then(() => {
-        showNotice("success", t("Restore Success, App will restart in 1s"));
+        showNotice.success("settings.modals.backup.messages.restoreSuccess");
       });
       await restartApp();
     });
@@ -92,10 +92,14 @@ export const BackupTableViewer = memo(
           return;
         }
         await onExport(filename, savePath);
-        showNotice("success", t("Local Backup Exported"));
+        showNotice.success(
+          "settings.modals.backup.messages.localBackupExported",
+        );
       } catch (error) {
         console.error(error);
-        showNotice("error", t("Local Backup Export Failed"));
+        showNotice.error(
+          "settings.modals.backup.messages.localBackupExportFailed",
+        );
       }
     });
 
@@ -104,9 +108,15 @@ export const BackupTableViewer = memo(
         <Table>
           <TableHead>
             <TableRow>
-              <TableCell>{t("Filename")}</TableCell>
-              <TableCell>{t("Backup Time")}</TableCell>
-              <TableCell align="right">{t("Actions")}</TableCell>
+              <TableCell>
+                {t("settings.modals.backup.table.filename")}
+              </TableCell>
+              <TableCell>
+                {t("settings.modals.backup.table.backupTime")}
+              </TableCell>
+              <TableCell align="right">
+                {t("settings.modals.backup.table.actions")}
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
@@ -140,9 +150,13 @@ export const BackupTableViewer = memo(
                           <>
                             <IconButton
                               color="primary"
-                              aria-label={t("Export")}
+                              aria-label={t(
+                                "settings.modals.backup.actions.export",
+                              )}
                               size="small"
-                              title={t("Export Backup")}
+                              title={t(
+                                "settings.modals.backup.actions.exportBackup",
+                              )}
                               onClick={async (e: React.MouseEvent) => {
                                 e.preventDefault();
                                 await handleExport(file.filename);
@@ -159,13 +173,17 @@ export const BackupTableViewer = memo(
                         )}
                         <IconButton
                           color="secondary"
-                          aria-label={t("Delete")}
+                          aria-label={t("shared.actions.delete")}
                           size="small"
-                          title={t("Delete Backup")}
+                          title={t(
+                            "settings.modals.backup.actions.deleteBackup",
+                          )}
                           onClick={async (e: React.MouseEvent) => {
                             e.preventDefault();
                             const confirmed = await confirmAsync(
-                              t("Confirm to delete this backup file?"),
+                              t(
+                                "settings.modals.backup.messages.confirmDelete",
+                              ),
                             );
                             if (confirmed) {
                               await handleDelete(file.filename);
@@ -181,14 +199,20 @@ export const BackupTableViewer = memo(
                         />
                         <IconButton
                           color="primary"
-                          aria-label={t("Restore")}
+                          aria-label={t(
+                            "settings.modals.backup.actions.restore",
+                          )}
                           size="small"
-                          title={t("Restore Backup")}
+                          title={t(
+                            "settings.modals.backup.actions.restoreBackup",
+                          )}
                           disabled={!file.allow_apply}
                           onClick={async (e: React.MouseEvent) => {
                             e.preventDefault();
                             const confirmed = await confirmAsync(
-                              t("Confirm to restore this backup file?"),
+                              t(
+                                "settings.modals.backup.messages.confirmRestore",
+                              ),
                             );
                             if (confirmed) {
                               await handleRestore(file.filename);
@@ -219,7 +243,7 @@ export const BackupTableViewer = memo(
                       color="textSecondary"
                       align="center"
                     >
-                      {t("No Backups")}
+                      {t("settings.modals.backup.table.noBackups")}
                     </Typography>
                   </Box>
                 </TableCell>
@@ -234,7 +258,7 @@ export const BackupTableViewer = memo(
           rowsPerPage={DEFAULT_ROWS_PER_PAGE}
           page={page}
           onPageChange={onPageChange}
-          labelRowsPerPage={t("Rows per page")}
+          labelRowsPerPage={t("settings.modals.backup.table.rowsPerPage")}
         />
       </TableContainer>
     );

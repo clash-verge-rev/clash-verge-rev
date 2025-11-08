@@ -24,7 +24,19 @@ const HOTKEY_FUNC = [
   "toggle_system_proxy",
   "toggle_tun_mode",
   "entry_lightweight_mode",
-];
+] as const;
+
+const HOTKEY_FUNC_LABELS: Record<(typeof HOTKEY_FUNC)[number], string> = {
+  open_or_close_dashboard:
+    "settings.modals.hotkey.functions.openOrCloseDashboard",
+  clash_mode_rule: "settings.modals.hotkey.functions.rule",
+  clash_mode_global: "settings.modals.hotkey.functions.global",
+  clash_mode_direct: "settings.modals.hotkey.functions.direct",
+  toggle_system_proxy: "settings.modals.hotkey.functions.toggleSystemProxy",
+  toggle_tun_mode: "settings.modals.hotkey.functions.toggleTunMode",
+  entry_lightweight_mode:
+    "settings.modals.hotkey.functions.entryLightweightMode",
+};
 
 export const HotkeyViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
@@ -81,24 +93,26 @@ export const HotkeyViewer = forwardRef<DialogRef>((props, ref) => {
         enable_global_hotkey: enableGlobalHotkey,
       });
       setOpen(false);
-    } catch (err: any) {
-      showNotice("error", err.message || err.toString());
+    } catch (err) {
+      showNotice.error(err);
     }
   });
 
   return (
     <BaseDialog
       open={open}
-      title={t("Hotkey Setting")}
+      title={t("settings.modals.hotkey.title")}
       contentSx={{ width: 450, maxHeight: 380 }}
-      okBtn={t("Save")}
-      cancelBtn={t("Cancel")}
+      okBtn={t("shared.actions.save")}
+      cancelBtn={t("shared.actions.cancel")}
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}
       onOk={onSave}
     >
       <ItemWrapper style={{ marginBottom: 16 }}>
-        <Typography>{t("Enable Global Hotkey")}</Typography>
+        <Typography>
+          {t("settings.modals.hotkey.toggles.enableGlobal")}
+        </Typography>
         <Switch
           edge="end"
           checked={enableGlobalHotkey}
@@ -108,7 +122,7 @@ export const HotkeyViewer = forwardRef<DialogRef>((props, ref) => {
 
       {HOTKEY_FUNC.map((func) => (
         <ItemWrapper key={func}>
-          <Typography>{t(func)}</Typography>
+          <Typography>{t(HOTKEY_FUNC_LABELS[func])}</Typography>
           <HotkeyInput
             value={hotkeyMap[func] ?? []}
             onChange={(v) => setHotkeyMap((m) => ({ ...m, [func]: v }))}

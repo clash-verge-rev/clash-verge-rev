@@ -17,6 +17,7 @@ export default defineConfig([
 
     plugins: {
       js: eslintJS,
+      // @ts-expect-error -- https://github.com/typescript-eslint/typescript-eslint/issues/11543
       "react-hooks": pluginReactHooks,
       // @ts-expect-error -- https://github.com/un-ts/eslint-plugin-import-x/issues/421
       "import-x": pluginImportX,
@@ -130,6 +131,16 @@ export default defineConfig([
 
       // Prettier 格式化问题
       "prettier/prettier": "warn",
+    },
+  },
+  {
+    files: ["scripts/**/*.{js,mjs,cjs}", "scripts-workflow/**/*.{js,mjs,cjs}"],
+
+    languageOptions: {
+      globals: {
+        ...globals.browser,
+        ...globals.node,
+      },
     },
   },
 ]);

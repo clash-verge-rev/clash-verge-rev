@@ -92,7 +92,7 @@ export function WebUIViewer({ ref }: { ref?: Ref<DialogRef> }) {
 
       await openWebUrl(url);
     } catch (e: any) {
-      showNotice("error", e.message || e.toString());
+      showNotice.error(e);
     }
   });
 
@@ -101,14 +101,14 @@ export function WebUIViewer({ ref }: { ref?: Ref<DialogRef> }) {
       open={open}
       title={
         <Box display="flex" justifyContent="space-between">
-          {t("Web UI")}
+          {t("settings.modals.webUI.title")}
           <Button
             variant="contained"
             size="small"
             disabled={editing}
             onClick={() => setEditing(true)}
           >
-            {t("New")}
+            {t("shared.actions.new")}
           </Button>
         </Box>
       }
@@ -119,7 +119,7 @@ export function WebUIViewer({ ref }: { ref?: Ref<DialogRef> }) {
         overflowY: "auto",
         userSelect: "text",
       }}
-      cancelBtn={t("Close")}
+      cancelBtn={t("shared.actions.close")}
       disableOk
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}
@@ -128,7 +128,7 @@ export function WebUIViewer({ ref }: { ref?: Ref<DialogRef> }) {
         <BaseEmpty
           extra={
             <Typography mt={2} sx={{ fontSize: "12px" }}>
-              {t("Replace host, port, secret with %host, %port, %secret")}
+              {t("settings.modals.webUI.messages.placeholderInstruction")}
             </Typography>
           }
         />

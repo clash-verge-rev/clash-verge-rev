@@ -1,0 +1,53 @@
+{
+  "page": {
+    "actions": {
+      "testAll": "Tümünü Test Et"
+    },
+    "title": "Test"
+  },
+  "components": {
+    "item": {
+      "actions": {
+        "test": "Test"
+      }
+    }
+  },
+  "modals": {
+    "test": {
+      "title": {
+        "create": "Test Oluştur",
+        "edit": "Testi Düzenle"
+      },
+      "fields": {
+        "url": "Test URL'si"
+      }
+    }
+  },
+  "statuses": {
+    "test": {
+      "pending": "Beklemede",
+      "yes": "Evet",
+      "no": "Hayır",
+      "failed": "Başarısız",
+      "completed": "Tamamlandı",
+      "disallowedIsp": "İzin Verilmeyen ISP",
+      "originalsOnly": "Yalnızca Orijinaller",
+      "noDisney": "Hayır (IP Disney+ Tarafından Yasaklandı)",
+      "unsupportedRegion": "Desteklenmeyen Ülke/Bölge",
+      "failedNetwork": "Başarısız (Ağ Bağlantısı)"
+    }
+  },
+  "unlock": {
+    "page": {
+      "actions": {
+        "testing": "Test Ediliyor..."
+      },
+      "empty": "No unlock test items",
+      "messages": {
+        "detectionFailedWithName": "{{name}} için tespit başarısız oldu",
+        "detectionTimeout": "Detection timeout or failed"
+      },
+      "title": "Kilit Açma Testi"
+    }
+  }
+}

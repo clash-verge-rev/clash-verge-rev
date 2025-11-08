@@ -1,0 +1,182 @@
+{
+  "page": {
+    "actions": {
+      "updateAll": "Update All Profiles",
+      "viewRuntimeConfig": "View Runtime Config",
+      "reactivate": "Reactivate Profiles",
+      "import": "Import"
+    },
+    "batch": {
+      "actions": {
+        "delete": "Delete Selected Profiles",
+        "selectAll": "Select All",
+        "deselectAll": "Deselect All",
+        "done": "Done"
+      },
+      "summary": {
+        "selected": "Selected",
+        "items": "items"
+      },
+      "title": "Batch Operations"
+    },
+    "importForm": {
+      "placeholder": "Profile URL",
+      "actions": {
+        "paste": "Paste"
+      }
+    },
+    "feedback": {
+      "errors": {
+        "invalidUrl": "Invalid profile URL. Please enter a URL starting with http:// or https://",
+        "onlyYaml": "Only YAML Files Supported"
+      },
+      "notifications": {
+        "importRetry": "Import failed, retrying with Clash proxy...",
+        "importFail": "Import failed even with Clash proxy",
+        "importNeedsRefresh": "Profile imported but may need manual refresh",
+        "importSuccess": "Profile imported successfully, please restart if not visible",
+        "profileSwitched": "Profile Switched",
+        "profileReactivated": "Profile Reactivated",
+        "switchInterrupted": "Profile switch interrupted by new selection",
+        "batchDeleted": "Selected profiles deleted successfully"
+      },
+      "notices": {
+        "forceRefreshCompleted": "Force refresh completed",
+        "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
+      }
+    },
+    "title": "Profiles"
+  },
+  "components": {
+    "card": {
+      "labels": {
+        "clickToImport": "Click to import subscription"
+      }
+    },
+    "fileInput": {
+      "chooseFile": "Choose File"
+    },
+    "menu": {
+      "home": "Home",
+      "select": "Select",
+      "editInfo": "Edit Info",
+      "editFile": "Edit File",
+      "editRules": "Edit Rules",
+      "editProxies": "Edit Proxies",
+      "editGroups": "Edit Proxy Groups",
+      "extendConfig": "Extend Config",
+      "extendScript": "Extend Script",
+      "openFile": "Open File",
+      "update": "Update",
+      "updateViaProxy": "Update via proxy"
+    },
+    "more": {
+      "global": {
+        "merge": "Global Extend Config",
+        "script": "Global Extend Script"
+      },
+      "chips": {
+        "merge": "Merge",
+        "script": "Script"
+      }
+    },
+    "profileItem": {
+      "tooltips": {
+        "showLast": "Click to show last update time",
+        "showNext": "Click to show next update"
+      },
+      "status": {
+        "lastUpdateFailed": "Last Update failed",
+        "nextUp": "Next Up",
+        "noSchedule": "No schedule",
+        "unknown": "Unknown",
+        "autoUpdateDisabled": "Auto update disabled"
+      }
+    }
+  },
+  "modals": {
+    "profileForm": {
+      "title": {
+        "create": "Create Profile",
+        "edit": "Edit Profile"
+      },
+      "fields": {
+        "type": "Type",
+        "description": "Descriptions",
+        "subscriptionUrl": "Subscription URL",
+        "httpTimeout": "HTTP Request Timeout",
+        "updateInterval": "Update Interval",
+        "useSystemProxy": "Use System Proxy",
+        "useClashProxy": "Use Clash Proxy",
+        "acceptInvalidCerts": "Allows Invalid Certificates (Danger)",
+        "allowAutoUpdate": "Allow Auto Update"
+      },
+      "feedback": {
+        "notifications": {
+          "creationRetry": "Profile creation failed, retrying with Clash proxy...",
+          "creationSuccess": "Profile creation succeeded with Clash proxy"
+        }
+      }
+    },
+    "proxiesEditor": {
+      "title": "Edit Proxies",
+      "placeholders": {
+        "multiUri": "Use newlines for multiple uri(Base64 encoding supported)"
+      },
+      "actions": {
+        "prepend": "Prepend Proxy",
+        "append": "Append Proxy"
+      }
+    },
+    "groupsEditor": {
+      "title": "Edit Proxy Groups",
+      "errors": {
+        "nameRequired": "Group Name Required",
+        "nameExists": "Group Name Already Exists"
+      },
+      "fields": {
+        "type": "Group Type",
+        "name": "Group Name",
+        "icon": "Proxy Group Icon",
+        "proxies": "Use Proxies",
+        "provider": "Use Provider",
+        "healthCheckUrl": "Health Check Url",
+        "expectedStatus": "Expected Status",
+        "interval": "Interval",
+        "maxFailedTimes": "Max Failed Times",
+        "interfaceName": "Interface Name",
+        "routingMark": "Routing Mark",
+        "filter": "Filter",
+        "excludeFilter": "Exclude Filter",
+        "excludeType": "Exclude Type",
+        "includeAll": "Include All Proxies and Providers",
+        "includeAllProxies": "Include All Proxies",
+        "includeAllProviders": "Include All Providers"
+      },
+      "toggles": {
+        "lazy": "Lazy",
+        "disableUdp": "Disable UDP",
+        "hidden": "Hidden"
+      },
+      "actions": {
+        "prepend": "Prepend Group",
+        "append": "Append Group"
+      }
+    },
+    "editor": {
+      "actions": {
+        "format": "Format document"
+      },
+      "messages": {
+        "readOnly": "Cannot edit in read-only editor"
+      }
+    },
+    "confirmDelete": {
+      "title": "Confirm deletion",
+      "message": "This operation is not reversible"
+    },
+    "logViewer": {
+      "title": "Script Console"
+    }
+  }
+}

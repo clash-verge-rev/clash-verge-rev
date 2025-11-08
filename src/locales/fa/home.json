@@ -1,0 +1,138 @@
+{
+  "page": {
+    "tooltips": {
+      "lightweightMode": "در فارسی",
+      "manual": "راهنما",
+      "settings": "Home Settings"
+    },
+    "cards": {
+      "trafficStats": "Traffic Stats",
+      "networkSettings": "Network Settings",
+      "proxyMode": "Proxy Mode"
+    },
+    "settings": {
+      "cards": {
+        "profile": "Profile Card",
+        "currentProxy": "Current Proxy Card",
+        "network": "Network Settings Card",
+        "proxyMode": "Proxy Mode Card",
+        "traffic": "Traffic Stats Card",
+        "tests": "Website Tests Card",
+        "ip": "IP Information Card",
+        "clashInfo": "Clash Info Cards",
+        "systemInfo": "System Info Cards"
+      },
+      "title": "Home Settings"
+    },
+    "title": "Home"
+  },
+  "components": {
+    "proxyTun": {
+      "status": {
+        "systemProxyEnabled": "System proxy is enabled, your applications will access the network through the proxy",
+        "systemProxyDisabled": "System proxy is disabled, it is recommended for most users to turn on this option",
+        "tunModeServiceRequired": "TUN mode requires service mode, please install the service first",
+        "tunModeEnabled": "TUN mode is enabled, applications will access the network through the virtual network card",
+        "tunModeDisabled": "TUN mode is disabled, suitable for special applications"
+      },
+      "tooltips": {
+        "systemProxy": "به امکانات تنظیم پروکسی سیستم عامل دسترسی پیدا کنید. اگر فعال‌سازی ناموفق بود، پروکسی سیستم عامل را به‌صورت دستی تغییر دهید",
+        "tunMode": "TUN mode can take over all application traffic, suitable for special applications that do not follow the system proxy settings"
+      }
+    },
+    "clashInfo": {
+      "title": "Clash Info",
+      "fields": {
+        "coreVersion": "Core Version",
+        "systemProxyAddress": "System Proxy Address",
+        "mixedPort": "Mixed Port",
+        "uptime": "Uptime",
+        "rulesCount": "Rules Count"
+      }
+    },
+    "systemInfo": {
+      "title": "System Info",
+      "fields": {
+        "osInfo": "OS Info",
+        "autoLaunch": "راه‌اندازی خودکار",
+        "runningMode": "Running Mode",
+        "lastCheckUpdate": "Last Check Update",
+        "vergeVersion": "نسخه Verge"
+      },
+      "actions": {
+        "settings": "تنظیمات"
+      },
+      "tooltips": {
+        "autoLaunchAdmin": "Administrator mode may not support auto launch"
+      },
+      "badges": {
+        "adminMode": "Administrator Mode",
+        "serviceMode": "حالت سرویس",
+        "sidecarMode": "User Mode",
+        "adminServiceMode": "Admin + Service Mode"
+      }
+    },
+    "ipInfo": {
+      "title": "IP Information",
+      "labels": {
+        "ip": "IP",
+        "asn": "ASN",
+        "isp": "ISP",
+        "org": "ORG",
+        "location": "Location",
+        "timezone": "Timezone",
+        "autoRefresh": "Auto refresh",
+        "unknown": "Unknown"
+      },
+      "errors": {
+        "load": "دریافت اطلاعات IP با خطا مواجه شد"
+      }
+    },
+    "currentProxy": {
+      "title": "Current Node",
+      "actions": {
+        "refreshDelay": "بررسی تأخیر"
+      },
+      "labels": {
+        "globalMode": "حالت جهانی",
+        "directMode": "حالت مستقیم",
+        "group": "Group",
+        "proxy": "Proxy",
+        "noActiveNode": "No active proxy node"
+      }
+    },
+    "tests": {
+      "title": "Website Tests"
+    },
+    "traffic": {
+      "metrics": {
+        "uploadSpeed": "سرعت بارگذاری",
+        "downloadSpeed": "سرعت دانلود",
+        "activeConnections": "Active Connections",
+        "memoryUsage": "استفاده از حافظه"
+      },
+      "legends": {
+        "upload": "Upload",
+        "download": "Download"
+      },
+      "patterns": {
+        "minutes": "{{time}} Minutes"
+      }
+    },
+    "clashMode": {
+      "errors": {
+        "communication": "Core communication error"
+      },
+      "labels": {
+        "rule": "حالت قانون",
+        "global": "حالت جهانی",
+        "direct": "حالت مستقیم"
+      },
+      "descriptions": {
+        "rule": "Automatically choose proxies according to the rule set.",
+        "global": "Forward all network requests through the selected proxy.",
+        "direct": "Bypass the proxy and connect to the internet directly."
+      }
+    }
+  }
+}

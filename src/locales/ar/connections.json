@@ -1,0 +1,28 @@
+{
+  "page": {
+    "title": "الاتصالات"
+  },
+  "components": {
+    "fields": {
+      "host": "المضيف",
+      "dlSpeed": "سرعة التنزيل",
+      "ulSpeed": "سرعة الرفع",
+      "chains": "السلاسل",
+      "rule": "قاعدة",
+      "process": "عملية",
+      "time": "الوقت",
+      "source": "المصدر",
+      "destination": "عنوان IP الوجهة",
+      "destinationPort": "ميناء الوجهة",
+      "type": "النوع"
+    },
+    "order": {
+      "default": "Default",
+      "uploadSpeed": "سرعة الرفع",
+      "downloadSpeed": "سرعة التنزيل"
+    },
+    "actions": {
+      "closeConnection": "إغلاق الاتصال"
+    }
+  }
+}

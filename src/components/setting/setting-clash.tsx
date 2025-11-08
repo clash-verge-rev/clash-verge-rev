@@ -67,9 +67,11 @@ const SettingClash = ({ onError }: Props) => {
   const onUpdateGeo = async () => {
     try {
       await updateGeo();
-      showNotice("success", t("GeoData Updated"));
+      showNotice.success(
+        "settings.feedback.notifications.clash.geoDataUpdated",
+      );
     } catch (err: any) {
-      showNotice("error", err.message || err.toString());
+      showNotice.error(err);
     }
   };
 
@@ -86,14 +88,14 @@ const SettingClash = ({ onError }: Props) => {
     } catch (err: any) {
       setDnsSettingsEnabled(!enable);
       localStorage.setItem("dns_settings_enabled", String(!enable));
-      showNotice("error", err.message || err.toString());
+      showNotice.error(err);
       await patchVerge({ enable_dns_settings: !enable }).catch(() => {});
       throw err;
     }
   });
 
   return (
-    <SettingList title={t("Clash Setting")}>
+    <SettingList title={t("settings.sections.clash.title")}>
       <WebUIViewer ref={webRef} />
       <ClashPortViewer ref={portRef} />
       <ControllerViewer ref={ctrlRef} />
@@ -103,10 +105,10 @@ const SettingClash = ({ onError }: Props) => {
       <HeaderConfiguration ref={corsRef} />
 
       <SettingItem
-        label={t("Allow Lan")}
+        label={t("settings.sections.clash.form.fields.allowLan")}
         extra={
           <TooltipIcon
-            title={t("Network Interface")}
+            title={t("settings.sections.clash.form.tooltips.networkInterface")}
             color={"inherit"}
             icon={LanRounded}
             onClick={() => {
@@ -128,7 +130,7 @@ const SettingClash = ({ onError }: Props) => {
       </SettingItem>
 
       <SettingItem
-        label={t("DNS Overwrite")}
+        label={t("settings.sections.clash.form.fields.dnsOverwrite")}
         extra={
           <TooltipIcon
             icon={SettingsRounded}
@@ -143,7 +145,7 @@ const SettingClash = ({ onError }: Props) => {
         />
       </SettingItem>
 
-      <SettingItem label={t("IPv6")}>
+      <SettingItem label={t("settings.sections.clash.form.fields.ipv6")}>
         <GuardState
           value={ipv6 ?? false}
           valueProps="checked"
@@ -157,10 +159,10 @@ const SettingClash = ({ onError }: Props) => {
       </SettingItem>
 
       <SettingItem
-        label={t("Unified Delay")}
+        label={t("settings.sections.clash.form.fields.unifiedDelay")}
         extra={
           <TooltipIcon
-            title={t("Unified Delay Info")}
+            title={t("settings.sections.clash.form.tooltips.unifiedDelay")}
             sx={{ opacity: "0.7" }}
           />
         }
@@ -178,9 +180,12 @@ const SettingClash = ({ onError }: Props) => {
       </SettingItem>
 
       <SettingItem
-        label={t("Log Level")}
+        label={t("settings.sections.clash.form.fields.logLevel")}
         extra={
-          <TooltipIcon title={t("Log Level Info")} sx={{ opacity: "0.7" }} />
+          <TooltipIcon
+            title={t("settings.sections.clash.form.tooltips.logLevel")}
+            sx={{ opacity: "0.7" }}
+          />
         }
       >
         <GuardState
@@ -194,16 +199,26 @@ const SettingClash = ({ onError }: Props) => {
           }}
         >
           <Select size="small" sx={{ width: 100, "> div": { py: "7.5px" } }}>
-            <MenuItem value="debug">Debug</MenuItem>
-            <MenuItem value="info">Info</MenuItem>
-            <MenuItem value="warning">Warn</MenuItem>
-            <MenuItem value="error">Error</MenuItem>
-            <MenuItem value="silent">Silent</MenuItem>
+            <MenuItem value="debug">
+              {t("settings.sections.clash.form.options.logLevel.debug")}
+            </MenuItem>
+            <MenuItem value="info">
+              {t("settings.sections.clash.form.options.logLevel.info")}
+            </MenuItem>
+            <MenuItem value="warning">
+              {t("settings.sections.clash.form.options.logLevel.warning")}
+            </MenuItem>
+            <MenuItem value="error">
+              {t("settings.sections.clash.form.options.logLevel.error")}
+            </MenuItem>
+            <MenuItem value="silent">
+              {t("settings.sections.clash.form.options.logLevel.silent")}
+            </MenuItem>
           </Select>
         </GuardState>
       </SettingItem>
 
-      <SettingItem label={t("Port Config")}>
+      <SettingItem label={t("settings.sections.clash.form.fields.portConfig")}>
         <TextField
           autoComplete="new-password"
           disabled={false}
@@ -218,10 +233,10 @@ const SettingClash = ({ onError }: Props) => {
       </SettingItem>
 
       <SettingItem
-        label={<>{t("External")}</>}
+        label={t("settings.sections.clash.form.fields.external")}
         extra={
           <TooltipIcon
-            title={t("External Cors Settings")}
+            title={t("settings.sections.externalCors.tooltips.open")}
             icon={SettingsRounded}
             onClick={(e) => {
               e.stopPropagation();
@@ -234,10 +249,13 @@ const SettingClash = ({ onError }: Props) => {
         }}
       />
 
-      <SettingItem onClick={() => webRef.current?.open()} label={t("Web UI")} />
+      <SettingItem
+        onClick={() => webRef.current?.open()}
+        label={t("settings.sections.clash.form.fields.webUI")}
+      />
 
       <SettingItem
-        label={t("Clash Core")}
+        label={t("settings.sections.clash.form.fields.clashCore")}
         extra={
           <TooltipIcon
             icon={SettingsRounded}
@@ -251,17 +269,20 @@ const SettingClash = ({ onError }: Props) => {
       {isWIN && (
         <SettingItem
           onClick={invoke_uwp_tool}
-          label={t("Open UWP tool")}
+          label={t("settings.sections.clash.form.fields.openUwpTool")}
           extra={
             <TooltipIcon
-              title={t("Open UWP tool Info")}
+              title={t("settings.sections.clash.form.tooltips.openUwpTool")}
               sx={{ opacity: "0.7" }}
             />
           }
         />
       )}
 
-      <SettingItem onClick={onUpdateGeo} label={t("Update GeoData")} />
+      <SettingItem
+        onClick={onUpdateGeo}
+        label={t("settings.sections.clash.form.fields.updateGeoData")}
+      />
     </SettingList>
   );
 };

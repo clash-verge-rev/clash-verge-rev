@@ -30,6 +30,8 @@
     "lint:fix": "eslint -c eslint.config.ts --max-warnings=0 --cache --cache-location .eslintcache --fix src",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "format:i18n": "node scripts/cleanup-unused-i18n.mjs --align --apply",
+    "i18n:types": "node scripts/generate-i18n-keys.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },

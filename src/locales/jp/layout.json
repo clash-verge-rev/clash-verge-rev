@@ -1,0 +1,21 @@
+{
+  "components": {
+    "navigation": {
+      "tabs": {
+        "home": "ホーム",
+        "proxies": "プロキシ",
+        "profiles": "プロファイル",
+        "connections": "接続",
+        "rules": "ルール",
+        "logs": "ログ",
+        "unlock": "テスト",
+        "settings": "設定"
+      },
+      "menu": {
+        "reorderMode": "Menu reorder mode",
+        "unlock": "Unlock menu order",
+        "lock": "Lock menu order"
+      }
+    }
+  }
+}

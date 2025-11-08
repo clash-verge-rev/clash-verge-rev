@@ -1,0 +1,138 @@
+{
+  "page": {
+    "tooltips": {
+      "lightweightMode": "Lightweight Mode",
+      "manual": "Manual",
+      "settings": "Home Settings"
+    },
+    "cards": {
+      "trafficStats": "Traffic Stats",
+      "networkSettings": "Network Settings",
+      "proxyMode": "Proxy Mode"
+    },
+    "settings": {
+      "cards": {
+        "profile": "Profile Card",
+        "currentProxy": "Current Proxy Card",
+        "network": "Network Settings Card",
+        "proxyMode": "Proxy Mode Card",
+        "traffic": "Traffic Stats Card",
+        "tests": "Website Tests Card",
+        "ip": "IP Information Card",
+        "clashInfo": "Clash Info Cards",
+        "systemInfo": "System Info Cards"
+      },
+      "title": "Home Settings"
+    },
+    "title": "Home"
+  },
+  "components": {
+    "proxyTun": {
+      "status": {
+        "systemProxyEnabled": "System Proxy Enabled",
+        "systemProxyDisabled": "System Proxy Disabled",
+        "tunModeServiceRequired": "TUN Mode Service Required",
+        "tunModeEnabled": "TUN Mode Enabled",
+        "tunModeDisabled": "TUN Mode Disabled"
+      },
+      "tooltips": {
+        "systemProxy": "System Proxy Info",
+        "tunMode": "TUN Mode Intercept Info"
+      }
+    },
+    "clashInfo": {
+      "title": "Clash Info",
+      "fields": {
+        "coreVersion": "Core Version",
+        "systemProxyAddress": "System Proxy Address",
+        "mixedPort": "Mixed Port",
+        "uptime": "Uptime",
+        "rulesCount": "Rules Count"
+      }
+    },
+    "systemInfo": {
+      "title": "System Info",
+      "fields": {
+        "osInfo": "OS Info",
+        "autoLaunch": "Auto Launch",
+        "runningMode": "Running Mode",
+        "lastCheckUpdate": "Last Check Update",
+        "vergeVersion": "Verge Version"
+      },
+      "actions": {
+        "settings": "Settings"
+      },
+      "tooltips": {
+        "autoLaunchAdmin": "Administrator mode may not support auto launch"
+      },
+      "badges": {
+        "adminMode": "Administrator Mode",
+        "serviceMode": "Service Mode",
+        "sidecarMode": "User Mode",
+        "adminServiceMode": "Admin + Service Mode"
+      }
+    },
+    "ipInfo": {
+      "title": "IP Information",
+      "labels": {
+        "ip": "IP",
+        "asn": "ASN",
+        "isp": "ISP",
+        "org": "ORG",
+        "location": "Location",
+        "timezone": "Timezone",
+        "autoRefresh": "Auto refresh",
+        "unknown": "Unknown"
+      },
+      "errors": {
+        "load": "Failed to get IP info"
+      }
+    },
+    "currentProxy": {
+      "title": "Current Node",
+      "actions": {
+        "refreshDelay": "Delay check"
+      },
+      "labels": {
+        "globalMode": "Global Mode",
+        "directMode": "Direct Mode",
+        "group": "Group",
+        "proxy": "Proxy",
+        "noActiveNode": "No active proxy node"
+      }
+    },
+    "tests": {
+      "title": "Website Tests"
+    },
+    "traffic": {
+      "metrics": {
+        "uploadSpeed": "Upload Speed",
+        "downloadSpeed": "Download Speed",
+        "activeConnections": "Active Connections",
+        "memoryUsage": "Core Usage"
+      },
+      "legends": {
+        "upload": "Upload",
+        "download": "Download"
+      },
+      "patterns": {
+        "minutes": "{{time}} Minutes"
+      }
+    },
+    "clashMode": {
+      "errors": {
+        "communication": "Core communication error"
+      },
+      "labels": {
+        "rule": "Rule",
+        "global": "Global",
+        "direct": "Direct"
+      },
+      "descriptions": {
+        "rule": "Automatically choose proxies according to the rule set.",
+        "global": "Forward all network requests through the selected proxy.",
+        "direct": "Bypass the proxy and connect to the internet directly."
+      }
+    }
+  }
+}

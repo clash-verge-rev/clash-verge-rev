@@ -60,7 +60,7 @@ const LogPage = () => {
   return (
     <BasePage
       full
-      title={t("Logs")}
+      title={t("logs.page.title")}
       contentStyle={{
         height: "100%",
         display: "flex",
@@ -70,7 +70,12 @@ const LogPage = () => {
       header={
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
           <IconButton
-            title={t(enableLog ? "Pause" : "Resume")}
+            title={t(
+              enableLog ? "shared.actions.pause" : "shared.actions.resume",
+            )}
+            aria-label={t(
+              enableLog ? "shared.actions.pause" : "shared.actions.resume",
+            )}
             size="small"
             color="inherit"
             onClick={handleToggleLog}
@@ -89,7 +94,7 @@ const LogPage = () => {
               refreshGetClashLog(true);
             }}
           >
-            {t("Clear")}
+            {t("shared.actions.clear")}
           </Button>
         </Box>
       }
@@ -108,11 +113,13 @@ const LogPage = () => {
           value={logState}
           onChange={(e) => handleLogLevelChange(e.target.value as LogFilter)}
         >
-          <MenuItem value="all">ALL</MenuItem>
-          <MenuItem value="debug">DEBUG</MenuItem>
-          <MenuItem value="info">INFO</MenuItem>
-          <MenuItem value="warn">WARN</MenuItem>
-          <MenuItem value="err">ERROR</MenuItem>
+          <MenuItem value="all">{t("shared.filters.logLevels.all")}</MenuItem>
+          <MenuItem value="debug">
+            {t("shared.filters.logLevels.debug")}
+          </MenuItem>
+          <MenuItem value="info">{t("shared.filters.logLevels.info")}</MenuItem>
+          <MenuItem value="warn">{t("shared.filters.logLevels.warn")}</MenuItem>
+          <MenuItem value="err">{t("shared.filters.logLevels.error")}</MenuItem>
         </BaseStyledSelect>
         <BaseSearchBox
           onSearch={(matcher, state) => {

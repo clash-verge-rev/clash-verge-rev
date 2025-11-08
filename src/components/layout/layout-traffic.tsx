@@ -87,7 +87,7 @@ export const LayoutTraffic = () => {
 
         <Box display="flex" flexDirection="column" gap={0.75}>
           <Box
-            title={`${t("Upload Speed")}`}
+            title={`${t("home.components.traffic.metrics.uploadSpeed")}`}
             {...boxStyle}
             sx={{
               ...boxStyle.sx,
@@ -105,7 +105,7 @@ export const LayoutTraffic = () => {
           </Box>
 
           <Box
-            title={`${t("Download Speed")}`}
+            title={`${t("home.components.traffic.metrics.downloadSpeed")}`}
             {...boxStyle}
             sx={{
               ...boxStyle.sx,
@@ -124,7 +124,7 @@ export const LayoutTraffic = () => {
 
           {displayMemory && (
             <Box
-              title={`${t("Memory Usage")} `}
+              title={`${t("home.components.traffic.metrics.memoryUsage")} `}
               {...boxStyle}
               sx={{
                 cursor: "auto",

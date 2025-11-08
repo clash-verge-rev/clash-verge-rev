@@ -1,0 +1,182 @@
+{
+  "page": {
+    "actions": {
+      "updateAll": "به‌روزرسانی همه پروفایل‌ها",
+      "viewRuntimeConfig": "مشاهده پیکربندی زمان اجرا",
+      "reactivate": "فعال‌سازی مجدد پروفایل‌ها",
+      "import": "وارد کردن"
+    },
+    "batch": {
+      "actions": {
+        "delete": "Delete Selected Profiles",
+        "selectAll": "Select All",
+        "deselectAll": "Deselect All",
+        "done": "Done"
+      },
+      "summary": {
+        "selected": "Selected",
+        "items": "items"
+      },
+      "title": "Batch Operations"
+    },
+    "importForm": {
+      "placeholder": "آدرس پروفایل",
+      "actions": {
+        "paste": "چسباندن"
+      }
+    },
+    "feedback": {
+      "errors": {
+        "invalidUrl": "Invalid profile URL. Please enter a URL starting with http:// or https://",
+        "onlyYaml": "فقط فایل‌های YAML پشتیبانی می‌شوند"
+      },
+      "notifications": {
+        "importRetry": "Import failed, retrying with Clash proxy...",
+        "importFail": "Import failed even with Clash proxy",
+        "importNeedsRefresh": "Profile imported but may need manual refresh",
+        "importSuccess": "Profile imported successfully, please restart if not visible",
+        "profileSwitched": "پروفایل تغییر یافت",
+        "profileReactivated": "پروفایل مجدداً فعال شد",
+        "switchInterrupted": "Profile switch interrupted by new selection",
+        "batchDeleted": "Selected profiles deleted successfully"
+      },
+      "notices": {
+        "forceRefreshCompleted": "Force refresh completed",
+        "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
+      }
+    },
+    "title": "پروفایل‌ها"
+  },
+  "components": {
+    "card": {
+      "labels": {
+        "clickToImport": "Click to import subscription"
+      }
+    },
+    "fileInput": {
+      "chooseFile": "انتخاب فایل"
+    },
+    "menu": {
+      "home": "Home",
+      "select": "انتخاب",
+      "editInfo": "ویرایش اطلاعات",
+      "editFile": "ویرایش فایل",
+      "editRules": "ویرایش قوانین",
+      "editProxies": "ویرایش پروکسی‌ها",
+      "editGroups": "ویرایش گروه‌های پروکسی",
+      "extendConfig": "توسعه پیکربندی",
+      "extendScript": "ادغام اسکریپت",
+      "openFile": "باز کردن فایل",
+      "update": "به‌روزرسانی",
+      "updateViaProxy": "Update via proxy"
+    },
+    "more": {
+      "global": {
+        "merge": "Global Merge",
+        "script": "Global Script"
+      },
+      "chips": {
+        "merge": "Merge",
+        "script": "Script"
+      }
+    },
+    "profileItem": {
+      "tooltips": {
+        "showLast": "Click to show last update time",
+        "showNext": "Click to show next update"
+      },
+      "status": {
+        "lastUpdateFailed": "Last Update failed",
+        "nextUp": "Next Up",
+        "noSchedule": "No schedule",
+        "unknown": "Unknown",
+        "autoUpdateDisabled": "Auto update disabled"
+      }
+    }
+  },
+  "modals": {
+    "profileForm": {
+      "title": {
+        "create": "ایجاد پروفایل",
+        "edit": "ویرایش پروفایل"
+      },
+      "fields": {
+        "type": "نوع",
+        "description": "توضیحات",
+        "subscriptionUrl": "آدرس اشتراک",
+        "httpTimeout": "HTTP Request Timeout",
+        "updateInterval": "فاصله زمانی به‌روزرسانی",
+        "useSystemProxy": "استفاده از پراکسی سیستم",
+        "useClashProxy": "استفاده از پراکسی Clash",
+        "acceptInvalidCerts": "پذیرش گواهی‌نامه‌های نامعتبر (خطرناک)",
+        "allowAutoUpdate": "Allow Auto Update"
+      },
+      "feedback": {
+        "notifications": {
+          "creationRetry": "Profile creation failed, retrying with Clash proxy...",
+          "creationSuccess": "Profile creation succeeded with Clash proxy"
+        }
+      }
+    },
+    "proxiesEditor": {
+      "title": "ویرایش پروکسی‌ها",
+      "placeholders": {
+        "multiUri": "استفاده از خطوط جدید برای چندین آدرس (پشتیبانی از رمزگذاری Base64)"
+      },
+      "actions": {
+        "prepend": "پیش‌افزودن پراکسی",
+        "append": "پس‌افزودن پراکسی"
+      }
+    },
+    "groupsEditor": {
+      "title": "ویرایش گروه‌های پروکسی",
+      "errors": {
+        "nameRequired": "نام گروه مورد نیاز است",
+        "nameExists": "نام گروه قبلا وجود دارد"
+      },
+      "fields": {
+        "type": "نوع گروه",
+        "name": "نام گروه",
+        "icon": "آیکون گروه پراکسی",
+        "proxies": "استفاده از پروکسی‌ها",
+        "provider": "استفاده از ارائه‌دهنده",
+        "healthCheckUrl": "آدرس بررسی سلامت",
+        "expectedStatus": "وضعیت مورد انتظار",
+        "interval": "فاصله زمانی",
+        "maxFailedTimes": "حداکثر تعداد شکست‌ها",
+        "interfaceName": "نام رابط",
+        "routingMark": "علامت مسیریابی",
+        "filter": "فیلتر",
+        "excludeFilter": "فیلتر استثناء",
+        "excludeType": "نوع استثناء",
+        "includeAll": "شامل همه پروکسی‌ها و ارائه‌دهنده‌ها",
+        "includeAllProxies": "شامل همه پروکسی‌ها",
+        "includeAllProviders": "شامل همه ارائه‌دهنده‌ها"
+      },
+      "toggles": {
+        "lazy": "تنبل",
+        "disableUdp": "غیرفعال کردن UDP",
+        "hidden": "مخفی"
+      },
+      "actions": {
+        "prepend": "اضافه کردن گروه به ابتدا",
+        "append": "اضافه کردن گروه به انتها"
+      }
+    },
+    "editor": {
+      "actions": {
+        "format": "فرمت‌بندی سند"
+      },
+      "messages": {
+        "readOnly": "نمی‌توان در ویرایشگر فقط خواندنی ویرایش کرد"
+      }
+    },
+    "confirmDelete": {
+      "title": "تأیید حذف",
+      "message": "این عملیات قابل برگشت نیست"
+    },
+    "logViewer": {
+      "title": "کنسول اسکریپت"
+    }
+  }
+}

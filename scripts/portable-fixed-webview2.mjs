@@ -1,9 +1,10 @@
 import fs from "fs";
 import fsp from "fs/promises";
-import path from "path";
-import AdmZip from "adm-zip";
 import { createRequire } from "module";
+import path from "path";
+
 import { getOctokit, context } from "@actions/github";
+import AdmZip from "adm-zip";
 
 const target = process.argv.slice(2)[0];
 const alpha = process.argv.slice(2)[1];
@@ -79,11 +80,11 @@ async function resolvePortable() {
     tag,
   });
 
-  let assets = release.assets.filter((x) => {
+  const assets = release.assets.filter((x) => {
     return x.name === zipFile;
   });
   if (assets.length > 0) {
-    let id = assets[0].id;
+    const id = assets[0].id;
     await github.rest.repos.deleteReleaseAsset({
       ...options,
       asset_id: id,
