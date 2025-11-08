@@ -8,8 +8,8 @@ use tokio::sync::Notify;
 
 use crate::{logging, utils::logging::Type};
 
-// 使用 AtomicBool 替代 RwLock<bool>，性能更好且无锁
-static UI_READY: OnceCell<AtomicBool> = OnceCell::new();
+// 获取 UI 是否准备就绪的全局状态
+static UI_READY: AtomicBool = AtomicBool::new(false);
 // 获取UI就绪状态细节
 static UI_READY_STATE: OnceCell<UiReadyState> = OnceCell::new();
 // 添加通知机制，用于事件驱动的 UI 就绪检测
@@ -39,8 +39,8 @@ impl Default for UiReadyState {
     }
 }
 
-pub(super) fn get_ui_ready() -> &'static AtomicBool {
-    UI_READY.get_or_init(|| AtomicBool::new(false))
+pub fn get_ui_ready() -> &'static AtomicBool {
+    &UI_READY
 }
 
 fn get_ui_ready_state() -> &'static UiReadyState {
