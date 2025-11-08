@@ -1,5 +1,6 @@
 use super::CmdResult;
 use crate::core::sysopt::Sysopt;
+use crate::utils::resolve::ui::{self, UiReadyStage};
 use crate::{
     cmd::StringifyErr,
     feat, logging,
@@ -242,34 +243,14 @@ pub async fn copy_icon_file(path: String, icon_info: IconInfo) -> CmdResult<Stri
 #[tauri::command]
 pub fn notify_ui_ready() -> CmdResult<()> {
     logging!(info, Type::Cmd, "前端UI已准备就绪");
-    crate::utils::resolve::ui::mark_ui_ready();
+    ui::mark_ui_ready();
     Ok(())
 }
 
 /// UI加载阶段
 #[tauri::command]
-pub fn update_ui_stage(stage: String) -> CmdResult<()> {
-    logging!(info, Type::Cmd, "UI加载阶段更新: {}", stage.as_str());
-
-    use crate::utils::resolve::ui::UiReadyStage;
-
-    let stage_enum = match stage.as_str() {
-        "NotStarted" => UiReadyStage::NotStarted,
-        "Loading" => UiReadyStage::Loading,
-        "DomReady" => UiReadyStage::DomReady,
-        "ResourcesLoaded" => UiReadyStage::ResourcesLoaded,
-        "Ready" => UiReadyStage::Ready,
-        _ => {
-            logging!(
-                warn,
-                Type::Cmd,
-                "Warning: 未知的UI加载阶段: {}",
-                stage.as_str()
-            );
-            return Err(format!("未知的UI加载阶段: {}", stage.as_str()).into());
-        }
-    };
-
-    crate::utils::resolve::ui::update_ui_ready_stage(stage_enum);
+pub fn update_ui_stage(stage: UiReadyStage) -> CmdResult<()> {
+    logging!(info, Type::Cmd, "UI加载阶段更新: {:?}", &stage);
+    ui::update_ui_ready_stage(stage);
     Ok(())
 }
