@@ -23,6 +23,10 @@
     },
     "actions": {
       "closeConnection": "Cerrar conexión"
+    },
+    "columnManager": {
+      "title": "Columnas",
+      "dragHandle": "Drag handle"
     }
   }
 }

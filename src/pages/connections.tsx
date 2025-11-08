@@ -86,6 +86,7 @@ const ConnectionsPage = () => {
 
   const [isPaused, setIsPaused] = useState(false);
   const [frozenData, setFrozenData] = useState<IConnections | null>(null);
+  const [isColumnManagerOpen, setIsColumnManagerOpen] = useState(false);
 
   // 使用全局连接数据
   const displayData = useMemo(() => {
@@ -110,14 +111,17 @@ const ConnectionsPage = () => {
 
   const [filterConn] = useMemo(() => {
     const orderFunc = orderFunctionMap[curOrderOpt];
-    let conns = displayData.connections?.filter((conn) => {
-      const { host, destinationIP, process } = conn.metadata;
-      return (
-        match(host || "") || match(destinationIP || "") || match(process || "")
-      );
-    });
-
-    if (orderFunc) conns = orderFunc(conns ?? []);
+    let conns: IConnectionsItem[] = (displayData.connections ?? []).filter(
+      (conn) => {
+        const { host, destinationIP, process } = conn.metadata;
+        return (
+          match(host || "") ||
+          match(destinationIP || "") ||
+          match(process || "")
+        );
+      },
+    );
+    if (orderFunc) conns = orderFunc(conns);
 
     return [conns];
   }, [displayData, match, curOrderOpt]);
@@ -144,6 +148,8 @@ const ConnectionsPage = () => {
       return !prev;
     });
   }, [connections]);
+
+  const hasTableData = filterConn.length > 0;
 
   return (
     <BasePage
@@ -214,9 +220,10 @@ const ConnectionsPage = () => {
           pt: 1,
           mb: 0.5,
           mx: "10px",
-          height: "36px",
+          minHeight: "36px",
           display: "flex",
           alignItems: "center",
+          gap: 1,
           userSelect: "text",
           position: "sticky",
           top: 0,
@@ -235,15 +242,29 @@ const ConnectionsPage = () => {
             ))}
           </BaseStyledSelect>
         )}
-        <BaseSearchBox onSearch={handleSearch} />
+        <Box
+          sx={{
+            flex: 1,
+            display: "flex",
+            alignItems: "center",
+            "& > *": {
+              flex: 1,
+            },
+          }}
+        >
+          <BaseSearchBox onSearch={handleSearch} />
+        </Box>
       </Box>
 
-      {!filterConn || filterConn.length === 0 ? (
+      {!hasTableData ? (
         <BaseEmpty />
       ) : isTableLayout ? (
         <ConnectionTable
           connections={filterConn}
           onShowDetail={(detail) => detailRef.current?.open(detail)}
+          columnManagerOpen={isTableLayout && isColumnManagerOpen}
+          onOpenColumnManager={() => setIsColumnManagerOpen(true)}
+          onCloseColumnManager={() => setIsColumnManagerOpen(false)}
         />
       ) : (
         <Virtuoso
