@@ -1,27 +1,33 @@
 use crate::{APP_HANDLE, constants::timing, singleton};
 use parking_lot::RwLock;
 use smartstring::alias::String;
-use std::{sync::Arc, thread};
+use std::{
+    sync::{
+        Arc,
+        atomic::{AtomicBool, Ordering},
+    },
+    thread,
+};
 use tauri::{AppHandle, Manager, WebviewWindow};
 use tauri_plugin_mihomo::{Mihomo, MihomoExt};
 use tokio::sync::RwLockReadGuard;
 
 use super::notification::{ErrorMessage, FrontendEvent, NotificationSystem};
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct Handle {
-    is_exiting: Arc<RwLock<bool>>,
+    is_exiting: AtomicBool,
     startup_errors: Arc<RwLock<Vec<ErrorMessage>>>,
-    startup_completed: Arc<RwLock<bool>>,
+    startup_completed: AtomicBool,
     pub(crate) notification_system: Arc<RwLock<Option<NotificationSystem>>>,
 }
 
 impl Default for Handle {
     fn default() -> Self {
         Self {
-            is_exiting: Arc::new(RwLock::new(false)),
+            is_exiting: AtomicBool::new(false),
             startup_errors: Arc::new(RwLock::new(Vec::new())),
-            startup_completed: Arc::new(RwLock::new(false)),
+            startup_completed: AtomicBool::new(false),
             notification_system: Arc::new(RwLock::new(Some(NotificationSystem::new()))),
         }
     }
@@ -108,7 +114,7 @@ impl Handle {
         let status_str = status.into();
         let msg_str = msg.into();
 
-        if !*handle.startup_completed.read() {
+        if !handle.startup_completed.load(Ordering::Acquire) {
             handle.startup_errors.write().push(ErrorMessage {
                 status: status_str,
                 message: msg_str,
@@ -139,7 +145,7 @@ impl Handle {
     }
 
     pub fn mark_startup_completed(&self) {
-        *self.startup_completed.write() = true;
+        self.startup_completed.store(true, Ordering::Release);
         self.send_startup_errors();
     }
 
@@ -182,7 +188,7 @@ impl Handle {
     }
 
     pub fn set_is_exiting(&self) {
-        *self.is_exiting.write() = true;
+        self.is_exiting.store(true, Ordering::Release);
 
         let mut system_opt = self.notification_system.write();
         if let Some(system) = system_opt.as_mut() {
@@ -191,7 +197,7 @@ impl Handle {
     }
 
     pub fn is_exiting(&self) -> bool {
-        *self.is_exiting.read()
+        self.is_exiting.load(Ordering::Acquire)
     }
 }
 
