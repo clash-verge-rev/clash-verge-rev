@@ -23,6 +23,10 @@
     },
     "actions": {
       "closeConnection": "بستن اتصال"
+    },
+    "columnManager": {
+      "title": "ستون‌ها",
+      "dragHandle": "Drag handle"
     }
   }
 }

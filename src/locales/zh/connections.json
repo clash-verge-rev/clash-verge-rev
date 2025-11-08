@@ -23,6 +23,10 @@
     },
     "actions": {
       "closeConnection": "关闭连接"
+    },
+    "columnManager": {
+      "title": "列设置",
+      "dragHandle": "拖拽控件"
     }
   }
 }

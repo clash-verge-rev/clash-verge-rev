@@ -8,6 +8,10 @@ export interface TranslationResources {
         actions: {
           closeConnection: string;
         };
+        columnManager: {
+          dragHandle: string;
+          title: string;
+        };
         fields: {
           chains: string;
           destination: string;
