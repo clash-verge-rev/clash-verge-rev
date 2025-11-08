@@ -55,6 +55,10 @@ export const ConnectionColumnManager = ({
   const { t } = useTranslation();
 
   const items = useMemo(() => columns.map((column) => column.field), [columns]);
+  const visibleCount = useMemo(
+    () => columns.filter((column) => column.visible).length,
+    [columns],
+  );
 
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
@@ -96,6 +100,7 @@ export const ConnectionColumnManager = ({
                   dragHandleLabel={t(
                     "connections.components.columnManager.dragHandle",
                   )}
+                  disableToggle={column.visible && visibleCount <= 1}
                 />
               ))}
             </List>
@@ -118,12 +123,14 @@ interface SortableColumnItemProps {
   column: ColumnOption;
   onToggle: (field: string, visible: boolean) => void;
   dragHandleLabel: string;
+  disableToggle?: boolean;
 }
 
 const SortableColumnItem = ({
   column,
   onToggle,
   dragHandleLabel,
+  disableToggle = false,
 }: SortableColumnItemProps) => {
   const {
     attributes,
@@ -161,6 +168,7 @@ const SortableColumnItem = ({
       <Checkbox
         edge="start"
         checked={column.visible}
+        disabled={disableToggle}
         onChange={(event) => onToggle(column.field, event.target.checked)}
       />
       <ListItemText

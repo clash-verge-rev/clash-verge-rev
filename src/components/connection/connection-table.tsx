@@ -354,6 +354,14 @@ export const ConnectionTable = (props: Props) => {
     });
   }, [baseColumns, columnOrder]);
 
+  const visibleColumnsCount = useMemo(() => {
+    return columns.reduce((count, column) => {
+      return (columnVisibilityModel?.[column.field] ?? true) !== false
+        ? count + 1
+        : count;
+    }, 0);
+  }, [columns, columnVisibilityModel]);
+
   const handleColumnResize = (params: GridColumnResizeParams) => {
     const { colDef, width } = params;
     setColumnWidths((prev) => ({
@@ -364,21 +372,38 @@ export const ConnectionTable = (props: Props) => {
 
   const handleColumnVisibilityChange = useCallback(
     (model: GridColumnVisibilityModel) => {
+      const hiddenFields = new Set<string>();
+      Object.entries(model).forEach(([field, value]) => {
+        if (value === false) {
+          hiddenFields.add(field);
+        }
+      });
+
+      const nextVisibleCount = columns.reduce((count, column) => {
+        return hiddenFields.has(column.field) ? count : count + 1;
+      }, 0);
+
+      if (nextVisibleCount === 0) {
+        return;
+      }
+
       setColumnVisibilityModel(() => {
         const sanitized: Partial<Record<string, boolean>> = {};
-        Object.entries(model).forEach(([field, value]) => {
-          if (!value) {
-            sanitized[field] = false;
-          }
+        hiddenFields.forEach((field) => {
+          sanitized[field] = false;
         });
         return sanitized;
       });
     },
-    [setColumnVisibilityModel],
+    [columns, setColumnVisibilityModel],
   );
 
   const handleToggleColumn = useCallback(
     (field: string, visible: boolean) => {
+      if (!visible && visibleColumnsCount <= 1) {
+        return;
+      }
+
       setColumnVisibilityModel((prev) => {
         const next = { ...(prev ?? {}) };
         if (visible) {
@@ -389,7 +414,7 @@ export const ConnectionTable = (props: Props) => {
         return next;
       });
     },
-    [setColumnVisibilityModel],
+    [setColumnVisibilityModel, visibleColumnsCount],
   );
 
   const handleColumnOrderChange = useCallback(
