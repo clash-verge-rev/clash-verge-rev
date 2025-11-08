@@ -1,4 +1,4 @@
-import { getOctokit, context } from "@actions/github";
+import { context, getOctokit } from "@actions/github";
 import fetch from "node-fetch";
 
 import { resolveUpdateLog } from "./updatelog.mjs";
@@ -36,7 +36,7 @@ async function resolveUpdater() {
 
   const updateData = {
     name: tag.name,
-    notes: await resolveUpdateLog(tag.name), // use updatelog.md
+    notes: await resolveUpdateLog(tag.name), // use Changelog.md
     pub_date: new Date().toISOString(),
     platforms: {
       "windows-x86_64": { signature: "", url: "" },
