@@ -6,6 +6,8 @@ use crate::{
 use anyhow::Result;
 use async_trait::async_trait;
 use once_cell::sync::OnceCell;
+#[cfg(unix)]
+use std::iter;
 use std::{fs, path::PathBuf};
 use tauri::Manager;
 
@@ -24,7 +26,6 @@ pub static PORTABLE_FLAG: OnceCell<bool> = OnceCell::new();
 pub static CLASH_CONFIG: &str = "config.yaml";
 pub static VERGE_CONFIG: &str = "verge.yaml";
 pub static PROFILE_YAML: &str = "profiles.yaml";
-pub static DNS_CONFIG: &str = "dns_config.yaml";
 
 /// init portable flag
 pub fn init_portable_flag() -> Result<()> {
@@ -62,7 +63,11 @@ pub fn app_home_dir() -> Result<PathBuf> {
     match app_handle.path().data_dir() {
         Ok(dir) => Ok(dir.join(APP_ID)),
         Err(e) => {
-            log::error!(target: "app", "Failed to get the app home directory: {e}");
+            logging!(
+                error,
+                Type::File,
+                "Failed to get the app home directory: {e}"
+            );
             Err(anyhow::anyhow!("Failed to get the app homedirectory"))
         }
     }
@@ -76,7 +81,11 @@ pub fn app_resources_dir() -> Result<PathBuf> {
     match app_handle.path().resource_dir() {
         Ok(dir) => Ok(dir.join("resources")),
         Err(e) => {
-            log::error!(target: "app", "Failed to get the resource directory: {e}");
+            logging!(
+                error,
+                Type::File,
+                "Failed to get the resource directory: {e}"
+            );
             Err(anyhow::anyhow!("Failed to get the resource directory"))
         }
     }
@@ -219,8 +228,7 @@ pub fn get_encryption_key() -> Result<Vec<u8>> {
 
 #[cfg(unix)]
 pub fn ensure_mihomo_safe_dir() -> Option<PathBuf> {
-    ["/tmp"]
-        .iter()
+    iter::once("/tmp")
         .map(PathBuf::from)
         .find(|path| path.exists())
         .or_else(|| {
@@ -229,7 +237,11 @@ pub fn ensure_mihomo_safe_dir() -> Option<PathBuf> {
                 if home_config.exists() || fs::create_dir_all(&home_config).is_ok() {
                     Some(home_config)
                 } else {
-                    log::error!(target: "app", "Failed to create safe directory: {home_config:?}");
+                    logging!(
+                        error,
+                        Type::File,
+                        "Failed to create safe directory: {home_config:?}"
+                    );
                     None
                 }
             })

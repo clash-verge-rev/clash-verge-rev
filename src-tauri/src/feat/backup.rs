@@ -2,6 +2,7 @@ use crate::{
     config::{Config, IVerge},
     core::backup,
     logging, logging_error,
+    process::AsyncHandler,
     utils::{
         dirs::{PathBufExec, app_home_dir, local_backup_dir},
         logging::Type,
@@ -12,7 +13,8 @@ use chrono::Utc;
 use reqwest_dav::list_cmd::ListFile;
 use serde::Serialize;
 use smartstring::alias::String;
-use std::{fs, path::PathBuf};
+use std::path::PathBuf;
+use tokio::fs;
 
 #[derive(Debug, Serialize)]
 pub struct LocalBackupFile {
@@ -24,7 +26,7 @@ pub struct LocalBackupFile {
 
 /// Create a backup and upload to WebDAV
 pub async fn create_backup_and_upload_webdav() -> Result<()> {
-    let (file_name, temp_file_path) = backup::create_backup().map_err(|err| {
+    let (file_name, temp_file_path) = backup::create_backup().await.map_err(|err| {
         logging!(error, Type::Backup, "Failed to create backup: {err:#?}");
         err
     })?;
@@ -76,7 +78,7 @@ pub async fn delete_webdav_backup(filename: String) -> Result<()> {
 /// Restore WebDAV backup
 pub async fn restore_webdav_backup(filename: String) -> Result<()> {
     let verge = Config::verge().await;
-    let verge_data = verge.latest_ref().clone();
+    let verge_data = verge.latest_arc();
     let webdav_url = verge_data.webdav_url.clone();
     let webdav_username = verge_data.webdav_username.clone();
     let webdav_password = verge_data.webdav_password.clone();
@@ -97,12 +99,14 @@ pub async fn restore_webdav_backup(filename: String) -> Result<()> {
         })?;
 
     // extract zip file
-    let mut zip = zip::ZipArchive::new(fs::File::open(backup_storage_path.clone())?)?;
+    let value = backup_storage_path.clone();
+    let file = AsyncHandler::spawn_blocking(move || std::fs::File::open(&value)).await??;
+    let mut zip = zip::ZipArchive::new(file)?;
     zip.extract(app_home_dir()?)?;
     logging_error!(
         Type::Backup,
         super::patch_verge(
-            IVerge {
+            &IVerge {
                 webdav_url,
                 webdav_username,
                 webdav_password,
@@ -119,7 +123,7 @@ pub async fn restore_webdav_backup(filename: String) -> Result<()> {
 
 /// Create a backup and save to local storage
 pub async fn create_local_backup() -> Result<()> {
-    let (file_name, temp_file_path) = backup::create_backup().map_err(|err| {
+    let (file_name, temp_file_path) = backup::create_backup().await.map_err(|err| {
         logging!(
             error,
             Type::Backup,
@@ -131,7 +135,7 @@ pub async fn create_local_backup() -> Result<()> {
     let backup_dir = local_backup_dir()?;
     let target_path = backup_dir.join(file_name.as_str());
 
-    if let Err(err) = move_file(temp_file_path.clone(), target_path.clone()) {
+    if let Err(err) = move_file(temp_file_path.clone(), target_path.clone()).await {
         logging!(
             error,
             Type::Backup,
@@ -151,12 +155,12 @@ pub async fn create_local_backup() -> Result<()> {
     Ok(())
 }
 
-fn move_file(from: PathBuf, to: PathBuf) -> Result<()> {
+async fn move_file(from: PathBuf, to: PathBuf) -> Result<()> {
     if let Some(parent) = to.parent() {
-        fs::create_dir_all(parent)?;
+        fs::create_dir_all(parent).await?;
     }
 
-    match fs::rename(&from, &to) {
+    match fs::rename(&from, &to).await {
         Ok(_) => Ok(()),
         Err(rename_err) => {
             // Attempt copy + remove as fallback, covering cross-device moves
@@ -165,8 +169,11 @@ fn move_file(from: PathBuf, to: PathBuf) -> Result<()> {
                 Type::Backup,
                 "Failed to rename backup file directly, fallback to copy/remove: {rename_err:#?}"
             );
-            fs::copy(&from, &to).map_err(|err| anyhow!("Failed to copy backup file: {err:#?}"))?;
+            fs::copy(&from, &to)
+                .await
+                .map_err(|err| anyhow!("Failed to copy backup file: {err:#?}"))?;
             fs::remove_file(&from)
+                .await
                 .map_err(|err| anyhow!("Failed to remove temp backup file: {err:#?}"))?;
             Ok(())
         }
@@ -174,24 +181,25 @@ fn move_file(from: PathBuf, to: PathBuf) -> Result<()> {
 }
 
 /// List local backups
-pub fn list_local_backup() -> Result<Vec<LocalBackupFile>> {
+pub async fn list_local_backup() -> Result<Vec<LocalBackupFile>> {
     let backup_dir = local_backup_dir()?;
     if !backup_dir.exists() {
         return Ok(vec![]);
     }
 
     let mut backups = Vec::new();
-    for entry in fs::read_dir(&backup_dir)? {
-        let entry = entry?;
+    let mut dir = fs::read_dir(&backup_dir).await?;
+    while let Some(entry) = dir.next_entry().await? {
         let path = entry.path();
-        if !path.is_file() {
+        let metadata = entry.metadata().await?;
+        if !metadata.is_file() {
             continue;
         }
 
-        let Some(file_name) = path.file_name().and_then(|name| name.to_str()) else {
-            continue;
+        let file_name = match path.file_name().and_then(|name| name.to_str()) {
+            Some(name) => name,
+            None => continue,
         };
-        let metadata = entry.metadata()?;
         let last_modified = metadata
             .modified()
             .map(|time| chrono::DateTime::<Utc>::from(time).to_rfc3339())
@@ -233,18 +241,23 @@ pub async fn restore_local_backup(filename: String) -> Result<()> {
         return Err(anyhow!("Backup file not found: {}", filename));
     }
 
-    let verge = Config::verge().await;
-    let verge_data = verge.latest_ref().clone();
-    let webdav_url = verge_data.webdav_url.clone();
-    let webdav_username = verge_data.webdav_username.clone();
-    let webdav_password = verge_data.webdav_password.clone();
+    let (webdav_url, webdav_username, webdav_password) = {
+        let verge = Config::verge().await;
+        let verge = verge.latest_arc();
+        (
+            verge.webdav_url.clone(),
+            verge.webdav_username.clone(),
+            verge.webdav_password.clone(),
+        )
+    };
 
-    let mut zip = zip::ZipArchive::new(fs::File::open(&target_path)?)?;
+    let file = AsyncHandler::spawn_blocking(move || std::fs::File::open(&target_path)).await??;
+    let mut zip = zip::ZipArchive::new(file)?;
     zip.extract(app_home_dir()?)?;
     logging_error!(
         Type::Backup,
         super::patch_verge(
-            IVerge {
+            &IVerge {
                 webdav_url,
                 webdav_username,
                 webdav_password,
@@ -258,7 +271,7 @@ pub async fn restore_local_backup(filename: String) -> Result<()> {
 }
 
 /// Export local backup file to user selected destination
-pub fn export_local_backup(filename: String, destination: String) -> Result<()> {
+pub async fn export_local_backup(filename: String, destination: String) -> Result<()> {
     let backup_dir = local_backup_dir()?;
     let source_path = backup_dir.join(filename.as_str());
     if !source_path.exists() {
@@ -267,10 +280,11 @@ pub fn export_local_backup(filename: String, destination: String) -> Result<()> 
 
     let dest_path = PathBuf::from(destination.as_str());
     if let Some(parent) = dest_path.parent() {
-        fs::create_dir_all(parent)?;
+        fs::create_dir_all(parent).await?;
     }
 
     fs::copy(&source_path, &dest_path)
+        .await
         .map(|_| ())
         .map_err(|err| anyhow!("Failed to export backup file: {err:#?}"))?;
     Ok(())

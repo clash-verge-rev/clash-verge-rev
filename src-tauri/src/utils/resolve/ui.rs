@@ -54,9 +54,7 @@ fn get_ui_ready_notify() -> &'static Arc<Notify> {
 // 更新UI准备阶段
 pub fn update_ui_ready_stage(stage: UiReadyStage) {
     let state = get_ui_ready_state();
-    let mut stage_lock = state.stage.write();
-
-    *stage_lock = stage;
+    *state.stage.write() = stage;
     // 如果是最终阶段，标记UI完全就绪
     if stage == UiReadyStage::Ready {
         mark_ui_ready();

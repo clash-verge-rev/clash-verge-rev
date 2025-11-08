@@ -1,5 +1,4 @@
 use anyhow::Result;
-use smartstring::alias::String;
 
 use crate::{
     config::Config,
@@ -11,10 +10,7 @@ use crate::{
         tray::Tray,
     },
     logging, logging_error,
-    module::{
-        lightweight::{auto_lightweight_mode_init, run_once_auto_lightweight},
-        signal,
-    },
+    module::{lightweight::auto_lightweight_boot, signal},
     process::AsyncHandler,
     utils::{init, logging::Type, server, window_manager::WindowManager},
 };
@@ -71,8 +67,7 @@ pub fn resolve_setup_async() {
             tray_init,
             init_timer(),
             init_hotkey(),
-            init_auto_lightweight_mode(),
-            init_once_auto_lightweight(),
+            init_auto_lightweight_boot(),
         );
     });
 }
@@ -103,7 +98,7 @@ pub(super) async fn resolve_setup_logger() {
     logging_error!(Type::Setup, init::init_logger().await);
 }
 
-pub async fn resolve_scheme(param: String) -> Result<()> {
+pub async fn resolve_scheme(param: &str) -> Result<()> {
     logging_error!(Type::Setup, scheme::resolve_scheme(param).await);
     Ok(())
 }
@@ -125,15 +120,11 @@ pub(super) async fn init_timer() {
 }
 
 pub(super) async fn init_hotkey() {
-    logging_error!(Type::Setup, Hotkey::global().init().await);
+    logging_error!(Type::Setup, Hotkey::global().init(false).await);
 }
 
-pub(super) async fn init_once_auto_lightweight() {
-    run_once_auto_lightweight().await;
-}
-
-pub(super) async fn init_auto_lightweight_mode() {
-    logging_error!(Type::Setup, auto_lightweight_mode_init().await);
+pub(super) async fn init_auto_lightweight_boot() {
+    logging_error!(Type::Setup, auto_lightweight_boot().await);
 }
 
 pub(super) fn init_signal() {
@@ -188,7 +179,7 @@ pub(super) async fn refresh_tray_menu() {
 pub(super) async fn init_window() {
     let is_silent_start = Config::verge()
         .await
-        .latest_ref()
+        .latest_arc()
         .enable_silent_start
         .unwrap_or(false);
     #[cfg(target_os = "macos")]

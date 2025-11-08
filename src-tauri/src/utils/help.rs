@@ -1,4 +1,4 @@
-use crate::{enhance::seq::SeqMap, logging, utils::logging::Type};
+use crate::{config::with_encryption, enhance::seq::SeqMap, logging, utils::logging::Type};
 use anyhow::{Context, Result, anyhow, bail};
 use nanoid::nanoid;
 use serde::{Serialize, de::DeserializeOwned};
@@ -13,7 +13,7 @@ pub async fn read_yaml<T: DeserializeOwned>(path: &PathBuf) -> Result<T> {
 
     let yaml_str = tokio::fs::read_to_string(path).await?;
 
-    Ok(serde_yaml_ng::from_str::<T>(&yaml_str)?)
+    Ok(with_encryption(|| async { serde_yaml_ng::from_str::<T>(&yaml_str) }).await?)
 }
 
 /// read mapping from yaml
@@ -65,7 +65,7 @@ pub async fn save_yaml<T: Serialize + Sync>(
     data: &T,
     prefix: Option<&str>,
 ) -> Result<()> {
-    let data_str = serde_yaml_ng::to_string(data)?;
+    let data_str = with_encryption(|| async { serde_yaml_ng::to_string(data) }).await?;
 
     let yaml_str = match prefix {
         Some(prefix) => format!("{prefix}\n\n{data_str}"),

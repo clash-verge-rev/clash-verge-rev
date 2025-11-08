@@ -254,7 +254,6 @@
   "Merge File Mapping Error": "병합 파일 매핑 오류",
   "Merge File Key Error": "병합 파일 키 오류",
   "Merge File Error": "병합 파일 오류",
-  "Update failed, retrying with Clash proxy...": "업데이트 실패, Clash 프록시로 재시도 중...",
   "Update with Clash proxy successfully": "Clash 프록시로 업데이트 성공",
   "Update failed even with Clash proxy": "Clash 프록시로도 업데이트 실패",
   "Failed": "실패",

@@ -71,8 +71,9 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
         setOpen(false);
         showNotice("success", t("Port settings saved"));
       },
-      onError: () => {
-        showNotice("error", t("Failed to save port settings"));
+      onError: (e) => {
+        showNotice("error", e.message || t("Failed to save port settings"));
+        // showNotice("error", t("Failed to save port settings"));
       },
     },
   );

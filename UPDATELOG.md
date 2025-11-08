@@ -1,6 +1,21 @@
+# v2.4.4
+
+### 🐞 修复问题
+
+<details>
+<summary><strong> ✨ 新增功能 </strong></summary>
+</details>
+
+<details>
+<summary><strong> 🚀 优化改进 </strong></summary>
+</details>
+
 ## v2.4.3
 
-感谢 @Slinetrac, @oomeow 以及 @Lythrilla 的出色贡献
+**发行代号：澜**
+代号释义：澜象征平稳与融合，本次版本聚焦稳定性、兼容性、性能与体验优化，全面提升整体可靠性。
+
+特别感谢 @Slinetrac, @oomeow, @Lythrilla, @Dragon1573 的出色贡献
 
 ### 🐞 修复问题
 
@@ -33,6 +48,11 @@
 - 修复悬浮跳转导航失效
 - 修复小键盘热键映射错误
 - 修复前端无法及时刷新操作状态
+- 修复 macOS 从 Dock 栏退出轻量模式状态不同步
+- 修复 Linux 系统主题切换不生效
+- 修复 `允许自动更新` 字段使手动订阅刷新失效
+- 修复轻量模式托盘状态不同步
+- 修复一键导入订阅导致应用卡死崩溃的问题
 
 <details>
 <summary><strong> ✨ 新增功能 </strong></summary>
@@ -82,6 +102,8 @@
 - 添加热键绑定错误的提示信息
 - 在 macOS 10.15 及更高版本默认包含 Mihomo-go122，以解决 Intel 架构 Mac 无法运行内核的问题
 - Tun 模式不可用时，禁用系统托盘的 Tun 模式菜单
+- 改进订阅更新方式，仍失败需打开订阅设置 `允许危险证书`
+- 允许设置 Mihomo 端口范围 1000(含) - 65536(含)
 
 </details>
 

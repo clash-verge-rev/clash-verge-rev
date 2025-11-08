@@ -1,6 +1,6 @@
 [package]
 name = "clash-verge"
-version = "2.4.3"
+version = "2.4.4"
 description = "clash verge"
 authors = ["zzzgydi", "Tunglies", "wonfen", "MystiPanda"]
 license = "GPL-3.0-only"
@@ -42,7 +42,7 @@ serde = { version = "1.0.228", features = ["derive"] }
 reqwest = { version = "0.12.24", features = ["json", "cookies"] }
 regex = "1.12.2"
 sysproxy = { git = "https://github.com/clash-verge-rev/sysproxy-rs" }
-tauri = { version = "2.9.1", features = [
+tauri = { version = "2.9.2", features = [
   "protocol-asset",
   "devtools",
   "tray-icon",
@@ -77,7 +77,7 @@ backoff = { version = "0.4.0", features = ["tokio"] }
 compact_str = { version = "0.9.0", features = ["serde"] }
 tauri-plugin-http = "2.5.4"
 flexi_logger = "0.31.7"
-console-subscriber = { version = "0.4.1", optional = true }
+console-subscriber = { version = "0.5.0", optional = true }
 tauri-plugin-devtools = { version = "2.0.1" }
 tauri-plugin-mihomo = { git = "https://github.com/clash-verge-rev/tauri-plugin-mihomo" }
 clash_verge_logger = { git = "https://github.com/clash-verge-rev/clash-verge-logger" }
@@ -86,6 +86,7 @@ smartstring = { version = "1.0.1", features = ["serde"] }
 clash_verge_service_ipc = { version = "2.0.21", features = [
   "client",
 ], git = "https://github.com/clash-verge-rev/clash-verge-service-ipc" }
+arc-swap = "1.7.1"
 
 [target.'cfg(windows)'.dependencies]
 runas = "=1.2.0"
@@ -110,9 +111,6 @@ windows-sys = { version = "0.61.2", features = [
   "Win32_System_SystemServices",
   "Win32_UI_WindowsAndMessaging",
 ] }
-
-[target.'cfg(target_os = "linux")'.dependencies]
-users = "0.11.0"
 
 [target.'cfg(unix)'.dependencies]
 signal-hook = "0.3.18"
@@ -225,3 +223,23 @@ needless_raw_string_hashes = "deny" # Too many in existing code
 
 or_fun_call = "deny"
 cognitive_complexity = "deny"
+useless_let_if_seq = "deny"
+use_self = "deny"
+tuple_array_conversions = "deny"
+trait_duplication_in_bounds = "deny"
+suspicious_operation_groupings = "deny"
+string_lit_as_bytes = "deny"
+significant_drop_tightening = "deny"
+significant_drop_in_scrutinee = "deny"
+redundant_clone = "deny"
+# option_if_let_else = "deny" // 过于激进，暂时不开启
+needless_pass_by_ref_mut = "deny"
+needless_collect = "deny"
+missing_const_for_fn = "deny"
+iter_with_drain = "deny"
+iter_on_single_items = "deny"
+iter_on_empty_collections = "deny"
+# fallible_impl_from = "deny" // 过于激进，暂时不开启
+equatable_if_let = "deny"
+collection_is_never_read = "deny"
+branches_sharing_code = "deny"

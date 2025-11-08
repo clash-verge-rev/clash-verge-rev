@@ -19,7 +19,7 @@ struct IntelGpuDetection {
 }
 
 impl IntelGpuDetection {
-    fn should_disable_dmabuf(&self) -> bool {
+    const fn should_disable_dmabuf(&self) -> bool {
         self.intel_is_primary || self.inconclusive
     }
 }
@@ -41,7 +41,7 @@ enum NvidiaDmabufDisableReason {
 }
 
 impl NvidiaGpuDetection {
-    fn disable_reason(&self, session: &SessionEnv) -> Option<NvidiaDmabufDisableReason> {
+    const fn disable_reason(&self, session: &SessionEnv) -> Option<NvidiaDmabufDisableReason> {
         if !session.is_wayland {
             return None;
         }
@@ -144,11 +144,11 @@ impl DmabufOverrides {
         }
     }
 
-    fn has_env_override(&self) -> bool {
+    const fn has_env_override(&self) -> bool {
         self.dmabuf_override.is_some()
     }
 
-    fn should_override_env(&self, decision: &DmabufDecision) -> bool {
+    const fn should_override_env(&self, decision: &DmabufDecision) -> bool {
         if self.user_preference.is_some() {
             return true;
         }

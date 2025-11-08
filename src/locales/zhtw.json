@@ -626,7 +626,6 @@
   "Unknown": "未知",
   "Auto update disabled": "自動更新已停用",
   "Update subscription successfully": "訂閱更新成功",
-  "Update failed, retrying with Clash proxy...": "訂閱更新失敗，嘗試使用 Clash 代理更新",
   "Update with Clash proxy successfully": "使用 Clash 代理更新成功",
   "Update failed even with Clash proxy": "使用 Clash 代理更新也失敗",
   "Profile creation failed, retrying with Clash proxy...": "訂閱建立失敗，嘗試使用 Clash 代理建立",

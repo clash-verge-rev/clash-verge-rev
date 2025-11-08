@@ -10,6 +10,9 @@ mod feat;
 mod module;
 mod process;
 pub mod utils;
+use crate::constants::files;
+#[cfg(target_os = "macos")]
+use crate::module::lightweight;
 #[cfg(target_os = "linux")]
 use crate::utils::linux;
 #[cfg(target_os = "macos")]
@@ -19,6 +22,7 @@ use crate::{
     process::AsyncHandler,
     utils::{resolve, server},
 };
+use anyhow::Result;
 use config::Config;
 use once_cell::sync::OnceCell;
 use tauri::{AppHandle, Manager};
@@ -28,11 +32,8 @@ use tauri_plugin_deep_link::DeepLinkExt;
 use utils::logging::Type;
 
 pub static APP_HANDLE: OnceCell<AppHandle> = OnceCell::new();
-
 /// Application initialization helper functions
 mod app_init {
-    use anyhow::Result;
-
     use super::*;
 
     /// Initialize singleton monitoring for other instances
@@ -91,14 +92,14 @@ mod app_init {
         }
 
         app.deep_link().on_open_url(|event| {
-            let url = event.urls().first().map(|u| u.to_string());
-            if let Some(url) = url {
-                AsyncHandler::spawn(|| async {
-                    if let Err(e) = resolve::resolve_scheme(url.into()).await {
-                        logging!(error, Type::Setup, "Failed to resolve scheme: {}", e);
-                    }
-                });
-            }
+            let urls = event.urls();
+            AsyncHandler::spawn(move || async move {
+                if let Some(url) = urls.first()
+                    && let Err(e) = resolve::resolve_scheme(url.as_ref()).await
+                {
+                    logging!(error, Type::Setup, "Failed to resolve scheme: {}", e);
+                }
+            });
         });
 
         Ok(())
@@ -115,7 +116,7 @@ mod app_init {
         {
             auto_start_plugin_builder = auto_start_plugin_builder
                 .macos_launcher(MacosLauncher::LaunchAgent)
-                .app_name(app.config().identifier.clone());
+                .app_name(&app.config().identifier);
         }
         app.handle().plugin(auto_start_plugin_builder.build())?;
         Ok(())
@@ -125,7 +126,7 @@ mod app_init {
     pub fn setup_window_state(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
         logging!(info, Type::Setup, "初始化窗口状态管理...");
         let window_state_plugin = tauri_plugin_window_state::Builder::new()
-            .with_filename("window_state.json")
+            .with_filename(files::WINDOW_STATE)
             .with_state_flags(tauri_plugin_window_state::StateFlags::default())
             .build();
         app.handle().plugin(window_state_plugin)?;
@@ -287,6 +288,11 @@ pub fn run() {
         pub async fn handle_reopen(has_visible_windows: bool) {
             handle::Handle::global().init();
 
+            if lightweight::is_in_lightweight_mode() {
+                lightweight::exit_lightweight_mode().await;
+                return;
+            }
+
             if !has_visible_windows {
                 handle::Handle::global().set_activation_policy_regular();
                 let _ = WindowManager::show_main_window().await;
@@ -313,7 +319,7 @@ pub fn run() {
             AsyncHandler::spawn(move || async move {
                 let is_enable_global_hotkey = Config::verge()
                     .await
-                    .latest_ref()
+                    .latest_arc()
                     .enable_global_hotkey
                     .unwrap_or(true);
 
@@ -328,10 +334,7 @@ pub fn run() {
                             .register_system_hotkey(SystemHotkey::CmdW)
                             .await;
                     }
-
-                    if !is_enable_global_hotkey {
-                        let _ = hotkey::Hotkey::global().init().await;
-                    }
+                    let _ = hotkey::Hotkey::global().init(true).await;
                     return;
                 }
 
@@ -348,13 +351,21 @@ pub fn run() {
             });
         }
 
+        #[cfg(target_os = "macos")]
         pub fn handle_window_destroyed() {
-            #[cfg(target_os = "macos")]
-            {
-                use crate::core::hotkey::SystemHotkey;
+            use crate::core::hotkey::SystemHotkey;
+            AsyncHandler::spawn(move || async move {
                 let _ = hotkey::Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdQ);
                 let _ = hotkey::Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdW);
-            }
+                let is_enable_global_hotkey = Config::verge()
+                    .await
+                    .latest_arc()
+                    .enable_global_hotkey
+                    .unwrap_or(true);
+                if !is_enable_global_hotkey {
+                    let _ = hotkey::Hotkey::global().reset();
+                }
+            });
         }
     }
 
@@ -434,6 +445,7 @@ pub fn run() {
             tauri::WindowEvent::Focused(focused) => {
                 event_handlers::handle_window_focus(focused);
             }
+            #[cfg(target_os = "macos")]
             tauri::WindowEvent::Destroyed => {
                 event_handlers::handle_window_destroyed();
             }

@@ -628,7 +628,6 @@
   "Unknown": "Unknown",
   "Auto update disabled": "Auto update disabled",
   "Update subscription successfully": "Update subscription successfully",
-  "Update failed, retrying with Clash proxy...": "Update failed, retrying with Clash proxy...",
   "Update with Clash proxy successfully": "Update with Clash proxy successfully",
   "Update failed even with Clash proxy": "Update failed even with Clash proxy",
   "Profile creation failed, retrying with Clash proxy...": "Profile creation failed, retrying with Clash proxy...",

@@ -62,7 +62,9 @@ export const useProfiles = () => {
   const patchCurrent = async (value: Partial<IProfileItem>) => {
     if (profiles?.current) {
       await patchProfile(profiles.current, value);
-      mutateProfiles();
+      if (!value.selected) {
+        mutateProfiles();
+      }
     }
   };
 
