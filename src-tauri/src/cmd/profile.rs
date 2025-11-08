@@ -1,6 +1,5 @@
 use super::CmdResult;
 use super::StringifyErr;
-use crate::utils::draft::SharedBox;
 use crate::{
     config::{
         Config, IProfiles, PrfItem, PrfOption,
@@ -24,10 +23,10 @@ use std::time::Duration;
 static CURRENT_SWITCHING_PROFILE: AtomicBool = AtomicBool::new(false);
 
 #[tauri::command]
-pub async fn get_profiles() -> CmdResult<SharedBox<IProfiles>> {
+pub async fn get_profiles() -> CmdResult<IProfiles> {
     logging!(debug, Type::Cmd, "获取配置文件列表");
     let draft = Config::profiles().await;
-    let data = draft.data_arc();
+    let data = (**draft.data_arc()).clone();
     Ok(data)
 }
 
