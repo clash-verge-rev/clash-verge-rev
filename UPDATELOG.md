@@ -8,6 +8,9 @@
 
 <details>
 <summary><strong> 🚀 优化改进 </strong></summary>
+
+- 替换前端信息编辑组件，提供更好性能
+
 </details>
 
 ## v2.4.3
