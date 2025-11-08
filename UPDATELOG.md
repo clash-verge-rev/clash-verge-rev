@@ -1,6 +1,9 @@
 ## v2.4.3
 
-感谢 @Slinetrac, @oomeow, @Lythrilla, @Dragon1573 的出色贡献
+**发行代号：澜**
+代号释义：澜象征平稳与融合，本次版本聚焦稳定性、兼容性、性能与体验优化，全面提升整体可靠性。
+
+特别感谢 @Slinetrac, @oomeow, @Lythrilla, @Dragon1573 的出色贡献
 
 ### 🐞 修复问题
 
