@@ -1,70 +1,18 @@
-use super::resolve;
 use crate::{
     config::{Config, DEFAULT_PAC, IVerge},
-    logging, logging_error,
-    module::lightweight,
+    logging,
     process::AsyncHandler,
-    utils::{logging::Type, window_manager::WindowManager},
+    utils::logging::Type,
 };
-use anyhow::{Result, bail};
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
-use port_scanner::local_port_available;
-use reqwest::ClientBuilder;
-use smartstring::alias::String;
-use std::time::Duration;
 use tokio::sync::oneshot;
 use warp::Filter;
-
-#[derive(serde::Deserialize, Debug)]
-struct QueryParam {
-    param: String,
-}
 
 // 关闭 embedded server 的信号发送端
 static SHUTDOWN_SENDER: OnceCell<Mutex<Option<oneshot::Sender<()>>>> = OnceCell::new();
 
-/// check whether there is already exists
-pub async fn check_singleton() -> Result<()> {
-    let port = IVerge::get_singleton_port();
-    if !local_port_available(port) {
-        let client = ClientBuilder::new()
-            .timeout(Duration::from_millis(500))
-            .build()?;
-        // 需要确保 Send
-        #[allow(clippy::needless_collect)]
-        let argvs: Vec<std::string::String> = std::env::args().collect();
-        if argvs.len() > 1 {
-            #[cfg(not(target_os = "macos"))]
-            {
-                let param = argvs[1].as_str();
-                if param.starts_with("clash:") {
-                    client
-                        .get(format!(
-                            "http://127.0.0.1:{port}/commands/scheme?param={param}"
-                        ))
-                        .send()
-                        .await?;
-                }
-            }
-        } else {
-            client
-                .get(format!("http://127.0.0.1:{port}/commands/visible"))
-                .send()
-                .await?;
-        }
-        logging!(
-            error,
-            Type::Window,
-            "failed to setup singleton listen server"
-        );
-        bail!("app exists");
-    }
-    Ok(())
-}
-
-/// The embed server only be used to implement singleton process
-/// maybe it can be used as pac server later
+/// The embed server only be used as pac server
 pub fn embed_server() {
     let (shutdown_tx, shutdown_rx) = oneshot::channel();
     #[allow(clippy::expect_used)]
@@ -74,19 +22,6 @@ pub fn embed_server() {
     let port = IVerge::get_singleton_port();
 
     AsyncHandler::spawn(move || async move {
-        let visible = warp::path!("commands" / "visible").and_then(|| async {
-            logging!(info, Type::Window, "检测到从单例模式恢复应用窗口");
-            if !lightweight::exit_lightweight_mode().await {
-                WindowManager::show_main_window().await;
-            } else {
-                logging!(error, Type::Window, "轻量模式退出失败，无法恢复应用窗口");
-            };
-            Ok::<_, warp::Rejection>(warp::reply::with_status::<std::string::String>(
-                "ok".to_string(),
-                warp::http::StatusCode::OK,
-            ))
-        });
-
         let verge_config = Config::verge().await;
         let clash_config = Config::clash().await;
 
@@ -109,21 +44,7 @@ pub fn embed_server() {
                 .unwrap_or_default()
         });
 
-        // Use map instead of and_then to avoid Send issues
-        let scheme = warp::path!("commands" / "scheme")
-            .and(warp::query::<QueryParam>())
-            .and_then(|query: QueryParam| async move {
-                AsyncHandler::spawn(|| async move {
-                    logging_error!(Type::Setup, resolve::resolve_scheme(&query.param).await);
-                });
-                Ok::<_, warp::Rejection>(warp::reply::with_status::<std::string::String>(
-                    "ok".to_string(),
-                    warp::http::StatusCode::OK,
-                ))
-            });
-
-        let commands = visible.or(scheme).or(pac);
-        warp::serve(commands)
+        warp::serve(pac)
             .bind(([127, 0, 0, 1], port))
             .await
             .graceful(async {

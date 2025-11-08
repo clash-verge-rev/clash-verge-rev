@@ -27,7 +27,6 @@ pub fn resolve_setup_handle() {
 
 pub fn resolve_setup_sync() {
     AsyncHandler::spawn(|| async {
-        AsyncHandler::spawn_blocking(init_scheme);
         AsyncHandler::spawn_blocking(init_embed_server);
         AsyncHandler::spawn_blocking(init_signal);
     });
@@ -87,10 +86,6 @@ pub async fn resolve_reset_async() -> Result<(), anyhow::Error> {
 
 pub fn init_handle() {
     handle::Handle::global().init();
-}
-
-pub(super) fn init_scheme() {
-    logging_error!(Type::Setup, init::init_scheme());
 }
 
 #[cfg(not(feature = "tauri-dev"))]
