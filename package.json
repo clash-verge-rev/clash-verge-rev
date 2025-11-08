@@ -1,6 +1,6 @@
 {
   "name": "clash-verge",
-  "version": "2.4.3",
+  "version": "2.4.4",
   "license": "GPL-3.0-only",
   "scripts": {
     "prepare": "husky || true",
@@ -117,10 +117,10 @@
     "terser": "^5.44.1",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.46.3",
-    "vite": "^7.2.1",
+    "vite": "^7.2.2",
     "vite-plugin-monaco-editor-esm": "^2.0.2",
     "vite-plugin-svgr": "^4.5.0",
-    "vitest": "^4.0.7"
+    "vitest": "^4.0.8"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": [

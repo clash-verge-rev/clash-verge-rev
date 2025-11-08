@@ -1111,7 +1111,7 @@ checksum = "a1d728cc89cf3aee9ff92b05e62b19ee65a02b5702cff7d5a377e32c6ae29d8d"
 
 [[package]]
 name = "clash-verge"
-version = "2.4.3"
+version = "2.4.4"
 dependencies = [
  "aes-gcm",
  "anyhow",
@@ -1175,7 +1175,6 @@ dependencies = [
  "tauri-plugin-window-state",
  "tokio",
  "tokio-stream",
- "users",
  "warp",
  "winapi",
  "windows-sys 0.61.2",
@@ -8867,16 +8866,6 @@ dependencies = [
  "serde",
  "unic-ucd-ident",
  "url",
-]
-
-[[package]]
-name = "users"
-version = "0.11.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "24cc0f6d6f267b73e5a2cadf007ba8f9bc39c6a6f9666f8cf25ea809a153b032"
-dependencies = [
- "libc",
- "log",
 ]
 
 [[package]]

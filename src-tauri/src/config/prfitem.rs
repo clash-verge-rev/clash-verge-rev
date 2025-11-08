@@ -456,16 +456,10 @@ impl PrfItem {
         Ok(Self {
             uid: Some(id),
             itype: Some("merge".into()),
-            name: None,
-            desc: None,
             file: Some(file),
-            url: None,
-            selected: None,
-            extra: None,
-            option: None,
-            home: None,
             updated: Some(chrono::Local::now().timestamp() as usize),
             file_data: Some(template),
+            ..Default::default()
         })
     }
 
@@ -481,16 +475,10 @@ impl PrfItem {
         Ok(Self {
             uid: Some(id),
             itype: Some("script".into()),
-            name: None,
-            desc: None,
             file: Some(file),
-            url: None,
-            home: None,
-            selected: None,
-            extra: None,
-            option: None,
             updated: Some(chrono::Local::now().timestamp() as usize),
             file_data: Some(tmpl::ITEM_SCRIPT.into()),
+            ..Default::default()
         })
     }
 
@@ -502,16 +490,10 @@ impl PrfItem {
         Ok(Self {
             uid: Some(uid),
             itype: Some("rules".into()),
-            name: None,
-            desc: None,
             file: Some(file),
-            url: None,
-            home: None,
-            selected: None,
-            extra: None,
-            option: None,
             updated: Some(chrono::Local::now().timestamp() as usize),
             file_data: Some(tmpl::ITEM_RULES.into()),
+            ..Default::default()
         })
     }
 
@@ -523,16 +505,10 @@ impl PrfItem {
         Ok(Self {
             uid: Some(uid),
             itype: Some("proxies".into()),
-            name: None,
-            desc: None,
             file: Some(file),
-            url: None,
-            home: None,
-            selected: None,
-            extra: None,
-            option: None,
             updated: Some(chrono::Local::now().timestamp() as usize),
             file_data: Some(tmpl::ITEM_PROXIES.into()),
+            ..Default::default()
         })
     }
 
@@ -544,16 +520,10 @@ impl PrfItem {
         Ok(Self {
             uid: Some(uid),
             itype: Some("groups".into()),
-            name: None,
-            desc: None,
             file: Some(file),
-            url: None,
-            home: None,
-            selected: None,
-            extra: None,
-            option: None,
             updated: Some(chrono::Local::now().timestamp() as usize),
             file_data: Some(tmpl::ITEM_GROUPS.into()),
+            ..Default::default()
         })
     }
 

@@ -1,6 +1,21 @@
+# v2.4.4
+
+### 🐞 修复问题
+
+<details>
+<summary><strong> ✨ 新增功能 </strong></summary>
+</details>
+
+<details>
+<summary><strong> 🚀 优化改进 </strong></summary>
+</details>
+
 ## v2.4.3
 
-感谢 @Slinetrac, @oomeow, @Lythrilla, @Dragon1573 的出色贡献
+**发行代号：澜**
+代号释义：澜象征平稳与融合，本次版本聚焦稳定性、兼容性、性能与体验优化，全面提升整体可靠性。
+
+特别感谢 @Slinetrac, @oomeow, @Lythrilla, @Dragon1573 的出色贡献
 
 ### 🐞 修复问题
 
@@ -37,6 +52,7 @@
 - 修复 Linux 系统主题切换不生效
 - 修复 `允许自动更新` 字段使手动订阅刷新失效
 - 修复轻量模式托盘状态不同步
+- 修复一键导入订阅导致应用卡死崩溃的问题
 
 <details>
 <summary><strong> ✨ 新增功能 </strong></summary>
