@@ -1,3 +1,4 @@
+import MonacoEditor from "@monaco-editor/react";
 import { RestartAltRounded } from "@mui/icons-material";
 import {
   Box,
@@ -25,7 +26,6 @@ import {
   useState,
 } from "react";
 import { useTranslation } from "react-i18next";
-import MonacoEditor from "react-monaco-editor";
 
 import { BaseDialog, DialogRef, Switch } from "@/components/base";
 import { useClash } from "@/hooks/use-clash";
@@ -568,12 +568,12 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
   });
 
   // YAML编辑器内容变更处理
-  const handleYamlChange = (value: string) => {
+  const handleYamlChange = (value?: string) => {
     setYamlContent(value || "");
 
     // 允许YAML编辑后立即分析和更新表单值
     try {
-      const config = yaml.load(value) as any;
+      const config = yaml.load(value || "") as any;
       if (config && typeof config === "object") {
         setTimeout(() => {
           updateValuesFromConfig(config);

@@ -1,19 +1,20 @@
 import {
   DndContext,
-  closestCenter,
+  DragEndEvent,
   KeyboardSensor,
   PointerSensor,
+  closestCenter,
   useSensor,
   useSensors,
-  DragEndEvent,
 } from "@dnd-kit/core";
 import {
   SortableContext,
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
+import MonacoEditor from "@monaco-editor/react";
 import {
-  VerticalAlignTopRounded,
   VerticalAlignBottomRounded,
+  VerticalAlignTopRounded,
 } from "@mui/icons-material";
 import {
   Box,
@@ -37,7 +38,6 @@ import {
   useState,
 } from "react";
 import { useTranslation } from "react-i18next";
-import MonacoEditor from "react-monaco-editor";
 import { Virtuoso } from "react-virtuoso";
 
 import { ProxyItem } from "@/components/profile/proxy-item";
@@ -494,7 +494,7 @@ export const ProxiesEditorViewer = (props: Props) => {
               fontLigatures: false, // 连字符
               smoothScrolling: true, // 平滑滚动
             }}
-            onChange={(value) => setCurrData(value)}
+            onChange={(value) => setCurrData(value ?? "")}
           />
         )}
       </DialogContent>

@@ -1,19 +1,20 @@
 import {
   DndContext,
-  closestCenter,
+  DragEndEvent,
   KeyboardSensor,
   PointerSensor,
+  closestCenter,
   useSensor,
   useSensors,
-  DragEndEvent,
 } from "@dnd-kit/core";
 import {
   SortableContext,
   sortableKeyboardCoordinates,
 } from "@dnd-kit/sortable";
+import MonacoEditor from "@monaco-editor/react";
 import {
-  VerticalAlignTopRounded,
   VerticalAlignBottomRounded,
+  VerticalAlignTopRounded,
 } from "@mui/icons-material";
 import {
   Autocomplete,
@@ -32,8 +33,8 @@ import {
 } from "@mui/material";
 import { useLockFn } from "ahooks";
 import {
-  requestIdleCallback,
   cancelIdleCallback,
+  requestIdleCallback,
 } from "foxact/request-idle-callback";
 import yaml from "js-yaml";
 import {
@@ -45,7 +46,6 @@ import {
 } from "react";
 import { Controller, useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import MonacoEditor from "react-monaco-editor";
 import { Virtuoso } from "react-virtuoso";
 
 import { Switch } from "@/components/base";
@@ -1113,7 +1113,7 @@ export const GroupsEditorViewer = (props: Props) => {
               fontLigatures: false, // 连字符
               smoothScrolling: true, // 平滑滚动
             }}
-            onChange={(value) => setCurrData(value)}
+            onChange={(value) => setCurrData(value ?? "")}
           />
         )}
       </DialogContent>
