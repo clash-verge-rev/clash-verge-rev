@@ -4,6 +4,9 @@
 
 <details>
 <summary><strong> ✨ 新增功能 </strong></summary>
+
+- 支持连接页面各个项目的排序
+
 </details>
 
 <details>
