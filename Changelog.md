@@ -13,6 +13,7 @@
 <summary><strong> 🚀 优化改进 </strong></summary>
 
 - 替换前端信息编辑组件，提供更好性能
+- 优化后端内存和性能表现
 
 </details>
 
