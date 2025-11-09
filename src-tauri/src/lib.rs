@@ -11,19 +11,14 @@ mod module;
 mod process;
 pub mod utils;
 use crate::constants::files;
-#[cfg(target_os = "macos")]
-use crate::module::lightweight;
 #[cfg(target_os = "linux")]
 use crate::utils::linux;
-#[cfg(target_os = "macos")]
-use crate::utils::window_manager::WindowManager;
 use crate::{
-    core::{EventDrivenProxyManager, handle, hotkey},
+    core::{EventDrivenProxyManager, handle},
     process::AsyncHandler,
     utils::{resolve, server},
 };
 use anyhow::Result;
-use config::Config;
 use once_cell::sync::OnceCell;
 use rust_i18n::i18n;
 use tauri::{AppHandle, Manager as _};
@@ -269,8 +264,18 @@ pub fn run() {
         .invoke_handler(app_init::generate_handlers());
 
     mod event_handlers {
-        use super::*;
-        use crate::core::handle;
+        #[cfg(target_os = "macos")]
+        use crate::module::lightweight;
+        #[cfg(target_os = "macos")]
+        use crate::utils::window_manager::WindowManager;
+        use crate::{
+            config::Config,
+            core::{self, handle, hotkey},
+            logging,
+            process::AsyncHandler,
+            utils::logging::Type,
+        };
+        use tauri::AppHandle;
 
         pub fn handle_ready_resumed(_app_handle: &AppHandle) {
             if handle::Handle::global().is_exiting() {
