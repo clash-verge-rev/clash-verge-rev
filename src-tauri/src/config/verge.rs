@@ -158,6 +158,15 @@ pub struct IVerge {
     /// 0: 不清理; 1: 1天；2: 7天; 3: 30天; 4: 90天
     pub auto_log_clean: Option<i32>,
 
+    /// Enable scheduled automatic backups
+    pub enable_auto_backup_schedule: Option<bool>,
+
+    /// Automatic backup interval in hours
+    pub auto_backup_interval_hours: Option<u64>,
+
+    /// Create backups automatically when critical configs change
+    pub auto_backup_on_change: Option<bool>,
+
     /// verge 的各种 port 用于覆盖 clash 的各种 port
     #[cfg(not(target_os = "windows"))]
     pub verge_redir_port: Option<u16>,
@@ -422,6 +431,9 @@ impl IVerge {
             auto_check_update: Some(true),
             enable_builtin_enhanced: Some(true),
             auto_log_clean: Some(2), // 1: 1天, 2: 7天, 3: 30天, 4: 90天
+            enable_auto_backup_schedule: Some(false),
+            auto_backup_interval_hours: Some(24),
+            auto_backup_on_change: Some(true),
             webdav_url: None,
             webdav_username: None,
             webdav_password: None,
@@ -517,6 +529,9 @@ impl IVerge {
         patch!(proxy_layout_column);
         patch!(test_list);
         patch!(auto_log_clean);
+        patch!(enable_auto_backup_schedule);
+        patch!(auto_backup_interval_hours);
+        patch!(auto_backup_on_change);
 
         patch!(webdav_url);
         patch!(webdav_username);

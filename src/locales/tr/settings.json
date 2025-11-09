@@ -309,6 +309,18 @@
         "confirmDelete": "Bu yedek dosyasını silmeyi onaylıyor musunuz?",
         "confirmRestore": "Bu yedek dosyasını geri yüklemeyi onaylıyor musunuz?"
       },
+      "auto": {
+        "title": "Automatic backup",
+        "scheduleLabel": "Enable scheduled backup",
+        "scheduleHelper": "Create local backups in the background at the configured interval.",
+        "intervalLabel": "Backup frequency",
+        "changeLabel": "Backup on critical changes",
+        "changeHelper": "Automatically back up when the global extend config/script or subscriptions are added, removed, or edited.",
+        "options": {
+          "hours": "Every {{n}} hours",
+          "days": "Every {{n}} days"
+        }
+      },
       "table": {
         "filename": "Dosya Adı",
         "backupTime": "Yedekleme Zamanı",

@@ -309,6 +309,18 @@
         "confirmDelete": "이 백업 파일을 삭제하시겠습니까?",
         "confirmRestore": "이 백업 파일을 복원하시겠습니까?"
       },
+      "auto": {
+        "title": "Automatic backup",
+        "scheduleLabel": "Enable scheduled backup",
+        "scheduleHelper": "Create local backups in the background at the configured interval.",
+        "intervalLabel": "Backup frequency",
+        "changeLabel": "Backup on critical changes",
+        "changeHelper": "Automatically back up when the global extend config/script or subscriptions are added, removed, or edited.",
+        "options": {
+          "hours": "Every {{n}} hours",
+          "days": "Every {{n}} days"
+        }
+      },
       "table": {
         "filename": "파일명",
         "backupTime": "백업 시간",

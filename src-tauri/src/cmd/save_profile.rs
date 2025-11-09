@@ -4,6 +4,7 @@ use crate::{
     config::{Config, PrfItem},
     core::{CoreManager, handle, validate::CoreConfigValidator},
     logging,
+    module::auto_backup::{AutoBackupManager, AutoBackupTrigger},
     utils::{dirs, logging::Type},
 };
 use smartstring::alias::String;
@@ -15,6 +16,12 @@ pub async fn save_profile_file(index: String, file_data: Option<String>) -> CmdR
     let file_data = match file_data {
         Some(d) => d,
         None => return Ok(()),
+    };
+
+    let backup_trigger = match index.as_str() {
+        "Merge" => Some(AutoBackupTrigger::GlobalMerge),
+        "Script" => Some(AutoBackupTrigger::GlobalScript),
+        _ => None,
     };
 
     // 在异步操作前获取必要元数据并释放锁
@@ -51,11 +58,19 @@ pub async fn save_profile_file(index: String, file_data: Option<String>) -> CmdR
         is_merge_file
     );
 
-    if is_merge_file {
-        return handle_merge_file(&file_path_str, &file_path, &original_content).await;
+    let result = if is_merge_file {
+        handle_merge_file(&file_path_str, &file_path, &original_content).await
+    } else {
+        handle_full_validation(&file_path_str, &file_path, &original_content).await
+    };
+
+    if result.is_ok()
+        && let Some(trigger) = backup_trigger
+    {
+        AutoBackupManager::trigger_backup(trigger);
     }
 
-    handle_full_validation(&file_path_str, &file_path, &original_content).await
+    result
 }
 
 async fn restore_original(

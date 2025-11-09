@@ -10,7 +10,7 @@ use crate::{
         tray::Tray,
     },
     logging, logging_error,
-    module::{lightweight::auto_lightweight_boot, signal},
+    module::{auto_backup::AutoBackupManager, lightweight::auto_lightweight_boot, signal},
     process::AsyncHandler,
     utils::{init, logging::Type, server, window_manager::WindowManager},
 };
@@ -68,6 +68,7 @@ pub fn resolve_setup_async() {
             init_timer(),
             init_hotkey(),
             init_auto_lightweight_boot(),
+            init_auto_backup(),
         );
     });
 }
@@ -125,6 +126,10 @@ pub(super) async fn init_hotkey() {
 
 pub(super) async fn init_auto_lightweight_boot() {
     logging_error!(Type::Setup, auto_lightweight_boot().await);
+}
+
+pub(super) async fn init_auto_backup() {
+    logging_error!(Type::Setup, AutoBackupManager::global().init().await);
 }
 
 pub(super) fn init_signal() {

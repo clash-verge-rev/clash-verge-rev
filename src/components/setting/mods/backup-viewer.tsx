@@ -25,6 +25,7 @@ import {
   restoreWebDavBackup,
 } from "@/services/cmds";
 
+import { AutoBackupSettings } from "./auto-backup-settings";
 import { BackupConfigViewer } from "./backup-config-viewer";
 import {
   BackupFile,
@@ -274,6 +275,7 @@ export function BackupViewer({ ref }: { ref?: Ref<DialogRef> }) {
             minHeight: 0,
           }}
         >
+          <AutoBackupSettings />
           <Tabs
             value={source}
             onChange={handleChangeSource}

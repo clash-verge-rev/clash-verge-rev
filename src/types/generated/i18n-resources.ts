@@ -691,6 +691,18 @@ export interface TranslationResources {
             restoreBackup: string;
             selectTarget: string;
           };
+          auto: {
+            changeHelper: string;
+            changeLabel: string;
+            intervalLabel: string;
+            options: {
+              days: string;
+              hours: string;
+            };
+            scheduleHelper: string;
+            scheduleLabel: string;
+            title: string;
+          };
           fields: {
             info: string;
             username: string;
