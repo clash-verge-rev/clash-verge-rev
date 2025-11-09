@@ -83,7 +83,7 @@
     "@actions/github": "^6.0.1",
     "@eslint-react/eslint-plugin": "^2.3.1",
     "@eslint/js": "^9.39.1",
-    "@tauri-apps/cli": "2.9.3",
+    "@tauri-apps/cli": "2.9.4",
     "@types/js-yaml": "^4.0.9",
     "@types/lodash-es": "^4.17.12",
     "@types/node": "^24.10.0",
