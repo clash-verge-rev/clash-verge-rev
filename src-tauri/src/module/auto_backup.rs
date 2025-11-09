@@ -113,7 +113,7 @@ impl AutoBackupManager {
             *self.settings.write() = settings;
         }
         let _ = self.settings_tx.send(settings);
-        self.ensure_runner();
+        self.maybe_start_runner(settings);
         Ok(())
     }
 
@@ -123,6 +123,7 @@ impl AutoBackupManager {
             *self.settings.write() = settings;
         }
         let _ = self.settings_tx.send(settings);
+        self.maybe_start_runner(settings);
         Ok(())
     }
 
@@ -137,6 +138,12 @@ impl AutoBackupManager {
                 );
             }
         });
+    }
+
+    fn maybe_start_runner(&self, settings: AutoBackupSettings) {
+        if settings.schedule_enabled {
+            self.ensure_runner();
+        }
     }
 
     fn ensure_runner(&self) {
