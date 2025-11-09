@@ -179,7 +179,7 @@ pub(super) async fn refresh_tray_menu() {
 pub(super) async fn init_window() {
     let is_silent_start = Config::verge()
         .await
-        .latest_arc()
+        .data_arc()
         .enable_silent_start
         .unwrap_or(false);
     #[cfg(target_os = "macos")]

@@ -227,7 +227,7 @@ impl Hotkey {
 
                         let is_enable_global_hotkey = Config::verge()
                             .await
-                            .latest_arc()
+                            .data_arc()
                             .enable_global_hotkey
                             .unwrap_or(true);
 
@@ -264,7 +264,7 @@ singleton_with_logging!(Hotkey, INSTANCE, "Hotkey");
 impl Hotkey {
     pub async fn init(&self, skip: bool) -> Result<()> {
         let verge = Config::verge().await;
-        let enable_global_hotkey = !skip && verge.latest_arc().enable_global_hotkey.unwrap_or(true);
+        let enable_global_hotkey = !skip && verge.data_arc().enable_global_hotkey.unwrap_or(true);
 
         logging!(
             debug,
@@ -274,7 +274,7 @@ impl Hotkey {
         );
 
         // Extract hotkeys data before async operations
-        let hotkeys = verge.latest_arc().hotkeys.as_ref().cloned();
+        let hotkeys = verge.data_arc().hotkeys.as_ref().cloned();
 
         if let Some(hotkeys) = hotkeys {
             logging!(

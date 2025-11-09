@@ -22,7 +22,7 @@ pub async fn copy_clash_env() -> CmdResult {
 /// 获取Clash信息
 #[tauri::command]
 pub async fn get_clash_info() -> CmdResult<ClashInfo> {
-    Ok(Config::clash().await.latest_arc().get_client_info())
+    Ok(Config::clash().await.data_arc().get_client_info())
 }
 
 /// 修改Clash配置
