@@ -29,6 +29,7 @@ import {
   exportLocalBackup,
   listLocalBackup,
   listWebDavBackup,
+  restartApp,
   restoreLocalBackup,
   restoreWebDavBackup,
 } from "@/services/cmds";
@@ -72,8 +73,10 @@ export const BackupHistoryViewer = ({
   const { t } = useTranslation();
   const [rows, setRows] = useState<BackupRow[]>([]);
   const [loading, setLoading] = useState(false);
+  const [isRestarting, setIsRestarting] = useState(false);
   const isLocal = source === "local";
   const pageSize = 8;
+  const isBusy = loading || isRestarting;
 
   const buildRow = useCallback((filename: string): BackupRow | null => {
     const platform = filename.split("-")[0];
@@ -124,6 +127,7 @@ export const BackupHistoryViewer = ({
   }, [rows, total, t]);
 
   const handleDelete = useLockFn(async (filename: string) => {
+    if (isRestarting) return;
     if (
       !(await confirmAsync(t("settings.modals.backup.messages.confirmDelete")))
     )
@@ -137,6 +141,7 @@ export const BackupHistoryViewer = ({
   });
 
   const handleRestore = useLockFn(async (filename: string) => {
+    if (isRestarting) return;
     if (
       !(await confirmAsync(t("settings.modals.backup.messages.confirmRestore")))
     )
@@ -147,17 +152,35 @@ export const BackupHistoryViewer = ({
       await restoreWebDavBackup(filename);
     }
     showNotice.success("settings.modals.backup.messages.restoreSuccess");
+    setIsRestarting(true);
+    window.setTimeout(() => {
+      void restartApp().catch((err: unknown) => {
+        setIsRestarting(false);
+        showNotice.error(err);
+      });
+    }, 1000);
   });
 
   const handleExport = useLockFn(async (filename: string) => {
+    if (isRestarting) return;
     if (!isLocal) return;
     const savePath = await save({ defaultPath: filename });
     if (!savePath || Array.isArray(savePath)) return;
-    await exportLocalBackup(filename, savePath);
-    showNotice.success("settings.modals.backup.messages.localBackupExported");
+    try {
+      await exportLocalBackup(filename, savePath);
+      showNotice.success("settings.modals.backup.messages.localBackupExported");
+    } catch (error: unknown) {
+      showNotice.error(
+        "settings.modals.backup.messages.localBackupExportFailed",
+      );
+      throw error;
+    }
   });
 
-  const handleRefresh = () => fetchRows();
+  const handleRefresh = () => {
+    if (isRestarting) return;
+    void fetchRows();
+  };
 
   return (
     <BaseDialog
@@ -170,7 +193,7 @@ export const BackupHistoryViewer = ({
       onClose={onClose}
     >
       <Box sx={{ position: "relative", minHeight: 320 }}>
-        <BaseLoadingOverlay isLoading={loading} />
+        <BaseLoadingOverlay isLoading={isBusy} />
         <Stack spacing={2}>
           <Stack
             direction="row"
@@ -180,6 +203,7 @@ export const BackupHistoryViewer = ({
             <Tabs
               value={source}
               onChange={(_, val) => {
+                if (isBusy) return;
                 onSourceChange(val as BackupSource);
                 onPageChange(0);
               }}
@@ -189,15 +213,17 @@ export const BackupHistoryViewer = ({
               <Tab
                 value="local"
                 label={t("settings.modals.backup.tabs.local")}
+                disabled={isBusy}
                 sx={{ px: 2 }}
               />
               <Tab
                 value="webdav"
                 label={t("settings.modals.backup.tabs.webdav")}
+                disabled={isBusy}
                 sx={{ px: 2 }}
               />
             </Tabs>
-            <IconButton size="small" onClick={handleRefresh}>
+            <IconButton size="small" onClick={handleRefresh} disabled={isBusy}>
               <RefreshRounded fontSize="small" />
             </IconButton>
           </Stack>
@@ -229,6 +255,7 @@ export const BackupHistoryViewer = ({
                       {isLocal && (
                         <IconButton
                           size="small"
+                          disabled={isBusy}
                           onClick={() => handleExport(row.filename)}
                         >
                           <DownloadRounded fontSize="small" />
@@ -236,12 +263,14 @@ export const BackupHistoryViewer = ({
                       )}
                       <IconButton
                         size="small"
+                        disabled={isBusy}
                         onClick={() => handleDelete(row.filename)}
                       >
                         <DeleteOutline fontSize="small" />
                       </IconButton>
                       <IconButton
                         size="small"
+                        disabled={isBusy}
                         onClick={() => handleRestore(row.filename)}
                       >
                         <RestoreRounded fontSize="small" />
@@ -272,7 +301,7 @@ export const BackupHistoryViewer = ({
                 <Button
                   size="small"
                   variant="text"
-                  disabled={currentPage === 0}
+                  disabled={isBusy || currentPage === 0}
                   onClick={() => onPageChange(Math.max(0, currentPage - 1))}
                 >
                   {t("shared.actions.previous")}
@@ -280,7 +309,7 @@ export const BackupHistoryViewer = ({
                 <Button
                   size="small"
                   variant="text"
-                  disabled={currentPage >= pageCount - 1}
+                  disabled={isBusy || currentPage >= pageCount - 1}
                   onClick={() =>
                     onPageChange(Math.min(pageCount - 1, currentPage + 1))
                   }
