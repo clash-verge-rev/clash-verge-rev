@@ -145,7 +145,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install Rust Stable
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: "1.91.0"
+          targets: ${{ matrix.target }}
 
       - name: Add Rust Target
         run: rustup target add ${{ matrix.target }}
@@ -201,6 +204,13 @@ jobs:
       - name: Release ${{ env.TAG_CHANNEL }} Version
         run: pnpm release-version autobuild-latest
 
+      - name: Add Rust Target
+        run: |
+          # Ensure cross target is installed for the pinned toolchain; fallback without explicit toolchain if needed
+          rustup target add ${{ matrix.target }} --toolchain 1.91.0 || rustup target add ${{ matrix.target }}
+          rustup target list --installed
+          echo "Rust target ${{ matrix.target }} installed."
+
       - name: Tauri build for Windows-macOS-Linux
         uses: tauri-apps/tauri-action@v0
         env:
@@ -244,7 +254,10 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install Rust Stable
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: "1.91.0"
+          targets: ${{ matrix.target }}
 
       - name: Add Rust Target
         run: rustup target add ${{ matrix.target }}
@@ -333,6 +346,13 @@ jobs:
           sudo apt install -y \
             gcc-arm-linux-gnueabihf \
             g++-arm-linux-gnueabihf
+
+      - name: Add Rust Target
+        run: |
+          # Ensure cross target is installed for the pinned toolchain; fallback without explicit toolchain if needed
+          rustup target add ${{ matrix.target }} --toolchain 1.91.0 || rustup target add ${{ matrix.target }}
+          rustup target list --installed
+          echo "Rust target ${{ matrix.target }} installed."
 
       - name: Tauri Build for Linux
         run: |
@@ -432,6 +452,13 @@ jobs:
           Expand .\Microsoft.WebView2.FixedVersionRuntime.109.0.1518.78.${{ matrix.arch }}.cab -F:* ./src-tauri
           Remove-Item .\src-tauri\tauri.windows.conf.json
           Rename-Item .\src-tauri\webview2.${{ matrix.arch }}.json tauri.windows.conf.json
+
+      - name: Add Rust Target
+        run: |
+          # Ensure cross target is installed for the pinned toolchain; fallback without explicit toolchain if needed
+          rustup target add ${{ matrix.target }} --toolchain 1.91.0 || rustup target add ${{ matrix.target }}
+          rustup target list --installed
+          echo "Rust target ${{ matrix.target }} installed."
 
       - name: Tauri build for Windows
         id: build
