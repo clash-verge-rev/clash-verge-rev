@@ -4,7 +4,7 @@ use crate::{logging, utils::logging::Type};
 use anyhow::{Result, anyhow};
 
 #[cfg(target_os = "windows")]
-use std::{os::windows::process::CommandExt, path::Path, path::PathBuf};
+use std::{os::windows::process::CommandExt as _, path::Path, path::PathBuf};
 
 /// Windows 下的开机启动文件夹路径
 #[cfg(target_os = "windows")]
@@ -37,7 +37,7 @@ pub fn get_exe_path() -> Result<PathBuf> {
 /// 创建快捷方式
 #[cfg(target_os = "windows")]
 pub async fn create_shortcut() -> Result<()> {
-    use crate::utils::dirs::PathBufExec;
+    use crate::utils::dirs::PathBufExec as _;
 
     let exe_path = get_exe_path()?;
     let startup_dir = get_startup_dir()?;
@@ -90,7 +90,7 @@ pub async fn create_shortcut() -> Result<()> {
 /// 删除快捷方式
 #[cfg(target_os = "windows")]
 pub async fn remove_shortcut() -> Result<()> {
-    use crate::utils::dirs::PathBufExec;
+    use crate::utils::dirs::PathBufExec as _;
 
     let startup_dir = get_startup_dir()?;
     let old_shortcut_path = startup_dir.join("Clash-Verge.lnk");

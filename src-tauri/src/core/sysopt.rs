@@ -59,7 +59,7 @@ async fn execute_sysproxy_command(args: Vec<std::string::String>) -> Result<()> 
     use crate::utils::dirs;
     use anyhow::bail;
     #[allow(unused_imports)] // Required for .creation_flags() method
-    use std::os::windows::process::CommandExt;
+    use std::os::windows::process::CommandExt as _;
     use tokio::process::Command;
 
     let binary_path = dirs::service_path()?;

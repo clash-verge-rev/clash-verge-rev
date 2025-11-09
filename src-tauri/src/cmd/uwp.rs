@@ -4,7 +4,7 @@ use crate::cmd::CmdResult;
 #[cfg(windows)]
 mod platform {
     use crate::cmd::CmdResult;
-    use crate::cmd::StringifyErr;
+    use crate::cmd::StringifyErr as _;
     use crate::core::win_uwp;
 
     pub fn invoke_uwp_tool() -> CmdResult {
