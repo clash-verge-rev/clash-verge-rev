@@ -59,6 +59,8 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
     try {
       await patchVerge({
         app_log_level: values.appLogLevel,
+        app_log_max_size: values.appLogMaxSize,
+        app_log_max_count: values.appLogMaxCount,
         auto_close_connection: values.autoCloseConnection,
         auto_check_update: values.autoCheckUpdate,
         enable_builtin_enhanced: values.enableBuiltinEnhanced,
