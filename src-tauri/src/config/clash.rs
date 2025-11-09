@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use serde_yaml_ng::{Mapping, Value};
 use std::{
     net::{IpAddr, Ipv4Addr, SocketAddr},
-    str::FromStr,
+    str::FromStr as _,
 };
 
 #[derive(Default, Debug, Clone)]

@@ -1,8 +1,8 @@
 use super::CmdResult;
 use crate::{
-    cmd::StringifyErr,
-    config::*,
-    core::{validate::CoreConfigValidator, *},
+    cmd::StringifyErr as _,
+    config::{Config, PrfItem},
+    core::{CoreManager, handle, validate::CoreConfigValidator},
     logging,
     utils::{dirs, logging::Type},
 };

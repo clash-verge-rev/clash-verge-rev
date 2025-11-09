@@ -5,7 +5,14 @@ mod script;
 pub mod seq;
 mod tun;
 
-use self::{chain::*, field::*, merge::*, script::*, seq::*, tun::*};
+use self::{
+    chain::{AsyncChainItemFrom as _, ChainItem, ChainType},
+    field::{use_keys, use_lowercase, use_sort},
+    merge::use_merge,
+    script::use_script,
+    seq::{SeqMap, use_seq},
+    tun::use_tun,
+};
 use crate::constants;
 use crate::utils::dirs;
 use crate::{config::Config, utils::tmpl};

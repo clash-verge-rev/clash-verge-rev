@@ -1,6 +1,6 @@
 use super::CmdResult;
 use crate::{
-    cmd::StringifyErr,
+    cmd::StringifyErr as _,
     config::{Config, IVerge},
     core, feat,
 };

@@ -8,8 +8,8 @@ use std::{
     },
     thread,
 };
-use tauri::{AppHandle, Manager, WebviewWindow};
-use tauri_plugin_mihomo::{Mihomo, MihomoExt};
+use tauri::{AppHandle, Manager as _, WebviewWindow};
+use tauri_plugin_mihomo::{Mihomo, MihomoExt as _};
 use tokio::sync::RwLockReadGuard;
 
 use super::notification::{ErrorMessage, FrontendEvent, NotificationSystem};

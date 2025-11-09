@@ -4,7 +4,7 @@ use crate::{
     logging, logging_error,
     process::AsyncHandler,
     utils::{
-        dirs::{PathBufExec, app_home_dir, local_backup_dir},
+        dirs::{PathBufExec as _, app_home_dir, local_backup_dir},
         logging::Type,
     },
 };

@@ -2,26 +2,26 @@
 #[cfg(not(feature = "tauri-dev"))]
 use crate::utils::logging::NoModuleFilter;
 use crate::{
-    config::*,
+    config::{Config, IClashTemp, IProfiles, IVerge},
     constants,
     core::handle,
     logging,
     process::AsyncHandler,
     utils::{
-        dirs::{self, PathBufExec, service_log_dir, sidecar_log_dir},
+        dirs::{self, PathBufExec as _, service_log_dir, sidecar_log_dir},
         help,
         logging::Type,
     },
 };
 use anyhow::Result;
-use chrono::{Local, TimeZone};
+use chrono::{Local, TimeZone as _};
 use clash_verge_service_ipc::WriterConfig;
 use flexi_logger::writers::FileLogWriter;
 use flexi_logger::{Cleanup, Criterion, FileSpec};
 #[cfg(not(feature = "tauri-dev"))]
 use flexi_logger::{Duplicate, LogSpecBuilder, Logger};
-use std::{path::PathBuf, str::FromStr};
-use tauri_plugin_shell::ShellExt;
+use std::{path::PathBuf, str::FromStr as _};
+use tauri_plugin_shell::ShellExt as _;
 use tokio::fs;
 use tokio::fs::DirEntry;
 

@@ -258,3 +258,7 @@ large_types_passed_by_value = "deny"
 expl_impl_clone_on_copy = "deny"
 copy_iterator = "deny"
 cloned_instead_of_copied = "deny"
+# self_only_used_in_recursion = "deny" // Since 1.92.0
+unnecessary_self_imports = "deny"
+unused_trait_names = "deny"
+wildcard_imports = "deny"

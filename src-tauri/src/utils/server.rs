@@ -14,7 +14,7 @@ use reqwest::ClientBuilder;
 use smartstring::alias::String;
 use std::time::Duration;
 use tokio::sync::oneshot;
-use warp::Filter;
+use warp::Filter as _;
 
 #[derive(serde::Deserialize, Debug)]
 struct QueryParam {

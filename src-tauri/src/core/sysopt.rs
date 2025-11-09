@@ -12,7 +12,7 @@ use smartstring::alias::String;
 use std::sync::atomic::{AtomicBool, Ordering};
 #[cfg(not(target_os = "windows"))]
 use sysproxy::{Autoproxy, Sysproxy};
-use tauri_plugin_autostart::ManagerExt;
+use tauri_plugin_autostart::ManagerExt as _;
 
 pub struct Sysopt {
     initialed: AtomicBool,

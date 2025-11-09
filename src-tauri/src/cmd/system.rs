@@ -10,7 +10,7 @@ use crate::{
 #[cfg(target_os = "windows")]
 use deelevate::{PrivilegeLevel, Token};
 use once_cell::sync::Lazy;
-use tauri_plugin_clipboard_manager::ClipboardExt;
+use tauri_plugin_clipboard_manager::ClipboardExt as _;
 use tokio::time::Instant;
 
 // 存储应用启动时间的全局变量

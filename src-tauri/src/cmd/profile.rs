@@ -1,5 +1,5 @@
 use super::CmdResult;
-use super::StringifyErr;
+use super::StringifyErr as _;
 use crate::{
     config::{
         Config, IProfiles, PrfItem, PrfOption,

@@ -1,7 +1,7 @@
 use super::CmdResult;
 use crate::utils::dirs;
 use crate::{
-    cmd::StringifyErr,
+    cmd::StringifyErr as _,
     config::{ClashInfo, Config},
     constants,
     core::{CoreManager, handle, validate::CoreConfigValidator},

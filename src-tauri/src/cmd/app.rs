@@ -2,18 +2,18 @@ use super::CmdResult;
 use crate::core::sysopt::Sysopt;
 use crate::utils::resolve::ui::{self, UiReadyStage};
 use crate::{
-    cmd::StringifyErr,
+    cmd::StringifyErr as _,
     feat, logging,
     utils::{
-        dirs::{self, PathBufExec},
+        dirs::{self, PathBufExec as _},
         logging::Type,
     },
 };
 use smartstring::alias::String;
 use std::path::Path;
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Manager as _};
 use tokio::fs;
-use tokio::io::AsyncWriteExt;
+use tokio::io::AsyncWriteExt as _;
 
 /// 打开应用程序所在目录
 #[tauri::command]

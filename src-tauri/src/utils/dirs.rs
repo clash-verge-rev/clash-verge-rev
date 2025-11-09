@@ -9,7 +9,7 @@ use once_cell::sync::OnceCell;
 #[cfg(unix)]
 use std::iter;
 use std::{fs, path::PathBuf};
-use tauri::Manager;
+use tauri::Manager as _;
 
 #[cfg(not(feature = "verge-dev"))]
 pub static APP_ID: &str = "io.github.clash-verge-rev.clash-verge-rev";

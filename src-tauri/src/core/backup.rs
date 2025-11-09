@@ -13,7 +13,7 @@ use smartstring::alias::String;
 use std::{
     collections::HashMap,
     env::{consts::OS, temp_dir},
-    io::Write,
+    io::Write as _,
     path::PathBuf,
     sync::Arc,
     time::Duration,

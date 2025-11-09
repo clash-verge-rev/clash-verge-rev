@@ -4,7 +4,7 @@ use crate::{
     logging, logging_error,
     utils::{dirs, init::service_writer_config, logging::Type},
 };
-use anyhow::{Context, Result, bail};
+use anyhow::{Context as _, Result, bail};
 use clash_verge_service_ipc::CoreConfig;
 use compact_str::CompactString;
 use once_cell::sync::Lazy;

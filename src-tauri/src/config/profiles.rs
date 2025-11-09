@@ -1,10 +1,10 @@
 use super::{PrfOption, prfitem::PrfItem};
 use crate::utils::{
-    dirs::{self, PathBufExec},
+    dirs::{self, PathBufExec as _},
     help,
 };
 use crate::{logging, utils::logging::Type};
-use anyhow::{Context, Result, bail};
+use anyhow::{Context as _, Result, bail};
 use serde::{Deserialize, Serialize};
 use serde_yaml_ng::Mapping;
 use smartstring::alias::String;

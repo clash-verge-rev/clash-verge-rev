@@ -2,7 +2,7 @@ use anyhow::Result;
 use scopeguard::defer;
 use smartstring::alias::String;
 use std::sync::atomic::{AtomicBool, Ordering};
-use tauri_plugin_shell::ShellExt;
+use tauri_plugin_shell::ShellExt as _;
 use tokio::fs;
 
 use crate::config::{Config, ConfigType};

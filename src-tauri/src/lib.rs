@@ -26,10 +26,10 @@ use anyhow::Result;
 use config::Config;
 use once_cell::sync::OnceCell;
 use rust_i18n::i18n;
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Manager as _};
 #[cfg(target_os = "macos")]
 use tauri_plugin_autostart::MacosLauncher;
-use tauri_plugin_deep_link::DeepLinkExt;
+use tauri_plugin_deep_link::DeepLinkExt as _;
 use utils::logging::Type;
 
 i18n!("locales", fallback = "zh");
