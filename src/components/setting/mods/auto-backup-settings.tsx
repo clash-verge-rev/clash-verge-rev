@@ -1,18 +1,18 @@
 import {
   FormControl,
   InputLabel,
-  List,
   ListItem,
   ListItemText,
   MenuItem,
   Select,
   SelectChangeEvent,
-  Switch,
+  Stack,
 } from "@mui/material";
 import { useLockFn } from "ahooks";
-import { useMemo, useState } from "react";
+import { Fragment, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import { Switch } from "@/components/base";
 import { useVerge } from "@/hooks/use-verge";
 import { showNotice } from "@/services/noticeService";
 
@@ -102,33 +102,27 @@ export function AutoBackupSettings() {
   const intervalLabelId = "auto-backup-interval-label";
 
   return (
-    <List
-      disablePadding
-      sx={{
-        ".MuiListItem-root": { px: 0 },
-        ".MuiListItemSecondaryAction-root": { right: 0 },
-      }}
-    >
-      <ListItem
-        divider
-        secondaryAction={
+    <Fragment>
+      <ListItem divider disableGutters>
+        <Stack direction="row" alignItems="center" spacing={1} width="100%">
+          <ListItemText
+            primary={t("settings.modals.backup.auto.scheduleLabel")}
+            secondary={t("settings.modals.backup.auto.scheduleHelper")}
+          />
           <Switch
             edge="end"
             checked={values.scheduleEnabled}
             onChange={handleScheduleToggle}
             disabled={disabled}
           />
-        }
-      >
-        <ListItemText
-          primary={t("settings.modals.backup.auto.scheduleLabel")}
-          secondary={t("settings.modals.backup.auto.scheduleHelper")}
-        />
+        </Stack>
       </ListItem>
 
-      <ListItem
-        divider
-        secondaryAction={
+      <ListItem divider disableGutters>
+        <Stack direction="row" alignItems="center" spacing={2} width="100%">
+          <ListItemText
+            primary={t("settings.modals.backup.auto.intervalLabel")}
+          />
           <FormControl
             size="small"
             disabled={disabled || !values.scheduleEnabled}
@@ -150,29 +144,23 @@ export function AutoBackupSettings() {
               ))}
             </Select>
           </FormControl>
-        }
-      >
-        <ListItemText
-          primary={t("settings.modals.backup.auto.intervalLabel")}
-        />
+        </Stack>
       </ListItem>
 
-      <ListItem
-        divider
-        secondaryAction={
+      <ListItem divider disableGutters>
+        <Stack direction="row" alignItems="center" spacing={1} width="100%">
+          <ListItemText
+            primary={t("settings.modals.backup.auto.changeLabel")}
+            secondary={t("settings.modals.backup.auto.changeHelper")}
+          />
           <Switch
             edge="end"
             checked={values.changeEnabled}
             onChange={handleChangeToggle}
             disabled={disabled}
           />
-        }
-      >
-        <ListItemText
-          primary={t("settings.modals.backup.auto.changeLabel")}
-          secondary={t("settings.modals.backup.auto.changeHelper")}
-        />
+        </Stack>
       </ListItem>
-    </List>
+    </Fragment>
   );
 }

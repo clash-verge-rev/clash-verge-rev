@@ -21,7 +21,9 @@
     "pause": "إيقاف مؤقت",
     "resume": "استأنف",
     "closeAll": "إغلاق الكل",
-    "clear": "مسح"
+    "clear": "مسح",
+    "previous": "Previous",
+    "next": "Next"
   },
   "labels": {
     "updateAt": "التحديث عند",

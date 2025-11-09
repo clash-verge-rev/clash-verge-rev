@@ -656,6 +656,8 @@ export const translationKeys = [
   "shared.actions.resume",
   "shared.actions.closeAll",
   "shared.actions.clear",
+  "shared.actions.previous",
+  "shared.actions.next",
   "shared.labels.updateAt",
   "shared.labels.timeout",
   "shared.labels.icon",

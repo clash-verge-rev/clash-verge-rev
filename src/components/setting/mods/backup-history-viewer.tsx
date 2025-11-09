@@ -1,4 +1,22 @@
-import { Box, Paper, Stack, Tab, Tabs, Typography } from "@mui/material";
+import DeleteOutline from "@mui/icons-material/DeleteOutline";
+import DownloadRounded from "@mui/icons-material/DownloadRounded";
+import RefreshRounded from "@mui/icons-material/RefreshRounded";
+import RestoreRounded from "@mui/icons-material/RestoreRounded";
+import {
+  Box,
+  Button,
+  IconButton,
+  List,
+  ListItem,
+  ListItemText,
+  ListSubheader,
+  Stack,
+  Tab,
+  Tabs,
+  Typography,
+} from "@mui/material";
+import { save } from "@tauri-apps/plugin-dialog";
+import { useLockFn } from "ahooks";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -14,12 +32,7 @@ import {
   restoreLocalBackup,
   restoreWebDavBackup,
 } from "@/services/cmds";
-
-import {
-  BackupHistoryTable,
-  DEFAULT_ROWS_PER_PAGE,
-  type BackupTableRow,
-} from "./backup-history-table";
+import { showNotice } from "@/services/noticeService";
 
 dayjs.extend(customParseFormat);
 
@@ -37,6 +50,17 @@ interface BackupHistoryViewerProps {
   onClose: () => void;
 }
 
+interface BackupRow {
+  filename: string;
+  platform: string;
+  backup_time: dayjs.Dayjs;
+}
+
+const confirmAsync = async (message: string) => {
+  const fn = window.confirm as (msg?: string) => boolean;
+  return fn(message);
+};
+
 export const BackupHistoryViewer = ({
   open,
   source,
@@ -46,25 +70,21 @@ export const BackupHistoryViewer = ({
   onClose,
 }: BackupHistoryViewerProps) => {
   const { t } = useTranslation();
-  const [rows, setRows] = useState<BackupTableRow[]>([]);
+  const [rows, setRows] = useState<BackupRow[]>([]);
   const [loading, setLoading] = useState(false);
-
   const isLocal = source === "local";
+  const pageSize = 8;
 
-  const buildBackupRow = useCallback(
-    (filename: string): BackupTableRow | null => {
-      const platform = filename.split("-")[0];
-      const match = filename.match(FILENAME_PATTERN);
-      if (!match) return null;
-      return {
-        filename,
-        platform,
-        backup_time: dayjs(match[0], DATE_FORMAT),
-        allow_apply: true,
-      };
-    },
-    [],
-  );
+  const buildRow = useCallback((filename: string): BackupRow | null => {
+    const platform = filename.split("-")[0];
+    const match = filename.match(FILENAME_PATTERN);
+    if (!match) return null;
+    return {
+      filename,
+      platform,
+      backup_time: dayjs(match[0], DATE_FORMAT),
+    };
+  }, []);
 
   const fetchRows = useCallback(async () => {
     if (!open) return;
@@ -73,33 +93,29 @@ export const BackupHistoryViewer = ({
       const list = isLocal ? await listLocalBackup() : await listWebDavBackup();
       setRows(
         list
-          .map((file) => buildBackupRow(file.filename))
-          .filter((item): item is BackupTableRow => item !== null)
+          .map((item) => buildRow(item.filename))
+          .filter((item): item is BackupRow => item !== null)
           .sort((a, b) => (a.backup_time.isAfter(b.backup_time) ? -1 : 1)),
       );
     } finally {
       setLoading(false);
     }
-  }, [isLocal, open, buildBackupRow]);
+  }, [buildRow, isLocal, open]);
 
   useEffect(() => {
     void fetchRows();
   }, [fetchRows]);
 
   const total = rows.length;
-  const pagedData = useMemo(
-    () =>
-      rows.slice(
-        page * DEFAULT_ROWS_PER_PAGE,
-        page * DEFAULT_ROWS_PER_PAGE + DEFAULT_ROWS_PER_PAGE,
-      ),
-    [rows, page],
+  const pageCount = Math.max(1, Math.ceil(total / pageSize));
+  const currentPage = Math.min(page, pageCount - 1);
+  const pagedRows = rows.slice(
+    currentPage * pageSize,
+    currentPage * pageSize + pageSize,
   );
 
   const summary = useMemo(() => {
-    if (!total) {
-      return t("settings.modals.backup.history.empty");
-    }
+    if (!total) return t("settings.modals.backup.history.empty");
     const recent = rows[0]?.backup_time.fromNow();
     return t("settings.modals.backup.history.summary", {
       count: total,
@@ -107,52 +123,173 @@ export const BackupHistoryViewer = ({
     });
   }, [rows, total, t]);
 
+  const handleDelete = useLockFn(async (filename: string) => {
+    if (
+      !(await confirmAsync(t("settings.modals.backup.messages.confirmDelete")))
+    )
+      return;
+    if (isLocal) {
+      await deleteLocalBackup(filename);
+    } else {
+      await deleteWebdavBackup(filename);
+    }
+    await fetchRows();
+  });
+
+  const handleRestore = useLockFn(async (filename: string) => {
+    if (
+      !(await confirmAsync(t("settings.modals.backup.messages.confirmRestore")))
+    )
+      return;
+    if (isLocal) {
+      await restoreLocalBackup(filename);
+    } else {
+      await restoreWebDavBackup(filename);
+    }
+    showNotice.success("settings.modals.backup.messages.restoreSuccess");
+  });
+
+  const handleExport = useLockFn(async (filename: string) => {
+    if (!isLocal) return;
+    const savePath = await save({ defaultPath: filename });
+    if (!savePath || Array.isArray(savePath)) return;
+    await exportLocalBackup(filename, savePath);
+    showNotice.success("settings.modals.backup.messages.localBackupExported");
+  });
+
+  const handleRefresh = () => fetchRows();
+
   return (
     <BaseDialog
       open={open}
       title={t("settings.modals.backup.history.title")}
-      contentSx={{ width: 720 }}
+      contentSx={{ width: 520 }}
       disableOk
       cancelBtn={t("shared.actions.close")}
       onCancel={onClose}
       onClose={onClose}
     >
-      <Box sx={{ position: "relative", minHeight: 360 }}>
+      <Box sx={{ position: "relative", minHeight: 320 }}>
         <BaseLoadingOverlay isLoading={loading} />
         <Stack spacing={2}>
-          <Paper variant="outlined" sx={{ p: 2 }}>
-            <Stack spacing={1}>
-              <Tabs
-                value={source}
-                onChange={(_, val) => {
-                  onSourceChange(val as BackupSource);
-                  onPageChange(0);
-                }}
-              >
-                <Tab
-                  value="local"
-                  label={t("settings.modals.backup.tabs.local")}
+          <Stack
+            direction="row"
+            alignItems="center"
+            justifyContent="space-between"
+          >
+            <Tabs
+              value={source}
+              onChange={(_, val) => {
+                onSourceChange(val as BackupSource);
+                onPageChange(0);
+              }}
+              textColor="primary"
+              indicatorColor="primary"
+            >
+              <Tab
+                value="local"
+                label={t("settings.modals.backup.tabs.local")}
+                sx={{ px: 2 }}
+              />
+              <Tab
+                value="webdav"
+                label={t("settings.modals.backup.tabs.webdav")}
+                sx={{ px: 2 }}
+              />
+            </Tabs>
+            <IconButton size="small" onClick={handleRefresh}>
+              <RefreshRounded fontSize="small" />
+            </IconButton>
+          </Stack>
+          <Typography variant="body2" color="text.secondary">
+            {summary}
+          </Typography>
+
+          <List
+            disablePadding
+            subheader={
+              <ListSubheader disableSticky>
+                {t("settings.modals.backup.history.title")}
+              </ListSubheader>
+            }
+          >
+            {pagedRows.length === 0 ? (
+              <ListItem>
+                <ListItemText
+                  primary={t("settings.modals.backup.history.empty") || ""}
                 />
-                <Tab
-                  value="webdav"
-                  label={t("settings.modals.backup.tabs.webdav")}
-                />
-              </Tabs>
-              <Typography variant="body2" color="text.secondary">
-                {summary}
+              </ListItem>
+            ) : (
+              pagedRows.map((row) => (
+                <ListItem
+                  key={`${row.platform}-${row.filename}`}
+                  divider
+                  secondaryAction={
+                    <Stack direction="row" spacing={0.5} alignItems="center">
+                      {isLocal && (
+                        <IconButton
+                          size="small"
+                          onClick={() => handleExport(row.filename)}
+                        >
+                          <DownloadRounded fontSize="small" />
+                        </IconButton>
+                      )}
+                      <IconButton
+                        size="small"
+                        onClick={() => handleDelete(row.filename)}
+                      >
+                        <DeleteOutline fontSize="small" />
+                      </IconButton>
+                      <IconButton
+                        size="small"
+                        onClick={() => handleRestore(row.filename)}
+                      >
+                        <RestoreRounded fontSize="small" />
+                      </IconButton>
+                    </Stack>
+                  }
+                >
+                  <ListItemText
+                    primary={row.filename}
+                    secondary={`${row.platform} · ${row.backup_time.format("YYYY-MM-DD HH:mm")}`}
+                  />
+                </ListItem>
+              ))
+            )}
+          </List>
+
+          {pageCount > 1 && (
+            <Stack
+              direction="row"
+              spacing={1}
+              justifyContent="flex-end"
+              alignItems="center"
+            >
+              <Typography variant="caption">
+                {currentPage + 1} / {pageCount}
               </Typography>
+              <Stack direction="row" spacing={1}>
+                <Button
+                  size="small"
+                  variant="text"
+                  disabled={currentPage === 0}
+                  onClick={() => onPageChange(Math.max(0, currentPage - 1))}
+                >
+                  {t("shared.actions.previous")}
+                </Button>
+                <Button
+                  size="small"
+                  variant="text"
+                  disabled={currentPage >= pageCount - 1}
+                  onClick={() =>
+                    onPageChange(Math.min(pageCount - 1, currentPage + 1))
+                  }
+                >
+                  {t("shared.actions.next")}
+                </Button>
+              </Stack>
             </Stack>
-          </Paper>
-          <BackupHistoryTable
-            datasource={pagedData}
-            page={page}
-            total={total}
-            onPageChange={(_, newPage) => onPageChange(newPage)}
-            onRefresh={fetchRows}
-            onDelete={isLocal ? deleteLocalBackup : deleteWebdavBackup}
-            onRestore={isLocal ? restoreLocalBackup : restoreWebDavBackup}
-            onExport={isLocal ? exportLocalBackup : undefined}
-          />
+          )}
         </Stack>
       </Box>
     </BaseDialog>

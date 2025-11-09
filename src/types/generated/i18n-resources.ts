@@ -1166,7 +1166,9 @@ export interface TranslationResources {
         hideDetails: string;
         listView: string;
         new: string;
+        next: string;
         pause: string;
+        previous: string;
         refresh: string;
         refreshPage: string;
         resetToDefault: string;

@@ -21,7 +21,9 @@
     "pause": "暂停",
     "resume": "继续",
     "closeAll": "关闭全部",
-    "clear": "清除"
+    "clear": "清除",
+    "previous": "Previous",
+    "next": "Next"
   },
   "labels": {
     "updateAt": "更新于",
