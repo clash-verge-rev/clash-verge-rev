@@ -27,10 +27,10 @@ sysinfo = { version = "0.37.2", features = ["network", "system"] }
 boa_engine = "0.21.0"
 serde_json = "1.0.145"
 serde_yaml_ng = "0.10.0"
-once_cell = "1.21.3"
+once_cell = { version = "1.21.3", features = ["parking_lot"] }
 port_scanner = "0.1.5"
 delay_timer = "0.11.6"
-parking_lot = "0.12.5"
+parking_lot = { version = "0.12.5", features = ["hardware-lock-elision"] }
 percent-encoding = "2.3.2"
 tokio = { version = "1.48.0", features = [
   "rt-multi-thread",
@@ -170,6 +170,10 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 
 [dev-dependencies]
 criterion = { version = "0.7.0", features = ["async_tokio"] }
+parking_lot = { version = "0.12.5", features = [
+  "hardware-lock-elision",
+  "deadlock_detection",
+] }
 
 [lints.clippy]
 # Core categories - most important for code safety and correctness
