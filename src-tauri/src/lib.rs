@@ -277,7 +277,7 @@ pub fn run() {
         };
         use tauri::AppHandle;
         #[cfg(target_os = "macos")]
-        use tauri::Manager;
+        use tauri::Manager as _;
 
         pub fn handle_ready_resumed(_app_handle: &AppHandle) {
             if handle::Handle::global().is_exiting() {
