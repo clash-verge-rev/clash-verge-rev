@@ -24,8 +24,16 @@ import { changeClashCore, restartCore } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
 
 const VALID_CORE = [
-  { name: "Mihomo", core: "verge-mihomo", chip: "Release Version" },
-  { name: "Mihomo Alpha", core: "verge-mihomo-alpha", chip: "Alpha Version" },
+  {
+    name: "Mihomo",
+    core: "verge-mihomo",
+    chipKey: "settings.modals.clashCore.variants.release",
+  },
+  {
+    name: "Mihomo Alpha",
+    core: "verge-mihomo-alpha",
+    chipKey: "settings.modals.clashCore.variants.alpha",
+  },
 ];
 
 export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
@@ -54,7 +62,7 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
       const errorMsg = await changeClashCore(core);
 
       if (errorMsg) {
-        showNotice("error", errorMsg);
+        showNotice.error(errorMsg);
         setChangingCore(null);
         return;
       }
@@ -65,9 +73,9 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
         mutate("getVersion");
         setChangingCore(null);
       }, 500);
-    } catch (err: any) {
+    } catch (err) {
       setChangingCore(null);
-      showNotice("error", err.message || err.toString());
+      showNotice.error(err);
     }
   });
 
@@ -75,11 +83,13 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
     try {
       setRestarting(true);
       await restartCore();
-      showNotice("success", t(`Clash Core Restarted`));
+      showNotice.success(
+        t("settings.feedback.notifications.clash.restartSuccess"),
+      );
       setRestarting(false);
-    } catch (err: any) {
+    } catch (err) {
       setRestarting(false);
-      showNotice("error", err.message || err.toString());
+      showNotice.error(err);
     }
   });
 
@@ -88,14 +98,16 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
       setUpgrading(true);
       await upgradeCore();
       setUpgrading(false);
-      showNotice("success", t(`Core Version Updated`));
+      showNotice.success(
+        t("settings.feedback.notifications.clash.versionUpdated"),
+      );
     } catch (err: any) {
       setUpgrading(false);
-      const errMsg = err.response?.data?.message || err.toString();
+      const errMsg = err?.response?.data?.message ?? String(err);
       const showMsg = errMsg.includes("already using latest version")
-        ? "Already Using Latest Core Version"
+        ? t("settings.feedback.notifications.clash.alreadyLatestVersion")
         : errMsg;
-      showNotice("error", t(showMsg));
+      showNotice.info(showMsg);
     }
   });
 
@@ -104,7 +116,7 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
       open={open}
       title={
         <Box display="flex" justifyContent="space-between">
-          {t("Clash Core")}
+          {t("settings.sections.clash.form.fields.clashCore")}
           <Box>
             <LoadingButton
               variant="contained"
@@ -116,7 +128,7 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
               sx={{ marginRight: "8px" }}
               onClick={onUpgrade}
             >
-              {t("Upgrade")}
+              {t("shared.actions.upgrade")}
             </LoadingButton>
             <LoadingButton
               variant="contained"
@@ -127,7 +139,7 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
               disabled={upgrading}
               onClick={onRestart}
             >
-              {t("Restart")}
+              {t("shared.actions.restart")}
             </LoadingButton>
           </Box>
         </Box>
@@ -141,7 +153,7 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
         marginTop: "-8px",
       }}
       disableOk
-      cancelBtn={t("Close")}
+      cancelBtn={t("shared.actions.close")}
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}
     >
@@ -157,7 +169,7 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
             {changingCore === each.core ? (
               <CircularProgress size={20} sx={{ mr: 1 }} />
             ) : (
-              <Chip label={t(`${each.chip}`)} size="small" />
+              <Chip label={t(each.chipKey)} size="small" />
             )}
           </ListItemButton>
         ))}

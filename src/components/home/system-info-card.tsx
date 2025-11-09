@@ -174,13 +174,15 @@ export const SystemInfoCard = () => {
     try {
       const info = await checkUpdate();
       if (!info?.available) {
-        showNotice("success", t("Currently on the Latest Version"));
+        showNotice.success(
+          "settings.components.verge.advanced.notifications.latestVersion",
+        );
       } else {
-        showNotice("info", t("Update Available"), 2000);
+        showNotice.info("shared.feedback.notifications.updateAvailable", 2000);
         goToSettings();
       }
-    } catch (err: any) {
-      showNotice("error", err.message || err.toString());
+    } catch (err) {
+      showNotice.error(err);
     }
   });
 
@@ -217,11 +219,11 @@ export const SystemInfoCard = () => {
           <>
             <AdminPanelSettingsOutlined
               sx={{ color: "primary.main", fontSize: 16 }}
-              titleAccess={t("Administrator Mode")}
+              titleAccess={t("home.components.systemInfo.badges.adminMode")}
             />
             <DnsOutlined
               sx={{ color: "success.main", fontSize: 16, ml: 0.5 }}
-              titleAccess={t("Service Mode")}
+              titleAccess={t("home.components.systemInfo.badges.serviceMode")}
             />
           </>
         );
@@ -229,21 +231,21 @@ export const SystemInfoCard = () => {
       return (
         <AdminPanelSettingsOutlined
           sx={{ color: "primary.main", fontSize: 16 }}
-          titleAccess={t("Administrator Mode")}
+          titleAccess={t("home.components.systemInfo.badges.adminMode")}
         />
       );
     } else if (isSidecarMode) {
       return (
         <ExtensionOutlined
           sx={{ color: "info.main", fontSize: 16 }}
-          titleAccess={t("Sidecar Mode")}
+          titleAccess={t("home.components.systemInfo.badges.sidecarMode")}
         />
       );
     } else {
       return (
         <DnsOutlined
           sx={{ color: "success.main", fontSize: 16 }}
-          titleAccess={t("Service Mode")}
+          titleAccess={t("home.components.systemInfo.badges.serviceMode")}
         />
       );
     }
@@ -254,13 +256,13 @@ export const SystemInfoCard = () => {
     if (isAdminMode) {
       // 判断是否同时处于服务模式
       if (!isSidecarMode) {
-        return t("Administrator + Service Mode");
+        return t("home.components.systemInfo.badges.adminServiceMode");
       }
-      return t("Administrator Mode");
+      return t("home.components.systemInfo.badges.adminMode");
     } else if (isSidecarMode) {
-      return t("Sidecar Mode");
+      return t("home.components.systemInfo.badges.sidecarMode");
     } else {
-      return t("Service Mode");
+      return t("home.components.systemInfo.badges.serviceMode");
     }
   };
 
@@ -269,11 +271,15 @@ export const SystemInfoCard = () => {
 
   return (
     <EnhancedCard
-      title={t("System Info")}
+      title={t("home.components.systemInfo.title")}
       icon={<InfoOutlined />}
       iconColor="error"
       action={
-        <IconButton size="small" onClick={goToSettings} title={t("Settings")}>
+        <IconButton
+          size="small"
+          onClick={goToSettings}
+          title={t("home.components.systemInfo.actions.settings")}
+        >
           <SettingsOutlined fontSize="small" />
         </IconButton>
       }
@@ -281,7 +287,7 @@ export const SystemInfoCard = () => {
       <Stack spacing={1.5}>
         <Stack direction="row" justifyContent="space-between">
           <Typography variant="body2" color="text.secondary">
-            {t("OS Info")}
+            {t("home.components.systemInfo.fields.osInfo")}
           </Typography>
           <Typography variant="body2" fontWeight="medium">
             {systemState.osInfo}
@@ -294,19 +300,23 @@ export const SystemInfoCard = () => {
           alignItems="center"
         >
           <Typography variant="body2" color="text.secondary">
-            {t("Auto Launch")}
+            {t("home.components.systemInfo.fields.autoLaunch")}
           </Typography>
           <Stack direction="row" spacing={1} alignItems="center">
             {isAdminMode && (
               <Tooltip
-                title={t("Administrator mode may not support auto launch")}
+                title={t("home.components.systemInfo.tooltips.autoLaunchAdmin")}
               >
                 <WarningOutlined sx={{ color: "warning.main", fontSize: 20 }} />
               </Tooltip>
             )}
             <Chip
               size="small"
-              label={autoLaunchEnabled ? t("Enabled") : t("Disabled")}
+              label={
+                autoLaunchEnabled
+                  ? t("shared.statuses.enabled")
+                  : t("shared.statuses.disabled")
+              }
               color={autoLaunchEnabled ? "success" : "default"}
               variant={autoLaunchEnabled ? "filled" : "outlined"}
               onClick={toggleAutoLaunch}
@@ -321,7 +331,7 @@ export const SystemInfoCard = () => {
           alignItems="center"
         >
           <Typography variant="body2" color="text.secondary">
-            {t("Running Mode")}
+            {t("home.components.systemInfo.fields.runningMode")}
           </Typography>
           <Typography
             variant="body2"
@@ -336,7 +346,7 @@ export const SystemInfoCard = () => {
         <Divider />
         <Stack direction="row" justifyContent="space-between">
           <Typography variant="body2" color="text.secondary">
-            {t("Last Check Update")}
+            {t("home.components.systemInfo.fields.lastCheckUpdate")}
           </Typography>
           <Typography
             variant="body2"
@@ -354,7 +364,7 @@ export const SystemInfoCard = () => {
         <Divider />
         <Stack direction="row" justifyContent="space-between">
           <Typography variant="body2" color="text.secondary">
-            {t("Verge Version")}
+            {t("home.components.systemInfo.fields.vergeVersion")}
           </Typography>
           <Typography variant="body2" fontWeight="medium">
             v{appVersion}

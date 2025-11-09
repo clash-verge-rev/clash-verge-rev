@@ -5,6 +5,7 @@ on:
   # ! 不再使用 workflow_dispatch 触发。
   # workflow_dispatch:
   push:
+    # -rc tag 时预览发布, 跳过 telegram 通知、跳过 winget 提交、跳过 latest.json 文件更新
     tags:
       - "v*.*.*"
 permissions: write-all
@@ -72,20 +73,7 @@ jobs:
 
       - name: Fetch UPDATE logs
         id: fetch_update_logs
-        run: |
-          if [ -f "UPDATELOG.md" ]; then
-            UPDATE_LOGS=$(awk '/^## v/{if(flag) exit; flag=1} flag' UPDATELOG.md)
-            if [ -n "$UPDATE_LOGS" ]; then
-              echo "Found update logs"
-              echo "UPDATE_LOGS<<EOF" >> $GITHUB_ENV
-              echo "$UPDATE_LOGS" >> $GITHUB_ENV
-              echo "EOF" >> $GITHUB_ENV
-            else
-              echo "No update sections found in UPDATELOG.md"
-            fi
-          else
-            echo "UPDATELOG.md file not found"
-          fi
+        run: bash ./scripts/extract_update_logs.sh
         shell: bash
 
       - name: Set Env
@@ -143,7 +131,7 @@ jobs:
           name: "Clash Verge Rev ${{ env.TAG_NAME }}"
           body_path: release.txt
           draft: false
-          prerelease: false
+          prerelease: ${{ contains(github.ref_name, '-rc') }}
           token: ${{ secrets.GITHUB_TOKEN }}
           # generate_release_notes: true
 
@@ -213,7 +201,8 @@ jobs:
           pnpm run prebuild ${{ matrix.target }}
 
       - name: Tauri build
-        uses: tauri-apps/tauri-action@v0
+        # 上游 5.24 修改了 latest.json 的生成逻辑，且依赖 tauri-plugin-update 2.10.0 暂未发布，故锁定在 0.5.23 版本
+        uses: tauri-apps/tauri-action@v0.5.23
         env:
           NODE_OPTIONS: "--max_old_space_size=4096"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -230,7 +219,7 @@ jobs:
           releaseName: "Clash Verge Rev ${{ github.ref_name }}"
           releaseBody: "Draft release, will be updated later."
           releaseDraft: true
-          prerelease: false
+          prerelease: ${{ contains(github.ref_name, '-rc') }}
           tauriScript: pnpm
           args: --target ${{ matrix.target }}
           includeUpdaterJson: true
@@ -354,6 +343,7 @@ jobs:
           name: "Clash Verge Rev v${{env.VERSION}}"
           body: "See release notes for detailed changelog."
           token: ${{ secrets.GITHUB_TOKEN }}
+          prerelease: ${{ contains(github.ref_name, '-rc') }}
           files: |
             src-tauri/target/${{ matrix.target }}/release/bundle/deb/*.deb
             src-tauri/target/${{ matrix.target }}/release/bundle/rpm/*.rpm
@@ -409,7 +399,8 @@ jobs:
 
       - name: Tauri build
         id: build
-        uses: tauri-apps/tauri-action@v0
+        # 上游 5.24 修改了 latest.json 的生成逻辑，且依赖 tauri-plugin-update 2.10.0 暂未发布，故锁定在 0.5.23 版本
+        uses: tauri-apps/tauri-action@v0.5.23
         env:
           NODE_OPTIONS: "--max_old_space_size=4096"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -446,6 +437,7 @@ jobs:
           name: "Clash Verge Rev v${{steps.build.outputs.appVersion}}"
           body: "See release notes for detailed changelog."
           token: ${{ secrets.GITHUB_TOKEN }}
+          prerelease: ${{ contains(github.ref_name, '-rc') }}
           files: src-tauri/target/${{ matrix.target }}/release/bundle/nsis/*setup*
 
       - name: Portable Bundle
@@ -454,6 +446,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   release-update:
+    if: ${{ !contains(github.ref_name, '-rc') }}
     name: Release Update
     runs-on: ubuntu-latest
     needs: [update_tag]
@@ -480,6 +473,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   release-update-for-fixed-webview2:
+    if: ${{ !contains(github.ref_name, '-rc') }}
     runs-on: ubuntu-latest
     needs: [update_tag]
     steps:
@@ -505,6 +499,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   submit-to-winget:
+    if: ${{ !contains(github.ref_name, '-rc') }}
     name: Submit to Winget
     runs-on: ubuntu-latest
     needs: [update_tag, release-update]
@@ -528,6 +523,7 @@ jobs:
           token: ${{ secrets.WINGET_TOKEN  }}
 
   notify-telegram:
+    if: ${{ !contains(github.ref_name, '-rc') }}
     name: Notify Telegram
     runs-on: ubuntu-latest
     needs:
@@ -543,20 +539,7 @@ jobs:
 
       - name: Fetch UPDATE logs
         id: fetch_update_logs
-        run: |
-          if [ -f "UPDATELOG.md" ]; then
-            UPDATE_LOGS=$(awk '/^## v/{if(flag) exit; flag=1} flag' UPDATELOG.md)
-            if [ -n "$UPDATE_LOGS" ]; then
-              echo "Found update logs"
-              echo "UPDATE_LOGS<<EOF" >> $GITHUB_ENV
-              echo "$UPDATE_LOGS" >> $GITHUB_ENV
-              echo "EOF" >> $GITHUB_ENV
-            else
-              echo "No update sections found in UPDATELOG.md"
-            fi
-          else
-            echo "UPDATELOG.md file not found"
-          fi
+        run: bash ./scripts/extract_update_logs.sh
         shell: bash
 
       - name: Install Node

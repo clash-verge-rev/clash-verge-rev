@@ -25,11 +25,14 @@ use crate::{
 use anyhow::Result;
 use config::Config;
 use once_cell::sync::OnceCell;
-use tauri::{AppHandle, Manager};
+use rust_i18n::i18n;
+use tauri::{AppHandle, Manager as _};
 #[cfg(target_os = "macos")]
 use tauri_plugin_autostart::MacosLauncher;
-use tauri_plugin_deep_link::DeepLinkExt;
+use tauri_plugin_deep_link::DeepLinkExt as _;
 use utils::logging::Type;
+
+i18n!("locales", fallback = "zh");
 
 pub static APP_HANDLE: OnceCell<AppHandle> = OnceCell::new();
 /// Application initialization helper functions
@@ -319,7 +322,7 @@ pub fn run() {
             AsyncHandler::spawn(move || async move {
                 let is_enable_global_hotkey = Config::verge()
                     .await
-                    .latest_ref()
+                    .data_arc()
                     .enable_global_hotkey
                     .unwrap_or(true);
 
@@ -334,10 +337,7 @@ pub fn run() {
                             .register_system_hotkey(SystemHotkey::CmdW)
                             .await;
                     }
-
-                    if !is_enable_global_hotkey {
-                        let _ = hotkey::Hotkey::global().init().await;
-                    }
+                    let _ = hotkey::Hotkey::global().init(true).await;
                     return;
                 }
 
@@ -354,13 +354,21 @@ pub fn run() {
             });
         }
 
+        #[cfg(target_os = "macos")]
         pub fn handle_window_destroyed() {
-            #[cfg(target_os = "macos")]
-            {
-                use crate::core::hotkey::SystemHotkey;
+            use crate::core::hotkey::SystemHotkey;
+            AsyncHandler::spawn(move || async move {
                 let _ = hotkey::Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdQ);
                 let _ = hotkey::Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdW);
-            }
+                let is_enable_global_hotkey = Config::verge()
+                    .await
+                    .data_arc()
+                    .enable_global_hotkey
+                    .unwrap_or(true);
+                if !is_enable_global_hotkey {
+                    let _ = hotkey::Hotkey::global().reset();
+                }
+            });
         }
     }
 
@@ -439,6 +447,7 @@ pub fn run() {
             tauri::WindowEvent::Focused(focused) => {
                 event_handlers::handle_window_focus(focused);
             }
+            #[cfg(target_os = "macos")]
             tauri::WindowEvent::Destroyed => {
                 event_handlers::handle_window_destroyed();
             }

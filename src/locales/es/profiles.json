@@ -1,0 +1,182 @@
+{
+  "page": {
+    "actions": {
+      "updateAll": "Actualizar todas las suscripciones",
+      "viewRuntimeConfig": "Ver configuración en tiempo de ejecución",
+      "reactivate": "Reactivar suscripciones",
+      "import": "Importar"
+    },
+    "batch": {
+      "actions": {
+        "delete": "Delete Selected Profiles",
+        "selectAll": "Select All",
+        "deselectAll": "Deselect All",
+        "done": "Done"
+      },
+      "summary": {
+        "selected": "Selected",
+        "items": "items"
+      },
+      "title": "Batch Operations"
+    },
+    "importForm": {
+      "placeholder": "Enlace del archivo de suscripción",
+      "actions": {
+        "paste": "Pegar"
+      }
+    },
+    "feedback": {
+      "errors": {
+        "invalidUrl": "Invalid profile URL. Please enter a URL starting with http:// or https://",
+        "onlyYaml": "Solo se admiten archivos YAML"
+      },
+      "notifications": {
+        "importRetry": "Error al importar la suscripción. Intentando con el proxy de Clash...",
+        "importFail": "Error al importar incluso con el proxy de Clash",
+        "importNeedsRefresh": "Profile imported but may need manual refresh",
+        "importSuccess": "Profile imported successfully, please restart if not visible",
+        "profileSwitched": "Suscripción cambiada",
+        "profileReactivated": "Suscripción reactivada",
+        "switchInterrupted": "Profile switch interrupted by new selection",
+        "batchDeleted": "Selected profiles deleted successfully"
+      },
+      "notices": {
+        "forceRefreshCompleted": "Force refresh completed",
+        "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
+      }
+    },
+    "title": "Suscripciones"
+  },
+  "components": {
+    "card": {
+      "labels": {
+        "clickToImport": "Haga clic para importar una suscripción"
+      }
+    },
+    "fileInput": {
+      "chooseFile": "Elegir archivo"
+    },
+    "menu": {
+      "home": "Hogar",
+      "select": "Usar",
+      "editInfo": "Editar información",
+      "editFile": "Editar archivo",
+      "editRules": "Editar reglas",
+      "editProxies": "Editar nodos",
+      "editGroups": "Editar grupos de proxy",
+      "extendConfig": "Configurar sobrescritura extendida",
+      "extendScript": "Script extendido",
+      "openFile": "Abrir archivo",
+      "update": "Actualizar",
+      "updateViaProxy": "Update via proxy"
+    },
+    "more": {
+      "global": {
+        "merge": "Global Merge",
+        "script": "Global Script"
+      },
+      "chips": {
+        "merge": "Merge",
+        "script": "Script"
+      }
+    },
+    "profileItem": {
+      "tooltips": {
+        "showLast": "Click to show last update time",
+        "showNext": "Click to show next update"
+      },
+      "status": {
+        "lastUpdateFailed": "La última actualización falló",
+        "nextUp": "Próxima actualización",
+        "noSchedule": "Sin programación",
+        "unknown": "Desconocido",
+        "autoUpdateDisabled": "La actualización automática está deshabilitada"
+      }
+    }
+  },
+  "modals": {
+    "profileForm": {
+      "title": {
+        "create": "Crear configuración",
+        "edit": "Editar configuración"
+      },
+      "fields": {
+        "type": "Tipo",
+        "description": "Descripción",
+        "subscriptionUrl": "Enlace de suscripción",
+        "httpTimeout": "HTTP Request Timeout",
+        "updateInterval": "Intervalo de actualización",
+        "useSystemProxy": "Usar proxy del sistema para actualizar",
+        "useClashProxy": "Usar proxy del núcleo para actualizar",
+        "acceptInvalidCerts": "Allows Invalid Certificates (Danger)",
+        "allowAutoUpdate": "Allow Auto Update"
+      },
+      "feedback": {
+        "notifications": {
+          "creationRetry": "Error al crear la suscripción. Intentando con el proxy de Clash...",
+          "creationSuccess": "Creación de la suscripción con el proxy de Clash exitosa"
+        }
+      }
+    },
+    "proxiesEditor": {
+      "title": "Editar nodos",
+      "placeholders": {
+        "multiUri": "Para múltiples URI, utilice saltos de línea (se admite la codificación Base64)"
+      },
+      "actions": {
+        "prepend": "Agregar nodo de proxy previo",
+        "append": "Agregar nodo de proxy posterior"
+      }
+    },
+    "groupsEditor": {
+      "title": "Editar grupos de proxy",
+      "errors": {
+        "nameRequired": "El nombre del grupo de proxy no puede estar vacío",
+        "nameExists": "El nombre del grupo de proxy ya existe"
+      },
+      "fields": {
+        "type": "Tipo de grupo de proxy",
+        "name": "Nombre del grupo de proxy",
+        "icon": "Icono del grupo de proxy",
+        "proxies": "Incluir proxies",
+        "provider": "Incluir proveedor de proxies",
+        "healthCheckUrl": "URL de prueba de salud",
+        "expectedStatus": "Código de estado esperado",
+        "interval": "Intervalo de comprobación",
+        "maxFailedTimes": "Número máximo de fallos",
+        "interfaceName": "Nombre de la interfaz de salida",
+        "routingMark": "Marca de enrutamiento",
+        "filter": "Filtrar nodos",
+        "excludeFilter": "Excluir nodos",
+        "excludeType": "Tipo de nodo a excluir",
+        "includeAll": "Incluir todos los proxies de salida y proveedores de proxies",
+        "includeAllProxies": "Incluir todos los proxies de salida",
+        "includeAllProviders": "Incluir todos los proveedores de proxies"
+      },
+      "toggles": {
+        "lazy": "Estado de inactividad",
+        "disableUdp": "Deshabilitar UDP",
+        "hidden": "Ocultar grupo de proxy"
+      },
+      "actions": {
+        "prepend": "Agregar grupo de proxy previo",
+        "append": "Agregar grupo de proxy posterior"
+      }
+    },
+    "editor": {
+      "actions": {
+        "format": "Formatear documento"
+      },
+      "messages": {
+        "readOnly": "No se puede editar en modo de solo lectura"
+      }
+    },
+    "confirmDelete": {
+      "title": "Confirmar eliminación",
+      "message": "Esta operación no se puede deshacer"
+    },
+    "logViewer": {
+      "title": "Salida de la consola del script"
+    }
+  }
+}

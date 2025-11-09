@@ -127,7 +127,6 @@ export function BackupViewer({ ref }: { ref?: Ref<DialogRef> }) {
       setBackupFiles([]);
       setTotal(0);
       console.error(error);
-      // Notice.error(t("Failed to fetch backup files"));
     } finally {
       setIsLoading(false);
     }
@@ -247,7 +246,7 @@ export function BackupViewer({ ref }: { ref?: Ref<DialogRef> }) {
   return (
     <BaseDialog
       open={open}
-      title={t("Backup Setting")}
+      title={t("settings.modals.backup.title")}
       contentSx={{
         minWidth: { xs: 320, sm: 620 },
         maxWidth: "unset",
@@ -278,11 +277,14 @@ export function BackupViewer({ ref }: { ref?: Ref<DialogRef> }) {
           <Tabs
             value={source}
             onChange={handleChangeSource}
-            aria-label={t("Select Backup Target")}
+            aria-label={t("settings.modals.backup.actions.selectTarget")}
             sx={{ mb: 2 }}
           >
-            <Tab value="local" label={t("Local Backup")} />
-            <Tab value="webdav" label={t("WebDAV Backup")} />
+            <Tab value="local" label={t("settings.modals.backup.tabs.local")} />
+            <Tab
+              value="webdav"
+              label={t("settings.modals.backup.tabs.webdav")}
+            />
           </Tabs>
           {source === "local" ? (
             <LocalBackupActions
@@ -342,7 +344,7 @@ export function BackupViewer({ ref }: { ref?: Ref<DialogRef> }) {
                 backgroundColor: (theme) => theme.palette.background.paper,
               }}
             >
-              {t("Close")}
+              {t("shared.actions.close")}
             </Button>
           </Box>,
           dialogPaper,

@@ -147,8 +147,8 @@ export const ProxyTunCard: FC = () => {
 
   const { enable_tun_mode } = verge ?? {};
 
-  const handleError = (err: Error) => {
-    showNotice("error", err.message || err.toString());
+  const handleError = (err: unknown) => {
+    showNotice.error(err);
   };
 
   const handleTabChange = (tab: string) => {
@@ -160,18 +160,18 @@ export const ProxyTunCard: FC = () => {
     if (activeTab === "system") {
       return {
         text: systemProxyActualState
-          ? t("System Proxy Enabled")
-          : t("System Proxy Disabled"),
-        tooltip: t("System Proxy Info"),
+          ? t("home.components.proxyTun.status.systemProxyEnabled")
+          : t("home.components.proxyTun.status.systemProxyDisabled"),
+        tooltip: t("home.components.proxyTun.tooltips.systemProxy"),
       };
     } else {
       return {
         text: !isTunModeAvailable
-          ? t("TUN Mode Service Required")
+          ? t("home.components.proxyTun.status.tunModeServiceRequired")
           : enable_tun_mode
-            ? t("TUN Mode Enabled")
-            : t("TUN Mode Disabled"),
-        tooltip: t("TUN Mode Intercept Info"),
+            ? t("home.components.proxyTun.status.tunModeEnabled")
+            : t("home.components.proxyTun.status.tunModeDisabled"),
+        tooltip: t("home.components.proxyTun.tooltips.tunMode"),
       };
     }
   }, [
@@ -198,14 +198,14 @@ export const ProxyTunCard: FC = () => {
           isActive={activeTab === "system"}
           onClick={() => handleTabChange("system")}
           icon={ComputerRounded}
-          label={t("System Proxy")}
+          label={t("settings.sections.system.toggles.systemProxy")}
           hasIndicator={systemProxyActualState}
         />
         <TabButton
           isActive={activeTab === "tun"}
           onClick={() => handleTabChange("tun")}
           icon={TroubleshootRounded}
-          label={t("Tun Mode")}
+          label={t("settings.sections.system.toggles.tunMode")}
           hasIndicator={enable_tun_mode && isTunModeAvailable}
         />
       </Stack>
@@ -236,7 +236,11 @@ export const ProxyTunCard: FC = () => {
       >
         <ProxyControlSwitches
           onError={handleError}
-          label={activeTab === "system" ? t("System Proxy") : t("Tun Mode")}
+          label={
+            activeTab === "system"
+              ? t("settings.sections.system.toggles.systemProxy")
+              : t("settings.sections.system.toggles.tunMode")
+          }
           noRightPadding={true}
         />
       </Box>

@@ -26,7 +26,7 @@ pub struct HttpResponse {
 }
 
 impl HttpResponse {
-    pub fn new(status: StatusCode, headers: HeaderMap, body: String) -> Self {
+    pub const fn new(status: StatusCode, headers: HeaderMap, body: String) -> Self {
         Self {
             status,
             headers,
@@ -34,11 +34,11 @@ impl HttpResponse {
         }
     }
 
-    pub fn status(&self) -> StatusCode {
+    pub const fn status(&self) -> StatusCode {
         self.status
     }
 
-    pub fn headers(&self) -> &HeaderMap {
+    pub const fn headers(&self) -> &HeaderMap {
         &self.headers
     }
 
@@ -80,8 +80,7 @@ impl NetworkManager {
     }
 
     async fn record_connection_error(&self, error: &str) {
-        let mut last_error = self.last_connection_error.lock().await;
-        *last_error = Some((Instant::now(), error.into()));
+        *self.last_connection_error.lock().await = Some((Instant::now(), error.into()));
 
         let mut count = self.connection_error_count.lock().await;
         *count += 1;
@@ -89,13 +88,11 @@ impl NetworkManager {
 
     async fn should_reset_clients(&self) -> bool {
         let count = *self.connection_error_count.lock().await;
-        let last_error_guard = self.last_connection_error.lock().await;
-
         if count > 5 {
             return true;
         }
 
-        if let Some((time, _)) = &*last_error_guard
+        if let Some((time, _)) = &*self.last_connection_error.lock().await
             && time.elapsed() < Duration::from_secs(30)
             && count > 2
         {
@@ -119,18 +116,15 @@ impl NetworkManager {
         accept_invalid_certs: bool,
         timeout_secs: Option<u64>,
     ) -> Result<HttpClient> {
-        let proxy_uri_clone = proxy_uri.clone();
-        let headers_clone = default_headers.clone();
-
         {
             let mut builder = HttpClient::builder();
 
-            builder = match proxy_uri_clone {
+            builder = match proxy_uri {
                 Some(uri) => builder.proxy(Some(uri)),
                 None => builder.proxy(None),
             };
 
-            for (name, value) in headers_clone.iter() {
+            for (name, value) in default_headers.iter() {
                 builder = builder.default_header(name, value);
             }
 
@@ -165,10 +159,10 @@ impl NetworkManager {
             ProxyType::None => None,
             ProxyType::Localhost => {
                 let port = {
-                    let verge_port = Config::verge().await.latest_ref().verge_mixed_port;
+                    let verge_port = Config::verge().await.latest_arc().verge_mixed_port;
                     match verge_port {
                         Some(port) => port,
-                        None => Config::clash().await.latest_ref().get_mixed_port(),
+                        None => Config::clash().await.latest_arc().get_mixed_port(),
                     }
                 };
                 let proxy_scheme = format!("http://127.0.0.1:{port}");

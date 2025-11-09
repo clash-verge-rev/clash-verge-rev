@@ -35,10 +35,10 @@ export const ConfirmViewer = (props: Props) => {
 
       <DialogActions>
         <Button onClick={onClose} variant="outlined">
-          {t("Cancel")}
+          {t("shared.actions.cancel")}
         </Button>
         <Button onClick={onConfirm} variant="contained">
-          {t("Confirm")}
+          {t("shared.actions.confirm")}
         </Button>
       </DialogActions>
     </Dialog>

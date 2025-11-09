@@ -1,0 +1,32 @@
+{
+  "page": {
+    "title": "Тоташулар"
+  },
+  "components": {
+    "fields": {
+      "host": "Хост",
+      "dlSpeed": "Йөкләү тизл.",
+      "ulSpeed": "Чыгару тизл.",
+      "chains": "Чылбырлар",
+      "rule": "Кагыйдә",
+      "process": "Процесс",
+      "time": "Тоташу вакыты",
+      "source": "Чыганак адресы",
+      "destination": "Максат IP-адресы",
+      "destinationPort": "Барасы порты",
+      "type": "Төр"
+    },
+    "order": {
+      "default": "Default",
+      "uploadSpeed": "Йөкләү (чыгару) тизлеге",
+      "downloadSpeed": "Йөкләү тизлеге"
+    },
+    "actions": {
+      "closeConnection": "Тоташуны ябу"
+    },
+    "columnManager": {
+      "title": "Баганалар",
+      "dragHandle": "Drag handle"
+    }
+  }
+}

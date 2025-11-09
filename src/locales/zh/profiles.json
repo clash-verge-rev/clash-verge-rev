@@ -1,0 +1,182 @@
+{
+  "page": {
+    "actions": {
+      "updateAll": "更新所有订阅",
+      "viewRuntimeConfig": "查看运行时订阅",
+      "reactivate": "重新激活订阅",
+      "import": "导入"
+    },
+    "batch": {
+      "actions": {
+        "delete": "删除选中订阅",
+        "selectAll": "全选",
+        "deselectAll": "取消全选",
+        "done": "完成"
+      },
+      "summary": {
+        "selected": "已选中",
+        "items": "项目"
+      },
+      "title": "批量操作"
+    },
+    "importForm": {
+      "placeholder": "订阅文件链接",
+      "actions": {
+        "paste": "粘贴"
+      }
+    },
+    "feedback": {
+      "errors": {
+        "invalidUrl": "无效的订阅链接，请输入以 http:// 或 https:// 开头的地址",
+        "onlyYaml": "仅支持 YAML 文件"
+      },
+      "notifications": {
+        "importRetry": "订阅导入失败，尝试使用 Clash 代理导入",
+        "importFail": "使用 Clash 代理导入订阅也失败",
+        "importNeedsRefresh": "订阅已导入，但可能需要手动刷新",
+        "importSuccess": "订阅已成功导入，如未显示请重启应用",
+        "profileSwitched": "订阅已切换",
+        "profileReactivated": "订阅已激活",
+        "switchInterrupted": "订阅切换被新选择中断",
+        "batchDeleted": "选中的订阅已成功删除"
+      },
+      "notices": {
+        "forceRefreshCompleted": "数据已强制刷新",
+        "emergencyRefreshFailed": "紧急刷新失败: {{message}}"
+      }
+    },
+    "title": "订阅"
+  },
+  "components": {
+    "card": {
+      "labels": {
+        "clickToImport": "点击导入订阅"
+      }
+    },
+    "fileInput": {
+      "chooseFile": "选择文件"
+    },
+    "menu": {
+      "home": "首 页",
+      "select": "使用",
+      "editInfo": "编辑信息",
+      "editFile": "编辑文件",
+      "editRules": "编辑规则",
+      "editProxies": "编辑节点",
+      "editGroups": "编辑代理组",
+      "extendConfig": "扩展覆写配置",
+      "extendScript": "扩展脚本",
+      "openFile": "打开文件",
+      "update": "更新",
+      "updateViaProxy": "更新（代理）"
+    },
+    "more": {
+      "global": {
+        "merge": "全局扩展覆写配置",
+        "script": "全局扩展脚本"
+      },
+      "chips": {
+        "merge": "Merge",
+        "script": "Script"
+      }
+    },
+    "profileItem": {
+      "tooltips": {
+        "showLast": "点击查看上次更新时间",
+        "showNext": "点击查看下一次更新"
+      },
+      "status": {
+        "lastUpdateFailed": "上次更新失败",
+        "nextUp": "下次更新",
+        "noSchedule": "没有计划",
+        "unknown": "未知",
+        "autoUpdateDisabled": "自动更新已禁用"
+      }
+    }
+  },
+  "modals": {
+    "profileForm": {
+      "title": {
+        "create": "新建配置",
+        "edit": "编辑配置"
+      },
+      "fields": {
+        "type": "类型",
+        "description": "描述",
+        "subscriptionUrl": "订阅链接",
+        "httpTimeout": "HTTP 请求超时",
+        "updateInterval": "更新间隔",
+        "useSystemProxy": "使用系统代理更新",
+        "useClashProxy": "使用内核代理更新",
+        "acceptInvalidCerts": "允许无效证书（危险）",
+        "allowAutoUpdate": "允许自动更新"
+      },
+      "feedback": {
+        "notifications": {
+          "creationRetry": "订阅创建失败，尝试使用 Clash 代理创建",
+          "creationSuccess": "使用 Clash 代理创建订阅成功"
+        }
+      }
+    },
+    "proxiesEditor": {
+      "title": "编辑节点",
+      "placeholders": {
+        "multiUri": "多条 URI 请使用换行分隔（支持 Base64 编码）"
+      },
+      "actions": {
+        "prepend": "添加前置代理节点",
+        "append": "添加后置代理节点"
+      }
+    },
+    "groupsEditor": {
+      "title": "编辑代理组",
+      "errors": {
+        "nameRequired": "代理组名称不能为空",
+        "nameExists": "代理组名称已存在"
+      },
+      "fields": {
+        "type": "代理组类型",
+        "name": "代理组组名",
+        "icon": "代理组图标",
+        "proxies": "引入代理",
+        "provider": "引入代理集合",
+        "healthCheckUrl": "健康检查测试地址",
+        "expectedStatus": "期望状态码",
+        "interval": "检查间隔",
+        "maxFailedTimes": "最大失败次数",
+        "interfaceName": "出站接口",
+        "routingMark": "路由标记",
+        "filter": "过滤节点",
+        "excludeFilter": "排除节点",
+        "excludeType": "排除节点类型",
+        "includeAll": "引入所有出站代理、代理集合",
+        "includeAllProxies": "引入所有出站代理",
+        "includeAllProviders": "引入所有代理集合"
+      },
+      "toggles": {
+        "lazy": "懒惰状态",
+        "disableUdp": "禁用 UDP",
+        "hidden": "隐藏代理组"
+      },
+      "actions": {
+        "prepend": "添加前置代理组",
+        "append": "添加后置代理组"
+      }
+    },
+    "editor": {
+      "actions": {
+        "format": "格式化文档"
+      },
+      "messages": {
+        "readOnly": "无法在只读模式下编辑"
+      }
+    },
+    "confirmDelete": {
+      "title": "确认删除",
+      "message": "此操作不可逆"
+    },
+    "logViewer": {
+      "title": "脚本控制台输出"
+    }
+  }
+}

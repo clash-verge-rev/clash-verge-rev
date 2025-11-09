@@ -4,7 +4,7 @@ use crate::{
     logging, logging_error,
     utils::{dirs, init::service_writer_config, logging::Type},
 };
-use anyhow::{Context, Result, bail};
+use anyhow::{Context as _, Result, bail};
 use clash_verge_service_ipc::CoreConfig;
 use compact_str::CompactString;
 use once_cell::sync::Lazy;
@@ -122,7 +122,6 @@ async fn reinstall_service() -> Result<()> {
 #[cfg(target_os = "linux")]
 async fn uninstall_service() -> Result<()> {
     logging!(info, Type::Service, "uninstall service");
-    use users::get_effective_uid;
 
     let uninstall_path =
         tauri::utils::platform::current_exe()?.with_file_name("clash-verge-service-uninstall");
@@ -134,13 +133,14 @@ async fn uninstall_service() -> Result<()> {
     let uninstall_shell: String = uninstall_path.to_string_lossy().replace(" ", "\\ ");
 
     let elevator = crate::utils::help::linux_elevator();
-    let status = match get_effective_uid() {
-        0 => StdCommand::new(uninstall_shell).status()?,
-        _ => StdCommand::new(elevator.clone())
+    let status = if linux_running_as_root() {
+        StdCommand::new(&uninstall_path).status()?
+    } else {
+        StdCommand::new(elevator)
             .arg("sh")
             .arg("-c")
             .arg(uninstall_shell)
-            .status()?,
+            .status()?
     };
     logging!(
         info,
@@ -163,7 +163,6 @@ async fn uninstall_service() -> Result<()> {
 #[allow(clippy::unused_async)]
 async fn install_service() -> Result<()> {
     logging!(info, Type::Service, "install service");
-    use users::get_effective_uid;
 
     let install_path =
         tauri::utils::platform::current_exe()?.with_file_name("clash-verge-service-install");
@@ -175,13 +174,14 @@ async fn install_service() -> Result<()> {
     let install_shell: String = install_path.to_string_lossy().replace(" ", "\\ ");
 
     let elevator = crate::utils::help::linux_elevator();
-    let status = match get_effective_uid() {
-        0 => StdCommand::new(install_shell).status()?,
-        _ => StdCommand::new(elevator.clone())
+    let status = if linux_running_as_root() {
+        StdCommand::new(&install_path).status()?
+    } else {
+        StdCommand::new(elevator)
             .arg("sh")
             .arg("-c")
             .arg(install_shell)
-            .status()?,
+            .status()?
     };
     logging!(
         info,
@@ -218,10 +218,15 @@ async fn reinstall_service() -> Result<()> {
     }
 }
 
+#[cfg(target_os = "linux")]
+fn linux_running_as_root() -> bool {
+    const ROOT_UID: u32 = 0;
+
+    unsafe { libc::geteuid() == ROOT_UID }
+}
+
 #[cfg(target_os = "macos")]
 async fn uninstall_service() -> Result<()> {
-    use crate::utils::i18n::t;
-
     logging!(info, Type::Service, "uninstall service");
 
     let binary_path = dirs::service_path()?;
@@ -233,7 +238,9 @@ async fn uninstall_service() -> Result<()> {
 
     let uninstall_shell: String = uninstall_path.to_string_lossy().into_owned();
 
-    let prompt = t("Service Administrator Prompt").await;
+    crate::utils::i18n::sync_locale().await;
+
+    let prompt = rust_i18n::t!("service.adminPrompt").to_string();
     let command = format!(
         r#"do shell script "sudo '{uninstall_shell}'" with administrator privileges with prompt "{prompt}""#
     );
@@ -256,8 +263,6 @@ async fn uninstall_service() -> Result<()> {
 
 #[cfg(target_os = "macos")]
 async fn install_service() -> Result<()> {
-    use crate::utils::i18n::t;
-
     logging!(info, Type::Service, "install service");
 
     let binary_path = dirs::service_path()?;
@@ -269,7 +274,9 @@ async fn install_service() -> Result<()> {
 
     let install_shell: String = install_path.to_string_lossy().into_owned();
 
-    let prompt = t("Service Administrator Prompt").await;
+    crate::utils::i18n::sync_locale().await;
+
+    let prompt = rust_i18n::t!("service.adminPrompt").to_string();
     let command = format!(
         r#"do shell script "sudo '{install_shell}'" with administrator privileges with prompt "{prompt}""#
     );
@@ -353,7 +360,7 @@ pub(super) async fn start_with_existing_service(config_file: &PathBuf) -> Result
     logging!(info, Type::Service, "尝试使用现有服务启动核心");
 
     let verge_config = Config::verge().await;
-    let clash_core = verge_config.latest_ref().get_valid_clash_core();
+    let clash_core = verge_config.latest_arc().get_valid_clash_core();
     drop(verge_config);
 
     let bin_ext = if cfg!(windows) { ".exe" } else { "" };
@@ -449,7 +456,7 @@ impl ServiceManager {
         Self(ServiceStatus::Unavailable("Need Checks".into()))
     }
 
-    pub fn config() -> Option<clash_verge_service_ipc::IpcConfig> {
+    pub const fn config() -> Option<clash_verge_service_ipc::IpcConfig> {
         Some(clash_verge_service_ipc::IpcConfig {
             default_timeout: Duration::from_millis(30),
             retry_delay: Duration::from_millis(250),
@@ -532,7 +539,7 @@ impl ServiceManager {
                 return Err(anyhow::anyhow!("服务不可用: {}", reason));
             }
         }
-        let _ = tray::Tray::global().update_tray_display().await;
+        let _ = tray::Tray::global().update_menu().await;
         Ok(())
     }
 }

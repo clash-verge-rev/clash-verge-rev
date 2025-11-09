@@ -1,0 +1,53 @@
+{
+  "page": {
+    "actions": {
+      "testAll": "Alle testen"
+    },
+    "title": "Testen"
+  },
+  "components": {
+    "item": {
+      "actions": {
+        "test": "Testen"
+      }
+    }
+  },
+  "modals": {
+    "test": {
+      "title": {
+        "create": "Neuen Test erstellen",
+        "edit": "Test bearbeiten"
+      },
+      "fields": {
+        "url": "Test-URL"
+      }
+    }
+  },
+  "statuses": {
+    "test": {
+      "pending": "Wartend auf Prüfung",
+      "yes": "Unterstützt",
+      "no": "Nicht unterstützt",
+      "failed": "Test fehlgeschlagen",
+      "completed": "Prüfung abgeschlossen",
+      "disallowedIsp": "Nicht zugelassener Internetdienstanbieter",
+      "originalsOnly": "Nur Original",
+      "noDisney": "No (IP Banned By Disney+)",
+      "unsupportedRegion": "Nicht unterstütztes Land/Region",
+      "failedNetwork": "Failed (Network Connection)"
+    }
+  },
+  "unlock": {
+    "page": {
+      "actions": {
+        "testing": "Wird getestet..."
+      },
+      "empty": "No unlock test items",
+      "messages": {
+        "detectionFailedWithName": "Erkennung für {{name}} fehlgeschlagen",
+        "detectionTimeout": "Detection timeout or failed"
+      },
+      "title": "Entsperrungstest"
+    }
+  }
+}

@@ -1,8 +1,8 @@
 use super::CmdResult;
 use crate::{
-    cmd::StringifyErr,
-    config::*,
-    core::{validate::CoreConfigValidator, *},
+    cmd::StringifyErr as _,
+    config::{Config, PrfItem},
+    core::{CoreManager, handle, validate::CoreConfigValidator},
     logging,
     utils::{dirs, logging::Type},
 };
@@ -20,7 +20,7 @@ pub async fn save_profile_file(index: String, file_data: Option<String>) -> CmdR
     // 在异步操作前获取必要元数据并释放锁
     let (rel_path, is_merge_file) = {
         let profiles = Config::profiles().await;
-        let profiles_guard = profiles.latest_ref();
+        let profiles_guard = profiles.latest_arc();
         let item = profiles_guard.get_item(&index).stringify_err()?;
         let is_merge = item.itype.as_ref().is_some_and(|t| t == "merge");
         let path = item.file.clone().ok_or("file field is null")?;

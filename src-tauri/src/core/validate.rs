@@ -2,7 +2,7 @@ use anyhow::Result;
 use scopeguard::defer;
 use smartstring::alias::String;
 use std::sync::atomic::{AtomicBool, Ordering};
-use tauri_plugin_shell::ShellExt;
+use tauri_plugin_shell::ShellExt as _;
 use tokio::fs;
 
 use crate::config::{Config, ConfigType};
@@ -16,7 +16,7 @@ pub struct CoreConfigValidator {
 }
 
 impl CoreConfigValidator {
-    pub fn new() -> Self {
+    pub const fn new() -> Self {
         Self {
             is_processing: AtomicBool::new(false),
         }
@@ -266,7 +266,7 @@ impl CoreConfigValidator {
 
         logging!(info, Type::Validate, "开始验证配置文件: {}", config_path);
 
-        let clash_core = Config::verge().await.latest_ref().get_valid_clash_core();
+        let clash_core = Config::verge().await.latest_arc().get_valid_clash_core();
         logging!(info, Type::Validate, "使用内核: {}", clash_core);
 
         let app_handle = handle::Handle::app_handle();
@@ -275,41 +275,43 @@ impl CoreConfigValidator {
         logging!(info, Type::Validate, "验证目录: {}", app_dir_str);
 
         // 使用子进程运行clash验证配置
-        let output = app_handle
-            .shell()
-            .sidecar(clash_core.as_str())?
-            .args(["-t", "-d", app_dir_str, "-f", config_path])
-            .output()
-            .await?;
+        let command = app_handle.shell().sidecar(clash_core.as_str())?.args([
+            "-t",
+            "-d",
+            app_dir_str,
+            "-f",
+            config_path,
+        ]);
+        let output = command.output().await?;
 
-        let stderr = std::string::String::from_utf8_lossy(&output.stderr);
-        let stdout = std::string::String::from_utf8_lossy(&output.stdout);
+        let status = &output.status;
+        let stderr = &output.stderr;
+        let stdout = &output.stdout;
 
         // 检查进程退出状态和错误输出
         let error_keywords = ["FATA", "fatal", "Parse config error", "level=fatal"];
-        let has_error =
-            !output.status.success() || error_keywords.iter().any(|&kw| stderr.contains(kw));
+        let has_error = !status.success() || contains_any_keyword(stderr, &error_keywords);
 
         logging!(info, Type::Validate, "-------- 验证结果 --------");
 
         if !stderr.is_empty() {
-            logging!(info, Type::Validate, "stderr输出:\n{}", stderr);
+            logging!(info, Type::Validate, "stderr输出:\n{:?}", stderr);
         }
 
         if has_error {
             logging!(info, Type::Validate, "发现错误，开始处理错误信息");
-            let error_msg = if !stdout.is_empty() {
-                stdout.into()
+            let error_msg: String = if !stdout.is_empty() {
+                str::from_utf8(stdout).unwrap_or_default().into()
             } else if !stderr.is_empty() {
-                stderr.into()
-            } else if let Some(code) = output.status.code() {
-                format!("验证进程异常退出，退出码: {code}")
+                str::from_utf8(stderr).unwrap_or_default().into()
+            } else if let Some(code) = status.code() {
+                format!("验证进程异常退出，退出码: {code}").into()
             } else {
                 "验证进程被终止".into()
             };
 
             logging!(info, Type::Validate, "-------- 验证结束 --------");
-            Ok((false, error_msg.into())) // 返回错误消息给调用者处理
+            Ok((false, error_msg)) // 返回错误消息给调用者处理
         } else {
             logging!(info, Type::Validate, "验证成功");
             logging!(info, Type::Validate, "-------- 验证结束 --------");
@@ -340,6 +342,23 @@ fn has_ext<P: AsRef<std::path::Path>>(path: P, ext: &str) -> bool {
         .and_then(|s| s.to_str())
         .map(|s| s.eq_ignore_ascii_case(ext))
         .unwrap_or(false)
+}
+
+fn contains_any_keyword<'a>(buf: &'a [u8], keywords: &'a [&str]) -> bool {
+    for &kw in keywords {
+        let needle = kw.as_bytes();
+        if needle.is_empty() {
+            continue;
+        }
+        let mut i = 0;
+        while i + needle.len() <= buf.len() {
+            if &buf[i..i + needle.len()] == needle {
+                return true;
+            }
+            i += 1;
+        }
+    }
+    false
 }
 
 singleton_lazy!(

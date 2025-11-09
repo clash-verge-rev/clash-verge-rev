@@ -1,6 +1,6 @@
 [package]
 name = "clash-verge"
-version = "2.4.3"
+version = "2.4.4"
 description = "clash verge"
 authors = ["zzzgydi", "Tunglies", "wonfen", "MystiPanda"]
 license = "GPL-3.0-only"
@@ -8,6 +8,7 @@ repository = "https://github.com/clash-verge-rev/clash-verge-rev.git"
 default-run = "clash-verge"
 edition = "2024"
 build = "build.rs"
+rust-version = "1.91"
 
 [package.metadata.bundle]
 identifier = "io.github.clash-verge-rev.clash-verge-rev"
@@ -27,10 +28,10 @@ sysinfo = { version = "0.37.2", features = ["network", "system"] }
 boa_engine = "0.21.0"
 serde_json = "1.0.145"
 serde_yaml_ng = "0.10.0"
-once_cell = "1.21.3"
+once_cell = { version = "1.21.3", features = ["parking_lot"] }
 port_scanner = "0.1.5"
 delay_timer = "0.11.6"
-parking_lot = "0.12.5"
+parking_lot = { version = "0.12.5", features = ["hardware-lock-elision"] }
 percent-encoding = "2.3.2"
 tokio = { version = "1.48.0", features = [
   "rt-multi-thread",
@@ -86,6 +87,8 @@ smartstring = { version = "1.0.1", features = ["serde"] }
 clash_verge_service_ipc = { version = "2.0.21", features = [
   "client",
 ], git = "https://github.com/clash-verge-rev/clash-verge-service-ipc" }
+arc-swap = "1.7.1"
+rust-i18n = "3.1.5"
 
 [target.'cfg(windows)'.dependencies]
 runas = "=1.2.0"
@@ -110,9 +113,6 @@ windows-sys = { version = "0.61.2", features = [
   "Win32_System_SystemServices",
   "Win32_UI_WindowsAndMessaging",
 ] }
-
-[target.'cfg(target_os = "linux")'.dependencies]
-users = "0.11.0"
 
 [target.'cfg(unix)'.dependencies]
 signal-hook = "0.3.18"
@@ -171,6 +171,10 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 
 [dev-dependencies]
 criterion = { version = "0.7.0", features = ["async_tokio"] }
+parking_lot = { version = "0.12.5", features = [
+  "hardware-lock-elision",
+  "deadlock_detection",
+] }
 
 [lints.clippy]
 # Core categories - most important for code safety and correctness
@@ -186,8 +190,10 @@ unimplemented = "deny"
 # Development quality lints
 todo = "warn"
 dbg_macro = "warn"
-#print_stdout = "warn"
-#print_stderr = "warn"
+
+# 我们期望所有输出方式通过 logging 模块进行统一管理
+# print_stdout = "deny"
+# print_stderr = "deny"
 
 # Performance lints for proxy application
 clone_on_ref_ptr = "warn"
@@ -225,3 +231,34 @@ needless_raw_string_hashes = "deny" # Too many in existing code
 
 or_fun_call = "deny"
 cognitive_complexity = "deny"
+useless_let_if_seq = "deny"
+use_self = "deny"
+tuple_array_conversions = "deny"
+trait_duplication_in_bounds = "deny"
+suspicious_operation_groupings = "deny"
+string_lit_as_bytes = "deny"
+significant_drop_tightening = "deny"
+significant_drop_in_scrutinee = "deny"
+redundant_clone = "deny"
+# option_if_let_else = "deny" // 过于激进，暂时不开启
+needless_pass_by_ref_mut = "deny"
+needless_collect = "deny"
+missing_const_for_fn = "deny"
+iter_with_drain = "deny"
+iter_on_single_items = "deny"
+iter_on_empty_collections = "deny"
+# fallible_impl_from = "deny" // 过于激进，暂时不开启
+equatable_if_let = "deny"
+collection_is_never_read = "deny"
+branches_sharing_code = "deny"
+pathbuf_init_then_push = "deny"
+option_as_ref_cloned = "deny"
+large_types_passed_by_value = "deny"
+# implicit_clone = "deny" // 可能会造成额外开销，暂时不开启
+expl_impl_clone_on_copy = "deny"
+copy_iterator = "deny"
+cloned_instead_of_copied = "deny"
+# self_only_used_in_recursion = "deny" // Since 1.92.0
+unnecessary_self_imports = "deny"
+unused_trait_names = "deny"
+wildcard_imports = "deny"

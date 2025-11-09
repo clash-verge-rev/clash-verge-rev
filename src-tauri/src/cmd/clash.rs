@@ -1,12 +1,12 @@
 use super::CmdResult;
 use crate::utils::dirs;
 use crate::{
-    cmd::StringifyErr,
-    config::Config,
+    cmd::StringifyErr as _,
+    config::{ClashInfo, Config},
     constants,
     core::{CoreManager, handle, validate::CoreConfigValidator},
 };
-use crate::{config::*, feat, logging, utils::logging::Type};
+use crate::{feat, logging, utils::logging::Type};
 use compact_str::CompactString;
 use serde_yaml_ng::Mapping;
 use smartstring::alias::String;
@@ -22,7 +22,7 @@ pub async fn copy_clash_env() -> CmdResult {
 /// 获取Clash信息
 #[tauri::command]
 pub async fn get_clash_info() -> CmdResult<ClashInfo> {
-    Ok(Config::clash().await.latest_ref().get_client_info())
+    Ok(Config::clash().await.data_arc().get_client_info())
 }
 
 /// 修改Clash配置
@@ -141,12 +141,6 @@ pub async fn save_dns_config(dns_config: Mapping) -> CmdResult {
 /// 应用或撤销DNS配置
 #[tauri::command]
 pub async fn apply_dns_config(apply: bool) -> CmdResult {
-    use crate::{
-        config::Config,
-        core::{CoreManager, handle},
-        utils::dirs,
-    };
-
     if apply {
         // 读取DNS配置文件
         let dns_path = dirs::app_home_dir()
@@ -175,7 +169,9 @@ pub async fn apply_dns_config(apply: bool) -> CmdResult {
         patch.insert("dns".into(), patch_config.into());
 
         // 应用DNS配置到运行时配置
-        Config::runtime().await.draft_mut().patch_config(patch);
+        Config::runtime().await.edit_draft(|d| {
+            d.patch_config(patch);
+        });
 
         // 重新生成配置
         Config::generate().await.stringify_err_log(|err| {
@@ -193,7 +189,6 @@ pub async fn apply_dns_config(apply: bool) -> CmdResult {
             })?;
 
         logging!(info, Type::Config, "DNS config successfully applied");
-        handle::Handle::refresh_clash();
     } else {
         // 当关闭DNS设置时，重新生成配置（不加载DNS配置文件）
         logging!(
@@ -216,9 +211,9 @@ pub async fn apply_dns_config(apply: bool) -> CmdResult {
             })?;
 
         logging!(info, Type::Config, "Config regenerated successfully");
-        handle::Handle::refresh_clash();
     }
 
+    handle::Handle::refresh_clash();
     Ok(())
 }
 

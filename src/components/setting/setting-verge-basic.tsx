@@ -76,11 +76,14 @@ const SettingVergeBasic = ({ onError }: Props) => {
 
   const onCopyClashEnv = useCallback(async () => {
     await copyClashEnv();
-    showNotice("success", t("Copy Success"), 1000);
-  }, [t]);
+    showNotice.success(
+      "shared.feedback.notifications.common.copySuccess",
+      1000,
+    );
+  }, []);
 
   return (
-    <SettingList title={t("Verge Basic Setting")}>
+    <SettingList title={t("settings.components.verge.basic.title")}>
       <ThemeViewer ref={themeRef} />
       <ConfigViewer ref={configRef} />
       <HotkeyViewer ref={hotkeyRef} />
@@ -89,7 +92,7 @@ const SettingVergeBasic = ({ onError }: Props) => {
       <UpdateViewer ref={updateRef} />
       <BackupViewer ref={backupRef} />
 
-      <SettingItem label={t("Language")}>
+      <SettingItem label={t("settings.components.verge.basic.fields.language")}>
         <GuardState
           value={language ?? "en"}
           onCatch={onError}
@@ -107,7 +110,9 @@ const SettingVergeBasic = ({ onError }: Props) => {
         </GuardState>
       </SettingItem>
 
-      <SettingItem label={t("Theme Mode")}>
+      <SettingItem
+        label={t("settings.components.verge.basic.fields.themeMode")}
+      >
         <GuardState
           value={theme_mode}
           onCatch={onError}
@@ -119,7 +124,9 @@ const SettingVergeBasic = ({ onError }: Props) => {
       </SettingItem>
 
       {OS !== "linux" && (
-        <SettingItem label={t("Tray Click Event")}>
+        <SettingItem
+          label={t("settings.components.verge.basic.fields.trayClickEvent")}
+        >
           <GuardState
             value={tray_event ?? "main_window"}
             onCatch={onError}
@@ -128,18 +135,30 @@ const SettingVergeBasic = ({ onError }: Props) => {
             onGuard={(e) => patchVerge({ tray_event: e })}
           >
             <Select size="small" sx={{ width: 140, "> div": { py: "7.5px" } }}>
-              <MenuItem value="main_window">{t("Show Main Window")}</MenuItem>
-              <MenuItem value="tray_menu">{t("Show Tray Menu")}</MenuItem>
-              <MenuItem value="system_proxy">{t("System Proxy")}</MenuItem>
-              <MenuItem value="tun_mode">{t("Tun Mode")}</MenuItem>
-              <MenuItem value="disable">{t("Disable")}</MenuItem>
+              <MenuItem value="main_window">
+                {t(
+                  "settings.components.verge.basic.trayOptions.showMainWindow",
+                )}
+              </MenuItem>
+              <MenuItem value="tray_menu">
+                {t("settings.components.verge.basic.trayOptions.showTrayMenu")}
+              </MenuItem>
+              <MenuItem value="system_proxy">
+                {t("settings.sections.system.toggles.systemProxy")}
+              </MenuItem>
+              <MenuItem value="tun_mode">
+                {t("settings.sections.system.toggles.tunMode")}
+              </MenuItem>
+              <MenuItem value="disable">
+                {t("settings.components.verge.basic.trayOptions.disable")}
+              </MenuItem>
             </Select>
           </GuardState>
         </SettingItem>
       )}
 
       <SettingItem
-        label={t("Copy Env Type")}
+        label={t("settings.components.verge.basic.fields.copyEnvType")}
         extra={
           <TooltipIcon icon={ContentCopyRounded} onClick={onCopyClashEnv} />
         }
@@ -161,7 +180,9 @@ const SettingVergeBasic = ({ onError }: Props) => {
         </GuardState>
       </SettingItem>
 
-      <SettingItem label={t("Start Page")}>
+      <SettingItem
+        label={t("settings.components.verge.basic.fields.startPage")}
+      >
         <GuardState
           value={start_page ?? "/"}
           onCatch={onError}
@@ -181,7 +202,9 @@ const SettingVergeBasic = ({ onError }: Props) => {
         </GuardState>
       </SettingItem>
 
-      <SettingItem label={t("Startup Script")}>
+      <SettingItem
+        label={t("settings.components.verge.basic.fields.startupScript")}
+      >
         <GuardState
           value={startup_script ?? ""}
           onCatch={onError}
@@ -214,7 +237,7 @@ const SettingVergeBasic = ({ onError }: Props) => {
                     }
                   }}
                 >
-                  {t("Browse")}
+                  {t("settings.components.verge.basic.actions.browse")}
                 </Button>
                 {startup_script && (
                   <Button
@@ -223,7 +246,7 @@ const SettingVergeBasic = ({ onError }: Props) => {
                       patchVerge({ startup_script: "" });
                     }}
                   >
-                    {t("Clear")}
+                    {t("shared.actions.clear")}
                   </Button>
                 )}
               </>
@@ -234,22 +257,22 @@ const SettingVergeBasic = ({ onError }: Props) => {
 
       <SettingItem
         onClick={() => themeRef.current?.open()}
-        label={t("Theme Setting")}
+        label={t("settings.components.verge.basic.fields.themeSetting")}
       />
 
       <SettingItem
         onClick={() => layoutRef.current?.open()}
-        label={t("Layout Setting")}
+        label={t("settings.components.verge.basic.fields.layoutSetting")}
       />
 
       <SettingItem
         onClick={() => miscRef.current?.open()}
-        label={t("Miscellaneous")}
+        label={t("settings.components.verge.basic.fields.misc")}
       />
 
       <SettingItem
         onClick={() => hotkeyRef.current?.open()}
-        label={t("Hotkey Setting")}
+        label={t("settings.components.verge.basic.fields.hotkeySetting")}
       />
     </SettingList>
   );

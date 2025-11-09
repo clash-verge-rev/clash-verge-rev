@@ -1,0 +1,182 @@
+{
+  "page": {
+    "actions": {
+      "updateAll": "更新所有訂閱",
+      "viewRuntimeConfig": "查看執行時訂閱",
+      "reactivate": "重新啟用訂閱",
+      "import": "匯入"
+    },
+    "batch": {
+      "actions": {
+        "delete": "刪除選取訂閱",
+        "selectAll": "全選",
+        "deselectAll": "取消選取",
+        "done": "完成"
+      },
+      "summary": {
+        "selected": "已選取",
+        "items": "項目"
+      },
+      "title": "批次操作"
+    },
+    "importForm": {
+      "placeholder": "訂閱檔網址",
+      "actions": {
+        "paste": "貼上"
+      }
+    },
+    "feedback": {
+      "errors": {
+        "invalidUrl": "無效的訂閱網址，請輸入以 http:// 或 https:// 開頭的位址",
+        "onlyYaml": "僅支援 YAML 檔案"
+      },
+      "notifications": {
+        "importRetry": "訂閱匯入失敗，嘗試使用 Clash 代理匯入",
+        "importFail": "使用 Clash 代理匯入訂閱也失敗",
+        "importNeedsRefresh": "Profile imported but may need manual refresh",
+        "importSuccess": "Profile imported successfully, please restart if not visible",
+        "profileSwitched": "訂閱已切換",
+        "profileReactivated": "訂閱已啟用",
+        "switchInterrupted": "配置切換被新的選擇中斷",
+        "batchDeleted": "選取的訂閱已成功刪除"
+      },
+      "notices": {
+        "forceRefreshCompleted": "Force refresh completed",
+        "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
+      }
+    },
+    "title": "訂閱"
+  },
+  "components": {
+    "card": {
+      "labels": {
+        "clickToImport": "點擊匯入訂閱"
+      }
+    },
+    "fileInput": {
+      "chooseFile": "選擇檔案"
+    },
+    "menu": {
+      "home": "首 頁",
+      "select": "使用",
+      "editInfo": "編輯資訊",
+      "editFile": "編輯檔案",
+      "editRules": "編輯規則",
+      "editProxies": "編輯節點",
+      "editGroups": "編輯代理組",
+      "extendConfig": "擴充覆寫設定",
+      "extendScript": "擴充指令碼",
+      "openFile": "開啟檔案",
+      "update": "更新",
+      "updateViaProxy": "更新（代理）"
+    },
+    "more": {
+      "global": {
+        "merge": "Global Merge",
+        "script": "Global Script"
+      },
+      "chips": {
+        "merge": "Merge",
+        "script": "Script"
+      }
+    },
+    "profileItem": {
+      "tooltips": {
+        "showLast": "Click to show last update time",
+        "showNext": "Click to show next update"
+      },
+      "status": {
+        "lastUpdateFailed": "上次更新失敗",
+        "nextUp": "下次更新",
+        "noSchedule": "沒有排程",
+        "unknown": "未知",
+        "autoUpdateDisabled": "自動更新已停用"
+      }
+    }
+  },
+  "modals": {
+    "profileForm": {
+      "title": {
+        "create": "新增設定檔",
+        "edit": "編輯設定檔"
+      },
+      "fields": {
+        "type": "類型",
+        "description": "描述",
+        "subscriptionUrl": "訂閱網址",
+        "httpTimeout": "HTTP Request Timeout",
+        "updateInterval": "更新間隔",
+        "useSystemProxy": "使用系統代理更新",
+        "useClashProxy": "使用內核代理更新",
+        "acceptInvalidCerts": "允許無效憑證（危險）",
+        "allowAutoUpdate": "允許自動更新"
+      },
+      "feedback": {
+        "notifications": {
+          "creationRetry": "訂閱建立失敗，嘗試使用 Clash 代理建立",
+          "creationSuccess": "使用 Clash 代理建立訂閱成功"
+        }
+      }
+    },
+    "proxiesEditor": {
+      "title": "編輯節點",
+      "placeholders": {
+        "multiUri": "多條網址，請使用換行分隔（支援 Base64 編碼）"
+      },
+      "actions": {
+        "prepend": "新增前置代理節點",
+        "append": "新增後置代理節點"
+      }
+    },
+    "groupsEditor": {
+      "title": "編輯代理組",
+      "errors": {
+        "nameRequired": "代理組名稱為必填",
+        "nameExists": "代理組名稱已存在"
+      },
+      "fields": {
+        "type": "代理組類型",
+        "name": "代理組名稱",
+        "icon": "代理組圖示",
+        "proxies": "使用代理",
+        "provider": "使用代理集合",
+        "healthCheckUrl": "健康檢查網址",
+        "expectedStatus": "預期狀態碼",
+        "interval": "檢查間隔",
+        "maxFailedTimes": "最大失敗次數",
+        "interfaceName": "輸出介面",
+        "routingMark": "路由標記",
+        "filter": "篩選節點",
+        "excludeFilter": "排除節點",
+        "excludeType": "排除節點類型",
+        "includeAll": "包含所有輸出代理、代理集合",
+        "includeAllProxies": "包含所有輸出代理",
+        "includeAllProviders": "包含所有代理集合"
+      },
+      "toggles": {
+        "lazy": "延遲載入",
+        "disableUdp": "停用 UDP",
+        "hidden": "隱藏代理組"
+      },
+      "actions": {
+        "prepend": "新增前置代理組",
+        "append": "新增後置代理組"
+      }
+    },
+    "editor": {
+      "actions": {
+        "format": "格式化文件"
+      },
+      "messages": {
+        "readOnly": "無法在唯讀模式下編輯"
+      }
+    },
+    "confirmDelete": {
+      "title": "確認刪除",
+      "message": "此操作無法復原"
+    },
+    "logViewer": {
+      "title": "指令碼控制台輸出"
+    }
+  }
+}

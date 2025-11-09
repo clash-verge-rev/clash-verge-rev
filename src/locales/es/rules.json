@@ -1,0 +1,82 @@
+{
+  "page": {
+    "provider": {
+      "trigger": "Proveedor de reglas",
+      "dialogTitle": "Proveedor de reglas",
+      "actions": {
+        "updateAll": "Actualizar todo",
+        "update": "Actualizar"
+      }
+    },
+    "title": "Reglas"
+  },
+  "feedback": {
+    "notifications": {
+      "provider": {
+        "updateSuccess": "{{name}} updated successfully",
+        "updateFailed": "Failed to update {{name}}: {{message}}",
+        "genericError": "Update failed: {{message}}",
+        "none": "No providers available to update",
+        "allUpdated": "All providers updated successfully"
+      }
+    }
+  },
+  "modals": {
+    "editor": {
+      "form": {
+        "labels": {
+          "type": "Tipo de regla",
+          "content": "Contenido de la regla",
+          "proxyPolicy": "Política de proxy"
+        },
+        "toggles": {
+          "noResolve": "Omitir resolución DNS"
+        },
+        "actions": {
+          "prependRule": "Agregar regla previa",
+          "appendRule": "Agregar regla posterior"
+        },
+        "validation": {
+          "conditionRequired": "Falta la condición de la regla",
+          "invalidRule": "Regla no válida"
+        }
+      },
+      "ruleTypes": {
+        "DOMAIN": "Coincidir con el nombre de dominio completo",
+        "DOMAIN-SUFFIX": "Coincidir con el sufijo del nombre de dominio",
+        "DOMAIN-KEYWORD": "Coincidir con la palabra clave del nombre de dominio",
+        "DOMAIN-REGEX": "Coincidir con la expresión regular del nombre de dominio",
+        "GEOSITE": "Coincidir con los nombres de dominio en Geosite",
+        "GEOIP": "Coincidir con el código de país del IP",
+        "SRC-GEOIP": "Coincidir con el código de país del IP de origen",
+        "IP-ASN": "Coincidir con el ASN del IP",
+        "SRC-IP-ASN": "Coincidir con el ASN del IP de origen",
+        "IP-CIDR": "Coincidir con el rango de direcciones IP",
+        "IP-CIDR6": "Coincidir con el rango de direcciones IP",
+        "SRC-IP-CIDR": "Coincidir con el rango de direcciones IP de origen",
+        "IP-SUFFIX": "Coincidir con el rango de sufijos de IP",
+        "SRC-IP-SUFFIX": "Coincidir con el rango de sufijos de IP de origen",
+        "SRC-PORT": "Coincidir con el rango de puertos de origen de la solicitud",
+        "DST-PORT": "Coincidir con el rango de puertos de destino de la solicitud",
+        "IN-PORT": "Coincidir con el puerto de entrada",
+        "DSCP": "Etiqueta DSCP (solo para entradas UDP TPROXY)",
+        "PROCESS-NAME": "Coincidir con el nombre del proceso (nombre del paquete de Android)",
+        "PROCESS-PATH": "Coincidir con la ruta completa del proceso",
+        "PROCESS-NAME-REGEX": "Coincidir con el nombre completo del proceso mediante expresiones regulares (nombre del paquete de Android)",
+        "PROCESS-PATH-REGEX": "Coincidir con la ruta completa del proceso mediante expresiones regulares",
+        "NETWORK": "Coincidir con el protocolo de transporte (TCP/UDP)",
+        "UID": "Coincidir con el ID de usuario de Linux",
+        "IN-TYPE": "Coincidir con el tipo de entrada",
+        "IN-USER": "Coincidir con el nombre de usuario de entrada",
+        "IN-NAME": "Coincidir con el nombre de entrada",
+        "SUB-RULE": "Subregla",
+        "RULE-SET": "Coincidir con el conjunto de reglas",
+        "AND": "Y lógico",
+        "OR": "O lógico",
+        "NOT": "No lógico",
+        "MATCH": "Coincidir con todas las solicitudes"
+      },
+      "title": "Editar reglas"
+    }
+  }
+}

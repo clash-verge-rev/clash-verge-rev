@@ -22,7 +22,7 @@ pub async fn build_new_window() -> Result<WebviewWindow, String> {
     let app_handle = handle::Handle::app_handle();
 
     let config = Config::verge().await;
-    let latest = config.latest_ref();
+    let latest = config.latest_arc();
     let start_page = latest.start_page.as_deref().unwrap_or("/");
 
     match tauri::WebviewWindowBuilder::new(

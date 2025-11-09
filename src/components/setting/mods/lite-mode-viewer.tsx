@@ -45,25 +45,27 @@ export function LiteModeViewer({ ref }: { ref?: Ref<DialogRef> }) {
         auto_light_weight_minutes: values.autoEnterLiteModeDelay,
       });
       setOpen(false);
-    } catch (err: any) {
-      showNotice("error", err.message || err.toString());
+    } catch (err) {
+      showNotice.error(err);
     }
   });
 
   return (
     <BaseDialog
       open={open}
-      title={t("LightWeight Mode Settings")}
+      title={t("settings.modals.liteMode.title")}
       contentSx={{ width: 450 }}
-      okBtn={t("Save")}
-      cancelBtn={t("Cancel")}
+      okBtn={t("shared.actions.save")}
+      cancelBtn={t("shared.actions.cancel")}
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}
       onOk={onSave}
     >
       <List>
         <ListItem sx={{ padding: "5px 2px" }}>
-          <ListItemText primary={t("Enter LightWeight Mode Now")} />
+          <ListItemText
+            primary={t("settings.modals.liteMode.actions.enterNow")}
+          />
           <Typography
             variant="button"
             sx={{
@@ -73,17 +75,17 @@ export function LiteModeViewer({ ref }: { ref?: Ref<DialogRef> }) {
             }}
             onClick={async () => await entry_lightweight_mode()}
           >
-            {t("Enable")}
+            {t("shared.actions.enable")}
           </Typography>
         </ListItem>
 
         <ListItem sx={{ padding: "5px 2px" }}>
           <ListItemText
-            primary={t("Auto Enter LightWeight Mode")}
+            primary={t("settings.modals.liteMode.toggles.autoEnter")}
             sx={{ maxWidth: "fit-content" }}
           />
           <TooltipIcon
-            title={t("Auto Enter LightWeight Mode Info")}
+            title={t("settings.modals.liteMode.tooltips.autoEnter")}
             sx={{ opacity: "0.7" }}
           />
           <Switch
@@ -99,7 +101,9 @@ export function LiteModeViewer({ ref }: { ref?: Ref<DialogRef> }) {
         {values.autoEnterLiteMode && (
           <>
             <ListItem sx={{ padding: "5px 2px" }}>
-              <ListItemText primary={t("Auto Enter LightWeight Mode Delay")} />
+              <ListItemText
+                primary={t("settings.modals.liteMode.fields.delay")}
+              />
               <TextField
                 autoComplete="off"
                 size="small"
@@ -119,7 +123,7 @@ export function LiteModeViewer({ ref }: { ref?: Ref<DialogRef> }) {
                   input: {
                     endAdornment: (
                       <InputAdornment position="end">
-                        {t("mins")}
+                        {t("shared.units.minutes")}
                       </InputAdornment>
                     ),
                   },
@@ -133,10 +137,9 @@ export function LiteModeViewer({ ref }: { ref?: Ref<DialogRef> }) {
                 color="text.secondary"
                 sx={{ fontStyle: "italic" }}
               >
-                {t(
-                  "When closing the window, LightWeight Mode will be automatically activated after _n minutes",
-                  { n: values.autoEnterLiteModeDelay },
-                )}
+                {t("settings.modals.liteMode.messages.autoEnterHint", {
+                  n: values.autoEnterLiteModeDelay,
+                })}
               </Typography>
             </ListItem>
           </>

@@ -112,7 +112,7 @@ const HomeSettingsDialog = ({
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
-      <DialogTitle>{t("Home Settings")}</DialogTitle>
+      <DialogTitle>{t("home.page.settings.title")}</DialogTitle>
       <DialogContent>
         <FormGroup>
           <FormControlLabel
@@ -122,7 +122,7 @@ const HomeSettingsDialog = ({
                 onChange={() => handleToggle("profile")}
               />
             }
-            label={t("Profile Card")}
+            label={t("home.page.settings.cards.profile")}
           />
           <FormControlLabel
             control={
@@ -131,7 +131,7 @@ const HomeSettingsDialog = ({
                 onChange={() => handleToggle("proxy")}
               />
             }
-            label={t("Current Proxy Card")}
+            label={t("home.page.settings.cards.currentProxy")}
           />
           <FormControlLabel
             control={
@@ -140,7 +140,7 @@ const HomeSettingsDialog = ({
                 onChange={() => handleToggle("network")}
               />
             }
-            label={t("Network Settings Card")}
+            label={t("home.page.settings.cards.network")}
           />
           <FormControlLabel
             control={
@@ -149,7 +149,7 @@ const HomeSettingsDialog = ({
                 onChange={() => handleToggle("mode")}
               />
             }
-            label={t("Proxy Mode Card")}
+            label={t("home.page.settings.cards.proxyMode")}
           />
           <FormControlLabel
             control={
@@ -158,7 +158,7 @@ const HomeSettingsDialog = ({
                 onChange={() => handleToggle("traffic")}
               />
             }
-            label={t("Traffic Stats Card")}
+            label={t("home.page.settings.cards.traffic")}
           />
           <FormControlLabel
             control={
@@ -167,7 +167,7 @@ const HomeSettingsDialog = ({
                 onChange={() => handleToggle("test")}
               />
             }
-            label={t("Website Tests Card")}
+            label={t("home.page.settings.cards.tests")}
           />
           <FormControlLabel
             control={
@@ -176,7 +176,7 @@ const HomeSettingsDialog = ({
                 onChange={() => handleToggle("ip")}
               />
             }
-            label={t("IP Information Card")}
+            label={t("home.page.settings.cards.ip")}
           />
           <FormControlLabel
             control={
@@ -185,7 +185,7 @@ const HomeSettingsDialog = ({
                 onChange={() => handleToggle("clashinfo")}
               />
             }
-            label={t("Clash Info Cards")}
+            label={t("home.page.settings.cards.clashInfo")}
           />
           <FormControlLabel
             control={
@@ -194,14 +194,14 @@ const HomeSettingsDialog = ({
                 onChange={() => handleToggle("systeminfo")}
               />
             }
-            label={t("System Info Cards")}
+            label={t("home.page.settings.cards.systemInfo")}
           />
         </FormGroup>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>{t("Cancel")}</Button>
+        <Button onClick={onClose}>{t("shared.actions.cancel")}</Button>
         <Button onClick={handleSave} color="primary">
-          {t("Save")}
+          {t("shared.actions.save")}
         </Button>
       </DialogActions>
     </Dialog>
@@ -323,7 +323,7 @@ const HomePage = () => {
       renderCard(
         "traffic",
         <EnhancedCard
-          title={t("Traffic Stats")}
+          title={t("home.page.cards.trafficStats")}
           icon={<SpeedOutlined />}
           iconColor="secondary"
         >
@@ -364,11 +364,11 @@ const HomePage = () => {
   );
   return (
     <BasePage
-      title={t("Label-Home")}
+      title={t("home.page.title")}
       contentStyle={{ padding: 2 }}
       header={
         <Box sx={{ display: "flex", alignItems: "center" }}>
-          <Tooltip title={t("LightWeight Mode")} arrow>
+          <Tooltip title={t("home.page.tooltips.lightweightMode")} arrow>
             <IconButton
               onClick={async () => await entry_lightweight_mode()}
               size="small"
@@ -377,12 +377,12 @@ const HomePage = () => {
               <HistoryEduOutlined />
             </IconButton>
           </Tooltip>
-          <Tooltip title={t("Manual")} arrow>
+          <Tooltip title={t("home.page.tooltips.manual")} arrow>
             <IconButton onClick={toGithubDoc} size="small" color="inherit">
               <HelpOutlineRounded />
             </IconButton>
           </Tooltip>
-          <Tooltip title={t("Home Settings")} arrow>
+          <Tooltip title={t("home.page.tooltips.settings")} arrow>
             <IconButton onClick={openSettings} size="small" color="inherit">
               <SettingsOutlined />
             </IconButton>
@@ -413,7 +413,7 @@ const NetworkSettingsCard = () => {
   const { t } = useTranslation();
   return (
     <EnhancedCard
-      title={t("Network Settings")}
+      title={t("home.page.cards.networkSettings")}
       icon={<DnsOutlined />}
       iconColor="primary"
       action={null}
@@ -428,7 +428,7 @@ const ClashModeEnhancedCard = () => {
   const { t } = useTranslation();
   return (
     <EnhancedCard
-      title={t("Proxy Mode")}
+      title={t("home.page.cards.proxyMode")}
       icon={<RouterOutlined />}
       iconColor="info"
       action={null}

@@ -1,5 +1,5 @@
 use super::CmdResult;
-use crate::{cmd::StringifyErr, feat};
+use crate::{cmd::StringifyErr as _, feat};
 use feat::LocalBackupFile;
 use smartstring::alias::String;
 

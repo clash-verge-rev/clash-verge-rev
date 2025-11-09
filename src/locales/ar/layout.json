@@ -1,0 +1,21 @@
+{
+  "components": {
+    "navigation": {
+      "tabs": {
+        "home": "Home",
+        "proxies": "الوكلاء",
+        "profiles": "الملفات الشخصية",
+        "connections": "الاتصالات",
+        "rules": "القواعد",
+        "logs": "السجلات",
+        "unlock": "Test",
+        "settings": "الإعدادات"
+      },
+      "menu": {
+        "reorderMode": "Menu reorder mode",
+        "unlock": "Unlock menu order",
+        "lock": "Lock menu order"
+      }
+    }
+  }
+}

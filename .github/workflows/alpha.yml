@@ -185,18 +185,18 @@ jobs:
       - name: Fetch UPDATE logs
         id: fetch_update_logs
         run: |
-          if [ -f "UPDATELOG.md" ]; then
-            UPDATE_LOGS=$(awk '/^## v/{if(flag) exit; flag=1} flag' UPDATELOG.md)
+          if [ -f "Changelog.md" ]; then
+            UPDATE_LOGS=$(awk '/^## v/{if(flag) exit; flag=1} flag' Changelog.md)
             if [ -n "$UPDATE_LOGS" ]; then
               echo "Found update logs"
               echo "UPDATE_LOGS<<EOF" >> $GITHUB_ENV
               echo "$UPDATE_LOGS" >> $GITHUB_ENV
               echo "EOF" >> $GITHUB_ENV
             else
-              echo "No update sections found in UPDATELOG.md"
+              echo "No update sections found in Changelog.md"
             fi
           else
-            echo "UPDATELOG.md file not found"
+            echo "Changelog.md file not found"
           fi
         shell: bash
 

@@ -19,7 +19,7 @@ struct IntelGpuDetection {
 }
 
 impl IntelGpuDetection {
-    fn should_disable_dmabuf(&self) -> bool {
+    const fn should_disable_dmabuf(&self) -> bool {
         self.intel_is_primary || self.inconclusive
     }
 }
@@ -41,7 +41,7 @@ enum NvidiaDmabufDisableReason {
 }
 
 impl NvidiaGpuDetection {
-    fn disable_reason(&self, session: &SessionEnv) -> Option<NvidiaDmabufDisableReason> {
+    const fn disable_reason(&self, session: &SessionEnv) -> Option<NvidiaDmabufDisableReason> {
         if !session.is_wayland {
             return None;
         }
@@ -144,11 +144,11 @@ impl DmabufOverrides {
         }
     }
 
-    fn has_env_override(&self) -> bool {
+    const fn has_env_override(&self) -> bool {
         self.dmabuf_override.is_some()
     }
 
-    fn should_override_env(&self, decision: &DmabufDecision) -> bool {
+    const fn should_override_env(&self, decision: &DmabufDecision) -> bool {
         if self.user_preference.is_some() {
             return true;
         }
@@ -262,7 +262,9 @@ impl DmabufDecision {
                         if intel_gpu.inconclusive {
                             decision.message = Some("Wayland 上检测到 Intel GPU，但缺少 boot_vga 信息：预防性禁用 WebKit DMABUF，若确认非主 GPU 可通过 CLASH_VERGE_DMABUF=1 覆盖。".into());
                         } else {
-                            decision.message = Some("Wayland 上检测到 Intel 主 GPU (0x8086)：禁用 WebKit DMABUF 以避免帧缓冲失败。".into());
+                            decision.message = Some(
+                                "Wayland 上检测到 Intel 主 GPU (0x8086)：禁用 WebKit DMABUF 以避免帧缓冲失败。".into(),
+                            );
                         }
                     } else if session.is_wayland {
                         decision.message = Some(

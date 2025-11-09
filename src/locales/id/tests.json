@@ -1,0 +1,53 @@
+{
+  "page": {
+    "actions": {
+      "testAll": "Tes Semua"
+    },
+    "title": "Tes"
+  },
+  "components": {
+    "item": {
+      "actions": {
+        "test": "Tes"
+      }
+    }
+  },
+  "modals": {
+    "test": {
+      "title": {
+        "create": "Buat Tes",
+        "edit": "Ubah Tes"
+      },
+      "fields": {
+        "url": "URL Tes"
+      }
+    }
+  },
+  "statuses": {
+    "test": {
+      "pending": "Pending",
+      "yes": "Yes",
+      "no": "No",
+      "failed": "Failed",
+      "completed": "Completed",
+      "disallowedIsp": "Disallowed ISP",
+      "originalsOnly": "Originals Only",
+      "noDisney": "No (IP Banned By Disney+)",
+      "unsupportedRegion": "Unsupported Country/Region",
+      "failedNetwork": "Failed (Network Connection)"
+    }
+  },
+  "unlock": {
+    "page": {
+      "actions": {
+        "testing": "Testing..."
+      },
+      "empty": "No unlock test items",
+      "messages": {
+        "detectionFailedWithName": "Deteksi gagal untuk {{name}}",
+        "detectionTimeout": "Detection timeout or failed"
+      },
+      "title": "Unlock Test"
+    }
+  }
+}

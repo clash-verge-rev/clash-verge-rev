@@ -5,7 +5,7 @@ use crate::{
 };
 use std::future::Future;
 use std::pin::Pin;
-use tauri::{Manager, WebviewWindow, Wry};
+use tauri::{Manager as _, WebviewWindow, Wry};
 
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
@@ -81,6 +81,7 @@ fn should_handle_window_operation() -> bool {
 
     if elapsed >= Duration::from_millis(WINDOW_OPERATION_DEBOUNCE_MS) {
         *last_operation = now;
+        drop(last_operation);
         WINDOW_OPERATION_IN_PROGRESS.store(true, Ordering::Release);
         logging!(info, Type::Window, "[防抖] 窗口操作被允许执行");
         true

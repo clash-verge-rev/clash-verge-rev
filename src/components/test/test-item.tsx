@@ -82,7 +82,7 @@ export const TestItem = ({
     try {
       removeTest(uid);
     } catch (err: any) {
-      showNotice("error", err.message || err.toString());
+      showNotice.error(err);
     }
   });
 
@@ -192,7 +192,7 @@ export const TestItem = ({
                 ":hover": { bgcolor: alpha(palette.primary.main, 0.15) },
               })}
             >
-              {t("Test")}
+              {t("tests.components.item.actions.test")}
             </Widget>
           )}
 

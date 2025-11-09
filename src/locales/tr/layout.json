@@ -1,0 +1,21 @@
+{
+  "components": {
+    "navigation": {
+      "tabs": {
+        "home": "Ana Sayfa",
+        "proxies": "Vekil'ler",
+        "profiles": "Profiller",
+        "connections": "Bağlantılar",
+        "rules": "Kurallar",
+        "logs": "Günlükler",
+        "unlock": "Test",
+        "settings": "Ayarlar"
+      },
+      "menu": {
+        "reorderMode": "Menu reorder mode",
+        "unlock": "Unlock menu order",
+        "lock": "Lock menu order"
+      }
+    }
+  }
+}

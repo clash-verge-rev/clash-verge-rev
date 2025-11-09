@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 use serde_yaml_ng::{Mapping, Value};
 use std::{
     net::{IpAddr, Ipv4Addr, SocketAddr},
-    str::FromStr,
+    str::FromStr as _,
 };
 
 #[derive(Default, Debug, Clone)]
@@ -300,7 +300,7 @@ impl IClashTemp {
         // 检查 enable_external_controller 设置，用于运行时配置生成
         let enable_external_controller = Config::verge()
             .await
-            .latest_ref()
+            .latest_arc()
             .enable_external_controller
             .unwrap_or(false);
 

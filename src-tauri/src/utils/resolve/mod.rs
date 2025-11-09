@@ -119,7 +119,7 @@ pub(super) async fn init_timer() {
 }
 
 pub(super) async fn init_hotkey() {
-    logging_error!(Type::Setup, Hotkey::global().init().await);
+    logging_error!(Type::Setup, Hotkey::global().init(false).await);
 }
 
 pub(super) async fn init_auto_lightweight_boot() {
@@ -174,7 +174,7 @@ pub(super) async fn refresh_tray_menu() {
 pub(super) async fn init_window() {
     let is_silent_start = Config::verge()
         .await
-        .latest_ref()
+        .data_arc()
         .enable_silent_start
         .unwrap_or(false);
     #[cfg(target_os = "macos")]

@@ -12,7 +12,7 @@ use smartstring::alias::String;
 use std::sync::atomic::{AtomicBool, Ordering};
 #[cfg(not(target_os = "windows"))]
 use sysproxy::{Autoproxy, Sysproxy};
-use tauri_plugin_autostart::ManagerExt;
+use tauri_plugin_autostart::ManagerExt as _;
 
 pub struct Sysopt {
     initialed: AtomicBool,
@@ -31,12 +31,12 @@ static DEFAULT_BYPASS: &str = "127.0.0.1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12
 async fn get_bypass() -> String {
     let use_default = Config::verge()
         .await
-        .latest_ref()
+        .latest_arc()
         .use_default_bypass
         .unwrap_or(true);
     let res = {
         let verge = Config::verge().await;
-        let verge = verge.latest_ref();
+        let verge = verge.latest_arc();
         verge.system_proxy_bypass.clone()
     };
     let custom_bypass = match res {
@@ -84,7 +84,7 @@ async fn execute_sysproxy_command(args: Vec<std::string::String>) -> Result<()> 
 
 impl Default for Sysopt {
     fn default() -> Self {
-        Sysopt {
+        Self {
             initialed: AtomicBool::new(false),
             update_sysproxy: AtomicBool::new(false),
             reset_sysproxy: AtomicBool::new(false),
@@ -115,17 +115,17 @@ impl Sysopt {
         }
 
         let port = {
-            let verge_port = Config::verge().await.latest_ref().verge_mixed_port;
+            let verge_port = Config::verge().await.latest_arc().verge_mixed_port;
             match verge_port {
                 Some(port) => port,
-                None => Config::clash().await.latest_ref().get_mixed_port(),
+                None => Config::clash().await.latest_arc().get_mixed_port(),
             }
         };
         let pac_port = IVerge::get_singleton_port();
 
         let (sys_enable, pac_enable, proxy_host) = {
             let verge = Config::verge().await;
-            let verge = verge.latest_ref();
+            let verge = verge.latest_arc();
             (
                 verge.enable_system_proxy.unwrap_or(false),
                 verge.proxy_auto_config.unwrap_or(false),
@@ -247,7 +247,7 @@ impl Sysopt {
 
     /// update the startup
     pub async fn update_launch(&self) -> Result<()> {
-        let enable_auto_launch = { Config::verge().await.latest_ref().enable_auto_launch };
+        let enable_auto_launch = { Config::verge().await.latest_arc().enable_auto_launch };
         let is_enable = enable_auto_launch.unwrap_or(false);
         logging!(
             info,

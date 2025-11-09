@@ -9,6 +9,7 @@ import {
 } from "@mui/material";
 import { useLockFn } from "ahooks";
 import dayjs from "dayjs";
+import { useTranslation } from "react-i18next";
 import { closeConnections } from "tauri-plugin-mihomo-api";
 
 import parseTraffic from "@/utils/parse-traffic";
@@ -33,6 +34,7 @@ export const ConnectionItem = (props: Props) => {
   const { value, onShowDetail } = props;
 
   const { id, metadata, chains, start, curUpload, curDownload } = value;
+  const { t } = useTranslation();
 
   const onDelete = useLockFn(async () => closeConnections(id));
   const showTraffic = curUpload! >= 100 || curDownload! >= 100;
@@ -42,7 +44,13 @@ export const ConnectionItem = (props: Props) => {
       dense
       sx={{ borderBottom: "1px solid var(--divider-color)" }}
       secondaryAction={
-        <IconButton edge="end" color="inherit" onClick={onDelete}>
+        <IconButton
+          edge="end"
+          color="inherit"
+          onClick={onDelete}
+          title={t("connections.components.actions.closeConnection")}
+          aria-label={t("connections.components.actions.closeConnection")}
+        >
           <CloseRounded />
         </IconButton>
       }

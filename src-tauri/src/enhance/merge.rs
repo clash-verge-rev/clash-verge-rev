@@ -16,7 +16,7 @@ fn deep_merge(a: &mut Value, b: &Value) {
 
 pub fn use_merge(merge: Mapping, config: Mapping) -> Mapping {
     let mut config = Value::from(config);
-    let merge = use_lowercase(merge.clone());
+    let merge = use_lowercase(merge);
 
     deep_merge(&mut config, &Value::from(merge));
 

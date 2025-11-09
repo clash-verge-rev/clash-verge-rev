@@ -851,7 +851,9 @@ export const EnhancedCanvasTrafficGraph = memo(
 
     // 获取时间范围文本
     const getTimeRangeText = useCallback(() => {
-      return t("{{time}} Minutes", { time: timeRange });
+      return t("home.components.traffic.patterns.minutes", {
+        time: timeRange,
+      });
     }, [timeRange, t]);
 
     return (
@@ -934,7 +936,7 @@ export const EnhancedCanvasTrafficGraph = memo(
                 textAlign: "right",
               }}
             >
-              {t("Upload")}
+              {t("home.components.traffic.legends.upload")}
             </Box>
             <Box
               sx={{
@@ -944,7 +946,7 @@ export const EnhancedCanvasTrafficGraph = memo(
                 textAlign: "right",
               }}
             >
-              {t("Download")}
+              {t("home.components.traffic.legends.download")}
             </Box>
           </Box>
 

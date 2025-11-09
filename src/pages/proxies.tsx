@@ -15,6 +15,12 @@ import {
   updateProxyChainConfigInRuntime,
 } from "@/services/cmds";
 
+const MODES = ["rule", "global", "direct"] as const;
+type Mode = (typeof MODES)[number];
+const MODE_SET = new Set<string>(MODES);
+const isMode = (value: unknown): value is Mode =>
+  typeof value === "string" && MODE_SET.has(value);
+
 const ProxyPage = () => {
   const { t } = useTranslation();
 
@@ -50,11 +56,12 @@ const ProxyPage = () => {
 
   const { verge } = useVerge();
 
-  const modeList = useMemo(() => ["rule", "global", "direct"], []);
+  const modeList = useMemo(() => MODES, []);
 
-  const curMode = clashConfig?.mode?.toLowerCase();
+  const normalizedMode = clashConfig?.mode?.toLowerCase();
+  const curMode = isMode(normalizedMode) ? normalizedMode : undefined;
 
-  const onChangeMode = useLockFn(async (mode: string) => {
+  const onChangeMode = useLockFn(async (mode: Mode) => {
     // 断开连接
     if (mode !== curMode && verge?.auto_close_connection) {
       closeAllConnections();
@@ -124,16 +131,20 @@ const ProxyPage = () => {
   }, [isChainMode, updateChainConfigData]);
 
   useEffect(() => {
-    if (curMode && !modeList.includes(curMode)) {
+    if (normalizedMode && !isMode(normalizedMode)) {
       onChangeMode("rule");
     }
-  }, [curMode, modeList, onChangeMode]);
+  }, [normalizedMode, onChangeMode]);
 
   return (
     <BasePage
       full
       contentStyle={{ height: "101.5%" }}
-      title={isChainMode ? t("Proxy Chain Mode") : t("Proxy Groups")}
+      title={
+        isChainMode
+          ? t("proxies.page.title.chainMode")
+          : t("proxies.page.title.default")
+      }
       header={
         <Box display="flex" alignItems="center" gap={1}>
           <ProviderButton />
@@ -146,7 +157,7 @@ const ProxyPage = () => {
                 onClick={() => onChangeMode(mode)}
                 sx={{ textTransform: "capitalize" }}
               >
-                {t(mode)}
+                {t(`proxies.page.modes.${mode}`)}
               </Button>
             ))}
           </ButtonGroup>
@@ -157,13 +168,13 @@ const ProxyPage = () => {
             onClick={onToggleChainMode}
             sx={{ ml: 1 }}
           >
-            {t("Chain Proxy")}
+            {t("proxies.page.actions.toggleChain")}
           </Button>
         </Box>
       }
     >
       <ProxyGroups
-        mode={curMode!}
+        mode={curMode ?? "rule"}
         isChainMode={isChainMode}
         chainConfigData={chainConfigData}
       />

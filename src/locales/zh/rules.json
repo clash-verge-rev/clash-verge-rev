@@ -1,0 +1,82 @@
+{
+  "page": {
+    "provider": {
+      "trigger": "规则集合",
+      "dialogTitle": "规则集合",
+      "actions": {
+        "updateAll": "更新全部",
+        "update": "更新"
+      }
+    },
+    "title": "规则"
+  },
+  "feedback": {
+    "notifications": {
+      "provider": {
+        "updateSuccess": "{{name}} 更新成功",
+        "updateFailed": "{{name}} 更新失败: {{message}}",
+        "genericError": "更新失败: {{message}}",
+        "none": "没有可更新的 provider",
+        "allUpdated": "所有 provider 均已更新"
+      }
+    }
+  },
+  "modals": {
+    "editor": {
+      "form": {
+        "labels": {
+          "type": "规则类型",
+          "content": "规则内容",
+          "proxyPolicy": "代理策略"
+        },
+        "toggles": {
+          "noResolve": "跳过 DNS 解析"
+        },
+        "actions": {
+          "prependRule": "添加前置规则",
+          "appendRule": "添加后置规则"
+        },
+        "validation": {
+          "conditionRequired": "规则条件缺失",
+          "invalidRule": "无效规则"
+        }
+      },
+      "ruleTypes": {
+        "DOMAIN": "匹配完整域名 (DOMAIN)",
+        "DOMAIN-SUFFIX": "匹配域名后缀 (DOMAIN-SUFFIX)",
+        "DOMAIN-KEYWORD": "匹配域名关键字 (DOMAIN-KEYWORD)",
+        "DOMAIN-REGEX": "匹配域名正则表达式 (DOMAIN-REGEX)",
+        "GEOSITE": "匹配 Geosite 内的域名 (GEOSITE)",
+        "GEOIP": "匹配 IP 所属国家代码 (GEOIP)",
+        "SRC-GEOIP": "匹配来源 IP 所属国家代码 (SRC-GEOIP)",
+        "IP-ASN": "匹配 IP 所属 ASN (IP-ASN)",
+        "SRC-IP-ASN": "匹配来源 IP 所属 ASN (SRC-IP-ASN)",
+        "IP-CIDR": "匹配 IP 地址范围 (IP-CIDR)",
+        "IP-CIDR6": "匹配 IP 地址范围 (IP-CIDR6)",
+        "SRC-IP-CIDR": "匹配来源 IP 地址范围 (SRC-IP-CIDR)",
+        "IP-SUFFIX": "匹配 IP 后缀范围 (IP-SUFFIX)",
+        "SRC-IP-SUFFIX": "匹配来源 IP 后缀范围 (SRC-IP-SUFFIX)",
+        "SRC-PORT": "匹配请求来源端口范围 (SRC-PORT)",
+        "DST-PORT": "匹配请求目标端口范围 (DST-PORT)",
+        "IN-PORT": "匹配入站端口 (IN-PORT)",
+        "DSCP": "DSCP 标记（仅限 TPROXY UDP 入站）(DSCP)",
+        "PROCESS-NAME": "匹配进程名称 (PROCESS-NAME)",
+        "PROCESS-PATH": "匹配完整进程路径 (PROCESS-PATH)",
+        "PROCESS-NAME-REGEX": "正则匹配完整进程名称 (PROCESS-NAME-REGEX)",
+        "PROCESS-PATH-REGEX": "正则匹配完整进程路径 (PROCESS-PATH-REGEX)",
+        "NETWORK": "匹配传输协议 (TCP/UDP) (NETWORK)",
+        "UID": "匹配 Linux USER ID (UID)",
+        "IN-TYPE": "匹配入站类型 (IN-TYPE)",
+        "IN-USER": "匹配入站用户名 (IN-USER)",
+        "IN-NAME": "匹配入站名称 (IN-NAME)",
+        "SUB-RULE": "子规则 (SUB-RULE)",
+        "RULE-SET": "匹配规则集 (RULE-SET)",
+        "AND": "逻辑与 (AND)",
+        "OR": "逻辑或 (OR)",
+        "NOT": "逻辑非 (NOT)",
+        "MATCH": "匹配所有请求 (MATCH)"
+      },
+      "title": "编辑规则"
+    }
+  }
+}

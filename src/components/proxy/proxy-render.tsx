@@ -160,7 +160,7 @@ export const ProxyRender = (props: RenderProps) => {
           }}
         />
         <Box sx={{ display: "flex", alignItems: "center" }}>
-          <Tooltip title={t("Proxy Count")} arrow>
+          <Tooltip title={t("proxies.page.labels.proxyCount")} arrow>
             <Chip
               size="small"
               label={`${group.all.length}`}

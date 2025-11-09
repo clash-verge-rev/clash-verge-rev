@@ -1,0 +1,138 @@
+{
+  "page": {
+    "tooltips": {
+      "lightweightMode": "轻量模式",
+      "manual": "使用手册",
+      "settings": "首页设置"
+    },
+    "cards": {
+      "trafficStats": "流量统计",
+      "networkSettings": "网络设置",
+      "proxyMode": "代理模式"
+    },
+    "settings": {
+      "cards": {
+        "profile": "订阅卡",
+        "currentProxy": "当前代理卡",
+        "network": "网络设置卡",
+        "proxyMode": "代理模式卡",
+        "traffic": "流量统计卡",
+        "tests": "网站测试卡",
+        "ip": "IP 信息卡",
+        "clashInfo": "Clash 信息卡",
+        "systemInfo": "系统信息卡"
+      },
+      "title": "首页设置"
+    },
+    "title": "首页"
+  },
+  "components": {
+    "proxyTun": {
+      "status": {
+        "systemProxyEnabled": "系统代理已启用，您的应用将通过代理访问网络",
+        "systemProxyDisabled": "系统代理已关闭，建议大多数用户打开此选项",
+        "tunModeServiceRequired": "TUN模式需要服务模式，请先安装服务",
+        "tunModeEnabled": "TUN 模式已启用，应用将通过虚拟网卡访问网络",
+        "tunModeDisabled": "TUN 模式已关闭，适用于特殊应用"
+      },
+      "tooltips": {
+        "systemProxy": "修改操作系统的代理设置，如果开启失败，可手动修改操作系统的代理设置",
+        "tunMode": "TUN模式可以接管所有应用流量，适用于特殊不遵循系统代理设置的应用"
+      }
+    },
+    "clashInfo": {
+      "title": "Clash 信息",
+      "fields": {
+        "coreVersion": "内核版本",
+        "systemProxyAddress": "系统代理地址",
+        "mixedPort": "混合代理端口",
+        "uptime": "运行时间",
+        "rulesCount": "规则数量"
+      }
+    },
+    "systemInfo": {
+      "title": "系统信息",
+      "fields": {
+        "osInfo": "操作系统信息",
+        "autoLaunch": "开机自启",
+        "runningMode": "运行模式",
+        "lastCheckUpdate": "最后检查更新",
+        "vergeVersion": "Verge 版本"
+      },
+      "actions": {
+        "settings": "设置"
+      },
+      "tooltips": {
+        "autoLaunchAdmin": "管理员模式可能不支持开机自启"
+      },
+      "badges": {
+        "adminMode": "管理员模式",
+        "serviceMode": "服务模式",
+        "sidecarMode": "用户模式",
+        "adminServiceMode": "管理员 + 服务模式"
+      }
+    },
+    "ipInfo": {
+      "title": "IP 信息",
+      "labels": {
+        "ip": "IP",
+        "asn": "自治域",
+        "isp": "服务商",
+        "org": "组织",
+        "location": "位置",
+        "timezone": "时区",
+        "autoRefresh": "自动刷新",
+        "unknown": "未知"
+      },
+      "errors": {
+        "load": "获取 IP 信息失败"
+      }
+    },
+    "currentProxy": {
+      "title": "当前节点",
+      "actions": {
+        "refreshDelay": "延迟测试"
+      },
+      "labels": {
+        "globalMode": "全局模式",
+        "directMode": "直连模式",
+        "group": "代理组",
+        "proxy": "节点",
+        "noActiveNode": "暂无激活的代理节点"
+      }
+    },
+    "tests": {
+      "title": "网站测试"
+    },
+    "traffic": {
+      "metrics": {
+        "uploadSpeed": "上传速度",
+        "downloadSpeed": "下载速度",
+        "activeConnections": "活跃连接",
+        "memoryUsage": "内核占用"
+      },
+      "legends": {
+        "upload": "上传",
+        "download": "下载"
+      },
+      "patterns": {
+        "minutes": "{{time}} 分钟"
+      }
+    },
+    "clashMode": {
+      "errors": {
+        "communication": "内核通信错误"
+      },
+      "labels": {
+        "rule": "规则",
+        "global": "全局",
+        "direct": "直连"
+      },
+      "descriptions": {
+        "rule": "基于预设规则智能判断流量走向，提供灵活的代理策略",
+        "global": "所有流量均通过代理服务器，适用于需要全局科学上网的场景",
+        "direct": "所有流量不经过代理节点，但经过Clash内核转发连接目标服务器，适用于需要通过内核进行分流的特定场景"
+      }
+    }
+  }
+}

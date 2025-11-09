@@ -1,15 +1,24 @@
 import { InboxRounded } from "@mui/icons-material";
 import { alpha, Box, Typography } from "@mui/material";
+import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
+import type { TranslationKey } from "@/types/generated/i18n-keys";
+
 interface Props {
-  text?: React.ReactNode;
-  extra?: React.ReactNode;
+  text?: ReactNode;
+  textKey?: TranslationKey;
+  extra?: ReactNode;
 }
 
-export const BaseEmpty = (props: Props) => {
-  const { text = "Empty", extra } = props;
+export const BaseEmpty = ({
+  text,
+  textKey = "shared.statuses.empty",
+  extra,
+}: Props) => {
   const { t } = useTranslation();
+
+  const resolvedText: ReactNode = text !== undefined ? text : t(textKey);
 
   return (
     <Box
@@ -24,7 +33,7 @@ export const BaseEmpty = (props: Props) => {
       })}
     >
       <InboxRounded sx={{ fontSize: "4em" }} />
-      <Typography sx={{ fontSize: "1.25em" }}>{t(`${text}`)}</Typography>
+      <Typography sx={{ fontSize: "1.25em" }}>{resolvedText}</Typography>
       {extra}
     </Box>
   );

@@ -1,14 +1,14 @@
 use super::{PrfOption, prfitem::PrfItem};
 use crate::utils::{
-    dirs::{self, PathBufExec},
+    dirs::{self, PathBufExec as _},
     help,
 };
 use crate::{logging, utils::logging::Type};
-use anyhow::{Context, Result, bail};
+use anyhow::{Context as _, Result, bail};
 use serde::{Deserialize, Serialize};
 use serde_yaml_ng::Mapping;
 use smartstring::alias::String;
-use std::collections::HashSet;
+use std::{collections::HashSet, sync::Arc};
 use tokio::fs;
 
 /// Define the `profiles.yaml` schema
@@ -32,7 +32,7 @@ pub struct CleanupResult {
 macro_rules! patch {
     ($lv: expr, $rv: expr, $key: tt) => {
         if ($rv.$key).is_some() {
-            $lv.$key = $rv.$key.clone();
+            $lv.$key = $rv.$key.to_owned();
         }
     };
 }
@@ -50,39 +50,30 @@ impl IProfiles {
         }
         None
     }
+
     pub async fn new() -> Self {
-        match dirs::profiles_path() {
-            Ok(path) => match help::read_yaml::<Self>(&path).await {
-                Ok(mut profiles) => {
-                    if profiles.items.is_none() {
-                        profiles.items = Some(vec![]);
-                    }
-                    // compatible with the old old old version
-                    if let Some(items) = profiles.items.as_mut() {
-                        for item in items.iter_mut() {
-                            if item.uid.is_none() {
-                                item.uid = Some(help::get_uid("d").into());
-                            }
-                        }
-                    }
-                    profiles
-                }
-                Err(err) => {
-                    logging!(error, Type::Config, "{err}");
-                    Self::template()
-                }
-            },
+        let path = match dirs::profiles_path() {
+            Ok(p) => p,
             Err(err) => {
                 logging!(error, Type::Config, "{err}");
-                Self::template()
+                return Self::default();
             }
-        }
-    }
+        };
 
-    pub fn template() -> Self {
-        Self {
-            items: Some(vec![]),
-            ..Self::default()
+        match help::read_yaml::<Self>(&path).await {
+            Ok(mut profiles) => {
+                let items = profiles.items.get_or_insert_with(Vec::new);
+                for item in items.iter_mut() {
+                    if item.uid.is_none() {
+                        item.uid = Some(help::get_uid("d").into());
+                    }
+                }
+                profiles
+            }
+            Err(err) => {
+                logging!(error, Type::Config, "{err}");
+                Self::default()
+            }
         }
     }
 
@@ -96,29 +87,27 @@ impl IProfiles {
     }
 
     /// 只修改current，valid和chain
-    pub fn patch_config(&mut self, patch: IProfiles) -> Result<()> {
+    pub fn patch_config(&mut self, patch: &Self) {
         if self.items.is_none() {
             self.items = Some(vec![]);
         }
 
-        if let Some(current) = patch.current
+        if let Some(current) = &patch.current
             && let Some(items) = self.items.as_ref()
         {
             let some_uid = Some(current);
-            if items.iter().any(|e| e.uid == some_uid) {
-                self.current = some_uid;
+            if items.iter().any(|e| e.uid.as_ref() == some_uid) {
+                self.current = some_uid.cloned();
             }
         }
-
-        Ok(())
     }
 
-    pub fn get_current(&self) -> Option<String> {
-        self.current.clone()
+    pub const fn get_current(&self) -> Option<&String> {
+        self.current.as_ref()
     }
 
     /// get items ref
-    pub fn get_items(&self) -> Option<&Vec<PrfItem>> {
+    pub const fn get_items(&self) -> Option<&Vec<PrfItem>> {
         self.items.as_ref()
     }
 
@@ -137,6 +126,15 @@ impl IProfiles {
         }
 
         bail!("failed to get the profile item \"uid:{}\"", uid_str);
+    }
+
+    pub fn get_item_arc(&self, uid: &str) -> Option<Arc<PrfItem>> {
+        self.items.as_ref().and_then(|items| {
+            items
+                .iter()
+                .find(|it| it.uid.as_deref() == Some(uid))
+                .map(|it| Arc::new(it.clone()))
+        })
     }
 
     /// append new item
@@ -364,88 +362,18 @@ impl IProfiles {
         }
     }
 
-    /// 获取current指向的订阅的merge
-    pub fn current_merge(&self) -> Option<String> {
-        match (self.current.as_ref(), self.items.as_ref()) {
-            (Some(current), Some(items)) => {
-                if let Some(item) = items.iter().find(|e| e.uid.as_ref() == Some(current)) {
-                    let merge = item.option.as_ref().and_then(|e| e.merge.clone());
-                    return merge;
-                }
-                None
-            }
-            _ => None,
-        }
-    }
-
-    /// 获取current指向的订阅的script
-    pub fn current_script(&self) -> Option<String> {
-        match (self.current.as_ref(), self.items.as_ref()) {
-            (Some(current), Some(items)) => {
-                if let Some(item) = items.iter().find(|e| e.uid.as_ref() == Some(current)) {
-                    let script = item.option.as_ref().and_then(|e| e.script.clone());
-                    return script;
-                }
-                None
-            }
-            _ => None,
-        }
-    }
-
-    /// 获取current指向的订阅的rules
-    pub fn current_rules(&self) -> Option<String> {
-        match (self.current.as_ref(), self.items.as_ref()) {
-            (Some(current), Some(items)) => {
-                if let Some(item) = items.iter().find(|e| e.uid.as_ref() == Some(current)) {
-                    let rules = item.option.as_ref().and_then(|e| e.rules.clone());
-                    return rules;
-                }
-                None
-            }
-            _ => None,
-        }
-    }
-
-    /// 获取current指向的订阅的proxies
-    pub fn current_proxies(&self) -> Option<String> {
-        match (self.current.as_ref(), self.items.as_ref()) {
-            (Some(current), Some(items)) => {
-                if let Some(item) = items.iter().find(|e| e.uid.as_ref() == Some(current)) {
-                    let proxies = item.option.as_ref().and_then(|e| e.proxies.clone());
-                    return proxies;
-                }
-                None
-            }
-            _ => None,
-        }
-    }
-
-    /// 获取current指向的订阅的groups
-    pub fn current_groups(&self) -> Option<String> {
-        match (self.current.as_ref(), self.items.as_ref()) {
-            (Some(current), Some(items)) => {
-                if let Some(item) = items.iter().find(|e| e.uid.as_ref() == Some(current)) {
-                    let groups = item.option.as_ref().and_then(|e| e.groups.clone());
-                    return groups;
-                }
-                None
-            }
-            _ => None,
-        }
-    }
-
     /// 判断profile是否是current指向的
     pub fn is_current_profile_index(&self, index: &String) -> bool {
         self.current.as_ref() == Some(index)
     }
 
     /// 获取所有的profiles(uid，名称)
-    pub fn all_profile_uid_and_name(&self) -> Option<Vec<(String, String)>> {
+    pub fn all_profile_uid_and_name(&self) -> Option<Vec<(&String, &String)>> {
         self.items.as_ref().map(|items| {
             items
                 .iter()
                 .filter_map(|e| {
-                    if let (Some(uid), Some(name)) = (e.uid.clone(), e.name.clone()) {
+                    if let (Some(uid), Some(name)) = (e.uid.as_ref(), e.name.as_ref()) {
                         Some((uid, name))
                     } else {
                         None
@@ -456,11 +384,11 @@ impl IProfiles {
     }
 
     /// 通过 uid 获取名称
-    pub fn get_name_by_uid(&self, uid: &String) -> Option<String> {
+    pub fn get_name_by_uid(&self, uid: &String) -> Option<&String> {
         if let Some(items) = &self.items {
             for item in items {
                 if item.uid.as_ref() == Some(uid) {
-                    return item.name.clone();
+                    return item.name.as_ref();
                 }
             }
         }
@@ -558,14 +486,14 @@ impl IProfiles {
     }
 
     /// 获取所有 active profile 关联的文件名
-    fn get_all_active_files(&self) -> HashSet<String> {
-        let mut active_files = HashSet::new();
+    fn get_all_active_files(&self) -> HashSet<&str> {
+        let mut active_files: HashSet<&str> = HashSet::new();
 
         if let Some(items) = &self.items {
             for item in items {
                 // 收集所有类型 profile 的文件
                 if let Some(file) = &item.file {
-                    active_files.insert(file.clone());
+                    active_files.insert(file);
                 }
 
                 // 对于主 profile 类型（remote/local），还需要收集其关联的扩展文件
@@ -578,35 +506,35 @@ impl IProfiles {
                         && let Ok(merge_item) = self.get_item(merge_uid)
                         && let Some(file) = &merge_item.file
                     {
-                        active_files.insert(file.clone());
+                        active_files.insert(file);
                     }
 
                     if let Some(script_uid) = &option.script
                         && let Ok(script_item) = self.get_item(script_uid)
                         && let Some(file) = &script_item.file
                     {
-                        active_files.insert(file.clone());
+                        active_files.insert(file);
                     }
 
                     if let Some(rules_uid) = &option.rules
                         && let Ok(rules_item) = self.get_item(rules_uid)
                         && let Some(file) = &rules_item.file
                     {
-                        active_files.insert(file.clone());
+                        active_files.insert(file);
                     }
 
                     if let Some(proxies_uid) = &option.proxies
                         && let Ok(proxies_item) = self.get_item(proxies_uid)
                         && let Some(file) = &proxies_item.file
                     {
-                        active_files.insert(file.clone());
+                        active_files.insert(file);
                     }
 
                     if let Some(groups_uid) = &option.groups
                         && let Ok(groups_item) = self.get_item(groups_uid)
                         && let Some(file) = &groups_item.file
                     {
-                        active_files.insert(file.clone());
+                        active_files.insert(file);
                     }
                 }
             }

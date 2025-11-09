@@ -58,12 +58,12 @@ export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
 
   const onUpdate = useLockFn(async () => {
     if (portableFlag) {
-      showNotice("error", t("Portable Updater Error"));
+      showNotice.error("settings.modals.update.messages.portableError");
       return;
     }
     if (!updateInfo?.body) return;
     if (breakChangeFlag) {
-      showNotice("error", t("Break Change Update Error"));
+      showNotice.error("settings.modals.update.messages.breakChangeError");
       return;
     }
     if (updateState) return;
@@ -89,7 +89,7 @@ export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
       await updateInfo.downloadAndInstall();
       await relaunch();
     } catch (err: any) {
-      showNotice("error", err?.message || err.toString());
+      showNotice.error(err);
     } finally {
       setUpdateState(false);
       if (progressListener) {
@@ -113,7 +113,9 @@ export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
       open={open}
       title={
         <Box display="flex" justifyContent="space-between">
-          {`New Version v${updateInfo?.version}`}
+          {t("settings.modals.update.title", {
+            version: updateInfo?.version ?? "",
+          })}
           <Box>
             <Button
               variant="contained"
@@ -124,14 +126,14 @@ export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
                 );
               }}
             >
-              {t("Go to Release Page")}
+              {t("settings.modals.update.actions.goToRelease")}
             </Button>
           </Box>
         </Box>
       }
       contentSx={{ minWidth: 360, maxWidth: 400, height: "50vh" }}
-      okBtn={t("Update")}
-      cancelBtn={t("Cancel")}
+      okBtn={t("settings.modals.update.actions.update")}
+      cancelBtn={t("shared.actions.cancel")}
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}
       onOk={onUpdate}

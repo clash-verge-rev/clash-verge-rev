@@ -1,5 +1,4 @@
 use once_cell::sync::OnceCell;
-use tauri::Emitter;
 use tauri::tray::TrayIconBuilder;
 use tauri_plugin_mihomo::models::Proxies;
 use tokio::fs;
@@ -16,7 +15,7 @@ use crate::{
     feat, logging,
     module::lightweight::is_in_lightweight_mode,
     singleton_lazy,
-    utils::{dirs::find_target_icons, i18n::t},
+    utils::{dirs::find_target_icons, i18n},
 };
 
 use super::handle;
@@ -55,18 +54,17 @@ fn get_tray_click_debounce() -> &'static Mutex<Instant> {
 
 fn should_handle_tray_click() -> bool {
     let debounce_lock = get_tray_click_debounce();
-    let mut last_click = debounce_lock.lock();
     let now = Instant::now();
 
-    if now.duration_since(*last_click) >= Duration::from_millis(TRAY_CLICK_DEBOUNCE_MS) {
-        *last_click = now;
+    if now.duration_since(*debounce_lock.lock()) >= Duration::from_millis(TRAY_CLICK_DEBOUNCE_MS) {
+        *debounce_lock.lock() = now;
         true
     } else {
         logging!(
             debug,
             Type::Tray,
             "托盘点击被防抖机制忽略，距离上次点击 {}ms",
-            now.duration_since(*last_click).as_millis()
+            now.duration_since(*debounce_lock.lock()).as_millis()
         );
         false
     }
@@ -86,7 +84,7 @@ pub struct Tray {
 
 impl TrayState {
     pub async fn get_common_tray_icon() -> (bool, Vec<u8>) {
-        let verge = Config::verge().await.latest_ref().clone();
+        let verge = Config::verge().await.latest_arc();
         let is_common_tray_icon = verge.common_tray_icon.unwrap_or(false);
         if is_common_tray_icon
             && let Ok(Some(common_icon_path)) = find_target_icons("common")
@@ -123,7 +121,7 @@ impl TrayState {
     }
 
     pub async fn get_sysproxy_tray_icon() -> (bool, Vec<u8>) {
-        let verge = Config::verge().await.latest_ref().clone();
+        let verge = Config::verge().await.latest_arc();
         let is_sysproxy_tray_icon = verge.sysproxy_tray_icon.unwrap_or(false);
         if is_sysproxy_tray_icon
             && let Ok(Some(sysproxy_icon_path)) = find_target_icons("sysproxy")
@@ -160,7 +158,7 @@ impl TrayState {
     }
 
     pub async fn get_tun_tray_icon() -> (bool, Vec<u8>) {
-        let verge = Config::verge().await.latest_ref().clone();
+        let verge = Config::verge().await.latest_arc();
         let is_tun_tray_icon = verge.tun_tray_icon.unwrap_or(false);
         if is_tun_tray_icon
             && let Ok(Some(tun_icon_path)) = find_target_icons("tun")
@@ -198,7 +196,7 @@ impl TrayState {
 
 impl Default for Tray {
     fn default() -> Self {
-        Tray {
+        Self {
             last_menu_update: Mutex::new(None),
             menu_updating: AtomicBool::new(false),
         }
@@ -243,7 +241,7 @@ impl Tray {
         }
 
         let app_handle = handle::Handle::app_handle();
-        let tray_event = { Config::verge().await.latest_ref().tray_event.clone() };
+        let tray_event = { Config::verge().await.latest_arc().tray_event.clone() };
         let tray_event = tray_event.unwrap_or_else(|| "main_window".into());
         let tray = app_handle
             .tray_by_id("main")
@@ -303,7 +301,7 @@ impl Tray {
     }
 
     async fn update_menu_internal(&self, app_handle: &AppHandle) -> Result<()> {
-        let verge = Config::verge().await.latest_ref().clone();
+        let verge = Config::verge().await.latest_arc();
         let system_proxy = verge.enable_system_proxy.as_ref().unwrap_or(&false);
         let tun_mode = verge.enable_tun_mode.as_ref().unwrap_or(&false);
         let tun_mode_available = cmd::system::is_admin().unwrap_or_default()
@@ -311,18 +309,16 @@ impl Tray {
         let mode = {
             Config::clash()
                 .await
-                .latest_ref()
+                .latest_arc()
                 .0
                 .get("mode")
                 .map(|val| val.as_str().unwrap_or("rule"))
                 .unwrap_or("rule")
                 .to_owned()
         };
-        let profile_uid_and_name = Config::profiles()
-            .await
-            .data_mut()
-            .all_profile_uid_and_name()
-            .unwrap_or_default();
+        let profiles_config = Config::profiles().await;
+        let profiles_arc = profiles_config.latest_arc();
+        let profile_uid_and_name = profiles_arc.all_profile_uid_and_name().unwrap_or_default();
         let is_lightweight_mode = is_in_lightweight_mode();
 
         match app_handle.tray_by_id("main") {
@@ -375,7 +371,7 @@ impl Tray {
             }
         };
 
-        let verge = Config::verge().await.latest_ref().clone();
+        let verge = Config::verge().await.latest_arc();
         let system_mode = verge.enable_system_proxy.as_ref().unwrap_or(&false);
         let tun_mode = verge.enable_tun_mode.as_ref().unwrap_or(&false);
 
@@ -418,7 +414,7 @@ impl Tray {
             }
         };
 
-        let verge = Config::verge().await.latest_ref().clone();
+        let verge = Config::verge().await.latest_arc();
         let system_mode = verge.enable_system_proxy.as_ref().unwrap_or(&false);
         let tun_mode = verge.enable_tun_mode.as_ref().unwrap_or(&false);
 
@@ -433,24 +429,6 @@ impl Tray {
         Ok(())
     }
 
-    /// 更新托盘显示状态的函数
-    pub async fn update_tray_display(&self) -> Result<()> {
-        if handle::Handle::global().is_exiting() {
-            logging!(debug, Type::Tray, "应用正在退出，跳过托盘显示状态更新");
-            return Ok(());
-        }
-
-        let app_handle = handle::Handle::app_handle();
-        let _tray = app_handle
-            .tray_by_id("main")
-            .ok_or_else(|| anyhow::anyhow!("Failed to get main tray"))?;
-
-        // 更新菜单
-        self.update_menu().await?;
-
-        Ok(())
-    }
-
     /// 更新托盘提示
     pub async fn update_tooltip(&self) -> Result<()> {
         if handle::Handle::global().is_exiting() {
@@ -460,7 +438,9 @@ impl Tray {
 
         let app_handle = handle::Handle::app_handle();
 
-        let verge = Config::verge().await.latest_ref().clone();
+        i18n::sync_locale().await;
+
+        let verge = Config::verge().await.latest_arc();
         let system_proxy = verge.enable_system_proxy.as_ref().unwrap_or(&false);
         let tun_mode = verge.enable_tun_mode.as_ref().unwrap_or(&false);
 
@@ -474,9 +454,9 @@ impl Tray {
         let mut current_profile_name = "None".into();
         {
             let profiles = Config::profiles().await;
-            let profiles = profiles.latest_ref();
+            let profiles = profiles.latest_arc();
             if let Some(current_profile_uid) = profiles.get_current()
-                && let Ok(profile) = profiles.get_item(&current_profile_uid)
+                && let Ok(profile) = profiles.get_item(current_profile_uid)
             {
                 current_profile_name = match &profile.name {
                     Some(profile_name) => profile_name.to_string(),
@@ -486,9 +466,9 @@ impl Tray {
         }
 
         // Get localized strings before using them
-        let sys_proxy_text = t("SysProxy").await;
-        let tun_text = t("TUN").await;
-        let profile_text = t("Profile").await;
+        let sys_proxy_text = rust_i18n::t!("tray.tooltip.systemProxy");
+        let tun_text = rust_i18n::t!("tray.tooltip.tun");
+        let profile_text = rust_i18n::t!("tray.tooltip.profile");
 
         let v = env!("CARGO_PKG_VERSION");
         let reassembled_version = v.split_once('+').map_or_else(
@@ -525,9 +505,7 @@ impl Tray {
             logging!(debug, Type::Tray, "应用正在退出，跳过托盘局部更新");
             return Ok(());
         }
-        // self.update_menu().await?;
-        // 更新轻量模式显示状态
-        self.update_tray_display().await?;
+        self.update_menu().await?;
         self.update_icon().await?;
         self.update_tooltip().await?;
         Ok(())
@@ -552,7 +530,7 @@ impl Tray {
 
         #[cfg(any(target_os = "macos", target_os = "windows"))]
         let show_menu_on_left_click = {
-            let tray_event = { Config::verge().await.latest_ref().tray_event.clone() };
+            let tray_event = { Config::verge().await.latest_arc().tray_event.clone() };
             let tray_event: String = tray_event.unwrap_or_else(|| "main_window".into());
             tray_event.as_str() == "tray_menu"
         };
@@ -572,70 +550,36 @@ impl Tray {
         let tray = builder.build(app_handle)?;
 
         tray.on_tray_icon_event(|_app_handle, event| {
-            // 忽略移动、进入和离开等无需处理的事件，避免不必要的刷新
-            match event {
-                TrayIconEvent::Move { .. }
-                | TrayIconEvent::Enter { .. }
-                | TrayIconEvent::Leave { .. } => {
-                    return;
-                }
-                _ => {}
-            }
+            if let TrayIconEvent::Click {
+                button: MouseButton::Left,
+                button_state: MouseButtonState::Down,
+                ..
+            } = event
+            {
+                AsyncHandler::spawn(|| async move {
+                    let tray_event = { Config::verge().await.latest_arc().tray_event.clone() };
+                    let tray_event: String = tray_event.unwrap_or_else(|| "main_window".into());
+                    logging!(debug, Type::Tray, "tray event: {tray_event:?}");
 
-            AsyncHandler::spawn(|| async move {
-                let tray_event = { Config::verge().await.latest_ref().tray_event.clone() };
-                let tray_event: String = tray_event.unwrap_or_else(|| "main_window".into());
-                logging!(debug, Type::Tray, "tray event: {tray_event:?}");
-
-                if let TrayIconEvent::Click {
-                    button: MouseButton::Left,
-                    button_state: MouseButtonState::Down,
-                    ..
-                } = event
-                {
                     // 添加防抖检查，防止快速连击
                     if !should_handle_tray_click() {
                         return;
                     }
 
-                    use std::future::Future;
-                    use std::pin::Pin;
-
-                    let fut: Pin<Box<dyn Future<Output = ()> + Send>> = match tray_event.as_str() {
-                        "system_proxy" => Box::pin(async move {
-                            feat::toggle_system_proxy().await;
-                        }),
-                        "tun_mode" => Box::pin(async move {
-                            feat::toggle_tun_mode(None).await;
-                        }),
-                        "main_window" => Box::pin(async move {
+                    match tray_event.as_str() {
+                        "system_proxy" => feat::toggle_system_proxy().await,
+                        "tun_mode" => feat::toggle_tun_mode(None).await,
+                        "main_window" => {
                             if !lightweight::exit_lightweight_mode().await {
                                 WindowManager::show_main_window().await;
                             };
-                        }),
-                        _ => Box::pin(async move {}),
+                        }
+                        _ => {}
                     };
-                    fut.await;
-                }
-            });
+                });
+            }
         });
         tray.on_menu_event(on_menu_event);
-        Ok(())
-    }
-
-    // 托盘统一的状态更新函数
-    pub async fn update_all_states(&self) -> Result<()> {
-        if handle::Handle::global().is_exiting() {
-            logging!(debug, Type::Tray, "应用正在退出，跳过托盘状态更新");
-            return Ok(());
-        }
-
-        // 确保所有状态更新完成
-        self.update_tray_display().await?;
-        // self.update_menu().await?;
-        self.update_icon().await?;
-        self.update_tooltip().await?;
-
         Ok(())
     }
 }
@@ -666,7 +610,7 @@ fn create_hotkeys(hotkeys: &Option<Vec<String>>) -> HashMap<String, String> {
 
 async fn create_profile_menu_item(
     app_handle: &AppHandle,
-    profile_uid_and_name: Vec<(String, String)>,
+    profile_uid_and_name: Vec<(&String, &String)>,
 ) -> Result<Vec<CheckMenuItem<Wry>>> {
     let futures = profile_uid_and_name
         .iter()
@@ -675,12 +619,12 @@ async fn create_profile_menu_item(
             async move {
                 let is_current_profile = Config::profiles()
                     .await
-                    .latest_ref()
+                    .latest_arc()
                     .is_current_profile_index(profile_uid);
                 CheckMenuItem::with_id(
                     &app_handle,
                     format!("profiles_{profile_uid}"),
-                    t(profile_name).await,
+                    profile_name.as_str(),
                     true,
                     is_current_profile,
                     None::<&str>,
@@ -870,18 +814,20 @@ async fn create_tray_menu(
     system_proxy_enabled: bool,
     tun_mode_enabled: bool,
     tun_mode_available: bool,
-    profile_uid_and_name: Vec<(String, String)>,
+    profile_uid_and_name: Vec<(&String, &String)>,
     is_lightweight_mode: bool,
 ) -> Result<tauri::menu::Menu<Wry>> {
     let current_proxy_mode = mode.unwrap_or("");
 
+    i18n::sync_locale().await;
+
     // 获取当前配置文件的选中代理组信息
     let current_profile_selected = {
         let profiles_config = Config::profiles().await;
-        let profiles_ref = profiles_config.latest_ref();
+        let profiles_ref = profiles_config.latest_arc();
         profiles_ref
             .get_current()
-            .and_then(|uid| profiles_ref.get_item(&uid).ok())
+            .and_then(|uid| profiles_ref.get_item(uid).ok())
             .and_then(|profile| profile.selected.clone())
             .unwrap_or_default()
     };
@@ -924,7 +870,7 @@ async fn create_tray_menu(
             .collect::<HashMap<String, usize>>()
     });
 
-    let verge_settings = Config::verge().await.latest_ref().clone();
+    let verge_settings = Config::verge().await.latest_arc();
     let show_proxy_groups_inline = verge_settings.tray_inline_proxy_groups.unwrap_or(false);
 
     let version = env!("CARGO_PKG_VERSION");
@@ -935,7 +881,7 @@ async fn create_tray_menu(
         create_profile_menu_item(app_handle, profile_uid_and_name).await?;
 
     // Pre-fetch all localized strings
-    let texts = &MenuTexts::new().await;
+    let texts = MenuTexts::new();
     // Convert to references only when needed
     let profile_menu_items_refs: Vec<&dyn IsMenuItem<Wry>> = profile_menu_items
         .iter()
@@ -1255,66 +1201,27 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
             }
             id if id.starts_with("proxy_") => {
                 // proxy_{group_name}_{proxy_name}
-                let parts: Vec<&str> = id.splitn(3, '_').collect();
-
-                if parts.len() == 3 && parts[0] == "proxy" {
-                    let group_name = parts[1];
-                    let proxy_name = parts[2];
-
-                    match handle::Handle::mihomo()
-                        .await
-                        .select_node_for_group(group_name, proxy_name)
-                        .await
-                    {
-                        Ok(_) => {
-                            logging!(
-                                info,
-                                Type::Tray,
-                                "切换代理成功: {} -> {}",
-                                group_name,
-                                proxy_name
-                            );
-                            let _ = handle::Handle::app_handle()
-                                .emit("verge://refresh-proxy-config", ());
-                        }
-                        Err(e) => {
-                            logging!(
-                                error,
-                                Type::Tray,
-                                "切换代理失败: {} -> {}, 错误: {:?}",
-                                group_name,
-                                proxy_name,
-                                e
-                            );
-
-                            // Fallback to IPC update
-                            if (handle::Handle::mihomo()
-                                .await
-                                .select_node_for_group(group_name, proxy_name)
-                                .await)
-                                .is_ok()
-                            {
-                                logging!(
-                                    info,
-                                    Type::Tray,
-                                    "代理切换回退成功: {} -> {}",
-                                    group_name,
-                                    proxy_name
-                                );
-
-                                let app_handle = handle::Handle::app_handle();
-                                let _ = app_handle.emit("verge://force-refresh-proxies", ());
-                            }
-                        }
-                    }
-                }
+                let rest = match id.strip_prefix("proxy_") {
+                    Some(r) => r,
+                    None => return,
+                };
+                let (group_name, proxy_name) = match rest.split_once('_') {
+                    Some((g, p)) => (g, p),
+                    None => return,
+                };
+                feat::switch_proxy_node(group_name, proxy_name).await;
             }
-            _ => {}
+            _ => {
+                logging!(
+                    debug,
+                    Type::Tray,
+                    "Unhandled tray menu event: {:?}",
+                    event.id
+                );
+            }
         }
 
-        // Ensure tray state update is awaited and properly handled
-        if let Err(e) = Tray::global().update_all_states().await {
-            logging!(warn, Type::Tray, "Failed to update tray state: {e}");
-        }
+        // We dont expected to refresh tray state here
+        // as the inner handle function (SHOULD) already takes care of it
     });
 }

@@ -21,13 +21,15 @@ export const PasswordInput = (props: Props) => {
 
   return (
     <Dialog open={true} maxWidth="xs" fullWidth>
-      <DialogTitle>{t("Please enter your root password")}</DialogTitle>
+      <DialogTitle>
+        {t("settings.modals.password.prompts.enterRoot")}
+      </DialogTitle>
 
       <DialogContent>
         <TextField
           sx={{ mt: 1 }}
           autoFocus
-          label={t("Password")}
+          label={t("shared.labels.password")}
           fullWidth
           size="small"
           type="password"
@@ -42,7 +44,7 @@ export const PasswordInput = (props: Props) => {
           onClick={async () => await onConfirm(passwd)}
           variant="contained"
         >
-          {t("Confirm")}
+          {t("shared.actions.confirm")}
         </Button>
       </DialogActions>
     </Dialog>
