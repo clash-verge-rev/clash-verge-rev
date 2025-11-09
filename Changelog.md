@@ -5,6 +5,7 @@
 <details>
 <summary><strong> ✨ 新增功能 </strong></summary>
 
+- **Mihomo(Meta) 内核升级至 v1.19.16**
 - 支持连接页面各个项目的排序
 
 </details>
@@ -14,6 +15,8 @@
 
 - 替换前端信息编辑组件，提供更好性能
 - 优化后端内存和性能表现
+- 防止退出时可能的禁用 TUN 失败
+- i18n 支持
 
 </details>
 
