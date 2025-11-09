@@ -57,13 +57,8 @@ pub async fn clean_async() -> bool {
 
         let disable_tun = serde_json::json!({ "tun": { "enable": false } });
 
-        #[cfg(target_os = "windows")]
-        let tun_timeout = Duration::from_millis(100);
-        #[cfg(not(target_os = "windows"))]
-        let tun_timeout = Duration::from_millis(100);
-
         match timeout(
-            tun_timeout,
+            Duration::from_millis(1000),
             handle::Handle::mihomo()
                 .await
                 .patch_base_config(&disable_tun),
