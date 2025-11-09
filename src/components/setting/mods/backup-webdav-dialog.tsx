@@ -1,8 +1,10 @@
 import { Box } from "@mui/material";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { BaseDialog, BaseLoadingOverlay } from "@/components/base";
+import { listWebDavBackup } from "@/services/cmds";
+import { showNotice } from "@/services/noticeService";
 
 import { BackupConfigViewer } from "./backup-config-viewer";
 
@@ -22,12 +24,35 @@ export const BackupWebdavDialog = ({
   const { t } = useTranslation();
   const [loading, setLoading] = useState(false);
 
-  const handleLoading = (value: boolean) => {
-    setLoading(value);
-    setBusy?.(value);
-  };
+  const handleLoading = useCallback(
+    (value: boolean) => {
+      setLoading(value);
+      setBusy?.(value);
+    },
+    [setBusy],
+  );
 
-  const noop = async () => {};
+  const refreshWebdav = useCallback(
+    async (options?: { silent?: boolean }) => {
+      handleLoading(true);
+      try {
+        await listWebDavBackup();
+        if (!options?.silent) {
+          showNotice.success("WebDAV refresh succeeded");
+        }
+      } catch (error) {
+        showNotice.error("WebDAV refresh failed", String(error));
+      } finally {
+        handleLoading(false);
+      }
+    },
+    [handleLoading],
+  );
+
+  const refreshSilently = useCallback(
+    () => refreshWebdav({ silent: true }),
+    [refreshWebdav],
+  );
 
   return (
     <BaseDialog
@@ -44,12 +69,12 @@ export const BackupWebdavDialog = ({
         <BackupConfigViewer
           setLoading={handleLoading}
           onBackupSuccess={async () => {
-            await noop();
+            await refreshSilently();
             onBackupSuccess?.();
           }}
-          onSaveSuccess={noop}
-          onRefresh={noop}
-          onInit={noop}
+          onSaveSuccess={refreshSilently}
+          onRefresh={refreshWebdav}
+          onInit={refreshSilently}
         />
       </Box>
     </BaseDialog>

@@ -58,14 +58,6 @@ export const BackupConfigViewer = memo(
       webdav_username !== username ||
       webdav_password !== password;
 
-    console.log(
-      "webdavChanged",
-      webdavChanged,
-      webdav_url,
-      webdav_username,
-      webdav_password,
-    );
-
     const handleClickShowPassword = () => {
       setShowPassword((prev) => !prev);
     };
