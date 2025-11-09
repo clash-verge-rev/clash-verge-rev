@@ -1,13 +1,13 @@
 import {
   FormControl,
-  FormHelperText,
   InputLabel,
+  List,
+  ListItem,
+  ListItemText,
   MenuItem,
   Select,
   SelectChangeEvent,
-  Stack,
   Switch,
-  Typography,
 } from "@mui/material";
 import { useLockFn } from "ahooks";
 import { useMemo, useState } from "react";
@@ -99,63 +99,80 @@ export function AutoBackupSettings() {
     applyPatch({ changeEnabled: checked }, { auto_backup_on_change: checked });
   };
 
+  const intervalLabelId = "auto-backup-interval-label";
+
   return (
-    <Stack spacing={1.5} sx={{ mb: 2 }}>
-      <Typography variant="subtitle1">
-        {t("settings.modals.backup.auto.title")}
-      </Typography>
-
-      <Stack direction="row" alignItems="center" justifyContent="space-between">
-        <Stack spacing={0.5} sx={{ pr: 2 }}>
-          <Typography variant="body2">
-            {t("settings.modals.backup.auto.scheduleLabel")}
-          </Typography>
-          <FormHelperText sx={{ m: 0 }}>
-            {t("settings.modals.backup.auto.scheduleHelper")}
-          </FormHelperText>
-        </Stack>
-        <Switch
-          edge="end"
-          checked={values.scheduleEnabled}
-          onChange={handleScheduleToggle}
-          disabled={disabled}
+    <List
+      disablePadding
+      sx={{
+        ".MuiListItem-root": { px: 0 },
+        ".MuiListItemSecondaryAction-root": { right: 0 },
+      }}
+    >
+      <ListItem
+        divider
+        secondaryAction={
+          <Switch
+            edge="end"
+            checked={values.scheduleEnabled}
+            onChange={handleScheduleToggle}
+            disabled={disabled}
+          />
+        }
+      >
+        <ListItemText
+          primary={t("settings.modals.backup.auto.scheduleLabel")}
+          secondary={t("settings.modals.backup.auto.scheduleHelper")}
         />
-      </Stack>
+      </ListItem>
 
-      <FormControl size="small" disabled={disabled || !values.scheduleEnabled}>
-        <InputLabel id="auto-backup-interval-label">
-          {t("settings.modals.backup.auto.intervalLabel")}
-        </InputLabel>
-        <Select
-          labelId="auto-backup-interval-label"
-          label={t("settings.modals.backup.auto.intervalLabel")}
-          value={values.intervalHours}
-          onChange={handleIntervalChange}
-        >
-          {INTERVAL_OPTIONS.map((option) => (
-            <MenuItem key={option} value={option}>
-              {formatIntervalLabel(option)}
-            </MenuItem>
-          ))}
-        </Select>
-      </FormControl>
-
-      <Stack direction="row" alignItems="center" justifyContent="space-between">
-        <Stack spacing={0.5} sx={{ pr: 2 }}>
-          <Typography variant="body2">
-            {t("settings.modals.backup.auto.changeLabel")}
-          </Typography>
-          <FormHelperText sx={{ m: 0 }}>
-            {t("settings.modals.backup.auto.changeHelper")}
-          </FormHelperText>
-        </Stack>
-        <Switch
-          edge="end"
-          checked={values.changeEnabled}
-          onChange={handleChangeToggle}
-          disabled={disabled}
+      <ListItem
+        divider
+        secondaryAction={
+          <FormControl
+            size="small"
+            disabled={disabled || !values.scheduleEnabled}
+            sx={{ minWidth: 160 }}
+          >
+            <InputLabel id={intervalLabelId}>
+              {t("settings.modals.backup.auto.intervalLabel")}
+            </InputLabel>
+            <Select
+              labelId={intervalLabelId}
+              label={t("settings.modals.backup.auto.intervalLabel")}
+              value={values.intervalHours}
+              onChange={handleIntervalChange}
+            >
+              {INTERVAL_OPTIONS.map((option) => (
+                <MenuItem key={option} value={option}>
+                  {formatIntervalLabel(option)}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        }
+      >
+        <ListItemText
+          primary={t("settings.modals.backup.auto.intervalLabel")}
         />
-      </Stack>
-    </Stack>
+      </ListItem>
+
+      <ListItem
+        divider
+        secondaryAction={
+          <Switch
+            edge="end"
+            checked={values.changeEnabled}
+            onChange={handleChangeToggle}
+            disabled={disabled}
+          />
+        }
+      >
+        <ListItemText
+          primary={t("settings.modals.backup.auto.changeLabel")}
+          secondary={t("settings.modals.backup.auto.changeHelper")}
+        />
+      </ListItem>
+    </List>
   );
 }

@@ -285,7 +285,8 @@
         "exportBackup": "导出备份",
         "deleteBackup": "删除备份",
         "restore": "恢复",
-        "restoreBackup": "恢复备份"
+        "restoreBackup": "恢复备份",
+        "viewHistory": "查看记录"
       },
       "fields": {
         "webdavUrl": "WebDAV 服务器地址 http(s)://",
@@ -320,6 +321,20 @@
           "hours": "每 {{n}} 小时",
           "days": "每 {{n}} 天"
         }
+      },
+      "manual": {
+        "title": "手动备份",
+        "local": "在本设备的应用数据目录中创建备份。",
+        "webdav": "配置 WebDAV 后，可直接上传备份到服务器。",
+        "configureWebdav": "配置 WebDAV"
+      },
+      "history": {
+        "title": "备份记录",
+        "summary": "共 {{count}} 份备份 · 最近 {{recent}}",
+        "empty": "暂无备份记录"
+      },
+      "webdav": {
+        "title": "WebDAV 设置"
       },
       "table": {
         "filename": "文件名称",

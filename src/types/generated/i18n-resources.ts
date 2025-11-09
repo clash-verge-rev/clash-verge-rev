@@ -690,6 +690,7 @@ export interface TranslationResources {
             restore: string;
             restoreBackup: string;
             selectTarget: string;
+            viewHistory: string;
           };
           auto: {
             changeHelper: string;
@@ -707,6 +708,17 @@ export interface TranslationResources {
             info: string;
             username: string;
             webdavUrl: string;
+          };
+          history: {
+            empty: string;
+            summary: string;
+            title: string;
+          };
+          manual: {
+            configureWebdav: string;
+            local: string;
+            title: string;
+            webdav: string;
           };
           messages: {
             backupCreated: string;
@@ -737,6 +749,9 @@ export interface TranslationResources {
             webdav: string;
           };
           title: string;
+          webdav: {
+            title: string;
+          };
         };
         clashCore: {
           variants: {

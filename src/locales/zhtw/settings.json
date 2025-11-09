@@ -285,7 +285,8 @@
         "exportBackup": "匯出備份",
         "deleteBackup": "刪除備份",
         "restore": "還原",
-        "restoreBackup": "還原備份"
+        "restoreBackup": "還原備份",
+        "viewHistory": "檢視紀錄"
       },
       "fields": {
         "webdavUrl": "WebDAV 伺服器位址 http(s)://",
@@ -320,6 +321,20 @@
           "hours": "每 {{n}} 小時",
           "days": "每 {{n}} 天"
         }
+      },
+      "manual": {
+        "title": "手動備份",
+        "local": "在本機應用資料資料夾建立備份檔。",
+        "webdav": "設定 WebDAV 後，可直接上傳備份至伺服器。",
+        "configureWebdav": "設定 WebDAV"
+      },
+      "history": {
+        "title": "備份紀錄",
+        "summary": "共 {{count}} 份備份 · 最近 {{recent}}",
+        "empty": "尚無備份紀錄"
+      },
+      "webdav": {
+        "title": "WebDAV 設定"
       },
       "table": {
         "filename": "檔案名稱",

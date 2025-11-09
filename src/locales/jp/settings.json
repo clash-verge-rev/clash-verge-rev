@@ -285,7 +285,8 @@
         "exportBackup": "Export Backup",
         "deleteBackup": "バックアップを削除",
         "restore": "復元",
-        "restoreBackup": "バックアップを復元"
+        "restoreBackup": "バックアップを復元",
+        "viewHistory": "View history"
       },
       "fields": {
         "webdavUrl": "WebDAVサーバーのURL http(s)://",
@@ -320,6 +321,20 @@
           "hours": "Every {{n}} hours",
           "days": "Every {{n}} days"
         }
+      },
+      "manual": {
+        "title": "Manual backup",
+        "local": "Creates a snapshot on this device, stored under the app data directory.",
+        "webdav": "Upload a snapshot to your WebDAV server once credentials are set.",
+        "configureWebdav": "Configure WebDAV"
+      },
+      "history": {
+        "title": "Backup history",
+        "summary": "{{count}} backups • latest {{recent}}",
+        "empty": "No backups available"
+      },
+      "webdav": {
+        "title": "WebDAV settings"
       },
       "table": {
         "filename": "ファイル名",
