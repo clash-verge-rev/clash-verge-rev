@@ -92,7 +92,8 @@ impl WebDavClient {
                     || verge.webdav_username.is_none()
                     || verge.webdav_password.is_none()
                 {
-                    let msg: String = "Unable to create web dav client, please make sure the webdav config is correct".into();
+                    let msg: String =
+                        "Unable to create web dav client, please make sure the webdav config is correct".into();
                     return Err(anyhow::Error::msg(msg));
                 }
 

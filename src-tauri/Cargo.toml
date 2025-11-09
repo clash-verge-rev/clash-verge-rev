@@ -8,6 +8,7 @@ repository = "https://github.com/clash-verge-rev/clash-verge-rev.git"
 default-run = "clash-verge"
 edition = "2024"
 build = "build.rs"
+rust-version = "1.91"
 
 [package.metadata.bundle]
 identifier = "io.github.clash-verge-rev.clash-verge-rev"
