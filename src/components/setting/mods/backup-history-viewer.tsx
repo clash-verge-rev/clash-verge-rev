@@ -102,6 +102,10 @@ export const BackupHistoryViewer = ({
           .filter((item): item is BackupRow => item !== null)
           .sort((a, b) => (a.backup_time.isAfter(b.backup_time) ? -1 : 1)),
       );
+    } catch (error) {
+      console.error(error);
+      setRows([]);
+      showNotice.error(error);
     } finally {
       setLoading(false);
     }
