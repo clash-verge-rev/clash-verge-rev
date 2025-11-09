@@ -27,11 +27,7 @@ impl<T: Clone> Draft<T> {
     /// 这也是零拷贝：只 clone Arc，不 clone T
     pub fn latest_arc(&self) -> SharedBox<T> {
         let guard = self.inner.read();
-        guard
-            .1
-            .as_ref()
-            .cloned()
-            .unwrap_or_else(|| Arc::clone(&guard.0))
+        guard.1.clone().unwrap_or_else(|| Arc::clone(&guard.0))
     }
 
     /// 通过闭包以可变方式编辑草稿（在闭包中我们给出 &mut T）

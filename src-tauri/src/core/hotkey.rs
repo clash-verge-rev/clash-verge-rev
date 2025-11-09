@@ -274,7 +274,7 @@ impl Hotkey {
         );
 
         // Extract hotkeys data before async operations
-        let hotkeys = verge.data_arc().hotkeys.as_ref().cloned();
+        let hotkeys = verge.data_arc().hotkeys.clone();
 
         if let Some(hotkeys) = hotkeys {
             logging!(

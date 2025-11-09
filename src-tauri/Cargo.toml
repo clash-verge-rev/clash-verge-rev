@@ -190,8 +190,10 @@ unimplemented = "deny"
 # Development quality lints
 todo = "warn"
 dbg_macro = "warn"
-#print_stdout = "warn"
-#print_stderr = "warn"
+
+# 我们期望所有输出方式通过 logging 模块进行统一管理
+# print_stdout = "deny"
+# print_stderr = "deny"
 
 # Performance lints for proxy application
 clone_on_ref_ptr = "warn"
@@ -249,3 +251,10 @@ iter_on_empty_collections = "deny"
 equatable_if_let = "deny"
 collection_is_never_read = "deny"
 branches_sharing_code = "deny"
+pathbuf_init_then_push = "deny"
+option_as_ref_cloned = "deny"
+large_types_passed_by_value = "deny"
+# implicit_clone = "deny" // 可能会造成额外开销，暂时不开启
+expl_impl_clone_on_copy = "deny"
+copy_iterator = "deny"
+cloned_instead_of_copied = "deny"
