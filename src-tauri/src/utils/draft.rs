@@ -12,12 +12,14 @@ pub struct Draft<T: Clone> {
 }
 
 impl<T: Clone> Draft<T> {
+    #[inline]
     pub fn new(data: T) -> Self {
         Self {
             inner: Arc::new(RwLock::new((Arc::new(Box::new(data)), None))),
         }
     }
     /// 以 Arc<Box<T>> 的形式获取当前“已提交（正式）”数据的快照（零拷贝，仅 clone Arc）
+    #[inline]
     pub fn data_arc(&self) -> SharedBox<T> {
         let guard = self.inner.read();
         Arc::clone(&guard.0)
@@ -25,6 +27,7 @@ impl<T: Clone> Draft<T> {
 
     /// 获取当前（草稿若存在则返回草稿，否则返回已提交）的快照
     /// 这也是零拷贝：只 clone Arc，不 clone T
+    #[inline]
     pub fn latest_arc(&self) -> SharedBox<T> {
         let guard = self.inner.read();
         guard.1.clone().unwrap_or_else(|| Arc::clone(&guard.0))
@@ -33,6 +36,7 @@ impl<T: Clone> Draft<T> {
     /// 通过闭包以可变方式编辑草稿（在闭包中我们给出 &mut T）
     /// - 延迟拷贝：如果只有这一个 Arc 引用，则直接修改，不会克隆 T；
     /// - 若草稿被其他读者共享，Arc::make_mut 会做一次 T.clone（最小必要拷贝）。
+    #[inline]
     pub fn edit_draft<F, R>(&self, f: F) -> R
     where
         F: FnOnce(&mut T) -> R,
@@ -56,6 +60,7 @@ impl<T: Clone> Draft<T> {
     }
 
     /// 将草稿提交到已提交位置（替换），并清除草稿
+    #[inline]
     pub fn apply(&self) {
         let mut guard = self.inner.write();
         if let Some(d) = guard.1.take() {
@@ -64,6 +69,7 @@ impl<T: Clone> Draft<T> {
     }
 
     /// 丢弃草稿（如果存在）
+    #[inline]
     pub fn discard(&self) {
         let mut guard = self.inner.write();
         guard.1 = None;
@@ -71,6 +77,7 @@ impl<T: Clone> Draft<T> {
 
     /// 异步地以拥有 Box<T> 的方式修改已提交数据：将克隆一次已提交数据到本地，
     /// 异步闭包返回新的 Box<T>（替换已提交数据）和业务返回值 R。
+    #[inline]
     pub async fn with_data_modify<F, Fut, R>(&self, f: F) -> Result<R, anyhow::Error>
     where
         T: Send + Sync + 'static,
