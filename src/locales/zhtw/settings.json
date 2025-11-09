@@ -154,7 +154,7 @@
         "tooltips": {
           "backupInfo": "支援本機或 WebDAV 方式備份配置檔案",
           "openConfDir": "如果軟體執行異常，!備份!並刪除此資料夾下的所有檔案，重新啟動軟體",
-          "liteMode": "關閉 GUI 介面，僅保留內核執行"
+          "liteMode": "關閉圖形介面，僅保留內核執行"
         },
         "actions": {
           "copyVersion": "複製Verge版本號"
@@ -192,10 +192,10 @@
           "cssInjection": "CSS 注入"
         },
         "actions": {
-          "editCss": "Edit CSS"
+          "editCss": "編輯 CSS"
         },
         "dialogs": {
-          "editCssTitle": "Edit CSS"
+          "editCssTitle": "編輯 CSS"
         }
       },
       "layout": {
@@ -234,11 +234,11 @@
     "clashPort": {
       "title": "連接埠設定",
       "fields": {
-        "mixed": "混合代理連接埠",
-        "socks": "SOCKS 代理連接埠",
-        "http": "HTTP(S) 代理連接埠",
-        "redir": "Redir 透明代理連接埠",
-        "tproxy": "Tproxy Port"
+        "mixed": "混合連接埠",
+        "socks": "SOCKS 連接埠",
+        "http": "HTTP(S) 連接埠",
+        "redir": "Redir 透明連接埠",
+        "tproxy": "Tproxy 連接埠"
       },
       "actions": {
         "random": "隨機連接埠"
@@ -298,7 +298,7 @@
         "usernameRequired": "使用者名稱不能為空",
         "passwordRequired": "密碼不能為空",
         "webdavConfigSaved": "WebDAV 配置儲存成功",
-        "webdavConfigSaveFailed": "儲存 WebDAV 配置失敗: {{error}}",
+        "webdavConfigSaveFailed": "儲存 WebDAV 設定檔失敗: {{error}}",
         "backupCreated": "備份建立成功",
         "backupFailed": "備份失敗: {{error}}",
         "localBackupCreated": "本機備份建立成功",
@@ -314,7 +314,7 @@
         "backupTime": "備份時間",
         "actions": "動作",
         "noBackups": "暫無備份",
-        "rowsPerPage": "Rows per page"
+        "rowsPerPage": "每頁列數"
       }
     },
     "misc": {
@@ -349,7 +349,7 @@
       }
     },
     "update": {
-      "title": "New Version v{{version}}",
+      "title": "新版本 v{{version}}",
       "actions": {
         "goToRelease": "前往發佈頁面",
         "update": "更新"
@@ -401,7 +401,7 @@
         "mtu": "最大傳輸單位"
       },
       "tooltips": {
-        "dnsHijack": "Please use , to separate multiple DNS servers"
+        "dnsHijack": "請用半形逗號來區隔多個 DNS 伺服器"
       },
       "messages": {
         "applied": "設定已套用"
@@ -498,7 +498,7 @@
         "configError": "DNS 設定錯誤："
       },
       "errors": {
-        "invalid": "Invalid configuration",
+        "invalid": "無效的設定",
         "invalidYaml": "YAML 格式無效"
       }
     },
