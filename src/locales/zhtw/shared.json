@@ -22,8 +22,8 @@
     "resume": "繼續",
     "closeAll": "關閉全部",
     "clear": "清除",
-    "previous": "Previous",
-    "next": "Next"
+    "previous": "上一頁",
+    "next": "下一頁"
   },
   "labels": {
     "updateAt": "更新於",
