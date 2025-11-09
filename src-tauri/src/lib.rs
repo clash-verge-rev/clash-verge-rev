@@ -276,6 +276,8 @@ pub fn run() {
             utils::logging::Type,
         };
         use tauri::AppHandle;
+        #[cfg(target_os = "macos")]
+        use tauri::Manager;
 
         pub fn handle_ready_resumed(_app_handle: &AppHandle) {
             if handle::Handle::global().is_exiting() {
