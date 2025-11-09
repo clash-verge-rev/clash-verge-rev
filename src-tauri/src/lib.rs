@@ -322,7 +322,7 @@ pub fn run() {
             AsyncHandler::spawn(move || async move {
                 let is_enable_global_hotkey = Config::verge()
                     .await
-                    .latest_arc()
+                    .data_arc()
                     .enable_global_hotkey
                     .unwrap_or(true);
 
@@ -362,7 +362,7 @@ pub fn run() {
                 let _ = hotkey::Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdW);
                 let is_enable_global_hotkey = Config::verge()
                     .await
-                    .latest_arc()
+                    .data_arc()
                     .enable_global_hotkey
                     .unwrap_or(true);
                 if !is_enable_global_hotkey {
