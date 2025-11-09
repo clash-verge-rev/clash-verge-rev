@@ -1,90 +1,90 @@
 {
-  "page": {
-    "modes": {
-      "rule": "規則",
-      "global": "全局",
-      "direct": "直連"
+    "page": {
+        "modes": {
+            "rule": "規則",
+            "global": "全局",
+            "direct": "直連"
+        },
+        "actions": {
+            "toggleChain": "鏈式代理",
+            "connect": "連線",
+            "disconnect": "中斷",
+            "connecting": "連線中...",
+            "clearChainConfig": "刪除鏈式設定"
+        },
+        "provider": {
+            "title": "代理集合",
+            "actions": {
+                "updateAll": "全部更新",
+                "update": "更新"
+            }
+        },
+        "rules": {
+            "title": "代理規則",
+            "select": "選擇規則"
+        },
+        "labels": {
+            "proxyCount": "節點數量",
+            "delayCheckReset": "測試延遲以取消固定"
+        },
+        "tooltips": {
+            "locate": "目前節點",
+            "delayCheck": "延遲測試",
+            "sortDefault": "預設排序",
+            "sortDelay": "按延遲排序",
+            "sortName": "按名稱排序",
+            "delayCheckUrl": "延遲測試網址",
+            "showBasic": "隱藏節點細節",
+            "showDetail": "展示節點細節",
+            "filter": "篩選節點"
+        },
+        "placeholders": {
+            "delayCheckUrl": "延遲測試網址"
+        },
+        "chain": {
+            "header": "鏈式代理設定",
+            "empty": "暫無鏈式代理設定",
+            "instruction": "依序點擊節點新增到鏈式代理中",
+            "minimumNodes": "鏈式代理至少需要 2 個節點",
+            "minimumNodesHint": "鏈式代理至少需要 2 個節點，請再新增一個節點。",
+            "connectFailed": "連線鏈式代理失敗",
+            "disconnectFailed": "中斷鏈式代理失敗",
+            "duplicateNode": "該節點已在鏈式代理表中"
+        },
+        "messages": {
+            "directMode": "直連模式"
+        },
+        "title": {
+            "default": "代理組",
+            "chainMode": "鏈式代理模式"
+        }
     },
-    "actions": {
-      "toggleChain": "🔗 鏈式代理",
-      "connect": "連線",
-      "disconnect": "中斷",
-      "connecting": "連線中...",
-      "clearChainConfig": "刪除鏈式設定"
+    "feedback": {
+        "notifications": {
+            "provider": {
+                "updateSuccess": "{{name}} updated successfully",
+                "updateFailed": "Failed to update {{name}}: {{message}}",
+                "genericError": "Update failed: {{message}}",
+                "none": "No providers available to update",
+                "allUpdated": "All providers updated successfully"
+            }
+        }
     },
-    "provider": {
-      "title": "代理集合",
-      "actions": {
-        "updateAll": "全部更新",
-        "update": "更新"
-      }
-    },
-    "rules": {
-      "title": "代理規則",
-      "select": "選擇規則"
-    },
-    "labels": {
-      "proxyCount": "節點數量",
-      "delayCheckReset": "測試延遲以取消固定"
-    },
-    "tooltips": {
-      "locate": "目前節點",
-      "delayCheck": "延遲測試",
-      "sortDefault": "預設排序",
-      "sortDelay": "按延遲排序",
-      "sortName": "按名稱排序",
-      "delayCheckUrl": "延遲測試網址",
-      "showBasic": "隱藏節點細節",
-      "showDetail": "展示節點細節",
-      "filter": "篩選節點"
-    },
-    "placeholders": {
-      "delayCheckUrl": "延遲測試網址"
-    },
-    "chain": {
-      "header": "鏈式代理設定",
-      "empty": "暫無鏈式代理設定",
-      "instruction": "依序點擊節點新增到鏈式代理中",
-      "minimumNodes": "鏈式代理至少需要 2 個節點",
-      "minimumNodesHint": "鏈式代理至少需要 2 個節點，請再新增一個節點。",
-      "connectFailed": "連線鏈式代理失敗",
-      "disconnectFailed": "中斷鏈式代理失敗",
-      "duplicateNode": "該節點已在鏈式代理表中"
-    },
-    "messages": {
-      "directMode": "直連模式"
-    },
-    "title": {
-      "default": "代理組",
-      "chainMode": "鏈式代理模式"
+    "components": {
+        "enums": {
+            "strategies": {
+                "select": "手動選擇代理",
+                "url-test": "根據網址測試延遲選擇代理",
+                "fallback": "切換至另一個備用代理",
+                "load-balance": "根據負載平衡分配代理",
+                "relay": "根據定義的代理鏈傳送"
+            },
+            "policies": {
+                "DIRECT": "直連 (DIRECT)",
+                "REJECT": "拒絕請求 (REJECT)",
+                "REJECT-DROP": "丟棄請求 (REJECT-DROP)",
+                "PASS": "跳過此規則 (PASS)"
+            }
+        }
     }
-  },
-  "feedback": {
-    "notifications": {
-      "provider": {
-        "updateSuccess": "{{name}} updated successfully",
-        "updateFailed": "Failed to update {{name}}: {{message}}",
-        "genericError": "Update failed: {{message}}",
-        "none": "No providers available to update",
-        "allUpdated": "All providers updated successfully"
-      }
-    }
-  },
-  "components": {
-    "enums": {
-      "strategies": {
-        "select": "手動選擇代理",
-        "url-test": "根據網址測試延遲選擇代理",
-        "fallback": "切換至另一個備用代理",
-        "load-balance": "根據負載平衡分配代理",
-        "relay": "根據定義的代理鏈傳送"
-      },
-      "policies": {
-        "DIRECT": "直連 (DIRECT)",
-        "REJECT": "拒絕請求 (REJECT)",
-        "REJECT-DROP": "丟棄請求 (REJECT-DROP)",
-        "PASS": "跳過此規則 (PASS)"
-      }
-    }
-  }
 }

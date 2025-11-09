@@ -1,90 +1,90 @@
 {
-  "page": {
-    "modes": {
-      "rule": "规则",
-      "global": "全局",
-      "direct": "直连"
+    "page": {
+        "modes": {
+            "rule": "规则",
+            "global": "全局",
+            "direct": "直连"
+        },
+        "actions": {
+            "toggleChain": "链式代理",
+            "connect": "连接",
+            "disconnect": "断开",
+            "connecting": "连接中...",
+            "clearChainConfig": "删除链式配置"
+        },
+        "provider": {
+            "title": "代理集合",
+            "actions": {
+                "updateAll": "更新全部",
+                "update": "更新"
+            }
+        },
+        "rules": {
+            "title": "代理规则",
+            "select": "选择规则"
+        },
+        "labels": {
+            "proxyCount": "节点数量",
+            "delayCheckReset": "进行延迟测试，以取消固定"
+        },
+        "tooltips": {
+            "locate": "当前节点",
+            "delayCheck": "延迟测试",
+            "sortDefault": "默认排序",
+            "sortDelay": "按延迟排序",
+            "sortName": "按名称排序",
+            "delayCheckUrl": "延迟测试链接",
+            "showBasic": "隐藏节点细节",
+            "showDetail": "展示节点细节",
+            "filter": "过滤节点"
+        },
+        "placeholders": {
+            "delayCheckUrl": "延迟测试链接"
+        },
+        "chain": {
+            "header": "代理链配置",
+            "empty": "暂无代理链配置",
+            "instruction": "顺序点击节点添加到代理链中",
+            "minimumNodes": "链式代理至少需要 2 个节点",
+            "minimumNodesHint": "链式代理至少需要 2 个节点，请再添加一个节点。",
+            "connectFailed": "连接链式代理失败",
+            "disconnectFailed": "断开链式代理失败",
+            "duplicateNode": "该节点已在链式代理表中"
+        },
+        "messages": {
+            "directMode": "直连模式"
+        },
+        "title": {
+            "default": "代理组",
+            "chainMode": "链式代理模式"
+        }
     },
-    "actions": {
-      "toggleChain": "🔗 链式代理",
-      "connect": "连接",
-      "disconnect": "断开",
-      "connecting": "连接中...",
-      "clearChainConfig": "删除链式配置"
+    "feedback": {
+        "notifications": {
+            "provider": {
+                "updateSuccess": "{{name}} 更新成功",
+                "updateFailed": "{{name}} 更新失败: {{message}}",
+                "genericError": "更新失败: {{message}}",
+                "none": "没有可更新的 provider",
+                "allUpdated": "所有 provider 均已更新"
+            }
+        }
     },
-    "provider": {
-      "title": "代理集合",
-      "actions": {
-        "updateAll": "更新全部",
-        "update": "更新"
-      }
-    },
-    "rules": {
-      "title": "代理规则",
-      "select": "选择规则"
-    },
-    "labels": {
-      "proxyCount": "节点数量",
-      "delayCheckReset": "进行延迟测试，以取消固定"
-    },
-    "tooltips": {
-      "locate": "当前节点",
-      "delayCheck": "延迟测试",
-      "sortDefault": "默认排序",
-      "sortDelay": "按延迟排序",
-      "sortName": "按名称排序",
-      "delayCheckUrl": "延迟测试链接",
-      "showBasic": "隐藏节点细节",
-      "showDetail": "展示节点细节",
-      "filter": "过滤节点"
-    },
-    "placeholders": {
-      "delayCheckUrl": "延迟测试链接"
-    },
-    "chain": {
-      "header": "代理链配置",
-      "empty": "暂无代理链配置",
-      "instruction": "顺序点击节点添加到代理链中",
-      "minimumNodes": "链式代理至少需要 2 个节点",
-      "minimumNodesHint": "链式代理至少需要 2 个节点，请再添加一个节点。",
-      "connectFailed": "连接链式代理失败",
-      "disconnectFailed": "断开链式代理失败",
-      "duplicateNode": "该节点已在链式代理表中"
-    },
-    "messages": {
-      "directMode": "直连模式"
-    },
-    "title": {
-      "default": "代理组",
-      "chainMode": "链式代理模式"
+    "components": {
+        "enums": {
+            "strategies": {
+                "select": "手动选择代理",
+                "url-test": "根据 URL 测试延迟选择代理",
+                "fallback": "不可用时切换到另一个代理",
+                "load-balance": "根据负载均衡分配代理",
+                "relay": "根据定义的代理链传递"
+            },
+            "policies": {
+                "DIRECT": "直连 (DIRECT)",
+                "REJECT": "拦截请求 (REJECT)",
+                "REJECT-DROP": "抛弃请求 (REJECT-DROP)",
+                "PASS": "跳过此规则 (PASS)"
+            }
+        }
     }
-  },
-  "feedback": {
-    "notifications": {
-      "provider": {
-        "updateSuccess": "{{name}} 更新成功",
-        "updateFailed": "{{name}} 更新失败: {{message}}",
-        "genericError": "更新失败: {{message}}",
-        "none": "没有可更新的 provider",
-        "allUpdated": "所有 provider 均已更新"
-      }
-    }
-  },
-  "components": {
-    "enums": {
-      "strategies": {
-        "select": "手动选择代理",
-        "url-test": "根据 URL 测试延迟选择代理",
-        "fallback": "不可用时切换到另一个代理",
-        "load-balance": "根据负载均衡分配代理",
-        "relay": "根据定义的代理链传递"
-      },
-      "policies": {
-        "DIRECT": "直连 (DIRECT)",
-        "REJECT": "拦截请求 (REJECT)",
-        "REJECT-DROP": "抛弃请求 (REJECT-DROP)",
-        "PASS": "跳过此规则 (PASS)"
-      }
-    }
-  }
 }
