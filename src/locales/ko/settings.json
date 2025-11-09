@@ -307,6 +307,8 @@
         "restoreSuccess": "복원 성공, 1초 후 앱이 재시작됩니다",
         "localBackupExported": "로컬 백업이 내보내졌습니다",
         "localBackupExportFailed": "로컬 백업 내보내기 실패",
+        "webdavRefreshSuccess": "WebDAV refresh succeeded",
+        "webdavRefreshFailed": "WebDAV refresh failed: {{error}}",
         "confirmDelete": "이 백업 파일을 삭제하시겠습니까?",
         "confirmRestore": "이 백업 파일을 복원하시겠습니까?"
       },

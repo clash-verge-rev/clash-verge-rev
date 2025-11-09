@@ -307,6 +307,8 @@
         "restoreSuccess": "Geri Yükleme Başarılı, Uygulama 1 saniye içinde yeniden başlatılacak",
         "localBackupExported": "Local backup exported successfully",
         "localBackupExportFailed": "Failed to export local backup",
+        "webdavRefreshSuccess": "WebDAV refresh succeeded",
+        "webdavRefreshFailed": "WebDAV refresh failed: {{error}}",
         "confirmDelete": "Bu yedek dosyasını silmeyi onaylıyor musunuz?",
         "confirmRestore": "Bu yedek dosyasını geri yüklemeyi onaylıyor musunuz?"
       },

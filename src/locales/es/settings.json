@@ -307,6 +307,8 @@
         "restoreSuccess": "Restauración exitosa. La aplicación se reiniciará en 1 segundo",
         "localBackupExported": "Local backup exported successfully",
         "localBackupExportFailed": "Failed to export local backup",
+        "webdavRefreshSuccess": "WebDAV refresh succeeded",
+        "webdavRefreshFailed": "WebDAV refresh failed: {{error}}",
         "confirmDelete": "Confirm to delete this backup file?",
         "confirmRestore": "Confirm to restore this backup file?"
       },

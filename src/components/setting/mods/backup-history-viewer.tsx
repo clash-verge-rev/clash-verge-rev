@@ -19,6 +19,7 @@ import { save } from "@tauri-apps/plugin-dialog";
 import { useLockFn } from "ahooks";
 import dayjs from "dayjs";
 import customParseFormat from "dayjs/plugin/customParseFormat";
+import relativeTime from "dayjs/plugin/relativeTime";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -36,6 +37,7 @@ import {
 import { showNotice } from "@/services/noticeService";
 
 dayjs.extend(customParseFormat);
+dayjs.extend(relativeTime);
 
 const DATE_FORMAT = "YYYY-MM-DD_HH-mm-ss";
 const FILENAME_PATTERN = /\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}/;

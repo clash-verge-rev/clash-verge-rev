@@ -307,6 +307,8 @@
         "restoreSuccess": "Восстановление успешно выполнено, приложение перезапустится через 1 секунду",
         "localBackupExported": "Local backup exported successfully",
         "localBackupExportFailed": "Failed to export local backup",
+        "webdavRefreshSuccess": "WebDAV refresh succeeded",
+        "webdavRefreshFailed": "WebDAV refresh failed: {{error}}",
         "confirmDelete": "Вы уверены, что хотите удалить этот файл резервной копии?",
         "confirmRestore": "Вы уверены, что хотите восстановить этот файл резервной копии?"
       },

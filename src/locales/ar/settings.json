@@ -307,6 +307,8 @@
         "restoreSuccess": "تمت الاستعادة بنجاح، سيعاد تشغيل التطبيق خلال ثانية واحدة",
         "localBackupExported": "Local backup exported successfully",
         "localBackupExportFailed": "Failed to export local backup",
+        "webdavRefreshSuccess": "WebDAV refresh succeeded",
+        "webdavRefreshFailed": "WebDAV refresh failed: {{error}}",
         "confirmDelete": "هل تريد بالتأكيد حذف ملف النسخة الاحتياطية هذا؟",
         "confirmRestore": "هل تريد بالتأكيد استعادة ملف النسخة الاحتياطية هذا؟"
       },

@@ -307,6 +307,8 @@
         "restoreSuccess": "Pemulihan Berhasil, Aplikasi akan dimulai ulang dalam 1 detik",
         "localBackupExported": "Local backup exported successfully",
         "localBackupExportFailed": "Failed to export local backup",
+        "webdavRefreshSuccess": "WebDAV refresh succeeded",
+        "webdavRefreshFailed": "WebDAV refresh failed: {{error}}",
         "confirmDelete": "Konfirmasi untuk menghapus file cadangan ini?",
         "confirmRestore": "Konfirmasi untuk memulihkan file cadangan ini?"
       },

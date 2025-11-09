@@ -307,6 +307,8 @@
         "restoreSuccess": "恢复成功，应用将在 1 秒后重启",
         "localBackupExported": "本地备份导出成功",
         "localBackupExportFailed": "本地备份导出失败",
+        "webdavRefreshSuccess": "WebDAV 刷新成功",
+        "webdavRefreshFailed": "WebDAV 刷新失败: {{error}}",
         "confirmDelete": "确认删除此备份文件吗？",
         "confirmRestore": "确认恢复此份文件吗？"
       },

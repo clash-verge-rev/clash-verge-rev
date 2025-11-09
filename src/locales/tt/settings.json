@@ -307,6 +307,8 @@
         "restoreSuccess": "Уңышлы кайтарылды, кушымта 1 секундтан яңадан башланачак",
         "localBackupExported": "Local backup exported successfully",
         "localBackupExportFailed": "Failed to export local backup",
+        "webdavRefreshSuccess": "WebDAV refresh succeeded",
+        "webdavRefreshFailed": "WebDAV refresh failed: {{error}}",
         "confirmDelete": "Бу резерв копия файлын бетерергә телисезме?",
         "confirmRestore": "Бу резерв копия файлын кире кайтарырга телисезме?"
       },

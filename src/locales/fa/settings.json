@@ -307,6 +307,8 @@
         "restoreSuccess": "بازیابی با موفقیت انجام شد، برنامه در 1 ثانیه راه‌اندازی مجدد می‌شود",
         "localBackupExported": "Local backup exported successfully",
         "localBackupExportFailed": "Failed to export local backup",
+        "webdavRefreshSuccess": "WebDAV refresh succeeded",
+        "webdavRefreshFailed": "WebDAV refresh failed: {{error}}",
         "confirmDelete": "آیا از حذف این فایل پشتیبان اطمینان دارید؟",
         "confirmRestore": "آیا از بازیابی این فایل پشتیبان اطمینان دارید؟"
       },

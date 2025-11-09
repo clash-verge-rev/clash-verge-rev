@@ -735,6 +735,8 @@ export interface TranslationResources {
             usernameRequired: string;
             webdavConfigSaved: string;
             webdavConfigSaveFailed: string;
+            webdavRefreshFailed: string;
+            webdavRefreshSuccess: string;
             webdavUrlRequired: string;
           };
           table: {

@@ -9,7 +9,7 @@ import {
   Stack,
 } from "@mui/material";
 import { useLockFn } from "ahooks";
-import { Fragment, useMemo, useState } from "react";
+import { Fragment, useMemo, useState, type ChangeEvent } from "react";
 import { useTranslation } from "react-i18next";
 
 import { Switch } from "@/components/base";
@@ -72,7 +72,7 @@ export function AutoBackupSettings() {
   };
 
   const handleScheduleToggle = (
-    _: React.ChangeEvent<HTMLInputElement>,
+    _: ChangeEvent<HTMLInputElement>,
     checked: boolean,
   ) => {
     applyPatch(
@@ -93,7 +93,7 @@ export function AutoBackupSettings() {
   };
 
   const handleChangeToggle = (
-    _: React.ChangeEvent<HTMLInputElement>,
+    _: ChangeEvent<HTMLInputElement>,
     checked: boolean,
   ) => {
     applyPatch({ changeEnabled: checked }, { auto_backup_on_change: checked });

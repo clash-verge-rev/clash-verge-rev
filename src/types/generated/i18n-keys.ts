@@ -479,6 +479,8 @@ export const translationKeys = [
   "settings.modals.backup.messages.restoreSuccess",
   "settings.modals.backup.messages.localBackupExported",
   "settings.modals.backup.messages.localBackupExportFailed",
+  "settings.modals.backup.messages.webdavRefreshSuccess",
+  "settings.modals.backup.messages.webdavRefreshFailed",
   "settings.modals.backup.messages.confirmDelete",
   "settings.modals.backup.messages.confirmRestore",
   "settings.modals.backup.auto.title",

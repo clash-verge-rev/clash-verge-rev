@@ -38,10 +38,15 @@ export const BackupWebdavDialog = ({
       try {
         await listWebDavBackup();
         if (!options?.silent) {
-          showNotice.success("WebDAV refresh succeeded");
+          showNotice.success(
+            "settings.modals.backup.messages.webdavRefreshSuccess",
+          );
         }
       } catch (error) {
-        showNotice.error("WebDAV refresh failed", String(error));
+        showNotice.error(
+          "settings.modals.backup.messages.webdavRefreshFailed",
+          { error },
+        );
       } finally {
         handleLoading(false);
       }
