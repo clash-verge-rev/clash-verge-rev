@@ -5,17 +5,10 @@ import path from "path";
 
 import AdmZip from "adm-zip";
 
-const target = process.argv.slice(2)[0];
-const ARCH_MAP = {
-  "x86_64-pc-windows-msvc": "x64",
-  "aarch64-pc-windows-msvc": "arm64",
-};
+import { getArch } from "./utils.mjs";
 
-const PROCESS_MAP = {
-  x64: "x64",
-  arm64: "arm64",
-};
-const arch = target ? ARCH_MAP[target] : PROCESS_MAP[process.arch];
+const target = process.argv.slice(2)[0];
+const arch = getArch(target);
 /// Script for ci
 /// 打包绿色版/便携版 (only Windows)
 async function resolvePortable() {

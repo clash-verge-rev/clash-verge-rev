@@ -1,7 +1,7 @@
 import { context, getOctokit } from "@actions/github";
-import fetch from "node-fetch";
 
 import { resolveUpdateLog } from "./updatelog.mjs";
+import { getSignature } from "./utils.mjs";
 
 const UPDATE_TAG_NAME = "updater";
 const UPDATE_JSON_FILE = "update-fixed-webview2.json";
@@ -143,16 +143,6 @@ async function resolveUpdater() {
     name: UPDATE_JSON_PROXY,
     data: JSON.stringify(updateDataNew, null, 2),
   });
-}
-
-// get the signature file content
-async function getSignature(url) {
-  const response = await fetch(url, {
-    method: "GET",
-    headers: { "Content-Type": "application/octet-stream" },
-  });
-
-  return response.text();
 }
 
 resolveUpdater().catch(console.error);

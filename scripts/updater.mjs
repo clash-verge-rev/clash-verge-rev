@@ -1,7 +1,7 @@
 import { getOctokit, context } from "@actions/github";
-import fetch from "node-fetch";
 
 import { resolveUpdateLog, resolveUpdateLogDefault } from "./updatelog.mjs";
+import { getSignature } from "./utils.mjs";
 
 // Add stable update JSON filenames
 const UPDATE_TAG_NAME = "updater";
@@ -309,16 +309,6 @@ async function processRelease(github, options, tag, isAlpha) {
       );
     }
   }
-}
-
-// get the signature file content
-async function getSignature(url) {
-  const response = await fetch(url, {
-    method: "GET",
-    headers: { "Content-Type": "application/octet-stream" },
-  });
-
-  return response.text();
 }
 
 resolveUpdater().catch(console.error);
