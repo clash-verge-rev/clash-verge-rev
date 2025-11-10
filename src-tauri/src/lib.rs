@@ -36,7 +36,7 @@ mod app_init {
 
     /// Initialize singleton monitoring for other instances
     pub fn init_singleton_check() -> Result<()> {
-        tauri::async_runtime::block_on(async move {
+        AsyncHandler::block_on(async move {
             logging!(info, Type::Setup, "开始检查单例实例...");
             server::check_singleton().await?;
             Ok(())
@@ -425,7 +425,7 @@ pub fn run() {
             });
         }
         tauri::RunEvent::ExitRequested { api, code, .. } => {
-            tauri::async_runtime::block_on(async {
+            AsyncHandler::block_on(async {
                 let _ = handle::Handle::mihomo()
                     .await
                     .clear_all_ws_connections()
