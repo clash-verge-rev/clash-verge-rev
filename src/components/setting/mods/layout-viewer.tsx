@@ -425,7 +425,6 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
                     await initIconPath();
                     onChangeData({ common_tray_icon: true });
                     patchVerge({ common_tray_icon: true });
-                    console.log();
                   }
                 }
               }}
