@@ -24,6 +24,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { BaseDialog, BaseLoadingOverlay } from "@/components/base";
+import { useVerge } from "@/hooks/use-verge";
 import {
   deleteLocalBackup,
   deleteWebdavBackup,
@@ -73,10 +74,15 @@ export const BackupHistoryViewer = ({
   onClose,
 }: BackupHistoryViewerProps) => {
   const { t } = useTranslation();
+  const { verge } = useVerge();
   const [rows, setRows] = useState<BackupRow[]>([]);
   const [loading, setLoading] = useState(false);
   const [isRestarting, setIsRestarting] = useState(false);
   const isLocal = source === "local";
+  const isWebDavConfigured = Boolean(
+    verge?.webdav_url && verge?.webdav_username && verge?.webdav_password,
+  );
+  const shouldSkipWebDav = !isLocal && !isWebDavConfigured;
   const pageSize = 8;
   const isBusy = loading || isRestarting;
 
@@ -93,6 +99,10 @@ export const BackupHistoryViewer = ({
 
   const fetchRows = useCallback(async () => {
     if (!open) return;
+    if (shouldSkipWebDav) {
+      setRows([]);
+      return;
+    }
     setLoading(true);
     try {
       const list = isLocal ? await listLocalBackup() : await listWebDavBackup();
@@ -109,7 +119,7 @@ export const BackupHistoryViewer = ({
     } finally {
       setLoading(false);
     }
-  }, [buildRow, isLocal, open]);
+  }, [buildRow, isLocal, open, shouldSkipWebDav]);
 
   useEffect(() => {
     void fetchRows();
@@ -124,13 +134,16 @@ export const BackupHistoryViewer = ({
   );
 
   const summary = useMemo(() => {
+    if (shouldSkipWebDav) {
+      return t("settings.modals.backup.manual.webdav");
+    }
     if (!total) return t("settings.modals.backup.history.empty");
     const recent = rows[0]?.backup_time.fromNow();
     return t("settings.modals.backup.history.summary", {
       count: total,
       recent,
     });
-  }, [rows, total, t]);
+  }, [rows, shouldSkipWebDav, t, total]);
 
   const handleDelete = useLockFn(async (filename: string) => {
     if (isRestarting) return;
