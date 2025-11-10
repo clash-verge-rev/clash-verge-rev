@@ -231,7 +231,9 @@ const ConnectionsPage = () => {
       ) : isTableLayout ? (
         <ConnectionTable
           connections={filterConn}
-          onShowDetail={(detail) => detailRef.current?.open(detail)}
+          onShowDetail={(detail) =>
+            detailRef.current?.open(detail, connectionsType === "closed")
+          }
           columnManagerOpen={isTableLayout && isColumnManagerOpen}
           onOpenColumnManager={() => setIsColumnManagerOpen(true)}
           onCloseColumnManager={() => setIsColumnManagerOpen(false)}
@@ -246,7 +248,10 @@ const ConnectionsPage = () => {
           itemContent={(_, item) => (
             <ConnectionItem
               value={item}
-              onShowDetail={() => detailRef.current?.open(item)}
+              closed={connectionsType === "closed"}
+              onShowDetail={() =>
+                detailRef.current?.open(item, connectionsType === "closed")
+              }
             />
           )}
         />
@@ -259,7 +264,11 @@ const ConnectionsPage = () => {
         <Fab
           size="medium"
           variant="extended"
-          sx={{ position: "absolute", right: 16, bottom: 70 }}
+          sx={{
+            position: "absolute",
+            right: 16,
+            bottom: isTableLayout ? 70 : 16,
+          }}
           color="primary"
           onClick={() => clearClosedConnections()}
         >
