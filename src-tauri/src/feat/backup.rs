@@ -123,6 +123,15 @@ pub async fn restore_webdav_backup(filename: String) -> Result<()> {
 
 /// Create a backup and save to local storage
 pub async fn create_local_backup() -> Result<()> {
+    create_local_backup_with_namer(|name| name.to_string().into())
+        .await
+        .map(|_| ())
+}
+
+pub async fn create_local_backup_with_namer<F>(namer: F) -> Result<String>
+where
+    F: FnOnce(&str) -> String,
+{
     let (file_name, temp_file_path) = backup::create_backup().await.map_err(|err| {
         logging!(
             error,
@@ -133,7 +142,8 @@ pub async fn create_local_backup() -> Result<()> {
     })?;
 
     let backup_dir = local_backup_dir()?;
-    let target_path = backup_dir.join(file_name.as_str());
+    let final_name = namer(file_name.as_str());
+    let target_path = backup_dir.join(final_name.as_str());
 
     if let Err(err) = move_file(temp_file_path.clone(), target_path.clone()).await {
         logging!(
@@ -152,7 +162,7 @@ pub async fn create_local_backup() -> Result<()> {
         return Err(err);
     }
 
-    Ok(())
+    Ok(final_name)
 }
 
 async fn move_file(from: PathBuf, to: PathBuf) -> Result<()> {

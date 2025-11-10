@@ -21,7 +21,9 @@
     "pause": "Jeda",
     "resume": "Lanjut",
     "closeAll": "Tutup Semua",
-    "clear": "Bersihkan"
+    "clear": "Bersihkan",
+    "previous": "Previous",
+    "next": "Next"
   },
   "labels": {
     "updateAt": "Diperbarui Pada",
@@ -48,6 +50,7 @@
     "milliseconds": "milidetik",
     "seconds": "detik",
     "minutes": "menit",
+    "hours": "jam",
     "kilobytes": "KB",
     "files": "Files"
   },

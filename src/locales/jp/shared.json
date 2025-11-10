@@ -21,7 +21,9 @@
     "pause": "一時停止",
     "resume": "再開",
     "closeAll": "すべて閉じる",
-    "clear": "クリア"
+    "clear": "クリア",
+    "previous": "Previous",
+    "next": "Next"
   },
   "labels": {
     "updateAt": "更新日時",
@@ -48,6 +50,7 @@
     "milliseconds": "ミリ秒",
     "seconds": "秒",
     "minutes": "分",
+    "hours": "時間",
     "kilobytes": "KB",
     "files": "Files"
   },

@@ -21,7 +21,9 @@
     "pause": "일시 정지",
     "resume": "재개",
     "closeAll": "모두 닫기",
-    "clear": "지우기"
+    "clear": "지우기",
+    "previous": "Previous",
+    "next": "Next"
   },
   "labels": {
     "updateAt": "업데이트 시간",
@@ -48,6 +50,7 @@
     "milliseconds": "밀리초",
     "seconds": "초",
     "minutes": "분",
+    "hours": "시간",
     "kilobytes": "KB",
     "files": "파일"
   },

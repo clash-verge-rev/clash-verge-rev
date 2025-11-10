@@ -285,7 +285,8 @@
         "exportBackup": "Export Backup",
         "deleteBackup": "Hapus Cadangan",
         "restore": "Pulihkan",
-        "restoreBackup": "Pulihkan Cadangan"
+        "restoreBackup": "Pulihkan Cadangan",
+        "viewHistory": "View history"
       },
       "fields": {
         "webdavUrl": "URL Server WebDAV",
@@ -306,8 +307,36 @@
         "restoreSuccess": "Pemulihan Berhasil, Aplikasi akan dimulai ulang dalam 1 detik",
         "localBackupExported": "Local backup exported successfully",
         "localBackupExportFailed": "Failed to export local backup",
+        "webdavRefreshSuccess": "WebDAV refresh succeeded",
+        "webdavRefreshFailed": "WebDAV refresh failed: {{error}}",
         "confirmDelete": "Konfirmasi untuk menghapus file cadangan ini?",
         "confirmRestore": "Konfirmasi untuk memulihkan file cadangan ini?"
+      },
+      "auto": {
+        "title": "Automatic backup",
+        "scheduleLabel": "Enable scheduled backup",
+        "scheduleHelper": "Create local backups in the background at the configured interval.",
+        "intervalLabel": "Backup frequency",
+        "changeLabel": "Backup on critical changes",
+        "changeHelper": "Automatically back up when the global extend config/script or subscriptions are added, removed, or edited.",
+        "options": {
+          "hours": "Every {{n}} hours",
+          "days": "Every {{n}} days"
+        }
+      },
+      "manual": {
+        "title": "Manual backup",
+        "local": "Creates a snapshot on this device, stored under the app data directory.",
+        "webdav": "Upload a snapshot to your WebDAV server once credentials are set.",
+        "configureWebdav": "Configure WebDAV"
+      },
+      "history": {
+        "title": "Backup history",
+        "summary": "{{count}} backups • latest {{recent}}",
+        "empty": "No backups available"
+      },
+      "webdav": {
+        "title": "WebDAV settings"
       },
       "table": {
         "filename": "Nama Berkas",

@@ -2,7 +2,7 @@ use crate::{
     config::{Config, IVerge},
     core::{CoreManager, handle, hotkey, sysopt, tray},
     logging_error,
-    module::lightweight,
+    module::{auto_backup::AutoBackupManager, lightweight},
     utils::{draft::SharedBox, logging::Type},
 };
 use anyhow::Result;
@@ -243,6 +243,10 @@ pub async fn patch_verge(patch: &IVerge, not_save_file: bool) -> Result<()> {
         return Err(err);
     }
     Config::verge().await.apply();
+    logging_error!(
+        Type::Backup,
+        AutoBackupManager::global().refresh_settings().await
+    );
     if !not_save_file {
         // 分离数据获取和异步调用
         let verge_data = Config::verge().await.data_arc();
