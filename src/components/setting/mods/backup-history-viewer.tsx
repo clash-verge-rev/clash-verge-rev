@@ -175,11 +175,10 @@ export const BackupHistoryViewer = ({
     try {
       await exportLocalBackup(filename, savePath);
       showNotice.success("settings.modals.backup.messages.localBackupExported");
-    } catch (error: unknown) {
+    } catch (ignoreError: unknown) {
       showNotice.error(
         "settings.modals.backup.messages.localBackupExportFailed",
       );
-      throw error;
     }
   });
 
