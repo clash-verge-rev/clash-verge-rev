@@ -1,0 +1,90 @@
+{
+  "page": {
+    "modes": {
+      "rule": "Rule",
+      "global": "Global",
+      "direct": "Direct"
+    },
+    "actions": {
+      "toggleChain": "チェーンプロキシ",
+      "connect": "Connect",
+      "disconnect": "Disconnect",
+      "connecting": "Connecting...",
+      "clearChainConfig": "Delete Chain Config"
+    },
+    "provider": {
+      "title": "プロキシプロバイダー",
+      "actions": {
+        "updateAll": "すべて更新",
+        "update": "更新"
+      }
+    },
+    "rules": {
+      "title": "Proxy Rules",
+      "select": "Select Rules"
+    },
+    "labels": {
+      "proxyCount": "ノード数",
+      "delayCheckReset": "遅延テストを実行して固定を解除する"
+    },
+    "tooltips": {
+      "locate": "現在のノード",
+      "delayCheck": "遅延テスト",
+      "sortDefault": "デフォルトでソート",
+      "sortDelay": "遅延でソート",
+      "sortName": "名前でソート",
+      "delayCheckUrl": "遅延テストURL",
+      "showBasic": "ノードの詳細を隠す",
+      "showDetail": "ノードの詳細を表示する",
+      "filter": "ノードをフィルタリング"
+    },
+    "placeholders": {
+      "delayCheckUrl": "遅延テストURL"
+    },
+    "chain": {
+      "header": "Chain Proxy Config",
+      "empty": "No proxy chain configured",
+      "instruction": "Click nodes in order to add to proxy chain",
+      "minimumNodes": "Chain proxy requires at least 2 nodes",
+      "minimumNodesHint": "Chain proxy requires at least 2 nodes. Please add one more node.",
+      "connectFailed": "Failed to connect to proxy chain",
+      "disconnectFailed": "Failed to disconnect from proxy chain",
+      "duplicateNode": "Proxy node already exists in chain"
+    },
+    "messages": {
+      "directMode": "直接接続モード"
+    },
+    "title": {
+      "default": "プロキシグループ",
+      "chainMode": "Proxy Chain Mode"
+    }
+  },
+  "feedback": {
+    "notifications": {
+      "provider": {
+        "updateSuccess": "{{name}} updated successfully",
+        "updateFailed": "Failed to update {{name}}: {{message}}",
+        "genericError": "Update failed: {{message}}",
+        "none": "No providers available to update",
+        "allUpdated": "All providers updated successfully"
+      }
+    }
+  },
+  "components": {
+    "enums": {
+      "strategies": {
+        "select": "手動でプロキシを選択",
+        "url-test": "URLテストによる遅延でプロキシを選択",
+        "fallback": "利用不可の場合は別のプロキシに切り替える",
+        "load-balance": "負荷分散によりプロキシを割り当てる",
+        "relay": "定義されたプロキシチェーンに沿って転送する"
+      },
+      "policies": {
+        "DIRECT": "直接接続",
+        "REJECT": "リクエストを拒否",
+        "REJECT-DROP": "リクエストを破棄",
+        "PASS": "このルールをスキップ"
+      }
+    }
+  }
+}

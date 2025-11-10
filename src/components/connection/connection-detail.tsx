@@ -1,8 +1,8 @@
 import { Box, Button, Snackbar, useTheme } from "@mui/material";
 import { useLockFn } from "ahooks";
 import dayjs from "dayjs";
-import { t } from "i18next";
 import { useImperativeHandle, useState, type Ref } from "react";
+import { useTranslation } from "react-i18next";
 import { closeConnections } from "tauri-plugin-mihomo-api";
 
 import parseTraffic from "@/utils/parse-traffic";
@@ -55,6 +55,7 @@ interface InnerProps {
 }
 
 const InnerConnectionDetail = ({ data, onClose }: InnerProps) => {
+  const { t } = useTranslation();
   const { metadata, rulePayload } = data;
   const theme = useTheme();
   const chains = [...data.chains].reverse().join(" / ");
@@ -67,34 +68,52 @@ const InnerConnectionDetail = ({ data, onClose }: InnerProps) => {
     : metadata.remoteDestination;
 
   const information = [
-    { label: t("Host"), value: host },
-    { label: t("Downloaded"), value: parseTraffic(data.download).join(" ") },
-    { label: t("Uploaded"), value: parseTraffic(data.upload).join(" ") },
+    { label: t("connections.components.fields.host"), value: host },
     {
-      label: t("DL Speed"),
+      label: t("shared.labels.downloaded"),
+      value: parseTraffic(data.download).join(" "),
+    },
+    {
+      label: t("shared.labels.uploaded"),
+      value: parseTraffic(data.upload).join(" "),
+    },
+    {
+      label: t("connections.components.fields.dlSpeed"),
       value: parseTraffic(data.curDownload ?? -1).join(" ") + "/s",
     },
     {
-      label: t("UL Speed"),
+      label: t("connections.components.fields.ulSpeed"),
       value: parseTraffic(data.curUpload ?? -1).join(" ") + "/s",
     },
     {
-      label: t("Chains"),
+      label: t("connections.components.fields.chains"),
       value: chains,
     },
-    { label: t("Rule"), value: rule },
+    { label: t("connections.components.fields.rule"), value: rule },
     {
-      label: t("Process"),
+      label: t("connections.components.fields.process"),
       value: `${metadata.process}${metadata.processPath ? `(${metadata.processPath})` : ""}`,
     },
-    { label: t("Time"), value: dayjs(data.start).fromNow() },
     {
-      label: t("Source"),
+      label: t("connections.components.fields.time"),
+      value: dayjs(data.start).fromNow(),
+    },
+    {
+      label: t("connections.components.fields.source"),
       value: `${metadata.sourceIP}:${metadata.sourcePort}`,
     },
-    { label: t("Destination"), value: Destination },
-    { label: t("DestinationPort"), value: `${metadata.destinationPort}` },
-    { label: t("Type"), value: `${metadata.type}(${metadata.network})` },
+    {
+      label: t("connections.components.fields.destination"),
+      value: Destination,
+    },
+    {
+      label: t("connections.components.fields.destinationPort"),
+      value: `${metadata.destinationPort}`,
+    },
+    {
+      label: t("connections.components.fields.type"),
+      value: `${metadata.type}(${metadata.network})`,
+    },
   ];
 
   const onDelete = useLockFn(async () => closeConnections(data.id));
@@ -118,13 +137,13 @@ const InnerConnectionDetail = ({ data, onClose }: InnerProps) => {
       <Box sx={{ textAlign: "right" }}>
         <Button
           variant="contained"
-          title={t("Close Connection")}
+          title={t("connections.components.actions.closeConnection")}
           onClick={() => {
             onDelete();
             onClose?.();
           }}
         >
-          {t("Close Connection")}
+          {t("connections.components.actions.closeConnection")}
         </Button>
       </Box>
     </Box>

@@ -1,0 +1,138 @@
+{
+  "page": {
+    "tooltips": {
+      "lightweightMode": "Modo ligero",
+      "manual": "Manual de uso",
+      "settings": "Configuración de la página de inicio"
+    },
+    "cards": {
+      "trafficStats": "Estadísticas de tráfico",
+      "networkSettings": "Configuración de red",
+      "proxyMode": "Modo de proxy"
+    },
+    "settings": {
+      "cards": {
+        "profile": "Tarjeta de suscripción",
+        "currentProxy": "Tarjeta de proxy actual",
+        "network": "Tarjeta de configuración de red",
+        "proxyMode": "Tarjeta de modo de proxy",
+        "traffic": "Tarjeta de estadísticas de tráfico",
+        "tests": "Tarjeta de pruebas de sitios web",
+        "ip": "Tarjeta de información de IP",
+        "clashInfo": "Tarjetas de información de Clash",
+        "systemInfo": "Tarjetas de información del sistema"
+      },
+      "title": "Configuración de la página de inicio"
+    },
+    "title": "Hogar"
+  },
+  "components": {
+    "proxyTun": {
+      "status": {
+        "systemProxyEnabled": "El proxy del sistema está habilitado. Sus aplicaciones accederán a Internet a través del proxy.",
+        "systemProxyDisabled": "El proxy del sistema está deshabilitado. Se recomienda a la mayoría de los usuarios habilitar esta opción.",
+        "tunModeServiceRequired": "El modo TUN requiere el modo de servicio. Instale el servicio primero.",
+        "tunModeEnabled": "El modo TUN está habilitado. Las aplicaciones accederán a Internet a través de la interfaz virtual.",
+        "tunModeDisabled": "El modo TUN está deshabilitado. Este modo es adecuado para aplicaciones especiales."
+      },
+      "tooltips": {
+        "systemProxy": "Modifica la configuración del proxy del sistema operativo. Si no se puede habilitar, puede modificar manualmente la configuración del proxy del sistema operativo.",
+        "tunMode": "El modo TUN puede gestionar todo el tráfico de las aplicaciones. Es adecuado para aplicaciones que no siguen la configuración del proxy del sistema."
+      }
+    },
+    "clashInfo": {
+      "title": "Información de Clash",
+      "fields": {
+        "coreVersion": "Versión del núcleo",
+        "systemProxyAddress": "Dirección del proxy del sistema",
+        "mixedPort": "Mixed Port",
+        "uptime": "Tiempo de actividad",
+        "rulesCount": "Número de reglas"
+      }
+    },
+    "systemInfo": {
+      "title": "Información del sistema",
+      "fields": {
+        "osInfo": "Información del sistema operativo",
+        "autoLaunch": "Inicio automático al arrancar el sistema",
+        "runningMode": "Modo de ejecución",
+        "lastCheckUpdate": "Última comprobación de actualizaciones",
+        "vergeVersion": "Versión de Verge"
+      },
+      "actions": {
+        "settings": "Ajustes"
+      },
+      "tooltips": {
+        "autoLaunchAdmin": "El modo de administrador puede no admitir el inicio automático."
+      },
+      "badges": {
+        "adminMode": "Modo de administrador",
+        "serviceMode": "Modo de servicio",
+        "sidecarMode": "Modo de usuario",
+        "adminServiceMode": "Admin + Service Mode"
+      }
+    },
+    "ipInfo": {
+      "title": "Información de IP",
+      "labels": {
+        "ip": "IP",
+        "asn": "Número de sistema autónomo",
+        "isp": "Proveedor de servicios de Internet",
+        "org": "Organización",
+        "location": "Ubicación",
+        "timezone": "Zona horaria",
+        "autoRefresh": "Actualización automática",
+        "unknown": "Desconocido"
+      },
+      "errors": {
+        "load": "Error al obtener la información de IP"
+      }
+    },
+    "currentProxy": {
+      "title": "Nodo actual",
+      "actions": {
+        "refreshDelay": "Prueba de latencia"
+      },
+      "labels": {
+        "globalMode": "Global Mode",
+        "directMode": "Direct Mode",
+        "group": "Grupo de proxy",
+        "proxy": "Nodo",
+        "noActiveNode": "No hay nodos de proxy activos"
+      }
+    },
+    "tests": {
+      "title": "Pruebas de sitios web"
+    },
+    "traffic": {
+      "metrics": {
+        "uploadSpeed": "Velocidad de subida",
+        "downloadSpeed": "Velocidad de descarga",
+        "activeConnections": "Conexiones activas",
+        "memoryUsage": "Uso de memoria del núcleo"
+      },
+      "legends": {
+        "upload": "Subir",
+        "download": "Descargar"
+      },
+      "patterns": {
+        "minutes": "{{time}} Minutes"
+      }
+    },
+    "clashMode": {
+      "errors": {
+        "communication": "Core communication error"
+      },
+      "labels": {
+        "rule": "Modo de reglas",
+        "global": "Modo global",
+        "direct": "Modo de conexión directa"
+      },
+      "descriptions": {
+        "rule": "Automatically choose proxies according to the rule set.",
+        "global": "Forward all network requests through the selected proxy.",
+        "direct": "Bypass the proxy and connect to the internet directly."
+      }
+    }
+  }
+}

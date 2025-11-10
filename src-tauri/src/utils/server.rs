@@ -14,7 +14,7 @@ use reqwest::ClientBuilder;
 use smartstring::alias::String;
 use std::time::Duration;
 use tokio::sync::oneshot;
-use warp::Filter;
+use warp::Filter as _;
 
 #[derive(serde::Deserialize, Debug)]
 struct QueryParam {
@@ -31,6 +31,8 @@ pub async fn check_singleton() -> Result<()> {
         let client = ClientBuilder::new()
             .timeout(Duration::from_millis(500))
             .build()?;
+        // 需要确保 Send
+        #[allow(clippy::needless_collect)]
         let argvs: Vec<std::string::String> = std::env::args().collect();
         if argvs.len() > 1 {
             #[cfg(not(target_os = "macos"))]
@@ -51,7 +53,11 @@ pub async fn check_singleton() -> Result<()> {
                 .send()
                 .await?;
         }
-        log::error!("failed to setup singleton listen server");
+        logging!(
+            error,
+            Type::Window,
+            "failed to setup singleton listen server"
+        );
         bail!("app exists");
     }
     Ok(())
@@ -85,15 +91,15 @@ pub fn embed_server() {
         let clash_config = Config::clash().await;
 
         let pac_content = verge_config
-            .latest_ref()
+            .latest_arc()
             .pac_file_content
             .clone()
             .unwrap_or_else(|| DEFAULT_PAC.into());
 
         let pac_port = verge_config
-            .latest_ref()
+            .latest_arc()
             .verge_mixed_port
-            .unwrap_or_else(|| clash_config.latest_ref().get_mixed_port());
+            .unwrap_or_else(|| clash_config.latest_arc().get_mixed_port());
 
         let pac = warp::path!("commands" / "pac").map(move || {
             let processed_content = pac_content.replace("%mixed-port%", &format!("{pac_port}"));
@@ -106,15 +112,14 @@ pub fn embed_server() {
         // Use map instead of and_then to avoid Send issues
         let scheme = warp::path!("commands" / "scheme")
             .and(warp::query::<QueryParam>())
-            .map(|query: QueryParam| {
-                let param = query.param.clone();
-                tokio::task::spawn_local(async move {
-                    logging_error!(Type::Setup, resolve::resolve_scheme(param).await);
+            .and_then(|query: QueryParam| async move {
+                AsyncHandler::spawn(|| async move {
+                    logging_error!(Type::Setup, resolve::resolve_scheme(&query.param).await);
                 });
-                warp::reply::with_status::<std::string::String>(
+                Ok::<_, warp::Rejection>(warp::reply::with_status::<std::string::String>(
                     "ok".to_string(),
                     warp::http::StatusCode::OK,
-                )
+                ))
             });
 
         let commands = visible.or(scheme).or(pac);
@@ -130,7 +135,7 @@ pub fn embed_server() {
 }
 
 pub fn shutdown_embedded_server() {
-    log::info!("shutting down embedded server");
+    logging!(info, Type::Window, "shutting down embedded server");
     if let Some(sender) = SHUTDOWN_SENDER.get()
         && let Some(sender) = sender.lock().take()
     {

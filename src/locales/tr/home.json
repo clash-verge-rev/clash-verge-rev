@@ -1,0 +1,138 @@
+{
+  "page": {
+    "tooltips": {
+      "lightweightMode": "Hafif Mod",
+      "manual": "Kılavuz",
+      "settings": "Ana Sayfa Ayarları"
+    },
+    "cards": {
+      "trafficStats": "Trafik İstatistikleri",
+      "networkSettings": "Ağ Ayarları",
+      "proxyMode": "Vekil Modu"
+    },
+    "settings": {
+      "cards": {
+        "profile": "Profil Kartı",
+        "currentProxy": "Geçerli Vekil Kartı",
+        "network": "Ağ Ayarları Kartı",
+        "proxyMode": "Vekil Modu Kartı",
+        "traffic": "Trafik İstatistikleri Kartı",
+        "tests": "Web Sitesi Testleri Kartı",
+        "ip": "IP Bilgi Kartı",
+        "clashInfo": "Clash Bilgi Kartları",
+        "systemInfo": "Sistem Bilgi Kartları"
+      },
+      "title": "Ana Sayfa Ayarları"
+    },
+    "title": "Ana Sayfa"
+  },
+  "components": {
+    "proxyTun": {
+      "status": {
+        "systemProxyEnabled": "Sistem vekil'i etkinleştirildi, uygulamalarınız vekil üzerinden ağa erişecek",
+        "systemProxyDisabled": "Sistem vekil'i devre dışı, çoğu kullanıcı için bu seçeneği açmanız önerilir",
+        "tunModeServiceRequired": "TUN modu hizmet modu gerektirir, lütfen önce hizmeti kurun",
+        "tunModeEnabled": "TUN modu etkinleştirildi, uygulamalar sanal ağ kartı üzerinden ağa erişecek",
+        "tunModeDisabled": "TUN modu devre dışı, özel uygulamalar için uygundur"
+      },
+      "tooltips": {
+        "systemProxy": "İşletim sisteminin vekil ayarlarını değiştirmek için etkinleştirin. Etkinleştirme başarısız olursa, işletim sisteminin proxy ayarlarını manuel olarak değiştirin",
+        "tunMode": "TUN modu tüm uygulama trafiğini ele alabilir, sistem vekil ayarlarını takip etmeyen özel uygulamalar için uygundur"
+      }
+    },
+    "clashInfo": {
+      "title": "Clash Bilgisi",
+      "fields": {
+        "coreVersion": "Çekirdek Sürümü",
+        "systemProxyAddress": "Sistem Vekil Adresi",
+        "mixedPort": "Mixed Port",
+        "uptime": "Çalışma Süresi",
+        "rulesCount": "Kural Sayısı"
+      }
+    },
+    "systemInfo": {
+      "title": "Sistem Bilgisi",
+      "fields": {
+        "osInfo": "İşletim Sistemi Bilgisi",
+        "autoLaunch": "Otomatik Başlatma",
+        "runningMode": "Çalışma Modu",
+        "lastCheckUpdate": "Son Güncelleme Kontrolü",
+        "vergeVersion": "Verge Sürümü"
+      },
+      "actions": {
+        "settings": "Ayarlar"
+      },
+      "tooltips": {
+        "autoLaunchAdmin": "Yönetici modu otomatik başlatmayı desteklemeyebilir"
+      },
+      "badges": {
+        "adminMode": "Yönetici Modu",
+        "serviceMode": "Hizmet Modu",
+        "sidecarMode": "Kullanıcı Modu",
+        "adminServiceMode": "Yönetici + Hizmet Modu"
+      }
+    },
+    "ipInfo": {
+      "title": "IP Bilgisi",
+      "labels": {
+        "ip": "IP",
+        "asn": "ASN",
+        "isp": "ISP",
+        "org": "Kuruluş",
+        "location": "Konum",
+        "timezone": "Saat Dilimi",
+        "autoRefresh": "Otomatik yenile",
+        "unknown": "Bilinmiyor"
+      },
+      "errors": {
+        "load": "IP bilgisi alınamadı"
+      }
+    },
+    "currentProxy": {
+      "title": "Geçerli Düğüm",
+      "actions": {
+        "refreshDelay": "Gecikme kontrolü"
+      },
+      "labels": {
+        "globalMode": "Küresel Mod",
+        "directMode": "Doğrudan Mod",
+        "group": "Grup",
+        "proxy": "Vekil",
+        "noActiveNode": "Aktif vekil düğümü yok"
+      }
+    },
+    "tests": {
+      "title": "Web Sitesi Testleri"
+    },
+    "traffic": {
+      "metrics": {
+        "uploadSpeed": "Yükleme Hızı",
+        "downloadSpeed": "İndirme Hızı",
+        "activeConnections": "Aktif Bağlantılar",
+        "memoryUsage": "Çekirdek Kullanımı"
+      },
+      "legends": {
+        "upload": "Yükleme",
+        "download": "İndirme"
+      },
+      "patterns": {
+        "minutes": "{{time}} Minutes"
+      }
+    },
+    "clashMode": {
+      "errors": {
+        "communication": "Core communication error"
+      },
+      "labels": {
+        "rule": "Kural Modu",
+        "global": "Küresel Mod",
+        "direct": "Doğrudan Mod"
+      },
+      "descriptions": {
+        "rule": "Automatically choose proxies according to the rule set.",
+        "global": "Forward all network requests through the selected proxy.",
+        "direct": "Bypass the proxy and connect to the internet directly."
+      }
+    }
+  }
+}

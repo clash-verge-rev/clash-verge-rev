@@ -1,26 +1,27 @@
-#[cfg(not(feature = "tracing"))]
+// #[cfg(not(feature = "tracing"))]
 #[cfg(not(feature = "tauri-dev"))]
 use crate::utils::logging::NoModuleFilter;
 use crate::{
-    config::*,
+    config::{Config, IClashTemp, IProfiles, IVerge},
+    constants,
     core::handle,
     logging,
     process::AsyncHandler,
     utils::{
-        dirs::{self, PathBufExec, service_log_dir, sidecar_log_dir},
+        dirs::{self, PathBufExec as _, service_log_dir, sidecar_log_dir},
         help,
         logging::Type,
     },
 };
 use anyhow::Result;
-use chrono::{Local, TimeZone};
+use chrono::{Local, TimeZone as _};
 use clash_verge_service_ipc::WriterConfig;
 use flexi_logger::writers::FileLogWriter;
 use flexi_logger::{Cleanup, Criterion, FileSpec};
 #[cfg(not(feature = "tauri-dev"))]
 use flexi_logger::{Duplicate, LogSpecBuilder, Logger};
-use std::{path::PathBuf, str::FromStr};
-use tauri_plugin_shell::ShellExt;
+use std::{path::PathBuf, str::FromStr as _};
+use tauri_plugin_shell::ShellExt as _;
 use tokio::fs;
 use tokio::fs::DirEntry;
 
@@ -30,7 +31,7 @@ pub async fn init_logger() -> Result<()> {
     // TODO 提供 runtime 级别实时修改
     let (log_level, log_max_size, log_max_count) = {
         let verge_guard = Config::verge().await;
-        let verge = verge_guard.latest_ref();
+        let verge = verge_guard.latest_arc();
         (
             verge.get_log_level(),
             verge.app_log_max_size.unwrap_or(128),
@@ -48,7 +49,9 @@ pub async fn init_logger() -> Result<()> {
     #[cfg(feature = "tracing")]
     spec.module("tauri", log::LevelFilter::Debug);
     #[cfg(feature = "tracing")]
-    spec.module("wry", log::LevelFilter::Debug);
+    spec.module("wry", log::LevelFilter::Off);
+    #[cfg(feature = "tracing")]
+    spec.module("tauri_plugin_mihomo", log::LevelFilter::Off);
     let spec = spec.build();
 
     let logger = Logger::with(spec)
@@ -66,6 +69,12 @@ pub async fn init_logger() -> Result<()> {
         );
     #[cfg(not(feature = "tracing"))]
     let logger = logger.filter(Box::new(NoModuleFilter(&["wry", "tauri"])));
+    #[cfg(feature = "tracing")]
+    let logger = logger.filter(Box::new(NoModuleFilter(&[
+        "wry",
+        "tauri_plugin_mihomo",
+        "kode_bridge",
+    ])));
 
     let _handle = logger.start()?;
 
@@ -80,7 +89,7 @@ pub async fn init_logger() -> Result<()> {
 pub async fn sidecar_writer() -> Result<FileLogWriter> {
     let (log_max_size, log_max_count) = {
         let verge_guard = Config::verge().await;
-        let verge = verge_guard.latest_ref();
+        let verge = verge_guard.latest_arc();
         (
             verge.app_log_max_size.unwrap_or(128),
             verge.app_log_max_count.unwrap_or(8),
@@ -108,7 +117,7 @@ pub async fn sidecar_writer() -> Result<FileLogWriter> {
 pub async fn service_writer_config() -> Result<WriterConfig> {
     let (log_max_size, log_max_count) = {
         let verge_guard = Config::verge().await;
-        let verge = verge_guard.latest_ref();
+        let verge = verge_guard.latest_arc();
         (
             verge.app_log_max_size.unwrap_or(128),
             verge.app_log_max_count.unwrap_or(8),
@@ -133,7 +142,7 @@ pub async fn delete_log() -> Result<()> {
 
     let auto_log_clean = {
         let verge = Config::verge().await;
-        let verge = verge.latest_ref();
+        let verge = verge.latest_arc();
         verge.auto_log_clean.unwrap_or(0)
     };
 
@@ -304,7 +313,7 @@ async fn init_dns_config() -> Result<()> {
 
     // 检查DNS配置文件是否存在
     let app_dir = dirs::app_home_dir()?;
-    let dns_path = app_dir.join("dns_config.yaml");
+    let dns_path = app_dir.join(constants::files::DNS_CONFIG);
 
     if !dns_path.exists() {
         logging!(info, Type::Setup, "Creating default DNS config file");
@@ -364,7 +373,7 @@ async fn initialize_config_files() -> Result<()> {
     if let Ok(path) = dirs::profiles_path()
         && !path.exists()
     {
-        let template = IProfiles::template();
+        let template = IProfiles::default();
         help::save_yaml(&path, &template, Some("# Clash Verge"))
             .await
             .map_err(|e| anyhow::anyhow!("Failed to create profiles config: {}", e))?;
@@ -429,26 +438,8 @@ pub async fn init_resources() -> Result<()> {
         let src_path = res_dir.join(file);
         let dest_path = app_dir.join(file);
 
-        let handle_copy = |src: PathBuf, dest: PathBuf, file: String| async move {
-            match fs::copy(&src, &dest).await {
-                Ok(_) => {
-                    logging!(debug, Type::Setup, "resources copied '{}'", file);
-                }
-                Err(err) => {
-                    logging!(
-                        error,
-                        Type::Setup,
-                        "failed to copy resources '{}' to '{:?}', {}",
-                        file,
-                        dest,
-                        err
-                    );
-                }
-            };
-        };
-
         if src_path.exists() && !dest_path.exists() {
-            handle_copy(src_path.clone(), dest_path.clone(), (*file).into()).await;
+            handle_copy(&src_path, &dest_path, file).await;
             continue;
         }
 
@@ -458,12 +449,12 @@ pub async fn init_resources() -> Result<()> {
         match (src_modified, dest_modified) {
             (Ok(src_modified), Ok(dest_modified)) => {
                 if src_modified > dest_modified {
-                    handle_copy(src_path.clone(), dest_path.clone(), (*file).into()).await;
+                    handle_copy(&src_path, &dest_path, file).await;
                 }
             }
             _ => {
                 logging!(debug, Type::Setup, "failed to get modified '{}'", file);
-                handle_copy(src_path.clone(), dest_path.clone(), (*file).into()).await;
+                handle_copy(&src_path, &dest_path, file).await;
             }
         };
     }
@@ -475,7 +466,7 @@ pub async fn init_resources() -> Result<()> {
 #[cfg(target_os = "windows")]
 pub fn init_scheme() -> Result<()> {
     use tauri::utils::platform::current_exe;
-    use winreg::{RegKey, enums::*};
+    use winreg::{RegKey, enums::HKEY_CURRENT_USER};
 
     let app_exe = current_exe()?;
     let app_exe = dunce::canonicalize(app_exe)?;
@@ -515,7 +506,7 @@ pub fn init_scheme() -> Result<()> {
     Ok(())
 }
 #[cfg(target_os = "macos")]
-pub fn init_scheme() -> Result<()> {
+pub const fn init_scheme() -> Result<()> {
     Ok(())
 }
 
@@ -526,7 +517,7 @@ pub async fn startup_script() -> Result<()> {
     let app_handle = handle::Handle::app_handle();
     let script_path = {
         let verge = Config::verge().await;
-        let verge = verge.latest_ref();
+        let verge = verge.latest_arc();
         verge.startup_script.clone().unwrap_or_else(|| "".into())
     };
 
@@ -562,4 +553,22 @@ pub async fn startup_script() -> Result<()> {
         .await?;
 
     Ok(())
+}
+
+async fn handle_copy(src: &PathBuf, dest: &PathBuf, file: &str) {
+    match fs::copy(src, dest).await {
+        Ok(_) => {
+            logging!(debug, Type::Setup, "resources copied '{}'", file);
+        }
+        Err(err) => {
+            logging!(
+                error,
+                Type::Setup,
+                "failed to copy resources '{}' to '{:?}', {}",
+                file,
+                dest,
+                err
+            );
+        }
+    };
 }

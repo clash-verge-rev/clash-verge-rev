@@ -506,7 +506,7 @@ export const CurrentProxyCard = () => {
 
   // 导航到代理页面
   const goToProxies = useCallback(() => {
-    navigate("/");
+    navigate("/proxies");
   }, [navigate]);
 
   // 获取要显示的代理节点
@@ -811,11 +811,11 @@ export const CurrentProxyCard = () => {
   const getSortTooltip = (): string => {
     switch (sortType) {
       case 0:
-        return t("Sort by default");
+        return t("proxies.page.tooltips.sortDefault");
       case 1:
-        return t("Sort by delay");
+        return t("proxies.page.tooltips.sortDelay");
       case 2:
-        return t("Sort by name");
+        return t("proxies.page.tooltips.sortName");
       default:
         return "";
     }
@@ -823,7 +823,7 @@ export const CurrentProxyCard = () => {
 
   return (
     <EnhancedCard
-      title={t("Current Node")}
+      title={t("home.components.currentProxy.title")}
       icon={
         <Tooltip
           title={
@@ -840,7 +840,9 @@ export const CurrentProxyCard = () => {
       iconColor={currentProxy ? "primary" : undefined}
       action={
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-          <Tooltip title={t("Delay check")}>
+          <Tooltip
+            title={t("home.components.currentProxy.actions.refreshDelay")}
+          >
             <span>
               <IconButton
                 size="small"
@@ -868,7 +870,7 @@ export const CurrentProxyCard = () => {
             sx={{ borderRadius: 1.5 }}
             endIcon={<ChevronRight fontSize="small" />}
           >
-            {t("Label-Proxies")}
+            {t("layout.components.navigation.tabs.proxies")}
           </Button>
         </Box>
       }
@@ -906,7 +908,7 @@ export const CurrentProxyCard = () => {
                 {isGlobalMode && (
                   <Chip
                     size="small"
-                    label={t("Global Mode")}
+                    label={t("home.components.currentProxy.labels.globalMode")}
                     color="primary"
                     sx={{ mr: 0.5 }}
                   />
@@ -914,7 +916,7 @@ export const CurrentProxyCard = () => {
                 {isDirectMode && (
                   <Chip
                     size="small"
-                    label={t("Direct Mode")}
+                    label={t("home.components.currentProxy.labels.directMode")}
                     color="success"
                     sx={{ mr: 0.5 }}
                   />
@@ -954,12 +956,14 @@ export const CurrentProxyCard = () => {
             size="small"
             sx={{ mb: 1.5 }}
           >
-            <InputLabel id="proxy-group-select-label">{t("Group")}</InputLabel>
+            <InputLabel id="proxy-group-select-label">
+              {t("home.components.currentProxy.labels.group")}
+            </InputLabel>
             <Select
               labelId="proxy-group-select-label"
               value={state.selection.group}
               onChange={handleGroupChange}
-              label={t("Group")}
+              label={t("home.components.currentProxy.labels.group")}
               disabled={isGlobalMode || isDirectMode}
             >
               {state.proxyData.groups.map((group) => (
@@ -972,12 +976,14 @@ export const CurrentProxyCard = () => {
 
           {/* 代理节点选择器 */}
           <FormControl fullWidth variant="outlined" size="small" sx={{ mb: 0 }}>
-            <InputLabel id="proxy-select-label">{t("Proxy")}</InputLabel>
+            <InputLabel id="proxy-select-label">
+              {t("home.components.currentProxy.labels.proxy")}
+            </InputLabel>
             <Select
               labelId="proxy-select-label"
               value={state.selection.proxy}
               onChange={handleProxyChange}
-              label={t("Proxy")}
+              label={t("home.components.currentProxy.labels.proxy")}
               disabled={isDirectMode}
               renderValue={renderProxyValue}
               MenuProps={{
@@ -1033,7 +1039,7 @@ export const CurrentProxyCard = () => {
       ) : (
         <Box sx={{ textAlign: "center", py: 4 }}>
           <Typography variant="body1" color="text.secondary">
-            {t("No active proxy node")}
+            {t("home.components.currentProxy.labels.noActiveNode")}
           </Typography>
         </Box>
       )}

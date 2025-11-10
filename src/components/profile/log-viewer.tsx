@@ -26,7 +26,7 @@ export const LogViewer = (props: Props) => {
 
   return (
     <Dialog open={open} onClose={onClose}>
-      <DialogTitle>{t("Script Console")}</DialogTitle>
+      <DialogTitle>{t("profiles.modals.logViewer.title")}</DialogTitle>
 
       <DialogContent
         sx={{
@@ -62,7 +62,7 @@ export const LogViewer = (props: Props) => {
 
       <DialogActions>
         <Button onClick={onClose} variant="outlined">
-          {t("Close")}
+          {t("shared.actions.close")}
         </Button>
       </DialogActions>
     </Dialog>

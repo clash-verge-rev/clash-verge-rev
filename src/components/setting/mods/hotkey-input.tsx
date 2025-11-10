@@ -102,7 +102,7 @@ export const HotkeyInput = (props: Props) => {
 
       <IconButton
         size="small"
-        title={t("Delete")}
+        title={t("shared.actions.delete")}
         color="inherit"
         onClick={() => {
           onChange([]);

@@ -1,4 +1,3 @@
-import { t } from "i18next";
 import { useCallback } from "react";
 
 import { restartCore, stopCore, uninstallService } from "@/services/cmds";
@@ -8,38 +7,45 @@ import { useSystemState } from "./use-system-state";
 
 const executeWithErrorHandling = async (
   operation: () => Promise<void>,
-  loadingMessage: string,
-  successMessage?: string,
+  loadingKey: string,
+  successKey?: string,
 ) => {
   try {
-    showNotice("info", t(loadingMessage));
+    showNotice.info(loadingKey);
     await operation();
-    if (successMessage) {
-      showNotice("success", t(successMessage));
+    if (successKey) {
+      showNotice.success(successKey);
     }
   } catch (err) {
-    const msg = (err as Error)?.message || String(err);
-    showNotice("error", msg);
+    showNotice.error(err);
     throw err;
   }
 };
 
 export const useServiceUninstaller = () => {
-  const { mutateRunningMode, mutateServiceOk } = useSystemState();
+  const { mutateSystemState } = useSystemState();
 
   const uninstallServiceAndRestartCore = useCallback(async () => {
-    await executeWithErrorHandling(() => stopCore(), "Stopping Core...");
-
-    await executeWithErrorHandling(
-      () => uninstallService(),
-      "Uninstalling Service...",
-      "Service Uninstalled Successfully",
-    );
-
-    await executeWithErrorHandling(() => restartCore(), "Restarting Core...");
-    await mutateRunningMode();
-    await mutateServiceOk();
-  }, [mutateRunningMode, mutateServiceOk]);
+    try {
+      await executeWithErrorHandling(
+        () => stopCore(),
+        "settings.statuses.clash.stopping",
+      );
+      await executeWithErrorHandling(
+        () => uninstallService(),
+        "settings.statuses.clashService.uninstalling",
+        "settings.feedback.notifications.clashService.uninstallSuccess",
+      );
+    } catch (ignore) {
+    } finally {
+      await executeWithErrorHandling(
+        () => restartCore(),
+        "settings.statuses.clash.restarting",
+        "settings.feedback.notifications.clash.restartSuccess",
+      );
+      await mutateSystemState();
+    }
+  }, [mutateSystemState]);
 
   return { uninstallServiceAndRestartCore };
 };

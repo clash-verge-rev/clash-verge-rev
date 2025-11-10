@@ -1,12 +1,14 @@
 use crate::config::Config;
+use crate::constants::{network, tun as tun_const};
 use crate::utils::dirs::{ipc_path, path_to_str};
 use crate::utils::{dirs, help};
+use crate::{logging, utils::logging::Type};
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 use serde_yaml_ng::{Mapping, Value};
 use std::{
     net::{IpAddr, Ipv4Addr, SocketAddr},
-    str::FromStr,
+    str::FromStr as _,
 };
 
 #[derive(Default, Debug, Clone)]
@@ -40,15 +42,13 @@ impl IClashTemp {
                 Self(Self::guard(map))
             }
             Err(err) => {
-                log::error!(target: "app", "{err}");
+                logging!(error, Type::Config, "{err}");
                 template
             }
         }
     }
 
     pub fn template() -> Self {
-        use crate::constants::{network, tun as tun_const};
-
         let mut map = Mapping::new();
         let mut tun_config = Mapping::new();
         let mut cors_map = Mapping::new();
@@ -214,9 +214,9 @@ impl IClashTemp {
                 Value::Number(val_num) => val_num.as_u64().map(|u| u as u16),
                 _ => None,
             })
-            .unwrap_or(7896);
+            .unwrap_or(network::ports::DEFAULT_TPROXY);
         if port == 0 {
-            port = 7896;
+            port = network::ports::DEFAULT_TPROXY;
         }
         port
     }
@@ -300,7 +300,7 @@ impl IClashTemp {
         // 检查 enable_external_controller 设置，用于运行时配置生成
         let enable_external_controller = Config::verge()
             .await
-            .latest_ref()
+            .latest_arc()
             .enable_external_controller
             .unwrap_or(false);
 
@@ -330,7 +330,7 @@ impl IClashTemp {
             .ok()
             .and_then(|path| path_to_str(&path).ok().map(|s| s.into()))
             .unwrap_or_else(|| {
-                log::error!(target: "app", "Failed to get IPC path");
+                logging!(error, Type::Config, "Failed to get IPC path");
                 crate::constants::network::DEFAULT_EXTERNAL_CONTROLLER.into()
             })
     }

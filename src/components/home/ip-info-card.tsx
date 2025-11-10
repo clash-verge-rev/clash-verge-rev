@@ -1,11 +1,11 @@
 import {
   LocationOnOutlined,
   RefreshOutlined,
-  VisibilityOutlined,
   VisibilityOffOutlined,
+  VisibilityOutlined,
 } from "@mui/icons-material";
-import { Box, Typography, Button, Skeleton, IconButton } from "@mui/material";
-import { useState, useEffect, useCallback, memo } from "react";
+import { Box, Button, IconButton, Skeleton, Typography } from "@mui/material";
+import { memo, useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { getIpInfo } from "@/services/api";
@@ -68,8 +68,12 @@ export const IpInfoCard = () => {
       const data = await getIpInfo();
       setIpInfo(data);
       setCountdown(IP_REFRESH_SECONDS);
-    } catch (err: any) {
-      setError(err.message || t("Failed to get IP info"));
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : t("home.components.ipInfo.errors.load"),
+      );
     } finally {
       setLoading(false);
     }
@@ -114,7 +118,7 @@ export const IpInfoCard = () => {
   if (loading) {
     return (
       <EnhancedCard
-        title={t("IP Information")}
+        title={t("home.components.ipInfo.title")}
         icon={<LocationOnOutlined />}
         iconColor="info"
         action={
@@ -137,7 +141,7 @@ export const IpInfoCard = () => {
   if (error) {
     return (
       <EnhancedCard
-        title={t("IP Information")}
+        title={t("home.components.ipInfo.title")}
         icon={<LocationOnOutlined />}
         iconColor="info"
         action={
@@ -160,7 +164,7 @@ export const IpInfoCard = () => {
             {error}
           </Typography>
           <Button onClick={fetchIpInfo} sx={{ mt: 2 }}>
-            {t("Retry")}
+            {t("shared.actions.retry")}
           </Button>
         </Box>
       </EnhancedCard>
@@ -170,7 +174,7 @@ export const IpInfoCard = () => {
   // 渲染正常数据
   return (
     <EnhancedCard
-      title={t("IP Information")}
+      title={t("home.components.ipInfo.title")}
       icon={<LocationOnOutlined />}
       iconColor="info"
       action={
@@ -222,7 +226,7 @@ export const IpInfoCard = () => {
                   maxWidth: "100%",
                 }}
               >
-                {ipInfo?.country || t("Unknown")}
+                {ipInfo?.country || t("home.components.ipInfo.labels.unknown")}
               </Typography>
             </Box>
 
@@ -232,7 +236,7 @@ export const IpInfoCard = () => {
                 color="text.secondary"
                 sx={{ flexShrink: 0 }}
               >
-                {t("IP")}:
+                {t("home.components.ipInfo.labels.ip")}:
               </Typography>
               <Box
                 sx={{
@@ -266,20 +270,29 @@ export const IpInfoCard = () => {
             </Box>
 
             <InfoItem
-              label={t("ASN")}
+              label={t("home.components.ipInfo.labels.asn")}
               value={ipInfo?.asn ? `AS${ipInfo.asn}` : "N/A"}
             />
           </Box>
 
           {/* 右侧：组织、ISP和位置信息 */}
           <Box sx={{ width: "60%", overflow: "auto" }}>
-            <InfoItem label={t("ISP")} value={ipInfo?.isp} />
-            <InfoItem label={t("ORG")} value={ipInfo?.asn_organization} />
             <InfoItem
-              label={t("Location")}
+              label={t("home.components.ipInfo.labels.isp")}
+              value={ipInfo?.isp}
+            />
+            <InfoItem
+              label={t("home.components.ipInfo.labels.org")}
+              value={ipInfo?.asn_organization}
+            />
+            <InfoItem
+              label={t("home.components.ipInfo.labels.location")}
               value={[ipInfo?.city, ipInfo?.region].filter(Boolean).join(", ")}
             />
-            <InfoItem label={t("Timezone")} value={ipInfo?.timezone} />
+            <InfoItem
+              label={t("home.components.ipInfo.labels.timezone")}
+              value={ipInfo?.timezone}
+            />
           </Box>
         </Box>
 
@@ -297,7 +310,7 @@ export const IpInfoCard = () => {
           }}
         >
           <Typography variant="caption">
-            {t("Auto refresh")}: {countdown}s
+            {t("home.components.ipInfo.labels.autoRefresh")}: {countdown}s
           </Typography>
           <Typography
             variant="caption"

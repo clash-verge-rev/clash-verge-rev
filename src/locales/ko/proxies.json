@@ -1,0 +1,90 @@
+{
+  "page": {
+    "modes": {
+      "rule": "규칙",
+      "global": "전역",
+      "direct": "직접"
+    },
+    "actions": {
+      "toggleChain": "체인 프록시",
+      "connect": "연결",
+      "disconnect": "연결 해제",
+      "connecting": "연결 중...",
+      "clearChainConfig": "체인 구성 삭제"
+    },
+    "provider": {
+      "title": "프록시 제공자",
+      "actions": {
+        "updateAll": "모두 업데이트",
+        "update": "업데이트"
+      }
+    },
+    "rules": {
+      "title": "프록시 규칙",
+      "select": "규칙 선택"
+    },
+    "labels": {
+      "proxyCount": "프록시 개수",
+      "delayCheckReset": "고정 취소를 위한 지연 확인"
+    },
+    "tooltips": {
+      "locate": "위치 찾기",
+      "delayCheck": "지연 확인",
+      "sortDefault": "기본 정렬",
+      "sortDelay": "지연으로 정렬",
+      "sortName": "이름으로 정렬",
+      "delayCheckUrl": "지연 확인 URL",
+      "showBasic": "프록시 기본",
+      "showDetail": "프록시 상세",
+      "filter": "필터"
+    },
+    "placeholders": {
+      "delayCheckUrl": "지연 확인 URL"
+    },
+    "chain": {
+      "header": "체인 프록시 구성",
+      "empty": "구성된 프록시 체인이 없습니다",
+      "instruction": "프록시 체인에 추가하려면 순서대로 노드를 클릭하세요",
+      "minimumNodes": "체인 프록시는 최소 2개의 노드가 필요합니다",
+      "minimumNodesHint": "체인 프록시는 최소 2개의 노드가 필요합니다. 하나 더 추가하세요.",
+      "connectFailed": "프록시 체인 연결 실패",
+      "disconnectFailed": "프록시 체인 연결 해제 실패",
+      "duplicateNode": "프록시 노드가 체인에 이미 존재합니다"
+    },
+    "messages": {
+      "directMode": "직접 모드"
+    },
+    "title": {
+      "default": "프록시 그룹",
+      "chainMode": "프록시 체인 모드"
+    }
+  },
+  "feedback": {
+    "notifications": {
+      "provider": {
+        "updateSuccess": "{{name}} 업데이트 성공",
+        "updateFailed": "{{name}} 업데이트 실패: {{message}}",
+        "genericError": "업데이트 실패: {{message}}",
+        "none": "업데이트할 제공자가 없습니다",
+        "allUpdated": "모든 제공자가 업데이트되었습니다"
+      }
+    }
+  },
+  "components": {
+    "enums": {
+      "strategies": {
+        "select": "수동으로 프록시 선택",
+        "url-test": "URL 테스트 지연을 기준으로 프록시 선택",
+        "fallback": "오류 발생 시 다른 프록시로 전환",
+        "load-balance": "부하 분산에 따라 프록시 분배",
+        "relay": "정의된 프록시 체인을 통과"
+      },
+      "policies": {
+        "DIRECT": "데이터가 직접 아웃바운드로 이동",
+        "REJECT": "요청 차단",
+        "REJECT-DROP": "요청 폐기",
+        "PASS": "일치할 경우 이 규칙 건너뛰기"
+      }
+    }
+  }
+}

@@ -1,0 +1,53 @@
+{
+  "page": {
+    "actions": {
+      "testAll": "Test All"
+    },
+    "title": "Test"
+  },
+  "components": {
+    "item": {
+      "actions": {
+        "test": "Test"
+      }
+    }
+  },
+  "modals": {
+    "test": {
+      "title": {
+        "create": "Create Test",
+        "edit": "Edit Test"
+      },
+      "fields": {
+        "url": "Test URL"
+      }
+    }
+  },
+  "statuses": {
+    "test": {
+      "pending": "Pending",
+      "yes": "Yes",
+      "no": "No",
+      "failed": "Failed",
+      "completed": "Completed",
+      "disallowedIsp": "Disallowed ISP",
+      "originalsOnly": "Originals Only",
+      "noDisney": "No (IP Banned By Disney+)",
+      "unsupportedRegion": "Unsupported Country/Region",
+      "failedNetwork": "Failed (Network Connection)"
+    }
+  },
+  "unlock": {
+    "page": {
+      "actions": {
+        "testing": "Testing..."
+      },
+      "empty": "No unlock test items",
+      "messages": {
+        "detectionFailedWithName": "Detection failed for {{name}}",
+        "detectionTimeout": "Detection timeout or failed"
+      },
+      "title": "Unlock Test"
+    }
+  }
+}

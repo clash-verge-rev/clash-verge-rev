@@ -1,20 +1,27 @@
 #[cfg(target_os = "macos")]
+use crate::{logging, utils::logging::Type};
 pub async fn set_public_dns(dns_server: String) {
-    use crate::{core::handle, utils::dirs};
-    use tauri_plugin_shell::ShellExt;
+    use crate::utils::logging::Type;
+    use crate::{core::handle, logging, utils::dirs};
+    use tauri_plugin_shell::ShellExt as _;
     let app_handle = handle::Handle::app_handle();
 
-    log::info!(target: "app", "try to set system dns");
+    logging!(info, Type::Config, "try to set system dns");
     let resource_dir = match dirs::app_resources_dir() {
         Ok(dir) => dir,
         Err(e) => {
-            log::error!(target: "app", "Failed to get resource directory: {}", e);
+            logging!(
+                error,
+                Type::Config,
+                "Failed to get resource directory: {}",
+                e
+            );
             return;
         }
     };
     let script = resource_dir.join("set_dns.sh");
     if !script.exists() {
-        log::error!(target: "app", "set_dns.sh not found");
+        logging!(error, Type::Config, "set_dns.sh not found");
         return;
     }
     let script = script.to_string_lossy().into_owned();
@@ -28,14 +35,14 @@ pub async fn set_public_dns(dns_server: String) {
     {
         Ok(status) => {
             if status.success() {
-                log::info!(target: "app", "set system dns successfully");
+                logging!(info, Type::Config, "set system dns successfully");
             } else {
                 let code = status.code().unwrap_or(-1);
-                log::error!(target: "app", "set system dns failed: {code}");
+                logging!(error, Type::Config, "set system dns failed: {code}");
             }
         }
         Err(err) => {
-            log::error!(target: "app", "set system dns failed: {err}");
+            logging!(error, Type::Config, "set system dns failed: {err}");
         }
     }
 }
@@ -43,19 +50,24 @@ pub async fn set_public_dns(dns_server: String) {
 #[cfg(target_os = "macos")]
 pub async fn restore_public_dns() {
     use crate::{core::handle, utils::dirs};
-    use tauri_plugin_shell::ShellExt;
+    use tauri_plugin_shell::ShellExt as _;
     let app_handle = handle::Handle::app_handle();
-    log::info!(target: "app", "try to unset system dns");
+    logging!(info, Type::Config, "try to unset system dns");
     let resource_dir = match dirs::app_resources_dir() {
         Ok(dir) => dir,
         Err(e) => {
-            log::error!(target: "app", "Failed to get resource directory: {}", e);
+            logging!(
+                error,
+                Type::Config,
+                "Failed to get resource directory: {}",
+                e
+            );
             return;
         }
     };
     let script = resource_dir.join("unset_dns.sh");
     if !script.exists() {
-        log::error!(target: "app", "unset_dns.sh not found");
+        logging!(error, Type::Config, "unset_dns.sh not found");
         return;
     }
     let script = script.to_string_lossy().into_owned();
@@ -69,14 +81,14 @@ pub async fn restore_public_dns() {
     {
         Ok(status) => {
             if status.success() {
-                log::info!(target: "app", "unset system dns successfully");
+                logging!(info, Type::Config, "unset system dns successfully");
             } else {
                 let code = status.code().unwrap_or(-1);
-                log::error!(target: "app", "unset system dns failed: {code}");
+                logging!(error, Type::Config, "unset system dns failed: {code}");
             }
         }
         Err(err) => {
-            log::error!(target: "app", "unset system dns failed: {err}");
+            logging!(error, Type::Config, "unset system dns failed: {err}");
         }
     }
 }

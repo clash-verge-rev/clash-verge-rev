@@ -1,3 +1,4 @@
+use super::handle::Handle;
 use crate::{
     constants::{retry, timing},
     logging,
@@ -7,13 +8,13 @@ use parking_lot::RwLock;
 use smartstring::alias::String;
 use std::{
     sync::{
-        atomic::{AtomicU64, Ordering},
+        atomic::{AtomicBool, AtomicU64, Ordering},
         mpsc,
     },
     thread,
-    time::Instant,
+    time::{Duration, Instant},
 };
-use tauri::{Emitter, WebviewWindow};
+use tauri::{Emitter as _, WebviewWindow};
 
 #[derive(Debug, Clone)]
 pub enum FrontendEvent {
@@ -46,7 +47,7 @@ pub struct NotificationSystem {
     worker_handle: Option<thread::JoinHandle<()>>,
     pub(super) is_running: bool,
     stats: EventStats,
-    emergency_mode: RwLock<bool>,
+    emergency_mode: AtomicBool,
 }
 
 impl Default for NotificationSystem {
@@ -62,7 +63,7 @@ impl NotificationSystem {
             worker_handle: None,
             is_running: false,
             stats: EventStats::default(),
-            emergency_mode: RwLock::new(false),
+            emergency_mode: AtomicBool::new(false),
         }
     }
 
@@ -91,23 +92,26 @@ impl NotificationSystem {
     }
 
     fn worker_loop(rx: mpsc::Receiver<FrontendEvent>) {
-        use super::handle::Handle;
-
-        let handle = Handle::global();
-
-        while !handle.is_exiting() {
-            match rx.recv_timeout(std::time::Duration::from_millis(100)) {
+        loop {
+            let handle = Handle::global();
+            if handle.is_exiting() {
+                break;
+            }
+            match rx.recv_timeout(Duration::from_millis(1_000)) {
                 Ok(event) => Self::process_event(handle, event),
+                Err(mpsc::RecvTimeoutError::Timeout) => (),
                 Err(mpsc::RecvTimeoutError::Disconnected) => break,
-                Err(mpsc::RecvTimeoutError::Timeout) => break,
             }
         }
     }
 
+    // Clippy 似乎对 parking lot 的 RwLock 有误报，这里禁用相关警告
+    #[allow(clippy::significant_drop_tightening)]
     fn process_event(handle: &super::handle::Handle, event: FrontendEvent) {
-        let system_guard = handle.notification_system.read();
-        let Some(system) = system_guard.as_ref() else {
-            return;
+        let binding = handle.notification_system.read();
+        let system = match binding.as_ref() {
+            Some(s) => s,
+            None => return,
         };
 
         if system.should_skip_event(&event) {
@@ -121,7 +125,7 @@ impl NotificationSystem {
     }
 
     fn should_skip_event(&self, event: &FrontendEvent) -> bool {
-        let is_emergency = *self.emergency_mode.read();
+        let is_emergency = self.emergency_mode.load(Ordering::Acquire);
         matches!(
             (is_emergency, event),
             (true, FrontendEvent::NoticeMessage { status, .. }) if status == "info"
@@ -180,14 +184,14 @@ impl NotificationSystem {
         *self.stats.last_error_time.write() = Some(Instant::now());
 
         let errors = self.stats.total_errors.load(Ordering::Relaxed);
-        if errors > retry::EVENT_EMIT_THRESHOLD && !*self.emergency_mode.read() {
+        if errors > retry::EVENT_EMIT_THRESHOLD && !self.emergency_mode.load(Ordering::Acquire) {
             logging!(
                 warn,
                 Type::Frontend,
                 "Entering emergency mode after {} errors",
                 errors
             );
-            *self.emergency_mode.write() = true;
+            self.emergency_mode.store(true, Ordering::Release);
         }
     }
 

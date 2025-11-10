@@ -1,50 +1,37 @@
 use once_cell::sync::OnceCell;
-use parking_lot::RwLock;
+use serde::{Deserialize, Serialize};
 use std::sync::{
     Arc,
-    atomic::{AtomicBool, Ordering},
+    atomic::{AtomicBool, AtomicU8, Ordering},
 };
 use tokio::sync::Notify;
 
 use crate::{logging, utils::logging::Type};
 
-// 使用 AtomicBool 替代 RwLock<bool>，性能更好且无锁
-static UI_READY: OnceCell<AtomicBool> = OnceCell::new();
+// 获取 UI 是否准备就绪的全局状态
+static UI_READY: AtomicBool = AtomicBool::new(false);
 // 获取UI就绪状态细节
-static UI_READY_STATE: OnceCell<UiReadyState> = OnceCell::new();
+static UI_READY_STATE: AtomicU8 = AtomicU8::new(0);
 // 添加通知机制，用于事件驱动的 UI 就绪检测
 static UI_READY_NOTIFY: OnceCell<Arc<Notify>> = OnceCell::new();
 
 // UI就绪阶段状态枚举
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[repr(u8)]
+#[derive(Debug, Clone, Copy, PartialEq, Serialize, Deserialize)]
 pub enum UiReadyStage {
-    NotStarted,
+    NotStarted = 0,
     Loading,
     DomReady,
     ResourcesLoaded,
     Ready,
 }
 
-// UI就绪详细状态
-#[derive(Debug)]
-struct UiReadyState {
-    stage: RwLock<UiReadyStage>,
+pub fn get_ui_ready() -> &'static AtomicBool {
+    &UI_READY
 }
 
-impl Default for UiReadyState {
-    fn default() -> Self {
-        Self {
-            stage: RwLock::new(UiReadyStage::NotStarted),
-        }
-    }
-}
-
-pub(super) fn get_ui_ready() -> &'static AtomicBool {
-    UI_READY.get_or_init(|| AtomicBool::new(false))
-}
-
-fn get_ui_ready_state() -> &'static UiReadyState {
-    UI_READY_STATE.get_or_init(UiReadyState::default)
+fn get_ui_ready_state() -> &'static AtomicU8 {
+    &UI_READY_STATE
 }
 
 fn get_ui_ready_notify() -> &'static Arc<Notify> {
@@ -53,10 +40,7 @@ fn get_ui_ready_notify() -> &'static Arc<Notify> {
 
 // 更新UI准备阶段
 pub fn update_ui_ready_stage(stage: UiReadyStage) {
-    let state = get_ui_ready_state();
-    let mut stage_lock = state.stage.write();
-
-    *stage_lock = stage;
+    get_ui_ready_state().store(stage as u8, Ordering::Release);
     // 如果是最终阶段，标记UI完全就绪
     if stage == UiReadyStage::Ready {
         mark_ui_ready();

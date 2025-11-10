@@ -1,0 +1,602 @@
+{
+  "page": {
+    "actions": {
+      "manual": "문서",
+      "telegram": "Telegram 채널",
+      "github": "GitHub 저장소"
+    },
+    "title": "설정"
+  },
+  "sections": {
+    "system": {
+      "title": "시스템 설정",
+      "toggles": {
+        "tunMode": "TUN 모드",
+        "systemProxy": "시스템 프록시"
+      },
+      "tooltips": {
+        "autoLaunchAdmin": "관리자 모드에서는 자동 실행이 지원되지 않을 수 있습니다",
+        "silentStart": "패널을 표시하지 않고 백그라운드에서 시작합니다"
+      },
+      "fields": {
+        "autoLaunch": "자동 실행",
+        "silentStart": "백그라운드 시작"
+      },
+      "notifications": {
+        "tunMode": {
+          "autoDisabled": "서비스를 사용할 수 없어 TUN 모드가 자동으로 비활성화되었습니다",
+          "autoDisableFailed": "TUN 모드를 자동으로 비활성화하지 못했습니다"
+        }
+      }
+    },
+    "proxyControl": {
+      "tooltips": {
+        "systemProxy": "운영 체제의 프록시 설정을 수정합니다. 활성화에 실패하면 운영 체제의 프록시를 수동으로 설정하세요",
+        "tunMode": "TUN(가상 NIC) 모드: 시스템 전체 트래픽을 캡처합니다. 활성화 시 시스템 프록시를 사용할 필요가 없습니다.",
+        "tunUnavailable": "TUN은 서비스 모드 또는 관리자 모드가 필요합니다"
+      },
+      "actions": {
+        "installService": "서비스 설치",
+        "uninstallService": "서비스 제거"
+      },
+      "fields": {
+        "systemProxy": "시스템 프록시",
+        "tunMode": "TUN 모드"
+      }
+    },
+    "externalController": {
+      "title": "외부 컨트롤러",
+      "fields": {
+        "enable": "외부 컨트롤러 사용",
+        "address": "외부 컨트롤러 주소",
+        "secret": "코어 비밀키"
+      },
+      "placeholders": {
+        "address": "필수",
+        "secret": "권장"
+      },
+      "tooltips": {
+        "copy": "클립보드에 복사"
+      },
+      "messages": {
+        "addressRequired": "컨트롤러 주소는 비워둘 수 없습니다",
+        "secretRequired": "비밀키는 비워둘 수 없습니다",
+        "copyFailed": "복사 실패",
+        "controllerCopied": "컨트롤러 주소가 클립보드에 복사되었습니다",
+        "secretCopied": "비밀키가 클립보드에 복사되었습니다"
+      }
+    },
+    "externalCors": {
+      "title": "외부 CORS 구성",
+      "fields": {
+        "allowPrivateNetwork": "프라이빗 네트워크 접근 허용",
+        "allowedOrigins": "허용된 오리진"
+      },
+      "placeholders": {
+        "origin": "유효한 URL을 입력하세요"
+      },
+      "actions": {
+        "add": "추가"
+      },
+      "messages": {
+        "alwaysIncluded": "항상 포함되는 오리진: {{urls}}"
+      },
+      "tooltips": {
+        "open": "외부 CORS 설정"
+      }
+    },
+    "appearance": {
+      "light": "라이트",
+      "dark": "다크",
+      "system": "시스템"
+    },
+    "clash": {
+      "title": "Clash 설정",
+      "form": {
+        "fields": {
+          "allowLan": "LAN 허용",
+          "dnsOverwrite": "DNS 덮어쓰기",
+          "ipv6": "IPv6",
+          "unifiedDelay": "지연 통합",
+          "logLevel": "로그 레벨",
+          "portConfig": "포트 설정",
+          "external": "외부",
+          "webUI": "Web UI",
+          "clashCore": "Clash 코어",
+          "openUwpTool": "UWP 도구 열기",
+          "updateGeoData": "GeoData 업데이트"
+        },
+        "tooltips": {
+          "networkInterface": "네트워크 인터페이스",
+          "unifiedDelay": "지연 통합을 켜면, 서로 다른 유형의 노드에서 연결 핸드셰이크 등으로 발생하는 지연 차이를 제거하기 위해 두 번의 지연 테스트를 수행합니다",
+          "logLevel": "이 매개변수는 로그 디렉터리 Service 폴더의 커널 로그 파일에만 적용됩니다",
+          "openUwpTool": "Windows 8 이후 UWP 앱(예: Microsoft Store)은 로컬 호스트 네트워크 서비스에 직접 접근이 제한됩니다. 이 도구로 해당 제한을 우회할 수 있습니다"
+        },
+        "options": {
+          "logLevel": {
+            "debug": "디버그",
+            "info": "정보",
+            "warning": "경고",
+            "error": "오류",
+            "silent": "무음"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "verge": {
+      "basic": {
+        "title": "Verge 기본 설정",
+        "actions": {
+          "browse": "찾아보기"
+        },
+        "trayOptions": {
+          "showMainWindow": "메인 창 표시",
+          "showTrayMenu": "트레이 메뉴 표시",
+          "disable": "비활성화"
+        },
+        "fields": {
+          "language": "언어",
+          "themeMode": "테마 모드",
+          "trayClickEvent": "트레이 클릭 이벤트",
+          "copyEnvType": "환경 유형 복사",
+          "startPage": "시작 페이지",
+          "startupScript": "시작 스크립트",
+          "themeSetting": "테마 설정",
+          "layoutSetting": "레이아웃 설정",
+          "misc": "기타",
+          "hotkeySetting": "단축키 설정"
+        }
+      },
+      "advanced": {
+        "title": "Verge 고급 설정",
+        "tooltips": {
+          "backupInfo": "설정 파일의 로컬 또는 WebDAV 백업을 지원합니다",
+          "openConfDir": "소프트웨어가 비정상 동작할 경우, 이 폴더의 파일을 백업 후 모두 삭제하고 재시작하세요",
+          "liteMode": "GUI를 닫고 커널만 실행 상태로 유지합니다"
+        },
+        "actions": {
+          "copyVersion": "버전 복사"
+        },
+        "notifications": {
+          "latestVersion": "현재 최신 버전입니다",
+          "versionCopied": "버전이 클립보드에 복사되었습니다"
+        },
+        "fields": {
+          "backupSetting": "백업 설정",
+          "runtimeConfig": "런타임 구성",
+          "openConfDir": "설정 디렉터리 열기",
+          "openCoreDir": "코어 디렉터리 열기",
+          "openLogsDir": "로그 디렉터리 열기",
+          "checkUpdates": "업데이트 확인",
+          "openDevTools": "개발자 도구",
+          "liteModeSettings": "경량 모드 설정",
+          "exit": "종료",
+          "exportDiagnostics": "진단 정보 내보내기",
+          "vergeVersion": "Verge 버전"
+        }
+      },
+      "theme": {
+        "title": "테마 설정",
+        "fields": {
+          "primaryColor": "기본 색상",
+          "secondaryColor": "보조 색상",
+          "primaryText": "기본 텍스트",
+          "secondaryText": "보조 텍스트",
+          "infoColor": "정보 색상",
+          "warningColor": "경고 색상",
+          "errorColor": "오류 색상",
+          "successColor": "성공 색상",
+          "fontFamily": "글꼴",
+          "cssInjection": "CSS 삽입"
+        },
+        "actions": {
+          "editCss": "CSS 편집"
+        },
+        "dialogs": {
+          "editCssTitle": "CSS 편집"
+        }
+      },
+      "layout": {
+        "title": "레이아웃 설정",
+        "fields": {
+          "preferSystemTitlebar": "시스템 제목 표시줄 사용",
+          "trafficGraph": "트래픽 그래프",
+          "memoryUsage": "메모리 사용량",
+          "proxyGroupIcon": "프록시 그룹 아이콘",
+          "hoverNavigator": "호버 점프 내비게이터",
+          "hoverNavigatorDelay": "호버 점프 내비게이터 지연",
+          "navIcon": "내비게이션 아이콘",
+          "trayIcon": "트레이 아이콘",
+          "showProxyGroupsInline": "프록시 그룹 인라인 표시",
+          "commonTrayIcon": "공용 트레이 아이콘",
+          "systemProxyTrayIcon": "시스템 프록시 트레이 아이콘",
+          "tunTrayIcon": "TUN 트레이 아이콘",
+          "enableTrayIcon": "트레이 아이콘 사용",
+          "enableTraySpeed": "트레이 속도 표시 사용"
+        },
+        "tooltips": {
+          "hoverNavigator": "알파벳에 마우스를 올리면 해당 프록시 그룹으로 자동 스크롤합니다",
+          "hoverNavigatorDelay": "호버 시 자동 스크롤까지의 지연(밀리초)"
+        },
+        "options": {
+          "icon": {
+            "monochrome": "단색",
+            "colorful": "컬러",
+            "disable": "비활성화"
+          }
+        }
+      }
+    }
+  },
+  "modals": {
+    "clashPort": {
+      "title": "포트 설정",
+      "fields": {
+        "mixed": "혼합 포트",
+        "socks": "SOCKS 포트",
+        "http": "HTTP(S) 포트",
+        "redir": "Redir 포트",
+        "tproxy": "TProxy 포트"
+      },
+      "actions": {
+        "random": "임의 포트"
+      },
+      "messages": {
+        "saved": "포트 설정이 저장되었습니다",
+        "saveFailed": "포트 설정 저장에 실패했습니다"
+      }
+    },
+    "clashCore": {
+      "variants": {
+        "release": "안정 버전",
+        "alpha": "알파 버전"
+      }
+    },
+    "liteMode": {
+      "title": "경량 모드 설정",
+      "actions": {
+        "enterNow": "지금 경량 모드로 전환"
+      },
+      "toggles": {
+        "autoEnter": "경량 모드 자동 진입"
+      },
+      "tooltips": {
+        "autoEnter": "창을 닫은 뒤 일정 시간이 지나면 자동으로 경량 모드가 활성화됩니다"
+      },
+      "fields": {
+        "delay": "경량 모드 자동 진입 지연"
+      },
+      "messages": {
+        "autoEnterHint": "창을 닫으면 {{n}}분 후 자동으로 경량 모드가 활성화됩니다"
+      }
+    },
+    "backup": {
+      "title": "백업 설정",
+      "tabs": {
+        "local": "로컬 백업",
+        "webdav": "WebDAV 백업"
+      },
+      "actions": {
+        "selectTarget": "백업 대상 선택",
+        "backup": "백업",
+        "export": "내보내기",
+        "exportBackup": "백업 내보내기",
+        "deleteBackup": "백업 삭제",
+        "restore": "복원",
+        "restoreBackup": "백업 복원",
+        "viewHistory": "View history"
+      },
+      "fields": {
+        "webdavUrl": "WebDAV 서버 URL",
+        "username": "사용자 이름",
+        "info": "백업은 애플리케이션 데이터 디렉터리에 로컬로 저장됩니다. 아래 목록을 사용해 복원하거나 삭제할 수 있습니다."
+      },
+      "messages": {
+        "webdavUrlRequired": "WebDAV URL은 비워둘 수 없습니다",
+        "invalidWebdavUrl": "유효하지 않은 WebDAV URL 형식입니다",
+        "usernameRequired": "사용자 이름은 비워둘 수 없습니다",
+        "passwordRequired": "비밀번호는 비워둘 수 없습니다",
+        "webdavConfigSaved": "WebDAV 구성이 저장되었습니다",
+        "webdavConfigSaveFailed": "WebDAV 구성 저장 실패: {{error}}",
+        "backupCreated": "백업이 생성되었습니다",
+        "backupFailed": "백업 실패: {{error}}",
+        "localBackupCreated": "로컬 백업이 생성되었습니다",
+        "localBackupFailed": "로컬 백업 실패",
+        "restoreSuccess": "복원 성공, 1초 후 앱이 재시작됩니다",
+        "localBackupExported": "로컬 백업이 내보내졌습니다",
+        "localBackupExportFailed": "로컬 백업 내보내기 실패",
+        "webdavRefreshSuccess": "WebDAV refresh succeeded",
+        "webdavRefreshFailed": "WebDAV refresh failed: {{error}}",
+        "confirmDelete": "이 백업 파일을 삭제하시겠습니까?",
+        "confirmRestore": "이 백업 파일을 복원하시겠습니까?"
+      },
+      "auto": {
+        "title": "Automatic backup",
+        "scheduleLabel": "Enable scheduled backup",
+        "scheduleHelper": "Create local backups in the background at the configured interval.",
+        "intervalLabel": "Backup frequency",
+        "changeLabel": "Backup on critical changes",
+        "changeHelper": "Automatically back up when the global extend config/script or subscriptions are added, removed, or edited.",
+        "options": {
+          "hours": "Every {{n}} hours",
+          "days": "Every {{n}} days"
+        }
+      },
+      "manual": {
+        "title": "Manual backup",
+        "local": "Creates a snapshot on this device, stored under the app data directory.",
+        "webdav": "Upload a snapshot to your WebDAV server once credentials are set.",
+        "configureWebdav": "Configure WebDAV"
+      },
+      "history": {
+        "title": "Backup history",
+        "summary": "{{count}} backups • latest {{recent}}",
+        "empty": "No backups available"
+      },
+      "webdav": {
+        "title": "WebDAV settings"
+      },
+      "table": {
+        "filename": "파일명",
+        "backupTime": "백업 시간",
+        "actions": "작업",
+        "noBackups": "사용 가능한 백업이 없습니다",
+        "rowsPerPage": "페이지당 행 수"
+      }
+    },
+    "misc": {
+      "title": "기타",
+      "fields": {
+        "appLogLevel": "앱 로그 레벨",
+        "appLogMaxSize": "앱 로그 최대 크기",
+        "appLogMaxCount": "앱 로그 최대 개수",
+        "autoCloseConnections": "연결 자동 종료",
+        "autoCheckUpdate": "업데이트 자동 확인",
+        "enableBuiltinEnhanced": "내장 향상 기능 사용",
+        "proxyLayoutColumns": "프록시 레이아웃 열 수",
+        "autoLogClean": "로그 자동 정리",
+        "autoDelayDetection": "자동 지연 감지",
+        "defaultLatencyTest": "기본 지연 테스트",
+        "defaultLatencyTimeout": "기본 지연 제한시간"
+      },
+      "tooltips": {
+        "autoCloseConnections": "프록시 그룹 선택 또는 프록시 모드 변경 시 기존 연결을 종료합니다",
+        "enableBuiltinEnhanced": "구성 파일에 대한 호환성 처리를 수행합니다",
+        "autoDelayDetection": "백그라운드에서 현재 노드의 지연을 주기적으로 검사합니다",
+        "defaultLatencyTest": "HTTP 클라이언트 요청 테스트에만 사용되며 구성 파일에는 영향을 주지 않습니다"
+      },
+      "options": {
+        "proxyLayoutColumns": {
+          "auto": "자동"
+        },
+        "autoLogClean": {
+          "never": "정리 안 함",
+          "retainDays": "{{n}}일 보관"
+        }
+      }
+    },
+    "update": {
+      "title": "새 버전 v{{version}}",
+      "actions": {
+        "goToRelease": "릴리스 페이지로 이동",
+        "update": "업데이트"
+      },
+      "messages": {
+        "portableError": "포터블 버전은 앱 내 업데이트를 지원하지 않습니다. 수동으로 다운로드하여 교체하세요",
+        "breakChangeError": "이 버전은 메이저 업데이트로 앱 내 업데이트를 지원하지 않습니다. 프로그램을 제거한 뒤 새 버전을 수동으로 설치하세요"
+      }
+    },
+    "sysproxy": {
+      "title": "시스템 프록시 설정",
+      "fieldsets": {
+        "currentStatus": "현재 시스템 프록시"
+      },
+      "fields": {
+        "enableStatus": "활성 상태:",
+        "serverAddr": "서버 주소: ",
+        "pacUrl": "PAC URL: ",
+        "proxyHost": "프록시 호스트",
+        "usePacMode": "PAC 모드 사용",
+        "proxyGuard": "프록시 가드",
+        "guardDuration": "가드 지속시간",
+        "alwaysUseDefaultBypass": "기본 우회 주소 항상 사용",
+        "proxyBypass": "프록시 우회 설정: ",
+        "bypass": "우회: ",
+        "pacScriptContent": "PAC 스크립트 내용"
+      },
+      "tooltips": {
+        "proxyGuard": "다른 소프트웨어가 운영 체제의 프록시 설정을 변경하지 못하도록 방지합니다"
+      },
+      "messages": {
+        "durationTooShort": "프록시 데몬 지속시간은 1초 미만일 수 없습니다",
+        "invalidBypass": "잘못된 우회 형식",
+        "invalidProxyHost": "잘못된 프록시 호스트 형식"
+      },
+      "actions": {
+        "editPac": "PAC 편집"
+      }
+    },
+    "tun": {
+      "title": "TUN 모드",
+      "fields": {
+        "stack": "스택",
+        "device": "장치 이름",
+        "autoRoute": "자동 라우팅",
+        "strictRoute": "엄격 라우팅",
+        "autoDetectInterface": "인터페이스 자동 감지",
+        "dnsHijack": "DNS 하이재킹",
+        "mtu": "MTU"
+      },
+      "tooltips": {
+        "dnsHijack": "여러 DNS 서버는 쉼표(,)로 구분하세요"
+      },
+      "messages": {
+        "applied": "설정이 적용되었습니다"
+      }
+    },
+    "dns": {
+      "dialog": {
+        "title": "DNS 덮어쓰기",
+        "warning": "이 설정에 익숙하지 않다면 수정하지 말고 DNS 덮어쓰기를 활성화 상태로 유지하세요"
+      },
+      "sections": {
+        "general": "DNS 설정",
+        "fallbackFilter": "폴백 필터 설정",
+        "hosts": "호스트 설정"
+      },
+      "fields": {
+        "enable": "DNS 사용",
+        "listen": "DNS 리슨",
+        "enhancedMode": "향상 모드",
+        "fakeIpRange": "가짜 IP 범위",
+        "fakeIpFilterMode": "가짜 IP 필터 모드",
+        "ipv6": {
+          "label": "IPv6",
+          "description": "IPv6 DNS 해석 사용"
+        },
+        "preferH3": {
+          "label": "H3 우선",
+          "description": "DNS DOH에서 HTTP/3 사용"
+        },
+        "respectRules": {
+          "label": "규칙 준수",
+          "description": "DNS 연결이 라우팅 규칙을 따릅니다"
+        },
+        "useHosts": {
+          "label": "Hosts 사용",
+          "description": "호스트 파일을 통해 해석하도록 활성화"
+        },
+        "useSystemHosts": {
+          "label": "시스템 Hosts 사용",
+          "description": "시스템 호스트 파일을 통해 해석하도록 활성화"
+        },
+        "directPolicy": {
+          "label": "직접 Nameserver 정책 따르기",
+          "description": "Nameserver 정책을 따를지 여부"
+        },
+        "defaultNameserver": {
+          "label": "기본 Nameserver",
+          "description": "DNS 서버 해석에 사용되는 기본 DNS 서버"
+        },
+        "nameserver": {
+          "label": "Nameserver",
+          "description": "DNS 서버 목록, 쉼표로 구분"
+        },
+        "fallback": {
+          "label": "폴백",
+          "description": "폴백 DNS 서버 목록, 쉼표로 구분"
+        },
+        "proxy": {
+          "label": "프록시 서버 Nameserver",
+          "description": "프록시 노드 도메인 해석용 DNS 서버"
+        },
+        "directNameserver": {
+          "label": "직접 Nameserver",
+          "description": "직접 출구 도메인 해석용 DNS 서버, 'system' 키워드 지원, 쉼표로 구분"
+        },
+        "fakeIpFilter": {
+          "label": "가짜 IP 필터",
+          "description": "가짜 IP 해석을 건너뛰는 도메인, 쉼표로 구분"
+        },
+        "nameserverPolicy": {
+          "label": "Nameserver 정책",
+          "description": "도메인별 DNS 서버, 여러 서버는 세미콜론으로 구분, 형식: domain=server1;server2"
+        },
+        "geoipFiltering": {
+          "label": "GeoIP 필터링",
+          "description": "폴백에 GeoIP 필터링 사용"
+        },
+        "geoipCode": "GeoIP 코드",
+        "fallbackIpCidr": {
+          "label": "폴백 IP CIDR",
+          "description": "폴백 서버를 사용하지 않는 IP CIDR, 쉼표로 구분"
+        },
+        "fallbackDomain": {
+          "label": "폴백 도메인",
+          "description": "폴백 서버를 사용하는 도메인, 쉼표로 구분"
+        },
+        "hosts": {
+          "label": "Hosts",
+          "description": "사용자 정의 도메인→IP 또는 도메인 매핑"
+        }
+      },
+      "messages": {
+        "saved": "DNS 설정이 저장되었습니다",
+        "configError": "DNS 구성 오류:"
+      },
+      "errors": {
+        "invalid": "잘못된 구성",
+        "invalidYaml": "잘못된 YAML 형식"
+      }
+    },
+    "webUI": {
+      "actions": {
+        "openUrl": "URL 열기"
+      },
+      "title": "Web UI",
+      "messages": {
+        "supportedPlaceholders": "지원되는 자리표시자: %host, %port, %secret",
+        "placeholderInstruction": "host, port, secret을 %host, %port, %secret로 바꿔 입력하세요"
+      }
+    },
+    "hotkey": {
+      "toggles": {
+        "enableGlobal": "전역 단축키 사용"
+      },
+      "title": "단축키 설정",
+      "functions": {
+        "rule": "규칙 모드",
+        "global": "전역 모드",
+        "openOrCloseDashboard": "대시보드 열기/닫기",
+        "toggleSystemProxy": "시스템 프록시 켜기/끄기",
+        "toggleTunMode": "TUN 모드 켜기/끄기",
+        "entryLightweightMode": "경량 모드 진입",
+        "direct": "직접 모드"
+      }
+    },
+    "password": {
+      "prompts": {
+        "enterRoot": "루트 암호를 입력하세요"
+      }
+    },
+    "networkInterface": {
+      "title": "네트워크 인터페이스",
+      "fields": {
+        "ipAddress": "IP 주소",
+        "macAddress": "MAC 주소"
+      }
+    }
+  },
+  "feedback": {
+    "notifications": {
+      "clash": {
+        "restartSuccess": "Clash 코어가 재시작되었습니다",
+        "versionUpdated": "코어 버전이 업데이트되었습니다",
+        "alreadyLatestVersion": "이미 최신 코어 버전을 사용 중입니다",
+        "changeSuccess": "코어 변경 성공",
+        "changeFailed": "코어 변경 실패",
+        "geoDataUpdated": "GeoData가 업데이트되었습니다"
+      },
+      "clashService": {
+        "installSuccess": "서비스가 설치되었습니다",
+        "uninstallSuccess": "서비스가 제거되었습니다"
+      },
+      "updater": {
+        "withClashProxySuccess": "Clash 프록시로 업데이트 성공",
+        "withClashProxyFailed": "Clash 프록시로도 업데이트 실패"
+      }
+    }
+  },
+  "statuses": {
+    "clash": {
+      "stopping": "코어 중지 중...",
+      "restarting": "코어 재시작 중..."
+    },
+    "clashService": {
+      "installing": "서비스 설치 중...",
+      "uninstalling": "서비스 제거 중..."
+    }
+  }
+}

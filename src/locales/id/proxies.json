@@ -1,0 +1,90 @@
+{
+  "page": {
+    "modes": {
+      "rule": "Rule",
+      "global": "Global",
+      "direct": "Direct"
+    },
+    "actions": {
+      "toggleChain": "Proxy Rantai",
+      "connect": "Connect",
+      "disconnect": "Disconnect",
+      "connecting": "Connecting...",
+      "clearChainConfig": "Delete Chain Config"
+    },
+    "provider": {
+      "title": "Penyedia Proksi",
+      "actions": {
+        "updateAll": "Perbarui Semua",
+        "update": "Perbarui"
+      }
+    },
+    "rules": {
+      "title": "Proxy Rules",
+      "select": "Select Rules"
+    },
+    "labels": {
+      "proxyCount": "Proxy Count",
+      "delayCheckReset": "Periksa keterlambatan untuk membatalkan tetap"
+    },
+    "tooltips": {
+      "locate": "Lokasi",
+      "delayCheck": "Periksa Keterlambatan",
+      "sortDefault": "Urutkan secara default",
+      "sortDelay": "Urutkan berdasarkan keterlambatan",
+      "sortName": "Urutkan berdasarkan nama",
+      "delayCheckUrl": "URL Periksa Keterlambatan",
+      "showBasic": "Dasar Proksi",
+      "showDetail": "Detail Proksi",
+      "filter": "Filter"
+    },
+    "placeholders": {
+      "delayCheckUrl": "URL Periksa Keterlambatan"
+    },
+    "chain": {
+      "header": "Chain Proxy Config",
+      "empty": "No proxy chain configured",
+      "instruction": "Click nodes in order to add to proxy chain",
+      "minimumNodes": "Chain proxy requires at least 2 nodes",
+      "minimumNodesHint": "Chain proxy requires at least 2 nodes. Please add one more node.",
+      "connectFailed": "Failed to connect to proxy chain",
+      "disconnectFailed": "Failed to disconnect from proxy chain",
+      "duplicateNode": "Proxy node already exists in chain"
+    },
+    "messages": {
+      "directMode": "Mode Langsung"
+    },
+    "title": {
+      "default": "Grup Proksi",
+      "chainMode": "Proxy Chain Mode"
+    }
+  },
+  "feedback": {
+    "notifications": {
+      "provider": {
+        "updateSuccess": "{{name}} updated successfully",
+        "updateFailed": "Failed to update {{name}}: {{message}}",
+        "genericError": "Update failed: {{message}}",
+        "none": "No providers available to update",
+        "allUpdated": "All providers updated successfully"
+      }
+    }
+  },
+  "components": {
+    "enums": {
+      "strategies": {
+        "select": "Pilih proksi secara manual",
+        "url-test": "Pilih proksi berdasarkan keterlambatan tes URL",
+        "fallback": "Beralih ke proksi lain saat terjadi kesalahan",
+        "load-balance": "Distribusikan proksi berdasarkan penyeimbangan beban",
+        "relay": "Lewatkan melalui rantai proksi yang ditentukan"
+      },
+      "policies": {
+        "DIRECT": "Data langsung keluar",
+        "REJECT": "Mencegat permintaan",
+        "REJECT-DROP": "Membuang permintaan",
+        "PASS": "Lewati aturan ini saat cocok"
+      }
+    }
+  }
+}

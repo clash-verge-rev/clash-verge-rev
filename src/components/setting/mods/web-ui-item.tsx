@@ -56,11 +56,13 @@ export const WebUIItem = (props: Props) => {
             size="small"
             value={editValue}
             onChange={(e) => setEditValue(e.target.value)}
-            placeholder={t("Support %host, %port, %secret")}
+            placeholder={t(
+              "settings.modals.webUI.messages.supportedPlaceholders",
+            )}
           />
           <IconButton
             size="small"
-            title={t("Save")}
+            title={t("shared.actions.save")}
             color="inherit"
             onClick={() => {
               onChange(editValue);
@@ -71,7 +73,7 @@ export const WebUIItem = (props: Props) => {
           </IconButton>
           <IconButton
             size="small"
-            title={t("Cancel")}
+            title={t("shared.actions.cancel")}
             color="inherit"
             onClick={() => {
               onCancel?.();
@@ -127,7 +129,7 @@ export const WebUIItem = (props: Props) => {
         </Typography>
         <IconButton
           size="small"
-          title={t("Open URL")}
+          title={t("settings.modals.webUI.actions.openUrl")}
           color="inherit"
           onClick={() => onOpenUrl?.(value)}
         >
@@ -135,7 +137,7 @@ export const WebUIItem = (props: Props) => {
         </IconButton>
         <IconButton
           size="small"
-          title={t("Edit")}
+          title={t("shared.actions.edit")}
           color="inherit"
           onClick={() => {
             setEditing(true);
@@ -146,7 +148,7 @@ export const WebUIItem = (props: Props) => {
         </IconButton>
         <IconButton
           size="small"
-          title={t("Delete")}
+          title={t("shared.actions.delete")}
           color="inherit"
           onClick={onDelete}
         >

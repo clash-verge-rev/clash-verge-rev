@@ -58,14 +58,6 @@ export const BackupConfigViewer = memo(
       webdav_username !== username ||
       webdav_password !== password;
 
-    console.log(
-      "webdavChanged",
-      webdavChanged,
-      webdav_url,
-      webdav_username,
-      webdav_password,
-    );
-
     const handleClickShowPassword = () => {
       setShowPassword((prev) => !prev);
     };
@@ -84,22 +76,22 @@ export const BackupConfigViewer = memo(
 
       if (!url) {
         urlRef.current?.focus();
-        showNotice("error", t("WebDAV URL Required"));
-        throw new Error(t("WebDAV URL Required"));
+        showNotice.error("settings.modals.backup.messages.webdavUrlRequired");
+        throw new Error(t("settings.modals.backup.messages.webdavUrlRequired"));
       } else if (!isValidUrl(url)) {
         urlRef.current?.focus();
-        showNotice("error", t("Invalid WebDAV URL"));
-        throw new Error(t("Invalid WebDAV URL"));
+        showNotice.error("settings.modals.backup.messages.invalidWebdavUrl");
+        throw new Error(t("settings.modals.backup.messages.invalidWebdavUrl"));
       }
       if (!username) {
         usernameRef.current?.focus();
-        showNotice("error", t("WebDAV URL Required"));
-        throw new Error(t("Username Required"));
+        showNotice.error("settings.modals.backup.messages.usernameRequired");
+        throw new Error(t("settings.modals.backup.messages.usernameRequired"));
       }
       if (!password) {
         passwordRef.current?.focus();
-        showNotice("error", t("WebDAV URL Required"));
-        throw new Error(t("Password Required"));
+        showNotice.error("settings.modals.backup.messages.passwordRequired");
+        throw new Error(t("settings.modals.backup.messages.passwordRequired"));
       }
     };
 
@@ -112,11 +104,17 @@ export const BackupConfigViewer = memo(
           data.username.trim(),
           data.password,
         ).then(() => {
-          showNotice("success", t("WebDAV Config Saved"));
+          showNotice.success(
+            "settings.modals.backup.messages.webdavConfigSaved",
+          );
           onSaveSuccess();
         });
       } catch (error) {
-        showNotice("error", t("WebDAV Config Save Failed", { error }), 3000);
+        showNotice.error(
+          "settings.modals.backup.messages.webdavConfigSaveFailed",
+          { error },
+          3000,
+        );
       } finally {
         setLoading(false);
       }
@@ -127,11 +125,13 @@ export const BackupConfigViewer = memo(
       try {
         setLoading(true);
         await createWebdavBackup().then(async () => {
-          showNotice("success", t("Backup Created"));
+          showNotice.success("settings.modals.backup.messages.backupCreated");
           await onBackupSuccess();
         });
       } catch (error) {
-        showNotice("error", t("Backup Failed", { error }));
+        showNotice.error("settings.modals.backup.messages.backupFailed", {
+          error,
+        });
       } finally {
         setLoading(false);
       }
@@ -145,7 +145,7 @@ export const BackupConfigViewer = memo(
               <Grid size={{ xs: 12 }}>
                 <TextField
                   fullWidth
-                  label={t("WebDAV Server URL")}
+                  label={t("settings.modals.backup.fields.webdavUrl")}
                   variant="outlined"
                   size="small"
                   {...register("url")}
@@ -157,7 +157,7 @@ export const BackupConfigViewer = memo(
               </Grid>
               <Grid size={{ xs: 6 }}>
                 <TextField
-                  label={t("Username")}
+                  label={t("settings.modals.backup.fields.username")}
                   variant="outlined"
                   size="small"
                   {...register("username")}
@@ -169,7 +169,7 @@ export const BackupConfigViewer = memo(
               </Grid>
               <Grid size={{ xs: 6 }}>
                 <TextField
-                  label={t("Password")}
+                  label={t("shared.labels.password")}
                   type={showPassword ? "text" : "password"}
                   variant="outlined"
                   size="small"
@@ -214,7 +214,7 @@ export const BackupConfigViewer = memo(
                   type="button"
                   onClick={handleSubmit(save)}
                 >
-                  {t("Save")}
+                  {t("shared.actions.save")}
                 </Button>
               ) : (
                 <>
@@ -225,7 +225,7 @@ export const BackupConfigViewer = memo(
                     type="button"
                     size="large"
                   >
-                    {t("Backup")}
+                    {t("settings.modals.backup.actions.backup")}
                   </Button>
                   <Button
                     variant="outlined"
@@ -233,7 +233,7 @@ export const BackupConfigViewer = memo(
                     type="button"
                     size="large"
                   >
-                    {t("Refresh")}
+                    {t("shared.actions.refresh")}
                   </Button>
                 </>
               )}

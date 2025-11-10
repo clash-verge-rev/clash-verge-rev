@@ -1,0 +1,53 @@
+{
+  "page": {
+    "actions": {
+      "testAll": "测试全部"
+    },
+    "title": "测试"
+  },
+  "components": {
+    "item": {
+      "actions": {
+        "test": "测试"
+      }
+    }
+  },
+  "modals": {
+    "test": {
+      "title": {
+        "create": "新建测试",
+        "edit": "编辑测试"
+      },
+      "fields": {
+        "url": "测试地址"
+      }
+    }
+  },
+  "statuses": {
+    "test": {
+      "pending": "待检测",
+      "yes": "支持",
+      "no": "不支持",
+      "failed": "测试失败",
+      "completed": "检测完成",
+      "disallowedIsp": "不允许的 ISP",
+      "originalsOnly": "仅限原创",
+      "noDisney": "不支持（IP被Disney+禁止）",
+      "unsupportedRegion": "不支持的国家/地区",
+      "failedNetwork": "测试失败（网络连接问题）"
+    }
+  },
+  "unlock": {
+    "page": {
+      "actions": {
+        "testing": "测试中..."
+      },
+      "empty": "暂无解锁测试项目",
+      "messages": {
+        "detectionFailedWithName": "{{name}} 检测失败",
+        "detectionTimeout": "检测超时或失败"
+      },
+      "title": "解锁测试"
+    }
+  }
+}

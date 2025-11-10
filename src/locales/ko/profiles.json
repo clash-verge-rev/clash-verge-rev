@@ -1,0 +1,182 @@
+{
+  "page": {
+    "actions": {
+      "updateAll": "모든 프로필 업데이트",
+      "viewRuntimeConfig": "런타임 설정 보기",
+      "reactivate": "프로필 재활성화",
+      "import": "가져오기"
+    },
+    "batch": {
+      "actions": {
+        "delete": "선택한 프로필 삭제",
+        "selectAll": "모두 선택",
+        "deselectAll": "모두 선택 해제",
+        "done": "완료"
+      },
+      "summary": {
+        "selected": "선택됨",
+        "items": "항목"
+      },
+      "title": "일괄 작업"
+    },
+    "importForm": {
+      "placeholder": "프로필 URL",
+      "actions": {
+        "paste": "붙여넣기"
+      }
+    },
+    "feedback": {
+      "errors": {
+        "invalidUrl": "잘못된 프로필 URL입니다. http:// 또는 https://로 시작하는 URL을 입력하세요",
+        "onlyYaml": "YAML 파일만 지원됩니다"
+      },
+      "notifications": {
+        "importRetry": "가져오기에 실패했습니다. Clash 프록시로 다시 시도 중...",
+        "importFail": "Clash 프록시로도 가져오기에 실패했습니다",
+        "importNeedsRefresh": "프로필을 가져왔지만 수동 새로고침이 필요할 수 있습니다",
+        "importSuccess": "프로필을 성공적으로 가져왔습니다. 보이지 않으면 재시작하세요",
+        "profileSwitched": "프로필 전환됨",
+        "profileReactivated": "프로필 재활성화됨",
+        "switchInterrupted": "새 선택으로 인해 프로필 전환이 중단되었습니다",
+        "batchDeleted": "선택한 프로필이 삭제되었습니다"
+      },
+      "notices": {
+        "forceRefreshCompleted": "강제 새로고침 완료",
+        "emergencyRefreshFailed": "긴급 새로고침 실패: {{message}}"
+      }
+    },
+    "title": "프로필"
+  },
+  "components": {
+    "card": {
+      "labels": {
+        "clickToImport": "클릭하여 구독 가져오기"
+      }
+    },
+    "fileInput": {
+      "chooseFile": "파일 선택"
+    },
+    "menu": {
+      "home": "홈",
+      "select": "선택",
+      "editInfo": "정보 편집",
+      "editFile": "파일 편집",
+      "editRules": "규칙 편집",
+      "editProxies": "프록시 편집",
+      "editGroups": "프록시 그룹 편집",
+      "extendConfig": "설정 확장",
+      "extendScript": "스크립트 확장",
+      "openFile": "파일 열기",
+      "update": "업데이트",
+      "updateViaProxy": "프록시를 통해 업데이트"
+    },
+    "more": {
+      "global": {
+        "merge": "전역 확장 구성",
+        "script": "전역 확장 스크립트"
+      },
+      "chips": {
+        "merge": "병합",
+        "script": "스크립트"
+      }
+    },
+    "profileItem": {
+      "tooltips": {
+        "showLast": "클릭하여 마지막 업데이트 시간 표시",
+        "showNext": "클릭하여 다음 업데이트 표시"
+      },
+      "status": {
+        "lastUpdateFailed": "마지막 업데이트 실패",
+        "nextUp": "다음 예정",
+        "noSchedule": "예약 없음",
+        "unknown": "알 수 없음",
+        "autoUpdateDisabled": "자동 업데이트 비활성화됨"
+      }
+    }
+  },
+  "modals": {
+    "profileForm": {
+      "title": {
+        "create": "프로필 생성",
+        "edit": "프로필 편집"
+      },
+      "fields": {
+        "type": "유형",
+        "description": "설명",
+        "subscriptionUrl": "구독 URL",
+        "httpTimeout": "HTTP 요청 시간 초과",
+        "updateInterval": "업데이트 간격",
+        "useSystemProxy": "시스템 프록시 사용",
+        "useClashProxy": "Clash 프록시 사용",
+        "acceptInvalidCerts": "잘못된 인증서 허용(위험)",
+        "allowAutoUpdate": "자동 업데이트 허용"
+      },
+      "feedback": {
+        "notifications": {
+          "creationRetry": "프로필 생성 실패, Clash 프록시로 다시 시도 중...",
+          "creationSuccess": "Clash 프록시로 프로필 생성 성공"
+        }
+      }
+    },
+    "proxiesEditor": {
+      "title": "프록시 편집",
+      "placeholders": {
+        "multiUri": "여러 URI의 경우 줄바꿈 사용(Base64 인코딩 지원)"
+      },
+      "actions": {
+        "prepend": "프록시 앞에 추가",
+        "append": "프록시 뒤에 추가"
+      }
+    },
+    "groupsEditor": {
+      "title": "프록시 그룹 편집",
+      "errors": {
+        "nameRequired": "그룹 이름 필수",
+        "nameExists": "그룹 이름이 이미 존재함"
+      },
+      "fields": {
+        "type": "그룹 유형",
+        "name": "그룹 이름",
+        "icon": "프록시 그룹 아이콘",
+        "proxies": "프록시 사용",
+        "provider": "제공자 사용",
+        "healthCheckUrl": "상태 확인 URL",
+        "expectedStatus": "예상 상태",
+        "interval": "간격",
+        "maxFailedTimes": "최대 실패 횟수",
+        "interfaceName": "인터페이스 이름",
+        "routingMark": "라우팅 마크",
+        "filter": "필터",
+        "excludeFilter": "제외 필터",
+        "excludeType": "제외 유형",
+        "includeAll": "모든 프록시 및 제공자 포함",
+        "includeAllProxies": "모든 프록시 포함",
+        "includeAllProviders": "모든 제공자 포함"
+      },
+      "toggles": {
+        "lazy": "지연 로딩",
+        "disableUdp": "UDP 비활성화",
+        "hidden": "숨김"
+      },
+      "actions": {
+        "prepend": "그룹 앞에 추가",
+        "append": "그룹 뒤에 추가"
+      }
+    },
+    "editor": {
+      "actions": {
+        "format": "문서 포맷"
+      },
+      "messages": {
+        "readOnly": "읽기 전용 편집기에서는 편집할 수 없습니다"
+      }
+    },
+    "confirmDelete": {
+      "title": "삭제 확인",
+      "message": "이 작업은 되돌릴 수 없습니다"
+    },
+    "logViewer": {
+      "title": "스크립트 콘솔"
+    }
+  }
+}

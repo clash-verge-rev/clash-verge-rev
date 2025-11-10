@@ -1,0 +1,34 @@
+{
+  "page": {
+    "title": "連線"
+  },
+  "components": {
+    "fields": {
+      "host": "主機",
+      "dlSpeed": "下載速度",
+      "ulSpeed": "上傳速度",
+      "chains": "鏈路",
+      "rule": "規則",
+      "process": "處理程序",
+      "time": "連線時間",
+      "source": "來源位址",
+      "destination": "目標位址",
+      "destinationPort": "目標連接埠",
+      "type": "類型"
+    },
+    "order": {
+      "default": "預設",
+      "uploadSpeed": "上傳速度",
+      "downloadSpeed": "下載速度"
+    },
+    "actions": {
+      "active": "活躍",
+      "closed": "已關閉",
+      "closeConnection": "關閉連線"
+    },
+    "columnManager": {
+      "title": "欄位設定",
+      "dragHandle": "拖曳以移動"
+    }
+  }
+}

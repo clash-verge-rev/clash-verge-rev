@@ -1,0 +1,138 @@
+{
+  "page": {
+    "tooltips": {
+      "lightweightMode": "경량 모드",
+      "manual": "사용 설명서",
+      "settings": "홈 설정"
+    },
+    "cards": {
+      "trafficStats": "트래픽 통계",
+      "networkSettings": "네트워크 설정",
+      "proxyMode": "프록시 모드"
+    },
+    "settings": {
+      "cards": {
+        "profile": "프로필 카드",
+        "currentProxy": "현재 프록시 카드",
+        "network": "네트워크 설정 카드",
+        "proxyMode": "프록시 모드 카드",
+        "traffic": "트래픽 통계 카드",
+        "tests": "웹사이트 테스트 카드",
+        "ip": "IP 정보 카드",
+        "clashInfo": "Clash 정보 카드",
+        "systemInfo": "시스템 정보 카드"
+      },
+      "title": "홈 설정"
+    },
+    "title": "홈"
+  },
+  "components": {
+    "proxyTun": {
+      "status": {
+        "systemProxyEnabled": "시스템 프록시가 활성화되었습니다. 애플리케이션이 프록시를 통해 네트워크에 접근합니다",
+        "systemProxyDisabled": "시스템 프록시가 비활성화되었습니다. 대부분의 사용자에게 이 옵션을 켜는 것을 권장합니다",
+        "tunModeServiceRequired": "TUN 모드는 서비스 모드가 필요합니다. 먼저 서비스를 설치하세요",
+        "tunModeEnabled": "TUN 모드가 활성화되었습니다. 애플리케이션이 가상 네트워크 카드를 통해 네트워크에 접근합니다",
+        "tunModeDisabled": "TUN 모드가 비활성화되었습니다. 특수 애플리케이션에 적합합니다"
+      },
+      "tooltips": {
+        "systemProxy": "운영 체제의 프록시 설정을 수정합니다. 활성화에 실패하면 운영 체제의 프록시 설정을 수동으로 수정하세요",
+        "tunMode": "TUN 모드는 모든 애플리케이션 트래픽을 인수할 수 있으며 시스템 프록시를 따르지 않는 특수 앱에 적합합니다"
+      }
+    },
+    "clashInfo": {
+      "title": "Clash 정보",
+      "fields": {
+        "coreVersion": "코어 버전",
+        "systemProxyAddress": "시스템 프록시 주소",
+        "mixedPort": "혼합 포트",
+        "uptime": "업타임",
+        "rulesCount": "규칙 개수"
+      }
+    },
+    "systemInfo": {
+      "title": "시스템 정보",
+      "fields": {
+        "osInfo": "OS 정보",
+        "autoLaunch": "자동 실행",
+        "runningMode": "실행 모드",
+        "lastCheckUpdate": "마지막 업데이트 확인",
+        "vergeVersion": "Verge 버전"
+      },
+      "actions": {
+        "settings": "설정"
+      },
+      "tooltips": {
+        "autoLaunchAdmin": "관리자 모드에서는 자동 실행이 지원되지 않을 수 있습니다"
+      },
+      "badges": {
+        "adminMode": "관리자 모드",
+        "serviceMode": "서비스 모드",
+        "sidecarMode": "사용자 모드",
+        "adminServiceMode": "관리자 + 서비스 모드"
+      }
+    },
+    "ipInfo": {
+      "title": "IP 정보",
+      "labels": {
+        "ip": "IP",
+        "asn": "ASN",
+        "isp": "ISP",
+        "org": "ORG",
+        "location": "위치",
+        "timezone": "시간대",
+        "autoRefresh": "자동 새로고침",
+        "unknown": "알 수 없음"
+      },
+      "errors": {
+        "load": "IP 정보를 가져오지 못했습니다"
+      }
+    },
+    "currentProxy": {
+      "title": "현재 노드",
+      "actions": {
+        "refreshDelay": "지연 확인"
+      },
+      "labels": {
+        "globalMode": "전역 모드",
+        "directMode": "직접 모드",
+        "group": "그룹",
+        "proxy": "프록시",
+        "noActiveNode": "활성 프록시 노드 없음"
+      }
+    },
+    "tests": {
+      "title": "웹사이트 테스트"
+    },
+    "traffic": {
+      "metrics": {
+        "uploadSpeed": "업로드 속도",
+        "downloadSpeed": "다운로드 속도",
+        "activeConnections": "활성 연결",
+        "memoryUsage": "코어 사용량"
+      },
+      "legends": {
+        "upload": "업로드",
+        "download": "다운로드"
+      },
+      "patterns": {
+        "minutes": "{{time}}분"
+      }
+    },
+    "clashMode": {
+      "errors": {
+        "communication": "코어 통신 오류"
+      },
+      "labels": {
+        "rule": "규칙",
+        "global": "전역",
+        "direct": "직접"
+      },
+      "descriptions": {
+        "rule": "규칙 세트에 따라 자동으로 프록시를 선택합니다.",
+        "global": "모든 네트워크 요청을 선택한 프록시를 통해 전달합니다.",
+        "direct": "프록시를 우회하여 직접 인터넷에 연결합니다."
+      }
+    }
+  }
+}

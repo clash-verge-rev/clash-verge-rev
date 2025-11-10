@@ -1,0 +1,53 @@
+{
+  "page": {
+    "actions": {
+      "testAll": "آزمون همه"
+    },
+    "title": "آزمون"
+  },
+  "components": {
+    "item": {
+      "actions": {
+        "test": "آزمون"
+      }
+    }
+  },
+  "modals": {
+    "test": {
+      "title": {
+        "create": "ایجاد آزمون",
+        "edit": "ویرایش آزمون"
+      },
+      "fields": {
+        "url": "آدرس آزمون"
+      }
+    }
+  },
+  "statuses": {
+    "test": {
+      "pending": "Pending",
+      "yes": "Yes",
+      "no": "No",
+      "failed": "Failed",
+      "completed": "Completed",
+      "disallowedIsp": "Disallowed ISP",
+      "originalsOnly": "Originals Only",
+      "noDisney": "No (IP Banned By Disney+)",
+      "unsupportedRegion": "Unsupported Country/Region",
+      "failedNetwork": "Failed (Network Connection)"
+    }
+  },
+  "unlock": {
+    "page": {
+      "actions": {
+        "testing": "Testing..."
+      },
+      "empty": "No unlock test items",
+      "messages": {
+        "detectionFailedWithName": "تشخیص برای {{name}} ناموفق بود",
+        "detectionTimeout": "Detection timeout or failed"
+      },
+      "title": "Unlock Test"
+    }
+  }
+}

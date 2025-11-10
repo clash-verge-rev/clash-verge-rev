@@ -1,0 +1,90 @@
+{
+  "page": {
+    "modes": {
+      "rule": "Rule",
+      "global": "Global",
+      "direct": "Direct"
+    },
+    "actions": {
+      "toggleChain": "Zincir Proxy",
+      "connect": "Connect",
+      "disconnect": "Disconnect",
+      "connecting": "Connecting...",
+      "clearChainConfig": "Delete Chain Config"
+    },
+    "provider": {
+      "title": "Vekil Sağlayıcısı",
+      "actions": {
+        "updateAll": "Tümünü Güncelle",
+        "update": "Güncelle"
+      }
+    },
+    "rules": {
+      "title": "Proxy Rules",
+      "select": "Select Rules"
+    },
+    "labels": {
+      "proxyCount": "Vekil Sayısı",
+      "delayCheckReset": "Sabit iptali için gecikme kontrolü"
+    },
+    "tooltips": {
+      "locate": "konum",
+      "delayCheck": "Gecikme kontrolü",
+      "sortDefault": "Varsayılana göre sırala",
+      "sortDelay": "Gecikmeye göre sırala",
+      "sortName": "İsme göre sırala",
+      "delayCheckUrl": "Gecikme kontrol URL'si",
+      "showBasic": "Temel Vekil",
+      "showDetail": "Vekil detayı",
+      "filter": "Filtre"
+    },
+    "placeholders": {
+      "delayCheckUrl": "Gecikme kontrol URL'si"
+    },
+    "chain": {
+      "header": "Chain Proxy Config",
+      "empty": "No proxy chain configured",
+      "instruction": "Click nodes in order to add to proxy chain",
+      "minimumNodes": "Chain proxy requires at least 2 nodes",
+      "minimumNodesHint": "Chain proxy requires at least 2 nodes. Please add one more node.",
+      "connectFailed": "Failed to connect to proxy chain",
+      "disconnectFailed": "Failed to disconnect from proxy chain",
+      "duplicateNode": "Proxy node already exists in chain"
+    },
+    "messages": {
+      "directMode": "Doğrudan Mod"
+    },
+    "title": {
+      "default": "Vekil Grupları",
+      "chainMode": "Proxy Chain Mode"
+    }
+  },
+  "feedback": {
+    "notifications": {
+      "provider": {
+        "updateSuccess": "{{name}} updated successfully",
+        "updateFailed": "Failed to update {{name}}: {{message}}",
+        "genericError": "Update failed: {{message}}",
+        "none": "No providers available to update",
+        "allUpdated": "All providers updated successfully"
+      }
+    }
+  },
+  "components": {
+    "enums": {
+      "strategies": {
+        "select": "Vekil'i manuel olarak seçin",
+        "url-test": "URL testi gecikmesine göre vekil seçin",
+        "fallback": "Hata durumunda başka bir vekil'e geçin",
+        "load-balance": "Yük dengelemeye göre vekil dağıtın",
+        "relay": "Tanımlanan vekil zincirinden geçirin"
+      },
+      "policies": {
+        "DIRECT": "Veri doğrudan dışarı gider",
+        "REJECT": "İstekleri engeller",
+        "REJECT-DROP": "İstekleri atar",
+        "PASS": "Eşleştiğinde bu kuralı atlar"
+      }
+    }
+  }
+}

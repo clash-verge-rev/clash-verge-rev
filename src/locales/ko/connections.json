@@ -1,0 +1,34 @@
+{
+  "page": {
+    "title": "연결"
+  },
+  "components": {
+    "fields": {
+      "host": "호스트",
+      "dlSpeed": "다운로드 속도",
+      "ulSpeed": "업로드 속도",
+      "chains": "체인",
+      "rule": "규칙",
+      "process": "프로세스",
+      "time": "시간",
+      "source": "소스",
+      "destination": "목적지",
+      "destinationPort": "목적지 포트",
+      "type": "유형"
+    },
+    "order": {
+      "default": "기본",
+      "uploadSpeed": "업로드 속도",
+      "downloadSpeed": "다운로드 속도"
+    },
+    "actions": {
+      "active": "Active",
+      "closed": "Closed",
+      "closeConnection": "연결 닫기"
+    },
+    "columnManager": {
+      "title": "열",
+      "dragHandle": "Drag handle"
+    }
+  }
+}

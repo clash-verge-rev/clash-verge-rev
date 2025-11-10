@@ -1,7 +1,7 @@
 import { exec } from "child_process";
-import { promisify } from "util";
 import fs from "fs/promises";
 import path from "path";
+import { promisify } from "util";
 
 /**
  *  为Alpha版本重命名版本号

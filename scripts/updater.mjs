@@ -1,5 +1,6 @@
-import fetch from "node-fetch";
 import { getOctokit, context } from "@actions/github";
+import fetch from "node-fetch";
+
 import { resolveUpdateLog, resolveUpdateLogDefault } from "./updatelog.mjs";
 
 // Add stable update JSON filenames
@@ -259,7 +260,7 @@ async function processRelease(github, options, tag, isAlpha) {
       const proxyFile = isAlpha ? ALPHA_UPDATE_JSON_PROXY : UPDATE_JSON_PROXY;
 
       // Delete existing assets with these names
-      for (let asset of updateRelease.assets) {
+      for (const asset of updateRelease.assets) {
         if (asset.name === jsonFile) {
           await github.rest.repos.deleteReleaseAsset({
             ...options,

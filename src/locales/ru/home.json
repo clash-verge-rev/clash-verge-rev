@@ -1,0 +1,138 @@
+{
+  "page": {
+    "tooltips": {
+      "lightweightMode": "LightWeight Mode",
+      "manual": "Документация",
+      "settings": "Настройки главной страницы"
+    },
+    "cards": {
+      "trafficStats": "Статистика по трафику",
+      "networkSettings": "Настройки сети",
+      "proxyMode": "Режим работы"
+    },
+    "settings": {
+      "cards": {
+        "profile": "Карточка профиля",
+        "currentProxy": "Карточка текущего прокси",
+        "network": "Карточка настроек сети",
+        "proxyMode": "Карточка режима работы",
+        "traffic": "Карточка статистики по трафику",
+        "tests": "Карточка тестов доступности веб-сайтов",
+        "ip": "Информация об IP",
+        "clashInfo": "Информация о Clash",
+        "systemInfo": "Информация о системе"
+      },
+      "title": "Настройки главной страницы"
+    },
+    "title": "Главная"
+  },
+  "components": {
+    "proxyTun": {
+      "status": {
+        "systemProxyEnabled": "Системный прокси включен, ваши приложения будут получать доступ к сети через него",
+        "systemProxyDisabled": "Системный прокси отключен, большинству пользователей рекомендуется включить эту опцию",
+        "tunModeServiceRequired": "Режим TUN требует установленную службу Clash Verge",
+        "tunModeEnabled": "Режим TUN включен, приложения будут получать доступ к сети через виртуальную сетевую карту",
+        "tunModeDisabled": "Режим TUN отключен"
+      },
+      "tooltips": {
+        "systemProxy": "Разрешить изменение настроек прокси-сервера операционной системы. Если разрешение не удастся, измените настройки прокси-сервера операционной системы вручную",
+        "tunMode": "Режим TUN может перехватить трафик всех приложений, подходит для приложений, которые не работают в режиме системного прокси."
+      }
+    },
+    "clashInfo": {
+      "title": "Информация о Clash",
+      "fields": {
+        "coreVersion": "Версия ядра",
+        "systemProxyAddress": "Адрес системного прокси",
+        "mixedPort": "Mixed Port",
+        "uptime": "Время работы",
+        "rulesCount": "Количество правил"
+      }
+    },
+    "systemInfo": {
+      "title": "Информация о системе",
+      "fields": {
+        "osInfo": "Версия ОС",
+        "autoLaunch": "Автозапуск",
+        "runningMode": "Режим работы",
+        "lastCheckUpdate": "Последняя проверка обновлений",
+        "vergeVersion": "Версия Clash Verge Rev"
+      },
+      "actions": {
+        "settings": "Настройки"
+      },
+      "tooltips": {
+        "autoLaunchAdmin": "Administrator mode may not support auto launch"
+      },
+      "badges": {
+        "adminMode": "Administrator Mode",
+        "serviceMode": "Режим системной службы",
+        "sidecarMode": "Пользовательский режим",
+        "adminServiceMode": "Admin + Service Mode"
+      }
+    },
+    "ipInfo": {
+      "title": "Информация об IP",
+      "labels": {
+        "ip": "IP",
+        "asn": "ASN",
+        "isp": "ISP",
+        "org": "ORG",
+        "location": "Location",
+        "timezone": "Timezone",
+        "autoRefresh": "Автоматическое обновление через",
+        "unknown": "Unknown"
+      },
+      "errors": {
+        "load": "Не удалось получить данные IP"
+      }
+    },
+    "currentProxy": {
+      "title": "Текущий сервер",
+      "actions": {
+        "refreshDelay": "Проверка задержки"
+      },
+      "labels": {
+        "globalMode": "Глобальный режим",
+        "directMode": "Прямой режим",
+        "group": "Группа",
+        "proxy": "Прокси",
+        "noActiveNode": "Нет активного прокси-узла"
+      }
+    },
+    "tests": {
+      "title": "Проверка доступности веб-сайтов"
+    },
+    "traffic": {
+      "metrics": {
+        "uploadSpeed": "Скорость загрузки",
+        "downloadSpeed": "Скорость скачивания",
+        "activeConnections": "Активные соединения",
+        "memoryUsage": "Использование памяти"
+      },
+      "legends": {
+        "upload": "Загрузка",
+        "download": "Скачивание"
+      },
+      "patterns": {
+        "minutes": "{{time}} Minutes"
+      }
+    },
+    "clashMode": {
+      "errors": {
+        "communication": "Core communication error"
+      },
+      "labels": {
+        "rule": "Режим правил",
+        "global": "Глобальный режим",
+        "direct": "Прямой режим"
+      },
+      "descriptions": {
+        "rule": "Automatically choose proxies according to the rule set.",
+        "global": "Forward all network requests through the selected proxy.",
+        "direct": "Bypass the proxy and connect to the internet directly."
+      }
+    }
+  }
+}

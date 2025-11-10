@@ -1,5 +1,5 @@
 {
-  "version": "2.4.3",
+  "version": "2.4.4",
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "bundle": {
     "active": true,
@@ -11,7 +11,7 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-    "resources": ["resources", "resources/locales/*"],
+    "resources": ["resources"],
     "publisher": "Clash Verge Rev",
     "externalBin": ["sidecar/verge-mihomo", "sidecar/verge-mihomo-alpha"],
     "copyright": "GNU General Public License v3.0",

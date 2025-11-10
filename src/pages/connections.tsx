@@ -32,12 +32,47 @@ import parseTraffic from "@/utils/parse-traffic";
 
 type OrderFunc = (list: IConnectionsItem[]) => IConnectionsItem[];
 
+const ORDER_OPTIONS = [
+  {
+    id: "default",
+    labelKey: "connections.components.order.default",
+    fn: (list: IConnectionsItem[]) =>
+      list.sort(
+        (a, b) =>
+          new Date(b.start || "0").getTime()! -
+          new Date(a.start || "0").getTime()!,
+      ),
+  },
+  {
+    id: "uploadSpeed",
+    labelKey: "connections.components.order.uploadSpeed",
+    fn: (list: IConnectionsItem[]) =>
+      list.sort((a, b) => b.curUpload! - a.curUpload!),
+  },
+  {
+    id: "downloadSpeed",
+    labelKey: "connections.components.order.downloadSpeed",
+    fn: (list: IConnectionsItem[]) =>
+      list.sort((a, b) => b.curDownload! - a.curDownload!),
+  },
+] as const;
+
+type OrderKey = (typeof ORDER_OPTIONS)[number]["id"];
+
+const orderFunctionMap = ORDER_OPTIONS.reduce<Record<OrderKey, OrderFunc>>(
+  (acc, option) => {
+    acc[option.id] = option.fn;
+    return acc;
+  },
+  {} as Record<OrderKey, OrderFunc>,
+);
+
 const ConnectionsPage = () => {
   const { t } = useTranslation();
   const [match, setMatch] = useState<(input: string) => boolean>(
     () => () => true,
   );
-  const [curOrderOpt, setCurOrderOpt] = useState("Default");
+  const [curOrderOpt, setCurOrderOpt] = useState<OrderKey>("default");
   const [connectionsType, setConnectionsType] = useState<"active" | "closed">(
     "active",
   );
@@ -51,24 +86,10 @@ const ConnectionsPage = () => {
 
   const isTableLayout = setting.layout === "table";
 
-  const orderOpts = useMemo<Record<string, OrderFunc>>(
-    () => ({
-      Default: (list) =>
-        list.sort(
-          (a, b) =>
-            new Date(b.start || "0").getTime()! -
-            new Date(a.start || "0").getTime()!,
-        ),
-      "Upload Speed": (list) =>
-        list.sort((a, b) => b.curUpload! - a.curUpload!),
-      "Download Speed": (list) =>
-        list.sort((a, b) => b.curDownload! - a.curDownload!),
-    }),
-    [],
-  );
+  const [isColumnManagerOpen, setIsColumnManagerOpen] = useState(false);
 
   const [filterConn] = useMemo(() => {
-    const orderFunc = orderOpts[curOrderOpt];
+    const orderFunc = orderFunctionMap[curOrderOpt];
     const conns =
       (connectionsType === "active"
         ? connections?.activeConnections
@@ -83,7 +104,7 @@ const ConnectionsPage = () => {
     if (orderFunc) matchConns = orderFunc(matchConns ?? []);
 
     return [matchConns];
-  }, [connections, connectionsType, match, curOrderOpt, orderOpts]);
+  }, [connections, connectionsType, match, curOrderOpt]);
 
   const onCloseAll = useLockFn(closeAllConnections);
 
@@ -93,10 +114,16 @@ const ConnectionsPage = () => {
     setMatch(() => match);
   }, []);
 
+  const hasTableData = filterConn.length > 0;
+
   return (
     <BasePage
       full
-      title={<span style={{ whiteSpace: "nowrap" }}>{t("Connections")}</span>}
+      title={
+        <span style={{ whiteSpace: "nowrap" }}>
+          {t("connections.page.title")}
+        </span>
+      }
       contentStyle={{
         height: "100%",
         display: "flex",
@@ -107,10 +134,12 @@ const ConnectionsPage = () => {
       header={
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
           <Box sx={{ mx: 1 }}>
-            {t("Downloaded")}: {parseTraffic(connections?.downloadTotal)}
+            {t("shared.labels.downloaded")}:{" "}
+            {parseTraffic(connections?.downloadTotal)}
           </Box>
           <Box sx={{ mx: 1 }}>
-            {t("Uploaded")}: {parseTraffic(connections?.uploadTotal)}
+            {t("shared.labels.uploaded")}:{" "}
+            {parseTraffic(connections?.uploadTotal)}
           </Box>
           <IconButton
             color="inherit"
@@ -124,13 +153,15 @@ const ConnectionsPage = () => {
             }
           >
             {isTableLayout ? (
-              <TableRowsRounded titleAccess={t("List View")} />
+              <TableRowsRounded titleAccess={t("shared.actions.listView")} />
             ) : (
-              <TableChartRounded titleAccess={t("Table View")} />
+              <TableChartRounded titleAccess={t("shared.actions.tableView")} />
             )}
           </IconButton>
           <Button size="small" variant="contained" onClick={onCloseAll}>
-            <span style={{ whiteSpace: "nowrap" }}>{t("Close All")}</span>
+            <span style={{ whiteSpace: "nowrap" }}>
+              {t("shared.actions.closeAll")}
+            </span>
           </Button>
         </Box>
       }
@@ -140,9 +171,10 @@ const ConnectionsPage = () => {
           pt: 1,
           mb: 0.5,
           mx: "10px",
-          height: "36px",
+          minHeight: "36px",
           display: "flex",
           alignItems: "center",
+          gap: 1,
           userSelect: "text",
           position: "sticky",
           top: 0,
@@ -155,37 +187,53 @@ const ConnectionsPage = () => {
             variant={connectionsType === "active" ? "contained" : "outlined"}
             onClick={() => setConnectionsType("active")}
           >
-            {t("Active")} {connections?.activeConnections.length}
+            {t("connections.components.actions.active")}{" "}
+            {connections?.activeConnections.length}
           </Button>
           <Button
             size="small"
             variant={connectionsType === "closed" ? "contained" : "outlined"}
             onClick={() => setConnectionsType("closed")}
           >
-            {t("Closed")} {connections?.closedConnections.length}
+            {t("connections.components.actions.closed")}{" "}
+            {connections?.closedConnections.length}
           </Button>
         </ButtonGroup>
         {!isTableLayout && (
           <BaseStyledSelect
             value={curOrderOpt}
-            onChange={(e) => setCurOrderOpt(e.target.value)}
+            onChange={(e) => setCurOrderOpt(e.target.value as OrderKey)}
           >
-            {Object.keys(orderOpts).map((opt) => (
-              <MenuItem key={opt} value={opt}>
-                <span style={{ fontSize: 14 }}>{t(opt)}</span>
+            {ORDER_OPTIONS.map((option) => (
+              <MenuItem key={option.id} value={option.id}>
+                <span style={{ fontSize: 14 }}>{t(option.labelKey)}</span>
               </MenuItem>
             ))}
           </BaseStyledSelect>
         )}
-        <BaseSearchBox onSearch={handleSearch} />
+        <Box
+          sx={{
+            flex: 1,
+            display: "flex",
+            alignItems: "center",
+            "& > *": {
+              flex: 1,
+            },
+          }}
+        >
+          <BaseSearchBox onSearch={handleSearch} />
+        </Box>
       </Box>
 
-      {!filterConn || filterConn.length === 0 ? (
+      {!hasTableData ? (
         <BaseEmpty />
       ) : isTableLayout ? (
         <ConnectionTable
           connections={filterConn}
           onShowDetail={(detail) => detailRef.current?.open(detail)}
+          columnManagerOpen={isTableLayout && isColumnManagerOpen}
+          onOpenColumnManager={() => setIsColumnManagerOpen(true)}
+          onCloseColumnManager={() => setIsColumnManagerOpen(false)}
         />
       ) : (
         <Virtuoso
@@ -211,7 +259,7 @@ const ConnectionsPage = () => {
           onClick={() => clearClosedConnections()}
         >
           <Clear sx={{ mr: 1 }} />
-          {t("Clear")}
+          {t("shared.actions.clear")}
         </Fab>
       )}
     </BasePage>

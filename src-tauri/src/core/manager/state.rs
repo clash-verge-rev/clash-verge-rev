@@ -16,7 +16,7 @@ use compact_str::CompactString;
 use flexi_logger::DeferredNow;
 use log::Level;
 use scopeguard::defer;
-use tauri_plugin_shell::ShellExt;
+use tauri_plugin_shell::ShellExt as _;
 
 impl CoreManager {
     pub async fn get_clash_logs(&self) -> Result<Vec<CompactString>> {
@@ -32,7 +32,7 @@ impl CoreManager {
 
         let config_file = Config::generate_file(crate::config::ConfigType::Run).await?;
         let app_handle = handle::Handle::app_handle();
-        let clash_core = Config::verge().await.latest_ref().get_valid_clash_core();
+        let clash_core = Config::verge().await.latest_arc().get_valid_clash_core();
         let config_dir = dirs::app_home_dir()?;
 
         let (mut rx, child) = app_handle
@@ -62,8 +62,12 @@ impl CoreManager {
                     | tauri_plugin_shell::process::CommandEvent::Stderr(line) => {
                         let mut now = DeferredNow::default();
                         let message = CompactString::from(String::from_utf8_lossy(&line).as_ref());
-                        let w = shared_writer.lock().await;
-                        write_sidecar_log(w, &mut now, Level::Error, &message);
+                        write_sidecar_log(
+                            shared_writer.lock().await,
+                            &mut now,
+                            Level::Error,
+                            &message,
+                        );
                         CLASH_LOGGER.append_log(message).await;
                     }
                     tauri_plugin_shell::process::CommandEvent::Terminated(term) => {
@@ -75,8 +79,12 @@ impl CoreManager {
                         } else {
                             CompactString::from("Process terminated")
                         };
-                        let w = shared_writer.lock().await;
-                        write_sidecar_log(w, &mut now, Level::Info, &message);
+                        write_sidecar_log(
+                            shared_writer.lock().await,
+                            &mut now,
+                            Level::Info,
+                            &message,
+                        );
                         CLASH_LOGGER.clear_logs().await;
                         break;
                     }
@@ -93,8 +101,7 @@ impl CoreManager {
         defer! {
             self.set_running_mode(RunningMode::NotRunning);
         }
-        let mut state = self.state.lock();
-        if let Some(child) = state.child_sidecar.take() {
+        if let Some(child) = self.take_child_sidecar() {
             let pid = child.pid();
             drop(child);
             logging!(trace, Type::Core, "Sidecar stopped (PID: {:?})", pid);

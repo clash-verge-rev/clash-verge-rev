@@ -35,7 +35,7 @@ export function NetworkInterfaceViewer({ ref }: { ref?: Ref<DialogRef> }) {
       open={open}
       title={
         <Box display="flex" justifyContent="space-between">
-          {t("Network Interface")}
+          {t("settings.modals.networkInterface.title")}
           <Box>
             <Button
               variant="contained"
@@ -51,7 +51,7 @@ export function NetworkInterfaceViewer({ ref }: { ref?: Ref<DialogRef> }) {
       }
       contentSx={{ width: 450 }}
       disableOk
-      cancelBtn={t("Close")}
+      cancelBtn={t("shared.actions.close")}
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}
     >
@@ -66,13 +66,17 @@ export function NetworkInterfaceViewer({ ref }: { ref?: Ref<DialogRef> }) {
                     address.V4 && (
                       <AddressDisplay
                         key={address.V4.ip}
-                        label={t("Ip Address")}
+                        label={t(
+                          "settings.modals.networkInterface.fields.ipAddress",
+                        )}
                         content={address.V4.ip}
                       />
                     ),
                 )}
                 <AddressDisplay
-                  label={t("Mac Address")}
+                  label={t(
+                    "settings.modals.networkInterface.fields.macAddress",
+                  )}
                   content={item.mac_addr ?? ""}
                 />
               </>
@@ -84,13 +88,17 @@ export function NetworkInterfaceViewer({ ref }: { ref?: Ref<DialogRef> }) {
                     address.V6 && (
                       <AddressDisplay
                         key={address.V6.ip}
-                        label={t("Ip Address")}
+                        label={t(
+                          "settings.modals.networkInterface.fields.ipAddress",
+                        )}
                         content={address.V6.ip}
                       />
                     ),
                 )}
                 <AddressDisplay
-                  label={t("Mac Address")}
+                  label={t(
+                    "settings.modals.networkInterface.fields.macAddress",
+                  )}
                   content={item.mac_addr ?? ""}
                 />
               </>
@@ -109,8 +117,6 @@ const AddressDisplay = ({
   label: string;
   content: string;
 }) => {
-  const { t } = useTranslation();
-
   return (
     <Box
       sx={{
@@ -135,7 +141,9 @@ const AddressDisplay = ({
           size="small"
           onClick={async () => {
             await writeText(content);
-            showNotice("success", t("Copy Success"));
+            showNotice.success(
+              "shared.feedback.notifications.common.copySuccess",
+            );
           }}
         >
           <ContentCopyRounded sx={{ fontSize: "18px" }} />

@@ -1,6 +1,11 @@
 use super::CmdResult;
-use crate::{cmd::StringifyErr, config::*, core::CoreManager, log_err};
-use anyhow::{Context, anyhow};
+use crate::{
+    cmd::StringifyErr as _,
+    config::{Config, ConfigType},
+    core::CoreManager,
+    log_err,
+};
+use anyhow::{Context as _, anyhow};
 use serde_yaml_ng::Mapping;
 use smartstring::alias::String;
 use std::collections::HashMap;
@@ -8,14 +13,14 @@ use std::collections::HashMap;
 /// 获取运行时配置
 #[tauri::command]
 pub async fn get_runtime_config() -> CmdResult<Option<Mapping>> {
-    Ok(Config::runtime().await.latest_ref().config.clone())
+    Ok(Config::runtime().await.latest_arc().config.clone())
 }
 
 /// 获取运行时YAML配置
 #[tauri::command]
 pub async fn get_runtime_yaml() -> CmdResult<String> {
     let runtime = Config::runtime().await;
-    let runtime = runtime.latest_ref();
+    let runtime = runtime.latest_arc();
 
     let config = runtime.config.as_ref();
     config
@@ -31,19 +36,19 @@ pub async fn get_runtime_yaml() -> CmdResult<String> {
 /// 获取运行时存在的键
 #[tauri::command]
 pub async fn get_runtime_exists() -> CmdResult<Vec<String>> {
-    Ok(Config::runtime().await.latest_ref().exists_keys.clone())
+    Ok(Config::runtime().await.latest_arc().exists_keys.clone())
 }
 
 /// 获取运行时日志
 #[tauri::command]
 pub async fn get_runtime_logs() -> CmdResult<HashMap<String, Vec<(String, String)>>> {
-    Ok(Config::runtime().await.latest_ref().chain_logs.clone())
+    Ok(Config::runtime().await.latest_arc().chain_logs.clone())
 }
 
 #[tauri::command]
 pub async fn get_runtime_proxy_chain_config(proxy_chain_exit_node: String) -> CmdResult<String> {
     let runtime = Config::runtime().await;
-    let runtime = runtime.latest_ref();
+    let runtime = runtime.latest_arc();
 
     let config = runtime
         .config
@@ -98,9 +103,7 @@ pub async fn update_proxy_chain_config_in_runtime(
 ) -> CmdResult<()> {
     {
         let runtime = Config::runtime().await;
-        let mut draft = runtime.draft_mut();
-        draft.update_proxy_chain_config(proxy_chain_config);
-        drop(draft);
+        runtime.edit_draft(|d| d.update_proxy_chain_config(proxy_chain_config));
         runtime.apply();
     }
 

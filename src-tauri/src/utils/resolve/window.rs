@@ -21,16 +21,14 @@ const MINIMAL_HEIGHT: f64 = 520.0;
 pub async fn build_new_window() -> Result<WebviewWindow, String> {
     let app_handle = handle::Handle::app_handle();
 
-    let start_page = Config::verge()
-        .await
-        .latest_ref()
-        .start_page
-        .clone()
-        .unwrap_or_else(|| "/".into());
+    let config = Config::verge().await;
+    let latest = config.latest_arc();
+    let start_page = latest.start_page.as_deref().unwrap_or("/");
+
     match tauri::WebviewWindowBuilder::new(
         app_handle,
         "main", /* the unique window label */
-        tauri::WebviewUrl::App(start_page.as_str().into()),
+        tauri::WebviewUrl::App(start_page.into()),
     )
     .title("Clash Verge")
     .center()

@@ -1,7 +1,5 @@
-use crate::utils::i18n::t;
-
-use tauri::AppHandle;
-use tauri_plugin_notification::NotificationExt;
+use crate::{core::handle, utils::i18n};
+use tauri_plugin_notification::NotificationExt as _;
 
 pub enum NotificationEvent<'a> {
     DashboardToggled,
@@ -16,8 +14,10 @@ pub enum NotificationEvent<'a> {
     AppHidden,
 }
 
-fn notify(app: &AppHandle, title: &str, body: &str) {
-    app.notification()
+fn notify(title: &str, body: &str) {
+    let app_handle = handle::Handle::app_handle();
+    app_handle
+        .notification()
         .builder()
         .title(title)
         .body(body)
@@ -25,54 +25,45 @@ fn notify(app: &AppHandle, title: &str, body: &str) {
         .ok();
 }
 
-pub async fn notify_event<'a>(app: AppHandle, event: NotificationEvent<'a>) {
+pub async fn notify_event<'a>(event: NotificationEvent<'a>) {
+    i18n::sync_locale().await;
+
     match event {
         NotificationEvent::DashboardToggled => {
-            notify(
-                &app,
-                &t("DashboardToggledTitle").await,
-                &t("DashboardToggledBody").await,
-            );
+            let title = rust_i18n::t!("notifications.dashboardToggled.title").to_string();
+            let body = rust_i18n::t!("notifications.dashboardToggled.body").to_string();
+            notify(&title, &body);
         }
         NotificationEvent::ClashModeChanged { mode } => {
-            notify(
-                &app,
-                &t("ClashModeChangedTitle").await,
-                &t_with_args("ClashModeChangedBody", mode).await,
-            );
+            let title = rust_i18n::t!("notifications.clashModeChanged.title").to_string();
+            let body = rust_i18n::t!("notifications.clashModeChanged.body").replace("{mode}", mode);
+            notify(&title, &body);
         }
         NotificationEvent::SystemProxyToggled => {
-            notify(
-                &app,
-                &t("SystemProxyToggledTitle").await,
-                &t("SystemProxyToggledBody").await,
-            );
+            let title = rust_i18n::t!("notifications.systemProxyToggled.title").to_string();
+            let body = rust_i18n::t!("notifications.systemProxyToggled.body").to_string();
+            notify(&title, &body);
         }
         NotificationEvent::TunModeToggled => {
-            notify(
-                &app,
-                &t("TunModeToggledTitle").await,
-                &t("TunModeToggledBody").await,
-            );
+            let title = rust_i18n::t!("notifications.tunModeToggled.title").to_string();
+            let body = rust_i18n::t!("notifications.tunModeToggled.body").to_string();
+            notify(&title, &body);
         }
         NotificationEvent::LightweightModeEntered => {
-            notify(
-                &app,
-                &t("LightweightModeEnteredTitle").await,
-                &t("LightweightModeEnteredBody").await,
-            );
+            let title = rust_i18n::t!("notifications.lightweightModeEntered.title").to_string();
+            let body = rust_i18n::t!("notifications.lightweightModeEntered.body").to_string();
+            notify(&title, &body);
         }
         NotificationEvent::AppQuit => {
-            notify(&app, &t("AppQuitTitle").await, &t("AppQuitBody").await);
+            let title = rust_i18n::t!("notifications.appQuit.title").to_string();
+            let body = rust_i18n::t!("notifications.appQuit.body").to_string();
+            notify(&title, &body);
         }
         #[cfg(target_os = "macos")]
         NotificationEvent::AppHidden => {
-            notify(&app, &t("AppHiddenTitle").await, &t("AppHiddenBody").await);
+            let title = rust_i18n::t!("notifications.appHidden.title").to_string();
+            let body = rust_i18n::t!("notifications.appHidden.body").to_string();
+            notify(&title, &body);
         }
     }
-}
-
-// 辅助函数，带参数的i18n
-async fn t_with_args(key: &str, mode: &str) -> String {
-    t(key).await.replace("{mode}", mode)
 }

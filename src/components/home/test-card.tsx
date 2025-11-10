@@ -173,16 +173,16 @@ export const TestCard = () => {
 
   return (
     <EnhancedCard
-      title={t("Website Tests")}
+      title={t("home.components.tests.title")}
       icon={<NetworkCheck />}
       action={
         <Box sx={{ display: "flex", gap: 1 }}>
-          <Tooltip title={t("Test All")} arrow>
+          <Tooltip title={t("tests.page.actions.testAll")} arrow>
             <IconButton size="small" onClick={handleTestAll}>
               <NetworkCheck fontSize="small" />
             </IconButton>
           </Tooltip>
-          <Tooltip title={t("Create Test")} arrow>
+          <Tooltip title={t("tests.modals.test.title.create")} arrow>
             <IconButton size="small" onClick={handleCreateTest}>
               <Add fontSize="small" />
             </IconButton>

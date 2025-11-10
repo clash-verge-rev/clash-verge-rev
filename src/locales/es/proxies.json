@@ -1,0 +1,90 @@
+{
+  "page": {
+    "modes": {
+      "rule": "Rule",
+      "global": "Global",
+      "direct": "Direct"
+    },
+    "actions": {
+      "toggleChain": "Proxy en cadena",
+      "connect": "Connect",
+      "disconnect": "Disconnect",
+      "connecting": "Connecting...",
+      "clearChainConfig": "Delete Chain Config"
+    },
+    "provider": {
+      "title": "Proveedor de proxies",
+      "actions": {
+        "updateAll": "Actualizar todo",
+        "update": "Actualizar"
+      }
+    },
+    "rules": {
+      "title": "Proxy Rules",
+      "select": "Select Rules"
+    },
+    "labels": {
+      "proxyCount": "Número de nodos",
+      "delayCheckReset": "Realizar prueba de latencia para cancelar la fijación"
+    },
+    "tooltips": {
+      "locate": "Nodo actual",
+      "delayCheck": "Prueba de latencia",
+      "sortDefault": "Ordenación predeterminada",
+      "sortDelay": "Ordenar por latencia",
+      "sortName": "Ordenar por nombre",
+      "delayCheckUrl": "URL de prueba de latencia",
+      "showBasic": "Ocultar detalles del nodo",
+      "showDetail": "Mostrar detalles del nodo",
+      "filter": "Filtrar nodos"
+    },
+    "placeholders": {
+      "delayCheckUrl": "URL de prueba de latencia"
+    },
+    "chain": {
+      "header": "Chain Proxy Config",
+      "empty": "No proxy chain configured",
+      "instruction": "Click nodes in order to add to proxy chain",
+      "minimumNodes": "Chain proxy requires at least 2 nodes",
+      "minimumNodesHint": "Chain proxy requires at least 2 nodes. Please add one more node.",
+      "connectFailed": "Failed to connect to proxy chain",
+      "disconnectFailed": "Failed to disconnect from proxy chain",
+      "duplicateNode": "Proxy node already exists in chain"
+    },
+    "messages": {
+      "directMode": "Modo de conexión directa"
+    },
+    "title": {
+      "default": "Grupos de proxies",
+      "chainMode": "Proxy Chain Mode"
+    }
+  },
+  "feedback": {
+    "notifications": {
+      "provider": {
+        "updateSuccess": "{{name}} updated successfully",
+        "updateFailed": "Failed to update {{name}}: {{message}}",
+        "genericError": "Update failed: {{message}}",
+        "none": "No providers available to update",
+        "allUpdated": "All providers updated successfully"
+      }
+    }
+  },
+  "components": {
+    "enums": {
+      "strategies": {
+        "select": "Seleccionar proxy manualmente",
+        "url-test": "Seleccionar proxy según la prueba de latencia de la URL",
+        "fallback": "Cambiar a otro proxy cuando no esté disponible",
+        "load-balance": "Asignar proxy según el equilibrio de carga",
+        "relay": "Transferir según la cadena de proxy definida"
+      },
+      "policies": {
+        "DIRECT": "Conexión directa",
+        "REJECT": "Rechazar solicitud",
+        "REJECT-DROP": "Descartar solicitud",
+        "PASS": "Saltar esta regla"
+      }
+    }
+  }
+}

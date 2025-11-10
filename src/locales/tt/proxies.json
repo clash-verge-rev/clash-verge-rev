@@ -1,0 +1,90 @@
+{
+  "page": {
+    "modes": {
+      "rule": "Rule",
+      "global": "Global",
+      "direct": "Direct"
+    },
+    "actions": {
+      "toggleChain": "Чылбыр прокси",
+      "connect": "Connect",
+      "disconnect": "Disconnect",
+      "connecting": "Connecting...",
+      "clearChainConfig": "Delete Chain Config"
+    },
+    "provider": {
+      "title": "Прокси провайдеры",
+      "actions": {
+        "updateAll": "Барысын да яңарту",
+        "update": "Яңарту"
+      }
+    },
+    "rules": {
+      "title": "Proxy Rules",
+      "select": "Select Rules"
+    },
+    "labels": {
+      "proxyCount": "Proxy Count",
+      "delayCheckReset": "Беркетелгәнне гамәлдән чыгару өчен задержканы тикшерү"
+    },
+    "tooltips": {
+      "locate": "Урын",
+      "delayCheck": "Задержканы тикшерү",
+      "sortDefault": "Башлангыч итеп сортлау",
+      "sortDelay": "Задержка буенча сортлау",
+      "sortName": "Исем буенча сортлау",
+      "delayCheckUrl": "Задержканы тикшерү URL-ы",
+      "showBasic": "Прокси турында кыскача мәгълүмат",
+      "showDetail": "Прокси турында тулы мәгълүмат",
+      "filter": "Фильтр"
+    },
+    "placeholders": {
+      "delayCheckUrl": "Задержканы тикшерү URL-ы"
+    },
+    "chain": {
+      "header": "Chain Proxy Config",
+      "empty": "No proxy chain configured",
+      "instruction": "Click nodes in order to add to proxy chain",
+      "minimumNodes": "Chain proxy requires at least 2 nodes",
+      "minimumNodesHint": "Chain proxy requires at least 2 nodes. Please add one more node.",
+      "connectFailed": "Failed to connect to proxy chain",
+      "disconnectFailed": "Failed to disconnect from proxy chain",
+      "duplicateNode": "Proxy node already exists in chain"
+    },
+    "messages": {
+      "directMode": "Туры режим"
+    },
+    "title": {
+      "default": "Прокси төркемнәре",
+      "chainMode": "Proxy Chain Mode"
+    }
+  },
+  "feedback": {
+    "notifications": {
+      "provider": {
+        "updateSuccess": "{{name}} updated successfully",
+        "updateFailed": "Failed to update {{name}}: {{message}}",
+        "genericError": "Update failed: {{message}}",
+        "none": "No providers available to update",
+        "allUpdated": "All providers updated successfully"
+      }
+    }
+  },
+  "components": {
+    "enums": {
+      "strategies": {
+        "select": "Проксины кулдан сайлау",
+        "url-test": "URL-тест задержкасына карап прокси сайлау",
+        "fallback": "Хата булган очракта башка проксига күчү",
+        "load-balance": "Трафикны баланслау нигезендә прокси тарату",
+        "relay": "Билгеле прокси чылбыры аша тапшыру"
+      },
+      "policies": {
+        "DIRECT": "Туры чыгу",
+        "REJECT": "Сорауларны тоткарлау",
+        "REJECT-DROP": "Сорауларны кире кагу",
+        "PASS": "Туры килсә дә, бу кагыйдәне урап узу"
+      }
+    }
+  }
+}

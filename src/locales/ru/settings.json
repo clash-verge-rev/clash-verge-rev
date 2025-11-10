@@ -1,0 +1,602 @@
+{
+  "page": {
+    "actions": {
+      "manual": "Документация",
+      "telegram": "Telegram-канал",
+      "github": "GitHub репозиторий"
+    },
+    "title": "Настройки"
+  },
+  "sections": {
+    "system": {
+      "title": "Настройки системы",
+      "toggles": {
+        "tunMode": "Режим TUN",
+        "systemProxy": "Системный прокси"
+      },
+      "tooltips": {
+        "autoLaunchAdmin": "Administrator mode may not support auto launch",
+        "silentStart": "Запускать программу в фоновом режиме без отображения панели"
+      },
+      "fields": {
+        "autoLaunch": "Автозапуск",
+        "silentStart": "Тихий запуск"
+      },
+      "notifications": {
+        "tunMode": {
+          "autoDisabled": "TUN Mode automatically disabled due to service unavailable",
+          "autoDisableFailed": "Failed to disable TUN Mode automatically"
+        }
+      }
+    },
+    "proxyControl": {
+      "tooltips": {
+        "systemProxy": "Разрешить изменение настроек прокси-сервера операционной системы. Если разрешение не удастся, измените настройки прокси-сервера операционной системы вручную",
+        "tunMode": "Режим Tun: захватывает весь системный трафик, при включении нет необходимости включать системный прокси-сервер.",
+        "tunUnavailable": "TUN requires Service Mode or Admin Mode"
+      },
+      "actions": {
+        "installService": "Установить службу",
+        "uninstallService": "Uninstall Service"
+      },
+      "fields": {
+        "systemProxy": "Системный прокси",
+        "tunMode": "Режим TUN"
+      }
+    },
+    "externalController": {
+      "title": "Адрес прослушивания внешнего контроллера",
+      "fields": {
+        "enable": "Включить внешний контроллер",
+        "address": "Адрес прослушивания внешнего контроллера",
+        "secret": "Секрет"
+      },
+      "placeholders": {
+        "address": "Обязательно",
+        "secret": "Рекомендуется"
+      },
+      "tooltips": {
+        "copy": "Копировать в буфер обмена"
+      },
+      "messages": {
+        "addressRequired": "Адрес контроллера не может быть пустым",
+        "secretRequired": "Секрет не может быть пустым",
+        "copyFailed": "Не удалось скопировать",
+        "controllerCopied": "Адрес контроллера скопирован в буфер обмена",
+        "secretCopied": "Секрет скопирован в буфер обмена"
+      }
+    },
+    "externalCors": {
+      "title": "Конфигурация внешнего CORS",
+      "fields": {
+        "allowPrivateNetwork": "Разрешить доступ к частной сети",
+        "allowedOrigins": "Разрешённые источники"
+      },
+      "placeholders": {
+        "origin": "Введите корректный URL"
+      },
+      "actions": {
+        "add": "Добавить"
+      },
+      "messages": {
+        "alwaysIncluded": "Всегда включаемые источники: {{urls}}"
+      },
+      "tooltips": {
+        "open": "Настройки внешнего CORS"
+      }
+    },
+    "appearance": {
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System"
+    },
+    "clash": {
+      "title": "Настройки Clash",
+      "form": {
+        "fields": {
+          "allowLan": "Разрешить доступ из локальной сети",
+          "dnsOverwrite": "Переопределение настроек DNS",
+          "ipv6": "IPv6",
+          "unifiedDelay": "Точная задержка",
+          "logLevel": "Уровень логов",
+          "portConfig": "Настройка порта",
+          "external": "Внешний контроллер",
+          "webUI": "Веб-интерфейс",
+          "clashCore": "Ядро Clash",
+          "openUwpTool": "Открыть UWP инструмент",
+          "updateGeoData": "Обновить GeoData"
+        },
+        "tooltips": {
+          "networkInterface": "Сетевой интерфейс",
+          "unifiedDelay": "Когда унифицированная(точная) задержка включена, будут выполнены два теста задержки, чтобы устранить различия в задержке между разными типами узлов, вызванные подтверждением соединения и т. д",
+          "logLevel": "Это действует только на файлы журнала ядра в служебном файле в каталоге журналов.",
+          "openUwpTool": "С Windows 8 приложения UWP (такие как Microsoft Store) ограничены в прямом доступе к сетевым службам локального хоста, и этот инструмент позволяет обойти это ограничение"
+        },
+        "options": {
+          "logLevel": {
+            "debug": "Debug",
+            "info": "Info",
+            "warning": "Warn",
+            "error": "Error",
+            "silent": "Silent"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "verge": {
+      "basic": {
+        "title": "Основные настройки Verge",
+        "actions": {
+          "browse": "Просмотреть"
+        },
+        "trayOptions": {
+          "showMainWindow": "Показать главное окно",
+          "showTrayMenu": "Показать меню в трее",
+          "disable": "Отключить"
+        },
+        "fields": {
+          "language": "Язык",
+          "themeMode": "Цветовая тема",
+          "trayClickEvent": "Событие при щелчке по иконке в трее",
+          "copyEnvType": "Скопировать тип Env",
+          "startPage": "Главная страница",
+          "startupScript": "Скрипт запуска",
+          "themeSetting": "Настройки темы",
+          "layoutSetting": "Настройки раскладки",
+          "misc": "Расширенные настройки",
+          "hotkeySetting": "Настройки сочетаний клавиш"
+        }
+      },
+      "advanced": {
+        "title": "Расширенные настройки Verge",
+        "tooltips": {
+          "backupInfo": "Поддерживает файлы конфигурации резервного копирования WebDAV",
+          "openConfDir": "Если программное обеспечение работает неправильно, сделайте резервную копию и удалите все файлы в этой папке, а затем перезапустите ПО",
+          "liteMode": "Режим, в котором работает только ядро Clash, а графический интрефейс закрыт"
+        },
+        "actions": {
+          "copyVersion": "Copy Version"
+        },
+        "notifications": {
+          "latestVersion": "Обновление не требуется",
+          "versionCopied": "Version copied to clipboard"
+        },
+        "fields": {
+          "backupSetting": "Настройки резервного копирования",
+          "runtimeConfig": "Используемый конфиг",
+          "openConfDir": "Открыть папку приложения",
+          "openCoreDir": "Открыть папку ядра",
+          "openLogsDir": "Открыть папку логов",
+          "checkUpdates": "Проверить обновления",
+          "openDevTools": "Открыть Dev Tools",
+          "liteModeSettings": "Настройки LightWeight Mode",
+          "exit": "Выход",
+          "exportDiagnostics": "Экспорт диагностической информации",
+          "vergeVersion": "Версия Clash Verge Rev"
+        }
+      },
+      "theme": {
+        "title": "Настройки темы",
+        "fields": {
+          "primaryColor": "Основной цвет",
+          "secondaryColor": "Вторичный цвет",
+          "primaryText": "Первичный текст",
+          "secondaryText": "Вторичный текст",
+          "infoColor": "Информационный цвет",
+          "warningColor": "Цвет предупреждения",
+          "errorColor": "Цвет ошибки",
+          "successColor": "Цвет успеха",
+          "fontFamily": "Семейство шрифтов",
+          "cssInjection": "Внедрение CSS"
+        },
+        "actions": {
+          "editCss": "Edit CSS"
+        },
+        "dialogs": {
+          "editCssTitle": "Edit CSS"
+        }
+      },
+      "layout": {
+        "title": "Настройки раскладки",
+        "fields": {
+          "preferSystemTitlebar": "Prefer System Titlebar",
+          "trafficGraph": "График трафика",
+          "memoryUsage": "Использование памяти",
+          "proxyGroupIcon": "Иконка Группы прокси",
+          "hoverNavigator": "Hover Jump Navigator",
+          "hoverNavigatorDelay": "Hover Jump Navigator Delay",
+          "navIcon": "Иконки навигации",
+          "trayIcon": "Иконка в трее",
+          "showProxyGroupsInline": "Show Proxy Groups Inline",
+          "commonTrayIcon": "Общий значок в трее",
+          "systemProxyTrayIcon": "Значок системного прокси в трее",
+          "tunTrayIcon": "Значок TUN в трее",
+          "enableTrayIcon": "Показывать значок в трее",
+          "enableTraySpeed": "Показывать скорость в трее"
+        },
+        "tooltips": {
+          "hoverNavigator": "Automatically scroll to the corresponding proxy group when hovering over alphabet letters",
+          "hoverNavigatorDelay": "Delay before auto scrolling when hovering, in milliseconds"
+        },
+        "options": {
+          "icon": {
+            "monochrome": "Монохромные",
+            "colorful": "Цветные",
+            "disable": "Отключить"
+          }
+        }
+      }
+    }
+  },
+  "modals": {
+    "clashPort": {
+      "title": "Настройка порта",
+      "fields": {
+        "mixed": "Смешанный прокси-порт",
+        "socks": "Порт Socks-прокси",
+        "http": "Порт Http(s)-прокси",
+        "redir": "Порт прозрачного прокси Redir",
+        "tproxy": "Порт прозрачного прокси Tproxy"
+      },
+      "actions": {
+        "random": "Случайный порт"
+      },
+      "messages": {
+        "saved": "Port settings saved",
+        "saveFailed": "Failed to save port settings"
+      }
+    },
+    "clashCore": {
+      "variants": {
+        "release": "Официальная версия",
+        "alpha": "Альфа-версия"
+      }
+    },
+    "liteMode": {
+      "title": "Настройки LightWeight Mode",
+      "actions": {
+        "enterNow": "Войти в LightWeight Mode"
+      },
+      "toggles": {
+        "autoEnter": "Автоматический вход в LightWeight Mode"
+      },
+      "tooltips": {
+        "autoEnter": "Автоматически включать LightWeight Mode, если окно закрыто определенное время"
+      },
+      "fields": {
+        "delay": "Задержка включения LightWeight Mode"
+      },
+      "messages": {
+        "autoEnterHint": "При закрытии окна LightWeight Mode будет автоматически активирован через {{n}} минут"
+      }
+    },
+    "backup": {
+      "title": "Настройки резервного копирования",
+      "tabs": {
+        "local": "Local backup",
+        "webdav": "WebDAV backup"
+      },
+      "actions": {
+        "selectTarget": "Select backup target",
+        "backup": "Резервное копирование",
+        "export": "Export",
+        "exportBackup": "Export Backup",
+        "deleteBackup": "Удалить резервную копию",
+        "restore": "Восстановить",
+        "restoreBackup": "Восстановить резервную копию",
+        "viewHistory": "View history"
+      },
+      "fields": {
+        "webdavUrl": "URL-адрес сервера WebDAV http(s)://",
+        "username": "Имя пользователя",
+        "info": "Backups are stored locally in the application data directory. Use the list below to restore or delete backups."
+      },
+      "messages": {
+        "webdavUrlRequired": "URL-адрес WebDAV не может быть пустым",
+        "invalidWebdavUrl": "Неверный формат URL-адреса WebDAV",
+        "usernameRequired": "Имя пользователя не может быть пустым",
+        "passwordRequired": "Пароль не может быть пустым",
+        "webdavConfigSaved": "Конфигурация WebDAV успешно сохранена",
+        "webdavConfigSaveFailed": "Не удалось сохранить конфигурацию WebDAV: {{error}}",
+        "backupCreated": "Резервная копия успешно создана",
+        "backupFailed": "Ошибка резервного копирования: {{error}}",
+        "localBackupCreated": "Local backup created successfully",
+        "localBackupFailed": "Local backup failed",
+        "restoreSuccess": "Восстановление успешно выполнено, приложение перезапустится через 1 секунду",
+        "localBackupExported": "Local backup exported successfully",
+        "localBackupExportFailed": "Failed to export local backup",
+        "webdavRefreshSuccess": "WebDAV refresh succeeded",
+        "webdavRefreshFailed": "WebDAV refresh failed: {{error}}",
+        "confirmDelete": "Вы уверены, что хотите удалить этот файл резервной копии?",
+        "confirmRestore": "Вы уверены, что хотите восстановить этот файл резервной копии?"
+      },
+      "auto": {
+        "title": "Automatic backup",
+        "scheduleLabel": "Enable scheduled backup",
+        "scheduleHelper": "Create local backups in the background at the configured interval.",
+        "intervalLabel": "Backup frequency",
+        "changeLabel": "Backup on critical changes",
+        "changeHelper": "Automatically back up when the global extend config/script or subscriptions are added, removed, or edited.",
+        "options": {
+          "hours": "Every {{n}} hours",
+          "days": "Every {{n}} days"
+        }
+      },
+      "manual": {
+        "title": "Manual backup",
+        "local": "Creates a snapshot on this device, stored under the app data directory.",
+        "webdav": "Upload a snapshot to your WebDAV server once credentials are set.",
+        "configureWebdav": "Configure WebDAV"
+      },
+      "history": {
+        "title": "Backup history",
+        "summary": "{{count}} backups • latest {{recent}}",
+        "empty": "No backups available"
+      },
+      "webdav": {
+        "title": "WebDAV settings"
+      },
+      "table": {
+        "filename": "Имя файла",
+        "backupTime": "Время резервного копирования",
+        "actions": "Действия",
+        "noBackups": "Нет доступных резервных копий",
+        "rowsPerPage": "Rows per page"
+      }
+    },
+    "misc": {
+      "title": "Расширенные настройки",
+      "fields": {
+        "appLogLevel": "Уровень журнала приложения",
+        "appLogMaxSize": "App Log Max Size",
+        "appLogMaxCount": "App Log Max Count",
+        "autoCloseConnections": "Автоматическое закрытие соединений",
+        "autoCheckUpdate": "Автоматическая проверка обновлений",
+        "enableBuiltinEnhanced": "Включить встроенные улучшения",
+        "proxyLayoutColumns": "Количество столбцов в макете прокси",
+        "autoLogClean": "Автоматическая очистка логов",
+        "autoDelayDetection": "Автоматическое измерение задержки",
+        "defaultLatencyTest": "Ссылка на тест задержки",
+        "defaultLatencyTimeout": "Таймаут задержки по умолчанию"
+      },
+      "tooltips": {
+        "autoCloseConnections": "Закрыть установленные соединения при изменении выбора группы прокси или режима прокси",
+        "enableBuiltinEnhanced": "Обработка совместимости для файла конфигурации",
+        "autoDelayDetection": "Периодически проверяет задержку текущего узла в фоновом режиме",
+        "defaultLatencyTest": "Используется только для тестирования HTTP-запросов клиента и не влияет на файл конфигурации"
+      },
+      "options": {
+        "proxyLayoutColumns": {
+          "auto": "Авто колонки"
+        },
+        "autoLogClean": {
+          "never": "Никогда не очищать",
+          "retainDays": "Сохранять {{n}} дней"
+        }
+      }
+    },
+    "update": {
+      "title": "New Version v{{version}}",
+      "actions": {
+        "goToRelease": "Перейти на страницу релизов",
+        "update": "Обновить"
+      },
+      "messages": {
+        "portableError": "Портативная версия не поддерживает обновление внутри приложения, пожалуйста, скачайте и замените файлы вручную",
+        "breakChangeError": "Это крупное обновление, которое не поддерживает обновление внутри приложения. Пожалуйста, удалите его и загрузите установочный файл вручную."
+      }
+    },
+    "sysproxy": {
+      "title": "Настройка системного прокси",
+      "fieldsets": {
+        "currentStatus": "Текущий системный прокси"
+      },
+      "fields": {
+        "enableStatus": "Статус включения",
+        "serverAddr": "Адрес сервера: ",
+        "pacUrl": "Адрес PAC: ",
+        "proxyHost": "Хост прокси",
+        "usePacMode": "Используйте режим PAC",
+        "proxyGuard": "Proxy Guard",
+        "guardDuration": "Период защиты",
+        "alwaysUseDefaultBypass": "Всегда использовать стандартное обходное решение",
+        "proxyBypass": "Игнорируемые адреса: ",
+        "bypass": "Игнорируемые адреса: ",
+        "pacScriptContent": "Содержание сценария PAC"
+      },
+      "tooltips": {
+        "proxyGuard": "Включите эту функцию чтобы предотвратить изменение настроек прокси-сервера операционной системы другим ПО"
+      },
+      "messages": {
+        "durationTooShort": "Продолжительность работы прокси-демона не может быть меньше 1 секунды",
+        "invalidBypass": "Неверный формат обхода",
+        "invalidProxyHost": "Неверный формат хоста прокси"
+      },
+      "actions": {
+        "editPac": "Редактировать PAC"
+      }
+    },
+    "tun": {
+      "title": "Режим TUN",
+      "fields": {
+        "stack": "Стек",
+        "device": "Device Name",
+        "autoRoute": "Автоматическая маршрутизация",
+        "strictRoute": "Строгая маршрутизация",
+        "autoDetectInterface": "Автоопределение интерфейса",
+        "dnsHijack": "DNS-перехват",
+        "mtu": "MTU"
+      },
+      "tooltips": {
+        "dnsHijack": "Please use , to separate multiple DNS servers"
+      },
+      "messages": {
+        "applied": "Настройки применены"
+      }
+    },
+    "dns": {
+      "dialog": {
+        "title": "Переопределение настроек DNS",
+        "warning": "Если вы не знакомы с этими настройками, пожалуйста, не изменяйте и не отключайте их"
+      },
+      "sections": {
+        "general": "Настройки DNS",
+        "fallbackFilter": "Настройки фильтра Fallback",
+        "hosts": "Hosts Settings"
+      },
+      "fields": {
+        "enable": "Включить DNS",
+        "listen": "Прослушивание DNS",
+        "enhancedMode": "Enhanced Mode",
+        "fakeIpRange": "Диапазон FakeIP",
+        "fakeIpFilterMode": "FakeIP Filter Mode",
+        "ipv6": {
+          "label": "IPv6",
+          "description": "Enable IPv6 DNS resolution"
+        },
+        "preferH3": {
+          "label": "Предпочитать H3",
+          "description": "DNS DOH использует http/3"
+        },
+        "respectRules": {
+          "label": "Приоритизировать правила",
+          "description": "Соединения DNS следуют правилам маршрутизации"
+        },
+        "useHosts": {
+          "label": "Использовать файл Hosts",
+          "description": "Включить разрешение хостов через файл Hosts"
+        },
+        "useSystemHosts": {
+          "label": "Использовать системный файл Hosts",
+          "description": "Включить разрешение хостов через системный файл Hosts"
+        },
+        "directPolicy": {
+          "label": "Прямой сервер имен следует политике",
+          "description": "Следовать ли политике DNS-серверов"
+        },
+        "defaultNameserver": {
+          "label": "DNS-сервер по умолчанию",
+          "description": "DNS-серверы по умолчанию, используемые для разрешения адресов серверов DNS"
+        },
+        "nameserver": {
+          "label": "DNS-сервер",
+          "description": "Список DNS-серверов, разделенных запятой"
+        },
+        "fallback": {
+          "label": "Fallback",
+          "description": "Список резервных DNS-серверов, разделенных запятой"
+        },
+        "proxy": {
+          "label": "Proxy Server Nameserver",
+          "description": "DNS-серверы для разрешения домена прокси-узлов"
+        },
+        "directNameserver": {
+          "label": "DNS-сервер для прямых соединений",
+          "description": "Список DNS-серверов для прямых соединений, разделенных запятой"
+        },
+        "fakeIpFilter": {
+          "label": "Фильтр FakeIP",
+          "description": "Домены, которые пропускают разрешение FakeIP, разделенные запятой"
+        },
+        "nameserverPolicy": {
+          "label": "Политика серверов имен",
+          "description": "DNS-сервер, специфичный для домена, несколько серверов разделяются знаком ';'"
+        },
+        "geoipFiltering": {
+          "label": "Фильтрация GeoIP",
+          "description": "Включить фильтрацию GeoIP"
+        },
+        "geoipCode": "Код GeoIP",
+        "fallbackIpCidr": {
+          "label": "Fallback IP CIDR",
+          "description": "Диапазоны IP-адресов, не использующие резервные серверы, разделенные запятой"
+        },
+        "fallbackDomain": {
+          "label": "Fallback домены",
+          "description": "Домены, использующие резервные серверы, разделенные запятой"
+        },
+        "hosts": {
+          "label": "Hosts",
+          "description": "Custom domain to IP or domain mapping"
+        }
+      },
+      "messages": {
+        "saved": "DNS settings saved",
+        "configError": "DNS configuration error:"
+      },
+      "errors": {
+        "invalid": "Invalid configuration",
+        "invalidYaml": "Invalid YAML format"
+      }
+    },
+    "webUI": {
+      "actions": {
+        "openUrl": "Перейти по адресу"
+      },
+      "title": "Веб-интерфейс",
+      "messages": {
+        "supportedPlaceholders": "Поддерживаются %host, %port, %secret",
+        "placeholderInstruction": "Замените хост, порт и секрет на %host, %port, %secret"
+      }
+    },
+    "hotkey": {
+      "toggles": {
+        "enableGlobal": "Включить глобальную горячую клавишу"
+      },
+      "title": "Настройки сочетаний клавиш",
+      "functions": {
+        "rule": "Режим правил",
+        "global": "Глобальный режим",
+        "openOrCloseDashboard": "Открыть/Закрыть панель управления",
+        "toggleSystemProxy": "Включить/Отключить системный прокси",
+        "toggleTunMode": "Включить/Отключить режим TUN",
+        "entryLightweightMode": "Вход в LightWeight Mode",
+        "direct": "Прямой режим"
+      }
+    },
+    "password": {
+      "prompts": {
+        "enterRoot": "Пожалуйста, введите ваш пароль root"
+      }
+    },
+    "networkInterface": {
+      "title": "Сетевой интерфейс",
+      "fields": {
+        "ipAddress": "IP адрес",
+        "macAddress": "MAC адрес"
+      }
+    }
+  },
+  "feedback": {
+    "notifications": {
+      "clash": {
+        "restartSuccess": "Ядро перезапущено",
+        "versionUpdated": "Ядро обновлено до последней версии",
+        "alreadyLatestVersion": "Вы уже используете последнюю версию ядра",
+        "changeSuccess": "Ядро успешно изменено",
+        "changeFailed": "Не удалось сменить ядро",
+        "geoDataUpdated": "Файлы GeoData обновлены"
+      },
+      "clashService": {
+        "installSuccess": "Служба успешно установлена",
+        "uninstallSuccess": "Служба успешно удалена"
+      },
+      "updater": {
+        "withClashProxySuccess": "Update with Clash proxy successfully",
+        "withClashProxyFailed": "Update failed even with Clash proxy"
+      }
+    }
+  },
+  "statuses": {
+    "clash": {
+      "stopping": "Stopping Core...",
+      "restarting": "Restarting Core..."
+    },
+    "clashService": {
+      "installing": "Установка службы...",
+      "uninstalling": "Uninstalling Service..."
+    }
+  }
+}

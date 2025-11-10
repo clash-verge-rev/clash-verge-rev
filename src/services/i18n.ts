@@ -17,6 +17,24 @@ export const supportedLanguages = [
   "zhtw",
 ];
 
+const FALLBACK_LANGUAGE = "zh";
+
+type LocaleModule = {
+  default: Record<string, unknown>;
+};
+
+const localeModules = import.meta.glob<LocaleModule>("@/locales/*/index.ts");
+
+const localeLoaders = Object.entries(localeModules).reduce<
+  Record<string, () => Promise<LocaleModule>>
+>((acc, [path, loader]) => {
+  const match = path.match(/[/\\]locales[/\\]([^/\\]+)[/\\]index\.ts$/);
+  if (match) {
+    acc[match[1]] = loader;
+  }
+  return acc;
+}, {});
+
 export const languages: Record<string, any> = supportedLanguages.reduce(
   (acc, lang) => {
     acc[lang] = {};
@@ -27,14 +45,27 @@ export const languages: Record<string, any> = supportedLanguages.reduce(
 
 export const loadLanguage = async (language: string) => {
   try {
-    const module = await import(`@/locales/${language}.json`);
+    const loader = localeLoaders[language];
+    if (!loader) {
+      throw new Error(`Locale loader not found for language "${language}"`);
+    }
+    const module = await loader();
     return module.default;
   } catch (error) {
-    console.warn(
-      `Failed to load language ${language}, fallback to zh, ${error}`,
-    );
-    const fallback = await import("@/locales/zh.json");
-    return fallback.default;
+    if (language !== FALLBACK_LANGUAGE) {
+      console.warn(
+        `Failed to load language ${language}, fallback to ${FALLBACK_LANGUAGE}, ${error}`,
+      );
+      const fallbackLoader = localeLoaders[FALLBACK_LANGUAGE];
+      if (!fallbackLoader) {
+        throw new Error(
+          `Fallback language "${FALLBACK_LANGUAGE}" resources are missing.`,
+        );
+      }
+      const fallback = await fallbackLoader();
+      return fallback.default;
+    }
+    throw error;
   }
 };
 

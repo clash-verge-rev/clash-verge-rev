@@ -1,10 +1,10 @@
 #[cfg(target_os = "windows")]
-use anyhow::{Result, anyhow};
+use crate::{logging, utils::logging::Type};
 #[cfg(target_os = "windows")]
-use log::info;
+use anyhow::{Result, anyhow};
 
 #[cfg(target_os = "windows")]
-use std::{os::windows::process::CommandExt, path::Path, path::PathBuf};
+use std::{os::windows::process::CommandExt as _, path::Path, path::PathBuf};
 
 /// Windows 下的开机启动文件夹路径
 #[cfg(target_os = "windows")]
@@ -37,7 +37,7 @@ pub fn get_exe_path() -> Result<PathBuf> {
 /// 创建快捷方式
 #[cfg(target_os = "windows")]
 pub async fn create_shortcut() -> Result<()> {
-    use crate::utils::dirs::PathBufExec;
+    use crate::utils::dirs::PathBufExec as _;
 
     let exe_path = get_exe_path()?;
     let startup_dir = get_startup_dir()?;
@@ -49,15 +49,15 @@ pub async fn create_shortcut() -> Result<()> {
         .remove_if_exists()
         .await
         .inspect(|_| {
-            info!(target: "app", "成功移除旧启动快捷方式");
+            logging!(info, Type::Setup, "成功移除旧启动快捷方式");
         })
         .inspect_err(|err| {
-            log::error!(target: "app", "移除旧启动快捷方式失败: {err}");
+            logging!(error, Type::Setup, "移除旧启动快捷方式失败: {err}");
         });
 
     // 如果新快捷方式已存在，直接返回成功
     if new_shortcut_path.exists() {
-        info!(target: "app", "启动快捷方式已存在");
+        logging!(info, Type::Setup, "启动快捷方式已存在");
         return Ok(());
     }
 
@@ -83,14 +83,14 @@ pub async fn create_shortcut() -> Result<()> {
         return Err(anyhow!("创建快捷方式失败: {}", error_msg));
     }
 
-    info!(target: "app", "成功创建启动快捷方式");
+    logging!(info, Type::Setup, "成功创建启动快捷方式");
     Ok(())
 }
 
 /// 删除快捷方式
 #[cfg(target_os = "windows")]
 pub async fn remove_shortcut() -> Result<()> {
-    use crate::utils::dirs::PathBufExec;
+    use crate::utils::dirs::PathBufExec as _;
 
     let startup_dir = get_startup_dir()?;
     let old_shortcut_path = startup_dir.join("Clash-Verge.lnk");
@@ -102,22 +102,22 @@ pub async fn remove_shortcut() -> Result<()> {
         .remove_if_exists()
         .await
         .inspect(|_| {
-            info!(target: "app", "成功删除旧启动快捷方式");
+            logging!(info, Type::Setup, "成功删除旧启动快捷方式");
             removed_any = true;
         })
         .inspect_err(|err| {
-            log::error!(target: "app", "删除旧启动快捷方式失败: {err}");
+            logging!(error, Type::Setup, "删除旧启动快捷方式失败: {err}");
         });
 
     let _ = new_shortcut_path
         .remove_if_exists()
         .await
         .inspect(|_| {
-            info!(target: "app", "成功删除启动快捷方式");
+            logging!(info, Type::Setup, "成功删除启动快捷方式");
             removed_any = true;
         })
         .inspect_err(|err| {
-            log::error!(target: "app", "删除启动快捷方式失败: {err}");
+            logging!(error, Type::Setup, "删除启动快捷方式失败: {err}");
         });
 
     Ok(())

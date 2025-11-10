@@ -1,7 +1,7 @@
 use crate::{
     config::Config,
     core::{CoreManager, handle, tray},
-    logging_error,
+    logging, logging_error,
     process::AsyncHandler,
     utils::{self, logging::Type, resolve},
 };
@@ -17,7 +17,7 @@ pub async fn restart_clash_core() {
         }
         Err(err) => {
             handle::Handle::notice_message("set_config::error", format!("{err}"));
-            log::error!(target:"app", "{err}");
+            logging!(error, Type::Core, "{err}");
         }
     }
 }
@@ -30,7 +30,7 @@ pub async fn restart_app() {
             "restart_app::error",
             format!("Failed to cleanup resources: {err}"),
         );
-        log::error!(target:"app", "Restart failed during cleanup: {err}");
+        logging!(error, Type::Core, "Restart failed during cleanup: {err}");
         return;
     }
 
@@ -47,10 +47,11 @@ fn after_change_clash_mode() {
                     for connection in connections_array {
                         let _ = mihomo.close_connection(&connection.id).await;
                     }
+                    drop(mihomo);
                 }
             }
             Err(err) => {
-                log::error!(target: "app", "Failed to get connections: {err}");
+                logging!(error, Type::Core, "Failed to get connections: {err}");
             }
         }
     });
@@ -64,7 +65,7 @@ pub async fn change_clash_mode(mode: String) {
     let json_value = serde_json::json!({
         "mode": mode
     });
-    log::debug!(target: "app", "change clash mode to {mode}");
+    logging!(debug, Type::Core, "change clash mode to {mode}");
     match handle::Handle::mihomo()
         .await
         .patch_base_config(&json_value)
@@ -72,26 +73,28 @@ pub async fn change_clash_mode(mode: String) {
     {
         Ok(_) => {
             // 更新订阅
-            Config::clash().await.data_mut().patch_config(mapping);
+            Config::clash()
+                .await
+                .edit_draft(|d| d.patch_config(mapping));
 
             // 分离数据获取和异步调用
-            let clash_data = Config::clash().await.data_mut().clone();
+            let clash_data = Config::clash().await.data_arc();
             if clash_data.save_config().await.is_ok() {
                 handle::Handle::refresh_clash();
                 logging_error!(Type::Tray, tray::Tray::global().update_menu().await);
-                logging_error!(Type::Tray, tray::Tray::global().update_icon().await);
+                logging_error!(Type::Tray, tray::Tray::global().update_icon(None).await);
             }
 
             let is_auto_close_connection = Config::verge()
                 .await
-                .data_mut()
+                .data_arc()
                 .auto_close_connection
                 .unwrap_or(false);
             if is_auto_close_connection {
                 after_change_clash_mode();
             }
         }
-        Err(err) => log::error!(target: "app", "{err}"),
+        Err(err) => logging!(error, Type::Core, "{err}"),
     }
 }
 
@@ -102,7 +105,7 @@ pub async fn test_delay(url: String) -> anyhow::Result<u32> {
 
     let tun_mode = Config::verge()
         .await
-        .latest_ref()
+        .latest_arc()
         .enable_tun_mode
         .unwrap_or(false);
 
@@ -123,7 +126,7 @@ pub async fn test_delay(url: String) -> anyhow::Result<u32> {
 
     match response {
         Ok(response) => {
-            log::trace!(target: "app", "test_delay response: {response:#?}");
+            logging!(trace, Type::Network, "test_delay response: {response:#?}");
             if response.status().is_success() {
                 Ok(start.elapsed().as_millis() as u32)
             } else {
@@ -131,7 +134,7 @@ pub async fn test_delay(url: String) -> anyhow::Result<u32> {
             }
         }
         Err(err) => {
-            log::trace!(target: "app", "test_delay error: {err:#?}");
+            logging!(trace, Type::Network, "test_delay error: {err:#?}");
             Err(err)
         }
     }

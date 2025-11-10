@@ -1,0 +1,90 @@
+{
+  "page": {
+    "modes": {
+      "rule": "Rule",
+      "global": "Global",
+      "direct": "Direct"
+    },
+    "actions": {
+      "toggleChain": "Цепной прокси",
+      "connect": "Connect",
+      "disconnect": "Disconnect",
+      "connecting": "Connecting...",
+      "clearChainConfig": "Delete Chain Config"
+    },
+    "provider": {
+      "title": "Провайдер прокси",
+      "actions": {
+        "updateAll": "Обновить все",
+        "update": "Обновить"
+      }
+    },
+    "rules": {
+      "title": "Proxy Rules",
+      "select": "Select Rules"
+    },
+    "labels": {
+      "proxyCount": "Proxy Count",
+      "delayCheckReset": "Проверка задержки для отмены фиксированного"
+    },
+    "tooltips": {
+      "locate": "Местоположение",
+      "delayCheck": "Проверка задержки",
+      "sortDefault": "Сортировать по умолчанию",
+      "sortDelay": "Сортировать по задержке",
+      "sortName": "Сортировать по названию",
+      "delayCheckUrl": "URL проверки задержки",
+      "showBasic": "Отображать меньше сведений о прокси",
+      "showDetail": "Отображать больше сведений о прокси",
+      "filter": "Фильтр"
+    },
+    "placeholders": {
+      "delayCheckUrl": "URL проверки задержки"
+    },
+    "chain": {
+      "header": "Конфигурация цепочки прокси",
+      "empty": "Цепочка прокси не настроена",
+      "instruction": "Нажимайте узлы по порядку, чтобы добавить в цепочку прокси",
+      "minimumNodes": "Chain proxy requires at least 2 nodes",
+      "minimumNodesHint": "Chain proxy requires at least 2 nodes. Please add one more node.",
+      "connectFailed": "Failed to connect to proxy chain",
+      "disconnectFailed": "Failed to disconnect from proxy chain",
+      "duplicateNode": "Proxy node already exists in chain"
+    },
+    "messages": {
+      "directMode": "Прямой режим"
+    },
+    "title": {
+      "default": "Группы прокси",
+      "chainMode": "Proxy Chain Mode"
+    }
+  },
+  "feedback": {
+    "notifications": {
+      "provider": {
+        "updateSuccess": "{{name}} updated successfully",
+        "updateFailed": "Failed to update {{name}}: {{message}}",
+        "genericError": "Update failed: {{message}}",
+        "none": "No providers available to update",
+        "allUpdated": "All providers updated successfully"
+      }
+    }
+  },
+  "components": {
+    "enums": {
+      "strategies": {
+        "select": "Выбор прокси вручную",
+        "url-test": "Выбор прокси на основе задержки теста URL",
+        "fallback": "Переключение на другой прокси при ошибке",
+        "load-balance": "Распределение прокси на основе балансировки нагрузки",
+        "relay": "Передача через определенную цепочку прокси"
+      },
+      "policies": {
+        "DIRECT": "Данные направляются напрямую наружу",
+        "REJECT": "Перехватывает запросы",
+        "REJECT-DROP": "Отклоняет запросы",
+        "PASS": "Пропускает это правило при совпадении"
+      }
+    }
+  }
+}

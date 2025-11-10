@@ -11,70 +11,79 @@ export const handleNoticeMessage = (
 ) => {
   const handlers: Record<string, () => void> = {
     "import_sub_url::ok": () => {
-      navigate("/profile", { state: { current: msg } });
-      showNotice("success", t("Import Subscription Successful"));
+      // 空 msg 传入，我们不希望导致 后端-前端-后端 死循环，这里只做提醒。
+      // 未来细分事件通知时，可以考虑传入订阅 ID 或其他标识符
+      // navigate("/profile", { state: { current: msg } });
+      navigate("/profile");
+      showNotice.success(
+        "shared.feedback.notifications.importSubscriptionSuccess",
+      );
     },
     "import_sub_url::error": () => {
       navigate("/profile");
-      showNotice("error", msg);
+      showNotice.error(msg);
     },
-    "set_config::error": () => showNotice("error", msg),
+    "set_config::error": () => showNotice.error(msg),
     update_with_clash_proxy: () =>
-      showNotice(
-        "success",
-        `${t("Update with Clash proxy successfully")} ${msg}`,
+      showNotice.success(
+        "settings.feedback.notifications.updater.withClashProxySuccess",
+        msg,
       ),
-    update_retry_with_clash: () =>
-      showNotice("info", t("Update failed, retrying with Clash proxy...")),
     update_failed_even_with_clash: () =>
-      showNotice(
-        "error",
-        `${t("Update failed even with Clash proxy")}: ${msg}`,
+      showNotice.error(
+        "settings.feedback.notifications.updater.withClashProxyFailed",
+        msg,
       ),
-    update_failed: () => showNotice("error", msg),
+    update_failed: () => showNotice.error(msg),
     "config_validate::boot_error": () =>
-      showNotice("error", `${t("Boot Config Validation Failed")} ${msg}`),
+      showNotice.error("shared.feedback.validation.config.bootFailed", msg),
     "config_validate::core_change": () =>
-      showNotice(
-        "error",
-        `${t("Core Change Config Validation Failed")} ${msg}`,
+      showNotice.error(
+        "shared.feedback.validation.config.coreChangeFailed",
+        msg,
       ),
     "config_validate::error": () =>
-      showNotice("error", `${t("Config Validation Failed")} ${msg}`),
+      showNotice.error("shared.feedback.validation.config.failed", msg),
     "config_validate::process_terminated": () =>
-      showNotice("error", t("Config Validation Process Terminated")),
+      showNotice.error("shared.feedback.validation.config.processTerminated"),
     "config_validate::stdout_error": () =>
-      showNotice("error", `${t("Config Validation Failed")} ${msg}`),
+      showNotice.error("shared.feedback.validation.config.failed", msg),
     "config_validate::script_error": () =>
-      showNotice("error", `${t("Script File Error")} ${msg}`),
+      showNotice.error("shared.feedback.validation.script.fileError", msg),
     "config_validate::script_syntax_error": () =>
-      showNotice("error", `${t("Script Syntax Error")} ${msg}`),
+      showNotice.error("shared.feedback.validation.script.syntaxError", msg),
     "config_validate::script_missing_main": () =>
-      showNotice("error", `${t("Script Missing Main")} ${msg}`),
+      showNotice.error("shared.feedback.validation.script.missingMain", msg),
     "config_validate::file_not_found": () =>
-      showNotice("error", `${t("File Not Found")} ${msg}`),
+      showNotice.error("shared.feedback.validation.script.fileNotFound", msg),
     "config_validate::yaml_syntax_error": () =>
-      showNotice("error", `${t("YAML Syntax Error")} ${msg}`),
+      showNotice.error("shared.feedback.validation.yaml.syntaxError", msg),
     "config_validate::yaml_read_error": () =>
-      showNotice("error", `${t("YAML Read Error")} ${msg}`),
+      showNotice.error("shared.feedback.validation.yaml.readError", msg),
     "config_validate::yaml_mapping_error": () =>
-      showNotice("error", `${t("YAML Mapping Error")} ${msg}`),
+      showNotice.error("shared.feedback.validation.yaml.mappingError", msg),
     "config_validate::yaml_key_error": () =>
-      showNotice("error", `${t("YAML Key Error")} ${msg}`),
+      showNotice.error("shared.feedback.validation.yaml.keyError", msg),
     "config_validate::yaml_error": () =>
-      showNotice("error", `${t("YAML Error")} ${msg}`),
+      showNotice.error("shared.feedback.validation.yaml.generalError", msg),
     "config_validate::merge_syntax_error": () =>
-      showNotice("error", `${t("Merge File Syntax Error")} ${msg}`),
+      showNotice.error("shared.feedback.validation.merge.syntaxError", msg),
     "config_validate::merge_mapping_error": () =>
-      showNotice("error", `${t("Merge File Mapping Error")} ${msg}`),
+      showNotice.error("shared.feedback.validation.merge.mappingError", msg),
     "config_validate::merge_key_error": () =>
-      showNotice("error", `${t("Merge File Key Error")} ${msg}`),
+      showNotice.error("shared.feedback.validation.merge.keyError", msg),
     "config_validate::merge_error": () =>
-      showNotice("error", `${t("Merge File Error")} ${msg}`),
+      showNotice.error("shared.feedback.validation.merge.generalError", msg),
     "config_core::change_success": () =>
-      showNotice("success", `${t("Core Changed Successfully")}: ${msg}`),
+      showNotice.success(
+        "settings.feedback.notifications.clash.changeSuccess",
+        msg,
+      ),
     "config_core::change_error": () =>
-      showNotice("error", `${t("Failed to Change Core")}: ${msg}`),
+      showNotice.error(
+        "settings.feedback.notifications.clash.changeFailed",
+        msg,
+      ),
   };
 
   const handler = handlers[status];

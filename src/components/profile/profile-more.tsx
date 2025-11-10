@@ -47,16 +47,26 @@ export const ProfileMore = (props: Props) => {
     setAnchorEl(null);
     try {
       await viewProfile(id);
-    } catch (err: any) {
-      showNotice("error", err?.message || err.toString());
+    } catch (err) {
+      showNotice.error(err);
     }
   });
 
   const hasError = entries.some(([level]) => level === "exception");
 
+  const globalTitles: Record<Props["id"], string> = {
+    Merge: "profiles.components.more.global.merge",
+    Script: "profiles.components.more.global.script",
+  };
+
+  const chipLabels: Record<Props["id"], string> = {
+    Merge: "profiles.components.more.chips.merge",
+    Script: "profiles.components.more.chips.script",
+  };
+
   const itemMenu = [
-    { label: "Edit File", handler: onEditFile },
-    { label: "Open File", handler: onOpenFile },
+    { label: "profiles.components.menu.editFile", handler: onEditFile },
+    { label: "profiles.components.menu.openFile", handler: onOpenFile },
   ];
 
   const boxStyle = {
@@ -89,13 +99,13 @@ export const ProfileMore = (props: Props) => {
             variant="h6"
             component="h2"
             noWrap
-            title={t(`Global ${id}`)}
+            title={t(globalTitles[id])}
           >
-            {t(`Global ${id}`)}
+            {t(globalTitles[id])}
           </Typography>
 
           <Chip
-            label={id}
+            label={t(chipLabels[id])}
             color="primary"
             size="small"
             variant="outlined"
@@ -111,7 +121,7 @@ export const ProfileMore = (props: Props) => {
                   size="small"
                   edge="start"
                   color="error"
-                  title={t("Script Console")}
+                  title={t("profiles.modals.logViewer.title")}
                   onClick={() => setLogOpen(true)}
                 >
                   <FeaturedPlayListRounded fontSize="inherit" />
@@ -122,7 +132,7 @@ export const ProfileMore = (props: Props) => {
                 size="small"
                 edge="start"
                 color="inherit"
-                title={t("Script Console")}
+                title={t("profiles.modals.logViewer.title")}
                 onClick={() => setLogOpen(true)}
               >
                 <FeaturedPlayListRounded fontSize="inherit" />
@@ -170,7 +180,7 @@ export const ProfileMore = (props: Props) => {
       {fileOpen && (
         <EditorViewer
           open={true}
-          title={`${t("Global " + id)}`}
+          title={t(globalTitles[id])}
           initialData={readProfileFile(id)}
           language={id === "Merge" ? "yaml" : "javascript"}
           schema={id === "Merge" ? "clash" : undefined}

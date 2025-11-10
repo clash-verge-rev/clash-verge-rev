@@ -1,0 +1,90 @@
+{
+  "page": {
+    "modes": {
+      "rule": "Rule",
+      "global": "Global",
+      "direct": "Direct"
+    },
+    "actions": {
+      "toggleChain": "پراکسی زنجیره‌ای",
+      "connect": "Connect",
+      "disconnect": "Disconnect",
+      "connecting": "Connecting...",
+      "clearChainConfig": "Delete Chain Config"
+    },
+    "provider": {
+      "title": "تأمین‌کننده پروکسی",
+      "actions": {
+        "updateAll": "به‌روزرسانی همه",
+        "update": "به‌روزرسانی"
+      }
+    },
+    "rules": {
+      "title": "Proxy Rules",
+      "select": "Select Rules"
+    },
+    "labels": {
+      "proxyCount": "Proxy Count",
+      "delayCheckReset": "بررسی تأخیر برای لغو ثابت"
+    },
+    "tooltips": {
+      "locate": "موقعیت",
+      "delayCheck": "بررسی تأخیر",
+      "sortDefault": "مرتب‌سازی بر اساس پیش‌فرض",
+      "sortDelay": "مرتب‌سازی بر اساس تأخیر",
+      "sortName": "مرتب‌سازی بر اساس نام",
+      "delayCheckUrl": "آدرس بررسی تأخیر",
+      "showBasic": "پراکسی پایه",
+      "showDetail": "جزئیات پراکسی",
+      "filter": "فیلتر"
+    },
+    "placeholders": {
+      "delayCheckUrl": "آدرس بررسی تأخیر"
+    },
+    "chain": {
+      "header": "Chain Proxy Config",
+      "empty": "No proxy chain configured",
+      "instruction": "Click nodes in order to add to proxy chain",
+      "minimumNodes": "Chain proxy requires at least 2 nodes",
+      "minimumNodesHint": "Chain proxy requires at least 2 nodes. Please add one more node.",
+      "connectFailed": "Failed to connect to proxy chain",
+      "disconnectFailed": "Failed to disconnect from proxy chain",
+      "duplicateNode": "Proxy node already exists in chain"
+    },
+    "messages": {
+      "directMode": "حالت مستقیم"
+    },
+    "title": {
+      "default": "گروه‌های پراکسی",
+      "chainMode": "Proxy Chain Mode"
+    }
+  },
+  "feedback": {
+    "notifications": {
+      "provider": {
+        "updateSuccess": "{{name}} updated successfully",
+        "updateFailed": "Failed to update {{name}}: {{message}}",
+        "genericError": "Update failed: {{message}}",
+        "none": "No providers available to update",
+        "allUpdated": "All providers updated successfully"
+      }
+    }
+  },
+  "components": {
+    "enums": {
+      "strategies": {
+        "select": "انتخاب پروکسی به صورت دستی",
+        "url-test": "انتخاب پروکسی بر اساس تأخیر آزمایش URL",
+        "fallback": "تعویض به پروکسی دیگر در صورت بروز خطا",
+        "load-balance": "توزیع پراکسی بر اساس توازن بار",
+        "relay": "عبور از زنجیره پروکسی تعریف شده"
+      },
+      "policies": {
+        "DIRECT": "داده‌ها به صورت مستقیم خروجی می‌شوند",
+        "REJECT": "درخواست‌ها را متوقف می‌کند",
+        "REJECT-DROP": "درخواست‌ها را نادیده می‌گیرد",
+        "PASS": "این قانون را در صورت تطابق نادیده می‌گیرد"
+      }
+    }
+  }
+}

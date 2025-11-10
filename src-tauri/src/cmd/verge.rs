@@ -1,20 +1,14 @@
 use super::CmdResult;
-use crate::{cmd::StringifyErr, config::*, feat};
+use crate::{cmd::StringifyErr as _, config::IVerge, feat, utils::draft::SharedBox};
 
 /// 获取Verge配置
 #[tauri::command]
-pub async fn get_verge_config() -> CmdResult<IVergeResponse> {
-    let verge = Config::verge().await;
-    let verge_data = {
-        let ref_data = verge.latest_ref();
-        ref_data.clone()
-    };
-    let verge_response = IVergeResponse::from(*verge_data);
-    Ok(verge_response)
+pub async fn get_verge_config() -> CmdResult<SharedBox<IVerge>> {
+    feat::fetch_verge_config().await.stringify_err()
 }
 
 /// 修改Verge配置
 #[tauri::command]
 pub async fn patch_verge_config(payload: IVerge) -> CmdResult {
-    feat::patch_verge(payload, false).await.stringify_err()
+    feat::patch_verge(&payload, false).await.stringify_err()
 }

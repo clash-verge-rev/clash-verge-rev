@@ -1,0 +1,82 @@
+{
+  "page": {
+    "provider": {
+      "trigger": "規則集合",
+      "dialogTitle": "規則集合",
+      "actions": {
+        "updateAll": "全部更新",
+        "update": "更新"
+      }
+    },
+    "title": "規則"
+  },
+  "feedback": {
+    "notifications": {
+      "provider": {
+        "updateSuccess": "已成功更新 {{name}}",
+        "updateFailed": "更新 {{name}} 失敗：{{message}}",
+        "genericError": "更新失敗：{{message}}",
+        "none": "沒有可供更新的提供者",
+        "allUpdated": "所有提供者都已成功更新"
+      }
+    }
+  },
+  "modals": {
+    "editor": {
+      "form": {
+        "labels": {
+          "type": "規則類型",
+          "content": "規則內容",
+          "proxyPolicy": "代理策略"
+        },
+        "toggles": {
+          "noResolve": "跳過 DNS 解析"
+        },
+        "actions": {
+          "prependRule": "新增前置規則",
+          "appendRule": "新增後置規則"
+        },
+        "validation": {
+          "conditionRequired": "規則條件為必填",
+          "invalidRule": "無效規則"
+        }
+      },
+      "ruleTypes": {
+        "DOMAIN": "配對完整網域 (DOMAIN)",
+        "DOMAIN-SUFFIX": "配對網域後綴 (DOMAIN-SUFFIX)",
+        "DOMAIN-KEYWORD": "配對網域關鍵字 (DOMAIN-KEYWORD)",
+        "DOMAIN-REGEX": "配對網域正規表示式 (DOMAIN-REGEX)",
+        "GEOSITE": "配對 Geosite 內的網域 (GEOSITE)",
+        "GEOIP": "配對 IP 所屬國家代碼 (GEOIP)",
+        "SRC-GEOIP": "配對來源 IP 所屬國家代碼 (SRC-GEOIP)",
+        "IP-ASN": "配對 IP 所屬 ASN (IP-ASN)",
+        "SRC-IP-ASN": "配對來源 IP 所屬 ASN (SRC-IP-ASN)",
+        "IP-CIDR": "配對 IP 位址範圍 (IP-CIDR)",
+        "IP-CIDR6": "配對 IP 位址範圍 (IP-CIDR6)",
+        "SRC-IP-CIDR": "配對來源 IP 位址範圍 (SRC-IP-CIDR)",
+        "IP-SUFFIX": "配對 IP 後綴範圍 (IP-SUFFIX)",
+        "SRC-IP-SUFFIX": "配對來源 IP 後綴範圍 (SRC-IP-SUFFIX)",
+        "SRC-PORT": "配對請求來源連接埠範圍 (SRC-PORT)",
+        "DST-PORT": "配對請求目標連接埠範圍 (DST-PORT)",
+        "IN-PORT": "配對傳入連接埠 (IN-PORT)",
+        "DSCP": "DSCP標記（僅限 TPROXY UDP 傳入）(DSCP)",
+        "PROCESS-NAME": "配對程序名稱 (PROCESS-NAME)",
+        "PROCESS-PATH": "配對完整程序路徑 (PROCESS-PATH)",
+        "PROCESS-NAME-REGEX": "正規表示式配對完整程序名稱 (PROCESS-NAME-REGEX)",
+        "PROCESS-PATH-REGEX": "正規表示式配對完整程序路徑 (PROCESS-PATH-REGEX)",
+        "NETWORK": "配對傳輸協定 (TCP/UDP) (NETWORK)",
+        "UID": "配對 Linux 使用者 ID (UID)",
+        "IN-TYPE": "配對傳入類型 (IN-TYPE)",
+        "IN-USER": "配對傳入使用者名稱 (IN-USER)",
+        "IN-NAME": "配對傳入名稱 (IN-NAME)",
+        "SUB-RULE": "子規則 (SUB-RULE)",
+        "RULE-SET": "配對規則集 (RULE-SET)",
+        "AND": "邏輯與 (AND)",
+        "OR": "邏輯或 (OR)",
+        "NOT": "邏輯非 (NOT)",
+        "MATCH": "配對所有請求 (MATCH)"
+      },
+      "title": "編輯規則"
+    }
+  }
+}

@@ -1,0 +1,602 @@
+{
+  "page": {
+    "actions": {
+      "manual": "使用手冊",
+      "telegram": "Telegram 頻道",
+      "github": "GitHub 專案位址"
+    },
+    "title": "設定"
+  },
+  "sections": {
+    "system": {
+      "title": "系統設定",
+      "toggles": {
+        "tunMode": "虛擬網路介面卡模式",
+        "systemProxy": "系統代理"
+      },
+      "tooltips": {
+        "autoLaunchAdmin": "管理員模式可能不支援開機自啟",
+        "silentStart": "程序啟動時以後台模式執行，不顯示程序面板"
+      },
+      "fields": {
+        "autoLaunch": "開機自啟",
+        "silentStart": "靜默啟動"
+      },
+      "notifications": {
+        "tunMode": {
+          "autoDisabled": "由於服務不可使用，虛擬網路介面卡模式已自動停用",
+          "autoDisableFailed": "自動停用虛擬網路介面卡模式失敗"
+        }
+      }
+    },
+    "proxyControl": {
+      "tooltips": {
+        "systemProxy": "修改作業系統的代理設定，如果開啟失敗，可手動修改作業系統的代理設定",
+        "tunMode": "TUN（虛擬網路介面卡）模式接管系統所有流量，啟用時無需開啟系統代理",
+        "tunUnavailable": "虛擬網路介面卡模式需要安裝服務模式或以系統管理員身分執行"
+      },
+      "actions": {
+        "installService": "安裝服務",
+        "uninstallService": "解除安裝服務"
+      },
+      "fields": {
+        "systemProxy": "系統代理",
+        "tunMode": "虛擬網路介面卡模式"
+      }
+    },
+    "externalController": {
+      "title": "外部控制器監聽位址",
+      "fields": {
+        "enable": "啟用外部控制器",
+        "address": "外部控制器監聽位址",
+        "secret": "API 存取金鑰"
+      },
+      "placeholders": {
+        "address": "必填",
+        "secret": "建議設定"
+      },
+      "tooltips": {
+        "copy": "複製到剪貼簿"
+      },
+      "messages": {
+        "addressRequired": "控制器位址不能為空",
+        "secretRequired": "存取金鑰不能為空",
+        "copyFailed": "複製失敗",
+        "controllerCopied": "API 連接埠已複製到剪貼簿",
+        "secretCopied": "API 金鑰已複製到剪貼簿"
+      }
+    },
+    "externalCors": {
+      "title": "外部跨來源資源共享設定",
+      "fields": {
+        "allowPrivateNetwork": "允許專用網路存取",
+        "allowedOrigins": "允許的來源"
+      },
+      "placeholders": {
+        "origin": "請輸入有效的網址"
+      },
+      "actions": {
+        "add": "新增"
+      },
+      "messages": {
+        "alwaysIncluded": "始終包含來源：{{urls}}"
+      },
+      "tooltips": {
+        "open": "外部跨來源資源共享設定"
+      }
+    },
+    "appearance": {
+      "light": "淺色",
+      "dark": "深色",
+      "system": "系統"
+    },
+    "clash": {
+      "title": "Clash 設定",
+      "form": {
+        "fields": {
+          "allowLan": "區域網路連線",
+          "dnsOverwrite": "DNS 覆寫",
+          "ipv6": "IPv6",
+          "unifiedDelay": "統一延遲",
+          "logLevel": "日誌等級",
+          "portConfig": "連接埠設定",
+          "external": "外部控制",
+          "webUI": "網頁介面",
+          "clashCore": "Clash 內核",
+          "openUwpTool": "UWP 工具",
+          "updateGeoData": "更新 GeoData"
+        },
+        "tooltips": {
+          "networkInterface": "網路介面",
+          "unifiedDelay": "開啟統一延遲時，會進行兩次延遲測試，以消除連線握手等帶來的不同類型節點的延遲差異",
+          "logLevel": "僅對日誌目錄 Service 資料夾下的內核日誌檔案生效",
+          "openUwpTool": "Windows 8 開始限制 UWP 應用程式（如Microsoft Store）直接存取本機主機的網路服務，使用此工具可繞過該限制"
+        },
+        "options": {
+          "logLevel": {
+            "debug": "Debug",
+            "info": "Info",
+            "warning": "Warn",
+            "error": "Error",
+            "silent": "Silent"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "verge": {
+      "basic": {
+        "title": "Verge 基礎設定",
+        "actions": {
+          "browse": "瀏覽"
+        },
+        "trayOptions": {
+          "showMainWindow": "顯示主視窗",
+          "showTrayMenu": "顯示系統匣選單",
+          "disable": "停用"
+        },
+        "fields": {
+          "language": "語言設定",
+          "themeMode": "主題模式",
+          "trayClickEvent": "系統匣點擊事件",
+          "copyEnvType": "複製環境變數類型",
+          "startPage": "啟動頁面",
+          "startupScript": "啟動指令碼",
+          "themeSetting": "主題設定",
+          "layoutSetting": "介面設定",
+          "misc": "雜項設定",
+          "hotkeySetting": "快速鍵設定"
+        }
+      },
+      "advanced": {
+        "title": "Verge 進階設定",
+        "tooltips": {
+          "backupInfo": "支援本機或 WebDAV 方式備份配置檔案",
+          "openConfDir": "如果軟體執行異常，!備份!並刪除此資料夾下的所有檔案，重新啟動軟體",
+          "liteMode": "關閉圖形介面，僅保留內核執行"
+        },
+        "actions": {
+          "copyVersion": "複製Verge版本號"
+        },
+        "notifications": {
+          "latestVersion": "目前已是最新版本",
+          "versionCopied": "Verge版本已複製到剪貼簿"
+        },
+        "fields": {
+          "backupSetting": "備份設定",
+          "runtimeConfig": "執行期設定",
+          "openConfDir": "配置目錄",
+          "openCoreDir": "內核目錄",
+          "openLogsDir": "日誌目錄",
+          "checkUpdates": "檢查更新",
+          "openDevTools": "開發人員工具",
+          "liteModeSettings": "輕量模式設定",
+          "exit": "離開",
+          "exportDiagnostics": "匯出診斷資訊",
+          "vergeVersion": "Verge 版本"
+        }
+      },
+      "theme": {
+        "title": "主題設定",
+        "fields": {
+          "primaryColor": "主要顏色",
+          "secondaryColor": "次要顏色",
+          "primaryText": "文字主要顏色",
+          "secondaryText": "文字次要顏色",
+          "infoColor": "資訊顏色",
+          "warningColor": "警告顏色",
+          "errorColor": "錯誤顏色",
+          "successColor": "成功顏色",
+          "fontFamily": "字型系列",
+          "cssInjection": "CSS 注入"
+        },
+        "actions": {
+          "editCss": "編輯 CSS"
+        },
+        "dialogs": {
+          "editCssTitle": "編輯 CSS"
+        }
+      },
+      "layout": {
+        "title": "介面設定",
+        "fields": {
+          "preferSystemTitlebar": "優先使用系統標題欄",
+          "trafficGraph": "流量圖表",
+          "memoryUsage": "內核佔用",
+          "proxyGroupIcon": "代理組圖示",
+          "hoverNavigator": "懸浮跳轉導航",
+          "hoverNavigatorDelay": "懸浮跳轉導航延遲",
+          "navIcon": "導覽列圖示",
+          "trayIcon": "系統匣圖示",
+          "showProxyGroupsInline": "將代理組顯示在系統匣一級選單",
+          "commonTrayIcon": "一般系統匣圖示",
+          "systemProxyTrayIcon": "系統代理系統匣圖示",
+          "tunTrayIcon": "虛擬網路介面卡模式系統匣圖示",
+          "enableTrayIcon": "啟用系統匣圖示",
+          "enableTraySpeed": "啟用系統匣速率"
+        },
+        "tooltips": {
+          "hoverNavigator": "滑鼠懸停在字母上時自動捲動到對應代理組",
+          "hoverNavigatorDelay": "滑鼠懸停後觸發自動跳轉前等待的毫秒數"
+        },
+        "options": {
+          "icon": {
+            "monochrome": "單色圖示",
+            "colorful": "彩色圖示",
+            "disable": "停用"
+          }
+        }
+      }
+    }
+  },
+  "modals": {
+    "clashPort": {
+      "title": "連接埠設定",
+      "fields": {
+        "mixed": "混合連接埠",
+        "socks": "SOCKS 連接埠",
+        "http": "HTTP(S) 連接埠",
+        "redir": "Redir 透明連接埠",
+        "tproxy": "Tproxy 連接埠"
+      },
+      "actions": {
+        "random": "隨機連接埠"
+      },
+      "messages": {
+        "saved": "連結埠設定已儲存",
+        "saveFailed": "連結埠設定儲存失敗"
+      }
+    },
+    "clashCore": {
+      "variants": {
+        "release": "正式版",
+        "alpha": "預覽版"
+      }
+    },
+    "liteMode": {
+      "title": "輕量模式設定",
+      "actions": {
+        "enterNow": "立即進入輕量模式"
+      },
+      "toggles": {
+        "autoEnter": "自動進入輕量模式"
+      },
+      "tooltips": {
+        "autoEnter": "啟用後，將在視窗關閉一段時間後自動啟用輕量模式"
+      },
+      "fields": {
+        "delay": "自動進入輕量模式延遲"
+      },
+      "messages": {
+        "autoEnterHint": "關閉視窗後，輕量模式將在 {{n}} 分鐘後自動啟用"
+      }
+    },
+    "backup": {
+      "title": "備份設定",
+      "tabs": {
+        "local": "本機備份",
+        "webdav": "WebDAV 備份"
+      },
+      "actions": {
+        "selectTarget": "選擇備份目標",
+        "backup": "備份",
+        "export": "匯出",
+        "exportBackup": "匯出備份",
+        "deleteBackup": "刪除備份",
+        "restore": "還原",
+        "restoreBackup": "還原備份",
+        "viewHistory": "檢視紀錄"
+      },
+      "fields": {
+        "webdavUrl": "WebDAV 伺服器位址 http(s)://",
+        "username": "使用者名稱",
+        "info": "在應用程式資料目錄中建立本機備份，您可以透過下方列表進行還原或刪除。"
+      },
+      "messages": {
+        "webdavUrlRequired": "WebDAV 伺服器位址不能為空",
+        "invalidWebdavUrl": "無效的 WebDAV 伺服器位址格式",
+        "usernameRequired": "使用者名稱不能為空",
+        "passwordRequired": "密碼不能為空",
+        "webdavConfigSaved": "WebDAV 配置儲存成功",
+        "webdavConfigSaveFailed": "儲存 WebDAV 設定檔失敗: {{error}}",
+        "backupCreated": "備份建立成功",
+        "backupFailed": "備份失敗: {{error}}",
+        "localBackupCreated": "本機備份建立成功",
+        "localBackupFailed": "本機備份失敗",
+        "restoreSuccess": "還原成功，應用程式將在 1 秒後重啟",
+        "localBackupExported": "本機備份匯出成功",
+        "localBackupExportFailed": "本機備份匯出失敗",
+        "webdavRefreshSuccess": "WebDAV 更新成功",
+        "webdavRefreshFailed": "WebDAV 更新失敗: {{error}}",
+        "confirmDelete": "確認是否刪除此備份檔案嗎？",
+        "confirmRestore": "確認還原此份檔案嗎？"
+      },
+      "auto": {
+        "title": "自動備份",
+        "scheduleLabel": "啟用定時備份",
+        "scheduleHelper": "依設定頻率在背景建立本機備份檔案。",
+        "intervalLabel": "備份頻率",
+        "changeLabel": "關鍵變更時自動備份",
+        "changeHelper": "全域擴充配置/腳本或訂閱新增、刪除、修改時自動備份。",
+        "options": {
+          "hours": "每 {{n}} 小時",
+          "days": "每 {{n}} 天"
+        }
+      },
+      "manual": {
+        "title": "手動備份",
+        "local": "在本機應用資料資料夾建立備份檔。",
+        "webdav": "設定 WebDAV 後，可直接上傳備份至伺服器。",
+        "configureWebdav": "設定 WebDAV"
+      },
+      "history": {
+        "title": "備份紀錄",
+        "summary": "共 {{count}} 份備份 · 最近 {{recent}}",
+        "empty": "尚無備份紀錄"
+      },
+      "webdav": {
+        "title": "WebDAV 設定"
+      },
+      "table": {
+        "filename": "檔案名稱",
+        "backupTime": "備份時間",
+        "actions": "動作",
+        "noBackups": "暫無備份",
+        "rowsPerPage": "每頁列數"
+      }
+    },
+    "misc": {
+      "title": "雜項設定",
+      "fields": {
+        "appLogLevel": "應用程式日誌等級",
+        "appLogMaxSize": "應用程式日誌最大大小",
+        "appLogMaxCount": "應用程式日誌最大數量",
+        "autoCloseConnections": "自動關閉連線",
+        "autoCheckUpdate": "自動檢查更新",
+        "enableBuiltinEnhanced": "內建增強功能",
+        "proxyLayoutColumns": "代理頁面欄數",
+        "autoLogClean": "自動清理日誌",
+        "autoDelayDetection": "自動延遲偵測",
+        "defaultLatencyTest": "預設測試網址",
+        "defaultLatencyTimeout": "測試逾時"
+      },
+      "tooltips": {
+        "autoCloseConnections": "當代理組選中節點或代理模式變動時，關閉已建立的連線",
+        "enableBuiltinEnhanced": "配置檔案的相容性處理",
+        "autoDelayDetection": "在背景定時偵測目前節點延遲",
+        "defaultLatencyTest": "僅用於 HTTP 客戶端請求測試，不會對配置檔案產生影響"
+      },
+      "options": {
+        "proxyLayoutColumns": {
+          "auto": "自動欄數"
+        },
+        "autoLogClean": {
+          "never": "不清理",
+          "retainDays": "保留 {{n}} 天"
+        }
+      }
+    },
+    "update": {
+      "title": "新版本 v{{version}}",
+      "actions": {
+        "goToRelease": "前往發佈頁面",
+        "update": "更新"
+      },
+      "messages": {
+        "portableError": "可攜式版不支援應用程式內更新，請手動下載替換",
+        "breakChangeError": "此版本為重大更新，不支援應用程式內更新，請解除安裝後手動下載安裝"
+      }
+    },
+    "sysproxy": {
+      "title": "系統代理設定",
+      "fieldsets": {
+        "currentStatus": "目前系統代理"
+      },
+      "fields": {
+        "enableStatus": "啟用狀態：",
+        "serverAddr": "服務位址：",
+        "pacUrl": "PAC 位址：",
+        "proxyHost": "代理主機",
+        "usePacMode": "使用 PAC 模式",
+        "proxyGuard": "系統代理守護",
+        "guardDuration": "代理守護間隔",
+        "alwaysUseDefaultBypass": "始終使用預設繞過",
+        "proxyBypass": "代理繞過設定：",
+        "bypass": "目前繞過：",
+        "pacScriptContent": "PAC 指令碼內容"
+      },
+      "tooltips": {
+        "proxyGuard": "開啟以防止其他軟體修改作業系統的代理設定"
+      },
+      "messages": {
+        "durationTooShort": "代理守護間隔時間不得低於 1 秒",
+        "invalidBypass": "無效的代理繞過格式",
+        "invalidProxyHost": "代理主機格式無效"
+      },
+      "actions": {
+        "editPac": "編輯 PAC"
+      }
+    },
+    "tun": {
+      "title": "虛擬網路介面卡模式",
+      "fields": {
+        "stack": "虛擬網路介面卡模式堆疊",
+        "device": "Device Name",
+        "autoRoute": "自動設定全域路由",
+        "strictRoute": "嚴格路由",
+        "autoDetectInterface": "自動偵測流量輸出介面",
+        "dnsHijack": "DNS 綁架",
+        "mtu": "最大傳輸單位"
+      },
+      "tooltips": {
+        "dnsHijack": "請用半形逗號來區隔多個 DNS 伺服器"
+      },
+      "messages": {
+        "applied": "設定已套用"
+      }
+    },
+    "dns": {
+      "dialog": {
+        "title": "DNS 覆寫",
+        "warning": "如果你不清楚這裡的設定請不要修改，並保持 DNS 覆寫開啟"
+      },
+      "sections": {
+        "general": "DNS 設定",
+        "fallbackFilter": "備援篩選設定",
+        "hosts": "Hosts 設定"
+      },
+      "fields": {
+        "enable": "啟用 DNS",
+        "listen": "DNS 監聽位址",
+        "enhancedMode": "增強模式",
+        "fakeIpRange": "Fake IP 範圍",
+        "fakeIpFilterMode": "Fake IP 篩選模式",
+        "ipv6": {
+          "label": "IPv6",
+          "description": "啟用 IPv6 DNS 解析"
+        },
+        "preferH3": {
+          "label": "優先使用 HTTP/3",
+          "description": "DNS DOH 使用 HTTP/3 協定"
+        },
+        "respectRules": {
+          "label": "遵循路由規則",
+          "description": "DNS 連線遵循路由規則"
+        },
+        "useHosts": {
+          "label": "使用 Hosts",
+          "description": "啟用透過 hosts 檔案解析網域"
+        },
+        "useSystemHosts": {
+          "label": "使用系統 Hosts",
+          "description": "啟用透過系統 hosts 檔案解析網域"
+        },
+        "directPolicy": {
+          "label": "直連域名伺服器遵循策略",
+          "description": "是否遵循 nameserver-policy 設定"
+        },
+        "defaultNameserver": {
+          "label": "預設域名伺服器",
+          "description": "用於解析 DNS 伺服器的預設 DNS 伺服器"
+        },
+        "nameserver": {
+          "label": "域名伺服器",
+          "description": "DNS 伺服器列表，用逗號分隔"
+        },
+        "fallback": {
+          "label": "備援伺服器",
+          "description": "備援 DNS 伺服器列表，用逗號分隔"
+        },
+        "proxy": {
+          "label": "代理節點 DNS",
+          "description": "代理節點網域解析伺服器，僅用於解析代理節點的網域，用逗號分隔"
+        },
+        "directNameserver": {
+          "label": "直連域名伺服器",
+          "description": "直連輸出網域解析伺服器，支援 system 關鍵字，用逗號分隔"
+        },
+        "fakeIpFilter": {
+          "label": "Fake IP 篩選",
+          "description": "跳過 Fake IP 解析的網域，用逗號分隔"
+        },
+        "nameserverPolicy": {
+          "label": "域名伺服器策略",
+          "description": "特定網域的 DNS 伺服器，多個伺服器使用分號分隔，格式: domain=server1;server2"
+        },
+        "geoipFiltering": {
+          "label": "GeoIP 篩選",
+          "description": "啟用 GeoIP 備援篩選"
+        },
+        "geoipCode": "GeoIP 國家代碼",
+        "fallbackIpCidr": {
+          "label": "備援 IP CIDR",
+          "description": "不使用備援伺服器的 IP CIDR，用逗號分隔"
+        },
+        "fallbackDomain": {
+          "label": "備援網域",
+          "description": "使用備援伺服器的網域，用逗號分隔"
+        },
+        "hosts": {
+          "label": "Hosts",
+          "description": "自訂網域到 IP 或網域的映射，用逗號分隔"
+        }
+      },
+      "messages": {
+        "saved": "DNS 設定已儲存",
+        "configError": "DNS 設定錯誤："
+      },
+      "errors": {
+        "invalid": "無效的設定",
+        "invalidYaml": "YAML 格式無效"
+      }
+    },
+    "webUI": {
+      "actions": {
+        "openUrl": "開啟網址"
+      },
+      "title": "網頁介面",
+      "messages": {
+        "supportedPlaceholders": "支援 %host, %port, %secret",
+        "placeholderInstruction": "使用 %host, %port, %secret 表示 主機, 連接埠, 存取金鑰"
+      }
+    },
+    "hotkey": {
+      "toggles": {
+        "enableGlobal": "啟用全域快速鍵"
+      },
+      "title": "快速鍵設定",
+      "functions": {
+        "rule": "規則模式",
+        "global": "全域模式",
+        "openOrCloseDashboard": "開啟/關閉儀表板",
+        "toggleSystemProxy": "開啟/關閉系統代理",
+        "toggleTunMode": "開啟/關閉 虛擬網路介面卡模式",
+        "entryLightweightMode": "進入輕量模式",
+        "direct": "直連模式"
+      }
+    },
+    "password": {
+      "prompts": {
+        "enterRoot": "請輸入您的 root 密碼"
+      }
+    },
+    "networkInterface": {
+      "title": "網路介面",
+      "fields": {
+        "ipAddress": "IP 位址",
+        "macAddress": "MAC 位址"
+      }
+    }
+  },
+  "feedback": {
+    "notifications": {
+      "clash": {
+        "restartSuccess": "已重啟 Clash 內核",
+        "versionUpdated": "內核版本已更新",
+        "alreadyLatestVersion": "已經是最新內核版本",
+        "changeSuccess": "內核切換成功",
+        "changeFailed": "無法切換內核",
+        "geoDataUpdated": "已更新 GeoData"
+      },
+      "clashService": {
+        "installSuccess": "已成功安裝服務",
+        "uninstallSuccess": "已成功解除安裝服務"
+      },
+      "updater": {
+        "withClashProxySuccess": "使用 Clash 代理更新成功",
+        "withClashProxyFailed": "使用 Clash 代理更新也失敗"
+      }
+    }
+  },
+  "statuses": {
+    "clash": {
+      "stopping": "內核停止中...",
+      "restarting": "內核重啟中..."
+    },
+    "clashService": {
+      "installing": "安裝服務中...",
+      "uninstalling": "服務解除安裝中..."
+    }
+  }
+}

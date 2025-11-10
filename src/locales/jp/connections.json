@@ -1,0 +1,34 @@
+{
+  "page": {
+    "title": "接続"
+  },
+  "components": {
+    "fields": {
+      "host": "ホスト",
+      "dlSpeed": "ダウンロード速度",
+      "ulSpeed": "アップロード速度",
+      "chains": "チェーン",
+      "rule": "ルール",
+      "process": "プロセス",
+      "time": "接続時間",
+      "source": "送信元アドレス",
+      "destination": "宛先アドレス",
+      "destinationPort": "宛先ポート",
+      "type": "タイプ"
+    },
+    "order": {
+      "default": "Default",
+      "uploadSpeed": "アップロード速度",
+      "downloadSpeed": "ダウンロード速度"
+    },
+    "actions": {
+      "active": "Active",
+      "closed": "Closed",
+      "closeConnection": "接続を閉じる"
+    },
+    "columnManager": {
+      "title": "列",
+      "dragHandle": "Drag handle"
+    }
+  }
+}

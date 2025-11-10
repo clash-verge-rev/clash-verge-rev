@@ -1,0 +1,21 @@
+{
+  "components": {
+    "navigation": {
+      "tabs": {
+        "home": "Hogar",
+        "proxies": "Proxies",
+        "profiles": "Perfiles",
+        "connections": "Conexiones",
+        "rules": "Normas",
+        "logs": "Registros",
+        "unlock": "Descubrir",
+        "settings": "Ajustes"
+      },
+      "menu": {
+        "reorderMode": "Menu reorder mode",
+        "unlock": "Unlock menu order",
+        "lock": "Lock menu order"
+      }
+    }
+  }
+}
