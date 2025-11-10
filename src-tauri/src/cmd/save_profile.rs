@@ -21,7 +21,7 @@ pub async fn save_profile_file(index: String, file_data: Option<String>) -> CmdR
     let backup_trigger = match index.as_str() {
         "Merge" => Some(AutoBackupTrigger::GlobalMerge),
         "Script" => Some(AutoBackupTrigger::GlobalScript),
-        _ => None,
+        _ => Some(AutoBackupTrigger::ProfileChange),
     };
 
     // 在异步操作前获取必要元数据并释放锁
