@@ -424,10 +424,10 @@ impl Tray {
         let tun_mode = verge.enable_tun_mode.as_ref().unwrap_or(&false);
 
         let (_is_custom_icon, icon_bytes) = match (*system_mode, *tun_mode) {
-            (true, true) => TrayState::get_tun_tray_icon(&verge).await,
-            (true, false) => TrayState::get_sysproxy_tray_icon(&verge).await,
-            (false, true) => TrayState::get_tun_tray_icon(&verge).await,
-            (false, false) => TrayState::get_common_tray_icon(&verge).await,
+            (true, true) => TrayState::get_tun_tray_icon(verge).await,
+            (true, false) => TrayState::get_sysproxy_tray_icon(verge).await,
+            (false, true) => TrayState::get_tun_tray_icon(verge).await,
+            (false, false) => TrayState::get_common_tray_icon(verge).await,
         };
 
         let _ = tray.set_icon(Some(tauri::image::Image::from_bytes(&icon_bytes)?));
