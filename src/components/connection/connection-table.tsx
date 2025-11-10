@@ -516,7 +516,6 @@ export const ConnectionTable = (props: Props) => {
       >
         <DataGrid
           apiRef={apiRef}
-          hideFooter
           rows={connRows}
           columns={columns}
           onRowClick={(e) => onShowDetail(e.row.connectionData)}

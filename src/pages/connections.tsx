@@ -1,5 +1,5 @@
 import {
-  Clear,
+  DeleteForeverRounded,
   TableChartRounded,
   TableRowsRounded,
 } from "@mui/icons-material";
@@ -10,6 +10,7 @@ import {
   Fab,
   IconButton,
   MenuItem,
+  Zoom,
 } from "@mui/material";
 import { useLockFn } from "ahooks";
 import { useCallback, useMemo, useRef, useState } from "react";
@@ -251,17 +252,21 @@ const ConnectionsPage = () => {
         />
       )}
       <ConnectionDetail ref={detailRef} />
-      {connectionsType === "closed" && (
+      <Zoom
+        in={connectionsType === "closed" && filterConn.length > 0}
+        unmountOnExit
+      >
         <Fab
+          size="medium"
           variant="extended"
-          sx={{ position: "absolute", right: 16, bottom: 16 }}
+          sx={{ position: "absolute", right: 16, bottom: 70 }}
           color="primary"
           onClick={() => clearClosedConnections()}
         >
-          <Clear sx={{ mr: 1 }} />
+          <DeleteForeverRounded sx={{ mr: 1 }} fontSize="small" />
           {t("shared.actions.clear")}
         </Fab>
-      )}
+      </Zoom>
     </BasePage>
   );
 };
