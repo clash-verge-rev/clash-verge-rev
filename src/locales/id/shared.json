@@ -50,6 +50,7 @@
     "milliseconds": "milidetik",
     "seconds": "detik",
     "minutes": "menit",
+    "hours": "jam",
     "kilobytes": "KB",
     "files": "Files"
   },

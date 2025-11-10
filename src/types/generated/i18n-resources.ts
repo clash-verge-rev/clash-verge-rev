@@ -1273,6 +1273,7 @@ export interface TranslationResources {
       };
       units: {
         files: string;
+        hours: string;
         kilobytes: string;
         milliseconds: string;
         minutes: string;

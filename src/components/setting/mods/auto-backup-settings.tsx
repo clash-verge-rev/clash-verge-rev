@@ -1,4 +1,10 @@
-import { ListItem, ListItemText, Stack, TextField } from "@mui/material";
+import {
+  InputAdornment,
+  ListItem,
+  ListItemText,
+  Stack,
+  TextField,
+} from "@mui/material";
 import { useLockFn } from "ahooks";
 import { Fragment, useMemo, useState, type ChangeEvent } from "react";
 import { useTranslation } from "react-i18next";
@@ -33,7 +39,19 @@ export function AutoBackupSettings() {
   const [pendingValues, setPendingValues] = useState<AutoBackupState | null>(
     null,
   );
-  const values = pendingValues ?? derivedValues;
+  const values = useMemo(() => {
+    if (!pendingValues) {
+      return derivedValues;
+    }
+    if (
+      pendingValues.scheduleEnabled === derivedValues.scheduleEnabled &&
+      pendingValues.intervalHours === derivedValues.intervalHours &&
+      pendingValues.changeEnabled === derivedValues.changeEnabled
+    ) {
+      return derivedValues;
+    }
+    return pendingValues;
+  }, [pendingValues, derivedValues]);
   const [intervalInputDraft, setIntervalInputDraft] = useState<string | null>(
     null,
   );
@@ -47,7 +65,6 @@ export function AutoBackupSettings() {
       setPendingValues(nextValues);
       try {
         await patchVerge(payload);
-        setPendingValues(null);
       } catch (error) {
         showNotice.error(error);
         setPendingValues(null);
@@ -113,21 +130,6 @@ export function AutoBackupSettings() {
   };
 
   const scheduleDisabled = disabled || !values.scheduleEnabled;
-  const intervalPreviewLabel = useMemo(() => {
-    const rawValue = intervalInputDraft ?? values.intervalHours.toString();
-    const numeric = Number(rawValue);
-    const effective = Number.isFinite(numeric) ? numeric : values.intervalHours;
-    const bounded = Math.min(
-      MAX_INTERVAL_HOURS,
-      Math.max(MIN_INTERVAL_HOURS, Math.round(effective)),
-    );
-    if (bounded % 24 === 0) {
-      return t("settings.modals.backup.auto.options.days", {
-        n: Math.max(1, bounded / 24),
-      });
-    }
-    return t("settings.modals.backup.auto.options.hours", { n: bounded });
-  }, [intervalInputDraft, t, values.intervalHours]);
 
   return (
     <Fragment>
@@ -150,7 +152,6 @@ export function AutoBackupSettings() {
         <Stack direction="row" alignItems="center" spacing={2} width="100%">
           <ListItemText
             primary={t("settings.modals.backup.auto.intervalLabel")}
-            secondary={intervalPreviewLabel}
           />
           <TextField
             label={t("settings.modals.backup.auto.intervalLabel")}
@@ -168,6 +169,13 @@ export function AutoBackupSettings() {
             }}
             sx={{ minWidth: 160 }}
             slotProps={{
+              input: {
+                endAdornment: (
+                  <InputAdornment position="end">
+                    {t("shared.units.hours")}
+                  </InputAdornment>
+                ),
+              },
               htmlInput: {
                 min: MIN_INTERVAL_HOURS,
                 max: MAX_INTERVAL_HOURS,

@@ -50,6 +50,7 @@
     "milliseconds": "ms",
     "seconds": "saniye",
     "minutes": "dakika",
+    "hours": "saat",
     "kilobytes": "KB",
     "files": "Files"
   },

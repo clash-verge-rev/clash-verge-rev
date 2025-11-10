@@ -680,6 +680,7 @@ export const translationKeys = [
   "shared.units.milliseconds",
   "shared.units.seconds",
   "shared.units.minutes",
+  "shared.units.hours",
   "shared.units.kilobytes",
   "shared.units.files",
   "shared.placeholders.filter",

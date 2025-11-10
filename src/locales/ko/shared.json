@@ -50,6 +50,7 @@
     "milliseconds": "밀리초",
     "seconds": "초",
     "minutes": "분",
+    "hours": "시간",
     "kilobytes": "KB",
     "files": "파일"
   },
