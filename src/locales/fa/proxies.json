@@ -6,7 +6,7 @@
       "direct": "Direct"
     },
     "actions": {
-      "toggleChain": "🔗 پراکسی زنجیره‌ای",
+      "toggleChain": "پراکسی زنجیره‌ای",
       "connect": "Connect",
       "disconnect": "Disconnect",
       "connecting": "Connecting...",

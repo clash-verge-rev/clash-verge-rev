@@ -6,7 +6,7 @@
       "direct": "Direct"
     },
     "actions": {
-      "toggleChain": "🔗 Цепной прокси",
+      "toggleChain": "Цепной прокси",
       "connect": "Connect",
       "disconnect": "Disconnect",
       "connecting": "Connecting...",
