@@ -106,10 +106,17 @@ pub fn find_target_icons(target: &str) -> Result<Option<String>> {
     let icon_path = fs::read_dir(&icons_dir)?
         .filter_map(|entry| entry.ok().map(|e| e.path()))
         .find(|path| {
-            path.file_prefix().is_some_and(|prefix| prefix == target)
-                && path
-                    .extension()
-                    .is_some_and(|ext| ext == "ico" || ext == "png")
+            let prefix_matches = path
+                .file_prefix()
+                .and_then(|p| p.to_str())
+                .is_some_and(|prefix| prefix.starts_with(target));
+            let ext_matches = path
+                .extension()
+                .and_then(|e| e.to_str())
+                .is_some_and(|ext| {
+                    ext.eq_ignore_ascii_case("ico") || ext.eq_ignore_ascii_case("png")
+                });
+            prefix_matches && ext_matches
         });
 
     icon_path
