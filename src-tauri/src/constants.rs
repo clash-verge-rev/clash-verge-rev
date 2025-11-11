@@ -68,10 +68,6 @@ pub mod error_patterns {
 }
 
 pub mod tun {
-    #[cfg(target_os = "linux")]
-    pub const DEFAULT_STACK: &str = "mixed";
-
-    #[cfg(not(target_os = "linux"))]
     pub const DEFAULT_STACK: &str = "gvisor";
 
     pub const DNS_HIJACK: &[&str] = &["any:53"];
