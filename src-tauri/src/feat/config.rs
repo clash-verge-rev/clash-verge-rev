@@ -22,7 +22,12 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
         } else {
             if patch.get("mode").is_some() {
                 logging_error!(Type::Tray, tray::Tray::global().update_menu().await);
-                logging_error!(Type::Tray, tray::Tray::global().update_icon(None).await);
+                logging_error!(
+                    Type::Tray,
+                    tray::Tray::global()
+                        .update_icon(&Config::verge().await.data_arc())
+                        .await
+                );
             }
             Config::runtime()
                 .await
@@ -213,7 +218,7 @@ async fn process_terminated_flags(update_flags: i32, patch: &IVerge) -> Result<(
     }
     if (update_flags & (UpdateFlags::SystrayIcon as i32)) != 0 {
         tray::Tray::global()
-            .update_icon(Some(&Config::verge().await.latest_arc()))
+            .update_icon(&Config::verge().await.data_arc())
             .await?;
     }
     if (update_flags & (UpdateFlags::SystrayTooltip as i32)) != 0 {

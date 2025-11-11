@@ -348,7 +348,7 @@ impl Tray {
 
     /// 更新托盘图标
     #[cfg(target_os = "macos")]
-    pub async fn update_icon(&self, verge: Option<&IVerge>) -> Result<()> {
+    pub async fn update_icon(&self, verge: &IVerge) -> Result<()> {
         if handle::Handle::global().is_exiting() {
             logging!(debug, Type::Tray, "应用正在退出，跳过托盘图标更新");
             return Ok(());
@@ -366,11 +366,6 @@ impl Tray {
                 );
                 return Ok(());
             }
-        };
-
-        let verge = match verge {
-            Some(v) => v,
-            None => &Config::verge().await.data_arc(),
         };
 
         let system_mode = verge.enable_system_proxy.as_ref().unwrap_or(&false);
@@ -395,7 +390,7 @@ impl Tray {
     }
 
     #[cfg(not(target_os = "macos"))]
-    pub async fn update_icon(&self, verge: Option<&IVerge>) -> Result<()> {
+    pub async fn update_icon(&self, verge: &IVerge) -> Result<()> {
         if handle::Handle::global().is_exiting() {
             logging!(debug, Type::Tray, "应用正在退出，跳过托盘图标更新");
             return Ok(());
@@ -413,11 +408,6 @@ impl Tray {
                 );
                 return Ok(());
             }
-        };
-
-        let verge = match verge {
-            Some(v) => v,
-            None => &Config::verge().await.data_arc(),
         };
 
         let system_mode = verge.enable_system_proxy.as_ref().unwrap_or(&false);
@@ -510,8 +500,9 @@ impl Tray {
             logging!(debug, Type::Tray, "应用正在退出，跳过托盘局部更新");
             return Ok(());
         }
+        let verge = Config::verge().await.data_arc();
         self.update_menu().await?;
-        self.update_icon(None).await?;
+        self.update_icon(&verge).await?;
         self.update_tooltip().await?;
         Ok(())
     }

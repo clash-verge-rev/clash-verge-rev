@@ -159,10 +159,10 @@ impl NetworkManager {
             ProxyType::None => None,
             ProxyType::Localhost => {
                 let port = {
-                    let verge_port = Config::verge().await.latest_arc().verge_mixed_port;
+                    let verge_port = Config::verge().await.data_arc().verge_mixed_port;
                     match verge_port {
                         Some(port) => port,
-                        None => Config::clash().await.latest_arc().get_mixed_port(),
+                        None => Config::clash().await.data_arc().get_mixed_port(),
                     }
                 };
                 let proxy_scheme = format!("http://127.0.0.1:{port}");
