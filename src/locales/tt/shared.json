@@ -21,7 +21,9 @@
     "pause": "Туктау",
     "resume": "Дәвам",
     "closeAll": "Барысын да ябу",
-    "clear": "Чистарту"
+    "clear": "Чистарту",
+    "previous": "Previous",
+    "next": "Next"
   },
   "labels": {
     "updateAt": "Яңартылган вакыт",
@@ -48,6 +50,7 @@
     "milliseconds": "Миллисекундлар",
     "seconds": "Секундлар",
     "minutes": "Минутлар",
+    "hours": "Сәгатьләр",
     "kilobytes": "KB",
     "files": "Files"
   },

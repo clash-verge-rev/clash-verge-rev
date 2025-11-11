@@ -1,3 +1,4 @@
+import { LanOutlined, LanRounded } from "@mui/icons-material";
 import { Box, Button, ButtonGroup } from "@mui/material";
 import { useLockFn } from "ahooks";
 import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
@@ -167,6 +168,13 @@ const ProxyPage = () => {
             variant={isChainMode ? "contained" : "outlined"}
             onClick={onToggleChainMode}
             sx={{ ml: 1 }}
+            startIcon={
+              isChainMode ? (
+                <LanRounded fontSize="small" />
+              ) : (
+                <LanOutlined fontSize="small" />
+              )
+            }
           >
             {t("proxies.page.actions.toggleChain")}
           </Button>

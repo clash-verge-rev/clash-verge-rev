@@ -6,7 +6,7 @@
       "direct": "Direct"
     },
     "actions": {
-      "toggleChain": "🔗 Proxy en cadena",
+      "toggleChain": "Proxy en cadena",
       "connect": "Connect",
       "disconnect": "Disconnect",
       "connecting": "Connecting...",

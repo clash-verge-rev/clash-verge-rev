@@ -7,6 +7,7 @@ use crate::{logging, utils::logging::Type};
 pub struct CommandChildGuard(Option<CommandChild>);
 
 impl Drop for CommandChildGuard {
+    #[inline]
     fn drop(&mut self) {
         if let Err(err) = self.kill() {
             logging!(
@@ -20,10 +21,12 @@ impl Drop for CommandChildGuard {
 }
 
 impl CommandChildGuard {
+    #[inline]
     pub const fn new(child: CommandChild) -> Self {
         Self(Some(child))
     }
 
+    #[inline]
     pub fn kill(&mut self) -> Result<()> {
         if let Some(child) = self.0.take() {
             let _ = child.kill();
@@ -31,6 +34,7 @@ impl CommandChildGuard {
         Ok(())
     }
 
+    #[inline]
     pub fn pid(&self) -> Option<u32> {
         self.0.as_ref().map(|c| c.pid())
     }

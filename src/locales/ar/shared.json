@@ -21,7 +21,9 @@
     "pause": "إيقاف مؤقت",
     "resume": "استأنف",
     "closeAll": "إغلاق الكل",
-    "clear": "مسح"
+    "clear": "مسح",
+    "previous": "Previous",
+    "next": "Next"
   },
   "labels": {
     "updateAt": "التحديث عند",
@@ -48,6 +50,7 @@
     "milliseconds": "ميلي ثانية",
     "seconds": "ثواني",
     "minutes": "دقائق",
+    "hours": "ساعات",
     "kilobytes": "KB",
     "files": "Files"
   },

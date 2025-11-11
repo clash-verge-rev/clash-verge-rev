@@ -6,7 +6,7 @@
       "direct": "Direct"
     },
     "actions": {
-      "toggleChain": "🔗 Чылбыр прокси",
+      "toggleChain": "Чылбыр прокси",
       "connect": "Connect",
       "disconnect": "Disconnect",
       "connecting": "Connecting...",

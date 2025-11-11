@@ -285,7 +285,8 @@
         "exportBackup": "匯出備份",
         "deleteBackup": "刪除備份",
         "restore": "還原",
-        "restoreBackup": "還原備份"
+        "restoreBackup": "還原備份",
+        "viewHistory": "檢視紀錄"
       },
       "fields": {
         "webdavUrl": "WebDAV 伺服器位址 http(s)://",
@@ -306,8 +307,36 @@
         "restoreSuccess": "還原成功，應用程式將在 1 秒後重啟",
         "localBackupExported": "本機備份匯出成功",
         "localBackupExportFailed": "本機備份匯出失敗",
+        "webdavRefreshSuccess": "WebDAV 更新成功",
+        "webdavRefreshFailed": "WebDAV 更新失敗: {{error}}",
         "confirmDelete": "確認是否刪除此備份檔案嗎？",
         "confirmRestore": "確認還原此份檔案嗎？"
+      },
+      "auto": {
+        "title": "自動備份",
+        "scheduleLabel": "啟用定時備份",
+        "scheduleHelper": "依設定頻率在背景建立本機備份檔案。",
+        "intervalLabel": "備份頻率",
+        "changeLabel": "關鍵變更時自動備份",
+        "changeHelper": "全域擴充配置/腳本或訂閱新增、刪除、修改時自動備份。",
+        "options": {
+          "hours": "每 {{n}} 小時",
+          "days": "每 {{n}} 天"
+        }
+      },
+      "manual": {
+        "title": "手動備份",
+        "local": "在本機應用資料資料夾建立備份檔。",
+        "webdav": "設定 WebDAV 後，可直接上傳備份至伺服器。",
+        "configureWebdav": "設定 WebDAV"
+      },
+      "history": {
+        "title": "備份紀錄",
+        "summary": "共 {{count}} 份備份 · 最近 {{recent}}",
+        "empty": "尚無備份紀錄"
+      },
+      "webdav": {
+        "title": "WebDAV 設定"
       },
       "table": {
         "filename": "檔案名稱",

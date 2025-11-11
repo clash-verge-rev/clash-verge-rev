@@ -171,10 +171,6 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 
 [dev-dependencies]
 criterion = { version = "0.7.0", features = ["async_tokio"] }
-parking_lot = { version = "0.12.5", features = [
-  "hardware-lock-elision",
-  "deadlock_detection",
-] }
 
 [lints.clippy]
 # Core categories - most important for code safety and correctness

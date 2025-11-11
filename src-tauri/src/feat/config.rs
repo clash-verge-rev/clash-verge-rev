@@ -2,7 +2,7 @@ use crate::{
     config::{Config, IVerge},
     core::{CoreManager, handle, hotkey, sysopt, tray},
     logging_error,
-    module::lightweight,
+    module::{auto_backup::AutoBackupManager, lightweight},
     utils::{draft::SharedBox, logging::Type},
 };
 use anyhow::Result;
@@ -22,7 +22,7 @@ pub async fn patch_clash(patch: Mapping) -> Result<()> {
         } else {
             if patch.get("mode").is_some() {
                 logging_error!(Type::Tray, tray::Tray::global().update_menu().await);
-                logging_error!(Type::Tray, tray::Tray::global().update_icon().await);
+                logging_error!(Type::Tray, tray::Tray::global().update_icon(None).await);
             }
             Config::runtime()
                 .await
@@ -180,6 +180,7 @@ fn determine_update_flags(patch: &IVerge) -> i32 {
     update_flags
 }
 
+#[allow(clippy::cognitive_complexity)]
 async fn process_terminated_flags(update_flags: i32, patch: &IVerge) -> Result<()> {
     // Process updates based on flags
     if (update_flags & (UpdateFlags::RestartCore as i32)) != 0 {
@@ -211,7 +212,9 @@ async fn process_terminated_flags(update_flags: i32, patch: &IVerge) -> Result<(
         tray::Tray::global().update_menu().await?;
     }
     if (update_flags & (UpdateFlags::SystrayIcon as i32)) != 0 {
-        tray::Tray::global().update_icon().await?;
+        tray::Tray::global()
+            .update_icon(Some(&Config::verge().await.latest_arc()))
+            .await?;
     }
     if (update_flags & (UpdateFlags::SystrayTooltip as i32)) != 0 {
         tray::Tray::global().update_tooltip().await?;
@@ -243,6 +246,10 @@ pub async fn patch_verge(patch: &IVerge, not_save_file: bool) -> Result<()> {
         return Err(err);
     }
     Config::verge().await.apply();
+    logging_error!(
+        Type::Backup,
+        AutoBackupManager::global().refresh_settings().await
+    );
     if !not_save_file {
         // 分离数据获取和异步调用
         let verge_data = Config::verge().await.data_arc();

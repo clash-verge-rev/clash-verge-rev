@@ -4,7 +4,6 @@ import { useEffect } from "react";
 import { mutate } from "swr";
 
 import { useListen } from "@/hooks/use-listen";
-import { getAxios } from "@/services/api";
 
 export const useLayoutEvents = (
   handleNotice: (payload: [string, string]) => void,
@@ -39,7 +38,6 @@ export const useLayoutEvents = (
 
     register(
       addListener("verge://refresh-clash-config", async () => {
-        await getAxios(true);
         mutate("getProxies");
         mutate("getVersion");
         mutate("getClashConfig");

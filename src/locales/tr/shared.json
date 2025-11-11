@@ -21,7 +21,9 @@
     "pause": "Duraklat",
     "resume": "Sürdür",
     "closeAll": "Tümünü Kapat",
-    "clear": "Temizle"
+    "clear": "Temizle",
+    "previous": "Previous",
+    "next": "Next"
   },
   "labels": {
     "updateAt": "Güncelleme Zamanı",
@@ -48,6 +50,7 @@
     "milliseconds": "ms",
     "seconds": "saniye",
     "minutes": "dakika",
+    "hours": "saat",
     "kilobytes": "KB",
     "files": "Files"
   },

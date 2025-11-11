@@ -4,6 +4,7 @@ use crate::{
     config::{Config, PrfItem},
     core::{CoreManager, handle, validate::CoreConfigValidator},
     logging,
+    module::auto_backup::{AutoBackupManager, AutoBackupTrigger},
     utils::{dirs, logging::Type},
 };
 use smartstring::alias::String;
@@ -15,6 +16,12 @@ pub async fn save_profile_file(index: String, file_data: Option<String>) -> CmdR
     let file_data = match file_data {
         Some(d) => d,
         None => return Ok(()),
+    };
+
+    let backup_trigger = match index.as_str() {
+        "Merge" => Some(AutoBackupTrigger::GlobalMerge),
+        "Script" => Some(AutoBackupTrigger::GlobalScript),
+        _ => Some(AutoBackupTrigger::ProfileChange),
     };
 
     // 在异步操作前获取必要元数据并释放锁
@@ -51,11 +58,17 @@ pub async fn save_profile_file(index: String, file_data: Option<String>) -> CmdR
         is_merge_file
     );
 
-    if is_merge_file {
-        return handle_merge_file(&file_path_str, &file_path, &original_content).await;
+    let changes_applied = if is_merge_file {
+        handle_merge_file(&file_path_str, &file_path, &original_content).await?
+    } else {
+        handle_full_validation(&file_path_str, &file_path, &original_content).await?
+    };
+
+    if changes_applied && let Some(trigger) = backup_trigger {
+        AutoBackupManager::trigger_backup(trigger);
     }
 
-    handle_full_validation(&file_path_str, &file_path, &original_content).await
+    Ok(())
 }
 
 async fn restore_original(
@@ -76,7 +89,7 @@ async fn handle_merge_file(
     file_path_str: &str,
     file_path: &std::path::Path,
     original_content: &str,
-) -> CmdResult {
+) -> CmdResult<bool> {
     logging!(
         info,
         Type::Config,
@@ -96,7 +109,7 @@ async fn handle_merge_file(
             } else {
                 handle::Handle::refresh_clash();
             }
-            Ok(())
+            Ok(true)
         }
         Ok((false, error_msg)) => {
             logging!(
@@ -108,7 +121,7 @@ async fn handle_merge_file(
             restore_original(file_path, original_content).await?;
             let result = (false, error_msg.clone());
             crate::cmd::validate::handle_yaml_validation_notice(&result, "合并配置文件");
-            Ok(())
+            Ok(false)
         }
         Err(e) => {
             logging!(error, Type::Config, "[cmd配置save] 验证过程发生错误: {}", e);
@@ -122,11 +135,11 @@ async fn handle_full_validation(
     file_path_str: &str,
     file_path: &std::path::Path,
     original_content: &str,
-) -> CmdResult {
+) -> CmdResult<bool> {
     match CoreConfigValidator::validate_config_file(file_path_str, None).await {
         Ok((true, _)) => {
             logging!(info, Type::Config, "[cmd配置save] 验证成功");
-            Ok(())
+            Ok(true)
         }
         Ok((false, error_msg)) => {
             logging!(warn, Type::Config, "[cmd配置save] 验证失败: {}", error_msg);
@@ -160,7 +173,7 @@ async fn handle_full_validation(
                 handle::Handle::notice_message("config_validate::error", error_msg.to_owned());
             }
 
-            Ok(())
+            Ok(false)
         }
         Err(e) => {
             logging!(error, Type::Config, "[cmd配置save] 验证过程发生错误: {}", e);

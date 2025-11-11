@@ -690,11 +690,35 @@ export interface TranslationResources {
             restore: string;
             restoreBackup: string;
             selectTarget: string;
+            viewHistory: string;
+          };
+          auto: {
+            changeHelper: string;
+            changeLabel: string;
+            intervalLabel: string;
+            options: {
+              days: string;
+              hours: string;
+            };
+            scheduleHelper: string;
+            scheduleLabel: string;
+            title: string;
           };
           fields: {
             info: string;
             username: string;
             webdavUrl: string;
+          };
+          history: {
+            empty: string;
+            summary: string;
+            title: string;
+          };
+          manual: {
+            configureWebdav: string;
+            local: string;
+            title: string;
+            webdav: string;
           };
           messages: {
             backupCreated: string;
@@ -711,6 +735,8 @@ export interface TranslationResources {
             usernameRequired: string;
             webdavConfigSaved: string;
             webdavConfigSaveFailed: string;
+            webdavRefreshFailed: string;
+            webdavRefreshSuccess: string;
             webdavUrlRequired: string;
           };
           table: {
@@ -725,6 +751,9 @@ export interface TranslationResources {
             webdav: string;
           };
           title: string;
+          webdav: {
+            title: string;
+          };
         };
         clashCore: {
           variants: {
@@ -1139,7 +1168,9 @@ export interface TranslationResources {
         hideDetails: string;
         listView: string;
         new: string;
+        next: string;
         pause: string;
+        previous: string;
         refresh: string;
         refreshPage: string;
         resetToDefault: string;
@@ -1242,6 +1273,7 @@ export interface TranslationResources {
       };
       units: {
         files: string;
+        hours: string;
         kilobytes: string;
         milliseconds: string;
         minutes: string;

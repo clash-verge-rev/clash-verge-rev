@@ -77,6 +77,17 @@ const GRAPH_CONFIG = {
   },
 };
 
+const MIN_FPS = 8;
+const MAX_FPS = 20;
+const FPS_ADJUST_INTERVAL = 3000; // ms
+const FPS_SAMPLE_WINDOW = 12;
+const STALE_DATA_THRESHOLD = 2500; // ms without fresh data => drop FPS
+const RESUME_FPS_TARGET = 12;
+const RESUME_COOLDOWN_MS = 2000;
+
+const getNow = () =>
+  typeof performance !== "undefined" ? performance.now() : Date.now();
+
 interface EnhancedCanvasTrafficGraphProps {
   ref?: Ref<EnhancedCanvasTrafficGraphRef>;
 }
@@ -105,6 +116,10 @@ export const EnhancedCanvasTrafficGraph = memo(
     const [timeRange, setTimeRange] = useState<TimeRange>(10);
     const [chartStyle, setChartStyle] = useState<"bezier" | "line">("bezier");
 
+    const initialFocusState =
+      typeof document !== "undefined" ? !document.hidden : true;
+    const [isWindowFocused, setIsWindowFocused] = useState(initialFocusState);
+
     // 悬浮提示状态
     const [tooltipData, setTooltipData] = useState<TooltipData>({
       x: 0,
@@ -122,6 +137,18 @@ export const EnhancedCanvasTrafficGraph = memo(
     const animationFrameRef = useRef<number | undefined>(undefined);
     const lastRenderTimeRef = useRef<number>(0);
     const isInitializedRef = useRef<boolean>(false);
+    const isWindowFocusedRef = useRef<boolean>(initialFocusState);
+    const fpsControllerRef = useRef<{
+      target: number;
+      samples: number[];
+      lastAdjustTime: number;
+    }>({
+      target: GRAPH_CONFIG.targetFPS,
+      samples: [],
+      lastAdjustTime: 0,
+    });
+    const lastDataTimestampRef = useRef<number>(0);
+    const resumeCooldownRef = useRef<number>(0);
 
     // 当前显示的数据缓存
     const [displayData, dispatchDisplayData] = useReducer(
@@ -129,6 +156,7 @@ export const EnhancedCanvasTrafficGraph = memo(
       [],
     );
     const debounceTimeoutRef = useRef<number | null>(null);
+    const [currentFPS, setCurrentFPS] = useState(GRAPH_CONFIG.targetFPS);
 
     // 主题颜色配置
     const colors = useMemo(
@@ -164,6 +192,74 @@ export const EnhancedCanvasTrafficGraph = memo(
         }
       };
     }, [dataPoints, timeRange, getDataForTimeRange, updateDisplayData]);
+
+    useEffect(() => {
+      if (displayData.length === 0) {
+        lastDataTimestampRef.current = 0;
+        fpsControllerRef.current.target = GRAPH_CONFIG.targetFPS;
+        fpsControllerRef.current.samples = [];
+        fpsControllerRef.current.lastAdjustTime = 0;
+        // eslint-disable-next-line @eslint-react/hooks-extra/no-direct-set-state-in-use-effect
+        setCurrentFPS(GRAPH_CONFIG.targetFPS);
+        return;
+      }
+
+      const latestTimestamp =
+        displayData[displayData.length - 1]?.timestamp ?? null;
+      if (latestTimestamp) {
+        lastDataTimestampRef.current = latestTimestamp;
+      }
+    }, [displayData]);
+
+    const handleFocusStateChange = useCallback(
+      (focused: boolean) => {
+        isWindowFocusedRef.current = focused;
+        setIsWindowFocused(focused);
+
+        const highResNow = getNow();
+        lastRenderTimeRef.current = highResNow;
+
+        if (focused) {
+          resumeCooldownRef.current = Date.now();
+          const controller = fpsControllerRef.current;
+          const resumeTarget = Math.max(
+            MIN_FPS,
+            Math.min(controller.target, RESUME_FPS_TARGET),
+          );
+          controller.target = resumeTarget;
+          controller.samples = [];
+          controller.lastAdjustTime = 0;
+          setCurrentFPS(resumeTarget);
+        } else {
+          resumeCooldownRef.current = 0;
+        }
+      },
+      [setIsWindowFocused, setCurrentFPS],
+    );
+
+    useEffect(() => {
+      if (typeof window === "undefined" || typeof document === "undefined") {
+        return;
+      }
+
+      const handleFocus = () => handleFocusStateChange(true);
+      const handleBlur = () => handleFocusStateChange(false);
+      const handleVisibilityChange = () =>
+        handleFocusStateChange(!document.hidden);
+
+      window.addEventListener("focus", handleFocus);
+      window.addEventListener("blur", handleBlur);
+      document.addEventListener("visibilitychange", handleVisibilityChange);
+
+      return () => {
+        window.removeEventListener("focus", handleFocus);
+        window.removeEventListener("blur", handleBlur);
+        document.removeEventListener(
+          "visibilitychange",
+          handleVisibilityChange,
+        );
+      };
+    }, [handleFocusStateChange]);
 
     // Y轴坐标计算 - 基于刻度范围的线性映射
     const calculateY = useCallback(
@@ -792,31 +888,135 @@ export const EnhancedCanvasTrafficGraph = memo(
       tooltipData,
     ]);
 
+    const collectFrameSample = useCallback(
+      (renderDuration: number, frameBudget: number) => {
+        const controller = fpsControllerRef.current;
+        controller.samples.push(renderDuration);
+        if (controller.samples.length > FPS_SAMPLE_WINDOW) {
+          controller.samples.shift();
+        }
+
+        const perfNow = getNow();
+        const lastDataAge =
+          lastDataTimestampRef.current > 0
+            ? Date.now() - lastDataTimestampRef.current
+            : null;
+        const isDataStale =
+          typeof lastDataAge === "number" && lastDataAge > STALE_DATA_THRESHOLD;
+
+        let inResumeCooldown = false;
+        if (resumeCooldownRef.current) {
+          const elapsedSinceResume = Date.now() - resumeCooldownRef.current;
+          if (elapsedSinceResume < RESUME_COOLDOWN_MS) {
+            inResumeCooldown = true;
+          } else {
+            resumeCooldownRef.current = 0;
+          }
+        }
+
+        if (isDataStale && controller.target !== MIN_FPS) {
+          controller.target = MIN_FPS;
+          controller.samples = [];
+          controller.lastAdjustTime = perfNow;
+          setCurrentFPS(controller.target);
+          return;
+        }
+
+        if (
+          !isDataStale &&
+          !inResumeCooldown &&
+          controller.target < GRAPH_CONFIG.targetFPS
+        ) {
+          controller.target = Math.min(
+            GRAPH_CONFIG.targetFPS,
+            controller.target + 2,
+          );
+          controller.samples = [];
+          controller.lastAdjustTime = perfNow;
+          setCurrentFPS(controller.target);
+        }
+
+        if (
+          controller.lastAdjustTime !== 0 &&
+          perfNow - controller.lastAdjustTime < FPS_ADJUST_INTERVAL
+        ) {
+          return;
+        }
+
+        if (controller.samples.length === 0) return;
+
+        const avgRender =
+          controller.samples.reduce((sum, value) => sum + value, 0) /
+          controller.samples.length;
+
+        let nextTarget = controller.target;
+
+        if (avgRender > frameBudget * 0.75 && controller.target > MIN_FPS) {
+          nextTarget = Math.max(MIN_FPS, controller.target - 2);
+        } else if (
+          avgRender < Math.max(4, frameBudget * 0.4) &&
+          controller.target < MAX_FPS &&
+          !inResumeCooldown
+        ) {
+          nextTarget = Math.min(MAX_FPS, controller.target + 2);
+        }
+
+        controller.samples = [];
+        controller.lastAdjustTime = perfNow;
+
+        if (nextTarget !== controller.target) {
+          controller.target = nextTarget;
+          setCurrentFPS(nextTarget);
+        }
+      },
+      [setCurrentFPS],
+    );
+
     // 受控的动画循环
     useEffect(() => {
-      const animate = (currentTime: number) => {
-        // 控制帧率，减少不必要的重绘
-        if (
-          currentTime - lastRenderTimeRef.current >=
-          1000 / GRAPH_CONFIG.targetFPS
-        ) {
-          drawGraph();
-          lastRenderTimeRef.current = currentTime;
+      if (!isWindowFocused || displayData.length === 0) {
+        if (animationFrameRef.current) {
+          cancelAnimationFrame(animationFrameRef.current);
+          animationFrameRef.current = undefined;
         }
+        lastRenderTimeRef.current = getNow();
+        return;
+      }
+
+      const animate = (currentTime: number) => {
+        if (!isWindowFocusedRef.current) {
+          lastRenderTimeRef.current = getNow();
+          animationFrameRef.current = undefined;
+          return;
+        }
+
+        const targetFPS = fpsControllerRef.current.target;
+        const frameBudget = 1000 / targetFPS;
+
+        if (
+          currentTime - lastRenderTimeRef.current >= frameBudget ||
+          !isInitializedRef.current
+        ) {
+          const drawStart = getNow();
+          drawGraph();
+          const drawEnd = getNow();
+
+          lastRenderTimeRef.current = currentTime;
+          collectFrameSample(drawEnd - drawStart, frameBudget);
+        }
+
         animationFrameRef.current = requestAnimationFrame(animate);
       };
 
-      // 只有在有数据时才开始动画
-      if (displayData.length > 0) {
-        animationFrameRef.current = requestAnimationFrame(animate);
-      }
+      animationFrameRef.current = requestAnimationFrame(animate);
 
       return () => {
         if (animationFrameRef.current) {
           cancelAnimationFrame(animationFrameRef.current);
+          animationFrameRef.current = undefined;
         }
       };
-    }, [drawGraph, displayData.length]);
+    }, [drawGraph, displayData.length, isWindowFocused, collectFrameSample]);
 
     // 切换时间范围
     const handleTimeRangeClick = useCallback((event: React.MouseEvent) => {
@@ -977,7 +1177,7 @@ export const EnhancedCanvasTrafficGraph = memo(
             }}
           >
             Points: {displayData.length} | Compressed:{" "}
-            {samplerStats.compressedBufferSize}
+            {samplerStats.compressedBufferSize} | FPS: {currentFPS}
           </Box>
 
           {/* 悬浮提示框 */}

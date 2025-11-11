@@ -285,7 +285,8 @@
         "exportBackup": "导出备份",
         "deleteBackup": "删除备份",
         "restore": "恢复",
-        "restoreBackup": "恢复备份"
+        "restoreBackup": "恢复备份",
+        "viewHistory": "查看记录"
       },
       "fields": {
         "webdavUrl": "WebDAV 服务器地址 http(s)://",
@@ -306,8 +307,36 @@
         "restoreSuccess": "恢复成功，应用将在 1 秒后重启",
         "localBackupExported": "本地备份导出成功",
         "localBackupExportFailed": "本地备份导出失败",
+        "webdavRefreshSuccess": "WebDAV 刷新成功",
+        "webdavRefreshFailed": "WebDAV 刷新失败: {{error}}",
         "confirmDelete": "确认删除此备份文件吗？",
         "confirmRestore": "确认恢复此份文件吗？"
+      },
+      "auto": {
+        "title": "自动备份",
+        "scheduleLabel": "启用定时备份",
+        "scheduleHelper": "按设定频率在后台创建本地备份文件。",
+        "intervalLabel": "备份频率",
+        "changeLabel": "关键变更时自动备份",
+        "changeHelper": "全局扩展配置/脚本或订阅增删改后会自动备份。",
+        "options": {
+          "hours": "每 {{n}} 小时",
+          "days": "每 {{n}} 天"
+        }
+      },
+      "manual": {
+        "title": "手动备份",
+        "local": "在本设备的应用数据目录中创建备份。",
+        "webdav": "配置 WebDAV 后，可直接上传备份到服务器。",
+        "configureWebdav": "配置 WebDAV"
+      },
+      "history": {
+        "title": "备份记录",
+        "summary": "共 {{count}} 份备份 · 最近 {{recent}}",
+        "empty": "暂无备份记录"
+      },
+      "webdav": {
+        "title": "WebDAV 设置"
       },
       "table": {
         "filename": "文件名称",
