@@ -870,7 +870,7 @@ async fn create_tray_menu(
     });
 
     let verge_settings = Config::verge().await.latest_arc();
-    let show_proxy_groups_inline = verge_settings.tray_inline_proxy_groups.unwrap_or(false);
+    let show_proxy_groups_inline = verge_settings.tray_inline_proxy_groups.unwrap_or(true);
 
     let version = env!("CARGO_PKG_VERSION");
 
