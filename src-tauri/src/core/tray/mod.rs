@@ -895,6 +895,13 @@ async fn create_tray_menu(
         hotkeys.get("open_or_close_dashboard").map(|s| s.as_str()),
     )?;
 
+    let current_mode_text = match current_proxy_mode {
+        "global" => rust_i18n::t!("tray.global"),
+        "direct" => rust_i18n::t!("tray.direct"),
+        _ => rust_i18n::t!("tray.rule"),
+    };
+    let outbound_modes_label = format!("{} ({})", texts.outbound_modes, current_mode_text);
+
     let rule_mode = &CheckMenuItem::with_id(
         app_handle,
         MenuIds::RULE_MODE,
@@ -920,6 +927,18 @@ async fn create_tray_menu(
         true,
         current_proxy_mode == "direct",
         hotkeys.get("clash_mode_direct").map(|s| s.as_str()),
+    )?;
+
+    let outbound_modes = &Submenu::with_id_and_items(
+        app_handle,
+        MenuIds::OUTBOUND_MODES,
+        outbound_modes_label.as_str(),
+        true,
+        &[
+            rule_mode as &dyn IsMenuItem<Wry>,
+            global_mode as &dyn IsMenuItem<Wry>,
+            direct_mode as &dyn IsMenuItem<Wry>,
+        ],
     )?;
 
     let profiles = &Submenu::with_id_and_items(
@@ -1090,15 +1109,8 @@ async fn create_tray_menu(
     let separator = &PredefinedMenuItem::separator(app_handle)?;
 
     // 动态构建菜单项
-    let mut menu_items: Vec<&dyn IsMenuItem<Wry>> = vec![
-        open_window,
-        separator,
-        rule_mode,
-        global_mode,
-        direct_mode,
-        separator,
-        profiles,
-    ];
+    let mut menu_items: Vec<&dyn IsMenuItem<Wry>> =
+        vec![open_window, outbound_modes, separator, profiles];
 
     // 如果有代理节点，添加代理节点菜单
     if show_proxy_groups_inline {
