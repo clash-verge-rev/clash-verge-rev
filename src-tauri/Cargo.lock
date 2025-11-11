@@ -3415,7 +3415,7 @@ dependencies = [
  "js-sys",
  "log",
  "wasm-bindgen",
- "windows-core 0.62.2",
+ "windows-core 0.61.2",
 ]
 
 [[package]]
@@ -6416,7 +6416,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys 0.4.15",
- "windows-sys 0.59.0",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -7284,7 +7284,7 @@ dependencies = [
 [[package]]
 name = "sysproxy"
 version = "0.3.1"
-source = "git+https://github.com/clash-verge-rev/sysproxy-rs#50100ab03eb802056c381f3c5009e903c67e3bac"
+source = "git+https://github.com/clash-verge-rev/sysproxy-rs#ea6e5b5bcef32025e1df914d663eea8558afacb2"
 dependencies = [
  "interfaces",
  "iptools",
