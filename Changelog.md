@@ -2,6 +2,8 @@
 
 ### 🐞 修复问题
 
+- Linux 无法切换 TUN 堆栈
+
 <details>
 <summary><strong> ✨ 新增功能 </strong></summary>
 
@@ -19,6 +21,7 @@
 - 防止退出时可能的禁用 TUN 失败
 - i18n 支持
 - 优化备份设置布局
+- 优化流量图性能表现，实现动态 FPS 和窗口失焦自动暂停
 
 </details>
 
