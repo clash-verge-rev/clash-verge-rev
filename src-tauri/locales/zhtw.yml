@@ -28,6 +28,10 @@ tray:
   ruleMode: 規則模式
   globalMode: 全域模式
   directMode: 直連模式
+  outboundModes: 出站模式
+  rule: 規則
+  direct: 直連
+  global: 全域
   profiles: 訂閱
   proxies: 代理
   systemProxy: 系統代理

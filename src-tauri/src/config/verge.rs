@@ -439,7 +439,7 @@ impl IVerge {
             webdav_password: None,
             enable_tray_speed: Some(false),
             // enable_tray_icon: Some(true),
-            tray_inline_proxy_groups: Some(false),
+            tray_inline_proxy_groups: Some(true),
             enable_global_hotkey: Some(true),
             enable_auto_light_weight_mode: Some(false),
             auto_light_weight_minutes: Some(10),

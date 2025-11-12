@@ -348,7 +348,7 @@ impl Tray {
 
     /// 更新托盘图标
     #[cfg(target_os = "macos")]
-    pub async fn update_icon(&self, verge: Option<&IVerge>) -> Result<()> {
+    pub async fn update_icon(&self, verge: &IVerge) -> Result<()> {
         if handle::Handle::global().is_exiting() {
             logging!(debug, Type::Tray, "应用正在退出，跳过托盘图标更新");
             return Ok(());
@@ -366,11 +366,6 @@ impl Tray {
                 );
                 return Ok(());
             }
-        };
-
-        let verge = match verge {
-            Some(v) => v,
-            None => &Config::verge().await.data_arc(),
         };
 
         let system_mode = verge.enable_system_proxy.as_ref().unwrap_or(&false);
@@ -395,7 +390,7 @@ impl Tray {
     }
 
     #[cfg(not(target_os = "macos"))]
-    pub async fn update_icon(&self, verge: Option<&IVerge>) -> Result<()> {
+    pub async fn update_icon(&self, verge: &IVerge) -> Result<()> {
         if handle::Handle::global().is_exiting() {
             logging!(debug, Type::Tray, "应用正在退出，跳过托盘图标更新");
             return Ok(());
@@ -413,11 +408,6 @@ impl Tray {
                 );
                 return Ok(());
             }
-        };
-
-        let verge = match verge {
-            Some(v) => v,
-            None => &Config::verge().await.data_arc(),
         };
 
         let system_mode = verge.enable_system_proxy.as_ref().unwrap_or(&false);
@@ -510,8 +500,9 @@ impl Tray {
             logging!(debug, Type::Tray, "应用正在退出，跳过托盘局部更新");
             return Ok(());
         }
+        let verge = Config::verge().await.data_arc();
         self.update_menu().await?;
-        self.update_icon(None).await?;
+        self.update_icon(&verge).await?;
         self.update_tooltip().await?;
         Ok(())
     }
@@ -879,7 +870,7 @@ async fn create_tray_menu(
     });
 
     let verge_settings = Config::verge().await.latest_arc();
-    let show_proxy_groups_inline = verge_settings.tray_inline_proxy_groups.unwrap_or(false);
+    let show_proxy_groups_inline = verge_settings.tray_inline_proxy_groups.unwrap_or(true);
 
     let version = env!("CARGO_PKG_VERSION");
 
@@ -903,6 +894,13 @@ async fn create_tray_menu(
         true,
         hotkeys.get("open_or_close_dashboard").map(|s| s.as_str()),
     )?;
+
+    let current_mode_text = match current_proxy_mode {
+        "global" => rust_i18n::t!("tray.global"),
+        "direct" => rust_i18n::t!("tray.direct"),
+        _ => rust_i18n::t!("tray.rule"),
+    };
+    let outbound_modes_label = format!("{} ({})", texts.outbound_modes, current_mode_text);
 
     let rule_mode = &CheckMenuItem::with_id(
         app_handle,
@@ -929,6 +927,18 @@ async fn create_tray_menu(
         true,
         current_proxy_mode == "direct",
         hotkeys.get("clash_mode_direct").map(|s| s.as_str()),
+    )?;
+
+    let outbound_modes = &Submenu::with_id_and_items(
+        app_handle,
+        MenuIds::OUTBOUND_MODES,
+        outbound_modes_label.as_str(),
+        true,
+        &[
+            rule_mode as &dyn IsMenuItem<Wry>,
+            global_mode as &dyn IsMenuItem<Wry>,
+            direct_mode as &dyn IsMenuItem<Wry>,
+        ],
     )?;
 
     let profiles = &Submenu::with_id_and_items(
@@ -1081,6 +1091,7 @@ async fn create_tray_menu(
         &texts.more,
         true,
         &[
+            copy_env as &dyn IsMenuItem<Wry>,
             close_all_connections,
             restart_clash,
             restart_app,
@@ -1099,15 +1110,8 @@ async fn create_tray_menu(
     let separator = &PredefinedMenuItem::separator(app_handle)?;
 
     // 动态构建菜单项
-    let mut menu_items: Vec<&dyn IsMenuItem<Wry>> = vec![
-        open_window,
-        separator,
-        rule_mode,
-        global_mode,
-        direct_mode,
-        separator,
-        profiles,
-    ];
+    let mut menu_items: Vec<&dyn IsMenuItem<Wry>> =
+        vec![open_window, outbound_modes, separator, profiles];
 
     // 如果有代理节点，添加代理节点菜单
     if show_proxy_groups_inline {
@@ -1124,7 +1128,6 @@ async fn create_tray_menu(
         tun_mode as &dyn IsMenuItem<Wry>,
         separator,
         lightweight_mode as &dyn IsMenuItem<Wry>,
-        copy_env as &dyn IsMenuItem<Wry>,
         open_dir as &dyn IsMenuItem<Wry>,
         more as &dyn IsMenuItem<Wry>,
         separator,

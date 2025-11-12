@@ -28,6 +28,10 @@ tray:
   ruleMode: 규칙 모드
   globalMode: 전역 모드
   directMode: 직접 모드
+  outboundModes: Outbound Modes
+  rule: 규칙
+  direct: 직접
+  global: 글로벌
   profiles: 프로필
   proxies: 프록시
   systemProxy: 시스템 프록시
