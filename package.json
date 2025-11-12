@@ -86,7 +86,7 @@
     "@tauri-apps/cli": "2.9.4",
     "@types/js-yaml": "^4.0.9",
     "@types/lodash-es": "^4.17.12",
-    "@types/node": "^24.10.0",
+    "@types/node": "^24.10.1",
     "@types/react": "19.2.3",
     "@types/react-dom": "19.2.2",
     "@vitejs/plugin-legacy": "^7.2.1",
