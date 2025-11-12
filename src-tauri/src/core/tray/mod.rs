@@ -1091,6 +1091,7 @@ async fn create_tray_menu(
         &texts.more,
         true,
         &[
+            copy_env as &dyn IsMenuItem<Wry>,
             close_all_connections,
             restart_clash,
             restart_app,
@@ -1127,7 +1128,6 @@ async fn create_tray_menu(
         tun_mode as &dyn IsMenuItem<Wry>,
         separator,
         lightweight_mode as &dyn IsMenuItem<Wry>,
-        copy_env as &dyn IsMenuItem<Wry>,
         open_dir as &dyn IsMenuItem<Wry>,
         more as &dyn IsMenuItem<Wry>,
         separator,
