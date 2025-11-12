@@ -33,8 +33,6 @@ pub async fn get_sys_proxy() -> CmdResult<Mapping> {
 /// 获取自动代理配置
 #[tauri::command]
 pub async fn get_auto_proxy() -> CmdResult<Mapping> {
-    logging!(debug, Type::Network, "开始获取自动代理配置（事件驱动）");
-
     let auto_proxy = sysproxy::Autoproxy::get_auto_proxy().stringify_err()?;
 
     let mut map = Mapping::new();

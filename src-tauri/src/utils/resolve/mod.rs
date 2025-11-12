@@ -54,6 +54,7 @@ pub fn resolve_setup_async() {
             init_service_manager().await;
             init_core_manager().await;
             init_system_proxy().await;
+            init_system_proxy_guard().await;
         });
 
         let tray_init = async {
@@ -170,6 +171,10 @@ pub(super) async fn init_system_proxy() {
         Type::Setup,
         sysopt::Sysopt::global().update_sysproxy().await
     );
+}
+
+pub(super) async fn init_system_proxy_guard() {
+    sysopt::Sysopt::global().refresh_guard().await;
 }
 
 pub(super) async fn refresh_tray_menu() {
