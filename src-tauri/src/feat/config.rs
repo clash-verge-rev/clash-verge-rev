@@ -218,7 +218,7 @@ async fn process_terminated_flags(update_flags: i32, patch: &IVerge) -> Result<(
     }
     if (update_flags & (UpdateFlags::SystrayIcon as i32)) != 0 {
         tray::Tray::global()
-            .update_icon(&Config::verge().await.data_arc())
+            .update_icon(&Config::verge().await.latest_arc())
             .await?;
     }
     if (update_flags & (UpdateFlags::SystrayTooltip as i32)) != 0 {
