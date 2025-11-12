@@ -86,6 +86,10 @@ mod app_init {
 
     /// Setup deep link handling
     pub fn setup_deep_links(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
+        #[cfg(any(target_os = "linux", all(debug_assertions, windows)))]
+        {
+            app.deep_link().register_all()?;
+        }
         app.deep_link().on_open_url(|event| {
             let urls = event.urls();
             AsyncHandler::spawn(move || async move {
@@ -221,11 +225,6 @@ mod app_init {
 }
 
 pub fn run() {
-    // if app_init::init_singleton_check().is_err() {
-    //     println!("app exists");
-    //     return;
-    // }
-
     let _ = utils::dirs::init_portable_flag();
 
     #[cfg(target_os = "linux")]
