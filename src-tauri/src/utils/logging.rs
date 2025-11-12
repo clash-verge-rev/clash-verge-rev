@@ -3,7 +3,7 @@ use flexi_logger::DeferredNow;
 #[cfg(not(feature = "tauri-dev"))]
 use flexi_logger::filter::LogLineFilter;
 use flexi_logger::writers::FileLogWriter;
-use flexi_logger::writers::LogWriter;
+use flexi_logger::writers::LogWriter as _;
 use log::Level;
 use log::Record;
 use std::{fmt, sync::Arc};

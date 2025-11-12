@@ -11,25 +11,20 @@ mod module;
 mod process;
 pub mod utils;
 use crate::constants::files;
-#[cfg(target_os = "macos")]
-use crate::module::lightweight;
 #[cfg(target_os = "linux")]
 use crate::utils::linux;
-#[cfg(target_os = "macos")]
-use crate::utils::window_manager::WindowManager;
 use crate::{
-    core::{EventDrivenProxyManager, handle, hotkey},
+    core::{EventDrivenProxyManager, handle},
     process::AsyncHandler,
     utils::resolve,
 };
 use anyhow::Result;
-use config::Config;
 use once_cell::sync::OnceCell;
 use rust_i18n::i18n;
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Manager as _};
 #[cfg(target_os = "macos")]
 use tauri_plugin_autostart::MacosLauncher;
-use tauri_plugin_deep_link::DeepLinkExt;
+use tauri_plugin_deep_link::DeepLinkExt as _;
 use utils::logging::Type;
 
 i18n!("locales", fallback = "zh");
@@ -267,8 +262,20 @@ pub fn run() {
         .invoke_handler(app_init::generate_handlers());
 
     mod event_handlers {
-        use super::*;
-        use crate::core::handle;
+        #[cfg(target_os = "macos")]
+        use crate::module::lightweight;
+        #[cfg(target_os = "macos")]
+        use crate::utils::window_manager::WindowManager;
+        use crate::{
+            config::Config,
+            core::{self, handle, hotkey},
+            logging,
+            process::AsyncHandler,
+            utils::logging::Type,
+        };
+        use tauri::AppHandle;
+        #[cfg(target_os = "macos")]
+        use tauri::Manager as _;
 
         pub fn handle_ready_resumed(_app_handle: &AppHandle) {
             if handle::Handle::global().is_exiting() {
@@ -320,7 +327,7 @@ pub fn run() {
             AsyncHandler::spawn(move || async move {
                 let is_enable_global_hotkey = Config::verge()
                     .await
-                    .latest_arc()
+                    .data_arc()
                     .enable_global_hotkey
                     .unwrap_or(true);
 
@@ -360,7 +367,7 @@ pub fn run() {
                 let _ = hotkey::Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdW);
                 let is_enable_global_hotkey = Config::verge()
                     .await
-                    .latest_arc()
+                    .data_arc()
                     .enable_global_hotkey
                     .unwrap_or(true);
                 if !is_enable_global_hotkey {
@@ -416,7 +423,7 @@ pub fn run() {
             });
         }
         tauri::RunEvent::ExitRequested { api, code, .. } => {
-            tauri::async_runtime::block_on(async {
+            AsyncHandler::block_on(async {
                 let _ = handle::Handle::mihomo()
                     .await
                     .clear_all_ws_connections()

@@ -23,6 +23,10 @@
     },
     "actions": {
       "closeConnection": "接続を閉じる"
+    },
+    "columnManager": {
+      "title": "列",
+      "dragHandle": "Drag handle"
     }
   }
 }

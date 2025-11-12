@@ -47,7 +47,7 @@ pub async fn clean_async() -> bool {
     let tun_task = async {
         let tun_enabled = Config::verge()
             .await
-            .latest_arc()
+            .data_arc()
             .enable_tun_mode
             .unwrap_or(false);
 
@@ -57,13 +57,8 @@ pub async fn clean_async() -> bool {
 
         let disable_tun = serde_json::json!({ "tun": { "enable": false } });
 
-        #[cfg(target_os = "windows")]
-        let tun_timeout = Duration::from_millis(100);
-        #[cfg(not(target_os = "windows"))]
-        let tun_timeout = Duration::from_millis(100);
-
         match timeout(
-            tun_timeout,
+            Duration::from_millis(1000),
             handle::Handle::mihomo()
                 .await
                 .patch_base_config(&disable_tun),
@@ -100,7 +95,7 @@ pub async fn clean_async() -> bool {
             // 检查系统代理是否开启
             let sys_proxy_enabled = Config::verge()
                 .await
-                .latest_arc()
+                .data_arc()
                 .enable_system_proxy
                 .unwrap_or(false);
 
@@ -176,7 +171,7 @@ pub async fn clean_async() -> bool {
         {
             let sys_proxy_enabled = Config::verge()
                 .await
-                .latest_arc()
+                .data_arc()
                 .enable_system_proxy
                 .unwrap_or(false);
 
@@ -316,7 +311,7 @@ pub async fn hide() {
 
     let enable_auto_light_weight_mode = Config::verge()
         .await
-        .latest_arc()
+        .data_arc()
         .enable_auto_light_weight_mode
         .unwrap_or(false);
 

@@ -6,7 +6,7 @@ use crate::{
         tmpl,
     },
 };
-use anyhow::{Context, Result, bail};
+use anyhow::{Context as _, Result, bail};
 use serde::{Deserialize, Serialize};
 use serde_yaml_ng::Mapping;
 use smartstring::alias::String;

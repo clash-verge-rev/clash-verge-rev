@@ -1,5 +1,5 @@
 use crate::{config::with_encryption, enhance::seq::SeqMap, logging, utils::logging::Type};
-use anyhow::{Context, Result, anyhow, bail};
+use anyhow::{Context as _, Result, anyhow, bail};
 use nanoid::nanoid;
 use serde::{Serialize, de::DeserializeOwned};
 use serde_yaml_ng::Mapping;

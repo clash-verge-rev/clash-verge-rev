@@ -9,7 +9,7 @@ use once_cell::sync::OnceCell;
 #[cfg(unix)]
 use std::iter;
 use std::{fs, path::PathBuf};
-use tauri::Manager;
+use tauri::Manager as _;
 
 #[cfg(not(feature = "verge-dev"))]
 pub static APP_ID: &str = "io.github.clash-verge-rev.clash-verge-rev";
@@ -103,31 +103,25 @@ pub fn app_icons_dir() -> Result<PathBuf> {
 
 pub fn find_target_icons(target: &str) -> Result<Option<String>> {
     let icons_dir = app_icons_dir()?;
-    let mut matching_files = Vec::new();
+    let icon_path = fs::read_dir(&icons_dir)?
+        .filter_map(|entry| entry.ok().map(|e| e.path()))
+        .find(|path| {
+            let prefix_matches = path
+                .file_prefix()
+                .and_then(|p| p.to_str())
+                .is_some_and(|prefix| prefix.starts_with(target));
+            let ext_matches = path
+                .extension()
+                .and_then(|e| e.to_str())
+                .is_some_and(|ext| {
+                    ext.eq_ignore_ascii_case("ico") || ext.eq_ignore_ascii_case("png")
+                });
+            prefix_matches && ext_matches
+        });
 
-    for entry in fs::read_dir(icons_dir)? {
-        let entry = entry?;
-        let path = entry.path();
-
-        if let Some(file_name) = path.file_name().and_then(|n| n.to_str())
-            && file_name.starts_with(target)
-            && (file_name.ends_with(".ico") || file_name.ends_with(".png"))
-        {
-            matching_files.push(path);
-        }
-    }
-
-    if matching_files.is_empty() {
-        Ok(None)
-    } else {
-        match matching_files.first() {
-            Some(first_path) => {
-                let first = path_to_str(first_path)?;
-                Ok(Some(first.into()))
-            }
-            None => Ok(None),
-        }
-    }
+    icon_path
+        .map(|path| path_to_str(&path).map(|s| s.into()))
+        .transpose()
 }
 
 /// logs dir

@@ -7,7 +7,7 @@ use crate::{
 };
 use anyhow::{Result, bail};
 use smartstring::alias::String;
-use tauri::Emitter;
+use tauri::Emitter as _;
 
 /// Toggle proxy profile
 pub async fn toggle_proxy_profile(profile_index: String) {

@@ -1,6 +1,11 @@
 use super::CmdResult;
-use crate::{cmd::StringifyErr, config::*, core::CoreManager, log_err};
-use anyhow::{Context, anyhow};
+use crate::{
+    cmd::StringifyErr as _,
+    config::{Config, ConfigType},
+    core::CoreManager,
+    log_err,
+};
+use anyhow::{Context as _, anyhow};
 use serde_yaml_ng::Mapping;
 use smartstring::alias::String;
 use std::collections::HashMap;

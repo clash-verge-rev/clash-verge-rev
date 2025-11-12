@@ -21,7 +21,9 @@
     "pause": "Пауза",
     "resume": "Возобновить",
     "closeAll": "Закрыть всё",
-    "clear": "Очистить"
+    "clear": "Очистить",
+    "previous": "Previous",
+    "next": "Next"
   },
   "labels": {
     "updateAt": "Обновлено в",
@@ -48,6 +50,7 @@
     "milliseconds": "миллисекунды",
     "seconds": "секунды",
     "minutes": "минуты",
+    "hours": "часы",
     "kilobytes": "KB",
     "files": "Files"
   },

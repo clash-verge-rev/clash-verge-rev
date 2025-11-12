@@ -2,7 +2,7 @@ use crate::{
     config::Config, core::sysopt::Sysopt, feat, logging, logging_error, singleton,
     utils::logging::Type,
 };
-use anyhow::{Context, Result};
+use anyhow::{Context as _, Result};
 use delay_timer::prelude::{DelayTimer, DelayTimerBuilder, TaskBuilder};
 use parking_lot::RwLock;
 use smartstring::alias::String;

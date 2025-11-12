@@ -7,7 +7,7 @@ use crate::{
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use tokio::sync::oneshot;
-use warp::Filter;
+use warp::Filter as _;
 
 // 关闭 embedded server 的信号发送端
 static SHUTDOWN_SENDER: OnceCell<Mutex<Option<oneshot::Sender<()>>>> = OnceCell::new();
@@ -26,15 +26,15 @@ pub fn embed_server() {
         let clash_config = Config::clash().await;
 
         let pac_content = verge_config
-            .latest_arc()
+            .data_arc()
             .pac_file_content
             .clone()
             .unwrap_or_else(|| DEFAULT_PAC.into());
 
         let pac_port = verge_config
-            .latest_arc()
+            .data_arc()
             .verge_mixed_port
-            .unwrap_or_else(|| clash_config.latest_arc().get_mixed_port());
+            .unwrap_or_else(|| clash_config.data_arc().get_mixed_port());
 
         let pac = warp::path!("commands" / "pac").map(move || {
             let processed_content = pac_content.replace("%mixed-port%", &format!("{pac_port}"));

@@ -1,5 +1,5 @@
 use super::CmdResult;
-use crate::cmd::StringifyErr;
+use crate::cmd::StringifyErr as _;
 use crate::core::{EventDrivenProxyManager, async_proxy_query::AsyncProxyQuery};
 use crate::process::AsyncHandler;
 use crate::{logging, utils::logging::Type};
@@ -93,7 +93,7 @@ pub fn get_network_interfaces() -> Vec<String> {
 /// 获取网络接口详细信息
 #[tauri::command]
 pub fn get_network_interfaces_info() -> CmdResult<Vec<NetworkInterface>> {
-    use network_interface::{NetworkInterface, NetworkInterfaceConfig};
+    use network_interface::{NetworkInterface, NetworkInterfaceConfig as _};
 
     let names = get_network_interfaces();
     let interfaces = NetworkInterface::show().stringify_err()?;

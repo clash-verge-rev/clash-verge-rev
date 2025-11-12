@@ -6,7 +6,7 @@
       "direct": "Direct"
     },
     "actions": {
-      "toggleChain": "🔗 Zincir Proxy",
+      "toggleChain": "Zincir Proxy",
       "connect": "Connect",
       "disconnect": "Disconnect",
       "connecting": "Connecting...",

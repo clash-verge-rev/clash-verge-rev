@@ -4,7 +4,7 @@ use crate::{
     logging, logging_error,
     utils::{dirs, init::service_writer_config, logging::Type},
 };
-use anyhow::{Context, Result, bail};
+use anyhow::{Context as _, Result, bail};
 use clash_verge_service_ipc::CoreConfig;
 use compact_str::CompactString;
 use once_cell::sync::Lazy;
@@ -37,7 +37,7 @@ async fn uninstall_service() -> Result<()> {
 
     use deelevate::{PrivilegeLevel, Token};
     use runas::Command as RunasCommand;
-    use std::os::windows::process::CommandExt;
+    use std::os::windows::process::CommandExt as _;
 
     let binary_path = dirs::service_path()?;
     let uninstall_path = binary_path.with_file_name("clash-verge-service-uninstall.exe");
@@ -72,7 +72,7 @@ async fn install_service() -> Result<()> {
 
     use deelevate::{PrivilegeLevel, Token};
     use runas::Command as RunasCommand;
-    use std::os::windows::process::CommandExt;
+    use std::os::windows::process::CommandExt as _;
 
     let binary_path = dirs::service_path()?;
     let install_path = binary_path.with_file_name("clash-verge-service-install.exe");

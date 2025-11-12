@@ -6,7 +6,7 @@
       "direct": "Direct"
     },
     "actions": {
-      "toggleChain": "🔗 チェーンプロキシ",
+      "toggleChain": "チェーンプロキシ",
       "connect": "Connect",
       "disconnect": "Disconnect",
       "connecting": "Connecting...",

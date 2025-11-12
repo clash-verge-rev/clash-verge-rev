@@ -6,7 +6,7 @@
       "direct": "直连"
     },
     "actions": {
-      "toggleChain": "🔗 链式代理",
+      "toggleChain": "链式代理",
       "connect": "连接",
       "disconnect": "断开",
       "connecting": "连接中...",

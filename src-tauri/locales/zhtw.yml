@@ -10,8 +10,8 @@ notifications:
     title: 系統代理
     body: 系統代理狀態已更新。
   tunModeToggled:
-    title: TUN 模式
-    body: TUN 模式狀態已更新。
+    title: 虛擬網路介面卡模式
+    body: 已更新虛擬網路介面卡模式狀態。
   lightweightModeEntered:
     title: 輕量模式
     body: 已進入輕量模式。
@@ -28,10 +28,14 @@ tray:
   ruleMode: 規則模式
   globalMode: 全域模式
   directMode: 直連模式
+  outboundModes: 出站模式
+  rule: 規則
+  direct: 直連
+  global: 全域
   profiles: 訂閱
   proxies: 代理
   systemProxy: 系統代理
-  tunMode: TUN 模式
+  tunMode: 虛擬網路介面卡模式
   closeAllConnections: 關閉所有連線
   lightweightMode: 輕量模式
   copyEnv: 複製環境變數
@@ -48,5 +52,5 @@ tray:
   exit: 離開
   tooltip:
     systemProxy: 系統代理
-    tun: TUN
+    tun: 虛擬網路介面卡
     profile: 訂閱

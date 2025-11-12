@@ -17,12 +17,16 @@
       "type": "類型"
     },
     "order": {
-      "default": "Default",
+      "default": "預設",
       "uploadSpeed": "上傳速度",
       "downloadSpeed": "下載速度"
     },
     "actions": {
       "closeConnection": "關閉連線"
+    },
+    "columnManager": {
+      "title": "欄位設定",
+      "dragHandle": "拖曳以移動"
     }
   }
 }

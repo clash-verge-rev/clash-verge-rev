@@ -16,7 +16,7 @@ use compact_str::CompactString;
 use flexi_logger::DeferredNow;
 use log::Level;
 use scopeguard::defer;
-use tauri_plugin_shell::ShellExt;
+use tauri_plugin_shell::ShellExt as _;
 
 impl CoreManager {
     pub async fn get_clash_logs(&self) -> Result<Vec<CompactString>> {

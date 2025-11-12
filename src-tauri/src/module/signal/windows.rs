@@ -1,4 +1,4 @@
-use tauri::Manager;
+use tauri::Manager as _;
 use windows_sys::Win32::{
     Foundation::{HWND, LPARAM, LRESULT, WPARAM},
     UI::WindowsAndMessaging::{

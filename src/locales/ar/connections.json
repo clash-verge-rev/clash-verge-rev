@@ -23,6 +23,10 @@
     },
     "actions": {
       "closeConnection": "إغلاق الاتصال"
+    },
+    "columnManager": {
+      "title": "الأعمدة",
+      "dragHandle": "Drag handle"
     }
   }
 }

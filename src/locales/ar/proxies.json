@@ -6,7 +6,7 @@
       "direct": "Direct"
     },
     "actions": {
-      "toggleChain": "🔗 بروكسي السلسلة",
+      "toggleChain": "بروكسي السلسلة",
       "connect": "Connect",
       "disconnect": "Disconnect",
       "connecting": "Connecting...",

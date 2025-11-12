@@ -2,26 +2,26 @@
 #[cfg(not(feature = "tauri-dev"))]
 use crate::utils::logging::NoModuleFilter;
 use crate::{
-    config::*,
+    config::{Config, IClashTemp, IProfiles, IVerge},
     constants,
     core::handle,
     logging,
     process::AsyncHandler,
     utils::{
-        dirs::{self, PathBufExec, service_log_dir, sidecar_log_dir},
+        dirs::{self, PathBufExec as _, service_log_dir, sidecar_log_dir},
         help,
         logging::Type,
     },
 };
 use anyhow::Result;
-use chrono::{Local, TimeZone};
+use chrono::{Local, TimeZone as _};
 use clash_verge_service_ipc::WriterConfig;
 use flexi_logger::writers::FileLogWriter;
 use flexi_logger::{Cleanup, Criterion, FileSpec};
 #[cfg(not(feature = "tauri-dev"))]
 use flexi_logger::{Duplicate, LogSpecBuilder, Logger};
-use std::{path::PathBuf, str::FromStr};
-use tauri_plugin_shell::ShellExt;
+use std::{path::PathBuf, str::FromStr as _};
+use tauri_plugin_shell::ShellExt as _;
 use tokio::fs;
 use tokio::fs::DirEntry;
 
@@ -31,7 +31,7 @@ pub async fn init_logger() -> Result<()> {
     // TODO 提供 runtime 级别实时修改
     let (log_level, log_max_size, log_max_count) = {
         let verge_guard = Config::verge().await;
-        let verge = verge_guard.latest_arc();
+        let verge = verge_guard.data_arc();
         (
             verge.get_log_level(),
             verge.app_log_max_size.unwrap_or(128),
@@ -89,7 +89,7 @@ pub async fn init_logger() -> Result<()> {
 pub async fn sidecar_writer() -> Result<FileLogWriter> {
     let (log_max_size, log_max_count) = {
         let verge_guard = Config::verge().await;
-        let verge = verge_guard.latest_arc();
+        let verge = verge_guard.data_arc();
         (
             verge.app_log_max_size.unwrap_or(128),
             verge.app_log_max_count.unwrap_or(8),
@@ -117,7 +117,7 @@ pub async fn sidecar_writer() -> Result<FileLogWriter> {
 pub async fn service_writer_config() -> Result<WriterConfig> {
     let (log_max_size, log_max_count) = {
         let verge_guard = Config::verge().await;
-        let verge = verge_guard.latest_arc();
+        let verge = verge_guard.data_arc();
         (
             verge.app_log_max_size.unwrap_or(128),
             verge.app_log_max_count.unwrap_or(8),
@@ -142,7 +142,7 @@ pub async fn delete_log() -> Result<()> {
 
     let auto_log_clean = {
         let verge = Config::verge().await;
-        let verge = verge.latest_arc();
+        let verge = verge.data_arc();
         verge.auto_log_clean.unwrap_or(0)
     };
 
@@ -466,7 +466,7 @@ pub async fn startup_script() -> Result<()> {
     let app_handle = handle::Handle::app_handle();
     let script_path = {
         let verge = Config::verge().await;
-        let verge = verge.latest_arc();
+        let verge = verge.data_arc();
         verge.startup_script.clone().unwrap_or_else(|| "".into())
     };
 

@@ -23,6 +23,10 @@
     },
     "actions": {
       "closeConnection": "연결 닫기"
+    },
+    "columnManager": {
+      "title": "열",
+      "dragHandle": "Drag handle"
     }
   }
 }

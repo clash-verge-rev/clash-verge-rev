@@ -12,7 +12,7 @@ use smartstring::alias::String;
 use std::sync::atomic::{AtomicBool, Ordering};
 #[cfg(not(target_os = "windows"))]
 use sysproxy::{Autoproxy, Sysproxy};
-use tauri_plugin_autostart::ManagerExt;
+use tauri_plugin_autostart::ManagerExt as _;
 
 pub struct Sysopt {
     initialed: AtomicBool,
@@ -59,7 +59,7 @@ async fn execute_sysproxy_command(args: Vec<std::string::String>) -> Result<()> 
     use crate::utils::dirs;
     use anyhow::bail;
     #[allow(unused_imports)] // Required for .creation_flags() method
-    use std::os::windows::process::CommandExt;
+    use std::os::windows::process::CommandExt as _;
     use tokio::process::Command;
 
     let binary_path = dirs::service_path()?;

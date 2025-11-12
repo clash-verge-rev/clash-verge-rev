@@ -285,7 +285,8 @@
         "exportBackup": "Export Backup",
         "deleteBackup": "Удалить резервную копию",
         "restore": "Восстановить",
-        "restoreBackup": "Восстановить резервную копию"
+        "restoreBackup": "Восстановить резервную копию",
+        "viewHistory": "View history"
       },
       "fields": {
         "webdavUrl": "URL-адрес сервера WebDAV http(s)://",
@@ -306,8 +307,36 @@
         "restoreSuccess": "Восстановление успешно выполнено, приложение перезапустится через 1 секунду",
         "localBackupExported": "Local backup exported successfully",
         "localBackupExportFailed": "Failed to export local backup",
+        "webdavRefreshSuccess": "WebDAV refresh succeeded",
+        "webdavRefreshFailed": "WebDAV refresh failed: {{error}}",
         "confirmDelete": "Вы уверены, что хотите удалить этот файл резервной копии?",
         "confirmRestore": "Вы уверены, что хотите восстановить этот файл резервной копии?"
+      },
+      "auto": {
+        "title": "Automatic backup",
+        "scheduleLabel": "Enable scheduled backup",
+        "scheduleHelper": "Create local backups in the background at the configured interval.",
+        "intervalLabel": "Backup frequency",
+        "changeLabel": "Backup on critical changes",
+        "changeHelper": "Automatically back up when the global extend config/script or subscriptions are added, removed, or edited.",
+        "options": {
+          "hours": "Every {{n}} hours",
+          "days": "Every {{n}} days"
+        }
+      },
+      "manual": {
+        "title": "Manual backup",
+        "local": "Creates a snapshot on this device, stored under the app data directory.",
+        "webdav": "Upload a snapshot to your WebDAV server once credentials are set.",
+        "configureWebdav": "Configure WebDAV"
+      },
+      "history": {
+        "title": "Backup history",
+        "summary": "{{count}} backups • latest {{recent}}",
+        "empty": "No backups available"
+      },
+      "webdav": {
+        "title": "WebDAV settings"
       },
       "table": {
         "filename": "Имя файла",

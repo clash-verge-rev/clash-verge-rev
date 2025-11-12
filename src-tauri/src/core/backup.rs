@@ -13,7 +13,7 @@ use smartstring::alias::String;
 use std::{
     collections::HashMap,
     env::{consts::OS, temp_dir},
-    io::Write,
+    io::Write as _,
     path::PathBuf,
     sync::Arc,
     time::Duration,
@@ -92,20 +92,20 @@ impl WebDavClient {
                     || verge.webdav_username.is_none()
                     || verge.webdav_password.is_none()
                 {
-                    let msg: String = "Unable to create web dav client, please make sure the webdav config is correct".into();
+                    let msg: String =
+                        "Unable to create web dav client, please make sure the webdav config is correct".into();
                     return Err(anyhow::Error::msg(msg));
                 }
 
                 let config = WebDavConfig {
                     url: verge
                         .webdav_url
-                        .as_ref()
-                        .cloned()
+                        .clone()
                         .unwrap_or_default()
                         .trim_end_matches('/')
                         .into(),
-                    username: verge.webdav_username.as_ref().cloned().unwrap_or_default(),
-                    password: verge.webdav_password.as_ref().cloned().unwrap_or_default(),
+                    username: verge.webdav_username.clone().unwrap_or_default(),
+                    password: verge.webdav_password.clone().unwrap_or_default(),
                 };
 
                 // 存储配置到 ArcSwapOption

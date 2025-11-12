@@ -10,10 +10,10 @@ use crate::{
 use crate::logging_error;
 
 use crate::utils::window_manager::WindowManager;
-use anyhow::{Context, Result};
+use anyhow::{Context as _, Result};
 use delay_timer::prelude::TaskBuilder;
 use std::sync::atomic::{AtomicU8, AtomicU32, Ordering};
-use tauri::Listener;
+use tauri::Listener as _;
 
 const LIGHT_WEIGHT_TASK_UID: &str = "light_weight_task";
 

@@ -5,7 +5,7 @@ use crate::{
     utils::logging::Type,
 };
 use std::env;
-use tauri_plugin_clipboard_manager::ClipboardExt;
+use tauri_plugin_clipboard_manager::ClipboardExt as _;
 
 /// Toggle system proxy on/off
 pub async fn toggle_system_proxy() {

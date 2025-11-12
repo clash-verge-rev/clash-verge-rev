@@ -23,6 +23,10 @@
     },
     "actions": {
       "closeConnection": "Bağlantıyı Kapat"
+    },
+    "columnManager": {
+      "title": "Sütunlar",
+      "dragHandle": "Drag handle"
     }
   }
 }

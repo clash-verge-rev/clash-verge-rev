@@ -1,5 +1,5 @@
 use crate::{core::handle, utils::i18n};
-use tauri_plugin_notification::NotificationExt;
+use tauri_plugin_notification::NotificationExt as _;
 
 pub enum NotificationEvent<'a> {
     DashboardToggled,

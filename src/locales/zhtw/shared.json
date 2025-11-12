@@ -21,7 +21,9 @@
     "pause": "暫停",
     "resume": "繼續",
     "closeAll": "關閉全部",
-    "clear": "清除"
+    "clear": "清除",
+    "previous": "上一頁",
+    "next": "下一頁"
   },
   "labels": {
     "updateAt": "更新於",
@@ -48,6 +50,7 @@
     "milliseconds": "毫秒",
     "seconds": "秒",
     "minutes": "分鐘",
+    "hours": "小時",
     "kilobytes": "KB",
     "files": "檔案"
   },

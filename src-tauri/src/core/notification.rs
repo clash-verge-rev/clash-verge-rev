@@ -8,13 +8,13 @@ use parking_lot::RwLock;
 use smartstring::alias::String;
 use std::{
     sync::{
-        atomic::{AtomicU64, Ordering},
+        atomic::{AtomicBool, AtomicU64, Ordering},
         mpsc,
     },
     thread,
     time::{Duration, Instant},
 };
-use tauri::{Emitter, WebviewWindow};
+use tauri::{Emitter as _, WebviewWindow};
 
 #[derive(Debug, Clone)]
 pub enum FrontendEvent {
@@ -47,7 +47,7 @@ pub struct NotificationSystem {
     worker_handle: Option<thread::JoinHandle<()>>,
     pub(super) is_running: bool,
     stats: EventStats,
-    emergency_mode: RwLock<bool>,
+    emergency_mode: AtomicBool,
 }
 
 impl Default for NotificationSystem {
@@ -63,7 +63,7 @@ impl NotificationSystem {
             worker_handle: None,
             is_running: false,
             stats: EventStats::default(),
-            emergency_mode: RwLock::new(false),
+            emergency_mode: AtomicBool::new(false),
         }
     }
 
@@ -125,7 +125,7 @@ impl NotificationSystem {
     }
 
     fn should_skip_event(&self, event: &FrontendEvent) -> bool {
-        let is_emergency = *self.emergency_mode.read();
+        let is_emergency = self.emergency_mode.load(Ordering::Acquire);
         matches!(
             (is_emergency, event),
             (true, FrontendEvent::NoticeMessage { status, .. }) if status == "info"
@@ -184,14 +184,14 @@ impl NotificationSystem {
         *self.stats.last_error_time.write() = Some(Instant::now());
 
         let errors = self.stats.total_errors.load(Ordering::Relaxed);
-        if errors > retry::EVENT_EMIT_THRESHOLD && !*self.emergency_mode.read() {
+        if errors > retry::EVENT_EMIT_THRESHOLD && !self.emergency_mode.load(Ordering::Acquire) {
             logging!(
                 warn,
                 Type::Frontend,
                 "Entering emergency mode after {} errors",
                 errors
             );
-            *self.emergency_mode.write() = true;
+            self.emergency_mode.store(true, Ordering::Release);
         }
     }
 

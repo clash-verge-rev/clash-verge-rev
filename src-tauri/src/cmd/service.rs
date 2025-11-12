@@ -1,4 +1,4 @@
-use super::{CmdResult, StringifyErr};
+use super::{CmdResult, StringifyErr as _};
 use crate::core::service::{self, SERVICE_MANAGER, ServiceStatus};
 use smartstring::SmartString;
 

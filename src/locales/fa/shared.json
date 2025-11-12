@@ -21,7 +21,9 @@
     "pause": "توقف",
     "resume": "از سرگیری",
     "closeAll": "بستن همه",
-    "clear": "پاک کردن"
+    "clear": "پاک کردن",
+    "previous": "Previous",
+    "next": "Next"
   },
   "labels": {
     "updateAt": "به‌روزرسانی در",
@@ -48,6 +50,7 @@
     "milliseconds": "میلی‌ثانیه",
     "seconds": "ثانیه‌ها",
     "minutes": "دقیقه",
+    "hours": "ساعت",
     "kilobytes": "KB",
     "files": "Files"
   },

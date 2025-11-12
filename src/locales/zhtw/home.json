@@ -85,7 +85,7 @@
         "unknown": "未知"
       },
       "errors": {
-        "load": "獲取 IP 資訊失敗"
+        "load": "取得 IP 資訊失敗"
       }
     },
     "currentProxy": {
@@ -116,7 +116,7 @@
         "download": "下載"
       },
       "patterns": {
-        "minutes": "{{time}} Minutes"
+        "minutes": "{{time}} 分"
       }
     },
     "clashMode": {

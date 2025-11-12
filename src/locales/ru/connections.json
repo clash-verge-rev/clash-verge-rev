@@ -23,6 +23,10 @@
     },
     "actions": {
       "closeConnection": "Закрыть соединение"
+    },
+    "columnManager": {
+      "title": "Столбцы",
+      "dragHandle": "Drag handle"
     }
   }
 }

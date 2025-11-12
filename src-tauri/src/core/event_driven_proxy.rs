@@ -2,7 +2,7 @@ use std::sync::Arc;
 use tokio::sync::RwLock;
 use tokio::sync::{mpsc, oneshot};
 use tokio::time::{Duration, sleep, timeout};
-use tokio_stream::{StreamExt, wrappers::UnboundedReceiverStream};
+use tokio_stream::{StreamExt as _, wrappers::UnboundedReceiverStream};
 
 use crate::config::{Config, IVerge};
 use crate::core::{async_proxy_query::AsyncProxyQuery, handle};
@@ -520,7 +520,7 @@ impl EventDrivenProxyManager {
 
         use crate::utils::dirs;
         #[allow(unused_imports)] // creation_flags必须
-        use std::os::windows::process::CommandExt;
+        use std::os::windows::process::CommandExt as _;
         use tokio::process::Command;
 
         let binary_path = match dirs::service_path() {

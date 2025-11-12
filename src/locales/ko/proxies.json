@@ -6,7 +6,7 @@
       "direct": "직접"
     },
     "actions": {
-      "toggleChain": "🔗 체인 프록시",
+      "toggleChain": "체인 프록시",
       "connect": "연결",
       "disconnect": "연결 해제",
       "connecting": "연결 중...",

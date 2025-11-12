@@ -5,7 +5,7 @@ use crate::{
 };
 use std::future::Future;
 use std::pin::Pin;
-use tauri::{Manager, WebviewWindow, Wry};
+use tauri::{Manager as _, WebviewWindow, Wry};
 
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;

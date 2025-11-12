@@ -21,7 +21,9 @@
     "pause": "Pausar",
     "resume": "Reanudar",
     "closeAll": "Cerrar todas",
-    "clear": "Limpiar"
+    "clear": "Limpiar",
+    "previous": "Previous",
+    "next": "Next"
   },
   "labels": {
     "updateAt": "Actualizado el",
@@ -48,6 +50,7 @@
     "milliseconds": "Milisegundos",
     "seconds": "Segundos",
     "minutes": "Minutos",
+    "hours": "Horas",
     "kilobytes": "KB",
     "files": "Files"
   },

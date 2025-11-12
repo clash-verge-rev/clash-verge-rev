@@ -372,7 +372,7 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
             )}
           />
           <GuardState
-            value={verge?.tray_inline_proxy_groups ?? false}
+            value={verge?.tray_inline_proxy_groups ?? true}
             valueProps="checked"
             onCatch={onError}
             onFormat={onSwitchFormat}
@@ -425,7 +425,6 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
                     await initIconPath();
                     onChangeData({ common_tray_icon: true });
                     patchVerge({ common_tray_icon: true });
-                    console.log();
                   }
                 }
               }}
