@@ -192,7 +192,7 @@ export const EditorViewer = <T extends Language>(props: Props<T>) => {
       >
         <MonacoEditor
           language={language}
-          theme={themeMode === "light" ? "vs" : "vs-dark"}
+          theme={themeMode === "light" ? "light" : "vs-dark"}
           options={{
             tabSize: ["yaml", "javascript", "css"].includes(language) ? 2 : 4, // 根据语言类型设置缩进大小
             minimap: {
