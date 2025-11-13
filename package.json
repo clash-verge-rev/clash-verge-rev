@@ -76,7 +76,7 @@
     "react-router": "^7.9.5",
     "react-virtuoso": "^4.14.1",
     "swr": "^2.3.6",
-    "tauri-plugin-mihomo-api": "git+https://github.com/clash-verge-rev/tauri-plugin-mihomo",
+    "tauri-plugin-mihomo-api": "git+https://github.com/clash-verge-rev/tauri-plugin-mihomo#main",
     "types-pac": "^1.0.3"
   },
   "devDependencies": {

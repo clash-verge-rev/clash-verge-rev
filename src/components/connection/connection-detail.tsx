@@ -3,7 +3,7 @@ import { useLockFn } from "ahooks";
 import dayjs from "dayjs";
 import { useImperativeHandle, useState, type Ref } from "react";
 import { useTranslation } from "react-i18next";
-import { closeConnections } from "tauri-plugin-mihomo-api";
+import { closeConnection } from "tauri-plugin-mihomo-api";
 
 import parseTraffic from "@/utils/parse-traffic";
 
@@ -123,7 +123,7 @@ const InnerConnectionDetail = ({ data, closed, onClose }: InnerProps) => {
     },
   ];
 
-  const onDelete = useLockFn(async () => closeConnections(data.id));
+  const onDelete = useLockFn(async () => closeConnection(data.id));
 
   return (
     <Box sx={{ userSelect: "text", color: theme.palette.text.secondary }}>
