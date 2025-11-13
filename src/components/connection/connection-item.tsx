@@ -27,11 +27,12 @@ const Tag = styled("span")(({ theme }) => ({
 
 interface Props {
   value: IConnectionsItem;
+  closed: boolean;
   onShowDetail?: () => void;
 }
 
 export const ConnectionItem = (props: Props) => {
-  const { value, onShowDetail } = props;
+  const { value, closed, onShowDetail } = props;
 
   const { id, metadata, chains, start, curUpload, curDownload } = value;
   const { t } = useTranslation();
@@ -44,15 +45,17 @@ export const ConnectionItem = (props: Props) => {
       dense
       sx={{ borderBottom: "1px solid var(--divider-color)" }}
       secondaryAction={
-        <IconButton
-          edge="end"
-          color="inherit"
-          onClick={onDelete}
-          title={t("connections.components.actions.closeConnection")}
-          aria-label={t("connections.components.actions.closeConnection")}
-        >
-          <CloseRounded />
-        </IconButton>
+        !closed && (
+          <IconButton
+            edge="end"
+            color="inherit"
+            onClick={onDelete}
+            title={t("connections.components.actions.closeConnection")}
+            aria-label={t("connections.components.actions.closeConnection")}
+          >
+            <CloseRounded />
+          </IconButton>
+        )
       }
     >
       <ListItemText

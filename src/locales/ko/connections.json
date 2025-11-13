@@ -22,6 +22,8 @@
       "downloadSpeed": "다운로드 속도"
     },
     "actions": {
+      "active": "Active",
+      "closed": "Closed",
       "closeConnection": "연결 닫기"
     },
     "columnManager": {

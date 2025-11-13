@@ -22,6 +22,8 @@
       "downloadSpeed": "Скорость скачивания"
     },
     "actions": {
+      "active": "Active",
+      "closed": "Closed",
       "closeConnection": "Закрыть соединение"
     },
     "columnManager": {

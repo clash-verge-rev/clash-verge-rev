@@ -22,6 +22,8 @@
       "downloadSpeed": "ダウンロード速度"
     },
     "actions": {
+      "active": "Active",
+      "closed": "Closed",
       "closeConnection": "接続を閉じる"
     },
     "columnManager": {
