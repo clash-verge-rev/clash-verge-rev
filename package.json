@@ -46,7 +46,7 @@
     "@mui/icons-material": "^7.3.5",
     "@mui/lab": "7.0.0-beta.17",
     "@mui/material": "^7.3.5",
-    "@mui/x-data-grid": "^8.17.0",
+    "@mui/x-data-grid": "^8.18.0",
     "@tauri-apps/api": "2.9.0",
     "@tauri-apps/plugin-clipboard-manager": "^2.3.2",
     "@tauri-apps/plugin-dialog": "^2.4.2",
