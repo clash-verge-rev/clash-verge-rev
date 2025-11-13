@@ -22,6 +22,8 @@
       "downloadSpeed": "Kecepatan Unduh"
     },
     "actions": {
+      "active": "Active",
+      "closed": "Closed",
       "closeConnection": "Tutup Koneksi"
     },
     "columnManager": {

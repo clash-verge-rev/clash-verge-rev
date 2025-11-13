@@ -6,7 +6,9 @@ export interface TranslationResources {
     connections: {
       components: {
         actions: {
+          active: string;
           closeConnection: string;
+          closed: string;
         };
         columnManager: {
           dragHandle: string;

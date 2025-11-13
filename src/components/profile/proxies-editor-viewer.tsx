@@ -473,7 +473,7 @@ export const ProxiesEditorViewer = (props: Props) => {
             height="100%"
             language="yaml"
             value={currData}
-            theme={themeMode === "light" ? "vs" : "vs-dark"}
+            theme={themeMode === "light" ? "light" : "vs-dark"}
             options={{
               tabSize: 2, // 根据语言类型设置缩进大小
               minimap: {

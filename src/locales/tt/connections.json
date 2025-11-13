@@ -22,6 +22,8 @@
       "downloadSpeed": "Йөкләү тизлеге"
     },
     "actions": {
+      "active": "Active",
+      "closed": "Closed",
       "closeConnection": "Тоташуны ябу"
     },
     "columnManager": {
