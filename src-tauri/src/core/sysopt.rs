@@ -17,9 +17,7 @@ use std::{
     },
     time::Duration,
 };
-#[cfg(not(target_os = "windows"))]
-use sysproxy::{Autoproxy, Sysproxy};
-use sysproxy::{GuardMonitor, GuardType};
+use sysproxy::{Autoproxy, GuardMonitor, GuardType, Sysproxy};
 use tauri_plugin_autostart::ManagerExt as _;
 
 pub struct Sysopt {
@@ -234,24 +232,39 @@ impl Sysopt {
             }
         }
 
-        // TODO 需要协助 Windows GuardMonitor 实现自动还原功能
         #[cfg(target_os = "windows")]
         {
             if !sys_enable {
-                let result = self.reset_sysproxy().await;
-                return result;
+                self.access_guard().write().set_guard_type(GuardType::None);
+                return self.reset_sysproxy().await;
             }
 
-            let args: Vec<std::string::String> = if pac_enable {
+            let (args, guard_type): (Vec<std::string::String>, GuardType) = if pac_enable {
                 let address = format!("http://{proxy_host}:{pac_port}/commands/pac");
-                vec!["pac".into(), address]
+                (
+                    vec!["pac".into(), address.clone()],
+                    GuardType::Autoproxy(Autoproxy {
+                        enable: true,
+                        url: address,
+                    }),
+                )
             } else {
                 let address = format!("{proxy_host}:{port}");
                 let bypass = get_bypass().await;
-                vec!["global".into(), address, bypass.into()]
+                let bypass_for_guard = bypass.as_str().to_owned();
+                (
+                    vec!["global".into(), address.clone(), bypass.into()],
+                    GuardType::Sysproxy(Sysproxy {
+                        enable: true,
+                        host: proxy_host.clone().into(),
+                        port,
+                        bypass: bypass_for_guard,
+                    }),
+                )
             };
 
             execute_sysproxy_command(args).await?;
+            self.access_guard().write().set_guard_type(guard_type);
         }
         Ok(())
     }
