@@ -47,6 +47,7 @@ import { RuleItem } from "@/components/profile/rule-item";
 import { readProfileFile, saveProfileFile } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
 import { useThemeMode } from "@/services/states";
+import type { TranslationKey } from "@/types/generated/i18n-keys";
 import getSystem from "@/utils/get-system";
 
 import { BaseSearchBox } from "../base/base-search-box";
@@ -249,13 +250,14 @@ const RULE_TYPE_LABEL_KEYS: Record<string, string> = Object.fromEntries(
 
 const builtinProxyPolicies = ["DIRECT", "REJECT", "REJECT-DROP", "PASS"];
 
-const PROXY_POLICY_LABEL_KEYS: Record<string, string> =
+const PROXY_POLICY_LABEL_KEYS: Record<string, TranslationKey> =
   builtinProxyPolicies.reduce(
     (acc, policy) => {
-      acc[policy] = `proxy.policies.${policy}`;
+      acc[policy] =
+        `proxies.components.enums.policies.${policy}` as TranslationKey;
       return acc;
     },
-    {} as Record<string, string>,
+    {} as Record<string, TranslationKey>,
   );
 
 export const RulesEditorViewer = (props: Props) => {
