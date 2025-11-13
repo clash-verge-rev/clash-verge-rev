@@ -12,8 +12,8 @@ export const initConnData: ConnectionMonitorData = {
 };
 
 export interface ConnectionMonitorData {
-  uploadTotal: 0;
-  downloadTotal: 0;
+  uploadTotal: number;
+  downloadTotal: number;
   activeConnections: IConnectionsItem[];
   closedConnections: IConnectionsItem[];
 }
@@ -92,7 +92,7 @@ export const useConnectionData = () => {
                       downloadTotal: data.downloadTotal,
                       activeConnections: activeConns,
                       closedConnections: closedConns,
-                    } as ConnectionMonitorData;
+                    };
                   });
                 }
               }
@@ -145,7 +145,7 @@ export const useConnectionData = () => {
       downloadTotal: response.data?.downloadTotal ?? 0,
       activeConnections: response.data?.activeConnections ?? [],
       closedConnections: [],
-    } as ConnectionMonitorData);
+    });
   };
 
   return { response, refreshGetClashConnection, clearClosedConnections };
