@@ -109,7 +109,7 @@
     "husky": "^9.1.7",
     "jiti": "^2.6.1",
     "lint-staged": "^16.2.6",
-    "meta-json-schema": "^1.19.14",
+    "meta-json-schema": "^1.19.16",
     "node-fetch": "^3.3.2",
     "prettier": "^3.6.2",
     "sass": "^1.94.0",
@@ -120,7 +120,7 @@
     "vite": "^7.2.2",
     "vite-plugin-monaco-editor-esm": "^2.0.2",
     "vite-plugin-svgr": "^4.5.0",
-    "vitest": "^4.0.8"
+    "vitest": "^4.0.9"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": [
