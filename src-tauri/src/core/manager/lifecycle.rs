@@ -1,5 +1,6 @@
 use super::{CoreManager, RunningMode};
-use crate::config::{Config, ConfigType, IVerge};
+use crate::cmd::StringifyErr as _;
+use crate::config::{Config, IVerge};
 use crate::{
     core::{
         logger::CLASH_LOGGER,
@@ -55,13 +56,8 @@ impl CoreManager {
         let verge_data = Config::verge().await.latest_arc();
         verge_data.save_file().await.map_err(|e| e.to_string())?;
 
-        let run_path = Config::generate_file(ConfigType::Run)
-            .await
-            .map_err(|e| e.to_string())?;
-
-        self.apply_config(run_path)
-            .await
-            .map_err(|e| e.to_string().into())
+        self.update_config().await.stringify_err()?;
+        Ok(())
     }
 
     async fn prepare_startup(&self) -> Result<()> {

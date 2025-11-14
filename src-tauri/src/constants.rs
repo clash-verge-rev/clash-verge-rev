@@ -35,8 +35,7 @@ pub mod bypass {
 pub mod timing {
     use super::Duration;
 
-    pub const CONFIG_UPDATE_DEBOUNCE: Duration = Duration::from_millis(500);
-    pub const CONFIG_RELOAD_DELAY: Duration = Duration::from_millis(300);
+    pub const CONFIG_UPDATE_DEBOUNCE: Duration = Duration::from_millis(300);
     pub const EVENT_EMIT_DELAY: Duration = Duration::from_millis(20);
     pub const STARTUP_ERROR_DELAY: Duration = Duration::from_secs(2);
     pub const ERROR_BATCH_DELAY: Duration = Duration::from_millis(300);
@@ -56,15 +55,6 @@ pub mod files {
     pub const CHECK_CONFIG: &str = "clash-verge-check.yaml";
     pub const DNS_CONFIG: &str = "dns_config.yaml";
     pub const WINDOW_STATE: &str = "window_state.json";
-}
-
-pub mod error_patterns {
-    pub const CONNECTION_ERRORS: &[&str] = &[
-        "Failed to create connection",
-        "The system cannot find the file specified",
-        "operation timed out",
-        "connection refused",
-    ];
 }
 
 pub mod tun {
