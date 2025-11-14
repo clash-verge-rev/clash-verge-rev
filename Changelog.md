@@ -3,6 +3,7 @@
 ### 🐞 修复问题
 
 - Linux 无法切换 TUN 堆栈
+- macOS service 启动项显示名称(试验性修改)
 
 <details>
 <summary><strong> ✨ 新增功能 </strong></summary>

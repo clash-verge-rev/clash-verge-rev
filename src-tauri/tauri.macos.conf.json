@@ -28,7 +28,8 @@
           "x": 200,
           "y": 180
         }
-      }
+      },
+      "infoPlist": "packages/macos/info_merge.plist"
     }
   }
 }
