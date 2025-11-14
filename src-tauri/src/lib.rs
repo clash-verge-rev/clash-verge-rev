@@ -41,7 +41,7 @@ mod app_init {
         #[allow(unused_mut)]
         let mut builder = builder
             .plugin(tauri_plugin_single_instance::init(|_app, _args, _cwd| {
-                AsyncHandler::block_on(async move {
+                AsyncHandler::spawn(async || {
                     logging!(info, Type::Window, "检测到从单例模式恢复应用窗口");
                     if !lightweight::exit_lightweight_mode().await {
                         WindowManager::show_main_window().await;
