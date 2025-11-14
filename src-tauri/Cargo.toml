@@ -70,10 +70,6 @@ gethostname = "1.1.0"
 scopeguard = "1.2.0"
 tauri-plugin-notification = "2.3.3"
 tokio-stream = "0.1.17"
-isahc = { version = "1.7.2", default-features = false, features = [
-  "text-decoding",
-  "parking_lot",
-] }
 backoff = { version = "0.4.0", features = ["tokio"] }
 compact_str = { version = "0.9.0", features = ["serde"] }
 tauri-plugin-http = "2.5.4"
