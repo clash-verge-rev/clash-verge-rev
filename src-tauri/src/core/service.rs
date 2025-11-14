@@ -521,6 +521,14 @@ impl ServiceManager {
             ServiceStatus::InstallRequired => {
                 logging!(info, Type::Service, "需要安装服务，执行安装流程");
                 install_service().await?;
+                // compatible with older service version, force reinstall if service is unavailable
+                if matches!(
+                    self.check_service_comprehensive().await,
+                    ServiceStatus::Unavailable(_)
+                ) {
+                    logging!(info, Type::Service, "服务需要强制重装，执行强制重装流程");
+                    force_reinstall_service().await?;
+                }
                 self.0 = ServiceStatus::Ready;
             }
             ServiceStatus::UninstallRequired => {
