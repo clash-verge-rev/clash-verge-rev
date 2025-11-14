@@ -68,11 +68,18 @@ pub async fn init_logger() -> Result<()> {
             Cleanup::KeepLogFiles(log_max_count),
         );
     #[cfg(not(feature = "tracing"))]
-    let logger = logger.filter(Box::new(NoModuleFilter(&["wry", "tauri"])));
+    let logger = logger.filter(Box::new(NoModuleFilter(&[
+        "wry",
+        "tauri",
+        "tokio_tungstenite",
+        "tungstenite",
+    ])));
     #[cfg(feature = "tracing")]
     let logger = logger.filter(Box::new(NoModuleFilter(&[
         "wry",
         "tauri_plugin_mihomo",
+        "tokio_tungstenite",
+        "tungstenite",
         "kode_bridge",
     ])));
 
