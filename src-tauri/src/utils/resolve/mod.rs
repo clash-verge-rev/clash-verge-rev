@@ -153,7 +153,7 @@ pub(super) async fn init_verge_config() {
 }
 
 pub(super) async fn init_service_manager() {
-    clash_verge_service_ipc::set_config(ServiceManager::config()).await;
+    clash_verge_service_ipc::set_config(Some(ServiceManager::config())).await;
     if !is_service_ipc_path_exists() {
         return;
     }
@@ -174,7 +174,7 @@ pub(super) async fn init_system_proxy() {
 }
 
 pub(super) fn init_system_proxy_guard() {
-    logging_error!(Type::Setup, sysopt::Sysopt::global().init_guard_sysproxy());
+    sysopt::Sysopt::global().init_guard_sysproxy();
 }
 
 pub(super) async fn refresh_tray_menu() {

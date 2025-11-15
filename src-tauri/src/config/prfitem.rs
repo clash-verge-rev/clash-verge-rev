@@ -581,6 +581,7 @@ impl PrfItem {
 }
 
 // 向前兼容，默认为订阅启用自动更新
+#[allow(clippy::unnecessary_wraps)]
 const fn default_allow_auto_update() -> Option<bool> {
     Some(true)
 }

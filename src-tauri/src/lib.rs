@@ -82,7 +82,7 @@ mod app_init {
     }
 
     /// Setup deep link handling
-    pub fn setup_deep_links(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
+    pub fn setup_deep_links(app: &tauri::App) {
         #[cfg(any(target_os = "linux", all(debug_assertions, windows)))]
         {
             logging!(info, Type::Setup, "注册深层链接...");
@@ -99,8 +99,6 @@ mod app_init {
                 }
             });
         });
-
-        Ok(())
     }
 
     /// Setup autostart plugin
@@ -246,9 +244,7 @@ pub fn run() {
                 logging!(error, Type::Setup, "Failed to setup autostart: {}", e);
             }
 
-            if let Err(e) = app_init::setup_deep_links(app) {
-                logging!(error, Type::Setup, "Failed to setup deep links: {}", e);
-            }
+            app_init::setup_deep_links(app);
 
             if let Err(e) = app_init::setup_window_state(app) {
                 logging!(error, Type::Setup, "Failed to setup window state: {}", e);

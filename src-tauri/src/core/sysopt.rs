@@ -100,13 +100,12 @@ impl Sysopt {
         self.initialed.load(Ordering::SeqCst)
     }
 
-    pub fn init_guard_sysproxy(&self) -> Result<()> {
+    pub fn init_guard_sysproxy(&self) {
         // 使用事件驱动代理管理器
         let proxy_manager = EventDrivenProxyManager::global();
         proxy_manager.notify_app_started();
 
         logging!(info, Type::Core, "已启用事件驱动代理守卫");
-        Ok(())
     }
 
     /// init the sysproxy

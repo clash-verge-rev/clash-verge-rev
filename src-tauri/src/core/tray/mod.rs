@@ -301,8 +301,8 @@ impl Tray {
         let verge = Config::verge().await.latest_arc();
         let system_proxy = verge.enable_system_proxy.as_ref().unwrap_or(&false);
         let tun_mode = verge.enable_tun_mode.as_ref().unwrap_or(&false);
-        let tun_mode_available = cmd::system::is_admin().unwrap_or_default()
-            || service::is_service_available().await.is_ok();
+        let tun_mode_available =
+            cmd::system::is_admin() || service::is_service_available().await.is_ok();
         let mode = {
             Config::clash()
                 .await
@@ -640,7 +640,7 @@ fn create_subcreate_proxy_menu_item(
     current_profile_selected: &[PrfSelected],
     proxy_group_order_map: Option<HashMap<String, usize>>,
     proxy_nodes_data: Result<Proxies>,
-) -> Result<Vec<Submenu<Wry>>> {
+) -> Vec<Submenu<Wry>> {
     let proxy_submenus: Vec<Submenu<Wry>> = {
         let mut submenus: Vec<(String, usize, Submenu<Wry>)> = Vec::new();
 
@@ -767,7 +767,7 @@ fn create_subcreate_proxy_menu_item(
             .map(|(_, _, submenu)| submenu)
             .collect()
     };
-    Ok(proxy_submenus)
+    proxy_submenus
 }
 
 fn create_proxy_menu_item(
@@ -955,7 +955,7 @@ async fn create_tray_menu(
         &current_profile_selected,
         proxy_group_order_map,
         proxy_nodes_data.map_err(anyhow::Error::from),
-    )?;
+    );
 
     let (proxies_menu, inline_proxy_items) = create_proxy_menu_item(
         app_handle,
