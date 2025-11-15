@@ -25,6 +25,15 @@ import { ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import pac from "types-pac/pac.d.ts?raw";
 
+// Ensure Monaco language contributions are registered for proper syntax highlighting.
+// - basic-languages registers the language ids and tokenizers
+// - language/* contributions wire up workers and rich language features
+// Without these, non-YAML editors (e.g. javascript/css) may appear uncolored.
+import "monaco-editor/esm/vs/basic-languages/javascript/javascript.contribution";
+import "monaco-editor/esm/vs/language/typescript/monaco.contribution";
+import "monaco-editor/esm/vs/basic-languages/css/css.contribution";
+import "monaco-editor/esm/vs/language/css/monaco.contribution";
+
 import { showNotice } from "@/services/noticeService";
 import { useThemeMode } from "@/services/states";
 import debounce from "@/utils/debounce";
