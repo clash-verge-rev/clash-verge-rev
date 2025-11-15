@@ -36,6 +36,7 @@ define_menu! {
     rule_mode => RULE_MODE, "tray_rule_mode", "tray.ruleMode",
     global_mode => GLOBAL_MODE, "tray_global_mode", "tray.globalMode",
     direct_mode => DIRECT_MODE, "tray_direct_mode", "tray.directMode",
+    outbound_modes => OUTBOUND_MODES, "tray_outbound_modes", "tray.outboundModes",
     profiles => PROFILES, "tray_profiles", "tray.profiles",
     proxies => PROXIES, "tray_proxies", "tray.proxies",
     system_proxy => SYSTEM_PROXY, "tray_system_proxy", "tray.systemProxy",

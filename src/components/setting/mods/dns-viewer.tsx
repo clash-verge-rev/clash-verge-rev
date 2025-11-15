@@ -1040,7 +1040,7 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
           height="100vh"
           language="yaml"
           value={yamlContent}
-          theme={themeMode === "light" ? "vs" : "vs-dark"}
+          theme={themeMode === "light" ? "light" : "vs-dark"}
           className="flex-grow"
           options={{
             tabSize: 2,

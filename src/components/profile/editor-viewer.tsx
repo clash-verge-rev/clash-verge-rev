@@ -103,7 +103,7 @@ export const EditorViewer = <T extends Language>(props: Props<T>) => {
     [initialData],
   );
 
-  const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
+  const editorRef = useRef<monaco.editor.IStandaloneCodeEditor>(undefined);
   const prevData = useRef<string | undefined>("");
   const currData = useRef<string | undefined>("");
 
@@ -126,8 +126,9 @@ export const EditorViewer = <T extends Language>(props: Props<T>) => {
     });
   };
 
-  const handleChange = useLockFn(async (value: string | undefined) => {
+  const handleChange = useLockFn(async (_value?: string) => {
     try {
+      const value = editorRef.current?.getValue();
       currData.current = value;
       onChange?.(prevData.current, currData.current);
     } catch (err) {
@@ -138,6 +139,7 @@ export const EditorViewer = <T extends Language>(props: Props<T>) => {
   const handleSave = useLockFn(async () => {
     try {
       if (!readOnly) {
+        currData.current = editorRef.current?.getValue();
         onSave?.(prevData.current, currData.current);
       }
       onClose();
@@ -175,12 +177,12 @@ export const EditorViewer = <T extends Language>(props: Props<T>) => {
     return () => {
       unlistenResized.then((fn) => fn());
       editorRef.current?.dispose();
-      editorRef.current = null;
+      editorRef.current = undefined;
     };
   }, [editorResize]);
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="xl" fullWidth>
+    <Dialog open={open} onClose={onClose} maxWidth="xl" fullWidth>
       <DialogTitle>{resolvedTitle}</DialogTitle>
 
       <DialogContent
@@ -192,7 +194,7 @@ export const EditorViewer = <T extends Language>(props: Props<T>) => {
       >
         <MonacoEditor
           language={language}
-          theme={themeMode === "light" ? "vs" : "vs-dark"}
+          theme={themeMode === "light" ? "light" : "vs-dark"}
           options={{
             tabSize: ["yaml", "javascript", "css"].includes(language) ? 2 : 4, // 根据语言类型设置缩进大小
             minimap: {

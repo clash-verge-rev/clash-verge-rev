@@ -22,6 +22,8 @@
       "downloadSpeed": "下載速度"
     },
     "actions": {
+      "active": "活躍",
+      "closed": "已關閉",
       "closeConnection": "關閉連線"
     },
     "columnManager": {

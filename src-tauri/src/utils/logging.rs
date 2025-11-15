@@ -65,21 +65,6 @@ macro_rules! error {
     };
 }
 
-#[macro_export]
-macro_rules! log_err {
-    ($result: expr) => {
-        if let Err(err) = $result {
-            log::error!(target: "app", "{err}");
-        }
-    };
-
-    ($result: expr, $err_str: expr) => {
-        if let Err(_) = $result {
-            log::error!(target: "app", "{}", $err_str);
-        }
-    };
-}
-
 /// wrap the anyhow error
 /// transform the error to String
 #[macro_export]

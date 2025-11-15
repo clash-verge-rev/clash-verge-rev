@@ -57,9 +57,7 @@ impl Config {
         Self::ensure_default_profile_items().await?;
 
         // init Tun mode
-        if !cmd::system::is_admin().unwrap_or_default()
-            && service::is_service_available().await.is_err()
-        {
+        if !cmd::system::is_admin() && service::is_service_available().await.is_err() {
             let verge = Self::verge().await;
             verge.edit_draft(|d| {
                 d.enable_tun_mode = Some(false);

@@ -14,7 +14,7 @@ rust-version = "1.91"
 identifier = "io.github.clash-verge-rev.clash-verge-rev"
 
 [build-dependencies]
-tauri-build = { version = "2.5.1", features = [] }
+tauri-build = { version = "2.5.2", features = [] }
 
 [dependencies]
 warp = { version = "0.4.2", features = ["server"] }
@@ -45,7 +45,7 @@ regex = "1.12.2"
 sysproxy = { git = "https://github.com/clash-verge-rev/sysproxy-rs", features = [
   "guard",
 ] }
-tauri = { version = "2.9.2", features = [
+tauri = { version = "2.9.3", features = [
   "protocol-asset",
   "devtools",
   "tray-icon",
@@ -72,10 +72,6 @@ gethostname = "1.1.0"
 scopeguard = "1.2.0"
 tauri-plugin-notification = "2.3.3"
 tokio-stream = "0.1.17"
-isahc = { version = "1.7.2", default-features = false, features = [
-  "text-decoding",
-  "parking_lot",
-] }
 backoff = { version = "0.4.0", features = ["tokio"] }
 compact_str = { version = "0.9.0", features = ["serde"] }
 tauri-plugin-http = "2.5.4"
@@ -260,3 +256,4 @@ cloned_instead_of_copied = "deny"
 unnecessary_self_imports = "deny"
 unused_trait_names = "deny"
 wildcard_imports = "deny"
+unnecessary_wraps = "deny"

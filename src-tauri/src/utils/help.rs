@@ -75,7 +75,9 @@ pub async fn save_yaml<T: Serialize + Sync>(
     let path_str = path.as_os_str().to_string_lossy().to_string();
     tokio::fs::write(path, yaml_str.as_bytes())
         .await
-        .with_context(|| format!("failed to save file \"{path_str}\""))
+        .with_context(|| format!("failed to save file \"{path_str}\""))?;
+    tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+    Ok(())
 }
 
 const ALPHABET: [char; 62] = [

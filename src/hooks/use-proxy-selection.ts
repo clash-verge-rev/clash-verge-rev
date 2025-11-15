@@ -1,7 +1,7 @@
 import { useLockFn } from "ahooks";
 import { useCallback, useMemo } from "react";
 import {
-  closeConnections,
+  closeConnection,
   getConnections,
   selectNodeForGroup,
 } from "tauri-plugin-mihomo-api";
@@ -16,7 +16,7 @@ const cleanupConnections = async (previousProxy: string) => {
     const { connections } = await getConnections();
     const cleanupPromises = (connections ?? [])
       .filter((conn) => conn.chains.includes(previousProxy))
-      .map((conn) => closeConnections(conn.id));
+      .map((conn) => closeConnection(conn.id));
 
     if (cleanupPromises.length > 0) {
       await Promise.allSettled(cleanupPromises);

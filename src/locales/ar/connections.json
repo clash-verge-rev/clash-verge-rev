@@ -22,6 +22,8 @@
       "downloadSpeed": "سرعة التنزيل"
     },
     "actions": {
+      "active": "Active",
+      "closed": "Closed",
       "closeConnection": "إغلاق الاتصال"
     },
     "columnManager": {

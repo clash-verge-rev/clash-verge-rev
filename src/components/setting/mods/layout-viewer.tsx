@@ -372,7 +372,7 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
             )}
           />
           <GuardState
-            value={verge?.tray_inline_proxy_groups ?? false}
+            value={verge?.tray_inline_proxy_groups ?? true}
             valueProps="checked"
             onCatch={onError}
             onFormat={onSwitchFormat}
