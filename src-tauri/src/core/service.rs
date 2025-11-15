@@ -136,11 +136,28 @@ async fn uninstall_service() -> Result<()> {
     let status = if linux_running_as_root() {
         StdCommand::new(&uninstall_path).status()?
     } else {
-        StdCommand::new(elevator)
+        let result = StdCommand::new(&elevator)
             .arg("sh")
             .arg("-c")
-            .arg(uninstall_shell)
-            .status()?
+            .arg(&uninstall_shell)
+            .status()?;
+
+        // 如果 pkexec 执行失败，回退到 sudo
+        if !result.success() && elevator.contains("pkexec") {
+            logging!(
+                warn,
+                Type::Service,
+                "pkexec failed with code {}, falling back to sudo",
+                result.code().unwrap_or(-1)
+            );
+            StdCommand::new("sudo")
+                .arg("sh")
+                .arg("-c")
+                .arg(&uninstall_shell)
+                .status()?
+        } else {
+            result
+        }
     };
     logging!(
         info,
@@ -177,11 +194,28 @@ async fn install_service() -> Result<()> {
     let status = if linux_running_as_root() {
         StdCommand::new(&install_path).status()?
     } else {
-        StdCommand::new(elevator)
+        let result = StdCommand::new(&elevator)
             .arg("sh")
             .arg("-c")
-            .arg(install_shell)
-            .status()?
+            .arg(&install_shell)
+            .status()?;
+
+        // 如果 pkexec 执行失败，回退到 sudo
+        if !result.success() && elevator.contains("pkexec") {
+            logging!(
+                warn,
+                Type::Service,
+                "pkexec failed with code {}, falling back to sudo",
+                result.code().unwrap_or(-1)
+            );
+            StdCommand::new("sudo")
+                .arg("sh")
+                .arg("-c")
+                .arg(&install_shell)
+                .status()?
+        } else {
+            result
+        }
     };
     logging!(
         info,
