@@ -3,9 +3,10 @@ use crate::{
     core::{CoreManager, handle, hotkey, sysopt, tray},
     logging, logging_error,
     module::{auto_backup::AutoBackupManager, lightweight},
-    utils::{draft::SharedBox, logging::Type},
+    utils::logging::Type,
 };
 use anyhow::Result;
+use draft::SharedBox;
 use serde_yaml_ng::Mapping;
 
 /// Patch Clash configuration

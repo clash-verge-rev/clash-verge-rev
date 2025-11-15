@@ -1122,6 +1122,7 @@ dependencies = [
  "criterion",
  "deelevate",
  "delay_timer",
+ "draft",
  "dunce",
  "flexi_logger",
  "futures",
@@ -2014,6 +2015,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "d8b14ccef22fc6f5a8f4d7d768562a182c04ce9a3b3157b91390b52ddfdf1a76"
 dependencies = [
  "serde",
+]
+
+[[package]]
+name = "draft"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "criterion",
+ "parking_lot",
+ "tokio",
 ]
 
 [[package]]
