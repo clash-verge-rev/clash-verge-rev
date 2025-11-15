@@ -1,112 +1,129 @@
 use criterion::{Criterion, criterion_group, criterion_main};
-use draft::*;
 use std::hint::black_box;
+use std::process;
+use tokio::runtime::Runtime;
 
-#[derive(Clone)]
-struct TestData {
-    number: i32,
-    string: String,
-    boolean: bool,
-    vector: Vec<i32>,
-    vec_string: Vec<String>,
-    option: Option<String>,
+use draft::Draft;
+
+#[derive(Clone, Debug)]
+struct IVerge {
+    enable_auto_launch: Option<bool>,
+    enable_tun_mode: Option<bool>,
 }
 
-fn new_test_data() -> Draft<TestData> {
-    Draft::new(TestData {
-        number: 42,
-        string: "Hello, World!".to_string(),
-        boolean: true,
-        vector: vec![1, 2, 3, 4, 5],
-        vec_string: vec!["one".to_string(), "two".to_string(), "three".to_string()],
-        option: Some("Some value".to_string()),
-    })
+impl Default for IVerge {
+    fn default() -> Self {
+        Self {
+            enable_auto_launch: None,
+            enable_tun_mode: None,
+        }
+    }
 }
 
-fn bench_create_and_apply(c: &mut Criterion) {
-    c.bench_function("create_and_apply", |b| {
+fn make_draft() -> Draft<IVerge> {
+    let verge = IVerge {
+        enable_auto_launch: Some(true),
+        enable_tun_mode: Some(false),
+        ..Default::default()
+    };
+    Draft::new(verge)
+}
+
+pub fn bench_draft(c: &mut Criterion) {
+    let rt = Runtime::new().unwrap_or_else(|e| {
+        eprintln!("Tokio runtime init failed: {e}");
+        process::exit(1);
+    });
+
+    let mut group = c.benchmark_group("draft");
+    group.sample_size(100);
+    group.warm_up_time(std::time::Duration::from_millis(300));
+    group.measurement_time(std::time::Duration::from_secs(1));
+
+    group.bench_function("data_mut", |b| {
         b.iter(|| {
-            let draft = new_test_data();
-            draft.with_draft_edit_sync(|data| {
-                data.number = black_box(100);
-                data.string = "Changed".to_string();
-                data.boolean = false;
-                data.vector.push(6);
-                data.vec_string.push("four".to_string());
-                data.option = None;
-            });
-            draft.apply();
-            black_box(());
+            let draft = black_box(make_draft());
+            draft.edit_draft(|d| d.enable_tun_mode = Some(true));
+            black_box(&draft.latest_arc().enable_tun_mode);
         });
     });
-}
 
-fn bench_edit_sync(c: &mut Criterion) {
-    c.bench_function("with_draft_edit_sync", |b| {
+    group.bench_function("draft_mut_first", |b| {
         b.iter(|| {
-            let draft = new_test_data();
-            draft.with_draft_edit_sync(|data| {
-                data.number = black_box(data.number + 1);
-            });
-            black_box(draft);
+            let draft = black_box(make_draft());
+            draft.edit_draft(|d| d.enable_auto_launch = Some(false));
+            let latest = draft.latest_arc();
+            black_box(&latest.enable_auto_launch);
         });
     });
-}
 
-fn bench_discard(c: &mut Criterion) {
-    c.bench_function("discard", |b| {
+    group.bench_function("draft_mut_existing", |b| {
         b.iter(|| {
-            let draft = new_test_data();
-            draft.with_draft_edit_sync(|data| {
-                data.number = black_box(999);
+            let draft = black_box(make_draft());
+            {
+                draft.edit_draft(|d| {
+                    d.enable_tun_mode = Some(true);
+                });
+                let latest1 = draft.latest_arc();
+                black_box(&latest1.enable_tun_mode);
+            }
+            draft.edit_draft(|d| {
+                d.enable_tun_mode = Some(false);
             });
-            draft.discard();
-            black_box(());
+            let latest2 = draft.latest_arc();
+            black_box(&latest2.enable_tun_mode);
         });
     });
-}
 
-fn bench_multiple_edits(c: &mut Criterion) {
-    c.bench_function("multiple_edits", |b| {
+    group.bench_function("latest_arc", |b| {
         b.iter(|| {
-            let draft = new_test_data();
-            for i in 0..10 {
-                draft.with_draft_edit_sync(|data| {
-                    data.number = black_box(i);
+            let draft = black_box(make_draft());
+            let latest = draft.latest_arc();
+            black_box(&latest.enable_auto_launch);
+        });
+    });
+
+    group.bench_function("apply", |b| {
+        b.iter(|| {
+            let draft = black_box(make_draft());
+            {
+                draft.edit_draft(|d| {
+                    d.enable_auto_launch = Some(false);
                 });
             }
-            black_box(draft.get_draft().number);
+            draft.apply();
+            black_box(&draft);
         });
     });
-}
 
-fn bench_get_draft(c: &mut Criterion) {
-    c.bench_function("get_draft", |b| {
+    group.bench_function("discard", |b| {
         b.iter(|| {
-            let draft = new_test_data();
-            // call get_draft to measure lazy creation and read path
-            let _ = black_box(draft.get_draft());
+            let draft = black_box(make_draft());
+            {
+                draft.edit_draft(|d| {
+                    d.enable_auto_launch = Some(false);
+                });
+            }
+            draft.discard();
+            black_box(&draft);
         });
     });
-}
 
-fn bench_get_committed(c: &mut Criterion) {
-    c.bench_function("get_committed", |b| {
-        b.iter(|| {
-            let draft = new_test_data();
-            // measure read-only access to committed
-            let _ = black_box(draft.get_committed());
+    group.bench_function("with_data_modify_async", |b| {
+        b.to_async(&rt).iter(|| async {
+            let draft = black_box(make_draft());
+            let _: Result<(), anyhow::Error> = draft
+                .with_data_modify::<_, _, _>(|mut box_data| async move {
+                    box_data.enable_auto_launch =
+                        Some(!box_data.enable_auto_launch.unwrap_or(false));
+                    Ok((box_data, ()))
+                })
+                .await;
         });
     });
+
+    group.finish();
 }
 
-criterion_group!(
-    benches,
-    bench_create_and_apply,
-    bench_edit_sync,
-    bench_discard,
-    bench_multiple_edits,
-    bench_get_draft,
-    bench_get_committed
-);
+criterion_group!(benches, bench_draft);
 criterion_main!(benches);

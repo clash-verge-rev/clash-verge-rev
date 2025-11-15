@@ -1122,6 +1122,7 @@ dependencies = [
  "criterion",
  "deelevate",
  "delay_timer",
+ "draft",
  "dunce",
  "flexi_logger",
  "futures",
@@ -2023,6 +2024,7 @@ dependencies = [
  "anyhow",
  "criterion",
  "parking_lot",
+ "tokio",
 ]
 
 [[package]]
