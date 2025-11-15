@@ -87,7 +87,7 @@
     "@types/js-yaml": "^4.0.9",
     "@types/lodash-es": "^4.17.12",
     "@types/node": "^24.10.1",
-    "@types/react": "19.2.4",
+    "@types/react": "19.2.5",
     "@types/react-dom": "19.2.3",
     "@vitejs/plugin-legacy": "^7.2.1",
     "@vitejs/plugin-react-swc": "^4.2.2",
