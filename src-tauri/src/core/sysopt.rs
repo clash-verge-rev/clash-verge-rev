@@ -2,22 +2,43 @@
 use crate::utils::autostart as startup_shortcut;
 use crate::{
     config::{Config, IVerge},
-    core::{EventDrivenProxyManager, handle::Handle},
+    core::handle::Handle,
     logging, logging_error, singleton_lazy,
     utils::logging::Type,
 };
 use anyhow::Result;
+use parking_lot::RwLock;
 use scopeguard::defer;
 use smartstring::alias::String;
-use std::sync::atomic::{AtomicBool, Ordering};
-#[cfg(not(target_os = "windows"))]
-use sysproxy::{Autoproxy, Sysproxy};
+use std::{
+    sync::{
+        Arc,
+        atomic::{AtomicBool, Ordering},
+    },
+    time::Duration,
+};
+use sysproxy::{Autoproxy, GuardMonitor, GuardType, Sysproxy};
 use tauri_plugin_autostart::ManagerExt as _;
 
 pub struct Sysopt {
     initialed: AtomicBool,
     update_sysproxy: AtomicBool,
     reset_sysproxy: AtomicBool,
+    guard: Arc<RwLock<GuardMonitor>>,
+}
+
+impl Default for Sysopt {
+    fn default() -> Self {
+        Self {
+            initialed: AtomicBool::new(false),
+            update_sysproxy: AtomicBool::new(false),
+            reset_sysproxy: AtomicBool::new(false),
+            guard: Arc::new(RwLock::new(GuardMonitor::new(
+                GuardType::None,
+                Duration::from_secs(30),
+            ))),
+        }
+    }
 }
 
 #[cfg(target_os = "windows")]
@@ -82,16 +103,6 @@ async fn execute_sysproxy_command(args: Vec<std::string::String>) -> Result<()> 
     Ok(())
 }
 
-impl Default for Sysopt {
-    fn default() -> Self {
-        Self {
-            initialed: AtomicBool::new(false),
-            update_sysproxy: AtomicBool::new(false),
-            reset_sysproxy: AtomicBool::new(false),
-        }
-    }
-}
-
 // Use simplified singleton_lazy macro
 singleton_lazy!(Sysopt, SYSOPT, Sysopt::default);
 
@@ -100,30 +111,64 @@ impl Sysopt {
         self.initialed.load(Ordering::SeqCst)
     }
 
-    pub fn init_guard_sysproxy(&self) {
-        // 使用事件驱动代理管理器
-        let proxy_manager = EventDrivenProxyManager::global();
-        proxy_manager.notify_app_started();
+    fn access_guard(&self) -> Arc<RwLock<GuardMonitor>> {
+        Arc::clone(&self.guard)
+    }
 
-        logging!(info, Type::Core, "已启用事件驱动代理守卫");
+    pub async fn refresh_guard(&self) {
+        logging!(info, Type::Core, "Refreshing system proxy guard...");
+        let verge = Config::verge().await.latest_arc();
+        if !verge.enable_system_proxy.unwrap_or(false) {
+            logging!(info, Type::Core, "System proxy is disabled.");
+            self.access_guard().write().stop();
+            return;
+        }
+        if !verge.enable_proxy_guard.unwrap_or(false) {
+            logging!(info, Type::Core, "System proxy guard is disabled.");
+            return;
+        }
+        logging!(
+            info,
+            Type::Core,
+            "Updating system proxy with duration: {} seconds",
+            verge.proxy_guard_duration.unwrap_or(30)
+        );
+        {
+            let guard = self.access_guard();
+            guard.write().set_interval(Duration::from_secs(
+                verge.proxy_guard_duration.unwrap_or(30),
+            ));
+        }
+        logging!(info, Type::Core, "Starting system proxy guard...");
+        {
+            let guard = self.access_guard();
+            guard.write().start();
+        }
     }
 
     /// init the sysproxy
     pub async fn update_sysproxy(&self) -> Result<()> {
         self.initialed.store(true, Ordering::SeqCst);
+        if self.update_sysproxy.load(Ordering::Acquire) {
+            logging!(info, Type::Core, "Sysproxy update is already in progress.");
+            return Ok(());
+        }
         if self
             .update_sysproxy
-            .compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst)
+            .compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire)
             .is_err()
         {
+            logging!(info, Type::Core, "Sysproxy update is already in progress.");
             return Ok(());
         }
         defer! {
-            self.update_sysproxy.store(false, Ordering::SeqCst);
+            logging!(info, Type::Core, "Sysproxy update completed.");
+            self.update_sysproxy.store(false, Ordering::Release);
         }
 
+        let verge = Config::verge().await.latest_arc();
         let port = {
-            let verge_port = Config::verge().await.latest_arc().verge_mixed_port;
+            let verge_port = verge.verge_mixed_port;
             match verge_port {
                 Some(port) => port,
                 None => Config::clash().await.latest_arc().get_mixed_port(),
@@ -132,8 +177,6 @@ impl Sysopt {
         let pac_port = IVerge::get_singleton_port();
 
         let (sys_enable, pac_enable, proxy_host) = {
-            let verge = Config::verge().await;
-            let verge = verge.latest_arc();
             (
                 verge.enable_system_proxy.unwrap_or(false),
                 verge.proxy_auto_config.unwrap_or(false),
@@ -160,8 +203,9 @@ impl Sysopt {
             if !sys_enable {
                 sys.set_system_proxy()?;
                 auto.set_auto_proxy()?;
-                let proxy_manager = EventDrivenProxyManager::global();
-                proxy_manager.notify_config_changed();
+                self.access_guard()
+                    .write()
+                    .set_guard_type(GuardType::Sysproxy(sys));
                 return Ok(());
             }
 
@@ -170,8 +214,9 @@ impl Sysopt {
                 auto.enable = true;
                 sys.set_system_proxy()?;
                 auto.set_auto_proxy()?;
-                let proxy_manager = EventDrivenProxyManager::global();
-                proxy_manager.notify_config_changed();
+                self.access_guard()
+                    .write()
+                    .set_guard_type(GuardType::Autoproxy(auto));
                 return Ok(());
             }
 
@@ -180,33 +225,47 @@ impl Sysopt {
                 sys.enable = true;
                 auto.set_auto_proxy()?;
                 sys.set_system_proxy()?;
-                let proxy_manager = EventDrivenProxyManager::global();
-                proxy_manager.notify_config_changed();
+                self.access_guard()
+                    .write()
+                    .set_guard_type(GuardType::Sysproxy(sys));
                 return Ok(());
             }
         }
+
         #[cfg(target_os = "windows")]
         {
             if !sys_enable {
-                let result = self.reset_sysproxy().await;
-                let proxy_manager = EventDrivenProxyManager::global();
-                proxy_manager.notify_config_changed();
-                return result;
+                self.access_guard().write().set_guard_type(GuardType::None);
+                return self.reset_sysproxy().await;
             }
 
-            let args: Vec<std::string::String> = if pac_enable {
+            let (args, guard_type): (Vec<std::string::String>, GuardType) = if pac_enable {
                 let address = format!("http://{proxy_host}:{pac_port}/commands/pac");
-                vec!["pac".into(), address]
+                (
+                    vec!["pac".into(), address.clone()],
+                    GuardType::Autoproxy(Autoproxy {
+                        enable: true,
+                        url: address,
+                    }),
+                )
             } else {
                 let address = format!("{proxy_host}:{port}");
                 let bypass = get_bypass().await;
-                vec!["global".into(), address, bypass.into()]
+                let bypass_for_guard = bypass.as_str().to_owned();
+                (
+                    vec!["global".into(), address.clone(), bypass.into()],
+                    GuardType::Sysproxy(Sysproxy {
+                        enable: true,
+                        host: proxy_host.clone().into(),
+                        port,
+                        bypass: bypass_for_guard,
+                    }),
+                )
             };
 
             execute_sysproxy_command(args).await?;
+            self.access_guard().write().set_guard_type(guard_type);
         }
-        let proxy_manager = EventDrivenProxyManager::global();
-        proxy_manager.notify_config_changed();
         Ok(())
     }
 

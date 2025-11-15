@@ -7151,13 +7151,14 @@ dependencies = [
 
 [[package]]
 name = "sysproxy"
-version = "0.3.1"
-source = "git+https://github.com/clash-verge-rev/sysproxy-rs#ea6e5b5bcef32025e1df914d663eea8558afacb2"
+version = "0.4.0"
+source = "git+https://github.com/clash-verge-rev/sysproxy-rs#0f844dd2639b0ac74da4548b1325335844947420"
 dependencies = [
  "interfaces",
  "iptools",
  "log",
  "thiserror 2.0.17",
+ "tokio",
  "url",
  "windows 0.62.2",
  "winreg 0.55.0",

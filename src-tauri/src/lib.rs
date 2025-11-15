@@ -14,7 +14,7 @@ use crate::constants::files;
 #[cfg(target_os = "linux")]
 use crate::utils::linux;
 use crate::{
-    core::{EventDrivenProxyManager, handle},
+    core::handle,
     process::AsyncHandler,
     utils::{resolve, server},
 };
@@ -440,7 +440,6 @@ pub fn run() {
             let handle = core::handle::Handle::global();
             if !handle.is_exiting() {
                 handle.set_is_exiting();
-                EventDrivenProxyManager::global().notify_app_stopping();
                 feat::clean();
             }
         }
