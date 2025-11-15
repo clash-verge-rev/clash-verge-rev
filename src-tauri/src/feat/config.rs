@@ -146,9 +146,6 @@ fn determine_update_flags(patch: &IVerge) -> i32 {
         update_flags |= UpdateFlags::SystrayIcon as i32;
     }
 
-    // if proxy_bypass.is_some() || pac_content.is_some() || pac.is_some() {
-    //     update_flags |= UpdateFlags::SysProxy as i32;
-    // }
     if proxy_bypass.is_some()
         || pac_content.is_some()
         || pac.is_some()
