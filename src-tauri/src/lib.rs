@@ -16,7 +16,7 @@ use crate::utils::linux;
 use crate::{
     core::{EventDrivenProxyManager, handle},
     process::AsyncHandler,
-    utils::{resolve, server},
+    utils::resolve,
 };
 use anyhow::Result;
 use once_cell::sync::OnceCell;
@@ -32,21 +32,24 @@ i18n!("locales", fallback = "zh");
 pub static APP_HANDLE: OnceCell<AppHandle> = OnceCell::new();
 /// Application initialization helper functions
 mod app_init {
-    use super::*;
+    use crate::{module::lightweight, utils::window_manager::WindowManager};
 
-    /// Initialize singleton monitoring for other instances
-    pub fn init_singleton_check() -> Result<()> {
-        AsyncHandler::block_on(async move {
-            logging!(info, Type::Setup, "开始检查单例实例...");
-            server::check_singleton().await?;
-            Ok(())
-        })
-    }
+    use super::*;
 
     /// Setup plugins for the Tauri builder
     pub fn setup_plugins(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri::Wry> {
         #[allow(unused_mut)]
         let mut builder = builder
+            .plugin(tauri_plugin_single_instance::init(|_app, _args, _cwd| {
+                AsyncHandler::spawn(async || {
+                    logging!(info, Type::Window, "检测到从单例模式恢复应用窗口");
+                    if !lightweight::exit_lightweight_mode().await {
+                        WindowManager::show_main_window().await;
+                    } else {
+                        logging!(error, Type::Window, "轻量模式退出失败，无法恢复应用窗口");
+                    };
+                });
+            }))
             .plugin(tauri_plugin_notification::init())
             .plugin(tauri_plugin_updater::Builder::new().build())
             .plugin(tauri_plugin_clipboard_manager::init())
@@ -84,10 +87,7 @@ mod app_init {
     /// Setup deep link handling
     pub fn setup_deep_links(app: &tauri::App) {
         #[cfg(any(target_os = "linux", all(debug_assertions, windows)))]
-        {
-            logging!(info, Type::Setup, "注册深层链接...");
-            app.deep_link().register_all()?;
-        }
+        app.deep_link().register_all()?;
 
         app.deep_link().on_open_url(|event| {
             let urls = event.urls();
@@ -222,10 +222,6 @@ mod app_init {
 }
 
 pub fn run() {
-    if app_init::init_singleton_check().is_err() {
-        return;
-    }
-
     let _ = utils::dirs::init_portable_flag();
 
     #[cfg(target_os = "linux")]
