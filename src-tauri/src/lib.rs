@@ -86,7 +86,7 @@ mod app_init {
         #[cfg(any(target_os = "linux", all(debug_assertions, windows)))]
         {
             logging!(info, Type::Setup, "注册深层链接...");
-            app.deep_link().register_all()?;
+            let _ = app.deep_link().register_all();
         }
 
         app.deep_link().on_open_url(|event| {
