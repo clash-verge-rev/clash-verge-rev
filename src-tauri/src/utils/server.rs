@@ -73,20 +73,20 @@ pub fn embed_server() {
         .expect("failed to set shutdown signal for embedded server");
     let port = IVerge::get_singleton_port();
 
-    AsyncHandler::spawn(move || async move {
-        let visible = warp::path!("commands" / "visible").and_then(|| async {
-            logging!(info, Type::Window, "检测到从单例模式恢复应用窗口");
-            if !lightweight::exit_lightweight_mode().await {
-                WindowManager::show_main_window().await;
-            } else {
-                logging!(error, Type::Window, "轻量模式退出失败，无法恢复应用窗口");
-            };
-            Ok::<_, warp::Rejection>(warp::reply::with_status::<std::string::String>(
-                "ok".to_string(),
-                warp::http::StatusCode::OK,
-            ))
-        });
+    let visible = warp::path!("commands" / "visible").and_then(|| async {
+        logging!(info, Type::Window, "检测到从单例模式恢复应用窗口");
+        if !lightweight::exit_lightweight_mode().await {
+            WindowManager::show_main_window().await;
+        } else {
+            logging!(error, Type::Window, "轻量模式退出失败，无法恢复应用窗口");
+        };
+        Ok::<_, warp::Rejection>(warp::reply::with_status::<std::string::String>(
+            "ok".to_string(),
+            warp::http::StatusCode::OK,
+        ))
+    });
 
+    let pac = warp::path!("commands" / "pac").and_then(|| async move {
         let verge_config = Config::verge().await;
         let clash_config = Config::clash().await;
 
@@ -100,29 +100,31 @@ pub fn embed_server() {
             .data_arc()
             .verge_mixed_port
             .unwrap_or_else(|| clash_config.data_arc().get_mixed_port());
-
-        let pac = warp::path!("commands" / "pac").map(move || {
-            let processed_content = pac_content.replace("%mixed-port%", &format!("{pac_port}"));
+        let processed_content = pac_content.replace("%mixed-port%", &format!("{pac_port}"));
+        Ok::<_, warp::Rejection>(
             warp::http::Response::builder()
                 .header("Content-Type", "application/x-ns-proxy-autoconfig")
                 .body(processed_content)
-                .unwrap_or_default()
+                .unwrap_or_default(),
+        )
+    });
+
+    // Use map instead of and_then to avoid Send issues
+    let scheme = warp::path!("commands" / "scheme")
+        .and(warp::query::<QueryParam>())
+        .and_then(|query: QueryParam| async move {
+            AsyncHandler::spawn(|| async move {
+                logging_error!(Type::Setup, resolve::resolve_scheme(&query.param).await);
+            });
+            Ok::<_, warp::Rejection>(warp::reply::with_status::<std::string::String>(
+                "ok".to_string(),
+                warp::http::StatusCode::OK,
+            ))
         });
 
-        // Use map instead of and_then to avoid Send issues
-        let scheme = warp::path!("commands" / "scheme")
-            .and(warp::query::<QueryParam>())
-            .and_then(|query: QueryParam| async move {
-                AsyncHandler::spawn(|| async move {
-                    logging_error!(Type::Setup, resolve::resolve_scheme(&query.param).await);
-                });
-                Ok::<_, warp::Rejection>(warp::reply::with_status::<std::string::String>(
-                    "ok".to_string(),
-                    warp::http::StatusCode::OK,
-                ))
-            });
+    let commands = visible.or(scheme).or(pac);
 
-        let commands = visible.or(scheme).or(pac);
+    AsyncHandler::spawn(move || async move {
         warp::serve(commands)
             .bind(([127, 0, 0, 1], port))
             .await
