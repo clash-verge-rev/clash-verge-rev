@@ -90,14 +90,12 @@ impl AsyncProxyQuery {
     #[cfg(target_os = "windows")]
     async fn get_auto_proxy_impl() -> Result<AsyncAutoproxy> {
         // Windows: 从注册表读取PAC配置
-        AsyncHandler::spawn_blocking(move || -> Result<AsyncAutoproxy> {
-            Self::get_pac_config_from_registry()
-        })
-        .await?
+        let proxy = AsyncHandler::spawn_blocking(Self::get_pac_config_from_registry).await?;
+        Ok(proxy)
     }
 
     #[cfg(target_os = "windows")]
-    fn get_pac_config_from_registry() -> Result<AsyncAutoproxy> {
+    fn get_pac_config_from_registry() -> AsyncAutoproxy {
         use std::ptr;
         use winapi::shared::minwindef::{DWORD, HKEY};
         use winapi::um::winnt::{KEY_READ, REG_DWORD, REG_SZ};
@@ -114,7 +112,7 @@ impl AsyncProxyQuery {
 
             if result != 0 {
                 logging!(debug, Type::Network, "无法打开注册表项");
-                return Ok(AsyncAutoproxy::default());
+                return AsyncAutoproxy::default();
             }
 
             // 1. 检查自动配置是否启用 (AutoConfigURL 存在且不为空即表示启用)
@@ -174,13 +172,13 @@ impl AsyncProxyQuery {
                     pac_url = "auto-detect".into();
                 }
 
-                Ok(AsyncAutoproxy {
+                AsyncAutoproxy {
                     enable: true,
                     url: pac_url,
-                })
+                }
             } else {
                 logging!(debug, Type::Network, "PAC配置未启用");
-                Ok(AsyncAutoproxy::default())
+                AsyncAutoproxy::default()
             }
         }
     }
@@ -286,14 +284,12 @@ impl AsyncProxyQuery {
     #[cfg(target_os = "windows")]
     async fn get_system_proxy_impl() -> Result<AsyncSysproxy> {
         // Windows: 使用注册表直接读取代理设置
-        AsyncHandler::spawn_blocking(move || -> Result<AsyncSysproxy> {
-            Self::get_system_proxy_from_registry()
-        })
-        .await?
+        let sys = AsyncHandler::spawn_blocking(Self::get_system_proxy_from_registry).await?;
+        Ok(sys)
     }
 
     #[cfg(target_os = "windows")]
-    fn get_system_proxy_from_registry() -> Result<AsyncSysproxy> {
+    fn get_system_proxy_from_registry() -> AsyncSysproxy {
         use std::ptr;
         use winapi::shared::minwindef::{DWORD, HKEY};
         use winapi::um::winnt::{KEY_READ, REG_DWORD, REG_SZ};
@@ -309,7 +305,7 @@ impl AsyncProxyQuery {
                 RegOpenKeyExW(HKEY_CURRENT_USER, key_path.as_ptr(), 0, KEY_READ, &mut hkey);
 
             if result != 0 {
-                return Ok(AsyncSysproxy::default());
+                return AsyncSysproxy::default();
             }
 
             // 检查代理是否启用
@@ -329,7 +325,7 @@ impl AsyncProxyQuery {
 
             if enable_result != 0 || value_type != REG_DWORD || proxy_enable == 0 {
                 RegCloseKey(hkey);
-                return Ok(AsyncSysproxy::default());
+                return AsyncSysproxy::default();
             }
 
             // 读取代理服务器设置
@@ -398,14 +394,14 @@ impl AsyncProxyQuery {
                     "从注册表读取到代理设置: {host}:{port}, bypass: {bypass_list}"
                 );
 
-                Ok(AsyncSysproxy {
+                AsyncSysproxy {
                     enable: true,
                     host,
                     port,
                     bypass: bypass_list,
-                })
+                }
             } else {
-                Ok(AsyncSysproxy::default())
+                AsyncSysproxy::default()
             }
         }
     }
