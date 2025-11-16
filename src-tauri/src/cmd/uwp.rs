@@ -17,6 +17,7 @@ mod platform {
 mod platform {
     use super::CmdResult;
 
+    #[allow(clippy::unnecessary_wraps)]
     pub const fn invoke_uwp_tool() -> CmdResult {
         Ok(())
     }

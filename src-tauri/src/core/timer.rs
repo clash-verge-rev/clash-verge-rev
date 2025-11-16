@@ -1,5 +1,7 @@
 use crate::{
-    config::Config, core::sysopt::Sysopt, feat, logging, logging_error, singleton,
+    config::Config,
+    core::{CoreManager, manager::RunningMode, sysopt::Sysopt},
+    feat, logging, logging_error, singleton,
     utils::logging::Type,
 };
 use anyhow::{Context as _, Result};
@@ -392,6 +394,7 @@ impl Timer {
             .spawn_async_routine(move || {
                 let uid = uid.clone();
                 Box::pin(async move {
+                    Self::wait_untile_core_manager(Duration::from_millis(1000)).await;
                     Self::wait_until_sysopt(Duration::from_millis(1000)).await;
                     Self::async_task(&uid).await;
                 }) as Pin<Box<dyn std::future::Future<Output = ()> + Send>>
@@ -523,10 +526,28 @@ impl Timer {
         Self::emit_update_event(uid, false);
     }
 
+    async fn wait_untile_core_manager(max_wait: Duration) {
+        let _ = timeout(max_wait, async {
+            while *CoreManager::global().get_running_mode() != RunningMode::NotRunning {
+                logging!(
+                    debug,
+                    Type::Timer,
+                    "Waiting for CoreManager to be initialized..."
+                );
+                sleep(Duration::from_millis(30)).await;
+            }
+        })
+        .await;
+    }
+
     async fn wait_until_sysopt(max_wait: Duration) {
         let _ = timeout(max_wait, async {
             while !Sysopt::global().is_initialed() {
-                logging!(warn, Type::Timer, "Waiting for Sysopt to be initialized...");
+                logging!(
+                    debug,
+                    Type::Timer,
+                    "Waiting for Sysopt to be initialized..."
+                );
                 sleep(Duration::from_millis(30)).await;
             }
         })

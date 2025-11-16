@@ -5,10 +5,11 @@ use crate::{
     constants::{files, timing},
     core::{CoreManager, handle, service, tray, validate::CoreConfigValidator},
     enhance, logging, logging_error,
-    utils::{Draft, dirs, help, logging::Type},
+    utils::{dirs, help, logging::Type},
 };
 use anyhow::{Result, anyhow};
 use backoff::{Error as BackoffError, ExponentialBackoff};
+use draft::Draft;
 use smartstring::alias::String;
 use std::path::PathBuf;
 use tokio::sync::OnceCell;
@@ -57,9 +58,7 @@ impl Config {
         Self::ensure_default_profile_items().await?;
 
         // init Tun mode
-        if !cmd::system::is_admin().unwrap_or_default()
-            && service::is_service_available().await.is_err()
-        {
+        if !cmd::system::is_admin() && service::is_service_available().await.is_err() {
             let verge = Self::verge().await;
             verge.edit_draft(|d| {
                 d.enable_tun_mode = Some(false);

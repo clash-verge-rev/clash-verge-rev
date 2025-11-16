@@ -1,5 +1,4 @@
 use crate::config::Config;
-use crate::core::event_driven_proxy::EventDrivenProxyManager;
 use crate::core::{CoreManager, handle, sysopt};
 use crate::utils;
 use crate::utils::window_manager::WindowManager;
@@ -24,7 +23,6 @@ pub async fn quit() {
     // 获取应用句柄并设置退出标志
     let app_handle = handle::Handle::app_handle();
     handle::Handle::global().set_is_exiting();
-    EventDrivenProxyManager::global().notify_app_stopping();
 
     logging!(info, Type::System, "开始异步清理资源");
     let cleanup_result = clean_async().await;

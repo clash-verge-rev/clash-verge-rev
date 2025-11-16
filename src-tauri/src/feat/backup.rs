@@ -1,10 +1,11 @@
 use crate::{
     config::{Config, IVerge},
     core::backup,
-    logging, logging_error,
+    logging,
     process::AsyncHandler,
     utils::{
-        dirs::{PathBufExec as _, app_home_dir, local_backup_dir},
+        dirs::{PathBufExec as _, app_home_dir, local_backup_dir, verge_path},
+        help,
         logging::Type,
     },
 };
@@ -22,6 +23,38 @@ pub struct LocalBackupFile {
     pub path: String,
     pub last_modified: String,
     pub content_length: u64,
+}
+
+/// Load restored verge.yaml from disk, merge back WebDAV creds, save, and sync memory.
+async fn finalize_restored_verge_config(
+    webdav_url: Option<String>,
+    webdav_username: Option<String>,
+    webdav_password: Option<String>,
+) -> Result<()> {
+    // Do NOT silently fallback to defaults; a broken/missing verge.yaml means restore failed.
+    // Propagate the error so the UI/user can react accordingly.
+    let mut restored = help::read_yaml::<IVerge>(&verge_path()?).await?;
+    restored.webdav_url = webdav_url;
+    restored.webdav_username = webdav_username;
+    restored.webdav_password = webdav_password;
+    restored.save_file().await?;
+
+    let verge_draft = Config::verge().await;
+    verge_draft.edit_draft(|d| {
+        *d = restored.clone();
+    });
+    verge_draft.apply();
+
+    // Ensure side-effects (flags, tray, sysproxy, hotkeys, auto-backup refresh, etc.) run.
+    // Use not_save_file = true to avoid extra I/O (we already persisted the restored file).
+    if let Err(err) = super::patch_verge(&restored, true).await {
+        logging!(
+            error,
+            Type::Backup,
+            "Failed to apply restored verge config: {err:#?}"
+        );
+    }
+    Ok(())
 }
 
 /// Create a backup and upload to WebDAV
@@ -103,22 +136,10 @@ pub async fn restore_webdav_backup(filename: String) -> Result<()> {
     let file = AsyncHandler::spawn_blocking(move || std::fs::File::open(&value)).await??;
     let mut zip = zip::ZipArchive::new(file)?;
     zip.extract(app_home_dir()?)?;
-    logging_error!(
-        Type::Backup,
-        super::patch_verge(
-            &IVerge {
-                webdav_url,
-                webdav_username,
-                webdav_password,
-                ..IVerge::default()
-            },
-            false
-        )
-        .await
-    );
-    // 最后删除临时文件
-    backup_storage_path.remove_if_exists().await?;
-    Ok(())
+    let res = finalize_restored_verge_config(webdav_url, webdav_username, webdav_password).await;
+    // Finally remove the temp file (attempt cleanup even if finalize fails)
+    let _ = backup_storage_path.remove_if_exists().await;
+    res
 }
 
 /// Create a backup and save to local storage
@@ -264,19 +285,7 @@ pub async fn restore_local_backup(filename: String) -> Result<()> {
     let file = AsyncHandler::spawn_blocking(move || std::fs::File::open(&target_path)).await??;
     let mut zip = zip::ZipArchive::new(file)?;
     zip.extract(app_home_dir()?)?;
-    logging_error!(
-        Type::Backup,
-        super::patch_verge(
-            &IVerge {
-                webdav_url,
-                webdav_username,
-                webdav_password,
-                ..IVerge::default()
-            },
-            false
-        )
-        .await
-    );
+    finalize_restored_verge_config(webdav_url, webdav_username, webdav_password).await?;
     Ok(())
 }
 
