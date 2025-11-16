@@ -89,7 +89,8 @@
       "common": {
         "copySuccess": "复制成功",
         "saveSuccess": "配置保存成功",
-        "saveFailed": "配置保存失败"
+        "saveFailed": "配置保存失败",
+        "refreshFailed": "刷新失败"
       }
     },
     "validation": {

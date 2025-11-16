@@ -89,7 +89,8 @@
       "common": {
         "copySuccess": "Күчерелде",
         "saveSuccess": "Configuration saved successfully",
-        "saveFailed": "Failed to save configuration"
+        "saveFailed": "Failed to save configuration",
+        "refreshFailed": "Refresh failed"
       }
     },
     "validation": {

@@ -89,7 +89,8 @@
       "common": {
         "copySuccess": "Kopyalama Başarılı",
         "saveSuccess": "Configuration saved successfully",
-        "saveFailed": "Failed to save configuration"
+        "saveFailed": "Failed to save configuration",
+        "refreshFailed": "Yenileme başarısız"
       }
     },
     "validation": {

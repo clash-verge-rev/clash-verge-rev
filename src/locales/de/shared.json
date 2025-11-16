@@ -89,7 +89,8 @@
       "common": {
         "copySuccess": "Kopieren erfolgreich",
         "saveSuccess": "Zufalls-Konfiguration erfolgreich gespeichert",
-        "saveFailed": "Failed to save configuration"
+        "saveFailed": "Failed to save configuration",
+        "refreshFailed": "Aktualisierung fehlgeschlagen"
       }
     },
     "validation": {

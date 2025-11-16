@@ -9,7 +9,14 @@ import {
   useTheme,
 } from "@mui/material";
 import { useLockFn } from "ahooks";
-import { useImperativeHandle, useMemo, useState } from "react";
+import {
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+  useCallback,
+} from "react";
 import { useTranslation } from "react-i18next";
 
 import { BaseDialog, DialogRef } from "@/components/base";
@@ -27,6 +34,11 @@ export function ThemeViewer(props: { ref?: React.Ref<DialogRef> }) {
   const { verge, patchVerge } = useVerge();
   const { theme_setting } = verge ?? {};
   const [theme, setTheme] = useState(theme_setting || {});
+  // Latest theme ref to avoid stale closures when saving CSS
+  const themeRef = useRef(theme);
+  useEffect(() => {
+    themeRef.current = theme;
+  }, [theme]);
 
   useImperativeHandle(ref, () => ({
     open: () => {
@@ -55,7 +67,6 @@ export function ThemeViewer(props: { ref?: React.Ref<DialogRef> }) {
     }
   });
 
-  // default theme
   const { palette } = useTheme();
 
   const dt = palette.mode === "light" ? defaultTheme : defaultDarkTheme;
@@ -97,6 +108,13 @@ export function ThemeViewer(props: { ref?: React.Ref<DialogRef> }) {
         key: "success_color",
       },
     ],
+    [],
+  );
+
+  // Stable loader that returns a fresh Promise each call so EditorViewer
+  // can retry/refresh and always read the latest staged CSS from state.
+  const loadCss = useCallback(
+    () => Promise.resolve(themeRef.current?.css_injection ?? ""),
     [],
   );
 
@@ -159,11 +177,15 @@ export function ThemeViewer(props: { ref?: React.Ref<DialogRef> }) {
             <EditorViewer
               open={true}
               title={t("settings.components.verge.theme.dialogs.editCssTitle")}
-              initialData={Promise.resolve(theme.css_injection ?? "")}
+              initialData={loadCss}
+              dataKey="theme-css"
               language="css"
-              onSave={(_prev, curr) => {
-                theme.css_injection = curr;
-                handleChange("css_injection");
+              onSave={async (_prev, curr) => {
+                // Only stage the CSS change locally. Persistence happens
+                // when the outer Theme dialog's Save button is pressed.
+                const prevTheme = themeRef.current || {};
+                const nextCss = curr ?? "";
+                setTheme({ ...prevTheme, css_injection: nextCss });
               }}
               onClose={() => {
                 setEditorOpen(false);

@@ -617,7 +617,8 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
               <EditorViewer
                 open={true}
                 title={t("settings.modals.sysproxy.actions.editPac")}
-                initialData={Promise.resolve(value.pac_content ?? "")}
+                initialData={() => Promise.resolve(value.pac_content ?? "")}
+                dataKey="sysproxy-pac"
                 language="javascript"
                 onSave={(_prev, curr) => {
                   let pac = DEFAULT_PAC;

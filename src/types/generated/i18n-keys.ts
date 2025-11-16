@@ -706,6 +706,7 @@ export const translationKeys = [
   "shared.feedback.notifications.common.copySuccess",
   "shared.feedback.notifications.common.saveSuccess",
   "shared.feedback.notifications.common.saveFailed",
+  "shared.feedback.notifications.common.refreshFailed",
   "shared.feedback.validation.config.failed",
   "shared.feedback.validation.config.bootFailed",
   "shared.feedback.validation.config.coreChangeFailed",

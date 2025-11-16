@@ -1200,6 +1200,7 @@ export interface TranslationResources {
         notifications: {
           common: {
             copySuccess: string;
+            refreshFailed: string;
             saveFailed: string;
             saveSuccess: string;
           };

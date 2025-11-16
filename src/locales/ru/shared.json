@@ -89,7 +89,8 @@
       "common": {
         "copySuccess": "Скопировано",
         "saveSuccess": "Configuration saved successfully",
-        "saveFailed": "Failed to save configuration"
+        "saveFailed": "Failed to save configuration",
+        "refreshFailed": "Не удалось обновить"
       }
     },
     "validation": {
