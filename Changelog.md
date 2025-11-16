@@ -4,6 +4,7 @@
 
 - Linux 无法切换 TUN 堆栈
 - macOS service 启动项显示名称(试验性修改)
+- PAC 自动代理脚本内容无法动态调整
 
 <details>
 <summary><strong> ✨ 新增功能 </strong></summary>
