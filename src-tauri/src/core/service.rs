@@ -556,6 +556,8 @@ impl ServiceManager {
                 logging!(info, Type::Service, "需要安装服务，执行安装流程");
                 install_service().await?;
                 // compatible with older service version, force reinstall if service is unavailable
+                // wait for service server is running
+                tokio::time::sleep(Duration::from_millis(500)).await;
                 if is_service_available().await.is_err() {
                     logging!(info, Type::Service, "服务需要强制重装，执行强制重装流程");
                     force_reinstall_service().await?;
