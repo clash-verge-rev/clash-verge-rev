@@ -14,11 +14,14 @@ rust-version = "1.91"
 identifier = "io.github.clash-verge-rev.clash-verge-rev"
 
 [build-dependencies]
-tauri-build = { version = "2.5.1", features = [] }
+tauri-build = { version = "2.5.2", features = [] }
 
 [dependencies]
+parking_lot = { workspace = true }
+anyhow = { workspace = true }
+tokio = { workspace = true }
+draft = { workspace = true }
 warp = { version = "0.4.2", features = ["server"] }
-anyhow = "1.0.100"
 open = "5.3.2"
 log = "0.4.28"
 dunce = "1.0.5"
@@ -31,19 +34,14 @@ serde_yaml_ng = "0.10.0"
 once_cell = { version = "1.21.3", features = ["parking_lot"] }
 port_scanner = "0.1.5"
 delay_timer = "0.11.6"
-parking_lot = { version = "0.12.5", features = ["hardware-lock-elision"] }
 percent-encoding = "2.3.2"
-tokio = { version = "1.48.0", features = [
-  "rt-multi-thread",
-  "macros",
-  "time",
-  "sync",
-] }
 serde = { version = "1.0.228", features = ["derive"] }
 reqwest = { version = "0.12.24", features = ["json", "cookies"] }
 regex = "1.12.2"
-sysproxy = { git = "https://github.com/clash-verge-rev/sysproxy-rs" }
-tauri = { version = "2.9.2", features = [
+sysproxy = { git = "https://github.com/clash-verge-rev/sysproxy-rs", features = [
+  "guard",
+] }
+tauri = { version = "2.9.3", features = [
   "protocol-asset",
   "devtools",
   "tray-icon",
@@ -70,10 +68,6 @@ gethostname = "1.1.0"
 scopeguard = "1.2.0"
 tauri-plugin-notification = "2.3.3"
 tokio-stream = "0.1.17"
-isahc = { version = "1.7.2", default-features = false, features = [
-  "text-decoding",
-  "parking_lot",
-] }
 backoff = { version = "0.4.0", features = ["tokio"] }
 compact_str = { version = "0.9.0", features = ["serde"] }
 tauri-plugin-http = "2.5.4"
@@ -123,6 +117,28 @@ tauri-plugin-global-shortcut = "2.3.1"
 tauri-plugin-single-instance = { version = "2", features = ["deep-link"] }
 tauri-plugin-updater = "2.9.0"
 
+[dev-dependencies]
+criterion = { workspace = true }
+
+[workspace.dependencies]
+draft = { path = "crates/draft" }
+parking_lot = { version = "0.12.5", features = [
+  "hardware-lock-elision",
+  "send_guard",
+] }
+anyhow = "1.0.100"
+criterion = { version = "0.7.0", features = ["async_tokio"] }
+tokio = { version = "1.48.0", features = [
+  "rt-multi-thread",
+  "macros",
+  "time",
+  "sync",
+] }
+
+[workspace]
+members = ["crates/*"]
+resolver = "2"
+
 [features]
 default = ["custom-protocol"]
 custom-protocol = ["tauri/custom-protocol"]
@@ -131,11 +147,6 @@ tauri-dev = []
 tokio-trace = ["console-subscriber"]
 clippy = ["tauri/test"]
 tracing = []
-
-[[bench]]
-name = "draft_benchmark"
-path = "benches/draft_benchmark.rs"
-harness = false
 
 [profile.release]
 panic = "abort"
@@ -169,9 +180,6 @@ strip = false
 [lib]
 name = "app_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
-
-[dev-dependencies]
-criterion = { version = "0.7.0", features = ["async_tokio"] }
 
 [lints.clippy]
 # Core categories - most important for code safety and correctness
@@ -259,3 +267,4 @@ cloned_instead_of_copied = "deny"
 unnecessary_self_imports = "deny"
 unused_trait_names = "deny"
 wildcard_imports = "deny"
+unnecessary_wraps = "deny"

@@ -21,7 +21,7 @@ pub fn embed_server() {
         .expect("failed to set shutdown signal for embedded server");
     let port = IVerge::get_singleton_port();
 
-    AsyncHandler::spawn(move || async move {
+    let pac = warp::path!("commands" / "pac").and_then(|| async move {
         let verge_config = Config::verge().await;
         let clash_config = Config::clash().await;
 
@@ -35,15 +35,16 @@ pub fn embed_server() {
             .data_arc()
             .verge_mixed_port
             .unwrap_or_else(|| clash_config.data_arc().get_mixed_port());
-
-        let pac = warp::path!("commands" / "pac").map(move || {
-            let processed_content = pac_content.replace("%mixed-port%", &format!("{pac_port}"));
+        let processed_content = pac_content.replace("%mixed-port%", &format!("{pac_port}"));
+        Ok::<_, warp::Rejection>(
             warp::http::Response::builder()
                 .header("Content-Type", "application/x-ns-proxy-autoconfig")
                 .body(processed_content)
-                .unwrap_or_default()
-        });
+                .unwrap_or_default(),
+        )
+    });
 
+    AsyncHandler::spawn(move || async move {
         warp::serve(pac)
             .bind(([127, 0, 0, 1], port))
             .await

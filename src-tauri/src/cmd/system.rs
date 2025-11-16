@@ -53,12 +53,12 @@ pub async fn get_running_mode() -> Result<Arc<RunningMode>, String> {
 
 /// 获取应用的运行时间（毫秒）
 #[tauri::command]
-pub fn get_app_uptime() -> CmdResult<u128> {
-    Ok(APP_START_TIME.elapsed().as_millis())
+pub fn get_app_uptime() -> u128 {
+    APP_START_TIME.elapsed().as_millis()
 }
 
 /// 检查应用是否以管理员身份运行
 #[tauri::command]
-pub fn is_admin() -> CmdResult<bool> {
-    Ok(*APPS_RUN_AS_ADMIN)
+pub fn is_admin() -> bool {
+    *APPS_RUN_AS_ADMIN
 }

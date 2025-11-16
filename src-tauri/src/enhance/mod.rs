@@ -425,7 +425,7 @@ async fn merge_default_config(
             }
             #[cfg(target_os = "windows")]
             {
-                if key.as_str() == Some("redir-port") || key.as_str() == Some("tproxy-port") {
+                if key.as_str() == Some("redir-port") {
                     continue;
                 }
             }
@@ -439,6 +439,13 @@ async fn merge_default_config(
             #[cfg(target_os = "linux")]
             {
                 if key.as_str() == Some("tproxy-port") && !tproxy_enabled {
+                    config.remove("tproxy-port");
+                    continue;
+                }
+            }
+            #[cfg(not(target_os = "linux"))]
+            {
+                if key.as_str() == Some("tproxy-port") {
                     config.remove("tproxy-port");
                     continue;
                 }
