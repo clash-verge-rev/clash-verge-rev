@@ -1,7 +1,5 @@
 use super::CmdResult;
 use crate::cmd::StringifyErr as _;
-use crate::core::{EventDrivenProxyManager, async_proxy_query::AsyncProxyQuery};
-use crate::process::AsyncHandler;
 use crate::{logging, utils::logging::Type};
 use gethostname::gethostname;
 use network_interface::NetworkInterface;
@@ -12,23 +10,23 @@ use serde_yaml_ng::Mapping;
 pub async fn get_sys_proxy() -> CmdResult<Mapping> {
     logging!(debug, Type::Network, "异步获取系统代理配置");
 
-    let current = AsyncProxyQuery::get_system_proxy().await;
+    let sys_proxy = sysproxy::Sysproxy::get_system_proxy().stringify_err()?;
 
     let mut map = Mapping::new();
-    map.insert("enable".into(), current.enable.into());
+    map.insert("enable".into(), sys_proxy.enable.into());
     map.insert(
         "server".into(),
-        format!("{}:{}", current.host, current.port).into(),
+        format!("{}:{}", sys_proxy.host, sys_proxy.port).into(),
     );
-    map.insert("bypass".into(), current.bypass.into());
+    map.insert("bypass".into(), sys_proxy.bypass.into());
 
     logging!(
         debug,
         Type::Network,
         "返回系统代理配置: enable={}, {}:{}",
-        current.enable,
-        current.host,
-        current.port
+        sys_proxy.enable,
+        sys_proxy.host,
+        sys_proxy.port
     );
     Ok(map)
 }
@@ -36,26 +34,18 @@ pub async fn get_sys_proxy() -> CmdResult<Mapping> {
 /// 获取自动代理配置
 #[tauri::command]
 pub async fn get_auto_proxy() -> CmdResult<Mapping> {
-    logging!(debug, Type::Network, "开始获取自动代理配置（事件驱动）");
-
-    let proxy_manager = EventDrivenProxyManager::global();
-
-    let current = proxy_manager.get_auto_proxy_cached().await;
-    // 异步请求更新，立即返回缓存数据
-    AsyncHandler::spawn(move || async move {
-        let _ = proxy_manager.get_auto_proxy_async().await;
-    });
+    let auto_proxy = sysproxy::Autoproxy::get_auto_proxy().stringify_err()?;
 
     let mut map = Mapping::new();
-    map.insert("enable".into(), current.enable.into());
-    map.insert("url".into(), current.url.clone().into());
+    map.insert("enable".into(), auto_proxy.enable.into());
+    map.insert("url".into(), auto_proxy.url.clone().into());
 
     logging!(
         debug,
         Type::Network,
         "返回自动代理配置（缓存）: enable={}, url={}",
-        current.enable,
-        current.url
+        auto_proxy.enable,
+        auto_proxy.url
     );
     Ok(map)
 }

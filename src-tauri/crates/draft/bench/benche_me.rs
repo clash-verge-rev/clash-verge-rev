@@ -3,17 +3,30 @@ use std::hint::black_box;
 use std::process;
 use tokio::runtime::Runtime;
 
-use app_lib::config::IVerge;
-use app_lib::utils::Draft as DraftNew;
+use draft::Draft;
 
-/// 创建测试数据
-fn make_draft() -> DraftNew<IVerge> {
+#[derive(Clone, Debug)]
+struct IVerge {
+    enable_auto_launch: Option<bool>,
+    enable_tun_mode: Option<bool>,
+}
+
+impl Default for IVerge {
+    fn default() -> Self {
+        Self {
+            enable_auto_launch: None,
+            enable_tun_mode: None,
+        }
+    }
+}
+
+fn make_draft() -> Draft<IVerge> {
     let verge = IVerge {
         enable_auto_launch: Some(true),
         enable_tun_mode: Some(false),
         ..Default::default()
     };
-    DraftNew::new(verge)
+    Draft::new(verge)
 }
 
 pub fn bench_draft(c: &mut Criterion) {
