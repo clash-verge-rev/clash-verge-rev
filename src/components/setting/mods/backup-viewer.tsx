@@ -9,7 +9,7 @@ import {
 } from "@mui/material";
 import { useLockFn } from "ahooks";
 import type { ReactNode, Ref } from "react";
-import { useImperativeHandle, useState } from "react";
+import { useCallback, useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { BaseDialog, DialogRef } from "@/components/base";
@@ -66,6 +66,13 @@ export function BackupViewer({ ref }: { ref?: Ref<DialogRef> }) {
       setBusyAction(null);
     }
   });
+
+  const setWebdavBusy = useCallback(
+    (loading: boolean) => {
+      setBusyAction(loading ? "webdav" : null);
+    },
+    [setBusyAction],
+  );
 
   return (
     <BaseDialog
@@ -206,7 +213,7 @@ export function BackupViewer({ ref }: { ref?: Ref<DialogRef> }) {
         open={webdavDialogOpen}
         onClose={() => setWebdavDialogOpen(false)}
         onBackupSuccess={() => openHistory("webdav")}
-        setBusy={(loading) => setBusyAction(loading ? "webdav" : null)}
+        setBusy={setWebdavBusy}
       />
     </BaseDialog>
   );
