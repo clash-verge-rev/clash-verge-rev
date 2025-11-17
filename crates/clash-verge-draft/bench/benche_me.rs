@@ -3,7 +3,7 @@ use std::hint::black_box;
 use std::process;
 use tokio::runtime::Runtime;
 
-use draft::Draft;
+use clash_verge_draft::Draft;
 
 #[derive(Clone, Debug)]
 struct IVerge {

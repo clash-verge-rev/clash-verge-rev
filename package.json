@@ -24,8 +24,6 @@
     "release:autobuild": "pnpm release-version autobuild",
     "release:deploytest": "pnpm release-version deploytest",
     "publish-version": "node scripts/publish-version.mjs",
-    "fmt": "cargo fmt --manifest-path ./src-tauri/Cargo.toml",
-    "clippy": "cargo clippy --all-features --all-targets --manifest-path ./src-tauri/Cargo.toml",
     "lint": "eslint -c eslint.config.ts --max-warnings=0 --cache --cache-location .eslintcache src",
     "lint:fix": "eslint -c eslint.config.ts --max-warnings=0 --cache --cache-location .eslintcache --fix src",
     "format": "prettier --write .",

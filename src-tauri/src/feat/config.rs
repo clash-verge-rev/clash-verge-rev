@@ -4,8 +4,8 @@ use crate::{
     module::{auto_backup::AutoBackupManager, lightweight},
 };
 use anyhow::Result;
+use clash_verge_draft::SharedBox;
 use clash_verge_logging::{Type, logging, logging_error};
-use draft::SharedBox;
 use serde_yaml_ng::Mapping;
 
 /// Patch Clash configuration
