@@ -1,6 +1,7 @@
 import MonacoEditor from "@monaco-editor/react";
 import {
   CloseFullscreenRounded,
+  ContentPasteRounded,
   FormatPaintRounded,
   OpenInFullRounded,
 } from "@mui/icons-material";
@@ -347,6 +348,33 @@ export const EditorViewer = <T extends Language>(props: Props<T>) => {
     }
   });
 
+  // Explicit paste action: works even when Monaco's context-menu paste cannot read clipboard.
+  const handlePaste = useLockFn(async () => {
+    try {
+      if (!editorRef.current || effectiveReadOnly) return;
+      const text = await navigator.clipboard.readText();
+      if (!text) return;
+      const editor = editorRef.current;
+      const model = editor.getModel();
+      const selections = editor.getSelections();
+      if (!model || !selections || selections.length === 0) return;
+      // Group edits to allow single undo step
+      editor.pushUndoStop();
+      editor.executeEdits(
+        "explicit-paste",
+        selections.map((sel) => ({
+          range: sel,
+          text,
+          forceMoveMarkers: true,
+        })),
+      );
+      editor.pushUndoStop();
+      editor.focus();
+    } catch (err) {
+      showNotice.error(err);
+    }
+  });
+
   const handleClose = useLockFn(async () => {
     try {
       onClose();
@@ -480,6 +508,16 @@ export const EditorViewer = <T extends Language>(props: Props<T>) => {
           variant="contained"
           sx={{ position: "absolute", left: "14px", bottom: "8px" }}
         >
+          <IconButton
+            size="medium"
+            color="inherit"
+            sx={{ display: readOnly ? "none" : "" }}
+            title={t("profiles.page.importForm.actions.paste")}
+            disabled={isLoading}
+            onClick={() => handlePaste()}
+          >
+            <ContentPasteRounded fontSize="inherit" />
+          </IconButton>
           <IconButton
             size="medium"
             color="inherit"
