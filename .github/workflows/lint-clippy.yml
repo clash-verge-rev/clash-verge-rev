@@ -61,8 +61,7 @@ jobs:
           workspaces: src-tauri
           cache-all-crates: true
           save-if: false
-          shared-key: autobuild-${{ runner.os }}-${{ matrix.target }}
-          key: ${{ runner.os }}-${{ matrix.target }}-${{ hashFiles('src-tauri/Cargo.lock') }}
+          key: ${{ runner.os }}-${{ matrix.target }}-${{ hashFiles('**Cargo.lock') }}
 
       - name: Install dependencies (ubuntu only)
         if: matrix.os == 'ubuntu-22.04'

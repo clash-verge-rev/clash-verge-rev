@@ -56,7 +56,7 @@ jobs:
           echo "🔍 Finding last commit with Tauri-related changes..."
 
           # Define patterns for Tauri-related files
-          TAURI_PATTERNS="src/ src-tauri/src src-tauri/Cargo.toml src-tauri/Cargo.lock src-tauri/tauri.*.conf.json src-tauri/build.rs src-tauri/capabilities"
+          TAURI_PATTERNS="src/ src-tauri/src src-tauri/Cargo.toml Cargo.lock src-tauri/tauri.*.conf.json src-tauri/build.rs src-tauri/capabilities"
 
           # Get the last commit that changed any of these patterns (excluding build artifacts)
           LAST_TAURI_COMMIT=""
