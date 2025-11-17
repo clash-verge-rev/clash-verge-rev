@@ -1,12 +1,12 @@
 use crate::{
     config::{Config, IVerge},
     feat::create_local_backup_with_namer,
-    logging,
     process::AsyncHandler,
-    utils::{dirs::local_backup_dir, logging::Type},
+    utils::dirs::local_backup_dir,
 };
 use anyhow::Result;
 use chrono::Local;
+use clash_verge_logging::{Type, logging};
 use once_cell::sync::OnceCell;
 use parking_lot::RwLock;
 use std::{

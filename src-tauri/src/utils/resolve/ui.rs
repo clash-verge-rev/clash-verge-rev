@@ -6,7 +6,7 @@ use std::sync::{
 };
 use tokio::sync::Notify;
 
-use crate::{logging, utils::logging::Type};
+use clash_verge_logging::{Type, logging};
 
 // 获取 UI 是否准备就绪的全局状态
 static UI_READY: AtomicBool = AtomicBool::new(false);

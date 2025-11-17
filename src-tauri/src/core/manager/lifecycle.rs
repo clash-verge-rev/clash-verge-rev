@@ -1,15 +1,12 @@
 use super::{CoreManager, RunningMode};
 use crate::cmd::StringifyErr as _;
 use crate::config::{Config, IVerge};
-use crate::{
-    core::{
-        logger::CLASH_LOGGER,
-        service::{SERVICE_MANAGER, ServiceStatus},
-    },
-    logging,
-    utils::logging::Type,
+use crate::core::{
+    logger::CLASH_LOGGER,
+    service::{SERVICE_MANAGER, ServiceStatus},
 };
 use anyhow::Result;
+use clash_verge_logging::{Type, logging};
 use smartstring::alias::String;
 
 impl CoreManager {

@@ -4,11 +4,12 @@ use crate::{
     config::{PrfItem, profiles_append_item_safe},
     constants::{files, timing},
     core::{CoreManager, handle, service, tray, validate::CoreConfigValidator},
-    enhance, logging, logging_error,
-    utils::{dirs, help, logging::Type},
+    enhance,
+    utils::{dirs, help},
 };
 use anyhow::{Result, anyhow};
 use backoff::{Error as BackoffError, ExponentialBackoff};
+use clash_verge_logging::{Type, logging, logging_error};
 use draft::Draft;
 use smartstring::alias::String;
 use std::path::PathBuf;

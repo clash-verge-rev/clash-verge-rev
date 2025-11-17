@@ -34,6 +34,7 @@ pub enum Type {
 }
 
 impl fmt::Display for Type {
+    #[inline]
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Cmd => write!(f, "[Cmd]"),
@@ -59,29 +60,6 @@ impl fmt::Display for Type {
 }
 
 #[macro_export]
-macro_rules! error {
-    ($result: expr) => {
-        log::error!(target: "app", "{}", $result);
-    };
-}
-
-/// wrap the anyhow error
-/// transform the error to String
-#[macro_export]
-macro_rules! wrap_err {
-    // Case 1: Future<Result<T, E>>
-    ($stat:expr, async) => {{
-        match $stat.await {
-            Ok(a) => Ok::<_, ::anyhow::Error>(a),
-            Err(err) => {
-                log::error!(target: "app", "{}", err);
-                Err(::anyhow::Error::msg(err.to_string()))
-            }
-        }
-    }};
-}
-
-#[macro_export]
 macro_rules! logging {
     // 不带 print 参数的版本（默认不打印）
     ($level:ident, $type:expr, $($arg:tt)*) => {
@@ -104,6 +82,7 @@ macro_rules! logging_error {
     };
 }
 
+#[inline]
 pub fn write_sidecar_log(
     writer: MutexGuard<'_, FileLogWriter>,
     now: &mut DeferredNow,
@@ -143,6 +122,7 @@ impl<'a> NoModuleFilter<'a> {
 
 #[cfg(not(feature = "tauri-dev"))]
 impl<'a> LogLineFilter for NoModuleFilter<'a> {
+    #[inline]
     fn write(
         &self,
         now: &mut DeferredNow,

@@ -1,9 +1,8 @@
 use std::sync::Arc;
 
+use clash_verge_logging::{Type, logging};
 use regex::Regex;
 use reqwest::{Client, cookie::Jar};
-
-use crate::{logging, utils::logging::Type};
 
 use super::UnlockItem;
 use super::utils::{country_code_to_emoji, get_local_date_string};

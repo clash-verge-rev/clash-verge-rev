@@ -3,12 +3,10 @@ use crate::core::sysopt::Sysopt;
 use crate::utils::resolve::ui::{self, UiReadyStage};
 use crate::{
     cmd::StringifyErr as _,
-    feat, logging,
-    utils::{
-        dirs::{self, PathBufExec as _},
-        logging::Type,
-    },
+    feat,
+    utils::dirs::{self, PathBufExec as _},
 };
+use clash_verge_logging::{Type, logging};
 use smartstring::alias::String;
 use std::path::Path;
 use tauri::{AppHandle, Manager as _};

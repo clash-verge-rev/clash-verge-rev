@@ -16,7 +16,7 @@ use self::{
 use crate::constants;
 use crate::utils::dirs;
 use crate::{config::Config, utils::tmpl};
-use crate::{logging, utils::logging::Type};
+use clash_verge_logging::{Type, logging};
 use serde_yaml_ng::Mapping;
 use smartstring::alias::String;
 use std::collections::{HashMap, HashSet};

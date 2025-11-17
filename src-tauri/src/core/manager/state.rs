@@ -5,13 +5,10 @@ use crate::{
     core::{handle, logger::CLASH_LOGGER, service},
     logging,
     process::CommandChildGuard,
-    utils::{
-        dirs,
-        init::sidecar_writer,
-        logging::{SharedWriter, Type, write_sidecar_log},
-    },
+    utils::{dirs, init::sidecar_writer},
 };
 use anyhow::Result;
+use clash_verge_logging::{SharedWriter, Type, write_sidecar_log};
 use compact_str::CompactString;
 use flexi_logger::DeferredNow;
 use log::Level;

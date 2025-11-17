@@ -1,6 +1,6 @@
 use super::CmdResult;
 use crate::cmd::StringifyErr as _;
-use crate::{logging, utils::logging::Type};
+use clash_verge_logging::{Type, logging};
 use gethostname::gethostname;
 use network_interface::NetworkInterface;
 use serde_yaml_ng::Mapping;

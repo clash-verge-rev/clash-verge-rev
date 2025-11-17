@@ -9,11 +9,11 @@ use crate::{
         sysopt,
         tray::Tray,
     },
-    logging, logging_error,
     module::{auto_backup::AutoBackupManager, lightweight::auto_lightweight_boot, signal},
     process::AsyncHandler,
-    utils::{init, logging::Type, server, window_manager::WindowManager},
+    utils::{init, server, window_manager::WindowManager},
 };
+use clash_verge_logging::{Type, logging, logging_error};
 
 pub mod dns;
 pub mod scheme;

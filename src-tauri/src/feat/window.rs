@@ -1,8 +1,9 @@
 use crate::config::Config;
 use crate::core::{CoreManager, handle, sysopt};
+use crate::module::lightweight;
 use crate::utils;
 use crate::utils::window_manager::WindowManager;
-use crate::{logging, module::lightweight, utils::logging::Type};
+use clash_verge_logging::{Type, logging};
 
 /// Public API: open or close the dashboard
 pub async fn open_or_close_dashboard() {

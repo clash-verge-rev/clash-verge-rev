@@ -10,12 +10,13 @@ use crate::{
         profiles_append_item_safe,
     },
     core::{CoreManager, handle, timer::Timer, tray::Tray},
-    feat, logging,
+    feat,
     module::auto_backup::{AutoBackupManager, AutoBackupTrigger},
     process::AsyncHandler,
     ret_err,
-    utils::{dirs, help, logging::Type},
+    utils::{dirs, help},
 };
+use clash_verge_logging::{Type, logging};
 use scopeguard::defer;
 use smartstring::alias::String;
 use std::sync::atomic::{AtomicBool, Ordering};

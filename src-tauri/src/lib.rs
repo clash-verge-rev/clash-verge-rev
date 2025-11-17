@@ -19,13 +19,13 @@ use crate::{
     utils::{resolve, server},
 };
 use anyhow::Result;
+use clash_verge_logging::{Type, logging};
 use once_cell::sync::OnceCell;
 use rust_i18n::i18n;
 use tauri::{AppHandle, Manager as _};
 #[cfg(target_os = "macos")]
 use tauri_plugin_autostart::MacosLauncher;
 use tauri_plugin_deep_link::DeepLinkExt as _;
-use utils::logging::Type;
 
 i18n!("locales", fallback = "zh");
 
@@ -267,10 +267,9 @@ pub fn run() {
         use crate::{
             config::Config,
             core::{self, handle, hotkey},
-            logging,
             process::AsyncHandler,
-            utils::logging::Type,
         };
+        use clash_verge_logging::{Type, logging};
         use tauri::AppHandle;
         #[cfg(target_os = "macos")]
         use tauri::Manager as _;

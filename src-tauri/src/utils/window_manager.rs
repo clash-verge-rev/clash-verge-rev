@@ -1,8 +1,5 @@
-use crate::{
-    core::handle,
-    logging,
-    utils::{logging::Type, resolve::window::build_new_window},
-};
+use crate::{core::handle, utils::resolve::window::build_new_window};
+use clash_verge_logging::{Type, logging};
 use std::future::Future;
 use std::pin::Pin;
 use tauri::{Manager as _, WebviewWindow, Wry};

@@ -1,12 +1,12 @@
 use super::resolve;
 use crate::{
     config::{Config, DEFAULT_PAC, IVerge},
-    logging, logging_error,
     module::lightweight,
     process::AsyncHandler,
-    utils::{logging::Type, window_manager::WindowManager},
+    utils::window_manager::WindowManager,
 };
 use anyhow::{Result, bail};
+use clash_verge_logging::{Type, logging, logging_error};
 use once_cell::sync::OnceCell;
 use parking_lot::Mutex;
 use port_scanner::local_port_available;

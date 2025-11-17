@@ -1115,6 +1115,7 @@ dependencies = [
  "base64 0.22.1",
  "boa_engine",
  "chrono",
+ "clash-verge-logging",
  "clash_verge_logger",
  "clash_verge_service_ipc",
  "compact_str",
@@ -1174,6 +1175,16 @@ dependencies = [
  "windows-sys 0.61.2",
  "winreg 0.55.0",
  "zip 6.0.0",
+]
+
+[[package]]
+name = "clash-verge-logging"
+version = "0.1.0"
+dependencies = [
+ "compact_str",
+ "flexi_logger",
+ "log",
+ "tokio",
 ]
 
 [[package]]

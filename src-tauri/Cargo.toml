@@ -10,6 +10,19 @@ edition = "2024"
 build = "build.rs"
 rust-version = "1.91"
 
+[workspace]
+members = ["crates/*"]
+resolver = "2"
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]
+verge-dev = ["clash_verge_logger/color"]
+tauri-dev = ["clash-verge-logging/tauri-dev"]
+tokio-trace = ["console-subscriber"]
+clippy = ["tauri/test"]
+tracing = []
+
 [package.metadata.bundle]
 identifier = "io.github.clash-verge-rev.clash-verge-rev"
 
@@ -17,13 +30,16 @@ identifier = "io.github.clash-verge-rev.clash-verge-rev"
 tauri-build = { version = "2.5.2", features = [] }
 
 [dependencies]
+clash-verge-logging = { path = "crates/clash-verge-logging" }
 parking_lot = { workspace = true }
 anyhow = { workspace = true }
 tokio = { workspace = true }
 draft = { workspace = true }
+compact_str = { workspace = true }
+flexi_logger = { workspace = true }
+log = { workspace = true }
 warp = { version = "0.4.2", features = ["server"] }
 open = "5.3.2"
-log = "0.4.28"
 dunce = "1.0.5"
 nanoid = "0.4"
 chrono = "0.4.42"
@@ -69,9 +85,7 @@ scopeguard = "1.2.0"
 tauri-plugin-notification = "2.3.3"
 tokio-stream = "0.1.17"
 backoff = { version = "0.4.0", features = ["tokio"] }
-compact_str = { version = "0.9.0", features = ["serde"] }
 tauri-plugin-http = "2.5.4"
-flexi_logger = "0.31.7"
 console-subscriber = { version = "0.5.0", optional = true }
 tauri-plugin-devtools = { version = "2.0.1" }
 tauri-plugin-mihomo = { git = "https://github.com/clash-verge-rev/tauri-plugin-mihomo" }
@@ -133,19 +147,9 @@ tokio = { version = "1.48.0", features = [
   "time",
   "sync",
 ] }
-
-[workspace]
-members = ["crates/*"]
-resolver = "2"
-
-[features]
-default = ["custom-protocol"]
-custom-protocol = ["tauri/custom-protocol"]
-verge-dev = ["clash_verge_logger/color"]
-tauri-dev = []
-tokio-trace = ["console-subscriber"]
-clippy = ["tauri/test"]
-tracing = []
+compact_str = { version = "0.9.0", features = ["serde"] }
+flexi_logger = "0.31.7"
+log = "0.4.28"
 
 [profile.release]
 panic = "abort"

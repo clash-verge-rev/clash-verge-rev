@@ -3,10 +3,10 @@ use crate::{
     config::{Config, ConfigType, IRuntime},
     constants::timing,
     core::{handle, validate::CoreConfigValidator},
-    logging,
-    utils::{dirs, help, logging::Type},
+    utils::{dirs, help},
 };
 use anyhow::{Result, anyhow};
+use clash_verge_logging::{Type, logging};
 use smartstring::alias::String;
 use std::{path::PathBuf, time::Instant};
 use tauri_plugin_mihomo::Error as MihomoError;

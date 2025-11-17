@@ -1,10 +1,10 @@
 use crate::config::Config;
 use crate::{
     config::{DEFAULT_PAC, deserialize_encrypted, serialize_encrypted},
-    logging,
-    utils::{dirs, help, i18n, logging::Type},
+    utils::{dirs, help, i18n},
 };
 use anyhow::Result;
+use clash_verge_logging::{Type, logging};
 use log::LevelFilter;
 use serde::{Deserialize, Serialize};
 use smartstring::alias::String;
