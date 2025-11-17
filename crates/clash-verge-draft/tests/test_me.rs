@@ -1,7 +1,7 @@
 #[cfg(test)]
 mod tests {
     use anyhow::anyhow;
-    use draft::Draft;
+    use clash_verge_draft::Draft;
     use std::future::Future;
     use std::pin::Pin;
     use std::task::{Context, Poll, RawWaker, RawWakerVTable, Waker};

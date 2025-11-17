@@ -1,0 +1,118 @@
+[workspace]
+members = [
+    "src-tauri",
+    "crates/clash-verge-draft",
+    "crates/clash-verge-logging",
+]
+resolver = "2"
+
+[workspace.package]
+edition = "2024"
+rust-version = "1.91"
+
+[profile.release]
+panic = "abort"
+codegen-units = 1
+lto = "thin"
+opt-level = 3
+debug = false
+strip = true
+overflow-checks = false
+rpath = false
+
+[profile.dev]
+incremental = true
+codegen-units = 64
+opt-level = 0
+debug = true
+strip = "none"
+overflow-checks = true
+lto = false
+rpath = false
+
+[profile.fast-release]
+inherits = "release"
+codegen-units = 64
+incremental = true
+lto = false
+opt-level = 0
+debug = true
+strip = false
+
+[workspace.dependencies]
+clash-verge-draft = { path = "crates/clash-verge-draft" }
+clash-verge-logging = { path = "crates/clash-verge-logging" }
+parking_lot = { version = "0.12.5", features = [
+    "hardware-lock-elision",
+    "send_guard",
+] }
+anyhow = "1.0.100"
+criterion = { version = "0.7.0", features = ["async_tokio"] }
+tokio = { version = "1.48.0", features = [
+    "rt-multi-thread",
+    "macros",
+    "time",
+    "sync",
+] }
+compact_str = { version = "0.9.0", features = ["serde"] }
+flexi_logger = "0.31.7"
+log = "0.4.28"
+
+[workspace.lints.clippy]
+correctness = { level = "deny", priority = -1 }
+suspicious = { level = "deny", priority = -1 }
+unwrap_used = "warn"
+expect_used = "warn"
+panic = "deny"
+unimplemented = "deny"
+todo = "warn"
+dbg_macro = "warn"
+clone_on_ref_ptr = "warn"
+rc_clone_in_vec_init = "warn"
+large_stack_arrays = "warn"
+large_const_arrays = "warn"
+async_yields_async = "deny"
+mutex_atomic = "deny"
+mutex_integer = "deny"
+rc_mutex = "deny"
+unused_async = "deny"
+await_holding_lock = "deny"
+large_futures = "deny"
+future_not_send = "deny"
+redundant_else = "deny"
+needless_continue = "deny"
+needless_raw_string_hashes = "deny"
+or_fun_call = "deny"
+cognitive_complexity = "deny"
+useless_let_if_seq = "deny"
+use_self = "deny"
+tuple_array_conversions = "deny"
+trait_duplication_in_bounds = "deny"
+suspicious_operation_groupings = "deny"
+string_lit_as_bytes = "deny"
+significant_drop_tightening = "deny"
+significant_drop_in_scrutinee = "deny"
+redundant_clone = "deny"
+# option_if_let_else = "deny" // 过于激进，暂时不开启
+needless_pass_by_ref_mut = "deny"
+needless_collect = "deny"
+missing_const_for_fn = "deny"
+iter_with_drain = "deny"
+iter_on_single_items = "deny"
+iter_on_empty_collections = "deny"
+# fallible_impl_from = "deny" // 过于激进，暂时不开启
+equatable_if_let = "deny"
+collection_is_never_read = "deny"
+branches_sharing_code = "deny"
+pathbuf_init_then_push = "deny"
+option_as_ref_cloned = "deny"
+large_types_passed_by_value = "deny"
+# implicit_clone = "deny" // 可能会造成额外开销，暂时不开启
+expl_impl_clone_on_copy = "deny"
+copy_iterator = "deny"
+cloned_instead_of_copied = "deny"
+# self_only_used_in_recursion = "deny" // Since 1.92.0
+unnecessary_self_imports = "deny"
+unused_trait_names = "deny"
+wildcard_imports = "deny"
+unnecessary_wraps = "deny"

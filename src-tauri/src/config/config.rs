@@ -9,8 +9,8 @@ use crate::{
 };
 use anyhow::{Result, anyhow};
 use backoff::{Error as BackoffError, ExponentialBackoff};
+use clash_verge_draft::Draft;
 use clash_verge_logging::{Type, logging, logging_error};
-use draft::Draft;
 use smartstring::alias::String;
 use std::path::PathBuf;
 use tokio::sync::OnceCell;

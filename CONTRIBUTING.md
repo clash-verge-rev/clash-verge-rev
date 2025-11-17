@@ -126,7 +126,7 @@ If you changed the rust code, it's recommanded to execute code style formatting 
 
 ```bash
 # For rust backend
-$ clash-verge-rev: pnpm clippy
+$ clash-verge-rev: cargo clippy-all
 # For frontend (not yet).
 ```
 
@@ -134,8 +134,7 @@ $ clash-verge-rev: pnpm clippy
 
 ```bash
 # For rust backend
-$ clash-verge-rev: cd src-tauri
-$ clash-verge-rev/src-tauri: cargo fmt
+$ clash-verge-rev: cargo fmt
 # For frontend
 $ clash-verge-rev: pnpm format:check
 $ clash-verge-rev: pnpm format
