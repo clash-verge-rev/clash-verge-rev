@@ -1,11 +1,12 @@
 use crate::process::AsyncHandler;
 use crate::utils::notification::{NotificationEvent, notify_event};
 use crate::{
-    config::Config, core::handle, feat, logging, module::lightweight::entry_lightweight_mode,
-    singleton_with_logging, utils::logging::Type,
+    config::Config, core::handle, feat, module::lightweight::entry_lightweight_mode,
+    singleton_with_logging,
 };
 use anyhow::{Result, bail};
 use arc_swap::ArcSwap;
+use clash_verge_logging::{Type, logging};
 use smartstring::alias::String;
 use std::{collections::HashMap, fmt, str::FromStr, sync::Arc};
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt as _, ShortcutState};

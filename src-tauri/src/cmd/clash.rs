@@ -1,4 +1,5 @@
 use super::CmdResult;
+use crate::feat;
 use crate::utils::dirs;
 use crate::{
     cmd::StringifyErr as _,
@@ -6,7 +7,7 @@ use crate::{
     constants,
     core::{CoreManager, handle, validate::CoreConfigValidator},
 };
-use crate::{feat, logging, utils::logging::Type};
+use clash_verge_logging::{Type, logging};
 use compact_str::CompactString;
 use serde_yaml_ng::Mapping;
 use smartstring::alias::String;

@@ -47,9 +47,9 @@ macro_rules! singleton_with_logging {
             pub fn global() -> &'static $struct_name {
                 $instance_name.get_or_init(|| {
                     let instance = Self::new();
-                    $crate::logging!(
+                    clash_verge_logging::logging!(
                         info,
-                        $crate::utils::logging::Type::Setup,
+                        clash_verge_logging::Type::Setup,
                         concat!($struct_name_str, " initialized")
                     );
                     instance

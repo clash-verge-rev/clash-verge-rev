@@ -3,10 +3,9 @@ use std::sync::Arc;
 use super::CmdResult;
 use crate::{
     core::{CoreManager, handle, manager::RunningMode},
-    logging,
     module::sysinfo::PlatformSpecification,
-    utils::logging::Type,
 };
+use clash_verge_logging::{Type, logging};
 #[cfg(target_os = "windows")]
 use deelevate::{PrivilegeLevel, Token};
 use once_cell::sync::Lazy;

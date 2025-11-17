@@ -1,8 +1,7 @@
-#[cfg(target_os = "macos")]
-use crate::{logging, utils::logging::Type};
+use clash_verge_logging::{Type, logging};
+
 pub async fn set_public_dns(dns_server: String) {
-    use crate::utils::logging::Type;
-    use crate::{core::handle, logging, utils::dirs};
+    use crate::{core::handle, utils::dirs};
     use tauri_plugin_shell::ShellExt as _;
     let app_handle = handle::Handle::app_handle();
 

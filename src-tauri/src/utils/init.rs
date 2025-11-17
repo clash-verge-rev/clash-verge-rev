@@ -1,6 +1,4 @@
 // #[cfg(not(feature = "tracing"))]
-#[cfg(not(feature = "tauri-dev"))]
-use crate::utils::logging::NoModuleFilter;
 use crate::{
     config::{Config, IClashTemp, IProfiles, IVerge},
     constants,
@@ -10,11 +8,13 @@ use crate::{
     utils::{
         dirs::{self, PathBufExec as _, service_log_dir, sidecar_log_dir},
         help,
-        logging::Type,
     },
 };
 use anyhow::Result;
 use chrono::{Local, TimeZone as _};
+#[cfg(not(feature = "tauri-dev"))]
+use clash_verge_logging::NoModuleFilter;
+use clash_verge_logging::Type;
 use clash_verge_service_ipc::WriterConfig;
 use flexi_logger::writers::FileLogWriter;
 use flexi_logger::{Cleanup, Criterion, FileSpec};

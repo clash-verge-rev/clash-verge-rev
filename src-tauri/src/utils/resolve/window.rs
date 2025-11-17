@@ -3,12 +3,9 @@ use tauri::WebviewWindow;
 use crate::{
     config::Config,
     core::handle,
-    logging_error,
-    utils::{
-        logging::Type,
-        resolve::window_script::{INITIAL_LOADING_OVERLAY, WINDOW_INITIAL_SCRIPT},
-    },
+    utils::resolve::window_script::{INITIAL_LOADING_OVERLAY, WINDOW_INITIAL_SCRIPT},
 };
+use clash_verge_logging::{Type, logging_error};
 
 // 定义默认窗口尺寸常量
 const DEFAULT_WIDTH: f64 = 940.0;

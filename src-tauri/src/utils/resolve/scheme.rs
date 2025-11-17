@@ -8,9 +8,8 @@ use tauri::Url;
 use crate::{
     config::{Config, PrfItem, profiles},
     core::handle,
-    logging,
-    utils::logging::Type,
 };
+use clash_verge_logging::{Type, logging};
 
 pub(super) async fn resolve_scheme(param: &str) -> Result<()> {
     logging!(info, Type::Config, "received deep link: {param}");

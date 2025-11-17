@@ -4,7 +4,8 @@ use signal_hook::{
     low_level,
 };
 
-use crate::{feat, logging, logging_error, utils::logging::Type};
+use crate::feat;
+use clash_verge_logging::{Type, logging, logging_error};
 
 pub fn register() {
     tauri::async_runtime::spawn(async {

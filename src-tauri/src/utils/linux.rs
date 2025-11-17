@@ -1,6 +1,5 @@
-use crate::logging;
-use crate::utils::logging::Type;
 use anyhow::Result;
+use clash_verge_logging::{Type, logging};
 use std::collections::{HashMap, HashSet};
 use std::env;
 use std::fs;

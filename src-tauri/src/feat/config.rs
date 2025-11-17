@@ -1,11 +1,10 @@
 use crate::{
     config::{Config, IVerge},
     core::{CoreManager, handle, hotkey, sysopt, tray},
-    logging, logging_error,
     module::{auto_backup::AutoBackupManager, lightweight},
-    utils::logging::Type,
 };
 use anyhow::Result;
+use clash_verge_logging::{Type, logging, logging_error};
 use draft::SharedBox;
 use serde_yaml_ng::Mapping;
 

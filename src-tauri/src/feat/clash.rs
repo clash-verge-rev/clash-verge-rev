@@ -1,10 +1,10 @@
 use crate::{
     config::Config,
     core::{CoreManager, handle, tray},
-    logging, logging_error,
     process::AsyncHandler,
-    utils::{self, logging::Type, resolve},
+    utils::{self, resolve},
 };
+use clash_verge_logging::{Type, logging, logging_error};
 use serde_yaml_ng::{Mapping, Value};
 use smartstring::alias::String;
 

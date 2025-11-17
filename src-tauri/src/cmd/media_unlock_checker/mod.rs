@@ -4,7 +4,7 @@ use reqwest::Client;
 use tauri::command;
 use tokio::{sync::Mutex, task::JoinSet};
 
-use crate::{logging, utils::logging::Type};
+use clash_verge_logging::{Type, logging};
 
 mod bahamut;
 mod bilibili;

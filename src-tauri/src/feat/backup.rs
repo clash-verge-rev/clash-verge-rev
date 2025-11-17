@@ -1,16 +1,15 @@
 use crate::{
     config::{Config, IVerge},
     core::backup,
-    logging,
     process::AsyncHandler,
     utils::{
         dirs::{PathBufExec as _, app_home_dir, local_backup_dir, verge_path},
         help,
-        logging::Type,
     },
 };
 use anyhow::{Result, anyhow};
 use chrono::Utc;
+use clash_verge_logging::{Type, logging};
 use reqwest_dav::list_cmd::ListFile;
 use serde::Serialize;
 use smartstring::alias::String;

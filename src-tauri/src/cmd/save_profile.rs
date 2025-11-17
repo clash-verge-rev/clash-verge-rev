@@ -3,10 +3,10 @@ use crate::{
     cmd::StringifyErr as _,
     config::{Config, PrfItem},
     core::{CoreManager, handle, validate::CoreConfigValidator},
-    logging,
     module::auto_backup::{AutoBackupManager, AutoBackupTrigger},
-    utils::{dirs, logging::Type},
+    utils::dirs,
 };
+use clash_verge_logging::{Type, logging};
 use smartstring::alias::String;
 use tokio::fs;
 

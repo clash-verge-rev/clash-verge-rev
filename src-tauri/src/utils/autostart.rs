@@ -1,7 +1,7 @@
 #[cfg(target_os = "windows")]
-use crate::{logging, utils::logging::Type};
-#[cfg(target_os = "windows")]
 use anyhow::{Result, anyhow};
+#[cfg(target_os = "windows")]
+use clash_verge_logging::{Type, logging};
 
 #[cfg(target_os = "windows")]
 use std::{os::windows::process::CommandExt as _, path::Path, path::PathBuf};

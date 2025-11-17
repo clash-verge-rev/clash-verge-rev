@@ -1,8 +1,7 @@
 use super::CmdResult;
-use crate::{
-    cmd::StringifyErr as _, config::Config, core::CoreManager, logging_error, utils::logging::Type,
-};
+use crate::{cmd::StringifyErr as _, config::Config, core::CoreManager};
 use anyhow::{Context as _, anyhow};
+use clash_verge_logging::{Type, logging_error};
 use serde_yaml_ng::Mapping;
 use smartstring::alias::String;
 use std::collections::HashMap;
