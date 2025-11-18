@@ -1,6 +1,7 @@
 import {
   PlayCircleOutlineRounded,
   PauseCircleOutlineRounded,
+  SwapVertRounded,
 } from "@mui/icons-material";
 import { Box, Button, IconButton, MenuItem } from "@mui/material";
 import { useMemo, useState } from "react";
@@ -20,6 +21,8 @@ const LogPage = () => {
   const [clashLog, setClashLog] = useClashLog();
   const enableLog = clashLog.enable;
   const logState = clashLog.logFilter;
+  const logOrder = clashLog.logOrder ?? "asc";
+  const isDescending = logOrder === "desc";
 
   const [match, setMatch] = useState(() => (_: string) => true);
   const [searchState, setSearchState] = useState<SearchState>();
@@ -49,12 +52,24 @@ const LogPage = () => {
     });
   }, [logData, logState, match]);
 
+  const filteredLogs = useMemo(
+    () => (isDescending ? [...filterLogs].reverse() : filterLogs),
+    [filterLogs, isDescending],
+  );
+
   const handleLogLevelChange = (newLevel: string) => {
     setClashLog((pre: any) => ({ ...pre, logFilter: newLevel }));
   };
 
   const handleToggleLog = async () => {
     setClashLog((pre: any) => ({ ...pre, enable: !enableLog }));
+  };
+
+  const handleToggleOrder = () => {
+    setClashLog((pre: any) => ({
+      ...pre,
+      logOrder: pre.logOrder === "desc" ? "asc" : "desc",
+    }));
   };
 
   return (
@@ -85,6 +100,28 @@ const LogPage = () => {
             ) : (
               <PlayCircleOutlineRounded />
             )}
+          </IconButton>
+          <IconButton
+            title={t(
+              isDescending
+                ? "logs.actions.showAscending"
+                : "logs.actions.showDescending",
+            )}
+            aria-label={t(
+              isDescending
+                ? "logs.actions.showAscending"
+                : "logs.actions.showDescending",
+            )}
+            size="small"
+            color="inherit"
+            onClick={handleToggleOrder}
+          >
+            <SwapVertRounded
+              sx={{
+                transform: isDescending ? "scaleY(-1)" : "none",
+                transition: "transform 0.2s ease",
+              }}
+            />
           </IconButton>
 
           <Button
@@ -129,17 +166,17 @@ const LogPage = () => {
         />
       </Box>
 
-      {filterLogs.length > 0 ? (
+      {filteredLogs.length > 0 ? (
         <Virtuoso
-          initialTopMostItemIndex={999}
-          data={filterLogs}
+          initialTopMostItemIndex={isDescending ? 0 : 999}
+          data={filteredLogs}
           style={{
             flex: 1,
           }}
           itemContent={(index, item) => (
             <LogItem value={item} searchState={searchState} />
           )}
-          followOutput={"smooth"}
+          followOutput={isDescending ? false : "smooth"}
         />
       ) : (
         <BaseEmpty />

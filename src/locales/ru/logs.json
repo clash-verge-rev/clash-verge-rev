@@ -1,5 +1,9 @@
 {
   "page": {
     "title": "Логи"
+  },
+  "actions": {
+    "showDescending": "Newest first",
+    "showAscending": "Oldest first"
   }
 }

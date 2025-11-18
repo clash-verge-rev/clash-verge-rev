@@ -7,16 +7,19 @@ const [ThemeModeProvider, useThemeMode, useSetThemeMode] = createContextState<
 >("light");
 
 export type LogFilter = "all" | "debug" | "info" | "warn" | "err";
+export type LogOrder = "asc" | "desc";
 
 interface IClashLog {
   enable: boolean;
   logLevel: LogLevel;
   logFilter: LogFilter;
+  logOrder: LogOrder;
 }
 const defaultClashLog: IClashLog = {
   enable: true,
   logLevel: "info",
   logFilter: "all",
+  logOrder: "asc",
 };
 export const useClashLog = () =>
   useLocalStorage<IClashLog>("clash-log", defaultClashLog, {

@@ -197,6 +197,10 @@ export interface TranslationResources {
       };
     };
     logs: {
+      actions: {
+        showAscending: string;
+        showDescending: string;
+      };
       page: {
         title: string;
       };

@@ -108,6 +108,8 @@ export const translationKeys = [
   "layout.components.navigation.menu.unlock",
   "layout.components.navigation.menu.lock",
   "logs.page.title",
+  "logs.actions.showDescending",
+  "logs.actions.showAscending",
   "profiles.page.actions.updateAll",
   "profiles.page.actions.viewRuntimeConfig",
   "profiles.page.actions.reactivate",
