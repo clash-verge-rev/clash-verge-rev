@@ -1,33 +1,17 @@
 use std::sync::Arc;
 
 use super::CmdResult;
-use crate::{
-    core::{CoreManager, handle, manager::RunningMode},
-    module::sysinfo::PlatformSpecification,
-};
+use crate::core::{CoreManager, handle, manager::RunningMode};
 use clash_verge_logging::{Type, logging};
-#[cfg(target_os = "windows")]
-use deelevate::{PrivilegeLevel, Token};
-use once_cell::sync::Lazy;
+use parking_lot::RwLock;
+use tauri::Manager;
+use tauri_plugin_clash_verge_sysinfo::Platform;
 use tauri_plugin_clipboard_manager::ClipboardExt as _;
-use tokio::time::Instant;
-
-// 存储应用启动时间的全局变量
-static APP_START_TIME: Lazy<Instant> = Lazy::new(Instant::now);
-#[cfg(not(target_os = "windows"))]
-static APPS_RUN_AS_ADMIN: Lazy<bool> = Lazy::new(|| unsafe { libc::geteuid() } == 0);
-#[cfg(target_os = "windows")]
-static APPS_RUN_AS_ADMIN: Lazy<bool> = Lazy::new(|| {
-    Token::with_current_process()
-        .and_then(|token| token.privilege_level())
-        .map(|level| level != PrivilegeLevel::NotPrivileged)
-        .unwrap_or(false)
-});
 
 #[tauri::command]
 pub async fn export_diagnostic_info() -> CmdResult<()> {
-    let sysinfo = PlatformSpecification::new_sync();
-    let info = format!("{sysinfo:?}");
+    let app_handle = handle::Handle::app_handle();
+    let info = app_handle.state::<RwLock<Platform>>().read().to_string();
 
     let app_handle = handle::Handle::app_handle();
     let cliboard = app_handle.clipboard();
@@ -37,10 +21,11 @@ pub async fn export_diagnostic_info() -> CmdResult<()> {
     Ok(())
 }
 
+// TODO 迁移，让新的结构体允许通过 tauri command 正确使用 structure.field 方式获取信息
 #[tauri::command]
 pub async fn get_system_info() -> CmdResult<String> {
-    let sysinfo = PlatformSpecification::new_sync();
-    let info = format!("{sysinfo:?}");
+    let app_handle = handle::Handle::app_handle();
+    let info = app_handle.state::<RwLock<Platform>>().read().to_string();
     Ok(info)
 }
 
@@ -53,11 +38,22 @@ pub async fn get_running_mode() -> Result<Arc<RunningMode>, String> {
 /// 获取应用的运行时间（毫秒）
 #[tauri::command]
 pub fn get_app_uptime() -> u128 {
-    APP_START_TIME.elapsed().as_millis()
+    let app_handle = handle::Handle::app_handle();
+    let startup_time = app_handle
+        .state::<RwLock<Platform>>()
+        .read()
+        .appinfo
+        .app_startup_time;
+    startup_time.elapsed().as_millis()
 }
 
 /// 检查应用是否以管理员身份运行
 #[tauri::command]
 pub fn is_admin() -> bool {
-    *APPS_RUN_AS_ADMIN
+    let app_handle = handle::Handle::app_handle();
+    app_handle
+        .state::<RwLock<Platform>>()
+        .read()
+        .appinfo
+        .app_is_admin
 }

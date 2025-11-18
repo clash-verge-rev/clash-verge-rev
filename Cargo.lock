@@ -1130,7 +1130,6 @@ dependencies = [
  "futures",
  "gethostname",
  "getrandom 0.3.4",
- "libc",
  "log",
  "nanoid",
  "network-interface",
@@ -1150,11 +1149,11 @@ dependencies = [
  "serde_yaml_ng",
  "smartstring",
  "sys-locale",
- "sysinfo",
  "sysproxy",
  "tauri",
  "tauri-build",
  "tauri-plugin-autostart",
+ "tauri-plugin-clash-verge-sysinfo",
  "tauri-plugin-clipboard-manager",
  "tauri-plugin-deep-link",
  "tauri-plugin-devtools",
@@ -7471,6 +7470,17 @@ dependencies = [
  "tauri",
  "tauri-plugin",
  "thiserror 2.0.17",
+]
+
+[[package]]
+name = "tauri-plugin-clash-verge-sysinfo"
+version = "0.1.0"
+dependencies = [
+ "deelevate",
+ "libc",
+ "parking_lot",
+ "sysinfo",
+ "tauri",
 ]
 
 [[package]]
