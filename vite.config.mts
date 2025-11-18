@@ -2,9 +2,7 @@ import path from "node:path";
 
 import legacy from "@vitejs/plugin-legacy";
 import react from "@vitejs/plugin-react-swc";
-import monacoEditorPlugin, {
-  type IMonacoEditorOpts,
-} from "vite-plugin-monaco-editor-esm";
+import monacoEditorPlugin from "vite-plugin-monaco-editor-esm";
 import svgr from "vite-plugin-svgr";
 import { defineConfig } from "vitest/config";
 
@@ -95,8 +93,12 @@ const chunkRules: ChunkRule[] = [
       !!pkg && LARGE_VENDOR_MATCHERS.some((keyword) => pkg.includes(keyword)),
   },
 ];
-const monacoEditorPluginDefault = ((monacoEditorPlugin as any).default ??
-  monacoEditorPlugin) as (options: IMonacoEditorOpts) => any;
+const monacoEditorPluginDefault: typeof monacoEditorPlugin =
+  (
+    monacoEditorPlugin as typeof monacoEditorPlugin & {
+      default?: typeof monacoEditorPlugin;
+    }
+  ).default ?? monacoEditorPlugin;
 
 export default defineConfig({
   root: "src",
