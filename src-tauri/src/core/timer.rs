@@ -1,10 +1,10 @@
 use crate::{
     config::Config,
     core::{CoreManager, manager::RunningMode, sysopt::Sysopt},
-    feat, logging, logging_error, singleton,
-    utils::logging::Type,
+    feat, singleton,
 };
 use anyhow::{Context as _, Result};
+use clash_verge_logging::{Type, logging, logging_error};
 use delay_timer::prelude::{DelayTimer, DelayTimerBuilder, TaskBuilder};
 use parking_lot::RwLock;
 use smartstring::alias::String;

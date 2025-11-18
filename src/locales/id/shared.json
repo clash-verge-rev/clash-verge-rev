@@ -89,7 +89,8 @@
       "common": {
         "copySuccess": "Salin Berhasil",
         "saveSuccess": "Configuration saved successfully",
-        "saveFailed": "Failed to save configuration"
+        "saveFailed": "Failed to save configuration",
+        "refreshFailed": "Penyegaran gagal"
       }
     },
     "validation": {

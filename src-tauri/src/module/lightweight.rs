@@ -1,12 +1,10 @@
 use crate::{
     config::Config,
     core::{handle, timer::Timer, tray::Tray},
-    logging,
     process::AsyncHandler,
-    utils::logging::Type,
 };
 
-use crate::logging_error;
+use clash_verge_logging::{Type, logging, logging_error};
 
 use crate::utils::window_manager::WindowManager;
 use anyhow::{Context as _, Result};

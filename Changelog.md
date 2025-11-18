@@ -8,6 +8,7 @@
 - 流量图缩放异常
 - PAC 自动代理脚本内容无法动态调整
 - 服务未正确安装
+- Monaco 编辑器的行数上限
 
 <details>
 <summary><strong> ✨ 新增功能 </strong></summary>

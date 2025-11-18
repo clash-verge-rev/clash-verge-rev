@@ -1,9 +1,6 @@
 use super::handle::Handle;
-use crate::{
-    constants::{retry, timing},
-    logging,
-    utils::logging::Type,
-};
+use crate::constants::{retry, timing};
+use clash_verge_logging::{Type, logging};
 use parking_lot::RwLock;
 use smartstring::alias::String;
 use std::{

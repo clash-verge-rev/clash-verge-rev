@@ -2,10 +2,9 @@ use crate::{
     cmd,
     config::{Config, PrfItem, PrfOption, profiles::profiles_draft_update_item_safe},
     core::{CoreManager, handle, tray},
-    logging, logging_error,
-    utils::logging::Type,
 };
 use anyhow::{Result, bail};
+use clash_verge_logging::{Type, logging, logging_error};
 use smartstring::alias::String;
 use tauri::Emitter as _;
 

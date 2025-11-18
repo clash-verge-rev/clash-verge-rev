@@ -6,9 +6,22 @@ authors = ["zzzgydi", "Tunglies", "wonfen", "MystiPanda"]
 license = "GPL-3.0-only"
 repository = "https://github.com/clash-verge-rev/clash-verge-rev.git"
 default-run = "clash-verge"
-edition = "2024"
 build = "build.rs"
-rust-version = "1.91"
+edition = { workspace = true }
+rust-version = { workspace = true }
+
+[lib]
+name = "app_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]
+verge-dev = ["clash_verge_logger/color"]
+tauri-dev = ["clash-verge-logging/tauri-dev"]
+tokio-trace = ["console-subscriber"]
+clippy = ["tauri/test"]
+tracing = []
 
 [package.metadata.bundle]
 identifier = "io.github.clash-verge-rev.clash-verge-rev"
@@ -17,13 +30,16 @@ identifier = "io.github.clash-verge-rev.clash-verge-rev"
 tauri-build = { version = "2.5.2", features = [] }
 
 [dependencies]
+clash-verge-draft = { workspace = true }
+clash-verge-logging = { workspace = true }
 parking_lot = { workspace = true }
 anyhow = { workspace = true }
 tokio = { workspace = true }
-draft = { workspace = true }
+compact_str = { workspace = true }
+flexi_logger = { workspace = true }
+log = { workspace = true }
 warp = { version = "0.4.2", features = ["server"] }
 open = "5.3.2"
-log = "0.4.28"
 dunce = "1.0.5"
 nanoid = "0.4"
 chrono = "0.4.42"
@@ -69,9 +85,7 @@ scopeguard = "1.2.0"
 tauri-plugin-notification = "2.3.3"
 tokio-stream = "0.1.17"
 backoff = { version = "0.4.0", features = ["tokio"] }
-compact_str = { version = "0.9.0", features = ["serde"] }
 tauri-plugin-http = "2.5.4"
-flexi_logger = "0.31.7"
 console-subscriber = { version = "0.5.0", optional = true }
 tauri-plugin-devtools = { version = "2.0.1" }
 tauri-plugin-mihomo = { git = "https://github.com/clash-verge-rev/tauri-plugin-mihomo" }
@@ -118,152 +132,3 @@ tauri-plugin-updater = "2.9.0"
 
 [dev-dependencies]
 criterion = { workspace = true }
-
-[workspace.dependencies]
-draft = { path = "crates/draft" }
-parking_lot = { version = "0.12.5", features = [
-  "hardware-lock-elision",
-  "send_guard",
-] }
-anyhow = "1.0.100"
-criterion = { version = "0.7.0", features = ["async_tokio"] }
-tokio = { version = "1.48.0", features = [
-  "rt-multi-thread",
-  "macros",
-  "time",
-  "sync",
-] }
-
-[workspace]
-members = ["crates/*"]
-resolver = "2"
-
-[features]
-default = ["custom-protocol"]
-custom-protocol = ["tauri/custom-protocol"]
-verge-dev = ["clash_verge_logger/color"]
-tauri-dev = []
-tokio-trace = ["console-subscriber"]
-clippy = ["tauri/test"]
-tracing = []
-
-[profile.release]
-panic = "abort"
-codegen-units = 1
-lto = "thin"
-opt-level = 3
-debug = false
-strip = true
-overflow-checks = false
-rpath = false
-
-[profile.dev]
-incremental = true
-codegen-units = 64
-opt-level = 0
-debug = true
-strip = "none"
-overflow-checks = true
-lto = false
-rpath = false
-
-[profile.fast-release]
-inherits = "release"
-codegen-units = 64
-incremental = true
-lto = false
-opt-level = 0
-debug = true
-strip = false
-
-[lib]
-name = "app_lib"
-crate-type = ["staticlib", "cdylib", "rlib"]
-
-[lints.clippy]
-# Core categories - most important for code safety and correctness
-correctness = { level = "deny", priority = -1 }
-suspicious = { level = "deny", priority = -1 }
-
-# Critical safety lints - warn for now due to extensive existing usage
-unwrap_used = "warn"
-expect_used = "warn"
-panic = "deny"
-unimplemented = "deny"
-
-# Development quality lints
-todo = "warn"
-dbg_macro = "warn"
-
-# 我们期望所有输出方式通过 logging 模块进行统一管理
-# print_stdout = "deny"
-# print_stderr = "deny"
-
-# Performance lints for proxy application
-clone_on_ref_ptr = "warn"
-rc_clone_in_vec_init = "warn"
-large_stack_arrays = "warn"
-large_const_arrays = "warn"
-
-# Security lints
-#integer_division = "warn"
-#lossy_float_literal = "warn"
-#default_numeric_fallback = "warn"
-
-# Mutex and async lints - strict control
-async_yields_async = "deny" # Prevents missing await in async blocks
-mutex_atomic = "deny"       # Use atomics instead of Mutex<bool/int>
-mutex_integer = "deny"      # Use AtomicInt instead of Mutex<int>
-rc_mutex = "deny"           # Single-threaded Rc with Mutex is wrong
-unused_async = "deny"       # Too many false positives in Tauri/framework code
-await_holding_lock = "deny"
-large_futures = "deny"
-future_not_send = "deny"
-
-# Common style improvements
-redundant_else = "deny"             # Too many in existing code
-needless_continue = "deny"          # Too many in existing code
-needless_raw_string_hashes = "deny" # Too many in existing code
-
-# Disable noisy categories for existing codebase but keep them available
-#style = { level = "allow", priority = -1 }
-#complexity = { level = "allow", priority = -1 }
-#perf = { level = "allow", priority = -1 }
-#pedantic = { level = "allow", priority = -1 }
-#nursery = { level = "allow", priority = -1 }
-#restriction = { level = "allow", priority = -1 }
-
-or_fun_call = "deny"
-cognitive_complexity = "deny"
-useless_let_if_seq = "deny"
-use_self = "deny"
-tuple_array_conversions = "deny"
-trait_duplication_in_bounds = "deny"
-suspicious_operation_groupings = "deny"
-string_lit_as_bytes = "deny"
-significant_drop_tightening = "deny"
-significant_drop_in_scrutinee = "deny"
-redundant_clone = "deny"
-# option_if_let_else = "deny" // 过于激进，暂时不开启
-needless_pass_by_ref_mut = "deny"
-needless_collect = "deny"
-missing_const_for_fn = "deny"
-iter_with_drain = "deny"
-iter_on_single_items = "deny"
-iter_on_empty_collections = "deny"
-# fallible_impl_from = "deny" // 过于激进，暂时不开启
-equatable_if_let = "deny"
-collection_is_never_read = "deny"
-branches_sharing_code = "deny"
-pathbuf_init_then_push = "deny"
-option_as_ref_cloned = "deny"
-large_types_passed_by_value = "deny"
-# implicit_clone = "deny" // 可能会造成额外开销，暂时不开启
-expl_impl_clone_on_copy = "deny"
-copy_iterator = "deny"
-cloned_instead_of_copied = "deny"
-# self_only_used_in_recursion = "deny" // Since 1.92.0
-unnecessary_self_imports = "deny"
-unused_trait_names = "deny"
-wildcard_imports = "deny"
-unnecessary_wraps = "deny"

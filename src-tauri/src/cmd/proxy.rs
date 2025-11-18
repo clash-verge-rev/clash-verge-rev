@@ -1,5 +1,5 @@
 use super::CmdResult;
-use crate::{logging, utils::logging::Type};
+use clash_verge_logging::{Type, logging};
 
 // TODO: 前端通过 emit 发送更新事件, tray 监听更新事件
 /// 同步托盘和GUI的代理选择状态

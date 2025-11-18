@@ -89,7 +89,8 @@
       "common": {
         "copySuccess": "コピー成功",
         "saveSuccess": "ランダム設定を保存完了",
-        "saveFailed": "Failed to save configuration"
+        "saveFailed": "Failed to save configuration",
+        "refreshFailed": "更新に失敗しました"
       }
     },
     "validation": {

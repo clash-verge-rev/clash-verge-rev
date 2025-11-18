@@ -8,7 +8,8 @@ use windows_sys::Win32::{
     },
 };
 
-use crate::{core::handle, feat, logging, utils::logging::Type};
+use crate::{core::handle, feat};
+use clash_verge_logging::{Type, logging};
 
 // code refer to:
 //      global-hotkey (https://github.com/tauri-apps/global-hotkey)

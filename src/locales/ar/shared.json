@@ -89,7 +89,8 @@
       "common": {
         "copySuccess": "تم النسخ بنجاح",
         "saveSuccess": "Configuration saved successfully",
-        "saveFailed": "Failed to save configuration"
+        "saveFailed": "Failed to save configuration",
+        "refreshFailed": "فشل التحديث"
       }
     },
     "validation": {

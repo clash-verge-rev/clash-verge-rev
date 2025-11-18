@@ -159,8 +159,7 @@ jobs:
           workspaces: src-tauri
           cache-all-crates: true
           save-if: ${{ github.ref == 'refs/heads/dev' }}
-          shared-key: autobuild-${{ runner.os }}-${{ matrix.target }}
-          key: ${{ runner.os }}-${{ matrix.target }}-${{ hashFiles('src-tauri/Cargo.lock') }}
+          key: ${{ runner.os }}-${{ matrix.target }}-${{ hashFiles('**Cargo.lock') }}
 
       - name: Install dependencies (ubuntu only)
         if: matrix.os == 'ubuntu-22.04'
@@ -268,8 +267,7 @@ jobs:
           workspaces: src-tauri
           cache-all-crates: true
           save-if: ${{ github.ref == 'refs/heads/dev' }}
-          shared-key: autobuild-${{ runner.os }}-${{ matrix.target }}
-          key: ${{ runner.os }}-${{ matrix.target }}-${{ hashFiles('src-tauri/Cargo.lock') }}
+          key: ${{ runner.os }}-${{ matrix.target }}-${{ hashFiles('**Cargo.lock') }}
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
@@ -416,8 +414,7 @@ jobs:
           workspaces: src-tauri
           cache-all-crates: true
           save-if: ${{ github.ref == 'refs/heads/dev' }}
-          shared-key: autobuild-${{ runner.os }}-${{ matrix.target }}
-          key: ${{ runner.os }}-${{ matrix.target }}-${{ hashFiles('src-tauri/Cargo.lock') }}
+          key: ${{ runner.os }}-${{ matrix.target }}-${{ hashFiles('**Cargo.lock') }}
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
@@ -475,19 +472,19 @@ jobs:
 
       - name: Rename
         run: |
-          $files = Get-ChildItem ".\src-tauri\target\${{ matrix.target }}\release\bundle\nsis\*-setup.exe"
+          $files = Get-ChildItem ".\target\${{ matrix.target }}\release\bundle\nsis\*-setup.exe"
           foreach ($file in $files) {
             $newName = $file.Name -replace "-setup\.exe$", "_fixed_webview2-setup.exe"
             Rename-Item $file.FullName $newName
           }
 
-          $files = Get-ChildItem ".\src-tauri\target\${{ matrix.target }}\release\bundle\nsis\*.nsis.zip"
+          $files = Get-ChildItem ".\target\${{ matrix.target }}\release\bundle\nsis\*.nsis.zip"
           foreach ($file in $files) {
             $newName = $file.Name -replace "-setup\.nsis\.zip$", "_fixed_webview2-setup.nsis.zip"
             Rename-Item $file.FullName $newName
           }
 
-          $files = Get-ChildItem ".\src-tauri\target\${{ matrix.target }}\release\bundle\nsis\*-setup.exe.sig"
+          $files = Get-ChildItem ".\target\${{ matrix.target }}\release\bundle\nsis\*-setup.exe.sig"
           foreach ($file in $files) {
             $newName = $file.Name -replace "-setup\.exe\.sig$", "_fixed_webview2-setup.exe.sig"
             Rename-Item $file.FullName $newName

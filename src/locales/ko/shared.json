@@ -89,7 +89,8 @@
       "common": {
         "copySuccess": "복사 성공",
         "saveSuccess": "설정이 저장되었습니다",
-        "saveFailed": "설정 저장 실패"
+        "saveFailed": "설정 저장 실패",
+        "refreshFailed": "새로고침 실패"
       }
     },
     "validation": {

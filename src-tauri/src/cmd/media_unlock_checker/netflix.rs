@@ -1,7 +1,7 @@
 use reqwest::Client;
 use serde_json::Value;
 
-use crate::{logging, utils::logging::Type};
+use clash_verge_logging::{Type, logging};
 
 use super::UnlockItem;
 use super::utils::{country_code_to_emoji, get_local_date_string};

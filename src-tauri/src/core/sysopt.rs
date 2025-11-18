@@ -3,10 +3,10 @@ use crate::utils::autostart as startup_shortcut;
 use crate::{
     config::{Config, IVerge},
     core::handle::Handle,
-    logging, logging_error, singleton_lazy,
-    utils::logging::Type,
+    singleton_lazy,
 };
 use anyhow::Result;
+use clash_verge_logging::{Type, logging, logging_error};
 use parking_lot::RwLock;
 use scopeguard::defer;
 use smartstring::alias::String;

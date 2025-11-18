@@ -830,7 +830,8 @@ export const ProfileItem = (props: Props) => {
       {fileOpen && (
         <EditorViewer
           open={true}
-          initialData={readProfileFile(uid)}
+          initialData={() => readProfileFile(uid)}
+          dataKey={uid}
           language="yaml"
           schema="clash"
           onSave={async (prev, curr) => {
@@ -876,9 +877,10 @@ export const ProfileItem = (props: Props) => {
       {mergeOpen && (
         <EditorViewer
           open={true}
-          initialData={readProfileFile(option?.merge ?? "")}
+          initialData={() => readProfileFile(option?.merge ?? "")}
+          dataKey={`merge:${option?.merge ?? ""}`}
           language="yaml"
-          schema="clash"
+          schema="merge"
           onSave={async (prev, curr) => {
             await saveProfileFile(option?.merge ?? "", curr ?? "");
             onSave?.(prev, curr);
@@ -889,7 +891,8 @@ export const ProfileItem = (props: Props) => {
       {scriptOpen && (
         <EditorViewer
           open={true}
-          initialData={readProfileFile(option?.script ?? "")}
+          initialData={() => readProfileFile(option?.script ?? "")}
+          dataKey={`script:${option?.script ?? ""}`}
           language="javascript"
           onSave={async (prev, curr) => {
             await saveProfileFile(option?.script ?? "", curr ?? "");

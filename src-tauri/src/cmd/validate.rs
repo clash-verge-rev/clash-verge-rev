@@ -1,9 +1,6 @@
 use super::CmdResult;
-use crate::{
-    core::{handle, validate::CoreConfigValidator},
-    logging,
-    utils::logging::Type,
-};
+use crate::core::{handle, validate::CoreConfigValidator};
+use clash_verge_logging::{Type, logging};
 use smartstring::alias::String;
 
 /// 发送脚本验证通知消息

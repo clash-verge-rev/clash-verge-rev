@@ -9,7 +9,7 @@ use crate::config::{Config, ConfigType};
 use crate::core::handle;
 use crate::singleton_lazy;
 use crate::utils::dirs;
-use crate::{logging, utils::logging::Type};
+use clash_verge_logging::{Type, logging};
 
 pub struct CoreConfigValidator {
     is_processing: AtomicBool,
