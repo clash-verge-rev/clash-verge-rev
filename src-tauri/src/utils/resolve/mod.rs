@@ -9,11 +9,13 @@ use crate::{
         sysopt,
         tray::Tray,
     },
-    module::{auto_backup::AutoBackupManager, lightweight::auto_lightweight_boot, signal},
+    feat,
+    module::{auto_backup::AutoBackupManager, lightweight::auto_lightweight_boot},
     process::AsyncHandler,
     utils::{init, server, window_manager::WindowManager},
 };
 use clash_verge_logging::{Type, logging, logging_error};
+use clash_verge_signal;
 
 pub mod dns;
 pub mod scheme;
@@ -134,7 +136,11 @@ pub(super) async fn init_auto_backup() {
 
 pub(super) fn init_signal() {
     logging!(info, Type::Setup, "Initializing signal handlers...");
-    signal::register();
+    clash_verge_signal::register(
+        #[cfg(windows)]
+        handle::Handle::app_handle(),
+        feat::clean_async,
+    );
 }
 
 pub async fn init_work_config() {

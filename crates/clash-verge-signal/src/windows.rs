@@ -1,4 +1,6 @@
-use tauri::Manager as _;
+use std::{future::Future, pin::Pin, sync::OnceLock};
+
+use tauri::{AppHandle, Manager as _};
 use windows_sys::Win32::{
     Foundation::{HWND, LPARAM, LRESULT, WPARAM},
     UI::WindowsAndMessaging::{
@@ -8,12 +10,16 @@ use windows_sys::Win32::{
     },
 };
 
-use crate::{core::handle, feat};
 use clash_verge_logging::{Type, logging};
 
 // code refer to:
 //      global-hotkey (https://github.com/tauri-apps/global-hotkey)
 //      Global Shortcut (https://github.com/tauri-apps/plugins-workspace/tree/v2/plugins/global-shortcut)
+
+type ShutdownHandler =
+    Box<dyn Fn() -> Pin<Box<dyn std::future::Future<Output = ()> + Send>> + Send + Sync>;
+
+static SHUTDOWN_HANDLER: OnceLock<ShutdownHandler> = OnceLock::new();
 
 struct ShutdownState {
     hwnd: HWND,
@@ -49,11 +55,19 @@ unsafe extern "system" fn shutdown_proc(
             );
         }
         WM_ENDSESSION => {
-            tauri::async_runtime::block_on(async move {
-                logging!(info, Type::System, "Session ended, system shutting down.");
-                feat::clean_async().await;
-                logging!(info, Type::System, "resolved reset finished");
-            });
+            if let Some(handler) = SHUTDOWN_HANDLER.get() {
+                tauri::async_runtime::block_on(async {
+                    logging!(info, Type::System, "Session ended, system shutting down.");
+                    handler().await;
+                    logging!(info, Type::System, "resolved reset finished");
+                });
+            } else {
+                logging!(
+                    error,
+                    Type::System,
+                    "WM_ENDSESSION received but no shutdown handler is registered"
+                );
+            }
         }
         _ => {}
     };
@@ -81,8 +95,18 @@ fn get_instance_handle() -> windows_sys::Win32::Foundation::HMODULE {
     unsafe { &__ImageBase as *const _ as _ }
 }
 
-pub fn register() {
-    let app_handle = handle::Handle::app_handle();
+pub fn register<F, Fut>(app_handle: &AppHandle, f: F)
+where
+    F: Fn() -> Fut + Send + Sync + 'static,
+    Fut: Future + Send + 'static,
+{
+    let _ = SHUTDOWN_HANDLER.set(Box::new(move || {
+        let fut = (f)();
+        Box::pin(async move {
+            fut.await;
+        }) as Pin<Box<dyn std::future::Future<Output = ()> + Send>>
+    }));
+
     let class_name = encode_wide("global_shutdown_app");
     unsafe {
         let hinstance = get_instance_handle();

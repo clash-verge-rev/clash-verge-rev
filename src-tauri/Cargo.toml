@@ -32,6 +32,14 @@ tauri-build = { version = "2.5.2", features = [] }
 [dependencies]
 clash-verge-draft = { workspace = true }
 clash-verge-logging = { workspace = true }
+clash-verge-signal = { workspace = true }
+tauri = { workspace = true, features = [
+  "protocol-asset",
+  "devtools",
+  "tray-icon",
+  "image-ico",
+  "image-png",
+] }
 parking_lot = { workspace = true }
 anyhow = { workspace = true }
 tokio = { workspace = true }
@@ -56,13 +64,6 @@ reqwest = { version = "0.12.24", features = ["json", "cookies"] }
 regex = "1.12.2"
 sysproxy = { git = "https://github.com/clash-verge-rev/sysproxy-rs", features = [
   "guard",
-] }
-tauri = { version = "2.9.3", features = [
-  "protocol-asset",
-  "devtools",
-  "tray-icon",
-  "image-ico",
-  "image-png",
 ] }
 network-interface = { version = "2.0.3", features = ["serde"] }
 tauri-plugin-shell = "2.3.3"
@@ -115,15 +116,6 @@ winapi = { version = "0.3.9", features = [
   "winhttp",
   "winreg",
 ] }
-windows-sys = { version = "0.61.2", features = [
-  "Win32_Foundation",
-  "Win32_Graphics_Gdi",
-  "Win32_System_SystemServices",
-  "Win32_UI_WindowsAndMessaging",
-] }
-
-[target.'cfg(unix)'.dependencies]
-signal-hook = "0.3.18"
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-autostart = "2.5.1"

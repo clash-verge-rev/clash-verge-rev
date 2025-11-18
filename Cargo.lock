@@ -1117,6 +1117,7 @@ dependencies = [
  "chrono",
  "clash-verge-draft",
  "clash-verge-logging",
+ "clash-verge-signal",
  "clash_verge_logger",
  "clash_verge_service_ipc",
  "compact_str",
@@ -1147,7 +1148,6 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_yaml_ng",
- "signal-hook 0.3.18",
  "smartstring",
  "sys-locale",
  "sysinfo",
@@ -1172,7 +1172,6 @@ dependencies = [
  "tokio-stream",
  "warp",
  "winapi",
- "windows-sys 0.61.2",
  "winreg 0.55.0",
  "zip 6.0.0",
 ]
@@ -1195,6 +1194,17 @@ dependencies = [
  "flexi_logger",
  "log",
  "tokio",
+]
+
+[[package]]
+name = "clash-verge-signal"
+version = "0.1.0"
+dependencies = [
+ "clash-verge-logging",
+ "log",
+ "signal-hook 0.3.18",
+ "tauri",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
