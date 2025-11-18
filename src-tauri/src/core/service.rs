@@ -256,6 +256,7 @@ async fn reinstall_service() -> Result<()> {
 fn linux_running_as_root() -> bool {
     use crate::core::handle;
     use parking_lot::RwLock;
+    use tauri::Manager as _;
     use tauri_plugin_clash_verge_sysinfo::Platform;
     let app_handle = handle::Handle::app_handle();
     app_handle
