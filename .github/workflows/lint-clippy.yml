@@ -58,10 +58,13 @@ jobs:
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
         with:
-          workspaces: src-tauri
-          cache-all-crates: true
-          save-if: false
-          key: ${{ runner.os }}-${{ matrix.target }}-${{ hashFiles('**Cargo.lock') }}
+          save-if: ${{ github.ref == 'refs/heads/dev' }}
+          prefix-key: "v1-rust"
+          key: "rust-shared-stable-${{ matrix.os }}-${{ matrix.target }}"
+          workspaces: |
+            . -> target
+          cache-all-crates: false
+          cache-workspace-crates: true
 
       - name: Install dependencies (ubuntu only)
         if: matrix.os == 'ubuntu-22.04'

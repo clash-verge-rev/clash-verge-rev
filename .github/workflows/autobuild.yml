@@ -156,10 +156,13 @@ jobs:
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
         with:
-          workspaces: src-tauri
-          cache-all-crates: true
           save-if: ${{ github.ref == 'refs/heads/dev' }}
-          key: ${{ runner.os }}-${{ matrix.target }}-${{ hashFiles('**Cargo.lock') }}
+          prefix-key: "v1-rust"
+          key: "rust-shared-stable-${{ matrix.os }}-${{ matrix.target }}"
+          workspaces: |
+            . -> target
+          cache-all-crates: false
+          cache-workspace-crates: true
 
       - name: Install dependencies (ubuntu only)
         if: matrix.os == 'ubuntu-22.04'
@@ -264,10 +267,13 @@ jobs:
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
         with:
-          workspaces: src-tauri
-          cache-all-crates: true
           save-if: ${{ github.ref == 'refs/heads/dev' }}
-          key: ${{ runner.os }}-${{ matrix.target }}-${{ hashFiles('**Cargo.lock') }}
+          prefix-key: "v1-rust"
+          key: "rust-shared-stable-${{ matrix.os }}-${{ matrix.target }}"
+          workspaces: |
+            . -> target
+          cache-all-crates: false
+          cache-workspace-crates: true
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
@@ -411,10 +417,13 @@ jobs:
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
         with:
-          workspaces: src-tauri
-          cache-all-crates: true
           save-if: ${{ github.ref == 'refs/heads/dev' }}
-          key: ${{ runner.os }}-${{ matrix.target }}-${{ hashFiles('**Cargo.lock') }}
+          prefix-key: "v1-rust"
+          key: "rust-shared-stable-${{ matrix.os }}-${{ matrix.target }}"
+          workspaces: |
+            . -> target
+          cache-all-crates: false
+          cache-workspace-crates: true
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
