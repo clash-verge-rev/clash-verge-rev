@@ -363,7 +363,7 @@ export const HomeProfileCard = ({
         endIcon={<StorageOutlined fontSize="small" />}
         sx={{ borderRadius: 1.5 }}
       >
-        {t("layout.components.navigation.tabs.proxies")}
+        {t("layout.components.navigation.tabs.profiles")}
       </Button>
     );
   }, [current, goToProfiles, t]);
