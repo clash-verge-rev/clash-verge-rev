@@ -4,6 +4,7 @@ use clash_verge_logging::{Type, logging};
 use gethostname::gethostname;
 use network_interface::NetworkInterface;
 use serde_yaml_ng::Mapping;
+use tauri_plugin_clash_verge_sysinfo;
 
 /// get the system proxy
 #[tauri::command]
@@ -68,13 +69,7 @@ pub fn get_system_hostname() -> String {
 /// 获取网络接口列表
 #[tauri::command]
 pub fn get_network_interfaces() -> Vec<String> {
-    use sysinfo::Networks;
-    let mut result = Vec::new();
-    let networks = Networks::new_with_refreshed_list();
-    for (interface_name, _) in &networks {
-        result.push(interface_name.clone());
-    }
-    result
+    tauri_plugin_clash_verge_sysinfo::list_network_interfaces()
 }
 
 /// 获取网络接口详细信息
