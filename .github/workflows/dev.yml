@@ -77,13 +77,15 @@ jobs:
         uses: dtolnay/rust-toolchain@1.91.0
 
       - name: Rust Cache
-        if: github.event.inputs[matrix.input] == 'true'
         uses: Swatinem/rust-cache@v2
         with:
-          workspaces: src-tauri
-          save-if: false
-          cache-all-crates: true
-          key: ${{ runner.os }}-${{ matrix.target }}-${{ hashFiles('**Cargo.lock') }}
+          save-if: ${{ github.ref == 'refs/heads/dev' }}
+          prefix-key: "v1-rust"
+          key: "rust-shared-stable-${{ matrix.os }}-${{ matrix.target }}"
+          workspaces: |
+            . -> target
+          cache-all-crates: false
+          cache-workspace-crates: true
 
       - name: Install dependencies (ubuntu only)
         if: matrix.os == 'ubuntu-22.04' && github.event.inputs[matrix.input] == 'true'
@@ -145,7 +147,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.target }}
-          path: src-tauri/target/${{ matrix.target }}/release/bundle/dmg/*.dmg
+          path: target/${{ matrix.target }}/release/bundle/dmg/*.dmg
           if-no-files-found: error
 
       - name: Upload Artifacts (Windows)
@@ -153,7 +155,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.target }}
-          path: src-tauri/target/${{ matrix.target }}/release/bundle/nsis/*.exe
+          path: target/${{ matrix.target }}/release/bundle/nsis/*.exe
           if-no-files-found: error
 
       - name: Upload Artifacts (Linux)
@@ -161,5 +163,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.target }}
-          path: src-tauri/target/${{ matrix.target }}/release/bundle/deb/*.deb
+          path: target/${{ matrix.target }}/release/bundle/deb/*.deb
           if-no-files-found: error
