@@ -22,10 +22,12 @@ use anyhow::Result;
 use clash_verge_logging::{Type, logging};
 use once_cell::sync::OnceCell;
 use rust_i18n::i18n;
+use std::time::Duration;
 use tauri::{AppHandle, Manager as _};
 #[cfg(target_os = "macos")]
 use tauri_plugin_autostart::MacosLauncher;
 use tauri_plugin_deep_link::DeepLinkExt as _;
+use tauri_plugin_mihomo::RejectPolicy;
 
 i18n!("locales", fallback = "zh");
 
@@ -47,6 +49,7 @@ mod app_init {
     pub fn setup_plugins(builder: tauri::Builder<tauri::Wry>) -> tauri::Builder<tauri::Wry> {
         #[allow(unused_mut)]
         let mut builder = builder
+            .plugin(tauri_plugin_clash_verge_sysinfo::init())
             .plugin(tauri_plugin_notification::init())
             .plugin(tauri_plugin_updater::Builder::new().build())
             .plugin(tauri_plugin_clipboard_manager::init())
@@ -57,17 +60,17 @@ mod app_init {
             .plugin(tauri_plugin_shell::init())
             .plugin(tauri_plugin_deep_link::init())
             .plugin(tauri_plugin_http::init())
-            .plugin(tauri_plugin_clash_verge_sysinfo::init())
             .plugin(
                 tauri_plugin_mihomo::Builder::new()
                     .protocol(tauri_plugin_mihomo::models::Protocol::LocalSocket)
                     .socket_path(crate::config::IClashTemp::guard_external_controller_ipc())
                     .pool_config(
                         tauri_plugin_mihomo::IpcPoolConfigBuilder::new()
-                            .min_connections(0)
-                            .max_connections(20)
-                            .idle_timeout(std::time::Duration::from_millis(500))
-                            .health_check_interval(std::time::Duration::from_secs(10))
+                            .min_connections(1)
+                            .max_connections(32)
+                            .idle_timeout(std::time::Duration::from_secs(60))
+                            .health_check_interval(std::time::Duration::from_secs(60))
+                            .reject_policy(RejectPolicy::Timeout(Duration::from_secs(3)))
                             .build(),
                     )
                     .build(),
