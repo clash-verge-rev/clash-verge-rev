@@ -161,7 +161,7 @@ jobs:
           key: "rust-shared-stable-${{ matrix.os }}-${{ matrix.target }}"
           workspaces: |
             . -> target
-          cache-all-crates: false
+          cache-all-crates: true
           cache-workspace-crates: true
 
       - name: Install dependencies (ubuntu only)
@@ -272,7 +272,7 @@ jobs:
           key: "rust-shared-stable-${{ matrix.os }}-${{ matrix.target }}"
           workspaces: |
             . -> target
-          cache-all-crates: false
+          cache-all-crates: true
           cache-workspace-crates: true
 
       - name: Install pnpm
@@ -422,7 +422,7 @@ jobs:
           key: "rust-shared-stable-${{ matrix.os }}-${{ matrix.target }}"
           workspaces: |
             . -> target
-          cache-all-crates: false
+          cache-all-crates: true
           cache-workspace-crates: true
 
       - name: Install pnpm

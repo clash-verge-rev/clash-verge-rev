@@ -63,7 +63,7 @@ jobs:
           key: "rust-shared-stable-${{ matrix.os }}-${{ matrix.target }}"
           workspaces: |
             . -> target
-          cache-all-crates: false
+          cache-all-crates: true
           cache-workspace-crates: true
 
       - name: Install dependencies (ubuntu only)
