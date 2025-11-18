@@ -33,6 +33,7 @@ tauri-build = { version = "2.5.2", features = [] }
 clash-verge-draft = { workspace = true }
 clash-verge-logging = { workspace = true }
 clash-verge-signal = { workspace = true }
+tauri-plugin-clash-verge-sysinfo = { workspace = true }
 tauri = { workspace = true, features = [
   "protocol-asset",
   "devtools",
@@ -51,7 +52,6 @@ open = "5.3.3"
 dunce = "1.0.5"
 nanoid = "0.4"
 chrono = "0.4.42"
-sysinfo = { version = "0.37.2", features = ["network", "system"] }
 boa_engine = "0.21.0"
 serde_json = "1.0.145"
 serde_yaml_ng = "0.10.0"
@@ -80,7 +80,6 @@ base64 = "0.22.1"
 getrandom = "0.3.4"
 futures = "0.3.31"
 sys-locale = "0.3.2"
-libc = "0.2.177"
 gethostname = "1.1.0"
 scopeguard = "1.2.0"
 tauri-plugin-notification = "2.3.3"
@@ -100,8 +99,8 @@ arc-swap = "1.7.1"
 rust-i18n = "3.1.5"
 
 [target.'cfg(windows)'.dependencies]
+deelevate = { workspace = true }
 runas = "=1.2.0"
-deelevate = "0.2.0"
 winreg = "0.55.0"
 winapi = { version = "0.3.9", features = [
   "winbase",

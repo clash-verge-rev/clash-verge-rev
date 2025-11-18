@@ -254,9 +254,16 @@ async fn reinstall_service() -> Result<()> {
 
 #[cfg(target_os = "linux")]
 fn linux_running_as_root() -> bool {
-    const ROOT_UID: u32 = 0;
-
-    unsafe { libc::geteuid() == ROOT_UID }
+    use crate::core::handle;
+    use parking_lot::RwLock;
+    use tauri::Manager as _;
+    use tauri_plugin_clash_verge_sysinfo::Platform;
+    let app_handle = handle::Handle::app_handle();
+    app_handle
+        .state::<RwLock<Platform>>()
+        .read()
+        .appinfo
+        .app_is_admin
 }
 
 #[cfg(target_os = "macos")]

@@ -4,6 +4,7 @@ members = [
     "crates/clash-verge-draft",
     "crates/clash-verge-logging",
     "crates/clash-verge-signal",
+    "crates/tauri-plugin-clash-verge-sysinfo",
 ]
 resolver = "2"
 
@@ -44,6 +45,7 @@ strip = false
 clash-verge-draft = { path = "crates/clash-verge-draft" }
 clash-verge-logging = { path = "crates/clash-verge-logging" }
 clash-verge-signal = { path = "crates/clash-verge-signal" }
+tauri-plugin-clash-verge-sysinfo = { path = "crates/tauri-plugin-clash-verge-sysinfo" }
 tauri = { version = "2.9.3" }
 parking_lot = { version = "0.12.5", features = [
     "hardware-lock-elision",
@@ -60,6 +62,10 @@ tokio = { version = "1.48.0", features = [
 compact_str = { version = "0.9.0", features = ["serde"] }
 flexi_logger = "0.31.7"
 log = "0.4.28"
+
+# *** For Windows platform only ***
+deelevate = "0.2.0"
+# *********************************
 
 [workspace.lints.clippy]
 correctness = { level = "deny", priority = -1 }
