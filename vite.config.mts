@@ -7,6 +7,94 @@ import monacoEditorPlugin, {
 } from "vite-plugin-monaco-editor-esm";
 import svgr from "vite-plugin-svgr";
 import { defineConfig } from "vitest/config";
+
+const getPackageName = (id: string) => {
+  // Walk through possible pnpm virtual paths and nested node_modules, return the last package segment.
+  const matches = [
+    ...id.matchAll(
+      /node_modules\/(?:\.pnpm\/[^/]+\/)?(?:node_modules\/)?((?:@[^/]+\/)?[^/]+)/g,
+    ),
+  ];
+  const last = matches.at(-1);
+  return last ? last[1] : null;
+};
+
+type ChunkMatchContext = { id: string; pkg: string | null };
+type ChunkRule = {
+  name: string | ((pkg: string) => string);
+  match: (ctx: ChunkMatchContext) => boolean;
+};
+
+const CHUNK_PACKAGE_SETS: Record<string, ReadonlySet<string>> = {
+  "react-core": new Set([
+    "react",
+    "react-dom",
+    "react-router",
+    "@remix-run/router",
+    "scheduler",
+    "loose-envify",
+    "object-assign",
+    "use-sync-external-store",
+    "use-sync-external-store/shim",
+  ]),
+  "react-ui": new Set([
+    "react-transition-group",
+    "react-error-boundary",
+    "react-hook-form",
+    "react-markdown",
+    "react-virtuoso",
+  ]),
+  utils: new Set([
+    "axios",
+    "lodash-es",
+    "dayjs",
+    "js-base64",
+    "js-yaml",
+    "cli-color",
+    "nanoid",
+  ]),
+};
+
+const NAMESPACE_CHUNK_PREFIXES: Array<{ name: string; prefixes: string[] }> = [
+  { name: "mui", prefixes: ["@mui/"] },
+  { name: "tauri-plugins", prefixes: ["@tauri-apps/"] },
+];
+
+const LARGE_VENDOR_MATCHERS = [
+  "@emotion/react",
+  "@emotion/styled",
+  "@emotion/cache",
+  "lodash",
+  "monaco",
+  "@dnd-kit",
+  "i18next",
+];
+
+const packageSetRules: ChunkRule[] = Object.entries(CHUNK_PACKAGE_SETS).map(
+  ([name, pkgSet]) => ({
+    name,
+    match: ({ pkg }) => !!pkg && pkgSet.has(pkg),
+  }),
+);
+
+const namespaceRules: ChunkRule[] = NAMESPACE_CHUNK_PREFIXES.map(
+  ({ name, prefixes }) => ({
+    name,
+    match: ({ pkg }) =>
+      !!pkg && prefixes.some((prefix) => pkg.startsWith(prefix)),
+  }),
+);
+
+const chunkRules: ChunkRule[] = [
+  { name: "monaco-editor", match: ({ id }) => id.includes("monaco-editor") },
+  ...packageSetRules,
+  ...namespaceRules,
+  {
+    name: (pkg) => `vendor-${pkg.replace(/[@/]/g, "-")}`,
+    match: ({ pkg }) =>
+      !!pkg && LARGE_VENDOR_MATCHERS.some((keyword) => pkg.includes(keyword)),
+  },
+];
 const monacoEditorPluginDefault = ((monacoEditorPlugin as any).default ??
   monacoEditorPlugin) as (options: IMonacoEditorOpts) => any;
 
@@ -43,7 +131,7 @@ export default defineConfig({
     outDir: "../dist",
     emptyOutDir: true,
     minify: "terser",
-    chunkSizeWarningLimit: 4000,
+    chunkSizeWarningLimit: 4500,
     reportCompressedSize: false,
     sourcemap: false,
     cssCodeSplit: true,
@@ -68,87 +156,21 @@ export default defineConfig({
       },
       output: {
         compact: true,
-        experimentalMinChunkSize: 100000,
         dynamicImportInCjs: true,
         manualChunks(id) {
-          if (id.includes("node_modules")) {
-            // Monaco Editor should be a separate chunk
-            if (id.includes("monaco-editor")) return "monaco-editor";
+          if (!id.includes("node_modules")) return;
 
-            // React core libraries
-            if (
-              id.includes("react") ||
-              id.includes("react-dom") ||
-              id.includes("react-router")
-            ) {
-              return "react-core";
-            }
-
-            // React UI libraries
-            if (
-              id.includes("react-transition-group") ||
-              id.includes("react-error-boundary") ||
-              id.includes("react-hook-form") ||
-              id.includes("react-markdown") ||
-              id.includes("react-virtuoso")
-            ) {
-              return "react-ui";
-            }
-
-            // Material UI libraries (grouped together)
-            if (
-              id.includes("@mui/material") ||
-              id.includes("@mui/icons-material") ||
-              id.includes("@mui/lab") ||
-              id.includes("@mui/x-data-grid")
-            ) {
-              return "mui";
-            }
-
-            // Tauri-related plugins: grouping together Tauri plugins
-            if (
-              id.includes("@tauri-apps/api") ||
-              id.includes("@tauri-apps/plugin-clipboard-manager") ||
-              id.includes("@tauri-apps/plugin-dialog") ||
-              id.includes("@tauri-apps/plugin-fs") ||
-              id.includes("@tauri-apps/plugin-global-shortcut") ||
-              id.includes("@tauri-apps/plugin-process") ||
-              id.includes("@tauri-apps/plugin-shell") ||
-              id.includes("@tauri-apps/plugin-updater")
-            ) {
-              return "tauri-plugins";
-            }
-
-            // Utilities chunk: group commonly used utility libraries
-            if (
-              id.includes("axios") ||
-              id.includes("lodash-es") ||
-              id.includes("dayjs") ||
-              id.includes("js-base64") ||
-              id.includes("js-yaml") ||
-              id.includes("cli-color") ||
-              id.includes("nanoid")
-            ) {
-              return "utils";
-            }
-
-            // Group other vendor packages together to reduce small chunks
-            const pkg = id.match(/node_modules\/([^/]+)/)?.[1];
-            if (pkg) {
-              // Large packages get their own chunks
-              if (
-                pkg.includes("monaco") ||
-                pkg.includes("lodash") ||
-                pkg.includes("antd") ||
-                pkg.includes("emotion")
-              ) {
-                return `vendor-${pkg}`;
-              }
-
-              // Group all other packages together
-              return "vendor";
+          const pkg = getPackageName(id);
+          const ctx: ChunkMatchContext = { id, pkg };
+          for (const rule of chunkRules) {
+            if (rule.match(ctx)) {
+              return typeof rule.name === "function"
+                ? rule.name(pkg ?? "vendor")
+                : rule.name;
             }
           }
+
+          return "vendor";
         },
       },
     },
