@@ -123,14 +123,12 @@
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": [
       "eslint --fix --max-warnings=0",
-      "prettier --write",
-      "git add"
+      "prettier --write"
     ],
     "*.{css,scss,json,md}": [
-      "prettier --write",
-      "git add"
+      "prettier --write"
     ]
   },
   "type": "module",
-  "packageManager": "pnpm@9.13.2"
+  "packageManager": "pnpm@10.22.0"
 }

@@ -1,0 +1,8 @@
+onlyBuiltDependencies:
+  - "@parcel/watcher"
+  - "@swc/core"
+  - core-js
+  - es5-ext
+  - esbuild
+  - meta-json-schema
+  - unrs-resolver
