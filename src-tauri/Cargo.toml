@@ -47,7 +47,7 @@ compact_str = { workspace = true }
 flexi_logger = { workspace = true }
 log = { workspace = true }
 warp = { version = "0.4.2", features = ["server"] }
-open = "5.3.2"
+open = "5.3.3"
 dunce = "1.0.5"
 nanoid = "0.4"
 chrono = "0.4.42"
