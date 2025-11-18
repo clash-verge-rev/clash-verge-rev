@@ -58,10 +58,10 @@ jobs:
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
         with:
-          workspaces: src-tauri
           cache-all-crates: true
           save-if: false
-          key: ${{ runner.os }}-${{ matrix.target }}-${{ hashFiles('**Cargo.lock') }}
+          shared-key: v0-rust-${{ runner.os }}-${{ matrix.target }}
+          key: ${{ hashFiles('**/Cargo.lock') }}
 
       - name: Install dependencies (ubuntu only)
         if: matrix.os == 'ubuntu-22.04'
