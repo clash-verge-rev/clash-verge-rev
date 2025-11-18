@@ -3,6 +3,7 @@ members = [
     "src-tauri",
     "crates/clash-verge-draft",
     "crates/clash-verge-logging",
+    "crates/clash-verge-signal",
 ]
 resolver = "2"
 
@@ -42,6 +43,8 @@ strip = false
 [workspace.dependencies]
 clash-verge-draft = { path = "crates/clash-verge-draft" }
 clash-verge-logging = { path = "crates/clash-verge-logging" }
+clash-verge-signal = { path = "crates/clash-verge-signal" }
+tauri = { version = "2.9.3" }
 parking_lot = { version = "0.12.5", features = [
     "hardware-lock-elision",
     "send_guard",
