@@ -16,9 +16,10 @@ use clash_verge_logging::{Type, logging};
 //      global-hotkey (https://github.com/tauri-apps/global-hotkey)
 //      Global Shortcut (https://github.com/tauri-apps/plugins-workspace/tree/v2/plugins/global-shortcut)
 
-static SHUTDOWN_HANDLER: OnceLock<
-    Box<dyn Fn() -> Pin<Box<dyn std::future::Future<Output = ()> + Send>> + Send + Sync>,
-> = OnceLock::new();
+type ShutdownHandler =
+    Box<dyn Fn() -> Pin<Box<dyn std::future::Future<Output = ()> + Send>> + Send + Sync>;
+
+static SHUTDOWN_HANDLER: OnceLock<ShutdownHandler> = OnceLock::new();
 
 struct ShutdownState {
     hwnd: HWND,
