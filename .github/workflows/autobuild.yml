@@ -389,8 +389,8 @@ jobs:
           prerelease: true
           token: ${{ secrets.GITHUB_TOKEN }}
           files: |
-            src-tauri/target/${{ matrix.target }}/release/bundle/deb/*.deb
-            src-tauri/target/${{ matrix.target }}/release/bundle/rpm/*.rpm
+            target/${{ matrix.target }}/release/bundle/deb/*.deb
+            target/${{ matrix.target }}/release/bundle/rpm/*.rpm
 
   autobuild-x86-arm-windows_webview2:
     name: Autobuild x86 and ARM Windows with WebView2
@@ -506,7 +506,7 @@ jobs:
           name: "Clash Verge Rev ${{ env.TAG_CHANNEL }}"
           prerelease: true
           token: ${{ secrets.GITHUB_TOKEN }}
-          files: src-tauri/target/${{ matrix.target }}/release/bundle/nsis/*setup*
+          files: target/${{ matrix.target }}/release/bundle/nsis/*setup*
 
       - name: Portable Bundle
         run: pnpm portable-fixed-webview2 ${{ matrix.target }} --${{ env.TAG_NAME }}
