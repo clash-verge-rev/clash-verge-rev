@@ -4,7 +4,7 @@ use tauri_plugin_mihomo::models::Proxies;
 use tokio::fs;
 #[cfg(target_os = "macos")]
 pub mod speed_rate;
-use crate::config::{IVerge, PrfSelected};
+use crate::config::{IProfilePreview, IVerge, PrfSelected};
 use crate::core::service;
 use crate::module::lightweight;
 use crate::process::AsyncHandler;
@@ -20,7 +20,6 @@ use crate::{
 
 use super::handle;
 use anyhow::Result;
-use futures::future::join_all;
 use parking_lot::Mutex;
 use smartstring::alias::String;
 use std::collections::HashMap;
@@ -315,7 +314,7 @@ impl Tray {
         };
         let profiles_config = Config::profiles().await;
         let profiles_arc = profiles_config.latest_arc();
-        let profile_uid_and_name = profiles_arc.all_profile_uid_and_name().unwrap_or_default();
+        let profiles_preview = profiles_arc.profiles_preview().unwrap_or_default();
         let is_lightweight_mode = is_in_lightweight_mode();
 
         match app_handle.tray_by_id("main") {
@@ -327,7 +326,7 @@ impl Tray {
                         *system_proxy,
                         *tun_mode,
                         tun_mode_available,
-                        profile_uid_and_name,
+                        profiles_preview,
                         is_lightweight_mode,
                     )
                     .await?,
@@ -607,31 +606,24 @@ fn create_hotkeys(hotkeys: &Option<Vec<String>>) -> HashMap<String, String> {
         .unwrap_or_default()
 }
 
-async fn create_profile_menu_item(
+fn create_profile_menu_item(
     app_handle: &AppHandle,
-    profile_uid_and_name: Vec<(&String, &String)>,
+    profiles_preview: Vec<IProfilePreview<'_>>,
 ) -> Result<Vec<CheckMenuItem<Wry>>> {
-    let futures = profile_uid_and_name
-        .iter()
-        .map(|(profile_uid, profile_name)| {
-            let app_handle = app_handle.clone();
-            async move {
-                let is_current_profile = Config::profiles()
-                    .await
-                    .latest_arc()
-                    .is_current_profile_index(profile_uid);
-                CheckMenuItem::with_id(
-                    &app_handle,
-                    format!("profiles_{profile_uid}"),
-                    profile_name.as_str(),
-                    true,
-                    is_current_profile,
-                    None::<&str>,
-                )
-            }
-        });
-    let results = join_all(futures).await;
-    Ok(results.into_iter().collect::<Result<Vec<_>, _>>()?)
+    profiles_preview
+        .into_iter()
+        .map(|profile| {
+            CheckMenuItem::with_id(
+                app_handle,
+                format!("profiles_{}", profile.uid),
+                profile.name,
+                true,
+                profile.is_current,
+                None::<&str>,
+            )
+            .map_err(|e| e.into())
+        })
+        .collect()
 }
 
 fn create_subcreate_proxy_menu_item(
@@ -813,7 +805,7 @@ async fn create_tray_menu(
     system_proxy_enabled: bool,
     tun_mode_enabled: bool,
     tun_mode_available: bool,
-    profile_uid_and_name: Vec<(&String, &String)>,
+    profiles_preview: Vec<IProfilePreview<'_>>,
     is_lightweight_mode: bool,
 ) -> Result<tauri::menu::Menu<Wry>> {
     let current_proxy_mode = mode.unwrap_or("");
@@ -877,7 +869,7 @@ async fn create_tray_menu(
     let hotkeys = create_hotkeys(&verge_settings.hotkeys);
 
     let profile_menu_items: Vec<CheckMenuItem<Wry>> =
-        create_profile_menu_item(app_handle, profile_uid_and_name).await?;
+        create_profile_menu_item(app_handle, profiles_preview)?;
 
     // Pre-fetch all localized strings
     let texts = MenuTexts::new();
