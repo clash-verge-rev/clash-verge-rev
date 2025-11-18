@@ -190,13 +190,13 @@ jobs:
           node-version: "22"
           cache: "pnpm"
 
-      - name: Cache pnpm store
+      - name: Pnpm Cache
         uses: actions/cache@v4
         with:
           path: ~/.pnpm-store
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+          key: "pnpm-shared-stable-${{ matrix.os }}-${{ matrix.target }}"
           restore-keys: |
-            ${{ runner.os }}-pnpm-
+            pnpm-shared-stable-${{ matrix.os }}-${{ matrix.target }}
 
       - name: Pnpm install and check
         run: |
@@ -286,13 +286,13 @@ jobs:
           node-version: "22"
           cache: "pnpm"
 
-      - name: Cache pnpm store
+      - name: Pnpm Cache
         uses: actions/cache@v4
         with:
           path: ~/.pnpm-store
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+          key: "pnpm-shared-stable-${{ matrix.os }}-${{ matrix.target }}"
           restore-keys: |
-            ${{ runner.os }}-pnpm-
+            pnpm-shared-stable-${{ matrix.os }}-${{ matrix.target }}
 
       - name: Pnpm install and check
         run: |
@@ -436,13 +436,13 @@ jobs:
           node-version: "22"
           cache: "pnpm"
 
-      - name: Cache pnpm store
+      - name: Pnpm Cache
         uses: actions/cache@v4
         with:
           path: ~/.pnpm-store
-          key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+          key: "pnpm-shared-stable-${{ matrix.os }}-${{ matrix.target }}"
           restore-keys: |
-            ${{ runner.os }}-pnpm-
+            pnpm-shared-stable-${{ matrix.os }}-${{ matrix.target }}
 
       - name: Pnpm install and check
         run: |

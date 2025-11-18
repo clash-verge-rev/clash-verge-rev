@@ -103,8 +103,17 @@ jobs:
         if: github.event.inputs[matrix.input] == 'true'
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
           cache: "pnpm"
+
+      - name: Pnpm Cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.pnpm-store
+          key: "pnpm-shared-stable-${{ matrix.os }}-${{ matrix.target }}"
+          restore-keys: |
+            pnpm-shared-stable-${{ matrix.os }}-${{ matrix.target }}
+          lookup-only: true
 
       - name: Pnpm install and check
         if: github.event.inputs[matrix.input] == 'true'
