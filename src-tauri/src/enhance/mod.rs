@@ -17,7 +17,7 @@ use crate::constants;
 use crate::utils::dirs;
 use crate::{config::Config, utils::tmpl};
 use clash_verge_logging::{Type, logging};
-use serde_yaml_ng::Mapping;
+use serde_yaml_ng::{Mapping, Value};
 use smartstring::alias::String;
 use std::collections::{HashMap, HashSet};
 use tokio::fs;
@@ -501,6 +501,61 @@ fn apply_builtin_scripts(
     config
 }
 
+fn cleanup_proxy_groups(mut config: Mapping) -> Mapping {
+    const BUILTIN_POLICIES: &[&str] = &["DIRECT", "REJECT", "REJECT-DROP", "PASS"];
+
+    let proxy_names = config
+        .get("proxies")
+        .and_then(|v| v.as_sequence())
+        .map(|seq| {
+            seq.iter()
+                .filter_map(|item| match item {
+                    Value::Mapping(map) => map
+                        .get("name")
+                        .and_then(Value::as_str)
+                        .map(std::convert::Into::into),
+                    Value::String(name) => Some(name.clone().into()),
+                    _ => None,
+                })
+                .collect::<HashSet<String>>()
+        })
+        .unwrap_or_default();
+
+    let group_names = config
+        .get("proxy-groups")
+        .and_then(|v| v.as_sequence())
+        .map(|seq| {
+            seq.iter()
+                .filter_map(|item| {
+                    item.as_mapping()
+                        .and_then(|map| map.get("name"))
+                        .and_then(Value::as_str)
+                        .map(std::convert::Into::into)
+                })
+                .collect::<HashSet<String>>()
+        })
+        .unwrap_or_default();
+
+    let mut allowed_names = proxy_names;
+    allowed_names.extend(group_names);
+    allowed_names.extend(BUILTIN_POLICIES.iter().map(|p| (*p).into()));
+
+    if let Some(Value::Sequence(groups)) = config.get_mut("proxy-groups") {
+        for group in groups {
+            if let Some(group_map) = group.as_mapping_mut()
+                && let Some(Value::Sequence(proxies)) = group_map.get_mut("proxies")
+            {
+                proxies.retain(|proxy| match proxy {
+                    Value::String(name) => allowed_names.contains(name.as_str()),
+                    _ => true,
+                });
+            }
+        }
+    }
+
+    config
+}
+
 async fn apply_dns_settings(mut config: Mapping, enable_dns_settings: bool) -> Mapping {
     if enable_dns_settings && let Ok(app_dir) = dirs::app_home_dir() {
         let dns_path = app_dir.join(constants::files::DNS_CONFIG);
@@ -595,6 +650,8 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
     // builtin scripts
     let mut config = apply_builtin_scripts(config, clash_core, enable_builtin);
 
+    config = cleanup_proxy_groups(config);
+
     config = use_tun(config, enable_tun);
     config = use_sort(config);
 
@@ -606,4 +663,77 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
     let exists_keys: Vec<String> = exists_set.into_iter().collect();
 
     (config, exists_keys, result_map)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::cleanup_proxy_groups;
+
+    #[test]
+    fn remove_missing_proxies_from_groups() {
+        let config_str = r#"
+proxies:
+  - name: "alive-node"
+    type: ss
+proxy-groups:
+  - name: "manual"
+    type: select
+    proxies:
+      - "alive-node"
+      - "missing-node"
+      - "DIRECT"
+  - name: "nested"
+    type: select
+    proxies:
+      - "manual"
+      - "ghost"
+"#;
+
+        let mut config: serde_yaml_ng::Mapping =
+            serde_yaml_ng::from_str(config_str).expect("Failed to parse test yaml");
+        config = cleanup_proxy_groups(config);
+
+        let groups = config
+            .get("proxy-groups")
+            .and_then(|v| v.as_sequence())
+            .cloned()
+            .expect("proxy-groups should be a sequence");
+
+        let manual_group = groups
+            .iter()
+            .find(|group| {
+                group.get("name").and_then(serde_yaml_ng::Value::as_str) == Some("manual")
+            })
+            .and_then(|group| group.as_mapping())
+            .expect("manual group should exist");
+
+        let manual_proxies = manual_group
+            .get("proxies")
+            .and_then(|v| v.as_sequence())
+            .expect("manual proxies should be a sequence");
+
+        assert_eq!(manual_proxies.len(), 2);
+        assert!(
+            manual_proxies
+                .iter()
+                .any(|p| p.as_str() == Some("alive-node"))
+        );
+        assert!(manual_proxies.iter().any(|p| p.as_str() == Some("DIRECT")));
+
+        let nested_group = groups
+            .iter()
+            .find(|group| {
+                group.get("name").and_then(serde_yaml_ng::Value::as_str) == Some("nested")
+            })
+            .and_then(|group| group.as_mapping())
+            .expect("nested group should exist");
+
+        let nested_proxies = nested_group
+            .get("proxies")
+            .and_then(|v| v.as_sequence())
+            .expect("nested proxies should be a sequence");
+
+        assert_eq!(nested_proxies.len(), 1);
+        assert_eq!(nested_proxies[0].as_str(), Some("manual"));
+    }
 }
