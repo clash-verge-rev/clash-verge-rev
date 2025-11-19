@@ -24,6 +24,7 @@ const HOTKEY_FUNC = [
   "toggle_system_proxy",
   "toggle_tun_mode",
   "entry_lightweight_mode",
+  "reactivate_profiles",
 ] as const;
 
 const HOTKEY_FUNC_LABELS: Record<(typeof HOTKEY_FUNC)[number], string> = {
@@ -36,6 +37,7 @@ const HOTKEY_FUNC_LABELS: Record<(typeof HOTKEY_FUNC)[number], string> = {
   toggle_tun_mode: "settings.modals.hotkey.functions.toggleTunMode",
   entry_lightweight_mode:
     "settings.modals.hotkey.functions.entryLightweightMode",
+  reactivate_profiles: "settings.modals.hotkey.functions.reactivateProfiles",
 };
 
 export const HotkeyViewer = forwardRef<DialogRef>((props, ref) => {

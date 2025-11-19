@@ -62,7 +62,7 @@ const DEFAULT_TEST_LIST = [
   },
   {
     uid: nanoid(),
-    name: "Youtube",
+    name: "YouTube",
     url: "https://www.youtube.com",
     icon: youtube,
   },

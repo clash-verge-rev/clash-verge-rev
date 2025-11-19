@@ -553,7 +553,8 @@
         "toggleSystemProxy": "開啟/關閉系統代理",
         "toggleTunMode": "開啟/關閉 虛擬網路介面卡模式",
         "entryLightweightMode": "進入輕量模式",
-        "direct": "直連模式"
+        "direct": "直連模式",
+        "reactivateProfiles": "重新啟用訂閱"
       }
     },
     "password": {

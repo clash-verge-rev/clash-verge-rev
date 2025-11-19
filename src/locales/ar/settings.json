@@ -553,7 +553,8 @@
         "toggleSystemProxy": "تفعيل/تعطيل وكيل النظام",
         "toggleTunMode": "تفعيل/تعطيل وضع TUN",
         "entryLightweightMode": "Entry Lightweight Mode",
-        "direct": "الوضع المباشر"
+        "direct": "الوضع المباشر",
+        "reactivateProfiles": "إعادة تنشيط الملفات الشخصية"
       }
     },
     "password": {

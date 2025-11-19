@@ -23,7 +23,8 @@
     "beforeBuildCommand": "pnpm run web:build",
     "frontendDist": "../dist",
     "beforeDevCommand": "pnpm run web:dev",
-    "devUrl": "http://localhost:3000/"
+    "devUrl": "http://localhost:3000/",
+    "removeUnusedCommands": true
   },
   "productName": "Clash Verge",
   "identifier": "io.github.clash-verge-rev.clash-verge-rev",

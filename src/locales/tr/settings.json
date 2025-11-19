@@ -553,7 +553,8 @@
         "toggleSystemProxy": "Sistem Vekil'ini Etkinleştir/Devre Dışı Bırak",
         "toggleTunMode": "Tun Modunu Etkinleştir/Devre Dışı Bırak",
         "entryLightweightMode": "Hafif Moda Gir",
-        "direct": "Doğrudan Mod"
+        "direct": "Doğrudan Mod",
+        "reactivateProfiles": "Profilleri Yeniden Etkinleştir"
       }
     },
     "password": {

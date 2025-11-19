@@ -553,7 +553,8 @@
         "toggleSystemProxy": "打开/关闭系统代理",
         "toggleTunMode": "打开/关闭 TUN 模式",
         "entryLightweightMode": "进入轻量模式",
-        "direct": "直连模式"
+        "direct": "直连模式",
+        "reactivateProfiles": "重新激活订阅"
       }
     },
     "password": {

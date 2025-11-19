@@ -553,7 +553,8 @@
         "toggleSystemProxy": "Enable/Disable System Proxy",
         "toggleTunMode": "Enable/Disable Tun Mode",
         "entryLightweightMode": "Entry Lightweight Mode",
-        "direct": "Direct Mode"
+        "direct": "Direct Mode",
+        "reactivateProfiles": "Reactivate Profiles"
       }
     },
     "password": {

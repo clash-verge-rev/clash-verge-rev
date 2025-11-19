@@ -553,7 +553,8 @@
         "toggleSystemProxy": "시스템 프록시 켜기/끄기",
         "toggleTunMode": "TUN 모드 켜기/끄기",
         "entryLightweightMode": "경량 모드 진입",
-        "direct": "직접 모드"
+        "direct": "직접 모드",
+        "reactivateProfiles": "프로필 재활성화"
       }
     },
     "password": {
