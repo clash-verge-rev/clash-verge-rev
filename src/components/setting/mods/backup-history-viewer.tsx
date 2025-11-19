@@ -265,40 +265,57 @@ export const BackupHistoryViewer = ({
               </ListItem>
             ) : (
               pagedRows.map((row) => (
-                <ListItem
-                  key={`${row.platform}-${row.filename}`}
-                  divider
-                  secondaryAction={
-                    <Stack direction="row" spacing={0.5} alignItems="center">
-                      {isLocal && (
-                        <IconButton
-                          size="small"
-                          disabled={isBusy}
-                          onClick={() => handleExport(row.filename)}
-                        >
-                          <DownloadRounded fontSize="small" />
-                        </IconButton>
-                      )}
-                      <IconButton
-                        size="small"
-                        disabled={isBusy}
-                        onClick={() => handleDelete(row.filename)}
-                      >
-                        <DeleteOutline fontSize="small" />
-                      </IconButton>
-                      <IconButton
-                        size="small"
-                        disabled={isBusy}
-                        onClick={() => handleRestore(row.filename)}
-                      >
-                        <RestoreRounded fontSize="small" />
-                      </IconButton>
-                    </Stack>
-                  }
-                >
+                <ListItem key={`${row.platform}-${row.filename}`} divider>
                   <ListItemText
-                    primary={row.filename}
-                    secondary={`${row.platform} · ${row.backup_time.format("YYYY-MM-DD HH:mm")}`}
+                    primary={
+                      <Typography
+                        variant="body2"
+                        sx={{ wordBreak: "break-all", fontWeight: 500 }}
+                      >
+                        {row.filename}
+                      </Typography>
+                    }
+                    secondary={
+                      <Stack
+                        direction="row"
+                        alignItems="center"
+                        justifyContent="space-between"
+                        spacing={1.5}
+                      >
+                        <Typography variant="caption" color="text.secondary">
+                          {`${row.platform} · ${row.backup_time.format("YYYY-MM-DD HH:mm")}`}
+                        </Typography>
+                        <Stack
+                          direction="row"
+                          spacing={0.5}
+                          alignItems="center"
+                        >
+                          {isLocal && (
+                            <IconButton
+                              size="small"
+                              disabled={isBusy}
+                              onClick={() => handleExport(row.filename)}
+                            >
+                              <DownloadRounded fontSize="small" />
+                            </IconButton>
+                          )}
+                          <IconButton
+                            size="small"
+                            disabled={isBusy}
+                            onClick={() => handleDelete(row.filename)}
+                          >
+                            <DeleteOutline fontSize="small" />
+                          </IconButton>
+                          <IconButton
+                            size="small"
+                            disabled={isBusy}
+                            onClick={() => handleRestore(row.filename)}
+                          >
+                            <RestoreRounded fontSize="small" />
+                          </IconButton>
+                        </Stack>
+                      </Stack>
+                    }
                   />
                 </ListItem>
               ))
