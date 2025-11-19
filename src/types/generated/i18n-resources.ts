@@ -885,6 +885,7 @@ export interface TranslationResources {
             entryLightweightMode: string;
             global: string;
             openOrCloseDashboard: string;
+            reactivateProfiles: string;
             rule: string;
             toggleSystemProxy: string;
             toggleTunMode: string;

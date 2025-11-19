@@ -553,7 +553,8 @@
         "toggleSystemProxy": "Aktifkan/Nonaktifkan Proksi Sistem",
         "toggleTunMode": "Aktifkan/Nonaktifkan Mode Tun",
         "entryLightweightMode": "Entry Lightweight Mode",
-        "direct": "Mode Langsung"
+        "direct": "Mode Langsung",
+        "reactivateProfiles": "Reaktivasi Profil"
       }
     },
     "password": {

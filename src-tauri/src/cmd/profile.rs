@@ -36,14 +36,29 @@ pub async fn get_profiles() -> CmdResult<IProfiles> {
 #[tauri::command]
 pub async fn enhance_profiles() -> CmdResult {
     match feat::enhance_profiles().await {
-        Ok(_) => {}
+        Ok((true, _)) => {
+            handle::Handle::refresh_clash();
+            Ok(())
+        }
+        Ok((false, msg)) => {
+            let message: String = if msg.is_empty() {
+                "Failed to reactivate profiles".into()
+            } else {
+                msg
+            };
+            logging!(
+                warn,
+                Type::Cmd,
+                "Reactivate profiles command failed validation: {}",
+                message.as_str()
+            );
+            Err(message)
+        }
         Err(e) => {
             logging!(error, Type::Cmd, "{}", e);
-            return Err(e.to_string().into());
+            Err(e.to_string().into())
         }
     }
-    handle::Handle::refresh_clash();
-    Ok(())
 }
 
 /// 导入配置文件

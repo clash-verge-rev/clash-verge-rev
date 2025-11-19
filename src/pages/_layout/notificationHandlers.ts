@@ -34,6 +34,7 @@ export const handleNoticeMessage = (
         "settings.feedback.notifications.updater.withClashProxyFailed",
         msg,
       ),
+    "reactivate_profiles::error": () => showNotice.error(msg),
     update_failed: () => showNotice.error(msg),
     "config_validate::boot_error": () =>
       showNotice.error("shared.feedback.validation.config.bootFailed", msg),

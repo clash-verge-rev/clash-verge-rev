@@ -553,7 +553,8 @@
         "toggleSystemProxy": "Activar/desactivar el proxy del sistema",
         "toggleTunMode": "Activar/desactivar el modo TUN",
         "entryLightweightMode": "Entrar en modo ligero",
-        "direct": "Modo de conexión directa"
+        "direct": "Modo de conexión directa",
+        "reactivateProfiles": "Reactivar suscripciones"
       }
     },
     "password": {
