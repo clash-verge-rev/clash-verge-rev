@@ -16,8 +16,8 @@ notifications:
     title: Lightweight Mode
     body: Entered lightweight mode.
   profilesReactivated:
-    title: "Профили"
-    body: "Профиль перезапущен"
+    title: Profiles
+    body: Profile Reactivated.
   appQuit:
     title: About to Exit
     body: Clash Verge is about to exit.

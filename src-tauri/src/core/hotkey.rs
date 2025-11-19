@@ -154,9 +154,23 @@ impl Hotkey {
             }
             HotkeyFunction::ReactivateProfiles => {
                 AsyncHandler::spawn(async move || match feat::enhance_profiles().await {
-                    Ok(_) => {
+                    Ok((true, _)) => {
                         handle::Handle::refresh_clash();
                         notify_event(NotificationEvent::ProfilesReactivated).await;
+                    }
+                    Ok((false, msg)) => {
+                        let message = if msg.is_empty() {
+                            "Failed to reactivate profiles.".to_string()
+                        } else {
+                            msg.to_string()
+                        };
+                        logging!(
+                            warn,
+                            Type::Hotkey,
+                            "Hotkey profile reactivation failed validation: {}",
+                            message.as_str()
+                        );
+                        handle::Handle::notice_message("reactivate_profiles::error", message);
                     }
                     Err(err) => {
                         logging!(
@@ -164,6 +178,10 @@ impl Hotkey {
                             Type::Hotkey,
                             "Failed to reactivate subscriptions via hotkey: {}",
                             err
+                        );
+                        handle::Handle::notice_message(
+                            "reactivate_profiles::error",
+                            err.to_string(),
                         );
                     }
                 });

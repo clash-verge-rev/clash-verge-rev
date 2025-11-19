@@ -17,7 +17,7 @@ notifications:
     body: 已进入轻量模式。
   profilesReactivated:
     title: 订阅
-    body: 订阅已激活
+    body: 订阅已激活。
   appQuit:
     title: 即将退出
     body: Clash Verge 即将退出。
