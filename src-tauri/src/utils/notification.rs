@@ -9,6 +9,7 @@ pub enum NotificationEvent<'a> {
     SystemProxyToggled,
     TunModeToggled,
     LightweightModeEntered,
+    ProfilesReactivated,
     AppQuit,
     #[cfg(target_os = "macos")]
     AppHidden,
@@ -52,6 +53,11 @@ pub async fn notify_event<'a>(event: NotificationEvent<'a>) {
         NotificationEvent::LightweightModeEntered => {
             let title = rust_i18n::t!("notifications.lightweightModeEntered.title").to_string();
             let body = rust_i18n::t!("notifications.lightweightModeEntered.body").to_string();
+            notify(&title, &body);
+        }
+        NotificationEvent::ProfilesReactivated => {
+            let title = rust_i18n::t!("notifications.profilesReactivated.title").to_string();
+            let body = rust_i18n::t!("notifications.profilesReactivated.body").to_string();
             notify(&title, &body);
         }
         NotificationEvent::AppQuit => {

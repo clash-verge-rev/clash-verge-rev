@@ -553,7 +553,8 @@
         "toggleSystemProxy": "فعال/غیرفعال کردن پراکسی سیستم",
         "toggleTunMode": "فعال/غیرفعال کردن حالت Tun",
         "entryLightweightMode": "Entry Lightweight Mode",
-        "direct": "حالت مستقیم"
+        "direct": "حالت مستقیم",
+        "reactivateProfiles": "فعال‌سازی مجدد پروفایل‌ها"
       }
     },
     "password": {

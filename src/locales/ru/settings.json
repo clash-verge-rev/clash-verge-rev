@@ -553,7 +553,8 @@
         "toggleSystemProxy": "Включить/Отключить системный прокси",
         "toggleTunMode": "Включить/Отключить режим TUN",
         "entryLightweightMode": "Вход в LightWeight Mode",
-        "direct": "Прямой режим"
+        "direct": "Прямой режим",
+        "reactivateProfiles": "Перезапустить профиль"
       }
     },
     "password": {
