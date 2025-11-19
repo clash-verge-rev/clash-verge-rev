@@ -5,26 +5,16 @@ use tokio::runtime::Runtime;
 
 use clash_verge_draft::Draft;
 
-#[derive(Clone, Debug)]
+#[derive(Default, Clone, Debug)]
 struct IVerge {
     enable_auto_launch: Option<bool>,
     enable_tun_mode: Option<bool>,
-}
-
-impl Default for IVerge {
-    fn default() -> Self {
-        Self {
-            enable_auto_launch: None,
-            enable_tun_mode: None,
-        }
-    }
 }
 
 fn make_draft() -> Draft<IVerge> {
     let verge = IVerge {
         enable_auto_launch: Some(true),
         enable_tun_mode: Some(false),
-        ..Default::default()
     };
     Draft::new(verge)
 }
