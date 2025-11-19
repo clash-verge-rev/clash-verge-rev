@@ -513,8 +513,8 @@ fn cleanup_proxy_groups(mut config: Mapping) -> Mapping {
                     Value::Mapping(map) => map
                         .get("name")
                         .and_then(Value::as_str)
-                        .map(std::convert::Into::into),
-                    Value::String(name) => Some(name.clone().into()),
+                        .map(|name| name.to_owned().into()),
+                    Value::String(name) => Some(name.to_owned().into()),
                     _ => None,
                 })
                 .collect::<HashSet<String>>()
