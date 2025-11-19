@@ -21,8 +21,7 @@ pub async fn quit() {
     logging!(debug, Type::System, "启动退出流程");
     utils::server::shutdown_embedded_server();
 
-    // 获取应用句柄并设置退出标志
-    let app_handle = handle::Handle::app_handle();
+    // 设置退出标志
     handle::Handle::global().set_is_exiting();
 
     logging!(info, Type::System, "开始异步清理资源");
@@ -34,6 +33,8 @@ pub async fn quit() {
         "资源清理完成，退出代码: {}",
         if cleanup_result { 0 } else { 1 }
     );
+
+    let app_handle = handle::Handle::app_handle();
     app_handle.exit(if cleanup_result { 0 } else { 1 });
 }
 
@@ -267,41 +268,6 @@ pub async fn clean_async() -> bool {
     );
 
     all_success
-}
-
-pub fn clean() -> bool {
-    use crate::process::AsyncHandler;
-
-    let (tx, rx) = std::sync::mpsc::channel();
-
-    AsyncHandler::spawn(move || async move {
-        logging!(info, Type::System, "开始执行关闭操作...");
-
-        // 使用已有的异步清理函数
-        let cleanup_result = clean_async().await;
-
-        let _ = tx.send(cleanup_result);
-    });
-
-    #[cfg(target_os = "windows")]
-    let total_timeout = std::time::Duration::from_secs(5);
-    #[cfg(not(target_os = "windows"))]
-    let total_timeout = std::time::Duration::from_secs(8);
-
-    match rx.recv_timeout(total_timeout) {
-        Ok(result) => {
-            logging!(info, Type::System, "关闭操作完成，结果: {}", result);
-            result
-        }
-        Err(_) => {
-            logging!(
-                warn,
-                Type::System,
-                "清理操作超时(可能正在关机)，返回成功避免阻塞"
-            );
-            true
-        }
-    }
 }
 
 #[cfg(target_os = "macos")]

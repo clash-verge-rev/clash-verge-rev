@@ -1,4 +1,5 @@
 use anyhow::Result;
+use flexi_logger::LoggerHandle;
 
 use crate::{
     config::Config,
@@ -23,6 +24,21 @@ pub mod ui;
 pub mod window;
 pub mod window_script;
 
+pub async fn prioritize_initialization() -> Option<LoggerHandle> {
+    init_work_config().await;
+    init_resources().await;
+
+    #[cfg(not(feature = "tauri-dev"))]
+    {
+        logging!(info, Type::Setup, "Initializing logger");
+        init::init_logger().await.ok()
+    }
+    #[cfg(feature = "tauri-dev")]
+    {
+        None
+    }
+}
+
 pub fn resolve_setup_handle() {
     init_handle();
 }
@@ -31,14 +47,11 @@ pub fn resolve_setup_sync() {
     AsyncHandler::spawn(|| async {
         AsyncHandler::spawn_blocking(init_scheme);
         AsyncHandler::spawn_blocking(init_embed_server);
-        AsyncHandler::spawn_blocking(init_signal);
     });
 }
 
 pub fn resolve_setup_async() {
     AsyncHandler::spawn(|| async {
-        #[cfg(not(feature = "tauri-dev"))]
-        resolve_setup_logger().await;
         logging!(
             info,
             Type::ClashVergeRev,
@@ -96,11 +109,6 @@ pub(super) fn init_scheme() {
     logging_error!(Type::Setup, init::init_scheme());
 }
 
-#[cfg(not(feature = "tauri-dev"))]
-pub(super) async fn resolve_setup_logger() {
-    logging_error!(Type::Setup, init::init_logger().await);
-}
-
 pub async fn resolve_scheme(param: &str) -> Result<()> {
     logging_error!(Type::Setup, scheme::resolve_scheme(param).await);
     Ok(())
@@ -134,7 +142,7 @@ pub(super) async fn init_auto_backup() {
     logging_error!(Type::Setup, AutoBackupManager::global().init().await);
 }
 
-pub(super) fn init_signal() {
+pub fn init_signal() {
     logging!(info, Type::Setup, "Initializing signal handlers...");
     clash_verge_signal::register(
         #[cfg(windows)]
