@@ -15,6 +15,9 @@ notifications:
   lightweightModeEntered:
     title: 경량 모드
     body: 경량 모드에 진입했습니다.
+  profilesReactivated:
+    title: Profiles
+    body: Profile Reactivated.
   appQuit:
     title: 곧 종료
     body: Clash Verge가 곧 종료됩니다.

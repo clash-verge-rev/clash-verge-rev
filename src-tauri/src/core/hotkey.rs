@@ -21,6 +21,7 @@ pub enum HotkeyFunction {
     ToggleSystemProxy,
     ToggleTunMode,
     EntryLightweightMode,
+    ReactivateProfiles,
     Quit,
     #[cfg(target_os = "macos")]
     Hide,
@@ -36,6 +37,7 @@ impl fmt::Display for HotkeyFunction {
             Self::ToggleSystemProxy => "toggle_system_proxy",
             Self::ToggleTunMode => "toggle_tun_mode",
             Self::EntryLightweightMode => "entry_lightweight_mode",
+            Self::ReactivateProfiles => "reactivate_profiles",
             Self::Quit => "quit",
             #[cfg(target_os = "macos")]
             Self::Hide => "hide",
@@ -56,6 +58,7 @@ impl FromStr for HotkeyFunction {
             "toggle_system_proxy" => Ok(Self::ToggleSystemProxy),
             "toggle_tun_mode" => Ok(Self::ToggleTunMode),
             "entry_lightweight_mode" => Ok(Self::EntryLightweightMode),
+            "reactivate_profiles" => Ok(Self::ReactivateProfiles),
             "quit" => Ok(Self::Quit),
             #[cfg(target_os = "macos")]
             "hide" => Ok(Self::Hide),
@@ -147,6 +150,40 @@ impl Hotkey {
                 AsyncHandler::spawn(async move || {
                     entry_lightweight_mode().await;
                     notify_event(NotificationEvent::LightweightModeEntered).await;
+                });
+            }
+            HotkeyFunction::ReactivateProfiles => {
+                AsyncHandler::spawn(async move || match feat::enhance_profiles().await {
+                    Ok((true, _)) => {
+                        handle::Handle::refresh_clash();
+                        notify_event(NotificationEvent::ProfilesReactivated).await;
+                    }
+                    Ok((false, msg)) => {
+                        let message = if msg.is_empty() {
+                            "Failed to reactivate profiles.".to_string()
+                        } else {
+                            msg.to_string()
+                        };
+                        logging!(
+                            warn,
+                            Type::Hotkey,
+                            "Hotkey profile reactivation failed validation: {}",
+                            message.as_str()
+                        );
+                        handle::Handle::notice_message("reactivate_profiles::error", message);
+                    }
+                    Err(err) => {
+                        logging!(
+                            error,
+                            Type::Hotkey,
+                            "Failed to reactivate subscriptions via hotkey: {}",
+                            err
+                        );
+                        handle::Handle::notice_message(
+                            "reactivate_profiles::error",
+                            err.to_string(),
+                        );
+                    }
                 });
             }
             HotkeyFunction::Quit => {

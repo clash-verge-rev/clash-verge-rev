@@ -553,7 +553,8 @@
         "toggleSystemProxy": "システムプロキシを開く/閉じる",
         "toggleTunMode": "TUNモードを開く/閉じる",
         "entryLightweightMode": "軽量モードに入る",
-        "direct": "直接接続モード"
+        "direct": "直接接続モード",
+        "reactivateProfiles": "プロファイルを再アクティブ化"
       }
     },
     "password": {

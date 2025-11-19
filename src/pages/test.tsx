@@ -62,7 +62,7 @@ const TestPage = () => {
         },
         {
           uid: nanoid(),
-          name: "Youtube",
+          name: "YouTube",
           url: "https://www.youtube.com",
           icon: youtube,
         },

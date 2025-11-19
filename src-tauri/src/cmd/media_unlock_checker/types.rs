@@ -26,7 +26,7 @@ const DEFAULT_UNLOCK_ITEM_NAMES: [&str; 13] = [
     "ChatGPT Web",
     "Claude",
     "Gemini",
-    "Youtube Premium",
+    "YouTube Premium",
     "Bahamut Anime",
     "Netflix",
     "Disney+",

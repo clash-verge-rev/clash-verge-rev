@@ -553,7 +553,8 @@
         "toggleSystemProxy": "Systemproxy ein/ausschalten",
         "toggleTunMode": "TUN-Modus ein/ausschalten",
         "entryLightweightMode": "Leichtgewichtigen Modus betreten",
-        "direct": "Direktverbindungs-Modus"
+        "direct": "Direktverbindungs-Modus",
+        "reactivateProfiles": "Abonnement erneut aktivieren"
       }
     },
     "password": {

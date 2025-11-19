@@ -15,6 +15,9 @@ notifications:
   lightweightModeEntered:
     title: 輕量模式
     body: 已進入輕量模式。
+  profilesReactivated:
+    title: 訂閱
+    body: 訂閱已啟用。
   appQuit:
     title: 即將退出
     body: Clash Verge 即將退出。

@@ -553,7 +553,8 @@
         "toggleSystemProxy": "Системалы проксины кабызу/сүндерү",
         "toggleTunMode": "Tun режимын кабызу/сүндерү",
         "entryLightweightMode": "Entry Lightweight Mode",
-        "direct": "Туры режим"
+        "direct": "Туры режим",
+        "reactivateProfiles": "Профильләрне янәдән активлаштыру"
       }
     },
     "password": {
