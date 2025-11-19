@@ -5,8 +5,8 @@ mod state;
 use anyhow::Result;
 use arc_swap::{ArcSwap, ArcSwapOption};
 use std::{fmt, sync::Arc, time::Instant};
+use tauri_plugin_shell::process::CommandChild;
 
-use crate::process::CommandChildGuard;
 use crate::singleton_lazy;
 
 #[derive(Debug, serde::Serialize, PartialEq, Eq)]
@@ -35,7 +35,7 @@ pub struct CoreManager {
 #[derive(Debug)]
 struct State {
     running_mode: ArcSwap<RunningMode>,
-    child_sidecar: ArcSwapOption<CommandChildGuard>,
+    child_sidecar: ArcSwapOption<CommandChild>,
 }
 
 impl Default for State {
@@ -61,7 +61,7 @@ impl CoreManager {
         Arc::clone(&self.state.load().running_mode.load())
     }
 
-    pub fn take_child_sidecar(&self) -> Option<CommandChildGuard> {
+    pub fn take_child_sidecar(&self) -> Option<CommandChild> {
         self.state
             .load()
             .child_sidecar
@@ -78,7 +78,7 @@ impl CoreManager {
         state.running_mode.store(Arc::new(mode));
     }
 
-    pub fn set_running_child_sidecar(&self, child: CommandChildGuard) {
+    pub fn set_running_child_sidecar(&self, child: CommandChild) {
         let state = self.state.load();
         state.child_sidecar.store(Some(Arc::new(child)));
     }
