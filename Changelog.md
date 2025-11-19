@@ -9,6 +9,7 @@
 - PAC 自动代理脚本内容无法动态调整
 - 兼容从旧版服务模式升级
 - Monaco 编辑器的行数上限
+- 已删除节点在手动分组中导致配置无法加载
 
 <details>
 <summary><strong> ✨ 新增功能 </strong></summary>
