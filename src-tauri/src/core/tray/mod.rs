@@ -8,13 +8,13 @@ use crate::config::{IProfilePreview, IVerge, PrfSelected};
 use crate::core::service;
 use crate::module::lightweight;
 use crate::process::AsyncHandler;
+use crate::singleton;
 use crate::utils::window_manager::WindowManager;
 use crate::{
     Type, cmd,
     config::Config,
     feat, logging,
     module::lightweight::is_in_lightweight_mode,
-    singleton_lazy,
     utils::{dirs::find_target_icons, i18n},
 };
 
@@ -199,10 +199,13 @@ impl Default for Tray {
     }
 }
 
-// Use simplified singleton_lazy macro
-singleton_lazy!(Tray, TRAY, Tray::default);
+singleton!(Tray, TRAY);
 
 impl Tray {
+    fn new() -> Self {
+        Self::default()
+    }
+
     pub async fn init(&self) -> Result<()> {
         if handle::Handle::global().is_exiting() {
             logging!(debug, Type::Tray, "应用正在退出，跳过托盘初始化");

@@ -1,9 +1,7 @@
 use crate::process::AsyncHandler;
+use crate::singleton;
 use crate::utils::notification::{NotificationEvent, notify_event};
-use crate::{
-    config::Config, core::handle, feat, module::lightweight::entry_lightweight_mode,
-    singleton_with_logging,
-};
+use crate::{config::Config, core::handle, feat, module::lightweight::entry_lightweight_mode};
 use anyhow::{Result, bail};
 use arc_swap::ArcSwap;
 use clash_verge_logging::{Type, logging};
@@ -296,8 +294,7 @@ impl Hotkey {
     }
 }
 
-// Use unified singleton macro
-singleton_with_logging!(Hotkey, INSTANCE, "Hotkey");
+singleton!(Hotkey, INSTANCE);
 
 impl Hotkey {
     pub async fn init(&self, skip: bool) -> Result<()> {

@@ -7,7 +7,7 @@ use arc_swap::{ArcSwap, ArcSwapOption};
 use std::{fmt, sync::Arc, time::Instant};
 use tauri_plugin_shell::process::CommandChild;
 
-use crate::singleton_lazy;
+use crate::singleton;
 
 #[derive(Debug, serde::Serialize, PartialEq, Eq)]
 pub enum RunningMode {
@@ -57,6 +57,10 @@ impl Default for CoreManager {
 }
 
 impl CoreManager {
+    fn new() -> Self {
+        Self::default()
+    }
+
     pub fn get_running_mode(&self) -> Arc<RunningMode> {
         Arc::clone(&self.state.load().running_mode.load())
     }
@@ -93,4 +97,4 @@ impl CoreManager {
     }
 }
 
-singleton_lazy!(CoreManager, CORE_MANAGER, CoreManager::default);
+singleton!(CoreManager, CORE_MANAGER);
