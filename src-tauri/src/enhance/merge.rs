@@ -14,7 +14,7 @@ fn deep_merge(a: &mut Value, b: &Value) {
     }
 }
 
-pub fn use_merge(merge: Mapping, config: Mapping) -> Mapping {
+pub fn use_merge(merge: &Mapping, config: Mapping) -> Mapping {
     let mut config = Value::from(config);
     let merge = use_lowercase(merge);
 
@@ -61,7 +61,7 @@ fn test_merge() -> anyhow::Result<()> {
     let merge = serde_yaml_ng::from_str::<Mapping>(merge)?;
     let config = serde_yaml_ng::from_str::<Mapping>(config)?;
 
-    let _ = serde_yaml_ng::to_string(&use_merge(merge, config))?;
+    let _ = serde_yaml_ng::to_string(&use_merge(&merge, config))?;
 
     Ok(())
 }

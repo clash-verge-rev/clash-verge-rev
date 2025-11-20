@@ -5,8 +5,8 @@ use smartstring::alias::String;
 
 pub fn use_script(
     script: String,
-    config: Mapping,
-    name: String,
+    config: &Mapping,
+    name: &String,
 ) -> Result<(Mapping, Vec<(String, String)>)> {
     use boa_engine::{Context, JsString, JsValue, Source, native_function::NativeFunction};
     use std::{cell::RefCell, rc::Rc};
@@ -66,7 +66,7 @@ pub fn use_script(
     let config_str = serde_json::to_string(&config)?;
 
     // 仅处理 name 参数中的特殊字符
-    let safe_name = escape_js_string_for_single_quote(&name);
+    let safe_name = escape_js_string_for_single_quote(name);
 
     let code = format!(
         r"try{{
@@ -93,7 +93,7 @@ pub fn use_script(
 
         let mut out = outputs.borrow_mut();
         match res {
-            Ok(config) => Ok((use_lowercase(config), out.to_vec())),
+            Ok(config) => Ok((use_lowercase(&config), out.to_vec())),
             Err(err) => {
                 out.push(("exception".into(), err.to_string().into()));
                 Ok((config, out.to_vec()))
@@ -150,8 +150,8 @@ fn test_script() {
       enable: false
   ";
 
-    let config = serde_yaml_ng::from_str(config).expect("Failed to parse test config YAML");
-    let (config, results) = use_script(script.into(), config, "".into())
+    let config = &serde_yaml_ng::from_str(config).expect("Failed to parse test config YAML");
+    let (config, results) = use_script(script.into(), config, &String::from(""))
         .expect("Script execution should succeed in test");
 
     let _ = serde_yaml_ng::to_string(&config).expect("Failed to serialize config to YAML");

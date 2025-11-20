@@ -325,19 +325,19 @@ fn process_global_items(
     mut config: Mapping,
     global_merge: ChainItem,
     global_script: ChainItem,
-    profile_name: String,
+    profile_name: &String,
 ) -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
     let mut result_map = HashMap::new();
     let mut exists_keys = use_keys(&config);
 
     if let ChainType::Merge(merge) = global_merge.data {
         exists_keys.extend(use_keys(&merge));
-        config = use_merge(merge, config.to_owned());
+        config = use_merge(&merge, config.to_owned());
     }
 
     if let ChainType::Script(script) = global_script.data {
         let mut logs = vec![];
-        match use_script(script, config.to_owned(), profile_name) {
+        match use_script(script, &config, profile_name) {
             Ok((res_config, res_logs)) => {
                 exists_keys.extend(use_keys(&res_config));
                 config = res_config;
@@ -361,7 +361,7 @@ fn process_profile_items(
     groups_item: ChainItem,
     merge_item: ChainItem,
     script_item: ChainItem,
-    profile_name: String,
+    profile_name: &String,
 ) -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
     if let ChainType::Rules(rules) = rules_item.data {
         config = use_seq(rules, config.to_owned(), "rules");
@@ -377,12 +377,12 @@ fn process_profile_items(
 
     if let ChainType::Merge(merge) = merge_item.data {
         exists_keys.extend(use_keys(&merge));
-        config = use_merge(merge, config.to_owned());
+        config = use_merge(&merge, config.to_owned());
     }
 
     if let ChainType::Script(script) = script_item.data {
         let mut logs = vec![];
-        match use_script(script, config.to_owned(), profile_name) {
+        match use_script(script, &config, profile_name) {
             Ok((res_config, res_logs)) => {
                 exists_keys.extend(use_keys(&res_config));
                 config = res_config;
@@ -486,7 +486,7 @@ fn apply_builtin_scripts(
             .for_each(|item| {
                 logging!(debug, Type::Core, "run builtin script {}", item.uid);
                 if let ChainType::Script(script) = item.data {
-                    match use_script(script, config.to_owned(), "".into()) {
+                    match use_script(script, &config, &String::from("")) {
                         Ok((res_config, _)) => {
                             config = res_config;
                         }
@@ -646,7 +646,7 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
 
     // process globals
     let (config, exists_keys, result_map) =
-        process_global_items(config, global_merge, global_script, profile_name.clone());
+        process_global_items(config, global_merge, global_script, &profile_name);
 
     // process profile-specific items
     let (config, exists_keys, result_map) = process_profile_items(
@@ -658,7 +658,7 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
         groups_item,
         merge_item,
         script_item,
-        profile_name,
+        &profile_name,
     );
 
     // merge default clash config

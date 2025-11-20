@@ -25,14 +25,14 @@ pub const DEFAULT_FIELDS: [&str; 5] = [
     "rules",
 ];
 
-pub fn use_lowercase(config: Mapping) -> Mapping {
+pub fn use_lowercase(config: &Mapping) -> Mapping {
     let mut ret = Mapping::new();
 
     for (key, value) in config.into_iter() {
         if let Some(key_str) = key.as_str() {
             let mut key_str = String::from(key_str);
             key_str.make_ascii_lowercase();
-            ret.insert(Value::from(key_str.as_str()), value);
+            ret.insert(Value::from(key_str.as_str()), value.clone());
         }
     }
     ret
