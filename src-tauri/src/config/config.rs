@@ -200,6 +200,22 @@ impl Config {
             logging!(error, Type::Setup, "Config init verification failed: {}", e);
         }
     }
+
+    // 升级草稿为正式数据，并写入文件。避免用户行为丢失。
+    // 仅在应用退出、重启、关机监听事件启用
+    pub async fn apply_all_and_save_file() {
+        let clash = Self::clash().await;
+        clash.apply();
+        logging_error!(Type::Config, clash.data_arc().save_config().await);
+
+        let verge = Self::verge().await;
+        verge.apply();
+        logging_error!(Type::Config, verge.data_arc().save_file().await);
+
+        let profiles = Self::profiles().await;
+        profiles.apply();
+        logging_error!(Type::Config, profiles.data_arc().save_file().await);
+    }
 }
 
 #[derive(Debug)]

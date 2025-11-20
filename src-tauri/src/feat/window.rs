@@ -4,6 +4,7 @@ use crate::module::lightweight;
 use crate::utils;
 use crate::utils::window_manager::WindowManager;
 use clash_verge_logging::{Type, logging};
+use tokio::time::{Duration, timeout};
 
 /// Public API: open or close the dashboard
 pub async fn open_or_close_dashboard() {
@@ -20,6 +21,7 @@ async fn open_or_close_dashboard_internal() {
 pub async fn quit() {
     logging!(debug, Type::System, "启动退出流程");
     utils::server::shutdown_embedded_server();
+    Config::apply_all_and_save_file().await;
 
     // 获取应用句柄并设置退出标志
     let app_handle = handle::Handle::app_handle();
@@ -38,8 +40,6 @@ pub async fn quit() {
 }
 
 pub async fn clean_async() -> bool {
-    use tokio::time::{Duration, timeout};
-
     logging!(info, Type::System, "开始执行异步清理操作...");
 
     // 1. 处理TUN模式

@@ -25,6 +25,7 @@ pub async fn restart_clash_core() {
 /// Restart the application
 pub async fn restart_app() {
     utils::server::shutdown_embedded_server();
+    Config::apply_all_and_save_file().await;
     if let Err(err) = resolve::resolve_reset_async().await {
         handle::Handle::notice_message(
             "restart_app::error",
