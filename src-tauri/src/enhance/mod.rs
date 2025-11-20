@@ -692,6 +692,7 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
     (config, exists_keys, result_map)
 }
 
+#[allow(clippy::expect_used)]
 #[cfg(test)]
 mod tests {
     use super::cleanup_proxy_groups;
