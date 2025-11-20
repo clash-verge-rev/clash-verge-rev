@@ -138,10 +138,15 @@ export const AppDataProvider = ({
       if (now - lastUpdateTime <= refreshThrottle) return;
 
       lastUpdateTime = now;
-      scheduleTimeout(() => {
-        refreshProxy().catch((error) =>
-          console.error("[DataProvider] Proxy refresh failed:", error),
-        );
+      scheduleTimeout(async () => {
+        await Promise.all([
+          refreshProxy().catch((error) =>
+            console.error("[DataProvider] Proxy refresh failed:", error),
+          ),
+          refreshClashConfig().catch((error) =>
+            console.error("[DataProvider] Clash config refresh failed:", error),
+          ),
+        ]);
       }, 200);
     };
 
@@ -220,7 +225,7 @@ export const AppDataProvider = ({
         );
       }
     };
-  }, [refreshProxy, refreshRules, refreshRuleProviders]);
+  }, [refreshProxy, refreshClashConfig, refreshRules, refreshRuleProviders]);
 
   const { data: sysproxy, mutate: refreshSysproxy } = useSWR(
     "getSystemProxy",
