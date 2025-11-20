@@ -119,7 +119,7 @@
     "vite": "^7.2.4",
     "vite-plugin-monaco-editor-esm": "^2.0.2",
     "vite-plugin-svgr": "^4.5.0",
-    "vitest": "^4.0.10"
+    "vitest": "^4.0.12"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": [
