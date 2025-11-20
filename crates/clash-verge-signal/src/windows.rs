@@ -56,7 +56,7 @@ unsafe extern "system" fn shutdown_proc(
         }
         WM_ENDSESSION => {
             if let Some(handler) = SHUTDOWN_HANDLER.get() {
-                tauri::async_runtime::block_on(async {
+                smol::block_on(async {
                     logging!(info, Type::System, "Session ended, system shutting down.");
                     handler().await;
                     logging!(info, Type::System, "resolved reset finished");

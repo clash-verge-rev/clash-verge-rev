@@ -11,7 +11,7 @@ where
     F: Fn() -> Fut + Send + Sync + 'static,
     Fut: Future + Send + 'static,
 {
-    tauri::async_runtime::spawn(async move {
+    smol::spawn(async move {
         let signals = [SIGTERM, SIGINT, SIGHUP];
 
         let mut sigs = match Signals::new(signals) {
@@ -40,5 +40,6 @@ where
                 low_level::emulate_default_handler(signal)
             );
         }
-    });
+    })
+    .detach();
 }
