@@ -10,6 +10,7 @@
 - 兼容从旧版服务模式升级
 - Monaco 编辑器的行数上限
 - 已删除节点在手动分组中导致配置无法加载
+- 仪表盘与托盘状态不同步
 
 <details>
 <summary><strong> ✨ 新增功能 </strong></summary>
