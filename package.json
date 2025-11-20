@@ -101,7 +101,7 @@
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
     "eslint-plugin-unused-imports": "^4.3.0",
-    "glob": "^12.0.0",
+    "glob": "^13.0.0",
     "globals": "^16.5.0",
     "https-proxy-agent": "^7.0.6",
     "husky": "^9.1.7",
