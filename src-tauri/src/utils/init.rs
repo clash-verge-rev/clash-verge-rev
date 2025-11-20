@@ -47,11 +47,9 @@ pub async fn init_logger() -> Result<LoggerHandle> {
         .unwrap_or(log_level);
     spec.default(level);
     #[cfg(feature = "tracing")]
-    spec.module("tauri", log::LevelFilter::Debug);
-    #[cfg(feature = "tracing")]
-    spec.module("wry", log::LevelFilter::Off);
-    #[cfg(feature = "tracing")]
-    spec.module("tauri_plugin_mihomo", log::LevelFilter::Off);
+    spec.module("tauri", log::LevelFilter::Debug)
+        .module("wry", log::LevelFilter::Off)
+        .module("tauri_plugin_mihomo", log::LevelFilter::Off);
     let spec = spec.build();
 
     let logger = Logger::with(spec)

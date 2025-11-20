@@ -57,6 +57,7 @@ pub async fn clean_async() -> bool {
 
         let disable_tun = serde_json::json!({ "tun": { "enable": false } });
 
+        logging!(info, Type::System, "send disable tun request to mihomo");
         match timeout(
             Duration::from_millis(1000),
             handle::Handle::mihomo()
@@ -211,6 +212,7 @@ pub async fn clean_async() -> bool {
         #[cfg(not(target_os = "windows"))]
         let stop_timeout = Duration::from_secs(3);
 
+        logging!(info, Type::System, "stop core");
         match timeout(stop_timeout, CoreManager::global().stop_core()).await {
             Ok(_) => {
                 logging!(info, Type::Window, "core已停止");
