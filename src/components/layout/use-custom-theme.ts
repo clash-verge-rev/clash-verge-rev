@@ -1,18 +1,10 @@
 import { alpha, createTheme, Theme as MuiTheme, Shadows } from "@mui/material";
 import {
-  arSD as arXDataGrid,
-  enUS as enXDataGrid,
-  faIR as faXDataGrid,
-  ruRU as ruXDataGrid,
-  zhCN as zhXDataGrid,
-} from "@mui/x-data-grid/locales";
-import {
   getCurrentWebviewWindow,
   WebviewWindow,
 } from "@tauri-apps/api/webviewWindow";
 import { Theme as TauriOsTheme } from "@tauri-apps/api/window";
 import { useEffect, useMemo } from "react";
-import { useTranslation } from "react-i18next";
 
 import { useVerge } from "@/hooks/use-verge";
 import { defaultDarkTheme, defaultTheme } from "@/pages/_theme";
@@ -73,24 +65,12 @@ ${css}
   return scopedBlock;
 };
 
-const languagePackMap: Record<string, any> = {
-  zh: { ...zhXDataGrid },
-  fa: { ...faXDataGrid },
-  ru: { ...ruXDataGrid },
-  ar: { ...arXDataGrid },
-  en: { ...enXDataGrid },
-};
-
-const getLanguagePackMap = (key: string) =>
-  languagePackMap[key] || languagePackMap.en;
-
 /**
  * custom theme
  */
 export const useCustomTheme = () => {
   const appWindow: WebviewWindow = useMemo(() => getCurrentWebviewWindow(), []);
   const { verge } = useVerge();
-  const { i18n } = useTranslation();
   const { theme_mode, theme_setting } = verge ?? {};
   const mode = useThemeMode();
   const setMode = useSetThemeMode();
@@ -237,37 +217,34 @@ export const useCustomTheme = () => {
     let muiTheme: MuiTheme;
 
     try {
-      muiTheme = createTheme(
-        {
-          breakpoints: {
-            values: { xs: 0, sm: 650, md: 900, lg: 1200, xl: 1536 },
+      muiTheme = createTheme({
+        breakpoints: {
+          values: { xs: 0, sm: 650, md: 900, lg: 1200, xl: 1536 },
+        },
+        palette: {
+          mode,
+          primary: { main: setting.primary_color || dt.primary_color },
+          secondary: { main: setting.secondary_color || dt.secondary_color },
+          info: { main: setting.info_color || dt.info_color },
+          error: { main: setting.error_color || dt.error_color },
+          warning: { main: setting.warning_color || dt.warning_color },
+          success: { main: setting.success_color || dt.success_color },
+          text: {
+            primary: setting.primary_text || dt.primary_text,
+            secondary: setting.secondary_text || dt.secondary_text,
           },
-          palette: {
-            mode,
-            primary: { main: setting.primary_color || dt.primary_color },
-            secondary: { main: setting.secondary_color || dt.secondary_color },
-            info: { main: setting.info_color || dt.info_color },
-            error: { main: setting.error_color || dt.error_color },
-            warning: { main: setting.warning_color || dt.warning_color },
-            success: { main: setting.success_color || dt.success_color },
-            text: {
-              primary: setting.primary_text || dt.primary_text,
-              secondary: setting.secondary_text || dt.secondary_text,
-            },
-            background: {
-              paper: dt.background_color,
-              default: dt.background_color,
-            },
-          },
-          shadows: Array(25).fill("none") as Shadows,
-          typography: {
-            fontFamily: setting.font_family
-              ? `${setting.font_family}, ${dt.font_family}`
-              : dt.font_family,
+          background: {
+            paper: dt.background_color,
+            default: dt.background_color,
           },
         },
-        getLanguagePackMap(i18n.language),
-      );
+        shadows: Array(25).fill("none") as Shadows,
+        typography: {
+          fontFamily: setting.font_family
+            ? `${setting.font_family}, ${dt.font_family}`
+            : dt.font_family,
+        },
+      });
     } catch (e) {
       console.error("Error creating MUI theme, falling back to defaults:", e);
       muiTheme = createTheme({
@@ -419,13 +396,7 @@ export const useCustomTheme = () => {
     }, 0);
 
     return muiTheme;
-  }, [
-    mode,
-    theme_setting,
-    i18n.language,
-    userBackgroundImage,
-    hasUserBackground,
-  ]);
+  }, [mode, theme_setting, userBackgroundImage, hasUserBackground]);
 
   return { theme };
 };
