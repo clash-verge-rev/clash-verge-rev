@@ -123,3 +123,6 @@ tauri-plugin-updater = "2.9.0"
 
 [dev-dependencies]
 criterion = { workspace = true }
+
+[lints]
+workspace = true

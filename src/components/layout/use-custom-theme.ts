@@ -1,33 +1,69 @@
 import { alpha, createTheme, Theme as MuiTheme, Shadows } from "@mui/material";
 import {
-  arSD as arXDataGrid,
-  enUS as enXDataGrid,
-  faIR as faXDataGrid,
-  ruRU as ruXDataGrid,
-  zhCN as zhXDataGrid,
-} from "@mui/x-data-grid/locales";
-import {
   getCurrentWebviewWindow,
   WebviewWindow,
 } from "@tauri-apps/api/webviewWindow";
 import { Theme as TauriOsTheme } from "@tauri-apps/api/window";
 import { useEffect, useMemo } from "react";
-import { useTranslation } from "react-i18next";
 
 import { useVerge } from "@/hooks/use-verge";
 import { defaultDarkTheme, defaultTheme } from "@/pages/_theme";
 import { useSetThemeMode, useThemeMode } from "@/services/states";
 
-const languagePackMap: Record<string, any> = {
-  zh: { ...zhXDataGrid },
-  fa: { ...faXDataGrid },
-  ru: { ...ruXDataGrid },
-  ar: { ...arXDataGrid },
-  en: { ...enXDataGrid },
+const CSS_INJECTION_SCOPE_ROOT = "[data-css-injection-root]";
+const CSS_INJECTION_SCOPE_LIMIT =
+  ':is(.monaco-editor .view-lines, .monaco-editor .view-line, .monaco-editor .margin, .monaco-editor .margin-view-overlays, .monaco-editor .view-overlays, .monaco-editor [class^="mtk"], .monaco-editor [class*=" mtk"])';
+const TOP_LEVEL_AT_RULES = [
+  "@charset",
+  "@import",
+  "@namespace",
+  "@font-face",
+  "@keyframes",
+  "@counter-style",
+  "@page",
+  "@property",
+  "@font-feature-values",
+  "@color-profile",
+];
+let cssScopeSupport: boolean | null = null;
+
+const canUseCssScope = () => {
+  if (cssScopeSupport !== null) {
+    return cssScopeSupport;
+  }
+  if (typeof document === "undefined") {
+    return false;
+  }
+  try {
+    const testStyle = document.createElement("style");
+    testStyle.textContent = "@scope (:root) { }";
+    document.head.appendChild(testStyle);
+    cssScopeSupport = !!testStyle.sheet?.cssRules?.length;
+    document.head.removeChild(testStyle);
+  } catch {
+    cssScopeSupport = false;
+  }
+  return cssScopeSupport;
 };
 
-const getLanguagePackMap = (key: string) =>
-  languagePackMap[key] || languagePackMap.en;
+const wrapCssInjectionWithScope = (css?: string) => {
+  if (!css?.trim()) {
+    return "";
+  }
+  const lowerCss = css.toLowerCase();
+  const hasTopLevelOnlyRule = TOP_LEVEL_AT_RULES.some((rule) =>
+    lowerCss.includes(rule),
+  );
+  if (hasTopLevelOnlyRule) {
+    return null;
+  }
+  const scopeRoot = CSS_INJECTION_SCOPE_ROOT;
+  const scopeLimit = CSS_INJECTION_SCOPE_LIMIT;
+  const scopedBlock = `@scope (${scopeRoot}) to (${scopeLimit}) {
+${css}
+}`;
+  return scopedBlock;
+};
 
 /**
  * custom theme
@@ -35,7 +71,6 @@ const getLanguagePackMap = (key: string) =>
 export const useCustomTheme = () => {
   const appWindow: WebviewWindow = useMemo(() => getCurrentWebviewWindow(), []);
   const { verge } = useVerge();
-  const { i18n } = useTranslation();
   const { theme_mode, theme_setting } = verge ?? {};
   const mode = useThemeMode();
   const setMode = useSetThemeMode();
@@ -134,8 +169,27 @@ export const useCustomTheme = () => {
     };
 
     const legacyQuery = mediaQuery as MediaQueryListLegacy;
-    legacyQuery.addListener?.(handleChange);
-    return () => legacyQuery.removeListener?.(handleChange);
+    const legacyAddListener = (
+      legacyQuery as {
+        addListener?: (
+          listener: (this: MediaQueryList, event: MediaQueryListEvent) => void,
+        ) => void;
+      }
+    ).addListener;
+    legacyAddListener?.call(legacyQuery, handleChange);
+    return () => {
+      const legacyRemoveListener = (
+        legacyQuery as {
+          removeListener?: (
+            listener: (
+              this: MediaQueryList,
+              event: MediaQueryListEvent,
+            ) => void,
+          ) => void;
+        }
+      ).removeListener;
+      legacyRemoveListener?.call(legacyQuery, handleChange);
+    };
   }, [theme_mode, setMode]);
 
   useEffect(() => {
@@ -163,37 +217,34 @@ export const useCustomTheme = () => {
     let muiTheme: MuiTheme;
 
     try {
-      muiTheme = createTheme(
-        {
-          breakpoints: {
-            values: { xs: 0, sm: 650, md: 900, lg: 1200, xl: 1536 },
+      muiTheme = createTheme({
+        breakpoints: {
+          values: { xs: 0, sm: 650, md: 900, lg: 1200, xl: 1536 },
+        },
+        palette: {
+          mode,
+          primary: { main: setting.primary_color || dt.primary_color },
+          secondary: { main: setting.secondary_color || dt.secondary_color },
+          info: { main: setting.info_color || dt.info_color },
+          error: { main: setting.error_color || dt.error_color },
+          warning: { main: setting.warning_color || dt.warning_color },
+          success: { main: setting.success_color || dt.success_color },
+          text: {
+            primary: setting.primary_text || dt.primary_text,
+            secondary: setting.secondary_text || dt.secondary_text,
           },
-          palette: {
-            mode,
-            primary: { main: setting.primary_color || dt.primary_color },
-            secondary: { main: setting.secondary_color || dt.secondary_color },
-            info: { main: setting.info_color || dt.info_color },
-            error: { main: setting.error_color || dt.error_color },
-            warning: { main: setting.warning_color || dt.warning_color },
-            success: { main: setting.success_color || dt.success_color },
-            text: {
-              primary: setting.primary_text || dt.primary_text,
-              secondary: setting.secondary_text || dt.secondary_text,
-            },
-            background: {
-              paper: dt.background_color,
-              default: dt.background_color,
-            },
-          },
-          shadows: Array(25).fill("none") as Shadows,
-          typography: {
-            fontFamily: setting.font_family
-              ? `${setting.font_family}, ${dt.font_family}`
-              : dt.font_family,
+          background: {
+            paper: dt.background_color,
+            default: dt.background_color,
           },
         },
-        getLanguagePackMap(i18n.language),
-      );
+        shadows: Array(25).fill("none") as Shadows,
+        typography: {
+          fontFamily: setting.font_family
+            ? `${setting.font_family}, ${dt.font_family}`
+            : dt.font_family,
+        },
+      });
     } catch (e) {
       console.error("Error creating MUI theme, falling back to defaults:", e);
       muiTheme = createTheme({
@@ -264,6 +315,7 @@ export const useCustomTheme = () => {
           ? String(setting.background_opacity)
           : "1",
       );
+      rootEle.setAttribute("data-css-injection-root", "true");
     }
 
     let styleElement = document.querySelector("style#verge-theme");
@@ -274,6 +326,11 @@ export const useCustomTheme = () => {
     }
 
     if (styleElement) {
+      let scopedCss: string | null = null;
+      if (canUseCssScope() && setting.css_injection) {
+        scopedCss = wrapCssInjectionWithScope(setting.css_injection);
+      }
+      const effectiveInjectedCss = scopedCss ?? setting.css_injection ?? "";
       const globalStyles = `
         /* 修复滚动条样式 */
         ::-webkit-scrollbar {
@@ -323,7 +380,7 @@ export const useCustomTheme = () => {
         }
       `;
 
-      styleElement.innerHTML = (setting.css_injection || "") + globalStyles;
+      styleElement.innerHTML = effectiveInjectedCss + globalStyles;
     }
 
     const { palette } = muiTheme;
@@ -339,13 +396,7 @@ export const useCustomTheme = () => {
     }, 0);
 
     return muiTheme;
-  }, [
-    mode,
-    theme_setting,
-    i18n.language,
-    userBackgroundImage,
-    hasUserBackground,
-  ]);
+  }, [mode, theme_setting, userBackgroundImage, hasUserBackground]);
 
   return { theme };
 };

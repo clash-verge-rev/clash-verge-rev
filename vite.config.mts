@@ -2,9 +2,9 @@ import path from "node:path";
 
 import legacy from "@vitejs/plugin-legacy";
 import react from "@vitejs/plugin-react-swc";
+import { defineConfig } from "vite";
 import monacoEditorPlugin from "vite-plugin-monaco-editor-esm";
 import svgr from "vite-plugin-svgr";
-import { defineConfig } from "vitest/config";
 
 const getPackageName = (id: string) => {
   // Walk through possible pnpm virtual paths and nested node_modules, return the last package segment.
@@ -183,11 +183,6 @@ export default defineConfig({
       "@root": path.resolve("."),
     },
   },
-  test: {
-    environment: "node",
-    include: ["**/*.{test,spec}.{ts,tsx}"],
-  },
-
   define: {
     OS_PLATFORM: `"${process.platform}"`,
   },

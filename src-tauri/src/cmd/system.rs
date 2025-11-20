@@ -4,7 +4,7 @@ use super::CmdResult;
 use crate::core::{CoreManager, handle, manager::RunningMode};
 use clash_verge_logging::{Type, logging};
 use parking_lot::RwLock;
-use tauri::Manager;
+use tauri::Manager as _;
 use tauri_plugin_clash_verge_sysinfo::Platform;
 use tauri_plugin_clipboard_manager::ClipboardExt as _;
 

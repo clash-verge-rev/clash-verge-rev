@@ -4,7 +4,6 @@ use crate::{
     config::Config,
     core::{handle, logger::CLASH_LOGGER, service},
     logging,
-    process::CommandChildGuard,
     utils::{dirs, init::sidecar_writer},
 };
 use anyhow::Result;
@@ -46,7 +45,7 @@ impl CoreManager {
         let pid = child.pid();
         logging!(trace, Type::Core, "Sidecar started with PID: {}", pid);
 
-        self.set_running_child_sidecar(CommandChildGuard::new(child));
+        self.set_running_child_sidecar(child);
         self.set_running_mode(RunningMode::Sidecar);
 
         let shared_writer: SharedWriter =
@@ -100,8 +99,14 @@ impl CoreManager {
         }
         if let Some(child) = self.take_child_sidecar() {
             let pid = child.pid();
-            drop(child);
-            logging!(trace, Type::Core, "Sidecar stopped (PID: {:?})", pid);
+            let result = child.kill();
+            logging!(
+                trace,
+                Type::Core,
+                "Sidecar stopped (PID: {:?}, Result: {:?})",
+                pid,
+                result
+            );
         }
     }
 

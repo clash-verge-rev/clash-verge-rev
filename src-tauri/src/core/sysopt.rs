@@ -3,7 +3,7 @@ use crate::utils::autostart as startup_shortcut;
 use crate::{
     config::{Config, IVerge},
     core::handle::Handle,
-    singleton_lazy,
+    singleton,
 };
 use anyhow::Result;
 use clash_verge_logging::{Type, logging, logging_error};
@@ -103,10 +103,13 @@ async fn execute_sysproxy_command(args: Vec<std::string::String>) -> Result<()> 
     Ok(())
 }
 
-// Use simplified singleton_lazy macro
-singleton_lazy!(Sysopt, SYSOPT, Sysopt::default);
+singleton!(Sysopt, SYSOPT);
 
 impl Sysopt {
+    fn new() -> Self {
+        Self::default()
+    }
+
     pub fn is_initialed(&self) -> bool {
         self.initialed.load(Ordering::SeqCst)
     }

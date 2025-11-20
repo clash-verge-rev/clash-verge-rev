@@ -4,6 +4,7 @@ use clash_verge_logging::{Type, logging};
 use gethostname::gethostname;
 use network_interface::NetworkInterface;
 use serde_yaml_ng::Mapping;
+use sysproxy::{Autoproxy, Sysproxy};
 use tauri_plugin_clash_verge_sysinfo;
 
 /// get the system proxy
@@ -11,15 +12,18 @@ use tauri_plugin_clash_verge_sysinfo;
 pub async fn get_sys_proxy() -> CmdResult<Mapping> {
     logging!(debug, Type::Network, "异步获取系统代理配置");
 
-    let sys_proxy = sysproxy::Sysproxy::get_system_proxy().stringify_err()?;
+    let sys_proxy = Sysproxy::get_system_proxy().stringify_err()?;
+    let Sysproxy {
+        ref host,
+        ref bypass,
+        ref port,
+        ref enable,
+    } = sys_proxy;
 
     let mut map = Mapping::new();
-    map.insert("enable".into(), sys_proxy.enable.into());
-    map.insert(
-        "server".into(),
-        format!("{}:{}", sys_proxy.host, sys_proxy.port).into(),
-    );
-    map.insert("bypass".into(), sys_proxy.bypass.into());
+    map.insert("enable".into(), (*enable).into());
+    map.insert("server".into(), format!("{}:{}", host, port).into());
+    map.insert("bypass".into(), bypass.as_str().into());
 
     logging!(
         debug,
@@ -35,11 +39,15 @@ pub async fn get_sys_proxy() -> CmdResult<Mapping> {
 /// 获取自动代理配置
 #[tauri::command]
 pub async fn get_auto_proxy() -> CmdResult<Mapping> {
-    let auto_proxy = sysproxy::Autoproxy::get_auto_proxy().stringify_err()?;
+    let auto_proxy = Autoproxy::get_auto_proxy().stringify_err()?;
+    let Autoproxy {
+        ref enable,
+        ref url,
+    } = auto_proxy;
 
     let mut map = Mapping::new();
-    map.insert("enable".into(), auto_proxy.enable.into());
-    map.insert("url".into(), auto_proxy.url.clone().into());
+    map.insert("enable".into(), (*enable).into());
+    map.insert("url".into(), url.as_str().into());
 
     logging!(
         debug,

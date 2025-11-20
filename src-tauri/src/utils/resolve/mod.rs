@@ -147,7 +147,7 @@ pub fn init_signal() {
     clash_verge_signal::register(
         #[cfg(windows)]
         handle::Handle::app_handle(),
-        feat::clean_async,
+        feat::quit,
     );
 }
 

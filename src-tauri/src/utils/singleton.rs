@@ -37,65 +37,6 @@ macro_rules! singleton {
     };
 }
 
-/// Macro for singleton pattern with logging
-#[macro_export]
-macro_rules! singleton_with_logging {
-    ($struct_name:ty, $instance_name:ident, $struct_name_str:literal) => {
-        static $instance_name: std::sync::OnceLock<$struct_name> = std::sync::OnceLock::new();
-
-        impl $struct_name {
-            pub fn global() -> &'static $struct_name {
-                $instance_name.get_or_init(|| {
-                    let instance = Self::new();
-                    clash_verge_logging::logging!(
-                        info,
-                        clash_verge_logging::Type::Setup,
-                        concat!($struct_name_str, " initialized")
-                    );
-                    instance
-                })
-            }
-        }
-    };
-}
-
-/// Macro for singleton pattern with lazy initialization using a closure
-/// This replaces patterns like lazy_static! or complex OnceLock initialization
-#[macro_export]
-macro_rules! singleton_lazy {
-    ($struct_name:ty, $instance_name:ident, $init_closure:expr) => {
-        static $instance_name: std::sync::OnceLock<$struct_name> = std::sync::OnceLock::new();
-
-        impl $struct_name {
-            pub fn global() -> &'static $struct_name {
-                $instance_name.get_or_init($init_closure)
-            }
-        }
-    };
-}
-
-/// Macro for singleton pattern with lazy initialization and logging
-#[macro_export]
-macro_rules! singleton_lazy_with_logging {
-    ($struct_name:ty, $instance_name:ident, $struct_name_str:literal, $init_closure:expr) => {
-        static $instance_name: std::sync::OnceLock<$struct_name> = std::sync::OnceLock::new();
-
-        impl $struct_name {
-            pub fn global() -> &'static $struct_name {
-                $instance_name.get_or_init(|| {
-                    let instance = $init_closure();
-                    $crate::logging!(
-                        info,
-                        $crate::utils::logging::Type::Setup,
-                        concat!($struct_name_str, " initialized")
-                    );
-                    instance
-                })
-            }
-        }
-    };
-}
-
 #[cfg(test)]
 mod tests {
     struct TestStruct {

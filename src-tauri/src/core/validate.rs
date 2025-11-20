@@ -7,7 +7,7 @@ use tokio::fs;
 
 use crate::config::{Config, ConfigType};
 use crate::core::handle;
-use crate::singleton_lazy;
+use crate::singleton;
 use crate::utils::dirs;
 use clash_verge_logging::{Type, logging};
 
@@ -361,8 +361,4 @@ fn contains_any_keyword<'a>(buf: &'a [u8], keywords: &'a [&str]) -> bool {
     false
 }
 
-singleton_lazy!(
-    CoreConfigValidator,
-    CORECONFIGVALIDATOR,
-    CoreConfigValidator::new
-);
+singleton!(CoreConfigValidator, CORECONFIGVALIDATOR);
