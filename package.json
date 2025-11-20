@@ -30,8 +30,7 @@
     "format:check": "prettier --check .",
     "format:i18n": "node scripts/cleanup-unused-i18n.mjs --align --apply",
     "i18n:types": "node scripts/generate-i18n-keys.mjs",
-    "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -118,8 +117,7 @@
     "typescript-eslint": "^8.47.0",
     "vite": "^7.2.4",
     "vite-plugin-monaco-editor-esm": "^2.0.2",
-    "vite-plugin-svgr": "^4.5.0",
-    "vitest": "^4.0.12"
+    "vite-plugin-svgr": "^4.5.0"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": [
