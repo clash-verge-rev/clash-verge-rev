@@ -442,13 +442,6 @@ pub fn run() {
                 api.prevent_exit();
             }
         }
-        // tauri::RunEvent::Exit => {
-        //     let handle = core::handle::Handle::global();
-        //     if !handle.is_exiting() {
-        //         handle.set_is_exiting();
-        //         feat::clean();
-        //     }
-        // }
         tauri::RunEvent::WindowEvent { label, event, .. } if label == "main" => match event {
             tauri::WindowEvent::CloseRequested { .. } => {
                 event_handlers::handle_window_close(&event);
