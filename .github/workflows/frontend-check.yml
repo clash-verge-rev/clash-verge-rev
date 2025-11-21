@@ -1,0 +1,71 @@
+name: Frontend Check
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+env:
+  HUSKY: 0
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check frontend changes
+        id: check_frontend
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            frontend:
+              - 'src/**'
+              - '**/*.js'
+              - '**/*.ts'
+              - '**/*.tsx'
+              - '**/*.css'
+              - '**/*.scss'
+              - '**/*.json'
+              - '**/*.md'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'eslint.config.ts'
+              - 'tsconfig.json'
+              - 'vite.config.*'
+
+      - name: Skip if no frontend changes
+        if: steps.check_frontend.outputs.frontend != 'true'
+        run: echo "No frontend changes, skipping frontend checks."
+
+      - uses: actions/setup-node@v4
+        if: steps.check_frontend.outputs.frontend == 'true'
+        with:
+          node-version: "lts/*"
+
+      - run: corepack enable
+        if: steps.check_frontend.outputs.frontend == 'true'
+
+      - name: Restore pnpm cache
+        if: steps.check_frontend.outputs.frontend == 'true'
+        uses: actions/cache@v4
+        with:
+          path: ~/.pnpm-store
+          key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-store-${{ runner.os }}-
+
+      - run: pnpm install --frozen-lockfile
+        if: steps.check_frontend.outputs.frontend == 'true'
+
+      - name: Run Prettier check
+        if: steps.check_frontend.outputs.frontend == 'true'
+        run: pnpm format:check
+
+      - name: Run ESLint
+        if: steps.check_frontend.outputs.frontend == 'true'
+        run: pnpm lint
+
+      - name: Run TypeScript typecheck
+        if: steps.check_frontend.outputs.frontend == 'true'
+        run: pnpm typecheck

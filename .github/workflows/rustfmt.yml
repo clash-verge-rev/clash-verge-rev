@@ -39,42 +39,6 @@ jobs:
         if: steps.check_rust.outputs.rust == 'true'
         run: cargo fmt --manifest-path ./src-tauri/Cargo.toml --all -- --check
 
-  prettier:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Check Web changes
-        id: check_web
-        uses: dorny/paths-filter@v3
-        with:
-          filters: |
-            web:
-              - 'src/**'
-              - '**/*.js'
-              - '**/*.ts'
-              - '**/*.tsx'
-              - '**/*.css'
-              - '**/*.scss'
-              - '**/*.json'
-              - '**/*.md'
-              - '**/*.json'
-
-      - name: Skip if no Web changes
-        if: steps.check_web.outputs.web != 'true'
-        run: echo "No web changes, skipping prettier."
-
-      - uses: actions/setup-node@v4
-        if: steps.check_web.outputs.web == 'true'
-        with:
-          node-version: "lts/*"
-      - run: corepack enable
-        if: steps.check_web.outputs.web == 'true'
-      - run: pnpm install --frozen-lockfile
-        if: steps.check_web.outputs.web == 'true'
-      - run: pnpm format:check
-        if: steps.check_web.outputs.web == 'true'
-
   # taplo:
   #   name: taplo (.toml files)
   #   runs-on: ubuntu-latest
