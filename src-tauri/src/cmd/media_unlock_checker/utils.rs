@@ -1,28 +1,9 @@
 use chrono::Local;
+use rust_iso3166;
 
 pub fn get_local_date_string() -> String {
     let now = Local::now();
     now.format("%Y-%m-%d %H:%M:%S").to_string()
-}
-
-pub fn iso3_to_iso2(code: &str) -> Option<&'static str> {
-    // 简单映射常用国家的ISO3到ISO2
-    match code.to_uppercase().as_str() {
-        // 常用国家
-        "CHN" => Some("CN"),
-        "USA" => Some("US"),
-        "JPN" => Some("JP"),
-        "KOR" => Some("KR"),
-        "HKG" => Some("HK"),
-        "TWN" => Some("TW"),
-        "GBR" => Some("GB"),
-        "DEU" => Some("DE"),
-        "FRA" => Some("FR"),
-        "CAN" => Some("CA"),
-        "AUS" => Some("AU"),
-        "SGP" => Some("SG"),
-        _ => None,
-    }
 }
 
 pub fn country_code_to_emoji(country_code: &str) -> String {
@@ -31,7 +12,8 @@ pub fn country_code_to_emoji(country_code: &str) -> String {
         return String::new();
     }
     let country_code_alpha2 = if country_code_upper.len() == 3 {
-        iso3_to_iso2(&country_code_upper)
+        rust_iso3166::from_alpha3(&country_code_upper)
+            .map(|c| c.alpha2)
             .unwrap_or(&country_code_upper)
             .to_string()
     } else {
@@ -45,4 +27,32 @@ pub fn country_code_to_emoji(country_code: &str) -> String {
     char::from_u32(c1)
         .and_then(|c1| char::from_u32(c2).map(|c2| format!("{c1}{c2}")))
         .unwrap_or_default()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::country_code_to_emoji;
+
+    #[test]
+    fn country_code_to_emoji_iso2() {
+        assert_eq!(country_code_to_emoji("CN"), "🇨🇳");
+        assert_eq!(country_code_to_emoji("us"), "🇺🇸");
+    }
+
+    #[test]
+    fn country_code_to_emoji_iso3() {
+        assert_eq!(country_code_to_emoji("CHN"), "🇨🇳");
+        assert_eq!(country_code_to_emoji("USA"), "🇺🇸");
+    }
+
+    #[test]
+    fn country_code_to_emoji_short() {
+        assert_eq!(country_code_to_emoji("C"), "");
+        assert_eq!(country_code_to_emoji(""), "");
+    }
+
+    #[test]
+    fn country_code_to_emoji_long() {
+        assert_eq!(country_code_to_emoji("CNAAA"), "🇨🇳");
+    }
 }
