@@ -38,6 +38,7 @@ define_menu! {
     direct_mode => DIRECT_MODE, "tray_direct_mode", "tray.directMode",
     outbound_modes => OUTBOUND_MODES, "tray_outbound_modes", "tray.outboundModes",
     profiles => PROFILES, "tray_profiles", "tray.profiles",
+    node_test => NODE_TEST, "tray_node_test", "tray.nodeTest",
     proxies => PROXIES, "tray_proxies", "tray.proxies",
     system_proxy => SYSTEM_PROXY, "tray_system_proxy", "tray.systemProxy",
     tun_mode => TUN_MODE, "tray_tun_mode", "tray.tunMode",

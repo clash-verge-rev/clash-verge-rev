@@ -40,6 +40,7 @@ if [ -n "$RUST_FILES" ]; then
   (
     cd src-tauri
     cargo clippy-all
+    export PATH="$HOME/.cargo/bin:$PATH"
     if ! command -v clash-verge-logging-check >/dev/null 2>&1; then
       echo "[pre-commit] Installing clash-verge-logging-check..."
       cargo install --git https://github.com/clash-verge-rev/clash-verge-logging-check.git

@@ -36,6 +36,7 @@ tray:
   direct: Direct
   global: Global
   profiles: Profiles
+  nodeTest: Node Test
   proxies: Proxies
   systemProxy: System Proxy
   tunMode: TUN Mode

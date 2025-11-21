@@ -36,6 +36,7 @@ tray:
   direct: 直連
   global: 全域
   profiles: 訂閱
+  nodeTest: 節點測速
   proxies: 代理
   systemProxy: 系統代理
   tunMode: 虛擬網路介面卡模式

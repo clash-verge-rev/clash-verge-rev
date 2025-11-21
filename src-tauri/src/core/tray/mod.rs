@@ -73,12 +73,14 @@ fn should_handle_tray_click() -> bool {
 pub struct Tray {
     last_menu_update: Mutex<Option<Instant>>,
     menu_updating: AtomicBool,
+    node_testing: AtomicBool,
 }
 
 #[cfg(not(target_os = "macos"))]
 pub struct Tray {
     last_menu_update: Mutex<Option<Instant>>,
     menu_updating: AtomicBool,
+    node_testing: AtomicBool,
 }
 
 impl TrayState {
@@ -195,6 +197,7 @@ impl Default for Tray {
         Self {
             last_menu_update: Mutex::new(None),
             menu_updating: AtomicBool::new(false),
+            node_testing: AtomicBool::new(false),
         }
     }
 }
@@ -204,6 +207,14 @@ singleton!(Tray, TRAY);
 impl Tray {
     fn new() -> Self {
         Self::default()
+    }
+
+    pub fn set_node_testing(&self, testing: bool) {
+        self.node_testing.store(testing, Ordering::Release);
+    }
+
+    pub fn is_node_testing(&self) -> bool {
+        self.node_testing.load(Ordering::Acquire)
     }
 
     pub async fn init(&self) -> Result<()> {
@@ -944,6 +955,20 @@ async fn create_tray_menu(
         &profile_menu_items_refs,
     )?;
 
+    let node_test_text = if Tray::global().is_node_testing() {
+        format!("{} (Testing...)", texts.node_test)
+    } else {
+        texts.node_test.to_string()
+    };
+
+    let node_test = &MenuItem::with_id(
+        app_handle,
+        MenuIds::NODE_TEST,
+        &node_test_text,
+        true,
+        None::<&str>,
+    )?;
+
     let proxy_sub_menus = create_subcreate_proxy_menu_item(
         app_handle,
         current_proxy_mode,
@@ -1101,12 +1126,11 @@ async fn create_tray_menu(
         true,
         Some("CmdOrControl+Q"),
     )?;
-
     let separator = &PredefinedMenuItem::separator(app_handle)?;
 
     // 动态构建菜单项
     let mut menu_items: Vec<&dyn IsMenuItem<Wry>> =
-        vec![open_window, outbound_modes, separator, profiles];
+        vec![open_window, outbound_modes, separator, node_test, profiles];
 
     // 如果有代理节点，添加代理节点菜单
     if show_proxy_groups_inline {
@@ -1159,6 +1183,16 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
             }
             MenuIds::TUN_MODE => {
                 feat::toggle_tun_mode(None).await;
+            }
+            MenuIds::NODE_TEST => {
+                logging!(info, Type::Tray, "托盘菜单点击: 节点测速");
+                if let Err(err) = cmd::test_all_nodes().await {
+                    logging!(
+                        error,
+                        Type::Tray,
+                        "Failed to test all nodes from tray: {err}"
+                    );
+                }
             }
             MenuIds::CLOSE_ALL_CONNECTIONS => {
                 if let Err(err) = handle::Handle::mihomo().await.close_all_connections().await {
