@@ -81,7 +81,7 @@ const monacoInitialization = () => {
     ],
   });
   // PAC type definitions for JS suggestions
-  monaco.languages.typescript.javascriptDefaults.addExtraLib(pac, "pac.d.ts");
+  monaco.typescript.javascriptDefaults.addExtraLib(pac, "pac.d.ts");
 
   initialized = true;
 };
