@@ -38,22 +38,26 @@ jobs:
         if: steps.check_frontend.outputs.frontend != 'true'
         run: echo "No frontend changes, skipping frontend checks."
 
+      - name: Install pnpm
+        if: steps.check_frontend.outputs.frontend == 'true'
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
       - uses: actions/setup-node@v4
         if: steps.check_frontend.outputs.frontend == 'true'
         with:
-          node-version: "lts/*"
-
-      - run: corepack enable
-        if: steps.check_frontend.outputs.frontend == 'true'
+          node-version: "22"
+          cache: "pnpm"
 
       - name: Restore pnpm cache
         if: steps.check_frontend.outputs.frontend == 'true'
         uses: actions/cache@v4
         with:
           path: ~/.pnpm-store
-          key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          key: "pnpm-shared-stable-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}"
           restore-keys: |
-            pnpm-store-${{ runner.os }}-
+            pnpm-shared-stable-${{ runner.os }}-
 
       - run: pnpm install --frozen-lockfile
         if: steps.check_frontend.outputs.frontend == 'true'
