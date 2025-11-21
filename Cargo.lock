@@ -1203,6 +1203,7 @@ dependencies = [
  "log",
  "signal-hook 0.3.18",
  "tauri",
+ "tokio",
  "windows-sys 0.61.2",
 ]
 

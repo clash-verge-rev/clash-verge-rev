@@ -56,11 +56,18 @@ unsafe extern "system" fn shutdown_proc(
         }
         WM_ENDSESSION => {
             if let Some(handler) = SHUTDOWN_HANDLER.get() {
-                tauri::async_runtime::block_on(async {
-                    logging!(info, Type::System, "Session ended, system shutting down.");
-                    handler().await;
-                    logging!(info, Type::System, "resolved reset finished");
-                });
+                match tokio::runtime::Runtime::new() {
+                    Ok(rt) => {
+                        rt.block_on(async {
+                            logging!(info, Type::System, "Session ended, system shutting down.");
+                            handler().await;
+                            logging!(info, Type::System, "resolved reset finished");
+                        });
+                    }
+                    Err(e) => {
+                        logging!(info, Type::System, "create tokio runtime error: {}", e);
+                    }
+                }
             } else {
                 logging!(
                     error,

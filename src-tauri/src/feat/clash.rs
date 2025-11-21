@@ -42,15 +42,6 @@ pub async fn restart_app() {
         if cleanup_result { 0 } else { 1 }
     );
 
-    // if let Err(err) = resolve::resolve_reset_async().await {
-    //     handle::Handle::notice_message(
-    //         "restart_app::error",
-    //         format!("Failed to cleanup resources: {err}"),
-    //     );
-    //     logging!(error, Type::Core, "Restart failed during cleanup: {err}");
-    //     return;
-    // }
-
     let app_handle = handle::Handle::app_handle();
     app_handle.restart();
 }

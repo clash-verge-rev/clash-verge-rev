@@ -11,34 +11,41 @@ where
     F: Fn() -> Fut + Send + Sync + 'static,
     Fut: Future + Send + 'static,
 {
-    tauri::async_runtime::spawn(async move {
-        let signals = [SIGTERM, SIGINT, SIGHUP];
+    match tokio::runtime::Runtime::new() {
+        Ok(rt) => {
+            rt.spawn(async move {
+                let signals = [SIGTERM, SIGINT, SIGHUP];
 
-        let mut sigs = match Signals::new(signals) {
-            Ok(s) => s,
-            Err(e) => {
-                logging!(error, Type::System, "注册信号处理器失败: {}", e);
-                return;
-            }
-        };
+                let mut sigs = match Signals::new(signals) {
+                    Ok(s) => s,
+                    Err(e) => {
+                        logging!(error, Type::System, "注册信号处理器失败: {}", e);
+                        return;
+                    }
+                };
 
-        for signal in &mut sigs {
-            let signal_to_str = |signal: i32| match signal {
-                SIGTERM => "SIGTERM",
-                SIGINT => "SIGINT",
-                SIGHUP => "SIGHUP",
-                _ => "UNKNOWN",
-            };
+                for signal in &mut sigs {
+                    let signal_to_str = |signal: i32| match signal {
+                        SIGTERM => "SIGTERM",
+                        SIGINT => "SIGINT",
+                        SIGHUP => "SIGHUP",
+                        _ => "UNKNOWN",
+                    };
 
-            logging!(info, Type::System, "捕获到信号 {}", signal_to_str(signal));
+                    logging!(info, Type::System, "捕获到信号 {}", signal_to_str(signal));
 
-            f().await;
+                    f().await;
 
-            logging_error!(
-                Type::System,
-                "信号 {:?} 默认处理失败",
-                low_level::emulate_default_handler(signal)
-            );
+                    logging_error!(
+                        Type::System,
+                        "信号 {:?} 默认处理失败",
+                        low_level::emulate_default_handler(signal)
+                    );
+                }
+            });
         }
-    });
+        Err(e) => {
+            logging!(info, Type::System, "create tokio runtime error: {}", e);
+        }
+    }
 }
