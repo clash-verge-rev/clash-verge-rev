@@ -62,7 +62,7 @@
     "js-yaml": "^4.1.1",
     "json-schema": "^0.4.0",
     "lodash-es": "^4.17.21",
-    "monaco-editor": "^0.54.0",
+    "monaco-editor": "^0.55.1",
     "monaco-yaml": "^5.4.0",
     "nanoid": "^5.1.6",
     "react": "19.2.0",
@@ -79,7 +79,7 @@
   },
   "devDependencies": {
     "@actions/github": "^6.0.1",
-    "@eslint-react/eslint-plugin": "^2.3.5",
+    "@eslint-react/eslint-plugin": "^2.3.7",
     "@eslint/js": "^9.39.1",
     "@tauri-apps/cli": "2.9.4",
     "@types/js-yaml": "^4.0.9",
