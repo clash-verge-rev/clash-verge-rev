@@ -427,10 +427,12 @@
         "strictRoute": "Rute Ketat",
         "autoDetectInterface": "Deteksi Antarmuka Otomatis",
         "dnsHijack": "Pembajakan DNS",
-        "mtu": "Unit Transmisi Maksimum"
+        "mtu": "Unit Transmisi Maksimum",
+        "autoRedirect": "Auto Redirect"
       },
       "tooltips": {
-        "dnsHijack": "Please use , to separate multiple DNS servers"
+        "dnsHijack": "Please use , to separate multiple DNS servers",
+        "autoRedirect": "Automatically configures nftables/iptables TCP redirects"
       },
       "messages": {
         "applied": "Pengaturan Diterapkan"

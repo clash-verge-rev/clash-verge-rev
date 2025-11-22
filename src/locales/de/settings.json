@@ -427,10 +427,12 @@
         "strictRoute": "Strenges Routing",
         "autoDetectInterface": "Netzwerkschnittstelle automatisch auswählen",
         "dnsHijack": "DNS-Hijacking",
-        "mtu": "Maximale Übertragungseinheit"
+        "mtu": "Maximale Übertragungseinheit",
+        "autoRedirect": "Auto Redirect"
       },
       "tooltips": {
-        "dnsHijack": "Please use , to separate multiple DNS servers"
+        "dnsHijack": "Please use , to separate multiple DNS servers",
+        "autoRedirect": "Automatically configures nftables/iptables TCP redirects"
       },
       "messages": {
         "applied": "Einstellungen angewendet"

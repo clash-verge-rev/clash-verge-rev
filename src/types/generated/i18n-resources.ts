@@ -989,6 +989,7 @@ export interface TranslationResources {
         tun: {
           fields: {
             autoDetectInterface: string;
+            autoRedirect: string;
             autoRoute: string;
             device: string;
             dnsHijack: string;
@@ -1001,6 +1002,7 @@ export interface TranslationResources {
           };
           title: string;
           tooltips: {
+            autoRedirect: string;
             dnsHijack: string;
           };
         };

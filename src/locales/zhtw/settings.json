@@ -427,10 +427,12 @@
         "strictRoute": "嚴格路由",
         "autoDetectInterface": "自動偵測流量輸出介面",
         "dnsHijack": "DNS 綁架",
-        "mtu": "最大傳輸單位"
+        "mtu": "最大傳輸單位",
+        "autoRedirect": "自動重導"
       },
       "tooltips": {
-        "dnsHijack": "請用半形逗號來區隔多個 DNS 伺服器"
+        "dnsHijack": "請用半形逗號來區隔多個 DNS 伺服器",
+        "autoRedirect": "自動配置 nftables/iptables 的 TCP 重導"
       },
       "messages": {
         "applied": "設定已套用"
