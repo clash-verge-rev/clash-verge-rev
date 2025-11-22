@@ -12,6 +12,8 @@ use windows_sys::Win32::{
 
 use clash_verge_logging::{Type, logging};
 
+use crate::RUNTIME;
+
 // code refer to:
 //      global-hotkey (https://github.com/tauri-apps/global-hotkey)
 //      Global Shortcut (https://github.com/tauri-apps/plugins-workspace/tree/v2/plugins/global-shortcut)
@@ -56,17 +58,18 @@ unsafe extern "system" fn shutdown_proc(
         }
         WM_ENDSESSION => {
             if let Some(handler) = SHUTDOWN_HANDLER.get() {
-                match tokio::runtime::Runtime::new() {
-                    Ok(rt) => {
-                        rt.block_on(async {
-                            logging!(info, Type::System, "Session ended, system shutting down.");
-                            handler().await;
-                            logging!(info, Type::System, "resolved reset finished");
-                        });
-                    }
-                    Err(e) => {
-                        logging!(info, Type::System, "create tokio runtime error: {}", e);
-                    }
+                if let Some(Some(rt)) = RUNTIME.get() {
+                    rt.block_on(async {
+                        logging!(info, Type::System, "Session ended, system shutting down.");
+                        handler().await;
+                        logging!(info, Type::System, "resolved reset finished");
+                    });
+                } else {
+                    logging!(
+                        error,
+                        Type::System,
+                        "handle shutdown signal failed, RUNTIME is not available"
+                    );
                 }
             } else {
                 logging!(
