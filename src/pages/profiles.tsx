@@ -263,11 +263,11 @@ const ProfilePage = () => {
 
   // distinguish type
   const profileItems = useMemo(() => {
-    const items = profiles.items || [];
+    const items = profiles.items || {};
 
     const type1 = ["local", "remote"];
 
-    return items.filter((i) => i && type1.includes(i.type!));
+    return Object.values(items).filter((i) => i && type1.includes(i.type!));
   }, [profiles]);
 
   const currentActivatings = () => {

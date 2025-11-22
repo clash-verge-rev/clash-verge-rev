@@ -280,7 +280,7 @@ interface IProfileOption {
 
 interface IProfilesConfig {
   current?: string;
-  items?: IProfileItem[];
+  items?: Record<string, IProfileItem>;
 }
 
 interface IVergeTestItem {

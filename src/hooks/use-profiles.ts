@@ -2,11 +2,11 @@ import useSWR, { mutate } from "swr";
 import { selectNodeForGroup } from "tauri-plugin-mihomo-api";
 
 import {
+  calcuProxies,
   getProfiles,
   patchProfile,
   patchProfilesConfig,
 } from "@/services/cmds";
-import { calcuProxies } from "@/services/cmds";
 
 export const useProfiles = () => {
   const {
@@ -83,9 +83,10 @@ export const useProfiles = () => {
         return;
       }
 
-      const current = profileData.items?.find(
-        (e) => e && e.uid === profileData.current,
-      );
+      const current =
+        profileData.current && profileData.items
+          ? profileData.items[profileData.current]
+          : undefined;
 
       if (!current) {
         console.log("[ActivateSelected] 未找到当前profile配置");
@@ -197,7 +198,7 @@ export const useProfiles = () => {
 
   return {
     profiles,
-    current: profiles?.items?.find((p) => p && p.uid === profiles.current),
+    current: profiles?.items?.[profiles.current || ""],
     activateSelected,
     patchProfiles,
     patchCurrent,

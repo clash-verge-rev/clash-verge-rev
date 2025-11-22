@@ -5,20 +5,22 @@ use crate::utils::{
 };
 use anyhow::{Context as _, Result, bail};
 use clash_verge_logging::{Type, logging};
-use serde::{Deserialize, Serialize};
+use indexmap::IndexMap;
+use serde::{Deserialize, Deserializer, Serialize};
 use serde_yaml_ng::Mapping;
 use smartstring::alias::String;
 use std::{collections::HashSet, sync::Arc};
 use tokio::fs;
 
 /// Define the `profiles.yaml` schema
-#[derive(Default, Debug, Clone, Deserialize, Serialize)]
+#[derive(Default, Debug, Clone, Serialize)]
 pub struct IProfiles {
     /// same as PrfConfig.current
     pub current: Option<String>,
 
     /// profile list
-    pub items: Option<Vec<PrfItem>>,
+    #[serde(default, deserialize_with = "deserialize_items")]
+    pub items: Option<IndexMap<String, PrfItem>>,
 }
 
 pub struct IProfilePreview<'a> {
@@ -45,16 +47,8 @@ macro_rules! patch {
 
 impl IProfiles {
     // Helper to find and remove an item by uid from the items vec, returning its file name (if any).
-    fn take_item_file_by_uid(
-        items: &mut Vec<PrfItem>,
-        target_uid: Option<String>,
-    ) -> Option<String> {
-        for (i, _) in items.iter().enumerate() {
-            if items[i].uid == target_uid {
-                return items.remove(i).file;
-            }
-        }
-        None
+    fn take_item_by_uid(&mut self, target_uid: Option<&String>) -> Option<PrfItem> {
+        self.items.as_mut()?.shift_remove(target_uid?)
     }
 
     pub async fn new() -> Self {
@@ -68,12 +62,29 @@ impl IProfiles {
 
         match help::read_yaml::<Self>(&path).await {
             Ok(mut profiles) => {
-                let items = profiles.items.get_or_insert_with(Vec::new);
-                for item in items.iter_mut() {
+                let items = profiles.items.get_or_insert_with(IndexMap::new);
+                let mut needs_save = false;
+
+                for item in items.values_mut() {
                     if item.uid.is_none() {
                         item.uid = Some(help::get_uid("d").into());
+                        needs_save = true;
                     }
                 }
+
+                // Auto-save after migration to persist the new IndexMap format
+                if needs_save {
+                    logging!(info, Type::Config, "Auto-saving profiles after migration");
+                    if let Err(err) = profiles.save_file().await {
+                        logging!(
+                            warn,
+                            Type::Config,
+                            "Failed to auto-save migrated profiles: {}",
+                            err
+                        );
+                    }
+                }
+
                 profiles
             }
             Err(err) => {
@@ -95,14 +106,14 @@ impl IProfiles {
     /// 只修改current，valid和chain
     pub fn patch_config(&mut self, patch: &Self) {
         if self.items.is_none() {
-            self.items = Some(vec![]);
+            self.items = Some(IndexMap::new());
         }
 
         if let Some(current) = &patch.current
             && let Some(items) = self.items.as_ref()
         {
             let some_uid = Some(current);
-            if items.iter().any(|e| e.uid.as_ref() == some_uid) {
+            if items.iter().any(|e| e.1.uid.as_ref() == some_uid) {
                 self.current = some_uid.cloned();
             }
         }
@@ -113,34 +124,26 @@ impl IProfiles {
     }
 
     /// get items ref
-    pub const fn get_items(&self) -> Option<&Vec<PrfItem>> {
+    pub const fn get_items(&self) -> Option<&IndexMap<String, PrfItem>> {
         self.items.as_ref()
     }
 
     /// find the item by the uid
     pub fn get_item(&self, uid: impl AsRef<str>) -> Result<&PrfItem> {
-        let uid_str = uid.as_ref();
-
-        if let Some(items) = self.items.as_ref() {
-            for each in items.iter() {
-                if let Some(uid_val) = &each.uid
-                    && uid_val.as_str() == uid_str
-                {
-                    return Ok(each);
-                }
-            }
-        }
-
-        bail!("failed to get the profile item \"uid:{}\"", uid_str);
+        self.items
+            .as_ref()
+            .and_then(|items| items.get(uid.as_ref()))
+            .ok_or_else(|| {
+                let uid_str = uid.as_ref();
+                anyhow::anyhow!("failed to get the profile item \"uid:{}\"", uid_str)
+            })
     }
 
+    // TODO 或许可以优化掉 clone，或者和 get_item 合并
     pub fn get_item_arc(&self, uid: &str) -> Option<Arc<PrfItem>> {
-        self.items.as_ref().and_then(|items| {
-            items
-                .iter()
-                .find(|it| it.uid.as_deref() == Some(uid))
-                .map(|it| Arc::new(it.clone()))
-        })
+        self.items
+            .as_ref()
+            .and_then(|items| items.get(uid).cloned().map(Arc::new))
     }
 
     /// append new item
@@ -176,11 +179,11 @@ impl IProfiles {
         }
 
         if self.items.is_none() {
-            self.items = Some(vec![]);
+            self.items = Some(IndexMap::new());
         }
 
         if let Some(items) = self.items.as_mut() {
-            items.push(item.to_owned());
+            items.insert(item.uid.clone().unwrap_or_default(), item.to_owned());
         }
 
         Ok(())
@@ -189,24 +192,27 @@ impl IProfiles {
     /// reorder items
     pub async fn reorder(&mut self, active_id: &String, over_id: &String) -> Result<()> {
         let mut items = self.items.take().unwrap_or_default();
-        let mut old_index = None;
-        let mut new_index = None;
+        let mut old_key = None;
+        let mut new_key = None;
 
-        for (i, _) in items.iter().enumerate() {
-            if items[i].uid.as_ref() == Some(active_id) {
-                old_index = Some(i);
+        for (key, item) in items.iter() {
+            if item.uid.as_ref() == Some(active_id) {
+                old_key = Some(key.clone());
             }
-            if items[i].uid.as_ref() == Some(over_id) {
-                new_index = Some(i);
+            if item.uid.as_ref() == Some(over_id) {
+                new_key = Some(key.clone());
             }
         }
 
-        let (old_idx, new_idx) = match (old_index, new_index) {
+        let (old_key, new_key) = match (old_key, new_key) {
             (Some(old), Some(new)) => (old, new),
             _ => return Ok(()),
         };
-        let item = items.remove(old_idx);
-        items.insert(new_idx, item);
+
+        if let Some(item) = items.swap_remove(&old_key) {
+            items.insert(new_key, item);
+        }
+
         self.items = Some(items);
         self.save_file().await
     }
@@ -215,21 +221,19 @@ impl IProfiles {
     pub async fn patch_item(&mut self, uid: &String, item: &PrfItem) -> Result<()> {
         let mut items = self.items.take().unwrap_or_default();
 
-        for each in items.iter_mut() {
-            if each.uid.as_ref() == Some(uid) {
-                patch!(each, item, itype);
-                patch!(each, item, name);
-                patch!(each, item, desc);
-                patch!(each, item, file);
-                patch!(each, item, url);
-                patch!(each, item, selected);
-                patch!(each, item, extra);
-                patch!(each, item, updated);
-                patch!(each, item, option);
+        if let Some(each) = items.get_mut(uid) {
+            patch!(each, item, itype);
+            patch!(each, item, name);
+            patch!(each, item, desc);
+            patch!(each, item, file);
+            patch!(each, item, url);
+            patch!(each, item, selected);
+            patch!(each, item, extra);
+            patch!(each, item, updated);
+            patch!(each, item, option);
 
-                self.items = Some(items);
-                return self.save_file().await;
-            }
+            self.items = Some(items);
+            return self.save_file().await;
         }
 
         self.items = Some(items);
@@ -238,46 +242,29 @@ impl IProfiles {
 
     /// be used to update the remote item
     /// only patch `updated` `extra` `file_data`
-    pub async fn update_item(&mut self, uid: &String, item: &mut PrfItem) -> Result<()> {
-        if self.items.is_none() {
-            self.items = Some(vec![]);
-        }
+    pub async fn update_item(&mut self, uid: &String, item: &PrfItem) -> Result<()> {
+        let items = self.items.get_or_insert_with(IndexMap::new);
 
-        // find the item
-        let _ = self.get_item(uid)?;
+        let profile_item = items
+            .get_mut(uid)
+            .ok_or_else(|| anyhow::anyhow!("failed to find the profile item \"uid:{}\"", uid))?;
 
-        if let Some(items) = self.items.as_mut() {
-            let some_uid = Some(uid.clone());
+        profile_item.extra = item.extra;
+        profile_item.updated = item.updated;
+        profile_item.home = item.home.clone();
+        profile_item.option = PrfOption::merge(profile_item.option.as_ref(), item.option.as_ref());
 
-            for each in items.iter_mut() {
-                if each.uid == some_uid {
-                    each.extra = item.extra;
-                    each.updated = item.updated;
-                    each.home = item.home.to_owned();
-                    each.option = PrfOption::merge(each.option.as_ref(), item.option.as_ref());
-                    // save the file data
-                    // move the field value after save
-                    if let Some(file_data) = item.file_data.take() {
-                        let file = each.file.take();
-                        let file = file.unwrap_or_else(|| {
-                            item.file
-                                .take()
-                                .unwrap_or_else(|| format!("{}.yaml", &uid).into())
-                        });
-
-                        // the file must exists
-                        each.file = Some(file.clone());
-
-                        let path = dirs::app_profiles_dir()?.join(file.as_str());
-
-                        fs::write(&path, file_data.as_bytes())
-                            .await
-                            .with_context(|| format!("failed to write to file \"{file}\""))?;
-                    }
-
-                    break;
-                }
-            }
+        if let Some(file_data) = &item.file_data {
+            let file_name = if let Some(f) = profile_item.file.as_ref() {
+                f.clone()
+            } else {
+                String::from(format!("{}.yaml", uid))
+            };
+            profile_item.file = Some(file_name.clone());
+            let path = dirs::app_profiles_dir()?.join(file_name.as_str());
+            fs::write(&path, file_data.as_bytes())
+                .await
+                .with_context(|| format!("failed to write to file \"{}\"", file_name))?;
         }
 
         self.save_file().await
@@ -286,86 +273,81 @@ impl IProfiles {
     /// delete item
     /// if delete the current then return true
     pub async fn delete_item(&mut self, uid: &String) -> Result<bool> {
-        let current = self.current.as_ref().unwrap_or(uid);
-        let current = current.clone();
-        let item = self.get_item(uid)?;
-        let merge_uid = item.option.as_ref().and_then(|e| e.merge.clone());
-        let script_uid = item.option.as_ref().and_then(|e| e.script.clone());
-        let rules_uid = item.option.as_ref().and_then(|e| e.rules.clone());
-        let proxies_uid = item.option.as_ref().and_then(|e| e.proxies.clone());
-        let groups_uid = item.option.as_ref().and_then(|e| e.groups.clone());
-        let mut items = self.items.take().unwrap_or_default();
+        let is_current_uid = self.current.as_ref() == Some(uid);
 
-        // remove the main item (if exists) and delete its file
-        if let Some(file) = Self::take_item_file_by_uid(&mut items, Some(uid.clone())) {
+        let item = match self.take_item_by_uid(Some(uid)) {
+            Some(it) => it,
+            None => return Ok(false),
+        };
+
+        let ext_uids = [
+            item.option.as_ref().and_then(|o| o.merge.as_ref()),
+            item.option.as_ref().and_then(|o| o.script.as_ref()),
+            item.option.as_ref().and_then(|o| o.rules.as_ref()),
+            item.option.as_ref().and_then(|o| o.proxies.as_ref()),
+            item.option.as_ref().and_then(|o| o.groups.as_ref()),
+        ];
+
+        if let Some(file) = item.file.as_ref() {
             let _ = dirs::app_profiles_dir()?
                 .join(file.as_str())
                 .remove_if_exists()
                 .await;
         }
 
-        // remove related extension items (merge, script, rules, proxies, groups)
-        if let Some(file) = Self::take_item_file_by_uid(&mut items, merge_uid.clone()) {
-            let _ = dirs::app_profiles_dir()?
-                .join(file.as_str())
-                .remove_if_exists()
-                .await;
-        }
-        if let Some(file) = Self::take_item_file_by_uid(&mut items, script_uid.clone()) {
-            let _ = dirs::app_profiles_dir()?
-                .join(file.as_str())
-                .remove_if_exists()
-                .await;
-        }
-        if let Some(file) = Self::take_item_file_by_uid(&mut items, rules_uid.clone()) {
-            let _ = dirs::app_profiles_dir()?
-                .join(file.as_str())
-                .remove_if_exists()
-                .await;
-        }
-        if let Some(file) = Self::take_item_file_by_uid(&mut items, proxies_uid.clone()) {
-            let _ = dirs::app_profiles_dir()?
-                .join(file.as_str())
-                .remove_if_exists()
-                .await;
-        }
-        if let Some(file) = Self::take_item_file_by_uid(&mut items, groups_uid.clone()) {
-            let _ = dirs::app_profiles_dir()?
-                .join(file.as_str())
-                .remove_if_exists()
-                .await;
-        }
-        // delete the original uid
-        if current == *uid {
-            self.current = None;
-            for item in items.iter() {
-                if item.itype == Some("remote".into()) || item.itype == Some("local".into()) {
-                    self.current = item.uid.clone();
-                    break;
-                }
+        for ext_uid in ext_uids.iter().flatten() {
+            if let Some(ext_item) = self.take_item_by_uid(Some(*ext_uid))
+                && let Some(file) = ext_item.file
+            {
+                let _ = dirs::app_profiles_dir()?
+                    .join(file.as_str())
+                    .remove_if_exists()
+                    .await;
             }
         }
 
-        self.items = Some(items);
+        if is_current_uid {
+            self.current = self.items.as_ref().and_then(|items| {
+                items.iter().find_map(|(_, i)| {
+                    let itype = i.itype.as_deref()?;
+                    if itype == "remote" || itype == "local" {
+                        i.uid.clone()
+                    } else {
+                        None
+                    }
+                })
+            });
+        }
+
         self.save_file().await?;
-        Ok(current == *uid)
+        Ok(is_current_uid)
     }
 
     /// 获取current指向的订阅内容
     pub async fn current_mapping(&self) -> Result<Mapping> {
-        match (self.current.as_ref(), self.items.as_ref()) {
-            (Some(current), Some(items)) => {
-                if let Some(item) = items.iter().find(|e| e.uid.as_ref() == Some(current)) {
-                    let file_path = match item.file.as_ref() {
-                        Some(file) => dirs::app_profiles_dir()?.join(file.as_str()),
-                        None => bail!("failed to get the file field"),
-                    };
-                    return help::read_mapping(&file_path).await;
-                }
-                bail!("failed to find the current profile \"uid:{current}\"");
-            }
-            _ => Ok(Mapping::new()),
-        }
+        let current_uid = match &self.current {
+            Some(uid) => uid,
+            None => return Ok(Mapping::new()),
+        };
+
+        let items = match &self.items {
+            Some(map) => map,
+            None => return Ok(Mapping::new()),
+        };
+
+        let item = items.get(current_uid).ok_or_else(|| {
+            anyhow::anyhow!("failed to find the current profile \"uid:{}\"", current_uid)
+        })?;
+
+        let file = item.file.as_ref().ok_or_else(|| {
+            anyhow::anyhow!(
+                "failed to get the file field for profile \"uid:{}\"",
+                current_uid
+            )
+        })?;
+
+        let path = dirs::app_profiles_dir()?.join(file.as_str());
+        help::read_mapping(&path).await
     }
 
     /// 判断profile是否是current指向的
@@ -377,19 +359,16 @@ impl IProfiles {
     pub fn profiles_preview(&self) -> Option<Vec<IProfilePreview<'_>>> {
         self.items.as_ref().map(|items| {
             items
-                .iter()
-                .filter_map(|e| {
-                    if let (Some(uid), Some(name)) = (e.uid.as_ref(), e.name.as_ref()) {
-                        let is_current = self.is_current_profile_index(uid);
-                        let preview = IProfilePreview {
-                            uid,
-                            name,
-                            is_current,
-                        };
-                        Some(preview)
-                    } else {
-                        None
-                    }
+                .values()
+                .filter_map(|item| {
+                    let uid = item.uid.as_ref()?;
+                    let name = item.name.as_ref()?;
+                    let is_current = self.current.as_ref() == Some(uid);
+                    Some(IProfilePreview {
+                        uid,
+                        name,
+                        is_current,
+                    })
                 })
                 .collect()
         })
@@ -397,14 +376,10 @@ impl IProfiles {
 
     /// 通过 uid 获取名称
     pub fn get_name_by_uid(&self, uid: &String) -> Option<&String> {
-        if let Some(items) = &self.items {
-            for item in items {
-                if item.uid.as_ref() == Some(uid) {
-                    return item.name.as_ref();
-                }
-            }
-        }
-        None
+        self.items
+            .as_ref()
+            .and_then(|items| items.get(uid))
+            .and_then(|item| item.name.as_ref())
     }
 
     /// 以 app 中的 profile 列表为准，删除不再需要的文件
@@ -497,12 +472,11 @@ impl IProfiles {
         protected_files
     }
 
-    /// 获取所有 active profile 关联的文件名
     fn get_all_active_files(&self) -> HashSet<&str> {
         let mut active_files: HashSet<&str> = HashSet::new();
 
         if let Some(items) = &self.items {
-            for item in items {
+            for item in items.values() {
                 // 收集所有类型 profile 的文件
                 if let Some(file) = &item.file {
                     active_files.insert(file);
@@ -650,4 +624,64 @@ pub async fn profiles_draft_update_item_safe(index: &String, item: &mut PrfItem)
             Ok((profiles, ()))
         })
         .await
+}
+
+fn deserialize_items<'de, D>(deserializer: D) -> Result<Option<IndexMap<String, PrfItem>>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    #[derive(Deserialize)]
+    #[serde(untagged)]
+    enum ItemsFormat {
+        Map(IndexMap<String, PrfItem>),
+        Vec(Vec<PrfItem>),
+    }
+
+    let value = Option::<ItemsFormat>::deserialize(deserializer)?;
+
+    match value {
+        None => Ok(None),
+        Some(ItemsFormat::Map(map)) => Ok(Some(map)),
+        Some(ItemsFormat::Vec(vec)) => {
+            let mut map = IndexMap::new();
+            for item in vec {
+                if let Some(uid) = &item.uid {
+                    map.insert(uid.clone(), item);
+                } else {
+                    logging!(
+                        warn,
+                        Type::Config,
+                        "Skipping profile item without uid during migration"
+                    );
+                }
+            }
+            logging!(
+                info,
+                Type::Config,
+                "Migrated {} profile items from Vec to IndexMap",
+                map.len()
+            );
+            Ok(Some(map))
+        }
+    }
+}
+
+impl<'de> Deserialize<'de> for IProfiles {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        #[derive(Deserialize)]
+        struct IProfilesHelper {
+            current: Option<String>,
+            #[serde(default, deserialize_with = "deserialize_items")]
+            items: Option<IndexMap<String, PrfItem>>,
+        }
+
+        let helper = IProfilesHelper::deserialize(deserializer)?;
+        Ok(Self {
+            current: helper.current,
+            items: helper.items,
+        })
+    }
 }

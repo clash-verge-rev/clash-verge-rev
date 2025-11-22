@@ -52,6 +52,7 @@ serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 serde_yaml_ng = { workspace = true }
 smartstring = { workspace = true, features = ["serde"] }
+indexmap = { workspace = true, features = ["serde"] } #TODO 迁移完成后移除
 warp = { version = "0.4.2", features = ["server"] }
 open = "5.3.3"
 dunce = "1.0.5"
