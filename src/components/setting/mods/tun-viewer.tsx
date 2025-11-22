@@ -207,6 +207,7 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
           <ListItem sx={{ padding: "5px 2px" }}>
             <ListItemText
               primary={t("settings.modals.tun.fields.autoRedirect")}
+              sx={{ maxWidth: "fit-content" }}
             />
             <TooltipIcon
               title={t("settings.modals.tun.tooltips.autoRedirect")}
