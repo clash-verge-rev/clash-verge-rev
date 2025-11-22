@@ -1,15 +1,15 @@
-use crate::enhance::field::use_keys;
-use serde::{Deserialize, Serialize};
 use serde_yaml_ng::{Mapping, Value};
 use smartstring::alias::String;
 use std::collections::HashMap;
 
-#[derive(Default, Debug, Clone, Deserialize, Serialize)]
+#[derive(Default, Clone)]
 pub struct IRuntime {
     pub config: Option<Mapping>,
     // 记录在订阅中（包括merge和script生成的）出现过的keys
     // 这些keys不一定都生效
+    // TODO 或许我们可以用  hashset 来存储以提升查询效率
     pub exists_keys: Vec<String>,
+    // TODO 或许可以用 FixMap 来存储以提升效率
     pub chain_logs: HashMap<String, Vec<(String, String)>>,
 }
 
@@ -49,49 +49,7 @@ impl IRuntime {
         }
     }
 
-    //跟新链式代理配置文件
-    /// {   
-    ///     "proxies":[
-    ///         {
-    ///             name : 入口节点,
-    ///             type: xxx
-    ///             server: xxx
-    ///             port: xxx
-    ///             ports: xxx
-    ///             password: xxx
-    ///             skip-cert-verify: xxx,
-    ///        },
-    ///         {
-    ///             name : hop_node_1_xxxx,
-    ///             type: xxx
-    ///             server: xxx
-    ///             port: xxx
-    ///             ports: xxx
-    ///             password: xxx
-    ///             skip-cert-verify: xxx,
-    ///             dialer-proxy : "入口节点"
-    ///        },
-    ///         {
-    ///             name : 出口节点,
-    ///             type: xxx
-    ///             server: xxx
-    ///             port: xxx
-    ///             ports: xxx
-    ///             password: xxx
-    ///             skip-cert-verify: xxx,
-    ///             dialer-proxy : "hop_node_1_xxxx"
-    ///        }
-    ///     ],
-    ///     "proxy-groups" : [
-    ///         {
-    ///             name : "proxy_chain",
-    ///             type: "select",
-    ///             proxies ["出口节点"]
-    ///         }
-    ///     ]
-    /// }
-    ///
-    /// 传入none 为删除
+    // 传入none 为删除
     pub fn update_proxy_chain_config(&mut self, proxy_chain_config: Option<Value>) {
         if let Some(config) = self.config.as_mut() {
             if let Some(Value::Sequence(proxies)) = config.get_mut("proxies") {
@@ -120,4 +78,17 @@ impl IRuntime {
             }
         }
     }
+}
+
+// TODO 完整迁移 enhance 行为后移除
+fn use_keys(config: &Mapping) -> Vec<String> {
+    config
+        .iter()
+        .filter_map(|(key, _)| key.as_str())
+        .map(|s: &str| {
+            let mut s: String = s.into();
+            s.make_ascii_lowercase();
+            s
+        })
+        .collect()
 }

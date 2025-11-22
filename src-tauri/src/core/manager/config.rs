@@ -1,12 +1,13 @@
 use super::CoreManager;
 use crate::{
-    config::{Config, ConfigType, IRuntime},
+    config::{Config, ConfigType},
     constants::timing,
     core::{handle, validate::CoreConfigValidator},
     utils::{dirs, help},
 };
 use anyhow::{Result, anyhow};
 use clash_verge_logging::{Type, logging};
+use clash_verge_types::runtime::IRuntime;
 use smartstring::alias::String;
 use std::{path::PathBuf, time::Instant};
 use tauri_plugin_mihomo::Error as MihomoError;

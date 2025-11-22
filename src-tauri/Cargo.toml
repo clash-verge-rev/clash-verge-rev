@@ -33,6 +33,7 @@ tauri-build = { version = "2.5.2", features = [] }
 clash-verge-draft = { workspace = true }
 clash-verge-logging = { workspace = true }
 clash-verge-signal = { workspace = true }
+clash-verge-types = { workspace = true }
 tauri-plugin-clash-verge-sysinfo = { workspace = true }
 tauri = { workspace = true, features = [
   "protocol-asset",
@@ -47,19 +48,20 @@ tokio = { workspace = true }
 compact_str = { workspace = true }
 flexi_logger = { workspace = true }
 log = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+serde_yaml_ng = { workspace = true }
+smartstring = { workspace = true, features = ["serde"] }
 warp = { version = "0.4.2", features = ["server"] }
 open = "5.3.3"
 dunce = "1.0.5"
 nanoid = "0.4"
 chrono = "0.4.42"
 boa_engine = "0.21.0"
-serde_json = "1.0.145"
-serde_yaml_ng = "0.10.0"
 once_cell = { version = "1.21.3", features = ["parking_lot"] }
 port_scanner = "0.1.5"
 delay_timer = "0.11.6"
 percent-encoding = "2.3.2"
-serde = { version = "1.0.228", features = ["derive"] }
 reqwest = { version = "0.12.24", features = ["json", "cookies"] }
 regex = "1.12.2"
 sysproxy = { git = "https://github.com/clash-verge-rev/sysproxy-rs", features = [
@@ -91,7 +93,6 @@ tauri-plugin-devtools = { version = "2.0.1" }
 tauri-plugin-mihomo = { git = "https://github.com/clash-verge-rev/tauri-plugin-mihomo" }
 clash_verge_logger = { git = "https://github.com/clash-verge-rev/clash-verge-logger" }
 async-trait = "0.1.89"
-smartstring = { version = "1.0.1", features = ["serde"] }
 clash_verge_service_ipc = { version = "2.0.21", features = [
   "client",
 ], git = "https://github.com/clash-verge-rev/clash-verge-service-ipc" }
