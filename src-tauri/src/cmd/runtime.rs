@@ -4,7 +4,7 @@ use anyhow::{Context as _, anyhow};
 use clash_verge_logging::{Type, logging_error};
 use serde_yaml_ng::Mapping;
 use smartstring::alias::String;
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 /// 获取运行时配置
 #[tauri::command]
@@ -31,7 +31,7 @@ pub async fn get_runtime_yaml() -> CmdResult<String> {
 
 /// 获取运行时存在的键
 #[tauri::command]
-pub async fn get_runtime_exists() -> CmdResult<Vec<String>> {
+pub async fn get_runtime_exists() -> CmdResult<HashSet<String>> {
     Ok(Config::runtime().await.latest_arc().exists_keys.clone())
 }
 
