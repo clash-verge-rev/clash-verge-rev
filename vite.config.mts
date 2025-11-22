@@ -3,7 +3,7 @@ import path from "node:path";
 import legacy from "@vitejs/plugin-legacy";
 import react from "@vitejs/plugin-react-swc";
 import { defineConfig } from "vite";
-import monacoEditorPlugin from "vite-plugin-monaco-editor-esm";
+import monacoEditorPlugin from "vite-plugin-monaco-editor";
 import svgr from "vite-plugin-svgr";
 
 const getPackageName = (id: string) => {
