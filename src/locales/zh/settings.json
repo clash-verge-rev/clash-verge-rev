@@ -427,10 +427,12 @@
         "strictRoute": "严格路由",
         "autoDetectInterface": "自动选择流量出口接口",
         "dnsHijack": "DNS 劫持",
-        "mtu": "最大传输单元"
+        "mtu": "最大传输单元",
+        "autoRedirect": "自动重定向"
       },
       "tooltips": {
-        "dnsHijack": "多个 DNS 服务器请使用 , 分隔"
+        "dnsHijack": "多个 DNS 服务器请使用 , 分隔",
+        "autoRedirect": "自动配置 nftables/iptables 的 TCP 重定向"
       },
       "messages": {
         "applied": "设置已应用"

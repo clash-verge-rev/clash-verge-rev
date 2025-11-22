@@ -427,10 +427,12 @@
         "strictRoute": "엄격 라우팅",
         "autoDetectInterface": "인터페이스 자동 감지",
         "dnsHijack": "DNS 하이재킹",
-        "mtu": "MTU"
+        "mtu": "MTU",
+        "autoRedirect": "Auto Redirect"
       },
       "tooltips": {
-        "dnsHijack": "여러 DNS 서버는 쉼표(,)로 구분하세요"
+        "dnsHijack": "여러 DNS 서버는 쉼표(,)로 구분하세요",
+        "autoRedirect": "Automatically configures nftables/iptables TCP redirects"
       },
       "messages": {
         "applied": "설정이 적용되었습니다"
