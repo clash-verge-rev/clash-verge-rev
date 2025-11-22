@@ -5,14 +5,15 @@ edition.workspace = true
 rust-version.workspace = true
 
 [dependencies]
-tauri = { workspace = true }
 clash-verge-logging = { workspace = true }
 log = { workspace = true }
+tokio = { workspace = true }
 
 [target.'cfg(unix)'.dependencies]
 signal-hook = "0.3.18"
 
 [target.'cfg(windows)'.dependencies]
+tauri = { workspace = true }
 windows-sys = { version = "0.61.2", features = [
     "Win32_Foundation",
     "Win32_Graphics_Gdi",

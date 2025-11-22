@@ -1,8 +1,9 @@
 use crate::{
     config::Config,
     core::{CoreManager, handle, tray},
+    feat::clean_async,
     process::AsyncHandler,
-    utils::{self, resolve},
+    utils,
 };
 use clash_verge_logging::{Type, logging, logging_error};
 use serde_yaml_ng::{Mapping, Value};
@@ -24,16 +25,22 @@ pub async fn restart_clash_core() {
 
 /// Restart the application
 pub async fn restart_app() {
+    logging!(debug, Type::System, "启动重启应用流程");
     utils::server::shutdown_embedded_server();
     Config::apply_all_and_save_file().await;
-    if let Err(err) = resolve::resolve_reset_async().await {
-        handle::Handle::notice_message(
-            "restart_app::error",
-            format!("Failed to cleanup resources: {err}"),
-        );
-        logging!(error, Type::Core, "Restart failed during cleanup: {err}");
-        return;
-    }
+
+    // 设置退出标志
+    handle::Handle::global().set_is_exiting();
+
+    logging!(info, Type::System, "开始异步清理资源");
+    let cleanup_result = clean_async().await;
+
+    logging!(
+        info,
+        Type::System,
+        "资源清理完成，退出代码: {}",
+        if cleanup_result { 0 } else { 1 }
+    );
 
     let app_handle = handle::Handle::app_handle();
     app_handle.restart();

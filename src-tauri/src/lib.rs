@@ -10,9 +10,10 @@ mod feat;
 mod module;
 mod process;
 pub mod utils;
-use crate::constants::files;
 #[cfg(target_os = "linux")]
 use crate::utils::linux;
+use crate::utils::resolve::init_signal;
+use crate::{constants::files, utils::resolve::prioritize_initialization};
 use crate::{
     core::handle,
     process::AsyncHandler,
@@ -237,13 +238,14 @@ pub fn run() {
 
     let builder = app_init::setup_plugins(tauri::Builder::default())
         .setup(|app| {
-            logging!(info, Type::Setup, "开始应用初始化...");
-
             #[allow(clippy::expect_used)]
             APP_HANDLE
                 .set(app.app_handle().clone())
                 .expect("failed to set global app handle");
 
+            let _handle = AsyncHandler::block_on(async { prioritize_initialization().await });
+
+            logging!(info, Type::Setup, "开始应用初始化...");
             if let Err(e) = app_init::setup_autostart(app) {
                 logging!(error, Type::Setup, "Failed to setup autostart: {}", e);
             }
@@ -257,6 +259,7 @@ pub fn run() {
             resolve::resolve_setup_handle();
             resolve::resolve_setup_async();
             resolve::resolve_setup_sync();
+            init_signal();
 
             logging!(info, Type::Setup, "初始化已启动");
             Ok(())
@@ -423,6 +426,10 @@ pub fn run() {
                 event_handlers::handle_reopen(has_visible_windows).await;
             });
         }
+        #[cfg(target_os = "macos")]
+        tauri::RunEvent::Exit => AsyncHandler::block_on(async {
+            feat::quit().await;
+        }),
         tauri::RunEvent::ExitRequested { api, code, .. } => {
             AsyncHandler::block_on(async {
                 let _ = handle::Handle::mihomo()
@@ -437,13 +444,6 @@ pub fn run() {
 
             if code.is_none() {
                 api.prevent_exit();
-            }
-        }
-        tauri::RunEvent::Exit => {
-            let handle = core::handle::Handle::global();
-            if !handle.is_exiting() {
-                handle.set_is_exiting();
-                feat::clean();
             }
         }
         tauri::RunEvent::WindowEvent { label, event, .. } if label == "main" => match event {

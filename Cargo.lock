@@ -1204,6 +1204,7 @@ dependencies = [
  "log",
  "signal-hook 0.3.18",
  "tauri",
+ "tokio",
  "windows-sys 0.61.2",
 ]
 
@@ -7628,7 +7629,7 @@ dependencies = [
 [[package]]
 name = "tauri-plugin-mihomo"
 version = "0.1.1"
-source = "git+https://github.com/clash-verge-rev/tauri-plugin-mihomo#1c2fba06b1e51eefd14b9f96310e75b9cdbf58fa"
+source = "git+https://github.com/clash-verge-rev/tauri-plugin-mihomo#24586eb0721314f88e65460b4ac01933b3376d3c"
 dependencies = [
  "base64 0.22.1",
  "futures-util",
