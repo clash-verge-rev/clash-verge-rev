@@ -55,7 +55,54 @@ impl IRuntime {
         }
     }
 
-    // 传入none 为删除
+    /// 更新链式代理配置
+    ///
+    /// 该函数更新 `proxies` 和 `proxy-groups` 配置，并处理链式代理的修改或(传入 None )删除。
+    ///
+    /// 配置示例：
+    ///
+    /// ```json
+    /// {
+    ///     "proxies": [
+    ///         {
+    ///             "name": "入口节点",
+    ///             "type": "xxx",
+    ///             "server": "xxx",
+    ///             "port": "xxx",
+    ///             "ports": "xxx",
+    ///             "password": "xxx",
+    ///             "skip-cert-verify": "xxx"
+    ///         },
+    ///         {
+    ///             "name": "hop_node_1_xxxx",
+    ///             "type": "xxx",
+    ///             "server": "xxx",
+    ///             "port": "xxx",
+    ///             "ports": "xxx",
+    ///             "password": "xxx",
+    ///             "skip-cert-verify": "xxx",
+    ///             "dialer-proxy": "入口节点"
+    ///         },
+    ///         {
+    ///             "name": "出口节点",
+    ///             "type": "xxx",
+    ///             "server": "xxx",
+    ///             "port": "xxx",
+    ///             "ports": "xxx",
+    ///             "password": "xxx",
+    ///             "skip-cert-verify": "xxx",
+    ///             "dialer-proxy": "hop_node_1_xxxx"
+    ///         }
+    ///     ],
+    ///     "proxy-groups": [
+    ///         {
+    ///             "name": "proxy_chain",
+    ///             "type": "select",
+    ///             "proxies": ["出口节点"]
+    ///         }
+    ///     ]
+    /// }
+    /// ```
     #[inline]
     pub fn update_proxy_chain_config(&mut self, proxy_chain_config: Option<Value>) {
         let config = if let Some(config) = self.config.as_mut() {
