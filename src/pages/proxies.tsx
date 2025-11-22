@@ -74,6 +74,10 @@ const ProxyPage = () => {
   const onToggleChainMode = useLockFn(async () => {
     const newChainMode = !isChainMode;
 
+    setIsChainMode(newChainMode);
+    // 保存链式代理按钮状态到 localStorage
+    localStorage.setItem("proxy-chain-mode-enabled", newChainMode.toString());
+
     if (!newChainMode) {
       // 退出链式代理模式时，清除链式代理配置
       try {
@@ -84,11 +88,6 @@ const ProxyPage = () => {
         console.error("Failed to clear chain configuration:", error);
       }
     }
-
-    setIsChainMode(newChainMode);
-
-    // 保存链式代理按钮状态到 localStorage
-    localStorage.setItem("proxy-chain-mode-enabled", newChainMode.toString());
   });
 
   // 当开启链式代理模式时，获取配置数据

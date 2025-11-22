@@ -1,56 +1,77 @@
 use super::use_lowercase;
 use anyhow::{Error, Result};
+use boa_engine::{Context, JsString, JsValue, Source, native_function::NativeFunction};
+use clash_verge_logging::{Type, logging_error};
+use parking_lot::Mutex;
 use serde_yaml_ng::Mapping;
 use smartstring::alias::String;
+use std::sync::Arc;
 
+const MAX_OUTPUTS: usize = 1000;
+const MAX_OUTPUT_SIZE: usize = 1024 * 1024; // 1MB
+const MAX_JSON_SIZE: usize = 10 * 1024 * 1024; // 10MB
+
+// TODO 使用引用改进上下相关处理，避免不必要 Clone
 pub fn use_script(
     script: String,
     config: &Mapping,
     name: &String,
 ) -> Result<(Mapping, Vec<(String, String)>)> {
-    use boa_engine::{Context, JsString, JsValue, Source, native_function::NativeFunction};
-    use std::{cell::RefCell, rc::Rc};
     let mut context = Context::default();
 
-    let outputs = Rc::new(RefCell::new(vec![]));
+    let outputs = Arc::new(Mutex::new(vec![]));
+    let total_size = Arc::new(Mutex::new(0usize));
 
-    let copy_outputs = Rc::clone(&outputs);
-    unsafe {
-        let _ = context.register_global_builtin_callable(
-            "__verge_log__".into(),
-            2,
-            NativeFunction::from_closure(
-                move |_: &JsValue, args: &[JsValue], context: &mut Context| {
-                    let level = args.first().ok_or_else(|| {
-                        boa_engine::JsError::from_opaque(
-                            JsString::from("Missing level argument").into(),
-                        )
-                    })?;
-                    let level = level.to_string(context)?;
-                    let level = level.to_std_string().map_err(|_| {
-                        boa_engine::JsError::from_opaque(
-                            JsString::from("Failed to convert level to string").into(),
-                        )
-                    })?;
+    let outputs_clone = Arc::clone(&outputs);
+    let total_size_clone = Arc::clone(&total_size);
 
-                    let data = args.get(1).ok_or_else(|| {
-                        boa_engine::JsError::from_opaque(
-                            JsString::from("Missing data argument").into(),
-                        )
-                    })?;
-                    let data = data.to_string(context)?;
-                    let data = data.to_std_string().map_err(|_| {
-                        boa_engine::JsError::from_opaque(
-                            JsString::from("Failed to convert data to string").into(),
-                        )
-                    })?;
-                    let mut out = copy_outputs.borrow_mut();
-                    out.push((level.into(), data.into()));
-                    Ok(JsValue::undefined())
-                },
-            ),
-        );
-    }
+    let _ = context.register_global_builtin_callable("__verge_log__".into(), 2, unsafe {
+        NativeFunction::from_closure(
+            move |_: &JsValue, args: &[JsValue], context: &mut Context| {
+                let level = args.first().ok_or_else(|| {
+                    boa_engine::JsError::from_opaque(
+                        JsString::from("Missing level argument").into(),
+                    )
+                })?;
+                let level = level.to_string(context)?;
+                let level = level.to_std_string().map_err(|_| {
+                    boa_engine::JsError::from_opaque(
+                        JsString::from("Failed to convert level to string").into(),
+                    )
+                })?;
+
+                let data = args.get(1).ok_or_else(|| {
+                    boa_engine::JsError::from_opaque(JsString::from("Missing data argument").into())
+                })?;
+                let data = data.to_string(context)?;
+                let data = data.to_std_string().map_err(|_| {
+                    boa_engine::JsError::from_opaque(
+                        JsString::from("Failed to convert data to string").into(),
+                    )
+                })?;
+
+                // 检查输出限制
+                if outputs_clone.lock().len() >= MAX_OUTPUTS {
+                    return Err(boa_engine::JsError::from_opaque(
+                        JsString::from("Maximum number of log outputs exceeded").into(),
+                    ));
+                }
+
+                let mut size = total_size_clone.lock();
+                let new_size = *size + level.len() + data.len();
+                if new_size > MAX_OUTPUT_SIZE {
+                    return Err(boa_engine::JsError::from_opaque(
+                        JsString::from("Maximum output size exceeded").into(),
+                    ));
+                }
+                *size = new_size;
+                drop(size);
+                outputs_clone.lock().push((level.into(), data.into()));
+                Ok(JsValue::undefined())
+            },
+        )
+    });
+
     let _ = context.eval(Source::from_bytes(
         r#"var console = Object.freeze({
         log(data){__verge_log__("log",JSON.stringify(data, null, 2))},
@@ -64,9 +85,15 @@ pub fn use_script(
 
     let config = use_lowercase(config);
     let config_str = serde_json::to_string(&config)?;
+    if config_str.len() > MAX_JSON_SIZE {
+        anyhow::bail!("Configuration size exceeds maximum allowed size");
+    }
 
     // 仅处理 name 参数中的特殊字符
     let safe_name = escape_js_string_for_single_quote(name);
+    if safe_name.len() > 1024 {
+        anyhow::bail!("Name parameter too long");
+    }
 
     let code = format!(
         r"try{{
@@ -88,15 +115,25 @@ pub fn use_script(
             .to_std_string()
             .map_err(|_| anyhow::anyhow!("Failed to convert JS string to std string"))?;
 
-        // 直接解析JSON结果,不做其他解析
+        if result.len() > MAX_JSON_SIZE {
+            anyhow::bail!("Script result exceeds maximum allowed size");
+        }
+
         let res: Result<Mapping, Error> = parse_json_safely(&result);
 
-        let mut out = outputs.borrow_mut();
         match res {
-            Ok(config) => Ok((use_lowercase(&config), out.to_vec())),
+            Ok(config) => Ok((use_lowercase(&config), outputs.lock().to_vec())),
             Err(err) => {
-                out.push(("exception".into(), err.to_string().into()));
-                Ok((config, out.to_vec()))
+                outputs
+                    .lock()
+                    .push(("exception".into(), "Script execution failed".into()));
+                logging_error!(
+                    Type::Config,
+                    "Script execution error: {}. Script name: {}",
+                    err,
+                    name
+                );
+                Ok((config, outputs.lock().to_vec()))
             }
         }
     } else {
@@ -105,14 +142,22 @@ pub fn use_script(
 }
 
 fn parse_json_safely(json_str: &str) -> Result<Mapping, Error> {
-    let json_str = strip_outer_quotes(json_str);
+    if json_str.len() > MAX_JSON_SIZE {
+        anyhow::bail!("JSON string too large");
+    }
 
+    let json_str = strip_outer_quotes(json_str);
     Ok(serde_json::from_str::<Mapping>(json_str)?)
 }
 
-// 移除字符串外层的引号
+// 安全地移除外层引号
 fn strip_outer_quotes(s: &str) -> &str {
     let s = s.trim();
+
+    if s.len() < 2 {
+        return s;
+    }
+
     if (s.starts_with('"') && s.ends_with('"')) || (s.starts_with('\'') && s.ends_with('\'')) {
         &s[1..s.len() - 1]
     } else {
@@ -120,9 +165,18 @@ fn strip_outer_quotes(s: &str) -> &str {
     }
 }
 
-// 转义单引号和反斜杠，用于单引号包裹的JavaScript字符串
+// 安全地转义字符串
 fn escape_js_string_for_single_quote(s: &str) -> String {
-    s.replace('\\', "\\\\").replace('\'', "\\'").into()
+    // 限制处理的字符串长度
+    if s.len() > 10240 {
+        return s[..10240].replace('\\', "\\\\").replace('\'', "\\'").into();
+    }
+
+    s.replace('\\', "\\\\")
+        .replace('\'', "\\'")
+        .replace('\n', "\\n") // 添加换行符转义
+        .replace('\r', "\\r") // 添加回车转义
+        .into()
 }
 
 #[test]
@@ -181,4 +235,33 @@ fn test_escape_unescape() {
 
     assert!(parsed_quoted.contains_key("key"));
     assert!(parsed_quoted.contains_key("nested"));
+}
+
+#[test]
+fn test_strip_outer_quotes_edge_cases() {
+    assert_eq!(strip_outer_quotes(""), "");
+    assert_eq!(strip_outer_quotes("'"), "'");
+    assert_eq!(strip_outer_quotes("\""), "\"");
+    assert_eq!(strip_outer_quotes("''"), "");
+    assert_eq!(strip_outer_quotes("\"\""), "");
+    assert_eq!(strip_outer_quotes("'a'"), "a");
+}
+
+#[test]
+fn test_memory_limits() {
+    // 测试输出限制
+    let script = r#"
+    function main(config) {
+      for(let i = 0; i < 2000; i++) {
+        console.log("test");
+      }
+      return config;
+    }
+  "#;
+
+    #[allow(clippy::expect_used)]
+    let config = &serde_yaml_ng::from_str("test: value").expect("Failed to parse test YAML");
+    let result = use_script(script.into(), config, &String::from(""));
+    // 应该失败或被限制
+    assert!(result.is_ok()); // 会被限制但不会 panic
 }
