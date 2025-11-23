@@ -1,0 +1,40 @@
+[config]
+skip_core_tasks = true
+skip_git_env_info = true
+skip_rust_env_info = true
+skip_crate_env_info = true
+
+[tasks.rust-format]
+install_crate = "rustfmt"
+command = "cargo"
+args = ["fmt", "--", "--emit=files"]
+
+[tasks.rust-clippy]
+description = "Run cargo clippy to lint the code"
+command = "cargo"
+args = ["clippy-all"]
+
+[tasks.format-check]
+description = "Run format checks"
+command = "pnpm"
+args = ["format:check"]
+
+[tasks.eslint]
+description = "Run ESLint to lint the code"
+command = "pnpm"
+args = ["lint"]
+
+[tasks.typecheck]
+description = "Run type checks"
+command = "pnpm"
+args = ["typecheck"]
+
+[tasks.pre-push]
+description = "Pre-push checks"
+dependencies = [
+    "rust-format",
+    "rust-clippy",
+    "format-check",
+    "eslint",
+    "typecheck",
+]
