@@ -47,8 +47,6 @@ struct TrayState {}
 // 托盘点击防抖机制
 static TRAY_CLICK_DEBOUNCE: OnceCell<Mutex<Instant>> = OnceCell::new();
 const TRAY_CLICK_DEBOUNCE_MS: u64 = 300;
-const DEFAULT_LATENCY_TEST_URL: &str = "https://cp.cloudflare.com/generate_204";
-const DEFAULT_LATENCY_TEST_TIMEOUT_MS: u32 = 10_000;
 const MAX_TRAY_DELAY_TEST_CONCURRENCY: usize = 10;
 static TRAY_DELAY_TEST_GROUPS: OnceCell<Mutex<HashSet<String>>> = OnceCell::new();
 
@@ -696,7 +694,7 @@ fn create_subcreate_proxy_menu_item(
                 let now_proxy = group_data.now.as_deref().unwrap_or_default();
 
                 // Create proxy items
-                let mut proxy_items: Vec<Box<dyn IsMenuItem<Wry>>> = all_proxies
+                let proxy_items: Vec<CheckMenuItem<Wry>> = all_proxies
                     .iter()
                     .filter_map(|proxy_str| {
                         let is_selected = *proxy_str == now_proxy;
@@ -724,7 +722,6 @@ fn create_subcreate_proxy_menu_item(
                             is_selected,
                             None::<&str>,
                         )
-                        .map(|item| Box::new(item) as Box<dyn IsMenuItem<Wry>>)
                         .map_err(|e| {
                             logging!(warn, Type::Tray, "Failed to create proxy menu item: {}", e)
                         })
@@ -754,42 +751,53 @@ fn create_subcreate_proxy_menu_item(
                     group_name.to_string()
                 };
 
-                let mut group_items: Vec<Box<dyn IsMenuItem<Wry>>> =
+                let mut group_items_refs: Vec<&dyn IsMenuItem<Wry>> =
                     Vec::with_capacity(proxy_items.len() + 2);
 
                 let delay_item_id = format!("{}_{}", MenuIds::DELAY_TEST, group_name);
-                match MenuItem::with_id(
+                let delay_item = match MenuItem::with_id(
                     app_handle,
                     &delay_item_id,
                     delay_test_label.as_ref(),
                     true,
                     None::<&str>,
                 ) {
-                    Ok(item) => group_items.push(Box::new(item)),
-                    Err(err) => logging!(
-                        warn,
-                        Type::Tray,
-                        "Failed to create delay test menu item for group {}: {}",
-                        group_name,
-                        err
-                    ),
+                    Ok(item) => Some(item),
+                    Err(err) => {
+                        logging!(
+                            warn,
+                            Type::Tray,
+                            "Failed to create delay test menu item for group {}: {}",
+                            group_name,
+                            err
+                        );
+                        None
+                    }
+                };
+
+                let separator = match PredefinedMenuItem::separator(app_handle) {
+                    Ok(item) => Some(item),
+                    Err(err) => {
+                        logging!(
+                            warn,
+                            Type::Tray,
+                            "Failed to create delay test separator for group {}: {}",
+                            group_name,
+                            err
+                        );
+                        None
+                    }
+                };
+
+                if let Some(item) = delay_item.as_ref() {
+                    group_items_refs.push(item as &dyn IsMenuItem<Wry>);
                 }
-
-                match PredefinedMenuItem::separator(app_handle) {
-                    Ok(separator) => group_items.push(Box::new(separator)),
-                    Err(err) => logging!(
-                        warn,
-                        Type::Tray,
-                        "Failed to create delay test separator for group {}: {}",
-                        group_name,
-                        err
-                    ),
+                if let Some(item) = separator.as_ref() {
+                    group_items_refs.push(item as &dyn IsMenuItem<Wry>);
                 }
-
-                group_items.append(&mut proxy_items);
-
-                let group_items_refs: Vec<&dyn IsMenuItem<Wry>> =
-                    group_items.iter().map(|item| item.as_ref()).collect();
+                for item in &proxy_items {
+                    group_items_refs.push(item as &dyn IsMenuItem<Wry>);
+                }
 
                 if let Ok(submenu) = Submenu::with_id_and_items(
                     app_handle,
@@ -1272,20 +1280,9 @@ async fn tray_test_proxy_group_delay(group_name: &str) {
 
     let proxies_to_test: Vec<std::string::String> = all_proxies.clone();
 
-    let verge_settings = Config::verge().await.latest_arc();
-    let test_url: std::string::String = verge_settings
-        .default_latency_test
-        .as_deref()
-        .map(str::trim)
-        .filter(|url| !url.is_empty())
-        .unwrap_or(DEFAULT_LATENCY_TEST_URL)
-        .into();
-    let timeout = verge_settings
-        .default_latency_timeout
-        .filter(|value| *value > 0)
-        .map(|value| value as u32)
-        .unwrap_or(DEFAULT_LATENCY_TEST_TIMEOUT_MS);
-    drop(verge_settings);
+    let latency_options = Config::latency_test_options().await;
+    let timeout = latency_options.timeout_ms;
+    let test_url = latency_options.url;
 
     let concurrency = proxies_to_test
         .len()

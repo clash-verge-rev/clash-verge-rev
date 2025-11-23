@@ -8,6 +8,16 @@ use clash_verge_logging::{Type, logging};
 use log::LevelFilter;
 use serde::{Deserialize, Serialize};
 use smartstring::alias::String;
+use std::string::String as StdString;
+
+pub const DEFAULT_LATENCY_TEST_URL: &str = "https://cp.cloudflare.com/generate_204";
+pub const DEFAULT_LATENCY_TEST_TIMEOUT_MS: u32 = 10_000;
+
+#[derive(Debug, Clone)]
+pub struct LatencyTestOptions {
+    pub url: StdString,
+    pub timeout_ms: u32,
+}
 
 /// ### `verge.yaml` schema
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
@@ -341,6 +351,24 @@ impl IVerge {
         self.clash_core
             .clone()
             .unwrap_or_else(|| "verge-mihomo".into())
+    }
+
+    pub fn latency_test_options(&self) -> LatencyTestOptions {
+        let url = self
+            .default_latency_test
+            .as_deref()
+            .map(str::trim)
+            .filter(|url| !url.is_empty())
+            .unwrap_or(DEFAULT_LATENCY_TEST_URL)
+            .to_string();
+
+        let timeout_ms = self
+            .default_latency_timeout
+            .filter(|value| *value > 0)
+            .map(|value| value as u32)
+            .unwrap_or(DEFAULT_LATENCY_TEST_TIMEOUT_MS);
+
+        LatencyTestOptions { url, timeout_ms }
     }
 
     fn get_system_language() -> String {

@@ -1,4 +1,4 @@
-use super::{IClashTemp, IProfiles, IVerge};
+use super::{IClashTemp, IProfiles, IVerge, LatencyTestOptions};
 use crate::{
     cmd,
     config::{PrfItem, profiles_append_item_safe},
@@ -53,6 +53,10 @@ impl Config {
 
     pub async fn runtime() -> Draft<IRuntime> {
         Self::global().await.runtime_config.clone()
+    }
+
+    pub async fn latency_test_options() -> LatencyTestOptions {
+        Self::verge().await.latest_arc().latency_test_options()
     }
 
     /// 初始化订阅
