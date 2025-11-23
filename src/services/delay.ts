@@ -1,7 +1,5 @@
 import { delayProxyByName, type ProxyDelay } from "tauri-plugin-mihomo-api";
 
-import { testProxyDelay } from "./cmds";
-
 const hashKey = (name: string, group: string) => `${group ?? ""}::${name}`;
 
 export interface DelayUpdate {
@@ -209,20 +207,12 @@ class DelayManager {
     return -1;
   }
 
-  private async requestProxyDelay(
+  private requestProxyDelay(
     name: string,
     url: string,
     timeout: number,
   ): Promise<ProxyDelay> {
-    try {
-      return await delayProxyByName(name, url, timeout);
-    } catch (error) {
-      console.warn(
-        `[DelayManager] 调用delayProxyByName失败，回退到test_proxy_delay`,
-        error,
-      );
-      return testProxyDelay(name, url, timeout);
-    }
+    return delayProxyByName(name, url, timeout);
   }
 
   async checkDelay(

@@ -1,10 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import dayjs from "dayjs";
-import {
-  getProxies,
-  getProxyProviders,
-  type ProxyDelay,
-} from "tauri-plugin-mihomo-api";
+import { getProxies, getProxyProviders } from "tauri-plugin-mihomo-api";
 
 import { showNotice } from "@/services/noticeService";
 
@@ -115,18 +111,6 @@ export async function patchClashMode(payload: string) {
 
 export async function syncTrayProxySelection() {
   return invoke<void>("sync_tray_proxy_selection");
-}
-
-export async function testProxyDelay(
-  proxyName: string,
-  testUrl: string,
-  timeout: number,
-) {
-  return invoke<ProxyDelay>("test_proxy_delay", {
-    proxy_name: proxyName,
-    test_url: testUrl,
-    timeout,
-  });
 }
 
 export async function calcuProxies(): Promise<{
