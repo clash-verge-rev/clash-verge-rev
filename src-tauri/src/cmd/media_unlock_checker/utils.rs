@@ -7,25 +7,37 @@ pub fn get_local_date_string() -> String {
 }
 
 pub fn country_code_to_emoji(country_code: &str) -> String {
-    let country_code_upper = country_code.to_uppercase();
-    if country_code_upper.len() < 2 {
-        return String::new();
-    }
-    let country_code_alpha2 = if country_code_upper.len() == 3 {
-        rust_iso3166::from_alpha3(&country_code_upper)
-            .map(|c| c.alpha2)
-            .unwrap_or(&country_code_upper)
-            .to_string()
-    } else {
-        country_code_upper.chars().take(2).collect::<String>()
-    };
+    let uc = country_code.to_ascii_uppercase();
 
-    let bytes = country_code_alpha2.as_bytes();
+    // 长度校验：仅允许 2 或 3
+    match uc.len() {
+        2 => {
+            // 校验是否是合法 alpha2
+            if rust_iso3166::from_alpha2(&uc).is_none() {
+                return String::new();
+            }
+            alpha2_to_emoji(&uc)
+        }
+        3 => {
+            // 转换并校验 alpha3
+            match rust_iso3166::from_alpha3(&uc) {
+                Some(c) => {
+                    let alpha2 = c.alpha2.to_ascii_uppercase();
+                    alpha2_to_emoji(&alpha2)
+                }
+                None => String::new(),
+            }
+        }
+        _ => String::new(),
+    }
+}
+
+fn alpha2_to_emoji(alpha2: &str) -> String {
+    let bytes = alpha2.as_bytes();
     let c1 = 0x1F1E6 + (bytes[0] as u32) - ('A' as u32);
     let c2 = 0x1F1E6 + (bytes[1] as u32) - ('A' as u32);
-
     char::from_u32(c1)
-        .and_then(|c1| char::from_u32(c2).map(|c2| format!("{c1}{c2}")))
+        .and_then(|x| char::from_u32(c2).map(|y| format!("{x}{y}")))
         .unwrap_or_default()
 }
 
@@ -46,6 +58,12 @@ mod tests {
     }
 
     #[test]
+    fn country_code_to_emoji_invalid() {
+        assert_eq!(country_code_to_emoji("XXX"), "");
+        assert_eq!(country_code_to_emoji("ZZ"), "");
+    }
+
+    #[test]
     fn country_code_to_emoji_short() {
         assert_eq!(country_code_to_emoji("C"), "");
         assert_eq!(country_code_to_emoji(""), "");
@@ -53,6 +71,6 @@ mod tests {
 
     #[test]
     fn country_code_to_emoji_long() {
-        assert_eq!(country_code_to_emoji("CNAAA"), "🇨🇳");
+        assert_eq!(country_code_to_emoji("CNAAA"), "");
     }
 }
