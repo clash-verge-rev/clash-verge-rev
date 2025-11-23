@@ -187,6 +187,7 @@ mod app_init {
             cmd::get_verge_config,
             cmd::patch_verge_config,
             cmd::test_delay,
+            cmd::test_proxy_delay,
             cmd::get_app_dir,
             cmd::copy_icon_file,
             cmd::download_icon_cache,

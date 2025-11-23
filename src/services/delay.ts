@@ -1,4 +1,5 @@
-import { delayProxyByName, ProxyDelay } from "tauri-plugin-mihomo-api";
+import { invoke } from "@tauri-apps/api/core";
+import type { ProxyDelay } from "tauri-plugin-mihomo-api";
 
 const hashKey = (name: string, group: string) => `${group ?? ""}::${name}`;
 
@@ -207,6 +208,18 @@ class DelayManager {
     return -1;
   }
 
+  private async requestProxyDelay(
+    name: string,
+    url: string,
+    timeout: number,
+  ): Promise<ProxyDelay> {
+    return invoke<ProxyDelay>("test_proxy_delay", {
+      proxy_name: name,
+      test_url: url,
+      timeout,
+    });
+  }
+
   async checkDelay(
     name: string,
     group: string,
@@ -235,7 +248,7 @@ class DelayManager {
 
       // 使用Promise.race来实现超时控制
       const result = await Promise.race([
-        delayProxyByName(name, url, timeout),
+        this.requestProxyDelay(name, url, timeout),
         timeoutPromise,
       ]);
 

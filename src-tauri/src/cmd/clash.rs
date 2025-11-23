@@ -11,6 +11,7 @@ use clash_verge_logging::{Type, logging};
 use compact_str::CompactString;
 use serde_yaml_ng::Mapping;
 use smartstring::alias::String;
+use tauri_plugin_mihomo::models::ProxyDelay;
 use tokio::fs;
 
 /// 复制Clash环境变量
@@ -117,6 +118,29 @@ pub async fn test_delay(url: String) -> CmdResult<u32> {
         }
     };
     Ok(result)
+}
+
+/// 测试指定代理节点的延迟
+#[tauri::command]
+pub async fn test_proxy_delay(
+    proxy_name: String,
+    test_url: String,
+    timeout: u32,
+) -> CmdResult<ProxyDelay> {
+    handle::Handle::mihomo()
+        .await
+        .delay_proxy_by_name(&proxy_name, &test_url, timeout)
+        .await
+        .map_err(|err| {
+            logging!(
+                error,
+                Type::Cmd,
+                "Failed to test proxy delay for {}: {}",
+                proxy_name,
+                err
+            );
+            err.to_string().into()
+        })
 }
 
 /// 保存DNS配置到单独文件

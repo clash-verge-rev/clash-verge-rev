@@ -333,38 +333,6 @@ export const openWebUrl = async (url: string) => {
   }
 };
 
-export async function cmdGetProxyDelay(
-  name: string,
-  timeout: number,
-  url?: string,
-) {
-  // 确保URL不为空
-  const testUrl = url || "https://cp.cloudflare.com/generate_204";
-
-  try {
-    // 不再在前端编码代理名称，由后端统一处理编码
-    const result = await invoke<{ delay: number }>(
-      "clash_api_get_proxy_delay",
-      {
-        name,
-        url: testUrl, // 传递经过验证的URL
-        timeout,
-      },
-    );
-
-    // 验证返回结果中是否有delay字段，并且值是一个有效的数字
-    if (result && typeof result.delay === "number") {
-      return result;
-    } else {
-      // 返回一个有效的结果对象，但标记为超时
-      return { delay: 1e6 };
-    }
-  } catch {
-    // 返回一个有效的结果对象，但标记为错误
-    return { delay: 1e6 };
-  }
-}
-
 export async function cmdTestDelay(url: string) {
   return invoke<number>("test_delay", { url });
 }
