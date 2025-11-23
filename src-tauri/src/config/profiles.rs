@@ -209,8 +209,10 @@ impl IProfiles {
             _ => return Ok(()),
         };
 
-        if let Some(item) = items.swap_remove(&old_key) {
-            items.insert(new_key, item);
+        let old_index = items.get_index_of(&old_key);
+        let new_index = items.get_index_of(&new_key);
+        if let (Some(old_idx), Some(new_idx)) = (old_index, new_index) {
+            items.move_index(old_idx, new_idx);
         }
 
         self.items = Some(items);
