@@ -37,6 +37,7 @@ tray:
   global: 글로벌
   profiles: 프로필
   proxies: 프록시
+  delayTest: Delay Test
   systemProxy: 시스템 프록시
   tunMode: TUN 모드
   closeAllConnections: 모든 연결 닫기

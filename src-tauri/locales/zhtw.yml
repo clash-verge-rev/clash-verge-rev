@@ -37,6 +37,7 @@ tray:
   global: 全域
   profiles: 訂閱
   proxies: 代理
+  delayTest: 延遲測試
   systemProxy: 系統代理
   tunMode: 虛擬網路介面卡模式
   closeAllConnections: 關閉所有連線

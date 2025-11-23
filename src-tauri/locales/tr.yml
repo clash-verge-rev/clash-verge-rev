@@ -37,6 +37,7 @@ tray:
   global: Küresel
   profiles: Profiles
   proxies: Proxies
+  delayTest: Delay Test
   systemProxy: System Proxy
   tunMode: TUN Mode
   closeAllConnections: Close All Connections
