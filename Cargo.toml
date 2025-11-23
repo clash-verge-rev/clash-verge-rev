@@ -64,6 +64,7 @@ log = "0.4.28"
 
 smartstring = { version = "1.0.1" }
 compact_str = { version = "0.9.0", features = ["serde"] }
+indexmap = { version = "2.12.1" }
 
 serde = { version = "1.0.228" }
 serde_json = { version = "1.0.145" }

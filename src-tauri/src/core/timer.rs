@@ -104,15 +104,15 @@ impl Timer {
         let profiles_to_update =
             if let Some(items) = Config::profiles().await.latest_arc().get_items() {
                 items
-                    .iter()
+                    .values()
                     .filter_map(|item| {
-                        let allow_auto_update =
-                            item.option.as_ref()?.allow_auto_update.unwrap_or_default();
+                        let option = item.option.as_ref()?;
+                        let allow_auto_update = option.allow_auto_update.unwrap_or_default();
                         if !allow_auto_update {
                             return None;
                         }
 
-                        let interval = item.option.as_ref()?.update_interval? as i64;
+                        let interval = option.update_interval? as i64;
                         let updated = item.updated? as i64;
                         let uid = item.uid.as_ref()?;
 
@@ -271,12 +271,12 @@ impl Timer {
         let mut new_map = HashMap::new();
 
         if let Some(items) = Config::profiles().await.latest_arc().get_items() {
-            for item in items.iter() {
+            for item in items.values() {
                 if let Some(option) = item.option.as_ref()
-                    && let Some(allow_auto_update) = option.allow_auto_update
-                    && let (Some(interval), Some(uid)) = (option.update_interval, &item.uid)
-                    && allow_auto_update
+                    && option.allow_auto_update.unwrap_or_default()
+                    && let Some(interval) = option.update_interval
                     && interval > 0
+                    && let Some(uid) = &item.uid
                 {
                     logging!(
                         debug,
@@ -422,23 +422,17 @@ impl Timer {
             }
         };
 
-        // Get the profile updated timestamp - now safe to await
-        let items = {
-            let profiles = Config::profiles().await;
-            let profiles_guard = profiles.latest_arc();
-            match profiles_guard.get_items() {
-                Some(i) => i.clone(),
-                None => {
-                    logging!(warn, Type::Timer, "获取配置列表失败");
-                    return None;
-                }
-            }
-        };
-
-        let profile = match items.iter().find(|item| item.uid.as_deref() == Some(uid)) {
-            Some(p) => p,
-            None => {
-                logging!(warn, Type::Timer, "找不到对应的配置，uid={}", uid);
+        let profiles = Config::profiles().await.latest_arc();
+        let profile = match profiles.get_item(uid) {
+            Ok(p) => p,
+            Err(e) => {
+                logging!(
+                    warn,
+                    Type::Timer,
+                    "找不到对应的配置，uid={}, 错误: {}",
+                    uid,
+                    e
+                );
                 return None;
             }
         };
