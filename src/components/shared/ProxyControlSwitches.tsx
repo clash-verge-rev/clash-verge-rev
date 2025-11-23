@@ -123,7 +123,7 @@ const ProxyControlSwitches = ({
   const sysproxyRef = useRef<DialogRef>(null);
   const tunRef = useRef<DialogRef>(null);
 
-  const { enable_tun_mode, enable_system_proxy } = verge ?? {};
+  const { enable_tun_mode } = verge ?? {};
 
   const showErrorNotice = useCallback(
     (msg: string) => showNotice.error(msg),
@@ -175,7 +175,7 @@ const ProxyControlSwitches = ({
           onInfoClick={() => sysproxyRef.current?.open()}
           onToggle={(value) => toggleSystemProxy(value)}
           onError={onError}
-          highlight={enable_system_proxy}
+          highlight={systemProxyActualState}
         />
       )}
 

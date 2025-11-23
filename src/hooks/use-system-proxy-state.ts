@@ -1,3 +1,4 @@
+import { useLockFn } from "ahooks";
 import useSWR, { mutate } from "swr";
 import { closeAllConnections } from "tauri-plugin-mihomo-api";
 
@@ -41,31 +42,30 @@ export const useSystemProxyState = () => {
     }
   };
 
-  const updateProxyStatus = async () => {
-    await new Promise((resolve) => setTimeout(resolve, 100));
+  const updateProxyStatus = async (isEnabling: boolean) => {
+    // 关闭时更快响应，开启时等待系统确认
+    const delay = isEnabling ? 20 : 10;
+    await new Promise((resolve) => setTimeout(resolve, delay));
     await mutate("getSystemProxy");
     await mutate("getAutotemProxy");
   };
 
-  const toggleSystemProxy = (enabled: boolean) => {
+  const toggleSystemProxy = useLockFn(async (enabled: boolean) => {
     mutateVerge({ ...verge, enable_system_proxy: enabled }, false);
 
-    setTimeout(async () => {
-      try {
-        if (!enabled && verge?.auto_close_connection) {
-          closeAllConnections();
-        }
-        await patchVerge({ enable_system_proxy: enabled });
-
-        updateProxyStatus();
-      } catch (error) {
-        console.warn("[useSystemProxyState] toggleSystemProxy failed:", error);
-        mutateVerge({ ...verge, enable_system_proxy: !enabled }, false);
+    try {
+      if (!enabled && verge?.auto_close_connection) {
+        await closeAllConnections();
       }
-    }, 0);
-
-    return Promise.resolve();
-  };
+      await patchVerge({ enable_system_proxy: enabled });
+      await updateProxyStatus(enabled);
+    } catch (error) {
+      console.warn("[useSystemProxyState] toggleSystemProxy failed:", error);
+      mutateVerge({ ...verge, enable_system_proxy: !enabled }, false);
+      await updateProxyStatus(!enabled);
+      throw error;
+    }
+  });
 
   return {
     actualState: getSystemProxyActualState(),
