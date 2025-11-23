@@ -43,7 +43,11 @@ export const ProxyItemMini = (props: Props) => {
 
   const updateDelay = useCallback(() => {
     if (!proxy) return;
-    const cachedUpdate = delayManager.getDelayUpdate(proxy.name, group.name);
+    const cachedUpdate = delayManager.getDelayUpdate(
+      proxy.name,
+      group.name,
+      proxy,
+    );
     if (cachedUpdate) {
       setDelayState({ ...cachedUpdate });
       return;

@@ -6,9 +6,26 @@ export interface DelayUpdate {
   delay: number;
   elapsed?: number;
   updatedAt: number;
+  historyTimestamp?: number;
+  fromHistory?: boolean;
 }
 
 const CACHE_TTL = 30 * 60 * 1000;
+// Ignore sub-50ms timestamp differences so we don't repeatedly sync the same record
+const HISTORY_EPSILON_MS = 50;
+
+interface HistorySnapshot {
+  rawDelay: number;
+  displayDelay: number;
+  timestamp?: number;
+}
+
+interface DelayMeta {
+  elapsed?: number;
+  updatedAt?: number;
+  historyTimestamp?: number;
+  fromHistory?: boolean;
+}
 
 class DelayManager {
   private cache = new Map<string, DelayUpdate>();
@@ -147,16 +164,23 @@ class DelayManager {
     name: string,
     group: string,
     delay: number,
-    meta?: { elapsed?: number },
+    meta?: DelayMeta,
   ): DelayUpdate {
     const key = hashKey(name, group);
+    const metaUpdatedAt = meta?.updatedAt;
+    const updatedAt =
+      typeof metaUpdatedAt === "number" && Number.isFinite(metaUpdatedAt)
+        ? metaUpdatedAt
+        : Date.now();
     console.log(
       `[DelayManager] 设置延迟，代理: ${name}, 组: ${group}, 延迟: ${delay}`,
     );
     const update: DelayUpdate = {
       delay,
       elapsed: meta?.elapsed,
-      updatedAt: Date.now(),
+      updatedAt,
+      historyTimestamp: meta?.historyTimestamp,
+      fromHistory: meta?.fromHistory ?? false,
     };
 
     this.cache.set(key, update);
@@ -172,38 +196,117 @@ class DelayManager {
     return update;
   }
 
-  getDelayUpdate(name: string, group: string) {
+  private getHistorySnapshot(proxy?: IProxyItem): HistorySnapshot | undefined {
+    if (!proxy || !proxy.history || proxy.history.length === 0)
+      return undefined;
+
+    const lastRecord = proxy.history[proxy.history.length - 1];
+    const parsed = Date.parse(lastRecord.time);
+    const timestamp = Number.isNaN(parsed) ? undefined : parsed;
+
+    const rawDelay =
+      typeof lastRecord.delay === "number" && Number.isFinite(lastRecord.delay)
+        ? lastRecord.delay
+        : -1;
+    const displayDelay = rawDelay === 0 ? 1e6 : rawDelay;
+
+    return {
+      rawDelay,
+      displayDelay,
+      timestamp,
+    };
+  }
+
+  private historyDelayForCache(snapshot: HistorySnapshot): number {
+    return snapshot.rawDelay;
+  }
+
+  private shouldSyncHistory(
+    entry: DelayUpdate,
+    snapshot: HistorySnapshot | undefined,
+  ) {
+    if (!snapshot) return false;
+    if (snapshot.rawDelay < 0) return false;
+    if (entry.delay === -2) return false;
+
+    const targetDelay = this.historyDelayForCache(snapshot);
+
+    if (
+      typeof snapshot.timestamp === "number" &&
+      typeof entry.historyTimestamp === "number" &&
+      snapshot.timestamp - entry.historyTimestamp > HISTORY_EPSILON_MS
+    ) {
+      return true;
+    }
+
+    if (entry.delay < 0 && targetDelay >= 0) {
+      return true;
+    }
+
+    return targetDelay !== entry.delay;
+  }
+
+  private updateDelayFromHistory(
+    name: string,
+    group: string,
+    snapshot?: HistorySnapshot,
+  ) {
+    if (!snapshot) return undefined;
+    if (snapshot.rawDelay < 0) return undefined;
+    const cacheDelay = this.historyDelayForCache(snapshot);
+    const updated = this.setDelay(name, group, cacheDelay, {
+      historyTimestamp: snapshot.timestamp,
+      fromHistory: true,
+    });
+    return { ...updated };
+  }
+
+  getDelayUpdate(name: string, group: string, proxy?: IProxyItem) {
     const key = hashKey(name, group);
     const entry = this.cache.get(key);
-    if (!entry) return undefined;
+    const historySnapshot = this.getHistorySnapshot(proxy);
+    if (!entry) {
+      return this.updateDelayFromHistory(name, group, historySnapshot);
+    }
 
     if (Date.now() - entry.updatedAt > CACHE_TTL) {
       this.cache.delete(key);
-      return undefined;
+      return this.updateDelayFromHistory(name, group, historySnapshot);
+    }
+
+    if (!historySnapshot && entry.fromHistory) {
+      // Only clear if we know the proxy used to have history and now explicitly reports none.
+      if (proxy && Array.isArray(proxy.history) && proxy.history.length === 0) {
+        this.cache.delete(key);
+        return undefined;
+      }
+      return { ...entry };
+    }
+
+    if (this.shouldSyncHistory(entry, historySnapshot)) {
+      return this.updateDelayFromHistory(name, group, historySnapshot);
     }
 
     return { ...entry };
   }
 
-  getDelay(name: string, group: string) {
-    const update = this.getDelayUpdate(name, group);
+  getDelay(name: string, group: string, proxy?: IProxyItem) {
+    const update = this.getDelayUpdate(name, group, proxy);
     return update ? update.delay : -1;
   }
 
   /// 暂时修复provider的节点延迟排序的问题
   getDelayFix(proxy: IProxyItem, group: string) {
     if (!proxy.provider) {
-      const update = this.getDelayUpdate(proxy.name, group);
+      const update = this.getDelayUpdate(proxy.name, group, proxy);
       if (update && (update.delay >= 0 || update.delay === -2)) {
         return update.delay;
       }
     }
 
     // 添加 history 属性的安全检查
-    if (proxy.history && proxy.history.length > 0) {
-      // 0ms以error显示
-      return proxy.history[proxy.history.length - 1].delay || 1e6;
-    }
+    const snapshot = this.getHistorySnapshot(proxy);
+    if (snapshot) return snapshot.displayDelay;
     return -1;
   }
 

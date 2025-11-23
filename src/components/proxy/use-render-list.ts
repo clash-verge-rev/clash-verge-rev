@@ -270,7 +270,7 @@ export const useRenderList = (
 
       // 为每个节点获取延迟信息
       const proxiesWithDelay = allProxies.map((proxy) => {
-        const delay = delayManager.getDelay(proxy.name, "chain-mode");
+        const delay = delayManager.getDelayFix(proxy, "chain-mode");
         return {
           ...proxy,
           // 如果delayManager有延迟数据，更新history
@@ -328,7 +328,7 @@ export const useRenderList = (
 
       // 为每个节点获取延迟信息
       const proxiesWithDelay = allProxies.map((proxy) => {
-        const delay = delayManager.getDelay(proxy.name, "chain-mode");
+        const delay = delayManager.getDelayFix(proxy, "chain-mode");
         return {
           ...proxy,
           // 如果delayManager有延迟数据，更新history
