@@ -260,6 +260,7 @@ pub fn run() {
             resolve::resolve_setup_async();
             resolve::resolve_setup_sync();
             init_signal();
+            resolve::resolve_done();
 
             logging!(info, Type::Setup, "初始化已启动");
             Ok(())

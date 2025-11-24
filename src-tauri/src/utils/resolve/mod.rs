@@ -1,3 +1,5 @@
+use std::sync::atomic::{AtomicBool, Ordering};
+
 use anyhow::Result;
 use flexi_logger::LoggerHandle;
 
@@ -23,6 +25,8 @@ pub mod scheme;
 pub mod ui;
 pub mod window;
 pub mod window_script;
+
+static RESOLVE_DONE: AtomicBool = AtomicBool::new(false);
 
 pub async fn prioritize_initialization() -> Option<LoggerHandle> {
     init_work_config().await;
@@ -207,4 +211,16 @@ pub(super) async fn init_window() {
         Handle::global().set_activation_policy_accessory();
     }
     WindowManager::create_window(!is_silent_start).await;
+}
+
+pub fn resolve_done() {
+    RESOLVE_DONE.store(true, Ordering::Release);
+}
+
+pub fn is_resolve_done() -> bool {
+    RESOLVE_DONE.load(Ordering::Acquire)
+}
+
+pub fn reset_resolve_done() {
+    RESOLVE_DONE.store(false, Ordering::Release);
 }

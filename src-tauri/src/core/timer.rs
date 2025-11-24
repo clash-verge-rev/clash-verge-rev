@@ -1,8 +1,4 @@
-use crate::{
-    config::Config,
-    core::{CoreManager, manager::RunningMode, sysopt::Sysopt},
-    feat, singleton,
-};
+use crate::{config::Config, feat, singleton, utils::resolve::is_resolve_done};
 use anyhow::{Context as _, Result};
 use clash_verge_logging::{Type, logging, logging_error};
 use delay_timer::prelude::{DelayTimer, DelayTimerBuilder, TaskBuilder};
@@ -392,8 +388,7 @@ impl Timer {
             .spawn_async_routine(move || {
                 let uid = uid.clone();
                 Box::pin(async move {
-                    Self::wait_untile_core_manager(Duration::from_millis(1000)).await;
-                    Self::wait_until_sysopt(Duration::from_millis(1000)).await;
+                    Self::wait_until_resolve_done(Duration::from_millis(5000)).await;
                     Self::async_task(&uid).await;
                 }) as Pin<Box<dyn std::future::Future<Output = ()> + Send>>
             })
@@ -524,29 +519,11 @@ impl Timer {
         Self::emit_update_event(uid, false);
     }
 
-    async fn wait_untile_core_manager(max_wait: Duration) {
+    async fn wait_until_resolve_done(max_wait: Duration) {
         let _ = timeout(max_wait, async {
-            while *CoreManager::global().get_running_mode() != RunningMode::NotRunning {
-                logging!(
-                    debug,
-                    Type::Timer,
-                    "Waiting for CoreManager to be initialized..."
-                );
-                sleep(Duration::from_millis(30)).await;
-            }
-        })
-        .await;
-    }
-
-    async fn wait_until_sysopt(max_wait: Duration) {
-        let _ = timeout(max_wait, async {
-            while !Sysopt::global().is_initialed() {
-                logging!(
-                    debug,
-                    Type::Timer,
-                    "Waiting for Sysopt to be initialized..."
-                );
-                sleep(Duration::from_millis(30)).await;
+            while !is_resolve_done() {
+                logging!(debug, Type::Timer, "Waiting for resolve to be done...");
+                sleep(Duration::from_millis(200)).await;
             }
         })
         .await;

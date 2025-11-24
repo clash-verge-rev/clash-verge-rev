@@ -3,7 +3,7 @@ use crate::{
     core::{CoreManager, handle, tray},
     feat::clean_async,
     process::AsyncHandler,
-    utils,
+    utils::{self, resolve::reset_resolve_done},
 };
 use clash_verge_logging::{Type, logging, logging_error};
 use serde_yaml_ng::{Mapping, Value};
@@ -42,6 +42,7 @@ pub async fn restart_app() {
         if cleanup_result { 0 } else { 1 }
     );
 
+    reset_resolve_done();
     let app_handle = handle::Handle::app_handle();
     app_handle.restart();
 }
