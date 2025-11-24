@@ -39,7 +39,7 @@ import {
   selectNodeForGroup,
 } from "tauri-plugin-mihomo-api";
 
-import { useAppData } from "@/providers/app-data-context";
+import { useProxiesData } from "@/hooks/app-data";
 import { calcuProxies, updateProxyChainConfigInRuntime } from "@/services/cmds";
 
 interface ProxyChainItem {
@@ -199,7 +199,7 @@ export const ProxyChain = ({
 }: ProxyChainProps) => {
   const theme = useTheme();
   const { t } = useTranslation();
-  const { proxies } = useAppData();
+  const { proxies } = useProxiesData();
   const [isConnecting, setIsConnecting] = useState(false);
   const markUnsavedChanges = useCallback(() => {
     onMarkUnsavedChanges?.();

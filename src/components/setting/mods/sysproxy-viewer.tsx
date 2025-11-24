@@ -27,8 +27,8 @@ import { BaseDialog, DialogRef, Switch } from "@/components/base";
 import { BaseFieldset } from "@/components/base/base-fieldset";
 import { TooltipIcon } from "@/components/base/base-tooltip-icon";
 import { EditorViewer } from "@/components/profile/editor-viewer";
+import { useSystemProxyAddress } from "@/hooks/app-data";
 import { useVerge } from "@/hooks/use-verge";
-import { useAppData } from "@/providers/app-data-context";
 import {
   getAutotemProxy,
   getNetworkInterfacesInfo,
@@ -168,7 +168,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
     updateProxy();
   }, [clashConfig?.mixedPort, value.pac]);
 
-  const { systemProxyAddress } = useAppData();
+  const systemProxyAddress = useSystemProxyAddress();
 
   // 为当前状态计算系统代理地址
   const getSystemProxyAddress = useMemo(() => {

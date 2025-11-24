@@ -15,9 +15,9 @@ import { useTranslation } from "react-i18next";
 import { Virtuoso, type VirtuosoHandle } from "react-virtuoso";
 import { delayGroup, healthcheckProxyProvider } from "tauri-plugin-mihomo-api";
 
+import { useProxiesData } from "@/hooks/app-data";
 import { useProxySelection } from "@/hooks/use-proxy-selection";
 import { useVerge } from "@/hooks/use-verge";
-import { useAppData } from "@/providers/app-data-context";
 import { updateProxyChainConfigInRuntime } from "@/services/cmds";
 import delayManager from "@/services/delay";
 
@@ -61,7 +61,7 @@ export const ProxyGroups = (props: Props) => {
   }>({ open: false, message: "" });
 
   const { verge } = useVerge();
-  const { proxies: proxiesData } = useAppData();
+  const { proxies: proxiesData } = useProxiesData();
   const groups = proxiesData?.groups;
   const availableGroups = useMemo(() => groups ?? [], [groups]);
 
