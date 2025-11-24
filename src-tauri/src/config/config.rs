@@ -1,4 +1,4 @@
-use super::{IClashTemp, IProfiles, IRuntime, IVerge};
+use super::{IClashTemp, IProfiles, IVerge};
 use crate::{
     cmd,
     config::{PrfItem, profiles_append_item_safe},
@@ -11,6 +11,7 @@ use anyhow::{Result, anyhow};
 use backoff::{Error as BackoffError, ExponentialBackoff};
 use clash_verge_draft::Draft;
 use clash_verge_logging::{Type, logging, logging_error};
+use clash_verge_types::runtime::IRuntime;
 use smartstring::alias::String;
 use std::path::PathBuf;
 use tokio::sync::OnceCell;

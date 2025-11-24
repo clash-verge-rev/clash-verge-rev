@@ -21,7 +21,6 @@ use sysproxy::{Autoproxy, GuardMonitor, GuardType, Sysproxy};
 use tauri_plugin_autostart::ManagerExt as _;
 
 pub struct Sysopt {
-    initialed: AtomicBool,
     update_sysproxy: AtomicBool,
     reset_sysproxy: AtomicBool,
     guard: Arc<RwLock<GuardMonitor>>,
@@ -30,7 +29,6 @@ pub struct Sysopt {
 impl Default for Sysopt {
     fn default() -> Self {
         Self {
-            initialed: AtomicBool::new(false),
             update_sysproxy: AtomicBool::new(false),
             reset_sysproxy: AtomicBool::new(false),
             guard: Arc::new(RwLock::new(GuardMonitor::new(
@@ -44,10 +42,10 @@ impl Default for Sysopt {
 #[cfg(target_os = "windows")]
 static DEFAULT_BYPASS: &str = "localhost;127.*;192.168.*;10.*;172.16.*;172.17.*;172.18.*;172.19.*;172.20.*;172.21.*;172.22.*;172.23.*;172.24.*;172.25.*;172.26.*;172.27.*;172.28.*;172.29.*;172.30.*;172.31.*;<local>";
 #[cfg(target_os = "linux")]
-static DEFAULT_BYPASS: &str =
-    "localhost,127.0.0.1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,172.29.0.0/16,::1";
+static DEFAULT_BYPASS: &str = "localhost,127.0.0.1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,::1";
 #[cfg(target_os = "macos")]
-static DEFAULT_BYPASS: &str = "127.0.0.1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,172.29.0.0/16,localhost,*.local,*.crashlytics.com,<local>";
+static DEFAULT_BYPASS: &str =
+    "127.0.0.1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,localhost,*.local,*.crashlytics.com,<local>";
 
 async fn get_bypass() -> String {
     let use_default = Config::verge()
@@ -110,10 +108,6 @@ impl Sysopt {
         Self::default()
     }
 
-    pub fn is_initialed(&self) -> bool {
-        self.initialed.load(Ordering::SeqCst)
-    }
-
     fn access_guard(&self) -> Arc<RwLock<GuardMonitor>> {
         Arc::clone(&self.guard)
     }
@@ -151,7 +145,6 @@ impl Sysopt {
 
     /// init the sysproxy
     pub async fn update_sysproxy(&self) -> Result<()> {
-        self.initialed.store(true, Ordering::SeqCst);
         if self.update_sysproxy.load(Ordering::Acquire) {
             logging!(info, Type::Core, "Sysproxy update is already in progress.");
             return Ok(());

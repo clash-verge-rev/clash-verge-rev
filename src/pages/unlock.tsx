@@ -50,6 +50,46 @@ const STATUS_LABEL_KEYS: Record<string, string> = {
   "Failed (Network Connection)": "tests.statuses.test.failedNetwork",
 };
 
+const normalizeUnlockName = (name: string) => name.trim().toLowerCase();
+
+const getStatusPriority = (status: string) => (status === "Pending" ? 0 : 1);
+const mergeOptionalFields = (preferred: UnlockItem, fallback: UnlockItem) => ({
+  ...preferred,
+  region: preferred.region ?? fallback.region,
+  check_time: preferred.check_time ?? fallback.check_time,
+});
+
+const dedupeUnlockItems = (items: UnlockItem[]) => {
+  const map = new Map<string, UnlockItem>();
+
+  items.forEach((item) => {
+    const key = normalizeUnlockName(item.name);
+    const existing = map.get(key);
+
+    if (!existing) {
+      map.set(key, item);
+      return;
+    }
+
+    const existingPriority = getStatusPriority(existing.status);
+    const itemPriority = getStatusPriority(item.status);
+
+    if (itemPriority > existingPriority) {
+      map.set(key, mergeOptionalFields(item, existing));
+      return;
+    }
+
+    if (itemPriority < existingPriority) {
+      map.set(key, mergeOptionalFields(existing, item));
+      return;
+    }
+
+    map.set(key, mergeOptionalFields(item, existing));
+  });
+
+  return Array.from(map.values());
+};
+
 const UnlockPage = () => {
   const { t } = useTranslation();
   const theme = useTheme();
@@ -68,13 +108,30 @@ const UnlockPage = () => {
         return defaults;
       }
 
-      const existingMap = new Map(existing.map((item) => [item.name, item]));
-      const merged = defaults.map((item) => existingMap.get(item.name) ?? item);
+      const normalizedExisting = dedupeUnlockItems(existing);
+      const existingMap = new Map(
+        normalizedExisting.map((item) => [
+          normalizeUnlockName(item.name),
+          item,
+        ]),
+      );
+      const merged = defaults.map((item) => {
+        const normalizedName = normalizeUnlockName(item.name);
+        const matchedItem = existingMap.get(normalizedName);
+        if (matchedItem) {
+          return { ...matchedItem, name: item.name };
+        }
+        return item;
+      });
 
-      const mergedNameSet = new Set(merged.map((item) => item.name));
-      existing.forEach((item) => {
-        if (!mergedNameSet.has(item.name)) {
+      const mergedNameSet = new Set(
+        merged.map((item) => normalizeUnlockName(item.name)),
+      );
+      normalizedExisting.forEach((item) => {
+        const normalizedName = normalizeUnlockName(item.name);
+        if (!mergedNameSet.has(normalizedName)) {
           merged.push(item);
+          mergedNameSet.add(normalizedName);
         }
       });
 
@@ -107,8 +164,9 @@ const UnlockPage = () => {
       const time = localStorage.getItem(UNLOCK_RESULTS_TIME_KEY);
 
       if (itemsJson) {
+        const parsedItems = JSON.parse(itemsJson) as UnlockItem[];
         return {
-          items: JSON.parse(itemsJson) as UnlockItem[],
+          items: dedupeUnlockItems(parsedItems),
           time,
         };
       }
@@ -177,7 +235,7 @@ const UnlockPage = () => {
       setIsCheckingAll(true);
       const result =
         await invokeWithTimeout<UnlockItem[]>("check_media_unlock");
-      const sortedItems = sortItemsByName(result);
+      const sortedItems = sortItemsByName(dedupeUnlockItems(result));
 
       setUnlockItems(sortedItems);
       const currentTime = new Date().toLocaleString();
@@ -198,13 +256,22 @@ const UnlockPage = () => {
       setLoadingItems((prev) => [...prev, name]);
       const result =
         await invokeWithTimeout<UnlockItem[]>("check_media_unlock");
+      const dedupedResult = dedupeUnlockItems(result);
 
-      const targetItem = result.find((item: UnlockItem) => item.name === name);
+      const normalizedTargetName = normalizeUnlockName(name);
+      const targetItem = dedupedResult.find(
+        (item: UnlockItem) =>
+          normalizeUnlockName(item.name) === normalizedTargetName,
+      );
 
       if (targetItem) {
         const updatedItems = sortItemsByName(
-          unlockItems.map((item: UnlockItem) =>
-            item.name === name ? targetItem : item,
+          dedupeUnlockItems(
+            unlockItems.map((item: UnlockItem) =>
+              normalizeUnlockName(item.name) === normalizedTargetName
+                ? targetItem
+                : item,
+            ),
           ),
         );
 

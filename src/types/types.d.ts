@@ -41,6 +41,7 @@ interface IConfigData {
     stack: string;
     device: string;
     "auto-route": boolean;
+    "auto-redirect"?: boolean;
     "auto-detect-interface": boolean;
     "dns-hijack": string[];
     "strict-route": boolean;

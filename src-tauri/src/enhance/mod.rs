@@ -597,7 +597,7 @@ async fn apply_dns_settings(mut config: Mapping, enable_dns_settings: bool) -> M
 
 /// Enhance mode
 /// 返回最终订阅、该订阅包含的键、和script执行的结果
-pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
+pub async fn enhance() -> (Mapping, HashSet<String>, HashMap<String, ResultLog>) {
     // gather config values
     let cfg_vals = get_config_values().await;
     let ConfigValues {
@@ -667,11 +667,10 @@ pub async fn enhance() -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
     // dns settings
     config = apply_dns_settings(config, enable_dns_settings).await;
 
-    let mut exists_set = HashSet::new();
-    exists_set.extend(exists_keys);
-    let exists_keys: Vec<String> = exists_set.into_iter().collect();
+    let mut exists_keys_set = HashSet::new();
+    exists_keys_set.extend(exists_keys);
 
-    (config, exists_keys, result_map)
+    (config, exists_keys_set, result_map)
 }
 
 #[allow(clippy::expect_used)]
