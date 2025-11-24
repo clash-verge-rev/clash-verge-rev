@@ -8,6 +8,7 @@ import {
   useClashConfig,
   useRulesData,
   useSystemProxyAddress,
+  useSystemProxyData,
 } from "@/hooks/app-data";
 import { useClash } from "@/hooks/use-clash";
 
@@ -25,9 +26,13 @@ export const ClashInfoCard = () => {
   const { t } = useTranslation();
   const { version: clashVersion } = useClash();
   const { clashConfig } = useClashConfig();
+  const { sysproxy } = useSystemProxyData();
   const { rules } = useRulesData();
   const { uptime } = useAppUptime();
-  const systemProxyAddress = useSystemProxyAddress();
+  const systemProxyAddress = useSystemProxyAddress({
+    clashConfig,
+    sysproxy,
+  });
 
   // 使用useMemo缓存格式化后的uptime，避免频繁计算
   const formattedUptime = useMemo(() => formatUptime(uptime), [uptime]);

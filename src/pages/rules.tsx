@@ -14,7 +14,7 @@ import { useVisibility } from "@/hooks/use-visibility";
 const RulesPage = () => {
   const { t } = useTranslation();
   const { rules = [], refreshRules } = useRulesData();
-  const { refreshRuleProviders } = useRuleProvidersData();
+  const { ruleProviders, refreshRuleProviders } = useRuleProvidersData();
   const [match, setMatch] = useState(() => (_: string) => true);
   const virtuosoRef = useRef<VirtuosoHandle>(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
@@ -58,7 +58,11 @@ const RulesPage = () => {
       }}
       header={
         <Box display="flex" alignItems="center" gap={1}>
-          <ProviderButton />
+          <ProviderButton
+            ruleProviders={ruleProviders}
+            refreshRuleProviders={refreshRuleProviders}
+            refreshRules={refreshRules}
+          />
         </Box>
       }
     >

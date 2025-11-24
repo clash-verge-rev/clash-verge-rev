@@ -14,19 +14,26 @@ import {
 } from "@/services/cmds";
 import { SWR_DEFAULTS, SWR_REALTIME, SWR_SLOW_POLL } from "@/services/config";
 
+import { useSharedSWRPoller } from "./use-shared-swr-poller";
 import { useVerge } from "./use-verge";
 
 export const useProxiesData = () => {
-  const { data, error, isLoading, mutate } = useSWR(
-    "getProxies",
-    calcuProxies,
-    {
-      ...SWR_REALTIME,
-      onError: (err) => console.warn("[AppData] Proxy fetch failed:", err),
-    },
-  );
+  const { mutate: globalMutate } = useSWRConfig();
+  const { data, error, isLoading } = useSWR("getProxies", calcuProxies, {
+    ...SWR_REALTIME,
+    refreshInterval: 0,
+    onError: (err) => console.warn("[AppData] Proxy fetch failed:", err),
+  });
 
-  const refreshProxy = useCallback(() => mutate(), [mutate]);
+  const refreshProxy = useCallback(
+    () => globalMutate("getProxies"),
+    [globalMutate],
+  );
+  const pollerRefresh = useCallback(() => {
+    void globalMutate("getProxies");
+  }, [globalMutate]);
+
+  useSharedSWRPoller("getProxies", SWR_REALTIME.refreshInterval, pollerRefresh);
 
   return {
     proxies: data,
@@ -37,13 +44,25 @@ export const useProxiesData = () => {
 };
 
 export const useClashConfig = () => {
-  const { data, error, isLoading, mutate } = useSWR(
-    "getClashConfig",
-    getBaseConfig,
-    SWR_SLOW_POLL,
-  );
+  const { mutate: globalMutate } = useSWRConfig();
+  const { data, error, isLoading } = useSWR("getClashConfig", getBaseConfig, {
+    ...SWR_SLOW_POLL,
+    refreshInterval: 0,
+  });
 
-  const refreshClashConfig = useCallback(() => mutate(), [mutate]);
+  const refreshClashConfig = useCallback(
+    () => globalMutate("getClashConfig"),
+    [globalMutate],
+  );
+  const pollerRefresh = useCallback(() => {
+    void globalMutate("getClashConfig");
+  }, [globalMutate]);
+
+  useSharedSWRPoller(
+    "getClashConfig",
+    SWR_SLOW_POLL.refreshInterval,
+    pollerRefresh,
+  );
 
   return {
     clashConfig: data,
@@ -121,10 +140,19 @@ export const useSystemProxyData = () => {
   };
 };
 
-export const useSystemProxyAddress = () => {
+type ClashConfig = Awaited<ReturnType<typeof getBaseConfig>>;
+type SystemProxy = Awaited<ReturnType<typeof getSystemProxy>>;
+
+interface SystemProxyAddressParams {
+  clashConfig?: ClashConfig | null;
+  sysproxy?: SystemProxy | null;
+}
+
+export const useSystemProxyAddress = ({
+  clashConfig,
+  sysproxy,
+}: SystemProxyAddressParams) => {
   const { verge } = useVerge();
-  const { clashConfig } = useClashConfig();
-  const { sysproxy } = useSystemProxyData();
 
   return useMemo(() => {
     if (!verge || !clashConfig) return "-";
