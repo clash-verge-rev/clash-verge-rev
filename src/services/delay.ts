@@ -1,5 +1,7 @@
 import { delayProxyByName, ProxyDelay } from "tauri-plugin-mihomo-api";
 
+import { debugLog } from "@/utils/debug";
+
 const hashKey = (name: string, group: string) => `${group ?? ""}::${name}`;
 
 export interface DelayUpdate {
@@ -108,13 +110,13 @@ class DelayManager {
   }
 
   setUrl(group: string, url: string) {
-    console.log(`[DelayManager] 设置测试URL，组: ${group}, URL: ${url}`);
+    debugLog(`[DelayManager] 设置测试URL，组: ${group}, URL: ${url}`);
     this.urlMap.set(group, url);
   }
 
   getUrl(group: string) {
     const url = this.urlMap.get(group);
-    console.log(
+    debugLog(
       `[DelayManager] 获取测试URL，组: ${group}, URL: ${url || "未设置"}`,
     );
     // 如果未设置URL，返回默认URL
@@ -150,7 +152,7 @@ class DelayManager {
     meta?: { elapsed?: number },
   ): DelayUpdate {
     const key = hashKey(name, group);
-    console.log(
+    debugLog(
       `[DelayManager] 设置延迟，代理: ${name}, 组: ${group}, 延迟: ${delay}`,
     );
     const update: DelayUpdate = {
@@ -212,7 +214,7 @@ class DelayManager {
     group: string,
     timeout: number,
   ): Promise<DelayUpdate> {
-    console.log(
+    debugLog(
       `[DelayManager] 开始测试延迟，代理: ${name}, 组: ${group}, 超时: ${timeout}ms`,
     );
 
@@ -226,7 +228,7 @@ class DelayManager {
 
     try {
       const url = this.getUrl(group);
-      console.log(`[DelayManager] 调用API测试延迟，代理: ${name}, URL: ${url}`);
+      debugLog(`[DelayManager] 调用API测试延迟，代理: ${name}, URL: ${url}`);
 
       // 设置超时处理, delay = 0 为超时
       const timeoutPromise = new Promise<ProxyDelay>((resolve) => {
@@ -247,9 +249,7 @@ class DelayManager {
 
       delay = result.delay;
       elapsed = elapsedTime;
-      console.log(
-        `[DelayManager] 延迟测试完成，代理: ${name}, 结果: ${delay}ms`,
-      );
+      debugLog(`[DelayManager] 延迟测试完成，代理: ${name}, 结果: ${delay}ms`);
     } catch (error) {
       // 确保至少显示500ms的加载动画
       await new Promise((resolve) => setTimeout(resolve, 500));
@@ -267,7 +267,7 @@ class DelayManager {
     timeout: number,
     concurrency = 36,
   ) {
-    console.log(
+    debugLog(
       `[DelayManager] 批量测试延迟开始，组: ${group}, 数量: ${nameList.length}, 并发数: ${concurrency}`,
     );
     const names = nameList.filter(Boolean);
@@ -312,7 +312,7 @@ class DelayManager {
 
     // 限制并发数，避免发送太多请求
     const actualConcurrency = Math.min(concurrency, names.length, 10);
-    console.log(`[DelayManager] 实际并发数: ${actualConcurrency}`);
+    debugLog(`[DelayManager] 实际并发数: ${actualConcurrency}`);
 
     const promiseList: Promise<void>[] = [];
     for (let i = 0; i < actualConcurrency; i++) {
@@ -321,7 +321,7 @@ class DelayManager {
 
     await Promise.all(promiseList);
     const totalTime = Date.now() - startTime;
-    console.log(
+    debugLog(
       `[DelayManager] 批量测试延迟完成，组: ${group}, 总耗时: ${totalTime}ms`,
     );
   }

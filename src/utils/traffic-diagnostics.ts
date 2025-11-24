@@ -1,3 +1,5 @@
+import { debugLog } from "@/utils/debug";
+
 /**
  * 流量统计诊断工具
  * 用于帮助开发者和用户诊断流量统计系统的性能和状态
@@ -158,7 +160,7 @@ export function runTrafficDiagnostics(
     samplerStats,
     isDataFresh,
   );
-  console.log(formatDiagnosticReport(report));
+  debugLog(formatDiagnosticReport(report));
 }
 
 /**
@@ -166,7 +168,7 @@ export function runTrafficDiagnostics(
  */
 export function resetErrorCount(): void {
   globalErrorCount = 0;
-  console.log("[TrafficDiagnostics] 错误计数器已重置");
+  debugLog("[TrafficDiagnostics] 错误计数器已重置");
 }
 
 // 导出到全局对象，方便在控制台调试

@@ -1,6 +1,8 @@
 import { useEffect, useRef, useCallback, useReducer } from "react";
 import { Traffic } from "tauri-plugin-mihomo-api";
 
+import { debugLog } from "@/utils/debug";
+
 // 增强的流量数据点接口
 export interface ITrafficDataPoint {
   up: number;
@@ -34,7 +36,7 @@ class ReferenceCounter {
 
   increment(): () => void {
     this.count++;
-    console.log(`[ReferenceCounter] 引用计数增加: ${this.count}`);
+    debugLog(`[ReferenceCounter] 引用计数增加: ${this.count}`);
 
     if (this.count === 1) {
       // 从0到1，开始数据收集
@@ -43,7 +45,7 @@ class ReferenceCounter {
 
     return () => {
       this.count--;
-      console.log(`[ReferenceCounter] 引用计数减少: ${this.count}`);
+      debugLog(`[ReferenceCounter] 引用计数减少: ${this.count}`);
 
       if (this.count === 0) {
         // 从1到0，停止数据收集
@@ -116,7 +118,7 @@ class TrafficDataSampler {
     this.compressedBuffer.push(compressedPoint);
     this.compressionQueue = [];
 
-    console.log(`[DataSampler] 压缩了 ${compressedPoint.samples} 个数据点`);
+    debugLog(`[DataSampler] 压缩了 ${compressedPoint.samples} 个数据点`);
   }
 
   getDataForTimeRange(minutes: number): ITrafficDataPoint[] {
@@ -194,12 +196,12 @@ export const useTrafficMonitorEnhanced = () => {
 
   // 注册引用计数
   useEffect(() => {
-    console.log("[TrafficMonitorEnhanced] 组件挂载，注册引用计数");
+    debugLog("[TrafficMonitorEnhanced] 组件挂载，注册引用计数");
     const cleanup = refCounter.increment();
     cleanupRef.current = cleanup;
 
     return () => {
-      console.log("[TrafficMonitorEnhanced] 组件卸载，清理引用计数");
+      debugLog("[TrafficMonitorEnhanced] 组件卸载，清理引用计数");
       cleanup();
       cleanupRef.current = null;
     };
@@ -208,13 +210,13 @@ export const useTrafficMonitorEnhanced = () => {
   // 设置引用计数变化回调
   useEffect(() => {
     const handleCountChange = () => {
-      console.log(
+      debugLog(
         `[TrafficMonitorEnhanced] 引用计数变化: ${refCounter.getCount()}`,
       );
       if (refCounter.getCount() === 0) {
-        console.log("[TrafficMonitorEnhanced] 所有组件已卸载，暂停数据收集");
+        debugLog("[TrafficMonitorEnhanced] 所有组件已卸载，暂停数据收集");
       } else {
-        console.log("[TrafficMonitorEnhanced] 开始数据收集");
+        debugLog("[TrafficMonitorEnhanced] 开始数据收集");
       }
     };
 
