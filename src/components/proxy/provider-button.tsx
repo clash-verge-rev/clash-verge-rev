@@ -22,7 +22,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { updateProxyProvider } from "tauri-plugin-mihomo-api";
 
-import { useAppData } from "@/providers/app-data-context";
+import { useProxiesData, useProxyProvidersData } from "@/hooks/app-data";
 import { showNotice } from "@/services/noticeService";
 import parseTraffic from "@/utils/parse-traffic";
 
@@ -48,7 +48,8 @@ const parseExpire = (expire?: number) => {
 export const ProviderButton = () => {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
-  const { proxyProviders, refreshProxy, refreshProxyProviders } = useAppData();
+  const { proxyProviders, refreshProxyProviders } = useProxyProvidersData();
+  const { refreshProxy } = useProxiesData();
   const [updating, setUpdating] = useState<Record<string, boolean>>({});
 
   // 检查是否有提供者
@@ -175,8 +176,8 @@ export const ProviderButton = () => {
           <List sx={{ py: 0, minHeight: 250 }}>
             {Object.entries(proxyProviders || {})
               .sort()
-              .map(([key, item]) => {
-                const provider = item;
+              .map(([key, provider]) => {
+                if (!provider) return null;
                 const time = dayjs(provider.updatedAt);
                 const isUpdating = updating[key];
 

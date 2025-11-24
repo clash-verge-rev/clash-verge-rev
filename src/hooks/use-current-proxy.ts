@@ -1,17 +1,11 @@
 import { useMemo } from "react";
 
-import { useAppData } from "@/providers/app-data-context";
-
-// 定义代理组类型
-interface ProxyGroup {
-  name: string;
-  now: string;
-}
+import { useClashConfig, useProxiesData } from "@/hooks/app-data";
 
 // 获取当前代理节点信息的自定义Hook
 export const useCurrentProxy = () => {
-  // 从AppDataProvider获取数据
-  const { proxies, clashConfig, refreshProxy } = useAppData();
+  const { proxies, refreshProxy } = useProxiesData();
+  const { clashConfig } = useClashConfig();
 
   // 获取当前模式
   const currentMode = clashConfig?.mode?.toLowerCase() || "rule";
@@ -20,11 +14,15 @@ export const useCurrentProxy = () => {
   const currentProxyInfo = useMemo(() => {
     if (!proxies) return { currentProxy: null, primaryGroupName: null };
 
-    const { global, groups, records } = proxies;
+    const globalGroup = proxies.global as IProxyGroupItem | undefined;
+    const groups: IProxyGroupItem[] = Array.isArray(proxies.groups)
+      ? (proxies.groups as IProxyGroupItem[])
+      : [];
+    const records = (proxies.records || {}) as Record<string, IProxyItem>;
 
     // 默认信息
     let primaryGroupName = "GLOBAL";
-    let currentName = global?.now;
+    let currentName = globalGroup?.now;
 
     // 在规则模式下，寻找主要代理组（通常是第一个或者名字包含特定关键词的组）
     if (currentMode === "rule" && groups.length > 0) {
@@ -37,11 +35,11 @@ export const useCurrentProxy = () => {
         "自动选择",
       ];
       const primaryGroup =
-        groups.find((group: ProxyGroup) =>
+        groups.find((group) =>
           primaryKeywords.some((keyword) =>
             group.name.toLowerCase().includes(keyword.toLowerCase()),
           ),
-        ) || groups.filter((g: ProxyGroup) => g.name !== "GLOBAL")[0];
+        ) || groups.filter((g) => g.name !== "GLOBAL")[0];
 
       if (primaryGroup) {
         primaryGroupName = primaryGroup.name;

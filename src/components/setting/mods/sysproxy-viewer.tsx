@@ -20,15 +20,18 @@ import {
   useState,
 } from "react";
 import { useTranslation } from "react-i18next";
-import useSWR, { mutate } from "swr";
-import { getBaseConfig } from "tauri-plugin-mihomo-api";
+import { mutate } from "swr";
 
 import { BaseDialog, DialogRef, Switch } from "@/components/base";
 import { BaseFieldset } from "@/components/base/base-fieldset";
 import { TooltipIcon } from "@/components/base/base-tooltip-icon";
 import { EditorViewer } from "@/components/profile/editor-viewer";
+import {
+  useClashConfig,
+  useSystemProxyAddress,
+  useSystemProxyData,
+} from "@/hooks/app-data";
 import { useVerge } from "@/hooks/use-verge";
-import { useAppData } from "@/providers/app-data-context";
 import {
   getAutotemProxy,
   getNetworkInterfacesInfo,
@@ -92,9 +95,6 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
   const { verge, patchVerge, mutateVerge } = useVerge();
   const [hostOptions, setHostOptions] = useState<string[]>([]);
 
-  type SysProxy = Awaited<ReturnType<typeof getSystemProxy>>;
-  const [sysproxy, setSysproxy] = useState<SysProxy>();
-
   type AutoProxy = Awaited<ReturnType<typeof getAutotemProxy>>;
   const [autoproxy, setAutoproxy] = useState<AutoProxy>();
 
@@ -129,12 +129,8 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
     return "127.0.0.1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,localhost,*.local,*.crashlytics.com,<local>";
   };
 
-  const { data: clashConfig } = useSWR("getClashConfig", getBaseConfig, {
-    revalidateOnFocus: false,
-    revalidateIfStale: true,
-    dedupingInterval: 1000,
-    errorRetryInterval: 5000,
-  });
+  const { clashConfig } = useClashConfig();
+  const { sysproxy, refreshSysproxy } = useSystemProxyData();
 
   const prevMixedPortRef = useRef(clashConfig?.mixedPort);
 
@@ -168,7 +164,10 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
     updateProxy();
   }, [clashConfig?.mixedPort, value.pac]);
 
-  const { systemProxyAddress } = useAppData();
+  const systemProxyAddress = useSystemProxyAddress({
+    clashConfig,
+    sysproxy,
+  });
 
   // 为当前状态计算系统代理地址
   const getSystemProxyAddress = useMemo(() => {
@@ -209,7 +208,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
         pac_content: pac_file_content ?? DEFAULT_PAC,
         proxy_host: proxy_host ?? "127.0.0.1",
       });
-      getSystemProxy().then((p) => setSysproxy(p));
+      void refreshSysproxy();
       getAutotemProxy().then((p) => setAutoproxy(p));
       fetchNetworkInterfaces();
     },

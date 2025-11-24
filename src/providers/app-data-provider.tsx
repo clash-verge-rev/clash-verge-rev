@@ -1,63 +1,25 @@
 import { listen } from "@tauri-apps/api/event";
-import React, { useCallback, useEffect, useMemo } from "react";
-import useSWR from "swr";
-import {
-  getBaseConfig,
-  getRuleProviders,
-  getRules,
-} from "tauri-plugin-mihomo-api";
+import { PropsWithChildren, useCallback, useEffect } from "react";
+import { useSWRConfig } from "swr";
 
-import { useVerge } from "@/hooks/use-verge";
-import {
-  calcuProxies,
-  calcuProxyProviders,
-  getAppUptime,
-  getRunningMode,
-  getSystemProxy,
-} from "@/services/cmds";
-import { SWR_DEFAULTS, SWR_REALTIME, SWR_SLOW_POLL } from "@/services/config";
+// 负责监听全局事件并驱动 SWR 刷新，避免包裹全局 context 带来的额外渲染
+export const AppDataProvider = ({ children }: PropsWithChildren) => {
+  useAppDataEventBridge();
+  return <>{children}</>;
+};
 
-import { AppDataContext, AppDataContextType } from "./app-data-context";
+const useAppDataEventBridge = () => {
+  const { mutate } = useSWRConfig();
 
-// 全局数据提供者组件
-export const AppDataProvider = ({
-  children,
-}: {
-  children: React.ReactNode;
-}) => {
-  const { verge } = useVerge();
-
-  const { data: proxiesData, mutate: refreshProxy } = useSWR(
-    "getProxies",
-    calcuProxies,
-    {
-      ...SWR_REALTIME,
-      onError: (err) => console.warn("[DataProvider] Proxy fetch failed:", err),
-    },
+  const refreshProxy = useCallback(() => mutate("getProxies"), [mutate]);
+  const refreshClashConfig = useCallback(
+    () => mutate("getClashConfig"),
+    [mutate],
   );
-
-  const { data: clashConfig, mutate: refreshClashConfig } = useSWR(
-    "getClashConfig",
-    getBaseConfig,
-    SWR_SLOW_POLL,
-  );
-
-  const { data: proxyProviders, mutate: refreshProxyProviders } = useSWR(
-    "getProxyProviders",
-    calcuProxyProviders,
-    SWR_DEFAULTS,
-  );
-
-  const { data: ruleProviders, mutate: refreshRuleProviders } = useSWR(
-    "getRuleProviders",
-    getRuleProviders,
-    SWR_DEFAULTS,
-  );
-
-  const { data: rulesData, mutate: refreshRules } = useSWR(
-    "getRules",
-    getRules,
-    SWR_DEFAULTS,
+  const refreshRules = useCallback(() => mutate("getRules"), [mutate]);
+  const refreshRuleProviders = useCallback(
+    () => mutate("getRuleProviders"),
+    [mutate],
   );
 
   useEffect(() => {
@@ -220,125 +182,10 @@ export const AppDataProvider = ({
 
       if (errors.length > 0) {
         console.error(
-          `[DataProvider] ${errors.length} errors during cleanup:`,
+          "[DataProvider] " + errors.length + " errors during cleanup:",
           errors,
         );
       }
     };
   }, [refreshProxy, refreshClashConfig, refreshRules, refreshRuleProviders]);
-
-  const { data: sysproxy, mutate: refreshSysproxy } = useSWR(
-    "getSystemProxy",
-    getSystemProxy,
-    SWR_DEFAULTS,
-  );
-
-  const { data: runningMode } = useSWR(
-    "getRunningMode",
-    getRunningMode,
-    SWR_DEFAULTS,
-  );
-
-  const { data: uptimeData } = useSWR("appUptime", getAppUptime, {
-    ...SWR_DEFAULTS,
-    refreshInterval: 3000,
-    errorRetryCount: 1,
-  });
-
-  // 提供统一的刷新方法
-  const refreshAll = useCallback(async () => {
-    await Promise.all([
-      refreshProxy(),
-      refreshClashConfig(),
-      refreshRules(),
-      refreshSysproxy(),
-      refreshProxyProviders(),
-      refreshRuleProviders(),
-    ]);
-  }, [
-    refreshProxy,
-    refreshClashConfig,
-    refreshRules,
-    refreshSysproxy,
-    refreshProxyProviders,
-    refreshRuleProviders,
-  ]);
-
-  // 聚合所有数据
-  const value = useMemo(() => {
-    // 计算系统代理地址
-    const calculateSystemProxyAddress = () => {
-      if (!verge || !clashConfig) return "-";
-
-      const isPacMode = verge.proxy_auto_config ?? false;
-
-      if (isPacMode) {
-        // PAC模式：显示我们期望设置的代理地址
-        const proxyHost = verge.proxy_host || "127.0.0.1";
-        const proxyPort =
-          verge.verge_mixed_port || clashConfig.mixedPort || 7897;
-        return `${proxyHost}:${proxyPort}`;
-      } else {
-        // HTTP代理模式：优先使用系统地址，但如果格式不正确则使用期望地址
-        const systemServer = sysproxy?.server;
-        if (
-          systemServer &&
-          systemServer !== "-" &&
-          !systemServer.startsWith(":")
-        ) {
-          return systemServer;
-        } else {
-          // 系统地址无效，返回期望的代理地址
-          const proxyHost = verge.proxy_host || "127.0.0.1";
-          const proxyPort =
-            verge.verge_mixed_port || clashConfig.mixedPort || 7897;
-          return `${proxyHost}:${proxyPort}`;
-        }
-      }
-    };
-
-    return {
-      // 数据
-      proxies: proxiesData,
-      clashConfig,
-      rules: rulesData?.rules || [],
-      sysproxy,
-      runningMode,
-      uptime: uptimeData || 0,
-
-      // 提供者数据
-      proxyProviders: proxyProviders || {},
-      ruleProviders: ruleProviders?.providers || {},
-
-      systemProxyAddress: calculateSystemProxyAddress(),
-
-      // 刷新方法
-      refreshProxy,
-      refreshClashConfig,
-      refreshRules,
-      refreshSysproxy,
-      refreshProxyProviders,
-      refreshRuleProviders,
-      refreshAll,
-    } as AppDataContextType;
-  }, [
-    proxiesData,
-    clashConfig,
-    rulesData,
-    sysproxy,
-    runningMode,
-    uptimeData,
-    proxyProviders,
-    ruleProviders,
-    verge,
-    refreshProxy,
-    refreshClashConfig,
-    refreshRules,
-    refreshSysproxy,
-    refreshProxyProviders,
-    refreshRuleProviders,
-    refreshAll,
-  ]);
-
-  return <AppDataContext value={value}>{children}</AppDataContext>;
 };

@@ -8,12 +8,13 @@ import { BaseSearchBox } from "@/components/base/base-search-box";
 import { ScrollTopButton } from "@/components/layout/scroll-top-button";
 import { ProviderButton } from "@/components/rule/provider-button";
 import RuleItem from "@/components/rule/rule-item";
+import { useRuleProvidersData, useRulesData } from "@/hooks/app-data";
 import { useVisibility } from "@/hooks/use-visibility";
-import { useAppData } from "@/providers/app-data-context";
 
 const RulesPage = () => {
   const { t } = useTranslation();
-  const { rules = [], refreshRules, refreshRuleProviders } = useAppData();
+  const { rules = [], refreshRules } = useRulesData();
+  const { ruleProviders, refreshRuleProviders } = useRuleProvidersData();
   const [match, setMatch] = useState(() => (_: string) => true);
   const virtuosoRef = useRef<VirtuosoHandle>(null);
   const [showScrollTop, setShowScrollTop] = useState(false);
@@ -57,7 +58,11 @@ const RulesPage = () => {
       }}
       header={
         <Box display="flex" alignItems="center" gap={1}>
-          <ProviderButton />
+          <ProviderButton
+            ruleProviders={ruleProviders}
+            refreshRuleProviders={refreshRuleProviders}
+            refreshRules={refreshRules}
+          />
         </Box>
       }
     >
