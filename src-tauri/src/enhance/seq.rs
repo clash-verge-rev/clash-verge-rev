@@ -50,7 +50,6 @@ pub fn use_seq(seq: SeqMap, mut config: Mapping, field: &str) -> Mapping {
         let mut new_groups = Sequence::new();
         for group in groups {
             if let Value::Mapping(group_map) = group {
-                let mut new_group = group_map.clone();
                 if let Some(Value::Sequence(proxies)) = group_map.get("proxies") {
                     let filtered_proxies: Sequence = proxies
                         .iter()
@@ -63,14 +62,14 @@ pub fn use_seq(seq: SeqMap, mut config: Mapping, field: &str) -> Mapping {
                         })
                         .cloned()
                         .collect();
-                    new_group.insert(
+                    group_map.insert(
                         Value::String("proxies".into()),
                         Value::Sequence(filtered_proxies),
                     );
                 }
-                new_groups.push(Value::Mapping(new_group));
+                new_groups.push(Value::Mapping(group_map.to_owned()));
             } else {
-                new_groups.push(group.clone());
+                new_groups.push(group.to_owned());
             }
         }
         config.insert(
