@@ -1,5 +1,6 @@
 use once_cell::sync::OnceCell;
 use tauri::tray::TrayIconBuilder;
+use tauri_plugin_clash_verge_sysinfo::is_current_app_handle_admin;
 use tauri_plugin_mihomo::models::Proxies;
 use tokio::fs;
 #[cfg(target_os = "macos")]
@@ -303,8 +304,8 @@ impl Tray {
         let verge = Config::verge().await.latest_arc();
         let system_proxy = verge.enable_system_proxy.as_ref().unwrap_or(&false);
         let tun_mode = verge.enable_tun_mode.as_ref().unwrap_or(&false);
-        let tun_mode_available =
-            cmd::system::is_admin() || service::is_service_available().await.is_ok();
+        let tun_mode_available = is_current_app_handle_admin(app_handle)
+            || service::is_service_available().await.is_ok();
         let mode = {
             Config::clash()
                 .await

@@ -7578,6 +7578,7 @@ dependencies = [
  "parking_lot",
  "sysinfo",
  "tauri",
+ "tauri-plugin-clipboard-manager",
 ]
 
 [[package]]

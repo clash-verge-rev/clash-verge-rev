@@ -35,6 +35,7 @@ clash-verge-logging = { workspace = true }
 clash-verge-signal = { workspace = true }
 clash-verge-types = { workspace = true }
 tauri-plugin-clash-verge-sysinfo = { workspace = true }
+tauri-plugin-clipboard-manager = { workspace = true }
 tauri = { workspace = true, features = [
   "protocol-asset",
   "devtools",
@@ -72,7 +73,6 @@ tauri-plugin-shell = "2.3.3"
 tauri-plugin-dialog = "2.4.2"
 tauri-plugin-fs = "2.4.4"
 tauri-plugin-process = "2.3.1"
-tauri-plugin-clipboard-manager = "2.3.2"
 tauri-plugin-deep-link = "2.4.5"
 tauri-plugin-window-state = "2.4.1"
 zip = "6.0.0"

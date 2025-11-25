@@ -255,15 +255,9 @@ async fn reinstall_service() -> Result<()> {
 #[cfg(target_os = "linux")]
 fn linux_running_as_root() -> bool {
     use crate::core::handle;
-    use parking_lot::RwLock;
-    use tauri::Manager as _;
-    use tauri_plugin_clash_verge_sysinfo::Platform;
+    use tauri_plugin_clash_verge_sysinfo::is_current_app_handle_admin;
     let app_handle = handle::Handle::app_handle();
-    app_handle
-        .state::<RwLock<Platform>>()
-        .read()
-        .appinfo
-        .app_is_admin
+    is_current_app_handle_admin(app_handle)
 }
 
 #[cfg(target_os = "macos")]
