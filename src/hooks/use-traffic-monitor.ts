@@ -350,7 +350,10 @@ const EMPTY_STATS: ISamplerStats = {
 /**
  * 增强的流量监控Hook - Web Worker驱动的数据采样与压缩
  */
-export const useTrafficMonitorEnhanced = () => {
+export const useTrafficMonitorEnhanced = (options?: {
+  subscribe?: boolean;
+}) => {
+  const subscribeToSnapshots = options?.subscribe ?? true;
   const [latestSnapshot, setLatestSnapshot] = useState<{
     availableDataPoints: ITrafficDataPoint[];
     samplerStats: ISamplerStats;
@@ -379,25 +382,29 @@ export const useTrafficMonitorEnhanced = () => {
     const cleanup = refCounter.increment();
     client.start(currentRangeRef.current);
 
-    const unsubscribe = client.onSnapshot((message) => {
-      setLatestSnapshot({
-        availableDataPoints: message.availableDataPoints ?? message.dataPoints,
-        samplerStats: message.samplerStats,
-        lastTimestamp: message.lastTimestamp,
+    let unsubscribe: (() => void) | undefined;
+    if (subscribeToSnapshots) {
+      unsubscribe = client.onSnapshot((message) => {
+        setLatestSnapshot({
+          availableDataPoints:
+            message.availableDataPoints ?? message.dataPoints,
+          samplerStats: message.samplerStats,
+          lastTimestamp: message.lastTimestamp,
+        });
       });
-    });
 
-    client.requestSnapshot();
+      client.requestSnapshot();
+    }
 
     return () => {
-      unsubscribe();
+      unsubscribe?.();
       cleanup();
       stopWatchRefCount();
       if (refCounter.getCount() === 0) {
         client.stop();
       }
     };
-  }, []);
+  }, [subscribeToSnapshots]);
 
   // 添加流量数据
   const appendData = useCallback((traffic: Traffic) => {
@@ -408,6 +415,7 @@ export const useTrafficMonitorEnhanced = () => {
   const requestRange = useCallback((minutes: number) => {
     currentRangeRef.current = minutes;
     setRangeMinutes(minutes);
+    clientRef.current?.setRange(minutes);
     clientRef.current?.requestSnapshot();
   }, []);
 
