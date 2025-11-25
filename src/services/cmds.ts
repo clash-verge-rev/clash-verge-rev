@@ -540,7 +540,7 @@ export const exit_lightweight_mode = async () => {
 
 export const isAdmin = async () => {
   try {
-    return await invoke<boolean>("is_admin");
+    return await invoke<boolean>("app_is_admin");
   } catch (error) {
     console.error("检查管理员权限失败:", error);
     return false;

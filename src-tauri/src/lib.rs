@@ -137,6 +137,10 @@ mod app_init {
     pub fn generate_handlers()
     -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Send + Sync + 'static {
         tauri::generate_handler![
+            tauri_plugin_clash_verge_sysinfo::commands::get_system_info,
+            tauri_plugin_clash_verge_sysinfo::commands::get_app_uptime,
+            tauri_plugin_clash_verge_sysinfo::commands::app_is_admin,
+            tauri_plugin_clash_verge_sysinfo::commands::export_diagnostic_info,
             cmd::get_sys_proxy,
             cmd::get_auto_proxy,
             cmd::open_app_dir,
@@ -155,9 +159,7 @@ mod app_init {
             cmd::notify_ui_ready,
             cmd::update_ui_stage,
             cmd::get_running_mode,
-            cmd::get_app_uptime,
             cmd::get_auto_launch_status,
-            cmd::is_admin,
             cmd::entry_lightweight_mode,
             cmd::exit_lightweight_mode,
             cmd::install_service,
@@ -218,8 +220,6 @@ mod app_init {
             cmd::list_webdav_backup,
             cmd::delete_webdav_backup,
             cmd::restore_webdav_backup,
-            cmd::export_diagnostic_info,
-            cmd::get_system_info,
             cmd::get_unlock_items,
             cmd::check_media_unlock,
         ]
