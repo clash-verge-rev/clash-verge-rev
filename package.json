@@ -114,7 +114,7 @@
     "tar": "^7.5.2",
     "terser": "^5.44.1",
     "typescript": "^5.9.3",
-    "typescript-eslint": "^8.47.0",
+    "typescript-eslint": "^8.48.0",
     "vite": "^7.2.4",
     "vite-plugin-svgr": "^4.5.0"
   },
