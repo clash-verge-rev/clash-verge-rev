@@ -8,13 +8,11 @@ const parseStringFlag = (value: string) => {
   return normalized === "1" || normalized === "true" || normalized === "yes";
 };
 
-const isEnvDebugEnabled = () => {
+let cachedDebugEnabled: boolean | null = null;
+
+const computeDebugEnabled = () => {
   if (import.meta.env.DEV) {
     return true;
-  }
-
-  if (runtimeOverride !== null) {
-    return runtimeOverride;
   }
 
   if (parseStringFlag(envVarValue)) {
@@ -40,8 +38,22 @@ const isEnvDebugEnabled = () => {
   return false;
 };
 
+const isEnvDebugEnabled = () => {
+  if (runtimeOverride !== null) {
+    return runtimeOverride;
+  }
+
+  if (cachedDebugEnabled !== null) {
+    return cachedDebugEnabled;
+  }
+
+  cachedDebugEnabled = computeDebugEnabled();
+  return cachedDebugEnabled;
+};
+
 export const setDebugLoggingEnabled = (enabled: boolean) => {
   runtimeOverride = enabled;
+  cachedDebugEnabled = enabled;
 };
 
 export const isDebugLoggingEnabled = () => isEnvDebugEnabled();

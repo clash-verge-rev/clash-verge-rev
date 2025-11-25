@@ -7,8 +7,6 @@ import { Box, Typography, Button, Alert, Collapse } from "@mui/material";
 import React, { Component, ErrorInfo, ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
-import { debugLog } from "@/utils/debug";
-
 interface Props {
   children: ReactNode;
   fallbackComponent?: ReactNode;
@@ -73,8 +71,7 @@ export class TrafficErrorBoundary extends Component<Props, State> {
       url: window.location.href,
     };
 
-    debugLog("[TrafficErrorBoundary] 错误报告:", errorReport);
-
+    console.error("[TrafficErrorBoundary] 错误报告:", errorReport);
     // TODO: 发送到错误监控服务
     // sendErrorReport(errorReport);
   };
@@ -82,7 +79,7 @@ export class TrafficErrorBoundary extends Component<Props, State> {
   private handleRetry = () => {
     if (this.retryCount < this.maxRetries) {
       this.retryCount++;
-      debugLog(
+      console.log(
         `[TrafficErrorBoundary] 尝试重试 (${this.retryCount}/${this.maxRetries})`,
       );
 

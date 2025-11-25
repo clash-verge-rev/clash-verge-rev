@@ -15,6 +15,7 @@ import { portableFlag } from "@/pages/_layout";
 import { showNotice } from "@/services/noticeService";
 import { useSetUpdateState, useUpdateState } from "@/services/states";
 import { checkUpdateSafe as checkUpdate } from "@/services/update";
+import { debugLog } from "@/utils/debug";
 
 export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
   const { t } = useTranslation();
@@ -102,7 +103,7 @@ export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
   useEffect(() => {
     return () => {
       if (currentProgressListener) {
-        console.log("UpdateViewer unmounting, cleaning up progress listener.");
+        debugLog("UpdateViewer unmounting, cleaning up progress listener.");
         currentProgressListener();
       }
     };

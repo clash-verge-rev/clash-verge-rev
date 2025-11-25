@@ -18,6 +18,7 @@
 - windows 端监听关机信号失败
 - 修复代理按钮和高亮状态不同步
 - 修复侧边栏可能的未能正确跳转
+- 修复解锁测试部分地区图标编码不正确
 
 <details>
 <summary><strong> ✨ 新增功能 </strong></summary>

@@ -31,6 +31,7 @@ import { BaseDialog, DialogRef, Switch } from "@/components/base";
 import { useClash } from "@/hooks/use-clash";
 import { showNotice } from "@/services/noticeService";
 import { useThemeMode } from "@/services/states";
+import { debugLog } from "@/utils/debug";
 import getSystem from "@/utils/get-system";
 
 const Item = styled(ListItem)(() => ({
@@ -580,7 +581,7 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
         }, 300);
       }
     } catch (err) {
-      console.log("YAML解析错误，忽略自动更新", err);
+      debugLog("YAML解析错误，忽略自动更新", err);
     }
   };
 
