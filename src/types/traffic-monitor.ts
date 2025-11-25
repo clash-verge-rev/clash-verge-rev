@@ -58,6 +58,7 @@ export type TrafficWorkerRequestMessage =
 export interface ITrafficWorkerSnapshotMessage {
   type: "snapshot";
   dataPoints: ITrafficDataPoint[];
+  availableDataPoints: ITrafficDataPoint[];
   samplerStats: ISamplerStats;
   rangeMinutes: number;
   lastTimestamp?: number;

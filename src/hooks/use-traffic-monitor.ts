@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+} from "react";
 import { Traffic } from "tauri-plugin-mihomo-api";
 
 import type {
@@ -9,34 +16,36 @@ import type {
   TrafficWorkerResponseMessage,
 } from "@/types/traffic-monitor";
 import { debugLog } from "@/utils/debug";
+import { TrafficDataSampler, formatTrafficName } from "@/utils/traffic-sampler";
 
 export type { ITrafficDataPoint } from "@/types/traffic-monitor";
 
 // 引用计数管理器
 class ReferenceCounter {
   private count = 0;
-  private callbacks: (() => void)[] = [];
+  private callbacks = new Set<() => void>();
+
+  private notify() {
+    this.callbacks.forEach((cb) => cb());
+  }
 
   increment(): () => void {
     this.count++;
     debugLog(`[ReferenceCounter] 引用计数增加: ${this.count}`);
 
-    if (this.count === 1) {
-      this.callbacks.forEach((cb) => cb());
-    }
+    this.notify();
 
     return () => {
       this.count--;
       debugLog(`[ReferenceCounter] 引用计数减少: ${this.count}`);
 
-      if (this.count === 0) {
-        this.callbacks.forEach((cb) => cb());
-      }
+      this.notify();
     };
   }
 
   onCountChange(callback: () => void) {
-    this.callbacks.push(callback);
+    this.callbacks.add(callback);
+    return () => this.callbacks.delete(callback);
   }
 
   getCount(): number {
@@ -52,8 +61,112 @@ const WORKER_CONFIG = {
   defaultRangeMinutes: 10,
 };
 
+class InlineTrafficMonitor {
+  private config = { ...WORKER_CONFIG };
+  private sampler = new TrafficDataSampler(this.config);
+  private throttleTimer: ReturnType<typeof setTimeout> | null = null;
+  private currentRange = this.config.defaultRangeMinutes;
+  private lastTimestamp: number | undefined;
+
+  constructor(
+    private emit: (snapshot: ITrafficWorkerSnapshotMessage) => void,
+  ) {}
+
+  start(rangeMinutes?: number) {
+    this.currentRange = rangeMinutes ?? this.currentRange;
+    this.handle({
+      type: "init",
+      config: {
+        ...this.config,
+        defaultRangeMinutes: this.currentRange,
+      },
+    });
+  }
+
+  stop() {
+    if (this.throttleTimer !== null) {
+      clearTimeout(this.throttleTimer);
+      this.throttleTimer = null;
+    }
+    this.sampler.clear();
+    this.lastTimestamp = undefined;
+  }
+
+  handle(message: TrafficWorkerRequestMessage) {
+    switch (message.type) {
+      case "init": {
+        this.config = { ...message.config };
+        this.sampler = new TrafficDataSampler(this.config);
+        this.currentRange = message.config.defaultRangeMinutes;
+        this.emitSnapshot("init");
+        break;
+      }
+      case "append": {
+        const timestamp = message.payload.timestamp ?? Date.now();
+        const dataPoint: ITrafficDataPoint = {
+          up: message.payload.up || 0,
+          down: message.payload.down || 0,
+          timestamp,
+          name: formatTrafficName(timestamp),
+        };
+
+        this.lastTimestamp = timestamp;
+        this.sampler.addDataPoint(dataPoint);
+        this.scheduleSnapshot("append-throttle");
+        break;
+      }
+      case "clear": {
+        this.sampler.clear();
+        this.lastTimestamp = undefined;
+        this.emitSnapshot("clear");
+        break;
+      }
+      case "setRange": {
+        if (this.currentRange !== message.minutes) {
+          this.currentRange = message.minutes;
+          this.emitSnapshot("range-change");
+        }
+        break;
+      }
+      case "requestSnapshot": {
+        this.emitSnapshot("request");
+        break;
+      }
+      default:
+        break;
+    }
+  }
+
+  private emitSnapshot(reason: ITrafficWorkerSnapshotMessage["reason"]) {
+    const dataPoints = this.sampler.getDataForTimeRange(this.currentRange);
+    const availableDataPoints = this.sampler.getDataForTimeRange(
+      this.config.compressedDataMinutes,
+    );
+
+    this.emit({
+      type: "snapshot",
+      dataPoints,
+      availableDataPoints,
+      samplerStats: this.sampler.getStats(),
+      rangeMinutes: this.currentRange,
+      lastTimestamp: this.lastTimestamp,
+      reason,
+    });
+  }
+
+  private scheduleSnapshot(reason: ITrafficWorkerSnapshotMessage["reason"]) {
+    if (this.throttleTimer !== null) return;
+    this.throttleTimer = setTimeout(() => {
+      this.throttleTimer = null;
+      this.emitSnapshot(reason);
+    }, this.config.snapshotIntervalMs);
+  }
+}
+
 class TrafficWorkerClient {
   private worker: Worker | null = null;
+  private inlineMonitor: InlineTrafficMonitor | null = null;
+  private mode: "worker" | "inline" | null = null;
   private listeners = new Set<
     (snapshot: ITrafficWorkerSnapshotMessage) => void
   >();
@@ -62,37 +175,16 @@ class TrafficWorkerClient {
   private currentRange = WORKER_CONFIG.defaultRangeMinutes;
 
   start(rangeMinutes?: number) {
-    if (typeof window === "undefined" || typeof Worker === "undefined") {
-      debugLog(
-        "[TrafficWorkerClient] Worker not supported in this environment",
-      );
+    if (typeof window === "undefined") {
+      debugLog("[TrafficWorkerClient] Window not available, skip start");
       return;
     }
 
-    if (this.worker) return;
-
     this.currentRange = rangeMinutes ?? this.currentRange;
-    this.worker = new Worker(
-      new URL("../services/traffic-monitor-worker.ts", import.meta.url),
-      { type: "module" },
-    );
 
-    this.worker.onmessage = (
-      event: MessageEvent<TrafficWorkerResponseMessage>,
-    ) => {
-      const message = event.data;
-      if (message.type === "snapshot") {
-        this.listeners.forEach((listener) => listener(message));
-      }
-    };
+    if (this.ready) return;
 
-    this.worker.onerror = (error) => {
-      debugLog(`[TrafficWorkerClient] Worker error: ${String(error)}`);
-    };
-
-    this.ready = true;
-
-    this.post({
+    const initMessage: TrafficWorkerRequestMessage = {
       type: "init",
       config: {
         rawDataMinutes: WORKER_CONFIG.rawDataMinutes,
@@ -101,8 +193,56 @@ class TrafficWorkerClient {
         snapshotIntervalMs: WORKER_CONFIG.snapshotIntervalMs,
         defaultRangeMinutes: this.currentRange,
       },
-    });
+    };
 
+    if (typeof Worker !== "undefined") {
+      try {
+        this.worker = new Worker(
+          new URL("../services/traffic-monitor-worker.ts", import.meta.url),
+          { type: "module" },
+        );
+        this.mode = "worker";
+
+        this.worker.onmessage = (
+          event: MessageEvent<TrafficWorkerResponseMessage>,
+        ) => {
+          const message = event.data;
+          if (message.type === "snapshot") {
+            this.listeners.forEach((listener) => listener(message));
+          }
+        };
+
+        this.worker.onerror = (error) => {
+          debugLog(`[TrafficWorkerClient] Worker error: ${String(error)}`);
+        };
+
+        this.ready = true;
+        this.post(initMessage);
+        this.flushQueue();
+        return;
+      } catch (error) {
+        debugLog(
+          `[TrafficWorkerClient] Worker initialization failed, falling back to inline sampler: ${String(error)}`,
+        );
+        this.worker = null;
+        this.mode = null;
+      }
+    } else {
+      debugLog(
+        "[TrafficWorkerClient] Worker not supported, using inline sampler",
+      );
+    }
+
+    this.startInline(initMessage);
+  }
+
+  private startInline(initMessage: TrafficWorkerRequestMessage) {
+    this.inlineMonitor = new InlineTrafficMonitor((snapshot) =>
+      this.listeners.forEach((listener) => listener(snapshot)),
+    );
+    this.mode = "inline";
+    this.ready = true;
+    this.post(initMessage);
     this.flushQueue();
   }
 
@@ -110,7 +250,12 @@ class TrafficWorkerClient {
     if (this.worker) {
       this.worker.terminate();
     }
+    if (this.inlineMonitor) {
+      this.inlineMonitor.stop();
+    }
     this.worker = null;
+    this.inlineMonitor = null;
+    this.mode = null;
     this.ready = false;
     this.pendingMessages = [];
   }
@@ -123,28 +268,43 @@ class TrafficWorkerClient {
   }
 
   private post(message: TrafficWorkerRequestMessage) {
-    if (!this.worker || !this.ready) {
+    if (!this.ready) {
       this.pendingMessages.push(message);
       return;
     }
-    this.worker.postMessage(message);
+
+    if (this.mode === "worker" && this.worker) {
+      this.worker.postMessage(message);
+      return;
+    }
+
+    if (this.mode === "inline" && this.inlineMonitor) {
+      this.inlineMonitor.handle(message);
+      return;
+    }
+
+    this.pendingMessages.push(message);
   }
 
   private flushQueue() {
-    if (!this.worker || !this.ready || this.pendingMessages.length === 0) {
+    if (!this.ready || this.pendingMessages.length === 0) {
       return;
     }
-    this.pendingMessages.forEach((message) => {
-      this.worker?.postMessage(message);
-    });
+    const queued = [...this.pendingMessages];
     this.pendingMessages = [];
+    queued.forEach((message) => {
+      this.post(message);
+    });
+  }
+
+  private ensureStarted() {
+    if (!this.ready) {
+      this.start(this.currentRange);
+    }
   }
 
   appendData(traffic: Traffic) {
-    if (!this.worker) {
-      this.start(this.currentRange);
-    }
-
+    this.ensureStarted();
     this.post({
       type: "append",
       payload: {
@@ -156,6 +316,7 @@ class TrafficWorkerClient {
   }
 
   clearData() {
+    this.ensureStarted();
     this.post({ type: "clear" });
   }
 
@@ -165,6 +326,7 @@ class TrafficWorkerClient {
   }
 
   requestSnapshot() {
+    this.ensureStarted();
     this.post({ type: "requestSnapshot" });
   }
 }
@@ -189,15 +351,19 @@ const EMPTY_STATS: ISamplerStats = {
  * 增强的流量监控Hook - Web Worker驱动的数据采样与压缩
  */
 export const useTrafficMonitorEnhanced = () => {
-  const [snapshot, setSnapshot] = useState<{
-    dataPoints: ITrafficDataPoint[];
+  const [latestSnapshot, setLatestSnapshot] = useState<{
+    availableDataPoints: ITrafficDataPoint[];
     samplerStats: ISamplerStats;
-    rangeMinutes: number;
+    lastTimestamp?: number;
   }>({
-    dataPoints: [],
+    availableDataPoints: [],
     samplerStats: EMPTY_STATS,
-    rangeMinutes: WORKER_CONFIG.defaultRangeMinutes,
+    lastTimestamp: undefined,
   });
+  const [rangeMinutes, setRangeMinutes] = useState(
+    WORKER_CONFIG.defaultRangeMinutes,
+  );
+  const [, forceRefCountRender] = useReducer((value) => value + 1, 0);
 
   const clientRef = useRef<TrafficWorkerClient | null>(getWorkerClient());
   const currentRangeRef = useRef<number>(WORKER_CONFIG.defaultRangeMinutes);
@@ -207,14 +373,17 @@ export const useTrafficMonitorEnhanced = () => {
     const client = getWorkerClient();
     clientRef.current = client;
 
+    const stopWatchRefCount = refCounter.onCountChange(() =>
+      forceRefCountRender(),
+    );
     const cleanup = refCounter.increment();
     client.start(currentRangeRef.current);
 
     const unsubscribe = client.onSnapshot((message) => {
-      setSnapshot({
-        dataPoints: message.dataPoints,
+      setLatestSnapshot({
+        availableDataPoints: message.availableDataPoints ?? message.dataPoints,
         samplerStats: message.samplerStats,
-        rangeMinutes: message.rangeMinutes,
+        lastTimestamp: message.lastTimestamp,
       });
     });
 
@@ -223,6 +392,7 @@ export const useTrafficMonitorEnhanced = () => {
     return () => {
       unsubscribe();
       cleanup();
+      stopWatchRefCount();
       if (refCounter.getCount() === 0) {
         client.stop();
       }
@@ -237,7 +407,8 @@ export const useTrafficMonitorEnhanced = () => {
   // 请求不同时间范围的数据
   const requestRange = useCallback((minutes: number) => {
     currentRangeRef.current = minutes;
-    clientRef.current?.setRange(minutes);
+    setRangeMinutes(minutes);
+    clientRef.current?.requestSnapshot();
   }, []);
 
   // 清空数据
@@ -245,15 +416,23 @@ export const useTrafficMonitorEnhanced = () => {
     clientRef.current?.clearData();
   }, []);
 
+  const filteredDataPoints = useMemo(() => {
+    const sourceData = latestSnapshot.availableDataPoints;
+    if (sourceData.length === 0) return [];
+
+    const cutoff = Date.now() - rangeMinutes * 60 * 1000;
+    return sourceData.filter((point) => point.timestamp > cutoff);
+  }, [latestSnapshot.availableDataPoints, rangeMinutes]);
+
   return {
     graphData: {
-      dataPoints: snapshot.dataPoints,
-      currentRangeMinutes: snapshot.rangeMinutes,
+      dataPoints: filteredDataPoints,
+      currentRangeMinutes: rangeMinutes,
       requestRange,
       appendData,
       clearData,
     },
-    samplerStats: snapshot.samplerStats,
+    samplerStats: latestSnapshot.samplerStats,
     referenceCount: refCounter.getCount(),
   };
 };
