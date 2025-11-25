@@ -39,6 +39,7 @@ import { useProfiles } from "@/hooks/use-profiles";
 import { useProxySelection } from "@/hooks/use-proxy-selection";
 import { useVerge } from "@/hooks/use-verge";
 import delayManager from "@/services/delay";
+import { debugLog } from "@/utils/debug";
 
 // 本地存储的键名
 const STORAGE_KEY_GROUP = "clash-verge-selected-proxy-group";
@@ -539,7 +540,7 @@ export const CurrentProxyCard = () => {
 
     const proxyRecord = latestProxyRecordRef.current;
     if (!proxyRecord) {
-      console.log(
+      debugLog(
         `[CurrentProxyCard] 自动延迟检测跳过，组: ${groupName}, 节点: ${proxyName} 未找到`,
       );
       return;
@@ -550,7 +551,7 @@ export const CurrentProxyCard = () => {
     const timeout = latestTimeoutRef.current || 10000;
 
     try {
-      console.log(
+      debugLog(
         `[CurrentProxyCard] 自动检测当前节点延迟，组: ${groupName}, 节点: ${proxyName}`,
       );
       if (proxyRecord.provider) {
@@ -647,7 +648,7 @@ export const CurrentProxyCard = () => {
     const groupName = state.selection.group;
     if (!groupName || isDirectMode) return;
 
-    console.log(`[CurrentProxyCard] 开始测试所有延迟，组: ${groupName}`);
+    debugLog(`[CurrentProxyCard] 开始测试所有延迟，组: ${groupName}`);
 
     const timeout = verge?.default_latency_timeout || 10000;
 
@@ -687,13 +688,13 @@ export const CurrentProxyCard = () => {
       }
     }
 
-    console.log(
+    debugLog(
       `[CurrentProxyCard] 找到代理数量: ${proxyNames.length}, 提供者数量: ${providers.size}`,
     );
 
     // 测试提供者的节点
     if (providers.size > 0) {
-      console.log(`[CurrentProxyCard] 开始测试提供者节点`);
+      debugLog(`[CurrentProxyCard] 开始测试提供者节点`);
       await Promise.allSettled(
         [...providers].map((p) => healthcheckProxyProvider(p)),
       );
@@ -702,14 +703,14 @@ export const CurrentProxyCard = () => {
     // 测试非提供者的节点
     if (proxyNames.length > 0) {
       const url = delayManager.getUrl(groupName);
-      console.log(`[CurrentProxyCard] 测试URL: ${url}, 超时: ${timeout}ms`);
+      debugLog(`[CurrentProxyCard] 测试URL: ${url}, 超时: ${timeout}ms`);
 
       try {
         await Promise.race([
           delayManager.checkListDelay(proxyNames, groupName, timeout),
           delayGroup(groupName, url, timeout),
         ]);
-        console.log(`[CurrentProxyCard] 延迟测试完成，组: ${groupName}`);
+        debugLog(`[CurrentProxyCard] 延迟测试完成，组: ${groupName}`);
       } catch (error) {
         console.error(
           `[CurrentProxyCard] 延迟测试出错，组: ${groupName}`,

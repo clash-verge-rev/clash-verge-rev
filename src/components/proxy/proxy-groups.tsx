@@ -20,6 +20,7 @@ import { useProxySelection } from "@/hooks/use-proxy-selection";
 import { useVerge } from "@/hooks/use-verge";
 import { updateProxyChainConfigInRuntime } from "@/services/cmds";
 import delayManager from "@/services/delay";
+import { debugLog } from "@/utils/debug";
 
 import { BaseEmpty } from "../base";
 import { ScrollTopButton } from "../layout/scroll-top-button";
@@ -274,7 +275,7 @@ export const ProxyGroups = (props: Props) => {
 
   // 测全部延迟
   const handleCheckAll = useLockFn(async (groupName: string) => {
-    console.log(`[ProxyGroups] 开始测试所有延迟，组: ${groupName}`);
+    debugLog(`[ProxyGroups] 开始测试所有延迟，组: ${groupName}`);
 
     const proxies = renderList
       .filter(
@@ -283,37 +284,37 @@ export const ProxyGroups = (props: Props) => {
       .flatMap((e) => e.proxyCol || e.proxy!)
       .filter(Boolean);
 
-    console.log(`[ProxyGroups] 找到代理数量: ${proxies.length}`);
+    debugLog(`[ProxyGroups] 找到代理数量: ${proxies.length}`);
 
     const providers = new Set(proxies.map((p) => p!.provider!).filter(Boolean));
 
     if (providers.size) {
-      console.log(`[ProxyGroups] 发现提供者，数量: ${providers.size}`);
+      debugLog(`[ProxyGroups] 发现提供者，数量: ${providers.size}`);
       Promise.allSettled(
         [...providers].map((p) => healthcheckProxyProvider(p)),
       ).then(() => {
-        console.log(`[ProxyGroups] 提供者健康检查完成`);
+        debugLog(`[ProxyGroups] 提供者健康检查完成`);
         onProxies();
       });
     }
 
     const names = proxies.filter((p) => !p!.provider).map((p) => p!.name);
-    console.log(`[ProxyGroups] 过滤后需要测试的代理数量: ${names.length}`);
+    debugLog(`[ProxyGroups] 过滤后需要测试的代理数量: ${names.length}`);
 
     const url = delayManager.getUrl(groupName);
-    console.log(`[ProxyGroups] 测试URL: ${url}, 超时: ${timeout}ms`);
+    debugLog(`[ProxyGroups] 测试URL: ${url}, 超时: ${timeout}ms`);
 
     try {
       await Promise.race([
         delayManager.checkListDelay(names, groupName, timeout),
         delayGroup(groupName, url, timeout).then((result) => {
-          console.log(
+          debugLog(
             `[ProxyGroups] getGroupProxyDelays返回结果数量:`,
             Object.keys(result || {}).length,
           );
         }), // 查询group delays 将清除fixed(不关注调用结果)
       ]);
-      console.log(`[ProxyGroups] 延迟测试完成，组: ${groupName}`);
+      debugLog(`[ProxyGroups] 延迟测试完成，组: ${groupName}`);
     } catch (error) {
       console.error(`[ProxyGroups] 延迟测试出错，组: ${groupName}`, error);
     } finally {

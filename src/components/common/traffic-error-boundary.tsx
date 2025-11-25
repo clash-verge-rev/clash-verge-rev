@@ -71,8 +71,7 @@ export class TrafficErrorBoundary extends Component<Props, State> {
       url: window.location.href,
     };
 
-    console.log("[TrafficErrorBoundary] 错误报告:", errorReport);
-
+    console.error("[TrafficErrorBoundary] 错误报告:", errorReport);
     // TODO: 发送到错误监控服务
     // sendErrorReport(errorReport);
   };

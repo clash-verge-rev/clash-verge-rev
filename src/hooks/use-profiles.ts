@@ -7,6 +7,7 @@ import {
   patchProfilesConfig,
 } from "@/services/cmds";
 import { calcuProxies } from "@/services/cmds";
+import { debugLog } from "@/utils/debug";
 
 export const useProfiles = () => {
   const {
@@ -25,7 +26,7 @@ export const useProfiles = () => {
       console.error("[useProfiles] SWR错误:", error);
     },
     onSuccess: (data) => {
-      console.log(
+      debugLog(
         "[useProfiles] 配置数据更新成功，配置数量:",
         data?.items?.length || 0,
       );
@@ -71,7 +72,7 @@ export const useProfiles = () => {
   // 根据selected的节点选择
   const activateSelected = async () => {
     try {
-      console.log("[ActivateSelected] 开始处理代理选择");
+      debugLog("[ActivateSelected] 开始处理代理选择");
 
       const [proxiesData, profileData] = await Promise.all([
         calcuProxies(),
@@ -79,7 +80,7 @@ export const useProfiles = () => {
       ]);
 
       if (!profileData || !proxiesData) {
-        console.log("[ActivateSelected] 代理或配置数据不可用，跳过处理");
+        debugLog("[ActivateSelected] 代理或配置数据不可用，跳过处理");
         return;
       }
 
@@ -88,18 +89,18 @@ export const useProfiles = () => {
       );
 
       if (!current) {
-        console.log("[ActivateSelected] 未找到当前profile配置");
+        debugLog("[ActivateSelected] 未找到当前profile配置");
         return;
       }
 
       // 检查是否有saved的代理选择
       const { selected = [] } = current;
       if (selected.length === 0) {
-        console.log("[ActivateSelected] 当前profile无保存的代理选择，跳过");
+        debugLog("[ActivateSelected] 当前profile无保存的代理选择，跳过");
         return;
       }
 
-      console.log(
+      debugLog(
         `[ActivateSelected] 当前profile有 ${selected.length} 个代理选择配置`,
       );
 
@@ -160,7 +161,7 @@ export const useProfiles = () => {
         }
 
         if (savedProxy !== now) {
-          console.log(
+          debugLog(
             `[ActivateSelected] 需要切换代理组 ${name}: ${now} -> ${savedProxy}`,
           );
           hasChange = true;
@@ -171,15 +172,15 @@ export const useProfiles = () => {
       });
 
       if (!hasChange) {
-        console.log("[ActivateSelected] 所有代理选择已经是目标状态，无需更新");
+        debugLog("[ActivateSelected] 所有代理选择已经是目标状态，无需更新");
         return;
       }
 
-      console.log(`[ActivateSelected] 完成代理切换，保存新的选择配置`);
+      debugLog(`[ActivateSelected] 完成代理切换，保存新的选择配置`);
 
       try {
         await patchProfile(profileData.current!, { selected: newSelected });
-        console.log("[ActivateSelected] 代理选择配置保存成功");
+        debugLog("[ActivateSelected] 代理选择配置保存成功");
 
         setTimeout(() => {
           mutate("getProxies", calcuProxies());

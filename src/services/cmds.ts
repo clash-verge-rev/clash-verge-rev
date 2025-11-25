@@ -3,6 +3,7 @@ import dayjs from "dayjs";
 import { getProxies, getProxyProviders } from "tauri-plugin-mihomo-api";
 
 import { showNotice } from "@/services/noticeService";
+import { debugLog } from "@/utils/debug";
 
 export async function copyClashEnv() {
   return invoke<void>("copy_clash_env");
@@ -264,12 +265,12 @@ export async function getSystemProxy() {
 
 export async function getAutotemProxy() {
   try {
-    console.log("[API] 开始调用 get_auto_proxy");
+    debugLog("[API] 开始调用 get_auto_proxy");
     const result = await invoke<{
       enable: boolean;
       url: string;
     }>("get_auto_proxy");
-    console.log("[API] get_auto_proxy 调用成功:", result);
+    debugLog("[API] get_auto_proxy 调用成功:", result);
     return result;
   } catch (error) {
     console.error("[API] get_auto_proxy 调用失败:", error);

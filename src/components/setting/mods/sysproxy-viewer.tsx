@@ -40,6 +40,7 @@ import {
   patchVergeConfig,
 } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
+import { debugLog } from "@/utils/debug";
 import getSystem from "@/utils/get-system";
 
 const sleep = (ms: number) =>
@@ -238,7 +239,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
       let hostname = "";
       try {
         hostname = await getSystemHostname();
-        console.log("获取到主机名:", hostname);
+        debugLog("获取到主机名:", hostname);
       } catch (err) {
         console.error("获取主机名失败:", err);
       }
@@ -252,12 +253,12 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
         if (hostname !== "localhost" && hostname !== "127.0.0.1") {
           hostname = hostname + ".local";
           options.push(hostname);
-          console.log("主机名已添加到选项中:", hostname);
+          debugLog("主机名已添加到选项中:", hostname);
         } else {
-          console.log("主机名与已有选项重复:", hostname);
+          debugLog("主机名与已有选项重复:", hostname);
         }
       } else {
-        console.log("主机名为空");
+        debugLog("主机名为空");
       }
 
       // 添加IP地址
@@ -265,7 +266,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
 
       // 去重
       const uniqueOptions = Array.from(new Set(options));
-      console.log("最终选项列表:", uniqueOptions);
+      debugLog("最终选项列表:", uniqueOptions);
       setHostOptions(uniqueOptions);
     } catch (error) {
       console.error("获取网络接口失败:", error);

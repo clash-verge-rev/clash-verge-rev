@@ -59,7 +59,7 @@ export class SystemMonitorValidator implements ISystemMonitorOverviewValidator {
    * 清理和修复数据，确保返回有效的ISystemMonitorOverview
    */
   sanitize(data: any): ISystemMonitorOverview {
-    // console.log("[DataValidator] 开始数据清理:", data);
+    // debugLog("[DataValidator] 开始数据清理:", data);
 
     const sanitized: ISystemMonitorOverview = {
       traffic: this.sanitizeTrafficData(data?.traffic),
@@ -67,7 +67,7 @@ export class SystemMonitorValidator implements ISystemMonitorOverviewValidator {
       overall_status: this.sanitizeOverallStatus(data?.overall_status),
     };
 
-    // console.log("[DataValidator] 数据清理完成:", sanitized);
+    // debugLog("[DataValidator] 数据清理完成:", sanitized);
     return sanitized;
   }
 

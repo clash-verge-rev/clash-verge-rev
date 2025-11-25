@@ -5,6 +5,7 @@ import { useProxiesData } from "@/hooks/app-data";
 import { useVerge } from "@/hooks/use-verge";
 import { getRuntimeConfig } from "@/services/cmds";
 import delayManager from "@/services/delay";
+import { debugLog } from "@/utils/debug";
 
 import { filterSort } from "./use-filter-sort";
 import {
@@ -130,7 +131,7 @@ export const useRenderList = (
 
     // 设置组监听器，当有延迟更新时自动刷新
     const groupListener = () => {
-      console.log("[ChainMode] 延迟更新，刷新UI");
+      debugLog("[ChainMode] 延迟更新，刷新UI");
       refreshProxy();
     };
 
@@ -141,7 +142,7 @@ export const useRenderList = (
         const timeout = verge?.default_latency_timeout || 10000;
         const proxyNames = allProxies.map((proxy) => proxy.name);
 
-        console.log(`[ChainMode] 开始计算 ${proxyNames.length} 个节点的延迟`);
+        debugLog(`[ChainMode] 开始计算 ${proxyNames.length} 个节点的延迟`);
 
         // 使用 delayManager 计算延迟，每个节点计算完成后会自动触发监听器刷新界面
         delayManager.checkListDelay(proxyNames, "chain-mode", timeout);

@@ -16,6 +16,7 @@ import {
   useTrafficGraphDataEnhanced,
   type ITrafficDataPoint,
 } from "@/hooks/use-traffic-monitor";
+import { debugLog } from "@/utils/debug";
 import parseTraffic from "@/utils/parse-traffic";
 
 // 流量数据项接口
@@ -1044,7 +1045,7 @@ export const EnhancedCanvasTrafficGraph = memo(
 
     // 兼容性方法
     const appendData = useCallback((data: ITrafficItem) => {
-      console.log(
+      debugLog(
         "[EnhancedCanvasTrafficGraphV2] appendData called (using global data):",
         data,
       );
