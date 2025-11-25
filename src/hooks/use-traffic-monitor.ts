@@ -366,6 +366,7 @@ export const useTrafficMonitorEnhanced = (options?: {
   const [rangeMinutes, setRangeMinutes] = useState(
     WORKER_CONFIG.defaultRangeMinutes,
   );
+  const [now, setNow] = useState(() => Date.now());
   const [, forceRefCountRender] = useReducer((value) => value + 1, 0);
 
   const clientRef = useRef<TrafficWorkerClient | null>(getWorkerClient());
@@ -398,12 +399,23 @@ export const useTrafficMonitorEnhanced = (options?: {
 
     return () => {
       unsubscribe?.();
-      cleanup();
       stopWatchRefCount();
+      cleanup();
       if (refCounter.getCount() === 0) {
         client.stop();
       }
     };
+  }, [subscribeToSnapshots]);
+
+  // Periodically refresh "now" so idle streams age out of the selected window when subscribed
+  useEffect(() => {
+    if (!subscribeToSnapshots) return;
+
+    const timer = window.setInterval(() => {
+      setNow(Date.now());
+    }, 1000);
+
+    return () => window.clearInterval(timer);
   }, [subscribeToSnapshots]);
 
   // 添加流量数据
@@ -416,7 +428,6 @@ export const useTrafficMonitorEnhanced = (options?: {
     currentRangeRef.current = minutes;
     setRangeMinutes(minutes);
     clientRef.current?.setRange(minutes);
-    clientRef.current?.requestSnapshot();
   }, []);
 
   // 清空数据
@@ -428,9 +439,9 @@ export const useTrafficMonitorEnhanced = (options?: {
     const sourceData = latestSnapshot.availableDataPoints;
     if (sourceData.length === 0) return [];
 
-    const cutoff = Date.now() - rangeMinutes * 60 * 1000;
+    const cutoff = now - rangeMinutes * 60 * 1000;
     return sourceData.filter((point) => point.timestamp > cutoff);
-  }, [latestSnapshot.availableDataPoints, rangeMinutes]);
+  }, [latestSnapshot.availableDataPoints, rangeMinutes, now]);
 
   return {
     graphData: {
