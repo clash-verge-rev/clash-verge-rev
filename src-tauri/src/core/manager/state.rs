@@ -39,6 +39,12 @@ impl CoreManager {
                 dirs::path_to_str(&config_dir)?,
                 "-f",
                 dirs::path_to_str(&config_file)?,
+                if cfg!(unix) {
+                    "-ext-ctl-unix"
+                } else {
+                    "-ext-ctl-pipe"
+                },
+                &crate::config::IClashTemp::guard_external_controller_ipc(),
             ])
             .spawn()?;
 
