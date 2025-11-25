@@ -15,7 +15,7 @@ export const useTrafficData = () => {
   const trafficRef = useRef<TrafficRef>(null);
   const {
     graphData: { appendData },
-  } = useTrafficMonitorEnhanced();
+  } = useTrafficMonitorEnhanced({ subscribe: false });
   const ws = useRef<MihomoWebSocket | null>(null);
   const wsFirstConnection = useRef<boolean>(true);
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>(null);
