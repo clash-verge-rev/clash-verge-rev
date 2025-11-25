@@ -17,6 +17,7 @@ import { useTranslation } from "react-i18next";
 
 import { useVerge } from "@/hooks/use-verge";
 import delayManager from "@/services/delay";
+import { debugLog } from "@/utils/debug";
 
 import type { ProxySortType } from "./use-filter-sort";
 import type { HeadState } from "./use-head-state";
@@ -78,10 +79,10 @@ export const ProxyHead = ({
         color="inherit"
         title={t("proxies.page.tooltips.delayCheck")}
         onClick={() => {
-          console.log(`[ProxyHead] 点击延迟测试按钮，组: ${groupName}`);
+          debugLog(`[ProxyHead] 点击延迟测试按钮，组: ${groupName}`);
           // Remind the user that it is custom test url
           if (testUrl?.trim() && textState !== "filter") {
-            console.log(`[ProxyHead] 使用自定义测试URL: ${testUrl}`);
+            debugLog(`[ProxyHead] 使用自定义测试URL: ${testUrl}`);
             onHeadState({ textState: "url" });
           }
           onCheckDelay();

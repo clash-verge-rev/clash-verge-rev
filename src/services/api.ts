@@ -1,5 +1,7 @@
 import { fetch } from "@tauri-apps/plugin-http";
 
+import { debugLog } from "@/utils/debug";
+
 // Get current IP and geolocation information （refactored IP detection with service-specific mappings）
 interface IpInfo {
   ip: string;
@@ -163,7 +165,7 @@ export const getIpInfo = async (): Promise<IpInfo> => {
     let lastError: Error | null = null;
 
     for (const service of shuffledServices) {
-      console.log(`尝试IP检测服务: ${service.url}`);
+      debugLog(`尝试IP检测服务: ${service.url}`);
 
       for (let attempt = 0; attempt < maxRetries; attempt++) {
         let timeoutId: ReturnType<typeof setTimeout> | null = null;
@@ -186,7 +188,7 @@ export const getIpInfo = async (): Promise<IpInfo> => {
           if (timeoutId) clearTimeout(timeoutId);
 
           if (data && data.ip) {
-            console.log(`IP检测成功，使用服务: ${service.url}`);
+            debugLog(`IP检测成功，使用服务: ${service.url}`);
             return service.mapping(data);
           } else {
             throw new Error(`无效的响应格式 from ${service.url}`);

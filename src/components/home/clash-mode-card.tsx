@@ -9,8 +9,8 @@ import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import { closeAllConnections } from "tauri-plugin-mihomo-api";
 
+import { useClashConfig } from "@/hooks/app-data";
 import { useVerge } from "@/hooks/use-verge";
-import { useAppData } from "@/providers/app-data-context";
 import { patchClashMode } from "@/services/cmds";
 import type { TranslationKey } from "@/types/generated/i18n-keys";
 
@@ -41,7 +41,7 @@ const MODE_META: Record<
 export const ClashModeCard = () => {
   const { t } = useTranslation();
   const { verge } = useVerge();
-  const { clashConfig, refreshClashConfig } = useAppData();
+  const { clashConfig, refreshClashConfig } = useClashConfig();
 
   // 支持的模式列表
   const modeList = CLASH_MODES;

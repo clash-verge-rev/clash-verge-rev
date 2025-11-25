@@ -60,6 +60,7 @@ export function GuardState<T>(props: Props<T>) {
 
       if (waitTime <= 0) {
         await onGuard(newValue, value!);
+        lockRef.current = false;
       } else {
         // debounce guard
         clearTimeout(timeRef.current);
@@ -71,6 +72,8 @@ export function GuardState<T>(props: Props<T>) {
             // 状态回退
             onChange(saveRef.current!);
             onCatch(err);
+          } finally {
+            lockRef.current = false;
           }
         }, waitTime);
       }
@@ -78,8 +81,8 @@ export function GuardState<T>(props: Props<T>) {
       // 状态回退
       onChange(saveRef.current!);
       onCatch(err);
+      lockRef.current = false;
     }
-    lockRef.current = false;
   };
   const { children: nestedChildren, ...restProps } = childProps;
 

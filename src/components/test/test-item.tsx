@@ -13,6 +13,7 @@ import { useListen } from "@/hooks/use-listen";
 import { cmdTestDelay, downloadIconCache } from "@/services/cmds";
 import delayManager from "@/services/delay";
 import { showNotice } from "@/services/noticeService";
+import { debugLog } from "@/utils/debug";
 
 import { TestBox } from "./test-box";
 
@@ -107,7 +108,7 @@ export const TestItem = ({
 
     return () => {
       if (unlistenFn) {
-        console.log(
+        debugLog(
           `TestItem for ${id} unmounting or url changed, cleaning up test-all listener.`,
         );
         unlistenFn();

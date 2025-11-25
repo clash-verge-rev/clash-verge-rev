@@ -35,6 +35,7 @@ clash-verge-logging = { workspace = true }
 clash-verge-signal = { workspace = true }
 clash-verge-types = { workspace = true }
 tauri-plugin-clash-verge-sysinfo = { workspace = true }
+tauri-plugin-clipboard-manager = { workspace = true }
 tauri = { workspace = true, features = [
   "protocol-asset",
   "devtools",
@@ -62,7 +63,7 @@ once_cell = { version = "1.21.3", features = ["parking_lot"] }
 port_scanner = "0.1.5"
 delay_timer = "0.11.6"
 percent-encoding = "2.3.2"
-reqwest = { version = "0.12.24", features = ["json", "cookies"] }
+reqwest = { version = "0.12.24", features = ["json", "cookies", "native-tls"] }
 regex = "1.12.2"
 sysproxy = { git = "https://github.com/clash-verge-rev/sysproxy-rs", features = [
   "guard",
@@ -72,7 +73,6 @@ tauri-plugin-shell = "2.3.3"
 tauri-plugin-dialog = "2.4.2"
 tauri-plugin-fs = "2.4.4"
 tauri-plugin-process = "2.3.1"
-tauri-plugin-clipboard-manager = "2.3.2"
 tauri-plugin-deep-link = "2.4.5"
 tauri-plugin-window-state = "2.4.1"
 zip = "6.0.0"
@@ -98,6 +98,7 @@ clash_verge_service_ipc = { version = "2.0.21", features = [
 ], git = "https://github.com/clash-verge-rev/clash-verge-service-ipc" }
 arc-swap = "1.7.1"
 rust-i18n = "3.1.5"
+rust_iso3166 = "0.1.14"
 
 [target.'cfg(windows)'.dependencies]
 deelevate = { workspace = true }

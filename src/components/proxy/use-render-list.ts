@@ -1,10 +1,11 @@
 import { useEffect, useMemo } from "react";
 import useSWR from "swr";
 
+import { useProxiesData } from "@/hooks/app-data";
 import { useVerge } from "@/hooks/use-verge";
-import { useAppData } from "@/providers/app-data-context";
 import { getRuntimeConfig } from "@/services/cmds";
 import delayManager from "@/services/delay";
+import { debugLog } from "@/utils/debug";
 
 import { filterSort } from "./use-filter-sort";
 import {
@@ -33,24 +34,8 @@ interface IProxyItem {
 }
 
 // 代理组类型
-type ProxyGroup = {
-  name: string;
-  type: string;
-  udp: boolean;
-  xudp: boolean;
-  tfo: boolean;
-  mptcp: boolean;
-  smux: boolean;
-  history: {
-    time: string;
-    delay: number;
-  }[];
-  now: string;
-  all: IProxyItem[];
-  hidden?: boolean;
-  icon?: string;
-  testUrl?: string;
-  provider?: string;
+type ProxyGroup = IProxyGroupItem & {
+  now?: string;
 };
 
 export interface IRenderItem {
@@ -99,7 +84,7 @@ export const useRenderList = (
   selectedGroup?: string | null,
 ) => {
   // 使用全局数据提供者
-  const { proxies: proxiesData, refreshProxy } = useAppData();
+  const { proxies: proxiesData, refreshProxy } = useProxiesData();
   const { verge } = useVerge();
   const { width } = useWindowWidth();
   const [headStates, setHeadState] = useHeadStateNew();
@@ -146,7 +131,7 @@ export const useRenderList = (
 
     // 设置组监听器，当有延迟更新时自动刷新
     const groupListener = () => {
-      console.log("[ChainMode] 延迟更新，刷新UI");
+      debugLog("[ChainMode] 延迟更新，刷新UI");
       refreshProxy();
     };
 
@@ -157,7 +142,7 @@ export const useRenderList = (
         const timeout = verge?.default_latency_timeout || 10000;
         const proxyNames = allProxies.map((proxy) => proxy.name);
 
-        console.log(`[ChainMode] 开始计算 ${proxyNames.length} 个节点的延迟`);
+        debugLog(`[ChainMode] 开始计算 ${proxyNames.length} 个节点的延迟`);
 
         // 使用 delayManager 计算延迟，每个节点计算完成后会自动触发监听器刷新界面
         delayManager.checkListDelay(proxyNames, "chain-mode", timeout);

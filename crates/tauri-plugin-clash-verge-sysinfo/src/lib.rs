@@ -3,6 +3,8 @@ use std::{
     time::Instant,
 };
 
+pub mod commands;
+
 #[cfg(windows)]
 use deelevate::{PrivilegeLevel, Token};
 use parking_lot::RwLock;
@@ -131,10 +133,23 @@ pub fn set_app_core_mode<R: Runtime>(app: &tauri::AppHandle<R>, mode: impl Into<
 }
 
 #[inline]
+pub fn is_current_app_handle_admin<R: Runtime>(app: &tauri::AppHandle<R>) -> bool {
+    let platform_spec = app.state::<RwLock<Platform>>();
+    let spec = platform_spec.read();
+    spec.appinfo.app_is_admin
+}
+
+#[inline]
 pub fn init<R: Runtime>() -> TauriPlugin<R> {
-    Builder::new("clash_verge_sysinfo")
+    Builder::<R>::new("clash_verge_sysinfo")
+        // TODO 现在 crate 还不是真正的 tauri 插件，必须由主 lib 自行注册
         // TODO 从 clash-verge 中迁移获取系统信息的 commnand 并实现优雅 structure.field 访问
-        // .invoke_handler(tauri::generate_handler![greet])
+        // .invoke_handler(tauri::generate_handler![
+        //     commands::get_system_info,
+        //     commands::get_app_uptime,
+        //     commands::app_is_admin,
+        //     commands::export_diagnostic_info,
+        // ])
         .setup(move |app, _api| {
             let app_version = app.package_info().version.to_string();
             let is_admin = is_binary_admin();

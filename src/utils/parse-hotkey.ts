@@ -1,5 +1,7 @@
 import { KeyboardEvent } from "react";
 
+import { debugLog } from "@/utils/debug";
+
 const KEY_MAP: Record<string, string> = {
   // Option + 特殊字符映射
   "–": "Minus", // Option + -
@@ -62,7 +64,7 @@ export const parseHotkey = (keyEvent: KeyboardEvent) => {
   } else if (temp.endsWith("RIGHT")) {
     temp = temp.slice(0, -5);
   }
-  console.log(temp, mapKeyCombination(temp));
+  debugLog(temp, mapKeyCombination(temp));
 
   switch (temp) {
     case "CONTROL":

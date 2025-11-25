@@ -37,6 +37,7 @@ import {
 import { showNotice } from "@/services/noticeService";
 import { useLoadingCache, useSetLoadingCache } from "@/services/states";
 import type { TranslationKey } from "@/types/generated/i18n-keys";
+import { debugLog } from "@/utils/debug";
 import parseTraffic from "@/utils/parse-traffic";
 
 import { ProfileBox } from "./profile-box";
@@ -104,16 +105,16 @@ export const ProfileItem = (props: Props) => {
       itemData.option.update_interval > 0
     ) {
       try {
-        console.log(`尝试获取配置 ${itemData.uid} 的下次更新时间`);
+        debugLog(`尝试获取配置 ${itemData.uid} 的下次更新时间`);
 
         // 如果需要强制刷新，先触发Timer.refresh()
         if (forceRefresh) {
           // 这里可以通过一个新的API来触发刷新，但目前我们依赖patch_profile中的刷新
-          console.log(`强制刷新定时器任务`);
+          debugLog(`强制刷新定时器任务`);
         }
 
         const nextUpdate = await getNextUpdateTime(itemData.uid);
-        console.log(`获取到下次更新时间结果:`, nextUpdate);
+        debugLog(`获取到下次更新时间结果:`, nextUpdate);
 
         if (nextUpdate) {
           const nextUpdateDate = dayjs(nextUpdate * 1000);
@@ -147,7 +148,7 @@ export const ProfileItem = (props: Props) => {
             }
           }
         } else {
-          console.log(`返回的下次更新时间为空`);
+          debugLog(`返回的下次更新时间为空`);
           setNextUpdateTime(
             t("profiles.components.profileItem.status.noSchedule"),
           );
@@ -157,7 +158,7 @@ export const ProfileItem = (props: Props) => {
         setNextUpdateTime(t("profiles.components.profileItem.status.unknown"));
       }
     } else {
-      console.log(`该配置未设置更新间隔或间隔为0`);
+      debugLog(`该配置未设置更新间隔或间隔为0`);
       setNextUpdateTime(
         t("profiles.components.profileItem.status.autoUpdateDisabled"),
       );
@@ -197,7 +198,7 @@ export const ProfileItem = (props: Props) => {
 
       // 只有当更新的是当前配置时才刷新显示
       if (updatedUid === itemData.uid && showNextUpdate) {
-        console.log(`收到定时器更新事件: uid=${updatedUid}`);
+        debugLog(`收到定时器更新事件: uid=${updatedUid}`);
         if (refreshTimeout !== undefined) {
           clearTimeout(refreshTimeout);
         }

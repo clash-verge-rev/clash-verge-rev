@@ -15,6 +15,7 @@ import {
   patchClashMode,
   updateProxyChainConfigInRuntime,
 } from "@/services/cmds";
+import { debugLog } from "@/utils/debug";
 
 const MODES = ["rule", "global", "direct"] as const;
 type Mode = (typeof MODES)[number];
@@ -81,9 +82,9 @@ const ProxyPage = () => {
     if (!newChainMode) {
       // 退出链式代理模式时，清除链式代理配置
       try {
-        console.log("Exiting chain mode, clearing chain configuration");
+        debugLog("Exiting chain mode, clearing chain configuration");
         await updateProxyChainConfigInRuntime(null);
-        console.log("Chain configuration cleared successfully");
+        debugLog("Chain configuration cleared successfully");
       } catch (error) {
         console.error("Failed to clear chain configuration:", error);
       }

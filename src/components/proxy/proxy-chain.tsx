@@ -39,8 +39,9 @@ import {
   selectNodeForGroup,
 } from "tauri-plugin-mihomo-api";
 
-import { useAppData } from "@/providers/app-data-context";
+import { useProxiesData } from "@/hooks/app-data";
 import { calcuProxies, updateProxyChainConfigInRuntime } from "@/services/cmds";
+import { debugLog } from "@/utils/debug";
 
 interface ProxyChainItem {
   id: string;
@@ -199,7 +200,7 @@ export const ProxyChain = ({
 }: ProxyChainProps) => {
   const theme = useTheme();
   const { t } = useTranslation();
-  const { proxies } = useAppData();
+  const { proxies } = useProxiesData();
   const [isConnecting, setIsConnecting] = useState(false);
   const markUnsavedChanges = useCallback(() => {
     onMarkUnsavedChanges?.();
@@ -319,13 +320,13 @@ export const ProxyChain = ({
     try {
       // 第一步：保存链式代理配置
       const chainProxies = proxyChain.map((node) => node.name);
-      console.log("Saving chain config:", chainProxies);
+      debugLog("Saving chain config:", chainProxies);
       await updateProxyChainConfigInRuntime(chainProxies);
-      console.log("Chain configuration saved successfully");
+      debugLog("Chain configuration saved successfully");
 
       // 第二步：连接到代理链的最后一个节点
       const lastNode = proxyChain[proxyChain.length - 1];
-      console.log(`Connecting to proxy chain, last node: ${lastNode.name}`);
+      debugLog(`Connecting to proxy chain, last node: ${lastNode.name}`);
 
       // 根据模式确定使用的代理组名称
       if (mode !== "global" && !selectedGroup) {
@@ -340,7 +341,7 @@ export const ProxyChain = ({
 
       // 刷新代理信息以更新连接状态
       mutateProxies();
-      console.log("Successfully connected to proxy chain");
+      debugLog("Successfully connected to proxy chain");
     } catch (error) {
       console.error("Failed to connect to proxy chain:", error);
       alert(t("proxies.page.chain.connectFailed") || "连接链式代理失败");

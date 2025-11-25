@@ -21,7 +21,6 @@ use sysproxy::{Autoproxy, GuardMonitor, GuardType, Sysproxy};
 use tauri_plugin_autostart::ManagerExt as _;
 
 pub struct Sysopt {
-    initialed: AtomicBool,
     update_sysproxy: AtomicBool,
     reset_sysproxy: AtomicBool,
     guard: Arc<RwLock<GuardMonitor>>,
@@ -30,7 +29,6 @@ pub struct Sysopt {
 impl Default for Sysopt {
     fn default() -> Self {
         Self {
-            initialed: AtomicBool::new(false),
             update_sysproxy: AtomicBool::new(false),
             reset_sysproxy: AtomicBool::new(false),
             guard: Arc::new(RwLock::new(GuardMonitor::new(
@@ -110,10 +108,6 @@ impl Sysopt {
         Self::default()
     }
 
-    pub fn is_initialed(&self) -> bool {
-        self.initialed.load(Ordering::SeqCst)
-    }
-
     fn access_guard(&self) -> Arc<RwLock<GuardMonitor>> {
         Arc::clone(&self.guard)
     }
@@ -151,7 +145,6 @@ impl Sysopt {
 
     /// init the sysproxy
     pub async fn update_sysproxy(&self) -> Result<()> {
-        self.initialed.store(true, Ordering::SeqCst);
         if self.update_sysproxy.load(Ordering::Acquire) {
             logging!(info, Type::Core, "Sysproxy update is already in progress.");
             return Ok(());
