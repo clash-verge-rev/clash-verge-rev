@@ -1131,6 +1131,7 @@ dependencies = [
  "futures",
  "gethostname",
  "getrandom 0.3.4",
+ "indexmap 2.12.1",
  "log",
  "nanoid",
  "network-interface",
