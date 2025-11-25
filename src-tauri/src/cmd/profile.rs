@@ -16,6 +16,7 @@ use crate::{
     ret_err,
     utils::{dirs, help},
 };
+use clash_verge_draft::SharedBox;
 use clash_verge_logging::{Type, logging};
 use scopeguard::defer;
 use smartstring::alias::String;
@@ -25,10 +26,10 @@ use std::time::Duration;
 static CURRENT_SWITCHING_PROFILE: AtomicBool = AtomicBool::new(false);
 
 #[tauri::command]
-pub async fn get_profiles() -> CmdResult<IProfiles> {
+pub async fn get_profiles() -> CmdResult<SharedBox<IProfiles>> {
     logging!(debug, Type::Cmd, "获取配置文件列表");
     let draft = Config::profiles().await;
-    let data = (**draft.data_arc()).clone();
+    let data = draft.data_arc();
     Ok(data)
 }
 
@@ -92,7 +93,7 @@ pub async fn import_profile(url: std::string::String, option: Option<PrfOption>)
             return Err(format!("导入订阅失败: {}", e).into());
         }
     }
-    // 立即发送配置变更通知
+
     if let Some(uid) = &item.uid {
         logging!(info, Type::Cmd, "[导入订阅] 发送配置变更通知: {}", uid);
         handle::Handle::notify_profile_changed(uid.clone());
@@ -103,6 +104,7 @@ pub async fn import_profile(url: std::string::String, option: Option<PrfOption>)
     if let Some(uid) = uid_clone {
         // 延迟发送，确保文件已完全写入
         tokio::time::sleep(Duration::from_millis(100)).await;
+        logging!(info, Type::Cmd, "[导入订阅] 发送配置变更通知: {}", uid);
         handle::Handle::notify_profile_changed(uid);
     }
 
@@ -135,9 +137,9 @@ pub async fn create_profile(item: PrfItem, file_data: Option<String>) -> CmdResu
     match profiles_append_item_with_filedata_safe(&item, file_data).await {
         Ok(_) => {
             // 发送配置变更通知
-            if let Some(uid) = &item.uid {
+            if let Some(uid) = item.uid.clone() {
                 logging!(info, Type::Cmd, "[创建订阅] 发送配置变更通知: {}", uid);
-                handle::Handle::notify_profile_changed(uid.clone());
+                handle::Handle::notify_profile_changed(uid);
             }
             Config::profiles().await.apply();
             AutoBackupManager::trigger_backup(AutoBackupTrigger::ProfileChange);
@@ -493,7 +495,7 @@ pub async fn view_profile(index: String) -> CmdResult {
         .get_item(&index)
         .stringify_err()?
         .file
-        .clone()
+        .as_ref()
         .ok_or("the file field is null")?;
 
     let path = dirs::app_profiles_dir()
@@ -513,7 +515,11 @@ pub async fn read_profile_file(index: String) -> CmdResult<String> {
         let profiles = Config::profiles().await;
         let profiles_ref = profiles.latest_arc();
         PrfItem {
-            file: profiles_ref.get_item(&index).stringify_err()?.file.clone(),
+            file: profiles_ref
+                .get_item(&index)
+                .stringify_err()?
+                .file
+                .to_owned(),
             ..Default::default()
         }
     };
