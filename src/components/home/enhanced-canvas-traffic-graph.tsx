@@ -110,7 +110,7 @@ export const EnhancedCanvasTrafficGraph = memo(
     const { t } = useTranslation();
 
     // 使用增强版全局流量数据管理
-    const { dataPoints, getDataForTimeRange, samplerStats } =
+    const { dataPoints, requestRange, samplerStats } =
       useTrafficGraphDataEnhanced();
 
     // 基础状态
@@ -183,8 +183,7 @@ export const EnhancedCanvasTrafficGraph = memo(
 
     // 监听数据变化
     useEffect(() => {
-      const timeRangeData = getDataForTimeRange(timeRange);
-      updateDisplayData(timeRangeData);
+      updateDisplayData(dataPoints);
 
       return () => {
         if (debounceTimeoutRef.current !== null) {
@@ -192,7 +191,11 @@ export const EnhancedCanvasTrafficGraph = memo(
           debounceTimeoutRef.current = null;
         }
       };
-    }, [dataPoints, timeRange, getDataForTimeRange, updateDisplayData]);
+    }, [dataPoints, updateDisplayData]);
+
+    useEffect(() => {
+      requestRange(timeRange);
+    }, [requestRange, timeRange]);
 
     useEffect(() => {
       if (displayData.length === 0) {
