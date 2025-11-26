@@ -8,9 +8,25 @@ use tauri_plugin_clash_verge_sysinfo::is_binary_admin;
 use tokio::process::Command;
 
 const CN_RECOMMENDED_SERVERS: &[&str] = &["ntp.ntsc.ac.cn", "210.72.145.44", "ntp.aliyun.com"];
-const GLOBAL_RECOMMENDED_SERVERS: &[&str] =
-    &["time.cloudflare.com", "time.google.com", "pool.ntp.org"];
+const CN_TZ_TARGETS: &[&str] = &["asia/shanghai"];
+const DEFAULT_GLOBAL_FALLBACK: &str = "pool.ntp.org";
+const GLOBAL_RECOMMENDED_SERVERS: &[&str] = &[
+    "time.cloudflare.com",
+    "time.google.com",
+    DEFAULT_GLOBAL_FALLBACK,
+];
 const MAX_RECOMMENDED: usize = 8;
+#[cfg(target_os = "windows")]
+// CREATE_NO_WINDOW to avoid flashing console windows when invoking CLI tools
+const CREATE_NO_WINDOW: u32 = 0x08000000;
+#[cfg(target_os = "windows")]
+const WINDOWS_MANUAL_PEER_FLAG: &str = "0x9";
+#[cfg(target_os = "windows")]
+const W32TIME_PARAMETERS_KEY: &str = "SYSTEM\\CurrentControlSet\\Services\\W32Time\\Parameters";
+#[cfg(target_os = "linux")]
+const TIMESYNCD_DROPIN_DIR: &str = "/etc/systemd/timesyncd.conf.d";
+#[cfg(target_os = "linux")]
+const TIMESYNCD_DROPIN_FILE: &str = "clash-verge.conf";
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -59,10 +75,12 @@ async fn recommended_servers() -> Vec<String> {
     // 4) always ensure at least one global fallback is present
     let mut seen: HashSet<String> = HashSet::new();
     servers.retain(|s| seen.insert(s.to_ascii_lowercase()));
-    for &global in GLOBAL_RECOMMENDED_SERVERS {
-        if seen.insert(global.to_ascii_lowercase()) {
-            servers.push(global.to_string());
-            break;
+    if !has_global_recommended(&servers) {
+        for &global in GLOBAL_RECOMMENDED_SERVERS {
+            if seen.insert(global.to_ascii_lowercase()) {
+                servers.push(global.to_string());
+                break;
+            }
         }
     }
 
@@ -70,13 +88,9 @@ async fn recommended_servers() -> Vec<String> {
     if servers.len() > MAX_RECOMMENDED {
         servers.truncate(MAX_RECOMMENDED);
     }
+    let has_global = has_global_recommended(&servers);
     // ensure a global fallback survives the cap
-    if !servers.iter().any(|s| {
-        GLOBAL_RECOMMENDED_SERVERS
-            .iter()
-            .any(|g| s.eq_ignore_ascii_case(g))
-    }) && let Some(global) = GLOBAL_RECOMMENDED_SERVERS.first()
-    {
+    if !has_global && let Some(global) = GLOBAL_RECOMMENDED_SERVERS.first() {
         if servers.is_empty() {
             servers.push((*global).to_string());
         } else {
@@ -86,6 +100,14 @@ async fn recommended_servers() -> Vec<String> {
     }
 
     servers
+}
+
+fn has_global_recommended(servers: &[String]) -> bool {
+    servers.iter().any(|s| {
+        GLOBAL_RECOMMENDED_SERVERS
+            .iter()
+            .any(|g| s.eq_ignore_ascii_case(g))
+    })
 }
 
 fn is_recommended(server: &str, recommended: &[String]) -> bool {
@@ -102,7 +124,7 @@ fn is_cn_like_locale() -> bool {
 
     let tz = normalize_tz(&env::var("TZ").unwrap_or_default());
 
-    let is_cn_tz = matches_timezone(&tz, &["asia/shanghai"]);
+    let is_cn_tz = matches_timezone(&tz, CN_TZ_TARGETS);
     if is_cn_tz {
         return true;
     }
@@ -255,7 +277,7 @@ use winreg::{
 fn recommended_peer_list(servers: &[String]) -> String {
     servers
         .iter()
-        .map(|s| format!("{s},0x9"))
+        .map(|s| format!("{s},{WINDOWS_MANUAL_PEER_FLAG}"))
         .collect::<Vec<_>>()
         .join(" ")
 }
@@ -268,7 +290,7 @@ async fn ensure_windows_time_service() {
 
     let _ = Command::new("sc")
         .args(["start", "w32time"])
-        .creation_flags(0x08000000)
+        .creation_flags(CREATE_NO_WINDOW)
         .stdin(Stdio::null())
         .stdout(Stdio::null())
         .stderr(Stdio::null())
@@ -287,10 +309,9 @@ async fn platform_check_ntp_status() -> Result<NtpStatus> {
     let recommended = recommended_servers().await;
     let has_w32tm = command_exists("w32tm");
 
-    match RegKey::predef(HKEY_LOCAL_MACHINE).open_subkey_with_flags(
-        "SYSTEM\\CurrentControlSet\\Services\\W32Time\\Parameters",
-        KEY_READ,
-    ) {
+    match RegKey::predef(HKEY_LOCAL_MACHINE)
+        .open_subkey_with_flags(W32TIME_PARAMETERS_KEY, KEY_READ)
+    {
         Ok(key) => {
             let ntp_server: String = key.get_value("NtpServer").unwrap_or_default();
             let sync_type: String = key.get_value("Type").unwrap_or_default();
@@ -338,7 +359,7 @@ async fn platform_sync_ntp() -> Result<()> {
 
     let output = Command::new("w32tm")
         .args(["/resync", "/force"])
-        .creation_flags(0x08000000)
+        .creation_flags(CREATE_NO_WINDOW)
         .stdin(Stdio::null())
         .output()
         .await
@@ -378,7 +399,7 @@ async fn platform_apply_recommended_ntp() -> Result<NtpStatus> {
             "/syncfromflags:manual",
             "/update",
         ])
-        .creation_flags(0x08000000)
+        .creation_flags(CREATE_NO_WINDOW)
         .stdin(Stdio::null())
         .output()
         .await
@@ -448,7 +469,7 @@ async fn platform_sync_ntp() -> Result<()> {
     let server = recommended
         .get(0)
         .cloned()
-        .unwrap_or_else(|| "pool.ntp.org".into());
+        .unwrap_or_else(|| DEFAULT_GLOBAL_FALLBACK.into());
 
     if command_exists("sntp") {
         logging!(
@@ -470,7 +491,7 @@ async fn platform_apply_recommended_ntp() -> Result<NtpStatus> {
     let server = recommended
         .get(0)
         .cloned()
-        .unwrap_or_else(|| "pool.ntp.org".into());
+        .unwrap_or_else(|| DEFAULT_GLOBAL_FALLBACK.into());
 
     if command_exists(SYSTEM_SETUP) {
         logging!(
@@ -579,7 +600,7 @@ async fn platform_sync_ntp() -> Result<()> {
         let server = recommended
             .get(0)
             .cloned()
-            .unwrap_or_else(|| "pool.ntp.org".into());
+            .unwrap_or_else(|| DEFAULT_GLOBAL_FALLBACK.into());
         logging!(info, Type::System, "Triggering ntpdate sync via {}", server);
         let _ = run_command("ntpdate", &["-u", &server]).await?;
         return Ok(());
@@ -608,8 +629,8 @@ async fn platform_apply_recommended_ntp() -> Result<NtpStatus> {
     }
     let recommended = recommended_servers().await;
 
-    let config_dir = Path::new("/etc/systemd/timesyncd.conf.d");
-    let config_file = config_dir.join("clash-verge.conf");
+    let config_dir = Path::new(TIMESYNCD_DROPIN_DIR);
+    let config_file = config_dir.join(TIMESYNCD_DROPIN_FILE);
     let content = format!("[Time]\nNTP={}\n", recommended.join(" "));
 
     tokio::fs::create_dir_all(config_dir)
