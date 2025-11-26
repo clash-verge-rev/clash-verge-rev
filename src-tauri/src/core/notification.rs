@@ -13,6 +13,7 @@ use std::{
 };
 use tauri::{Emitter as _, WebviewWindow};
 
+// TODO 重构或优化，避免 Clone 过多
 #[derive(Debug, Clone)]
 pub enum FrontendEvent {
     RefreshClash,

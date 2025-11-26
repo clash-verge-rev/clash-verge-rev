@@ -153,6 +153,7 @@ export const BackupConfigViewer = memo(
                   autoCapitalize="off"
                   spellCheck="false"
                   inputRef={urlRef}
+                  sx={{ mt: 1 }}
                 />
               </Grid>
               <Grid size={{ xs: 6 }}>
