@@ -23,7 +23,9 @@ use tauri_plugin_autostart::ManagerExt as _;
 pub struct Sysopt {
     update_sysproxy: AtomicBool,
     reset_sysproxy: AtomicBool,
+    #[cfg(not(target_os = "windows"))]
     sysproxy: Arc<Mutex<Sysproxy>>,
+    #[cfg(not(target_os = "windows"))]
     autoproxy: Arc<Mutex<Autoproxy>>,
     guard: Arc<RwLock<GuardMonitor>>,
 }
@@ -33,7 +35,9 @@ impl Default for Sysopt {
         Self {
             update_sysproxy: AtomicBool::new(false),
             reset_sysproxy: AtomicBool::new(false),
+            #[cfg(not(target_os = "windows"))]
             sysproxy: Arc::new(Mutex::new(Sysproxy::default())),
+            #[cfg(not(target_os = "windows"))]
             autoproxy: Arc::new(Mutex::new(Autoproxy::default())),
             guard: Arc::new(RwLock::new(GuardMonitor::new(
                 GuardType::None,
@@ -189,27 +193,25 @@ impl Sysopt {
 
         #[cfg(not(target_os = "windows"))]
         {
-            let mut sys = Sysproxy {
-                enable: false,
-                host: proxy_host.clone().into(),
-                port,
-                bypass: get_bypass().await.into(),
-            };
-            let mut auto = Autoproxy {
-                enable: false,
-                url: format!("http://{proxy_host}:{pac_port}/commands/pac"),
-            };
-            {
-                *self.sysproxy.lock() = sys.clone();
-                *self.autoproxy.lock() = auto.clone();
-            }
+            // 先 await, 避免持有锁导致的 Send 问题
+            let bypass = get_bypass().await;
+
+            let mut sys = self.sysproxy.lock();
+            sys.enable = false;
+            sys.host = proxy_host.clone().into();
+            sys.port = port;
+            sys.bypass = bypass.into();
+
+            let mut auto = self.autoproxy.lock();
+            auto.enable = false;
+            auto.url = format!("http://{proxy_host}:{pac_port}/commands/pac");
 
             if !sys_enable {
                 sys.set_system_proxy()?;
                 auto.set_auto_proxy()?;
                 self.access_guard()
                     .write()
-                    .set_guard_type(GuardType::Sysproxy(sys));
+                    .set_guard_type(GuardType::Sysproxy(sys.clone()));
                 return Ok(());
             }
 
@@ -220,7 +222,7 @@ impl Sysopt {
                 auto.set_auto_proxy()?;
                 self.access_guard()
                     .write()
-                    .set_guard_type(GuardType::Autoproxy(auto));
+                    .set_guard_type(GuardType::Autoproxy(auto.clone()));
                 return Ok(());
             }
 
@@ -229,9 +231,11 @@ impl Sysopt {
                 sys.enable = true;
                 auto.set_auto_proxy()?;
                 sys.set_system_proxy()?;
+                drop(auto);
                 self.access_guard()
                     .write()
-                    .set_guard_type(GuardType::Sysproxy(sys));
+                    .set_guard_type(GuardType::Sysproxy(sys.clone()));
+                drop(sys);
                 return Ok(());
             }
         }
