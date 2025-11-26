@@ -5,7 +5,7 @@ import {
   VisibilityOutlined,
 } from "@mui/icons-material";
 import { Box, Button, IconButton, Skeleton, Typography } from "@mui/material";
-import { memo, useCallback, useEffect, useState } from "react";
+import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { getIpInfo } from "@/services/api";
@@ -14,6 +14,7 @@ import { EnhancedCard } from "./enhanced-card";
 
 // 定义刷新时间（秒）
 const IP_REFRESH_SECONDS = 300;
+const IP_INFO_CACHE_KEY = "cv_ip_info_cache";
 
 // 提取InfoItem子组件并使用memo优化
 const InfoItem = memo(({ label, value }: { label: string; value: string }) => (
@@ -59,47 +60,100 @@ export const IpInfoCard = () => {
   const [error, setError] = useState("");
   const [showIp, setShowIp] = useState(false);
   const [countdown, setCountdown] = useState(IP_REFRESH_SECONDS);
+  const lastFetchRef = useRef<number | null>(null);
 
-  // 获取IP信息
-  const fetchIpInfo = useCallback(async () => {
-    try {
-      setLoading(true);
+  const fetchIpInfo = useCallback(
+    async (force = false) => {
       setError("");
-      const data = await getIpInfo();
-      setIpInfo(data);
-      setCountdown(IP_REFRESH_SECONDS);
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : t("home.components.ipInfo.errors.load"),
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, [t]);
 
-  // 组件加载时获取IP信息
+      try {
+        if (!force && typeof window !== "undefined" && window.sessionStorage) {
+          const raw = window.sessionStorage.getItem(IP_INFO_CACHE_KEY);
+          if (raw) {
+            const parsed = JSON.parse(raw);
+            const now = Date.now();
+            if (
+              parsed?.ts &&
+              parsed?.data &&
+              now - parsed.ts < IP_REFRESH_SECONDS * 1000
+            ) {
+              setIpInfo(parsed.data);
+              lastFetchRef.current = parsed.ts;
+              const elapsed = Math.floor((now - parsed.ts) / 1000);
+              setCountdown(Math.max(IP_REFRESH_SECONDS - elapsed, 0));
+              setLoading(false);
+              return;
+            }
+          }
+        }
+      } catch (e) {
+        console.warn("Failed to read IP info from sessionStorage:", e);
+      }
+
+      try {
+        setLoading(true);
+        const data = await getIpInfo();
+        setIpInfo(data);
+        const ts = Date.now();
+        lastFetchRef.current = ts;
+        try {
+          if (typeof window !== "undefined" && window.sessionStorage) {
+            window.sessionStorage.setItem(
+              IP_INFO_CACHE_KEY,
+              JSON.stringify({ data, ts }),
+            );
+          }
+        } catch (e) {
+          console.warn("Failed to write IP info to sessionStorage:", e);
+        }
+        setCountdown(IP_REFRESH_SECONDS);
+      } catch (err) {
+        setError(
+          err instanceof Error
+            ? err.message
+            : t("home.components.ipInfo.errors.load"),
+        );
+      } finally {
+        setLoading(false);
+      }
+    },
+    [t],
+  );
+
+  // 组件加载时获取IP信息并启动基于上次请求时间的倒计时
   useEffect(() => {
     fetchIpInfo();
 
-    // 倒计时实现优化，减少不必要的重渲染
     let timer: number | null = null;
-    let currentCount = IP_REFRESH_SECONDS;
 
-    // 只在必要时更新状态，减少重渲染次数
     const startCountdown = () => {
       timer = window.setInterval(() => {
-        currentCount -= 1;
+        const now = Date.now();
+        let ts = lastFetchRef.current;
+        try {
+          if (!ts && typeof window !== "undefined" && window.sessionStorage) {
+            const raw = window.sessionStorage.getItem(IP_INFO_CACHE_KEY);
+            if (raw) {
+              const parsed = JSON.parse(raw);
+              ts = parsed?.ts || null;
+            }
+          }
+        } catch (e) {
+          console.warn("Failed to read IP info from sessionStorage:", e);
+          ts = ts || null;
+        }
 
-        if (currentCount <= 0) {
+        const elapsed = ts ? Math.floor((now - ts) / 1000) : 0;
+        let remaining = IP_REFRESH_SECONDS - elapsed;
+
+        if (remaining <= 0) {
           fetchIpInfo();
-          currentCount = IP_REFRESH_SECONDS;
+          remaining = IP_REFRESH_SECONDS;
         }
 
         // 每5秒或倒计时结束时才更新UI
-        if (currentCount % 5 === 0 || currentCount <= 0) {
-          setCountdown(currentCount);
+        if (remaining % 5 === 0 || remaining <= 0) {
+          setCountdown(remaining);
         }
       }, 1000);
     };
@@ -122,7 +176,11 @@ export const IpInfoCard = () => {
         icon={<LocationOnOutlined />}
         iconColor="info"
         action={
-          <IconButton size="small" onClick={fetchIpInfo} disabled={true}>
+          <IconButton
+            size="small"
+            onClick={() => fetchIpInfo(true)}
+            disabled={true}
+          >
             <RefreshOutlined />
           </IconButton>
         }
@@ -145,7 +203,7 @@ export const IpInfoCard = () => {
         icon={<LocationOnOutlined />}
         iconColor="info"
         action={
-          <IconButton size="small" onClick={fetchIpInfo}>
+          <IconButton size="small" onClick={() => fetchIpInfo(true)}>
             <RefreshOutlined />
           </IconButton>
         }
@@ -163,7 +221,7 @@ export const IpInfoCard = () => {
           <Typography variant="body1" color="error">
             {error}
           </Typography>
-          <Button onClick={fetchIpInfo} sx={{ mt: 2 }}>
+          <Button onClick={() => fetchIpInfo(true)} sx={{ mt: 2 }}>
             {t("shared.actions.retry")}
           </Button>
         </Box>
@@ -178,7 +236,7 @@ export const IpInfoCard = () => {
       icon={<LocationOnOutlined />}
       iconColor="info"
       action={
-        <IconButton size="small" onClick={fetchIpInfo}>
+        <IconButton size="small" onClick={() => fetchIpInfo(true)}>
           <RefreshOutlined />
         </IconButton>
       }
