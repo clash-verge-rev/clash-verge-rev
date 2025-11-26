@@ -72,7 +72,7 @@
     "react-i18next": "16.3.5",
     "react-markdown": "10.1.0",
     "react-router": "^7.9.6",
-    "react-virtuoso": "^4.14.1",
+    "react-virtuoso": "^4.15.0",
     "swr": "^2.3.6",
     "tauri-plugin-mihomo-api": "git+https://github.com/clash-verge-rev/tauri-plugin-mihomo#main",
     "types-pac": "^1.0.3"
