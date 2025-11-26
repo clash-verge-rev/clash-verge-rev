@@ -50,6 +50,20 @@ export const BaseSearchBox = ({
   onSearch,
 }: SearchProps) => {
   const { t } = useTranslation();
+
+  const escapeRegex = useCallback((value: string) => {
+    return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  }, []);
+
+  const buildRegex = useCallback((pattern: string, flags = "") => {
+    try {
+      return new RegExp(pattern, flags);
+    } catch (e) {
+      console.warn("[BaseSearchBox] buildRegex error:", e);
+      return null;
+    }
+  }, []);
+
   const inputRef = useRef<HTMLInputElement>(null);
   const onSearchRef = useRef(onSearch);
   const [matchCase, setMatchCase] = useState(defaultMatchCase);
@@ -69,47 +83,63 @@ export const BaseSearchBox = ({
   };
 
   // Helper that verifies whether a pattern is a valid regular expression
-  const validateRegex = useCallback((pattern: string) => {
-    if (!pattern) return true;
-    try {
-      new RegExp(pattern);
-      return true;
-    } catch (e) {
-      console.warn("[BaseSearchBox] validateRegex error:", e);
-      return false;
-    }
-  }, []);
+  const validateRegex = useCallback(
+    (pattern: string, flags = "") => {
+      if (!pattern) return true;
+      return !!buildRegex(pattern, flags);
+    },
+    [buildRegex],
+  );
 
   const createMatcher = useMemo(() => {
     return (searchText: string) => {
-      if (useRegularExpression && searchText) {
-        const isValid = validateRegex(searchText);
-        if (!isValid) {
-          // Invalid regex should result in no match
-          return () => false;
-        }
+      if (!searchText) {
+        return () => true;
+      }
+
+      const flags = matchCase ? "" : "i";
+
+      if (useRegularExpression) {
+        const regex = buildRegex(searchText, flags);
+        if (!regex) return () => false;
+
+        return (content: string) => {
+          try {
+            return regex.test(content);
+          } catch (e) {
+            console.warn("[BaseSearchBox] regex match error:", e);
+            return false;
+          }
+        };
+      }
+
+      if (matchWholeWord) {
+        const regex = buildRegex(`\\b${escapeRegex(searchText)}\\b`, flags);
+        if (!regex) return () => false;
+
+        return (content: string) => {
+          try {
+            return regex.test(content);
+          } catch (e) {
+            console.warn("[BaseSearchBox] whole word match error:", e);
+            return false;
+          }
+        };
       }
 
       return (content: string) => {
-        if (!searchText) {
-          return true;
-        }
-
-        const item = !matchCase ? content.toLowerCase() : content;
-        const searchItem = !matchCase ? searchText.toLowerCase() : searchText;
-
-        if (useRegularExpression) {
-          return new RegExp(searchItem).test(item);
-        }
-
-        if (matchWholeWord) {
-          return new RegExp(`\\b${searchItem}\\b`).test(item);
-        }
-
-        return item.includes(searchItem);
+        const item = matchCase ? content : content.toLowerCase();
+        const target = matchCase ? searchText : searchText.toLowerCase();
+        return item.includes(target);
       };
     };
-  }, [matchCase, matchWholeWord, useRegularExpression, validateRegex]);
+  }, [
+    buildRegex,
+    escapeRegex,
+    matchCase,
+    matchWholeWord,
+    useRegularExpression,
+  ]);
 
   useEffect(() => {
     onSearchRef.current = onSearch;
@@ -130,10 +160,11 @@ export const BaseSearchBox = ({
   const onChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const value = e.target?.value ?? "";
     setErrorMessage("");
+    const flags = matchCase ? "" : "i";
 
     // Validate regex input eagerly
     if (useRegularExpression && value) {
-      const isValid = validateRegex(value);
+      const isValid = validateRegex(value, flags);
       if (!isValid) {
         setErrorMessage(t("shared.validation.invalidRegex"));
       }
@@ -155,7 +186,8 @@ export const BaseSearchBox = ({
         setErrorMessage("");
       } else {
         const value = inputRef.current?.value ?? "";
-        if (value && !validateRegex(value)) {
+        const flags = matchCase ? "" : "i";
+        if (value && !validateRegex(value, flags)) {
           setErrorMessage(t("shared.validation.invalidRegex"));
         }
       }
