@@ -467,7 +467,7 @@ async fn platform_check_ntp_status() -> Result<NtpStatus> {
 async fn platform_sync_ntp() -> Result<()> {
     let recommended = recommended_servers().await;
     let server = recommended
-        .get(0)
+        .first()
         .cloned()
         .unwrap_or_else(|| DEFAULT_GLOBAL_FALLBACK.into());
 
@@ -489,7 +489,7 @@ async fn platform_sync_ntp() -> Result<()> {
 async fn platform_apply_recommended_ntp() -> Result<NtpStatus> {
     let recommended = recommended_servers().await;
     let server = recommended
-        .get(0)
+        .first()
         .cloned()
         .unwrap_or_else(|| DEFAULT_GLOBAL_FALLBACK.into());
 
@@ -598,7 +598,7 @@ async fn platform_sync_ntp() -> Result<()> {
 
     if command_exists("ntpdate") {
         let server = recommended
-            .get(0)
+            .first()
             .cloned()
             .unwrap_or_else(|| DEFAULT_GLOBAL_FALLBACK.into());
         logging!(info, Type::System, "Triggering ntpdate sync via {}", server);
