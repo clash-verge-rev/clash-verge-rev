@@ -7,7 +7,7 @@ use crate::{
 };
 use anyhow::Result;
 use clash_verge_logging::{Type, logging, logging_error};
-use parking_lot::RwLock;
+use parking_lot::{Mutex, RwLock};
 use scopeguard::defer;
 use smartstring::alias::String;
 use std::{
@@ -23,6 +23,8 @@ use tauri_plugin_autostart::ManagerExt as _;
 pub struct Sysopt {
     update_sysproxy: AtomicBool,
     reset_sysproxy: AtomicBool,
+    sysproxy: Arc<Mutex<Sysproxy>>,
+    autoproxy: Arc<Mutex<Autoproxy>>,
     guard: Arc<RwLock<GuardMonitor>>,
 }
 
@@ -31,6 +33,8 @@ impl Default for Sysopt {
         Self {
             update_sysproxy: AtomicBool::new(false),
             reset_sysproxy: AtomicBool::new(false),
+            sysproxy: Arc::new(Mutex::new(Sysproxy::default())),
+            autoproxy: Arc::new(Mutex::new(Autoproxy::default())),
             guard: Arc::new(RwLock::new(GuardMonitor::new(
                 GuardType::None,
                 Duration::from_secs(30),
@@ -195,6 +199,10 @@ impl Sysopt {
                 enable: false,
                 url: format!("http://{proxy_host}:{pac_port}/commands/pac"),
             };
+            {
+                *self.sysproxy.lock() = sys.clone();
+                *self.autoproxy.lock() = auto.clone();
+            }
 
             if !sys_enable {
                 sys.set_system_proxy()?;
@@ -282,32 +290,13 @@ impl Sysopt {
         //直接关闭所有代理
         #[cfg(not(target_os = "windows"))]
         {
-            let mut sysproxy: Sysproxy = match Sysproxy::get_system_proxy() {
-                Ok(sp) => sp,
-                Err(e) => {
-                    logging!(
-                        warn,
-                        Type::Core,
-                        "Warning: 重置代理时获取系统代理配置失败: {e}, 使用默认配置"
-                    );
-                    Sysproxy::default()
-                }
-            };
-            let mut autoproxy = match Autoproxy::get_auto_proxy() {
-                Ok(ap) => ap,
-                Err(e) => {
-                    logging!(
-                        warn,
-                        Type::Core,
-                        "Warning: 重置代理时获取自动代理配置失败: {e}, 使用默认配置"
-                    );
-                    Autoproxy::default()
-                }
-            };
+            let mut sysproxy = self.sysproxy.lock();
             sysproxy.enable = false;
+            sysproxy.set_system_proxy()?;
+            drop(sysproxy);
+            let mut autoproxy = self.autoproxy.lock();
             autoproxy.enable = false;
             autoproxy.set_auto_proxy()?;
-            sysproxy.set_system_proxy()?;
         }
 
         #[cfg(target_os = "windows")]
