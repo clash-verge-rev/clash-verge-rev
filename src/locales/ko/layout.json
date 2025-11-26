@@ -17,5 +17,16 @@
         "lock": "메뉴 순서 잠금"
       }
     }
+  },
+  "ntp": {
+    "promptTitle": "Network time sync is off",
+    "promptMessage": "The system NTP service is disabled. Use the recommended time server ({{server}}) to sync now?",
+    "notifications": {
+      "manualWarning": "System clock may be inaccurate. Please calibrate it in system settings to avoid connection issues.",
+      "applyFailed": "Failed to switch to the recommended NTP server: {{message}}",
+      "syncFailed": "Failed to trigger an NTP sync: {{message}}",
+      "applySuccess": "Applied the recommended time server ({{server}}).",
+      "statusUnknown": "Unable to read the system time sync status; please verify the clock manually."
+    }
   }
 }

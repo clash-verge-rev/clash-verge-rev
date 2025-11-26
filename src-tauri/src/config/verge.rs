@@ -90,6 +90,10 @@ pub struct IVerge {
     /// enable dns settings - this controls whether dns_config.yaml is applied
     pub enable_dns_settings: Option<bool>,
 
+    /// custom ntp servers
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub ntp_servers: Option<Vec<String>>,
+
     /// always use default bypass
     pub use_default_bypass: Option<bool>,
 

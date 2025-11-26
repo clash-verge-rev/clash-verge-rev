@@ -48,7 +48,6 @@ export const useNtpChecker = () => {
 
         statusRef.current = status;
         if (status.enabled) {
-          await syncNtpNow().catch(handleSyncError);
           return;
         }
 
@@ -71,7 +70,7 @@ export const useNtpChecker = () => {
     return () => {
       disposed = true;
     };
-  }, [handleSyncError, warnManualCalibration]);
+  }, [warnManualCalibration]);
 
   const handleApply = useLockFn(async () => {
     try {

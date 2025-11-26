@@ -1,13 +1,16 @@
+use crate::config::Config;
 use anyhow::{Context as _, Result, bail};
 use clash_verge_logging::{Type, logging};
 use serde::Serialize;
-use std::{env, path::Path, process::Stdio};
+use std::{collections::HashSet, env, path::Path, process::Stdio};
+#[cfg(any(target_os = "linux", target_os = "windows"))]
+use tauri_plugin_clash_verge_sysinfo::is_binary_admin;
 use tokio::process::Command;
 
 const CN_RECOMMENDED_SERVERS: &[&str] = &["ntp.ntsc.ac.cn", "210.72.145.44", "ntp.aliyun.com"];
-
 const GLOBAL_RECOMMENDED_SERVERS: &[&str] =
     &["time.cloudflare.com", "time.google.com", "pool.ntp.org"];
+const MAX_RECOMMENDED: usize = 8;
 
 #[derive(Debug, Serialize)]
 #[serde(rename_all = "camelCase")]
@@ -34,36 +37,60 @@ pub async fn apply_recommended_ntp() -> Result<NtpStatus> {
     platform_apply_recommended_ntp().await
 }
 
-fn recommended_servers() -> Vec<String> {
-    let is_cn = is_cn_like_locale();
-    let mut seen = std::collections::HashSet::new();
-    let mut servers = Vec::new();
+async fn recommended_servers() -> Vec<String> {
+    // 1) user override via env
+    let mut servers = normalize_servers(env_recommended_servers());
 
-    let push_unique =
-        |list: &[&str], seen: &mut std::collections::HashSet<String>, out: &mut Vec<String>| {
-            for &item in list {
-                let key = item.to_ascii_lowercase();
-                if seen.insert(key) {
-                    out.push(item.to_string());
-                }
-            }
-        };
-
-    if is_cn {
-        push_unique(CN_RECOMMENDED_SERVERS, &mut seen, &mut servers);
-    } else {
-        push_unique(GLOBAL_RECOMMENDED_SERVERS, &mut seen, &mut servers);
+    // 2) user override via config
+    if servers.is_empty() {
+        servers = normalize_servers(config_recommended_servers().await);
     }
 
-    // Always append global fallback to ensure we have a public pool for overseas users
-    push_unique(GLOBAL_RECOMMENDED_SERVERS, &mut seen, &mut servers);
+    // 3) locale-based defaults
+    if servers.is_empty() {
+        let defaults = if is_cn_like_locale() {
+            CN_RECOMMENDED_SERVERS.to_vec()
+        } else {
+            GLOBAL_RECOMMENDED_SERVERS.to_vec()
+        };
+        servers = normalize_servers(defaults);
+    }
+
+    // 4) always ensure at least one global fallback is present
+    let mut seen: HashSet<String> = HashSet::new();
+    servers.retain(|s| seen.insert(s.to_ascii_lowercase()));
+    for &global in GLOBAL_RECOMMENDED_SERVERS {
+        if seen.insert(global.to_ascii_lowercase()) {
+            servers.push(global.to_string());
+            break;
+        }
+    }
+
+    // 5) cap the list length to avoid runaway configs
+    if servers.len() > MAX_RECOMMENDED {
+        servers.truncate(MAX_RECOMMENDED);
+    }
+    // ensure a global fallback survives the cap
+    if !servers.iter().any(|s| {
+        GLOBAL_RECOMMENDED_SERVERS
+            .iter()
+            .any(|g| s.eq_ignore_ascii_case(g))
+    }) && let Some(global) = GLOBAL_RECOMMENDED_SERVERS.first()
+    {
+        if servers.is_empty() {
+            servers.push((*global).to_string());
+        } else {
+            let last = servers.len() - 1;
+            servers[last] = (*global).to_string();
+        }
+    }
 
     servers
 }
 
-fn is_recommended(server: &str) -> bool {
+fn is_recommended(server: &str, recommended: &[String]) -> bool {
     let lower = server.to_ascii_lowercase();
-    recommended_servers()
+    recommended
         .iter()
         .any(|s| lower.contains(&s.to_ascii_lowercase()))
 }
@@ -72,7 +99,109 @@ fn is_cn_like_locale() -> bool {
     let locale = sys_locale::get_locale()
         .unwrap_or_default()
         .to_ascii_lowercase();
-    locale.contains("zh") || locale.contains("cn")
+
+    let tz = normalize_tz(&env::var("TZ").unwrap_or_default());
+
+    let is_cn_tz = matches_timezone(&tz, &["asia/shanghai"]);
+    if is_cn_tz {
+        return true;
+    }
+
+    let lang_region: Vec<&str> = locale.split(&['-', '_']).collect();
+    if lang_region.is_empty() {
+        return false;
+    }
+
+    let lang = lang_region[0];
+    if lang != "zh" {
+        return false;
+    }
+
+    let region = lang_region.get(1).copied().unwrap_or_default();
+    if region.is_empty() {
+        return false;
+    }
+
+    let region_lower = region.to_ascii_lowercase();
+    matches!(region_lower.as_str(), "cn" | "hans" | "chs")
+}
+
+fn matches_timezone(tz: &str, targets: &[&str]) -> bool {
+    targets.contains(&tz)
+}
+
+fn normalize_tz(tz: &str) -> String {
+    let mut norm = tz.trim_start_matches(':').to_ascii_lowercase();
+    if let Some(stripped) = norm.strip_prefix("posix/") {
+        norm = stripped.to_string();
+    }
+    if let Some(stripped) = norm.strip_prefix("right/") {
+        norm = stripped.to_string();
+    }
+    norm = match norm.as_str() {
+        // normalize deprecated/alias zones to the canonical Asia/Shanghai
+        "asia/beijing" | "asia/chongqing" | "asia/harbin" | "asia/urumqi" => {
+            "asia/shanghai".to_string()
+        }
+        _ => norm,
+    };
+    norm
+}
+
+#[cfg(target_os = "linux")]
+fn ensure_linux_privileges(action: &str) -> Result<()> {
+    if !is_binary_admin() {
+        bail!(
+            "{action} requires root privileges (sudo). Please run Clash Verge with sudo or configure NTP in system settings."
+        );
+    }
+    Ok(())
+}
+
+#[cfg(target_os = "linux")]
+fn linux_can_persist_ntp_config() -> bool {
+    command_exists("timedatectl") && Path::new("/run/systemd/system").exists()
+}
+
+fn normalize_servers<S: AsRef<str>, I: IntoIterator<Item = S>>(iter: I) -> Vec<String> {
+    let mut seen = HashSet::new();
+    let mut result = Vec::new();
+
+    for raw in iter {
+        let trimmed = raw.as_ref().trim();
+        if trimmed.is_empty() {
+            continue;
+        }
+        let key = trimmed.to_ascii_lowercase();
+        if seen.insert(key) {
+            result.push(trimmed.to_string());
+        }
+    }
+
+    result
+}
+
+fn env_recommended_servers() -> Vec<String> {
+    let env_servers = env::var("VERGE_NTP_SERVERS")
+        .or_else(|_| env::var("CLASH_VERGE_NTP_SERVERS"))
+        .unwrap_or_default();
+
+    if env_servers.is_empty() {
+        return Vec::new();
+    }
+
+    let list = env_servers
+        .split(|c: char| c == ',' || c.is_whitespace())
+        .map(str::to_string);
+    normalize_servers(list)
+}
+
+async fn config_recommended_servers() -> Vec<String> {
+    let verge = Config::verge().await.latest_arc();
+    if let Some(list) = verge.ntp_servers.clone() {
+        return normalize_servers(list);
+    }
+    Vec::new()
 }
 
 fn command_exists(command: &str) -> bool {
@@ -123,9 +252,9 @@ use winreg::{
 };
 
 #[cfg(target_os = "windows")]
-fn recommended_peer_list() -> String {
-    recommended_servers()
-        .into_iter()
+fn recommended_peer_list(servers: &[String]) -> String {
+    servers
+        .iter()
         .map(|s| format!("{s},0x9"))
         .collect::<Vec<_>>()
         .join(" ")
@@ -148,11 +277,15 @@ async fn ensure_windows_time_service() {
 }
 
 #[cfg(target_os = "windows")]
-fn platform_check_ntp_status_sync() -> NtpStatus {
+async fn platform_check_ntp_status() -> Result<NtpStatus> {
     let mut message = None;
     let mut enabled = false;
     let mut server = None;
     let mut using_recommended = false;
+    let is_admin = is_binary_admin();
+
+    let recommended = recommended_servers().await;
+    let has_w32tm = command_exists("w32tm");
 
     match RegKey::predef(HKEY_LOCAL_MACHINE).open_subkey_with_flags(
         "SYSTEM\\CurrentControlSet\\Services\\W32Time\\Parameters",
@@ -164,7 +297,7 @@ fn platform_check_ntp_status_sync() -> NtpStatus {
             enabled = !ntp_server.trim().is_empty() && !sync_type.eq_ignore_ascii_case("NoSync");
 
             if !ntp_server.trim().is_empty() {
-                using_recommended = is_recommended(&ntp_server);
+                using_recommended = is_recommended(&ntp_server, &recommended);
                 server = Some(ntp_server);
             }
         }
@@ -173,25 +306,33 @@ fn platform_check_ntp_status_sync() -> NtpStatus {
         }
     }
 
-    NtpStatus {
+    if message.is_none() && has_w32tm && !is_admin {
+        message = Some(
+            "Applying or syncing NTP on Windows requires Administrator privileges. Please run Clash Verge as Administrator."
+                .into(),
+        );
+    }
+
+    Ok(NtpStatus {
         enabled,
         using_recommended,
         server,
         provider: Some("w32time".into()),
         message,
         platform: "windows".into(),
-        can_configure: command_exists("w32tm"),
-        recommended_servers: recommended_servers(),
-    }
-}
-
-#[cfg(target_os = "windows")]
-fn platform_check_ntp_status() -> impl std::future::Future<Output = Result<NtpStatus>> {
-    futures::future::ready(Ok(platform_check_ntp_status_sync()))
+        can_configure: has_w32tm && is_admin,
+        recommended_servers: recommended,
+    })
 }
 
 #[cfg(target_os = "windows")]
 async fn platform_sync_ntp() -> Result<()> {
+    if !is_binary_admin() {
+        bail!(
+            "Windows time sync requires Administrator privileges. Please run Clash Verge as Administrator."
+        );
+    }
+
     logging!(info, Type::System, "Triggering Windows time resync");
     ensure_windows_time_service().await;
 
@@ -213,7 +354,14 @@ async fn platform_sync_ntp() -> Result<()> {
 
 #[cfg(target_os = "windows")]
 async fn platform_apply_recommended_ntp() -> Result<NtpStatus> {
-    let peer_list = recommended_peer_list();
+    if !is_binary_admin() {
+        bail!(
+            "Applying NTP settings requires Administrator privileges. Please run Clash Verge as Administrator."
+        );
+    }
+
+    let recommended = recommended_servers().await;
+    let peer_list = recommended_peer_list(&recommended);
     logging!(
         info,
         Type::System,
@@ -242,7 +390,11 @@ async fn platform_apply_recommended_ntp() -> Result<NtpStatus> {
     }
 
     let _ = platform_sync_ntp().await;
-    platform_check_ntp_status().await
+
+    // Prefer returning the latest status with the same recommended list we just applied
+    let mut status = platform_check_ntp_status().await?;
+    status.recommended_servers = recommended;
+    Ok(status)
 }
 
 #[cfg(target_os = "macos")]
@@ -254,6 +406,7 @@ async fn platform_check_ntp_status() -> Result<NtpStatus> {
     let mut enabled = false;
     let mut server = None;
     let mut using_recommended = false;
+    let recommended = recommended_servers().await;
 
     if command_exists(SYSTEM_SETUP) {
         match run_command(SYSTEM_SETUP, &["-getusingnetworktime"]).await {
@@ -270,7 +423,7 @@ async fn platform_check_ntp_status() -> Result<NtpStatus> {
             let trimmed = output.trim();
             if !trimmed.is_empty() {
                 server = Some(trimmed.to_string());
-                using_recommended = is_recommended(trimmed);
+                using_recommended = is_recommended(trimmed, &recommended);
             }
         }
     } else {
@@ -285,16 +438,17 @@ async fn platform_check_ntp_status() -> Result<NtpStatus> {
         message,
         platform: "macos".into(),
         can_configure: command_exists(SYSTEM_SETUP) || command_exists("sntp"),
-        recommended_servers: recommended_servers(),
+        recommended_servers: recommended,
     })
 }
 
 #[cfg(target_os = "macos")]
 async fn platform_sync_ntp() -> Result<()> {
-    let server = recommended_servers()
+    let recommended = recommended_servers().await;
+    let server = recommended
         .get(0)
         .cloned()
-        .unwrap_or_else(|| "time.apple.com".into());
+        .unwrap_or_else(|| "pool.ntp.org".into());
 
     if command_exists("sntp") {
         logging!(
@@ -312,10 +466,11 @@ async fn platform_sync_ntp() -> Result<()> {
 
 #[cfg(target_os = "macos")]
 async fn platform_apply_recommended_ntp() -> Result<NtpStatus> {
-    let server = recommended_servers()
+    let recommended = recommended_servers().await;
+    let server = recommended
         .get(0)
         .cloned()
-        .unwrap_or_else(|| "ntp.ntsc.ac.cn".into());
+        .unwrap_or_else(|| "pool.ntp.org".into());
 
     if command_exists(SYSTEM_SETUP) {
         logging!(
@@ -329,7 +484,9 @@ async fn platform_apply_recommended_ntp() -> Result<NtpStatus> {
     }
 
     let _ = platform_sync_ntp().await;
-    platform_check_ntp_status().await
+    let mut status = platform_check_ntp_status().await?;
+    status.recommended_servers = recommended;
+    Ok(status)
 }
 
 #[cfg(target_os = "linux")]
@@ -338,6 +495,9 @@ async fn platform_check_ntp_status() -> Result<NtpStatus> {
     let mut enabled = false;
     let mut server = None;
     let mut provider = None;
+    let recommended = recommended_servers().await;
+    let is_admin = is_binary_admin();
+    let can_persist = linux_can_persist_ntp_config();
 
     if command_exists("timedatectl") {
         provider = Some("systemd-timesyncd".into());
@@ -375,7 +535,21 @@ async fn platform_check_ntp_status() -> Result<NtpStatus> {
         message = Some("no NTP utilities (timedatectl/chronyc) found".into());
     }
 
-    let using_recommended = server.as_ref().map(|s| is_recommended(s)).unwrap_or(false);
+    let using_recommended = server
+        .as_ref()
+        .map(|s| is_recommended(s, &recommended))
+        .unwrap_or(false);
+    if message.is_none() && !can_persist {
+        message = Some(
+            "systemd-timesyncd (timedatectl) is not available; auto configuration is unsupported"
+                .into(),
+        );
+    } else if message.is_none() && can_persist && !is_admin {
+        message = Some(
+            "Configuring NTP servers requires root privileges (sudo). Please run Clash Verge as root or configure NTP in system settings."
+                .into(),
+        );
+    }
 
     Ok(NtpStatus {
         enabled,
@@ -384,15 +558,16 @@ async fn platform_check_ntp_status() -> Result<NtpStatus> {
         provider,
         message,
         platform: "linux".into(),
-        can_configure: command_exists("timedatectl")
-            || command_exists("chronyc")
-            || command_exists("ntpdate"),
-        recommended_servers: recommended_servers(),
+        can_configure: can_persist && is_admin,
+        recommended_servers: recommended,
     })
 }
 
 #[cfg(target_os = "linux")]
 async fn platform_sync_ntp() -> Result<()> {
+    ensure_linux_privileges("NTP sync operations on Linux")?;
+    let recommended = recommended_servers().await;
+
     if command_exists("chronyc") {
         logging!(info, Type::System, "Triggering chrony makestep");
         if run_command("chronyc", &["-a", "makestep"]).await.is_ok() {
@@ -401,7 +576,7 @@ async fn platform_sync_ntp() -> Result<()> {
     }
 
     if command_exists("ntpdate") {
-        let server = recommended_servers()
+        let server = recommended
             .get(0)
             .cloned()
             .unwrap_or_else(|| "pool.ntp.org".into());
@@ -425,22 +600,30 @@ async fn platform_sync_ntp() -> Result<()> {
 
 #[cfg(target_os = "linux")]
 async fn platform_apply_recommended_ntp() -> Result<NtpStatus> {
-    if command_exists("timedatectl") && Path::new("/run/systemd/system").exists() {
-        let config_dir = Path::new("/etc/systemd/timesyncd.conf.d");
-        let config_file = config_dir.join("clash-verge.conf");
-        let content = format!("[Time]\nNTP={}\n", recommended_servers().join(" "));
-
-        tokio::fs::create_dir_all(config_dir)
-            .await
-            .context("failed to create timesyncd config dir")?;
-        tokio::fs::write(&config_file, content.as_bytes())
-            .await
-            .with_context(|| format!("failed to write {}", config_file.display()))?;
-
-        let _ = run_command("timedatectl", &["set-ntp", "true"]).await?;
-        let _ = run_command("systemctl", &["restart", "systemd-timesyncd"]).await?;
+    ensure_linux_privileges("Applying NTP servers on Linux")?;
+    if !linux_can_persist_ntp_config() {
+        bail!(
+            "Applying NTP servers requires systemd-timesyncd (timedatectl). This system does not support auto-configuration."
+        );
     }
+    let recommended = recommended_servers().await;
+
+    let config_dir = Path::new("/etc/systemd/timesyncd.conf.d");
+    let config_file = config_dir.join("clash-verge.conf");
+    let content = format!("[Time]\nNTP={}\n", recommended.join(" "));
+
+    tokio::fs::create_dir_all(config_dir)
+        .await
+        .context("failed to create timesyncd config dir")?;
+    tokio::fs::write(&config_file, content.as_bytes())
+        .await
+        .with_context(|| format!("failed to write {}", config_file.display()))?;
+
+    let _ = run_command("timedatectl", &["set-ntp", "true"]).await?;
+    let _ = run_command("systemctl", &["restart", "systemd-timesyncd"]).await?;
 
     let _ = platform_sync_ntp().await;
-    platform_check_ntp_status().await
+    let mut status = platform_check_ntp_status().await?;
+    status.recommended_servers = recommended;
+    Ok(status)
 }

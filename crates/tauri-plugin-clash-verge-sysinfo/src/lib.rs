@@ -106,7 +106,7 @@ impl Platform {
 }
 
 #[inline]
-fn is_binary_admin() -> bool {
+pub fn is_binary_admin() -> bool {
     #[cfg(not(windows))]
     unsafe {
         libc::geteuid() == 0
