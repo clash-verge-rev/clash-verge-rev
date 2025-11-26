@@ -7,7 +7,9 @@ use crate::{
 };
 use anyhow::Result;
 use clash_verge_logging::{Type, logging, logging_error};
-use parking_lot::{Mutex, RwLock};
+#[cfg(not(target_os = "windows"))]
+use parking_lot::Mutex;
+use parking_lot::RwLock;
 use scopeguard::defer;
 use smartstring::alias::String;
 use std::{
