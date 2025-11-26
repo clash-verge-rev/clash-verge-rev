@@ -9,6 +9,7 @@ use crate::{
         validate::CoreConfigValidator,
     },
     enhance,
+    process::AsyncHandler,
     utils::{dirs, help},
 };
 use anyhow::{Result, anyhow};
@@ -213,17 +214,27 @@ impl Config {
     // 升级草稿为正式数据，并写入文件。避免用户行为丢失。
     // 仅在应用退出、重启、关机监听事件启用
     pub async fn apply_all_and_save_file() {
-        let clash = Self::clash().await;
-        clash.apply();
-        logging_error!(Type::Config, clash.data_arc().save_config().await);
+        logging!(info, Type::Config, "save all draft data");
+        let save_clash_task = AsyncHandler::spawn(|| async {
+            let clash = Self::clash().await;
+            clash.apply();
+            logging_error!(Type::Config, clash.data_arc().save_config().await);
+        });
 
-        let verge = Self::verge().await;
-        verge.apply();
-        logging_error!(Type::Config, verge.data_arc().save_file().await);
+        let save_verge_task = AsyncHandler::spawn(|| async {
+            let verge = Self::verge().await;
+            verge.apply();
+            logging_error!(Type::Config, verge.data_arc().save_file().await);
+        });
 
-        let profiles = Self::profiles().await;
-        profiles.apply();
-        logging_error!(Type::Config, profiles.data_arc().save_file().await);
+        let save_profiles_task = AsyncHandler::spawn(|| async {
+            let profiles = Self::profiles().await;
+            profiles.apply();
+            logging_error!(Type::Config, profiles.data_arc().save_file().await);
+        });
+
+        let _ = tokio::join!(save_clash_task, save_verge_task, save_profiles_task);
+        logging!(info, Type::Config, "save all draft data finished");
     }
 }
 

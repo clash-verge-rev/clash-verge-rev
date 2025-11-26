@@ -20,11 +20,11 @@ async fn open_or_close_dashboard_internal() {
 
 pub async fn quit() {
     logging!(debug, Type::System, "启动退出流程");
-    utils::server::shutdown_embedded_server();
-    Config::apply_all_and_save_file().await;
-
     // 设置退出标志
     handle::Handle::global().set_is_exiting();
+
+    utils::server::shutdown_embedded_server();
+    Config::apply_all_and_save_file().await;
 
     logging!(info, Type::System, "开始异步清理资源");
     let cleanup_result = clean_async().await;
@@ -43,50 +43,7 @@ pub async fn quit() {
 pub async fn clean_async() -> bool {
     logging!(info, Type::System, "开始执行异步清理操作...");
 
-    // 1. 处理TUN模式
-    // let tun_task = tokio::task::spawn(async {
-    //     let tun_enabled = Config::verge()
-    //         .await
-    //         .data_arc()
-    //         .enable_tun_mode
-    //         .unwrap_or(false);
-
-    //     if !tun_enabled {
-    //         return true;
-    //     }
-
-    //     let disable_tun = serde_json::json!({ "tun": { "enable": false } });
-
-    //     logging!(info, Type::System, "send disable tun request to mihomo");
-    //     match timeout(
-    //         Duration::from_millis(1000),
-    //         handle::Handle::mihomo()
-    //             .await
-    //             .patch_base_config(&disable_tun),
-    //     )
-    //     .await
-    //     {
-    //         Ok(Ok(_)) => {
-    //             logging!(info, Type::Window, "TUN模式已禁用");
-    //             true
-    //         }
-    //         Ok(Err(e)) => {
-    //             logging!(warn, Type::Window, "Warning: 禁用TUN模式失败: {e}");
-    //             // 超时不阻塞退出
-    //             true
-    //         }
-    //         Err(_) => {
-    //             logging!(
-    //                 warn,
-    //                 Type::Window,
-    //                 "Warning: 禁用TUN模式超时（可能系统正在关机），继续退出流程"
-    //             );
-    //             true
-    //         }
-    //     }
-    // });
-
-    // 2. 系统代理重置
+    // 重置系统代理
     let proxy_task = tokio::task::spawn(async {
         #[cfg(target_os = "windows")]
         {
@@ -205,7 +162,7 @@ pub async fn clean_async() -> bool {
         }
     });
 
-    // 3. 核心服务停止
+    // 关闭 Tun 模式 + 停止核心服务
     let core_task = tokio::task::spawn(async {
         logging!(info, Type::System, "disable tun");
         let tun_enabled = Config::verge()
@@ -263,9 +220,9 @@ pub async fn clean_async() -> bool {
         }
     });
 
-    // 4. DNS恢复（仅macOS）
-    #[cfg(target_os = "macos")]
+    // DNS恢复（仅macOS）
     let dns_task = tokio::task::spawn(async {
+        #[cfg(target_os = "macos")]
         match timeout(
             Duration::from_millis(1000),
             crate::utils::resolve::dns::restore_public_dns(),
@@ -281,10 +238,9 @@ pub async fn clean_async() -> bool {
                 false
             }
         }
+        #[cfg(not(target_os = "macos"))]
+        true
     });
-
-    #[cfg(not(target_os = "macos"))]
-    let dns_task = tokio::task::spawn(async { true });
 
     // 并行执行清理任务
     let (proxy_result, core_result, dns_result) = tokio::join!(proxy_task, core_task, dns_task);
