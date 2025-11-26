@@ -195,6 +195,17 @@ export interface TranslationResources {
           };
         };
       };
+      ntp: {
+        notifications: {
+          applyFailed: string;
+          applySuccess: string;
+          manualWarning: string;
+          statusUnknown: string;
+          syncFailed: string;
+        };
+        promptMessage: string;
+        promptTitle: string;
+      };
     };
     logs: {
       actions: {

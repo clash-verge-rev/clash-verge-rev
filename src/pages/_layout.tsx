@@ -48,7 +48,9 @@ import { LayoutItem } from "@/components/layout/layout-item";
 import { LayoutTraffic } from "@/components/layout/layout-traffic";
 import { UpdateButton } from "@/components/layout/update-button";
 import { useCustomTheme } from "@/components/layout/use-custom-theme";
+import { ConfirmViewer } from "@/components/profile/confirm-viewer";
 import { useI18n } from "@/hooks/use-i18n";
+import { useNtpChecker } from "@/hooks/use-ntp-checker";
 import { useVerge } from "@/hooks/use-verge";
 import { useWindowDecorations } from "@/hooks/use-window";
 import { useThemeMode } from "@/services/states";
@@ -288,6 +290,13 @@ const Layout = () => {
 
   useLoadingOverlay(themeReady);
   useAppInitialization();
+  const {
+    promptOpen: ntpPromptOpen,
+    promptTitle: ntpPromptTitle,
+    promptMessage: ntpPromptMessage,
+    handleApply: handleNtpApply,
+    handleDecline: handleNtpDecline,
+  } = useNtpChecker();
 
   const handleNotice = useCallback(
     (payload: [string, string]) => {
@@ -344,6 +353,15 @@ const Layout = () => {
       <ThemeProvider theme={theme}>
         {/* 左侧底部窗口控制按钮 */}
         <NoticeManager />
+        {ntpPromptOpen && (
+          <ConfirmViewer
+            open={ntpPromptOpen}
+            title={ntpPromptTitle}
+            message={ntpPromptMessage}
+            onClose={() => void handleNtpDecline()}
+            onConfirm={() => void handleNtpApply()}
+          />
+        )}
         <div
           style={{
             animation: "fadeIn 0.5s",

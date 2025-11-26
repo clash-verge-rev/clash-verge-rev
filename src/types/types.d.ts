@@ -890,3 +890,14 @@ interface IWebDavConfig {
   username: string;
   password: string;
 }
+
+interface INtpStatus {
+  enabled: boolean;
+  usingRecommended: boolean;
+  server?: string | null;
+  provider?: string | null;
+  message?: string | null;
+  platform: string;
+  canConfigure: boolean;
+  recommendedServers: string[];
+}

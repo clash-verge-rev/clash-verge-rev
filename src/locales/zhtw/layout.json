@@ -17,5 +17,16 @@
         "lock": "鎖定選單排序"
       }
     }
+  },
+  "ntp": {
+    "promptTitle": "未啟用時間同步",
+    "promptMessage": "偵測到系統未啟用 NTP，是否改用推薦時間伺服器（{{server}}）進行同步？",
+    "notifications": {
+      "manualWarning": "系統時間可能不準確，請在系統設定中手動校準以避免連線問題。",
+      "applyFailed": "切換到推薦的時間伺服器失敗：{{message}}",
+      "syncFailed": "觸發 NTP 同步失敗：{{message}}",
+      "applySuccess": "已嘗試使用推薦時間伺服器（{{server}}）。",
+      "statusUnknown": "無法讀取系統時間同步狀態，請手動確認時間是否正確。"
+    }
   }
 }

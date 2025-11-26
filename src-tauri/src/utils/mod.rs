@@ -8,6 +8,7 @@ pub mod init;
 pub mod linux;
 pub mod network;
 pub mod notification;
+pub mod ntp;
 pub mod resolve;
 pub mod server;
 pub mod singleton;

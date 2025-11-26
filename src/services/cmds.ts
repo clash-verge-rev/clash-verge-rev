@@ -547,6 +547,18 @@ export const isAdmin = async () => {
   }
 };
 
+export const checkNtpStatus = async () => {
+  return invoke<INtpStatus>("check_ntp_status");
+};
+
+export const syncNtpNow = async () => {
+  return invoke<boolean>("sync_ntp_now");
+};
+
+export const applyRecommendedNtpServer = async () => {
+  return invoke<INtpStatus>("apply_recommended_ntp_server");
+};
+
 export async function getNextUpdateTime(uid: string) {
   return invoke<number | null>("get_next_update_time", { uid });
 }

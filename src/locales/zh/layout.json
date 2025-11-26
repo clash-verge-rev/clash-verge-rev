@@ -17,5 +17,16 @@
         "lock": "锁定菜单排序"
       }
     }
+  },
+  "ntp": {
+    "promptTitle": "时间同步未开启",
+    "promptMessage": "检测到系统未开启 NTP，同步可能异常，是否使用推荐时间服务器（{{server}}）进行同步？",
+    "notifications": {
+      "manualWarning": "系统时间可能不准确，请在系统设置中手动校准以避免连接问题。",
+      "applyFailed": "切换到推荐的时间服务器失败：{{message}}",
+      "syncFailed": "触发 NTP 同步失败：{{message}}",
+      "applySuccess": "已尝试使用推荐时间服务器（{{server}}）。",
+      "statusUnknown": "无法读取系统时间同步状态，请手动确认时间是否准确。"
+    }
   }
 }
