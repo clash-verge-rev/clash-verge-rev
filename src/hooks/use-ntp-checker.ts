@@ -38,7 +38,7 @@ const getPreferredServer = (status?: INtpStatus | null) => {
 export const useNtpChecker = () => {
   const { t } = useTranslation();
   const [promptOpen, setPromptOpen] = useState(false);
-  const statusRef = useRef<INtpStatus | null>(null);
+  const [status, setStatus] = useState<INtpStatus | null>(null);
   const checkedRef = useRef(false);
 
   const warnManualCalibration = useCallback(() => {
@@ -53,7 +53,7 @@ export const useNtpChecker = () => {
 
   const promptTitle = t("layout.ntp.promptTitle");
   const promptMessage = t("layout.ntp.promptMessage", {
-    server: getPreferredServer(statusRef.current),
+    server: getPreferredServer(status),
   });
 
   useEffect(() => {
@@ -66,7 +66,7 @@ export const useNtpChecker = () => {
         const status = await checkNtpStatus();
         if (disposed) return;
 
-        statusRef.current = status;
+        setStatus(status);
         if (status.enabled) {
           return;
         }
@@ -95,7 +95,7 @@ export const useNtpChecker = () => {
   const handleApply = useLockFn(async () => {
     try {
       const result = await applyRecommendedNtpServer();
-      statusRef.current = result;
+      setStatus(result);
       setPromptOpen(false);
 
       const server = result.server ?? getPreferredServer(result);
