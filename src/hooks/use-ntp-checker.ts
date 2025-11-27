@@ -9,10 +9,30 @@ import {
 } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
 
+const CN_FALLBACK_SERVERS = ["ntp.aliyun.com", "ntp.tencent.com"];
+const GLOBAL_FALLBACK_SERVERS = ["time.cloudflare.com", "time.google.com"];
+
+const isCnLikeTimezone = () => {
+  const locale =
+    typeof navigator !== "undefined" ? navigator.language?.toLowerCase() : "";
+
+  const timezone =
+    typeof Intl !== "undefined"
+      ? Intl.DateTimeFormat().resolvedOptions().timeZone?.toLowerCase()
+      : undefined;
+
+  if (timezone === "asia/shanghai") {
+    return true;
+  }
+
+  return locale.startsWith("zh-cn") || locale.startsWith("zh-hans");
+};
+
 const getPreferredServer = (status?: INtpStatus | null) => {
   const server = status?.recommendedServers?.[0];
   if (server) return server;
-  return "time.cloudflare.com";
+  if (isCnLikeTimezone()) return CN_FALLBACK_SERVERS[0];
+  return GLOBAL_FALLBACK_SERVERS[0];
 };
 
 export const useNtpChecker = () => {
