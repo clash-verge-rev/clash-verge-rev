@@ -79,7 +79,7 @@
   },
   "devDependencies": {
     "@actions/github": "^6.0.1",
-    "@eslint-react/eslint-plugin": "^2.3.7",
+    "@eslint-react/eslint-plugin": "^2.3.9",
     "@eslint/js": "^9.39.1",
     "@tauri-apps/cli": "2.9.4",
     "@types/js-yaml": "^4.0.9",
