@@ -205,6 +205,7 @@
           "trafficGraph": "Gráfico de tráfico",
           "memoryUsage": "Uso de memoria del núcleo",
           "proxyGroupIcon": "Icono del grupo de proxy",
+          "toastPosition": "Posición del aviso",
           "hoverNavigator": "Hover Jump Navigator",
           "hoverNavigatorDelay": "Hover Jump Navigator Delay",
           "navIcon": "Icono de la barra de navegación",
@@ -225,6 +226,12 @@
             "monochrome": "Icono monocromo",
             "colorful": "Icono colorido",
             "disable": "Deshabilitar"
+          },
+          "toastPosition": {
+            "topLeft": "Arriba a la izquierda",
+            "topRight": "Arriba a la derecha",
+            "bottomLeft": "Abajo a la izquierda",
+            "bottomRight": "Abajo a la derecha"
           }
         }
       }

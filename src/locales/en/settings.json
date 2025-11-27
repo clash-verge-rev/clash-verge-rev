@@ -205,6 +205,7 @@
           "trafficGraph": "Traffic Graph",
           "memoryUsage": "Core Usage",
           "proxyGroupIcon": "Proxy Group Icon",
+          "toastPosition": "Toast Position",
           "hoverNavigator": "Hover Jump Navigator",
           "hoverNavigatorDelay": "Hover Jump Navigator Delay",
           "navIcon": "Nav Icon",
@@ -225,6 +226,12 @@
             "monochrome": "Monochrome",
             "colorful": "Colorful",
             "disable": "Disable"
+          },
+          "toastPosition": {
+            "topLeft": "Top Left",
+            "topRight": "Top Right",
+            "bottomLeft": "Bottom Left",
+            "bottomRight": "Bottom Right"
           }
         }
       }

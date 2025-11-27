@@ -205,6 +205,7 @@
           "trafficGraph": "Trafik Grafiği",
           "memoryUsage": "Çekirdek Kullanımı",
           "proxyGroupIcon": "Vekil Grup Simgesi",
+          "toastPosition": "Toast konumu",
           "hoverNavigator": "Hover Jump Navigator",
           "hoverNavigatorDelay": "Hover Jump Navigator Delay",
           "navIcon": "Gezinme Simgesi",
@@ -225,6 +226,12 @@
             "monochrome": "Tek Renkli",
             "colorful": "Renkli",
             "disable": "Devre Dışı Bırak"
+          },
+          "toastPosition": {
+            "topLeft": "Sol üst",
+            "topRight": "Sağ üst",
+            "bottomLeft": "Sol alt",
+            "bottomRight": "Sağ alt"
           }
         }
       }

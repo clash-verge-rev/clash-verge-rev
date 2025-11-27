@@ -205,6 +205,7 @@
           "trafficGraph": "トラフィックグラフ",
           "memoryUsage": "コアメモリ使用量",
           "proxyGroupIcon": "プロキシグループアイコン",
+          "toastPosition": "トーストの表示位置",
           "hoverNavigator": "Hover Jump Navigator",
           "hoverNavigatorDelay": "Hover Jump Navigator Delay",
           "navIcon": "ナビゲーションバーアイコン",
@@ -225,6 +226,12 @@
             "monochrome": "モノクロアイコン",
             "colorful": "カラーアイコン",
             "disable": "無効にする"
+          },
+          "toastPosition": {
+            "topLeft": "左上",
+            "topRight": "右上",
+            "bottomLeft": "左下",
+            "bottomRight": "右下"
           }
         }
       }

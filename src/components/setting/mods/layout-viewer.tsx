@@ -192,6 +192,42 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
 
         <Item>
           <ListItemText
+            primary={t("settings.components.verge.layout.fields.toastPosition")}
+          />
+          <GuardState
+            value={verge?.notice_position ?? "top-right"}
+            onCatch={onError}
+            onFormat={(e: any) => e.target.value}
+            onChange={(value) => onChangeData({ notice_position: value })}
+            onGuard={(value) => patchVerge({ notice_position: value })}
+          >
+            <Select size="small" sx={{ width: 180, "> div": { py: "7.5px" } }}>
+              <MenuItem value="top-right">
+                {t(
+                  "settings.components.verge.layout.options.toastPosition.topRight",
+                )}
+              </MenuItem>
+              <MenuItem value="top-left">
+                {t(
+                  "settings.components.verge.layout.options.toastPosition.topLeft",
+                )}
+              </MenuItem>
+              <MenuItem value="bottom-right">
+                {t(
+                  "settings.components.verge.layout.options.toastPosition.bottomRight",
+                )}
+              </MenuItem>
+              <MenuItem value="bottom-left">
+                {t(
+                  "settings.components.verge.layout.options.toastPosition.bottomLeft",
+                )}
+              </MenuItem>
+            </Select>
+          </GuardState>
+        </Item>
+
+        <Item>
+          <ListItemText
             primary={
               <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
                 <span>

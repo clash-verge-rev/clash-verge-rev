@@ -627,6 +627,7 @@ export interface TranslationResources {
               proxyGroupIcon: string;
               showProxyGroupsInline: string;
               systemProxyTrayIcon: string;
+              toastPosition: string;
               trafficGraph: string;
               trayIcon: string;
               tunTrayIcon: string;
@@ -636,6 +637,12 @@ export interface TranslationResources {
                 colorful: string;
                 disable: string;
                 monochrome: string;
+              };
+              toastPosition: {
+                bottomLeft: string;
+                bottomRight: string;
+                topLeft: string;
+                topRight: string;
               };
             };
             title: string;

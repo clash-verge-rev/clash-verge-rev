@@ -205,6 +205,7 @@
           "trafficGraph": "نمودار ترافیک",
           "memoryUsage": "استفاده از حافظه",
           "proxyGroupIcon": "آیکون گروه پراکسی",
+          "toastPosition": "Toast Position",
           "hoverNavigator": "Hover Jump Navigator",
           "hoverNavigatorDelay": "Hover Jump Navigator Delay",
           "navIcon": "آیکون ناوبری",
@@ -225,6 +226,12 @@
             "monochrome": "تک رنگ",
             "colorful": "رنگارنگ",
             "disable": "غیرفعال کردن"
+          },
+          "toastPosition": {
+            "topLeft": "Top Left",
+            "topRight": "Top Right",
+            "bottomLeft": "Bottom Left",
+            "bottomRight": "Bottom Right"
           }
         }
       }
