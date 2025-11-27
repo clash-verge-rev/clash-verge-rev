@@ -109,7 +109,7 @@
     "lint-staged": "^16.2.7",
     "meta-json-schema": "^1.19.16",
     "node-fetch": "^3.3.2",
-    "prettier": "^3.6.2",
+    "prettier": "^3.7.0",
     "sass": "^1.94.2",
     "tar": "^7.5.2",
     "terser": "^5.44.1",
