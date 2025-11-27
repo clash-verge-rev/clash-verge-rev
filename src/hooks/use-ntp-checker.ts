@@ -1,5 +1,6 @@
 import { useLockFn } from "ahooks";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect } from "foxact/use-abortable-effect";
+import { useCallback, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import {
@@ -56,41 +57,39 @@ export const useNtpChecker = () => {
     server: getPreferredServer(status),
   });
 
-  useEffect(() => {
-    if (checkedRef.current) return;
-    checkedRef.current = true;
+  useEffect(
+    (signal) => {
+      if (checkedRef.current) return;
+      checkedRef.current = true;
 
-    let disposed = false;
-    void (async () => {
-      try {
-        const status = await checkNtpStatus();
-        if (disposed) return;
+      void (async () => {
+        try {
+          const status = await checkNtpStatus();
+          if (signal.aborted) return;
 
-        setStatus(status);
-        if (status.enabled) {
-          return;
-        }
-
-        if (status.canConfigure) {
-          setPromptOpen(true);
-        } else {
-          if (status.message) {
-            showNotice.info(status.message);
+          setStatus(status);
+          if (status.enabled) {
+            return;
           }
+
+          if (status.canConfigure) {
+            setPromptOpen(true);
+          } else {
+            if (status.message) {
+              showNotice.info(status.message);
+            }
+            showNotice.info("layout.ntp.notifications.statusUnknown");
+            warnManualCalibration();
+          }
+        } catch (error) {
+          console.error("[NTP] Failed to check status:", error);
           showNotice.info("layout.ntp.notifications.statusUnknown");
           warnManualCalibration();
         }
-      } catch (error) {
-        console.error("[NTP] Failed to check status:", error);
-        showNotice.info("layout.ntp.notifications.statusUnknown");
-        warnManualCalibration();
-      }
-    })();
-
-    return () => {
-      disposed = true;
-    };
-  }, [warnManualCalibration]);
+      })();
+    },
+    [warnManualCalibration],
+  );
 
   const handleApply = useLockFn(async () => {
     try {
