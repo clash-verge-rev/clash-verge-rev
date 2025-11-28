@@ -55,6 +55,8 @@ document.addEventListener("keydown", (event) => {
   }
 });
 
+let cachedVergeConfig: IVergeConfig | null = null;
+
 const detectSystemTheme = (): "light" | "dark" => {
   if (typeof window === "undefined" || typeof window.matchMedia !== "function")
     return "light";
@@ -63,12 +65,28 @@ const detectSystemTheme = (): "light" | "dark" => {
     : "light";
 };
 
+const getInitialThemeModeFromWindow = ():
+  | IVergeConfig["theme_mode"]
+  | undefined => {
+  if (typeof window === "undefined") return undefined;
+  const mode = (
+    window as typeof window & {
+      __VERGE_INITIAL_THEME_MODE?: unknown;
+    }
+  ).__VERGE_INITIAL_THEME_MODE;
+  if (mode === "light" || mode === "dark" || mode === "system") {
+    return mode;
+  }
+  return undefined;
+};
+
 const resolveInitialThemeMode = (
   vergeConfig?: IVergeConfig | null,
 ): "light" | "dark" => {
-  const configMode = vergeConfig?.theme_mode;
-  if (configMode === "dark" || configMode === "light") {
-    return configMode;
+  const initialMode =
+    vergeConfig?.theme_mode ?? getInitialThemeModeFromWindow();
+  if (initialMode === "dark" || initialMode === "light") {
+    return initialMode;
   }
   return detectSystemTheme();
 };
@@ -96,33 +114,47 @@ const initializeApp = (initialThemeMode: "light" | "dark") => {
   );
 };
 
-const determineInitialLanguage = async (vergeConfig?: IVergeConfig | null) => {
+const determineInitialLanguage = async (
+  vergeConfig?: IVergeConfig | null,
+  loadVergeConfig?: () => Promise<IVergeConfig | null>,
+) => {
   const cachedLanguage = getCachedLanguage();
   if (cachedLanguage) {
     return cachedLanguage;
   }
 
-  const languageFromConfig = vergeConfig?.language;
+  let resolvedConfig = vergeConfig;
+
+  if (resolvedConfig === undefined) {
+    if (loadVergeConfig) {
+      try {
+        resolvedConfig = await loadVergeConfig();
+      } catch (error) {
+        console.warn(
+          "[main.tsx] Failed to read language from Verge config:",
+          error,
+        );
+        resolvedConfig = null;
+      }
+    } else {
+      try {
+        resolvedConfig = await getVergeConfig();
+        cachedVergeConfig = resolvedConfig;
+      } catch (error) {
+        console.warn(
+          "[main.tsx] Failed to read language from Verge config:",
+          error,
+        );
+        resolvedConfig = null;
+      }
+    }
+  }
+
+  const languageFromConfig = resolvedConfig?.language;
   if (languageFromConfig) {
     const resolved = resolveLanguage(languageFromConfig);
     cacheLanguage(resolved);
     return resolved;
-  }
-
-  if (!vergeConfig) {
-    try {
-      const fetchedConfig = await getVergeConfig();
-      if (fetchedConfig?.language) {
-        const resolved = resolveLanguage(fetchedConfig.language);
-        cacheLanguage(resolved);
-        return resolved;
-      }
-    } catch (error) {
-      console.warn(
-        "[main.tsx] Failed to read language from Verge config:",
-        error,
-      );
-    }
   }
 
   const browserLanguage = resolveLanguage(
@@ -132,17 +164,28 @@ const determineInitialLanguage = async (vergeConfig?: IVergeConfig | null) => {
   return browserLanguage;
 };
 
-const bootstrap = async () => {
-  let vergeConfig: IVergeConfig | null = null;
+const fetchVergeConfig = async () => {
   try {
-    vergeConfig = await getVergeConfig();
+    const config = await getVergeConfig();
+    cachedVergeConfig = config;
+    return config;
   } catch (error) {
     console.warn("[main.tsx] Failed to read Verge config:", error);
+    return null;
   }
+};
 
-  const initialLanguage = await determineInitialLanguage(vergeConfig);
+const bootstrap = async () => {
+  const vergeConfigPromise = fetchVergeConfig();
+  const initialLanguage = await determineInitialLanguage(
+    undefined,
+    () => vergeConfigPromise,
+  );
+  const [vergeConfig] = await Promise.all([
+    vergeConfigPromise,
+    initializeLanguage(initialLanguage),
+  ]);
   const initialThemeMode = resolveInitialThemeMode(vergeConfig);
-  await initializeLanguage(initialLanguage);
   initializeApp(initialThemeMode);
 };
 
@@ -159,7 +202,7 @@ bootstrap().catch((error) => {
       );
     })
     .finally(() => {
-      initializeApp(resolveInitialThemeMode());
+      initializeApp(resolveInitialThemeMode(cachedVergeConfig));
     });
 });
 
