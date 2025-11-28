@@ -38,7 +38,7 @@ pub const WINDOW_INITIAL_SCRIPT: &str = r##"
     const applyInitialTheme = (theme) => {
         const isDark = theme === "dark";
         const root = document.documentElement;
-        const bgColor = isDark ? "#1a1a1a" : "#f5f5f5";
+        const bgColor = isDark ? "#2E303D" : "#f5f5f5";
         const textColor = isDark ? "#ffffff" : "#333";
         if (root) {
             root.dataset.theme = theme;
@@ -69,7 +69,7 @@ pub const WINDOW_INITIAL_SCRIPT: &str = r##"
     const isDarkTheme = applyInitialTheme(initialTheme);
 
     const getInitialOverlayColors = () => ({
-        bg: isDarkTheme ? "#1a1a1a" : "#f5f5f5",
+        bg: isDarkTheme ? "#2E303D" : "#f5f5f5",
         text: isDarkTheme ? "#ffffff" : "#333",
         spinnerTrack: isDarkTheme ? "#3a3a3a" : "#e3e3e3",
         spinnerTop: isDarkTheme ? "#0a84ff" : "#3498db",

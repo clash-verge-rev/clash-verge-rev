@@ -1,3 +1,4 @@
+use dark_light::{Mode as SystemTheme, detect as detect_system_theme};
 use tauri::utils::config::Color;
 use tauri::{Theme, WebviewWindow};
 
@@ -36,9 +37,14 @@ pub async fn build_new_window() -> Result<WebviewWindow, String> {
     };
 
     let background_color = match resolved_theme {
-        Some(Theme::Dark) => Some(Color(26, 26, 26, 255)), // #1a1a1a
+        Some(Theme::Dark) => Some(Color(46, 48, 61, 255)), // #2e303d
         Some(Theme::Light) => Some(Color(245, 245, 245, 255)), // #f5f5f5
-        _ => None,
+        Some(_) => None,
+        None => match detect_system_theme().ok() {
+            Some(SystemTheme::Dark) => Some(Color(46, 48, 61, 255)),
+            Some(SystemTheme::Light) => Some(Color(245, 245, 245, 255)),
+            _ => Some(Color(46, 48, 61, 255)),
+        },
     };
 
     let mut builder = tauri::WebviewWindowBuilder::new(
