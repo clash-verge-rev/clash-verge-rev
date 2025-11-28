@@ -99,6 +99,7 @@ clash_verge_service_ipc = { version = "2.0.21", features = [
 arc-swap = "1.7.1"
 rust-i18n = "3.1.5"
 rust_iso3166 = "0.1.14"
+dark-light = "2.0.0"
 
 [target.'cfg(windows)'.dependencies]
 deelevate = { workspace = true }

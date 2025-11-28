@@ -4,7 +4,7 @@ import { LogLevel } from "tauri-plugin-mihomo-api";
 
 const [ThemeModeProvider, useThemeMode, useSetThemeMode] = createContextState<
   "light" | "dark"
->("light");
+>();
 
 export type LogFilter = "all" | "debug" | "info" | "warn" | "err";
 export type LogOrder = "asc" | "desc";

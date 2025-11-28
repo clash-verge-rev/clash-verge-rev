@@ -55,9 +55,45 @@ document.addEventListener("keydown", (event) => {
   }
 });
 
-const initializeApp = () => {
+let cachedVergeConfig: IVergeConfig | null = null;
+
+const detectSystemTheme = (): "light" | "dark" => {
+  if (typeof window === "undefined" || typeof window.matchMedia !== "function")
+    return "light";
+  return window.matchMedia("(prefers-color-scheme: dark)").matches
+    ? "dark"
+    : "light";
+};
+
+const getInitialThemeModeFromWindow = ():
+  | IVergeConfig["theme_mode"]
+  | undefined => {
+  if (typeof window === "undefined") return undefined;
+  const mode = (
+    window as typeof window & {
+      __VERGE_INITIAL_THEME_MODE?: unknown;
+    }
+  ).__VERGE_INITIAL_THEME_MODE;
+  if (mode === "light" || mode === "dark" || mode === "system") {
+    return mode;
+  }
+  return undefined;
+};
+
+const resolveInitialThemeMode = (
+  vergeConfig?: IVergeConfig | null,
+): "light" | "dark" => {
+  const initialMode =
+    vergeConfig?.theme_mode ?? getInitialThemeModeFromWindow();
+  if (initialMode === "dark" || initialMode === "light") {
+    return initialMode;
+  }
+  return detectSystemTheme();
+};
+
+const initializeApp = (initialThemeMode: "light" | "dark") => {
   const contexts = [
-    <ThemeModeProvider key="theme" />,
+    <ThemeModeProvider key="theme" initialState={initialThemeMode} />,
     <LoadingCacheProvider key="loading" />,
     <UpdateStateProvider key="update" />,
   ];
@@ -78,24 +114,47 @@ const initializeApp = () => {
   );
 };
 
-const determineInitialLanguage = async () => {
+const determineInitialLanguage = async (
+  vergeConfig?: IVergeConfig | null,
+  loadVergeConfig?: () => Promise<IVergeConfig | null>,
+) => {
   const cachedLanguage = getCachedLanguage();
   if (cachedLanguage) {
     return cachedLanguage;
   }
 
-  try {
-    const vergeConfig = await getVergeConfig();
-    if (vergeConfig?.language) {
-      const resolved = resolveLanguage(vergeConfig.language);
-      cacheLanguage(resolved);
-      return resolved;
+  let resolvedConfig = vergeConfig;
+
+  if (resolvedConfig === undefined) {
+    if (loadVergeConfig) {
+      try {
+        resolvedConfig = await loadVergeConfig();
+      } catch (error) {
+        console.warn(
+          "[main.tsx] Failed to read language from Verge config:",
+          error,
+        );
+        resolvedConfig = null;
+      }
+    } else {
+      try {
+        resolvedConfig = await getVergeConfig();
+        cachedVergeConfig = resolvedConfig;
+      } catch (error) {
+        console.warn(
+          "[main.tsx] Failed to read language from Verge config:",
+          error,
+        );
+        resolvedConfig = null;
+      }
     }
-  } catch (error) {
-    console.warn(
-      "[main.tsx] Failed to read language from Verge config:",
-      error,
-    );
+  }
+
+  const languageFromConfig = resolvedConfig?.language;
+  if (languageFromConfig) {
+    const resolved = resolveLanguage(languageFromConfig);
+    cacheLanguage(resolved);
+    return resolved;
   }
 
   const browserLanguage = resolveLanguage(
@@ -105,10 +164,29 @@ const determineInitialLanguage = async () => {
   return browserLanguage;
 };
 
+const fetchVergeConfig = async () => {
+  try {
+    const config = await getVergeConfig();
+    cachedVergeConfig = config;
+    return config;
+  } catch (error) {
+    console.warn("[main.tsx] Failed to read Verge config:", error);
+    return null;
+  }
+};
+
 const bootstrap = async () => {
-  const initialLanguage = await determineInitialLanguage();
-  await initializeLanguage(initialLanguage);
-  initializeApp();
+  const vergeConfigPromise = fetchVergeConfig();
+  const initialLanguage = await determineInitialLanguage(
+    undefined,
+    () => vergeConfigPromise,
+  );
+  const [vergeConfig] = await Promise.all([
+    vergeConfigPromise,
+    initializeLanguage(initialLanguage),
+  ]);
+  const initialThemeMode = resolveInitialThemeMode(vergeConfig);
+  initializeApp(initialThemeMode);
 };
 
 bootstrap().catch((error) => {
@@ -124,7 +202,7 @@ bootstrap().catch((error) => {
       );
     })
     .finally(() => {
-      initializeApp();
+      initializeApp(resolveInitialThemeMode(cachedVergeConfig));
     });
 });
 
