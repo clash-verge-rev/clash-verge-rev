@@ -9,6 +9,11 @@ use crate::{
 };
 use clash_verge_logging::{Type, logging_error};
 
+const DARK_BACKGROUND_COLOR: Color = Color(46, 48, 61, 255); // #2E303D
+const LIGHT_BACKGROUND_COLOR: Color = Color(245, 245, 245, 255); // #F5F5F5
+const DARK_BACKGROUND_HEX: &str = "#2E303D";
+const LIGHT_BACKGROUND_HEX: &str = "#F5F5F5";
+
 // 定义默认窗口尺寸常量
 const DEFAULT_WIDTH: f64 = 940.0;
 const DEFAULT_HEIGHT: f64 = 700.0;
@@ -28,7 +33,6 @@ pub async fn build_new_window() -> Result<WebviewWindow, String> {
         Some("light") => "light",
         _ => "system",
     };
-    let initial_script = build_window_initial_script(initial_theme_mode);
 
     let resolved_theme = match initial_theme_mode {
         "dark" => Some(Theme::Dark),
@@ -36,16 +40,23 @@ pub async fn build_new_window() -> Result<WebviewWindow, String> {
         _ => None,
     };
 
-    let background_color = match resolved_theme {
-        Some(Theme::Dark) => Some(Color(46, 48, 61, 255)), // #2e303d
-        Some(Theme::Light) => Some(Color(245, 245, 245, 255)), // #f5f5f5
-        Some(_) => None,
-        None => match detect_system_theme().ok() {
-            Some(SystemTheme::Dark) => Some(Color(46, 48, 61, 255)),
-            Some(SystemTheme::Light) => Some(Color(245, 245, 245, 255)),
-            _ => Some(Color(46, 48, 61, 255)),
-        },
+    let prefers_dark_background = match resolved_theme {
+        Some(Theme::Dark) => true,
+        Some(Theme::Light) => false,
+        _ => !matches!(detect_system_theme().ok(), Some(SystemTheme::Light)),
     };
+
+    let background_color = if prefers_dark_background {
+        DARK_BACKGROUND_COLOR
+    } else {
+        LIGHT_BACKGROUND_COLOR
+    };
+
+    let initial_script = build_window_initial_script(
+        initial_theme_mode,
+        DARK_BACKGROUND_HEX,
+        LIGHT_BACKGROUND_HEX,
+    );
 
     let mut builder = tauri::WebviewWindowBuilder::new(
         app_handle,
@@ -59,19 +70,21 @@ pub async fn build_new_window() -> Result<WebviewWindow, String> {
     .fullscreen(false)
     .inner_size(DEFAULT_WIDTH, DEFAULT_HEIGHT)
     .min_inner_size(MINIMAL_WIDTH, MINIMAL_HEIGHT)
-    .visible(true) // 立即显示窗口，避免用户等待
+    .visible(false) // 等待主题色准备好后再展示，避免启动色差
     .initialization_script(&initial_script);
 
     if let Some(theme) = resolved_theme {
         builder = builder.theme(Some(theme));
     }
 
-    if let Some(color) = background_color {
-        builder = builder.background_color(color);
-    }
+    builder = builder.background_color(background_color);
 
     match builder.build() {
         Ok(window) => {
+            logging_error!(
+                Type::Window,
+                window.set_background_color(Some(background_color))
+            );
             logging_error!(Type::Window, window.eval(INITIAL_LOADING_OVERLAY));
             Ok(window)
         }

@@ -1,4 +1,8 @@
-pub fn build_window_initial_script(initial_theme_mode: &str) -> String {
+pub fn build_window_initial_script(
+    initial_theme_mode: &str,
+    dark_background: &str,
+    light_background: &str,
+) -> String {
     let theme_mode = match initial_theme_mode {
         "dark" => "dark",
         "light" => "light",
@@ -7,13 +11,36 @@ pub fn build_window_initial_script(initial_theme_mode: &str) -> String {
     format!(
         r#"
     window.__VERGE_INITIAL_THEME_MODE = "{theme_mode}";
-{WINDOW_INITIAL_SCRIPT}
-"#
+    window.__VERGE_INITIAL_THEME_COLORS = {{
+        darkBg: "{dark_background}",
+        lightBg: "{light_background}",
+    }};
+{script}
+"#,
+        theme_mode = theme_mode,
+        dark_background = dark_background,
+        light_background = light_background,
+        script = WINDOW_INITIAL_SCRIPT,
     )
 }
 
 pub const WINDOW_INITIAL_SCRIPT: &str = r##"
     console.log('[Tauri] 窗口初始化脚本开始执行');
+
+    const initialColors = (() => {
+        try {
+            const colors = window.__VERGE_INITIAL_THEME_COLORS;
+            if (colors && typeof colors === "object") {
+                const { darkBg, lightBg } = colors;
+                if (typeof darkBg === "string" && typeof lightBg === "string") {
+                    return { darkBg, lightBg };
+                }
+            }
+        } catch (error) {
+            console.warn("[Tauri] 读取初始主题颜色失败:", error);
+        }
+        return { darkBg: "#2E303D", lightBg: "#F5F5F5" };
+    })();
 
     const prefersDark = (() => {
         try {
@@ -38,7 +65,7 @@ pub const WINDOW_INITIAL_SCRIPT: &str = r##"
     const applyInitialTheme = (theme) => {
         const isDark = theme === "dark";
         const root = document.documentElement;
-        const bgColor = isDark ? "#2E303D" : "#f5f5f5";
+        const bgColor = isDark ? initialColors.darkBg : initialColors.lightBg;
         const textColor = isDark ? "#ffffff" : "#333";
         if (root) {
             root.dataset.theme = theme;
@@ -69,20 +96,29 @@ pub const WINDOW_INITIAL_SCRIPT: &str = r##"
     const isDarkTheme = applyInitialTheme(initialTheme);
 
     const getInitialOverlayColors = () => ({
-        bg: isDarkTheme ? "#2E303D" : "#f5f5f5",
+        bg: isDarkTheme ? initialColors.darkBg : initialColors.lightBg,
         text: isDarkTheme ? "#ffffff" : "#333",
         spinnerTrack: isDarkTheme ? "#3a3a3a" : "#e3e3e3",
         spinnerTop: isDarkTheme ? "#0a84ff" : "#3498db",
     });
 
-    function createLoadingOverlay() {
+    function createOrUpdateLoadingOverlay() {
+        const colors = getInitialOverlayColors();
+        const existed = document.getElementById('initial-loading-overlay');
 
-        if (document.getElementById('initial-loading-overlay')) {
-            console.log('[Tauri] 加载指示器已存在');
+        const applyOverlayColors = (element) => {
+            element.style.setProperty("--bg-color", colors.bg);
+            element.style.setProperty("--text-color", colors.text);
+            element.style.setProperty("--spinner-track", colors.spinnerTrack);
+            element.style.setProperty("--spinner-top", colors.spinnerTop);
+        };
+
+        if (existed) {
+            console.log('[Tauri] 复用已有加载指示器');
+            applyOverlayColors(existed);
             return;
         }
 
-        const colors = getInitialOverlayColors();
         console.log('[Tauri] 创建加载指示器');
         const loadingDiv = document.createElement('div');
         loadingDiv.id = 'initial-loading-overlay';
@@ -112,10 +148,7 @@ pub const WINDOW_INITIAL_SCRIPT: &str = r##"
             </style>
         `;
 
-        loadingDiv.style.setProperty("--bg-color", colors.bg);
-        loadingDiv.style.setProperty("--text-color", colors.text);
-        loadingDiv.style.setProperty("--spinner-track", colors.spinnerTrack);
-        loadingDiv.style.setProperty("--spinner-top", colors.spinnerTop);
+        applyOverlayColors(loadingDiv);
 
         if (document.body) {
             document.body.appendChild(loadingDiv);
@@ -128,12 +161,12 @@ pub const WINDOW_INITIAL_SCRIPT: &str = r##"
         }
     }
 
-    createLoadingOverlay();
+    createOrUpdateLoadingOverlay();
 
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', createLoadingOverlay);
+        document.addEventListener('DOMContentLoaded', createOrUpdateLoadingOverlay);
     } else {
-        createLoadingOverlay();
+        createOrUpdateLoadingOverlay();
     }
 
     console.log('[Tauri] 窗口初始化脚本执行完成');
