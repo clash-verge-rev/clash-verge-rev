@@ -38,11 +38,25 @@ pub const WINDOW_INITIAL_SCRIPT: &str = r##"
     const applyInitialTheme = (theme) => {
         const isDark = theme === "dark";
         const root = document.documentElement;
+        const bgColor = isDark ? "#1a1a1a" : "#f5f5f5";
+        const textColor = isDark ? "#ffffff" : "#333";
         if (root) {
             root.dataset.theme = theme;
-            root.style.setProperty("--bg-color", isDark ? "#1a1a1a" : "#f5f5f5");
-            root.style.setProperty("--text-color", isDark ? "#ffffff" : "#333");
+            root.style.setProperty("--bg-color", bgColor);
+            root.style.setProperty("--text-color", textColor);
             root.style.colorScheme = isDark ? "dark" : "light";
+            root.style.backgroundColor = bgColor;
+            root.style.color = textColor;
+        }
+        const paintBody = () => {
+            if (!document.body) return;
+            document.body.style.backgroundColor = bgColor;
+            document.body.style.color = textColor;
+        };
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", paintBody, { once: true });
+        } else {
+            paintBody();
         }
         try {
             localStorage.setItem("verge-theme-mode-cache", theme);
