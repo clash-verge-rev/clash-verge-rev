@@ -17,7 +17,65 @@ export const supportedLanguages = [
   "zhtw",
 ];
 
-const FALLBACK_LANGUAGE = "zh";
+export const FALLBACK_LANGUAGE = "zh";
+const LANGUAGE_STORAGE_KEY = "verge-language";
+
+const normalizeLanguage = (language?: string) =>
+  language?.toLowerCase().replace(/_/g, "-");
+
+export const resolveLanguage = (language?: string) => {
+  const normalized = normalizeLanguage(language);
+  if (!normalized) {
+    return FALLBACK_LANGUAGE;
+  }
+
+  if (normalized === "zh-tw") return "zhtw";
+  if (normalized === "zh-cn") return "zh";
+
+  if (supportedLanguages.includes(normalized)) {
+    return normalized;
+  }
+
+  const baseLanguage = normalized.split("-")[0];
+  if (supportedLanguages.includes(baseLanguage)) {
+    return baseLanguage;
+  }
+
+  return FALLBACK_LANGUAGE;
+};
+
+const getLanguageStorage = () => {
+  if (typeof window === "undefined") return null;
+  try {
+    return window.localStorage;
+  } catch {
+    return null;
+  }
+};
+
+export const cacheLanguage = (language: string) => {
+  const storage = getLanguageStorage();
+  if (!storage) return;
+
+  try {
+    storage.setItem(LANGUAGE_STORAGE_KEY, resolveLanguage(language));
+  } catch (error) {
+    console.warn("[i18n] Failed to cache language:", error);
+  }
+};
+
+export const getCachedLanguage = () => {
+  const storage = getLanguageStorage();
+  if (!storage) return undefined;
+
+  try {
+    const cached = storage.getItem(LANGUAGE_STORAGE_KEY);
+    return cached ? resolveLanguage(cached) : undefined;
+  } catch (error) {
+    console.warn("[i18n] Failed to read cached language:", error);
+    return undefined;
+  }
+};
 
 type LocaleModule = {
   default: Record<string, unknown>;
@@ -71,22 +129,27 @@ export const loadLanguage = async (language: string) => {
 
 i18n.use(initReactI18next).init({
   resources: {},
-  lng: "zh",
-  fallbackLng: "zh",
+  lng: FALLBACK_LANGUAGE,
+  fallbackLng: FALLBACK_LANGUAGE,
   interpolation: {
     escapeValue: false,
   },
 });
 
 export const changeLanguage = async (language: string) => {
-  if (!i18n.hasResourceBundle(language, "translation")) {
-    const resources = await loadLanguage(language);
-    i18n.addResourceBundle(language, "translation", resources);
+  const targetLanguage = resolveLanguage(language);
+
+  if (!i18n.hasResourceBundle(targetLanguage, "translation")) {
+    const resources = await loadLanguage(targetLanguage);
+    i18n.addResourceBundle(targetLanguage, "translation", resources);
   }
 
-  await i18n.changeLanguage(language);
+  await i18n.changeLanguage(targetLanguage);
+  cacheLanguage(targetLanguage);
 };
 
-export const initializeLanguage = async (initialLanguage: string = "zh") => {
+export const initializeLanguage = async (
+  initialLanguage: string = FALLBACK_LANGUAGE,
+) => {
   await changeLanguage(initialLanguage);
 };

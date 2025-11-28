@@ -14,7 +14,14 @@ import { BaseErrorBoundary } from "./components/base";
 import { router } from "./pages/_routers";
 import { AppDataProvider } from "./providers/app-data-provider";
 import { WindowProvider } from "./providers/window";
-import { initializeLanguage } from "./services/i18n";
+import { getVergeConfig } from "./services/cmds";
+import {
+  FALLBACK_LANGUAGE,
+  cacheLanguage,
+  getCachedLanguage,
+  initializeLanguage,
+  resolveLanguage,
+} from "./services/i18n";
 import {
   LoadingCacheProvider,
   ThemeModeProvider,
@@ -71,20 +78,67 @@ const initializeApp = () => {
   );
 };
 
-initializeLanguage("zh").catch(console.error);
-initializeApp();
+const determineInitialLanguage = async () => {
+  const cachedLanguage = getCachedLanguage();
+  if (cachedLanguage) {
+    return cachedLanguage;
+  }
 
-// 错误处理
+  try {
+    const vergeConfig = await getVergeConfig();
+    if (vergeConfig?.language) {
+      const resolved = resolveLanguage(vergeConfig.language);
+      cacheLanguage(resolved);
+      return resolved;
+    }
+  } catch (error) {
+    console.warn(
+      "[main.tsx] Failed to read language from Verge config:",
+      error,
+    );
+  }
+
+  const browserLanguage = resolveLanguage(
+    typeof navigator !== "undefined" ? navigator.language : undefined,
+  );
+  cacheLanguage(browserLanguage);
+  return browserLanguage;
+};
+
+const bootstrap = async () => {
+  const initialLanguage = await determineInitialLanguage();
+  await initializeLanguage(initialLanguage);
+  initializeApp();
+};
+
+bootstrap().catch((error) => {
+  console.error(
+    "[main.tsx] App bootstrap failed, falling back to default language:",
+    error,
+  );
+  initializeLanguage(FALLBACK_LANGUAGE)
+    .catch((fallbackError) => {
+      console.error(
+        "[main.tsx] Fallback language initialization failed:",
+        fallbackError,
+      );
+    })
+    .finally(() => {
+      initializeApp();
+    });
+});
+
+// Error handling
 window.addEventListener("error", (event) => {
-  console.error("[main.tsx] 全局错误:", event.error);
+  console.error("[main.tsx] Global error:", event.error);
 });
 
 window.addEventListener("unhandledrejection", (event) => {
-  console.error("[main.tsx] 未处理的Promise拒绝:", event.reason);
+  console.error("[main.tsx] Unhandled promise rejection:", event.reason);
 });
 
-// 页面关闭/刷新事件
+// Page close/refresh events
 window.addEventListener("beforeunload", () => {
-  // 同步清理所有 WebSocket 实例, 防止内存泄漏
+  // Clean up all WebSocket instances to prevent memory leaks
   MihomoWebSocket.cleanupAll();
 });
