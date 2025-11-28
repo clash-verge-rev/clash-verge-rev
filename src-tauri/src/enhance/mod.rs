@@ -661,10 +661,6 @@ pub async fn enhance() -> (Mapping, HashSet<String>, HashMap<String, ResultLog>)
 
     config = cleanup_proxy_groups(config);
 
-    // remove ipc config
-    config.remove("external-controller-unix");
-    config.remove("external-controller-pipe");
-
     config = use_tun(config, enable_tun);
     config = use_sort(config);
 
