@@ -55,9 +55,27 @@ document.addEventListener("keydown", (event) => {
   }
 });
 
-const initializeApp = () => {
+const detectSystemTheme = (): "light" | "dark" => {
+  if (typeof window === "undefined" || typeof window.matchMedia !== "function")
+    return "light";
+  return window.matchMedia("(prefers-color-scheme: dark)").matches
+    ? "dark"
+    : "light";
+};
+
+const resolveInitialThemeMode = (
+  vergeConfig?: IVergeConfig | null,
+): "light" | "dark" => {
+  const configMode = vergeConfig?.theme_mode;
+  if (configMode === "dark" || configMode === "light") {
+    return configMode;
+  }
+  return detectSystemTheme();
+};
+
+const initializeApp = (initialThemeMode: "light" | "dark") => {
   const contexts = [
-    <ThemeModeProvider key="theme" />,
+    <ThemeModeProvider key="theme" initialState={initialThemeMode} />,
     <LoadingCacheProvider key="loading" />,
     <UpdateStateProvider key="update" />,
   ];
@@ -78,24 +96,33 @@ const initializeApp = () => {
   );
 };
 
-const determineInitialLanguage = async () => {
+const determineInitialLanguage = async (vergeConfig?: IVergeConfig | null) => {
   const cachedLanguage = getCachedLanguage();
   if (cachedLanguage) {
     return cachedLanguage;
   }
 
-  try {
-    const vergeConfig = await getVergeConfig();
-    if (vergeConfig?.language) {
-      const resolved = resolveLanguage(vergeConfig.language);
-      cacheLanguage(resolved);
-      return resolved;
+  const languageFromConfig = vergeConfig?.language;
+  if (languageFromConfig) {
+    const resolved = resolveLanguage(languageFromConfig);
+    cacheLanguage(resolved);
+    return resolved;
+  }
+
+  if (!vergeConfig) {
+    try {
+      const fetchedConfig = await getVergeConfig();
+      if (fetchedConfig?.language) {
+        const resolved = resolveLanguage(fetchedConfig.language);
+        cacheLanguage(resolved);
+        return resolved;
+      }
+    } catch (error) {
+      console.warn(
+        "[main.tsx] Failed to read language from Verge config:",
+        error,
+      );
     }
-  } catch (error) {
-    console.warn(
-      "[main.tsx] Failed to read language from Verge config:",
-      error,
-    );
   }
 
   const browserLanguage = resolveLanguage(
@@ -106,9 +133,17 @@ const determineInitialLanguage = async () => {
 };
 
 const bootstrap = async () => {
-  const initialLanguage = await determineInitialLanguage();
+  let vergeConfig: IVergeConfig | null = null;
+  try {
+    vergeConfig = await getVergeConfig();
+  } catch (error) {
+    console.warn("[main.tsx] Failed to read Verge config:", error);
+  }
+
+  const initialLanguage = await determineInitialLanguage(vergeConfig);
+  const initialThemeMode = resolveInitialThemeMode(vergeConfig);
   await initializeLanguage(initialLanguage);
-  initializeApp();
+  initializeApp(initialThemeMode);
 };
 
 bootstrap().catch((error) => {
@@ -124,7 +159,7 @@ bootstrap().catch((error) => {
       );
     })
     .finally(() => {
-      initializeApp();
+      initializeApp(resolveInitialThemeMode());
     });
 });
 

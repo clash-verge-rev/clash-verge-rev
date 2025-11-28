@@ -3,7 +3,7 @@ use tauri::WebviewWindow;
 use crate::{
     config::Config,
     core::handle,
-    utils::resolve::window_script::{INITIAL_LOADING_OVERLAY, WINDOW_INITIAL_SCRIPT},
+    utils::resolve::window_script::{INITIAL_LOADING_OVERLAY, build_window_initial_script},
 };
 use clash_verge_logging::{Type, logging_error};
 
@@ -21,6 +21,12 @@ pub async fn build_new_window() -> Result<WebviewWindow, String> {
     let config = Config::verge().await;
     let latest = config.latest_arc();
     let start_page = latest.start_page.as_deref().unwrap_or("/");
+    let initial_theme_mode = match latest.theme_mode.as_deref() {
+        Some("dark") => "dark",
+        Some("light") => "light",
+        _ => "system",
+    };
+    let initial_script = build_window_initial_script(initial_theme_mode);
 
     match tauri::WebviewWindowBuilder::new(
         app_handle,
@@ -35,7 +41,7 @@ pub async fn build_new_window() -> Result<WebviewWindow, String> {
     .inner_size(DEFAULT_WIDTH, DEFAULT_HEIGHT)
     .min_inner_size(MINIMAL_WIDTH, MINIMAL_HEIGHT)
     .visible(true) // 立即显示窗口，避免用户等待
-    .initialization_script(WINDOW_INITIAL_SCRIPT)
+    .initialization_script(&initial_script)
     .build()
     {
         Ok(window) => {
