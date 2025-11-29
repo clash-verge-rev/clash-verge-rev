@@ -597,7 +597,7 @@ export const ProxyGroups = (props: Props) => {
         initialScrollTop={scrollPositionRef.current[mode]}
         computeItemKey={(index) => renderList[index].key}
         itemContent={(index) => (
-          <div style={{ paddingRight: 14, paddingLeft: 14 }}>
+          <div style={{ paddingRight: 14 }}>
             <ProxyRender
               key={renderList[index].key}
               item={renderList[index]}
