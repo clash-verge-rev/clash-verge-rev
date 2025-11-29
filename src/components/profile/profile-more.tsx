@@ -184,7 +184,6 @@ export const ProfileMore = (props: Props) => {
           initialData={() => readProfileFile(id)}
           dataKey={id}
           language={id === "Merge" ? "yaml" : "javascript"}
-          schema={id === "Merge" ? "merge" : undefined}
           onSave={async (prev, curr) => {
             await saveProfileFile(id, curr ?? "");
             onSave?.(prev, curr);

@@ -68,9 +68,6 @@ importers:
       '@tauri-apps/plugin-updater':
         specifier: 2.9.0
         version: 2.9.0
-      '@types/json-schema':
-        specifier: ^7.0.15
-        version: 7.0.15
       ahooks:
         specifier: ^3.9.6
         version: 3.9.6(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
@@ -89,9 +86,6 @@ importers:
       js-yaml:
         specifier: ^4.1.1
         version: 4.1.1
-      json-schema:
-        specifier: ^0.4.0
-        version: 0.4.0
       lodash-es:
         specifier: ^4.17.21
         version: 4.17.21
@@ -225,9 +219,6 @@ importers:
       lint-staged:
         specifier: ^16.2.7
         version: 16.2.7
-      meta-json-schema:
-        specifier: ^1.19.16
-        version: 1.19.16
       node-fetch:
         specifier: ^3.3.2
         version: 3.3.2
@@ -3072,9 +3063,6 @@ packages:
   json-schema-traverse@0.4.1:
     resolution: {integrity: sha512-xbbCH5dCYU5T8LcEhhuh7HJ88HXuW3qsI3Y0zOZFKfZEHcpWiHU/Jxzk629Brsab/mMiHQti9wMP+845RPe3Vg==}
 
-  json-schema@0.4.0:
-    resolution: {integrity: sha512-es94M3nTIfsEPisRafak+HDLfHXnKBhV3vU5eqPcS3flIWqcxJWgXHXiey3YrpaNsanY5ei1VoYEbOzijuq9BA==}
-
   json-stable-stringify-without-jsonify@1.0.1:
     resolution: {integrity: sha512-Bdboy+l7tA3OGW6FjyFHWkP5LuByj1Tk33Ljyq0axyzdk9//JSi2u3fP1QSmd1KNwq6VOKYGlAu87CisVir6Pw==}
 
@@ -3192,10 +3180,6 @@ packages:
   meow@13.2.0:
     resolution: {integrity: sha512-pxQJQzB6djGPXh08dacEloMFopsOqGVRKFPYvPOt9XDZ1HasbgDZA74CJGreSU4G3Ak7EFJGoiH2auq+yXISgA==}
     engines: {node: '>=18'}
-
-  meta-json-schema@1.19.16:
-    resolution: {integrity: sha512-Py3XR3VRXs3tAMg3sy7fmex8IU4p4FTxVbF86WTtssWpFcSNbBUjk0QjpdhGrh+9qPMSwCJY1drXnvgDq9XQ7Q==}
-    engines: {node: '>=18', pnpm: '>=9'}
 
   micromark-core-commonmark@2.0.3:
     resolution: {integrity: sha512-RDBrHEMSxVFLg6xvnXmb1Ayr2WzLAWjeSATAoxwKYJV94TeNavgoIdA0a9ytzDSVzBy2YKFK+emCPOEibLeCrg==}
@@ -7257,8 +7241,6 @@ snapshots:
 
   json-schema-traverse@0.4.1: {}
 
-  json-schema@0.4.0: {}
-
   json-stable-stringify-without-jsonify@1.0.1: {}
 
   json5@1.0.2:
@@ -7449,8 +7431,6 @@ snapshots:
       timers-ext: 0.1.8
 
   meow@13.2.0: {}
-
-  meta-json-schema@1.19.16: {}
 
   micromark-core-commonmark@2.0.3:
     dependencies:

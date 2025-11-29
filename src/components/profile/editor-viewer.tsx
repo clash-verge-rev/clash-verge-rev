@@ -16,9 +16,6 @@ import {
 } from "@mui/material";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { useLockFn } from "ahooks";
-import { type JSONSchema7 } from "json-schema";
-import mergeSchema from "meta-json-schema/schemas/clash-verge-merge-json-schema.json";
-import metaSchema from "meta-json-schema/schemas/meta-json-schema.json";
 import * as monaco from "monaco-editor";
 import { configureMonacoYaml } from "monaco-yaml";
 import { nanoid } from "nanoid";
@@ -34,12 +31,6 @@ import getSystem from "@/utils/get-system";
 const appWindow = getCurrentWebviewWindow();
 
 type Language = "yaml" | "javascript" | "css";
-type Schema<T extends Language> = LanguageSchemaMap[T];
-interface LanguageSchemaMap {
-  yaml: "clash" | "merge";
-  javascript: never;
-  css: never;
-}
 
 interface Props<T extends Language> {
   open: boolean;
@@ -47,11 +38,10 @@ interface Props<T extends Language> {
   // Initial content loader: prefer passing a stable function. A plain Promise is supported,
   // but it won't trigger background refreshes and should be paired with a stable `dataKey`.
   initialData: Promise<string> | (() => Promise<string>);
-  // Logical document id; reloads when this or language/schema changes.
+  // Logical document id; reloads when this or language changes.
   dataKey?: string | number;
   readOnly?: boolean;
   language: T;
-  schema?: Schema<T>;
   onChange?: (prev?: string, curr?: string) => void;
   onSave?: (prev?: string, curr?: string) => void | Promise<void>;
   onClose: () => void;
@@ -61,24 +51,10 @@ let initialized = false;
 const monacoInitialization = () => {
   if (initialized) return;
 
-  // YAML worker and schemas
+  // YAML worker setup
   configureMonacoYaml(monaco, {
     validate: true,
     enableSchemaRequest: true,
-    schemas: [
-      {
-        uri: "http://example.com/meta-json-schema.json",
-        fileMatch: ["**/*.clash.yaml"],
-        // @ts-expect-error -- meta schema JSON import does not satisfy JSONSchema7 at compile time
-        schema: metaSchema as JSONSchema7,
-      },
-      {
-        uri: "http://example.com/clash-verge-merge-json-schema.json",
-        fileMatch: ["**/*.merge.yaml"],
-        // @ts-expect-error -- merge schema JSON import does not satisfy JSONSchema7 at compile time
-        schema: mergeSchema as JSONSchema7,
-      },
-    ],
   });
   // PAC type definitions for JS suggestions
   monaco.typescript.javascriptDefaults.addExtraLib(pac, "pac.d.ts");
@@ -98,7 +74,6 @@ export const EditorViewer = <T extends Language>(props: Props<T>) => {
     dataKey,
     readOnly = false,
     language = "yaml",
-    schema,
     onChange,
     onSave,
     onClose,
@@ -261,9 +236,8 @@ export const EditorViewer = <T extends Language>(props: Props<T>) => {
         currData.current = data;
 
         setInitialText(data);
-        // Build a path that matches YAML schemas when applicable, and avoids "undefined" in name
+        // Build a stable model path and avoid "undefined" in the name
         const pathParts = [String(dataKey ?? nanoid()), instanceIdRef.current];
-        if (schema) pathParts.push(String(schema));
         pathParts.push(language);
 
         setModelPath(pathParts.join("."));
@@ -282,7 +256,6 @@ export const EditorViewer = <T extends Language>(props: Props<T>) => {
 
         setInitialText("");
         const pathParts = [String(dataKey ?? nanoid()), instanceIdRef.current];
-        if (schema) pathParts.push(String(schema));
         pathParts.push(language);
 
         setModelPath(pathParts.join("."));
@@ -297,7 +270,7 @@ export const EditorViewer = <T extends Language>(props: Props<T>) => {
     return () => {
       cancelled = true;
     };
-  }, [open, dataKey, language, schema]);
+  }, [open, dataKey, language]);
   /* eslint-enable @eslint-react/hooks-extra/no-direct-set-state-in-use-effect */
 
   const onMount = async (editor: monaco.editor.IStandaloneCodeEditor) => {
