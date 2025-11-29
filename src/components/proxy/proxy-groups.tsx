@@ -597,17 +597,15 @@ export const ProxyGroups = (props: Props) => {
         initialScrollTop={scrollPositionRef.current[mode]}
         computeItemKey={(index) => renderList[index].key}
         itemContent={(index) => (
-          <div style={{ paddingRight: 14 }}>
-            <ProxyRender
-              key={renderList[index].key}
-              item={renderList[index]}
-              indent={mode === "rule" || mode === "script"}
-              onLocation={handleLocation}
-              onCheckAll={handleCheckAll}
-              onHeadState={onHeadState}
-              onChangeProxy={handleChangeProxy}
-            />
-          </div>
+          <ProxyRender
+            key={renderList[index].key}
+            item={renderList[index]}
+            indent={mode === "rule" || mode === "script"}
+            onLocation={handleLocation}
+            onCheckAll={handleCheckAll}
+            onHeadState={onHeadState}
+            onChangeProxy={handleChangeProxy}
+          />
         )}
       />
       <ScrollTopButton show={showScrollTop} onClick={scrollToTop} />
