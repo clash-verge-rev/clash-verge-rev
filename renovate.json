@@ -1,7 +1,7 @@
 {
   "extends": ["config:recommended", ":disableDependencyDashboard"],
   "baseBranches": ["dev"],
-  "enabledManagers": ["cargo", "npm"],
+  "enabledManagers": ["cargo", "npm", "github-actions"],
   "labels": ["dependencies"],
   "ignorePaths": [
     "**/node_modules/**",
