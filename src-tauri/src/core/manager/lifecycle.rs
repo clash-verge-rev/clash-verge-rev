@@ -42,11 +42,6 @@ impl CoreManager {
     pub async fn restart_core(&self) -> Result<()> {
         logging!(info, Type::Core, "Restarting core");
         self.stop_core().await?;
-
-        if SERVICE_MANAGER.lock().await.init().await.is_ok() {
-            let _ = SERVICE_MANAGER.lock().await.refresh().await;
-        }
-
         self.start_core().await
     }
 

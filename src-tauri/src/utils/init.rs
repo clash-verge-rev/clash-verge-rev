@@ -54,7 +54,7 @@ pub async fn init_logger() -> Result<LoggerHandle> {
 
     let logger = Logger::with(spec)
         .log_to_file(FileSpec::default().directory(log_dir).basename(""))
-        .duplicate_to_stdout(Duplicate::Trace)
+        .duplicate_to_stdout(Duplicate::Debug)
         .format(clash_verge_logger::console_format)
         .format_for_files(clash_verge_logger::file_format_with_level)
         .rotate(
@@ -68,7 +68,7 @@ pub async fn init_logger() -> Result<LoggerHandle> {
     #[cfg(not(feature = "tracing"))]
     let logger = logger.filter(Box::new(NoModuleFilter(&[
         "wry",
-        // "tauri",
+        "tauri",
         "tokio_tungstenite",
         "tungstenite",
     ])));

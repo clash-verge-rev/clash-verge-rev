@@ -635,13 +635,13 @@ fn create_subcreate_proxy_menu_item(
     proxy_mode: &str,
     current_profile_selected: &[PrfSelected],
     proxy_group_order_map: Option<HashMap<String, usize>>,
-    proxy_nodes_data: Result<Proxies>,
+    proxy_nodes_data: Option<Proxies>,
 ) -> Vec<Submenu<Wry>> {
     let proxy_submenus: Vec<Submenu<Wry>> = {
         let mut submenus: Vec<(String, usize, Submenu<Wry>)> = Vec::new();
 
         // TODO: 应用启动时，内核还未启动完全，无法获取代理节点信息
-        if let Ok(proxy_nodes_data) = proxy_nodes_data {
+        if let Some(proxy_nodes_data) = proxy_nodes_data {
             for (group_name, group_data) in proxy_nodes_data.proxies.iter() {
                 // Filter groups based on mode
                 let should_show = match proxy_mode {
@@ -827,7 +827,7 @@ async fn create_tray_menu(
             .unwrap_or_default()
     };
 
-    let proxy_nodes_data = handle::Handle::mihomo().await.get_proxies().await;
+    let proxy_nodes_data = handle::Handle::mihomo().await.get_proxies().await.ok();
 
     let runtime_proxy_groups_order = cmd::get_runtime_config()
         .await
@@ -950,7 +950,7 @@ async fn create_tray_menu(
         current_proxy_mode,
         &current_profile_selected,
         proxy_group_order_map,
-        proxy_nodes_data.map_err(anyhow::Error::from),
+        proxy_nodes_data,
     );
 
     let (proxies_menu, inline_proxy_items) = create_proxy_menu_item(
