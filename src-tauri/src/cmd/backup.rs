@@ -27,6 +27,12 @@ pub async fn restore_local_backup(filename: String) -> CmdResult<()> {
     feat::restore_local_backup(filename).await.stringify_err()
 }
 
+/// Import local backup into the app's backup directory
+#[tauri::command]
+pub async fn import_local_backup(source: String) -> CmdResult<String> {
+    feat::import_local_backup(source).await.stringify_err()
+}
+
 /// Export local backup to a user selected destination
 #[tauri::command]
 pub async fn export_local_backup(filename: String, destination: String) -> CmdResult<()> {

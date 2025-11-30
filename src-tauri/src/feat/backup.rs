@@ -158,6 +158,53 @@ where
     Ok(final_name)
 }
 
+/// Import an existing backup file into the local backup directory
+pub async fn import_local_backup(source: String) -> Result<String> {
+    let source_path = PathBuf::from(source.as_str());
+    if !source_path.exists() {
+        return Err(anyhow!("Backup file not found: {source}"));
+    }
+    if !source_path.is_file() {
+        return Err(anyhow!("Backup path is not a file: {source}"));
+    }
+
+    let ext = source_path
+        .extension()
+        .and_then(|ext| ext.to_str())
+        .map(|ext| ext.to_ascii_lowercase())
+        .unwrap_or_default();
+    if ext != "zip" {
+        return Err(anyhow!("Only .zip backup files are supported"));
+    }
+
+    let file_name = source_path
+        .file_name()
+        .and_then(|name| name.to_str())
+        .ok_or_else(|| anyhow!("Invalid backup file name"))?;
+
+    let backup_dir = local_backup_dir()?;
+    let target_path = backup_dir.join(file_name);
+
+    if target_path == source_path {
+        // Already located in the backup directory
+        return Ok(file_name.to_string().into());
+    }
+
+    if let Some(parent) = target_path.parent() {
+        fs::create_dir_all(parent).await?;
+    }
+
+    if target_path.exists() {
+        return Err(anyhow!("Backup file already exists: {file_name}"));
+    }
+
+    fs::copy(&source_path, &target_path)
+        .await
+        .map_err(|err| anyhow!("Failed to import backup file: {err:#?}"))?;
+
+    Ok(file_name.to_string().into())
+}
+
 async fn move_file(from: PathBuf, to: PathBuf) -> Result<()> {
     if let Some(parent) = to.parent() {
         fs::create_dir_all(parent).await?;

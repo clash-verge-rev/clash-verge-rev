@@ -7,13 +7,18 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
+import { open as openDialog } from "@tauri-apps/plugin-dialog";
 import { useLockFn } from "ahooks";
 import type { ReactNode, Ref } from "react";
 import { useCallback, useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { BaseDialog, DialogRef } from "@/components/base";
-import { createLocalBackup, createWebdavBackup } from "@/services/cmds";
+import {
+  createLocalBackup,
+  createWebdavBackup,
+  importLocalBackup,
+} from "@/services/cmds";
 import { showNotice } from "@/services/notice-service";
 
 import { AutoBackupSettings } from "./auto-backup-settings";
@@ -26,6 +31,7 @@ export function BackupViewer({ ref }: { ref?: Ref<DialogRef> }) {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [busyAction, setBusyAction] = useState<BackupSource | null>(null);
+  const [localImporting, setLocalImporting] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [historySource, setHistorySource] = useState<BackupSource>("local");
   const [historyPage, setHistoryPage] = useState(0);
@@ -67,12 +73,35 @@ export function BackupViewer({ ref }: { ref?: Ref<DialogRef> }) {
     }
   });
 
+  const handleImport = useLockFn(async () => {
+    const selected = await openDialog({
+      multiple: false,
+      filters: [{ name: "Backup File", extensions: ["zip"] }],
+    });
+    if (!selected || Array.isArray(selected)) return;
+    try {
+      setLocalImporting(true);
+      await importLocalBackup(selected);
+      showNotice.success("settings.modals.backup.messages.localBackupImported");
+      openHistory("local");
+    } catch (error) {
+      console.error(error);
+      showNotice.error(
+        "settings.modals.backup.messages.localBackupImportFailed",
+      );
+    } finally {
+      setLocalImporting(false);
+    }
+  });
+
   const setWebdavBusy = useCallback(
     (loading: boolean) => {
       setBusyAction(loading ? "webdav" : null);
     },
     [setBusyAction],
   );
+
+  const isLocalBusy = busyAction === "local" || localImporting;
 
   return (
     <BaseDialog
@@ -125,6 +154,7 @@ export function BackupViewer({ ref }: { ref?: Ref<DialogRef> }) {
                       variant="contained"
                       size="small"
                       loading={busyAction === "local"}
+                      disabled={localImporting}
                       onClick={() => handleBackup("local")}
                     >
                       {t("settings.modals.backup.actions.backup")}
@@ -133,10 +163,21 @@ export function BackupViewer({ ref }: { ref?: Ref<DialogRef> }) {
                       key="history"
                       variant="outlined"
                       size="small"
+                      disabled={isLocalBusy}
                       onClick={() => openHistory("local")}
                     >
                       {t("settings.modals.backup.actions.viewHistory")}
                     </Button>,
+                    <LoadingButton
+                      key="import"
+                      variant="text"
+                      size="small"
+                      loading={localImporting}
+                      disabled={busyAction === "local"}
+                      onClick={() => handleImport()}
+                    >
+                      {t("settings.modals.backup.actions.importBackup")}
+                    </LoadingButton>,
                   ],
                 },
                 {

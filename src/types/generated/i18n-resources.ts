@@ -694,6 +694,7 @@ export interface TranslationResources {
             deleteBackup: string;
             export: string;
             exportBackup: string;
+            importBackup: string;
             restore: string;
             restoreBackup: string;
             selectTarget: string;
@@ -737,6 +738,8 @@ export interface TranslationResources {
             localBackupExported: string;
             localBackupExportFailed: string;
             localBackupFailed: string;
+            localBackupImported: string;
+            localBackupImportFailed: string;
             passwordRequired: string;
             restoreSuccess: string;
             usernameRequired: string;
