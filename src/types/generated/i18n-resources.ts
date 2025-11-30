@@ -721,6 +721,8 @@ export interface TranslationResources {
             empty: string;
             summary: string;
             title: string;
+            unknownPlatform: string;
+            unknownTime: string;
           };
           manual: {
             configureWebdav: string;

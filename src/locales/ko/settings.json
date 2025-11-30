@@ -309,7 +309,7 @@
         "localBackupExported": "로컬 백업이 내보내졌습니다",
         "localBackupExportFailed": "로컬 백업 내보내기 실패",
         "localBackupImported": "로컬 백업을 가져왔습니다",
-        "localBackupImportFailed": "로컬 백업 가져오기 실패",
+        "localBackupImportFailed": "로컬 백업 가져오기 실패: {{error}}",
         "webdavRefreshSuccess": "WebDAV refresh succeeded",
         "webdavRefreshFailed": "WebDAV refresh failed: {{error}}",
         "confirmDelete": "이 백업 파일을 삭제하시겠습니까?",
@@ -336,7 +336,9 @@
       "history": {
         "title": "Backup history",
         "summary": "{{count}} backups • latest {{recent}}",
-        "empty": "No backups available"
+        "empty": "No backups available",
+        "unknownPlatform": "알 수 없음",
+        "unknownTime": "시간 정보 없음"
       },
       "webdav": {
         "title": "WebDAV settings"

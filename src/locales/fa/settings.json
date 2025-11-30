@@ -309,7 +309,7 @@
         "localBackupExported": "Local backup exported successfully",
         "localBackupExportFailed": "Failed to export local backup",
         "localBackupImported": "Local backup imported successfully",
-        "localBackupImportFailed": "Failed to import local backup",
+        "localBackupImportFailed": "Failed to import local backup: {{error}}",
         "webdavRefreshSuccess": "WebDAV refresh succeeded",
         "webdavRefreshFailed": "WebDAV refresh failed: {{error}}",
         "confirmDelete": "آیا از حذف این فایل پشتیبان اطمینان دارید؟",
@@ -336,7 +336,9 @@
       "history": {
         "title": "تاریخچه پشتیبان گیری",
         "summary": "{{count}} backups • latest {{recent}}",
-        "empty": "هیچ نسخه پشتیبان در دسترس نیست"
+        "empty": "هیچ نسخه پشتیبان در دسترس نیست",
+        "unknownPlatform": "unknown",
+        "unknownTime": "Unknown time"
       },
       "webdav": {
         "title": "پیکربندی WebDAV"

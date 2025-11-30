@@ -88,6 +88,7 @@ export function BackupViewer({ ref }: { ref?: Ref<DialogRef> }) {
       console.error(error);
       showNotice.error(
         "settings.modals.backup.messages.localBackupImportFailed",
+        { error },
       );
     } finally {
       setLocalImporting(false);

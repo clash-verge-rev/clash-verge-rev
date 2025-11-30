@@ -309,7 +309,7 @@
         "localBackupExported": "本機備份匯出成功",
         "localBackupExportFailed": "本機備份匯出失敗",
         "localBackupImported": "本機備份匯入成功",
-        "localBackupImportFailed": "本機備份匯入失敗",
+        "localBackupImportFailed": "本機備份匯入失敗：{{error}}",
         "webdavRefreshSuccess": "WebDAV 更新成功",
         "webdavRefreshFailed": "WebDAV 更新失敗: {{error}}",
         "confirmDelete": "確認是否刪除此備份檔案嗎？",
@@ -336,7 +336,9 @@
       "history": {
         "title": "備份紀錄",
         "summary": "共 {{count}} 份備份 · 最近 {{recent}}",
-        "empty": "尚無備份紀錄"
+        "empty": "尚無備份紀錄",
+        "unknownPlatform": "未知",
+        "unknownTime": "未知時間"
       },
       "webdav": {
         "title": "WebDAV 設定"
