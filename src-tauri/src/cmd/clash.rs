@@ -29,7 +29,7 @@ pub async fn get_clash_info() -> CmdResult<ClashInfo> {
 /// 修改Clash配置
 #[tauri::command]
 pub async fn patch_clash_config(payload: Mapping) -> CmdResult {
-    feat::patch_clash(payload).await.stringify_err()
+    feat::patch_clash(&payload).await.stringify_err()
 }
 
 /// 修改Clash模式
@@ -171,7 +171,7 @@ pub async fn apply_dns_config(apply: bool) -> CmdResult {
 
         // 应用DNS配置到运行时配置
         Config::runtime().await.edit_draft(|d| {
-            d.patch_config(patch);
+            d.patch_config(&patch);
         });
 
         // 重新生成配置

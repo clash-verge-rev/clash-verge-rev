@@ -9,10 +9,8 @@ use clash_verge_logging::{Type, logging, logging_error};
 use serde_yaml_ng::Mapping;
 
 /// Patch Clash configuration
-pub async fn patch_clash(patch: Mapping) -> Result<()> {
-    Config::clash()
-        .await
-        .edit_draft(|d| d.patch_config(patch.clone()));
+pub async fn patch_clash(patch: &Mapping) -> Result<()> {
+    Config::clash().await.edit_draft(|d| d.patch_config(patch));
 
     let res = {
         // 激活订阅

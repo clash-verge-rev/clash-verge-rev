@@ -22,7 +22,7 @@ impl IRuntime {
 
     // 这里只更改 allow-lan | ipv6 | log-level | tun
     #[inline]
-    pub fn patch_config(&mut self, patch: Mapping) {
+    pub fn patch_config(&mut self, patch: &Mapping) {
         let config = if let Some(config) = self.config.as_mut() {
             config
         } else {

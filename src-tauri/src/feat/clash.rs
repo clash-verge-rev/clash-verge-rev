@@ -84,7 +84,7 @@ pub async fn change_clash_mode(mode: String) {
             // 更新订阅
             Config::clash()
                 .await
-                .edit_draft(|d| d.patch_config(mapping));
+                .edit_draft(|d| d.patch_config(&mapping));
 
             // 分离数据获取和异步调用
             let clash_data = Config::clash().await.data_arc();
