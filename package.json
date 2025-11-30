@@ -106,7 +106,7 @@
     "jiti": "^2.6.1",
     "lint-staged": "^16.2.7",
     "node-fetch": "^3.3.2",
-    "prettier": "^3.7.2",
+    "prettier": "^3.7.3",
     "sass": "^1.94.2",
     "tar": "^7.5.2",
     "terser": "^5.44.1",
