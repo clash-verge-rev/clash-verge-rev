@@ -118,7 +118,7 @@ async fn should_update_profile(
             "[订阅更新] {} 是远程订阅，URL: {}",
             uid,
             item.url
-                .clone()
+                .as_ref()
                 .ok_or_else(|| anyhow::anyhow!("Profile URL is None"))?
         );
         Ok(Some((
