@@ -2,6 +2,9 @@
 
 - **Mihomo(Meta) 内核升级至 v1.19.16**
 
+> **Warning**
+> macOS 签名故障，临时暂停签名
+
 ### 🐞 修复问题
 
 - Linux 无法切换 TUN 堆栈
