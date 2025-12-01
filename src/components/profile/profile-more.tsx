@@ -12,11 +12,11 @@ import { useLockFn } from "ahooks";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import { LogViewer } from "@/components/console";
 import { EditorViewer } from "@/components/profile/editor-viewer";
 import { viewProfile, readProfileFile, saveProfileFile } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
 
-import { LogViewerV2 } from "./log-viewer-v2";
 import { ProfileBox } from "./profile-box";
 
 interface Props {
@@ -193,7 +193,7 @@ export const ProfileMore = (props: Props) => {
         />
       )}
       {logOpen && (
-        <LogViewerV2
+        <LogViewer
           open={logOpen}
           logInfo={entries}
           onClose={() => setLogOpen(false)}
