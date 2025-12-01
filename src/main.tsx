@@ -22,6 +22,7 @@ import {
   initializeLanguage,
   resolveLanguage,
 } from "./services/i18n";
+import { setInitialVergeConfig } from "./services/preloaded-verge-config";
 import {
   LoadingCacheProvider,
   ThemeModeProvider,
@@ -168,9 +169,11 @@ const fetchVergeConfig = async () => {
   try {
     const config = await getVergeConfig();
     cachedVergeConfig = config;
+    setInitialVergeConfig(config);
     return config;
   } catch (error) {
     console.warn("[main.tsx] Failed to read Verge config:", error);
+    setInitialVergeConfig(null);
     return null;
   }
 };
