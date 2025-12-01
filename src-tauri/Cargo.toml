@@ -63,7 +63,7 @@ once_cell = { version = "1.21.3", features = ["parking_lot"] }
 port_scanner = "0.1.5"
 delay_timer = "0.11.6"
 percent-encoding = "2.3.2"
-reqwest = { version = "0.12.24", features = ["json", "cookies", "native-tls"] }
+reqwest = { version = "0.12.24", features = ["json", "cookies", "rustls-tls"] }
 regex = "1.12.2"
 sysproxy = { git = "https://github.com/clash-verge-rev/sysproxy-rs", features = [
   "guard",

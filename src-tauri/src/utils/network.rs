@@ -110,6 +110,7 @@ impl NetworkManager {
         timeout_secs: Option<u64>,
     ) -> Result<Client> {
         let mut builder = Client::builder()
+            .use_rustls_tls()
             .redirect(reqwest::redirect::Policy::limited(10))
             .tcp_keepalive(Duration::from_secs(60))
             .pool_max_idle_per_host(0)
