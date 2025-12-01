@@ -304,9 +304,6 @@ export interface TranslationResources {
           };
         };
         logViewer: {
-          title: string;
-        };
-        logViewerV2: {
           filter: string;
           noLogs: string;
           noMatch: string;

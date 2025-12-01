@@ -178,9 +178,6 @@
       "message": "此操作不可逆"
     },
     "logViewer": {
-      "title": "脚本控制台输出"
-    },
-    "logViewerV2": {
       "title": "脚本控制台输出",
       "filter": "搜索日志...",
       "noLogs": "暂无日志",

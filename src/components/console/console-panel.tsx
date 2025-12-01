@@ -205,7 +205,7 @@ export const ConsolePanel = (props: ConsolePanelProps) => {
             >
               <TextField
                 size="small"
-                placeholder={t("profiles.modals.logViewerV2.filter")}
+                placeholder={t("profiles.modals.logViewer.filter")}
                 value={filter}
                 onChange={(e) => setFilter(e.target.value)}
                 slotProps={{
@@ -357,8 +357,8 @@ export const ConsolePanel = (props: ConsolePanelProps) => {
                   }}
                 >
                   {logInfo.length === 0
-                    ? t("profiles.modals.logViewerV2.noLogs")
-                    : t("profiles.modals.logViewerV2.noMatch")}
+                    ? t("profiles.modals.logViewer.noLogs")
+                    : t("profiles.modals.logViewer.noMatch")}
                 </Typography>
               </Box>
             )}

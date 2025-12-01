@@ -70,7 +70,7 @@ export const LogViewer = (props: Props) => {
           <Typography
             sx={{ color: colors.text, fontSize: 13, fontWeight: 500 }}
           >
-            {t("profiles.modals.logViewerV2.title")}
+            {t("profiles.modals.logViewer.title")}
           </Typography>
 
           {/* Stats badges */}
