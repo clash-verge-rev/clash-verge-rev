@@ -1059,6 +1059,7 @@ const ProfilePage = () => {
                       await onEnhance(false);
                     }
                   }}
+                  onRun={() => onEnhance(false)}
                 />
               </Grid>
             </Grid>

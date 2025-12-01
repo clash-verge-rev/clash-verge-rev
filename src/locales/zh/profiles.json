@@ -165,7 +165,9 @@
     },
     "editor": {
       "actions": {
-        "format": "格式化文档"
+        "format": "格式化文档",
+        "console": "控制台",
+        "run": "运行"
       },
       "messages": {
         "readOnly": "无法在只读模式下编辑"

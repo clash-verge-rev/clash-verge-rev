@@ -165,7 +165,9 @@
     },
     "editor": {
       "actions": {
-        "format": "Format document"
+        "format": "Format document",
+        "console": "Console",
+        "run": "Run"
       },
       "messages": {
         "readOnly": "Cannot edit in read-only editor"

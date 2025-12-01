@@ -260,7 +260,9 @@ export interface TranslationResources {
         };
         editor: {
           actions: {
+            console: string;
             format: string;
+            run: string;
           };
           messages: {
             readOnly: string;

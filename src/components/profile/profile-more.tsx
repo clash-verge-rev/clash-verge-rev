@@ -23,13 +23,15 @@ interface Props {
   logInfo?: [string, string][];
   id: "Merge" | "Script";
   onSave?: (prev?: string, curr?: string) => void;
+  /** Run script to refresh logs without closing editor */
+  onRun?: () => void | Promise<void>;
 }
 
 const EMPTY_LOG_INFO: [string, string][] = [];
 
 // profile enhanced item
 export const ProfileMore = (props: Props) => {
-  const { id, logInfo, onSave } = props;
+  const { id, logInfo, onSave, onRun } = props;
 
   const entries = logInfo ?? EMPTY_LOG_INFO;
   const { t } = useTranslation();
@@ -185,10 +187,12 @@ export const ProfileMore = (props: Props) => {
           dataKey={id}
           language={id === "Merge" ? "yaml" : "javascript"}
           schema={id === "Merge" ? "merge" : undefined}
+          logInfo={id === "Script" ? entries : undefined}
           onSave={async (prev, curr) => {
             await saveProfileFile(id, curr ?? "");
             onSave?.(prev, curr);
           }}
+          onRun={id === "Script" ? onRun : undefined}
           onClose={() => setFileOpen(false)}
         />
       )}

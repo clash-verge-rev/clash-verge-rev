@@ -4,10 +4,14 @@ import {
   ContentPasteRounded,
   FormatPaintRounded,
   OpenInFullRounded,
+  PlayArrowRounded,
+  TerminalRounded,
 } from "@mui/icons-material";
 import {
+  Box,
   Button,
   ButtonGroup,
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -23,10 +27,12 @@ import * as monaco from "monaco-editor";
 import { configureMonacoYaml } from "monaco-yaml";
 import { nanoid } from "nanoid";
 import { ReactNode, useEffect, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { useTranslation } from "react-i18next";
 import pac from "types-pac/pac.d.ts?raw";
 
 import { BaseLoadingOverlay } from "@/components/base";
+import { ConsolePanel } from "@/components/console";
 import { showNotice } from "@/services/noticeService";
 import { useThemeMode } from "@/services/states";
 import debounce from "@/utils/debounce";
@@ -52,8 +58,12 @@ interface Props<T extends Language> {
   readOnly?: boolean;
   language: T;
   schema?: Schema<T>;
+  /** Console log data: [level, message][] */
+  logInfo?: [string, string][];
   onChange?: (prev?: string, curr?: string) => void;
   onSave?: (prev?: string, curr?: string) => void | Promise<void>;
+  /** Run script without closing the dialog, used to test script and refresh logs */
+  onRun?: (content: string) => void | Promise<void>;
   onClose: () => void;
 }
 
@@ -90,6 +100,8 @@ export const EditorViewer = <T extends Language>(props: Props<T>) => {
   const { t } = useTranslation();
   const themeMode = useThemeMode();
   const [isMaximized, setIsMaximized] = useState(false);
+  const [showConsole, setShowConsole] = useState(false);
+  const [isRunning, setIsRunning] = useState(false);
 
   const {
     open = false,
@@ -99,8 +111,10 @@ export const EditorViewer = <T extends Language>(props: Props<T>) => {
     readOnly = false,
     language = "yaml",
     schema,
+    logInfo,
     onChange,
     onSave,
+    onRun,
     onClose,
   } = props;
 
@@ -348,6 +362,29 @@ export const EditorViewer = <T extends Language>(props: Props<T>) => {
     }
   });
 
+  // Run script: save and execute without closing the dialog
+  const handleRun = useLockFn(async () => {
+    if (!editorRef.current || !onRun) return;
+    // Use flushSync to force immediate UI update for loading state
+    // eslint-disable-next-line @eslint-react/dom/no-flush-sync
+    flushSync(() => setIsRunning(true));
+    try {
+      const content = editorRef.current.getValue();
+      // Save file first
+      if (onSave) {
+        await onSave(prevData.current, content);
+        prevData.current = content;
+        currData.current = content;
+      }
+      // Then run to refresh logs
+      await onRun(content);
+    } catch (err) {
+      showNotice.error(err);
+    } finally {
+      setIsRunning(false);
+    }
+  });
+
   // Explicit paste action: works even when Monaco's context-menu paste cannot read clipboard.
   const handlePaste = useLockFn(async () => {
     try {
@@ -422,85 +459,117 @@ export const EditorViewer = <T extends Language>(props: Props<T>) => {
           overflow: "hidden",
         }}
       >
-        <div style={{ position: "relative", flex: "1 1 auto", minHeight: 0 }}>
-          {/* Show overlay while loading or until modelPath is ready */}
-          <BaseLoadingOverlay isLoading={isLoading} />
-          {/* Background refresh failure helper */}
-          {!!refreshFailed && (
-            <div
-              style={{
-                position: "absolute",
-                top: 8,
-                right: 10,
-                zIndex: 2,
-                display: "flex",
-                gap: 8,
-                alignItems: "center",
-                pointerEvents: "auto",
-              }}
-            >
-              <span
+        <div
+          style={{
+            position: "relative",
+            flex: "1 1 auto",
+            minHeight: 0,
+            display: "flex",
+            flexDirection: "column",
+          }}
+        >
+          {/* Editor area */}
+          <div
+            style={{
+              position: "relative",
+              flex: showConsole ? "1 1 60%" : "1 1 auto",
+              minHeight: 0,
+            }}
+          >
+            {/* Show overlay while loading or until modelPath is ready */}
+            <BaseLoadingOverlay isLoading={isLoading} />
+            {/* Background refresh failure helper */}
+            {!!refreshFailed && (
+              <div
                 style={{
-                  color: "var(--mui-palette-warning-main, #ed6c02)",
-                  background: "rgba(237,108,2,0.1)",
-                  border: "1px solid rgba(237,108,2,0.35)",
-                  borderRadius: 6,
-                  padding: "2px 8px",
-                  fontSize: 12,
-                  lineHeight: "20px",
-                  userSelect: "text",
+                  position: "absolute",
+                  top: 8,
+                  right: 10,
+                  zIndex: 2,
+                  display: "flex",
+                  gap: 8,
+                  alignItems: "center",
+                  pointerEvents: "auto",
                 }}
               >
-                {t("shared.feedback.notifications.common.refreshFailed")}
-              </span>
-              <Button
-                size="small"
-                variant="outlined"
-                onClick={() => reloadLatest()}
-              >
-                {t("shared.actions.retry")}
-              </Button>
-            </div>
-          )}
-          {initialText !== null && modelPath && (
-            <MonacoEditor
-              height="100%"
-              path={modelPath}
-              language={language}
-              defaultValue={initialText}
-              theme={themeMode === "light" ? "light" : "vs-dark"}
-              options={{
-                automaticLayout: true,
-                tabSize: ["yaml", "javascript", "css"].includes(language)
-                  ? 2
-                  : 4,
-                minimap: {
-                  enabled: document.documentElement.clientWidth >= 1500,
-                },
-                mouseWheelZoom: true,
-                readOnly: effectiveReadOnly,
-                readOnlyMessage: {
-                  value: t("profiles.modals.editor.messages.readOnly"),
-                },
-                renderValidationDecorations: "on",
-                quickSuggestions: {
-                  strings: true,
-                  comments: true,
-                  other: true,
-                },
-                padding: {
-                  top: 33, // Top padding to prevent snippet overlap
-                },
-                fontFamily: `Fira Code, JetBrains Mono, Roboto Mono, "Source Code Pro", Consolas, Menlo, Monaco, monospace, "Courier New", "Apple Color Emoji"${
-                  getSystem() === "windows" ? ", twemoji mozilla" : ""
-                }`,
-                fontLigatures: false,
-                smoothScrolling: true,
+                <span
+                  style={{
+                    color: "var(--mui-palette-warning-main, #ed6c02)",
+                    background: "rgba(237,108,2,0.1)",
+                    border: "1px solid rgba(237,108,2,0.35)",
+                    borderRadius: 6,
+                    padding: "2px 8px",
+                    fontSize: 12,
+                    lineHeight: "20px",
+                    userSelect: "text",
+                  }}
+                >
+                  {t("shared.feedback.notifications.common.refreshFailed")}
+                </span>
+                <Button
+                  size="small"
+                  variant="outlined"
+                  onClick={() => reloadLatest()}
+                >
+                  {t("shared.actions.retry")}
+                </Button>
+              </div>
+            )}
+            {initialText !== null && modelPath && (
+              <MonacoEditor
+                height="100%"
+                path={modelPath}
+                language={language}
+                defaultValue={initialText}
+                theme={themeMode === "light" ? "light" : "vs-dark"}
+                options={{
+                  automaticLayout: true,
+                  tabSize: ["yaml", "javascript", "css"].includes(language)
+                    ? 2
+                    : 4,
+                  minimap: {
+                    enabled: document.documentElement.clientWidth >= 1500,
+                  },
+                  mouseWheelZoom: true,
+                  readOnly: effectiveReadOnly,
+                  readOnlyMessage: {
+                    value: t("profiles.modals.editor.messages.readOnly"),
+                  },
+                  renderValidationDecorations: "on",
+                  quickSuggestions: {
+                    strings: true,
+                    comments: true,
+                    other: true,
+                  },
+                  padding: {
+                    top: 33, // Top padding to prevent snippet overlap
+                  },
+                  fontFamily: `Fira Code, JetBrains Mono, Roboto Mono, "Source Code Pro", Consolas, Menlo, Monaco, monospace, "Courier New", "Apple Color Emoji"${
+                    getSystem() === "windows" ? ", twemoji mozilla" : ""
+                  }`,
+                  fontLigatures: false,
+                  smoothScrolling: true,
+                }}
+                beforeMount={beforeMount}
+                onMount={onMount}
+                onChange={handleChange}
+              />
+            )}
+          </div>
+
+          {/* Console panel */}
+          {showConsole && logInfo && (
+            <Box
+              sx={{
+                flex: "0 0 40%",
+                minHeight: 120,
+                borderTop: 1,
+                borderColor: "divider",
+                overflow: "hidden",
               }}
-              beforeMount={beforeMount}
-              onMount={onMount}
-              onChange={handleChange}
-            />
+            >
+              <ConsolePanel logInfo={logInfo} showToolbar />
+            </Box>
           )}
         </div>
 
@@ -532,6 +601,31 @@ export const EditorViewer = <T extends Language>(props: Props<T>) => {
           >
             <FormatPaintRounded fontSize="inherit" />
           </IconButton>
+          {onRun && (
+            <IconButton
+              size="medium"
+              color="inherit"
+              title={t("profiles.modals.editor.actions.run")}
+              disabled={isLoading || isRunning}
+              onClick={() => handleRun()}
+            >
+              {isRunning ? (
+                <CircularProgress size={18} color="inherit" />
+              ) : (
+                <PlayArrowRounded fontSize="inherit" />
+              )}
+            </IconButton>
+          )}
+          {logInfo && (
+            <IconButton
+              size="medium"
+              color={showConsole ? "primary" : "inherit"}
+              title={t("profiles.modals.editor.actions.console")}
+              onClick={() => setShowConsole((prev) => !prev)}
+            >
+              <TerminalRounded fontSize="inherit" />
+            </IconButton>
+          )}
           <IconButton
             size="medium"
             color="inherit"

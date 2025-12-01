@@ -204,6 +204,8 @@ export const translationKeys = [
   "profiles.modals.groupsEditor.actions.prepend",
   "profiles.modals.groupsEditor.actions.append",
   "profiles.modals.editor.actions.format",
+  "profiles.modals.editor.actions.console",
+  "profiles.modals.editor.actions.run",
   "profiles.modals.editor.messages.readOnly",
   "profiles.modals.confirmDelete.title",
   "profiles.modals.confirmDelete.message",
