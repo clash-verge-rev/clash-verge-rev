@@ -16,7 +16,6 @@ pub struct IClashTemp(pub Mapping);
 
 impl IClashTemp {
     pub async fn new() -> Self {
-        let template = Self::template();
         let clash_path_result = dirs::clash_path();
         let map_result = if let Ok(path) = clash_path_result {
             help::read_mapping(&path).await
@@ -26,24 +25,26 @@ impl IClashTemp {
 
         match map_result {
             Ok(mut map) => {
-                template.0.keys().for_each(|key| {
-                    if !map.contains_key(key)
-                        && let Some(value) = template.0.get(key)
-                    {
-                        map.insert(key.clone(), value.clone());
+                let template_map = Self::template().0;
+                for (key, value) in template_map.into_iter() {
+                    if !map.contains_key(&key) {
+                        map.insert(key, value);
                     }
-                });
+                }
+
                 // 确保 secret 字段存在且不为空
-                if let Some(Value::String(s)) = map.get_mut("secret")
+                if let Some(val) = map.get_mut("secret")
+                    && let Value::String(s) = val
                     && s.is_empty()
                 {
                     *s = "set-your-secret".into();
                 }
+
                 Self(Self::guard(map))
             }
             Err(err) => {
                 logging!(error, Type::Config, "{err}");
-                template
+                Self::template()
             }
         }
     }
@@ -144,9 +145,9 @@ impl IClashTemp {
         config
     }
 
-    pub fn patch_config(&mut self, patch: Mapping) {
-        for (key, value) in patch.into_iter() {
-            self.0.insert(key, value);
+    pub fn patch_config(&mut self, patch: &Mapping) {
+        for (key, value) in patch.iter() {
+            self.0.insert(key.to_owned(), value.to_owned());
         }
     }
 

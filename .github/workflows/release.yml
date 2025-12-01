@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -69,7 +69,7 @@ jobs:
     needs: [release, release-for-linux-arm, release-for-fixed-webview2]
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Fetch UPDATE logs
         id: fetch_update_logs
@@ -156,7 +156,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install Rust Stable
         uses: dtolnay/rust-toolchain@stable
@@ -186,9 +186,9 @@ jobs:
           echo "PKG_CONFIG_PATH=$(brew --prefix openssl@3)/lib/pkgconfig" >> $GITHUB_ENV
 
       - name: Install Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: "22"
+          node-version: "24.11.1"
 
       - uses: pnpm/action-setup@v4
         name: Install pnpm
@@ -202,7 +202,7 @@ jobs:
 
       - name: Tauri build
         # 上游 5.24 修改了 latest.json 的生成逻辑，且依赖 tauri-plugin-update 2.10.0 暂未发布，故锁定在 0.5.23 版本
-        uses: tauri-apps/tauri-action@v0.5.23
+        uses: tauri-apps/tauri-action@v0.6.0
         env:
           NODE_OPTIONS: "--max_old_space_size=4096"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -240,7 +240,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install Rust Stable
         uses: dtolnay/rust-toolchain@stable
@@ -255,9 +255,9 @@ jobs:
           save-if: false
 
       - name: Install Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: "22"
+          node-version: "24.11.1"
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
@@ -364,7 +364,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Add Rust Target
         run: rustup target add ${{ matrix.target }}
@@ -376,9 +376,9 @@ jobs:
           save-if: false
 
       - name: Install Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: "22"
+          node-version: "24.11.1"
 
       - uses: pnpm/action-setup@v4
         name: Install pnpm
@@ -400,7 +400,7 @@ jobs:
       - name: Tauri build
         id: build
         # 上游 5.24 修改了 latest.json 的生成逻辑，且依赖 tauri-plugin-update 2.10.0 暂未发布，故锁定在 0.5.23 版本
-        uses: tauri-apps/tauri-action@v0.5.23
+        uses: tauri-apps/tauri-action@v0.6.0
         env:
           NODE_OPTIONS: "--max_old_space_size=4096"
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -452,12 +452,12 @@ jobs:
     needs: [update_tag]
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: "22"
+          node-version: "24.11.1"
 
       - uses: pnpm/action-setup@v4
         name: Install pnpm
@@ -478,12 +478,12 @@ jobs:
     needs: [update_tag]
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: "22"
+          node-version: "24.11.1"
 
       - uses: pnpm/action-setup@v4
         name: Install pnpm
@@ -505,7 +505,7 @@ jobs:
     needs: [update_tag, release-update]
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - name: Get Version
@@ -535,7 +535,7 @@ jobs:
       ]
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Fetch UPDATE logs
         id: fetch_update_logs
@@ -543,9 +543,9 @@ jobs:
         shell: bash
 
       - name: Install Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: "22"
+          node-version: "24.11.1"
 
       - uses: pnpm/action-setup@v4
         name: Install pnpm

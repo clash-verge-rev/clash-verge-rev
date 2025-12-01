@@ -49,7 +49,7 @@ clash-verge-signal = { path = "crates/clash-verge-signal" }
 clash-verge-types = { path = "crates/clash-verge-types" }
 tauri-plugin-clash-verge-sysinfo = { path = "crates/tauri-plugin-clash-verge-sysinfo" }
 
-tauri = { version = "2.9.3" }
+tauri = { version = "2.9.4" }
 tauri-plugin-clipboard-manager = "2.3.2"
 parking_lot = { version = "0.12.5", features = ["hardware-lock-elision"] }
 anyhow = "1.0.100"

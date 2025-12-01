@@ -11,7 +11,7 @@ jobs:
   frontend:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Check frontend changes
         id: check_frontend
@@ -44,10 +44,10 @@ jobs:
         with:
           run_install: false
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         if: steps.check_frontend.outputs.frontend == 'true'
         with:
-          node-version: "22"
+          node-version: "24.11.1"
           cache: "pnpm"
 
       - name: Restore pnpm cache

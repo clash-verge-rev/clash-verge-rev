@@ -429,7 +429,9 @@ pub fn run() {
         }
         #[cfg(target_os = "macos")]
         tauri::RunEvent::Exit => AsyncHandler::block_on(async {
-            feat::quit().await;
+            if !handle::Handle::global().is_exiting() {
+                feat::quit().await;
+            }
         }),
         tauri::RunEvent::ExitRequested { api, code, .. } => {
             AsyncHandler::block_on(async {

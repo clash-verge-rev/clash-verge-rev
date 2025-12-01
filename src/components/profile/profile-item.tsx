@@ -834,7 +834,6 @@ export const ProfileItem = (props: Props) => {
           initialData={() => readProfileFile(uid)}
           dataKey={uid}
           language="yaml"
-          schema="clash"
           onSave={async (prev, curr) => {
             await saveProfileFile(uid, curr ?? "");
             onSave?.(prev, curr);
@@ -881,7 +880,6 @@ export const ProfileItem = (props: Props) => {
           initialData={() => readProfileFile(option?.merge ?? "")}
           dataKey={`merge:${option?.merge ?? ""}`}
           language="yaml"
-          schema="merge"
           onSave={async (prev, curr) => {
             await saveProfileFile(option?.merge ?? "", curr ?? "");
             onSave?.(prev, curr);

@@ -26,11 +26,11 @@ pub async fn restart_clash_core() {
 /// Restart the application
 pub async fn restart_app() {
     logging!(debug, Type::System, "启动重启应用流程");
-    utils::server::shutdown_embedded_server();
-    Config::apply_all_and_save_file().await;
-
     // 设置退出标志
     handle::Handle::global().set_is_exiting();
+
+    utils::server::shutdown_embedded_server();
+    Config::apply_all_and_save_file().await;
 
     logging!(info, Type::System, "开始异步清理资源");
     let cleanup_result = clean_async().await;
@@ -84,7 +84,7 @@ pub async fn change_clash_mode(mode: String) {
             // 更新订阅
             Config::clash()
                 .await
-                .edit_draft(|d| d.patch_config(mapping));
+                .edit_draft(|d| d.patch_config(&mapping));
 
             // 分离数据获取和异步调用
             let clash_data = Config::clash().await.data_arc();

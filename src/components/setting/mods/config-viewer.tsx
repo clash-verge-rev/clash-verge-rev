@@ -35,7 +35,6 @@ export const ConfigViewer = forwardRef<DialogRef>((_, ref) => {
       dataKey="runtime-config"
       readOnly
       language="yaml"
-      schema="clash"
       onClose={() => setOpen(false)}
     />
   );

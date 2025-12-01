@@ -1,6 +1,10 @@
 ## v2.4.4
 
-- **Mihomo(Meta) 内核升级至 v1.19.16**
+- **Mihomo(Meta) 内核升级至 v1.19.17**
+
+> [!WARNING]
+> Apple 公证服务故障，临时暂停 macOS 签名
+> macOS 跳过签名，终端执行 `sudo xattr -rd com.apple.quarantine /Applications/Clash\ Verge.app/`
 
 ### 🐞 修复问题
 
@@ -51,6 +55,7 @@
 - 优化重启应用的资源清理逻辑
 - 优化前端数据刷新
 - 优化流量采样和数据处理
+- 优化应用重启/退出时的资源清理性能, 大幅缩短执行时间
 
 </details>
 

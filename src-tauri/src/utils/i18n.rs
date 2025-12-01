@@ -82,9 +82,9 @@ pub async fn current_language() -> String {
         .await
         .latest_arc()
         .language
-        .clone()
+        .as_ref()
         .filter(|lang| !lang.is_empty())
-        .and_then(|lang| resolve_supported_language(&lang))
+        .and_then(|lang| resolve_supported_language(lang))
         .unwrap_or_else(system_language)
 }
 
