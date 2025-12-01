@@ -1,9 +1,9 @@
 ## v2.4.4
 
-- **Mihomo(Meta) 内核升级至 v1.19.16**
+- **Mihomo(Meta) 内核升级至 v1.19.17**
 
-> **Warning**
-> macOS 签名故障，临时暂停签名
+> [!WARNING]
+> Apple 公证服务故障，临时暂停 macOS 签名
 > macOS 跳过签名，终端执行 `sudo xattr -rd com.apple.quarantine /Applications/Clash\ Verge.app/`
 
 ### 🐞 修复问题
