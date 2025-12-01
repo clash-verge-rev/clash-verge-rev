@@ -16,7 +16,7 @@ import { EditorViewer } from "@/components/profile/editor-viewer";
 import { viewProfile, readProfileFile, saveProfileFile } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
 
-import { LogViewer } from "./log-viewer";
+import { LogViewerV2 } from "./log-viewer-v2";
 import { ProfileBox } from "./profile-box";
 
 interface Props {
@@ -193,7 +193,7 @@ export const ProfileMore = (props: Props) => {
         />
       )}
       {logOpen && (
-        <LogViewer
+        <LogViewerV2
           open={logOpen}
           logInfo={entries}
           onClose={() => setLogOpen(false)}

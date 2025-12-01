@@ -177,6 +177,12 @@
     },
     "logViewer": {
       "title": "Script Console"
+    },
+    "logViewerV2": {
+      "title": "Script Console",
+      "filter": "Filter logs...",
+      "noLogs": "No logs available",
+      "noMatch": "No matching logs found"
     }
   }
 }
