@@ -16,8 +16,8 @@
         "updateSuccess": "{{name}} 更新成功",
         "updateFailed": "{{name}} 更新失败: {{message}}",
         "genericError": "更新失败: {{message}}",
-        "none": "没有可更新的 provider",
-        "allUpdated": "所有 provider 均已更新"
+        "none": "没有可更新的规则集合",
+        "allUpdated": "所有规则集合均已更新"
       }
     }
   },

@@ -16,8 +16,8 @@
         "updateSuccess": "已成功更新 {{name}}",
         "updateFailed": "更新 {{name}} 失敗：{{message}}",
         "genericError": "更新失敗：{{message}}",
-        "none": "沒有可供更新的提供者",
-        "allUpdated": "所有提供者都已成功更新"
+        "none": "沒有可更新的規則集合",
+        "allUpdated": "所有規則集合均已更新"
       }
     }
   },
