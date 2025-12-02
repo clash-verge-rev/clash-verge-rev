@@ -1,32 +1,26 @@
 import { Box, Button, LinearProgress } from "@mui/material";
-import { Event, UnlistenFn } from "@tauri-apps/api/event";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { open as openUrl } from "@tauri-apps/plugin-shell";
+import type { DownloadEvent } from "@tauri-apps/plugin-updater";
 import { useLockFn } from "ahooks";
 import type { Ref } from "react";
-import { useEffect, useImperativeHandle, useMemo, useState } from "react";
+import { useImperativeHandle, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import ReactMarkdown from "react-markdown";
 import useSWR from "swr";
 
 import { BaseDialog, DialogRef } from "@/components/base";
-import { useListen } from "@/hooks/use-listen";
 import { portableFlag } from "@/pages/_layout";
 import { showNotice } from "@/services/noticeService";
 import { useSetUpdateState, useUpdateState } from "@/services/states";
 import { checkUpdateSafe as checkUpdate } from "@/services/update";
-import { debugLog } from "@/utils/debug";
 
 export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
   const { t } = useTranslation();
 
   const [open, setOpen] = useState(false);
-  const [currentProgressListener, setCurrentProgressListener] =
-    useState<UnlistenFn | null>(null);
-
   const updateState = useUpdateState();
   const setUpdateState = useSetUpdateState();
-  const { addListener } = useListen();
 
   const { data: updateInfo } = useSWR("checkUpdate", checkUpdate, {
     errorRetryCount: 2,
@@ -35,8 +29,14 @@ export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
   });
 
   const [downloaded, setDownloaded] = useState(0);
-  const [buffer, setBuffer] = useState(0);
   const [total, setTotal] = useState(0);
+  const downloadedRef = useRef(0);
+  const totalRef = useRef(0);
+
+  const progress = useMemo(() => {
+    if (total <= 0) return 0;
+    return Math.min((downloaded / total) * 100, 100);
+  }, [downloaded, total]);
 
   useImperativeHandle(ref, () => ({
     open: () => setOpen(true),
@@ -69,45 +69,48 @@ export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
     }
     if (updateState) return;
     setUpdateState(true);
+    setDownloaded(0);
+    setTotal(0);
+    downloadedRef.current = 0;
+    totalRef.current = 0;
 
-    if (currentProgressListener) {
-      currentProgressListener();
-    }
+    const onDownloadEvent = (event: DownloadEvent) => {
+      if (event.event === "Started") {
+        const contentLength = event.data.contentLength ?? 0;
+        totalRef.current = contentLength;
+        setTotal(contentLength);
+        setDownloaded(0);
+        downloadedRef.current = 0;
+        return;
+      }
 
-    const progressListener = await addListener(
-      "tauri://update-download-progress",
-      (e: Event<any>) => {
-        setTotal(e.payload.contentLength);
-        setBuffer(e.payload.chunkLength);
-        setDownloaded((a) => {
-          return a + e.payload.chunkLength;
+      if (event.event === "Progress") {
+        setDownloaded((prev) => {
+          const next = prev + event.data.chunkLength;
+          downloadedRef.current = next;
+          return next;
         });
-      },
-    );
-    setCurrentProgressListener(() => progressListener);
+      }
+
+      if (event.event === "Finished" && totalRef.current === 0) {
+        totalRef.current = downloadedRef.current;
+        setTotal(downloadedRef.current);
+      }
+    };
 
     try {
-      await updateInfo.downloadAndInstall();
+      await updateInfo.downloadAndInstall(onDownloadEvent);
       await relaunch();
     } catch (err: any) {
       showNotice.error(err);
     } finally {
       setUpdateState(false);
-      if (progressListener) {
-        progressListener();
-      }
-      setCurrentProgressListener(null);
+      setDownloaded(0);
+      setTotal(0);
+      downloadedRef.current = 0;
+      totalRef.current = 0;
     }
   });
-
-  useEffect(() => {
-    return () => {
-      if (currentProgressListener) {
-        debugLog("UpdateViewer unmounting, cleaning up progress listener.");
-        currentProgressListener();
-      }
-    };
-  }, [currentProgressListener]);
 
   return (
     <BaseDialog
@@ -157,9 +160,8 @@ export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
       </Box>
       {updateState && (
         <LinearProgress
-          variant="buffer"
-          value={(downloaded / total) * 100}
-          valueBuffer={buffer}
+          variant={total > 0 ? "determinate" : "indeterminate"}
+          value={progress}
           sx={{ marginTop: "5px" }}
         />
       )}
