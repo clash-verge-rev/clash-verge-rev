@@ -69,7 +69,7 @@
     "react-hook-form": "^7.67.0",
     "react-i18next": "16.3.5",
     "react-markdown": "10.1.0",
-    "react-router": "^7.9.6",
+    "react-router": "^7.10.0",
     "react-virtuoso": "^4.16.1",
     "swr": "^2.3.7",
     "tauri-plugin-mihomo-api": "git+https://github.com/clash-verge-rev/tauri-plugin-mihomo#main",
@@ -77,7 +77,7 @@
   },
   "devDependencies": {
     "@actions/github": "^6.0.1",
-    "@eslint-react/eslint-plugin": "^2.3.10",
+    "@eslint-react/eslint-plugin": "^2.3.11",
     "@eslint/js": "^9.39.1",
     "@tauri-apps/cli": "2.9.5",
     "@types/js-yaml": "^4.0.9",
