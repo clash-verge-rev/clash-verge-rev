@@ -2,10 +2,8 @@ use super::{CoreManager, RunningMode};
 use crate::cmd::StringifyErr as _;
 use crate::config::{Config, IVerge};
 use crate::core::handle::Handle;
-use crate::core::{
-    logger::CLASH_LOGGER,
-    service::{SERVICE_MANAGER, ServiceStatus},
-};
+use crate::core::manager::CLASH_LOGGER;
+use crate::core::service::{SERVICE_MANAGER, ServiceStatus};
 use anyhow::Result;
 use clash_verge_logging::{Type, logging};
 use scopeguard::defer;
@@ -44,11 +42,6 @@ impl CoreManager {
     pub async fn restart_core(&self) -> Result<()> {
         logging!(info, Type::Core, "Restarting core");
         self.stop_core().await?;
-
-        if SERVICE_MANAGER.lock().await.init().await.is_ok() {
-            let _ = SERVICE_MANAGER.lock().await.refresh().await;
-        }
-
         self.start_core().await
     }
 

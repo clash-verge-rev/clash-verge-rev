@@ -1,8 +1,8 @@
 use super::{CoreManager, RunningMode};
 use crate::{
     AsyncHandler,
-    config::Config,
-    core::{handle, logger::CLASH_LOGGER, service},
+    config::{Config, IClashTemp},
+    core::{handle, manager::CLASH_LOGGER, service},
     logging,
     utils::{dirs, init::sidecar_writer},
 };
@@ -39,6 +39,12 @@ impl CoreManager {
                 dirs::path_to_str(&config_dir)?,
                 "-f",
                 dirs::path_to_str(&config_file)?,
+                if cfg!(windows) {
+                    "-ext-ctl-pipe"
+                } else {
+                    "-ext-ctl-unix"
+                },
+                &IClashTemp::guard_external_controller_ipc(),
             ])
             .spawn()?;
 

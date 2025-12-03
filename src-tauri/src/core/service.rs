@@ -1,5 +1,5 @@
 use crate::{
-    config::Config,
+    config::{Config, IClashTemp},
     core::tray,
     utils::{dirs, init::service_writer_config},
 };
@@ -405,6 +405,7 @@ pub(super) async fn start_with_existing_service(config_file: &PathBuf) -> Result
         core_config: CoreConfig {
             config_path: dirs::path_to_str(config_file)?.into(),
             core_path: dirs::path_to_str(&bin_path)?.into(),
+            core_ipc_path: IClashTemp::guard_external_controller_ipc(),
             config_dir: dirs::path_to_str(&dirs::app_home_dir()?)?.into(),
         },
         log_config: service_writer_config().await?,
