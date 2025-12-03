@@ -1,0 +1,50 @@
+{
+  extends: ["config:recommended", ":disableDependencyDashboard"],
+  baseBranches: ["dev"],
+  enabledManagers: ["cargo", "npm", "github-actions"],
+  labels: ["dependencies"],
+  ignorePaths: [
+    "**/node_modules/**",
+    "**/bower_components/**",
+    "**/vendor/**",
+    "**/__tests__/**",
+    "**/test/**",
+    "**/tests/**",
+    "**/__fixtures__/**",
+    "shared/**",
+  ],
+  rangeStrategy: "replace",
+  packageRules: [
+    {
+      matchUpdateTypes: ["patch"],
+      automerge: true,
+    },
+    {
+      semanticCommitType: "chore",
+      matchPackageNames: ["*"],
+    },
+    {
+      description: "Disable node/pnpm version updates",
+      matchPackageNames: ["node", "pnpm"],
+      matchDepTypes: ["engines", "packageManager"],
+      enabled: false,
+    },
+    {
+      description: "Group all cargo dependencies into a single PR",
+      matchManagers: ["cargo"],
+      groupName: "cargo dependencies",
+    },
+    {
+      description: "Group all npm dependencies into a single PR",
+      matchManagers: ["npm"],
+      groupName: "npm dependencies",
+    },
+    {
+      description: "Group all GitHub Actions updates into a single PR",
+      matchManagers: ["github-actions"],
+      groupName: "github actions",
+    },
+  ],
+  postUpdateOptions: ["pnpmDedupe", "updateCargoLock"],
+  ignoreDeps: ["criterion"],
+}
