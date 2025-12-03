@@ -25,6 +25,7 @@ import {
   ThemeModeProvider,
   UpdateStateProvider,
 } from "./services/states";
+import { disableWebViewShortcuts } from "./utils/disable-webview-shortcuts";
 
 if (!window.ResizeObserver) {
   window.ResizeObserver = ResizeObserver;
@@ -39,19 +40,7 @@ if (!container) {
   );
 }
 
-document.addEventListener("keydown", (event) => {
-  // Disable WebView keyboard shortcuts
-  const disabledShortcuts =
-    ["F5", "F7"].includes(event.key) ||
-    (event.altKey && ["ArrowLeft", "ArrowRight"].includes(event.key)) ||
-    ((event.ctrlKey || event.metaKey) &&
-      ["F", "G", "H", "J", "P", "Q", "R", "U"].includes(
-        event.key.toUpperCase(),
-      ));
-  if (disabledShortcuts) {
-    event.preventDefault();
-  }
-});
+disableWebViewShortcuts();
 
 const initializeApp = (initialThemeMode: "light" | "dark") => {
   const contexts = [
