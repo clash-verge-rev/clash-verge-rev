@@ -354,6 +354,7 @@
         "appLogMaxCount": "App Log Max Count",
         "autoCloseConnections": "Verbindungen automatisch schließen",
         "autoCheckUpdate": "Automatisch auf Updates prüfen",
+        "enableEscToMinimize": "ESC to Minimize Window",
         "enableBuiltinEnhanced": "Eingebaute Verbesserungen aktivieren",
         "proxyLayoutColumns": "Anzahl der Spalten im Proxy-Layout",
         "autoLogClean": "Protokolle automatisch bereinigen",
@@ -363,6 +364,7 @@
       },
       "tooltips": {
         "autoCloseConnections": "Wenn der ausgewählte Knoten in der Proxy-Gruppe oder der Proxy-Modus geändert wird, werden die bestehenden Verbindungen geschlossen.",
+        "enableEscToMinimize": "Press ESC key to minimize the window (excludes input fields)",
         "enableBuiltinEnhanced": "Kompatibilitätsbehandlung der Konfigurationsdatei",
         "autoDelayDetection": "Überprüft regelmäßig im Hintergrund die Latenz des aktuellen Knotens",
         "defaultLatencyTest": "Dies wird nur für HTTP-Client-Anfragentests verwendet und hat keine Auswirkungen auf die Konfigurationsdatei."

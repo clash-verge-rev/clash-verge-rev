@@ -48,6 +48,7 @@ import { LayoutItem } from "@/components/layout/layout-item";
 import { LayoutTraffic } from "@/components/layout/layout-traffic";
 import { UpdateButton } from "@/components/layout/update-button";
 import { useCustomTheme } from "@/components/layout/use-custom-theme";
+import { useEscMinimize } from "@/hooks/use-esc-minimize";
 import { useI18n } from "@/hooks/use-i18n";
 import { useVerge } from "@/hooks/use-verge";
 import { useWindowDecorations } from "@/hooks/use-window";
@@ -288,6 +289,7 @@ const Layout = () => {
 
   useLoadingOverlay(themeReady);
   useAppInitialization();
+  useEscMinimize();
 
   const handleNotice = useCallback(
     (payload: [string, string]) => {

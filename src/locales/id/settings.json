@@ -354,6 +354,7 @@
         "appLogMaxCount": "App Log Max Count",
         "autoCloseConnections": "Tutup Koneksi Otomatis",
         "autoCheckUpdate": "Periksa Pembaruan Otomatis",
+        "enableEscToMinimize": "ESC to Minimize Window",
         "enableBuiltinEnhanced": "Aktifkan Peningkatan Bawaan",
         "proxyLayoutColumns": "Kolom Tata Letak Proksi",
         "autoLogClean": "Pembersihan Log Otomatis",
@@ -363,6 +364,7 @@
       },
       "tooltips": {
         "autoCloseConnections": "Hentikan koneksi yang sudah ada saat pemilihan grup proksi atau mode proksi berubah",
+        "enableEscToMinimize": "Press ESC key to minimize the window (excludes input fields)",
         "enableBuiltinEnhanced": "Penanganan kompatibilitas untuk file konfigurasi",
         "autoDelayDetection": "Secara berkala menguji latensi node saat ini di latar belakang",
         "defaultLatencyTest": "Digunakan hanya untuk pengujian permintaan klien HTTP dan tidak akan mempengaruhi file konfigurasi"

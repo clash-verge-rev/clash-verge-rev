@@ -354,6 +354,7 @@
         "appLogMaxCount": "앱 로그 최대 개수",
         "autoCloseConnections": "연결 자동 종료",
         "autoCheckUpdate": "업데이트 자동 확인",
+        "enableEscToMinimize": "ESC to Minimize Window",
         "enableBuiltinEnhanced": "내장 향상 기능 사용",
         "proxyLayoutColumns": "프록시 레이아웃 열 수",
         "autoLogClean": "로그 자동 정리",
@@ -363,6 +364,7 @@
       },
       "tooltips": {
         "autoCloseConnections": "프록시 그룹 선택 또는 프록시 모드 변경 시 기존 연결을 종료합니다",
+        "enableEscToMinimize": "Press ESC key to minimize the window (excludes input fields)",
         "enableBuiltinEnhanced": "구성 파일에 대한 호환성 처리를 수행합니다",
         "autoDelayDetection": "백그라운드에서 현재 노드의 지연을 주기적으로 검사합니다",
         "defaultLatencyTest": "HTTP 클라이언트 요청 테스트에만 사용되며 구성 파일에는 영향을 주지 않습니다"

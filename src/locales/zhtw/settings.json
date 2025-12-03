@@ -354,6 +354,7 @@
         "appLogMaxCount": "應用程式日誌最大數量",
         "autoCloseConnections": "自動關閉連線",
         "autoCheckUpdate": "自動檢查更新",
+        "enableEscToMinimize": "ESC 鍵最小化視窗",
         "enableBuiltinEnhanced": "內建增強功能",
         "proxyLayoutColumns": "代理頁面欄數",
         "autoLogClean": "自動清理日誌",
@@ -363,6 +364,7 @@
       },
       "tooltips": {
         "autoCloseConnections": "當代理組選中節點或代理模式變動時，關閉已建立的連線",
+        "enableEscToMinimize": "按 ESC 鍵最小化視窗（輸入框內除外）",
         "enableBuiltinEnhanced": "配置檔案的相容性處理",
         "autoDelayDetection": "在背景定時偵測目前節點延遲",
         "defaultLatencyTest": "僅用於 HTTP 客戶端請求測試，不會對配置檔案產生影響"

@@ -354,6 +354,7 @@
         "appLogMaxCount": "App Log Max Count",
         "autoCloseConnections": "Тоташуларны автоматик ябу",
         "autoCheckUpdate": "Яңартуларны автоматик тикшерү",
+        "enableEscToMinimize": "ESC to Minimize Window",
         "enableBuiltinEnhanced": "Эчке камилләштерүне кабызу",
         "proxyLayoutColumns": "Прокси күрсәтү баганалары саны",
         "autoLogClean": "Логларны автоматик чистарту",
@@ -363,6 +364,7 @@
       },
       "tooltips": {
         "autoCloseConnections": "Прокси төркеме яисә режимын үзгәрткәндә актив тоташуларны өзү",
+        "enableEscToMinimize": "Press ESC key to minimize the window (excludes input fields)",
         "enableBuiltinEnhanced": "Конфигурация файлы белән туры килә торган өстәмә оптимизация",
         "autoDelayDetection": "Фон режимында хәзерге төен тоткарлыгын периодик тикшерә",
         "defaultLatencyTest": "Бу фәкать клиентның HTTP сораулары тесты өчен кулланыла, конфигурация файлына йогынты ясамый"

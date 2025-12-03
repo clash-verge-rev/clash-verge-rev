@@ -925,6 +925,7 @@ export interface TranslationResources {
             defaultLatencyTest: string;
             defaultLatencyTimeout: string;
             enableBuiltinEnhanced: string;
+            enableEscToMinimize: string;
             proxyLayoutColumns: string;
           };
           options: {
@@ -942,6 +943,7 @@ export interface TranslationResources {
             autoDelayDetection: string;
             defaultLatencyTest: string;
             enableBuiltinEnhanced: string;
+            enableEscToMinimize: string;
           };
         };
         networkInterface: {

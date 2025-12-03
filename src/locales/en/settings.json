@@ -354,6 +354,7 @@
         "appLogMaxCount": "App Log Max Count",
         "autoCloseConnections": "Auto Close Connections",
         "autoCheckUpdate": "Auto Check Update",
+        "enableEscToMinimize": "ESC to Minimize Window",
         "enableBuiltinEnhanced": "Enable Builtin Enhanced",
         "proxyLayoutColumns": "Proxy Layout Columns",
         "autoLogClean": "Auto Log Clean",
@@ -363,6 +364,7 @@
       },
       "tooltips": {
         "autoCloseConnections": "Terminate established connections when the proxy group selection or proxy mode changes",
+        "enableEscToMinimize": "Press ESC key to minimize the window (excludes input fields)",
         "enableBuiltinEnhanced": "Compatibility handling for the configuration file",
         "autoDelayDetection": "Periodically test the current node latency in the background",
         "defaultLatencyTest": "Used for HTTP client request testing only and won't make a difference to the configuration file"

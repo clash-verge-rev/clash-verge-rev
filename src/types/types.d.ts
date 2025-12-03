@@ -858,6 +858,7 @@ interface IVergeConfig {
   auto_log_clean?: 0 | 1 | 2 | 3 | 4;
   enable_auto_backup_schedule?: boolean;
   auto_backup_interval_hours?: number;
+  enable_esc_to_minimize?: boolean;
   auto_backup_on_change?: boolean;
   proxy_layout_column?: number;
   test_list?: IVergeTestItem[];

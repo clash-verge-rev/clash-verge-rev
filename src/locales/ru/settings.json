@@ -354,6 +354,7 @@
         "appLogMaxCount": "App Log Max Count",
         "autoCloseConnections": "Автоматическое закрытие соединений",
         "autoCheckUpdate": "Автоматическая проверка обновлений",
+        "enableEscToMinimize": "ESC to Minimize Window",
         "enableBuiltinEnhanced": "Включить встроенные улучшения",
         "proxyLayoutColumns": "Количество столбцов в макете прокси",
         "autoLogClean": "Автоматическая очистка логов",
@@ -363,6 +364,7 @@
       },
       "tooltips": {
         "autoCloseConnections": "Закрыть установленные соединения при изменении выбора группы прокси или режима прокси",
+        "enableEscToMinimize": "Press ESC key to minimize the window (excludes input fields)",
         "enableBuiltinEnhanced": "Обработка совместимости для файла конфигурации",
         "autoDelayDetection": "Периодически проверяет задержку текущего узла в фоновом режиме",
         "defaultLatencyTest": "Используется только для тестирования HTTP-запросов клиента и не влияет на файл конфигурации"

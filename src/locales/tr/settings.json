@@ -354,6 +354,7 @@
         "appLogMaxCount": "App Log Max Count",
         "autoCloseConnections": "Bağlantıları Otomatik Kapat",
         "autoCheckUpdate": "Otomatik Güncelleme Kontrolü",
+        "enableEscToMinimize": "ESC to Minimize Window",
         "enableBuiltinEnhanced": "Yerleşik Geliştirilmiş Modu Etkinleştir",
         "proxyLayoutColumns": "Vekil Düzeni Sütunları",
         "autoLogClean": "Otomatik Günlük Temizleme",
@@ -363,6 +364,7 @@
       },
       "tooltips": {
         "autoCloseConnections": "Vekil grup seçimi veya vekil modu değiştiğinde kurulan bağlantıları sonlandır",
+        "enableEscToMinimize": "Press ESC key to minimize the window (excludes input fields)",
         "enableBuiltinEnhanced": "Yapılandırma dosyası için uyumluluk işleme",
         "autoDelayDetection": "Arka planda mevcut düğümün gecikmesini periyodik olarak test eder",
         "defaultLatencyTest": "Yalnızca HTTP istemci isteği testi için kullanılır ve yapılandırma dosyasında bir fark yaratmaz"

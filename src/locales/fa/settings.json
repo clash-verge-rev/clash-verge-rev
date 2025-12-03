@@ -354,6 +354,7 @@
         "appLogMaxCount": "App Log Max Count",
         "autoCloseConnections": "بستن خودکار اتصالات",
         "autoCheckUpdate": "بررسی خودکار به‌روزرسانی",
+        "enableEscToMinimize": "ESC to Minimize Window",
         "enableBuiltinEnhanced": "فعال کردن تقویت داخلی",
         "proxyLayoutColumns": "ستون چیدمان پراکسی",
         "autoLogClean": "پاکسازی خودکار لاگ",
@@ -363,6 +364,7 @@
       },
       "tooltips": {
         "autoCloseConnections": "اتصالات برقرار شده را هنگام تغییر انتخاب گروه پروکسی یا حالت پروکسی خاتمه دهید",
+        "enableEscToMinimize": "Press ESC key to minimize the window (excludes input fields)",
         "enableBuiltinEnhanced": "مدیریت سازگاری برای فایل پیکربندی",
         "autoDelayDetection": "به‌صورت دوره‌ای تأخیر گره فعلی را در پس‌زمینه آزمایش می‌کند",
         "defaultLatencyTest": "فقط برای تست درخواست‌های کلاینت HTTP استفاده می‌شود و بر فایل پیکربندی تأثیری نخواهد داشت"

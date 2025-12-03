@@ -354,6 +354,7 @@
         "appLogMaxCount": "App Log Max Count",
         "autoCloseConnections": "接続を自動的に閉じる",
         "autoCheckUpdate": "自動更新チェック",
+        "enableEscToMinimize": "ESC to Minimize Window",
         "enableBuiltinEnhanced": "組み込み拡張機能を有効にする",
         "proxyLayoutColumns": "プロキシページのレイアウト列数",
         "autoLogClean": "ログを自動的にクリーンアップ",
@@ -363,6 +364,7 @@
       },
       "tooltips": {
         "autoCloseConnections": "プロキシグループで選択されたノードまたはプロキシモードが変更されたときに、既存の接続を閉じます。",
+        "enableEscToMinimize": "Press ESC key to minimize the window (excludes input fields)",
         "enableBuiltinEnhanced": "設定ファイルの互換性処理",
         "autoDelayDetection": "バックグラウンドで現在のノードのレイテンシーを定期的にテストします",
         "defaultLatencyTest": "HTTPクライアントリクエストテストにのみ使用され、設定ファイルには影響しません。"

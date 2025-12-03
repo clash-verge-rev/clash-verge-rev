@@ -33,6 +33,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
     defaultLatencyTest: "",
     autoLogClean: 2,
     defaultLatencyTimeout: 10000,
+    enableEscToMinimize: false,
   });
 
   useImperativeHandle(ref, () => ({
@@ -50,6 +51,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
         defaultLatencyTest: verge?.default_latency_test || "",
         autoLogClean: verge?.auto_log_clean || 0,
         defaultLatencyTimeout: verge?.default_latency_timeout || 10000,
+        enableEscToMinimize: verge?.enable_esc_to_minimize ?? false,
       });
     },
     close: () => setOpen(false),
@@ -69,6 +71,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
         default_latency_test: values.defaultLatencyTest,
         default_latency_timeout: values.defaultLatencyTimeout,
         auto_log_clean: values.autoLogClean as any,
+        enable_esc_to_minimize: values.enableEscToMinimize,
       });
       setOpen(false);
     } catch (err) {
@@ -204,6 +207,25 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
             onChange={(_, c) =>
               setValues((v) => ({ ...v, autoCheckUpdate: c }))
             }
+          />
+        </ListItem>
+
+        <ListItem sx={{ padding: "5px 2px" }}>
+          <ListItemText
+            primary={t("settings.modals.misc.fields.enableEscToMinimize")}
+            sx={{ maxWidth: "fit-content" }}
+          />
+          <TooltipIcon
+            title={t("settings.modals.misc.tooltips.enableEscToMinimize")}
+            sx={{ opacity: "0.7" }}
+          />
+          <Switch
+            edge="end"
+            checked={values.enableEscToMinimize}
+            onChange={(_, c) =>
+              setValues((v) => ({ ...v, enableEscToMinimize: c }))
+            }
+            sx={{ marginLeft: "auto" }}
           />
         </ListItem>
 
