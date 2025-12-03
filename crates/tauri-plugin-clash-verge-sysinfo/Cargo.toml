@@ -11,7 +11,7 @@ parking_lot = { workspace = true }
 sysinfo = { version = "0.37.2", features = ["network", "system"] }
 
 [target.'cfg(not(windows))'.dependencies]
-libc = "0.2.177"
+libc = "0.2.178"
 
 [target.'cfg(windows)'.dependencies]
 deelevate = { workspace = true }
