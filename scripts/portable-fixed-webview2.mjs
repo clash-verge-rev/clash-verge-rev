@@ -3,7 +3,7 @@ import fsp from "fs/promises";
 import { createRequire } from "module";
 import path from "path";
 
-import { getOctokit, context } from "@actions/github";
+import { context, getOctokit } from "@actions/github";
 import AdmZip from "adm-zip";
 
 const target = process.argv.slice(2)[0];
@@ -50,9 +50,9 @@ async function resolvePortable() {
   zip.addLocalFolder(
     path.join(
       releaseDir,
-      `Microsoft.WebView2.FixedVersionRuntime.109.0.1518.78.${arch}`,
+      `Microsoft.WebView2.FixedVersionRuntime.133.0.3065.92.${arch}`,
     ),
-    `Microsoft.WebView2.FixedVersionRuntime.109.0.1518.78.${arch}`,
+    `Microsoft.WebView2.FixedVersionRuntime.133.0.3065.92.${arch}`,
   );
   zip.addLocalFolder(configDir, ".config");
 
