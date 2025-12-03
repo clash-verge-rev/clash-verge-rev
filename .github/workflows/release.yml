@@ -167,8 +167,13 @@ jobs:
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
         with:
-          workspaces: src-tauri
-          save-if: false
+          save-if: ${{ github.ref == 'refs/heads/dev' }}
+          prefix-key: "v1-rust"
+          key: "rust-shared-stable-${{ matrix.os }}-${{ matrix.target }}"
+          workspaces: |
+            . -> target
+          cache-all-crates: true
+          cache-workspace-crates: true
 
       - name: Install dependencies (ubuntu only)
         if: matrix.os == 'ubuntu-22.04'
@@ -251,8 +256,13 @@ jobs:
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
         with:
-          workspaces: src-tauri
-          save-if: false
+          save-if: ${{ github.ref == 'refs/heads/dev' }}
+          prefix-key: "v1-rust"
+          key: "rust-shared-stable-${{ matrix.os }}-${{ matrix.target }}"
+          workspaces: |
+            . -> target
+          cache-all-crates: true
+          cache-workspace-crates: true
 
       - name: Install Node
         uses: actions/setup-node@v6
@@ -345,8 +355,8 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           prerelease: ${{ contains(github.ref_name, '-rc') }}
           files: |
-            src-tauri/target/${{ matrix.target }}/release/bundle/deb/*.deb
-            src-tauri/target/${{ matrix.target }}/release/bundle/rpm/*.rpm
+            target/${{ matrix.target }}/release/bundle/deb/*.deb
+            target/${{ matrix.target }}/release/bundle/rpm/*.rpm
 
   release-for-fixed-webview2:
     name: Release Build for Fixed WebView2
@@ -372,8 +382,13 @@ jobs:
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
         with:
-          workspaces: src-tauri
-          save-if: false
+          save-if: ${{ github.ref == 'refs/heads/dev' }}
+          prefix-key: "v1-rust"
+          key: "rust-shared-stable-${{ matrix.os }}-${{ matrix.target }}"
+          workspaces: |
+            . -> target
+          cache-all-crates: true
+          cache-workspace-crates: true
 
       - name: Install Node
         uses: actions/setup-node@v6
@@ -438,7 +453,7 @@ jobs:
           body: "See release notes for detailed changelog."
           token: ${{ secrets.GITHUB_TOKEN }}
           prerelease: ${{ contains(github.ref_name, '-rc') }}
-          files: src-tauri/target/${{ matrix.target }}/release/bundle/nsis/*setup*
+          files: target/${{ matrix.target }}/release/bundle/nsis/*setup*
 
       - name: Portable Bundle
         run: pnpm portable-fixed-webview2 ${{ matrix.target }}
