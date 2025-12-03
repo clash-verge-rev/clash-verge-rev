@@ -1,23 +1,8 @@
 {
-  "extends": [
-    "config:recommended",
-    ":disableDependencyDashboard",
-    ":semanticCommits",
-    ":disableRateLimiting"
-  ],
-
+  "extends": ["config:recommended", ":disableDependencyDashboard"],
   "baseBranches": ["dev"],
-  "timezone": "Asia/Shanghai",
-
   "enabledManagers": ["cargo", "npm", "github-actions"],
   "labels": ["dependencies"],
-  "rangeStrategy": "replace",
-
-  "cargo": {
-    "enabled": true,
-    "fileMatch": ["^Cargo\\.toml$", "^crates/.*/Cargo\\.toml$"]
-  },
-
   "ignorePaths": [
     "**/node_modules/**",
     "**/bower_components/**",
@@ -26,68 +11,37 @@
     "**/test/**",
     "**/tests/**",
     "**/__fixtures__/**",
+    "**/crate/**",
     "shared/**"
   ],
-
+  "rangeStrategy": "bump",
   "packageRules": [
     {
       "semanticCommitType": "chore",
       "matchPackageNames": ["*"]
     },
-
     {
       "description": "Disable node/pnpm version updates",
       "matchPackageNames": ["node", "pnpm"],
       "matchDepTypes": ["engines", "packageManager"],
       "enabled": false
     },
-
     {
-      "description": "Group all cargo workspace dependencies",
+      "description": "Group all cargo dependencies into a single PR",
       "matchManagers": ["cargo"],
-      "groupName": "cargo workspace dependencies",
-      "groupSlug": "cargo-workspace"
+      "groupName": "cargo dependencies"
     },
-
     {
       "description": "Group all npm dependencies into a single PR",
       "matchManagers": ["npm"],
       "groupName": "npm dependencies"
     },
-
     {
       "description": "Group all GitHub Actions updates into a single PR",
       "matchManagers": ["github-actions"],
       "groupName": "github actions"
-    },
-
-    {
-      "description": "Allow Rust major updates but require manual merge after CI",
-      "matchManagers": ["cargo"],
-      "matchUpdateTypes": ["major"],
-      "automerge": false,
-      "requiredStatusChecks": null,
-      "labels": ["dependencies", "major"],
-      "prPriority": 10
-    },
-
-    {
-      "description": "Automerge Rust patch updates after CI success",
-      "matchManagers": ["cargo"],
-      "matchUpdateTypes": ["patch"],
-      "automerge": true,
-      "automergeType": "pr",
-      "requiredStatusChecks": null
     }
   ],
-
-  "lockFileMaintenance": {
-    "enabled": true,
-    "schedule": ["weekly"],
-    "ignoreUnstable": true
-  },
-
   "postUpdateOptions": ["pnpmDedupe", "updateCargoLock"],
-
   "ignoreDeps": ["criterion"]
 }
