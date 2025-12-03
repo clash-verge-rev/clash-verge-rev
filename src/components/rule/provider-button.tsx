@@ -21,7 +21,10 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { updateRuleProvider } from "tauri-plugin-mihomo-api";
 
-import type { useRuleProvidersData, useRulesData } from "@/hooks/app-data";
+import type {
+  useRuleProvidersData,
+  useRulesData,
+} from "@/hooks/use-clash-data";
 import { showNotice } from "@/services/noticeService";
 
 // 辅助组件 - 类型框

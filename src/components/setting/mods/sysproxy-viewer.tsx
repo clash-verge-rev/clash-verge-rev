@@ -30,7 +30,7 @@ import {
   useClashConfig,
   useSystemProxyAddress,
   useSystemProxyData,
-} from "@/hooks/app-data";
+} from "@/hooks/use-clash-data";
 import { useVerge } from "@/hooks/use-verge";
 import {
   getAutotemProxy,

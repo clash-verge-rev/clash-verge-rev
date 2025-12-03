@@ -1,6 +1,8 @@
 import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useRef } from "react";
 
+import { hideInitialOverlay } from "../utils";
+
 export const useAppInitialization = () => {
   const initRef = useRef(false);
 
@@ -25,6 +27,8 @@ export const useAppInitialization = () => {
     };
 
     const notifyBackend = async (stage?: string) => {
+      if (isCancelled) return;
+
       try {
         if (stage) {
           await invoke("update_ui_stage", { stage });
@@ -32,20 +36,16 @@ export const useAppInitialization = () => {
           await invoke("notify_ui_ready");
         }
       } catch (err) {
-        console.error(`[初始化] 通知后端失败:`, err);
+        console.error(`[Initialization] Failed to notify backend:`, err);
       }
     };
 
     const removeLoadingOverlay = () => {
-      const overlay = document.getElementById("initial-loading-overlay");
-      if (overlay) {
-        overlay.style.opacity = "0";
-        scheduleTimeout(() => overlay.remove(), 300);
-      }
+      hideInitialOverlay({ schedule: scheduleTimeout });
     };
 
     const performInitialization = async () => {
-      if (isInitialized) return;
+      if (isCancelled || isInitialized) return;
       isInitialized = true;
 
       try {
@@ -70,14 +70,18 @@ export const useAppInitialization = () => {
         await notifyBackend("ResourcesLoaded");
         await notifyBackend();
       } catch (error) {
-        console.error("[初始化] 失败:", error);
-        removeLoadingOverlay();
-        notifyBackend().catch(console.error);
+        if (!isCancelled) {
+          console.error("[Initialization] Failed:", error);
+          removeLoadingOverlay();
+          notifyBackend().catch(console.error);
+        }
       }
     };
 
     const checkBackendReady = async () => {
       try {
+        if (isCancelled) return;
+
         await invoke("update_ui_stage", { stage: "Loading" });
         performInitialization();
       } catch {
@@ -99,7 +103,7 @@ export const useAppInitialization = () => {
         try {
           window.clearTimeout(id);
         } catch (error) {
-          console.warn("[初始化] 清理定时器失败:", error);
+          console.warn("[Initialization] Failed to clear timer:", error);
         }
       });
       timers.clear();

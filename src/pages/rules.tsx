@@ -8,7 +8,7 @@ import { BaseSearchBox } from "@/components/base/base-search-box";
 import { ScrollTopButton } from "@/components/layout/scroll-top-button";
 import { ProviderButton } from "@/components/rule/provider-button";
 import RuleItem from "@/components/rule/rule-item";
-import { useRuleProvidersData, useRulesData } from "@/hooks/app-data";
+import { useRuleProvidersData, useRulesData } from "@/hooks/use-clash-data";
 import { useVisibility } from "@/hooks/use-visibility";
 
 const RulesPage = () => {

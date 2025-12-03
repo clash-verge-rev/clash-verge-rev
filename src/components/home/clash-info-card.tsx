@@ -3,14 +3,14 @@ import { Divider, Stack, Typography } from "@mui/material";
 import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
+import { useClash } from "@/hooks/use-clash";
 import {
   useAppUptime,
   useClashConfig,
   useRulesData,
   useSystemProxyAddress,
   useSystemProxyData,
-} from "@/hooks/app-data";
-import { useClash } from "@/hooks/use-clash";
+} from "@/hooks/use-clash-data";
 
 import { EnhancedCard } from "./enhanced-card";
 

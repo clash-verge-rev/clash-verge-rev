@@ -13,6 +13,10 @@ export const useLayoutEvents = (
   useEffect(() => {
     const unlisteners: Array<() => void> = [];
     let disposed = false;
+    const revalidateKeys = (keys: readonly string[]) => {
+      const keySet = new Set(keys);
+      mutate((key) => typeof key === "string" && keySet.has(key));
+    };
 
     const register = (
       maybeUnlisten: void | (() => void) | Promise<void | (() => void)>,
@@ -33,25 +37,31 @@ export const useLayoutEvents = (
             unlisteners.push(unlisten);
           }
         })
-        .catch((error) => console.error("[事件监听] 注册失败", error));
+        .catch((error) =>
+          console.error("[Event Listener] Registration failed:", error),
+        );
     };
 
     register(
       addListener("verge://refresh-clash-config", async () => {
-        mutate("getProxies");
-        mutate("getVersion");
-        mutate("getClashConfig");
-        mutate("getProxyProviders");
+        revalidateKeys([
+          "getProxies",
+          "getVersion",
+          "getClashConfig",
+          "getProxyProviders",
+        ]);
       }),
     );
 
     register(
       addListener("verge://refresh-verge-config", () => {
-        mutate("getVergeConfig");
-        mutate("getSystemProxy");
-        mutate("getAutotemProxy");
-        mutate("getRunningMode");
-        mutate("isServiceAvailable");
+        revalidateKeys([
+          "getVergeConfig",
+          "getSystemProxy",
+          "getAutotemProxy",
+          "getRunningMode",
+          "isServiceAvailable",
+        ]);
       }),
     );
 
@@ -91,7 +101,7 @@ export const useLayoutEvents = (
 
       if (errors.length > 0) {
         console.error(
-          `[事件监听] 清理过程中发生 ${errors.length} 个错误:`,
+          `[Event Listener] Encountered ${errors.length} errors during cleanup:`,
           errors,
         );
       }

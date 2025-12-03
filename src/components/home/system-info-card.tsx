@@ -20,9 +20,9 @@ import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router";
 import useSWR from "swr";
 
+import { useServiceInstaller } from "@/hooks/use-service-installer";
 import { useSystemState } from "@/hooks/use-system-state";
 import { useVerge } from "@/hooks/use-verge";
-import { useServiceInstaller } from "@/hooks/useServiceInstaller";
 import { getSystemInfo } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
 import { checkUpdateSafe as checkUpdate } from "@/services/update";

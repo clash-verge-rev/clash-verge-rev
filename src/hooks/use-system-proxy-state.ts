@@ -2,7 +2,7 @@ import { useLockFn } from "ahooks";
 import useSWR, { mutate } from "swr";
 import { closeAllConnections } from "tauri-plugin-mihomo-api";
 
-import { useSystemProxyData } from "@/hooks/app-data";
+import { useSystemProxyData } from "@/hooks/use-clash-data";
 import { useVerge } from "@/hooks/use-verge";
 import { getAutotemProxy } from "@/services/cmds";
 

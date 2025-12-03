@@ -1,7 +1,7 @@
 import { useEffect, useMemo } from "react";
 import useSWR from "swr";
 
-import { useProxiesData } from "@/hooks/app-data";
+import { useProxiesData } from "@/hooks/use-clash-data";
 import { useVerge } from "@/hooks/use-verge";
 import { getRuntimeConfig } from "@/services/cmds";
 import delayManager from "@/services/delay";

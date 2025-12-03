@@ -16,11 +16,11 @@ import { TooltipIcon } from "@/components/base/base-tooltip-icon";
 import { GuardState } from "@/components/setting/mods/guard-state";
 import { SysproxyViewer } from "@/components/setting/mods/sysproxy-viewer";
 import { TunViewer } from "@/components/setting/mods/tun-viewer";
+import { useServiceInstaller } from "@/hooks/use-service-installer";
+import { useServiceUninstaller } from "@/hooks/use-service-uninstaller";
 import { useSystemProxyState } from "@/hooks/use-system-proxy-state";
 import { useSystemState } from "@/hooks/use-system-state";
 import { useVerge } from "@/hooks/use-verge";
-import { useServiceInstaller } from "@/hooks/useServiceInstaller";
-import { useServiceUninstaller } from "@/hooks/useServiceUninstaller";
 import { showNotice } from "@/services/noticeService";
 
 interface ProxySwitchProps {

@@ -39,7 +39,7 @@ import {
   selectNodeForGroup,
 } from "tauri-plugin-mihomo-api";
 
-import { useProxiesData } from "@/hooks/app-data";
+import { useProxiesData } from "@/hooks/use-clash-data";
 import { calcuProxies, updateProxyChainConfigInRuntime } from "@/services/cmds";
 import { debugLog } from "@/utils/debug";
 

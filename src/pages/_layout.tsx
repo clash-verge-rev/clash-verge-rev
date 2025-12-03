@@ -54,10 +54,12 @@ import { useWindowDecorations } from "@/hooks/use-window";
 import { useThemeMode } from "@/services/states";
 import getSystem from "@/utils/get-system";
 
-import { handleNoticeMessage } from "./_layout/notificationHandlers";
-import { useAppInitialization } from "./_layout/useAppInitialization";
-import { useLayoutEvents } from "./_layout/useLayoutEvents";
-import { useLoadingOverlay } from "./_layout/useLoadingOverlay";
+import {
+  useAppInitialization,
+  useLayoutEvents,
+  useLoadingOverlay,
+} from "./_layout/hooks";
+import { handleNoticeMessage } from "./_layout/utils";
 import { navItems } from "./_routers";
 
 import "dayjs/locale/ru";

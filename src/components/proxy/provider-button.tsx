@@ -22,7 +22,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { updateProxyProvider } from "tauri-plugin-mihomo-api";
 
-import { useProxiesData, useProxyProvidersData } from "@/hooks/app-data";
+import { useProxiesData, useProxyProvidersData } from "@/hooks/use-clash-data";
 import { showNotice } from "@/services/noticeService";
 import parseTraffic from "@/utils/parse-traffic";
 
