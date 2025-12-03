@@ -14,15 +14,12 @@ import { BaseErrorBoundary } from "./components/base";
 import { router } from "./pages/_routers";
 import { AppDataProvider } from "./providers/app-data-provider";
 import { WindowProvider } from "./providers/window";
-import { getVergeConfig } from "./services/cmds";
+import { FALLBACK_LANGUAGE, initializeLanguage } from "./services/i18n";
 import {
-  FALLBACK_LANGUAGE,
-  cacheLanguage,
-  getCachedLanguage,
-  initializeLanguage,
-  resolveLanguage,
-} from "./services/i18n";
-import { setInitialVergeConfig } from "./services/preloaded-verge-config";
+  preloadAppData,
+  resolveThemeMode,
+  getPreloadConfig,
+} from "./services/preload";
 import {
   LoadingCacheProvider,
   ThemeModeProvider,
@@ -56,42 +53,6 @@ document.addEventListener("keydown", (event) => {
   }
 });
 
-let cachedVergeConfig: IVergeConfig | null = null;
-
-const detectSystemTheme = (): "light" | "dark" => {
-  if (typeof window === "undefined" || typeof window.matchMedia !== "function")
-    return "light";
-  return window.matchMedia("(prefers-color-scheme: dark)").matches
-    ? "dark"
-    : "light";
-};
-
-const getInitialThemeModeFromWindow = ():
-  | IVergeConfig["theme_mode"]
-  | undefined => {
-  if (typeof window === "undefined") return undefined;
-  const mode = (
-    window as typeof window & {
-      __VERGE_INITIAL_THEME_MODE?: unknown;
-    }
-  ).__VERGE_INITIAL_THEME_MODE;
-  if (mode === "light" || mode === "dark" || mode === "system") {
-    return mode;
-  }
-  return undefined;
-};
-
-const resolveInitialThemeMode = (
-  vergeConfig?: IVergeConfig | null,
-): "light" | "dark" => {
-  const initialMode =
-    vergeConfig?.theme_mode ?? getInitialThemeModeFromWindow();
-  if (initialMode === "dark" || initialMode === "light") {
-    return initialMode;
-  }
-  return detectSystemTheme();
-};
-
 const initializeApp = (initialThemeMode: "light" | "dark") => {
   const contexts = [
     <ThemeModeProvider key="theme" initialState={initialThemeMode} />,
@@ -115,80 +76,8 @@ const initializeApp = (initialThemeMode: "light" | "dark") => {
   );
 };
 
-const determineInitialLanguage = async (
-  vergeConfig?: IVergeConfig | null,
-  loadVergeConfig?: () => Promise<IVergeConfig | null>,
-) => {
-  const cachedLanguage = getCachedLanguage();
-  if (cachedLanguage) {
-    return cachedLanguage;
-  }
-
-  let resolvedConfig = vergeConfig;
-
-  if (resolvedConfig === undefined) {
-    if (loadVergeConfig) {
-      try {
-        resolvedConfig = await loadVergeConfig();
-      } catch (error) {
-        console.warn(
-          "[main.tsx] Failed to read language from Verge config:",
-          error,
-        );
-        resolvedConfig = null;
-      }
-    } else {
-      try {
-        resolvedConfig = await getVergeConfig();
-        cachedVergeConfig = resolvedConfig;
-      } catch (error) {
-        console.warn(
-          "[main.tsx] Failed to read language from Verge config:",
-          error,
-        );
-        resolvedConfig = null;
-      }
-    }
-  }
-
-  const languageFromConfig = resolvedConfig?.language;
-  if (languageFromConfig) {
-    const resolved = resolveLanguage(languageFromConfig);
-    cacheLanguage(resolved);
-    return resolved;
-  }
-
-  const browserLanguage = resolveLanguage(
-    typeof navigator !== "undefined" ? navigator.language : undefined,
-  );
-  cacheLanguage(browserLanguage);
-  return browserLanguage;
-};
-
-const fetchVergeConfig = async () => {
-  try {
-    const config = await getVergeConfig();
-    cachedVergeConfig = config;
-    setInitialVergeConfig(config);
-    return config;
-  } catch (error) {
-    console.warn("[main.tsx] Failed to read Verge config:", error);
-    setInitialVergeConfig(null);
-    return null;
-  }
-};
-
 const bootstrap = async () => {
-  const vergeConfigPromise = fetchVergeConfig();
-  const initialLanguage = await determineInitialLanguage(
-    undefined,
-    () => vergeConfigPromise,
-  );
-  const [vergeConfig] = await Promise.all([
-    vergeConfigPromise,
-    initializeLanguage(initialLanguage),
-  ]);
-  const initialThemeMode = resolveInitialThemeMode(vergeConfig);
+  const { initialThemeMode } = await preloadAppData();
   initializeApp(initialThemeMode);
 };
 
@@ -205,7 +94,7 @@ bootstrap().catch((error) => {
       );
     })
     .finally(() => {
-      initializeApp(resolveInitialThemeMode(cachedVergeConfig));
+      initializeApp(resolveThemeMode(getPreloadConfig()));
     });
 });
 

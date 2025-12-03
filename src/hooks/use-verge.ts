@@ -1,18 +1,15 @@
 import useSWR from "swr";
 
 import { getVergeConfig, patchVergeConfig } from "@/services/cmds";
-import {
-  getInitialVergeConfig,
-  setInitialVergeConfig,
-} from "@/services/preloaded-verge-config";
+import { getPreloadConfig, setPreloadConfig } from "@/services/preload";
 
 export const useVerge = () => {
-  const initialVergeConfig = getInitialVergeConfig();
+  const initialVergeConfig = getPreloadConfig();
   const { data: verge, mutate: mutateVerge } = useSWR(
     "getVergeConfig",
     async () => {
       const config = await getVergeConfig();
-      setInitialVergeConfig(config);
+      setPreloadConfig(config);
       return config;
     },
     {
