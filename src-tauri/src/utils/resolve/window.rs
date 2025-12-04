@@ -51,7 +51,7 @@ fn get_saved_window_state() -> Option<WindowState> {
                 Ok(json) => {
                     // 尝试从 JSON 中提取 main 窗口的状态
                     if let Some(main_state) = json.get("main") {
-                        match serde_json::from_value::<WindowState>(main_state.clone()) {
+                        match serde_json::from_value::<WindowState>(main_state.to_owned()) {
                             Ok(state) => {
                                 logging!(
                                     info,
