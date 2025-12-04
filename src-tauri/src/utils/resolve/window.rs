@@ -181,7 +181,7 @@ pub async fn build_new_window() -> Result<WebviewWindow, String> {
 
     // 检查是否存在保存的窗口状态
     let saved_state = get_saved_window_state();
-    let should_center = if let Some(ref state) = saved_state {
+    let (should_center, window_width, window_height) = if let Some(ref state) = saved_state {
         // 如果有保存的状态，检查位置是否有效
         if let (Some(x), Some(y), Some(width), Some(height)) = (state.x, state.y, state.width, state.height) {
             // 获取所有监视器
@@ -195,22 +195,22 @@ pub async fn build_new_window() -> Result<WebviewWindow, String> {
             
             if is_valid {
                 logging!(info, Type::Window, "使用保存的窗口位置和大小");
-                false // 不需要居中，使用保存的位置
+                (false, width, height) // 不需要居中，使用保存的位置和大小
             } else {
                 logging!(
                     info,
                     Type::Window,
                     "保存的窗口位置无效（监视器可能已断开），将使用保存的大小在主监视器居中"
                 );
-                true // 需要居中
+                (true, width, height) // 需要居中，但保留保存的大小
             }
         } else {
-            logging!(info, Type::Window, "保存的窗口状态不完整，将居中显示");
-            true
+            logging!(info, Type::Window, "保存的窗口状态不完整，将使用默认大小并居中显示");
+            (true, DEFAULT_WIDTH, DEFAULT_HEIGHT)
         }
     } else {
-        logging!(info, Type::Window, "没有保存的窗口状态，将居中显示");
-        true
+        logging!(info, Type::Window, "没有保存的窗口状态，将使用默认大小并居中显示");
+        (true, DEFAULT_WIDTH, DEFAULT_HEIGHT)
     };
 
     let mut builder = tauri::WebviewWindowBuilder::new(
@@ -222,7 +222,7 @@ pub async fn build_new_window() -> Result<WebviewWindow, String> {
     // Using WindowManager::prefer_system_titlebar to control if show system built-in titlebar
     // .decorations(true)
     .fullscreen(false)
-    .inner_size(DEFAULT_WIDTH, DEFAULT_HEIGHT)
+    .inner_size(window_width, window_height)
     .min_inner_size(MINIMAL_WIDTH, MINIMAL_HEIGHT)
     .visible(false) // 等待主题色准备好后再展示，避免启动色差
     .initialization_script(&initial_script);
