@@ -197,6 +197,17 @@ interface ILogItem {
   payload: string;
 }
 
+type LogLevel = import("tauri-plugin-mihomo-api").LogLevel;
+type LogFilter = "all" | "debug" | "info" | "warn" | "err";
+type LogOrder = "asc" | "desc";
+
+interface IClashLog {
+  enable: boolean;
+  logLevel: LogLevel;
+  logFilter: LogFilter;
+  logOrder: LogOrder;
+}
+
 interface IConnectionsItem {
   id: string;
   metadata: {
@@ -225,6 +236,10 @@ interface IConnections {
   downloadTotal: number;
   uploadTotal: number;
   connections: IConnectionsItem[];
+}
+
+interface IConnectionSetting {
+  layout: "table" | "list";
 }
 
 /**

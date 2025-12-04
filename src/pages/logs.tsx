@@ -13,8 +13,8 @@ import { BaseSearchBox } from "@/components/base/base-search-box";
 import { SearchState } from "@/components/base/base-search-box";
 import { BaseStyledSelect } from "@/components/base/base-styled-select";
 import LogItem from "@/components/log/log-item";
+import { useClashLog } from "@/hooks/use-clash-log";
 import { useLogData } from "@/hooks/use-log-data";
-import { LogFilter, useClashLog } from "@/services/states";
 
 const LogPage = () => {
   const { t } = useTranslation();
