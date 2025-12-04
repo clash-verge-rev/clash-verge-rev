@@ -7,8 +7,6 @@ use crate::{
 };
 use anyhow::Result;
 use clash_verge_logging::{Type, logging, logging_error};
-#[cfg(not(target_os = "windows"))]
-use parking_lot::Mutex;
 use parking_lot::RwLock;
 use scopeguard::defer;
 use smartstring::alias::String;
@@ -26,9 +24,7 @@ pub struct Sysopt {
     update_sysproxy: AtomicBool,
     reset_sysproxy: AtomicBool,
     #[cfg(not(target_os = "windows"))]
-    sysproxy: Arc<Mutex<Sysproxy>>,
-    #[cfg(not(target_os = "windows"))]
-    autoproxy: Arc<Mutex<Autoproxy>>,
+    inner_proxy: Arc<RwLock<(Sysproxy, Autoproxy)>>,
     guard: Arc<RwLock<GuardMonitor>>,
 }
 
@@ -38,9 +34,7 @@ impl Default for Sysopt {
             update_sysproxy: AtomicBool::new(false),
             reset_sysproxy: AtomicBool::new(false),
             #[cfg(not(target_os = "windows"))]
-            sysproxy: Arc::new(Mutex::new(Sysproxy::default())),
-            #[cfg(not(target_os = "windows"))]
-            autoproxy: Arc::new(Mutex::new(Autoproxy::default())),
+            inner_proxy: Arc::new(RwLock::new((Sysproxy::default(), Autoproxy::default()))),
             guard: Arc::new(RwLock::new(GuardMonitor::new(
                 GuardType::None,
                 Duration::from_secs(30),
@@ -198,13 +192,12 @@ impl Sysopt {
             // 先 await, 避免持有锁导致的 Send 问题
             let bypass = get_bypass().await;
 
-            let mut sys = self.sysproxy.lock();
+            let (sys, auto) = &mut *self.inner_proxy.write();
             sys.enable = false;
             sys.host = proxy_host.clone().into();
             sys.port = port;
             sys.bypass = bypass.into();
 
-            let mut auto = self.autoproxy.lock();
             auto.enable = false;
             auto.url = format!("http://{proxy_host}:{pac_port}/commands/pac");
 
@@ -233,11 +226,9 @@ impl Sysopt {
                 sys.enable = true;
                 auto.set_auto_proxy()?;
                 sys.set_system_proxy()?;
-                drop(auto);
                 self.access_guard()
                     .write()
                     .set_guard_type(GuardType::Sysproxy(sys.clone()));
-                drop(sys);
                 return Ok(());
             }
         }
@@ -296,13 +287,11 @@ impl Sysopt {
         //直接关闭所有代理
         #[cfg(not(target_os = "windows"))]
         {
-            let mut sysproxy = self.sysproxy.lock();
-            sysproxy.enable = false;
-            sysproxy.set_system_proxy()?;
-            drop(sysproxy);
-            let mut autoproxy = self.autoproxy.lock();
-            autoproxy.enable = false;
-            autoproxy.set_auto_proxy()?;
+            let (sys, auto) = &mut *self.inner_proxy.write();
+            sys.enable = false;
+            sys.set_system_proxy()?;
+            auto.enable = false;
+            auto.set_auto_proxy()?;
         }
 
         #[cfg(target_os = "windows")]
