@@ -195,7 +195,7 @@ pub async fn build_new_window() -> Result<WebviewWindow, String> {
             
             if is_valid {
                 logging!(info, Type::Window, "使用保存的窗口位置和大小");
-                (false, width, height) // 不需要居中，使用保存的位置和大小
+                (false, width, height) // 不需要居中，让插件恢复保存的位置和大小
             } else {
                 logging!(
                     info,
