@@ -9,10 +9,10 @@ import { updateGeo } from "tauri-plugin-mihomo-api";
 import { DialogRef, Switch } from "@/components/base";
 import { TooltipIcon } from "@/components/base/base-tooltip-icon";
 import { useClash } from "@/hooks/use-clash";
+import { useClashLog } from "@/hooks/use-clash-log";
 import { useVerge } from "@/hooks/use-verge";
 import { invoke_uwp_tool } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
-import { useClashLog } from "@/services/states";
 import getSystem from "@/utils/get-system";
 
 import { ClashCoreViewer } from "./mods/clash-core-viewer";

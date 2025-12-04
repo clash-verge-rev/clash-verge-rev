@@ -4,8 +4,8 @@ import { mutate } from "swr";
 import { MihomoWebSocket, type LogLevel } from "tauri-plugin-mihomo-api";
 
 import { getClashLogs } from "@/services/cmds";
-import { useClashLog } from "@/services/states";
 
+import { useClashLog } from "./use-clash-log";
 import { useMihomoWsSubscription } from "./use-mihomo-ws-subscription";
 
 const MAX_LOG_NUM = 1000;
