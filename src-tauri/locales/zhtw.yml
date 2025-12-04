@@ -25,7 +25,8 @@ notifications:
     title: 應用已隱藏
     body: Clash Verge 正在背景執行。
 service:
-  adminPrompt: 安裝服務需要管理員權限
+  adminInstallPrompt: 安裝服務需要管理員權限
+  adminUninstallPrompt: 卸载服務需要管理員權限
 tray:
   dashboard: 儀表板
   ruleMode: 規則模式

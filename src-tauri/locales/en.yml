@@ -25,7 +25,9 @@ notifications:
     title: Application Hidden
     body: Clash Verge is running in the background.
 service:
-  adminPrompt: Installing the service requires administrator privileges.
+  adminInstallPrompt: Installing the service requires administrator privileges.
+  adminUninstallPrompt: Uninstalling the service requires administrator privileges.
+
 tray:
   dashboard: Dashboard
   ruleMode: Rule Mode

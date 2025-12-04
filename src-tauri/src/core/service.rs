@@ -275,7 +275,7 @@ async fn uninstall_service() -> Result<()> {
 
     crate::utils::i18n::sync_locale().await;
 
-    let prompt = rust_i18n::t!("service.adminPrompt").to_string();
+    let prompt = rust_i18n::t!("service.adminUninstallPrompt").to_string();
     let command = format!(
         r#"do shell script "sudo '{uninstall_shell}'" with administrator privileges with prompt "{prompt}""#
     );
@@ -311,12 +311,10 @@ async fn install_service() -> Result<()> {
 
     crate::utils::i18n::sync_locale().await;
 
-    let prompt = rust_i18n::t!("service.adminPrompt").to_string();
+    let prompt = rust_i18n::t!("service.adminInstallPrompt").to_string();
     let command = format!(
         r#"do shell script "sudo '{install_shell}'" with administrator privileges with prompt "{prompt}""#
     );
-
-    // logging!(debug, Type::Service, "install command: {}", command);
 
     let status = StdCommand::new("osascript")
         .args(vec!["-e", &command])
@@ -351,7 +349,7 @@ async fn reinstall_service() -> Result<()> {
 }
 
 /// 强制重装服务（UI修复按钮）
-pub async fn force_reinstall_service() -> Result<()> {
+async fn force_reinstall_service() -> Result<()> {
     logging!(info, Type::Service, "用户请求强制重装服务");
     reinstall_service().await.map_err(|err| {
         logging!(error, Type::Service, "强制重装服务失败: {}", err);
@@ -383,10 +381,10 @@ async fn check_service_version() -> Result<String> {
 }
 
 /// 检查服务是否需要重装
-pub async fn check_service_needs_reinstall() -> bool {
+pub async fn check_service_needs_reinstall() -> Result<bool> {
     match check_service_version().await {
-        Ok(version) => version != clash_verge_service_ipc::VERSION,
-        Err(_) => false,
+        Ok(version) => Ok(version != clash_verge_service_ipc::VERSION),
+        Err(e) => Err(e),
     }
 }
 
@@ -429,9 +427,10 @@ pub(super) async fn start_with_existing_service(config_file: &PathBuf) -> Result
 pub(super) async fn run_core_by_service(config_file: &PathBuf) -> Result<()> {
     logging!(info, Type::Service, "正在尝试通过服务启动核心");
 
-    if check_service_needs_reinstall().await {
-        reinstall_service().await?;
-    }
+    let mut manager = SERVICE_MANAGER.lock().await;
+    let status = manager.check_service_comprehensive().await;
+    manager.handle_service_status(&status).await?;
+    drop(manager);
 
     logging!(info, Type::Service, "服务已运行且版本匹配，直接使用");
     start_with_existing_service(config_file).await
@@ -521,11 +520,11 @@ impl ServiceManager {
 
     /// 综合服务状态检查（一次性完成所有检查）
     pub async fn check_service_comprehensive(&self) -> ServiceStatus {
-        match is_service_available().await {
-            Ok(_) => {
-                logging!(info, Type::Service, "服务当前可用，检查是否需要重装");
-                if check_service_needs_reinstall().await {
-                    logging!(info, Type::Service, "服务需要重装且允许重装");
+        match check_service_needs_reinstall().await {
+            Ok(need) => {
+                logging!(debug, Type::Service, "服务当前可用，检查是否需要重装");
+                if need {
+                    logging!(debug, Type::Service, "服务需要重装且需要重装");
                     ServiceStatus::NeedsReinstall
                 } else {
                     ServiceStatus::Ready
