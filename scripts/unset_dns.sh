@@ -1,16 +1,20 @@
 #!/bin/bash
 nic=$(route -n get default | grep "interface" | awk '{print $2}')
 
-hardware_port=$(networksetup -listallhardwareports | awk -v dev="$nic" '
-    /Hardware Port:/{
-        port=$0; gsub("Hardware Port: ", "", port)
-    } 
-    /Device: /{
-        if ($2 == dev) {
-            print port; 
-            exit
-        }
-    }
+# hardware_port=$(networksetup -listallhardwareports | awk -v dev="$nic" '
+#     /Hardware Port:/{
+#         port=$0; gsub("Hardware Port: ", "", port)
+#     } 
+#     /Device: /{
+#         if ($2 == dev) {
+#             print port; 
+#             exit
+#         }
+#     }
+# ')
+hardware_port=$(networksetup -listnetworkserviceorder | awk -v dev="$nic" '
+    /^\([0-9]+\) /{port=$0; sub(/^\([0-9]+\) /, "", port)} 
+    /\(Hardware Port:/{interface=$NF;sub(/\)/, "", interface); if (interface == dev) {print port; exit}}
 ')
 
 if [ -f .original_dns.txt ]; then
