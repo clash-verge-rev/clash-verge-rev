@@ -61,6 +61,7 @@
 - 优化应用重启/退出时的资源清理性能, 大幅缩短执行时间
 - 优化 WebSocket 连接机制
 - 改进旧版 Service 需要重新安装检测流程
+- 优化 macOS 和 Linux 信号处理
 
 </details>
 

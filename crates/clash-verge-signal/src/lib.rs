@@ -19,7 +19,7 @@ where
         Err(e) => {
             logging!(
                 info,
-                Type::System,
+                Type::SystemSignal,
                 "register shutdown signal failed, create tokio runtime error: {}",
                 e
             );

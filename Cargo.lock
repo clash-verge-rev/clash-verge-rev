@@ -1285,7 +1285,6 @@ version = "0.1.0"
 dependencies = [
  "clash-verge-logging",
  "log",
- "signal-hook 0.3.18",
  "tauri",
  "tokio",
  "windows-sys 0.61.2",

@@ -33,7 +33,7 @@ unsafe impl Sync for ShutdownState {}
 impl Drop for ShutdownState {
     fn drop(&mut self) {
         // this log not be printed, I don't know why.
-        logging!(info, Type::System, "正在销毁系统关闭监听窗口");
+        logging!(info, Type::SystemSignal, "正在销毁系统关闭监听窗口");
         unsafe {
             DestroyWindow(self.hwnd);
         }
@@ -52,7 +52,7 @@ unsafe extern "system" fn shutdown_proc(
         WM_QUERYENDSESSION => {
             logging!(
                 info,
-                Type::System,
+                Type::SystemSignal,
                 "System is shutting down or user is logging off."
             );
         }
@@ -60,21 +60,21 @@ unsafe extern "system" fn shutdown_proc(
             if let Some(handler) = SHUTDOWN_HANDLER.get() {
                 if let Some(Some(rt)) = RUNTIME.get() {
                     rt.block_on(async {
-                        logging!(info, Type::System, "Session ended, system shutting down.");
+                        logging!(info, Type::SystemSignal, "Session ended, system shutting down.");
                         handler().await;
-                        logging!(info, Type::System, "resolved reset finished");
+                        logging!(info, Type::SystemSignal, "resolved reset finished");
                     });
                 } else {
                     logging!(
                         error,
-                        Type::System,
+                        Type::SystemSignal,
                         "handle shutdown signal failed, RUNTIME is not available"
                     );
                 }
             } else {
                 logging!(
                     error,
-                    Type::System,
+                    Type::SystemSignal,
                     "WM_ENDSESSION received but no shutdown handler is registered"
                 );
             }
@@ -105,6 +105,7 @@ fn get_instance_handle() -> windows_sys::Win32::Foundation::HMODULE {
     unsafe { &__ImageBase as *const _ as _ }
 }
 
+//? 我们有机会采用类似 tokio 信号，不阻塞信号线程吗？
 pub fn register<F, Fut>(app_handle: &AppHandle, f: F)
 where
     F: Fn() -> Fut + Send + Sync + 'static,
@@ -153,7 +154,7 @@ where
             std::ptr::null_mut(),
         );
         if hwnd.is_null() {
-            logging!(error, Type::System, "failed to create shutdown window");
+            logging!(error, Type::SystemSignal, "failed to create shutdown window");
         } else {
             app_handle.manage(ShutdownState { hwnd });
         }
