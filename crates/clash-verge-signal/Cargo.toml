@@ -9,15 +9,5 @@ clash-verge-logging = { workspace = true }
 log = { workspace = true }
 tokio = { workspace = true }
 
-[target.'cfg(windows)'.dependencies]
-tauri = { workspace = true }
-windows-sys = { version = "0.61.2", features = [
-    "Win32_Foundation",
-    "Win32_Graphics_Gdi",
-    "Win32_System_SystemServices",
-    "Win32_UI_WindowsAndMessaging",
-] }
-
-
 [lints]
 workspace = true

@@ -143,11 +143,7 @@ pub(super) async fn init_auto_backup() {
 
 pub fn init_signal() {
     logging!(info, Type::Setup, "Initializing signal handlers...");
-    clash_verge_signal::register(
-        #[cfg(windows)]
-        handle::Handle::app_handle(),
-        feat::quit,
-    );
+    clash_verge_signal::register(feat::quit);
 }
 
 pub async fn init_work_config() {
