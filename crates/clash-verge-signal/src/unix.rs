@@ -1,7 +1,11 @@
+use std::sync::atomic::{AtomicBool, Ordering};
+
 use clash_verge_logging::{Type, logging};
 use tokio::signal::unix::{SignalKind, signal};
 
 use crate::RUNTIME;
+
+static IS_CLEANING_UP: AtomicBool = AtomicBool::new(false);
 
 pub fn register<F, Fut>(f: F)
 where
@@ -63,6 +67,17 @@ where
                         break;
                     }
                 }
+
+                if IS_CLEANING_UP.load(Ordering::SeqCst) {
+                    logging!(
+                        info,
+                        Type::SystemSignal,
+                        "Already shutting down, ignoring repeated signal: {}",
+                        signal_name
+                    );
+                    continue;
+                }
+                IS_CLEANING_UP.store(true, Ordering::SeqCst);
 
                 logging!(info, Type::SystemSignal, "Caught signal {}", signal_name);
 

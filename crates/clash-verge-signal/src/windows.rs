@@ -1,7 +1,11 @@
+use std::sync::atomic::{AtomicBool, Ordering};
+
 use clash_verge_logging::{Type, logging};
 use tokio::signal::windows;
 
 use crate::RUNTIME;
+
+static IS_CLEANING_UP: AtomicBool = AtomicBool::new(false);
 
 pub fn register<F, Fut>(f: F)
 where
@@ -62,30 +66,43 @@ where
                 }
             };
 
-            let signal_name;
-            tokio::select! {
-                _ = ctrl_c.recv() => {
-                    signal_name = "Ctrl+C";
+            loop {
+                let signal_name;
+                tokio::select! {
+                    _ = ctrl_c.recv() => {
+                        signal_name = "Ctrl+C";
+                    }
+                    _ = ctrl_close.recv() => {
+                        signal_name = "Ctrl+Close";
+                    }
+                    _ = ctrl_shutdown.recv() => {
+                        signal_name = "Ctrl+Shutdown";
+                    }
+                    _ = ctrl_logoff.recv() => {
+                        signal_name = "Ctrl+Logoff";
+                    }
                 }
-                _ = ctrl_close.recv() => {
-                    signal_name = "Ctrl+Close";
+
+                if IS_CLEANING_UP.load(Ordering::SeqCst) {
+                    logging!(
+                        info,
+                        Type::SystemSignal,
+                        "Already shutting down, ignoring repeated signal: {}",
+                        signal_name
+                    );
+                    continue;
                 }
-                _ = ctrl_shutdown.recv() => {
-                    signal_name = "Ctrl+Shutdown";
-                }
-                _ = ctrl_logoff.recv() => {
-                    signal_name = "Ctrl+Logoff";
-                }
+                IS_CLEANING_UP.store(true, Ordering::SeqCst);
+
+                logging!(
+                    info,
+                    Type::SystemSignal,
+                    "Caught Windows signal: {}",
+                    signal_name
+                );
+
+                f().await;
             }
-
-            logging!(
-                info,
-                Type::SystemSignal,
-                "Caught Windows signal: {}",
-                signal_name
-            );
-
-            f().await;
         });
     } else {
         logging!(
