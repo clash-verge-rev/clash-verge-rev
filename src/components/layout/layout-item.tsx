@@ -37,8 +37,13 @@ export const LayoutItem = (props: Props) => {
   const match = useMatch({ path: resolved.pathname, end: true });
   const navigate = useNavigate();
 
-  const { setNodeRef, attributes, listeners, style, isDragging } =
+  const { setNodeRef, attributes, listeners, style, isDragging, disabled } =
     sortable ?? {};
+
+  const draggable = Boolean(sortable) && !disabled;
+  const dragHandleProps = draggable
+    ? { ...(attributes ?? {}), ...(listeners ?? {}) }
+    : undefined;
 
   return (
     <ListItem
@@ -51,6 +56,7 @@ export const LayoutItem = (props: Props) => {
     >
       <ListItemButton
         selected={!!match}
+        {...(dragHandleProps ?? {})}
         sx={[
           {
             borderRadius: 2,
@@ -58,7 +64,8 @@ export const LayoutItem = (props: Props) => {
             paddingLeft: 1,
             paddingRight: 1,
             marginRight: 1.25,
-            cursor: "pointer",
+            cursor: draggable ? "grab" : "pointer",
+            "&:active": draggable ? { cursor: "grabbing" } : {},
             "& .MuiListItemText-primary": {
               color: "text.primary",
               fontWeight: "700",
@@ -84,20 +91,14 @@ export const LayoutItem = (props: Props) => {
             sx={{
               color: "text.primary",
               marginLeft: "6px",
-              cursor: sortable && !sortable.disabled ? "grab" : "inherit",
+              cursor: draggable ? "grab" : "inherit",
             }}
-            {...(attributes ?? {})}
-            {...(listeners ?? {})}
           >
             {icon[0]}
           </ListItemIcon>
         )}
         {menu_icon === "colorful" && (
-          <ListItemIcon
-            sx={{ cursor: sortable && !sortable.disabled ? "grab" : "inherit" }}
-            {...(attributes ?? {})}
-            {...(listeners ?? {})}
-          >
+          <ListItemIcon sx={{ cursor: draggable ? "grab" : "inherit" }}>
             {icon[1]}
           </ListItemIcon>
         )}
