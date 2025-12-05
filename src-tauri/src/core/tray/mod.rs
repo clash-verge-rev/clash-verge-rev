@@ -5,7 +5,7 @@ use tauri_plugin_mihomo::models::Proxies;
 use tokio::fs;
 #[cfg(target_os = "macos")]
 pub mod speed_rate;
-use crate::config::{IProfilePreview, IVerge, PrfSelected};
+use crate::config::{IProfilePreview, IVerge};
 use crate::core::service;
 use crate::module::lightweight;
 use crate::process::AsyncHandler;
@@ -633,7 +633,6 @@ fn create_profile_menu_item(
 fn create_subcreate_proxy_menu_item(
     app_handle: &AppHandle,
     proxy_mode: &str,
-    current_profile_selected: &[PrfSelected],
     proxy_group_order_map: Option<HashMap<String, usize>>,
     proxy_nodes_data: Option<Proxies>,
 ) -> Vec<Submenu<Wry>> {
@@ -643,13 +642,11 @@ fn create_subcreate_proxy_menu_item(
         // TODO: 应用启动时，内核还未启动完全，无法获取代理节点信息
         if let Some(proxy_nodes_data) = proxy_nodes_data {
             for (group_name, group_data) in proxy_nodes_data.proxies.iter() {
-                // Filter groups based on mode
+                // Filter groups based on mode and hidden flag
                 let should_show = match proxy_mode {
                     "global" => group_name == "GLOBAL",
                     _ => group_name != "GLOBAL",
-                } &&
-                // Check if the group is hidden
-                !group_data.hidden.unwrap_or_default();
+                } && !group_data.hidden.unwrap_or_default();
 
                 if !should_show {
                     continue;
@@ -701,23 +698,7 @@ fn create_subcreate_proxy_menu_item(
                     continue;
                 }
 
-                // Determine if group is active
-                let is_group_active = match proxy_mode {
-                    "global" => group_name == "GLOBAL" && !now_proxy.is_empty(),
-                    "direct" => false,
-                    _ => {
-                        current_profile_selected
-                            .iter()
-                            .any(|s| s.name.as_deref() == Some(group_name))
-                            && !now_proxy.is_empty()
-                    }
-                };
-
-                let group_display_name = if is_group_active {
-                    format!("✓ {}", group_name)
-                } else {
-                    group_name.to_string()
-                };
+                let group_display_name = group_name.to_string();
 
                 let group_items_refs: Vec<&dyn IsMenuItem<Wry>> = group_items
                     .iter()
@@ -815,17 +796,6 @@ async fn create_tray_menu(
     let current_proxy_mode = mode.unwrap_or("");
 
     i18n::sync_locale().await;
-
-    // 获取当前配置文件的选中代理组信息
-    let current_profile_selected = {
-        let profiles_config = Config::profiles().await;
-        let profiles_ref = profiles_config.latest_arc();
-        profiles_ref
-            .get_current()
-            .and_then(|uid| profiles_ref.get_item(uid).ok())
-            .and_then(|profile| profile.selected.clone())
-            .unwrap_or_default()
-    };
 
     let proxy_nodes_data = handle::Handle::mihomo().await.get_proxies().await.ok();
 
@@ -948,7 +918,6 @@ async fn create_tray_menu(
     let proxy_sub_menus = create_subcreate_proxy_menu_item(
         app_handle,
         current_proxy_mode,
-        &current_profile_selected,
         proxy_group_order_map,
         proxy_nodes_data,
     );
