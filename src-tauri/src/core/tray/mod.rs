@@ -722,7 +722,13 @@ async fn create_tray_menu(
 
     i18n::sync_locale().await;
 
-    let proxy_nodes_data = handle::Handle::mihomo().await.get_proxies().await.ok();
+    // TODO: mihomo 请求的超时机制未起作用，需要排查
+    let proxy_nodes_data = tokio::time::timeout(
+        Duration::from_millis(1000),
+        handle::Handle::mihomo().await.get_proxies(),
+    )
+    .await
+    .map_or(None, |res| res.ok());
 
     let runtime_proxy_groups_order = cmd::get_runtime_config()
         .await

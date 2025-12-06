@@ -1,6 +1,6 @@
 use crate::{
     config::{Config, IClashTemp},
-    core::tray,
+    core::Timer,
     utils::{dirs, init::service_writer_config},
 };
 use anyhow::{Context as _, Result, bail};
@@ -568,7 +568,9 @@ impl ServiceManager {
                 return Err(anyhow::anyhow!("服务不可用: {}", reason));
             }
         }
-        let _ = tray::Tray::global().update_menu().await;
+
+        // 防止服务安装成功后，内核未完全启动导致系统托盘无法获取代理节点信息
+        Timer::global().add_update_tray_menu_task()?;
         Ok(())
     }
 }
