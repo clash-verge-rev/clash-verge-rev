@@ -177,10 +177,7 @@ impl Hotkey {
                             "Failed to reactivate subscriptions via hotkey: {}",
                             err
                         );
-                        handle::Handle::notice_message(
-                            "reactivate_profiles::error",
-                            err.to_string(),
-                        );
+                        handle::Handle::notice_message("reactivate_profiles::error", err.to_string());
                     }
                 });
             }
@@ -205,8 +202,7 @@ impl Hotkey {
     pub async fn register_system_hotkey(&self, hotkey: SystemHotkey) -> Result<()> {
         let hotkey_str = hotkey.to_string();
         let function = hotkey.function();
-        self.register_hotkey_with_function(&hotkey_str, function)
-            .await
+        self.register_hotkey_with_function(&hotkey_str, function).await
     }
 
     #[cfg(target_os = "macos")]
@@ -218,11 +214,7 @@ impl Hotkey {
 
     /// Register a hotkey with function enum
     #[allow(clippy::unused_async)]
-    pub async fn register_hotkey_with_function(
-        &self,
-        hotkey: &str,
-        function: HotkeyFunction,
-    ) -> Result<()> {
+    pub async fn register_hotkey_with_function(&self, hotkey: &str, function: HotkeyFunction) -> Result<()> {
         let app_handle = handle::Handle::app_handle();
         let manager = app_handle.global_shortcut();
 
@@ -261,11 +253,8 @@ impl Hotkey {
                     AsyncHandler::spawn(move || async move {
                         logging!(debug, Type::Hotkey, "Executing function directly");
 
-                        let is_enable_global_hotkey = Config::verge()
-                            .await
-                            .data_arc()
-                            .enable_global_hotkey
-                            .unwrap_or(true);
+                        let is_enable_global_hotkey =
+                            Config::verge().await.data_arc().enable_global_hotkey.unwrap_or(true);
 
                         if is_enable_global_hotkey {
                             Self::execute_function(function);
@@ -312,12 +301,7 @@ impl Hotkey {
         let hotkeys = verge.data_arc().hotkeys.clone();
 
         if let Some(hotkeys) = hotkeys {
-            logging!(
-                debug,
-                Type::Hotkey,
-                "Has {} hotkeys need to register",
-                hotkeys.len()
-            );
+            logging!(debug, Type::Hotkey, "Has {} hotkeys need to register", hotkeys.len());
 
             for hotkey in hotkeys.iter() {
                 let mut iter = hotkey.split(',');
@@ -326,13 +310,7 @@ impl Hotkey {
 
                 match (key, func) {
                     (Some(key), Some(func)) => {
-                        logging!(
-                            debug,
-                            Type::Hotkey,
-                            "Registering hotkey: {} -> {}",
-                            key,
-                            func
-                        );
+                        logging!(debug, Type::Hotkey, "Registering hotkey: {} -> {}", key, func);
                         if let Err(e) = self.register(key, func).await {
                             logging!(
                                 error,
@@ -465,12 +443,7 @@ impl Drop for Hotkey {
     fn drop(&mut self) {
         let app_handle = handle::Handle::app_handle();
         if let Err(e) = app_handle.global_shortcut().unregister_all() {
-            logging!(
-                error,
-                Type::Hotkey,
-                "Error unregistering all hotkeys: {:?}",
-                e
-            );
+            logging!(error, Type::Hotkey, "Error unregistering all hotkeys: {:?}", e);
         }
     }
 }

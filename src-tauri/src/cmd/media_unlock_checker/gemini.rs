@@ -18,12 +18,7 @@ pub(super) async fn check_gemini(client: &Client) -> UnlockItem {
                 let re = match Regex::new(r#",2,1,200,"([A-Z]{3})""#) {
                     Ok(re) => re,
                     Err(e) => {
-                        logging!(
-                            error,
-                            Type::Network,
-                            "Failed to compile Gemini regex: {}",
-                            e
-                        );
+                        logging!(error, Type::Network, "Failed to compile Gemini regex: {}", e);
                         return UnlockItem {
                             name: "Gemini".to_string(),
                             status: "Failed".to_string(),

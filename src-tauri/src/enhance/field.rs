@@ -17,13 +17,7 @@ pub const HANDLE_FIELDS: [&str; 12] = [
     "unified-delay",
 ];
 
-pub const DEFAULT_FIELDS: [&str; 5] = [
-    "proxies",
-    "proxy-providers",
-    "proxy-groups",
-    "rule-providers",
-    "rules",
-];
+pub const DEFAULT_FIELDS: [&str; 5] = ["proxies", "proxy-providers", "proxy-groups", "rule-providers", "rules"];
 
 pub fn use_lowercase(config: &Mapping) -> Mapping {
     let mut ret = Mapping::new();

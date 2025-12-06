@@ -50,11 +50,9 @@ fn resolve_supported_language(language: &str) -> Option<String> {
 
     let supported = supported_languages_internal();
 
-    candidates.into_iter().find(|candidate| {
-        supported
-            .iter()
-            .any(|&lang| lang.eq_ignore_ascii_case(candidate))
-    })
+    candidates
+        .into_iter()
+        .find(|candidate| supported.iter().any(|&lang| lang.eq_ignore_ascii_case(candidate)))
 }
 
 fn system_language() -> String {
@@ -72,8 +70,7 @@ pub fn get_supported_languages() -> Vec<String> {
 }
 
 pub fn set_locale(language: &str) {
-    let lang =
-        resolve_supported_language(language).unwrap_or_else(|| fallback_language().to_string());
+    let lang = resolve_supported_language(language).unwrap_or_else(|| fallback_language().to_string());
     rust_i18n::set_locale(&lang);
 }
 

@@ -9,12 +9,7 @@ pub async fn set_public_dns(dns_server: String) {
     let resource_dir = match dirs::app_resources_dir() {
         Ok(dir) => dir,
         Err(e) => {
-            logging!(
-                error,
-                Type::Config,
-                "Failed to get resource directory: {}",
-                e
-            );
+            logging!(error, Type::Config, "Failed to get resource directory: {}", e);
             return;
         }
     };
@@ -55,12 +50,7 @@ pub async fn restore_public_dns() {
     let resource_dir = match dirs::app_resources_dir() {
         Ok(dir) => dir,
         Err(e) => {
-            logging!(
-                error,
-                Type::Config,
-                "Failed to get resource directory: {}",
-                e
-            );
+            logging!(error, Type::Config, "Failed to get resource directory: {}", e);
             return;
         }
     };

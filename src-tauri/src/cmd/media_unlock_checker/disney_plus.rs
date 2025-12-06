@@ -9,8 +9,7 @@ use super::utils::{country_code_to_emoji, get_local_date_string};
 #[allow(clippy::cognitive_complexity)]
 pub(super) async fn check_disney_plus(client: &Client) -> UnlockItem {
     let device_api_url = "https://disney.api.edge.bamgrid.com/devices";
-    let auth_header =
-        "Bearer ZGlzbmV5JmJyb3dzZXImMS4wLjA.Cu56AgSfBTDag5NiRA81oLHkDZfu5L3CKadnefEAY84";
+    let auth_header = "Bearer ZGlzbmV5JmJyb3dzZXImMS4wLjA.Cu56AgSfBTDag5NiRA81oLHkDZfu5L3CKadnefEAY84";
 
     let device_req_body = serde_json::json!({
         "deviceFamily": "browser",
@@ -39,12 +38,7 @@ pub(super) async fn check_disney_plus(client: &Client) -> UnlockItem {
     let device_response = match device_result {
         Ok(response) => response,
         Err(e) => {
-            logging!(
-                error,
-                Type::Network,
-                "Failed to get Disney+ device response: {}",
-                e
-            );
+            logging!(error, Type::Network, "Failed to get Disney+ device response: {}", e);
             return UnlockItem {
                 name: "Disney+".to_string(),
                 status: "Failed (Network Connection)".to_string(),
@@ -120,18 +114,12 @@ pub(super) async fn check_disney_plus(client: &Client) -> UnlockItem {
         }
     };
     let token_body = [
-        (
-            "grant_type",
-            "urn:ietf:params:oauth:grant-type:token-exchange",
-        ),
+        ("grant_type", "urn:ietf:params:oauth:grant-type:token-exchange"),
         ("latitude", "0"),
         ("longitude", "0"),
         ("platform", "browser"),
         ("subject_token", assertion_str.as_str()),
-        (
-            "subject_token_type",
-            "urn:bamtech:params:oauth:token-type:device",
-        ),
+        ("subject_token_type", "urn:bamtech:params:oauth:token-type:device"),
     ];
 
     let token_result = client
@@ -154,12 +142,7 @@ pub(super) async fn check_disney_plus(client: &Client) -> UnlockItem {
     let token_response = match token_result {
         Ok(response) => response,
         Err(e) => {
-            logging!(
-                error,
-                Type::Network,
-                "Failed to get Disney+ token response: {}",
-                e
-            );
+            logging!(error, Type::Network, "Failed to get Disney+ token response: {}", e);
             return UnlockItem {
                 name: "Disney+".to_string(),
                 status: "Failed (Network Connection)".to_string(),
@@ -264,12 +247,7 @@ pub(super) async fn check_disney_plus(client: &Client) -> UnlockItem {
     let graphql_response = match graphql_result {
         Ok(response) => response,
         Err(e) => {
-            logging!(
-                error,
-                Type::Network,
-                "Failed to get Disney+ GraphQL response: {}",
-                e
-            );
+            logging!(error, Type::Network, "Failed to get Disney+ GraphQL response: {}", e);
             return UnlockItem {
                 name: "Disney+".to_string(),
                 status: "Failed (Network Connection)".to_string(),

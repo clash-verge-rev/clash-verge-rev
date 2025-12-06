@@ -46,26 +46,18 @@ pub async fn change_clash_core(clash_core: String) -> CmdResult<Option<String>> 
 
     match CoreManager::global().change_core(&clash_core).await {
         Ok(_) => {
-            logging_error!(
-                Type::Core,
-                Config::profiles().await.latest_arc().save_file().await
-            );
+            logging_error!(Type::Core, Config::profiles().await.latest_arc().save_file().await);
 
             // 切换内核后重启内核
             match CoreManager::global().restart_core().await {
                 Ok(_) => {
-                    logging!(
-                        info,
-                        Type::Core,
-                        "core changed and restarted to {clash_core}"
-                    );
+                    logging!(info, Type::Core, "core changed and restarted to {clash_core}");
                     handle::Handle::notice_message("config_core::change_success", clash_core);
                     handle::Handle::refresh_clash();
                     Ok(None)
                 }
                 Err(err) => {
-                    let error_msg: String =
-                        format!("Core changed but failed to restart: {err}").into();
+                    let error_msg: String = format!("Core changed but failed to restart: {err}").into();
                     handle::Handle::notice_message("config_core::change_error", error_msg.clone());
                     logging!(error, Type::Core, "{error_msg}");
                     Ok(Some(error_msg))
@@ -94,10 +86,7 @@ pub async fn start_core() -> CmdResult {
 /// 关闭核心
 #[tauri::command]
 pub async fn stop_core() -> CmdResult {
-    logging_error!(
-        Type::Core,
-        Config::profiles().await.latest_arc().save_file().await
-    );
+    logging_error!(Type::Core, Config::profiles().await.latest_arc().save_file().await);
     let result = CoreManager::global().stop_core().await.stringify_err();
     if result.is_ok() {
         handle::Handle::refresh_clash();
@@ -108,10 +97,7 @@ pub async fn stop_core() -> CmdResult {
 /// 重启核心
 #[tauri::command]
 pub async fn restart_core() -> CmdResult {
-    logging_error!(
-        Type::Core,
-        Config::profiles().await.latest_arc().save_file().await
-    );
+    logging_error!(Type::Core, Config::profiles().await.latest_arc().save_file().await);
     let result = CoreManager::global().restart_core().await.stringify_err();
     if result.is_ok() {
         handle::Handle::refresh_clash();
@@ -140,9 +126,7 @@ pub async fn save_dns_config(dns_config: Mapping) -> CmdResult {
     use tokio::fs;
 
     // 获取DNS配置文件路径
-    let dns_path = dirs::app_home_dir()
-        .stringify_err()?
-        .join(constants::files::DNS_CONFIG);
+    let dns_path = dirs::app_home_dir().stringify_err()?.join(constants::files::DNS_CONFIG);
 
     // 保存DNS配置到文件
     let yaml_str = serde_yaml_ng::to_string(&dns_config).stringify_err()?;
@@ -157,9 +141,7 @@ pub async fn save_dns_config(dns_config: Mapping) -> CmdResult {
 pub async fn apply_dns_config(apply: bool) -> CmdResult {
     if apply {
         // 读取DNS配置文件
-        let dns_path = dirs::app_home_dir()
-            .stringify_err()?
-            .join(constants::files::DNS_CONFIG);
+        let dns_path = dirs::app_home_dir().stringify_err()?.join(constants::files::DNS_CONFIG);
 
         if !dns_path.exists() {
             logging!(warn, Type::Config, "DNS config file not found");
@@ -171,10 +153,9 @@ pub async fn apply_dns_config(apply: bool) -> CmdResult {
         })?;
 
         // 解析DNS配置
-        let patch_config = serde_yaml_ng::from_str::<serde_yaml_ng::Mapping>(&dns_yaml)
-            .stringify_err_log(|e| {
-                logging!(error, Type::Config, "Failed to parse DNS config: {e}");
-            })?;
+        let patch_config = serde_yaml_ng::from_str::<serde_yaml_ng::Mapping>(&dns_yaml).stringify_err_log(|e| {
+            logging!(error, Type::Config, "Failed to parse DNS config: {e}");
+        })?;
 
         logging!(info, Type::Config, "Applying DNS config from file");
 
@@ -194,35 +175,25 @@ pub async fn apply_dns_config(apply: bool) -> CmdResult {
         })?;
 
         // 应用新配置
-        CoreManager::global()
-            .update_config()
-            .await
-            .stringify_err_log(|err| {
-                let err = format!("Failed to apply config with DNS: {err}");
-                logging!(error, Type::Config, "{err}");
-            })?;
+        CoreManager::global().update_config().await.stringify_err_log(|err| {
+            let err = format!("Failed to apply config with DNS: {err}");
+            logging!(error, Type::Config, "{err}");
+        })?;
 
         logging!(info, Type::Config, "DNS config successfully applied");
     } else {
         // 当关闭DNS设置时，重新生成配置（不加载DNS配置文件）
-        logging!(
-            info,
-            Type::Config,
-            "DNS settings disabled, regenerating config"
-        );
+        logging!(info, Type::Config, "DNS settings disabled, regenerating config");
 
         Config::generate().await.stringify_err_log(|err| {
             let err = format!("Failed to regenerate config: {err}");
             logging!(error, Type::Config, "{err}");
         })?;
 
-        CoreManager::global()
-            .update_config()
-            .await
-            .stringify_err_log(|err| {
-                let err = format!("Failed to apply regenerated config: {err}");
-                logging!(error, Type::Config, "{err}");
-            })?;
+        CoreManager::global().update_config().await.stringify_err_log(|err| {
+            let err = format!("Failed to apply regenerated config: {err}");
+            logging!(error, Type::Config, "{err}");
+        })?;
 
         logging!(info, Type::Config, "Config regenerated successfully");
     }
@@ -236,9 +207,7 @@ pub async fn apply_dns_config(apply: bool) -> CmdResult {
 pub fn check_dns_config_exists() -> CmdResult<bool> {
     use crate::utils::dirs;
 
-    let dns_path = dirs::app_home_dir()
-        .stringify_err()?
-        .join(constants::files::DNS_CONFIG);
+    let dns_path = dirs::app_home_dir().stringify_err()?.join(constants::files::DNS_CONFIG);
 
     Ok(dns_path.exists())
 }
@@ -249,9 +218,7 @@ pub async fn get_dns_config_content() -> CmdResult<String> {
     use crate::utils::dirs;
     use tokio::fs;
 
-    let dns_path = dirs::app_home_dir()
-        .stringify_err()?
-        .join(constants::files::DNS_CONFIG);
+    let dns_path = dirs::app_home_dir().stringify_err()?.join(constants::files::DNS_CONFIG);
 
     if !fs::try_exists(&dns_path).await.stringify_err()? {
         return Err("DNS config file not found".into());
@@ -279,9 +246,6 @@ pub async fn validate_dns_config() -> CmdResult<(bool, String)> {
 
 #[tauri::command]
 pub async fn get_clash_logs() -> CmdResult<Vec<CompactString>> {
-    let logs = CoreManager::global()
-        .get_clash_logs()
-        .await
-        .unwrap_or_default();
+    let logs = CoreManager::global().get_clash_logs().await.unwrap_or_default();
     Ok(logs)
 }

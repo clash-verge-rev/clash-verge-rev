@@ -89,10 +89,7 @@ pub fn get_portable_flag() -> bool {
 /// 获取应用目录
 #[tauri::command]
 pub fn get_app_dir() -> CmdResult<String> {
-    let app_home_dir = dirs::app_home_dir()
-        .stringify_err()?
-        .to_string_lossy()
-        .into();
+    let app_home_dir = dirs::app_home_dir().stringify_err()?.to_string_lossy().into();
     Ok(app_home_dir)
 }
 
@@ -105,10 +102,7 @@ pub fn get_auto_launch_status() -> CmdResult<bool> {
 /// 下载图标缓存
 #[tauri::command]
 pub async fn download_icon_cache(url: String, name: String) -> CmdResult<String> {
-    let icon_cache_dir = dirs::app_home_dir()
-        .stringify_err()?
-        .join("icons")
-        .join("cache");
+    let icon_cache_dir = dirs::app_home_dir().stringify_err()?.join("icons").join("cache");
     let icon_path = icon_cache_dir.join(name.as_str());
 
     if icon_path.exists() {
@@ -134,9 +128,7 @@ pub async fn download_icon_cache(url: String, name: String) -> CmdResult<String>
     let content = response.bytes().await.stringify_err()?;
 
     let is_html = content.len() > 15
-        && (content.starts_with(b"<!DOCTYPE html")
-            || content.starts_with(b"<html")
-            || content.starts_with(b"<?xml"));
+        && (content.starts_with(b"<!DOCTYPE html") || content.starts_with(b"<html") || content.starts_with(b"<?xml"));
 
     if is_image && !is_html {
         {

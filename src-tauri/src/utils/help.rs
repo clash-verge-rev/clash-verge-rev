@@ -35,19 +35,14 @@ pub async fn read_mapping(path: &PathBuf) -> Result<Mapping> {
 
             Ok(val
                 .as_mapping()
-                .ok_or_else(|| {
-                    anyhow!("failed to transform to yaml mapping \"{}\"", path.display())
-                })?
+                .ok_or_else(|| anyhow!("failed to transform to yaml mapping \"{}\"", path.display()))?
                 .to_owned())
         }
         Err(err) => {
             let error_msg = format!("YAML syntax error in {}: {}", path.display(), err);
             logging!(error, Type::Config, "{}", error_msg);
 
-            crate::core::handle::Handle::notice_message(
-                "config_validate::yaml_syntax_error",
-                &error_msg,
-            );
+            crate::core::handle::Handle::notice_message("config_validate::yaml_syntax_error", &error_msg);
 
             bail!("YAML syntax error: {}", err)
         }
@@ -61,11 +56,7 @@ pub async fn read_seq_map(path: &PathBuf) -> Result<SeqMap> {
 
 /// save the data to the file
 /// can set `prefix` string to add some comments
-pub async fn save_yaml<T: Serialize + Sync>(
-    path: &PathBuf,
-    data: &T,
-    prefix: Option<&str>,
-) -> Result<()> {
+pub async fn save_yaml<T: Serialize + Sync>(path: &PathBuf, data: &T, prefix: Option<&str>) -> Result<()> {
     let data_str = with_encryption(|| async { serde_yaml_ng::to_string(data) }).await?;
 
     let yaml_str = match prefix {
@@ -82,10 +73,9 @@ pub async fn save_yaml<T: Serialize + Sync>(
 }
 
 const ALPHABET: [char; 62] = [
-    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i',
-    'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B',
-    'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U',
-    'V', 'W', 'X', 'Y', 'Z',
+    '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm',
+    'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z', 'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
+    'K', 'L', 'M', 'N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z',
 ];
 
 /// generate the uid

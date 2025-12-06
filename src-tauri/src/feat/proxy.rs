@@ -17,11 +17,7 @@ pub async fn toggle_system_proxy() {
         && auto_close_connection
         && let Err(err) = handle::Handle::mihomo().await.close_all_connections().await
     {
-        logging!(
-            error,
-            Type::ProxyMode,
-            "Failed to close all connections: {err}"
-        );
+        logging!(error, Type::ProxyMode, "Failed to close all connections: {err}");
     }
 
     let patch_result = super::patch_verge(
@@ -86,9 +82,7 @@ pub async fn copy_clash_env() {
     let env_type = verge_cfg.env_type.as_deref().unwrap_or(default_env);
 
     let export_text = match env_type {
-        "bash" => format!(
-            "export https_proxy={http_proxy} http_proxy={http_proxy} all_proxy={socks5_proxy}"
-        ),
+        "bash" => format!("export https_proxy={http_proxy} http_proxy={http_proxy} all_proxy={socks5_proxy}"),
         "cmd" => format!("set http_proxy={http_proxy}\r\nset https_proxy={http_proxy}"),
         "powershell" => {
             format!("$env:HTTP_PROXY=\"{http_proxy}\"; $env:HTTPS_PROXY=\"{http_proxy}\"")
@@ -98,11 +92,7 @@ pub async fn copy_clash_env() {
         }
         "fish" => format!("set -x http_proxy {http_proxy}; set -x https_proxy {http_proxy}"),
         _ => {
-            logging!(
-                error,
-                Type::ProxyMode,
-                "copy_clash_env: Invalid env type! {env_type}"
-            );
+            logging!(error, Type::ProxyMode, "copy_clash_env: Invalid env type! {env_type}");
             return;
         }
     };

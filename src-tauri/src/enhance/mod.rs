@@ -455,11 +455,7 @@ async fn merge_default_config(
     config
 }
 
-fn apply_builtin_scripts(
-    mut config: Mapping,
-    clash_core: Option<String>,
-    enable_builtin: bool,
-) -> Mapping {
+fn apply_builtin_scripts(mut config: Mapping, clash_core: Option<String>, enable_builtin: bool) -> Mapping {
     if enable_builtin {
         ChainItem::builtin()
             .into_iter()
@@ -552,9 +548,7 @@ fn cleanup_proxy_groups(mut config: Mapping) -> Mapping {
 
                 if let Some(Value::Sequence(proxies)) = group_map.get_mut("proxies") {
                     proxies.retain(|proxy| match proxy {
-                        Value::String(name) => {
-                            allowed_names.contains(name.as_str()) || has_valid_provider
-                        }
+                        Value::String(name) => allowed_names.contains(name.as_str()) || has_valid_provider,
                         _ => true,
                     });
                 }
@@ -627,8 +621,7 @@ pub async fn enhance() -> (Mapping, HashSet<String>, HashMap<String, ResultLog>)
     let profile_name = profile.profile_name;
 
     // process globals
-    let (config, exists_keys, result_map) =
-        process_global_items(config, global_merge, global_script, &profile_name);
+    let (config, exists_keys, result_map) = process_global_items(config, global_merge, global_script, &profile_name);
 
     // process profile-specific items
     let (config, exists_keys, result_map) = process_profile_items(
@@ -710,9 +703,7 @@ proxy-groups:
 
         let manual_group = groups
             .iter()
-            .find(|group| {
-                group.get("name").and_then(serde_yaml_ng::Value::as_str) == Some("manual")
-            })
+            .find(|group| group.get("name").and_then(serde_yaml_ng::Value::as_str) == Some("manual"))
             .and_then(|group| group.as_mapping())
             .expect("manual group should exist");
 
@@ -722,18 +713,12 @@ proxy-groups:
             .expect("manual proxies should be a sequence");
 
         assert_eq!(manual_proxies.len(), 2);
-        assert!(
-            manual_proxies
-                .iter()
-                .any(|p| p.as_str() == Some("alive-node"))
-        );
+        assert!(manual_proxies.iter().any(|p| p.as_str() == Some("alive-node")));
         assert!(manual_proxies.iter().any(|p| p.as_str() == Some("DIRECT")));
 
         let nested_group = groups
             .iter()
-            .find(|group| {
-                group.get("name").and_then(serde_yaml_ng::Value::as_str) == Some("nested")
-            })
+            .find(|group| group.get("name").and_then(serde_yaml_ng::Value::as_str) == Some("nested"))
             .and_then(|group| group.as_mapping())
             .expect("nested group should exist");
 
@@ -778,9 +763,7 @@ proxy-groups:
 
         let manual_group = groups
             .iter()
-            .find(|group| {
-                group.get("name").and_then(serde_yaml_ng::Value::as_str) == Some("manual")
-            })
+            .find(|group| group.get("name").and_then(serde_yaml_ng::Value::as_str) == Some("manual"))
             .and_then(|group| group.as_mapping())
             .expect("manual group should exist");
 
@@ -825,9 +808,7 @@ proxy-groups:
 
         let manual_group = groups
             .iter()
-            .find(|group| {
-                group.get("name").and_then(serde_yaml_ng::Value::as_str) == Some("manual")
-            })
+            .find(|group| group.get("name").and_then(serde_yaml_ng::Value::as_str) == Some("manual"))
             .and_then(|group| group.as_mapping())
             .expect("manual group should exist");
 

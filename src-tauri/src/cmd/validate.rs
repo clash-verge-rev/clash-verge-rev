@@ -47,12 +47,7 @@ pub async fn validate_script_file(file_path: String) -> CmdResult<bool> {
         }
         Err(e) => {
             let error_msg = e.to_string();
-            logging!(
-                error,
-                Type::Config,
-                "验证脚本文件过程发生错误: {}",
-                error_msg
-            );
+            logging!(error, Type::Config, "验证脚本文件过程发生错误: {}", error_msg);
             handle::Handle::notice_message("config_validate::process_terminated", &error_msg);
             Ok(false)
         }
@@ -64,13 +59,7 @@ pub async fn validate_script_file(file_path: String) -> CmdResult<bool> {
 pub fn handle_yaml_validation_notice(result: &(bool, String), file_type: &str) {
     if !result.0 {
         let error_msg = &result.1;
-        logging!(
-            info,
-            Type::Config,
-            "[通知] 处理{}验证错误: {}",
-            file_type,
-            error_msg
-        );
+        logging!(info, Type::Config, "[通知] 处理{}验证错误: {}", file_type, error_msg);
 
         // 检查是否为merge文件
         let is_merge_file = file_type.contains("合并");

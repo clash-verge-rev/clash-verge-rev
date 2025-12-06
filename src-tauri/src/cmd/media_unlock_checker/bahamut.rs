@@ -12,9 +12,12 @@ pub(super) async fn check_bahamut_anime(client: &Client) -> UnlockItem {
 
     let client_with_cookies = match Client::builder()
         .use_rustls_tls()
-        .user_agent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36")
+        .user_agent(
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+        )
         .cookie_provider(Arc::clone(&cookie_store))
-        .build() {
+        .build()
+    {
         Ok(client) => client,
         Err(e) => {
             logging!(
@@ -59,8 +62,7 @@ pub(super) async fn check_bahamut_anime(client: &Client) -> UnlockItem {
         };
     }
 
-    let url =
-        format!("https://ani.gamer.com.tw/ajax/token.php?adID=89422&sn=37783&device={device_id}");
+    let url = format!("https://ani.gamer.com.tw/ajax/token.php?adID=89422&sn=37783&device={device_id}");
 
     let token_result = match client_with_cookies.get(&url).send().await {
         Ok(response) => match response.text().await {
@@ -85,21 +87,14 @@ pub(super) async fn check_bahamut_anime(client: &Client) -> UnlockItem {
         };
     }
 
-    let region = match client_with_cookies
-        .get("https://ani.gamer.com.tw/")
-        .send()
-        .await
-    {
+    let region = match client_with_cookies.get("https://ani.gamer.com.tw/").send().await {
         Ok(response) => match response.text().await {
             Ok(body) => match Regex::new(r#"data-geo="([^"]+)"#) {
-                Ok(region_re) => region_re
-                    .captures(&body)
-                    .and_then(|caps| caps.get(1))
-                    .map(|m| {
-                        let country_code = m.as_str();
-                        let emoji = country_code_to_emoji(country_code);
-                        format!("{emoji}{country_code}")
-                    }),
+                Ok(region_re) => region_re.captures(&body).and_then(|caps| caps.get(1)).map(|m| {
+                    let country_code = m.as_str();
+                    let emoji = country_code_to_emoji(country_code);
+                    format!("{emoji}{country_code}")
+                }),
                 Err(e) => {
                     logging!(
                         error,

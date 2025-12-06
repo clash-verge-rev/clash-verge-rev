@@ -47,11 +47,7 @@ async fn finalize_restored_verge_config(
     // Ensure side-effects (flags, tray, sysproxy, hotkeys, auto-backup refresh, etc.) run.
     // Use not_save_file = true to avoid extra I/O (we already persisted the restored file).
     if let Err(err) = super::patch_verge(&restored, true).await {
-        logging!(
-            error,
-            Type::Backup,
-            "Failed to apply restored verge config: {err:#?}"
-        );
+        logging!(error, Type::Backup, "Failed to apply restored verge config: {err:#?}");
     }
     Ok(())
 }
@@ -83,28 +79,17 @@ pub async fn create_backup_and_upload_webdav() -> Result<()> {
 /// List WebDAV backups
 pub async fn list_wevdav_backup() -> Result<Vec<ListFile>> {
     backup::WebDavClient::global().list().await.map_err(|err| {
-        logging!(
-            error,
-            Type::Backup,
-            "Failed to list WebDAV backup files: {err:#?}"
-        );
+        logging!(error, Type::Backup, "Failed to list WebDAV backup files: {err:#?}");
         err
     })
 }
 
 /// Delete WebDAV backup
 pub async fn delete_webdav_backup(filename: String) -> Result<()> {
-    backup::WebDavClient::global()
-        .delete(filename)
-        .await
-        .map_err(|err| {
-            logging!(
-                error,
-                Type::Backup,
-                "Failed to delete WebDAV backup file: {err:#?}"
-            );
-            err
-        })
+    backup::WebDavClient::global().delete(filename).await.map_err(|err| {
+        logging!(error, Type::Backup, "Failed to delete WebDAV backup file: {err:#?}");
+        err
+    })
 }
 
 /// Restore WebDAV backup
@@ -122,11 +107,7 @@ pub async fn restore_webdav_backup(filename: String) -> Result<()> {
         .download(filename, backup_storage_path.clone())
         .await
         .map_err(|err| {
-            logging!(
-                error,
-                Type::Backup,
-                "Failed to download WebDAV backup file: {err:#?}"
-            );
+            logging!(error, Type::Backup, "Failed to download WebDAV backup file: {err:#?}");
             err
         })?;
 
@@ -153,11 +134,7 @@ where
     F: FnOnce(&str) -> String,
 {
     let (file_name, temp_file_path) = backup::create_backup().await.map_err(|err| {
-        logging!(
-            error,
-            Type::Backup,
-            "Failed to create local backup: {err:#?}"
-        );
+        logging!(error, Type::Backup, "Failed to create local backup: {err:#?}");
         err
     })?;
 
@@ -166,11 +143,7 @@ where
     let target_path = backup_dir.join(final_name.as_str());
 
     if let Err(err) = move_file(temp_file_path.clone(), target_path.clone()).await {
-        logging!(
-            error,
-            Type::Backup,
-            "Failed to move local backup file: {err:#?}"
-        );
+        logging!(error, Type::Backup, "Failed to move local backup file: {err:#?}");
         // 清理临时文件
         if let Err(clean_err) = temp_file_path.remove_if_exists().await {
             logging!(
@@ -251,12 +224,7 @@ pub async fn delete_local_backup(filename: String) -> Result<()> {
     let backup_dir = local_backup_dir()?;
     let target_path = backup_dir.join(filename.as_str());
     if !target_path.exists() {
-        logging!(
-            warn,
-            Type::Backup,
-            "Local backup file not found: {}",
-            filename
-        );
+        logging!(warn, Type::Backup, "Local backup file not found: {}", filename);
         return Ok(());
     }
     target_path.remove_if_exists().await?;

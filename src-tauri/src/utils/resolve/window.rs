@@ -52,11 +52,7 @@ pub async fn build_new_window() -> Result<WebviewWindow, String> {
         LIGHT_BACKGROUND_COLOR
     };
 
-    let initial_script = build_window_initial_script(
-        initial_theme_mode,
-        DARK_BACKGROUND_HEX,
-        LIGHT_BACKGROUND_HEX,
-    );
+    let initial_script = build_window_initial_script(initial_theme_mode, DARK_BACKGROUND_HEX, LIGHT_BACKGROUND_HEX);
 
     let mut builder = tauri::WebviewWindowBuilder::new(
         app_handle,
@@ -81,10 +77,7 @@ pub async fn build_new_window() -> Result<WebviewWindow, String> {
 
     match builder.build() {
         Ok(window) => {
-            logging_error!(
-                Type::Window,
-                window.set_background_color(Some(background_color))
-            );
+            logging_error!(Type::Window, window.set_background_color(Some(background_color)));
             logging_error!(Type::Window, window.eval(INITIAL_LOADING_OVERLAY));
             Ok(window)
         }

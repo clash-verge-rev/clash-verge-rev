@@ -23,12 +23,7 @@ pub(super) async fn check_prime_video(client: &Client) -> UnlockItem {
     let response = match result {
         Ok(response) => response,
         Err(e) => {
-            logging!(
-                error,
-                Type::Network,
-                "Failed to get Prime Video response: {}",
-                e
-            );
+            logging!(error, Type::Network, "Failed to get Prime Video response: {}", e);
             return UnlockItem {
                 name: "Prime Video".to_string(),
                 status: "Failed (Network Connection)".to_string(),

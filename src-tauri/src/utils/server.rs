@@ -28,9 +28,7 @@ static SHUTDOWN_SENDER: OnceCell<Mutex<Option<oneshot::Sender<()>>>> = OnceCell:
 pub async fn check_singleton() -> Result<()> {
     let port = IVerge::get_singleton_port();
     if !local_port_available(port) {
-        let client = ClientBuilder::new()
-            .timeout(Duration::from_millis(500))
-            .build()?;
+        let client = ClientBuilder::new().timeout(Duration::from_millis(500)).build()?;
         // 需要确保 Send
         #[allow(clippy::needless_collect)]
         let argvs: Vec<std::string::String> = std::env::args().collect();
@@ -40,9 +38,7 @@ pub async fn check_singleton() -> Result<()> {
                 let param = argvs[1].as_str();
                 if param.starts_with("clash:") {
                     client
-                        .get(format!(
-                            "http://127.0.0.1:{port}/commands/scheme?param={param}"
-                        ))
+                        .get(format!("http://127.0.0.1:{port}/commands/scheme?param={param}"))
                         .send()
                         .await?;
                 }
@@ -53,11 +49,7 @@ pub async fn check_singleton() -> Result<()> {
                 .send()
                 .await?;
         }
-        logging!(
-            error,
-            Type::Window,
-            "failed to setup singleton listen server"
-        );
+        logging!(error, Type::Window, "failed to setup singleton listen server");
         bail!("app exists");
     }
     Ok(())

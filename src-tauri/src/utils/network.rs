@@ -20,11 +20,7 @@ pub struct HttpResponse {
 
 impl HttpResponse {
     pub const fn new(status: StatusCode, headers: HeaderMap, body: String) -> Self {
-        Self {
-            status,
-            headers,
-            body,
-        }
+        Self { status, headers, body }
     }
 
     pub const fn status(&self) -> StatusCode {
@@ -208,10 +204,7 @@ impl NetworkManager {
         {
             let auth_str = format!("{}:{}", parsed.username(), pass);
             let encoded = general_purpose::STANDARD.encode(auth_str);
-            extra_headers.insert(
-                "Authorization",
-                HeaderValue::from_str(&format!("Basic {}", encoded))?,
-            );
+            extra_headers.insert("Authorization", HeaderValue::from_str(&format!("Basic {}", encoded))?);
         }
 
         let clean_url = {
@@ -235,8 +228,7 @@ impl NetworkManager {
         let response = match request_builder.send().await {
             Ok(resp) => resp,
             Err(e) => {
-                self.record_connection_error(&format!("Request failed: {}", e))
-                    .await;
+                self.record_connection_error(&format!("Request failed: {}", e)).await;
                 return Err(anyhow::anyhow!("Request failed: {}", e));
             }
         };

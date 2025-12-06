@@ -60,11 +60,7 @@ pub fn app_home_dir() -> Result<PathBuf> {
     match app_handle.path().data_dir() {
         Ok(dir) => Ok(dir.join(APP_ID)),
         Err(e) => {
-            logging!(
-                error,
-                Type::File,
-                "Failed to get the app home directory: {e}"
-            );
+            logging!(error, Type::File, "Failed to get the app home directory: {e}");
             Err(anyhow::anyhow!("Failed to get the app homedirectory"))
         }
     }
@@ -78,11 +74,7 @@ pub fn app_resources_dir() -> Result<PathBuf> {
     match app_handle.path().resource_dir() {
         Ok(dir) => Ok(dir.join("resources")),
         Err(e) => {
-            logging!(
-                error,
-                Type::File,
-                "Failed to get the resource directory: {e}"
-            );
+            logging!(error, Type::File, "Failed to get the resource directory: {e}");
             Err(anyhow::anyhow!("Failed to get the resource directory"))
         }
     }
@@ -110,15 +102,11 @@ pub fn find_target_icons(target: &str) -> Result<Option<String>> {
             let ext_matches = path
                 .extension()
                 .and_then(|e| e.to_str())
-                .is_some_and(|ext| {
-                    ext.eq_ignore_ascii_case("ico") || ext.eq_ignore_ascii_case("png")
-                });
+                .is_some_and(|ext| ext.eq_ignore_ascii_case("ico") || ext.eq_ignore_ascii_case("png"));
             prefix_matches && ext_matches
         });
 
-    icon_path
-        .map(|path| path_to_str(&path).map(|s| s.into()))
-        .transpose()
+    icon_path.map(|path| path_to_str(&path).map(|s| s.into())).transpose()
 }
 
 /// logs dir
@@ -179,9 +167,7 @@ pub fn service_log_dir() -> Result<PathBuf> {
 pub fn clash_latest_log() -> Result<PathBuf> {
     match *CoreManager::global().get_running_mode() {
         RunningMode::Service => Ok(service_log_dir()?.join("service_latest.log")),
-        RunningMode::Sidecar | RunningMode::NotRunning => {
-            Ok(sidecar_log_dir()?.join("sidecar_latest.log"))
-        }
+        RunningMode::Sidecar | RunningMode::NotRunning => Ok(sidecar_log_dir()?.join("sidecar_latest.log")),
     }
 }
 
@@ -207,12 +193,10 @@ pub fn get_encryption_key() -> Result<Vec<u8>> {
 
         // Ensure directory exists
         if let Some(parent) = key_path.parent() {
-            fs::create_dir_all(parent)
-                .map_err(|e| anyhow::anyhow!("Failed to create key directory: {}", e))?;
+            fs::create_dir_all(parent).map_err(|e| anyhow::anyhow!("Failed to create key directory: {}", e))?;
         }
         // Save key
-        fs::write(&key_path, &key)
-            .map_err(|e| anyhow::anyhow!("Failed to save encryption key: {}", e))?;
+        fs::write(&key_path, &key).map_err(|e| anyhow::anyhow!("Failed to save encryption key: {}", e))?;
         Ok(key)
     }
 }
@@ -228,11 +212,7 @@ pub fn ensure_mihomo_safe_dir() -> Option<PathBuf> {
                 if home_config.exists() || fs::create_dir_all(&home_config).is_ok() {
                     Some(home_config)
                 } else {
-                    logging!(
-                        error,
-                        Type::File,
-                        "Failed to create safe directory: {home_config:?}"
-                    );
+                    logging!(error, Type::File, "Failed to create safe directory: {home_config:?}");
                     None
                 }
             })

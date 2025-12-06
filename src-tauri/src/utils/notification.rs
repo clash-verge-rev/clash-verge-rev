@@ -17,13 +17,7 @@ pub enum NotificationEvent<'a> {
 
 fn notify(title: &str, body: &str) {
     let app_handle = handle::Handle::app_handle();
-    app_handle
-        .notification()
-        .builder()
-        .title(title)
-        .body(body)
-        .show()
-        .ok();
+    app_handle.notification().builder().title(title).body(body).show().ok();
 }
 
 pub async fn notify_event<'a>(event: NotificationEvent<'a>) {

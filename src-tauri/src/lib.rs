@@ -134,8 +134,7 @@ mod app_init {
         Ok(())
     }
 
-    pub fn generate_handlers()
-    -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Send + Sync + 'static {
+    pub fn generate_handlers() -> impl Fn(tauri::ipc::Invoke<tauri::Wry>) -> bool + Send + Sync + 'static {
         tauri::generate_handler![
             tauri_plugin_clash_verge_sysinfo::commands::get_system_info,
             tauri_plugin_clash_verge_sysinfo::commands::get_app_uptime,
@@ -330,11 +329,7 @@ pub fn run() {
 
         pub fn handle_window_focus(focused: bool) {
             AsyncHandler::spawn(move || async move {
-                let is_enable_global_hotkey = Config::verge()
-                    .await
-                    .data_arc()
-                    .enable_global_hotkey
-                    .unwrap_or(true);
+                let is_enable_global_hotkey = Config::verge().await.data_arc().enable_global_hotkey.unwrap_or(true);
 
                 if focused {
                     #[cfg(target_os = "macos")]
@@ -370,11 +365,7 @@ pub fn run() {
             AsyncHandler::spawn(move || async move {
                 let _ = hotkey::Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdQ);
                 let _ = hotkey::Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdW);
-                let is_enable_global_hotkey = Config::verge()
-                    .await
-                    .data_arc()
-                    .enable_global_hotkey
-                    .unwrap_or(true);
+                let is_enable_global_hotkey = Config::verge().await.data_arc().enable_global_hotkey.unwrap_or(true);
                 if !is_enable_global_hotkey {
                     let _ = hotkey::Hotkey::global().reset();
                 }
@@ -386,27 +377,15 @@ pub fn run() {
     let context = tauri::test::mock_context(tauri::test::noop_assets());
     #[cfg(feature = "clippy")]
     let app = builder.build(context).unwrap_or_else(|e| {
-        logging!(
-            error,
-            Type::Setup,
-            "Failed to build Tauri application: {}",
-            e
-        );
+        logging!(error, Type::Setup, "Failed to build Tauri application: {}", e);
         std::process::exit(1);
     });
 
     #[cfg(not(feature = "clippy"))]
-    let app = builder
-        .build(tauri::generate_context!())
-        .unwrap_or_else(|e| {
-            logging!(
-                error,
-                Type::Setup,
-                "Failed to build Tauri application: {}",
-                e
-            );
-            std::process::exit(1);
-        });
+    let app = builder.build(tauri::generate_context!()).unwrap_or_else(|e| {
+        logging!(error, Type::Setup, "Failed to build Tauri application: {}", e);
+        std::process::exit(1);
+    });
 
     app.run(|app_handle, e| match e {
         tauri::RunEvent::Ready | tauri::RunEvent::Resumed => {
@@ -417,8 +396,7 @@ pub fn run() {
         }
         #[cfg(target_os = "macos")]
         tauri::RunEvent::Reopen {
-            has_visible_windows,
-            ..
+            has_visible_windows, ..
         } => {
             if core::handle::Handle::global().is_exiting() {
                 return;
@@ -435,10 +413,7 @@ pub fn run() {
         }),
         tauri::RunEvent::ExitRequested { api, code, .. } => {
             AsyncHandler::block_on(async {
-                let _ = handle::Handle::mihomo()
-                    .await
-                    .clear_all_ws_connections()
-                    .await;
+                let _ = handle::Handle::mihomo().await.clear_all_ws_connections().await;
             });
 
             if core::handle::Handle::global().is_exiting() {

@@ -75,16 +75,10 @@ pub async fn change_clash_mode(mode: String) {
         "mode": mode
     });
     logging!(debug, Type::Core, "change clash mode to {mode}");
-    match handle::Handle::mihomo()
-        .await
-        .patch_base_config(&json_value)
-        .await
-    {
+    match handle::Handle::mihomo().await.patch_base_config(&json_value).await {
         Ok(_) => {
             // 更新订阅
-            Config::clash()
-                .await
-                .edit_draft(|d| d.patch_config(&mapping));
+            Config::clash().await.edit_draft(|d| d.patch_config(&mapping));
 
             // 分离数据获取和异步调用
             let clash_data = Config::clash().await.data_arc();
@@ -99,11 +93,7 @@ pub async fn change_clash_mode(mode: String) {
                 );
             }
 
-            let is_auto_close_connection = Config::verge()
-                .await
-                .data_arc()
-                .auto_close_connection
-                .unwrap_or(false);
+            let is_auto_close_connection = Config::verge().await.data_arc().auto_close_connection.unwrap_or(false);
             if is_auto_close_connection {
                 after_change_clash_mode();
             }
@@ -117,11 +107,7 @@ pub async fn test_delay(url: String) -> anyhow::Result<u32> {
     use crate::utils::network::{NetworkManager, ProxyType};
     use tokio::time::Instant;
 
-    let tun_mode = Config::verge()
-        .await
-        .latest_arc()
-        .enable_tun_mode
-        .unwrap_or(false);
+    let tun_mode = Config::verge().await.latest_arc().enable_tun_mode.unwrap_or(false);
 
     // 如果是TUN模式，不使用代理，否则使用自身代理
     let proxy_type = if !tun_mode {

@@ -1,8 +1,4 @@
-pub fn build_window_initial_script(
-    initial_theme_mode: &str,
-    dark_background: &str,
-    light_background: &str,
-) -> String {
+pub fn build_window_initial_script(initial_theme_mode: &str, dark_background: &str, light_background: &str) -> String {
     let theme_mode = match initial_theme_mode {
         "dark" => "dark",
         "light" => "light",

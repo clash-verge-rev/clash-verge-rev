@@ -4,8 +4,8 @@ use crate::{
     config::{
         Config, IProfiles, PrfItem, PrfOption,
         profiles::{
-            profiles_append_item_with_filedata_safe, profiles_delete_item_safe,
-            profiles_patch_item_safe, profiles_reorder_safe, profiles_save_file_safe,
+            profiles_append_item_with_filedata_safe, profiles_delete_item_safe, profiles_patch_item_safe,
+            profiles_reorder_safe, profiles_save_file_safe,
         },
         profiles_append_item_safe,
     },
@@ -223,32 +223,20 @@ async fn validate_new_profile(new_profile: &String) -> Result<(), ()> {
     // 如果获取到文件路径，检查YAML语法
     if let Some(file_path) = config_file_result {
         if !file_path.exists() {
-            logging!(
-                error,
-                Type::Cmd,
-                "目标配置文件不存在: {}",
-                file_path.display()
-            );
-            handle::Handle::notice_message(
-                "config_validate::file_not_found",
-                format!("{}", file_path.display()),
-            );
+            logging!(error, Type::Cmd, "目标配置文件不存在: {}", file_path.display());
+            handle::Handle::notice_message("config_validate::file_not_found", format!("{}", file_path.display()));
             return Err(());
         }
 
         // 超时保护
-        let file_read_result = tokio::time::timeout(
-            Duration::from_secs(5),
-            tokio::fs::read_to_string(&file_path),
-        )
-        .await;
+        let file_read_result =
+            tokio::time::timeout(Duration::from_secs(5), tokio::fs::read_to_string(&file_path)).await;
 
         match file_read_result {
             Ok(Ok(content)) => {
-                let yaml_parse_result = AsyncHandler::spawn_blocking(move || {
-                    serde_yaml_ng::from_str::<serde_yaml_ng::Value>(&content)
-                })
-                .await;
+                let yaml_parse_result =
+                    AsyncHandler::spawn_blocking(move || serde_yaml_ng::from_str::<serde_yaml_ng::Value>(&content))
+                        .await;
 
                 match yaml_parse_result {
                     Ok(Ok(_)) => {
@@ -257,25 +245,14 @@ async fn validate_new_profile(new_profile: &String) -> Result<(), ()> {
                     }
                     Ok(Err(err)) => {
                         let error_msg = format!(" {err}");
-                        logging!(
-                            error,
-                            Type::Cmd,
-                            "目标配置文件存在YAML语法错误:{}",
-                            error_msg
-                        );
-                        handle::Handle::notice_message(
-                            "config_validate::yaml_syntax_error",
-                            error_msg,
-                        );
+                        logging!(error, Type::Cmd, "目标配置文件存在YAML语法错误:{}", error_msg);
+                        handle::Handle::notice_message("config_validate::yaml_syntax_error", error_msg);
                         Err(())
                     }
                     Err(join_err) => {
                         let error_msg = format!("YAML解析任务失败: {join_err}");
                         logging!(error, Type::Cmd, "{}", error_msg);
-                        handle::Handle::notice_message(
-                            "config_validate::yaml_parse_error",
-                            error_msg,
-                        );
+                        handle::Handle::notice_message("config_validate::yaml_parse_error", error_msg);
                         Err(())
                     }
                 }
@@ -342,10 +319,7 @@ async fn handle_success(current_value: Option<&String>) -> CmdResult<bool> {
     Ok(true)
 }
 
-async fn handle_validation_failure(
-    error_msg: String,
-    current_profile: Option<&String>,
-) -> CmdResult<bool> {
+async fn handle_validation_failure(error_msg: String, current_profile: Option<&String>) -> CmdResult<bool> {
     logging!(warn, Type::Cmd, "配置验证失败: {}", error_msg);
     Config::profiles().await.discard();
     if let Some(prev_profile) = current_profile {
@@ -373,18 +347,11 @@ async fn handle_timeout(current_profile: Option<&String>) -> CmdResult<bool> {
     Ok(false)
 }
 
-async fn perform_config_update(
-    current_value: Option<&String>,
-    current_profile: Option<&String>,
-) -> CmdResult<bool> {
+async fn perform_config_update(current_value: Option<&String>, current_profile: Option<&String>) -> CmdResult<bool> {
     defer! {
         CURRENT_SWITCHING_PROFILE.store(false, Ordering::Release);
     }
-    let update_result = tokio::time::timeout(
-        Duration::from_secs(30),
-        CoreManager::global().update_config(),
-    )
-    .await;
+    let update_result = tokio::time::timeout(Duration::from_secs(30), CoreManager::global().update_config()).await;
 
     match update_result {
         Ok(Ok((true, _))) => handle_success(current_value).await,
@@ -407,12 +374,7 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
 
     let target_profile = profiles.current.as_ref();
 
-    logging!(
-        info,
-        Type::Cmd,
-        "开始修改配置文件，目标profile: {:?}",
-        target_profile
-    );
+    logging!(info, Type::Cmd, "开始修改配置文件，目标profile: {:?}", target_profile);
 
     // 保存当前配置，以便在验证失败时恢复
     let previous_profile = Config::profiles().await.data_arc().current.clone();
@@ -426,9 +388,7 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
         CURRENT_SWITCHING_PROFILE.store(false, Ordering::Release);
         return Ok(false);
     }
-    Config::profiles()
-        .await
-        .edit_draft(|d| d.patch_config(&profiles));
+    Config::profiles().await.edit_draft(|d| d.patch_config(&profiles));
 
     perform_config_update(target_profile, previous_profile.as_ref()).await
 }
@@ -455,19 +415,14 @@ pub async fn patch_profile(index: String, profile: PrfItem) -> CmdResult {
     {
         let old_interval = old_profile.option.as_ref().and_then(|o| o.update_interval);
         let new_interval = new_option.update_interval;
-        let old_allow_auto_update = old_profile
-            .option
-            .as_ref()
-            .and_then(|o| o.allow_auto_update);
+        let old_allow_auto_update = old_profile.option.as_ref().and_then(|o| o.allow_auto_update);
         let new_allow_auto_update = new_option.allow_auto_update;
         (old_interval != new_interval) || (old_allow_auto_update != new_allow_auto_update)
     } else {
         false
     };
 
-    profiles_patch_item_safe(&index, &profile)
-        .await
-        .stringify_err()?;
+    profiles_patch_item_safe(&index, &profile).await.stringify_err()?;
 
     // 如果更新间隔或允许自动更新变更，异步刷新定时器
     if should_refresh_timer {
@@ -498,9 +453,7 @@ pub async fn view_profile(index: String) -> CmdResult {
         .as_ref()
         .ok_or("the file field is null")?;
 
-    let path = dirs::app_profiles_dir()
-        .stringify_err()?
-        .join(file.as_str());
+    let path = dirs::app_profiles_dir().stringify_err()?.join(file.as_str());
     if !path.exists() {
         ret_err!("the file not found");
     }
@@ -515,11 +468,7 @@ pub async fn read_profile_file(index: String) -> CmdResult<String> {
         let profiles = Config::profiles().await;
         let profiles_ref = profiles.latest_arc();
         PrfItem {
-            file: profiles_ref
-                .get_item(&index)
-                .stringify_err()?
-                .file
-                .to_owned(),
+            file: profiles_ref.get_item(&index).stringify_err()?.file.to_owned(),
             ..Default::default()
         }
     };

@@ -51,11 +51,7 @@ pub async fn clean_async() -> bool {
             use winapi::um::winuser::{GetSystemMetrics, SM_SHUTTINGDOWN};
 
             // 检查系统代理是否开启
-            let sys_proxy_enabled = Config::verge()
-                .await
-                .data_arc()
-                .enable_system_proxy
-                .unwrap_or(false);
+            let sys_proxy_enabled = Config::verge().await.data_arc().enable_system_proxy.unwrap_or(false);
 
             if !sys_proxy_enabled {
                 logging!(info, Type::Window, "系统代理未启用，跳过重置");
@@ -67,11 +63,7 @@ pub async fn clean_async() -> bool {
 
             if is_shutting_down {
                 // sysproxy-rs 操作注册表(避免.exe的dll错误)
-                logging!(
-                    info,
-                    Type::Window,
-                    "检测到正在关机，syspro-rs操作注册表关闭系统代理"
-                );
+                logging!(info, Type::Window, "检测到正在关机，syspro-rs操作注册表关闭系统代理");
 
                 match Sysproxy::get_system_proxy() {
                     Ok(mut sysproxy) => {
@@ -99,12 +91,7 @@ pub async fn clean_async() -> bool {
             // 正常退出：使用 sysproxy.exe 重置代理
             logging!(info, Type::Window, "sysproxy.exe重置系统代理");
 
-            match timeout(
-                Duration::from_secs(2),
-                sysopt::Sysopt::global().reset_sysproxy(),
-            )
-            .await
-            {
+            match timeout(Duration::from_secs(2), sysopt::Sysopt::global().reset_sysproxy()).await {
                 Ok(Ok(_)) => {
                     logging!(info, Type::Window, "系统代理已重置");
                     true
@@ -114,11 +101,7 @@ pub async fn clean_async() -> bool {
                     true
                 }
                 Err(_) => {
-                    logging!(
-                        warn,
-                        Type::Window,
-                        "Warning: 重置系统代理超时，继续退出流程"
-                    );
+                    logging!(warn, Type::Window, "Warning: 重置系统代理超时，继续退出流程");
                     true
                 }
             }
@@ -127,11 +110,7 @@ pub async fn clean_async() -> bool {
         // 非 Windows 平台：正常重置代理
         #[cfg(not(target_os = "windows"))]
         {
-            let sys_proxy_enabled = Config::verge()
-                .await
-                .data_arc()
-                .enable_system_proxy
-                .unwrap_or(false);
+            let sys_proxy_enabled = Config::verge().await.data_arc().enable_system_proxy.unwrap_or(false);
 
             if !sys_proxy_enabled {
                 logging!(info, Type::Window, "系统代理未启用，跳过重置");
@@ -140,12 +119,7 @@ pub async fn clean_async() -> bool {
 
             logging!(info, Type::Window, "开始重置系统代理...");
 
-            match timeout(
-                Duration::from_millis(1500),
-                sysopt::Sysopt::global().reset_sysproxy(),
-            )
-            .await
-            {
+            match timeout(Duration::from_millis(1500), sysopt::Sysopt::global().reset_sysproxy()).await {
                 Ok(Ok(_)) => {
                     logging!(info, Type::Window, "系统代理已重置");
                     true
@@ -165,20 +139,14 @@ pub async fn clean_async() -> bool {
     // 关闭 Tun 模式 + 停止核心服务
     let core_task = tokio::task::spawn(async {
         logging!(info, Type::System, "disable tun");
-        let tun_enabled = Config::verge()
-            .await
-            .data_arc()
-            .enable_tun_mode
-            .unwrap_or(false);
+        let tun_enabled = Config::verge().await.data_arc().enable_tun_mode.unwrap_or(false);
         if tun_enabled {
             let disable_tun = serde_json::json!({ "tun": { "enable": false } });
 
             logging!(info, Type::System, "send disable tun request to mihomo");
             match timeout(
                 Duration::from_millis(1000),
-                handle::Handle::mihomo()
-                    .await
-                    .patch_base_config(&disable_tun),
+                handle::Handle::mihomo().await.patch_base_config(&disable_tun),
             )
             .await
             {

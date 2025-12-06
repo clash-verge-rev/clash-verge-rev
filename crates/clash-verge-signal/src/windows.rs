@@ -60,7 +60,11 @@ unsafe extern "system" fn shutdown_proc(
             if let Some(handler) = SHUTDOWN_HANDLER.get() {
                 if let Some(Some(rt)) = RUNTIME.get() {
                     rt.block_on(async {
-                        logging!(info, Type::SystemSignal, "Session ended, system shutting down.");
+                        logging!(
+                            info,
+                            Type::SystemSignal,
+                            "Session ended, system shutting down."
+                        );
                         handler().await;
                         logging!(info, Type::SystemSignal, "resolved reset finished");
                     });
@@ -154,7 +158,11 @@ where
             std::ptr::null_mut(),
         );
         if hwnd.is_null() {
-            logging!(error, Type::SystemSignal, "failed to create shutdown window");
+            logging!(
+                error,
+                Type::SystemSignal,
+                "failed to create shutdown window"
+            );
         } else {
             app_handle.manage(ShutdownState { hwnd });
         }

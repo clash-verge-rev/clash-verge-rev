@@ -58,8 +58,7 @@ pub async fn get_runtime_proxy_chain_config(proxy_chain_exit_node: String) -> Cm
 
         while let Some(proxy) = proxies.iter().find(|proxy| {
             if let serde_yaml_ng::Value::Mapping(proxy_map) = proxy {
-                proxy_map.get("name").map(|x| x.as_str()) == proxy_name
-                    && proxy_map.get("dialer-proxy").is_some()
+                proxy_map.get("name").map(|x| x.as_str()) == proxy_name && proxy_map.get("dialer-proxy").is_some()
             } else {
                 false
             }
@@ -94,9 +93,7 @@ pub async fn get_runtime_proxy_chain_config(proxy_chain_exit_node: String) -> Cm
 
 /// 更新运行时链式代理配置
 #[tauri::command]
-pub async fn update_proxy_chain_config_in_runtime(
-    proxy_chain_config: Option<serde_yaml_ng::Value>,
-) -> CmdResult<()> {
+pub async fn update_proxy_chain_config_in_runtime(proxy_chain_config: Option<serde_yaml_ng::Value>) -> CmdResult<()> {
     {
         let runtime = Config::runtime().await;
         runtime.edit_draft(|d| d.update_proxy_chain_config(proxy_chain_config));

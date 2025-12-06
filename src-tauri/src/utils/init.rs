@@ -223,14 +223,8 @@ async fn init_dns_config() -> Result<()> {
         ("enable".into(), Value::Bool(true)),
         ("listen".into(), Value::String(":53".into())),
         ("enhanced-mode".into(), Value::String("fake-ip".into())),
-        (
-            "fake-ip-range".into(),
-            Value::String("198.18.0.1/16".into()),
-        ),
-        (
-            "fake-ip-filter-mode".into(),
-            Value::String("blacklist".into()),
-        ),
+        ("fake-ip-range".into(), Value::String("198.18.0.1/16".into())),
+        ("fake-ip-filter-mode".into(), Value::String("blacklist".into())),
         ("prefer-h3".into(), Value::Bool(false)),
         ("respect-rules".into(), Value::Bool(false)),
         ("use-hosts".into(), Value::Bool(false)),
@@ -310,10 +304,7 @@ async fn init_dns_config() -> Result<()> {
     // 获取默认DNS和host配置
     let default_dns_config = serde_yaml_ng::Mapping::from_iter([
         ("dns".into(), Value::Mapping(dns_config)),
-        (
-            "hosts".into(),
-            Value::Mapping(serde_yaml_ng::Mapping::new()),
-        ),
+        ("hosts".into(), Value::Mapping(serde_yaml_ng::Mapping::new())),
     ]);
 
     // 检查DNS配置文件是否存在
@@ -322,12 +313,7 @@ async fn init_dns_config() -> Result<()> {
 
     if !dns_path.exists() {
         logging!(info, Type::Setup, "Creating default DNS config file");
-        help::save_yaml(
-            &dns_path,
-            &default_dns_config,
-            Some("# Clash Verge DNS Config"),
-        )
-        .await?;
+        help::save_yaml(&dns_path, &default_dns_config, Some("# Clash Verge DNS Config")).await?;
     }
 
     Ok(())
@@ -343,9 +329,9 @@ async fn ensure_directories() -> Result<()> {
 
     for (name, dir) in directories {
         if !dir.exists() {
-            fs::create_dir_all(&dir).await.map_err(|e| {
-                anyhow::anyhow!("Failed to create {} directory {:?}: {}", name, dir, e)
-            })?;
+            fs::create_dir_all(&dir)
+                .await
+                .map_err(|e| anyhow::anyhow!("Failed to create {} directory {:?}: {}", name, dir, e))?;
             logging!(info, Type::Setup, "Created {} directory: {:?}", name, dir);
         }
     }
@@ -535,10 +521,7 @@ pub async fn startup_script() -> Result<()> {
     } else if script_path.ends_with(".ps1") || script_path.ends_with(".bat") {
         "powershell"
     } else {
-        return Err(anyhow::anyhow!(
-            "unsupported script extension: {}",
-            script_path
-        ));
+        return Err(anyhow::anyhow!("unsupported script extension: {}", script_path));
     };
 
     let script_dir = PathBuf::from(script_path.as_str());

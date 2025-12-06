@@ -35,10 +35,7 @@ impl Default for Sysopt {
             reset_sysproxy: AtomicBool::new(false),
             #[cfg(not(target_os = "windows"))]
             inner_proxy: Arc::new(RwLock::new((Sysproxy::default(), Autoproxy::default()))),
-            guard: Arc::new(RwLock::new(GuardMonitor::new(
-                GuardType::None,
-                Duration::from_secs(30),
-            ))),
+            guard: Arc::new(RwLock::new(GuardMonitor::new(GuardType::None, Duration::from_secs(30)))),
         }
     }
 }
@@ -52,11 +49,7 @@ static DEFAULT_BYPASS: &str =
     "127.0.0.1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,localhost,*.local,*.crashlytics.com,<local>";
 
 async fn get_bypass() -> String {
-    let use_default = Config::verge()
-        .await
-        .latest_arc()
-        .use_default_bypass
-        .unwrap_or(true);
+    let use_default = Config::verge().await.latest_arc().use_default_bypass.unwrap_or(true);
     let res = {
         let verge = Config::verge().await;
         let verge = verge.latest_arc();
@@ -136,9 +129,9 @@ impl Sysopt {
         );
         {
             let guard = self.access_guard();
-            guard.write().set_interval(Duration::from_secs(
-                verge.proxy_guard_duration.unwrap_or(30),
-            ));
+            guard
+                .write()
+                .set_interval(Duration::from_secs(verge.proxy_guard_duration.unwrap_or(30)));
         }
         logging!(info, Type::Core, "Starting system proxy guard...");
         {
@@ -180,10 +173,7 @@ impl Sysopt {
             (
                 verge.enable_system_proxy.unwrap_or(false),
                 verge.proxy_auto_config.unwrap_or(false),
-                verge
-                    .proxy_host
-                    .clone()
-                    .unwrap_or_else(|| String::from("127.0.0.1")),
+                verge.proxy_host.clone().unwrap_or_else(|| String::from("127.0.0.1")),
             )
         };
 
@@ -306,12 +296,7 @@ impl Sysopt {
     pub async fn update_launch(&self) -> Result<()> {
         let enable_auto_launch = { Config::verge().await.latest_arc().enable_auto_launch };
         let is_enable = enable_auto_launch.unwrap_or(false);
-        logging!(
-            info,
-            Type::System,
-            "Setting auto-launch state to: {:?}",
-            is_enable
-        );
+        logging!(info, Type::System, "Setting auto-launch state to: {:?}", is_enable);
 
         // 首先尝试使用快捷方式方法
         #[cfg(target_os = "windows")]

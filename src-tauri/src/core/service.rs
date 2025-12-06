@@ -50,9 +50,7 @@ async fn uninstall_service() -> Result<()> {
     let level = token.privilege_level()?;
     let status = match level {
         PrivilegeLevel::NotPrivileged => RunasCommand::new(uninstall_path).show(false).status()?,
-        _ => StdCommand::new(uninstall_path)
-            .creation_flags(0x08000000)
-            .status()?,
+        _ => StdCommand::new(uninstall_path).creation_flags(0x08000000).status()?,
     };
 
     if !status.success() {
@@ -85,16 +83,11 @@ async fn install_service() -> Result<()> {
     let level = token.privilege_level()?;
     let status = match level {
         PrivilegeLevel::NotPrivileged => RunasCommand::new(install_path).show(false).status()?,
-        _ => StdCommand::new(install_path)
-            .creation_flags(0x08000000)
-            .status()?,
+        _ => StdCommand::new(install_path).creation_flags(0x08000000).status()?,
     };
 
     if !status.success() {
-        bail!(
-            "failed to install service with status {}",
-            status.code().unwrap_or(-1)
-        );
+        bail!("failed to install service with status {}", status.code().unwrap_or(-1));
     }
 
     Ok(())
@@ -123,8 +116,7 @@ async fn reinstall_service() -> Result<()> {
 async fn uninstall_service() -> Result<()> {
     logging!(info, Type::Service, "uninstall service");
 
-    let uninstall_path =
-        tauri::utils::platform::current_exe()?.with_file_name("clash-verge-service-uninstall");
+    let uninstall_path = tauri::utils::platform::current_exe()?.with_file_name("clash-verge-service-uninstall");
 
     if !uninstall_path.exists() {
         bail!(format!("uninstaller not found: {uninstall_path:?}"));
@@ -181,8 +173,7 @@ async fn uninstall_service() -> Result<()> {
 async fn install_service() -> Result<()> {
     logging!(info, Type::Service, "install service");
 
-    let install_path =
-        tauri::utils::platform::current_exe()?.with_file_name("clash-verge-service-install");
+    let install_path = tauri::utils::platform::current_exe()?.with_file_name("clash-verge-service-install");
 
     if !install_path.exists() {
         bail!(format!("installer not found: {install_path:?}"));
@@ -225,10 +216,7 @@ async fn install_service() -> Result<()> {
     );
 
     if !status.success() {
-        bail!(
-            "failed to install service with status {}",
-            status.code().unwrap_or(-1)
-        );
+        bail!("failed to install service with status {}", status.code().unwrap_or(-1));
     }
 
     Ok(())
@@ -276,15 +264,12 @@ async fn uninstall_service() -> Result<()> {
     crate::utils::i18n::sync_locale().await;
 
     let prompt = rust_i18n::t!("service.adminUninstallPrompt").to_string();
-    let command = format!(
-        r#"do shell script "sudo '{uninstall_shell}'" with administrator privileges with prompt "{prompt}""#
-    );
+    let command =
+        format!(r#"do shell script "sudo '{uninstall_shell}'" with administrator privileges with prompt "{prompt}""#);
 
     // logging!(debug, Type::Service, "uninstall command: {}", command);
 
-    let status = StdCommand::new("osascript")
-        .args(vec!["-e", &command])
-        .status()?;
+    let status = StdCommand::new("osascript").args(vec!["-e", &command]).status()?;
 
     if !status.success() {
         bail!(
@@ -312,19 +297,13 @@ async fn install_service() -> Result<()> {
     crate::utils::i18n::sync_locale().await;
 
     let prompt = rust_i18n::t!("service.adminInstallPrompt").to_string();
-    let command = format!(
-        r#"do shell script "sudo '{install_shell}'" with administrator privileges with prompt "{prompt}""#
-    );
+    let command =
+        format!(r#"do shell script "sudo '{install_shell}'" with administrator privileges with prompt "{prompt}""#);
 
-    let status = StdCommand::new("osascript")
-        .args(vec!["-e", &command])
-        .status()?;
+    let status = StdCommand::new("osascript").args(vec!["-e", &command]).status()?;
 
     if !status.success() {
-        bail!(
-            "failed to install service with status {}",
-            status.code().unwrap_or(-1)
-        );
+        bail!("failed to install service with status {}", status.code().unwrap_or(-1));
     }
 
     Ok(())
@@ -362,19 +341,13 @@ async fn check_service_version() -> Result<String> {
     let version_arc: Result<String> = {
         logging!(info, Type::Service, "开始检查服务版本 (IPC)");
         let result = clash_verge_service_ipc::get_version().await;
-        logging!(
-            debug,
-            Type::Service,
-            "检查服务版本 (IPC) 结果: {:?}",
-            result
-        );
+        logging!(debug, Type::Service, "检查服务版本 (IPC) 结果: {:?}", result);
 
         // 检查错误信息是否是JSON序列化错误或预期值错误，以适配老版本服务
         // 这可能是因为老版本服务的API不兼容，导致无法正确解析响应
         // 如果是这种情况，直接返回空字符串，表示无法获取版本
         if let Err(e) = result.as_ref()
-            && (e.to_string().contains("JSON serialization error")
-                || e.to_string().contains("expected value"))
+            && (e.to_string().contains("JSON serialization error") || e.to_string().contains("expected value"))
         {
             logging!(
                 warn,
@@ -468,12 +441,7 @@ pub(super) async fn get_clash_logs_by_service() -> Result<Vec<CompactString>> {
 
     if response.code > 0 {
         let err_msg = response.message;
-        logging!(
-            error,
-            Type::Service,
-            "获取服务模式下的 Clash 日志失败: {}",
-            err_msg
-        );
+        logging!(error, Type::Service, "获取服务模式下的 Clash 日志失败: {}", err_msg);
         bail!(err_msg);
     }
 
@@ -594,12 +562,7 @@ impl ServiceManager {
                 self.0 = ServiceStatus::Unavailable("Service Uninstalled".into());
             }
             ServiceStatus::Unavailable(reason) => {
-                logging!(
-                    info,
-                    Type::Service,
-                    "服务不可用: {}，将使用Sidecar模式",
-                    reason
-                );
+                logging!(info, Type::Service, "服务不可用: {}，将使用Sidecar模式", reason);
                 self.0 = ServiceStatus::Unavailable(reason.clone());
                 return Err(anyhow::anyhow!("服务不可用: {}", reason));
             }
@@ -609,5 +572,4 @@ impl ServiceManager {
     }
 }
 
-pub static SERVICE_MANAGER: Lazy<Mutex<ServiceManager>> =
-    Lazy::new(|| Mutex::new(ServiceManager::default()));
+pub static SERVICE_MANAGER: Lazy<Mutex<ServiceManager>> = Lazy::new(|| Mutex::new(ServiceManager::default()));

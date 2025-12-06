@@ -79,15 +79,9 @@ struct SessionEnv {
 
 impl SessionEnv {
     fn gather() -> Self {
-        let desktop_env = env::var("XDG_CURRENT_DESKTOP")
-            .unwrap_or_default()
-            .to_uppercase();
-        let session_desktop = env::var("XDG_SESSION_DESKTOP")
-            .unwrap_or_default()
-            .to_uppercase();
-        let desktop_session = env::var("DESKTOP_SESSION")
-            .unwrap_or_default()
-            .to_uppercase();
+        let desktop_env = env::var("XDG_CURRENT_DESKTOP").unwrap_or_default().to_uppercase();
+        let session_desktop = env::var("XDG_SESSION_DESKTOP").unwrap_or_default().to_uppercase();
+        let desktop_session = env::var("DESKTOP_SESSION").unwrap_or_default().to_uppercase();
 
         let is_kde_plasma = desktop_env.contains("KDE")
             || session_desktop.contains("KDE")
@@ -95,9 +89,8 @@ impl SessionEnv {
             || desktop_env.contains("PLASMA")
             || session_desktop.contains("PLASMA")
             || desktop_session.contains("PLASMA");
-        let is_hyprland = desktop_env.contains("HYPR")
-            || session_desktop.contains("HYPR")
-            || desktop_session.contains("HYPR");
+        let is_hyprland =
+            desktop_env.contains("HYPR") || session_desktop.contains("HYPR") || desktop_session.contains("HYPR");
         let is_wayland = env::var("XDG_SESSION_TYPE")
             .map(|value| value.eq_ignore_ascii_case("wayland"))
             .unwrap_or(false)
@@ -128,13 +121,14 @@ struct DmabufOverrides {
 
 impl DmabufOverrides {
     fn gather() -> Self {
-        let user_preference = env::var("CLASH_VERGE_DMABUF").ok().and_then(|value| {
-            match value.trim().to_ascii_lowercase().as_str() {
-                "1" | "true" | "enable" | "on" => Some(true),
-                "0" | "false" | "disable" | "off" => Some(false),
-                _ => None,
-            }
-        });
+        let user_preference =
+            env::var("CLASH_VERGE_DMABUF")
+                .ok()
+                .and_then(|value| match value.trim().to_ascii_lowercase().as_str() {
+                    "1" | "true" | "enable" | "on" => Some(true),
+                    "0" | "false" | "disable" | "off" => Some(false),
+                    _ => None,
+                });
         let dmabuf_override = env::var("WEBKIT_DISABLE_DMABUF_RENDERER").ok();
 
         Self {
@@ -185,13 +179,11 @@ impl DmabufDecision {
         match overrides.user_preference {
             Some(true) => {
                 decision.enable_dmabuf = true;
-                decision.message =
-                    Some("CLASH_VERGE_DMABUF=1: 强制启用 WebKit DMABUF 渲染。".into());
+                decision.message = Some("CLASH_VERGE_DMABUF=1: 强制启用 WebKit DMABUF 渲染。".into());
             }
             Some(false) => {
                 decision.enable_dmabuf = false;
-                decision.message =
-                    Some("CLASH_VERGE_DMABUF=0: 强制禁用 WebKit DMABUF 渲染。".into());
+                decision.message = Some("CLASH_VERGE_DMABUF=0: 强制禁用 WebKit DMABUF 渲染。".into());
                 if session.is_wayland && !session.prefer_native_wayland {
                     decision.force_x11_backend = true;
                 }
@@ -200,10 +192,8 @@ impl DmabufDecision {
                 if overrides.has_env_override() {
                     if overrides.dmabuf_override.as_deref() == Some("1") {
                         decision.enable_dmabuf = false;
-                        decision.message = Some(
-                            "检测到 WEBKIT_DISABLE_DMABUF_RENDERER=1，沿用用户的软件渲染配置。"
-                                .into(),
-                        );
+                        decision.message =
+                            Some("检测到 WEBKIT_DISABLE_DMABUF_RENDERER=1，沿用用户的软件渲染配置。".into());
                         if session.is_wayland && !session.prefer_native_wayland {
                             decision.force_x11_backend = true;
                         }
@@ -230,14 +220,18 @@ impl DmabufDecision {
                         })
                         .unwrap_or_else(|| String::from("NVIDIA Open Kernel Module"));
                     let message = match reason {
-                        NvidiaDmabufDisableReason::PrimaryOpenKernelModule => format!(
-                            "Wayland 会话检测到 {}：禁用 WebKit DMABUF 渲染以规避协议错误。",
-                            summary
-                        ),
-                        NvidiaDmabufDisableReason::MissingBootVga => format!(
-                            "Wayland 会话检测到 {}，但缺少 boot_vga 信息：预防性禁用 WebKit DMABUF。",
-                            summary
-                        ),
+                        NvidiaDmabufDisableReason::PrimaryOpenKernelModule => {
+                            format!(
+                                "Wayland 会话检测到 {}：禁用 WebKit DMABUF 渲染以规避协议错误。",
+                                summary
+                            )
+                        }
+                        NvidiaDmabufDisableReason::MissingBootVga => {
+                            format!(
+                                "Wayland 会话检测到 {}，但缺少 boot_vga 信息：预防性禁用 WebKit DMABUF。",
+                                summary
+                            )
+                        }
                         NvidiaDmabufDisableReason::PreferNativeWayland => format!(
                             "Wayland ({}) + {}：检测到 NVIDIA Open Kernel Module 在辅 GPU 上运行，预防性禁用 WebKit DMABUF。",
                             session.compositor_label, summary
@@ -266,12 +260,9 @@ impl DmabufDecision {
                             );
                         }
                     } else if session.is_wayland {
-                        decision.message = Some(
-                            "Wayland 会话未匹配受支持的合成器：禁用 WebKit DMABUF 渲染。".into(),
-                        );
+                        decision.message = Some("Wayland 会话未匹配受支持的合成器：禁用 WebKit DMABUF 渲染。".into());
                     } else {
-                        decision.message =
-                            Some("禁用 WebKit DMABUF 渲染以获得更稳定的输出。".into());
+                        decision.message = Some("禁用 WebKit DMABUF 渲染以获得更稳定的输出。".into());
                     }
                 }
             }
@@ -433,13 +424,7 @@ fn read_nvidia_driver_summary() -> Option<String> {
             .map(|line| line.trim().to_string())
             .filter(|line| !line.is_empty()),
         Err(err) => {
-            logging!(
-                info,
-                Type::Setup,
-                "读取 {} 失败：{}",
-                NVIDIA_VERSION_PATH,
-                err
-            );
+            logging!(info, Type::Setup, "读取 {} 失败：{}", NVIDIA_VERSION_PATH, err);
             None
         }
     }
@@ -639,10 +624,7 @@ fn flush_section(
 
             if let Some(&index) = seen.get(scheme) {
                 let existing_line = &mut processed[index];
-                let existing_prefix: String = existing_line
-                    .chars()
-                    .take_while(|c| c.is_whitespace())
-                    .collect();
+                let existing_prefix: String = existing_line.chars().take_while(|c| c.is_whitespace()).collect();
                 let Some((_, existing_raw_value)) = existing_line.trim().split_once('=') else {
                     processed.push(line);
                     continue;
@@ -695,10 +677,7 @@ fn flush_section(
                 *changed = true;
             }
 
-            let prefix = line
-                .chars()
-                .take_while(|c| c.is_whitespace())
-                .collect::<String>();
+            let prefix = line.chars().take_while(|c| c.is_whitespace()).collect::<String>();
             let mut new_line = format!("{prefix}x-scheme-handler/{scheme}=");
             new_line.push_str(&values.join(";"));
             new_line.push(';');
@@ -716,10 +695,7 @@ fn flush_section(
         processed.push(line);
     }
 
-    let ensure_all = matches!(
-        kind,
-        SectionKind::DefaultApplications | SectionKind::AddedAssociations
-    );
+    let ensure_all = matches!(kind, SectionKind::DefaultApplications | SectionKind::AddedAssociations);
 
     if ensure_all {
         for &scheme in schemes {

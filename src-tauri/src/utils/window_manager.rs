@@ -55,11 +55,7 @@ fn get_window_operation_debounce() -> &'static Mutex<Instant> {
 
 fn should_handle_window_operation() -> bool {
     if WINDOW_OPERATION_IN_PROGRESS.load(Ordering::Acquire) {
-        logging!(
-            warn,
-            Type::Window,
-            "Warning: [防抖] 窗口操作已在进行中，跳过重复调用"
-        );
+        logging!(warn, Type::Window, "Warning: [防抖] 窗口操作已在进行中，跳过重复调用");
         return false;
     }
 
@@ -328,12 +324,7 @@ impl WindowManager {
     /// 创建新窗口,防抖避免重复调用
     pub fn create_window(is_show: bool) -> Pin<Box<dyn Future<Output = bool> + Send>> {
         Box::pin(async move {
-            logging!(
-                info,
-                Type::Window,
-                "开始创建/显示主窗口, is_show={}",
-                is_show
-            );
+            logging!(info, Type::Window, "开始创建/显示主窗口, is_show={}", is_show);
 
             if !is_show {
                 return false;
@@ -383,8 +374,6 @@ impl WindowManager {
         let is_focused = Self::is_main_window_focused();
         let is_minimized = Self::is_main_window_minimized();
 
-        format!(
-            "窗口状态: {state:?} | 可见: {is_visible} | 有焦点: {is_focused} | 最小化: {is_minimized}"
-        )
+        format!("窗口状态: {state:?} | 可见: {is_visible} | 有焦点: {is_focused} | 最小化: {is_minimized}")
     }
 }

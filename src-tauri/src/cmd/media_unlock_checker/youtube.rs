@@ -31,12 +31,7 @@ pub(super) async fn check_youtube_premium(client: &Client) -> UnlockItem {
                             }
                         }
                         Err(e) => {
-                            logging!(
-                                error,
-                                Type::Network,
-                                "Failed to compile YouTube Premium regex: {}",
-                                e
-                            );
+                            logging!(error, Type::Network, "Failed to compile YouTube Premium regex: {}", e);
                         }
                     }
                 }

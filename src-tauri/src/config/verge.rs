@@ -308,12 +308,7 @@ impl IVerge {
 
             Self::reload_config_after_fix(config).await?;
         } else {
-            logging!(
-                info,
-                Type::Config,
-                "clash_core配置验证通过: {:?}",
-                config.clash_core
-            );
+            logging!(info, Type::Config, "clash_core配置验证通过: {:?}", config.clash_core);
         }
 
         Ok(())
@@ -338,15 +333,11 @@ impl IVerge {
     }
 
     pub fn get_valid_clash_core(&self) -> String {
-        self.clash_core
-            .clone()
-            .unwrap_or_else(|| "verge-mihomo".into())
+        self.clash_core.clone().unwrap_or_else(|| "verge-mihomo".into())
     }
 
     fn get_system_language() -> String {
-        let sys_lang = sys_locale::get_locale()
-            .unwrap_or_else(|| "en".into())
-            .to_lowercase();
+        let sys_lang = sys_locale::get_locale().unwrap_or_else(|| "en".into()).to_lowercase();
 
         let lang_code = sys_lang.split(['_', '-']).next().unwrap_or("en");
         let supported_languages = i18n::get_supported_languages();

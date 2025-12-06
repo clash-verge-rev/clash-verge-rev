@@ -45,17 +45,8 @@ impl CoreConfigValidator {
         let content = match fs::read_to_string(path).await {
             Ok(content) => content,
             Err(err) => {
-                logging!(
-                    warn,
-                    Type::Validate,
-                    "无法读取文件以检测类型: {}, 错误: {}",
-                    path,
-                    err
-                );
-                return Err(anyhow::anyhow!(
-                    "Failed to read file to detect type: {}",
-                    err
-                ));
+                logging!(warn, Type::Validate, "无法读取文件以检测类型: {}, 错误: {}", path, err);
+                return Err(anyhow::anyhow!("Failed to read file to detect type: {}", err));
             }
         };
 
@@ -102,12 +93,7 @@ impl CoreConfigValidator {
         }
 
         // 默认情况：无法确定时，假设为非脚本文件（更安全）
-        logging!(
-            debug,
-            Type::Validate,
-            "无法确定文件类型，默认当作YAML处理: {}",
-            path
-        );
+        logging!(debug, Type::Validate, "无法确定文件类型，默认当作YAML处理: {}", path);
         Ok(false)
     }
 
@@ -188,10 +174,7 @@ impl CoreConfigValidator {
     }
 
     /// 验证指定的配置文件
-    pub async fn validate_config_file(
-        config_path: &str,
-        is_merge_file: Option<bool>,
-    ) -> Result<(bool, String)> {
+    pub async fn validate_config_file(config_path: &str, is_merge_file: Option<bool>) -> Result<(bool, String)> {
         // 检查程序是否正在退出，如果是则跳过验证
         if handle::Handle::global().is_exiting() {
             logging!(info, Type::Core, "应用正在退出，跳过验证");
@@ -207,12 +190,7 @@ impl CoreConfigValidator {
 
         // 如果是合并文件且不是强制验证，执行语法检查但不进行完整验证
         if is_merge_file.unwrap_or(false) {
-            logging!(
-                info,
-                Type::Validate,
-                "检测到Merge文件，仅进行语法检查: {}",
-                config_path
-            );
+            logging!(info, Type::Validate, "检测到Merge文件，仅进行语法检查: {}", config_path);
             return Self::validate_file_syntax(config_path).await;
         }
 
@@ -224,13 +202,7 @@ impl CoreConfigValidator {
                 Ok(result) => result,
                 Err(err) => {
                     // 如果无法确定文件类型，尝试使用Clash内核验证
-                    logging!(
-                        warn,
-                        Type::Validate,
-                        "无法确定文件类型: {}, 错误: {}",
-                        config_path,
-                        err
-                    );
+                    logging!(warn, Type::Validate, "无法确定文件类型: {}, 错误: {}", config_path, err);
                     return Self::validate_config_internal(config_path).await;
                 }
             }
@@ -247,12 +219,7 @@ impl CoreConfigValidator {
         }
 
         // 对YAML配置文件使用Clash内核验证
-        logging!(
-            info,
-            Type::Validate,
-            "使用Clash内核验证配置文件: {}",
-            config_path
-        );
+        logging!(info, Type::Validate, "使用Clash内核验证配置文件: {}", config_path);
         Self::validate_config_internal(config_path).await
     }
 
@@ -275,13 +242,11 @@ impl CoreConfigValidator {
         logging!(info, Type::Validate, "验证目录: {}", app_dir_str);
 
         // 使用子进程运行clash验证配置
-        let command = app_handle.shell().sidecar(clash_core.as_str())?.args([
-            "-t",
-            "-d",
-            app_dir_str,
-            "-f",
-            config_path,
-        ]);
+        let command =
+            app_handle
+                .shell()
+                .sidecar(clash_core.as_str())?
+                .args(["-t", "-d", app_dir_str, "-f", config_path]);
         let output = command.output().await?;
 
         let status = &output.status;

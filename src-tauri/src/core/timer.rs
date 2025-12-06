@@ -75,12 +75,7 @@ impl Timer {
         // Log timer info first
         {
             let timer_map = self.timer_map.read();
-            logging!(
-                info,
-                Type::Timer,
-                "已注册的定时任务数量: {}",
-                timer_map.len()
-            );
+            logging!(info, Type::Timer, "已注册的定时任务数量: {}", timer_map.len());
 
             for (uid, task) in timer_map.iter() {
                 logging!(
@@ -97,32 +92,30 @@ impl Timer {
         let cur_timestamp = chrono::Local::now().timestamp();
 
         // Collect profiles that need immediate update
-        let profiles_to_update =
-            if let Some(items) = Config::profiles().await.latest_arc().get_items() {
-                items
-                    .iter()
-                    .filter_map(|item| {
-                        let allow_auto_update =
-                            item.option.as_ref()?.allow_auto_update.unwrap_or_default();
-                        if !allow_auto_update {
-                            return None;
-                        }
+        let profiles_to_update = if let Some(items) = Config::profiles().await.latest_arc().get_items() {
+            items
+                .iter()
+                .filter_map(|item| {
+                    let allow_auto_update = item.option.as_ref()?.allow_auto_update.unwrap_or_default();
+                    if !allow_auto_update {
+                        return None;
+                    }
 
-                        let interval = item.option.as_ref()?.update_interval? as i64;
-                        let updated = item.updated? as i64;
-                        let uid = item.uid.as_ref()?;
+                    let interval = item.option.as_ref()?.update_interval? as i64;
+                    let updated = item.updated? as i64;
+                    let uid = item.uid.as_ref()?;
 
-                        if interval > 0 && cur_timestamp - updated >= interval * 60 {
-                            logging!(info, Type::Timer, "需要立即更新的配置: uid={}", uid);
-                            Some(uid.clone())
-                        } else {
-                            None
-                        }
-                    })
-                    .collect::<Vec<String>>()
-            } else {
-                Vec::new()
-            };
+                    if interval > 0 && cur_timestamp - updated >= interval * 60 {
+                        logging!(info, Type::Timer, "需要立即更新的配置: uid={}", uid);
+                        Some(uid.clone())
+                    } else {
+                        None
+                    }
+                })
+                .collect::<Vec<String>>()
+        } else {
+            Vec::new()
+        };
 
         // Advance tasks outside of locks to minimize lock contention
         if !profiles_to_update.is_empty() {
@@ -178,12 +171,7 @@ impl Timer {
             return Ok(());
         }
 
-        logging!(
-            info,
-            Type::Timer,
-            "Refreshing {} timer tasks",
-            diff_map.len()
-        );
+        logging!(info, Type::Timer, "Refreshing {} timer tasks", diff_map.len());
 
         // Apply changes - first collect operations to perform without holding locks
         let mut operations_to_add: Vec<(String, TaskID, u64)> = Vec::new();
@@ -286,12 +274,7 @@ impl Timer {
             }
         }
 
-        logging!(
-            debug,
-            Type::Timer,
-            "生成的定时更新配置数量: {}",
-            new_map.len()
-        );
+        logging!(debug, Type::Timer, "生成的定时更新配置数量: {}", new_map.len());
         new_map
     }
 
@@ -302,12 +285,7 @@ impl Timer {
 
         // Read lock for comparing current state
         let timer_map = self.timer_map.read();
-        logging!(
-            debug,
-            Type::Timer,
-            "当前 timer_map 大小: {}",
-            timer_map.len()
-        );
+        logging!(debug, Type::Timer, "当前 timer_map 大小: {}", timer_map.len());
 
         // Find tasks to modify or delete
         for (uid, task) in timer_map.iter() {
@@ -364,13 +342,7 @@ impl Timer {
     }
 
     /// Add a timer task with better error handling
-    fn add_task(
-        &self,
-        delay_timer: &DelayTimer,
-        uid: String,
-        tid: TaskID,
-        minutes: u64,
-    ) -> Result<()> {
+    fn add_task(&self, delay_timer: &DelayTimer, uid: String, tid: TaskID, minutes: u64) -> Result<()> {
         logging!(
             info,
             Type::Timer,
@@ -394,9 +366,7 @@ impl Timer {
             })
             .context("failed to create timer task")?;
 
-        delay_timer
-            .add_task(task)
-            .context("failed to add timer task")?;
+        delay_timer.add_task(task).context("failed to add timer task")?;
 
         Ok(())
     }
@@ -443,13 +413,7 @@ impl Timer {
         // Calculate next update time
         if updated > 0 && task_interval > 0 {
             let next_time = updated + (task_interval as i64 * 60);
-            logging!(
-                info,
-                Type::Timer,
-                "计算得到下次更新时间: {}, uid={}",
-                next_time,
-                uid
-            );
+            logging!(info, Type::Timer, "计算得到下次更新时间: {}, uid={}", next_time, uid);
             Some(next_time)
         } else {
             logging!(
@@ -483,13 +447,7 @@ impl Timer {
             Self::emit_update_event(uid, true);
 
             let is_current = Config::profiles().await.latest_arc().current.as_ref() == Some(uid);
-            logging!(
-                info,
-                Type::Timer,
-                "配置 {} 是否为当前激活配置: {}",
-                uid,
-                is_current
-            );
+            logging!(info, Type::Timer, "配置 {} 是否为当前激活配置: {}", uid, is_current);
 
             feat::update_profile(uid, None, is_current, false).await
         })

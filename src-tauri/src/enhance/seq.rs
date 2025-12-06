@@ -62,20 +62,14 @@ pub fn use_seq(seq: SeqMap, mut config: Mapping, field: &str) -> Mapping {
                         })
                         .cloned()
                         .collect();
-                    group_map.insert(
-                        Value::String("proxies".into()),
-                        Value::Sequence(filtered_proxies),
-                    );
+                    group_map.insert(Value::String("proxies".into()), Value::Sequence(filtered_proxies));
                 }
                 new_groups.push(Value::Mapping(group_map.to_owned()));
             } else {
                 new_groups.push(group.to_owned());
             }
         }
-        config.insert(
-            Value::String("proxy-groups".into()),
-            Value::Sequence(new_groups),
-        );
+        config.insert(Value::String("proxy-groups".into()), Value::Sequence(new_groups));
     }
 
     config
@@ -108,8 +102,7 @@ proxy-groups:
   proxies:
     - "proxy1"
 "#;
-        let mut config: Mapping =
-            serde_yaml_ng::from_str(config_str).expect("Failed to parse test config YAML");
+        let mut config: Mapping = serde_yaml_ng::from_str(config_str).expect("Failed to parse test config YAML");
 
         let seq = SeqMap {
             prepend: Sequence::new(),
@@ -160,9 +153,7 @@ proxy-groups:
 
         assert_eq!(group1_proxies.len(), 1);
         assert_eq!(
-            group1_proxies[0]
-                .as_str()
-                .expect("proxy name should be string"),
+            group1_proxies[0].as_str().expect("proxy name should be string"),
             "proxy2"
         );
         assert_eq!(group2_proxies.len(), 0);

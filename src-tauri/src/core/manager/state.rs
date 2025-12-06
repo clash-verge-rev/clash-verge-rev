@@ -54,8 +54,7 @@ impl CoreManager {
         self.set_running_child_sidecar(child);
         self.set_running_mode(RunningMode::Sidecar);
 
-        let shared_writer: SharedWriter =
-            std::sync::Arc::new(tokio::sync::Mutex::new(sidecar_writer().await?));
+        let shared_writer: SharedWriter = std::sync::Arc::new(tokio::sync::Mutex::new(sidecar_writer().await?));
 
         AsyncHandler::spawn(|| async move {
             while let Some(event) = rx.recv().await {
@@ -64,12 +63,7 @@ impl CoreManager {
                     | tauri_plugin_shell::process::CommandEvent::Stderr(line) => {
                         let mut now = DeferredNow::default();
                         let message = CompactString::from(String::from_utf8_lossy(&line).as_ref());
-                        write_sidecar_log(
-                            shared_writer.lock().await,
-                            &mut now,
-                            Level::Error,
-                            &message,
-                        );
+                        write_sidecar_log(shared_writer.lock().await, &mut now, Level::Error, &message);
                         CLASH_LOGGER.append_log(message).await;
                     }
                     tauri_plugin_shell::process::CommandEvent::Terminated(term) => {
@@ -81,12 +75,7 @@ impl CoreManager {
                         } else {
                             CompactString::from("Process terminated")
                         };
-                        write_sidecar_log(
-                            shared_writer.lock().await,
-                            &mut now,
-                            Level::Info,
-                            &message,
-                        );
+                        write_sidecar_log(shared_writer.lock().await, &mut now, Level::Info, &message);
                         CLASH_LOGGER.clear_logs().await;
                         break;
                     }

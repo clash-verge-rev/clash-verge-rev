@@ -252,8 +252,7 @@ mod tests {
     #[allow(unused_variables)]
     #[allow(clippy::expect_used)]
     fn test_prfitem_from_merge_size() {
-        let merge_item =
-            PrfItem::from_merge(Some("Merge".into())).expect("Failed to create merge item in test");
+        let merge_item = PrfItem::from_merge(Some("Merge".into())).expect("Failed to create merge item in test");
         let prfitem_size = mem::size_of_val(&merge_item);
         // Boxed version
         let boxed_merge_item = Box::new(merge_item);
@@ -276,9 +275,6 @@ mod tests {
     fn test_draft_size_boxed() {
         let draft = Draft::new(Box::new(IRuntime::new()));
         let box_iruntime_size = std::mem::size_of_val(&draft);
-        assert_eq!(
-            box_iruntime_size,
-            std::mem::size_of::<Draft<Box<IRuntime>>>()
-        );
+        assert_eq!(box_iruntime_size, std::mem::size_of::<Draft<Box<IRuntime>>>());
     }
 }

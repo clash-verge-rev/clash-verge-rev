@@ -50,12 +50,7 @@ pub(super) async fn check_netflix(client: &Client) -> UnlockItem {
     let status1 = match result1 {
         Ok(response) => response.status().as_u16(),
         Err(e) => {
-            logging!(
-                error,
-                Type::Network,
-                "Failed to get Netflix response 1: {}",
-                e
-            );
+            logging!(error, Type::Network, "Failed to get Netflix response 1: {}", e);
             return UnlockItem {
                 name: "Netflix".to_string(),
                 status: "Failed".to_string(),
@@ -68,12 +63,7 @@ pub(super) async fn check_netflix(client: &Client) -> UnlockItem {
     let status2 = match result2 {
         Ok(response) => response.status().as_u16(),
         Err(e) => {
-            logging!(
-                error,
-                Type::Network,
-                "Failed to get Netflix response 2: {}",
-                e
-            );
+            logging!(error, Type::Network, "Failed to get Netflix response 2: {}", e);
             return UnlockItem {
                 name: "Netflix".to_string(),
                 status: "Failed".to_string(),
@@ -157,12 +147,7 @@ pub(super) async fn check_netflix(client: &Client) -> UnlockItem {
 async fn check_netflix_cdn(client: &Client) -> UnlockItem {
     let url = "https://api.fast.com/netflix/speedtest/v2?https=true&token=YXNkZmFzZGxmbnNkYWZoYXNkZmhrYWxm&urlCount=5";
 
-    match client
-        .get(url)
-        .timeout(std::time::Duration::from_secs(30))
-        .send()
-        .await
-    {
+    match client.get(url).timeout(std::time::Duration::from_secs(30)).send().await {
         Ok(response) => {
             if response.status().as_u16() == 403 {
                 return UnlockItem {

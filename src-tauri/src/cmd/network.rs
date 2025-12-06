@@ -40,10 +40,7 @@ pub async fn get_sys_proxy() -> CmdResult<Mapping> {
 #[tauri::command]
 pub async fn get_auto_proxy() -> CmdResult<Mapping> {
     let auto_proxy = Autoproxy::get_auto_proxy().stringify_err()?;
-    let Autoproxy {
-        ref enable,
-        ref url,
-    } = auto_proxy;
+    let Autoproxy { ref enable, ref url } = auto_proxy;
 
     let mut map = Mapping::new();
     map.insert("enable".into(), (*enable).into());

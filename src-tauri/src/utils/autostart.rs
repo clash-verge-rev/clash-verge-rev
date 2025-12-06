@@ -28,8 +28,7 @@ pub fn get_startup_dir() -> Result<PathBuf> {
 /// 获取当前可执行文件路径
 #[cfg(target_os = "windows")]
 pub fn get_exe_path() -> Result<PathBuf> {
-    let exe_path =
-        std::env::current_exe().map_err(|e| anyhow!("无法获取当前可执行文件路径: {}", e))?;
+    let exe_path = std::env::current_exe().map_err(|e| anyhow!("无法获取当前可执行文件路径: {}", e))?;
 
     Ok(exe_path)
 }

@@ -118,19 +118,16 @@ impl ChainItem {
     /// 内建支持一些脚本
     pub fn builtin() -> Vec<(ChainSupport, Self)> {
         // meta 的一些处理
-        let meta_guard =
-            Self::to_script("verge_meta_guard", include_str!("./builtin/meta_guard.js"));
+        let meta_guard = Self::to_script("verge_meta_guard", include_str!("./builtin/meta_guard.js"));
 
         // meta 1.13.2 alpn string 转 数组
         let hy_alpn = Self::to_script("verge_hy_alpn", include_str!("./builtin/meta_hy_alpn.js"));
 
         // meta 的一些处理
-        let meta_guard_alpha =
-            Self::to_script("verge_meta_guard", include_str!("./builtin/meta_guard.js"));
+        let meta_guard_alpha = Self::to_script("verge_meta_guard", include_str!("./builtin/meta_guard.js"));
 
         // meta 1.13.2 alpn string 转 数组
-        let hy_alpn_alpha =
-            Self::to_script("verge_hy_alpn", include_str!("./builtin/meta_hy_alpn.js"));
+        let hy_alpn_alpha = Self::to_script("verge_hy_alpn", include_str!("./builtin/meta_hy_alpn.js"));
 
         vec![
             (ChainSupport::ClashMeta, hy_alpn),

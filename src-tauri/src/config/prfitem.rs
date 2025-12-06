@@ -129,9 +129,8 @@ impl PrfOption {
                 result.user_agent = b_ref.user_agent.clone().or(result.user_agent);
                 result.with_proxy = b_ref.with_proxy.or(result.with_proxy);
                 result.self_proxy = b_ref.self_proxy.or(result.self_proxy);
-                result.danger_accept_invalid_certs = b_ref
-                    .danger_accept_invalid_certs
-                    .or(result.danger_accept_invalid_certs);
+                result.danger_accept_invalid_certs =
+                    b_ref.danger_accept_invalid_certs.or(result.danger_accept_invalid_certs);
                 result.allow_auto_update = b_ref.allow_auto_update.or(result.allow_auto_update);
                 result.update_interval = b_ref.update_interval.or(result.update_interval);
                 result.merge = b_ref.merge.clone().or(result.merge);
@@ -259,8 +258,7 @@ impl PrfItem {
     ) -> Result<Self> {
         let with_proxy = option.is_some_and(|o| o.with_proxy.unwrap_or(false));
         let self_proxy = option.is_some_and(|o| o.self_proxy.unwrap_or(false));
-        let accept_invalid_certs =
-            option.is_some_and(|o| o.danger_accept_invalid_certs.unwrap_or(false));
+        let accept_invalid_certs = option.is_some_and(|o| o.danger_accept_invalid_certs.unwrap_or(false));
         let allow_auto_update = option.map(|o| o.allow_auto_update.unwrap_or(true));
         let user_agent = option.and_then(|o| o.user_agent.clone());
         let update_interval = option.and_then(|o| o.update_interval);
@@ -282,13 +280,7 @@ impl PrfItem {
 
         // 使用网络管理器发送请求
         let resp = match NetworkManager::new()
-            .get_with_interrupt(
-                url,
-                proxy_type,
-                Some(timeout),
-                user_agent.clone(),
-                accept_invalid_certs,
-            )
+            .get_with_interrupt(url, proxy_type, Some(timeout), user_agent.clone(), accept_invalid_certs)
             .await
         {
             Ok(r) => r,
@@ -348,10 +340,7 @@ impl PrfItem {
                     },
                 }
             }
-            None => Some(
-                crate::utils::help::get_last_part_and_decode(url)
-                    .unwrap_or_else(|| "Remote File".into()),
-            ),
+            None => Some(crate::utils::help::get_last_part_and_decode(url).unwrap_or_else(|| "Remote File".into())),
         };
         let update_interval = match update_interval {
             Some(val) => Some(val),
@@ -374,19 +363,16 @@ impl PrfItem {
 
         let uid = help::get_uid("R").into();
         let file = format!("{uid}.yaml").into();
-        let name = name.map(|s| s.to_owned()).unwrap_or_else(|| {
-            filename
-                .map(|s| s.into())
-                .unwrap_or_else(|| "Remote File".into())
-        });
+        let name = name
+            .map(|s| s.to_owned())
+            .unwrap_or_else(|| filename.map(|s| s.into()).unwrap_or_else(|| "Remote File".into()));
         let data = resp.text_with_charset()?;
 
         // process the charset "UTF-8 with BOM"
         let data = data.trim_start_matches('\u{feff}');
 
         // check the data whether the valid yaml format
-        let yaml = serde_yaml_ng::from_str::<Mapping>(data)
-            .context("the remote profile data is invalid yaml")?;
+        let yaml = serde_yaml_ng::from_str::<Mapping>(data).context("the remote profile data is invalid yaml")?;
 
         if !yaml.contains_key("proxies") && !yaml.contains_key("proxy-providers") {
             bail!("profile does not contain `proxies` or `proxy-providers`");
@@ -534,9 +520,7 @@ impl PrfItem {
             .as_ref()
             .ok_or_else(|| anyhow::anyhow!("could not find the file"))?;
         let path = dirs::app_profiles_dir()?.join(file.as_str());
-        let content = fs::read_to_string(path)
-            .await
-            .context("failed to read the file")?;
+        let content = fs::read_to_string(path).await.context("failed to read the file")?;
         Ok(content.into())
     }
 

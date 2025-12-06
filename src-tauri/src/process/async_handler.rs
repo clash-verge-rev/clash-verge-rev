@@ -62,12 +62,7 @@ impl AsyncHandler {
         let location = Location::caller();
         let type_str = type_name::<F>();
         let size_str = format!("{} bytes", size);
-        let loc_str = format!(
-            "{}:{}:{}",
-            location.file(),
-            location.line(),
-            location.column()
-        );
+        let loc_str = format!("{}:{}:{}", location.file(), location.line(), location.column());
 
         println!(
             "┌────────────────────┬─────────────────────────────────────────────────────────────────────────────┐"

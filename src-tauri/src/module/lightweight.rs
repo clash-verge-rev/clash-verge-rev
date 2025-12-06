@@ -51,12 +51,7 @@ fn get_state() -> LightweightState {
 #[inline]
 fn try_transition(from: LightweightState, to: LightweightState) -> bool {
     LIGHTWEIGHT_STATE
-        .compare_exchange(
-            from.as_u8(),
-            to.as_u8(),
-            Ordering::AcqRel,
-            Ordering::Relaxed,
-        )
+        .compare_exchange(from.as_u8(), to.as_u8(), Ordering::AcqRel, Ordering::Relaxed)
         .is_ok()
 }
 
@@ -83,10 +78,7 @@ async fn refresh_lightweight_tray_state() {
 
 pub async fn auto_lightweight_boot() -> Result<()> {
     let verge_config = Config::verge().await;
-    let is_enable_auto = verge_config
-        .data_arc()
-        .enable_auto_light_weight_mode
-        .unwrap_or(false);
+    let is_enable_auto = verge_config.data_arc().enable_auto_light_weight_mode.unwrap_or(false);
     let is_silent_start = verge_config.data_arc().enable_silent_start.unwrap_or(false);
     if is_enable_auto {
         enable_auto_light_weight_mode().await;
@@ -182,11 +174,7 @@ fn setup_webview_focus_listener() {
     if let Some(window) = handle::Handle::get_window() {
         let handler_id = window.listen("tauri://focus", move |_event| {
             logging_error!(Type::Lightweight, cancel_light_weight_timer());
-            logging!(
-                debug,
-                Type::Lightweight,
-                "监听到窗口获得焦点，取消轻量模式计时"
-            );
+            logging!(debug, Type::Lightweight, "监听到窗口获得焦点，取消轻量模式计时");
         });
         WEBVIEW_FOCUS_HANDLER_ID.store(handler_id, Ordering::Release);
     }
@@ -207,11 +195,7 @@ async fn setup_light_weight_timer() -> Result<()> {
         return Err(e).context("failed to initialize timer");
     }
 
-    let once_by_minutes = Config::verge()
-        .await
-        .data_arc()
-        .auto_light_weight_minutes
-        .unwrap_or(10);
+    let once_by_minutes = Config::verge().await.data_arc().auto_light_weight_minutes.unwrap_or(10);
 
     {
         let timer_map = Timer::global().timer_map.read();
@@ -239,9 +223,7 @@ async fn setup_light_weight_timer() -> Result<()> {
 
     {
         let delay_timer = Timer::global().delay_timer.write();
-        delay_timer
-            .add_task(task)
-            .context("failed to add timer task")?;
+        delay_timer.add_task(task).context("failed to add timer task")?;
     }
 
     {
@@ -265,10 +247,7 @@ async fn setup_light_weight_timer() -> Result<()> {
 }
 
 fn cancel_light_weight_timer() -> Result<()> {
-    let value = Timer::global()
-        .timer_map
-        .write()
-        .remove(LIGHT_WEIGHT_TASK_UID);
+    let value = Timer::global().timer_map.write().remove(LIGHT_WEIGHT_TASK_UID);
     if let Some(task) = value {
         Timer::global()
             .delay_timer
