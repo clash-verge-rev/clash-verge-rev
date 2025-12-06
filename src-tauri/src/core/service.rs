@@ -505,7 +505,6 @@ impl ServiceManager {
     pub async fn refresh(&mut self) -> Result<()> {
         let status = self.check_service_comprehensive().await;
         logging_error!(Type::Service, self.handle_service_status(&status).await);
-        self.0 = status;
         Ok(())
     }
 
