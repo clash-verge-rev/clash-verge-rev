@@ -90,7 +90,7 @@ backoff = { version = "0.4.0", features = ["tokio"] }
 tauri-plugin-http = "2.5.4"
 console-subscriber = { version = "0.5.0", optional = true }
 tauri-plugin-devtools = { version = "2.0.1" }
-tauri-plugin-mihomo = { git = "https://github.com/clash-verge-rev/tauri-plugin-mihomo" }
+tauri-plugin-mihomo = { git = "https://github.com/clash-verge-rev/tauri-plugin-mihomo", rev = "153f16f7b3f979aa130a2d3d7c39a52a39987288" }
 clash_verge_logger = { git = "https://github.com/clash-verge-rev/clash-verge-logger" }
 async-trait = "0.1.89"
 clash_verge_service_ipc = { version = "2.0.24", features = [
