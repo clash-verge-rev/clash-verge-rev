@@ -311,6 +311,17 @@ const baseShowNotice = (
   return id;
 };
 
+/**
+ * Shows a global notice; `showNotice.success / error / info` are the usual entry points.
+ *
+ * - `message`: i18n key string, `{ key, params }`, ReactNode, Error/any value (message is extracted)
+ * - `extras` parsed left-to-right: first plain object is i18n params; next value is raw payload; first number overrides duration (ms, 0 = persistent; defaults: success 3000 / info 5000 / error 8000)
+ * - Returns a notice id for manual closing via `hideNotice(id)`
+ *
+ * @example showNotice.success("profiles.page.feedback.notifications.batchDeleted");
+ * @example showNotice.error(err); // pass an Error directly
+ * @example showNotice.error("profiles.page.feedback.errors.invalidUrl", { url }, 4000);
+ */
 export const showNotice: ShowNotice = Object.assign(baseShowNotice, {
   success: (message: NoticeContent, ...extras: NoticeExtra[]) =>
     baseShowNotice("success", message, ...extras),
