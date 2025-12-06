@@ -1285,9 +1285,7 @@ version = "0.1.0"
 dependencies = [
  "clash-verge-logging",
  "log",
- "tauri",
  "tokio",
- "windows-sys 0.61.2",
 ]
 
 [[package]]
