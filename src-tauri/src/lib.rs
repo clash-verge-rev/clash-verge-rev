@@ -405,20 +405,19 @@ pub fn run() {
                 event_handlers::handle_reopen(has_visible_windows).await;
             });
         }
-        #[cfg(target_os = "macos")]
         tauri::RunEvent::Exit => AsyncHandler::block_on(async {
             if !handle::Handle::global().is_exiting() {
                 feat::quit().await;
             }
         }),
         tauri::RunEvent::ExitRequested { api, code, .. } => {
-            AsyncHandler::block_on(async {
-                let _ = handle::Handle::mihomo().await.clear_all_ws_connections().await;
-            });
-
             if core::handle::Handle::global().is_exiting() {
                 return;
             }
+
+            AsyncHandler::block_on(async {
+                let _ = handle::Handle::mihomo().await.clear_all_ws_connections().await;
+            });
 
             if code.is_none() {
                 api.prevent_exit();
