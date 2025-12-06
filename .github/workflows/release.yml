@@ -121,6 +121,7 @@ jobs:
 
           ### 稳定机场VPN推荐
           - [狗狗加速](https://verge.dginv.click/#/register?code=oaxsAGo6)
+
           Created at ${{ env.BUILDTIME }}.
           EOF
 
@@ -159,7 +160,10 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Install Rust Stable
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: "1.91.0"
+          targets: ${{ matrix.target }}
 
       - name: Add Rust Target
         run: rustup target add ${{ matrix.target }}
@@ -248,7 +252,10 @@ jobs:
         uses: actions/checkout@v6
 
       - name: Install Rust Stable
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: "1.91.0"
+          targets: ${{ matrix.target }}
 
       - name: Add Rust Target
         run: rustup target add ${{ matrix.target }}
@@ -376,6 +383,12 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v6
 
+      - name: Install Rust Stable
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: "1.91.0"
+          targets: ${{ matrix.target }}
+
       - name: Add Rust Target
         run: rustup target add ${{ matrix.target }}
 
@@ -414,7 +427,6 @@ jobs:
 
       - name: Tauri build
         id: build
-        # 上游 5.24 修改了 latest.json 的生成逻辑，且依赖 tauri-plugin-update 2.10.0 暂未发布，故锁定在 0.5.23 版本
         uses: tauri-apps/tauri-action@v0.6.0
         env:
           NODE_OPTIONS: "--max_old_space_size=4096"
@@ -614,6 +626,7 @@ jobs:
 
           ### 稳定机场VPN推荐
           - [狗狗加速](https://verge.dginv.click/#/register?code=oaxsAGo6)
+
           Created at ${{ env.BUILDTIME }}.
           EOF
 
