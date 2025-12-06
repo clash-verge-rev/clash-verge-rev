@@ -7400,8 +7400,8 @@ dependencies = [
 
 [[package]]
 name = "sysproxy"
-version = "0.4.0"
-source = "git+https://github.com/clash-verge-rev/sysproxy-rs#0f844dd2639b0ac74da4548b1325335844947420"
+version = "0.4.1"
+source = "git+https://github.com/clash-verge-rev/sysproxy-rs#279a5cf1c4470d0b28af9a5c3fb7c2fcb503a906"
 dependencies = [
  "interfaces",
  "iptools",
