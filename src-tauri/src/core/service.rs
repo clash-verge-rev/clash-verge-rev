@@ -361,9 +361,32 @@ async fn force_reinstall_service() -> Result<()> {
 async fn check_service_version() -> Result<String> {
     let version_arc: Result<String> = {
         logging!(info, Type::Service, "开始检查服务版本 (IPC)");
-        let response = clash_verge_service_ipc::get_version()
-            .await
-            .context("无法连接到Clash Verge Service")?;
+        let result = clash_verge_service_ipc::get_version().await;
+        logging!(
+            debug,
+            Type::Service,
+            "检查服务版本 (IPC) 结果: {:?}",
+            result
+        );
+
+        // 检查错误信息是否是JSON序列化错误或预期值错误，以适配老版本服务
+        // 这可能是因为老版本服务的API不兼容，导致无法正确解析响应
+        // 如果是这种情况，直接返回空字符串，表示无法获取版本
+        if let Err(e) = result.as_ref()
+            && (e.to_string().contains("JSON serialization error")
+                || e.to_string().contains("expected value"))
+        {
+            logging!(
+                warn,
+                Type::Service,
+                "服务版本检查失败，可能是老版本服务 API 不兼容: {}",
+                e
+            );
+            return Ok("".to_string());
+        }
+
+        // 因为上面的错误处理 Error 可能会被忽略，所以这里需要再次检查
+        let response = result.context("无法连接到Clash Verge Service")?;
         if response.code > 0 {
             let err_msg = response.message;
             logging!(error, Type::Service, "获取服务版本失败: {}", err_msg);
