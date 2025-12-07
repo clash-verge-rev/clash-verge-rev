@@ -1,9 +1,13 @@
 import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 import legacy from "@vitejs/plugin-legacy";
 import react from "@vitejs/plugin-react-swc";
 import { defineConfig } from "vite";
 import svgr from "vite-plugin-svgr";
+
+const CONFIG_DIR = path.dirname(fileURLToPath(import.meta.url));
+const SRC_ROOT = path.resolve(CONFIG_DIR, "src");
 
 const getPackageName = (id: string) => {
   // Walk through possible pnpm virtual paths and nested node_modules, return the last package segment.
@@ -15,6 +19,57 @@ const getPackageName = (id: string) => {
   const last = matches.at(-1);
   return last ? last[1] : null;
 };
+
+const getSemanticNameFromFacade = (
+  facadeModuleId: string | null | undefined,
+) => {
+  if (!facadeModuleId) return null;
+
+  const cleanPath = facadeModuleId.split("?")[0];
+  const relativePath = path.relative(SRC_ROOT, cleanPath);
+  if (relativePath.startsWith("..")) return null;
+
+  const withoutExtension = relativePath.replace(/\.[^/.]+$/, "");
+  const normalizedPath = withoutExtension.replace(/\\/g, "/");
+  const withoutTrailingIndex = normalizedPath.endsWith("/index")
+    ? normalizedPath.slice(0, -"/index".length)
+    : normalizedPath;
+
+  const semanticName = withoutTrailingIndex
+    .split("/")
+    .filter(Boolean)
+    .join("-")
+    .replace(/[^a-zA-Z0-9-]/g, "-")
+    .replace(/--+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+  return semanticName || "index";
+};
+
+const normalizeEntryName = (name: string, isEntry?: boolean) =>
+  isEntry && name === "index" ? "main" : name;
+
+const getSemanticNameFromChunk = (chunkInfo: {
+  facadeModuleId: string | null | undefined;
+  moduleIds?: string[];
+  name: string;
+  isEntry?: boolean;
+}) => {
+  const fromFacade = getSemanticNameFromFacade(chunkInfo.facadeModuleId);
+  if (fromFacade) return normalizeEntryName(fromFacade, chunkInfo.isEntry);
+
+  if (Array.isArray(chunkInfo.moduleIds)) {
+    for (const moduleId of chunkInfo.moduleIds) {
+      const semantic = getSemanticNameFromFacade(moduleId);
+      if (semantic) return normalizeEntryName(semantic, chunkInfo.isEntry);
+    }
+  }
+
+  return normalizeEntryName(chunkInfo.name, chunkInfo.isEntry);
+};
+
+const normalizePackageName = (pkg: string) =>
+  pkg.replace(/^@/, "").replace(/[@/]/g, "-");
 
 type ChunkMatchContext = { id: string; pkg: string | null };
 type ChunkRule = {
@@ -87,7 +142,7 @@ const chunkRules: ChunkRule[] = [
   ...packageSetRules,
   ...namespaceRules,
   {
-    name: (pkg) => `vendor-${pkg.replace(/[@/]/g, "-")}`,
+    name: (pkg) => `vendor-${normalizePackageName(pkg ?? "vendor")}`,
     match: ({ pkg }) =>
       !!pkg && LARGE_VENDOR_MATCHERS.some((keyword) => pkg.includes(keyword)),
   },
@@ -141,6 +196,16 @@ export default defineConfig({
       output: {
         compact: true,
         dynamicImportInCjs: true,
+        entryFileNames: (chunkInfo) => {
+          const semanticName = getSemanticNameFromChunk(chunkInfo);
+
+          return `assets/${semanticName}-[hash].js`;
+        },
+        chunkFileNames: (chunkInfo) => {
+          const semanticName = getSemanticNameFromChunk(chunkInfo);
+
+          return `assets/${semanticName}-[hash].js`;
+        },
         manualChunks(id) {
           if (!id.includes("node_modules")) return;
 
