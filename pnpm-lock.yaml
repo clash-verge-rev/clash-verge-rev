@@ -126,7 +126,7 @@ importers:
         specifier: ^2.3.7
         version: 2.3.7(react@19.2.1)
       tauri-plugin-mihomo-api:
-        specifier: git+https://github.com/clash-verge-rev/tauri-plugin-mihomo#153f16f7b3f979aa130a2d3d7c39a52a39987288
+        specifier: git+https://github.com/clash-verge-rev/tauri-plugin-mihomo#main
         version: https://codeload.github.com/clash-verge-rev/tauri-plugin-mihomo/tar.gz/153f16f7b3f979aa130a2d3d7c39a52a39987288
       types-pac:
         specifier: ^1.0.3
