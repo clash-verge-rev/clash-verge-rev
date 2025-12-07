@@ -10,8 +10,6 @@ mod feat;
 mod module;
 mod process;
 pub mod utils;
-#[cfg(target_os = "linux")]
-use crate::utils::linux;
 use crate::utils::resolve::init_signal;
 use crate::{constants::files, utils::resolve::prioritize_initialization};
 use crate::{
@@ -231,9 +229,6 @@ pub fn run() {
     }
 
     let _ = utils::dirs::init_portable_flag();
-
-    #[cfg(target_os = "linux")]
-    linux::configure_environment();
 
     let builder = app_init::setup_plugins(tauri::Builder::default())
         .setup(|app| {
