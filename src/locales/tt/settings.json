@@ -203,6 +203,7 @@
         "fields": {
           "preferSystemTitlebar": "Prefer System Titlebar",
           "trafficGraph": "Трафик графигы",
+          "navigationCollapsed": "Collapse Navigation Panel",
           "memoryUsage": "Хәтер куллану",
           "proxyGroupIcon": "Прокси төркеме иконкасы",
           "hoverNavigator": "Hover Jump Navigator",

@@ -203,6 +203,7 @@
         "fields": {
           "preferSystemTitlebar": "优先使用系统标题栏",
           "trafficGraph": "流量图显",
+          "navigationCollapsed": "Collapse Navigation Panel",
           "memoryUsage": "内核占用",
           "proxyGroupIcon": "代理组图标",
           "hoverNavigator": "悬浮跳转导航",

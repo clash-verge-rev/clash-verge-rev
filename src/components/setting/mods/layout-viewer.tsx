@@ -158,6 +158,24 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
 
         <Item>
           <ListItemText
+            primary={t(
+              "settings.components.verge.layout.fields.navigationCollapsed",
+            )}
+          />
+          <GuardState
+            value={verge?.navigation_collapsed ?? false}
+            valueProps="checked"
+            onCatch={onError}
+            onFormat={onSwitchFormat}
+            onChange={(e) => onChangeData({ navigation_collapsed: e })}
+            onGuard={(e) => patchVerge({ navigation_collapsed: e })}
+          >
+            <Switch edge="end" />
+          </GuardState>
+        </Item>
+
+        <Item>
+          <ListItemText
             primary={t("settings.components.verge.layout.fields.memoryUsage")}
           />
           <GuardState

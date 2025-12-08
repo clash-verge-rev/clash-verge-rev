@@ -203,6 +203,7 @@
         "fields": {
           "preferSystemTitlebar": "시스템 제목 표시줄 사용",
           "trafficGraph": "트래픽 그래프",
+          "navigationCollapsed": "Collapse Navigation Panel",
           "memoryUsage": "메모리 사용량",
           "proxyGroupIcon": "프록시 그룹 아이콘",
           "hoverNavigator": "호버 점프 내비게이터",

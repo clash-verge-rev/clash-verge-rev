@@ -14,6 +14,8 @@ import {
   useSortable,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
+import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
+import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import {
   Box,
   List,
@@ -167,7 +169,7 @@ const Layout = () => {
   const { t } = useTranslation();
   const { theme } = useCustomTheme();
   const { verge, mutateVerge, patchVerge } = useVerge();
-  const { language } = verge ?? {};
+  const { language, navigation_collapsed } = verge ?? {};
   const { switchLanguage } = useI18n();
   const navigate = useNavigate();
   const themeReady = useMemo(() => Boolean(theme), [theme]);
@@ -275,6 +277,25 @@ const Layout = () => {
     setMenuUnlocked(false);
     setMenuContextPosition(null);
   }, []);
+
+  const handleToggleCollapse = useCallback(async () => {
+    const newCollapsedState = !navigation_collapsed;
+
+    try {
+      await patchVerge(
+        { navigation_collapsed: newCollapsedState },
+        {
+          optimistic: (prev) => ({
+            ...prev,
+            navigation_collapsed: newCollapsedState,
+          }),
+        },
+      );
+    } catch (error) {
+      console.error("Failed to update navigation collapse state:", error);
+      // 如果需要，这里可以根据实际体验再决定是否本地回滚
+    }
+  }, [navigation_collapsed, patchVerge]);
 
   const customTitlebar = useMemo(
     () =>
@@ -392,7 +413,9 @@ const Layout = () => {
           {customTitlebar}
 
           <div className="layout-content">
-            <div className="layout-content__left">
+            <div
+              className={`layout-content__left ${navigation_collapsed ? "collapsed" : ""}`}
+            >
               <div className="the-logo" data-tauri-drag-region="false">
                 <div
                   data-tauri-drag-region="true"
@@ -523,6 +546,43 @@ const Layout = () => {
               <div className="the-traffic">
                 <LayoutTraffic />
               </div>
+
+              <Box
+                className="collapse-toggle"
+                onClick={handleToggleCollapse}
+                sx={[
+                  (theme) => ({
+                    position: "absolute",
+                    bottom: "12px",
+                    right: "-10px",
+                    width: "26px",
+                    height: "26px",
+                    borderRadius: "12px",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
+                    zIndex: 10,
+                    transition: "all 0.18s ease",
+                    backgroundColor:
+                      theme.palette.mode === "light"
+                        ? theme.palette.background.paper
+                        : theme.palette.background.default,
+                    border: `1px solid ${theme.palette.divider}`,
+                    boxShadow: theme.shadows[2],
+                    "&:hover": {
+                      backgroundColor: theme.palette.action.hover,
+                      transform: "translateX(2px) scale(1.05)",
+                    },
+                  }),
+                ]}
+              >
+                {navigation_collapsed ? (
+                  <ChevronRightIcon fontSize="small" />
+                ) : (
+                  <ChevronLeftIcon fontSize="small" />
+                )}
+              </Box>
             </div>
 
             <div className="layout-content__right">

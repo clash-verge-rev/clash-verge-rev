@@ -203,6 +203,7 @@
         "fields": {
           "preferSystemTitlebar": "Prefer System Titlebar",
           "trafficGraph": "نمودار ترافیک",
+          "navigationCollapsed": "Collapse Navigation Panel",
           "memoryUsage": "استفاده از حافظه",
           "proxyGroupIcon": "آیکون گروه پراکسی",
           "hoverNavigator": "Hover Jump Navigator",

@@ -45,6 +45,9 @@ pub struct IVerge {
     /// show memory info (only for Clash Meta)
     pub enable_memory_usage: Option<bool>,
 
+    /// navigation collapsed
+    pub navigation_collapsed: Option<bool>,
+
     /// enable group icon
     #[serde(skip_serializing_if = "Option::is_none")]
     pub enable_group_icon: Option<bool>,
@@ -467,6 +470,7 @@ impl IVerge {
         patch!(startup_script);
         patch!(traffic_graph);
         patch!(enable_memory_usage);
+        patch!(navigation_collapsed);
         patch!(enable_group_icon);
         #[cfg(target_os = "macos")]
         patch!(tray_icon);

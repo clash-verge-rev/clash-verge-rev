@@ -203,6 +203,7 @@
         "fields": {
           "preferSystemTitlebar": "Prefer System Titlebar",
           "trafficGraph": "Trafik Grafiği",
+          "navigationCollapsed": "Collapse Navigation Panel",
           "memoryUsage": "Çekirdek Kullanımı",
           "proxyGroupIcon": "Vekil Grup Simgesi",
           "hoverNavigator": "Hover Jump Navigator",

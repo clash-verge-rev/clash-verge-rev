@@ -203,6 +203,7 @@
         "fields": {
           "preferSystemTitlebar": "Prefer System Titlebar",
           "trafficGraph": "مخطط حركة المرور",
+          "navigationCollapsed": "Collapse Navigation Panel",
           "memoryUsage": "استهلاك الذاكرة",
           "proxyGroupIcon": "أيقونة مجموعة الوكلاء",
           "hoverNavigator": "Hover Jump Navigator",

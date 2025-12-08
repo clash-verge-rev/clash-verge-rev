@@ -203,6 +203,7 @@
         "fields": {
           "preferSystemTitlebar": "Prefer System Titlebar",
           "trafficGraph": "Gráfico de tráfico",
+          "navigationCollapsed": "Collapse Navigation Panel",
           "memoryUsage": "Uso de memoria del núcleo",
           "proxyGroupIcon": "Icono del grupo de proxy",
           "hoverNavigator": "Hover Jump Navigator",

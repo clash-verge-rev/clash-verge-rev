@@ -616,6 +616,7 @@ export interface TranslationResources {
               hoverNavigatorDelay: string;
               memoryUsage: string;
               navIcon: string;
+              navigationCollapsed: string;
               preferSystemTitlebar: string;
               proxyGroupIcon: string;
               showProxyGroupsInline: string;

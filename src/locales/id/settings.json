@@ -203,6 +203,7 @@
         "fields": {
           "preferSystemTitlebar": "Prefer System Titlebar",
           "trafficGraph": "Grafik Lalu Lintas",
+          "navigationCollapsed": "Collapse Navigation Panel",
           "memoryUsage": "Penggunaan Memori",
           "proxyGroupIcon": "Ikon Grup Proksi",
           "hoverNavigator": "Hover Jump Navigator",

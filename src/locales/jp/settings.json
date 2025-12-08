@@ -203,6 +203,7 @@
         "fields": {
           "preferSystemTitlebar": "Prefer System Titlebar",
           "trafficGraph": "トラフィックグラフ",
+          "navigationCollapsed": "Collapse Navigation Panel",
           "memoryUsage": "コアメモリ使用量",
           "proxyGroupIcon": "プロキシグループアイコン",
           "hoverNavigator": "Hover Jump Navigator",

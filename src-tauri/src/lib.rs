@@ -18,7 +18,7 @@ use crate::utils::linux;
 #[cfg(target_os = "macos")]
 use crate::utils::window_manager::WindowManager;
 use crate::{
-    core::{EventDrivenProxyManager, handle, hotkey},
+    core::{EventDrivenProxyManager, handle},
     process::AsyncHandler,
     utils::{resolve, server},
 };
@@ -269,8 +269,13 @@ pub fn run() {
         .invoke_handler(app_init::generate_handlers());
 
     mod event_handlers {
-        use super::*;
+        use super::{Type, core, logging};
         use crate::core::handle;
+        use crate::core::hotkey::Hotkey;
+        #[cfg(target_os = "macos")]
+        use crate::utils::window_manager::WindowManager;
+        use crate::{AsyncHandler, Config};
+        use tauri::AppHandle;
 
         pub fn handle_ready_resumed(_app_handle: &AppHandle) {
             if handle::Handle::global().is_exiting() {
@@ -330,26 +335,26 @@ pub fn run() {
                     #[cfg(target_os = "macos")]
                     {
                         use crate::core::hotkey::SystemHotkey;
-                        let _ = hotkey::Hotkey::global()
+                        let _ = Hotkey::global()
                             .register_system_hotkey(SystemHotkey::CmdQ)
                             .await;
-                        let _ = hotkey::Hotkey::global()
+                        let _ = Hotkey::global()
                             .register_system_hotkey(SystemHotkey::CmdW)
                             .await;
                     }
-                    let _ = hotkey::Hotkey::global().init(true).await;
+                    let _ = Hotkey::global().init(true).await;
                     return;
                 }
 
                 #[cfg(target_os = "macos")]
                 {
                     use crate::core::hotkey::SystemHotkey;
-                    let _ = hotkey::Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdQ);
-                    let _ = hotkey::Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdW);
+                    let _ = Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdQ);
+                    let _ = Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdW);
                 }
 
                 if !is_enable_global_hotkey {
-                    let _ = hotkey::Hotkey::global().reset();
+                    let _ = Hotkey::global().reset();
                 }
             });
         }
@@ -358,15 +363,15 @@ pub fn run() {
         pub fn handle_window_destroyed() {
             use crate::core::hotkey::SystemHotkey;
             AsyncHandler::spawn(move || async move {
-                let _ = hotkey::Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdQ);
-                let _ = hotkey::Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdW);
+                let _ = Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdQ);
+                let _ = Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdW);
                 let is_enable_global_hotkey = Config::verge()
                     .await
                     .data_arc()
                     .enable_global_hotkey
                     .unwrap_or(true);
                 if !is_enable_global_hotkey {
-                    let _ = hotkey::Hotkey::global().reset();
+                    let _ = Hotkey::global().reset();
                 }
             });
         }

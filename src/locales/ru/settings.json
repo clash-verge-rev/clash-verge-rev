@@ -203,6 +203,7 @@
         "fields": {
           "preferSystemTitlebar": "Prefer System Titlebar",
           "trafficGraph": "График трафика",
+          "navigationCollapsed": "Collapse Navigation Panel",
           "memoryUsage": "Использование памяти",
           "proxyGroupIcon": "Иконка Группы прокси",
           "hoverNavigator": "Hover Jump Navigator",

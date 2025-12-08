@@ -863,6 +863,7 @@ interface IVergeConfig {
   enable_hover_jump_navigator?: boolean;
   hover_jump_navigator_delay?: number;
   enable_external_controller?: boolean;
+  navigation_collapsed?: boolean;
 }
 
 interface IWebDavFile {
