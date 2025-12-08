@@ -25,8 +25,8 @@ notifications:
     title: 应用已隐藏
     body: Clash Verge 正在后台运行。
 service:
-  adminInstallPrompt: 安装服务需要管理员权限
-  adminUninstallPrompt: 写在服务需要管理员权限
+  adminInstallPrompt: 安装 Clash Verge 服务需要管理员权限
+  adminUninstallPrompt: 卸载 Clash Verge 服务需要管理员权限
 tray:
   dashboard: 仪表板
   ruleMode: 规则模式
