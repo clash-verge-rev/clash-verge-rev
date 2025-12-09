@@ -27,9 +27,9 @@ pub mod timing {
     pub const STARTUP_ERROR_DELAY: Duration = Duration::from_secs(2);
     pub const ERROR_BATCH_DELAY: Duration = Duration::from_millis(300);
 
-    #[cfg(target_os = "windows")]
+    #[cfg(any(target_os = "windows", target_os = "macos"))]
     pub const SERVICE_WAIT_MAX: Duration = Duration::from_millis(3000);
-    #[cfg(target_os = "windows")]
+    #[cfg(any(target_os = "windows", target_os = "macos"))]
     pub const SERVICE_WAIT_INTERVAL: Duration = Duration::from_millis(200);
 }
 
