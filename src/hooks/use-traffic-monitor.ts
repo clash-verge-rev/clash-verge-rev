@@ -8,17 +8,8 @@ import {
 } from "react";
 import { Traffic } from "tauri-plugin-mihomo-api";
 
-import type {
-  ISamplerStats,
-  ITrafficDataPoint,
-  ITrafficWorkerSnapshotMessage,
-  TrafficWorkerRequestMessage,
-  TrafficWorkerResponseMessage,
-} from "@/types/traffic-monitor";
 import { debugLog } from "@/utils/debug";
 import { TrafficDataSampler, formatTrafficName } from "@/utils/traffic-sampler";
-
-export type { ITrafficDataPoint } from "@/types/traffic-monitor";
 
 // 引用计数管理器
 class ReferenceCounter {

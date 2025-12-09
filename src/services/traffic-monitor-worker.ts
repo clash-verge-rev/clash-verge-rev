@@ -1,9 +1,3 @@
-import type {
-  ISamplingConfig,
-  ITrafficDataPoint,
-  ITrafficWorkerSnapshotMessage,
-  TrafficWorkerRequestMessage,
-} from "../types/traffic-monitor";
 import {
   TrafficDataSampler,
   formatTrafficName,

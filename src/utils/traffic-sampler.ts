@@ -1,9 +1,3 @@
-import type {
-  ISamplerStats,
-  ISamplingConfig,
-  ITrafficDataPoint,
-} from "@/types/traffic-monitor";
-
 interface ICompressedDataPoint {
   up: number;
   down: number;

@@ -12,10 +12,7 @@ import {
 } from "react";
 import { useTranslation } from "react-i18next";
 
-import {
-  useTrafficGraphDataEnhanced,
-  type ITrafficDataPoint,
-} from "@/hooks/use-traffic-monitor";
+import { useTrafficGraphDataEnhanced } from "@/hooks/use-traffic-monitor";
 import { debugLog } from "@/utils/debug";
 import parseTraffic from "@/utils/parse-traffic";
 

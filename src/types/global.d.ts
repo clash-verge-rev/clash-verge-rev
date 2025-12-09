@@ -906,3 +906,86 @@ interface IWebDavConfig {
   username: string;
   password: string;
 }
+
+// Traffic monitor types
+interface ITrafficDataPoint {
+  up: number;
+  down: number;
+  timestamp: number;
+  name: string;
+}
+
+interface ISamplingConfig {
+  rawDataMinutes: number;
+  compressedDataMinutes: number;
+  compressionRatio: number;
+}
+
+interface ISamplerStats {
+  rawBufferSize: number;
+  compressedBufferSize: number;
+  compressionQueueSize: number;
+  totalMemoryPoints: number;
+}
+
+interface ITrafficWorkerInitMessage {
+  type: "init";
+  config: ISamplingConfig & {
+    snapshotIntervalMs: number;
+    defaultRangeMinutes: number;
+  };
+}
+
+interface ITrafficWorkerAppendMessage {
+  type: "append";
+  payload: {
+    up: number;
+    down: number;
+    timestamp?: number;
+  };
+}
+
+interface ITrafficWorkerClearMessage {
+  type: "clear";
+}
+
+interface ITrafficWorkerSetRangeMessage {
+  type: "setRange";
+  minutes: number;
+}
+
+interface ITrafficWorkerRequestSnapshotMessage {
+  type: "requestSnapshot";
+}
+
+type TrafficWorkerRequestMessage =
+  | ITrafficWorkerInitMessage
+  | ITrafficWorkerAppendMessage
+  | ITrafficWorkerClearMessage
+  | ITrafficWorkerSetRangeMessage
+  | ITrafficWorkerRequestSnapshotMessage;
+
+interface ITrafficWorkerSnapshotMessage {
+  type: "snapshot";
+  dataPoints: ITrafficDataPoint[];
+  availableDataPoints: ITrafficDataPoint[];
+  samplerStats: ISamplerStats;
+  rangeMinutes: number;
+  lastTimestamp?: number;
+  reason:
+    | "init"
+    | "interval"
+    | "range-change"
+    | "request"
+    | "append-throttle"
+    | "clear";
+}
+
+interface ITrafficWorkerLogMessage {
+  type: "log";
+  message: string;
+}
+
+type TrafficWorkerResponseMessage =
+  | ITrafficWorkerSnapshotMessage
+  | ITrafficWorkerLogMessage;
