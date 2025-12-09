@@ -1,46 +1,48 @@
-import { use } from "react";
+import { use, useMemo } from "react";
 
-import { WindowContext, type WindowContextType } from "@/providers/window";
+import { WindowContext } from "@/providers/window-context";
 
-export const useWindow = () => {
+const controlKeys = [
+  "maximized",
+  "minimize",
+  "toggleMaximize",
+  "close",
+  "toggleFullscreen",
+  "currentWindow",
+] as const;
+
+const decorationKeys = [
+  "decorated",
+  "toggleDecorations",
+  "refreshDecorated",
+] as const;
+
+const pickWindowValues = <K extends keyof WindowContextType>(
+  context: WindowContextType,
+  keys: readonly K[],
+) =>
+  keys.reduce(
+    (result, key) => {
+      result[key] = context[key];
+      return result;
+    },
+    {} as Pick<WindowContextType, K>,
+  );
+
+const useWindowContext = () => {
   const context = use(WindowContext);
-  if (context === undefined) {
-    throw new Error("useWindow must be used within WindowProvider");
+  if (!context) {
+    throw new Error("useWindowContext must be used within WindowProvider");
   }
   return context;
 };
 
 export const useWindowControls = () => {
-  const {
-    maximized,
-    minimize,
-    toggleMaximize,
-    close,
-    toggleFullscreen,
-    currentWindow,
-  } = useWindow();
-  return {
-    maximized,
-    minimize,
-    toggleMaximize,
-    close,
-    toggleFullscreen,
-    currentWindow,
-  } satisfies Pick<
-    WindowContextType,
-    | "maximized"
-    | "minimize"
-    | "toggleMaximize"
-    | "close"
-    | "toggleFullscreen"
-    | "currentWindow"
-  >;
+  const context = useWindowContext();
+  return useMemo(() => pickWindowValues(context, controlKeys), [context]);
 };
 
 export const useWindowDecorations = () => {
-  const { decorated, toggleDecorations, refreshDecorated } = useWindow();
-  return { decorated, toggleDecorations, refreshDecorated } satisfies Pick<
-    WindowContextType,
-    "decorated" | "toggleDecorations" | "refreshDecorated"
-  >;
+  const context = useWindowContext();
+  return useMemo(() => pickWindowValues(context, decorationKeys), [context]);
 };

@@ -13,7 +13,7 @@ import { MihomoWebSocket } from "tauri-plugin-mihomo-api";
 import { BaseErrorBoundary } from "./components/base";
 import { router } from "./pages/_routers";
 import { AppDataProvider } from "./providers/app-data-provider";
-import { WindowProvider } from "./providers/window";
+import { WindowProvider } from "./providers/window-provider";
 import { FALLBACK_LANGUAGE, initializeLanguage } from "./services/i18n";
 import {
   preloadAppData,
