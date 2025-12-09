@@ -13,7 +13,7 @@ import {
   openDevTools,
   openLogsDir,
 } from "@/services/cmds";
-import { showNotice } from "@/services/noticeService";
+import { showNotice } from "@/services/notice-service";
 import { checkUpdateSafe as checkUpdate } from "@/services/update";
 import { version } from "@root/package.json";
 

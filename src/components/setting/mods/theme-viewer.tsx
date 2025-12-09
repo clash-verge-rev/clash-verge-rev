@@ -23,7 +23,7 @@ import { BaseDialog, DialogRef } from "@/components/base";
 import { EditorViewer } from "@/components/profile/editor-viewer";
 import { useVerge } from "@/hooks/use-verge";
 import { defaultDarkTheme, defaultTheme } from "@/pages/_theme";
-import { showNotice } from "@/services/noticeService";
+import { showNotice } from "@/services/notice-service";
 
 export function ThemeViewer(props: { ref?: React.Ref<DialogRef> }) {
   const { ref } = props;

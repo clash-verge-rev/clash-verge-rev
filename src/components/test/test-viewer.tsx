@@ -7,7 +7,7 @@ import { useTranslation } from "react-i18next";
 
 import { BaseDialog } from "@/components/base";
 import { useVerge } from "@/hooks/use-verge";
-import { showNotice } from "@/services/noticeService";
+import { showNotice } from "@/services/notice-service";
 
 interface Props {
   onChange: (uid: string, patch?: Partial<IVergeTestItem>) => void;

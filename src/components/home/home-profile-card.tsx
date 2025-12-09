@@ -26,7 +26,7 @@ import { useNavigate } from "react-router";
 
 import { useRefreshAll } from "@/hooks/use-clash-data";
 import { openWebUrl, updateProfile } from "@/services/cmds";
-import { showNotice } from "@/services/noticeService";
+import { showNotice } from "@/services/notice-service";
 import parseTraffic from "@/utils/parse-traffic";
 
 import { EnhancedCard } from "./enhanced-card";

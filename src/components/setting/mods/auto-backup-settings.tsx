@@ -11,7 +11,7 @@ import { useTranslation } from "react-i18next";
 
 import { Switch } from "@/components/base";
 import { useVerge } from "@/hooks/use-verge";
-import { showNotice } from "@/services/noticeService";
+import { showNotice } from "@/services/notice-service";
 
 const MIN_INTERVAL_HOURS = 1;
 const MAX_INTERVAL_HOURS = 168;

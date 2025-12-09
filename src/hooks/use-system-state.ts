@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import useSWR from "swr";
 
 import { getRunningMode, isAdmin, isServiceAvailable } from "@/services/cmds";
-import { showNotice } from "@/services/noticeService";
+import { showNotice } from "@/services/notice-service";
 
 import { useVerge } from "./use-verge";
 

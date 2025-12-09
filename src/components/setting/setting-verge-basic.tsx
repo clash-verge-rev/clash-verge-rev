@@ -10,7 +10,7 @@ import { useVerge } from "@/hooks/use-verge";
 import { navItems } from "@/pages/_routers";
 import { copyClashEnv } from "@/services/cmds";
 import { supportedLanguages } from "@/services/i18n";
-import { showNotice } from "@/services/noticeService";
+import { showNotice } from "@/services/notice-service";
 import getSystem from "@/utils/get-system";
 
 import { BackupViewer } from "./mods/backup-viewer";

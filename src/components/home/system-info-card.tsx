@@ -24,7 +24,7 @@ import { useServiceInstaller } from "@/hooks/use-service-installer";
 import { useSystemState } from "@/hooks/use-system-state";
 import { useVerge } from "@/hooks/use-verge";
 import { getSystemInfo } from "@/services/cmds";
-import { showNotice } from "@/services/noticeService";
+import { showNotice } from "@/services/notice-service";
 import { checkUpdateSafe as checkUpdate } from "@/services/update";
 import { version as appVersion } from "@root/package.json";
 

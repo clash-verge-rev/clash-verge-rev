@@ -17,11 +17,11 @@ import {
 import { useState, useMemo, memo, FC } from "react";
 import { useTranslation } from "react-i18next";
 
-import ProxyControlSwitches from "@/components/shared/ProxyControlSwitches";
+import ProxyControlSwitches from "@/components/shared/proxy-control-switches";
 import { useSystemProxyState } from "@/hooks/use-system-proxy-state";
 import { useSystemState } from "@/hooks/use-system-state";
 import { useVerge } from "@/hooks/use-verge";
-import { showNotice } from "@/services/noticeService";
+import { showNotice } from "@/services/notice-service";
 
 const LOCAL_STORAGE_TAB_KEY = "clash-verge-proxy-active-tab";
 

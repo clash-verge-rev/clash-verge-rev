@@ -1,4 +1,4 @@
-import { showNotice } from "@/services/noticeService";
+import { showNotice } from "@/services/notice-service";
 
 type NavigateFunction = (path: string, options?: any) => void;
 type TranslateFunction = (key: string) => string;

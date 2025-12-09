@@ -9,7 +9,7 @@ import SettingSystem from "@/components/setting/setting-system";
 import SettingVergeAdvanced from "@/components/setting/setting-verge-advanced";
 import SettingVergeBasic from "@/components/setting/setting-verge-basic";
 import { openWebUrl } from "@/services/cmds";
-import { showNotice } from "@/services/noticeService";
+import { showNotice } from "@/services/notice-service";
 import { useThemeMode } from "@/services/states";
 
 const SettingPage = () => {

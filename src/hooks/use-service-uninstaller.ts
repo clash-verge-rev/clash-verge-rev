@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 
 import { restartCore, stopCore, uninstallService } from "@/services/cmds";
-import { showNotice } from "@/services/noticeService";
+import { showNotice } from "@/services/notice-service";
 
 import { useSystemState } from "./use-system-state";
 

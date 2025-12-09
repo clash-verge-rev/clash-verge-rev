@@ -12,7 +12,7 @@ import { BaseLoading } from "@/components/base";
 import { useListen } from "@/hooks/use-listen";
 import { cmdTestDelay, downloadIconCache } from "@/services/cmds";
 import delayManager from "@/services/delay";
-import { showNotice } from "@/services/noticeService";
+import { showNotice } from "@/services/notice-service";
 import { debugLog } from "@/utils/debug";
 
 import { TestBox } from "./test-box";

@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 
 import { BaseDialog, BaseLoadingOverlay } from "@/components/base";
 import { listWebDavBackup } from "@/services/cmds";
-import { showNotice } from "@/services/noticeService";
+import { showNotice } from "@/services/notice-service";
 
 import { BackupConfigViewer } from "./backup-config-viewer";
 

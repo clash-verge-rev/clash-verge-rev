@@ -15,7 +15,7 @@ import { BaseDialog, DialogRef, Switch } from "@/components/base";
 import { TooltipIcon } from "@/components/base/base-tooltip-icon";
 import { useVerge } from "@/hooks/use-verge";
 import { entry_lightweight_mode } from "@/services/cmds";
-import { showNotice } from "@/services/noticeService";
+import { showNotice } from "@/services/notice-service";
 
 export function LiteModeViewer({ ref }: { ref?: Ref<DialogRef> }) {
   const { t } = useTranslation();

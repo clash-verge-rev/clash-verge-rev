@@ -55,7 +55,7 @@ import {
   readProfileFile,
   saveProfileFile,
 } from "@/services/cmds";
-import { showNotice } from "@/services/noticeService";
+import { showNotice } from "@/services/notice-service";
 import { useThemeMode } from "@/services/states";
 import type { TranslationKey } from "@/types/generated/i18n-keys";
 import getSystem from "@/utils/get-system";

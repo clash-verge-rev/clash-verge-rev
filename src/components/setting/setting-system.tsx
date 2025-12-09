@@ -6,10 +6,10 @@ import { mutate } from "swr";
 
 import { DialogRef, Switch } from "@/components/base";
 import { TooltipIcon } from "@/components/base/base-tooltip-icon";
-import ProxyControlSwitches from "@/components/shared/ProxyControlSwitches";
+import ProxyControlSwitches from "@/components/shared/proxy-control-switches";
 import { useSystemState } from "@/hooks/use-system-state";
 import { useVerge } from "@/hooks/use-verge";
-import { showNotice } from "@/services/noticeService";
+import { showNotice } from "@/services/notice-service";
 
 import { GuardState } from "./mods/guard-state";
 import { SettingList, SettingItem } from "./mods/setting-comp";

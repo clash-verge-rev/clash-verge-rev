@@ -23,7 +23,7 @@ import { useTranslation } from "react-i18next";
 import { updateProxyProvider } from "tauri-plugin-mihomo-api";
 
 import { useProxiesData, useProxyProvidersData } from "@/hooks/use-clash-data";
-import { showNotice } from "@/services/noticeService";
+import { showNotice } from "@/services/notice-service";
 import parseTraffic from "@/utils/parse-traffic";
 
 // 样式化组件 - 类型框

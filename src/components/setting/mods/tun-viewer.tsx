@@ -16,7 +16,7 @@ import { BaseDialog, DialogRef, Switch } from "@/components/base";
 import { TooltipIcon } from "@/components/base/base-tooltip-icon";
 import { useClash } from "@/hooks/use-clash";
 import { enhanceProfiles } from "@/services/cmds";
-import { showNotice } from "@/services/noticeService";
+import { showNotice } from "@/services/notice-service";
 import getSystem from "@/utils/get-system";
 
 import { StackModeSwitch } from "./stack-mode-switch";

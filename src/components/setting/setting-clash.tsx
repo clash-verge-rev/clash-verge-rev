@@ -12,7 +12,7 @@ import { useClash } from "@/hooks/use-clash";
 import { useClashLog } from "@/hooks/use-clash-log";
 import { useVerge } from "@/hooks/use-verge";
 import { invoke_uwp_tool } from "@/services/cmds";
-import { showNotice } from "@/services/noticeService";
+import { showNotice } from "@/services/notice-service";
 import getSystem from "@/utils/get-system";
 
 import { ClashCoreViewer } from "./mods/clash-core-viewer";

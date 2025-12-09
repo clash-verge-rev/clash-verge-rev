@@ -35,7 +35,7 @@ import {
   restoreLocalBackup,
   restoreWebDavBackup,
 } from "@/services/cmds";
-import { showNotice } from "@/services/noticeService";
+import { showNotice } from "@/services/notice-service";
 
 dayjs.extend(customParseFormat);
 dayjs.extend(relativeTime);

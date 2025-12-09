@@ -15,7 +15,7 @@ import { useTranslation } from "react-i18next";
 import { BaseDialog, Switch } from "@/components/base";
 import { useClashInfo } from "@/hooks/use-clash";
 import { useVerge } from "@/hooks/use-verge";
-import { showNotice } from "@/services/noticeService";
+import { showNotice } from "@/services/notice-service";
 import getSystem from "@/utils/get-system";
 
 const OS = getSystem();

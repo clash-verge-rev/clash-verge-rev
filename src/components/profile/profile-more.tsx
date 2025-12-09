@@ -14,7 +14,7 @@ import { useTranslation } from "react-i18next";
 
 import { EditorViewer } from "@/components/profile/editor-viewer";
 import { viewProfile, readProfileFile, saveProfileFile } from "@/services/cmds";
-import { showNotice } from "@/services/noticeService";
+import { showNotice } from "@/services/notice-service";
 
 import { LogViewer } from "./log-viewer";
 import { ProfileBox } from "./profile-box";

@@ -15,7 +15,7 @@ import { useTranslation } from "react-i18next";
 
 import { useVerge } from "@/hooks/use-verge";
 import { saveWebdavConfig, createWebdavBackup } from "@/services/cmds";
-import { showNotice } from "@/services/noticeService";
+import { showNotice } from "@/services/notice-service";
 import { isValidUrl } from "@/utils/helper";
 
 interface BackupConfigViewerProps {

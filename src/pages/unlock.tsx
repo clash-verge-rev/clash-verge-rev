@@ -25,7 +25,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { BaseEmpty, BasePage } from "@/components/base";
-import { showNotice } from "@/services/noticeService";
+import { showNotice } from "@/services/notice-service";
 
 interface UnlockItem {
   name: string;

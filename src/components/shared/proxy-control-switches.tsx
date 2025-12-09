@@ -21,7 +21,7 @@ import { useServiceUninstaller } from "@/hooks/use-service-uninstaller";
 import { useSystemProxyState } from "@/hooks/use-system-proxy-state";
 import { useSystemState } from "@/hooks/use-system-state";
 import { useVerge } from "@/hooks/use-verge";
-import { showNotice } from "@/services/noticeService";
+import { showNotice } from "@/services/notice-service";
 
 interface ProxySwitchProps {
   label?: string;

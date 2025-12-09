@@ -2,7 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 import dayjs from "dayjs";
 import { getProxies, getProxyProviders } from "tauri-plugin-mihomo-api";
 
-import { showNotice } from "@/services/noticeService";
+import { showNotice } from "@/services/notice-service";
 import { debugLog } from "@/utils/debug";
 
 export async function copyClashEnv() {

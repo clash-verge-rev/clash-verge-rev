@@ -45,7 +45,7 @@ import { Virtuoso } from "react-virtuoso";
 import { Switch } from "@/components/base";
 import { RuleItem } from "@/components/profile/rule-item";
 import { readProfileFile, saveProfileFile } from "@/services/cmds";
-import { showNotice } from "@/services/noticeService";
+import { showNotice } from "@/services/notice-service";
 import { useThemeMode } from "@/services/states";
 import type { TranslationKey } from "@/types/generated/i18n-keys";
 import getSystem from "@/utils/get-system";

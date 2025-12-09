@@ -77,9 +77,9 @@ const IGNORED_KEY_PREFIXES = new Set([
 
 const NOTICE_METHOD_NAMES = new Set(["success", "error", "info", "warning"]);
 const NOTICE_SERVICE_IDENTIFIERS = new Set([
-  "@/services/noticeService",
-  "./noticeService",
-  "../services/noticeService",
+  "@/services/notice-service",
+  "./notice-service",
+  "../services/notice-service",
 ]);
 
 const WHITELIST_KEYS = new Set([

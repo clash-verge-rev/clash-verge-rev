@@ -23,7 +23,7 @@ import { DEFAULT_HOVER_DELAY } from "@/components/proxy/proxy-group-navigator";
 import { useVerge } from "@/hooks/use-verge";
 import { useWindowDecorations } from "@/hooks/use-window";
 import { copyIconFile, getAppDir } from "@/services/cmds";
-import { showNotice } from "@/services/noticeService";
+import { showNotice } from "@/services/notice-service";
 import getSystem from "@/utils/get-system";
 
 import { GuardState } from "./guard-state";

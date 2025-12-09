@@ -25,7 +25,7 @@ import type {
   useRuleProvidersData,
   useRulesData,
 } from "@/hooks/use-clash-data";
-import { showNotice } from "@/services/noticeService";
+import { showNotice } from "@/services/notice-service";
 
 // 辅助组件 - 类型框
 const TypeBox = styled(Box)<{ component?: React.ElementType }>(({ theme }) => ({

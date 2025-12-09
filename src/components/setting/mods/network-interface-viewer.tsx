@@ -8,7 +8,7 @@ import useSWR from "swr";
 
 import { BaseDialog, DialogRef } from "@/components/base";
 import { getNetworkInterfacesInfo } from "@/services/cmds";
-import { showNotice } from "@/services/noticeService";
+import { showNotice } from "@/services/notice-service";
 
 export function NetworkInterfaceViewer({ ref }: { ref?: Ref<DialogRef> }) {
   const { t } = useTranslation();

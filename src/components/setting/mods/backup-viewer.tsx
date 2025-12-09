@@ -14,7 +14,7 @@ import { useTranslation } from "react-i18next";
 
 import { BaseDialog, DialogRef } from "@/components/base";
 import { createLocalBackup, createWebdavBackup } from "@/services/cmds";
-import { showNotice } from "@/services/noticeService";
+import { showNotice } from "@/services/notice-service";
 
 import { AutoBackupSettings } from "./auto-backup-settings";
 import { BackupHistoryViewer } from "./backup-history-viewer";

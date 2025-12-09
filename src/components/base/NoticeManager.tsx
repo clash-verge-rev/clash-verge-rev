@@ -7,7 +7,7 @@ import {
   subscribeNotices,
   hideNotice,
   getSnapshotNotices,
-} from "@/services/noticeService";
+} from "@/services/notice-service";
 import type { TranslationKey } from "@/types/generated/i18n-keys";
 
 export const NoticeManager: React.FC = () => {

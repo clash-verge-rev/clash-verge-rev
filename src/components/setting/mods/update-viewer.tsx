@@ -11,7 +11,7 @@ import useSWR from "swr";
 
 import { BaseDialog, DialogRef } from "@/components/base";
 import { portableFlag } from "@/pages/_layout";
-import { showNotice } from "@/services/noticeService";
+import { showNotice } from "@/services/notice-service";
 import { useSetUpdateState, useUpdateState } from "@/services/states";
 import { checkUpdateSafe as checkUpdate } from "@/services/update";
 

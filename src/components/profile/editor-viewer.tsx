@@ -24,7 +24,7 @@ import { useTranslation } from "react-i18next";
 import pac from "types-pac/pac.d.ts?raw";
 
 import { BaseLoadingOverlay } from "@/components/base";
-import { showNotice } from "@/services/noticeService";
+import { showNotice } from "@/services/notice-service";
 import { useThemeMode } from "@/services/states";
 import debounce from "@/utils/debounce";
 import getSystem from "@/utils/get-system";

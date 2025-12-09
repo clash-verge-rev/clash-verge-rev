@@ -17,7 +17,7 @@ import { useTranslation } from "react-i18next";
 import { BaseDialog, Switch } from "@/components/base";
 import { useProfiles } from "@/hooks/use-profiles";
 import { createProfile, patchProfile } from "@/services/cmds";
-import { showNotice } from "@/services/noticeService";
+import { showNotice } from "@/services/notice-service";
 import { version } from "@root/package.json";
 
 import { FileInput } from "./file-input";

@@ -8,7 +8,7 @@ import { BaseDialog, BaseEmpty, DialogRef } from "@/components/base";
 import { useClashInfo } from "@/hooks/use-clash";
 import { useVerge } from "@/hooks/use-verge";
 import { openWebUrl } from "@/services/cmds";
-import { showNotice } from "@/services/noticeService";
+import { showNotice } from "@/services/notice-service";
 
 import { WebUIItem } from "./web-ui-item";
 

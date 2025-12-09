@@ -21,7 +21,7 @@ import { closeAllConnections, upgradeCore } from "tauri-plugin-mihomo-api";
 import { BaseDialog, DialogRef } from "@/components/base";
 import { useVerge } from "@/hooks/use-verge";
 import { changeClashCore, restartCore } from "@/services/cmds";
-import { showNotice } from "@/services/noticeService";
+import { showNotice } from "@/services/notice-service";
 
 const VALID_CORE = [
   {
