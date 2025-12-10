@@ -469,7 +469,21 @@ pub(super) async fn stop_core_by_service() -> Result<()> {
 
 /// 检查服务是否正在运行
 pub async fn is_service_available() -> Result<()> {
+    // Service client 当前会优先判断 IPC 文件是否存在
+    // 睡一会等文件拉起服务
+    tokio::time::sleep(Duration::from_millis(725)).await;
     clash_verge_service_ipc::connect().await?;
+    Ok(())
+}
+
+/// 等待一会，再检查服务是否正在运行
+/// TODO 使用 tokio select 之类机制并结合 timeout 实现更优雅的等待机制，期望等待文件出现，再尝试连接
+pub async fn wait_and_check_service_available(status: &mut ServiceManager) -> Result<()> {
+    status.0 = ServiceStatus::Unavailable("Waiting for service to be available".into());
+    // 过早返回可能导致 UI 侧积极尝试连接服务失败
+    tokio::time::sleep(Duration::from_millis(725)).await;
+    clash_verge_service_ipc::connect().await?;
+    status.0 = ServiceStatus::Ready;
     Ok(())
 }
 
@@ -484,7 +498,7 @@ impl ServiceManager {
 
     pub const fn config() -> clash_verge_service_ipc::IpcConfig {
         clash_verge_service_ipc::IpcConfig {
-            default_timeout: Duration::from_millis(30),
+            default_timeout: Duration::from_millis(60),
             retry_delay: Duration::from_millis(250),
             max_retries: 6,
         }
@@ -511,6 +525,7 @@ impl ServiceManager {
 
     /// 综合服务状态检查（一次性完成所有检查）
     pub async fn check_service_comprehensive(&self) -> ServiceStatus {
+        tokio::time::sleep(Duration::from_millis(125)).await;
         match check_service_needs_reinstall().await {
             Ok(need) => {
                 logging!(debug, Type::Service, "服务当前可用，检查是否需要重装");
@@ -538,24 +553,17 @@ impl ServiceManager {
             ServiceStatus::NeedsReinstall | ServiceStatus::ReinstallRequired => {
                 logging!(info, Type::Service, "服务需要重装，执行重装流程");
                 reinstall_service().await?;
-                self.0 = ServiceStatus::Ready;
+                wait_and_check_service_available(self).await?;
             }
             ServiceStatus::ForceReinstallRequired => {
                 logging!(info, Type::Service, "服务需要强制重装，执行强制重装流程");
                 force_reinstall_service().await?;
-                self.0 = ServiceStatus::Ready;
+                wait_and_check_service_available(self).await?;
             }
             ServiceStatus::InstallRequired => {
                 logging!(info, Type::Service, "需要安装服务，执行安装流程");
                 install_service().await?;
-                // compatible with older service version, force reinstall if service is unavailable
-                // wait for service server is running
-                tokio::time::sleep(Duration::from_millis(500)).await;
-                if is_service_available().await.is_err() {
-                    logging!(info, Type::Service, "服务需要强制重装，执行强制重装流程");
-                    force_reinstall_service().await?;
-                }
-                self.0 = ServiceStatus::Ready;
+                wait_and_check_service_available(self).await?;
             }
             ServiceStatus::UninstallRequired => {
                 logging!(info, Type::Service, "服务需要卸载，执行卸载流程");
