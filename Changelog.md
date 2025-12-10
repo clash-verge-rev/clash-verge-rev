@@ -61,6 +61,7 @@
 - 优化前端 WebSocket 连接机制
 - 改进旧版 Service 需要重新安装检测流程
 - 优化 macOS, Linux 和 Windows 系统信号处理
+- 链式代理仅显示 Selector 类型规则组
 
 </details>
 

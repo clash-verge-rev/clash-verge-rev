@@ -27,8 +27,8 @@ import { ScrollTopButton } from "../layout/scroll-top-button";
 
 import { ProxyChain } from "./proxy-chain";
 import {
-  ProxyGroupNavigator,
   DEFAULT_HOVER_DELAY,
+  ProxyGroupNavigator,
 } from "./proxy-group-navigator";
 import { ProxyRender } from "./proxy-render";
 import { useRenderList } from "./use-render-list";
@@ -64,7 +64,13 @@ export const ProxyGroups = (props: Props) => {
   const { verge } = useVerge();
   const { proxies: proxiesData } = useProxiesData();
   const groups = proxiesData?.groups;
-  const availableGroups = useMemo(() => groups ?? [], [groups]);
+  const availableGroups = useMemo(() => {
+    if (!groups) return [];
+    // 在链式代理模式下，仅显示支持选择节点的 Selector 代理组
+    return isChainMode
+      ? groups.filter((g: any) => g.type === "Selector")
+      : groups;
+  }, [groups, isChainMode]);
 
   const defaultRuleGroup = useMemo(() => {
     if (isChainMode && mode === "rule" && availableGroups.length > 0) {
