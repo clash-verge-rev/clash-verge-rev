@@ -198,8 +198,6 @@ impl Tray {
                 );
             }
         }
-        // TODO: 初始化时，暂时使用此方法更新系统托盘菜单，有效避免代理节点菜单空白
-        crate::core::timer::Timer::global().add_update_tray_menu_task()?;
         Ok(())
     }
 

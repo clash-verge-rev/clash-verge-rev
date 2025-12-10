@@ -142,25 +142,6 @@ impl Timer {
         Ok(())
     }
 
-    /// 每 3 秒更新系统托盘菜单，总共执行 3 次
-    pub fn add_update_tray_menu_task(&self) -> Result<()> {
-        let tid = self.timer_count.fetch_add(1, Ordering::SeqCst);
-        let task = TaskBuilder::default()
-            .set_task_id(tid)
-            .set_maximum_parallel_runnable_num(1)
-            .set_frequency_count_down_by_seconds(3, 3)
-            .spawn_async_routine(|| async move {
-                logging!(debug, Type::Timer, "Updating tray menu");
-                crate::core::tray::Tray::global().update_menu().await
-            })
-            .context("failed to create update tray menu timer task")?;
-        self.delay_timer
-            .write()
-            .add_task(task)
-            .context("failed to add update tray menu timer task")?;
-        Ok(())
-    }
-
     /// Refresh timer tasks with better error handling
     pub async fn refresh(&self) -> Result<()> {
         // Generate diff outside of lock to minimize lock contention
