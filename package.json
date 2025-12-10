@@ -125,5 +125,15 @@
     ]
   },
   "type": "module",
-  "packageManager": "pnpm@10.24.0"
+  "packageManager": "pnpm@10.25.0",
+  "pnpm": {
+    "onlyBuiltDependencies": [
+      "@parcel/watcher",
+      "@swc/core",
+      "core-js",
+      "es5-ext",
+      "esbuild",
+      "unrs-resolver"
+    ]
+  }
 }
