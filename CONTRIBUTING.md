@@ -119,13 +119,17 @@ cargo fmt
 pnpm format
 ```
 
+### Signing your commit
+
+Signed commits are required to verify authorship and ensure your contributions can be merged. Reference signing-commits [here](https://docs.github.com/en/authentication/managing-commit-signature-verification/signing-commits).
+
 ### Submitting Your Changes
 
 1. Fork the repository.
 
 2. Create a new branch for your feature or bug fix.
 
-3. Commit your changes with clear messages.
+3. Commit your changes with clear messages and make sure it's signed.
 
 4. Push your branch and submit a pull request.
 
