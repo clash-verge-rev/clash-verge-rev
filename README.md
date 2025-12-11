@@ -17,7 +17,7 @@ A Clash Meta GUI based on <a href="https://github.com/tauri-apps/tauri">Tauri</a
   <a href="./docs/README_ru.md">Русский</a> ·
   <a href="./docs/README_ja.md">日本語</a> ·
   <a href="./docs/README_ko.md">한국어</a> .
-  <a href="./README_fa.md">فارسی</a>
+  <a href="./docs/README_fa.md">فارسی</a>
 </p>
 
 ## Preview
