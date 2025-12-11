@@ -1,10 +1,12 @@
 use super::{CoreManager, RunningMode};
 use crate::cmd::StringifyErr as _;
 use crate::config::{Config, IVerge};
+use crate::constants::timing;
 use crate::core::handle::Handle;
 use crate::core::manager::CLASH_LOGGER;
 use crate::core::service::{SERVICE_MANAGER, ServiceStatus};
 use anyhow::Result;
+use backoff::{Error as BackoffError, ExponentialBackoff};
 use clash_verge_logging::{Type, logging};
 use scopeguard::defer;
 use smartstring::alias::String;
@@ -63,7 +65,6 @@ impl CoreManager {
     }
 
     async fn prepare_startup(&self) -> Result<()> {
-        #[cfg(any(target_os = "windows", target_os = "macos"))]
         self.wait_for_service_if_needed().await;
 
         let value = SERVICE_MANAGER.lock().await.current();
@@ -81,14 +82,9 @@ impl CoreManager {
         tauri_plugin_clash_verge_sysinfo::set_app_core_mode(app_handle, self.get_running_mode().to_string());
     }
 
-    #[cfg(any(target_os = "windows", target_os = "macos"))]
     async fn wait_for_service_if_needed(&self) {
-        use crate::constants::timing;
-        use backoff::{Error as BackoffError, ExponentialBackoff};
-
         #[cfg(target_os = "windows")]
         {
-            use crate::config::Config;
             let needs_service = Config::verge().await.latest_arc().enable_tun_mode.unwrap_or(false);
 
             if !needs_service {
@@ -96,7 +92,7 @@ impl CoreManager {
             }
         }
 
-        // 在 macOS 上，如果服务状态是 "Need Checks"，尝试初始化服务管理器
+        // 在 unix 上，如果服务状态是 "Need Checks"，尝试初始化服务管理器
         // 在 Windows 上，只有在需要 TUN 模式时才等待服务
         let mut manager = SERVICE_MANAGER.lock().await;
         let current_status = manager.current();
