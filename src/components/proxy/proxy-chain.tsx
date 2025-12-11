@@ -285,23 +285,37 @@ export const ProxyChain = ({
 
   const handleConnect = useCallback(async () => {
     if (isConnected) {
-      // 如果已连接，则断开连接
       setIsConnecting(true);
       try {
-        // 清空链式代理配置
         await updateProxyChainConfigInRuntime(null);
 
-        // 切换到 DIRECT 模式断开代理连接
-        // await updateProxyAndSync("GLOBAL", "DIRECT");
+        const targetGroup =
+          mode === "global"
+            ? "GLOBAL"
+            : selectedGroup || localStorage.getItem("proxy-chain-group");
 
-        // 关闭所有连接
+        if (targetGroup) {
+          try {
+            await selectNodeForGroup(targetGroup, "DIRECT");
+          } catch {
+            if (proxyChain.length >= 1) {
+              try {
+                await selectNodeForGroup(targetGroup, proxyChain[0].name);
+              } catch {
+                // ignore
+              }
+            }
+          }
+        }
+
+        localStorage.removeItem("proxy-chain-group");
+        localStorage.removeItem("proxy-chain-exit-node");
+        localStorage.removeItem("proxy-chain-items");
+
         await closeAllConnections();
+        await mutateProxies();
 
-        // 刷新代理信息以更新连接状态
-        mutateProxies();
-
-        // 清空链式代理配置UI
-        // onUpdateChain([]);
+        onUpdateChain([]);
       } catch (error) {
         console.error("Failed to disconnect from proxy chain:", error);
         alert(t("proxies.page.chain.disconnectFailed") || "断开链式代理失败");
@@ -348,7 +362,15 @@ export const ProxyChain = ({
     } finally {
       setIsConnecting(false);
     }
-  }, [proxyChain, isConnected, t, mutateProxies, mode, selectedGroup]);
+  }, [
+    proxyChain,
+    isConnected,
+    t,
+    mutateProxies,
+    mode,
+    selectedGroup,
+    onUpdateChain,
+  ]);
 
   const proxyChainRef = useRef(proxyChain);
   const onUpdateChainRef = useRef(onUpdateChain);
@@ -376,10 +398,11 @@ export const ProxyChain = ({
                   type: proxy.type,
                   delay: undefined,
                 })) || [];
-              onUpdateChain(chainItems);
+              if (chainItems.length > 0) {
+                onUpdateChain(chainItems);
+              }
             } catch (parseError) {
               console.error("Failed to parse YAML:", parseError);
-              onUpdateChain([]);
             }
           })
           .catch((importError) => {
@@ -399,19 +422,16 @@ export const ProxyChain = ({
                   type: proxy.type,
                   delay: undefined,
                 })) || [];
-              onUpdateChain(chainItems);
+              if (chainItems.length > 0) {
+                onUpdateChain(chainItems);
+              }
             } catch (jsonError) {
               console.error("Failed to parse as JSON either:", jsonError);
-              onUpdateChain([]);
             }
           });
       } catch (error) {
         console.error("Failed to process chain config data:", error);
-        onUpdateChain([]);
       }
-    } else if (chainConfigData === "") {
-      // Empty string means no proxies available, show empty state
-      onUpdateChain([]);
     }
   }, [chainConfigData, onUpdateChain]);
 
@@ -481,6 +501,9 @@ export const ProxyChain = ({
               size="small"
               onClick={() => {
                 updateProxyChainConfigInRuntime(null);
+                localStorage.removeItem("proxy-chain-group");
+                localStorage.removeItem("proxy-chain-exit-node");
+                localStorage.removeItem("proxy-chain-items");
                 onUpdateChain([]);
               }}
               sx={{

@@ -51,8 +51,26 @@ const VirtuosoFooter = () => <div style={{ height: "8px" }} />;
 export const ProxyGroups = (props: Props) => {
   const { t } = useTranslation();
   const { mode, isChainMode = false, chainConfigData } = props;
-  const [proxyChain, setProxyChain] = useState<ProxyChainItem[]>([]);
+  const [proxyChain, setProxyChain] = useState<ProxyChainItem[]>(() => {
+    try {
+      const saved = localStorage.getItem("proxy-chain-items");
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch {
+      // ignore
+    }
+    return [];
+  });
   const [selectedGroup, setSelectedGroup] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (proxyChain.length > 0) {
+      localStorage.setItem("proxy-chain-items", JSON.stringify(proxyChain));
+    } else {
+      localStorage.removeItem("proxy-chain-items");
+    }
+  }, [proxyChain]);
   const [ruleMenuAnchor, setRuleMenuAnchor] = useState<null | HTMLElement>(
     null,
   );
@@ -231,10 +249,11 @@ export const ProxyGroups = (props: Props) => {
     setSelectedGroup(groupName);
     handleGroupMenuClose();
 
-    // 在链式代理模式的规则模式下，切换代理组时清空链式代理配置
     if (isChainMode && mode === "rule") {
       updateProxyChainConfigInRuntime(null);
-      // 同时清空右侧链式代理配置
+      localStorage.removeItem("proxy-chain-group");
+      localStorage.removeItem("proxy-chain-exit-node");
+      localStorage.removeItem("proxy-chain-items");
       setProxyChain([]);
     }
   };
