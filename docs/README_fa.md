@@ -60,7 +60,7 @@
 - کلاسترهای متعادل بار با مسیرهای اختصاصی پرسرعت (سازگار با کلاینت‌های قدیمی)، تأخیر فوق‌العاده کم، پخش روان 4K
 - اولین ارائه‌دهنده جهانی که از پروتکل «Hysteria2» پشتیبانی می‌کند - کاملاً مناسب برای کلاینت Clash Verge
 - پشتیبانی از سرویس‌های استریم و دسترسی به ChatGPT
-- Official site: [https://狗狗加速.com](https://verge.dginv.click/#/register?code=oaxsAGo6)
+- وبسایت رسمی: [https://狗狗加速.com](https://verge.dginv.click/#/register?code=oaxsAGo6)
 
 #### حامی زیرساخت ساخت — [سرورهای اختصاصی YXVM](https://yxvm.com/aff.php?aff=827)
 
@@ -110,14 +110,14 @@ pnpm dev
 
 ## تقدیر و تشکر
 
-<p dir="rtl"> Clash Verge Rev بر اساس این پروژه‌ها ساخته شده یا از آنها الهام گرفته است: </p>
+Clash Verge Rev بر اساس این پروژه‌ها ساخته شده یا از آنها الهام گرفته است:
 
-- <p dir="rtl">‎[zzzgydi/clash-verge](https://github.com/zzzgydi/clash-verge): یک رابط کاربری گرافیکی Clash مبتنی بر Tauri برای ویندوز، macOS و لینوکس..</p>
-- <p dir="rtl">[tauri-apps/tauri](https://github.com/tauri-apps/tauri): ساخت برنامه‌های دسکتاپ کوچک‌تر، سریع‌تر و امن‌تر با رابط کاربری وب.</p>
-- <p dir="rtl">[Dreamacro/clash](https://github.com/Dreamacro/clash): یک تونل مبتنی بر قانون که با زبان Go نوشته شده است.</p>
-- <p dir="rtl">[MetaCubeX/mihomo](https://github.com/MetaCubeX/mihomo): یک تونل مبتنی بر قانون که با زبان Go نوشته شده است.</p>
-- <p dir="rtl">[Fndroid/clash_for_windows_pkg](https://github.com/Fndroid/clash_for_windows_pkg): رابط کاربری گرافیکی Clash برای ویندوز و macOS.</p>
-- <p dir="rtl">[vitejs/vite](https://github.com/vitejs/vite): ابزارهای فرانت‌اند نسل بعدی با DX فوق‌العاده سریع.</p>
+- [zzzgydi/clash-verge](https://github.com/zzzgydi/clash-verge): یک رابط کاربری گرافیکی Clash مبتنی بر Tauri برای ویندوز، macOS و لینوکس..
+- [tauri-apps/tauri](https://github.com/tauri-apps/tauri): ساخت برنامه‌های دسکتاپ کوچک‌تر، سریع‌تر و امن‌تر با رابط کاربری وب.
+- [Dreamacro/clash](https://github.com/Dreamacro/clash): یک تونل مبتنی بر قانون که با زبان Go نوشته شده است.
+- [MetaCubeX/mihomo](https://github.com/MetaCubeX/mihomo): یک تونل مبتنی بر قانون که با زبان Go نوشته شده است.
+- [Fndroid/clash_for_windows_pkg](https://github.com/Fndroid/clash_for_windows_pkg): رابط کاربری گرافیکی Clash برای ویندوز و macOS.
+- [vitejs/vite](https://github.com/vitejs/vite): ابزارهای فرانت‌اند نسل بعدی با DX فوق‌العاده سریع.
 
 ## مجوز
 
