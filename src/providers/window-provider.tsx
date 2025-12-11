@@ -80,8 +80,15 @@ export const WindowProvider = ({ children }: PropsWithChildren) => {
     };
 
     return {
-      minimize: () => currentWindow.minimize(),
-      close: () => currentWindow.close(),
+      minimize: async () => {
+        // Delay one frame so the UI can clear :hover before the window hides.
+        await new Promise((resolve) => setTimeout(resolve, 10));
+        await currentWindow.minimize();
+      },
+      close: async () => {
+        await new Promise((resolve) => setTimeout(resolve, 20));
+        await currentWindow.close();
+      },
       refreshDecorated,
       toggleDecorations,
       toggleMaximize,
