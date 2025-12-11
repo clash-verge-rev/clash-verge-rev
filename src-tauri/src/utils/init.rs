@@ -12,7 +12,7 @@ use crate::{
 };
 use anyhow::Result;
 use chrono::{Local, TimeZone as _};
-#[cfg(not(feature = "tauri-dev"))]
+#[cfg(all(not(feature = "tauri-dev"), not(feature = "tracing-full")))]
 use clash_verge_logging::NoModuleFilter;
 use clash_verge_logging::Type;
 use clash_verge_service_ipc::WriterConfig;
@@ -65,7 +65,7 @@ pub async fn init_logger() -> Result<LoggerHandle> {
             },
             Cleanup::KeepLogFiles(log_max_count),
         );
-    #[cfg(not(feature = "tracing"))]
+    #[cfg(all(not(feature = "tracing"), not(feature = "tracing-full")))]
     let logger = logger.filter(Box::new(NoModuleFilter(&[
         "wry",
         "tauri",
