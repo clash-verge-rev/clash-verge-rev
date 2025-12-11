@@ -67,7 +67,7 @@
     "react-dom": "19.2.1",
     "react-error-boundary": "6.0.0",
     "react-hook-form": "^7.67.0",
-    "react-i18next": "16.4.0",
+    "react-i18next": "16.4.1",
     "react-markdown": "10.1.0",
     "react-router": "^7.10.0",
     "react-virtuoso": "^4.16.1",
