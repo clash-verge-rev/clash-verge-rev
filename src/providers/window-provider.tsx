@@ -80,7 +80,10 @@ export const WindowProvider = ({ children }: PropsWithChildren) => {
     };
 
     return {
-      minimize: () => currentWindow.minimize(),
+      minimize: async () => {
+        await new Promise((resolve) => setTimeout(resolve, 10));
+        await currentWindow.minimize();
+      },
       close: () => currentWindow.close(),
       refreshDecorated,
       toggleDecorations,
