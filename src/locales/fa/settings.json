@@ -24,8 +24,8 @@
       },
       "notifications": {
         "tunMode": {
-          "autoDisabled": "TUN Mode automatically disabled due to service unavailable",
-          "autoDisableFailed": "Failed to disable TUN Mode automatically"
+          "autoDisabled": "حالت TUN به دلیل عدم دسترسی به سرویس، به طور خودکار غیرفعال می‌شود",
+          "autoDisableFailed": "غیرفعال کردن خودکار حالت TUN ناموفق بود"
         }
       }
     },
