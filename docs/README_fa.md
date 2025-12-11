@@ -6,98 +6,97 @@
 </h1>
 
 <h3 align="center">
-A Clash Meta GUI built with <a href="https://github.com/tauri-apps/tauri">Tauri</a>.
+  یک رابط کاربری گرافیکی Clash Meta که با <a href="https://github.com/tauri-apps/tauri">Tauri</a> ساخته شده است.
 </h3>
 
 <p align="center">
-  Languages:
+  زبان‌ها:
   <a href="../README.md">简体中文</a> ·
   <a href="./README_en.md">English</a> ·
   <a href="./README_es.md">Español</a> ·
   <a href="./README_ru.md">Русский</a> ·
   <a href="./README_ja.md">日本語</a> ·
-  <a href="./README_ko.md">한국어</a>
+  <a href="./README_ko.md">한국어</a> ·
+  <a href="./README_fa.md">فارسی</a>
 </p>
 
-## Preview
+## پیش‌نمایش
 
-| Dark                                | Light                                 |
+| تاریک                                | روشن                                 |
 | ----------------------------------- | ------------------------------------- |
 | ![Dark Preview](./preview_dark.png) | ![Light Preview](./preview_light.png) |
 
-## Install
+## نصب
 
-Visit the [Release page](https://github.com/clash-verge-rev/clash-verge-rev/releases) to download the installer that matches your platform.<br>
-We provide packages for Windows (x64/x86), Linux (x64/arm64), and macOS 10.15+ (Intel/Apple).
+برای دانلود فایل نصبی متناسب با پلتفرم خود، به [صفحه انتشار](https://github.com/clash-verge-rev/clash-verge-rev/releases) مراجعه کنید.<br> ما بسته‌هایی برای ویندوز (x64/x86)، لینوکس (x64/arm64) و macOS 10.15+ (اینتل/اپل) ارائه می‌دهیم.
 
-#### Choosing a Release Channel
+#### انتخاب کانال انتشار
 
-| Channel     | Description                                                           | Link                                                                                   |
+| Channel     | توضیحات                                                           | Link                                                                                   |
 | :---------- | :-------------------------------------------------------------------- | :------------------------------------------------------------------------------------- |
-| Stable      | Official builds with high reliability, ideal for daily use.           | [Release](https://github.com/clash-verge-rev/clash-verge-rev/releases)                 |
-| Alpha (EOL) | Legacy builds used to validate the publish pipeline.                  | [Alpha](https://github.com/clash-verge-rev/clash-verge-rev/releases/tag/alpha)         |
-| AutoBuild   | Rolling builds for testing and feedback. Expect experimental changes. | [AutoBuild](https://github.com/clash-verge-rev/clash-verge-rev/releases/tag/autobuild) |
+| Stable      | ساخت رسمی با قابلیت اطمینان بالا، ایده‌آل برای استفاده روزانه.           | [Release](https://github.com/clash-verge-rev/clash-verge-rev/releases)                 |
+| Alpha (EOL) | نسخه‌های قدیمی (Legacy builds) برای اعتبارسنجی خط لوله انتشار (publish pipeline) استفاده می‌شوند.                | [Alpha](https://github.com/clash-verge-rev/clash-verge-rev/releases/tag/alpha)         |
+| AutoBuild   | نسخه‌های آزمایشی برای آزمایش و دریافت بازخورد. منتظر تغییرات آزمایشی باشید. | [AutoBuild](https://github.com/clash-verge-rev/clash-verge-rev/releases/tag/autobuild) |
 
-#### Installation Guides & FAQ
+#### راهنماهای نصب و سوالات متداول
 
-Read the [project documentation](https://clash-verge-rev.github.io/) for install steps, troubleshooting, and frequently asked questions.
+برای مراحل نصب، عیب‌یابی و سوالات متداول، [مستندات پروژه](https://clash-verge-rev.github.io/) را مطالعه کنید.
 
 ---
 
-### Telegram Channel
+### کانال تلگرام
 
-Join [@clash_verge_rev](https://t.me/clash_verge_re) for update announcements.
+برای اطلاع از آخرین اخبار به [@clash_verge_rev](https://t.me/clash_verge_re) بپیوندید.
 
-## Promotion
+## تبلیغات
 
-#### [Doggygo VPN — Performance-oriented global accelerator](https://verge.dginv.click/#/register?code=oaxsAGo6)
+#### [Doggygo VPN — شتاب‌دهنده جهانی عملکردگرا](https://verge.dginv.click/#/register?code=oaxsAGo6)
 
-- High-performance overseas network service with free trials, discounted plans, streaming unlocks, and first-class Hysteria protocol support.
-- Register through the exclusive Clash Verge link to get a 3-day trial with 1 GB of traffic per day: [Sign up](https://verge.dginv.click/#/register?code=oaxsAGo6)
-- Exclusive 20% off coupon for Clash Verge users: `verge20` (limited to 500 uses)
-- Discounted bundle from ¥15.8 per month for 160 GB, plus an additional 20% off for yearly billing
-- Operated by an overseas team with reliable service and up to 50% revenue share
-- Load-balanced clusters with high-speed dedicated routes (compatible with legacy clients), exceptionally low latency, smooth 4K playback
-- First global provider to support the `Hysteria2` protocol—perfect fit for the Clash Verge client
-- Supports streaming services and ChatGPT access
+- سرویس شبکه برون مرزی با عملکرد بالا به همراه دوره‌های آزمایشی رایگان، طرح‌های تخفیف‌دار، امکان باز کردن قفل استریم و پشتیبانی درجه یک از پروتکل هیستریا.
+- از طریق لینک اختصاصی Clash Verge ثبت نام کنید تا یک دوره آزمایشی ۳ روزه با ۱ گیگابایت ترافیک در روز دریافت کنید: [ثبت نام](https://verge.dginv.click/#/register?code=oaxsAGo6)
+- کوپن تخفیف ۲۰٪ ویژه کاربران Clash Verge: `verge20` (محدود به ۵۰۰ بار استفاده)
+- بسته تخفیف‌دار از ۱۵.۸ ین در ماه برای ۱۶۰ گیگابایت، به علاوه ۲۰٪ تخفیف اضافی برای صورتحساب سالانه
+- توسط یک تیم خارجی با خدمات قابل اعتماد و تا 50٪ سهم درآمد اداره می‌شود
+- کلاسترهای متعادل بار با مسیرهای اختصاصی پرسرعت (سازگار با کلاینت‌های قدیمی)، تأخیر فوق‌العاده کم، پخش روان 4K
+- اولین ارائه‌دهنده جهانی که از پروتکل «Hysteria2» پشتیبانی می‌کند - کاملاً مناسب برای کلاینت Clash Verge
+- پشتیبانی از سرویس‌های استریم و دسترسی به ChatGPT
 - Official site: [https://狗狗加速.com](https://verge.dginv.click/#/register?code=oaxsAGo6)
 
-#### Build Infrastructure Sponsor — [YXVM Dedicated Servers](https://yxvm.com/aff.php?aff=827)
+#### حامی زیرساخت ساخت — [سرورهای اختصاصی YXVM](https://yxvm.com/aff.php?aff=827)
 
-Our builds and releases run on YXVM dedicated servers that deliver premium resources, strong performance, and high-speed networking. If downloads feel fast and usage feels snappy, it is thanks to robust hardware.
+بیلدها و نسخه‌های ما روی سرورهای اختصاصی YXVM اجرا می‌شوند که منابع ممتاز، عملکرد قوی و شبکه پرسرعت را ارائه می‌دهند. اگر دانلودها سریع و استفاده از آن سریع به نظر می‌رسد، به لطف سخت‌افزار قوی است.
+🧩 نکات برجسته سرورهای اختصاصی YXVM:
 
-🧩 Highlights of YXVM Dedicated Servers:
+- 🌎 مسیرهای جهانی بهینه شده برای دانلودهای بسیار سریعتر
+- 🔧 منابع فیزیکی به جای ظرفیت VPS مشترک برای حداکثر کارایی
+- 🧠 عالی برای بارهای کاری پروکسی، میزبانی سرویس‌های وب/CDN، خطوط لوله CI/CD یا هرگونه کار با بار بالا
+- 💡 آماده استفاده فوری با گزینه‌های متعدد مرکز داده، از جمله CN2 و IEPL
+- 📦 پیکربندی مورد استفاده در این پروژه در حال فروش است - می‌توانید همان تنظیمات را تهیه کنید.
+- 🎯 آیا محیط ساخت مشابهی می‌خواهید؟ [همین امروز یک سرور YXVM سفارش دهید](https://yxvm.com/aff.php?aff=827)
 
-- 🌎 Optimized global routes for dramatically faster downloads
-- 🔧 Bare-metal resources instead of shared VPS capacity for maximum performance
-- 🧠 Great for proxy workloads, hosting web/CDN services, CI/CD pipelines, or any high-load tasks
-- 💡 Ready to use instantly with multiple datacenter options, including CN2 and IEPL
-- 📦 The configuration used by this project is on sale—feel free to get the same setup
-- 🎯 Want the same build environment? [Order a YXVM server today](https://yxvm.com/aff.php?aff=827)
+## ویژگی‌ها
 
-## Features
+- ساخته شده بر اساس Rust با کارایی بالا و فریم‌ورک Tauri 2
+- با هسته جاسازی‌شده [Clash.Meta (mihomo)](https://github.com/MetaCubeX/mihomo) ارائه می‌شود و از تغییر به کانال «آلفا» پشتیبانی می‌کند.
+- رابط کاربری تمیز و مرتب با کنترل‌های رنگ تم، آیکون‌های گروه/سینی پروکسی و `تزریق CSS`
+- مدیریت پروفایل پیشرفته (ادغام و کمک‌کننده‌های اسکریپت) با نکات مربوط به سینتکس پیکربندی
+- کنترل‌های پروکسی سیستم، حالت محافظت و پشتیبانی از `TUN` (آداپتور شبکه مجازی)
+- ویرایشگرهای بصری برای گره‌ها و قوانین
+- پشتیبان‌گیری و همگام‌سازی مبتنی بر WebDAV برای تنظیمات
 
-- Built on high-performance Rust with the Tauri 2 framework
-- Ships with the embedded [Clash.Meta (mihomo)](https://github.com/MetaCubeX/mihomo) core and supports switching to the `Alpha` channel
-- Clean, polished UI with theme color controls, proxy group/tray icons, and `CSS Injection`
-- Enhanced profile management (Merge and Script helpers) with configuration syntax hints
-- System proxy controls, guard mode, and `TUN` (virtual network adapter) support
-- Visual editors for nodes and rules
-- WebDAV-based backup and sync for configurations
+### سوالات متداول
 
-### FAQ
+برای راهنمایی‌های مربوط به هر پلتفرم، به [صفحه سوالات متداول](https://clash-verge-rev.github.io/faq/windows.html) مراجعه کنید.
 
-See the [FAQ page](https://clash-verge-rev.github.io/faq/windows.html) for platform-specific guidance.
+### اهدا
 
-### Donation
+[پشتیبانی از توسعه Clash Verge Rev](https://github.com/sponsors/clash-verge-rev)
 
-[Support Clash Verge Rev development](https://github.com/sponsors/clash-verge-rev)
+## توسعه
 
-## Development
+برای دستورالعمل‌های دقیق مشارکت، به [CONTRIBUTING.md](../CONTRIBUTING.md) مراجعه کنید.
 
-See [CONTRIBUTING.md](../CONTRIBUTING.md) for detailed contribution guidelines.
-
-After installing all **Tauri** prerequisites, run the development shell with:
+پس از نصب تمام پیش‌نیازهای **Tauri**، پوسته توسعه را با دستور زیر اجرا کنید:
 
 ```shell
 pnpm i
@@ -105,21 +104,21 @@ pnpm run prebuild
 pnpm dev
 ```
 
-## Contributions
+## مشارکت‌ها
 
-Issues and pull requests are welcome!
+مشکلات و درخواست‌های pull مورد استقبال قرار می‌گیرند!
 
-## Acknowledgement
+## تقدیر و تشکر
 
-Clash Verge Rev builds on or draws inspiration from these projects:
+<p dir="rtl"> Clash Verge Rev بر اساس این پروژه‌ها ساخته شده یا از آنها الهام گرفته است: </p>
 
-- [zzzgydi/clash-verge](https://github.com/zzzgydi/clash-verge): A Tauri-based Clash GUI for Windows, macOS, and Linux.
-- [tauri-apps/tauri](https://github.com/tauri-apps/tauri): Build smaller, faster, more secure desktop apps with a web frontend.
-- [Dreamacro/clash](https://github.com/Dreamacro/clash): A rule-based tunnel written in Go.
-- [MetaCubeX/mihomo](https://github.com/MetaCubeX/mihomo): A rule-based tunnel written in Go.
-- [Fndroid/clash_for_windows_pkg](https://github.com/Fndroid/clash_for_windows_pkg): A Clash GUI for Windows and macOS.
-- [vitejs/vite](https://github.com/vitejs/vite): Next-generation frontend tooling with blazing-fast DX.
+- <p dir="rtl">‎[zzzgydi/clash-verge](https://github.com/zzzgydi/clash-verge): یک رابط کاربری گرافیکی Clash مبتنی بر Tauri برای ویندوز، macOS و لینوکس..</p>
+- <p dir="rtl">[tauri-apps/tauri](https://github.com/tauri-apps/tauri): ساخت برنامه‌های دسکتاپ کوچک‌تر، سریع‌تر و امن‌تر با رابط کاربری وب.</p>
+- <p dir="rtl">[Dreamacro/clash](https://github.com/Dreamacro/clash): یک تونل مبتنی بر قانون که با زبان Go نوشته شده است.</p>
+- <p dir="rtl">[MetaCubeX/mihomo](https://github.com/MetaCubeX/mihomo): یک تونل مبتنی بر قانون که با زبان Go نوشته شده است.</p>
+- <p dir="rtl">[Fndroid/clash_for_windows_pkg](https://github.com/Fndroid/clash_for_windows_pkg): رابط کاربری گرافیکی Clash برای ویندوز و macOS.</p>
+- <p dir="rtl">[vitejs/vite](https://github.com/vitejs/vite): ابزارهای فرانت‌اند نسل بعدی با DX فوق‌العاده سریع.</p>
 
-## License
+## مجوز
 
-GPL-3.0 License. See the [license file](../LICENSE) for details.
+مجوز GPL-3.0. برای جزئیات بیشتر به [فایل مجوز](../LICENSE) مراجعه کنید.
