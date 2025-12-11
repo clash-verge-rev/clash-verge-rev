@@ -129,8 +129,9 @@ const ConnectionsPage = () => {
         height: "100%",
         display: "flex",
         flexDirection: "column",
-        overflow: "auto",
+        overflow: "hidden",
         borderRadius: "8px",
+        minHeight: 0,
       }}
       header={
         <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
@@ -243,6 +244,8 @@ const ConnectionsPage = () => {
           style={{
             flex: 1,
             borderRadius: "8px",
+            WebkitOverflowScrolling: "touch",
+            overscrollBehavior: "contain",
           }}
           data={filterConn}
           itemContent={(_, item) => (

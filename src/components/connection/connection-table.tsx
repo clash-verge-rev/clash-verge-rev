@@ -478,6 +478,8 @@ export const ConnectionTable = (props: Props) => {
             flex: 1,
             minHeight: 0,
             overflow: "auto",
+            WebkitOverflowScrolling: "touch",
+            overscrollBehavior: "contain",
             borderRadius: 1,
             border: "none",
             "&::-webkit-scrollbar": {
