@@ -1,5 +1,3 @@
-use std::time::Duration;
-
 pub mod network {
     pub const DEFAULT_EXTERNAL_CONTROLLER: &str = "127.0.0.1:9097";
 
@@ -20,16 +18,14 @@ pub mod network {
 }
 
 pub mod timing {
-    use super::Duration;
+    use std::time::Duration;
 
     pub const CONFIG_UPDATE_DEBOUNCE: Duration = Duration::from_millis(300);
     pub const EVENT_EMIT_DELAY: Duration = Duration::from_millis(20);
     pub const STARTUP_ERROR_DELAY: Duration = Duration::from_secs(2);
     pub const ERROR_BATCH_DELAY: Duration = Duration::from_millis(300);
 
-    #[cfg(target_os = "windows")]
     pub const SERVICE_WAIT_MAX: Duration = Duration::from_millis(3000);
-    #[cfg(target_os = "windows")]
     pub const SERVICE_WAIT_INTERVAL: Duration = Duration::from_millis(200);
 }
 
