@@ -15,7 +15,7 @@
         "systemProxy": "پراکسی سیستم"
       },
       "tooltips": {
-        "autoLaunchAdmin": "Administrator mode may not support auto launch",
+        "autoLaunchAdmin": "حالت ادمین ممکن است از راه‌اندازی خودکار پشتیبانی نکند",
         "silentStart": "برنامه را در حالت پس‌زمینه بدون نمایش پانل اجرا کنید"
       },
       "fields": {
@@ -33,11 +33,11 @@
       "tooltips": {
         "systemProxy": "به امکانات تنظیم پروکسی سیستم عامل دسترسی پیدا کنید. اگر فعال‌سازی ناموفق بود، پروکسی سیستم عامل را به‌صورت دستی تغییر دهید",
         "tunMode": "حالت Tun (NIC مجازی): تمام ترافیک سیستم را ضبط می کند، وقتی فعال باشد، نیازی به فعال کردن پروکسی سیستم نیست.",
-        "tunUnavailable": "TUN requires Service Mode or Admin Mode"
+        "tunUnavailable": "TUN به حالت سرویس یا حالت ادمین نیاز دارد"
       },
       "actions": {
         "installService": "نصب سرویس",
-        "uninstallService": "Uninstall Service"
+        "uninstallService": "حذف سرویس"
       },
       "fields": {
         "systemProxy": "پراکسی سیستم",
@@ -47,22 +47,22 @@
     "externalController": {
       "title": "کنترل‌کننده خارجی",
       "fields": {
-        "enable": "Enable External Controller",
+        "enable": "فعال کردن کنترل‌کننده خارجی",
         "address": "کنترل‌کننده خارجی",
         "secret": "رمز اصلی"
       },
       "placeholders": {
-        "address": "Required",
+        "address": "مورد نیاز",
         "secret": "توصیه شده"
       },
       "tooltips": {
-        "copy": "Copy to clipboard"
+        "copy": "کپی در کلیپ بورد"
       },
       "messages": {
-        "addressRequired": "Controller address cannot be empty",
-        "secretRequired": "Secret cannot be empty",
-        "copyFailed": "Failed to copy",
-        "controllerCopied": "Controller address copied to clipboard",
+        "addressRequired": "آدرس کنترلر نمی‌تواند خالی باشد",
+        "secretRequired": "راز نمی‌تواند خالی باشد",
+        "copyFailed": "کپی نشد",
+        "controllerCopied": "آدرس کنترلر در کلیپ بورد کپی شد",
         "secretCopied": "Secret copied to clipboard"
       }
     },
@@ -73,10 +73,10 @@
         "allowedOrigins": "Allowed Origins"
       },
       "placeholders": {
-        "origin": "Please enter a valid url"
+        "origin": "لطفا یک url معتبر وارد کنید"
       },
       "actions": {
-        "add": "Add"
+        "add": "افزودن"
       },
       "messages": {
         "alwaysIncluded": "Always included origins: {{urls}}"
@@ -95,7 +95,7 @@
       "form": {
         "fields": {
           "allowLan": "اجازه LAN",
-          "dnsOverwrite": "DNS Overwrite",
+          "dnsOverwrite": "بازنویسی DNS",
           "ipv6": "IPv6",
           "unifiedDelay": "معادلDELAY",
           "logLevel": "سطح لاگ",
@@ -157,11 +157,11 @@
           "liteMode": "رابط کاربری گرافیکی را ببندید و فقط هسته را در حال اجرا نگه دارید"
         },
         "actions": {
-          "copyVersion": "Copy Version"
+          "copyVersion": "کپی نسخه"
         },
         "notifications": {
           "latestVersion": "در حال حاضر در آخرین نسخه",
-          "versionCopied": "Version copied to clipboard"
+          "versionCopied": "نسخه در کلیپ بورد کپی شد"
         },
         "fields": {
           "backupSetting": "تنظیمات پشتیبان گیری",
@@ -263,13 +263,13 @@
         "autoEnter": "Auto Enter LightWeight Mode"
       },
       "tooltips": {
-        "autoEnter": "Enable to automatically activate LightWeight Mode after the window is closed for a period of time"
+        "autoEnter": "فعال کردن حالت LightWeight به صورت خودکار پس از بسته شدن پنجره برای مدت زمانی خاص"
       },
       "fields": {
-        "delay": "Auto Enter LightWeight Mode Delay"
+        "delay": "تأخیر ورود خودکار به حالت LightWeight"
       },
       "messages": {
-        "autoEnterHint": "When closing the window, LightWeight Mode will be automatically activated after {{n}} minutes"
+        "autoEnterHint": "هنگام بستن پنجره، حالت LightWeight پس از {{n}} دقیقه به طور خودکار فعال می‌شود"
       }
     },
     "backup": {
@@ -325,18 +325,18 @@
         }
       },
       "manual": {
-        "title": "Manual backup",
-        "local": "Creates a snapshot on this device, stored under the app data directory.",
-        "webdav": "Upload a snapshot to your WebDAV server once credentials are set.",
-        "configureWebdav": "Configure WebDAV"
+        "title": "پشتیبان گیری دستی",
+        "local": "یک اسنپ‌شات روی این دستگاه ایجاد می‌کند که در پوشه‌ی داده‌های برنامه ذخیره می‌شود.",
+        "webdav": "پس از تنظیم اعتبارنامه‌ها، یک اسنپ‌شات (عکس فوری) در سرور WebDAV خود آپلود کنید.",
+        "configureWebdav": "پیکربندی WebDAV"
       },
       "history": {
-        "title": "Backup history",
+        "title": "تاریخچه پشتیبان گیری",
         "summary": "{{count}} backups • latest {{recent}}",
-        "empty": "No backups available"
+        "empty": "هیچ نسخه پشتیبان در دسترس نیست"
       },
       "webdav": {
-        "title": "WebDAV settings"
+        "title": "پیکربندی WebDAV"
       },
       "table": {
         "filename": "نام فایل",
@@ -431,8 +431,8 @@
         "autoRedirect": "Auto Redirect"
       },
       "tooltips": {
-        "dnsHijack": "Please use , to separate multiple DNS servers",
-        "autoRedirect": "Automatically configures nftables/iptables TCP redirects"
+        "dnsHijack": "لطفا برای جدا کردن چندین سرور DNS از , استفاده کنید.",
+        "autoRedirect": "پیکربندی خودکار ریدایرکت‌های TCP در nftables/iptables"
       },
       "messages": {
         "applied": "تنظیمات اعمال شد"
@@ -440,11 +440,11 @@
     },
     "dns": {
       "dialog": {
-        "title": "DNS Overwrite",
-        "warning": "If you are not familiar with these settings, please do not modify them and keep DNS Overwrite enabled"
+        "title": "بازنویسی DNS",
+        "warning": "اگر با این تنظیمات آشنا نیستید، لطفاً آنها را تغییر ندهید و DNS Overwrite را فعال نگه دارید."
       },
       "sections": {
-        "general": "DNS Settings",
+        "general": "تنظیمات DNS",
         "fallbackFilter": "Fallback Filter Settings",
         "hosts": "Hosts Settings"
       },
@@ -464,7 +464,7 @@
         },
         "respectRules": {
           "label": "Respect Rules",
-          "description": "DNS connections follow routing rules"
+          "description": "اتصالات DNS از قوانین مسیریابی پیروی می‌کنند"
         },
         "useHosts": {
           "label": "Use Hosts",
@@ -484,11 +484,11 @@
         },
         "nameserver": {
           "label": "Nameserver",
-          "description": "List of DNS servers, comma separated"
+          "description": "فهرست سرورهای DNS، جدا شده با کاما"
         },
         "fallback": {
           "label": "Fallback",
-          "description": "List of fallback DNS servers, comma separated"
+          "description": "فهرست سرورهای DNS جایگزین، جدا شده با کاما"
         },
         "proxy": {
           "label": "Proxy Server Nameserver",
@@ -516,21 +516,21 @@
           "description": "IP CIDRs not using fallback servers, comma separated"
         },
         "fallbackDomain": {
-          "label": "Fallback Domain",
-          "description": "Domains using fallback servers, comma separated"
+          "label": "دامنه جایگزین",
+          "description": "دامنه‌هایی که از سرورهای جایگزین استفاده می‌کنند، با کاما از هم جدا شده‌اند"
         },
         "hosts": {
-          "label": "Hosts",
-          "description": "Custom domain to IP or domain mapping"
+          "label": "میزبان‌ها",
+          "description": "تبدیل دامنه به IP یا نگاشت دامنه سفارشی"
         }
       },
       "messages": {
-        "saved": "DNS settings saved",
-        "configError": "DNS configuration error:"
+        "saved": "تنظیمات DNS ذخیره شد",
+        "configError": "خطای پیکربندی DNS:"
       },
       "errors": {
-        "invalid": "Invalid configuration",
-        "invalidYaml": "Invalid YAML format"
+        "invalid": "پیکربندی نامعتبر",
+        "invalidYaml": "قالب YAML نامعتبر است"
       }
     },
     "webUI": {
@@ -587,8 +587,8 @@
         "uninstallSuccess": "سرویس با موفقیت حذف نصب شد"
       },
       "updater": {
-        "withClashProxySuccess": "Update with Clash proxy successfully",
-        "withClashProxyFailed": "Update failed even with Clash proxy"
+        "withClashProxySuccess": "با موفقیت با پروکسی کلش به‌روزرسانی شد",
+        "withClashProxyFailed": "به‌روزرسانی حتی با پروکسی کلش هم انجام نشد"
       }
     }
   },
@@ -599,7 +599,7 @@
     },
     "clashService": {
       "installing": "در حال نصب سرویس...",
-      "uninstalling": "Uninstalling Service..."
+      "uninstalling": "در حال حذف سرویس..."
     }
   }
 }
