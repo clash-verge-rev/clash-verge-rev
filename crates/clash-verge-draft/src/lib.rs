@@ -6,6 +6,7 @@ type DraftInner<T> = (SharedBox<T>, Option<SharedBox<T>>);
 
 /// Draft 管理：committed 与 optional draft 都以 Arc<Box<T>> 存储，
 // (committed_snapshot, optional_draft_snapshot)
+#[repr(align(64))] // 用于减少伪共享的可能性，我们只为 64 位系统分发，通常 CPU cache line 大小为 64 字节。
 #[derive(Debug, Clone)]
 pub struct Draft<T: Clone> {
     inner: Arc<RwLock<DraftInner<T>>>,
