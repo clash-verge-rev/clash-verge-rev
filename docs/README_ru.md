@@ -16,7 +16,8 @@ Clash Meta GUI базируется на <a href="https://github.com/tauri-apps/
   <a href="./README_es.md">Español</a> ·
   <a href="./README_ru.md">Русский</a> ·
   <a href="./README_ja.md">日本語</a> ·
-  <a href="./README_ko.md">한국어</a>
+  <a href="./README_ko.md">한국어</a> ·
+  <a href="./README_fa.md">فارسی</a>
 </p>
 ## Предпросмотр
 
