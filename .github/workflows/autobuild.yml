@@ -191,7 +191,7 @@ jobs:
           cache: "pnpm"
 
       - name: Pnpm Cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.pnpm-store
           key: "pnpm-shared-stable-${{ matrix.os }}-${{ matrix.target }}"
@@ -287,7 +287,7 @@ jobs:
           cache: "pnpm"
 
       - name: Pnpm Cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.pnpm-store
           key: "pnpm-shared-stable-${{ matrix.os }}-${{ matrix.target }}"
@@ -437,7 +437,7 @@ jobs:
           cache: "pnpm"
 
       - name: Pnpm Cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.pnpm-store
           key: "pnpm-shared-stable-${{ matrix.os }}-${{ matrix.target }}"
