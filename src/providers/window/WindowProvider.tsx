@@ -12,8 +12,16 @@ export const WindowProvider: React.FC<{ children: React.ReactNode }> = ({
   const [decorated, setDecorated] = useState<boolean | null>(null);
   const [maximized, setMaximized] = useState<boolean | null>(null);
 
-  const close = useCallback(() => currentWindow.close(), [currentWindow]);
-  const minimize = useCallback(() => currentWindow.minimize(), [currentWindow]);
+  const close = useCallback(async () => {
+    // Delay one frame so the UI can clear :hover before the window hides.
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    await currentWindow.close();
+  }, [currentWindow]);
+  const minimize = useCallback(async () => {
+    // Delay one frame so the UI can clear :hover before the window hides.
+    await new Promise((resolve) => setTimeout(resolve, 10));
+    await currentWindow.minimize();
+  }, [currentWindow]);
 
   useEffect(() => {
     let isUnmounted = false;
