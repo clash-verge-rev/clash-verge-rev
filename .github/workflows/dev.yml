@@ -153,7 +153,7 @@ jobs:
 
       - name: Upload Artifacts (macOS)
         if: matrix.os == 'macos-latest' && github.event.inputs[matrix.input] == 'true'
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ matrix.target }}
           path: target/${{ matrix.target }}/release/bundle/dmg/*.dmg
@@ -161,7 +161,7 @@ jobs:
 
       - name: Upload Artifacts (Windows)
         if: matrix.os == 'windows-latest' && github.event.inputs[matrix.input] == 'true'
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ matrix.target }}
           path: target/${{ matrix.target }}/release/bundle/nsis/*.exe
@@ -169,7 +169,7 @@ jobs:
 
       - name: Upload Artifacts (Linux)
         if: matrix.os == 'ubuntu-22.04' && github.event.inputs[matrix.input] == 'true'
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ matrix.target }}
           path: target/${{ matrix.target }}/release/bundle/deb/*.deb
