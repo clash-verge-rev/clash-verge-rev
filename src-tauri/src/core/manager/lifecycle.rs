@@ -1,12 +1,10 @@
 use super::{CoreManager, RunningMode};
 use crate::cmd::StringifyErr as _;
 use crate::config::{Config, IVerge};
-use crate::constants::timing;
 use crate::core::handle::Handle;
 use crate::core::manager::CLASH_LOGGER;
 use crate::core::service::{SERVICE_MANAGER, ServiceStatus};
 use anyhow::Result;
-use backoff::{Error as BackoffError, ExponentialBackoff};
 use clash_verge_logging::{Type, logging};
 use scopeguard::defer;
 use smartstring::alias::String;
@@ -65,6 +63,7 @@ impl CoreManager {
     }
 
     async fn prepare_startup(&self) -> Result<()> {
+        #[cfg(target_os = "windows")]
         self.wait_for_service_if_needed().await;
 
         let value = SERVICE_MANAGER.lock().await.current();
@@ -82,40 +81,17 @@ impl CoreManager {
         tauri_plugin_clash_verge_sysinfo::set_app_core_mode(app_handle, self.get_running_mode().to_string());
     }
 
+    #[cfg(target_os = "windows")]
     async fn wait_for_service_if_needed(&self) {
-        #[cfg(target_os = "windows")]
-        {
-            let needs_service = Config::verge().await.latest_arc().enable_tun_mode.unwrap_or(false);
+        use crate::{config::Config, constants::timing};
+        use backoff::{Error as BackoffError, ExponentialBackoff};
 
-            if !needs_service {
-                return;
-            }
-        }
+        let needs_service = Config::verge().await.latest_arc().enable_tun_mode.unwrap_or(false);
 
-        // 在 unix 上，如果服务状态是 "Need Checks"，尝试初始化服务管理器
-        // 在 Windows 上，只有在需要 TUN 模式时才等待服务
-        let mut manager = SERVICE_MANAGER.lock().await;
-        let current_status = manager.current();
-
-        // 如果服务状态是 "Need Checks"，尝试初始化服务管理器
-        if matches!(current_status, ServiceStatus::Unavailable(ref reason) if reason == "Need Checks") {
-            // 尝试初始化服务管理器，即使 IPC 路径可能暂时不存在
-            if let Err(e) = manager.init().await {
-                logging!(debug, Type::Core, "服务管理器初始化失败（可能服务未启动）: {}", e);
-            } else {
-                // 初始化成功，尝试刷新状态
-                let _ = manager.refresh().await;
-            }
-        }
-
-        // 如果服务已经就绪，直接返回
-        if matches!(manager.current(), ServiceStatus::Ready) {
+        if !needs_service {
             return;
         }
 
-        drop(manager);
-
-        // 使用退避重试策略等待服务就绪
         let backoff = ExponentialBackoff {
             initial_interval: timing::SERVICE_WAIT_INTERVAL,
             max_interval: timing::SERVICE_WAIT_INTERVAL,
@@ -132,11 +108,7 @@ impl CoreManager {
                 return Ok(());
             }
 
-            // 如果服务管理器未初始化，尝试初始化
-            if matches!(manager.current(), ServiceStatus::Unavailable(ref reason) if reason == "Need Checks") {
-                manager.init().await.map_err(BackoffError::transient)?;
-            }
-
+            manager.init().await.map_err(BackoffError::transient)?;
             let _ = manager.refresh().await;
 
             if matches!(manager.current(), ServiceStatus::Ready) {
