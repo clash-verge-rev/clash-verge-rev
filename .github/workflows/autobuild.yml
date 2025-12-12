@@ -46,7 +46,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v6
         with:
-          node-version: "24.11.1"
+          node-version: "24.12.0"
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -187,11 +187,11 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v6
         with:
-          node-version: "24.11.1"
+          node-version: "24.12.0"
           cache: "pnpm"
 
       - name: Pnpm Cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.pnpm-store
           key: "pnpm-shared-stable-${{ matrix.os }}-${{ matrix.target }}"
@@ -283,11 +283,11 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v6
         with:
-          node-version: "24.11.1"
+          node-version: "24.12.0"
           cache: "pnpm"
 
       - name: Pnpm Cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.pnpm-store
           key: "pnpm-shared-stable-${{ matrix.os }}-${{ matrix.target }}"
@@ -433,11 +433,11 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v6
         with:
-          node-version: "24.11.1"
+          node-version: "24.12.0"
           cache: "pnpm"
 
       - name: Pnpm Cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.pnpm-store
           key: "pnpm-shared-stable-${{ matrix.os }}-${{ matrix.target }}"
@@ -535,7 +535,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v6
         with:
-          node-version: "24.11.1"
+          node-version: "24.12.0"
 
       - uses: pnpm/action-setup@v4.2.0
         name: Install pnpm
