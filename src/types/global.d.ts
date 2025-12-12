@@ -198,20 +198,6 @@ interface ILogItem {
 }
 
 type LogLevel = import("tauri-plugin-mihomo-api").LogLevel;
-
-type AppWindow = import("@tauri-apps/api/window").WebviewWindow;
-
-interface WindowContextType {
-  decorated: boolean | null;
-  maximized: boolean | null;
-  toggleDecorations: () => Promise<void>;
-  refreshDecorated: () => Promise<boolean>;
-  minimize: () => void;
-  close: () => void;
-  toggleMaximize: () => Promise<void>;
-  toggleFullscreen: () => Promise<void>;
-  currentWindow: AppWindow;
-}
 type LogFilter = "all" | "debug" | "info" | "warn" | "err";
 type LogOrder = "asc" | "desc";
 
