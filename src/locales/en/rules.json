@@ -46,7 +46,7 @@
         "DOMAIN-SUFFIX": "Match domain suffix (DOMAIN-SUFFIX)",
         "DOMAIN-KEYWORD": "Match domain keyword (DOMAIN-KEYWORD)",
         "DOMAIN-REGEX": "Match domain using regex (DOMAIN-REGEX)",
-        "GEOSITE": "Match domains in Geosite (GEOSITE)",
+        "GEOSITE": "Match domains in GeoSite (GEOSITE)",
         "GEOIP": "Match IP country code (GEOIP)",
         "SRC-GEOIP": "Match source IP country code (SRC-GEOIP)",
         "IP-ASN": "Match IP ASN (IP-ASN)",

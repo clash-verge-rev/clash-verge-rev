@@ -80,10 +80,10 @@
         "relay": "根據定義的代理鏈傳送"
       },
       "policies": {
-        "DIRECT": "直連 (DIRECT)",
-        "REJECT": "拒絕請求 (REJECT)",
+        "DIRECT": "直接連線 (DIRECT)",
+        "REJECT": "攔截請求 (REJECT)",
         "REJECT-DROP": "丟棄請求 (REJECT-DROP)",
-        "PASS": "跳過此規則 (PASS)"
+        "PASS": "跳過此項 (PASS)"
       }
     }
   }

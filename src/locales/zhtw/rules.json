@@ -46,7 +46,7 @@
         "DOMAIN-SUFFIX": "配對網域後綴 (DOMAIN-SUFFIX)",
         "DOMAIN-KEYWORD": "配對網域關鍵字 (DOMAIN-KEYWORD)",
         "DOMAIN-REGEX": "配對網域正規表示式 (DOMAIN-REGEX)",
-        "GEOSITE": "配對 Geosite 內的網域 (GEOSITE)",
+        "GEOSITE": "配對 GeoSite 內的網域 (GEOSITE)",
         "GEOIP": "配對 IP 所屬國家代碼 (GEOIP)",
         "SRC-GEOIP": "配對來源 IP 所屬國家代碼 (SRC-GEOIP)",
         "IP-ASN": "配對 IP 所屬 ASN (IP-ASN)",
