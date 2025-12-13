@@ -28,24 +28,18 @@ pnpm exec lint-staged
 RUST_FILES="$(git diff --cached --name-only --diff-filter=ACMR | grep -E '^src-tauri/.*\.rs$' || true)"
 if [ -n "$RUST_FILES" ]; then
   echo "[pre-commit] Formatting Rust changes with cargo fmt..."
-  (
-    cd src-tauri
-    cargo fmt
-  )
+  cargo fmt
   while IFS= read -r file; do
     [ -n "$file" ] && git add "$file"
   done <<< "$RUST_FILES"
 
   echo "[pre-commit] Linting Rust changes with cargo clippy..."
-  (
-    cd src-tauri
-    cargo clippy-all
-    if ! command -v clash-verge-logging-check >/dev/null 2>&1; then
-      echo "[pre-commit] Installing clash-verge-logging-check..."
-      cargo install --git https://github.com/clash-verge-rev/clash-verge-logging-check.git
-    fi
-    clash-verge-logging-check
-  )
+  cargo clippy-all
+  if ! command -v clash-verge-logging-check >/dev/null 2>&1; then
+    echo "[pre-commit] Installing clash-verge-logging-check..."
+    cargo install --git https://github.com/clash-verge-rev/clash-verge-logging-check.git
+  fi
+  clash-verge-logging-check
 fi
 
 TS_FILES="$(git diff --cached --name-only --diff-filter=ACMR | grep -E '\.(ts|tsx)$' || true)"

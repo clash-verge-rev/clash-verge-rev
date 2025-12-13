@@ -25,16 +25,10 @@ pnpm typecheck
 
 if command -v cargo >/dev/null 2>&1; then
   echo "[pre-push] Verifying Rust formatting..."
-  (
-    cd src-tauri
-    cargo fmt --check
-  )
+  cargo fmt --check
 
   echo "[pre-push] Running cargo clippy..."
-  (
-    cd src-tauri
-    cargo clippy-all
-  )
+  cargo clippy-all
 else
   echo "[pre-push] ⚠️ cargo not found; skipping Rust checks."
 fi
