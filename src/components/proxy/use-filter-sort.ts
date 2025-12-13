@@ -77,10 +77,6 @@ export function filterSort(
 const regex1 = /delay([=<>])(\d+|timeout|error)/i;
 const regex2 = /type=(.*)/i;
 
-/**
- * filter the proxy
- * according to the regular conditions
- */
 const escapeRegex = (value: string) => {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 };
@@ -93,6 +89,10 @@ const buildRegex = (pattern: string, flags = "") => {
   }
 };
 
+/**
+ * filter the proxy
+ * according to the regular conditions
+ */
 function filterProxies(
   proxies: IProxyItem[],
   groupName: string,
