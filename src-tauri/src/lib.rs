@@ -10,8 +10,7 @@ mod feat;
 mod module;
 mod process;
 pub mod utils;
-use crate::utils::resolve::init_signal;
-use crate::{constants::files, utils::resolve::prioritize_initialization};
+use crate::constants::files;
 use crate::{
     core::handle,
     process::AsyncHandler,
@@ -237,7 +236,7 @@ pub fn run() {
                 .set(app.app_handle().clone())
                 .expect("failed to set global app handle");
 
-            let _handle = AsyncHandler::block_on(async { prioritize_initialization().await });
+            let _handle = resolve::init_work_dir_and_logger();
 
             logging!(info, Type::Setup, "开始应用初始化...");
             if let Err(e) = app_init::setup_autostart(app) {
@@ -253,7 +252,7 @@ pub fn run() {
             resolve::resolve_setup_handle();
             resolve::resolve_setup_async();
             resolve::resolve_setup_sync();
-            init_signal();
+            resolve::init_signal();
             resolve::resolve_done();
 
             logging!(info, Type::Setup, "初始化已启动");
