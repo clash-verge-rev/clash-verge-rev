@@ -78,10 +78,6 @@ export function filterSort(
 const regex1 = /delay([=<>])(\d+|timeout|error)/i;
 const regex2 = /type=(.*)/i;
 
-type ProxyPredicate = (proxy: IProxyItem) => boolean;
-const matchAll: ProxyPredicate = () => true;
-const lastValidPredicateByGroup = new Map<string, ProxyPredicate>();
-
 /**
  * filter the proxy
  * according to the regular conditions
@@ -93,10 +89,7 @@ function filterProxies(
   searchState?: ProxySearchState,
 ) {
   const query = filterText.trim();
-  if (!query) {
-    lastValidPredicateByGroup.set(groupName, matchAll);
-    return proxies;
-  }
+  if (!query) return proxies;
 
   const res1 = regex1.exec(query);
   if (res1) {
@@ -105,7 +98,7 @@ function filterProxies(
     const value =
       symbol2 === "error" ? 1e5 : symbol2 === "timeout" ? 3000 : +symbol2;
 
-    const predicate: ProxyPredicate = (p) => {
+    return proxies.filter((p) => {
       const delay = delayManager.getDelayFix(p, groupName);
 
       if (delay < 0) return false;
@@ -116,19 +109,13 @@ function filterProxies(
       if (symbol === "<") return delay <= value;
       if (symbol === ">") return delay >= value;
       return false;
-    };
-
-    lastValidPredicateByGroup.set(groupName, predicate);
-    return proxies.filter(predicate);
+    });
   }
 
   const res2 = regex2.exec(query);
   if (res2) {
     const type = res2[1].toLowerCase();
-    const predicate: ProxyPredicate = (p) =>
-      p.type.toLowerCase().includes(type);
-    lastValidPredicateByGroup.set(groupName, predicate);
-    return proxies.filter(predicate);
+    return proxies.filter((p) => p.type.toLowerCase().includes(type));
   }
 
   const {
@@ -142,15 +129,8 @@ function filterProxies(
     useRegularExpression,
   });
 
-  if (!compiled.isValid) {
-    const predicate = lastValidPredicateByGroup.get(groupName) ?? matchAll;
-    if (predicate === matchAll) return proxies;
-    return proxies.filter(predicate);
-  }
-
-  const predicate: ProxyPredicate = (p) => compiled.matcher(p.name);
-  lastValidPredicateByGroup.set(groupName, predicate);
-  return proxies.filter(predicate);
+  if (!compiled.isValid) return [];
+  return proxies.filter((p) => compiled.matcher(p.name));
 }
 
 /**

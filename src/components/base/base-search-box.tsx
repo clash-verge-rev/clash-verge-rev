@@ -83,7 +83,6 @@ export const BaseSearchBox = ({
   const { t } = useTranslation();
   const onSearchRef = useRef(onSearch);
   const lastSearchStateRef = useRef<SearchState | null>(null);
-  const lastValidMatcherRef = useRef<(content: string) => boolean>(() => true);
 
   const [text, setText] = useControllableState<string>({
     controlled: value,
@@ -130,12 +129,7 @@ export const BaseSearchBox = ({
     if (isSameState) return;
 
     const compiled = compileStringMatcher(nextState.text, nextState);
-    if (compiled.isValid) {
-      lastValidMatcherRef.current = compiled.matcher;
-      onSearchRef.current(compiled.matcher, nextState);
-    } else {
-      onSearchRef.current(lastValidMatcherRef.current, nextState);
-    }
+    onSearchRef.current(compiled.matcher, nextState);
 
     lastSearchStateRef.current = nextState;
   }, []);

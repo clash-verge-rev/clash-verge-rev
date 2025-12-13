@@ -34,13 +34,13 @@ export const compileStringMatcher = (
 
   if (useRegularExpression) {
     const regex = buildRegex(query, flags);
-    if (!regex) return { matcher: () => true, isValid: false };
+    if (!regex) return { matcher: () => false, isValid: false };
     return { matcher: (content: string) => regex.test(content), isValid: true };
   }
 
   if (matchWholeWord) {
     const regex = buildRegex(`\\b${escapeRegex(query)}\\b`, flags);
-    if (!regex) return { matcher: () => true, isValid: false };
+    if (!regex) return { matcher: () => false, isValid: false };
     return { matcher: (content: string) => regex.test(content), isValid: true };
   }
 
