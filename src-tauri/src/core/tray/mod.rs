@@ -480,8 +480,7 @@ impl Tray {
         let show_menu_on_left_click = {
             // TODO 优化这里 复用 verge
             let tray_event = { Config::verge().await.latest_arc().tray_event.clone() };
-            let tray_event: String = tray_event.unwrap_or_else(|| "main_window".into());
-            tray_event.as_str() == "tray_menu"
+            tray_event.is_some_and(|v| v == "tray_menu")
         };
 
         #[cfg(not(target_os = "linux"))]
@@ -508,15 +507,15 @@ impl Tray {
                 ..
             } = event
             {
+                // 添加防抖检查，防止快速连击
+                if !should_handle_tray_click() {
+                    logging!(info, Type::Tray, "click tray icon too fast, ignore");
+                    return;
+                }
                 AsyncHandler::spawn(|| async move {
                     let tray_event = { Config::verge().await.latest_arc().tray_event.clone() };
                     let tray_event: String = tray_event.unwrap_or_else(|| "main_window".into());
                     logging!(debug, Type::Tray, "tray event: {tray_event:?}");
-
-                    // 添加防抖检查，防止快速连击
-                    if !should_handle_tray_click() {
-                        return;
-                    }
 
                     match tray_event.as_str() {
                         "system_proxy" => feat::toggle_system_proxy().await,
@@ -526,7 +525,9 @@ impl Tray {
                                 WindowManager::show_main_window().await;
                             };
                         }
-                        _ => {}
+                        _ => {
+                            logging!(warn, Type::Tray, "invalid tray event: {}", tray_event);
+                        }
                     };
                 });
             }
@@ -725,7 +726,7 @@ async fn create_tray_menu(
 
     i18n::sync_locale().await;
 
-    // TODO: mihomo 请求的超时机制未起作用，需要排查
+    // TODO: should update tray menu again when it was timeout error
     let proxy_nodes_data = tokio::time::timeout(
         Duration::from_millis(1000),
         handle::Handle::mihomo().await.get_proxies(),
@@ -976,7 +977,7 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
     AsyncHandler::spawn(|| async move {
         match event.id.as_ref() {
             mode @ (MenuIds::RULE_MODE | MenuIds::GLOBAL_MODE | MenuIds::DIRECT_MODE) => {
-                // Removing the the "tray_" preffix and "_mode" suffix
+                // Removing the the "tray_" prefix and "_mode" suffix
                 let mode = &mode[5..mode.len() - 5];
                 logging!(info, Type::ProxyMode, "Switch Proxy Mode To: {}", mode);
                 feat::change_clash_mode(mode.into()).await;

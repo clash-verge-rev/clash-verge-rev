@@ -111,7 +111,7 @@ async fn perform_profile_update(
     let profile_name = profiles_arc
         .get_name_by_uid(uid)
         .cloned()
-        .unwrap_or_else(|| String::from("UnKown Profile"));
+        .unwrap_or_else(|| String::from("UnKnown Profile"));
 
     let mut last_err;
 
