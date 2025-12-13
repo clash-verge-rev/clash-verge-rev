@@ -21,11 +21,17 @@ export type SearchState = {
   useRegularExpression: boolean;
 };
 
+type SearchOptionState = Omit<SearchState, "text">;
+
 type SearchProps = {
+  value?: string;
+  defaultValue?: string;
+  autoFocus?: boolean;
   placeholder?: string;
   matchCase?: boolean;
   matchWholeWord?: boolean;
   useRegularExpression?: boolean;
+  searchState?: Partial<SearchOptionState>;
   onSearch: (match: (content: string) => boolean, state: SearchState) => void;
 };
 
@@ -43,13 +49,18 @@ const StyledTextField = styled(TextField)(({ theme }) => ({
 }));
 
 export const BaseSearchBox = ({
+  value,
+  defaultValue,
+  autoFocus,
   placeholder,
+  searchState,
   matchCase: defaultMatchCase = false,
   matchWholeWord: defaultMatchWholeWord = false,
   useRegularExpression: defaultUseRegularExpression = false,
   onSearch,
 }: SearchProps) => {
   const { t } = useTranslation();
+  const isTextControlled = value !== undefined;
 
   const escapeRegex = useCallback((value: string) => {
     return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -66,12 +77,24 @@ export const BaseSearchBox = ({
 
   const inputRef = useRef<HTMLInputElement>(null);
   const onSearchRef = useRef(onSearch);
-  const [matchCase, setMatchCase] = useState(defaultMatchCase);
-  const [matchWholeWord, setMatchWholeWord] = useState(defaultMatchWholeWord);
-  const [useRegularExpression, setUseRegularExpression] = useState(
+  const lastSearchStateRef = useRef<SearchState | null>(null);
+  const [matchCaseState, setMatchCaseState] = useState(defaultMatchCase);
+  const [matchWholeWordState, setMatchWholeWordState] = useState(
+    defaultMatchWholeWord,
+  );
+  const [useRegularExpressionState, setUseRegularExpressionState] = useState(
     defaultUseRegularExpression,
   );
   const [errorMessage, setErrorMessage] = useState("");
+
+  const matchCase = searchState?.matchCase ?? matchCaseState;
+  const matchWholeWord = searchState?.matchWholeWord ?? matchWholeWordState;
+  const useRegularExpression =
+    searchState?.useRegularExpression ?? useRegularExpressionState;
+  const isMatchCaseControlled = searchState?.matchCase !== undefined;
+  const isMatchWholeWordControlled = searchState?.matchWholeWord !== undefined;
+  const isUseRegularExpressionControlled =
+    searchState?.useRegularExpression !== undefined;
 
   const iconStyle = {
     style: {
@@ -91,15 +114,27 @@ export const BaseSearchBox = ({
     [buildRegex],
   );
 
-  const createMatcher = useMemo(() => {
-    return (searchText: string) => {
+  useEffect(() => {
+    onSearchRef.current = onSearch;
+  }, [onSearch]);
+
+  const getCurrentText = useCallback(() => {
+    if (isTextControlled) return value ?? "";
+    return inputRef.current?.value ?? "";
+  }, [isTextControlled, value]);
+
+  const createMatcher = useCallback(
+    (
+      searchText: string,
+      options: SearchOptionState | SearchState,
+    ): ((content: string) => boolean) => {
       if (!searchText) {
         return () => true;
       }
 
-      const flags = matchCase ? "" : "i";
+      const flags = options.matchCase ? "" : "i";
 
-      if (useRegularExpression) {
+      if (options.useRegularExpression) {
         const regex = buildRegex(searchText, flags);
         if (!regex) return () => false;
 
@@ -113,7 +148,7 @@ export const BaseSearchBox = ({
         };
       }
 
-      if (matchWholeWord) {
+      if (options.matchWholeWord) {
         const regex = buildRegex(`\\b${escapeRegex(searchText)}\\b`, flags);
         if (!regex) return () => false;
 
@@ -128,75 +163,155 @@ export const BaseSearchBox = ({
       }
 
       return (content: string) => {
-        const item = matchCase ? content : content.toLowerCase();
-        const target = matchCase ? searchText : searchText.toLowerCase();
+        const item = options.matchCase ? content : content.toLowerCase();
+        const target = options.matchCase
+          ? searchText
+          : searchText.toLowerCase();
         return item.includes(target);
       };
-    };
+    },
+    [buildRegex, escapeRegex],
+  );
+
+  const emitSearch = useCallback(
+    (nextState: SearchState) => {
+      const matcher = createMatcher(nextState.text, nextState);
+      onSearchRef.current(matcher, nextState);
+      lastSearchStateRef.current = nextState;
+    },
+    [createMatcher],
+  );
+
+  const effectiveErrorMessage = useMemo(() => {
+    if (!isTextControlled) return errorMessage;
+
+    const text = value ?? "";
+    if (!useRegularExpression || !text) return "";
+
+    const flags = matchCase ? "" : "i";
+    return validateRegex(text, flags)
+      ? ""
+      : t("shared.validation.invalidRegex");
   }, [
-    buildRegex,
-    escapeRegex,
+    errorMessage,
+    isTextControlled,
+    matchCase,
+    t,
+    useRegularExpression,
+    validateRegex,
+    value,
+  ]);
+
+  useEffect(() => {
+    const text = getCurrentText();
+    const nextState: SearchState = {
+      text,
+      matchCase,
+      matchWholeWord,
+      useRegularExpression,
+    };
+
+    const prevState = lastSearchStateRef.current;
+    const isSameState =
+      !!prevState &&
+      prevState.text === nextState.text &&
+      prevState.matchCase === nextState.matchCase &&
+      prevState.matchWholeWord === nextState.matchWholeWord &&
+      prevState.useRegularExpression === nextState.useRegularExpression;
+
+    if (isSameState) return;
+
+    emitSearch(nextState);
+  }, [
+    emitSearch,
+    getCurrentText,
     matchCase,
     matchWholeWord,
     useRegularExpression,
   ]);
 
-  useEffect(() => {
-    onSearchRef.current = onSearch;
-  }, [onSearch]);
+  const onChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const text = e.target?.value ?? "";
+    const flags = matchCase ? "" : "i";
 
-  useEffect(() => {
-    if (!inputRef.current) return;
-    const value = inputRef.current.value;
-    const matcher = createMatcher(value);
-    onSearchRef.current(matcher, {
-      text: value,
+    const nextErrorMessage =
+      useRegularExpression && text && !validateRegex(text, flags)
+        ? t("shared.validation.invalidRegex")
+        : "";
+    if (!isTextControlled) {
+      setErrorMessage(nextErrorMessage);
+    }
+
+    const nextState: SearchState = {
+      text,
       matchCase,
       matchWholeWord,
       useRegularExpression,
-    });
-  }, [matchCase, matchWholeWord, useRegularExpression, createMatcher]);
+    };
+    emitSearch(nextState);
+  };
 
-  const onChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const value = e.target?.value ?? "";
-    setErrorMessage("");
-    const flags = matchCase ? "" : "i";
+  const handleToggleUseRegularExpression = () => {
+    const text = getCurrentText();
+    const next = !useRegularExpression;
 
-    // Validate regex input eagerly
-    if (useRegularExpression && value) {
-      const isValid = validateRegex(value, flags);
-      if (!isValid) {
-        setErrorMessage(t("shared.validation.invalidRegex"));
+    if (!isUseRegularExpressionControlled) {
+      setUseRegularExpressionState(next);
+    }
+
+    if (!isTextControlled) {
+      if (!next) {
+        setErrorMessage("");
+      } else {
+        const flags = matchCase ? "" : "i";
+        setErrorMessage(
+          text && !validateRegex(text, flags)
+            ? t("shared.validation.invalidRegex")
+            : "",
+        );
       }
     }
 
-    const matcher = createMatcher(value);
-    onSearchRef.current(matcher, {
-      text: value,
+    emitSearch({
+      text,
       matchCase,
+      matchWholeWord,
+      useRegularExpression: next,
+    });
+  };
+
+  const handleToggleMatchCase = () => {
+    const text = getCurrentText();
+    const next = !matchCase;
+    if (!isMatchCaseControlled) {
+      setMatchCaseState(next);
+    }
+
+    emitSearch({
+      text,
+      matchCase: next,
       matchWholeWord,
       useRegularExpression,
     });
   };
 
-  const handleToggleUseRegularExpression = () => {
-    setUseRegularExpression((prev) => {
-      const next = !prev;
-      if (!next) {
-        setErrorMessage("");
-      } else {
-        const value = inputRef.current?.value ?? "";
-        const flags = matchCase ? "" : "i";
-        if (value && !validateRegex(value, flags)) {
-          setErrorMessage(t("shared.validation.invalidRegex"));
-        }
-      }
-      return next;
+  const handleToggleMatchWholeWord = () => {
+    const text = getCurrentText();
+    const next = !matchWholeWord;
+    if (!isMatchWholeWordControlled) {
+      setMatchWholeWordState(next);
+    }
+
+    emitSearch({
+      text,
+      matchCase,
+      matchWholeWord: next,
+      useRegularExpression,
     });
   };
 
   return (
-    <Tooltip title={errorMessage || ""} placement="bottom-start">
+    <Tooltip title={effectiveErrorMessage || ""} placement="bottom-start">
       <StyledTextField
         autoComplete="new-password"
         inputRef={inputRef}
@@ -204,11 +319,17 @@ export const BaseSearchBox = ({
         fullWidth
         size="small"
         variant="outlined"
+        autoFocus={autoFocus}
         spellCheck="false"
         placeholder={placeholder ?? t("shared.placeholders.filter")}
         sx={{ input: { py: 0.65, px: 1.25 } }}
         onChange={onChange}
-        error={!!errorMessage}
+        error={!!effectiveErrorMessage}
+        {...(isTextControlled
+          ? { value: value ?? "" }
+          : defaultValue !== undefined
+            ? { defaultValue }
+            : {})}
         slotProps={{
           input: {
             sx: { pr: 1 },
@@ -220,7 +341,7 @@ export const BaseSearchBox = ({
                       component={matchCaseIcon}
                       {...iconStyle}
                       aria-label={matchCase ? "active" : "inactive"}
-                      onClick={() => setMatchCase((prev) => !prev)}
+                      onClick={handleToggleMatchCase}
                     />
                   </div>
                 </Tooltip>
@@ -230,7 +351,7 @@ export const BaseSearchBox = ({
                       component={matchWholeWordIcon}
                       {...iconStyle}
                       aria-label={matchWholeWord ? "active" : "inactive"}
-                      onClick={() => setMatchWholeWord((prev) => !prev)}
+                      onClick={handleToggleMatchWholeWord}
                     />
                   </div>
                 </Tooltip>

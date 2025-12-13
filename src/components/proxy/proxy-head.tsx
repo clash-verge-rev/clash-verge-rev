@@ -15,6 +15,7 @@ import { Box, IconButton, TextField, SxProps } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import { BaseSearchBox } from "@/components/base/base-search-box";
 import { useVerge } from "@/hooks/use-verge";
 import delayManager from "@/services/delay";
 import { debugLog } from "@/utils/debug";
@@ -43,7 +44,16 @@ export const ProxyHead = ({
   onLocation,
   onCheckDelay,
 }: Props) => {
-  const { showType, sortType, filterText, textState, testUrl } = headState;
+  const {
+    showType,
+    sortType,
+    filterText,
+    textState,
+    testUrl,
+    filterMatchCase,
+    filterMatchWholeWord,
+    filterUseRegularExpression,
+  } = headState;
 
   const { t } = useTranslation();
   const [autoFocus, setAutoFocus] = useState(false);
@@ -154,17 +164,25 @@ export const ProxyHead = ({
       </IconButton>
 
       {textState === "filter" && (
-        <TextField
-          autoComplete="new-password"
-          autoFocus={autoFocus}
-          hiddenLabel
-          value={filterText}
-          size="small"
-          variant="outlined"
-          placeholder={t("shared.placeholders.filter")}
-          onChange={(e) => onHeadState({ filterText: e.target.value })}
-          sx={{ ml: 0.5, flex: "1 1 auto", input: { py: 0.65, px: 1 } }}
-        />
+        <Box sx={{ ml: 0.5, flex: "1 1 auto" }}>
+          <BaseSearchBox
+            autoFocus={autoFocus}
+            value={filterText}
+            searchState={{
+              matchCase: filterMatchCase,
+              matchWholeWord: filterMatchWholeWord,
+              useRegularExpression: filterUseRegularExpression,
+            }}
+            onSearch={(_, state) =>
+              onHeadState({
+                filterText: state.text,
+                filterMatchCase: state.matchCase,
+                filterMatchWholeWord: state.matchWholeWord,
+                filterUseRegularExpression: state.useRegularExpression,
+              })
+            }
+          />
+        </Box>
       )}
 
       {textState === "url" && (
