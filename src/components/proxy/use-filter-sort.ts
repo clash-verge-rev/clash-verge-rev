@@ -2,6 +2,7 @@ import { useEffect, useMemo, useReducer } from "react";
 
 import { useVerge } from "@/hooks/use-verge";
 import delayManager from "@/services/delay";
+import { compileStringMatcher } from "@/utils/search-matcher";
 
 // default | delay | alphabet
 export type ProxySortType = 0 | 1 | 2;
@@ -77,17 +78,9 @@ export function filterSort(
 const regex1 = /delay([=<>])(\d+|timeout|error)/i;
 const regex2 = /type=(.*)/i;
 
-const escapeRegex = (value: string) => {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-};
-
-const buildRegex = (pattern: string, flags = "") => {
-  try {
-    return new RegExp(pattern, flags);
-  } catch {
-    return null;
-  }
-};
+type ProxyPredicate = (proxy: IProxyItem) => boolean;
+const matchAll: ProxyPredicate = () => true;
+const lastValidPredicateByGroup = new Map<string, ProxyPredicate>();
 
 /**
  * filter the proxy
@@ -100,7 +93,10 @@ function filterProxies(
   searchState?: ProxySearchState,
 ) {
   const query = filterText.trim();
-  if (!query) return proxies;
+  if (!query) {
+    lastValidPredicateByGroup.set(groupName, matchAll);
+    return proxies;
+  }
 
   const res1 = regex1.exec(query);
   if (res1) {
@@ -109,7 +105,7 @@ function filterProxies(
     const value =
       symbol2 === "error" ? 1e5 : symbol2 === "timeout" ? 3000 : +symbol2;
 
-    return proxies.filter((p) => {
+    const predicate: ProxyPredicate = (p) => {
       const delay = delayManager.getDelayFix(p, groupName);
 
       if (delay < 0) return false;
@@ -120,13 +116,19 @@ function filterProxies(
       if (symbol === "<") return delay <= value;
       if (symbol === ">") return delay >= value;
       return false;
-    });
+    };
+
+    lastValidPredicateByGroup.set(groupName, predicate);
+    return proxies.filter(predicate);
   }
 
   const res2 = regex2.exec(query);
   if (res2) {
     const type = res2[1].toLowerCase();
-    return proxies.filter((p) => p.type.toLowerCase().includes(type));
+    const predicate: ProxyPredicate = (p) =>
+      p.type.toLowerCase().includes(type);
+    lastValidPredicateByGroup.set(groupName, predicate);
+    return proxies.filter(predicate);
   }
 
   const {
@@ -134,38 +136,21 @@ function filterProxies(
     matchWholeWord = false,
     useRegularExpression = false,
   } = searchState ?? {};
-  const flags = matchCase ? "" : "i";
+  const compiled = compileStringMatcher(query, {
+    matchCase,
+    matchWholeWord,
+    useRegularExpression,
+  });
 
-  if (useRegularExpression) {
-    const regex = buildRegex(query, flags);
-    if (!regex) return [];
-    return proxies.filter((p) => {
-      try {
-        return regex.test(p.name);
-      } catch {
-        return false;
-      }
-    });
+  if (!compiled.isValid) {
+    const predicate = lastValidPredicateByGroup.get(groupName) ?? matchAll;
+    if (predicate === matchAll) return proxies;
+    return proxies.filter(predicate);
   }
 
-  if (matchWholeWord) {
-    const regex = buildRegex(`\\b${escapeRegex(query)}\\b`, flags);
-    if (!regex) return [];
-    return proxies.filter((p) => {
-      try {
-        return regex.test(p.name);
-      } catch {
-        return false;
-      }
-    });
-  }
-
-  if (matchCase) {
-    return proxies.filter((p) => p.name.includes(query));
-  }
-
-  const target = query.toLowerCase();
-  return proxies.filter((p) => p.name.toLowerCase().includes(target));
+  const predicate: ProxyPredicate = (p) => compiled.matcher(p.name);
+  lastValidPredicateByGroup.set(groupName, predicate);
+  return proxies.filter(predicate);
 }
 
 /**
