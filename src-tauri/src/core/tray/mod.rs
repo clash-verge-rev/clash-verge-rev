@@ -486,6 +486,11 @@ impl Tray {
 
         #[cfg(not(target_os = "linux"))]
         let mut builder = TrayIconBuilder::with_id("main").icon(icon).icon_as_template(false);
+        #[cfg(target_os = "macos")]
+        {
+            let is_monochrome = verge.tray_icon.clone().is_none_or(|v| v == "monochrome");
+            builder = builder.icon_as_template(is_monochrome);
+        }
 
         #[cfg(any(target_os = "macos", target_os = "windows"))]
         {
