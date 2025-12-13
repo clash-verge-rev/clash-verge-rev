@@ -11,11 +11,11 @@ body:
         ## 在提交问题之前，请确认以下事项：
 
         1. 请 **确保** 您已经查阅了 [Clash Verge Rev 官方文档](https://clash-verge-rev.github.io/guide/term.html)  以及 [常见问题](https://clash-verge-rev.github.io/faq/windows.html)
-        2. 请 **确保** [已有的问题](https://github.com/clash-verge-rev/clash-verge-rev/issues?q=is%3Aissue) 中没有人提交过相似issue，否则请在已有的issue下进行讨论
-        3. 请 **务必** 给issue填写一个简洁明了的标题，以便他人快速检索
+        2. 请 **确保** [已有的问题](https://github.com/clash-verge-rev/clash-verge-rev/issues?q=is%3Aissue) 中没有人提交过相似 issue，否则请在已有的 issue 下进行讨论
+        3. 请 **务必** 给 issue 填写一个简洁明了的标题，以便他人快速检索
         4. 请 **务必** 查看 [AutoBuild](https://github.com/clash-verge-rev/clash-verge-rev/releases/tag/autobuild) 版本更新日志
         5. 请 **务必** 尝试 [AutoBuild](https://github.com/clash-verge-rev/clash-verge-rev/releases/tag/autobuild) 版本，确定问题是否仍然存在
-        6. 请 **务必** 按照模板规范详细描述问题以及尝试更新 Alpha 版本，否则issue将会被直接关闭
+        6. 请 **务必** 按照模板规范详细描述问题以及尝试更新 AutoBuild 版本，否则 issue 将会被直接关闭
 
         ## Before submitting the issue, please make sure of the following checklist:
 
