@@ -209,6 +209,7 @@
           "hoverNavigator": "Hover Jump Navigator",
           "hoverNavigatorDelay": "Hover Jump Navigator Delay",
           "navIcon": "Ikon Navigasi",
+          "collapseNavBar": "Ciutkan bilah navigasi",
           "trayIcon": "Ikon Tray",
           "showProxyGroupsInline": "Show Proxy Groups Inline",
           "commonTrayIcon": "Ikon Tray Umum",

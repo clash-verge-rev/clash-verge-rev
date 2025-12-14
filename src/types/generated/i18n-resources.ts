@@ -616,6 +616,7 @@ export interface TranslationResources {
           };
           layout: {
             fields: {
+              collapseNavBar: string;
               commonTrayIcon: string;
               enableTrayIcon: string;
               enableTraySpeed: string;

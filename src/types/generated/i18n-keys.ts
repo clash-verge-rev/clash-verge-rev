@@ -429,6 +429,7 @@ export const translationKeys = [
   "settings.components.verge.layout.fields.hoverNavigator",
   "settings.components.verge.layout.fields.hoverNavigatorDelay",
   "settings.components.verge.layout.fields.navIcon",
+  "settings.components.verge.layout.fields.collapseNavBar",
   "settings.components.verge.layout.fields.trayIcon",
   "settings.components.verge.layout.fields.showProxyGroupsInline",
   "settings.components.verge.layout.fields.commonTrayIcon",

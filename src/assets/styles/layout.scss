@@ -158,3 +158,56 @@
     }
   }
 }
+
+.layout.layout--nav-collapsed {
+  .layout-content {
+    &__left {
+      flex: 0 0 56px !important;
+      width: 56px !important;
+      min-width: 56px !important;
+      max-width: 56px !important;
+      border-right: none !important;
+
+      .the-logo,
+      .the-traffic {
+        display: none !important;
+      }
+
+      > .MuiBox-root {
+        display: none !important;
+      }
+
+      .the-menu {
+        width: 56px !important;
+        overflow-x: hidden;
+
+        scrollbar-width: none;
+        &::-webkit-scrollbar {
+          width: 0;
+          height: 0;
+        }
+
+        li:last-child {
+          border-bottom: none;
+        }
+
+        .MuiListItemButton-root {
+          justify-content: center !important;
+          margin-left: 0 !important;
+          margin-right: 0 !important;
+          padding-left: 0 !important;
+          padding-right: 0 !important;
+        }
+
+        .MuiListItemIcon-root {
+          min-width: auto !important;
+          margin: 0 !important;
+        }
+
+        .MuiListItemText-root {
+          display: none !important;
+        }
+      }
+    }
+  }
+}

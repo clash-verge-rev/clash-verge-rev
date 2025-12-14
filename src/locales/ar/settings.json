@@ -209,6 +209,7 @@
           "hoverNavigator": "Hover Jump Navigator",
           "hoverNavigatorDelay": "Hover Jump Navigator Delay",
           "navIcon": "أيقونة التنقل",
+          "collapseNavBar": "طي شريط التنقل",
           "trayIcon": "أيقونة شريط المهام",
           "showProxyGroupsInline": "Show Proxy Groups Inline",
           "commonTrayIcon": "أيقونة شريط مهام عامة",

@@ -209,6 +209,7 @@
           "hoverNavigator": "懸浮跳轉導航",
           "hoverNavigatorDelay": "懸浮跳轉導航延遲",
           "navIcon": "導覽列圖示",
+          "collapseNavBar": "收起導覽列",
           "trayIcon": "系統匣圖示",
           "showProxyGroupsInline": "將代理組顯示在系統匣一級選單",
           "commonTrayIcon": "一般系統匣圖示",

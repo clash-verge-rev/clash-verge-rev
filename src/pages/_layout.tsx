@@ -117,6 +117,7 @@ const Layout = () => {
   const { theme } = useCustomTheme();
   const { verge, mutateVerge, patchVerge } = useVerge();
   const { language } = verge ?? {};
+  const navCollapsed = verge?.collapse_navbar ?? false;
   const { switchLanguage } = useI18n();
   const navigate = useNavigate();
   const themeReady = useMemo(() => Boolean(theme), [theme]);
@@ -281,7 +282,7 @@ const Layout = () => {
         <Paper
           square
           elevation={0}
-          className={`${OS} layout`}
+          className={`${OS} layout${navCollapsed ? " layout--nav-collapsed" : ""}`}
           style={{
             borderTopLeftRadius: "0px",
             borderTopRightRadius: "0px",

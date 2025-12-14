@@ -33,9 +33,13 @@ export const LayoutItem = (props: Props) => {
   const { to, children, icon, sortable } = props;
   const { verge } = useVerge();
   const { menu_icon } = verge ?? {};
+  const navCollapsed = verge?.collapse_navbar ?? false;
   const resolved = useResolvedPath(to);
   const match = useMatch({ path: resolved.pathname, end: true });
   const navigate = useNavigate();
+
+  const effectiveMenuIcon =
+    navCollapsed && menu_icon === "disable" ? "monochrome" : menu_icon;
 
   const { setNodeRef, attributes, listeners, style, isDragging, disabled } =
     sortable ?? {};
@@ -84,9 +88,11 @@ export const LayoutItem = (props: Props) => {
             };
           },
         ]}
+        title={navCollapsed ? children : undefined}
+        aria-label={navCollapsed ? children : undefined}
         onClick={() => navigate(to)}
       >
-        {(menu_icon === "monochrome" || !menu_icon) && (
+        {(effectiveMenuIcon === "monochrome" || !effectiveMenuIcon) && (
           <ListItemIcon
             sx={{
               color: "text.primary",
@@ -97,7 +103,7 @@ export const LayoutItem = (props: Props) => {
             {icon[0]}
           </ListItemIcon>
         )}
-        {menu_icon === "colorful" && (
+        {effectiveMenuIcon === "colorful" && (
           <ListItemIcon sx={{ cursor: draggable ? "grab" : "inherit" }}>
             {icon[1]}
           </ListItemIcon>
@@ -105,7 +111,7 @@ export const LayoutItem = (props: Props) => {
         <ListItemText
           sx={{
             textAlign: "center",
-            marginLeft: menu_icon === "disable" ? "" : "-35px",
+            marginLeft: effectiveMenuIcon === "disable" ? "" : "-35px",
           }}
           primary={children}
         />

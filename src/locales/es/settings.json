@@ -209,6 +209,7 @@
           "hoverNavigator": "Hover Jump Navigator",
           "hoverNavigatorDelay": "Hover Jump Navigator Delay",
           "navIcon": "Icono de la barra de navegación",
+          "collapseNavBar": "Colapsar barra de navegación",
           "trayIcon": "Icono de la bandeja",
           "showProxyGroupsInline": "Show Proxy Groups Inline",
           "commonTrayIcon": "Icono de bandeja común",
