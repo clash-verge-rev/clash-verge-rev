@@ -1,20 +1,20 @@
 import { event } from "@tauri-apps/api";
 import { listen, UnlistenFn, EventCallback } from "@tauri-apps/api/event";
-import { useRef } from "react";
+import { useCallback, useRef } from "react";
 
 export const useListen = () => {
   const unlistenFns = useRef<UnlistenFn[]>([]);
 
-  const addListener = async <T>(
-    eventName: string,
-    handler: EventCallback<T>,
-  ) => {
-    const unlisten = await listen(eventName, handler);
-    unlistenFns.current.push(unlisten);
-    return unlisten;
-  };
+  const addListener = useCallback(
+    async <T>(eventName: string, handler: EventCallback<T>) => {
+      const unlisten = await listen(eventName, handler);
+      unlistenFns.current.push(unlisten);
+      return unlisten;
+    },
+    [],
+  );
 
-  const removeAllListeners = () => {
+  const removeAllListeners = useCallback(() => {
     const errors: Error[] = [];
 
     unlistenFns.current.forEach((unlisten) => {
@@ -33,13 +33,13 @@ export const useListen = () => {
     }
 
     unlistenFns.current.length = 0;
-  };
+  }, []);
 
-  const setupCloseListener = async function () {
+  const setupCloseListener = useCallback(async () => {
     await event.once("tauri://close-requested", async () => {
       removeAllListeners();
     });
-  };
+  }, [removeAllListeners]);
 
   return {
     addListener,
