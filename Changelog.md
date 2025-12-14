@@ -27,6 +27,7 @@
 - 修复菜单排序模式拖拽异常
 - 修复托盘菜单代理组前的异常勾选状态
 - 修复 Windows 下自定义标题栏按钮在最小化 / 关闭后 hover 状态残留
+- 修复直接覆盖 `config.yaml` 使用时无法展开代理组
 
 <details>
 <summary><strong> ✨ 新增功能 </strong></summary>
