@@ -55,11 +55,6 @@ export function useHeadStateNew() {
   const [state, dispatch] = useReducer(headStateReducer, {});
 
   useEffect(() => {
-    if (!current) {
-      dispatch({ type: "reset" });
-      return;
-    }
-
     try {
       const data = JSON.parse(
         localStorage.getItem(HEAD_STATE_KEY)!,
@@ -78,8 +73,6 @@ export function useHeadStateNew() {
   }, [current]);
 
   useEffect(() => {
-    if (!current) return;
-
     const timer = setTimeout(() => {
       try {
         const item = localStorage.getItem(HEAD_STATE_KEY);
@@ -99,10 +92,9 @@ export function useHeadStateNew() {
 
   const setHeadState = useCallback(
     (groupName: string, obj: Partial<HeadState>) => {
-      if (!current) return;
       dispatch({ type: "update", groupName, patch: obj });
     },
-    [current],
+    [],
   );
 
   return [state, setHeadState] as const;
