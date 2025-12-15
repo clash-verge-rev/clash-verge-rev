@@ -9,9 +9,6 @@ members = [
 ]
 resolver = "2"
 
-[workspace.package]
-edition = "2024"
-rust-version = "1.91"
 
 [profile.release]
 panic = "abort"

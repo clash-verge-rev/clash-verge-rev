@@ -7,8 +7,8 @@ license = "GPL-3.0-only"
 repository = "https://github.com/clash-verge-rev/clash-verge-rev.git"
 default-run = "clash-verge"
 build = "build.rs"
-edition = { workspace = true }
-rust-version = { workspace = true }
+edition = "2024"
+rust-version = "1.91"
 
 [lib]
 name = "app_lib"

@@ -1,8 +1,8 @@
 [package]
 name = "tauri-plugin-clash-verge-sysinfo"
 version = "0.1.0"
-edition.workspace = true
-rust-version.workspace = true
+edition = "2024"
+rust-version = "1.91"
 
 [dependencies]
 tauri = { workspace = true }
