@@ -576,7 +576,7 @@ const resolveServicePermission = async () => {
 };
 
 // =======================
-// Other resource resolvers (service, mmdb, geosite, geoip, enableLoopback, sysproxy)
+// Other resource resolvers (service, mmdb, geosite, geoip, enableLoopback)
 // =======================
 const SERVICE_URL = `https://github.com/clash-verge-rev/clash-verge-service-ipc/releases/download/${SIDECAR_HOST}`;
 const resolveService = () => {
@@ -624,11 +624,6 @@ const resolveEnableLoopback = () =>
     file: "enableLoopback.exe",
     downloadURL: `https://github.com/Kuingsmile/uwp-tool/releases/download/latest/enableLoopback.exe`,
   });
-const resolveWinSysproxy = () =>
-  resolveResource({
-    file: "sysproxy.exe",
-    downloadURL: `https://github.com/clash-verge-rev/sysproxy/releases/download/${arch}/sysproxy.exe`,
-  });
 
 const resolveSetDnsScript = () =>
   resolveResource({
@@ -675,12 +670,6 @@ const tasks = [
     func: resolveServicePermission,
     retry: 5,
     unixOnly: platform === "linux" || platform === "darwin",
-  },
-  {
-    name: "windows-sysproxy",
-    func: resolveWinSysproxy,
-    retry: 5,
-    winOnly: true,
   },
   {
     name: "set_dns_script",
