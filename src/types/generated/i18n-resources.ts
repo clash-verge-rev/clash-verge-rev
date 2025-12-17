@@ -181,6 +181,7 @@ export interface TranslationResources {
           menu: {
             lock: string;
             reorderMode: string;
+            restoreDefaultOrder: string;
             unlock: string;
           };
           tabs: {

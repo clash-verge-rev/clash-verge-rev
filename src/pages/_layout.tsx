@@ -154,7 +154,13 @@ const Layout = () => {
     [patchVerge],
   );
 
-  const { menuOrder, navItemMap, handleMenuDragEnd } = useNavMenuOrder({
+  const {
+    menuOrder,
+    navItemMap,
+    handleMenuDragEnd,
+    isDefaultOrder,
+    resetMenuOrder,
+  } = useNavMenuOrder({
     enabled: menuUnlocked,
     items: navItems,
     storedOrder: verge?.menu_order,
@@ -174,6 +180,11 @@ const Layout = () => {
   const handleMenuContextClose = useCallback(() => {
     setMenuContextPosition(null);
   }, []);
+
+  const handleResetMenuOrder = useCallback(() => {
+    setMenuContextPosition(null);
+    void resetMenuOrder();
+  }, [resetMenuOrder]);
 
   const handleUnlockMenu = useCallback(() => {
     setMenuUnlocked(true);
@@ -426,6 +437,13 @@ const Layout = () => {
                   {menuUnlocked
                     ? t("layout.components.navigation.menu.lock")
                     : t("layout.components.navigation.menu.unlock")}
+                </MenuItem>
+                <MenuItem
+                  onClick={handleResetMenuOrder}
+                  dense
+                  disabled={isDefaultOrder}
+                >
+                  {t("layout.components.navigation.menu.restoreDefaultOrder")}
                 </MenuItem>
               </Menu>
 

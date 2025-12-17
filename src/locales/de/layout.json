@@ -13,6 +13,7 @@
       },
       "menu": {
         "reorderMode": "Menu reorder mode",
+        "restoreDefaultOrder": "Restore default order",
         "unlock": "Unlock menu order",
         "lock": "Lock menu order"
       }

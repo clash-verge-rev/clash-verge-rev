@@ -82,6 +82,11 @@ export const useNavMenuOrder = <T extends { path: string }>({
     dispatchMenuOrder({ type: "sync", payload: configMenuOrder });
   }, [configMenuOrder]);
 
+  const isDefaultOrder = useMemo(
+    () => areOrdersEqual(menuOrder, defaultOrder),
+    [menuOrder, defaultOrder],
+  );
+
   const handleMenuDragEnd = useCallback(
     async (event: DragEndEvent) => {
       if (!enabled) {
@@ -120,9 +125,31 @@ export const useNavMenuOrder = <T extends { path: string }>({
     [enabled, menuOrder, onOptimisticUpdate, onPersist],
   );
 
+  const resetMenuOrder = useCallback(async () => {
+    if (isDefaultOrder) {
+      return;
+    }
+
+    const previousOrder = [...menuOrder];
+    const nextOrder = [...defaultOrder];
+
+    dispatchMenuOrder({ type: "sync", payload: nextOrder });
+    onOptimisticUpdate?.(nextOrder);
+
+    try {
+      await onPersist(nextOrder);
+    } catch (error) {
+      console.error("Failed to reset menu order:", error);
+      dispatchMenuOrder({ type: "sync", payload: previousOrder });
+      onOptimisticUpdate?.(previousOrder);
+    }
+  }, [defaultOrder, isDefaultOrder, menuOrder, onOptimisticUpdate, onPersist]);
+
   return {
     menuOrder,
     navItemMap,
     handleMenuDragEnd,
+    isDefaultOrder,
+    resetMenuOrder,
   };
 };

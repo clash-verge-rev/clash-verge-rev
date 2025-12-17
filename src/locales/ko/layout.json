@@ -13,6 +13,7 @@
       },
       "menu": {
         "reorderMode": "메뉴 재정렬 모드",
+        "restoreDefaultOrder": "Restore default order",
         "unlock": "메뉴 순서 잠금 해제",
         "lock": "메뉴 순서 잠금"
       }
