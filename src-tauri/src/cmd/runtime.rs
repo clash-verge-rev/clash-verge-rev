@@ -99,7 +99,7 @@ pub async fn update_proxy_chain_config_in_runtime(proxy_chain_config: Option<ser
         runtime.edit_draft(|d| d.update_proxy_chain_config(proxy_chain_config));
         // 我们需要在 CoreManager 中验证并应用配置，这里不应该直接调用 runtime.apply()
     }
-    logging_error!(Type::Core, CoreManager::global().update_config().await);
+    logging_error!(Type::Core, CoreManager::global().apply_generate_confihg().await);
 
     Ok(())
 }
