@@ -1,6 +1,5 @@
 import {
   DndContext,
-  DragEndEvent,
   KeyboardSensor,
   PointerSensor,
   closestCenter,
@@ -9,7 +8,6 @@ import {
 } from "@dnd-kit/core";
 import {
   SortableContext,
-  arrayMove,
   sortableKeyboardCoordinates,
   useSortable,
 } from "@dnd-kit/sortable";
@@ -25,14 +23,7 @@ import {
 } from "@mui/material";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import {
-  useCallback,
-  useEffect,
-  useMemo,
-  useReducer,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import { useTranslation } from "react-i18next";
 import { Outlet, useNavigate } from "react-router";
@@ -58,6 +49,7 @@ import {
   useAppInitialization,
   useLayoutEvents,
   useLoadingOverlay,
+  useNavMenuOrder,
 } from "./_layout/hooks";
 import { handleNoticeMessage } from "./_layout/utils";
 import { navItems } from "./_routers";
@@ -69,52 +61,7 @@ export const portableFlag = false;
 
 type NavItem = (typeof navItems)[number];
 
-const createNavLookup = (items: NavItem[]) => {
-  const map = new Map(items.map((item) => [item.path, item]));
-  const defaultOrder = items.map((item) => item.path);
-  return { map, defaultOrder };
-};
-
-const resolveMenuOrder = (
-  order: string[] | null | undefined,
-  defaultOrder: string[],
-  map: Map<string, NavItem>,
-) => {
-  const seen = new Set<string>();
-  const resolved: string[] = [];
-
-  if (Array.isArray(order)) {
-    for (const path of order) {
-      if (map.has(path) && !seen.has(path)) {
-        resolved.push(path);
-        seen.add(path);
-      }
-    }
-  }
-
-  for (const path of defaultOrder) {
-    if (!seen.has(path)) {
-      resolved.push(path);
-      seen.add(path);
-    }
-  }
-
-  return resolved;
-};
-
-const areOrdersEqual = (a: string[], b: string[]) =>
-  a.length === b.length && a.every((value, index) => value === b[index]);
-
 type MenuContextPosition = { top: number; left: number };
-type MenuOrderAction = { type: "sync"; payload: string[] };
-
-const menuOrderReducer = (state: string[], action: MenuOrderAction) => {
-  const next = action.payload;
-  if (areOrdersEqual(state, next)) {
-    return state;
-  }
-  return [...next];
-};
 
 interface SortableNavMenuItemProps {
   item: NavItem;
@@ -192,68 +139,28 @@ const Layout = () => {
     }),
   );
 
-  const { map: navItemMap, defaultOrder: defaultMenuOrder } = useMemo(
-    () => createNavLookup(navItems),
-    [],
-  );
-
-  const configMenuOrder = useMemo(
-    () => resolveMenuOrder(verge?.menu_order, defaultMenuOrder, navItemMap),
-    [verge?.menu_order, defaultMenuOrder, navItemMap],
-  );
-
-  const [menuOrder, dispatchMenuOrder] = useReducer(
-    menuOrderReducer,
-    configMenuOrder,
-  );
-
-  useEffect(() => {
-    dispatchMenuOrder({ type: "sync", payload: configMenuOrder });
-  }, [configMenuOrder]);
-
-  const handleMenuDragEnd = useCallback(
-    async (event: DragEndEvent) => {
-      if (!menuUnlocked) {
-        return;
-      }
-
-      const { active, over } = event;
-      if (!over || active.id === over.id) {
-        return;
-      }
-
-      const activeId = String(active.id);
-      const overId = String(over.id);
-
-      const oldIndex = menuOrder.indexOf(activeId);
-      const newIndex = menuOrder.indexOf(overId);
-
-      if (oldIndex === -1 || newIndex === -1) {
-        return;
-      }
-
-      const previousOrder = [...menuOrder];
-      const nextOrder = arrayMove(menuOrder, oldIndex, newIndex);
-
-      dispatchMenuOrder({ type: "sync", payload: nextOrder });
+  const handleMenuOrderOptimisticUpdate = useCallback(
+    (order: string[]) => {
       mutateVerge(
-        (prev) => (prev ? { ...prev, menu_order: nextOrder } : prev),
+        (prev) => (prev ? { ...prev, menu_order: order } : prev),
         false,
       );
-
-      try {
-        await patchVerge({ menu_order: nextOrder });
-      } catch (error) {
-        console.error("Failed to update menu order:", error);
-        dispatchMenuOrder({ type: "sync", payload: previousOrder });
-        mutateVerge(
-          (prev) => (prev ? { ...prev, menu_order: previousOrder } : prev),
-          false,
-        );
-      }
     },
-    [menuUnlocked, menuOrder, mutateVerge, patchVerge],
+    [mutateVerge],
   );
+
+  const handleMenuOrderPersist = useCallback(
+    (order: string[]) => patchVerge({ menu_order: order }),
+    [patchVerge],
+  );
+
+  const { menuOrder, navItemMap, handleMenuDragEnd } = useNavMenuOrder({
+    enabled: menuUnlocked,
+    items: navItems,
+    storedOrder: verge?.menu_order,
+    onOptimisticUpdate: handleMenuOrderOptimisticUpdate,
+    onPersist: handleMenuOrderPersist,
+  });
 
   const handleMenuContextMenu = useCallback(
     (event: React.MouseEvent<HTMLElement>) => {
