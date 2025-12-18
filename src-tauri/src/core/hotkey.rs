@@ -287,8 +287,12 @@ singleton!(Hotkey, INSTANCE);
 
 impl Hotkey {
     pub async fn init(&self, skip: bool) -> Result<()> {
+        if skip {
+            logging!(debug, Type::Hotkey, "skip register all hotkeys");
+            return Ok(());
+        }
         let verge = Config::verge().await;
-        let enable_global_hotkey = !skip && verge.data_arc().enable_global_hotkey.unwrap_or(true);
+        let enable_global_hotkey = verge.latest_arc().enable_global_hotkey.unwrap_or(true);
 
         logging!(
             debug,
@@ -298,7 +302,7 @@ impl Hotkey {
         );
 
         // Extract hotkeys data before async operations
-        let hotkeys = verge.data_arc().hotkeys.clone();
+        let hotkeys = verge.latest_arc().hotkeys.clone();
 
         if let Some(hotkeys) = hotkeys {
             logging!(debug, Type::Hotkey, "Has {} hotkeys need to register", hotkeys.len());
