@@ -132,8 +132,8 @@ pub(super) async fn init_timer() {
 
 pub(super) async fn init_hotkey() {
     // if hotkey is not use by global, skip init it
-    let skip_register_global_hotkeys = !Config::verge().await.latest_arc().enable_global_hotkey.unwrap_or(true);
-    logging_error!(Type::Setup, Hotkey::global().init(skip_register_global_hotkeys).await);
+    let skip_register_hotkeys = !Config::verge().await.latest_arc().enable_global_hotkey.unwrap_or(true);
+    logging_error!(Type::Setup, Hotkey::global().init(skip_register_hotkeys).await);
 }
 
 pub(super) async fn init_auto_lightweight_boot() {
