@@ -65,6 +65,7 @@
 - 改进旧版 Service 需要重新安装检测流程
 - 优化 macOS, Linux 和 Windows 系统信号处理
 - 链式代理仅显示 Selector 类型规则组
+- 优化 Windows 系统代理设置，不再依赖 `sysproxy.exe` 来设置代理
 
 </details>
 
