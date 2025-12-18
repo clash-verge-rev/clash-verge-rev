@@ -45,93 +45,25 @@ pub async fn clean_async() -> bool {
 
     // 重置系统代理
     let proxy_task = tokio::task::spawn(async {
-        #[cfg(target_os = "windows")]
-        {
-            use sysproxy::{Autoproxy, Sysproxy};
-            use winapi::um::winuser::{GetSystemMetrics, SM_SHUTTINGDOWN};
-
-            // 检查系统代理是否开启
-            let sys_proxy_enabled = Config::verge().await.data_arc().enable_system_proxy.unwrap_or(false);
-
-            if !sys_proxy_enabled {
-                logging!(info, Type::Window, "系统代理未启用，跳过重置");
-                return true;
-            }
-
-            // 检查是否正在关机
-            let is_shutting_down = unsafe { GetSystemMetrics(SM_SHUTTINGDOWN) != 0 };
-
-            if is_shutting_down {
-                // sysproxy-rs 操作注册表(避免.exe的dll错误)
-                logging!(info, Type::Window, "检测到正在关机，syspro-rs操作注册表关闭系统代理");
-
-                match Sysproxy::get_system_proxy() {
-                    Ok(mut sysproxy) => {
-                        sysproxy.enable = false;
-                        if let Err(e) = sysproxy.set_system_proxy() {
-                            logging!(warn, Type::Window, "Warning: 关机时关闭系统代理失败: {e}");
-                        } else {
-                            logging!(info, Type::Window, "系统代理已关闭（通过注册表）");
-                        }
-                    }
-                    Err(e) => {
-                        logging!(warn, Type::Window, "Warning: 关机时获取代理设置失败: {e}");
-                    }
-                }
-
-                // 关闭自动代理配置
-                if let Ok(mut autoproxy) = Autoproxy::get_auto_proxy() {
-                    autoproxy.enable = false;
-                    let _ = autoproxy.set_auto_proxy();
-                }
-
-                return true;
-            }
-
-            // 正常退出：使用 sysproxy.exe 重置代理
-            logging!(info, Type::Window, "sysproxy.exe重置系统代理");
-
-            match timeout(Duration::from_secs(2), sysopt::Sysopt::global().reset_sysproxy()).await {
-                Ok(Ok(_)) => {
-                    logging!(info, Type::Window, "系统代理已重置");
-                    true
-                }
-                Ok(Err(e)) => {
-                    logging!(warn, Type::Window, "Warning: 重置系统代理失败: {e}");
-                    true
-                }
-                Err(_) => {
-                    logging!(warn, Type::Window, "Warning: 重置系统代理超时，继续退出流程");
-                    true
-                }
-            }
+        let sys_proxy_enabled = Config::verge().await.data_arc().enable_system_proxy.unwrap_or(false);
+        if !sys_proxy_enabled {
+            logging!(info, Type::Window, "系统代理未启用，跳过重置");
+            return true;
         }
 
-        // 非 Windows 平台：正常重置代理
-        #[cfg(not(target_os = "windows"))]
-        {
-            let sys_proxy_enabled = Config::verge().await.data_arc().enable_system_proxy.unwrap_or(false);
-
-            if !sys_proxy_enabled {
-                logging!(info, Type::Window, "系统代理未启用，跳过重置");
-                return true;
+        logging!(info, Type::Window, "开始重置系统代理...");
+        match timeout(Duration::from_millis(1500), sysopt::Sysopt::global().reset_sysproxy()).await {
+            Ok(Ok(_)) => {
+                logging!(info, Type::Window, "系统代理已重置");
+                true
             }
-
-            logging!(info, Type::Window, "开始重置系统代理...");
-
-            match timeout(Duration::from_millis(1500), sysopt::Sysopt::global().reset_sysproxy()).await {
-                Ok(Ok(_)) => {
-                    logging!(info, Type::Window, "系统代理已重置");
-                    true
-                }
-                Ok(Err(e)) => {
-                    logging!(warn, Type::Window, "Warning: 重置系统代理失败: {e}");
-                    true
-                }
-                Err(_) => {
-                    logging!(warn, Type::Window, "Warning: 重置系统代理超时，继续退出");
-                    true
-                }
+            Ok(Err(e)) => {
+                logging!(warn, Type::Window, "Warning: 重置系统代理失败: {e}");
+                false
+            }
+            Err(_) => {
+                logging!(warn, Type::Window, "Warning: 重置系统代理超时，继续退出");
+                false
             }
         }
     });
@@ -183,7 +115,7 @@ pub async fn clean_async() -> bool {
                     Type::Window,
                     "Warning: 停止core超时（可能系统正在关机），继续退出"
                 );
-                true
+                false
             }
         }
     });
