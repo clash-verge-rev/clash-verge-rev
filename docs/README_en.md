@@ -51,17 +51,23 @@ Join [@clash_verge_rev](https://t.me/clash_verge_re) for update announcements.
 
 ## Promotion
 
-#### [Doggygo VPN — Performance-oriented global accelerator](https://verge.dginv.click/#/register?code=oaxsAGo6)
+### ✈️ [Doggygo VPN — A Technical-Grade Proxy Service](https://verge.dginv.click/#/register?code=oaxsAGo6)
 
-- High-performance overseas network service with free trials, discounted plans, streaming unlocks, and first-class Hysteria protocol support.
-- Register through the exclusive Clash Verge link to get a 3-day trial with 1 GB of traffic per day: [Sign up](https://verge.dginv.click/#/register?code=oaxsAGo6)
-- Exclusive 20% off coupon for Clash Verge users: `verge20` (limited to 500 uses)
-- Discounted bundle from ¥15.8 per month for 160 GB, plus an additional 20% off for yearly billing
-- Operated by an overseas team with reliable service and up to 50% revenue share
-- Load-balanced clusters with high-speed dedicated routes (compatible with legacy clients), exceptionally low latency, smooth 4K playback
-- First global provider to support the `Hysteria2` protocol—perfect fit for the Clash Verge client
-- Supports streaming services and ChatGPT access
-- Official site: [https://狗狗加速.com](https://verge.dginv.click/#/register?code=oaxsAGo6)
+🚀 A high-performance, overseas, technical-grade proxy service offering free trials and discounted plans, fully unlocking streaming platforms and AI services. The world’s first provider to adopt the **QUIC protocol**.
+
+🎁 Register via the **Clash Verge exclusive invitation link** to receive **3 days of free trial**, with **1GB traffic per day**: 👉 [Register here](https://verge.dginv.click/#/register?code=oaxsAGo6)
+
+#### **Core Advantages:**
+
+- 📱 Self-developed iOS client (the industry’s “only one”), with technology proven in production and **significant ongoing R&D investment**
+- 🧑‍💻 **12-hour live customer support** (also assists with Clash Verge usage issues)
+- 💰 Discounted plans at **only CNY 21 per month, 160GB traffic, 20% off with annual billing**
+- 🌍 Overseas team, no risk of shutdown or exit scams, with up to **50% referral commission**
+- ⚙️ **Cluster-based load balancing** architecture with **real-time load monitoring and elastic scaling**, high-speed dedicated lines (compatible with legacy clients), ultra-low latency, unaffected by peak hours, **4K streaming loads instantly**
+- ⚡ The world’s first **QUIC-protocol-based proxy service**, now upgraded with the faster **Tuic protocol** (best paired with the Clash Verge client)
+- 🎬 Unlocks **streaming platforms and mainstream AI services**
+
+🌐 Official Website: 👉 [https://狗狗加速.com](https://verge.dginv.click/#/register?code=oaxsAGo6)
 
 #### Build Infrastructure Sponsor — [YXVM Dedicated Servers](https://yxvm.com/aff.php?aff=827)
 
