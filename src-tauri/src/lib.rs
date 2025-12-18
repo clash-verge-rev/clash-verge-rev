@@ -336,7 +336,9 @@ pub fn run() {
                             .register_system_hotkey(SystemHotkey::CmdW)
                             .await;
                     }
-                    let _ = hotkey::Hotkey::global().init(true).await;
+                    if !is_enable_global_hotkey {
+                        let _ = hotkey::Hotkey::global().init(false).await;
+                    }
                     return;
                 }
 
