@@ -111,6 +111,7 @@ export const CurrentProxyCard = () => {
   const { verge } = useVerge();
   const { current: currentProfile } = useProfiles();
   const autoDelayEnabled = verge?.enable_auto_delay_detection ?? false;
+  const defaultLatencyTimeout = verge?.default_latency_timeout;
   const currentProfileId = currentProfile?.uid || null;
 
   const getProfileStorageKey = useCallback(
@@ -742,20 +743,38 @@ export const CurrentProxyCard = () => {
 
       if (sortType === 1) {
         const refreshTick = delaySortRefresh;
+        const effectiveTimeout =
+          typeof defaultLatencyTimeout === "number" && defaultLatencyTimeout > 0
+            ? defaultLatencyTimeout
+            : 10000;
+
+        const categorizeDelay = (delay: number): [number, number] => {
+          if (!Number.isFinite(delay)) return [5, Number.MAX_SAFE_INTEGER];
+          if (delay > 1e5) return [4, delay];
+          if (delay === 0 || (delay >= effectiveTimeout && delay <= 1e5)) {
+            return [3, delay || effectiveTimeout];
+          }
+          if (delay < 0) return [5, Number.MAX_SAFE_INTEGER];
+          return [0, delay];
+        };
+
         list.sort((a, b) => {
           const recordA = state.proxyData.records[a.name];
           const recordB = state.proxyData.records[b.name];
 
-          if (!recordA) return 1;
-          if (!recordB) return -1;
+          const [ar, av] = recordA
+            ? categorizeDelay(
+                delayManager.getDelayFix(recordA, state.selection.group),
+              )
+            : [6, Number.MAX_SAFE_INTEGER];
+          const [br, bv] = recordB
+            ? categorizeDelay(
+                delayManager.getDelayFix(recordB, state.selection.group),
+              )
+            : [6, Number.MAX_SAFE_INTEGER];
 
-          const ad = delayManager.getDelayFix(recordA, state.selection.group);
-          const bd = delayManager.getDelayFix(recordB, state.selection.group);
-
-          if (ad === -1 || ad === -2) return 1;
-          if (bd === -1 || bd === -2) return -1;
-
-          if (ad !== bd) return ad - bd;
+          if (ar !== br) return ar - br;
+          if (av !== bv) return av - bv;
           return refreshTick >= 0 ? a.name.localeCompare(b.name) : 0;
         });
       } else {
@@ -800,6 +819,7 @@ export const CurrentProxyCard = () => {
     state.selection.group,
     sortType,
     delaySortRefresh,
+    defaultLatencyTimeout,
   ]);
 
   // 获取排序图标
