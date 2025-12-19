@@ -205,6 +205,7 @@
           "trafficGraph": "Verkehrsdiagramm",
           "memoryUsage": "Kern-Speichernutzung",
           "proxyGroupIcon": "Proxy-Gruppen-Symbol",
+          "toastPosition": "Toast-Position",
           "hoverNavigator": "Hover Jump Navigator",
           "hoverNavigatorDelay": "Hover Jump Navigator Delay",
           "navIcon": "Navigationsleiste-Symbol",
@@ -225,6 +226,12 @@
             "monochrome": "Monochromes Symbol",
             "colorful": "Farbiges Symbol",
             "disable": "Deaktivieren"
+          },
+          "toastPosition": {
+            "topLeft": "Oben links",
+            "topRight": "Oben rechts",
+            "bottomLeft": "Unten links",
+            "bottomRight": "Unten rechts"
           }
         }
       }

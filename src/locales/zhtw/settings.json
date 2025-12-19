@@ -205,6 +205,7 @@
           "trafficGraph": "流量圖表",
           "memoryUsage": "內核佔用",
           "proxyGroupIcon": "代理組圖示",
+          "toastPosition": "通知位置",
           "hoverNavigator": "懸浮跳轉導航",
           "hoverNavigatorDelay": "懸浮跳轉導航延遲",
           "navIcon": "導覽列圖示",
@@ -225,6 +226,12 @@
             "monochrome": "單色圖示",
             "colorful": "彩色圖示",
             "disable": "停用"
+          },
+          "toastPosition": {
+            "topLeft": "左上角",
+            "topRight": "右上角",
+            "bottomLeft": "左下角",
+            "bottomRight": "右下角"
           }
         }
       }

@@ -814,6 +814,7 @@ interface IVergeConfig {
   enable_group_icon?: boolean;
   menu_icon?: "monochrome" | "colorful" | "disable";
   menu_order?: string[];
+  notice_position?: "top-left" | "top-right" | "bottom-left" | "bottom-right";
   tray_icon?: "monochrome" | "colorful";
   common_tray_icon?: boolean;
   sysproxy_tray_icon?: boolean;

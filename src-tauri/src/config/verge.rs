@@ -66,6 +66,10 @@ pub struct IVerge {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub menu_order: Option<Vec<String>>,
 
+    /// toast / notice position on screen
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub notice_position: Option<String>,
+
     /// sysproxy tray icon
     pub sysproxy_tray_icon: Option<bool>,
 
@@ -391,6 +395,7 @@ impl IVerge {
             #[cfg(target_os = "macos")]
             tray_icon: Some("monochrome".into()),
             menu_icon: Some("monochrome".into()),
+            notice_position: Some("top-right".into()),
             common_tray_icon: Some(false),
             sysproxy_tray_icon: Some(false),
             tun_tray_icon: Some(false),
@@ -475,6 +480,7 @@ impl IVerge {
         patch!(tray_icon);
         patch!(menu_icon);
         patch!(menu_order);
+        patch!(notice_position);
         patch!(common_tray_icon);
         patch!(sysproxy_tray_icon);
         patch!(tun_tray_icon);
