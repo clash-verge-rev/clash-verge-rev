@@ -2,6 +2,7 @@
 # Changelog.md
 # CONTRIBUTING.md
 
+.changelog_backups
 pnpm-lock.yaml
 
 src-tauri/target/

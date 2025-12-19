@@ -11,4 +11,5 @@ scripts/_env.sh
 .idea
 .old
 .eslintcache
+.changelog_backups
 target
