@@ -70,6 +70,9 @@ pub struct IVerge {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub notice_position: Option<String>,
 
+    /// collapse navigation bar
+    pub collapse_navbar: Option<bool>,
+
     /// sysproxy tray icon
     pub sysproxy_tray_icon: Option<bool>,
 
@@ -396,6 +399,7 @@ impl IVerge {
             tray_icon: Some("monochrome".into()),
             menu_icon: Some("monochrome".into()),
             notice_position: Some("top-right".into()),
+            collapse_navbar: Some(false),
             common_tray_icon: Some(false),
             sysproxy_tray_icon: Some(false),
             tun_tray_icon: Some(false),
@@ -481,6 +485,7 @@ impl IVerge {
         patch!(menu_icon);
         patch!(menu_order);
         patch!(notice_position);
+        patch!(collapse_navbar);
         patch!(common_tray_icon);
         patch!(sysproxy_tray_icon);
         patch!(tun_tray_icon);

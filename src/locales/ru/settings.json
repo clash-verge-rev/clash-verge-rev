@@ -209,6 +209,7 @@
           "hoverNavigator": "Hover Jump Navigator",
           "hoverNavigatorDelay": "Hover Jump Navigator Delay",
           "navIcon": "Иконки навигации",
+          "collapseNavBar": "Свернуть панель навигации",
           "trayIcon": "Иконка в трее",
           "showProxyGroupsInline": "Show Proxy Groups Inline",
           "commonTrayIcon": "Общий значок в трее",

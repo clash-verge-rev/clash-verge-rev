@@ -158,3 +158,103 @@
     }
   }
 }
+
+.layout.layout--nav-collapsed {
+  --layout-nav-collapsed-width: 72px;
+  --layout-nav-item-size: 52px;
+  --layout-nav-item-radius: 12px;
+  --layout-nav-logo-size: 56px;
+
+  .layout-content {
+    &__left {
+      flex: 0 0 var(--layout-nav-collapsed-width) !important;
+      width: var(--layout-nav-collapsed-width) !important;
+      min-width: var(--layout-nav-collapsed-width) !important;
+      max-width: var(--layout-nav-collapsed-width) !important;
+      border-right: none !important;
+
+      .the-traffic {
+        display: none !important;
+      }
+
+      > .MuiBox-root {
+        display: none !important;
+      }
+
+      .the-logo {
+        flex: 0 0 var(--layout-nav-logo-size) !important;
+        height: var(--layout-nav-logo-size) !important;
+        margin: 8px 0 4px !important;
+        padding: 0 !important;
+        align-items: center !important;
+        justify-content: center !important;
+      }
+
+      .the-logo > div {
+        width: 100% !important;
+        height: 100% !important;
+        align-items: center !important;
+        justify-content: center !important;
+      }
+
+      .the-logo > div > svg:last-child {
+        display: none !important;
+      }
+
+      .the-logo .MuiSvgIcon-root {
+        margin: 0 !important;
+      }
+
+      .the-logo .the-newbtn {
+        display: none !important;
+      }
+
+      .the-menu {
+        width: var(--layout-nav-collapsed-width) !important;
+        overflow-x: hidden;
+
+        scrollbar-width: none;
+        &::-webkit-scrollbar {
+          width: 0;
+          height: 0;
+        }
+
+        li:last-child {
+          border-bottom: none;
+        }
+
+        .MuiListItem-root {
+          max-width: 100% !important;
+          padding: 0 !important;
+        }
+
+        .MuiListItemButton-root {
+          justify-content: center !important;
+          width: var(--layout-nav-item-size) !important;
+          height: var(--layout-nav-item-size) !important;
+          min-height: var(--layout-nav-item-size) !important;
+          max-width: var(--layout-nav-item-size) !important;
+          flex: 0 0 var(--layout-nav-item-size) !important;
+          flex-grow: 0 !important;
+          flex-shrink: 0 !important;
+          margin: 6px auto !important;
+          padding: 0 !important;
+          border-radius: var(--layout-nav-item-radius) !important;
+        }
+
+        .MuiListItemIcon-root {
+          min-width: auto !important;
+          margin: 0 !important;
+          margin-left: 0 !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+        }
+
+        .MuiListItemText-root {
+          display: none !important;
+        }
+      }
+    }
+  }
+}

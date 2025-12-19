@@ -209,6 +209,7 @@
           "hoverNavigator": "Hover Jump Navigator",
           "hoverNavigatorDelay": "Hover Jump Navigator Delay",
           "navIcon": "آیکون ناوبری",
+          "collapseNavBar": "جمع کردن نوار ناوبری",
           "trayIcon": "آیکون سینی سیستم",
           "showProxyGroupsInline": "Show Proxy Groups Inline",
           "commonTrayIcon": "آیکون مشترک سینی سیستم",

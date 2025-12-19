@@ -209,6 +209,7 @@
           "hoverNavigator": "悬浮跳转导航",
           "hoverNavigatorDelay": "悬浮跳转导航延迟",
           "navIcon": "导航栏图标",
+          "collapseNavBar": "收起导航栏",
           "trayIcon": "托盘图标",
           "showProxyGroupsInline": "将代理组显示在托盘一级菜单",
           "commonTrayIcon": "常规托盘图标",
