@@ -39,9 +39,10 @@ function is_valid_ip() {
 
 # 获取网络接口和硬件端口
 nic=$(route -n get default | grep "interface" | awk '{print $2}')
-hardware_port=$(networksetup -listallhardwareports | awk -v dev="$nic" '
-    /Hardware Port:/{port=$0; gsub("Hardware Port: ", "", port)} 
-    /Device: /{if ($2 == dev) {print port; exit}}
+# 从网络服务列表中获取硬件端口
+hardware_port=$(networksetup -listnetworkserviceorder | awk -v dev="$nic" '
+    /^\([0-9]+\) /{port=$0; sub(/^\([0-9]+\) /, "", port)} 
+    /\(Hardware Port:/{interface=$NF;sub(/\)/, "", interface); if (interface == dev) {print port; exit}}
 ')
 
 # 获取当前DNS设置
