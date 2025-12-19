@@ -283,6 +283,7 @@
         "backup": "备份",
         "export": "导出",
         "exportBackup": "导出备份",
+        "importBackup": "导入备份",
         "deleteBackup": "删除备份",
         "restore": "恢复",
         "restoreBackup": "恢复备份",
@@ -307,6 +308,8 @@
         "restoreSuccess": "恢复成功，应用将在 1 秒后重启",
         "localBackupExported": "本地备份导出成功",
         "localBackupExportFailed": "本地备份导出失败",
+        "localBackupImported": "本地备份导入成功",
+        "localBackupImportFailed": "本地备份导入失败：{{error}}",
         "webdavRefreshSuccess": "WebDAV 刷新成功",
         "webdavRefreshFailed": "WebDAV 刷新失败: {{error}}",
         "confirmDelete": "确认删除此备份文件吗？",
@@ -333,7 +336,9 @@
       "history": {
         "title": "备份记录",
         "summary": "共 {{count}} 份备份 · 最近 {{recent}}",
-        "empty": "暂无备份记录"
+        "empty": "暂无备份记录",
+        "unknownPlatform": "未知",
+        "unknownTime": "未知时间"
       },
       "webdav": {
         "title": "WebDAV 设置"

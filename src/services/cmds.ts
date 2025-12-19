@@ -455,6 +455,10 @@ export async function restoreLocalBackup(filename: string) {
   return invoke<void>("restore_local_backup", { filename });
 }
 
+export async function importLocalBackup(source: string) {
+  return invoke<string>("import_local_backup", { source });
+}
+
 export async function exportLocalBackup(filename: string, destination: string) {
   return invoke<void>("export_local_backup", { filename, destination });
 }

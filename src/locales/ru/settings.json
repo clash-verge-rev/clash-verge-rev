@@ -283,6 +283,7 @@
         "backup": "Резервное копирование",
         "export": "Export",
         "exportBackup": "Export Backup",
+        "importBackup": "Import Backup",
         "deleteBackup": "Удалить резервную копию",
         "restore": "Восстановить",
         "restoreBackup": "Восстановить резервную копию",
@@ -307,6 +308,8 @@
         "restoreSuccess": "Восстановление успешно выполнено, приложение перезапустится через 1 секунду",
         "localBackupExported": "Local backup exported successfully",
         "localBackupExportFailed": "Failed to export local backup",
+        "localBackupImported": "Local backup imported successfully",
+        "localBackupImportFailed": "Не удалось импортировать локальную резервную копию: {{error}}",
         "webdavRefreshSuccess": "WebDAV refresh succeeded",
         "webdavRefreshFailed": "WebDAV refresh failed: {{error}}",
         "confirmDelete": "Вы уверены, что хотите удалить этот файл резервной копии?",
@@ -333,7 +336,9 @@
       "history": {
         "title": "Backup history",
         "summary": "{{count}} backups • latest {{recent}}",
-        "empty": "No backups available"
+        "empty": "No backups available",
+        "unknownPlatform": "неизвестно",
+        "unknownTime": "Неизвестное время"
       },
       "webdav": {
         "title": "WebDAV settings"

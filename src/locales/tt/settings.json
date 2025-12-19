@@ -283,6 +283,7 @@
         "backup": "Резерв копия",
         "export": "Export",
         "exportBackup": "Export Backup",
+        "importBackup": "Import Backup",
         "deleteBackup": "Резерв копияне бетерү",
         "restore": "Кайтару",
         "restoreBackup": "Резерв копияне кайтару",
@@ -307,6 +308,8 @@
         "restoreSuccess": "Уңышлы кайтарылды, кушымта 1 секундтан яңадан башланачак",
         "localBackupExported": "Local backup exported successfully",
         "localBackupExportFailed": "Failed to export local backup",
+        "localBackupImported": "Local backup imported successfully",
+        "localBackupImportFailed": "Failed to import local backup: {{error}}",
         "webdavRefreshSuccess": "WebDAV refresh succeeded",
         "webdavRefreshFailed": "WebDAV refresh failed: {{error}}",
         "confirmDelete": "Бу резерв копия файлын бетерергә телисезме?",
@@ -333,7 +336,9 @@
       "history": {
         "title": "Backup history",
         "summary": "{{count}} backups • latest {{recent}}",
-        "empty": "No backups available"
+        "empty": "No backups available",
+        "unknownPlatform": "unknown",
+        "unknownTime": "Unknown time"
       },
       "webdav": {
         "title": "WebDAV settings"

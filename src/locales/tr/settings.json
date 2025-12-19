@@ -283,6 +283,7 @@
         "backup": "Yedekle",
         "export": "Export",
         "exportBackup": "Export Backup",
+        "importBackup": "Import Backup",
         "deleteBackup": "Yedeği Sil",
         "restore": "Geri Yükle",
         "restoreBackup": "Yedeği Geri Yükle",
@@ -307,6 +308,8 @@
         "restoreSuccess": "Geri Yükleme Başarılı, Uygulama 1 saniye içinde yeniden başlatılacak",
         "localBackupExported": "Local backup exported successfully",
         "localBackupExportFailed": "Failed to export local backup",
+        "localBackupImported": "Local backup imported successfully",
+        "localBackupImportFailed": "Failed to import local backup: {{error}}",
         "webdavRefreshSuccess": "WebDAV refresh succeeded",
         "webdavRefreshFailed": "WebDAV refresh failed: {{error}}",
         "confirmDelete": "Bu yedek dosyasını silmeyi onaylıyor musunuz?",
@@ -333,7 +336,9 @@
       "history": {
         "title": "Backup history",
         "summary": "{{count}} backups • latest {{recent}}",
-        "empty": "No backups available"
+        "empty": "No backups available",
+        "unknownPlatform": "unknown",
+        "unknownTime": "Unknown time"
       },
       "webdav": {
         "title": "WebDAV settings"
