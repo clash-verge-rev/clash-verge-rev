@@ -8,6 +8,7 @@
 <summary><strong> ✨ 新增功能 </strong></summary>
 
 - 允许代理页面允许高级过滤搜索
+- 备份设置页面新增导入备份按钮
 
 </details>
 
