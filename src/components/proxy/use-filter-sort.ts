@@ -2,15 +2,23 @@ import { useEffect, useMemo, useReducer } from "react";
 
 import { useVerge } from "@/hooks/use-verge";
 import delayManager from "@/services/delay";
+import { compileStringMatcher } from "@/utils/search-matcher";
 
 // default | delay | alphabet
 export type ProxySortType = 0 | 1 | 2;
+
+export type ProxySearchState = {
+  matchCase?: boolean;
+  matchWholeWord?: boolean;
+  useRegularExpression?: boolean;
+};
 
 export default function useFilterSort(
   proxies: IProxyItem[],
   groupName: string,
   filterText: string,
   sortType: ProxySortType,
+  searchState?: ProxySearchState,
 ) {
   const { verge } = useVerge();
   const [_, bumpRefresh] = useReducer((count: number) => count + 1, 0);
@@ -33,7 +41,7 @@ export default function useFilterSort(
   }, [groupName]);
 
   return useMemo(() => {
-    const fp = filterProxies(proxies, groupName, filterText);
+    const fp = filterProxies(proxies, groupName, filterText, searchState);
     const sp = sortProxies(
       fp,
       groupName,
@@ -46,6 +54,7 @@ export default function useFilterSort(
     groupName,
     filterText,
     sortType,
+    searchState,
     verge?.default_latency_timeout,
   ]);
 }
@@ -56,8 +65,9 @@ export function filterSort(
   filterText: string,
   sortType: ProxySortType,
   latencyTimeout?: number,
+  searchState?: ProxySearchState,
 ) {
-  const fp = filterProxies(proxies, groupName, filterText);
+  const fp = filterProxies(proxies, groupName, filterText, searchState);
   const sp = sortProxies(fp, groupName, sortType, latencyTimeout);
   return sp;
 }
@@ -76,10 +86,12 @@ function filterProxies(
   proxies: IProxyItem[],
   groupName: string,
   filterText: string,
+  searchState?: ProxySearchState,
 ) {
-  if (!filterText) return proxies;
+  const query = filterText.trim();
+  if (!query) return proxies;
 
-  const res1 = regex1.exec(filterText);
+  const res1 = regex1.exec(query);
   if (res1) {
     const symbol = res1[1];
     const symbol2 = res1[2].toLowerCase();
@@ -100,13 +112,25 @@ function filterProxies(
     });
   }
 
-  const res2 = regex2.exec(filterText);
+  const res2 = regex2.exec(query);
   if (res2) {
     const type = res2[1].toLowerCase();
     return proxies.filter((p) => p.type.toLowerCase().includes(type));
   }
 
-  return proxies.filter((p) => p.name.includes(filterText.trim()));
+  const {
+    matchCase = false,
+    matchWholeWord = false,
+    useRegularExpression = false,
+  } = searchState ?? {};
+  const compiled = compileStringMatcher(query, {
+    matchCase,
+    matchWholeWord,
+    useRegularExpression,
+  });
+
+  if (!compiled.isValid) return [];
+  return proxies.filter((p) => compiled.matcher(p.name));
 }
 
 /**

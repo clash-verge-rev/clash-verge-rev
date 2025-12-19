@@ -9,6 +9,9 @@ export interface HeadState {
   showType: boolean;
   sortType: ProxySortType;
   filterText: string;
+  filterMatchCase?: boolean;
+  filterMatchWholeWord?: boolean;
+  filterUseRegularExpression?: boolean;
   textState: "url" | "filter" | null;
   testUrl: string;
 }
@@ -21,6 +24,9 @@ export const DEFAULT_STATE: HeadState = {
   showType: true,
   sortType: 0,
   filterText: "",
+  filterMatchCase: false,
+  filterMatchWholeWord: false,
+  filterUseRegularExpression: false,
   textState: null,
   testUrl: "",
 };
