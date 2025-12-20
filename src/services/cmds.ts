@@ -554,3 +554,12 @@ export const isAdmin = async () => {
 export async function getNextUpdateTime(uid: string) {
   return invoke<number | null>("get_next_update_time", { uid });
 }
+
+export const isPortInUse = async (port: number) => {
+  try {
+    return await invoke<boolean>("is_port_in_use", { port });
+  } catch (error) {
+    console.error("检查端口使用状态失败:", error);
+    return false;
+  }
+};

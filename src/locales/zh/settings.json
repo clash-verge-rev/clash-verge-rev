@@ -252,6 +252,7 @@
         "random": "随机端口"
       },
       "messages": {
+        "portInUse": "端口 {{port}} 已被占用",
         "saved": "端口设置已保存",
         "saveFailed": "端口设置保存失败"
       }

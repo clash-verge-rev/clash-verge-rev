@@ -9,12 +9,13 @@ import {
   TextField,
 } from "@mui/material";
 import { useLockFn, useRequest } from "ahooks";
-import { forwardRef, useImperativeHandle, useState } from "react";
+import { forwardRef, useImperativeHandle, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { BaseDialog, Switch } from "@/components/base";
 import { useClashInfo } from "@/hooks/use-clash";
 import { useVerge } from "@/hooks/use-verge";
+import { isPortInUse } from "@/services/cmds";
 import { showNotice } from "@/services/notice-service";
 import getSystem from "@/utils/get-system";
 
@@ -59,6 +60,9 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
     verge?.verge_tproxy_enabled ?? false,
   );
 
+  // 保存打开对话框时的原始值，用于在检测到端口被占用时恢复
+  const originalPortsRef = useRef<Record<string, any> | null>(null);
+
   // 添加保存请求，防止GUI卡死
   const { loading, run: saveSettings } = useRequest(
     async (params: { clashConfig: any; vergeConfig: any }) => {
@@ -82,15 +86,27 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
 
   useImperativeHandle(ref, () => ({
     open: () => {
-      setMixedPort(verge?.verge_mixed_port ?? clashInfo?.mixed_port ?? 7897);
-      setSocksPort(verge?.verge_socks_port ?? 7898);
-      setSocksEnabled(verge?.verge_socks_enabled ?? false);
-      setHttpPort(verge?.verge_port ?? 7899);
-      setHttpEnabled(verge?.verge_http_enabled ?? false);
-      setRedirPort(verge?.verge_redir_port ?? 7895);
-      setRedirEnabled(verge?.verge_redir_enabled ?? false);
-      setTproxyPort(verge?.verge_tproxy_port ?? 7896);
-      setTproxyEnabled(verge?.verge_tproxy_enabled ?? false);
+      originalPortsRef.current = {
+        mixedPort: verge?.verge_mixed_port ?? clashInfo?.mixed_port ?? 7897,
+        socksPort: verge?.verge_socks_port ?? 7898,
+        socksEnabled: verge?.verge_socks_enabled ?? false,
+        httpPort: verge?.verge_port ?? 7899,
+        httpEnabled: verge?.verge_http_enabled ?? false,
+        redirPort: verge?.verge_redir_port ?? 7895,
+        redirEnabled: verge?.verge_redir_enabled ?? false,
+        tproxyPort: verge?.verge_tproxy_port ?? 7896,
+        tproxyEnabled: verge?.verge_tproxy_enabled ?? false,
+      };
+
+      setMixedPort(originalPortsRef.current.mixedPort);
+      setSocksPort(originalPortsRef.current.socksPort);
+      setSocksEnabled(originalPortsRef.current.socksEnabled);
+      setHttpPort(originalPortsRef.current.httpPort);
+      setHttpEnabled(originalPortsRef.current.httpEnabled);
+      setRedirPort(originalPortsRef.current.redirPort);
+      setRedirEnabled(originalPortsRef.current.redirEnabled);
+      setTproxyPort(originalPortsRef.current.tproxyPort);
+      setTproxyEnabled(originalPortsRef.current.tproxyEnabled);
       setOpen(true);
     },
     close: () => setOpen(false),
@@ -122,6 +138,47 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
 
     if (!allPortsValid) {
       return;
+    }
+
+    for (const port of portList) {
+      try {
+        const inUse = await isPortInUse(port);
+        if (inUse) {
+          showNotice.error("settings.modals.clashPort.messages.portInUse", {
+            port,
+          });
+          const original = originalPortsRef.current;
+          if (original) {
+            setMixedPort(original.mixedPort);
+            setSocksPort(original.socksPort);
+            setSocksEnabled(original.socksEnabled);
+            setHttpPort(original.httpPort);
+            setHttpEnabled(original.httpEnabled);
+            setRedirPort(original.redirPort);
+            setRedirEnabled(original.redirEnabled);
+            setTproxyPort(original.tproxyPort);
+            setTproxyEnabled(original.tproxyEnabled);
+          } else {
+            setMixedPort(
+              verge?.verge_mixed_port ?? clashInfo?.mixed_port ?? 7897,
+            );
+            setSocksPort(verge?.verge_socks_port ?? 7898);
+            setSocksEnabled(verge?.verge_socks_enabled ?? false);
+            setHttpPort(verge?.verge_port ?? 7899);
+            setHttpEnabled(verge?.verge_http_enabled ?? false);
+            setRedirPort(verge?.verge_redir_port ?? 7895);
+            setRedirEnabled(verge?.verge_redir_enabled ?? false);
+            setTproxyPort(verge?.verge_tproxy_port ?? 7896);
+            setTproxyEnabled(verge?.verge_tproxy_enabled ?? false);
+          }
+          return;
+        }
+      } catch (error) {
+        showNotice.error("settings.modals.clashPort.messages.portCheckFailed", {
+          error,
+        });
+        return;
+      }
     }
 
     // 准备配置数据

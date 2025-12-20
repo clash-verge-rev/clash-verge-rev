@@ -4,8 +4,8 @@ import { getVersion } from "tauri-plugin-mihomo-api";
 
 import {
   getClashInfo,
-  patchClashConfig,
   getRuntimeConfig,
+  patchClashConfig,
 } from "@/services/cmds";
 
 const PORT_KEYS = [

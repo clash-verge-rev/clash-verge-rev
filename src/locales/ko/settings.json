@@ -252,6 +252,7 @@
         "random": "임의 포트"
       },
       "messages": {
+        "portInUse": "Port {{port}} is already in use",
         "saved": "포트 설정이 저장되었습니다",
         "saveFailed": "포트 설정 저장에 실패했습니다"
       }

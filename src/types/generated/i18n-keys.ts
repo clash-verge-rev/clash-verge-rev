@@ -453,6 +453,7 @@ export const translationKeys = [
   "settings.modals.clashPort.fields.redir",
   "settings.modals.clashPort.fields.tproxy",
   "settings.modals.clashPort.actions.random",
+  "settings.modals.clashPort.messages.portInUse",
   "settings.modals.clashPort.messages.saved",
   "settings.modals.clashPort.messages.saveFailed",
   "settings.modals.clashCore.variants.release",

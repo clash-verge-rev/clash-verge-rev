@@ -137,6 +137,7 @@ mod app_init {
             tauri_plugin_clash_verge_sysinfo::commands::get_app_uptime,
             tauri_plugin_clash_verge_sysinfo::commands::app_is_admin,
             tauri_plugin_clash_verge_sysinfo::commands::export_diagnostic_info,
+            cmd::is_port_in_use,
             cmd::get_sys_proxy,
             cmd::get_auto_proxy,
             cmd::open_app_dir,

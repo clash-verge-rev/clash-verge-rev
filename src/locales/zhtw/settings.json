@@ -252,6 +252,7 @@
         "random": "隨機連接埠"
       },
       "messages": {
+        "portInUse": "Port {{port}} is already in use",
         "saved": "連結埠設定已儲存",
         "saveFailed": "連結埠設定儲存失敗"
       }

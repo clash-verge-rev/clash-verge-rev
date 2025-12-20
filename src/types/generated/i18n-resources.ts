@@ -793,6 +793,7 @@ export interface TranslationResources {
             tproxy: string;
           };
           messages: {
+            portInUse: string;
             saved: string;
             saveFailed: string;
           };
