@@ -4695,9 +4695,9 @@ dependencies = [
 
 [[package]]
 name = "ntex"
-version = "2.17.0"
+version = "3.0.0-pre.9"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "483c0641500f9424a638bcc28f41d8a8f243351f222736a0e6814996ea105c74"
+checksum = "4e9f2445ee6caa58f028cc5164e3bea0002dc8ddf11c56db7d75e628411eb618"
 dependencies = [
  "base64 0.22.1",
  "bitflags 2.10.0",
@@ -4729,38 +4729,37 @@ dependencies = [
  "serde_urlencoded",
  "sha1",
  "thiserror 2.0.17",
+ "uuid",
  "variadics_please",
 ]
 
 [[package]]
 name = "ntex-bytes"
-version = "0.1.31"
+version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "da68b58d622475c69e4f19e33d12f90b4acaff1939f134e09e9318ad8bc6fa74"
+checksum = "4eb9eb0e05f22d68cae27049eb6ec055cae3e7e5e459ece774b11d03369a6ae3"
 dependencies = [
- "bitflags 2.10.0",
  "bytes",
- "futures-core",
  "serde",
 ]
 
 [[package]]
 name = "ntex-codec"
-version = "0.6.2"
+version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "69a7e111d946bb915d712df496728ca2a120b1b5643f66c580f13023bce46fda"
+checksum = "efe7504ae0a8b2b5dc11b9519953725a7b3fa3edc510ae4bfc80e6771ed06e99"
 dependencies = [
  "ntex-bytes",
 ]
 
 [[package]]
 name = "ntex-h2"
-version = "1.14.2"
+version = "3.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "695ca21edca7c03ddcd1a450a8ec2efaa8fc937d8ab0ae8a7dd07fe2805d328f"
+checksum = "6c6bc7791879687e482382bc8f24a7b69c9b224330ccdb4c3122678b8b9c78ba"
 dependencies = [
- "ahash",
  "bitflags 2.10.0",
+ "foldhash 0.2.0",
  "log",
  "nanorand",
  "ntex-bytes",
@@ -4776,11 +4775,11 @@ dependencies = [
 
 [[package]]
 name = "ntex-http"
-version = "0.1.15"
+version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "61da3d6c8bec83c5481d7e36ed4cf1a8cd0edee3e2fa411290932b17549d5cf2"
+checksum = "ffb1f0643064d8ab21b70e0c9660b513ad3253744700c874668e6d7693ab3a39"
 dependencies = [
- "ahash",
+ "foldhash 0.2.0",
  "futures-core",
  "http 1.4.0",
  "itoa",
@@ -4792,9 +4791,9 @@ dependencies = [
 
 [[package]]
 name = "ntex-io"
-version = "2.15.1"
+version = "3.3.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1dee52f78bf207359e5013f40bd959022eab8299608ac4750408fed80d7bdd4a"
+checksum = "8924c3dd123a9ad22e91295e3e3cdc16d1e612cf684b417801f6f99ec4fea2ef"
 dependencies = [
  "bitflags 2.10.0",
  "log",
@@ -4807,9 +4806,9 @@ dependencies = [
 
 [[package]]
 name = "ntex-macros"
-version = "0.1.4"
+version = "0.2.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7389855b7cf0a7cc4cd6748b6d31ad8d45481c9a4d6c977d289a469a362f7766"
+checksum = "6d4e3df338a8b6e8305a1a85e9fc559db1b7020e5d5a9f30ab991d2af14b1f7a"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -4818,9 +4817,9 @@ dependencies = [
 
 [[package]]
 name = "ntex-net"
-version = "2.9.0"
+version = "3.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8954ded069d59412df14b4c4804c4c6b45631300fcd13376c08aa19b4043d3fd"
+checksum = "4cd094b5839d42f0217bfe57a820a1971eb74d53d4d56b3e2f47fc45657c660d"
 dependencies = [
  "bitflags 2.10.0",
  "cfg-if",
@@ -4838,9 +4837,9 @@ dependencies = [
 
 [[package]]
 name = "ntex-router"
-version = "0.5.3"
+version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "bb9c68c26a87ffca54339be5f95223339db3e7bcc5d64733fef20812970a746f"
+checksum = "203fc4ba8fd22db656cde62cfbfe705f776aa652ce8d7ce5c6093b7c37185f70"
 dependencies = [
  "http 1.4.0",
  "log",
@@ -4851,9 +4850,9 @@ dependencies = [
 
 [[package]]
 name = "ntex-rt"
-version = "0.4.33"
+version = "3.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "86073cb8a4ae37ca4d4a10a50fb8fc01e7a40973567d3e4f1dcbfb37039a97ce"
+checksum = "7525cce87fef7f3951d3195288e565d2233313e814690cb91cd6840ca10b4dc3"
 dependencies = [
  "async-channel 2.5.0",
  "futures-timer",
@@ -4864,16 +4863,16 @@ dependencies = [
 
 [[package]]
 name = "ntex-server"
-version = "2.8.1"
+version = "3.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b886e739e5101ba06f083244bda0557997521c3ddf9b8f85ca74bc2aa165aa29"
+checksum = "b95fdda46b53fd8168cd3b720819550fc7385f486542c35fcd1e4713ca2e7299"
 dependencies = [
  "async-channel 2.5.0",
  "atomic-waker",
  "core_affinity",
  "ctrlc",
  "log",
- "ntex-bytes",
+ "ntex-io",
  "ntex-net",
  "ntex-rt",
  "ntex-service",
@@ -4881,14 +4880,15 @@ dependencies = [
  "oneshot",
  "polling 3.11.0",
  "signal-hook 0.3.18",
- "socket2 0.5.10",
+ "socket2 0.6.1",
+ "uuid",
 ]
 
 [[package]]
 name = "ntex-service"
-version = "3.8.0"
+version = "4.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d5369e31c09d793420b2410431852df0bbb8d19784c2c3696afa9e58e1217718"
+checksum = "179cfd5ab6b56445ca1b4146ee1d7a87e7f7bb1b7d4973f02327619c6aa90bcc"
 dependencies = [
  "foldhash 0.2.0",
  "log",
@@ -4897,9 +4897,9 @@ dependencies = [
 
 [[package]]
 name = "ntex-tls"
-version = "2.6.2"
+version = "3.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ff51d87c36e9a94ae2703475f06c6a1602c7cc59bd6b235ca0f01bab1755c3c7"
+checksum = "9621cd8aea4c0d1bc29793c1e172fdb95c23a75c654490cba036c1ad6d9c3c38"
 dependencies = [
  "log",
  "ntex-bytes",
@@ -4911,25 +4911,26 @@ dependencies = [
 
 [[package]]
 name = "ntex-tokio"
-version = "0.5.4"
+version = "3.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fa57071a4136ac715146348fe7535b79266e46d165d9734ea61469c2ebaae415"
+checksum = "35a8a029f40a98a5f9ba95eb0e0b215c17f111897a3711b692d2ac3ed49a23d1"
 dependencies = [
  "log",
  "ntex-bytes",
  "ntex-io",
+ "ntex-service",
  "ntex-util",
  "tokio",
 ]
 
 [[package]]
 name = "ntex-util"
-version = "2.16.0"
+version = "3.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9511ba3ddba94f75b53c47faede99d624d9dd53baf8e706ffafc6f760c1b923d"
+checksum = "092a46f60e64950809011a95d5ec6f634394b80d984bc44d8057b89a6a78c1f1"
 dependencies = [
- "ahash",
  "bitflags 2.10.0",
+ "foldhash 0.2.0",
  "futures-core",
  "futures-timer",
  "log",
