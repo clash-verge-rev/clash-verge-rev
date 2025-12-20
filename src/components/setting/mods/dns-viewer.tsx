@@ -612,6 +612,7 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
   return (
     <BaseDialog
       open={open}
+      disableEnforceFocus={!visualization}
       title={
         <Box display="flex" justifyContent="space-between" alignItems="center">
           {t("settings.modals.dns.dialog.title")}

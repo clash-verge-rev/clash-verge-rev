@@ -3,6 +3,7 @@
 ### 🐞 修复问题
 
 - 修复 macOS 有线网络 DNS 劫持失败
+- 修复 Monaco 编辑器内右键菜单显示异常
 
 <details>
 <summary><strong> ✨ 新增功能 </strong></summary>

@@ -382,7 +382,13 @@ export const EditorViewer = <T extends Language>(props: Props<T>) => {
   }, []);
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="xl" fullWidth>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="xl"
+      fullWidth
+      disableEnforceFocus
+    >
       <DialogTitle>{resolvedTitle}</DialogTitle>
 
       <DialogContent

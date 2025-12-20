@@ -506,7 +506,13 @@ export const RulesEditorViewer = (props: Props) => {
   });
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="xl" fullWidth>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="xl"
+      fullWidth
+      disableEnforceFocus={!visualization}
+    >
       <DialogTitle>
         {
           <Box display="flex" justifyContent="space-between">

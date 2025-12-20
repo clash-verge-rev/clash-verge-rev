@@ -15,6 +15,7 @@ interface Props {
   open: boolean;
   okBtn?: ReactNode;
   cancelBtn?: ReactNode;
+  disableEnforceFocus?: boolean;
   disableOk?: boolean;
   disableCancel?: boolean;
   disableFooter?: boolean;
@@ -37,6 +38,7 @@ export const BaseDialog: React.FC<Props> = ({
   children,
   okBtn,
   cancelBtn,
+  disableEnforceFocus,
   contentSx,
   disableCancel,
   disableOk,
@@ -47,7 +49,11 @@ export const BaseDialog: React.FC<Props> = ({
   onClose,
 }) => {
   return (
-    <Dialog open={open} onClose={onClose}>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      disableEnforceFocus={disableEnforceFocus}
+    >
       <DialogTitle>{title}</DialogTitle>
 
       <DialogContent sx={contentSx}>{children}</DialogContent>
