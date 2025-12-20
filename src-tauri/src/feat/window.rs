@@ -1,7 +1,6 @@
 use crate::config::Config;
 use crate::core::{CoreManager, handle, sysopt};
 use crate::module::lightweight;
-use crate::utils;
 use crate::utils::window_manager::WindowManager;
 use clash_verge_logging::{Type, logging};
 use tokio::time::{Duration, timeout};
@@ -23,7 +22,6 @@ pub async fn quit() {
     // 设置退出标志
     handle::Handle::global().set_is_exiting();
 
-    utils::server::shutdown_embedded_server();
     Config::apply_all_and_save_file().await;
 
     logging!(info, Type::System, "开始异步清理资源");

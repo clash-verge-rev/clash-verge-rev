@@ -2,6 +2,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 
 use anyhow::Result;
 use flexi_logger::LoggerHandle;
+use ntex::rt::System;
 
 use crate::{
     config::Config,
@@ -52,7 +53,6 @@ pub fn resolve_setup_handle() {
 pub fn resolve_setup_sync() {
     AsyncHandler::spawn(|| async {
         AsyncHandler::spawn_blocking(init_scheme);
-        AsyncHandler::spawn_blocking(init_embed_server);
     });
 }
 
@@ -88,6 +88,16 @@ pub fn resolve_setup_async() {
     });
 }
 
+pub fn resolve_embed_server() {
+    AsyncHandler::spawn_blocking(|| {
+        logging!(info, Type::Setup, "Starting embedded singleton server runtime");
+        let system = System::new("clash-verge-embed");
+        system.block_on(async {
+            init_embed_server().await;
+        });
+    });
+}
+
 pub async fn resolve_reset_async() -> Result<(), anyhow::Error> {
     sysopt::Sysopt::global().reset_sysproxy().await?;
     CoreManager::global().stop_core().await?;
@@ -114,8 +124,8 @@ pub async fn resolve_scheme(param: &str) -> Result<()> {
     Ok(())
 }
 
-pub(super) fn init_embed_server() {
-    server::embed_server();
+async fn init_embed_server() {
+    logging_error!(Type::Setup, server::embed_server().await);
 }
 
 pub(super) async fn init_resources() {

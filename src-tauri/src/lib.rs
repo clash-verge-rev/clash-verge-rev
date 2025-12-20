@@ -254,6 +254,7 @@ pub fn run() {
             resolve::resolve_setup_handle();
             resolve::resolve_setup_async();
             resolve::resolve_setup_sync();
+            resolve::resolve_embed_server();
             resolve::init_signal();
             resolve::resolve_done();
 

@@ -54,7 +54,7 @@ serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 serde_yaml_ng = { workspace = true }
 smartstring = { workspace = true, features = ["serde"] }
-warp = { version = "0.4.2", features = ["server"] }
+ntex = { version = "2.17.0", features = ["tokio"] }
 open = "5.3.3"
 dunce = "1.0.5"
 nanoid = "0.4"

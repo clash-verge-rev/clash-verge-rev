@@ -3,7 +3,7 @@ use crate::{
     core::{CoreManager, handle, tray},
     feat::clean_async,
     process::AsyncHandler,
-    utils::{self, resolve::reset_resolve_done},
+    utils::resolve::reset_resolve_done,
 };
 use clash_verge_logging::{Type, logging, logging_error};
 use serde_yaml_ng::{Mapping, Value};
@@ -29,7 +29,6 @@ pub async fn restart_app() {
     // 设置退出标志
     handle::Handle::global().set_is_exiting();
 
-    utils::server::shutdown_embedded_server();
     Config::apply_all_and_save_file().await;
 
     logging!(info, Type::System, "开始异步清理资源");
