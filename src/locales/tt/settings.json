@@ -212,6 +212,7 @@
           "collapseNavBar": "Навигация панелен җыю",
           "trayIcon": "Трей иконкасы",
           "showProxyGroupsInline": "Show Proxy Groups Inline",
+          "showOutboundModesInline": "Show Outbound Modes Inline",
           "commonTrayIcon": "Гомуми трей иконкасы",
           "systemProxyTrayIcon": "Системалы прокси иконкасы",
           "tunTrayIcon": "Tun (виртуаль адаптер) иконкасы",

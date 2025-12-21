@@ -212,6 +212,7 @@
           "collapseNavBar": "Collapse Navigation Bar",
           "trayIcon": "Tray Icon",
           "showProxyGroupsInline": "Show Proxy Groups Inline",
+          "showOutboundModesInline": "Show Outbound Modes Inline",
           "commonTrayIcon": "Common Tray Icon",
           "systemProxyTrayIcon": "System Proxy Tray Icon",
           "tunTrayIcon": "Tun Tray Icon",

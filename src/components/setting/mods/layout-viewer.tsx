@@ -436,6 +436,23 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
             <Switch edge="end" />
           </GuardState>
         </Item>
+        <Item>
+          <ListItemText
+            primary={t(
+              "settings.components.verge.layout.fields.showOutboundModesInline",
+            )}
+          />
+          <GuardState
+            value={verge?.tray_inline_outbound_modes ?? false}
+            valueProps="checked"
+            onCatch={onError}
+            onFormat={onSwitchFormat}
+            onChange={(e) => onChangeData({ tray_inline_outbound_modes: e })}
+            onGuard={(e) => patchVerge({ tray_inline_outbound_modes: e })}
+          >
+            <Switch edge="end" />
+          </GuardState>
+        </Item>
 
         <Item>
           <ListItemText

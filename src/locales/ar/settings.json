@@ -212,6 +212,7 @@
           "collapseNavBar": "طي شريط التنقل",
           "trayIcon": "أيقونة شريط المهام",
           "showProxyGroupsInline": "Show Proxy Groups Inline",
+          "showOutboundModesInline": "Show Outbound Modes Inline",
           "commonTrayIcon": "أيقونة شريط مهام عامة",
           "systemProxyTrayIcon": "أيقونة شريط المهام لوكيل النظام",
           "tunTrayIcon": "أيقونة شريط المهام لـ TUN",

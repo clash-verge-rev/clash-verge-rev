@@ -212,6 +212,7 @@
           "collapseNavBar": "Navigationsleiste einklappen",
           "trayIcon": "Tray-Symbol",
           "showProxyGroupsInline": "Show Proxy Groups Inline",
+          "showOutboundModesInline": "Show Outbound Modes Inline",
           "commonTrayIcon": "Standard-Tray-Symbol",
           "systemProxyTrayIcon": "Systemproxy-Tray-Symbol",
           "tunTrayIcon": "TUN-Modus-Tray-Symbol",

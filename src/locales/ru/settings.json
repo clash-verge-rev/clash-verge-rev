@@ -212,6 +212,7 @@
           "collapseNavBar": "Свернуть панель навигации",
           "trayIcon": "Иконка в трее",
           "showProxyGroupsInline": "Show Proxy Groups Inline",
+          "showOutboundModesInline": "Show Outbound Modes Inline",
           "commonTrayIcon": "Общий значок в трее",
           "systemProxyTrayIcon": "Значок системного прокси в трее",
           "tunTrayIcon": "Значок TUN в трее",

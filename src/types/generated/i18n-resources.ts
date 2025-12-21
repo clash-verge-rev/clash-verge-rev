@@ -626,6 +626,7 @@ export interface TranslationResources {
               navIcon: string;
               preferSystemTitlebar: string;
               proxyGroupIcon: string;
+              showOutboundModesInline: string;
               showProxyGroupsInline: string;
               systemProxyTrayIcon: string;
               toastPosition: string;

@@ -212,6 +212,7 @@
           "collapseNavBar": "내비게이션 바 접기",
           "trayIcon": "트레이 아이콘",
           "showProxyGroupsInline": "프록시 그룹 인라인 표시",
+          "showOutboundModesInline": "Show Outbound Modes Inline",
           "commonTrayIcon": "공용 트레이 아이콘",
           "systemProxyTrayIcon": "시스템 프록시 트레이 아이콘",
           "tunTrayIcon": "TUN 트레이 아이콘",

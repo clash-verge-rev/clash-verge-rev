@@ -230,6 +230,8 @@ pub struct IVerge {
     // pub enable_tray_icon: Option<bool>,
     /// show proxy groups directly on tray root menu
     pub tray_inline_proxy_groups: Option<bool>,
+    /// show outbound modes directly on tray root menu
+    pub tray_inline_outbound_modes: Option<bool>,
 
     /// 自动进入轻量模式
     pub enable_auto_light_weight_mode: Option<bool>,
@@ -440,6 +442,7 @@ impl IVerge {
             enable_tray_speed: Some(false),
             // enable_tray_icon: Some(true),
             tray_inline_proxy_groups: Some(true),
+            tray_inline_outbound_modes: Some(false),
             enable_global_hotkey: Some(true),
             enable_auto_light_weight_mode: Some(false),
             auto_light_weight_minutes: Some(10),
@@ -541,6 +544,7 @@ impl IVerge {
         patch!(enable_tray_speed);
         // patch!(enable_tray_icon);
         patch!(tray_inline_proxy_groups);
+        patch!(tray_inline_outbound_modes);
         patch!(enable_auto_light_weight_mode);
         patch!(auto_light_weight_minutes);
         patch!(enable_dns_settings);

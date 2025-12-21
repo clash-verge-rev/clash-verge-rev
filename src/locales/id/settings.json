@@ -212,6 +212,7 @@
           "collapseNavBar": "Ciutkan bilah navigasi",
           "trayIcon": "Ikon Tray",
           "showProxyGroupsInline": "Show Proxy Groups Inline",
+          "showOutboundModesInline": "Show Outbound Modes Inline",
           "commonTrayIcon": "Ikon Tray Umum",
           "systemProxyTrayIcon": "Ikon Tray Proksi Sistem",
           "tunTrayIcon": "Ikon Tray Tun",

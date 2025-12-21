@@ -212,6 +212,7 @@
           "collapseNavBar": "ナビゲーションバーを折りたたむ",
           "trayIcon": "トレイアイコン",
           "showProxyGroupsInline": "Show Proxy Groups Inline",
+          "showOutboundModesInline": "Show Outbound Modes Inline",
           "commonTrayIcon": "通常のトレイアイコン",
           "systemProxyTrayIcon": "システムプロキシトレイアイコン",
           "tunTrayIcon": "TUNモードトレイアイコン",

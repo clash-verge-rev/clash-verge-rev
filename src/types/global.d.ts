@@ -823,6 +823,7 @@ interface IVergeConfig {
   // enable_tray_speed?: boolean;
   // enable_tray_icon?: boolean;
   tray_inline_proxy_groups?: boolean;
+  tray_inline_outbound_modes?: boolean;
   enable_tun_mode?: boolean;
   enable_auto_light_weight_mode?: boolean;
   auto_light_weight_minutes?: number;

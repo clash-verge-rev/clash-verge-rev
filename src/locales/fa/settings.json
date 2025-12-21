@@ -212,6 +212,7 @@
           "collapseNavBar": "جمع کردن نوار ناوبری",
           "trayIcon": "آیکون سینی سیستم",
           "showProxyGroupsInline": "Show Proxy Groups Inline",
+          "showOutboundModesInline": "Show Outbound Modes Inline",
           "commonTrayIcon": "آیکون مشترک سینی سیستم",
           "systemProxyTrayIcon": "آیکون سینی پراکسی سیستم",
           "tunTrayIcon": "آیکون سینی Tun",

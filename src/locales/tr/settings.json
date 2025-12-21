@@ -212,6 +212,7 @@
           "collapseNavBar": "Gezinme çubuğunu daralt",
           "trayIcon": "Tepsi Simgesi",
           "showProxyGroupsInline": "Show Proxy Groups Inline",
+          "showOutboundModesInline": "Show Outbound Modes Inline",
           "commonTrayIcon": "Genel Tepsi Simgesi",
           "systemProxyTrayIcon": "Sistem Vekil Tepsi Simgesi",
           "tunTrayIcon": "Tun Tepsi Simgesi",

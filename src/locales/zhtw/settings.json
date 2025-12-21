@@ -212,6 +212,7 @@
           "collapseNavBar": "收起導覽列",
           "trayIcon": "系統匣圖示",
           "showProxyGroupsInline": "將代理組顯示在系統匣一級選單",
+          "showOutboundModesInline": "將出站模式顯示在系統匣一級選單",
           "commonTrayIcon": "一般系統匣圖示",
           "systemProxyTrayIcon": "系統代理系統匣圖示",
           "tunTrayIcon": "虛擬網路介面卡模式系統匣圖示",
