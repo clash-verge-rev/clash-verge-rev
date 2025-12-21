@@ -9,14 +9,20 @@ use std::collections::{HashMap, HashSet};
 /// 获取运行时配置
 #[tauri::command]
 pub async fn get_runtime_config() -> CmdResult<Option<Mapping>> {
-    Ok(Config::runtime().await.latest_arc().config.clone())
+    Ok(Config::runtime()
+        .await
+        .latest_arc()
+        .upgrade()
+        .unwrap_or_default()
+        .config
+        .clone())
 }
 
 /// 获取运行时YAML配置
 #[tauri::command]
 pub async fn get_runtime_yaml() -> CmdResult<String> {
     let runtime = Config::runtime().await;
-    let runtime = runtime.latest_arc();
+    let runtime = runtime.latest_arc().upgrade().unwrap_or_default();
 
     let config = runtime.config.as_ref();
     config
@@ -32,19 +38,31 @@ pub async fn get_runtime_yaml() -> CmdResult<String> {
 /// 获取运行时存在的键
 #[tauri::command]
 pub async fn get_runtime_exists() -> CmdResult<HashSet<String>> {
-    Ok(Config::runtime().await.latest_arc().exists_keys.clone())
+    Ok(Config::runtime()
+        .await
+        .latest_arc()
+        .upgrade()
+        .unwrap_or_default()
+        .exists_keys
+        .clone())
 }
 
 /// 获取运行时日志
 #[tauri::command]
 pub async fn get_runtime_logs() -> CmdResult<HashMap<String, Vec<(String, String)>>> {
-    Ok(Config::runtime().await.latest_arc().chain_logs.clone())
+    Ok(Config::runtime()
+        .await
+        .latest_arc()
+        .upgrade()
+        .unwrap_or_default()
+        .chain_logs
+        .clone())
 }
 
 #[tauri::command]
 pub async fn get_runtime_proxy_chain_config(proxy_chain_exit_node: String) -> CmdResult<String> {
     let runtime = Config::runtime().await;
-    let runtime = runtime.latest_arc();
+    let runtime = runtime.latest_arc().upgrade().unwrap_or_default();
 
     let config = runtime
         .config

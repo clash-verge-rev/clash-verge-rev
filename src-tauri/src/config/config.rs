@@ -78,7 +78,7 @@ impl Config {
             let _ = tray::Tray::global().update_menu().await;
 
             // 分离数据获取和异步调用避免Send问题
-            let verge_data = Self::verge().await.latest_arc();
+            let verge_data = Self::verge().await.latest_arc().upgrade().unwrap_or_default();
             logging_error!(Type::Core, verge_data.save_file().await);
         }
 
@@ -95,11 +95,23 @@ impl Config {
     // Ensure "Merge" and "Script" profile items exist, adding them if missing.
     async fn ensure_default_profile_items() -> Result<()> {
         let profiles = Self::profiles().await;
-        if profiles.latest_arc().get_item("Merge").is_err() {
+        if profiles
+            .latest_arc()
+            .upgrade()
+            .unwrap_or_default()
+            .get_item("Merge")
+            .is_err()
+        {
             let merge_item = &mut PrfItem::from_merge(Some("Merge".into()))?;
             profiles_append_item_safe(merge_item).await?;
         }
-        if profiles.latest_arc().get_item("Script").is_err() {
+        if profiles
+            .latest_arc()
+            .upgrade()
+            .unwrap_or_default()
+            .get_item("Script")
+            .is_err()
+        {
             let script_item = &mut PrfItem::from_script(Some("Script".into()))?;
             profiles_append_item_safe(script_item).await?;
         }
@@ -165,7 +177,7 @@ impl Config {
         };
 
         let runtime = Self::runtime().await;
-        let runtime_arc = runtime.latest_arc();
+        let runtime_arc = runtime.latest_arc().upgrade().unwrap_or_default();
         let config = runtime_arc
             .config
             .as_ref()
@@ -199,7 +211,14 @@ impl Config {
         };
 
         let operation = || async {
-            if Self::runtime().await.latest_arc().config.is_some() {
+            if Self::runtime()
+                .await
+                .latest_arc()
+                .upgrade()
+                .unwrap_or_default()
+                .config
+                .is_some()
+            {
                 return Ok::<(), BackoffError<anyhow::Error>>(());
             }
 
@@ -218,19 +237,28 @@ impl Config {
         let save_clash_task = AsyncHandler::spawn(|| async {
             let clash = Self::clash().await;
             clash.apply();
-            logging_error!(Type::Config, clash.data_arc().save_config().await);
+            logging_error!(
+                Type::Config,
+                clash.data_arc().upgrade().unwrap_or_default().save_config().await
+            );
         });
 
         let save_verge_task = AsyncHandler::spawn(|| async {
             let verge = Self::verge().await;
             verge.apply();
-            logging_error!(Type::Config, verge.data_arc().save_file().await);
+            logging_error!(
+                Type::Config,
+                verge.data_arc().upgrade().unwrap_or_default().save_file().await
+            );
         });
 
         let save_profiles_task = AsyncHandler::spawn(|| async {
             let profiles = Self::profiles().await;
             profiles.apply();
-            logging_error!(Type::Config, profiles.data_arc().save_file().await);
+            logging_error!(
+                Type::Config,
+                profiles.data_arc().upgrade().unwrap_or_default().save_file().await
+            );
         });
 
         let _ = tokio::join!(save_clash_task, save_verge_task, save_profiles_task);

@@ -47,10 +47,16 @@ static DEFAULT_BYPASS: &str =
     "127.0.0.1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,localhost,*.local,*.crashlytics.com,<local>";
 
 async fn get_bypass() -> String {
-    let use_default = Config::verge().await.latest_arc().use_default_bypass.unwrap_or(true);
+    let use_default = Config::verge()
+        .await
+        .latest_arc()
+        .upgrade()
+        .unwrap_or_default()
+        .use_default_bypass
+        .unwrap_or(true);
     let res = {
         let verge = Config::verge().await;
-        let verge = verge.latest_arc();
+        let verge = verge.latest_arc().upgrade().unwrap_or_default();
         verge.system_proxy_bypass.clone()
     };
     let custom_bypass = match res {
@@ -80,7 +86,7 @@ impl Sysopt {
 
     pub async fn refresh_guard(&self) {
         logging!(info, Type::Core, "Refreshing system proxy guard...");
-        let verge = Config::verge().await.latest_arc();
+        let verge = Config::verge().await.latest_arc().upgrade().unwrap_or_default();
         if !verge.enable_system_proxy.unwrap_or_default() {
             logging!(info, Type::Core, "System proxy is disabled.");
             self.access_guard().write().stop();
@@ -128,12 +134,17 @@ impl Sysopt {
             self.update_sysproxy.store(false, Ordering::Release);
         }
 
-        let verge = Config::verge().await.latest_arc();
+        let verge = Config::verge().await.latest_arc().upgrade().unwrap_or_default();
         let port = {
             let verge_port = verge.verge_mixed_port;
             match verge_port {
                 Some(port) => port,
-                None => Config::clash().await.latest_arc().get_mixed_port(),
+                None => Config::clash()
+                    .await
+                    .latest_arc()
+                    .upgrade()
+                    .unwrap_or_default()
+                    .get_mixed_port(),
             }
         };
         let pac_port = IVerge::get_singleton_port();
@@ -226,7 +237,14 @@ impl Sysopt {
 
     /// update the startup
     pub async fn update_launch(&self) -> Result<()> {
-        let enable_auto_launch = { Config::verge().await.latest_arc().enable_auto_launch };
+        let enable_auto_launch = {
+            Config::verge()
+                .await
+                .latest_arc()
+                .upgrade()
+                .unwrap_or_default()
+                .enable_auto_launch
+        };
         let is_enable = enable_auto_launch.unwrap_or(false);
         logging!(info, Type::System, "Setting auto-launch state to: {:?}", is_enable);
 

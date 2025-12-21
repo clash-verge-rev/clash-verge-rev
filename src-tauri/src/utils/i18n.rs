@@ -78,6 +78,8 @@ pub async fn current_language() -> String {
     Config::verge()
         .await
         .latest_arc()
+        .upgrade()
+        .unwrap_or_default()
         .language
         .as_ref()
         .filter(|lang| !lang.is_empty())

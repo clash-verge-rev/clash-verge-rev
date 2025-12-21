@@ -132,7 +132,13 @@ pub(super) async fn init_timer() {
 
 pub(super) async fn init_hotkey() {
     // if hotkey is not use by global, skip init it
-    let skip_register_hotkeys = !Config::verge().await.latest_arc().enable_global_hotkey.unwrap_or(true);
+    let skip_register_hotkeys = !Config::verge()
+        .await
+        .latest_arc()
+        .upgrade()
+        .unwrap_or_default()
+        .enable_global_hotkey
+        .unwrap_or(true);
     logging_error!(Type::Setup, Hotkey::global().init(skip_register_hotkeys).await);
 }
 
@@ -191,7 +197,13 @@ pub(super) async fn refresh_tray_menu() {
 }
 
 pub(super) async fn init_window() {
-    let is_silent_start = Config::verge().await.data_arc().enable_silent_start.unwrap_or(false);
+    let is_silent_start = Config::verge()
+        .await
+        .data_arc()
+        .upgrade()
+        .unwrap_or_default()
+        .enable_silent_start
+        .unwrap_or(false);
     #[cfg(target_os = "macos")]
     if is_silent_start {
         use crate::core::handle::Handle;

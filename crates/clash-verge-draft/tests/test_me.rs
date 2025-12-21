@@ -46,7 +46,7 @@ mod tests {
 
         // 读取正式数据（data_arc）
         {
-            let data = draft.data_arc();
+            let data = draft.data_arc().upgrade().unwrap_or_default();
             assert_eq!(data.enable_auto_launch, Some(true));
             assert_eq!(data.enable_tun_mode, Some(false));
         }
@@ -59,14 +59,14 @@ mod tests {
 
         // 正式数据未变
         {
-            let data = draft.data_arc();
+            let data = draft.data_arc().upgrade().unwrap_or_default();
             assert_eq!(data.enable_auto_launch, Some(true));
             assert_eq!(data.enable_tun_mode, Some(false));
         }
 
         // 草稿已变
         {
-            let latest = draft.latest_arc();
+            let latest = draft.latest_arc().upgrade().unwrap_or_default();
             assert_eq!(latest.enable_auto_launch, Some(false));
             assert_eq!(latest.enable_tun_mode, Some(true));
         }
@@ -76,7 +76,7 @@ mod tests {
 
         // 正式数据已更新
         {
-            let data = draft.data_arc();
+            let data = draft.data_arc().upgrade().unwrap_or_default();
             assert_eq!(data.enable_auto_launch, Some(false));
             assert_eq!(data.enable_tun_mode, Some(true));
         }
@@ -86,7 +86,7 @@ mod tests {
             d.enable_auto_launch = Some(true);
         });
         {
-            let latest = draft.latest_arc();
+            let latest = draft.latest_arc().upgrade().unwrap_or_default();
             assert_eq!(latest.enable_auto_launch, Some(true));
             assert_eq!(latest.enable_tun_mode, Some(true));
         }
@@ -103,7 +103,7 @@ mod tests {
                 d.enable_tun_mode = Some(false);
             });
             // 草稿中值已修改，但正式数据仍是 apply 后的值
-            let data = draft.data_arc();
+            let data = draft.data_arc().upgrade().unwrap_or_default();
             assert_eq!(data.enable_auto_launch, Some(false));
             assert_eq!(data.enable_tun_mode, Some(true));
         }
@@ -117,14 +117,14 @@ mod tests {
         });
 
         // 初始 latest == committed
-        let committed = draft.data_arc();
-        let latest = draft.latest_arc();
+        let committed = draft.data_arc().upgrade().unwrap_or_default();
+        let latest = draft.latest_arc().upgrade().unwrap_or_default();
         assert!(std::sync::Arc::ptr_eq(&committed, &latest));
 
         // 第一次 edit：由于与 committed 共享，Arc::make_mut 会克隆
         draft.edit_draft(|d| d.enable_tun_mode = Some(true));
-        let committed_after_first_edit = draft.data_arc();
-        let draft_after_first_edit = draft.latest_arc();
+        let committed_after_first_edit = draft.data_arc().upgrade().unwrap_or_default();
+        let draft_after_first_edit = draft.latest_arc().upgrade().unwrap_or_default();
         assert!(!std::sync::Arc::ptr_eq(
             &committed_after_first_edit,
             &draft_after_first_edit
@@ -132,7 +132,7 @@ mod tests {
         // 提交会把 committed 指向草稿的 Arc
         let prev_draft_ptr = std::sync::Arc::as_ptr(&draft_after_first_edit);
         draft.apply();
-        let committed_after_apply = draft.data_arc();
+        let committed_after_apply = draft.data_arc().upgrade().unwrap_or_default();
         assert_eq!(
             std::sync::Arc::as_ptr(&committed_after_apply),
             prev_draft_ptr
@@ -141,13 +141,13 @@ mod tests {
         // 第二次编辑：此时草稿唯一持有（无其它引用），不应再克隆
         // 获取草稿 Arc 的指针并立即丢弃本地引用，避免增加 strong_count
         draft.edit_draft(|d| d.enable_auto_launch = Some(false));
-        let latest1 = draft.latest_arc();
+        let latest1 = draft.latest_arc().upgrade().unwrap_or_default();
         let latest1_ptr = std::sync::Arc::as_ptr(&latest1);
         drop(latest1); // 确保只有 Draft 内部持有草稿 Arc
 
         // 再次编辑（unique，Arc::make_mut 不应克隆）
         draft.edit_draft(|d| d.enable_tun_mode = Some(false));
-        let latest2 = draft.latest_arc();
+        let latest2 = draft.latest_arc().upgrade().unwrap_or_default();
         let latest2_ptr = std::sync::Arc::as_ptr(&latest2);
 
         assert_eq!(latest1_ptr, latest2_ptr, "Unique edit should not clone Arc");
@@ -164,14 +164,14 @@ mod tests {
 
         // 创建草稿并修改
         draft.edit_draft(|d| d.enable_auto_launch = Some(true));
-        let committed = draft.data_arc();
-        let latest = draft.latest_arc();
+        let committed = draft.data_arc().upgrade().unwrap_or_default();
+        let latest = draft.latest_arc().upgrade().unwrap_or_default();
         assert!(!std::sync::Arc::ptr_eq(&committed, &latest));
 
         // 丢弃草稿后 latest 应回到 committed
         draft.discard();
-        let committed2 = draft.data_arc();
-        let latest2 = draft.latest_arc();
+        let committed2 = draft.data_arc().upgrade().unwrap_or_default();
+        let latest2 = draft.latest_arc().upgrade().unwrap_or_default();
         assert!(std::sync::Arc::ptr_eq(&committed2, &latest2));
         assert_eq!(latest2.enable_auto_launch, Some(false));
     }
@@ -184,7 +184,7 @@ mod tests {
             123usize
         });
         assert_eq!(ret, 123);
-        let latest = draft.latest_arc();
+        let latest = draft.latest_arc().upgrade().unwrap_or_default();
         assert_eq!(latest.enable_tun_mode, Some(true));
     }
 
@@ -208,7 +208,7 @@ mod tests {
             "done"
         );
 
-        let committed = draft.data_arc();
+        let committed = draft.data_arc().upgrade().unwrap_or_default();
         assert_eq!(committed.enable_auto_launch, Some(true));
         assert_eq!(committed.enable_tun_mode, Some(false));
     }
@@ -239,7 +239,7 @@ mod tests {
             d.enable_auto_launch = Some(true);
             d.enable_tun_mode = Some(true);
         });
-        let draft_before = draft.latest_arc();
+        let draft_before = draft.latest_arc().upgrade().unwrap_or_default();
         let draft_before_ptr = std::sync::Arc::as_ptr(&draft_before);
 
         // 同时通过 with_data_modify 修改 committed
@@ -251,7 +251,7 @@ mod tests {
         .unwrap();
 
         // 草稿应保持不变
-        let draft_after = draft.latest_arc();
+        let draft_after = draft.latest_arc().upgrade().unwrap_or_default();
         assert_eq!(
             std::sync::Arc::as_ptr(&draft_after),
             draft_before_ptr,
@@ -262,7 +262,7 @@ mod tests {
 
         // 丢弃草稿后 latest == committed，且 committed 为异步修改结果
         draft.discard();
-        let latest = draft.latest_arc();
+        let latest = draft.latest_arc().upgrade().unwrap_or_default();
         assert_eq!(latest.enable_auto_launch, Some(false));
         assert_eq!(latest.enable_tun_mode, Some(false));
     }

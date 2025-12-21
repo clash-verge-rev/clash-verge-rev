@@ -78,8 +78,9 @@ async fn refresh_lightweight_tray_state() {
 
 pub async fn auto_lightweight_boot() -> Result<()> {
     let verge_config = Config::verge().await;
-    let is_enable_auto = verge_config.data_arc().enable_auto_light_weight_mode.unwrap_or(false);
-    let is_silent_start = verge_config.data_arc().enable_silent_start.unwrap_or(false);
+    let verge_data = verge_config.data_arc().upgrade().unwrap_or_default();
+    let is_enable_auto = verge_data.enable_auto_light_weight_mode.unwrap_or(false);
+    let is_silent_start = verge_data.enable_silent_start.unwrap_or(false);
     if is_enable_auto {
         enable_auto_light_weight_mode().await;
     }
@@ -195,7 +196,13 @@ async fn setup_light_weight_timer() -> Result<()> {
         return Err(e).context("failed to initialize timer");
     }
 
-    let once_by_minutes = Config::verge().await.data_arc().auto_light_weight_minutes.unwrap_or(10);
+    let once_by_minutes = Config::verge()
+        .await
+        .data_arc()
+        .upgrade()
+        .unwrap_or_default()
+        .auto_light_weight_minutes
+        .unwrap_or(10);
 
     {
         let timer_map = Timer::global().timer_map.read();

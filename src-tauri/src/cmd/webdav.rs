@@ -19,7 +19,7 @@ pub async fn save_webdav_config(url: String, username: String, password: String)
     Config::verge().await.edit_draft(|e| e.patch_config(&patch));
     Config::verge().await.apply();
 
-    let verge_data = Config::verge().await.data_arc();
+    let verge_data = Config::verge().await.data_arc().upgrade().unwrap_or_default();
     verge_data.save_file().await.stringify_err()?;
     core::backup::WebDavClient::global().reset();
     Ok(())

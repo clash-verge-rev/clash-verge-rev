@@ -45,7 +45,13 @@ pub async fn clean_async() -> bool {
 
     // 重置系统代理
     let proxy_task = tokio::task::spawn(async {
-        let sys_proxy_enabled = Config::verge().await.data_arc().enable_system_proxy.unwrap_or(false);
+        let sys_proxy_enabled = Config::verge()
+            .await
+            .data_arc()
+            .upgrade()
+            .unwrap_or_default()
+            .enable_system_proxy
+            .unwrap_or(false);
         if !sys_proxy_enabled {
             logging!(info, Type::Window, "系统代理未启用，跳过重置");
             return true;
@@ -71,7 +77,13 @@ pub async fn clean_async() -> bool {
     // 关闭 Tun 模式 + 停止核心服务
     let core_task = tokio::task::spawn(async {
         logging!(info, Type::System, "disable tun");
-        let tun_enabled = Config::verge().await.data_arc().enable_tun_mode.unwrap_or(false);
+        let tun_enabled = Config::verge()
+            .await
+            .data_arc()
+            .upgrade()
+            .unwrap_or_default()
+            .enable_tun_mode
+            .unwrap_or(false);
         if tun_enabled {
             let disable_tun = serde_json::json!({ "tun": { "enable": false } });
 
@@ -171,6 +183,8 @@ pub async fn hide() {
     let enable_auto_light_weight_mode = Config::verge()
         .await
         .data_arc()
+        .upgrade()
+        .unwrap_or_default()
         .enable_auto_light_weight_mode
         .unwrap_or(false);
 

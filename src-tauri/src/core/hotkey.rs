@@ -253,8 +253,13 @@ impl Hotkey {
                     AsyncHandler::spawn(move || async move {
                         logging!(debug, Type::Hotkey, "Executing function directly");
 
-                        let is_enable_global_hotkey =
-                            Config::verge().await.data_arc().enable_global_hotkey.unwrap_or(true);
+                        let is_enable_global_hotkey = Config::verge()
+                            .await
+                            .data_arc()
+                            .upgrade()
+                            .unwrap_or_default()
+                            .enable_global_hotkey
+                            .unwrap_or(true);
 
                         if is_enable_global_hotkey {
                             Self::execute_function(function);
@@ -292,7 +297,12 @@ impl Hotkey {
             return Ok(());
         }
         let verge = Config::verge().await;
-        let enable_global_hotkey = verge.latest_arc().enable_global_hotkey.unwrap_or(true);
+        let enable_global_hotkey = verge
+            .latest_arc()
+            .upgrade()
+            .unwrap_or_default()
+            .enable_global_hotkey
+            .unwrap_or(true);
 
         logging!(
             debug,
@@ -302,7 +312,7 @@ impl Hotkey {
         );
 
         // Extract hotkeys data before async operations
-        let hotkeys = verge.latest_arc().hotkeys.clone();
+        let hotkeys = verge.latest_arc().upgrade().unwrap_or_default().hotkeys.clone();
 
         if let Some(hotkeys) = hotkeys {
             logging!(debug, Type::Hotkey, "Has {} hotkeys need to register", hotkeys.len());

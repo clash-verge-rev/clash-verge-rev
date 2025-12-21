@@ -28,7 +28,12 @@ impl CoreManager {
 
         let config_file = Config::generate_file(crate::config::ConfigType::Run).await?;
         let app_handle = handle::Handle::app_handle();
-        let clash_core = Config::verge().await.latest_arc().get_valid_clash_core();
+        let clash_core = Config::verge()
+            .await
+            .latest_arc()
+            .upgrade()
+            .unwrap_or_default()
+            .get_valid_clash_core();
         let config_dir = dirs::app_home_dir()?;
 
         let (mut rx, child) = app_handle

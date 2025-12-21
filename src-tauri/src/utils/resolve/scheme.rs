@@ -72,7 +72,13 @@ pub(super) async fn resolve_scheme(param: &str) -> Result<()> {
     match profiles::profiles_append_item_safe(&mut item).await {
         Ok(_) => {
             Config::profiles().await.apply();
-            let _ = Config::profiles().await.data_arc().save_file().await;
+            let _ = Config::profiles()
+                .await
+                .data_arc()
+                .upgrade()
+                .unwrap_or_default()
+                .save_file()
+                .await;
             handle::Handle::notice_message(
                 "import_sub_url::ok",
                 "", // 空 msg 传入，我们不希望导致 后端-前端-后端 死循环，这里只做提醒。
