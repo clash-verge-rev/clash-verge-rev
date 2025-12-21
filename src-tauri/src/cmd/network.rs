@@ -99,8 +99,5 @@ pub fn get_network_interfaces_info() -> CmdResult<Vec<NetworkInterface>> {
 
 #[tauri::command]
 pub fn is_port_in_use(port: u16) -> bool {
-    match TcpListener::bind(("127.0.0.1", port)) {
-        Ok(_listener) => false,
-        Err(_) => true,
-    }
+    TcpListener::bind(("127.0.0.1", port)).is_err()
 }
