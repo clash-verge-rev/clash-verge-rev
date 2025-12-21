@@ -18,7 +18,7 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 default = ["custom-protocol"]
 custom-protocol = ["tauri/custom-protocol"]
 verge-dev = ["clash_verge_logger/color"]
-tauri-dev = ["clash-verge-logging/tauri-dev"]
+tauri-dev = []
 tokio-trace = ["console-subscriber"]
 clippy = ["tauri/test"]
 tracing = []
@@ -65,7 +65,12 @@ boa_engine = "0.21.0"
 once_cell = { version = "1.21.3", features = ["parking_lot"] }
 delay_timer = "0.11.6"
 percent-encoding = "2.3.2"
-reqwest = { version = "0.13.1", features = ["json", "cookies", "rustls", "form"] }
+reqwest = { version = "0.13.1", features = [
+  "json",
+  "cookies",
+  "rustls",
+  "form",
+] }
 regex = "1.12.2"
 sysproxy = { git = "https://github.com/clash-verge-rev/sysproxy-rs", features = [
   "guard",
@@ -94,7 +99,7 @@ tauri-plugin-devtools = { version = "2.0.1" }
 tauri-plugin-mihomo = { git = "https://github.com/clash-verge-rev/tauri-plugin-mihomo" }
 clash_verge_logger = { git = "https://github.com/clash-verge-rev/clash-verge-logger" }
 async-trait = "0.1.89"
-clash_verge_service_ipc = { version = "2.0.27", features = [
+clash_verge_service_ipc = { version = "2.0.28", features = [
   "client",
 ], git = "https://github.com/clash-verge-rev/clash-verge-service-ipc" }
 arc-swap = "1.8.0"

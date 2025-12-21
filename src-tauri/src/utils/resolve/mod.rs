@@ -1,13 +1,13 @@
 use std::sync::atomic::{AtomicBool, Ordering};
 
 use anyhow::Result;
-use flexi_logger::LoggerHandle;
 
 use crate::{
     config::Config,
     core::{
         CoreManager, Timer, handle,
         hotkey::Hotkey,
+        logger::Logger,
         service::{SERVICE_MANAGER, ServiceManager, is_service_ipc_path_exists},
         sysopt,
         tray::Tray,
@@ -28,20 +28,13 @@ pub mod window_script;
 
 static RESOLVE_DONE: AtomicBool = AtomicBool::new(false);
 
-pub fn init_work_dir_and_logger() -> Option<LoggerHandle> {
+pub fn init_work_dir_and_logger() -> anyhow::Result<()> {
     AsyncHandler::block_on(async {
         init_work_config().await;
         init_resources().await;
-
-        #[cfg(not(feature = "tauri-dev"))]
-        {
-            logging!(info, Type::Setup, "Initializing logger");
-            init::init_logger().await.ok()
-        }
-        #[cfg(feature = "tauri-dev")]
-        {
-            None
-        }
+        logging!(info, Type::Setup, "Initializing logger");
+        Logger::global().init().await?;
+        Ok(())
     })
 }
 

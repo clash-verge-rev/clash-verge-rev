@@ -238,7 +238,7 @@ pub fn run() {
                 .set(app.app_handle().clone())
                 .expect("failed to set global app handle");
 
-            let _handle = resolve::init_work_dir_and_logger();
+            resolve::init_work_dir_and_logger()?;
 
             logging!(info, Type::Setup, "开始应用初始化...");
             if let Err(e) = app_init::setup_autostart(app) {
