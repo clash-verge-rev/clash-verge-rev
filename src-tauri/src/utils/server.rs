@@ -79,24 +79,11 @@ pub fn embed_server() {
     });
 
     let pac = warp::path!("commands" / "pac").and_then(|| async move {
-        let verge_config = Config::verge().await;
-        let clash_config = Config::clash().await;
-
-        let pac_content = verge_config
-            .data_arc()
-            .pac_file_content
-            .clone()
-            .unwrap_or_else(|| DEFAULT_PAC.into());
-
-        let pac_port = verge_config
-            .data_arc()
-            .verge_mixed_port
-            .unwrap_or_else(|| clash_config.data_arc().get_mixed_port());
-        let processed_content = pac_content.replace("%mixed-port%", &format!("{pac_port}"));
+        let pac_content = get_currentt_pac_content().await;
         Ok::<_, warp::Rejection>(
             warp::http::Response::builder()
                 .header("Content-Type", "application/x-ns-proxy-autoconfig")
-                .body(processed_content)
+                .body(pac_content)
                 .unwrap_or_default(),
         )
     });
@@ -105,9 +92,7 @@ pub fn embed_server() {
     let scheme = warp::path!("commands" / "scheme")
         .and(warp::query::<QueryParam>())
         .and_then(|query: QueryParam| async move {
-            AsyncHandler::spawn(|| async move {
-                logging_error!(Type::Setup, resolve::resolve_scheme(&query.param).await);
-            });
+            logging_error!(Type::Setup, resolve::resolve_scheme(&query.param).await);
             Ok::<_, warp::Rejection>(warp::reply::with_status::<std::string::String>(
                 "ok".to_string(),
                 warp::http::StatusCode::OK,
@@ -116,16 +101,36 @@ pub fn embed_server() {
 
     let commands = visible.or(scheme).or(pac);
 
-    AsyncHandler::spawn(move || async move {
-        warp::serve(commands)
-            .bind(([127, 0, 0, 1], port))
-            .await
-            .graceful(async {
-                shutdown_rx.await.ok();
-            })
-            .run()
-            .await;
-    });
+    if let Ok(rt) = tokio::runtime::Builder::new_current_thread()
+        .thread_name("clash-verge-rev-embed-server")
+        .worker_threads(1)
+        .build()
+    {
+        rt.spawn(async move {
+            run(commands, port, shutdown_rx).await;
+        });
+    } else {
+        // Running in tauri's tokio runtime will cause blocking issues and lots of large task stacks
+        // But we should keep this as a fallback plan or we can't start the app in some environments
+        AsyncHandler::spawn(move || async move {
+            run(commands, port, shutdown_rx).await;
+        });
+    }
+}
+
+async fn run(
+    commands: impl warp::Filter<Extract = impl warp::Reply> + Clone + Send + Sync + 'static,
+    port: u16,
+    shutdown_rx: oneshot::Receiver<()>,
+) {
+    warp::serve(commands)
+        .bind(([127, 0, 0, 1], port))
+        .await
+        .graceful(async {
+            shutdown_rx.await.ok();
+        })
+        .run()
+        .await;
 }
 
 pub fn shutdown_embedded_server() {
@@ -135,4 +140,24 @@ pub fn shutdown_embedded_server() {
     {
         sender.send(()).ok();
     }
+}
+
+async fn get_currentt_pac_content() -> std::string::String {
+    let pac_content = {
+        Config::verge()
+            .await
+            .data_arc()
+            .pac_file_content
+            .clone()
+            .unwrap_or_else(|| DEFAULT_PAC.into())
+    };
+    let clash_mixed_port = { Config::clash().await.data_arc().get_mixed_port() };
+    let pac_port = {
+        Config::verge()
+            .await
+            .data_arc()
+            .verge_mixed_port
+            .unwrap_or(clash_mixed_port)
+    };
+    pac_content.replace("%mixed-port%", &format!("{pac_port}"))
 }
