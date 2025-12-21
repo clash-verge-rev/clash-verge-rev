@@ -13,13 +13,7 @@ pub fn get_system_info(state: State<'_, RwLock<Platform>>) -> Result<String, Err
 /// 获取应用的运行时间（毫秒）
 #[command]
 pub fn get_app_uptime(state: State<'_, RwLock<Platform>>) -> Result<u128, Error> {
-    Ok(state
-        .inner()
-        .read()
-        .appinfo
-        .app_startup_time
-        .elapsed()
-        .as_millis())
+    Ok(state.inner().read().appinfo.app_startup_time.elapsed().as_millis())
 }
 
 /// 检查应用是否以管理员身份运行

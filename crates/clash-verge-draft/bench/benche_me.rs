@@ -104,8 +104,7 @@ pub fn bench_draft(c: &mut Criterion) {
             let draft = black_box(make_draft());
             let _: Result<(), anyhow::Error> = draft
                 .with_data_modify::<_, _, _>(|mut box_data| async move {
-                    box_data.enable_auto_launch =
-                        Some(!box_data.enable_auto_launch.unwrap_or(false));
+                    box_data.enable_auto_launch = Some(!box_data.enable_auto_launch.unwrap_or(false));
                     Ok((box_data, ()))
                 })
                 .await;

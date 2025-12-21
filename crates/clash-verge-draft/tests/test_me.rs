@@ -133,10 +133,7 @@ mod tests {
         let prev_draft_ptr = std::sync::Arc::as_ptr(&draft_after_first_edit);
         draft.apply();
         let committed_after_apply = draft.data_arc();
-        assert_eq!(
-            std::sync::Arc::as_ptr(&committed_after_apply),
-            prev_draft_ptr
-        );
+        assert_eq!(std::sync::Arc::as_ptr(&committed_after_apply), prev_draft_ptr);
 
         // 第二次编辑：此时草稿唯一持有（无其它引用），不应再克隆
         // 获取草稿 Arc 的指针并立即丢弃本地引用，避免增加 strong_count

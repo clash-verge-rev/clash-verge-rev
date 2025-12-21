@@ -125,9 +125,8 @@ impl IRuntime {
             && let Some(Value::Sequence(proxies)) = config.get_mut("proxies")
         {
             for (i, dialer_proxy) in dialer_proxies.iter().enumerate() {
-                if let Some(Value::Mapping(proxy)) = proxies
-                    .iter_mut()
-                    .find(|proxy| proxy.get("name") == Some(dialer_proxy))
+                if let Some(Value::Mapping(proxy)) =
+                    proxies.iter_mut().find(|proxy| proxy.get("name") == Some(dialer_proxy))
                     && i != 0
                     && let Some(dialer_proxy) = dialer_proxies.get(i - 1)
                 {
@@ -141,12 +140,9 @@ impl IRuntime {
 // TODO 完整迁移 enhance 行为后移除
 #[inline]
 fn use_keys<'a>(config: &'a Mapping) -> impl Iterator<Item = String> + 'a {
-    config
-        .iter()
-        .filter_map(|(key, _)| key.as_str())
-        .map(|s: &str| {
-            let mut s: String = s.into();
-            s.make_ascii_lowercase();
-            s
-        })
+    config.iter().filter_map(|(key, _)| key.as_str()).map(|s: &str| {
+        let mut s: String = s.into();
+        s.make_ascii_lowercase();
+        s
+    })
 }
