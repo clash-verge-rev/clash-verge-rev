@@ -1,9 +1,14 @@
+import { loader } from "@monaco-editor/react";
+import * as monaco from "monaco-editor";
 import editorWorker from "monaco-editor/esm/vs/editor/editor.worker?worker";
 import cssWorker from "monaco-editor/esm/vs/language/css/css.worker?worker";
 import tsWorker from "monaco-editor/esm/vs/language/typescript/ts.worker?worker";
 import yamlWorker from "monaco-yaml/yaml.worker?worker";
 
 type WorkerConstructor = new () => Worker;
+
+// Ensure monaco loader uses the bundled ESM instance instead of CDN.
+loader.config({ monaco });
 
 // Align with the former plugin mapping so Monaco can resolve its background workers.
 const workerConstructors: Record<string, WorkerConstructor> = {

@@ -5,6 +5,7 @@
 - 修复 macOS 有线网络 DNS 劫持失败
 - 修复 Monaco 编辑器内右键菜单显示异常
 - 修复设置代理端口时检查端口占用
+- 修复 Monaco 编辑器初始化卡 Loading
 
 <details>
 <summary><strong> ✨ 新增功能 </strong></summary>
