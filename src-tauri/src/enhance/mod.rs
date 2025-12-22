@@ -91,14 +91,14 @@ impl Default for ProfileItems {
 
 async fn get_config_values() -> ConfigValues {
     let clash = Config::clash().await;
-    let clash_arc = clash.latest_arc();
+    let clash_arc = clash.latest_arc().upgrade().unwrap_or_default();
     let clash_config = clash_arc.0.clone();
     drop(clash_arc);
     drop(clash);
 
     let verge = Config::verge().await;
 
-    let verge_arc = verge.latest_arc();
+    let verge_arc = verge.latest_arc().upgrade().unwrap_or_default();
     let IVerge {
         ref enable_tun_mode,
         ref enable_builtin_enhanced,
@@ -144,7 +144,7 @@ async fn get_config_values() -> ConfigValues {
 #[allow(clippy::cognitive_complexity)]
 async fn collect_profile_items() -> ProfileItems {
     let profiles = Config::profiles().await;
-    let profiles_arc = profiles.latest_arc();
+    let profiles_arc = profiles.latest_arc().upgrade().unwrap_or_default();
     drop(profiles);
 
     let current = profiles_arc.current_mapping().await.unwrap_or_default();
@@ -437,6 +437,8 @@ async fn merge_default_config(
                 let enable_external_controller = Config::verge()
                     .await
                     .latest_arc()
+                    .upgrade()
+                    .unwrap_or_default()
                     .enable_external_controller
                     .unwrap_or(false);
 

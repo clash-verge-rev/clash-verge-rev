@@ -34,7 +34,13 @@ pub fn bench_draft(c: &mut Criterion) {
         b.iter(|| {
             let draft = black_box(make_draft());
             draft.edit_draft(|d| d.enable_tun_mode = Some(true));
-            black_box(&draft.latest_arc().enable_tun_mode);
+            black_box(
+                &draft
+                    .latest_arc()
+                    .upgrade()
+                    .unwrap_or_default()
+                    .enable_tun_mode,
+            );
         });
     });
 
@@ -42,7 +48,7 @@ pub fn bench_draft(c: &mut Criterion) {
         b.iter(|| {
             let draft = black_box(make_draft());
             draft.edit_draft(|d| d.enable_auto_launch = Some(false));
-            let latest = draft.latest_arc();
+            let latest = draft.latest_arc().upgrade().unwrap_or_default();
             black_box(&latest.enable_auto_launch);
         });
     });
@@ -54,13 +60,13 @@ pub fn bench_draft(c: &mut Criterion) {
                 draft.edit_draft(|d| {
                     d.enable_tun_mode = Some(true);
                 });
-                let latest1 = draft.latest_arc();
+                let latest1 = draft.latest_arc().upgrade().unwrap_or_default();
                 black_box(&latest1.enable_tun_mode);
             }
             draft.edit_draft(|d| {
                 d.enable_tun_mode = Some(false);
             });
-            let latest2 = draft.latest_arc();
+            let latest2 = draft.latest_arc().upgrade().unwrap_or_default();
             black_box(&latest2.enable_tun_mode);
         });
     });
@@ -68,7 +74,7 @@ pub fn bench_draft(c: &mut Criterion) {
     group.bench_function("latest_arc", |b| {
         b.iter(|| {
             let draft = black_box(make_draft());
-            let latest = draft.latest_arc();
+            let latest = draft.latest_arc().upgrade().unwrap_or_default();
             black_box(&latest.enable_auto_launch);
         });
     });

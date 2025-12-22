@@ -289,6 +289,8 @@ impl IClashTemp {
         let enable_external_controller = Config::verge()
             .await
             .latest_arc()
+            .upgrade()
+            .unwrap_or_default()
             .enable_external_controller
             .unwrap_or(false);
 

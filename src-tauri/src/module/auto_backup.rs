@@ -236,7 +236,7 @@ impl AutoBackupManager {
 
     async fn load_settings() -> AutoBackupSettings {
         let verge = Config::verge().await;
-        AutoBackupSettings::from_verge(&verge.latest_arc())
+        AutoBackupSettings::from_verge(verge.latest_arc().upgrade().unwrap_or_default().as_ref().as_ref())
     }
 }
 

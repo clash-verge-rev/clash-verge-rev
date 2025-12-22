@@ -4,7 +4,7 @@ use crate::{
     module::{auto_backup::AutoBackupManager, lightweight},
 };
 use anyhow::Result;
-use clash_verge_draft::SharedBox;
+use clash_verge_draft::StrongBox;
 use clash_verge_logging::{Type, logging, logging_error};
 use serde_yaml_ng::Mapping;
 
@@ -23,7 +23,7 @@ pub async fn patch_clash(patch: &Mapping) -> Result<()> {
                 logging_error!(
                     Type::Tray,
                     tray::Tray::global()
-                        .update_icon(&Config::verge().await.data_arc())
+                        .update_icon(&Config::verge().await.data_arc().upgrade().unwrap_or_default())
                         .await
                 );
             }
@@ -37,7 +37,7 @@ pub async fn patch_clash(patch: &Mapping) -> Result<()> {
         Ok(()) => {
             Config::clash().await.apply();
             // 分离数据获取和异步调用
-            let clash_data = Config::clash().await.data_arc();
+            let clash_data = Config::clash().await.data_arc().upgrade().unwrap_or_default();
             clash_data.save_config().await?;
             Ok(())
         }
@@ -226,7 +226,7 @@ async fn process_terminated_flags(update_flags: i32, patch: &IVerge) -> Result<(
     }
     if (update_flags & (UpdateFlags::SystrayIcon as i32)) != 0 {
         tray::Tray::global()
-            .update_icon(&Config::verge().await.latest_arc())
+            .update_icon(&Config::verge().await.latest_arc().upgrade().unwrap_or_default())
             .await?;
     }
     if (update_flags & (UpdateFlags::SystrayTooltip as i32)) != 0 {
@@ -262,15 +262,15 @@ pub async fn patch_verge(patch: &IVerge, not_save_file: bool) -> Result<()> {
     logging_error!(Type::Backup, AutoBackupManager::global().refresh_settings().await);
     if !not_save_file {
         // 分离数据获取和异步调用
-        let verge_data = Config::verge().await.data_arc();
+        let verge_data = Config::verge().await.data_arc().upgrade().unwrap_or_default();
         logging!(info, Type::Setup, "Saving Verge configuration to file...");
         verge_data.save_file().await?;
     }
     Ok(())
 }
 
-pub async fn fetch_verge_config() -> Result<SharedBox<IVerge>> {
+pub async fn fetch_verge_config() -> Result<StrongBox<IVerge>> {
     let draft = Config::verge().await;
-    let data = draft.data_arc();
+    let data = draft.data_arc().upgrade().unwrap_or_default();
     Ok(data)
 }

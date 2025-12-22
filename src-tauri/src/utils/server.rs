@@ -84,14 +84,18 @@ pub fn embed_server() {
 
         let pac_content = verge_config
             .data_arc()
+            .upgrade()
+            .unwrap_or_default()
             .pac_file_content
             .clone()
             .unwrap_or_else(|| DEFAULT_PAC.into());
 
         let pac_port = verge_config
             .data_arc()
+            .upgrade()
+            .unwrap_or_default()
             .verge_mixed_port
-            .unwrap_or_else(|| clash_config.data_arc().get_mixed_port());
+            .unwrap_or_else(|| clash_config.data_arc().upgrade().unwrap_or_default().get_mixed_port());
         let processed_content = pac_content.replace("%mixed-port%", &format!("{pac_port}"));
         Ok::<_, warp::Rejection>(
             warp::http::Response::builder()

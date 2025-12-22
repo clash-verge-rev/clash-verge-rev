@@ -233,7 +233,12 @@ impl CoreConfigValidator {
 
         logging!(info, Type::Validate, "开始验证配置文件: {}", config_path);
 
-        let clash_core = Config::verge().await.latest_arc().get_valid_clash_core();
+        let clash_core = Config::verge()
+            .await
+            .latest_arc()
+            .upgrade()
+            .unwrap_or_default()
+            .get_valid_clash_core();
         logging!(info, Type::Validate, "使用内核: {}", clash_core);
 
         let app_handle = handle::Handle::app_handle();

@@ -83,7 +83,7 @@ impl WebDavClient {
                 (*cfg_arc).clone()
             } else {
                 // 释放锁后获取异步配置
-                let verge = Config::verge().await.data_arc();
+                let verge = Config::verge().await.data_arc().upgrade().unwrap_or_default();
                 if verge.webdav_url.is_none() || verge.webdav_username.is_none() || verge.webdav_password.is_none() {
                     let msg: String =
                         "Unable to create web dav client, please make sure the webdav config is correct".into();

@@ -1,8 +1,9 @@
 use parking_lot::RwLock;
-use std::sync::Arc;
+use std::sync::{Arc, Weak};
 
-pub type SharedBox<T> = Arc<Box<T>>;
-type DraftInner<T> = (SharedBox<T>, Option<SharedBox<T>>);
+pub type StrongBox<T> = Arc<Box<T>>;
+type DraftInner<T> = (StrongBox<T>, Option<StrongBox<T>>);
+pub type SharedWeakBox<T> = Weak<Box<T>>;
 
 /// Draft 管理：committed 与 optional draft 都以 Arc<Box<T>> 存储，
 // (committed_snapshot, optional_draft_snapshot)
@@ -20,17 +21,17 @@ impl<T: Clone> Draft<T> {
     }
     /// 以 Arc<Box<T>> 的形式获取当前“已提交（正式）”数据的快照（零拷贝，仅 clone Arc）
     #[inline]
-    pub fn data_arc(&self) -> SharedBox<T> {
+    pub fn data_arc(&self) -> SharedWeakBox<T> {
         let guard = self.inner.read();
-        Arc::clone(&guard.0)
+        Arc::downgrade(&guard.0)
     }
 
     /// 获取当前（草稿若存在则返回草稿，否则返回已提交）的快照
     /// 这也是零拷贝：只 clone Arc，不 clone T
     #[inline]
-    pub fn latest_arc(&self) -> SharedBox<T> {
+    pub fn latest_arc(&self) -> SharedWeakBox<T> {
         let guard = self.inner.read();
-        guard.1.clone().unwrap_or_else(|| Arc::clone(&guard.0))
+        Arc::downgrade(guard.1.as_ref().unwrap_or_else(|| &guard.0))
     }
 
     /// 通过闭包以可变方式编辑草稿（在闭包中我们给出 &mut T）

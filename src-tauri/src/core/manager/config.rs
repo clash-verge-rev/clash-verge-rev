@@ -17,7 +17,7 @@ impl CoreManager {
         use crate::constants::files::RUNTIME_CONFIG;
 
         let runtime_path = dirs::app_home_dir()?.join(RUNTIME_CONFIG);
-        let clash_config = &Config::clash().await.latest_arc().0;
+        let clash_config = &Config::clash().await.latest_arc().upgrade().unwrap_or_default().0;
 
         Config::runtime().await.edit_draft(|d| {
             *d = IRuntime {

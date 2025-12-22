@@ -55,7 +55,7 @@ impl CoreManager {
         });
         Config::verge().await.apply();
 
-        let verge_data = Config::verge().await.latest_arc();
+        let verge_data = Config::verge().await.latest_arc().upgrade().unwrap_or_default();
         verge_data.save_file().await.map_err(|e| e.to_string())?;
 
         self.update_config().await.stringify_err()?;
@@ -86,7 +86,13 @@ impl CoreManager {
         use crate::{config::Config, constants::timing};
         use backoff::{Error as BackoffError, ExponentialBackoff};
 
-        let needs_service = Config::verge().await.latest_arc().enable_tun_mode.unwrap_or(false);
+        let needs_service = Config::verge()
+            .await
+            .latest_arc()
+            .upgrade()
+            .unwrap_or_default()
+            .enable_tun_mode
+            .unwrap_or(false);
 
         if !needs_service {
             return;

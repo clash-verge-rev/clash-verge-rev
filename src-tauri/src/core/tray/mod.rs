@@ -209,7 +209,15 @@ impl Tray {
         }
 
         let app_handle = handle::Handle::app_handle();
-        let tray_event = { Config::verge().await.latest_arc().tray_event.clone() };
+        let tray_event = {
+            Config::verge()
+                .await
+                .latest_arc()
+                .upgrade()
+                .unwrap_or_default()
+                .tray_event
+                .clone()
+        };
         let tray_event = tray_event.unwrap_or_else(|| "main_window".into());
         let tray = app_handle
             .tray_by_id("main")
@@ -269,7 +277,7 @@ impl Tray {
     }
 
     async fn update_menu_internal(&self, app_handle: &AppHandle) -> Result<()> {
-        let verge = Config::verge().await.latest_arc();
+        let verge = Config::verge().await.latest_arc().upgrade().unwrap_or_default();
         let system_proxy = verge.enable_system_proxy.as_ref().unwrap_or(&false);
         let tun_mode = verge.enable_tun_mode.as_ref().unwrap_or(&false);
         let tun_mode_available =
@@ -278,6 +286,8 @@ impl Tray {
             Config::clash()
                 .await
                 .latest_arc()
+                .upgrade()
+                .unwrap_or_default()
                 .0
                 .get("mode")
                 .map(|val| val.as_str().unwrap_or("rule"))
@@ -285,7 +295,7 @@ impl Tray {
                 .to_owned()
         };
         let profiles_config = Config::profiles().await;
-        let profiles_arc = profiles_config.latest_arc();
+        let profiles_arc = profiles_config.latest_arc().upgrade().unwrap_or_default();
         let profiles_preview = profiles_arc.profiles_preview().unwrap_or_default();
         let is_lightweight_mode = is_in_lightweight_mode();
 
@@ -391,7 +401,7 @@ impl Tray {
 
         i18n::sync_locale().await;
 
-        let verge = Config::verge().await.latest_arc();
+        let verge = Config::verge().await.latest_arc().upgrade().unwrap_or_default();
         let system_proxy = verge.enable_system_proxy.as_ref().unwrap_or(&false);
         let tun_mode = verge.enable_tun_mode.as_ref().unwrap_or(&false);
 
@@ -405,7 +415,7 @@ impl Tray {
         let mut current_profile_name = "None".into();
         {
             let profiles = Config::profiles().await;
-            let profiles = profiles.latest_arc();
+            let profiles = profiles.latest_arc().upgrade().unwrap_or_default();
             if let Some(current_profile_uid) = profiles.get_current()
                 && let Ok(profile) = profiles.get_item(current_profile_uid)
             {
@@ -452,7 +462,7 @@ impl Tray {
             logging!(debug, Type::Tray, "应用正在退出，跳过托盘局部更新");
             return Ok(());
         }
-        let verge = Config::verge().await.data_arc();
+        let verge = Config::verge().await.data_arc().upgrade().unwrap_or_default();
         self.update_menu().await?;
         self.update_icon(&verge).await?;
         self.update_tooltip().await?;
@@ -467,7 +477,7 @@ impl Tray {
 
         logging!(info, Type::Tray, "正在从AppHandle创建系统托盘");
 
-        let verge = Config::verge().await.data_arc();
+        let verge = Config::verge().await.data_arc().upgrade().unwrap_or_default();
 
         // 获取图标
         let icon_bytes = TrayState::get_common_tray_icon(&verge).await.1;
@@ -479,7 +489,15 @@ impl Tray {
         #[cfg(any(target_os = "macos", target_os = "windows"))]
         let show_menu_on_left_click = {
             // TODO 优化这里 复用 verge
-            let tray_event = { Config::verge().await.latest_arc().tray_event.clone() };
+            let tray_event = {
+                Config::verge()
+                    .await
+                    .latest_arc()
+                    .upgrade()
+                    .unwrap_or_default()
+                    .tray_event
+                    .clone()
+            };
             tray_event.is_some_and(|v| v == "tray_menu")
         };
 
@@ -513,7 +531,15 @@ impl Tray {
                     return;
                 }
                 AsyncHandler::spawn(|| async move {
-                    let tray_event = { Config::verge().await.latest_arc().tray_event.clone() };
+                    let tray_event = {
+                        Config::verge()
+                            .await
+                            .latest_arc()
+                            .upgrade()
+                            .unwrap_or_default()
+                            .tray_event
+                            .clone()
+                    };
                     let tray_event: String = tray_event.unwrap_or_else(|| "main_window".into());
                     logging!(debug, Type::Tray, "tray event: {tray_event:?}");
 
@@ -769,7 +795,7 @@ async fn create_tray_menu(
                 .collect::<HashMap<String, usize>>()
         });
 
-    let verge_settings = Config::verge().await.latest_arc();
+    let verge_settings = Config::verge().await.latest_arc().upgrade().unwrap_or_default();
     let show_proxy_groups_inline = verge_settings.tray_inline_proxy_groups.unwrap_or(true);
     let show_outbound_modes_inline = verge_settings.tray_inline_outbound_modes.unwrap_or(false);
 

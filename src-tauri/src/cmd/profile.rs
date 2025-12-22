@@ -16,7 +16,7 @@ use crate::{
     ret_err,
     utils::{dirs, help},
 };
-use clash_verge_draft::SharedBox;
+use clash_verge_draft::StrongBox;
 use clash_verge_logging::{Type, logging};
 use scopeguard::defer;
 use smartstring::alias::String;
@@ -26,10 +26,10 @@ use std::time::Duration;
 static CURRENT_SWITCHING_PROFILE: AtomicBool = AtomicBool::new(false);
 
 #[tauri::command]
-pub async fn get_profiles() -> CmdResult<SharedBox<IProfiles>> {
+pub async fn get_profiles() -> CmdResult<StrongBox<IProfiles>> {
     logging!(debug, Type::Cmd, "获取配置文件列表");
     let draft = Config::profiles().await;
-    let data = draft.data_arc();
+    let data = draft.data_arc().upgrade().unwrap_or_default();
     Ok(data)
 }
 
@@ -203,7 +203,7 @@ async fn validate_new_profile(new_profile: &String) -> Result<(), ()> {
     // 获取目标配置文件路径
     let config_file_result = {
         let profiles_config = Config::profiles().await;
-        let profiles_data = profiles_config.latest_arc();
+        let profiles_data = profiles_config.latest_arc().upgrade().unwrap_or_default();
         match profiles_data.get_item(new_profile) {
             Ok(item) => {
                 if let Some(file) = &item.file {
@@ -377,7 +377,13 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<bool> {
     logging!(info, Type::Cmd, "开始修改配置文件，目标profile: {:?}", target_profile);
 
     // 保存当前配置，以便在验证失败时恢复
-    let previous_profile = Config::profiles().await.data_arc().current.clone();
+    let previous_profile = Config::profiles()
+        .await
+        .data_arc()
+        .upgrade()
+        .unwrap_or_default()
+        .current
+        .clone();
     logging!(info, Type::Cmd, "当前配置: {:?}", previous_profile);
 
     // 如果要切换配置，先检查目标配置文件是否有语法错误
@@ -410,7 +416,8 @@ pub async fn patch_profiles_config_by_profile_index(profile_index: String) -> Cm
 pub async fn patch_profile(index: String, profile: PrfItem) -> CmdResult {
     // 保存修改前检查是否有更新 update_interval
     let profiles = Config::profiles().await;
-    let should_refresh_timer = if let Ok(old_profile) = profiles.latest_arc().get_item(&index)
+    let should_refresh_timer = if let Ok(old_profile) =
+        profiles.latest_arc().upgrade().unwrap_or_default().get_item(&index)
         && let Some(new_option) = profile.option.as_ref()
     {
         let old_interval = old_profile.option.as_ref().and_then(|o| o.update_interval);
@@ -445,7 +452,7 @@ pub async fn patch_profile(index: String, profile: PrfItem) -> CmdResult {
 #[tauri::command]
 pub async fn view_profile(index: String) -> CmdResult {
     let profiles = Config::profiles().await;
-    let profiles_ref = profiles.latest_arc();
+    let profiles_ref = profiles.latest_arc().upgrade().unwrap_or_default();
     let file = profiles_ref
         .get_item(&index)
         .stringify_err()?
@@ -466,7 +473,7 @@ pub async fn view_profile(index: String) -> CmdResult {
 pub async fn read_profile_file(index: String) -> CmdResult<String> {
     let item = {
         let profiles = Config::profiles().await;
-        let profiles_ref = profiles.latest_arc();
+        let profiles_ref = profiles.latest_arc().upgrade().unwrap_or_default();
         PrfItem {
             file: profiles_ref.get_item(&index).stringify_err()?.file.to_owned(),
             ..Default::default()

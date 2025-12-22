@@ -9,8 +9,18 @@ use tauri_plugin_clipboard_manager::ClipboardExt as _;
 /// Toggle system proxy on/off
 pub async fn toggle_system_proxy() {
     let verge = Config::verge().await;
-    let enable = verge.latest_arc().enable_system_proxy.unwrap_or(false);
-    let auto_close_connection = verge.latest_arc().auto_close_connection.unwrap_or(false);
+    let enable = verge
+        .latest_arc()
+        .upgrade()
+        .unwrap_or_default()
+        .enable_system_proxy
+        .unwrap_or(false);
+    let auto_close_connection = verge
+        .latest_arc()
+        .upgrade()
+        .unwrap_or_default()
+        .auto_close_connection
+        .unwrap_or(false);
 
     // 如果当前系统代理即将关闭，且自动关闭连接设置为true，则关闭所有连接
     if enable
@@ -37,7 +47,12 @@ pub async fn toggle_system_proxy() {
 
 /// Toggle TUN mode on/off
 pub async fn toggle_tun_mode(not_save_file: Option<bool>) {
-    let enable = Config::verge().await.latest_arc().enable_tun_mode;
+    let enable = Config::verge()
+        .await
+        .latest_arc()
+        .upgrade()
+        .unwrap_or_default()
+        .enable_tun_mode;
     let enable = enable.unwrap_or(false);
 
     match super::patch_verge(
@@ -57,7 +72,7 @@ pub async fn toggle_tun_mode(not_save_file: Option<bool>) {
 /// Copy proxy environment variables to clipboard
 pub async fn copy_clash_env() {
     let env_ip = env::var("CLASH_VERGE_REV_IP").ok();
-    let verge_cfg = Config::verge().await.latest_arc();
+    let verge_cfg = Config::verge().await.latest_arc().upgrade().unwrap_or_default();
     let ip = env_ip
         .as_deref()
         .unwrap_or_else(|| verge_cfg.proxy_host.as_deref().unwrap_or("127.0.0.1"));
