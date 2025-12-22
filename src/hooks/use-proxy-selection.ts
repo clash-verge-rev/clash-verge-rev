@@ -62,18 +62,15 @@ export const useProxySelection = (options: ProxySelectionOptions = {}) => {
 
       try {
         if (current && !skipConfigSave) {
-          if (!current.selected) current.selected = [];
-
-          const index = current.selected.findIndex(
-            (item) => item.name === groupName,
-          );
+          const selected = current.selected ? [...current.selected] : [];
+          const index = selected.findIndex((item) => item.name === groupName);
 
           if (index < 0) {
-            current.selected.push({ name: groupName, now: proxyName });
+            selected.push({ name: groupName, now: proxyName });
           } else {
-            current.selected[index] = { name: groupName, now: proxyName };
+            selected[index] = { name: groupName, now: proxyName };
           }
-          await patchCurrent({ selected: current.selected });
+          await patchCurrent({ selected });
         }
 
         await selectNodeForGroup(groupName, proxyName);

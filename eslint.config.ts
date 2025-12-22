@@ -5,6 +5,7 @@ import configPrettier from "eslint-config-prettier";
 import { createTypeScriptImportResolver } from "eslint-import-resolver-typescript";
 import pluginImportX from "eslint-plugin-import-x";
 import pluginPrettier from "eslint-plugin-prettier";
+import pluginReactCompiler from "eslint-plugin-react-compiler";
 import pluginReactHooks from "eslint-plugin-react-hooks";
 import pluginReactRefresh from "eslint-plugin-react-refresh";
 import pluginUnusedImports from "eslint-plugin-unused-imports";
@@ -19,6 +20,7 @@ export default defineConfig([
       js: eslintJS,
       // @ts-expect-error -- https://github.com/typescript-eslint/typescript-eslint/issues/11543
       "react-hooks": pluginReactHooks,
+      "react-compiler": pluginReactCompiler,
       // @ts-expect-error -- https://github.com/un-ts/eslint-plugin-import-x/issues/421
       "import-x": pluginImportX,
       "react-refresh": pluginReactRefresh,
@@ -52,6 +54,7 @@ export default defineConfig([
       // React
       "react-hooks/rules-of-hooks": "error",
       "react-hooks/exhaustive-deps": "error",
+      "react-compiler/react-compiler": "error",
       "react-refresh/only-export-components": [
         "warn",
         { allowConstantExport: true },

@@ -12,7 +12,7 @@ import { useTranslation } from "react-i18next";
 
 import matchCaseIcon from "@/assets/image/component/match_case.svg?react";
 import matchWholeWordIcon from "@/assets/image/component/match_whole_word.svg?react";
-import useRegularExpressionIcon from "@/assets/image/component/use_regular_expression.svg?react";
+import UseRegularExpressionIcon from "@/assets/image/component/use_regular_expression.svg?react";
 import { buildRegex, compileStringMatcher } from "@/utils/search-matcher";
 
 export type SearchState = {
@@ -223,7 +223,7 @@ export const BaseSearchBox = ({
                 <Tooltip title={t("shared.placeholders.useRegex")}>
                   <div>
                     <SvgIcon
-                      component={useRegularExpressionIcon}
+                      component={UseRegularExpressionIcon}
                       aria-label={useRegularExpression ? "active" : "inactive"}
                       {...iconStyle}
                       onClick={handleToggleUseRegularExpression}
