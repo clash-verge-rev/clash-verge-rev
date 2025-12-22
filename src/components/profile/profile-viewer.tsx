@@ -88,10 +88,6 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
 
   const handleOk = useLockFn(
     handleSubmit(async (form) => {
-      if (form.option?.timeout_seconds) {
-        form.option.timeout_seconds = +form.option.timeout_seconds;
-      }
-
       setLoading(true);
       try {
         // 基本验证
@@ -101,17 +97,21 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
         }
 
         // 处理表单数据
-        if (form.option?.update_interval) {
-          form.option.update_interval = +form.option.update_interval;
-        } else {
-          delete form.option?.update_interval;
+        const option = form.option ? { ...form.option } : undefined;
+        if (option?.timeout_seconds) {
+          option.timeout_seconds = +option.timeout_seconds;
         }
-        if (form.option?.user_agent === "") {
-          delete form.option.user_agent;
+        if (option?.update_interval) {
+          option.update_interval = +option.update_interval;
+        } else if (option) {
+          option.update_interval = undefined;
+        }
+        if (option?.user_agent === "") {
+          option.user_agent = undefined;
         }
 
         const name = form.name || `${form.type} file`;
-        const item = { ...form, name };
+        const item = { ...form, name, option };
         const isRemote = form.type === "remote";
         const isUpdate = openType === "edit";
 

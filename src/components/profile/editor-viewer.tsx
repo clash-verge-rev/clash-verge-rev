@@ -123,24 +123,6 @@ export const EditorViewer = <T extends Language>(props: Props<T>) => {
   useEffect(() => {
     initialDataRef.current = initialData;
   }, [initialData]);
-  // Background refresh: when the dialog/model is ready and the underlying resource key changes,
-  // try to refresh content (only if user hasn't typed). Do NOT depend on `initialData` function
-  // identity because callers often pass inline lambdas that change every render.
-  useEffect(() => {
-    if (!open) return;
-    // Only attempt after initial model is ready to avoid racing the initial load
-    if (!modelPath) return;
-    // Avoid immediate double-load on open: the initial load has just completed.
-    if (skipNextRefreshRef.current) {
-      skipNextRefreshRef.current = false;
-      return;
-    }
-    // Only meaningful when a callable loader is provided (plain Promise cannot be "recalled")
-    if (typeof initialDataRef.current === "function") {
-      void reloadLatest();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, modelPath, dataKey]);
   // Helper to (soft) reload latest source and apply only if the user hasn't typed yet
   const reloadLatest = useLockFn(async () => {
     // Snapshot the model/doc identity and bump a token so older calls can't win
@@ -201,6 +183,23 @@ export const EditorViewer = <T extends Language>(props: Props<T>) => {
       }
     }
   });
+  // Background refresh: when the dialog/model is ready and the underlying resource key changes,
+  // try to refresh content (only if user hasn't typed). Do NOT depend on `initialData` function
+  // identity because callers often pass inline lambdas that change every render.
+  useEffect(() => {
+    if (!open) return;
+    // Only attempt after initial model is ready to avoid racing the initial load
+    if (!modelPath) return;
+    // Avoid immediate double-load on open: the initial load has just completed.
+    if (skipNextRefreshRef.current) {
+      skipNextRefreshRef.current = false;
+      return;
+    }
+    // Only meaningful when a callable loader is provided (plain Promise cannot be "recalled")
+    if (typeof initialDataRef.current === "function") {
+      void reloadLatest();
+    }
+  }, [open, modelPath, dataKey, reloadLatest]);
 
   const beforeMount = () => {
     monacoInitialization();

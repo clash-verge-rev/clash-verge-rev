@@ -88,25 +88,19 @@ export const WebUIItem = (props: Props) => {
     );
   }
 
-  const placeholderCounts: Record<string, number> = {};
-  let textCounter = 0;
-  const renderedParts = highlightedParts.map((part) => {
+  const renderedParts = highlightedParts.map((part, index) => {
     const isPlaceholder =
       part === "%host" || part === "%port" || part === "%secret";
+    const repeatIndex = highlightedParts
+      .slice(0, index)
+      .filter((prev) => prev === part).length;
+    const key = `${part || "empty"}-${repeatIndex}`;
 
-    if (isPlaceholder) {
-      const count = placeholderCounts[part] ?? 0;
-      placeholderCounts[part] = count + 1;
-      return (
-        <span key={`placeholder-${part}-${count}`} className="placeholder">
-          {part}
-        </span>
-      );
-    }
-
-    const key = `text-${textCounter}-${part || "empty"}`;
-    textCounter += 1;
-    return <span key={key}>{part}</span>;
+    return (
+      <span key={key} className={isPlaceholder ? "placeholder" : undefined}>
+        {part}
+      </span>
+    );
   });
 
   return (
