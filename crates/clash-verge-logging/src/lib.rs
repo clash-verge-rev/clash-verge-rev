@@ -93,11 +93,7 @@ pub fn write_sidecar_log(
 ) {
     let args = format_args!("{}", message);
 
-    let record = Record::builder()
-        .args(args)
-        .level(level)
-        .target("sidecar")
-        .build();
+    let record = Record::builder().args(args).level(level).target("sidecar").build();
 
     let _ = writer.write(now, &record);
 }
@@ -111,9 +107,7 @@ impl<'a> NoModuleFilter<'a> {
     pub fn filter(&self, record: &Record) -> bool {
         if let Some(module) = record.module_path() {
             for blocked in self.0 {
-                if module.len() >= blocked.len()
-                    && module.as_bytes()[..blocked.len()] == blocked.as_bytes()[..]
-                {
+                if module.len() >= blocked.len() && module.as_bytes()[..blocked.len()] == blocked.as_bytes()[..] {
                     return false;
                 }
             }

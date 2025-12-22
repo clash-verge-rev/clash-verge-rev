@@ -17,12 +17,7 @@ where
             let mut ctrl_c = match windows::ctrl_c() {
                 Ok(s) => s,
                 Err(e) => {
-                    logging!(
-                        error,
-                        Type::SystemSignal,
-                        "Failed to register Ctrl+C: {}",
-                        e
-                    );
+                    logging!(error, Type::SystemSignal, "Failed to register Ctrl+C: {}", e);
                     return;
                 }
             };
@@ -30,12 +25,7 @@ where
             let mut ctrl_close = match windows::ctrl_close() {
                 Ok(s) => s,
                 Err(e) => {
-                    logging!(
-                        error,
-                        Type::SystemSignal,
-                        "Failed to register Ctrl+Close: {}",
-                        e
-                    );
+                    logging!(error, Type::SystemSignal, "Failed to register Ctrl+Close: {}", e);
                     return;
                 }
             };
@@ -43,12 +33,7 @@ where
             let mut ctrl_shutdown = match windows::ctrl_shutdown() {
                 Ok(s) => s,
                 Err(e) => {
-                    logging!(
-                        error,
-                        Type::SystemSignal,
-                        "Failed to register Ctrl+Shutdown: {}",
-                        e
-                    );
+                    logging!(error, Type::SystemSignal, "Failed to register Ctrl+Shutdown: {}", e);
                     return;
                 }
             };
@@ -56,12 +41,7 @@ where
             let mut ctrl_logoff = match windows::ctrl_logoff() {
                 Ok(s) => s,
                 Err(e) => {
-                    logging!(
-                        error,
-                        Type::SystemSignal,
-                        "Failed to register Ctrl+Logoff: {}",
-                        e
-                    );
+                    logging!(error, Type::SystemSignal, "Failed to register Ctrl+Logoff: {}", e);
                     return;
                 }
             };
@@ -94,12 +74,7 @@ where
                 }
                 IS_CLEANING_UP.store(true, Ordering::SeqCst);
 
-                logging!(
-                    info,
-                    Type::SystemSignal,
-                    "Caught Windows signal: {}",
-                    signal_name
-                );
+                logging!(info, Type::SystemSignal, "Caught Windows signal: {}", signal_name);
 
                 f().await;
             }

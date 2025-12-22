@@ -17,36 +17,21 @@ where
             let mut sigterm = match signal(SignalKind::terminate()) {
                 Ok(s) => s,
                 Err(e) => {
-                    logging!(
-                        error,
-                        Type::SystemSignal,
-                        "Failed to register SIGTERM: {}",
-                        e
-                    );
+                    logging!(error, Type::SystemSignal, "Failed to register SIGTERM: {}", e);
                     return;
                 }
             };
             let mut sigint = match signal(SignalKind::interrupt()) {
                 Ok(s) => s,
                 Err(e) => {
-                    logging!(
-                        error,
-                        Type::SystemSignal,
-                        "Failed to register SIGINT: {}",
-                        e
-                    );
+                    logging!(error, Type::SystemSignal, "Failed to register SIGINT: {}", e);
                     return;
                 }
             };
             let mut sighup = match signal(SignalKind::hangup()) {
                 Ok(s) => s,
                 Err(e) => {
-                    logging!(
-                        error,
-                        Type::SystemSignal,
-                        "Failed to register SIGHUP: {}",
-                        e
-                    );
+                    logging!(error, Type::SystemSignal, "Failed to register SIGHUP: {}", e);
                     return;
                 }
             };
