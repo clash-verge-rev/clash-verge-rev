@@ -197,6 +197,11 @@ const Layout = () => {
     setMenuContextPosition(null);
   }, []);
 
+  const handleToggleNavCollapsed = useCallback(() => {
+    setMenuContextPosition(null);
+    void patchVerge({ collapse_navbar: !navCollapsed });
+  }, [navCollapsed, patchVerge]);
+
   const customTitlebar = useMemo(
     () =>
       !decorated ? (
@@ -431,6 +436,11 @@ const Layout = () => {
                   },
                 }}
               >
+                <MenuItem onClick={handleToggleNavCollapsed} dense>
+                  {navCollapsed
+                    ? t("layout.components.navigation.menu.expandNavBar")
+                    : t("layout.components.navigation.menu.collapseNavBar")}
+                </MenuItem>
                 <MenuItem
                   onClick={menuUnlocked ? handleLockMenu : handleUnlockMenu}
                   dense

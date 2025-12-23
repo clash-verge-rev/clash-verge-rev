@@ -179,6 +179,8 @@ export interface TranslationResources {
       components: {
         navigation: {
           menu: {
+            collapseNavBar: string;
+            expandNavBar: string;
             lock: string;
             reorderMode: string;
             restoreDefaultOrder: string;

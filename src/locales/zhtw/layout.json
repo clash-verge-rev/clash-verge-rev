@@ -15,7 +15,9 @@
         "reorderMode": "選單排序模式",
         "restoreDefaultOrder": "恢復預設排序",
         "unlock": "解鎖選單排序",
-        "lock": "鎖定選單排序"
+        "lock": "鎖定選單排序",
+        "collapseNavBar": "收起導覽列",
+        "expandNavBar": "展開導覽列"
       }
     }
   }

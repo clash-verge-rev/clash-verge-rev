@@ -15,7 +15,9 @@
         "reorderMode": "菜单排序模式",
         "restoreDefaultOrder": "恢复默认排序",
         "unlock": "解锁菜单排序",
-        "lock": "锁定菜单排序"
+        "lock": "锁定菜单排序",
+        "collapseNavBar": "收起导航栏",
+        "expandNavBar": "展开导航栏"
       }
     }
   }
