@@ -1,5 +1,5 @@
 use crate::{
-    config::{Config, IVerge},
+    config::{Config, IClashTemp, IProfiles, IVerge},
     core::backup,
     process::AsyncHandler,
     utils::{
@@ -25,6 +25,7 @@ pub struct LocalBackupFile {
 }
 
 /// Load restored verge.yaml from disk, merge back WebDAV creds, save, and sync memory.
+/// Also reload other restored configs so restarts won't overwrite them.
 async fn finalize_restored_verge_config(
     webdav_url: Option<String>,
     webdav_username: Option<String>,
@@ -37,6 +38,20 @@ async fn finalize_restored_verge_config(
     restored.webdav_username = webdav_username;
     restored.webdav_password = webdav_password;
     restored.save_file().await?;
+
+    let restored_clash = IClashTemp::new().await;
+    let clash_draft = Config::clash().await;
+    clash_draft.edit_draft(|d| {
+        *d = restored_clash.clone();
+    });
+    clash_draft.apply();
+
+    let restored_profiles = IProfiles::new().await;
+    let profiles_draft = Config::profiles().await;
+    profiles_draft.edit_draft(|d| {
+        *d = restored_profiles.clone();
+    });
+    profiles_draft.apply();
 
     let verge_draft = Config::verge().await;
     verge_draft.edit_draft(|d| {
