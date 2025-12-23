@@ -7,6 +7,7 @@ import type { Ref } from "react";
 import { useImperativeHandle, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import ReactMarkdown from "react-markdown";
+import rehypeRaw from "rehype-raw";
 import useSWR from "swr";
 
 import { BaseDialog, DialogRef } from "@/components/base";
@@ -144,6 +145,7 @@ export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
     >
       <Box sx={{ height: "calc(100% - 10px)", overflow: "auto" }}>
         <ReactMarkdown
+          rehypePlugins={[rehypeRaw]}
           components={{
             a: ({ ...props }) => {
               const { children } = props;

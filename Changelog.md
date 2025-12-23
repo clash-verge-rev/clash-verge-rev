@@ -22,4 +22,6 @@
 <details>
 <summary><strong> 🚀 优化改进 </strong></summary>
 
+- 应用内更新日志支持解析并渲染 HTML 标签
+
 </details>
