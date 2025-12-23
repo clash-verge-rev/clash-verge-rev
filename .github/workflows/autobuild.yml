@@ -315,20 +315,18 @@ jobs:
         run: |
           sudo ls -lR /etc/apt/
 
-          cat > /tmp/sources.list << EOF
-          deb [arch=amd64,i386] http://archive.ubuntu.com/ubuntu jammy main multiverse universe restricted
-          deb [arch=amd64,i386] http://archive.ubuntu.com/ubuntu jammy-security main multiverse universe restricted
-          deb [arch=amd64,i386] http://archive.ubuntu.com/ubuntu jammy-updates main multiverse universe restricted
-          deb [arch=amd64,i386] http://archive.ubuntu.com/ubuntu jammy-backports main multiverse universe restricted
+          sudo rm -f /etc/apt/sources.list.d/ubuntu.sources
+          sudo tee /etc/apt/sources.list << EOF
+          deb [arch=amd64,i386] http://archive.ubuntu.com/ubuntu noble main restricted universe multiverse
+          deb [arch=amd64,i386] http://archive.ubuntu.com/ubuntu noble-security main restricted universe multiverse
+          deb [arch=amd64,i386] http://archive.ubuntu.com/ubuntu noble-updates main restricted universe multiverse
+          deb [arch=amd64,i386] http://archive.ubuntu.com/ubuntu noble-backports main restricted universe multiverse
 
-          deb [arch=armhf,arm64] http://ports.ubuntu.com/ubuntu-ports jammy main multiverse universe restricted
-          deb [arch=armhf,arm64] http://ports.ubuntu.com/ubuntu-ports jammy-security main multiverse universe restricted
-          deb [arch=armhf,arm64] http://ports.ubuntu.com/ubuntu-ports jammy-updates main multiverse universe restricted
-          deb [arch=armhf,arm64] http://ports.ubuntu.com/ubuntu-ports jammy-backports main multiverse universe restricted
+          deb [arch=armhf,arm64] http://ports.ubuntu.com/ubuntu-ports noble main restricted universe multiverse
+          deb [arch=armhf,arm64] http://ports.ubuntu.com/ubuntu-ports noble-security main restricted universe multiverse
+          deb [arch=armhf,arm64] http://ports.ubuntu.com/ubuntu-ports noble-updates main restricted universe multiverse
+          deb [arch=armhf,arm64] http://ports.ubuntu.com/ubuntu-ports noble-backports main restricted universe multiverse
           EOF
-
-          sudo mv /etc/apt/sources.list /etc/apt/sources.list.default
-          sudo mv /tmp/sources.list /etc/apt/sources.list
 
           sudo dpkg --add-architecture ${{ matrix.arch }}
           sudo apt-get update -y
@@ -339,7 +337,7 @@ jobs:
             libc6-dev:${{ matrix.arch }}
 
           sudo apt-get install -y \
-            libxslt1.1:${{ matrix.arch }} \
+            libxslt1-dev:${{ matrix.arch }} \
             libwebkit2gtk-4.1-dev:${{ matrix.arch }} \
             libayatana-appindicator3-dev:${{ matrix.arch }} \
             libssl-dev:${{ matrix.arch }} \
