@@ -1,8 +1,8 @@
 use parking_lot::RwLock;
 use std::sync::Arc;
 
-pub type SharedBox<T> = Arc<T>;
-type DraftInner<T> = (SharedBox<T>, Option<SharedBox<T>>);
+pub type SharedDraft<T> = Arc<T>;
+type DraftInner<T> = (SharedDraft<T>, Option<SharedDraft<T>>);
 
 /// Draft 管理：committed 与 optional draft 都以 Arc<Box<T>> 存储，
 // (committed_snapshot, optional_draft_snapshot)
@@ -20,7 +20,7 @@ impl<T: Clone> Draft<T> {
     }
     /// 以 Arc<Box<T>> 的形式获取当前“已提交（正式）”数据的快照（零拷贝，仅 clone Arc）
     #[inline]
-    pub fn data_arc(&self) -> SharedBox<T> {
+    pub fn data_arc(&self) -> SharedDraft<T> {
         let guard = self.inner.read();
         Arc::clone(&guard.0)
     }
@@ -28,7 +28,7 @@ impl<T: Clone> Draft<T> {
     /// 获取当前（草稿若存在则返回草稿，否则返回已提交）的快照
     /// 这也是零拷贝：只 clone Arc，不 clone T
     #[inline]
-    pub fn latest_arc(&self) -> SharedBox<T> {
+    pub fn latest_arc(&self) -> SharedDraft<T> {
         let guard = self.inner.read();
         guard.1.clone().unwrap_or_else(|| Arc::clone(&guard.0))
     }
@@ -70,18 +70,23 @@ impl<T: Clone> Draft<T> {
     #[inline]
     pub async fn with_data_modify<F, Fut, R>(&self, f: F) -> Result<R, anyhow::Error>
     where
-        T: Send + Sync + 'static, // 因为涉及异步跨线程，T 需要满足这些约束
+        T: Send + Sync + 'static,
         F: FnOnce(Box<T>) -> Fut + Send,
         Fut: std::future::Future<Output = Result<(Box<T>, R), anyhow::Error>> + Send,
     {
-        let local: Box<T> = {
+        let (local, original_arc) = {
             let guard = self.inner.read();
-            Box::new((*guard.0).clone())
+            let arc = Arc::clone(&guard.0);
+            (Box::new((*arc).clone()), arc)
         };
         let (new_local, res) = f(local).await?;
         let mut guard = self.inner.write();
+        if !Arc::ptr_eq(&guard.0, &original_arc) {
+            return Err(anyhow::anyhow!(
+                "Optimistic lock failed: Committed data has changed during async operation"
+            ));
+        }
         guard.0 = Arc::from(new_local);
-
         Ok(res)
     }
 }

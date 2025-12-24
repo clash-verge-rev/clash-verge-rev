@@ -4,7 +4,7 @@ use crate::{
     module::{auto_backup::AutoBackupManager, lightweight},
 };
 use anyhow::Result;
-use clash_verge_draft::SharedBox;
+use clash_verge_draft::SharedDraft;
 use clash_verge_logging::{Type, logging, logging_error};
 use serde_yaml_ng::Mapping;
 
@@ -269,7 +269,7 @@ pub async fn patch_verge(patch: &IVerge, not_save_file: bool) -> Result<()> {
     Ok(())
 }
 
-pub async fn fetch_verge_config() -> Result<SharedBox<IVerge>> {
+pub async fn fetch_verge_config() -> Result<SharedDraft<IVerge>> {
     let draft = Config::verge().await;
     let data = draft.data_arc();
     Ok(data)
