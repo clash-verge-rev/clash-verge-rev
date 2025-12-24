@@ -211,7 +211,7 @@
           "navIcon": "Ikon Navigasi",
           "collapseNavBar": "Ciutkan bilah navigasi",
           "trayIcon": "Ikon Tray",
-          "showProxyGroupsInline": "Show Proxy Groups Inline",
+          "proxyGroupsDisplayMode": "Proxy Groups Display Mode",
           "showOutboundModesInline": "Show Outbound Modes Inline",
           "commonTrayIcon": "Ikon Tray Umum",
           "systemProxyTrayIcon": "Ikon Tray Proksi Sistem",
@@ -234,6 +234,11 @@
             "topRight": "Kanan atas",
             "bottomLeft": "Kiri bawah",
             "bottomRight": "Kanan bawah"
+          },
+          "proxyGroupsDisplayMode": {
+            "default": "Default",
+            "inline": "Inline",
+            "disable": "Disable"
           }
         }
       }

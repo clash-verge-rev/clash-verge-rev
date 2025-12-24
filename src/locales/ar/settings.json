@@ -211,7 +211,7 @@
           "navIcon": "أيقونة التنقل",
           "collapseNavBar": "طي شريط التنقل",
           "trayIcon": "أيقونة شريط المهام",
-          "showProxyGroupsInline": "Show Proxy Groups Inline",
+          "proxyGroupsDisplayMode": "Proxy Groups Display Mode",
           "showOutboundModesInline": "Show Outbound Modes Inline",
           "commonTrayIcon": "أيقونة شريط مهام عامة",
           "systemProxyTrayIcon": "أيقونة شريط المهام لوكيل النظام",
@@ -234,6 +234,11 @@
             "topRight": "Top Right",
             "bottomLeft": "Bottom Left",
             "bottomRight": "Bottom Right"
+          },
+          "proxyGroupsDisplayMode": {
+            "default": "Default",
+            "inline": "Inline",
+            "disable": "Disable"
           }
         }
       }

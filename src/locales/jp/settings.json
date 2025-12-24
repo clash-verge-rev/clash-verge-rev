@@ -211,7 +211,7 @@
           "navIcon": "ナビゲーションバーアイコン",
           "collapseNavBar": "ナビゲーションバーを折りたたむ",
           "trayIcon": "トレイアイコン",
-          "showProxyGroupsInline": "Show Proxy Groups Inline",
+          "proxyGroupsDisplayMode": "Proxy Groups Display Mode",
           "showOutboundModesInline": "Show Outbound Modes Inline",
           "commonTrayIcon": "通常のトレイアイコン",
           "systemProxyTrayIcon": "システムプロキシトレイアイコン",
@@ -234,6 +234,11 @@
             "topRight": "右上",
             "bottomLeft": "左下",
             "bottomRight": "右下"
+          },
+          "proxyGroupsDisplayMode": {
+            "default": "Default",
+            "inline": "Inline",
+            "disable": "Disable"
           }
         }
       }

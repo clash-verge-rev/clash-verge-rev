@@ -211,7 +211,7 @@
           "navIcon": "Icono de la barra de navegación",
           "collapseNavBar": "Colapsar barra de navegación",
           "trayIcon": "Icono de la bandeja",
-          "showProxyGroupsInline": "Show Proxy Groups Inline",
+          "proxyGroupsDisplayMode": "Proxy Groups Display Mode",
           "showOutboundModesInline": "Show Outbound Modes Inline",
           "commonTrayIcon": "Icono de bandeja común",
           "systemProxyTrayIcon": "Icono de bandeja del proxy del sistema",
@@ -234,6 +234,11 @@
             "topRight": "Arriba a la derecha",
             "bottomLeft": "Abajo a la izquierda",
             "bottomRight": "Abajo a la derecha"
+          },
+          "proxyGroupsDisplayMode": {
+            "default": "Default",
+            "inline": "Inline",
+            "disable": "Disable"
           }
         }
       }

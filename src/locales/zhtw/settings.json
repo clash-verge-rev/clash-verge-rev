@@ -211,7 +211,7 @@
           "navIcon": "導覽列圖示",
           "collapseNavBar": "收起導覽列",
           "trayIcon": "系統匣圖示",
-          "showProxyGroupsInline": "將代理組顯示在系統匣一級選單",
+          "proxyGroupsDisplayMode": "系統匣代理組顯示模式",
           "showOutboundModesInline": "將出站模式顯示在系統匣一級選單",
           "commonTrayIcon": "一般系統匣圖示",
           "systemProxyTrayIcon": "系統代理系統匣圖示",
