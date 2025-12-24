@@ -4,6 +4,8 @@ use clash_verge_logging::{Type, logging};
 use std::os::windows::process::CommandExt as _;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
+use winapi::um::stringapiset::MultiByteToWideChar;
+use winapi::um::winnls::{GetACP, GetOEMCP};
 
 const CREATE_NO_WINDOW: u32 = 0x08000000;
 const TASK_NAME_USER: &str = "Clash Verge";
@@ -74,9 +76,72 @@ fn build_task_command() -> Result<String> {
     Ok(format!("\"{}\"", exe_path.to_string_lossy()))
 }
 
+fn decode_with_code_page(bytes: &[u8], code_page: u32) -> Option<String> {
+    if bytes.is_empty() {
+        return Some(String::new());
+    }
+
+    let len = bytes.len();
+    if len > i32::MAX as usize {
+        return None;
+    }
+
+    let required = unsafe {
+        MultiByteToWideChar(
+            code_page,
+            0,
+            bytes.as_ptr() as *const i8,
+            len as i32,
+            std::ptr::null_mut(),
+            0,
+        )
+    };
+
+    if required == 0 {
+        return None;
+    }
+
+    let mut wide = vec![0u16; required as usize];
+    let written = unsafe {
+        MultiByteToWideChar(
+            code_page,
+            0,
+            bytes.as_ptr() as *const i8,
+            len as i32,
+            wide.as_mut_ptr(),
+            required,
+        )
+    };
+
+    if written == 0 {
+        return None;
+    }
+
+    wide.truncate(written as usize);
+    Some(String::from_utf16_lossy(&wide))
+}
+
+fn decode_console_output(bytes: &[u8]) -> String {
+    if let Ok(text) = std::str::from_utf8(bytes) {
+        return text.to_string();
+    }
+
+    let oem = unsafe { GetOEMCP() };
+    if let Some(text) = decode_with_code_page(bytes, oem) {
+        return text;
+    }
+
+    let acp = unsafe { GetACP() };
+    if let Some(text) = decode_with_code_page(bytes, acp) {
+        return text;
+    }
+
+    String::from_utf8_lossy(bytes).to_string()
+}
+
 fn output_message(output: &Output) -> String {
-    let stdout = String::from_utf8_lossy(&output.stdout);
-    let stderr = String::from_utf8_lossy(&output.stderr);
+    let stdout = decode_console_output(&output.stdout);
+    let stderr = decode_console_output(&output.stderr);
     let stdout = stdout.trim();
     let stderr = stderr.trim();
 

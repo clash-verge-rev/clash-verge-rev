@@ -113,10 +113,12 @@ winapi = { version = "0.3.9", features = [
   "errhandlingapi",
   "minwindef",
   "winerror",
+  "stringapiset",
   "tlhelp32",
   "processthreadsapi",
   "winhttp",
   "winreg",
+  "winnls",
 ] }
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
