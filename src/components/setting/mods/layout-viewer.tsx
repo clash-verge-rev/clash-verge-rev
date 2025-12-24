@@ -422,18 +422,37 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
         <Item>
           <ListItemText
             primary={t(
-              "settings.components.verge.layout.fields.showProxyGroupsInline",
+              "settings.components.verge.layout.fields.proxyGroupsDisplayMode",
             )}
           />
           <GuardState
-            value={verge?.tray_inline_proxy_groups ?? true}
-            valueProps="checked"
+            value={verge?.tray_proxy_groups_display_mode ?? "default"}
             onCatch={onError}
-            onFormat={onSwitchFormat}
-            onChange={(e) => onChangeData({ tray_inline_proxy_groups: e })}
-            onGuard={(e) => patchVerge({ tray_inline_proxy_groups: e })}
+            onFormat={(e: any) => e.target.value}
+            onChange={(value) =>
+              onChangeData({ tray_proxy_groups_display_mode: value })
+            }
+            onGuard={(value) =>
+              patchVerge({ tray_proxy_groups_display_mode: value })
+            }
           >
-            <Switch edge="end" />
+            <Select size="small" sx={{ width: 140, "> div": { py: "7.5px" } }}>
+              <MenuItem value="default">
+                {t(
+                  "settings.components.verge.layout.options.proxyGroupsDisplayMode.default",
+                )}
+              </MenuItem>
+              <MenuItem value="inline">
+                {t(
+                  "settings.components.verge.layout.options.proxyGroupsDisplayMode.inline",
+                )}
+              </MenuItem>
+              <MenuItem value="disable">
+                {t(
+                  "settings.components.verge.layout.options.proxyGroupsDisplayMode.disable",
+                )}
+              </MenuItem>
+            </Select>
           </GuardState>
         </Item>
         <Item>

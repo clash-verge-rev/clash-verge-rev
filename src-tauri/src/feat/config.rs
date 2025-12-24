@@ -102,7 +102,7 @@ fn determine_update_flags(patch: &IVerge) -> i32 {
     let home_cards = patch.home_cards.clone();
     let enable_auto_light_weight = patch.enable_auto_light_weight_mode;
     let enable_external_controller = patch.enable_external_controller;
-    let tray_inline_proxy_groups = patch.tray_inline_proxy_groups;
+    let tray_proxy_groups_display_mode = &patch.tray_proxy_groups_display_mode;
     let tray_inline_outbound_modes = patch.tray_inline_outbound_modes;
     let enable_proxy_guard = patch.enable_proxy_guard;
     let proxy_guard_duration = patch.proxy_guard_duration;
@@ -182,7 +182,7 @@ fn determine_update_flags(patch: &IVerge) -> i32 {
         update_flags |= UpdateFlags::RestartCore as i32;
     }
 
-    if tray_inline_proxy_groups.is_some() {
+    if tray_proxy_groups_display_mode.is_some() {
         update_flags |= UpdateFlags::SystrayMenu as i32;
     }
     if tray_inline_outbound_modes.is_some() {

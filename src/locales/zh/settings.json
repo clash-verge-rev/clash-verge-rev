@@ -234,6 +234,11 @@
             "topRight": "右上角",
             "bottomLeft": "左下角",
             "bottomRight": "右下角"
+          },
+          "proxyGroupsDisplayMode": {
+            "default": "默认",
+            "inline": "一级菜单",
+            "disable": "禁用"
           }
         }
       }

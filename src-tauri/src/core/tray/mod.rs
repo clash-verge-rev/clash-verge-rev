@@ -770,7 +770,12 @@ async fn create_tray_menu(
         });
 
     let verge_settings = Config::verge().await.latest_arc();
-    let show_proxy_groups_inline = verge_settings.tray_inline_proxy_groups.unwrap_or(true);
+    let tray_proxy_groups_display_mode = verge_settings
+        .tray_proxy_groups_display_mode
+        .clone()
+        .unwrap_or_else(|| "default".into());
+    let show_proxy_groups = tray_proxy_groups_display_mode != "disable";
+    let show_proxy_groups_inline = tray_proxy_groups_display_mode == "inline";
     let show_outbound_modes_inline = verge_settings.tray_inline_outbound_modes.unwrap_or(false);
 
     let version = env!("CARGO_PKG_VERSION");
@@ -855,8 +860,11 @@ async fn create_tray_menu(
     let proxy_sub_menus =
         create_subcreate_proxy_menu_item(app_handle, current_proxy_mode, proxy_group_order_map, proxy_nodes_data);
 
-    let (proxies_menu, inline_proxy_items) =
-        create_proxy_menu_item(app_handle, show_proxy_groups_inline, proxy_sub_menus, &texts.proxies)?;
+    let (proxies_menu, inline_proxy_items) = if show_proxy_groups {
+        create_proxy_menu_item(app_handle, show_proxy_groups_inline, proxy_sub_menus, &texts.proxies)?
+    } else {
+        (None, Vec::new())
+    };
 
     let system_proxy = &CheckMenuItem::with_id(
         app_handle,
@@ -952,14 +960,16 @@ async fn create_tray_menu(
     // 动态构建菜单项
     let mut menu_items: Vec<&dyn IsMenuItem<Wry>> = vec![open_window, separator];
 
-    if show_outbound_modes_inline {
-        menu_items.extend_from_slice(&[
-            rule_mode as &dyn IsMenuItem<Wry>,
-            global_mode as &dyn IsMenuItem<Wry>,
-            direct_mode as &dyn IsMenuItem<Wry>,
-        ]);
-    } else if let Some(ref outbound_modes) = outbound_modes {
-        menu_items.push(outbound_modes);
+    if show_proxy_groups {
+        if show_outbound_modes_inline {
+            menu_items.extend_from_slice(&[
+                rule_mode as &dyn IsMenuItem<Wry>,
+                global_mode as &dyn IsMenuItem<Wry>,
+                direct_mode as &dyn IsMenuItem<Wry>,
+            ]);
+        } else if let Some(ref outbound_modes) = outbound_modes {
+            menu_items.push(outbound_modes);
+        }
     }
 
     menu_items.extend_from_slice(&[separator, profiles]);
