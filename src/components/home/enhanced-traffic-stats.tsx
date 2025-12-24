@@ -14,8 +14,7 @@ import {
   alpha,
   useTheme,
 } from "@mui/material";
-import { useRef, memo, useMemo } from "react";
-import { ReactNode } from "react";
+import { ReactNode, memo, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 
 import { TrafficErrorBoundary } from "@/components/common/traffic-error-boundary";
@@ -147,9 +146,12 @@ export const EnhancedTrafficStats = () => {
   const trafficRef = useRef<EnhancedCanvasTrafficGraphRef>(null);
   const pageVisible = useVisibility();
 
+  // 是否显示流量图表
+  const trafficGraph = verge?.traffic_graph ?? true;
+
   const {
     response: { data: traffic },
-  } = useTrafficData();
+  } = useTrafficData({ enabled: trafficGraph && pageVisible });
 
   const {
     response: { data: memory },
@@ -158,9 +160,6 @@ export const EnhancedTrafficStats = () => {
   const {
     response: { data: connections },
   } = useConnectionData();
-
-  // 是否显示流量图表
-  const trafficGraph = verge?.traffic_graph ?? true;
 
   // Canvas组件现在直接从全局Hook获取数据，无需手动添加数据点
 

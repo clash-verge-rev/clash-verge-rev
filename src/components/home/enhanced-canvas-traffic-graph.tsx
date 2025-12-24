@@ -147,6 +147,7 @@ export const EnhancedCanvasTrafficGraph = memo(
     });
     const lastDataTimestampRef = useRef<number>(0);
     const resumeCooldownRef = useRef<number>(0);
+    const dataStaleRef = useRef<boolean>(false);
 
     // 当前显示的数据缓存
     const [displayData, dispatchDisplayData] = useReducer(
@@ -197,6 +198,7 @@ export const EnhancedCanvasTrafficGraph = memo(
     useEffect(() => {
       if (displayData.length === 0) {
         lastDataTimestampRef.current = 0;
+        dataStaleRef.current = false;
         fpsControllerRef.current.target = GRAPH_CONFIG.targetFPS;
         fpsControllerRef.current.samples = [];
         fpsControllerRef.current.lastAdjustTime = 0;
@@ -209,6 +211,11 @@ export const EnhancedCanvasTrafficGraph = memo(
         displayData[displayData.length - 1]?.timestamp ?? null;
       if (latestTimestamp) {
         lastDataTimestampRef.current = latestTimestamp;
+        const age = Date.now() - latestTimestamp;
+        const stale = age > STALE_DATA_THRESHOLD;
+        dataStaleRef.current = stale;
+      } else {
+        dataStaleRef.current = false;
       }
     }, [displayData]);
 
@@ -986,7 +993,11 @@ export const EnhancedCanvasTrafficGraph = memo(
 
     // 受控的动画循环
     useEffect(() => {
-      if (!isWindowFocused || displayData.length === 0) {
+      if (
+        !isWindowFocused ||
+        displayData.length === 0 ||
+        dataStaleRef.current
+      ) {
         if (animationFrameRef.current) {
           cancelAnimationFrame(animationFrameRef.current);
           animationFrameRef.current = undefined;
@@ -1002,8 +1013,24 @@ export const EnhancedCanvasTrafficGraph = memo(
           return;
         }
 
+        const lastDataAge =
+          lastDataTimestampRef.current > 0
+            ? Date.now() - lastDataTimestampRef.current
+            : null;
         const targetFPS = fpsControllerRef.current.target;
         const frameBudget = 1000 / targetFPS;
+
+        if (
+          typeof lastDataAge === "number" &&
+          lastDataAge > STALE_DATA_THRESHOLD
+        ) {
+          if (animationFrameRef.current) {
+            cancelAnimationFrame(animationFrameRef.current);
+            animationFrameRef.current = undefined;
+          }
+          dataStaleRef.current = true;
+          return;
+        }
 
         if (
           currentTime - lastRenderTimeRef.current >= frameBudget ||

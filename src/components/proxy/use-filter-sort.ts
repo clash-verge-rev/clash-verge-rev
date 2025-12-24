@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useReducer } from "react";
+import { useEffect, useMemo, useReducer, useRef } from "react";
 
 import { useVerge } from "@/hooks/use-verge";
 import delayManager from "@/services/delay";
@@ -22,6 +22,10 @@ export default function useFilterSort(
 ) {
   const { verge } = useVerge();
   const [_, bumpRefresh] = useReducer((count: number) => count + 1, 0);
+  const lastInputRef = useRef<{ text: string; sort: ProxySortType } | null>(
+    null,
+  );
+  const debounceTimer = useRef<number | null>(null);
 
   useEffect(() => {
     let last = 0;
@@ -40,7 +44,7 @@ export default function useFilterSort(
     };
   }, [groupName]);
 
-  return useMemo(() => {
+  const compute = useMemo(() => {
     const fp = filterProxies(proxies, groupName, filterText, searchState);
     const sp = sortProxies(
       fp,
@@ -57,6 +61,39 @@ export default function useFilterSort(
     searchState,
     verge?.default_latency_timeout,
   ]);
+
+  const [result, setResult] = useReducer(
+    (_prev: IProxyItem[], next: IProxyItem[]) => next,
+    compute,
+  );
+
+  useEffect(() => {
+    if (debounceTimer.current !== null) {
+      window.clearTimeout(debounceTimer.current);
+      debounceTimer.current = null;
+    }
+
+    const prev = lastInputRef.current;
+    const stableInputs =
+      prev && prev.text === filterText && prev.sort === sortType;
+
+    lastInputRef.current = { text: filterText, sort: sortType };
+
+    const delay = stableInputs ? 0 : 150;
+    debounceTimer.current = window.setTimeout(() => {
+      setResult(compute);
+      debounceTimer.current = null;
+    }, delay);
+
+    return () => {
+      if (debounceTimer.current !== null) {
+        window.clearTimeout(debounceTimer.current);
+        debounceTimer.current = null;
+      }
+    };
+  }, [compute, filterText, sortType]);
+
+  return result;
 }
 
 export function filterSort(

@@ -343,8 +343,10 @@ const EMPTY_STATS: ISamplerStats = {
  */
 export const useTrafficMonitorEnhanced = (options?: {
   subscribe?: boolean;
+  enabled?: boolean;
 }) => {
   const subscribeToSnapshots = options?.subscribe ?? true;
+  const enabled = options?.enabled ?? true;
   const [latestSnapshot, setLatestSnapshot] = useState<{
     availableDataPoints: ITrafficDataPoint[];
     samplerStats: ISamplerStats;
@@ -365,6 +367,8 @@ export const useTrafficMonitorEnhanced = (options?: {
 
   // 注册引用计数与Worker生命周期
   useEffect(() => {
+    if (!enabled) return;
+
     const client = getWorkerClient();
     clientRef.current = client;
 
@@ -396,43 +400,53 @@ export const useTrafficMonitorEnhanced = (options?: {
         client.stop();
       }
     };
-  }, [subscribeToSnapshots]);
+  }, [enabled, subscribeToSnapshots]);
 
   // Periodically refresh "now" so idle streams age out of the selected window when subscribed
   useEffect(() => {
-    if (!subscribeToSnapshots) return;
+    if (!enabled || !subscribeToSnapshots) return;
 
     const timer = window.setInterval(() => {
       setNow(Date.now());
     }, 1000);
 
     return () => window.clearInterval(timer);
-  }, [subscribeToSnapshots]);
+  }, [enabled, subscribeToSnapshots]);
 
   // 添加流量数据
-  const appendData = useCallback((traffic: Traffic) => {
-    clientRef.current?.appendData(traffic);
-  }, []);
+  const appendData = useCallback(
+    (traffic: Traffic) => {
+      if (!enabled) return;
+      clientRef.current?.appendData(traffic);
+    },
+    [enabled],
+  );
 
   // 请求不同时间范围的数据
-  const requestRange = useCallback((minutes: number) => {
-    currentRangeRef.current = minutes;
-    setRangeMinutes(minutes);
-    clientRef.current?.setRange(minutes);
-  }, []);
+  const requestRange = useCallback(
+    (minutes: number) => {
+      if (!enabled) return;
+      currentRangeRef.current = minutes;
+      setRangeMinutes(minutes);
+      clientRef.current?.setRange(minutes);
+    },
+    [enabled],
+  );
 
   // 清空数据
   const clearData = useCallback(() => {
+    if (!enabled) return;
     clientRef.current?.clearData();
-  }, []);
+  }, [enabled]);
 
   const filteredDataPoints = useMemo(() => {
+    if (!enabled) return [];
     const sourceData = latestSnapshot.availableDataPoints;
     if (sourceData.length === 0) return [];
 
     const cutoff = now - rangeMinutes * 60 * 1000;
     return sourceData.filter((point) => point.timestamp > cutoff);
-  }, [latestSnapshot.availableDataPoints, rangeMinutes, now]);
+  }, [enabled, latestSnapshot.availableDataPoints, rangeMinutes, now]);
 
   return {
     graphData: {

@@ -23,5 +23,6 @@
 <summary><strong> 🚀 优化改进 </strong></summary>
 
 - 应用内更新日志支持解析并渲染 HTML 标签
+- 性能优化前后端在渲染流量图时的资源
 
 </details>

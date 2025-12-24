@@ -6,6 +6,7 @@ type SharedPollerEntry = {
   timer: number | null;
   interval: number;
   callback: (() => void) | null;
+  lastFired: number;
   refreshWhenHidden: boolean;
   refreshWhenOffline: boolean;
 };
@@ -32,6 +33,12 @@ const ensureTimer = (key: string, entry: SharedPollerEntry) => {
   entry.timer = window.setInterval(() => {
     if (!entry.refreshWhenHidden && isDocumentHidden()) return;
     if (!entry.refreshWhenOffline && isOffline()) return;
+    const now = Date.now();
+    if (entry.lastFired && now - entry.lastFired < entry.interval / 2) {
+      // Skip duplicate fire within half interval to coalesce concurrent consumers
+      return;
+    }
+    entry.lastFired = now;
     entry.callback?.();
   }, entry.interval);
 };
@@ -50,6 +57,7 @@ const registerSharedPoller = (
       timer: null,
       interval,
       callback,
+      lastFired: 0,
       refreshWhenHidden: options.refreshWhenHidden,
       refreshWhenOffline: options.refreshWhenOffline,
     };

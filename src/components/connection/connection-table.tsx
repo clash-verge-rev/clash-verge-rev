@@ -3,13 +3,13 @@ import { Box, IconButton, Tooltip } from "@mui/material";
 import {
   ColumnDef,
   ColumnSizingState,
-  SortingState,
-  VisibilityState,
   flexRender,
   getCoreRowModel,
   getSortedRowModel,
+  SortingState,
   Updater,
   useReactTable,
+  VisibilityState,
 } from "@tanstack/react-table";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import dayjs from "dayjs";
@@ -42,6 +42,50 @@ const reconcileColumnOrder = (
   const missing = baseFields.filter((field) => !filtered.includes(field));
   return [...filtered, ...missing];
 };
+
+const createConnectionRow = (each: IConnectionsItem) => {
+  const { metadata, rulePayload } = each;
+  const chains = [...each.chains].reverse().join(" / ");
+  const rule = rulePayload ? `${each.rule}(${rulePayload})` : each.rule;
+  const destination = metadata.destinationIP
+    ? `${metadata.destinationIP}:${metadata.destinationPort}`
+    : `${metadata.remoteDestination}:${metadata.destinationPort}`;
+
+  return {
+    id: each.id,
+    host: metadata.host
+      ? `${metadata.host}:${metadata.destinationPort}`
+      : `${metadata.remoteDestination}:${metadata.destinationPort}`,
+    download: each.download,
+    upload: each.upload,
+    dlSpeed: each.curDownload,
+    ulSpeed: each.curUpload,
+    chains,
+    rule,
+    process: truncateStr(metadata.process || metadata.processPath),
+    time: each.start,
+    source: `${metadata.sourceIP}:${metadata.sourcePort}`,
+    remoteDestination: destination,
+    type: `${metadata.type}(${metadata.network})`,
+    connectionData: each,
+  };
+};
+
+type ConnectionRow = ReturnType<typeof createConnectionRow>;
+
+const areRowsEqual = (a: ConnectionRow, b: ConnectionRow) =>
+  a.host === b.host &&
+  a.download === b.download &&
+  a.upload === b.upload &&
+  a.dlSpeed === b.dlSpeed &&
+  a.ulSpeed === b.ulSpeed &&
+  a.chains === b.chains &&
+  a.rule === b.rule &&
+  a.process === b.process &&
+  a.time === b.time &&
+  a.source === b.source &&
+  a.remoteDestination === b.remoteDestination &&
+  a.type === b.type;
 
 interface Props {
   connections: IConnectionsItem[];
@@ -104,35 +148,6 @@ export const ConnectionTable = (props: Props) => {
       },
     },
   );
-
-  const createConnectionRow = (each: IConnectionsItem) => {
-    const { metadata, rulePayload } = each;
-    const chains = [...each.chains].reverse().join(" / ");
-    const rule = rulePayload ? `${each.rule}(${rulePayload})` : each.rule;
-    const Destination = metadata.destinationIP
-      ? `${metadata.destinationIP}:${metadata.destinationPort}`
-      : `${metadata.remoteDestination}:${metadata.destinationPort}`;
-    return {
-      id: each.id,
-      host: metadata.host
-        ? `${metadata.host}:${metadata.destinationPort}`
-        : `${metadata.remoteDestination}:${metadata.destinationPort}`,
-      download: each.download,
-      upload: each.upload,
-      dlSpeed: each.curDownload,
-      ulSpeed: each.curUpload,
-      chains,
-      rule,
-      process: truncateStr(metadata.process || metadata.processPath),
-      time: each.start,
-      source: `${metadata.sourceIP}:${metadata.sourcePort}`,
-      remoteDestination: Destination,
-      type: `${metadata.type}(${metadata.network})`,
-      connectionData: each,
-    };
-  };
-
-  type ConnectionRow = ReturnType<typeof createConnectionRow>;
 
   type ColumnField = Exclude<keyof ConnectionRow, "connectionData">;
 
@@ -209,7 +224,7 @@ export const ConnectionTable = (props: Props) => {
         width: 100,
         minWidth: 80,
         align: "right",
-        cell: (row) => dayjs(row.time).fromNow(),
+        // cell filled later with shared relativeNow ticker
       },
       {
         field: "source",
@@ -366,30 +381,68 @@ export const ConnectionTable = (props: Props) => {
     }));
   }, [columns, columnVisibilityModel]);
 
-  const connRows = useMemo<ConnectionRow[]>(
-    () => connections.map((each) => createConnectionRow(each)),
-    [connections],
-  );
+  const prevRowsRef = useRef<Map<string, ConnectionRow>>(new Map());
 
-  const columnDefs = useMemo<ColumnDef<ConnectionRow>[]>(() => {
-    return columns.map((column) => ({
-      id: column.field,
-      accessorKey: column.field,
-      header: column.headerName,
-      size: column.width,
-      minSize: column.minWidth ?? 80,
-      enableResizing: true,
-      meta: {
-        align: column.align ?? "left",
-        field: column.field,
-      },
-      cell: column.cell
-        ? ({ row }) => column.cell?.(row.original)
-        : (info) => info.getValue(),
-    }));
-  }, [columns]);
+  const connRows = useMemo<ConnectionRow[]>(() => {
+    const prevMap = prevRowsRef.current;
+    const nextMap = new Map<string, ConnectionRow>();
+
+    const nextRows = connections.map((each) => {
+      const nextRow = createConnectionRow(each);
+      const prevRow = prevMap.get(each.id);
+
+      if (prevRow && areRowsEqual(prevRow, nextRow)) {
+        nextMap.set(each.id, prevRow);
+        return prevRow;
+      }
+
+      nextMap.set(each.id, nextRow);
+      return nextRow;
+    });
+
+    prevRowsRef.current = nextMap;
+    return nextRows;
+  }, [connections]);
 
   const [sorting, setSorting] = useState<SortingState>([]);
+  const [relativeNow, setRelativeNow] = useState(() => Date.now());
+
+  const columnDefs = useMemo<ColumnDef<ConnectionRow>[]>(() => {
+    return columns.map((column) => {
+      const baseCell: ColumnDef<ConnectionRow>["cell"] = column.cell
+        ? (ctx) => column.cell?.(ctx.row.original)
+        : (ctx) => ctx.getValue() as ReactNode;
+
+      const cell: ColumnDef<ConnectionRow>["cell"] =
+        column.field === "time"
+          ? (ctx) => dayjs(ctx.row.original.time).from(relativeNow)
+          : baseCell;
+
+      return {
+        id: column.field,
+        accessorKey: column.field,
+        header: column.headerName,
+        size: column.width,
+        minSize: column.minWidth ?? 80,
+        enableResizing: true,
+        meta: {
+          align: column.align ?? "left",
+          field: column.field,
+        },
+        cell,
+      } satisfies ColumnDef<ConnectionRow>;
+    });
+  }, [columns, relativeNow]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+
+    const timer = window.setInterval(() => {
+      setRelativeNow(Date.now());
+    }, 5000);
+
+    return () => window.clearInterval(timer);
+  }, []);
 
   const handleColumnSizingChange = useCallback(
     (updater: Updater<ColumnSizingState>) => {
@@ -411,7 +464,6 @@ export const ConnectionTable = (props: Props) => {
 
   const table = useReactTable({
     data: connRows,
-    columns: columnDefs,
     state: {
       columnVisibility: columnVisibilityState,
       columnSizing: columnWidths,
@@ -420,10 +472,11 @@ export const ConnectionTable = (props: Props) => {
     columnResizeMode: "onChange",
     enableSortingRemoval: true,
     getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
+    getSortedRowModel: sorting.length ? getSortedRowModel() : undefined,
     onSortingChange: setSorting,
     onColumnSizingChange: handleColumnSizingChange,
     onColumnVisibilityChange: handleColumnVisibilityChange,
+    columns: columnDefs,
   });
 
   const rows = table.getRowModel().rows;
@@ -432,7 +485,7 @@ export const ConnectionTable = (props: Props) => {
     count: rows.length,
     getScrollElement: () => tableContainerRef.current,
     estimateSize: () => ROW_HEIGHT,
-    overscan: 8,
+    overscan: 4,
   });
 
   const virtualRows = rowVirtualizer.getVirtualItems();
