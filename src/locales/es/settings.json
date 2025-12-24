@@ -15,7 +15,6 @@
         "systemProxy": "Proxy del sistema"
       },
       "tooltips": {
-        "autoLaunchAdmin": "El modo de administrador puede no admitir el inicio automático.",
         "silentStart": "El programa se ejecutará en segundo plano al iniciarse y no mostrará el panel."
       },
       "fields": {

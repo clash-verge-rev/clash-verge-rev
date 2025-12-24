@@ -15,7 +15,6 @@
         "systemProxy": "Sistem Vekil'i"
       },
       "tooltips": {
-        "autoLaunchAdmin": "Yönetici modu otomatik başlatmayı desteklemeyebilir",
         "silentStart": "Programı paneli görüntülemeden arka plan modunda başlatır"
       },
       "fields": {

@@ -15,7 +15,6 @@
         "systemProxy": "System Proxy"
       },
       "tooltips": {
-        "autoLaunchAdmin": "Administrator mode may not support auto launch",
         "silentStart": "Start the program in background mode without displaying the panel"
       },
       "fields": {

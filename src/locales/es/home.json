@@ -62,9 +62,6 @@
       "actions": {
         "settings": "Ajustes"
       },
-      "tooltips": {
-        "autoLaunchAdmin": "El modo de administrador puede no admitir el inicio automático."
-      },
       "badges": {
         "adminMode": "Modo de administrador",
         "serviceMode": "Modo de servicio",

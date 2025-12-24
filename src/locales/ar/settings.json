@@ -15,7 +15,6 @@
         "systemProxy": "وكيل النظام"
       },
       "tooltips": {
-        "autoLaunchAdmin": "Administrator mode may not support auto launch",
         "silentStart": "بدء البرنامج في الخلفية دون عرض الواجهة"
       },
       "fields": {

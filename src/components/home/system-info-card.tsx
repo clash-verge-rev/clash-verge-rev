@@ -1,19 +1,11 @@
 import {
   InfoOutlined,
   SettingsOutlined,
-  WarningOutlined,
   AdminPanelSettingsOutlined,
   DnsOutlined,
   ExtensionOutlined,
 } from "@mui/icons-material";
-import {
-  Typography,
-  Stack,
-  Divider,
-  Chip,
-  IconButton,
-  Tooltip,
-} from "@mui/material";
+import { Typography, Stack, Divider, Chip, IconButton } from "@mui/material";
 import { useLockFn } from "ahooks";
 import { useCallback, useEffect, useMemo, useReducer } from "react";
 import { useTranslation } from "react-i18next";
@@ -303,13 +295,6 @@ export const SystemInfoCard = () => {
             {t("home.components.systemInfo.fields.autoLaunch")}
           </Typography>
           <Stack direction="row" spacing={1} alignItems="center">
-            {isAdminMode && (
-              <Tooltip
-                title={t("home.components.systemInfo.tooltips.autoLaunchAdmin")}
-              >
-                <WarningOutlined sx={{ color: "warning.main", fontSize: 20 }} />
-              </Tooltip>
-            )}
             <Chip
               size="small"
               label={

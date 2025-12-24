@@ -62,9 +62,6 @@
       "actions": {
         "settings": "Pengaturan"
       },
-      "tooltips": {
-        "autoLaunchAdmin": "Administrator mode may not support auto launch"
-      },
       "badges": {
         "adminMode": "Administrator Mode",
         "serviceMode": "Mode Layanan",

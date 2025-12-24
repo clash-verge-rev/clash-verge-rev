@@ -1,5 +1,3 @@
-import { WarningRounded } from "@mui/icons-material";
-import { Tooltip } from "@mui/material";
 import React, { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { mutate } from "swr";
@@ -7,9 +5,7 @@ import { mutate } from "swr";
 import { DialogRef, Switch } from "@/components/base";
 import { TooltipIcon } from "@/components/base/base-tooltip-icon";
 import ProxyControlSwitches from "@/components/shared/proxy-control-switches";
-import { useSystemState } from "@/hooks/use-system-state";
 import { useVerge } from "@/hooks/use-verge";
-import { showNotice } from "@/services/notice-service";
 
 import { GuardState } from "./mods/guard-state";
 import { SettingList, SettingItem } from "./mods/setting-comp";
@@ -24,8 +20,6 @@ const SettingSystem = ({ onError }: Props) => {
   const { t } = useTranslation();
 
   const { verge, mutateVerge, patchVerge } = useVerge();
-
-  const { isAdminMode } = useSystemState();
 
   const { enable_auto_launch, enable_silent_start } = verge ?? {};
 
@@ -55,34 +49,16 @@ const SettingSystem = ({ onError }: Props) => {
         onError={onError}
       />
 
-      <SettingItem
-        label={t("settings.sections.system.fields.autoLaunch")}
-        extra={
-          isAdminMode && (
-            <Tooltip
-              title={t("settings.sections.system.tooltips.autoLaunchAdmin")}
-            >
-              <WarningRounded sx={{ color: "warning.main", mr: 1 }} />
-            </Tooltip>
-          )
-        }
-      >
+      <SettingItem label={t("settings.sections.system.fields.autoLaunch")}>
         <GuardState
           value={enable_auto_launch ?? false}
           valueProps="checked"
           onCatch={onError}
           onFormat={onSwitchFormat}
           onChange={(e) => {
-            // 移除管理员模式检查提示
             onChangeData({ enable_auto_launch: e });
           }}
           onGuard={async (e) => {
-            if (isAdminMode) {
-              showNotice.info(
-                "settings.sections.system.tooltips.autoLaunchAdmin",
-              );
-            }
-
             try {
               // 先触发UI更新立即看到反馈
               onChangeData({ enable_auto_launch: e });

@@ -62,9 +62,6 @@
       "actions": {
         "settings": "Einstellungen"
       },
-      "tooltips": {
-        "autoLaunchAdmin": "Der Administrator-Modus unterstützt möglicherweise keine automatische Startfunktion."
-      },
       "badges": {
         "adminMode": "Administrator-Modus",
         "serviceMode": "Service-Modus",
