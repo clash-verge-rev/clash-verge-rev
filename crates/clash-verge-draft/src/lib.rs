@@ -1,7 +1,7 @@
 use parking_lot::RwLock;
 use std::sync::Arc;
 
-pub type SharedBox<T> = Arc<Box<T>>;
+pub type SharedBox<T> = Arc<T>;
 type DraftInner<T> = (SharedBox<T>, Option<SharedBox<T>>);
 
 /// Draft 管理：committed 与 optional draft 都以 Arc<Box<T>> 存储，
@@ -15,7 +15,7 @@ impl<T: Clone> Draft<T> {
     #[inline]
     pub fn new(data: T) -> Self {
         Self {
-            inner: Arc::new(RwLock::new((Arc::new(Box::new(data)), None))),
+            inner: Arc::new(RwLock::new((Arc::new(data), None))),
         }
     }
     /// 以 Arc<Box<T>> 的形式获取当前“已提交（正式）”数据的快照（零拷贝，仅 clone Arc）
@@ -41,21 +41,11 @@ impl<T: Clone> Draft<T> {
     where
         F: FnOnce(&mut T) -> R,
     {
-        // 先获得写锁以创建或取出草稿 Arc 的可变引用位置
         let mut guard = self.inner.write();
-        let mut draft_arc = if guard.1.is_none() {
-            Arc::clone(&guard.0)
-        } else {
-            #[allow(clippy::unwrap_used)]
-            guard.1.take().unwrap()
-        };
-        drop(guard);
-        // Arc::make_mut: 如果只有一个引用则返回可变引用；否则会克隆底层 Box<T>（要求 T: Clone）
-        let boxed = Arc::make_mut(&mut draft_arc); // &mut Box<T>
-        // 对 Box<T> 解引用得到 &mut T
-        let result = f(&mut **boxed);
-        // 恢复修改后的草稿 Arc
-        self.inner.write().1 = Some(draft_arc);
+        let mut draft_arc = guard.1.take().unwrap_or_else(|| Arc::clone(&guard.0));
+        let data_mut = Arc::make_mut(&mut draft_arc);
+        let result = f(data_mut);
+        guard.1 = Some(draft_arc);
         result
     }
 
@@ -80,22 +70,17 @@ impl<T: Clone> Draft<T> {
     #[inline]
     pub async fn with_data_modify<F, Fut, R>(&self, f: F) -> Result<R, anyhow::Error>
     where
-        T: Send + Sync + 'static,
+        T: Send + Sync + 'static, // 因为涉及异步跨线程，T 需要满足这些约束
         F: FnOnce(Box<T>) -> Fut + Send,
         Fut: std::future::Future<Output = Result<(Box<T>, R), anyhow::Error>> + Send,
     {
-        // 读取已提交快照（cheap Arc clone, 然后得到 Box<T> 所有权 via clone）
-        // 注意：为了让闭包接收 Box<T> 所有权，我们需要 clone 底层 T（不可避免）
         let local: Box<T> = {
             let guard = self.inner.read();
-            // 将 Arc<Box<T>> 的 Box<T> clone 出来（会调用 T: Clone）
-            (*guard.0).clone()
+            Box::new((*guard.0).clone())
         };
-
         let (new_local, res) = f(local).await?;
-
-        // 将新的 Box<T> 放到已提交位置（包进 Arc）
-        self.inner.write().0 = Arc::new(new_local);
+        let mut guard = self.inner.write();
+        guard.0 = Arc::from(new_local);
 
         Ok(res)
     }
