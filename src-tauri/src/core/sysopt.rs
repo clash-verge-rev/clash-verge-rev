@@ -1,12 +1,14 @@
 #[cfg(target_os = "windows")]
-use crate::utils::autostart as startup_shortcut;
+use crate::utils::schtasks as startup_task;
 use crate::{
     config::{Config, IVerge},
     core::handle::Handle,
     singleton,
 };
 use anyhow::Result;
-use clash_verge_logging::{Type, logging, logging_error};
+#[cfg(not(target_os = "windows"))]
+use clash_verge_logging::logging_error;
+use clash_verge_logging::{Type, logging};
 use parking_lot::RwLock;
 use scopeguard::defer;
 use smartstring::alias::String;
@@ -18,7 +20,10 @@ use std::{
     time::Duration,
 };
 use sysproxy::{Autoproxy, GuardMonitor, GuardType, Sysproxy};
+#[cfg(not(target_os = "windows"))]
 use tauri_plugin_autostart::ManagerExt as _;
+#[cfg(target_os = "windows")]
+use tauri_plugin_clash_verge_sysinfo::is_current_app_handle_admin;
 
 pub struct Sysopt {
     update_sysproxy: AtomicBool,
@@ -230,35 +235,21 @@ impl Sysopt {
         let is_enable = enable_auto_launch.unwrap_or(false);
         logging!(info, Type::System, "Setting auto-launch state to: {:?}", is_enable);
 
-        // 首先尝试使用快捷方式方法
         #[cfg(target_os = "windows")]
         {
-            if is_enable {
-                if let Err(e) = startup_shortcut::create_shortcut().await {
-                    logging!(error, Type::Setup, "创建启动快捷方式失败: {e}");
-                    // 如果快捷方式创建失败，回退到原来的方法
-                    self.try_original_autostart_method(is_enable);
-                } else {
-                    return Ok(());
-                }
-            } else if let Err(e) = startup_shortcut::remove_shortcut().await {
-                logging!(error, Type::Setup, "删除启动快捷方式失败: {e}");
-                self.try_original_autostart_method(is_enable);
-            } else {
-                return Ok(());
-            }
+            let is_admin = is_current_app_handle_admin(Handle::app_handle());
+            startup_task::set_auto_launch(is_enable, is_admin).await
         }
 
         #[cfg(not(target_os = "windows"))]
         {
-            // 非Windows平台使用原来的方法
             self.try_original_autostart_method(is_enable);
+            Ok(())
         }
-
-        Ok(())
     }
 
     /// 尝试使用原来的自启动方法
+    #[cfg(not(target_os = "windows"))]
     fn try_original_autostart_method(&self, is_enable: bool) {
         let app_handle = Handle::app_handle();
         let autostart_manager = app_handle.autolaunch();
@@ -272,32 +263,28 @@ impl Sysopt {
 
     /// 获取当前自启动的实际状态
     pub fn get_launch_status(&self) -> Result<bool> {
-        // 首先尝试检查快捷方式是否存在
         #[cfg(target_os = "windows")]
         {
-            match startup_shortcut::is_shortcut_enabled() {
-                Ok(enabled) => {
-                    logging!(info, Type::System, "快捷方式自启动状态: {enabled}");
-                    return Ok(enabled);
-                }
-                Err(e) => {
-                    logging!(error, Type::System, "检查快捷方式失败，尝试原来的方法: {e}");
-                }
+            let enabled = startup_task::is_auto_launch_enabled();
+            if let Ok(status) = enabled {
+                logging!(info, Type::System, "Auto launch status (scheduled task): {status}");
             }
+            enabled
         }
 
-        // 回退到原来的方法
-        let app_handle = Handle::app_handle();
-        let autostart_manager = app_handle.autolaunch();
-
-        match autostart_manager.is_enabled() {
-            Ok(status) => {
-                logging!(info, Type::System, "Auto launch status: {status}");
-                Ok(status)
-            }
-            Err(e) => {
-                logging!(error, Type::System, "Failed to get auto launch status: {e}");
-                Err(anyhow::anyhow!("Failed to get auto launch status: {}", e))
+        #[cfg(not(target_os = "windows"))]
+        {
+            let app_handle = Handle::app_handle();
+            let autostart_manager = app_handle.autolaunch();
+            match autostart_manager.is_enabled() {
+                Ok(status) => {
+                    logging!(info, Type::System, "Auto launch status: {status}");
+                    Ok(status)
+                }
+                Err(e) => {
+                    logging!(error, Type::System, "Failed to get auto launch status: {e}");
+                    Err(anyhow::anyhow!("Failed to get auto launch status: {}", e))
+                }
             }
         }
     }
