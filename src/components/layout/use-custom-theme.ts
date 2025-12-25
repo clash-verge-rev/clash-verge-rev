@@ -1,4 +1,6 @@
 import { alpha, createTheme, Theme as MuiTheme, Shadows } from "@mui/material";
+import { isTauri as isTauriApp } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 import {
   getCurrentWebviewWindow,
   WebviewWindow,
@@ -9,6 +11,7 @@ import { useEffect, useMemo } from "react";
 import { useVerge } from "@/hooks/use-verge";
 import { defaultDarkTheme, defaultTheme } from "@/pages/_theme";
 import { useSetThemeMode, useThemeMode } from "@/services/states";
+import getSystem from "@/utils/get-system";
 
 const CSS_INJECTION_SCOPE_ROOT = "[data-css-injection-root]";
 const CSS_INJECTION_SCOPE_LIMIT =
@@ -26,6 +29,7 @@ const TOP_LEVEL_AT_RULES = [
   "@color-profile",
 ];
 let cssScopeSupport: boolean | null = null;
+const OS = getSystem();
 
 const canUseCssScope = () => {
   if (cssScopeSupport !== null) {
@@ -76,6 +80,8 @@ export const useCustomTheme = () => {
   const setMode = useSetThemeMode();
   const userBackgroundImage = theme_setting?.background_image || "";
   const hasUserBackground = !!userBackgroundImage;
+  const isTauri = typeof window !== "undefined" && isTauriApp();
+  const isWindows = OS === "windows";
 
   useEffect(() => {
     if (theme_mode === "light" || theme_mode === "dark") {
@@ -84,17 +90,7 @@ export const useCustomTheme = () => {
   }, [theme_mode, setMode]);
 
   useEffect(() => {
-    if (theme_mode !== "system") {
-      return;
-    }
-
-    const preferBrowserMatchMedia =
-      typeof window !== "undefined" &&
-      typeof window.matchMedia === "function" &&
-      // Skip Tauri flow when running purely in browser.
-      !("__TAURI__" in window);
-
-    if (preferBrowserMatchMedia) {
+    if (theme_mode !== "system" || !isTauri || isWindows) {
       return;
     }
 
@@ -133,7 +129,40 @@ export const useCustomTheme = () => {
           console.error("Failed to unlisten from theme changes:", err);
         });
     };
-  }, [theme_mode, appWindow, setMode]);
+  }, [theme_mode, appWindow, setMode, isTauri, isWindows]);
+
+  // Windows-only: Tauri's theme API is unreliable.
+  // Theme changes are detected in Rust and propagated via a custom event.
+  useEffect(() => {
+    if (theme_mode !== "system" || !isTauri || !isWindows) {
+      return;
+    }
+
+    let isMounted = true;
+    let unlisten: (() => void) | null = null;
+
+    listen<string>("verge://app-theme-changed", (event) => {
+      if (!isMounted) return;
+      if (event.payload === "dark" || event.payload === "light") {
+        setMode(event.payload);
+      }
+    })
+      .then((unlistenFn) => {
+        if (typeof unlistenFn === "function") {
+          unlisten = unlistenFn;
+        }
+      })
+      .catch((err) => {
+        console.error("Failed to listen to app theme changes:", err);
+      });
+
+    return () => {
+      isMounted = false;
+      if (typeof unlisten === "function") {
+        unlisten();
+      }
+    };
+  }, [theme_mode, setMode, isTauri, isWindows]);
 
   useEffect(() => {
     if (theme_mode !== "system") {
@@ -144,6 +173,10 @@ export const useCustomTheme = () => {
       typeof window === "undefined" ||
       typeof window.matchMedia !== "function"
     ) {
+      return;
+    }
+
+    if (isTauri && isWindows) {
       return;
     }
 
@@ -190,7 +223,7 @@ export const useCustomTheme = () => {
       ).removeListener;
       legacyRemoveListener?.call(legacyQuery, handleChange);
     };
-  }, [theme_mode, setMode]);
+  }, [theme_mode, setMode, isTauri, isWindows]);
 
   useEffect(() => {
     if (theme_mode === undefined) {
@@ -198,18 +231,16 @@ export const useCustomTheme = () => {
     }
 
     if (theme_mode === "system") {
-      appWindow.setTheme(null).catch((err) => {
-        console.error(
-          "Failed to set window theme to follow system (setTheme(null)):",
-          err,
-        );
+      const preferredTheme = isWindows ? (mode as TauriOsTheme) : null;
+      appWindow.setTheme(preferredTheme).catch((err) => {
+        console.error("Failed to set window theme for system mode:", err);
       });
     } else if (mode) {
       appWindow.setTheme(mode as TauriOsTheme).catch((err) => {
         console.error(`Failed to set window theme to ${mode}:`, err);
       });
     }
-  }, [mode, appWindow, theme_mode]);
+  }, [mode, appWindow, theme_mode, isWindows]);
 
   const theme = useMemo(() => {
     const setting = theme_setting || {};
