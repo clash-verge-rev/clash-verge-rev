@@ -772,8 +772,8 @@ async fn create_tray_menu(
     let verge_settings = Config::verge().await.latest_arc();
     let tray_proxy_groups_display_mode = verge_settings
         .tray_proxy_groups_display_mode
-        .clone()
-        .unwrap_or_else(|| "default".into());
+        .as_deref()
+        .unwrap_or("default");
     let show_proxy_groups = tray_proxy_groups_display_mode != "disable";
     let show_proxy_groups_inline = tray_proxy_groups_display_mode == "inline";
     let show_outbound_modes_inline = verge_settings.tray_inline_outbound_modes.unwrap_or(false);
@@ -960,27 +960,27 @@ async fn create_tray_menu(
     // 动态构建菜单项
     let mut menu_items: Vec<&dyn IsMenuItem<Wry>> = vec![open_window, separator];
 
-    if show_proxy_groups {
-        if show_outbound_modes_inline {
-            menu_items.extend_from_slice(&[
-                rule_mode as &dyn IsMenuItem<Wry>,
-                global_mode as &dyn IsMenuItem<Wry>,
-                direct_mode as &dyn IsMenuItem<Wry>,
-            ]);
-        } else if let Some(ref outbound_modes) = outbound_modes {
-            menu_items.push(outbound_modes);
-        }
+    if show_outbound_modes_inline {
+        menu_items.extend_from_slice(&[
+            rule_mode as &dyn IsMenuItem<Wry>,
+            global_mode as &dyn IsMenuItem<Wry>,
+            direct_mode as &dyn IsMenuItem<Wry>,
+        ]);
+    } else if let Some(ref outbound_modes) = outbound_modes {
+        menu_items.push(outbound_modes);
     }
 
     menu_items.extend_from_slice(&[separator, profiles]);
 
     // 如果有代理节点，添加代理节点菜单
-    if show_proxy_groups_inline {
-        if !inline_proxy_items.is_empty() {
-            menu_items.extend(inline_proxy_items.iter().map(|item| item.as_ref()));
+    if show_proxy_groups {
+        if show_proxy_groups_inline {
+            if !inline_proxy_items.is_empty() {
+                menu_items.extend(inline_proxy_items.iter().map(|item| item.as_ref()));
+            }
+        } else if let Some(ref proxies_menu) = proxies_menu {
+            menu_items.push(proxies_menu);
         }
-    } else if let Some(ref proxies_menu) = proxies_menu {
-        menu_items.push(proxies_menu);
     }
 
     menu_items.extend_from_slice(&[
