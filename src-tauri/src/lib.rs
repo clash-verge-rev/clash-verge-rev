@@ -229,6 +229,9 @@ pub fn run() {
         return;
     }
 
+    #[cfg(target_os = "linux")]
+    utils::workarounds::apply_nvidia_dmabuf_renderer_workaround();
+
     let _ = utils::dirs::init_portable_flag();
 
     let builder = app_init::setup_plugins(tauri::Builder::default())

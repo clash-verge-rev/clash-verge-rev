@@ -13,3 +13,5 @@ pub mod server;
 pub mod singleton;
 pub mod tmpl;
 pub mod window_manager;
+#[cfg(target_os = "linux")]
+pub mod workarounds;
