@@ -154,9 +154,6 @@ pub async fn init_work_config() {
 }
 
 pub(super) async fn init_tray() {
-    if std::env::var("CLASH_VERGE_DISABLE_TRAY").unwrap_or_default() == "1" {
-        return;
-    }
     logging_error!(Type::Setup, Tray::global().init().await);
 }
 
