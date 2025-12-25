@@ -493,7 +493,7 @@ pub fn init_scheme() -> Result<()> {
         }
     }
 
-    crate::utils::linux::ensure_mimeapps_entries(DESKTOP_FILE, DEEP_LINK_SCHEMES)?;
+    crate::utils::mime::ensure_mimeapps_entries(DESKTOP_FILE, DEEP_LINK_SCHEMES)?;
     Ok(())
 }
 #[cfg(target_os = "macos")]

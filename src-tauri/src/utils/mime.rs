@@ -1,3 +1,11 @@
+//! Utilities for working with freedesktop MIME / mimeapps.list.
+//!
+//! NOTE:
+//! `mimeapps.list` is not a strict INI file.
+//! We intentionally perform line-based, round-trip edits instead of using
+//! an INI parser to preserve comments, ordering, duplicate keys and desktop
+//! environment quirks.
+
 use anyhow::Result;
 use std::collections::HashMap;
 use std::env;
