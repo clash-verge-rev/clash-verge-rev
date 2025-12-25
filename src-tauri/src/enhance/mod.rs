@@ -106,7 +106,7 @@ async fn get_config_values() -> ConfigValues {
         ref verge_http_enabled,
         ref enable_dns_settings,
         ..
-    } = **verge_arc;
+    } = *verge_arc;
 
     let (clash_core, enable_tun, enable_builtin, socks_enabled, http_enabled, enable_dns_settings) = (
         Some(verge_arc.get_valid_clash_core()),

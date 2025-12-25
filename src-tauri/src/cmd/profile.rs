@@ -16,7 +16,7 @@ use crate::{
     ret_err,
     utils::{dirs, help},
 };
-use clash_verge_draft::SharedBox;
+use clash_verge_draft::SharedDraft;
 use clash_verge_logging::{Type, logging};
 use scopeguard::defer;
 use smartstring::alias::String;
@@ -26,7 +26,7 @@ use std::time::Duration;
 static CURRENT_SWITCHING_PROFILE: AtomicBool = AtomicBool::new(false);
 
 #[tauri::command]
-pub async fn get_profiles() -> CmdResult<SharedBox<IProfiles>> {
+pub async fn get_profiles() -> CmdResult<SharedDraft<IProfiles>> {
     logging!(debug, Type::Cmd, "获取配置文件列表");
     let draft = Config::profiles().await;
     let data = draft.data_arc();
