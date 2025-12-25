@@ -101,6 +101,17 @@ pub fn embed_server() {
 
     let commands = visible.or(scheme).or(pac);
 
+    #[cfg(target_os = "linux")]
+    {
+        // On Linux, spawing through a new tokio runtime cause to create a new app instance
+        // So we have to spawn through AsyncHandler(tauri::async_runtime) to avoid that
+        // See relate comments in https://github.com/clash-verge-rev/clash-verge-rev/pull/5908#issuecomment-3678727040
+        AsyncHandler::spawn(move || async move {
+            run(commands, port, shutdown_rx).await;
+        });
+    }
+
+    #[cfg(not(target_os = "linux"))]
     if let Ok(rt) = tokio::runtime::Builder::new_current_thread()
         .thread_name("clash-verge-rev-embed-server")
         .worker_threads(1)
