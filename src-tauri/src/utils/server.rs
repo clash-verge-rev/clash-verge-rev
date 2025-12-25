@@ -65,41 +65,16 @@ pub fn embed_server() {
         .expect("failed to set shutdown signal for embedded server");
     let port = IVerge::get_singleton_port();
 
-    let visible = warp::path!("commands" / "visible").and_then(|| async {
-        logging!(info, Type::Window, "检测到从单例模式恢复应用窗口");
-        if !lightweight::exit_lightweight_mode().await {
-            WindowManager::show_main_window().await;
-        } else {
-            logging!(error, Type::Window, "轻量模式退出失败，无法恢复应用窗口");
-        };
-        Ok::<_, warp::Rejection>(warp::reply::with_status::<std::string::String>(
-            "ok".to_string(),
-            warp::http::StatusCode::OK,
-        ))
-    });
+    let visible = warp::path!("commands" / "visible").and_then(current_visible);
 
-    let pac = warp::path!("commands" / "pac").and_then(|| async move {
-        let pac_content = get_currentt_pac_content().await;
-        Ok::<_, warp::Rejection>(
-            warp::http::Response::builder()
-                .header("Content-Type", "application/x-ns-proxy-autoconfig")
-                .body(pac_content)
-                .unwrap_or_default(),
-        )
-    });
+    let pac = warp::path!("commands" / "pac").and_then(get_current_pac_content);
 
     // Use map instead of and_then to avoid Send issues
     let scheme = warp::path!("commands" / "scheme")
         .and(warp::query::<QueryParam>())
-        .and_then(|query: QueryParam| async move {
-            logging_error!(Type::Setup, resolve::resolve_scheme(&query.param).await);
-            Ok::<_, warp::Rejection>(warp::reply::with_status::<std::string::String>(
-                "ok".to_string(),
-                warp::http::StatusCode::OK,
-            ))
-        });
+        .and_then(current_scheme);
 
-    let commands = visible.or(scheme).or(pac);
+    let commands = visible.or(scheme).or(pac).boxed();
 
     #[cfg(target_os = "linux")]
     {
@@ -153,7 +128,20 @@ pub fn shutdown_embedded_server() {
     }
 }
 
-async fn get_currentt_pac_content() -> std::string::String {
+async fn current_visible() -> std::result::Result<impl warp::Reply, warp::Rejection> {
+    logging!(info, Type::Window, "检测到从单例模式恢复应用窗口");
+    if !lightweight::exit_lightweight_mode().await {
+        WindowManager::show_main_window().await;
+    } else {
+        logging!(error, Type::Window, "轻量模式退出失败，无法恢复应用窗口");
+    };
+    Ok::<_, warp::Rejection>(warp::reply::with_status::<std::string::String>(
+        "ok".to_string(),
+        warp::http::StatusCode::OK,
+    ))
+}
+
+async fn get_current_pac_content() -> std::result::Result<impl warp::Reply, warp::Rejection> {
     let pac_content = {
         Config::verge()
             .await
@@ -170,5 +158,19 @@ async fn get_currentt_pac_content() -> std::string::String {
             .verge_mixed_port
             .unwrap_or(clash_mixed_port)
     };
-    pac_content.replace("%mixed-port%", &format!("{pac_port}"))
+    let pac_content = pac_content.replace("%mixed-port%", &format!("{pac_port}"));
+    Ok::<_, warp::Rejection>(
+        warp::http::Response::builder()
+            .header("Content-Type", "application/x-ns-proxy-autoconfig")
+            .body(pac_content)
+            .unwrap_or_default(),
+    )
+}
+
+async fn current_scheme(query: QueryParam) -> std::result::Result<impl warp::Reply, warp::Rejection> {
+    logging_error!(Type::Setup, resolve::resolve_scheme(&query.param).await);
+    Ok::<_, warp::Rejection>(warp::reply::with_status::<std::string::String>(
+        "ok".to_string(),
+        warp::http::StatusCode::OK,
+    ))
 }
