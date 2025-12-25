@@ -5,7 +5,7 @@ pub mod help;
 pub mod i18n;
 pub mod init;
 #[cfg(target_os = "linux")]
-pub mod mime;
+pub mod linux;
 pub mod network;
 pub mod notification;
 pub mod resolve;
@@ -13,5 +13,3 @@ pub mod server;
 pub mod singleton;
 pub mod tmpl;
 pub mod window_manager;
-#[cfg(target_os = "linux")]
-pub mod workarounds;

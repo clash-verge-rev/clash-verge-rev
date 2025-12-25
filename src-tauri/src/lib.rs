@@ -230,7 +230,7 @@ pub fn run() {
     }
 
     #[cfg(target_os = "linux")]
-    utils::workarounds::apply_nvidia_dmabuf_renderer_workaround();
+    utils::linux::workarounds::apply_nvidia_dmabuf_renderer_workaround();
 
     let _ = utils::dirs::init_portable_flag();
 
