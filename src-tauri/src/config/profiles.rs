@@ -8,7 +8,7 @@ use clash_verge_logging::{Type, logging};
 use serde::{Deserialize, Serialize};
 use serde_yaml_ng::Mapping;
 use smartstring::alias::String;
-use std::{collections::HashSet, sync::Arc};
+use std::collections::HashSet;
 use tokio::fs;
 
 /// Define the `profiles.yaml` schema
@@ -124,15 +124,6 @@ impl IProfiles {
         }
 
         bail!("failed to get the profile item \"uid:{}\"", uid_str);
-    }
-
-    pub fn get_item_arc(&self, uid: &str) -> Option<Arc<PrfItem>> {
-        self.items.as_ref().and_then(|items| {
-            items
-                .iter()
-                .find(|it| it.uid.as_deref() == Some(uid))
-                .map(|it| Arc::new(it.clone()))
-        })
     }
 
     /// append new item
@@ -420,7 +411,7 @@ impl IProfiles {
                     match path.to_path_buf().remove_if_exists().await {
                         Ok(_) => {
                             deleted_files.push(file_name.into());
-                            logging!(info, Type::Config, "已清理冗余文件: {file_name}");
+                            logging!(debug, Type::Config, "已清理冗余文件: {file_name}");
                         }
                         Err(e) => {
                             failed_deletions.push(format!("{file_name}: {e}").into());
