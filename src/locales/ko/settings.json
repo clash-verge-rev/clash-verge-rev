@@ -15,7 +15,6 @@
         "systemProxy": "시스템 프록시"
       },
       "tooltips": {
-        "autoLaunchAdmin": "관리자 모드에서는 자동 실행이 지원되지 않을 수 있습니다",
         "silentStart": "패널을 표시하지 않고 백그라운드에서 시작합니다"
       },
       "fields": {

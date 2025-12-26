@@ -62,9 +62,6 @@
       "actions": {
         "settings": "設定"
       },
-      "tooltips": {
-        "autoLaunchAdmin": "管理員模式可能不支援開機自啟"
-      },
       "badges": {
         "adminMode": "管理員模式",
         "serviceMode": "服務模式",

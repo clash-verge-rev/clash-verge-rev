@@ -124,9 +124,6 @@ export interface TranslationResources {
             vergeVersion: string;
           };
           title: string;
-          tooltips: {
-            autoLaunchAdmin: string;
-          };
         };
         tests: {
           title: string;
@@ -1166,7 +1163,6 @@ export interface TranslationResources {
             tunMode: string;
           };
           tooltips: {
-            autoLaunchAdmin: string;
             silentStart: string;
           };
         };

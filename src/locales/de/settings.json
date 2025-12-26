@@ -15,7 +15,6 @@
         "systemProxy": "Systemproxy"
       },
       "tooltips": {
-        "autoLaunchAdmin": "Der Administrator-Modus unterstützt möglicherweise keine automatische Startfunktion.",
         "silentStart": "Die Anwendung wird im Hintergrund gestartet, ohne dass das Programmfenster angezeigt wird."
       },
       "fields": {

@@ -15,7 +15,6 @@
         "systemProxy": "系统代理"
       },
       "tooltips": {
-        "autoLaunchAdmin": "管理员模式可能不支持开机自启",
         "silentStart": "程序启动时以后台模式运行，不显示程序面板"
       },
       "fields": {

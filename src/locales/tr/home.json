@@ -62,9 +62,6 @@
       "actions": {
         "settings": "Ayarlar"
       },
-      "tooltips": {
-        "autoLaunchAdmin": "Yönetici modu otomatik başlatmayı desteklemeyebilir"
-      },
       "badges": {
         "adminMode": "Yönetici Modu",
         "serviceMode": "Hizmet Modu",

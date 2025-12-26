@@ -15,7 +15,6 @@
         "systemProxy": "Proksi Sistem"
       },
       "tooltips": {
-        "autoLaunchAdmin": "Administrator mode may not support auto launch",
         "silentStart": "Mulai program dalam mode latar belakang tanpa menampilkan panel"
       },
       "fields": {

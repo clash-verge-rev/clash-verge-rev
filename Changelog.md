@@ -26,5 +26,6 @@
 - 应用内更新日志支持解析并渲染 HTML 标签
 - 性能优化前后端在渲染流量图时的资源
 - 在 Linux NVIDIA 显卡环境下尝试禁用 WebKit DMABUF 渲染以规避潜在问题
+- Windows 下自启动改为计划任务实现
 
 </details>

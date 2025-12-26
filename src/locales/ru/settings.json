@@ -15,7 +15,6 @@
         "systemProxy": "Системный прокси"
       },
       "tooltips": {
-        "autoLaunchAdmin": "Administrator mode may not support auto launch",
         "silentStart": "Запускать программу в фоновом режиме без отображения панели"
       },
       "fields": {
