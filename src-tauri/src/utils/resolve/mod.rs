@@ -22,8 +22,6 @@ use clash_verge_signal;
 
 pub mod dns;
 pub mod scheme;
-#[cfg(target_os = "windows")]
-pub mod theme;
 pub mod ui;
 pub mod window;
 pub mod window_script;
@@ -66,8 +64,6 @@ pub fn resolve_setup_async() {
         init_verge_config().await;
         Config::verify_config_initialization().await;
         init_window().await;
-        #[cfg(target_os = "windows")]
-        theme::start_windows_app_theme_watcher();
 
         let core_init = AsyncHandler::spawn(|| async {
             init_service_manager().await;
