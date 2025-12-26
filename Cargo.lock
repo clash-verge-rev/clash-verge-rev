@@ -7435,8 +7435,7 @@ checksum = "c0e973b34477b7823833469eb0f5a3a60370fef7a453e02d751b59180d0a5a05"
 [[package]]
 name = "tao"
 version = "0.34.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f3a753bdc39c07b192151523a3f77cd0394aa75413802c883a0f6f6a0e5ee2e7"
+source = "git+https://github.com/clash-verge-rev/tao?branch=fix%2Fwindows-dark-mode#2676a907a149b5e8962cc15382736a92d2337984"
 dependencies = [
  "bitflags 2.10.0",
  "block2 0.6.2",
@@ -7463,7 +7462,7 @@ dependencies = [
  "parking_lot",
  "raw-window-handle",
  "scopeguard",
- "tao-macros",
+ "tao-macros 0.1.3 (git+https://github.com/clash-verge-rev/tao?branch=fix%2Fwindows-dark-mode)",
  "unicode-segmentation",
  "url",
  "windows 0.61.3",
@@ -7477,6 +7476,16 @@ name = "tao-macros"
 version = "0.1.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f4e16beb8b2ac17db28eab8bca40e62dbfbb34c0fcdc6d9826b11b7b5d047dfd"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.111",
+]
+
+[[package]]
+name = "tao-macros"
+version = "0.1.3"
+source = "git+https://github.com/clash-verge-rev/tao?branch=fix%2Fwindows-dark-mode#2676a907a149b5e8962cc15382736a92d2337984"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -10119,7 +10128,7 @@ dependencies = [
  "raw-window-handle",
  "sha2 0.10.9",
  "soup3",
- "tao-macros",
+ "tao-macros 0.1.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "thiserror 2.0.17",
  "tracing",
  "url",

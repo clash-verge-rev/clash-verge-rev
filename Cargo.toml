@@ -71,6 +71,9 @@ serde_yaml_ng = { version = "0.10.0" }
 deelevate = "0.2.0"
 # *********************************
 
+[patch.crates-io]
+tao = { git = "https://github.com/clash-verge-rev/tao", branch = "fix/windows-dark-mode" }
+
 [workspace.lints.clippy]
 correctness = { level = "deny", priority = -1 }
 suspicious = { level = "deny", priority = -1 }
