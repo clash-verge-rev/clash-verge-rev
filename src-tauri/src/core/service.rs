@@ -91,24 +91,6 @@ fn install_service() -> Result<()> {
     Ok(())
 }
 
-#[cfg(target_os = "windows")]
-fn reinstall_service() -> Result<()> {
-    logging!(info, Type::Service, "reinstall service");
-
-    // 先卸载服务
-    if let Err(err) = uninstall_service() {
-        logging!(warn, Type::Service, "failed to uninstall service: {}", err);
-    }
-
-    // 再安装服务
-    match install_service() {
-        Ok(_) => Ok(()),
-        Err(err) => {
-            bail!(format!("failed to install service: {err}"))
-        }
-    }
-}
-
 #[cfg(target_os = "linux")]
 fn uninstall_service() -> Result<()> {
     logging!(info, Type::Service, "uninstall service");
@@ -219,24 +201,6 @@ fn install_service() -> Result<()> {
 }
 
 #[cfg(target_os = "linux")]
-async fn reinstall_service() -> Result<()> {
-    logging!(info, Type::Service, "reinstall service");
-
-    // 先卸载服务
-    if let Err(err) = uninstall_service().await {
-        logging!(warn, Type::Service, "failed to uninstall service: {}", err);
-    }
-
-    // 再安装服务
-    match install_service().await {
-        Ok(_) => Ok(()),
-        Err(err) => {
-            bail!(format!("failed to install service: {err}"))
-        }
-    }
-}
-
-#[cfg(target_os = "linux")]
 fn linux_running_as_root() -> bool {
     use crate::core::handle;
     use tauri_plugin_clash_verge_sysinfo::is_current_app_handle_admin;
@@ -305,7 +269,6 @@ fn install_service() -> Result<()> {
     Ok(())
 }
 
-#[cfg(target_os = "macos")]
 fn reinstall_service() -> Result<()> {
     logging!(info, Type::Service, "reinstall service");
 
