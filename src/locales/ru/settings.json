@@ -210,7 +210,7 @@
           "navIcon": "Иконки навигации",
           "collapseNavBar": "Свернуть панель навигации",
           "trayIcon": "Иконка в трее",
-          "showProxyGroupsInline": "Show Proxy Groups Inline",
+          "proxyGroupsDisplayMode": "Proxy Groups Display Mode",
           "showOutboundModesInline": "Show Outbound Modes Inline",
           "commonTrayIcon": "Общий значок в трее",
           "systemProxyTrayIcon": "Значок системного прокси в трее",
@@ -233,6 +233,11 @@
             "topRight": "Сверху справа",
             "bottomLeft": "Снизу слева",
             "bottomRight": "Снизу справа"
+          },
+          "proxyGroupsDisplayMode": {
+            "default": "Default",
+            "inline": "Inline",
+            "disable": "Disable"
           }
         }
       }

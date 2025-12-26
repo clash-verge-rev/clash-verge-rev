@@ -229,7 +229,8 @@ pub struct IVerge {
 
     // pub enable_tray_icon: Option<bool>,
     /// show proxy groups directly on tray root menu
-    pub tray_inline_proxy_groups: Option<bool>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tray_proxy_groups_display_mode: Option<String>,
     /// show outbound modes directly on tray root menu
     pub tray_inline_outbound_modes: Option<bool>,
 
@@ -441,7 +442,7 @@ impl IVerge {
             webdav_password: None,
             enable_tray_speed: Some(false),
             // enable_tray_icon: Some(true),
-            tray_inline_proxy_groups: Some(true),
+            tray_proxy_groups_display_mode: Some("default".into()),
             tray_inline_outbound_modes: Some(false),
             enable_global_hotkey: Some(true),
             enable_auto_light_weight_mode: Some(false),
@@ -543,7 +544,7 @@ impl IVerge {
         patch!(webdav_password);
         patch!(enable_tray_speed);
         // patch!(enable_tray_icon);
-        patch!(tray_inline_proxy_groups);
+        patch!(tray_proxy_groups_display_mode);
         patch!(tray_inline_outbound_modes);
         patch!(enable_auto_light_weight_mode);
         patch!(auto_light_weight_minutes);

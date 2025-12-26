@@ -210,7 +210,7 @@
           "navIcon": "Nav Icon",
           "collapseNavBar": "Collapse Navigation Bar",
           "trayIcon": "Tray Icon",
-          "showProxyGroupsInline": "Show Proxy Groups Inline",
+          "proxyGroupsDisplayMode": "Proxy Groups Display Mode",
           "showOutboundModesInline": "Show Outbound Modes Inline",
           "commonTrayIcon": "Common Tray Icon",
           "systemProxyTrayIcon": "System Proxy Tray Icon",
@@ -233,6 +233,11 @@
             "topRight": "Top Right",
             "bottomLeft": "Bottom Left",
             "bottomRight": "Bottom Right"
+          },
+          "proxyGroupsDisplayMode": {
+            "default": "Default",
+            "inline": "Inline",
+            "disable": "Disable"
           }
         }
       }

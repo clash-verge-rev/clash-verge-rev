@@ -210,7 +210,7 @@
           "navIcon": "내비게이션 아이콘",
           "collapseNavBar": "내비게이션 바 접기",
           "trayIcon": "트레이 아이콘",
-          "showProxyGroupsInline": "프록시 그룹 인라인 표시",
+          "proxyGroupsDisplayMode": "Proxy Groups Display Mode",
           "showOutboundModesInline": "Show Outbound Modes Inline",
           "commonTrayIcon": "공용 트레이 아이콘",
           "systemProxyTrayIcon": "시스템 프록시 트레이 아이콘",
@@ -233,6 +233,11 @@
             "topRight": "오른쪽 상단",
             "bottomLeft": "왼쪽 하단",
             "bottomRight": "오른쪽 하단"
+          },
+          "proxyGroupsDisplayMode": {
+            "default": "Default",
+            "inline": "Inline",
+            "disable": "Disable"
           }
         }
       }

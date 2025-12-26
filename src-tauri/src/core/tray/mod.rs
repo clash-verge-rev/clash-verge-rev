@@ -770,7 +770,10 @@ async fn create_tray_menu(
         });
 
     let verge_settings = Config::verge().await.latest_arc();
-    let show_proxy_groups_inline = verge_settings.tray_inline_proxy_groups.unwrap_or(true);
+    let tray_proxy_groups_display_mode = verge_settings
+        .tray_proxy_groups_display_mode
+        .as_deref()
+        .unwrap_or("default");
     let show_outbound_modes_inline = verge_settings.tray_inline_outbound_modes.unwrap_or(false);
 
     let version = env!("CARGO_PKG_VERSION");
@@ -855,8 +858,11 @@ async fn create_tray_menu(
     let proxy_sub_menus =
         create_subcreate_proxy_menu_item(app_handle, current_proxy_mode, proxy_group_order_map, proxy_nodes_data);
 
-    let (proxies_menu, inline_proxy_items) =
-        create_proxy_menu_item(app_handle, show_proxy_groups_inline, proxy_sub_menus, &texts.proxies)?;
+    let (proxies_menu, inline_proxy_items) = match tray_proxy_groups_display_mode {
+        "default" => create_proxy_menu_item(app_handle, false, proxy_sub_menus, &texts.proxies)?,
+        "inline" => create_proxy_menu_item(app_handle, true, proxy_sub_menus, &texts.proxies)?,
+        _ => (None, Vec::new()),
+    };
 
     let system_proxy = &CheckMenuItem::with_id(
         app_handle,
@@ -965,12 +971,14 @@ async fn create_tray_menu(
     menu_items.extend_from_slice(&[separator, profiles]);
 
     // 如果有代理节点，添加代理节点菜单
-    if show_proxy_groups_inline {
-        if !inline_proxy_items.is_empty() {
+    match tray_proxy_groups_display_mode {
+        "default" => {
+            menu_items.extend(proxies_menu.iter().map(|item| item as &dyn IsMenuItem<_>));
+        }
+        "inline" if !inline_proxy_items.is_empty() => {
             menu_items.extend(inline_proxy_items.iter().map(|item| item.as_ref()));
         }
-    } else if let Some(ref proxies_menu) = proxies_menu {
-        menu_items.push(proxies_menu);
+        _ => {}
     }
 
     menu_items.extend_from_slice(&[

@@ -210,7 +210,7 @@
           "navIcon": "آیکون ناوبری",
           "collapseNavBar": "جمع کردن نوار ناوبری",
           "trayIcon": "آیکون سینی سیستم",
-          "showProxyGroupsInline": "Show Proxy Groups Inline",
+          "proxyGroupsDisplayMode": "Proxy Groups Display Mode",
           "showOutboundModesInline": "Show Outbound Modes Inline",
           "commonTrayIcon": "آیکون مشترک سینی سیستم",
           "systemProxyTrayIcon": "آیکون سینی پراکسی سیستم",
@@ -233,6 +233,11 @@
             "topRight": "Top Right",
             "bottomLeft": "Bottom Left",
             "bottomRight": "Bottom Right"
+          },
+          "proxyGroupsDisplayMode": {
+            "default": "Default",
+            "inline": "Inline",
+            "disable": "Disable"
           }
         }
       }

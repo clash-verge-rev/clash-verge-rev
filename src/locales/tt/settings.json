@@ -210,7 +210,7 @@
           "navIcon": "Навигация иконкасы",
           "collapseNavBar": "Навигация панелен җыю",
           "trayIcon": "Трей иконкасы",
-          "showProxyGroupsInline": "Show Proxy Groups Inline",
+          "proxyGroupsDisplayMode": "Proxy Groups Display Mode",
           "showOutboundModesInline": "Show Outbound Modes Inline",
           "commonTrayIcon": "Гомуми трей иконкасы",
           "systemProxyTrayIcon": "Системалы прокси иконкасы",
@@ -233,6 +233,11 @@
             "topRight": "Top Right",
             "bottomLeft": "Bottom Left",
             "bottomRight": "Bottom Right"
+          },
+          "proxyGroupsDisplayMode": {
+            "default": "Default",
+            "inline": "Inline",
+            "disable": "Disable"
           }
         }
       }

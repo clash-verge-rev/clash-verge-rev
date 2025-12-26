@@ -210,7 +210,7 @@
           "navIcon": "导航栏图标",
           "collapseNavBar": "收起导航栏",
           "trayIcon": "托盘图标",
-          "showProxyGroupsInline": "将代理组显示在托盘一级菜单",
+          "proxyGroupsDisplayMode": "托盘代理组显示模式",
           "showOutboundModesInline": "将出站模式显示在托盘一级菜单",
           "commonTrayIcon": "常规托盘图标",
           "systemProxyTrayIcon": "系统代理托盘图标",
@@ -233,6 +233,11 @@
             "topRight": "右上角",
             "bottomLeft": "左下角",
             "bottomRight": "右下角"
+          },
+          "proxyGroupsDisplayMode": {
+            "default": "默认",
+            "inline": "一级菜单",
+            "disable": "禁用"
           }
         }
       }

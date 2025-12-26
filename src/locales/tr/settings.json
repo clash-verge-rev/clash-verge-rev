@@ -210,7 +210,7 @@
           "navIcon": "Gezinme Simgesi",
           "collapseNavBar": "Gezinme çubuğunu daralt",
           "trayIcon": "Tepsi Simgesi",
-          "showProxyGroupsInline": "Show Proxy Groups Inline",
+          "proxyGroupsDisplayMode": "Proxy Groups Display Mode",
           "showOutboundModesInline": "Show Outbound Modes Inline",
           "commonTrayIcon": "Genel Tepsi Simgesi",
           "systemProxyTrayIcon": "Sistem Vekil Tepsi Simgesi",
@@ -233,6 +233,11 @@
             "topRight": "Sağ üst",
             "bottomLeft": "Sol alt",
             "bottomRight": "Sağ alt"
+          },
+          "proxyGroupsDisplayMode": {
+            "default": "Default",
+            "inline": "Inline",
+            "disable": "Disable"
           }
         }
       }
