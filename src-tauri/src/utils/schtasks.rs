@@ -1,6 +1,7 @@
-use crate::utils::dirs::PathBufExec as _;
+use crate::utils::dirs::{self, PathBufExec as _};
 use anyhow::{Result, anyhow};
 use clash_verge_logging::{Type, logging};
+use std::fs;
 use std::os::windows::process::CommandExt as _;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
@@ -10,6 +11,9 @@ use winapi::um::winnls::{GetACP, GetOEMCP};
 const CREATE_NO_WINDOW: u32 = 0x08000000;
 const TASK_NAME_USER: &str = "Clash Verge";
 const TASK_NAME_ADMIN: &str = "Clash Verge (Admin)";
+const TASK_XML_DIR: &str = "tasks";
+const TASK_XML_USER: &str = "clash-verge-task-user.xml";
+const TASK_XML_ADMIN: &str = "clash-verge-task-admin.xml";
 
 #[derive(Clone, Copy)]
 pub enum TaskMode {
@@ -32,10 +36,17 @@ impl TaskMode {
         }
     }
 
-    const fn run_level(self) -> &'static str {
+    const fn xml_run_level(self) -> &'static str {
         match self {
-            Self::User => "LIMITED",
-            Self::Admin => "HIGHEST",
+            Self::User => "LeastPrivilege",
+            Self::Admin => "HighestAvailable",
+        }
+    }
+
+    const fn xml_file_name(self) -> &'static str {
+        match self {
+            Self::User => TASK_XML_USER,
+            Self::Admin => TASK_XML_ADMIN,
         }
     }
 }
@@ -43,6 +54,30 @@ impl TaskMode {
 fn get_exe_path() -> Result<PathBuf> {
     let exe_path = std::env::current_exe().map_err(|e| anyhow!("failed to get exe path: {}", e))?;
     Ok(exe_path)
+}
+
+fn get_task_user_id() -> Result<String> {
+    let username = std::env::var_os("USERNAME")
+        .or_else(|| std::env::var_os("USER"))
+        .ok_or_else(|| anyhow!("failed to get current user name"))?;
+    let username = username.to_string_lossy();
+    let username = username.trim();
+    if username.is_empty() {
+        return Err(anyhow!("current user name is empty"));
+    }
+
+    let domain = std::env::var_os("USERDOMAIN")
+        .or_else(|| std::env::var_os("COMPUTERNAME"))
+        .map(|value| value.to_string_lossy().to_string());
+
+    if let Some(domain) = domain {
+        let domain = domain.trim();
+        if !domain.is_empty() {
+            return Ok(format!("{domain}\\{username}"));
+        }
+    }
+
+    Ok(username.to_string())
 }
 
 fn get_startup_dir() -> Result<PathBuf> {
@@ -71,9 +106,96 @@ async fn cleanup_legacy_shortcuts() -> Result<()> {
     Ok(())
 }
 
-fn build_task_command() -> Result<String> {
-    let exe_path = get_exe_path()?;
-    Ok(format!("\"{}\"", exe_path.to_string_lossy()))
+fn task_xml_path(mode: TaskMode) -> Result<PathBuf> {
+    let dir = dirs::app_home_dir()?.join(TASK_XML_DIR);
+    fs::create_dir_all(&dir).map_err(|e| anyhow!("failed to create task xml dir: {}", e))?;
+    Ok(dir.join(mode.xml_file_name()))
+}
+
+fn xml_escape(value: &str) -> String {
+    let mut escaped = String::with_capacity(value.len());
+    for ch in value.chars() {
+        match ch {
+            '&' => escaped.push_str("&amp;"),
+            '<' => escaped.push_str("&lt;"),
+            '>' => escaped.push_str("&gt;"),
+            '"' => escaped.push_str("&quot;"),
+            '\'' => escaped.push_str("&apos;"),
+            _ => escaped.push(ch),
+        }
+    }
+    escaped
+}
+
+fn build_task_xml(mode: TaskMode) -> Result<String> {
+    let exe_path = get_exe_path()?.to_string_lossy().to_string();
+    let exe_path = xml_escape(&exe_path);
+    let user_id = xml_escape(&get_task_user_id()?);
+    Ok(format!(
+        r#"<?xml version="1.0" encoding="UTF-16"?>
+<Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+  <Triggers>
+    <LogonTrigger>
+      <Enabled>true</Enabled>
+      <Delay>PT3S</Delay>
+      <UserId>{}</UserId>
+    </LogonTrigger>
+  </Triggers>
+  <Principals>
+    <Principal id="Author">
+      <UserId>{}</UserId>
+      <LogonType>InteractiveToken</LogonType>
+      <RunLevel>{}</RunLevel>
+    </Principal>
+  </Principals>
+  <Settings>
+    <MultipleInstancesPolicy>Parallel</MultipleInstancesPolicy>
+    <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>
+    <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
+    <AllowHardTerminate>false</AllowHardTerminate>
+    <StartWhenAvailable>false</StartWhenAvailable>
+    <RunOnlyIfNetworkAvailable>false</RunOnlyIfNetworkAvailable>
+    <IdleSettings>
+      <StopOnIdleEnd>false</StopOnIdleEnd>
+      <RestartOnIdle>false</RestartOnIdle>
+    </IdleSettings>
+    <AllowStartOnDemand>true</AllowStartOnDemand>
+    <Enabled>true</Enabled>
+    <Hidden>false</Hidden>
+    <RunOnlyIfIdle>false</RunOnlyIfIdle>
+    <WakeToRun>false</WakeToRun>
+    <ExecutionTimeLimit>PT0S</ExecutionTimeLimit>
+    <Priority>3</Priority>
+  </Settings>
+  <Actions Context="Author">
+    <Exec>
+      <Command>{}</Command>
+    </Exec>
+  </Actions>
+</Task>
+"#,
+        user_id,
+        user_id,
+        mode.xml_run_level(),
+        exe_path
+    ))
+}
+
+fn encode_utf16le_with_bom(content: &str) -> Vec<u8> {
+    let mut bytes = Vec::with_capacity(2 + content.len() * 2);
+    bytes.extend_from_slice(&[0xFF, 0xFE]);
+    for unit in content.encode_utf16() {
+        bytes.extend_from_slice(&unit.to_le_bytes());
+    }
+    bytes
+}
+
+fn write_task_xml(mode: TaskMode) -> Result<PathBuf> {
+    let task_xml = build_task_xml(mode)?;
+    let task_xml_path = task_xml_path(mode)?;
+    let encoded = encode_utf16le_with_bom(&task_xml);
+    fs::write(&task_xml_path, encoded).map_err(|e| anyhow!("failed to write task xml: {}", e))?;
+    Ok(task_xml_path)
 }
 
 fn decode_with_code_page(bytes: &[u8], code_page: u32) -> Option<String> {
@@ -170,13 +292,11 @@ pub fn is_task_enabled(mode: TaskMode) -> Result<bool> {
 }
 
 pub fn create_task(mode: TaskMode) -> Result<()> {
-    let task_command = build_task_command()?;
+    let task_xml_path = write_task_xml(mode)?;
     let output = schtasks_output({
         let mut cmd = Command::new("schtasks");
-        cmd.args(["/Create", "/SC", "ONLOGON"]);
-        cmd.arg("/TN").arg(mode.name());
-        cmd.arg("/TR").arg(task_command);
-        cmd.arg("/RL").arg(mode.run_level());
+        cmd.args(["/Create", "/TN", mode.name(), "/XML"]);
+        cmd.arg(&task_xml_path);
         cmd.arg("/F");
         cmd
     })?;
