@@ -3,7 +3,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 
 import debounce from "@/utils/debounce";
 
-import { WindowContext } from "./WindowContext";
+import { WindowContext } from "./window-context";
 
 export const WindowProvider: React.FC<{ children: React.ReactNode }> = ({
   children,

@@ -33,12 +33,11 @@ import iconDark from "@/assets/image/icon_dark.svg?react";
 import iconLight from "@/assets/image/icon_light.svg?react";
 import LogoSvg from "@/assets/image/logo.svg?react";
 import { BaseErrorBoundary } from "@/components/base";
-import { NoticeManager } from "@/components/base/NoticeManager";
-import { WindowControls } from "@/components/controller/window-controller";
 import { LayoutItem } from "@/components/layout/layout-item";
 import { LayoutTraffic } from "@/components/layout/layout-traffic";
+import { NoticeManager } from "@/components/layout/notice-manager";
 import { UpdateButton } from "@/components/layout/update-button";
-import { useCustomTheme } from "@/components/layout/use-custom-theme";
+import { WindowControls } from "@/components/layout/window-controller";
 import { useI18n } from "@/hooks/use-i18n";
 import { useVerge } from "@/hooks/use-verge";
 import { useWindowDecorations } from "@/hooks/use-window";
@@ -47,6 +46,7 @@ import getSystem from "@/utils/get-system";
 
 import {
   useAppInitialization,
+  useCustomTheme,
   useLayoutEvents,
   useLoadingOverlay,
   useNavMenuOrder,

@@ -17,7 +17,7 @@ import {
 import { ReactNode, memo, useMemo, useRef } from "react";
 import { useTranslation } from "react-i18next";
 
-import { TrafficErrorBoundary } from "@/components/common/traffic-error-boundary";
+import { TrafficErrorBoundary } from "@/components/shared/traffic-error-boundary";
 import { useConnectionData } from "@/hooks/use-connection-data";
 import { useMemoryData } from "@/hooks/use-memory-data";
 import { useTrafficData } from "@/hooks/use-traffic-data";

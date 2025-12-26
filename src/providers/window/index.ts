@@ -1,3 +1,3 @@
-export { WindowContext } from "./WindowContext";
-export type { WindowContextType } from "./WindowContext";
-export { WindowProvider } from "./WindowProvider";
+export { WindowContext } from "./window-context";
+export type { WindowContextType } from "./window-context";
+export { WindowProvider } from "./window-provider";
