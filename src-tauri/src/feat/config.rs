@@ -63,6 +63,7 @@ enum UpdateFlags {
     SystrayTooltip = 1 << 8,
     SystrayClickBehavior = 1 << 9,
     LighteWeight = 1 << 10,
+    Language = 1 << 11,
 }
 
 fn determine_update_flags(patch: &IVerge) -> i32 {
@@ -153,6 +154,7 @@ fn determine_update_flags(patch: &IVerge) -> i32 {
     }
 
     if language.is_some() {
+        update_flags |= UpdateFlags::Language as i32;
         update_flags |= UpdateFlags::SystrayMenu as i32;
     }
     if common_tray_icon.is_some()
@@ -211,6 +213,11 @@ async fn process_terminated_flags(update_flags: i32, patch: &IVerge) -> Result<(
     }
     if (update_flags & (UpdateFlags::Launch as i32)) != 0 {
         sysopt::Sysopt::global().update_launch().await?;
+    }
+    if (update_flags & (UpdateFlags::Language as i32)) != 0
+        && let Some(language) = &patch.language
+    {
+        clash_verge_i18n::set_locale(language.as_str());
     }
     if (update_flags & (UpdateFlags::SysProxy as i32)) != 0 {
         sysopt::Sysopt::global().update_sysproxy().await?;

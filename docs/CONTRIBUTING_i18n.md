@@ -6,7 +6,7 @@ Thanks for helping localize Clash Verge Rev. This guide reflects the current arc
 
 - Update the language folder under `src/locales/<lang>/`; use `src/locales/en/` as the canonical reference for keys and intent.
 - Run `pnpm format:i18n` to align structure and `pnpm i18n:types` to refresh generated typings.
-- If you touch backend copy, edit the matching YAML file in `src-tauri/locales/<lang>.yml`.
+- If you touch backend copy, edit the matching YAML file in `crates/clash-verge-i18n/locales/<lang>.yml`.
 - Preview UI changes with `pnpm dev` (desktop shell) or `pnpm web:dev` (web only).
 - Keep PRs focused and add screenshots whenever layout could be affected by text length.
 
@@ -42,7 +42,7 @@ Because backend translations now live in their own directory, you no longer need
 
 ## Backend (Tauri) locale bundles
 
-Native UI strings (tray menu, notifications, dialogs) use `rust-i18n` with YAML bundles stored in `src-tauri/locales/<lang>.yml`. These files are completely independent from the frontend JSON modules.
+Native UI strings (tray menu, notifications, dialogs) use `rust-i18n` with YAML bundles stored in `crates/clash-verge-i18n/locales/<lang>.yml`. These files are completely independent from the frontend JSON modules.
 
 - Keep `en.yml` semantically aligned with the Simplified Chinese baseline (`zh.yml`). Other locales may temporarily copy English if no translation is available yet.
 - When a backend feature introduces new strings, update every YAML file to keep the key set consistent. Missing keys fall back to the default language (`zh`), so catching gaps early avoids mixed-language output.
@@ -53,7 +53,7 @@ Native UI strings (tray menu, notifications, dialogs) use `rust-i18n` with YAML 
 1. Duplicate `src/locales/en/` into `src/locales/<new-lang>/` and translate the JSON files while preserving key structure.
 2. Update the locale’s `index.ts` to import every namespace. Matching the English file is the easiest way to avoid missing exports.
 3. Append the language code to `supportedLanguages` in `src/services/i18n.ts`.
-4. If the backend should expose the language, create `src-tauri/locales/<new-lang>.yml` and translate the keys used in existing YAML files.
+4. If the backend should expose the language, create `crates/clash-verge-i18n/<new-lang>.yml` and translate the keys used in existing YAML files.
 5. Adjust `crowdin.yml` if the locale requires a special mapping for Crowdin.
 6. Run `pnpm format:i18n`, `pnpm i18n:types`, and (optionally) `pnpm node scripts/cleanup-unused-i18n.mjs` in dry-run mode to confirm structure.
 

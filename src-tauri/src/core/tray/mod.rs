@@ -12,11 +12,8 @@ use crate::process::AsyncHandler;
 use crate::singleton;
 use crate::utils::window_manager::WindowManager;
 use crate::{
-    Type, cmd,
-    config::Config,
-    feat, logging,
-    module::lightweight::is_in_lightweight_mode,
-    utils::{dirs::find_target_icons, i18n},
+    Type, cmd, config::Config, feat, logging, module::lightweight::is_in_lightweight_mode,
+    utils::dirs::find_target_icons,
 };
 
 use super::handle;
@@ -389,7 +386,8 @@ impl Tray {
 
         let app_handle = handle::Handle::app_handle();
 
-        i18n::sync_locale().await;
+        // We do not want to always synchronize locale settings to cause unnecessary performance cost
+        // clash_verge_i18n::sync_locale().await;
 
         let verge = Config::verge().await.latest_arc();
         let system_proxy = verge.enable_system_proxy.as_ref().unwrap_or(&false);
@@ -417,9 +415,9 @@ impl Tray {
         }
 
         // Get localized strings before using them
-        let sys_proxy_text = rust_i18n::t!("tray.tooltip.systemProxy");
-        let tun_text = rust_i18n::t!("tray.tooltip.tun");
-        let profile_text = rust_i18n::t!("tray.tooltip.profile");
+        let sys_proxy_text = clash_verge_i18n::t!("tray.tooltip.systemProxy");
+        let tun_text = clash_verge_i18n::t!("tray.tooltip.tun");
+        let profile_text = clash_verge_i18n::t!("tray.tooltip.profile");
 
         let v = env!("CARGO_PKG_VERSION");
         let reassembled_version = v.split_once('+').map_or_else(
@@ -724,7 +722,8 @@ async fn create_tray_menu(
 ) -> Result<tauri::menu::Menu<Wry>> {
     let current_proxy_mode = mode.unwrap_or("");
 
-    i18n::sync_locale().await;
+    // We do not want to always synchronize locale settings to cause unnecessary performance cost
+    // i18n::sync_locale().await;
 
     // TODO: should update tray menu again when it was timeout error
     let proxy_nodes_data = tokio::time::timeout(
@@ -829,9 +828,9 @@ async fn create_tray_menu(
         None
     } else {
         let current_mode_text = match current_proxy_mode {
-            "global" => rust_i18n::t!("tray.global"),
-            "direct" => rust_i18n::t!("tray.direct"),
-            _ => rust_i18n::t!("tray.rule"),
+            "global" => clash_verge_i18n::t!("tray.global"),
+            "direct" => clash_verge_i18n::t!("tray.direct"),
+            _ => clash_verge_i18n::t!("tray.rule"),
         };
         let outbound_modes_label = format!("{} ({})", texts.outbound_modes, current_mode_text);
         Some(Submenu::with_id_and_items(

@@ -30,9 +30,8 @@ pub enum ServiceStatus {
 #[derive(Clone)]
 pub struct ServiceManager(ServiceStatus);
 
-#[allow(clippy::unused_async)]
 #[cfg(target_os = "windows")]
-async fn uninstall_service() -> Result<()> {
+fn uninstall_service() -> Result<()> {
     logging!(info, Type::Service, "uninstall service");
 
     use deelevate::{PrivilegeLevel, Token};
@@ -63,9 +62,8 @@ async fn uninstall_service() -> Result<()> {
     Ok(())
 }
 
-#[allow(clippy::unused_async)]
 #[cfg(target_os = "windows")]
-async fn install_service() -> Result<()> {
+fn install_service() -> Result<()> {
     logging!(info, Type::Service, "install service");
 
     use deelevate::{PrivilegeLevel, Token};
@@ -94,16 +92,16 @@ async fn install_service() -> Result<()> {
 }
 
 #[cfg(target_os = "windows")]
-async fn reinstall_service() -> Result<()> {
+fn reinstall_service() -> Result<()> {
     logging!(info, Type::Service, "reinstall service");
 
     // 先卸载服务
-    if let Err(err) = uninstall_service().await {
+    if let Err(err) = uninstall_service() {
         logging!(warn, Type::Service, "failed to uninstall service: {}", err);
     }
 
     // 再安装服务
-    match install_service().await {
+    match install_service() {
         Ok(_) => Ok(()),
         Err(err) => {
             bail!(format!("failed to install service: {err}"))
@@ -111,9 +109,8 @@ async fn reinstall_service() -> Result<()> {
     }
 }
 
-#[allow(clippy::unused_async)]
 #[cfg(target_os = "linux")]
-async fn uninstall_service() -> Result<()> {
+fn uninstall_service() -> Result<()> {
     logging!(info, Type::Service, "uninstall service");
 
     let uninstall_path = tauri::utils::platform::current_exe()?.with_file_name("clash-verge-service-uninstall");
@@ -169,8 +166,7 @@ async fn uninstall_service() -> Result<()> {
 }
 
 #[cfg(target_os = "linux")]
-#[allow(clippy::unused_async)]
-async fn install_service() -> Result<()> {
+fn install_service() -> Result<()> {
     logging!(info, Type::Service, "install service");
 
     let install_path = tauri::utils::platform::current_exe()?.with_file_name("clash-verge-service-install");
@@ -249,7 +245,7 @@ fn linux_running_as_root() -> bool {
 }
 
 #[cfg(target_os = "macos")]
-async fn uninstall_service() -> Result<()> {
+fn uninstall_service() -> Result<()> {
     logging!(info, Type::Service, "uninstall service");
 
     let binary_path = dirs::service_path()?;
@@ -261,9 +257,9 @@ async fn uninstall_service() -> Result<()> {
 
     let uninstall_shell: String = uninstall_path.to_string_lossy().into_owned();
 
-    crate::utils::i18n::sync_locale().await;
+    // clash_verge_i18n::sync_locale(Config::verge().await.latest_arc().language.as_deref());
 
-    let prompt = rust_i18n::t!("service.adminUninstallPrompt").to_string();
+    let prompt = clash_verge_i18n::t!("service.adminUninstallPrompt");
     let command =
         format!(r#"do shell script "sudo '{uninstall_shell}'" with administrator privileges with prompt "{prompt}""#);
 
@@ -282,7 +278,7 @@ async fn uninstall_service() -> Result<()> {
 }
 
 #[cfg(target_os = "macos")]
-async fn install_service() -> Result<()> {
+fn install_service() -> Result<()> {
     logging!(info, Type::Service, "install service");
 
     let binary_path = dirs::service_path()?;
@@ -294,9 +290,9 @@ async fn install_service() -> Result<()> {
 
     let install_shell: String = install_path.to_string_lossy().into_owned();
 
-    crate::utils::i18n::sync_locale().await;
+    // clash_verge_i18n::sync_locale(Config::verge().await.latest_arc().language.as_deref());
 
-    let prompt = rust_i18n::t!("service.adminInstallPrompt").to_string();
+    let prompt = clash_verge_i18n::t!("service.adminInstallPrompt");
     let command =
         format!(r#"do shell script "sudo '{install_shell}'" with administrator privileges with prompt "{prompt}""#);
 
@@ -310,16 +306,16 @@ async fn install_service() -> Result<()> {
 }
 
 #[cfg(target_os = "macos")]
-async fn reinstall_service() -> Result<()> {
+fn reinstall_service() -> Result<()> {
     logging!(info, Type::Service, "reinstall service");
 
     // 先卸载服务
-    if let Err(err) = uninstall_service().await {
+    if let Err(err) = uninstall_service() {
         logging!(warn, Type::Service, "failed to uninstall service: {}", err);
     }
 
     // 再安装服务
-    match install_service().await {
+    match install_service() {
         Ok(_) => Ok(()),
         Err(err) => {
             bail!(format!("failed to install service: {err}"))
@@ -328,9 +324,9 @@ async fn reinstall_service() -> Result<()> {
 }
 
 /// 强制重装服务（UI修复按钮）
-async fn force_reinstall_service() -> Result<()> {
+fn force_reinstall_service() -> Result<()> {
     logging!(info, Type::Service, "用户请求强制重装服务");
-    reinstall_service().await.map_err(|err| {
+    reinstall_service().map_err(|err| {
         logging!(error, Type::Service, "强制重装服务失败: {}", err);
         err
     })
@@ -550,22 +546,22 @@ impl ServiceManager {
             }
             ServiceStatus::NeedsReinstall | ServiceStatus::ReinstallRequired => {
                 logging!(info, Type::Service, "服务需要重装，执行重装流程");
-                reinstall_service().await?;
+                reinstall_service()?;
                 wait_and_check_service_available(self).await?;
             }
             ServiceStatus::ForceReinstallRequired => {
                 logging!(info, Type::Service, "服务需要强制重装，执行强制重装流程");
-                force_reinstall_service().await?;
+                force_reinstall_service()?;
                 wait_and_check_service_available(self).await?;
             }
             ServiceStatus::InstallRequired => {
                 logging!(info, Type::Service, "需要安装服务，执行安装流程");
-                install_service().await?;
+                install_service()?;
                 wait_and_check_service_available(self).await?;
             }
             ServiceStatus::UninstallRequired => {
                 logging!(info, Type::Service, "服务需要卸载，执行卸载流程");
-                uninstall_service().await?;
+                uninstall_service()?;
                 self.0 = ServiceStatus::Unavailable("Service Uninstalled".into());
             }
             ServiceStatus::Unavailable(reason) => {
