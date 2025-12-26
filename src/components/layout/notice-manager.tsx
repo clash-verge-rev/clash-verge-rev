@@ -17,6 +17,8 @@ import {
 import type { TranslationKey } from "@/types/generated/i18n-keys";
 
 type NoticePosition = NonNullable<IVergeConfig["notice_position"]>;
+type NoticeItem = ReturnType<typeof getSnapshotNotices>[number];
+type TranslationFn = ReturnType<typeof useTranslation>["t"];
 
 const VALID_POSITIONS: NoticePosition[] = [
   "top-left",
@@ -38,6 +40,49 @@ const getAnchorOrigin = (position: NoticePosition): SnackbarOrigin => {
     SnackbarOrigin["horizontal"],
   ];
   return { vertical, horizontal };
+};
+
+const resolveNoticeMessage = (
+  notice: NoticeItem,
+  t: TranslationFn,
+): React.ReactNode => {
+  const i18n = notice.i18n;
+  if (!i18n) return notice.message;
+
+  const params = (i18n.params ?? {}) as Record<string, unknown>;
+  const { prefixKey, prefixParams, prefix, message, ...restParams } = params;
+
+  const prefixKeyParams =
+    prefixParams && typeof prefixParams === "object"
+      ? (prefixParams as Record<string, unknown>)
+      : undefined;
+
+  const resolvedPrefix =
+    typeof prefixKey === "string"
+      ? t(prefixKey as TranslationKey, {
+          defaultValue: prefixKey,
+          ...(prefixKeyParams ?? {}),
+          ...restParams,
+        })
+      : typeof prefix === "string"
+        ? prefix
+        : undefined;
+
+  const messageStr = typeof message === "string" ? message : undefined;
+
+  const defaultValue =
+    messageStr === undefined
+      ? undefined
+      : resolvedPrefix
+        ? `${resolvedPrefix} ${messageStr}`
+        : messageStr;
+
+  return t(i18n.key as TranslationKey, {
+    defaultValue,
+    ...restParams,
+    ...(resolvedPrefix !== undefined ? { prefix: resolvedPrefix } : {}),
+    ...(messageStr !== undefined ? { message: messageStr } : {}),
+  });
 };
 
 interface NoticeManagerProps {
@@ -104,61 +149,7 @@ export const NoticeManager: React.FC<NoticeManagerProps> = ({ position }) => {
               </IconButton>
             }
           >
-            {notice.i18n
-              ? (() => {
-                  const params = (notice.i18n.params ?? {}) as Record<
-                    string,
-                    unknown
-                  >;
-                  const {
-                    prefixKey,
-                    prefixParams,
-                    prefix,
-                    message,
-                    ...restParams
-                  } = params;
-
-                  const prefixKeyParams =
-                    prefixParams &&
-                    typeof prefixParams === "object" &&
-                    prefixParams !== null
-                      ? (prefixParams as Record<string, unknown>)
-                      : undefined;
-
-                  const resolvedPrefix =
-                    typeof prefixKey === "string"
-                      ? t(prefixKey as TranslationKey, {
-                          defaultValue: prefixKey,
-                          ...(prefixKeyParams ?? {}),
-                          ...restParams,
-                        })
-                      : typeof prefix === "string"
-                        ? prefix
-                        : undefined;
-
-                  const finalParams: Record<string, unknown> = {
-                    ...restParams,
-                  };
-                  if (resolvedPrefix !== undefined) {
-                    finalParams.prefix = resolvedPrefix;
-                  }
-                  if (typeof message === "string") {
-                    finalParams.message = message;
-                  }
-
-                  const defaultValue =
-                    resolvedPrefix && typeof message === "string"
-                      ? `${resolvedPrefix} ${message}`
-                      : typeof message === "string"
-                        ? message
-                        : undefined;
-
-                  return t(notice.i18n.key as TranslationKey, {
-                    defaultValue,
-                    ...finalParams,
-                  });
-                })()
-              : notice.message}
+            {resolveNoticeMessage(notice, t)}
           </Alert>
         </Snackbar>
       ))}
