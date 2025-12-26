@@ -134,18 +134,3 @@ pub fn linux_elevator() -> String {
         Err(_) => "sudo".to_string(),
     }
 }
-
-/// return the string literal error
-#[macro_export]
-macro_rules! ret_err {
-    ($str: expr) => {
-        return Err($str.into())
-    };
-}
-
-#[macro_export]
-macro_rules! t {
-    ($en:expr, $zh:expr, $use_zh:expr) => {
-        if $use_zh { $zh } else { $en }
-    };
-}

@@ -13,7 +13,6 @@ use crate::{
     feat,
     module::auto_backup::{AutoBackupManager, AutoBackupTrigger},
     process::AsyncHandler,
-    ret_err,
     utils::{dirs, help},
 };
 use clash_verge_draft::SharedDraft;
@@ -455,7 +454,7 @@ pub async fn view_profile(index: String) -> CmdResult {
 
     let path = dirs::app_profiles_dir().stringify_err()?.join(file.as_str());
     if !path.exists() {
-        ret_err!("the file not found");
+        return CmdResult::Err(format!("file not found \"{}\"", path.display()).into());
     }
 
     help::open_file(path).stringify_err()
