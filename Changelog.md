@@ -7,6 +7,7 @@
 - 修复设置代理端口时检查端口占用
 - 修复 Monaco 编辑器初始化卡 Loading
 - 修复恢复备份时 `config.yaml` / `profiles.yaml` 文件内字段未正确恢复
+- 修复 Windows 下系统主题同步问题
 
 <details>
 <summary><strong> ✨ 新增功能 </strong></summary>

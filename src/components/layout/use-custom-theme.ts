@@ -31,9 +31,6 @@ const canUseCssScope = () => {
   if (cssScopeSupport !== null) {
     return cssScopeSupport;
   }
-  if (typeof document === "undefined") {
-    return false;
-  }
   try {
     const testStyle = document.createElement("style");
     testStyle.textContent = "@scope (:root) { }";
@@ -88,16 +85,6 @@ export const useCustomTheme = () => {
       return;
     }
 
-    const preferBrowserMatchMedia =
-      typeof window !== "undefined" &&
-      typeof window.matchMedia === "function" &&
-      // Skip Tauri flow when running purely in browser.
-      !("__TAURI__" in window);
-
-    if (preferBrowserMatchMedia) {
-      return;
-    }
-
     let isMounted = true;
 
     const timerId = setTimeout(() => {
@@ -134,63 +121,6 @@ export const useCustomTheme = () => {
         });
     };
   }, [theme_mode, appWindow, setMode]);
-
-  useEffect(() => {
-    if (theme_mode !== "system") {
-      return;
-    }
-
-    if (
-      typeof window === "undefined" ||
-      typeof window.matchMedia !== "function"
-    ) {
-      return;
-    }
-
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
-    const syncMode = (isDark: boolean) => setMode(isDark ? "dark" : "light");
-    const handleChange = (event: MediaQueryListEvent) =>
-      syncMode(event.matches);
-
-    syncMode(mediaQuery.matches);
-
-    if (typeof mediaQuery.addEventListener === "function") {
-      mediaQuery.addEventListener("change", handleChange);
-      return () => mediaQuery.removeEventListener("change", handleChange);
-    }
-
-    type MediaQueryListLegacy = MediaQueryList & {
-      addListener?: (
-        listener: (this: MediaQueryList, event: MediaQueryListEvent) => void,
-      ) => void;
-      removeListener?: (
-        listener: (this: MediaQueryList, event: MediaQueryListEvent) => void,
-      ) => void;
-    };
-
-    const legacyQuery = mediaQuery as MediaQueryListLegacy;
-    const legacyAddListener = (
-      legacyQuery as {
-        addListener?: (
-          listener: (this: MediaQueryList, event: MediaQueryListEvent) => void,
-        ) => void;
-      }
-    ).addListener;
-    legacyAddListener?.call(legacyQuery, handleChange);
-    return () => {
-      const legacyRemoveListener = (
-        legacyQuery as {
-          removeListener?: (
-            listener: (
-              this: MediaQueryList,
-              event: MediaQueryListEvent,
-            ) => void,
-          ) => void;
-        }
-      ).removeListener;
-      legacyRemoveListener?.call(legacyQuery, handleChange);
-    };
-  }, [theme_mode, setMode]);
 
   useEffect(() => {
     if (theme_mode === undefined) {
