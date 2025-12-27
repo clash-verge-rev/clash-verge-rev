@@ -19,12 +19,15 @@ use crate::{
 use anyhow::Result;
 use clash_verge_logging::{Type, logging};
 use once_cell::sync::OnceCell;
+use rust_i18n::i18n;
 use std::time::Duration;
 use tauri::{AppHandle, Manager as _};
 #[cfg(target_os = "macos")]
 use tauri_plugin_autostart::MacosLauncher;
 use tauri_plugin_deep_link::DeepLinkExt as _;
 use tauri_plugin_mihomo::RejectPolicy;
+
+i18n!("locales", fallback = "zh");
 
 pub static APP_HANDLE: OnceCell<AppHandle> = OnceCell::new();
 /// Application initialization helper functions

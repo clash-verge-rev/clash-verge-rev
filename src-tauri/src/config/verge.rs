@@ -1,7 +1,7 @@
 use crate::config::Config;
 use crate::{
     config::{DEFAULT_PAC, deserialize_encrypted, serialize_encrypted},
-    utils::{dirs, help},
+    utils::{dirs, help, i18n},
 };
 use anyhow::Result;
 use clash_verge_logging::{Type, logging};
@@ -346,6 +346,19 @@ impl IVerge {
         self.clash_core.clone().unwrap_or_else(|| "verge-mihomo".into())
     }
 
+    fn get_system_language() -> String {
+        let sys_lang = sys_locale::get_locale().unwrap_or_else(|| "en".into()).to_lowercase();
+
+        let lang_code = sys_lang.split(['_', '-']).next().unwrap_or("en");
+        let supported_languages = i18n::get_supported_languages();
+
+        if supported_languages.contains(&lang_code.into()) {
+            lang_code.into()
+        } else {
+            String::from("en")
+        }
+    }
+
     pub async fn new() -> Self {
         match dirs::verge_path() {
             Ok(path) => match help::read_yaml::<Self>(&path).await {
@@ -375,7 +388,7 @@ impl IVerge {
             app_log_max_size: Some(128),
             app_log_max_count: Some(8),
             clash_core: Some("verge-mihomo".into()),
-            language: Some(clash_verge_i18n::system_language().into()),
+            language: Some(Self::get_system_language()),
             theme_mode: Some("system".into()),
             #[cfg(not(target_os = "windows"))]
             env_type: Some("bash".into()),

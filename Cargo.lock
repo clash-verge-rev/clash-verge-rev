@@ -1197,7 +1197,6 @@ dependencies = [
  "boa_engine",
  "chrono",
  "clash-verge-draft",
- "clash-verge-i18n",
  "clash-verge-logging",
  "clash-verge-signal",
  "clash-verge-types",
@@ -1225,12 +1224,14 @@ dependencies = [
  "reqwest",
  "reqwest_dav",
  "runas",
+ "rust-i18n",
  "rust_iso3166",
  "scopeguard",
  "serde",
  "serde_json",
  "serde_yaml_ng",
  "smartstring",
+ "sys-locale",
  "sysproxy",
  "tauri",
  "tauri-build",
@@ -1265,14 +1266,6 @@ dependencies = [
  "criterion",
  "parking_lot",
  "tokio",
-]
-
-[[package]]
-name = "clash-verge-i18n"
-version = "0.1.0"
-dependencies = [
- "rust-i18n",
- "sys-locale",
 ]
 
 [[package]]

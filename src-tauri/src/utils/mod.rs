@@ -1,5 +1,6 @@
 pub mod dirs;
 pub mod help;
+pub mod i18n;
 pub mod init;
 #[cfg(target_os = "linux")]
 pub mod linux;
