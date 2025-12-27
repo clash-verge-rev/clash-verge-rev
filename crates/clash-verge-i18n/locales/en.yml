@@ -27,7 +27,6 @@ notifications:
 service:
   adminInstallPrompt: Installing the Clash Verge service requires administrator privileges.
   adminUninstallPrompt: Uninstalling the Clash Verge service requires administrator privileges.
-
 tray:
   dashboard: Dashboard
   ruleMode: Rule Mode
