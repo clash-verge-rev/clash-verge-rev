@@ -159,6 +159,8 @@ pub(super) async fn init_tray() {
 
 pub(super) async fn init_verge_config() {
     logging_error!(Type::Setup, Config::init_config().await);
+    let verge = Config::verge().await.latest_arc();
+    clash_verge_i18n::sync_locale(verge.language.as_deref());
 }
 
 pub(super) async fn init_service_manager() {
