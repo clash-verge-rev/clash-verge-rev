@@ -4,21 +4,23 @@ import fs from "fs";
 import path from "path";
 import { fileURLToPath } from "url";
 
+import yaml from "js-yaml";
 import ts from "typescript";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const LOCALES_DIR = path.resolve(__dirname, "../src/locales");
-const TAURI_LOCALES_DIR = path.resolve(
+const FRONTEND_LOCALES_DIR = path.resolve(__dirname, "../src/locales");
+const BACKEND_LOCALES_DIR = path.resolve(
   __dirname,
   "../crates/clash-verge-i18n/locales",
 );
-const DEFAULT_SOURCE_DIRS = [
-  path.resolve(__dirname, "../src"),
+const DEFAULT_FRONTEND_SOURCE_DIRS = [path.resolve(__dirname, "../src")];
+const DEFAULT_BACKEND_SOURCE_DIRS = [
   path.resolve(__dirname, "../src-tauri"),
+  path.resolve(__dirname, "../crates"),
 ];
-const EXCLUDE_USAGE_DIRS = [LOCALES_DIR, TAURI_LOCALES_DIR];
+const EXCLUDE_USAGE_DIRS = [FRONTEND_LOCALES_DIR, BACKEND_LOCALES_DIR];
 const DEFAULT_BASELINE_LANG = "en";
 const IGNORE_DIR_NAMES = new Set([
   ".git",
@@ -39,7 +41,7 @@ const IGNORE_DIR_NAMES = new Set([
   "logs",
   "__pycache__",
 ]);
-const SUPPORTED_EXTENSIONS = new Set([
+const FRONTEND_EXTENSIONS = new Set([
   ".ts",
   ".tsx",
   ".js",
@@ -49,6 +51,7 @@ const SUPPORTED_EXTENSIONS = new Set([
   ".vue",
   ".json",
 ]);
+const BACKEND_EXTENSIONS = new Set([".rs"]);
 
 const TS_EXTENSIONS = new Set([".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"]);
 
@@ -89,12 +92,17 @@ const WHITELIST_KEYS = new Set([
   "theme.light",
   "theme.dark",
   "theme.system",
-  "Already Using Latest Core Version",
+  "_version",
 ]);
 
 const MAX_PREVIEW_ENTRIES = 40;
 const dynamicKeyCache = new Map();
 const fileUsageCache = new Map();
+
+function resetUsageCaches() {
+  dynamicKeyCache.clear();
+  fileUsageCache.clear();
+}
 
 function printUsage() {
   console.log(`Usage: pnpm node scripts/cleanup-unused-i18n.mjs [options]
@@ -102,7 +110,7 @@ function printUsage() {
 Options:
   --apply            Write locale files with unused keys removed (default: report only)
   --align            Align locale structure/order using the baseline locale
-  --baseline <lang>  Baseline locale file name (default: ${DEFAULT_BASELINE_LANG})
+  --baseline <lang>  Baseline locale file name for frontend/backend (default: ${DEFAULT_BASELINE_LANG})
   --keep-extra       Preserve keys that exist only in non-baseline locales when aligning
   --no-backup        Skip creating \`.bak\` backups when applying changes
   --report <path>    Write a JSON report to the given path
@@ -151,7 +159,7 @@ function parseArgs(argv) {
         if (!next) {
           throw new Error("--baseline requires a locale name (e.g. en)");
         }
-        options.baseline = next.replace(/\.json$/, "");
+        options.baseline = next.replace(/\.(json|ya?ml)$/i, "");
         i += 1;
         break;
       }
@@ -214,14 +222,16 @@ function getAllFiles(start, predicate) {
   return files;
 }
 
-function collectSourceFiles(sourceDirs) {
+function collectSourceFiles(sourceDirs, options = {}) {
+  const supportedExtensions =
+    options.supportedExtensions ?? FRONTEND_EXTENSIONS;
   const seen = new Set();
   const files = [];
 
   for (const dir of sourceDirs) {
     const resolved = getAllFiles(dir, (filePath) => {
       if (seen.has(filePath)) return false;
-      if (!SUPPORTED_EXTENSIONS.has(path.extname(filePath))) return false;
+      if (!supportedExtensions.has(path.extname(filePath))) return false;
       if (
         EXCLUDE_USAGE_DIRS.some((excluded) =>
           filePath.startsWith(`${excluded}${path.sep}`),
@@ -676,6 +686,45 @@ function collectUsedKeysFromTextFile(file, baselineNamespaces, usedKeys) {
   }
 }
 
+function readRustStringLiteral(source, startIndex) {
+  const slice = source.slice(startIndex);
+  if (slice.startsWith('"')) {
+    const match = slice.match(/^"(?:\\.|[^"\\])*"/);
+    if (!match) return null;
+    return match[0].slice(1, -1);
+  }
+  if (slice.startsWith("r")) {
+    const match = slice.match(/^r(#+)?"([\s\S]*?)"\1/);
+    if (!match) return null;
+    return match[2];
+  }
+  return null;
+}
+
+function collectUsedKeysFromRustFile(
+  file,
+  baselineNamespaces,
+  usedKeys,
+  _dynamicPrefixes,
+) {
+  const pattern = /\b(?:[A-Za-z_][\w:]*::)?t!\s*\(/g;
+  let match;
+  while ((match = pattern.exec(file.content))) {
+    let index = match.index + match[0].length;
+    while (index < file.content.length && /\s/.test(file.content[index])) {
+      index += 1;
+    }
+    const key = readRustStringLiteral(file.content, index);
+    if (key) {
+      addKeyIfValid(key, usedKeys, baselineNamespaces, {
+        forceNamespace: true,
+      });
+    }
+  }
+
+  collectUsedKeysFromTextFile(file, baselineNamespaces, usedKeys);
+}
+
 function collectUsedI18nKeys(sourceFiles, baselineNamespaces) {
   const usedKeys = new Set();
   const dynamicPrefixes = new Set();
@@ -683,6 +732,13 @@ function collectUsedI18nKeys(sourceFiles, baselineNamespaces) {
   for (const file of sourceFiles) {
     if (TS_EXTENSIONS.has(file.extension)) {
       collectUsedKeysFromTsFile(
+        file,
+        baselineNamespaces,
+        usedKeys,
+        dynamicPrefixes,
+      );
+    } else if (file.extension === ".rs") {
+      collectUsedKeysFromRustFile(
         file,
         baselineNamespaces,
         usedKeys,
@@ -867,12 +923,16 @@ function writeReport(reportPath, data) {
   fs.writeFileSync(reportPath, `${payload}\n`, "utf8");
 }
 
-function loadLocales() {
-  if (!fs.existsSync(LOCALES_DIR)) {
-    throw new Error(`Locales directory not found: ${LOCALES_DIR}`);
+function isPlainObject(value) {
+  return value && typeof value === "object" && !Array.isArray(value);
+}
+
+function loadFrontendLocales() {
+  if (!fs.existsSync(FRONTEND_LOCALES_DIR)) {
+    throw new Error(`Locales directory not found: ${FRONTEND_LOCALES_DIR}`);
   }
 
-  const entries = fs.readdirSync(LOCALES_DIR, { withFileTypes: true });
+  const entries = fs.readdirSync(FRONTEND_LOCALES_DIR, { withFileTypes: true });
   const locales = [];
 
   for (const entry of entries) {
@@ -882,12 +942,12 @@ function loadLocales() {
         !entry.name.endsWith(".bak") &&
         !entry.name.endsWith(".old")
       ) {
-        const localePath = path.join(LOCALES_DIR, entry.name);
+        const localePath = path.join(FRONTEND_LOCALES_DIR, entry.name);
         const name = path.basename(entry.name, ".json");
         const raw = fs.readFileSync(localePath, "utf8");
         locales.push({
           name,
-          dir: LOCALES_DIR,
+          dir: FRONTEND_LOCALES_DIR,
           format: "single-file",
           files: [
             {
@@ -904,7 +964,7 @@ function loadLocales() {
     if (!entry.isDirectory()) continue;
     if (entry.name.startsWith(".")) continue;
 
-    const localeDir = path.join(LOCALES_DIR, entry.name);
+    const localeDir = path.join(FRONTEND_LOCALES_DIR, entry.name);
     const namespaceEntries = fs
       .readdirSync(localeDir, { withFileTypes: true })
       .filter(
@@ -937,6 +997,51 @@ function loadLocales() {
       dir: localeDir,
       format: "multi-file",
       files: namespaceEntries,
+      data,
+    });
+  }
+
+  locales.sort((a, b) => a.name.localeCompare(b.name));
+  return locales;
+}
+
+function loadBackendLocales() {
+  if (!fs.existsSync(BACKEND_LOCALES_DIR)) {
+    return [];
+  }
+
+  const entries = fs.readdirSync(BACKEND_LOCALES_DIR, { withFileTypes: true });
+  const locales = [];
+
+  for (const entry of entries) {
+    if (!entry.isFile()) continue;
+    if (entry.name.endsWith(".bak") || entry.name.endsWith(".old")) {
+      continue;
+    }
+    if (!/\.(ya?ml)$/i.test(entry.name)) continue;
+
+    const localePath = path.join(BACKEND_LOCALES_DIR, entry.name);
+    const name = entry.name.replace(/\.(ya?ml)$/i, "");
+    const raw = fs.readFileSync(localePath, "utf8");
+    let data = {};
+    try {
+      const parsed = yaml.load(raw);
+      data = isPlainObject(parsed) ? parsed : {};
+    } catch (error) {
+      console.warn(`Warning: failed to parse ${localePath}: ${error.message}`);
+      data = {};
+    }
+
+    locales.push({
+      name,
+      dir: BACKEND_LOCALES_DIR,
+      format: "yaml-file",
+      files: [
+        {
+          namespace: "translation",
+          path: localePath,
+        },
+      ],
       data,
     });
   }
@@ -1045,6 +1150,15 @@ function writeLocale(locale, data, options) {
   let success = false;
 
   try {
+    if (locale.format === "yaml-file") {
+      const target = locale.files[0].path;
+      backupIfNeeded(target, backups, options);
+      const serialized = yaml.dump(data ?? {}, { lineWidth: -1, noRefs: true });
+      fs.writeFileSync(target, `${serialized.trimEnd()}\n`, "utf8");
+      success = true;
+      return;
+    }
+
     if (locale.format === "single-file") {
       const target = locale.files[0].path;
       backupIfNeeded(target, backups, options);
@@ -1100,6 +1214,8 @@ function processLocale(
   sourceFiles,
   missingFromSource,
   options,
+  groupName,
+  baselineName,
 ) {
   const data = JSON.parse(JSON.stringify(locale.data));
   const flattened = flattenLocale(data);
@@ -1115,7 +1231,7 @@ function processLocale(
   }
 
   const sourceMissing =
-    locale.name === options.baseline
+    locale.name === baselineName
       ? missingFromSource.filter((key) => !flattened.has(key))
       : [];
 
@@ -1168,8 +1284,9 @@ function processLocale(
   }
 
   return {
+    group: groupName,
     locale: locale.name,
-    file: locale.format === "single-file" ? locale.files[0].path : locale.dir,
+    file: locale.format === "multi-file" ? locale.dir : locale.files[0].path,
     totalKeys: flattened.size,
     expectedKeys: expectedTotal,
     unusedKeys: unused,
@@ -1181,34 +1298,42 @@ function processLocale(
   };
 }
 
-function main() {
-  const argv = process.argv.slice(2);
+function summarizeResults(results) {
+  return results.reduce(
+    (totals, result) => {
+      totals.totalUnused += result.unusedKeys.length;
+      totals.totalMissing += result.missingKeys.length;
+      totals.totalExtra += result.extraKeys.length;
+      totals.totalSourceMissing += result.missingSourceKeys.length;
+      return totals;
+    },
+    {
+      totalUnused: 0,
+      totalMissing: 0,
+      totalExtra: 0,
+      totalSourceMissing: 0,
+    },
+  );
+}
 
-  let options;
-  try {
-    options = parseArgs(argv);
-  } catch (error) {
-    console.error(`Error: ${error.message}`);
-    console.log();
-    printUsage();
-    process.exit(1);
-  }
-
+function processLocaleGroup(group, options) {
   const sourceDirs = [
-    ...new Set([...DEFAULT_SOURCE_DIRS, ...options.extraSources]),
+    ...new Set([...group.sourceDirs, ...options.extraSources]),
   ];
 
-  console.log("Scanning source directories:");
+  console.log(`\n[${group.label}] Scanning source directories:`);
   for (const dir of sourceDirs) {
     console.log(`  - ${dir}`);
   }
 
-  const sourceFiles = collectSourceFiles(sourceDirs);
-  const locales = loadLocales();
+  const sourceFiles = collectSourceFiles(sourceDirs, {
+    supportedExtensions: group.supportedExtensions,
+  });
+  const locales = group.locales;
 
   if (locales.length === 0) {
-    console.log("No locale files found.");
-    return;
+    console.log(`[${group.label}] No locale files found.`);
+    return null;
   }
 
   const baselineLocale = locales.find(
@@ -1218,7 +1343,7 @@ function main() {
   if (!baselineLocale) {
     const available = locales.map((item) => item.name).join(", ");
     throw new Error(
-      `Baseline locale "${options.baseline}" not found. Available locales: ${available}`,
+      `[${group.label}] Baseline locale "${options.baseline}" not found. Available locales: ${available}`,
     );
   }
 
@@ -1238,8 +1363,11 @@ function main() {
     return a.name.localeCompare(b.name);
   });
 
-  console.log(`\nChecking ${locales.length} locale files...\n`);
+  console.log(
+    `\n[${group.label}] Checking ${locales.length} locale files...\n`,
+  );
 
+  resetUsageCaches();
   const results = locales.map((locale) =>
     processLocale(
       locale,
@@ -1249,35 +1377,85 @@ function main() {
       sourceFiles,
       missingFromSource,
       options,
+      group.label,
+      baselineLocale.name,
     ),
   );
 
-  const totalUnused = results.reduce(
-    (count, result) => count + result.unusedKeys.length,
-    0,
-  );
-  const totalMissing = results.reduce(
-    (count, result) => count + result.missingKeys.length,
-    0,
-  );
-  const totalExtra = results.reduce(
-    (count, result) => count + result.extraKeys.length,
-    0,
-  );
-  const totalSourceMissing = results.reduce(
-    (count, result) => count + result.missingSourceKeys.length,
-    0,
-  );
+  const totals = summarizeResults(results);
 
-  console.log("\nSummary:");
+  console.log(`\n[${group.label}] Summary:`);
   for (const result of results) {
     console.log(
       `  • ${result.locale}: unused=${result.unusedKeys.length}, missing=${result.missingKeys.length}, extra=${result.extraKeys.length}, missingSource=${result.missingSourceKeys.length}, total=${result.totalKeys}, expected=${result.expectedKeys}`,
     );
   }
   console.log(
-    `\nTotals → unused: ${totalUnused}, missing: ${totalMissing}, extra: ${totalExtra}, missingSource: ${totalSourceMissing}`,
+    `\n[${group.label}] Totals → unused: ${totals.totalUnused}, missing: ${totals.totalMissing}, extra: ${totals.totalExtra}, missingSource: ${totals.totalSourceMissing}`,
   );
+
+  return {
+    group: group.label,
+    baseline: baselineLocale.name,
+    sourceDirs,
+    totals,
+    results,
+  };
+}
+
+function main() {
+  const argv = process.argv.slice(2);
+
+  let options;
+  try {
+    options = parseArgs(argv);
+  } catch (error) {
+    console.error(`Error: ${error.message}`);
+    console.log();
+    printUsage();
+    process.exit(1);
+  }
+
+  const localeGroups = [
+    {
+      label: "frontend",
+      locales: loadFrontendLocales(),
+      sourceDirs: DEFAULT_FRONTEND_SOURCE_DIRS,
+      supportedExtensions: FRONTEND_EXTENSIONS,
+    },
+    {
+      label: "backend",
+      locales: loadBackendLocales(),
+      sourceDirs: DEFAULT_BACKEND_SOURCE_DIRS,
+      supportedExtensions: BACKEND_EXTENSIONS,
+    },
+  ].filter((group) => group.locales.length > 0);
+
+  if (localeGroups.length === 0) {
+    console.log("No locale files found.");
+    return;
+  }
+
+  const groupReports = [];
+  const allResults = [];
+
+  for (const group of localeGroups) {
+    const report = processLocaleGroup(group, options);
+    if (!report) continue;
+    groupReports.push(report);
+    allResults.push(...report.results);
+  }
+
+  if (groupReports.length > 1) {
+    const overallTotals = summarizeResults(allResults);
+    console.log(
+      `\nOverall totals → unused: ${overallTotals.totalUnused}, missing: ${overallTotals.totalMissing}, extra: ${overallTotals.totalExtra}, missingSource: ${overallTotals.totalSourceMissing}`,
+    );
+  }
+
+  if (allResults.length === 0) {
+    return;
+  }
   if (options.apply) {
     console.log(
       "Files were updated in-place; review diffs before committing changes.",
@@ -1304,11 +1482,17 @@ function main() {
         apply: options.apply,
         backup: options.backup,
         align: options.align,
-        baseline: baselineLocale.name,
+        baseline: options.baseline,
         keepExtra: options.keepExtra,
-        sourceDirs,
       },
-      results,
+      groups: groupReports.map((report) => ({
+        group: report.group,
+        baseline: report.baseline,
+        sourceDirs: report.sourceDirs,
+        totals: report.totals,
+        locales: report.results.map((result) => result.locale),
+      })),
+      results: allResults,
     };
     writeReport(options.reportPath, payload);
     console.log(`Report written to ${options.reportPath}`);
