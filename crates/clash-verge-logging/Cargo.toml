@@ -11,4 +11,3 @@ flexi_logger = { workspace = true }
 
 [features]
 default = []
-tauri-dev = []

@@ -1,7 +1,7 @@
 use crate::{
     config::{Config, IClashTemp},
-    core::tray::Tray,
-    utils::{dirs, init::service_writer_config},
+    core::{logger::Logger, tray::Tray},
+    utils::dirs,
 };
 use anyhow::{Context as _, Result, bail};
 use clash_verge_logging::{Type, logging, logging_error};
@@ -402,7 +402,7 @@ pub(super) async fn start_with_existing_service(config_file: &PathBuf) -> Result
             core_ipc_path: IClashTemp::guard_external_controller_ipc(),
             config_dir: dirs::path_to_str(&dirs::app_home_dir()?)?.into(),
         },
-        log_config: service_writer_config().await?,
+        log_config: Logger::global().service_writer_config()?,
     };
 
     let response = clash_verge_service_ipc::start_clash(&payload)

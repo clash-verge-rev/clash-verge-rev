@@ -1,6 +1,6 @@
 use crate::{
     config::{Config, IVerge},
-    core::{CoreManager, handle, hotkey, sysopt, tray},
+    core::{CoreManager, handle, hotkey, logger::Logger, sysopt, tray},
     module::{auto_backup::AutoBackupManager, lightweight},
 };
 use anyhow::Result;
@@ -63,6 +63,8 @@ enum UpdateFlags {
     SystrayTooltip = 1 << 8,
     SystrayClickBehavior = 1 << 9,
     LighteWeight = 1 << 10,
+    LogLevel = 1 << 11,
+    LogFile = 1 << 12,
 }
 
 fn determine_update_flags(patch: &IVerge) -> i32 {
@@ -106,6 +108,9 @@ fn determine_update_flags(patch: &IVerge) -> i32 {
     let tray_inline_outbound_modes = patch.tray_inline_outbound_modes;
     let enable_proxy_guard = patch.enable_proxy_guard;
     let proxy_guard_duration = patch.proxy_guard_duration;
+    let log_level = &patch.app_log_level;
+    let log_max_size = patch.app_log_max_size;
+    let log_max_count = patch.app_log_max_count;
 
     if tun_mode.is_some() {
         update_flags |= UpdateFlags::ClashConfig as i32;
@@ -185,6 +190,12 @@ fn determine_update_flags(patch: &IVerge) -> i32 {
     if tray_proxy_groups_display_mode.is_some() {
         update_flags |= UpdateFlags::SystrayMenu as i32;
     }
+    if log_level.is_some() {
+        update_flags |= UpdateFlags::LogLevel as i32;
+    }
+    if log_max_size.is_some() || log_max_count.is_some() {
+        update_flags |= UpdateFlags::LogFile as i32;
+    }
     if tray_inline_outbound_modes.is_some() {
         update_flags |= UpdateFlags::SystrayMenu as i32;
     }
@@ -241,6 +252,14 @@ async fn process_terminated_flags(update_flags: i32, patch: &IVerge) -> Result<(
         } else {
             lightweight::disable_auto_light_weight_mode();
         }
+    }
+    if update_flags & (UpdateFlags::LogLevel as i32) != 0 {
+        Logger::global().update_log_level(patch.get_log_level())?;
+    }
+    if update_flags & (UpdateFlags::LogFile as i32) != 0 {
+        let log_max_size = patch.app_log_max_size.unwrap_or(128);
+        let log_max_count = patch.app_log_max_count.unwrap_or(8);
+        Logger::global().update_log_config(log_max_size, log_max_count).await?;
     }
     Ok(())
 }

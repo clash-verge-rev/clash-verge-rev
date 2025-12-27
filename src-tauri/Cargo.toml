@@ -18,7 +18,7 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 default = ["custom-protocol"]
 custom-protocol = ["tauri/custom-protocol"]
 verge-dev = ["clash_verge_logger/color"]
-tauri-dev = ["clash-verge-logging/tauri-dev"]
+tauri-dev = []
 tokio-trace = ["console-subscriber"]
 clippy = ["tauri/test"]
 tracing = []
@@ -95,7 +95,7 @@ clash_verge_logger = { git = "https://github.com/clash-verge-rev/clash-verge-log
 async-trait = "0.1.89"
 clash_verge_service_ipc = { version = "2.0.26", features = [
   "client",
-], git = "https://github.com/clash-verge-rev/clash-verge-service-ipc" }
+], git = "https://github.com/clash-verge-rev/clash-verge-service-ipc", branch = "feat/update-writer-config" }
 arc-swap = "1.7.1"
 rust-i18n = "3.1.5"
 rust_iso3166 = "0.1.14"
