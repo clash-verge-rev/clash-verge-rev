@@ -68,6 +68,7 @@ compact_str = { version = "0.9.0", features = ["serde"] }
 serde = { version = "1.0.228" }
 serde_json = { version = "1.0.145" }
 serde_yaml_ng = { version = "0.10.0" }
+bitflags = { version = "2.10.0" }
 
 # *** For Windows platform only ***
 deelevate = "0.2.0"
