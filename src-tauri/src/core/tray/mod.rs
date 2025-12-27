@@ -386,9 +386,6 @@ impl Tray {
 
         let app_handle = handle::Handle::app_handle();
 
-        // We do not want to always synchronize locale settings to cause unnecessary performance cost
-        // clash_verge_i18n::sync_locale().await;
-
         let verge = Config::verge().await.latest_arc();
         let system_proxy = verge.enable_system_proxy.as_ref().unwrap_or(&false);
         let tun_mode = verge.enable_tun_mode.as_ref().unwrap_or(&false);
@@ -721,9 +718,6 @@ async fn create_tray_menu(
     is_lightweight_mode: bool,
 ) -> Result<tauri::menu::Menu<Wry>> {
     let current_proxy_mode = mode.unwrap_or("");
-
-    // We do not want to always synchronize locale settings to cause unnecessary performance cost
-    // i18n::sync_locale().await;
 
     // TODO: should update tray menu again when it was timeout error
     let proxy_nodes_data = tokio::time::timeout(
