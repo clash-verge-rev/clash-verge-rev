@@ -1,6 +1,7 @@
 use serde_yaml_ng::{Mapping, Value};
 use smartstring::alias::String;
-use std::collections::{HashMap, HashSet};
+
+use crate::types::iruntime::{ChainLogs, ExistsKeys};
 
 const PATCH_CONFIG_INNER: [&str; 4] = ["allow-lan", "ipv6", "log-level", "unified-delay"];
 
@@ -9,9 +10,8 @@ pub struct IRuntime {
     pub config: Option<Mapping>,
     // 记录在订阅中（包括merge和script生成的）出现过的keys
     // 这些keys不一定都生效
-    pub exists_keys: HashSet<String>,
-    // TODO 或许可以用 FixMap 来存储以提升效率
-    pub chain_logs: HashMap<String, Vec<(String, String)>>,
+    pub exists_keys: ExistsKeys,
+    pub chain_logs: ChainLogs,
 }
 
 impl IRuntime {

@@ -8,6 +8,7 @@ rust-version = "1.91"
 serde = { workspace = true }
 serde_yaml_ng = { workspace = true }
 smartstring = { workspace = true }
+im = { workspace = true }
 
 [lints]
 workspace = true

@@ -2,9 +2,9 @@ use super::CmdResult;
 use crate::{cmd::StringifyErr as _, config::Config, core::CoreManager};
 use anyhow::{Context as _, anyhow};
 use clash_verge_logging::{Type, logging_error};
+use im::{HashMap, HashSet, Vector};
 use serde_yaml_ng::Mapping;
 use smartstring::alias::String;
-use std::collections::{HashMap, HashSet};
 
 /// 获取运行时配置
 #[tauri::command]
@@ -37,7 +37,7 @@ pub async fn get_runtime_exists() -> CmdResult<HashSet<String>> {
 
 /// 获取运行时日志
 #[tauri::command]
-pub async fn get_runtime_logs() -> CmdResult<HashMap<String, Vec<(String, String)>>> {
+pub async fn get_runtime_logs() -> CmdResult<HashMap<String, Vector<(String, String)>>> {
     Ok(Config::runtime().await.latest_arc().chain_logs.clone())
 }
 

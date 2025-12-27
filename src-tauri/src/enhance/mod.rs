@@ -17,13 +17,13 @@ use crate::utils::dirs;
 use crate::{config::Config, utils::tmpl};
 use crate::{config::IVerge, constants};
 use clash_verge_logging::{Type, logging};
+use clash_verge_types::types::iruntime::{ChainLogs, ExistsKeys};
+use im::{HashMap, HashSet, Vector};
 use serde_yaml_ng::{Mapping, Value};
 use smartstring::alias::String;
 use std::borrow::Cow;
-use std::collections::{HashMap, HashSet};
 use tokio::fs;
 
-type ResultLog = Vec<(String, String)>;
 #[derive(Debug)]
 struct ConfigValues {
     clash_config: Mapping,
@@ -308,7 +308,7 @@ fn process_global_items(
     global_merge: ChainItem,
     global_script: ChainItem,
     profile_name: &String,
-) -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
+) -> (Mapping, Vec<String>, ChainLogs) {
     let mut result_map = HashMap::new();
     let mut exists_keys = use_keys(&config);
 
@@ -318,14 +318,14 @@ fn process_global_items(
     }
 
     if let ChainType::Script(script) = global_script.data {
-        let mut logs = vec![];
+        let mut logs = Vector::new();
         match use_script(script, &config, profile_name) {
             Ok((res_config, res_logs)) => {
                 exists_keys.extend(use_keys(&res_config));
                 config = res_config;
                 logs.extend(res_logs);
             }
-            Err(err) => logs.push(("exception".into(), err.to_string().into())),
+            Err(err) => logs.push_back(("exception".into(), err.to_string().into())),
         }
         result_map.insert(global_script.uid, logs);
     }
@@ -337,14 +337,14 @@ fn process_global_items(
 fn process_profile_items(
     mut config: Mapping,
     mut exists_keys: Vec<String>,
-    mut result_map: HashMap<String, ResultLog>,
+    mut result_map: ChainLogs,
     rules_item: ChainItem,
     proxies_item: ChainItem,
     groups_item: ChainItem,
     merge_item: ChainItem,
     script_item: ChainItem,
     profile_name: &String,
-) -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
+) -> (Mapping, Vec<String>, ChainLogs) {
     if let ChainType::Rules(rules) = rules_item.data {
         config = use_seq(rules, config.to_owned(), "rules");
     }
@@ -363,14 +363,14 @@ fn process_profile_items(
     }
 
     if let ChainType::Script(script) = script_item.data {
-        let mut logs = vec![];
+        let mut logs = Vector::new();
         match use_script(script, &config, profile_name) {
             Ok((res_config, res_logs)) => {
                 exists_keys.extend(use_keys(&res_config));
                 config = res_config;
                 logs.extend(res_logs);
             }
-            Err(err) => logs.push(("exception".into(), err.to_string().into())),
+            Err(err) => logs.push_back(("exception".into(), err.to_string().into())),
         }
         result_map.insert(script_item.uid, logs);
     }
@@ -491,7 +491,7 @@ fn cleanup_proxy_groups(mut config: Mapping) -> Mapping {
                     Value::Mapping(map) => map
                         .get("name")
                         .and_then(Value::as_str)
-                        .map(|name| name.to_owned().into()),
+                        .map(|name| -> String { name.to_owned().into() }),
                     Value::String(name) => Some(name.to_owned().into()),
                     _ => None,
                 })
@@ -508,7 +508,7 @@ fn cleanup_proxy_groups(mut config: Mapping) -> Mapping {
                     item.as_mapping()
                         .and_then(|map| map.get("name"))
                         .and_then(Value::as_str)
-                        .map(std::convert::Into::into)
+                        .map(|n| -> String { n.into() })
                 })
                 .collect::<HashSet<String>>()
         })
@@ -520,7 +520,7 @@ fn cleanup_proxy_groups(mut config: Mapping) -> Mapping {
         .map(|map| {
             map.keys()
                 .filter_map(Value::as_str)
-                .map(std::convert::Into::into)
+                .map(|n| -> String { n.into() })
                 .collect::<HashSet<String>>()
         })
         .unwrap_or_default();
@@ -528,7 +528,7 @@ fn cleanup_proxy_groups(mut config: Mapping) -> Mapping {
     let mut allowed_names = proxy_names;
     allowed_names.extend(group_names);
     allowed_names.extend(provider_names.iter().cloned());
-    allowed_names.extend(BUILTIN_POLICIES.iter().map(|p| (*p).into()));
+    allowed_names.extend(BUILTIN_POLICIES.iter().map(|p| -> String { (*p).into() }));
 
     if let Some(Value::Sequence(groups)) = config.get_mut("proxy-groups") {
         for group in groups {
@@ -591,7 +591,7 @@ async fn apply_dns_settings(mut config: Mapping, enable_dns_settings: bool) -> M
 
 /// Enhance mode
 /// 返回最终订阅、该订阅包含的键、和script执行的结果
-pub async fn enhance() -> (Mapping, HashSet<String>, HashMap<String, ResultLog>) {
+pub async fn enhance() -> (Mapping, ExistsKeys, ChainLogs) {
     // gather config values
     let cfg_vals = get_config_values().await;
     let ConfigValues {
