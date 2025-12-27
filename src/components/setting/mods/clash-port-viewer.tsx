@@ -174,9 +174,7 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
           return;
         }
       } catch (error) {
-        showNotice.error("settings.modals.clashPort.messages.portCheckFailed", {
-          error,
-        });
+        showNotice.error(error);
         return;
       }
     }
