@@ -60,10 +60,10 @@ impl CoreManager {
 
     async fn perform_config_update(&self) -> Result<(bool, String)> {
         Config::generate().await?;
-        self.apply_generate_confihg().await
+        self.apply_generate_config().await
     }
 
-    pub async fn apply_generate_confihg(&self) -> Result<(bool, String)> {
+    pub async fn apply_generate_config(&self) -> Result<(bool, String)> {
         match CoreConfigValidator::global().validate_config().await {
             Ok((true, _)) => {
                 let run_path = Config::generate_file(ConfigType::Run).await?;
