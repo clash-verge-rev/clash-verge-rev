@@ -156,6 +156,7 @@ fn determine_update_flags(patch: &IVerge) -> i32 {
     if language.is_some() {
         update_flags |= UpdateFlags::Language as i32;
         update_flags |= UpdateFlags::SystrayMenu as i32;
+        update_flags |= UpdateFlags::SystrayTooltip as i32;
     }
     if common_tray_icon.is_some()
         || sysproxy_tray_icon.is_some()

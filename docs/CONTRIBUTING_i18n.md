@@ -47,7 +47,7 @@ Native UI strings (tray menu, notifications, dialogs) use `rust-i18n` with YAML 
 - Keep `en.yml` semantically aligned with the Simplified Chinese baseline (`zh.yml`). Other locales may temporarily copy English if no translation is available yet.
 - When a backend feature introduces new strings, update every YAML file to keep the key set consistent. Missing keys fall back to the default language (`zh`), so catching gaps early avoids mixed-language output.
 - The same `pnpm i18n:check` / `pnpm i18n:format` tooling now validates backend YAML keys against Rust usage, so run it after backend i18n edits.
-- Rust code resolves the active language through `src-tauri/src/utils/i18n.rs`. No additional build step is required after editing YAML files; `tauri dev` and `tauri build` pick them up automatically.
+- Rust code resolves the active language through the `clash-verge-i18n` crate (`crates/clash-verge-i18n/src/lib.rs`). No additional build step is required after editing YAML files; `tauri dev` and `tauri build` pick them up automatically.
 
 ## Adding a new language
 
