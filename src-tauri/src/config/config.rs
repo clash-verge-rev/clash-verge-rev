@@ -65,6 +65,9 @@ impl Config {
     pub async fn init_config() -> Result<()> {
         Self::ensure_default_profile_items().await?;
 
+        let verge = Self::verge().await.latest_arc();
+        clash_verge_i18n::sync_locale(verge.language.as_deref());
+
         // init Tun mode
         let handle = Handle::app_handle();
         let is_admin = is_current_app_handle_admin(handle);

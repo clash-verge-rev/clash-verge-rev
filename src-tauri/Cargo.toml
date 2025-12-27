@@ -35,6 +35,7 @@ clash-verge-draft = { workspace = true }
 clash-verge-logging = { workspace = true }
 clash-verge-signal = { workspace = true }
 clash-verge-types = { workspace = true }
+clash-verge-i18n = { workspace = true }
 tauri-plugin-clash-verge-sysinfo = { workspace = true }
 tauri-plugin-clipboard-manager = { workspace = true }
 tauri = { workspace = true, features = [
@@ -81,7 +82,6 @@ aes-gcm = { version = "0.10.3", features = ["std"] }
 base64 = "0.22.1"
 getrandom = "0.3.4"
 futures = "0.3.31"
-sys-locale = "0.3.2"
 gethostname = "1.1.0"
 scopeguard = "1.2.0"
 tauri-plugin-notification = "2.3.3"
@@ -97,7 +97,6 @@ clash_verge_service_ipc = { version = "2.0.26", features = [
   "client",
 ], git = "https://github.com/clash-verge-rev/clash-verge-service-ipc" }
 arc-swap = "1.7.1"
-rust-i18n = "3.1.5"
 rust_iso3166 = "0.1.14"
 dark-light = "2.0.0"
 
