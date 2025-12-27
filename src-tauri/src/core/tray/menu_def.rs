@@ -1,8 +1,11 @@
-use rust_i18n::t;
+use clash_verge_i18n::t;
 use std::{borrow::Cow, sync::Arc};
 
-fn to_arc_str(value: Cow<'static, str>) -> Arc<str> {
-    match value {
+fn to_arc_str<S>(value: S) -> Arc<str>
+where
+    S: Into<Cow<'static, str>>,
+{
+    match value.into() {
         Cow::Borrowed(s) => Arc::from(s),
         Cow::Owned(s) => Arc::from(s.into_boxed_str()),
     }
