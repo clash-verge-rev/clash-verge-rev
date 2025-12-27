@@ -1,16 +1,11 @@
 use crate::{core::handle, utils::resolve::window::build_new_window};
 use clash_verge_logging::{Type, logging};
-use std::future::Future;
+use governor::{DefaultDirectRateLimiter, Quota, RateLimiter};
+use once_cell::sync::Lazy;
+use std::num::NonZeroU32;
 use std::pin::Pin;
+use std::time::Duration;
 use tauri::{Manager as _, WebviewWindow, Wry};
-
-use once_cell::sync::OnceCell;
-use parking_lot::Mutex;
-use scopeguard;
-use std::{
-    sync::atomic::{AtomicBool, Ordering},
-    time::{Duration, Instant},
-};
 
 /// 窗口操作结果
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -45,53 +40,22 @@ pub enum WindowState {
 }
 
 // 窗口操作防抖机制
-static WINDOW_OPERATION_DEBOUNCE: OnceCell<Mutex<Instant>> = OnceCell::new();
-static WINDOW_OPERATION_IN_PROGRESS: AtomicBool = AtomicBool::new(false);
-const WINDOW_OPERATION_DEBOUNCE_MS: u64 = 500;
-
-fn get_window_operation_debounce() -> &'static Mutex<Instant> {
-    WINDOW_OPERATION_DEBOUNCE.get_or_init(|| Mutex::new(Instant::now() - Duration::from_secs(1)))
-}
+const WINDOW_OPERATION_DEBOUNCE_MS: u64 = 1_275;
+static WINDOW_OPERATION_LIMITER: Lazy<DefaultDirectRateLimiter> = Lazy::new(|| {
+    #[allow(clippy::unwrap_used)]
+    RateLimiter::direct(
+        Quota::with_period(Duration::from_millis(WINDOW_OPERATION_DEBOUNCE_MS))
+            .unwrap()
+            .allow_burst(NonZeroU32::new(1).unwrap()),
+    )
+});
 
 fn should_handle_window_operation() -> bool {
-    if WINDOW_OPERATION_IN_PROGRESS.load(Ordering::Acquire) {
-        logging!(warn, Type::Window, "Warning: [防抖] 窗口操作已在进行中，跳过重复调用");
-        return false;
+    let res = WINDOW_OPERATION_LIMITER.check().is_ok();
+    if !res {
+        logging!(debug, Type::Window, "window operation rate limited");
     }
-
-    let debounce_lock = get_window_operation_debounce();
-    let mut last_operation = debounce_lock.lock();
-    let now = Instant::now();
-    let elapsed = now.duration_since(*last_operation);
-
-    logging!(
-        debug,
-        Type::Window,
-        "[防抖] 检查窗口操作间隔: {}ms (需要>={}ms)",
-        elapsed.as_millis(),
-        WINDOW_OPERATION_DEBOUNCE_MS
-    );
-
-    if elapsed >= Duration::from_millis(WINDOW_OPERATION_DEBOUNCE_MS) {
-        *last_operation = now;
-        drop(last_operation);
-        WINDOW_OPERATION_IN_PROGRESS.store(true, Ordering::Release);
-        logging!(info, Type::Window, "[防抖] 窗口操作被允许执行");
-        true
-    } else {
-        logging!(
-            warn,
-            Type::Window,
-            "Warning: [防抖] 窗口操作被防抖机制忽略，距离上次操作 {}ms < {}ms",
-            elapsed.as_millis(),
-            WINDOW_OPERATION_DEBOUNCE_MS
-        );
-        false
-    }
-}
-
-fn finish_window_operation() {
-    WINDOW_OPERATION_IN_PROGRESS.store(false, Ordering::Release);
+    res
 }
 
 /// 统一的窗口管理器
@@ -135,9 +99,6 @@ impl WindowManager {
         if !should_handle_window_operation() {
             return WindowOperationResult::NoAction;
         }
-        let _guard = scopeguard::guard((), |_| {
-            finish_window_operation();
-        });
 
         logging!(info, Type::Window, "开始智能显示主窗口");
         logging!(debug, Type::Window, "{}", Self::get_window_status_info());
@@ -149,7 +110,7 @@ impl WindowManager {
                 logging!(info, Type::Window, "窗口不存在，创建新窗口");
                 if Self::create_window(true).await {
                     logging!(info, Type::Window, "窗口创建成功");
-                    std::thread::sleep(std::time::Duration::from_millis(100));
+                    std::thread::sleep(std::time::Duration::from_millis(50));
                     WindowOperationResult::Created
                 } else {
                     logging!(warn, Type::Window, "窗口创建失败");
@@ -180,11 +141,7 @@ impl WindowManager {
         // 防抖检查
         if !should_handle_window_operation() {
             return WindowOperationResult::NoAction;
-        }
-        let _guard = scopeguard::guard((), |_| {
-            finish_window_operation();
-        });
-
+        };
         logging!(info, Type::Window, "开始切换主窗口显示状态");
 
         let current_state = Self::get_main_window_state();

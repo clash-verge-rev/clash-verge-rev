@@ -1,4 +1,4 @@
-use once_cell::sync::OnceCell;
+use governor::{DefaultDirectRateLimiter, Quota, RateLimiter};
 use tauri::tray::TrayIconBuilder;
 use tauri_plugin_clash_verge_sysinfo::is_current_app_handle_admin;
 use tauri_plugin_mihomo::models::Proxies;
@@ -18,14 +18,11 @@ use crate::{
 
 use super::handle;
 use anyhow::Result;
-use parking_lot::Mutex;
 use smartstring::alias::String;
 use std::collections::HashMap;
+use std::num::NonZeroU32;
 use std::sync::Arc;
-use std::{
-    sync::atomic::{AtomicBool, Ordering},
-    time::{Duration, Instant},
-};
+use std::time::Duration;
 use tauri::{
     AppHandle, Wry,
     menu::{CheckMenuItem, IsMenuItem, MenuEvent, MenuItem, PredefinedMenuItem, Submenu},
@@ -38,45 +35,13 @@ use menu_def::{MenuIds, MenuTexts};
 
 type ProxyMenuItem = (Option<Submenu<Wry>>, Vec<Box<dyn IsMenuItem<Wry>>>);
 
+const TRAY_CLICK_DEBOUNCE_MS: u64 = 1_275;
+
 #[derive(Clone)]
 struct TrayState {}
 
-// 托盘点击防抖机制
-static TRAY_CLICK_DEBOUNCE: OnceCell<Mutex<Instant>> = OnceCell::new();
-const TRAY_CLICK_DEBOUNCE_MS: u64 = 300;
-
-fn get_tray_click_debounce() -> &'static Mutex<Instant> {
-    TRAY_CLICK_DEBOUNCE.get_or_init(|| Mutex::new(Instant::now() - Duration::from_secs(1)))
-}
-
-fn should_handle_tray_click() -> bool {
-    let debounce_lock = get_tray_click_debounce();
-    let now = Instant::now();
-
-    if now.duration_since(*debounce_lock.lock()) >= Duration::from_millis(TRAY_CLICK_DEBOUNCE_MS) {
-        *debounce_lock.lock() = now;
-        true
-    } else {
-        logging!(
-            debug,
-            Type::Tray,
-            "托盘点击被防抖机制忽略，距离上次点击 {}ms",
-            now.duration_since(*debounce_lock.lock()).as_millis()
-        );
-        false
-    }
-}
-
-#[cfg(target_os = "macos")]
 pub struct Tray {
-    last_menu_update: Mutex<Option<Instant>>,
-    menu_updating: AtomicBool,
-}
-
-#[cfg(not(target_os = "macos"))]
-pub struct Tray {
-    last_menu_update: Mutex<Option<Instant>>,
-    menu_updating: AtomicBool,
+    limiter: DefaultDirectRateLimiter,
 }
 
 impl TrayState {
@@ -159,10 +124,14 @@ impl TrayState {
 }
 
 impl Default for Tray {
+    #[allow(clippy::unwrap_used)]
     fn default() -> Self {
         Self {
-            last_menu_update: Mutex::new(None),
-            menu_updating: AtomicBool::new(false),
+            limiter: RateLimiter::direct(
+                Quota::with_period(Duration::from_millis(TRAY_CLICK_DEBOUNCE_MS))
+                    .unwrap()
+                    .allow_burst(NonZeroU32::new(1).unwrap()),
+            ),
         }
     }
 }
@@ -224,45 +193,8 @@ impl Tray {
             logging!(debug, Type::Tray, "应用正在退出，跳过托盘菜单更新");
             return Ok(());
         }
-        // 调整最小更新间隔，确保状态及时刷新
-        const MIN_UPDATE_INTERVAL: Duration = Duration::from_millis(100);
-
-        // 检查是否正在更新
-        if self.menu_updating.load(Ordering::Acquire) {
-            return Ok(());
-        }
-
-        // 检查更新频率，但允许重要事件跳过频率限制
-        let should_force_update = match std::thread::current().name() {
-            Some("main") => true,
-            _ => {
-                let last_update = self.last_menu_update.lock();
-                if let Some(last_time) = *last_update {
-                    last_time.elapsed() >= MIN_UPDATE_INTERVAL
-                } else {
-                    true
-                }
-            }
-        };
-
-        if !should_force_update {
-            return Ok(());
-        }
-
         let app_handle = handle::Handle::app_handle();
-
-        // 设置更新状态
-        self.menu_updating.store(true, Ordering::Release);
-
-        let result = self.update_menu_internal(app_handle).await;
-
-        {
-            let mut last_update = self.last_menu_update.lock();
-            *last_update = Some(Instant::now());
-        }
-        self.menu_updating.store(false, Ordering::Release);
-
-        result
+        self.update_menu_internal(app_handle).await
     }
 
     async fn update_menu_internal(&self, app_handle: &AppHandle) -> Result<()> {
@@ -503,8 +435,8 @@ impl Tray {
             } = event
             {
                 // 添加防抖检查，防止快速连击
-                if !should_handle_tray_click() {
-                    logging!(info, Type::Tray, "click tray icon too fast, ignore");
+                #[allow(clippy::use_self)]
+                if !Tray::global().should_handle_tray_click() {
                     return;
                 }
                 AsyncHandler::spawn(|| async move {
@@ -529,6 +461,14 @@ impl Tray {
         });
         tray.on_menu_event(on_menu_event);
         Ok(())
+    }
+
+    fn should_handle_tray_click(&self) -> bool {
+        let res = self.limiter.check().is_ok();
+        if !res {
+            logging!(debug, Type::Tray, "tray click rate limited");
+        }
+        res
     }
 }
 
@@ -1001,10 +941,6 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
             }
             MenuIds::DASHBOARD => {
                 logging!(info, Type::Tray, "托盘菜单点击: 打开窗口");
-
-                if !should_handle_tray_click() {
-                    return;
-                }
                 if !lightweight::exit_lightweight_mode().await {
                     WindowManager::show_main_window().await;
                 };
@@ -1040,9 +976,6 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
             MenuIds::RESTART_CLASH => feat::restart_clash_core().await,
             MenuIds::RESTART_APP => feat::restart_app().await,
             MenuIds::LIGHTWEIGHT_MODE => {
-                if !should_handle_tray_click() {
-                    return;
-                }
                 if !is_in_lightweight_mode() {
                     lightweight::entry_lightweight_mode().await;
                 } else {
