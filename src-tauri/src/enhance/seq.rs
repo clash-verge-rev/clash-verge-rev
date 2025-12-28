@@ -109,14 +109,13 @@ pub fn use_seq(seq: SeqMap, mut config: Mapping, field: &str) -> Mapping {
                         }
                     }
                     for value in base_seq {
-                        match &value {
-                            Value::String(name) => {
-                                if existing.insert(name.to_owned()) {
-                                    seq.push(value);
-                                }
-                            }
-                            _ => seq.push(value),
+                        if let Value::String(name) = &value
+                            && !existing.insert(name.to_owned())
+                        {
+                            continue;
                         }
+
+                        seq.push(value);
                     }
                     proxies_seq = Some(seq);
                     appended_to_selector = true;
