@@ -112,6 +112,14 @@ fn determine_update_flags(patch: &IVerge) -> UpdateFlags {
     let enable_proxy_guard = patch.enable_proxy_guard;
     let proxy_guard_duration = patch.proxy_guard_duration;
 
+    #[cfg(target_os = "windows")]
+    let restart_core_needed = socks_enabled.is_some()
+        || http_enabled.is_some()
+        || socks_port.is_some()
+        || http_port.is_some()
+        || mixed_port.is_some()
+        || enable_external_controller.is_some();
+    #[cfg(not(target_os = "windows"))]
     let mut restart_core_needed = socks_enabled.is_some()
         || http_enabled.is_some()
         || socks_port.is_some()
