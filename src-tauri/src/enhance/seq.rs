@@ -100,15 +100,22 @@ pub fn use_seq(seq: SeqMap, mut config: Mapping, field: &str) -> Mapping {
                 });
 
                 if !appended_to_selector && !added_proxy_names.is_empty() && is_selector_group(group_map) {
-                    let mut seq = proxies_seq.unwrap_or_else(Sequence::new);
-                    let mut existing = seq
-                        .iter()
-                        .filter_map(Value::as_str)
-                        .map(str::to_owned)
-                        .collect::<HashSet<String>>();
+                    let base_seq = proxies_seq.unwrap_or_else(Sequence::new);
+                    let mut seq = Sequence::new();
+                    let mut existing = HashSet::new();
                     for name in &added_proxy_names {
                         if existing.insert(name.clone()) {
                             seq.push(Value::String(name.clone()));
+                        }
+                    }
+                    for value in base_seq {
+                        match &value {
+                            Value::String(name) => {
+                                if existing.insert(name.to_owned()) {
+                                    seq.push(value);
+                                }
+                            }
+                            _ => seq.push(value),
                         }
                     }
                     proxies_seq = Some(seq);
@@ -270,7 +277,7 @@ proxy-groups:
             .as_sequence()
             .expect("group proxies should be a sequence");
         let names: Vec<&str> = group1_proxies.iter().filter_map(Value::as_str).collect();
-        assert_eq!(names, vec!["proxy1", "proxy3", "proxy4"]);
+        assert_eq!(names, vec!["proxy3", "proxy4", "proxy1"]);
 
         let group2_proxies = groups[1]
             .as_mapping()
