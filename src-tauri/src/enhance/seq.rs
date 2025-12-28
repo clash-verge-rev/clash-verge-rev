@@ -1,5 +1,6 @@
 use serde::{Deserialize, Serialize};
 use serde_yaml_ng::{Mapping, Sequence, Value};
+use std::collections::HashSet;
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct SeqMap {
@@ -8,12 +9,45 @@ pub struct SeqMap {
     pub delete: Vec<String>,
 }
 
+fn collect_proxy_names(seq: &Sequence) -> Vec<String> {
+    seq.iter()
+        .filter_map(|item| match item {
+            Value::Mapping(map) => map.get("name").and_then(Value::as_str).map(str::to_owned),
+            Value::String(name) => Some(name.to_owned()),
+            _ => None,
+        })
+        .collect()
+}
+
+fn is_selector_group(group_map: &Mapping) -> bool {
+    group_map
+        .get("type")
+        .and_then(Value::as_str)
+        .map(|value| {
+            let value = value.to_ascii_lowercase();
+            value == "select" || value == "selector"
+        })
+        .unwrap_or(false)
+}
+
 pub fn use_seq(seq: SeqMap, mut config: Mapping, field: &str) -> Mapping {
     let SeqMap {
         prepend,
         append,
         delete,
     } = seq;
+
+    let added_proxy_names = if field == "proxies" {
+        let mut names = collect_proxy_names(&prepend);
+        names.extend(collect_proxy_names(&append));
+        let mut seen = HashSet::new();
+        names
+            .into_iter()
+            .filter(|name| seen.insert(name.clone()))
+            .collect::<Vec<String>>()
+    } else {
+        Vec::new()
+    };
 
     let mut new_seq = Sequence::new();
     new_seq.extend(prepend);
@@ -48,10 +82,11 @@ pub fn use_seq(seq: SeqMap, mut config: Mapping, field: &str) -> Mapping {
         && let Some(Value::Sequence(groups)) = config.get_mut("proxy-groups")
     {
         let mut new_groups = Sequence::new();
+        let mut appended_to_selector = false;
         for group in groups {
             if let Value::Mapping(group_map) = group {
-                if let Some(Value::Sequence(proxies)) = group_map.get("proxies") {
-                    let filtered_proxies: Sequence = proxies
+                let mut proxies_seq = group_map.get("proxies").and_then(Value::as_sequence).map(|proxies| {
+                    proxies
                         .iter()
                         .filter(|p| {
                             if let Value::String(name) = p {
@@ -61,8 +96,27 @@ pub fn use_seq(seq: SeqMap, mut config: Mapping, field: &str) -> Mapping {
                             }
                         })
                         .cloned()
-                        .collect();
-                    group_map.insert(Value::String("proxies".into()), Value::Sequence(filtered_proxies));
+                        .collect::<Sequence>()
+                });
+
+                if !appended_to_selector && !added_proxy_names.is_empty() && is_selector_group(group_map) {
+                    let mut seq = proxies_seq.unwrap_or_else(Sequence::new);
+                    let mut existing = seq
+                        .iter()
+                        .filter_map(Value::as_str)
+                        .map(str::to_owned)
+                        .collect::<HashSet<String>>();
+                    for name in &added_proxy_names {
+                        if existing.insert(name.clone()) {
+                            seq.push(Value::String(name.clone()));
+                        }
+                    }
+                    proxies_seq = Some(seq);
+                    appended_to_selector = true;
+                }
+
+                if let Some(seq) = proxies_seq {
+                    group_map.insert(Value::String("proxies".into()), Value::Sequence(seq));
                 }
                 new_groups.push(Value::Mapping(group_map.to_owned()));
             } else {
@@ -157,5 +211,75 @@ proxy-groups:
             "proxy2"
         );
         assert_eq!(group2_proxies.len(), 0);
+    }
+
+    #[test]
+    #[allow(clippy::unwrap_used)]
+    #[allow(clippy::expect_used)]
+    fn test_add_new_proxies_to_first_selector_group() {
+        let config_str = r#"
+proxies:
+- name: "proxy1"
+  type: "ss"
+proxy-groups:
+- name: "group1"
+  type: "select"
+  proxies:
+    - "proxy1"
+- name: "group2"
+  type: "select"
+  proxies:
+    - "proxy1"
+"#;
+        let mut config: Mapping = serde_yaml_ng::from_str(config_str).expect("Failed to parse test config YAML");
+
+        let prepend: Sequence = serde_yaml_ng::from_str(
+            r#"
+- name: "proxy3"
+  type: "ss"
+"#,
+        )
+        .expect("Failed to parse prepend proxies");
+
+        let append: Sequence = serde_yaml_ng::from_str(
+            r#"
+- name: "proxy4"
+  type: "vmess"
+"#,
+        )
+        .expect("Failed to parse append proxies");
+
+        let seq = SeqMap {
+            prepend,
+            append,
+            delete: vec![],
+        };
+
+        config = use_seq(seq, config, "proxies");
+
+        let groups = config
+            .get("proxy-groups")
+            .expect("proxy-groups field should exist")
+            .as_sequence()
+            .expect("proxy-groups should be a sequence");
+        let group1_proxies = groups[0]
+            .as_mapping()
+            .expect("group should be a mapping")
+            .get("proxies")
+            .expect("group should have proxies")
+            .as_sequence()
+            .expect("group proxies should be a sequence");
+        let names: Vec<&str> = group1_proxies.iter().filter_map(Value::as_str).collect();
+        assert_eq!(names, vec!["proxy1", "proxy3", "proxy4"]);
+
+        let group2_proxies = groups[1]
+            .as_mapping()
+            .expect("group should be a mapping")
+            .get("proxies")
+            .expect("group should have proxies")
+            .as_sequence()
+            .expect("group proxies should be a sequence");
+        let names: Vec<&str> = group2_proxies.iter().filter_map(Value::as_str).collect();
+        assert_eq!(names, vec!["proxy1"]);
     }
 }
