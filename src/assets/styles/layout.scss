@@ -61,6 +61,12 @@
         overflow-y: auto;
         margin-bottom: 0px;
         padding-top: 4px;
+        scrollbar-width: none;
+
+        &::-webkit-scrollbar {
+          width: 0;
+          height: 0;
+        }
       }
 
       .the-traffic {

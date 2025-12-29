@@ -106,6 +106,11 @@ export const ProxyGroupNavigator = ({
         p: 0.25,
         maxHeight: "70vh",
         overflowY: "auto",
+        scrollbarWidth: "none",
+        "&::-webkit-scrollbar": {
+          width: 0,
+          height: 0,
+        },
         minWidth: "auto",
       }}
     >
