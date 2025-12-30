@@ -215,11 +215,8 @@ mod tests {
         let draft = Draft::new(IVerge::default());
 
         #[allow(clippy::unwrap_used)]
-        let err = block_on_ready(draft.with_data_modify(|v| async move {
-            drop(v);
-            Err::<(IVerge, ()), _>(anyhow!("boom"))
-        }))
-        .unwrap_err();
+        let err = block_on_ready(draft.with_data_modify(|_v| async move { Err::<(IVerge, ()), _>(anyhow!("boom")) }))
+            .unwrap_err();
 
         assert_eq!(format!("{err}"), "boom");
     }

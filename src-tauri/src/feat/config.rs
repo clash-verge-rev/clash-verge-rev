@@ -104,7 +104,7 @@ fn determine_update_flags(patch: &IVerge) -> UpdateFlags {
     // let enable_tray_icon = patch.enable_tray_icon;
     let enable_global_hotkey = patch.enable_global_hotkey;
     let tray_event = &patch.tray_event;
-    let home_cards = patch.home_cards.clone();
+    let home_cards = patch.home_cards.as_ref();
     let enable_auto_light_weight = patch.enable_auto_light_weight_mode;
     let enable_external_controller = patch.enable_external_controller;
     let tray_proxy_groups_display_mode = &patch.tray_proxy_groups_display_mode;
