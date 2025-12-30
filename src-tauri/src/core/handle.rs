@@ -1,10 +1,6 @@
 use crate::{APP_HANDLE, singleton};
-use parking_lot::Mutex;
 use smartstring::alias::String;
-use std::sync::{
-    Arc,
-    atomic::{AtomicBool, Ordering},
-};
+use std::sync::atomic::{AtomicBool, Ordering};
 use tauri::{AppHandle, Manager as _, WebviewWindow};
 use tauri_plugin_mihomo::{Mihomo, MihomoExt as _};
 use tokio::sync::RwLockReadGuard;
@@ -13,7 +9,6 @@ use super::notification::{FrontendEvent, NotificationSystem};
 
 #[derive(Debug, Default)]
 pub struct Handle {
-    pub(super) notification_system: Arc<Mutex<NotificationSystem>>,
     is_exiting: AtomicBool,
 }
 
@@ -22,13 +17,6 @@ singleton!(Handle, HANDLE);
 impl Handle {
     pub fn new() -> Self {
         Self::default()
-    }
-
-    pub fn init(&self) {
-        if self.is_exiting() {
-            return;
-        }
-        self.notification_system.lock().start();
     }
 
     pub fn app_handle() -> &'static AppHandle {
@@ -91,12 +79,12 @@ impl Handle {
         if handle.is_exiting() {
             return;
         }
-        handle.notification_system.lock().send_event(event);
+        let webview = Self::get_window();
+        NotificationSystem::send_event(webview.as_ref(), event);
     }
 
     pub fn set_is_exiting(&self) {
         self.is_exiting.store(true, Ordering::Release);
-        self.notification_system.lock().shutdown();
     }
 
     pub fn is_exiting(&self) -> bool {

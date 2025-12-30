@@ -251,7 +251,6 @@ pub fn run() {
                 logging!(error, Type::Setup, "Failed to setup window state: {}", e);
             }
 
-            resolve::resolve_setup_handle();
             resolve::resolve_setup_async();
             resolve::resolve_setup_sync();
             resolve::init_signal();
@@ -284,7 +283,6 @@ pub fn run() {
             }
 
             logging!(info, Type::System, "应用就绪");
-            handle::Handle::global().init();
 
             #[cfg(target_os = "macos")]
             if let Some(window) = _app_handle.get_webview_window("main") {
@@ -294,8 +292,6 @@ pub fn run() {
 
         #[cfg(target_os = "macos")]
         pub async fn handle_reopen(has_visible_windows: bool) {
-            handle::Handle::global().init();
-
             if lightweight::is_in_lightweight_mode() {
                 lightweight::exit_lightweight_mode().await;
                 return;
