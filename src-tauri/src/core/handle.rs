@@ -80,7 +80,7 @@ impl Handle {
             return;
         }
         let webview = Self::get_window();
-        NotificationSystem::send_event(webview.as_ref(), event);
+        NotificationSystem::send_event(webview, event);
     }
 
     pub fn set_is_exiting(&self) {

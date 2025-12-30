@@ -3,6 +3,8 @@ use serde_json::json;
 use smartstring::alias::String;
 use tauri::{Emitter as _, WebviewWindow};
 
+use crate::process::AsyncHandler;
+
 // TODO 重构或优化，避免 Clone 过多
 #[derive(Debug, Clone)]
 pub(super) enum FrontendEvent {
@@ -18,13 +20,15 @@ pub(super) enum FrontendEvent {
 pub(super) struct NotificationSystem;
 
 impl NotificationSystem {
-    pub(super) fn send_event(window: Option<&WebviewWindow>, event: FrontendEvent) {
+    pub(super) fn send_event(window: Option<WebviewWindow>, event: FrontendEvent) {
         if let Some(window) = window {
-            Self::emit_to_window(window, event);
+            AsyncHandler::spawn_blocking(move || {
+                Self::emit_to_window(window, event);
+            });
         }
     }
 
-    fn emit_to_window(window: &WebviewWindow, event: FrontendEvent) {
+    fn emit_to_window(window: WebviewWindow, event: FrontendEvent) {
         let (event_name, payload) = Self::serialize_event(event);
         let Ok(payload) = payload else {
             return;
