@@ -1,6 +1,5 @@
 use crate::{APP_HANDLE, singleton};
-use arc_swap::ArcSwap;
-use parking_lot::RwLock;
+use parking_lot::Mutex;
 use smartstring::alias::String;
 use std::sync::{
     Arc,
@@ -10,14 +9,13 @@ use tauri::{AppHandle, Manager as _, WebviewWindow};
 use tauri_plugin_mihomo::{Mihomo, MihomoExt as _};
 use tokio::sync::RwLockReadGuard;
 
-use super::notification::{ErrorMessage, FrontendEvent, NotificationSystem};
+use super::notification::{FrontendEvent, NotificationSystem};
 
 #[derive(Debug, Default)]
 pub struct Handle {
+    pub(super) notification_system: Arc<Mutex<NotificationSystem>>,
     is_exiting: AtomicBool,
     startup_completed: AtomicBool,
-    startup_errors: Arc<RwLock<Vec<ErrorMessage>>>,
-    pub(super) notification_system: ArcSwap<NotificationSystem>,
 }
 
 singleton!(Handle, HANDLE);
@@ -31,7 +29,7 @@ impl Handle {
         if self.is_exiting() {
             return;
         }
-        self.notification_system.load().start();
+        self.notification_system.lock().start();
     }
 
     pub fn app_handle() -> &'static AppHandle {
@@ -76,20 +74,12 @@ impl Handle {
     // TODO 利用 &str 等缩短 Clone
     pub fn notice_message<S: Into<String>, M: Into<String>>(status: S, msg: M) {
         let handle = Self::global();
-        let status_str = status.into();
-        let msg_str = msg.into();
-
-        if !handle.startup_completed.load(Ordering::Acquire) {
-            handle.startup_errors.write().push(ErrorMessage {
-                status: status_str,
-                message: msg_str,
-            });
-            return;
-        }
-
         if handle.is_exiting() {
             return;
         }
+
+        let status_str = status.into();
+        let msg_str = msg.into();
 
         Self::send_event(FrontendEvent::NoticeMessage {
             status: status_str,
@@ -102,27 +92,16 @@ impl Handle {
         if handle.is_exiting() {
             return;
         }
-        handle.notification_system.load().send_event(event);
+        handle.notification_system.lock().send_event(event);
     }
 
     pub fn mark_startup_completed(&self) {
         self.startup_completed.store(true, Ordering::Release);
-        self.send_startup_errors();
-    }
-
-    fn send_startup_errors(&self) {
-        let errors = std::mem::take(&mut *self.startup_errors.write());
-        for error in errors {
-            Self::send_event(FrontendEvent::NoticeMessage {
-                status: error.status,
-                message: error.message,
-            });
-        }
     }
 
     pub fn set_is_exiting(&self) {
         self.is_exiting.store(true, Ordering::Release);
-        self.notification_system.load().shutdown();
+        self.notification_system.lock().shutdown();
     }
 
     pub fn is_exiting(&self) -> bool {

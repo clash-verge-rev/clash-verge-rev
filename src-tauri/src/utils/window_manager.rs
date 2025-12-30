@@ -110,7 +110,6 @@ impl WindowManager {
                 logging!(info, Type::Window, "窗口不存在，创建新窗口");
                 if Self::create_window(true).await {
                     logging!(info, Type::Window, "窗口创建成功");
-                    std::thread::sleep(std::time::Duration::from_millis(50));
                     WindowOperationResult::Created
                 } else {
                     logging!(warn, Type::Window, "窗口创建失败");

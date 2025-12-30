@@ -1,19 +1,20 @@
-use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{
+    Arc,
+    atomic::{AtomicBool, Ordering},
+};
 
 use super::handle::Handle;
 use clash_verge_logging::{Type, logging};
-use parking_lot::Mutex;
 use serde_json::json;
 use smartstring::alias::String;
 use tauri::{
     Emitter as _, WebviewWindow,
-    async_runtime::{Receiver, Sender, channel},
+    async_runtime::{JoinHandle, Receiver, Sender, channel},
 };
-use tokio::task::JoinHandle;
 
 // TODO 重构或优化，避免 Clone 过多
 #[derive(Debug, Clone)]
-pub enum FrontendEvent {
+pub(super) enum FrontendEvent {
     RefreshClash,
     RefreshVerge,
     NoticeMessage { status: String, message: String },
@@ -23,21 +24,15 @@ pub enum FrontendEvent {
     ProfileUpdateCompleted { uid: String },
 }
 
-#[derive(Debug, Clone)]
-pub struct ErrorMessage {
-    pub status: String,
-    pub message: String,
-}
-
 #[derive(Debug, Default)]
 pub struct NotificationSystem {
-    sender: Mutex<Option<Sender<FrontendEvent>>>,
-    worker_task: Mutex<Option<JoinHandle<()>>>,
+    sender: Arc<Option<Sender<FrontendEvent>>>,
+    worker_task: Arc<Option<JoinHandle<()>>>,
     pub(super) is_running: AtomicBool,
 }
 
 impl NotificationSystem {
-    pub fn start(&self) {
+    pub fn start(&mut self) {
         if self
             .is_running
             .compare_exchange(false, true, Ordering::Release, Ordering::Relaxed)
@@ -47,22 +42,18 @@ impl NotificationSystem {
         }
 
         let (tx, rx) = channel(32);
-        *self.sender.lock() = Some(tx);
-
-        #[allow(clippy::expect_used)]
-        let rt = tokio::runtime::Builder::new_current_thread()
-            .worker_threads(1)
-            .enable_all()
-            .build()
-            .expect("Failed to build runtime for notification system");
-
-        let task = rt.spawn(async move {
+        if let Some(s) = Arc::get_mut(&mut self.sender) {
+            *s = Some(tx);
+        }
+        let task = tauri::async_runtime::spawn(async move {
             Self::worker_loop(rx).await;
         });
-        *self.worker_task.lock() = Some(task);
+        if let Some(t) = Arc::get_mut(&mut self.worker_task) {
+            *t = Some(task);
+        }
     }
 
-    pub fn shutdown(&self) {
+    pub fn shutdown(&mut self) {
         if self
             .is_running
             .compare_exchange(true, false, Ordering::Release, Ordering::Relaxed)
@@ -71,16 +62,16 @@ impl NotificationSystem {
             return;
         }
 
-        self.sender.lock().take();
+        self.sender = Arc::new(None);
 
-        let value = self.worker_task.lock().take();
+        let value = Arc::get_mut(&mut self.worker_task).and_then(|t| t.take());
         if let Some(task) = value {
             task.abort();
         }
     }
 
     pub fn send_event(&self, event: FrontendEvent) -> bool {
-        if let Some(sender) = &*self.sender.lock() {
+        if let Some(sender) = &*self.sender {
             sender.try_send(event).is_ok()
         } else {
             false
@@ -100,9 +91,8 @@ impl NotificationSystem {
     }
 
     fn process_event_sync(handle: &super::handle::Handle, event: FrontendEvent) {
-        let system = handle.notification_system.load();
         if let Some(window) = super::handle::Handle::get_window() {
-            system.emit_to_window(&window, event);
+            handle.notification_system.lock().emit_to_window(&window, event);
         }
     }
 
