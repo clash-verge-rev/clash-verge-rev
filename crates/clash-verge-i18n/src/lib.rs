@@ -65,8 +65,8 @@ pub fn set_locale(language: &str) {
 }
 
 #[inline]
-pub fn translate(key: &str) -> String {
-    rust_i18n::t!(key).to_string()
+pub fn translate(key: &str) -> Cow<'_, str> {
+    rust_i18n::t!(key)
 }
 
 #[macro_export]
@@ -78,7 +78,7 @@ macro_rules! t {
         {
             let mut _text = $crate::translate(&$key);
             $(
-                _text = _text.replace(&format!("{{{}}}", stringify!($arg_name)), &$arg_value.to_string());
+                _text = _text.replace(&format!("{{{}}}", stringify!($arg_name)), &$arg_value);
             )*
             _text
         }
