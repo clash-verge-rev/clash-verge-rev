@@ -685,6 +685,7 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
             <TextField
               size="small"
               autoComplete="off"
+              spellCheck="false"
               value={values.listen}
               onChange={handleChange("listen")}
               placeholder=":53"
@@ -714,6 +715,7 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
             <TextField
               size="small"
               autoComplete="off"
+              spellCheck="false"
               value={values.fakeIpRange}
               onChange={handleChange("fakeIpRange")}
               placeholder="198.18.0.1/16"
@@ -827,6 +829,7 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
               minRows={2}
               maxRows={3}
               size="small"
+              spellCheck="false"
               value={values.defaultNameserver}
               onChange={handleChange("defaultNameserver")}
               placeholder="system,223.6.6.6, 8.8.8.8, 2400:3200::1, 2001:4860:4860::8888"
@@ -844,6 +847,7 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
               minRows={2}
               maxRows={4}
               size="small"
+              spellCheck="false"
               value={values.nameserver}
               onChange={handleChange("nameserver")}
               placeholder="8.8.8.8, https://doh.pub/dns-query, https://dns.alidns.com/dns-query"
@@ -861,6 +865,7 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
               minRows={2}
               maxRows={4}
               size="small"
+              spellCheck="false"
               value={values.fallback}
               onChange={handleChange("fallback")}
               placeholder="https://dns.alidns.com/dns-query, https://dns.google/dns-query, https://cloudflare-dns.com/dns-query"
@@ -878,6 +883,7 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
               minRows={2}
               maxRows={3}
               size="small"
+              spellCheck="false"
               value={values.proxyServerNameserver}
               onChange={handleChange("proxyServerNameserver")}
               placeholder="https://doh.pub/dns-query, https://dns.alidns.com/dns-query"
@@ -897,6 +903,7 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
               minRows={2}
               maxRows={3}
               size="small"
+              spellCheck="false"
               value={values.directNameserver}
               onChange={handleChange("directNameserver")}
               placeholder="system, 223.6.6.6"
@@ -916,6 +923,7 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
               minRows={2}
               maxRows={4}
               size="small"
+              spellCheck="false"
               value={values.fakeIpFilter}
               onChange={handleChange("fakeIpFilter")}
               placeholder="*.lan, *.local, localhost.ptlogin2.qq.com"
@@ -935,6 +943,7 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
               minRows={2}
               maxRows={4}
               size="small"
+              spellCheck="false"
               value={values.nameserverPolicy}
               onChange={handleChange("nameserverPolicy")}
               placeholder="+.arpa=10.0.0.1, rule-set:cn=https://doh.pub/dns-query;https://dns.alidns.com/dns-query"
@@ -967,6 +976,7 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
             <TextField
               size="small"
               autoComplete="off"
+              spellCheck="false"
               value={values.fallbackGeoipCode}
               onChange={handleChange("fallbackGeoipCode")}
               placeholder="CN"
@@ -987,6 +997,7 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
               minRows={2}
               maxRows={3}
               size="small"
+              spellCheck="false"
               value={values.fallbackIpcidr}
               onChange={handleChange("fallbackIpcidr")}
               placeholder="240.0.0.0/4, 127.0.0.1/8"
@@ -1006,6 +1017,7 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
               minRows={2}
               maxRows={3}
               size="small"
+              spellCheck="false"
               value={values.fallbackDomain}
               onChange={handleChange("fallbackDomain")}
               placeholder="+.google.com, +.facebook.com, +.youtube.com"
@@ -1031,6 +1043,7 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
               minRows={2}
               maxRows={4}
               size="small"
+              spellCheck="false"
               value={values.hosts}
               onChange={handleChange("hosts")}
               placeholder="*.clash.dev=127.0.0.1, alpha.clash.dev=::1, test.com=1.1.1.1;2.2.2.2, baidu.com=google.com"
