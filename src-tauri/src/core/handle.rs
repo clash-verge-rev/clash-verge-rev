@@ -15,7 +15,6 @@ use super::notification::{FrontendEvent, NotificationSystem};
 pub struct Handle {
     pub(super) notification_system: Arc<Mutex<NotificationSystem>>,
     is_exiting: AtomicBool,
-    startup_completed: AtomicBool,
 }
 
 singleton!(Handle, HANDLE);
@@ -93,10 +92,6 @@ impl Handle {
             return;
         }
         handle.notification_system.lock().send_event(event);
-    }
-
-    pub fn mark_startup_completed(&self) {
-        self.startup_completed.store(true, Ordering::Release);
     }
 
     pub fn set_is_exiting(&self) {
