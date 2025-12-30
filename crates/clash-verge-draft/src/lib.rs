@@ -71,13 +71,13 @@ impl<T: Clone> Draft<T> {
     pub async fn with_data_modify<F, Fut, R>(&self, f: F) -> Result<R, anyhow::Error>
     where
         T: Send + Sync + 'static,
-        F: FnOnce(Box<T>) -> Fut + Send,
-        Fut: std::future::Future<Output = Result<(Box<T>, R), anyhow::Error>> + Send,
+        F: FnOnce(T) -> Fut + Send,
+        Fut: std::future::Future<Output = Result<(T, R), anyhow::Error>> + Send,
     {
         let (local, original_arc) = {
             let guard = self.inner.read();
             let arc = Arc::clone(&guard.0);
-            (Box::new((*arc).clone()), arc)
+            ((*arc).clone(), arc)
         };
         let (new_local, res) = f(local).await?;
         let mut guard = self.inner.write();

@@ -195,7 +195,7 @@ mod tests {
         // 使用 with_data_modify 异步（立即就绪）地更新 committed
         let res = block_on_ready(draft.with_data_modify(|mut v| async move {
             v.enable_auto_launch = Some(true);
-            Ok((Box::new(*v), "done")) // Dereference v to get Box<T>
+            Ok((v, "done"))
         }));
         assert_eq!(
             {
@@ -217,7 +217,7 @@ mod tests {
         #[allow(clippy::unwrap_used)]
         let err = block_on_ready(draft.with_data_modify(|v| async move {
             drop(v);
-            Err::<(Box<IVerge>, ()), _>(anyhow!("boom"))
+            Err::<(IVerge, ()), _>(anyhow!("boom"))
         }))
         .unwrap_err();
 
@@ -243,7 +243,7 @@ mod tests {
         #[allow(clippy::unwrap_used)]
         block_on_ready(draft.with_data_modify(|mut v| async move {
             v.enable_auto_launch = Some(false); // 与草稿不同
-            Ok((Box::new(*v), ())) // Dereference v to get Box<T>
+            Ok((v, ()))
         }))
         .unwrap();
 
