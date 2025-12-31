@@ -33,5 +33,6 @@
 - 使用「编辑节点」添加节点时，自动将节点添加到第一个 `select` 类型的代理组的第一位
 - 隐藏侧边导航栏和悬浮跳转导航的滚动条
 - 完善对 AnyTLS / Mieru / Sudoku 的 GUI 支持
+- macOS 和 Linux 对服务 IPC 权限进一步限制
 
 </details>

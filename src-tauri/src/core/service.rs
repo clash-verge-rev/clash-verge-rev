@@ -295,54 +295,6 @@ fn force_reinstall_service() -> Result<()> {
     })
 }
 
-/// 检查服务版本 - 使用IPC通信
-async fn check_service_version() -> Result<String> {
-    let version_arc: Result<String> = {
-        logging!(info, Type::Service, "开始检查服务版本 (IPC)");
-        let result = clash_verge_service_ipc::get_version().await;
-        logging!(debug, Type::Service, "检查服务版本 (IPC) 结果: {:?}", result);
-
-        // 检查错误信息是否是JSON序列化错误或预期值错误，以适配老版本服务
-        // 这可能是因为老版本服务的API不兼容，导致无法正确解析响应
-        // 如果是这种情况，直接返回空字符串，表示无法获取版本
-        if let Err(e) = result.as_ref()
-            && (e.to_string().contains("JSON serialization error") || e.to_string().contains("expected value"))
-        {
-            logging!(
-                warn,
-                Type::Service,
-                "服务版本检查失败，可能是老版本服务 API 不兼容: {}",
-                e
-            );
-            return Ok("".to_string());
-        }
-
-        // 因为上面的错误处理 Error 可能会被忽略，所以这里需要再次检查
-        let response = result.context("无法连接到Clash Verge Service")?;
-        if response.code > 0 {
-            let err_msg = response.message;
-            logging!(error, Type::Service, "获取服务版本失败: {}", err_msg);
-            return Err(anyhow::anyhow!(err_msg));
-        }
-
-        let version = response.data.unwrap_or_else(|| "unknown".into());
-        Ok(version)
-    };
-
-    match version_arc.as_ref() {
-        Ok(v) => Ok(v.clone()),
-        Err(e) => Err(anyhow::Error::msg(e.to_string())),
-    }
-}
-
-/// 检查服务是否需要重装
-pub async fn check_service_needs_reinstall() -> Result<bool> {
-    match check_service_version().await {
-        Ok(version) => Ok(version != clash_verge_service_ipc::VERSION),
-        Err(e) => Err(e),
-    }
-}
-
 /// 尝试使用服务启动core
 pub(super) async fn start_with_existing_service(config_file: &PathBuf) -> Result<()> {
     logging!(info, Type::Service, "尝试使用现有服务启动核心");
@@ -483,20 +435,10 @@ impl ServiceManager {
 
     /// 综合服务状态检查（一次性完成所有检查）
     pub async fn check_service_comprehensive(&self) -> ServiceStatus {
-        match check_service_needs_reinstall().await {
-            Ok(need) => {
-                logging!(debug, Type::Service, "服务当前可用，检查是否需要重装");
-                if need {
-                    logging!(debug, Type::Service, "服务需要重装且需要重装");
-                    ServiceStatus::NeedsReinstall
-                } else {
-                    ServiceStatus::Ready
-                }
-            }
-            Err(err) => {
-                logging!(warn, Type::Service, "服务不可用，检查安装状态");
-                ServiceStatus::Unavailable(err.to_string())
-            }
+        if clash_verge_service_ipc::is_reinstall_service_needed().await {
+            ServiceStatus::NeedsReinstall
+        } else {
+            ServiceStatus::Ready
         }
     }
 
