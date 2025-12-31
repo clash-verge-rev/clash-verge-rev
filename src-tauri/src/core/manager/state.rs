@@ -31,6 +31,8 @@ impl CoreManager {
         let clash_core = Config::verge().await.latest_arc().get_valid_clash_core();
         let config_dir = dirs::app_home_dir()?;
 
+        #[cfg(unix)]
+        let previous_mask = unsafe { tauri_plugin_clash_verge_sysinfo::libc::umask(0o007) };
         let (mut rx, child) = app_handle
             .shell()
             .sidecar(clash_core.as_str())?
@@ -47,6 +49,10 @@ impl CoreManager {
                 &IClashTemp::guard_external_controller_ipc(),
             ])
             .spawn()?;
+        #[cfg(unix)]
+        unsafe {
+            tauri_plugin_clash_verge_sysinfo::libc::umask(previous_mask)
+        };
 
         let pid = child.pid();
         logging!(trace, Type::Core, "Sidecar started with PID: {}", pid);

@@ -7,6 +7,8 @@ pub mod commands;
 
 #[cfg(windows)]
 use deelevate::{PrivilegeLevel, Token};
+#[cfg(unix)]
+pub use libc;
 use parking_lot::RwLock;
 use sysinfo::{Networks, System};
 use tauri::{
