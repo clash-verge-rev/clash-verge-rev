@@ -33,14 +33,13 @@ import {
 } from "@mui/material";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import useSWR from "swr";
 import {
   closeAllConnections,
   selectNodeForGroup,
 } from "tauri-plugin-mihomo-api";
 
 import { useProxiesData } from "@/hooks/use-clash-data";
-import { calcuProxies, updateProxyChainConfigInRuntime } from "@/services/cmds";
+import { updateProxyChainConfigInRuntime } from "@/services/cmds";
 import { debugLog } from "@/utils/debug";
 
 interface ProxyChainItem {
@@ -200,44 +199,33 @@ export const ProxyChain = ({
 }: ProxyChainProps) => {
   const theme = useTheme();
   const { t } = useTranslation();
-  const { proxies } = useProxiesData();
+  const { proxies, refreshProxy } = useProxiesData();
   const [isConnecting, setIsConnecting] = useState(false);
   const markUnsavedChanges = useCallback(() => {
     onMarkUnsavedChanges?.();
   }, [onMarkUnsavedChanges]);
 
-  // 获取当前代理信息以检查连接状态
-  const { data: currentProxies, mutate: mutateProxies } = useSWR(
-    "getProxies",
-    calcuProxies,
-    {
-      revalidateOnFocus: true,
-      revalidateIfStale: true,
-      refreshInterval: 5000, // 每5秒刷新一次
-    },
-  );
-
   const isConnected = useMemo(() => {
-    if (!currentProxies || proxyChain.length < 2) {
+    if (!proxies || proxyChain.length < 2) {
       return false;
     }
 
     const lastNode = proxyChain[proxyChain.length - 1];
 
     if (mode === "global") {
-      return currentProxies.global?.now === lastNode.name;
+      return proxies.global?.now === lastNode.name;
     }
 
-    if (!selectedGroup || !Array.isArray(currentProxies.groups)) {
+    if (!selectedGroup || !Array.isArray(proxies.groups)) {
       return false;
     }
 
-    const proxyChainGroup = currentProxies.groups.find(
+    const proxyChainGroup = proxies.groups.find(
       (group) => group.name === selectedGroup,
     );
 
     return proxyChainGroup?.now === lastNode.name;
-  }, [currentProxies, proxyChain, mode, selectedGroup]);
+  }, [proxies, proxyChain, mode, selectedGroup]);
 
   // 监听链的变化，但排除从配置加载的情况
   const chainLengthRef = useRef(proxyChain.length);
@@ -313,7 +301,7 @@ export const ProxyChain = ({
         localStorage.removeItem("proxy-chain-items");
 
         await closeAllConnections();
-        await mutateProxies();
+        await refreshProxy();
 
         onUpdateChain([]);
       } catch (error) {
@@ -354,7 +342,7 @@ export const ProxyChain = ({
       localStorage.setItem("proxy-chain-exit-node", lastNode.name);
 
       // 刷新代理信息以更新连接状态
-      mutateProxies();
+      refreshProxy();
       debugLog("Successfully connected to proxy chain");
     } catch (error) {
       console.error("Failed to connect to proxy chain:", error);
@@ -366,7 +354,7 @@ export const ProxyChain = ({
     proxyChain,
     isConnected,
     t,
-    mutateProxies,
+    refreshProxy,
     mode,
     selectedGroup,
     onUpdateChain,
