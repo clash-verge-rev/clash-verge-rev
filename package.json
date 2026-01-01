@@ -103,7 +103,7 @@
     "eslint-plugin-react-refresh": "^0.4.26",
     "eslint-plugin-unused-imports": "^4.3.0",
     "glob": "^13.0.0",
-    "globals": "^16.5.0",
+    "globals": "^17.0.0",
     "https-proxy-agent": "^7.0.6",
     "husky": "^9.1.7",
     "jiti": "^2.6.1",
