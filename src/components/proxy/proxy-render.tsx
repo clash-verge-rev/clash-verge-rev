@@ -13,12 +13,11 @@ import {
   Chip,
   Tooltip,
 } from "@mui/material";
-import { convertFileSrc } from "@tauri-apps/api/core";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
+import { useIconCache } from "@/hooks/use-icon-cache";
 import { useVerge } from "@/hooks/use-verge";
-import { downloadIconCache } from "@/services/cmds";
 import { useThemeMode } from "@/services/states";
 
 import { ProxyHead } from "./proxy-head";
@@ -57,26 +56,11 @@ export const ProxyRender = (props: RenderProps) => {
   const mode = useThemeMode();
   const isDark = mode === "light" ? false : true;
   const itembackgroundcolor = isDark ? "#282A36" : "#ffffff";
-  const [iconCachePath, setIconCachePath] = useState("");
-
-  const initIconCachePath = useCallback(async () => {
-    if (group.icon && group.icon.trim().startsWith("http")) {
-      const fileName =
-        group.name.replaceAll(" ", "") + "-" + getFileName(group.icon);
-      const iconPath = await downloadIconCache(group.icon, fileName);
-      setIconCachePath(convertFileSrc(iconPath));
-    } else {
-      setIconCachePath("");
-    }
-  }, [group.icon, group.name]);
-
-  useEffect(() => {
-    initIconCachePath();
-  }, [initIconCachePath]);
-
-  function getFileName(url: string) {
-    return url.substring(url.lastIndexOf("/") + 1);
-  }
+  const iconCachePath = useIconCache({
+    icon: group.icon,
+    cacheKey: group.name.replaceAll(" ", ""),
+    enabled: enable_group_icon,
+  });
 
   const proxyColItemsMemo = useMemo(() => {
     if (type !== 4 || !proxyCol) {

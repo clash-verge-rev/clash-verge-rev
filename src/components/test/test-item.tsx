@@ -2,15 +2,15 @@ import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { LanguageRounded } from "@mui/icons-material";
 import { Box, Divider, MenuItem, Menu, styled, alpha } from "@mui/material";
-import { convertFileSrc } from "@tauri-apps/api/core";
 import { UnlistenFn } from "@tauri-apps/api/event";
 import { useLockFn } from "ahooks";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { BaseLoading } from "@/components/base";
+import { useIconCache } from "@/hooks/use-icon-cache";
 import { useListen } from "@/hooks/use-listen";
-import { cmdTestDelay, downloadIconCache } from "@/services/cmds";
+import { cmdTestDelay } from "@/services/cmds";
 import delayManager from "@/services/delay";
 import { showNotice } from "@/services/notice-service";
 import { debugLog } from "@/utils/debug";
@@ -46,7 +46,7 @@ export const TestItem = ({
   const [position, setPosition] = useState({ left: 0, top: 0 });
   const [delay, setDelay] = useState(-1);
   const { uid, name, icon, url } = itemData;
-  const [iconCachePath, setIconCachePath] = useState("");
+  const iconCachePath = useIconCache({ icon, cacheKey: uid });
   const { addListener } = useListen();
 
   const onDelay = useCallback(async () => {
@@ -54,24 +54,6 @@ export const TestItem = ({
     const result = await cmdTestDelay(url);
     setDelay(result);
   }, [url]);
-
-  const initIconCachePath = useCallback(async () => {
-    if (icon && icon.trim().startsWith("http")) {
-      const fileName = uid + "-" + getFileName(icon);
-      const iconPath = await downloadIconCache(icon, fileName);
-      setIconCachePath(convertFileSrc(iconPath));
-    } else {
-      setIconCachePath("");
-    }
-  }, [icon, uid]);
-
-  useEffect(() => {
-    void initIconCachePath();
-  }, [initIconCachePath]);
-
-  function getFileName(url: string) {
-    return url.substring(url.lastIndexOf("/") + 1);
-  }
 
   const onEditTest = () => {
     setAnchorEl(null);

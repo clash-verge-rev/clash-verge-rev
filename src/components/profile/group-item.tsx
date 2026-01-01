@@ -9,10 +9,8 @@ import {
   alpha,
   styled,
 } from "@mui/material";
-import { convertFileSrc } from "@tauri-apps/api/core";
-import { useEffect, useState } from "react";
 
-import { downloadIconCache } from "@/services/cmds";
+import { useIconCache } from "@/hooks/use-icon-cache";
 interface Props {
   type: "prepend" | "original" | "delete" | "append";
   group: IProxyGroupConfig;
@@ -38,40 +36,10 @@ export const GroupItem = (props: Props) => {
   const dragListeners = sortable ? sortableListeners : undefined;
   const dragNodeRef = sortable ? sortableSetNodeRef : undefined;
 
-  const [iconCachePath, setIconCachePath] = useState("");
-
-  useEffect(() => {
-    let cancelled = false;
-    const initIconCachePath = async () => {
-      const icon = group.icon?.trim() ?? "";
-      if (icon.startsWith("http")) {
-        try {
-          const fileName =
-            group.name.replaceAll(" ", "") + "-" + getFileName(icon);
-          const iconPath = await downloadIconCache(icon, fileName);
-          if (!cancelled) {
-            setIconCachePath(convertFileSrc(iconPath));
-          }
-        } catch {
-          if (!cancelled) {
-            setIconCachePath("");
-          }
-        }
-      } else if (!cancelled) {
-        setIconCachePath("");
-      }
-    };
-
-    void initIconCachePath();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [group.icon, group.name]);
-
-  function getFileName(url: string) {
-    return url.substring(url.lastIndexOf("/") + 1);
-  }
+  const iconCachePath = useIconCache({
+    icon: group.icon,
+    cacheKey: group.name.replaceAll(" ", ""),
+  });
 
   return (
     <ListItem
