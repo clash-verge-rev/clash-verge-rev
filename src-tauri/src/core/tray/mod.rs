@@ -162,34 +162,8 @@ impl Tray {
                     Type::Tray,
                     "System tray creation failed: {e}, Application will continue running without tray icon",
                 );
-
-                // retray
-                #[cfg(target_os = "windows")]
-                tokio::spawn(async move {
-                    // backoff：3s / 10s / 30s
-                    let delays = [3, 10, 30];
-
-                    for delay in delays {
-                        tokio::time::sleep(std::time::Duration::from_secs(delay)).await;
-
-                        if handle::Handle::global().is_exiting() {
-                            logging!(debug, Type::Tray, "应用正在退出，停止托盘重试");
-                            return;
-                        }
-
-                        logging!(debug, Type::Tray, "Retrying system tray creation after {delay}s");
-
-                        if Self::global().create_tray_from_handle(app_handle).await.is_ok() {
-                            logging!(info, Type::Tray, "System tray created successfully on retry");
-                            return;
-                        }
-                    }
-
-                    logging!(warn, Type::Tray, "System tray retry attempts exhausted, giving up");
-                });
             }
         }
-
         Ok(())
     }
 
