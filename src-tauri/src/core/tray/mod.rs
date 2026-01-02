@@ -45,6 +45,17 @@ pub struct Tray {
 }
 
 impl TrayState {
+    async fn get_tray_icon(verge: &IVerge) -> (bool, Vec<u8>) {
+        let system_mode = verge.enable_system_proxy.as_ref().unwrap_or(&false);
+        let tun_mode = verge.enable_tun_mode.as_ref().unwrap_or(&false);
+        match (*system_mode, *tun_mode) {
+            (true, true) => Self::get_tun_tray_icon(verge).await,
+            (true, false) => Self::get_sysproxy_tray_icon(verge).await,
+            (false, true) => Self::get_tun_tray_icon(verge).await,
+            (false, false) => Self::get_common_tray_icon(verge).await,
+        }
+    }
+
     async fn get_common_tray_icon(verge: &IVerge) -> (bool, Vec<u8>) {
         let is_common_tray_icon = verge.common_tray_icon.unwrap_or(false);
         if is_common_tray_icon
@@ -260,15 +271,7 @@ impl Tray {
             }
         };
 
-        let system_mode = verge.enable_system_proxy.as_ref().unwrap_or(&false);
-        let tun_mode = verge.enable_tun_mode.as_ref().unwrap_or(&false);
-
-        let (_is_custom_icon, icon_bytes) = match (*system_mode, *tun_mode) {
-            (true, true) => TrayState::get_tun_tray_icon(verge).await,
-            (true, false) => TrayState::get_sysproxy_tray_icon(verge).await,
-            (false, true) => TrayState::get_tun_tray_icon(verge).await,
-            (false, false) => TrayState::get_common_tray_icon(verge).await,
-        };
+        let (_is_custom_icon, icon_bytes) = TrayState::get_tray_icon(verge).await;
 
         let colorful = verge.tray_icon.clone().unwrap_or_else(|| "monochrome".into());
         let is_colorful = colorful == "colorful";
@@ -295,15 +298,7 @@ impl Tray {
             }
         };
 
-        let system_mode = verge.enable_system_proxy.as_ref().unwrap_or(&false);
-        let tun_mode = verge.enable_tun_mode.as_ref().unwrap_or(&false);
-
-        let (_is_custom_icon, icon_bytes) = match (*system_mode, *tun_mode) {
-            (true, true) => TrayState::get_tun_tray_icon(verge).await,
-            (true, false) => TrayState::get_sysproxy_tray_icon(verge).await,
-            (false, true) => TrayState::get_tun_tray_icon(verge).await,
-            (false, false) => TrayState::get_common_tray_icon(verge).await,
-        };
+        let (_is_custom_icon, icon_bytes) = TrayState::get_tray_icon(verge).await;
 
         let _ = tray.set_icon(Some(tauri::image::Image::from_bytes(&icon_bytes)?));
         Ok(())
@@ -396,8 +391,7 @@ impl Tray {
 
         let verge = Config::verge().await.data_arc();
 
-        // 获取图标
-        let icon_bytes = TrayState::get_common_tray_icon(&verge).await.1;
+        let icon_bytes = TrayState::get_tray_icon(&verge).await.1;
         let icon = tauri::image::Image::from_bytes(&icon_bytes)?;
 
         #[cfg(target_os = "linux")]
