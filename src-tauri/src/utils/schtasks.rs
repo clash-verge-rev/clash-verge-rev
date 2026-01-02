@@ -137,7 +137,6 @@ fn build_task_xml(mode: TaskMode) -> Result<String> {
   <Triggers>
     <LogonTrigger>
       <Enabled>true</Enabled>
-      <Delay>PT3S</Delay>
       <UserId>{}</UserId>
     </LogonTrigger>
   </Triggers>

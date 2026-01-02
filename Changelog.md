@@ -34,5 +34,6 @@
 - 隐藏侧边导航栏和悬浮跳转导航的滚动条
 - 完善对 AnyTLS / Mieru / Sudoku 的 GUI 支持
 - macOS 和 Linux 对服务 IPC 权限进一步限制
+- 移除 Windows 自启动计划任务中冗余的 3 秒延时
 
 </details>
