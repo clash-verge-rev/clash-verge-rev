@@ -7695,7 +7695,7 @@ checksum = "c0e973b34477b7823833469eb0f5a3a60370fef7a453e02d751b59180d0a5a05"
 [[package]]
 name = "tao"
 version = "0.34.5"
-source = "git+https://github.com/clash-verge-rev/tao?branch=fix%2Fwindows-dark-mode#2676a907a149b5e8962cc15382736a92d2337984"
+source = "git+https://github.com/tauri-apps/tao#e196538f989894fcb92401fced54d7d3a65fc91a"
 dependencies = [
  "bitflags 2.10.0",
  "block2 0.6.2",
@@ -7722,7 +7722,7 @@ dependencies = [
  "parking_lot",
  "raw-window-handle",
  "scopeguard",
- "tao-macros 0.1.3 (git+https://github.com/clash-verge-rev/tao?branch=fix%2Fwindows-dark-mode)",
+ "tao-macros 0.1.3 (git+https://github.com/tauri-apps/tao)",
  "unicode-segmentation",
  "url",
  "windows 0.61.3",
@@ -7745,7 +7745,7 @@ dependencies = [
 [[package]]
 name = "tao-macros"
 version = "0.1.3"
-source = "git+https://github.com/clash-verge-rev/tao?branch=fix%2Fwindows-dark-mode#2676a907a149b5e8962cc15382736a92d2337984"
+source = "git+https://github.com/tauri-apps/tao#e196538f989894fcb92401fced54d7d3a65fc91a"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -9020,8 +9020,7 @@ dependencies = [
 [[package]]
 name = "tray-icon"
 version = "0.21.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e3d5572781bee8e3f994d7467084e1b1fd7a93ce66bd480f8156ba89dee55a2b"
+source = "git+https://github.com/clash-verge-rev/tray-icon?branch=fix%2Ftray-icon-create#3a8b8846dbf1969f860458b48c7ad1a352493725"
 dependencies = [
  "crossbeam-channel",
  "dirs 6.0.0",
