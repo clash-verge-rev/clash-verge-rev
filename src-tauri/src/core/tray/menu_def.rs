@@ -1,21 +1,11 @@
 use clash_verge_i18n::t;
-use std::{borrow::Cow, sync::Arc};
-
-fn to_arc_str<S>(value: S) -> Arc<str>
-where
-    S: Into<Cow<'static, str>>,
-{
-    match value.into() {
-        Cow::Borrowed(s) => Arc::from(s),
-        Cow::Owned(s) => Arc::from(s.into_boxed_str()),
-    }
-}
+use std::borrow::Cow;
 
 macro_rules! define_menu {
     ($($field:ident => $const_name:ident, $id:expr, $text:expr),+ $(,)?) => {
         #[derive(Debug)]
         pub struct MenuTexts {
-            $(pub $field: Arc<str>,)+
+            $(pub $field: Cow<'static, str>,)+
         }
 
         pub struct MenuIds;
@@ -23,7 +13,7 @@ macro_rules! define_menu {
         impl MenuTexts {
             pub fn new() -> Self {
                 Self {
-                    $($field: to_arc_str(t!($text)),)+
+                    $($field: t!($text),)+
                 }
             }
         }

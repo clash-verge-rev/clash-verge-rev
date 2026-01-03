@@ -90,6 +90,7 @@ pub fn app_icons_dir() -> Result<PathBuf> {
     Ok(app_home_dir()?.join("icons"))
 }
 
+// TODO find target icon when needed
 pub fn find_target_icons(target: &str) -> Result<Option<String>> {
     let icons_dir = app_icons_dir()?;
     let icon_path = fs::read_dir(&icons_dir)?
