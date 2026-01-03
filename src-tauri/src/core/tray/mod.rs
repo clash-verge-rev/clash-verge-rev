@@ -1,13 +1,16 @@
 use governor::{DefaultDirectRateLimiter, Quota, RateLimiter};
+use parking_lot::Mutex;
 use tauri::tray::TrayIconBuilder;
 use tauri_plugin_clash_verge_sysinfo::is_current_app_handle_admin;
 use tauri_plugin_mihomo::models::Proxies;
-pub mod data;
+// pub mod data;
 mod logic;
 mod view;
 use crate::config::{IProfilePreview, IVerge};
 use crate::core::service;
-use crate::core::tray::view::{TrayState, TrayStateImpl};
+#[cfg(target_os = "macos")]
+use crate::core::tray::view::IconStyle;
+use crate::core::tray::view::{CacheComponent, TrayComponent, TrayIcon};
 use crate::module::lightweight;
 use crate::process::AsyncHandler;
 use crate::singleton;
@@ -20,6 +23,7 @@ use smartstring::alias::String;
 use std::borrow::Cow;
 use std::collections::HashMap;
 use std::num::NonZeroU32;
+use std::sync::Arc;
 use std::time::Duration;
 use tauri::{
     AppHandle, Wry,
@@ -29,14 +33,13 @@ use tauri::{
 mod menu_def;
 use menu_def::{MenuIds, MenuTexts};
 
-// TODO: 是否需要将可变菜单抽离存储起来，后续直接更新对应菜单实例，无需重新创建菜单(待考虑)
-
 type ProxyMenuItem = (Option<Submenu<Wry>>, Vec<Box<dyn IsMenuItem<Wry>>>);
 
 const TRAY_CLICK_DEBOUNCE_MS: u64 = 1_275;
 
 pub struct Tray {
     limiter: DefaultDirectRateLimiter,
+    icon_compoment: Arc<Mutex<TrayIcon>>,
 }
 
 impl Default for Tray {
@@ -48,6 +51,7 @@ impl Default for Tray {
                     .unwrap()
                     .allow_burst(NonZeroU32::new(1).unwrap()),
             ),
+            icon_compoment: Arc::new(Mutex::new(Default::default())),
         }
     }
 }
@@ -175,11 +179,20 @@ impl Tray {
             }
         };
 
-        let (_icon_style, icon_bytes) = TrayStateImpl::parse_icon_from_verge(verge).await;
+        let mut icon_compoment_guard = self.icon_compoment.lock();
+        let is_refresh = icon_compoment_guard.refresh(false, verge).await;
+        if !is_refresh {
+            logging!(debug, Type::Tray, "托盘图标未更改，跳过更新");
+            return Ok(());
+        }
 
-        let _ = tray.set_icon(Some(tauri::image::Image::from_bytes(&icon_bytes)?));
+        let icon_comp_view = icon_compoment_guard.get();
+
+        let _ = tray.set_icon(Some(tauri::image::Image::from_bytes(icon_comp_view.last_icon_bytes)?));
         #[cfg(target_os = "macos")]
-        let _ = tray.set_icon_as_template(_icon_style.into());
+        let _ = tray.set_icon_as_template(matches!(icon_comp_view.last_icon_style, IconStyle::Monochrome));
+
+        drop(icon_compoment_guard);
         Ok(())
     }
 
@@ -270,8 +283,12 @@ impl Tray {
 
         let verge = Config::verge().await.data_arc();
 
-        let (_icon_style, icon_bytes) = TrayStateImpl::parse_icon_from_verge(&verge).await;
-        let icon = tauri::image::Image::from_bytes(&icon_bytes)?;
+        {
+            self.icon_compoment.lock().refresh(false, &verge).await;
+        }
+        let cache_icon_guard = self.icon_compoment.lock();
+        let icon = tauri::image::Image::from_bytes(cache_icon_guard.get().last_icon_bytes)?;
+        drop(cache_icon_guard);
 
         #[cfg(target_os = "linux")]
         let builder = TrayIconBuilder::with_id("main").icon(icon).icon_as_template(false);
@@ -488,7 +505,7 @@ fn create_proxy_menu_item(
     app_handle: &AppHandle,
     show_proxy_groups_inline: bool,
     proxy_submenus: Vec<Submenu<Wry>>,
-    proxies_text: &Cow<'_, str>,
+    proxies_text: &str,
 ) -> Result<ProxyMenuItem> {
     // 创建代理主菜单
     let (proxies_submenu, inline_proxy_items) = if show_proxy_groups_inline {

@@ -1,7 +1,5 @@
 use std::borrow::Cow;
 
-use crate::config::IVerge;
-
 pub type IconBytes = Cow<'static, [u8]>;
 
 #[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
@@ -12,12 +10,12 @@ pub(crate) enum ProxyStatus {
     // Proxy Enabled, Not TUN
     Proxy,
     // Not Proxy, TUN Enabled
-    TUN,
+    Tun,
     // Proxy Enabled, TUN Enabled
     ProxyTUN,
 }
 
-#[derive(Debug, Default, PartialEq, Eq)]
+#[derive(Debug, Default, Clone, Copy, PartialEq, Eq)]
 pub(crate) enum IconStyle {
     #[default]
     Normal,
@@ -25,28 +23,36 @@ pub(crate) enum IconStyle {
     Monochrome,
 }
 
-impl From<bool> for IconStyle {
-    fn from(is_monochrome: bool) -> Self {
-        if is_monochrome {
-            IconStyle::Monochrome
-        } else {
-            IconStyle::Normal
-        }
-    }
+#[async_trait::async_trait]
+pub(crate) trait TrayComponent: CacheComponent {
+    type Context;
+
+    async fn refresh(&mut self, force: bool, ctx: &Self::Context) -> bool;
 }
 
-impl Into<bool> for IconStyle {
-    fn into(self) -> bool {
-        match self {
-            IconStyle::Monochrome => true,
-            _ => false,
-        }
-    }
+pub(crate) trait CacheComponent {
+    type Cache;
+    type View<'a>
+    where
+        Self: 'a;
+
+    fn is_some(&self) -> bool;
+    fn get(&self) -> Self::View<'_>;
+    fn update(&mut self, t: Self::Cache);
+    fn equals(&self, other: &Self::Cache) -> bool;
 }
 
-pub(crate) trait TrayState {
-    async fn parse_icon_from_verge(verge: &IVerge) -> (IconStyle, IconBytes);
-    async fn get_tray_icon(proxy_status: ProxyStatus, style: IconStyle) -> (IconStyle, IconBytes);
+#[derive(Default)]
+pub(crate) struct TrayIconCache {
+    pub(crate) last_icon_style: IconStyle,
+    pub(crate) last_proxy_status: ProxyStatus,
+    pub(crate) last_icon_bytes: IconBytes,
 }
 
-pub(crate) struct TrayStateImpl;
+pub(crate) struct TrayIconView<'a> {
+    pub(crate) last_icon_style: &'a IconStyle,
+    pub(crate) last_icon_bytes: &'a IconBytes,
+}
+
+#[derive(Default)]
+pub(crate) struct TrayIcon(pub TrayIconCache);
