@@ -7,6 +7,7 @@ use tokio::fs;
 pub mod speed_rate;
 use crate::config::{IProfilePreview, IVerge};
 use crate::core::service;
+use crate::core::tray::menu_def::TrayAction;
 use crate::module::lightweight;
 use crate::process::AsyncHandler;
 use crate::singleton;
@@ -21,7 +22,6 @@ use anyhow::Result;
 use smartstring::alias::String;
 use std::collections::HashMap;
 use std::num::NonZeroU32;
-use std::sync::Arc;
 use std::time::Duration;
 use tauri::{
     AppHandle, Wry,
@@ -187,12 +187,12 @@ impl Tray {
 
         let app_handle = handle::Handle::app_handle();
         let tray_event = { Config::verge().await.latest_arc().tray_event.clone() };
-        let tray_event = tray_event.unwrap_or_else(|| "main_window".into());
+        let tray_event = TrayAction::from(tray_event.as_deref().unwrap_or("main_window"));
         let tray = app_handle
             .tray_by_id("main")
             .ok_or_else(|| anyhow::anyhow!("Failed to get main tray"))?;
-        match tray_event.as_str() {
-            "tray_menu" => tray.set_show_menu_on_left_click(true)?,
+        match tray_event {
+            TrayAction::TrayMenue => tray.set_show_menu_on_left_click(true)?,
             _ => tray.set_show_menu_on_left_click(false)?,
         }
         Ok(())
@@ -398,17 +398,13 @@ impl Tray {
         let builder = TrayIconBuilder::with_id("main").icon(icon).icon_as_template(false);
 
         #[cfg(any(target_os = "macos", target_os = "windows"))]
-        let show_menu_on_left_click = {
-            // TODO 优化这里 复用 verge
-            let tray_event = { Config::verge().await.latest_arc().tray_event.clone() };
-            tray_event.is_some_and(|v| v == "tray_menu")
-        };
+        let show_menu_on_left_click = verge.tray_event.as_ref().is_some_and(|v| v == "tray_menu");
 
         #[cfg(not(target_os = "linux"))]
         let mut builder = TrayIconBuilder::with_id("main").icon(icon).icon_as_template(false);
         #[cfg(target_os = "macos")]
         {
-            let is_monochrome = verge.tray_icon.clone().is_none_or(|v| v == "monochrome");
+            let is_monochrome = verge.tray_icon.as_ref().is_none_or(|v| v == "monochrome");
             builder = builder.icon_as_template(is_monochrome);
         }
 
@@ -420,8 +416,10 @@ impl Tray {
         }
 
         let tray = builder.build(app_handle)?;
+        let tray_event = verge.tray_event.clone().unwrap_or_else(|| "main_window".into());
+        let tray_action = TrayAction::from(tray_event.as_str());
 
-        tray.on_tray_icon_event(|_app_handle, event| {
+        tray.on_tray_icon_event(move |_app_handle, event| {
             if let TrayIconEvent::Click {
                 button: MouseButton::Left,
                 button_state: MouseButtonState::Down,
@@ -433,24 +431,29 @@ impl Tray {
                 if !Tray::global().should_handle_tray_click() {
                     return;
                 }
-                AsyncHandler::spawn(|| async move {
-                    let tray_event = { Config::verge().await.latest_arc().tray_event.clone() };
-                    let tray_event: String = tray_event.unwrap_or_else(|| "main_window".into());
-                    logging!(debug, Type::Tray, "tray event: {tray_event:?}");
-
-                    match tray_event.as_str() {
-                        "system_proxy" => feat::toggle_system_proxy().await,
-                        "tun_mode" => feat::toggle_tun_mode(None).await,
-                        "main_window" => {
+                logging!(debug, Type::Tray, "tray event: {tray_action:?}");
+                match tray_action {
+                    TrayAction::SystemProxy => {
+                        AsyncHandler::spawn(|| async move {
+                            let _ = feat::toggle_system_proxy().await;
+                        });
+                    }
+                    TrayAction::TunMode => {
+                        AsyncHandler::spawn(|| async move {
+                            let _ = feat::toggle_tun_mode(None).await;
+                        });
+                    }
+                    TrayAction::MainWindow => {
+                        AsyncHandler::spawn(|| async move {
                             if !lightweight::exit_lightweight_mode().await {
                                 WindowManager::show_main_window().await;
                             };
-                        }
-                        _ => {
-                            logging!(warn, Type::Tray, "invalid tray event: {}", tray_event);
-                        }
-                    };
-                });
+                        });
+                    }
+                    _ => {
+                        logging!(warn, Type::Tray, "invalid tray event: {}", tray_event);
+                    }
+                };
             }
         });
         tray.on_menu_event(on_menu_event);
@@ -609,7 +612,7 @@ fn create_proxy_menu_item(
     app_handle: &AppHandle,
     show_proxy_groups_inline: bool,
     proxy_submenus: Vec<Submenu<Wry>>,
-    proxies_text: &Arc<str>,
+    proxies_text: &str,
 ) -> Result<ProxyMenuItem> {
     // 创建代理主菜单
     let (proxies_submenu, inline_proxy_items) = if show_proxy_groups_inline {
