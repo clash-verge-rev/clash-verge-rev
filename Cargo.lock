@@ -9020,7 +9020,7 @@ dependencies = [
 [[package]]
 name = "tray-icon"
 version = "0.21.2"
-source = "git+https://github.com/clash-verge-rev/tray-icon?branch=fix%2Ftray-icon-create#3a8b8846dbf1969f860458b48c7ad1a352493725"
+source = "git+https://github.com/clash-verge-rev/tray-icon?branch=fix%2Ftray-icon-create#ef2e99ac9959571f5a2540023ab2fc914395f805"
 dependencies = [
  "crossbeam-channel",
  "dirs 6.0.0",
