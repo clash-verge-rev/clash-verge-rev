@@ -1,7 +1,7 @@
 use super::{IClashTemp, IProfiles, IVerge};
 use crate::{
     config::{PrfItem, profiles_append_item_safe},
-    constants::{files, timing},
+    constants::files,
     core::{
         CoreManager,
         handle::{self, Handle},
@@ -21,7 +21,6 @@ use smartstring::alias::String;
 use std::path::PathBuf;
 use tauri_plugin_clash_verge_sysinfo::is_current_app_handle_admin;
 use tokio::sync::OnceCell;
-use tokio::time::sleep;
 
 pub struct Config {
     clash_config: Draft<IClashTemp>,
@@ -88,7 +87,6 @@ impl Config {
         let validation_result = Self::generate_and_validate().await?;
 
         if let Some((msg_type, msg_content)) = validation_result {
-            sleep(timing::STARTUP_ERROR_DELAY).await;
             handle::Handle::notice_message(msg_type, msg_content);
         }
 

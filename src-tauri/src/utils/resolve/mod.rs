@@ -6,7 +6,7 @@ use flexi_logger::LoggerHandle;
 use crate::{
     config::Config,
     core::{
-        CoreManager, Timer, handle,
+        CoreManager, Timer,
         hotkey::Hotkey,
         service::{SERVICE_MANAGER, ServiceManager, is_service_ipc_path_exists},
         sysopt,
@@ -43,10 +43,6 @@ pub fn init_work_dir_and_logger() -> Option<LoggerHandle> {
             None
         }
     })
-}
-
-pub fn resolve_setup_handle() {
-    init_handle();
 }
 
 pub fn resolve_setup_sync() {
@@ -99,10 +95,6 @@ pub async fn resolve_reset_async() -> Result<(), anyhow::Error> {
     }
 
     Ok(())
-}
-
-pub fn init_handle() {
-    handle::Handle::global().init();
 }
 
 pub(super) fn init_scheme() {

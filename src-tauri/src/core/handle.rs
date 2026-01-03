@@ -1,36 +1,15 @@
-use crate::{APP_HANDLE, constants::timing, singleton};
-use parking_lot::RwLock;
+use crate::{APP_HANDLE, singleton};
 use smartstring::alias::String;
-use std::{
-    sync::{
-        Arc,
-        atomic::{AtomicBool, Ordering},
-    },
-    thread,
-};
+use std::sync::atomic::{AtomicBool, Ordering};
 use tauri::{AppHandle, Manager as _, WebviewWindow};
 use tauri_plugin_mihomo::{Mihomo, MihomoExt as _};
 use tokio::sync::RwLockReadGuard;
 
-use super::notification::{ErrorMessage, FrontendEvent, NotificationSystem};
+use super::notification::{FrontendEvent, NotificationSystem};
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Handle {
     is_exiting: AtomicBool,
-    startup_errors: Arc<RwLock<Vec<ErrorMessage>>>,
-    startup_completed: AtomicBool,
-    pub(crate) notification_system: Arc<RwLock<Option<NotificationSystem>>>,
-}
-
-impl Default for Handle {
-    fn default() -> Self {
-        Self {
-            is_exiting: AtomicBool::new(false),
-            startup_errors: Arc::new(RwLock::new(Vec::new())),
-            startup_completed: AtomicBool::new(false),
-            notification_system: Arc::new(RwLock::new(Some(NotificationSystem::new()))),
-        }
-    }
 }
 
 singleton!(Handle, HANDLE);
@@ -38,19 +17,6 @@ singleton!(Handle, HANDLE);
 impl Handle {
     pub fn new() -> Self {
         Self::default()
-    }
-
-    pub fn init(&self) {
-        if self.is_exiting() {
-            return;
-        }
-
-        let mut system_opt = self.notification_system.write();
-        if let Some(system) = system_opt.as_mut()
-            && !system.is_running
-        {
-            system.start();
-        }
     }
 
     pub fn app_handle() -> &'static AppHandle {
@@ -67,27 +33,11 @@ impl Handle {
     }
 
     pub fn refresh_clash() {
-        let handle = Self::global();
-        if handle.is_exiting() {
-            return;
-        }
-
-        let system_opt = handle.notification_system.read();
-        if let Some(system) = system_opt.as_ref() {
-            system.send_event(FrontendEvent::RefreshClash);
-        }
+        Self::send_event(FrontendEvent::RefreshClash);
     }
 
     pub fn refresh_verge() {
-        let handle = Self::global();
-        if handle.is_exiting() {
-            return;
-        }
-
-        let system_opt = handle.notification_system.read();
-        if let Some(system) = system_opt.as_ref() {
-            system.send_event(FrontendEvent::RefreshVerge);
-        }
+        Self::send_event(FrontendEvent::RefreshVerge);
     }
 
     pub fn notify_profile_changed(profile_id: String) {
@@ -111,20 +61,12 @@ impl Handle {
     // TODO 利用 &str 等缩短 Clone
     pub fn notice_message<S: Into<String>, M: Into<String>>(status: S, msg: M) {
         let handle = Self::global();
-        let status_str = status.into();
-        let msg_str = msg.into();
-
-        if !handle.startup_completed.load(Ordering::Acquire) {
-            handle.startup_errors.write().push(ErrorMessage {
-                status: status_str,
-                message: msg_str,
-            });
-            return;
-        }
-
         if handle.is_exiting() {
             return;
         }
+
+        let status_str = status.into();
+        let msg_str = msg.into();
 
         Self::send_event(FrontendEvent::NoticeMessage {
             status: status_str,
@@ -137,63 +79,12 @@ impl Handle {
         if handle.is_exiting() {
             return;
         }
-
-        let system_opt = handle.notification_system.read();
-        if let Some(system) = system_opt.as_ref() {
-            system.send_event(event);
-        }
-    }
-
-    pub fn mark_startup_completed(&self) {
-        self.startup_completed.store(true, Ordering::Release);
-        self.send_startup_errors();
-    }
-
-    fn send_startup_errors(&self) {
-        let errors = {
-            let mut errors = self.startup_errors.write();
-            std::mem::take(&mut *errors)
-        };
-
-        if errors.is_empty() {
-            return;
-        }
-
-        let _ = thread::Builder::new()
-            .name("startup-errors-sender".into())
-            .spawn(move || {
-                thread::sleep(timing::STARTUP_ERROR_DELAY);
-
-                let handle = Self::global();
-                if handle.is_exiting() {
-                    return;
-                }
-
-                let system_opt = handle.notification_system.read();
-                if let Some(system) = system_opt.as_ref() {
-                    for error in errors {
-                        if handle.is_exiting() {
-                            break;
-                        }
-
-                        system.send_event(FrontendEvent::NoticeMessage {
-                            status: error.status,
-                            message: error.message,
-                        });
-
-                        thread::sleep(timing::ERROR_BATCH_DELAY);
-                    }
-                }
-            });
+        let webview = Self::get_window();
+        NotificationSystem::send_event(webview, event);
     }
 
     pub fn set_is_exiting(&self) {
         self.is_exiting.store(true, Ordering::Release);
-
-        let mut system_opt = self.notification_system.write();
-        if let Some(system) = system_opt.as_mut() {
-            system.shutdown();
-        }
     }
 
     pub fn is_exiting(&self) -> bool {
