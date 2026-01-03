@@ -421,6 +421,7 @@
         "proxyGuard": "Guardia del proxy del sistema",
         "guardDuration": "Intervalo de guardia del proxy",
         "alwaysUseDefaultBypass": "Siempre usar la lista de omisión predeterminada",
+        "enableBypassCheck": "Validar formato de bypass de proxy",
         "proxyBypass": "Configuración de omisión del proxy: ",
         "bypass": "Omisión actual: ",
         "pacScriptContent": "Contenido del script PAC"

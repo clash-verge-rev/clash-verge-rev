@@ -421,6 +421,7 @@
         "proxyGuard": "系统代理守卫",
         "guardDuration": "代理守卫间隔",
         "alwaysUseDefaultBypass": "始终使用默认绕过",
+        "enableBypassCheck": "验证代理绕过格式",
         "proxyBypass": "代理绕过设置：",
         "bypass": "当前绕过：",
         "pacScriptContent": "PAC 脚本内容"

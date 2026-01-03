@@ -421,6 +421,7 @@
         "proxyGuard": "システムプロキシガード",
         "guardDuration": "プロキシガード間隔",
         "alwaysUseDefaultBypass": "常にデフォルトのバイパスを使用",
+        "enableBypassCheck": "プロキシバイパス形式を検証",
         "proxyBypass": "プロキシバイパス設定：",
         "bypass": "現在のバイパス：",
         "pacScriptContent": "PACスクリプト内容"

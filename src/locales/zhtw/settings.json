@@ -421,6 +421,7 @@
         "proxyGuard": "系統代理守護",
         "guardDuration": "代理守護間隔",
         "alwaysUseDefaultBypass": "始終使用預設繞過",
+        "enableBypassCheck": "驗證代理繞過格式",
         "proxyBypass": "代理繞過設定：",
         "bypass": "目前繞過：",
         "pacScriptContent": "PAC 指令碼內容"

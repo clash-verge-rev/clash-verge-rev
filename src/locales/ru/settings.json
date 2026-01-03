@@ -421,6 +421,7 @@
         "proxyGuard": "Proxy Guard",
         "guardDuration": "Период защиты",
         "alwaysUseDefaultBypass": "Всегда использовать стандартное обходное решение",
+        "enableBypassCheck": "Проверять формат обхода прокси",
         "proxyBypass": "Игнорируемые адреса: ",
         "bypass": "Игнорируемые адреса: ",
         "pacScriptContent": "Содержание сценария PAC"

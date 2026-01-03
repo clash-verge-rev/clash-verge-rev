@@ -421,6 +421,7 @@
         "proxyGuard": "حماية الوكيل",
         "guardDuration": "مدة الحماية",
         "alwaysUseDefaultBypass": "استخدام التخطي الافتراضي دائمًا",
+        "enableBypassCheck": "التحقق من تنسيق تجاوز الوكيل",
         "proxyBypass": "إعدادات تخطي الوكيل:",
         "bypass": "تخطي:",
         "pacScriptContent": "محتوى سكريبت PAC"

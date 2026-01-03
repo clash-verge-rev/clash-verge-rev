@@ -421,6 +421,7 @@
         "proxyGuard": "Прокси саклаучы",
         "guardDuration": "Саклау вакыты",
         "alwaysUseDefaultBypass": "Һәрвакыт төп Bypass-ны куллану",
+        "enableBypassCheck": "Прокси урап узу форматын тикшерү",
         "proxyBypass": "Проксины әйләнеп узу:",
         "bypass": "Әйләнеп узу:",
         "pacScriptContent": "PAC скрипты эчтәлеге"

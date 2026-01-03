@@ -421,6 +421,7 @@
         "proxyGuard": "Vekil Koruyucusu",
         "guardDuration": "Koruma Süresi",
         "alwaysUseDefaultBypass": "Her Zaman Varsayılan Baypas Kullan",
+        "enableBypassCheck": "Proxy baypas biçimini doğrula",
         "proxyBypass": "Vekil Baypas Ayarları: ",
         "bypass": "Baypas: ",
         "pacScriptContent": "PAC Betiği İçeriği"

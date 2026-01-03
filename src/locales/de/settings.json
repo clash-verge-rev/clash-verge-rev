@@ -421,6 +421,7 @@
         "proxyGuard": "Systemproxy-Schutz",
         "guardDuration": "Proxy-Schutz-Intervall",
         "alwaysUseDefaultBypass": "Immer die Standard-Umgehung verwenden",
+        "enableBypassCheck": "Proxy-Bypass-Format prüfen",
         "proxyBypass": "Proxy-Umgehungseinstellungen: ",
         "bypass": "Aktuelle Umgehung: ",
         "pacScriptContent": "PAC-Skriptinhalt"

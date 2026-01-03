@@ -104,6 +104,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
     proxy_auto_config,
     pac_file_content,
     enable_proxy_guard,
+    enable_bypass_check,
     use_default_bypass,
     system_proxy_bypass,
     proxy_guard_duration,
@@ -112,6 +113,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
 
   const [value, setValue] = useState({
     guard: enable_proxy_guard,
+    enable_bypass_check: enable_bypass_check ?? true,
     bypass: system_proxy_bypass,
     duration: proxy_guard_duration ?? 10,
     use_default: use_default_bypass ?? true,
@@ -202,6 +204,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
       setOpen(true);
       setValue({
         guard: enable_proxy_guard,
+        enable_bypass_check: enable_bypass_check ?? true,
         bypass: system_proxy_bypass,
         duration: proxy_guard_duration ?? 10,
         use_default: use_default_bypass ?? true,
@@ -280,7 +283,13 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
       showNotice.error("settings.modals.sysproxy.messages.durationTooShort");
       return;
     }
-    if (value.bypass && !validReg.test(value.bypass)) {
+    if (
+      value.enable_bypass_check &&
+      !value.pac &&
+      !value.use_default &&
+      value.bypass &&
+      !validReg.test(value.bypass)
+    ) {
       showNotice.error("settings.modals.sysproxy.messages.invalidBypass");
       return;
     }
@@ -309,6 +318,9 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
 
     if (value.guard !== enable_proxy_guard) {
       patch.enable_proxy_guard = value.guard;
+    }
+    if (value.enable_bypass_check !== enable_bypass_check) {
+      patch.enable_bypass_check = value.enable_bypass_check;
     }
     if (value.duration !== proxy_guard_duration) {
       patch.proxy_guard_duration = value.duration;
@@ -560,13 +572,33 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
           </ListItem>
         )}
 
+        {!value.pac && (
+          <ListItem sx={{ padding: "5px 2px" }}>
+            <ListItemText
+              primary={t("settings.modals.sysproxy.fields.enableBypassCheck")}
+            />
+            <Switch
+              edge="end"
+              disabled={!enabled}
+              checked={value.enable_bypass_check}
+              onChange={(_, e) =>
+                setValue((v) => ({ ...v, enable_bypass_check: e }))
+              }
+            />
+          </ListItem>
+        )}
+
         {!value.pac && !value.use_default && (
           <>
             <ListItemText
               primary={t("settings.modals.sysproxy.fields.proxyBypass")}
             />
             <TextField
-              error={value.bypass ? !validReg.test(value.bypass) : false}
+              error={
+                value.enable_bypass_check && value.bypass
+                  ? !validReg.test(value.bypass)
+                  : false
+              }
               disabled={!enabled}
               size="small"
               multiline

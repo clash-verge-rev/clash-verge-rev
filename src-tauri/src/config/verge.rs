@@ -94,6 +94,9 @@ pub struct IVerge {
     /// enable proxy guard
     pub enable_proxy_guard: Option<bool>,
 
+    /// enable bypass format check
+    pub enable_bypass_check: Option<bool>,
+
     /// enable dns settings - this controls whether dns_config.yaml is applied
     pub enable_dns_settings: Option<bool>,
 
@@ -415,6 +418,7 @@ impl IVerge {
             verge_port: Some(7899),
             verge_http_enabled: Some(false),
             enable_proxy_guard: Some(false),
+            enable_bypass_check: Some(true),
             use_default_bypass: Some(true),
             proxy_guard_duration: Some(30),
             auto_close_connection: Some(true),
@@ -501,6 +505,7 @@ impl IVerge {
         patch!(verge_http_enabled);
         patch!(enable_system_proxy);
         patch!(enable_proxy_guard);
+        patch!(enable_bypass_check);
         patch!(use_default_bypass);
         patch!(system_proxy_bypass);
         patch!(proxy_guard_duration);

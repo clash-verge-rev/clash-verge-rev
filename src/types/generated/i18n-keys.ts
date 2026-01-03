@@ -559,6 +559,7 @@ export const translationKeys = [
   "settings.modals.sysproxy.fields.proxyGuard",
   "settings.modals.sysproxy.fields.guardDuration",
   "settings.modals.sysproxy.fields.alwaysUseDefaultBypass",
+  "settings.modals.sysproxy.fields.enableBypassCheck",
   "settings.modals.sysproxy.fields.proxyBypass",
   "settings.modals.sysproxy.fields.bypass",
   "settings.modals.sysproxy.fields.pacScriptContent",

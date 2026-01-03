@@ -421,6 +421,7 @@
         "proxyGuard": "프록시 가드",
         "guardDuration": "가드 지속시간",
         "alwaysUseDefaultBypass": "기본 우회 주소 항상 사용",
+        "enableBypassCheck": "프록시 우회 형식 검증",
         "proxyBypass": "프록시 우회 설정: ",
         "bypass": "우회: ",
         "pacScriptContent": "PAC 스크립트 내용"

@@ -421,6 +421,7 @@
         "proxyGuard": "Proxy Guard",
         "guardDuration": "Guard Duration",
         "alwaysUseDefaultBypass": "Always use Default Bypass",
+        "enableBypassCheck": "Validate Proxy Bypass Format",
         "proxyBypass": "Proxy Bypass Settings: ",
         "bypass": "Bypass: ",
         "pacScriptContent": "PAC Script Content"

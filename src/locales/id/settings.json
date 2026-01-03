@@ -421,6 +421,7 @@
         "proxyGuard": "Penjaga Proksi",
         "guardDuration": "Durasi Penjagaan",
         "alwaysUseDefaultBypass": "Selalu gunakan Bypass Default",
+        "enableBypassCheck": "Validasi format bypass proksi",
         "proxyBypass": "Pengaturan Bypass Proksi: ",
         "bypass": "Bypass: ",
         "pacScriptContent": "Konten Skrip PAC"

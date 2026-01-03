@@ -983,6 +983,7 @@ export interface TranslationResources {
           fields: {
             alwaysUseDefaultBypass: string;
             bypass: string;
+            enableBypassCheck: string;
             enableStatus: string;
             guardDuration: string;
             pacScriptContent: string;
