@@ -53,16 +53,16 @@ impl Operation {
 }
 
 pub struct WebDavClient {
-    config: Arc<ArcSwapOption<WebDavConfig>>,
-    clients: Arc<ArcSwap<HashMap<Operation, reqwest_dav::Client>>>,
+    config: ArcSwapOption<WebDavConfig>,
+    clients: ArcSwap<HashMap<Operation, reqwest_dav::Client>>,
 }
 
 impl WebDavClient {
     pub fn global() -> &'static Self {
         static WEBDAV_CLIENT: OnceCell<WebDavClient> = OnceCell::new();
         WEBDAV_CLIENT.get_or_init(|| Self {
-            config: Arc::new(ArcSwapOption::new(None)),
-            clients: Arc::new(ArcSwap::new(Arc::new(HashMap::new()))),
+            config: ArcSwapOption::new(None),
+            clients: ArcSwap::new(Arc::new(HashMap::new())),
         })
     }
 
@@ -147,11 +147,12 @@ impl WebDavClient {
             }
         }
 
-        // 缓存客户端（替换 Arc<Mutex<HashMap<...>>> 的写法）
         {
-            let mut map = (**self.clients.load()).clone();
-            map.insert(op, client.clone());
-            self.clients.store(map.into());
+            self.clients.rcu(|clients_map| {
+                let mut new_map = (**clients_map).clone();
+                new_map.insert(op, client.clone());
+                Arc::new(new_map)
+            });
         }
 
         Ok(client)

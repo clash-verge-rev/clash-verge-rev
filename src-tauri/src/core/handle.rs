@@ -1,24 +1,19 @@
-use crate::{APP_HANDLE, constants::timing, singleton};
+use crate::{APP_HANDLE, singleton, utils::window_manager::WindowManager};
 use parking_lot::RwLock;
 use smartstring::alias::String;
-use std::{
-    sync::{
-        Arc,
-        atomic::{AtomicBool, Ordering},
-    },
-    thread,
+use std::sync::{
+    Arc,
+    atomic::{AtomicBool, Ordering},
 };
 use tauri::{AppHandle, Manager as _, WebviewWindow};
 use tauri_plugin_mihomo::{Mihomo, MihomoExt as _};
 use tokio::sync::RwLockReadGuard;
 
-use super::notification::{ErrorMessage, FrontendEvent, NotificationSystem};
+use super::notification::{FrontendEvent, NotificationSystem};
 
 #[derive(Debug)]
 pub struct Handle {
     is_exiting: AtomicBool,
-    startup_errors: Arc<RwLock<Vec<ErrorMessage>>>,
-    startup_completed: AtomicBool,
     pub(crate) notification_system: Arc<RwLock<Option<NotificationSystem>>>,
 }
 
@@ -26,8 +21,6 @@ impl Default for Handle {
     fn default() -> Self {
         Self {
             is_exiting: AtomicBool::new(false),
-            startup_errors: Arc::new(RwLock::new(Vec::new())),
-            startup_completed: AtomicBool::new(false),
             notification_system: Arc::new(RwLock::new(Some(NotificationSystem::new()))),
         }
     }
@@ -47,7 +40,7 @@ impl Handle {
 
         let mut system_opt = self.notification_system.write();
         if let Some(system) = system_opt.as_mut()
-            && !system.is_running
+            && !system.is_running()
         {
             system.start();
         }
@@ -111,20 +104,18 @@ impl Handle {
     // TODO 利用 &str 等缩短 Clone
     pub fn notice_message<S: Into<String>, M: Into<String>>(status: S, msg: M) {
         let handle = Self::global();
-        let status_str = status.into();
-        let msg_str = msg.into();
-
-        if !handle.startup_completed.load(Ordering::Acquire) {
-            handle.startup_errors.write().push(ErrorMessage {
-                status: status_str,
-                message: msg_str,
-            });
-            return;
-        }
 
         if handle.is_exiting() {
             return;
         }
+
+        // We only send notice when main window exists
+        if WindowManager::get_main_window().is_none() {
+            return;
+        }
+
+        let status_str = status.into();
+        let msg_str = msg.into();
 
         Self::send_event(FrontendEvent::NoticeMessage {
             status: status_str,
@@ -142,49 +133,6 @@ impl Handle {
         if let Some(system) = system_opt.as_ref() {
             system.send_event(event);
         }
-    }
-
-    pub fn mark_startup_completed(&self) {
-        self.startup_completed.store(true, Ordering::Release);
-        self.send_startup_errors();
-    }
-
-    fn send_startup_errors(&self) {
-        let errors = {
-            let mut errors = self.startup_errors.write();
-            std::mem::take(&mut *errors)
-        };
-
-        if errors.is_empty() {
-            return;
-        }
-
-        let _ = thread::Builder::new()
-            .name("startup-errors-sender".into())
-            .spawn(move || {
-                thread::sleep(timing::STARTUP_ERROR_DELAY);
-
-                let handle = Self::global();
-                if handle.is_exiting() {
-                    return;
-                }
-
-                let system_opt = handle.notification_system.read();
-                if let Some(system) = system_opt.as_ref() {
-                    for error in errors {
-                        if handle.is_exiting() {
-                            break;
-                        }
-
-                        system.send_event(FrontendEvent::NoticeMessage {
-                            status: error.status,
-                            message: error.message,
-                        });
-
-                        thread::sleep(timing::ERROR_BATCH_DELAY);
-                    }
-                }
-            });
     }
 
     pub fn set_is_exiting(&self) {
