@@ -75,8 +75,8 @@ deelevate = "0.2.0"
 # *********************************
 
 [patch.crates-io]
+# Patches until https://github.com/tauri-apps/tao/pull/1167 is merged.
 tao = { git = "https://github.com/tauri-apps/tao" }
-tray-icon = { git = "https://github.com/clash-verge-rev/tray-icon", branch = "fix/tray-icon-create" }
 
 [workspace.lints.clippy]
 correctness = { level = "deny", priority = -1 }

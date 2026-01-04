@@ -9019,8 +9019,9 @@ dependencies = [
 
 [[package]]
 name = "tray-icon"
-version = "0.21.2"
-source = "git+https://github.com/clash-verge-rev/tray-icon?branch=fix%2Ftray-icon-create#ef2e99ac9959571f5a2540023ab2fc914395f805"
+version = "0.21.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a5e85aa143ceb072062fc4d6356c1b520a51d636e7bc8e77ec94be3608e5e80c"
 dependencies = [
  "crossbeam-channel",
  "dirs 6.0.0",
