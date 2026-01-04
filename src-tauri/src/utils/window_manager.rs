@@ -303,8 +303,6 @@ impl WindowManager {
                 return false;
             }
 
-            handle::Handle::global().mark_startup_completed();
-
             true
         })
     }

@@ -1,10 +1,3 @@
-use governor::{DefaultDirectRateLimiter, Quota, RateLimiter};
-use tauri::tray::TrayIconBuilder;
-use tauri_plugin_clash_verge_sysinfo::is_current_app_handle_admin;
-use tauri_plugin_mihomo::models::Proxies;
-use tokio::fs;
-#[cfg(target_os = "macos")]
-pub mod speed_rate;
 use crate::config::{IProfilePreview, IVerge};
 use crate::core::service;
 use crate::core::tray::menu_def::TrayAction;
@@ -16,6 +9,11 @@ use crate::{
     Type, cmd, config::Config, feat, logging, module::lightweight::is_in_lightweight_mode,
     utils::dirs::find_target_icons,
 };
+use governor::{DefaultDirectRateLimiter, Quota, RateLimiter};
+use tauri::tray::TrayIconBuilder;
+use tauri_plugin_clash_verge_sysinfo::is_current_app_handle_admin;
+use tauri_plugin_mihomo::models::Proxies;
+use tokio::fs;
 
 use super::handle;
 use anyhow::Result;
@@ -955,7 +953,6 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
             }
             MenuIds::COPY_ENV => feat::copy_clash_env().await,
             MenuIds::CONF_DIR => {
-                println!("Open directory submenu clicked");
                 let _ = cmd::open_app_dir().await;
             }
             MenuIds::CORE_DIR => {

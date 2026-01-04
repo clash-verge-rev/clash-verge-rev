@@ -6,10 +6,9 @@ use reqwest::{
     header::{HeaderMap, HeaderValue, USER_AGENT},
 };
 use smartstring::alias::String;
-use std::time::{Duration, Instant};
+use std::time::Duration;
 use sysproxy::Sysproxy;
 use tauri::Url;
-use tokio::sync::Mutex;
 
 #[derive(Debug)]
 pub struct HttpResponse {
@@ -43,13 +42,7 @@ pub enum ProxyType {
     System,
 }
 
-pub struct NetworkManager {
-    self_proxy_client: Mutex<Option<Client>>,
-    system_proxy_client: Mutex<Option<Client>>,
-    no_proxy_client: Mutex<Option<Client>>,
-    last_connection_error: Mutex<Option<(Instant, String)>>,
-    connection_error_count: Mutex<usize>,
-}
+pub struct NetworkManager;
 
 impl Default for NetworkManager {
     fn default() -> Self {
@@ -58,44 +51,8 @@ impl Default for NetworkManager {
 }
 
 impl NetworkManager {
-    pub fn new() -> Self {
-        Self {
-            self_proxy_client: Mutex::new(None),
-            system_proxy_client: Mutex::new(None),
-            no_proxy_client: Mutex::new(None),
-            last_connection_error: Mutex::new(None),
-            connection_error_count: Mutex::new(0),
-        }
-    }
-
-    async fn record_connection_error(&self, error: &str) {
-        *self.last_connection_error.lock().await = Some((Instant::now(), error.into()));
-
-        let mut count = self.connection_error_count.lock().await;
-        *count += 1;
-    }
-
-    async fn should_reset_clients(&self) -> bool {
-        let count = *self.connection_error_count.lock().await;
-        if count > 5 {
-            return true;
-        }
-
-        if let Some((time, _)) = &*self.last_connection_error.lock().await
-            && time.elapsed() < Duration::from_secs(30)
-            && count > 2
-        {
-            return true;
-        }
-
-        false
-    }
-
-    pub async fn reset_clients(&self) {
-        *self.self_proxy_client.lock().await = None;
-        *self.system_proxy_client.lock().await = None;
-        *self.no_proxy_client.lock().await = None;
-        *self.connection_error_count.lock().await = 0;
+    pub const fn new() -> Self {
+        Self
     }
 
     fn build_client(
@@ -192,11 +149,7 @@ impl NetworkManager {
         user_agent: Option<String>,
         accept_invalid_certs: bool,
     ) -> Result<HttpResponse> {
-        if self.should_reset_clients().await {
-            self.reset_clients().await;
-        }
-
-        let parsed = Url::parse(url)?;
+        let mut parsed = Url::parse(url)?;
         let mut extra_headers = HeaderMap::new();
 
         if !parsed.username().is_empty()
@@ -207,19 +160,15 @@ impl NetworkManager {
             extra_headers.insert("Authorization", HeaderValue::from_str(&format!("Basic {}", encoded))?);
         }
 
-        let clean_url = {
-            let mut no_auth = parsed.clone();
-            no_auth.set_username("").ok();
-            no_auth.set_password(None).ok();
-            no_auth.to_string()
-        };
+        parsed.set_username("").ok();
+        parsed.set_password(None).ok();
 
         // 创建请求
         let client = self
             .create_request(proxy_type, timeout_secs, user_agent, accept_invalid_certs)
             .await?;
 
-        let mut request_builder = client.get(&clean_url);
+        let mut request_builder = client.get(parsed);
 
         for (key, value) in extra_headers.iter() {
             request_builder = request_builder.header(key, value);
@@ -228,18 +177,15 @@ impl NetworkManager {
         let response = match request_builder.send().await {
             Ok(resp) => resp,
             Err(e) => {
-                self.record_connection_error(&format!("Request failed: {}", e)).await;
                 return Err(anyhow::anyhow!("Request failed: {}", e));
             }
         };
 
         let status = response.status();
-        let headers = response.headers().clone();
+        let headers = response.headers().to_owned();
         let body = match response.text().await {
             Ok(text) => text.into(),
             Err(e) => {
-                self.record_connection_error(&format!("Failed to read response body: {}", e))
-                    .await;
                 return Err(anyhow::anyhow!("Failed to read response body: {}", e));
             }
         };

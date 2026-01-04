@@ -134,7 +134,6 @@ impl Logger {
 
     /// only update app log level
     pub fn update_log_level(&self, level: LevelFilter) -> Result<()> {
-        println!("refresh log level");
         *self.log_level.write() = level;
         let log_level = self.log_level.read().to_owned();
         if let Some(handle) = self.handle.lock().as_mut() {
@@ -149,7 +148,6 @@ impl Logger {
 
     /// update app and mihomo core log config
     pub async fn update_log_config(&self, log_max_size: u64, log_max_count: usize) -> Result<()> {
-        println!("refresh log file");
         self.log_max_size.store(log_max_size, Ordering::SeqCst);
         self.log_max_count.store(log_max_count, Ordering::SeqCst);
         if let Some(handle) = self.handle.lock().as_ref() {
