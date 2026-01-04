@@ -1,7 +1,9 @@
 import { EditRounded } from "@mui/icons-material";
 import {
   Autocomplete,
+  Box,
   Button,
+  Chip,
   InputAdornment,
   List,
   ListItem,
@@ -22,7 +24,12 @@ import {
 import { useTranslation } from "react-i18next";
 import { mutate } from "swr";
 
-import { BaseDialog, DialogRef, Switch } from "@/components/base";
+import {
+  BaseDialog,
+  BaseSplitChipEditor,
+  DialogRef,
+  Switch,
+} from "@/components/base";
 import { BaseFieldset } from "@/components/base/base-fieldset";
 import { TooltipIcon } from "@/components/base/base-tooltip-icon";
 import { EditorViewer } from "@/components/profile/editor-viewer";
@@ -85,9 +92,16 @@ const getValidReg = (isWindows: boolean) => {
   return new RegExp(rValid);
 };
 
+const splitBypass = (value?: string) =>
+  (value ?? "")
+    .split(/[,\n;\r]+/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+
 export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation();
-  const isWindows = getSystem() === "windows";
+  const systemName = getSystem();
+  const isWindows = systemName === "windows";
   const validReg = useMemo(() => getValidReg(isWindows), [isWindows]);
 
   const [open, setOpen] = useState(false);
@@ -122,11 +136,13 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
     proxy_host: proxy_host ?? "127.0.0.1",
   });
 
+  const separator = useMemo(() => (isWindows ? ";" : ","), [isWindows]);
+
   const defaultBypass = () => {
     if (isWindows) {
       return "localhost;127.*;192.168.*;10.*;172.16.*;172.17.*;172.18.*;172.19.*;172.20.*;172.21.*;172.22.*;172.23.*;172.24.*;172.25.*;172.26.*;172.27.*;172.28.*;172.29.*;172.30.*;172.31.*;<local>";
     }
-    if (getSystem() === "linux") {
+    if (systemName === "linux") {
       return "localhost,127.0.0.1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,::1";
     }
     return "127.0.0.1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,localhost,*.local,*.crashlytics.com,<local>";
@@ -198,6 +214,14 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
     const port = import.meta.env.DEV ? 11233 : 33331;
     return `http://${host}:${port}/commands/pac`;
   }, [value.proxy_host]);
+
+  const bypassError =
+    value.enable_bypass_check &&
+    !value.pac &&
+    !value.use_default &&
+    value.bypass
+      ? !validReg.test(value.bypass)
+      : false;
 
   useImperativeHandle(ref, () => ({
     open: () => {
@@ -560,14 +584,19 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
               edge="end"
               disabled={!enabled}
               checked={value.use_default}
-              onChange={(_, e) =>
-                setValue((v) => ({
-                  ...v,
-                  use_default: e,
-                  // 当取消选择use_default且当前bypass为空时，填充默认值
-                  bypass: !e && !v.bypass ? defaultBypass() : v.bypass,
-                }))
-              }
+              onChange={(_, e) => {
+                if (!e && !value.bypass) {
+                  const nextBypass = defaultBypass();
+                  setValue((v) => ({
+                    ...v,
+                    use_default: e,
+                    // 当取消选择use_default且当前bypass为空时，填充默认值
+                    bypass: nextBypass,
+                  }));
+                  return;
+                }
+                setValue((v) => ({ ...v, use_default: e }));
+              }}
             />
           </ListItem>
         )}
@@ -589,27 +618,32 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
         )}
 
         {!value.pac && !value.use_default && (
-          <>
-            <ListItemText
-              primary={t("settings.modals.sysproxy.fields.proxyBypass")}
-            />
-            <TextField
-              error={
-                value.enable_bypass_check && value.bypass
-                  ? !validReg.test(value.bypass)
-                  : false
-              }
-              disabled={!enabled}
-              size="small"
-              multiline
-              rows={4}
-              sx={{ width: "100%" }}
-              value={value.bypass}
-              onChange={(e) => {
-                setValue((v) => ({ ...v, bypass: e.target.value }));
-              }}
-            />
-          </>
+          <BaseSplitChipEditor
+            value={value.bypass ?? ""}
+            separator={separator}
+            disabled={!enabled}
+            error={bypassError}
+            helperText={
+              bypassError
+                ? t("settings.modals.sysproxy.messages.invalidBypass")
+                : undefined
+            }
+            placeholder="localhost"
+            ariaLabel={t("settings.modals.sysproxy.fields.proxyBypass")}
+            onChange={(nextValue) => {
+              setValue((v) => ({ ...v, bypass: nextValue }));
+            }}
+            renderHeader={(modeToggle) => (
+              <ListItem sx={{ padding: "5px 2px" }}>
+                <ListItemText
+                  primary={t("settings.modals.sysproxy.fields.proxyBypass")}
+                />
+                {modeToggle ? (
+                  <Box sx={{ marginLeft: "auto" }}>{modeToggle}</Box>
+                ) : null}
+              </ListItem>
+            )}
+          />
         )}
 
         {!value.pac && value.use_default && (
@@ -617,16 +651,13 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
             <ListItemText
               primary={t("settings.modals.sysproxy.fields.bypass")}
             />
-            <FlexBox>
-              <TextField
-                disabled={true}
-                size="small"
-                multiline
-                rows={4}
-                sx={{ width: "100%" }}
-                value={defaultBypass()}
-              />
-            </FlexBox>
+            <Box sx={{ padding: "0 2px 5px" }}>
+              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+                {splitBypass(defaultBypass()).map((item) => (
+                  <Chip key={item} label={item} size="small" />
+                ))}
+              </Box>
+            </Box>
           </>
         )}
 
