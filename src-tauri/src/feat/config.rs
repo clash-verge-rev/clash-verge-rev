@@ -1,6 +1,6 @@
 use crate::{
     config::{Config, IVerge},
-    core::{CoreManager, handle, hotkey, sysopt, tray},
+    core::{CoreManager, handle, hotkey, logger::Logger, sysopt, tray},
     module::{auto_backup::AutoBackupManager, lightweight},
 };
 use anyhow::Result;
@@ -65,6 +65,8 @@ bitflags! {
         const SYSTRAY_CLICK_BEHAVIOR = 1 << 9;
         const LIGHT_WEIGHT = 1 << 10;
         const LANGUAGE = 1 << 11;
+        const LOG_LEVEL = 1 << 12;
+        const LOG_FILE = 1 << 13;
 
         const GROUP_SYS_TRAY = Self::SYSTRAY_MENU.bits()
                              | Self::SYSTRAY_TOOLTIP.bits()
@@ -111,6 +113,9 @@ fn determine_update_flags(patch: &IVerge) -> UpdateFlags {
     let tray_inline_outbound_modes = patch.tray_inline_outbound_modes;
     let enable_proxy_guard = patch.enable_proxy_guard;
     let proxy_guard_duration = patch.proxy_guard_duration;
+    let log_level = &patch.app_log_level;
+    let log_max_size = patch.app_log_max_size;
+    let log_max_count = patch.app_log_max_count;
 
     #[cfg(target_os = "windows")]
     let restart_core_needed = socks_enabled.is_some()
@@ -182,6 +187,12 @@ fn determine_update_flags(patch: &IVerge) -> UpdateFlags {
     if tray_proxy_groups_display_mode.is_some() {
         update_flags.insert(UpdateFlags::SYSTRAY_MENU);
     }
+    if log_level.is_some() {
+        update_flags.insert(UpdateFlags::LOG_LEVEL);
+    }
+    if log_max_size.is_some() || log_max_count.is_some() {
+        update_flags.insert(UpdateFlags::LOG_FILE);
+    }
     if tray_inline_outbound_modes.is_some() {
         update_flags.insert(UpdateFlags::SYSTRAY_MENU);
     }
@@ -243,6 +254,14 @@ async fn process_terminated_flags(update_flags: UpdateFlags, patch: &IVerge) -> 
         } else {
             lightweight::disable_auto_light_weight_mode();
         }
+    }
+    if update_flags.contains(UpdateFlags::LOG_LEVEL) {
+        Logger::global().update_log_level(patch.get_log_level())?;
+    }
+    if update_flags.contains(UpdateFlags::LOG_FILE) {
+        let log_max_size = patch.app_log_max_size.unwrap_or(128);
+        let log_max_count = patch.app_log_max_count.unwrap_or(8);
+        Logger::global().update_log_config(log_max_size, log_max_count).await?;
     }
     Ok(())
 }
