@@ -3,12 +3,12 @@ import { listen, UnlistenFn, EventCallback } from "@tauri-apps/api/event";
 import { useCallback, useRef } from "react";
 
 export const useListen = () => {
-  const unlistenFns = useRef<UnlistenFn[]>([]);
+  const unlistenFnsRef = useRef<UnlistenFn[]>([]);
 
   const addListener = useCallback(
     async <T>(eventName: string, handler: EventCallback<T>) => {
       const unlisten = await listen(eventName, handler);
-      unlistenFns.current.push(unlisten);
+      unlistenFnsRef.current.push(unlisten);
       return unlisten;
     },
     [],
@@ -17,7 +17,7 @@ export const useListen = () => {
   const removeAllListeners = useCallback(() => {
     const errors: Error[] = [];
 
-    unlistenFns.current.forEach((unlisten) => {
+    unlistenFnsRef.current.forEach((unlisten) => {
       try {
         unlisten();
       } catch (error) {
@@ -32,7 +32,7 @@ export const useListen = () => {
       );
     }
 
-    unlistenFns.current.length = 0;
+    unlistenFnsRef.current.length = 0;
   }, []);
 
   const setupCloseListener = useCallback(async () => {

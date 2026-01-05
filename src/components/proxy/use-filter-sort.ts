@@ -25,7 +25,7 @@ export default function useFilterSort(
   const lastInputRef = useRef<{ text: string; sort: ProxySortType } | null>(
     null,
   );
-  const debounceTimer = useRef<number | null>(null);
+  const debounceTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     let last = 0;
@@ -68,9 +68,9 @@ export default function useFilterSort(
   );
 
   useEffect(() => {
-    if (debounceTimer.current !== null) {
-      window.clearTimeout(debounceTimer.current);
-      debounceTimer.current = null;
+    if (debounceTimerRef.current !== null) {
+      window.clearTimeout(debounceTimerRef.current);
+      debounceTimerRef.current = null;
     }
 
     const prev = lastInputRef.current;
@@ -80,15 +80,15 @@ export default function useFilterSort(
     lastInputRef.current = { text: filterText, sort: sortType };
 
     const delay = stableInputs ? 0 : 150;
-    debounceTimer.current = window.setTimeout(() => {
+    debounceTimerRef.current = window.setTimeout(() => {
       setResult(compute);
-      debounceTimer.current = null;
+      debounceTimerRef.current = null;
     }, delay);
 
     return () => {
-      if (debounceTimer.current !== null) {
-        window.clearTimeout(debounceTimer.current);
-        debounceTimer.current = null;
+      if (debounceTimerRef.current !== null) {
+        window.clearTimeout(debounceTimerRef.current);
+        debounceTimerRef.current = null;
       }
     };
   }, [compute, filterText, sortType]);
