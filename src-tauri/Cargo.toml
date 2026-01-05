@@ -75,7 +75,7 @@ regex = "1.12.2"
 sysproxy = { git = "https://github.com/clash-verge-rev/sysproxy-rs", features = [
   "guard",
 ] }
-network-interface = { version = "2.0.4", features = ["serde"] }
+network-interface = { version = "2.0.5", features = ["serde"] }
 tauri-plugin-shell = "2.3.3"
 tauri-plugin-dialog = "2.4.2"
 tauri-plugin-fs = "2.4.4"
@@ -91,7 +91,7 @@ futures = "0.3.31"
 gethostname = "1.1.0"
 scopeguard = "1.2.0"
 tauri-plugin-notification = "2.3.3"
-tokio-stream = "0.1.17"
+tokio-stream = "0.1.18"
 backoff = { version = "0.4.0", features = ["tokio"] }
 tauri-plugin-http = "2.5.4"
 console-subscriber = { version = "0.5.0", optional = true }
