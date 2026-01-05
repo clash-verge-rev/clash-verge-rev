@@ -278,21 +278,59 @@ impl PrfItem {
             ProxyType::None
         };
 
-        // 使用网络管理器发送请求
-        let resp = match NetworkManager::new()
+        let mobile_ua: String = "Shadowrocket/1.0".into();
+
+        let mut resp = match NetworkManager::new()
             .get_with_interrupt(url, proxy_type, Some(timeout), user_agent.clone(), accept_invalid_certs)
             .await
         {
             Ok(r) => r,
-            Err(e) => {
+            Err(_) => {
                 tokio::time::sleep(Duration::from_millis(100)).await;
-                bail!("failed to fetch remote profile: {}", e);
+                match NetworkManager::new()
+                    .get_with_interrupt(
+                        url,
+                        proxy_type,
+                        Some(timeout),
+                        Some(mobile_ua.clone()),
+                        accept_invalid_certs,
+                    )
+                    .await
+                {
+                    Ok(r) => r,
+                    Err(e) => {
+                        bail!("failed to fetch remote profile: {}", e);
+                    }
+                }
             }
         };
 
         let status_code = resp.status();
         if !status_code.is_success() {
-            bail!("failed to fetch remote profile with status {status_code}")
+            if user_agent.as_deref() != Some(mobile_ua.as_str()) {
+                match NetworkManager::new()
+                    .get_with_interrupt(
+                        url,
+                        proxy_type,
+                        Some(timeout),
+                        Some(mobile_ua.clone()),
+                        accept_invalid_certs,
+                    )
+                    .await
+                {
+                    Ok(r) => {
+                        resp = r;
+                        if !resp.status().is_success() {
+                            bail!("failed to fetch remote profile with status {}", resp.status())
+                        }
+                    }
+                    Err(e) => {
+                        bail!("failed to fetch remote profile: {}", e);
+                    }
+                }
+            } else {
+                bail!("failed to fetch remote profile with status {status_code}")
+            }
         }
 
         let header = resp.headers();
