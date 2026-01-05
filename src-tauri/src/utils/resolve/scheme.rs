@@ -39,8 +39,25 @@ pub(super) async fn resolve_scheme(param: &str) -> Result<()> {
         let url_param = if let Some(query) = link_parsed.query() {
             let prefix = "url=";
             if let Some(pos) = query.find(prefix) {
-                let raw_url = &query[pos + prefix.len()..];
-                Some(percent_decode_str(raw_url).decode_utf8_lossy().to_string())
+                let raw_url = query[pos + prefix.len()..].trim();
+                // Avoid double-decoding nested subscription URLs; decode only when needed.
+                let decoded = if Url::parse(raw_url).is_ok() {
+                    raw_url.to_string()
+                } else {
+                    let mut candidate = raw_url.to_string();
+                    for _ in 0..2 {
+                        let next = percent_decode_str(&candidate).decode_utf8_lossy().to_string();
+                        if next == candidate {
+                            break;
+                        }
+                        candidate = next;
+                        if Url::parse(&candidate).is_ok() {
+                            break;
+                        }
+                    }
+                    candidate
+                };
+                Some(decoded)
             } else {
                 None
             }
