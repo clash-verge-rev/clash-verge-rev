@@ -126,7 +126,7 @@ const Layout = () => {
   const [menuContextPosition, setMenuContextPosition] =
     useState<MenuContextPosition | null>(null);
 
-  const windowControls = useRef<any>(null);
+  const windowControlsRef = useRef<any>(null);
   const { decorated } = useWindowDecorations();
 
   const sensors = useSensors(
@@ -206,7 +206,7 @@ const Layout = () => {
     () =>
       !decorated ? (
         <div className="the_titlebar" data-tauri-drag-region="true">
-          <WindowControls ref={windowControls} />
+          <WindowControls ref={windowControlsRef} />
         </div>
       ) : null,
     [decorated],

@@ -109,19 +109,19 @@ export const useLogData = () => {
     },
   });
 
-  const previousLogLevel = useRef<string | undefined>(undefined);
+  const previousLogLevelRef = useRef<string | undefined>(undefined);
 
   useEffect(() => {
     if (!logLevel) {
-      previousLogLevel.current = logLevel ?? undefined;
+      previousLogLevelRef.current = logLevel ?? undefined;
       return;
     }
 
-    if (previousLogLevel.current === logLevel) {
+    if (previousLogLevelRef.current === logLevel) {
       return;
     }
 
-    previousLogLevel.current = logLevel;
+    previousLogLevelRef.current = logLevel;
     refresh();
   }, [logLevel, refresh]);
 

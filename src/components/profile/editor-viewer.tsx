@@ -82,8 +82,8 @@ export const EditorViewer = <T extends Language>(props: Props<T>) => {
   const resolvedTitle = title ?? t("profiles.components.menu.editFile");
 
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor>(undefined);
-  const prevData = useRef<string | undefined>("");
-  const currData = useRef<string | undefined>("");
+  const prevDataRef = useRef<string | undefined>("");
+  const currDataRef = useRef<string | undefined>("");
   // Hold the latest loader without making effects depend on its identity
   const initialDataRef = useRef<Props<T>["initialData"]>(initialData);
   // Track mount/open state to prevent setState after unmount/close
@@ -154,10 +154,10 @@ export const EditorViewer = <T extends Language>(props: Props<T>) => {
         return;
       }
       // Only update when untouched and value changed
-      const userUntouched = currData.current === prevData.current;
-      if (userUntouched && next !== prevData.current) {
-        prevData.current = next;
-        currData.current = next;
+      const userUntouched = currDataRef.current === prevDataRef.current;
+      if (userUntouched && next !== prevDataRef.current) {
+        prevDataRef.current = next;
+        currDataRef.current = next;
         editorRef.current?.setValue(next);
       }
       // Ensure any previous error state is cleared after a successful refresh
@@ -219,8 +219,8 @@ export const EditorViewer = <T extends Language>(props: Props<T>) => {
     setHasLoadedOnce(false);
     // We will perform an explicit initial load below; skip the first background refresh.
     skipNextRefreshRef.current = true;
-    prevData.current = undefined;
-    currData.current = undefined;
+    prevDataRef.current = undefined;
+    currDataRef.current = undefined;
 
     (async () => {
       try {
@@ -231,8 +231,8 @@ export const EditorViewer = <T extends Language>(props: Props<T>) => {
             : (dataSource ?? Promise.resolve(""));
         const data = await dataPromise;
         if (cancelled) return;
-        prevData.current = data;
-        currData.current = data;
+        prevDataRef.current = data;
+        currDataRef.current = data;
 
         setInitialText(data);
         // Build a stable model path and avoid "undefined" in the name
@@ -250,8 +250,8 @@ export const EditorViewer = <T extends Language>(props: Props<T>) => {
         showNotice.error(err);
 
         // Align refs with fallback text after a load failure
-        prevData.current = "";
-        currData.current = "";
+        prevDataRef.current = "";
+        currDataRef.current = "";
 
         setInitialText("");
         const pathParts = [String(dataKey ?? nanoid()), instanceIdRef.current];
@@ -288,8 +288,8 @@ export const EditorViewer = <T extends Language>(props: Props<T>) => {
 
   const handleChange = useLockFn(async (value?: string) => {
     try {
-      currData.current = value ?? editorRef.current?.getValue();
-      onChange?.(prevData.current, currData.current);
+      currDataRef.current = value ?? editorRef.current?.getValue();
+      onChange?.(prevDataRef.current, currDataRef.current);
       // If the initial load failed, allow saving after the user makes an edit.
       if (!hasLoadedOnce) {
         setHasLoadedOnce(true);
@@ -307,11 +307,11 @@ export const EditorViewer = <T extends Language>(props: Props<T>) => {
         if (!editorRef.current) {
           return;
         }
-        currData.current = editorRef.current.getValue();
+        currDataRef.current = editorRef.current.getValue();
         if (onSave) {
-          await onSave(prevData.current, currData.current);
+          await onSave(prevDataRef.current, currDataRef.current);
           // If save succeeds, align prev with current
-          prevData.current = currData.current;
+          prevDataRef.current = currDataRef.current;
         }
       }
       onClose();
