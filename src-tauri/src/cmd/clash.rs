@@ -8,7 +8,6 @@ use crate::{
     core::{CoreManager, handle, validate::CoreConfigValidator},
 };
 use clash_verge_logging::{Type, logging, logging_error};
-use compact_str::CompactString;
 use serde_yaml_ng::Mapping;
 use smartstring::alias::String;
 use tokio::fs;
@@ -242,10 +241,4 @@ pub async fn validate_dns_config() -> CmdResult<(bool, String)> {
     CoreConfigValidator::validate_config_file(dns_path_str, None)
         .await
         .stringify_err()
-}
-
-#[tauri::command]
-pub async fn get_clash_logs() -> CmdResult<Vec<CompactString>> {
-    let logs = CoreManager::global().get_clash_logs().await.unwrap_or_default();
-    Ok(logs)
 }

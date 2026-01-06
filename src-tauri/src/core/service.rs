@@ -6,7 +6,6 @@ use crate::{
 use anyhow::{Context as _, Result, bail};
 use clash_verge_logging::{Type, logging, logging_error};
 use clash_verge_service_ipc::CoreConfig;
-use compact_str::CompactString;
 use once_cell::sync::Lazy;
 use std::{
     env::current_exe,
@@ -341,23 +340,6 @@ pub(super) async fn run_core_by_service(config_file: &PathBuf) -> Result<()> {
 
     logging!(info, Type::Service, "服务已运行且版本匹配，直接使用");
     start_with_existing_service(config_file).await
-}
-
-pub(super) async fn get_clash_logs_by_service() -> Result<Vec<CompactString>> {
-    logging!(info, Type::Service, "正在获取服务模式下的 Clash 日志");
-
-    let response = clash_verge_service_ipc::get_clash_logs()
-        .await
-        .context("无法连接到Clash Verge Service")?;
-
-    if response.code > 0 {
-        let err_msg = response.message;
-        logging!(error, Type::Service, "获取服务模式下的 Clash 日志失败: {}", err_msg);
-        bail!(err_msg);
-    }
-
-    logging!(info, Type::Service, "成功获取服务模式下的 Clash 日志");
-    Ok(response.data.unwrap_or_default())
 }
 
 /// 通过服务停止core

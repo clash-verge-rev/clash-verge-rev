@@ -17,7 +17,7 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 [features]
 default = ["custom-protocol"]
 custom-protocol = ["tauri/custom-protocol"]
-verge-dev = ["clash_verge_logger/color"]
+verge-dev = ["clash-verge-logging/color"]
 tauri-dev = []
 tokio-trace = ["console-subscriber"]
 clippy = ["tauri/test"]
@@ -48,7 +48,6 @@ tauri = { workspace = true, features = [
 parking_lot = { workspace = true }
 anyhow = { workspace = true }
 tokio = { workspace = true }
-compact_str = { workspace = true }
 flexi_logger = { workspace = true }
 log = { workspace = true }
 serde = { workspace = true, features = ["derive"] }
@@ -97,11 +96,10 @@ tauri-plugin-http = "2.5.4"
 console-subscriber = { version = "0.5.0", optional = true }
 tauri-plugin-devtools = { version = "2.0.1" }
 tauri-plugin-mihomo = { git = "https://github.com/clash-verge-rev/tauri-plugin-mihomo" }
-clash_verge_logger = { git = "https://github.com/clash-verge-rev/clash-verge-logger" }
 async-trait = "0.1.89"
-clash_verge_service_ipc = { version = "2.0.28", features = [
+clash_verge_service_ipc = { version = "2.0.29", features = [
   "client",
-], git = "https://github.com/clash-verge-rev/clash-verge-service-ipc" }
+], git = "https://github.com/clash-verge-rev/clash-verge-service-ipc", branch = "refactor/remove-logs-record" }
 arc-swap = "1.8.0"
 rust_iso3166 = "0.1.14"
 dark-light = "2.0.0"

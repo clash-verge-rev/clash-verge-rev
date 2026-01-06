@@ -2,7 +2,6 @@ use super::{CoreManager, RunningMode};
 use crate::cmd::StringifyErr as _;
 use crate::config::{Config, IVerge};
 use crate::core::handle::Handle;
-use crate::core::manager::CLASH_LOGGER;
 use crate::core::service::{SERVICE_MANAGER, ServiceStatus};
 use anyhow::Result;
 use clash_verge_logging::{Type, logging};
@@ -24,7 +23,6 @@ impl CoreManager {
     }
 
     pub async fn stop_core(&self) -> Result<()> {
-        CLASH_LOGGER.clear_logs().await;
         defer! {
             self.after_core_process();
         }

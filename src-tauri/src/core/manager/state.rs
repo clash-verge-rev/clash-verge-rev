@@ -1,27 +1,20 @@
+use std::borrow::Cow;
+
 use super::{CoreManager, RunningMode};
 use crate::{
     AsyncHandler,
     config::{Config, IClashTemp},
-    core::{handle, logger::Logger, manager::CLASH_LOGGER, service},
+    core::{handle, logger::Logger, service},
     logging,
     utils::dirs,
 };
 use anyhow::Result;
 use clash_verge_logging::Type;
-use compact_str::CompactString;
 use log::Level;
 use scopeguard::defer;
 use tauri_plugin_shell::ShellExt as _;
 
 impl CoreManager {
-    pub async fn get_clash_logs(&self) -> Result<Vec<CompactString>> {
-        match *self.get_running_mode() {
-            RunningMode::Service => service::get_clash_logs_by_service().await,
-            RunningMode::Sidecar => Ok(CLASH_LOGGER.get_logs().await),
-            RunningMode::NotRunning => Ok(Vec::new()),
-        }
-    }
-
     pub(super) async fn start_core_by_sidecar(&self) -> Result<()> {
         logging!(info, Type::Core, "Starting core in sidecar mode");
 
@@ -64,20 +57,18 @@ impl CoreManager {
                 match event {
                     tauri_plugin_shell::process::CommandEvent::Stdout(line)
                     | tauri_plugin_shell::process::CommandEvent::Stderr(line) => {
-                        let message = CompactString::from(String::from_utf8_lossy(&line).as_ref());
+                        let message = String::from_utf8_lossy(&line);
                         Logger::global().writer_sidecar_log(Level::Error, &message);
-                        CLASH_LOGGER.append_log(message).await;
                     }
                     tauri_plugin_shell::process::CommandEvent::Terminated(term) => {
                         let message = if let Some(code) = term.code {
-                            CompactString::from(format!("Process terminated with code: {}", code))
+                            Cow::Owned(format!("Process terminated with code: {}", code))
                         } else if let Some(signal) = term.signal {
-                            CompactString::from(format!("Process terminated by signal: {}", signal))
+                            Cow::Owned(format!("Process terminated by signal: {}", signal))
                         } else {
-                            CompactString::from("Process terminated")
+                            Cow::Borrowed("Process terminated")
                         };
                         Logger::global().writer_sidecar_log(Level::Info, &message);
-                        CLASH_LOGGER.clear_logs().await;
                         break;
                     }
                     _ => {}

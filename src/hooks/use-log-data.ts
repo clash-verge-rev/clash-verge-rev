@@ -3,8 +3,6 @@ import { useEffect, useRef } from "react";
 import { mutate } from "swr";
 import { MihomoWebSocket, type LogLevel } from "tauri-plugin-mihomo-api";
 
-import { getClashLogs } from "@/services/cmds";
-
 import { useClashLog } from "./use-clash-log";
 import { useMihomoWsSubscription } from "./use-mihomo-ws-subscription";
 
@@ -23,15 +21,6 @@ const LOG_LEVEL_FILTERS: Record<LogLevel, LogType[]> = {
 
 const clampLogs = (logs: ILogItem[]): ILogItem[] =>
   logs.length > MAX_LOG_NUM ? logs.slice(-MAX_LOG_NUM) : logs;
-
-const filterLogsByLevel = (
-  logs: ILogItem[],
-  allowedTypes: LogType[],
-): ILogItem[] => {
-  if (allowedTypes.length === 0) return [];
-  if (allowedTypes.length === DEFAULT_LOG_TYPES.length) return logs;
-  return logs.filter((log) => allowedTypes.includes(log.type));
-};
 
 const appendLogs = (
   current: ILogItem[] | undefined,
@@ -99,10 +88,7 @@ export const useLogData = () => {
           }
         },
         async onConnected() {
-          const logs = await getClashLogs();
-          if (isMounted()) {
-            next(null, clampLogs(filterLogsByLevel(logs, allowedTypes)));
-          }
+          console.debug("[use-log-data] Log WebSocket connected");
         },
         cleanup: clearFlushTimer,
       };
