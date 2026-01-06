@@ -129,7 +129,7 @@ async fn init_dns_config() -> Result<()> {
             "default-nameserver".into(),
             Value::Sequence(vec![
                 Value::String("system".into()),
-                Value::String("223.6.6.6".into()),
+                // Value::String("223.6.6.6".into()),
                 Value::String("8.8.8.8".into()),
                 Value::String("2400:3200::1".into()),
                 Value::String("2001:4860:4860::8888".into()),
