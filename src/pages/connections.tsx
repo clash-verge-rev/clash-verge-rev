@@ -18,9 +18,12 @@ import { useTranslation } from "react-i18next";
 import { Virtuoso } from "react-virtuoso";
 import { closeAllConnections } from "tauri-plugin-mihomo-api";
 
-import { BaseEmpty, BasePage } from "@/components/base";
-import { BaseSearchBox } from "@/components/base/base-search-box";
-import { BaseStyledSelect } from "@/components/base/base-styled-select";
+import {
+  BaseEmpty,
+  BasePage,
+  BaseSearchBox,
+  BaseStyledSelect,
+} from "@/components/base";
 import {
   ConnectionDetail,
   ConnectionDetailRef,

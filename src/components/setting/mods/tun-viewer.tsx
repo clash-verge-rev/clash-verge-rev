@@ -12,8 +12,7 @@ import type { Ref } from "react";
 import { useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { BaseDialog, DialogRef, Switch } from "@/components/base";
-import { TooltipIcon } from "@/components/base/base-tooltip-icon";
+import { BaseDialog, DialogRef, Switch, TooltipIcon } from "@/components/base";
 import { useClash } from "@/hooks/use-clash";
 import { enhanceProfiles } from "@/services/cmds";
 import { showNotice } from "@/services/notice-service";

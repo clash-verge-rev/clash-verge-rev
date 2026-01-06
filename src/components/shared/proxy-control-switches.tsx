@@ -11,8 +11,7 @@ import { useLockFn } from "ahooks";
 import React, { useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 
-import { DialogRef, Switch } from "@/components/base";
-import { TooltipIcon } from "@/components/base/base-tooltip-icon";
+import { DialogRef, Switch, TooltipIcon } from "@/components/base";
 import { GuardState } from "@/components/setting/mods/guard-state";
 import { SysproxyViewer } from "@/components/setting/mods/sysproxy-viewer";
 import { TunViewer } from "@/components/setting/mods/tun-viewer";

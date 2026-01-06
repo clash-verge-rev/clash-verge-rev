@@ -3,8 +3,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Virtuoso, VirtuosoHandle } from "react-virtuoso";
 
-import { BaseEmpty, BasePage } from "@/components/base";
-import { BaseSearchBox } from "@/components/base/base-search-box";
+import { BaseEmpty, BasePage, BaseSearchBox } from "@/components/base";
 import { ScrollTopButton } from "@/components/layout/scroll-top-button";
 import { ProviderButton } from "@/components/rule/provider-button";
 import RuleItem from "@/components/rule/rule-item";

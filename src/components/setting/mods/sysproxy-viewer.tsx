@@ -26,12 +26,12 @@ import { mutate } from "swr";
 
 import {
   BaseDialog,
+  BaseFieldset,
   BaseSplitChipEditor,
   DialogRef,
   Switch,
+  TooltipIcon,
 } from "@/components/base";
-import { BaseFieldset } from "@/components/base/base-fieldset";
-import { TooltipIcon } from "@/components/base/base-tooltip-icon";
 import { EditorViewer } from "@/components/profile/editor-viewer";
 import {
   useClashConfig,

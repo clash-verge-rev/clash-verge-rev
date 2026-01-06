@@ -15,7 +15,7 @@ import { Box, IconButton, TextField, SxProps } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { BaseSearchBox } from "@/components/base/base-search-box";
+import { BaseSearchBox } from "@/components/base";
 import { useVerge } from "@/hooks/use-verge";
 import delayManager from "@/services/delay";
 import { debugLog } from "@/utils/debug";

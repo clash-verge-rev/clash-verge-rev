@@ -11,8 +11,7 @@ import { useLockFn } from "ahooks";
 import { forwardRef, useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { BaseDialog, DialogRef, Switch } from "@/components/base";
-import { TooltipIcon } from "@/components/base/base-tooltip-icon";
+import { BaseDialog, DialogRef, Switch, TooltipIcon } from "@/components/base";
 import { useVerge } from "@/hooks/use-verge";
 import { showNotice } from "@/services/notice-service";
 

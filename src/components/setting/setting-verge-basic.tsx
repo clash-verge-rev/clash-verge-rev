@@ -4,8 +4,7 @@ import { open } from "@tauri-apps/plugin-dialog";
 import { useCallback, useRef } from "react";
 import { useTranslation } from "react-i18next";
 
-import { DialogRef } from "@/components/base";
-import { TooltipIcon } from "@/components/base/base-tooltip-icon";
+import { DialogRef, TooltipIcon } from "@/components/base";
 import { useVerge } from "@/hooks/use-verge";
 import { navItems } from "@/pages/_routers";
 import { copyClashEnv } from "@/services/cmds";

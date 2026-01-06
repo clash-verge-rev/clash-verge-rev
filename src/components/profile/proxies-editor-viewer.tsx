@@ -40,14 +40,13 @@ import {
 import { useTranslation } from "react-i18next";
 import { Virtuoso } from "react-virtuoso";
 
+import { BaseSearchBox } from "@/components/base";
 import { ProxyItem } from "@/components/profile/proxy-item";
 import { readProfileFile, saveProfileFile } from "@/services/cmds";
 import { showNotice } from "@/services/notice-service";
 import { useThemeMode } from "@/services/states";
 import getSystem from "@/utils/get-system";
 import parseUri from "@/utils/uri-parser";
-
-import { BaseSearchBox } from "../base/base-search-box";
 
 interface Props {
   profileUid: string;

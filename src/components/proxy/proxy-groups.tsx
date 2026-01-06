@@ -15,6 +15,7 @@ import { useTranslation } from "react-i18next";
 import { Virtuoso, type VirtuosoHandle } from "react-virtuoso";
 import { delayGroup, healthcheckProxyProvider } from "tauri-plugin-mihomo-api";
 
+import { BaseEmpty } from "@/components/base";
 import { useProxiesData } from "@/hooks/use-clash-data";
 import { useProxySelection } from "@/hooks/use-proxy-selection";
 import { useVerge } from "@/hooks/use-verge";
@@ -22,7 +23,6 @@ import { updateProxyChainConfigInRuntime } from "@/services/cmds";
 import delayManager from "@/services/delay";
 import { debugLog } from "@/utils/debug";
 
-import { BaseEmpty } from "../base";
 import { ScrollTopButton } from "../layout/scroll-top-button";
 
 import { ProxyChain } from "./proxy-chain";

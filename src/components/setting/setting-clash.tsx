@@ -6,8 +6,7 @@ import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { updateGeo } from "tauri-plugin-mihomo-api";
 
-import { DialogRef, Switch } from "@/components/base";
-import { TooltipIcon } from "@/components/base/base-tooltip-icon";
+import { DialogRef, Switch, TooltipIcon } from "@/components/base";
 import { useClash } from "@/hooks/use-clash";
 import { useClashLog } from "@/hooks/use-clash-log";
 import { useVerge } from "@/hooks/use-verge";
