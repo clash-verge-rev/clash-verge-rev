@@ -576,7 +576,8 @@
         "toggleTunMode": "TUN 모드 켜기/끄기",
         "entryLightweightMode": "경량 모드 진입",
         "direct": "직접 모드",
-        "reactivateProfiles": "프로필 재활성화"
+        "reactivateProfiles": "프로필 재활성화",
+        "closeAllConnections": "모든 연결 닫기"
       }
     },
     "password": {

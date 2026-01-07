@@ -20,6 +20,7 @@ pub enum HotkeyFunction {
     ToggleTunMode,
     EntryLightweightMode,
     ReactivateProfiles,
+    CloseAllConnections,
     Quit,
     #[cfg(target_os = "macos")]
     Hide,
@@ -36,6 +37,7 @@ impl fmt::Display for HotkeyFunction {
             Self::ToggleTunMode => "toggle_tun_mode",
             Self::EntryLightweightMode => "entry_lightweight_mode",
             Self::ReactivateProfiles => "reactivate_profiles",
+            Self::CloseAllConnections => "close_all_connections",
             Self::Quit => "quit",
             #[cfg(target_os = "macos")]
             Self::Hide => "hide",
@@ -57,6 +59,7 @@ impl FromStr for HotkeyFunction {
             "toggle_tun_mode" => Ok(Self::ToggleTunMode),
             "entry_lightweight_mode" => Ok(Self::EntryLightweightMode),
             "reactivate_profiles" => Ok(Self::ReactivateProfiles),
+            "close_all_connections" => Ok(Self::CloseAllConnections),
             "quit" => Ok(Self::Quit),
             #[cfg(target_os = "macos")]
             "hide" => Ok(Self::Hide),
@@ -178,6 +181,18 @@ impl Hotkey {
                             err
                         );
                         handle::Handle::notice_message("reactivate_profiles::error", err.to_string());
+                    }
+                });
+            }
+            HotkeyFunction::CloseAllConnections => {
+                AsyncHandler::spawn(async move || {
+                    if let Err(err) = handle::Handle::mihomo().await.close_all_connections().await {
+                        logging!(
+                            error,
+                            Type::Hotkey,
+                            "Failed to close all connections via hotkey: {}",
+                            err
+                        );
                     }
                 });
             }

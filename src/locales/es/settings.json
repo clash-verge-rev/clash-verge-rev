@@ -576,7 +576,8 @@
         "toggleTunMode": "Activar/desactivar el modo TUN",
         "entryLightweightMode": "Entrar en modo ligero",
         "direct": "Modo de conexión directa",
-        "reactivateProfiles": "Reactivar suscripciones"
+        "reactivateProfiles": "Reactivar suscripciones",
+        "closeAllConnections": "Cerrar todas las conexiones"
       }
     },
     "password": {

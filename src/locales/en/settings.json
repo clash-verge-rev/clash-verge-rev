@@ -576,7 +576,8 @@
         "toggleTunMode": "Enable/Disable Tun Mode",
         "entryLightweightMode": "Entry Lightweight Mode",
         "direct": "Direct Mode",
-        "reactivateProfiles": "Reactivate Profiles"
+        "reactivateProfiles": "Reactivate Profiles",
+        "closeAllConnections": "Close All Connections"
       }
     },
     "password": {

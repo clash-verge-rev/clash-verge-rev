@@ -576,7 +576,8 @@
         "toggleTunMode": "تفعيل/تعطيل وضع TUN",
         "entryLightweightMode": "Entry Lightweight Mode",
         "direct": "الوضع المباشر",
-        "reactivateProfiles": "إعادة تنشيط الملفات الشخصية"
+        "reactivateProfiles": "إعادة تنشيط الملفات الشخصية",
+        "closeAllConnections": "إغلاق جميع الاتصالات"
       }
     },
     "password": {

@@ -576,7 +576,8 @@
         "toggleTunMode": "Tun режимын кабызу/сүндерү",
         "entryLightweightMode": "Entry Lightweight Mode",
         "direct": "Туры режим",
-        "reactivateProfiles": "Профильләрне янәдән активлаштыру"
+        "reactivateProfiles": "Профильләрне янәдән активлаштыру",
+        "closeAllConnections": "Барлык бәйләнешләрне ябу"
       }
     },
     "password": {

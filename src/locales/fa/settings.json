@@ -576,7 +576,8 @@
         "toggleTunMode": "فعال/غیرفعال کردن حالت Tun",
         "entryLightweightMode": "Entry Lightweight Mode",
         "direct": "حالت مستقیم",
-        "reactivateProfiles": "فعال‌سازی مجدد پروفایل‌ها"
+        "reactivateProfiles": "فعال‌سازی مجدد پروفایل‌ها",
+        "closeAllConnections": "بستن همه اتصالات"
       }
     },
     "password": {

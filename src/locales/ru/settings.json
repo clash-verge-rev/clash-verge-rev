@@ -576,7 +576,8 @@
         "toggleTunMode": "Включить/Отключить режим TUN",
         "entryLightweightMode": "Вход в LightWeight Mode",
         "direct": "Прямой режим",
-        "reactivateProfiles": "Перезапустить профиль"
+        "reactivateProfiles": "Перезапустить профиль",
+        "closeAllConnections": "Закрыть все соединения"
       }
     },
     "password": {

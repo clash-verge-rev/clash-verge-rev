@@ -576,7 +576,8 @@
         "toggleTunMode": "Tun Modunu Etkinleştir/Devre Dışı Bırak",
         "entryLightweightMode": "Hafif Moda Gir",
         "direct": "Doğrudan Mod",
-        "reactivateProfiles": "Profilleri Yeniden Etkinleştir"
+        "reactivateProfiles": "Profilleri Yeniden Etkinleştir",
+        "closeAllConnections": "Tüm Bağlantıları Kapat"
       }
     },
     "password": {

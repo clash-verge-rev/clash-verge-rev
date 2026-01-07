@@ -576,7 +576,8 @@
         "toggleTunMode": "Aktifkan/Nonaktifkan Mode Tun",
         "entryLightweightMode": "Entry Lightweight Mode",
         "direct": "Mode Langsung",
-        "reactivateProfiles": "Reaktivasi Profil"
+        "reactivateProfiles": "Reaktivasi Profil",
+        "closeAllConnections": "Tutup Semua Koneksi"
       }
     },
     "password": {
