@@ -6,13 +6,14 @@ import {
   Box,
   type SnackbarOrigin,
 } from "@mui/material";
-import React, { useMemo, useSyncExternalStore } from "react";
+import React, { useCallback, useMemo, useSyncExternalStore } from "react";
 import { useTranslation } from "react-i18next";
 
 import {
   subscribeNotices,
   hideNotice,
   getSnapshotNotices,
+  showNotice,
 } from "@/services/notice-service";
 import type { TranslationKey } from "@/types/generated/i18n-keys";
 
@@ -85,6 +86,45 @@ const resolveNoticeMessage = (
   });
 };
 
+const extractNoticeCopyText = (input: unknown): string | undefined => {
+  if (input === null || input === undefined) return undefined;
+  if (typeof input === "string") return input;
+  if (typeof input === "number" || typeof input === "boolean") {
+    return String(input);
+  }
+  if (input instanceof Error) {
+    return input.message || input.name;
+  }
+  if (React.isValidElement(input)) return undefined;
+  if (typeof input === "object") {
+    const maybeMessage = (input as { message?: unknown }).message;
+    if (typeof maybeMessage === "string") return maybeMessage;
+  }
+  try {
+    return JSON.stringify(input);
+  } catch {
+    return String(input);
+  }
+};
+
+const resolveNoticeCopyText = (
+  notice: NoticeItem,
+  t: TranslationFn,
+): string | undefined => {
+  if (
+    notice.i18n?.key === "shared.feedback.notices.prefixedRaw" ||
+    notice.i18n?.key === "shared.feedback.notices.raw"
+  ) {
+    const rawText = extractNoticeCopyText(notice.i18n?.params?.message);
+    if (rawText) return rawText;
+  }
+
+  return (
+    extractNoticeCopyText(resolveNoticeMessage(notice, t)) ??
+    extractNoticeCopyText(notice.message)
+  );
+};
+
 interface NoticeManagerProps {
   position?: NoticePosition | null;
 }
@@ -104,6 +144,23 @@ export const NoticeManager: React.FC<NoticeManagerProps> = ({ position }) => {
   const handleClose = (id: number) => {
     hideNotice(id);
   };
+
+  const handleNoticeCopy = useCallback(
+    async (notice: NoticeItem) => {
+      const text = resolveNoticeCopyText(notice, t);
+      if (!text) return;
+      try {
+        await navigator.clipboard.writeText(text);
+        showNotice.success(
+          "shared.feedback.notifications.common.copySuccess",
+          1000,
+        );
+      } catch (error) {
+        console.warn("[NoticeManager] copy to clipboard failed:", error);
+      }
+    },
+    [t],
+  );
 
   return (
     <Box
@@ -139,6 +196,11 @@ export const NoticeManager: React.FC<NoticeManagerProps> = ({ position }) => {
             severity={notice.type}
             variant="filled"
             sx={{ width: "100%" }}
+            onContextMenu={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              void handleNoticeCopy(notice);
+            }}
             action={
               <IconButton
                 size="small"
