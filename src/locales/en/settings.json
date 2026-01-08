@@ -444,6 +444,7 @@
         "stack": "Tun Stack",
         "device": "Device Name",
         "autoRoute": "Auto Route",
+        "routeExcludeAddress": "Route Exclude Address",
         "strictRoute": "Strict Route",
         "autoDetectInterface": "Auto Detect Interface",
         "dnsHijack": "DNS Hijack",

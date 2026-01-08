@@ -444,6 +444,7 @@
         "stack": "انباشته Tun",
         "device": "Device Name",
         "autoRoute": "مسیر خودکار",
+        "routeExcludeAddress": "نشانی‌های مستثنا از مسیردهی",
         "strictRoute": "مسیر دقیق",
         "autoDetectInterface": "تشخیص خودکار رابط",
         "dnsHijack": "ربایش DNS",

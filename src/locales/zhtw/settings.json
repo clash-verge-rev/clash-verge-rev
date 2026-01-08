@@ -444,6 +444,7 @@
         "stack": "虛擬網路介面卡模式堆疊",
         "device": "Device Name",
         "autoRoute": "自動設定全域路由",
+        "routeExcludeAddress": "排除自訂網段",
         "strictRoute": "嚴格路由",
         "autoDetectInterface": "自動偵測流量輸出介面",
         "dnsHijack": "DNS 綁架",

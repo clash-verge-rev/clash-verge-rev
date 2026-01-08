@@ -1015,6 +1015,7 @@ export interface TranslationResources {
             device: string;
             dnsHijack: string;
             mtu: string;
+            routeExcludeAddress: string;
             stack: string;
             strictRoute: string;
           };
