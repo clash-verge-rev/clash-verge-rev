@@ -9,7 +9,6 @@ use std::{
 use anyhow::{Result, bail};
 use clash_verge_logging::{Type, logging};
 use clash_verge_service_ipc::WriterConfig;
-use compact_str::CompactString;
 use flexi_logger::{
     Cleanup, Criterion, DeferredNow, FileSpec, LogSpecBuilder, LogSpecification, LoggerHandle,
     writers::{FileLogWriter, FileLogWriterBuilder, LogWriter as _},
@@ -75,8 +74,8 @@ impl Logger {
             let logger = flexi_logger::Logger::with(log_spec)
                 .log_to_file(FileSpec::default().directory(log_dir).basename(""))
                 .duplicate_to_stdout(log_level.into())
-                .format(clash_verge_logger::console_format)
-                .format_for_files(clash_verge_logger::file_format_with_level)
+                .format(clash_verge_logging::console_format)
+                .format_for_files(clash_verge_logging::file_format_with_level)
                 .rotate(
                     Criterion::Size(log_max_size * 1024),
                     flexi_logger::Naming::TimestampsCustomFormat {
@@ -183,7 +182,7 @@ impl Logger {
                 .basename("sidecar")
                 .suppress_timestamp(),
         )
-        .format(clash_verge_logger::file_format_without_level)
+        .format(clash_verge_logging::file_format_without_level)
         .rotate(
             Criterion::Size(log_max_size * 1024),
             flexi_logger::Naming::TimestampsCustomFormat {
@@ -195,7 +194,7 @@ impl Logger {
         .try_build()?)
     }
 
-    pub fn writer_sidecar_log(&self, level: Level, message: &CompactString) {
+    pub fn writer_sidecar_log(&self, level: Level, message: &str) {
         if let Some(writer) = self.sidecar_file_writer.read().as_ref() {
             let mut now = DeferredNow::default();
             let args = format_args!("{}", message);

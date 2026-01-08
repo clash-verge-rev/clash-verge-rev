@@ -1,5 +1,4 @@
 import { invoke } from "@tauri-apps/api/core";
-import dayjs from "dayjs";
 import { getProxies, getProxyProviders } from "tauri-plugin-mihomo-api";
 
 import { showNotice } from "@/services/notice-service";
@@ -218,33 +217,6 @@ export async function calcuProxyProviders() {
           item?.vehicleType === "HTTP" || item?.vehicleType === "File",
       ),
   );
-}
-
-export async function getClashLogs() {
-  const regex = /time="(.+?)"\s+level=(.+?)\s+msg="(.+?)"/;
-  const newRegex = /(.+?)\s+(.+?)\s+(.+)/;
-  const logs = await invoke<string[]>("get_clash_logs");
-
-  return logs.reduce<ILogItem[]>((acc, log) => {
-    const result = log.match(regex);
-    if (result) {
-      const [_, _time, type, payload] = result;
-      const time = dayjs(_time).format("MM-DD HH:mm:ss");
-      acc.push({ time, type, payload });
-      return acc;
-    }
-
-    const result2 = log.match(newRegex);
-    if (result2) {
-      const [_, time, type, payload] = result2;
-      acc.push({ time, type, payload });
-    }
-    return acc;
-  }, []);
-}
-
-export async function clearLogs() {
-  return invoke<void>("clear_logs");
 }
 
 export async function getVergeConfig() {

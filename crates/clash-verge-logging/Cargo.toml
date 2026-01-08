@@ -6,8 +6,9 @@ edition = "2024"
 [dependencies]
 log = { workspace = true }
 tokio = { workspace = true }
-compact_str = { workspace = true }
 flexi_logger = { workspace = true }
+nu-ansi-term = { version = "0.50", optional = true }
 
 [features]
 default = []
+color = ["nu-ansi-term"]
