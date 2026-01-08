@@ -89,13 +89,11 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
         }),
         false,
       );
-      try {
-        await enhanceProfiles();
-        showNotice.success("settings.modals.tun.messages.applied");
-      } catch (err: any) {
-        showNotice.error(err);
-      }
       setOpen(false);
+      showNotice.success("settings.modals.tun.messages.applied");
+      void enhanceProfiles().catch((err: any) => {
+        showNotice.error(err);
+      });
     } catch (err: any) {
       showNotice.error(err);
     }
