@@ -72,6 +72,13 @@ interface IConfigData {
       domain?: string[];
     };
   };
+  tunnels?: {
+    network: string[];
+    address: string;
+    target: string;
+    proxy: string;
+  }[];
+  "proxy-groups": IProxyGroupItem[];
 }
 
 interface IRuleItem {

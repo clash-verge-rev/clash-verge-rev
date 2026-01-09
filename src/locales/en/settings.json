@@ -103,7 +103,27 @@
           "webUI": "Web UI",
           "clashCore": "Clash Core",
           "openUwpTool": "Open UWP tool",
-          "updateGeoData": "Update GeoData"
+          "updateGeoData": "Update GeoData",
+          "tunnels": {
+            "title": "Tunnel Management",
+            "localAddr": "Local Address",
+            "localPort": "Local Port",
+            "target": "Target Address",
+            "proxyGroup": "Proxy Group",
+            "proxyNode": "Proxy Node",
+            "protocols": "Protocols",
+            "existing": "Existing Tunnels",
+            "messages": {
+              "incomplete": "Please complete all tunnel fields",
+              "invalidLocalAddr": "Invalid local address",
+              "invalidLocalPort": "Invalid local port",
+              "invalidTarget": "Invalid target address, expected host:port"
+            },
+            "actions": {
+              "add": "Add",
+              "addNew": "Add New Tunnel"
+            }
+          }
         },
         "tooltips": {
           "networkInterface": "Network Interface",

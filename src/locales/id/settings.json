@@ -103,7 +103,27 @@
           "webUI": "Antarmuka Web",
           "clashCore": "Inti Clash",
           "openUwpTool": "Buka alat UWP",
-          "updateGeoData": "Perbarui GeoData"
+          "updateGeoData": "Perbarui GeoData",
+          "tunnels": {
+            "title": "Manajemen Tunnel",
+            "localAddr": "Alamat Lokal",
+            "localPort": "Port Lokal",
+            "target": "Alamat Target",
+            "proxyGroup": "Grup Proxy",
+            "proxyNode": "Node Proxy",
+            "protocols": "Protokol",
+            "existing": "Tunnel yang Ada",
+            "messages": {
+              "incomplete": "Harap lengkapi semua informasi tunnel",
+              "invalidLocalAddr": "Alamat lokal tidak valid",
+              "invalidLocalPort": "Port lokal tidak valid",
+              "invalidTarget": "Alamat target tidak valid, format harus host:port"
+            },
+            "actions": {
+              "add": "Tambah",
+              "addNew": "Tambah Tunnel Baru"
+            }
+          }
         },
         "tooltips": {
           "networkInterface": "Antarmuka Jaringan",

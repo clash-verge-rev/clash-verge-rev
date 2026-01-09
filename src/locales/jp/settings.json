@@ -103,7 +103,27 @@
           "webUI": "Webインターフェース",
           "clashCore": "Clashコア",
           "openUwpTool": "UWPツールを開く",
-          "updateGeoData": "GeoDataを更新"
+          "updateGeoData": "GeoDataを更新",
+          "tunnels": {
+            "title": "トンネル管理",
+            "localAddr": "ローカルアドレス",
+            "localPort": "ローカルポート",
+            "target": "ターゲットアドレス",
+            "proxyGroup": "プロキシグループ",
+            "proxyNode": "プロキシノード",
+            "protocols": "プロトコル",
+            "existing": "既存のトンネル",
+            "messages": {
+              "incomplete": "すべてのトンネル情報を入力してください",
+              "invalidLocalAddr": "無効なローカルアドレスです",
+              "invalidLocalPort": "無効なローカルポートです",
+              "invalidTarget": "無効なターゲットアドレスです（host:port形式）"
+            },
+            "actions": {
+              "add": "追加",
+              "addNew": "新しいトンネルを追加"
+            }
+          }
         },
         "tooltips": {
           "networkInterface": "ネットワークインターフェース",

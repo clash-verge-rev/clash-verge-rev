@@ -103,7 +103,27 @@
           "webUI": "Веб-интерфейс",
           "clashCore": "Ядро Clash",
           "openUwpTool": "Открыть UWP инструмент",
-          "updateGeoData": "Обновить GeoData"
+          "updateGeoData": "Обновить GeoData",
+          "tunnels": {
+            "title": "Управление туннелями",
+            "localAddr": "Локальный адрес",
+            "localPort": "Локальный порт",
+            "target": "Адрес назначения",
+            "proxyGroup": "Группа прокси",
+            "proxyNode": "Прокси-узел",
+            "protocols": "Протоколы",
+            "existing": "Существующие туннели",
+            "messages": {
+              "incomplete": "Пожалуйста, заполните всю информацию о туннеле",
+              "invalidLocalAddr": "Недопустимый локальный адрес",
+              "invalidLocalPort": "Недопустимый локальный порт",
+              "invalidTarget": "Недопустимый адрес назначения, ожидался формат host:port"
+            },
+            "actions": {
+              "add": "Добавить",
+              "addNew": "Добавить новый туннель"
+            }
+          }
         },
         "tooltips": {
           "networkInterface": "Сетевой интерфейс",

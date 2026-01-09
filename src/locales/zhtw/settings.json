@@ -103,7 +103,27 @@
           "webUI": "網頁介面",
           "clashCore": "Clash 內核",
           "openUwpTool": "UWP 工具",
-          "updateGeoData": "更新 GeoData"
+          "updateGeoData": "更新 GeoData",
+          "tunnels": {
+            "title": "流量通道管理",
+            "localAddr": "本地地址",
+            "localPort": "本地端口",
+            "target": "目標地址",
+            "proxyGroup": "代理群組",
+            "proxyNode": "代理節點",
+            "protocols": "協議",
+            "existing": "已設定的通道",
+            "messages": {
+              "incomplete": "請完整填寫通道資訊",
+              "invalidLocalAddr": "無效的本地地址",
+              "invalidLocalPort": "無效的本地端口",
+              "invalidTarget": "無效的目標地址，應為 host:port 格式"
+            },
+            "actions": {
+              "add": "新增",
+              "addNew": "新增通道"
+            }
+          }
         },
         "tooltips": {
           "networkInterface": "網路介面",

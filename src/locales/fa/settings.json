@@ -103,7 +103,27 @@
           "webUI": "رابط وب",
           "clashCore": "هسته Clash",
           "openUwpTool": "باز کردن ابزار UWP",
-          "updateGeoData": "به‌روزرسانی GeoData"
+          "updateGeoData": "به‌روزرسانی GeoData",
+          "tunnels": {
+            "title": "مدیریت تونل",
+            "localAddr": "آدرس محلی",
+            "localPort": "درگاه محلی",
+            "target": "آدرس مقصد",
+            "proxyGroup": "گروه پراکسی",
+            "proxyNode": "گره پراکسی",
+            "protocols": "پروتکل‌ها",
+            "existing": "تونل‌های موجود",
+            "messages": {
+              "incomplete": "لطفاً تمام اطلاعات تونل را تکمیل کنید",
+              "invalidLocalAddr": "آدرس محلی نامعتبر است",
+              "invalidLocalPort": "درگاه محلی نامعتبر است",
+              "invalidTarget": "آدرس مقصد نامعتبر است، فرمت باید host:port باشد"
+            },
+            "actions": {
+              "add": "افزودن",
+              "addNew": "افزودن تونل جدید"
+            }
+          }
         },
         "tooltips": {
           "networkInterface": "رابط شبکه",

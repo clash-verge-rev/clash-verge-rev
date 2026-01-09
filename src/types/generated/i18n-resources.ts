@@ -1074,6 +1074,26 @@ export interface TranslationResources {
               logLevel: string;
               openUwpTool: string;
               portConfig: string;
+              tunnels: {
+                actions: {
+                  add: string;
+                  addNew: string;
+                };
+                existing: string;
+                localAddr: string;
+                localPort: string;
+                messages: {
+                  incomplete: string;
+                  invalidLocalAddr: string;
+                  invalidLocalPort: string;
+                  invalidTarget: string;
+                };
+                protocols: string;
+                proxyGroup: string;
+                proxyNode: string;
+                target: string;
+                title: string;
+              };
               unifiedDelay: string;
               updateGeoData: string;
               webUI: string;
