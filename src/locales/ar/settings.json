@@ -464,6 +464,7 @@
         "stack": "مكدس TUN",
         "device": "Device Name",
         "autoRoute": "توجيه تلقائي",
+        "routeExcludeAddress": "عناوين مستثناة من التوجيه",
         "strictRoute": "توجيه صارم",
         "autoDetectInterface": "الكشف التلقائي عن الواجهة",
         "dnsHijack": "اختطاف DNS",

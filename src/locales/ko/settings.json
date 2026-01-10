@@ -464,6 +464,7 @@
         "stack": "스택",
         "device": "장치 이름",
         "autoRoute": "자동 라우팅",
+        "routeExcludeAddress": "라우트 제외 주소",
         "strictRoute": "엄격 라우팅",
         "autoDetectInterface": "인터페이스 자동 감지",
         "dnsHijack": "DNS 하이재킹",

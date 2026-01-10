@@ -586,6 +586,7 @@ export const translationKeys = [
   "settings.modals.tun.fields.stack",
   "settings.modals.tun.fields.device",
   "settings.modals.tun.fields.autoRoute",
+  "settings.modals.tun.fields.routeExcludeAddress",
   "settings.modals.tun.fields.strictRoute",
   "settings.modals.tun.fields.autoDetectInterface",
   "settings.modals.tun.fields.dnsHijack",

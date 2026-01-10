@@ -12,7 +12,13 @@ import type { Ref } from "react";
 import { useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { BaseDialog, DialogRef, Switch, TooltipIcon } from "@/components/base";
+import {
+  BaseDialog,
+  BaseSplitChipEditor,
+  TooltipIcon,
+  DialogRef,
+  Switch,
+} from "@/components/base";
 import { useClash } from "@/hooks/use-clash";
 import { enhanceProfiles } from "@/services/cmds";
 import { showNotice } from "@/services/notice-service";
@@ -21,6 +27,12 @@ import getSystem from "@/utils/get-system";
 import { StackModeSwitch } from "./stack-mode-switch";
 
 const OS = getSystem();
+
+const splitRouteExcludeAddress = (value: string) =>
+  value
+    .split(/[,\n;\r]+/)
+    .map((item) => item.trim())
+    .filter(Boolean);
 
 export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
   const { t } = useTranslation();
@@ -32,6 +44,7 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
     stack: "mixed",
     device: OS === "macos" ? "utun1024" : "Mihomo",
     autoRoute: true,
+    routeExcludeAddress: "",
     autoRedirect: false,
     autoDetectInterface: true,
     dnsHijack: ["any:53"],
@@ -50,6 +63,9 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
         stack: clash?.tun.stack ?? "gvisor",
         device: clash?.tun.device ?? (OS === "macos" ? "utun1024" : "Mihomo"),
         autoRoute: nextAutoRoute,
+        routeExcludeAddress: (clash?.tun["route-exclude-address"] ?? []).join(
+          ",",
+        ),
         autoRedirect: computedAutoRedirect,
         autoDetectInterface: clash?.tun["auto-detect-interface"] ?? true,
         dnsHijack: clash?.tun["dns-hijack"] ?? ["any:53"],
@@ -62,6 +78,9 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
 
   const onSave = useLockFn(async () => {
     try {
+      const routeExcludeAddress = splitRouteExcludeAddress(
+        values.routeExcludeAddress,
+      );
       const tun: IConfigData["tun"] = {
         stack: values.stack,
         device:
@@ -71,6 +90,7 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
               : "Mihomo"
             : values.device,
         "auto-route": values.autoRoute,
+        "route-exclude-address": routeExcludeAddress,
         ...(OS === "linux"
           ? {
               "auto-redirect": values.autoRedirect,
@@ -120,6 +140,7 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
                   : {}),
                 "auto-detect-interface": true,
                 "dns-hijack": ["any:53"],
+                "route-exclude-address": [],
                 "strict-route": false,
                 mtu: 1500,
               };
@@ -127,6 +148,7 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
                 stack: "gvisor",
                 device: OS === "macos" ? "utun1024" : "Mihomo",
                 autoRoute: true,
+                routeExcludeAddress: "",
                 autoRedirect: false,
                 autoDetectInterface: true,
                 dnsHijack: ["any:53"],
@@ -284,6 +306,26 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
             }
           />
         </ListItem>
+
+        <BaseSplitChipEditor
+          value={values.routeExcludeAddress}
+          placeholder="192.168.0.0/16"
+          ariaLabel={t("settings.modals.tun.fields.routeExcludeAddress")}
+          disabled={!values.autoRoute}
+          onChange={(nextValue) =>
+            setValues((v) => ({ ...v, routeExcludeAddress: nextValue }))
+          }
+          renderHeader={(modeToggle) => (
+            <ListItem sx={{ padding: "5px 2px" }}>
+              <ListItemText
+                primary={t("settings.modals.tun.fields.routeExcludeAddress")}
+              />
+              {modeToggle ? (
+                <Box sx={{ marginLeft: "auto" }}>{modeToggle}</Box>
+              ) : null}
+            </ListItem>
+          )}
+        />
       </List>
     </BaseDialog>
   );

@@ -464,6 +464,7 @@
         "stack": "TUN 模式堆栈",
         "device": "虚拟网卡名称",
         "autoRoute": "自动设置全局路由",
+        "routeExcludeAddress": "排除自定义网段",
         "strictRoute": "严格路由",
         "autoDetectInterface": "自动选择流量出口接口",
         "dnsHijack": "DNS 劫持",

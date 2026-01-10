@@ -464,6 +464,7 @@
         "stack": "Tumpukan Tun",
         "device": "Device Name",
         "autoRoute": "Rute Otomatis",
+        "routeExcludeAddress": "Alamat Pengecualian Rute",
         "strictRoute": "Rute Ketat",
         "autoDetectInterface": "Deteksi Antarmuka Otomatis",
         "dnsHijack": "Pembajakan DNS",

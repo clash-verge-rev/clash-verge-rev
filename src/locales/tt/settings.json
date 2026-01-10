@@ -464,6 +464,7 @@
         "stack": "Стек",
         "device": "Device Name",
         "autoRoute": "Авто-маршрутлау",
+        "routeExcludeAddress": "Route Exclude Address",
         "strictRoute": "Катгый маршрутлау",
         "autoDetectInterface": "Интерфейсны автоматик ачыклау",
         "dnsHijack": "DNS'ны үзгәртеп тоту (hijack)",
