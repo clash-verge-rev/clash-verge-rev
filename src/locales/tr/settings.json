@@ -444,6 +444,7 @@
         "stack": "Tun Yığını",
         "device": "Device Name",
         "autoRoute": "Otomatik Yönlendirme",
+        "routeExcludeAddress": "Yönlendirme Hariç Adresler",
         "strictRoute": "Katı Yönlendirme",
         "autoDetectInterface": "Arayüzü Otomatik Algıla",
         "dnsHijack": "DNS Ele Geçirme",

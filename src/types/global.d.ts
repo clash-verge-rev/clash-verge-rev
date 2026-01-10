@@ -44,6 +44,7 @@ interface IConfigData {
     "auto-redirect"?: boolean;
     "auto-detect-interface": boolean;
     "dns-hijack": string[];
+    "route-exclude-address"?: string[];
     "strict-route": boolean;
     mtu: number;
   };

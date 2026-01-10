@@ -444,6 +444,7 @@
         "stack": "TUNモードスタック",
         "device": "Device Name",
         "autoRoute": "グローバルルートを自動設定",
+        "routeExcludeAddress": "ルート除外アドレス",
         "strictRoute": "厳格なルート",
         "autoDetectInterface": "トラフィックの出口インターフェースを自動選択",
         "dnsHijack": "DNSハイジャック",

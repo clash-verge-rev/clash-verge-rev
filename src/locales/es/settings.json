@@ -444,6 +444,7 @@
         "stack": "Pila del modo TUN",
         "device": "Device Name",
         "autoRoute": "Configurar enrutamiento global automáticamente",
+        "routeExcludeAddress": "Direcciones excluidas de ruta",
         "strictRoute": "Enrutamiento estricto",
         "autoDetectInterface": "Detectar automáticamente la interfaz de salida del tráfico",
         "dnsHijack": "Secuestro de DNS",
