@@ -105,19 +105,21 @@
           "openUwpTool": "UWP-Tool öffnen",
           "updateGeoData": "Geo-Daten aktualisieren",
           "tunnels": {
-            "title": "Tunnelverwaltung",
-            "localAddr": "Lokale Adresse",
-            "localPort": "Lokaler Port",
+            "title": "Tunnel-Verwaltung",
+            "localAddr": "Lokale Abhöradresse",
+            "localPort": "Lokaler Abhörport",
             "target": "Zieladresse",
             "proxyGroup": "Proxy-Gruppe",
             "proxyNode": "Proxy-Knoten",
-            "protocols": "Protokolle",
+            "protocols": "Protokoll",
             "existing": "Vorhandene Tunnel",
+            "default": "Aktueller Konfiguration folgen",
+            "optional": "Optional",
             "messages": {
-              "incomplete": "Bitte füllen Sie alle Tunnelinformationen aus",
-              "invalidLocalAddr": "Ungültige lokale Adresse",
-              "invalidLocalPort": "Ungültiger lokaler Port",
-              "invalidTarget": "Ungültige Zieladresse, erwartet host:port"
+              "incomplete": "Bitte alle erforderlichen Tunnel-Felder ausfüllen",
+              "invalidLocalAddr": "Ungültige lokale Abhöradresse",
+              "invalidLocalPort": "Ungültiger lokaler Abhörport",
+              "invalidTarget": "Ungültige Zieladresse. Erwartetes Format: host:port"
             },
             "actions": {
               "add": "Hinzufügen",

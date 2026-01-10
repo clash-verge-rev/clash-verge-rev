@@ -106,18 +106,20 @@
           "updateGeoData": "Update GeoData",
           "tunnels": {
             "title": "Tunnel Management",
-            "localAddr": "Local Address",
-            "localPort": "Local Port",
+            "localAddr": "Local Listen Address",
+            "localPort": "Local Listen Port",
             "target": "Target Address",
             "proxyGroup": "Proxy Group",
             "proxyNode": "Proxy Node",
-            "protocols": "Protocols",
+            "protocols": "Protocol",
             "existing": "Existing Tunnels",
+            "default": "Follow Current Configuration",
+            "optional": "Optional",
             "messages": {
-              "incomplete": "Please complete all tunnel fields",
-              "invalidLocalAddr": "Invalid local address",
-              "invalidLocalPort": "Invalid local port",
-              "invalidTarget": "Invalid target address, expected host:port"
+              "incomplete": "Please fill in all required tunnel fields",
+              "invalidLocalAddr": "Invalid local listen address",
+              "invalidLocalPort": "Invalid local listen port",
+              "invalidTarget": "Invalid target address. Expected format: host:port"
             },
             "actions": {
               "add": "Add",

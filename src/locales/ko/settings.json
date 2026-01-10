@@ -106,18 +106,20 @@
           "updateGeoData": "GeoData 업데이트",
           "tunnels": {
             "title": "터널 관리",
-            "localAddr": "로컬 주소",
-            "localPort": "로컬 포트",
+            "localAddr": "로컬 수신 주소",
+            "localPort": "로컬 수신 포트",
             "target": "대상 주소",
             "proxyGroup": "프록시 그룹",
             "proxyNode": "프록시 노드",
             "protocols": "프로토콜",
             "existing": "기존 터널",
+            "default": "현재 설정 따르기",
+            "optional": "선택 사항",
             "messages": {
-              "incomplete": "모든 터널 정보를 입력하세요",
-              "invalidLocalAddr": "잘못된 로컬 주소입니다",
-              "invalidLocalPort": "잘못된 로컬 포트입니다",
-              "invalidTarget": "잘못된 대상 주소입니다, host:port 형식을 사용하세요"
+              "incomplete": "필수 터널 항목을 모두 입력해 주세요",
+              "invalidLocalAddr": "유효하지 않은 로컬 수신 주소입니다",
+              "invalidLocalPort": "유효하지 않은 로컬 수신 포트입니다",
+              "invalidTarget": "유효하지 않은 대상 주소입니다. 형식: host:port"
             },
             "actions": {
               "add": "추가",

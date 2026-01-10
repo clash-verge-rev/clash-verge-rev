@@ -373,6 +373,8 @@ export const translationKeys = [
   "settings.sections.clash.form.fields.tunnels.proxyNode",
   "settings.sections.clash.form.fields.tunnels.protocols",
   "settings.sections.clash.form.fields.tunnels.existing",
+  "settings.sections.clash.form.fields.tunnels.default",
+  "settings.sections.clash.form.fields.tunnels.optional",
   "settings.sections.clash.form.fields.tunnels.messages.incomplete",
   "settings.sections.clash.form.fields.tunnels.messages.invalidLocalAddr",
   "settings.sections.clash.form.fields.tunnels.messages.invalidLocalPort",

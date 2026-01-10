@@ -105,19 +105,21 @@
           "openUwpTool": "باز کردن ابزار UWP",
           "updateGeoData": "به‌روزرسانی GeoData",
           "tunnels": {
-            "title": "مدیریت تونل",
-            "localAddr": "آدرس محلی",
-            "localPort": "درگاه محلی",
+            "title": "مدیریت تونل‌ها",
+            "localAddr": "آدرس شنود محلی",
+            "localPort": "پورت شنود محلی",
             "target": "آدرس مقصد",
             "proxyGroup": "گروه پراکسی",
             "proxyNode": "گره پراکسی",
-            "protocols": "پروتکل‌ها",
+            "protocols": "پروتکل",
             "existing": "تونل‌های موجود",
+            "default": "پیروی از تنظیمات فعلی",
+            "optional": "اختیاری",
             "messages": {
-              "incomplete": "لطفاً تمام اطلاعات تونل را تکمیل کنید",
-              "invalidLocalAddr": "آدرس محلی نامعتبر است",
-              "invalidLocalPort": "درگاه محلی نامعتبر است",
-              "invalidTarget": "آدرس مقصد نامعتبر است، فرمت باید host:port باشد"
+              "incomplete": "لطفاً تمام فیلدهای الزامی تونل را تکمیل کنید",
+              "invalidLocalAddr": "آدرس شنود محلی نامعتبر است",
+              "invalidLocalPort": "پورت شنود محلی نامعتبر است",
+              "invalidTarget": "آدرس مقصد نامعتبر است. قالب مورد انتظار: host:port"
             },
             "actions": {
               "add": "افزودن",

@@ -105,19 +105,21 @@
           "openUwpTool": "Buka alat UWP",
           "updateGeoData": "Perbarui GeoData",
           "tunnels": {
-            "title": "Manajemen Tunnel",
-            "localAddr": "Alamat Lokal",
-            "localPort": "Port Lokal",
-            "target": "Alamat Target",
+            "title": "Manajemen Terowongan",
+            "localAddr": "Alamat Dengarkan Lokal",
+            "localPort": "Port Dengarkan Lokal",
+            "target": "Alamat Tujuan",
             "proxyGroup": "Grup Proxy",
             "proxyNode": "Node Proxy",
             "protocols": "Protokol",
-            "existing": "Tunnel yang Ada",
+            "existing": "Terowongan yang Ada",
+            "default": "Ikuti Konfigurasi Saat Ini",
+            "optional": "Opsional",
             "messages": {
-              "incomplete": "Harap lengkapi semua informasi tunnel",
-              "invalidLocalAddr": "Alamat lokal tidak valid",
-              "invalidLocalPort": "Port lokal tidak valid",
-              "invalidTarget": "Alamat target tidak valid, format harus host:port"
+              "incomplete": "Silakan lengkapi semua kolom terowongan yang diperlukan",
+              "invalidLocalAddr": "Alamat dengarkan lokal tidak valid",
+              "invalidLocalPort": "Port dengarkan lokal tidak valid",
+              "invalidTarget": "Alamat tujuan tidak valid. Format yang diharapkan: host:port"
             },
             "actions": {
               "add": "Tambah",

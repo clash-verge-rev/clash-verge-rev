@@ -1080,6 +1080,7 @@ export interface TranslationResources {
                   add: string;
                   addNew: string;
                 };
+                default: string;
                 existing: string;
                 localAddr: string;
                 localPort: string;
@@ -1089,6 +1090,7 @@ export interface TranslationResources {
                   invalidLocalPort: string;
                   invalidTarget: string;
                 };
+                optional: string;
                 protocols: string;
                 proxyGroup: string;
                 proxyNode: string;

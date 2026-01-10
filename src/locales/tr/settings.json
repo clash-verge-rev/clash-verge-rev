@@ -106,18 +106,20 @@
           "updateGeoData": "GeoData'yı Güncelle",
           "tunnels": {
             "title": "Tünel Yönetimi",
-            "localAddr": "Yerel Adres",
-            "localPort": "Yerel Port",
+            "localAddr": "Yerel Dinleme Adresi",
+            "localPort": "Yerel Dinleme Portu",
             "target": "Hedef Adres",
             "proxyGroup": "Proxy Grubu",
             "proxyNode": "Proxy Düğümü",
-            "protocols": "Protokoller",
+            "protocols": "Protokol",
             "existing": "Mevcut Tüneller",
+            "default": "Geçerli Yapılandırmayı İzle",
+            "optional": "İsteğe Bağlı",
             "messages": {
-              "incomplete": "Lütfen tüm tünel bilgilerini doldurun",
-              "invalidLocalAddr": "Geçersiz yerel adres",
-              "invalidLocalPort": "Geçersiz yerel port",
-              "invalidTarget": "Geçersiz hedef adres, host:port formatında olmalıdır"
+              "incomplete": "Lütfen gerekli tüm tünel alanlarını doldurun",
+              "invalidLocalAddr": "Geçersiz yerel dinleme adresi",
+              "invalidLocalPort": "Geçersiz yerel dinleme portu",
+              "invalidTarget": "Geçersiz hedef adres. Beklenen biçim: host:port"
             },
             "actions": {
               "add": "Ekle",

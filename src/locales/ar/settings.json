@@ -106,18 +106,20 @@
           "updateGeoData": "تحديث البيانات الجغرافية",
           "tunnels": {
             "title": "إدارة الأنفاق",
-            "localAddr": "العنوان المحلي",
-            "localPort": "المنفذ المحلي",
-            "target": "العنوان الهدف",
+            "localAddr": "عنوان الاستماع المحلي",
+            "localPort": "منفذ الاستماع المحلي",
+            "target": "عنوان الوجهة",
             "proxyGroup": "مجموعة الوكيل",
             "proxyNode": "عقدة الوكيل",
-            "protocols": "البروتوكولات",
-            "existing": "الأنفاق الحالية",
+            "protocols": "البروتوكول",
+            "existing": "الأنفاق الموجودة",
+            "default": "اتباع الإعدادات الحالية",
+            "optional": "اختياري",
             "messages": {
-              "incomplete": "يرجى إكمال جميع معلومات النفق",
-              "invalidLocalAddr": "عنوان محلي غير صالح",
-              "invalidLocalPort": "منفذ محلي غير صالح",
-              "invalidTarget": "عنوان هدف غير صالح، يجب أن يكون بصيغة host:port"
+              "incomplete": "يرجى تعبئة جميع حقول النفق المطلوبة",
+              "invalidLocalAddr": "عنوان الاستماع المحلي غير صالح",
+              "invalidLocalPort": "منفذ الاستماع المحلي غير صالح",
+              "invalidTarget": "عنوان الوجهة غير صالح. الصيغة المتوقعة: host:port"
             },
             "actions": {
               "add": "إضافة",

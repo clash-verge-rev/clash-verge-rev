@@ -113,6 +113,8 @@
             "proxyNode": "Proxy Töyene",
             "protocols": "Protokollar",
             "existing": "Bar Tunnel'lär",
+            "default": "Xäzerge Köyläwlärgä iärü",
+            "optional": "Mäcbüri tügel",
             "messages": {
               "incomplete": "Böten tunnel mäğlümatların tutırıgız",
               "invalidLocalAddr": "Döres tügel urınçı adres",

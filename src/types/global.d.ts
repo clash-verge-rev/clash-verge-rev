@@ -77,9 +77,9 @@ interface IConfigData {
     network: string[];
     address: string;
     target: string;
-    proxy: string;
+    proxy?: string;
   }[];
-  "proxy-groups": IProxyGroupItem[];
+  "proxy-groups"?: IProxyGroupItem[];
 }
 
 interface IRuleItem {

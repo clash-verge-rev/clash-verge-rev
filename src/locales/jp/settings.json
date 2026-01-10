@@ -106,18 +106,20 @@
           "updateGeoData": "GeoDataを更新",
           "tunnels": {
             "title": "トンネル管理",
-            "localAddr": "ローカルアドレス",
-            "localPort": "ローカルポート",
+            "localAddr": "ローカル待受アドレス",
+            "localPort": "ローカル待受ポート",
             "target": "ターゲットアドレス",
             "proxyGroup": "プロキシグループ",
             "proxyNode": "プロキシノード",
             "protocols": "プロトコル",
             "existing": "既存のトンネル",
+            "default": "現在の設定に従う",
+            "optional": "任意",
             "messages": {
-              "incomplete": "すべてのトンネル情報を入力してください",
-              "invalidLocalAddr": "無効なローカルアドレスです",
-              "invalidLocalPort": "無効なローカルポートです",
-              "invalidTarget": "無効なターゲットアドレスです（host:port形式）"
+              "incomplete": "必須のトンネル項目をすべて入力してください",
+              "invalidLocalAddr": "無効なローカル待受アドレスです",
+              "invalidLocalPort": "無効なローカル待受ポートです",
+              "invalidTarget": "無効なターゲットアドレスです。形式: host:port"
             },
             "actions": {
               "add": "追加",

@@ -106,18 +106,20 @@
           "updateGeoData": "Actualizar GeoData",
           "tunnels": {
             "title": "Gestión de Túneles",
-            "localAddr": "Dirección Local",
-            "localPort": "Puerto Local",
+            "localAddr": "Dirección de Escucha Local",
+            "localPort": "Puerto de Escucha Local",
             "target": "Dirección de Destino",
-            "proxyGroup": "Grupo Proxy",
+            "proxyGroup": "Grupo de Proxy",
             "proxyNode": "Nodo Proxy",
-            "protocols": "Protocolos",
+            "protocols": "Protocolo",
             "existing": "Túneles Existentes",
+            "default": "Seguir la Configuración Actual",
+            "optional": "Opcional",
             "messages": {
-              "incomplete": "Por favor complete toda la información del túnel",
-              "invalidLocalAddr": "Dirección local no válida",
-              "invalidLocalPort": "Puerto local no válido",
-              "invalidTarget": "Dirección de destino no válida, se espera host:port"
+              "incomplete": "Por favor complete todos los campos obligatorios del túnel",
+              "invalidLocalAddr": "Dirección de escucha local no válida",
+              "invalidLocalPort": "Puerto de escucha local no válido",
+              "invalidTarget": "Dirección de destino no válida. Formato esperado: host:port"
             },
             "actions": {
               "add": "Agregar",
