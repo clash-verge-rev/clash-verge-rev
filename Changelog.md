@@ -11,6 +11,7 @@
 - 修复恢复备份时 `config.yaml` / `profiles.yaml` 文件内字段未正确恢复
 - 修复 Windows 下系统主题同步问题
 - 修复 URL Schemes 无法正常导入
+- 修复 Linux 下无法安装 TUN 服务
 
 <details>
 <summary><strong> ✨ 新增功能 </strong></summary>
@@ -41,5 +42,6 @@
 - macOS 和 Linux 对服务 IPC 权限进一步限制
 - 移除 Windows 自启动计划任务中冗余的 3 秒延时
 - 右键错误通知可复制错误详情
+- 保存 TUN 设置时优化执行流程，避免界面卡顿
 
 </details>
