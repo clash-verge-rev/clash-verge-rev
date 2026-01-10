@@ -120,9 +120,9 @@ export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
     try {
       await patchClash({ tunnels });
       await mutateClash();
-      showNotice.success(t("shared.feedback.notifications.common.saveSuccess"));
+      showNotice.success("shared.feedback.notifications.common.saveSuccess");
     } catch {
-      showNotice.error(t("shared.feedback.notifications.common.saveFailed"));
+      showNotice.error("shared.feedback.notifications.common.saveFailed");
     }
   };
 
@@ -132,7 +132,7 @@ export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
     // 1. 基础非空校验
     if (!localAddr || !localPort || !target || !proxy) {
       showNotice.error(
-        t("settings.sections.clash.form.fields.tunnels.messages.incomplete"),
+        "settings.sections.clash.form.fields.tunnels.messages.incomplete",
       );
       return;
     }
@@ -140,9 +140,7 @@ export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
     // 2. 本地地址校验（host）
     if (!isValidHost(localAddr)) {
       showNotice.error(
-        t(
-          "settings.sections.clash.form.fields.tunnels.messages.invalidLocalAddr",
-        ),
+        "settings.sections.clash.form.fields.tunnels.messages.invalidLocalAddr",
       );
       return;
     }
@@ -152,9 +150,7 @@ export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
       parseRequiredPort(localPort, "invalid-local-port");
     } catch {
       showNotice.error(
-        t(
-          "settings.sections.clash.form.fields.tunnels.messages.invalidLocalPort",
-        ),
+        "settings.sections.clash.form.fields.tunnels.messages.invalidLocalPort",
       );
       return;
     }
@@ -181,7 +177,7 @@ export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
     const normalizedTarget = parseAndValidateTarget(values.target);
     if (!normalizedTarget) {
       showNotice.error(
-        t("settings.sections.clash.form.fields.tunnels.messages.invalidTarget"),
+        "settings.sections.clash.form.fields.tunnels.messages.invalidTarget",
       );
       return;
     }
