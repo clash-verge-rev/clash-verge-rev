@@ -5,7 +5,7 @@
     "targets": ["deb", "rpm"],
     "linux": {
       "deb": {
-        "depends": ["openssl"],
+        "depends": ["openssl", "libayatana-appindicator3-1"],
         "desktopTemplate": "./packages/linux/clash-verge.desktop",
         "provides": ["clash-verge"],
         "conflicts": ["clash-verge"],
@@ -14,7 +14,7 @@
         "preRemoveScript": "./packages/linux/pre-remove.sh"
       },
       "rpm": {
-        "depends": ["openssl"],
+        "depends": ["openssl", "libayatana-appindicator-gtk3"],
         "desktopTemplate": "./packages/linux/clash-verge.desktop",
         "provides": ["clash-verge"],
         "conflicts": ["clash-verge"],
