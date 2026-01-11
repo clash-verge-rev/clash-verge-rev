@@ -52,6 +52,7 @@ export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
     group: "",
     proxy: "",
   });
+  const [draftTunnels, setDraftTunnels] = useState<TunnelEntry[]>([]);
 
   useImperativeHandle(ref, () => ({
     open: () => {
@@ -63,6 +64,7 @@ export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
         group: "",
         proxy: "",
       }));
+      setDraftTunnels(() => clash?.tunnels ?? []);
       setOpen(true);
       // 如果没有隧道，则自动展开
       setExpanded((clash?.tunnels ?? []).length === 0);
@@ -74,7 +76,7 @@ export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
 
   const tunnelEntries = useMemo(() => {
     const counts: Record<string, number> = {};
-    return (clash?.tunnels ?? []).map((tunnel, index) => {
+    return draftTunnels.map((tunnel, index) => {
       const base = `${tunnel.address}_${tunnel.target}_${tunnel.network.join("+")}`;
       const occurrence = (counts[base] = (counts[base] ?? 0) + 1);
       return {
@@ -86,7 +88,7 @@ export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
         proxy: tunnel.proxy,
       };
     });
-  }, [clash?.tunnels]);
+  }, [draftTunnels]);
 
   const { proxies } = useProxiesData();
 
@@ -114,13 +116,14 @@ export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
     return /^[a-zA-Z0-9.-]+$/.test(input);
   };
 
-  const saveTunnels = async (tunnels: TunnelEntry[]) => {
+  const handleSave = async () => {
     try {
-      await patchClash({ tunnels });
+      await patchClash({ tunnels: draftTunnels });
       await mutateClash();
       showNotice.success("shared.feedback.notifications.common.saveSuccess");
-    } catch {
-      showNotice.error("shared.feedback.notifications.common.saveFailed");
+      setOpen(false);
+    } catch (err: any) {
+      showNotice.error(err);
     }
   };
 
@@ -189,7 +192,7 @@ export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
     };
 
     // 6. 写入配置 + 清空输入
-    saveTunnels([...(clash?.tunnels ?? []), entry]);
+    setDraftTunnels((prev) => [...prev, entry]);
 
     setValues((v) => ({
       ...v,
@@ -201,7 +204,7 @@ export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
   };
 
   const handleDelete = (index: number) => {
-    saveTunnels((clash?.tunnels ?? []).filter((_, i) => i !== index));
+    setDraftTunnels((prev) => prev.filter((_, i) => i !== index));
   };
 
   return (
@@ -217,12 +220,10 @@ export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
       onCancel={() => {
         setOpen(false);
       }}
-      onOk={() => {
-        setOpen(false);
-      }}
+      onOk={handleSave}
     >
       <List>
-        {(clash?.tunnels ?? []).length > 0 && (
+        {draftTunnels.length > 0 && (
           <>
             <ListItem sx={{ padding: "4px 0", opacity: 0.6 }}>
               <ListItemText
