@@ -31,8 +31,8 @@ pub struct IProfilePreview<'a> {
 #[derive(Debug, Clone)]
 pub struct CleanupResult {
     pub total_files: usize,
-    pub deleted_files: Vec<String>,
-    pub failed_deletions: Vec<String>,
+    pub deleted_files: usize,
+    pub failed_deletions: usize,
 }
 
 macro_rules! patch {
@@ -365,15 +365,11 @@ impl IProfiles {
     }
 
     /// 以 app 中的 profile 列表为准，删除不再需要的文件
-    pub async fn cleanup_orphaned_files(&self) -> Result<CleanupResult> {
+    pub async fn cleanup_orphaned_files(&self) -> Result<()> {
         let profiles_dir = dirs::app_profiles_dir()?;
 
         if !profiles_dir.exists() {
-            return Ok(CleanupResult {
-                total_files: 0,
-                deleted_files: vec![],
-                failed_deletions: vec![],
-            });
+            return Ok(());
         }
 
         // 获取所有 active profile 的文件名集合
@@ -384,8 +380,8 @@ impl IProfiles {
 
         // 扫描 profiles 目录下的所有文件
         let mut total_files = 0;
-        let mut deleted_files = vec![];
-        let mut failed_deletions = vec![];
+        let mut deleted_files = 0;
+        let mut failed_deletions = 0;
 
         let mut dir_entries = tokio::fs::read_dir(&profiles_dir).await?;
         while let Some(entry) = dir_entries.next_entry().await? {
@@ -410,11 +406,11 @@ impl IProfiles {
                 if !active_files.contains(file_name) {
                     match path.to_path_buf().remove_if_exists().await {
                         Ok(_) => {
-                            deleted_files.push(file_name.into());
+                            deleted_files += 1;
                             logging!(debug, Type::Config, "已清理冗余文件: {file_name}");
                         }
                         Err(e) => {
-                            failed_deletions.push(format!("{file_name}: {e}").into());
+                            failed_deletions += 1;
                             logging!(warn, Type::Config, "Warning: 清理文件失败: {file_name} - {e}");
                         }
                     }
@@ -433,11 +429,11 @@ impl IProfiles {
             Type::Config,
             "Profile 文件清理完成: 总文件数={}, 删除文件数={}, 失败数={}",
             result.total_files,
-            result.deleted_files.len(),
-            result.failed_deletions.len()
+            result.deleted_files,
+            result.failed_deletions
         );
 
-        Ok(result)
+        Ok(())
     }
 
     /// 不删除全局扩展配置
