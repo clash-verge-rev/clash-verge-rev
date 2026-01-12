@@ -108,7 +108,8 @@
             "title": "Tunnel İdäräse",
             "localAddr": "Urınçı Adres",
             "localPort": "Urınçı Port",
-            "target": "Maksat Adresı",
+            "targetAddr": "Максат адресы",
+            "targetPort": "Максат порты",
             "proxyGroup": "Proxy Törkeme",
             "proxyNode": "Proxy Töyene",
             "protocols": "Protokollar",
@@ -119,7 +120,8 @@
               "incomplete": "Böten tunnel mäğlümatların tutırıgız",
               "invalidLocalAddr": "Döres tügel urınçı adres",
               "invalidLocalPort": "Döres tügel urınçı port",
-              "invalidTarget": "Döres tügel maksat adresı, format host:port bulırğa tieş"
+              "invalidTargetAddr": "Дөрес түгел максат адресы",
+              "invalidTargetPort": "Дөрес түгел максат порты"
             },
             "actions": {
               "add": "Östäw",

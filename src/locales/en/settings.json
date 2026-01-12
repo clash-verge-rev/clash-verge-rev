@@ -108,7 +108,8 @@
             "title": "Tunnel Management",
             "localAddr": "Local Listen Address",
             "localPort": "Local Listen Port",
-            "target": "Target Address",
+            "targetAddr": "Target Address",
+            "targetPort": "Target Port",
             "proxyGroup": "Proxy Group",
             "proxyNode": "Proxy Node",
             "protocols": "Protocol",
@@ -119,7 +120,8 @@
               "incomplete": "Please fill in all required tunnel fields",
               "invalidLocalAddr": "Invalid local listen address",
               "invalidLocalPort": "Invalid local listen port",
-              "invalidTarget": "Invalid target address. Expected format: host:port"
+              "invalidTargetAddr": "Invalid Target Address",
+              "invalidTargetPort": "Invalid Target Port"
             },
             "actions": {
               "add": "Add",

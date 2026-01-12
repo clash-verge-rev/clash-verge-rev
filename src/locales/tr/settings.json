@@ -108,7 +108,8 @@
             "title": "Tünel Yönetimi",
             "localAddr": "Yerel Dinleme Adresi",
             "localPort": "Yerel Dinleme Portu",
-            "target": "Hedef Adres",
+            "targetAddr": "Hedef Adresi",
+            "targetPort": "Hedef Portu",
             "proxyGroup": "Proxy Grubu",
             "proxyNode": "Proxy Düğümü",
             "protocols": "Protokol",
@@ -119,7 +120,8 @@
               "incomplete": "Lütfen gerekli tüm tünel alanlarını doldurun",
               "invalidLocalAddr": "Geçersiz yerel dinleme adresi",
               "invalidLocalPort": "Geçersiz yerel dinleme portu",
-              "invalidTarget": "Geçersiz hedef adres. Beklenen biçim: host:port"
+              "invalidTargetAddr": "Geçersiz hedef adresi",
+              "invalidTargetPort": "Geçersiz hedef portu"
             },
             "actions": {
               "add": "Ekle",

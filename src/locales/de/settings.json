@@ -108,7 +108,8 @@
             "title": "Tunnel-Verwaltung",
             "localAddr": "Lokale Abhöradresse",
             "localPort": "Lokaler Abhörport",
-            "target": "Zieladresse",
+            "targetAddr": "Zieladresse",
+            "targetPort": "Zielport",
             "proxyGroup": "Proxy-Gruppe",
             "proxyNode": "Proxy-Knoten",
             "protocols": "Protokoll",
@@ -119,7 +120,8 @@
               "incomplete": "Bitte alle erforderlichen Tunnel-Felder ausfüllen",
               "invalidLocalAddr": "Ungültige lokale Abhöradresse",
               "invalidLocalPort": "Ungültiger lokaler Abhörport",
-              "invalidTarget": "Ungültige Zieladresse. Erwartetes Format: host:port"
+              "invalidTargetAddr": "Ungültige Zieladresse",
+              "invalidTargetPort": "Ungültiger Zielport"
             },
             "actions": {
               "add": "Hinzufügen",

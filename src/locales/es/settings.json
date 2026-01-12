@@ -108,7 +108,8 @@
             "title": "Gestión de Túneles",
             "localAddr": "Dirección de Escucha Local",
             "localPort": "Puerto de Escucha Local",
-            "target": "Dirección de Destino",
+            "targetAddr": "Dirección de destino",
+            "targetPort": "Puerto de destino",
             "proxyGroup": "Grupo de Proxy",
             "proxyNode": "Nodo Proxy",
             "protocols": "Protocolo",
@@ -119,7 +120,8 @@
               "incomplete": "Por favor complete todos los campos obligatorios del túnel",
               "invalidLocalAddr": "Dirección de escucha local no válida",
               "invalidLocalPort": "Puerto de escucha local no válido",
-              "invalidTarget": "Dirección de destino no válida. Formato esperado: host:port"
+              "invalidTargetAddr": "Dirección de destino no válida",
+              "invalidTargetPort": "Puerto de destino no válido"
             },
             "actions": {
               "add": "Agregar",

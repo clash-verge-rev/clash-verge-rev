@@ -108,7 +108,8 @@
             "title": "Manajemen Terowongan",
             "localAddr": "Alamat Dengarkan Lokal",
             "localPort": "Port Dengarkan Lokal",
-            "target": "Alamat Tujuan",
+            "targetAddr": "Alamat tujuan",
+            "targetPort": "Port tujuan",
             "proxyGroup": "Grup Proxy",
             "proxyNode": "Node Proxy",
             "protocols": "Protokol",
@@ -119,7 +120,8 @@
               "incomplete": "Silakan lengkapi semua kolom terowongan yang diperlukan",
               "invalidLocalAddr": "Alamat dengarkan lokal tidak valid",
               "invalidLocalPort": "Port dengarkan lokal tidak valid",
-              "invalidTarget": "Alamat tujuan tidak valid. Format yang diharapkan: host:port"
+              "invalidTargetAddr": "Alamat tujuan tidak valid",
+              "invalidTargetPort": "Port tujuan tidak valid"
             },
             "actions": {
               "add": "Tambah",

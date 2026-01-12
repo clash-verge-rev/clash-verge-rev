@@ -108,7 +108,8 @@
             "title": "トンネル管理",
             "localAddr": "ローカル待受アドレス",
             "localPort": "ローカル待受ポート",
-            "target": "ターゲットアドレス",
+            "targetAddr": "ターゲットアドレス",
+            "targetPort": "ターゲットポート",
             "proxyGroup": "プロキシグループ",
             "proxyNode": "プロキシノード",
             "protocols": "プロトコル",
@@ -119,7 +120,8 @@
               "incomplete": "必須のトンネル項目をすべて入力してください",
               "invalidLocalAddr": "無効なローカル待受アドレスです",
               "invalidLocalPort": "無効なローカル待受ポートです",
-              "invalidTarget": "無効なターゲットアドレスです。形式: host:port"
+              "invalidTargetAddr": "無効なターゲットアドレス",
+              "invalidTargetPort": "無効なターゲットポート"
             },
             "actions": {
               "add": "追加",

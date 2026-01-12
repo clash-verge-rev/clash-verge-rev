@@ -1088,13 +1088,15 @@ export interface TranslationResources {
                   incomplete: string;
                   invalidLocalAddr: string;
                   invalidLocalPort: string;
-                  invalidTarget: string;
+                  invalidTargetAddr: string;
+                  invalidTargetPort: string;
                 };
                 optional: string;
                 protocols: string;
                 proxyGroup: string;
                 proxyNode: string;
-                target: string;
+                targetAddr: string;
+                targetPort: string;
                 title: string;
               };
               unifiedDelay: string;

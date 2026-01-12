@@ -108,7 +108,8 @@
             "title": "إدارة الأنفاق",
             "localAddr": "عنوان الاستماع المحلي",
             "localPort": "منفذ الاستماع المحلي",
-            "target": "عنوان الوجهة",
+            "targetAddr": "عنوان الهدف",
+            "targetPort": "منفذ الهدف",
             "proxyGroup": "مجموعة الوكيل",
             "proxyNode": "عقدة الوكيل",
             "protocols": "البروتوكول",
@@ -119,7 +120,8 @@
               "incomplete": "يرجى تعبئة جميع حقول النفق المطلوبة",
               "invalidLocalAddr": "عنوان الاستماع المحلي غير صالح",
               "invalidLocalPort": "منفذ الاستماع المحلي غير صالح",
-              "invalidTarget": "عنوان الوجهة غير صالح. الصيغة المتوقعة: host:port"
+              "invalidTargetAddr": "عنوان الهدف غير صالح",
+              "invalidTargetPort": "منفذ الهدف غير صالح"
             },
             "actions": {
               "add": "إضافة",

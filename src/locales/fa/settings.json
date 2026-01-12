@@ -108,7 +108,8 @@
             "title": "مدیریت تونل‌ها",
             "localAddr": "آدرس شنود محلی",
             "localPort": "پورت شنود محلی",
-            "target": "آدرس مقصد",
+            "targetAddr": "آدرس هدف",
+            "targetPort": "پورت هدف",
             "proxyGroup": "گروه پراکسی",
             "proxyNode": "گره پراکسی",
             "protocols": "پروتکل",
@@ -119,7 +120,8 @@
               "incomplete": "لطفاً تمام فیلدهای الزامی تونل را تکمیل کنید",
               "invalidLocalAddr": "آدرس شنود محلی نامعتبر است",
               "invalidLocalPort": "پورت شنود محلی نامعتبر است",
-              "invalidTarget": "آدرس مقصد نامعتبر است. قالب مورد انتظار: host:port"
+              "invalidTargetAddr": "آدرس هدف نامعتبر",
+              "invalidTargetPort": "پورت هدف نامعتبر"
             },
             "actions": {
               "add": "افزودن",

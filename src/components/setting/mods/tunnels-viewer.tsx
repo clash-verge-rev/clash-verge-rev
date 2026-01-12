@@ -19,7 +19,7 @@ import { useClash } from "@/hooks/use-clash";
 import { useProxiesData } from "@/hooks/use-clash-data";
 import { isPortInUse } from "@/services/cmds";
 import { showNotice } from "@/services/notice-service";
-import { isLocalhost, isValidHost } from "@/utils/helper";
+import { isLocalhost, isValidHost, isValidPort } from "@/utils/helper";
 
 interface TunnelsViewerRef {
   open: () => void;
@@ -42,7 +42,8 @@ export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
   const [values, setValues] = useState({
     localAddr: "",
     localPort: "",
-    target: "",
+    targetAddr: "",
+    targetPort: "",
     network: "tcp+udp",
     group: "",
     proxy: "",
@@ -54,7 +55,8 @@ export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
       setValues(() => ({
         localAddr: "",
         localPort: "",
-        target: "",
+        targetAddr: "",
+        targetPort: "",
         network: "tcp+udp",
         group: "",
         proxy: "",
@@ -113,17 +115,18 @@ export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
   };
 
   const handleAdd = async () => {
-    const { localAddr, localPort, target, network, proxy } = values;
+    const { localAddr, localPort, targetAddr, targetPort, network, proxy } =
+      values;
 
-    // 1. 基础非空校验
-    if (!localAddr || !localPort || !target) {
+    // 基础非空校验
+    if (!localAddr || !localPort || !targetAddr || !targetPort) {
       showNotice.error(
         "settings.sections.clash.form.fields.tunnels.messages.incomplete",
       );
       return;
     }
 
-    // 2. 本地地址校验（host）
+    // 本地地址校验（host）
     if (!isLocalhost(localAddr)) {
       showNotice.error(
         "settings.sections.clash.form.fields.tunnels.messages.invalidLocalAddr",
@@ -131,47 +134,54 @@ export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
       return;
     }
 
-    // 3. 本地端口校验 (port)
-    const port = Number(localPort);
-    if (isNaN(port) || port < 1 || port > 65535) {
+    // 本地端口校验 (port)
+    if (!isValidPort(localPort)) {
       showNotice.error(
         "settings.sections.clash.form.fields.tunnels.messages.invalidLocalPort",
       );
       return;
     }
-    const inUse = await isPortInUse(port);
-    console.log("isPortInUse", port, inUse);
+    const inUse = await isPortInUse(Number(localPort));
     if (inUse) {
       showNotice.error("settings.modals.clashPort.messages.portInUse", {
-        port,
+        port: localPort,
       });
       return;
     }
 
-    // 4. 目标地址校验：使用isValidHost
-    if (!isValidHost(target)) {
+    // 目标地址校验 (host)
+    if (!isValidHost(targetAddr)) {
       showNotice.error(
-        "settings.sections.clash.form.fields.tunnels.messages.invalidTarget",
+        "settings.sections.clash.form.fields.tunnels.messages.invalidTargetAddr",
       );
       return;
     }
 
-    // 5. 构造新 entry
+    // 目标端口校验 (port)
+    if (!isValidPort(targetPort)) {
+      showNotice.error(
+        "settings.sections.clash.form.fields.tunnels.messages.invalidTargetPort",
+      );
+      return;
+    }
+
+    // 构造新 entry
     const entry: TunnelEntry = {
       network: network === "tcp+udp" ? ["tcp", "udp"] : [network],
       address: `${localAddr}:${localPort}`,
-      target: target,
+      target: `${targetAddr}:${targetPort}`,
       ...(proxy ? { proxy } : {}),
     };
 
-    // 6. 写入配置 + 清空输入
+    // 写入配置 + 清空输入
     setDraftTunnels((prev) => [...prev, entry]);
 
     setValues((v) => ({
       ...v,
       localAddr: "",
       localPort: "",
-      target: "",
+      targetAddr: "",
+      targetPort: "",
       network: "tcp+udp",
     }));
   };
@@ -312,21 +322,41 @@ export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
                 />
               </ListItem>
 
-              {/* 目标服务器 */}
+              {/* 目标服务器地址 */}
               <ListItem sx={{ padding: "6px 2px" }}>
                 <ListItemText
                   primary={t(
-                    "settings.sections.clash.form.fields.tunnels.target",
+                    "settings.sections.clash.form.fields.tunnels.targetAddr",
                   )}
                 />
                 <TextField
                   autoComplete="new-password"
                   size="small"
                   sx={{ width: 200 }}
-                  value={values.target}
-                  placeholder="8.8.8.8:53"
+                  value={values.targetAddr}
+                  placeholder="8.8.8.8"
                   onChange={(e) =>
-                    setValues((v) => ({ ...v, target: e.target.value }))
+                    setValues((v) => ({ ...v, targetAddr: e.target.value }))
+                  }
+                />
+              </ListItem>
+
+              {/* 目标服务器端口 */}
+              <ListItem sx={{ padding: "6px 2px" }}>
+                <ListItemText
+                  primary={t(
+                    "settings.sections.clash.form.fields.tunnels.targetPort",
+                  )}
+                />
+                <TextField
+                  autoComplete="new-password"
+                  size="small"
+                  type="number"
+                  sx={{ width: 200 }}
+                  value={values.targetPort}
+                  placeholder="53"
+                  onChange={(e) =>
+                    setValues((v) => ({ ...v, targetPort: e.target.value }))
                   }
                 />
               </ListItem>

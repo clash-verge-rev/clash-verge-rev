@@ -108,7 +108,8 @@
             "title": "터널 관리",
             "localAddr": "로컬 수신 주소",
             "localPort": "로컬 수신 포트",
-            "target": "대상 주소",
+            "targetAddr": "대상 주소",
+            "targetPort": "대상 포트",
             "proxyGroup": "프록시 그룹",
             "proxyNode": "프록시 노드",
             "protocols": "프로토콜",
@@ -119,7 +120,8 @@
               "incomplete": "필수 터널 항목을 모두 입력해 주세요",
               "invalidLocalAddr": "유효하지 않은 로컬 수신 주소입니다",
               "invalidLocalPort": "유효하지 않은 로컬 수신 포트입니다",
-              "invalidTarget": "유효하지 않은 대상 주소입니다. 형식: host:port"
+              "invalidTargetAddr": "유효하지 않은 대상 주소",
+              "invalidTargetPort": "유효하지 않은 대상 포트"
             },
             "actions": {
               "add": "추가",
