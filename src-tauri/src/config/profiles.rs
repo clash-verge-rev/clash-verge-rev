@@ -144,7 +144,7 @@ impl IProfiles {
 
             let file = item
                 .file
-                .clone()
+                .as_ref()
                 .ok_or_else(|| anyhow::anyhow!("file field is required when file_data is provided"))?;
             let path = dirs::app_profiles_dir()?.join(file.as_str());
 
@@ -387,8 +387,8 @@ impl IProfiles {
         let mut deleted_files = vec![];
         let mut failed_deletions = vec![];
 
-        for entry in std::fs::read_dir(&profiles_dir)? {
-            let entry = entry?;
+        let mut dir_entries = tokio::fs::read_dir(&profiles_dir).await?;
+        while let Some(entry) = dir_entries.next_entry().await? {
             let path = entry.path();
 
             if !path.is_file() {
