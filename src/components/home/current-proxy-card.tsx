@@ -27,8 +27,13 @@ import {
   useTheme,
 } from "@mui/material";
 import { useLockFn } from "ahooks";
-import React from "react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router";
 import { delayGroup, healthcheckProxyProvider } from "tauri-plugin-mihomo-api";
@@ -46,8 +51,8 @@ const STORAGE_KEY_GROUP = "clash-verge-selected-proxy-group";
 const STORAGE_KEY_PROXY = "clash-verge-selected-proxy";
 const STORAGE_KEY_SORT_TYPE = "clash-verge-proxy-sort-type";
 
-const AUTO_CHECK_INITIAL_DELAY_MS = 1500;
 const AUTO_CHECK_DEFAULT_INTERVAL_MINUTES = 5;
+const AUTO_CHECK_INITIAL_DELAY_MS = 100;
 
 // 代理节点信息接口
 interface ProxyOption {
