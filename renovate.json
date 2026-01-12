@@ -49,8 +49,7 @@
   "ignoreDeps": ["criterion"],
   "lockFileMaintenance": {
     "enabled": true,
-    "description": "Force update Cargo.lock to track latest commits of git dependencies",
-    "automerge": true,
+    "description": "Force update lockfile to track latest commits of git dependencies",
     "schedule": ["before 5am on monday"]
   }
 }
