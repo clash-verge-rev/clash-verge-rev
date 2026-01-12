@@ -18,13 +18,9 @@ import { useTranslation } from "react-i18next";
 import { BaseDialog } from "@/components/base";
 import { useClash } from "@/hooks/use-clash";
 import { useProxiesData } from "@/hooks/use-clash-data";
+import { isPortInUse } from "@/services/cmds";
 import { showNotice } from "@/services/notice-service";
-import {
-  parseUrlLike,
-  parseRequiredPort,
-  isIPv4,
-  isIPv6,
-} from "@/utils/uri-parser/helpers";
+import { isLocalhost, isValidHost } from "@/utils/helper";
 
 interface TunnelsViewerRef {
   open: () => void;
@@ -106,16 +102,6 @@ export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
     return group?.all ?? [];
   }, [proxyGroups, values.group]);
 
-  // 简单的 host 校验：支持 IPv4 / IPv6 / 域名 / localhost
-  const isValidHost = (input: string): boolean => {
-    // 禁止空白（如空格、\t、\n） 和 连续点（..）
-    if (/\s/.test(input) || input.includes("..")) return false;
-    // IPv4 或 IPv6
-    if (isIPv4(input) || isIPv6(input)) return true;
-    // 允许局域网 / 普通主机名
-    return /^[a-zA-Z0-9.-]+$/.test(input);
-  };
-
   const handleSave = async () => {
     try {
       await patchClash({ tunnels: draftTunnels });
@@ -127,7 +113,7 @@ export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
     }
   };
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     const { localAddr, localPort, target, network, proxy } = values;
 
     // 1. 基础非空校验
@@ -139,44 +125,32 @@ export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
     }
 
     // 2. 本地地址校验（host）
-    if (!isValidHost(localAddr)) {
+    if (!isLocalhost(localAddr)) {
       showNotice.error(
         "settings.sections.clash.form.fields.tunnels.messages.invalidLocalAddr",
       );
       return;
     }
 
-    // 3. 本地端口校验（只调用 parseRequiredPort，不接返回值）
-    try {
-      parseRequiredPort(localPort, "invalid-local-port");
-    } catch {
+    // 3. 本地端口校验 (port)
+    const port = Number(localPort);
+    if (isNaN(port) || port < 1 || port > 65535) {
       showNotice.error(
         "settings.sections.clash.form.fields.tunnels.messages.invalidLocalPort",
       );
       return;
     }
+    const inUse = await isPortInUse(port);
+    console.log("isPortInUse", port, inUse);
+    if (inUse) {
+      showNotice.error("settings.modals.clashPort.messages.portInUse", {
+        port,
+      });
+      return;
+    }
 
-    // 4. 目标地址校验：先用 parseUrlLike 拆 host/port
-    const parseAndValidateTarget = (raw: string): string | null => {
-      try {
-        const { host = "", port } = parseUrlLike(raw, {
-          errorMessage: "invalid-target",
-        });
-
-        const trimmedHost = host.trim();
-        if (!trimmedHost || !isValidHost(trimmedHost)) {
-          return null;
-        }
-
-        parseRequiredPort(port, "invalid-target-port");
-        return `${trimmedHost}:${port}`;
-      } catch {
-        return null;
-      }
-    };
-
-    const normalizedTarget = parseAndValidateTarget(target);
-    if (!normalizedTarget) {
+    // 4. 目标地址校验：使用isValidHost
+    if (!isValidHost(target)) {
       showNotice.error(
         "settings.sections.clash.form.fields.tunnels.messages.invalidTarget",
       );
@@ -187,7 +161,7 @@ export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
     const entry: TunnelEntry = {
       network: network === "tcp+udp" ? ["tcp", "udp"] : [network],
       address: `${localAddr}:${localPort}`,
-      target: normalizedTarget,
+      target: target,
       ...(proxy ? { proxy } : {}),
     };
 
@@ -452,6 +426,12 @@ export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
               <Button
                 variant="contained"
                 size="small"
+                sx={{
+                  marginTop: "6px",
+                  marginRight: "2px",
+                  marginLeft: "auto",
+                  display: "block",
+                }}
                 color="success"
                 onClick={handleAdd}
               >
