@@ -1,5 +1,4 @@
-import { Delete as DeleteIcon } from "@mui/icons-material";
-import { ExpandLess, ExpandMore } from "@mui/icons-material";
+import { Delete, ExpandLess, ExpandMore } from "@mui/icons-material";
 import {
   Button,
   Divider,
@@ -218,7 +217,7 @@ export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
                       color="error"
                       onClick={() => handleDelete(item.index)}
                     >
-                      <DeleteIcon fontSize="small" />
+                      <Delete fontSize="small" />
                     </IconButton>
                   }
                 >
