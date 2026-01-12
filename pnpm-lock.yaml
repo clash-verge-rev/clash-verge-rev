@@ -30,19 +30,19 @@ importers:
         specifier: ^4.7.0
         version: 4.7.0(monaco-editor@0.55.1)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@mui/icons-material':
-        specifier: ^7.3.6
+        specifier: ^7.3.7
         version: 7.3.7(@mui/material@7.3.7(@emotion/react@11.14.0(@types/react@19.2.8)(react@19.2.3))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.8)(react@19.2.3))(@types/react@19.2.8)(react@19.2.3))(@types/react@19.2.8)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(@types/react@19.2.8)(react@19.2.3)
       '@mui/lab':
         specifier: 7.0.0-beta.17
         version: 7.0.0-beta.17(@emotion/react@11.14.0(@types/react@19.2.8)(react@19.2.3))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.8)(react@19.2.3))(@types/react@19.2.8)(react@19.2.3))(@mui/material@7.3.7(@emotion/react@11.14.0(@types/react@19.2.8)(react@19.2.3))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.8)(react@19.2.3))(@types/react@19.2.8)(react@19.2.3))(@types/react@19.2.8)(react-dom@19.2.3(react@19.2.3))(react@19.2.3))(@types/react@19.2.8)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@mui/material':
-        specifier: ^7.3.6
+        specifier: ^7.3.7
         version: 7.3.7(@emotion/react@11.14.0(@types/react@19.2.8)(react@19.2.3))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.8)(react@19.2.3))(@types/react@19.2.8)(react@19.2.3))(@types/react@19.2.8)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@tanstack/react-table':
         specifier: ^8.21.3
         version: 8.21.3(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@tanstack/react-virtual':
-        specifier: ^3.13.16
+        specifier: ^3.13.18
         version: 3.13.18(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@tauri-apps/api':
         specifier: 2.9.1
@@ -51,13 +51,13 @@ importers:
         specifier: ^2.3.2
         version: 2.3.2
       '@tauri-apps/plugin-dialog':
-        specifier: ^2.4.2
+        specifier: ^2.5.0
         version: 2.5.0
       '@tauri-apps/plugin-fs':
-        specifier: ^2.4.4
+        specifier: ^2.4.5
         version: 2.4.5
       '@tauri-apps/plugin-http':
-        specifier: ~2.5.4
+        specifier: ~2.5.5
         version: 2.5.5
       '@tauri-apps/plugin-process':
         specifier: ^2.3.1
@@ -78,10 +78,10 @@ importers:
         specifier: 1.11.19
         version: 1.11.19
       foxact:
-        specifier: ^0.2.49
+        specifier: ^0.2.52
         version: 0.2.52(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       i18next:
-        specifier: ^25.7.3
+        specifier: ^25.7.4
         version: 25.7.4(typescript@5.9.3)
       js-yaml:
         specifier: ^4.1.1
@@ -108,7 +108,7 @@ importers:
         specifier: 6.0.3
         version: 6.0.3(react@19.2.3)
       react-hook-form:
-        specifier: ^7.70.0
+        specifier: ^7.71.0
         version: 7.71.0(react@19.2.3)
       react-i18next:
         specifier: 16.5.2
@@ -117,7 +117,7 @@ importers:
         specifier: 10.1.0
         version: 10.1.0(@types/react@19.2.8)(react@19.2.3)
       react-router:
-        specifier: ^7.11.0
+        specifier: ^7.12.0
         version: 7.12.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       react-virtuoso:
         specifier: ^4.18.1
@@ -139,7 +139,7 @@ importers:
         specifier: ^7.0.0
         version: 7.0.0
       '@eslint-react/eslint-plugin':
-        specifier: ^2.5.1
+        specifier: ^2.5.5
         version: 2.5.5(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3)
       '@eslint/js':
         specifier: ^9.39.2
@@ -154,7 +154,7 @@ importers:
         specifier: ^4.17.12
         version: 4.17.12
       '@types/node':
-        specifier: ^24.10.4
+        specifier: ^24.10.7
         version: 24.10.7
       '@types/react':
         specifier: 19.2.8
@@ -232,7 +232,7 @@ importers:
         specifier: ^3.7.4
         version: 3.7.4
       sass:
-        specifier: ^1.97.1
+        specifier: ^1.97.2
         version: 1.97.2
       tar:
         specifier: ^7.5.2
@@ -244,10 +244,10 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
       typescript-eslint:
-        specifier: ^8.51.0
+        specifier: ^8.52.0
         version: 8.52.0(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3)
       vite:
-        specifier: ^7.3.0
+        specifier: ^7.3.1
         version: 7.3.1(@types/node@24.10.7)(jiti@2.6.1)(sass@1.97.2)(terser@5.44.1)(yaml@2.8.2)
       vite-plugin-svgr:
         specifier: ^4.5.0
