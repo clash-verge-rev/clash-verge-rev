@@ -313,7 +313,7 @@ jobs:
 
       - name: Setup for linux
         run: |
-          sudo ls -lR /etc/apt/
+          sudo dpkg --add-architecture ${{ matrix.arch }}
 
           sudo rm -f /etc/apt/sources.list.d/ubuntu.sources
           sudo tee /etc/apt/sources.list << EOF
@@ -322,27 +322,28 @@ jobs:
           deb [arch=amd64,i386] http://archive.ubuntu.com/ubuntu noble-updates main restricted universe multiverse
           deb [arch=amd64,i386] http://archive.ubuntu.com/ubuntu noble-backports main restricted universe multiverse
 
-          deb [arch=armhf,arm64] http://ports.ubuntu.com/ubuntu-ports noble main restricted universe multiverse
-          deb [arch=armhf,arm64] http://ports.ubuntu.com/ubuntu-ports noble-security main restricted universe multiverse
-          deb [arch=armhf,arm64] http://ports.ubuntu.com/ubuntu-ports noble-updates main restricted universe multiverse
-          deb [arch=armhf,arm64] http://ports.ubuntu.com/ubuntu-ports noble-backports main restricted universe multiverse
+          deb [arch=${{ matrix.arch }}] http://ports.ubuntu.com/ubuntu-ports noble main restricted universe multiverse
+          deb [arch=${{ matrix.arch }}] http://ports.ubuntu.com/ubuntu-ports noble-security main restricted universe multiverse
+          deb [arch=${{ matrix.arch }}] http://ports.ubuntu.com/ubuntu-ports noble-updates main restricted universe multiverse
+          deb [arch=${{ matrix.arch }}] http://ports.ubuntu.com/ubuntu-ports noble-backports main restricted universe multiverse
           EOF
 
-          sudo dpkg --add-architecture ${{ matrix.arch }}
           sudo apt-get update -y
-          sudo apt-get -f install -y
+
+          sudo apt-get install -y libglib2.0-dev-bin
 
           sudo apt-get install -y \
             linux-libc-dev:${{ matrix.arch }} \
-            libc6-dev:${{ matrix.arch }}
+            libc6-dev:${{ matrix.arch }} \
+            libicu-dev:${{ matrix.arch }}
 
-          sudo apt-get install -y \
+          sudo apt-get install -y --no-install-recommends \
             libxslt1-dev:${{ matrix.arch }} \
             libwebkit2gtk-4.1-dev:${{ matrix.arch }} \
             libayatana-appindicator3-dev:${{ matrix.arch }} \
             libssl-dev:${{ matrix.arch }} \
-            patchelf:${{ matrix.arch }} \
-            librsvg2-dev:${{ matrix.arch }}
+            librsvg2-dev:${{ matrix.arch }} \
+            patchelf
 
       - name: Install aarch64 tools
         if: matrix.target == 'aarch64-unknown-linux-gnu'
