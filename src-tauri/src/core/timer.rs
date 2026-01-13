@@ -1,4 +1,4 @@
-use crate::{config::Config, feat, singleton, utils::resolve::is_resolve_done};
+use crate::{config::Config, feat, module::lightweight, singleton, utils::resolve::is_resolve_done};
 use anyhow::{Context as _, Result};
 use clash_verge_logging::{Type, logging, logging_error};
 use delay_timer::prelude::{DelayTimer, DelayTimerBuilder, TaskBuilder};
@@ -35,6 +35,8 @@ pub struct Timer {
 
     /// Flag to mark if timer is initialized - atomic for better performance
     pub initialized: AtomicBool,
+
+    pub lightweight_task_id: AtomicU64,
 }
 
 // Use singleton macro
@@ -47,6 +49,7 @@ impl Timer {
             timer_map: Arc::new(RwLock::new(HashMap::new())),
             timer_count: AtomicU64::new(1),
             initialized: AtomicBool::new(false),
+            lightweight_task_id: AtomicU64::new(0),
         }
     }
 
@@ -470,4 +473,42 @@ enum DiffFlag {
     Del(TaskID),
     Add(TaskID, u64),
     Mod(TaskID, u64),
+}
+
+impl Timer {
+    pub fn setup_lightweight_timer(&self, minutes: u64) -> Result<()> {
+        if self.lightweight_task_id.load(Ordering::SeqCst) != 0 {
+            // logging!(debug, Type::Lightweight, "轻量模式定时器已存在，跳过创建");
+            return Ok(());
+        }
+
+        let task_id = 42;
+        let task = TaskBuilder::default()
+            .set_task_id(task_id)
+            .set_maximum_running_time(1)
+            .set_maximum_parallel_runnable_num(1)
+            .set_frequency_once_by_minutes(minutes)
+            .spawn_async_routine(move || async move {
+                logging!(info, Type::Timer, "计时器到期，开始进入轻量模式");
+                lightweight::entry_lightweight_mode().await;
+            })?;
+        self.delay_timer
+            .write()
+            .add_task(task)
+            .context("failed to add lightweight timer task")?;
+        self.lightweight_task_id.store(task_id, Ordering::SeqCst);
+        Ok(())
+    }
+
+    pub fn cancel_lightweight_timer(&self) -> Result<()> {
+        let task_id = self.lightweight_task_id.load(Ordering::SeqCst);
+        if task_id != 0 {
+            self.delay_timer
+                .write()
+                .remove_task(task_id)
+                .context("failed to remove lightweight timer task")?;
+            self.lightweight_task_id.store(0, Ordering::SeqCst);
+        }
+        Ok(())
+    }
 }
