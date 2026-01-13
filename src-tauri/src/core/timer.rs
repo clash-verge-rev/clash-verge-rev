@@ -21,8 +21,6 @@ type TaskID = u64;
 pub struct TimerTask {
     pub task_id: TaskID,
     pub interval_minutes: u64,
-    #[allow(unused)]
-    pub last_run: i64, // Timestamp of last execution
 }
 
 pub struct Timer {
@@ -182,7 +180,6 @@ impl Timer {
                         let task = TimerTask {
                             task_id: tid,
                             interval_minutes: interval,
-                            last_run: chrono::Local::now().timestamp(),
                         };
 
                         self.timer_map.write().insert(uid.clone(), task);
@@ -206,7 +203,6 @@ impl Timer {
                         let task = TimerTask {
                             task_id: tid,
                             interval_minutes: interval,
-                            last_run: chrono::Local::now().timestamp(),
                         };
 
                         self.timer_map.write().insert(uid.clone(), task);

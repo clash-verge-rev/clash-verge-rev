@@ -231,7 +231,6 @@ async fn setup_light_weight_timer() -> Result<()> {
         let timer_task = crate::core::timer::TimerTask {
             task_id,
             interval_minutes: once_by_minutes,
-            last_run: chrono::Local::now().timestamp(),
         };
         timer_map.insert(LIGHT_WEIGHT_TASK_UID.into(), timer_task);
     }
