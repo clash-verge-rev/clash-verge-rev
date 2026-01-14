@@ -44,49 +44,56 @@ const reconcileColumnOrder = (
   return [...filtered, ...missing];
 };
 
-const createConnectionRow = (each: IConnectionsItem) => {
+type ColumnField =
+  | "host"
+  | "download"
+  | "upload"
+  | "dlSpeed"
+  | "ulSpeed"
+  | "chains"
+  | "rule"
+  | "process"
+  | "time"
+  | "source"
+  | "remoteDestination"
+  | "type";
+
+const getConnectionCellValue = (field: ColumnField, each: IConnectionsItem) => {
   const { metadata, rulePayload } = each;
-  const chains = [...each.chains].reverse().join(" / ");
-  const rule = rulePayload ? `${each.rule}(${rulePayload})` : each.rule;
-  const destination = metadata.destinationIP
-    ? `${metadata.destinationIP}:${metadata.destinationPort}`
-    : `${metadata.remoteDestination}:${metadata.destinationPort}`;
 
-  return {
-    id: each.id,
-    host: metadata.host
-      ? `${metadata.host}:${metadata.destinationPort}`
-      : `${metadata.remoteDestination}:${metadata.destinationPort}`,
-    download: each.download,
-    upload: each.upload,
-    dlSpeed: each.curDownload,
-    ulSpeed: each.curUpload,
-    chains,
-    rule,
-    process: truncateStr(metadata.process || metadata.processPath),
-    time: each.start,
-    source: `${metadata.sourceIP}:${metadata.sourcePort}`,
-    remoteDestination: destination,
-    type: `${metadata.type}(${metadata.network})`,
-    connectionData: each,
-  };
+  switch (field) {
+    case "host":
+      return metadata.host
+        ? `${metadata.host}:${metadata.destinationPort}`
+        : `${metadata.remoteDestination}:${metadata.destinationPort}`;
+    case "download":
+      return each.download;
+    case "upload":
+      return each.upload;
+    case "dlSpeed":
+      return each.curDownload;
+    case "ulSpeed":
+      return each.curUpload;
+    case "chains":
+      return [...each.chains].reverse().join(" / ");
+    case "rule":
+      return rulePayload ? `${each.rule}(${rulePayload})` : each.rule;
+    case "process":
+      return truncateStr(metadata.process || metadata.processPath);
+    case "time":
+      return each.start;
+    case "source":
+      return `${metadata.sourceIP}:${metadata.sourcePort}`;
+    case "remoteDestination":
+      return metadata.destinationIP
+        ? `${metadata.destinationIP}:${metadata.destinationPort}`
+        : `${metadata.remoteDestination}:${metadata.destinationPort}`;
+    case "type":
+      return `${metadata.type}(${metadata.network})`;
+    default:
+      return "";
+  }
 };
-
-type ConnectionRow = ReturnType<typeof createConnectionRow>;
-
-const areRowsEqual = (a: ConnectionRow, b: ConnectionRow) =>
-  a.host === b.host &&
-  a.download === b.download &&
-  a.upload === b.upload &&
-  a.dlSpeed === b.dlSpeed &&
-  a.ulSpeed === b.ulSpeed &&
-  a.chains === b.chains &&
-  a.rule === b.rule &&
-  a.process === b.process &&
-  a.time === b.time &&
-  a.source === b.source &&
-  a.remoteDestination === b.remoteDestination &&
-  a.type === b.type;
 
 interface Props {
   connections: IConnectionsItem[];
@@ -147,15 +154,13 @@ export const ConnectionTable = (props: Props) => {
     },
   );
 
-  type ColumnField = Exclude<keyof ConnectionRow, "connectionData">;
-
   interface BaseColumn {
     field: ColumnField;
     headerName: string;
     width?: number;
     minWidth?: number;
     align?: "left" | "right";
-    cell?: (row: ConnectionRow) => ReactNode;
+    cell?: (row: IConnectionsItem) => ReactNode;
   }
 
   const baseColumns = useMemo<BaseColumn[]>(() => {
@@ -188,7 +193,7 @@ export const ConnectionTable = (props: Props) => {
         width: 76,
         minWidth: 60,
         align: "right",
-        cell: (row) => `${parseTraffic(row.dlSpeed).join(" ")}/s`,
+        cell: (row) => `${parseTraffic(row.curDownload).join(" ")}/s`,
       },
       {
         field: "ulSpeed",
@@ -196,7 +201,7 @@ export const ConnectionTable = (props: Props) => {
         width: 76,
         minWidth: 60,
         align: "right",
-        cell: (row) => `${parseTraffic(row.ulSpeed).join(" ")}/s`,
+        cell: (row) => `${parseTraffic(row.curUpload).join(" ")}/s`,
       },
       {
         field: "chains",
@@ -301,56 +306,32 @@ export const ConnectionTable = (props: Props) => {
     [baseColumns, setColumnOrder],
   );
 
-  const prevRowsRef = useRef<Map<string, ConnectionRow>>(new Map());
-
-  const connRows = useMemo<ConnectionRow[]>(() => {
-    const prevMap = prevRowsRef.current;
-    const nextMap = new Map<string, ConnectionRow>();
-
-    const nextRows = connections.map((each) => {
-      const nextRow = createConnectionRow(each);
-      const prevRow = prevMap.get(each.id);
-
-      if (prevRow && areRowsEqual(prevRow, nextRow)) {
-        nextMap.set(each.id, prevRow);
-        return prevRow;
-      }
-
-      nextMap.set(each.id, nextRow);
-      return nextRow;
-    });
-
-    prevRowsRef.current = nextMap;
-    return nextRows;
-  }, [connections]);
-
   const [sorting, setSorting] = useState<SortingState>([]);
   const [relativeNow, setRelativeNow] = useState(() => Date.now());
 
-  const columnDefs = useMemo<ColumnDef<ConnectionRow>[]>(() => {
+  const columnDefs = useMemo<ColumnDef<IConnectionsItem>[]>(() => {
     return baseColumns.map((column) => {
-      const baseCell: ColumnDef<ConnectionRow>["cell"] = column.cell
+      const baseCell: ColumnDef<IConnectionsItem>["cell"] = column.cell
         ? (ctx) => column.cell?.(ctx.row.original)
         : (ctx) => ctx.getValue() as ReactNode;
 
-      const cell: ColumnDef<ConnectionRow>["cell"] =
+      const cell: ColumnDef<IConnectionsItem>["cell"] =
         column.field === "time"
-          ? (ctx) => dayjs(ctx.row.original.time).from(relativeNow)
+          ? (ctx) => dayjs(ctx.getValue() as string).from(relativeNow)
           : baseCell;
 
       return {
         id: column.field,
-        accessorKey: column.field,
+        accessorFn: (row) => getConnectionCellValue(column.field, row),
         header: column.headerName,
         size: column.width,
-        minSize: column.minWidth ?? 80,
-        enableResizing: true,
+        minSize: column.minWidth,
         meta: {
           align: column.align ?? "left",
           field: column.field,
         },
         cell,
-      } satisfies ColumnDef<ConnectionRow>;
+      } satisfies ColumnDef<IConnectionsItem>;
     });
   }, [baseColumns, relativeNow]);
 
@@ -383,15 +364,23 @@ export const ConnectionTable = (props: Props) => {
   );
 
   const table = useReactTable({
-    data: connRows,
+    data: connections,
     state: {
       columnVisibility: columnVisibilityModel ?? {},
       columnSizing: columnWidths,
       columnOrder,
       sorting,
     },
+    initialState: {
+      columnOrder: baseColumns.map((col) => col.field),
+    },
+    defaultColumn: {
+      minSize: 80,
+      enableResizing: true,
+    },
     columnResizeMode: "onChange",
     enableSortingRemoval: true,
+    getRowId: (row) => row.id,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: sorting.length ? getSortedRowModel() : undefined,
     onSortingChange: setSorting,
@@ -430,9 +419,9 @@ export const ConnectionTable = (props: Props) => {
   );
 
   const handleResetColumns = useCallback(() => {
-    table.setColumnVisibility({});
-    table.setColumnOrder(baseColumns.map((col) => col.field));
-  }, [baseColumns, table]);
+    table.resetColumnVisibility();
+    table.resetColumnOrder();
+  }, [table]);
 
   const rows = table.getRowModel().rows;
   const tableContainerRef = useRef<HTMLDivElement | null>(null);
@@ -624,7 +613,7 @@ export const ConnectionTable = (props: Props) => {
                 return (
                   <Box
                     key={row.id}
-                    onClick={() => onShowDetail(row.original.connectionData)}
+                    onClick={() => onShowDetail(row.original)}
                     sx={{
                       display: "flex",
                       position: "absolute",
