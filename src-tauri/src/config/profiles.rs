@@ -8,7 +8,7 @@ use clash_verge_logging::{Type, logging};
 use serde::{Deserialize, Serialize};
 use serde_yaml_ng::Mapping;
 use smartstring::alias::String;
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 use tokio::fs;
 
 /// Define the `profiles.yaml` schema
@@ -44,16 +44,6 @@ macro_rules! patch {
 }
 
 impl IProfiles {
-    // Helper to find and remove an item by uid from the items vec, returning its file name (if any).
-    fn take_item_file_by_uid(items: &mut Vec<PrfItem>, target_uid: Option<String>) -> Option<String> {
-        for (i, _) in items.iter().enumerate() {
-            if items[i].uid == target_uid {
-                return items.remove(i).file;
-            }
-        }
-        None
-    }
-
     pub async fn new() -> Self {
         let path = match dirs::profiles_path() {
             Ok(p) => p,
@@ -265,51 +255,64 @@ impl IProfiles {
     /// delete item
     /// if delete the current then return true
     pub async fn delete_item(&mut self, uid: &String) -> Result<bool> {
-        let current = self.current.as_ref().unwrap_or(uid);
-        let current = current.clone();
-        let item = self.get_item(uid)?;
-        let merge_uid = item.option.as_ref().and_then(|e| e.merge.clone());
-        let script_uid = item.option.as_ref().and_then(|e| e.script.clone());
-        let rules_uid = item.option.as_ref().and_then(|e| e.rules.clone());
-        let proxies_uid = item.option.as_ref().and_then(|e| e.proxies.clone());
-        let groups_uid = item.option.as_ref().and_then(|e| e.groups.clone());
-        let mut items = self.items.take().unwrap_or_default();
+        let uids_to_remove: HashSet<String> = {
+            let item = self.get_item(uid)?;
+            let mut set = HashSet::new();
+            set.insert(uid.clone());
 
-        // remove the main item (if exists) and delete its file
-        if let Some(file) = Self::take_item_file_by_uid(&mut items, Some(uid.clone())) {
-            let _ = dirs::app_profiles_dir()?.join(file.as_str()).remove_if_exists().await;
-        }
-
-        // remove related extension items (merge, script, rules, proxies, groups)
-        if let Some(file) = Self::take_item_file_by_uid(&mut items, merge_uid.clone()) {
-            let _ = dirs::app_profiles_dir()?.join(file.as_str()).remove_if_exists().await;
-        }
-        if let Some(file) = Self::take_item_file_by_uid(&mut items, script_uid.clone()) {
-            let _ = dirs::app_profiles_dir()?.join(file.as_str()).remove_if_exists().await;
-        }
-        if let Some(file) = Self::take_item_file_by_uid(&mut items, rules_uid.clone()) {
-            let _ = dirs::app_profiles_dir()?.join(file.as_str()).remove_if_exists().await;
-        }
-        if let Some(file) = Self::take_item_file_by_uid(&mut items, proxies_uid.clone()) {
-            let _ = dirs::app_profiles_dir()?.join(file.as_str()).remove_if_exists().await;
-        }
-        if let Some(file) = Self::take_item_file_by_uid(&mut items, groups_uid.clone()) {
-            let _ = dirs::app_profiles_dir()?.join(file.as_str()).remove_if_exists().await;
-        }
-        // delete the original uid
-        if current == *uid {
-            self.current = None;
-            for item in items.iter() {
-                if item.itype == Some("remote".into()) || item.itype == Some("local".into()) {
-                    self.current = item.uid.clone();
-                    break;
+            if let Some(opt) = &item.option {
+                if let Some(u) = &opt.merge {
+                    set.insert(u.clone());
+                }
+                if let Some(u) = &opt.script {
+                    set.insert(u.clone());
+                }
+                if let Some(u) = &opt.rules {
+                    set.insert(u.clone());
+                }
+                if let Some(u) = &opt.proxies {
+                    set.insert(u.clone());
+                }
+                if let Some(u) = &opt.groups {
+                    set.insert(u.clone());
                 }
             }
+            set
+        };
+
+        let mut items = self.items.take().unwrap_or_default();
+        let mut deleted_files = Vec::new();
+
+        items.retain_mut(|item| {
+            if let Some(item_uid) = item.uid.as_ref()
+                && uids_to_remove.contains(item_uid)
+            {
+                if let Some(file) = item.file.take() {
+                    deleted_files.push(file);
+                }
+                return false;
+            }
+            true
+        });
+
+        let is_deleting_current = self.current.as_ref() == Some(uid);
+        if is_deleting_current {
+            self.current = items
+                .iter()
+                .find(|i| i.itype.as_deref() == Some("remote") || i.itype.as_deref() == Some("local"))
+                .and_then(|i| i.uid.clone());
         }
 
         self.items = Some(items);
+
+        if let Ok(profile_dir) = dirs::app_profiles_dir() {
+            for file in deleted_files {
+                let _ = profile_dir.join(file.as_str()).remove_if_exists().await;
+            }
+        }
+
         self.save_file().await?;
-        Ok(current == *uid)
+        Ok(is_deleting_current)
     }
 
     /// 获取current指向的订阅内容
@@ -448,59 +451,39 @@ impl IProfiles {
 
     /// 获取所有 active profile 关联的文件名
     fn get_all_active_files(&self) -> HashSet<&str> {
-        let mut active_files: HashSet<&str> = HashSet::new();
+        let mut active_files = HashSet::new();
+        let items = match &self.items {
+            Some(i) => i,
+            None => return active_files,
+        };
 
-        if let Some(items) = &self.items {
-            for item in items {
-                // 收集所有类型 profile 的文件
-                if let Some(file) = &item.file {
-                    active_files.insert(file);
-                }
+        let item_map: HashMap<Option<&str>, &PrfItem> = items.iter().map(|i| (i.uid.as_deref(), i)).collect();
 
-                // 对于主 profile 类型（remote/local），还需要收集其关联的扩展文件
-                if let Some(itype) = &item.itype
-                    && (itype == "remote" || itype == "local")
-                    && let Some(option) = &item.option
+        for item in items {
+            if let Some(f) = &item.file {
+                active_files.insert(f.as_str());
+            }
+
+            let Some(opt) = &item.option else {
+                continue;
+            };
+
+            let related = [
+                opt.merge.as_deref(),
+                opt.script.as_deref(),
+                opt.rules.as_deref(),
+                opt.proxies.as_deref(),
+                opt.groups.as_deref(),
+            ];
+
+            for r_uid in related.into_iter().flatten() {
+                if let Some(r_item) = item_map.get(&Some(r_uid))
+                    && let Some(f) = &r_item.file
                 {
-                    // 收集关联的扩展文件
-                    if let Some(merge_uid) = &option.merge
-                        && let Ok(merge_item) = self.get_item(merge_uid)
-                        && let Some(file) = &merge_item.file
-                    {
-                        active_files.insert(file);
-                    }
-
-                    if let Some(script_uid) = &option.script
-                        && let Ok(script_item) = self.get_item(script_uid)
-                        && let Some(file) = &script_item.file
-                    {
-                        active_files.insert(file);
-                    }
-
-                    if let Some(rules_uid) = &option.rules
-                        && let Ok(rules_item) = self.get_item(rules_uid)
-                        && let Some(file) = &rules_item.file
-                    {
-                        active_files.insert(file);
-                    }
-
-                    if let Some(proxies_uid) = &option.proxies
-                        && let Ok(proxies_item) = self.get_item(proxies_uid)
-                        && let Some(file) = &proxies_item.file
-                    {
-                        active_files.insert(file);
-                    }
-
-                    if let Some(groups_uid) = &option.groups
-                        && let Ok(groups_item) = self.get_item(groups_uid)
-                        && let Some(file) = &groups_item.file
-                    {
-                        active_files.insert(file);
-                    }
+                    active_files.insert(f.as_str());
                 }
             }
         }
-
         active_files
     }
 
