@@ -1,8 +1,8 @@
 import { useEffect, useMemo } from "react";
 import useSWR from "swr";
 
-import { useProxiesData } from "@/hooks/use-clash-data";
 import { useVerge } from "@/hooks/use-verge";
+import { useAppData } from "@/providers/app-data-context";
 import { getRuntimeConfig } from "@/services/cmds";
 import delayManager from "@/services/delay";
 import { debugLog } from "@/utils/debug";
@@ -34,8 +34,24 @@ interface IProxyItem {
 }
 
 // 代理组类型
-type ProxyGroup = IProxyGroupItem & {
-  now?: string;
+type ProxyGroup = {
+  name: string;
+  type: string;
+  udp: boolean;
+  xudp: boolean;
+  tfo: boolean;
+  mptcp: boolean;
+  smux: boolean;
+  history: {
+    time: string;
+    delay: number;
+  }[];
+  now: string;
+  all: IProxyItem[];
+  hidden?: boolean;
+  icon?: string;
+  testUrl?: string;
+  provider?: string;
 };
 
 export interface IRenderItem {
@@ -84,7 +100,7 @@ export const useRenderList = (
   selectedGroup?: string | null,
 ) => {
   // 使用全局数据提供者
-  const { proxies: proxiesData, refreshProxy } = useProxiesData();
+  const { proxies: proxiesData, refreshProxy } = useAppData();
   const { verge } = useVerge();
   const { width } = useWindowWidth();
   const [headStates, setHeadState] = useHeadStateNew();

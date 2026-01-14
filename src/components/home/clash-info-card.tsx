@@ -4,13 +4,7 @@ import { useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
 import { useClash } from "@/hooks/use-clash";
-import {
-  useAppUptime,
-  useClashConfig,
-  useRulesData,
-  useSystemProxyAddress,
-  useSystemProxyData,
-} from "@/hooks/use-clash-data";
+import { useAppData } from "@/providers/app-data-context";
 
 import { EnhancedCard } from "./enhanced-card";
 
@@ -25,14 +19,7 @@ const formatUptime = (uptimeMs: number) => {
 export const ClashInfoCard = () => {
   const { t } = useTranslation();
   const { version: clashVersion } = useClash();
-  const { clashConfig } = useClashConfig();
-  const { sysproxy } = useSystemProxyData();
-  const { rules } = useRulesData();
-  const { uptime } = useAppUptime();
-  const systemProxyAddress = useSystemProxyAddress({
-    clashConfig,
-    sysproxy,
-  });
+  const { clashConfig, rules, uptime, systemProxyAddress } = useAppData();
 
   // 使用useMemo缓存格式化后的uptime，避免频繁计算
   const formattedUptime = useMemo(() => formatUptime(uptime), [uptime]);

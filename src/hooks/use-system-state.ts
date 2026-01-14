@@ -4,7 +4,6 @@ import useSWR from "swr";
 import { getRunningMode, isAdmin, isServiceAvailable } from "@/services/cmds";
 import { showNotice } from "@/services/notice-service";
 
-import { useSharedSWRPoller } from "./use-shared-swr-poller";
 import { useVerge } from "./use-verge";
 
 export interface SystemState {
@@ -44,18 +43,9 @@ export function useSystemState() {
     },
     {
       suspense: true,
-      refreshInterval: 0,
+      refreshInterval: 30000,
       fallback: defaultSystemState,
     },
-  );
-
-  useSharedSWRPoller(
-    "getSystemState",
-    30000,
-    () => {
-      void mutateSystemState();
-    },
-    { refreshWhenHidden: false, refreshWhenOffline: false },
   );
 
   const isSidecarMode = systemState.runningMode === "Sidecar";
