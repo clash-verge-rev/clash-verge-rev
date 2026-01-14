@@ -8,6 +8,7 @@ import { Box, Button, IconButton, Skeleton, Typography } from "@mui/material";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
+import { useClashConfig } from "@/hooks/use-clash-data";
 import { getIpInfo } from "@/services/api";
 
 import { EnhancedCard } from "./enhanced-card";
@@ -55,6 +56,7 @@ const getCountryFlag = (countryCode: string) => {
 // IP信息卡片组件
 export const IpInfoCard = () => {
   const { t } = useTranslation();
+  const { clashConfig } = useClashConfig();
   const [ipInfo, setIpInfo] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -90,6 +92,20 @@ export const IpInfoCard = () => {
         console.warn("Failed to read IP info from sessionStorage:", e);
       }
 
+      if (typeof navigator !== "undefined" && !navigator.onLine) {
+        setLoading(false);
+        lastFetchRef.current = Date.now();
+        setCountdown(IP_REFRESH_SECONDS);
+        return;
+      }
+
+      if (!clashConfig) {
+        setLoading(false);
+        lastFetchRef.current = Date.now();
+        setCountdown(IP_REFRESH_SECONDS);
+        return;
+      }
+
       try {
         setLoading(true);
         const data = await getIpInfo();
@@ -113,11 +129,13 @@ export const IpInfoCard = () => {
             ? err.message
             : t("home.components.ipInfo.errors.load"),
         );
+        lastFetchRef.current = Date.now();
+        setCountdown(IP_REFRESH_SECONDS);
       } finally {
         setLoading(false);
       }
     },
-    [t],
+    [t, clashConfig],
   );
 
   // 组件加载时获取IP信息并启动基于上次请求时间的倒计时
