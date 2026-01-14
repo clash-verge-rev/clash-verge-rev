@@ -2,6 +2,7 @@ import { ViewColumnRounded } from "@mui/icons-material";
 import { Box, IconButton, Tooltip } from "@mui/material";
 import {
   ColumnDef,
+  ColumnOrderState,
   ColumnSizingState,
   flexRender,
   getCoreRowModel,
@@ -104,33 +105,30 @@ export const ConnectionTable = (props: Props) => {
     onCloseColumnManager,
   } = props;
   const { t } = useTranslation();
-  const [columnWidths, setColumnWidths] = useLocalStorage<
-    Record<string, number>
-  >(
+  const [columnWidths, setColumnWidths] = useLocalStorage<ColumnSizingState>(
     "connection-table-widths",
     // server-side value, this is the default value used by server-side rendering (if any)
     // Do not omit (otherwise a Suspense boundary will be triggered)
     {},
   );
 
-  const [columnVisibilityModel, setColumnVisibilityModel] = useLocalStorage<
-    Partial<Record<string, boolean>>
-  >(
-    "connection-table-visibility",
-    {},
-    {
-      serializer: JSON.stringify,
-      deserializer: (value) => {
-        try {
-          const parsed = JSON.parse(value);
-          if (parsed && typeof parsed === "object") return parsed;
-        } catch (err) {
-          console.warn("Failed to parse connection-table-visibility", err);
-        }
-        return {};
+  const [columnVisibilityModel, setColumnVisibilityModel] =
+    useLocalStorage<VisibilityState>(
+      "connection-table-visibility",
+      {},
+      {
+        serializer: JSON.stringify,
+        deserializer: (value) => {
+          try {
+            const parsed = JSON.parse(value);
+            if (parsed && typeof parsed === "object") return parsed;
+          } catch (err) {
+            console.warn("Failed to parse connection-table-visibility", err);
+          }
+          return {};
+        },
       },
-    },
-  );
+    );
 
   const [columnOrder, setColumnOrder] = useLocalStorage<string[]>(
     "connection-table-order",
@@ -262,124 +260,46 @@ export const ConnectionTable = (props: Props) => {
     });
   }, [baseColumns, setColumnOrder]);
 
-  const columns = useMemo<BaseColumn[]>(() => {
-    const order = Array.isArray(columnOrder) ? columnOrder : [];
-    const orderMap = new Map(order.map((field, index) => [field, index]));
-
-    return [...baseColumns].sort((a, b) => {
-      const aIndex = orderMap.has(a.field)
-        ? (orderMap.get(a.field) as number)
-        : Number.MAX_SAFE_INTEGER;
-      const bIndex = orderMap.has(b.field)
-        ? (orderMap.get(b.field) as number)
-        : Number.MAX_SAFE_INTEGER;
-
-      if (aIndex === bIndex) {
-        return order.indexOf(a.field) - order.indexOf(b.field);
-      }
-
-      return aIndex - bIndex;
-    });
-  }, [baseColumns, columnOrder]);
-
-  const visibleColumnsCount = useMemo(() => {
-    return columns.reduce((count, column) => {
-      return (columnVisibilityModel?.[column.field] ?? true) !== false
-        ? count + 1
-        : count;
-    }, 0);
-  }, [columns, columnVisibilityModel]);
-
-  const handleToggleColumn = useCallback(
-    (field: string, visible: boolean) => {
-      if (!visible && visibleColumnsCount <= 1) {
-        return;
-      }
-
-      setColumnVisibilityModel((prev) => {
-        const next = { ...(prev ?? {}) };
-        if (visible) {
-          delete next[field];
-        } else {
-          next[field] = false;
-        }
-        return next;
-      });
-    },
-    [setColumnVisibilityModel, visibleColumnsCount],
-  );
-
-  const handleManagerOrderChange = useCallback(
-    (order: string[]) => {
-      setColumnOrder(() => {
-        const baseFields = baseColumns.map((col) => col.field);
-        return reconcileColumnOrder(order, baseFields);
-      });
-    },
-    [baseColumns, setColumnOrder],
-  );
-
-  const handleResetColumns = useCallback(() => {
-    setColumnVisibilityModel({});
-    setColumnOrder(baseColumns.map((col) => col.field));
-  }, [baseColumns, setColumnOrder, setColumnVisibilityModel]);
-
   const handleColumnVisibilityChange = useCallback(
     (update: Updater<VisibilityState>) => {
       setColumnVisibilityModel((prev) => {
         const current = prev ?? {};
-        const baseState: VisibilityState = {};
-        columns.forEach((column) => {
-          baseState[column.field] = (current[column.field] ?? true) !== false;
-        });
+        const nextState =
+          typeof update === "function" ? update(current) : update;
 
-        const mergedState =
-          typeof update === "function"
-            ? update(baseState)
-            : { ...baseState, ...update };
+        const visibleCount = baseColumns.reduce((count, column) => {
+          const isVisible = (nextState[column.field] ?? true) !== false;
+          return count + (isVisible ? 1 : 0);
+        }, 0);
 
-        const hiddenFields = columns
-          .filter((column) => mergedState[column.field] === false)
-          .map((column) => column.field);
-
-        if (columns.length - hiddenFields.length === 0) {
+        if (visibleCount === 0) {
           return current;
         }
 
-        const sanitized: Partial<Record<string, boolean>> = {};
-        hiddenFields.forEach((field) => {
-          sanitized[field] = false;
+        const sanitized: VisibilityState = {};
+        baseColumns.forEach((column) => {
+          if (nextState[column.field] === false) {
+            sanitized[column.field] = false;
+          }
         });
         return sanitized;
       });
     },
-    [columns, setColumnVisibilityModel],
+    [baseColumns, setColumnVisibilityModel],
   );
 
-  const columnVisibilityState = useMemo<VisibilityState>(() => {
-    const result: VisibilityState = {};
-    if (!columnVisibilityModel) {
-      columns.forEach((column) => {
-        result[column.field] = true;
+  const handleColumnOrderChange = useCallback(
+    (update: Updater<ColumnOrderState>) => {
+      setColumnOrder((prev) => {
+        const current = Array.isArray(prev) ? prev : [];
+        const nextState =
+          typeof update === "function" ? update(current) : update;
+        const baseFields = baseColumns.map((col) => col.field);
+        return reconcileColumnOrder(nextState, baseFields);
       });
-      return result;
-    }
-
-    columns.forEach((column) => {
-      result[column.field] =
-        (columnVisibilityModel?.[column.field] ?? true) !== false;
-    });
-
-    return result;
-  }, [columnVisibilityModel, columns]);
-
-  const columnOptions = useMemo(() => {
-    return columns.map((column) => ({
-      field: column.field,
-      label: column.headerName ?? column.field,
-      visible: (columnVisibilityModel?.[column.field] ?? true) !== false,
-    }));
-  }, [columns, columnVisibilityModel]);
+    },
+    [baseColumns, setColumnOrder],
+  );
 
   const prevRowsRef = useRef<Map<string, ConnectionRow>>(new Map());
 
@@ -408,7 +328,7 @@ export const ConnectionTable = (props: Props) => {
   const [relativeNow, setRelativeNow] = useState(() => Date.now());
 
   const columnDefs = useMemo<ColumnDef<ConnectionRow>[]>(() => {
-    return columns.map((column) => {
+    return baseColumns.map((column) => {
       const baseCell: ColumnDef<ConnectionRow>["cell"] = column.cell
         ? (ctx) => column.cell?.(ctx.row.original)
         : (ctx) => ctx.getValue() as ReactNode;
@@ -432,7 +352,7 @@ export const ConnectionTable = (props: Props) => {
         cell,
       } satisfies ColumnDef<ConnectionRow>;
     });
-  }, [columns, relativeNow]);
+  }, [baseColumns, relativeNow]);
 
   useEffect(() => {
     if (typeof window === "undefined") return undefined;
@@ -450,7 +370,7 @@ export const ConnectionTable = (props: Props) => {
         const prevState = prev ?? {};
         const nextState =
           typeof updater === "function" ? updater(prevState) : updater;
-        const sanitized: Record<string, number> = {};
+        const sanitized: ColumnSizingState = {};
         Object.entries(nextState).forEach(([key, size]) => {
           if (typeof size === "number" && Number.isFinite(size)) {
             sanitized[key] = size;
@@ -465,8 +385,9 @@ export const ConnectionTable = (props: Props) => {
   const table = useReactTable({
     data: connRows,
     state: {
-      columnVisibility: columnVisibilityState,
+      columnVisibility: columnVisibilityModel ?? {},
       columnSizing: columnWidths,
+      columnOrder,
       sorting,
     },
     columnResizeMode: "onChange",
@@ -476,8 +397,42 @@ export const ConnectionTable = (props: Props) => {
     onSortingChange: setSorting,
     onColumnSizingChange: handleColumnSizingChange,
     onColumnVisibilityChange: handleColumnVisibilityChange,
+    onColumnOrderChange: handleColumnOrderChange,
     columns: columnDefs,
   });
+
+  const columnOptions = table.getAllLeafColumns().map((column) => ({
+    field: column.id,
+    label:
+      typeof column.columnDef.header === "string"
+        ? column.columnDef.header
+        : column.id,
+    visible: column.getIsVisible(),
+  }));
+
+  const handleToggleColumn = useCallback(
+    (field: string, visible: boolean) => {
+      if (!visible && table.getVisibleLeafColumns().length <= 1) {
+        return;
+      }
+
+      table.getColumn(field)?.toggleVisibility(visible);
+    },
+    [table],
+  );
+
+  const handleManagerOrderChange = useCallback(
+    (order: string[]) => {
+      const baseFields = baseColumns.map((col) => col.field);
+      table.setColumnOrder(reconcileColumnOrder(order, baseFields));
+    },
+    [baseColumns, table],
+  );
+
+  const handleResetColumns = useCallback(() => {
+    table.setColumnVisibility({});
+    table.setColumnOrder(baseColumns.map((col) => col.field));
+  }, [baseColumns, table]);
 
   const rows = table.getRowModel().rows;
   const tableContainerRef = useRef<HTMLDivElement | null>(null);
