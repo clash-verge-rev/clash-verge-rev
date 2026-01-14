@@ -329,6 +329,7 @@ export const ConnectionTable = (props: Props) => {
         meta: {
           align: column.align ?? "left",
           field: column.field,
+          label: column.headerName,
         },
         cell,
       } satisfies ColumnDef<IConnectionsItem>;
@@ -390,26 +391,6 @@ export const ConnectionTable = (props: Props) => {
     columns: columnDefs,
   });
 
-  const columnOptions = table.getAllLeafColumns().map((column) => ({
-    field: column.id,
-    label:
-      typeof column.columnDef.header === "string"
-        ? column.columnDef.header
-        : column.id,
-    visible: column.getIsVisible(),
-  }));
-
-  const handleToggleColumn = useCallback(
-    (field: string, visible: boolean) => {
-      if (!visible && table.getVisibleLeafColumns().length <= 1) {
-        return;
-      }
-
-      table.getColumn(field)?.toggleVisibility(visible);
-    },
-    [table],
-  );
-
   const handleManagerOrderChange = useCallback(
     (order: string[]) => {
       const baseFields = baseColumns.map((col) => col.field);
@@ -435,6 +416,7 @@ export const ConnectionTable = (props: Props) => {
   const virtualRows = rowVirtualizer.getVirtualItems();
   const totalSize = rowVirtualizer.getTotalSize();
   const tableWidth = table.getTotalSize();
+  const managerColumns = table.getAllLeafColumns();
 
   return (
     <>
@@ -670,9 +652,8 @@ export const ConnectionTable = (props: Props) => {
       </Box>
       <ConnectionColumnManager
         open={columnManagerOpen}
-        columns={columnOptions}
+        columns={managerColumns}
         onClose={onCloseColumnManager}
-        onToggle={handleToggleColumn}
         onOrderChange={handleManagerOrderChange}
         onReset={handleResetColumns}
       />
