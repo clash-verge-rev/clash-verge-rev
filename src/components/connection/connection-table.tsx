@@ -582,15 +582,10 @@ export const ConnectionTable = (props: Props) => {
                           alignItems: "center",
                           position: "relative",
                           boxSizing: "border-box",
-                          px: 1,
-                          py: 1,
                           fontSize: 13,
                           fontWeight: 600,
                           color: "text.secondary",
                           userSelect: "none",
-                          justifyContent:
-                            meta?.align === "right" ? "flex-end" : "flex-start",
-                          gap: 0.25,
                           "&:hover": {
                             backgroundColor: (theme) =>
                               theme.palette.action.hover,
@@ -599,15 +594,26 @@ export const ConnectionTable = (props: Props) => {
                       >
                         <Box
                           component="span"
+                          onClick={
+                            header.column.getCanSort()
+                              ? header.column.getToggleSortingHandler()
+                              : undefined
+                          }
                           sx={{
-                            display: "inline-flex",
+                            flex: 1,
+                            display: "flex",
                             alignItems: "center",
+                            justifyContent:
+                              meta?.align === "right"
+                                ? "flex-end"
+                                : "flex-start",
                             gap: 0.5,
+                            px: 1,
+                            py: 1,
                             cursor: header.column.getCanSort()
                               ? "pointer"
                               : "default",
                           }}
-                          onClick={header.column.getToggleSortingHandler()}
                         >
                           {flexRender(
                             header.column.columnDef.header,
@@ -620,8 +626,15 @@ export const ConnectionTable = (props: Props) => {
                         </Box>
                         {header.column.getCanResize() && (
                           <Box
-                            onMouseDown={header.getResizeHandler()}
-                            onTouchStart={header.getResizeHandler()}
+                            onClick={(event) => event.stopPropagation()}
+                            onMouseDown={(event) => {
+                              event.stopPropagation();
+                              header.getResizeHandler()(event);
+                            }}
+                            onTouchStart={(event) => {
+                              event.stopPropagation();
+                              header.getResizeHandler()(event);
+                            }}
                             sx={{
                               cursor: "col-resize",
                               position: "absolute",

@@ -44,5 +44,6 @@
 - 右键错误通知可复制错误详情
 - 保存 TUN 设置时优化执行流程，避免界面卡顿
 - 补充 `deb` / `rpm` 依赖 `libayatana-appindicator`
+- 「连接」表格标题的排序点击区域扩展到整列宽度
 
 </details>
