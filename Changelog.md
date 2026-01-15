@@ -13,7 +13,7 @@
 > sudo "$APP/Contents/Resources/resources/clash-verge-service-install"
 > ```
 >
-> 对于 Linux（Arch 等非官方分发）：
+> 对于 Linux：
 >
 > ```bash
 > sudo clash-verge-service-uninstall
