@@ -112,6 +112,7 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
     close: () => setOpen(false),
   }));
 
+  // TODO 减少代码复杂度，性能开支
   const onSave = useLockFn(async () => {
     // 端口冲突检测
     const portList = [
@@ -140,14 +141,26 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
       return;
     }
 
-    for (const port of portList) {
+    const original = originalPortsRef.current;
+    const changedPorts: number[] = [];
+
+    if (mixedPort !== original?.mixedPort) changedPorts.push(mixedPort);
+    if (socksEnabled && socksPort !== original?.socksPort)
+      changedPorts.push(socksPort);
+    if (httpEnabled && httpPort !== original?.httpPort)
+      changedPorts.push(httpPort);
+    if (redirEnabled && redirPort !== original?.redirPort)
+      changedPorts.push(redirPort);
+    if (tproxyEnabled && tproxyPort !== original?.tproxyPort)
+      changedPorts.push(tproxyPort);
+
+    for (const port of changedPorts) {
       try {
         const inUse = await isPortInUse(port);
         if (inUse) {
           showNotice.error("settings.modals.clashPort.messages.portInUse", {
             port,
           });
-          const original = originalPortsRef.current;
           if (original) {
             setMixedPort(original.mixedPort);
             setSocksPort(original.socksPort);
@@ -201,7 +214,7 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
     };
 
     // 提交保存请求
-    await saveSettings({ clashConfig, vergeConfig });
+    saveSettings({ clashConfig, vergeConfig });
   });
 
   return (

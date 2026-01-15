@@ -32,6 +32,7 @@
 - 修复 Windows 下系统主题同步问题
 - 修复 URL Schemes 无法正常导入
 - 修复 Linux 下无法安装 TUN 服务
+- 修复可能的端口被占用误报
 
 <details>
 <summary><strong> ✨ 新增功能 </strong></summary>
