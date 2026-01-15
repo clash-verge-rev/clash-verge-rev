@@ -104,7 +104,8 @@ impl TrayState {
         }
         
         if !enabled {
-            // When system proxy is disabled, show the common icon
+            // When system proxy is disabled and tray_event is "system_proxy",
+            // show the common icon. System proxy mode doesn't have dedicated "off" icons.
             return Self::get_common_tray_icon(verge).await;
         }
         
