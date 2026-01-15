@@ -46,10 +46,26 @@ impl TrayState {
     async fn get_tray_icon(verge: &IVerge) -> (bool, Vec<u8>) {
         let system_mode = verge.enable_system_proxy.as_ref().unwrap_or(&false);
         let tun_mode = verge.enable_tun_mode.as_ref().unwrap_or(&false);
+        let tray_event = verge.tray_event.as_deref().unwrap_or("main_window");
+        
+        // Check if user has set tray to control a specific mode
+        match tray_event {
+            "tun_mode" => {
+                // Always show TUN icons when tray is set to control TUN mode
+                return Self::get_tun_tray_icon(verge, *tun_mode).await;
+            }
+            "system_proxy" => {
+                // Always show system proxy icons when tray is set to control system proxy
+                return Self::get_sysproxy_tray_icon(verge, *system_mode).await;
+            }
+            _ => {}
+        }
+        
+        // Default behavior: prioritize TUN when enabled, then system proxy
         match (*system_mode, *tun_mode) {
-            (true, true) => Self::get_tun_tray_icon(verge).await,
-            (true, false) => Self::get_sysproxy_tray_icon(verge).await,
-            (false, true) => Self::get_tun_tray_icon(verge).await,
+            (true, true) => Self::get_tun_tray_icon(verge, true).await,
+            (true, false) => Self::get_sysproxy_tray_icon(verge, true).await,
+            (false, true) => Self::get_tun_tray_icon(verge, true).await,
             (false, false) => Self::get_common_tray_icon(verge).await,
         }
     }
@@ -78,7 +94,7 @@ impl TrayState {
         }
     }
 
-    async fn get_sysproxy_tray_icon(verge: &IVerge) -> (bool, Vec<u8>) {
+    async fn get_sysproxy_tray_icon(verge: &IVerge, enabled: bool) -> (bool, Vec<u8>) {
         let is_sysproxy_tray_icon = verge.sysproxy_tray_icon.unwrap_or(false);
         if is_sysproxy_tray_icon
             && let Ok(Some(sysproxy_icon_path)) = find_target_icons("sysproxy")
@@ -86,6 +102,12 @@ impl TrayState {
         {
             return (true, icon_data);
         }
+        
+        if !enabled {
+            // When system proxy is disabled, show the common icon
+            return Self::get_common_tray_icon(verge).await;
+        }
+        
         #[cfg(target_os = "macos")]
         {
             let tray_icon_colorful = verge.tray_icon.clone().unwrap_or_else(|| "monochrome".into());
@@ -105,7 +127,7 @@ impl TrayState {
         }
     }
 
-    async fn get_tun_tray_icon(verge: &IVerge) -> (bool, Vec<u8>) {
+    async fn get_tun_tray_icon(verge: &IVerge, enabled: bool) -> (bool, Vec<u8>) {
         let is_tun_tray_icon = verge.tun_tray_icon.unwrap_or(false);
         if is_tun_tray_icon
             && let Ok(Some(tun_icon_path)) = find_target_icons("tun")
@@ -113,21 +135,42 @@ impl TrayState {
         {
             return (true, icon_data);
         }
+        
         #[cfg(target_os = "macos")]
         {
             let tray_icon_colorful = verge.tray_icon.clone().unwrap_or_else(|| "monochrome".into());
-            if tray_icon_colorful == "monochrome" {
-                (
-                    false,
-                    include_bytes!("../../../icons/tray-icon-tun-mono-new.ico").to_vec(),
-                )
+            if enabled {
+                // TUN mode is enabled - show active icon
+                if tray_icon_colorful == "monochrome" {
+                    (
+                        false,
+                        include_bytes!("../../../icons/tray-icon-tun-mono-new.ico").to_vec(),
+                    )
+                } else {
+                    (false, include_bytes!("../../../icons/tray-icon-tun.ico").to_vec())
+                }
             } else {
-                (false, include_bytes!("../../../icons/tray-icon-tun.ico").to_vec())
+                // TUN mode is disabled - show inactive/off icon
+                if tray_icon_colorful == "monochrome" {
+                    (
+                        false,
+                        include_bytes!("../../../icons/tray-icon-tun-off-mono-new.ico").to_vec(),
+                    )
+                } else {
+                    (false, include_bytes!("../../../icons/tray-icon-tun-off.ico").to_vec())
+                }
             }
         }
+
         #[cfg(not(target_os = "macos"))]
         {
-            (false, include_bytes!("../../../icons/tray-icon-tun.ico").to_vec())
+            if enabled {
+                // TUN mode is enabled - show active icon
+                (false, include_bytes!("../../../icons/tray-icon-tun.ico").to_vec())
+            } else {
+                // TUN mode is disabled - show inactive/off icon
+                (false, include_bytes!("../../../icons/tray-icon-tun-off.ico").to_vec())
+            }
         }
     }
 }
