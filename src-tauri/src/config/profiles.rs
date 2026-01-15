@@ -159,28 +159,43 @@ impl IProfiles {
     }
 
     /// reorder items
-    pub async fn reorder(&mut self, active_id: &String, over_id: &String) -> Result<()> {
-        let mut items = self.items.take().unwrap_or_default();
-        let mut old_index = None;
-        let mut new_index = None;
+    pub async fn reorder(&mut self, active_id: &str, over_id: &str) -> Result<()> {
+        if active_id == over_id {
+            return Ok(());
+        }
 
-        for (i, _) in items.iter().enumerate() {
-            if items[i].uid.as_ref() == Some(active_id) {
-                old_index = Some(i);
+        let Some(items) = self.items.as_mut() else {
+            return Ok(());
+        };
+
+        let mut old_idx = None;
+        let mut new_idx = None;
+
+        for (i, item) in items.iter().enumerate() {
+            if let Some(uid) = item.uid.as_ref() {
+                if uid == active_id {
+                    old_idx = Some(i);
+                }
+                if uid == over_id {
+                    new_idx = Some(i);
+                }
             }
-            if items[i].uid.as_ref() == Some(over_id) {
-                new_index = Some(i);
+            if old_idx.is_some() && new_idx.is_some() {
+                break;
             }
         }
 
-        let (old_idx, new_idx) = match (old_index, new_index) {
-            (Some(old), Some(new)) => (old, new),
-            _ => return Ok(()),
-        };
-        let item = items.remove(old_idx);
-        items.insert(new_idx, item);
-        self.items = Some(items);
-        self.save_file().await
+        if let (Some(old), Some(new)) = (old_idx, new_idx) {
+            if old < new {
+                items[old..=new].rotate_left(1);
+            } else {
+                items[new..=old].rotate_right(1);
+            }
+
+            return self.save_file().await;
+        }
+
+        Ok(())
     }
 
     /// update the item value

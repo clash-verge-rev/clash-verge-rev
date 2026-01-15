@@ -117,7 +117,7 @@ pub async fn import_profile(url: std::string::String, option: Option<PrfOption>)
 pub async fn reorder_profile(active_id: String, over_id: String) -> CmdResult {
     match profiles_reorder_safe(&active_id, &over_id).await {
         Ok(_) => {
-            logging!(info, Type::Cmd, "重新排序配置文件");
+            logging!(debug, Type::Cmd, "重新排序配置文件");
             Config::profiles().await.apply();
             Ok(())
         }
