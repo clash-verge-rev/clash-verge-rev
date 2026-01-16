@@ -34,6 +34,7 @@
 - 修复 Linux 下无法安装 TUN 服务
 - 修复可能的端口被占用误报
 - 修复设置允许外部控制来源不能立即生效
+- 修复前端性能回归问题
 
 <details>
 <summary><strong> ✨ 新增功能 </strong></summary>

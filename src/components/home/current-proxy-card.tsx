@@ -34,14 +34,10 @@ import { useNavigate } from "react-router";
 import { delayGroup, healthcheckProxyProvider } from "tauri-plugin-mihomo-api";
 
 import { EnhancedCard } from "@/components/home/enhanced-card";
-import {
-  useClashConfig,
-  useProxiesData,
-  useRulesData,
-} from "@/hooks/use-clash-data";
 import { useProfiles } from "@/hooks/use-profiles";
 import { useProxySelection } from "@/hooks/use-proxy-selection";
 import { useVerge } from "@/hooks/use-verge";
+import { useAppData } from "@/providers/app-data-context";
 import delayManager from "@/services/delay";
 import { debugLog } from "@/utils/debug";
 
@@ -105,9 +101,7 @@ export const CurrentProxyCard = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const theme = useTheme();
-  const { proxies, refreshProxy } = useProxiesData();
-  const { clashConfig } = useClashConfig();
-  const { rules } = useRulesData();
+  const { proxies, clashConfig, refreshProxy, rules } = useAppData();
   const { verge } = useVerge();
   const { current: currentProfile } = useProfiles();
   const autoDelayEnabled = verge?.enable_auto_delay_detection ?? false;

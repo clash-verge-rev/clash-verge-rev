@@ -21,10 +21,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { updateRuleProvider } from "tauri-plugin-mihomo-api";
 
-import type {
-  useRuleProvidersData,
-  useRulesData,
-} from "@/hooks/use-clash-data";
+import { useAppData } from "@/providers/app-data-context";
 import { showNotice } from "@/services/notice-service";
 
 // 辅助组件 - 类型框
@@ -40,22 +37,10 @@ const TypeBox = styled(Box)<{ component?: React.ElementType }>(({ theme }) => ({
   lineHeight: 1.25,
 }));
 
-type RuleProvidersHook = ReturnType<typeof useRuleProvidersData>;
-type RulesHook = ReturnType<typeof useRulesData>;
-
-interface ProviderButtonProps {
-  ruleProviders: RuleProvidersHook["ruleProviders"];
-  refreshRuleProviders: RuleProvidersHook["refreshRuleProviders"];
-  refreshRules: RulesHook["refreshRules"];
-}
-
-export const ProviderButton = ({
-  ruleProviders,
-  refreshRuleProviders,
-  refreshRules,
-}: ProviderButtonProps) => {
+export const ProviderButton = () => {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
+  const { ruleProviders, refreshRules, refreshRuleProviders } = useAppData();
   const [updating, setUpdating] = useState<Record<string, boolean>>({});
 
   // 检查是否有提供者
@@ -178,8 +163,8 @@ export const ProviderButton = ({
           <List sx={{ py: 0, minHeight: 250 }}>
             {Object.entries(ruleProviders || {})
               .sort()
-              .map(([key, provider]) => {
-                if (!provider) return null;
+              .map(([key, item]) => {
+                const provider = item;
                 const time = dayjs(provider.updatedAt);
                 const isUpdating = updating[key];
 
