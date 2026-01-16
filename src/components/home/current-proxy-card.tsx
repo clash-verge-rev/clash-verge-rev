@@ -50,7 +50,7 @@ const STORAGE_KEY_GROUP = "clash-verge-selected-proxy-group";
 const STORAGE_KEY_PROXY = "clash-verge-selected-proxy";
 const STORAGE_KEY_SORT_TYPE = "clash-verge-proxy-sort-type";
 
-const AUTO_CHECK_INITIAL_DELAY_MS = 1500;
+const AUTO_CHECK_INITIAL_DELAY_MS = 100;
 const AUTO_CHECK_INTERVAL_MS = 5 * 60 * 1000;
 
 // 代理节点信息接口

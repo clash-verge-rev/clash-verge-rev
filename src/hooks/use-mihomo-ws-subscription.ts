@@ -4,7 +4,7 @@ import { mutate, type MutatorCallback } from "swr";
 import useSWRSubscription from "swr/subscription";
 import { type Message, type MihomoWebSocket } from "tauri-plugin-mihomo-api";
 
-export const RECONNECT_DELAY_MS = 500;
+export const RECONNECT_DELAY_MS = 100;
 
 type NextFn<T> = (error?: any, data?: T | MutatorCallback<T>) => void;
 

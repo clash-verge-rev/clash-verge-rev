@@ -22,6 +22,8 @@ export const useProxiesData = () => {
   const { data, error, isLoading } = useSWR("getProxies", calcuProxies, {
     ...SWR_REALTIME,
     refreshInterval: 0,
+    errorRetryCount: 10,
+    errorRetryInterval: 1000,
     onError: (err) => console.warn("[AppData] Proxy fetch failed:", err),
   });
 
@@ -48,6 +50,8 @@ export const useClashConfig = () => {
   const { data, error, isLoading } = useSWR("getClashConfig", getBaseConfig, {
     ...SWR_SLOW_POLL,
     refreshInterval: 0,
+    errorRetryCount: 5,
+    errorRetryInterval: 1000,
   });
 
   const refreshClashConfig = useCallback(
