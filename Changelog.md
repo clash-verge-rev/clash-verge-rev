@@ -12,6 +12,7 @@
 - 修复 Windows 下系统主题同步问题
 - 修复 URL Schemes 无法正常导入
 - 修复 Linux 下无法安装 TUN 服务
+- 修复前端性能回归问题
 
 <details>
 <summary><strong> ✨ 新增功能 </strong></summary>
