@@ -60,13 +60,13 @@ pub struct PrfItem {
     pub file_data: Option<String>,
 }
 
-#[derive(Default, Debug, Clone, Deserialize, Serialize)]
+#[derive(Default, Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub struct PrfSelected {
     pub name: Option<String>,
     pub now: Option<String>,
 }
 
-#[derive(Default, Debug, Clone, Copy, Deserialize, Serialize)]
+#[derive(Default, Debug, Clone, Copy, PartialEq, Deserialize, Serialize)]
 pub struct PrfExtra {
     pub upload: u64,
     pub download: u64,
