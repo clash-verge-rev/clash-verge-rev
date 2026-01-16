@@ -37,8 +37,10 @@ pub struct CleanupResult {
 
 macro_rules! patch {
     ($lv: expr, $rv: expr, $key: tt) => {
-        if ($rv.$key).is_some() {
-            $lv.$key = $rv.$key.to_owned();
+        if let Some(ref val) = $rv.$key {
+            if Some(val) != $lv.$key.as_ref() {
+                $lv.$key = Some(val.to_owned());
+            }
         }
     };
 }
@@ -53,21 +55,22 @@ impl IProfiles {
             }
         };
 
-        match help::read_yaml::<Self>(&path).await {
-            Ok(mut profiles) => {
-                let items = profiles.items.get_or_insert_with(Vec::new);
-                for item in items.iter_mut() {
-                    if item.uid.is_none() {
-                        item.uid = Some(help::get_uid("d").into());
-                    }
-                }
-                profiles
-            }
+        let mut profiles = match help::read_yaml::<Self>(&path).await {
+            Ok(profiles) => profiles,
             Err(err) => {
                 logging!(error, Type::Config, "{err}");
-                Self::default()
+                return Self::default();
+            }
+        };
+
+        let items = profiles.items.get_or_insert_with(Vec::new);
+        for item in items.iter_mut() {
+            if item.uid.is_none() {
+                item.uid = Some(help::get_uid("d").into());
             }
         }
+
+        profiles
     }
 
     pub async fn save_file(&self) -> Result<()> {
@@ -103,38 +106,28 @@ impl IProfiles {
     pub fn get_item(&self, uid: impl AsRef<str>) -> Result<&PrfItem> {
         let uid_str = uid.as_ref();
 
-        if let Some(items) = self.items.as_ref() {
-            for each in items.iter() {
-                if let Some(uid_val) = &each.uid
-                    && uid_val.as_str() == uid_str
-                {
-                    return Ok(each);
-                }
-            }
-        }
-
-        bail!("failed to get the profile item \"uid:{}\"", uid_str);
+        self.items
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("no profile items found"))?
+            .iter()
+            .find(|each| each.uid.as_ref().is_some_and(|uid_val| uid_val.as_str() == uid_str))
+            .ok_or_else(|| anyhow::anyhow!("failed to get the profile item \"uid:{}\"", uid_str))
     }
 
     /// append new item
     /// if the file_data is some
     /// then should save the data to file
     pub async fn append_item(&mut self, item: &mut PrfItem) -> Result<()> {
-        let uid = &item.uid;
-        if uid.is_none() {
-            bail!("the uid should not be null");
-        }
+        anyhow::ensure!(item.uid.is_some(), "the uid should not be null");
 
         // save the file data
         // move the field value after save
         if let Some(file_data) = item.file_data.take() {
-            if item.file.is_none() {
-                bail!("the file should not be null");
-            }
+            anyhow::ensure!(item.file.is_some(), "the file should not be null");
 
             let file = item
                 .file
-                .clone()
+                .as_ref()
                 .ok_or_else(|| anyhow::anyhow!("file field is required when file_data is provided"))?;
             let path = dirs::app_profiles_dir()?.join(file.as_str());
 
@@ -143,17 +136,14 @@ impl IProfiles {
                 .with_context(|| format!("failed to write to file \"{file}\""))?;
         }
 
-        if self.current.is_none() && (item.itype == Some("remote".into()) || item.itype == Some("local".into())) {
-            self.current = uid.to_owned();
+        if self.current.is_none()
+            && let Some(t) = item.itype.as_deref()
+            && (t == "remote" || t == "local")
+        {
+            self.current = item.uid.to_owned();
         }
 
-        if self.items.is_none() {
-            self.items = Some(vec![]);
-        }
-
-        if let Some(items) = self.items.as_mut() {
-            items.push(item.to_owned());
-        }
+        self.items.get_or_insert_default().push(std::mem::take(item));
 
         Ok(())
     }
@@ -200,26 +190,27 @@ impl IProfiles {
 
     /// update the item value
     pub async fn patch_item(&mut self, uid: &String, item: &PrfItem) -> Result<()> {
-        let mut items = self.items.take().unwrap_or_default();
+        let items = self
+            .items
+            .as_mut()
+            .ok_or_else(|| anyhow::anyhow!("no profile items found"))?;
 
-        for each in items.iter_mut() {
-            if each.uid.as_ref() == Some(uid) {
-                patch!(each, item, itype);
-                patch!(each, item, name);
-                patch!(each, item, desc);
-                patch!(each, item, file);
-                patch!(each, item, url);
-                patch!(each, item, selected);
-                patch!(each, item, extra);
-                patch!(each, item, updated);
-                patch!(each, item, option);
+        let target = items.iter_mut().find(|each| each.uid.as_ref() == Some(uid));
 
-                self.items = Some(items);
-                return self.save_file().await;
-            }
+        if let Some(each) = target {
+            patch!(each, item, itype);
+            patch!(each, item, name);
+            patch!(each, item, desc);
+            patch!(each, item, file);
+            patch!(each, item, url);
+            patch!(each, item, selected);
+            patch!(each, item, extra);
+            patch!(each, item, updated);
+            patch!(each, item, option);
+
+            return self.save_file().await;
         }
 
-        self.items = Some(items);
         bail!("failed to find the profile item \"uid:{uid}\"")
     }
 
