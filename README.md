@@ -66,19 +66,6 @@ Supports Windows (x64/x86), Linux (x64/arm64) and macOS 10.15+ (intel/apple).
 
 🌐 官网：👉 [https://狗狗加速.com](https://verge.dginv.click/#/register?code=oaxsAGo6)
 
-#### 本项目的构建与发布环境由 [YXVM](https://yxvm.com/aff.php?aff=827) 独立服务器全力支持，
-
-感谢提供 独享资源、高性能、高速网络 的强大后端环境。如果你觉得下载够快、使用够爽，那是因为我们用了好服务器！
-
-🧩 YXVM 独立服务器优势：
-
-- 🌎 优质网络，回程优化，下载快到飞起
-- 🔧 物理机独享资源，非VPS可比，性能拉满
-- 🧠 适合跑代理、搭建 WEB 站 CDN 站 、搞 CI/CD 或任何高负载应用
-- 💡 支持即开即用，多机房选择，CN2 / IEPL 可选
-- 📦 本项目使用配置已在售，欢迎同款入手！
-- 🎯 想要同款构建体验？[立即下单 YXVM 独立服务器！](https://yxvm.com/aff.php?aff=827)
-
 ## Features
 
 - 基于性能强劲的 Rust 和 Tauri 2 框架

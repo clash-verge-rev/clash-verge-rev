@@ -63,19 +63,6 @@ Consulta la [documentación del proyecto](https://clash-verge-rev.github.io/) pa
 - Desbloquea servicios de streaming y acceso a ChatGPT
 - Sitio oficial: [https://狗狗加速.com](https://verge.dginv.click/#/register?code=oaxsAGo6)
 
-#### Patrocinador de la infraestructura de compilación — [Servidores dedicados YXVM](https://yxvm.com/aff.php?aff=827)
-
-Las compilaciones y lanzamientos del proyecto se ejecutan en servidores dedicados de YXVM, que proporcionan recursos premium, alto rendimiento y redes de alta velocidad. Si las descargas son rápidas y el uso es fluido, es gracias a este hardware robusto.
-
-🧩 Ventajas de los servidores dedicados YXVM:
-
-- 🌎 Rutas globales optimizadas para descargas significativamente más rápidas
-- 🔧 Recursos bare-metal, en lugar de VPS compartidos, para obtener el máximo rendimiento
-- 🧠 Ideales para proxys, alojamiento de sitios web/CDN, pipelines de CI/CD o cualquier carga elevada
-- 💡 Listos para usar al instante, con múltiples centros de datos disponibles (incluidos CN2 e IEPL)
-- 📦 La misma configuración utilizada por este proyecto está disponible para su compra
-- 🎯 ¿Quieres el mismo entorno de compilación? [Solicita un servidor YXVM hoy](https://yxvm.com/aff.php?aff=827)
-
 ## Funciones
 
 - Basado en Rust de alto rendimiento y en el framework Tauri 2

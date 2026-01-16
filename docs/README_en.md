@@ -69,19 +69,6 @@ Join [@clash_verge_rev](https://t.me/clash_verge_re) for update announcements.
 
 🌐 Official Website: 👉 [https://狗狗加速.com](https://verge.dginv.click/#/register?code=oaxsAGo6)
 
-#### Build Infrastructure Sponsor — [YXVM Dedicated Servers](https://yxvm.com/aff.php?aff=827)
-
-Our builds and releases run on YXVM dedicated servers that deliver premium resources, strong performance, and high-speed networking. If downloads feel fast and usage feels snappy, it is thanks to robust hardware.
-
-🧩 Highlights of YXVM Dedicated Servers:
-
-- 🌎 Optimized global routes for dramatically faster downloads
-- 🔧 Bare-metal resources instead of shared VPS capacity for maximum performance
-- 🧠 Great for proxy workloads, hosting web/CDN services, CI/CD pipelines, or any high-load tasks
-- 💡 Ready to use instantly with multiple datacenter options, including CN2 and IEPL
-- 📦 The configuration used by this project is on sale—feel free to get the same setup
-- 🎯 Want the same build environment? [Order a YXVM server today](https://yxvm.com/aff.php?aff=827)
-
 ## Features
 
 - Built on high-performance Rust with the Tauri 2 framework
