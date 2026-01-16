@@ -20,7 +20,7 @@
 > sudo clash-verge-service-install
 > ```
 
-- **Mihomo(Meta) 内核升级至 v1.19.18**
+- **Mihomo(Meta) 内核升级至 v1.19.19**
 
 ### 🐞 修复问题
 
