@@ -1,6 +1,6 @@
 [package]
 name = "clash-verge"
-version = "2.4.5"
+version = "2.4.5-rc.1"
 description = "clash verge"
 authors = ["zzzgydi", "Tunglies", "wonfen", "MystiPanda"]
 license = "GPL-3.0-only"
@@ -72,7 +72,7 @@ reqwest = { version = "0.13.1", features = [
   "form",
 ] }
 regex = "1.12.2"
-sysproxy = { git = "https://github.com/clash-verge-rev/sysproxy-rs", features = [
+sysproxy = { git = "https://github.com/clash-verge-rev/sysproxy-rs", branch = "0.4.3", features = [
   "guard",
 ] }
 network-interface = { version = "2.0.5", features = ["serde"] }

@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 
 import { BaseDialog, Switch } from "@/components/base";
 import { useClash } from "@/hooks/use-clash";
+import { restartCore } from "@/services/cmds";
 import { showNotice } from "@/services/notice-service";
 
 // 定义开发环境的URL列表
@@ -134,6 +135,7 @@ export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
             ),
           },
         });
+        await restartCore();
         await mutateClash();
       },
       {

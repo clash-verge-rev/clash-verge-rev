@@ -79,6 +79,7 @@ export const BackupHistoryViewer = ({
   const { verge } = useVerge();
   const [rows, setRows] = useState<BackupRow[]>([]);
   const [loading, setLoading] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(false);
   const [isRestarting, setIsRestarting] = useState(false);
   const isLocal = source === "local";
   const isWebDavConfigured = Boolean(
@@ -86,7 +87,7 @@ export const BackupHistoryViewer = ({
   );
   const shouldSkipWebDav = !isLocal && !isWebDavConfigured;
   const pageSize = 8;
-  const isBusy = loading || isRestarting;
+  const isBusy = loading || isRestoring || isRestarting;
 
   const buildRow = useCallback(
     (item: ILocalBackupFile | IWebDavFile): BackupRow | null => {
@@ -195,24 +196,32 @@ export const BackupHistoryViewer = ({
   });
 
   const handleRestore = useLockFn(async (filename: string) => {
-    if (isRestarting) return;
+    if (isRestoring || isRestarting) return;
     if (
       !(await confirmAsync(t("settings.modals.backup.messages.confirmRestore")))
     )
       return;
-    if (isLocal) {
-      await restoreLocalBackup(filename);
-    } else {
-      await restoreWebDavBackup(filename);
+    setIsRestoring(true);
+    try {
+      if (isLocal) {
+        await restoreLocalBackup(filename);
+      } else {
+        await restoreWebDavBackup(filename);
+      }
+      showNotice.success("settings.modals.backup.messages.restoreSuccess");
+      setIsRestarting(true);
+      window.setTimeout(() => {
+        void restartApp().catch((err: unknown) => {
+          setIsRestarting(false);
+          showNotice.error(err);
+        });
+      }, 1000);
+    } catch (error) {
+      console.error(error);
+      showNotice.error(error);
+    } finally {
+      setIsRestoring(false);
     }
-    showNotice.success("settings.modals.backup.messages.restoreSuccess");
-    setIsRestarting(true);
-    window.setTimeout(() => {
-      void restartApp().catch((err: unknown) => {
-        setIsRestarting(false);
-        showNotice.error(err);
-      });
-    }, 1000);
   });
 
   const handleExport = useLockFn(async (filename: string) => {
