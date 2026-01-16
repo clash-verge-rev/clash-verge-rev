@@ -217,43 +217,35 @@ impl IProfiles {
     /// be used to update the remote item
     /// only patch `updated` `extra` `file_data`
     pub async fn update_item(&mut self, uid: &String, item: &mut PrfItem) -> Result<()> {
-        if self.items.is_none() {
-            self.items = Some(vec![]);
-        }
+        let target = self
+            .items
+            .get_or_insert_default()
+            .iter_mut()
+            .find(|each| each.uid.as_ref() == Some(uid))
+            .ok_or_else(|| anyhow::anyhow!("Item not found"))?;
 
-        // find the item
-        let _ = self.get_item(uid)?;
+        target.extra = item.extra;
+        target.updated = item.updated;
+        target.home = std::mem::take(&mut item.home);
+        target.option = PrfOption::merge(target.option.as_ref(), item.option.as_ref());
 
-        if let Some(items) = self.items.as_mut() {
-            let some_uid = Some(uid.clone());
+        let Some(file_data) = item.file_data.take() else {
+            return self.save_file().await;
+        };
 
-            for each in items.iter_mut() {
-                if each.uid == some_uid {
-                    each.extra = item.extra;
-                    each.updated = item.updated;
-                    each.home = item.home.to_owned();
-                    each.option = PrfOption::merge(each.option.as_ref(), item.option.as_ref());
-                    // save the file data
-                    // move the field value after save
-                    if let Some(file_data) = item.file_data.take() {
-                        let file = each.file.take();
-                        let file =
-                            file.unwrap_or_else(|| item.file.take().unwrap_or_else(|| format!("{}.yaml", &uid).into()));
+        let file = target
+            .file
+            .take()
+            .or_else(|| item.file.take())
+            .unwrap_or_else(|| format!("{}.yaml", uid).into());
 
-                        // the file must exists
-                        each.file = Some(file.clone());
+        let path = dirs::app_profiles_dir()?.join(file.as_str());
 
-                        let path = dirs::app_profiles_dir()?.join(file.as_str());
+        fs::write(&path, file_data.as_bytes())
+            .await
+            .with_context(|| format!("failed to write to file \"{file}\""))?;
 
-                        fs::write(&path, file_data.as_bytes())
-                            .await
-                            .with_context(|| format!("failed to write to file \"{file}\""))?;
-                    }
-
-                    break;
-                }
-            }
-        }
+        target.file = Some(file);
 
         self.save_file().await
     }
