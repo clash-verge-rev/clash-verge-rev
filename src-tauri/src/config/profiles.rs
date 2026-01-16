@@ -315,19 +315,20 @@ impl IProfiles {
 
     /// 获取current指向的订阅内容
     pub async fn current_mapping(&self) -> Result<Mapping> {
-        match (self.current.as_ref(), self.items.as_ref()) {
-            (Some(current), Some(items)) => {
-                if let Some(item) = items.iter().find(|e| e.uid.as_ref() == Some(current)) {
-                    let file_path = match item.file.as_ref() {
-                        Some(file) => dirs::app_profiles_dir()?.join(file.as_str()),
-                        None => bail!("failed to get the file field"),
-                    };
-                    return help::read_mapping(&file_path).await;
-                }
-                bail!("failed to find the current profile \"uid:{current}\"");
-            }
-            _ => Ok(Mapping::new()),
-        }
+        let (Some(current), Some(items)) = (self.current.as_ref(), self.items.as_ref()) else {
+            return Ok(Mapping::new());
+        };
+
+        let Some(target) = items.iter().find(|e| e.uid.as_ref() == Some(current)) else {
+            bail!("failed to find the current profile \"uid:{current}\"");
+        };
+
+        let file = target
+            .file
+            .as_ref()
+            .ok_or_else(|| anyhow::anyhow!("failed to get the file field"))?;
+        let file_path = dirs::app_profiles_dir()?.join(file.as_str());
+        help::read_mapping(&file_path).await
     }
 
     /// 判断profile是否是current指向的
@@ -337,32 +338,32 @@ impl IProfiles {
 
     /// 获取所有的profiles(uid，名称, 是否为 current)
     pub fn profiles_preview(&self) -> Option<Vec<IProfilePreview<'_>>> {
-        self.items.as_ref().map(|items| {
-            items
-                .iter()
-                .filter_map(|e| {
-                    if let (Some(uid), Some(name)) = (e.uid.as_ref(), e.name.as_ref()) {
-                        let is_current = self.is_current_profile_index(uid);
-                        let preview = IProfilePreview { uid, name, is_current };
-                        Some(preview)
-                    } else {
-                        None
-                    }
+        let items = self.items.as_ref()?;
+        let current_uid = self.current.as_ref();
+
+        let previews = items
+            .iter()
+            .filter_map(|e| {
+                let uid = e.uid.as_ref()?;
+                let name = e.name.as_ref()?;
+                Some(IProfilePreview {
+                    uid,
+                    name,
+                    is_current: current_uid == Some(uid),
                 })
-                .collect()
-        })
+            })
+            .collect();
+
+        Some(previews)
     }
 
     /// 通过 uid 获取名称
-    pub fn get_name_by_uid(&self, uid: &String) -> Option<&String> {
-        if let Some(items) = &self.items {
-            for item in items {
-                if item.uid.as_ref() == Some(uid) {
-                    return item.name.as_ref();
-                }
-            }
-        }
-        None
+    pub fn get_name_by_uid(&self, uid: &str) -> Option<&String> {
+        self.items
+            .as_ref()?
+            .iter()
+            .find(|item| item.uid.as_deref() == Some(uid))
+            .and_then(|item| item.name.as_ref())
     }
 
     /// 以 app 中的 profile 列表为准，删除不再需要的文件
