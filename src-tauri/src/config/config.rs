@@ -17,7 +17,9 @@ use backoff::{Error as BackoffError, ExponentialBackoff};
 use clash_verge_draft::Draft;
 use clash_verge_logging::{Type, logging, logging_error};
 use clash_verge_types::runtime::IRuntime;
+use serde_yaml_ng::{Mapping, Value};
 use smartstring::alias::String;
+use smartstring::{LazyCompact, SmartString};
 use std::path::PathBuf;
 use tauri_plugin_clash_verge_sysinfo::is_current_app_handle_admin;
 use tokio::sync::OnceCell;
@@ -188,7 +190,9 @@ impl Config {
     }
 
     pub async fn generate() -> Result<()> {
-        let (config, exists_keys, logs) = enhance::enhance().await;
+        let (mut config, exists_keys, logs) = enhance::enhance().await;
+
+        sanitize_tunnels_proxy(&mut config);
 
         Self::runtime().await.edit_draft(|d| {
             *d = IRuntime {
@@ -247,6 +251,94 @@ impl Config {
 
         let _ = tokio::join!(save_clash_task, save_verge_task, save_profiles_task);
         logging!(info, Type::Config, "save all draft data finished");
+    }
+}
+
+fn sanitize_tunnels_proxy(config: &mut Mapping) {
+    // 检查是否存在 tunnels
+    if !tunnels_need_validation(config) {
+        return;
+    }
+
+    // 在需要时，收集可用目标（proxies + proxy-groups + 内建）
+    let mut valid: Vec<SmartString<LazyCompact>> = Vec::new();
+    collect_names(config, "proxies", &mut valid);
+    collect_names(config, "proxy-groups", &mut valid);
+    valid.push(SmartString::from("DIRECT"));
+    valid.push(SmartString::from("REJECT"));
+
+    // 修改 tunnels：删除无效 proxy
+    let tunnels_key = Value::String("tunnels".to_string());
+    let Some(Value::Sequence(tunnels)) = config.get_mut(&tunnels_key) else {
+        return;
+    };
+
+    let proxy_key = Value::String("proxy".to_string());
+
+    for item in tunnels.iter_mut() {
+        let Value::Mapping(tunnel) = item else {
+            continue;
+        };
+        let Some(Value::String(proxy_name)) = tunnel.get(&proxy_key) else {
+            continue;
+        };
+
+        if proxy_name == "DIRECT" || proxy_name == "REJECT" {
+            continue;
+        }
+
+        let proxy_ss: SmartString<LazyCompact> = proxy_name.as_str().into();
+        let ok = valid.contains(&proxy_ss);
+
+        if !ok {
+            tunnel.remove(&proxy_key);
+        }
+    }
+}
+
+// tunnels 存在且至少有一条 tunnel 的 proxy 需要校验时才返回 true
+fn tunnels_need_validation(config: &Mapping) -> bool {
+    let tunnels_key = Value::String("tunnels".to_string());
+    let Some(Value::Sequence(tunnels)) = config.get(&tunnels_key) else {
+        return false;
+    };
+
+    let proxy_key = Value::String("proxy".to_string());
+
+    for item in tunnels {
+        let Value::Mapping(tunnel) = item else {
+            continue;
+        };
+        let Some(Value::String(proxy_name)) = tunnel.get(&proxy_key) else {
+            continue;
+        };
+
+        // 只有遇到“非内建目标”的 proxy，才需要去扫描 proxies/groups
+        if proxy_name != "DIRECT" && proxy_name != "REJECT" {
+            return true;
+        }
+    }
+
+    false
+}
+
+fn collect_names(config: &Mapping, list_key: &str, out: &mut Vec<SmartString<LazyCompact>>) {
+    let key = Value::String(list_key.to_string());
+    let Some(Value::Sequence(seq)) = config.get(&key) else {
+        return;
+    };
+
+    let name_key = Value::String("name".to_string());
+
+    for item in seq {
+        let Value::Mapping(map) = item else {
+            continue;
+        };
+        if let Some(Value::String(n)) = map.get(&name_key)
+            && !n.is_empty()
+        {
+            out.push(n.as_str().into());
+        }
     }
 }
 
