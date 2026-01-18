@@ -16,7 +16,7 @@ import { useTranslation } from "react-i18next";
 
 import { BaseDialog } from "@/components/base";
 import { useClash } from "@/hooks/use-clash";
-import { useProxiesData } from "@/hooks/use-clash-data";
+import { useAppData } from "@/providers/app-data-context";
 import { isPortInUse } from "@/services/cmds";
 import { showNotice } from "@/services/notice-service";
 import { parseHost, parsedLocalhost, isValidPort } from "@/utils/helper";
@@ -87,19 +87,19 @@ export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
     });
   }, [draftTunnels]);
 
-  const { proxies } = useProxiesData();
+  const { proxies } = useAppData();
 
-  const proxyGroups = useMemo(() => {
+  const proxyGroups = useMemo<IProxyGroupItem[]>(() => {
     return proxies?.groups ?? [];
   }, [proxies]);
 
-  const groupNames = useMemo(
-    () => proxyGroups.map((g) => g.name),
+  const groupNames = useMemo<string[]>(
+    () => proxyGroups.map((group) => group.name),
     [proxyGroups],
   );
 
-  const proxyOptions = useMemo(() => {
-    const group = proxyGroups.find((g) => g.name === values.group);
+  const proxyOptions = useMemo<IProxyItem[]>(() => {
+    const group = proxyGroups.find((item) => item.name === values.group);
     return group?.all ?? [];
   }, [proxyGroups, values.group]);
 

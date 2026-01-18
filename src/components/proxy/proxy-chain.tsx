@@ -38,7 +38,7 @@ import {
   selectNodeForGroup,
 } from "tauri-plugin-mihomo-api";
 
-import { useProxiesData } from "@/hooks/use-clash-data";
+import { useAppData } from "@/providers/app-data-context";
 import { updateProxyChainConfigInRuntime } from "@/services/cmds";
 import { debugLog } from "@/utils/debug";
 
@@ -199,7 +199,7 @@ export const ProxyChain = ({
 }: ProxyChainProps) => {
   const theme = useTheme();
   const { t } = useTranslation();
-  const { proxies, refreshProxy } = useProxiesData();
+  const { proxies, refreshProxy } = useAppData();
   const [isConnecting, setIsConnecting] = useState(false);
   const markUnsavedChanges = useCallback(() => {
     onMarkUnsavedChanges?.();
@@ -221,7 +221,7 @@ export const ProxyChain = ({
     }
 
     const proxyChainGroup = proxies.groups.find(
-      (group) => group.name === selectedGroup,
+      (group: { name: string }) => group.name === selectedGroup,
     );
 
     return proxyChainGroup?.now === lastNode.name;

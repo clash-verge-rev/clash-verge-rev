@@ -63,19 +63,6 @@ Windows (x64/x86), Linux (x64/arm64), macOS 10.15+ (Intel/Apple)을 지원합니
 - 스트리밍 및 ChatGPT 접근 지원
 - 공식 사이트: [https://狗狗加速.com](https://verge.dginv.click/#/register?code=oaxsAGo6)
 
-#### 빌드 인프라 스폰서 — [YXVM 전용 서버](https://yxvm.com/aff.php?aff=827)
-
-본 프로젝트의 빌드 및 릴리스는 YXVM 전용 서버에서 구동됩니다. 빠른 다운로드와 경쾌한 사용감은 탄탄한 하드웨어 덕분입니다.
-
-🧩 YXVM 전용 서버 하이라이트:
-
-- 🌎 최적화된 글로벌 라우팅으로 대폭 빨라진 다운로드
-- 🔧 공유 VPS가 아닌 베어메탈 자원으로 최대 성능 제공
-- 🧠 프록시 워크로드, Web/CDN 호스팅, CI/CD, 고부하 작업에 적합
-- 💡 CN2 / IEPL 등 다양한 데이터센터 옵션, 즉시 사용 가능
-- 📦 본 프로젝트가 사용하는 구성도 판매 중 — 동일한 환경을 사용할 수 있습니다
-- 🎯 동일한 빌드 환경이 필요하다면 [지금 YXVM 서버 주문](https://yxvm.com/aff.php?aff=827)
-
 ## 기능
 
 - 고성능 Rust와 Tauri 2 프레임워크 기반 데스크톱 앱

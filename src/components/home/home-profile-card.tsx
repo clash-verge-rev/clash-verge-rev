@@ -24,7 +24,7 @@ import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router";
 
-import { useRefreshAll } from "@/hooks/use-clash-data";
+import { useAppData } from "@/providers/app-data-context";
 import { openWebUrl, updateProfile } from "@/services/cmds";
 import { showNotice } from "@/services/notice-service";
 import parseTraffic from "@/utils/parse-traffic";
@@ -281,7 +281,7 @@ export const HomeProfileCard = ({
 }: HomeProfileCardProps) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const refreshAll = useRefreshAll();
+  const { refreshAll } = useAppData();
 
   // 更新当前订阅
   const [updating, setUpdating] = useState(false);
