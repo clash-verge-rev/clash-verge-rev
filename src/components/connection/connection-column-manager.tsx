@@ -21,20 +21,14 @@ import {
   ListItem,
   ListItemText,
 } from "@mui/material";
+import type { Column } from "@tanstack/react-table";
 import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
-interface ColumnOption {
-  field: string;
-  label: string;
-  visible: boolean;
-}
-
 interface Props {
   open: boolean;
-  columns: ColumnOption[];
+  columns: Column<IConnectionsItem, unknown>[];
   onClose: () => void;
-  onToggle: (field: string, visible: boolean) => void;
   onOrderChange: (order: string[]) => void;
   onReset: () => void;
 }
@@ -43,7 +37,6 @@ export const ConnectionColumnManager = ({
   open,
   columns,
   onClose,
-  onToggle,
   onOrderChange,
   onReset,
 }: Props) => {
@@ -54,9 +47,9 @@ export const ConnectionColumnManager = ({
   );
   const { t } = useTranslation();
 
-  const items = useMemo(() => columns.map((column) => column.field), [columns]);
+  const items = useMemo(() => columns.map((column) => column.id), [columns]);
   const visibleCount = useMemo(
-    () => columns.filter((column) => column.visible).length,
+    () => columns.filter((column) => column.getIsVisible()).length,
     [columns],
   );
 
@@ -65,7 +58,7 @@ export const ConnectionColumnManager = ({
       const { active, over } = event;
       if (!over || active.id === over.id) return;
 
-      const order = columns.map((column) => column.field);
+      const order = columns.map((column) => column.id);
       const oldIndex = order.indexOf(active.id as string);
       const newIndex = order.indexOf(over.id as string);
       if (oldIndex === -1 || newIndex === -1) return;
@@ -94,13 +87,16 @@ export const ConnectionColumnManager = ({
             >
               {columns.map((column) => (
                 <SortableColumnItem
-                  key={column.field}
+                  key={column.id}
                   column={column}
-                  onToggle={onToggle}
+                  label={getColumnLabel(column)}
                   dragHandleLabel={t(
                     "connections.components.columnManager.dragHandle",
                   )}
-                  disableToggle={column.visible && visibleCount <= 1}
+                  disableToggle={
+                    !column.getCanHide() ||
+                    (column.getIsVisible() && visibleCount <= 1)
+                  }
                 />
               ))}
             </List>
@@ -120,15 +116,15 @@ export const ConnectionColumnManager = ({
 };
 
 interface SortableColumnItemProps {
-  column: ColumnOption;
-  onToggle: (field: string, visible: boolean) => void;
+  column: Column<IConnectionsItem, unknown>;
+  label: string;
   dragHandleLabel: string;
   disableToggle?: boolean;
 }
 
 const SortableColumnItem = ({
   column,
-  onToggle,
+  label,
   dragHandleLabel,
   disableToggle = false,
 }: SortableColumnItemProps) => {
@@ -139,7 +135,7 @@ const SortableColumnItem = ({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: column.field });
+  } = useSortable({ id: column.id });
 
   const style = useMemo(
     () => ({
@@ -167,12 +163,12 @@ const SortableColumnItem = ({
     >
       <Checkbox
         edge="start"
-        checked={column.visible}
+        checked={column.getIsVisible()}
         disabled={disableToggle}
-        onChange={(event) => onToggle(column.field, event.target.checked)}
+        onChange={(event) => column.toggleVisibility(event.target.checked)}
       />
       <ListItemText
-        primary={column.label}
+        primary={label}
         slotProps={{ primary: { variant: "body2" } }}
         sx={{ mr: 1 }}
       />
@@ -188,4 +184,12 @@ const SortableColumnItem = ({
       </IconButton>
     </ListItem>
   );
+};
+
+const getColumnLabel = (column: Column<IConnectionsItem, unknown>) => {
+  const meta = column.columnDef.meta as { label?: string } | undefined;
+  if (meta?.label) return meta.label;
+
+  const header = column.columnDef.header;
+  return typeof header === "string" ? header : column.id;
 };
