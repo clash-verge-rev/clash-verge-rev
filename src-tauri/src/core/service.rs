@@ -256,9 +256,11 @@ fn install_service() -> Result<()> {
 
     // clash_verge_i18n::sync_locale(Config::verge().await.latest_arc().language.as_deref());
 
+    let gid = tauri_plugin_clash_verge_sysinfo::current_gid();
     let prompt = clash_verge_i18n::t!("service.adminInstallPrompt");
-    let command =
-        format!(r#"do shell script "sudo '{install_shell}'" with administrator privileges with prompt "{prompt}""#);
+    let command = format!(
+        r#"do shell script "sudo CLASH_VERGE_SERVICE_GID={gid} '{install_shell}'" with administrator privileges with prompt "{prompt}""#
+    );
 
     let status = StdCommand::new("osascript").args(vec!["-e", &command]).status()?;
 

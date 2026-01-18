@@ -1,25 +1,5 @@
 ## v2.4.5
 
-> [!WARNING]
-> 此版本 macOS 和 Linux 对服务 IPC 权限进一步限制引入了破坏性变更，需要先在旧版本**卸载 TUN 服务**后再安装新版本。
->
-> **已经安装的用户**可在终端卸载服务再安装。
->
-> 对于 macOS：
->
-> ```bash
-> APP="/Applications/Clash Verge.app"
-> sudo "$APP/Contents/Resources/resources/clash-verge-service-uninstall"
-> sudo "$APP/Contents/Resources/resources/clash-verge-service-install"
-> ```
->
-> 对于 Linux：
->
-> ```bash
-> sudo clash-verge-service-uninstall
-> sudo clash-verge-service-install
-> ```
-
 - **Mihomo(Meta) 内核升级至 v1.19.19**
 
 ### 🐞 修复问题
