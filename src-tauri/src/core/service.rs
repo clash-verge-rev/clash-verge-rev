@@ -158,16 +158,12 @@ fn install_service() -> Result<()> {
     }
 
     let install_shell: String = install_path.to_string_lossy().replace(" ", "\\ ");
-    let gid = tauri_plugin_clash_verge_sysinfo::current_gid();
 
     let elevator = crate::utils::help::linux_elevator();
     let status = if linux_running_as_root() {
-        StdCommand::new(&install_path)
-            .env("CLASH_VERGE_SERVICE_GID", gid.to_string())
-            .status()?
+        StdCommand::new(&install_path).status()?
     } else {
         let result = StdCommand::new(&elevator)
-            .env("CLASH_VERGE_SERVICE_GID", gid.to_string())
             .arg("sh")
             .arg("-c")
             .arg(&install_shell)
