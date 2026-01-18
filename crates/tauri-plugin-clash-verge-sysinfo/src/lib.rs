@@ -121,6 +121,12 @@ fn is_binary_admin() -> bool {
 }
 
 #[inline]
+#[cfg(unix)]
+pub fn current_gid() -> u32 {
+    unsafe { libc::getgid() }
+}
+
+#[inline]
 pub fn list_network_interfaces() -> Vec<String> {
     let mut networks = Networks::new();
     networks.refresh(false);
