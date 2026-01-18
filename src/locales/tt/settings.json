@@ -103,7 +103,31 @@
           "webUI": "Веб-интерфейс",
           "clashCore": "Clash ядросы",
           "openUwpTool": "UWP инструментын ачу",
-          "updateGeoData": "GeoData яңарту"
+          "updateGeoData": "GeoData яңарту",
+          "tunnels": {
+            "title": "Tunnel İdäräse",
+            "localAddr": "Urınçı Adres",
+            "localPort": "Urınçı Port",
+            "targetAddr": "Максат адресы",
+            "targetPort": "Максат порты",
+            "proxyGroup": "Proxy Törkeme",
+            "proxyNode": "Proxy Töyene",
+            "protocols": "Protokollar",
+            "existing": "Bar Tunnel'lär",
+            "default": "Xäzerge Köyläwlärgä iärü",
+            "optional": "Mäcbüri tügel",
+            "messages": {
+              "incomplete": "Böten tunnel mäğlümatların tutırıgız",
+              "invalidLocalAddr": "Döres tügel urınçı adres",
+              "invalidLocalPort": "Döres tügel urınçı port",
+              "invalidTargetAddr": "Дөрес түгел максат адресы",
+              "invalidTargetPort": "Дөрес түгел максат порты"
+            },
+            "actions": {
+              "add": "Östäw",
+              "addNew": "Yaña Tunnel Östäw"
+            }
+          }
         },
         "tooltips": {
           "networkInterface": "Челтәр интерфейсы",

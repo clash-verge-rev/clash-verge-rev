@@ -103,7 +103,31 @@
           "webUI": "واجهة الويب",
           "clashCore": "نواة Clash",
           "openUwpTool": "فتح أداة UWP",
-          "updateGeoData": "تحديث البيانات الجغرافية"
+          "updateGeoData": "تحديث البيانات الجغرافية",
+          "tunnels": {
+            "title": "إدارة الأنفاق",
+            "localAddr": "عنوان الاستماع المحلي",
+            "localPort": "منفذ الاستماع المحلي",
+            "targetAddr": "عنوان الهدف",
+            "targetPort": "منفذ الهدف",
+            "proxyGroup": "مجموعة الوكيل",
+            "proxyNode": "عقدة الوكيل",
+            "protocols": "البروتوكول",
+            "existing": "الأنفاق الموجودة",
+            "default": "اتباع الإعدادات الحالية",
+            "optional": "اختياري",
+            "messages": {
+              "incomplete": "يرجى تعبئة جميع حقول النفق المطلوبة",
+              "invalidLocalAddr": "عنوان الاستماع المحلي غير صالح",
+              "invalidLocalPort": "منفذ الاستماع المحلي غير صالح",
+              "invalidTargetAddr": "عنوان الهدف غير صالح",
+              "invalidTargetPort": "منفذ الهدف غير صالح"
+            },
+            "actions": {
+              "add": "إضافة",
+              "addNew": "إضافة نفق جديد"
+            }
+          }
         },
         "tooltips": {
           "networkInterface": "واجهة الشبكة",

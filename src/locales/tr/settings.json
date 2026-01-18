@@ -103,7 +103,31 @@
           "webUI": "Web Arayüzü",
           "clashCore": "Clash Çekirdeği",
           "openUwpTool": "UWP Aracını Aç",
-          "updateGeoData": "GeoData'yı Güncelle"
+          "updateGeoData": "GeoData'yı Güncelle",
+          "tunnels": {
+            "title": "Tünel Yönetimi",
+            "localAddr": "Yerel Dinleme Adresi",
+            "localPort": "Yerel Dinleme Portu",
+            "targetAddr": "Hedef Adresi",
+            "targetPort": "Hedef Portu",
+            "proxyGroup": "Proxy Grubu",
+            "proxyNode": "Proxy Düğümü",
+            "protocols": "Protokol",
+            "existing": "Mevcut Tüneller",
+            "default": "Geçerli Yapılandırmayı İzle",
+            "optional": "İsteğe Bağlı",
+            "messages": {
+              "incomplete": "Lütfen gerekli tüm tünel alanlarını doldurun",
+              "invalidLocalAddr": "Geçersiz yerel dinleme adresi",
+              "invalidLocalPort": "Geçersiz yerel dinleme portu",
+              "invalidTargetAddr": "Geçersiz hedef adresi",
+              "invalidTargetPort": "Geçersiz hedef portu"
+            },
+            "actions": {
+              "add": "Ekle",
+              "addNew": "Yeni Tünel Ekle"
+            }
+          }
         },
         "tooltips": {
           "networkInterface": "Ağ Arayüzü",

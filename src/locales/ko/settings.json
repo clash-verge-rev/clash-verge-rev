@@ -103,7 +103,31 @@
           "webUI": "Web UI",
           "clashCore": "Clash 코어",
           "openUwpTool": "UWP 도구 열기",
-          "updateGeoData": "GeoData 업데이트"
+          "updateGeoData": "GeoData 업데이트",
+          "tunnels": {
+            "title": "터널 관리",
+            "localAddr": "로컬 수신 주소",
+            "localPort": "로컬 수신 포트",
+            "targetAddr": "대상 주소",
+            "targetPort": "대상 포트",
+            "proxyGroup": "프록시 그룹",
+            "proxyNode": "프록시 노드",
+            "protocols": "프로토콜",
+            "existing": "기존 터널",
+            "default": "현재 설정 따르기",
+            "optional": "선택 사항",
+            "messages": {
+              "incomplete": "필수 터널 항목을 모두 입력해 주세요",
+              "invalidLocalAddr": "유효하지 않은 로컬 수신 주소입니다",
+              "invalidLocalPort": "유효하지 않은 로컬 수신 포트입니다",
+              "invalidTargetAddr": "유효하지 않은 대상 주소",
+              "invalidTargetPort": "유효하지 않은 대상 포트"
+            },
+            "actions": {
+              "add": "추가",
+              "addNew": "새 터널 추가"
+            }
+          }
         },
         "tooltips": {
           "networkInterface": "네트워크 인터페이스",

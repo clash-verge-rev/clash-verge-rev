@@ -103,7 +103,31 @@
           "webUI": "Antarmuka Web",
           "clashCore": "Inti Clash",
           "openUwpTool": "Buka alat UWP",
-          "updateGeoData": "Perbarui GeoData"
+          "updateGeoData": "Perbarui GeoData",
+          "tunnels": {
+            "title": "Manajemen Terowongan",
+            "localAddr": "Alamat Dengarkan Lokal",
+            "localPort": "Port Dengarkan Lokal",
+            "targetAddr": "Alamat tujuan",
+            "targetPort": "Port tujuan",
+            "proxyGroup": "Grup Proxy",
+            "proxyNode": "Node Proxy",
+            "protocols": "Protokol",
+            "existing": "Terowongan yang Ada",
+            "default": "Ikuti Konfigurasi Saat Ini",
+            "optional": "Opsional",
+            "messages": {
+              "incomplete": "Silakan lengkapi semua kolom terowongan yang diperlukan",
+              "invalidLocalAddr": "Alamat dengarkan lokal tidak valid",
+              "invalidLocalPort": "Port dengarkan lokal tidak valid",
+              "invalidTargetAddr": "Alamat tujuan tidak valid",
+              "invalidTargetPort": "Port tujuan tidak valid"
+            },
+            "actions": {
+              "add": "Tambah",
+              "addNew": "Tambah Tunnel Baru"
+            }
+          }
         },
         "tooltips": {
           "networkInterface": "Antarmuka Jaringan",
