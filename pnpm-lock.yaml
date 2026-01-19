@@ -51,13 +51,13 @@ importers:
         specifier: ^2.3.2
         version: 2.3.2
       '@tauri-apps/plugin-dialog':
-        specifier: ^2.5.0
+        specifier: ^2.6.0
         version: 2.6.0
       '@tauri-apps/plugin-fs':
         specifier: ^2.4.5
         version: 2.4.5
       '@tauri-apps/plugin-http':
-        specifier: ~2.5.5
+        specifier: ~2.5.6
         version: 2.5.6
       '@tauri-apps/plugin-process':
         specifier: ^2.3.1
@@ -108,7 +108,7 @@ importers:
         specifier: 6.1.0
         version: 6.1.0(react@19.2.3)
       react-hook-form:
-        specifier: ^7.71.0
+        specifier: ^7.71.1
         version: 7.71.1(react@19.2.3)
       react-i18next:
         specifier: 16.5.3
@@ -139,7 +139,7 @@ importers:
         specifier: ^7.0.0
         version: 7.0.0
       '@eslint-react/eslint-plugin':
-        specifier: ^2.5.5
+        specifier: ^2.7.2
         version: 2.7.2(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3)
       '@eslint/js':
         specifier: ^9.39.2
@@ -154,7 +154,7 @@ importers:
         specifier: ^4.17.12
         version: 4.17.12
       '@types/node':
-        specifier: ^24.10.7
+        specifier: ^24.10.9
         version: 24.10.9
       '@types/react':
         specifier: 19.2.8
@@ -193,7 +193,7 @@ importers:
         specifier: ^4.16.1
         version: 4.16.1(@typescript-eslint/utils@8.53.0(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3))(eslint@9.39.2(jiti@2.6.1))
       eslint-plugin-prettier:
-        specifier: ^5.5.4
+        specifier: ^5.5.5
         version: 5.5.5(eslint-config-prettier@10.1.8(eslint@9.39.2(jiti@2.6.1)))(eslint@9.39.2(jiti@2.6.1))(prettier@3.8.0)
       eslint-plugin-react-compiler:
         specifier: 19.1.0-rc.2
@@ -229,22 +229,22 @@ importers:
         specifier: ^3.3.2
         version: 3.3.2
       prettier:
-        specifier: ^3.7.4
+        specifier: ^3.8.0
         version: 3.8.0
       sass:
         specifier: ^1.97.2
         version: 1.97.2
       tar:
-        specifier: ^7.5.2
+        specifier: ^7.5.3
         version: 7.5.3
       terser:
-        specifier: ^5.44.1
+        specifier: ^5.46.0
         version: 5.46.0
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
       typescript-eslint:
-        specifier: ^8.52.0
+        specifier: ^8.53.0
         version: 8.53.0(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3)
       vite:
         specifier: ^7.3.1
