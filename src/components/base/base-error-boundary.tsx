@@ -2,15 +2,18 @@ import { ReactNode } from "react";
 import { ErrorBoundary, FallbackProps } from "react-error-boundary";
 
 function ErrorFallback({ error }: FallbackProps) {
+  const errorMessage = error instanceof Error ? error.message : String(error);
+  const errorStack = error instanceof Error ? error.stack : undefined;
+
   return (
     <div role="alert" style={{ padding: 16 }}>
       <h4>Something went wrong:(</h4>
 
-      <pre>{error.message}</pre>
+      <pre>{errorMessage}</pre>
 
       <details title="Error Stack">
         <summary>Error Stack</summary>
-        <pre>{error.stack}</pre>
+        <pre>{errorStack}</pre>
       </details>
     </div>
   );
