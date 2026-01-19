@@ -1,60 +1,60 @@
 _version: 1
 notifications:
   dashboardToggled:
-    title: Dashboard
-    body: Dashboard visibility has been updated.
+    title: Gösterge Paneli
+    body: Gösterge panelinin görünürlüğü güncellendi.
   clashModeChanged:
-    title: Mode Switch
-    body: Switched to {mode}.
+    title: Mod Değişimi
+    body: "{mode} moduna geçildi."
   systemProxyToggled:
-    title: System Proxy
-    body: System proxy status has been updated.
+    title: Sistem Vekil'i
+    body: Sistem vekil'i durumu güncellendi.
   tunModeToggled:
-    title: TUN Mode
-    body: TUN mode status has been updated.
+    title: TUN Modu
+    body: TUN modu durumu güncellendi.
   lightweightModeEntered:
-    title: Lightweight Mode
-    body: Entered lightweight mode.
+    title: Hafif Mod
+    body: Hafif moda geçildi.
   profilesReactivated:
-    title: Profiles
-    body: Profile Reactivated.
+    title: Profiller
+    body: Profil yeniden etkinleştirildi.
   appQuit:
-    title: About to Exit
-    body: Clash Verge is about to exit.
+    title: Çıkış Yapılmak Üzere
+    body: Clash Verge kapanmak üzere.
   appHidden:
-    title: Application Hidden
-    body: Clash Verge is running in the background.
+    title: Uygulama Gizlendi
+    body: Clash Verge arka planda çalışıyor.
 service:
-  adminInstallPrompt: Installing the Clash Verge service requires administrator privileges.
-  adminUninstallPrompt: Uninstalling the Clash Verge service requires administrator privileges.
+  adminInstallPrompt: Clash Verge hizmetini kurmak için yönetici ayrıcalıkları gerekir.
+  adminUninstallPrompt: Clash Verge hizmetini kaldırmak için yönetici ayrıcalıkları gerekir.
 tray:
-  dashboard: Dashboard
-  ruleMode: Rule Mode
-  globalMode: Global Mode
-  directMode: Direct Mode
-  outboundModes: Outbound Modes
+  dashboard: Gösterge Paneli
+  ruleMode: Kural Modu
+  globalMode: Küresel Mod
+  directMode: Doğrudan Mod
+  outboundModes: Giden Modlar
   rule: Kural
   direct: Doğrudan
   global: Küresel
-  profiles: Profiles
-  proxies: Proxies
-  systemProxy: System Proxy
-  tunMode: TUN Mode
-  closeAllConnections: Close All Connections
-  lightweightMode: Lightweight Mode
-  copyEnv: Copy Environment Variables
-  confDir: Configuration Directory
-  coreDir: Core Directory
-  logsDir: Log Directory
-  openDir: Open Directory
-  appLog: Application Log
-  coreLog: Core Log
-  restartClash: Restart Clash Core
-  restartApp: Restart Application
-  vergeVersion: Verge Version
-  more: More
-  exit: Exit
+  profiles: Profiller
+  proxies: Vekil'ler
+  systemProxy: Sistem Vekil'i
+  tunMode: TUN Modu
+  closeAllConnections: Tüm Bağlantıları Kapat
+  lightweightMode: Hafif Mod
+  copyEnv: Ortam Değişkenlerini Kopyala
+  confDir: Yapılandırma Dizini
+  coreDir: Çekirdek Dizini
+  logsDir: Günlük Dizini
+  openDir: Dizini Aç
+  appLog: Uygulama Günlüğü
+  coreLog: Çekirdek Günlüğü
+  restartClash: Clash Çekirdeğini Yeniden Başlat
+  restartApp: Uygulamayı Yeniden Başlat
+  vergeVersion: Verge Sürümü
+  more: Daha Fazla
+  exit: Çıkış
   tooltip:
-    systemProxy: System Proxy
+    systemProxy: Sistem Vekil'i
     tun: TUN
-    profile: Profile
+    profile: Profil

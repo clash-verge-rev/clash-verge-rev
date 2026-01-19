@@ -1,60 +1,60 @@
 _version: 1
 notifications:
   dashboardToggled:
-    title: Dashboard
-    body: Dashboard visibility has been updated.
+    title: Dasbor
+    body: Visibilitas dasbor telah diperbarui.
   clashModeChanged:
-    title: Mode Switch
-    body: Switched to {mode}.
+    title: Peralihan Mode
+    body: Beralih ke {mode}.
   systemProxyToggled:
-    title: System Proxy
-    body: System proxy status has been updated.
+    title: Proksi Sistem
+    body: Status proksi sistem telah diperbarui.
   tunModeToggled:
-    title: TUN Mode
-    body: TUN mode status has been updated.
+    title: Mode TUN
+    body: Status mode TUN telah diperbarui.
   lightweightModeEntered:
-    title: Lightweight Mode
-    body: Entered lightweight mode.
+    title: Mode Ringan
+    body: Masuk ke mode ringan.
   profilesReactivated:
-    title: Profiles
-    body: Profile Reactivated.
+    title: Profil
+    body: Profil diaktifkan kembali.
   appQuit:
-    title: About to Exit
-    body: Clash Verge is about to exit.
+    title: Akan Keluar
+    body: Clash Verge akan keluar.
   appHidden:
-    title: Application Hidden
-    body: Clash Verge is running in the background.
+    title: Aplikasi Disembunyikan
+    body: Clash Verge berjalan di latar belakang.
 service:
-  adminInstallPrompt: Installing the Clash Verge service requires administrator privileges.
-  adminUninstallPrompt: Uninstalling the Clash Verge service requires administrator privileges.
+  adminInstallPrompt: Menginstal layanan Clash Verge memerlukan hak administrator.
+  adminUninstallPrompt: Menghapus instalasi layanan Clash Verge memerlukan hak administrator.
 tray:
-  dashboard: Dashboard
-  ruleMode: Rule Mode
-  globalMode: Global Mode
-  directMode: Direct Mode
-  outboundModes: Outbound Modes
+  dashboard: Dasbor
+  ruleMode: Mode Aturan
+  globalMode: Mode Global
+  directMode: Mode Langsung
+  outboundModes: Mode Keluar
   rule: Aturan
   direct: Langsung
   global: Global
-  profiles: Profiles
-  proxies: Proxies
-  systemProxy: System Proxy
-  tunMode: TUN Mode
-  closeAllConnections: Close All Connections
-  lightweightMode: Lightweight Mode
-  copyEnv: Copy Environment Variables
-  confDir: Configuration Directory
-  coreDir: Core Directory
-  logsDir: Log Directory
-  openDir: Open Directory
-  appLog: Application Log
-  coreLog: Core Log
-  restartClash: Restart Clash Core
-  restartApp: Restart Application
-  vergeVersion: Verge Version
-  more: More
-  exit: Exit
+  profiles: Profil
+  proxies: Proksi
+  systemProxy: Proksi Sistem
+  tunMode: Mode TUN
+  closeAllConnections: Tutup Semua Koneksi
+  lightweightMode: Mode Ringan
+  copyEnv: Salin Variabel Lingkungan
+  confDir: Direktori Konfigurasi
+  coreDir: Direktori Core
+  logsDir: Direktori Log
+  openDir: Buka Direktori
+  appLog: Log Aplikasi
+  coreLog: Log Core
+  restartClash: Mulai Ulang Core Clash
+  restartApp: Mulai Ulang Aplikasi
+  vergeVersion: Versi Verge
+  more: Lainnya
+  exit: Keluar
   tooltip:
-    systemProxy: System Proxy
+    systemProxy: Proksi Sistem
     tun: TUN
-    profile: Profile
+    profile: Profil

@@ -1,60 +1,60 @@
 _version: 1
 notifications:
   dashboardToggled:
-    title: Dashboard
-    body: Dashboard visibility has been updated.
+    title: Panel
+    body: La visibilidad del panel se ha actualizado.
   clashModeChanged:
-    title: Mode Switch
-    body: Switched to {mode}.
+    title: Cambio de modo
+    body: Cambiado a {mode}.
   systemProxyToggled:
-    title: System Proxy
-    body: System proxy status has been updated.
+    title: Proxy del sistema
+    body: El estado del proxy del sistema se ha actualizado.
   tunModeToggled:
-    title: TUN Mode
-    body: TUN mode status has been updated.
+    title: Modo TUN
+    body: El estado del modo TUN se ha actualizado.
   lightweightModeEntered:
-    title: Lightweight Mode
-    body: Entered lightweight mode.
+    title: Modo ligero
+    body: Se ha entrado en el modo ligero.
   profilesReactivated:
-    title: Profiles
-    body: Profile Reactivated.
+    title: Perfiles
+    body: Perfil reactivado.
   appQuit:
-    title: About to Exit
-    body: Clash Verge is about to exit.
+    title: A punto de salir
+    body: Clash Verge está a punto de salir.
   appHidden:
-    title: Application Hidden
-    body: Clash Verge is running in the background.
+    title: Aplicación oculta
+    body: Clash Verge se está ejecutando en segundo plano.
 service:
-  adminInstallPrompt: Installing the Clash Verge service requires administrator privileges.
-  adminUninstallPrompt: Uninstalling the Clash Verge service requires administrator privileges.
+  adminInstallPrompt: Instalar el servicio de Clash Verge requiere privilegios de administrador.
+  adminUninstallPrompt: Desinstalar el servicio de Clash Verge requiere privilegios de administrador.
 tray:
-  dashboard: Dashboard
-  ruleMode: Rule Mode
-  globalMode: Global Mode
-  directMode: Direct Mode
-  outboundModes: Outbound Modes
+  dashboard: Panel
+  ruleMode: Modo de reglas
+  globalMode: Modo global
+  directMode: Modo directo
+  outboundModes: Modos de salida
   rule: Regla
   direct: Directo
   global: Global
-  profiles: Profiles
+  profiles: Perfiles
   proxies: Proxies
-  systemProxy: System Proxy
-  tunMode: TUN Mode
-  closeAllConnections: Close All Connections
-  lightweightMode: Lightweight Mode
-  copyEnv: Copy Environment Variables
-  confDir: Configuration Directory
-  coreDir: Core Directory
-  logsDir: Log Directory
-  openDir: Open Directory
-  appLog: Application Log
-  coreLog: Core Log
-  restartClash: Restart Clash Core
-  restartApp: Restart Application
-  vergeVersion: Verge Version
-  more: More
-  exit: Exit
+  systemProxy: Proxy del sistema
+  tunMode: Modo TUN
+  closeAllConnections: Cerrar todas las conexiones
+  lightweightMode: Modo ligero
+  copyEnv: Copiar variables de entorno
+  confDir: Directorio de configuración
+  coreDir: Directorio del núcleo
+  logsDir: Directorio de registros
+  openDir: Abrir directorio
+  appLog: Registro de la aplicación
+  coreLog: Registro del núcleo
+  restartClash: Reiniciar el núcleo de Clash
+  restartApp: Reiniciar aplicación
+  vergeVersion: Versión de Verge
+  more: Más
+  exit: Salir
   tooltip:
-    systemProxy: System Proxy
+    systemProxy: Proxy del sistema
     tun: TUN
-    profile: Profile
+    profile: Perfil

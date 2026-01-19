@@ -1,60 +1,60 @@
 _version: 1
 notifications:
   dashboardToggled:
-    title: Dashboard
-    body: Dashboard visibility has been updated.
+    title: ダッシュボード
+    body: ダッシュボードの表示状態が更新されました。
   clashModeChanged:
-    title: Mode Switch
-    body: Switched to {mode}.
+    title: モード切り替え
+    body: "{mode} に切り替えました。"
   systemProxyToggled:
-    title: System Proxy
-    body: System proxy status has been updated.
+    title: システムプロキシ
+    body: システムプロキシの状態が更新されました。
   tunModeToggled:
-    title: TUN Mode
-    body: TUN mode status has been updated.
+    title: TUN モード
+    body: TUN モードの状態が更新されました。
   lightweightModeEntered:
-    title: Lightweight Mode
-    body: Entered lightweight mode.
+    title: 軽量モード
+    body: 軽量モードに入りました。
   profilesReactivated:
-    title: Profiles
-    body: Profile Reactivated.
+    title: プロファイル
+    body: プロファイルが再有効化されました。
   appQuit:
-    title: About to Exit
-    body: Clash Verge is about to exit.
+    title: 終了間近
+    body: Clash Verge はまもなく終了します。
   appHidden:
-    title: Application Hidden
-    body: Clash Verge is running in the background.
+    title: アプリが非表示
+    body: Clash Verge はバックグラウンドで実行中です。
 service:
-  adminInstallPrompt: Installing the Clash Verge service requires administrator privileges.
-  adminUninstallPrompt: Uninstalling the Clash Verge service requires administrator privileges.
+  adminInstallPrompt: Clash Verge サービスのインストールには管理者権限が必要です。
+  adminUninstallPrompt: Clash Verge サービスのアンインストールには管理者権限が必要です。
 tray:
-  dashboard: Dashboard
-  ruleMode: Rule Mode
-  globalMode: Global Mode
-  directMode: Direct Mode
-  outboundModes: Outbound Modes
+  dashboard: ダッシュボード
+  ruleMode: ルールモード
+  globalMode: グローバルモード
+  directMode: ダイレクトモード
+  outboundModes: アウトバウンドモード
   rule: ルール
   direct: ダイレクト
   global: グローバル
-  profiles: Profiles
-  proxies: Proxies
-  systemProxy: System Proxy
-  tunMode: TUN Mode
-  closeAllConnections: Close All Connections
-  lightweightMode: Lightweight Mode
-  copyEnv: Copy Environment Variables
-  confDir: Configuration Directory
-  coreDir: Core Directory
-  logsDir: Log Directory
-  openDir: Open Directory
-  appLog: Application Log
-  coreLog: Core Log
-  restartClash: Restart Clash Core
-  restartApp: Restart Application
-  vergeVersion: Verge Version
-  more: More
-  exit: Exit
+  profiles: プロファイル
+  proxies: プロキシ
+  systemProxy: システムプロキシ
+  tunMode: TUN モード
+  closeAllConnections: すべての接続を閉じる
+  lightweightMode: 軽量モード
+  copyEnv: 環境変数をコピー
+  confDir: 設定ディレクトリ
+  coreDir: コアディレクトリ
+  logsDir: ログディレクトリ
+  openDir: ディレクトリを開く
+  appLog: アプリケーションログ
+  coreLog: コアログ
+  restartClash: Clash コアを再起動
+  restartApp: アプリケーションを再起動
+  vergeVersion: Verge バージョン
+  more: その他
+  exit: 終了
   tooltip:
-    systemProxy: System Proxy
+    systemProxy: システムプロキシ
     tun: TUN
-    profile: Profile
+    profile: プロファイル

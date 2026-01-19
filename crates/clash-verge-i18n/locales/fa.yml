@@ -1,60 +1,60 @@
 _version: 1
 notifications:
   dashboardToggled:
-    title: Dashboard
-    body: Dashboard visibility has been updated.
+    title: داشبورد
+    body: وضعیت نمایش داشبورد به‌روزرسانی شد.
   clashModeChanged:
-    title: Mode Switch
-    body: Switched to {mode}.
+    title: تغییر حالت
+    body: به {mode} تغییر کرد.
   systemProxyToggled:
-    title: System Proxy
-    body: System proxy status has been updated.
+    title: پروکسی سیستم
+    body: وضعیت پروکسی سیستم به‌روزرسانی شد.
   tunModeToggled:
-    title: TUN Mode
-    body: TUN mode status has been updated.
+    title: حالت TUN
+    body: وضعیت حالت TUN به‌روزرسانی شد.
   lightweightModeEntered:
-    title: Lightweight Mode
-    body: Entered lightweight mode.
+    title: حالت سبک
+    body: به حالت سبک وارد شد.
   profilesReactivated:
-    title: Profiles
-    body: Profile Reactivated.
+    title: پروفایل‌ها
+    body: پروفایل دوباره فعال شد.
   appQuit:
-    title: About to Exit
-    body: Clash Verge is about to exit.
+    title: در آستانه خروج
+    body: Clash Verge در آستانه خروج است.
   appHidden:
-    title: Application Hidden
-    body: Clash Verge is running in the background.
+    title: برنامه پنهان شد
+    body: Clash Verge در پس‌زمینه در حال اجراست.
 service:
-  adminInstallPrompt: Installing the Clash Verge service requires administrator privileges.
-  adminUninstallPrompt: Uninstalling the Clash Verge service requires administrator privileges.
+  adminInstallPrompt: نصب سرویس Clash Verge به دسترسی مدیر نیاز دارد.
+  adminUninstallPrompt: حذف سرویس Clash Verge به دسترسی مدیر نیاز دارد.
 tray:
-  dashboard: Dashboard
-  ruleMode: Rule Mode
-  globalMode: Global Mode
-  directMode: Direct Mode
-  outboundModes: Outbound Modes
-  rule: Rule
-  direct: Direct
-  global: Global
-  profiles: Profiles
-  proxies: Proxies
-  systemProxy: System Proxy
-  tunMode: TUN Mode
-  closeAllConnections: Close All Connections
-  lightweightMode: Lightweight Mode
-  copyEnv: Copy Environment Variables
-  confDir: Configuration Directory
-  coreDir: Core Directory
-  logsDir: Log Directory
-  openDir: Open Directory
-  appLog: Application Log
-  coreLog: Core Log
-  restartClash: Restart Clash Core
-  restartApp: Restart Application
-  vergeVersion: Verge Version
-  more: More
-  exit: Exit
+  dashboard: داشبورد
+  ruleMode: حالت قوانین
+  globalMode: حالت سراسری
+  directMode: حالت مستقیم
+  outboundModes: حالت‌های خروجی
+  rule: قانون
+  direct: مستقیم
+  global: سراسری
+  profiles: پروفایل‌ها
+  proxies: پروکسی‌ها
+  systemProxy: پروکسی سیستم
+  tunMode: حالت TUN
+  closeAllConnections: بستن همه اتصال‌ها
+  lightweightMode: حالت سبک
+  copyEnv: کپی متغیرهای محیطی
+  confDir: پوشه پیکربندی
+  coreDir: پوشه هسته
+  logsDir: پوشه گزارش‌ها
+  openDir: باز کردن پوشه
+  appLog: گزارش برنامه
+  coreLog: گزارش هسته
+  restartClash: راه‌اندازی مجدد هسته Clash
+  restartApp: راه‌اندازی مجدد برنامه
+  vergeVersion: نسخه Verge
+  more: بیشتر
+  exit: خروج
   tooltip:
-    systemProxy: System Proxy
+    systemProxy: پروکسی سیستم
     tun: TUN
-    profile: Profile
+    profile: پروفایل
