@@ -14,7 +14,6 @@ use std::{
     sync::Arc,
     time::Duration,
 };
-use tauri_plugin_http::reqwest as tauri_reqwest;
 use tokio::{fs, time::timeout};
 use zip::write::SimpleFileOptions;
 
@@ -111,12 +110,12 @@ impl WebDavClient {
         // 创建新的客户端
         let client = reqwest_dav::ClientBuilder::new()
             .set_agent(
-                tauri_reqwest::Client::builder()
+                reqwest::Client::builder()
                     .use_rustls_tls()
                     .danger_accept_invalid_certs(true)
                     .timeout(Duration::from_secs(op.timeout()))
                     .user_agent(format!("clash-verge/{APP_VERSION} ({OS} WebDAV-Client)"))
-                    .redirect(tauri_reqwest::redirect::Policy::custom(|attempt| {
+                    .redirect(reqwest::redirect::Policy::custom(|attempt| {
                         // 允许所有请求类型的重定向，包括PUT
                         if attempt.previous().len() >= 5 {
                             attempt.error("重定向次数过多")
