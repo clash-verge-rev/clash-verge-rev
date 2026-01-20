@@ -14,12 +14,17 @@ import { useCallback, useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { BaseDialog, DialogRef } from "@/components/base";
+import { useVerge } from "@/hooks/use-verge";
 import {
   createLocalBackup,
   createWebdavBackup,
   importLocalBackup,
 } from "@/services/cmds";
 import { showNotice } from "@/services/notice-service";
+import {
+  buildWebdavSignature,
+  setWebdavStatus,
+} from "@/services/webdav-status";
 
 import { AutoBackupSettings } from "./auto-backup-settings";
 import { BackupHistoryViewer } from "./backup-history-viewer";
@@ -29,6 +34,7 @@ type BackupSource = "local" | "webdav";
 
 export function BackupViewer({ ref }: { ref?: Ref<DialogRef> }) {
   const { t } = useTranslation();
+  const { verge } = useVerge();
   const [open, setOpen] = useState(false);
   const [busyAction, setBusyAction] = useState<BackupSource | null>(null);
   const [localImporting, setLocalImporting] = useState(false);
@@ -36,6 +42,7 @@ export function BackupViewer({ ref }: { ref?: Ref<DialogRef> }) {
   const [historySource, setHistorySource] = useState<BackupSource>("local");
   const [historyPage, setHistoryPage] = useState(0);
   const [webdavDialogOpen, setWebdavDialogOpen] = useState(false);
+  const webdavSignature = buildWebdavSignature(verge);
 
   useImperativeHandle(ref, () => ({
     open: () => setOpen(true),
@@ -59,6 +66,7 @@ export function BackupViewer({ ref }: { ref?: Ref<DialogRef> }) {
       } else {
         await createWebdavBackup();
         showNotice.success("settings.modals.backup.messages.backupCreated");
+        setWebdavStatus(webdavSignature, "ready");
       }
     } catch (error) {
       console.error(error);
@@ -68,6 +76,9 @@ export function BackupViewer({ ref }: { ref?: Ref<DialogRef> }) {
           : "settings.modals.backup.messages.backupFailed",
         target === "local" ? undefined : { error },
       );
+      if (target === "webdav") {
+        setWebdavStatus(webdavSignature, "failed");
+      }
     } finally {
       setBusyAction(null);
     }

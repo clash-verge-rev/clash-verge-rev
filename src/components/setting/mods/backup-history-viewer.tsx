@@ -36,6 +36,11 @@ import {
   restoreWebDavBackup,
 } from "@/services/cmds";
 import { showNotice } from "@/services/notice-service";
+import {
+  buildWebdavSignature,
+  getWebdavStatus,
+  setWebdavStatus,
+} from "@/services/webdav-status";
 
 dayjs.extend(customParseFormat);
 dayjs.extend(relativeTime);
@@ -85,6 +90,8 @@ export const BackupHistoryViewer = ({
   const isWebDavConfigured = Boolean(
     verge?.webdav_url && verge?.webdav_username && verge?.webdav_password,
   );
+  const webdavSignature = buildWebdavSignature(verge);
+  const webdavStatus = getWebdavStatus(webdavSignature);
   const shouldSkipWebDav = !isLocal && !isWebDavConfigured;
   const pageSize = 8;
   const isBusy = loading || isRestoring || isRestarting;
@@ -128,33 +135,49 @@ export const BackupHistoryViewer = ({
     [t],
   );
 
-  const fetchRows = useCallback(async () => {
-    if (!open) return;
-    if (shouldSkipWebDav) {
-      setRows([]);
-      return;
-    }
-    setLoading(true);
-    try {
-      const list = isLocal ? await listLocalBackup() : await listWebDavBackup();
-      setRows(
-        list
-          .map((item) => buildRow(item))
-          .filter((item): item is BackupRow => item !== null)
-          .sort((a, b) =>
-            a.sort_value === b.sort_value
-              ? b.filename.localeCompare(a.filename)
-              : b.sort_value - a.sort_value,
-          ),
-      );
-    } catch (error) {
-      console.error(error);
-      setRows([]);
-      showNotice.error(error);
-    } finally {
-      setLoading(false);
-    }
-  }, [buildRow, isLocal, open, shouldSkipWebDav]);
+  const fetchRows = useCallback(
+    async (options?: { force?: boolean }) => {
+      if (!open) return;
+      if (shouldSkipWebDav) {
+        setRows([]);
+        return;
+      }
+      if (!isLocal && webdavStatus === "failed" && !options?.force) {
+        setRows([]);
+        return;
+      }
+
+      setLoading(true);
+      try {
+        const list = isLocal
+          ? await listLocalBackup()
+          : await listWebDavBackup();
+        if (!isLocal) {
+          setWebdavStatus(webdavSignature, "ready");
+        }
+        setRows(
+          list
+            .map((item) => buildRow(item))
+            .filter((item): item is BackupRow => item !== null)
+            .sort((a, b) =>
+              a.sort_value === b.sort_value
+                ? b.filename.localeCompare(a.filename)
+                : b.sort_value - a.sort_value,
+            ),
+        );
+      } catch (error) {
+        if (!isLocal) {
+          setWebdavStatus(webdavSignature, "failed");
+        }
+        console.error(error);
+        setRows([]);
+        showNotice.error(error);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [buildRow, isLocal, open, shouldSkipWebDav, webdavSignature, webdavStatus],
+  );
 
   useEffect(() => {
     void fetchRows();
@@ -169,7 +192,7 @@ export const BackupHistoryViewer = ({
   );
 
   const summary = useMemo(() => {
-    if (shouldSkipWebDav) {
+    if (shouldSkipWebDav || (!isLocal && webdavStatus === "failed")) {
       return t("settings.modals.backup.manual.webdav");
     }
     if (!total) return t("settings.modals.backup.history.empty");
@@ -179,7 +202,7 @@ export const BackupHistoryViewer = ({
       count: total,
       recent,
     });
-  }, [rows, shouldSkipWebDav, t, total]);
+  }, [isLocal, rows, shouldSkipWebDav, t, total, webdavStatus]);
 
   const handleDelete = useLockFn(async (filename: string) => {
     if (isRestarting) return;
@@ -241,7 +264,7 @@ export const BackupHistoryViewer = ({
 
   const handleRefresh = () => {
     if (isRestarting) return;
-    void fetchRows();
+    void fetchRows({ force: true });
   };
 
   return (
