@@ -2,6 +2,8 @@ use serde_yaml_ng::{Mapping, Value};
 use smartstring::alias::String;
 use std::collections::{HashMap, HashSet};
 
+use crate::enhance::field::use_keys;
+
 const PATCH_CONFIG_INNER: [&str; 4] = ["allow-lan", "ipv6", "log-level", "unified-delay"];
 
 #[derive(Default, Clone)]
@@ -135,14 +137,4 @@ impl IRuntime {
             }
         }
     }
-}
-
-// TODO 完整迁移 enhance 行为后移除
-#[inline]
-fn use_keys<'a>(config: &'a Mapping) -> impl Iterator<Item = String> + 'a {
-    config.iter().filter_map(|(key, _)| key.as_str()).map(|s: &str| {
-        let mut s: String = s.into();
-        s.make_ascii_lowercase();
-        s
-    })
 }

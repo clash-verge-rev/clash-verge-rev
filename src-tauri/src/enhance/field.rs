@@ -61,14 +61,11 @@ pub fn use_sort(config: Mapping) -> Mapping {
     ret
 }
 
-pub fn use_keys(config: &Mapping) -> Vec<String> {
-    config
-        .iter()
-        .filter_map(|(key, _)| key.as_str())
-        .map(|s: &str| {
-            let mut s: String = s.into();
-            s.make_ascii_lowercase();
-            s
-        })
-        .collect()
+#[inline]
+pub fn use_keys<'a>(config: &'a Mapping) -> impl Iterator<Item = String> + 'a {
+    config.iter().filter_map(|(key, _)| key.as_str()).map(|s: &str| {
+        let mut s: String = s.into();
+        s.make_ascii_lowercase();
+        s
+    })
 }

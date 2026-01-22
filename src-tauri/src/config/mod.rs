@@ -4,6 +4,7 @@ mod config;
 mod encrypt;
 mod prfitem;
 pub mod profiles;
+pub mod runtime;
 mod verge;
 
 pub use self::{clash::*, config::*, encrypt::*, prfitem::*, profiles::*, verge::*};
