@@ -1,9 +1,7 @@
 name: Release Build
 
 on:
-  # ! 为了避免重复发布版本，应当通过独特 git tag 触发。
-  # ! 不再使用 workflow_dispatch 触发。
-  # workflow_dispatch:
+  workflow_dispatch:
   push:
     # -rc tag 时预览发布, 跳过 telegram 通知、跳过 winget 提交、跳过 latest.json 文件更新
     tags:
@@ -30,6 +28,17 @@ jobs:
 
       - name: Check if tag is from main branch
         run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            if [[ "${{ github.ref }}" != "refs/tags/"* ]]; then
+              echo "❌ Error: Manual trigger must be run on a tag (use the 'Use workflow from' dropdown)."
+              exit 1
+            fi
+            if [[ "${GITHUB_REF##*/}" != *"-rc"* ]]; then
+              echo "❌ Error: Manual trigger is only allowed for -rc tags."
+              exit 1
+            fi
+          fi
+
           TAG_REF="${GITHUB_REF##*/}"
           echo "Checking if tag $TAG_REF is from main branch..."
 
