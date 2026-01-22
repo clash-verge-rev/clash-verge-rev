@@ -73,17 +73,17 @@
   "components": {
     "enums": {
       "strategies": {
-        "select": "Выбор прокси вручную",
-        "url-test": "Выбор прокси на основе задержки теста URL",
-        "fallback": "Переключение на другой прокси при ошибке",
-        "load-balance": "Распределение прокси на основе балансировки нагрузки",
-        "relay": "Передача через определенную цепочку прокси"
+        "select": "select",
+        "url-test": "url-test",
+        "fallback": "fallback",
+        "load-balance": "load-balance",
+        "relay": "relay"
       },
       "policies": {
-        "DIRECT": "Данные направляются напрямую наружу",
-        "REJECT": "Перехватывает запросы",
-        "REJECT-DROP": "Отклоняет запросы",
-        "PASS": "Пропускает это правило при совпадении"
+        "DIRECT": "DIRECT",
+        "REJECT": "REJECT",
+        "REJECT-DROP": "REJECT-DROP",
+        "PASS": "PASS"
       }
     }
   }
