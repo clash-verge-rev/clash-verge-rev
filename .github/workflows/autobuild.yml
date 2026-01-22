@@ -253,10 +253,12 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-24.04
+          # It should be ubuntu-22.04 to match the cross-compilation environment
+          # ortherwise it is hard to resolve the dependencies
+          - os: ubuntu-22.04
             target: aarch64-unknown-linux-gnu
             arch: arm64
-          - os: ubuntu-24.04
+          - os: ubuntu-22.04
             target: armv7-unknown-linux-gnueabihf
             arch: armhf
     runs-on: ${{ matrix.os }}
@@ -311,39 +313,35 @@ jobs:
       - name: Release ${{ env.TAG_CHANNEL }} Version
         run: pnpm release-version autobuild-latest
 
-      - name: Setup for linux
-        run: |
-          sudo dpkg --add-architecture ${{ matrix.arch }}
+      - name: "Setup for linux"
+        run: |-
+          sudo ls -lR /etc/apt/
 
-          sudo rm -f /etc/apt/sources.list.d/ubuntu.sources
-          sudo tee /etc/apt/sources.list << EOF
-          deb [arch=amd64,i386] http://archive.ubuntu.com/ubuntu noble main restricted universe multiverse
-          deb [arch=amd64,i386] http://archive.ubuntu.com/ubuntu noble-security main restricted universe multiverse
-          deb [arch=amd64,i386] http://archive.ubuntu.com/ubuntu noble-updates main restricted universe multiverse
-          deb [arch=amd64,i386] http://archive.ubuntu.com/ubuntu noble-backports main restricted universe multiverse
+          cat > /tmp/sources.list << EOF
+          deb [arch=amd64,i386] http://archive.ubuntu.com/ubuntu jammy main multiverse universe restricted
+          deb [arch=amd64,i386] http://archive.ubuntu.com/ubuntu jammy-security main multiverse universe restricted
+          deb [arch=amd64,i386] http://archive.ubuntu.com/ubuntu jammy-updates main multiverse universe restricted
+          deb [arch=amd64,i386] http://archive.ubuntu.com/ubuntu jammy-backports main multiverse universe restricted
 
-          deb [arch=${{ matrix.arch }}] http://ports.ubuntu.com/ubuntu-ports noble main restricted universe multiverse
-          deb [arch=${{ matrix.arch }}] http://ports.ubuntu.com/ubuntu-ports noble-security main restricted universe multiverse
-          deb [arch=${{ matrix.arch }}] http://ports.ubuntu.com/ubuntu-ports noble-updates main restricted universe multiverse
-          deb [arch=${{ matrix.arch }}] http://ports.ubuntu.com/ubuntu-ports noble-backports main restricted universe multiverse
+          deb [arch=armhf,arm64] http://ports.ubuntu.com/ubuntu-ports jammy main multiverse universe restricted
+          deb [arch=armhf,arm64] http://ports.ubuntu.com/ubuntu-ports jammy-security main multiverse universe restricted
+          deb [arch=armhf,arm64] http://ports.ubuntu.com/ubuntu-ports jammy-updates main multiverse universe restricted
+          deb [arch=armhf,arm64] http://ports.ubuntu.com/ubuntu-ports jammy-backports main multiverse universe restricted
           EOF
 
-          sudo apt-get update -y
+          sudo mv /etc/apt/sources.list /etc/apt/sources.list.default
+          sudo mv /tmp/sources.list /etc/apt/sources.list
 
-          sudo apt-get install -y libglib2.0-dev-bin
+          sudo dpkg --add-architecture ${{ matrix.arch }}
+          sudo apt update
 
-          sudo apt-get install -y \
-            linux-libc-dev:${{ matrix.arch }} \
-            libc6-dev:${{ matrix.arch }} \
-            libicu-dev:${{ matrix.arch }}
-
-          sudo apt-get install -y --no-install-recommends \
-            libxslt1-dev:${{ matrix.arch }} \
+          sudo apt install -y \
+            libxslt1.1:${{ matrix.arch }} \
             libwebkit2gtk-4.1-dev:${{ matrix.arch }} \
             libayatana-appindicator3-dev:${{ matrix.arch }} \
             libssl-dev:${{ matrix.arch }} \
-            librsvg2-dev:${{ matrix.arch }} \
-            patchelf
+            patchelf:${{ matrix.arch }} \
+            librsvg2-dev:${{ matrix.arch }}
 
       - name: Install aarch64 tools
         if: matrix.target == 'aarch64-unknown-linux-gnu'
