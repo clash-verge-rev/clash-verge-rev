@@ -5,7 +5,6 @@ members = [
   "crates/clash-verge-logging",
   "crates/clash-verge-signal",
   "crates/tauri-plugin-clash-verge-sysinfo",
-  "crates/clash-verge-types",
   "crates/clash-verge-i18n",
 ]
 resolver = "2"
@@ -44,7 +43,6 @@ strip = false
 clash-verge-draft = { path = "crates/clash-verge-draft" }
 clash-verge-logging = { path = "crates/clash-verge-logging" }
 clash-verge-signal = { path = "crates/clash-verge-signal" }
-clash-verge-types = { path = "crates/clash-verge-types" }
 clash-verge-i18n = { path = "crates/clash-verge-i18n" }
 tauri-plugin-clash-verge-sysinfo = { path = "crates/tauri-plugin-clash-verge-sysinfo" }
 

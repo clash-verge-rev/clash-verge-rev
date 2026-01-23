@@ -1124,7 +1124,6 @@ dependencies = [
  "clash-verge-i18n",
  "clash-verge-logging",
  "clash-verge-signal",
- "clash-verge-types",
  "clash_verge_logger",
  "clash_verge_service_ipc",
  "compact_str",
@@ -1217,15 +1216,6 @@ dependencies = [
  "clash-verge-logging",
  "log",
  "tokio",
-]
-
-[[package]]
-name = "clash-verge-types"
-version = "0.1.0"
-dependencies = [
- "serde",
- "serde_yaml_ng",
- "smartstring",
 ]
 
 [[package]]
