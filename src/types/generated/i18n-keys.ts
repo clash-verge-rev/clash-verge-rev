@@ -535,6 +535,7 @@ export const translationKeys = [
   "settings.modals.misc.fields.proxyLayoutColumns",
   "settings.modals.misc.fields.autoLogClean",
   "settings.modals.misc.fields.autoDelayDetection",
+  "settings.modals.misc.fields.autoDelayDetectionInterval",
   "settings.modals.misc.fields.defaultLatencyTest",
   "settings.modals.misc.fields.defaultLatencyTimeout",
   "settings.modals.misc.tooltips.autoCloseConnections",

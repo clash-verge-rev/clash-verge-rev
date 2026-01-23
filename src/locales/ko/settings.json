@@ -377,6 +377,7 @@
         "proxyLayoutColumns": "프록시 레이아웃 열 수",
         "autoLogClean": "로그 자동 정리",
         "autoDelayDetection": "자동 지연 감지",
+        "autoDelayDetectionInterval": "자동 지연 감지 간격",
         "defaultLatencyTest": "기본 지연 테스트",
         "defaultLatencyTimeout": "기본 지연 제한시간"
       },
