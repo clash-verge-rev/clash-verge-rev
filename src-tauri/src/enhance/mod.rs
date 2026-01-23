@@ -310,7 +310,7 @@ fn process_global_items(
     profile_name: &String,
 ) -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
     let mut result_map = HashMap::new();
-    let mut exists_keys = use_keys(&config);
+    let mut exists_keys = use_keys(&config).collect::<Vec<_>>();
 
     if let ChainType::Merge(merge) = global_merge.data {
         exists_keys.extend(use_keys(&merge));

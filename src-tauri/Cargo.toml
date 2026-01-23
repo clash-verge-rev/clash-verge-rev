@@ -34,7 +34,6 @@ tauri-build = { version = "2.5.3", features = [] }
 clash-verge-draft = { workspace = true }
 clash-verge-logging = { workspace = true }
 clash-verge-signal = { workspace = true }
-clash-verge-types = { workspace = true }
 clash-verge-i18n = { workspace = true }
 tauri-plugin-clash-verge-sysinfo = { workspace = true }
 tauri-plugin-clipboard-manager = { workspace = true }
