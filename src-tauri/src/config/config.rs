@@ -1,6 +1,6 @@
 use super::{IClashTemp, IProfiles, IVerge};
 use crate::{
-    config::{PrfItem, profiles_append_item_safe},
+    config::{PrfItem, profiles_append_item_safe, runtime::IRuntime},
     constants::{files, timing},
     core::{
         CoreManager,
@@ -16,7 +16,6 @@ use anyhow::{Result, anyhow};
 use backoff::{Error as BackoffError, ExponentialBackoff};
 use clash_verge_draft::Draft;
 use clash_verge_logging::{Type, logging, logging_error};
-use clash_verge_types::runtime::IRuntime;
 use serde_yaml_ng::{Mapping, Value};
 use smartstring::alias::String;
 use smartstring::{LazyCompact, SmartString};

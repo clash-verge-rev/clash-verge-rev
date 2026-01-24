@@ -16,8 +16,8 @@ notifications:
     title: 경량 모드
     body: 경량 모드에 진입했습니다.
   profilesReactivated:
-    title: Profiles
-    body: Profile Reactivated.
+    title: 프로필
+    body: 프로필이 다시 활성화되었습니다.
   appQuit:
     title: 곧 종료
     body: Clash Verge가 곧 종료됩니다.
@@ -25,14 +25,14 @@ notifications:
     title: 앱이 숨겨짐
     body: Clash Verge가 백그라운드에서 실행 중입니다.
 service:
-  adminInstallPrompt: Installing the Clash Verge service requires administrator privileges.
-  adminUninstallPrompt: Uninstalling the Clash Verge service requires administrator privileges.
+  adminInstallPrompt: Clash Verge 서비스 설치에는 관리자 권한이 필요합니다.
+  adminUninstallPrompt: Clash Verge 서비스 제거에는 관리자 권한이 필요합니다.
 tray:
   dashboard: 대시보드
   ruleMode: 규칙 모드
   globalMode: 전역 모드
   directMode: 직접 모드
-  outboundModes: Outbound Modes
+  outboundModes: 아웃바운드 모드
   rule: 규칙
   direct: 직접
   global: 글로벌

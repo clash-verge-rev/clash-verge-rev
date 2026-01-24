@@ -23,8 +23,8 @@ import {
 } from "@mui/material";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Outlet, useNavigate } from "react-router";
 import { SWRConfig } from "swr";
@@ -257,12 +257,24 @@ const Layout = () => {
     <SWRConfig
       value={{
         errorRetryCount: 3,
+        // TODO remove the 5000ms
         errorRetryInterval: 5000,
         onError: (error, key) => {
-          console.error(`[SWR Error] Key: ${key}, Error:`, error);
+          // FIXME the condition should not be handle gllobally
           if (key !== "getAutotemProxy") {
             console.error(`SWR Error for ${key}:`, error);
+            return;
           }
+
+          // FIXME we need a better way to handle the retry when first booting app
+          const silentKeys = [
+            "getVersion",
+            "getClashConfig",
+            "getAutotemProxy",
+          ];
+          if (silentKeys.includes(key)) return;
+
+          console.error(`[SWR Error] Key: ${key}, Error:`, error);
         },
         dedupingInterval: 2000,
       }}

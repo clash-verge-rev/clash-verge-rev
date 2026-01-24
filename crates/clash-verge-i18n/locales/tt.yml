@@ -1,60 +1,60 @@
 _version: 1
 notifications:
   dashboardToggled:
-    title: Dashboard
-    body: Dashboard visibility has been updated.
+    title: Идарә панеле
+    body: Идарә панеленең күренеше яңартылды.
   clashModeChanged:
-    title: Mode Switch
-    body: Switched to {mode}.
+    title: Режим алыштыру
+    body: "{mode} режимына күчтел."
   systemProxyToggled:
-    title: System Proxy
-    body: System proxy status has been updated.
+    title: Системалы прокси
+    body: Системалы прокси хәле яңартылды.
   tunModeToggled:
-    title: TUN Mode
-    body: TUN mode status has been updated.
+    title: TUN режимы
+    body: TUN режимы хәле яңартылды.
   lightweightModeEntered:
-    title: Lightweight Mode
-    body: Entered lightweight mode.
+    title: Җиңел режим
+    body: Җиңел режимга күчелде.
   profilesReactivated:
-    title: Profiles
-    body: Profile Reactivated.
+    title: Профильләр
+    body: Профиль яңадан активлаштырылды.
   appQuit:
-    title: About to Exit
-    body: Clash Verge is about to exit.
+    title: Чыгар алдыннан
+    body: Clash Verge чыгарга җыена.
   appHidden:
-    title: Application Hidden
-    body: Clash Verge is running in the background.
+    title: Кушымта яшерелде
+    body: Clash Verge фон режимында эшли.
 service:
-  adminInstallPrompt: Installing the Clash Verge service requires administrator privileges.
-  adminUninstallPrompt: Uninstalling the Clash Verge service requires administrator privileges.
+  adminInstallPrompt: Clash Verge хезмәтен урнаштыру өчен администратор хокуклары кирәк.
+  adminUninstallPrompt: Clash Verge хезмәтен бетерү өчен администратор хокуклары кирәк.
 tray:
-  dashboard: Dashboard
-  ruleMode: Rule Mode
-  globalMode: Global Mode
-  directMode: Direct Mode
-  outboundModes: Outbound Modes
-  rule: Rule
-  direct: Direct
-  global: Global
-  profiles: Profiles
-  proxies: Proxies
-  systemProxy: System Proxy
-  tunMode: TUN Mode
-  closeAllConnections: Close All Connections
-  lightweightMode: Lightweight Mode
-  copyEnv: Copy Environment Variables
-  confDir: Configuration Directory
-  coreDir: Core Directory
-  logsDir: Log Directory
-  openDir: Open Directory
-  appLog: Application Log
-  coreLog: Core Log
-  restartClash: Restart Clash Core
-  restartApp: Restart Application
-  vergeVersion: Verge Version
-  more: More
-  exit: Exit
+  dashboard: Идарә панеле
+  ruleMode: Кагыйдә режимы
+  globalMode: Глобаль режим
+  directMode: Турыдан-туры режим
+  outboundModes: Чыгыш режимнары
+  rule: Кагыйдә
+  direct: Турыдан-туры
+  global: Глобаль
+  profiles: Профильләр
+  proxies: Проксилар
+  systemProxy: Системалы прокси
+  tunMode: TUN режимы
+  closeAllConnections: Барлык тоташуларны ябу
+  lightweightMode: Җиңел режим
+  copyEnv: Мохит үзгәрүчәннәрен күчерү
+  confDir: Конфигурация каталогы
+  coreDir: Ядро каталогы
+  logsDir: Журнал каталогы
+  openDir: Каталогны ачу
+  appLog: Кушымта журналы
+  coreLog: Ядро журналы
+  restartClash: Clash ядрәсен кабат җибәрү
+  restartApp: Кушымтаны кабат җибәрү
+  vergeVersion: Verge версиясе
+  more: Күбрәк
+  exit: Чыгу
   tooltip:
-    systemProxy: System Proxy
+    systemProxy: Системалы прокси
     tun: TUN
-    profile: Profile
+    profile: Профиль

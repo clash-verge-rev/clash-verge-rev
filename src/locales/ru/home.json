@@ -121,14 +121,14 @@
         "communication": "Core communication error"
       },
       "labels": {
-        "rule": "Режим правил",
-        "global": "Глобальный режим",
-        "direct": "Прямой режим"
+        "rule": "Rule",
+        "global": "Global",
+        "direct": "Direct"
       },
       "descriptions": {
-        "rule": "Automatically choose proxies according to the rule set.",
-        "global": "Forward all network requests through the selected proxy.",
-        "direct": "Bypass the proxy and connect to the internet directly."
+        "rule": "Автоматически выбирать прокси в зависимости от правил",
+        "global": "Перенаправлять все сетевые запросы через выбранный прокси",
+        "direct": "Подключение к интернету без прокси"
       }
     }
   }
