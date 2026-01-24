@@ -32,7 +32,11 @@ export const AppDataProvider = ({
     calcuProxies,
     {
       ...SWR_REALTIME,
-      onError: (err) => console.warn("[DataProvider] Proxy fetch failed:", err),
+      onError: (_) => {
+        // FIXME when we intially start the app, and core is starting,
+        // there will be error thrown by getProxies API.
+        // We should handle this case properly later.
+      },
     },
   );
 
