@@ -3,13 +3,13 @@ import { Box, Button, ButtonGroup } from "@mui/material";
 import { useLockFn } from "ahooks";
 import { useCallback, useEffect, useMemo, useReducer, useState } from "react";
 import { useTranslation } from "react-i18next";
-import useSWR from "swr";
-import { closeAllConnections, getBaseConfig } from "tauri-plugin-mihomo-api";
+import { closeAllConnections } from "tauri-plugin-mihomo-api";
 
 import { BasePage } from "@/components/base";
 import { ProviderButton } from "@/components/proxy/provider-button";
 import { ProxyGroups } from "@/components/proxy/proxy-groups";
 import { useVerge } from "@/hooks/use-verge";
+import { useAppData } from "@/providers/app-data-context";
 import {
   getRuntimeProxyChainConfig,
   patchClashMode,
@@ -41,21 +41,11 @@ const ProxyPage = () => {
     null as string | null,
   );
 
+  const { clashConfig, refreshClashConfig } = useAppData();
+
   const updateChainConfigData = useCallback((value: string | null) => {
     dispatchChainConfigData(value);
   }, []);
-
-  const { data: clashConfig, mutate: mutateClash } = useSWR(
-    "getClashConfig",
-    getBaseConfig,
-    {
-      revalidateOnFocus: false,
-      revalidateIfStale: true,
-      dedupingInterval: 1000,
-      errorRetryInterval: 5000,
-    },
-  );
-
   const { verge } = useVerge();
 
   const modeList = useMemo(() => MODES, []);
@@ -69,7 +59,7 @@ const ProxyPage = () => {
       closeAllConnections();
     }
     await patchClashMode(mode);
-    mutateClash();
+    refreshClashConfig();
   });
 
   const onToggleChainMode = useLockFn(async () => {
