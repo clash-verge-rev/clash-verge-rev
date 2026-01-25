@@ -5,6 +5,10 @@ export { BaseFieldset } from "./base-fieldset";
 export { BaseLoading } from "./base-loading";
 export { BaseLoadingOverlay } from "./base-loading-overlay";
 export { BasePage } from "./base-page";
+export {
+  BaseSearchPanel,
+  type BaseSearchPanelField,
+} from "./base-search-panel";
 export { BaseSearchBox, type SearchState } from "./base-search-box";
 export {
   BaseSplitChipEditor,

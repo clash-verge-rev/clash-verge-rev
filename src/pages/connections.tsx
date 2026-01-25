@@ -1,28 +1,21 @@
 import {
   DeleteForeverRounded,
-  FilterListRounded,
   PauseCircleOutlineRounded,
   PlayCircleOutlineRounded,
   TableChartRounded,
   TableRowsRounded,
 } from "@mui/icons-material";
 import {
-  Autocomplete,
-  Badge,
   Box,
   Button,
   ButtonGroup,
   Fab,
   IconButton,
   MenuItem,
-  Popover,
-  Stack,
-  TextField,
-  Tooltip,
   Zoom,
 } from "@mui/material";
 import { useLockFn } from "ahooks";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Virtuoso } from "react-virtuoso";
 import { closeAllConnections, closeConnection } from "tauri-plugin-mihomo-api";
@@ -30,8 +23,9 @@ import { closeAllConnections, closeConnection } from "tauri-plugin-mihomo-api";
 import {
   BaseEmpty,
   BasePage,
-  BaseSearchBox,
+  BaseSearchPanel,
   BaseStyledSelect,
+  type BaseSearchPanelField,
   type SearchState,
 } from "@/components/base";
 import {
@@ -111,6 +105,8 @@ type ConnectionFilters = {
   destinationPort: string[];
 };
 
+type FilterField = keyof ConnectionFilters;
+
 const EMPTY_FILTERS: ConnectionFilters = {
   host: [],
   sourceIP: [],
@@ -118,6 +114,14 @@ const EMPTY_FILTERS: ConnectionFilters = {
   network: [],
   sourcePort: [],
   destinationPort: [],
+};
+
+const normalizeFilterValue = (field: FilterField, value: string) => {
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+  return field === "host" || field === "network"
+    ? trimmed.toLowerCase()
+    : trimmed;
 };
 
 const getUniqueValues = (values: Array<string | undefined>) => {
@@ -140,9 +144,10 @@ const ConnectionsPage = () => {
     "active",
   );
   const [filters, setFilters] = useState<ConnectionFilters>(EMPTY_FILTERS);
-  const [filterAnchorEl, setFilterAnchorEl] = useState<HTMLElement | null>(
-    null,
-  );
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [activeFilterField, setActiveFilterField] =
+    useState<FilterField>("sourceIP");
+  const [filterQuery, setFilterQuery] = useState("");
   const [paused, setPaused] = useState(false);
 
   const {
@@ -196,6 +201,36 @@ const ConnectionsPage = () => {
     };
   }, [baseConnections]);
 
+  const filterFields = useMemo<BaseSearchPanelField<FilterField>[]>(
+    () => [
+      {
+        key: "sourceIP" as const,
+        label: t("connections.components.fields.sourceIP"),
+      },
+      {
+        key: "destinationIP" as const,
+        label: t("connections.components.fields.destinationIP"),
+      },
+      {
+        key: "host" as const,
+        label: t("connections.components.fields.host"),
+      },
+      {
+        key: "network" as const,
+        label: t("connections.components.fields.network"),
+      },
+      {
+        key: "sourcePort" as const,
+        label: t("connections.components.fields.sourcePort"),
+      },
+      {
+        key: "destinationPort" as const,
+        label: t("connections.components.fields.destinationPort"),
+      },
+    ],
+    [t],
+  );
+
   const normalizedFilters = useMemo(
     () => ({
       host: new Set(
@@ -221,6 +256,35 @@ const ConnectionsPage = () => {
     }),
     [filters],
   );
+
+  useEffect(() => {
+    setFilterQuery("");
+  }, [activeFilterField]);
+
+  const activeFieldOptions = useMemo(() => {
+    const options = filterOptions[activeFilterField] ?? [];
+    const selected = filters[activeFilterField] ?? [];
+    const map = new Map<string, string>();
+    selected.forEach((value) => {
+      const normalized = normalizeFilterValue(activeFilterField, value);
+      if (!normalized) return;
+      map.set(normalized, value.trim());
+    });
+    options.forEach((value) => {
+      const normalized = normalizeFilterValue(activeFilterField, value);
+      if (!normalized || map.has(normalized)) return;
+      map.set(normalized, value);
+    });
+    return Array.from(map.values());
+  }, [activeFilterField, filterOptions, filters]);
+
+  const visibleFieldOptions = useMemo(() => {
+    const query = filterQuery.trim().toLowerCase();
+    if (!query) return activeFieldOptions;
+    return activeFieldOptions.filter((option) =>
+      option.toLowerCase().includes(query),
+    );
+  }, [activeFieldOptions, filterQuery]);
 
   const [filterConn] = useMemo(() => {
     const orderFunc = orderFunctionMap[curOrderOpt];
@@ -322,6 +386,43 @@ const ConnectionsPage = () => {
 
   const detailRef = useRef<ConnectionDetailRef>(null!);
 
+  const isValueSelected = useCallback(
+    (field: FilterField, value: string) =>
+      normalizedFilters[field].has(normalizeFilterValue(field, value)),
+    [normalizedFilters],
+  );
+
+  const toggleFilterValue = useCallback((field: FilterField, value: string) => {
+    const normalized = normalizeFilterValue(field, value);
+    if (!normalized) return;
+    const trimmed = value.trim();
+    setFilters((prev) => {
+      const current = prev[field] ?? [];
+      const next = current.filter(
+        (item) => normalizeFilterValue(field, item) !== normalized,
+      );
+      if (next.length === current.length) {
+        return { ...prev, [field]: [...current, trimmed] };
+      }
+      return { ...prev, [field]: next };
+    });
+  }, []);
+
+  const addFilterValue = useCallback((field: FilterField, value: string) => {
+    const normalized = normalizeFilterValue(field, value);
+    if (!normalized) return;
+    const trimmed = value.trim();
+    setFilters((prev) => {
+      const current = prev[field] ?? [];
+      if (
+        current.some((item) => normalizeFilterValue(field, item) === normalized)
+      ) {
+        return prev;
+      }
+      return { ...prev, [field]: [...current, trimmed] };
+    });
+  }, []);
+
   const handleSearch = useCallback(
     (matcher: (content: string) => boolean, state: SearchState) => {
       setMatch(() => matcher);
@@ -331,16 +432,6 @@ const ConnectionsPage = () => {
   );
 
   const hasTableData = filterConn.length > 0;
-
-  const handleFilterChange = useCallback(
-    (key: keyof ConnectionFilters) => (_: unknown, values: string[]) => {
-      const nextValues = Array.from(
-        new Set(values.map((value) => value.trim()).filter(Boolean)),
-      );
-      setFilters((prev) => ({ ...prev, [key]: nextValues }));
-    },
-    [],
-  );
 
   const handleClearFilters = useCallback(() => {
     setFilters({ ...EMPTY_FILTERS });
@@ -460,158 +551,39 @@ const ConnectionsPage = () => {
             ))}
           </BaseStyledSelect>
         )}
-        <Tooltip title={t("connections.components.actions.filter")}>
-          <Badge
-            color="primary"
-            variant="dot"
-            overlap="circular"
-            invisible={!hasActiveFilters}
-            sx={{ mr: 1 }}
-          >
-            <IconButton
-              size="small"
-              color="inherit"
-              onClick={(event) =>
-                setFilterAnchorEl((prev) => (prev ? null : event.currentTarget))
-              }
-              aria-label={t("connections.components.actions.filter")}
-            >
-              <FilterListRounded />
-            </IconButton>
-          </Badge>
-        </Tooltip>
-        <Popover
-          open={Boolean(filterAnchorEl)}
-          anchorEl={filterAnchorEl}
-          onClose={() => setFilterAnchorEl(null)}
-          anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
-          transformOrigin={{ vertical: "top", horizontal: "left" }}
-        >
-          <Box sx={{ p: 2, width: 360 }}>
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                mb: 1,
-              }}
-            >
-              <Box sx={{ fontWeight: 600, fontSize: 14 }}>
-                {t("connections.components.actions.filter")}
-              </Box>
-              <Button
-                size="small"
-                onClick={handleClearFilters}
-                disabled={!hasActiveFilters}
-              >
-                {t("connections.components.actions.clearFilters")}
-              </Button>
-            </Box>
-            <Stack spacing={1.5}>
-              <Autocomplete
-                multiple
-                freeSolo
-                size="small"
-                options={filterOptions.host}
-                value={filters.host}
-                onChange={handleFilterChange("host")}
-                filterSelectedOptions
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label={t("connections.components.fields.host")}
-                  />
-                )}
-              />
-              <Autocomplete
-                multiple
-                freeSolo
-                size="small"
-                options={filterOptions.sourceIP}
-                value={filters.sourceIP}
-                onChange={handleFilterChange("sourceIP")}
-                filterSelectedOptions
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label={t("connections.components.fields.sourceIP")}
-                  />
-                )}
-              />
-              <Autocomplete
-                multiple
-                freeSolo
-                size="small"
-                options={filterOptions.destinationIP}
-                value={filters.destinationIP}
-                onChange={handleFilterChange("destinationIP")}
-                filterSelectedOptions
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label={t("connections.components.fields.destinationIP")}
-                  />
-                )}
-              />
-              <Autocomplete
-                multiple
-                freeSolo
-                size="small"
-                options={filterOptions.network}
-                value={filters.network}
-                onChange={handleFilterChange("network")}
-                filterSelectedOptions
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label={t("connections.components.fields.network")}
-                  />
-                )}
-              />
-              <Autocomplete
-                multiple
-                freeSolo
-                size="small"
-                options={filterOptions.sourcePort}
-                value={filters.sourcePort}
-                onChange={handleFilterChange("sourcePort")}
-                filterSelectedOptions
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label={t("connections.components.fields.sourcePort")}
-                  />
-                )}
-              />
-              <Autocomplete
-                multiple
-                freeSolo
-                size="small"
-                options={filterOptions.destinationPort}
-                value={filters.destinationPort}
-                onChange={handleFilterChange("destinationPort")}
-                filterSelectedOptions
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    label={t("connections.components.fields.destinationPort")}
-                  />
-                )}
-              />
-            </Stack>
-          </Box>
-        </Popover>
-        <Box
-          sx={{
-            flex: 1,
-            display: "flex",
-            alignItems: "center",
-            "& > *": {
-              flex: 1,
-            },
-          }}
-        >
-          <BaseSearchBox onSearch={handleSearch} />
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <BaseSearchPanel
+            open={isFilterOpen}
+            onOpenChange={setIsFilterOpen}
+            onSearch={handleSearch}
+            filterLabel={t("connections.components.actions.filter")}
+            showIndicator={hasActiveFilters}
+            title={t("connections.components.actions.filter")}
+            fields={filterFields.map((field) => ({
+              ...field,
+              count: filters[field.key].length,
+            }))}
+            activeField={activeFilterField}
+            onActiveFieldChange={setActiveFilterField}
+            options={visibleFieldOptions}
+            isOptionSelected={(option) =>
+              isValueSelected(activeFilterField, option)
+            }
+            onToggleOption={(option) =>
+              toggleFilterValue(activeFilterField, option)
+            }
+            searchValue={filterQuery}
+            onSearchValueChange={setFilterQuery}
+            onSearchSubmit={(value) => {
+              addFilterValue(activeFilterField, value);
+              setFilterQuery("");
+            }}
+            searchPlaceholder={t("shared.placeholders.filter")}
+            emptyText={t("shared.statuses.empty")}
+            clearLabel={t("connections.components.actions.clearFilters")}
+            onClear={handleClearFilters}
+            clearDisabled={!hasActiveFilters}
+          />
         </Box>
       </Box>
 
