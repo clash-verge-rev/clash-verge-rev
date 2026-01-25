@@ -2,12 +2,21 @@
 
 ### 🐞 修复问题
 
+- 修复首次启动时代理信息刷新缓慢
+- 修复无网络时无限请求 IP 归属查询
+- 修复 WebDAV 页面重试逻辑
+
 <details>
 <summary><strong> ✨ 新增功能 </strong></summary>
+
+- 支持订阅设置自动延时监测间隔
 
 </details>
 
 <details>
 <summary><strong> 🚀 优化改进 </strong></summary>
+
+- 后端性能优化
+- 前端性能优化
 
 </details>
