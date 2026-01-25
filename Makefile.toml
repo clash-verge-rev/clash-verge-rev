@@ -4,37 +4,65 @@ skip_git_env_info = true
 skip_rust_env_info = true
 skip_crate_env_info = true
 
+# --- Backend ---
+
 [tasks.rust-format]
 install_crate = "rustfmt"
 command = "cargo"
 args = ["fmt", "--", "--emit=files"]
+[tasks.rust-format.condition]
+files_modified = { input = [
+  "./src-tauri/**/*.rs",
+  "./crates/**/*.rs",
+  "**/Cargo.toml",
+], output = [
+  "./target/**/clash-verge",
+] }
 
 [tasks.rust-clippy]
 description = "Run cargo clippy to lint the code"
 command = "cargo"
-args = ["clippy-all"]
+args = ["clippy", "--all-targets", "--all-features", "--", "-D", "warnings"]
+[tasks.rust-clippy.condition]
+files_modified = { input = [
+  "./src-tauri/**/*.rs",
+  "./crates/**/*.rs",
+  "**/Cargo.toml",
+], output = [
+  "./target/**/clash-verge",
+] }
+
+# --- Frontend ---
 
 [tasks.format-check]
 description = "Run format checks"
 command = "pnpm"
 args = ["format:check"]
+[tasks.format-check.condition]
+files_modified = { input = ["./src/**/*", "package.json", "pnpm-lock.yaml"] }
 
 [tasks.eslint]
 description = "Run ESLint to lint the code"
 command = "pnpm"
 args = ["lint"]
+[tasks.eslint.condition]
+files_modified = { input = ["./src/**/*", "package.json"] }
 
 [tasks.typecheck]
 description = "Run type checks"
 command = "pnpm"
 args = ["typecheck"]
+[tasks.typecheck.condition]
+files_modified = { input = ["./src/**/*", "tsconfig.json"] }
+
+# --- Hook ---
 
 [tasks.pre-push]
 description = "Pre-push checks"
 dependencies = [
-    "rust-format",
-    "rust-clippy",
-    "format-check",
-    "eslint",
-    "typecheck",
+  "rust-format",
+  "rust-clippy",
+  "format-check",
+  "eslint",
+  "typecheck",
 ]
