@@ -5,6 +5,11 @@
   "components": {
     "fields": {
       "host": "المضيف",
+      "sourceIP": "Source IP",
+      "destinationIP": "Destination IP",
+      "sourcePort": "Source Port",
+      "destinationPort": "ميناء الوجهة",
+      "network": "Protocol",
       "dlSpeed": "سرعة التنزيل",
       "ulSpeed": "سرعة الرفع",
       "chains": "السلاسل",
@@ -13,18 +18,23 @@
       "time": "الوقت",
       "source": "المصدر",
       "destination": "عنوان IP الوجهة",
-      "destinationPort": "ميناء الوجهة",
       "type": "النوع"
     },
     "order": {
       "default": "Default",
       "uploadSpeed": "سرعة الرفع",
-      "downloadSpeed": "سرعة التنزيل"
+      "downloadSpeed": "سرعة التنزيل",
+      "uploadTotal": "Upload Total",
+      "downloadTotal": "Download Total",
+      "duration": "Duration"
     },
     "actions": {
       "active": "Active",
       "closed": "Closed",
-      "closeConnection": "إغلاق الاتصال"
+      "closeConnection": "إغلاق الاتصال",
+      "filter": "Filter",
+      "clearFilters": "Clear Filters",
+      "closeFiltered": "Close Filtered"
     },
     "columnManager": {
       "title": "الأعمدة",

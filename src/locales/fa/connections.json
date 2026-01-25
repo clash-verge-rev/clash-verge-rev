@@ -5,6 +5,11 @@
   "components": {
     "fields": {
       "host": "میزبان",
+      "sourceIP": "Source IP",
+      "destinationIP": "Destination IP",
+      "sourcePort": "Source Port",
+      "destinationPort": "بندر هدف",
+      "network": "Protocol",
       "dlSpeed": "سرعت دانلود",
       "ulSpeed": "سرعت بارگذاری",
       "chains": "زنجیره‌ها",
@@ -13,18 +18,23 @@
       "time": "زمان",
       "source": "منبع",
       "destination": "آدرس IP مقصد",
-      "destinationPort": "بندر هدف",
       "type": "نوع"
     },
     "order": {
       "default": "Default",
       "uploadSpeed": "سرعت بارگذاری",
-      "downloadSpeed": "سرعت دانلود"
+      "downloadSpeed": "سرعت دانلود",
+      "uploadTotal": "Upload Total",
+      "downloadTotal": "Download Total",
+      "duration": "Duration"
     },
     "actions": {
       "active": "Active",
       "closed": "Closed",
-      "closeConnection": "بستن اتصال"
+      "closeConnection": "بستن اتصال",
+      "filter": "Filter",
+      "clearFilters": "Clear Filters",
+      "closeFiltered": "Close Filtered"
     },
     "columnManager": {
       "title": "ستون‌ها",

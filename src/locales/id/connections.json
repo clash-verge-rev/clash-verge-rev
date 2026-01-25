@@ -5,6 +5,11 @@
   "components": {
     "fields": {
       "host": "Host",
+      "sourceIP": "Source IP",
+      "destinationIP": "Destination IP",
+      "sourcePort": "Source Port",
+      "destinationPort": "Port Tujuan",
+      "network": "Protocol",
       "dlSpeed": "Kecepatan Unduh",
       "ulSpeed": "Kecepatan Unggah",
       "chains": "Rantai",
@@ -13,18 +18,23 @@
       "time": "Waktu",
       "source": "Sumber",
       "destination": "IP Tujuan",
-      "destinationPort": "Port Tujuan",
       "type": "Jenis"
     },
     "order": {
       "default": "Default",
       "uploadSpeed": "Kecepatan Unggah",
-      "downloadSpeed": "Kecepatan Unduh"
+      "downloadSpeed": "Kecepatan Unduh",
+      "uploadTotal": "Upload Total",
+      "downloadTotal": "Download Total",
+      "duration": "Duration"
     },
     "actions": {
       "active": "Active",
       "closed": "Closed",
-      "closeConnection": "Tutup Koneksi"
+      "closeConnection": "Tutup Koneksi",
+      "filter": "Filter",
+      "clearFilters": "Clear Filters",
+      "closeFiltered": "Close Filtered"
     },
     "columnManager": {
       "title": "Kolom",

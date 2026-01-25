@@ -5,6 +5,11 @@
   "components": {
     "fields": {
       "host": "Ana Bilgisayar",
+      "sourceIP": "Source IP",
+      "destinationIP": "Destination IP",
+      "sourcePort": "Source Port",
+      "destinationPort": "Hedef Port",
+      "network": "Protocol",
       "dlSpeed": "İndirme Hızı",
       "ulSpeed": "Yükleme Hızı",
       "chains": "Zincirler",
@@ -13,18 +18,23 @@
       "time": "Zaman",
       "source": "Kaynak",
       "destination": "Hedef",
-      "destinationPort": "Hedef Port",
       "type": "Tip"
     },
     "order": {
       "default": "Default",
       "uploadSpeed": "Yükleme Hızı",
-      "downloadSpeed": "İndirme Hızı"
+      "downloadSpeed": "İndirme Hızı",
+      "uploadTotal": "Upload Total",
+      "downloadTotal": "Download Total",
+      "duration": "Duration"
     },
     "actions": {
       "active": "Active",
       "closed": "Closed",
-      "closeConnection": "Bağlantıyı Kapat"
+      "closeConnection": "Bağlantıyı Kapat",
+      "filter": "Filter",
+      "clearFilters": "Clear Filters",
+      "closeFiltered": "Close Filtered"
     },
     "columnManager": {
       "title": "Sütunlar",

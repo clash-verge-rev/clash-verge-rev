@@ -5,6 +5,11 @@
   "components": {
     "fields": {
       "host": "호스트",
+      "sourceIP": "Source IP",
+      "destinationIP": "Destination IP",
+      "sourcePort": "Source Port",
+      "destinationPort": "목적지 포트",
+      "network": "Protocol",
       "dlSpeed": "다운로드 속도",
       "ulSpeed": "업로드 속도",
       "chains": "체인",
@@ -13,18 +18,23 @@
       "time": "시간",
       "source": "소스",
       "destination": "목적지",
-      "destinationPort": "목적지 포트",
       "type": "유형"
     },
     "order": {
       "default": "기본",
       "uploadSpeed": "업로드 속도",
-      "downloadSpeed": "다운로드 속도"
+      "downloadSpeed": "다운로드 속도",
+      "uploadTotal": "Upload Total",
+      "downloadTotal": "Download Total",
+      "duration": "Duration"
     },
     "actions": {
       "active": "Active",
       "closed": "Closed",
-      "closeConnection": "연결 닫기"
+      "closeConnection": "연결 닫기",
+      "filter": "Filter",
+      "clearFilters": "Clear Filters",
+      "closeFiltered": "Close Filtered"
     },
     "columnManager": {
       "title": "열",

@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { mutate } from "swr";
 import { MihomoWebSocket } from "tauri-plugin-mihomo-api";
 
@@ -74,7 +75,21 @@ const mergeConnectionSnapshot = (
   };
 };
 
-export const useConnectionData = () => {
+export const useConnectionData = (
+  options: {
+    paused?: boolean;
+  } = {},
+) => {
+  const { paused = false } = options;
+  const pausedRef = useRef(paused);
+  const resetSpeedRef = useRef(false);
+  useEffect(() => {
+    if (pausedRef.current && !paused) {
+      resetSpeedRef.current = true;
+    }
+    pausedRef.current = paused;
+  }, [paused]);
+
   const { response, refresh, subscriptionCacheKey } =
     useMihomoWsSubscription<ConnectionMonitorData>({
       storageKey: "mihomo_connection_date",
@@ -89,11 +104,20 @@ export const useConnectionData = () => {
             return;
           }
 
+          if (pausedRef.current) return;
+
           try {
             const parsed = JSON.parse(data) as IConnections;
-            next(null, (old = initConnData) =>
-              mergeConnectionSnapshot(parsed, old),
-            );
+            next(null, (old = initConnData) => {
+              if (resetSpeedRef.current) {
+                resetSpeedRef.current = false;
+                return mergeConnectionSnapshot(parsed, {
+                  ...old,
+                  activeConnections: [],
+                });
+              }
+              return mergeConnectionSnapshot(parsed, old);
+            });
           } catch (error) {
             next(error);
           }

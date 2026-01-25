@@ -5,6 +5,11 @@
   "components": {
     "fields": {
       "host": "主机",
+      "sourceIP": "源 IP",
+      "destinationIP": "目标 IP",
+      "sourcePort": "源端口",
+      "destinationPort": "目标端口",
+      "network": "协议",
       "dlSpeed": "下载速度",
       "ulSpeed": "上传速度",
       "chains": "链路",
@@ -13,18 +18,23 @@
       "time": "连接时间",
       "source": "源地址",
       "destination": "目标地址",
-      "destinationPort": "目标端口",
       "type": "类型"
     },
     "order": {
       "default": "默认",
       "uploadSpeed": "上传速度",
-      "downloadSpeed": "下载速度"
+      "downloadSpeed": "下载速度",
+      "uploadTotal": "上传总量",
+      "downloadTotal": "下载总量",
+      "duration": "连接时长"
     },
     "actions": {
       "active": "活跃",
       "closed": "已关闭",
-      "closeConnection": "关闭连接"
+      "closeConnection": "关闭连接",
+      "filter": "筛选",
+      "clearFilters": "清除筛选",
+      "closeFiltered": "关闭筛选连接"
     },
     "columnManager": {
       "title": "列设置",

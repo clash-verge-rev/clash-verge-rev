@@ -5,6 +5,11 @@
   "components": {
     "fields": {
       "host": "主機",
+      "sourceIP": "來源 IP",
+      "destinationIP": "目標 IP",
+      "sourcePort": "來源連接埠",
+      "destinationPort": "目標連接埠",
+      "network": "協定",
       "dlSpeed": "下載速度",
       "ulSpeed": "上傳速度",
       "chains": "鏈路",
@@ -13,18 +18,23 @@
       "time": "連線時間",
       "source": "來源位址",
       "destination": "目標位址",
-      "destinationPort": "目標連接埠",
       "type": "類型"
     },
     "order": {
       "default": "預設",
       "uploadSpeed": "上傳速度",
-      "downloadSpeed": "下載速度"
+      "downloadSpeed": "下載速度",
+      "uploadTotal": "上傳總量",
+      "downloadTotal": "下載總量",
+      "duration": "連線時長"
     },
     "actions": {
       "active": "活躍",
       "closed": "已關閉",
-      "closeConnection": "關閉連線"
+      "closeConnection": "關閉連線",
+      "filter": "篩選",
+      "clearFilters": "清除篩選",
+      "closeFiltered": "關閉篩選連線"
     },
     "columnManager": {
       "title": "欄位設定",

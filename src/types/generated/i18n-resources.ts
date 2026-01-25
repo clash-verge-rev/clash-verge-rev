@@ -7,8 +7,11 @@ export interface TranslationResources {
       components: {
         actions: {
           active: string;
+          clearFilters: string;
           closeConnection: string;
           closed: string;
+          closeFiltered: string;
+          filter: string;
         };
         columnManager: {
           dragHandle: string;
@@ -17,12 +20,16 @@ export interface TranslationResources {
         fields: {
           chains: string;
           destination: string;
+          destinationIP: string;
           destinationPort: string;
           dlSpeed: string;
           host: string;
+          network: string;
           process: string;
           rule: string;
           source: string;
+          sourceIP: string;
+          sourcePort: string;
           time: string;
           type: string;
           ulSpeed: string;
@@ -30,7 +37,10 @@ export interface TranslationResources {
         order: {
           default: string;
           downloadSpeed: string;
+          downloadTotal: string;
+          duration: string;
           uploadSpeed: string;
+          uploadTotal: string;
         };
       };
       page: {

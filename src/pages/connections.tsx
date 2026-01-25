@@ -1,28 +1,38 @@
 import {
   DeleteForeverRounded,
+  FilterListRounded,
+  PauseCircleOutlineRounded,
+  PlayCircleOutlineRounded,
   TableChartRounded,
   TableRowsRounded,
 } from "@mui/icons-material";
 import {
+  Autocomplete,
+  Badge,
   Box,
   Button,
   ButtonGroup,
   Fab,
   IconButton,
   MenuItem,
+  Popover,
+  Stack,
+  TextField,
+  Tooltip,
   Zoom,
 } from "@mui/material";
 import { useLockFn } from "ahooks";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Virtuoso } from "react-virtuoso";
-import { closeAllConnections } from "tauri-plugin-mihomo-api";
+import { closeAllConnections, closeConnection } from "tauri-plugin-mihomo-api";
 
 import {
   BaseEmpty,
   BasePage,
   BaseSearchBox,
   BaseStyledSelect,
+  type SearchState,
 } from "@/components/base";
 import {
   ConnectionDetail,
@@ -59,6 +69,27 @@ const ORDER_OPTIONS = [
     fn: (list: IConnectionsItem[]) =>
       list.sort((a, b) => b.curDownload! - a.curDownload!),
   },
+  {
+    id: "uploadTotal",
+    labelKey: "connections.components.order.uploadTotal",
+    fn: (list: IConnectionsItem[]) => list.sort((a, b) => b.upload - a.upload),
+  },
+  {
+    id: "downloadTotal",
+    labelKey: "connections.components.order.downloadTotal",
+    fn: (list: IConnectionsItem[]) =>
+      list.sort((a, b) => b.download - a.download),
+  },
+  {
+    id: "duration",
+    labelKey: "connections.components.order.duration",
+    fn: (list: IConnectionsItem[]) =>
+      list.sort(
+        (a, b) =>
+          new Date(a.start || "0").getTime()! -
+          new Date(b.start || "0").getTime()!,
+      ),
+  },
 ] as const;
 
 type OrderKey = (typeof ORDER_OPTIONS)[number]["id"];
@@ -71,20 +102,53 @@ const orderFunctionMap = ORDER_OPTIONS.reduce<Record<OrderKey, OrderFunc>>(
   {} as Record<OrderKey, OrderFunc>,
 );
 
+type ConnectionFilters = {
+  host: string[];
+  sourceIP: string[];
+  destinationIP: string[];
+  network: string[];
+  sourcePort: string[];
+  destinationPort: string[];
+};
+
+const EMPTY_FILTERS: ConnectionFilters = {
+  host: [],
+  sourceIP: [],
+  destinationIP: [],
+  network: [],
+  sourcePort: [],
+  destinationPort: [],
+};
+
+const getUniqueValues = (values: Array<string | undefined>) => {
+  const set = new Set<string>();
+  values.forEach((value) => {
+    const nextValue = value?.trim();
+    if (nextValue) set.add(nextValue);
+  });
+  return [...set];
+};
+
 const ConnectionsPage = () => {
   const { t } = useTranslation();
   const [match, setMatch] = useState<(input: string) => boolean>(
     () => () => true,
   );
+  const [searchState, setSearchState] = useState<SearchState>();
   const [curOrderOpt, setCurOrderOpt] = useState<OrderKey>("default");
   const [connectionsType, setConnectionsType] = useState<"active" | "closed">(
     "active",
   );
+  const [filters, setFilters] = useState<ConnectionFilters>(EMPTY_FILTERS);
+  const [filterAnchorEl, setFilterAnchorEl] = useState<HTMLElement | null>(
+    null,
+  );
+  const [paused, setPaused] = useState(false);
 
   const {
     response: { data: connections },
     clearClosedConnections,
-  } = useConnectionData();
+  } = useConnectionData({ paused });
 
   const [setting, setSetting] = useConnectionSetting();
 
@@ -92,33 +156,195 @@ const ConnectionsPage = () => {
 
   const [isColumnManagerOpen, setIsColumnManagerOpen] = useState(false);
 
-  const [filterConn] = useMemo(() => {
-    const orderFunc = orderFunctionMap[curOrderOpt];
-    const conns =
+  const baseConnections = useMemo(
+    () =>
       (connectionsType === "active"
         ? connections?.activeConnections
-        : connections?.closedConnections) ?? [];
-    let matchConns = conns.filter((conn) => {
-      const { host, destinationIP, process } = conn.metadata;
-      return (
-        match(host || "") || match(destinationIP || "") || match(process || "")
-      );
+        : connections?.closedConnections) ?? [],
+    [connections, connectionsType],
+  );
+
+  const filterOptions = useMemo(() => {
+    const hosts = getUniqueValues(
+      baseConnections.map(
+        (conn) => conn.metadata.host || conn.metadata.remoteDestination,
+      ),
+    );
+    const sourceIPs = getUniqueValues(
+      baseConnections.map((conn) => conn.metadata.sourceIP),
+    );
+    const destinationIPs = getUniqueValues(
+      baseConnections.map((conn) => conn.metadata.destinationIP),
+    );
+    const networks = getUniqueValues(
+      baseConnections.map((conn) => conn.metadata.network),
+    );
+    const sourcePorts = getUniqueValues(
+      baseConnections.map((conn) => conn.metadata.sourcePort),
+    );
+    const destinationPorts = getUniqueValues(
+      baseConnections.map((conn) => conn.metadata.destinationPort),
+    );
+
+    return {
+      host: hosts.sort((a, b) => a.localeCompare(b)),
+      sourceIP: sourceIPs.sort((a, b) => a.localeCompare(b)),
+      destinationIP: destinationIPs.sort((a, b) => a.localeCompare(b)),
+      network: networks.sort((a, b) => a.localeCompare(b)),
+      sourcePort: sourcePorts.sort((a, b) => Number(a) - Number(b)),
+      destinationPort: destinationPorts.sort((a, b) => Number(a) - Number(b)),
+    };
+  }, [baseConnections]);
+
+  const normalizedFilters = useMemo(
+    () => ({
+      host: new Set(
+        filters.host.map((value) => value.trim().toLowerCase()).filter(Boolean),
+      ),
+      sourceIP: new Set(
+        filters.sourceIP.map((value) => value.trim()).filter(Boolean),
+      ),
+      destinationIP: new Set(
+        filters.destinationIP.map((value) => value.trim()).filter(Boolean),
+      ),
+      network: new Set(
+        filters.network
+          .map((value) => value.trim().toLowerCase())
+          .filter(Boolean),
+      ),
+      sourcePort: new Set(
+        filters.sourcePort.map((value) => value.trim()).filter(Boolean),
+      ),
+      destinationPort: new Set(
+        filters.destinationPort.map((value) => value.trim()).filter(Boolean),
+      ),
+    }),
+    [filters],
+  );
+
+  const [filterConn] = useMemo(() => {
+    const orderFunc = orderFunctionMap[curOrderOpt];
+    let matchConns = baseConnections.filter((conn) => {
+      const { metadata } = conn;
+      const searchTarget = [
+        metadata.host,
+        metadata.destinationIP,
+        metadata.remoteDestination,
+        metadata.sourceIP,
+        metadata.sourcePort,
+        metadata.destinationPort,
+        metadata.process,
+        metadata.processPath,
+        metadata.type,
+        metadata.network,
+      ]
+        .filter(Boolean)
+        .join(" ");
+
+      if (!match(searchTarget)) return false;
+
+      const hostValue = (
+        metadata.host ||
+        metadata.remoteDestination ||
+        ""
+      ).toLowerCase();
+      const networkValue = (metadata.network || "").toLowerCase();
+      const sourceIPValue = metadata.sourceIP || "";
+      const destinationIPValue = metadata.destinationIP || "";
+      const sourcePortValue = metadata.sourcePort || "";
+      const destinationPortValue = metadata.destinationPort || "";
+
+      if (
+        normalizedFilters.host.size > 0 &&
+        !normalizedFilters.host.has(hostValue)
+      ) {
+        return false;
+      }
+      if (
+        normalizedFilters.network.size > 0 &&
+        !normalizedFilters.network.has(networkValue)
+      ) {
+        return false;
+      }
+      if (
+        normalizedFilters.sourceIP.size > 0 &&
+        !normalizedFilters.sourceIP.has(sourceIPValue)
+      ) {
+        return false;
+      }
+      if (
+        normalizedFilters.destinationIP.size > 0 &&
+        !normalizedFilters.destinationIP.has(destinationIPValue)
+      ) {
+        return false;
+      }
+      if (
+        normalizedFilters.sourcePort.size > 0 &&
+        !normalizedFilters.sourcePort.has(sourcePortValue)
+      ) {
+        return false;
+      }
+      if (
+        normalizedFilters.destinationPort.size > 0 &&
+        !normalizedFilters.destinationPort.has(destinationPortValue)
+      ) {
+        return false;
+      }
+
+      return true;
     });
 
     if (orderFunc) matchConns = orderFunc(matchConns ?? []);
 
     return [matchConns];
-  }, [connections, connectionsType, match, curOrderOpt]);
+  }, [baseConnections, curOrderOpt, match, normalizedFilters]);
+
+  const hasActiveFilters = useMemo(
+    () => Object.values(filters).some((values) => values.length > 0),
+    [filters],
+  );
+  const hasSearchText = Boolean(searchState?.text?.trim());
+  const hasFilterCriteria = hasActiveFilters || hasSearchText;
 
   const onCloseAll = useLockFn(closeAllConnections);
+  const onCloseFiltered = useLockFn(async () => {
+    if (connectionsType !== "active" || filterConn.length === 0) return;
+    if (!hasFilterCriteria) return;
+    await Promise.allSettled(
+      filterConn.map((conn) => closeConnection(conn.id)),
+    );
+  });
+
+  const shouldCloseFiltered = connectionsType === "active" && hasFilterCriteria;
+  const closeActionLabel = shouldCloseFiltered
+    ? t("connections.components.actions.closeFiltered")
+    : t("shared.actions.closeAll");
 
   const detailRef = useRef<ConnectionDetailRef>(null!);
 
-  const handleSearch = useCallback((match: (content: string) => boolean) => {
-    setMatch(() => match);
-  }, []);
+  const handleSearch = useCallback(
+    (matcher: (content: string) => boolean, state: SearchState) => {
+      setMatch(() => matcher);
+      setSearchState(state);
+    },
+    [],
+  );
 
   const hasTableData = filterConn.length > 0;
+
+  const handleFilterChange = useCallback(
+    (key: keyof ConnectionFilters) => (_: unknown, values: string[]) => {
+      const nextValues = Array.from(
+        new Set(values.map((value) => value.trim()).filter(Boolean)),
+      );
+      setFilters((prev) => ({ ...prev, [key]: nextValues }));
+    },
+    [],
+  );
+
+  const handleClearFilters = useCallback(() => {
+    setFilters({ ...EMPTY_FILTERS });
+  }, []);
 
   return (
     <BasePage
@@ -149,6 +375,21 @@ const ConnectionsPage = () => {
           <IconButton
             color="inherit"
             size="small"
+            title={t(paused ? "shared.actions.resume" : "shared.actions.pause")}
+            aria-label={t(
+              paused ? "shared.actions.resume" : "shared.actions.pause",
+            )}
+            onClick={() => setPaused((prev) => !prev)}
+          >
+            {paused ? (
+              <PlayCircleOutlineRounded />
+            ) : (
+              <PauseCircleOutlineRounded />
+            )}
+          </IconButton>
+          <IconButton
+            color="inherit"
+            size="small"
             onClick={() =>
               setSetting((o) =>
                 o?.layout !== "table"
@@ -163,10 +404,13 @@ const ConnectionsPage = () => {
               <TableChartRounded titleAccess={t("shared.actions.tableView")} />
             )}
           </IconButton>
-          <Button size="small" variant="contained" onClick={onCloseAll}>
-            <span style={{ whiteSpace: "nowrap" }}>
-              {t("shared.actions.closeAll")}
-            </span>
+          <Button
+            size="small"
+            variant="contained"
+            onClick={shouldCloseFiltered ? onCloseFiltered : onCloseAll}
+            disabled={shouldCloseFiltered && filterConn.length === 0}
+          >
+            <span style={{ whiteSpace: "nowrap" }}>{closeActionLabel}</span>
           </Button>
         </Box>
       }
@@ -216,6 +460,147 @@ const ConnectionsPage = () => {
             ))}
           </BaseStyledSelect>
         )}
+        <Tooltip title={t("connections.components.actions.filter")}>
+          <Badge
+            color="primary"
+            variant="dot"
+            overlap="circular"
+            invisible={!hasActiveFilters}
+            sx={{ mr: 1 }}
+          >
+            <IconButton
+              size="small"
+              color="inherit"
+              onClick={(event) =>
+                setFilterAnchorEl((prev) => (prev ? null : event.currentTarget))
+              }
+              aria-label={t("connections.components.actions.filter")}
+            >
+              <FilterListRounded />
+            </IconButton>
+          </Badge>
+        </Tooltip>
+        <Popover
+          open={Boolean(filterAnchorEl)}
+          anchorEl={filterAnchorEl}
+          onClose={() => setFilterAnchorEl(null)}
+          anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+          transformOrigin={{ vertical: "top", horizontal: "left" }}
+        >
+          <Box sx={{ p: 2, width: 360 }}>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                mb: 1,
+              }}
+            >
+              <Box sx={{ fontWeight: 600, fontSize: 14 }}>
+                {t("connections.components.actions.filter")}
+              </Box>
+              <Button
+                size="small"
+                onClick={handleClearFilters}
+                disabled={!hasActiveFilters}
+              >
+                {t("connections.components.actions.clearFilters")}
+              </Button>
+            </Box>
+            <Stack spacing={1.5}>
+              <Autocomplete
+                multiple
+                freeSolo
+                size="small"
+                options={filterOptions.host}
+                value={filters.host}
+                onChange={handleFilterChange("host")}
+                filterSelectedOptions
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label={t("connections.components.fields.host")}
+                  />
+                )}
+              />
+              <Autocomplete
+                multiple
+                freeSolo
+                size="small"
+                options={filterOptions.sourceIP}
+                value={filters.sourceIP}
+                onChange={handleFilterChange("sourceIP")}
+                filterSelectedOptions
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label={t("connections.components.fields.sourceIP")}
+                  />
+                )}
+              />
+              <Autocomplete
+                multiple
+                freeSolo
+                size="small"
+                options={filterOptions.destinationIP}
+                value={filters.destinationIP}
+                onChange={handleFilterChange("destinationIP")}
+                filterSelectedOptions
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label={t("connections.components.fields.destinationIP")}
+                  />
+                )}
+              />
+              <Autocomplete
+                multiple
+                freeSolo
+                size="small"
+                options={filterOptions.network}
+                value={filters.network}
+                onChange={handleFilterChange("network")}
+                filterSelectedOptions
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label={t("connections.components.fields.network")}
+                  />
+                )}
+              />
+              <Autocomplete
+                multiple
+                freeSolo
+                size="small"
+                options={filterOptions.sourcePort}
+                value={filters.sourcePort}
+                onChange={handleFilterChange("sourcePort")}
+                filterSelectedOptions
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label={t("connections.components.fields.sourcePort")}
+                  />
+                )}
+              />
+              <Autocomplete
+                multiple
+                freeSolo
+                size="small"
+                options={filterOptions.destinationPort}
+                value={filters.destinationPort}
+                onChange={handleFilterChange("destinationPort")}
+                filterSelectedOptions
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label={t("connections.components.fields.destinationPort")}
+                  />
+                )}
+              />
+            </Stack>
+          </Box>
+        </Popover>
         <Box
           sx={{
             flex: 1,
@@ -235,6 +620,7 @@ const ConnectionsPage = () => {
       ) : isTableLayout ? (
         <ConnectionTable
           connections={filterConn}
+          paused={paused}
           onShowDetail={(detail) =>
             detailRef.current?.open(detail, connectionsType === "closed")
           }

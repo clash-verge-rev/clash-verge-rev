@@ -97,6 +97,7 @@ const getConnectionCellValue = (field: ColumnField, each: IConnectionsItem) => {
 
 interface Props {
   connections: IConnectionsItem[];
+  paused?: boolean;
   onShowDetail: (data: IConnectionsItem) => void;
   columnManagerOpen: boolean;
   onOpenColumnManager: () => void;
@@ -106,6 +107,7 @@ interface Props {
 export const ConnectionTable = (props: Props) => {
   const {
     connections,
+    paused = false,
     onShowDetail,
     columnManagerOpen,
     onOpenColumnManager,
@@ -337,14 +339,15 @@ export const ConnectionTable = (props: Props) => {
   }, [baseColumns, relativeNow]);
 
   useEffect(() => {
-    if (typeof window === "undefined") return undefined;
+    if (paused || typeof window === "undefined") return undefined;
+    setRelativeNow(Date.now());
 
     const timer = window.setInterval(() => {
       setRelativeNow(Date.now());
     }, 5000);
 
     return () => window.clearInterval(timer);
-  }, []);
+  }, [paused]);
 
   const handleColumnSizingChange = useCallback(
     (updater: Updater<ColumnSizingState>) => {

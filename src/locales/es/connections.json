@@ -5,6 +5,11 @@
   "components": {
     "fields": {
       "host": "Host",
+      "sourceIP": "Source IP",
+      "destinationIP": "Destination IP",
+      "sourcePort": "Source Port",
+      "destinationPort": "Puerto de destino",
+      "network": "Protocol",
       "dlSpeed": "Velocidad de descarga",
       "ulSpeed": "Velocidad de subida",
       "chains": "Cadenas",
@@ -13,18 +18,23 @@
       "time": "Tiempo de conexión",
       "source": "Dirección de origen",
       "destination": "Dirección de destino",
-      "destinationPort": "Puerto de destino",
       "type": "Tipo"
     },
     "order": {
       "default": "Default",
       "uploadSpeed": "Velocidad de subida",
-      "downloadSpeed": "Velocidad de descarga"
+      "downloadSpeed": "Velocidad de descarga",
+      "uploadTotal": "Upload Total",
+      "downloadTotal": "Download Total",
+      "duration": "Duration"
     },
     "actions": {
       "active": "Active",
       "closed": "Closed",
-      "closeConnection": "Cerrar conexión"
+      "closeConnection": "Cerrar conexión",
+      "filter": "Filter",
+      "clearFilters": "Clear Filters",
+      "closeFiltered": "Close Filtered"
     },
     "columnManager": {
       "title": "Columnas",
