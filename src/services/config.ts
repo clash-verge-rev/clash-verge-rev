@@ -1,4 +1,12 @@
-import { useSWRConfig } from "swr";
+const SWR_NOT_SMART = {
+  revalidateOnFocus: false,
+  revalidateOnReconnect: false,
+  revalidateIfStale: false,
+  suspense: false,
+  errorRetryCount: 2,
+  dedupingInterval: 1500,
+  errorRetryInterval: 3000,
+} as const;
 
 export const SWR_DEFAULTS = {
   revalidateOnFocus: false,
@@ -19,7 +27,6 @@ export const SWR_SLOW_POLL = {
   refreshInterval: 60000,
 } as const;
 
-export const useSWRMutate = () => {
-  const { mutate } = useSWRConfig();
-  return mutate;
+export const SWR_MIHOMO = {
+  ...SWR_NOT_SMART,
 };

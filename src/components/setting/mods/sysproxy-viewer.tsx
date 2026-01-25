@@ -22,8 +22,7 @@ import {
   useState,
 } from "react";
 import { useTranslation } from "react-i18next";
-import useSWR, { mutate } from "swr";
-import { getBaseConfig } from "tauri-plugin-mihomo-api";
+import { mutate } from "swr";
 
 import {
   BaseDialog,
@@ -113,6 +112,8 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
   type AutoProxy = Awaited<ReturnType<typeof getAutotemProxy>>;
   const [autoproxy, setAutoproxy] = useState<AutoProxy>();
 
+  const { clashConfig } = useAppData();
+
   const {
     enable_system_proxy: enabled,
     proxy_auto_config,
@@ -147,13 +148,6 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
     }
     return "127.0.0.1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,localhost,*.local,*.crashlytics.com,<local>";
   };
-
-  const { data: clashConfig } = useSWR("getClashConfig", getBaseConfig, {
-    revalidateOnFocus: false,
-    revalidateIfStale: true,
-    dedupingInterval: 1000,
-    errorRetryInterval: 5000,
-  });
 
   const prevMixedPortRef = useRef(clashConfig?.mixedPort);
 

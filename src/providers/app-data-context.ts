@@ -44,7 +44,7 @@ export const useAppData = () => {
   const context = use(AppDataContext);
 
   if (!context) {
-    throw new Error("useAppData必须在AppDataProvider内使用");
+    throw new Error("useAppData must be used within AppDataProvider");
   }
 
   return context;
