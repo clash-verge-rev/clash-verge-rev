@@ -377,6 +377,7 @@
         "proxyLayoutColumns": "Anzahl der Spalten im Proxy-Layout",
         "autoLogClean": "Protokolle automatisch bereinigen",
         "autoDelayDetection": "Automatische Latenzprüfung",
+        "autoDelayDetectionInterval": "Intervall für automatische Latenzprüfung",
         "defaultLatencyTest": "Standard-Testlink",
         "defaultLatencyTimeout": "Test-Timeout"
       },
