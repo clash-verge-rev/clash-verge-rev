@@ -3,8 +3,13 @@ import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { BaseDialog, BaseLoadingOverlay } from "@/components/base";
+import { useVerge } from "@/hooks/use-verge";
 import { listWebDavBackup } from "@/services/cmds";
 import { showNotice } from "@/services/notice-service";
+import {
+  buildWebdavSignature,
+  setWebdavStatus,
+} from "@/services/webdav-status";
 
 import { BackupConfigViewer } from "./backup-config-viewer";
 
@@ -22,7 +27,9 @@ export const BackupWebdavDialog = ({
   setBusy,
 }: BackupWebdavDialogProps) => {
   const { t } = useTranslation();
+  const { verge } = useVerge();
   const [loading, setLoading] = useState(false);
+  const webdavSignature = buildWebdavSignature(verge);
 
   const handleLoading = useCallback(
     (value: boolean) => {
@@ -33,16 +40,19 @@ export const BackupWebdavDialog = ({
   );
 
   const refreshWebdav = useCallback(
-    async (options?: { silent?: boolean }) => {
+    async (options?: { silent?: boolean; signature?: string }) => {
+      const signature = options?.signature ?? webdavSignature;
       handleLoading(true);
       try {
         await listWebDavBackup();
+        setWebdavStatus(signature, "ready");
         if (!options?.silent) {
           showNotice.success(
             "settings.modals.backup.messages.webdavRefreshSuccess",
           );
         }
       } catch (error) {
+        setWebdavStatus(signature, "failed");
         showNotice.error(
           "settings.modals.backup.messages.webdavRefreshFailed",
           { error },
@@ -51,11 +61,11 @@ export const BackupWebdavDialog = ({
         handleLoading(false);
       }
     },
-    [handleLoading],
+    [handleLoading, webdavSignature],
   );
 
   const refreshSilently = useCallback(
-    () => refreshWebdav({ silent: true }),
+    (signature?: string) => refreshWebdav({ silent: true, signature }),
     [refreshWebdav],
   );
 
