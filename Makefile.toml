@@ -80,6 +80,11 @@ files_modified.input = [
   "./pnpm-lock.yaml",
   "./tsconfig.json",
 ]
+files_modified.output = [
+  "./node_modules/.last_format",
+  "./node_modules/.last_eslint",
+  "./node_modules/.last_typecheck",
+]
 
 [tasks.pre-push]
 description = "Pre-push checks"
