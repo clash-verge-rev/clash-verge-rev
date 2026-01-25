@@ -27,15 +27,7 @@ args = ["format"]
 description = "Run format checks"
 command = "pnpm"
 args = ["format:check"]
-[tasks.format-check.condition]
-# TODO add more specific file patterns
-files_modified = { input = [
-  "./src/**/*",
-  "./package.json",
-  "./pnpm-lock.yaml",
-], output = [
-  "./node_modules/.last_format",
-] }
+
 [tasks.eslint]
 description = "Run ESLint to lint the code"
 command = "pnpm"
@@ -55,9 +47,6 @@ args = ["exec", "lint-staged"]
 description = "Check i18n consistency"
 command = "pnpm"
 args = ["i18n:types"]
-[tasks.i18n-check.condition]
-files_modified.input = ["./src/locales/**/*.ts", "./src/locales/**/*.json"]
-files_modified.output = ["./src/types/generated/*.ts"]
 
 # --- Jobs ---
 [tasks.rust]
@@ -68,27 +57,13 @@ files_modified.input = [
   "./crates/**/*.rs",
   "**/Cargo.toml",
 ]
-files_modified.output = ["./target/**/clash-verge"]
-
+files_modified.output = ["./target/debug/*", "./target/release/*"]
 [tasks.typescript]
-dependencies = ["format", "format-check", "eslint", "lint-staged", "typecheck"]
-[tasks.typescript.condition]
-files_modified.input = [
-  "**/*.ts",
-  "**/*.tsx",
-  "./package.json",
-  "./pnpm-lock.yaml",
-  "./tsconfig.json",
-]
-files_modified.output = [
-  "./node_modules/.last_format",
-  "./node_modules/.last_eslint",
-  "./node_modules/.last_typecheck",
-]
+dependencies = ["format-check", "eslint", "typecheck"]
 
 [tasks.pre-push]
 description = "Pre-push checks"
-dependencies = ["rust", "format-check", "eslint", "typecheck"]
+dependencies = ["rust", "typescript"]
 
 [tasks.pre-commit]
-dependencies = ["rust", "typescript", "i18n-check"]
+dependencies = ["lint-staged", "i18n-check"]
