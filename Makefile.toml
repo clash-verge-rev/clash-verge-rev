@@ -39,8 +39,14 @@ description = "Run format checks"
 command = "pnpm"
 args = ["format:check"]
 [tasks.format-check.condition]
-files_modified = { input = ["./src/**/*", "package.json", "pnpm-lock.yaml"] }
-
+# TODO add more specific file patterns
+files_modified = { input = [
+  "./src/**/*",
+  "./package.json",
+  "./pnpm-lock.yaml",
+], output = [
+  "./node_modules/.last_format",
+] }
 [tasks.eslint]
 description = "Run ESLint to lint the code"
 command = "pnpm"
