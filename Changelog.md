@@ -5,6 +5,7 @@
 - 修复首次启动时代理信息刷新缓慢
 - 修复无网络时无限请求 IP 归属查询
 - 修复 WebDAV 页面重试逻辑
+- 修复 Linux 通过 GUI 安装服务模式权限不符合预期
 
 <details>
 <summary><strong> ✨ 新增功能 </strong></summary>
