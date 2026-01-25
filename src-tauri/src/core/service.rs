@@ -168,7 +168,7 @@ fn install_service() -> Result<()> {
     let install_shell: String = install_path.to_string_lossy().replace(" ", "\\ ");
 
     let elevator = crate::utils::help::linux_elevator();
-    let status = if linux_running_as_root() {
+    let output = if linux_running_as_root() {
         StdCommand::new(&install_path).output()?
     } else {
         let result = StdCommand::new(&elevator)
