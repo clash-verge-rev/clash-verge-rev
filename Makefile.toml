@@ -10,27 +10,11 @@ skip_crate_env_info = true
 install_crate = "rustfmt"
 command = "cargo"
 args = ["fmt", "--", "--emit=files"]
-[tasks.rust-format.condition]
-files_modified = { input = [
-  "./src-tauri/**/*.rs",
-  "./crates/**/*.rs",
-  "**/Cargo.toml",
-], output = [
-  "./target/**/clash-verge",
-] }
 
 [tasks.rust-clippy]
 description = "Run cargo clippy to lint the code"
 command = "cargo"
 args = ["clippy", "--all-targets", "--all-features", "--", "-D", "warnings"]
-[tasks.rust-clippy.condition]
-files_modified = { input = [
-  "./src-tauri/**/*.rs",
-  "./crates/**/*.rs",
-  "**/Cargo.toml",
-], output = [
-  "./target/**/clash-verge",
-] }
 
 # --- Frontend ---
 
@@ -72,14 +56,23 @@ files_modified = { input = [
   "./node_modules/.last_typecheck",
 ] }
 
-# --- Hook ---
+# --- Jobs ---
+[tasks.rust]
+dependencies = ["rust-format", "rust-clippy"]
+[tasks.rust.condition]
+files_modified = { input = [
+  "./src-tauri/**/*.rs",
+  "./crates/**/*.rs",
+  "**/Cargo.toml",
+], output = [
+  "./target/**/clash-verge",
+] }
+# TODO add frontend jobs conditions
+
 
 [tasks.pre-push]
 description = "Pre-push checks"
-dependencies = [
-  "rust-format",
-  "rust-clippy",
-  "format-check",
-  "eslint",
-  "typecheck",
-]
+dependencies = ["rust", "format-check", "eslint", "typecheck"]
+
+[tasks.pre-commit]
+dependencies = ["rust"]
