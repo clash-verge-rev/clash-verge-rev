@@ -18,6 +18,11 @@ args = ["clippy", "--all-targets", "--all-features", "--", "-D", "warnings"]
 
 # --- Frontend ---
 
+[tasks.format]
+description = "Run code formatter"
+command = "pnpm"
+args = ["format"]
+
 [tasks.format-check]
 description = "Run format checks"
 command = "pnpm"
@@ -35,44 +40,50 @@ files_modified = { input = [
 description = "Run ESLint to lint the code"
 command = "pnpm"
 args = ["lint"]
-[tasks.eslint.condition]
-files_modified = { input = [
-  "./src/**/*",
-  "./package.json",
-  "./pnpm-lock.yaml",
-], output = [
-  "./node_modules/.eslintcache",
-] }
 
 [tasks.typecheck]
 description = "Run type checks"
 command = "pnpm"
 args = ["typecheck"]
-[tasks.typecheck.condition]
-files_modified = { input = [
-  "./src/**/*",
-  "./tsconfig.json",
-], output = [
-  "./node_modules/.last_typecheck",
-] }
+
+[tasks.lint-staged]
+description = "Run lint-staged for staged files"
+command = "pnpm"
+args = ["exec", "lint-staged"]
+
+[tasks.i18n-check]
+description = "Check i18n consistency"
+command = "pnpm"
+args = ["i18n:types"]
+[tasks.i18n-check.condition]
+files_modified.input = ["./src/locales/**/*.ts", "./src/locales/**/*.json"]
+files_modified.output = ["./src/types/generated/*.ts"]
 
 # --- Jobs ---
 [tasks.rust]
 dependencies = ["rust-format", "rust-clippy"]
 [tasks.rust.condition]
-files_modified = { input = [
+files_modified.input = [
   "./src-tauri/**/*.rs",
   "./crates/**/*.rs",
   "**/Cargo.toml",
-], output = [
-  "./target/**/clash-verge",
-] }
-# TODO add frontend jobs conditions
+]
+files_modified.output = ["./target/**/clash-verge"]
 
+[tasks.typescript]
+dependencies = ["format", "format-check", "eslint", "lint-staged", "typecheck"]
+[tasks.typescript.condition]
+files_modified.input = [
+  "**/*.ts",
+  "**/*.tsx",
+  "./package.json",
+  "./pnpm-lock.yaml",
+  "./tsconfig.json",
+]
 
 [tasks.pre-push]
 description = "Pre-push checks"
 dependencies = ["rust", "format-check", "eslint", "typecheck"]
 
 [tasks.pre-commit]
-dependencies = ["rust"]
+dependencies = ["rust", "typescript", "i18n-check"]

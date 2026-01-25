@@ -6,37 +6,9 @@ if ! command -v "cargo-make" >/dev/null 2>&1; then
   cargo install --force cargo-make
 fi
 
-ROOT_DIR="$(git rev-parse --show-toplevel)"
-cd "$ROOT_DIR"
-
 if ! command -v pnpm >/dev/null 2>&1; then
   echo "❌ pnpm is required for pre-commit checks."
   exit 1
 fi
 
-LOCALE_DIFF="$(git diff --cached --name-only --diff-filter=ACMR | grep -E '^src/locales/' || true)"
-if [ -n "$LOCALE_DIFF" ]; then
-  echo "[pre-commit] Locale changes detected. Regenerating i18n types..."
-  pnpm i18n:types
-  if [ -d src/types/generated ]; then
-    echo "[pre-commit] Staging regenerated i18n type artifacts..."
-    git add src/types/generated
-  fi
-fi
-
-echo "[pre-commit] Running pnpm format before lint..."
-pnpm format
-
-echo "[pre-commit] Running lint-staged for JS/TS files..."
-pnpm exec lint-staged
-
-
 cargo make pre-commit
-
-TS_FILES="$(git diff --cached --name-only --diff-filter=ACMR | grep -E '\.(ts|tsx)$' || true)"
-if [ -n "$TS_FILES" ]; then
-  echo "[pre-commit] Running TypeScript type check..."
-  pnpm typecheck
-fi
-
-echo "[pre-commit] All checks completed successfully."
