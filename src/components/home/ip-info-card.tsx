@@ -8,7 +8,7 @@ import { Box, Button, IconButton, Skeleton, Typography } from "@mui/material";
 import { memo, useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 
-import { useClashConfig } from "@/hooks/use-clash-data";
+import { useAppData } from "@/providers/app-data-context";
 import { getIpInfo } from "@/services/api";
 
 import { EnhancedCard } from "./enhanced-card";
@@ -56,7 +56,7 @@ const getCountryFlag = (countryCode: string) => {
 // IP信息卡片组件
 export const IpInfoCard = () => {
   const { t } = useTranslation();
-  const { clashConfig } = useClashConfig();
+  const { clashConfig } = useAppData();
   const [ipInfo, setIpInfo] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
