@@ -52,14 +52,25 @@ description = "Run ESLint to lint the code"
 command = "pnpm"
 args = ["lint"]
 [tasks.eslint.condition]
-files_modified = { input = ["./src/**/*", "package.json"] }
+files_modified = { input = [
+  "./src/**/*",
+  "./package.json",
+  "./pnpm-lock.yaml",
+], output = [
+  "./node_modules/.eslintcache",
+] }
 
 [tasks.typecheck]
 description = "Run type checks"
 command = "pnpm"
 args = ["typecheck"]
 [tasks.typecheck.condition]
-files_modified = { input = ["./src/**/*", "tsconfig.json"] }
+files_modified = { input = [
+  "./src/**/*",
+  "./tsconfig.json",
+], output = [
+  "./node_modules/.last_typecheck",
+] }
 
 # --- Hook ---
 
