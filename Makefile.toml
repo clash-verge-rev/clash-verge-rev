@@ -18,20 +18,6 @@ args = ["clippy", "--all-targets", "--all-features", "--", "-D", "warnings"]
 
 # --- Frontend ---
 
-[tasks.format]
-description = "Run code formatter"
-command = "pnpm"
-args = ["format"]
-[tasks.format.windows]
-command = "pnpm.cmd"
-
-[tasks.format-check]
-description = "Run format checks"
-command = "pnpm"
-args = ["format:check"]
-[tasks.format-check.windows]
-command = "pnpm.cmd"
-
 [tasks.eslint]
 description = "Run ESLint to lint the code"
 command = "pnpm"
