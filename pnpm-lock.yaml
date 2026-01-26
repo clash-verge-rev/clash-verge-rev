@@ -72,7 +72,7 @@ importers:
         specifier: ^3.9.6
         version: 3.9.6(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       axios:
-        specifier: ^1.13.2
+        specifier: ^1.13.3
         version: 1.13.3
       dayjs:
         specifier: 1.11.19
@@ -81,13 +81,13 @@ importers:
         specifier: ^0.2.52
         version: 0.2.52(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       i18next:
-        specifier: ^25.7.4
+        specifier: ^25.8.0
         version: 25.8.0(typescript@5.9.3)
       js-yaml:
         specifier: ^4.1.1
         version: 4.1.1
       lodash-es:
-        specifier: ^4.17.22
+        specifier: ^4.17.23
         version: 4.17.23
       monaco-editor:
         specifier: ^0.55.1
@@ -117,7 +117,7 @@ importers:
         specifier: 10.1.0
         version: 10.1.0(@types/react@19.2.9)(react@19.2.3)
       react-router:
-        specifier: ^7.12.0
+        specifier: ^7.13.0
         version: 7.13.0(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       react-virtuoso:
         specifier: ^4.18.1
@@ -139,7 +139,7 @@ importers:
         specifier: ^7.0.0
         version: 7.0.0
       '@eslint-react/eslint-plugin':
-        specifier: ^2.7.2
+        specifier: ^2.7.4
         version: 2.7.4(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3)
       '@eslint/js':
         specifier: ^9.39.2
@@ -211,7 +211,7 @@ importers:
         specifier: ^13.0.0
         version: 13.0.0
       globals:
-        specifier: ^17.0.0
+        specifier: ^17.1.0
         version: 17.1.0
       https-proxy-agent:
         specifier: ^7.0.6
@@ -229,13 +229,13 @@ importers:
         specifier: ^3.3.2
         version: 3.3.2
       prettier:
-        specifier: ^3.8.0
+        specifier: ^3.8.1
         version: 3.8.1
       sass:
-        specifier: ^1.97.2
+        specifier: ^1.97.3
         version: 1.97.3
       tar:
-        specifier: ^7.5.3
+        specifier: ^7.5.6
         version: 7.5.6
       terser:
         specifier: ^5.46.0
@@ -244,7 +244,7 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
       typescript-eslint:
-        specifier: ^8.53.0
+        specifier: ^8.53.1
         version: 8.53.1(eslint@9.39.2(jiti@2.6.1))(typescript@5.9.3)
       vite:
         specifier: ^7.3.1
