@@ -2,7 +2,7 @@
 set -euo pipefail
 
 if ! command -v "cargo-make" >/dev/null 2>&1; then
-  echo "❌ cargo-make is required for pre-push checks."
+  echo "❌ cargo-make is required for pre-commit checks."
   cargo install --force cargo-make
 fi
 

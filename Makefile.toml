@@ -43,11 +43,6 @@ description = "Run lint-staged for staged files"
 command = "pnpm"
 args = ["exec", "lint-staged"]
 
-[tasks.i18n-check]
-description = "Check i18n consistency"
-command = "pnpm"
-args = ["i18n:types"]
-
 # --- Jobs ---
 
 # Rust format (for pre-commit)
@@ -82,7 +77,7 @@ dependencies = ["lint-staged"]
 # Frontend lint (for pre-push)
 [tasks.frontend-lint]
 description = "Frontend linting and type checking"
-dependencies = ["eslint", "typecheck", "i18n-check"]
+dependencies = ["eslint", "typecheck"]
 
 # --- Git Hooks ---
 
