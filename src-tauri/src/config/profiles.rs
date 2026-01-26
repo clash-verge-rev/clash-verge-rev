@@ -5,8 +5,6 @@ use crate::utils::{
 };
 use anyhow::{Context as _, Result, bail};
 use clash_verge_logging::{Type, logging};
-use once_cell::sync::OnceCell;
-use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_yaml_ng::Mapping;
 use smartstring::alias::String;
@@ -500,7 +498,7 @@ impl IProfiles {
         // r12345678.yaml (rules)
         // p12345678.yaml (proxies)
         // g12345678.yaml (groups)
-        
+
         let patterns = [
             r"^[RL][a-zA-Z0-9]+\.yaml$",  // Remote/Local profiles
             r"^m[a-zA-Z0-9]+\.yaml$",     // Merge files
