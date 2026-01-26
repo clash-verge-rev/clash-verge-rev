@@ -501,6 +501,7 @@ impl IProfiles {
         // p12345678.yaml (proxies)
         // g12345678.yaml (groups)
 
+        #[allow(clippy::unwrap_used)]
         PROFILE_FILE_RE
             .get_or_init(|| {
                 regex::Regex::new(
