@@ -158,7 +158,6 @@ fn install_service() -> Result<()> {
     }
 
     let install_shell: String = install_path.to_string_lossy().replace(" ", "\\ ");
-    let gid = tauri_plugin_clash_verge_sysinfo::current_gid().to_string();
 
     let elevator = crate::utils::help::linux_elevator();
     let status = if linux_running_as_root() {
@@ -168,7 +167,6 @@ fn install_service() -> Result<()> {
             .arg("sh")
             .arg("-c")
             .arg(&install_shell)
-            .env("CLASH_VERGE_SERVICE_GID", &gid)
             .status()?;
 
         // 如果 pkexec 执行失败，回退到 sudo
@@ -183,7 +181,6 @@ fn install_service() -> Result<()> {
                 .arg("sh")
                 .arg("-c")
                 .arg(&install_shell)
-                .env("CLASH_VERGE_SERVICE_GID", &gid)
                 .status()?
         } else {
             result
