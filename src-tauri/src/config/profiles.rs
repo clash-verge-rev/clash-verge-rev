@@ -13,7 +13,7 @@ use smartstring::alias::String;
 use std::collections::{HashMap, HashSet};
 use tokio::fs;
 
-static PROFILE_FILE_RE: OnceCell<Regex> = OnceCell::new();
+// static PROFILE_FILE_RE: OnceCell<Regex> = OnceCell::new();
 
 /// Define the `profiles.yaml` schema
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
@@ -500,11 +500,19 @@ impl IProfiles {
         // r12345678.yaml (rules)
         // p12345678.yaml (proxies)
         // g12345678.yaml (groups)
+        
+        let patterns = [
+            r"^[RL][a-zA-Z0-9]+\.yaml$",  // Remote/Local profiles
+            r"^m[a-zA-Z0-9]+\.yaml$",     // Merge files
+            r"^s[a-zA-Z0-9]+\.js$",       // Script files
+            r"^[rpg][a-zA-Z0-9]+\.yaml$", // Rules/Proxies/Groups files
+        ];
 
-        #[allow(clippy::unwrap_used)]
-        let re = PROFILE_FILE_RE
-            .get_or_init(|| Regex::new(r"^(?:[RLmprg][a-zA-Z0-9_-]+\.yaml|s[a-zA-Z0-9_-]+\.js)$").unwrap());
-        re.is_match(filename)
+        patterns.iter().any(|pattern| {
+            regex::Regex::new(pattern)
+                .map(|re| re.is_match(filename))
+                .unwrap_or(false)
+        })
     }
 }
 
