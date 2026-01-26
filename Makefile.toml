@@ -22,26 +22,36 @@ args = ["clippy", "--all-targets", "--all-features", "--", "-D", "warnings"]
 description = "Run code formatter"
 command = "pnpm"
 args = ["format"]
+[tasks.format.windows]
+command = "pnpm.cmd"
 
 [tasks.format-check]
 description = "Run format checks"
 command = "pnpm"
 args = ["format:check"]
+[tasks.format-check.windows]
+command = "pnpm.cmd"
 
 [tasks.eslint]
 description = "Run ESLint to lint the code"
 command = "pnpm"
 args = ["lint"]
+[tasks.eslint.windows]
+command = "pnpm.cmd"
 
 [tasks.typecheck]
 description = "Run type checks"
 command = "pnpm"
 args = ["typecheck"]
+[tasks.typecheck.windows]
+command = "pnpm.cmd"
 
 [tasks.lint-staged]
 description = "Run lint-staged for staged files"
 command = "pnpm"
 args = ["exec", "lint-staged"]
+[tasks.lint-staged.windows]
+command = "pnpm.cmd"
 
 # --- Jobs ---
 
