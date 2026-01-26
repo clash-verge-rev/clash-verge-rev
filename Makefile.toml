@@ -1,0 +1,86 @@
+[config]
+skip_core_tasks = true
+skip_git_env_info = true
+skip_rust_env_info = true
+skip_crate_env_info = true
+
+# --- Backend ---
+
+[tasks.rust-format]
+install_crate = "rustfmt"
+command = "cargo"
+args = ["fmt", "--", "--emit=files"]
+
+[tasks.rust-clippy]
+description = "Run cargo clippy to lint the code"
+command = "cargo"
+args = ["clippy", "--all-targets", "--all-features", "--", "-D", "warnings"]
+
+# --- Frontend ---
+
+[tasks.eslint]
+description = "Run ESLint to lint the code"
+command = "pnpm"
+args = ["lint"]
+[tasks.eslint.windows]
+command = "pnpm.cmd"
+
+[tasks.typecheck]
+description = "Run type checks"
+command = "pnpm"
+args = ["typecheck"]
+[tasks.typecheck.windows]
+command = "pnpm.cmd"
+
+[tasks.lint-staged]
+description = "Run lint-staged for staged files"
+command = "pnpm"
+args = ["exec", "lint-staged"]
+[tasks.lint-staged.windows]
+command = "pnpm.cmd"
+
+# --- Jobs ---
+
+# Rust format (for pre-commit)
+[tasks.rust-format-check]
+description = "Check Rust code formatting"
+dependencies = ["rust-format"]
+[tasks.rust-format-check.condition]
+files_modified.input = [
+  "./src-tauri/**/*.rs",
+  "./crates/**/*.rs",
+  "**/Cargo.toml",
+]
+files_modified.output = ["./target/debug/*", "./target/release/*"]
+
+# Rust lint (for pre-push)
+[tasks.rust-lint]
+description = "Run Rust linting"
+dependencies = ["rust-clippy"]
+[tasks.rust-lint.condition]
+files_modified.input = [
+  "./src-tauri/**/*.rs",
+  "./crates/**/*.rs",
+  "**/Cargo.toml",
+]
+files_modified.output = ["./target/debug/*", "./target/release/*"]
+
+# Frontend format (for pre-commit)
+[tasks.frontend-format]
+description = "Frontend format checks"
+dependencies = ["lint-staged"]
+
+# Frontend lint (for pre-push)
+[tasks.frontend-lint]
+description = "Frontend linting and type checking"
+dependencies = ["eslint", "typecheck"]
+
+# --- Git Hooks ---
+
+[tasks.pre-commit]
+description = "Pre-commit checks: format only"
+dependencies = ["rust-format-check", "frontend-format"]
+
+[tasks.pre-push]
+description = "Pre-push checks: lint and typecheck"
+dependencies = ["rust-lint", "frontend-lint"]
