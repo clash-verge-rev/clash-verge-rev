@@ -5,13 +5,15 @@ use crate::utils::{
 };
 use anyhow::{Context as _, Result, bail};
 use clash_verge_logging::{Type, logging};
+use once_cell::sync::OnceCell;
+use regex::Regex;
 use serde::{Deserialize, Serialize};
 use serde_yaml_ng::Mapping;
 use smartstring::alias::String;
 use std::collections::{HashMap, HashSet};
 use tokio::fs;
 
-// static PROFILE_FILE_RE: OnceCell<Regex> = OnceCell::new();
+static PROFILE_FILE_RE: OnceCell<Regex> = OnceCell::new();
 
 /// Define the `profiles.yaml` schema
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
@@ -499,18 +501,14 @@ impl IProfiles {
         // p12345678.yaml (proxies)
         // g12345678.yaml (groups)
 
-        let patterns = [
-            r"^[RL][a-zA-Z0-9]+\.yaml$",  // Remote/Local profiles
-            r"^m[a-zA-Z0-9]+\.yaml$",     // Merge files
-            r"^s[a-zA-Z0-9]+\.js$",       // Script files
-            r"^[rpg][a-zA-Z0-9]+\.yaml$", // Rules/Proxies/Groups files
-        ];
-
-        patterns.iter().any(|pattern| {
-            regex::Regex::new(pattern)
-                .map(|re| re.is_match(filename))
-                .unwrap_or(false)
-        })
+        PROFILE_FILE_RE
+            .get_or_init(|| {
+                regex::Regex::new(
+                    r"^(?:[RL][a-zA-Z0-9]+\.yaml|m[a-zA-Z0-9]+\.yaml|s[a-zA-Z0-9]+\.js|[rpg][a-zA-Z0-9]+\.yaml)$",
+                )
+                .unwrap()
+            })
+            .is_match(filename)
     }
 }
 
