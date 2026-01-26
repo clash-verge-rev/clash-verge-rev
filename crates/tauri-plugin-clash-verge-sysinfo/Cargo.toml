@@ -8,7 +8,7 @@ rust-version = "1.91"
 tauri = { workspace = true }
 tauri-plugin-clipboard-manager = { workspace = true }
 parking_lot = { workspace = true }
-sysinfo = { version = "0.37.2", features = ["network", "system"] }
+sysinfo = { version = "0.38.0", features = ["network", "system"] }
 
 [target.'cfg(not(windows))'.dependencies]
 libc = "0.2.180"
