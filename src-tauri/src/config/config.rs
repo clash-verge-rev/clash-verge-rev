@@ -18,7 +18,6 @@ use clash_verge_draft::Draft;
 use clash_verge_logging::{Type, logging, logging_error};
 use serde_yaml_ng::{Mapping, Value};
 use smartstring::alias::String;
-use smartstring::{LazyCompact, SmartString};
 use std::path::PathBuf;
 use tauri_plugin_clash_verge_sysinfo::is_current_app_handle_admin;
 use tokio::sync::OnceCell;
@@ -260,19 +259,18 @@ fn sanitize_tunnels_proxy(config: &mut Mapping) {
     }
 
     // 在需要时，收集可用目标（proxies + proxy-groups + 内建）
-    let mut valid: Vec<SmartString<LazyCompact>> = Vec::new();
+    let mut valid: Vec<String> = Vec::with_capacity(4);
     collect_names(config, "proxies", &mut valid);
     collect_names(config, "proxy-groups", &mut valid);
-    valid.push(SmartString::from("DIRECT"));
-    valid.push(SmartString::from("REJECT"));
-
+    valid.push("DIRECT".into());
+    valid.push("REJECT".into());
     // 修改 tunnels：删除无效 proxy
-    let tunnels_key = Value::String("tunnels".to_string());
+    let tunnels_key = Value::String("tunnels".into());
     let Some(Value::Sequence(tunnels)) = config.get_mut(&tunnels_key) else {
         return;
     };
 
-    let proxy_key = Value::String("proxy".to_string());
+    let proxy_key = Value::String("proxy".into());
 
     for item in tunnels.iter_mut() {
         let Value::Mapping(tunnel) = item else {
@@ -286,7 +284,7 @@ fn sanitize_tunnels_proxy(config: &mut Mapping) {
             continue;
         }
 
-        let proxy_ss: SmartString<LazyCompact> = proxy_name.as_str().into();
+        let proxy_ss: String = proxy_name.as_str().into();
         let ok = valid.contains(&proxy_ss);
 
         if !ok {
@@ -297,12 +295,12 @@ fn sanitize_tunnels_proxy(config: &mut Mapping) {
 
 // tunnels 存在且至少有一条 tunnel 的 proxy 需要校验时才返回 true
 fn tunnels_need_validation(config: &Mapping) -> bool {
-    let tunnels_key = Value::String("tunnels".to_string());
+    let tunnels_key = Value::String("tunnels".into());
     let Some(Value::Sequence(tunnels)) = config.get(&tunnels_key) else {
         return false;
     };
 
-    let proxy_key = Value::String("proxy".to_string());
+    let proxy_key = Value::String("proxy".into());
 
     for item in tunnels {
         let Value::Mapping(tunnel) = item else {
@@ -321,13 +319,13 @@ fn tunnels_need_validation(config: &Mapping) -> bool {
     false
 }
 
-fn collect_names(config: &Mapping, list_key: &str, out: &mut Vec<SmartString<LazyCompact>>) {
-    let key = Value::String(list_key.to_string());
+fn collect_names(config: &Mapping, list_key: &str, out: &mut Vec<String>) {
+    let key = Value::String(list_key.into());
     let Some(Value::Sequence(seq)) = config.get(&key) else {
         return;
     };
 
-    let name_key = Value::String("name".to_string());
+    let name_key = Value::String("name".into());
 
     for item in seq {
         let Value::Mapping(map) = item else {
