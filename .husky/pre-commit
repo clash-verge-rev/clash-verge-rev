@@ -1,51 +1,14 @@
 #!/bin/bash
 set -euo pipefail
 
-ROOT_DIR="$(git rev-parse --show-toplevel)"
-cd "$ROOT_DIR"
+if ! command -v "cargo-make" >/dev/null 2>&1; then
+  echo "❌ cargo-make is required for pre-commit checks."
+  cargo install --force cargo-make
+fi
 
 if ! command -v pnpm >/dev/null 2>&1; then
   echo "❌ pnpm is required for pre-commit checks."
   exit 1
 fi
 
-LOCALE_DIFF="$(git diff --cached --name-only --diff-filter=ACMR | grep -E '^src/locales/' || true)"
-if [ -n "$LOCALE_DIFF" ]; then
-  echo "[pre-commit] Locale changes detected. Regenerating i18n types..."
-  pnpm i18n:types
-  if [ -d src/types/generated ]; then
-    echo "[pre-commit] Staging regenerated i18n type artifacts..."
-    git add src/types/generated
-  fi
-fi
-
-echo "[pre-commit] Running pnpm format before lint..."
-pnpm format
-
-echo "[pre-commit] Running lint-staged for JS/TS files..."
-pnpm exec lint-staged
-
-RUST_FILES="$(git diff --cached --name-only --diff-filter=ACMR | grep -E '^src-tauri/.*\.rs$' || true)"
-if [ -n "$RUST_FILES" ]; then
-  echo "[pre-commit] Formatting Rust changes with cargo fmt..."
-  cargo fmt
-  while IFS= read -r file; do
-    [ -n "$file" ] && git add "$file"
-  done <<< "$RUST_FILES"
-
-  echo "[pre-commit] Linting Rust changes with cargo clippy..."
-  cargo clippy-all
-  if ! command -v clash-verge-logging-check >/dev/null 2>&1; then
-    echo "[pre-commit] Installing clash-verge-logging-check..."
-    cargo install --git https://github.com/clash-verge-rev/clash-verge-logging-check.git
-  fi
-  clash-verge-logging-check
-fi
-
-TS_FILES="$(git diff --cached --name-only --diff-filter=ACMR | grep -E '\.(ts|tsx)$' || true)"
-if [ -n "$TS_FILES" ]; then
-  echo "[pre-commit] Running TypeScript type check..."
-  pnpm typecheck
-fi
-
-echo "[pre-commit] All checks completed successfully."
+cargo make pre-commit

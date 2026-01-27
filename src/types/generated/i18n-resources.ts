@@ -941,6 +941,7 @@ export interface TranslationResources {
             autoCheckUpdate: string;
             autoCloseConnections: string;
             autoDelayDetection: string;
+            autoDelayDetectionInterval: string;
             autoLogClean: string;
             defaultLatencyTest: string;
             defaultLatencyTimeout: string;

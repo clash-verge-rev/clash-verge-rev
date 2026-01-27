@@ -401,6 +401,7 @@
         "proxyLayoutColumns": "代理頁面欄數",
         "autoLogClean": "自動清理日誌",
         "autoDelayDetection": "自動延遲偵測",
+        "autoDelayDetectionInterval": "自動延遲偵測間隔",
         "defaultLatencyTest": "預設測試網址",
         "defaultLatencyTimeout": "測試逾時"
       },

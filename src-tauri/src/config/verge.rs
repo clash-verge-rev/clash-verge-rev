@@ -155,6 +155,9 @@ pub struct IVerge {
     /// 是否自动检测当前节点延迟
     pub enable_auto_delay_detection: Option<bool>,
 
+    /// 自动检测当前节点延迟的间隔（分钟）
+    pub auto_delay_detection_interval_minutes: Option<u64>,
+
     /// 是否使用内部的脚本支持，默认为真
     pub enable_builtin_enhanced: Option<bool>,
 
@@ -523,6 +526,7 @@ impl IVerge {
         patch!(default_latency_test);
         patch!(default_latency_timeout);
         patch!(enable_auto_delay_detection);
+        patch!(auto_delay_detection_interval_minutes);
         patch!(enable_builtin_enhanced);
         patch!(proxy_layout_column);
         patch!(test_list);

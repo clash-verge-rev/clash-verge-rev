@@ -401,6 +401,7 @@
         "proxyLayoutColumns": "Количество столбцов в макете прокси",
         "autoLogClean": "Автоматическая очистка логов",
         "autoDelayDetection": "Автоматическое измерение задержки",
+        "autoDelayDetectionInterval": "Интервал автоматического измерения задержки",
         "defaultLatencyTest": "Ссылка на тест задержки",
         "defaultLatencyTimeout": "Таймаут задержки по умолчанию"
       },

@@ -27,8 +27,13 @@ import {
   useTheme,
 } from "@mui/material";
 import { useLockFn } from "ahooks";
-import React from "react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router";
 import { delayGroup, healthcheckProxyProvider } from "tauri-plugin-mihomo-api";
@@ -46,8 +51,8 @@ const STORAGE_KEY_GROUP = "clash-verge-selected-proxy-group";
 const STORAGE_KEY_PROXY = "clash-verge-selected-proxy";
 const STORAGE_KEY_SORT_TYPE = "clash-verge-proxy-sort-type";
 
-const AUTO_CHECK_INITIAL_DELAY_MS = 1500;
-const AUTO_CHECK_INTERVAL_MS = 5 * 60 * 1000;
+const AUTO_CHECK_DEFAULT_INTERVAL_MINUTES = 5;
+const AUTO_CHECK_INITIAL_DELAY_MS = 100;
 
 // 代理节点信息接口
 interface ProxyOption {
@@ -106,6 +111,14 @@ export const CurrentProxyCard = () => {
   const { current: currentProfile } = useProfiles();
   const autoDelayEnabled = verge?.enable_auto_delay_detection ?? false;
   const defaultLatencyTimeout = verge?.default_latency_timeout;
+  const autoDelayIntervalMs = useMemo(() => {
+    const rawInterval = verge?.auto_delay_detection_interval_minutes;
+    const intervalMinutes =
+      typeof rawInterval === "number" && rawInterval > 0
+        ? rawInterval
+        : AUTO_CHECK_DEFAULT_INTERVAL_MINUTES;
+    return Math.max(1, Math.round(intervalMinutes)) * 60 * 1000;
+  }, [verge?.auto_delay_detection_interval_minutes]);
   const currentProfileId = currentProfile?.uid || null;
 
   const getProfileStorageKey = useCallback(
@@ -592,13 +605,13 @@ export const CurrentProxyCard = () => {
       if (disposed) return;
       await checkCurrentProxyDelay();
       if (disposed) return;
-      intervalTimer = setTimeout(runAndSchedule, AUTO_CHECK_INTERVAL_MS);
+      intervalTimer = setTimeout(runAndSchedule, autoDelayIntervalMs);
     };
 
     initialTimer = setTimeout(async () => {
       await checkCurrentProxyDelay();
       if (disposed) return;
-      intervalTimer = setTimeout(runAndSchedule, AUTO_CHECK_INTERVAL_MS);
+      intervalTimer = setTimeout(runAndSchedule, autoDelayIntervalMs);
     }, AUTO_CHECK_INITIAL_DELAY_MS);
 
     return () => {
@@ -608,6 +621,7 @@ export const CurrentProxyCard = () => {
     };
   }, [
     checkCurrentProxyDelay,
+    autoDelayIntervalMs,
     isDirectMode,
     state.selection.group,
     state.selection.proxy,

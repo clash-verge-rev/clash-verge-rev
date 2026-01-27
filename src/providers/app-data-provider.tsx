@@ -15,7 +15,7 @@ import {
   getRunningMode,
   getSystemProxy,
 } from "@/services/cmds";
-import { SWR_DEFAULTS, SWR_REALTIME, SWR_SLOW_POLL } from "@/services/config";
+import { SWR_DEFAULTS, SWR_MIHOMO, SWR_REALTIME } from "@/services/config";
 
 import { AppDataContext, AppDataContextType } from "./app-data-context";
 
@@ -43,25 +43,25 @@ export const AppDataProvider = ({
   const { data: clashConfig, mutate: refreshClashConfig } = useSWR(
     "getClashConfig",
     getBaseConfig,
-    SWR_SLOW_POLL,
+    SWR_MIHOMO,
   );
 
   const { data: proxyProviders, mutate: refreshProxyProviders } = useSWR(
     "getProxyProviders",
     calcuProxyProviders,
-    SWR_DEFAULTS,
+    SWR_MIHOMO,
   );
 
   const { data: ruleProviders, mutate: refreshRuleProviders } = useSWR(
     "getRuleProviders",
     getRuleProviders,
-    SWR_DEFAULTS,
+    SWR_MIHOMO,
   );
 
   const { data: rulesData, mutate: refreshRules } = useSWR(
     "getRules",
     getRules,
-    SWR_DEFAULTS,
+    SWR_MIHOMO,
   );
 
   useEffect(() => {

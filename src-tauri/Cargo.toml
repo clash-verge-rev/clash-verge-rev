@@ -1,6 +1,6 @@
 [package]
 name = "clash-verge"
-version = "2.4.5-rc.2"
+version = "2.4.6"
 description = "clash verge"
 authors = ["zzzgydi", "Tunglies", "wonfen", "MystiPanda"]
 license = "GPL-3.0-only"
@@ -81,7 +81,7 @@ tauri-plugin-fs = "2.4.5"
 tauri-plugin-process = "2.3.1"
 tauri-plugin-deep-link = "2.4.6"
 tauri-plugin-window-state = "2.4.1"
-zip = "7.1.0"
+zip = "7.2.0"
 reqwest_dav = "0.3.1"
 aes-gcm = { version = "0.10.3", features = ["std"] }
 base64 = "0.22.1"
@@ -98,7 +98,7 @@ tauri-plugin-devtools = { version = "2.0.1" }
 tauri-plugin-mihomo = { git = "https://github.com/clash-verge-rev/tauri-plugin-mihomo" }
 clash_verge_logger = { git = "https://github.com/clash-verge-rev/clash-verge-logger" }
 async-trait = "0.1.89"
-clash_verge_service_ipc = { version = "2.1.0", features = [
+clash_verge_service_ipc = { version = "2.1.2", features = [
   "client",
 ], git = "https://github.com/clash-verge-rev/clash-verge-service-ipc" }
 arc-swap = "1.8.0"

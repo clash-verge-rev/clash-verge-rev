@@ -1,36 +1,9 @@
 #!/bin/bash
 set -euo pipefail
 
-remote_name="${1:-origin}"
-remote_url="${2:-unknown}"
-
-ROOT_DIR="$(git rev-parse --show-toplevel)"
-cd "$ROOT_DIR"
-
-if ! command -v pnpm >/dev/null 2>&1; then
-  echo "❌ pnpm is required for pre-push checks."
-  exit 1
+if ! command -v "cargo-make" >/dev/null 2>&1; then
+  echo "❌ cargo-make is required for pre-push checks."
+  cargo install --force cargo-make
 fi
 
-echo "[pre-push] Preparing to push to '$remote_name' ($remote_url). Running full validation..."
-
-echo "[pre-push] Checking Prettier formatting..."
-pnpm format:check
-
-echo "[pre-push] Running ESLint..."
-pnpm lint
-
-echo "[pre-push] Running TypeScript type checking..."
-pnpm typecheck
-
-if command -v cargo >/dev/null 2>&1; then
-  echo "[pre-push] Verifying Rust formatting..."
-  cargo fmt --check
-
-  echo "[pre-push] Running cargo clippy..."
-  cargo clippy-all
-else
-  echo "[pre-push] ⚠️ cargo not found; skipping Rust checks."
-fi
-
-echo "[pre-push] All checks passed."
+cargo make pre-push
