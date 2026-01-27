@@ -22,6 +22,13 @@ impl IRuntime {
         Self::default()
     }
 
+    #[inline]
+    pub fn clean_all(&mut self) {
+        self.config = None;
+        self.exists_keys.clear();
+        self.chain_logs.clear();
+    }
+
     // 这里只更改 allow-lan | ipv6 | log-level | tun
     #[inline]
     pub fn patch_config(&mut self, patch: &Mapping) {
