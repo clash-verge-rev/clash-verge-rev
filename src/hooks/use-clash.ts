@@ -51,11 +51,12 @@ const validatePorts = (patch: ClashInfoPatch) => {
   });
 };
 
+export const useRuntimeConfig = (shouldFetch: boolean = true) => {
+  return useSWR(shouldFetch ? "getRuntimeConfig" : null, getRuntimeConfig);
+};
+
 export const useClash = () => {
-  const { data: clash, mutate: mutateClash } = useSWR(
-    "getRuntimeConfig",
-    getRuntimeConfig,
-  );
+  const { data: clash, mutate: mutateClash } = useRuntimeConfig();
 
   const { data: versionData, mutate: mutateVersion } = useSWR(
     "getVersion",

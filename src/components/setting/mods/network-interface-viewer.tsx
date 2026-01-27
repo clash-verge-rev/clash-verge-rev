@@ -4,10 +4,9 @@ import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import type { Ref } from "react";
 import { useImperativeHandle, useState } from "react";
 import { useTranslation } from "react-i18next";
-import useSWR from "swr";
 
 import { BaseDialog, DialogRef } from "@/components/base";
-import { getNetworkInterfacesInfo } from "@/services/cmds";
+import { useNetworkInterfaces } from "@/hooks/use-network";
 import { showNotice } from "@/services/notice-service";
 
 export function NetworkInterfaceViewer({ ref }: { ref?: Ref<DialogRef> }) {
@@ -22,13 +21,7 @@ export function NetworkInterfaceViewer({ ref }: { ref?: Ref<DialogRef> }) {
     close: () => setOpen(false),
   }));
 
-  const { data: networkInterfaces } = useSWR(
-    "clash-verge-rev-internal://network-interfaces",
-    getNetworkInterfacesInfo,
-    {
-      fallbackData: [], // default data before fetch
-    },
-  );
+  const { networkInterfaces } = useNetworkInterfaces();
 
   return (
     <BaseDialog

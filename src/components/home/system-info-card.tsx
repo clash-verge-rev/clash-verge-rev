@@ -10,14 +10,13 @@ import { useLockFn } from "ahooks";
 import { useCallback, useEffect, useMemo, useReducer } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router";
-import useSWR from "swr";
 
 import { useServiceInstaller } from "@/hooks/use-service-installer";
 import { useSystemState } from "@/hooks/use-system-state";
+import { useUpdate } from "@/hooks/use-update";
 import { useVerge } from "@/hooks/use-verge";
 import { getSystemInfo } from "@/services/cmds";
 import { showNotice } from "@/services/notice-service";
-import { checkUpdateSafe as checkUpdate } from "@/services/update";
 import { version as appVersion } from "@root/package.json";
 
 import { EnhancedCard } from "./enhanced-card";
@@ -51,6 +50,18 @@ export const SystemInfoCard = () => {
   const navigate = useNavigate();
   const { isAdminMode, isSidecarMode } = useSystemState();
   const { installServiceAndRestartCore } = useServiceInstaller();
+
+  // 自动检查更新逻辑
+  const { checkUpdate: triggerCheckUpdate } = useUpdate(true, {
+    onSuccess: () => {
+      const now = Date.now();
+      localStorage.setItem("last_check_update", now.toString());
+      dispatchSystemState({
+        type: "set-last-check-update",
+        payload: new Date(now).toLocaleString(),
+      });
+    },
+  });
 
   // 系统信息状态
   const [systemState, dispatchSystemState] = useReducer(systemStateReducer, {
@@ -109,7 +120,7 @@ export const SystemInfoCard = () => {
 
       timeoutId = window.setTimeout(() => {
         if (verge?.auto_check_update) {
-          checkUpdate().catch(console.error);
+          triggerCheckUpdate().catch(console.error);
         }
       }, 5000);
     }
@@ -118,26 +129,7 @@ export const SystemInfoCard = () => {
         window.clearTimeout(timeoutId);
       }
     };
-  }, [verge?.auto_check_update, dispatchSystemState]);
-
-  // 自动检查更新逻辑
-  useSWR(
-    verge?.auto_check_update ? "checkUpdate" : null,
-    async () => {
-      const now = Date.now();
-      localStorage.setItem("last_check_update", now.toString());
-      dispatchSystemState({
-        type: "set-last-check-update",
-        payload: new Date(now).toLocaleString(),
-      });
-      return await checkUpdate();
-    },
-    {
-      revalidateOnFocus: false,
-      refreshInterval: 24 * 60 * 60 * 1000, // 每天检查一次
-      dedupingInterval: 60 * 60 * 1000, // 1小时内不重复检查
-    },
-  );
+  }, [verge?.auto_check_update, dispatchSystemState, triggerCheckUpdate]);
 
   // 导航到设置页面
   const goToSettings = useCallback(() => {
@@ -164,7 +156,7 @@ export const SystemInfoCard = () => {
   // 检查更新
   const onCheckUpdate = useLockFn(async () => {
     try {
-      const info = await checkUpdate();
+      const info = await triggerCheckUpdate();
       if (!info?.available) {
         showNotice.success(
           "settings.components.verge.advanced.notifications.latestVersion",
