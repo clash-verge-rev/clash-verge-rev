@@ -1,10 +1,8 @@
 import { Button } from "@mui/material";
 import { useRef } from "react";
-import useSWR from "swr";
 
 import { DialogRef } from "@/components/base";
-import { useVerge } from "@/hooks/use-verge";
-import { checkUpdateSafe } from "@/services/update";
+import { useUpdate } from "@/hooks/use-update";
 
 import { UpdateViewer } from "../setting/mods/update-viewer";
 
@@ -14,20 +12,9 @@ interface Props {
 
 export const UpdateButton = (props: Props) => {
   const { className } = props;
-  const { verge } = useVerge();
-  const { auto_check_update } = verge || {};
-
   const viewerRef = useRef<DialogRef>(null);
 
-  const { data: updateInfo } = useSWR(
-    auto_check_update || auto_check_update === null ? "checkUpdate" : null,
-    checkUpdateSafe,
-    {
-      errorRetryCount: 2,
-      revalidateIfStale: false,
-      focusThrottleInterval: 36e5, // 1 hour
-    },
-  );
+  const { updateInfo } = useUpdate();
 
   if (!updateInfo?.available) return null;
 

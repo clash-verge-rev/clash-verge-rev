@@ -8,13 +8,12 @@ import { useImperativeHandle, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import ReactMarkdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
-import useSWR from "swr";
 
 import { BaseDialog, DialogRef } from "@/components/base";
+import { useUpdate } from "@/hooks/use-update";
 import { portableFlag } from "@/pages/_layout";
 import { showNotice } from "@/services/notice-service";
 import { useSetUpdateState, useUpdateState } from "@/services/states";
-import { checkUpdateSafe as checkUpdate } from "@/services/update";
 
 export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
   const { t } = useTranslation();
@@ -23,11 +22,7 @@ export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
   const updateState = useUpdateState();
   const setUpdateState = useSetUpdateState();
 
-  const { data: updateInfo } = useSWR("checkUpdate", checkUpdate, {
-    errorRetryCount: 2,
-    revalidateIfStale: false,
-    focusThrottleInterval: 36e5, // 1 hour
-  });
+  const { updateInfo } = useUpdate();
 
   const [downloaded, setDownloaded] = useState(0);
   const [total, setTotal] = useState(0);
