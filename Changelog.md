@@ -11,6 +11,7 @@
 <summary><strong> ✨ 新增功能 </strong></summary>
 
 - 支持订阅设置自动延时监测间隔
+- 新增流量隧道管理界面，支持可视化添加/删除隧道配置
 
 </details>
 
