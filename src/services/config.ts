@@ -16,12 +16,6 @@ export const SWR_DEFAULTS = {
   dedupingInterval: 5000,
 } as const;
 
-export const SWR_REALTIME = {
-  ...SWR_DEFAULTS,
-  refreshInterval: 8000,
-  dedupingInterval: 3000,
-} as const;
-
 export const SWR_SLOW_POLL = {
   ...SWR_DEFAULTS,
   refreshInterval: 60000,
@@ -29,4 +23,6 @@ export const SWR_SLOW_POLL = {
 
 export const SWR_MIHOMO = {
   ...SWR_NOT_SMART,
+  errorRetryInterval: 500,
+  errorRetryCount: 15,
 };
