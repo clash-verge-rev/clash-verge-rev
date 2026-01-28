@@ -103,7 +103,31 @@
           "webUI": "网页界面",
           "clashCore": "Clash 内核",
           "openUwpTool": "UWP 工具",
-          "updateGeoData": "更新 GeoData"
+          "updateGeoData": "更新 GeoData",
+          "tunnels": {
+            "title": "流量隧道管理",
+            "localAddr": "本地监听地址",
+            "localPort": "本地监听端口",
+            "targetAddr": "目标地址",
+            "targetPort": "目标端口",
+            "proxyGroup": "代理组",
+            "proxyNode": "代理节点",
+            "protocols": "协议",
+            "existing": "已配置的隧道",
+            "default": "跟随当前配置",
+            "optional": "可选",
+            "messages": {
+              "incomplete": "请完整填写隧道信息",
+              "invalidLocalAddr": "无效的本地监听地址",
+              "invalidLocalPort": "无效的本地监听端口",
+              "invalidTargetAddr": "无效的目标地址",
+              "invalidTargetPort": "无效的目标端口"
+            },
+            "actions": {
+              "add": "添加",
+              "addNew": "添加新隧道"
+            }
+          }
         },
         "tooltips": {
           "networkInterface": "网络接口",
