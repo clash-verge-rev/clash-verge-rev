@@ -78,7 +78,7 @@
     "types-pac": "^1.0.3"
   },
   "devDependencies": {
-    "@actions/github": "^8.0.0",
+    "@actions/github": "^9.0.0",
     "@eslint-react/eslint-plugin": "^2.7.4",
     "@eslint/js": "^9.39.2",
     "@tauri-apps/cli": "2.9.6",
