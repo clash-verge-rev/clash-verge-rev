@@ -6,8 +6,8 @@ type DraftInner<T> = (SharedDraft<T>, Option<SharedDraft<T>>);
 
 /// Draft 管理：committed 与 optional draft 都以 Arc<Box<T>> 存储，
 // (committed_snapshot, optional_draft_snapshot)
-#[derive(Debug, Clone)]
-pub struct Draft<T: Clone> {
+#[derive(Debug)]
+pub struct Draft<T> {
     inner: Arc<RwLock<DraftInner<T>>>,
 }
 
@@ -88,5 +88,13 @@ impl<T: Clone> Draft<T> {
         }
         guard.0 = Arc::from(new_local);
         Ok(res)
+    }
+}
+
+impl<T: Clone> Clone for Draft<T> {
+    fn clone(&self) -> Self {
+        Self {
+            inner: Arc::clone(&self.inner),
+        }
     }
 }
