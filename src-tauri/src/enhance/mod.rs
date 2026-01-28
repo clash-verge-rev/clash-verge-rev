@@ -13,6 +13,7 @@ use self::{
     seq::{SeqMap, use_seq},
     tun::use_tun,
 };
+use crate::process::AsyncHandler;
 use crate::utils::dirs;
 use crate::{config::Config, utils::tmpl};
 use crate::{config::IVerge, constants};
@@ -33,6 +34,7 @@ struct ConfigValues {
     socks_enabled: bool,
     http_enabled: bool,
     enable_dns_settings: bool,
+    enable_external_controller: bool,
     #[cfg(not(target_os = "windows"))]
     redir_enabled: bool,
     #[cfg(target_os = "linux")]
@@ -108,13 +110,22 @@ async fn get_config_values() -> ConfigValues {
         ..
     } = *verge_arc;
 
-    let (clash_core, enable_tun, enable_builtin, socks_enabled, http_enabled, enable_dns_settings) = (
+    let (
+        clash_core,
+        enable_tun,
+        enable_builtin,
+        socks_enabled,
+        http_enabled,
+        enable_dns_settings,
+        enable_external_controller,
+    ) = (
         Some(verge_arc.get_valid_clash_core()),
         enable_tun_mode.unwrap_or(false),
         enable_builtin_enhanced.unwrap_or(true),
         verge_socks_enabled.unwrap_or(false),
         verge_http_enabled.unwrap_or(false),
         enable_dns_settings.unwrap_or(false),
+        verge_arc.enable_external_controller.unwrap_or(false),
     );
 
     #[cfg(not(target_os = "windows"))]
@@ -134,6 +145,7 @@ async fn get_config_values() -> ConfigValues {
         socks_enabled,
         http_enabled,
         enable_dns_settings,
+        enable_external_controller,
         #[cfg(not(target_os = "windows"))]
         redir_enabled,
         #[cfg(target_os = "linux")]
@@ -378,11 +390,12 @@ fn process_profile_items(
     (config, exists_keys, result_map)
 }
 
-async fn merge_default_config(
+fn merge_default_config(
     mut config: Mapping,
     clash_config: Mapping,
     socks_enabled: bool,
     http_enabled: bool,
+    enable_external_controller: bool,
     #[cfg(not(target_os = "windows"))] redir_enabled: bool,
     #[cfg(target_os = "linux")] tproxy_enabled: bool,
 ) -> Mapping {
@@ -433,19 +446,8 @@ async fn merge_default_config(
                 }
             }
             // 处理 external-controller 键的开关逻辑
-            if key.as_str() == Some("external-controller") {
-                let enable_external_controller = Config::verge()
-                    .await
-                    .latest_arc()
-                    .enable_external_controller
-                    .unwrap_or(false);
-
-                if enable_external_controller {
-                    config.insert(key, value);
-                } else {
-                    // 如果禁用了外部控制器，设置为空字符串
-                    config.insert(key, "".into());
-                }
+            if key.as_str() == Some("external-controller") && !enable_external_controller {
+                config.insert(key, "".into());
             } else {
                 config.insert(key, value);
             }
@@ -602,6 +604,7 @@ pub async fn enhance() -> (Mapping, HashSet<String>, HashMap<String, ResultLog>)
         socks_enabled,
         http_enabled,
         enable_dns_settings,
+        enable_external_controller,
         #[cfg(not(target_os = "windows"))]
         redir_enabled,
         #[cfg(target_os = "linux")]
@@ -620,48 +623,58 @@ pub async fn enhance() -> (Mapping, HashSet<String>, HashMap<String, ResultLog>)
     let global_script = profile.global_script;
     let profile_name = profile.profile_name;
 
-    // process globals
-    let (config, exists_keys, result_map) = process_global_items(config, global_merge, global_script, &profile_name);
+    let (config, exists_keys_set, result_map) = AsyncHandler::spawn_blocking(move || {
+        // process globals
+        let (config, exists_keys, result_map) =
+            process_global_items(config, global_merge, global_script, &profile_name);
 
-    // process profile-specific items
-    let (config, exists_keys, result_map) = process_profile_items(
-        config,
-        exists_keys,
-        result_map,
-        rules_item,
-        proxies_item,
-        groups_item,
-        merge_item,
-        script_item,
-        &profile_name,
-    );
+        // process profile-specific items
+        let (config, exists_keys, result_map) = process_profile_items(
+            config,
+            exists_keys,
+            result_map,
+            rules_item,
+            proxies_item,
+            groups_item,
+            merge_item,
+            script_item,
+            &profile_name,
+        );
 
-    // merge default clash config
-    let config = merge_default_config(
-        config,
-        clash_config,
-        socks_enabled,
-        http_enabled,
-        #[cfg(not(target_os = "windows"))]
-        redir_enabled,
-        #[cfg(target_os = "linux")]
-        tproxy_enabled,
-    )
-    .await;
+        // merge default clash config
+        let config = merge_default_config(
+            config,
+            clash_config,
+            socks_enabled,
+            http_enabled,
+            enable_external_controller,
+            #[cfg(not(target_os = "windows"))]
+            redir_enabled,
+            #[cfg(target_os = "linux")]
+            tproxy_enabled,
+        );
 
-    // builtin scripts
-    let mut config = apply_builtin_scripts(config, clash_core, enable_builtin);
+        // builtin scripts
+        let mut config = apply_builtin_scripts(config, clash_core.clone(), enable_builtin);
 
-    config = cleanup_proxy_groups(config);
+        config = cleanup_proxy_groups(config);
 
-    config = use_tun(config, enable_tun);
-    config = use_sort(config);
+        config = use_tun(config, enable_tun);
+        config = use_sort(config);
+
+        let mut exists_keys_set = HashSet::new();
+        exists_keys_set.extend(exists_keys);
+
+        (config, exists_keys_set, result_map)
+    })
+    .await
+    .unwrap_or_else(|e| {
+        logging!(error, Type::Core, "enhance task join error: {}", e);
+        (Mapping::new(), HashSet::new(), HashMap::new())
+    });
 
     // dns settings
-    config = apply_dns_settings(config, enable_dns_settings).await;
-
-    let mut exists_keys_set = HashSet::new();
-    exists_keys_set.extend(exists_keys);
+    let config = apply_dns_settings(config, enable_dns_settings).await;
 
     (config, exists_keys_set, result_map)
 }

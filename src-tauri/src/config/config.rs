@@ -190,6 +190,10 @@ impl Config {
         let (config, exists_keys, logs) = enhance::enhance().await;
 
         Self::runtime().await.edit_draft(|d| {
+            d.clean_all();
+        });
+
+        Self::runtime().await.edit_draft(|d| {
             *d = IRuntime {
                 config: Some(config),
                 exists_keys,
