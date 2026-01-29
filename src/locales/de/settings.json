@@ -103,7 +103,31 @@
           "webUI": "Web-Oberfläche",
           "clashCore": "Clash-Kern",
           "openUwpTool": "UWP-Tool öffnen",
-          "updateGeoData": "Geo-Daten aktualisieren"
+          "updateGeoData": "Geo-Daten aktualisieren",
+          "tunnels": {
+            "title": "Tunnel-Verwaltung",
+            "localAddr": "Lokale Abhöradresse",
+            "localPort": "Lokaler Abhörport",
+            "targetAddr": "Zieladresse",
+            "targetPort": "Zielport",
+            "proxyGroup": "Proxy-Gruppe",
+            "proxyNode": "Proxy-Knoten",
+            "protocols": "Protokoll",
+            "existing": "Vorhandene Tunnel",
+            "default": "Aktueller Konfiguration folgen",
+            "optional": "Optional",
+            "messages": {
+              "incomplete": "Bitte alle erforderlichen Tunnel-Felder ausfüllen",
+              "invalidLocalAddr": "Ungültige lokale Abhöradresse",
+              "invalidLocalPort": "Ungültiger lokaler Abhörport",
+              "invalidTargetAddr": "Ungültige Zieladresse",
+              "invalidTargetPort": "Ungültiger Zielport"
+            },
+            "actions": {
+              "add": "Hinzufügen",
+              "addNew": "Neuen Tunnel hinzufügen"
+            }
+          }
         },
         "tooltips": {
           "networkInterface": "Netzwerkschnittstelle",
