@@ -3,7 +3,7 @@ use crate::{
     core::{logger::Logger, tray::Tray},
     utils::dirs,
 };
-use anyhow::{Context as _, Result, bail};
+use anyhow::{Context as _, Result, anyhow, bail};
 use clash_verge_logging::{Type, logging, logging_error};
 use clash_verge_service_ipc::CoreConfig;
 use compact_str::CompactString;
@@ -14,7 +14,7 @@ use std::{
     process::Command as StdCommand,
     time::Duration,
 };
-use tokio::sync::Mutex;
+use tokio::{sync::Mutex, time::sleep};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ServiceStatus {
@@ -336,10 +336,7 @@ pub(super) async fn start_with_existing_service(config_file: &PathBuf) -> Result
 pub(super) async fn run_core_by_service(config_file: &PathBuf) -> Result<()> {
     logging!(info, Type::Service, "正在尝试通过服务启动核心");
 
-    let mut manager = SERVICE_MANAGER.lock().await;
-    let status = manager.check_service_comprehensive().await;
-    manager.handle_service_status(&status).await?;
-    drop(manager);
+    SERVICE_MANAGER.lock().await.refresh().await?;
 
     logging!(info, Type::Service, "服务已运行且版本匹配，直接使用");
     start_with_existing_service(config_file).await
@@ -395,13 +392,37 @@ pub async fn is_service_available() -> Result<()> {
     Ok(())
 }
 
-/// 等待一会，再检查服务是否正在运行
-/// TODO 使用 tokio select 之类机制并结合 timeout 实现更优雅的等待机制，期望等待文件出现，再尝试连接
 pub async fn wait_and_check_service_available(status: &mut ServiceManager) -> Result<()> {
-    status.0 = ServiceStatus::Unavailable("Waiting for service to be available".into());
-    clash_verge_service_ipc::connect().await?;
-    status.0 = ServiceStatus::Ready;
-    Ok(())
+    wait_for_service_ipc(status, "Waiting for service to be available").await
+}
+
+async fn wait_for_service_ipc(status: &mut ServiceManager, reason: &str) -> Result<()> {
+    status.0 = ServiceStatus::Unavailable(reason.into());
+    let config = ServiceManager::config();
+    let mut attempts = 0u32;
+    let mut last_err = anyhow!("service not ready");
+
+    loop {
+        if Path::new(clash_verge_service_ipc::IPC_PATH).exists() {
+            match clash_verge_service_ipc::connect().await {
+                Ok(_) => {
+                    status.0 = ServiceStatus::Ready;
+                    return Ok(());
+                }
+                Err(e) => last_err = e,
+            }
+        } else {
+            last_err = anyhow!("IPC path not ready");
+        }
+
+        if attempts >= config.max_retries as u32 {
+            break;
+        }
+        attempts += 1;
+        sleep(config.retry_delay).await;
+    }
+
+    Err(last_err)
 }
 
 pub fn is_service_ipc_path_exists() -> bool {
@@ -415,9 +436,9 @@ impl ServiceManager {
 
     pub const fn config() -> clash_verge_service_ipc::IpcConfig {
         clash_verge_service_ipc::IpcConfig {
-            default_timeout: Duration::from_millis(100),
-            retry_delay: Duration::from_millis(200),
-            max_retries: 6,
+            default_timeout: Duration::from_millis(150),
+            retry_delay: Duration::from_millis(250),
+            max_retries: 20,
         }
     }
 
