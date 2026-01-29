@@ -190,7 +190,7 @@ impl Tray {
             .tray_by_id("main")
             .ok_or_else(|| anyhow::anyhow!("Failed to get main tray"))?;
         match tray_event {
-            TrayAction::TrayMenue => tray.set_show_menu_on_left_click(true)?,
+            TrayAction::TrayMenu => tray.set_show_menu_on_left_click(true)?,
             _ => tray.set_show_menu_on_left_click(false)?,
         }
         Ok(())
@@ -418,6 +418,9 @@ impl Tray {
         let tray_action = TrayAction::from(tray_event.as_str());
 
         tray.on_tray_icon_event(move |_app_handle, event| {
+            if matches!(tray_action, TrayAction::Unknown) {
+                return;
+            }
             if let TrayIconEvent::Click {
                 button: MouseButton::Left,
                 button_state: MouseButtonState::Down,
