@@ -6,6 +6,7 @@
 - 修复无网络时无限请求 IP 归属查询
 - 修复 WebDAV 页面重试逻辑
 - 修复 Linux 通过 GUI 安装服务模式权限不符合预期
+- 修复 macOS 因网口顺序导致无法正确设置代理
 
 <details>
 <summary><strong> ✨ 新增功能 </strong></summary>
@@ -17,8 +18,5 @@
 
 <details>
 <summary><strong> 🚀 优化改进 </strong></summary>
-
-- 后端性能优化
-- 前端性能优化
 
 </details>
