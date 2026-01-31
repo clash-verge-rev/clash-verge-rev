@@ -1,21 +1,23 @@
+#![feature(integer_atomics)]
+
 use std::sync::Arc;
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::atomic::{AtomicU128, Ordering};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 pub type SystemLimiter = Limiter<SystemClock>;
 
 pub trait Clock: Send + Sync {
-    fn now_ms(&self) -> u64;
+    fn now_ms(&self) -> u128;
 }
 
 impl<T: Clock + ?Sized> Clock for &T {
-    fn now_ms(&self) -> u64 {
+    fn now_ms(&self) -> u128 {
         (**self).now_ms()
     }
 }
 
 impl<T: Clock + ?Sized> Clock for Arc<T> {
-    fn now_ms(&self) -> u64 {
+    fn now_ms(&self) -> u128 {
         (**self).now_ms()
     }
 }
@@ -23,25 +25,25 @@ impl<T: Clock + ?Sized> Clock for Arc<T> {
 pub struct SystemClock;
 
 impl Clock for SystemClock {
-    fn now_ms(&self) -> u64 {
+    fn now_ms(&self) -> u128 {
         SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .unwrap_or_default()
-            .as_millis() as u64
+            .as_millis()
     }
 }
 
 pub struct Limiter<C: Clock = SystemClock> {
-    last_run_ms: AtomicU64,
-    period_ms: u64,
+    last_run_ms: AtomicU128,
+    period_ms: u128,
     clock: C,
 }
 
 impl<C: Clock> Limiter<C> {
     pub const fn new(period: Duration, clock: C) -> Self {
         Self {
-            last_run_ms: AtomicU64::new(0),
-            period_ms: period.as_millis() as u64,
+            last_run_ms: AtomicU128::new(0),
+            period_ms: period.as_millis(),
             clock,
         }
     }
@@ -66,16 +68,16 @@ mod extra_tests {
     use std::sync::Arc;
     use std::thread;
 
-    struct MockClock(AtomicU64);
+    struct MockClock(AtomicU128);
     impl Clock for MockClock {
-        fn now_ms(&self) -> u64 {
+        fn now_ms(&self) -> u128 {
             self.0.load(Ordering::SeqCst)
         }
     }
 
     #[test]
     fn test_zero_period_always_passes() {
-        let mock = MockClock(AtomicU64::new(100));
+        let mock = MockClock(AtomicU128::new(100));
         let limiter = Limiter::new(Duration::from_millis(0), &mock);
 
         assert!(limiter.check());
@@ -85,7 +87,7 @@ mod extra_tests {
     #[test]
     fn test_boundary_condition() {
         let period_ms = 100;
-        let mock = MockClock(AtomicU64::new(1000));
+        let mock = MockClock(AtomicU128::new(1000));
         let limiter = Limiter::new(Duration::from_millis(period_ms), &mock);
 
         assert!(limiter.check());
@@ -100,7 +102,7 @@ mod extra_tests {
     #[test]
     fn test_high_concurrency_consistency() {
         let period = Duration::from_millis(1000);
-        let mock = Arc::new(MockClock(AtomicU64::new(1000)));
+        let mock = Arc::new(MockClock(AtomicU128::new(1000)));
         let limiter = Arc::new(Limiter::new(period, Arc::clone(&mock)));
 
         assert!(limiter.check());
@@ -124,12 +126,12 @@ mod extra_tests {
 
     #[test]
     fn test_extreme_time_jump() {
-        let mock = MockClock(AtomicU64::new(100));
+        let mock = MockClock(AtomicU128::new(100));
         let limiter = Limiter::new(Duration::from_millis(100), &mock);
 
         assert!(limiter.check());
 
-        mock.0.store(u64::MAX - 10, Ordering::SeqCst);
+        mock.0.store(u128::MAX - 10, Ordering::SeqCst);
         assert!(limiter.check());
     }
 
@@ -151,7 +153,7 @@ mod extra_tests {
 
     #[test]
     fn test_coverage_time_backward() {
-        let mock = MockClock(AtomicU64::new(5000));
+        let mock = MockClock(AtomicU128::new(5000));
         let limiter = Limiter::new(Duration::from_millis(100), &mock);
 
         assert!(limiter.check());
