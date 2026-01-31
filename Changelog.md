@@ -20,4 +20,6 @@
 <details>
 <summary><strong> 🚀 优化改进 </strong></summary>
 
+- 安装服务失败时报告更详细的错误
+
 </details>

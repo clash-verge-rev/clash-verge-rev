@@ -9,6 +9,7 @@ use clash_verge_service_ipc::CoreConfig;
 use compact_str::CompactString;
 use once_cell::sync::Lazy;
 use std::{
+    borrow::Cow,
     env::current_exe,
     path::{Path, PathBuf},
     process::Command as StdCommand,
@@ -64,6 +65,7 @@ fn uninstall_service() -> Result<()> {
 
 #[cfg(target_os = "windows")]
 fn install_service() -> Result<()> {
+    use std::process::Output;
     logging!(info, Type::Service, "install service");
 
     use deelevate::{PrivilegeLevel, Token};
@@ -79,13 +81,30 @@ fn install_service() -> Result<()> {
 
     let token = Token::with_current_process()?;
     let level = token.privilege_level()?;
-    let status = match level {
-        PrivilegeLevel::NotPrivileged => RunasCommand::new(install_path).show(false).status()?,
-        _ => StdCommand::new(install_path).creation_flags(0x08000000).status()?,
+    let output = match level {
+        PrivilegeLevel::NotPrivileged => {
+            let status = RunasCommand::new(&install_path).show(false).status()?;
+            Output {
+                status,
+                stdout: Vec::new(),
+                stderr: Vec::new(),
+            }
+        }
+        _ => {
+            // StdCommand returns Output directly
+            StdCommand::new(&install_path).creation_flags(0x08000000).output()?
+        }
     };
 
-    if !status.success() {
-        bail!("failed to install service with status {}", status.code().unwrap_or(-1));
+    if let Some((code, err)) = check_output_error(&output) {
+        logging!(
+            error,
+            Type::Service,
+            "failed to install service code: {}, details: {}",
+            code,
+            err
+        );
+        bail!("failed to install service code: {}, details: {}", code, err);
     }
 
     Ok(())
@@ -160,41 +179,42 @@ fn install_service() -> Result<()> {
     let install_shell: String = install_path.to_string_lossy().replace(" ", "\\ ");
 
     let elevator = crate::utils::help::linux_elevator();
-    let status = if linux_running_as_root() {
-        StdCommand::new(&install_path).status()?
+    let output = if linux_running_as_root() {
+        StdCommand::new(&install_path).output()?
     } else {
         let result = StdCommand::new(&elevator)
             .arg("sh")
             .arg("-c")
             .arg(&install_shell)
-            .status()?;
+            .output()?;
 
         // 如果 pkexec 执行失败，回退到 sudo
-        if !result.success() && elevator.contains("pkexec") {
+        if !result.status.success() && elevator.contains("pkexec") {
             logging!(
                 warn,
                 Type::Service,
                 "pkexec failed with code {}, falling back to sudo",
-                result.code().unwrap_or(-1)
+                result.status.code().unwrap_or(-1)
             );
             StdCommand::new("sudo")
                 .arg("sh")
                 .arg("-c")
                 .arg(&install_shell)
-                .status()?
+                .output()?
         } else {
             result
         }
     };
-    logging!(
-        info,
-        Type::Service,
-        "install status code:{}",
-        status.code().unwrap_or(-1)
-    );
 
-    if !status.success() {
-        bail!("failed to install service with status {}", status.code().unwrap_or(-1));
+    if let Some((code, err)) = check_output_error(&output) {
+        logging!(
+            error,
+            Type::Service,
+            "failed to install service code: {}, details: {}",
+            code,
+            err
+        );
+        bail!("failed to install service code: {}, details: {}", code, err);
     }
 
     Ok(())
@@ -262,13 +282,35 @@ fn install_service() -> Result<()> {
         r#"do shell script "sudo CLASH_VERGE_SERVICE_GID={gid} '{install_shell}'" with administrator privileges with prompt "{prompt}""#
     );
 
-    let status = StdCommand::new("osascript").args(vec!["-e", &command]).status()?;
-
-    if !status.success() {
-        bail!("failed to install service with status {}", status.code().unwrap_or(-1));
+    let output = StdCommand::new("osascript").args(vec!["-e", &command]).output()?;
+    if let Some((code, err)) = check_output_error(&output) {
+        logging!(
+            error,
+            Type::Service,
+            "failed to install service code: {}, details: {}",
+            code,
+            err
+        );
+        bail!("failed to install service code: {}, details: {}", code, err);
     }
 
     Ok(())
+}
+
+fn check_output_error(output: &std::process::Output) -> Option<(i32, Cow<'_, str>)> {
+    if output.status.success() {
+        return None;
+    }
+    let code = output.status.code().unwrap_or(-1);
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    if !stderr.is_empty() {
+        return Some((code, stderr));
+    }
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    if !stdout.is_empty() {
+        return Some((code, stdout));
+    }
+    Some((code, Cow::Borrowed("Unknown error")))
 }
 
 fn reinstall_service() -> Result<()> {
