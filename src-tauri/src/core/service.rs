@@ -400,6 +400,7 @@ async fn wait_for_service_ipc(status: &mut ServiceManager, reason: &str) -> Resu
     status.0 = ServiceStatus::Unavailable(reason.into());
     let config = ServiceManager::config();
     let mut attempts = 0u32;
+    #[allow(unused_assignments)]
     let mut last_err = anyhow!("service not ready");
 
     loop {
