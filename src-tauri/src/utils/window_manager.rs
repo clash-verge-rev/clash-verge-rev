@@ -39,7 +39,7 @@ pub enum WindowState {
 }
 
 // 窗口操作防抖机制
-const WINDOW_OPERATION_DEBOUNCE_MS: u64 = 1_275;
+const WINDOW_OPERATION_DEBOUNCE_MS: u64 = 625;
 static WINDOW_OPERATION_LIMITER: Lazy<Limiter> = Lazy::new(|| {
     Limiter::new(
         Duration::from_millis(WINDOW_OPERATION_DEBOUNCE_MS),

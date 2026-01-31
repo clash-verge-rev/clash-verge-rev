@@ -32,7 +32,7 @@ use menu_def::{MenuIds, MenuTexts};
 
 type ProxyMenuItem = (Option<Submenu<Wry>>, Vec<Box<dyn IsMenuItem<Wry>>>);
 
-const TRAY_CLICK_DEBOUNCE_MS: u64 = 1_275;
+const TRAY_CLICK_DEBOUNCE_MS: u64 = 300;
 
 #[derive(Clone)]
 struct TrayState {}
