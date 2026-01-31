@@ -9,7 +9,7 @@ use crate::{
     Type, cmd, config::Config, feat, logging, module::lightweight::is_in_lightweight_mode,
     utils::dirs::find_target_icons,
 };
-use governor::{DefaultDirectRateLimiter, Quota, RateLimiter};
+use clash_verge_limiter::{Limiter, SystemClock, SystemLimiter};
 use tauri::tray::TrayIconBuilder;
 use tauri_plugin_clash_verge_sysinfo::is_current_app_handle_admin;
 use tauri_plugin_mihomo::models::Proxies;
@@ -19,7 +19,6 @@ use super::handle;
 use anyhow::Result;
 use smartstring::alias::String;
 use std::collections::HashMap;
-use std::num::NonZeroU32;
 use std::time::Duration;
 use tauri::{
     AppHandle, Wry,
@@ -33,13 +32,13 @@ use menu_def::{MenuIds, MenuTexts};
 
 type ProxyMenuItem = (Option<Submenu<Wry>>, Vec<Box<dyn IsMenuItem<Wry>>>);
 
-const TRAY_CLICK_DEBOUNCE_MS: u64 = 1_275;
+const TRAY_CLICK_DEBOUNCE_MS: u64 = 300;
 
 #[derive(Clone)]
 struct TrayState {}
 
 pub struct Tray {
-    limiter: DefaultDirectRateLimiter,
+    limiter: SystemLimiter,
 }
 
 impl TrayState {
@@ -136,11 +135,7 @@ impl Default for Tray {
     #[allow(clippy::unwrap_used)]
     fn default() -> Self {
         Self {
-            limiter: RateLimiter::direct(
-                Quota::with_period(Duration::from_millis(TRAY_CLICK_DEBOUNCE_MS))
-                    .unwrap()
-                    .allow_burst(NonZeroU32::new(1).unwrap()),
-            ),
+            limiter: Limiter::new(Duration::from_millis(TRAY_CLICK_DEBOUNCE_MS), SystemClock),
         }
     }
 }
@@ -462,11 +457,11 @@ impl Tray {
     }
 
     fn should_handle_tray_click(&self) -> bool {
-        let res = self.limiter.check().is_ok();
-        if !res {
+        let allow = self.limiter.check();
+        if !allow {
             logging!(debug, Type::Tray, "tray click rate limited");
         }
-        res
+        allow
     }
 }
 

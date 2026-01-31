@@ -1,8 +1,7 @@
 use crate::{core::handle, utils::resolve::window::build_new_window};
+use clash_verge_limiter::Limiter;
 use clash_verge_logging::{Type, logging};
-use governor::{DefaultDirectRateLimiter, Quota, RateLimiter};
 use once_cell::sync::Lazy;
-use std::num::NonZeroU32;
 use std::pin::Pin;
 use std::time::Duration;
 use tauri::{Manager as _, WebviewWindow, Wry};
@@ -40,22 +39,20 @@ pub enum WindowState {
 }
 
 // 窗口操作防抖机制
-const WINDOW_OPERATION_DEBOUNCE_MS: u64 = 1_275;
-static WINDOW_OPERATION_LIMITER: Lazy<DefaultDirectRateLimiter> = Lazy::new(|| {
-    #[allow(clippy::unwrap_used)]
-    RateLimiter::direct(
-        Quota::with_period(Duration::from_millis(WINDOW_OPERATION_DEBOUNCE_MS))
-            .unwrap()
-            .allow_burst(NonZeroU32::new(1).unwrap()),
+const WINDOW_OPERATION_DEBOUNCE_MS: u64 = 625;
+static WINDOW_OPERATION_LIMITER: Lazy<Limiter> = Lazy::new(|| {
+    Limiter::new(
+        Duration::from_millis(WINDOW_OPERATION_DEBOUNCE_MS),
+        clash_verge_limiter::SystemClock,
     )
 });
 
 fn should_handle_window_operation() -> bool {
-    let res = WINDOW_OPERATION_LIMITER.check().is_ok();
-    if !res {
+    let allow = WINDOW_OPERATION_LIMITER.check();
+    if !allow {
         logging!(debug, Type::Window, "window operation rate limited");
     }
-    res
+    allow
 }
 
 /// 统一的窗口管理器
