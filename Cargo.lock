@@ -1200,6 +1200,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "clash-verge-limiter"
+version = "0.1.0"
+
+[[package]]
 name = "clash-verge-logging"
 version = "0.1.0"
 dependencies = [

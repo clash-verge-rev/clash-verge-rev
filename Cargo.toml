@@ -5,7 +5,7 @@ members = [
   "crates/clash-verge-logging",
   "crates/clash-verge-signal",
   "crates/tauri-plugin-clash-verge-sysinfo",
-  "crates/clash-verge-i18n",
+  "crates/clash-verge-i18n", "crates/clash-verge-limiter",
 ]
 resolver = "2"
 
