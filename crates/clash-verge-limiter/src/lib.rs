@@ -2,6 +2,8 @@ use std::sync::Arc;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
+pub type SystemLimiter = Limiter<SystemClock>;
+
 pub trait Clock: Send + Sync {
     fn now_ms(&self) -> u64;
 }
@@ -36,7 +38,7 @@ pub struct Limiter<C: Clock = SystemClock> {
 }
 
 impl<C: Clock> Limiter<C> {
-    pub fn new(period: Duration, clock: C) -> Self {
+    pub const fn new(period: Duration, clock: C) -> Self {
         Self {
             last_run_ms: AtomicU64::new(0),
             period_ms: period.as_millis() as u64,
