@@ -65,6 +65,7 @@ fn uninstall_service() -> Result<()> {
 
 #[cfg(target_os = "windows")]
 fn install_service() -> Result<()> {
+    use std::process::Output;
     logging!(info, Type::Service, "install service");
 
     use deelevate::{PrivilegeLevel, Token};
@@ -81,8 +82,18 @@ fn install_service() -> Result<()> {
     let token = Token::with_current_process()?;
     let level = token.privilege_level()?;
     let output = match level {
-        PrivilegeLevel::NotPrivileged => RunasCommand::new(install_path).show(false).output()?,
-        _ => StdCommand::new(install_path).creation_flags(0x08000000).output()?,
+        PrivilegeLevel::NotPrivileged => {
+            let status = RunasCommand::new(&install_path).show(false).status()?;
+            Output {
+                status,
+                stdout: Vec::new(),
+                stderr: Vec::new(),
+            }
+        }
+        _ => {
+            // StdCommand returns Output directly
+            StdCommand::new(&install_path).creation_flags(0x08000000).output()?
+        }
     };
 
     if let Some((code, err)) = check_output_error(&output) {
