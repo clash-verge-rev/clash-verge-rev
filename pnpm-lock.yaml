@@ -80,6 +80,9 @@ importers:
       foxact:
         specifier: ^0.2.52
         version: 0.2.52(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      foxts:
+        specifier: ^5.2.1
+        version: 5.2.1
       i18next:
         specifier: ^25.8.0
         version: 25.8.0(typescript@5.9.3)
@@ -2648,6 +2651,9 @@ packages:
         optional: true
       react-dom:
         optional: true
+
+  foxts@5.2.1:
+    resolution: {integrity: sha512-EsvV1QDTp8leo7RXluZbiIc1IjO9m06G6ePeX8P8VwJmKodSviS++2AKSXUh1GBMliFl57oH8ZV2fCJWEbh2rw==}
 
   fsevents@2.3.3:
     resolution: {integrity: sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==}
@@ -6339,6 +6345,8 @@ snapshots:
     optionalDependencies:
       react: 19.2.3
       react-dom: 19.2.3(react@19.2.3)
+
+  foxts@5.2.1: {}
 
   fsevents@2.3.3:
     optional: true

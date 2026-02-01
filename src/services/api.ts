@@ -1,4 +1,6 @@
 import { fetch } from "@tauri-apps/plugin-http";
+import { asyncRetry } from "foxts/async-retry";
+import { extractErrorMessage } from "foxts/extract-error-message";
 
 import { debugLog } from "@/utils/debug";
 
@@ -157,52 +159,58 @@ export const getIpInfo = async (): Promise<
   // 配置参数
   const maxRetries = 3;
   const serviceTimeout = 5000;
-  // const overallTimeout = 20000; // 增加总超时时间以容纳延迟
 
   const shuffledServices = shuffleServices();
-  let lastError: Error | null = null;
+  let lastError: unknown | null = null;
 
   for (const service of shuffledServices) {
     debugLog(`尝试IP检测服务: ${service.url}`);
 
-    for (let attempt = 0; attempt < maxRetries; attempt++) {
-      try {
-        console.debug("Fetching IP information...");
+    try {
+      return await asyncRetry(
+        async (bail) => {
+          console.debug("Fetching IP information...");
 
-        const response = await fetch(service.url, {
-          method: "GET",
-          signal: AbortSignal.timeout(service.timeout || serviceTimeout),
-          connectTimeout: service.timeout || serviceTimeout,
-        });
+          const response = await fetch(service.url, {
+            method: "GET",
+            signal: AbortSignal.timeout(service.timeout || serviceTimeout),
+            connectTimeout: service.timeout || serviceTimeout,
+          });
 
-        const data = await response.json();
+          if (!response.ok) {
+            return bail(
+              new Error(
+                `IP 检测服务出错，状态码: ${response.status} from ${service.url}`,
+              ),
+            );
+          }
 
-        if (data && data.ip) {
-          debugLog(`IP检测成功，使用服务: ${service.url}`);
-          return Object.assign(service.mapping(data), { lastFetchTs });
-        } else {
-          throw new Error(`无效的响应格式 from ${service.url}`);
-        }
-      } catch (error: any) {
-        lastError = error;
-        console.warn(
-          `尝试 ${attempt + 1}/${maxRetries} 失败 (${service.url}):`,
-          error,
-        );
+          const data = await response.json();
 
-        if (error.name === "AbortError") {
-          throw error;
-        }
-
-        if (attempt < maxRetries - 1) {
-          await new Promise((resolve) => setTimeout(resolve, 1000));
-        }
-      }
+          if (data && data.ip) {
+            debugLog(`IP检测成功，使用服务: ${service.url}`);
+            return Object.assign(service.mapping(data), { lastFetchTs });
+          } else {
+            throw new Error(`无效的响应格式 from ${service.url}`);
+          }
+        },
+        {
+          retries: maxRetries,
+          minTimeout: 500,
+          maxTimeout: 2000,
+          randomize: true,
+        },
+      );
+    } catch (error) {
+      debugLog(`IP检测服务失败: ${service.url}`, error);
+      lastError = error;
     }
   }
 
   if (lastError) {
-    throw new Error(`所有IP检测服务都失败: ${lastError.message}`);
+    throw new Error(
+      `所有IP检测服务都失败: ${extractErrorMessage(lastError) || "未知错误"}`,
+    );
   } else {
     throw new Error("没有可用的IP检测服务");
   }
