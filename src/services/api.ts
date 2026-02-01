@@ -149,76 +149,61 @@ function createPrng(seed: number): () => number {
 }
 
 // 获取当前IP和地理位置信息
-export const getIpInfo = async (): Promise<IpInfo> => {
+export const getIpInfo = async (): Promise<
+  IpInfo & { lastFetchTs: number }
+> => {
+  const lastFetchTs = Date.now();
+
   // 配置参数
   const maxRetries = 3;
   const serviceTimeout = 5000;
-  const overallTimeout = 20000; // 增加总超时时间以容纳延迟
+  // const overallTimeout = 20000; // 增加总超时时间以容纳延迟
 
-  const overallTimeoutController = new AbortController();
-  const overallTimeoutId = setTimeout(() => {
-    overallTimeoutController.abort();
-  }, overallTimeout);
+  const shuffledServices = shuffleServices();
+  let lastError: Error | null = null;
 
-  try {
-    const shuffledServices = shuffleServices();
-    let lastError: Error | null = null;
+  for (const service of shuffledServices) {
+    debugLog(`尝试IP检测服务: ${service.url}`);
 
-    for (const service of shuffledServices) {
-      debugLog(`尝试IP检测服务: ${service.url}`);
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        console.debug("Fetching IP information...");
 
-      for (let attempt = 0; attempt < maxRetries; attempt++) {
-        let timeoutId: ReturnType<typeof setTimeout> | null = null;
+        const response = await fetch(service.url, {
+          method: "GET",
+          signal: AbortSignal.timeout(service.timeout || serviceTimeout),
+          connectTimeout: service.timeout || serviceTimeout,
+        });
 
-        try {
-          const timeoutController = new AbortController();
-          timeoutId = setTimeout(() => {
-            timeoutController.abort();
-          }, service.timeout || serviceTimeout);
-          console.debug("Fetching IP information...");
+        const data = await response.json();
 
-          const response = await fetch(service.url, {
-            method: "GET",
-            signal: timeoutController.signal,
-            connectTimeout: service.timeout || serviceTimeout,
-          });
+        if (data && data.ip) {
+          debugLog(`IP检测成功，使用服务: ${service.url}`);
+          return Object.assign(service.mapping(data), { lastFetchTs });
+        } else {
+          throw new Error(`无效的响应格式 from ${service.url}`);
+        }
+      } catch (error: any) {
+        lastError = error;
+        console.warn(
+          `尝试 ${attempt + 1}/${maxRetries} 失败 (${service.url}):`,
+          error,
+        );
 
-          const data = await response.json();
+        if (error.name === "AbortError") {
+          throw error;
+        }
 
-          if (timeoutId) clearTimeout(timeoutId);
-
-          if (data && data.ip) {
-            debugLog(`IP检测成功，使用服务: ${service.url}`);
-            return service.mapping(data);
-          } else {
-            throw new Error(`无效的响应格式 from ${service.url}`);
-          }
-        } catch (error: any) {
-          if (timeoutId) clearTimeout(timeoutId);
-
-          lastError = error;
-          console.warn(
-            `尝试 ${attempt + 1}/${maxRetries} 失败 (${service.url}):`,
-            error,
-          );
-
-          if (error.name === "AbortError") {
-            throw error;
-          }
-
-          if (attempt < maxRetries - 1) {
-            await new Promise((resolve) => setTimeout(resolve, 1000));
-          }
+        if (attempt < maxRetries - 1) {
+          await new Promise((resolve) => setTimeout(resolve, 1000));
         }
       }
     }
+  }
 
-    if (lastError) {
-      throw new Error(`所有IP检测服务都失败: ${lastError.message}`);
-    } else {
-      throw new Error("没有可用的IP检测服务");
-    }
-  } finally {
-    clearTimeout(overallTimeoutId);
+  if (lastError) {
+    throw new Error(`所有IP检测服务都失败: ${lastError.message}`);
+  } else {
+    throw new Error("没有可用的IP检测服务");
   }
 };
