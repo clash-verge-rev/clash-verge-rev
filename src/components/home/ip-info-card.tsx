@@ -5,7 +5,9 @@ import {
   VisibilityOutlined,
 } from "@mui/icons-material";
 import { Box, Button, IconButton, Skeleton, Typography } from "@mui/material";
-import { memo, useCallback, useEffect, useState, useEffectEvent } from "react";
+import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { useEffect } from "foxact/use-abortable-effect";
+import { memo, useCallback, useState, useEffectEvent, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 import useSWR from "swr";
 
@@ -56,6 +58,7 @@ const getCountryFlag = (countryCode: string | undefined) => {
 export const IpInfoCard = () => {
   const { t } = useTranslation();
   const [showIp, setShowIp] = useState(false);
+  const appWindow = useMemo(() => getCurrentWebviewWindow(), []);
 
   const [countdown, setCountdown] = useState(IP_REFRESH_SECONDS);
 
@@ -72,7 +75,7 @@ export const IpInfoCard = () => {
   });
 
   // function useEffectEvent
-  const onCountdownTick = useEffectEvent(() => {
+  const onCountdownTick = useEffectEvent(async () => {
     const now = Date.now();
     const ts = ipInfo?.lastFetchTs;
     if (!ts) {
@@ -83,7 +86,7 @@ export const IpInfoCard = () => {
     let remaining = IP_REFRESH_SECONDS - elapsed;
 
     if (remaining <= 0) {
-      if (navigator.onLine) {
+      if (navigator.onLine && (await appWindow.isVisible())) {
         mutate();
       }
       remaining = IP_REFRESH_SECONDS;
