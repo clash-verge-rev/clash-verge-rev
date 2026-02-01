@@ -107,7 +107,7 @@ export const IpInfoCard = () => {
     return () => {
       if (timer != null) clearInterval(timer);
     };
-  }, [mutate]);
+  }, []);
 
   const toggleShowIp = useCallback(() => {
     setShowIp((prev) => !prev);
