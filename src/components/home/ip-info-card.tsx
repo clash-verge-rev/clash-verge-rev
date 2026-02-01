@@ -83,16 +83,22 @@ export const IpInfoCard = () => {
     }
 
     const elapsed = Math.floor((now - ts) / 1000);
-    let remaining = IP_REFRESH_SECONDS - elapsed;
+    const remaining = IP_REFRESH_SECONDS - elapsed;
 
     if (remaining <= 0) {
       if (navigator.onLine && (await appWindow.isVisible())) {
         mutate();
+        setCountdown(IP_REFRESH_SECONDS);
+      } else {
+        // do nothing. we even skip "setCountdown" to reduce re-renders
+        //
+        // but the remaining time still <= 0, and setInterval is not stopped, this
+        // callback will still be regularly triggered, as soon as the window is visible
+        // or network online again, we mutate() immediately in the following tick.
       }
-      remaining = IP_REFRESH_SECONDS;
+    } else {
+      setCountdown(remaining);
     }
-
-    setCountdown(remaining);
   });
 
   // Countdown / refresh scheduler — updates UI every 1s and triggers immediate revalidation when expired
