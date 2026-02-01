@@ -92,7 +92,7 @@ export const IpInfoCard = () => {
     setCountdown(remaining);
   });
 
-  // Countdown / refresh scheduler — updates UI every 5s and triggers immediate revalidation when expired
+  // Countdown / refresh scheduler — updates UI every 1s and triggers immediate revalidation when expired
   useEffect(() => {
     const timer: number | null = window.setInterval(onCountdownTick, 1000);
     return () => {
