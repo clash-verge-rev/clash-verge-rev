@@ -321,7 +321,7 @@ export const IpInfoCard = () => {
               whiteSpace: "nowrap",
             }}
           >
-            {`${ipInfo?.country_code}, ${ipInfo?.longitude?.toFixed(2)}, ${ipInfo?.latitude?.toFixed(2)}`}
+            {`${ipInfo?.country_code ?? "N/A"}, ${ipInfo?.longitude?.toFixed(2) ?? "N/A"}, ${ipInfo?.latitude?.toFixed(2) ?? "N/A"}`}
           </Typography>
         </Box>
       </Box>
