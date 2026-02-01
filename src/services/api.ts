@@ -198,6 +198,11 @@ export const getIpInfo = async (): Promise<
   for (const service of shuffledServices) {
     debugLog(`尝试IP检测服务: ${service.url}`);
 
+    const timeoutController = new AbortController();
+    const timeoutId = setTimeout(() => {
+      timeoutController.abort();
+    }, service.timeout || serviceTimeout);
+
     try {
       return await asyncRetry(
         async (bail) => {
@@ -205,7 +210,7 @@ export const getIpInfo = async (): Promise<
 
           const response = await fetch(service.url, {
             method: "GET",
-            signal: AbortSignal.timeout(service.timeout || serviceTimeout),
+            signal: timeoutController.signal, // AbortSignal.timeout(service.timeout || serviceTimeout),
             connectTimeout: service.timeout || serviceTimeout,
           });
 
@@ -236,6 +241,8 @@ export const getIpInfo = async (): Promise<
     } catch (error) {
       debugLog(`IP检测服务失败: ${service.url}`, error);
       lastError = error;
+    } finally {
+      clearTimeout(timeoutId);
     }
   }
 
