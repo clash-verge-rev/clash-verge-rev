@@ -92,6 +92,38 @@ const IP_CHECK_SERVICES: ServiceConfig[] = [
       timezone: data.timezone?.id || "",
     }),
   },
+  {
+    url: "https://ip.api.skk.moe/cf-geoip",
+    mapping: (data) => ({
+      ip: data.ip || "",
+      country_code: data.country || "",
+      country: data.country || "",
+      region: data.region || "",
+      city: data.city || "",
+      organization: data.asOrg || "",
+      asn: data.asn || 0,
+      asn_organization: data.asOrg || "",
+      longitude: data.longitude || 0,
+      latitude: data.latitude || 0,
+      timezone: data.timezone || "",
+    }),
+  },
+  {
+    url: "https://get.geojs.io/v1/ip/geo.json",
+    mapping: (data) => ({
+      ip: data.ip || "",
+      country_code: data.country_code || "",
+      country: data.country || "",
+      region: data.region || "",
+      city: data.city || "",
+      organization: data.organization_name || "",
+      asn: data.asn || 0,
+      asn_organization: data.organization_name || "",
+      longitude: Number(data.longitude) || 0,
+      latitude: Number(data.latitude) || 0,
+      timezone: data.timezone || "",
+    }),
+  },
 ];
 
 // 随机性服务列表洗牌函数
