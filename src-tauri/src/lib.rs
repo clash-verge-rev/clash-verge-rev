@@ -402,18 +402,34 @@ pub fn run() {
                 event_handlers::handle_reopen(has_visible_windows).await;
             });
         }
-        tauri::RunEvent::Exit => AsyncHandler::block_on(async {
+        tauri::RunEvent::Exit => {
+            // 使用 spawn 而不是 block_on 避免死锁
+            // 退出逻辑已经在 quit() 中有超时保护
             if !handle::Handle::global().is_exiting() {
-                feat::quit().await;
+                // 同步设置退出标志，避免重复退出
+                handle::Handle::global().set_is_exiting();
+                // 在后台执行清理，不阻塞事件循环
+                std::thread::spawn(|| {
+                    let rt = tokio::runtime::Builder::new_current_thread().enable_all().build();
+                    if let Ok(rt) = rt {
+                        rt.block_on(async {
+                            let _ = tokio::time::timeout(std::time::Duration::from_secs(5), feat::clean_async()).await;
+                        });
+                    }
+                });
             }
-        }),
+        }
         tauri::RunEvent::ExitRequested { api, code, .. } => {
             if core::handle::Handle::global().is_exiting() {
                 return;
             }
 
-            AsyncHandler::block_on(async {
-                let _ = handle::Handle::mihomo().await.clear_all_ws_connections().await;
+            // 使用 spawn 并添加超时，避免阻塞事件循环
+            AsyncHandler::spawn(|| async {
+                let _ = tokio::time::timeout(std::time::Duration::from_millis(500), async {
+                    let _ = handle::Handle::mihomo().await.clear_all_ws_connections().await;
+                })
+                .await;
             });
 
             if code.is_none() {

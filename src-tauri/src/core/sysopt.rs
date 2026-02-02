@@ -115,6 +115,7 @@ impl Sysopt {
     }
 
     /// init the sysproxy
+    /// 优化：减少锁持有时间，在锁外执行 I/O 操作
     pub async fn update_sysproxy(&self) -> Result<()> {
         if self.update_sysproxy.load(Ordering::Acquire) {
             logging!(info, Type::Core, "Sysproxy update is already in progress.");
@@ -155,46 +156,57 @@ impl Sysopt {
         // 先 await, 避免持有锁导致的 Send 问题
         let bypass = get_bypass().await;
 
-        let (sys, auto) = &mut *self.inner_proxy.write();
-        sys.enable = false;
-        sys.host = proxy_host.clone().into();
-        sys.port = port;
-        sys.bypass = bypass.into();
+        // 准备代理配置（在锁内快速完成）
+        let (sys_config, auto_config) = {
+            let (sys, auto) = &mut *self.inner_proxy.write();
+            sys.enable = false;
+            sys.host = proxy_host.clone().into();
+            sys.port = port;
+            sys.bypass = bypass.into();
 
-        auto.enable = false;
-        auto.url = format!("http://{proxy_host}:{pac_port}/commands/pac");
+            auto.enable = false;
+            auto.url = format!("http://{proxy_host}:{pac_port}/commands/pac");
 
+            // 根据配置设置 enable 标志
+            if pac_enable {
+                auto.enable = true;
+            } else if sys_enable {
+                sys.enable = true;
+            }
+
+            // 克隆配置用于锁外操作
+            (sys.clone(), auto.clone())
+        }; // 锁在这里释放
+
+        // 在锁外重置 guard
         self.access_guard().write().set_guard_type(GuardType::None);
 
+        // 在锁外执行 I/O 操作，避免长时间持有锁
         if !sys_enable && !pac_enable {
             // disable proxy
-            sys.set_system_proxy()?;
-            auto.set_auto_proxy()?;
+            sys_config.set_system_proxy()?;
+            auto_config.set_auto_proxy()?;
             return Ok(());
         }
 
         if pac_enable {
-            sys.enable = false;
-            auto.enable = true;
-            sys.set_system_proxy()?;
-            auto.set_auto_proxy()?;
+            sys_config.set_system_proxy()?;
+            auto_config.set_auto_proxy()?;
             if proxy_guard {
                 self.access_guard()
                     .write()
-                    .set_guard_type(GuardType::Autoproxy(auto.clone()));
+                    .set_guard_type(GuardType::Autoproxy(auto_config));
             }
             return Ok(());
         }
 
         if sys_enable {
-            auto.enable = false;
-            sys.enable = true;
-            auto.set_auto_proxy()?;
-            sys.set_system_proxy()?;
+            auto_config.set_auto_proxy()?;
+            sys_config.set_system_proxy()?;
             if proxy_guard {
                 self.access_guard()
                     .write()
-                    .set_guard_type(GuardType::Sysproxy(sys.clone()));
+                    .set_guard_type(GuardType::Sysproxy(sys_config));
             }
             return Ok(());
         }
@@ -203,6 +215,7 @@ impl Sysopt {
     }
 
     /// reset the sysproxy
+    /// 优化：减少锁持有时间
     #[allow(clippy::unused_async)]
     pub async fn reset_sysproxy(&self) -> Result<()> {
         if self
@@ -219,12 +232,17 @@ impl Sysopt {
         // close proxy guard
         self.access_guard().write().set_guard_type(GuardType::None);
 
-        // 直接关闭所有代理
-        let (sys, auto) = &mut *self.inner_proxy.write();
-        sys.enable = false;
-        sys.set_system_proxy()?;
-        auto.enable = false;
-        auto.set_auto_proxy()?;
+        // 准备配置（快速获取锁并更新）
+        let (sys_config, auto_config) = {
+            let (sys, auto) = &mut *self.inner_proxy.write();
+            sys.enable = false;
+            auto.enable = false;
+            (sys.clone(), auto.clone())
+        }; // 锁在这里释放
+
+        // 在锁外执行 I/O 操作
+        sys_config.set_system_proxy()?;
+        auto_config.set_auto_proxy()?;
 
         Ok(())
     }

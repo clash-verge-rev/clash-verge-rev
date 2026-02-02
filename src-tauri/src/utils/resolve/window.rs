@@ -7,7 +7,7 @@ use crate::{
     core::handle,
     utils::resolve::window_script::{INITIAL_LOADING_OVERLAY, build_window_initial_script},
 };
-use clash_verge_logging::{Type, logging_error};
+use clash_verge_logging::{Type, logging, logging_error};
 
 const DARK_BACKGROUND_COLOR: Color = Color(46, 48, 61, 255); // #2E303D
 const LIGHT_BACKGROUND_COLOR: Color = Color(245, 245, 245, 255); // #F5F5F5
@@ -20,6 +20,30 @@ const DEFAULT_HEIGHT: f64 = 700.0;
 
 const MINIMAL_WIDTH: f64 = 520.0;
 const MINIMAL_HEIGHT: f64 = 520.0;
+
+/// 检测系统主题（带超时保护）
+/// 在某些 Linux 环境上，DBUS 调用可能会阻塞
+fn detect_system_theme_safe() -> Option<SystemTheme> {
+    use std::sync::mpsc;
+    use std::time::Duration;
+
+    let (tx, rx) = mpsc::channel();
+
+    // 在单独的线程中执行检测，避免阻塞
+    std::thread::spawn(move || {
+        let result = detect_system_theme().ok();
+        let _ = tx.send(result);
+    });
+
+    // 等待最多 500ms
+    match rx.recv_timeout(Duration::from_millis(500)) {
+        Ok(result) => result,
+        Err(_) => {
+            logging!(warn, Type::Window, "System theme detection timed out, using default");
+            None
+        }
+    }
+}
 
 /// 构建新的 WebView 窗口
 pub async fn build_new_window() -> Result<WebviewWindow, String> {
@@ -40,10 +64,11 @@ pub async fn build_new_window() -> Result<WebviewWindow, String> {
         _ => None,
     };
 
+    // 使用带超时保护的主题检测
     let prefers_dark_background = match resolved_theme {
         Some(Theme::Dark) => true,
         Some(Theme::Light) => false,
-        _ => !matches!(detect_system_theme().ok(), Some(SystemTheme::Light)),
+        _ => !matches!(detect_system_theme_safe(), Some(SystemTheme::Light)),
     };
 
     let background_color = if prefers_dark_background {

@@ -200,15 +200,56 @@ fn determine_update_flags(patch: &IVerge) -> UpdateFlags {
     update_flags
 }
 
+/// 核心操作超时时间（秒）
+const CORE_OPERATION_TIMEOUT_SECS: u64 = 10;
+
 #[allow(clippy::cognitive_complexity)]
 async fn process_terminated_flags(update_flags: UpdateFlags, patch: &IVerge) -> Result<()> {
+    use tokio::time::{Duration, timeout};
+
     // Process updates based on flags
+    // 为核心操作添加超时保护，避免无限期阻塞
     if update_flags.contains(UpdateFlags::RESTART_CORE) {
         Config::generate().await?;
-        CoreManager::global().restart_core().await?;
+        match timeout(
+            Duration::from_secs(CORE_OPERATION_TIMEOUT_SECS),
+            CoreManager::global().restart_core(),
+        )
+        .await
+        {
+            Ok(result) => result?,
+            Err(_) => {
+                logging!(
+                    error,
+                    Type::Core,
+                    "restart_core timed out after {}s",
+                    CORE_OPERATION_TIMEOUT_SECS
+                );
+                anyhow::bail!("Core restart timed out");
+            }
+        }
     }
     if update_flags.contains(UpdateFlags::CLASH_CONFIG) {
-        CoreManager::global().update_config().await?;
+        // TUN 模式切换的关键路径，添加超时保护
+        match timeout(
+            Duration::from_secs(CORE_OPERATION_TIMEOUT_SECS),
+            CoreManager::global().update_config(),
+        )
+        .await
+        {
+            Ok(result) => {
+                result?;
+            }
+            Err(_) => {
+                logging!(
+                    error,
+                    Type::Core,
+                    "update_config timed out after {}s",
+                    CORE_OPERATION_TIMEOUT_SECS
+                );
+                anyhow::bail!("Config update timed out");
+            }
+        }
         handle::Handle::refresh_clash();
     }
     if update_flags.contains(UpdateFlags::VERGE_CONFIG) {

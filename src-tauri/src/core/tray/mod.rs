@@ -205,8 +205,8 @@ impl Tray {
         let verge = Config::verge().await.latest_arc();
         let system_proxy = verge.enable_system_proxy.as_ref().unwrap_or(&false);
         let tun_mode = verge.enable_tun_mode.as_ref().unwrap_or(&false);
-        let tun_mode_available =
-            is_current_app_handle_admin(app_handle) || service::is_service_available().await.is_ok();
+        // 使用缓存的服务状态检查，避免每次都进行 IPC 连接导致阻塞
+        let tun_mode_available = is_current_app_handle_admin(app_handle) || service::is_service_available_cached();
         let mode = {
             Config::clash()
                 .await

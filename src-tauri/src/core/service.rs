@@ -13,9 +13,17 @@ use std::{
     env::current_exe,
     path::{Path, PathBuf},
     process::Command as StdCommand,
+    sync::atomic::{AtomicBool, AtomicU64, Ordering},
     time::Duration,
 };
 use tokio::{sync::Mutex, time::sleep};
+
+/// 服务状态缓存，避免频繁检查
+static SERVICE_AVAILABLE_CACHE: AtomicBool = AtomicBool::new(false);
+/// 上次检查时间戳（毫秒）
+static SERVICE_CHECK_TIMESTAMP: AtomicU64 = AtomicU64::new(0);
+/// 缓存有效期（毫秒）
+const SERVICE_CACHE_TTL_MS: u64 = 5000;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ServiceStatus {
@@ -110,6 +118,54 @@ fn install_service() -> Result<()> {
     Ok(())
 }
 
+/// 检查是否有可用的图形环境（用于 pkexec）
+#[cfg(target_os = "linux")]
+fn has_display_environment() -> bool {
+    std::env::var("DISPLAY").is_ok() || std::env::var("WAYLAND_DISPLAY").is_ok()
+}
+
+/// 使用超时执行命令，避免无限期阻塞
+#[cfg(target_os = "linux")]
+fn run_command_with_timeout(mut cmd: StdCommand, timeout_secs: u64) -> Result<std::process::Output> {
+    use std::process::Stdio;
+
+    // 设置非阻塞的 stdin，避免等待输入
+    cmd.stdin(Stdio::null());
+
+    let child = cmd.spawn()?;
+    let pid = child.id();
+
+    // 在单独的线程中等待进程完成
+    let (tx, rx) = std::sync::mpsc::channel();
+    let handle = std::thread::spawn(move || {
+        let output = child.wait_with_output();
+        let _ = tx.send(output);
+    });
+
+    // 等待超时
+    match rx.recv_timeout(std::time::Duration::from_secs(timeout_secs)) {
+        Ok(result) => {
+            let _ = handle.join();
+            result.map_err(|e| anyhow::anyhow!(e))
+        }
+        Err(_) => {
+            // 超时，尝试终止进程
+            logging!(
+                warn,
+                Type::Service,
+                "Command timed out after {}s, killing process {}",
+                timeout_secs,
+                pid
+            );
+            #[cfg(unix)]
+            unsafe {
+                libc::kill(pid as i32, libc::SIGKILL);
+            }
+            bail!("Command timed out after {} seconds", timeout_secs);
+        }
+    }
+}
+
 #[cfg(target_os = "linux")]
 fn uninstall_service() -> Result<()> {
     logging!(info, Type::Service, "uninstall service");
@@ -122,47 +178,65 @@ fn uninstall_service() -> Result<()> {
 
     let uninstall_shell: String = uninstall_path.to_string_lossy().replace(" ", "\\ ");
 
-    let elevator = crate::utils::help::linux_elevator();
-    let status = if linux_running_as_root() {
-        StdCommand::new(&uninstall_path).status()?
-    } else {
-        let result = StdCommand::new(&elevator)
-            .arg("sh")
-            .arg("-c")
-            .arg(&uninstall_shell)
-            .status()?;
-
-        // 如果 pkexec 执行失败，回退到 sudo
-        if !result.success() && elevator.contains("pkexec") {
-            logging!(
-                warn,
-                Type::Service,
-                "pkexec failed with code {}, falling back to sudo",
-                result.code().unwrap_or(-1)
+    // 如果已经是 root，直接执行
+    if linux_running_as_root() {
+        let mut cmd = StdCommand::new(&uninstall_path);
+        let output = run_command_with_timeout(cmd, 30)?;
+        if !output.status.success() {
+            bail!(
+                "failed to uninstall service with status {}",
+                output.status.code().unwrap_or(-1)
             );
-            StdCommand::new("sudo")
-                .arg("sh")
-                .arg("-c")
-                .arg(&uninstall_shell)
-                .status()?
-        } else {
-            result
+        }
+        return Ok(());
+    }
+
+    // 非 root 用户需要权限提升
+    let elevator = crate::utils::help::linux_elevator();
+
+    // 如果使用 pkexec 但没有图形环境，直接返回错误
+    if elevator.contains("pkexec") && !has_display_environment() {
+        logging!(
+            warn,
+            Type::Service,
+            "pkexec requires display environment, but none found"
+        );
+        bail!("Cannot run pkexec without display environment. Please run as root or set DISPLAY.");
+    }
+
+    let mut cmd = StdCommand::new(&elevator);
+    cmd.arg("sh").arg("-c").arg(&uninstall_shell);
+
+    // 使用超时执行，避免无限期等待
+    let output = match run_command_with_timeout(cmd, 60) {
+        Ok(output) => output,
+        Err(e) => {
+            // 如果 pkexec 超时或失败，尝试 sudo（仅在有终端时）
+            if elevator.contains("pkexec") {
+                logging!(
+                    warn,
+                    Type::Service,
+                    "pkexec failed: {}, this may require manual intervention",
+                    e
+                );
+            }
+            return Err(e);
         }
     };
+
+    if !output.status.success() {
+        bail!(
+            "failed to uninstall service with status {}",
+            output.status.code().unwrap_or(-1)
+        );
+    }
+
     logging!(
         info,
         Type::Service,
         "uninstall status code:{}",
-        status.code().unwrap_or(-1)
+        output.status.code().unwrap_or(-1)
     );
-
-    if !status.success() {
-        bail!(
-            "failed to uninstall service with status {}",
-            status.code().unwrap_or(-1)
-        );
-    }
-
     Ok(())
 }
 
@@ -178,31 +252,45 @@ fn install_service() -> Result<()> {
 
     let install_shell: String = install_path.to_string_lossy().replace(" ", "\\ ");
 
-    let elevator = crate::utils::help::linux_elevator();
-    let output = if linux_running_as_root() {
-        StdCommand::new(&install_path).output()?
-    } else {
-        let result = StdCommand::new(&elevator)
-            .arg("sh")
-            .arg("-c")
-            .arg(&install_shell)
-            .output()?;
+    // 如果已经是 root，直接执行
+    if linux_running_as_root() {
+        let cmd = StdCommand::new(&install_path);
+        let output = run_command_with_timeout(cmd, 30)?;
+        if let Some((code, err)) = check_output_error(&output) {
+            bail!("failed to install service code: {}, details: {}", code, err);
+        }
+        return Ok(());
+    }
 
-        // 如果 pkexec 执行失败，回退到 sudo
-        if !result.status.success() && elevator.contains("pkexec") {
-            logging!(
-                warn,
-                Type::Service,
-                "pkexec failed with code {}, falling back to sudo",
-                result.status.code().unwrap_or(-1)
-            );
-            StdCommand::new("sudo")
-                .arg("sh")
-                .arg("-c")
-                .arg(&install_shell)
-                .output()?
-        } else {
-            result
+    // 非 root 用户需要权限提升
+    let elevator = crate::utils::help::linux_elevator();
+
+    // 如果使用 pkexec 但没有图形环境，直接返回错误
+    if elevator.contains("pkexec") && !has_display_environment() {
+        logging!(
+            warn,
+            Type::Service,
+            "pkexec requires display environment, but none found"
+        );
+        bail!("Cannot run pkexec without display environment. Please run as root or set DISPLAY.");
+    }
+
+    let mut cmd = StdCommand::new(&elevator);
+    cmd.arg("sh").arg("-c").arg(&install_shell);
+
+    // 使用超时执行，避免无限期等待
+    let output = match run_command_with_timeout(cmd, 60) {
+        Ok(output) => output,
+        Err(e) => {
+            if elevator.contains("pkexec") {
+                logging!(
+                    warn,
+                    Type::Service,
+                    "pkexec failed: {}, this may require manual intervention",
+                    e
+                );
+            }
+            return Err(e);
         }
     };
 
@@ -419,19 +507,66 @@ pub(super) async fn stop_core_by_service() -> Result<()> {
     Ok(())
 }
 
-/// 检查服务是否正在运行
-pub async fn is_service_available() -> Result<()> {
-    if let Err(e) = Path::metadata(clash_verge_service_ipc::IPC_PATH.as_ref()) {
-        let verge = Config::verge().await;
-        let verge_last = verge.latest_arc();
-        let is_enable = verge_last.enable_tun_mode.unwrap_or(false);
-        if is_enable {
-            logging!(warn, Type::Service, "Some issue with service IPC Path: {}", e);
-        }
-        return Err(e.into());
+/// 快速检查服务是否可用（使用缓存，适用于 UI 更新等频繁调用场景）
+pub fn is_service_available_cached() -> bool {
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_millis() as u64)
+        .unwrap_or(0);
+
+    let last_check = SERVICE_CHECK_TIMESTAMP.load(Ordering::Relaxed);
+
+    // 如果缓存仍然有效，直接返回缓存值
+    if now.saturating_sub(last_check) < SERVICE_CACHE_TTL_MS {
+        return SERVICE_AVAILABLE_CACHE.load(Ordering::Relaxed);
     }
-    clash_verge_service_ipc::connect().await?;
-    Ok(())
+
+    // 缓存过期，返回上次的值，后台更新
+    // 这里使用同步检查 IPC 路径是否存在作为快速判断
+    let path_exists = is_service_ipc_path_exists();
+    if !path_exists {
+        SERVICE_AVAILABLE_CACHE.store(false, Ordering::Relaxed);
+        SERVICE_CHECK_TIMESTAMP.store(now, Ordering::Relaxed);
+    }
+
+    SERVICE_AVAILABLE_CACHE.load(Ordering::Relaxed)
+}
+
+/// 更新服务可用性缓存
+pub fn update_service_available_cache(available: bool) {
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map(|d| d.as_millis() as u64)
+        .unwrap_or(0);
+
+    SERVICE_AVAILABLE_CACHE.store(available, Ordering::Relaxed);
+    SERVICE_CHECK_TIMESTAMP.store(now, Ordering::Relaxed);
+}
+
+/// 检查服务是否正在运行（带超时保护）
+pub async fn is_service_available() -> Result<()> {
+    // 先检查 IPC 路径是否存在（快速检查）
+    if !is_service_ipc_path_exists() {
+        update_service_available_cache(false);
+        return Err(anyhow!("IPC path not exists"));
+    }
+
+    // 使用超时包装连接检查，避免长时间阻塞
+    match tokio::time::timeout(Duration::from_millis(500), clash_verge_service_ipc::connect()).await {
+        Ok(Ok(_)) => {
+            update_service_available_cache(true);
+            Ok(())
+        }
+        Ok(Err(e)) => {
+            update_service_available_cache(false);
+            Err(e)
+        }
+        Err(_) => {
+            // 超时
+            update_service_available_cache(false);
+            Err(anyhow!("Service connection timeout"))
+        }
+    }
 }
 
 pub async fn wait_and_check_service_available(status: &mut ServiceManager) -> Result<()> {
@@ -447,12 +582,15 @@ async fn wait_for_service_ipc(status: &mut ServiceManager, reason: &str) -> Resu
 
     loop {
         if Path::new(clash_verge_service_ipc::IPC_PATH).exists() {
-            match clash_verge_service_ipc::connect().await {
-                Ok(_) => {
+            // 为每次连接尝试添加超时保护
+            match tokio::time::timeout(Duration::from_millis(300), clash_verge_service_ipc::connect()).await {
+                Ok(Ok(_)) => {
                     status.0 = ServiceStatus::Ready;
+                    update_service_available_cache(true);
                     return Ok(());
                 }
-                Err(e) => last_err = e,
+                Ok(Err(e)) => last_err = e,
+                Err(_) => last_err = anyhow!("Connection timeout"),
             }
         } else {
             last_err = anyhow!("IPC path not ready");
@@ -465,6 +603,7 @@ async fn wait_for_service_ipc(status: &mut ServiceManager, reason: &str) -> Resu
         sleep(config.retry_delay).await;
     }
 
+    update_service_available_cache(false);
     Err(last_err)
 }
 
@@ -477,11 +616,13 @@ impl ServiceManager {
         Self(ServiceStatus::Unavailable("Need Checks".into()))
     }
 
+    /// IPC 配置 - 减少重试次数避免长时间阻塞
+    /// 最大阻塞时间: 5 * 200ms = 1秒
     pub const fn config() -> clash_verge_service_ipc::IpcConfig {
         clash_verge_service_ipc::IpcConfig {
-            default_timeout: Duration::from_millis(150),
-            retry_delay: Duration::from_millis(250),
-            max_retries: 20,
+            default_timeout: Duration::from_millis(100),
+            retry_delay: Duration::from_millis(200),
+            max_retries: 5,
         }
     }
 
