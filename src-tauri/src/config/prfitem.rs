@@ -8,7 +8,7 @@ use crate::{
 };
 use anyhow::{Context as _, Result, bail};
 use base64::{Engine as _, engine::general_purpose};
-use chrono::{Datelike, Local, TimeZone};
+use chrono::{Datelike as _, Local, TimeZone as _};
 use clash_verge_logging::{Type, logging};
 use serde::{Deserialize, Serialize};
 use serde_json::Value as JsonValue;
@@ -632,6 +632,7 @@ fn fix_dirty_url(input: &str) -> Result<Url> {
     Ok(url)
 }
 
+#[allow(clippy::too_many_arguments)]
 async fn try_build_jms_profile(
     url: &Url,
     name: Option<&String>,
@@ -868,8 +869,12 @@ fn last_day_of_month(year: i32, month: u32) -> u32 {
     } else {
         (year, month + 1)
     };
-    let first_next = chrono::NaiveDate::from_ymd_opt(next_year, next_month, 1)
-        .unwrap_or_else(|| chrono::NaiveDate::from_ymd_opt(year, month, 1).unwrap());
+    let first_next = match chrono::NaiveDate::from_ymd_opt(next_year, next_month, 1)
+        .or_else(|| chrono::NaiveDate::from_ymd_opt(year, month, 1))
+    {
+        Some(date) => date,
+        None => return 28,
+    };
     let last = first_next - chrono::Duration::days(1);
     last.day()
 }
@@ -928,7 +933,7 @@ fn parse_jms_subscription(content: &str) -> Result<Vec<ProxyConfig>> {
 
 fn decode_base64_text(input: &str) -> Result<StdString> {
     let mut compact: StdString = input.chars().filter(|c| !c.is_whitespace()).collect();
-    while compact.len() % 4 != 0 {
+    while !compact.len().is_multiple_of(4) {
         compact.push('=');
     }
     let decoded = general_purpose::STANDARD.decode(compact.as_bytes())?;
