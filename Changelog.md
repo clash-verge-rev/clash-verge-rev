@@ -21,5 +21,6 @@
 <summary><strong> 🚀 优化改进 </strong></summary>
 
 - 安装服务失败时报告更详细的错误
+- 避免脏订阅地址无法 Scheme 导入订阅
 
 </details>
