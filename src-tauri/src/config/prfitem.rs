@@ -7,9 +7,14 @@ use crate::{
     },
 };
 use anyhow::{Context as _, Result, bail};
+use base64::{Engine as _, engine::general_purpose};
+use chrono::{Datelike, Local, TimeZone};
+use clash_verge_logging::{Type, logging};
 use serde::{Deserialize, Serialize};
+use serde_json::Value as JsonValue;
 use serde_yaml_ng::Mapping;
 use smartstring::alias::String;
+use std::string::String as StdString;
 use std::time::Duration;
 use tokio::fs;
 // TODO, use other re-export
@@ -282,6 +287,21 @@ impl PrfItem {
         };
 
         let url = fix_dirty_url(url)?;
+
+        if let Some(item) = try_build_jms_profile(
+            &url,
+            name,
+            desc,
+            option,
+            proxy_type,
+            timeout,
+            user_agent.clone(),
+            accept_invalid_certs,
+        )
+        .await?
+        {
+            return Ok(item);
+        }
 
         // 使用网络管理器发送请求
         let resp = match NetworkManager::new()
@@ -610,4 +630,384 @@ fn fix_dirty_url(input: &str) -> Result<Url> {
     }
 
     Ok(url)
+}
+
+async fn try_build_jms_profile(
+    url: &Url,
+    name: Option<&String>,
+    desc: Option<&String>,
+    option: Option<&PrfOption>,
+    proxy_type: ProxyType,
+    timeout: u64,
+    user_agent: Option<String>,
+    accept_invalid_certs: bool,
+) -> Result<Option<PrfItem>> {
+    if !is_jms_subscription_url(url) {
+        return Ok(None);
+    }
+
+    let allow_auto_update = option.map(|o| o.allow_auto_update.unwrap_or(true));
+    let update_interval = option.and_then(|o| o.update_interval);
+    let mut merge = option.and_then(|o| o.merge.clone());
+    let mut script = option.and_then(|o| o.script.clone());
+    let mut rules = option.and_then(|o| o.rules.clone());
+    let mut proxies = option.and_then(|o| o.proxies.clone());
+    let mut groups = option.and_then(|o| o.groups.clone());
+
+    let resp = match NetworkManager::new()
+        .get_with_interrupt(
+            url.as_str(),
+            proxy_type,
+            Some(timeout),
+            user_agent.clone(),
+            accept_invalid_certs,
+        )
+        .await
+    {
+        Ok(r) => r,
+        Err(e) => {
+            tokio::time::sleep(Duration::from_millis(100)).await;
+            bail!("failed to fetch jms subscription: {}", e);
+        }
+    };
+
+    let status_code = resp.status();
+    if !status_code.is_success() {
+        bail!("failed to fetch jms subscription with status {status_code}")
+    }
+
+    let raw_content = resp.text_with_charset()?;
+    let proxies_config = parse_jms_subscription(raw_content)?;
+    if proxies_config.is_empty() {
+        bail!("jms subscription does not contain valid nodes");
+    }
+
+    let config = ClashConfig {
+        proxies: proxies_config,
+    };
+
+    let data = serde_yaml_ng::to_string(&config).context("failed to serialize jms config")?;
+    let yaml = serde_yaml_ng::from_str::<Mapping>(&data).context("the jms profile data is invalid yaml")?;
+    if !yaml.contains_key("proxies") && !yaml.contains_key("proxy-providers") {
+        bail!("jms profile does not contain `proxies` or `proxy-providers`");
+    }
+
+    let extra = match fetch_jms_bandwidth_info(
+        url,
+        proxy_type,
+        timeout,
+        user_agent,
+        accept_invalid_certs,
+    )
+    .await
+    {
+        Ok(info) => info,
+        Err(e) => {
+            logging!(warn, Type::Config, "failed to fetch jms bandwidth info: {}", e);
+            None
+        }
+    };
+
+    if merge.is_none() {
+        let merge_item = &mut PrfItem::from_merge(None)?;
+        profiles::profiles_append_item_safe(merge_item).await?;
+        merge = merge_item.uid.clone();
+    }
+    if script.is_none() {
+        let script_item = &mut PrfItem::from_script(None)?;
+        profiles::profiles_append_item_safe(script_item).await?;
+        script = script_item.uid.clone();
+    }
+    if rules.is_none() {
+        let rules_item = &mut PrfItem::from_rules()?;
+        profiles::profiles_append_item_safe(rules_item).await?;
+        rules = rules_item.uid.clone();
+    }
+    if proxies.is_none() {
+        let proxies_item = &mut PrfItem::from_proxies()?;
+        profiles::profiles_append_item_safe(proxies_item).await?;
+        proxies = proxies_item.uid.clone();
+    }
+    if groups.is_none() {
+        let groups_item = &mut PrfItem::from_groups()?;
+        profiles::profiles_append_item_safe(groups_item).await?;
+        groups = groups_item.uid.clone();
+    }
+
+    let uid = help::get_uid("R").into();
+    let file = format!("{uid}.yaml").into();
+    let name = name
+        .map(|s| s.to_owned())
+        .unwrap_or_else(|| "JMS".into());
+
+    Ok(Some(PrfItem {
+        uid: Some(uid),
+        itype: Some("remote".into()),
+        name: Some(name),
+        desc: desc.cloned(),
+        file: Some(file),
+        url: Some(url.as_str().into()),
+        selected: None,
+        extra,
+        option: Some(PrfOption {
+            update_interval,
+            merge,
+            script,
+            rules,
+            proxies,
+            groups,
+            allow_auto_update,
+            ..PrfOption::default()
+        }),
+        home: None,
+        updated: Some(chrono::Local::now().timestamp() as usize),
+        file_data: Some(data.into()),
+    }))
+}
+
+fn is_jms_subscription_url(url: &Url) -> bool {
+    let host = url.host_str().unwrap_or_default().to_ascii_lowercase();
+    host.ends_with("jmssub.net") && url.path() == "/members/getsub.php"
+}
+
+async fn fetch_jms_bandwidth_info(
+    url: &Url,
+    proxy_type: ProxyType,
+    timeout: u64,
+    user_agent: Option<String>,
+    accept_invalid_certs: bool,
+) -> Result<Option<PrfExtra>> {
+    let mut service = None;
+    let mut id = None;
+    for (key, value) in url.query_pairs() {
+        if key == "service" {
+            service = Some(value.into_owned());
+        } else if key == "id" {
+            id = Some(value.into_owned());
+        }
+    }
+
+    let (service, id) = match (service, id) {
+        (Some(service), Some(id)) => (service, id),
+        _ => return Ok(None),
+    };
+
+    let bw_url = format!(
+        "https://justmysocks6.net/members/getbwcounter.php?service={service}&id={id}"
+    );
+    let resp = NetworkManager::new()
+        .get_with_interrupt(
+            bw_url.as_str(),
+            proxy_type,
+            Some(timeout),
+            user_agent,
+            accept_invalid_certs,
+        )
+        .await?;
+
+    if !resp.status().is_success() {
+        return Ok(None);
+    }
+
+    let text = resp.text_with_charset()?;
+    let payload: JsonValue = serde_json::from_str(text).context("invalid jms bandwidth json")?;
+    let monthly = payload
+        .get("monthly_bw_limit_b")
+        .and_then(JsonValue::as_u64)
+        .unwrap_or(0);
+    let used = payload
+        .get("bw_counter_b")
+        .and_then(JsonValue::as_u64)
+        .unwrap_or(0);
+    let reset_day = payload
+        .get("bw_reset_day_of_month")
+        .and_then(JsonValue::as_u64)
+        .unwrap_or(0) as u32;
+
+    if monthly == 0 || reset_day == 0 {
+        return Ok(None);
+    }
+
+    let adjust_factor = (1024_f64.powi(3)) / (1000_f64.powi(3));
+    let adjusted_used = (used as f64 * adjust_factor).round() as u64;
+    let adjusted_total = (monthly as f64 * adjust_factor).round() as u64;
+    let expire = next_reset_timestamp(reset_day).unwrap_or(0);
+
+    Ok(Some(PrfExtra {
+        upload: 0,
+        download: adjusted_used,
+        total: adjusted_total,
+        expire,
+    }))
+}
+
+fn next_reset_timestamp(reset_day: u32) -> Option<u64> {
+    let now = Local::now();
+    let mut year = now.year();
+    let mut month = now.month();
+
+    if now.day() >= reset_day {
+        if month == 12 {
+            year += 1;
+            month = 1;
+        } else {
+            month += 1;
+        }
+    }
+
+    let day = reset_day.min(last_day_of_month(year, month));
+    let date = chrono::NaiveDate::from_ymd_opt(year, month, day)?;
+    let datetime = date.and_hms_opt(0, 0, 0)?;
+    let local_dt = Local.from_local_datetime(&datetime).single()?;
+    Some(local_dt.timestamp() as u64)
+}
+
+fn last_day_of_month(year: i32, month: u32) -> u32 {
+    let (next_year, next_month) = if month == 12 {
+        (year + 1, 1)
+    } else {
+        (year, month + 1)
+    };
+    let first_next = chrono::NaiveDate::from_ymd_opt(next_year, next_month, 1)
+        .unwrap_or_else(|| chrono::NaiveDate::from_ymd_opt(year, month, 1).unwrap());
+    let last = first_next - chrono::Duration::days(1);
+    last.day()
+}
+
+#[derive(Serialize)]
+struct ClashConfig {
+    proxies: Vec<ProxyConfig>,
+}
+
+#[derive(Serialize)]
+#[serde(tag = "type")]
+enum ProxyConfig {
+    #[serde(rename = "ss")]
+    Ss {
+        name: String,
+        server: String,
+        port: u16,
+        cipher: String,
+        password: String,
+        udp: bool,
+    },
+    #[serde(rename = "vmess")]
+    Vmess {
+        name: String,
+        server: String,
+        port: u16,
+        uuid: String,
+        #[serde(rename = "alterId")]
+        alter_id: u32,
+        cipher: String,
+        tls: bool,
+        udp: bool,
+    },
+}
+
+fn parse_jms_subscription(content: &str) -> Result<Vec<ProxyConfig>> {
+    let decoded = decode_base64_text(content).context("invalid jms subscription base64")?;
+    let mut nodes = Vec::new();
+
+    for line in decoded.lines() {
+        let trimmed = line.trim();
+        if trimmed.is_empty() {
+            continue;
+        }
+        if let Some(node) = parse_ss_link(trimmed) {
+            nodes.push(node);
+            continue;
+        }
+        if let Some(node) = parse_vmess_link(trimmed) {
+            nodes.push(node);
+        }
+    }
+
+    Ok(nodes)
+}
+
+fn decode_base64_text(input: &str) -> Result<StdString> {
+    let mut compact: StdString = input.chars().filter(|c| !c.is_whitespace()).collect();
+    while compact.len() % 4 != 0 {
+        compact.push('=');
+    }
+    let decoded = general_purpose::STANDARD.decode(compact.as_bytes())?;
+    Ok(StdString::from_utf8_lossy(&decoded).to_string())
+}
+
+fn parse_ss_link(line: &str) -> Option<ProxyConfig> {
+    if !line.starts_with("ss://") {
+        return None;
+    }
+
+    let raw = &line["ss://".len()..];
+    let (base64_part, name_raw) = raw.split_once('#').unwrap_or((raw, ""));
+    let name_raw = percent_encoding::percent_decode_str(name_raw)
+        .decode_utf8_lossy()
+        .to_string();
+    let decoded = decode_base64_text(base64_part).ok()?;
+    let (method_password, host_port) = decoded.split_once('@')?;
+    let (cipher, password) = method_password.split_once(':')?;
+    let (server, port_str) = host_port.split_once(':')?;
+    let port: u16 = port_str.parse().ok()?;
+
+    let name: String = if name_raw.trim().is_empty() {
+        String::from("JMS")
+    } else {
+        name_raw.into()
+    };
+
+    Some(ProxyConfig::Ss {
+        name,
+        server: server.to_string().into(),
+        port,
+        cipher: cipher.to_string().into(),
+        password: password.to_string().into(),
+        udp: true,
+    })
+}
+
+fn parse_vmess_link(line: &str) -> Option<ProxyConfig> {
+    if !line.starts_with("vmess://") {
+        return None;
+    }
+
+    let raw = &line["vmess://".len()..];
+    let decoded = decode_base64_text(raw).ok()?;
+    let payload: JsonValue = serde_json::from_str(&decoded).ok()?;
+    let ps = payload.get("ps")?.as_str()?.to_string();
+    let server = payload.get("add")?.as_str()?.to_string();
+    let port = match payload.get("port")? {
+        JsonValue::String(val) => val.parse::<u16>().ok()?,
+        JsonValue::Number(val) => val.as_u64()? as u16,
+        _ => return None,
+    };
+    let uuid = payload.get("id")?.as_str()?.to_string();
+    let alter_id = parse_vmess_alter_id(payload.get("aid"));
+    let tls = payload.get("tls").and_then(JsonValue::as_str) == Some("tls");
+
+    let name: String = if ps.trim().is_empty() {
+        String::from("JMS")
+    } else {
+        ps.into()
+    };
+
+    Some(ProxyConfig::Vmess {
+        name,
+        server: server.into(),
+        port,
+        uuid: uuid.into(),
+        alter_id,
+        cipher: String::from("auto"),
+        tls,
+        udp: true,
+    })
+}
+
+fn parse_vmess_alter_id(value: Option<&JsonValue>) -> u32 {
+    match value {
+        Some(JsonValue::Number(num)) => num.as_u64().unwrap_or(0) as u32,
+        Some(JsonValue::String(val)) => val.parse::<u32>().unwrap_or(0),
+        _ => 0,
+    }
 }
