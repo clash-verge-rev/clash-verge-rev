@@ -8,6 +8,7 @@
 - 修复 Linux 通过 GUI 安装服务模式权限不符合预期
 - 修复 macOS 因网口顺序导致无法正确设置代理
 - 修复恢复休眠后无法操作托盘
+- 修复首页当前节点图标语义显示不一致
 
 <details>
 <summary><strong> ✨ 新增功能 </strong></summary>
