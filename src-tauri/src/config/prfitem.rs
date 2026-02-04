@@ -63,13 +63,13 @@ pub struct PrfItem {
     pub file_data: Option<String>,
 }
 
-#[derive(Default, Debug, Clone, Deserialize, Serialize)]
+#[derive(Default, Debug, Clone, PartialEq, Deserialize, Serialize)]
 pub struct PrfSelected {
     pub name: Option<String>,
     pub now: Option<String>,
 }
 
-#[derive(Default, Debug, Clone, Copy, Deserialize, Serialize)]
+#[derive(Default, Debug, Clone, Copy, PartialEq, Deserialize, Serialize)]
 pub struct PrfExtra {
     pub upload: u64,
     pub download: u64,
@@ -127,25 +127,22 @@ pub struct PrfOption {
 impl PrfOption {
     pub fn merge(one: Option<&Self>, other: Option<&Self>) -> Option<Self> {
         match (one, other) {
-            (Some(a_ref), Some(b_ref)) => {
-                let mut result = a_ref.clone();
-                result.user_agent = b_ref.user_agent.clone().or(result.user_agent);
-                result.with_proxy = b_ref.with_proxy.or(result.with_proxy);
-                result.self_proxy = b_ref.self_proxy.or(result.self_proxy);
-                result.danger_accept_invalid_certs =
-                    b_ref.danger_accept_invalid_certs.or(result.danger_accept_invalid_certs);
-                result.allow_auto_update = b_ref.allow_auto_update.or(result.allow_auto_update);
-                result.update_interval = b_ref.update_interval.or(result.update_interval);
-                result.merge = b_ref.merge.clone().or(result.merge);
-                result.script = b_ref.script.clone().or(result.script);
-                result.rules = b_ref.rules.clone().or(result.rules);
-                result.proxies = b_ref.proxies.clone().or(result.proxies);
-                result.groups = b_ref.groups.clone().or(result.groups);
-                result.timeout_seconds = b_ref.timeout_seconds.or(result.timeout_seconds);
-                Some(result)
-            }
-            (Some(a_ref), None) => Some(a_ref.clone()),
-            (None, Some(b_ref)) => Some(b_ref.clone()),
+            (Some(a), Some(b)) => Some(Self {
+                user_agent: b.user_agent.as_ref().or(a.user_agent.as_ref()).cloned(),
+                with_proxy: b.with_proxy.or(a.with_proxy),
+                self_proxy: b.self_proxy.or(a.self_proxy),
+                danger_accept_invalid_certs: b.danger_accept_invalid_certs.or(a.danger_accept_invalid_certs),
+                allow_auto_update: b.allow_auto_update.or(a.allow_auto_update),
+                update_interval: b.update_interval.or(a.update_interval),
+                merge: b.merge.as_ref().or(a.merge.as_ref()).cloned(),
+                script: b.script.as_ref().or(a.script.as_ref()).cloned(),
+                rules: b.rules.as_ref().or(a.rules.as_ref()).cloned(),
+                proxies: b.proxies.as_ref().or(a.proxies.as_ref()).cloned(),
+                groups: b.groups.as_ref().or(a.groups.as_ref()).cloned(),
+                timeout_seconds: b.timeout_seconds.or(a.timeout_seconds),
+            }),
+            (Some(a), None) => Some(a.clone()),
+            (None, Some(b)) => Some(b.clone()),
             (None, None) => None,
         }
     }
