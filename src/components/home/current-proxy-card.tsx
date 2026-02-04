@@ -89,9 +89,13 @@ function getSignalIcon(delay: number): {
   text: string;
   color: string;
 } {
-  if (delay < 0)
+  if (delay === -2)
+    return { icon: <SignalNone />, text: "测试中", color: "text.secondary" };
+  if (delay === -1)
     return { icon: <SignalNone />, text: "未测试", color: "text.secondary" };
-  if (delay >= 10000)
+  if (delay > 1e5)
+    return { icon: <SignalError />, text: "错误", color: "error.main" };
+  if (delay === 0 || delay >= 10000)
     return { icon: <SignalError />, text: "超时", color: "error.main" };
   if (delay >= 500)
     return { icon: <SignalWeak />, text: "延迟较高", color: "error.main" };
