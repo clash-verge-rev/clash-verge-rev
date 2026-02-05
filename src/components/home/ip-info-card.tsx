@@ -97,7 +97,14 @@ export const IpInfoCard = () => {
     const remaining = IP_REFRESH_SECONDS - elapsed;
 
     if (remaining <= 0) {
-      if (navigator.onLine && (await appWindow.isVisible())) {
+      if (
+        // is online
+        navigator.onLine &&
+        // there is no ongoing revalidation already scheduled
+        countdown.type !== "revalidating" &&
+        // window is visible
+        (await appWindow.isVisible())
+      ) {
         mutate();
         setCountdown({ type: "revalidating" });
         // we do not care about the result of mutate here. after mutate is done,
