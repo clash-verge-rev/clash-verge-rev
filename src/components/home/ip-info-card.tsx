@@ -126,9 +126,33 @@ export const IpInfoCard = () => {
 
   // Countdown / refresh scheduler — updates UI every 1s and triggers immediate revalidation when expired
   useEffect(() => {
-    const timer: number | null = window.setInterval(onCountdownTick, 1000);
+    let timer: number | null = window.setInterval(onCountdownTick, 1000);
+
+    // This will fire when the window is minimized or restored
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    // Tauri's visibility change detection is actually broken:
+    // https://github.com/tauri-apps/tauri/issues/10592
+    //
+    // But at least we should try to pause countdown on supported platforms
+    // to reduce power consumption.
+    function onVisibilityChange() {
+      if (document.hidden) {
+        // Pause the timer
+        if (timer != null) {
+          clearInterval(timer);
+          timer = null;
+        }
+      } else {
+        // Resume the timer only when previous one is cleared
+        if (timer == null) {
+          timer = window.setInterval(onCountdownTick, 1000);
+        }
+      }
+    }
+
     return () => {
       if (timer != null) clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
     };
   }, []);
 
