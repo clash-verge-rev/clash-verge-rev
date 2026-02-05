@@ -7,9 +7,10 @@ import {
 import { Box, Button, IconButton, Skeleton, Typography } from "@mui/material";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { useEffect } from "foxact/use-abortable-effect";
+import type { XOR } from "foxts/ts-xor";
 import { memo, useCallback, useState, useEffectEvent, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import useSWR from "swr";
+import useSWRImmutable from "swr/immutable";
 
 import { getIpInfo } from "@/services/api";
 
@@ -54,23 +55,33 @@ const getCountryFlag = (countryCode: string | undefined) => {
   return String.fromCodePoint(...codePoints);
 };
 
+type CountDownState = XOR<
+  {
+    type: "countdown";
+    remainingSeconds: number;
+  },
+  {
+    type: "revalidating";
+  }
+>;
+
 // IP信息卡片组件
 export const IpInfoCard = () => {
   const { t } = useTranslation();
   const [showIp, setShowIp] = useState(false);
   const appWindow = useMemo(() => getCurrentWebviewWindow(), []);
 
-  const [countdown, setCountdown] = useState(IP_REFRESH_SECONDS);
+  const [countdown, setCountdown] = useState<CountDownState>({
+    type: "countdown",
+    remainingSeconds: IP_REFRESH_SECONDS,
+  });
 
   const {
     data: ipInfo,
     error,
     isLoading,
     mutate,
-  } = useSWR(IP_INFO_CACHE_KEY, getIpInfo, {
-    refreshInterval: 0,
-    refreshWhenOffline: false,
-    revalidateOnFocus: true,
+  } = useSWRImmutable(IP_INFO_CACHE_KEY, getIpInfo, {
     shouldRetryOnError: true,
   });
 
@@ -88,7 +99,9 @@ export const IpInfoCard = () => {
     if (remaining <= 0) {
       if (navigator.onLine && (await appWindow.isVisible())) {
         mutate();
-        setCountdown(IP_REFRESH_SECONDS);
+        setCountdown({ type: "revalidating" });
+        // we do not care about the result of mutate here. after mutate is done,
+        // simply wait for next interval tick with `setCountdown({ type: "countdown", ... })`
       } else {
         // do nothing. we even skip "setCountdown" to reduce re-renders
         //
@@ -97,7 +110,10 @@ export const IpInfoCard = () => {
         // or network online again, we mutate() immediately in the following tick.
       }
     } else {
-      setCountdown(remaining);
+      setCountdown({
+        type: "countdown",
+        remainingSeconds: remaining,
+      });
     }
   });
 
@@ -311,7 +327,10 @@ export const IpInfoCard = () => {
           }}
         >
           <Typography variant="caption">
-            {t("home.components.ipInfo.labels.autoRefresh")}: {countdown}s
+            {t("home.components.ipInfo.labels.autoRefresh")}
+            {countdown.type === "countdown"
+              ? `: ${countdown.remainingSeconds}s`
+              : "..."}
           </Typography>
           <Typography
             variant="caption"
