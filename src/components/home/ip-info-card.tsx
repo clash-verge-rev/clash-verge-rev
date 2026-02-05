@@ -85,7 +85,7 @@ const IPInfoCardContainer = forwardRef<HTMLElement, React.PropsWithChildren>(
         iconColor="info"
         ref={ref}
         action={
-          <IconButton size="small" onClick={() => mutate()} disabled>
+          <IconButton size="small" onClick={() => mutate()}>
             <RefreshOutlined />
           </IconButton>
         }
