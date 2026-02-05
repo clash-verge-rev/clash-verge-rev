@@ -162,7 +162,18 @@ export const IpInfoCard = () => {
 
   // Countdown / refresh scheduler — updates UI every 1s and triggers immediate revalidation when expired
   useEffect(() => {
-    let timer: number | null = window.setInterval(onCountdownTick, 1000);
+    let timer: number | null = null;
+
+    if (hasIntersected) {
+      console.debug(
+        "IP info card has entered the viewport, starting the countdown interval.",
+      );
+      timer = window.setInterval(onCountdownTick, 1000);
+    } else {
+      console.debug(
+        "IP info card has not yet entered the viewport, no counting down.",
+      );
+    }
 
     // This will fire when the window is minimized or restored
     document.addEventListener("visibilitychange", onVisibilityChange);
@@ -173,18 +184,22 @@ export const IpInfoCard = () => {
     // to reduce power consumption.
     function onVisibilityChange() {
       if (document.hidden) {
-        console.debug("Document hidden，暂停倒计时");
+        console.debug("Document hidden, pause the interval");
         // Pause the timer
         if (timer != null) {
           clearInterval(timer);
           timer = null;
         }
-      } else {
-        console.debug("Document visible，恢复倒计时");
+      } else if (hasIntersected) {
+        console.debug("Document visible, resume the interval");
         // Resume the timer only when previous one is cleared
         if (timer == null) {
           timer = window.setInterval(onCountdownTick, 1000);
         }
+      } else {
+        console.debug(
+          "Document visible, but IP info card has never entered the viewport, not even once, not starting the interval.",
+        );
       }
     }
 
@@ -192,7 +207,7 @@ export const IpInfoCard = () => {
       if (timer != null) clearInterval(timer);
       document.removeEventListener("visibilitychange", onVisibilityChange);
     };
-  }, []);
+  }, [hasIntersected]);
 
   const toggleShowIp = useCallback(() => {
     setShowIp((prev) => !prev);
