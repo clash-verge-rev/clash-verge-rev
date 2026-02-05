@@ -204,7 +204,7 @@ export const getIpInfo = async (): Promise<
     try {
       return await asyncRetry(
         async (bail) => {
-          console.debug("Fetching IP information...");
+          console.debug("Fetching IP information:", service.url);
 
           const response = await fetch(service.url, {
             method: "GET",

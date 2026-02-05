@@ -164,6 +164,10 @@ export const IpInfoCard = () => {
   useEffect(() => {
     let timer: number | null = null;
 
+    // Do not add document.hidden check here as it is not reliable in Tauri.
+    //
+    // Thank god IntersectionObserver is a DOM API that relies on DOM/webview
+    // instead of Tauri, which is reliable enough.
     if (hasIntersected) {
       console.debug(
         "IP info card has entered the viewport, starting the countdown interval.",
@@ -177,11 +181,12 @@ export const IpInfoCard = () => {
 
     // This will fire when the window is minimized or restored
     document.addEventListener("visibilitychange", onVisibilityChange);
-    // Tauri's visibility change detection is actually broken:
+    // Tauri's visibility change detection is actually broken on some platforms:
     // https://github.com/tauri-apps/tauri/issues/10592
     //
-    // But at least we should try to pause countdown on supported platforms
-    // to reduce power consumption.
+    // It is working on macOS though (tested).
+    // So at least we should try to pause countdown on supported platforms to
+    // reduce power consumption.
     function onVisibilityChange() {
       if (document.hidden) {
         console.debug("Document hidden, pause the interval");
