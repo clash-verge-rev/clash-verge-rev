@@ -186,10 +186,8 @@ function createPrng(seed: number): () => number {
 export const getIpInfo = async (): Promise<
   IpInfo & { lastFetchTs: number }
 > => {
-  const lastFetchTs = Date.now();
-
   // 配置参数
-  const maxRetries = 3;
+  const maxRetries = 2;
   const serviceTimeout = 5000;
 
   const shuffledServices = shuffleServices();
@@ -226,15 +224,18 @@ export const getIpInfo = async (): Promise<
 
           if (data && data.ip) {
             debugLog(`IP检测成功，使用服务: ${service.url}`);
-            return Object.assign(service.mapping(data), { lastFetchTs });
+            return Object.assign(service.mapping(data), {
+              // use last fetch success timestamp
+              lastFetchTs: Date.now(),
+            });
           } else {
             throw new Error(`无效的响应格式 from ${service.url}`);
           }
         },
         {
           retries: maxRetries,
-          minTimeout: 500,
-          maxTimeout: 2000,
+          minTimeout: 1000,
+          maxTimeout: 4000,
           randomize: true,
         },
       );
