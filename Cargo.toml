@@ -40,6 +40,11 @@ opt-level = 0
 debug = true
 strip = false
 
+[profile.debug-release]
+inherits = "fast-release"
+codegen-units = 1
+split-debuginfo = "unpacked"
+
 [workspace.dependencies]
 clash-verge-draft = { path = "crates/clash-verge-draft" }
 clash-verge-logging = { path = "crates/clash-verge-logging" }
