@@ -22,7 +22,6 @@ tauri-dev = []
 tokio-trace = ["console-subscriber"]
 clippy = ["tauri/test"]
 tracing = []
-tracing-full = []
 
 [package.metadata.bundle]
 identifier = "io.github.clash-verge-rev.clash-verge-rev"

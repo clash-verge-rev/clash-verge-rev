@@ -33,6 +33,7 @@ pub fn init_work_dir_and_logger() -> anyhow::Result<()> {
         init_work_config().await;
         init_resources().await;
         logging!(info, Type::Setup, "Initializing logger");
+        // #[cfg(not(feature = "tokio-trace"))]
         Logger::global().init().await?;
         Ok(())
     })
