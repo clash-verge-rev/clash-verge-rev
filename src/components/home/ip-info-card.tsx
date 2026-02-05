@@ -7,8 +7,16 @@ import {
 import { Box, Button, IconButton, Skeleton, Typography } from "@mui/material";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 import { useEffect } from "foxact/use-abortable-effect";
+import { useIntersection } from "foxact/use-intersection";
 import type { XOR } from "foxts/ts-xor";
-import { memo, useCallback, useState, useEffectEvent, useMemo } from "react";
+import {
+  memo,
+  useCallback,
+  useState,
+  useEffectEvent,
+  useMemo,
+  forwardRef,
+} from "react";
 import { useTranslation } from "react-i18next";
 import useSWRImmutable from "swr/immutable";
 
@@ -65,25 +73,49 @@ type CountDownState = XOR<
   }
 >;
 
+const IPInfoCardContainer = forwardRef<HTMLElement, React.PropsWithChildren>(
+  ({ children }, ref) => {
+    const { t } = useTranslation();
+    const { mutate } = useIPInfo();
+
+    return (
+      <EnhancedCard
+        title={t("home.components.ipInfo.title")}
+        icon={<LocationOnOutlined />}
+        iconColor="info"
+        ref={ref}
+        action={
+          <IconButton size="small" onClick={() => mutate()} disabled>
+            <RefreshOutlined />
+          </IconButton>
+        }
+      >
+        {children}
+      </EnhancedCard>
+    );
+  },
+);
+
 // IP信息卡片组件
 export const IpInfoCard = () => {
   const { t } = useTranslation();
   const [showIp, setShowIp] = useState(false);
   const appWindow = useMemo(() => getCurrentWebviewWindow(), []);
 
+  // track ip info card has been in viewport or not
+  // hasIntersected default to false, and will be true once the card is in viewport
+  // and will never be false again afterwards (unless resetIntersected is called or
+  // the component is unmounted)
+  const [containerRef, hasIntersected, _resetIntersected] = useIntersection({
+    rootMargin: "0px",
+  });
+
   const [countdown, setCountdown] = useState<CountDownState>({
     type: "countdown",
     remainingSeconds: IP_REFRESH_SECONDS,
   });
 
-  const {
-    data: ipInfo,
-    error,
-    isLoading,
-    mutate,
-  } = useSWRImmutable(IP_INFO_CACHE_KEY, getIpInfo, {
-    shouldRetryOnError: true,
-  });
+  const { data: ipInfo, error, isLoading, mutate } = useIPInfo();
 
   // function useEffectEvent
   const onCountdownTick = useEffectEvent(async () => {
@@ -98,6 +130,10 @@ export const IpInfoCard = () => {
 
     if (remaining <= 0) {
       if (
+        // has intersected at least once
+        // this avoids unncessary revalidation if user never scrolls down,
+        // then we will only load initially once.
+        hasIntersected &&
         // is online
         navigator.onLine &&
         // there is no ongoing revalidation already scheduled
@@ -137,12 +173,14 @@ export const IpInfoCard = () => {
     // to reduce power consumption.
     function onVisibilityChange() {
       if (document.hidden) {
+        console.debug("Document hidden，暂停倒计时");
         // Pause the timer
         if (timer != null) {
           clearInterval(timer);
           timer = null;
         }
       } else {
+        console.debug("Document visible，恢复倒计时");
         // Resume the timer only when previous one is cleared
         if (timer == null) {
           timer = window.setInterval(onCountdownTick, 1000);
@@ -160,42 +198,21 @@ export const IpInfoCard = () => {
     setShowIp((prev) => !prev);
   }, []);
 
-  // Loading
-  if (isLoading) {
-    return (
-      <EnhancedCard
-        title={t("home.components.ipInfo.title")}
-        icon={<LocationOnOutlined />}
-        iconColor="info"
-        action={
-          <IconButton size="small" onClick={() => mutate()} disabled>
-            <RefreshOutlined />
-          </IconButton>
-        }
-      >
+  let mainElement: React.ReactElement;
+
+  switch (true) {
+    case isLoading:
+      mainElement = (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
           <Skeleton variant="text" width="60%" height={30} />
           <Skeleton variant="text" width="80%" height={24} />
           <Skeleton variant="text" width="70%" height={24} />
           <Skeleton variant="text" width="50%" height={24} />
         </Box>
-      </EnhancedCard>
-    );
-  }
-
-  // Error
-  if (error) {
-    return (
-      <EnhancedCard
-        title={t("home.components.ipInfo.title")}
-        icon={<LocationOnOutlined />}
-        iconColor="info"
-        action={
-          <IconButton size="small" onClick={() => mutate()}>
-            <RefreshOutlined />
-          </IconButton>
-        }
-      >
+      );
+      break;
+    case !!error:
+      mainElement = (
         <Box
           sx={{
             display: "flex",
@@ -215,166 +232,167 @@ export const IpInfoCard = () => {
             {t("shared.actions.retry")}
           </Button>
         </Box>
-      </EnhancedCard>
-    );
-  }
-
-  // Normal render
-  return (
-    <EnhancedCard
-      title={t("home.components.ipInfo.title")}
-      icon={<LocationOnOutlined />}
-      iconColor="info"
-      action={
-        <IconButton size="small" onClick={() => mutate()}>
-          <RefreshOutlined />
-        </IconButton>
-      }
-    >
-      <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "row",
-            flex: 1,
-            overflow: "hidden",
-          }}
-        >
-          {/* 左侧：国家和IP地址 */}
-          <Box sx={{ width: "40%", overflow: "hidden" }}>
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                mb: 1,
-                overflow: "hidden",
-              }}
-            >
-              <Box
-                component="span"
-                sx={{
-                  fontSize: "1.5rem",
-                  mr: 1,
-                  display: "inline-block",
-                  width: 28,
-                  textAlign: "center",
-                  flexShrink: 0,
-                  fontFamily: '"twemoji mozilla", sans-serif',
-                }}
-              >
-                {getCountryFlag(ipInfo?.country_code)}
-              </Box>
-              <Typography
-                variant="subtitle1"
-                sx={{
-                  fontWeight: "medium",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                  maxWidth: "100%",
-                }}
-              >
-                {ipInfo?.country || t("home.components.ipInfo.labels.unknown")}
-              </Typography>
-            </Box>
-
-            <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{ flexShrink: 0 }}
-              >
-                {t("home.components.ipInfo.labels.ip")}:
-              </Typography>
+      );
+      break;
+    default: // Normal render
+      mainElement = (
+        <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "row",
+              flex: 1,
+              overflow: "hidden",
+            }}
+          >
+            {/* 左侧：国家和IP地址 */}
+            <Box sx={{ width: "40%", overflow: "hidden" }}>
               <Box
                 sx={{
                   display: "flex",
                   alignItems: "center",
-                  ml: 1,
+                  mb: 1,
                   overflow: "hidden",
-                  maxWidth: "calc(100% - 30px)",
                 }}
               >
-                <Typography
-                  variant="body2"
+                <Box
+                  component="span"
                   sx={{
-                    fontFamily: "monospace",
-                    fontSize: "0.75rem",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    wordBreak: "break-all",
+                    fontSize: "1.5rem",
+                    mr: 1,
+                    display: "inline-block",
+                    width: 28,
+                    textAlign: "center",
+                    flexShrink: 0,
+                    fontFamily: '"twemoji mozilla", sans-serif',
                   }}
                 >
-                  {showIp ? ipInfo?.ip : "••••••••••"}
+                  {getCountryFlag(ipInfo?.country_code)}
+                </Box>
+                <Typography
+                  variant="subtitle1"
+                  sx={{
+                    fontWeight: "medium",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                    maxWidth: "100%",
+                  }}
+                >
+                  {ipInfo?.country ||
+                    t("home.components.ipInfo.labels.unknown")}
                 </Typography>
-                <IconButton size="small" onClick={toggleShowIp}>
-                  {showIp ? (
-                    <VisibilityOffOutlined fontSize="small" />
-                  ) : (
-                    <VisibilityOutlined fontSize="small" />
-                  )}
-                </IconButton>
               </Box>
+
+              <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ flexShrink: 0 }}
+                >
+                  {t("home.components.ipInfo.labels.ip")}:
+                </Typography>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    ml: 1,
+                    overflow: "hidden",
+                    maxWidth: "calc(100% - 30px)",
+                  }}
+                >
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      fontFamily: "monospace",
+                      fontSize: "0.75rem",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      wordBreak: "break-all",
+                    }}
+                  >
+                    {showIp ? ipInfo?.ip : "••••••••••"}
+                  </Typography>
+                  <IconButton size="small" onClick={toggleShowIp}>
+                    {showIp ? (
+                      <VisibilityOffOutlined fontSize="small" />
+                    ) : (
+                      <VisibilityOutlined fontSize="small" />
+                    )}
+                  </IconButton>
+                </Box>
+              </Box>
+
+              <InfoItem
+                label={t("home.components.ipInfo.labels.asn")}
+                value={ipInfo?.asn ? `AS${ipInfo.asn}` : "N/A"}
+              />
             </Box>
 
-            <InfoItem
-              label={t("home.components.ipInfo.labels.asn")}
-              value={ipInfo?.asn ? `AS${ipInfo.asn}` : "N/A"}
-            />
+            {/* 右侧：组织、ISP和位置信息 */}
+            <Box sx={{ width: "60%", overflow: "auto" }}>
+              <InfoItem
+                label={t("home.components.ipInfo.labels.isp")}
+                value={ipInfo?.organization}
+              />
+              <InfoItem
+                label={t("home.components.ipInfo.labels.org")}
+                value={ipInfo?.asn_organization}
+              />
+              <InfoItem
+                label={t("home.components.ipInfo.labels.location")}
+                value={[ipInfo?.city, ipInfo?.region]
+                  .filter(Boolean)
+                  .join(", ")}
+              />
+              <InfoItem
+                label={t("home.components.ipInfo.labels.timezone")}
+                value={ipInfo?.timezone}
+              />
+            </Box>
           </Box>
 
-          {/* 右侧：组织、ISP和位置信息 */}
-          <Box sx={{ width: "60%", overflow: "auto" }}>
-            <InfoItem
-              label={t("home.components.ipInfo.labels.isp")}
-              value={ipInfo?.organization}
-            />
-            <InfoItem
-              label={t("home.components.ipInfo.labels.org")}
-              value={ipInfo?.asn_organization}
-            />
-            <InfoItem
-              label={t("home.components.ipInfo.labels.location")}
-              value={[ipInfo?.city, ipInfo?.region].filter(Boolean).join(", ")}
-            />
-            <InfoItem
-              label={t("home.components.ipInfo.labels.timezone")}
-              value={ipInfo?.timezone}
-            />
-          </Box>
-        </Box>
-
-        <Box
-          sx={{
-            mt: "auto",
-            pt: 0.5,
-            borderTop: 1,
-            borderColor: "divider",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            opacity: 0.7,
-            fontSize: "0.7rem",
-          }}
-        >
-          <Typography variant="caption">
-            {t("home.components.ipInfo.labels.autoRefresh")}
-            {countdown.type === "countdown"
-              ? `: ${countdown.remainingSeconds}s`
-              : "..."}
-          </Typography>
-          <Typography
-            variant="caption"
+          <Box
             sx={{
-              textOverflow: "ellipsis",
-              overflow: "hidden",
-              whiteSpace: "nowrap",
+              mt: "auto",
+              pt: 0.5,
+              borderTop: 1,
+              borderColor: "divider",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              opacity: 0.7,
+              fontSize: "0.7rem",
             }}
           >
-            {`${ipInfo?.country_code ?? "N/A"}, ${ipInfo?.longitude?.toFixed(2) ?? "N/A"}, ${ipInfo?.latitude?.toFixed(2) ?? "N/A"}`}
-          </Typography>
+            <Typography variant="caption">
+              {t("home.components.ipInfo.labels.autoRefresh")}
+              {countdown.type === "countdown"
+                ? `: ${countdown.remainingSeconds}s`
+                : "..."}
+            </Typography>
+            <Typography
+              variant="caption"
+              sx={{
+                textOverflow: "ellipsis",
+                overflow: "hidden",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {`${ipInfo?.country_code ?? "N/A"}, ${ipInfo?.longitude?.toFixed(2) ?? "N/A"}, ${ipInfo?.latitude?.toFixed(2) ?? "N/A"}`}
+            </Typography>
+          </Box>
         </Box>
-      </Box>
-    </EnhancedCard>
+      );
+  }
+
+  return (
+    <IPInfoCardContainer ref={containerRef}>{mainElement}</IPInfoCardContainer>
   );
 };
+
+function useIPInfo() {
+  return useSWRImmutable(IP_INFO_CACHE_KEY, getIpInfo, {
+    shouldRetryOnError: true,
+  });
+}
