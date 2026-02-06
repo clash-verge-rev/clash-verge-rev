@@ -207,7 +207,7 @@ impl WindowManager {
     fn activate_existing_main_window(window: Option<&WebviewWindow<Wry>>) -> WindowOperationResult {
         logging!(info, Type::Window, "窗口存在但被隐藏或最小化，将激活窗口");
         if let Some(window) = window {
-            Self::activate_window(&window)
+            Self::activate_window(window)
         } else {
             logging!(warn, Type::Window, "无法获取窗口实例");
             WindowOperationResult::Failed
