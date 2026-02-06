@@ -141,10 +141,18 @@ export const IpInfoCard = () => {
         // window is visible
         (await appWindow.isVisible())
       ) {
-        mutate();
         setCountdown({ type: "revalidating" });
         // we do not care about the result of mutate here. after mutate is done,
         // simply wait for next interval tick with `setCountdown({ type: "countdown", ... })`
+        try {
+          await mutate();
+        } finally {
+          // in case mutate throws error, we still need to reset the countdown state
+          setCountdown({
+            type: "countdown",
+            remainingSeconds: IP_REFRESH_SECONDS,
+          });
+        }
       } else {
         // do nothing. we even skip "setCountdown" to reduce re-renders
         //
