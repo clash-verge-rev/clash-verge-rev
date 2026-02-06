@@ -178,7 +178,7 @@ pub async fn hide() {
         add_light_weight_timer().await;
     }
 
-    if let Some(window) = handle::Handle::get_window()
+    if let Some(window) = WindowManager::get_main_window()
         && window.is_visible().unwrap_or(false)
     {
         let _ = window.hide();

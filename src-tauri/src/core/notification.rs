@@ -1,5 +1,5 @@
 use super::handle::Handle;
-use crate::constants::timing;
+use crate::{constants::timing, utils::window_manager::WindowManager};
 use clash_verge_logging::{Type, logging};
 use smartstring::alias::String;
 use std::{sync::mpsc, thread};
@@ -84,7 +84,7 @@ impl NotificationSystem {
             None => return,
         };
 
-        if let Some(window) = super::handle::Handle::get_window() {
+        if let Some(window) = WindowManager::get_main_window() {
             system.emit_to_window(&window, event);
             drop(binding);
             thread::sleep(timing::EVENT_EMIT_DELAY);
