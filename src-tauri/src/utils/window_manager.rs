@@ -60,14 +60,13 @@ pub struct WindowManager;
 
 impl WindowManager {
     pub fn get_main_window_with_state() -> (Option<WebviewWindow<Wry>>, WindowState) {
-        let window = Self::get_main_window();
-        if window.is_none() {
+        let Some(window) = Self::get_main_window() else {
             return (None, WindowState::NotExist);
-        }
+        };
 
-        let is_minimized = window.as_ref().unwrap().is_minimized().unwrap_or(false);
-        let is_visible = window.as_ref().unwrap().is_visible().unwrap_or(false);
-        let is_focused = window.as_ref().unwrap().is_focused().unwrap_or(false);
+        let is_minimized = window.is_minimized().unwrap_or(false);
+        let is_visible = window.is_visible().unwrap_or(false);
+        let is_focused = window.is_focused().unwrap_or(false);
 
         let state = if is_minimized {
             WindowState::Minimized
@@ -79,7 +78,7 @@ impl WindowManager {
             WindowState::VisibleUnfocused
         };
 
-        (window, state)
+        (Some(window), state)
     }
 
     pub fn get_main_window_state() -> WindowState {
