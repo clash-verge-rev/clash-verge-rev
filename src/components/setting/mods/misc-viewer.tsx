@@ -383,7 +383,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
             spellCheck="false"
             sx={{ width: 250, marginLeft: "auto" }}
             value={values.defaultLatencyTest}
-            placeholder="https://cp.cloudflare.com/generate_204"
+            placeholder="https://1.1.1.1"
             onChange={(e) =>
               setValues((v) => ({ ...v, defaultLatencyTest: e.target.value }))
             }
