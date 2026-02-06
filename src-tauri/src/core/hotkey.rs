@@ -261,8 +261,9 @@ impl Hotkey {
                             Self::execute_function(function);
                         } else {
                             use crate::utils::window_manager::WindowManager;
-                            let is_visible = WindowManager::is_main_window_visible();
-                            let is_focused = WindowManager::is_main_window_focused();
+                            let window = WindowManager::get_main_window();
+                            let is_visible = WindowManager::is_main_window_visible(window.as_ref());
+                            let is_focused = WindowManager::is_main_window_focused(window.as_ref());
 
                             if is_focused && is_visible {
                                 Self::execute_function(function);
