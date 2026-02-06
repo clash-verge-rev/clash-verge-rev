@@ -264,7 +264,6 @@ pub fn run() {
     mod event_handlers {
         #[cfg(target_os = "macos")]
         use crate::module::lightweight;
-        #[cfg(target_os = "macos")]
         use crate::utils::window_manager::WindowManager;
         use crate::{
             config::Config,
