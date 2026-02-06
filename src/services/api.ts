@@ -1,8 +1,25 @@
+import { getName, getVersion } from "@tauri-apps/api/app";
 import { fetch } from "@tauri-apps/plugin-http";
 import { asyncRetry } from "foxts/async-retry";
 import { extractErrorMessage } from "foxts/extract-error-message";
 
 import { debugLog } from "@/utils/debug";
+
+let cachedUserAgent: string | null = null;
+
+async function getUserAgent(): Promise<string> {
+  if (cachedUserAgent) return cachedUserAgent;
+
+  try {
+    const [name, version] = await Promise.all([getName(), getVersion()]);
+    cachedUserAgent = `${name}/${version}`;
+  } catch (error) {
+    console.debug("Failed to build User-Agent, fallback to default", error);
+    cachedUserAgent = "clash-verge-rev";
+  }
+
+  return cachedUserAgent;
+}
 
 // Get current IP and geolocation information （refactored IP detection with service-specific mappings）
 interface IpInfo {
@@ -192,6 +209,8 @@ export const getIpInfo = async (): Promise<
 
   const shuffledServices = shuffleServices();
   let lastError: unknown | null = null;
+  const userAgent = await getUserAgent();
+  console.debug("User-Agent for IP detection:", userAgent);
 
   for (const service of shuffledServices) {
     debugLog(`尝试IP检测服务: ${service.url}`);
@@ -210,6 +229,9 @@ export const getIpInfo = async (): Promise<
             method: "GET",
             signal: timeoutController.signal, // AbortSignal.timeout(service.timeout || serviceTimeout),
             connectTimeout: service.timeout || serviceTimeout,
+            headers: {
+              "User-Agent": userAgent,
+            },
           });
 
           if (!response.ok) {
