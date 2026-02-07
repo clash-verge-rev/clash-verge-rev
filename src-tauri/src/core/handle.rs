@@ -5,7 +5,7 @@ use std::sync::{
     Arc,
     atomic::{AtomicBool, Ordering},
 };
-use tauri::{AppHandle, Manager as _, WebviewWindow};
+use tauri::AppHandle;
 use tauri_plugin_mihomo::{Mihomo, MihomoExt as _};
 use tokio::sync::RwLockReadGuard;
 
@@ -53,10 +53,6 @@ impl Handle {
 
     pub async fn mihomo() -> RwLockReadGuard<'static, Mihomo> {
         Self::app_handle().mihomo().read().await
-    }
-
-    pub fn get_window() -> Option<WebviewWindow> {
-        Self::app_handle().get_webview_window("main")
     }
 
     pub fn refresh_clash() {

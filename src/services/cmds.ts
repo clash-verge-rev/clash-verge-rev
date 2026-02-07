@@ -18,7 +18,7 @@ export async function enhanceProfiles() {
 }
 
 export async function patchProfilesConfig(profiles: IProfilesConfig) {
-  return invoke<void>("patch_profiles_config", { profiles });
+  return invoke<boolean>("patch_profiles_config", { profiles });
 }
 
 export async function createProfile(

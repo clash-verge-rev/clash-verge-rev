@@ -264,7 +264,6 @@ pub fn run() {
     mod event_handlers {
         #[cfg(target_os = "macos")]
         use crate::module::lightweight;
-        #[cfg(target_os = "macos")]
         use crate::utils::window_manager::WindowManager;
         use crate::{
             config::Config,
@@ -316,7 +315,7 @@ pub fn run() {
 
             if let tauri::WindowEvent::CloseRequested { api, .. } = api {
                 api.prevent_close();
-                if let Some(window) = core::handle::Handle::get_window() {
+                if let Some(window) = WindowManager::get_main_window() {
                     let _ = window.hide();
                 }
             }

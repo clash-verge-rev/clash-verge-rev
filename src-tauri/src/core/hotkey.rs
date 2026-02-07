@@ -1,6 +1,7 @@
 use crate::process::AsyncHandler;
 use crate::singleton;
 use crate::utils::notification::{NotificationEvent, notify_event};
+use crate::utils::window_manager::WindowManager;
 use crate::{config::Config, core::handle, feat, module::lightweight::entry_lightweight_mode};
 use anyhow::{Result, bail};
 use arc_swap::ArcSwap;
@@ -243,7 +244,7 @@ impl Hotkey {
                 logging!(debug, Type::Hotkey, "Hotkey pressed: {:?}", hotkey_event);
                 let hotkey = hotkey_event.key;
                 if hotkey == Code::KeyQ && is_quit {
-                    if let Some(window) = handle::Handle::get_window()
+                    if let Some(window) = WindowManager::get_main_window()
                         && window.is_focused().unwrap_or(false)
                     {
                         logging!(debug, Type::Hotkey, "Executing quit function");
@@ -260,8 +261,9 @@ impl Hotkey {
                             Self::execute_function(function);
                         } else {
                             use crate::utils::window_manager::WindowManager;
-                            let is_visible = WindowManager::is_main_window_visible();
-                            let is_focused = WindowManager::is_main_window_focused();
+                            let window = WindowManager::get_main_window();
+                            let is_visible = WindowManager::is_main_window_visible(window.as_ref());
+                            let is_focused = WindowManager::is_main_window_focused(window.as_ref());
 
                             if is_focused && is_visible {
                                 Self::execute_function(function);
