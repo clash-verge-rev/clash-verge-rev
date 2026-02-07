@@ -82,7 +82,7 @@
   "devDependencies": {
     "@actions/github": "^9.0.0",
     "@eslint-react/eslint-plugin": "^2.9.4",
-    "@eslint/js": "^9.39.2",
+    "@eslint/js": "^10.0.0",
     "@tauri-apps/cli": "2.9.6",
     "@types/js-yaml": "^4.0.9",
     "@types/lodash-es": "^4.17.12",
@@ -95,7 +95,7 @@
     "cli-color": "^2.0.4",
     "commander": "^14.0.3",
     "cross-env": "^10.1.0",
-    "eslint": "^9.39.2",
+    "eslint": "^10.0.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-import-resolver-typescript": "^4.4.4",
     "eslint-plugin-import-x": "^4.16.1",
