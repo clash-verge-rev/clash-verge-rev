@@ -19,6 +19,17 @@ async function getUserAgent(): Promise<string> {
   }
 
   return cachedUserAgent;
+let cachedUserAgentPromise: Promise<string> | null = null;
+
+async function getUserAgentPromise(): Promise<string> {
+  cachedUserAgentPromise ||= Promise.all([getName(), getVersion()])
+  	.then(([name, version]) => `${name}/${version}`)
+  	.catch(() => {
+	    console.debug("Failed to build User-Agent, fallback to default", error);
+      return "clash-verge-rev";
+  	});
+
+  return cachedUserAgentPromise;
 }
 
 // Get current IP and geolocation information （refactored IP detection with service-specific mappings）
