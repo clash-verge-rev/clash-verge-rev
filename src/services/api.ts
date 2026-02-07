@@ -2,36 +2,19 @@ import { getName, getVersion } from "@tauri-apps/api/app";
 import { fetch } from "@tauri-apps/plugin-http";
 import { asyncRetry } from "foxts/async-retry";
 import { extractErrorMessage } from "foxts/extract-error-message";
+import { once } from "foxts/once";
 
 import { debugLog } from "@/utils/debug";
 
-let cachedUserAgent: string | null = null;
-
-async function getUserAgent(): Promise<string> {
-  if (cachedUserAgent) return cachedUserAgent;
-
+const getUserAgentPromise = once(async () => {
   try {
     const [name, version] = await Promise.all([getName(), getVersion()]);
-    cachedUserAgent = `${name}/${version}`;
+    return `${name}/${version}`;
   } catch (error) {
     console.debug("Failed to build User-Agent, fallback to default", error);
-    cachedUserAgent = "clash-verge-rev";
+    return "clash-verge-rev";
   }
-
-  return cachedUserAgent;
-let cachedUserAgentPromise: Promise<string> | null = null;
-
-async function getUserAgentPromise(): Promise<string> {
-  cachedUserAgentPromise ||= Promise.all([getName(), getVersion()])
-  	.then(([name, version]) => `${name}/${version}`)
-  	.catch(() => {
-	    console.debug("Failed to build User-Agent, fallback to default", error);
-      return "clash-verge-rev";
-  	});
-
-  return cachedUserAgentPromise;
-}
-
+});
 // Get current IP and geolocation information （refactored IP detection with service-specific mappings）
 interface IpInfo {
   ip: string;
@@ -220,7 +203,7 @@ export const getIpInfo = async (): Promise<
 
   const shuffledServices = shuffleServices();
   let lastError: unknown | null = null;
-  const userAgent = await getUserAgent();
+  const userAgent = await getUserAgentPromise();
   console.debug("User-Agent for IP detection:", userAgent);
 
   for (const service of shuffledServices) {
