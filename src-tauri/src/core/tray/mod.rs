@@ -10,6 +10,7 @@ use crate::{
     utils::dirs::find_target_icons,
 };
 use clash_verge_limiter::{Limiter, SystemClock, SystemLimiter};
+use clash_verge_logging::logging_error;
 use tauri::tray::TrayIconBuilder;
 use tauri_plugin_clash_verge_sysinfo::is_current_app_handle_admin;
 use tauri_plugin_mihomo::models::Proxies;
@@ -201,6 +202,11 @@ impl Tray {
     }
 
     async fn update_menu_internal(&self, app_handle: &AppHandle) -> Result<()> {
+        let Some(tray) = app_handle.tray_by_id("main") else {
+            logging!(warn, Type::Tray, "Failed to update tray menu: tray not found");
+            return Ok(());
+        };
+
         let verge = Config::verge().await.latest_arc();
         let system_proxy = verge.enable_system_proxy.as_ref().unwrap_or(&false);
         let tun_mode = verge.enable_tun_mode.as_ref().unwrap_or(&false);
@@ -221,28 +227,24 @@ impl Tray {
         let profiles_preview = profiles_arc.profiles_preview().unwrap_or_default();
         let is_lightweight_mode = is_in_lightweight_mode();
 
-        match app_handle.tray_by_id("main") {
-            Some(tray) => {
-                let _ = tray.set_menu(Some(
-                    create_tray_menu(
-                        app_handle,
-                        Some(mode.as_str()),
-                        *system_proxy,
-                        *tun_mode,
-                        tun_mode_available,
-                        profiles_preview,
-                        is_lightweight_mode,
-                    )
-                    .await?,
-                ));
-                logging!(debug, Type::Tray, "托盘菜单更新成功");
-                Ok(())
-            }
-            None => {
-                logging!(warn, Type::Tray, "Failed to update tray menu: tray not found");
-                Ok(())
-            }
-        }
+        logging_error!(
+            Type::Tray,
+            tray.set_menu(Some(
+                create_tray_menu(
+                    app_handle,
+                    Some(mode.as_str()),
+                    *system_proxy,
+                    *tun_mode,
+                    tun_mode_available,
+                    profiles_preview,
+                    is_lightweight_mode,
+                )
+                .await?,
+            ))
+        );
+
+        logging!(debug, Type::Tray, "托盘菜单更新成功");
+        Ok(())
     }
 
     /// 更新托盘图标
@@ -255,12 +257,9 @@ impl Tray {
 
         let app_handle = handle::Handle::app_handle();
 
-        let tray = match app_handle.tray_by_id("main") {
-            Some(tray) => tray,
-            None => {
-                logging!(warn, Type::Tray, "Failed to update tray icon: tray not found");
-                return Ok(());
-            }
+        let Some(tray) = app_handle.tray_by_id("main") else {
+            logging!(warn, Type::Tray, "Failed to update tray icon: tray not found");
+            return Ok(());
         };
 
         let (_is_custom_icon, icon_bytes) = TrayState::get_tray_icon(verge).await;
@@ -268,8 +267,11 @@ impl Tray {
         let colorful = verge.tray_icon.clone().unwrap_or_else(|| "monochrome".into());
         let is_colorful = colorful == "colorful";
 
-        let _ = tray.set_icon(Some(tauri::image::Image::from_bytes(&icon_bytes)?));
-        let _ = tray.set_icon_as_template(!is_colorful);
+        logging_error!(
+            Type::Tray,
+            tray.set_icon(Some(tauri::image::Image::from_bytes(&icon_bytes)?))
+        );
+        logging_error!(Type::Tray, tray.set_icon_as_template(!is_colorful));
         Ok(())
     }
 
@@ -282,17 +284,17 @@ impl Tray {
 
         let app_handle = handle::Handle::app_handle();
 
-        let tray = match app_handle.tray_by_id("main") {
-            Some(tray) => tray,
-            None => {
-                logging!(warn, Type::Tray, "Failed to update tray icon: tray not found");
-                return Ok(());
-            }
+        let Some(tray) = app_handle.tray_by_id("main") else {
+            logging!(warn, Type::Tray, "Failed to update tray icon: tray not found");
+            return Ok(());
         };
 
         let (_is_custom_icon, icon_bytes) = TrayState::get_tray_icon(verge).await;
 
-        let _ = tray.set_icon(Some(tauri::image::Image::from_bytes(&icon_bytes)?));
+        logging_error!(
+            Type::Tray,
+            tray.set_icon(Some(tauri::image::Image::from_bytes(&icon_bytes)?))
+        );
         Ok(())
     }
 
@@ -352,11 +354,13 @@ impl Tray {
             current_profile_name
         );
 
-        if let Some(tray) = app_handle.tray_by_id("main") {
-            let _ = tray.set_tooltip(Some(&tooltip));
-        } else {
+        let Some(tray) = app_handle.tray_by_id("main") else {
             logging!(warn, Type::Tray, "Failed to update tray tooltip: tray not found");
-        }
+            return Ok(());
+        };
+
+        let _ = tray.set_tooltip(Some(&tooltip));
+        logging_error!(Type::Tray, tray.set_tooltip(Some(&tooltip)));
 
         Ok(())
     }
