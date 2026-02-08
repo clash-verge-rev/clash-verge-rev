@@ -411,10 +411,7 @@ impl Tray {
         }
 
         let tray = builder.build(app_handle)?;
-        let verge_tray_event = verge.tray_event.clone().unwrap_or_else(|| "main_window".into());
-        tray.on_tray_icon_event(move |tray_icon, tray_event| {
-            on_tray_icon_event(tray_icon, tray_event, verge_tray_event.to_owned());
-        });
+        tray.on_tray_icon_event(on_tray_icon_event);
         tray.on_menu_event(on_menu_event);
         Ok(())
     }
@@ -886,7 +883,7 @@ async fn create_tray_menu(
     Ok(menu)
 }
 
-fn on_tray_icon_event(_tray_icon: &TrayIcon, tray_event: TrayIconEvent, verge_tray_event: String) {
+fn on_tray_icon_event(_tray_icon: &TrayIcon, tray_event: TrayIconEvent) {
     if matches!(
         tray_event,
         TrayIconEvent::Move { .. } | TrayIconEvent::Leave { .. } | TrayIconEvent::Enter { .. }
@@ -905,30 +902,29 @@ fn on_tray_icon_event(_tray_icon: &TrayIcon, tray_event: TrayIconEvent, verge_tr
         if !Tray::global().should_handle_tray_click() {
             return;
         }
-        let verge_tray_action = TrayAction::from(verge_tray_event.as_str());
-        logging!(debug, Type::Tray, "tray event: {verge_tray_action:?}");
-        match verge_tray_action {
-            TrayAction::SystemProxy => {
-                AsyncHandler::spawn(|| async move {
+
+        AsyncHandler::spawn(|| async move {
+            let verge = Config::verge().await.data_arc();
+            let verge_tray_event = verge.tray_event.clone().unwrap_or_else(|| "main_window".into());
+            let verge_tray_action = TrayAction::from(verge_tray_event.as_str());
+            logging!(debug, Type::Tray, "tray event: {verge_tray_action:?}");
+            match verge_tray_action {
+                TrayAction::SystemProxy => {
                     let _ = feat::toggle_system_proxy().await;
-                });
-            }
-            TrayAction::TunMode => {
-                AsyncHandler::spawn(|| async move {
+                }
+                TrayAction::TunMode => {
                     let _ = feat::toggle_tun_mode(None).await;
-                });
-            }
-            TrayAction::MainWindow => {
-                AsyncHandler::spawn(|| async move {
+                }
+                TrayAction::MainWindow => {
                     if !lightweight::exit_lightweight_mode().await {
                         WindowManager::show_main_window().await;
                     };
-                });
-            }
-            _ => {
-                logging!(warn, Type::Tray, "invalid tray event: {}", verge_tray_event);
-            }
-        };
+                }
+                _ => {
+                    logging!(warn, Type::Tray, "invalid tray event: {}", verge_tray_event);
+                }
+            };
+        });
     }
 }
 
