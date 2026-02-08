@@ -23,7 +23,6 @@ use std::time::Duration;
 use tauri::{
     AppHandle, Wry,
     menu::{CheckMenuItem, IsMenuItem, MenuEvent, MenuItem, PredefinedMenuItem, Submenu},
-    tray::{MouseButton, MouseButtonState, TrayIconEvent},
 };
 mod menu_def;
 use menu_def::{MenuIds, MenuTexts};
@@ -409,49 +408,6 @@ impl Tray {
         }
 
         let tray = builder.build(app_handle)?;
-        let tray_event = verge.tray_event.clone().unwrap_or_else(|| "main_window".into());
-        let tray_action = TrayAction::from(tray_event.as_str());
-
-        tray.on_tray_icon_event(move |_app_handle, event| {
-            if matches!(tray_action, TrayAction::Unknown) {
-                return;
-            }
-            if let TrayIconEvent::Click {
-                button: MouseButton::Left,
-                button_state: MouseButtonState::Down,
-                ..
-            } = event
-            {
-                // 添加防抖检查，防止快速连击
-                #[allow(clippy::use_self)]
-                if !Tray::global().should_handle_tray_click() {
-                    return;
-                }
-                logging!(debug, Type::Tray, "tray event: {tray_action:?}");
-                match tray_action {
-                    TrayAction::SystemProxy => {
-                        AsyncHandler::spawn(|| async move {
-                            let _ = feat::toggle_system_proxy().await;
-                        });
-                    }
-                    TrayAction::TunMode => {
-                        AsyncHandler::spawn(|| async move {
-                            let _ = feat::toggle_tun_mode(None).await;
-                        });
-                    }
-                    TrayAction::MainWindow => {
-                        AsyncHandler::spawn(|| async move {
-                            if !lightweight::exit_lightweight_mode().await {
-                                WindowManager::show_main_window().await;
-                            };
-                        });
-                    }
-                    _ => {
-                        logging!(warn, Type::Tray, "invalid tray event: {}", tray_event);
-                    }
-                };
-            }
-        });
         tray.on_menu_event(on_menu_event);
         Ok(())
     }
@@ -924,13 +880,22 @@ async fn create_tray_menu(
 }
 
 fn on_menu_event(_: &AppHandle, event: MenuEvent) {
+    if !Tray::global().should_handle_tray_click() {
+        return;
+    }
+    if event.id.as_ref().is_empty() {
+        return;
+    }
     AsyncHandler::spawn(|| async move {
         match event.id.as_ref() {
             mode @ (MenuIds::RULE_MODE | MenuIds::GLOBAL_MODE | MenuIds::DIRECT_MODE) => {
                 // Removing the the "tray_" prefix and "_mode" suffix
-                let mode = &mode[5..mode.len() - 5];
-                logging!(info, Type::ProxyMode, "Switch Proxy Mode To: {}", mode);
-                feat::change_clash_mode(mode.into()).await;
+                if let Some(stripped) = mode.strip_prefix("tray_")
+                    && let Some(final_mode) = stripped.strip_suffix("_mode")
+                {
+                    logging!(info, Type::ProxyMode, "Switch Proxy Mode To: {}", final_mode);
+                    feat::change_clash_mode(final_mode.into()).await;
+                }
             }
             MenuIds::DASHBOARD => {
                 logging!(info, Type::Tray, "托盘菜单点击: 打开窗口");
@@ -978,7 +943,10 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
                 feat::quit().await;
             }
             id if id.starts_with("profiles_") => {
-                let profile_index = &id["profiles_".len()..];
+                let profile_index = match id.strip_prefix("profiles_") {
+                    Some(index_str) => index_str,
+                    None => return,
+                };
                 feat::toggle_proxy_profile(profile_index.into()).await;
             }
             id if id.starts_with("proxy_") => {
