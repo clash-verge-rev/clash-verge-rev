@@ -16,8 +16,9 @@ use anyhow::{Result, anyhow};
 use backoff::{Error as BackoffError, ExponentialBackoff};
 use clash_verge_draft::Draft;
 use clash_verge_logging::{Type, logging, logging_error};
+use serde_yaml_ng::{Mapping, Value};
 use smartstring::alias::String;
-use std::path::PathBuf;
+use std::{collections::HashSet, path::PathBuf};
 use tauri_plugin_clash_verge_sysinfo::is_current_app_handle_admin;
 use tokio::sync::OnceCell;
 use tokio::time::sleep;
@@ -187,7 +188,9 @@ impl Config {
     }
 
     pub async fn generate() -> Result<()> {
-        let (config, exists_keys, logs) = enhance::enhance().await;
+        let (mut config, exists_keys, logs) = enhance::enhance().await;
+
+        sanitize_tunnels_proxy(&mut config);
 
         Self::runtime().await.edit_draft(|d| {
             *d = IRuntime {
@@ -246,6 +249,73 @@ impl Config {
 
         let _ = tokio::join!(save_clash_task, save_verge_task, save_profiles_task);
         logging!(info, Type::Config, "save all draft data finished");
+    }
+}
+
+fn sanitize_tunnels_proxy(config: &mut Mapping) {
+    // 检查是否存在 tunnels
+    if !config
+        .get("tunnels")
+        .and_then(|v| v.as_sequence())
+        .is_some_and(|t| tunnels_need_validation(t))
+    {
+        return;
+    }
+
+    // 在需要时，收集可用目标（proxies + proxy-groups + 内建）
+    let mut valid: HashSet<String> = HashSet::with_capacity(64);
+    collect_names(config, "proxies", &mut valid);
+    collect_names(config, "proxy-groups", &mut valid);
+
+    valid.insert("DIRECT".into());
+    valid.insert("REJECT".into());
+
+    let Some(tunnels) = config.get_mut("tunnels").and_then(|v| v.as_sequence_mut()) else {
+        return;
+    };
+
+    // 修改 tunnels：删除无效 proxy
+    for item in tunnels {
+        let Some(tunnel) = item.as_mapping_mut() else { continue };
+
+        let Some(proxy_name) = tunnel.get("proxy").and_then(|v| v.as_str()) else {
+            continue;
+        };
+
+        if proxy_name == "DIRECT" || proxy_name == "REJECT" {
+            continue;
+        }
+
+        if !valid.contains(proxy_name) {
+            tunnel.remove("proxy");
+        }
+    }
+}
+
+// tunnels 存在且至少有一条 tunnel 的 proxy 需要校验时才返回 true
+fn tunnels_need_validation(tunnels: &[Value]) -> bool {
+    tunnels.iter().any(|item| {
+        item.as_mapping()
+            .and_then(|t| t.get("proxy"))
+            .and_then(|p| p.as_str())
+            .is_some_and(|name| name != "DIRECT" && name != "REJECT")
+    })
+}
+
+fn collect_names(config: &Mapping, list_key: &str, out: &mut HashSet<String>) {
+    let Some(Value::Sequence(seq)) = config.get(list_key) else {
+        return;
+    };
+
+    for item in seq {
+        let Value::Mapping(map) = item else {
+            continue;
+        };
+        if let Some(Value::String(n)) = map.get("name")
+            && !n.is_empty()
+        {
+            out.insert(n.into());
+        }
     }
 }
 

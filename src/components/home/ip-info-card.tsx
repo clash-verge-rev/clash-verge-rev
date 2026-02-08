@@ -5,10 +5,21 @@ import {
   VisibilityOutlined,
 } from "@mui/icons-material";
 import { Box, Button, IconButton, Skeleton, Typography } from "@mui/material";
-import { memo, useCallback, useEffect, useRef, useState } from "react";
+import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { useEffect } from "foxact/use-abortable-effect";
+import { useIntersection } from "foxact/use-intersection";
+import type { XOR } from "foxts/ts-xor";
+import {
+  memo,
+  useCallback,
+  useState,
+  useEffectEvent,
+  useMemo,
+  forwardRef,
+} from "react";
 import { useTranslation } from "react-i18next";
+import useSWRImmutable from "swr/immutable";
 
-import { useAppData } from "@/providers/app-data-context";
 import { getIpInfo } from "@/services/api";
 
 import { EnhancedCard } from "./enhanced-card";
@@ -17,8 +28,7 @@ import { EnhancedCard } from "./enhanced-card";
 const IP_REFRESH_SECONDS = 300;
 const IP_INFO_CACHE_KEY = "cv_ip_info_cache";
 
-// 提取InfoItem子组件并使用memo优化
-const InfoItem = memo(({ label, value }: { label: string; value: string }) => (
+const InfoItem = memo(({ label, value }: { label: string; value?: string }) => (
   <Box sx={{ mb: 0.7, display: "flex", alignItems: "flex-start" }}>
     <Typography
       variant="body2"
@@ -44,7 +54,7 @@ const InfoItem = memo(({ label, value }: { label: string; value: string }) => (
 ));
 
 // 获取国旗表情
-const getCountryFlag = (countryCode: string) => {
+const getCountryFlag = (countryCode: string | undefined) => {
   if (!countryCode) return "";
   const codePoints = countryCode
     .toUpperCase()
@@ -53,179 +63,184 @@ const getCountryFlag = (countryCode: string) => {
   return String.fromCodePoint(...codePoints);
 };
 
-// IP信息卡片组件
-export const IpInfoCard = () => {
-  const { t } = useTranslation();
-  const { clashConfig } = useAppData();
-  const [ipInfo, setIpInfo] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState("");
-  const [showIp, setShowIp] = useState(false);
-  const [countdown, setCountdown] = useState(IP_REFRESH_SECONDS);
-  const lastFetchRef = useRef<number | null>(null);
+type CountDownState = XOR<
+  {
+    type: "countdown";
+    remainingSeconds: number;
+  },
+  {
+    type: "revalidating";
+  }
+>;
 
-  const fetchIpInfo = useCallback(
-    async (force = false) => {
-      setError("");
+const IPInfoCardContainer = forwardRef<HTMLElement, React.PropsWithChildren>(
+  ({ children }, ref) => {
+    const { t } = useTranslation();
+    const { mutate } = useIPInfo();
 
-      try {
-        if (!force && typeof window !== "undefined" && window.sessionStorage) {
-          const raw = window.sessionStorage.getItem(IP_INFO_CACHE_KEY);
-          if (raw) {
-            const parsed = JSON.parse(raw);
-            const now = Date.now();
-            if (
-              parsed?.ts &&
-              parsed?.data &&
-              now - parsed.ts < IP_REFRESH_SECONDS * 1000
-            ) {
-              setIpInfo(parsed.data);
-              lastFetchRef.current = parsed.ts;
-              const elapsed = Math.floor((now - parsed.ts) / 1000);
-              setCountdown(Math.max(IP_REFRESH_SECONDS - elapsed, 0));
-              setLoading(false);
-              return;
-            }
-          }
-        }
-      } catch (e) {
-        console.warn("Failed to read IP info from sessionStorage:", e);
-      }
-
-      if (typeof navigator !== "undefined" && !navigator.onLine) {
-        setLoading(false);
-        lastFetchRef.current = Date.now();
-        setCountdown(IP_REFRESH_SECONDS);
-        return;
-      }
-
-      if (!clashConfig) {
-        setLoading(false);
-        lastFetchRef.current = Date.now();
-        setCountdown(IP_REFRESH_SECONDS);
-        return;
-      }
-
-      try {
-        setLoading(true);
-        const data = await getIpInfo();
-        setIpInfo(data);
-        const ts = Date.now();
-        lastFetchRef.current = ts;
-        try {
-          if (typeof window !== "undefined" && window.sessionStorage) {
-            window.sessionStorage.setItem(
-              IP_INFO_CACHE_KEY,
-              JSON.stringify({ data, ts }),
-            );
-          }
-        } catch (e) {
-          console.warn("Failed to write IP info to sessionStorage:", e);
-        }
-        setCountdown(IP_REFRESH_SECONDS);
-      } catch (err) {
-        setError(
-          err instanceof Error
-            ? err.message
-            : t("home.components.ipInfo.errors.load"),
-        );
-        lastFetchRef.current = Date.now();
-        setCountdown(IP_REFRESH_SECONDS);
-      } finally {
-        setLoading(false);
-      }
-    },
-    [t, clashConfig],
-  );
-
-  // 组件加载时获取IP信息并启动基于上次请求时间的倒计时
-  useEffect(() => {
-    fetchIpInfo();
-
-    let timer: number | null = null;
-
-    const startCountdown = () => {
-      timer = window.setInterval(() => {
-        const now = Date.now();
-        let ts = lastFetchRef.current;
-        try {
-          if (!ts && typeof window !== "undefined" && window.sessionStorage) {
-            const raw = window.sessionStorage.getItem(IP_INFO_CACHE_KEY);
-            if (raw) {
-              const parsed = JSON.parse(raw);
-              ts = parsed?.ts || null;
-            }
-          }
-        } catch (e) {
-          console.warn("Failed to read IP info from sessionStorage:", e);
-          ts = ts || null;
-        }
-
-        const elapsed = ts ? Math.floor((now - ts) / 1000) : 0;
-        let remaining = IP_REFRESH_SECONDS - elapsed;
-
-        if (remaining <= 0) {
-          fetchIpInfo();
-          remaining = IP_REFRESH_SECONDS;
-        }
-
-        // 每5秒或倒计时结束时才更新UI
-        if (remaining % 5 === 0 || remaining <= 0) {
-          setCountdown(remaining);
-        }
-      }, 1000);
-    };
-
-    startCountdown();
-    return () => {
-      if (timer) clearInterval(timer);
-    };
-  }, [fetchIpInfo]);
-
-  const toggleShowIp = useCallback(() => {
-    setShowIp((prev) => !prev);
-  }, []);
-
-  // 渲染加载状态
-  if (loading) {
     return (
       <EnhancedCard
         title={t("home.components.ipInfo.title")}
         icon={<LocationOnOutlined />}
         iconColor="info"
+        ref={ref}
         action={
-          <IconButton
-            size="small"
-            onClick={() => fetchIpInfo(true)}
-            disabled={true}
-          >
+          <IconButton size="small" onClick={() => mutate()}>
             <RefreshOutlined />
           </IconButton>
         }
       >
+        {children}
+      </EnhancedCard>
+    );
+  },
+);
+
+// IP信息卡片组件
+export const IpInfoCard = () => {
+  const { t } = useTranslation();
+  const [showIp, setShowIp] = useState(false);
+  const appWindow = useMemo(() => getCurrentWebviewWindow(), []);
+
+  // track ip info card has been in viewport or not
+  // hasIntersected default to false, and will be true once the card is in viewport
+  // and will never be false again afterwards (unless resetIntersected is called or
+  // the component is unmounted)
+  const [containerRef, hasIntersected, _resetIntersected] = useIntersection({
+    rootMargin: "0px",
+  });
+
+  const [countdown, setCountdown] = useState<CountDownState>({
+    type: "countdown",
+    remainingSeconds: IP_REFRESH_SECONDS,
+  });
+
+  const { data: ipInfo, error, isLoading, mutate } = useIPInfo();
+
+  // function useEffectEvent
+  const onCountdownTick = useEffectEvent(async () => {
+    const now = Date.now();
+    const ts = ipInfo?.lastFetchTs;
+    if (!ts) {
+      return;
+    }
+
+    const elapsed = Math.floor((now - ts) / 1000);
+    const remaining = IP_REFRESH_SECONDS - elapsed;
+
+    if (remaining <= 0) {
+      if (
+        // has intersected at least once
+        // this avoids unncessary revalidation if user never scrolls down,
+        // then we will only load initially once.
+        hasIntersected &&
+        // is online
+        navigator.onLine &&
+        // there is no ongoing revalidation already scheduled
+        countdown.type !== "revalidating" &&
+        // window is visible
+        (await appWindow.isVisible())
+      ) {
+        setCountdown({ type: "revalidating" });
+        // we do not care about the result of mutate here. after mutate is done,
+        // simply wait for next interval tick with `setCountdown({ type: "countdown", ... })`
+        try {
+          await mutate();
+        } finally {
+          // in case mutate throws error, we still need to reset the countdown state
+          setCountdown({
+            type: "countdown",
+            remainingSeconds: IP_REFRESH_SECONDS,
+          });
+        }
+      } else {
+        // do nothing. we even skip "setCountdown" to reduce re-renders
+        //
+        // but the remaining time still <= 0, and setInterval is not stopped, this
+        // callback will still be regularly triggered, as soon as the window is visible
+        // or network online again, we mutate() immediately in the following tick.
+      }
+    } else {
+      setCountdown({
+        type: "countdown",
+        remainingSeconds: remaining,
+      });
+    }
+  });
+
+  // Countdown / refresh scheduler — updates UI every 1s and triggers immediate revalidation when expired
+  useEffect(() => {
+    let timer: number | null = null;
+
+    // Do not add document.hidden check here as it is not reliable in Tauri.
+    //
+    // Thank god IntersectionObserver is a DOM API that relies on DOM/webview
+    // instead of Tauri, which is reliable enough.
+    if (hasIntersected) {
+      console.debug(
+        "IP info card has entered the viewport, starting the countdown interval.",
+      );
+      timer = window.setInterval(onCountdownTick, 1000);
+    } else {
+      console.debug(
+        "IP info card has not yet entered the viewport, no counting down.",
+      );
+    }
+
+    // This will fire when the window is minimized or restored
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    // Tauri's visibility change detection is actually broken on some platforms:
+    // https://github.com/tauri-apps/tauri/issues/10592
+    //
+    // It is working on macOS though (tested).
+    // So at least we should try to pause countdown on supported platforms to
+    // reduce power consumption.
+    function onVisibilityChange() {
+      if (document.hidden) {
+        console.debug("Document hidden, pause the interval");
+        // Pause the timer
+        if (timer != null) {
+          clearInterval(timer);
+          timer = null;
+        }
+      } else if (hasIntersected) {
+        console.debug("Document visible, resume the interval");
+        // Resume the timer only when previous one is cleared
+        if (timer == null) {
+          timer = window.setInterval(onCountdownTick, 1000);
+        }
+      } else {
+        console.debug(
+          "Document visible, but IP info card has never entered the viewport, not even once, not starting the interval.",
+        );
+      }
+    }
+
+    return () => {
+      if (timer != null) clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+    };
+  }, [hasIntersected]);
+
+  const toggleShowIp = useCallback(() => {
+    setShowIp((prev) => !prev);
+  }, []);
+
+  let mainElement: React.ReactElement;
+
+  switch (true) {
+    case isLoading:
+      mainElement = (
         <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
           <Skeleton variant="text" width="60%" height={30} />
           <Skeleton variant="text" width="80%" height={24} />
           <Skeleton variant="text" width="70%" height={24} />
           <Skeleton variant="text" width="50%" height={24} />
         </Box>
-      </EnhancedCard>
-    );
-  }
-
-  // 渲染错误状态
-  if (error) {
-    return (
-      <EnhancedCard
-        title={t("home.components.ipInfo.title")}
-        icon={<LocationOnOutlined />}
-        iconColor="info"
-        action={
-          <IconButton size="small" onClick={() => fetchIpInfo(true)}>
-            <RefreshOutlined />
-          </IconButton>
-        }
-      >
+      );
+      break;
+    case !!error:
+      mainElement = (
         <Box
           sx={{
             display: "flex",
@@ -237,170 +252,175 @@ export const IpInfoCard = () => {
           }}
         >
           <Typography variant="body1" color="error">
-            {error}
+            {error instanceof Error
+              ? error.message
+              : t("home.components.ipInfo.errors.load")}
           </Typography>
-          <Button onClick={() => fetchIpInfo(true)} sx={{ mt: 2 }}>
+          <Button onClick={() => mutate()} sx={{ mt: 2 }}>
             {t("shared.actions.retry")}
           </Button>
         </Box>
-      </EnhancedCard>
-    );
-  }
-
-  // 渲染正常数据
-  return (
-    <EnhancedCard
-      title={t("home.components.ipInfo.title")}
-      icon={<LocationOnOutlined />}
-      iconColor="info"
-      action={
-        <IconButton size="small" onClick={() => fetchIpInfo(true)}>
-          <RefreshOutlined />
-        </IconButton>
-      }
-    >
-      <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "row",
-            flex: 1,
-            overflow: "hidden",
-          }}
-        >
-          {/* 左侧：国家和IP地址 */}
-          <Box sx={{ width: "40%", overflow: "hidden" }}>
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                mb: 1,
-                overflow: "hidden",
-              }}
-            >
-              <Box
-                component="span"
-                sx={{
-                  fontSize: "1.5rem",
-                  mr: 1,
-                  display: "inline-block",
-                  width: 28,
-                  textAlign: "center",
-                  flexShrink: 0,
-                  fontFamily: '"twemoji mozilla", sans-serif',
-                }}
-              >
-                {getCountryFlag(ipInfo?.country_code)}
-              </Box>
-              <Typography
-                variant="subtitle1"
-                sx={{
-                  fontWeight: "medium",
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                  maxWidth: "100%",
-                }}
-              >
-                {ipInfo?.country || t("home.components.ipInfo.labels.unknown")}
-              </Typography>
-            </Box>
-
-            <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
-              <Typography
-                variant="body2"
-                color="text.secondary"
-                sx={{ flexShrink: 0 }}
-              >
-                {t("home.components.ipInfo.labels.ip")}:
-              </Typography>
+      );
+      break;
+    default: // Normal render
+      mainElement = (
+        <Box sx={{ height: "100%", display: "flex", flexDirection: "column" }}>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "row",
+              flex: 1,
+              overflow: "hidden",
+            }}
+          >
+            {/* 左侧：国家和IP地址 */}
+            <Box sx={{ width: "40%", overflow: "hidden" }}>
               <Box
                 sx={{
                   display: "flex",
                   alignItems: "center",
-                  ml: 1,
+                  mb: 1,
                   overflow: "hidden",
-                  maxWidth: "calc(100% - 30px)",
                 }}
               >
-                <Typography
-                  variant="body2"
+                <Box
+                  component="span"
                   sx={{
-                    fontFamily: "monospace",
-                    fontSize: "0.75rem",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    wordBreak: "break-all",
+                    fontSize: "1.5rem",
+                    mr: 1,
+                    display: "inline-block",
+                    width: 28,
+                    textAlign: "center",
+                    flexShrink: 0,
+                    fontFamily: '"twemoji mozilla", sans-serif',
                   }}
                 >
-                  {showIp ? ipInfo?.ip : "••••••••••"}
+                  {getCountryFlag(ipInfo?.country_code)}
+                </Box>
+                <Typography
+                  variant="subtitle1"
+                  sx={{
+                    fontWeight: "medium",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                    maxWidth: "100%",
+                  }}
+                >
+                  {ipInfo?.country ||
+                    t("home.components.ipInfo.labels.unknown")}
                 </Typography>
-                <IconButton size="small" onClick={toggleShowIp}>
-                  {showIp ? (
-                    <VisibilityOffOutlined fontSize="small" />
-                  ) : (
-                    <VisibilityOutlined fontSize="small" />
-                  )}
-                </IconButton>
               </Box>
+
+              <Box sx={{ display: "flex", alignItems: "center", mb: 1 }}>
+                <Typography
+                  variant="body2"
+                  color="text.secondary"
+                  sx={{ flexShrink: 0 }}
+                >
+                  {t("home.components.ipInfo.labels.ip")}:
+                </Typography>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    ml: 1,
+                    overflow: "hidden",
+                    maxWidth: "calc(100% - 30px)",
+                  }}
+                >
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      fontFamily: "monospace",
+                      fontSize: "0.75rem",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      wordBreak: "break-all",
+                    }}
+                  >
+                    {showIp ? ipInfo?.ip : "••••••••••"}
+                  </Typography>
+                  <IconButton size="small" onClick={toggleShowIp}>
+                    {showIp ? (
+                      <VisibilityOffOutlined fontSize="small" />
+                    ) : (
+                      <VisibilityOutlined fontSize="small" />
+                    )}
+                  </IconButton>
+                </Box>
+              </Box>
+
+              <InfoItem
+                label={t("home.components.ipInfo.labels.asn")}
+                value={ipInfo?.asn ? `AS${ipInfo.asn}` : "N/A"}
+              />
             </Box>
 
-            <InfoItem
-              label={t("home.components.ipInfo.labels.asn")}
-              value={ipInfo?.asn ? `AS${ipInfo.asn}` : "N/A"}
-            />
+            {/* 右侧：组织、ISP和位置信息 */}
+            <Box sx={{ width: "60%", overflow: "auto" }}>
+              <InfoItem
+                label={t("home.components.ipInfo.labels.isp")}
+                value={ipInfo?.organization}
+              />
+              <InfoItem
+                label={t("home.components.ipInfo.labels.org")}
+                value={ipInfo?.asn_organization}
+              />
+              <InfoItem
+                label={t("home.components.ipInfo.labels.location")}
+                value={[ipInfo?.city, ipInfo?.region]
+                  .filter(Boolean)
+                  .join(", ")}
+              />
+              <InfoItem
+                label={t("home.components.ipInfo.labels.timezone")}
+                value={ipInfo?.timezone}
+              />
+            </Box>
           </Box>
 
-          {/* 右侧：组织、ISP和位置信息 */}
-          <Box sx={{ width: "60%", overflow: "auto" }}>
-            <InfoItem
-              label={t("home.components.ipInfo.labels.isp")}
-              value={ipInfo?.isp}
-            />
-            <InfoItem
-              label={t("home.components.ipInfo.labels.org")}
-              value={ipInfo?.asn_organization}
-            />
-            <InfoItem
-              label={t("home.components.ipInfo.labels.location")}
-              value={[ipInfo?.city, ipInfo?.region].filter(Boolean).join(", ")}
-            />
-            <InfoItem
-              label={t("home.components.ipInfo.labels.timezone")}
-              value={ipInfo?.timezone}
-            />
-          </Box>
-        </Box>
-
-        <Box
-          sx={{
-            mt: "auto",
-            pt: 0.5,
-            borderTop: 1,
-            borderColor: "divider",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            opacity: 0.7,
-            fontSize: "0.7rem",
-          }}
-        >
-          <Typography variant="caption">
-            {t("home.components.ipInfo.labels.autoRefresh")}: {countdown}s
-          </Typography>
-          <Typography
-            variant="caption"
+          <Box
             sx={{
-              textOverflow: "ellipsis",
-              overflow: "hidden",
-              whiteSpace: "nowrap",
+              mt: "auto",
+              pt: 0.5,
+              borderTop: 1,
+              borderColor: "divider",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              opacity: 0.7,
+              fontSize: "0.7rem",
             }}
           >
-            {ipInfo?.country_code}, {ipInfo?.longitude?.toFixed(2)},{" "}
-            {ipInfo?.latitude?.toFixed(2)}
-          </Typography>
+            <Typography variant="caption">
+              {t("home.components.ipInfo.labels.autoRefresh")}
+              {countdown.type === "countdown"
+                ? `: ${countdown.remainingSeconds}s`
+                : "..."}
+            </Typography>
+            <Typography
+              variant="caption"
+              sx={{
+                textOverflow: "ellipsis",
+                overflow: "hidden",
+                whiteSpace: "nowrap",
+              }}
+            >
+              {`${ipInfo?.country_code ?? "N/A"}, ${ipInfo?.longitude?.toFixed(2) ?? "N/A"}, ${ipInfo?.latitude?.toFixed(2) ?? "N/A"}`}
+            </Typography>
+          </Box>
         </Box>
-      </Box>
-    </EnhancedCard>
+      );
+  }
+
+  return (
+    <IPInfoCardContainer ref={containerRef}>{mainElement}</IPInfoCardContainer>
   );
 };
+
+function useIPInfo() {
+  return useSWRImmutable(IP_INFO_CACHE_KEY, getIpInfo, {
+    shouldRetryOnError: true,
+  });
+}

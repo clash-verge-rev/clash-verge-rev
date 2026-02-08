@@ -6,6 +6,7 @@ members = [
   "crates/clash-verge-signal",
   "crates/tauri-plugin-clash-verge-sysinfo",
   "crates/clash-verge-i18n",
+  "crates/clash-verge-limiter",
 ]
 resolver = "2"
 
@@ -39,14 +40,20 @@ opt-level = 0
 debug = true
 strip = false
 
+[profile.debug-release]
+inherits = "fast-release"
+codegen-units = 1
+split-debuginfo = "unpacked"
+
 [workspace.dependencies]
 clash-verge-draft = { path = "crates/clash-verge-draft" }
 clash-verge-logging = { path = "crates/clash-verge-logging" }
 clash-verge-signal = { path = "crates/clash-verge-signal" }
 clash-verge-i18n = { path = "crates/clash-verge-i18n" }
+clash-verge-limiter = { path = "crates/clash-verge-limiter" }
 tauri-plugin-clash-verge-sysinfo = { path = "crates/tauri-plugin-clash-verge-sysinfo" }
 
-tauri = { version = "2.9.5" }
+tauri = { version = "2.10.2" }
 tauri-plugin-clipboard-manager = "2.3.2"
 parking_lot = { version = "0.12.5", features = ["hardware-lock-elision"] }
 anyhow = "1.0.100"

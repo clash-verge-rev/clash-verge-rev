@@ -18,7 +18,7 @@ export async function enhanceProfiles() {
 }
 
 export async function patchProfilesConfig(profiles: IProfilesConfig) {
-  return invoke<void>("patch_profiles_config", { profiles });
+  return invoke<boolean>("patch_profiles_config", { profiles });
 }
 
 export async function createProfile(
@@ -340,7 +340,7 @@ export async function cmdGetProxyDelay(
   url?: string,
 ) {
   // 确保URL不为空
-  const testUrl = url || "https://cp.cloudflare.com/generate_204";
+  const testUrl = url || "https://1.1.1.1";
 
   try {
     // 不再在前端编码代理名称，由后端统一处理编码

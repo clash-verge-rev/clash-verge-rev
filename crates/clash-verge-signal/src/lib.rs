@@ -14,18 +14,20 @@ where
     F: Fn() -> Fut + Send + Sync + 'static,
     Fut: Future + Send + 'static,
 {
-    RUNTIME.get_or_init(|| match tokio::runtime::Runtime::new() {
-        Ok(rt) => Some(rt),
-        Err(e) => {
-            logging!(
-                info,
-                Type::SystemSignal,
-                "register shutdown signal failed, create tokio runtime error: {}",
-                e
-            );
-            None
-        }
-    });
+    RUNTIME.get_or_init(
+        || match tokio::runtime::Builder::new_current_thread().enable_all().build() {
+            Ok(rt) => Some(rt),
+            Err(e) => {
+                logging!(
+                    info,
+                    Type::SystemSignal,
+                    "register shutdown signal failed, create tokio runtime error: {}",
+                    e
+                );
+                None
+            }
+        },
+    );
 
     #[cfg(unix)]
     unix::register(f);

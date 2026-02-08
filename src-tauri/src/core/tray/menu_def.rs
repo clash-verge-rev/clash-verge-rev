@@ -55,7 +55,7 @@ pub(crate) enum TrayAction {
     SystemProxy,
     TunMode,
     MainWindow,
-    TrayMenue,
+    TrayMenu,
     Unknown,
 }
 
@@ -65,7 +65,7 @@ impl From<&str> for TrayAction {
             "system_proxy" => Self::SystemProxy,
             "tun_mode" => Self::TunMode,
             "main_window" => Self::MainWindow,
-            "tray_menue" => Self::TrayMenue,
+            "tray_menu" => Self::TrayMenu,
             _ => Self::Unknown,
         }
     }

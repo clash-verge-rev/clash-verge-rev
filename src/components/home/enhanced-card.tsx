@@ -1,5 +1,5 @@
 import { Box, Typography, alpha, useTheme } from "@mui/material";
-import { ReactNode } from "react";
+import React, { forwardRef, ReactNode } from "react";
 
 // 自定义卡片组件接口
 interface EnhancedCardProps {
@@ -19,103 +19,109 @@ interface EnhancedCardProps {
 }
 
 // 自定义卡片组件
-export const EnhancedCard = ({
-  title,
-  icon,
-  action,
-  children,
-  iconColor = "primary",
-  minHeight,
-  noContentPadding = false,
-}: EnhancedCardProps) => {
-  const theme = useTheme();
-  const isDark = theme.palette.mode === "dark";
+export const EnhancedCard = forwardRef<HTMLElement, EnhancedCardProps>(
+  (
+    {
+      title,
+      icon,
+      action,
+      children,
+      iconColor = "primary",
+      minHeight,
+      noContentPadding = false,
+    },
+    ref,
+  ) => {
+    const theme = useTheme();
+    const isDark = theme.palette.mode === "dark";
 
-  // 统一的标题截断样式
-  const titleTruncateStyle = {
-    minWidth: 0,
-    maxWidth: "100%",
-    overflow: "hidden",
-    textOverflow: "ellipsis",
-    whiteSpace: "nowrap",
-    display: "block",
-  };
+    // 统一的标题截断样式
+    const titleTruncateStyle = {
+      minWidth: 0,
+      maxWidth: "100%",
+      overflow: "hidden",
+      textOverflow: "ellipsis",
+      whiteSpace: "nowrap",
+      display: "block",
+    };
 
-  return (
-    <Box
-      sx={{
-        height: "100%",
-        display: "flex",
-        flexDirection: "column",
-        borderRadius: 2,
-        backgroundColor: isDark ? "#282a36" : "#ffffff",
-      }}
-    >
+    return (
       <Box
         sx={{
-          px: 2,
-          py: 1,
+          height: "100%",
           display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          borderBottom: 1,
-          borderColor: "divider",
+          flexDirection: "column",
+          borderRadius: 2,
+          backgroundColor: isDark ? "#282a36" : "#ffffff",
         }}
+        ref={ref}
       >
         <Box
           sx={{
+            px: 2,
+            py: 1,
             display: "flex",
             alignItems: "center",
-            minWidth: 0,
-            flex: 1,
-            overflow: "hidden",
+            justifyContent: "space-between",
+            borderBottom: 1,
+            borderColor: "divider",
           }}
         >
           <Box
             sx={{
               display: "flex",
               alignItems: "center",
-              justifyContent: "center",
-              borderRadius: 1.5,
-              width: 38,
-              height: 38,
-              mr: 1.5,
-              flexShrink: 0,
-              backgroundColor: alpha(theme.palette[iconColor].main, 0.12),
-              color: theme.palette[iconColor].main,
+              minWidth: 0,
+              flex: 1,
+              overflow: "hidden",
             }}
           >
-            {icon}
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                borderRadius: 1.5,
+                width: 38,
+                height: 38,
+                mr: 1.5,
+                flexShrink: 0,
+                backgroundColor: alpha(theme.palette[iconColor].main, 0.12),
+                color: theme.palette[iconColor].main,
+              }}
+            >
+              {icon}
+            </Box>
+            <Box sx={{ minWidth: 0, flex: 1 }}>
+              {typeof title === "string" ? (
+                <Typography
+                  variant="h6"
+                  fontWeight="medium"
+                  fontSize={18}
+                  sx={titleTruncateStyle}
+                  title={title}
+                >
+                  {title}
+                </Typography>
+              ) : (
+                <Box sx={titleTruncateStyle}>{title}</Box>
+              )}
+            </Box>
           </Box>
-          <Box sx={{ minWidth: 0, flex: 1 }}>
-            {typeof title === "string" ? (
-              <Typography
-                variant="h6"
-                fontWeight="medium"
-                fontSize={18}
-                sx={titleTruncateStyle}
-                title={title}
-              >
-                {title}
-              </Typography>
-            ) : (
-              <Box sx={titleTruncateStyle}>{title}</Box>
-            )}
-          </Box>
+          {action && <Box sx={{ ml: 2, flexShrink: 0 }}>{action}</Box>}
         </Box>
-        {action && <Box sx={{ ml: 2, flexShrink: 0 }}>{action}</Box>}
+        <Box
+          sx={{
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
+            p: noContentPadding ? 0 : 2,
+            ...(minHeight && { minHeight }),
+          }}
+        >
+          {children}
+        </Box>
       </Box>
-      <Box
-        sx={{
-          flex: 1,
-          display: "flex",
-          flexDirection: "column",
-          p: noContentPadding ? 0 : 2,
-          ...(minHeight && { minHeight }),
-        }}
-      >
-        {children}
-      </Box>
-    </Box>
-  );
-};
+    );
+  },
+);

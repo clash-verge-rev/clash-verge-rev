@@ -9,7 +9,7 @@ use crate::{
     Type, cmd, config::Config, feat, logging, module::lightweight::is_in_lightweight_mode,
     utils::dirs::find_target_icons,
 };
-use governor::{DefaultDirectRateLimiter, Quota, RateLimiter};
+use clash_verge_limiter::{Limiter, SystemClock, SystemLimiter};
 use tauri::tray::TrayIconBuilder;
 use tauri_plugin_clash_verge_sysinfo::is_current_app_handle_admin;
 use tauri_plugin_mihomo::models::Proxies;
@@ -19,7 +19,6 @@ use super::handle;
 use anyhow::Result;
 use smartstring::alias::String;
 use std::collections::HashMap;
-use std::num::NonZeroU32;
 use std::time::Duration;
 use tauri::{
     AppHandle, Wry,
@@ -33,13 +32,13 @@ use menu_def::{MenuIds, MenuTexts};
 
 type ProxyMenuItem = (Option<Submenu<Wry>>, Vec<Box<dyn IsMenuItem<Wry>>>);
 
-const TRAY_CLICK_DEBOUNCE_MS: u64 = 1_275;
+const TRAY_CLICK_DEBOUNCE_MS: u64 = 300;
 
 #[derive(Clone)]
 struct TrayState {}
 
 pub struct Tray {
-    limiter: DefaultDirectRateLimiter,
+    limiter: SystemLimiter,
 }
 
 impl TrayState {
@@ -136,11 +135,7 @@ impl Default for Tray {
     #[allow(clippy::unwrap_used)]
     fn default() -> Self {
         Self {
-            limiter: RateLimiter::direct(
-                Quota::with_period(Duration::from_millis(TRAY_CLICK_DEBOUNCE_MS))
-                    .unwrap()
-                    .allow_burst(NonZeroU32::new(1).unwrap()),
-            ),
+            limiter: Limiter::new(Duration::from_millis(TRAY_CLICK_DEBOUNCE_MS), SystemClock),
         }
     }
 }
@@ -190,7 +185,7 @@ impl Tray {
             .tray_by_id("main")
             .ok_or_else(|| anyhow::anyhow!("Failed to get main tray"))?;
         match tray_event {
-            TrayAction::TrayMenue => tray.set_show_menu_on_left_click(true)?,
+            TrayAction::TrayMenu => tray.set_show_menu_on_left_click(true)?,
             _ => tray.set_show_menu_on_left_click(false)?,
         }
         Ok(())
@@ -418,6 +413,9 @@ impl Tray {
         let tray_action = TrayAction::from(tray_event.as_str());
 
         tray.on_tray_icon_event(move |_app_handle, event| {
+            if matches!(tray_action, TrayAction::Unknown) {
+                return;
+            }
             if let TrayIconEvent::Click {
                 button: MouseButton::Left,
                 button_state: MouseButtonState::Down,
@@ -459,11 +457,11 @@ impl Tray {
     }
 
     fn should_handle_tray_click(&self) -> bool {
-        let res = self.limiter.check().is_ok();
-        if !res {
+        let allow = self.limiter.check();
+        if !allow {
             logging!(debug, Type::Tray, "tray click rate limited");
         }
-        res
+        allow
     }
 }
 

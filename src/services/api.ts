@@ -1,7 +1,20 @@
+import { getName, getVersion } from "@tauri-apps/api/app";
 import { fetch } from "@tauri-apps/plugin-http";
+import { asyncRetry } from "foxts/async-retry";
+import { extractErrorMessage } from "foxts/extract-error-message";
+import { once } from "foxts/once";
 
 import { debugLog } from "@/utils/debug";
 
+const getUserAgentPromise = once(async () => {
+  try {
+    const [name, version] = await Promise.all([getName(), getVersion()]);
+    return `${name}/${version}`;
+  } catch (error) {
+    console.debug("Failed to build User-Agent, fallback to default", error);
+    return "clash-verge-rev";
+  }
+});
 // Get current IP and geolocation information （refactored IP detection with service-specific mappings）
 interface IpInfo {
   ip: string;
@@ -90,6 +103,38 @@ const IP_CHECK_SERVICES: ServiceConfig[] = [
       timezone: data.timezone?.id || "",
     }),
   },
+  {
+    url: "https://ip.api.skk.moe/cf-geoip",
+    mapping: (data) => ({
+      ip: data.ip || "",
+      country_code: data.country || "",
+      country: data.country || "",
+      region: data.region || "",
+      city: data.city || "",
+      organization: data.asOrg || "",
+      asn: data.asn || 0,
+      asn_organization: data.asOrg || "",
+      longitude: data.longitude || 0,
+      latitude: data.latitude || 0,
+      timezone: data.timezone || "",
+    }),
+  },
+  {
+    url: "https://get.geojs.io/v1/ip/geo.json",
+    mapping: (data) => ({
+      ip: data.ip || "",
+      country_code: data.country_code || "",
+      country: data.country || "",
+      region: data.region || "",
+      city: data.city || "",
+      organization: data.organization_name || "",
+      asn: data.asn || 0,
+      asn_organization: data.organization_name || "",
+      longitude: Number(data.longitude) || 0,
+      latitude: Number(data.latitude) || 0,
+      timezone: data.timezone || "",
+    }),
+  },
 ];
 
 // 随机性服务列表洗牌函数
@@ -149,76 +194,80 @@ function createPrng(seed: number): () => number {
 }
 
 // 获取当前IP和地理位置信息
-export const getIpInfo = async (): Promise<IpInfo> => {
+export const getIpInfo = async (): Promise<
+  IpInfo & { lastFetchTs: number }
+> => {
   // 配置参数
-  const maxRetries = 3;
+  const maxRetries = 2;
   const serviceTimeout = 5000;
-  const overallTimeout = 20000; // 增加总超时时间以容纳延迟
 
-  const overallTimeoutController = new AbortController();
-  const overallTimeoutId = setTimeout(() => {
-    overallTimeoutController.abort();
-  }, overallTimeout);
+  const shuffledServices = shuffleServices();
+  let lastError: unknown | null = null;
+  const userAgent = await getUserAgentPromise();
+  console.debug("User-Agent for IP detection:", userAgent);
 
-  try {
-    const shuffledServices = shuffleServices();
-    let lastError: Error | null = null;
+  for (const service of shuffledServices) {
+    debugLog(`尝试IP检测服务: ${service.url}`);
 
-    for (const service of shuffledServices) {
-      debugLog(`尝试IP检测服务: ${service.url}`);
+    const timeoutController = new AbortController();
+    const timeoutId = setTimeout(() => {
+      timeoutController.abort();
+    }, service.timeout || serviceTimeout);
 
-      for (let attempt = 0; attempt < maxRetries; attempt++) {
-        let timeoutId: ReturnType<typeof setTimeout> | null = null;
-
-        try {
-          const timeoutController = new AbortController();
-          timeoutId = setTimeout(() => {
-            timeoutController.abort();
-          }, service.timeout || serviceTimeout);
-          console.debug("Fetching IP information...");
+    try {
+      return await asyncRetry(
+        async (bail) => {
+          console.debug("Fetching IP information:", service.url);
 
           const response = await fetch(service.url, {
             method: "GET",
-            signal: timeoutController.signal,
+            signal: timeoutController.signal, // AbortSignal.timeout(service.timeout || serviceTimeout),
             connectTimeout: service.timeout || serviceTimeout,
+            headers: {
+              "User-Agent": userAgent,
+            },
           });
+
+          if (!response.ok) {
+            return bail(
+              new Error(
+                `IP 检测服务出错，状态码: ${response.status} from ${service.url}`,
+              ),
+            );
+          }
 
           const data = await response.json();
 
-          if (timeoutId) clearTimeout(timeoutId);
-
           if (data && data.ip) {
             debugLog(`IP检测成功，使用服务: ${service.url}`);
-            return service.mapping(data);
+            return Object.assign(service.mapping(data), {
+              // use last fetch success timestamp
+              lastFetchTs: Date.now(),
+            });
           } else {
             throw new Error(`无效的响应格式 from ${service.url}`);
           }
-        } catch (error: any) {
-          if (timeoutId) clearTimeout(timeoutId);
-
-          lastError = error;
-          console.warn(
-            `尝试 ${attempt + 1}/${maxRetries} 失败 (${service.url}):`,
-            error,
-          );
-
-          if (error.name === "AbortError") {
-            throw error;
-          }
-
-          if (attempt < maxRetries - 1) {
-            await new Promise((resolve) => setTimeout(resolve, 1000));
-          }
-        }
-      }
+        },
+        {
+          retries: maxRetries,
+          minTimeout: 1000,
+          maxTimeout: 4000,
+          randomize: true,
+        },
+      );
+    } catch (error) {
+      debugLog(`IP检测服务失败: ${service.url}`, error);
+      lastError = error;
+    } finally {
+      clearTimeout(timeoutId);
     }
+  }
 
-    if (lastError) {
-      throw new Error(`所有IP检测服务都失败: ${lastError.message}`);
-    } else {
-      throw new Error("没有可用的IP检测服务");
-    }
-  } finally {
-    clearTimeout(overallTimeoutId);
+  if (lastError) {
+    throw new Error(
+      `所有IP检测服务都失败: ${extractErrorMessage(lastError) || "未知错误"}`,
+    );
+  } else {
+    throw new Error("没有可用的IP检测服务");
   }
 };

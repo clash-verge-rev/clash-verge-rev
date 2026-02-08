@@ -1,5 +1,6 @@
 use super::CmdResult;
 use super::StringifyErr as _;
+use crate::utils::window_manager::WindowManager;
 use crate::{
     config::{
         Config, IProfiles, PrfItem, PrfOption,
@@ -310,7 +311,9 @@ async fn handle_success(current_value: Option<&String>) -> CmdResult<bool> {
         logging!(warn, Type::Cmd, "Warning: 异步保存配置文件失败: {e}");
     }
 
-    if let Some(current) = current_value {
+    if let Some(current) = current_value
+        && WindowManager::get_main_window().is_some()
+    {
         logging!(info, Type::Cmd, "向前端发送配置变更事件: {}", current);
         handle::Handle::notify_profile_changed(current.to_owned());
     }

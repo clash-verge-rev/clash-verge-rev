@@ -103,7 +103,31 @@
           "webUI": "Interfaz web",
           "clashCore": "Núcleo de Clash",
           "openUwpTool": "Abrir herramienta UWP",
-          "updateGeoData": "Actualizar GeoData"
+          "updateGeoData": "Actualizar GeoData",
+          "tunnels": {
+            "title": "Gestión de Túneles",
+            "localAddr": "Dirección de Escucha Local",
+            "localPort": "Puerto de Escucha Local",
+            "targetAddr": "Dirección de destino",
+            "targetPort": "Puerto de destino",
+            "proxyGroup": "Grupo de Proxy",
+            "proxyNode": "Nodo Proxy",
+            "protocols": "Protocolo",
+            "existing": "Túneles Existentes",
+            "default": "Seguir la Configuración Actual",
+            "optional": "Opcional",
+            "messages": {
+              "incomplete": "Por favor complete todos los campos obligatorios del túnel",
+              "invalidLocalAddr": "Dirección de escucha local no válida",
+              "invalidLocalPort": "Puerto de escucha local no válido",
+              "invalidTargetAddr": "Dirección de destino no válida",
+              "invalidTargetPort": "Puerto de destino no válido"
+            },
+            "actions": {
+              "add": "Agregar",
+              "addNew": "Agregar Nuevo Túnel"
+            }
+          }
         },
         "tooltips": {
           "networkInterface": "Interfaz de red",

@@ -1,6 +1,6 @@
 use crate::{
     config::Config,
-    core::{handle, timer::Timer, tray::Tray},
+    core::{timer::Timer, tray::Tray},
     process::AsyncHandler,
 };
 
@@ -143,7 +143,7 @@ pub async fn add_light_weight_timer() {
 }
 
 fn setup_window_close_listener() {
-    if let Some(window) = handle::Handle::get_window() {
+    if let Some(window) = WindowManager::get_main_window() {
         let handler_id = window.listen("tauri://close-requested", move |_event| {
             std::mem::drop(AsyncHandler::spawn(|| async {
                 if let Err(e) = setup_light_weight_timer().await {
@@ -161,7 +161,7 @@ fn setup_window_close_listener() {
 }
 
 fn cancel_window_close_listener() {
-    if let Some(window) = handle::Handle::get_window() {
+    if let Some(window) = WindowManager::get_main_window() {
         let id = WINDOW_CLOSE_HANDLER_ID.swap(0, Ordering::AcqRel);
         if id != 0 {
             window.unlisten(id);
@@ -171,7 +171,7 @@ fn cancel_window_close_listener() {
 }
 
 fn setup_webview_focus_listener() {
-    if let Some(window) = handle::Handle::get_window() {
+    if let Some(window) = WindowManager::get_main_window() {
         let handler_id = window.listen("tauri://focus", move |_event| {
             logging_error!(Type::Lightweight, cancel_light_weight_timer());
             logging!(debug, Type::Lightweight, "监听到窗口获得焦点，取消轻量模式计时");
@@ -181,7 +181,7 @@ fn setup_webview_focus_listener() {
 }
 
 fn cancel_webview_focus_listener() {
-    if let Some(window) = handle::Handle::get_window() {
+    if let Some(window) = WindowManager::get_main_window() {
         let id = WEBVIEW_FOCUS_HANDLER_ID.swap(0, Ordering::AcqRel);
         if id != 0 {
             window.unlisten(id);

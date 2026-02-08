@@ -3,18 +3,19 @@ use crate::{
     core::{logger::Logger, tray::Tray},
     utils::dirs,
 };
-use anyhow::{Context as _, Result, bail};
+use anyhow::{Context as _, Result, anyhow, bail};
 use clash_verge_logging::{Type, logging, logging_error};
 use clash_verge_service_ipc::CoreConfig;
 use compact_str::CompactString;
 use once_cell::sync::Lazy;
 use std::{
+    borrow::Cow,
     env::current_exe,
     path::{Path, PathBuf},
     process::Command as StdCommand,
     time::Duration,
 };
-use tokio::sync::Mutex;
+use tokio::{sync::Mutex, time::sleep};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ServiceStatus {
@@ -64,6 +65,7 @@ fn uninstall_service() -> Result<()> {
 
 #[cfg(target_os = "windows")]
 fn install_service() -> Result<()> {
+    use std::process::Output;
     logging!(info, Type::Service, "install service");
 
     use deelevate::{PrivilegeLevel, Token};
@@ -79,13 +81,30 @@ fn install_service() -> Result<()> {
 
     let token = Token::with_current_process()?;
     let level = token.privilege_level()?;
-    let status = match level {
-        PrivilegeLevel::NotPrivileged => RunasCommand::new(install_path).show(false).status()?,
-        _ => StdCommand::new(install_path).creation_flags(0x08000000).status()?,
+    let output = match level {
+        PrivilegeLevel::NotPrivileged => {
+            let status = RunasCommand::new(&install_path).show(false).status()?;
+            Output {
+                status,
+                stdout: Vec::new(),
+                stderr: Vec::new(),
+            }
+        }
+        _ => {
+            // StdCommand returns Output directly
+            StdCommand::new(&install_path).creation_flags(0x08000000).output()?
+        }
     };
 
-    if !status.success() {
-        bail!("failed to install service with status {}", status.code().unwrap_or(-1));
+    if let Some((code, err)) = check_output_error(&output) {
+        logging!(
+            error,
+            Type::Service,
+            "failed to install service code: {}, details: {}",
+            code,
+            err
+        );
+        bail!("failed to install service code: {}, details: {}", code, err);
     }
 
     Ok(())
@@ -160,41 +179,42 @@ fn install_service() -> Result<()> {
     let install_shell: String = install_path.to_string_lossy().replace(" ", "\\ ");
 
     let elevator = crate::utils::help::linux_elevator();
-    let status = if linux_running_as_root() {
-        StdCommand::new(&install_path).status()?
+    let output = if linux_running_as_root() {
+        StdCommand::new(&install_path).output()?
     } else {
         let result = StdCommand::new(&elevator)
             .arg("sh")
             .arg("-c")
             .arg(&install_shell)
-            .status()?;
+            .output()?;
 
         // 如果 pkexec 执行失败，回退到 sudo
-        if !result.success() && elevator.contains("pkexec") {
+        if !result.status.success() && elevator.contains("pkexec") {
             logging!(
                 warn,
                 Type::Service,
                 "pkexec failed with code {}, falling back to sudo",
-                result.code().unwrap_or(-1)
+                result.status.code().unwrap_or(-1)
             );
             StdCommand::new("sudo")
                 .arg("sh")
                 .arg("-c")
                 .arg(&install_shell)
-                .status()?
+                .output()?
         } else {
             result
         }
     };
-    logging!(
-        info,
-        Type::Service,
-        "install status code:{}",
-        status.code().unwrap_or(-1)
-    );
 
-    if !status.success() {
-        bail!("failed to install service with status {}", status.code().unwrap_or(-1));
+    if let Some((code, err)) = check_output_error(&output) {
+        logging!(
+            error,
+            Type::Service,
+            "failed to install service code: {}, details: {}",
+            code,
+            err
+        );
+        bail!("failed to install service code: {}, details: {}", code, err);
     }
 
     Ok(())
@@ -262,13 +282,35 @@ fn install_service() -> Result<()> {
         r#"do shell script "sudo CLASH_VERGE_SERVICE_GID={gid} '{install_shell}'" with administrator privileges with prompt "{prompt}""#
     );
 
-    let status = StdCommand::new("osascript").args(vec!["-e", &command]).status()?;
-
-    if !status.success() {
-        bail!("failed to install service with status {}", status.code().unwrap_or(-1));
+    let output = StdCommand::new("osascript").args(vec!["-e", &command]).output()?;
+    if let Some((code, err)) = check_output_error(&output) {
+        logging!(
+            error,
+            Type::Service,
+            "failed to install service code: {}, details: {}",
+            code,
+            err
+        );
+        bail!("failed to install service code: {}, details: {}", code, err);
     }
 
     Ok(())
+}
+
+fn check_output_error(output: &std::process::Output) -> Option<(i32, Cow<'_, str>)> {
+    if output.status.success() {
+        return None;
+    }
+    let code = output.status.code().unwrap_or(-1);
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    if !stderr.is_empty() {
+        return Some((code, stderr));
+    }
+    let stdout = String::from_utf8_lossy(&output.stdout);
+    if !stdout.is_empty() {
+        return Some((code, stdout));
+    }
+    Some((code, Cow::Borrowed("Unknown error")))
 }
 
 fn reinstall_service() -> Result<()> {
@@ -336,10 +378,7 @@ pub(super) async fn start_with_existing_service(config_file: &PathBuf) -> Result
 pub(super) async fn run_core_by_service(config_file: &PathBuf) -> Result<()> {
     logging!(info, Type::Service, "正在尝试通过服务启动核心");
 
-    let mut manager = SERVICE_MANAGER.lock().await;
-    let status = manager.check_service_comprehensive().await;
-    manager.handle_service_status(&status).await?;
-    drop(manager);
+    SERVICE_MANAGER.lock().await.refresh().await?;
 
     logging!(info, Type::Service, "服务已运行且版本匹配，直接使用");
     start_with_existing_service(config_file).await
@@ -395,13 +434,38 @@ pub async fn is_service_available() -> Result<()> {
     Ok(())
 }
 
-/// 等待一会，再检查服务是否正在运行
-/// TODO 使用 tokio select 之类机制并结合 timeout 实现更优雅的等待机制，期望等待文件出现，再尝试连接
 pub async fn wait_and_check_service_available(status: &mut ServiceManager) -> Result<()> {
-    status.0 = ServiceStatus::Unavailable("Waiting for service to be available".into());
-    clash_verge_service_ipc::connect().await?;
-    status.0 = ServiceStatus::Ready;
-    Ok(())
+    wait_for_service_ipc(status, "Waiting for service to be available").await
+}
+
+async fn wait_for_service_ipc(status: &mut ServiceManager, reason: &str) -> Result<()> {
+    status.0 = ServiceStatus::Unavailable(reason.into());
+    let config = ServiceManager::config();
+    let mut attempts = 0u32;
+    #[allow(unused_assignments)]
+    let mut last_err = anyhow!("service not ready");
+
+    loop {
+        if Path::new(clash_verge_service_ipc::IPC_PATH).exists() {
+            match clash_verge_service_ipc::connect().await {
+                Ok(_) => {
+                    status.0 = ServiceStatus::Ready;
+                    return Ok(());
+                }
+                Err(e) => last_err = e,
+            }
+        } else {
+            last_err = anyhow!("IPC path not ready");
+        }
+
+        if attempts >= config.max_retries as u32 {
+            break;
+        }
+        attempts += 1;
+        sleep(config.retry_delay).await;
+    }
+
+    Err(last_err)
 }
 
 pub fn is_service_ipc_path_exists() -> bool {
@@ -415,9 +479,9 @@ impl ServiceManager {
 
     pub const fn config() -> clash_verge_service_ipc::IpcConfig {
         clash_verge_service_ipc::IpcConfig {
-            default_timeout: Duration::from_millis(100),
-            retry_delay: Duration::from_millis(200),
-            max_retries: 6,
+            default_timeout: Duration::from_millis(150),
+            retry_delay: Duration::from_millis(250),
+            max_retries: 20,
         }
     }
 

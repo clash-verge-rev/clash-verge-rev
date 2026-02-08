@@ -12,6 +12,9 @@ use serde_yaml_ng::Mapping;
 use smartstring::alias::String;
 use std::time::Duration;
 use tokio::fs;
+// TODO, use other re-export
+use reqwest_dav::re_exports::url::form_urlencoded;
+use tauri::Url;
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct PrfItem {
@@ -278,9 +281,17 @@ impl PrfItem {
             ProxyType::None
         };
 
+        let url = fix_dirty_url(url)?;
+
         // 使用网络管理器发送请求
         let resp = match NetworkManager::new()
-            .get_with_interrupt(url, proxy_type, Some(timeout), user_agent.clone(), accept_invalid_certs)
+            .get_with_interrupt(
+                url.as_str(),
+                proxy_type,
+                Some(timeout),
+                user_agent.clone(),
+                accept_invalid_certs,
+            )
             .await
         {
             Ok(r) => r,
@@ -340,7 +351,9 @@ impl PrfItem {
                     },
                 }
             }
-            None => Some(crate::utils::help::get_last_part_and_decode(url).unwrap_or_else(|| "Remote File".into())),
+            None => {
+                Some(crate::utils::help::get_last_part_and_decode(url.as_str()).unwrap_or_else(|| "Remote File".into()))
+            }
         };
         let update_interval = match update_interval {
             Some(val) => Some(val),
@@ -410,7 +423,7 @@ impl PrfItem {
             name: Some(name),
             desc: desc.cloned(),
             file: Some(file),
-            url: Some(url.into()),
+            url: Some(url.as_str().into()),
             selected: None,
             extra,
             option: Some(PrfOption {
@@ -568,4 +581,33 @@ impl PrfItem {
 #[allow(clippy::unnecessary_wraps)]
 const fn default_allow_auto_update() -> Option<bool> {
     Some(true)
+}
+
+/// Fix URLs where query parameters are incorrectly appended to the path segment
+///
+/// Incorrect Example: https://example.com/path&param1=value1
+fn fix_dirty_url(input: &str) -> Result<Url> {
+    let mut url = match Url::parse(input) {
+        Ok(u) => u,
+        Err(e) => {
+            return Err(anyhow::anyhow!(
+                "failed to parse deep link url: {:?}, input: {:?}",
+                e,
+                input
+            ));
+        }
+    };
+
+    if url.query().is_none() && url.path().contains('&') {
+        let path = url.path().to_string();
+
+        if let Some((clean_path, dirty_params)) = path.split_once('&') {
+            url.set_path(clean_path);
+
+            url.query_pairs_mut()
+                .extend_pairs(form_urlencoded::parse(dirty_params.as_bytes()));
+        }
+    }
+
+    Ok(url)
 }

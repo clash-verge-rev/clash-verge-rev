@@ -68,6 +68,7 @@ impl Logger {
         self.log_max_size.store(log_max_size, Ordering::SeqCst);
         self.log_max_count.store(log_max_count, Ordering::SeqCst);
 
+        #[cfg(not(feature = "tokio-trace"))]
         #[cfg(not(feature = "tauri-dev"))]
         {
             let log_spec = Self::generate_log_spec(log_level);
