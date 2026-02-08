@@ -10,7 +10,8 @@ use crate::{
     utils::dirs::find_target_icons,
 };
 use clash_verge_limiter::{Limiter, SystemClock, SystemLimiter};
-use tauri::tray::TrayIconBuilder;
+use clash_verge_logging::logging_error;
+use tauri::tray::{MouseButton, MouseButtonState, TrayIcon, TrayIconBuilder, TrayIconEvent};
 use tauri_plugin_clash_verge_sysinfo::is_current_app_handle_admin;
 use tauri_plugin_mihomo::models::Proxies;
 use tokio::fs;
@@ -23,7 +24,6 @@ use std::time::Duration;
 use tauri::{
     AppHandle, Wry,
     menu::{CheckMenuItem, IsMenuItem, MenuEvent, MenuItem, PredefinedMenuItem, Submenu},
-    tray::{MouseButton, MouseButtonState, TrayIconEvent},
 };
 mod menu_def;
 use menu_def::{MenuIds, MenuTexts};
@@ -202,6 +202,11 @@ impl Tray {
     }
 
     async fn update_menu_internal(&self, app_handle: &AppHandle) -> Result<()> {
+        let Some(tray) = app_handle.tray_by_id("main") else {
+            logging!(warn, Type::Tray, "Failed to update tray menu: tray not found");
+            return Ok(());
+        };
+
         let verge = Config::verge().await.latest_arc();
         let system_proxy = verge.enable_system_proxy.as_ref().unwrap_or(&false);
         let tun_mode = verge.enable_tun_mode.as_ref().unwrap_or(&false);
@@ -222,28 +227,24 @@ impl Tray {
         let profiles_preview = profiles_arc.profiles_preview().unwrap_or_default();
         let is_lightweight_mode = is_in_lightweight_mode();
 
-        match app_handle.tray_by_id("main") {
-            Some(tray) => {
-                let _ = tray.set_menu(Some(
-                    create_tray_menu(
-                        app_handle,
-                        Some(mode.as_str()),
-                        *system_proxy,
-                        *tun_mode,
-                        tun_mode_available,
-                        profiles_preview,
-                        is_lightweight_mode,
-                    )
-                    .await?,
-                ));
-                logging!(debug, Type::Tray, "托盘菜单更新成功");
-                Ok(())
-            }
-            None => {
-                logging!(warn, Type::Tray, "Failed to update tray menu: tray not found");
-                Ok(())
-            }
-        }
+        logging_error!(
+            Type::Tray,
+            tray.set_menu(Some(
+                create_tray_menu(
+                    app_handle,
+                    Some(mode.as_str()),
+                    *system_proxy,
+                    *tun_mode,
+                    tun_mode_available,
+                    profiles_preview,
+                    is_lightweight_mode,
+                )
+                .await?,
+            ))
+        );
+
+        logging!(debug, Type::Tray, "托盘菜单更新成功");
+        Ok(())
     }
 
     /// 更新托盘图标
@@ -256,12 +257,9 @@ impl Tray {
 
         let app_handle = handle::Handle::app_handle();
 
-        let tray = match app_handle.tray_by_id("main") {
-            Some(tray) => tray,
-            None => {
-                logging!(warn, Type::Tray, "Failed to update tray icon: tray not found");
-                return Ok(());
-            }
+        let Some(tray) = app_handle.tray_by_id("main") else {
+            logging!(warn, Type::Tray, "Failed to update tray icon: tray not found");
+            return Ok(());
         };
 
         let (_is_custom_icon, icon_bytes) = TrayState::get_tray_icon(verge).await;
@@ -269,8 +267,11 @@ impl Tray {
         let colorful = verge.tray_icon.clone().unwrap_or_else(|| "monochrome".into());
         let is_colorful = colorful == "colorful";
 
-        let _ = tray.set_icon(Some(tauri::image::Image::from_bytes(&icon_bytes)?));
-        let _ = tray.set_icon_as_template(!is_colorful);
+        logging_error!(
+            Type::Tray,
+            tray.set_icon(Some(tauri::image::Image::from_bytes(&icon_bytes)?))
+        );
+        logging_error!(Type::Tray, tray.set_icon_as_template(!is_colorful));
         Ok(())
     }
 
@@ -283,17 +284,17 @@ impl Tray {
 
         let app_handle = handle::Handle::app_handle();
 
-        let tray = match app_handle.tray_by_id("main") {
-            Some(tray) => tray,
-            None => {
-                logging!(warn, Type::Tray, "Failed to update tray icon: tray not found");
-                return Ok(());
-            }
+        let Some(tray) = app_handle.tray_by_id("main") else {
+            logging!(warn, Type::Tray, "Failed to update tray icon: tray not found");
+            return Ok(());
         };
 
         let (_is_custom_icon, icon_bytes) = TrayState::get_tray_icon(verge).await;
 
-        let _ = tray.set_icon(Some(tauri::image::Image::from_bytes(&icon_bytes)?));
+        logging_error!(
+            Type::Tray,
+            tray.set_icon(Some(tauri::image::Image::from_bytes(&icon_bytes)?))
+        );
         Ok(())
     }
 
@@ -353,11 +354,12 @@ impl Tray {
             current_profile_name
         );
 
-        if let Some(tray) = app_handle.tray_by_id("main") {
-            let _ = tray.set_tooltip(Some(&tooltip));
-        } else {
+        let Some(tray) = app_handle.tray_by_id("main") else {
             logging!(warn, Type::Tray, "Failed to update tray tooltip: tray not found");
-        }
+            return Ok(());
+        };
+
+        logging_error!(Type::Tray, tray.set_tooltip(Some(&tooltip)));
 
         Ok(())
     }
@@ -409,49 +411,7 @@ impl Tray {
         }
 
         let tray = builder.build(app_handle)?;
-        let tray_event = verge.tray_event.clone().unwrap_or_else(|| "main_window".into());
-        let tray_action = TrayAction::from(tray_event.as_str());
-
-        tray.on_tray_icon_event(move |_app_handle, event| {
-            if matches!(tray_action, TrayAction::Unknown) {
-                return;
-            }
-            if let TrayIconEvent::Click {
-                button: MouseButton::Left,
-                button_state: MouseButtonState::Down,
-                ..
-            } = event
-            {
-                // 添加防抖检查，防止快速连击
-                #[allow(clippy::use_self)]
-                if !Tray::global().should_handle_tray_click() {
-                    return;
-                }
-                logging!(debug, Type::Tray, "tray event: {tray_action:?}");
-                match tray_action {
-                    TrayAction::SystemProxy => {
-                        AsyncHandler::spawn(|| async move {
-                            let _ = feat::toggle_system_proxy().await;
-                        });
-                    }
-                    TrayAction::TunMode => {
-                        AsyncHandler::spawn(|| async move {
-                            let _ = feat::toggle_tun_mode(None).await;
-                        });
-                    }
-                    TrayAction::MainWindow => {
-                        AsyncHandler::spawn(|| async move {
-                            if !lightweight::exit_lightweight_mode().await {
-                                WindowManager::show_main_window().await;
-                            };
-                        });
-                    }
-                    _ => {
-                        logging!(warn, Type::Tray, "invalid tray event: {}", tray_event);
-                    }
-                };
-            }
-        });
+        tray.on_tray_icon_event(on_tray_icon_event);
         tray.on_menu_event(on_menu_event);
         Ok(())
     }
@@ -923,14 +883,68 @@ async fn create_tray_menu(
     Ok(menu)
 }
 
+fn on_tray_icon_event(_tray_icon: &TrayIcon, tray_event: TrayIconEvent) {
+    if matches!(
+        tray_event,
+        TrayIconEvent::Move { .. } | TrayIconEvent::Leave { .. } | TrayIconEvent::Enter { .. }
+    ) {
+        return;
+    }
+
+    if let TrayIconEvent::Click {
+        button: MouseButton::Left,
+        button_state: MouseButtonState::Down,
+        ..
+    } = tray_event
+    {
+        // 添加防抖检查，防止快速连击
+        #[allow(clippy::use_self)]
+        if !Tray::global().should_handle_tray_click() {
+            return;
+        }
+
+        AsyncHandler::spawn(|| async move {
+            let verge = Config::verge().await.data_arc();
+            let verge_tray_event = verge.tray_event.clone().unwrap_or_else(|| "main_window".into());
+            let verge_tray_action = TrayAction::from(verge_tray_event.as_str());
+            logging!(debug, Type::Tray, "tray event: {verge_tray_action:?}");
+            match verge_tray_action {
+                TrayAction::SystemProxy => {
+                    let _ = feat::toggle_system_proxy().await;
+                }
+                TrayAction::TunMode => {
+                    let _ = feat::toggle_tun_mode(None).await;
+                }
+                TrayAction::MainWindow => {
+                    if !lightweight::exit_lightweight_mode().await {
+                        WindowManager::show_main_window().await;
+                    };
+                }
+                _ => {
+                    logging!(warn, Type::Tray, "invalid tray event: {}", verge_tray_event);
+                }
+            };
+        });
+    }
+}
+
 fn on_menu_event(_: &AppHandle, event: MenuEvent) {
+    if !Tray::global().should_handle_tray_click() {
+        return;
+    }
+    if event.id.as_ref().is_empty() {
+        return;
+    }
     AsyncHandler::spawn(|| async move {
         match event.id.as_ref() {
             mode @ (MenuIds::RULE_MODE | MenuIds::GLOBAL_MODE | MenuIds::DIRECT_MODE) => {
                 // Removing the the "tray_" prefix and "_mode" suffix
-                let mode = &mode[5..mode.len() - 5];
-                logging!(info, Type::ProxyMode, "Switch Proxy Mode To: {}", mode);
-                feat::change_clash_mode(mode.into()).await;
+                if let Some(stripped) = mode.strip_prefix("tray_")
+                    && let Some(final_mode) = stripped.strip_suffix("_mode")
+                {
+                    logging!(info, Type::ProxyMode, "Switch Proxy Mode To: {}", final_mode);
+                    feat::change_clash_mode(final_mode.into()).await;
+                }
             }
             MenuIds::DASHBOARD => {
                 logging!(info, Type::Tray, "托盘菜单点击: 打开窗口");
@@ -978,7 +992,10 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
                 feat::quit().await;
             }
             id if id.starts_with("profiles_") => {
-                let profile_index = &id["profiles_".len()..];
+                let profile_index = match id.strip_prefix("profiles_") {
+                    Some(index_str) => index_str,
+                    None => return,
+                };
                 feat::toggle_proxy_profile(profile_index.into()).await;
             }
             id if id.starts_with("proxy_") => {
