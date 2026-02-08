@@ -9,6 +9,7 @@
 - 修复 macOS 因网口顺序导致无法正确设置代理
 - 修复恢复休眠后无法操作托盘
 - 修复首页当前节点图标语义显示不一致
+- 修复使用 URL scheme 导入订阅时没有及时重载配置
 
 <details>
 <summary><strong> ✨ 新增功能 </strong></summary>
