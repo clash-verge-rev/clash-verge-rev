@@ -359,7 +359,6 @@ impl Tray {
             return Ok(());
         };
 
-        let _ = tray.set_tooltip(Some(&tooltip));
         logging_error!(Type::Tray, tray.set_tooltip(Some(&tooltip)));
 
         Ok(())
