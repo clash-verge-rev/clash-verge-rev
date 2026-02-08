@@ -221,9 +221,6 @@ class DelayManager {
     // 先将状态设置为测试中
     this.setDelay(name, group, -2);
 
-    let delay = -1;
-    let elapsed = 0;
-
     const startTime = Date.now();
 
     try {
@@ -247,18 +244,20 @@ class DelayManager {
         await new Promise((resolve) => setTimeout(resolve, 500 - elapsedTime));
       }
 
-      delay = result.delay;
-      elapsed = elapsedTime;
+      const delay = result.delay;
+      const elapsed = elapsedTime;
       debugLog(`[DelayManager] 延迟测试完成，代理: ${name}, 结果: ${delay}ms`);
+
+      return this.setDelay(name, group, delay, { elapsed });
     } catch (error) {
       // 确保至少显示500ms的加载动画
       await new Promise((resolve) => setTimeout(resolve, 500));
       console.error(`[DelayManager] 延迟测试出错，代理: ${name}`, error);
-      delay = 1e6; // error
-      elapsed = Date.now() - startTime;
-    }
+      const delay = 1e6; // error
+      const elapsed = Date.now() - startTime;
 
-    return this.setDelay(name, group, delay, { elapsed });
+      return this.setDelay(name, group, delay, { elapsed });
+    }
   }
 
   async checkListDelay(
