@@ -141,7 +141,7 @@ export const ProxiesEditorViewer = (props: Props) => {
   const handleParseAsync = (cb: (proxies: IProxyConfig[]) => void) => {
     const proxies: IProxyConfig[] = [];
     const names: string[] = [];
-    let uris = "";
+    let uris: string;
     try {
       uris = atob(proxyUri);
     } catch {

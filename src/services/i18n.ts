@@ -118,6 +118,7 @@ export const loadLanguage = async (language: string) => {
       if (!fallbackLoader) {
         throw new Error(
           `Fallback language "${FALLBACK_LANGUAGE}" resources are missing.`,
+          { cause: error },
         );
       }
       const fallback = await fallbackLoader();
