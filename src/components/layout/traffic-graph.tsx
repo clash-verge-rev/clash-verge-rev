@@ -107,10 +107,7 @@ export function TrafficGraph({ ref }: { ref?: Ref<TrafficRef> }) {
         countY(y),
       ]);
 
-      let x = points[0][0];
-      let y = points[0][1];
-
-      context.moveTo(x, y);
+      context.moveTo(points[0][0], points[0][1]);
 
       for (let i = 1; i < points.length; i++) {
         const p1 = points[i];
@@ -120,8 +117,6 @@ export function TrafficGraph({ ref }: { ref?: Ref<TrafficRef> }) {
         const y1 = (p1[1] + p2[1]) / 2;
 
         context.quadraticCurveTo(p1[0], p1[1], x1, y1);
-        x = x1;
-        y = y1;
       }
     };
 

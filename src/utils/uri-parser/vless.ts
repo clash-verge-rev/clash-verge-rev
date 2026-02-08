@@ -120,7 +120,7 @@ export function URI_VLESS(line: string): IProxyVlessConfig {
   }
 
   let httpupgrade = false;
-  let network: NetworkType = "tcp";
+  let network: NetworkType;
 
   if (params.headerType === "http") {
     network = "http";
