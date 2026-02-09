@@ -27,7 +27,7 @@ tracing = []
 identifier = "io.github.clash-verge-rev.clash-verge-rev"
 
 [build-dependencies]
-tauri-build = { version = "2.5.3", features = [] }
+tauri-build = { version = "2.5.5", features = [] }
 
 [dependencies]
 clash-verge-draft = { workspace = true }
@@ -64,35 +64,35 @@ boa_engine = "0.21.0"
 once_cell = { version = "1.21.3", features = ["parking_lot"] }
 delay_timer = "0.11.6"
 percent-encoding = "2.3.2"
-reqwest = { version = "0.13.1", features = [
+reqwest = { version = "0.13.2", features = [
   "json",
   "cookies",
   "rustls",
   "form",
 ] }
-regex = "1.12.2"
+regex = "1.12.3"
 sysproxy = { git = "https://github.com/clash-verge-rev/sysproxy-rs", branch = "0.4.4", features = [
   "guard",
 ] }
 network-interface = { version = "2.0.5", features = ["serde"] }
-tauri-plugin-shell = "2.3.4"
+tauri-plugin-shell = "2.3.5"
 tauri-plugin-dialog = "2.6.0"
 tauri-plugin-fs = "2.4.5"
 tauri-plugin-process = "2.3.1"
-tauri-plugin-deep-link = "2.4.6"
+tauri-plugin-deep-link = "2.4.7"
 tauri-plugin-window-state = "2.4.1"
-zip = "7.2.0"
-reqwest_dav = "0.3.1"
+zip = "7.4.0"
+reqwest_dav = "0.3.2"
 aes-gcm = { version = "0.10.3", features = ["std"] }
 base64 = "0.22.1"
-getrandom = "0.3.4"
+getrandom = "0.4.1"
 futures = "0.3.31"
 gethostname = "1.1.0"
 scopeguard = "1.2.0"
 tauri-plugin-notification = "2.3.3"
 tokio-stream = "0.1.18"
 backoff = { version = "0.4.0", features = ["tokio"] }
-tauri-plugin-http = "2.5.6"
+tauri-plugin-http = "2.5.7"
 console-subscriber = { version = "0.5.0", optional = true }
 tauri-plugin-devtools = { version = "2.0.1" }
 tauri-plugin-mihomo = { git = "https://github.com/clash-verge-rev/tauri-plugin-mihomo" }
@@ -101,7 +101,7 @@ async-trait = "0.1.89"
 clash_verge_service_ipc = { version = "2.1.3", features = [
   "client",
 ], git = "https://github.com/clash-verge-rev/clash-verge-service-ipc" }
-arc-swap = "1.8.0"
+arc-swap = "1.8.1"
 rust_iso3166 = "0.1.14"
 # Use the git repo until the next release after v2.0.0.
 dark-light = { git = "https://github.com/rust-dark-light/dark-light" }
@@ -129,7 +129,7 @@ winapi = { version = "0.3.9", features = [
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-autostart = "2.5.1"
 tauri-plugin-global-shortcut = "2.3.1"
-tauri-plugin-updater = "2.9.0"
+tauri-plugin-updater = "2.10.0"
 
 [dev-dependencies]
 criterion = { workspace = true }
