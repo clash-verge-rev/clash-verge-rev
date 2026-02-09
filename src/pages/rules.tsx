@@ -30,6 +30,7 @@ const RulesPage = () => {
   }, [refreshRules, refreshRuleProviders, pageVisible]);
 
   const filteredRules = useMemo(() => {
+    rules.forEach((item, index) => (item.lineNo = index + 1)); // 循环出每一条规则的行号lineNo，用于展示在规则页面里的每一行（主要是过滤的时候展示行号用）
     return rules.filter((item) => match(item.payload));
   }, [rules, match]);
 
@@ -81,9 +82,7 @@ const RulesPage = () => {
             style={{
               flex: 1,
             }}
-            itemContent={(index, item) => (
-              <RuleItem index={index + 1} value={item} />
-            )}
+            itemContent={(_index, item) => <RuleItem value={item} />}
             followOutput={"smooth"}
             scrollerRef={(ref) => {
               if (ref) ref.addEventListener("scroll", handleScroll);
