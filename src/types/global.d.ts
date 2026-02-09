@@ -86,6 +86,7 @@ interface IRuleItem {
   type: string;
   payload: string;
   proxy: string;
+  lineNo: number;
 }
 
 interface IProxyItem {
