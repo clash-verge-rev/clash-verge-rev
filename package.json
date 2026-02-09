@@ -55,11 +55,11 @@
     "@tauri-apps/plugin-shell": "2.3.5",
     "@tauri-apps/plugin-updater": "2.10.0",
     "ahooks": "^3.9.6",
-    "axios": "^1.13.4",
+    "axios": "^1.13.5",
     "dayjs": "1.11.19",
     "foxact": "^0.2.52",
     "foxts": "^5.2.1",
-    "i18next": "^25.8.3",
+    "i18next": "^25.8.4",
     "ipaddr.js": "^2.3.0",
     "js-yaml": "^4.1.1",
     "lodash-es": "^4.17.23",
@@ -81,12 +81,12 @@
   },
   "devDependencies": {
     "@actions/github": "^9.0.0",
-    "@eslint-react/eslint-plugin": "^2.9.4",
-    "@eslint/js": "^10.0.0",
+    "@eslint-react/eslint-plugin": "^2.12.2",
+    "@eslint/js": "^10.0.1",
     "@tauri-apps/cli": "2.10.0",
     "@types/js-yaml": "^4.0.9",
     "@types/lodash-es": "^4.17.12",
-    "@types/node": "^24.10.10",
+    "@types/node": "^24.10.12",
     "@types/react": "19.2.13",
     "@types/react-dom": "19.2.3",
     "@vitejs/plugin-legacy": "^7.2.1",
@@ -130,7 +130,7 @@
     ]
   },
   "type": "module",
-  "packageManager": "pnpm@10.28.0",
+  "packageManager": "pnpm@10.29.2",
   "pnpm": {
     "onlyBuiltDependencies": [
       "@parcel/watcher",
