@@ -557,11 +557,12 @@ export const RulesEditorViewer = (props: Props) => {
                     t(RULE_TYPE_LABEL_KEYS[option.name] ?? option.name)
                   }
                   renderOption={(props, option) => {
+                    const { key, ...optionProps } = props;
                     const label = t(
                       RULE_TYPE_LABEL_KEYS[option.name] ?? option.name,
                     );
                     return (
-                      <li {...props} title={label}>
+                      <li key={key} {...optionProps} title={label}>
                         {label}
                       </li>
                     );
@@ -624,9 +625,10 @@ export const RulesEditorViewer = (props: Props) => {
                     t(PROXY_POLICY_LABEL_KEYS[option] ?? option)
                   }
                   renderOption={(props, option) => {
+                    const { key, ...optionProps } = props;
                     const label = t(PROXY_POLICY_LABEL_KEYS[option] ?? option);
                     return (
-                      <li {...props} title={label}>
+                      <li key={key} {...optionProps} title={label}>
                         {label}
                       </li>
                     );

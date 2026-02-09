@@ -37,6 +37,11 @@ export default defineConfig([
 
     languageOptions: {
       globals: globals.browser,
+      parserOptions: {
+        projectService: {
+          allowDefaultProject: ["src/polyfills/*.js"],
+        },
+      },
     },
 
     settings: {
