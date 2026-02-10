@@ -1,4 +1,5 @@
 import { styled, Box, Typography } from "@mui/material";
+import { Rule } from "tauri-plugin-mihomo-api";
 
 const Item = styled(Box)(({ theme }) => ({
   display: "flex",
@@ -15,8 +16,7 @@ const COLOR = [
 ];
 
 interface Props {
-  index: number;
-  value: IRuleItem;
+  value: Rule & { lineNo: number };
 }
 
 const parseColor = (text: string) => {
@@ -31,7 +31,7 @@ const parseColor = (text: string) => {
 };
 
 const RuleItem = (props: Props) => {
-  const { index, value } = props;
+  const { value } = props;
 
   return (
     <Item sx={{ borderBottom: "1px solid var(--divider-color)" }}>
@@ -40,7 +40,7 @@ const RuleItem = (props: Props) => {
         variant="body2"
         sx={{ lineHeight: 2, minWidth: 30, mr: 2.25, textAlign: "center" }}
       >
-        {index}
+        {value.lineNo}
       </Typography>
 
       <Box sx={{ userSelect: "text" }}>

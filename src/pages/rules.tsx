@@ -30,7 +30,13 @@ const RulesPage = () => {
   }, [refreshRules, refreshRuleProviders, pageVisible]);
 
   const filteredRules = useMemo(() => {
-    return rules.filter((item) => match(item.payload));
+    const rulesWithLineNo = rules.map((item, index) => ({
+      ...item,
+      // UI-only derived data; keep app context/SWR data immutable
+      lineNo: index + 1,
+    }));
+
+    return rulesWithLineNo.filter((item) => match(item.payload ?? ""));
   }, [rules, match]);
 
   const scrollToTop = () => {
@@ -81,9 +87,7 @@ const RulesPage = () => {
             style={{
               flex: 1,
             }}
-            itemContent={(index, item) => (
-              <RuleItem index={index + 1} value={item} />
-            )}
+            itemContent={(_index, item) => <RuleItem value={item} />}
             followOutput={"smooth"}
             scrollerRef={(ref) => {
               if (ref) ref.addEventListener("scroll", handleScroll);
