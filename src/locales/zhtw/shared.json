@@ -55,6 +55,7 @@
     "files": "檔案"
   },
   "placeholders": {
+    "resetInput": "清空輸入框",
     "filter": "篩選條件",
     "matchCase": "區分大小寫",
     "matchWholeWord": "完整字詞配對",

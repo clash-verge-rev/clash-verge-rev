@@ -55,6 +55,7 @@
     "files": "Files"
   },
   "placeholders": {
+    "resetInput": "Giriş alanını temizle",
     "filter": "Filtre koşulları",
     "matchCase": "Büyük/Küçük Harf Eşleştir",
     "matchWholeWord": "Tam Kelime Eşleştir",
