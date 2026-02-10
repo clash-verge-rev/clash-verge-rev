@@ -308,14 +308,11 @@ impl Tray {
         let app_handle = handle::Handle::app_handle();
 
         let verge = Config::verge().await.latest_arc();
-        let system_proxy = verge.enable_system_proxy.as_ref().unwrap_or(&false);
-        let tun_mode = verge.enable_tun_mode.as_ref().unwrap_or(&false);
+        let system_proxy = verge.enable_system_proxy.unwrap_or(false);
+        let tun_mode = verge.enable_tun_mode.unwrap_or(false);
 
-        let switch_map = {
-            let mut map = std::collections::HashMap::new();
-            map.insert(true, "on");
-            map.insert(false, "off");
-            map
+        let switch_str = |flag: bool| {
+            if flag { "on" } else { "off" }
         };
 
         let mut current_profile_name = "None".into();
@@ -347,9 +344,9 @@ impl Tray {
             "Clash Verge {}\n{}: {}\n{}: {}\n{}: {}",
             reassembled_version,
             sys_proxy_text,
-            switch_map[system_proxy],
+            switch_str(system_proxy),
             tun_text,
-            switch_map[tun_mode],
+            switch_str(tun_mode),
             profile_text,
             current_profile_name
         );
