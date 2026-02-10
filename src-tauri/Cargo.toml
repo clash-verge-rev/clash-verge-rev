@@ -110,21 +110,7 @@ dark-light = { git = "https://github.com/rust-dark-light/dark-light" }
 deelevate = { workspace = true }
 runas = "=1.2.0"
 winreg = "0.55.0"
-winapi = { version = "0.3.9", features = [
-  "winbase",
-  "fileapi",
-  "winnt",
-  "handleapi",
-  "errhandlingapi",
-  "minwindef",
-  "winerror",
-  "stringapiset",
-  "tlhelp32",
-  "processthreadsapi",
-  "winhttp",
-  "winreg",
-  "winnls",
-] }
+windows = { version = "0.62.2", features = ["Win32_Globalization"] }
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-autostart = "2.5.1"
