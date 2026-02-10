@@ -8,13 +8,7 @@ use clash_verge_logging::{Type, logging, logging_error};
 use clash_verge_service_ipc::CoreConfig;
 use compact_str::CompactString;
 use once_cell::sync::Lazy;
-use std::{
-    borrow::Cow,
-    env::current_exe,
-    path::{Path, PathBuf},
-    process::Command as StdCommand,
-    time::Duration,
-};
+use std::{borrow::Cow, env::current_exe, path::PathBuf, process::Command as StdCommand, time::Duration};
 use tokio::{sync::Mutex, time::sleep};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -421,15 +415,16 @@ pub(super) async fn stop_core_by_service() -> Result<()> {
 
 /// 检查服务是否正在运行
 pub async fn is_service_available() -> Result<()> {
-    if let Err(e) = Path::metadata(clash_verge_service_ipc::IPC_PATH.as_ref()) {
+    if !clash_verge_service_ipc::is_ipc_path_exists() {
         let verge = Config::verge().await;
         let verge_last = verge.latest_arc();
         let is_enable = verge_last.enable_tun_mode.unwrap_or(false);
         if is_enable {
-            logging!(warn, Type::Service, "Some issue with service IPC Path: {}", e);
+            logging!(warn, Type::Service, "service IPC endpoint is not ready");
         }
-        return Err(e.into());
+        return Err(anyhow!("service IPC endpoint is not ready"));
     }
+
     clash_verge_service_ipc::connect().await?;
     Ok(())
 }
@@ -446,7 +441,7 @@ async fn wait_for_service_ipc(status: &mut ServiceManager, reason: &str) -> Resu
     let mut last_err = anyhow!("service not ready");
 
     loop {
-        if Path::new(clash_verge_service_ipc::IPC_PATH).exists() {
+        if clash_verge_service_ipc::is_ipc_path_exists() {
             match clash_verge_service_ipc::connect().await {
                 Ok(_) => {
                     status.0 = ServiceStatus::Ready;
@@ -466,10 +461,6 @@ async fn wait_for_service_ipc(status: &mut ServiceManager, reason: &str) -> Resu
     }
 
     Err(last_err)
-}
-
-pub fn is_service_ipc_path_exists() -> bool {
-    Path::new(clash_verge_service_ipc::IPC_PATH).exists()
 }
 
 impl ServiceManager {

@@ -161,7 +161,7 @@ impl Logger {
         *self.sidecar_file_writer.write() = Some(sidecar_writer);
 
         // update service writer config
-        if service::is_service_ipc_path_exists() && service::is_service_available().await.is_ok() {
+        if service::is_service_available().await.is_ok() {
             let service_log_dir = dirs::path_to_str(&service_log_dir()?)?.into();
             clash_verge_service_ipc::update_writer(&WriterConfig {
                 directory: service_log_dir,
