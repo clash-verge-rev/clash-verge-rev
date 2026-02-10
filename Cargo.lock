@@ -1176,7 +1176,7 @@ dependencies = [
  "tokio",
  "tokio-stream",
  "warp",
- "winapi",
+ "windows 0.62.2",
  "winreg 0.55.0",
  "zip 7.4.0",
 ]
