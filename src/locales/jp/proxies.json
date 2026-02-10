@@ -49,7 +49,9 @@
       "minimumNodesHint": "Chain proxy requires at least 2 nodes. Please add one more node.",
       "connectFailed": "Failed to connect to proxy chain",
       "disconnectFailed": "Failed to disconnect from proxy chain",
-      "duplicateNode": "Proxy node already exists in chain"
+      "duplicateNode": "Proxy node already exists in chain",
+      "entryNode": "入口",
+      "exitNode": "出口"
     },
     "messages": {
       "directMode": "直接接続モード"

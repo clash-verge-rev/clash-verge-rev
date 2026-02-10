@@ -49,7 +49,9 @@
       "minimumNodesHint": "链式代理至少需要 2 个节点，请再添加一个节点。",
       "connectFailed": "连接链式代理失败",
       "disconnectFailed": "断开链式代理失败",
-      "duplicateNode": "该节点已在链式代理表中"
+      "duplicateNode": "该节点已在链式代理表中",
+      "entryNode": "入口",
+      "exitNode": "出口"
     },
     "messages": {
       "directMode": "直连模式"
