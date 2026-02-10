@@ -298,7 +298,7 @@ export const AppDataProvider = ({
       // 数据
       proxies: proxiesData,
       clashConfig,
-      rules: rulesData?.rules || [],
+      rules: rulesData?.rules ?? [],
       sysproxy,
       runningMode,
       uptime: uptimeData || 0,

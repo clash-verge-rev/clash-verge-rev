@@ -30,8 +30,13 @@ const RulesPage = () => {
   }, [refreshRules, refreshRuleProviders, pageVisible]);
 
   const filteredRules = useMemo(() => {
-    rules.forEach((item, index) => (item.lineNo = index + 1)); // 循环出每一条规则的行号lineNo，用于展示在规则页面里的每一行（主要是过滤的时候展示行号用）
-    return rules.filter((item) => match(item.payload));
+    const rulesWithLineNo = rules.map((item, index) => ({
+      ...item,
+      // UI-only derived data; keep app context/SWR data immutable
+      lineNo: index + 1,
+    }));
+
+    return rulesWithLineNo.filter((item) => match(item.payload ?? ""));
   }, [rules, match]);
 
   const scrollToTop = () => {

@@ -82,13 +82,6 @@ interface IConfigData {
   "proxy-groups"?: IProxyGroupItem[];
 }
 
-interface IRuleItem {
-  type: string;
-  payload: string;
-  proxy: string;
-  lineNo: number;
-}
-
 interface IProxyItem {
   name: string;
   type: string;

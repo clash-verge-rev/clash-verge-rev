@@ -9,7 +9,7 @@ import {
 export interface AppDataContextType {
   proxies: any;
   clashConfig: BaseConfig;
-  rules: Array<Rule & { lineNo: number }>;
+  rules: Rule[];
   sysproxy: any;
   runningMode?: string;
   uptime: number;
