@@ -730,6 +730,7 @@ export const translationKeys = [
   "shared.units.hours",
   "shared.units.kilobytes",
   "shared.units.files",
+  "shared.placeholders.resetInput",
   "shared.placeholders.filter",
   "shared.placeholders.matchCase",
   "shared.placeholders.matchWholeWord",

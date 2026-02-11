@@ -1,4 +1,5 @@
-import { Box, SvgIcon, TextField, styled } from "@mui/material";
+import { ClearRounded } from "@mui/icons-material";
+import { Box, SvgIcon, TextField, styled, IconButton } from "@mui/material";
 import Tooltip from "@mui/material/Tooltip";
 import {
   ChangeEvent,
@@ -168,6 +169,11 @@ export const BaseSearchBox = ({
     });
   };
 
+  const handleClearInput = () => {
+    setText("");
+    emitSearch({ text: "", matchCase, matchWholeWord, useRegularExpression });
+  };
+
   const handleToggleMatchCase = () => {
     const next = !matchCase;
     setMatchCase(next);
@@ -200,35 +206,40 @@ export const BaseSearchBox = ({
             sx: { pr: 1 },
             endAdornment: (
               <Box display="flex">
-                <Tooltip title={t("shared.placeholders.matchCase")}>
-                  <div>
-                    <SvgIcon
-                      component={matchCaseIcon}
+                {!!text && (
+                  <Tooltip title={t("shared.placeholders.resetInput")}>
+                    <IconButton
+                      size="small"
                       {...iconStyle}
-                      aria-label={matchCase ? "active" : "inactive"}
-                      onClick={handleToggleMatchCase}
-                    />
-                  </div>
+                      onClick={handleClearInput}
+                    >
+                      <ClearRounded fontSize="inherit" />
+                    </IconButton>
+                  </Tooltip>
+                )}
+                <Tooltip title={t("shared.placeholders.matchCase")}>
+                  <SvgIcon
+                    component={matchCaseIcon}
+                    {...iconStyle}
+                    aria-label={matchCase ? "active" : "inactive"}
+                    onClick={handleToggleMatchCase}
+                  />
                 </Tooltip>
                 <Tooltip title={t("shared.placeholders.matchWholeWord")}>
-                  <div>
-                    <SvgIcon
-                      component={matchWholeWordIcon}
-                      {...iconStyle}
-                      aria-label={matchWholeWord ? "active" : "inactive"}
-                      onClick={handleToggleMatchWholeWord}
-                    />
-                  </div>
+                  <SvgIcon
+                    component={matchWholeWordIcon}
+                    {...iconStyle}
+                    aria-label={matchWholeWord ? "active" : "inactive"}
+                    onClick={handleToggleMatchWholeWord}
+                  />
                 </Tooltip>
                 <Tooltip title={t("shared.placeholders.useRegex")}>
-                  <div>
-                    <SvgIcon
-                      component={UseRegularExpressionIcon}
-                      aria-label={useRegularExpression ? "active" : "inactive"}
-                      {...iconStyle}
-                      onClick={handleToggleUseRegularExpression}
-                    />
-                  </div>
+                  <SvgIcon
+                    component={UseRegularExpressionIcon}
+                    aria-label={useRegularExpression ? "active" : "inactive"}
+                    {...iconStyle}
+                    onClick={handleToggleUseRegularExpression}
+                  />
                 </Tooltip>
               </Box>
             ),

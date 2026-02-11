@@ -55,6 +55,7 @@
     "files": "Files"
   },
   "placeholders": {
+    "resetInput": "پاک کردن فیلد ورودی",
     "filter": "شرایط فیلتر",
     "matchCase": "تطبیق حروف کوچک و بزرگ",
     "matchWholeWord": "تطبیق کل کلمه",
