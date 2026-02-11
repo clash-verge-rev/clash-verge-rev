@@ -595,6 +595,21 @@ interface IProxyMieruConfig extends IProxyBaseConfig {
   multiplexing?: MieruMultiplexing;
   "handshake-mode"?: string;
 }
+// masque
+interface IProxyMasqueConfig extends IProxyBaseConfig {
+  name: string;
+  type: "masque";
+  server?: string;
+  port?: number;
+  "private-key"?: string;
+  "public-key"?: string;
+  ip?: string;
+  ipv6?: string;
+  mtu?: number;
+  udp?: boolean;
+  "remote-dns-resolve"?: boolean;
+  dns?: string[];
+}
 // vless
 interface IProxyVlessConfig extends IProxyBaseConfig {
   name: string;
@@ -837,6 +852,7 @@ interface IProxyConfig
     IProxyAnyTLSConfig,
     IProxyTuicConfig,
     IProxyMieruConfig,
+    IProxyMasqueConfig,
     IProxyVlessConfig,
     IProxyVmessConfig,
     IProxyWireguardConfig,
@@ -862,6 +878,7 @@ interface IProxyConfig
     | "wireguard"
     | "ssh"
     | "socks5"
+    | "masque"
     | "vmess"
     | "vless"
     | "mieru"
