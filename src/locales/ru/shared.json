@@ -55,6 +55,7 @@
     "files": "Files"
   },
   "placeholders": {
+    "resetInput": "Очистить поле ввода",
     "filter": "Условия фильтрации",
     "matchCase": "Учитывать регистр",
     "matchWholeWord": "Полное совпадение слова",

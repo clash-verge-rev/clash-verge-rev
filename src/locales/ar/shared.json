@@ -55,6 +55,7 @@
     "files": "Files"
   },
   "placeholders": {
+    "resetInput": "مربع إدخال واضح",
     "filter": "شروط التصفية",
     "matchCase": "مطابقة الحالة",
     "matchWholeWord": "مطابقة الكلمة بأكملها",

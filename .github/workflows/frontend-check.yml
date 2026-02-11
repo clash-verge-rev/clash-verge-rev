@@ -47,7 +47,7 @@ jobs:
       - uses: actions/setup-node@v6
         if: steps.check_frontend.outputs.frontend == 'true'
         with:
-          node-version: "24.13.0"
+          node-version: "24.13.1"
           cache: "pnpm"
 
       - name: Restore pnpm cache

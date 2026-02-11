@@ -103,7 +103,7 @@ jobs:
         if: github.event.inputs[matrix.input] == 'true'
         uses: actions/setup-node@v6
         with:
-          node-version: "24.13.0"
+          node-version: "24.13.1"
           cache: "pnpm"
 
       - name: Pnpm Cache

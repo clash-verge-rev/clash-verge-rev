@@ -55,6 +55,7 @@
     "files": "文件"
   },
   "placeholders": {
+    "resetInput": "清空输入框",
     "filter": "过滤条件",
     "matchCase": "区分大小写",
     "matchWholeWord": "全字匹配",
