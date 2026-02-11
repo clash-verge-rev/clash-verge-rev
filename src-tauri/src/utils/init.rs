@@ -92,6 +92,22 @@ pub async fn delete_log() -> Result<()> {
         std::mem::drop(process_file(entry).await);
     }
 
+    #[cfg(target_os = "windows")]
+    {
+        let temp_log_dir = log_dir.join("temp");
+        if temp_log_dir.exists() {
+            let mut read_dir = fs::read_dir(temp_log_dir).await?;
+            while let Some(entry) = read_dir.next_entry().await? {
+                let file_name = entry.file_name();
+                let file_name = file_name.to_str().unwrap_or_default();
+                if file_name.ends_with(".log") {
+                    let _ = entry.path().remove_if_exists().await;
+                    logging!(info, Type::Setup, "delete log file: {}", file_name);
+                }
+            }
+        }
+    }
+
     Ok(())
 }
 

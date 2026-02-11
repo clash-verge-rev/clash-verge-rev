@@ -134,3 +134,27 @@ pub fn linux_elevator() -> String {
         Err(_) => "sudo".to_string(),
     }
 }
+
+// copy the file to the dist path and return the dist path
+pub fn snapshot_path(original_path: PathBuf) -> anyhow::Result<PathBuf> {
+    #[cfg(target_os = "windows")]
+    {
+        let log_dir = original_path
+            .parent()
+            .ok_or_else(|| anyhow::anyhow!("Invalid log path"))?;
+        let temp_dir = log_dir.join("temp");
+
+        std::fs::create_dir_all(&temp_dir)?;
+
+        let timestamp = chrono::Local::now().format("%Y-%m-%d_%H-%M-%S");
+        let file_stem = original_path.file_stem().unwrap_or_default().to_string_lossy();
+        let temp_path = temp_dir.join(format!("{}_{}.log", file_stem, timestamp));
+
+        std::fs::copy(&original_path, &temp_path)?;
+
+        Ok(temp_path)
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    Ok(original_path)
+}
