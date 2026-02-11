@@ -135,6 +135,9 @@ pub fn linux_elevator() -> String {
     }
 }
 
+// Not const: performs runtime I/O and time operations.
+// Clippy's `missing_const_for_fn` is a false positive due to cfg branching.
+#[allow(clippy::missing_const_for_fn)]
 // copy the file to the dist path and return the dist path
 pub fn snapshot_path(original_path: PathBuf) -> anyhow::Result<PathBuf> {
     #[cfg(target_os = "windows")]
