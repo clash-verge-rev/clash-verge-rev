@@ -16,6 +16,7 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import {
+  ArrowDownward,
   Delete as DeleteIcon,
   DragIndicator,
   Link,
@@ -69,10 +70,18 @@ interface ProxyChainProps {
 interface SortableItemProps {
   proxy: ProxyChainItem;
   index: number;
+  isFirst: boolean;
+  isLast: boolean;
   onRemove: (id: string) => void;
 }
 
-const SortableItem = ({ proxy, index, onRemove }: SortableItemProps) => {
+const SortableItem = ({
+  proxy,
+  index,
+  isFirst,
+  isLast,
+  onRemove,
+}: SortableItemProps) => {
   const theme = useTheme();
   const { t } = useTranslation();
   const {
@@ -90,12 +99,24 @@ const SortableItem = ({ proxy, index, onRemove }: SortableItemProps) => {
     opacity: isDragging ? 0.5 : 1,
   };
 
+  const roleLabel = isFirst
+    ? t("proxies.page.chain.entryNode")
+    : isLast
+      ? t("proxies.page.chain.exitNode")
+      : undefined;
+
+  const roleColor = isFirst
+    ? theme.palette.success.main
+    : isLast
+      ? theme.palette.warning.main
+      : undefined;
+
   return (
     <Box
       ref={setNodeRef}
       style={style}
       sx={{
-        mb: 1,
+        mb: 0,
         display: "flex",
         alignItems: "center",
         p: 1,
@@ -103,7 +124,9 @@ const SortableItem = ({ proxy, index, onRemove }: SortableItemProps) => {
           ? theme.palette.action.selected
           : theme.palette.background.default,
         borderRadius: 1,
-        border: `1px solid ${theme.palette.divider}`,
+        border: roleColor
+          ? `1.5px solid ${roleColor}`
+          : `1px solid ${theme.palette.divider}`,
         boxShadow: isDragging ? theme.shadows[4] : theme.shadows[1],
         transition: "box-shadow 0.2s, background-color 0.2s",
       }}
@@ -125,12 +148,25 @@ const SortableItem = ({ proxy, index, onRemove }: SortableItemProps) => {
         <DragIndicator />
       </Box>
 
-      <Chip
-        label={`${index + 1}`}
-        size="small"
-        color="primary"
-        sx={{ mr: 1, minWidth: 32 }}
-      />
+      {roleLabel ? (
+        <Chip
+          label={roleLabel}
+          size="small"
+          sx={{
+            mr: 1,
+            fontWeight: 700,
+            color: "#fff",
+            backgroundColor: roleColor,
+          }}
+        />
+      ) : (
+        <Chip
+          label={`${index + 1}`}
+          size="small"
+          color="primary"
+          sx={{ mr: 1, minWidth: 32 }}
+        />
+      )}
 
       <Typography
         variant="body2"
@@ -579,12 +615,34 @@ export const ProxyChain = ({
                 }}
               >
                 {proxyChain.map((proxy, index) => (
-                  <SortableItem
-                    key={proxy.id}
-                    proxy={proxy}
-                    index={index}
-                    onRemove={handleRemoveProxy}
-                  />
+                  <Box key={proxy.id}>
+                    <SortableItem
+                      proxy={proxy}
+                      index={index}
+                      isFirst={index === 0}
+                      isLast={
+                        index === proxyChain.length - 1 && proxyChain.length > 1
+                      }
+                      onRemove={handleRemoveProxy}
+                    />
+                    {index < proxyChain.length - 1 && (
+                      <Box
+                        sx={{
+                          display: "flex",
+                          justifyContent: "center",
+                          py: 0.25,
+                        }}
+                      >
+                        <ArrowDownward
+                          sx={{
+                            fontSize: 20,
+                            color: theme.palette.primary.main,
+                            opacity: 0.7,
+                          }}
+                        />
+                      </Box>
+                    )}
+                  </Box>
                 ))}
               </Box>
             </SortableContext>

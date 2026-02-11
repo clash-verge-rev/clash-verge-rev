@@ -243,6 +243,8 @@ export const translationKeys = [
   "proxies.page.chain.connectFailed",
   "proxies.page.chain.disconnectFailed",
   "proxies.page.chain.duplicateNode",
+  "proxies.page.chain.entryNode",
+  "proxies.page.chain.exitNode",
   "proxies.page.messages.directMode",
   "proxies.page.title.default",
   "proxies.page.title.chainMode",

@@ -429,6 +429,8 @@ export interface TranslationResources {
           disconnectFailed: string;
           duplicateNode: string;
           empty: string;
+          entryNode: string;
+          exitNode: string;
           header: string;
           instruction: string;
           minimumNodes: string;
