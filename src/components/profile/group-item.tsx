@@ -86,6 +86,10 @@ export const GroupItem = (props: Props) => {
         <img
           src={`data:image/svg+xml;base64,${btoa(group.icon ?? "")}`}
           width="32px"
+          style={{
+            marginRight: "12px",
+            borderRadius: "6px",
+          }}
         />
       )}
       <ListItemText
