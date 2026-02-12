@@ -26,3 +26,10 @@ export const SWR_MIHOMO = {
   errorRetryInterval: 500,
   errorRetryCount: 15,
 };
+
+export const SWR_EXTERNAL_API = {
+  ...SWR_NOT_SMART,
+  shouldRetryOnError: true,
+  errorRetryCount: 1,
+  errorRetryInterval: 30_000,
+} as const;
