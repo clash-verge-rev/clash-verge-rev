@@ -13,8 +13,9 @@ use crate::{
 use anyhow::Result;
 use chrono::{Local, TimeZone as _};
 use clash_verge_logging::Type;
-use std::path::{Path, PathBuf};
-use std::str::FromStr as _;
+#[cfg(target_os = "windows")]
+use std::path::Path;
+use std::{path::PathBuf, str::FromStr as _};
 use tauri_plugin_shell::ShellExt as _;
 use tokio::fs;
 use tokio::fs::DirEntry;
