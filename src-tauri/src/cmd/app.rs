@@ -45,14 +45,20 @@ pub fn open_web_url(url: String) -> CmdResult<()> {
 /// 打开 Verge 最新日志
 #[tauri::command]
 pub async fn open_app_log() -> CmdResult<()> {
-    open::that(dirs::app_latest_log().stringify_err()?).stringify_err()
+    let log_path = dirs::app_latest_log().stringify_err()?;
+    #[cfg(target_os = "windows")]
+    let log_path = crate::utils::help::snapshot_path(&log_path).stringify_err()?;
+    open::that(log_path).stringify_err()
 }
 
 // TODO 后续可以为前端提供接口，当前作为托盘菜单使用
 /// 打开 Clash 最新日志
 #[tauri::command]
 pub async fn open_core_log() -> CmdResult<()> {
-    open::that(dirs::clash_latest_log().stringify_err()?).stringify_err()
+    let log_path = dirs::clash_latest_log().stringify_err()?;
+    #[cfg(target_os = "windows")]
+    let log_path = crate::utils::help::snapshot_path(&log_path).stringify_err()?;
+    open::that(log_path).stringify_err()
 }
 
 /// 打开/关闭开发者工具

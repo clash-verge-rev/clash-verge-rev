@@ -11,6 +11,7 @@
 - 修复首页当前节点图标语义显示不一致
 - 修复使用 URL scheme 导入订阅时没有及时重载配置
 - 修复规则界面里的行号展示逻辑
+- 修复 Windows 托盘打开日志失败
 
 <details>
 <summary><strong> ✨ 新增功能 </strong></summary>
