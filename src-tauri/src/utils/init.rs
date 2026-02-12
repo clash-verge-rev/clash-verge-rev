@@ -13,10 +13,38 @@ use crate::{
 use anyhow::Result;
 use chrono::{Local, TimeZone as _};
 use clash_verge_logging::Type;
-use std::{path::PathBuf, str::FromStr as _};
+use std::path::{Path, PathBuf};
+use std::str::FromStr as _;
 use tauri_plugin_shell::ShellExt as _;
 use tokio::fs;
 use tokio::fs::DirEntry;
+
+#[cfg(target_os = "windows")]
+async fn delete_snapshot_logs(log_dir: &Path) -> Result<()> {
+    let temp_dirs = [
+        log_dir.join("temp"),
+        log_dir.join("service").join("temp"),
+        log_dir.join("sidecar").join("temp"),
+    ];
+
+    for temp_dir in temp_dirs {
+        if !temp_dir.exists() {
+            continue;
+        }
+
+        let mut read_dir = fs::read_dir(&temp_dir).await?;
+        while let Some(entry) = read_dir.next_entry().await? {
+            let file_name = entry.file_name();
+            let file_name = file_name.to_str().unwrap_or_default();
+            if file_name.ends_with(".log") {
+                let _ = entry.path().remove_if_exists().await;
+                logging!(info, Type::Setup, "delete snapshot log file: {}", file_name);
+            }
+        }
+    }
+
+    Ok(())
+}
 
 // TODO flexi_logger 提供了最大保留天数，或许我们应该用内置删除log文件
 /// 删除log文件
@@ -25,6 +53,9 @@ pub async fn delete_log() -> Result<()> {
     if !log_dir.exists() {
         return Ok(());
     }
+
+    #[cfg(target_os = "windows")]
+    delete_snapshot_logs(&log_dir).await?;
 
     let auto_log_clean = {
         let verge = Config::verge().await;
@@ -90,22 +121,6 @@ pub async fn delete_log() -> Result<()> {
     let mut service_log_read_dir = fs::read_dir(service_log_dir).await?;
     while let Some(entry) = service_log_read_dir.next_entry().await? {
         std::mem::drop(process_file(entry).await);
-    }
-
-    #[cfg(target_os = "windows")]
-    {
-        let temp_log_dir = log_dir.join("temp");
-        if temp_log_dir.exists() {
-            let mut read_dir = fs::read_dir(temp_log_dir).await?;
-            while let Some(entry) = read_dir.next_entry().await? {
-                let file_name = entry.file_name();
-                let file_name = file_name.to_str().unwrap_or_default();
-                if file_name.ends_with(".log") {
-                    let _ = entry.path().remove_if_exists().await;
-                    logging!(info, Type::Setup, "delete log file: {}", file_name);
-                }
-            }
-        }
     }
 
     Ok(())
