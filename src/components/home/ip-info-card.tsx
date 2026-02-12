@@ -21,11 +21,13 @@ import { useTranslation } from "react-i18next";
 import useSWRImmutable from "swr/immutable";
 
 import { getIpInfo } from "@/services/api";
+import { SWR_EXTERNAL_API } from "@/services/config";
 
 import { EnhancedCard } from "./enhanced-card";
 
 // 定义刷新时间（秒）
 const IP_REFRESH_SECONDS = 300;
+const COUNTDOWN_TICK_INTERVAL = 5_000;
 const IP_INFO_CACHE_KEY = "cv_ip_info_cache";
 
 const InfoItem = memo(({ label, value }: { label: string; value?: string }) => (
@@ -180,7 +182,7 @@ export const IpInfoCard = () => {
       console.debug(
         "IP info card has entered the viewport, starting the countdown interval.",
       );
-      timer = window.setInterval(onCountdownTick, 1000);
+      timer = window.setInterval(onCountdownTick, COUNTDOWN_TICK_INTERVAL);
     } else {
       console.debug(
         "IP info card has not yet entered the viewport, no counting down.",
@@ -207,7 +209,7 @@ export const IpInfoCard = () => {
         console.debug("Document visible, resume the interval");
         // Resume the timer only when previous one is cleared
         if (timer == null) {
-          timer = window.setInterval(onCountdownTick, 1000);
+          timer = window.setInterval(onCountdownTick, COUNTDOWN_TICK_INTERVAL);
         }
       } else {
         console.debug(
@@ -420,7 +422,5 @@ export const IpInfoCard = () => {
 };
 
 function useIPInfo() {
-  return useSWRImmutable(IP_INFO_CACHE_KEY, getIpInfo, {
-    shouldRetryOnError: true,
-  });
+  return useSWRImmutable(IP_INFO_CACHE_KEY, getIpInfo, SWR_EXTERNAL_API);
 }
