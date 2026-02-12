@@ -28,18 +28,13 @@ async fn delete_snapshot_logs(log_dir: &Path) -> Result<()> {
         log_dir.join("sidecar").join("temp"),
     ];
 
-    for temp_dir in temp_dirs {
-        if !temp_dir.exists() {
-            continue;
-        }
-
-        let mut read_dir = fs::read_dir(&temp_dir).await?;
-        while let Some(entry) = read_dir.next_entry().await? {
-            let file_name = entry.file_name();
-            let file_name = file_name.to_str().unwrap_or_default();
-            if file_name.ends_with(".log") {
-                let _ = entry.path().remove_if_exists().await;
-                logging!(info, Type::Setup, "delete snapshot log file: {}", file_name);
+    for temp_dir in temp_dirs.iter().filter(|d| d.exists()) {
+        let mut entries = fs::read_dir(temp_dir).await?;
+        while let Some(entry) = entries.next_entry().await? {
+            let path = entry.path();
+            if path.extension().and_then(|s| s.to_str()) == Some("log") {
+                let _ = path.remove_if_exists().await;
+                logging!(info, Type::Setup, "delete snapshot log file: {}", path.display());
             }
         }
     }

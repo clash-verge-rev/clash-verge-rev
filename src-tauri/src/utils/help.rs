@@ -139,10 +139,10 @@ pub fn linux_elevator() -> String {
 
 #[cfg(target_os = "windows")]
 /// copy the file to the dist path and return the dist path
-pub fn snapshot_path(original_path: &Path) -> anyhow::Result<PathBuf> {
+pub fn snapshot_path(original_path: &Path) -> Result<PathBuf> {
     let temp_dir = original_path
         .parent()
-        .ok_or_else(|| anyhow::anyhow!("Invalid log path"))?
+        .ok_or_else(|| anyhow!("Invalid log path"))?
         .join("temp");
 
     std::fs::create_dir_all(&temp_dir)?;
