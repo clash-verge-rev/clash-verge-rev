@@ -4,6 +4,8 @@ use clash_verge_logging::{Type, logging};
 use nanoid::nanoid;
 use serde::{Serialize, de::DeserializeOwned};
 use serde_yaml_ng::Mapping;
+#[cfg(target_os = "windows")]
+use std::path::Path;
 use std::{path::PathBuf, str::FromStr};
 
 /// read data from yaml as struct T
@@ -135,29 +137,23 @@ pub fn linux_elevator() -> String {
     }
 }
 
-// Not const: performs runtime I/O and time operations.
-// Clippy's `missing_const_for_fn` is a false positive due to cfg branching.
-#[allow(clippy::missing_const_for_fn)]
-// copy the file to the dist path and return the dist path
-pub fn snapshot_path(original_path: PathBuf) -> anyhow::Result<PathBuf> {
-    #[cfg(target_os = "windows")]
-    {
-        let log_dir = original_path
-            .parent()
-            .ok_or_else(|| anyhow::anyhow!("Invalid log path"))?;
-        let temp_dir = log_dir.join("temp");
+#[cfg(target_os = "windows")]
+/// copy the file to the dist path and return the dist path
+pub fn snapshot_path(original_path: &Path) -> anyhow::Result<PathBuf> {
+    let temp_dir = original_path
+        .parent()
+        .ok_or_else(|| anyhow::anyhow!("Invalid log path"))?
+        .join("temp");
 
-        std::fs::create_dir_all(&temp_dir)?;
+    std::fs::create_dir_all(&temp_dir)?;
 
-        let timestamp = chrono::Local::now().format("%Y-%m-%d_%H-%M-%S");
-        let file_stem = original_path.file_stem().unwrap_or_default().to_string_lossy();
-        let temp_path = temp_dir.join(format!("{}_{}.log", file_stem, timestamp));
+    let temp_path = temp_dir.join(format!(
+        "{}_{}.log",
+        original_path.file_stem().unwrap_or_default().to_string_lossy(),
+        chrono::Local::now().format("%Y-%m-%d_%H-%M-%S")
+    ));
 
-        std::fs::copy(&original_path, &temp_path)?;
+    std::fs::copy(original_path, &temp_path)?;
 
-        Ok(temp_path)
-    }
-
-    #[cfg(not(target_os = "windows"))]
-    Ok(original_path)
+    Ok(temp_path)
 }
