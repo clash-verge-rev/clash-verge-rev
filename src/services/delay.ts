@@ -120,7 +120,7 @@ class DelayManager {
       `[DelayManager] 获取测试URL，组: ${group}, URL: ${url || "未设置"}`,
     );
     // 如果未设置URL，返回默认URL
-    return url || "https://8.8.8.8/generate_204";
+    return url || "http://104.16.132.229/generate_204";
   }
 
   setListener(

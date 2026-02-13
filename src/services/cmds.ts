@@ -340,7 +340,7 @@ export async function cmdGetProxyDelay(
   url?: string,
 ) {
   // 确保URL不为空
-  const testUrl = url || "https://8.8.8.8/generate_204";
+  const testUrl = url || "http://104.16.132.229/generate_204";
 
   try {
     // 不再在前端编码代理名称，由后端统一处理编码
