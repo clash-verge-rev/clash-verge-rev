@@ -71,8 +71,7 @@ const SIDECAR_HOST = target
 const RESOURCES_DIR = path.join(cwd, "src-tauri", "resources");
 const SIDECAR_DIR = path.join(cwd, "src-tauri", "sidecar");
 // Linux service binaries are bundled as externalBin sidecars (see tauri.linux.conf.json)
-const SERVICE_DIR =
-  platform === "linux" ? SIDECAR_DIR : RESOURCES_DIR;
+const SERVICE_DIR = platform === "linux" ? SIDECAR_DIR : RESOURCES_DIR;
 
 // =======================
 // Version Cache
