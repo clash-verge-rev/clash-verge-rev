@@ -88,7 +88,7 @@ impl Logger {
 
             let mut filter_modules = vec!["wry", "tokio_tungstenite", "tungstenite"];
             #[cfg(not(feature = "tracing"))]
-            filter_modules.push("tauri");
+            filter_modules.push("tauri::ipc");
             #[cfg(feature = "tracing")]
             filter_modules.extend(["kode_bridge"]);
             let logger = logger.filter(Box::new(clash_verge_logging::NoModuleFilter(filter_modules)));
