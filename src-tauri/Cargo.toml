@@ -71,7 +71,7 @@ reqwest = { version = "0.13.2", features = [
   "form",
 ] }
 regex = "1.12.3"
-sysproxy = { git = "https://github.com/clash-verge-rev/sysproxy-rs", branch = "0.4.4", features = [
+sysproxy = { git = "https://github.com/clash-verge-rev/sysproxy-rs", branch = "0.4.5", features = [
   "guard",
 ] }
 network-interface = { version = "2.0.5", features = ["serde"] }

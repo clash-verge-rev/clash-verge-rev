@@ -12,6 +12,7 @@
 - 修复使用 URL scheme 导入订阅时没有及时重载配置
 - 修复规则界面里的行号展示逻辑
 - 修复 Windows 托盘打开日志失败
+- 修复 KDE 首次启动报错
 
 <details>
 <summary><strong> ✨ 新增功能 </strong></summary>
@@ -33,5 +34,6 @@
 - 链式代理增加明显的入口出口与数据流向标识
 - 优化 IP 信息卡
 - 美化代理组图标样式
+- 移除 Linux resources 文件夹下多余的服务二进制文件
 
 </details>
