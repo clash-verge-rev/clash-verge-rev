@@ -68,6 +68,11 @@ const SIDECAR_HOST = target
       .toString()
       .match(/(?<=host: ).+(?=\s*)/g)[0];
 
+const RESOURCES_DIR = path.join(cwd, "src-tauri", "resources");
+const SIDECAR_DIR = path.join(cwd, "src-tauri", "sidecar");
+// Linux service binaries are bundled as externalBin sidecars (see tauri.linux.conf.json)
+const SERVICE_DIR = platform === "linux" ? SIDECAR_DIR : RESOURCES_DIR;
+
 // =======================
 // Version Cache
 // =======================
@@ -369,9 +374,8 @@ async function downloadFile(url, outPath) {
 // =======================
 async function resolveSidecar(binInfo) {
   const { name, targetFile, zipFile, exeFile, downloadURL } = binInfo;
-  const sidecarDir = path.join(cwd, "src-tauri", "sidecar");
-  const sidecarPath = path.join(sidecarDir, targetFile);
-  await fsp.mkdir(sidecarDir, { recursive: true });
+  const sidecarPath = path.join(SIDECAR_DIR, targetFile);
+  await fsp.mkdir(SIDECAR_DIR, { recursive: true });
 
   if (!FORCE && fs.existsSync(sidecarPath)) {
     log_success(`"${name}" already exists, skipping download`);
@@ -460,9 +464,9 @@ async function resolveSidecar(binInfo) {
 }
 
 async function resolveResource(binInfo) {
-  const { file, downloadURL, localPath } = binInfo;
-  const resDir = path.join(cwd, "src-tauri/resources");
-  const targetPath = path.join(resDir, file);
+  const { file, downloadURL, localPath, dir } = binInfo;
+  const baseDir = dir ?? RESOURCES_DIR;
+  const targetPath = path.join(baseDir, file);
 
   if (!FORCE && fs.existsSync(targetPath) && !downloadURL && !localPath) {
     log_success(`"${file}" already exists, skipping`);
@@ -474,7 +478,7 @@ async function resolveResource(binInfo) {
       log_success(`"${file}" already exists, skipping download`);
       return;
     }
-    await fsp.mkdir(resDir, { recursive: true });
+    await fsp.mkdir(baseDir, { recursive: true });
     await downloadFile(downloadURL, targetPath);
     await updateHashCache(targetPath);
   }
@@ -483,7 +487,7 @@ async function resolveResource(binInfo) {
     if (!(await hasFileChanged(localPath, targetPath))) {
       return;
     }
-    await fsp.mkdir(resDir, { recursive: true });
+    await fsp.mkdir(baseDir, { recursive: true });
     await fsp.copyFile(localPath, targetPath);
     await updateHashCache(targetPath);
     log_success(`Copied file: ${file}`);
@@ -545,12 +549,11 @@ const resolveServicePermission = async () => {
     "clash-verge-service-install*",
     "clash-verge-service-uninstall*",
   ];
-  const resDir = path.join(cwd, "src-tauri/resources");
   const hashCache = await loadHashCache();
   let hasChanges = false;
 
   for (const f of serviceExecutables) {
-    const files = glob.sync(path.join(resDir, f));
+    const files = glob.sync(path.join(SERVICE_DIR, f));
     for (const filePath of files) {
       if (fs.existsSync(filePath)) {
         const currentHash = await calculateFileHash(filePath);
@@ -584,6 +587,7 @@ const resolveService = () => {
   const suffix = platform === "linux" ? "-" + SIDECAR_HOST : "";
   return resolveResource({
     file: "clash-verge-service" + suffix + ext,
+    dir: SERVICE_DIR,
     downloadURL: `${SERVICE_URL}/clash-verge-service${ext}`,
   });
 };
@@ -592,6 +596,7 @@ const resolveInstall = () => {
   const suffix = platform === "linux" ? "-" + SIDECAR_HOST : "";
   return resolveResource({
     file: "clash-verge-service-install" + suffix + ext,
+    dir: SERVICE_DIR,
     downloadURL: `${SERVICE_URL}/clash-verge-service-install${ext}`,
   });
 };
@@ -600,6 +605,7 @@ const resolveUninstall = () => {
   const suffix = platform === "linux" ? "-" + SIDECAR_HOST : "";
   return resolveResource({
     file: "clash-verge-service-uninstall" + suffix + ext,
+    dir: SERVICE_DIR,
     downloadURL: `${SERVICE_URL}/clash-verge-service-uninstall${ext}`,
   });
 };
