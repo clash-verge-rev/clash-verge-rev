@@ -23,7 +23,6 @@ pub mod timing {
     use super::Duration;
 
     pub const CONFIG_UPDATE_DEBOUNCE: Duration = Duration::from_millis(300);
-    pub const EVENT_EMIT_DELAY: Duration = Duration::from_millis(20);
     pub const STARTUP_ERROR_DELAY: Duration = Duration::from_secs(2);
 
     #[cfg(target_os = "windows")]
