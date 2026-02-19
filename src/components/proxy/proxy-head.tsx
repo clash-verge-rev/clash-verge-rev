@@ -66,7 +66,7 @@ export const ProxyHead = ({
 
   const { verge } = useVerge();
   const defaultLatencyUrl =
-    verge?.default_latency_test?.trim() || "http://104.16.132.229/generate_204";
+    verge?.default_latency_test?.trim() || "http://1.0.0.1";
 
   useEffect(() => {
     delayManager.setUrl(groupName, testUrl?.trim() || url || defaultLatencyUrl);

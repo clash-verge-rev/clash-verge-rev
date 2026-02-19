@@ -615,7 +615,7 @@ export const GroupsEditorViewer = (props: Props) => {
                       />
                       <TextField
                         autoComplete="new-password"
-                        placeholder="http://104.16.132.229/generate_204"
+                        placeholder="http://1.0.0.1"
                         size="small"
                         sx={{ width: "calc(100% - 150px)" }}
                         {...field}
