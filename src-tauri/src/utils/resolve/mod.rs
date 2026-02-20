@@ -5,7 +5,7 @@ use anyhow::Result;
 use crate::{
     config::Config,
     core::{
-        CoreManager, Timer, handle,
+        CoreManager, Timer,
         hotkey::Hotkey,
         logger::Logger,
         service::{SERVICE_MANAGER, ServiceManager, is_service_ipc_path_exists},
@@ -37,10 +37,6 @@ pub fn init_work_dir_and_logger() -> anyhow::Result<()> {
         Logger::global().init().await?;
         Ok(())
     })
-}
-
-pub fn resolve_setup_handle() {
-    init_handle();
 }
 
 pub fn resolve_setup_sync() {
@@ -93,10 +89,6 @@ pub async fn resolve_reset_async() -> Result<(), anyhow::Error> {
     }
 
     Ok(())
-}
-
-pub fn init_handle() {
-    handle::Handle::global().init();
 }
 
 pub(super) fn init_scheme() {
