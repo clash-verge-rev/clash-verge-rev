@@ -98,6 +98,57 @@ pub fn parse_str<T: FromStr>(target: &str, key: &str) -> Option<T> {
     })
 }
 
+/// Mask sensitive parts of a subscription URL for safe logging.
+/// Examples:
+/// - `https://example.com/api/v1/clash?token=abc123` → `https://example.com/api/v1/clash?token=***`
+/// - `https://example.com/abc123def456ghi789/clash` → `https://example.com/***/clash`
+pub fn mask_url(url: &str) -> String {
+    // Split off query string
+    let (path_part, query_part) = match url.find('?') {
+        Some(pos) => (&url[..pos], Some(&url[pos + 1..])),
+        None => (url, None),
+    };
+
+    // Extract scheme+host prefix (everything up to the first '/' after "://")
+    let host_end = path_part
+        .find("://")
+        .and_then(|scheme_end| {
+            path_part[scheme_end + 3..]
+                .find('/')
+                .map(|slash| scheme_end + 3 + slash)
+        })
+        .unwrap_or(path_part.len());
+
+    let scheme_and_host = &path_part[..host_end];
+    let path = &path_part[host_end..]; // starts with '/' or empty
+
+    let mut result = scheme_and_host.to_owned();
+
+    // Mask path segments that look like tokens (longer than 16 chars)
+    if !path.is_empty() {
+        let masked: Vec<&str> = path
+            .split('/')
+            .map(|seg| if seg.len() > 16 { "***" } else { seg })
+            .collect();
+        result.push_str(&masked.join("/"));
+    }
+
+    // Keep query param keys, mask values
+    if let Some(query) = query_part {
+        result.push('?');
+        let masked_query: Vec<String> = query
+            .split('&')
+            .map(|param| match param.find('=') {
+                Some(eq) => format!("{}=***", &param[..eq]),
+                None => param.to_owned(),
+            })
+            .collect();
+        result.push_str(&masked_query.join("&"));
+    }
+
+    result
+}
+
 /// get the last part of the url, if not found, return empty string
 pub fn get_last_part_and_decode(url: &str) -> Option<String> {
     let path = url.split('?').next().unwrap_or(""); // Splits URL and takes the path part

@@ -65,7 +65,7 @@ pub async fn enhance_profiles() -> CmdResult {
 /// 导入配置文件
 #[tauri::command]
 pub async fn import_profile(url: std::string::String, option: Option<PrfOption>) -> CmdResult {
-    logging!(info, Type::Cmd, "[导入订阅] 开始导入: {}", url);
+    logging!(info, Type::Cmd, "[导入订阅] 开始导入: {}", help::mask_url(&url));
 
     // 直接依赖 PrfItem::from_url 自身的超时/重试逻辑，不再使用 tokio::time::timeout 包裹
     let item = &mut match PrfItem::from_url(&url, None, None, option.as_ref()).await {
@@ -107,7 +107,7 @@ pub async fn import_profile(url: std::string::String, option: Option<PrfOption>)
         handle::Handle::notify_profile_changed(uid);
     }
 
-    logging!(info, Type::Cmd, "[导入订阅] 导入完成: {}", url);
+    logging!(info, Type::Cmd, "[导入订阅] 导入完成: {}", help::mask_url(&url));
     AutoBackupManager::trigger_backup(AutoBackupTrigger::ProfileChange);
     Ok(())
 }

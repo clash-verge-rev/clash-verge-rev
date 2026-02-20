@@ -2,6 +2,7 @@ use crate::{
     cmd,
     config::{Config, PrfItem, PrfOption, profiles::profiles_draft_update_item_safe},
     core::{CoreManager, handle, tray},
+    utils::help::mask_url,
 };
 use anyhow::{Result, bail};
 use clash_verge_logging::{Type, logging, logging_error};
@@ -83,9 +84,11 @@ async fn should_update_profile(uid: &String, ignore_auto_update: bool) -> Result
             Type::Config,
             "[订阅更新] {} 是远程订阅，URL: {}",
             uid,
-            item.url
-                .as_ref()
-                .ok_or_else(|| anyhow::anyhow!("Profile URL is None"))?
+            mask_url(
+                item.url
+                    .as_ref()
+                    .ok_or_else(|| anyhow::anyhow!("Profile URL is None"))?
+            )
         );
         Ok(Some((
             item.url.clone().ok_or_else(|| anyhow::anyhow!("Profile URL is None"))?,
