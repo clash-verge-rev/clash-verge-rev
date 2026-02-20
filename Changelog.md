@@ -1,4 +1,4 @@
-## v(2.4.6)
+## v2.4.6
 
 > [!IMPORTANT]
 > 历经多轮磨合与修正，这是自 2.0 以来我们最满意的里程碑版本。建议所有用户立即升级。
@@ -17,18 +17,14 @@
 - 修复 Windows 托盘打开日志失败
 - 修复 KDE 首次启动报错
 
-<details>
-<summary><strong> ✨ 新增功能 </strong></summary>
+### ✨ 新增功能
 
 - 升级 Mihomo 内核到最新
 - 支持订阅设置自动延时监测间隔
 - 新增流量隧道管理界面，支持可视化添加/删除隧道配置
 - Masque 协议的 GUI 支持
 
-</details>
-
-<details>
-<summary><strong> 🚀 优化改进 </strong></summary>
+### 🚀 优化改进
 
 - 安装服务失败时报告更详细的错误
 - 避免脏订阅地址无法 Scheme 导入订阅
@@ -39,5 +35,3 @@
 - 优化 IP 信息卡
 - 美化代理组图标样式
 - 移除 Linux resources 文件夹下多余的服务二进制文件
-
-</details>
