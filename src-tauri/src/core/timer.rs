@@ -409,12 +409,12 @@ impl Timer {
     }
 
     /// Emit update events for frontend notification
-    fn emit_update_event(_uid: &str, _is_start: bool) {
+    fn emit_update_event(uid: &String, is_start: bool) {
         {
-            if _is_start {
-                super::handle::Handle::notify_profile_update_started(_uid.into());
+            if is_start {
+                super::handle::Handle::notify_profile_update_started(uid);
             } else {
-                super::handle::Handle::notify_profile_update_completed(_uid.into());
+                super::handle::Handle::notify_profile_update_completed(uid);
             }
         }
     }

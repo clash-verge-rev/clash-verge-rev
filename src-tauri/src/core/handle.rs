@@ -44,27 +44,26 @@ impl Handle {
         Self::send_event(FrontendEvent::RefreshVerge);
     }
 
-    pub fn notify_profile_changed(profile_id: String) {
+    pub fn notify_profile_changed(profile_id: &String) {
         Self::send_event(FrontendEvent::ProfileChanged {
             current_profile_id: profile_id,
         });
     }
 
-    pub fn notify_timer_updated(profile_index: String) {
+    pub fn notify_timer_updated(profile_index: &String) {
         Self::send_event(FrontendEvent::TimerUpdated { profile_index });
     }
 
-    pub fn notify_profile_update_started(uid: String) {
+    pub fn notify_profile_update_started(uid: &String) {
         Self::send_event(FrontendEvent::ProfileUpdateStarted { uid });
     }
 
-    pub fn notify_profile_update_completed(uid: String) {
+    pub fn notify_profile_update_completed(uid: &String) {
         Self::send_event(FrontendEvent::ProfileUpdateCompleted { uid });
     }
 
-    // TODO 利用 &str 等缩短 Clone
-    pub fn notice_message<S: Into<String>, M: Into<String>>(status: S, msg: M) {
-        let status_str = status.into();
+    pub fn notice_message<S: AsRef<str>, M: Into<String>>(status: S, msg: M) {
+        let status_str = status.as_ref();
         let msg_str = msg.into();
 
         Self::send_event(FrontendEvent::NoticeMessage {

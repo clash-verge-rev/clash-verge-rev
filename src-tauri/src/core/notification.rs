@@ -5,16 +5,15 @@ use smartstring::alias::String;
 
 use tauri::{Emitter as _, WebviewWindow};
 
-// TODO 重构或优化，避免 Clone 过多
-#[derive(Debug, Clone)]
-pub enum FrontendEvent {
+#[derive(Debug)]
+pub enum FrontendEvent<'a> {
     RefreshClash,
     RefreshVerge,
-    NoticeMessage { status: String, message: String },
-    ProfileChanged { current_profile_id: String },
-    TimerUpdated { profile_index: String },
-    ProfileUpdateStarted { uid: String },
-    ProfileUpdateCompleted { uid: String },
+    NoticeMessage { status: &'a str, message: String },
+    ProfileChanged { current_profile_id: &'a String },
+    TimerUpdated { profile_index: &'a String },
+    ProfileUpdateStarted { uid: &'a String },
+    ProfileUpdateCompleted { uid: &'a String },
 }
 
 #[derive(Debug)]
