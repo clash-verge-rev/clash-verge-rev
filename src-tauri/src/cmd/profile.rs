@@ -158,7 +158,7 @@ pub async fn create_profile(item: PrfItem, file_data: Option<String>) -> CmdResu
 /// 更新配置文件
 #[tauri::command]
 pub async fn update_profile(index: String, option: Option<PrfOption>) -> CmdResult {
-    match feat::update_profile(&index, option.as_ref(), true, true).await {
+    match feat::update_profile(&index, option.as_ref(), true, true, true).await {
         Ok(_) => {
             let _: () = Config::profiles().await.apply();
             Ok(())

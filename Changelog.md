@@ -10,4 +10,6 @@
 <details>
 <summary><strong> 🚀 优化改进 </strong></summary>
 
+- 优化订阅错误通知，仅在手动触发时
+
 </details>
