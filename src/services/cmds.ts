@@ -340,7 +340,7 @@ export async function cmdGetProxyDelay(
   url?: string,
 ) {
   // 确保URL不为空
-  const testUrl = url || "http://1.0.0.1";
+  const testUrl = url || "http://cp.cloudflare.com";
 
   try {
     // 不再在前端编码代理名称，由后端统一处理编码
