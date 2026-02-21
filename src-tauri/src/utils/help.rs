@@ -149,6 +149,41 @@ pub fn mask_url(url: &str) -> String {
     result
 }
 
+/// Mask all URLs embedded in an error/log string for safe logging.
+///
+/// Scans the string for `http://` or `https://` and replaces each URL
+/// (terminated by whitespace or `)`, `]`, `"`, `'`) with its masked form.
+/// Text between URLs is copied verbatim.
+pub fn mask_err(err: &str) -> String {
+    let mut result = String::with_capacity(err.len());
+    let mut remaining = err;
+
+    loop {
+        let http = remaining.find("http://");
+        let https = remaining.find("https://");
+        let start = match (http, https) {
+            (None, None) => {
+                result.push_str(remaining);
+                break;
+            }
+            (Some(a), None) | (None, Some(a)) => a,
+            (Some(a), Some(b)) => a.min(b),
+        };
+
+        result.push_str(&remaining[..start]);
+        remaining = &remaining[start..];
+
+        let url_end = remaining
+            .find(|c: char| c.is_whitespace() || matches!(c, ')' | ']' | '"' | '\''))
+            .unwrap_or(remaining.len());
+
+        result.push_str(&mask_url(&remaining[..url_end]));
+        remaining = &remaining[url_end..];
+    }
+
+    result
+}
+
 /// get the last part of the url, if not found, return empty string
 pub fn get_last_part_and_decode(url: &str) -> Option<String> {
     let path = url.split('?').next().unwrap_or(""); // Splits URL and takes the path part
