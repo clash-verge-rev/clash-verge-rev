@@ -2,6 +2,8 @@
 
 ### 🐞 修复问题
 
+- 修复 Windows 管理员身份运行时开关 TUN 模式异常
+
 <details>
 <summary><strong> ✨ 新增功能 </strong></summary>
 
