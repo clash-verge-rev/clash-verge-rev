@@ -294,6 +294,8 @@ interface IProfileOption {
   rules?: string;
   proxies?: string;
   groups?: string;
+  /** Subscription login password for decrypting Subscription-Encryption responses */
+  login_password?: string;
 }
 
 interface IProfilesConfig {

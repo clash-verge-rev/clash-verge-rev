@@ -1,4 +1,5 @@
 use super::CmdResult;
+use crate::config::Config;
 use crate::core::sysopt::Sysopt;
 use crate::utils::resolve::ui::{self, UiReadyStage};
 use crate::{
@@ -9,6 +10,7 @@ use crate::{
 use clash_verge_logging::{Type, logging};
 use smartstring::alias::String;
 use std::path::Path;
+use std::process::Command;
 use tauri::{AppHandle, Manager as _};
 use tokio::fs;
 use tokio::io::AsyncWriteExt as _;
@@ -39,6 +41,65 @@ pub async fn open_logs_dir() -> CmdResult<()> {
 #[tauri::command]
 pub fn open_web_url(url: String) -> CmdResult<()> {
     open::that(url.as_str()).stringify_err()
+}
+
+/// Launch the default browser with the current Clash proxy (mixed port).
+/// Only the configured port is used; ensure the core is running for the proxy to work.
+#[tauri::command]
+pub async fn launch_browser_with_proxy() -> CmdResult<()> {
+    let port = {
+        let verge = Config::verge().await.data_arc();
+        verge
+            .verge_mixed_port
+            .unwrap_or_else(|| Config::clash().await.data_arc().get_mixed_port())
+    };
+    let proxy_arg = format!("127.0.0.1:{}", port);
+    let url = "https://www.google.com";
+
+    #[cfg(target_os = "windows")]
+    {
+        // Try msedge first (Windows 10/11), then chrome
+        let browsers = ["msedge", "chrome"];
+        for exe in browsers {
+            let status = Command::new(exe)
+                .args([
+                    format!("--proxy-server={}", proxy_arg),
+                    url,
+                ])
+                .spawn();
+            if status.is_ok() {
+                return Ok(());
+            }
+        }
+        return Err("Could not start browser (tried msedge, chrome). Install Edge or Chrome.".into());
+    }
+
+    #[cfg(target_os = "macos")]
+    {
+        // Open Chrome with proxy if available, else default browser (no proxy)
+        let status = Command::new("open")
+            .args(["-a", "Google Chrome", "--args", &format!("--proxy-server={}", proxy_arg), url])
+            .spawn();
+        if status.is_ok() {
+            return Ok(());
+        }
+        open::that(url).stringify_err()
+    }
+
+    #[cfg(not(any(target_os = "windows", target_os = "macos")))]
+    {
+        // Linux: try chromium or google-chrome with proxy
+        let browsers = ["chromium", "google-chrome", "chromium-browser"];
+        for exe in browsers {
+            let status = Command::new(exe)
+                .args([format!("--proxy-server={}", proxy_arg), url.to_string()])
+                .spawn();
+            if status.is_ok() {
+                return Ok(());
+            }
+        }
+        open::that(url).stringify_err()
+    }
 }
 
 // TODO 后续可以为前端提供接口，当前作为托盘菜单使用

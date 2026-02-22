@@ -105,6 +105,8 @@
         "description": "描述",
         "subscriptionUrl": "订阅链接",
         "httpTimeout": "HTTP 请求超时",
+        "loginPassword": "订阅登录密码",
+        "loginPasswordPlaceholder": "用于解密加密订阅（Subscription-Encryption）",
         "updateInterval": "更新间隔",
         "useSystemProxy": "使用系统代理更新",
         "useClashProxy": "使用内核代理更新",

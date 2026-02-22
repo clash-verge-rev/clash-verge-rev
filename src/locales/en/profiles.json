@@ -105,6 +105,8 @@
         "description": "Descriptions",
         "subscriptionUrl": "Subscription URL",
         "httpTimeout": "HTTP Request Timeout",
+        "loginPassword": "Subscription Login Password",
+        "loginPasswordPlaceholder": "For encrypted subscription (Subscription-Encryption)",
         "updateInterval": "Update Interval",
         "useSystemProxy": "Use System Proxy",
         "useClashProxy": "Use Clash Proxy",

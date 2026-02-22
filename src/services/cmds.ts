@@ -334,6 +334,15 @@ export const openWebUrl = async (url: string) => {
   }
 };
 
+/** Launch default browser with current Clash proxy (mixed port). */
+export const launchBrowserWithProxy = async () => {
+  try {
+    await invoke("launch_browser_with_proxy");
+  } catch (err: any) {
+    showNotice.error(err);
+  }
+};
+
 export async function cmdGetProxyDelay(
   name: string,
   timeout: number,

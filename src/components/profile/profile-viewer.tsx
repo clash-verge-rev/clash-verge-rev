@@ -109,6 +109,9 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
         if (option?.user_agent === "") {
           option.user_agent = undefined;
         }
+        if (option?.login_password === "") {
+          option.login_password = undefined;
+        }
 
         const name = form.name || `${form.type} file`;
         const item = { ...form, name, option };
@@ -318,6 +321,21 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
                     ),
                   },
                 }}
+              />
+            )}
+          />
+
+          <Controller
+            name="option.login_password"
+            control={control}
+            render={({ field }) => (
+              <TextField
+                {...text}
+                {...field}
+                type="password"
+                autoComplete="off"
+                label={t("profiles.modals.profileForm.fields.loginPassword")}
+                placeholder={t("profiles.modals.profileForm.fields.loginPasswordPlaceholder")}
               />
             )}
           />

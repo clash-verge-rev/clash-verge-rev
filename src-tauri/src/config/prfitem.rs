@@ -6,7 +6,10 @@ use crate::{
         tmpl,
     },
 };
+use aes::cipher::{block_padding::Pkcs7, BlockDecryptMut, KeyIvInit};
 use anyhow::{Context as _, Result, bail};
+use base64::Engine;
+use md5::Md5;
 use serde::{Deserialize, Serialize};
 use serde_yaml_ng::Mapping;
 use smartstring::alias::String;
@@ -15,6 +18,8 @@ use tokio::fs;
 // TODO, use other re-export
 use reqwest_dav::re_exports::url::form_urlencoded;
 use tauri::Url;
+
+type Aes128CbcDec = cbc::Decryptor<aes::Aes128>;
 
 #[derive(Debug, Clone, Deserialize, Serialize, Default)]
 pub struct PrfItem {
@@ -122,6 +127,11 @@ pub struct PrfOption {
     pub proxies: Option<String>,
 
     pub groups: Option<String>,
+
+    /// for `remote` profile with encrypted subscription
+    /// used to decrypt body when Subscription-Encryption header is present
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub login_password: Option<String>,
 }
 
 impl PrfOption {
@@ -142,6 +152,7 @@ impl PrfOption {
                 result.proxies = b_ref.proxies.clone().or(result.proxies);
                 result.groups = b_ref.groups.clone().or(result.groups);
                 result.timeout_seconds = b_ref.timeout_seconds.or(result.timeout_seconds);
+                result.login_password = b_ref.login_password.clone().or(result.login_password);
                 Some(result)
             }
             (Some(a_ref), None) => Some(a_ref.clone()),
@@ -379,7 +390,39 @@ impl PrfItem {
         let name = name
             .map(|s| s.to_owned())
             .unwrap_or_else(|| filename.map(|s| s.into()).unwrap_or_else(|| "Remote File".into()));
-        let data = resp.text_with_charset()?;
+        let mut data = resp.text_with_charset()?.to_string();
+
+        // Subscription-Encryption: decrypt body when present and login_password is set
+        let encrypted = header
+            .iter()
+            .find(|(k, _)| k.as_str().to_ascii_lowercase() == "subscription-encryption")
+            .and_then(|(_, v)| v.to_str().ok())
+            .map(|v| v.trim().eq_ignore_ascii_case("true"))
+            .unwrap_or(false);
+        if encrypted {
+            let password = option.and_then(|o| o.login_password.as_ref()).filter(|s| !s.is_empty());
+            match password {
+                Some(pwd) => {
+                    let decoded = base64::engine::general_purpose::STANDARD
+                        .decode(data.trim())
+                        .context("subscription decryption: invalid base64 body")?;
+                    if decoded.len() < 32 {
+                        bail!("subscription decryption: body too short (need IV + cipher)");
+                    }
+                    let (iv_slice, cipher) = decoded.split_at(16);
+                    let key = md5::compute(pwd.as_bytes());
+                    let mut cipher_mut = cipher.to_vec();
+                    let dec = Aes128CbcDec::new_from_slices(key.as_ref(), iv_slice)
+                        .map_err(|_| anyhow::anyhow!("subscription decryption: invalid key/iv length"))?
+                        .decrypt_padded_mut::<Pkcs7>(&mut cipher_mut)
+                        .map_err(|_| anyhow::anyhow!("subscription decryption failed (wrong password?)"))?;
+                    data = std::str::from_utf8(dec)
+                        .map(|s| s.to_string())
+                        .context("subscription decryption: result is not valid UTF-8")?;
+                }
+                None => bail!("subscription is encrypted (Subscription-Encryption: true) but no login password is set; please set the subscription password in profile options"),
+            }
+        }
 
         // process the charset "UTF-8 with BOM"
         let data = data.trim_start_matches('\u{feff}');
