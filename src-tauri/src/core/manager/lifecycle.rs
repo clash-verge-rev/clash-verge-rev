@@ -83,7 +83,7 @@ impl CoreManager {
 
     #[cfg(target_os = "windows")]
     async fn wait_for_service_if_needed(&self) {
-        use crate::{config::Config, constants::timing};
+        use crate::{config::Config, constants::timing, core::service};
         use backoff::{Error as BackoffError, ExponentialBackoff};
 
         let needs_service = Config::verge().await.latest_arc().enable_tun_mode.unwrap_or(false);
@@ -106,6 +106,12 @@ impl CoreManager {
 
             if matches!(manager.current(), ServiceStatus::Ready) {
                 return Ok(());
+            }
+
+            // If the service IPC path is not ready yet, treat it as transient and retry.
+            // Running init/refresh too early can mark service state unavailable and break later config reloads.
+            if !service::is_service_ipc_path_exists() {
+                return Err(BackoffError::transient(anyhow::anyhow!("Service IPC not ready")));
             }
 
             manager.init().await.map_err(BackoffError::transient)?;
