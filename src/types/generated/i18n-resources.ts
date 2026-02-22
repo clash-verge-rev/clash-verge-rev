@@ -174,6 +174,21 @@ export interface TranslationResources {
     };
     layout: {
       components: {
+        login: {
+          description: string;
+          email: string;
+          error: {
+            loginFailed: string;
+            required: string;
+            resolvePanelUrlFailed: string;
+            unknown: string;
+            userInfoFailed: string;
+          };
+          panelUrlHint: string;
+          password: string;
+          submit: string;
+          title: string;
+        };
         navigation: {
           menu: {
             collapseNavBar: string;
@@ -1318,10 +1333,10 @@ export interface TranslationResources {
         usedTotal: string;
       };
       placeholders: {
-        resetInput: string;
         filter: string;
         matchCase: string;
         matchWholeWord: string;
+        resetInput: string;
         useRegex: string;
       };
       statuses: {

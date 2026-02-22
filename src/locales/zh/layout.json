@@ -19,6 +19,21 @@
         "collapseNavBar": "收起导航栏",
         "expandNavBar": "展开导航栏"
       }
+    },
+    "login": {
+      "title": "SSPanel 登录",
+      "description": "请登录您的 SSPanel 账号。面板地址将从 Git 远程配置自动获取并解码。",
+      "email": "邮箱",
+      "password": "密码",
+      "panelUrlHint": "面板地址来源：Git URL API（Base64 解码），将自动探测可访问域名并缓存 24 小时。",
+      "submit": "登录",
+      "error": {
+        "required": "请完整填写登录信息。",
+        "resolvePanelUrlFailed": "获取面板地址失败，请检查 Git URL API 或网络后重试。",
+        "unknown": "登录失败，请稍后重试。",
+        "loginFailed": "SSPanel 登录失败。",
+        "userInfoFailed": "获取用户信息失败。"
+      }
     }
   }
 }

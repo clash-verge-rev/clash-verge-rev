@@ -35,6 +35,7 @@ import LogoSvg from "@/assets/image/logo.svg?react";
 import { BaseErrorBoundary } from "@/components/base";
 import { LayoutItem } from "@/components/layout/layout-item";
 import { LayoutTraffic } from "@/components/layout/layout-traffic";
+import { LoginDialog } from "@/components/layout/login-dialog";
 import { NoticeManager } from "@/components/layout/notice-manager";
 import { UpdateButton } from "@/components/layout/update-button";
 import { WindowControls } from "@/components/layout/window-controller";
@@ -280,6 +281,7 @@ const Layout = () => {
       }}
     >
       <ThemeProvider theme={theme}>
+        <LoginDialog />
         {/* 左侧底部窗口控制按钮 */}
         <NoticeManager position={verge?.notice_position} />
         <div
