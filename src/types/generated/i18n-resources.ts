@@ -180,11 +180,10 @@ export interface TranslationResources {
           error: {
             loginFailed: string;
             required: string;
-            resolvePanelUrlFailed: string;
             unknown: string;
             userInfoFailed: string;
           };
-          panelUrlHint: string;
+          panelUrl: string;
           password: string;
           submit: string;
           title: string;

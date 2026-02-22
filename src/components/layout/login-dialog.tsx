@@ -15,13 +15,9 @@ import { useTranslation } from "react-i18next";
 import { getProfiles, importProfile, updateProfile } from "@/services/cmds";
 
 type LoginForm = {
+  panelUrl: string;
   email: string;
   password: string;
-};
-
-type PanelUrlCache = {
-  url: string;
-  expiresAt: number;
 };
 
 type SspanelLoginResponse = {
@@ -42,122 +38,20 @@ type SspanelUserInfoResponse = {
 };
 
 const SSPANEL_AUTH_KEY = "sspanel-auth";
-const SSPANEL_URL_CACHE_KEY = "sspanel-panel-url-cache";
 const SSPANEL_PROFILE_KEY = "sspanel-profile";
-const SSPANEL_URL_CACHE_TTL = 24 * 60 * 60 * 1000;
-const URL_CHECK_TIMEOUT = 6000;
-const SSPANEL_URL_API =
-  "https://git.youxu.net/timorzzz/layerv2/raw/branch/main/urlapi.txt";
 
 const defaultForm: LoginForm = {
+  panelUrl: "",
   email: "",
   password: "",
 };
 
-const parseCandidateUrls = (raw: string) => {
-  const cleaned = raw.trim();
-  const decoded = atob(cleaned).trim();
-
-  if (!decoded) {
-    throw new Error("Decoded panel URL is empty");
+const normalizePanelUrl = (url: string) => {
+  const normalized = url.trim().replace(/\/$/, "");
+  if (!/^https?:\/\//i.test(normalized)) {
+    throw new Error("Panel URL must start with http:// or https://");
   }
-
-  const candidates = decoded
-    .split(/[\n,\s]+/)
-    .map((url) => url.trim().replace(/\/$/, ""))
-    .filter(Boolean);
-
-  if (candidates.length === 0) {
-    throw new Error("No panel URL candidates found");
-  }
-
-  return [...new Set(candidates)];
-};
-
-const getCachedPanelUrl = () => {
-  const rawCache = localStorage.getItem(SSPANEL_URL_CACHE_KEY);
-
-  if (!rawCache) {
-    return null;
-  }
-
-  try {
-    const parsed = JSON.parse(rawCache) as PanelUrlCache;
-    if (!parsed.url || !parsed.expiresAt) {
-      localStorage.removeItem(SSPANEL_URL_CACHE_KEY);
-      return null;
-    }
-
-    if (parsed.expiresAt <= Date.now()) {
-      localStorage.removeItem(SSPANEL_URL_CACHE_KEY);
-      return null;
-    }
-
-    return parsed.url;
-  } catch {
-    localStorage.removeItem(SSPANEL_URL_CACHE_KEY);
-    return null;
-  }
-};
-
-const cachePanelUrl = (url: string) => {
-  const payload: PanelUrlCache = {
-    url,
-    expiresAt: Date.now() + SSPANEL_URL_CACHE_TTL,
-  };
-  localStorage.setItem(SSPANEL_URL_CACHE_KEY, JSON.stringify(payload));
-};
-
-const checkUrlAccessible = async (url: string) => {
-  const controller = new AbortController();
-  const timer = window.setTimeout(() => controller.abort(), URL_CHECK_TIMEOUT);
-
-  try {
-    await fetch(url, {
-      method: "GET",
-      mode: "no-cors",
-      cache: "no-store",
-      signal: controller.signal,
-    });
-    return true;
-  } catch {
-    return false;
-  } finally {
-    window.clearTimeout(timer);
-  }
-};
-
-const pickAvailablePanelUrl = async (candidates: string[]) => {
-  for (const url of candidates) {
-    const accessible = await checkUrlAccessible(url);
-    if (accessible) {
-      return url;
-    }
-  }
-
-  throw new Error("No accessible panel URL found");
-};
-
-const resolvePanelUrlFromGit = async () => {
-  const cached = getCachedPanelUrl();
-  if (cached) {
-    return cached;
-  }
-
-  const response = await fetch(SSPANEL_URL_API, {
-    method: "GET",
-    cache: "no-store",
-  });
-
-  if (!response.ok) {
-    throw new Error(`Fetch URL API failed: ${response.status}`);
-  }
-
-  const base64Text = await response.text();
-  const candidates = parseCandidateUrls(base64Text);
-  const panelUrl = await pickAvailablePanelUrl(candidates);
-  cachePanelUrl(panelUrl);
-  return panelUrl;
+  return normalized;
 };
 
 const sspanelLogin = async (panelUrl: string, form: LoginForm) => {
@@ -237,7 +131,7 @@ export const LoginDialog = () => {
   const [loading, setLoading] = useState(false);
 
   const canSubmit = useMemo(() => {
-    return Boolean(form.email && form.password);
+    return Boolean(form.panelUrl && form.email && form.password);
   }, [form]);
 
   const handleChange =
@@ -255,7 +149,7 @@ export const LoginDialog = () => {
     setLoading(true);
 
     try {
-      const panelUrl = await resolvePanelUrlFromGit();
+      const panelUrl = normalizePanelUrl(form.panelUrl);
       const loginResult = await sspanelLogin(panelUrl, form);
 
       if (loginResult.ret !== 1) {
@@ -316,11 +210,20 @@ export const LoginDialog = () => {
           </Typography>
 
           <TextField
+            label={t("layout.components.login.panelUrl")}
+            value={form.panelUrl}
+            onChange={handleChange("panelUrl")}
+            size="small"
+            autoFocus
+            fullWidth
+            placeholder="https://your-sspanel-domain"
+          />
+
+          <TextField
             label={t("layout.components.login.email")}
             value={form.email}
             onChange={handleChange("email")}
             size="small"
-            autoFocus
             fullWidth
           />
 
@@ -337,10 +240,6 @@ export const LoginDialog = () => {
               }
             }}
           />
-
-          <Typography variant="caption" color="text.secondary">
-            {t("layout.components.login.panelUrlHint")}
-          </Typography>
 
           {error && <Alert severity="error">{error}</Alert>}
 

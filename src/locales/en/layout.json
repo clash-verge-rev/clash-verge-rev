@@ -22,18 +22,17 @@
     },
     "login": {
       "title": "SSPanel Login",
-      "description": "Please sign in to your SSPanel account. The panel URL is fetched from Git URL API and decoded from Base64 automatically.",
+      "description": "Please sign in to your SSPanel account and enter the panel URL.",
       "email": "Email",
       "password": "Password",
-      "panelUrlHint": "Panel URL source: Git URL API (Base64 decoded). An accessible domain is selected automatically and cached for 24 hours.",
       "submit": "Sign in",
       "error": {
         "required": "Please fill in all login fields.",
-        "resolvePanelUrlFailed": "Failed to resolve panel URL. Please check Git URL API or network and try again.",
         "unknown": "Login failed, please try again later.",
         "loginFailed": "SSPanel login failed.",
         "userInfoFailed": "Failed to fetch user info."
-      }
+      },
+      "panelUrl": "Panel URL"
     }
   }
 }
