@@ -30,13 +30,13 @@ importers:
         specifier: ^4.7.0
         version: 4.7.0(monaco-editor@0.55.1)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@mui/icons-material':
-        specifier: ^7.3.7
+        specifier: ^7.3.8
         version: 7.3.8(@mui/material@7.3.8(@emotion/react@11.14.0(@types/react@19.2.14)(react@19.2.4))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.14)(react@19.2.4))(@types/react@19.2.14)(react@19.2.4))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(@types/react@19.2.14)(react@19.2.4)
       '@mui/lab':
         specifier: 7.0.0-beta.17
         version: 7.0.0-beta.17(@emotion/react@11.14.0(@types/react@19.2.14)(react@19.2.4))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.14)(react@19.2.4))(@types/react@19.2.14)(react@19.2.4))(@mui/material@7.3.8(@emotion/react@11.14.0(@types/react@19.2.14)(react@19.2.4))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.14)(react@19.2.4))(@types/react@19.2.14)(react@19.2.4))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@mui/material':
-        specifier: ^7.3.7
+        specifier: ^7.3.8
         version: 7.3.8(@emotion/react@11.14.0(@types/react@19.2.14)(react@19.2.4))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@19.2.14)(react@19.2.4))(@types/react@19.2.14)(react@19.2.4))(@types/react@19.2.14)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@tanstack/react-table':
         specifier: ^8.21.3
@@ -84,7 +84,7 @@ importers:
         specifier: ^5.2.1
         version: 5.2.1
       i18next:
-        specifier: ^25.8.4
+        specifier: ^25.8.13
         version: 25.8.13(typescript@5.9.3)
       ipaddr.js:
         specifier: ^2.3.0
@@ -99,7 +99,7 @@ importers:
         specifier: ^0.55.1
         version: 0.55.1
       monaco-yaml:
-        specifier: ^5.4.0
+        specifier: ^5.4.1
         version: 5.4.1(monaco-editor@0.55.1)
       nanoid:
         specifier: ^5.1.6
@@ -114,7 +114,7 @@ importers:
         specifier: 6.1.1
         version: 6.1.1(react@19.2.4)
       react-hook-form:
-        specifier: ^7.71.1
+        specifier: ^7.71.2
         version: 7.71.2(react@19.2.4)
       react-i18next:
         specifier: 16.5.4
@@ -145,7 +145,7 @@ importers:
         specifier: ^9.0.0
         version: 9.0.0
       '@eslint-react/eslint-plugin':
-        specifier: ^2.12.2
+        specifier: ^2.13.0
         version: 2.13.0(eslint@10.0.1(jiti@2.6.1))(typescript@5.9.3)
       '@eslint/js':
         specifier: ^10.0.1
@@ -160,7 +160,7 @@ importers:
         specifier: ^4.17.12
         version: 4.17.12
       '@types/node':
-        specifier: ^24.10.12
+        specifier: ^24.10.13
         version: 24.10.13
       '@types/react':
         specifier: 19.2.14
@@ -187,7 +187,7 @@ importers:
         specifier: ^10.1.0
         version: 10.1.0
       eslint:
-        specifier: ^10.0.0
+        specifier: ^10.0.1
         version: 10.0.1(jiti@2.6.1)
       eslint-config-prettier:
         specifier: ^10.1.8
@@ -211,10 +211,10 @@ importers:
         specifier: ^0.5.0
         version: 0.5.0(eslint@10.0.1(jiti@2.6.1))
       eslint-plugin-unused-imports:
-        specifier: ^4.3.0
+        specifier: ^4.4.1
         version: 4.4.1(@typescript-eslint/eslint-plugin@8.56.0(@typescript-eslint/parser@8.56.0(eslint@10.0.1(jiti@2.6.1))(typescript@5.9.3))(eslint@10.0.1(jiti@2.6.1))(typescript@5.9.3))(eslint@10.0.1(jiti@2.6.1))
       glob:
-        specifier: ^13.0.1
+        specifier: ^13.0.6
         version: 13.0.6
       globals:
         specifier: ^17.3.0
@@ -241,7 +241,7 @@ importers:
         specifier: ^1.97.3
         version: 1.97.3
       tar:
-        specifier: ^7.5.7
+        specifier: ^7.5.9
         version: 7.5.9
       terser:
         specifier: ^5.46.0
@@ -250,7 +250,7 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
       typescript-eslint:
-        specifier: ^8.54.0
+        specifier: ^8.56.0
         version: 8.56.0(eslint@10.0.1(jiti@2.6.1))(typescript@5.9.3)
       vite:
         specifier: ^7.3.1
