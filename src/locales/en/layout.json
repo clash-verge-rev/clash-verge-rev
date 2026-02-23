@@ -19,6 +19,20 @@
         "collapseNavBar": "Collapse navigation bar",
         "expandNavBar": "Expand navigation bar"
       }
+    },
+    "login": {
+      "title": "SSPanel Login",
+      "description": "Please sign in to your SSPanel account and enter the panel URL.",
+      "email": "Email",
+      "password": "Password",
+      "submit": "Sign in",
+      "error": {
+        "required": "Please fill in all login fields.",
+        "unknown": "Login failed, please try again later.",
+        "loginFailed": "SSPanel login failed.",
+        "userInfoFailed": "Failed to fetch user info."
+      },
+      "panelUrl": "Panel URL"
     }
   }
 }

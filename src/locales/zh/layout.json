@@ -19,6 +19,20 @@
         "collapseNavBar": "收起导航栏",
         "expandNavBar": "展开导航栏"
       }
+    },
+    "login": {
+      "title": "SSPanel 登录",
+      "description": "请登录您的 SSPanel 账号并填写面板地址。",
+      "email": "邮箱",
+      "password": "密码",
+      "submit": "登录",
+      "error": {
+        "required": "请完整填写登录信息。",
+        "unknown": "登录失败，请稍后重试。",
+        "loginFailed": "SSPanel 登录失败。",
+        "userInfoFailed": "获取用户信息失败。"
+      },
+      "panelUrl": "面板地址"
     }
   }
 }
