@@ -59,7 +59,7 @@
         "SRC-PORT": "匹配请求来源端口范围 (SRC-PORT)",
         "DST-PORT": "匹配请求目标端口范围 (DST-PORT)",
         "IN-PORT": "匹配入站端口 (IN-PORT)",
-        "DSCP": "DSCP 标记（仅限 TPROXY UDP 入站）(DSCP)",
+        "DSCP": "DSCP 标记（仅限 TPROXY UDP 入站） (DSCP)",
         "PROCESS-NAME": "匹配进程名称 (PROCESS-NAME)",
         "PROCESS-PATH": "匹配完整进程路径 (PROCESS-PATH)",
         "PROCESS-NAME-REGEX": "正则匹配完整进程名称 (PROCESS-NAME-REGEX)",
