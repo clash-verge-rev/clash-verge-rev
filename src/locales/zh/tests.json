@@ -32,7 +32,7 @@
       "completed": "检测完成",
       "disallowedIsp": "不允许的 ISP",
       "originalsOnly": "仅限原创",
-      "noDisney": "不支持（ IP 被 Disney+ 禁止）",
+      "noDisney": "不支持（IP 被 Disney+ 禁止）",
       "unsupportedRegion": "不支持的国家/地区",
       "failedNetwork": "测试失败（网络连接问题）"
     }
