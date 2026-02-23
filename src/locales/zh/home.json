@@ -31,13 +31,13 @@
       "status": {
         "systemProxyEnabled": "系统代理已启用，您的应用将通过代理访问网络",
         "systemProxyDisabled": "系统代理已关闭，建议大多数用户打开此选项",
-        "tunModeServiceRequired": "TUN模式需要服务模式，请先安装服务",
+        "tunModeServiceRequired": "TUN 模式需要服务模式，请先安装服务",
         "tunModeEnabled": "TUN 模式已启用，应用将通过虚拟网卡访问网络",
         "tunModeDisabled": "TUN 模式已关闭，适用于特殊应用"
       },
       "tooltips": {
         "systemProxy": "修改操作系统的代理设置，如果开启失败，可手动修改操作系统的代理设置",
-        "tunMode": "TUN模式可以接管所有应用流量，适用于特殊不遵循系统代理设置的应用"
+        "tunMode": "TUN 模式可以接管所有应用流量，适用于特殊不遵循系统代理设置的应用"
       }
     },
     "clashInfo": {
