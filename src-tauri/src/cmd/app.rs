@@ -1,17 +1,10 @@
 use super::CmdResult;
 use crate::core::sysopt::Sysopt;
 use crate::utils::resolve::ui::{self, UiReadyStage};
-use crate::{
-    cmd::StringifyErr as _,
-    feat,
-    utils::dirs::{self, PathBufExec as _},
-};
+use crate::{cmd::StringifyErr as _, feat, utils::dirs};
 use clash_verge_logging::{Type, logging};
 use smartstring::alias::String;
-use std::path::Path;
 use tauri::{AppHandle, Manager as _};
-use tokio::fs;
-use tokio::io::AsyncWriteExt as _;
 
 /// 打开应用程序所在目录
 #[tauri::command]
@@ -108,131 +101,13 @@ pub fn get_auto_launch_status() -> CmdResult<bool> {
 /// 下载图标缓存
 #[tauri::command]
 pub async fn download_icon_cache(url: String, name: String) -> CmdResult<String> {
-    let icon_cache_dir = dirs::app_home_dir().stringify_err()?.join("icons").join("cache");
-    let icon_path = icon_cache_dir.join(name.as_str());
-
-    if icon_path.exists() {
-        return Ok(icon_path.to_string_lossy().into());
-    }
-
-    if !icon_cache_dir.exists() {
-        let _ = fs::create_dir_all(&icon_cache_dir).await;
-    }
-
-    let temp_path = icon_cache_dir.join(format!("{}.downloading", name.as_str()));
-
-    let response = reqwest::get(url.as_str()).await.stringify_err()?;
-
-    let content_type = response
-        .headers()
-        .get(reqwest::header::CONTENT_TYPE)
-        .and_then(|v| v.to_str().ok())
-        .unwrap_or("");
-
-    let is_image = content_type.starts_with("image/");
-
-    let content = response.bytes().await.stringify_err()?;
-
-    let is_html = content.len() > 15
-        && (content.starts_with(b"<!DOCTYPE html") || content.starts_with(b"<html") || content.starts_with(b"<?xml"));
-
-    if is_image && !is_html {
-        {
-            let mut file = match fs::File::create(&temp_path).await {
-                Ok(file) => file,
-                Err(_) => {
-                    if icon_path.exists() {
-                        return Ok(icon_path.to_string_lossy().into());
-                    }
-                    return Err("Failed to create temporary file".into());
-                }
-            };
-            file.write_all(content.as_ref()).await.stringify_err()?;
-            file.flush().await.stringify_err()?;
-        }
-
-        if !icon_path.exists() {
-            match fs::rename(&temp_path, &icon_path).await {
-                Ok(_) => {}
-                Err(_) => {
-                    let _ = temp_path.remove_if_exists().await;
-                    if icon_path.exists() {
-                        return Ok(icon_path.to_string_lossy().into());
-                    }
-                }
-            }
-        } else {
-            let _ = temp_path.remove_if_exists().await;
-        }
-
-        Ok(icon_path.to_string_lossy().into())
-    } else {
-        let _ = temp_path.remove_if_exists().await;
-        Err(format!("下载的内容不是有效图片: {}", url.as_str()).into())
-    }
-}
-
-#[derive(Debug, serde::Serialize, serde::Deserialize)]
-pub struct IconInfo {
-    name: String,
-    previous_t: String,
-    current_t: String,
+    feat::download_icon_cache(url, name).await
 }
 
 /// 复制图标文件
 #[tauri::command]
-pub async fn copy_icon_file(path: String, icon_info: IconInfo) -> CmdResult<String> {
-    let file_path = Path::new(path.as_str());
-
-    let icon_dir = dirs::app_home_dir().stringify_err()?.join("icons");
-    if !icon_dir.exists() {
-        let _ = fs::create_dir_all(&icon_dir).await;
-    }
-    let ext: String = match file_path.extension() {
-        Some(e) => e.to_string_lossy().into(),
-        None => "ico".into(),
-    };
-
-    let dest_path = icon_dir.join(format!(
-        "{0}-{1}.{ext}",
-        icon_info.name.as_str(),
-        icon_info.current_t.as_str()
-    ));
-    if file_path.exists() {
-        if icon_info.previous_t.trim() != "" {
-            icon_dir
-                .join(format!(
-                    "{0}-{1}.png",
-                    icon_info.name.as_str(),
-                    icon_info.previous_t.as_str()
-                ))
-                .remove_if_exists()
-                .await
-                .unwrap_or_default();
-            icon_dir
-                .join(format!(
-                    "{0}-{1}.ico",
-                    icon_info.name.as_str(),
-                    icon_info.previous_t.as_str()
-                ))
-                .remove_if_exists()
-                .await
-                .unwrap_or_default();
-        }
-        logging!(
-            info,
-            Type::Cmd,
-            "Copying icon file path: {:?} -> file dist: {:?}",
-            path,
-            dest_path
-        );
-        match fs::copy(file_path, &dest_path).await {
-            Ok(_) => Ok(dest_path.to_string_lossy().into()),
-            Err(err) => Err(err.to_string().into()),
-        }
-    } else {
-        Err("file not found".into())
-    }
+pub async fn copy_icon_file(path: String, icon_info: feat::IconInfo) -> CmdResult<String> {
+    feat::copy_icon_file(path, icon_info).await
 }
 
 /// 通知UI已准备就绪
