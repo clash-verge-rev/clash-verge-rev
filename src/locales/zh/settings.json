@@ -177,10 +177,10 @@
         "tooltips": {
           "backupInfo": "支持本地或 WebDAV 方式备份配置文件",
           "openConfDir": "如果软件运行异常，!备份!并删除此文件夹下的所有文件，重启软件",
-          "liteMode": "关闭GUI界面，仅保留内核运行"
+          "liteMode": "关闭 GUI 界面，仅保留内核运行"
         },
         "actions": {
-          "copyVersion": "复制Verge版本号"
+          "copyVersion": "复制 Verge 版本号"
         },
         "notifications": {
           "latestVersion": "当前已是最新版本",
