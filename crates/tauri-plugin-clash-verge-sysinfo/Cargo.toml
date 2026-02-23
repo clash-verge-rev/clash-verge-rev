@@ -8,10 +8,12 @@ rust-version = "1.91"
 tauri = { workspace = true }
 tauri-plugin-clipboard-manager = { workspace = true }
 parking_lot = { workspace = true }
-sysinfo = { version = "0.38.0", features = ["network", "system"] }
+# sysinfo 0.38.2 conflicts with dark-light
+# see https://github.com/GuillaumeGomez/sysinfo/issues/1623
+sysinfo = { version = "0.38", features = ["network", "system"] }
 
 [target.'cfg(not(windows))'.dependencies]
-libc = "0.2.180"
+libc = "0.2.182"
 
 [target.'cfg(windows)'.dependencies]
 deelevate = { workspace = true }
