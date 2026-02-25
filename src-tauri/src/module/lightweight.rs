@@ -131,6 +131,15 @@ pub async fn exit_lightweight_mode() -> bool {
     }
     record_state_and_log(LightweightState::Exiting);
     WindowManager::show_main_window().await;
+    let enable_auto_light_weight_mode = Config::verge()
+        .await
+        .data_arc()
+        .enable_auto_light_weight_mode
+        .unwrap_or(false);
+    if enable_auto_light_weight_mode {
+        setup_window_close_listener();
+        setup_webview_focus_listener();
+    }
     let _ = cancel_light_weight_timer();
     record_state_and_log(LightweightState::Normal);
     refresh_lightweight_tray_state().await;
