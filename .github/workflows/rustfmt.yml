@@ -49,7 +49,7 @@ jobs:
   #       uses: dtolnay/rust-toolchain@stable
 
   #     - name: install taplo-cli
-  #       uses: taiki-e/install-action@v2
+  #       uses: taiki-e/install-action@v2.68.8
   #       with:
   #         tool: taplo-cli
 
