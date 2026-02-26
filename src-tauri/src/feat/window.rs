@@ -6,14 +6,12 @@ use crate::utils::window_manager::WindowManager;
 use clash_verge_logging::{Type, logging};
 use tokio::time::{Duration, timeout};
 
-/// Public API: open or close the dashboard
 pub async fn open_or_close_dashboard() {
-    open_or_close_dashboard_internal().await
-}
+    if lightweight::is_in_lightweight_mode() {
+        let _ = lightweight::exit_lightweight_mode().await;
+        return;
+    }
 
-/// Internal implementation for opening/closing dashboard
-async fn open_or_close_dashboard_internal() {
-    let _ = lightweight::exit_lightweight_mode().await;
     let result = WindowManager::toggle_main_window().await;
     logging!(info, Type::Window, "Window toggle result: {result:?}");
 }
