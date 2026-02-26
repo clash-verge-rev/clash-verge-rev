@@ -1,5 +1,4 @@
-import { useLockFn } from "ahooks";
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useRef } from "react";
 import {
   closeConnection,
   getConnections,
@@ -34,10 +33,19 @@ interface ProxySelectionOptions {
   enableConnectionCleanup?: boolean;
 }
 
+interface ProxyChangeRequest {
+  groupName: string;
+  proxyName: string;
+  previousProxy?: string;
+  skipConfigSave: boolean;
+}
+
 // 代理选择 Hook
 export const useProxySelection = (options: ProxySelectionOptions = {}) => {
   const { current, patchCurrent } = useProfiles();
   const { verge } = useVerge();
+  const pendingRequestRef = useRef<ProxyChangeRequest | null>(null);
+  const isProcessingRef = useRef(false);
 
   const { onSuccess, onError, enableConnectionCleanup = true } = options;
 
@@ -51,35 +59,45 @@ export const useProxySelection = (options: ProxySelectionOptions = {}) => {
   );
 
   // 切换节点
-  const changeProxy = useLockFn(
-    async (
-      groupName: string,
-      proxyName: string,
-      previousProxy?: string,
-      skipConfigSave: boolean = false,
-    ) => {
+  const syncTraySelection = useCallback(() => {
+    syncTrayProxySelection().catch((error) => {
+      console.error("[ProxySelection] 托盘状态同步失败:", error);
+    });
+  }, []);
+
+  const persistSelection = useCallback(
+    (groupName: string, proxyName: string, skipConfigSave: boolean) => {
+      if (!current || skipConfigSave) return;
+
+      const selected = current.selected ? [...current.selected] : [];
+      const index = selected.findIndex((item) => item.name === groupName);
+
+      if (index < 0) {
+        selected.push({ name: groupName, now: proxyName });
+      } else {
+        selected[index] = { name: groupName, now: proxyName };
+      }
+
+      patchCurrent({ selected }).catch((error) => {
+        console.error("[ProxySelection] 保存代理选择失败:", error);
+      });
+    },
+    [current, patchCurrent],
+  );
+
+  const executeChange = useCallback(
+    async (request: ProxyChangeRequest) => {
+      const { groupName, proxyName, previousProxy, skipConfigSave } = request;
       debugLog(`[ProxySelection] 代理切换: ${groupName} -> ${proxyName}`);
 
       try {
-        if (current && !skipConfigSave) {
-          const selected = current.selected ? [...current.selected] : [];
-          const index = selected.findIndex((item) => item.name === groupName);
-
-          if (index < 0) {
-            selected.push({ name: groupName, now: proxyName });
-          } else {
-            selected[index] = { name: groupName, now: proxyName };
-          }
-          await patchCurrent({ selected });
-        }
-
         await selectNodeForGroup(groupName, proxyName);
-        await syncTrayProxySelection();
+        onSuccess?.();
+        syncTraySelection();
+        persistSelection(groupName, proxyName, skipConfigSave);
         debugLog(
           `[ProxySelection] 代理和状态同步完成: ${groupName} -> ${proxyName}`,
         );
-
-        onSuccess?.();
 
         if (
           config.enableConnectionCleanup &&
@@ -96,8 +114,9 @@ export const useProxySelection = (options: ProxySelectionOptions = {}) => {
 
         try {
           await selectNodeForGroup(groupName, proxyName);
-          await syncTrayProxySelection();
           onSuccess?.();
+          syncTraySelection();
+          persistSelection(groupName, proxyName, skipConfigSave);
           debugLog(
             `[ProxySelection] 代理切换回退成功: ${groupName} -> ${proxyName}`,
           );
@@ -110,6 +129,43 @@ export const useProxySelection = (options: ProxySelectionOptions = {}) => {
         }
       }
     },
+    [config, onError, onSuccess, persistSelection, syncTraySelection],
+  );
+
+  const flushChangeQueue = useCallback(async () => {
+    if (isProcessingRef.current) return;
+    isProcessingRef.current = true;
+
+    try {
+      while (pendingRequestRef.current) {
+        const request = pendingRequestRef.current;
+        pendingRequestRef.current = null;
+        await executeChange(request);
+      }
+    } finally {
+      isProcessingRef.current = false;
+      if (pendingRequestRef.current) {
+        void flushChangeQueue();
+      }
+    }
+  }, [executeChange]);
+
+  const changeProxy = useCallback(
+    (
+      groupName: string,
+      proxyName: string,
+      previousProxy?: string,
+      skipConfigSave: boolean = false,
+    ) => {
+      pendingRequestRef.current = {
+        groupName,
+        proxyName,
+        previousProxy,
+        skipConfigSave,
+      };
+      void flushChangeQueue();
+    },
+    [flushChangeQueue],
   );
 
   const handleSelectChange = useCallback(
