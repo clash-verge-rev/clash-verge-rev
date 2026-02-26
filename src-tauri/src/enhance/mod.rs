@@ -393,7 +393,10 @@ async fn merge_default_config(
             });
             let patch_tun = value.as_mapping().cloned().unwrap_or_else(Mapping::new);
             for (key, value) in patch_tun.into_iter() {
-                tun.insert(key, value);
+                // Only set default values; don't override user Merge/subscription settings
+                if !tun.contains_key(&key) {
+                    tun.insert(key, value);
+                }
             }
             config.insert("tun".into(), tun.into());
         } else {
