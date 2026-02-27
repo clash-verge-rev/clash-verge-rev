@@ -14,3 +14,4 @@ scripts/_env.sh
 .changelog_backups
 target
 CLAUDE.md
+.vfox.toml

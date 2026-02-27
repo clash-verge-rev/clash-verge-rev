@@ -5,6 +5,7 @@
 - 修复 Windows 管理员身份运行时开关 TUN 模式异常
 - 修复静默启动与自动轻量模式存在冲突
 - 修复进入轻量模式后无法返回主界面
+- 切换配置文件偶尔失败的问题
 
 <details>
 <summary><strong> ✨ 新增功能 </strong></summary>
