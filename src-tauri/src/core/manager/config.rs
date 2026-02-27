@@ -90,7 +90,7 @@ impl CoreManager {
             }
             Err(err) => {
                 logging!(
-                    info,
+                    warn,
                     Type::Core,
                     "Failed to apply configuration by mihomo api, restart core to apply it, error msg: {err}"
                 );
