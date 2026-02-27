@@ -155,7 +155,7 @@ jobs:
         if: matrix.os == 'macos-latest' && github.event.inputs[matrix.input] == 'true'
         uses: actions/upload-artifact@v7
         with:
-          name: ${{ matrix.target }}
+          archive: false
           path: target/${{ matrix.target }}/release/bundle/dmg/*.dmg
           if-no-files-found: error
 
@@ -163,7 +163,7 @@ jobs:
         if: matrix.os == 'windows-latest' && github.event.inputs[matrix.input] == 'true'
         uses: actions/upload-artifact@v7
         with:
-          name: ${{ matrix.target }}
+          archive: false
           path: target/${{ matrix.target }}/release/bundle/nsis/*.exe
           if-no-files-found: error
 
@@ -171,6 +171,6 @@ jobs:
         if: matrix.os == 'ubuntu-22.04' && github.event.inputs[matrix.input] == 'true'
         uses: actions/upload-artifact@v7
         with:
-          name: ${{ matrix.target }}
+          archive: false
           path: target/${{ matrix.target }}/release/bundle/deb/*.deb
           if-no-files-found: error
