@@ -834,7 +834,12 @@ async fn create_tray_menu(
         ],
     )?;
 
-    let quit = &MenuItem::with_id(app_handle, MenuIds::EXIT, &texts.exit, true, Some("CmdOrControl+Q"))?;
+    let quit_accelerator = hotkeys.get("quit").map(|s| s.as_str());
+
+    #[cfg(target_os = "macos")]
+    let quit_accelerator = quit_accelerator.or(Some("Cmd+Q"));
+
+    let quit = &MenuItem::with_id(app_handle, MenuIds::EXIT, &texts.exit, true, quit_accelerator)?;
 
     let separator = &PredefinedMenuItem::separator(app_handle)?;
 
