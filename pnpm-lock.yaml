@@ -42,7 +42,7 @@ importers:
         specifier: ^8.21.3
         version: 8.21.3(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@tanstack/react-virtual':
-        specifier: ^3.13.18
+        specifier: ^3.13.19
         version: 3.13.19(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@tauri-apps/api':
         specifier: 2.10.1
@@ -72,16 +72,16 @@ importers:
         specifier: ^3.9.6
         version: 3.9.6(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       axios:
-        specifier: ^1.13.5
+        specifier: ^1.13.6
         version: 1.13.6
       dayjs:
         specifier: 1.11.19
         version: 1.11.19
       foxact:
-        specifier: ^0.2.52
+        specifier: ^0.2.54
         version: 0.2.54(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       foxts:
-        specifier: ^5.2.1
+        specifier: ^5.3.0
         version: 5.3.0
       i18next:
         specifier: ^25.8.13
@@ -123,7 +123,7 @@ importers:
         specifier: 10.1.0
         version: 10.1.0(@types/react@19.2.14)(react@19.2.4)
       react-router:
-        specifier: ^7.13.0
+        specifier: ^7.13.1
         version: 7.13.1(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       react-virtuoso:
         specifier: ^4.18.1
@@ -132,7 +132,7 @@ importers:
         specifier: ^7.0.0
         version: 7.0.0
       swr:
-        specifier: ^2.4.0
+        specifier: ^2.4.1
         version: 2.4.1(react@19.2.4)
       tauri-plugin-mihomo-api:
         specifier: github:clash-verge-rev/tauri-plugin-mihomo#main
@@ -160,7 +160,7 @@ importers:
         specifier: ^4.17.12
         version: 4.17.12
       '@types/node':
-        specifier: ^24.10.13
+        specifier: ^24.11.0
         version: 24.11.0
       '@types/react':
         specifier: 19.2.14
@@ -187,7 +187,7 @@ importers:
         specifier: ^10.1.0
         version: 10.1.0
       eslint:
-        specifier: ^10.0.1
+        specifier: ^10.0.2
         version: 10.0.2(jiti@2.6.1)
       eslint-config-prettier:
         specifier: ^10.1.8
@@ -208,7 +208,7 @@ importers:
         specifier: ^7.0.1
         version: 7.0.1(eslint@10.0.2(jiti@2.6.1))
       eslint-plugin-react-refresh:
-        specifier: ^0.5.0
+        specifier: ^0.5.2
         version: 0.5.2(eslint@10.0.2(jiti@2.6.1))
       eslint-plugin-unused-imports:
         specifier: ^4.4.1
@@ -217,7 +217,7 @@ importers:
         specifier: ^13.0.6
         version: 13.0.6
       globals:
-        specifier: ^17.3.0
+        specifier: ^17.4.0
         version: 17.4.0
       https-proxy-agent:
         specifier: ^7.0.6
@@ -229,7 +229,7 @@ importers:
         specifier: ^2.6.1
         version: 2.6.1
       lint-staged:
-        specifier: ^16.2.7
+        specifier: ^16.3.1
         version: 16.3.1
       node-fetch:
         specifier: ^3.3.2
@@ -250,7 +250,7 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
       typescript-eslint:
-        specifier: ^8.56.0
+        specifier: ^8.56.1
         version: 8.56.1(eslint@10.0.2(jiti@2.6.1))(typescript@5.9.3)
       vite:
         specifier: ^7.3.1
