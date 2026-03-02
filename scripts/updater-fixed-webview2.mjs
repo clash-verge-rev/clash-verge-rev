@@ -50,33 +50,33 @@ async function resolveUpdater() {
     const { name, browser_download_url } = asset;
 
     // win64 url
-    if (name.endsWith("x64_fixed_webview2-setup.nsis.zip")) {
+    if (name.endsWith("x64_fixed_webview2-setup.exe")) {
       updateData.platforms["windows-x86_64"].url = browser_download_url;
     }
     // win64 signature
-    if (name.endsWith("x64_fixed_webview2-setup.nsis.zip.sig")) {
+    if (name.endsWith("x64_fixed_webview2-setup.exe.sig")) {
       const sig = await getSignature(browser_download_url);
       updateData.platforms["windows-x86_64"].signature = sig;
     }
 
     // win32 url
-    if (name.endsWith("x86_fixed_webview2-setup.nsis.zip")) {
+    if (name.endsWith("x86_fixed_webview2-setup.exe")) {
       updateData.platforms["windows-x86"].url = browser_download_url;
       updateData.platforms["windows-i686"].url = browser_download_url;
     }
     // win32 signature
-    if (name.endsWith("x86_fixed_webview2-setup.nsis.zip.sig")) {
+    if (name.endsWith("x86_fixed_webview2-setup.exe.sig")) {
       const sig = await getSignature(browser_download_url);
       updateData.platforms["windows-x86"].signature = sig;
       updateData.platforms["windows-i686"].signature = sig;
     }
 
     // win arm url
-    if (name.endsWith("arm64_fixed_webview2-setup.nsis.zip")) {
+    if (name.endsWith("arm64_fixed_webview2-setup.exe")) {
       updateData.platforms["windows-aarch64"].url = browser_download_url;
     }
     // win arm signature
-    if (name.endsWith("arm64_fixed_webview2-setup.nsis.zip.sig")) {
+    if (name.endsWith("arm64_fixed_webview2-setup.exe.sig")) {
       const sig = await getSignature(browser_download_url);
       updateData.platforms["windows-aarch64"].signature = sig;
     }
