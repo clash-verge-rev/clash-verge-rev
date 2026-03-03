@@ -1,4 +1,5 @@
 use super::CmdResult;
+use crate::core::handle;
 use crate::core::sysopt::Sysopt;
 use crate::utils::resolve::ui::{self, UiReadyStage};
 use crate::{cmd::StringifyErr as _, feat, utils::dirs};
@@ -112,9 +113,14 @@ pub async fn copy_icon_file(path: String, icon_info: feat::IconInfo) -> CmdResul
 
 /// 通知UI已准备就绪
 #[tauri::command]
-pub fn notify_ui_ready() {
+pub async fn notify_ui_ready() {
     logging!(info, Type::Cmd, "前端UI已准备就绪");
     ui::mark_ui_ready();
+
+    handle::Handle::refresh_clash();
+    let delayed_refresh_delay = std::time::Duration::from_millis(1500);
+    tokio::time::sleep(delayed_refresh_delay).await;
+    handle::Handle::refresh_clash();
 }
 
 /// UI加载阶段
