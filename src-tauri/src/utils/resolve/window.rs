@@ -61,8 +61,8 @@ pub async fn build_new_window() -> Result<WebviewWindow, String> {
     )
     .title("Clash Verge")
     .center()
-    // Using WindowManager::prefer_system_titlebar to control if show system built-in titlebar
-    // .decorations(true)
+    // Default to custom titlebar; users can switch to system titlebar in settings.
+    .decorations(false)
     .fullscreen(false)
     .inner_size(DEFAULT_WIDTH, DEFAULT_HEIGHT)
     .min_inner_size(MINIMAL_WIDTH, MINIMAL_HEIGHT)
