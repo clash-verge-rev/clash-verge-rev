@@ -1,3 +1,4 @@
+pub mod autostart;
 pub mod backup;
 pub mod handle;
 pub mod hotkey;
