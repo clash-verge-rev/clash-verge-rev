@@ -1,6 +1,6 @@
 use crate::{
     config::{Config, IVerge},
-    core::{CoreManager, handle, hotkey, logger::Logger, sysopt, tray},
+    core::{CoreManager, autostart, handle, hotkey, logger::Logger, sysopt, tray},
     module::{auto_backup::AutoBackupManager, lightweight},
 };
 use anyhow::Result;
@@ -218,7 +218,7 @@ async fn process_terminated_flags(update_flags: UpdateFlags, patch: &IVerge) -> 
         handle::Handle::refresh_verge();
     }
     if update_flags.contains(UpdateFlags::LAUNCH) {
-        sysopt::Sysopt::global().update_launch().await?;
+        autostart::update_launch().await?;
     }
     if update_flags.contains(UpdateFlags::LANGUAGE)
         && let Some(language) = &patch.language
