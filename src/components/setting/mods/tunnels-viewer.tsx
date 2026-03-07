@@ -19,7 +19,12 @@ import { useClash } from "@/hooks/use-clash";
 import { useAppData } from "@/providers/app-data-context";
 import { isPortInUse } from "@/services/cmds";
 import { showNotice } from "@/services/notice-service";
-import { parseHost, parsedLocalhost, isValidPort } from "@/utils/helper";
+import {
+  formatHostPort,
+  isValidPort,
+  normalizeHost,
+  normalizeListenHost,
+} from "@/utils/network";
 
 interface TunnelsViewerRef {
   open: () => void;
@@ -127,8 +132,8 @@ export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
     }
 
     // 本地地址校验（host）
-    const parsedLocal = parsedLocalhost(localAddr);
-    if (!parsedLocal) {
+    const localHost = normalizeListenHost(localAddr);
+    if (!localHost) {
       showNotice.error(
         "settings.sections.clash.form.fields.tunnels.messages.invalidLocalAddr",
       );
@@ -151,8 +156,8 @@ export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
     }
 
     // 目标地址校验 (host)
-    const parsedTarget = parseHost(targetAddr);
-    if (!parsedTarget) {
+    const targetHost = normalizeHost(targetAddr);
+    if (!targetHost) {
       showNotice.error(
         "settings.sections.clash.form.fields.tunnels.messages.invalidTargetAddr",
       );
@@ -170,14 +175,8 @@ export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
     // 构造新 entry
     const entry: TunnelEntry = {
       network: network === "tcp+udp" ? ["tcp", "udp"] : [network],
-      address:
-        parsedLocal.kind === "ipv6"
-          ? `[${parsedLocal.host}]:${localPort}`
-          : `${parsedLocal.host}:${localPort}`,
-      target:
-        parsedTarget.kind === "ipv6"
-          ? `[${parsedTarget.host}]:${targetPort}`
-          : `${parsedTarget.host}:${targetPort}`,
+      address: formatHostPort(localHost, localPort),
+      target: formatHostPort(targetHost, targetPort),
       ...(proxy ? { proxy } : {}),
     };
 

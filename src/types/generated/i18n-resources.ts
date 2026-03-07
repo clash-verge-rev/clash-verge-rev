@@ -1024,6 +1024,8 @@ export interface TranslationResources {
           };
           messages: {
             applied: string;
+            invalidRouteExcludeAddress: string;
+            routeExcludeAddressHint: string;
           };
           title: string;
           tooltips: {
@@ -1318,10 +1320,10 @@ export interface TranslationResources {
         usedTotal: string;
       };
       placeholders: {
-        resetInput: string;
         filter: string;
         matchCase: string;
         matchWholeWord: string;
+        resetInput: string;
         useRegex: string;
       };
       statuses: {

@@ -23,6 +23,7 @@ import { useClash } from "@/hooks/use-clash";
 import { enhanceProfiles } from "@/services/cmds";
 import { showNotice } from "@/services/notice-service";
 import getSystem from "@/utils/get-system";
+import { areValidIpCidrs } from "@/utils/network";
 
 import { StackModeSwitch } from "./stack-mode-switch";
 
@@ -52,6 +53,17 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
     mtu: 1500,
   });
 
+  const routeExcludeAddressItems = splitRouteExcludeAddress(
+    values.routeExcludeAddress,
+  );
+  const routeExcludeAddressError =
+    values.autoRoute &&
+    routeExcludeAddressItems.length > 0 &&
+    !areValidIpCidrs(routeExcludeAddressItems);
+  const routeExcludeAddressHelperText = routeExcludeAddressError
+    ? t("settings.modals.tun.messages.invalidRouteExcludeAddress")
+    : t("settings.modals.tun.messages.routeExcludeAddressHint");
+
   useImperativeHandle(ref, () => ({
     open: () => {
       setOpen(true);
@@ -78,9 +90,15 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
 
   const onSave = useLockFn(async () => {
     try {
-      const routeExcludeAddress = splitRouteExcludeAddress(
-        values.routeExcludeAddress,
-      );
+      const routeExcludeAddress = routeExcludeAddressItems;
+
+      if (routeExcludeAddressError) {
+        showNotice.error(
+          "settings.modals.tun.messages.invalidRouteExcludeAddress",
+        );
+        return;
+      }
+
       const tun: IConfigData["tun"] = {
         stack: values.stack,
         device:
@@ -312,6 +330,8 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
           placeholder="192.168.0.0/16"
           ariaLabel={t("settings.modals.tun.fields.routeExcludeAddress")}
           disabled={!values.autoRoute}
+          error={routeExcludeAddressError}
+          helperText={routeExcludeAddressHelperText}
           onChange={(nextValue) =>
             setValues((v) => ({ ...v, routeExcludeAddress: nextValue }))
           }

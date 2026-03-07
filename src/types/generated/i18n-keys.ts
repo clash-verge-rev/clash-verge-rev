@@ -602,6 +602,8 @@ export const translationKeys = [
   "settings.modals.tun.tooltips.dnsHijack",
   "settings.modals.tun.tooltips.autoRedirect",
   "settings.modals.tun.messages.applied",
+  "settings.modals.tun.messages.invalidRouteExcludeAddress",
+  "settings.modals.tun.messages.routeExcludeAddressHint",
   "settings.modals.dns.dialog.title",
   "settings.modals.dns.dialog.warning",
   "settings.modals.dns.sections.general",

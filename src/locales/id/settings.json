@@ -481,7 +481,9 @@
         "autoRedirect": "Automatically configures nftables/iptables TCP redirects"
       },
       "messages": {
-        "applied": "Pengaturan Diterapkan"
+        "applied": "Pengaturan Diterapkan",
+        "invalidRouteExcludeAddress": "Masukkan blok CIDR yang valid",
+        "routeExcludeAddressHint": "Hanya CIDR IPv4/IPv6 yang didukung, seperti 192.168.0.0/16 atau fd00::/8"
       }
     },
     "dns": {

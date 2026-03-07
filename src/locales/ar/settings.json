@@ -481,7 +481,9 @@
         "autoRedirect": "Automatically configures nftables/iptables TCP redirects"
       },
       "messages": {
-        "applied": "تم تطبيق الإعدادات"
+        "applied": "تم تطبيق الإعدادات",
+        "invalidRouteExcludeAddress": "يرجى إدخال نطاق CIDR صالح",
+        "routeExcludeAddressHint": "يتم دعم CIDR لـ IPv4/IPv6 فقط، مثل 192.168.0.0/16 أو fd00::/8"
       }
     },
     "dns": {

@@ -481,7 +481,9 @@
         "autoRedirect": "自动配置 nftables/iptables 的 TCP 重定向"
       },
       "messages": {
-        "applied": "设置已应用"
+        "applied": "设置已应用",
+        "invalidRouteExcludeAddress": "请输入有效的 CIDR 网段",
+        "routeExcludeAddressHint": "仅支持 IPv4/IPv6 CIDR，例如 192.168.0.0/16 或 fd00::/8"
       }
     },
     "dns": {
