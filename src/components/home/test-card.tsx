@@ -70,7 +70,11 @@ const DEFAULT_TEST_LIST = [
 
 export const TestCard = () => {
   const { t } = useTranslation();
-  const sensors = useSensors(useSensor(PointerSensor));
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 8 },
+    }),
+  );
   const { verge, mutateVerge, patchVerge } = useVerge();
   const viewerRef = useRef<TestViewerRef>(null);
 

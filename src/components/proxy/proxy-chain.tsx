@@ -277,7 +277,9 @@ export const ProxyChain = ({
   }, [proxyChain.length, markUnsavedChanges]);
 
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 8 },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     }),
