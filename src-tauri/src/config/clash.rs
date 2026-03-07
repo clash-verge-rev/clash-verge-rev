@@ -55,9 +55,19 @@ impl IClashTemp {
         let mut cors_map = Mapping::new();
 
         tun_config.insert("enable".into(), false.into());
-        tun_config.insert("stack".into(), tun_const::DEFAULT_STACK.into());
+        // On macOS, use stack: mixed and strict-route: true to prevent DNS loop
+        // when TUN mode is enabled (see: https://github.com/clash-verge-rev/clash-verge-rev/issues/6375)
+        #[cfg(target_os = "macos")]
+        {
+            tun_config.insert("stack".into(), "mixed".into());
+            tun_config.insert("strict-route".into(), true.into());
+        }
+        #[cfg(not(target_os = "macos"))]
+        {
+            tun_config.insert("stack".into(), tun_const::DEFAULT_STACK.into());
+            tun_config.insert("strict-route".into(), false.into());
+        }
         tun_config.insert("auto-route".into(), true.into());
-        tun_config.insert("strict-route".into(), false.into());
         tun_config.insert("auto-detect-interface".into(), true.into());
         tun_config.insert("dns-hijack".into(), tun_const::DNS_HIJACK.into());
 

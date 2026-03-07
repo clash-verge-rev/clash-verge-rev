@@ -82,3 +82,53 @@ pub fn use_tun(mut config: Mapping, enable: bool) -> Mapping {
 
     config
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn use_tun_preserves_existing_settings() {
+        let config_str = r#"
+tun:
+  enable: false
+  stack: mixed
+  strict-route: true
+  auto-route: true
+  mtu: 9000
+"#;
+        let config: Mapping = serde_yaml_ng::from_str(config_str).unwrap();
+        let result = use_tun(config, true);
+
+        let tun = result.get("tun").unwrap().as_mapping().unwrap();
+        assert_eq!(tun.get("enable").unwrap().as_bool().unwrap(), true);
+        // Existing values should be preserved
+        assert_eq!(tun.get("stack").unwrap().as_str().unwrap(), "mixed");
+        assert_eq!(tun.get("strict-route").unwrap().as_bool().unwrap(), true);
+        assert_eq!(tun.get("mtu").unwrap().as_u64().unwrap(), 9000);
+    }
+
+    #[test]
+    fn use_tun_disable() {
+        let config_str = r#"
+tun:
+  enable: true
+  stack: gvisor
+  strict-route: false
+"#;
+        let config: Mapping = serde_yaml_ng::from_str(config_str).unwrap();
+        let result = use_tun(config, false);
+
+        let tun = result.get("tun").unwrap().as_mapping().unwrap();
+        assert_eq!(tun.get("enable").unwrap().as_bool().unwrap(), false);
+    }
+
+    #[test]
+    fn use_tun_creates_tun_section_if_missing() {
+        let config = Mapping::new();
+        let result = use_tun(config, true);
+
+        let tun = result.get("tun").unwrap().as_mapping().unwrap();
+        assert_eq!(tun.get("enable").unwrap().as_bool().unwrap(), true);
+    }
+}

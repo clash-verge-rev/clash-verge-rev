@@ -129,8 +129,10 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
             variant="outlined"
             size="small"
             onClick={async () => {
+              const defaultStack = OS === "macos" ? "mixed" : "gvisor";
+              const defaultStrictRoute = OS === "macos" ? true : false;
               const tun: IConfigData["tun"] = {
-                stack: "gvisor",
+                stack: defaultStack,
                 device: OS === "macos" ? "utun1024" : "Mihomo",
                 "auto-route": true,
                 ...(OS === "linux"
@@ -141,18 +143,18 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
                 "auto-detect-interface": true,
                 "dns-hijack": ["any:53"],
                 "route-exclude-address": [],
-                "strict-route": false,
+                "strict-route": defaultStrictRoute,
                 mtu: 1500,
               };
               setValues({
-                stack: "gvisor",
+                stack: defaultStack,
                 device: OS === "macos" ? "utun1024" : "Mihomo",
                 autoRoute: true,
                 routeExcludeAddress: "",
                 autoRedirect: false,
                 autoDetectInterface: true,
                 dnsHijack: ["any:53"],
-                strictRoute: false,
+                strictRoute: defaultStrictRoute,
                 mtu: 1500,
               });
               await patchClash({ tun });
