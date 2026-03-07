@@ -49,6 +49,7 @@ import { showNotice } from "@/services/notice-service";
 import { useThemeMode } from "@/services/states";
 import type { TranslationKey } from "@/types/generated/i18n-keys";
 import getSystem from "@/utils/get-system";
+import { isValidIpCidr } from "@/utils/helper";
 
 interface Props {
   groupsUid: string;
@@ -63,16 +64,6 @@ interface Props {
 const portValidator = (value: string): boolean => {
   return new RegExp(
     "^(?:[1-9]\\d{0,3}|[1-5]\\d{4}|6[0-4]\\d{3}|65[0-4]\\d{2}|655[0-2]\\d|6553[0-5])$",
-  ).test(value);
-};
-const ipv4CIDRValidator = (value: string): boolean => {
-  return new RegExp(
-    "^(?:(?:[1-9]?[0-9]|1[0-9][0-9]|2(?:[0-4][0-9]|5[0-5]))\\.){3}(?:[1-9]?[0-9]|1[0-9][0-9]|2(?:[0-4][0-9]|5[0-5]))(?:\\/(?:[12]?[0-9]|3[0-2]))$",
-  ).test(value);
-};
-const ipv6CIDRValidator = (value: string): boolean => {
-  return new RegExp(
-    "^([0-9a-fA-F]{1,4}(?::[0-9a-fA-F]{1,4}){7}|::|:(?::[0-9a-fA-F]{1,4}){1,6}|[0-9a-fA-F]{1,4}:(?::[0-9a-fA-F]{1,4}){1,5}|(?:[0-9a-fA-F]{1,4}:){2}(?::[0-9a-fA-F]{1,4}){1,4}|(?:[0-9a-fA-F]{1,4}:){3}(?::[0-9a-fA-F]{1,4}){1,3}|(?:[0-9a-fA-F]{1,4}:){4}(?::[0-9a-fA-F]{1,4}){1,2}|(?:[0-9a-fA-F]{1,4}:){5}:[0-9a-fA-F]{1,4}|(?:[0-9a-fA-F]{1,4}:){1,6}:)\\/(?:12[0-8]|1[01][0-9]|[1-9]?[0-9])$",
   ).test(value);
 };
 
@@ -127,29 +118,29 @@ const rules: {
     name: "IP-CIDR",
     example: "127.0.0.0/8",
     noResolve: true,
-    validator: (value) => ipv4CIDRValidator(value) || ipv6CIDRValidator(value),
+    validator: isValidIpCidr,
   },
   {
     name: "IP-CIDR6",
     example: "2620:0:2d0:200::7/32",
     noResolve: true,
-    validator: (value) => ipv4CIDRValidator(value) || ipv6CIDRValidator(value),
+    validator: isValidIpCidr,
   },
   {
     name: "SRC-IP-CIDR",
     example: "192.168.1.201/32",
-    validator: (value) => ipv4CIDRValidator(value) || ipv6CIDRValidator(value),
+    validator: isValidIpCidr,
   },
   {
     name: "IP-SUFFIX",
     example: "8.8.8.8/24",
     noResolve: true,
-    validator: (value) => ipv4CIDRValidator(value) || ipv6CIDRValidator(value),
+    validator: isValidIpCidr,
   },
   {
     name: "SRC-IP-SUFFIX",
     example: "192.168.1.201/8",
-    validator: (value) => ipv4CIDRValidator(value) || ipv6CIDRValidator(value),
+    validator: isValidIpCidr,
   },
   {
     name: "SRC-PORT",

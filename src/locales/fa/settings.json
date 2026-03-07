@@ -481,7 +481,9 @@
         "autoRedirect": "پیکربندی خودکار ریدایرکت‌های TCP در nftables/iptables"
       },
       "messages": {
-        "applied": "تنظیمات اعمال شد"
+        "applied": "تنظیمات اعمال شد",
+        "invalidRouteExcludeAddress": "لطفاً یک محدوده CIDR معتبر وارد کنید",
+        "routeExcludeAddressHint": "فقط CIDRهای IPv4/IPv6 پشتیبانی می‌شوند، مانند 192.168.0.0/16 یا fd00::/8"
       }
     },
     "dns": {

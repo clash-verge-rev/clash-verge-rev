@@ -481,7 +481,9 @@
         "autoRedirect": "Automatically configures nftables/iptables TCP redirects"
       },
       "messages": {
-        "applied": "Ayarlar Uygulandı"
+        "applied": "Ayarlar Uygulandı",
+        "invalidRouteExcludeAddress": "Lütfen geçerli bir CIDR bloğu girin",
+        "routeExcludeAddressHint": "Yalnızca IPv4/IPv6 CIDR blokları desteklenir; örneğin 192.168.0.0/16 veya fd00::/8"
       }
     },
     "dns": {

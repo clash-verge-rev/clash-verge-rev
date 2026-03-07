@@ -481,7 +481,9 @@
         "autoRedirect": "Automatically configures nftables/iptables TCP redirects"
       },
       "messages": {
-        "applied": "설정이 적용되었습니다"
+        "applied": "설정이 적용되었습니다",
+        "invalidRouteExcludeAddress": "유효한 CIDR 대역을 입력하세요",
+        "routeExcludeAddressHint": "IPv4/IPv6 CIDR만 지원합니다. 예: 192.168.0.0/16 또는 fd00::/8"
       }
     },
     "dns": {

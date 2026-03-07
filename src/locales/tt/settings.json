@@ -481,7 +481,9 @@
         "autoRedirect": "Automatically configures nftables/iptables TCP redirects"
       },
       "messages": {
-        "applied": "Көйләүләр кулланылды"
+        "applied": "Көйләүләр кулланылды",
+        "invalidRouteExcludeAddress": "Дөрес CIDR блогын кертегез",
+        "routeExcludeAddressHint": "IPv4/IPv6 CIDR блоклары гына хуплана, мәсәлән 192.168.0.0/16 яки fd00::/8"
       }
     },
     "dns": {

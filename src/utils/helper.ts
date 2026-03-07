@@ -110,3 +110,54 @@ export const parsedLocalhost = (host: string): ParsedHost | null => {
   // domain和都不符合则返回 null
   return null;
 };
+
+const CIDR_PATTERN = /^(.+)\/(\d+)$/;
+
+const isValidPrefixLength = (
+  value: string,
+  maxPrefixLength: number,
+): boolean => {
+  if (!/^(0|[1-9]\d*)$/.test(value)) {
+    return false;
+  }
+
+  const prefixLength = Number(value);
+  return prefixLength >= 0 && prefixLength <= maxPrefixLength;
+};
+
+export const isValidIpv4Cidr = (value: string): boolean => {
+  const match = value.trim().match(CIDR_PATTERN);
+  if (!match) {
+    return false;
+  }
+
+  const [, address, prefixLength] = match;
+
+  return (
+    ipaddr.IPv4.isValidFourPartDecimal(address) &&
+    isValidPrefixLength(prefixLength, 32)
+  );
+};
+
+export const isValidIpv6Cidr = (value: string): boolean => {
+  const match = value.trim().match(CIDR_PATTERN);
+  if (!match) {
+    return false;
+  }
+
+  const [, address, prefixLength] = match;
+
+  return (
+    !address.includes("%") &&
+    ipaddr.IPv6.isValid(address) &&
+    isValidPrefixLength(prefixLength, 128)
+  );
+};
+
+export const isValidIpCidr = (value: string): boolean => {
+  return isValidIpv4Cidr(value) || isValidIpv6Cidr(value);
+};
+
+export const areValidIpCidrs = (values: string[]): boolean => {
+  return values.every((value) => isValidIpCidr(value));
+};

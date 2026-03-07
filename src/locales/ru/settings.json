@@ -481,7 +481,9 @@
         "autoRedirect": "Automatically configures nftables/iptables TCP redirects"
       },
       "messages": {
-        "applied": "Настройки применены"
+        "applied": "Настройки применены",
+        "invalidRouteExcludeAddress": "Введите корректный блок CIDR",
+        "routeExcludeAddressHint": "Поддерживаются только блоки CIDR IPv4/IPv6, например 192.168.0.0/16 или fd00::/8"
       }
     },
     "dns": {
