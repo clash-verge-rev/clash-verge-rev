@@ -21,7 +21,7 @@ import {
   getWebdavStatus,
   setWebdavStatus,
 } from "@/services/webdav-status";
-import { isValidUrl } from "@/utils/helper";
+import { isValidUrl } from "@/utils/network";
 
 interface BackupConfigViewerProps {
   onBackupSuccess: () => Promise<void>;

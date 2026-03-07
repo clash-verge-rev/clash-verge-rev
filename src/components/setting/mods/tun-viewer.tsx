@@ -23,7 +23,7 @@ import { useClash } from "@/hooks/use-clash";
 import { enhanceProfiles } from "@/services/cmds";
 import { showNotice } from "@/services/notice-service";
 import getSystem from "@/utils/get-system";
-import { areValidIpCidrs } from "@/utils/helper";
+import { areValidIpCidrs } from "@/utils/network";
 
 import { StackModeSwitch } from "./stack-mode-switch";
 

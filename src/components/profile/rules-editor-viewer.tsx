@@ -49,7 +49,7 @@ import { showNotice } from "@/services/notice-service";
 import { useThemeMode } from "@/services/states";
 import type { TranslationKey } from "@/types/generated/i18n-keys";
 import getSystem from "@/utils/get-system";
-import { isValidIpCidr } from "@/utils/helper";
+import { isValidIpCidr } from "@/utils/network";
 
 interface Props {
   groupsUid: string;
