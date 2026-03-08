@@ -25,13 +25,21 @@ export const WindowProvider: React.FC<{ children: React.ReactNode }> = ({
 
   useEffect(() => {
     let isUnmounted = false;
+    let lastWidth = -1;
+    let lastHeight = -1;
 
-    const checkMaximized = debounce(async () => {
-      if (!isUnmounted) {
+    const checkMaximized = debounce(
+      async (event: { payload: { width: number; height: number } }) => {
+        if (isUnmounted) return;
+        const { width, height } = event.payload;
+        if (width === lastWidth && height === lastHeight) return;
+        lastWidth = width;
+        lastHeight = height;
         const value = await currentWindow.isMaximized();
         setMaximized(value);
-      }
-    }, 300);
+      },
+      300,
+    );
 
     const unlistenPromise = currentWindow.onResized(checkMaximized);
 
