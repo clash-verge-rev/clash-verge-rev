@@ -53,12 +53,12 @@ clash-verge-i18n = { path = "crates/clash-verge-i18n" }
 clash-verge-limiter = { path = "crates/clash-verge-limiter" }
 tauri-plugin-clash-verge-sysinfo = { path = "crates/tauri-plugin-clash-verge-sysinfo" }
 
-tauri = { version = "2.10.2" }
+tauri = { version = "2.10.3" }
 tauri-plugin-clipboard-manager = "2.3.2"
 parking_lot = { version = "0.12.5", features = ["hardware-lock-elision"] }
 anyhow = "1.0.102"
 criterion = { version = "0.8.2", features = ["async_tokio"] }
-tokio = { version = "1.49.0", features = [
+tokio = { version = "1.50.0", features = [
   "rt-multi-thread",
   "macros",
   "time",
@@ -78,10 +78,6 @@ bitflags = { version = "2.11.0" }
 # *** For Windows platform only ***
 deelevate = "0.2.0"
 # *********************************
-
-[patch.crates-io]
-# Patches until https://github.com/tauri-apps/tao/pull/1167 is merged.
-tao = { git = "https://github.com/tauri-apps/tao" }
 
 [workspace.lints.clippy]
 correctness = { level = "deny", priority = -1 }
