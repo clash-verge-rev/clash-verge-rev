@@ -1238,7 +1238,7 @@ dependencies = [
 [[package]]
 name = "clash_verge_service_ipc"
 version = "2.1.3"
-source = "git+https://github.com/clash-verge-rev/clash-verge-service-ipc#cab4c9b64a980c701ec296b7bc6eb1ec3403f4d8"
+source = "git+https://github.com/clash-verge-rev/clash-verge-service-ipc#5b283382cf92e0e56966fcb043f6a3a39335a7cb"
 dependencies = [
  "anyhow",
  "compact_str",
@@ -3958,9 +3958,9 @@ checksum = "2c4a545a15244c7d945065b5d392b2d2d7f21526fba56ce51467b06ed445e8f7"
 
 [[package]]
 name = "libc"
-version = "0.2.182"
+version = "0.2.183"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6800badb6cb2082ffd7b6a67e6125bb39f18782f793520caee8cb8846be06112"
+checksum = "b5b646652bf6661599e1da8901b3b9522896f01e736bad5f723fe7a3a27f899d"
 
 [[package]]
 name = "libloading"
