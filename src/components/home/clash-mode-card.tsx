@@ -4,14 +4,14 @@ import {
   MultipleStopRounded,
 } from "@mui/icons-material";
 import { Box, Paper, Stack, Typography } from "@mui/material";
-import { useLockFn } from "ahooks";
-import { useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { closeAllConnections } from "tauri-plugin-mihomo-api";
 
 import { useVerge } from "@/hooks/use-verge";
 import { useAppData } from "@/providers/app-data-context";
 import { patchClashMode } from "@/services/cmds";
+import { showNotice } from "@/services/notice-service";
 import type { TranslationKey } from "@/types/generated/i18n-keys";
 
 const CLASH_MODES = ["rule", "global", "direct"] as const;
@@ -53,6 +53,8 @@ export const ClashModeCard = () => {
       ? currentMode
       : undefined;
 
+  const [switching, setSwitching] = useState(false);
+
   const modeDescription = useMemo(() => {
     if (currentModeKey) {
       return t(MODE_META[currentModeKey].description);
@@ -71,24 +73,34 @@ export const ClashModeCard = () => {
   );
 
   // 切换模式的处理函数
-  const onChangeMode = useLockFn(async (mode: ClashMode) => {
-    if (mode === currentModeKey) return;
-    if (verge?.auto_close_connection) {
-      closeAllConnections();
-    }
+  const onChangeMode = useCallback(
+    async (mode: ClashMode) => {
+      if (switching) return;
+      if (mode === currentModeKey) return;
 
-    try {
-      await patchClashMode(mode);
-      // 使用共享的刷新方法
-      refreshClashConfig();
-    } catch (error) {
-      console.error("Failed to change mode:", error);
-    }
-  });
+      setSwitching(true);
+
+      if (verge?.auto_close_connection) {
+        closeAllConnections();
+      }
+
+      try {
+        await patchClashMode(mode);
+        await refreshClashConfig();
+      } catch (error) {
+        console.error("Failed to change mode:", error);
+        showNotice.error(error);
+      } finally {
+        setSwitching(false);
+      }
+    },
+    [currentModeKey, switching, verge, refreshClashConfig],
+  );
 
   // 按钮样式
   const buttonStyles = (mode: ClashMode) => ({
-    cursor: "pointer",
+    cursor: switching ? "not-allowed" : "pointer",
+    pointerEvents: switching ? "none" : "auto",
     px: 2,
     py: 1.2,
     display: "flex",
@@ -97,8 +109,8 @@ export const ClashModeCard = () => {
     gap: 1,
     bgcolor: mode === currentModeKey ? "primary.main" : "background.paper",
     color: mode === currentModeKey ? "primary.contrastText" : "text.primary",
+    opacity: switching ? 0.5 : 1,
     borderRadius: 1.5,
-    transition: "all 0.2s ease-in-out",
     position: "relative",
     overflow: "visible",
     "&:hover": {

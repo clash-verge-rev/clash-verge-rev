@@ -5,6 +5,7 @@ use crate::{
     process::AsyncHandler,
     utils::{self, resolve::reset_resolve_done},
 };
+use anyhow::Result;
 use clash_verge_logging::{Type, logging, logging_error};
 use serde_yaml_ng::{Mapping, Value};
 use smartstring::alias::String;
@@ -67,7 +68,7 @@ fn after_change_clash_mode() {
 }
 
 /// Change Clash mode (rule/global/direct/script)
-pub async fn change_clash_mode(mode: String) {
+pub async fn change_clash_mode(mode: String) -> Result<()> {
     let mut mapping = Mapping::new();
     mapping.insert(Value::from("mode"), Value::from(mode.as_str()));
     // Convert YAML mapping to JSON Value
@@ -75,31 +76,33 @@ pub async fn change_clash_mode(mode: String) {
         "mode": mode
     });
     logging!(debug, Type::Core, "change clash mode to {mode}");
-    match handle::Handle::mihomo().await.patch_base_config(&json_value).await {
-        Ok(_) => {
-            // 更新订阅
-            Config::clash().await.edit_draft(|d| d.patch_config(&mapping));
+    handle::Handle::mihomo()
+        .await
+        .patch_base_config(&json_value)
+        .await?;
 
-            // 分离数据获取和异步调用
-            let clash_data = Config::clash().await.data_arc();
-            if clash_data.save_config().await.is_ok() {
-                handle::Handle::refresh_clash();
-                logging_error!(Type::Tray, tray::Tray::global().update_menu().await);
-                logging_error!(
-                    Type::Tray,
-                    tray::Tray::global()
-                        .update_icon(&Config::verge().await.data_arc())
-                        .await
-                );
-            }
+    // 更新订阅
+    Config::clash().await.edit_draft(|d| d.patch_config(&mapping));
 
-            let is_auto_close_connection = Config::verge().await.data_arc().auto_close_connection.unwrap_or(false);
-            if is_auto_close_connection {
-                after_change_clash_mode();
-            }
-        }
-        Err(err) => logging!(error, Type::Core, "{err}"),
+    // 分离数据获取和异步调用
+    let clash_data = Config::clash().await.data_arc();
+    if clash_data.save_config().await.is_ok() {
+        handle::Handle::refresh_clash();
+        logging_error!(Type::Tray, tray::Tray::global().update_menu().await);
+        logging_error!(
+            Type::Tray,
+            tray::Tray::global()
+                .update_icon(&Config::verge().await.data_arc())
+                .await
+        );
     }
+
+    let is_auto_close_connection = Config::verge().await.data_arc().auto_close_connection.unwrap_or(false);
+    if is_auto_close_connection {
+        after_change_clash_mode();
+    }
+
+    Ok(())
 }
 
 /// Test connection delay to a URL

@@ -16,6 +16,7 @@ import {
   updateProxyChainConfigInRuntime,
 } from "@/services/cmds";
 import { debugLog } from "@/utils/debug";
+import { showNotice } from "@/services/notice-service";
 
 const MODES = ["rule", "global", "direct"] as const;
 type Mode = (typeof MODES)[number];
@@ -53,14 +54,32 @@ const ProxyPage = () => {
   const normalizedMode = clashConfig?.mode?.toLowerCase();
   const curMode = isMode(normalizedMode) ? normalizedMode : undefined;
 
-  const onChangeMode = useLockFn(async (mode: Mode) => {
-    // 断开连接
-    if (mode !== curMode && verge?.auto_close_connection) {
-      closeAllConnections();
-    }
-    await patchClashMode(mode);
-    refreshClashConfig();
-  });
+  const [switching, setSwitching] = useState(false);
+
+  // 切换模式时显式禁用按钮，避免 IPC 期间后续点击被静默吞掉
+  const onChangeMode = useCallback(
+    async (mode: Mode) => {
+      if (switching) return;
+      if (mode === curMode) return;
+
+      setSwitching(true);
+
+      if (mode !== curMode && verge?.auto_close_connection) {
+        closeAllConnections();
+      }
+
+      try {
+        await patchClashMode(mode);
+        await refreshClashConfig();
+      } catch (error) {
+        console.error("Failed to change mode:", error);
+        showNotice.error(error);
+      } finally {
+        setSwitching(false);
+      }
+    },
+    [curMode, switching, verge, refreshClashConfig],
+  );
 
   const onToggleChainMode = useLockFn(async () => {
     const newChainMode = !isChainMode;
@@ -146,6 +165,7 @@ const ProxyPage = () => {
                 key={mode}
                 variant={mode === curMode ? "contained" : "outlined"}
                 onClick={() => onChangeMode(mode)}
+                disabled={switching}
                 sx={{ textTransform: "capitalize" }}
               >
                 {t(`proxies.page.modes.${mode}`)}

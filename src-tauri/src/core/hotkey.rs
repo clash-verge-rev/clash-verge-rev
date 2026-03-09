@@ -117,19 +117,28 @@ impl Hotkey {
             }
             HotkeyFunction::ClashModeRule => {
                 AsyncHandler::spawn(async move || {
-                    feat::change_clash_mode("rule".into()).await;
+                    if let Err(err) = feat::change_clash_mode("rule".into()).await {
+                        logging!(error, Type::Hotkey, "Failed to switch clash mode to rule: {}", err);
+                        return;
+                    }
                     notify_event(NotificationEvent::ClashModeChanged { mode: "Rule" }).await;
                 });
             }
             HotkeyFunction::ClashModeGlobal => {
                 AsyncHandler::spawn(async move || {
-                    feat::change_clash_mode("global".into()).await;
+                    if let Err(err) = feat::change_clash_mode("global".into()).await {
+                        logging!(error, Type::Hotkey, "Failed to switch clash mode to global: {}", err);
+                        return;
+                    }
                     notify_event(NotificationEvent::ClashModeChanged { mode: "Global" }).await;
                 });
             }
             HotkeyFunction::ClashModeDirect => {
                 AsyncHandler::spawn(async move || {
-                    feat::change_clash_mode("direct".into()).await;
+                    if let Err(err) = feat::change_clash_mode("direct".into()).await {
+                        logging!(error, Type::Hotkey, "Failed to switch clash mode to direct: {}", err);
+                        return;
+                    }
                     notify_event(NotificationEvent::ClashModeChanged { mode: "Direct" }).await;
                 });
             }

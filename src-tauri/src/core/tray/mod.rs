@@ -945,7 +945,9 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
                     && let Some(final_mode) = stripped.strip_suffix("_mode")
                 {
                     logging!(info, Type::ProxyMode, "Switch Proxy Mode To: {}", final_mode);
-                    feat::change_clash_mode(final_mode.into()).await;
+                    if let Err(err) = feat::change_clash_mode(final_mode.into()).await {
+                        logging!(error, Type::Tray, "Failed to switch proxy mode from tray: {err}");
+                    }
                 }
             }
             MenuIds::DASHBOARD => {

@@ -35,8 +35,7 @@ pub async fn patch_clash_config(payload: Mapping) -> CmdResult {
 /// 修改Clash模式
 #[tauri::command]
 pub async fn patch_clash_mode(payload: String) -> CmdResult {
-    feat::change_clash_mode(payload).await;
-    Ok(())
+    feat::change_clash_mode(payload).await.stringify_err()
 }
 
 /// 切换Clash核心
