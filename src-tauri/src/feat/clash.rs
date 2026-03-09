@@ -9,6 +9,10 @@ use anyhow::Result;
 use clash_verge_logging::{Type, logging, logging_error};
 use serde_yaml_ng::{Mapping, Value};
 use smartstring::alias::String;
+use tauri_plugin_mihomo::Error as MihomoError;
+use tokio::time::{Duration, sleep};
+
+const MODE_SWITCH_RETRY_DELAYS_MS: [u64; 4] = [125, 250, 500, 1000];
 
 /// Restart the Clash core
 pub async fn restart_clash_core() {
@@ -67,6 +71,51 @@ fn after_change_clash_mode() {
     });
 }
 
+fn is_transient_mode_switch_error(err: &MihomoError) -> bool {
+    match err {
+        MihomoError::Io(io_err) => matches!(
+            io_err.kind(),
+            std::io::ErrorKind::ConnectionAborted
+                | std::io::ErrorKind::ConnectionRefused
+                | std::io::ErrorKind::ConnectionReset
+                | std::io::ErrorKind::NotFound
+                | std::io::ErrorKind::TimedOut
+        ),
+        MihomoError::Reqwest(req_err) => req_err.is_connect() || req_err.is_timeout() || req_err.is_request(),
+        MihomoError::FailedResponse(msg) => {
+            let msg = msg.to_ascii_lowercase();
+            ["connection", "pipe", "timed out", "timeout", "localhost"]
+                .iter()
+                .any(|pattern| msg.contains(pattern))
+        }
+        _ => false,
+    }
+}
+
+async fn patch_base_config_with_retry(json_value: &serde_json::Value) -> Result<(), MihomoError> {
+    let total_attempts = MODE_SWITCH_RETRY_DELAYS_MS.len() + 1;
+
+    for (attempt_idx, retry_delay_ms) in MODE_SWITCH_RETRY_DELAYS_MS.iter().copied().enumerate() {
+        let attempt = attempt_idx + 1;
+        let result = handle::Handle::mihomo().await.patch_base_config(json_value).await;
+
+        match result {
+            Ok(()) => return Ok(()),
+            Err(err) if is_transient_mode_switch_error(&err) => {
+                logging!(
+                    warn,
+                    Type::Core,
+                    "change clash mode request failed on attempt {attempt}/{total_attempts}: {err}; retrying in {retry_delay_ms}ms"
+                );
+                sleep(Duration::from_millis(retry_delay_ms)).await;
+            }
+            Err(err) => return Err(err),
+        }
+    }
+
+    handle::Handle::mihomo().await.patch_base_config(json_value).await
+}
+
 /// Change Clash mode (rule/global/direct/script)
 pub async fn change_clash_mode(mode: String) -> Result<()> {
     let mut mapping = Mapping::new();
@@ -76,10 +125,7 @@ pub async fn change_clash_mode(mode: String) -> Result<()> {
         "mode": mode
     });
     logging!(debug, Type::Core, "change clash mode to {mode}");
-    handle::Handle::mihomo()
-        .await
-        .patch_base_config(&json_value)
-        .await?;
+    patch_base_config_with_retry(&json_value).await?;
 
     // 更新订阅
     Config::clash().await.edit_draft(|d| d.patch_config(&mapping));
