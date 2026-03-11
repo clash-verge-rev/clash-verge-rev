@@ -240,7 +240,8 @@
           "systemProxyTrayIcon": "Icono de bandeja del proxy del sistema",
           "tunTrayIcon": "Icono de bandeja del modo TUN",
           "enableTrayIcon": "Habilitar icono de la bandeja",
-          "enableTraySpeed": "Habilitar velocidad en la bandeja"
+          "enableTraySpeed": "Habilitar velocidad en la bandeja",
+          "pauseRenderTrafficStatsOnBlur": "Pause rendering traffic statistics when blurred"
         },
         "tooltips": {
           "hoverNavigator": "Automatically scroll to the corresponding proxy group when hovering over alphabet letters",

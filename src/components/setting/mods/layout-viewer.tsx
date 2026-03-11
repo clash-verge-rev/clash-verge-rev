@@ -191,6 +191,24 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
 
         <Item>
           <ListItemText
+            primary={t(
+              "settings.components.verge.layout.fields.pauseRenderTrafficStatsOnBlur",
+            )}
+          />
+          <GuardState
+            value={verge?.pause_render_traffic_stats_on_blur ?? true}
+            valueProps="checked"
+            onCatch={onError}
+            onFormat={onSwitchFormat}
+            onChange={(e) => onChangeData({ pause_render_traffic_stats_on_blur: e })}
+            onGuard={(e) => patchVerge({ pause_render_traffic_stats_on_blur: e })}
+          >
+            <Switch edge="end" />
+          </GuardState>
+        </Item>
+
+        <Item>
+          <ListItemText
             primary={t("settings.components.verge.layout.fields.toastPosition")}
           />
           <GuardState

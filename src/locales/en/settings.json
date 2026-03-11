@@ -240,7 +240,8 @@
           "systemProxyTrayIcon": "System Proxy Tray Icon",
           "tunTrayIcon": "Tun Tray Icon",
           "enableTrayIcon": "Enable Tray Icon",
-          "enableTraySpeed": "Enable Tray Speed"
+          "enableTraySpeed": "Enable Tray Speed",
+          "pauseRenderTrafficStatsOnBlur": "Pause rendering traffic statistics when blurred"
         },
         "tooltips": {
           "hoverNavigator": "Automatically scroll to the corresponding proxy group when hovering over alphabet letters",
