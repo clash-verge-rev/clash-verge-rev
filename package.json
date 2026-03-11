@@ -76,7 +76,7 @@
     "react-virtuoso": "^4.18.3",
     "rehype-raw": "^7.0.0",
     "swr": "^2.4.1",
-    "tauri-plugin-mihomo-api": "github:clash-verge-rev/tauri-plugin-mihomo#main",
+    "tauri-plugin-mihomo-api": "github:clash-verge-rev/tauri-plugin-mihomo#revert",
     "types-pac": "^1.0.3",
     "validator": "^13.15.26"
   },
