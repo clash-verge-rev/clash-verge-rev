@@ -49,6 +49,9 @@ pub struct IVerge {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub enable_group_icon: Option<bool>,
 
+    /// pause render traffic stats on blur
+    pub pause_render_traffic_stats_on_blur: Option<bool>,
+
     /// common tray icon
     #[serde(skip_serializing_if = "Option::is_none")]
     pub common_tray_icon: Option<bool>,
@@ -391,6 +394,7 @@ impl IVerge {
             traffic_graph: Some(true),
             enable_memory_usage: Some(true),
             enable_group_icon: Some(true),
+            pause_render_traffic_stats_on_blur: Some(true),
             #[cfg(target_os = "macos")]
             tray_icon: Some("monochrome".into()),
             menu_icon: Some("monochrome".into()),
@@ -478,6 +482,7 @@ impl IVerge {
         patch!(traffic_graph);
         patch!(enable_memory_usage);
         patch!(enable_group_icon);
+        patch!(pause_render_traffic_stats_on_blur);
         #[cfg(target_os = "macos")]
         patch!(tray_icon);
         patch!(menu_icon);

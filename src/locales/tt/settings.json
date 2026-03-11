@@ -240,7 +240,8 @@
           "systemProxyTrayIcon": "Системалы прокси иконкасы",
           "tunTrayIcon": "Tun (виртуаль адаптер) иконкасы",
           "enableTrayIcon": "Enable Tray Icon",
-          "enableTraySpeed": "Трей скоростьне үстерү"
+          "enableTraySpeed": "Трей скоростьне үстерү",
+          "pauseRenderTrafficStatsOnBlur": "Pause rendering traffic statistics when blurred"
         },
         "tooltips": {
           "hoverNavigator": "Automatically scroll to the corresponding proxy group when hovering over alphabet letters",
