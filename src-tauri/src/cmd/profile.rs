@@ -12,7 +12,6 @@ use crate::{
     },
     core::{CoreManager, handle, timer::Timer, tray::Tray},
     feat,
-    module::auto_backup::{AutoBackupManager, AutoBackupTrigger},
     process::AsyncHandler,
     utils::{dirs, help},
 };
@@ -108,7 +107,6 @@ pub async fn import_profile(url: std::string::String, option: Option<PrfOption>)
     }
 
     logging!(info, Type::Cmd, "[导入订阅] 导入完成: {}", help::mask_url(&url));
-    AutoBackupManager::trigger_backup(AutoBackupTrigger::ProfileChange);
     Ok(())
 }
 
@@ -141,7 +139,6 @@ pub async fn create_profile(item: PrfItem, file_data: Option<String>) -> CmdResu
                 handle::Handle::notify_profile_changed(uid);
             }
             Config::profiles().await.apply();
-            AutoBackupManager::trigger_backup(AutoBackupTrigger::ProfileChange);
             Ok(())
         }
         Err(err) => {
@@ -184,7 +181,6 @@ pub async fn delete_profile(index: String) -> CmdResult {
                 // 发送配置变更通知
                 logging!(info, Type::Cmd, "[删除订阅] 发送配置变更通知: {}", index);
                 handle::Handle::notify_profile_changed(&index);
-                AutoBackupManager::trigger_backup(AutoBackupTrigger::ProfileChange);
             }
             Err(e) => {
                 logging!(error, Type::Cmd, "{}", e);
@@ -438,7 +434,6 @@ pub async fn patch_profile(index: String, profile: PrfItem) -> CmdResult {
         });
     }
 
-    AutoBackupManager::trigger_backup(AutoBackupTrigger::ProfileChange);
     Ok(())
 }
 
