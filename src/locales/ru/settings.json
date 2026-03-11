@@ -240,7 +240,8 @@
           "systemProxyTrayIcon": "Значок системного прокси в трее",
           "tunTrayIcon": "Значок TUN в трее",
           "enableTrayIcon": "Показывать значок в трее",
-          "enableTraySpeed": "Показывать скорость в трее"
+          "enableTraySpeed": "Показывать скорость в трее",
+          "pauseRenderTrafficStatsOnBlur": "Pause rendering traffic statistics when blurred"
         },
         "tooltips": {
           "hoverNavigator": "Automatically scroll to the corresponding proxy group when hovering over alphabet letters",
