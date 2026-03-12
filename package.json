@@ -108,7 +108,7 @@
     "eslint-plugin-unused-imports": "^4.4.1",
     "glob": "^13.0.6",
     "globals": "^17.4.0",
-    "https-proxy-agent": "^7.0.6",
+    "https-proxy-agent": "^8.0.0",
     "husky": "^9.1.7",
     "jiti": "^2.6.1",
     "lint-staged": "^16.3.2",
