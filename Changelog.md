@@ -11,6 +11,8 @@
 <details>
 <summary><strong> ✨ 新增功能 </strong></summary>
 
+- 恢复并重构托盘显示速率功能（支持通过设置开关启停）
+
 </details>
 
 <details>
