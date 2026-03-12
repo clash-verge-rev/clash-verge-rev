@@ -91,7 +91,7 @@
     "@types/react": "19.2.14",
     "@types/react-dom": "19.2.3",
     "@types/validator": "^13.15.10",
-    "@vitejs/plugin-legacy": "^7.2.1",
+    "@vitejs/plugin-legacy": "^8.0.0",
     "@vitejs/plugin-react-swc": "^4.2.3",
     "adm-zip": "^0.5.16",
     "cli-color": "^2.0.4",
@@ -119,7 +119,7 @@
     "terser": "^5.46.0",
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.56.1",
-    "vite": "^7.3.1",
+    "vite": "^8.0.0",
     "vite-plugin-svgr": "^4.5.0"
   },
   "lint-staged": {
