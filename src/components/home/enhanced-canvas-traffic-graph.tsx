@@ -246,7 +246,7 @@ export const EnhancedCanvasTrafficGraph = memo(
           resumeCooldownRef.current = 0;
         }
       },
-      [setIsWindowFocused, setCurrentFPS],
+      [setIsWindowFocused, setCurrentFPS, pause_render_traffic_stats_on_blur],
     );
 
     useEffect(() => {
@@ -1062,7 +1062,8 @@ export const EnhancedCanvasTrafficGraph = memo(
     }, [
       drawGraph,
       displayData.length,
-      isWindowFocused || !pause_render_traffic_stats_on_blur,
+      isWindowFocused,
+      pause_render_traffic_stats_on_blur,
       collectFrameSample,
     ]);
 
