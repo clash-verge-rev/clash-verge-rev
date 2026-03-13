@@ -5,34 +5,40 @@ import cssWorker from "monaco-editor/esm/vs/language/css/css.worker?worker";
 import tsWorker from "monaco-editor/esm/vs/language/typescript/ts.worker?worker";
 import yamlWorker from "monaco-yaml/yaml.worker?worker";
 
-if (typeof self !== "undefined") {
+type WorkerConstructor = new () => Worker;
+
+// Ensure monaco loader uses the bundled ESM instance instead of CDN.
+loader.config({ monaco });
+
+// Align with the former plugin mapping so Monaco can resolve its background workers.
+const workerConstructors: Record<string, WorkerConstructor> = {
+  editorWorkerService: editorWorker,
+  typescript: tsWorker,
+  javascript: tsWorker,
+  "languages.typescript": tsWorker,
+  css: cssWorker,
+  less: cssWorker,
+  scss: cssWorker,
+  "languages.css": cssWorker,
+  yaml: yamlWorker,
+};
+
+const defaultWorker = workerConstructors.editorWorkerService;
+
+if (typeof window !== "undefined") {
   const globalScope = self as typeof self & {
     MonacoEnvironment?: {
-      getWorker: (workerId: string, label: string) => Worker;
+      getWorker: (moduleId: string, label: string) => Worker;
     };
   };
 
+  const getWorker = (_moduleId: string, label: string) => {
+    const WorkerCtor = workerConstructors[label] ?? defaultWorker;
+    return new WorkerCtor();
+  };
+
   globalScope.MonacoEnvironment = {
-    getWorker(_workerId: string, label: string) {
-      switch (label) {
-        case "css":
-        case "less":
-        case "scss":
-          return new cssWorker();
-        case "typescript":
-        case "javascript":
-          return new tsWorker();
-        case "yaml":
-          return new yamlWorker();
-        default:
-          return new editorWorker();
-      }
-    },
+    ...globalScope.MonacoEnvironment,
+    getWorker,
   };
 }
-
-loader.config({ monaco });
-
-void loader.init().catch((error: unknown) => {
-  console.error("[monaco] Monaco initialization failed:", error);
-});

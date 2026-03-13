@@ -660,6 +660,26 @@ pub async fn enhance() -> (Mapping, HashSet<String>, HashMap<String, ResultLog>)
     // dns settings
     config = apply_dns_settings(config, enable_dns_settings).await;
 
+    #[cfg(target_os = "macos")]
+    {
+        if let Some(apps) = Config::verge().await.latest_arc().mac_exclude_apps.as_ref() {
+            if !apps.is_empty() {
+                let mut rules = config
+                    .get("rules")
+                    .and_then(|v| v.as_sequence())
+                    .cloned()
+                    .unwrap_or_default();
+                
+                // insert to the front
+                for app in apps.iter().rev() {
+                    rules.insert(0, Value::String(format!("PROCESS-PATH,{}/*,DIRECT", app)));
+                }
+                
+                config.insert("rules".into(), Value::Sequence(rules));
+            }
+        }
+    }
+
     let mut exists_keys_set = HashSet::new();
     exists_keys_set.extend(exists_keys);
 

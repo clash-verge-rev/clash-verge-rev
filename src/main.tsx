@@ -26,6 +26,10 @@ import {
   UpdateStateProvider,
 } from "./services/states";
 import { disableWebViewShortcuts } from "./utils/disable-webview-shortcuts";
+import {
+  isIgnoredMonacoWorkerError,
+  patchMonacoWorkerConsole,
+} from "./utils/monaco-worker-ignore";
 
 if (!window.ResizeObserver) {
   window.ResizeObserver = ResizeObserver;
@@ -87,12 +91,22 @@ bootstrap().catch((error) => {
     });
 });
 
+patchMonacoWorkerConsole();
+
 // Error handling
 window.addEventListener("error", (event) => {
+  if (isIgnoredMonacoWorkerError(event.error ?? event.message)) {
+    event.preventDefault();
+    return;
+  }
   console.error("[main.tsx] Global error:", event.error);
 });
 
 window.addEventListener("unhandledrejection", (event) => {
+  if (isIgnoredMonacoWorkerError(event.reason)) {
+    event.preventDefault();
+    return;
+  }
   console.error("[main.tsx] Unhandled promise rejection:", event.reason);
 });
 

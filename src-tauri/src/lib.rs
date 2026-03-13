@@ -139,6 +139,7 @@ mod app_init {
             cmd::open_app_dir,
             cmd::open_logs_dir,
             cmd::open_web_url,
+            cmd::reveal_file,
             cmd::open_core_dir,
             cmd::open_app_log,
             cmd::open_core_log,
@@ -216,6 +217,9 @@ mod app_init {
             cmd::restore_webdav_backup,
             cmd::get_unlock_items,
             cmd::check_media_unlock,
+            cmd::get_app_traffic_stats,
+            cmd::clear_app_traffic_stats,
+            cmd::get_macos_apps,
         ]
     }
 }

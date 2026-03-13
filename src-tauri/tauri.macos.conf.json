@@ -3,10 +3,10 @@
   "identifier": "io.github.clash-verge-rev.clash-verge-rev",
   "productName": "Clash Verge",
   "bundle": {
-    "targets": ["app", "dmg"],
+    "targets": ["dmg"],
     "macOS": {
       "frameworks": [],
-      "minimumSystemVersion": "11.0",
+      "minimumSystemVersion": "10.15",
       "exceptionDomain": "",
       "signingIdentity": null,
       "entitlements": "packages/macos/entitlements.plist",

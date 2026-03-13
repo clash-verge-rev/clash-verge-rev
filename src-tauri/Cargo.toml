@@ -105,6 +105,7 @@ arc-swap = "1.8.2"
 rust_iso3166 = "0.1.14"
 # Use the git repo until the next release after v2.0.0.
 dark-light = { git = "https://github.com/rust-dark-light/dark-light" }
+rusqlite = { version = "0.38.0", features = ["bundled"] }
 
 [target.'cfg(windows)'.dependencies]
 deelevate = { workspace = true }

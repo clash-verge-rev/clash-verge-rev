@@ -318,6 +318,12 @@ export async function openAppDir() {
   return invoke<void>("open_app_dir").catch((err) => showNotice.error(err));
 }
 
+export async function revealFile(path: string) {
+  return invoke<void>("reveal_file", { path }).catch((err) =>
+    showNotice.error(err),
+  );
+}
+
 export async function openCoreDir() {
   return invoke<void>("open_core_dir").catch((err) => showNotice.error(err));
 }
@@ -563,3 +569,28 @@ export const isPortInUse = async (port: number) => {
     return false;
   }
 };
+
+export async function getMacosApps() {
+  return invoke<{ name: string; path: string }[]>("get_macos_apps");
+}
+
+export async function getAppTrafficStats(period: "day" | "week" | "month") {
+  return invoke<
+    {
+      process_name: string;
+      process_path: string;
+      traffic_mode: string;
+      upload_bytes: number;
+      download_bytes: number;
+    }[]
+  >("get_app_traffic_stats", { period }).catch((err) => {
+    showNotice.error(err);
+    return [];
+  });
+}
+
+export async function clearAppTrafficStats() {
+  return invoke<void>("clear_app_traffic_stats").catch((err) => {
+    showNotice.error(err);
+  });
+}

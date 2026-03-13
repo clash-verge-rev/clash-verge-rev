@@ -1,3 +1,5 @@
+import SettingsRoundedIcon from "@mui/icons-material/SettingsRounded";
+import { IconButton, Typography } from "@mui/material";
 import React, { useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { mutate } from "swr";
@@ -5,8 +7,13 @@ import { mutate } from "swr";
 import { DialogRef, Switch, TooltipIcon } from "@/components/base";
 import ProxyControlSwitches from "@/components/shared/proxy-control-switches";
 import { useVerge } from "@/hooks/use-verge";
+import { version } from "@root/package.json";
 
 import { GuardState } from "./mods/guard-state";
+import {
+  MacAppExcludeViewer,
+  MacAppExcludeViewerRef,
+} from "./mods/mac-app-exclude-viewer";
 import { SettingList, SettingItem } from "./mods/setting-comp";
 import { SysproxyViewer } from "./mods/sysproxy-viewer";
 import { TunViewer } from "./mods/tun-viewer";
@@ -24,6 +31,7 @@ const SettingSystem = ({ onError }: Props) => {
 
   const sysproxyRef = useRef<DialogRef>(null);
   const tunRef = useRef<DialogRef>(null);
+  const macExcludeRef = useRef<MacAppExcludeViewerRef>(null);
 
   const onSwitchFormat = (
     _e: React.ChangeEvent<HTMLInputElement>,
@@ -34,68 +42,92 @@ const SettingSystem = ({ onError }: Props) => {
   };
 
   return (
-    <SettingList title={t("settings.sections.system.title")}>
-      <SysproxyViewer ref={sysproxyRef} />
-      <TunViewer ref={tunRef} />
+    <>
+      <SettingList title={t("settings.sections.system.title")}>
+        <SysproxyViewer ref={sysproxyRef} />
+        <TunViewer ref={tunRef} />
+        <MacAppExcludeViewer ref={macExcludeRef} />
 
-      <ProxyControlSwitches
-        label={t("settings.sections.system.toggles.tunMode")}
-        onError={onError}
-      />
-
-      <ProxyControlSwitches
-        label={t("settings.sections.system.toggles.systemProxy")}
-        onError={onError}
-      />
-
-      <SettingItem label={t("settings.sections.system.fields.autoLaunch")}>
-        <GuardState
-          value={enable_auto_launch ?? false}
-          valueProps="checked"
-          onCatch={onError}
-          onFormat={onSwitchFormat}
-          onChange={(e) => {
-            onChangeData({ enable_auto_launch: e });
-          }}
-          onGuard={async (e) => {
-            try {
-              // 先触发UI更新立即看到反馈
-              onChangeData({ enable_auto_launch: e });
-              await patchVerge({ enable_auto_launch: e });
-              await mutate("getAutoLaunchStatus");
-              return Promise.resolve();
-            } catch (error) {
-              // 如果出错，恢复原始状态
-              onChangeData({ enable_auto_launch: !e });
-              return Promise.reject(error);
+        {OS_PLATFORM === "darwin" && (
+          <SettingItem
+            label="macOS 代理直连应用"
+            extra={
+              <IconButton
+                size="small"
+                onClick={() => macExcludeRef.current?.open()}
+              >
+                <SettingsRoundedIcon fontSize="small" />
+              </IconButton>
             }
-          }}
-        >
-          <Switch edge="end" />
-        </GuardState>
-      </SettingItem>
-
-      <SettingItem
-        label={t("settings.sections.system.fields.silentStart")}
-        extra={
-          <TooltipIcon
-            title={t("settings.sections.system.tooltips.silentStart")}
-            sx={{ opacity: "0.7" }}
           />
-        }
-      >
-        <GuardState
-          value={enable_silent_start ?? false}
-          valueProps="checked"
-          onCatch={onError}
-          onFormat={onSwitchFormat}
-          onChange={(e) => onChangeData({ enable_silent_start: e })}
-          onGuard={(e) => patchVerge({ enable_silent_start: e })}
+        )}
+
+        <ProxyControlSwitches
+          label={t("settings.sections.system.toggles.tunMode")}
+          onError={onError}
+        />
+
+        <ProxyControlSwitches
+          label={t("settings.sections.system.toggles.systemProxy")}
+          onError={onError}
+        />
+
+        <SettingItem label={t("settings.sections.system.fields.autoLaunch")}>
+          <GuardState
+            value={enable_auto_launch ?? false}
+            valueProps="checked"
+            onCatch={onError}
+            onFormat={onSwitchFormat}
+            onChange={(e) => {
+              onChangeData({ enable_auto_launch: e });
+            }}
+            onGuard={async (e) => {
+              try {
+                // 先触发UI更新立即看到反馈
+                onChangeData({ enable_auto_launch: e });
+                await patchVerge({ enable_auto_launch: e });
+                await mutate("getAutoLaunchStatus");
+                return Promise.resolve();
+              } catch (error) {
+                // 如果出错，恢复原始状态
+                onChangeData({ enable_auto_launch: !e });
+                return Promise.reject(error);
+              }
+            }}
+          >
+            <Switch edge="end" />
+          </GuardState>
+        </SettingItem>
+
+        <SettingItem
+          label={t("settings.sections.system.fields.silentStart")}
+          extra={
+            <TooltipIcon
+              title={t("settings.sections.system.tooltips.silentStart")}
+              sx={{ opacity: "0.7" }}
+            />
+          }
         >
-          <Switch edge="end" />
-        </GuardState>
-      </SettingItem>
-    </SettingList>
+          <GuardState
+            value={enable_silent_start ?? false}
+            valueProps="checked"
+            onCatch={onError}
+            onFormat={onSwitchFormat}
+            onChange={(e) => onChangeData({ enable_silent_start: e })}
+            onGuard={(e) => patchVerge({ enable_silent_start: e })}
+          >
+            <Switch edge="end" />
+          </GuardState>
+        </SettingItem>
+      </SettingList>
+
+      <SettingList title="关于">
+        <SettingItem
+          label="当前版本"
+          extra={<Typography sx={{ py: "7px", pr: 1 }}>v{version}</Typography>}
+        />
+      </SettingList>
+    </>
   );
 };
 

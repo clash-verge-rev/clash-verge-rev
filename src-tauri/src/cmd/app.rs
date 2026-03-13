@@ -34,6 +34,20 @@ pub fn open_web_url(url: String) -> CmdResult<()> {
     open::that(url.as_str()).stringify_err()
 }
 
+/// 定位文件在系统的位置 (macOS 下高亮显示)
+#[tauri::command]
+pub async fn reveal_file(path: String) -> CmdResult<()> {
+    #[cfg(target_os = "macos")]
+    {
+        std::process::Command::new("open")
+            .arg("-R")
+            .arg(path.as_str())
+            .spawn()
+            .stringify_err()?;
+    }
+    Ok(())
+}
+
 // TODO 后续可以为前端提供接口，当前作为托盘菜单使用
 /// 打开 Verge 最新日志
 #[tauri::command]
@@ -128,3 +142,53 @@ pub fn update_ui_stage(stage: UiReadyStage) {
     logging!(info, Type::Cmd, "UI加载阶段更新: {:?}", &stage);
     ui::update_ui_ready_stage(stage);
 }
+
+#[derive(serde::Serialize)]
+pub struct MacAppInfo {
+    pub name: String,
+    pub path: String,
+}
+
+#[tauri::command]
+pub async fn get_macos_apps() -> CmdResult<Vec<MacAppInfo>> {
+    #[cfg(target_os = "macos")]
+    {
+        let mut apps = Vec::new();
+        if let Ok(entries) = std::fs::read_dir("/Applications") {
+            for entry in entries.flatten() {
+                let path = entry.path();
+                if path.extension().and_then(|s| s.to_str()) == Some("app") {
+                    if let Some(name) = path.file_stem().and_then(|s| s.to_str()) {
+                        apps.push(MacAppInfo {
+                            name: name.to_string().into(),
+                            path: path.to_string_lossy().to_string().into(),
+                        });
+                    }
+                }
+            }
+        }
+        // Also check ~/Applications
+        if let Ok(home) = std::env::var("HOME") {
+            if let Ok(entries) = std::fs::read_dir(format!("{}/Applications", home)) {
+                for entry in entries.flatten() {
+                    let path = entry.path();
+                    if path.extension().and_then(|s| s.to_str()) == Some("app") {
+                        if let Some(name) = path.file_stem().and_then(|s| s.to_str()) {
+                            apps.push(MacAppInfo {
+                                name: name.to_string().into(),
+                                path: path.to_string_lossy().to_string().into(),
+                            });
+                        }
+                    }
+                }
+            }
+        }
+        apps.sort_by(|a, b| a.name.cmp(&b.name));
+        Ok(apps)
+    }
+    #[cfg(not(target_os = "macos"))]
+    {
+        Ok(vec![])
+    }
+}
+

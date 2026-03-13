@@ -1,3 +1,4 @@
+import DataUsageRoundedIcon from "@mui/icons-material/DataUsageRounded";
 import DnsRoundedIcon from "@mui/icons-material/DnsRounded";
 import ForkRightRoundedIcon from "@mui/icons-material/ForkRightRounded";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
@@ -25,6 +26,7 @@ import ProfilesPage from "./profiles";
 import ProxiesPage from "./proxies";
 import RulesPage from "./rules";
 import SettingsPage from "./settings";
+import TrafficPage from "./traffic";
 import UnlockPage from "./unlock";
 
 export const navItems = [
@@ -69,6 +71,15 @@ export const navItems = [
     path: "/unlock",
     icon: [<LockOpenRoundedIcon key="mui" />, <UnlockSvg key="svg" />],
     Component: UnlockPage,
+  },
+  {
+    label: "应用流量", // Hardcoded Chinese as requested
+    path: "/traffic",
+    icon: [
+      <DataUsageRoundedIcon key="mui" />,
+      <DataUsageRoundedIcon key="svg" />,
+    ],
+    Component: TrafficPage,
   },
   {
     label: "layout.components.navigation.tabs.settings",

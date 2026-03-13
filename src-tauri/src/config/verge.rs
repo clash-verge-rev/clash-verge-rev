@@ -254,6 +254,10 @@ pub struct IVerge {
 
     /// 启用外部控制器
     pub enable_external_controller: Option<bool>,
+
+    /// MacOS 选中的需要跳过代理的 App 路径
+    #[cfg(target_os = "macos")]
+    pub mac_exclude_apps: Option<Vec<String>>,
 }
 
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
@@ -444,6 +448,8 @@ impl IVerge {
             enable_dns_settings: Some(false),
             home_cards: None,
             enable_external_controller: Some(false),
+            #[cfg(target_os = "macos")]
+            mac_exclude_apps: Some(vec![]),
             ..Self::default()
         }
     }
@@ -547,6 +553,8 @@ impl IVerge {
         patch!(enable_dns_settings);
         patch!(home_cards);
         patch!(enable_external_controller);
+        #[cfg(target_os = "macos")]
+        patch!(mac_exclude_apps);
     }
 
     pub const fn get_singleton_port() -> u16 {

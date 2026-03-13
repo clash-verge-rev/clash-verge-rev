@@ -5,6 +5,7 @@ mod icon;
 mod profile;
 mod proxy;
 mod window;
+pub mod app_traffic;
 
 // Re-export all functions from modules
 pub use backup::*;
@@ -14,3 +15,4 @@ pub use icon::*;
 pub use profile::*;
 pub use proxy::*;
 pub use window::*;
+pub use app_traffic::*;
