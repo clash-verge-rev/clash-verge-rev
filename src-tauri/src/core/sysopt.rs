@@ -80,6 +80,8 @@ impl Sysopt {
         if !verge.enable_system_proxy.unwrap_or_default() {
             logging!(info, Type::Core, "System proxy is disabled.");
             self.access_guard().write().stop();
+            // Also stop network monitor when system proxy is disabled
+            crate::core::network_monitor::NetworkMonitor::global().stop_monitoring();
             return;
         }
         if !verge.enable_proxy_guard.unwrap_or_default() {
@@ -103,6 +105,8 @@ impl Sysopt {
             let guard = self.access_guard();
             guard.write().start();
         }
+        // Also refresh network monitor when system proxy settings change
+        crate::core::network_monitor::NetworkMonitor::global().refresh().await;
     }
 
     /// init the sysproxy

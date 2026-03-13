@@ -60,6 +60,7 @@ pub fn resolve_setup_async() {
             init_core_manager().await;
             init_system_proxy().await;
             init_system_proxy_guard().await;
+            init_network_monitor().await;
         });
 
         let tray_init = async {
@@ -167,6 +168,11 @@ pub(super) async fn init_system_proxy() {
 
 pub(super) async fn init_system_proxy_guard() {
     sysopt::Sysopt::global().refresh_guard().await;
+}
+
+pub(super) async fn init_network_monitor() {
+    use crate::core::network_monitor::NetworkMonitor;
+    NetworkMonitor::global().start_monitoring().await;
 }
 
 pub(super) async fn refresh_tray_menu() {
