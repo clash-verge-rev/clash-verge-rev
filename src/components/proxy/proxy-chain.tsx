@@ -32,6 +32,7 @@ import {
   Typography,
   useTheme,
 } from "@mui/material";
+import yaml from "js-yaml";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -74,6 +75,21 @@ interface SortableItemProps {
   isLast: boolean;
   onRemove: (id: string) => void;
 }
+
+const toChainItems = (
+  parsedConfig: ParsedChainConfig | null | undefined,
+): ProxyChainItem[] => {
+  const timestamp = Date.now();
+
+  return (
+    parsedConfig?.proxies?.map((proxy, index) => ({
+      id: `${proxy.name}_${timestamp}_${index}`,
+      name: proxy.name,
+      type: proxy.type,
+      delay: undefined,
+    })) || []
+  );
+};
 
 const SortableItem = ({
   proxy,
@@ -410,51 +426,13 @@ export const ProxyChain = ({
   useEffect(() => {
     if (chainConfigData) {
       try {
-        // Try to parse as YAML using dynamic import
-        import("js-yaml")
-          .then((yaml) => {
-            try {
-              const parsedConfig = yaml.load(
-                chainConfigData,
-              ) as ParsedChainConfig;
-              const chainItems =
-                parsedConfig?.proxies?.map((proxy, index: number) => ({
-                  id: `${proxy.name}_${Date.now()}_${index}`,
-                  name: proxy.name,
-                  type: proxy.type,
-                  delay: undefined,
-                })) || [];
-              if (chainItems.length > 0) {
-                onUpdateChain(chainItems);
-              }
-            } catch (parseError) {
-              console.error("Failed to parse YAML:", parseError);
-            }
-          })
-          .catch((importError) => {
-            // Fallback: try to parse as JSON if YAML is not available
-            console.warn(
-              "js-yaml not available, trying JSON parse:",
-              importError,
-            );
-            try {
-              const parsedConfig = JSON.parse(
-                chainConfigData,
-              ) as ParsedChainConfig;
-              const chainItems =
-                parsedConfig?.proxies?.map((proxy, index: number) => ({
-                  id: `${proxy.name}_${Date.now()}_${index}`,
-                  name: proxy.name,
-                  type: proxy.type,
-                  delay: undefined,
-                })) || [];
-              if (chainItems.length > 0) {
-                onUpdateChain(chainItems);
-              }
-            } catch (jsonError) {
-              console.error("Failed to parse as JSON either:", jsonError);
-            }
-          });
+        // JSON is valid YAML, so one parser covers both persisted formats.
+        const parsedConfig = yaml.load(chainConfigData) as ParsedChainConfig;
+        const chainItems = toChainItems(parsedConfig);
+
+        if (chainItems.length > 0) {
+          onUpdateChain(chainItems);
+        }
       } catch (error) {
         console.error("Failed to process chain config data:", error);
       }

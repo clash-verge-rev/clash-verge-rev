@@ -92,7 +92,7 @@
     "@types/react-dom": "19.2.3",
     "@types/validator": "^13.15.10",
     "@vitejs/plugin-legacy": "^8.0.0",
-    "@vitejs/plugin-react-swc": "^4.2.3",
+    "@vitejs/plugin-react": "^6.0.0",
     "adm-zip": "^0.5.16",
     "cli-color": "^2.0.4",
     "commander": "^14.0.3",
@@ -136,7 +136,6 @@
   "pnpm": {
     "onlyBuiltDependencies": [
       "@parcel/watcher",
-      "@swc/core",
       "core-js",
       "es5-ext",
       "esbuild",
