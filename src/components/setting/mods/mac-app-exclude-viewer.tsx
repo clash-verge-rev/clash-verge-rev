@@ -11,7 +11,6 @@ import {
 } from "@mui/material";
 import { useState, useImperativeHandle, forwardRef } from "react";
 import { createPortal } from "react-dom";
-import { useTranslation } from "react-i18next";
 
 import { BaseDialog } from "@/components/base";
 import { useVerge } from "@/hooks/use-verge";
