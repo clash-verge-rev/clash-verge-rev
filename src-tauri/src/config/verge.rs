@@ -254,6 +254,16 @@ pub struct IVerge {
 
     /// 启用外部控制器
     pub enable_external_controller: Option<bool>,
+
+    /// 启用 MCP (Model Context Protocol) 服务器
+    pub enable_mcp_server: Option<bool>,
+
+    /// MCP 服务器端口
+    pub mcp_server_port: Option<u16>,
+
+    /// MCP 服务器认证密钥
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub mcp_server_secret: Option<String>,
 }
 
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
@@ -444,6 +454,9 @@ impl IVerge {
             enable_dns_settings: Some(false),
             home_cards: None,
             enable_external_controller: Some(false),
+            enable_mcp_server: Some(false),
+            mcp_server_port: Some(crate::constants::network::ports::DEFAULT_MCP_SERVER),
+            mcp_server_secret: None,
             ..Self::default()
         }
     }
@@ -547,6 +560,9 @@ impl IVerge {
         patch!(enable_dns_settings);
         patch!(home_cards);
         patch!(enable_external_controller);
+        patch!(enable_mcp_server);
+        patch!(mcp_server_port);
+        patch!(mcp_server_secret);
     }
 
     pub const fn get_singleton_port() -> u16 {

@@ -43,6 +43,7 @@ pub fn resolve_setup_sync() {
     AsyncHandler::spawn(|| async {
         AsyncHandler::spawn_blocking(init_scheme);
         AsyncHandler::spawn_blocking(init_embed_server);
+        AsyncHandler::spawn_blocking(init_mcp_server);
     });
 }
 
@@ -102,6 +103,10 @@ pub async fn resolve_scheme(param: &str) -> Result<()> {
 
 pub(super) fn init_embed_server() {
     server::embed_server();
+}
+
+pub(super) fn init_mcp_server() {
+    crate::mcp::server::start_mcp_server();
 }
 
 pub(super) async fn init_resources() {

@@ -7,6 +7,7 @@ mod constants;
 mod core;
 mod enhance;
 mod feat;
+pub mod mcp;
 mod module;
 mod process;
 pub mod utils;

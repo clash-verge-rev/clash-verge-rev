@@ -16,6 +16,8 @@ pub mod network {
         pub const SINGLETON_SERVER: u16 = 33331;
         #[cfg(feature = "verge-dev")]
         pub const SINGLETON_SERVER: u16 = 11233;
+
+        pub const DEFAULT_MCP_SERVER: u16 = 9199;
     }
 }
 

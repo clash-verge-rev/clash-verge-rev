@@ -84,6 +84,27 @@
         "open": "外部控制跨域设置"
       }
     },
+    "mcpServer": {
+      "title": "MCP 服务器",
+      "fields": {
+        "enable": "启用 MCP 服务器",
+        "port": "服务端口",
+        "secret": "访问密钥"
+      },
+      "placeholders": {
+        "port": "默认：9199",
+        "secret": "可选"
+      },
+      "tooltips": {
+        "copy": "复制到剪贴板"
+      },
+      "messages": {
+        "portCopied": "端口已复制到剪贴板",
+        "secretCopied": "密钥已复制到剪贴板",
+        "copyFailed": "复制失败",
+        "restartRequired": "需要重启应用以应用更改"
+      }
+    },
     "appearance": {
       "light": "浅色",
       "dark": "深色",
@@ -100,6 +121,7 @@
           "logLevel": "日志等级",
           "portConfig": "端口设置",
           "external": "外部控制",
+          "mcpServer": "MCP 服务器",
           "webUI": "网页界面",
           "clashCore": "Clash 内核",
           "openUwpTool": "UWP 工具",

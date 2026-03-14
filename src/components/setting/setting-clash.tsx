@@ -20,6 +20,7 @@ import { ControllerViewer } from "./mods/controller-viewer";
 import { DnsViewer } from "./mods/dns-viewer";
 import { HeaderConfiguration } from "./mods/external-controller-cors";
 import { GuardState } from "./mods/guard-state";
+import { McpServerViewer } from "./mods/mcp-server-viewer";
 import { NetworkInterfaceViewer } from "./mods/network-interface-viewer";
 import { SettingItem, SettingList } from "./mods/setting-comp";
 import { TunnelsViewer } from "./mods/tunnels-viewer";
@@ -59,6 +60,7 @@ const SettingClash = ({ onError }: Props) => {
   const networkRef = useRef<DialogRef>(null);
   const dnsRef = useRef<DialogRef>(null);
   const corsRef = useRef<DialogRef>(null);
+  const mcpRef = useRef<DialogRef>(null);
   const tunnelRef = useRef<DialogRef>(null);
 
   const onSwitchFormat = (_e: any, value: boolean) => value;
@@ -104,6 +106,7 @@ const SettingClash = ({ onError }: Props) => {
       <NetworkInterfaceViewer ref={networkRef} />
       <DnsViewer ref={dnsRef} />
       <HeaderConfiguration ref={corsRef} />
+      <McpServerViewer ref={mcpRef} />
       <TunnelsViewer ref={tunnelRef} />
       <SettingItem
         label={t("settings.sections.clash.form.fields.allowLan")}
@@ -248,6 +251,11 @@ const SettingClash = ({ onError }: Props) => {
         onClick={() => {
           ctrlRef.current?.open();
         }}
+      />
+
+      <SettingItem
+        label={t("settings.sections.clash.form.fields.mcpServer")}
+        onClick={() => mcpRef.current?.open()}
       />
 
       <SettingItem

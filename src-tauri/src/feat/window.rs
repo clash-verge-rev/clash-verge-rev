@@ -22,6 +22,7 @@ pub async fn quit() {
     handle::Handle::global().set_is_exiting();
 
     utils::server::shutdown_embedded_server();
+    crate::mcp::server::shutdown_mcp_server();
     Config::apply_all_and_save_file().await;
 
     logging!(info, Type::System, "开始异步清理资源");

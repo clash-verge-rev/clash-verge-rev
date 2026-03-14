@@ -84,6 +84,27 @@
         "open": "External Cors Settings"
       }
     },
+    "mcpServer": {
+      "title": "MCP Server",
+      "fields": {
+        "enable": "Enable MCP Server",
+        "port": "Server Port",
+        "secret": "Access Secret"
+      },
+      "placeholders": {
+        "port": "Default: 9199",
+        "secret": "Optional"
+      },
+      "tooltips": {
+        "copy": "Copy to clipboard"
+      },
+      "messages": {
+        "portCopied": "Port copied to clipboard",
+        "secretCopied": "Secret copied to clipboard",
+        "copyFailed": "Failed to copy",
+        "restartRequired": "Restart required to apply changes"
+      }
+    },
     "appearance": {
       "light": "Light",
       "dark": "Dark",
@@ -100,6 +121,7 @@
           "logLevel": "Log Level",
           "portConfig": "Port Config",
           "external": "External",
+          "mcpServer": "MCP Server",
           "webUI": "Web UI",
           "clashCore": "Clash Core",
           "openUwpTool": "Open UWP tool",

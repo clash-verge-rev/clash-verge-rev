@@ -1078,6 +1078,7 @@ export interface TranslationResources {
               external: string;
               ipv6: string;
               logLevel: string;
+              mcpServer: string;
               openUwpTool: string;
               portConfig: string;
               tunnels: {
@@ -1165,6 +1166,27 @@ export interface TranslationResources {
           title: string;
           tooltips: {
             open: string;
+          };
+        };
+        mcpServer: {
+          fields: {
+            enable: string;
+            port: string;
+            secret: string;
+          };
+          messages: {
+            copyFailed: string;
+            portCopied: string;
+            restartRequired: string;
+            secretCopied: string;
+          };
+          placeholders: {
+            port: string;
+            secret: string;
+          };
+          title: string;
+          tooltips: {
+            copy: string;
           };
         };
         proxyControl: {
