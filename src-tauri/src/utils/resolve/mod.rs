@@ -67,6 +67,8 @@ pub fn resolve_setup_async() {
             refresh_tray_menu().await;
         };
 
+        feat::app_traffic::init_app_traffic_daemon();
+
         let _ = futures::join!(
             core_init,
             tray_init,
@@ -74,7 +76,6 @@ pub fn resolve_setup_async() {
             init_hotkey(),
             init_auto_lightweight_boot(),
             init_auto_backup(),
-            feat::app_traffic::init_app_traffic_daemon(),
         );
     });
 }

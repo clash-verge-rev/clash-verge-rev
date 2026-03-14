@@ -662,21 +662,21 @@ pub async fn enhance() -> (Mapping, HashSet<String>, HashMap<String, ResultLog>)
 
     #[cfg(target_os = "macos")]
     {
-        if let Some(apps) = Config::verge().await.latest_arc().mac_exclude_apps.as_ref() {
-            if !apps.is_empty() {
-                let mut rules = config
-                    .get("rules")
-                    .and_then(|v| v.as_sequence())
-                    .cloned()
-                    .unwrap_or_default();
+        if let Some(apps) = Config::verge().await.latest_arc().mac_exclude_apps.as_ref()
+            && !apps.is_empty()
+        {
+            let mut rules = config
+                .get("rules")
+                .and_then(|v| v.as_sequence())
+                .cloned()
+                .unwrap_or_default();
 
-                // insert to the front
-                for app in apps.iter().rev() {
-                    rules.insert(0, Value::String(format!("PROCESS-PATH,{}/*,DIRECT", app)));
-                }
-
-                config.insert("rules".into(), Value::Sequence(rules));
+            // insert to the front
+            for app in apps.iter().rev() {
+                rules.insert(0, Value::String(format!("PROCESS-PATH,{}/*,DIRECT", app)));
             }
+
+            config.insert("rules".into(), Value::Sequence(rules));
         }
     }
 

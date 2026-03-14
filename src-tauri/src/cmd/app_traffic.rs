@@ -1,5 +1,5 @@
 use crate::cmd::CmdResult;
-use crate::cmd::StringifyErr;
+use crate::cmd::StringifyErr as _;
 use crate::feat::app_traffic::{AppTrafficStat, clear_traffic, query_traffic};
 
 #[tauri::command]

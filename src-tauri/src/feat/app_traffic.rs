@@ -22,7 +22,7 @@ pub struct AppTrafficStat {
     pub download_bytes: u64,
 }
 
-pub async fn init_app_traffic_daemon() {
+pub fn init_app_traffic_daemon() {
     AsyncHandler::spawn(|| async {
         if let Err(e) = setup_db().await {
             logging!(error, Type::Core, "Failed to setup app traffic DB: {}", e);
@@ -37,17 +37,19 @@ pub async fn init_app_traffic_daemon() {
         loop {
             sleep(Duration::from_secs(5)).await;
 
-            let mihomo = handle::Handle::mihomo().await;
-            let connections = match mihomo.get_connections().await {
-                Ok(c) => c,
-                Err(e) => {
-                    logging!(
-                        trace,
-                        Type::Core,
-                        "App traffic daemon: failed to get connections: {}",
-                        e
-                    );
-                    continue;
+            let connections = {
+                let mihomo = handle::Handle::mihomo().await;
+                match mihomo.get_connections().await {
+                    Ok(c) => c,
+                    Err(e) => {
+                        logging!(
+                            trace,
+                            Type::Core,
+                            "App traffic daemon: failed to get connections: {}",
+                            e
+                        );
+                        continue;
+                    }
                 }
             };
 
@@ -112,10 +114,10 @@ pub async fn init_app_traffic_daemon() {
                     }
                 }
 
-                if !deltas.is_empty() {
-                    if let Err(e) = insert_traffic_deltas(&deltas).await {
-                        logging!(error, Type::Core, "Failed to insert traffic: {}", e);
-                    }
+                if !deltas.is_empty()
+                    && let Err(e) = insert_traffic_deltas(&deltas).await
+                {
+                    logging!(error, Type::Core, "Failed to insert traffic: {}", e);
                 }
             }
 
@@ -125,9 +127,9 @@ pub async fn init_app_traffic_daemon() {
     });
 }
 
+#[allow(clippy::significant_drop_tightening)]
 async fn setup_db() -> anyhow::Result<()> {
-    let mut path = dirs::app_home_dir()?;
-    path.push("app_traffic.db");
+    let path = dirs::app_home_dir()?.join("app_traffic.db");
 
     let conn = Connection::open(&path)?;
 
@@ -159,6 +161,7 @@ async fn setup_db() -> anyhow::Result<()> {
     Ok(())
 }
 
+#[allow(clippy::significant_drop_tightening)]
 async fn insert_traffic_deltas(deltas: &[(String, String, String, u64, u64)]) -> anyhow::Result<()> {
     let mut db_guard = DB_CONN.lock().await;
     if let Some(conn) = db_guard.as_mut() {
@@ -183,6 +186,7 @@ async fn insert_traffic_deltas(deltas: &[(String, String, String, u64, u64)]) ->
     Ok(())
 }
 
+#[allow(clippy::significant_drop_tightening)]
 pub async fn query_traffic(period: &str) -> anyhow::Result<Vec<AppTrafficStat>> {
     let mut db_guard = DB_CONN.lock().await;
     if let Some(conn) = db_guard.as_mut() {
@@ -224,10 +228,12 @@ pub async fn query_traffic(period: &str) -> anyhow::Result<Vec<AppTrafficStat>> 
     Ok(vec![])
 }
 
+#[allow(clippy::significant_drop_tightening)]
 pub async fn clear_traffic() -> anyhow::Result<()> {
     let mut db_guard = DB_CONN.lock().await;
     if let Some(conn) = db_guard.as_mut() {
         conn.execute("DELETE FROM app_traffic", [])?;
     }
+    drop(db_guard);
     Ok(())
 }

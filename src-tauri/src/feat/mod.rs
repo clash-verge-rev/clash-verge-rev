@@ -8,7 +8,7 @@ mod proxy;
 mod window;
 
 // Re-export all functions from modules
-pub use app_traffic::*;
+// app_traffic types are used directly via full path
 pub use backup::*;
 pub use clash::*;
 pub use config::*;

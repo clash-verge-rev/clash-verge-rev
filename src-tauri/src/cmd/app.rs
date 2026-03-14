@@ -157,29 +157,29 @@ pub async fn get_macos_apps() -> CmdResult<Vec<MacAppInfo>> {
         if let Ok(entries) = std::fs::read_dir("/Applications") {
             for entry in entries.flatten() {
                 let path = entry.path();
-                if path.extension().and_then(|s| s.to_str()) == Some("app") {
-                    if let Some(name) = path.file_stem().and_then(|s| s.to_str()) {
-                        apps.push(MacAppInfo {
-                            name: name.to_string().into(),
-                            path: path.to_string_lossy().to_string().into(),
-                        });
-                    }
+                if path.extension().and_then(|s| s.to_str()) == Some("app")
+                    && let Some(name) = path.file_stem().and_then(|s| s.to_str())
+                {
+                    apps.push(MacAppInfo {
+                        name: name.to_string().into(),
+                        path: path.to_string_lossy().to_string().into(),
+                    });
                 }
             }
         }
         // Also check ~/Applications
-        if let Ok(home) = std::env::var("HOME") {
-            if let Ok(entries) = std::fs::read_dir(format!("{}/Applications", home)) {
-                for entry in entries.flatten() {
-                    let path = entry.path();
-                    if path.extension().and_then(|s| s.to_str()) == Some("app") {
-                        if let Some(name) = path.file_stem().and_then(|s| s.to_str()) {
-                            apps.push(MacAppInfo {
-                                name: name.to_string().into(),
-                                path: path.to_string_lossy().to_string().into(),
-                            });
-                        }
-                    }
+        if let Ok(home) = std::env::var("HOME")
+            && let Ok(entries) = std::fs::read_dir(format!("{}/Applications", home))
+        {
+            for entry in entries.flatten() {
+                let path = entry.path();
+                if path.extension().and_then(|s| s.to_str()) == Some("app")
+                    && let Some(name) = path.file_stem().and_then(|s| s.to_str())
+                {
+                    apps.push(MacAppInfo {
+                        name: name.to_string().into(),
+                        path: path.to_string_lossy().to_string().into(),
+                    });
                 }
             }
         }
