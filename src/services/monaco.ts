@@ -4,8 +4,9 @@ import editorWorker from "monaco-editor/esm/vs/editor/editor.worker?worker";
 import cssWorker from "monaco-editor/esm/vs/language/css/css.worker?worker";
 import tsWorker from "monaco-editor/esm/vs/language/typescript/ts.worker?worker";
 import { configureMonacoYaml } from "monaco-yaml";
-import yamlWorker from "monaco-yaml/yaml.worker?worker";
 import pac from "types-pac/pac.d.ts?raw";
+
+import yamlWorker from "@/utils/yaml.worker?worker";
 
 self.MonacoEnvironment = {
   getWorker(_, label) {
@@ -27,21 +28,35 @@ self.MonacoEnvironment = {
 
 loader.config({ monaco });
 
-let hasConfiguredMonaco = false;
+// Work around https://github.com/remcohaszing/monaco-yaml/issues/272.
+const patchCreateWebWorker = () => {
+  const oldCreateWebWorker = monaco.editor.createWebWorker;
 
-export const configureMonacoOnce = () => {
-  if (hasConfiguredMonaco) return;
+  monaco.editor.createWebWorker = (
+    options: monaco.IWebWorkerOptions | monaco.editor.IInternalWebWorkerOptions,
+  ) => {
+    if ("worker" in options) {
+      return oldCreateWebWorker(options);
+    }
+
+    return monaco.createWebWorker(options);
+  };
+};
+
+let mounted = false;
+
+export const beforeEditorMount = () => {
+  if (mounted) return;
+
+  patchCreateWebWorker();
 
   monaco.typescript.javascriptDefaults.addExtraLib(pac, "pac.d.ts");
 
   configureMonacoYaml(monaco, {
     validate: true,
     enableSchemaRequest: true,
+    completion: true,
   });
 
-  hasConfiguredMonaco = true;
+  mounted = true;
 };
-
-loader.init().catch((error) => {
-  console.error("[monaco] Monaco initialization failed:", error);
-});

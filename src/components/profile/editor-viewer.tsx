@@ -27,11 +27,11 @@ import {
 import { useTranslation } from "react-i18next";
 
 import { BaseLoadingOverlay } from "@/components/base";
+import { beforeEditorMount } from "@/services/monaco";
 import { showNotice } from "@/services/notice-service";
 import { useThemeMode } from "@/services/states";
 import debounce from "@/utils/debounce";
 import getSystem from "@/utils/get-system";
-import { configureMonacoOnce } from "@/utils/monaco";
 
 const appWindow = getCurrentWebviewWindow();
 
@@ -205,7 +205,7 @@ export const EditorViewer = ({
               loading={null}
               saveViewState
               keepCurrentModel={false}
-              beforeMount={configureMonacoOnce}
+              beforeMount={beforeEditorMount}
               onMount={(editorInstance) => {
                 editorRef.current = editorInstance;
               }}
