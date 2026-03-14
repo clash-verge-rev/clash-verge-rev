@@ -1,6 +1,6 @@
 {
   "name": "clash-verge",
-  "version": "2.5.1",
+  "version": "2.5.3",
   "license": "GPL-3.0-only",
   "scripts": {
     "prepare": "husky || true",
@@ -141,6 +141,9 @@
       "es5-ext",
       "esbuild",
       "unrs-resolver"
-    ]
+    ],
+    "overrides": {
+      "entities": "7.0.1"
+    }
   }
 }

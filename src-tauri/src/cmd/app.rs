@@ -191,4 +191,3 @@ pub async fn get_macos_apps() -> CmdResult<Vec<MacAppInfo>> {
         Ok(vec![])
     }
 }
-

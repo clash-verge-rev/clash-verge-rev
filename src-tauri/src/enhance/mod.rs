@@ -669,12 +669,12 @@ pub async fn enhance() -> (Mapping, HashSet<String>, HashMap<String, ResultLog>)
                     .and_then(|v| v.as_sequence())
                     .cloned()
                     .unwrap_or_default();
-                
+
                 // insert to the front
                 for app in apps.iter().rev() {
                     rules.insert(0, Value::String(format!("PROCESS-PATH,{}/*,DIRECT", app)));
                 }
-                
+
                 config.insert("rules".into(), Value::Sequence(rules));
             }
         }

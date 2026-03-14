@@ -1,9 +1,17 @@
-import { RefreshRounded } from "@mui/icons-material";
+import {
+  DeleteRounded,
+  RefreshRounded,
+  TuneRounded,
+} from "@mui/icons-material";
 import {
   Box,
   Button,
   ButtonGroup,
+  Chip,
   IconButton,
+  Menu,
+  MenuItem,
+  ListItemText,
   Paper,
   Table,
   TableBody,
@@ -20,8 +28,7 @@ import {
   DialogContentText,
   DialogActions,
 } from "@mui/material";
-import { useEffect, useState, useMemo } from "react";
-import { useTranslation } from "react-i18next";
+import { useCallback, useEffect, useState, useMemo } from "react";
 
 import { BasePage } from "@/components/base";
 import {
@@ -39,9 +46,10 @@ interface AppTrafficStat {
   download_bytes: number;
 }
 
+const FILTER_MODES = ["全部", "直连", "代理", "TUN"] as const;
+type FilterMode = (typeof FILTER_MODES)[number];
+
 const TrafficPage = () => {
-<<<<<<<
-=======
   const [period, setPeriod] = useState<"day" | "week" | "month">("day");
   const [stats, setStats] = useState<AppTrafficStat[]>([]);
   const [loading, setLoading] = useState(false);
@@ -52,6 +60,13 @@ const TrafficPage = () => {
   );
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
+  // Mode filter state
+  const [selectedMode, setSelectedMode] = useState<FilterMode>("全部");
+  const [filterAnchorEl, setFilterAnchorEl] = useState<null | HTMLElement>(
+    null,
+  );
+  const filterOpen = Boolean(filterAnchorEl);
+
   const handleSort = (field: "upload" | "download" | "total") => {
     if (sortField === field) {
       setSortOrder(sortOrder === "asc" ? "desc" : "asc");
@@ -59,6 +74,11 @@ const TrafficPage = () => {
       setSortField(field);
       setSortOrder("desc");
     }
+  };
+
+  const handleSelectMode = (mode: FilterMode) => {
+    setSelectedMode(mode);
+    setFilterAnchorEl(null);
   };
 
   const handleClearStats = async () => {
@@ -80,7 +100,7 @@ const TrafficPage = () => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
       setLoading(true);
       const data = await getAppTrafficStats(period);
@@ -90,31 +110,36 @@ const TrafficPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [period]);
 
   useEffect(() => {
     fetchStats();
-  }, [period]);
+  }, [fetchStats]);
 
-  const sortedStats = useMemo(() => {
-    const list = [...stats];
+  const isAllSelected = selectedMode === "全部";
+
+  const filteredAndSortedStats = useMemo(() => {
+    const filtered = isAllSelected
+      ? stats
+      : stats.filter((s) => s.traffic_mode === selectedMode);
+    const list = [...filtered];
     list.sort((a, b) => {
-      let aVal = 0;
-      let bVal = 0;
-      if (sortField === "upload") {
-        aVal = a.upload_bytes;
-        bVal = b.upload_bytes;
-      } else if (sortField === "download") {
-        aVal = a.download_bytes;
-        bVal = b.download_bytes;
-      } else {
-        aVal = a.upload_bytes + a.download_bytes;
-        bVal = b.upload_bytes + b.download_bytes;
-      }
+      const aVal =
+        sortField === "upload"
+          ? a.upload_bytes
+          : sortField === "download"
+            ? a.download_bytes
+            : a.upload_bytes + a.download_bytes;
+      const bVal =
+        sortField === "upload"
+          ? b.upload_bytes
+          : sortField === "download"
+            ? b.download_bytes
+            : b.upload_bytes + b.download_bytes;
       return sortOrder === "asc" ? aVal - bVal : bVal - aVal;
     });
     return list;
-  }, [stats, sortField, sortOrder]);
+  }, [stats, sortField, sortOrder, selectedMode, isAllSelected]);
 
   const periods = [
     { key: "day", label: "今日" },
@@ -142,17 +167,87 @@ const TrafficPage = () => {
           <IconButton size="small" onClick={fetchStats} color="inherit">
             <RefreshRounded fontSize="small" />
           </IconButton>
+
+          <Tooltip title="清除所有流量记录">
+            <IconButton
+              size="small"
+              onClick={() => setOpenClearDialog(true)}
+              color="inherit"
+              sx={{
+                "&:hover": {
+                  color: "error.main",
+                },
+                transition: "color 0.2s ease",
+              }}
+            >
+              <DeleteRounded fontSize="small" />
+            </IconButton>
+          </Tooltip>
         </Box>
       }
     >
       <TableContainer
         component={Paper}
-        sx={{ height: "calc(100vh - 120px)", borderRadius: 2 }}
+        sx={{ height: "calc(100vh - 100px)", borderRadius: 2 }}
       >
         <Table stickyHeader size="small">
           <TableHead>
             <TableRow>
-              <TableCell>应用名称 / 进程</TableCell>
+              <TableCell>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 0.5,
+                  }}
+                >
+                  应用名称 / 进程
+                  <Tooltip title="按模式筛选">
+                    <IconButton
+                      size="small"
+                      onClick={(e) => setFilterAnchorEl(e.currentTarget)}
+                      sx={{
+                        p: 0.25,
+                        color: isAllSelected
+                          ? "text.secondary"
+                          : "primary.main",
+                      }}
+                    >
+                      <TuneRounded sx={{ fontSize: 16 }} />
+                    </IconButton>
+                  </Tooltip>
+                  {!isAllSelected && (
+                    <Chip
+                      label={selectedMode}
+                      size="small"
+                      variant="outlined"
+                      color="primary"
+                      sx={{ height: 20, fontSize: 11, ml: 0.5 }}
+                    />
+                  )}
+                </Box>
+                <Menu
+                  anchorEl={filterAnchorEl}
+                  open={filterOpen}
+                  onClose={() => setFilterAnchorEl(null)}
+                  slotProps={{
+                    paper: {
+                      sx: { minWidth: 160 },
+                    },
+                  }}
+                >
+                  {FILTER_MODES.map((mode) => (
+                    <MenuItem
+                      key={mode}
+                      dense
+                      selected={selectedMode === mode}
+                      onClick={() => handleSelectMode(mode)}
+                    >
+                      <ListItemText>{mode}</ListItemText>
+                    </MenuItem>
+                  ))}
+                </Menu>
+              </TableCell>
               <TableCell align="right">
                 <TableSortLabel
                   active={sortField === "upload"}
@@ -189,14 +284,14 @@ const TrafficPage = () => {
                   加载中...
                 </TableCell>
               </TableRow>
-            ) : stats.length === 0 ? (
+            ) : filteredAndSortedStats.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={4} align="center">
                   暂无数据
                 </TableCell>
               </TableRow>
             ) : (
-              sortedStats.map((stat, i) => {
+              filteredAndSortedStats.map((stat) => {
                 const isPathClickable =
                   stat.process_path && stat.process_path.startsWith("/");
                 const displayName = stat.traffic_mode
@@ -204,7 +299,12 @@ const TrafficPage = () => {
                   : stat.process_name;
 
                 return (
-                  <TableRow key={stat.process_name + stat.process_path + stat.traffic_mode} hover>
+                  <TableRow
+                    key={
+                      stat.process_name + stat.process_path + stat.traffic_mode
+                    }
+                    hover
+                  >
                     <TableCell component="th" scope="row">
                       {isPathClickable ? (
                         <Tooltip
@@ -244,16 +344,6 @@ const TrafficPage = () => {
           </TableBody>
         </Table>
       </TableContainer>
-
-      <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 2 }}>
-        <Button
-          variant="contained"
-          color="error"
-          onClick={() => setOpenClearDialog(true)}
-        >
-          清除记录
-        </Button>
-      </Box>
 
       <Dialog open={openClearDialog} onClose={() => setOpenClearDialog(false)}>
         <DialogTitle>确认清除</DialogTitle>
