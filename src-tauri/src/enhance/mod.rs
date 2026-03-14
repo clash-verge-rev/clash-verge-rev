@@ -671,12 +671,52 @@ pub async fn enhance() -> (Mapping, HashSet<String>, HashMap<String, ResultLog>)
                 .cloned()
                 .unwrap_or_default();
 
+            let mut exclude_processes = Vec::new();
+
             // insert to the front
-            for app in apps.iter().rev() {
-                rules.insert(0, Value::String(format!("PROCESS-PATH,{}/*,DIRECT", app)));
+            for app_path in apps.iter().rev() {
+                // Rule fallback (regex is safer for package structure)
+                rules.insert(
+                    0,
+                    Value::String(format!("PROCESS-PATH-REGEX,^{}/.*,DIRECT", app_path)),
+                );
+
+                // Extract app name for tun.auto-exclude-processes
+                if let Some(app_name) = std::path::Path::new(app_path.as_str())
+                    .file_stem()
+                    .and_then(|s| s.to_str())
+                {
+                    exclude_processes.push(Value::String(app_name.to_string()));
+                }
             }
 
             config.insert("rules".into(), Value::Sequence(rules));
+
+            // Inject into tun.auto-exclude-processes to bypass TUN entirely
+            if !exclude_processes.is_empty() {
+                let mut tun = config
+                    .get("tun")
+                    .and_then(|v| v.as_mapping())
+                    .cloned()
+                    .unwrap_or_default();
+                let mut auto_exclude = tun
+                    .get("auto-exclude-processes")
+                    .and_then(|v| v.as_sequence())
+                    .cloned()
+                    .unwrap_or_default();
+
+                for proc in exclude_processes {
+                    if !auto_exclude.contains(&proc) {
+                        auto_exclude.push(proc);
+                    }
+                }
+
+                tun.insert(
+                    "auto-exclude-processes".into(),
+                    Value::Sequence(auto_exclude),
+                );
+                config.insert("tun".into(), Value::Mapping(tun));
+            }
         }
     }
 

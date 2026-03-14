@@ -50,7 +50,7 @@ const SettingSystem = ({ onError }: Props) => {
 
         {OS_PLATFORM === "darwin" && (
           <SettingItem
-            label="macOS 代理直连应用"
+            label="macOS 直连应用"
             extra={
               <IconButton
                 size="small"

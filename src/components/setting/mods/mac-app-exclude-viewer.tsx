@@ -33,6 +33,13 @@ export const MacAppExcludeViewer = forwardRef<MacAppExcludeViewerRef>(
         setOpen(true);
         const appList = await getMacosApps();
         setApps(appList);
+
+        // If current excludeApps is empty, default to select all
+        if (excludeApps.length === 0 && appList.length > 0) {
+          const allPaths = appList.map((a) => a.path);
+          patchVerge({ mac_exclude_apps: allPaths });
+          mutateVerge({ ...verge, mac_exclude_apps: allPaths } as any, false);
+        }
       },
     }));
 
@@ -76,7 +83,7 @@ export const MacAppExcludeViewer = forwardRef<MacAppExcludeViewerRef>(
       <BaseDialog
         open={open}
         onClose={() => setOpen(false)}
-        title="macOS 代理直连应用"
+        title="macOS 直连应用"
         okBtn="确定"
         onOk={() => setOpen(false)}
         disableCancel
