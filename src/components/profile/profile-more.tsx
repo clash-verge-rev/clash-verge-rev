@@ -3,16 +3,17 @@ import {
   Box,
   Badge,
   Chip,
-  Typography,
-  MenuItem,
-  Menu,
   IconButton,
+  Menu,
+  MenuItem,
+  Typography,
 } from "@mui/material";
 import { useLockFn } from "ahooks";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 import { EditorViewer } from "@/components/profile/editor-viewer";
+import { useEditorDocument } from "@/hooks/use-editor-document";
 import { viewProfile, readProfileFile, saveProfileFile } from "@/services/cmds";
 import { showNotice } from "@/services/notice-service";
 
@@ -37,6 +38,12 @@ export const ProfileMore = (props: Props) => {
   const [position, setPosition] = useState({ left: 0, top: 0 });
   const [fileOpen, setFileOpen] = useState(false);
   const [logOpen, setLogOpen] = useState(false);
+
+  const loadDocument = useCallback(() => readProfileFile(id), [id]);
+  const document = useEditorDocument({
+    open: fileOpen,
+    load: loadDocument,
+  });
 
   const onEditFile = () => {
     setAnchorEl(null);
@@ -76,6 +83,13 @@ export const ProfileMore = (props: Props) => {
     justifyContent: "space-between",
     lineHeight: 1,
   };
+
+  const handleSave = useLockFn(async () => {
+    const currentValue = document.value;
+    await saveProfileFile(id, currentValue);
+    onSave?.(document.savedValue, currentValue);
+    document.markSaved(currentValue);
+  });
 
   return (
     <>
@@ -181,13 +195,13 @@ export const ProfileMore = (props: Props) => {
         <EditorViewer
           open={true}
           title={t(globalTitles[id])}
-          initialData={() => readProfileFile(id)}
-          dataKey={id}
+          value={document.value}
           language={id === "Merge" ? "yaml" : "javascript"}
-          onSave={async (prev, curr) => {
-            await saveProfileFile(id, curr ?? "");
-            onSave?.(prev, curr);
-          }}
+          path={`profile-more:${id}.${id === "Merge" ? "yaml" : "js"}`}
+          loading={document.loading}
+          dirty={document.dirty}
+          onChange={document.setValue}
+          onSave={handleSave}
           onClose={() => setFileOpen(false)}
         />
       )}

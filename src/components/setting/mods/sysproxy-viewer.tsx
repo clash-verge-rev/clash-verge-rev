@@ -102,6 +102,8 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
 
   const [open, setOpen] = useState(false);
   const [editorOpen, setEditorOpen] = useState(false);
+  const [pacEditorValue, setPacEditorValue] = useState(DEFAULT_PAC);
+  const [pacEditorSavedValue, setPacEditorSavedValue] = useState(DEFAULT_PAC);
   const [saving, setSaving] = useState(false);
   const { verge, patchVerge, mutateVerge } = useVerge();
   const [hostOptions, setHostOptions] = useState<string[]>([]);
@@ -217,6 +219,21 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
     value.bypass
       ? !validReg.test(value.bypass)
       : false;
+
+  const openPacEditor = () => {
+    const nextPac = value.pac_content ?? DEFAULT_PAC;
+    setPacEditorValue(nextPac);
+    setPacEditorSavedValue(nextPac);
+    setEditorOpen(true);
+  };
+
+  const handleSavePac = useLockFn(async () => {
+    const nextPac =
+      pacEditorValue.trim().length > 0 ? pacEditorValue : DEFAULT_PAC;
+
+    setValue((current) => ({ ...current, pac_content: nextPac }));
+    setPacEditorSavedValue(nextPac);
+  });
 
   useImperativeHandle(ref, () => ({
     open: () => {
@@ -665,9 +682,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
             <Button
               startIcon={<EditRounded />}
               variant="outlined"
-              onClick={() => {
-                setEditorOpen(true);
-              }}
+              onClick={openPacEditor}
             >
               {t("settings.modals.sysproxy.actions.editPac")}
             </Button>
@@ -675,16 +690,12 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
               <EditorViewer
                 open={true}
                 title={t("settings.modals.sysproxy.actions.editPac")}
-                initialData={() => Promise.resolve(value.pac_content ?? "")}
-                dataKey="sysproxy-pac"
+                value={pacEditorValue}
                 language="javascript"
-                onSave={(_prev, curr) => {
-                  let pac = DEFAULT_PAC;
-                  if (curr && curr.trim().length > 0) {
-                    pac = curr;
-                  }
-                  setValue((v) => ({ ...v, pac_content: pac }));
-                }}
+                path="sysproxy-pac.js"
+                dirty={pacEditorValue !== pacEditorSavedValue}
+                onChange={setPacEditorValue}
+                onSave={handleSavePac}
                 onClose={() => setEditorOpen(false)}
               />
             )}

@@ -15,7 +15,6 @@ import {
   useMemo,
   useRef,
   useState,
-  useCallback,
 } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -31,6 +30,8 @@ export function ThemeViewer(props: { ref?: React.Ref<DialogRef> }) {
 
   const [open, setOpen] = useState(false);
   const [editorOpen, setEditorOpen] = useState(false);
+  const [cssEditorValue, setCssEditorValue] = useState("");
+  const [cssEditorSavedValue, setCssEditorSavedValue] = useState("");
   const { verge, patchVerge } = useVerge();
   const { theme_setting } = verge ?? {};
   const [theme, setTheme] = useState(theme_setting || {});
@@ -111,12 +112,18 @@ export function ThemeViewer(props: { ref?: React.Ref<DialogRef> }) {
     [],
   );
 
-  // Stable loader that returns a fresh Promise each call so EditorViewer
-  // can retry/refresh and always read the latest staged CSS from state.
-  const loadCss = useCallback(
-    () => Promise.resolve(themeRef.current?.css_injection ?? ""),
-    [],
-  );
+  const openCssEditor = () => {
+    const nextCss = themeRef.current?.css_injection ?? "";
+    setCssEditorValue(nextCss);
+    setCssEditorSavedValue(nextCss);
+    setEditorOpen(true);
+  };
+
+  const handleSaveCss = useLockFn(async () => {
+    const prevTheme = themeRef.current || {};
+    setTheme({ ...prevTheme, css_injection: cssEditorValue });
+    setCssEditorSavedValue(cssEditorValue);
+  });
 
   const renderItem = (labelKey: string, key: ThemeKey) => {
     const label = t(labelKey);
@@ -167,9 +174,7 @@ export function ThemeViewer(props: { ref?: React.Ref<DialogRef> }) {
           <Button
             startIcon={<EditRounded />}
             variant="outlined"
-            onClick={() => {
-              setEditorOpen(true);
-            }}
+            onClick={openCssEditor}
           >
             {t("settings.components.verge.theme.actions.editCss")}
           </Button>
@@ -177,16 +182,12 @@ export function ThemeViewer(props: { ref?: React.Ref<DialogRef> }) {
             <EditorViewer
               open={true}
               title={t("settings.components.verge.theme.dialogs.editCssTitle")}
-              initialData={loadCss}
-              dataKey="theme-css"
+              value={cssEditorValue}
               language="css"
-              onSave={async (_prev, curr) => {
-                // Only stage the CSS change locally. Persistence happens
-                // when the outer Theme dialog's Save button is pressed.
-                const prevTheme = themeRef.current || {};
-                const nextCss = curr ?? "";
-                setTheme({ ...prevTheme, css_injection: nextCss });
-              }}
+              path="theme-css.css"
+              dirty={cssEditorValue !== cssEditorSavedValue}
+              onChange={setCssEditorValue}
+              onSave={handleSaveCss}
               onClose={() => {
                 setEditorOpen(false);
               }}
