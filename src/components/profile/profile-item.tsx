@@ -19,7 +19,7 @@ import {
 import { open } from "@tauri-apps/plugin-shell";
 import { useLockFn } from "ahooks";
 import dayjs from "dayjs";
-import { useEffect, useReducer, useState } from "react";
+import { useCallback, useEffect, useReducer, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { mutate } from "swr";
 
@@ -27,6 +27,7 @@ import { ConfirmViewer } from "@/components/profile/confirm-viewer";
 import { EditorViewer } from "@/components/profile/editor-viewer";
 import { GroupsEditorViewer } from "@/components/profile/groups-editor-viewer";
 import { RulesEditorViewer } from "@/components/profile/rules-editor-viewer";
+import { useEditorDocument } from "@/hooks/use-editor-document";
 import {
   viewProfile,
   readProfileFile,
@@ -276,6 +277,29 @@ export const ProfileItem = (props: Props) => {
   const [mergeOpen, setMergeOpen] = useState(false);
   const [scriptOpen, setScriptOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+
+  const loadProfileDocument = useCallback(() => readProfileFile(uid), [uid]);
+  const loadMergeDocument = useCallback(
+    () => readProfileFile(option?.merge ?? ""),
+    [option?.merge],
+  );
+  const loadScriptDocument = useCallback(
+    () => readProfileFile(option?.script ?? ""),
+    [option?.script],
+  );
+
+  const profileDocument = useEditorDocument({
+    open: fileOpen,
+    load: loadProfileDocument,
+  });
+  const mergeDocument = useEditorDocument({
+    open: mergeOpen,
+    load: loadMergeDocument,
+  });
+  const scriptDocument = useEditorDocument({
+    open: scriptOpen,
+    load: loadScriptDocument,
+  });
 
   const onOpenHome = () => {
     setAnchorEl(null);
@@ -575,6 +599,29 @@ export const ProfileItem = (props: Props) => {
     };
   }, [fetchNextUpdateTime, itemData.uid, setLoadingCache, showNextUpdate]);
 
+  const handleSaveProfileDocument = useLockFn(async () => {
+    const currentValue = profileDocument.value;
+    await saveProfileFile(uid, currentValue);
+    onSave?.(profileDocument.savedValue, currentValue);
+    profileDocument.markSaved(currentValue);
+  });
+
+  const handleSaveMergeDocument = useLockFn(async () => {
+    const mergeUid = option?.merge ?? "";
+    const currentValue = mergeDocument.value;
+    await saveProfileFile(mergeUid, currentValue);
+    onSave?.(mergeDocument.savedValue, currentValue);
+    mergeDocument.markSaved(currentValue);
+  });
+
+  const handleSaveScriptDocument = useLockFn(async () => {
+    const scriptUid = option?.script ?? "";
+    const currentValue = scriptDocument.value;
+    await saveProfileFile(scriptUid, currentValue);
+    onSave?.(scriptDocument.savedValue, currentValue);
+    scriptDocument.markSaved(currentValue);
+  });
+
   return (
     <Box
       sx={{
@@ -831,13 +878,13 @@ export const ProfileItem = (props: Props) => {
       {fileOpen && (
         <EditorViewer
           open={true}
-          initialData={() => readProfileFile(uid)}
-          dataKey={uid}
+          value={profileDocument.value}
           language="yaml"
-          onSave={async (prev, curr) => {
-            await saveProfileFile(uid, curr ?? "");
-            onSave?.(prev, curr);
-          }}
+          path={`profile:${uid}.yaml`}
+          loading={profileDocument.loading}
+          dirty={profileDocument.dirty}
+          onChange={profileDocument.setValue}
+          onSave={handleSaveProfileDocument}
           onClose={() => setFileOpen(false)}
         />
       )}
@@ -877,26 +924,26 @@ export const ProfileItem = (props: Props) => {
       {mergeOpen && (
         <EditorViewer
           open={true}
-          initialData={() => readProfileFile(option?.merge ?? "")}
-          dataKey={`merge:${option?.merge ?? ""}`}
+          value={mergeDocument.value}
           language="yaml"
-          onSave={async (prev, curr) => {
-            await saveProfileFile(option?.merge ?? "", curr ?? "");
-            onSave?.(prev, curr);
-          }}
+          path={`merge:${option?.merge ?? ""}.yaml`}
+          loading={mergeDocument.loading}
+          dirty={mergeDocument.dirty}
+          onChange={mergeDocument.setValue}
+          onSave={handleSaveMergeDocument}
           onClose={() => setMergeOpen(false)}
         />
       )}
       {scriptOpen && (
         <EditorViewer
           open={true}
-          initialData={() => readProfileFile(option?.script ?? "")}
-          dataKey={`script:${option?.script ?? ""}`}
+          value={scriptDocument.value}
           language="javascript"
-          onSave={async (prev, curr) => {
-            await saveProfileFile(option?.script ?? "", curr ?? "");
-            onSave?.(prev, curr);
-          }}
+          path={`script:${option?.script ?? ""}.js`}
+          loading={scriptDocument.loading}
+          dirty={scriptDocument.dirty}
+          onChange={scriptDocument.setValue}
+          onSave={handleSaveScriptDocument}
           onClose={() => setScriptOpen(false)}
         />
       )}

@@ -63,6 +63,7 @@
     "i18next": "^25.8.14",
     "js-yaml": "^4.1.1",
     "lodash-es": "^4.17.23",
+    "meta-json-schema": "^1.19.21",
     "monaco-editor": "^0.55.1",
     "monaco-yaml": "^5.4.1",
     "nanoid": "^5.1.6",
@@ -139,6 +140,7 @@
       "core-js",
       "es5-ext",
       "esbuild",
+      "meta-json-schema",
       "unrs-resolver"
     ]
   }

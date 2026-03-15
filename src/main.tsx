@@ -1,7 +1,7 @@
 /// <reference types="vite/client" />
 /// <reference types="vite-plugin-svgr/client" />
 import "./assets/styles/index.scss";
-import "./utils/monaco";
+import "./services/monaco";
 
 import { ResizeObserver } from "@juggle/resize-observer";
 import { ComposeContextProvider } from "foxact/compose-context-provider";

@@ -9,14 +9,24 @@ import { getRuntimeYaml } from "@/services/cmds";
 export const ConfigViewer = forwardRef<DialogRef>((_, ref) => {
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [runtimeConfig, setRuntimeConfig] = useState("");
 
   useImperativeHandle(ref, () => ({
     open: () => {
-      getRuntimeYaml().then((data) => {
-        setRuntimeConfig(data ?? "# Error getting runtime yaml\n");
-        setOpen(true);
-      });
+      setRuntimeConfig("");
+      setLoading(true);
+      setOpen(true);
+      getRuntimeYaml()
+        .then((data) => {
+          setRuntimeConfig(data ?? "# Error getting runtime yaml\n");
+        })
+        .catch(() => {
+          setRuntimeConfig("# Error getting runtime yaml\n");
+        })
+        .finally(() => {
+          setLoading(false);
+        });
     },
     close: () => setOpen(false),
   }));
@@ -31,10 +41,11 @@ export const ConfigViewer = forwardRef<DialogRef>((_, ref) => {
           <Chip label={t("shared.labels.readOnly")} size="small" />
         </Box>
       }
-      initialData={() => Promise.resolve(runtimeConfig)}
-      dataKey="runtime-config"
+      value={runtimeConfig}
       readOnly
       language="yaml"
+      path="runtime-config.yaml"
+      loading={loading}
       onClose={() => setOpen(false)}
     />
   );
