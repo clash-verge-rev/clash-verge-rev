@@ -1,10 +1,8 @@
 import eslintJS from '@eslint/js'
 import eslintReact from '@eslint-react/eslint-plugin'
 import { defineConfig } from 'eslint/config'
-import configPrettier from 'eslint-config-prettier'
 import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript'
 import pluginImportX from 'eslint-plugin-import-x'
-import pluginPrettier from 'eslint-plugin-prettier'
 import pluginReactCompiler from 'eslint-plugin-react-compiler'
 import pluginReactHooks from 'eslint-plugin-react-hooks'
 import pluginReactRefresh from 'eslint-plugin-react-refresh'
@@ -25,14 +23,12 @@ export default defineConfig([
       'import-x': pluginImportX,
       'react-refresh': pluginReactRefresh,
       'unused-imports': pluginUnusedImports,
-      prettier: pluginPrettier,
     },
 
     extends: [
       eslintJS.configs.recommended,
       tseslint.configs.recommended,
       eslintReact.configs['recommended-typescript'],
-      configPrettier,
     ],
 
     languageOptions: {
@@ -140,13 +136,10 @@ export default defineConfig([
       'no-case-declarations': 'error',
       'no-fallthrough': 'error',
       'no-empty': ['warn', { allowEmptyCatch: true }],
-
-      // Prettier 格式化问题
-      'prettier/prettier': 'warn',
     },
   },
   {
-    files: ['scripts/**/*.{js,mjs,cjs}', 'scripts-workflow/**/*.{js,mjs,cjs}'],
+    files: ['scripts/**/*.{js,mjs,cjs}'],
 
     languageOptions: {
       globals: {
