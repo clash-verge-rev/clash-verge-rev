@@ -10,7 +10,6 @@ members = [
 ]
 resolver = "2"
 
-
 [profile.release]
 panic = "abort"
 codegen-units = 1

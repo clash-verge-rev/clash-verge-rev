@@ -7,7 +7,7 @@ on:
   push:
     # -rc tag 时预览发布, 跳过 telegram 通知、跳过 winget 提交、跳过 latest.json 文件更新
     tags:
-      - "v*.*.*"
+      - 'v*.*.*'
 permissions: write-all
 env:
   CARGO_INCREMENTAL: 0
@@ -15,7 +15,7 @@ env:
   HUSKY: 0
 concurrency:
   # only allow per workflow per commit (and not pr) to run at a time
-  group: "${{ github.workflow }} - ${{ github.head_ref || github.ref }}"
+  group: '${{ github.workflow }} - ${{ github.head_ref || github.ref }}'
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
@@ -129,7 +129,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.TAG_NAME }}
-          name: "Clash Verge Rev ${{ env.TAG_NAME }}"
+          name: 'Clash Verge Rev ${{ env.TAG_NAME }}'
           body_path: release.txt
           draft: false
           prerelease: ${{ contains(github.ref_name, '-rc') }}
@@ -162,7 +162,7 @@ jobs:
       - name: Install Rust Stable
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: "1.91.0"
+          toolchain: '1.91.0'
           targets: ${{ matrix.target }}
 
       - name: Add Rust Target
@@ -172,8 +172,8 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           save-if: ${{ github.ref == 'refs/heads/dev' }}
-          prefix-key: "v1-rust"
-          key: "rust-shared-stable-${{ matrix.os }}-${{ matrix.target }}"
+          prefix-key: 'v1-rust'
+          key: 'rust-shared-stable-${{ matrix.os }}-${{ matrix.target }}'
           workspaces: |
             . -> target
           cache-all-crates: true
@@ -197,7 +197,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v6
         with:
-          node-version: "24.14.0"
+          node-version: '24.14.0'
 
       - uses: pnpm/action-setup@v4
         name: Install pnpm
@@ -220,7 +220,7 @@ jobs:
         # 上游 5.24 修改了 latest.json 的生成逻辑，且依赖 tauri-plugin-update 2.10.0 暂未发布，故锁定在 0.5.23 版本
         uses: tauri-apps/tauri-action@v0.6.2
         env:
-          NODE_OPTIONS: "--max_old_space_size=4096"
+          NODE_OPTIONS: '--max_old_space_size=4096'
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
@@ -232,8 +232,8 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         with:
           tagName: ${{ github.ref_name }}
-          releaseName: "Clash Verge Rev ${{ github.ref_name }}"
-          releaseBody: "Draft release, will be updated later."
+          releaseName: 'Clash Verge Rev ${{ github.ref_name }}'
+          releaseBody: 'Draft release, will be updated later.'
           releaseDraft: true
           prerelease: ${{ contains(github.ref_name, '-rc') }}
           tauriScript: pnpm
@@ -261,7 +261,7 @@ jobs:
       - name: Install Rust Stable
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: "1.91.0"
+          toolchain: '1.91.0'
           targets: ${{ matrix.target }}
 
       - name: Add Rust Target
@@ -271,8 +271,8 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           save-if: ${{ github.ref == 'refs/heads/dev' }}
-          prefix-key: "v1-rust"
-          key: "rust-shared-stable-${{ matrix.os }}-${{ matrix.target }}"
+          prefix-key: 'v1-rust'
+          key: 'rust-shared-stable-${{ matrix.os }}-${{ matrix.target }}'
           workspaces: |
             . -> target
           cache-all-crates: true
@@ -281,7 +281,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v6
         with:
-          node-version: "24.14.0"
+          node-version: '24.14.0'
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
@@ -293,7 +293,7 @@ jobs:
           pnpm i
           pnpm run prebuild ${{ matrix.target }}
 
-      - name: "Setup for linux"
+      - name: 'Setup for linux'
         run: |-
           sudo ls -lR /etc/apt/
 
@@ -323,14 +323,14 @@ jobs:
             patchelf:${{ matrix.arch }} \
             librsvg2-dev:${{ matrix.arch }}
 
-      - name: "Install aarch64 tools"
+      - name: 'Install aarch64 tools'
         if: matrix.target == 'aarch64-unknown-linux-gnu'
         run: |
           sudo apt install -y \
             gcc-aarch64-linux-gnu \
             g++-aarch64-linux-gnu
 
-      - name: "Install armv7 tools"
+      - name: 'Install armv7 tools'
         if: matrix.target == 'armv7-unknown-linux-gnueabihf'
         run: |
           sudo apt install -y \
@@ -356,7 +356,7 @@ jobs:
           fi
           pnpm build --target ${{ matrix.target }}
         env:
-          NODE_OPTIONS: "--max_old_space_size=4096"
+          NODE_OPTIONS: '--max_old_space_size=4096'
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
 
@@ -371,8 +371,8 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{env.VERSION}}
-          name: "Clash Verge Rev v${{env.VERSION}}"
-          body: "See release notes for detailed changelog."
+          name: 'Clash Verge Rev v${{env.VERSION}}'
+          body: 'See release notes for detailed changelog.'
           token: ${{ secrets.GITHUB_TOKEN }}
           prerelease: ${{ contains(github.ref_name, '-rc') }}
           files: |
@@ -400,7 +400,7 @@ jobs:
       - name: Install Rust Stable
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: "1.91.0"
+          toolchain: '1.91.0'
           targets: ${{ matrix.target }}
 
       - name: Add Rust Target
@@ -410,8 +410,8 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           save-if: ${{ github.ref == 'refs/heads/dev' }}
-          prefix-key: "v1-rust"
-          key: "rust-shared-stable-${{ matrix.os }}-${{ matrix.target }}"
+          prefix-key: 'v1-rust'
+          key: 'rust-shared-stable-${{ matrix.os }}-${{ matrix.target }}'
           workspaces: |
             . -> target
           cache-all-crates: true
@@ -420,7 +420,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v6
         with:
-          node-version: "24.14.0"
+          node-version: '24.14.0'
 
       - uses: pnpm/action-setup@v4
         name: Install pnpm
@@ -450,7 +450,7 @@ jobs:
         id: build
         uses: tauri-apps/tauri-action@v0.6.2
         env:
-          NODE_OPTIONS: "--max_old_space_size=4096"
+          NODE_OPTIONS: '--max_old_space_size=4096'
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
@@ -482,8 +482,8 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{steps.build.outputs.appVersion}}
-          name: "Clash Verge Rev v${{steps.build.outputs.appVersion}}"
-          body: "See release notes for detailed changelog."
+          name: 'Clash Verge Rev v${{steps.build.outputs.appVersion}}'
+          body: 'See release notes for detailed changelog.'
           token: ${{ secrets.GITHUB_TOKEN }}
           prerelease: ${{ contains(github.ref_name, '-rc') }}
           files: target/${{ matrix.target }}/release/bundle/nsis/*setup*
@@ -505,7 +505,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v6
         with:
-          node-version: "24.14.0"
+          node-version: '24.14.0'
 
       - uses: pnpm/action-setup@v4
         name: Install pnpm
@@ -531,7 +531,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v6
         with:
-          node-version: "24.14.0"
+          node-version: '24.14.0'
 
       - uses: pnpm/action-setup@v4
         name: Install pnpm
@@ -593,7 +593,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v6
         with:
-          node-version: "24.14.0"
+          node-version: '24.14.0'
 
       - uses: pnpm/action-setup@v4
         name: Install pnpm

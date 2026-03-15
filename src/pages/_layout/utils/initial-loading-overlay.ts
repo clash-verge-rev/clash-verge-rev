@@ -1,45 +1,45 @@
-const OVERLAY_ID = "initial-loading-overlay";
-const REMOVE_DELAY = 300;
+const OVERLAY_ID = 'initial-loading-overlay'
+const REMOVE_DELAY = 300
 
-let overlayRemoved = false;
+let overlayRemoved = false
 
 type HideOverlayOptions = {
-  schedule?: (handler: () => void, delay: number) => number;
-  assumeMissingAsRemoved?: boolean;
-};
+  schedule?: (handler: () => void, delay: number) => number
+  assumeMissingAsRemoved?: boolean
+}
 
 type HideOverlayResult = {
-  removed: boolean;
-  removalTimer?: number;
-};
+  removed: boolean
+  removalTimer?: number
+}
 
 export const hideInitialOverlay = (
   options: HideOverlayOptions = {},
 ): HideOverlayResult => {
   if (overlayRemoved) {
-    return { removed: true };
+    return { removed: true }
   }
 
-  const overlay = document.getElementById(OVERLAY_ID);
+  const overlay = document.getElementById(OVERLAY_ID)
   if (!overlay) {
     if (options.assumeMissingAsRemoved) {
-      overlayRemoved = true;
-      return { removed: true };
+      overlayRemoved = true
+      return { removed: true }
     }
-    return { removed: false };
+    return { removed: false }
   }
 
-  overlayRemoved = true;
-  overlay.dataset.hidden = "true";
+  overlayRemoved = true
+  overlay.dataset.hidden = 'true'
 
-  const schedule = options.schedule ?? window.setTimeout;
+  const schedule = options.schedule ?? window.setTimeout
   const removalTimer = schedule(() => {
     try {
-      overlay.remove();
+      overlay.remove()
     } catch (error) {
-      console.warn("[Loading Overlay] Removal failed:", error);
+      console.warn('[Loading Overlay] Removal failed:', error)
     }
-  }, REMOVE_DELAY);
+  }, REMOVE_DELAY)
 
-  return { removed: true, removalTimer };
-};
+  return { removed: true, removalTimer }
+}

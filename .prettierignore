@@ -9,3 +9,4 @@ src-tauri/target/
 src-tauri/gen/
 
 target
+Cargo.lock

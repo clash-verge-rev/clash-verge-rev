@@ -1,13 +1,13 @@
-import { useLocalStorage } from "foxact/use-local-storage";
+import { useLocalStorage } from 'foxact/use-local-storage'
 
-const defaultConnectionSetting: IConnectionSetting = { layout: "table" };
+const defaultConnectionSetting: IConnectionSetting = { layout: 'table' }
 
 export const useConnectionSetting = () =>
   useLocalStorage<IConnectionSetting>(
-    "connections-setting",
+    'connections-setting',
     defaultConnectionSetting,
     {
       serializer: JSON.stringify,
       deserializer: JSON.parse,
     },
-  );
+  )

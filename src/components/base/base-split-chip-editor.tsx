@@ -1,4 +1,4 @@
-import { CodeRounded, ViewModuleRounded } from "@mui/icons-material";
+import { CodeRounded, ViewModuleRounded } from '@mui/icons-material'
 import {
   Box,
   Button,
@@ -8,51 +8,51 @@ import {
   TextField,
   Tooltip,
   Typography,
-} from "@mui/material";
-import type { ReactNode } from "react";
-import { useMemo, useState } from "react";
-import { useTranslation } from "react-i18next";
+} from '@mui/material'
+import type { ReactNode } from 'react'
+import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
-export type BaseSplitChipEditorMode = "visual" | "advanced";
+export type BaseSplitChipEditorMode = 'visual' | 'advanced'
 
 interface BaseSplitChipEditorProps {
-  value?: string;
-  onChange: (value: string) => void;
-  disabled?: boolean;
-  error?: boolean;
-  helperText?: ReactNode;
-  placeholder?: string;
-  rows?: number;
-  separator?: string;
-  splitPattern?: RegExp;
-  defaultMode?: BaseSplitChipEditorMode;
-  showModeToggle?: boolean;
-  ariaLabel?: string;
-  addLabel?: ReactNode;
-  emptyLabel?: ReactNode;
-  modeLabels?: Partial<Record<BaseSplitChipEditorMode, ReactNode>>;
-  renderHeader?: (modeToggle: ReactNode) => ReactNode;
+  value?: string
+  onChange: (value: string) => void
+  disabled?: boolean
+  error?: boolean
+  helperText?: ReactNode
+  placeholder?: string
+  rows?: number
+  separator?: string
+  splitPattern?: RegExp
+  defaultMode?: BaseSplitChipEditorMode
+  showModeToggle?: boolean
+  ariaLabel?: string
+  addLabel?: ReactNode
+  emptyLabel?: ReactNode
+  modeLabels?: Partial<Record<BaseSplitChipEditorMode, ReactNode>>
+  renderHeader?: (modeToggle: ReactNode) => ReactNode
 }
 
-const DEFAULT_SPLIT_PATTERN = /[,\n;\r]+/;
+const DEFAULT_SPLIT_PATTERN = /[,\n;\r]+/
 
 const splitValue = (value: string, splitPattern: RegExp) =>
   value
     .split(splitPattern)
     .map((item) => item.trim())
-    .filter(Boolean);
+    .filter(Boolean)
 
 export const BaseSplitChipEditor = ({
-  value = "",
+  value = '',
   onChange,
   disabled = false,
   error = false,
   helperText,
   placeholder,
   rows = 4,
-  separator = ",",
+  separator = ',',
   splitPattern = DEFAULT_SPLIT_PATTERN,
-  defaultMode = "visual",
+  defaultMode = 'visual',
   showModeToggle = true,
   ariaLabel,
   addLabel,
@@ -60,58 +60,58 @@ export const BaseSplitChipEditor = ({
   modeLabels,
   renderHeader,
 }: BaseSplitChipEditorProps) => {
-  const { t } = useTranslation();
-  const [mode, setMode] = useState<BaseSplitChipEditorMode>(defaultMode);
-  const [draft, setDraft] = useState("");
+  const { t } = useTranslation()
+  const [mode, setMode] = useState<BaseSplitChipEditorMode>(defaultMode)
+  const [draft, setDraft] = useState('')
 
   const resolvedLabels = useMemo(
     () => ({
-      visual: modeLabels?.visual ?? t("shared.editorModes.visualization"),
-      advanced: modeLabels?.advanced ?? t("shared.editorModes.advanced"),
-      add: addLabel ?? t("shared.actions.new"),
-      empty: emptyLabel ?? t("shared.statuses.empty"),
+      visual: modeLabels?.visual ?? t('shared.editorModes.visualization'),
+      advanced: modeLabels?.advanced ?? t('shared.editorModes.advanced'),
+      add: addLabel ?? t('shared.actions.new'),
+      empty: emptyLabel ?? t('shared.statuses.empty'),
     }),
     [t, modeLabels, addLabel, emptyLabel],
-  );
+  )
 
   const values = useMemo(
     () => splitValue(value, splitPattern),
     [value, splitPattern],
-  );
+  )
 
   const items = useMemo(() => {
-    const counts = new Map<string, number>();
+    const counts = new Map<string, number>()
     return values.map((item) => {
-      const nextCount = (counts.get(item) ?? 0) + 1;
-      counts.set(item, nextCount);
+      const nextCount = (counts.get(item) ?? 0) + 1
+      counts.set(item, nextCount)
       return {
         key: `${item}-${nextCount}`,
         value: item,
-      };
-    });
-  }, [values]);
+      }
+    })
+  }, [values])
 
   const handleAddDraft = () => {
-    const nextValues = splitValue(draft, splitPattern);
+    const nextValues = splitValue(draft, splitPattern)
     if (!nextValues.length) {
-      return;
+      return
     }
-    const nextValue = [...values, ...nextValues].join(separator);
-    onChange(nextValue);
-    setDraft("");
-  };
+    const nextValue = [...values, ...nextValues].join(separator)
+    onChange(nextValue)
+    setDraft('')
+  }
 
   const handleRemoveItem = (index: number) => {
-    const nextValue = values.filter((_, itemIndex) => itemIndex !== index);
-    onChange(nextValue.join(separator));
-  };
+    const nextValue = values.filter((_, itemIndex) => itemIndex !== index)
+    onChange(nextValue.join(separator))
+  }
 
-  const nextMode = mode === "visual" ? "advanced" : "visual";
+  const nextMode = mode === 'visual' ? 'advanced' : 'visual'
   const toggleLabel =
-    nextMode === "visual" ? resolvedLabels.visual : resolvedLabels.advanced;
-  const ToggleIcon = nextMode === "visual" ? ViewModuleRounded : CodeRounded;
+    nextMode === 'visual' ? resolvedLabels.visual : resolvedLabels.advanced
+  const ToggleIcon = nextMode === 'visual' ? ViewModuleRounded : CodeRounded
   const resolvedAriaLabel =
-    ariaLabel ?? (typeof toggleLabel === "string" ? toggleLabel : undefined);
+    ariaLabel ?? (typeof toggleLabel === 'string' ? toggleLabel : undefined)
 
   const modeToggle = showModeToggle ? (
     <Tooltip title={toggleLabel}>
@@ -119,26 +119,26 @@ export const BaseSplitChipEditor = ({
         size="small"
         aria-label={resolvedAriaLabel}
         onClick={() => {
-          setMode(nextMode);
-          if (nextMode === "visual") {
-            setDraft("");
+          setMode(nextMode)
+          if (nextMode === 'visual') {
+            setDraft('')
           }
         }}
       >
         <ToggleIcon fontSize="small" />
       </IconButton>
     </Tooltip>
-  ) : null;
+  ) : null
 
   return (
     <>
       {renderHeader ? renderHeader(modeToggle) : modeToggle}
-      {mode === "visual" ? (
-        <Box sx={{ padding: "0 2px 5px" }}>
+      {mode === 'visual' ? (
+        <Box sx={{ padding: '0 2px 5px' }}>
           <Box
             sx={{
-              display: "flex",
-              flexWrap: "wrap",
+              display: 'flex',
+              flexWrap: 'wrap',
               gap: 1,
               minHeight: 32,
             }}
@@ -161,7 +161,7 @@ export const BaseSplitChipEditor = ({
             )}
           </Box>
           <Box
-            sx={{ display: "flex", gap: 1, marginTop: 1, alignItems: "center" }}
+            sx={{ display: 'flex', gap: 1, marginTop: 1, alignItems: 'center' }}
           >
             <TextField
               disabled={disabled}
@@ -171,14 +171,14 @@ export const BaseSplitChipEditor = ({
               placeholder={placeholder}
               error={error}
               sx={{
-                "& .MuiInputBase-root": { minHeight: 32 },
-                "& .MuiInputBase-input": { padding: "4px 8px" },
+                '& .MuiInputBase-root': { minHeight: 32 },
+                '& .MuiInputBase-input': { padding: '4px 8px' },
               }}
               onChange={(event) => setDraft(event.target.value)}
               onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  event.preventDefault();
-                  handleAddDraft();
+                if (event.key === 'Enter') {
+                  event.preventDefault()
+                  handleAddDraft()
                 }
               }}
             />
@@ -187,7 +187,7 @@ export const BaseSplitChipEditor = ({
               size="small"
               onClick={handleAddDraft}
               disabled={disabled || !draft.trim()}
-              sx={{ minHeight: 32, padding: "2px 8px" }}
+              sx={{ minHeight: 32, padding: '2px 8px' }}
             >
               {resolvedLabels.add}
             </Button>
@@ -203,14 +203,14 @@ export const BaseSplitChipEditor = ({
           size="small"
           multiline
           rows={rows}
-          sx={{ width: "100%" }}
+          sx={{ width: '100%' }}
           value={value}
           helperText={helperText}
           onChange={(event) => {
-            onChange(event.target.value);
+            onChange(event.target.value)
           }}
         />
       )}
     </>
-  );
-};
+  )
+}
