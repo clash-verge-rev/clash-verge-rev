@@ -1,16 +1,5 @@
 {
-  "printWidth": 80,
-  "tabWidth": 2,
-  "useTabs": false,
-  "semi": true,
-  "singleQuote": false,
-  "jsxSingleQuote": false,
-  "trailingComma": "all",
-  "bracketSpacing": true,
-  "bracketSameLine": false,
-  "arrowParens": "always",
-  "proseWrap": "preserve",
-  "htmlWhitespaceSensitivity": "css",
-  "endOfLine": "auto",
-  "embeddedLanguageFormatting": "auto"
+  "semi": false,
+  "singleQuote": true,
+  "plugins": ["prettier-plugin-toml"]
 }

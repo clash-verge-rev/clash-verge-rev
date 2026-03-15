@@ -1,54 +1,54 @@
 /* eslint-disable @eslint-react/hooks-extra/no-direct-set-state-in-use-effect */
-import { useEffect } from "foxact/use-abortable-effect";
-import { useCallback, useState } from "react";
+import { useEffect } from 'foxact/use-abortable-effect'
+import { useCallback, useState } from 'react'
 
-import { showNotice } from "@/services/notice-service";
+import { showNotice } from '@/services/notice-service'
 
 interface UseEditorDocumentOptions {
-  open: boolean;
-  load: () => Promise<string>;
+  open: boolean
+  load: () => Promise<string>
 }
 
 export const useEditorDocument = ({ open, load }: UseEditorDocumentOptions) => {
-  const [value, setValue] = useState("");
-  const [savedValue, setSavedValue] = useState("");
-  const [loading, setLoading] = useState(true);
+  const [value, setValue] = useState('')
+  const [savedValue, setSavedValue] = useState('')
+  const [loading, setLoading] = useState(true)
 
   const resetDocumentState = useCallback(() => {
-    setValue("");
-    setSavedValue("");
-    setLoading(true);
-  }, []);
+    setValue('')
+    setSavedValue('')
+    setLoading(true)
+  }, [])
 
   useEffect(
     (signal) => {
-      resetDocumentState();
+      resetDocumentState()
 
-      if (!open) return;
+      if (!open) return
 
       load()
         .then((nextValue) => {
-          if (signal.aborted) return;
+          if (signal.aborted) return
 
-          const normalized = nextValue ?? "";
-          setValue(normalized);
-          setSavedValue(normalized);
+          const normalized = nextValue ?? ''
+          setValue(normalized)
+          setSavedValue(normalized)
         })
         .catch((error) => {
-          if (!signal.aborted) showNotice.error(error);
+          if (!signal.aborted) showNotice.error(error)
         })
         .finally(() => {
-          if (!signal.aborted) setLoading(false);
-        });
+          if (!signal.aborted) setLoading(false)
+        })
     },
     [load, open, resetDocumentState],
-  );
+  )
 
   const markSaved = useCallback((nextValue: string) => {
-    setSavedValue(nextValue);
-  }, []);
+    setSavedValue(nextValue)
+  }, [])
 
-  const dirty = value !== savedValue;
+  const dirty = value !== savedValue
 
   return {
     value,
@@ -57,5 +57,5 @@ export const useEditorDocument = ({ open, load }: UseEditorDocumentOptions) => {
     loading,
     dirty,
     markSaved,
-  };
-};
+  }
+}

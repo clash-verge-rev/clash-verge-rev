@@ -6,1400 +6,1400 @@ export interface TranslationResources {
     connections: {
       components: {
         actions: {
-          active: string;
-          closeConnection: string;
-          closed: string;
-        };
+          active: string
+          closeConnection: string
+          closed: string
+        }
         columnManager: {
-          dragHandle: string;
-          title: string;
-        };
+          dragHandle: string
+          title: string
+        }
         fields: {
-          chains: string;
-          destination: string;
-          destinationPort: string;
-          dlSpeed: string;
-          host: string;
-          process: string;
-          rule: string;
-          source: string;
-          time: string;
-          type: string;
-          ulSpeed: string;
-        };
+          chains: string
+          destination: string
+          destinationPort: string
+          dlSpeed: string
+          host: string
+          process: string
+          rule: string
+          source: string
+          time: string
+          type: string
+          ulSpeed: string
+        }
         order: {
-          default: string;
-          downloadSpeed: string;
-          uploadSpeed: string;
-        };
-      };
+          default: string
+          downloadSpeed: string
+          uploadSpeed: string
+        }
+      }
       page: {
-        title: string;
-      };
-    };
+        title: string
+      }
+    }
     home: {
       components: {
         clashInfo: {
           fields: {
-            coreVersion: string;
-            mixedPort: string;
-            rulesCount: string;
-            systemProxyAddress: string;
-            uptime: string;
-          };
-          title: string;
-        };
+            coreVersion: string
+            mixedPort: string
+            rulesCount: string
+            systemProxyAddress: string
+            uptime: string
+          }
+          title: string
+        }
         clashMode: {
           descriptions: {
-            direct: string;
-            global: string;
-            rule: string;
-          };
+            direct: string
+            global: string
+            rule: string
+          }
           errors: {
-            communication: string;
-          };
+            communication: string
+          }
           labels: {
-            direct: string;
-            global: string;
-            rule: string;
-          };
-        };
+            direct: string
+            global: string
+            rule: string
+          }
+        }
         currentProxy: {
           actions: {
-            refreshDelay: string;
-          };
+            refreshDelay: string
+          }
           labels: {
-            directMode: string;
-            globalMode: string;
-            group: string;
-            noActiveNode: string;
-            proxy: string;
-          };
-          title: string;
-        };
+            directMode: string
+            globalMode: string
+            group: string
+            noActiveNode: string
+            proxy: string
+          }
+          title: string
+        }
         ipInfo: {
           errors: {
-            load: string;
-          };
+            load: string
+          }
           labels: {
-            asn: string;
-            autoRefresh: string;
-            ip: string;
-            isp: string;
-            location: string;
-            org: string;
-            timezone: string;
-            unknown: string;
-          };
-          title: string;
-        };
+            asn: string
+            autoRefresh: string
+            ip: string
+            isp: string
+            location: string
+            org: string
+            timezone: string
+            unknown: string
+          }
+          title: string
+        }
         proxyTun: {
           status: {
-            systemProxyDisabled: string;
-            systemProxyEnabled: string;
-            tunModeDisabled: string;
-            tunModeEnabled: string;
-            tunModeServiceRequired: string;
-          };
+            systemProxyDisabled: string
+            systemProxyEnabled: string
+            tunModeDisabled: string
+            tunModeEnabled: string
+            tunModeServiceRequired: string
+          }
           tooltips: {
-            systemProxy: string;
-            tunMode: string;
-          };
-        };
+            systemProxy: string
+            tunMode: string
+          }
+        }
         systemInfo: {
           actions: {
-            settings: string;
-          };
+            settings: string
+          }
           badges: {
-            adminMode: string;
-            adminServiceMode: string;
-            serviceMode: string;
-            sidecarMode: string;
-          };
+            adminMode: string
+            adminServiceMode: string
+            serviceMode: string
+            sidecarMode: string
+          }
           fields: {
-            autoLaunch: string;
-            lastCheckUpdate: string;
-            osInfo: string;
-            runningMode: string;
-            vergeVersion: string;
-          };
-          title: string;
-        };
+            autoLaunch: string
+            lastCheckUpdate: string
+            osInfo: string
+            runningMode: string
+            vergeVersion: string
+          }
+          title: string
+        }
         tests: {
-          title: string;
-        };
+          title: string
+        }
         traffic: {
           legends: {
-            download: string;
-            upload: string;
-          };
+            download: string
+            upload: string
+          }
           metrics: {
-            activeConnections: string;
-            downloadSpeed: string;
-            memoryUsage: string;
-            uploadSpeed: string;
-          };
+            activeConnections: string
+            downloadSpeed: string
+            memoryUsage: string
+            uploadSpeed: string
+          }
           patterns: {
-            minutes: string;
-          };
-        };
-      };
+            minutes: string
+          }
+        }
+      }
       page: {
         cards: {
-          networkSettings: string;
-          proxyMode: string;
-          trafficStats: string;
-        };
+          networkSettings: string
+          proxyMode: string
+          trafficStats: string
+        }
         settings: {
           cards: {
-            clashInfo: string;
-            currentProxy: string;
-            ip: string;
-            network: string;
-            profile: string;
-            proxyMode: string;
-            systemInfo: string;
-            tests: string;
-            traffic: string;
-          };
-          title: string;
-        };
-        title: string;
+            clashInfo: string
+            currentProxy: string
+            ip: string
+            network: string
+            profile: string
+            proxyMode: string
+            systemInfo: string
+            tests: string
+            traffic: string
+          }
+          title: string
+        }
+        title: string
         tooltips: {
-          lightweightMode: string;
-          manual: string;
-          settings: string;
-        };
-      };
-    };
+          lightweightMode: string
+          manual: string
+          settings: string
+        }
+      }
+    }
     layout: {
       components: {
         navigation: {
           menu: {
-            collapseNavBar: string;
-            expandNavBar: string;
-            lock: string;
-            reorderMode: string;
-            restoreDefaultOrder: string;
-            unlock: string;
-          };
+            collapseNavBar: string
+            expandNavBar: string
+            lock: string
+            reorderMode: string
+            restoreDefaultOrder: string
+            unlock: string
+          }
           tabs: {
-            connections: string;
-            home: string;
-            logs: string;
-            profiles: string;
-            proxies: string;
-            rules: string;
-            settings: string;
-            unlock: string;
-          };
-        };
-      };
-    };
+            connections: string
+            home: string
+            logs: string
+            profiles: string
+            proxies: string
+            rules: string
+            settings: string
+            unlock: string
+          }
+        }
+      }
+    }
     logs: {
       actions: {
-        showAscending: string;
-        showDescending: string;
-      };
+        showAscending: string
+        showDescending: string
+      }
       page: {
-        title: string;
-      };
-    };
+        title: string
+      }
+    }
     profiles: {
       components: {
         card: {
           labels: {
-            clickToImport: string;
-          };
-        };
+            clickToImport: string
+          }
+        }
         fileInput: {
-          chooseFile: string;
-        };
+          chooseFile: string
+        }
         menu: {
-          editFile: string;
-          editGroups: string;
-          editInfo: string;
-          editProxies: string;
-          editRules: string;
-          extendConfig: string;
-          extendScript: string;
-          home: string;
-          openFile: string;
-          select: string;
-          update: string;
-          updateViaProxy: string;
-        };
+          editFile: string
+          editGroups: string
+          editInfo: string
+          editProxies: string
+          editRules: string
+          extendConfig: string
+          extendScript: string
+          home: string
+          openFile: string
+          select: string
+          update: string
+          updateViaProxy: string
+        }
         more: {
           chips: {
-            merge: string;
-            script: string;
-          };
+            merge: string
+            script: string
+          }
           global: {
-            merge: string;
-            script: string;
-          };
-        };
+            merge: string
+            script: string
+          }
+        }
         profileItem: {
           status: {
-            autoUpdateDisabled: string;
-            lastUpdateFailed: string;
-            nextUp: string;
-            noSchedule: string;
-            unknown: string;
-          };
+            autoUpdateDisabled: string
+            lastUpdateFailed: string
+            nextUp: string
+            noSchedule: string
+            unknown: string
+          }
           tooltips: {
-            showLast: string;
-            showNext: string;
-          };
-        };
-      };
+            showLast: string
+            showNext: string
+          }
+        }
+      }
       modals: {
         confirmDelete: {
-          message: string;
-          title: string;
-        };
+          message: string
+          title: string
+        }
         editor: {
           actions: {
-            format: string;
-          };
+            format: string
+          }
           messages: {
-            readOnly: string;
-          };
-        };
+            readOnly: string
+          }
+        }
         groupsEditor: {
           actions: {
-            append: string;
-            prepend: string;
-          };
+            append: string
+            prepend: string
+          }
           errors: {
-            nameExists: string;
-            nameRequired: string;
-          };
+            nameExists: string
+            nameRequired: string
+          }
           fields: {
-            excludeFilter: string;
-            excludeType: string;
-            expectedStatus: string;
-            filter: string;
-            healthCheckUrl: string;
-            icon: string;
-            includeAll: string;
-            includeAllProviders: string;
-            includeAllProxies: string;
-            interfaceName: string;
-            interval: string;
-            maxFailedTimes: string;
-            name: string;
-            provider: string;
-            proxies: string;
-            routingMark: string;
-            type: string;
-          };
-          title: string;
+            excludeFilter: string
+            excludeType: string
+            expectedStatus: string
+            filter: string
+            healthCheckUrl: string
+            icon: string
+            includeAll: string
+            includeAllProviders: string
+            includeAllProxies: string
+            interfaceName: string
+            interval: string
+            maxFailedTimes: string
+            name: string
+            provider: string
+            proxies: string
+            routingMark: string
+            type: string
+          }
+          title: string
           toggles: {
-            disableUdp: string;
-            hidden: string;
-            lazy: string;
-          };
-        };
+            disableUdp: string
+            hidden: string
+            lazy: string
+          }
+        }
         logViewer: {
-          title: string;
-        };
+          title: string
+        }
         profileForm: {
           feedback: {
             notifications: {
-              creationRetry: string;
-              creationSuccess: string;
-            };
-          };
+              creationRetry: string
+              creationSuccess: string
+            }
+          }
           fields: {
-            acceptInvalidCerts: string;
-            allowAutoUpdate: string;
-            description: string;
-            httpTimeout: string;
-            subscriptionUrl: string;
-            type: string;
-            updateInterval: string;
-            useClashProxy: string;
-            useSystemProxy: string;
-          };
+            acceptInvalidCerts: string
+            allowAutoUpdate: string
+            description: string
+            httpTimeout: string
+            subscriptionUrl: string
+            type: string
+            updateInterval: string
+            useClashProxy: string
+            useSystemProxy: string
+          }
           title: {
-            create: string;
-            edit: string;
-          };
-        };
+            create: string
+            edit: string
+          }
+        }
         proxiesEditor: {
           actions: {
-            append: string;
-            prepend: string;
-          };
+            append: string
+            prepend: string
+          }
           placeholders: {
-            multiUri: string;
-          };
-          title: string;
-        };
-      };
+            multiUri: string
+          }
+          title: string
+        }
+      }
       page: {
         actions: {
-          import: string;
-          reactivate: string;
-          updateAll: string;
-          viewRuntimeConfig: string;
-        };
+          import: string
+          reactivate: string
+          updateAll: string
+          viewRuntimeConfig: string
+        }
         batch: {
           actions: {
-            delete: string;
-            deselectAll: string;
-            done: string;
-            selectAll: string;
-          };
+            delete: string
+            deselectAll: string
+            done: string
+            selectAll: string
+          }
           summary: {
-            items: string;
-            selected: string;
-          };
-          title: string;
-        };
+            items: string
+            selected: string
+          }
+          title: string
+        }
         feedback: {
           errors: {
-            invalidUrl: string;
-            onlyYaml: string;
-          };
+            invalidUrl: string
+            onlyYaml: string
+          }
           notices: {
-            emergencyRefreshFailed: string;
-            forceRefreshCompleted: string;
-          };
+            emergencyRefreshFailed: string
+            forceRefreshCompleted: string
+          }
           notifications: {
-            batchDeleted: string;
-            importFail: string;
-            importNeedsRefresh: string;
-            importRetry: string;
-            importSuccess: string;
-            profileReactivated: string;
-            profileSwitched: string;
-            switchInterrupted: string;
-          };
-        };
+            batchDeleted: string
+            importFail: string
+            importNeedsRefresh: string
+            importRetry: string
+            importSuccess: string
+            profileReactivated: string
+            profileSwitched: string
+            switchInterrupted: string
+          }
+        }
         importForm: {
           actions: {
-            paste: string;
-          };
-          placeholder: string;
-        };
-        title: string;
-      };
-    };
+            paste: string
+          }
+          placeholder: string
+        }
+        title: string
+      }
+    }
     proxies: {
       components: {
         enums: {
           policies: {
-            DIRECT: string;
-            PASS: string;
-            REJECT: string;
-            "REJECT-DROP": string;
-          };
+            DIRECT: string
+            PASS: string
+            REJECT: string
+            'REJECT-DROP': string
+          }
           strategies: {
-            fallback: string;
-            "load-balance": string;
-            relay: string;
-            select: string;
-            "url-test": string;
-          };
-        };
-      };
+            fallback: string
+            'load-balance': string
+            relay: string
+            select: string
+            'url-test': string
+          }
+        }
+      }
       feedback: {
         notifications: {
           provider: {
-            allUpdated: string;
-            genericError: string;
-            none: string;
-            updateFailed: string;
-            updateSuccess: string;
-          };
-        };
-      };
+            allUpdated: string
+            genericError: string
+            none: string
+            updateFailed: string
+            updateSuccess: string
+          }
+        }
+      }
       page: {
         actions: {
-          clearChainConfig: string;
-          connect: string;
-          connecting: string;
-          disconnect: string;
-          toggleChain: string;
-        };
+          clearChainConfig: string
+          connect: string
+          connecting: string
+          disconnect: string
+          toggleChain: string
+        }
         chain: {
-          connectFailed: string;
-          disconnectFailed: string;
-          duplicateNode: string;
-          empty: string;
-          entryNode: string;
-          exitNode: string;
-          header: string;
-          instruction: string;
-          minimumNodes: string;
-          minimumNodesHint: string;
-        };
+          connectFailed: string
+          disconnectFailed: string
+          duplicateNode: string
+          empty: string
+          entryNode: string
+          exitNode: string
+          header: string
+          instruction: string
+          minimumNodes: string
+          minimumNodesHint: string
+        }
         labels: {
-          delayCheckReset: string;
-          proxyCount: string;
-        };
+          delayCheckReset: string
+          proxyCount: string
+        }
         messages: {
-          directMode: string;
-        };
+          directMode: string
+        }
         modes: {
-          direct: string;
-          global: string;
-          rule: string;
-        };
+          direct: string
+          global: string
+          rule: string
+        }
         placeholders: {
-          delayCheckUrl: string;
-        };
+          delayCheckUrl: string
+        }
         provider: {
           actions: {
-            update: string;
-            updateAll: string;
-          };
-          title: string;
-        };
+            update: string
+            updateAll: string
+          }
+          title: string
+        }
         rules: {
-          select: string;
-          title: string;
-        };
+          select: string
+          title: string
+        }
         title: {
-          chainMode: string;
-          default: string;
-        };
+          chainMode: string
+          default: string
+        }
         tooltips: {
-          delayCheck: string;
-          delayCheckUrl: string;
-          filter: string;
-          locate: string;
-          showBasic: string;
-          showDetail: string;
-          sortDefault: string;
-          sortDelay: string;
-          sortName: string;
-        };
-      };
-    };
+          delayCheck: string
+          delayCheckUrl: string
+          filter: string
+          locate: string
+          showBasic: string
+          showDetail: string
+          sortDefault: string
+          sortDelay: string
+          sortName: string
+        }
+      }
+    }
     rules: {
       feedback: {
         notifications: {
           provider: {
-            allUpdated: string;
-            genericError: string;
-            none: string;
-            updateFailed: string;
-            updateSuccess: string;
-          };
-        };
-      };
+            allUpdated: string
+            genericError: string
+            none: string
+            updateFailed: string
+            updateSuccess: string
+          }
+        }
+      }
       modals: {
         editor: {
           form: {
             actions: {
-              appendRule: string;
-              prependRule: string;
-            };
+              appendRule: string
+              prependRule: string
+            }
             labels: {
-              content: string;
-              proxyPolicy: string;
-              type: string;
-            };
+              content: string
+              proxyPolicy: string
+              type: string
+            }
             toggles: {
-              noResolve: string;
-            };
+              noResolve: string
+            }
             validation: {
-              conditionRequired: string;
-              invalidRule: string;
-            };
-          };
+              conditionRequired: string
+              invalidRule: string
+            }
+          }
           ruleTypes: {
-            AND: string;
-            DOMAIN: string;
-            "DOMAIN-KEYWORD": string;
-            "DOMAIN-REGEX": string;
-            "DOMAIN-SUFFIX": string;
-            DSCP: string;
-            "DST-PORT": string;
-            GEOIP: string;
-            GEOSITE: string;
-            "IN-NAME": string;
-            "IN-PORT": string;
-            "IN-TYPE": string;
-            "IN-USER": string;
-            "IP-ASN": string;
-            "IP-CIDR": string;
-            "IP-CIDR6": string;
-            "IP-SUFFIX": string;
-            MATCH: string;
-            NETWORK: string;
-            NOT: string;
-            OR: string;
-            "PROCESS-NAME": string;
-            "PROCESS-NAME-REGEX": string;
-            "PROCESS-PATH": string;
-            "PROCESS-PATH-REGEX": string;
-            "RULE-SET": string;
-            "SRC-GEOIP": string;
-            "SRC-IP-ASN": string;
-            "SRC-IP-CIDR": string;
-            "SRC-IP-SUFFIX": string;
-            "SRC-PORT": string;
-            "SUB-RULE": string;
-            UID: string;
-          };
-          title: string;
-        };
-      };
+            AND: string
+            DOMAIN: string
+            'DOMAIN-KEYWORD': string
+            'DOMAIN-REGEX': string
+            'DOMAIN-SUFFIX': string
+            DSCP: string
+            'DST-PORT': string
+            GEOIP: string
+            GEOSITE: string
+            'IN-NAME': string
+            'IN-PORT': string
+            'IN-TYPE': string
+            'IN-USER': string
+            'IP-ASN': string
+            'IP-CIDR': string
+            'IP-CIDR6': string
+            'IP-SUFFIX': string
+            MATCH: string
+            NETWORK: string
+            NOT: string
+            OR: string
+            'PROCESS-NAME': string
+            'PROCESS-NAME-REGEX': string
+            'PROCESS-PATH': string
+            'PROCESS-PATH-REGEX': string
+            'RULE-SET': string
+            'SRC-GEOIP': string
+            'SRC-IP-ASN': string
+            'SRC-IP-CIDR': string
+            'SRC-IP-SUFFIX': string
+            'SRC-PORT': string
+            'SUB-RULE': string
+            UID: string
+          }
+          title: string
+        }
+      }
       page: {
         provider: {
           actions: {
-            update: string;
-            updateAll: string;
-          };
-          dialogTitle: string;
-          trigger: string;
-        };
-        title: string;
-      };
-    };
+            update: string
+            updateAll: string
+          }
+          dialogTitle: string
+          trigger: string
+        }
+        title: string
+      }
+    }
     settings: {
       components: {
         verge: {
           advanced: {
             actions: {
-              copyVersion: string;
-            };
+              copyVersion: string
+            }
             fields: {
-              backupSetting: string;
-              checkUpdates: string;
-              exit: string;
-              exportDiagnostics: string;
-              liteModeSettings: string;
-              openConfDir: string;
-              openCoreDir: string;
-              openDevTools: string;
-              openLogsDir: string;
-              runtimeConfig: string;
-              vergeVersion: string;
-            };
+              backupSetting: string
+              checkUpdates: string
+              exit: string
+              exportDiagnostics: string
+              liteModeSettings: string
+              openConfDir: string
+              openCoreDir: string
+              openDevTools: string
+              openLogsDir: string
+              runtimeConfig: string
+              vergeVersion: string
+            }
             notifications: {
-              latestVersion: string;
-              versionCopied: string;
-            };
-            title: string;
+              latestVersion: string
+              versionCopied: string
+            }
+            title: string
             tooltips: {
-              backupInfo: string;
-              liteMode: string;
-              openConfDir: string;
-            };
-          };
+              backupInfo: string
+              liteMode: string
+              openConfDir: string
+            }
+          }
           basic: {
             actions: {
-              browse: string;
-            };
+              browse: string
+            }
             fields: {
-              copyEnvType: string;
-              hotkeySetting: string;
-              language: string;
-              layoutSetting: string;
-              misc: string;
-              startPage: string;
-              startupScript: string;
-              themeMode: string;
-              themeSetting: string;
-              trayClickEvent: string;
-            };
-            title: string;
+              copyEnvType: string
+              hotkeySetting: string
+              language: string
+              layoutSetting: string
+              misc: string
+              startPage: string
+              startupScript: string
+              themeMode: string
+              themeSetting: string
+              trayClickEvent: string
+            }
+            title: string
             trayOptions: {
-              disable: string;
-              showMainWindow: string;
-              showTrayMenu: string;
-            };
-          };
+              disable: string
+              showMainWindow: string
+              showTrayMenu: string
+            }
+          }
           layout: {
             fields: {
-              collapseNavBar: string;
-              commonTrayIcon: string;
-              enableTrayIcon: string;
-              enableTraySpeed: string;
-              hoverNavigator: string;
-              hoverNavigatorDelay: string;
-              memoryUsage: string;
-              navIcon: string;
-              preferSystemTitlebar: string;
-              proxyGroupIcon: string;
-              proxyGroupsDisplayMode: string;
-              showOutboundModesInline: string;
-              systemProxyTrayIcon: string;
-              toastPosition: string;
-              trafficGraph: string;
-              trayIcon: string;
-              tunTrayIcon: string;
-            };
+              collapseNavBar: string
+              commonTrayIcon: string
+              enableTrayIcon: string
+              enableTraySpeed: string
+              hoverNavigator: string
+              hoverNavigatorDelay: string
+              memoryUsage: string
+              navIcon: string
+              preferSystemTitlebar: string
+              proxyGroupIcon: string
+              proxyGroupsDisplayMode: string
+              showOutboundModesInline: string
+              systemProxyTrayIcon: string
+              toastPosition: string
+              trafficGraph: string
+              trayIcon: string
+              tunTrayIcon: string
+            }
             options: {
               icon: {
-                colorful: string;
-                disable: string;
-                monochrome: string;
-              };
+                colorful: string
+                disable: string
+                monochrome: string
+              }
               proxyGroupsDisplayMode: {
-                default: string;
-                disable: string;
-                inline: string;
-              };
+                default: string
+                disable: string
+                inline: string
+              }
               toastPosition: {
-                bottomLeft: string;
-                bottomRight: string;
-                topLeft: string;
-                topRight: string;
-              };
-            };
-            title: string;
+                bottomLeft: string
+                bottomRight: string
+                topLeft: string
+                topRight: string
+              }
+            }
+            title: string
             tooltips: {
-              hoverNavigator: string;
-              hoverNavigatorDelay: string;
-            };
-          };
+              hoverNavigator: string
+              hoverNavigatorDelay: string
+            }
+          }
           theme: {
             actions: {
-              editCss: string;
-            };
+              editCss: string
+            }
             dialogs: {
-              editCssTitle: string;
-            };
+              editCssTitle: string
+            }
             fields: {
-              cssInjection: string;
-              errorColor: string;
-              fontFamily: string;
-              infoColor: string;
-              primaryColor: string;
-              primaryText: string;
-              secondaryColor: string;
-              secondaryText: string;
-              successColor: string;
-              warningColor: string;
-            };
-            title: string;
-          };
-        };
-      };
+              cssInjection: string
+              errorColor: string
+              fontFamily: string
+              infoColor: string
+              primaryColor: string
+              primaryText: string
+              secondaryColor: string
+              secondaryText: string
+              successColor: string
+              warningColor: string
+            }
+            title: string
+          }
+        }
+      }
       feedback: {
         notifications: {
           clash: {
-            alreadyLatestVersion: string;
-            changeFailed: string;
-            changeSuccess: string;
-            geoDataUpdated: string;
-            restartSuccess: string;
-            versionUpdated: string;
-          };
+            alreadyLatestVersion: string
+            changeFailed: string
+            changeSuccess: string
+            geoDataUpdated: string
+            restartSuccess: string
+            versionUpdated: string
+          }
           clashService: {
-            installSuccess: string;
-            uninstallSuccess: string;
-          };
+            installSuccess: string
+            uninstallSuccess: string
+          }
           updater: {
-            withClashProxyFailed: string;
-            withClashProxySuccess: string;
-          };
-        };
-      };
+            withClashProxyFailed: string
+            withClashProxySuccess: string
+          }
+        }
+      }
       modals: {
         backup: {
           actions: {
-            backup: string;
-            deleteBackup: string;
-            export: string;
-            exportBackup: string;
-            importBackup: string;
-            restore: string;
-            restoreBackup: string;
-            selectTarget: string;
-            viewHistory: string;
-          };
+            backup: string
+            deleteBackup: string
+            export: string
+            exportBackup: string
+            importBackup: string
+            restore: string
+            restoreBackup: string
+            selectTarget: string
+            viewHistory: string
+          }
           auto: {
-            changeHelper: string;
-            changeLabel: string;
-            intervalLabel: string;
+            changeHelper: string
+            changeLabel: string
+            intervalLabel: string
             options: {
-              days: string;
-              hours: string;
-            };
-            scheduleHelper: string;
-            scheduleLabel: string;
-            title: string;
-          };
+              days: string
+              hours: string
+            }
+            scheduleHelper: string
+            scheduleLabel: string
+            title: string
+          }
           fields: {
-            info: string;
-            username: string;
-            webdavUrl: string;
-          };
+            info: string
+            username: string
+            webdavUrl: string
+          }
           history: {
-            empty: string;
-            summary: string;
-            title: string;
-            unknownPlatform: string;
-            unknownTime: string;
-          };
+            empty: string
+            summary: string
+            title: string
+            unknownPlatform: string
+            unknownTime: string
+          }
           manual: {
-            configureWebdav: string;
-            local: string;
-            title: string;
-            webdav: string;
-          };
+            configureWebdav: string
+            local: string
+            title: string
+            webdav: string
+          }
           messages: {
-            backupCreated: string;
-            backupFailed: string;
-            confirmDelete: string;
-            confirmRestore: string;
-            invalidWebdavUrl: string;
-            localBackupCreated: string;
-            localBackupExported: string;
-            localBackupExportFailed: string;
-            localBackupFailed: string;
-            localBackupImported: string;
-            localBackupImportFailed: string;
-            passwordRequired: string;
-            restoreSuccess: string;
-            usernameRequired: string;
-            webdavConfigSaved: string;
-            webdavConfigSaveFailed: string;
-            webdavRefreshFailed: string;
-            webdavRefreshSuccess: string;
-            webdavUrlRequired: string;
-          };
+            backupCreated: string
+            backupFailed: string
+            confirmDelete: string
+            confirmRestore: string
+            invalidWebdavUrl: string
+            localBackupCreated: string
+            localBackupExported: string
+            localBackupExportFailed: string
+            localBackupFailed: string
+            localBackupImported: string
+            localBackupImportFailed: string
+            passwordRequired: string
+            restoreSuccess: string
+            usernameRequired: string
+            webdavConfigSaved: string
+            webdavConfigSaveFailed: string
+            webdavRefreshFailed: string
+            webdavRefreshSuccess: string
+            webdavUrlRequired: string
+          }
           table: {
-            actions: string;
-            backupTime: string;
-            filename: string;
-            noBackups: string;
-            rowsPerPage: string;
-          };
+            actions: string
+            backupTime: string
+            filename: string
+            noBackups: string
+            rowsPerPage: string
+          }
           tabs: {
-            local: string;
-            webdav: string;
-          };
-          title: string;
+            local: string
+            webdav: string
+          }
+          title: string
           webdav: {
-            title: string;
-          };
-        };
+            title: string
+          }
+        }
         clashCore: {
           variants: {
-            alpha: string;
-            release: string;
-          };
-        };
+            alpha: string
+            release: string
+          }
+        }
         clashPort: {
           actions: {
-            random: string;
-          };
+            random: string
+          }
           fields: {
-            http: string;
-            mixed: string;
-            redir: string;
-            socks: string;
-            tproxy: string;
-          };
+            http: string
+            mixed: string
+            redir: string
+            socks: string
+            tproxy: string
+          }
           messages: {
-            portInUse: string;
-            saved: string;
-            saveFailed: string;
-          };
-          title: string;
-        };
+            portInUse: string
+            saved: string
+            saveFailed: string
+          }
+          title: string
+        }
         dns: {
           dialog: {
-            title: string;
-            warning: string;
-          };
+            title: string
+            warning: string
+          }
           errors: {
-            invalid: string;
-            invalidYaml: string;
-          };
+            invalid: string
+            invalidYaml: string
+          }
           fields: {
             defaultNameserver: {
-              description: string;
-              label: string;
-            };
+              description: string
+              label: string
+            }
             directNameserver: {
-              description: string;
-              label: string;
-            };
+              description: string
+              label: string
+            }
             directPolicy: {
-              description: string;
-              label: string;
-            };
-            enable: string;
-            enhancedMode: string;
+              description: string
+              label: string
+            }
+            enable: string
+            enhancedMode: string
             fakeIpFilter: {
-              description: string;
-              label: string;
-            };
-            fakeIpFilterMode: string;
-            fakeIpRange: string;
+              description: string
+              label: string
+            }
+            fakeIpFilterMode: string
+            fakeIpRange: string
             fallback: {
-              description: string;
-              label: string;
-            };
+              description: string
+              label: string
+            }
             fallbackDomain: {
-              description: string;
-              label: string;
-            };
+              description: string
+              label: string
+            }
             fallbackIpCidr: {
-              description: string;
-              label: string;
-            };
-            geoipCode: string;
+              description: string
+              label: string
+            }
+            geoipCode: string
             geoipFiltering: {
-              description: string;
-              label: string;
-            };
+              description: string
+              label: string
+            }
             hosts: {
-              description: string;
-              label: string;
-            };
+              description: string
+              label: string
+            }
             ipv6: {
-              description: string;
-              label: string;
-            };
-            listen: string;
+              description: string
+              label: string
+            }
+            listen: string
             nameserver: {
-              description: string;
-              label: string;
-            };
+              description: string
+              label: string
+            }
             nameserverPolicy: {
-              description: string;
-              label: string;
-            };
+              description: string
+              label: string
+            }
             preferH3: {
-              description: string;
-              label: string;
-            };
+              description: string
+              label: string
+            }
             proxy: {
-              description: string;
-              label: string;
-            };
+              description: string
+              label: string
+            }
             respectRules: {
-              description: string;
-              label: string;
-            };
+              description: string
+              label: string
+            }
             useHosts: {
-              description: string;
-              label: string;
-            };
+              description: string
+              label: string
+            }
             useSystemHosts: {
-              description: string;
-              label: string;
-            };
-          };
+              description: string
+              label: string
+            }
+          }
           messages: {
-            configError: string;
-            saved: string;
-          };
+            configError: string
+            saved: string
+          }
           sections: {
-            fallbackFilter: string;
-            general: string;
-            hosts: string;
-          };
-        };
+            fallbackFilter: string
+            general: string
+            hosts: string
+          }
+        }
         hotkey: {
           functions: {
-            direct: string;
-            entryLightweightMode: string;
-            global: string;
-            openOrCloseDashboard: string;
-            reactivateProfiles: string;
-            rule: string;
-            toggleSystemProxy: string;
-            toggleTunMode: string;
-          };
-          title: string;
+            direct: string
+            entryLightweightMode: string
+            global: string
+            openOrCloseDashboard: string
+            reactivateProfiles: string
+            rule: string
+            toggleSystemProxy: string
+            toggleTunMode: string
+          }
+          title: string
           toggles: {
-            enableGlobal: string;
-          };
-        };
+            enableGlobal: string
+          }
+        }
         liteMode: {
           actions: {
-            enterNow: string;
-          };
+            enterNow: string
+          }
           fields: {
-            delay: string;
-          };
+            delay: string
+          }
           messages: {
-            autoEnterHint: string;
-          };
-          title: string;
+            autoEnterHint: string
+          }
+          title: string
           toggles: {
-            autoEnter: string;
-          };
+            autoEnter: string
+          }
           tooltips: {
-            autoEnter: string;
-          };
-        };
+            autoEnter: string
+          }
+        }
         misc: {
           fields: {
-            appLogLevel: string;
-            appLogMaxCount: string;
-            appLogMaxSize: string;
-            autoCheckUpdate: string;
-            autoCloseConnections: string;
-            autoDelayDetection: string;
-            autoDelayDetectionInterval: string;
-            autoLogClean: string;
-            defaultLatencyTest: string;
-            defaultLatencyTimeout: string;
-            enableBuiltinEnhanced: string;
-            proxyLayoutColumns: string;
-          };
+            appLogLevel: string
+            appLogMaxCount: string
+            appLogMaxSize: string
+            autoCheckUpdate: string
+            autoCloseConnections: string
+            autoDelayDetection: string
+            autoDelayDetectionInterval: string
+            autoLogClean: string
+            defaultLatencyTest: string
+            defaultLatencyTimeout: string
+            enableBuiltinEnhanced: string
+            proxyLayoutColumns: string
+          }
           options: {
             autoLogClean: {
-              never: string;
-              retainDays: string;
-            };
+              never: string
+              retainDays: string
+            }
             proxyLayoutColumns: {
-              auto: string;
-            };
-          };
-          title: string;
+              auto: string
+            }
+          }
+          title: string
           tooltips: {
-            autoCloseConnections: string;
-            autoDelayDetection: string;
-            defaultLatencyTest: string;
-            enableBuiltinEnhanced: string;
-          };
-        };
+            autoCloseConnections: string
+            autoDelayDetection: string
+            defaultLatencyTest: string
+            enableBuiltinEnhanced: string
+          }
+        }
         networkInterface: {
           fields: {
-            ipAddress: string;
-            macAddress: string;
-          };
-          title: string;
-        };
+            ipAddress: string
+            macAddress: string
+          }
+          title: string
+        }
         password: {
           prompts: {
-            enterRoot: string;
-          };
-        };
+            enterRoot: string
+          }
+        }
         sysproxy: {
           actions: {
-            editPac: string;
-          };
+            editPac: string
+          }
           fields: {
-            alwaysUseDefaultBypass: string;
-            bypass: string;
-            enableBypassCheck: string;
-            enableStatus: string;
-            guardDuration: string;
-            pacScriptContent: string;
-            pacUrl: string;
-            proxyBypass: string;
-            proxyGuard: string;
-            proxyHost: string;
-            serverAddr: string;
-            usePacMode: string;
-          };
+            alwaysUseDefaultBypass: string
+            bypass: string
+            enableBypassCheck: string
+            enableStatus: string
+            guardDuration: string
+            pacScriptContent: string
+            pacUrl: string
+            proxyBypass: string
+            proxyGuard: string
+            proxyHost: string
+            serverAddr: string
+            usePacMode: string
+          }
           fieldsets: {
-            currentStatus: string;
-          };
+            currentStatus: string
+          }
           messages: {
-            durationTooShort: string;
-            invalidBypass: string;
-            invalidProxyHost: string;
-          };
-          title: string;
+            durationTooShort: string
+            invalidBypass: string
+            invalidProxyHost: string
+          }
+          title: string
           tooltips: {
-            proxyGuard: string;
-          };
-        };
+            proxyGuard: string
+          }
+        }
         tun: {
           fields: {
-            autoDetectInterface: string;
-            autoRedirect: string;
-            autoRoute: string;
-            device: string;
-            dnsHijack: string;
-            mtu: string;
-            routeExcludeAddress: string;
-            stack: string;
-            strictRoute: string;
-          };
+            autoDetectInterface: string
+            autoRedirect: string
+            autoRoute: string
+            device: string
+            dnsHijack: string
+            mtu: string
+            routeExcludeAddress: string
+            stack: string
+            strictRoute: string
+          }
           messages: {
-            applied: string;
-            invalidRouteExcludeAddress: string;
-            routeExcludeAddressHint: string;
-          };
-          title: string;
+            applied: string
+            invalidRouteExcludeAddress: string
+            routeExcludeAddressHint: string
+          }
+          title: string
           tooltips: {
-            autoRedirect: string;
-            dnsHijack: string;
-          };
-        };
+            autoRedirect: string
+            dnsHijack: string
+          }
+        }
         update: {
           actions: {
-            goToRelease: string;
-            update: string;
-          };
+            goToRelease: string
+            update: string
+          }
           messages: {
-            breakChangeError: string;
-            portableError: string;
-          };
-          title: string;
-        };
+            breakChangeError: string
+            portableError: string
+          }
+          title: string
+        }
         webUI: {
           actions: {
-            openUrl: string;
-          };
+            openUrl: string
+          }
           messages: {
-            placeholderInstruction: string;
-            supportedPlaceholders: string;
-          };
-          title: string;
-        };
-      };
+            placeholderInstruction: string
+            supportedPlaceholders: string
+          }
+          title: string
+        }
+      }
       page: {
         actions: {
-          github: string;
-          manual: string;
-          telegram: string;
-        };
-        title: string;
-      };
+          github: string
+          manual: string
+          telegram: string
+        }
+        title: string
+      }
       sections: {
         appearance: {
-          dark: string;
-          light: string;
-          system: string;
-        };
+          dark: string
+          light: string
+          system: string
+        }
         clash: {
           form: {
             fields: {
-              allowLan: string;
-              clashCore: string;
-              dnsOverwrite: string;
-              external: string;
-              ipv6: string;
-              logLevel: string;
-              openUwpTool: string;
-              portConfig: string;
+              allowLan: string
+              clashCore: string
+              dnsOverwrite: string
+              external: string
+              ipv6: string
+              logLevel: string
+              openUwpTool: string
+              portConfig: string
               tunnels: {
                 actions: {
-                  add: string;
-                  addNew: string;
-                };
-                default: string;
-                existing: string;
-                localAddr: string;
-                localPort: string;
+                  add: string
+                  addNew: string
+                }
+                default: string
+                existing: string
+                localAddr: string
+                localPort: string
                 messages: {
-                  incomplete: string;
-                  invalidLocalAddr: string;
-                  invalidLocalPort: string;
-                  invalidTargetAddr: string;
-                  invalidTargetPort: string;
-                };
-                optional: string;
-                protocols: string;
-                proxyGroup: string;
-                proxyNode: string;
-                targetAddr: string;
-                targetPort: string;
-                title: string;
-              };
-              unifiedDelay: string;
-              updateGeoData: string;
-              webUI: string;
-            };
+                  incomplete: string
+                  invalidLocalAddr: string
+                  invalidLocalPort: string
+                  invalidTargetAddr: string
+                  invalidTargetPort: string
+                }
+                optional: string
+                protocols: string
+                proxyGroup: string
+                proxyNode: string
+                targetAddr: string
+                targetPort: string
+                title: string
+              }
+              unifiedDelay: string
+              updateGeoData: string
+              webUI: string
+            }
             options: {
               logLevel: {
-                debug: string;
-                error: string;
-                info: string;
-                silent: string;
-                warning: string;
-              };
-            };
+                debug: string
+                error: string
+                info: string
+                silent: string
+                warning: string
+              }
+            }
             tooltips: {
-              logLevel: string;
-              networkInterface: string;
-              openUwpTool: string;
-              unifiedDelay: string;
-            };
-          };
-          title: string;
-        };
+              logLevel: string
+              networkInterface: string
+              openUwpTool: string
+              unifiedDelay: string
+            }
+          }
+          title: string
+        }
         externalController: {
           fields: {
-            address: string;
-            enable: string;
-            secret: string;
-          };
+            address: string
+            enable: string
+            secret: string
+          }
           messages: {
-            addressRequired: string;
-            controllerCopied: string;
-            copyFailed: string;
-            secretCopied: string;
-            secretRequired: string;
-          };
+            addressRequired: string
+            controllerCopied: string
+            copyFailed: string
+            secretCopied: string
+            secretRequired: string
+          }
           placeholders: {
-            address: string;
-            secret: string;
-          };
-          title: string;
+            address: string
+            secret: string
+          }
+          title: string
           tooltips: {
-            copy: string;
-          };
-        };
+            copy: string
+          }
+        }
         externalCors: {
           actions: {
-            add: string;
-          };
+            add: string
+          }
           fields: {
-            allowedOrigins: string;
-            allowPrivateNetwork: string;
-          };
+            allowedOrigins: string
+            allowPrivateNetwork: string
+          }
           messages: {
-            alwaysIncluded: string;
-          };
+            alwaysIncluded: string
+          }
           placeholders: {
-            origin: string;
-          };
-          title: string;
+            origin: string
+          }
+          title: string
           tooltips: {
-            open: string;
-          };
-        };
+            open: string
+          }
+        }
         proxyControl: {
           actions: {
-            installService: string;
-            uninstallService: string;
-          };
+            installService: string
+            uninstallService: string
+          }
           fields: {
-            systemProxy: string;
-            tunMode: string;
-          };
+            systemProxy: string
+            tunMode: string
+          }
           tooltips: {
-            systemProxy: string;
-            tunMode: string;
-            tunUnavailable: string;
-          };
-        };
+            systemProxy: string
+            tunMode: string
+            tunUnavailable: string
+          }
+        }
         system: {
           fields: {
-            autoLaunch: string;
-            silentStart: string;
-          };
+            autoLaunch: string
+            silentStart: string
+          }
           notifications: {
             tunMode: {
-              autoDisabled: string;
-              autoDisableFailed: string;
-            };
-          };
-          title: string;
+              autoDisabled: string
+              autoDisableFailed: string
+            }
+          }
+          title: string
           toggles: {
-            systemProxy: string;
-            tunMode: string;
-          };
+            systemProxy: string
+            tunMode: string
+          }
           tooltips: {
-            silentStart: string;
-          };
-        };
-      };
+            silentStart: string
+          }
+        }
+      }
       statuses: {
         clash: {
-          restarting: string;
-          stopping: string;
-        };
+          restarting: string
+          stopping: string
+        }
         clashService: {
-          installing: string;
-          uninstalling: string;
-        };
-      };
-    };
+          installing: string
+          uninstalling: string
+        }
+      }
+    }
     shared: {
       actions: {
-        cancel: string;
-        clear: string;
-        close: string;
-        closeAll: string;
-        confirm: string;
-        delete: string;
-        edit: string;
-        enable: string;
-        hideDetails: string;
-        listView: string;
-        new: string;
-        next: string;
-        pause: string;
-        previous: string;
-        refresh: string;
-        refreshPage: string;
-        resetToDefault: string;
-        restart: string;
-        resume: string;
-        retry: string;
-        save: string;
-        showDetails: string;
-        tableView: string;
-        upgrade: string;
-      };
+        cancel: string
+        clear: string
+        close: string
+        closeAll: string
+        confirm: string
+        delete: string
+        edit: string
+        enable: string
+        hideDetails: string
+        listView: string
+        new: string
+        next: string
+        pause: string
+        previous: string
+        refresh: string
+        refreshPage: string
+        resetToDefault: string
+        restart: string
+        resume: string
+        retry: string
+        save: string
+        showDetails: string
+        tableView: string
+        upgrade: string
+      }
       editorModes: {
-        advanced: string;
-        visualization: string;
-      };
+        advanced: string
+        visualization: string
+      }
       feedback: {
         errors: {
-          trafficStats: string;
-          trafficStatsDescription: string;
-        };
+          trafficStats: string
+          trafficStatsDescription: string
+        }
         notices: {
-          prefixedRaw: string;
-          raw: string;
-        };
+          prefixedRaw: string
+          raw: string
+        }
         notifications: {
           common: {
-            copySuccess: string;
-            refreshFailed: string;
-            saveFailed: string;
-            saveSuccess: string;
-          };
-          importSubscriptionSuccess: string;
-          importSuccess: string;
-          importWithClashProxy: string;
-          saved: string;
-          updateAvailable: string;
-        };
+            copySuccess: string
+            refreshFailed: string
+            saveFailed: string
+            saveSuccess: string
+          }
+          importSubscriptionSuccess: string
+          importSuccess: string
+          importWithClashProxy: string
+          saved: string
+          updateAvailable: string
+        }
         validation: {
           config: {
-            bootFailed: string;
-            coreChangeFailed: string;
-            failed: string;
-            processTerminated: string;
-          };
+            bootFailed: string
+            coreChangeFailed: string
+            failed: string
+            processTerminated: string
+          }
           merge: {
-            generalError: string;
-            keyError: string;
-            mappingError: string;
-            syntaxError: string;
-          };
+            generalError: string
+            keyError: string
+            mappingError: string
+            syntaxError: string
+          }
           script: {
-            fileError: string;
-            fileNotFound: string;
-            missingMain: string;
-            syntaxError: string;
-          };
+            fileError: string
+            fileNotFound: string
+            missingMain: string
+            syntaxError: string
+          }
           yaml: {
-            generalError: string;
-            keyError: string;
-            mappingError: string;
-            readError: string;
-            syntaxError: string;
-          };
-        };
-      };
+            generalError: string
+            keyError: string
+            mappingError: string
+            readError: string
+            syntaxError: string
+          }
+        }
+      }
       filters: {
         logLevels: {
-          all: string;
-          debug: string;
-          error: string;
-          info: string;
-          warn: string;
-        };
-      };
+          all: string
+          debug: string
+          error: string
+          info: string
+          warn: string
+        }
+      }
       labels: {
-        downloaded: string;
-        expireTime: string;
-        from: string;
-        icon: string;
-        name: string;
-        password: string;
-        readOnly: string;
-        retryAttempts: string;
-        timeout: string;
-        updateAt: string;
-        updateTime: string;
-        uploaded: string;
-        usedTotal: string;
-      };
+        downloaded: string
+        expireTime: string
+        from: string
+        icon: string
+        name: string
+        password: string
+        readOnly: string
+        retryAttempts: string
+        timeout: string
+        updateAt: string
+        updateTime: string
+        uploaded: string
+        usedTotal: string
+      }
       placeholders: {
-        filter: string;
-        matchCase: string;
-        matchWholeWord: string;
-        resetInput: string;
-        useRegex: string;
-      };
+        filter: string
+        matchCase: string
+        matchWholeWord: string
+        resetInput: string
+        useRegex: string
+      }
       statuses: {
-        disabled: string;
-        empty: string;
-        enabled: string;
-        saving: string;
-      };
+        disabled: string
+        empty: string
+        enabled: string
+        saving: string
+      }
       units: {
-        files: string;
-        hours: string;
-        kilobytes: string;
-        milliseconds: string;
-        minutes: string;
-        seconds: string;
-      };
+        files: string
+        hours: string
+        kilobytes: string
+        milliseconds: string
+        minutes: string
+        seconds: string
+      }
       validation: {
-        invalidRegex: string;
-      };
+        invalidRegex: string
+      }
       window: {
-        maximize: string;
-        minimize: string;
-      };
-    };
+        maximize: string
+        minimize: string
+      }
+    }
     tests: {
       components: {
         item: {
           actions: {
-            test: string;
-          };
-        };
-      };
+            test: string
+          }
+        }
+      }
       modals: {
         test: {
           fields: {
-            url: string;
-          };
+            url: string
+          }
           title: {
-            create: string;
-            edit: string;
-          };
-        };
-      };
+            create: string
+            edit: string
+          }
+        }
+      }
       page: {
         actions: {
-          testAll: string;
-        };
-        title: string;
-      };
+          testAll: string
+        }
+        title: string
+      }
       statuses: {
         test: {
-          completed: string;
-          disallowedIsp: string;
-          failed: string;
-          failedNetwork: string;
-          no: string;
-          noDisney: string;
-          originalsOnly: string;
-          pending: string;
-          unsupportedRegion: string;
-          yes: string;
-        };
-      };
+          completed: string
+          disallowedIsp: string
+          failed: string
+          failedNetwork: string
+          no: string
+          noDisney: string
+          originalsOnly: string
+          pending: string
+          unsupportedRegion: string
+          yes: string
+        }
+      }
       unlock: {
         page: {
           actions: {
-            testing: string;
-          };
-          empty: string;
+            testing: string
+          }
+          empty: string
           messages: {
-            detectionFailedWithName: string;
-            detectionTimeout: string;
-          };
-          title: string;
-        };
-      };
-    };
-  };
+            detectionFailedWithName: string
+            detectionTimeout: string
+          }
+          title: string
+        }
+      }
+    }
+  }
 }

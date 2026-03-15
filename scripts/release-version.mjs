@@ -29,11 +29,11 @@
  * Errors are logged and the process exits with code 1 on failure.
  */
 
-import { execSync } from "child_process";
-import fs from "fs/promises";
-import path from "path";
+import { execSync } from 'child_process'
+import fs from 'fs/promises'
+import path from 'path'
 
-import { program } from "commander";
+import { program } from 'commander'
 
 /**
  * 获取当前 git 短 commit hash
@@ -41,10 +41,10 @@ import { program } from "commander";
  */
 function getGitShortCommit() {
   try {
-    return execSync("git rev-parse --short HEAD").toString().trim();
+    return execSync('git rev-parse --short HEAD').toString().trim()
   } catch {
-    console.warn("[WARN]: Failed to get git short commit, fallback to 'nogit'");
-    return "nogit";
+    console.warn("[WARN]: Failed to get git short commit, fallback to 'nogit'")
+    return 'nogit'
   }
 }
 
@@ -55,21 +55,21 @@ function getGitShortCommit() {
 function getLatestTauriCommit() {
   try {
     const fullHash = execSync(
-      "bash ./scripts-workflow/get_latest_tauri_commit.bash",
+      'bash ./scripts-workflow/get_latest_tauri_commit.bash',
     )
       .toString()
-      .trim();
+      .trim()
     const shortHash = execSync(`git rev-parse --short ${fullHash}`)
       .toString()
-      .trim();
-    console.log(`[INFO]: Latest Tauri-related commit: ${shortHash}`);
-    return shortHash;
+      .trim()
+    console.log(`[INFO]: Latest Tauri-related commit: ${shortHash}`)
+    return shortHash
   } catch (error) {
     console.warn(
-      "[WARN]: Failed to get latest Tauri commit, fallback to current git short commit",
-    );
-    console.warn(`[WARN]: Error details: ${error.message}`);
-    return getGitShortCommit();
+      '[WARN]: Failed to get latest Tauri commit, fallback to current git short commit',
+    )
+    console.warn(`[WARN]: Error details: ${error.message}`)
+    return getGitShortCommit()
   }
 }
 
@@ -81,25 +81,25 @@ function getLatestTauriCommit() {
  * @returns {string}
  */
 function generateShortTimestamp(withCommit = false, useTauriCommit = false) {
-  const now = new Date();
+  const now = new Date()
 
-  const formatter = new Intl.DateTimeFormat("en-CA", {
-    timeZone: "Asia/Shanghai",
-    month: "2-digit",
-    day: "2-digit",
-  });
+  const formatter = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Shanghai',
+    month: '2-digit',
+    day: '2-digit',
+  })
 
-  const parts = formatter.formatToParts(now);
-  const month = parts.find((part) => part.type === "month").value;
-  const day = parts.find((part) => part.type === "day").value;
+  const parts = formatter.formatToParts(now)
+  const month = parts.find((part) => part.type === 'month').value
+  const day = parts.find((part) => part.type === 'day').value
 
   if (withCommit) {
     const gitShort = useTauriCommit
       ? getLatestTauriCommit()
-      : getGitShortCommit();
-    return `${month}${day}.${gitShort}`;
+      : getGitShortCommit()
+    return `${month}${day}.${gitShort}`
   }
-  return `${month}${day}`;
+  return `${month}${day}`
 }
 
 /**
@@ -110,7 +110,7 @@ function generateShortTimestamp(withCommit = false, useTauriCommit = false) {
 function isValidVersion(version) {
   return /^v?\d+\.\d+\.\d+(-(alpha|beta|rc)(\.\d+)?)?(\+[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*)?$/i.test(
     version,
-  );
+  )
 }
 
 /**
@@ -119,7 +119,7 @@ function isValidVersion(version) {
  * @returns {string}
  */
 function normalizeVersion(version) {
-  return version.startsWith("v") ? version : `v${version}`;
+  return version.startsWith('v') ? version : `v${version}`
 }
 
 /**
@@ -128,9 +128,9 @@ function normalizeVersion(version) {
  * @returns {string}
  */
 function getBaseVersion(version) {
-  let base = version.replace(/-(alpha|beta|rc)(\.\d+)?/i, "");
-  base = base.replace(/\+[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*/g, "");
-  return base;
+  let base = version.replace(/-(alpha|beta|rc)(\.\d+)?/i, '')
+  base = base.replace(/\+[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*/g, '')
+  return base
 }
 
 /**
@@ -138,30 +138,30 @@ function getBaseVersion(version) {
  * @param {string} newVersion
  */
 async function updatePackageVersion(newVersion) {
-  const _dirname = process.cwd();
-  const packageJsonPath = path.join(_dirname, "package.json");
+  const _dirname = process.cwd()
+  const packageJsonPath = path.join(_dirname, 'package.json')
   try {
-    const data = await fs.readFile(packageJsonPath, "utf8");
-    const packageJson = JSON.parse(data);
+    const data = await fs.readFile(packageJsonPath, 'utf8')
+    const packageJson = JSON.parse(data)
 
     console.log(
-      "[INFO]: Current package.json version is: ",
+      '[INFO]: Current package.json version is: ',
       packageJson.version,
-    );
-    packageJson.version = newVersion.startsWith("v")
+    )
+    packageJson.version = newVersion.startsWith('v')
       ? newVersion.slice(1)
-      : newVersion;
+      : newVersion
     await fs.writeFile(
       packageJsonPath,
       JSON.stringify(packageJson, null, 2),
-      "utf8",
-    );
+      'utf8',
+    )
     console.log(
       `[INFO]: package.json version updated to: ${packageJson.version}`,
-    );
+    )
   } catch (error) {
-    console.error("Error updating package.json version:", error);
-    throw error;
+    console.error('Error updating package.json version:', error)
+    throw error
   }
 }
 
@@ -170,30 +170,30 @@ async function updatePackageVersion(newVersion) {
  * @param {string} newVersion
  */
 async function updateCargoVersion(newVersion) {
-  const _dirname = process.cwd();
-  const cargoTomlPath = path.join(_dirname, "src-tauri", "Cargo.toml");
+  const _dirname = process.cwd()
+  const cargoTomlPath = path.join(_dirname, 'src-tauri', 'Cargo.toml')
   try {
-    const data = await fs.readFile(cargoTomlPath, "utf8");
-    const lines = data.split("\n");
-    const versionWithoutV = newVersion.startsWith("v")
+    const data = await fs.readFile(cargoTomlPath, 'utf8')
+    const lines = data.split('\n')
+    const versionWithoutV = newVersion.startsWith('v')
       ? newVersion.slice(1)
-      : newVersion;
+      : newVersion
 
     const updatedLines = lines.map((line) => {
-      if (line.trim().startsWith("version =")) {
+      if (line.trim().startsWith('version =')) {
         return line.replace(
           /version\s*=\s*"[^"]+"/,
           `version = "${versionWithoutV}"`,
-        );
+        )
       }
-      return line;
-    });
+      return line
+    })
 
-    await fs.writeFile(cargoTomlPath, updatedLines.join("\n"), "utf8");
-    console.log(`[INFO]: Cargo.toml version updated to: ${versionWithoutV}`);
+    await fs.writeFile(cargoTomlPath, updatedLines.join('\n'), 'utf8')
+    console.log(`[INFO]: Cargo.toml version updated to: ${versionWithoutV}`)
   } catch (error) {
-    console.error("Error updating Cargo.toml version:", error);
-    throw error;
+    console.error('Error updating Cargo.toml version:', error)
+    throw error
   }
 }
 
@@ -202,34 +202,34 @@ async function updateCargoVersion(newVersion) {
  * @param {string} newVersion
  */
 async function updateTauriConfigVersion(newVersion) {
-  const _dirname = process.cwd();
-  const tauriConfigPath = path.join(_dirname, "src-tauri", "tauri.conf.json");
+  const _dirname = process.cwd()
+  const tauriConfigPath = path.join(_dirname, 'src-tauri', 'tauri.conf.json')
   try {
-    const data = await fs.readFile(tauriConfigPath, "utf8");
-    const tauriConfig = JSON.parse(data);
-    const versionWithoutV = newVersion.startsWith("v")
+    const data = await fs.readFile(tauriConfigPath, 'utf8')
+    const tauriConfig = JSON.parse(data)
+    const versionWithoutV = newVersion.startsWith('v')
       ? newVersion.slice(1)
-      : newVersion;
+      : newVersion
 
     console.log(
-      "[INFO]: Current tauri.conf.json version is: ",
+      '[INFO]: Current tauri.conf.json version is: ',
       tauriConfig.version,
-    );
+    )
 
     // 使用完整版本信息，包含build metadata
-    tauriConfig.version = versionWithoutV;
+    tauriConfig.version = versionWithoutV
 
     await fs.writeFile(
       tauriConfigPath,
       JSON.stringify(tauriConfig, null, 2),
-      "utf8",
-    );
+      'utf8',
+    )
     console.log(
       `[INFO]: tauri.conf.json version updated to: ${versionWithoutV}`,
-    );
+    )
   } catch (error) {
-    console.error("Error updating tauri.conf.json version:", error);
-    throw error;
+    console.error('Error updating tauri.conf.json version:', error)
+    throw error
   }
 }
 
@@ -237,15 +237,15 @@ async function updateTauriConfigVersion(newVersion) {
  * 获取当前版本号
  */
 async function getCurrentVersion() {
-  const _dirname = process.cwd();
-  const packageJsonPath = path.join(_dirname, "package.json");
+  const _dirname = process.cwd()
+  const packageJsonPath = path.join(_dirname, 'package.json')
   try {
-    const data = await fs.readFile(packageJsonPath, "utf8");
-    const packageJson = JSON.parse(data);
-    return packageJson.version;
+    const data = await fs.readFile(packageJsonPath, 'utf8')
+    const packageJson = JSON.parse(data)
+    return packageJson.version
   } catch (error) {
-    console.error("Error getting current version:", error);
-    throw error;
+    console.error('Error getting current version:', error)
+    throw error
   }
 }
 
@@ -254,62 +254,62 @@ async function getCurrentVersion() {
  */
 async function main(versionArg) {
   if (!versionArg) {
-    console.error("Error: Version argument is required");
-    process.exit(1);
+    console.error('Error: Version argument is required')
+    process.exit(1)
   }
 
   try {
-    let newVersion;
+    let newVersion
     const validTags = [
-      "alpha",
-      "beta",
-      "rc",
-      "autobuild",
-      "autobuild-latest",
-      "deploytest",
-    ];
+      'alpha',
+      'beta',
+      'rc',
+      'autobuild',
+      'autobuild-latest',
+      'deploytest',
+    ]
 
     if (validTags.includes(versionArg.toLowerCase())) {
-      const currentVersion = await getCurrentVersion();
-      const baseVersion = getBaseVersion(currentVersion);
+      const currentVersion = await getCurrentVersion()
+      const baseVersion = getBaseVersion(currentVersion)
 
-      if (versionArg.toLowerCase() === "autobuild") {
+      if (versionArg.toLowerCase() === 'autobuild') {
         // 格式: 2.3.0+autobuild.1004.cc39b27
         // 使用 Tauri 相关的最新 commit hash
-        newVersion = `${baseVersion}+autobuild.${generateShortTimestamp(true, true)}`;
-      } else if (versionArg.toLowerCase() === "autobuild-latest") {
+        newVersion = `${baseVersion}+autobuild.${generateShortTimestamp(true, true)}`
+      } else if (versionArg.toLowerCase() === 'autobuild-latest') {
         // 格式: 2.3.0+autobuild.1004.a1b2c3d (使用最新 Tauri 提交)
-        const latestTauriCommit = getLatestTauriCommit();
-        newVersion = `${baseVersion}+autobuild.${generateShortTimestamp()}.${latestTauriCommit}`;
-      } else if (versionArg.toLowerCase() === "deploytest") {
+        const latestTauriCommit = getLatestTauriCommit()
+        newVersion = `${baseVersion}+autobuild.${generateShortTimestamp()}.${latestTauriCommit}`
+      } else if (versionArg.toLowerCase() === 'deploytest') {
         // 格式: 2.3.0+deploytest.1004.cc39b27
         // 使用 Tauri 相关的最新 commit hash
-        newVersion = `${baseVersion}+deploytest.${generateShortTimestamp(true, true)}`;
+        newVersion = `${baseVersion}+deploytest.${generateShortTimestamp(true, true)}`
       } else {
-        newVersion = `${baseVersion}-${versionArg.toLowerCase()}`;
+        newVersion = `${baseVersion}-${versionArg.toLowerCase()}`
       }
     } else {
       if (!isValidVersion(versionArg)) {
-        console.error("Error: Invalid version format");
-        process.exit(1);
+        console.error('Error: Invalid version format')
+        process.exit(1)
       }
-      newVersion = normalizeVersion(versionArg);
+      newVersion = normalizeVersion(versionArg)
     }
 
-    console.log(`[INFO]: Updating versions to: ${newVersion}`);
-    await updatePackageVersion(newVersion);
-    await updateCargoVersion(newVersion);
-    await updateTauriConfigVersion(newVersion);
-    console.log("[SUCCESS]: All version updates completed successfully!");
+    console.log(`[INFO]: Updating versions to: ${newVersion}`)
+    await updatePackageVersion(newVersion)
+    await updateCargoVersion(newVersion)
+    await updateTauriConfigVersion(newVersion)
+    console.log('[SUCCESS]: All version updates completed successfully!')
   } catch (error) {
-    console.error("[ERROR]: Failed to update versions:", error);
-    process.exit(1);
+    console.error('[ERROR]: Failed to update versions:', error)
+    process.exit(1)
   }
 }
 
 program
-  .name("pnpm release-version")
-  .description("Update project version numbers")
-  .argument("<version>", "version tag or full version")
+  .name('pnpm release-version')
+  .description('Update project version numbers')
+  .argument('<version>', 'version tag or full version')
   .action(main)
-  .parse(process.argv);
+  .parse(process.argv)

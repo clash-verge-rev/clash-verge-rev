@@ -4,36 +4,36 @@ on:
   workflow_dispatch:
     inputs:
       tag_name:
-        description: "Release tag name to check against (default: autobuild)"
+        description: 'Release tag name to check against (default: autobuild)'
         required: false
-        default: "autobuild"
+        default: 'autobuild'
         type: string
       force_build:
-        description: "Force build regardless of checks"
+        description: 'Force build regardless of checks'
         required: false
         default: false
         type: boolean
   workflow_call:
     inputs:
       tag_name:
-        description: "Release tag name to check against (default: autobuild)"
+        description: 'Release tag name to check against (default: autobuild)'
         required: false
-        default: "autobuild"
+        default: 'autobuild'
         type: string
       force_build:
-        description: "Force build regardless of checks"
+        description: 'Force build regardless of checks'
         required: false
         default: false
         type: boolean
     outputs:
       should_run:
-        description: "Whether the build should run"
+        description: 'Whether the build should run'
         value: ${{ jobs.check_commit.outputs.should_run }}
       last_tauri_commit:
-        description: "The last commit hash with Tauri-related changes"
+        description: 'The last commit hash with Tauri-related changes'
         value: ${{ jobs.check_commit.outputs.last_tauri_commit }}
       autobuild_version:
-        description: "The generated autobuild version string"
+        description: 'The generated autobuild version string'
         value: ${{ jobs.check_commit.outputs.autobuild_version }}
 
 permissions:
