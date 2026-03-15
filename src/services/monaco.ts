@@ -1,9 +1,10 @@
 import { loader } from "@monaco-editor/react";
+import metaSchema from "meta-json-schema/schemas/meta-json-schema.json";
 import * as monaco from "monaco-editor";
 import editorWorker from "monaco-editor/esm/vs/editor/editor.worker?worker";
 import cssWorker from "monaco-editor/esm/vs/language/css/css.worker?worker";
 import tsWorker from "monaco-editor/esm/vs/language/typescript/ts.worker?worker";
-import { configureMonacoYaml } from "monaco-yaml";
+import { configureMonacoYaml, JSONSchema } from "monaco-yaml";
 import pac from "types-pac/pac.d.ts?raw";
 
 import yamlWorker from "@/utils/yaml.worker?worker";
@@ -56,6 +57,13 @@ export const beforeEditorMount = () => {
     validate: true,
     enableSchemaRequest: true,
     completion: true,
+    schemas: [
+      {
+        uri: "http://example.com/meta-json-schema.json",
+        fileMatch: ["**/*.yaml", "**/*.yml"],
+        schema: metaSchema as unknown as JSONSchema, // JSON import is inferred as a literal type
+      },
+    ],
   });
 
   mounted = true;

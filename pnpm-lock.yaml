@@ -95,6 +95,9 @@ importers:
       lodash-es:
         specifier: ^4.17.23
         version: 4.17.23
+      meta-json-schema:
+        specifier: ^1.19.21
+        version: 1.19.21
       monaco-editor:
         specifier: ^0.55.1
         version: 0.55.1
@@ -3135,6 +3138,10 @@ packages:
   meow@13.2.0:
     resolution: {integrity: sha512-pxQJQzB6djGPXh08dacEloMFopsOqGVRKFPYvPOt9XDZ1HasbgDZA74CJGreSU4G3Ak7EFJGoiH2auq+yXISgA==}
     engines: {node: '>=18'}
+
+  meta-json-schema@1.19.21:
+    resolution: {integrity: sha512-PkEdW1H+C0HNt+Bw5qAfBHkXgN0ZXB1g5YBhzCRzUNdLnWWe59lMgXRri85IizRRRVe8bVLffDMNbPb+4wrU3Q==}
+    engines: {node: '>=18', pnpm: '>=9'}
 
   micromark-core-commonmark@2.0.3:
     resolution: {integrity: sha512-RDBrHEMSxVFLg6xvnXmb1Ayr2WzLAWjeSATAoxwKYJV94TeNavgoIdA0a9ytzDSVzBy2YKFK+emCPOEibLeCrg==}
@@ -6939,6 +6946,8 @@ snapshots:
       timers-ext: 0.1.8
 
   meow@13.2.0: {}
+
+  meta-json-schema@1.19.21: {}
 
   micromark-core-commonmark@2.0.3:
     dependencies:
