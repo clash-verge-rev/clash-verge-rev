@@ -1,4 +1,6 @@
-import { useCallback, useEffect, useState } from "react";
+/* eslint-disable @eslint-react/hooks-extra/no-direct-set-state-in-use-effect */
+import { useEffect } from "foxact/use-abortable-effect";
+import { useCallback, useState } from "react";
 
 import { showNotice } from "@/services/notice-service";
 
@@ -12,40 +14,35 @@ export const useEditorDocument = ({ open, load }: UseEditorDocumentOptions) => {
   const [savedValue, setSavedValue] = useState("");
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (open) return;
-
-    /* eslint-disable @eslint-react/hooks-extra/no-direct-set-state-in-use-effect */
+  const resetDocumentState = useCallback(() => {
     setValue("");
     setSavedValue("");
     setLoading(true);
-    /* eslint-enable @eslint-react/hooks-extra/no-direct-set-state-in-use-effect */
-  }, [open]);
+  }, []);
 
-  useEffect(() => {
-    if (!open) return;
+  useEffect(
+    (signal) => {
+      resetDocumentState();
 
-    let cancelled = false;
+      if (!open) return;
 
-    load()
-      .then((nextValue) => {
-        if (cancelled) return;
+      load()
+        .then((nextValue) => {
+          if (signal.aborted) return;
 
-        const normalized = nextValue ?? "";
-        setValue(normalized);
-        setSavedValue(normalized);
-      })
-      .catch((error) => {
-        if (!cancelled) showNotice.error(error);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [load, open]);
+          const normalized = nextValue ?? "";
+          setValue(normalized);
+          setSavedValue(normalized);
+        })
+        .catch((error) => {
+          if (!signal.aborted) showNotice.error(error);
+        })
+        .finally(() => {
+          if (!signal.aborted) setLoading(false);
+        });
+    },
+    [load, open, resetDocumentState],
+  );
 
   const markSaved = useCallback((nextValue: string) => {
     setSavedValue(nextValue);
