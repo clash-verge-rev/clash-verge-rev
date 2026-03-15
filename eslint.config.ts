@@ -39,6 +39,7 @@ export default defineConfig([
             'eslint.config.ts',
             'src/polyfills/*.js',
             'src-tauri/src/enhance/builtin/*.js',
+            'scripts/*.mjs',
           ],
         },
       },
@@ -139,7 +140,7 @@ export default defineConfig([
     },
   },
   {
-    files: ['scripts/**/*.{js,mjs,cjs}'],
+    files: ['scripts/*.mjs'],
 
     languageOptions: {
       globals: {

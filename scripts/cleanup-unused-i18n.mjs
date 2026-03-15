@@ -1122,17 +1122,18 @@ function regenerateLocaleIndex(localeDir, namespaces) {
     const filePath = path.join(localeDir, `${namespace}.json`)
     if (!fs.existsSync(filePath)) continue
     const identifier = toModuleIdentifier(namespace, seen)
-    imports.push(`import ${identifier} from "./${namespace}.json";`)
-    mappings.push(`  "${namespace}": ${identifier},`)
+    const key = namespace === identifier ? namespace : `'${namespace}'`
+    imports.push(`import ${identifier} from './${namespace}.json'`)
+    mappings.push(`  ${key}: ${identifier},`)
   }
 
   const content = `${imports.join('\n')}
 
 const resources = {
 ${mappings.join('\n')}
-};
+}
 
-export default resources;
+export default resources
 `
 
   fs.writeFileSync(path.join(localeDir, 'index.ts'), content, 'utf8')
