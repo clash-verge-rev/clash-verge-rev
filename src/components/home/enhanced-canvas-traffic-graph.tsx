@@ -202,7 +202,7 @@ export const EnhancedCanvasTrafficGraph = memo(
         fpsControllerRef.current.target = GRAPH_CONFIG.targetFPS
         fpsControllerRef.current.samples = []
         fpsControllerRef.current.lastAdjustTime = 0
-        // eslint-disable-next-line @eslint-react/hooks-extra/no-direct-set-state-in-use-effect
+        // eslint-disable-next-line @eslint-react/set-state-in-effect
         setCurrentFPS(GRAPH_CONFIG.targetFPS)
         return
       }

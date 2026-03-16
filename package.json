@@ -83,7 +83,7 @@
   },
   "devDependencies": {
     "@actions/github": "^9.0.0",
-    "@eslint-react/eslint-plugin": "^2.13.0",
+    "@eslint-react/eslint-plugin": "^3.0.0",
     "@eslint/js": "^10.0.1",
     "@tauri-apps/cli": "2.10.1",
     "@types/js-yaml": "^4.0.9",
@@ -123,11 +123,11 @@
     "vite-plugin-svgr": "^4.5.0"
   },
   "lint-staged": {
-    "*.{ts,tsx,js,jsx}": [
+    "*.{ts,tsx,js,mjs,jsx}": [
       "eslint --fix --max-warnings=0",
       "prettier --write"
     ],
-    "*.{css,scss,json,md}": [
+    "*.{css,scss,json,md,toml}": [
       "prettier --write"
     ]
   },
