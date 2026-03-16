@@ -241,7 +241,7 @@
           "tunTrayIcon": "Tun Tepsi Simgesi",
           "enableTrayIcon": "Tepsi Simgesini Etkinleştir",
           "enableTraySpeed": "Tepsi Hızını Etkinleştir",
-          "pauseRenderTrafficStatsOnBlur": "Pause rendering traffic statistics when blurred"
+          "pauseRenderTrafficStatsOnBlur": "Odak kaybolduğunda trafik istatistiklerinin işlenmesini duraklat"
         },
         "tooltips": {
           "hoverNavigator": "Automatically scroll to the corresponding proxy group when hovering over alphabet letters",

@@ -241,7 +241,7 @@
           "tunTrayIcon": "TUN-Modus-Tray-Symbol",
           "enableTrayIcon": "Tray-Symbol aktivieren",
           "enableTraySpeed": "Tray-Geschwindigkeit aktivieren",
-          "pauseRenderTrafficStatsOnBlur": "Pause rendering traffic statistics when blurred"
+          "pauseRenderTrafficStatsOnBlur": "Rendering der Verkehrsstatistiken bei Fokusverlust pausieren"
         },
         "tooltips": {
           "hoverNavigator": "Automatically scroll to the corresponding proxy group when hovering over alphabet letters",

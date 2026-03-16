@@ -241,7 +241,7 @@
           "tunTrayIcon": "Ikon Tray Tun",
           "enableTrayIcon": "Enable Tray Icon",
           "enableTraySpeed": "Aktifkan Tray Speed",
-          "pauseRenderTrafficStatsOnBlur": "Pause rendering traffic statistics when blurred"
+          "pauseRenderTrafficStatsOnBlur": "Jeda render statistik lalu lintas saat jendela tidak fokus"
         },
         "tooltips": {
           "hoverNavigator": "Automatically scroll to the corresponding proxy group when hovering over alphabet letters",

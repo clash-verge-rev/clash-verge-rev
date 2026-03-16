@@ -241,7 +241,7 @@
           "tunTrayIcon": "Icono de bandeja del modo TUN",
           "enableTrayIcon": "Habilitar icono de la bandeja",
           "enableTraySpeed": "Habilitar velocidad en la bandeja",
-          "pauseRenderTrafficStatsOnBlur": "Pause rendering traffic statistics when blurred"
+          "pauseRenderTrafficStatsOnBlur": "Pausar el renderizado de estadísticas de tráfico al perder el foco"
         },
         "tooltips": {
           "hoverNavigator": "Automatically scroll to the corresponding proxy group when hovering over alphabet letters",

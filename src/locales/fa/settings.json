@@ -241,7 +241,7 @@
           "tunTrayIcon": "آیکون سینی Tun",
           "enableTrayIcon": "Enable Tray Icon",
           "enableTraySpeed": "فعال کردن سرعت ترای",
-          "pauseRenderTrafficStatsOnBlur": "Pause rendering traffic statistics when blurred"
+          "pauseRenderTrafficStatsOnBlur": "توقف رندر آمار ترافیک هنگام از دست رفتن فوکوس"
         },
         "tooltips": {
           "hoverNavigator": "Automatically scroll to the corresponding proxy group when hovering over alphabet letters",
