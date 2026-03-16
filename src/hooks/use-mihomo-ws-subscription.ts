@@ -1,32 +1,32 @@
-import { useLocalStorage } from "foxact/use-local-storage";
-import { useCallback, useEffect, useRef } from "react";
-import { mutate, type MutatorCallback } from "swr";
-import useSWRSubscription from "swr/subscription";
-import { type Message, type MihomoWebSocket } from "tauri-plugin-mihomo-api";
+import { useLocalStorage } from 'foxact/use-local-storage'
+import { useCallback, useEffect, useRef } from 'react'
+import { mutate, type MutatorCallback } from 'swr'
+import useSWRSubscription from 'swr/subscription'
+import { type Message, type MihomoWebSocket } from 'tauri-plugin-mihomo-api'
 
-export const RECONNECT_DELAY_MS = 100;
+export const RECONNECT_DELAY_MS = 100
 
-type NextFn<T> = (error?: any, data?: T | MutatorCallback<T>) => void;
+type NextFn<T> = (error?: any, data?: T | MutatorCallback<T>) => void
 
 interface HandlerContext<T> {
-  next: NextFn<T>;
-  scheduleReconnect: () => Promise<void>;
-  isMounted: () => boolean;
+  next: NextFn<T>
+  scheduleReconnect: () => Promise<void>
+  isMounted: () => boolean
 }
 
 interface HandlerResult {
-  handleMessage: (data: string) => void;
-  onConnected?: (ws: MihomoWebSocket) => Promise<void> | void;
-  cleanup?: () => void;
+  handleMessage: (data: string) => void
+  onConnected?: (ws: MihomoWebSocket) => Promise<void> | void
+  cleanup?: () => void
 }
 
 interface UseMihomoWsSubscriptionOptions<T> {
-  storageKey: string;
-  buildSubscriptKey: (date: number) => string | null;
-  fallbackData: T;
-  connect: () => Promise<MihomoWebSocket>;
-  keepPreviousData?: boolean;
-  setupHandlers: (ctx: HandlerContext<T>) => HandlerResult;
+  storageKey: string
+  buildSubscriptKey: (date: number) => string | null
+  fallbackData: T
+  connect: () => Promise<MihomoWebSocket>
+  keepPreviousData?: boolean
+  setupHandlers: (ctx: HandlerContext<T>) => HandlerResult
 }
 
 export const useMihomoWsSubscription = <T>(
@@ -39,42 +39,43 @@ export const useMihomoWsSubscription = <T>(
     connect,
     keepPreviousData = true,
     setupHandlers,
-  } = options;
+  } = options
 
-  const [date, setDate] = useLocalStorage(storageKey, Date.now());
-  const subscriptKey = buildSubscriptKey(date);
-  const subscriptionCacheKey = subscriptKey ? `$sub$${subscriptKey}` : null;
+  // eslint-disable-next-line @eslint-react/purity
+  const [date, setDate] = useLocalStorage(storageKey, Date.now())
+  const subscriptKey = buildSubscriptKey(date)
+  const subscriptionCacheKey = subscriptKey ? `$sub$${subscriptKey}` : null
 
-  const wsRef = useRef<MihomoWebSocket | null>(null);
-  const wsFirstConnectionRef = useRef<boolean>(true);
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const wsRef = useRef<MihomoWebSocket | null>(null)
+  const wsFirstConnectionRef = useRef<boolean>(true)
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const response = useSWRSubscription<T, any, string | null>(
     subscriptKey,
     (_key, { next }) => {
-      let isMounted = true;
+      let isMounted = true
 
       const clearReconnectTimer = () => {
         if (timeoutRef.current) {
-          clearTimeout(timeoutRef.current);
-          timeoutRef.current = null;
+          clearTimeout(timeoutRef.current)
+          timeoutRef.current = null
         }
-      };
+      }
 
       const closeSocket = async () => {
         if (wsRef.current) {
-          await wsRef.current.close();
-          wsRef.current = null;
+          await wsRef.current.close()
+          wsRef.current = null
         }
-      };
+      }
 
       const scheduleReconnect = async () => {
-        if (!isMounted) return;
-        clearReconnectTimer();
-        await closeSocket();
-        if (!isMounted) return;
-        timeoutRef.current = setTimeout(connectWs, RECONNECT_DELAY_MS);
-      };
+        if (!isMounted) return
+        clearReconnectTimer()
+        await closeSocket()
+        if (!isMounted) return
+        timeoutRef.current = setTimeout(connectWs, RECONNECT_DELAY_MS)
+      }
 
       const {
         handleMessage: handleTextMessage,
@@ -84,73 +85,73 @@ export const useMihomoWsSubscription = <T>(
         next,
         scheduleReconnect,
         isMounted: () => isMounted,
-      });
+      })
 
       const cleanupAll = () => {
-        clearReconnectTimer();
-        cleanup?.();
-        void closeSocket();
-      };
+        clearReconnectTimer()
+        cleanup?.()
+        void closeSocket()
+      }
 
       const handleMessage = (msg: Message) => {
-        if (msg.type !== "Text") return;
-        handleTextMessage(msg.data);
-      };
+        if (msg.type !== 'Text') return
+        handleTextMessage(msg.data)
+      }
 
       async function connectWs() {
         try {
-          const ws_ = await connect();
+          const ws_ = await connect()
           if (!isMounted) {
-            await ws_.close();
-            return;
+            await ws_.close()
+            return
           }
 
-          wsRef.current = ws_;
-          clearReconnectTimer();
+          wsRef.current = ws_
+          clearReconnectTimer()
 
           if (onConnected) {
-            await onConnected(ws_);
+            await onConnected(ws_)
             if (!isMounted) {
-              await ws_.close();
-              return;
+              await ws_.close()
+              return
             }
           }
 
-          ws_.addListener(handleMessage);
+          ws_.addListener(handleMessage)
         } catch (ignoreError) {
           if (!wsRef.current && isMounted) {
-            timeoutRef.current = setTimeout(connectWs, RECONNECT_DELAY_MS);
+            timeoutRef.current = setTimeout(connectWs, RECONNECT_DELAY_MS)
           }
         }
       }
 
       if (wsFirstConnectionRef.current || !wsRef.current) {
-        wsFirstConnectionRef.current = false;
-        cleanupAll();
-        void connectWs();
+        wsFirstConnectionRef.current = false
+        cleanupAll()
+        void connectWs()
       }
 
       return () => {
-        isMounted = false;
-        wsFirstConnectionRef.current = true;
-        cleanupAll();
-      };
+        isMounted = false
+        wsFirstConnectionRef.current = true
+        cleanupAll()
+      }
     },
     {
       fallbackData,
       keepPreviousData,
     },
-  );
+  )
 
   useEffect(() => {
     if (subscriptionCacheKey) {
-      mutate(subscriptionCacheKey);
+      mutate(subscriptionCacheKey)
     }
-  }, [subscriptionCacheKey]);
+  }, [subscriptionCacheKey])
 
   const refresh = useCallback(() => {
-    setDate(Date.now());
-  }, [setDate]);
+    setDate(Date.now())
+  }, [setDate])
 
-  return { response, refresh, subscriptionCacheKey, wsRef };
-};
+  return { response, refresh, subscriptionCacheKey, wsRef }
+}

@@ -1,106 +1,106 @@
-import { getVergeConfig } from "./cmds";
+import { getVergeConfig } from './cmds'
 import {
   cacheLanguage,
   getCachedLanguage,
   initializeLanguage,
   resolveLanguage,
-} from "./i18n";
+} from './i18n'
 
-let vergeConfigCache: IVergeConfig | null | undefined;
+let vergeConfigCache: IVergeConfig | null | undefined
 
-const detectSystemTheme = (): "light" | "dark" => {
-  if (typeof window === "undefined" || typeof window.matchMedia !== "function")
-    return "light";
-  return window.matchMedia("(prefers-color-scheme: dark)").matches
-    ? "dark"
-    : "light";
-};
+const detectSystemTheme = (): 'light' | 'dark' => {
+  if (typeof window === 'undefined' || typeof window.matchMedia !== 'function')
+    return 'light'
+  return window.matchMedia('(prefers-color-scheme: dark)').matches
+    ? 'dark'
+    : 'light'
+}
 
-const getThemeModeFromWindow = (): IVergeConfig["theme_mode"] | undefined => {
-  if (typeof window === "undefined") return undefined;
+const getThemeModeFromWindow = (): IVergeConfig['theme_mode'] | undefined => {
+  if (typeof window === 'undefined') return undefined
   const mode = (
     window as typeof window & {
-      __VERGE_INITIAL_THEME_MODE?: unknown;
+      __VERGE_INITIAL_THEME_MODE?: unknown
     }
-  ).__VERGE_INITIAL_THEME_MODE;
-  if (mode === "light" || mode === "dark" || mode === "system") {
-    return mode;
+  ).__VERGE_INITIAL_THEME_MODE
+  if (mode === 'light' || mode === 'dark' || mode === 'system') {
+    return mode
   }
-  return undefined;
-};
+  return undefined
+}
 
 export const resolveThemeMode = (
   vergeConfig?: IVergeConfig | null,
-): "light" | "dark" => {
-  const initialMode = vergeConfig?.theme_mode ?? getThemeModeFromWindow();
-  if (initialMode === "dark" || initialMode === "light") {
-    return initialMode;
+): 'light' | 'dark' => {
+  const initialMode = vergeConfig?.theme_mode ?? getThemeModeFromWindow()
+  if (initialMode === 'dark' || initialMode === 'light') {
+    return initialMode
   }
-  return detectSystemTheme();
-};
+  return detectSystemTheme()
+}
 
 export const setPreloadConfig = (config: IVergeConfig | null) => {
-  vergeConfigCache = config;
-};
+  vergeConfigCache = config
+}
 
-export const getPreloadConfig = () => vergeConfigCache;
+export const getPreloadConfig = () => vergeConfigCache
 
 export const preloadConfig = async () => {
   try {
-    const config = await getVergeConfig();
-    setPreloadConfig(config);
-    return config;
+    const config = await getVergeConfig()
+    setPreloadConfig(config)
+    return config
   } catch (error) {
-    console.warn("[preload.ts] Failed to read Verge config:", error);
-    setPreloadConfig(null);
-    return null;
+    console.warn('[preload.ts] Failed to read Verge config:', error)
+    setPreloadConfig(null)
+    return null
   }
-};
+}
 
 export const preloadLanguage = async (
   vergeConfig?: IVergeConfig | null,
   loadConfig: () => Promise<IVergeConfig | null> = preloadConfig,
 ) => {
-  const cachedLanguage = getCachedLanguage();
+  const cachedLanguage = getCachedLanguage()
   if (cachedLanguage) {
-    return cachedLanguage;
+    return cachedLanguage
   }
 
-  let resolvedConfig = vergeConfig;
+  let resolvedConfig = vergeConfig
 
   if (resolvedConfig === undefined) {
     try {
-      resolvedConfig = await loadConfig();
+      resolvedConfig = await loadConfig()
     } catch (error) {
       console.warn(
-        "[preload.ts] Failed to read language from Verge config:",
+        '[preload.ts] Failed to read language from Verge config:',
         error,
-      );
-      resolvedConfig = null;
+      )
+      resolvedConfig = null
     }
   }
 
-  const languageFromConfig = resolvedConfig?.language;
+  const languageFromConfig = resolvedConfig?.language
   if (languageFromConfig) {
-    const resolved = resolveLanguage(languageFromConfig);
-    cacheLanguage(resolved);
-    return resolved;
+    const resolved = resolveLanguage(languageFromConfig)
+    cacheLanguage(resolved)
+    return resolved
   }
 
   const browserLanguage = resolveLanguage(
-    typeof navigator !== "undefined" ? navigator.language : undefined,
-  );
-  cacheLanguage(browserLanguage);
-  return browserLanguage;
-};
+    typeof navigator !== 'undefined' ? navigator.language : undefined,
+  )
+  cacheLanguage(browserLanguage)
+  return browserLanguage
+}
 
 export const preloadAppData = async () => {
-  const configPromise = preloadConfig();
-  const initialLanguage = await preloadLanguage(undefined, () => configPromise);
+  const configPromise = preloadConfig()
+  const initialLanguage = await preloadLanguage(undefined, () => configPromise)
   const [config] = await Promise.all([
     configPromise,
     initializeLanguage(initialLanguage),
-  ]);
-  const initialThemeMode = resolveThemeMode(config);
-  return { initialThemeMode };
-};
+  ])
+  const initialThemeMode = resolveThemeMode(config)
+  return { initialThemeMode }
+}

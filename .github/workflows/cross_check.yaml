@@ -16,7 +16,7 @@ jobs:
   cargo-check:
     # Treat all Rust compiler warnings as errors
     env:
-      RUSTFLAGS: "-D warnings"
+      RUSTFLAGS: '-D warnings'
     strategy:
       fail-fast: false
       matrix:
@@ -43,7 +43,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v6
         with:
-          node-version: "24.14.0"
+          node-version: '24.14.0'
 
       - uses: pnpm/action-setup@v4
         name: Install pnpm

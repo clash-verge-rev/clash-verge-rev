@@ -1,21 +1,15 @@
-import { Box, Typography, alpha, useTheme } from "@mui/material";
-import React, { forwardRef, ReactNode } from "react";
+import { Box, Typography, alpha, useTheme } from '@mui/material'
+import React, { forwardRef, ReactNode } from 'react'
 
 // 自定义卡片组件接口
 interface EnhancedCardProps {
-  title: ReactNode;
-  icon: ReactNode;
-  action?: ReactNode;
-  children: ReactNode;
-  iconColor?:
-    | "primary"
-    | "secondary"
-    | "error"
-    | "warning"
-    | "info"
-    | "success";
-  minHeight?: number | string;
-  noContentPadding?: boolean;
+  title: ReactNode
+  icon: ReactNode
+  action?: ReactNode
+  children: ReactNode
+  iconColor?: 'primary' | 'secondary' | 'error' | 'warning' | 'info' | 'success'
+  minHeight?: number | string
+  noContentPadding?: boolean
 }
 
 // 自定义卡片组件
@@ -26,33 +20,33 @@ export const EnhancedCard = forwardRef<HTMLElement, EnhancedCardProps>(
       icon,
       action,
       children,
-      iconColor = "primary",
+      iconColor = 'primary',
       minHeight,
       noContentPadding = false,
     },
     ref,
   ) => {
-    const theme = useTheme();
-    const isDark = theme.palette.mode === "dark";
+    const theme = useTheme()
+    const isDark = theme.palette.mode === 'dark'
 
     // 统一的标题截断样式
     const titleTruncateStyle = {
       minWidth: 0,
-      maxWidth: "100%",
-      overflow: "hidden",
-      textOverflow: "ellipsis",
-      whiteSpace: "nowrap",
-      display: "block",
-    };
+      maxWidth: '100%',
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
+      whiteSpace: 'nowrap',
+      display: 'block',
+    }
 
     return (
       <Box
         sx={{
-          height: "100%",
-          display: "flex",
-          flexDirection: "column",
+          height: '100%',
+          display: 'flex',
+          flexDirection: 'column',
           borderRadius: 2,
-          backgroundColor: isDark ? "#282a36" : "#ffffff",
+          backgroundColor: isDark ? '#282a36' : '#ffffff',
         }}
         ref={ref}
       >
@@ -60,27 +54,27 @@ export const EnhancedCard = forwardRef<HTMLElement, EnhancedCardProps>(
           sx={{
             px: 2,
             py: 1,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
             borderBottom: 1,
-            borderColor: "divider",
+            borderColor: 'divider',
           }}
         >
           <Box
             sx={{
-              display: "flex",
-              alignItems: "center",
+              display: 'flex',
+              alignItems: 'center',
               minWidth: 0,
               flex: 1,
-              overflow: "hidden",
+              overflow: 'hidden',
             }}
           >
             <Box
               sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
                 borderRadius: 1.5,
                 width: 38,
                 height: 38,
@@ -93,7 +87,7 @@ export const EnhancedCard = forwardRef<HTMLElement, EnhancedCardProps>(
               {icon}
             </Box>
             <Box sx={{ minWidth: 0, flex: 1 }}>
-              {typeof title === "string" ? (
+              {typeof title === 'string' ? (
                 <Typography
                   variant="h6"
                   fontWeight="medium"
@@ -113,8 +107,8 @@ export const EnhancedCard = forwardRef<HTMLElement, EnhancedCardProps>(
         <Box
           sx={{
             flex: 1,
-            display: "flex",
-            flexDirection: "column",
+            display: 'flex',
+            flexDirection: 'column',
             p: noContentPadding ? 0 : 2,
             ...(minHeight && { minHeight }),
           }}
@@ -122,6 +116,6 @@ export const EnhancedCard = forwardRef<HTMLElement, EnhancedCardProps>(
           {children}
         </Box>
       </Box>
-    );
+    )
   },
-);
+)

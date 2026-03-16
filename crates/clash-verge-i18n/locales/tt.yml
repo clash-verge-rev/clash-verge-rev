@@ -5,7 +5,7 @@ notifications:
     body: Идарә панеленең күренеше яңартылды.
   clashModeChanged:
     title: Режим алыштыру
-    body: "{mode} режимына күчтел."
+    body: '{mode} режимына күчтел.'
   systemProxyToggled:
     title: Системалы прокси
     body: Системалы прокси хәле яңартылды.

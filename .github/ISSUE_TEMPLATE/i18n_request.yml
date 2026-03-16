@@ -1,8 +1,8 @@
 name: I18N / 多语言相关
-title: "[I18N] "
+title: '[I18N] '
 description: 用于多语言翻译、国际化相关问题或建议 / For issues or suggestions related to translations and internationalization
-labels: ["I18n"]
-type: "Task"
+labels: ['I18n']
+type: 'Task'
 
 body:
   - type: markdown
