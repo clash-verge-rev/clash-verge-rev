@@ -19,7 +19,6 @@ export default defineConfig([
       // @ts-expect-error -- https://github.com/typescript-eslint/typescript-eslint/issues/11543
       'react-hooks': pluginReactHooks,
       'react-compiler': pluginReactCompiler,
-      // @ts-expect-error -- https://github.com/un-ts/eslint-plugin-import-x/issues/421
       'import-x': pluginImportX,
       'react-refresh': pluginReactRefresh,
       'unused-imports': pluginUnusedImports,
@@ -35,12 +34,7 @@ export default defineConfig([
       globals: globals.browser,
       parserOptions: {
         projectService: {
-          allowDefaultProject: [
-            'eslint.config.ts',
-            'src/polyfills/*.js',
-            'src-tauri/src/enhance/builtin/*.js',
-            'scripts/*.mjs',
-          ],
+          allowDefaultProject: ['eslint.config.ts', 'src/polyfills/*.js'],
         },
       },
     },
