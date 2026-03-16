@@ -240,7 +240,8 @@
           "systemProxyTrayIcon": "آیکون سینی پراکسی سیستم",
           "tunTrayIcon": "آیکون سینی Tun",
           "enableTrayIcon": "Enable Tray Icon",
-          "enableTraySpeed": "فعال کردن سرعت ترای"
+          "enableTraySpeed": "فعال کردن سرعت ترای",
+          "pauseRenderTrafficStatsOnBlur": "توقف رندر آمار ترافیک هنگام از دست رفتن فوکوس"
         },
         "tooltips": {
           "hoverNavigator": "Automatically scroll to the corresponding proxy group when hovering over alphabet letters",

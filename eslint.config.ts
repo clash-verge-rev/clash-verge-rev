@@ -19,7 +19,6 @@ export default defineConfig([
       // @ts-expect-error -- https://github.com/typescript-eslint/typescript-eslint/issues/11543
       'react-hooks': pluginReactHooks,
       'react-compiler': pluginReactCompiler,
-      // @ts-expect-error -- https://github.com/un-ts/eslint-plugin-import-x/issues/421
       'import-x': pluginImportX,
       'react-refresh': pluginReactRefresh,
       'unused-imports': pluginUnusedImports,
@@ -35,12 +34,7 @@ export default defineConfig([
       globals: globals.browser,
       parserOptions: {
         projectService: {
-          allowDefaultProject: [
-            'eslint.config.ts',
-            'src/polyfills/*.js',
-            'src-tauri/src/enhance/builtin/*.js',
-            'scripts/*.mjs',
-          ],
+          allowDefaultProject: ['eslint.config.ts', 'src/polyfills/*.js'],
         },
       },
     },
@@ -79,14 +73,11 @@ export default defineConfig([
       '@eslint-react/no-class-component': 'error',
       '@eslint-react/no-clone-element': 'error',
       '@eslint-react/no-create-ref': 'error',
-      '@eslint-react/no-default-props': 'error',
       '@eslint-react/no-direct-mutation-state': 'error',
       '@eslint-react/no-implicit-key': 'error',
-      '@eslint-react/no-prop-types': 'error',
       '@eslint-react/no-set-state-in-component-did-mount': 'error',
       '@eslint-react/no-set-state-in-component-did-update': 'error',
       '@eslint-react/no-set-state-in-component-will-update': 'error',
-      '@eslint-react/no-string-refs': 'error',
       '@eslint-react/no-unstable-context-value': 'warn',
       '@eslint-react/no-unstable-default-props': 'warn',
       '@eslint-react/no-unused-class-component-members': 'error',

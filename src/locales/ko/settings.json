@@ -240,7 +240,8 @@
           "systemProxyTrayIcon": "시스템 프록시 트레이 아이콘",
           "tunTrayIcon": "TUN 트레이 아이콘",
           "enableTrayIcon": "트레이 아이콘 사용",
-          "enableTraySpeed": "트레이 속도 표시 사용"
+          "enableTraySpeed": "트레이 속도 표시 사용",
+          "pauseRenderTrafficStatsOnBlur": "포커스를 잃으면 트래픽 통계 렌더링 일시 중지"
         },
         "tooltips": {
           "hoverNavigator": "알파벳에 마우스를 올리면 해당 프록시 그룹으로 자동 스크롤합니다",

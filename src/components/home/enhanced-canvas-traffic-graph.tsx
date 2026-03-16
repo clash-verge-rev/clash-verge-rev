@@ -13,6 +13,7 @@ import {
 import { useTranslation } from 'react-i18next'
 
 import { useTrafficGraphDataEnhanced } from '@/hooks/use-traffic-monitor'
+import { useVerge } from '@/hooks/use-verge'
 import { debugLog } from '@/utils/debug'
 import parseTraffic from '@/utils/parse-traffic'
 
@@ -105,6 +106,9 @@ export const EnhancedCanvasTrafficGraph = memo(
   }: EnhancedCanvasTrafficGraphProps) {
     const theme = useTheme()
     const { t } = useTranslation()
+    const verge = useVerge()
+    const pause_render_traffic_stats_on_blur =
+      verge.verge?.pause_render_traffic_stats_on_blur ?? true
 
     // 使用增强版全局流量数据管理
     const { dataPoints, requestRange, samplerStats } =
@@ -202,7 +206,7 @@ export const EnhancedCanvasTrafficGraph = memo(
         fpsControllerRef.current.target = GRAPH_CONFIG.targetFPS
         fpsControllerRef.current.samples = []
         fpsControllerRef.current.lastAdjustTime = 0
-        // eslint-disable-next-line @eslint-react/hooks-extra/no-direct-set-state-in-use-effect
+        // eslint-disable-next-line @eslint-react/set-state-in-effect
         setCurrentFPS(GRAPH_CONFIG.targetFPS)
         return
       }
@@ -227,7 +231,7 @@ export const EnhancedCanvasTrafficGraph = memo(
         const highResNow = getNow()
         lastRenderTimeRef.current = highResNow
 
-        if (focused) {
+        if (focused || !pause_render_traffic_stats_on_blur) {
           resumeCooldownRef.current = Date.now()
           const controller = fpsControllerRef.current
           const resumeTarget = Math.max(
@@ -242,7 +246,7 @@ export const EnhancedCanvasTrafficGraph = memo(
           resumeCooldownRef.current = 0
         }
       },
-      [setIsWindowFocused, setCurrentFPS],
+      [setIsWindowFocused, setCurrentFPS, pause_render_traffic_stats_on_blur],
     )
 
     useEffect(() => {
@@ -985,7 +989,7 @@ export const EnhancedCanvasTrafficGraph = memo(
     // 受控的动画循环
     useEffect(() => {
       if (
-        !isWindowFocused ||
+        (!isWindowFocused && pause_render_traffic_stats_on_blur) ||
         displayData.length === 0 ||
         dataStaleRef.current
       ) {
@@ -998,7 +1002,7 @@ export const EnhancedCanvasTrafficGraph = memo(
       }
 
       const animate = (currentTime: number) => {
-        if (!isWindowFocusedRef.current) {
+        if (!isWindowFocusedRef.current && pause_render_traffic_stats_on_blur) {
           lastRenderTimeRef.current = getNow()
           animationFrameRef.current = undefined
           return
@@ -1046,7 +1050,13 @@ export const EnhancedCanvasTrafficGraph = memo(
           animationFrameRef.current = undefined
         }
       }
-    }, [drawGraph, displayData.length, isWindowFocused, collectFrameSample])
+    }, [
+      drawGraph,
+      displayData.length,
+      isWindowFocused,
+      pause_render_traffic_stats_on_blur,
+      collectFrameSample,
+    ])
 
     // 切换时间范围
     const handleTimeRangeClick = useCallback((event: React.MouseEvent) => {

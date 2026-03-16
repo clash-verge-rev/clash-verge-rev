@@ -1,4 +1,4 @@
-/* eslint-disable @eslint-react/hooks-extra/no-direct-set-state-in-use-effect */
+/* eslint-disable @eslint-react/set-state-in-effect */
 import { useEffect } from 'foxact/use-abortable-effect'
 import { useCallback, useState } from 'react'
 
