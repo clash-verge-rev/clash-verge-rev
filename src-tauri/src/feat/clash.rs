@@ -102,40 +102,69 @@ pub async fn change_clash_mode(mode: String) {
     }
 }
 
-/// Test connection delay to a URL
+/// Test TLS handshake delay to a URL (through proxy when not in TUN mode)
 pub async fn test_delay(url: String) -> anyhow::Result<u32> {
-    use crate::utils::network::{NetworkManager, ProxyType};
+    use std::sync::Arc;
+    use std::time::Duration;
+    use tokio::io::{AsyncReadExt as _, AsyncWriteExt as _};
+    use tokio::net::TcpStream;
     use tokio::time::Instant;
 
-    let tun_mode = Config::verge().await.latest_arc().enable_tun_mode.unwrap_or(false);
+    let parsed = tauri::Url::parse(&url)?;
+    let is_https = parsed.scheme() == "https";
+    let host = parsed
+        .host_str()
+        .ok_or_else(|| anyhow::anyhow!("Invalid URL: no host"))?
+        .to_string();
+    let port = parsed.port().unwrap_or(if is_https { 443 } else { 80 });
 
-    // 如果是TUN模式，不使用代理，否则使用自身代理
-    let proxy_type = if !tun_mode {
-        ProxyType::Localhost
-    } else {
-        ProxyType::None
+    let verge = Config::verge().await.latest_arc();
+    let tun_mode = verge.enable_tun_mode.unwrap_or(false);
+
+    let inner = async {
+        let start = Instant::now();
+
+        // TCP connect: direct in TUN mode, via CONNECT tunnel otherwise
+        let stream = if tun_mode {
+            TcpStream::connect(format!("{host}:{port}")).await?
+        } else {
+            let proxy_port = match verge.verge_mixed_port {
+                Some(p) => p,
+                None => Config::clash().await.data_arc().get_mixed_port(),
+            };
+            let mut stream = TcpStream::connect(format!("127.0.0.1:{proxy_port}")).await?;
+            stream
+                .write_all(format!("CONNECT {host}:{port} HTTP/1.1\r\nHost: {host}:{port}\r\n\r\n").as_bytes())
+                .await?;
+            let mut buf = [0u8; 1024];
+            let n = stream.read(&mut buf).await?;
+            if !std::str::from_utf8(&buf[..n]).unwrap_or("").contains("200") {
+                return Err(anyhow::anyhow!("Proxy CONNECT failed"));
+            }
+            stream
+        };
+
+        // TLS handshake for HTTPS; for HTTP the TCP connect above is the result
+        if is_https {
+            let root_store = rustls::RootCertStore::from_iter(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
+            let config =
+                rustls::ClientConfig::builder_with_provider(Arc::new(rustls::crypto::ring::default_provider()))
+                    .with_safe_default_protocol_versions()?
+                    .with_root_certificates(root_store)
+                    .with_no_client_auth();
+            let connector = tokio_rustls::TlsConnector::from(Arc::new(config));
+            let server_name = rustls::pki_types::ServerName::try_from(host.as_str())
+                .map_err(|_| anyhow::anyhow!("Invalid DNS name: {host}"))?
+                .to_owned();
+            connector.connect(server_name, stream).await?;
+        }
+
+        // Ensure at least 1ms — frontend treats 0 as timeout
+        Ok((start.elapsed().as_millis() as u32).max(1))
     };
 
-    let user_agent = Some("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0".into());
-
-    let start = Instant::now();
-
-    let response = NetworkManager::new()
-        .get_with_interrupt(&url, proxy_type, Some(10), user_agent, false)
-        .await;
-
-    match response {
-        Ok(response) => {
-            logging!(trace, Type::Network, "test_delay response: {response:#?}");
-            if response.status().is_success() {
-                Ok(start.elapsed().as_millis() as u32)
-            } else {
-                Ok(10000u32)
-            }
-        }
-        Err(err) => {
-            logging!(trace, Type::Network, "test_delay error: {err:#?}");
-            Err(err)
-        }
+    match tokio::time::timeout(Duration::from_secs(10), inner).await {
+        Ok(result) => result,
+        Err(_) => Ok(10000u32),
     }
 }
