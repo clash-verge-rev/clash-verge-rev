@@ -625,6 +625,7 @@ export interface TranslationResources {
               hoverNavigatorDelay: string
               memoryUsage: string
               navIcon: string
+              pauseRenderTrafficStatsOnBlur: string
               preferSystemTitlebar: string
               proxyGroupIcon: string
               proxyGroupsDisplayMode: string

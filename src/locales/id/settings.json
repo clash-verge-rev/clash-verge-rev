@@ -240,7 +240,8 @@
           "systemProxyTrayIcon": "Ikon Tray Proksi Sistem",
           "tunTrayIcon": "Ikon Tray Tun",
           "enableTrayIcon": "Enable Tray Icon",
-          "enableTraySpeed": "Aktifkan Tray Speed"
+          "enableTraySpeed": "Aktifkan Tray Speed",
+          "pauseRenderTrafficStatsOnBlur": "Jeda render statistik lalu lintas saat jendela tidak fokus"
         },
         "tooltips": {
           "hoverNavigator": "Automatically scroll to the corresponding proxy group when hovering over alphabet letters",

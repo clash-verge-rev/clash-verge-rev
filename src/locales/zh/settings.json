@@ -240,7 +240,8 @@
           "systemProxyTrayIcon": "系统代理托盘图标",
           "tunTrayIcon": "TUN 模式托盘图标",
           "enableTrayIcon": "启用托盘图标",
-          "enableTraySpeed": "启用托盘速率"
+          "enableTraySpeed": "启用托盘速率",
+          "pauseRenderTrafficStatsOnBlur": "失去焦点时暂停渲染流量统计"
         },
         "tooltips": {
           "hoverNavigator": "鼠标悬停在字母上时自动滚动到对应代理组",

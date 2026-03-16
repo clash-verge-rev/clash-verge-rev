@@ -458,6 +458,7 @@ export const translationKeys = [
   'settings.components.verge.layout.fields.tunTrayIcon',
   'settings.components.verge.layout.fields.enableTrayIcon',
   'settings.components.verge.layout.fields.enableTraySpeed',
+  'settings.components.verge.layout.fields.pauseRenderTrafficStatsOnBlur',
   'settings.components.verge.layout.tooltips.hoverNavigator',
   'settings.components.verge.layout.tooltips.hoverNavigatorDelay',
   'settings.components.verge.layout.options.icon.monochrome',

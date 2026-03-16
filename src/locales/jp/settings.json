@@ -240,7 +240,8 @@
           "systemProxyTrayIcon": "システムプロキシトレイアイコン",
           "tunTrayIcon": "TUNモードトレイアイコン",
           "enableTrayIcon": "トレイアイコンを有効にする",
-          "enableTraySpeed": "トレイの速度表示を有効にする"
+          "enableTraySpeed": "トレイの速度表示を有効にする",
+          "pauseRenderTrafficStatsOnBlur": "フォーカスを失ったときにトラフィック統計の描画を一時停止"
         },
         "tooltips": {
           "hoverNavigator": "Automatically scroll to the corresponding proxy group when hovering over alphabet letters",
