@@ -123,11 +123,11 @@
     "vite-plugin-svgr": "^4.5.0"
   },
   "lint-staged": {
-    "*.{ts,tsx,js,jsx}": [
+    "*.{ts,tsx,js,mjs,jsx}": [
       "eslint --fix --max-warnings=0",
       "prettier --write"
     ],
-    "*.{css,scss,json,md}": [
+    "*.{css,scss,json,md,toml}": [
       "prettier --write"
     ]
   },

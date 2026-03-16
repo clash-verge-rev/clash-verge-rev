@@ -62,7 +62,6 @@ args = [
 description = "Frontend format checks"
 dependencies = ["i18n-format", "i18n-types", "git-add", "lint-staged"]
 
-
 # --- Git Hooks ---
 
 [tasks.pre-commit]
