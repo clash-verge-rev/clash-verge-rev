@@ -18,13 +18,6 @@ args = ["clippy", "--all-targets", "--all-features", "--", "-D", "warnings"]
 
 # --- Frontend ---
 
-[tasks.eslint]
-description = "Run ESLint to lint the code"
-command = "pnpm"
-args = ["lint"]
-[tasks.eslint.windows]
-command = "pnpm.cmd"
-
 [tasks.typecheck]
 description = "Run type checks"
 command = "pnpm"
@@ -56,7 +49,12 @@ command = "pnpm.cmd"
 [tasks.git-add]
 description = "Add changed files to git"
 command = "git"
-args = ["add", "."]
+args = [
+  "add",
+  "src/locales",
+  "crates/clash-verge-i18n/locales",
+  "src/types/generated",
+]
 
 # --- Jobs ---
 
@@ -64,9 +62,6 @@ args = ["add", "."]
 description = "Frontend format checks"
 dependencies = ["i18n-format", "i18n-types", "git-add", "lint-staged"]
 
-[tasks.frontend-lint]
-description = "Frontend linting and type checking"
-dependencies = ["eslint", "typecheck"]
 
 # --- Git Hooks ---
 
@@ -76,4 +71,4 @@ dependencies = ["rust-format", "frontend-format"]
 
 [tasks.pre-push]
 description = "Pre-push checks: lint and typecheck"
-dependencies = ["rust-clippy", "frontend-lint"]
+dependencies = ["rust-clippy", "typecheck"]
