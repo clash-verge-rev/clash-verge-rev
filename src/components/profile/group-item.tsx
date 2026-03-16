@@ -1,6 +1,6 @@
-import { useSortable } from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
-import { DeleteForeverRounded, UndoRounded } from "@mui/icons-material";
+import { useSortable } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
+import { DeleteForeverRounded, UndoRounded } from '@mui/icons-material'
 import {
   Box,
   IconButton,
@@ -8,18 +8,18 @@ import {
   ListItemText,
   alpha,
   styled,
-} from "@mui/material";
+} from '@mui/material'
 
-import { useIconCache } from "@/hooks/use-icon-cache";
+import { useIconCache } from '@/hooks/use-icon-cache'
 interface Props {
-  type: "prepend" | "original" | "delete" | "append";
-  group: IProxyGroupConfig;
-  onDelete: () => void;
+  type: 'prepend' | 'original' | 'delete' | 'append'
+  group: IProxyGroupConfig
+  onDelete: () => void
 }
 
 export const GroupItem = (props: Props) => {
-  const { type, group, onDelete } = props;
-  const sortable = type === "prepend" || type === "append";
+  const { type, group, onDelete } = props
+  const sortable = type === 'prepend' || type === 'append'
 
   const {
     attributes: sortableAttributes,
@@ -31,64 +31,64 @@ export const GroupItem = (props: Props) => {
   } = useSortable({
     id: group.name,
     disabled: !sortable,
-  });
-  const dragAttributes = sortable ? sortableAttributes : undefined;
-  const dragListeners = sortable ? sortableListeners : undefined;
-  const dragNodeRef = sortable ? sortableSetNodeRef : undefined;
+  })
+  const dragAttributes = sortable ? sortableAttributes : undefined
+  const dragListeners = sortable ? sortableListeners : undefined
+  const dragNodeRef = sortable ? sortableSetNodeRef : undefined
 
   const iconCachePath = useIconCache({
     icon: group.icon,
-    cacheKey: group.name.replaceAll(" ", ""),
-  });
+    cacheKey: group.name.replaceAll(' ', ''),
+  })
 
   return (
     <ListItem
       dense
       sx={({ palette }) => ({
-        position: "relative",
+        position: 'relative',
         background:
-          type === "original"
-            ? palette.mode === "dark"
+          type === 'original'
+            ? palette.mode === 'dark'
               ? alpha(palette.background.paper, 0.3)
               : alpha(palette.grey[400], 0.3)
-            : type === "delete"
+            : type === 'delete'
               ? alpha(palette.error.main, 0.3)
               : alpha(palette.success.main, 0.3),
-        height: "100%",
-        margin: "8px 0",
-        borderRadius: "8px",
+        height: '100%',
+        margin: '8px 0',
+        borderRadius: '8px',
         transform: CSS.Transform.toString(transform),
         transition,
-        zIndex: isDragging ? "calc(infinity)" : undefined,
+        zIndex: isDragging ? 'calc(infinity)' : undefined,
       })}
     >
-      {group.icon && group.icon?.trim().startsWith("http") && (
+      {group.icon && group.icon?.trim().startsWith('http') && (
         <img
-          src={iconCachePath === "" ? group.icon : iconCachePath}
+          src={iconCachePath === '' ? group.icon : iconCachePath}
           width="32px"
           style={{
-            marginRight: "12px",
-            borderRadius: "6px",
+            marginRight: '12px',
+            borderRadius: '6px',
           }}
         />
       )}
-      {group.icon && group.icon?.trim().startsWith("data") && (
+      {group.icon && group.icon?.trim().startsWith('data') && (
         <img
           src={group.icon}
           width="32px"
           style={{
-            marginRight: "12px",
-            borderRadius: "6px",
+            marginRight: '12px',
+            borderRadius: '6px',
           }}
         />
       )}
-      {group.icon && group.icon?.trim().startsWith("<svg") && (
+      {group.icon && group.icon?.trim().startsWith('<svg') && (
         <img
-          src={`data:image/svg+xml;base64,${btoa(group.icon ?? "")}`}
+          src={`data:image/svg+xml;base64,${btoa(group.icon ?? '')}`}
           width="32px"
           style={{
-            marginRight: "12px",
-            borderRadius: "6px",
+            marginRight: '12px',
+            borderRadius: '6px',
           }}
         />
       )}
@@ -96,10 +96,10 @@ export const GroupItem = (props: Props) => {
         {...(dragAttributes ?? {})}
         {...(dragListeners ?? {})}
         ref={dragNodeRef}
-        sx={{ cursor: sortable ? "move" : "" }}
+        sx={{ cursor: sortable ? 'move' : '' }}
         primary={
           <StyledPrimary
-            sx={{ textDecoration: type === "delete" ? "line-through" : "" }}
+            sx={{ textDecoration: type === 'delete' ? 'line-through' : '' }}
           >
             {group.name}
           </StyledPrimary>
@@ -107,13 +107,13 @@ export const GroupItem = (props: Props) => {
         secondary={
           <ListItemTextChild
             sx={{
-              overflow: "hidden",
-              display: "flex",
-              alignItems: "center",
-              pt: "2px",
+              overflow: 'hidden',
+              display: 'flex',
+              alignItems: 'center',
+              pt: '2px',
             }}
           >
-            <Box sx={{ marginTop: "2px" }}>
+            <Box sx={{ marginTop: '2px' }}>
               <StyledTypeBox>{group.type}</StyledTypeBox>
             </Box>
           </ListItemTextChild>
@@ -121,41 +121,41 @@ export const GroupItem = (props: Props) => {
         slotProps={{
           secondary: {
             sx: {
-              display: "flex",
-              alignItems: "center",
-              color: "#ccc",
+              display: 'flex',
+              alignItems: 'center',
+              color: '#ccc',
             },
           },
         }}
       />
       <IconButton onClick={onDelete}>
-        {type === "delete" ? <UndoRounded /> : <DeleteForeverRounded />}
+        {type === 'delete' ? <UndoRounded /> : <DeleteForeverRounded />}
       </IconButton>
     </ListItem>
-  );
-};
+  )
+}
 
-const StyledPrimary = styled("div")`
+const StyledPrimary = styled('div')`
   font-size: 15px;
   font-weight: 700;
   line-height: 1.5;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-`;
+`
 
-const ListItemTextChild = styled("span")`
+const ListItemTextChild = styled('span')`
   display: block;
-`;
+`
 
 const StyledTypeBox = styled(ListItemTextChild)(({ theme }) => ({
-  display: "inline-block",
-  border: "1px solid #ccc",
+  display: 'inline-block',
+  border: '1px solid #ccc',
   borderColor: alpha(theme.palette.primary.main, 0.5),
   color: alpha(theme.palette.primary.main, 0.8),
   borderRadius: 4,
   fontSize: 10,
-  padding: "0 4px",
+  padding: '0 4px',
   lineHeight: 1.5,
-  marginRight: "8px",
-}));
+  marginRight: '8px',
+}))

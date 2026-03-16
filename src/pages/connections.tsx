@@ -2,7 +2,7 @@ import {
   DeleteForeverRounded,
   TableChartRounded,
   TableRowsRounded,
-} from "@mui/icons-material";
+} from '@mui/icons-material'
 import {
   Box,
   Button,
@@ -11,139 +11,139 @@ import {
   IconButton,
   MenuItem,
   Zoom,
-} from "@mui/material";
-import { useLockFn } from "ahooks";
-import { useCallback, useMemo, useRef, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { Virtuoso } from "react-virtuoso";
-import { closeAllConnections } from "tauri-plugin-mihomo-api";
+} from '@mui/material'
+import { useLockFn } from 'ahooks'
+import { useCallback, useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { Virtuoso } from 'react-virtuoso'
+import { closeAllConnections } from 'tauri-plugin-mihomo-api'
 
 import {
   BaseEmpty,
   BasePage,
   BaseSearchBox,
   BaseStyledSelect,
-} from "@/components/base";
+} from '@/components/base'
 import {
   ConnectionDetail,
   ConnectionDetailRef,
-} from "@/components/connection/connection-detail";
-import { ConnectionItem } from "@/components/connection/connection-item";
-import { ConnectionTable } from "@/components/connection/connection-table";
-import { useConnectionData } from "@/hooks/use-connection-data";
-import { useConnectionSetting } from "@/hooks/use-connection-setting";
-import parseTraffic from "@/utils/parse-traffic";
+} from '@/components/connection/connection-detail'
+import { ConnectionItem } from '@/components/connection/connection-item'
+import { ConnectionTable } from '@/components/connection/connection-table'
+import { useConnectionData } from '@/hooks/use-connection-data'
+import { useConnectionSetting } from '@/hooks/use-connection-setting'
+import parseTraffic from '@/utils/parse-traffic'
 
-type OrderFunc = (list: IConnectionsItem[]) => IConnectionsItem[];
+type OrderFunc = (list: IConnectionsItem[]) => IConnectionsItem[]
 
 const ORDER_OPTIONS = [
   {
-    id: "default",
-    labelKey: "connections.components.order.default",
+    id: 'default',
+    labelKey: 'connections.components.order.default',
     fn: (list: IConnectionsItem[]) =>
       list.sort(
         (a, b) =>
-          new Date(b.start || "0").getTime()! -
-          new Date(a.start || "0").getTime()!,
+          new Date(b.start || '0').getTime()! -
+          new Date(a.start || '0').getTime()!,
       ),
   },
   {
-    id: "uploadSpeed",
-    labelKey: "connections.components.order.uploadSpeed",
+    id: 'uploadSpeed',
+    labelKey: 'connections.components.order.uploadSpeed',
     fn: (list: IConnectionsItem[]) =>
       list.sort((a, b) => b.curUpload! - a.curUpload!),
   },
   {
-    id: "downloadSpeed",
-    labelKey: "connections.components.order.downloadSpeed",
+    id: 'downloadSpeed',
+    labelKey: 'connections.components.order.downloadSpeed',
     fn: (list: IConnectionsItem[]) =>
       list.sort((a, b) => b.curDownload! - a.curDownload!),
   },
-] as const;
+] as const
 
-type OrderKey = (typeof ORDER_OPTIONS)[number]["id"];
+type OrderKey = (typeof ORDER_OPTIONS)[number]['id']
 
 const orderFunctionMap = ORDER_OPTIONS.reduce<Record<OrderKey, OrderFunc>>(
   (acc, option) => {
-    acc[option.id] = option.fn;
-    return acc;
+    acc[option.id] = option.fn
+    return acc
   },
   {} as Record<OrderKey, OrderFunc>,
-);
+)
 
 const ConnectionsPage = () => {
-  const { t } = useTranslation();
+  const { t } = useTranslation()
   const [match, setMatch] = useState<(input: string) => boolean>(
     () => () => true,
-  );
-  const [curOrderOpt, setCurOrderOpt] = useState<OrderKey>("default");
-  const [connectionsType, setConnectionsType] = useState<"active" | "closed">(
-    "active",
-  );
+  )
+  const [curOrderOpt, setCurOrderOpt] = useState<OrderKey>('default')
+  const [connectionsType, setConnectionsType] = useState<'active' | 'closed'>(
+    'active',
+  )
 
   const {
     response: { data: connections },
     clearClosedConnections,
-  } = useConnectionData();
+  } = useConnectionData()
 
-  const [setting, setSetting] = useConnectionSetting();
+  const [setting, setSetting] = useConnectionSetting()
 
-  const isTableLayout = setting.layout === "table";
+  const isTableLayout = setting.layout === 'table'
 
-  const [isColumnManagerOpen, setIsColumnManagerOpen] = useState(false);
+  const [isColumnManagerOpen, setIsColumnManagerOpen] = useState(false)
 
   const [filterConn] = useMemo(() => {
-    const orderFunc = orderFunctionMap[curOrderOpt];
+    const orderFunc = orderFunctionMap[curOrderOpt]
     const conns =
-      (connectionsType === "active"
+      (connectionsType === 'active'
         ? connections?.activeConnections
-        : connections?.closedConnections) ?? [];
+        : connections?.closedConnections) ?? []
     let matchConns = conns.filter((conn) => {
-      const { host, destinationIP, process } = conn.metadata;
+      const { host, destinationIP, process } = conn.metadata
       return (
-        match(host || "") || match(destinationIP || "") || match(process || "")
-      );
-    });
+        match(host || '') || match(destinationIP || '') || match(process || '')
+      )
+    })
 
-    if (orderFunc) matchConns = orderFunc(matchConns ?? []);
+    if (orderFunc) matchConns = orderFunc(matchConns ?? [])
 
-    return [matchConns];
-  }, [connections, connectionsType, match, curOrderOpt]);
+    return [matchConns]
+  }, [connections, connectionsType, match, curOrderOpt])
 
-  const onCloseAll = useLockFn(closeAllConnections);
+  const onCloseAll = useLockFn(closeAllConnections)
 
-  const detailRef = useRef<ConnectionDetailRef>(null!);
+  const detailRef = useRef<ConnectionDetailRef>(null!)
 
   const handleSearch = useCallback((match: (content: string) => boolean) => {
-    setMatch(() => match);
-  }, []);
+    setMatch(() => match)
+  }, [])
 
-  const hasTableData = filterConn.length > 0;
+  const hasTableData = filterConn.length > 0
 
   return (
     <BasePage
       full
       title={
-        <span style={{ whiteSpace: "nowrap" }}>
-          {t("connections.page.title")}
+        <span style={{ whiteSpace: 'nowrap' }}>
+          {t('connections.page.title')}
         </span>
       }
       contentStyle={{
-        height: "100%",
-        display: "flex",
-        flexDirection: "column",
-        overflow: "hidden",
-        borderRadius: "8px",
+        height: '100%',
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        borderRadius: '8px',
         minHeight: 0,
       }}
       header={
-        <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <Box sx={{ mx: 1 }}>
-            {t("shared.labels.downloaded")}:{" "}
+            {t('shared.labels.downloaded')}:{' '}
             {parseTraffic(connections?.downloadTotal)}
           </Box>
           <Box sx={{ mx: 1 }}>
-            {t("shared.labels.uploaded")}:{" "}
+            {t('shared.labels.uploaded')}:{' '}
             {parseTraffic(connections?.uploadTotal)}
           </Box>
           <IconButton
@@ -151,21 +151,21 @@ const ConnectionsPage = () => {
             size="small"
             onClick={() =>
               setSetting((o) =>
-                o?.layout !== "table"
-                  ? { ...o, layout: "table" }
-                  : { ...o, layout: "list" },
+                o?.layout !== 'table'
+                  ? { ...o, layout: 'table' }
+                  : { ...o, layout: 'list' },
               )
             }
           >
             {isTableLayout ? (
-              <TableRowsRounded titleAccess={t("shared.actions.listView")} />
+              <TableRowsRounded titleAccess={t('shared.actions.listView')} />
             ) : (
-              <TableChartRounded titleAccess={t("shared.actions.tableView")} />
+              <TableChartRounded titleAccess={t('shared.actions.tableView')} />
             )}
           </IconButton>
           <Button size="small" variant="contained" onClick={onCloseAll}>
-            <span style={{ whiteSpace: "nowrap" }}>
-              {t("shared.actions.closeAll")}
+            <span style={{ whiteSpace: 'nowrap' }}>
+              {t('shared.actions.closeAll')}
             </span>
           </Button>
         </Box>
@@ -175,32 +175,32 @@ const ConnectionsPage = () => {
         sx={{
           pt: 1,
           mb: 0.5,
-          mx: "10px",
-          minHeight: "36px",
-          display: "flex",
-          alignItems: "center",
+          mx: '10px',
+          minHeight: '36px',
+          display: 'flex',
+          alignItems: 'center',
           gap: 1,
-          userSelect: "text",
-          position: "sticky",
+          userSelect: 'text',
+          position: 'sticky',
           top: 0,
           zIndex: 2,
         }}
       >
-        <ButtonGroup sx={{ mr: 1, flexBasis: "content" }}>
+        <ButtonGroup sx={{ mr: 1, flexBasis: 'content' }}>
           <Button
             size="small"
-            variant={connectionsType === "active" ? "contained" : "outlined"}
-            onClick={() => setConnectionsType("active")}
+            variant={connectionsType === 'active' ? 'contained' : 'outlined'}
+            onClick={() => setConnectionsType('active')}
           >
-            {t("connections.components.actions.active")}{" "}
+            {t('connections.components.actions.active')}{' '}
             {connections?.activeConnections.length}
           </Button>
           <Button
             size="small"
-            variant={connectionsType === "closed" ? "contained" : "outlined"}
-            onClick={() => setConnectionsType("closed")}
+            variant={connectionsType === 'closed' ? 'contained' : 'outlined'}
+            onClick={() => setConnectionsType('closed')}
           >
-            {t("connections.components.actions.closed")}{" "}
+            {t('connections.components.actions.closed')}{' '}
             {connections?.closedConnections.length}
           </Button>
         </ButtonGroup>
@@ -219,9 +219,9 @@ const ConnectionsPage = () => {
         <Box
           sx={{
             flex: 1,
-            display: "flex",
-            alignItems: "center",
-            "& > *": {
+            display: 'flex',
+            alignItems: 'center',
+            '& > *': {
               flex: 1,
             },
           }}
@@ -236,7 +236,7 @@ const ConnectionsPage = () => {
         <ConnectionTable
           connections={filterConn}
           onShowDetail={(detail) =>
-            detailRef.current?.open(detail, connectionsType === "closed")
+            detailRef.current?.open(detail, connectionsType === 'closed')
           }
           columnManagerOpen={isTableLayout && isColumnManagerOpen}
           onOpenColumnManager={() => setIsColumnManagerOpen(true)}
@@ -246,17 +246,17 @@ const ConnectionsPage = () => {
         <Virtuoso
           style={{
             flex: 1,
-            borderRadius: "8px",
-            WebkitOverflowScrolling: "touch",
-            overscrollBehavior: "contain",
+            borderRadius: '8px',
+            WebkitOverflowScrolling: 'touch',
+            overscrollBehavior: 'contain',
           }}
           data={filterConn}
           itemContent={(_, item) => (
             <ConnectionItem
               value={item}
-              closed={connectionsType === "closed"}
+              closed={connectionsType === 'closed'}
               onShowDetail={() =>
-                detailRef.current?.open(item, connectionsType === "closed")
+                detailRef.current?.open(item, connectionsType === 'closed')
               }
             />
           )}
@@ -264,14 +264,14 @@ const ConnectionsPage = () => {
       )}
       <ConnectionDetail ref={detailRef} />
       <Zoom
-        in={connectionsType === "closed" && filterConn.length > 0}
+        in={connectionsType === 'closed' && filterConn.length > 0}
         unmountOnExit
       >
         <Fab
           size="medium"
           variant="extended"
           sx={{
-            position: "absolute",
+            position: 'absolute',
             right: 16,
             bottom: isTableLayout ? 70 : 16,
           }}
@@ -279,11 +279,11 @@ const ConnectionsPage = () => {
           onClick={() => clearClosedConnections()}
         >
           <DeleteForeverRounded sx={{ mr: 1 }} fontSize="small" />
-          {t("shared.actions.clear")}
+          {t('shared.actions.clear')}
         </Fab>
       </Zoom>
     </BasePage>
-  );
-};
+  )
+}
 
-export default ConnectionsPage;
+export default ConnectionsPage

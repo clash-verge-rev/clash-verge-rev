@@ -2,37 +2,37 @@ import {
   ArrowDownwardRounded,
   ArrowUpwardRounded,
   MemoryRounded,
-} from "@mui/icons-material";
-import { Box, Typography } from "@mui/material";
-import { useEffect, useRef } from "react";
-import { useTranslation } from "react-i18next";
+} from '@mui/icons-material'
+import { Box, Typography } from '@mui/material'
+import { useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 
-import { LightweightTrafficErrorBoundary } from "@/components/shared/traffic-error-boundary";
-import { useMemoryData } from "@/hooks/use-memory-data";
-import { useTrafficData } from "@/hooks/use-traffic-data";
-import { useVerge } from "@/hooks/use-verge";
-import { useVisibility } from "@/hooks/use-visibility";
-import parseTraffic from "@/utils/parse-traffic";
+import { LightweightTrafficErrorBoundary } from '@/components/shared/traffic-error-boundary'
+import { useMemoryData } from '@/hooks/use-memory-data'
+import { useTrafficData } from '@/hooks/use-traffic-data'
+import { useVerge } from '@/hooks/use-verge'
+import { useVisibility } from '@/hooks/use-visibility'
+import parseTraffic from '@/utils/parse-traffic'
 
-import { TrafficGraph, type TrafficRef } from "./traffic-graph";
+import { TrafficGraph, type TrafficRef } from './traffic-graph'
 
 // setup the traffic
 export const LayoutTraffic = () => {
-  const { t } = useTranslation();
-  const { verge } = useVerge();
+  const { t } = useTranslation()
+  const { verge } = useVerge()
 
   // whether hide traffic graph
-  const trafficGraph = verge?.traffic_graph ?? true;
+  const trafficGraph = verge?.traffic_graph ?? true
 
-  const trafficRef = useRef<TrafficRef>(null);
-  const pageVisible = useVisibility();
+  const trafficRef = useRef<TrafficRef>(null)
+  const pageVisible = useVisibility()
 
   const {
     response: { data: traffic },
-  } = useTrafficData({ enabled: trafficGraph && pageVisible });
+  } = useTrafficData({ enabled: trafficGraph && pageVisible })
   const {
     response: { data: memory },
-  } = useMemoryData();
+  } = useMemoryData()
 
   // 监听数据变化，为图表添加数据点
   useEffect(() => {
@@ -40,45 +40,45 @@ export const LayoutTraffic = () => {
       trafficRef.current.appendData({
         up: traffic?.up || 0,
         down: traffic?.down || 0,
-      });
+      })
     }
-  }, [traffic]);
+  }, [traffic])
 
   // 显示内存使用情况的设置
-  const displayMemory = verge?.enable_memory_usage ?? true;
+  const displayMemory = verge?.enable_memory_usage ?? true
 
   // 使用parseTraffic统一处理转换，保持与首页一致的显示格式
-  const [up, upUnit] = parseTraffic(traffic?.up || 0);
-  const [down, downUnit] = parseTraffic(traffic?.down || 0);
-  const [inuse, inuseUnit] = parseTraffic(memory?.inuse || 0);
+  const [up, upUnit] = parseTraffic(traffic?.up || 0)
+  const [down, downUnit] = parseTraffic(traffic?.down || 0)
+  const [inuse, inuseUnit] = parseTraffic(memory?.inuse || 0)
 
   const boxStyle: any = {
-    display: "flex",
-    alignItems: "center",
-    whiteSpace: "nowrap",
-  };
+    display: 'flex',
+    alignItems: 'center',
+    whiteSpace: 'nowrap',
+  }
   const iconStyle: any = {
-    sx: { mr: "8px", fontSize: 16 },
-  };
+    sx: { mr: '8px', fontSize: 16 },
+  }
   const valStyle: any = {
-    component: "span",
-    textAlign: "center",
-    sx: { flex: "1 1 56px", userSelect: "none" },
-  };
+    component: 'span',
+    textAlign: 'center',
+    sx: { flex: '1 1 56px', userSelect: 'none' },
+  }
   const unitStyle: any = {
-    component: "span",
-    color: "grey.500",
-    fontSize: "12px",
-    textAlign: "right",
-    sx: { flex: "0 1 27px", userSelect: "none" },
-  };
+    component: 'span',
+    color: 'grey.500',
+    fontSize: '12px',
+    textAlign: 'right',
+    sx: { flex: '0 1 27px', userSelect: 'none' },
+  }
 
   return (
     <LightweightTrafficErrorBoundary>
       <Box position="relative">
         {trafficGraph && pageVisible && (
           <div
-            style={{ width: "100%", height: 60, marginBottom: 6 }}
+            style={{ width: '100%', height: 60, marginBottom: 6 }}
             onClick={trafficRef.current?.toggleStyle}
           >
             <TrafficGraph ref={trafficRef} />
@@ -87,7 +87,7 @@ export const LayoutTraffic = () => {
 
         <Box display="flex" flexDirection="column" gap={0.75}>
           <Box
-            title={`${t("home.components.traffic.metrics.uploadSpeed")}`}
+            title={`${t('home.components.traffic.metrics.uploadSpeed')}`}
             {...boxStyle}
             sx={{
               ...boxStyle.sx,
@@ -96,7 +96,7 @@ export const LayoutTraffic = () => {
           >
             <ArrowUpwardRounded
               {...iconStyle}
-              color={(traffic?.up || 0) > 0 ? "secondary" : "disabled"}
+              color={(traffic?.up || 0) > 0 ? 'secondary' : 'disabled'}
             />
             <Typography {...valStyle} color="secondary">
               {up}
@@ -105,7 +105,7 @@ export const LayoutTraffic = () => {
           </Box>
 
           <Box
-            title={`${t("home.components.traffic.metrics.downloadSpeed")}`}
+            title={`${t('home.components.traffic.metrics.downloadSpeed')}`}
             {...boxStyle}
             sx={{
               ...boxStyle.sx,
@@ -114,7 +114,7 @@ export const LayoutTraffic = () => {
           >
             <ArrowDownwardRounded
               {...iconStyle}
-              color={(traffic?.down || 0) > 0 ? "primary" : "disabled"}
+              color={(traffic?.down || 0) > 0 ? 'primary' : 'disabled'}
             />
             <Typography {...valStyle} color="primary">
               {down}
@@ -124,13 +124,13 @@ export const LayoutTraffic = () => {
 
           {displayMemory && (
             <Box
-              title={`${t("home.components.traffic.metrics.memoryUsage")} `}
+              title={`${t('home.components.traffic.metrics.memoryUsage')} `}
               {...boxStyle}
               sx={{
-                cursor: "auto",
+                cursor: 'auto',
                 // opacity: memory?.is_fresh ? 1 : 0.6,
               }}
-              color={"disabled"}
+              color={'disabled'}
               onClick={async () => {
                 // isDebug && (await gc());
               }}
@@ -143,5 +143,5 @@ export const LayoutTraffic = () => {
         </Box>
       </Box>
     </LightweightTrafficErrorBoundary>
-  );
-};
+  )
+}

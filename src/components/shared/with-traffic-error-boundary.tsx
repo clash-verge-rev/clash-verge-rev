@@ -1,14 +1,14 @@
-import React from "react";
-import type { ErrorInfo } from "react";
+import React from 'react'
+import type { ErrorInfo } from 'react'
 
 import {
   TrafficErrorBoundary,
   LightweightTrafficErrorBoundary,
-} from "./traffic-error-boundary";
+} from './traffic-error-boundary'
 
 interface WithTrafficErrorBoundaryOptions {
-  lightweight?: boolean;
-  onError?: (error: Error, errorInfo: ErrorInfo) => void;
+  lightweight?: boolean
+  onError?: (error: Error, errorInfo: ErrorInfo) => void
 }
 
 /**
@@ -21,16 +21,16 @@ export function withTrafficErrorBoundary<P extends object>(
   const WithErrorBoundaryComponent = (props: P) => {
     const ErrorBoundaryComponent = options?.lightweight
       ? LightweightTrafficErrorBoundary
-      : TrafficErrorBoundary;
+      : TrafficErrorBoundary
 
     return (
       <ErrorBoundaryComponent onError={options?.onError}>
         <WrappedComponent {...props} />
       </ErrorBoundaryComponent>
-    );
-  };
+    )
+  }
 
-  WithErrorBoundaryComponent.displayName = `withTrafficErrorBoundary(${WrappedComponent.displayName || WrappedComponent.name})`;
+  WithErrorBoundaryComponent.displayName = `withTrafficErrorBoundary(${WrappedComponent.displayName || WrappedComponent.name})`
 
-  return WithErrorBoundaryComponent;
+  return WithErrorBoundaryComponent
 }

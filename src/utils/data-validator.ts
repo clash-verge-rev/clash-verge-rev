@@ -5,17 +5,17 @@
 
 // 数字验证器
 function isValidNumber(value: any): value is number {
-  return typeof value === "number" && !isNaN(value) && isFinite(value);
+  return typeof value === 'number' && !isNaN(value) && isFinite(value)
 }
 
 // 字符串验证器
 function isValidString(value: any): value is string {
-  return typeof value === "string" && value.length > 0;
+  return typeof value === 'string' && value.length > 0
 }
 
 // 布尔值验证器
 function isValidBoolean(value: any): value is boolean {
-  return typeof value === "boolean";
+  return typeof value === 'boolean'
 }
 
 /**
@@ -26,33 +26,33 @@ export class SystemMonitorValidator implements ISystemMonitorOverviewValidator {
    * 验证数据是否符合ISystemMonitorOverview接口
    */
   validate(data: any): data is ISystemMonitorOverview {
-    if (!data || typeof data !== "object") {
-      console.warn("[DataValidator] 数据不是对象:", data);
-      return false;
+    if (!data || typeof data !== 'object') {
+      console.warn('[DataValidator] 数据不是对象:', data)
+      return false
     }
 
     // 验证traffic字段
     if (!this.validateTrafficData(data.traffic)) {
-      console.warn("[DataValidator] traffic字段验证失败:", data.traffic);
-      return false;
+      console.warn('[DataValidator] traffic字段验证失败:', data.traffic)
+      return false
     }
 
     // 验证memory字段
     if (!this.validateMemoryData(data.memory)) {
-      console.warn("[DataValidator] memory字段验证失败:", data.memory);
-      return false;
+      console.warn('[DataValidator] memory字段验证失败:', data.memory)
+      return false
     }
 
     // 验证overall_status字段
     if (!this.validateOverallStatus(data.overall_status)) {
       console.warn(
-        "[DataValidator] overall_status字段验证失败:",
+        '[DataValidator] overall_status字段验证失败:',
         data.overall_status,
-      );
-      return false;
+      )
+      return false
     }
 
-    return true;
+    return true
   }
 
   /**
@@ -65,86 +65,86 @@ export class SystemMonitorValidator implements ISystemMonitorOverviewValidator {
       traffic: this.sanitizeTrafficData(data?.traffic),
       memory: this.sanitizeMemoryData(data?.memory),
       overall_status: this.sanitizeOverallStatus(data?.overall_status),
-    };
+    }
 
     // debugLog("[DataValidator] 数据清理完成:", sanitized);
-    return sanitized;
+    return sanitized
   }
 
   private validateTrafficData(traffic: any): boolean {
-    if (!traffic || typeof traffic !== "object") return false;
+    if (!traffic || typeof traffic !== 'object') return false
 
     // 验证raw字段
-    const raw = traffic.raw;
-    if (!raw || typeof raw !== "object") return false;
+    const raw = traffic.raw
+    if (!raw || typeof raw !== 'object') return false
     if (
       !isValidNumber(raw.up) ||
       !isValidNumber(raw.down) ||
       !isValidNumber(raw.up_rate) ||
       !isValidNumber(raw.down_rate)
     ) {
-      return false;
+      return false
     }
 
     // 验证formatted字段
-    const formatted = traffic.formatted;
-    if (!formatted || typeof formatted !== "object") return false;
+    const formatted = traffic.formatted
+    if (!formatted || typeof formatted !== 'object') return false
     if (
       !isValidString(formatted.up_rate) ||
       !isValidString(formatted.down_rate) ||
       !isValidString(formatted.total_up) ||
       !isValidString(formatted.total_down)
     ) {
-      return false;
+      return false
     }
 
     // 验证is_fresh字段
-    if (!isValidBoolean(traffic.is_fresh)) return false;
+    if (!isValidBoolean(traffic.is_fresh)) return false
 
-    return true;
+    return true
   }
 
   private validateMemoryData(memory: any): boolean {
-    if (!memory || typeof memory !== "object") return false;
+    if (!memory || typeof memory !== 'object') return false
 
     // 验证raw字段
-    const raw = memory.raw;
-    if (!raw || typeof raw !== "object") return false;
+    const raw = memory.raw
+    if (!raw || typeof raw !== 'object') return false
     if (
       !isValidNumber(raw.inuse) ||
       !isValidNumber(raw.oslimit) ||
       !isValidNumber(raw.usage_percent)
     ) {
-      return false;
+      return false
     }
 
     // 验证formatted字段
-    const formatted = memory.formatted;
-    if (!formatted || typeof formatted !== "object") return false;
+    const formatted = memory.formatted
+    if (!formatted || typeof formatted !== 'object') return false
     if (
       !isValidString(formatted.inuse) ||
       !isValidString(formatted.oslimit) ||
       !isValidNumber(formatted.usage_percent)
     ) {
-      return false;
+      return false
     }
 
     // 验证is_fresh字段
-    if (!isValidBoolean(memory.is_fresh)) return false;
+    if (!isValidBoolean(memory.is_fresh)) return false
 
-    return true;
+    return true
   }
 
   private validateOverallStatus(status: any): boolean {
     return (
-      typeof status === "string" &&
-      ["active", "inactive", "error", "unknown", "healthy"].includes(status)
-    );
+      typeof status === 'string' &&
+      ['active', 'inactive', 'error', 'unknown', 'healthy'].includes(status)
+    )
   }
 
   private sanitizeTrafficData(traffic: any) {
-    const raw = traffic?.raw || {};
-    const formatted = traffic?.formatted || {};
+    const raw = traffic?.raw || {}
+    const formatted = traffic?.formatted || {}
 
     return {
       raw: {
@@ -154,22 +154,22 @@ export class SystemMonitorValidator implements ISystemMonitorOverviewValidator {
         down_rate: isValidNumber(raw.down_rate) ? raw.down_rate : 0,
       },
       formatted: {
-        up_rate: isValidString(formatted.up_rate) ? formatted.up_rate : "0B",
+        up_rate: isValidString(formatted.up_rate) ? formatted.up_rate : '0B',
         down_rate: isValidString(formatted.down_rate)
           ? formatted.down_rate
-          : "0B",
-        total_up: isValidString(formatted.total_up) ? formatted.total_up : "0B",
+          : '0B',
+        total_up: isValidString(formatted.total_up) ? formatted.total_up : '0B',
         total_down: isValidString(formatted.total_down)
           ? formatted.total_down
-          : "0B",
+          : '0B',
       },
       is_fresh: isValidBoolean(traffic?.is_fresh) ? traffic.is_fresh : false,
-    };
+    }
   }
 
   private sanitizeMemoryData(memory: any) {
-    const raw = memory?.raw || {};
-    const formatted = memory?.formatted || {};
+    const raw = memory?.raw || {}
+    const formatted = memory?.formatted || {}
 
     return {
       raw: {
@@ -178,31 +178,31 @@ export class SystemMonitorValidator implements ISystemMonitorOverviewValidator {
         usage_percent: isValidNumber(raw.usage_percent) ? raw.usage_percent : 0,
       },
       formatted: {
-        inuse: isValidString(formatted.inuse) ? formatted.inuse : "0B",
-        oslimit: isValidString(formatted.oslimit) ? formatted.oslimit : "0B",
+        inuse: isValidString(formatted.inuse) ? formatted.inuse : '0B',
+        oslimit: isValidString(formatted.oslimit) ? formatted.oslimit : '0B',
         usage_percent: isValidNumber(formatted.usage_percent)
           ? formatted.usage_percent
           : 0,
       },
       is_fresh: isValidBoolean(memory?.is_fresh) ? memory.is_fresh : false,
-    };
+    }
   }
 
   private sanitizeOverallStatus(
     status: any,
-  ): "active" | "inactive" | "error" | "unknown" | "healthy" {
+  ): 'active' | 'inactive' | 'error' | 'unknown' | 'healthy' {
     if (
-      typeof status === "string" &&
-      ["active", "inactive", "error", "unknown", "healthy"].includes(status)
+      typeof status === 'string' &&
+      ['active', 'inactive', 'error', 'unknown', 'healthy'].includes(status)
     ) {
-      return status as "active" | "inactive" | "error" | "unknown" | "healthy";
+      return status as 'active' | 'inactive' | 'error' | 'unknown' | 'healthy'
     }
-    return "unknown";
+    return 'unknown'
   }
 }
 
 // 全局验证器实例
-export const systemMonitorValidator = new SystemMonitorValidator();
+export const systemMonitorValidator = new SystemMonitorValidator()
 
 /**
  * 安全的API调用包装器
@@ -213,18 +213,18 @@ export function withDataValidation<T extends (...args: any[]) => Promise<any>>(
 ): T {
   return (async (...args: Parameters<T>) => {
     try {
-      const result = await apiCall(...args);
+      const result = await apiCall(...args)
 
       if (validator.validate(result)) {
-        return result;
+        return result
       } else {
-        console.warn("[DataValidator] API返回数据验证失败，尝试修复:", result);
-        return validator.sanitize(result);
+        console.warn('[DataValidator] API返回数据验证失败，尝试修复:', result)
+        return validator.sanitize(result)
       }
     } catch (error) {
-      console.error("[DataValidator] API调用失败:", error);
+      console.error('[DataValidator] API调用失败:', error)
       // 返回安全的默认值
-      return validator.sanitize(null);
+      return validator.sanitize(null)
     }
-  }) as T;
+  }) as T
 }

@@ -5,39 +5,39 @@ import {
   PlayCircleOutlineRounded,
   SettingsRounded,
   WarningRounded,
-} from "@mui/icons-material";
-import { Box, Typography, alpha, useTheme } from "@mui/material";
-import { useLockFn } from "ahooks";
-import React, { useCallback, useRef } from "react";
-import { useTranslation } from "react-i18next";
+} from '@mui/icons-material'
+import { Box, Typography, alpha, useTheme } from '@mui/material'
+import { useLockFn } from 'ahooks'
+import React, { useCallback, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 
-import { DialogRef, Switch, TooltipIcon } from "@/components/base";
-import { GuardState } from "@/components/setting/mods/guard-state";
-import { SysproxyViewer } from "@/components/setting/mods/sysproxy-viewer";
-import { TunViewer } from "@/components/setting/mods/tun-viewer";
-import { useServiceInstaller } from "@/hooks/use-service-installer";
-import { useServiceUninstaller } from "@/hooks/use-service-uninstaller";
-import { useSystemProxyState } from "@/hooks/use-system-proxy-state";
-import { useSystemState } from "@/hooks/use-system-state";
-import { useVerge } from "@/hooks/use-verge";
-import { showNotice } from "@/services/notice-service";
+import { DialogRef, Switch, TooltipIcon } from '@/components/base'
+import { GuardState } from '@/components/setting/mods/guard-state'
+import { SysproxyViewer } from '@/components/setting/mods/sysproxy-viewer'
+import { TunViewer } from '@/components/setting/mods/tun-viewer'
+import { useServiceInstaller } from '@/hooks/use-service-installer'
+import { useServiceUninstaller } from '@/hooks/use-service-uninstaller'
+import { useSystemProxyState } from '@/hooks/use-system-proxy-state'
+import { useSystemState } from '@/hooks/use-system-state'
+import { useVerge } from '@/hooks/use-verge'
+import { showNotice } from '@/services/notice-service'
 
 interface ProxySwitchProps {
-  label?: string;
-  onError?: (err: Error) => void;
-  noRightPadding?: boolean;
+  label?: string
+  onError?: (err: Error) => void
+  noRightPadding?: boolean
 }
 
 interface SwitchRowProps {
-  label: string;
-  active: boolean;
-  disabled?: boolean;
-  infoTitle: string;
-  onInfoClick?: () => void;
-  extraIcons?: React.ReactNode;
-  onToggle: (value: boolean) => Promise<void>;
-  onError?: (err: Error) => void;
-  highlight?: boolean;
+  label: string
+  active: boolean
+  disabled?: boolean
+  infoTitle: string
+  onInfoClick?: () => void
+  extraIcons?: React.ReactNode
+  onToggle: (value: boolean) => Promise<void>
+  onError?: (err: Error) => void
+  highlight?: boolean
 }
 
 /**
@@ -54,32 +54,32 @@ const SwitchRow = ({
   onError,
   highlight,
 }: SwitchRowProps) => {
-  const theme = useTheme();
+  const theme = useTheme()
   return (
     <Box
       sx={{
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "space-between",
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
         p: 1,
         pr: 2,
         borderRadius: 1.5,
         bgcolor: highlight
           ? alpha(theme.palette.success.main, 0.07)
-          : "transparent",
+          : 'transparent',
         opacity: disabled ? 0.6 : 1,
-        transition: "background-color 0.3s",
+        transition: 'background-color 0.3s',
       }}
     >
-      <Box sx={{ display: "flex", alignItems: "center" }}>
+      <Box sx={{ display: 'flex', alignItems: 'center' }}>
         {active ? (
-          <PlayCircleOutlineRounded sx={{ color: "success.main", mr: 1 }} />
+          <PlayCircleOutlineRounded sx={{ color: 'success.main', mr: 1 }} />
         ) : (
-          <PauseCircleOutlineRounded sx={{ color: "text.disabled", mr: 1 }} />
+          <PauseCircleOutlineRounded sx={{ color: 'text.disabled', mr: 1 }} />
         )}
         <Typography
           variant="subtitle1"
-          sx={{ fontWeight: 500, fontSize: "15px" }}
+          sx={{ fontWeight: 500, fontSize: '15px' }}
         >
           {label}
         </Typography>
@@ -102,75 +102,75 @@ const SwitchRow = ({
         <Switch edge="end" disabled={disabled} />
       </GuardState>
     </Box>
-  );
-};
+  )
+}
 
 const ProxyControlSwitches = ({
   label,
   onError,
   noRightPadding = false,
 }: ProxySwitchProps) => {
-  const { t } = useTranslation();
-  const { verge, mutateVerge, patchVerge } = useVerge();
-  const { installServiceAndRestartCore } = useServiceInstaller();
-  const { uninstallServiceAndRestartCore } = useServiceUninstaller();
+  const { t } = useTranslation()
+  const { verge, mutateVerge, patchVerge } = useVerge()
+  const { installServiceAndRestartCore } = useServiceInstaller()
+  const { uninstallServiceAndRestartCore } = useServiceUninstaller()
   const { configState: systemProxyConfigState, toggleSystemProxy } =
-    useSystemProxyState();
+    useSystemProxyState()
   const { isServiceOk, isTunModeAvailable, mutateSystemState } =
-    useSystemState();
+    useSystemState()
 
-  const sysproxyRef = useRef<DialogRef>(null);
-  const tunRef = useRef<DialogRef>(null);
+  const sysproxyRef = useRef<DialogRef>(null)
+  const tunRef = useRef<DialogRef>(null)
 
-  const { enable_tun_mode } = verge ?? {};
+  const { enable_tun_mode } = verge ?? {}
 
   const showErrorNotice = useCallback(
     (msg: string) => showNotice.error(msg),
     [],
-  );
+  )
 
   const handleTunToggle = async (value: boolean) => {
     if (!isTunModeAvailable) {
-      const msgKey = "settings.sections.proxyControl.tooltips.tunUnavailable";
-      showErrorNotice(msgKey);
-      throw new Error(t(msgKey));
+      const msgKey = 'settings.sections.proxyControl.tooltips.tunUnavailable'
+      showErrorNotice(msgKey)
+      throw new Error(t(msgKey))
     }
-    mutateVerge({ ...verge, enable_tun_mode: value }, false);
-    await patchVerge({ enable_tun_mode: value });
-  };
+    mutateVerge({ ...verge, enable_tun_mode: value }, false)
+    await patchVerge({ enable_tun_mode: value })
+  }
 
   const onInstallService = useLockFn(async () => {
     try {
-      await installServiceAndRestartCore();
-      await mutateSystemState();
+      await installServiceAndRestartCore()
+      await mutateSystemState()
     } catch (err) {
-      showNotice.error(err);
+      showNotice.error(err)
     }
-  });
+  })
 
   const onUninstallService = useLockFn(async () => {
     try {
       if (verge?.enable_tun_mode) {
-        await handleTunToggle(false);
+        await handleTunToggle(false)
       }
-      await uninstallServiceAndRestartCore();
-      await mutateSystemState();
+      await uninstallServiceAndRestartCore()
+      await mutateSystemState()
     } catch (err) {
-      showNotice.error(err);
+      showNotice.error(err)
     }
-  });
+  })
 
   const isSystemProxyMode =
-    label === t("settings.sections.system.toggles.systemProxy") || !label;
-  const isTunMode = label === t("settings.sections.system.toggles.tunMode");
+    label === t('settings.sections.system.toggles.systemProxy') || !label
+  const isTunMode = label === t('settings.sections.system.toggles.tunMode')
 
   return (
-    <Box sx={{ width: "100%", pr: noRightPadding ? 1 : 2 }}>
+    <Box sx={{ width: '100%', pr: noRightPadding ? 1 : 2 }}>
       {isSystemProxyMode && (
         <SwitchRow
-          label={t("settings.sections.proxyControl.fields.systemProxy")}
+          label={t('settings.sections.proxyControl.fields.systemProxy')}
           active={systemProxyConfigState}
-          infoTitle={t("settings.sections.proxyControl.tooltips.systemProxy")}
+          infoTitle={t('settings.sections.proxyControl.tooltips.systemProxy')}
           onInfoClick={() => sysproxyRef.current?.open()}
           onToggle={(value) => toggleSystemProxy(value)}
           onError={onError}
@@ -180,9 +180,9 @@ const ProxyControlSwitches = ({
 
       {isTunMode && (
         <SwitchRow
-          label={t("settings.sections.proxyControl.fields.tunMode")}
+          label={t('settings.sections.proxyControl.fields.tunMode')}
           active={enable_tun_mode || false}
-          infoTitle={t("settings.sections.proxyControl.tooltips.tunMode")}
+          infoTitle={t('settings.sections.proxyControl.tooltips.tunMode')}
           onInfoClick={() => tunRef.current?.open()}
           onToggle={handleTunToggle}
           onError={onError}
@@ -194,14 +194,14 @@ const ProxyControlSwitches = ({
                 <>
                   <TooltipIcon
                     title={t(
-                      "settings.sections.proxyControl.tooltips.tunUnavailable",
+                      'settings.sections.proxyControl.tooltips.tunUnavailable',
                     )}
                     icon={WarningRounded}
-                    sx={{ color: "warning.main", ml: 1 }}
+                    sx={{ color: 'warning.main', ml: 1 }}
                   />
                   <TooltipIcon
                     title={t(
-                      "settings.sections.proxyControl.actions.installService",
+                      'settings.sections.proxyControl.actions.installService',
                     )}
                     icon={BuildRounded}
                     color="primary"
@@ -213,7 +213,7 @@ const ProxyControlSwitches = ({
               {isServiceOk && (
                 <TooltipIcon
                   title={t(
-                    "settings.sections.proxyControl.actions.uninstallService",
+                    'settings.sections.proxyControl.actions.uninstallService',
                   )}
                   icon={DeleteForeverRounded}
                   color="secondary"
@@ -229,7 +229,7 @@ const ProxyControlSwitches = ({
       <SysproxyViewer ref={sysproxyRef} />
       <TunViewer ref={tunRef} />
     </Box>
-  );
-};
+  )
+}
 
-export default ProxyControlSwitches;
+export default ProxyControlSwitches

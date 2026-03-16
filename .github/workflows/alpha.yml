@@ -27,7 +27,7 @@ env:
   RUST_BACKTRACE: short
   HUSKY: 0
 concurrency:
-  group: "${{ github.workflow }} - ${{ github.head_ref || github.ref }}"
+  group: '${{ github.workflow }} - ${{ github.head_ref || github.ref }}'
 
 jobs:
   check_alpha_tag:
@@ -249,7 +249,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.TAG_NAME }}
-          name: "Clash Verge Rev ${{ env.TAG_CHANNEL }}"
+          name: 'Clash Verge Rev ${{ env.TAG_CHANNEL }}'
           body_path: release.txt
           prerelease: true
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -307,7 +307,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v6
         with:
-          node-version: "24.14.0"
+          node-version: '24.14.0'
 
       - uses: pnpm/action-setup@v4
         name: Install pnpm
@@ -325,7 +325,7 @@ jobs:
       - name: Tauri build
         uses: tauri-apps/tauri-action@v0
         env:
-          NODE_OPTIONS: "--max_old_space_size=4096"
+          NODE_OPTIONS: '--max_old_space_size=4096'
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
@@ -337,8 +337,8 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         with:
           tagName: ${{ env.TAG_NAME }}
-          releaseName: "Clash Verge Rev ${{ env.TAG_CHANNEL }}"
-          releaseBody: "More new features are now supported."
+          releaseName: 'Clash Verge Rev ${{ env.TAG_CHANNEL }}'
+          releaseBody: 'More new features are now supported.'
           releaseDraft: false
           prerelease: true
           tauriScript: pnpm
@@ -377,7 +377,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v6
         with:
-          node-version: "24.14.0"
+          node-version: '24.14.0'
 
       - name: Install pnpm
         uses: pnpm/action-setup@v4
@@ -453,7 +453,7 @@ jobs:
           fi
           pnpm build --target ${{ matrix.target }}
         env:
-          NODE_OPTIONS: "--max_old_space_size=4096"
+          NODE_OPTIONS: '--max_old_space_size=4096'
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
 
@@ -468,7 +468,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.TAG_NAME }}
-          name: "Clash Verge Rev ${{ env.TAG_CHANNEL }}"
+          name: 'Clash Verge Rev ${{ env.TAG_CHANNEL }}'
           prerelease: true
           token: ${{ secrets.GITHUB_TOKEN }}
           files: |
@@ -505,7 +505,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v6
         with:
-          node-version: "24.14.0"
+          node-version: '24.14.0'
 
       - uses: pnpm/action-setup@v4
         name: Install pnpm
@@ -531,7 +531,7 @@ jobs:
         id: build
         uses: tauri-apps/tauri-action@v0
         env:
-          NODE_OPTIONS: "--max_old_space_size=4096"
+          NODE_OPTIONS: '--max_old_space_size=4096'
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
@@ -563,7 +563,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.TAG_NAME }}
-          name: "Clash Verge Rev ${{ env.TAG_CHANNEL }}"
+          name: 'Clash Verge Rev ${{ env.TAG_CHANNEL }}'
           prerelease: true
           token: ${{ secrets.GITHUB_TOKEN }}
           files: src-tauri/target/${{ matrix.target }}/release/bundle/nsis/*setup*
