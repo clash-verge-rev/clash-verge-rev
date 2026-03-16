@@ -41,6 +41,7 @@ export const useMihomoWsSubscription = <T>(
     setupHandlers,
   } = options
 
+  // eslint-disable-next-line @eslint-react/purity
   const [date, setDate] = useLocalStorage(storageKey, Date.now())
   const subscriptKey = buildSubscriptKey(date)
   const subscriptionCacheKey = subscriptKey ? `$sub$${subscriptKey}` : null

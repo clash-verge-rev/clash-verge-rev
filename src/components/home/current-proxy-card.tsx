@@ -1,3 +1,4 @@
+/* eslint-disable @eslint-react/set-state-in-effect */
 import {
   AccessTimeRounded,
   ChevronRight,
@@ -286,7 +287,6 @@ export const CurrentProxyCard = () => {
 
     // 根据模式确定初始组
     if (isGlobalMode) {
-      // eslint-disable-next-line @eslint-react/hooks-extra/no-direct-set-state-in-use-effect
       setState((prev) => ({
         ...prev,
         selection: {
@@ -295,7 +295,6 @@ export const CurrentProxyCard = () => {
         },
       }))
     } else if (isDirectMode) {
-      // eslint-disable-next-line @eslint-react/hooks-extra/no-direct-set-state-in-use-effect
       setState((prev) => ({
         ...prev,
         selection: {
@@ -305,7 +304,6 @@ export const CurrentProxyCard = () => {
       }))
     } else {
       const savedGroup = readProfileScopedItem(STORAGE_KEY_GROUP)
-      // eslint-disable-next-line @eslint-react/hooks-extra/no-direct-set-state-in-use-effect
       setState((prev) => ({
         ...prev,
         selection: {
@@ -320,7 +318,6 @@ export const CurrentProxyCard = () => {
   useEffect(() => {
     if (!proxies) return
 
-    // eslint-disable-next-line @eslint-react/hooks-extra/no-direct-set-state-in-use-effect
     setState((prev) => {
       const groupsMap = new Map<string, ProxyGroupOption>()
 
