@@ -42,7 +42,7 @@ importers:
         specifier: ^8.21.3
         version: 8.21.3(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@tanstack/react-virtual':
-        specifier: ^3.13.21
+        specifier: ^3.13.22
         version: 3.13.22(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@tauri-apps/api':
         specifier: 2.10.1
@@ -81,13 +81,13 @@ importers:
         specifier: 1.11.20
         version: 1.11.20
       foxact:
-        specifier: ^0.2.54
+        specifier: ^0.2.55
         version: 0.2.55(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       foxts:
         specifier: ^5.3.0
         version: 5.3.0
       i18next:
-        specifier: ^25.8.14
+        specifier: ^25.8.18
         version: 25.8.18(typescript@5.9.3)
       js-yaml:
         specifier: ^4.1.1
@@ -105,7 +105,7 @@ importers:
         specifier: ^5.4.1
         version: 5.4.1(monaco-editor@0.55.1)
       nanoid:
-        specifier: ^5.1.6
+        specifier: ^5.1.7
         version: 5.1.7
       react:
         specifier: 19.2.4
@@ -181,7 +181,7 @@ importers:
         specifier: ^8.0.0
         version: 8.0.0(terser@5.46.0)(vite@8.0.0(@types/node@24.12.0)(jiti@2.6.1)(sass@1.98.0)(terser@5.46.0)(yaml@2.8.2))
       '@vitejs/plugin-react':
-        specifier: ^6.0.0
+        specifier: ^6.0.1
         version: 6.0.1(vite@8.0.0(@types/node@24.12.0)(jiti@2.6.1)(sass@1.98.0)(terser@5.46.0)(yaml@2.8.2))
       adm-zip:
         specifier: ^0.5.16
@@ -202,7 +202,7 @@ importers:
         specifier: ^4.4.4
         version: 4.4.4(eslint-plugin-import-x@4.16.2(@typescript-eslint/utils@8.57.0(eslint@10.0.3(jiti@2.6.1))(typescript@5.9.3))(eslint@10.0.3(jiti@2.6.1)))(eslint@10.0.3(jiti@2.6.1))
       eslint-plugin-import-x:
-        specifier: ^4.16.1
+        specifier: ^4.16.2
         version: 4.16.2(@typescript-eslint/utils@8.57.0(eslint@10.0.3(jiti@2.6.1))(typescript@5.9.3))(eslint@10.0.3(jiti@2.6.1))
       eslint-plugin-react-compiler:
         specifier: 19.1.0-rc.2
@@ -232,7 +232,7 @@ importers:
         specifier: ^2.6.1
         version: 2.6.1
       lint-staged:
-        specifier: ^16.3.2
+        specifier: ^16.4.0
         version: 16.4.0
       node-fetch:
         specifier: ^3.3.2
@@ -244,10 +244,10 @@ importers:
         specifier: ^2.0.6
         version: 2.0.6(prettier@3.8.1)
       sass:
-        specifier: ^1.97.3
+        specifier: ^1.98.0
         version: 1.98.0
       tar:
-        specifier: ^7.5.10
+        specifier: ^7.5.11
         version: 7.5.11
       terser:
         specifier: ^5.46.0
@@ -256,7 +256,7 @@ importers:
         specifier: ^5.9.3
         version: 5.9.3
       typescript-eslint:
-        specifier: ^8.56.1
+        specifier: ^8.57.0
         version: 8.57.0(eslint@10.0.3(jiti@2.6.1))(typescript@5.9.3)
       vite:
         specifier: ^8.0.0
