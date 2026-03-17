@@ -102,7 +102,8 @@ pub async fn change_clash_mode(mode: String) {
     }
 }
 
-/// Test TLS handshake delay to a URL (through proxy when not in TUN mode)
+/// Test delay to a URL through proxy.
+/// HTTPS: measures TLS handshake time. HTTP: measures HEAD round-trip time.
 pub async fn test_delay(url: String) -> anyhow::Result<u32> {
     use std::sync::Arc;
     use std::time::Duration;
@@ -119,33 +120,33 @@ pub async fn test_delay(url: String) -> anyhow::Result<u32> {
     let port = parsed.port().unwrap_or(if is_https { 443 } else { 80 });
 
     let verge = Config::verge().await.latest_arc();
-    let tun_mode = verge.enable_tun_mode.unwrap_or(false);
+    let proxy_port = if verge.enable_tun_mode.unwrap_or(false) {
+        None
+    } else {
+        Some(match verge.verge_mixed_port {
+            Some(p) => p,
+            None => Config::clash().await.data_arc().get_mixed_port(),
+        })
+    };
 
-    let inner = async {
+    tokio::time::timeout(Duration::from_secs(10), async {
         let start = Instant::now();
 
-        // TCP connect: direct in TUN mode, via CONNECT tunnel otherwise
-        let stream = if tun_mode {
-            TcpStream::connect(format!("{host}:{port}")).await?
-        } else {
-            let proxy_port = match verge.verge_mixed_port {
-                Some(p) => p,
-                None => Config::clash().await.data_arc().get_mixed_port(),
-            };
-            let mut stream = TcpStream::connect(format!("127.0.0.1:{proxy_port}")).await?;
-            stream
-                .write_all(format!("CONNECT {host}:{port} HTTP/1.1\r\nHost: {host}:{port}\r\n\r\n").as_bytes())
-                .await?;
-            let mut buf = [0u8; 1024];
-            let n = stream.read(&mut buf).await?;
-            if !std::str::from_utf8(&buf[..n]).unwrap_or("").contains("200") {
-                return Err(anyhow::anyhow!("Proxy CONNECT failed"));
-            }
-            stream
-        };
-
-        // TLS handshake for HTTPS; for HTTP the TCP connect above is the result
         if is_https {
+            let stream = match proxy_port {
+                Some(pp) => {
+                    let mut s = TcpStream::connect(format!("127.0.0.1:{pp}")).await?;
+                    s.write_all(format!("CONNECT {host}:{port} HTTP/1.1\r\nHost: {host}:{port}\r\n\r\n").as_bytes())
+                        .await?;
+                    let mut buf = [0u8; 1024];
+                    let n = s.read(&mut buf).await?;
+                    if !std::str::from_utf8(&buf[..n]).unwrap_or("").contains("200") {
+                        return Err(anyhow::anyhow!("Proxy CONNECT failed"));
+                    }
+                    s
+                }
+                None => TcpStream::connect(format!("{host}:{port}")).await?,
+            };
             let root_store = rustls::RootCertStore::from_iter(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
             let config =
                 rustls::ClientConfig::builder_with_provider(Arc::new(rustls::crypto::ring::default_provider()))
@@ -157,14 +158,25 @@ pub async fn test_delay(url: String) -> anyhow::Result<u32> {
                 .map_err(|_| anyhow::anyhow!("Invalid DNS name: {host}"))?
                 .to_owned();
             connector.connect(server_name, stream).await?;
+        } else {
+            let (mut stream, req) = match proxy_port {
+                Some(pp) => (
+                    TcpStream::connect(format!("127.0.0.1:{pp}")).await?,
+                    format!("HEAD {url} HTTP/1.1\r\nHost: {host}\r\nConnection: close\r\n\r\n"),
+                ),
+                None => (
+                    TcpStream::connect(format!("{host}:{port}")).await?,
+                    format!("HEAD / HTTP/1.1\r\nHost: {host}\r\nConnection: close\r\n\r\n"),
+                ),
+            };
+            stream.write_all(req.as_bytes()).await?;
+            let mut buf = [0u8; 1024];
+            let _ = stream.read(&mut buf).await?;
         }
 
-        // Ensure at least 1ms — frontend treats 0 as timeout
+        // frontend treats 0 as timeout
         Ok((start.elapsed().as_millis() as u32).max(1))
-    };
-
-    match tokio::time::timeout(Duration::from_secs(10), inner).await {
-        Ok(result) => result,
-        Err(_) => Ok(10000u32),
-    }
+    })
+    .await
+    .unwrap_or(Ok(10000u32))
 }
