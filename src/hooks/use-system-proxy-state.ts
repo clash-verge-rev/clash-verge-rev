@@ -1,4 +1,4 @@
-import { useLockFn } from 'ahooks'
+import { useRef } from 'react'
 import useSWR, { mutate } from 'swr'
 import { closeAllConnections } from 'tauri-plugin-mihomo-api'
 
@@ -36,28 +36,31 @@ export const useSystemProxyState = () => {
     }
   })()
 
-  const toggleSystemProxy = useLockFn(async (enabled: boolean) => {
-    mutateVerge({ ...verge, enable_system_proxy: enabled }, false)
+  // "最后一次生效"模式：快速连续点击时，只执行最终状态
+  const pendingRef = useRef<boolean | null>(null)
+  const busyRef = useRef(false)
 
-    const updateProxyStatus = async () => {
-      await new Promise((resolve) => setTimeout(resolve, enabled ? 20 : 10))
-      await mutate('getSystemProxy')
-      await mutate('getAutotemProxy')
-    }
+  const toggleSystemProxy = async (enabled: boolean) => {
+    mutateVerge({ ...verge, enable_system_proxy: enabled }, false)
+    pendingRef.current = enabled
+
+    if (busyRef.current) return
+    busyRef.current = true
 
     try {
-      if (!enabled && verge?.auto_close_connection) {
-        await closeAllConnections()
+      while (pendingRef.current !== null) {
+        const target = pendingRef.current
+        pendingRef.current = null
+        if (!target && verge?.auto_close_connection) {
+          await closeAllConnections().catch(() => {})
+        }
+        await patchVerge({ enable_system_proxy: target })
       }
-      await patchVerge({ enable_system_proxy: enabled })
-      await updateProxyStatus()
-    } catch (error) {
-      console.warn('[useSystemProxyState] toggleSystemProxy failed:', error)
-      mutateVerge({ ...verge, enable_system_proxy: !enabled }, false)
-      await updateProxyStatus()
-      throw error
+    } finally {
+      busyRef.current = false
+      await Promise.all([mutate('getSystemProxy'), mutate('getAutotemProxy')])
     }
-  })
+  }
 
   return {
     indicator,

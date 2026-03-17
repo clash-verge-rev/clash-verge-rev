@@ -8,11 +8,10 @@ import {
 } from '@mui/icons-material'
 import { Box, Typography, alpha, useTheme } from '@mui/material'
 import { useLockFn } from 'ahooks'
-import React, { useCallback, useRef } from 'react'
+import React, { useCallback, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { DialogRef, Switch, TooltipIcon } from '@/components/base'
-import { GuardState } from '@/components/setting/mods/guard-state'
 import { SysproxyViewer } from '@/components/setting/mods/sysproxy-viewer'
 import { TunViewer } from '@/components/setting/mods/tun-viewer'
 import { useServiceInstaller } from '@/hooks/use-service-installer'
@@ -42,6 +41,7 @@ interface SwitchRowProps {
 
 /**
  * 抽取的子组件：统一的开关 UI
+ * active = 真实状态OS/配置 乐观更新
  */
 const SwitchRow = ({
   label,
@@ -55,6 +55,24 @@ const SwitchRow = ({
   highlight,
 }: SwitchRowProps) => {
   const theme = useTheme()
+  const [checked, setChecked] = useState(active)
+  const pendingRef = useRef(false)
+
+  if (pendingRef.current) {
+    if (active === checked) pendingRef.current = false
+  } else if (checked !== active) {
+    setChecked(active)
+  }
+
+  const handleChange = (_: React.ChangeEvent, value: boolean) => {
+    pendingRef.current = true
+    setChecked(value)
+    onToggle(value).catch((err: any) => {
+      pendingRef.current = false
+      onError?.(err)
+    })
+  }
+
   return (
     <Box
       sx={{
@@ -92,15 +110,12 @@ const SwitchRow = ({
         {extraIcons}
       </Box>
 
-      <GuardState
-        value={active}
-        valueProps="checked"
-        onCatch={onError}
-        onFormat={(_, v) => v}
-        onGuard={onToggle}
-      >
-        <Switch edge="end" disabled={disabled} />
-      </GuardState>
+      <Switch
+        edge="end"
+        disabled={disabled}
+        checked={checked}
+        onChange={handleChange}
+      />
     </Box>
   )
 }
