@@ -199,7 +199,7 @@ jobs:
         with:
           node-version: '24.14.0'
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v5
         name: Install pnpm
         with:
           run_install: false
@@ -284,7 +284,7 @@ jobs:
           node-version: '24.14.0'
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v5
         with:
           run_install: false
 
@@ -422,7 +422,7 @@ jobs:
         with:
           node-version: '24.14.0'
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v5
         name: Install pnpm
         with:
           run_install: false
@@ -507,7 +507,7 @@ jobs:
         with:
           node-version: '24.14.0'
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v5
         name: Install pnpm
         with:
           run_install: false
@@ -533,7 +533,7 @@ jobs:
         with:
           node-version: '24.14.0'
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v5
         name: Install pnpm
         with:
           run_install: false
@@ -595,7 +595,7 @@ jobs:
         with:
           node-version: '24.14.0'
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v5
         name: Install pnpm
         with:
           run_install: false
