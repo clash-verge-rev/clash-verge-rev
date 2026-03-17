@@ -419,16 +419,22 @@ export async function downloadIconCache(url: string, name: string) {
   return invoke<string>('download_icon_cache', { url, name })
 }
 
+const NETWORK_INTERFACES_CMD = 'get_network_interfaces'
+const SYSTEM_HOSTNAME_CMD = 'get_system_hostname'
+const NETWORK_INTERFACES_INFO_CMD = 'get_network_interfaces_info'
+
+export const NETWORK_INTERFACES_INFO_QUERY_KEY = 'getNetworkInterfacesInfo'
+
 export async function getNetworkInterfaces() {
-  return invoke<string[]>('get_network_interfaces')
+  return invoke<string[]>(NETWORK_INTERFACES_CMD)
 }
 
 export async function getSystemHostname() {
-  return invoke<string>('get_system_hostname')
+  return invoke<string>(SYSTEM_HOSTNAME_CMD)
 }
 
 export async function getNetworkInterfacesInfo() {
-  return invoke<INetworkInterface[]>('get_network_interfaces_info')
+  return invoke<INetworkInterface[]>(NETWORK_INTERFACES_INFO_CMD)
 }
 
 export async function createWebdavBackup() {

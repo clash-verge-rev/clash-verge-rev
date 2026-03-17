@@ -1,10 +1,13 @@
 import useSWR from 'swr'
 
-import { getNetworkInterfacesInfo } from '@/services/cmds'
+import {
+  getNetworkInterfacesInfo,
+  NETWORK_INTERFACES_INFO_QUERY_KEY,
+} from '@/services/cmds'
 
 export const useNetworkInterfaces = () => {
   const { data, error, isLoading, mutate } = useSWR(
-    'getNetworkInterfacesInfo',
+    NETWORK_INTERFACES_INFO_QUERY_KEY,
     getNetworkInterfacesInfo,
     {
       revalidateOnFocus: false,
@@ -14,7 +17,7 @@ export const useNetworkInterfaces = () => {
   )
 
   return {
-    networkInterfaces: data || [],
+    networkInterfaces: data ?? [],
     loading: isLoading,
     error,
     mutate,
