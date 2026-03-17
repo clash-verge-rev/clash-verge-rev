@@ -120,13 +120,14 @@ pub async fn test_delay(url: String) -> anyhow::Result<u32> {
     let port = parsed.port().unwrap_or(if is_https { 443 } else { 80 });
 
     let verge = Config::verge().await.latest_arc();
-    let proxy_port = if verge.enable_tun_mode.unwrap_or(false) {
-        None
-    } else {
+    let proxy_enabled = verge.enable_system_proxy.unwrap_or(false) || verge.enable_tun_mode.unwrap_or(false);
+    let proxy_port = if proxy_enabled {
         Some(match verge.verge_mixed_port {
             Some(p) => p,
             None => Config::clash().await.data_arc().get_mixed_port(),
         })
+    } else {
+        None
     };
 
     tokio::time::timeout(Duration::from_secs(10), async {
