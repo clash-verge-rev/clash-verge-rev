@@ -240,7 +240,8 @@
           "systemProxyTrayIcon": "系統代理系統匣圖示",
           "tunTrayIcon": "虛擬網路介面卡模式系統匣圖示",
           "enableTrayIcon": "啟用系統匣圖示",
-          "enableTraySpeed": "啟用系統匣速率"
+          "enableTraySpeed": "啟用系統匣速率",
+          "pauseRenderTrafficStatsOnBlur": "失去焦點時暫停渲染流量統計"
         },
         "tooltips": {
           "hoverNavigator": "滑鼠懸停在字母上時自動捲動到對應代理組",
@@ -359,7 +360,7 @@
         "scheduleHelper": "依設定頻率在背景建立本機備份檔案。",
         "intervalLabel": "備份頻率",
         "changeLabel": "關鍵變更時自動備份",
-        "changeHelper": "全域擴充配置/腳本或訂閱新增、刪除、修改時自動備份。",
+        "changeHelper": "Global Extend Config/Script 變更後自動備份。",
         "options": {
           "hours": "每 {{n}} 小時",
           "days": "每 {{n}} 天"
@@ -481,7 +482,9 @@
         "autoRedirect": "自動配置 nftables/iptables 的 TCP 重導"
       },
       "messages": {
-        "applied": "設定已套用"
+        "applied": "設定已套用",
+        "invalidRouteExcludeAddress": "請輸入有效的 CIDR 網段",
+        "routeExcludeAddressHint": "僅支援 IPv4/IPv6 CIDR，例如 192.168.0.0/16 或 fd00::/8"
       }
     },
     "dns": {

@@ -250,7 +250,6 @@ pub fn run() {
                 logging!(error, Type::Setup, "Failed to setup window state: {}", e);
             }
 
-            resolve::resolve_setup_handle();
             resolve::resolve_setup_async();
             resolve::resolve_setup_sync();
             resolve::init_signal();
@@ -264,7 +263,6 @@ pub fn run() {
     mod event_handlers {
         #[cfg(target_os = "macos")]
         use crate::module::lightweight;
-        #[cfg(target_os = "macos")]
         use crate::utils::window_manager::WindowManager;
         use crate::{
             config::Config,
@@ -283,7 +281,6 @@ pub fn run() {
             }
 
             logging!(info, Type::System, "应用就绪");
-            handle::Handle::global().init();
 
             #[cfg(target_os = "macos")]
             if let Some(window) = _app_handle.get_webview_window("main") {
@@ -293,8 +290,6 @@ pub fn run() {
 
         #[cfg(target_os = "macos")]
         pub async fn handle_reopen(has_visible_windows: bool) {
-            handle::Handle::global().init();
-
             if lightweight::is_in_lightweight_mode() {
                 lightweight::exit_lightweight_mode().await;
                 return;
@@ -316,7 +311,7 @@ pub fn run() {
 
             if let tauri::WindowEvent::CloseRequested { api, .. } = api {
                 api.prevent_close();
-                if let Some(window) = core::handle::Handle::get_window() {
+                if let Some(window) = WindowManager::get_main_window() {
                     let _ = window.hide();
                 }
             }

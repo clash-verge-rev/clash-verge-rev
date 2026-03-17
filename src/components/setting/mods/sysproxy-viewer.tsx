@@ -1,4 +1,4 @@
-import { EditRounded } from "@mui/icons-material";
+import { EditRounded } from '@mui/icons-material'
 import {
   Autocomplete,
   Box,
@@ -11,8 +11,8 @@ import {
   styled,
   TextField,
   Typography,
-} from "@mui/material";
-import { useLockFn } from "ahooks";
+} from '@mui/material'
+import { useLockFn } from 'ahooks'
 import {
   forwardRef,
   useEffect,
@@ -20,9 +20,9 @@ import {
   useMemo,
   useRef,
   useState,
-} from "react";
-import { useTranslation } from "react-i18next";
-import { mutate } from "swr";
+} from 'react'
+import { useTranslation } from 'react-i18next'
+import { mutate } from 'swr'
 
 import {
   BaseDialog,
@@ -31,88 +31,86 @@ import {
   DialogRef,
   Switch,
   TooltipIcon,
-} from "@/components/base";
-import { EditorViewer } from "@/components/profile/editor-viewer";
-import { useVerge } from "@/hooks/use-verge";
-import { useAppData } from "@/providers/app-data-context";
+} from '@/components/base'
+import { EditorViewer } from '@/components/profile/editor-viewer'
+import { useSystemProxyState } from '@/hooks/use-system-proxy-state'
+import { useVerge } from '@/hooks/use-verge'
+import { useAppData } from '@/providers/app-data-context'
 import {
   getAutotemProxy,
   getNetworkInterfacesInfo,
   getSystemHostname,
   getSystemProxy,
   patchVergeConfig,
-} from "@/services/cmds";
-import { showNotice } from "@/services/notice-service";
-import { debugLog } from "@/utils/debug";
-import getSystem from "@/utils/get-system";
+} from '@/services/cmds'
+import { showNotice } from '@/services/notice-service'
+import { debugLog } from '@/utils/debug'
+import getSystem from '@/utils/get-system'
 
 const sleep = (ms: number) =>
   new Promise<void>((resolve) => {
-    setTimeout(resolve, ms);
-  });
+    setTimeout(resolve, ms)
+  })
 
 const DEFAULT_PAC = `function FindProxyForURL(url, host) {
   return "PROXY %proxy_host%:%mixed-port%; SOCKS5 %proxy_host%:%mixed-port%; DIRECT;";
-}`;
+}`
 
 /** NO_PROXY validation */
 
 // *., cdn*., *, etc.
-const domain_subdomain_part = String.raw`(?:[a-z0-9\-\*]+\.|\*)*`;
+const domain_subdomain_part = String.raw`(?:[a-z0-9\-\*]+\.|\*)*`
 // .*, .cn, .moe, .co*, *
-const domain_tld_part = String.raw`(?:\w{2,64}\*?|\*)`;
+const domain_tld_part = String.raw`(?:\w{2,64}\*?|\*)`
 // *epicgames*, *skk.moe, *.skk.moe, skk.*, sponsor.cdn.skk.moe, *.*, etc.
 // also matches 192.168.*, 10.*, 127.0.0.*, etc. (partial ipv4)
-const rDomainSimple = domain_subdomain_part + domain_tld_part;
+const rDomainSimple = domain_subdomain_part + domain_tld_part
 
-const ipv4_part = String.raw`\d{1,3}`;
+const ipv4_part = String.raw`\d{1,3}`
 
-const ipv6_part = "(?:[a-fA-F0-9:])+";
+const ipv6_part = '(?:[a-fA-F0-9:])+'
 
-const rLocal = `localhost|<local>|localdomain`;
+const rLocal = `localhost|<local>|localdomain`
 
 const getValidReg = (isWindows: boolean) => {
   // 127.0.0.1 (full ipv4)
-  const rIPv4Unix = String.raw`(?:${ipv4_part}\.){3}${ipv4_part}(?:\/\d{1,2})?`;
-  const rIPv4Windows = String.raw`(?:${ipv4_part}\.){3}${ipv4_part}`;
+  const rIPv4Unix = String.raw`(?:${ipv4_part}\.){3}${ipv4_part}(?:\/\d{1,2})?`
+  const rIPv4Windows = String.raw`(?:${ipv4_part}\.){3}${ipv4_part}`
 
-  const rIPv6Unix = String.raw`(?:${ipv6_part}:+)+${ipv6_part}(?:\/\d{1,3})?`;
-  const rIPv6Windows = String.raw`(?:${ipv6_part}:+)+${ipv6_part}`;
+  const rIPv6Unix = String.raw`(?:${ipv6_part}:+)+${ipv6_part}(?:\/\d{1,3})?`
+  const rIPv6Windows = String.raw`(?:${ipv6_part}:+)+${ipv6_part}`
 
   const rValidPart = `${rDomainSimple}|${
     isWindows ? rIPv4Windows : rIPv4Unix
-  }|${isWindows ? rIPv6Windows : rIPv6Unix}|${rLocal}`;
-  const separator = isWindows ? ";" : ",";
-  const rValid = String.raw`^(${rValidPart})(?:${separator}\s?(${rValidPart}))*${separator}?$`;
+  }|${isWindows ? rIPv6Windows : rIPv6Unix}|${rLocal}`
+  const separator = isWindows ? ';' : ','
+  const rValid = String.raw`^(${rValidPart})(?:${separator}\s?(${rValidPart}))*${separator}?$`
 
-  return new RegExp(rValid);
-};
+  return new RegExp(rValid)
+}
 
 const splitBypass = (value?: string) =>
-  (value ?? "")
+  (value ?? '')
     .split(/[,\n;\r]+/)
     .map((item) => item.trim())
-    .filter(Boolean);
+    .filter(Boolean)
 
 export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
-  const { t } = useTranslation();
-  const systemName = getSystem();
-  const isWindows = systemName === "windows";
-  const validReg = useMemo(() => getValidReg(isWindows), [isWindows]);
+  const { t } = useTranslation()
+  const systemName = getSystem()
+  const isWindows = systemName === 'windows'
+  const validReg = useMemo(() => getValidReg(isWindows), [isWindows])
 
-  const [open, setOpen] = useState(false);
-  const [editorOpen, setEditorOpen] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const { verge, patchVerge, mutateVerge } = useVerge();
-  const [hostOptions, setHostOptions] = useState<string[]>([]);
+  const [open, setOpen] = useState(false)
+  const [editorOpen, setEditorOpen] = useState(false)
+  const [pacEditorValue, setPacEditorValue] = useState(DEFAULT_PAC)
+  const [pacEditorSavedValue, setPacEditorSavedValue] = useState(DEFAULT_PAC)
+  const [saving, setSaving] = useState(false)
+  const { verge, patchVerge, mutateVerge } = useVerge()
+  const [hostOptions, setHostOptions] = useState<string[]>([])
 
-  type SysProxy = Awaited<ReturnType<typeof getSystemProxy>>;
-  const [sysproxy, setSysproxy] = useState<SysProxy>();
-
-  type AutoProxy = Awaited<ReturnType<typeof getAutotemProxy>>;
-  const [autoproxy, setAutoproxy] = useState<AutoProxy>();
-
-  const { clashConfig } = useAppData();
+  const { clashConfig } = useAppData()
+  const { indicator: isProxyReallyEnabled } = useSystemProxyState()
 
   const {
     enable_system_proxy: enabled,
@@ -124,7 +122,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
     system_proxy_bypass,
     proxy_guard_duration,
     proxy_host,
-  } = verge ?? {};
+  } = verge ?? {}
 
   const [value, setValue] = useState({
     guard: enable_proxy_guard,
@@ -134,67 +132,67 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
     use_default: use_default_bypass ?? true,
     pac: proxy_auto_config,
     pac_content: pac_file_content ?? DEFAULT_PAC,
-    proxy_host: proxy_host ?? "127.0.0.1",
-  });
+    proxy_host: proxy_host ?? '127.0.0.1',
+  })
 
-  const separator = useMemo(() => (isWindows ? ";" : ","), [isWindows]);
+  const separator = useMemo(() => (isWindows ? ';' : ','), [isWindows])
 
   const defaultBypass = () => {
     if (isWindows) {
-      return "localhost;127.*;192.168.*;10.*;172.16.*;172.17.*;172.18.*;172.19.*;172.20.*;172.21.*;172.22.*;172.23.*;172.24.*;172.25.*;172.26.*;172.27.*;172.28.*;172.29.*;172.30.*;172.31.*;<local>";
+      return 'localhost;127.*;192.168.*;10.*;172.16.*;172.17.*;172.18.*;172.19.*;172.20.*;172.21.*;172.22.*;172.23.*;172.24.*;172.25.*;172.26.*;172.27.*;172.28.*;172.29.*;172.30.*;172.31.*;<local>'
     }
-    if (systemName === "linux") {
-      return "localhost,127.0.0.1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,::1";
+    if (systemName === 'linux') {
+      return 'localhost,127.0.0.1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,::1'
     }
-    return "127.0.0.1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,localhost,*.local,*.crashlytics.com,<local>";
-  };
+    return '127.0.0.1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,localhost,*.local,*.crashlytics.com,<local>'
+  }
 
-  const prevMixedPortRef = useRef(clashConfig?.mixedPort);
+  const prevMixedPortRef = useRef(clashConfig?.mixedPort)
 
   useEffect(() => {
-    const mixedPort = clashConfig?.mixedPort;
+    const mixedPort = clashConfig?.mixedPort
     if (!mixedPort || mixedPort === prevMixedPortRef.current) {
-      return;
+      return
     }
 
-    prevMixedPortRef.current = mixedPort;
+    prevMixedPortRef.current = mixedPort
 
     const updateProxy = async () => {
       try {
-        const currentSysProxy = await getSystemProxy();
-        const currentAutoProxy = await getAutotemProxy();
+        const currentSysProxy = await getSystemProxy()
+        const currentAutoProxy = await getAutotemProxy()
 
         if (value.pac ? currentAutoProxy?.enable : currentSysProxy?.enable) {
-          await patchVergeConfig({ enable_system_proxy: false });
-          await sleep(200);
-          await patchVergeConfig({ enable_system_proxy: true });
+          await patchVergeConfig({ enable_system_proxy: false })
+          await sleep(200)
+          await patchVergeConfig({ enable_system_proxy: true })
           await Promise.all([
-            mutate("getSystemProxy"),
-            mutate("getAutotemProxy"),
-          ]);
+            mutate('getSystemProxy'),
+            mutate('getAutotemProxy'),
+          ])
         }
       } catch (err) {
-        showNotice.error(err);
+        showNotice.error(err)
       }
-    };
+    }
 
-    updateProxy();
-  }, [clashConfig?.mixedPort, value.pac]);
+    updateProxy()
+  }, [clashConfig?.mixedPort, value.pac])
 
-  const { systemProxyAddress } = useAppData();
+  const { systemProxyAddress } = useAppData()
 
   // 为当前状态计算系统代理地址
   const getSystemProxyAddress = useMemo(() => {
-    if (!clashConfig) return "-";
+    if (!clashConfig) return '-'
 
-    const isPacMode = value.pac ?? false;
+    const isPacMode = value.pac ?? false
 
     if (isPacMode) {
-      const host = value.proxy_host || "127.0.0.1";
-      const port = verge?.verge_mixed_port || clashConfig.mixedPort || 7897;
-      return `${host}:${port}`;
+      const host = value.proxy_host || '127.0.0.1'
+      const port = verge?.verge_mixed_port || clashConfig.mixedPort || 7897
+      return `${host}:${port}`
     } else {
-      return systemProxyAddress;
+      return systemProxyAddress
     }
   }, [
     value.pac,
@@ -202,13 +200,13 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
     verge?.verge_mixed_port,
     clashConfig,
     systemProxyAddress,
-  ]);
+  ])
   const getCurrentPacUrl = useMemo(() => {
-    const host = value.proxy_host || "127.0.0.1";
+    const host = value.proxy_host || '127.0.0.1'
     // 根据环境判断PAC端口
-    const port = import.meta.env.DEV ? 11233 : 33331;
-    return `http://${host}:${port}/commands/pac`;
-  }, [value.proxy_host]);
+    const port = import.meta.env.DEV ? 11233 : 33331
+    return `http://${host}:${port}/commands/pac`
+  }, [value.proxy_host])
 
   const bypassError =
     value.enable_bypass_check &&
@@ -216,11 +214,26 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
     !value.use_default &&
     value.bypass
       ? !validReg.test(value.bypass)
-      : false;
+      : false
+
+  const openPacEditor = () => {
+    const nextPac = value.pac_content ?? DEFAULT_PAC
+    setPacEditorValue(nextPac)
+    setPacEditorSavedValue(nextPac)
+    setEditorOpen(true)
+  }
+
+  const handleSavePac = useLockFn(async () => {
+    const nextPac =
+      pacEditorValue.trim().length > 0 ? pacEditorValue : DEFAULT_PAC
+
+    setValue((current) => ({ ...current, pac_content: nextPac }))
+    setPacEditorSavedValue(nextPac)
+  })
 
   useImperativeHandle(ref, () => ({
     open: () => {
-      setOpen(true);
+      setOpen(true)
       setValue({
         guard: enable_proxy_guard,
         enable_bypass_check: enable_bypass_check ?? true,
@@ -229,78 +242,76 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
         use_default: use_default_bypass ?? true,
         pac: proxy_auto_config,
         pac_content: pac_file_content ?? DEFAULT_PAC,
-        proxy_host: proxy_host ?? "127.0.0.1",
-      });
-      getSystemProxy().then((p) => setSysproxy(p));
-      getAutotemProxy().then((p) => setAutoproxy(p));
-      fetchNetworkInterfaces();
+        proxy_host: proxy_host ?? '127.0.0.1',
+      })
+      fetchNetworkInterfaces()
     },
     close: () => setOpen(false),
-  }));
+  }))
 
   // 获取网络接口和主机名
   const fetchNetworkInterfaces = async () => {
     try {
       // 获取系统网络接口信息
-      const interfaces = await getNetworkInterfacesInfo();
-      const ipAddresses: string[] = [];
+      const interfaces = await getNetworkInterfacesInfo()
+      const ipAddresses: string[] = []
 
       // 从interfaces中提取IPv4和IPv6地址
       interfaces.forEach((iface) => {
         iface.addr.forEach((address) => {
           if (address.V4 && address.V4.ip) {
-            ipAddresses.push(address.V4.ip);
+            ipAddresses.push(address.V4.ip)
           }
           if (address.V6 && address.V6.ip) {
-            ipAddresses.push(address.V6.ip);
+            ipAddresses.push(address.V6.ip)
           }
-        });
-      });
+        })
+      })
 
       // 获取当前系统的主机名
-      let hostname = "";
+      let hostname = ''
       try {
-        hostname = await getSystemHostname();
-        debugLog("获取到主机名:", hostname);
+        hostname = await getSystemHostname()
+        debugLog('获取到主机名:', hostname)
       } catch (err) {
-        console.error("获取主机名失败:", err);
+        console.error('获取主机名失败:', err)
       }
 
       // 构建选项列表
-      const options = ["127.0.0.1", "localhost"];
+      const options = ['127.0.0.1', 'localhost']
 
       // 确保主机名添加到列表，即使它是空字符串也记录下来
       if (hostname) {
         // 如果主机名不是localhost或127.0.0.1，则添加它
-        if (hostname !== "localhost" && hostname !== "127.0.0.1") {
-          hostname = hostname + ".local";
-          options.push(hostname);
-          debugLog("主机名已添加到选项中:", hostname);
+        if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
+          hostname = hostname + '.local'
+          options.push(hostname)
+          debugLog('主机名已添加到选项中:', hostname)
         } else {
-          debugLog("主机名与已有选项重复:", hostname);
+          debugLog('主机名与已有选项重复:', hostname)
         }
       } else {
-        debugLog("主机名为空");
+        debugLog('主机名为空')
       }
 
       // 添加IP地址
-      options.push(...ipAddresses);
+      options.push(...ipAddresses)
 
       // 去重
-      const uniqueOptions = Array.from(new Set(options));
-      debugLog("最终选项列表:", uniqueOptions);
-      setHostOptions(uniqueOptions);
+      const uniqueOptions = Array.from(new Set(options))
+      debugLog('最终选项列表:', uniqueOptions)
+      setHostOptions(uniqueOptions)
     } catch (error) {
-      console.error("获取网络接口失败:", error);
+      console.error('获取网络接口失败:', error)
       // 失败时至少提供基本选项
-      setHostOptions(["127.0.0.1", "localhost"]);
+      setHostOptions(['127.0.0.1', 'localhost'])
     }
-  };
+  }
 
   const onSave = useLockFn(async () => {
     if (value.duration < 1) {
-      showNotice.error("settings.modals.sysproxy.messages.durationTooShort");
-      return;
+      showNotice.error('settings.modals.sysproxy.messages.durationTooShort')
+      return
     }
     if (
       value.enable_bypass_check &&
@@ -309,75 +320,75 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
       value.bypass &&
       !validReg.test(value.bypass)
     ) {
-      showNotice.error("settings.modals.sysproxy.messages.invalidBypass");
-      return;
+      showNotice.error('settings.modals.sysproxy.messages.invalidBypass')
+      return
     }
 
     // 修改验证规则，允许IP和主机名
     const ipv4Regex =
-      /^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+      /^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/
     const ipv6Regex =
-      /^(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))$/;
+      /^(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))$/
     const hostnameRegex =
-      /^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9-]*[A-Za-z0-9])$/;
+      /^(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9-]*[a-zA-Z0-9])\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9-]*[A-Za-z0-9])$/
 
     if (
       !ipv4Regex.test(value.proxy_host) &&
       !ipv6Regex.test(value.proxy_host) &&
       !hostnameRegex.test(value.proxy_host)
     ) {
-      showNotice.error("settings.modals.sysproxy.messages.invalidProxyHost");
-      return;
+      showNotice.error('settings.modals.sysproxy.messages.invalidProxyHost')
+      return
     }
 
-    setSaving(true);
-    setOpen(false);
-    setSaving(false);
-    const patch: Partial<IVergeConfig> = {};
+    setSaving(true)
+    setOpen(false)
+    setSaving(false)
+    const patch: Partial<IVergeConfig> = {}
 
     if (value.guard !== enable_proxy_guard) {
-      patch.enable_proxy_guard = value.guard;
+      patch.enable_proxy_guard = value.guard
     }
     if (value.enable_bypass_check !== enable_bypass_check) {
-      patch.enable_bypass_check = value.enable_bypass_check;
+      patch.enable_bypass_check = value.enable_bypass_check
     }
     if (value.duration !== proxy_guard_duration) {
-      patch.proxy_guard_duration = value.duration;
+      patch.proxy_guard_duration = value.duration
     }
     if (value.bypass !== system_proxy_bypass) {
-      patch.system_proxy_bypass = value.bypass;
+      patch.system_proxy_bypass = value.bypass
     }
     if (value.pac !== proxy_auto_config) {
-      patch.proxy_auto_config = value.pac;
+      patch.proxy_auto_config = value.pac
     }
     if (value.use_default !== use_default_bypass) {
-      patch.use_default_bypass = value.use_default;
+      patch.use_default_bypass = value.use_default
     }
 
-    let pacContent = value.pac_content;
+    let pacContent = value.pac_content
     if (pacContent) {
-      pacContent = pacContent.replace(/%proxy_host%/g, value.proxy_host);
+      pacContent = pacContent.replace(/%proxy_host%/g, value.proxy_host)
       // 将 mixed-port 转换为字符串
-      const mixedPortStr = (clashConfig?.mixedPort || "").toString();
-      pacContent = pacContent.replace(/%mixed-port%/g, mixedPortStr);
+      const mixedPortStr = (clashConfig?.mixedPort || '').toString()
+      pacContent = pacContent.replace(/%mixed-port%/g, mixedPortStr)
     }
 
     if (pacContent !== pac_file_content) {
-      patch.pac_file_content = pacContent;
+      patch.pac_file_content = pacContent
     }
 
     // 处理IPv6地址，如果是IPv6地址但没有被方括号包围，则添加方括号
-    let proxyHost = value.proxy_host;
+    let proxyHost = value.proxy_host
     if (
       ipv6Regex.test(proxyHost) &&
-      !proxyHost.startsWith("[") &&
-      !proxyHost.endsWith("]")
+      !proxyHost.startsWith('[') &&
+      !proxyHost.endsWith(']')
     ) {
-      proxyHost = `[${proxyHost}]`;
+      proxyHost = `[${proxyHost}]`
     }
 
     if (proxyHost !== proxy_host) {
-      patch.proxy_host = proxyHost;
+      patch.proxy_host = proxyHost
     }
 
     // 判断是否需要重置系统代理
@@ -386,65 +397,65 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
       proxyHost !== proxy_host ||
       pacContent !== pac_file_content ||
       value.bypass !== system_proxy_bypass ||
-      value.use_default !== use_default_bypass;
+      value.use_default !== use_default_bypass
 
     Promise.resolve().then(async () => {
       try {
         // 乐观更新本地状态
         if (Object.keys(patch).length > 0) {
-          mutateVerge({ ...verge, ...patch }, false);
+          mutateVerge({ ...verge, ...patch }, false)
         }
         if (Object.keys(patch).length > 0) {
-          await patchVerge(patch);
+          await patchVerge(patch)
         }
         setTimeout(async () => {
           try {
             await Promise.all([
-              mutate("getSystemProxy"),
-              mutate("getAutotemProxy"),
-            ]);
+              mutate('getSystemProxy'),
+              mutate('getAutotemProxy'),
+            ])
 
             // 如果需要重置代理且代理当前启用
             if (needResetProxy && enabled) {
               const [currentSysProxy, currentAutoProxy] = await Promise.all([
                 getSystemProxy(),
                 getAutotemProxy(),
-              ]);
+              ])
 
               const isProxyActive = value.pac
                 ? currentAutoProxy?.enable
-                : currentSysProxy?.enable;
+                : currentSysProxy?.enable
 
               if (isProxyActive) {
-                await patchVergeConfig({ enable_system_proxy: false });
-                await new Promise((resolve) => setTimeout(resolve, 50));
-                await patchVergeConfig({ enable_system_proxy: true });
+                await patchVergeConfig({ enable_system_proxy: false })
+                await new Promise((resolve) => setTimeout(resolve, 50))
+                await patchVergeConfig({ enable_system_proxy: true })
                 await Promise.all([
-                  mutate("getSystemProxy"),
-                  mutate("getAutotemProxy"),
-                ]);
+                  mutate('getSystemProxy'),
+                  mutate('getAutotemProxy'),
+                ])
               }
             }
           } catch (err) {
-            console.warn("代理状态更新失败:", err);
+            console.warn('代理状态更新失败:', err)
           }
-        }, 50);
+        }, 50)
       } catch (err) {
-        console.error("配置保存失败:", err);
-        mutateVerge();
-        showNotice.error(err);
+        console.error('配置保存失败:', err)
+        mutateVerge()
+        showNotice.error(err)
         // setOpen(true);
       }
-    });
-  });
+    })
+  })
 
   return (
     <BaseDialog
       open={open}
-      title={t("settings.modals.sysproxy.title")}
+      title={t('settings.modals.sysproxy.title')}
       contentSx={{ width: 450, maxHeight: 565 }}
-      okBtn={t("shared.actions.save")}
-      cancelBtn={t("shared.actions.cancel")}
+      okBtn={t('shared.actions.save')}
+      cancelBtn={t('shared.actions.cancel')}
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}
       onOk={onSave}
@@ -453,27 +464,23 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
     >
       <List>
         <BaseFieldset
-          label={t("settings.modals.sysproxy.fieldsets.currentStatus")}
+          label={t('settings.modals.sysproxy.fieldsets.currentStatus')}
           padding="15px 10px"
         >
           <FlexBox>
             <Typography className="label">
-              {t("settings.modals.sysproxy.fields.enableStatus")}
+              {t('settings.modals.sysproxy.fields.enableStatus')}
             </Typography>
             <Typography className="value">
-              {value.pac
-                ? autoproxy?.enable
-                  ? t("shared.statuses.enabled")
-                  : t("shared.statuses.disabled")
-                : sysproxy?.enable
-                  ? t("shared.statuses.enabled")
-                  : t("shared.statuses.disabled")}
+              {isProxyReallyEnabled
+                ? t('shared.statuses.enabled')
+                : t('shared.statuses.disabled')}
             </Typography>
           </FlexBox>
           {!value.pac && (
             <FlexBox>
               <Typography className="label">
-                {t("settings.modals.sysproxy.fields.serverAddr")}
+                {t('settings.modals.sysproxy.fields.serverAddr')}
               </Typography>
               <Typography className="value">{getSystemProxyAddress}</Typography>
             </FlexBox>
@@ -481,17 +488,17 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
           {value.pac && (
             <FlexBox>
               <Typography className="label">
-                {t("settings.modals.sysproxy.fields.pacUrl")}
+                {t('settings.modals.sysproxy.fields.pacUrl')}
               </Typography>
               <Typography className="value">
-                {getCurrentPacUrl || "-"}
+                {getCurrentPacUrl || '-'}
               </Typography>
             </FlexBox>
           )}
         </BaseFieldset>
-        <ListItem sx={{ padding: "5px 2px" }}>
+        <ListItem sx={{ padding: '5px 2px' }}>
           <ListItemText
-            primary={t("settings.modals.sysproxy.fields.proxyHost")}
+            primary={t('settings.modals.sysproxy.fields.proxyHost')}
           />
           <Autocomplete
             size="small"
@@ -505,20 +512,20 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
             onChange={(_, newValue) => {
               setValue((v) => ({
                 ...v,
-                proxy_host: newValue || "127.0.0.1",
-              }));
+                proxy_host: newValue || '127.0.0.1',
+              }))
             }}
             onInputChange={(_, newInputValue) => {
               setValue((v) => ({
                 ...v,
-                proxy_host: newInputValue || "127.0.0.1",
-              }));
+                proxy_host: newInputValue || '127.0.0.1',
+              }))
             }}
           />
         </ListItem>
-        <ListItem sx={{ padding: "5px 2px" }}>
+        <ListItem sx={{ padding: '5px 2px' }}>
           <ListItemText
-            primary={t("settings.modals.sysproxy.fields.usePacMode")}
+            primary={t('settings.modals.sysproxy.fields.usePacMode')}
           />
           <Switch
             edge="end"
@@ -528,27 +535,27 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
           />
         </ListItem>
 
-        <ListItem sx={{ padding: "5px 2px" }}>
+        <ListItem sx={{ padding: '5px 2px' }}>
           <ListItemText
-            primary={t("settings.modals.sysproxy.fields.proxyGuard")}
-            sx={{ maxWidth: "fit-content" }}
+            primary={t('settings.modals.sysproxy.fields.proxyGuard')}
+            sx={{ maxWidth: 'fit-content' }}
           />
           <TooltipIcon
-            title={t("settings.modals.sysproxy.tooltips.proxyGuard")}
-            sx={{ opacity: "0.7" }}
+            title={t('settings.modals.sysproxy.tooltips.proxyGuard')}
+            sx={{ opacity: '0.7' }}
           />
           <Switch
             edge="end"
             disabled={!enabled}
             checked={value.guard}
             onChange={(_, e) => setValue((v) => ({ ...v, guard: e }))}
-            sx={{ marginLeft: "auto" }}
+            sx={{ marginLeft: 'auto' }}
           />
         </ListItem>
 
-        <ListItem sx={{ padding: "5px 2px" }}>
+        <ListItem sx={{ padding: '5px 2px' }}>
           <ListItemText
-            primary={t("settings.modals.sysproxy.fields.guardDuration")}
+            primary={t('settings.modals.sysproxy.fields.guardDuration')}
           />
           <TextField
             disabled={!enabled}
@@ -563,16 +570,16 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
             onChange={(e) => {
               setValue((v) => ({
                 ...v,
-                duration: +e.target.value.replace(/\D/, ""),
-              }));
+                duration: +e.target.value.replace(/\D/, ''),
+              }))
             }}
           />
         </ListItem>
         {!value.pac && (
-          <ListItem sx={{ padding: "5px 2px" }}>
+          <ListItem sx={{ padding: '5px 2px' }}>
             <ListItemText
               primary={t(
-                "settings.modals.sysproxy.fields.alwaysUseDefaultBypass",
+                'settings.modals.sysproxy.fields.alwaysUseDefaultBypass',
               )}
             />
             <Switch
@@ -581,25 +588,25 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
               checked={value.use_default}
               onChange={(_, e) => {
                 if (!e && !value.bypass) {
-                  const nextBypass = defaultBypass();
+                  const nextBypass = defaultBypass()
                   setValue((v) => ({
                     ...v,
                     use_default: e,
                     // 当取消选择use_default且当前bypass为空时，填充默认值
                     bypass: nextBypass,
-                  }));
-                  return;
+                  }))
+                  return
                 }
-                setValue((v) => ({ ...v, use_default: e }));
+                setValue((v) => ({ ...v, use_default: e }))
               }}
             />
           </ListItem>
         )}
 
         {!value.pac && (
-          <ListItem sx={{ padding: "5px 2px" }}>
+          <ListItem sx={{ padding: '5px 2px' }}>
             <ListItemText
-              primary={t("settings.modals.sysproxy.fields.enableBypassCheck")}
+              primary={t('settings.modals.sysproxy.fields.enableBypassCheck')}
             />
             <Switch
               edge="end"
@@ -614,27 +621,27 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
 
         {!value.pac && !value.use_default && (
           <BaseSplitChipEditor
-            value={value.bypass ?? ""}
+            value={value.bypass ?? ''}
             separator={separator}
             disabled={!enabled}
             error={bypassError}
             helperText={
               bypassError
-                ? t("settings.modals.sysproxy.messages.invalidBypass")
+                ? t('settings.modals.sysproxy.messages.invalidBypass')
                 : undefined
             }
             placeholder="localhost"
-            ariaLabel={t("settings.modals.sysproxy.fields.proxyBypass")}
+            ariaLabel={t('settings.modals.sysproxy.fields.proxyBypass')}
             onChange={(nextValue) => {
-              setValue((v) => ({ ...v, bypass: nextValue }));
+              setValue((v) => ({ ...v, bypass: nextValue }))
             }}
             renderHeader={(modeToggle) => (
-              <ListItem sx={{ padding: "5px 2px" }}>
+              <ListItem sx={{ padding: '5px 2px' }}>
                 <ListItemText
-                  primary={t("settings.modals.sysproxy.fields.proxyBypass")}
+                  primary={t('settings.modals.sysproxy.fields.proxyBypass')}
                 />
                 {modeToggle ? (
-                  <Box sx={{ marginLeft: "auto" }}>{modeToggle}</Box>
+                  <Box sx={{ marginLeft: 'auto' }}>{modeToggle}</Box>
                 ) : null}
               </ListItem>
             )}
@@ -644,10 +651,10 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
         {!value.pac && value.use_default && (
           <>
             <ListItemText
-              primary={t("settings.modals.sysproxy.fields.bypass")}
+              primary={t('settings.modals.sysproxy.fields.bypass')}
             />
-            <Box sx={{ padding: "0 2px 5px" }}>
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+            <Box sx={{ padding: '0 2px 5px' }}>
+              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
                 {splitBypass(defaultBypass()).map((item) => (
                   <Chip key={item} label={item} size="small" />
                 ))}
@@ -657,34 +664,28 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
         )}
 
         {value.pac && (
-          <ListItem sx={{ padding: "5px 2px", alignItems: "start" }}>
+          <ListItem sx={{ padding: '5px 2px', alignItems: 'start' }}>
             <ListItemText
-              primary={t("settings.modals.sysproxy.fields.pacScriptContent")}
-              sx={{ padding: "3px 0" }}
+              primary={t('settings.modals.sysproxy.fields.pacScriptContent')}
+              sx={{ padding: '3px 0' }}
             />
             <Button
               startIcon={<EditRounded />}
               variant="outlined"
-              onClick={() => {
-                setEditorOpen(true);
-              }}
+              onClick={openPacEditor}
             >
-              {t("settings.modals.sysproxy.actions.editPac")}
+              {t('settings.modals.sysproxy.actions.editPac')}
             </Button>
             {editorOpen && (
               <EditorViewer
                 open={true}
-                title={t("settings.modals.sysproxy.actions.editPac")}
-                initialData={() => Promise.resolve(value.pac_content ?? "")}
-                dataKey="sysproxy-pac"
+                title={t('settings.modals.sysproxy.actions.editPac')}
+                value={pacEditorValue}
                 language="javascript"
-                onSave={(_prev, curr) => {
-                  let pac = DEFAULT_PAC;
-                  if (curr && curr.trim().length > 0) {
-                    pac = curr;
-                  }
-                  setValue((v) => ({ ...v, pac_content: pac }));
-                }}
+                path="sysproxy-pac.js"
+                dirty={pacEditorValue !== pacEditorSavedValue}
+                onChange={setPacEditorValue}
+                onSave={handleSavePac}
                 onClose={() => setEditorOpen(false)}
               />
             )}
@@ -692,10 +693,10 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
         )}
       </List>
     </BaseDialog>
-  );
-});
+  )
+})
 
-const FlexBox = styled("div")`
+const FlexBox = styled('div')`
   display: flex;
   margin-top: 4px;
 
@@ -703,4 +704,4 @@ const FlexBox = styled("div")`
     flex: none;
     //width: 85px;
   }
-`;
+`

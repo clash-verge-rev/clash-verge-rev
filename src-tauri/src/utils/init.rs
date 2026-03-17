@@ -13,10 +13,34 @@ use crate::{
 use anyhow::Result;
 use chrono::{Local, TimeZone as _};
 use clash_verge_logging::Type;
+#[cfg(target_os = "windows")]
+use std::path::Path;
 use std::{path::PathBuf, str::FromStr as _};
 use tauri_plugin_shell::ShellExt as _;
 use tokio::fs;
 use tokio::fs::DirEntry;
+
+#[cfg(target_os = "windows")]
+async fn delete_snapshot_logs(log_dir: &Path) -> Result<()> {
+    let temp_dirs = [
+        log_dir.join("temp"),
+        log_dir.join("service").join("temp"),
+        log_dir.join("sidecar").join("temp"),
+    ];
+
+    for temp_dir in temp_dirs.iter().filter(|d| d.exists()) {
+        let mut entries = fs::read_dir(temp_dir).await?;
+        while let Some(entry) = entries.next_entry().await? {
+            let path = entry.path();
+            if path.extension().and_then(|s| s.to_str()) == Some("log") {
+                let _ = path.remove_if_exists().await;
+                logging!(info, Type::Setup, "delete snapshot log file: {}", path.display());
+            }
+        }
+    }
+
+    Ok(())
+}
 
 // TODO flexi_logger 提供了最大保留天数，或许我们应该用内置删除log文件
 /// 删除log文件
@@ -25,6 +49,9 @@ pub async fn delete_log() -> Result<()> {
     if !log_dir.exists() {
         return Ok(());
     }
+
+    #[cfg(target_os = "windows")]
+    delete_snapshot_logs(&log_dir).await?;
 
     let auto_log_clean = {
         let verge = Config::verge().await;

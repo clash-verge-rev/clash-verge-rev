@@ -32,7 +32,7 @@
       },
       "notifications": {
         "importRetry": "订阅导入失败，尝试使用 Clash 代理导入",
-        "importFail": "使用 Clash 代理导入订阅也失败",
+        "importFail": "使用 Clash 代理导入订阅失败",
         "importNeedsRefresh": "订阅已导入，但可能需要手动刷新",
         "importSuccess": "订阅已成功导入，如未显示请重启应用",
         "profileSwitched": "订阅已切换",

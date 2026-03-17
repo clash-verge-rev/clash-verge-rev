@@ -55,6 +55,7 @@
     "files": "Files"
   },
   "placeholders": {
+    "resetInput": "Eingabefeld leeren",
     "filter": "Filterbedingungen",
     "matchCase": "Groß-/Kleinschreibung beachten",
     "matchWholeWord": "Ganzes Wort übereinstimmen",

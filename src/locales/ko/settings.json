@@ -240,7 +240,8 @@
           "systemProxyTrayIcon": "시스템 프록시 트레이 아이콘",
           "tunTrayIcon": "TUN 트레이 아이콘",
           "enableTrayIcon": "트레이 아이콘 사용",
-          "enableTraySpeed": "트레이 속도 표시 사용"
+          "enableTraySpeed": "트레이 속도 표시 사용",
+          "pauseRenderTrafficStatsOnBlur": "포커스를 잃으면 트래픽 통계 렌더링 일시 중지"
         },
         "tooltips": {
           "hoverNavigator": "알파벳에 마우스를 올리면 해당 프록시 그룹으로 자동 스크롤합니다",
@@ -359,7 +360,7 @@
         "scheduleHelper": "Create local backups in the background at the configured interval.",
         "intervalLabel": "Backup frequency",
         "changeLabel": "Backup on critical changes",
-        "changeHelper": "Automatically back up when the global extend config/script or subscriptions are added, removed, or edited.",
+        "changeHelper": "Automatically backup when Global Extend Config/Script changes.",
         "options": {
           "hours": "Every {{n}} hours",
           "days": "Every {{n}} days"
@@ -481,7 +482,9 @@
         "autoRedirect": "Automatically configures nftables/iptables TCP redirects"
       },
       "messages": {
-        "applied": "설정이 적용되었습니다"
+        "applied": "설정이 적용되었습니다",
+        "invalidRouteExcludeAddress": "유효한 CIDR 대역을 입력하세요",
+        "routeExcludeAddressHint": "IPv4/IPv6 CIDR만 지원합니다. 예: 192.168.0.0/16 또는 fd00::/8"
       }
     },
     "dns": {

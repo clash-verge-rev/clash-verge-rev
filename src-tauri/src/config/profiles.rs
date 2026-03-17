@@ -45,13 +45,9 @@ macro_rules! patch {
 
 impl IProfiles {
     // Helper to find and remove an item by uid from the items vec, returning its file name (if any).
-    fn take_item_file_by_uid(items: &mut Vec<PrfItem>, target_uid: Option<String>) -> Option<String> {
-        for (i, _) in items.iter().enumerate() {
-            if items[i].uid == target_uid {
-                return items.remove(i).file;
-            }
-        }
-        None
+    fn take_item_file_by_uid(items: &mut Vec<PrfItem>, target_uid: Option<&str>) -> Option<String> {
+        let index = items.iter().position(|item| item.uid.as_deref() == target_uid)?;
+        items.remove(index).file
     }
 
     pub async fn new() -> Self {
@@ -267,33 +263,38 @@ impl IProfiles {
     pub async fn delete_item(&mut self, uid: &String) -> Result<bool> {
         let current = self.current.as_ref().unwrap_or(uid);
         let current = current.clone();
-        let item = self.get_item(uid)?;
-        let merge_uid = item.option.as_ref().and_then(|e| e.merge.clone());
-        let script_uid = item.option.as_ref().and_then(|e| e.script.clone());
-        let rules_uid = item.option.as_ref().and_then(|e| e.rules.clone());
-        let proxies_uid = item.option.as_ref().and_then(|e| e.proxies.clone());
-        let groups_uid = item.option.as_ref().and_then(|e| e.groups.clone());
+        let (merge_uid, script_uid, rules_uid, proxies_uid, groups_uid) = {
+            let item = self.get_item(uid)?;
+            let option = item.option.as_ref();
+            (
+                option.and_then(|e| e.merge.clone()),
+                option.and_then(|e| e.script.clone()),
+                option.and_then(|e| e.rules.clone()),
+                option.and_then(|e| e.proxies.clone()),
+                option.and_then(|e| e.groups.clone()),
+            )
+        };
         let mut items = self.items.take().unwrap_or_default();
 
         // remove the main item (if exists) and delete its file
-        if let Some(file) = Self::take_item_file_by_uid(&mut items, Some(uid.clone())) {
+        if let Some(file) = Self::take_item_file_by_uid(&mut items, Some(uid.as_str())) {
             let _ = dirs::app_profiles_dir()?.join(file.as_str()).remove_if_exists().await;
         }
 
         // remove related extension items (merge, script, rules, proxies, groups)
-        if let Some(file) = Self::take_item_file_by_uid(&mut items, merge_uid.clone()) {
+        if let Some(file) = Self::take_item_file_by_uid(&mut items, merge_uid.as_deref()) {
             let _ = dirs::app_profiles_dir()?.join(file.as_str()).remove_if_exists().await;
         }
-        if let Some(file) = Self::take_item_file_by_uid(&mut items, script_uid.clone()) {
+        if let Some(file) = Self::take_item_file_by_uid(&mut items, script_uid.as_deref()) {
             let _ = dirs::app_profiles_dir()?.join(file.as_str()).remove_if_exists().await;
         }
-        if let Some(file) = Self::take_item_file_by_uid(&mut items, rules_uid.clone()) {
+        if let Some(file) = Self::take_item_file_by_uid(&mut items, rules_uid.as_deref()) {
             let _ = dirs::app_profiles_dir()?.join(file.as_str()).remove_if_exists().await;
         }
-        if let Some(file) = Self::take_item_file_by_uid(&mut items, proxies_uid.clone()) {
+        if let Some(file) = Self::take_item_file_by_uid(&mut items, proxies_uid.as_deref()) {
             let _ = dirs::app_profiles_dir()?.join(file.as_str()).remove_if_exists().await;
         }
-        if let Some(file) = Self::take_item_file_by_uid(&mut items, groups_uid.clone()) {
+        if let Some(file) = Self::take_item_file_by_uid(&mut items, groups_uid.as_deref()) {
             let _ = dirs::app_profiles_dir()?.join(file.as_str()).remove_if_exists().await;
         }
         // delete the original uid

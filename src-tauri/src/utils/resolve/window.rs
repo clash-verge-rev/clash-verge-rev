@@ -21,6 +21,11 @@ const DEFAULT_HEIGHT: f64 = 700.0;
 const MINIMAL_WIDTH: f64 = 520.0;
 const MINIMAL_HEIGHT: f64 = 520.0;
 
+#[cfg(target_os = "linux")]
+const DEFAULT_DECORATIONS: bool = false;
+#[cfg(not(target_os = "linux"))]
+const DEFAULT_DECORATIONS: bool = true;
+
 /// 构建新的 WebView 窗口
 pub async fn build_new_window() -> Result<WebviewWindow, String> {
     let app_handle = handle::Handle::app_handle();
@@ -61,8 +66,7 @@ pub async fn build_new_window() -> Result<WebviewWindow, String> {
     )
     .title("Clash Verge")
     .center()
-    // Using WindowManager::prefer_system_titlebar to control if show system built-in titlebar
-    // .decorations(true)
+    .decorations(DEFAULT_DECORATIONS)
     .fullscreen(false)
     .inner_size(DEFAULT_WIDTH, DEFAULT_HEIGHT)
     .min_inner_size(MINIMAL_WIDTH, MINIMAL_HEIGHT)

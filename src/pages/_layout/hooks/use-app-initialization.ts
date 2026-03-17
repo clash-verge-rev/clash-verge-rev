@@ -1,112 +1,112 @@
-import { invoke } from "@tauri-apps/api/core";
-import { useEffect, useRef } from "react";
+import { invoke } from '@tauri-apps/api/core'
+import { useEffect, useRef } from 'react'
 
-import { hideInitialOverlay } from "../utils";
+import { hideInitialOverlay } from '../utils'
 
 export const useAppInitialization = () => {
-  const initRef = useRef(false);
+  const initRef = useRef(false)
 
   useEffect(() => {
-    if (initRef.current) return;
-    initRef.current = true;
+    if (initRef.current) return
+    initRef.current = true
 
-    let isInitialized = false;
-    let isCancelled = false;
-    const timers = new Set<number>();
+    let isInitialized = false
+    let isCancelled = false
+    const timers = new Set<number>()
 
     const scheduleTimeout = (handler: () => void, delay: number) => {
-      if (isCancelled) return -1;
+      if (isCancelled) return -1
       const id = window.setTimeout(() => {
         if (!isCancelled) {
-          handler();
+          handler()
         }
-        timers.delete(id);
-      }, delay);
-      timers.add(id);
-      return id;
-    };
+        timers.delete(id)
+      }, delay)
+      timers.add(id)
+      return id
+    }
 
     const notifyBackend = async (stage?: string) => {
-      if (isCancelled) return;
+      if (isCancelled) return
 
       try {
         if (stage) {
-          await invoke("update_ui_stage", { stage });
+          await invoke('update_ui_stage', { stage })
         } else {
-          await invoke("notify_ui_ready");
+          await invoke('notify_ui_ready')
         }
       } catch (err) {
-        console.error(`[Initialization] Failed to notify backend:`, err);
+        console.error(`[Initialization] Failed to notify backend:`, err)
       }
-    };
+    }
 
     const removeLoadingOverlay = () => {
-      hideInitialOverlay({ schedule: scheduleTimeout });
-    };
+      hideInitialOverlay({ schedule: scheduleTimeout })
+    }
 
     const performInitialization = async () => {
-      if (isCancelled || isInitialized) return;
-      isInitialized = true;
+      if (isCancelled || isInitialized) return
+      isInitialized = true
 
       try {
-        removeLoadingOverlay();
-        await notifyBackend("Loading");
+        removeLoadingOverlay()
+        await notifyBackend('Loading')
 
         await new Promise<void>((resolve) => {
           const check = () => {
-            const root = document.getElementById("root");
+            const root = document.getElementById('root')
             if (root && root.children.length > 0) {
-              resolve();
+              resolve()
             } else {
-              scheduleTimeout(check, 50);
+              scheduleTimeout(check, 50)
             }
-          };
-          check();
-          scheduleTimeout(resolve, 2000);
-        });
+          }
+          check()
+          scheduleTimeout(resolve, 2000)
+        })
 
-        await notifyBackend("DomReady");
-        await new Promise((resolve) => requestAnimationFrame(resolve));
-        await notifyBackend("ResourcesLoaded");
-        await notifyBackend();
+        await notifyBackend('DomReady')
+        await new Promise((resolve) => requestAnimationFrame(resolve))
+        await notifyBackend('ResourcesLoaded')
+        await notifyBackend()
       } catch (error) {
         if (!isCancelled) {
-          console.error("[Initialization] Failed:", error);
-          removeLoadingOverlay();
-          notifyBackend().catch(console.error);
+          console.error('[Initialization] Failed:', error)
+          removeLoadingOverlay()
+          notifyBackend().catch(console.error)
         }
       }
-    };
+    }
 
     const checkBackendReady = async () => {
       try {
-        if (isCancelled) return;
+        if (isCancelled) return
 
-        await invoke("update_ui_stage", { stage: "Loading" });
-        performInitialization();
+        await invoke('update_ui_stage', { stage: 'Loading' })
+        performInitialization()
       } catch {
-        scheduleTimeout(performInitialization, 1500);
+        scheduleTimeout(performInitialization, 1500)
       }
-    };
+    }
 
-    scheduleTimeout(checkBackendReady, 100);
+    scheduleTimeout(checkBackendReady, 100)
     scheduleTimeout(() => {
       if (!isInitialized) {
-        removeLoadingOverlay();
-        notifyBackend().catch(console.error);
+        removeLoadingOverlay()
+        notifyBackend().catch(console.error)
       }
-    }, 5000);
+    }, 5000)
 
     return () => {
-      isCancelled = true;
+      isCancelled = true
       timers.forEach((id) => {
         try {
-          window.clearTimeout(id);
+          window.clearTimeout(id)
         } catch (error) {
-          console.warn("[Initialization] Failed to clear timer:", error);
+          console.warn('[Initialization] Failed to clear timer:', error)
         }
-      });
-      timers.clear();
-    };
-  }, []);
-};
+      })
+      timers.clear()
+    }
+  }, [])
+}

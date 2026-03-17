@@ -24,7 +24,7 @@ jobs:
       - name: Check src-tauri changes
         if: github.event_name != 'workflow_dispatch'
         id: check_changes
-        uses: dorny/paths-filter@v3
+        uses: dorny/paths-filter@v4
         with:
           filters: |
             rust:
@@ -59,8 +59,8 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           save-if: ${{ github.ref == 'refs/heads/dev' }}
-          prefix-key: "v1-rust"
-          key: "rust-shared-stable-${{ matrix.os }}-${{ matrix.target }}"
+          prefix-key: 'v1-rust'
+          key: 'rust-shared-stable-${{ matrix.os }}-${{ matrix.target }}'
           workspaces: |
             . -> target
           cache-all-crates: true

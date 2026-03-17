@@ -55,6 +55,7 @@
     "files": "파일"
   },
   "placeholders": {
+    "resetInput": "입력 필드 지우기",
     "filter": "필터 조건",
     "matchCase": "대/소문자 구분",
     "matchWholeWord": "단어 전체 일치",

@@ -55,6 +55,7 @@
     "files": "Files"
   },
   "placeholders": {
+    "resetInput": "Clear Input",
     "filter": "Filter conditions",
     "matchCase": "Match Case",
     "matchWholeWord": "Match Whole Word",

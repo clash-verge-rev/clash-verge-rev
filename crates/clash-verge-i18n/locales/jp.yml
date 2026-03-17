@@ -5,7 +5,7 @@ notifications:
     body: ダッシュボードの表示状態が更新されました。
   clashModeChanged:
     title: モード切り替え
-    body: "{mode} に切り替えました。"
+    body: '{mode} に切り替えました。'
   systemProxyToggled:
     title: システムプロキシ
     body: システムプロキシの状態が更新されました。

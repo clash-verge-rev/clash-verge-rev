@@ -89,8 +89,23 @@ impl CoreManager {
                 Ok(())
             }
             Err(err) => {
-                Config::runtime().await.discard();
-                Err(anyhow!("Failed to apply config: {}", err))
+                logging!(
+                    warn,
+                    Type::Core,
+                    "Failed to apply configuration by mihomo api, restart core to apply it, error msg: {err}"
+                );
+                match self.restart_core().await {
+                    Ok(_) => {
+                        Config::runtime().await.apply();
+                        logging!(info, Type::Core, "Configuration applied after restart");
+                        Ok(())
+                    }
+                    Err(err) => {
+                        logging!(error, Type::Core, "Failed to restart core: {}", err);
+                        Config::runtime().await.discard();
+                        Err(anyhow!("Failed to apply config: {}", err))
+                    }
+                }
             }
         }
     }

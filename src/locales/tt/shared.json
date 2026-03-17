@@ -55,6 +55,7 @@
     "files": "Files"
   },
   "placeholders": {
+    "resetInput": "кертү кырын чистарту",
     "filter": "Фильтр шартлары",
     "matchCase": "Регистрны исәпкә алу",
     "matchWholeWord": "Сүзнең тулы туры килүе",

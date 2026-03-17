@@ -49,7 +49,9 @@
       "minimumNodesHint": "체인 프록시는 최소 2개의 노드가 필요합니다. 하나 더 추가하세요.",
       "connectFailed": "프록시 체인 연결 실패",
       "disconnectFailed": "프록시 체인 연결 해제 실패",
-      "duplicateNode": "프록시 노드가 체인에 이미 존재합니다"
+      "duplicateNode": "프록시 노드가 체인에 이미 존재합니다",
+      "entryNode": "입구",
+      "exitNode": "출구"
     },
     "messages": {
       "directMode": "직접 모드"

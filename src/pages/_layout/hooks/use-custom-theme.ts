@@ -1,150 +1,150 @@
-import { alpha, createTheme, Theme as MuiTheme, Shadows } from "@mui/material";
+import { alpha, createTheme, Theme as MuiTheme, Shadows } from '@mui/material'
 import {
   getCurrentWebviewWindow,
   WebviewWindow,
-} from "@tauri-apps/api/webviewWindow";
-import { Theme as TauriOsTheme } from "@tauri-apps/api/window";
-import { useEffect, useMemo } from "react";
+} from '@tauri-apps/api/webviewWindow'
+import { Theme as TauriOsTheme } from '@tauri-apps/api/window'
+import { useEffect, useMemo } from 'react'
 
-import { useVerge } from "@/hooks/use-verge";
-import { defaultDarkTheme, defaultTheme } from "@/pages/_theme";
-import { useSetThemeMode, useThemeMode } from "@/services/states";
+import { useVerge } from '@/hooks/use-verge'
+import { defaultDarkTheme, defaultTheme } from '@/pages/_theme'
+import { useSetThemeMode, useThemeMode } from '@/services/states'
 
-const CSS_INJECTION_SCOPE_ROOT = "[data-css-injection-root]";
+const CSS_INJECTION_SCOPE_ROOT = '[data-css-injection-root]'
 const CSS_INJECTION_SCOPE_LIMIT =
-  ':is(.monaco-editor .view-lines, .monaco-editor .view-line, .monaco-editor .margin, .monaco-editor .margin-view-overlays, .monaco-editor .view-overlays, .monaco-editor [class^="mtk"], .monaco-editor [class*=" mtk"])';
+  ':is(.monaco-editor .view-lines, .monaco-editor .view-line, .monaco-editor .margin, .monaco-editor .margin-view-overlays, .monaco-editor .view-overlays, .monaco-editor [class^="mtk"], .monaco-editor [class*=" mtk"])'
 const TOP_LEVEL_AT_RULES = [
-  "@charset",
-  "@import",
-  "@namespace",
-  "@font-face",
-  "@keyframes",
-  "@counter-style",
-  "@page",
-  "@property",
-  "@font-feature-values",
-  "@color-profile",
-];
-let cssScopeSupport: boolean | null = null;
+  '@charset',
+  '@import',
+  '@namespace',
+  '@font-face',
+  '@keyframes',
+  '@counter-style',
+  '@page',
+  '@property',
+  '@font-feature-values',
+  '@color-profile',
+]
+let cssScopeSupport: boolean | null = null
 
 const canUseCssScope = () => {
   if (cssScopeSupport !== null) {
-    return cssScopeSupport;
+    return cssScopeSupport
   }
   try {
-    const testStyle = document.createElement("style");
-    testStyle.textContent = "@scope (:root) { }";
-    document.head.appendChild(testStyle);
-    cssScopeSupport = !!testStyle.sheet?.cssRules?.length;
-    document.head.removeChild(testStyle);
+    const testStyle = document.createElement('style')
+    testStyle.textContent = '@scope (:root) { }'
+    document.head.appendChild(testStyle)
+    cssScopeSupport = !!testStyle.sheet?.cssRules?.length
+    document.head.removeChild(testStyle)
   } catch {
-    cssScopeSupport = false;
+    cssScopeSupport = false
   }
-  return cssScopeSupport;
-};
+  return cssScopeSupport
+}
 
 const wrapCssInjectionWithScope = (css?: string) => {
   if (!css?.trim()) {
-    return "";
+    return ''
   }
-  const lowerCss = css.toLowerCase();
+  const lowerCss = css.toLowerCase()
   const hasTopLevelOnlyRule = TOP_LEVEL_AT_RULES.some((rule) =>
     lowerCss.includes(rule),
-  );
+  )
   if (hasTopLevelOnlyRule) {
-    return null;
+    return null
   }
-  const scopeRoot = CSS_INJECTION_SCOPE_ROOT;
-  const scopeLimit = CSS_INJECTION_SCOPE_LIMIT;
+  const scopeRoot = CSS_INJECTION_SCOPE_ROOT
+  const scopeLimit = CSS_INJECTION_SCOPE_LIMIT
   const scopedBlock = `@scope (${scopeRoot}) to (${scopeLimit}) {
 ${css}
-}`;
-  return scopedBlock;
-};
+}`
+  return scopedBlock
+}
 
 /**
  * custom theme
  */
 export const useCustomTheme = () => {
-  const appWindow: WebviewWindow = useMemo(() => getCurrentWebviewWindow(), []);
-  const { verge } = useVerge();
-  const { theme_mode, theme_setting } = verge ?? {};
-  const mode = useThemeMode();
-  const setMode = useSetThemeMode();
-  const userBackgroundImage = theme_setting?.background_image || "";
-  const hasUserBackground = !!userBackgroundImage;
+  const appWindow: WebviewWindow = useMemo(() => getCurrentWebviewWindow(), [])
+  const { verge } = useVerge()
+  const { theme_mode, theme_setting } = verge ?? {}
+  const mode = useThemeMode()
+  const setMode = useSetThemeMode()
+  const userBackgroundImage = theme_setting?.background_image || ''
+  const hasUserBackground = !!userBackgroundImage
 
   useEffect(() => {
-    if (theme_mode === "light" || theme_mode === "dark") {
-      setMode(theme_mode);
+    if (theme_mode === 'light' || theme_mode === 'dark') {
+      setMode(theme_mode)
     }
-  }, [theme_mode, setMode]);
+  }, [theme_mode, setMode])
 
   useEffect(() => {
-    if (theme_mode !== "system") {
-      return;
+    if (theme_mode !== 'system') {
+      return
     }
 
-    let isMounted = true;
+    let isMounted = true
 
     const timerId = setTimeout(() => {
-      if (!isMounted) return;
+      if (!isMounted) return
       appWindow
         .theme()
         .then((systemTheme) => {
           if (isMounted && systemTheme) {
-            setMode(systemTheme);
+            setMode(systemTheme)
           }
         })
         .catch((err) => {
-          console.error("Failed to get initial system theme:", err);
-        });
-    }, 0);
+          console.error('Failed to get initial system theme:', err)
+        })
+    }, 0)
 
     const unlistenPromise = appWindow.onThemeChanged(({ payload }) => {
       if (isMounted) {
-        setMode(payload);
+        setMode(payload)
       }
-    });
+    })
 
     return () => {
-      isMounted = false;
-      clearTimeout(timerId);
+      isMounted = false
+      clearTimeout(timerId)
       unlistenPromise
         .then((unlistenFn) => {
-          if (typeof unlistenFn === "function") {
-            unlistenFn();
+          if (typeof unlistenFn === 'function') {
+            unlistenFn()
           }
         })
         .catch((err) => {
-          console.error("Failed to unlisten from theme changes:", err);
-        });
-    };
-  }, [theme_mode, appWindow, setMode]);
+          console.error('Failed to unlisten from theme changes:', err)
+        })
+    }
+  }, [theme_mode, appWindow, setMode])
 
   useEffect(() => {
     if (theme_mode === undefined) {
-      return;
+      return
     }
 
-    if (theme_mode === "system") {
+    if (theme_mode === 'system') {
       appWindow.setTheme(null).catch((err) => {
         console.error(
-          "Failed to set window theme to follow system (setTheme(null)):",
+          'Failed to set window theme to follow system (setTheme(null)):',
           err,
-        );
-      });
+        )
+      })
     } else if (mode) {
       appWindow.setTheme(mode as TauriOsTheme).catch((err) => {
-        console.error(`Failed to set window theme to ${mode}:`, err);
-      });
+        console.error(`Failed to set window theme to ${mode}:`, err)
+      })
     }
-  }, [mode, appWindow, theme_mode]);
+  }, [mode, appWindow, theme_mode])
 
   const theme = useMemo(() => {
-    const setting = theme_setting || {};
-    const dt = mode === "light" ? defaultTheme : defaultDarkTheme;
-    let muiTheme: MuiTheme;
+    const setting = theme_setting || {}
+    const dt = mode === 'light' ? defaultTheme : defaultDarkTheme
+    let muiTheme: MuiTheme
 
     try {
       muiTheme = createTheme({
@@ -168,15 +168,15 @@ export const useCustomTheme = () => {
             default: dt.background_color,
           },
         },
-        shadows: Array(25).fill("none") as Shadows,
+        shadows: Array(25).fill('none') as Shadows,
         typography: {
           fontFamily: setting.font_family
             ? `${setting.font_family}, ${dt.font_family}`
             : dt.font_family,
         },
-      });
+      })
     } catch (e) {
-      console.error("Error creating MUI theme, falling back to defaults:", e);
+      console.error('Error creating MUI theme, falling back to defaults:', e)
       muiTheme = createTheme({
         breakpoints: {
           values: { xs: 0, sm: 650, md: 900, lg: 1200, xl: 1536 },
@@ -196,71 +196,67 @@ export const useCustomTheme = () => {
           },
         },
         typography: { fontFamily: dt.font_family },
-      });
+      })
     }
 
-    const rootEle = document.documentElement;
+    const rootEle = document.documentElement
     if (rootEle) {
-      const backgroundColor =
-        mode === "light" ? "#ECECEC" : dt.background_color;
-      const selectColor = mode === "light" ? "#f5f5f5" : "#3E3E3E";
-      const scrollColor = mode === "light" ? "#90939980" : "#555555";
+      const backgroundColor = mode === 'light' ? '#ECECEC' : dt.background_color
+      const selectColor = mode === 'light' ? '#f5f5f5' : '#3E3E3E'
+      const scrollColor = mode === 'light' ? '#90939980' : '#555555'
       const dividerColor =
-        mode === "light" ? "rgba(0, 0, 0, 0.06)" : "rgba(255, 255, 255, 0.06)";
-      rootEle.style.setProperty("--divider-color", dividerColor);
-      rootEle.style.setProperty("--background-color", backgroundColor);
-      rootEle.style.setProperty("--selection-color", selectColor);
-      rootEle.style.setProperty("--scroller-color", scrollColor);
+        mode === 'light' ? 'rgba(0, 0, 0, 0.06)' : 'rgba(255, 255, 255, 0.06)'
+      rootEle.style.setProperty('--divider-color', dividerColor)
+      rootEle.style.setProperty('--background-color', backgroundColor)
+      rootEle.style.setProperty('--selection-color', selectColor)
+      rootEle.style.setProperty('--scroller-color', scrollColor)
+      rootEle.style.setProperty('--primary-main', muiTheme.palette.primary.main)
       rootEle.style.setProperty(
-        "--primary-main",
-        muiTheme.palette.primary.main,
-      );
-      rootEle.style.setProperty(
-        "--background-color-alpha",
+        '--background-color-alpha',
         alpha(muiTheme.palette.primary.main, 0.1),
-      );
+      )
       rootEle.style.setProperty(
-        "--window-border-color",
-        mode === "light" ? "#cccccc" : "#1E1E1E",
-      );
+        '--window-border-color',
+        mode === 'light' ? '#cccccc' : '#1E1E1E',
+      )
       rootEle.style.setProperty(
-        "--scrollbar-bg",
-        mode === "light" ? "#f1f1f1" : "#2E303D",
-      );
+        '--scrollbar-bg',
+        mode === 'light' ? '#f1f1f1' : '#2E303D',
+      )
       rootEle.style.setProperty(
-        "--scrollbar-thumb",
-        mode === "light" ? "#c1c1c1" : "#555555",
-      );
+        '--scrollbar-thumb',
+        mode === 'light' ? '#c1c1c1' : '#555555',
+      )
       rootEle.style.setProperty(
-        "--user-background-image",
-        hasUserBackground ? `url('${userBackgroundImage}')` : "none",
-      );
+        '--user-background-image',
+        hasUserBackground ? `url('${userBackgroundImage}')` : 'none',
+      )
       rootEle.style.setProperty(
-        "--background-blend-mode",
-        setting.background_blend_mode || "normal",
-      );
+        '--background-blend-mode',
+        setting.background_blend_mode || 'normal',
+      )
       rootEle.style.setProperty(
-        "--background-opacity",
+        '--background-opacity',
         setting.background_opacity !== undefined
           ? String(setting.background_opacity)
-          : "1",
-      );
-      rootEle.setAttribute("data-css-injection-root", "true");
+          : '1',
+      )
+      rootEle.setAttribute('data-css-injection-root', 'true')
     }
 
-    let styleElement = document.querySelector("style#verge-theme");
+    let styleElement = document.querySelector('style#verge-theme')
     if (!styleElement) {
-      styleElement = document.createElement("style");
-      styleElement.id = "verge-theme";
-      document.head.appendChild(styleElement!);
+      styleElement = document.createElement('style')
+      styleElement.id = 'verge-theme'
+      document.head.appendChild(styleElement!)
     }
 
     if (styleElement) {
-      let scopedCss: string | null = null;
+      let scopedCss: string | null = null
       if (canUseCssScope() && setting.css_injection) {
-        scopedCss = wrapCssInjectionWithScope(setting.css_injection);
+        scopedCss = wrapCssInjectionWithScope(setting.css_injection)
       }
-      const effectiveInjectedCss = scopedCss ?? setting.css_injection ?? "";
+      const effectiveInjectedCss = scopedCss ?? setting.css_injection ?? ''
       const globalStyles = `
         /* 修复滚动条样式 */
         ::-webkit-scrollbar {
@@ -273,7 +269,7 @@ export const useCustomTheme = () => {
           border-radius: 4px;
         }
         ::-webkit-scrollbar-thumb:hover {
-          background-color: ${mode === "light" ? "#a1a1a1" : "#666666"};
+          background-color: ${mode === 'light' ? '#a1a1a1' : '#666666'};
         }
 
         /* 背景图处理 */
@@ -289,7 +285,7 @@ export const useCustomTheme = () => {
             background-blend-mode: var(--background-blend-mode);
             opacity: var(--background-opacity);
           `
-              : ""
+              : ''
           }
         }
 
@@ -300,7 +296,7 @@ export const useCustomTheme = () => {
 
         /* 确保模态框和对话框也使用暗色主题 */
         .MuiDialog-paper {
-          background-color: ${mode === "light" ? "#ffffff" : "#2E303D"} !important;
+          background-color: ${mode === 'light' ? '#ffffff' : '#2E303D'} !important;
         }
 
         /* 移除可能的白色点或线条 */
@@ -308,25 +304,25 @@ export const useCustomTheme = () => {
           outline: none !important;
           box-shadow: none !important;
         }
-      `;
+      `
 
-      styleElement.innerHTML = effectiveInjectedCss + globalStyles;
+      styleElement.innerHTML = effectiveInjectedCss + globalStyles
     }
 
-    const { palette } = muiTheme;
+    const { palette } = muiTheme
     setTimeout(() => {
-      const dom = document.querySelector("#Gradient2");
+      const dom = document.querySelector('#Gradient2')
       if (dom) {
         dom.innerHTML = `
         <stop offset="0%" stop-color="${palette.primary.main}" />
         <stop offset="80%" stop-color="${palette.primary.dark}" />
         <stop offset="100%" stop-color="${palette.primary.dark}" />
-        `;
+        `
       }
-    }, 0);
+    }, 0)
 
-    return muiTheme;
-  }, [mode, theme_setting, userBackgroundImage, hasUserBackground]);
+    return muiTheme
+  }, [mode, theme_setting, userBackgroundImage, hasUserBackground])
 
-  return { theme };
-};
+  return { theme }
+}

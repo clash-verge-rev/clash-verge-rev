@@ -15,7 +15,7 @@ jobs:
 
       - name: Check frontend changes
         id: check_frontend
-        uses: dorny/paths-filter@v3
+        uses: dorny/paths-filter@v4
         with:
           filters: |
             frontend:
@@ -47,8 +47,8 @@ jobs:
       - uses: actions/setup-node@v6
         if: steps.check_frontend.outputs.frontend == 'true'
         with:
-          node-version: "24.13.0"
-          cache: "pnpm"
+          node-version: '24.14.0'
+          cache: 'pnpm'
 
       - name: Restore pnpm cache
         if: steps.check_frontend.outputs.frontend == 'true'

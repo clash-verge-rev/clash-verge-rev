@@ -5,7 +5,7 @@ notifications:
     body: Gösterge panelinin görünürlüğü güncellendi.
   clashModeChanged:
     title: Mod Değişimi
-    body: "{mode} moduna geçildi."
+    body: '{mode} moduna geçildi.'
   systemProxyToggled:
     title: Sistem Vekil'i
     body: Sistem vekil'i durumu güncellendi.

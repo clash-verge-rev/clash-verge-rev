@@ -18,7 +18,7 @@ jobs:
 
       - name: Check Rust changes
         id: check_rust
-        uses: dorny/paths-filter@v3
+        uses: dorny/paths-filter@v4
         with:
           filters: |
             rust:
@@ -43,13 +43,13 @@ jobs:
   #   name: taplo (.toml files)
   #   runs-on: ubuntu-latest
   #   steps:
-  #     - uses: actions/checkout@v4
+  #     - uses: actions/checkout@v6
 
   #     - name: install Rust stable
   #       uses: dtolnay/rust-toolchain@stable
 
   #     - name: install taplo-cli
-  #       uses: taiki-e/install-action@v2
+  #       uses: taiki-e/install-action@v2.68.8
   #       with:
   #         tool: taplo-cli
 
