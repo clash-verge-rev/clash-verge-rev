@@ -383,11 +383,11 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
             </GuardState>
           </Item>
         )}
-        {OS === "macos" && (
+        {OS === 'macos' && (
           <Item>
             <ListItemText
               primary={t(
-                "settings.components.verge.layout.fields.enableTraySpeed",
+                'settings.components.verge.layout.fields.enableTraySpeed',
               )}
             />
             <GuardState
