@@ -34,7 +34,11 @@ export default defineConfig([
       globals: globals.browser,
       parserOptions: {
         projectService: {
-          allowDefaultProject: ['eslint.config.ts', 'src/polyfills/*.js'],
+          allowDefaultProject: [
+            'eslint.config.ts',
+            `vite.config.mts`,
+            'src/polyfills/*.js',
+          ],
         },
       },
     },
