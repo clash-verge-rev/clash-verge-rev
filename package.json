@@ -127,7 +127,7 @@
       "eslint --fix --max-warnings=0",
       "prettier --write"
     ],
-    "*.{js,mjs,css,scss,json,md,toml}": [
+    "*.{js,mjs,css,scss,json,md,toml,yaml,yml}": [
       "prettier --write"
     ]
   },
