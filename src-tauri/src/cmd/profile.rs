@@ -173,6 +173,13 @@ pub async fn delete_profile(index: String) -> CmdResult {
     // 使用Send-safe helper函数
     let should_update = profiles_delete_item_safe(&index).await.stringify_err()?;
     profiles_save_file_safe().await.stringify_err()?;
+    if let Err(e) = Tray::global().update_tooltip().await {
+        logging!(warn, Type::Cmd, "Warning: 异步更新托盘提示失败: {e}");
+    }
+
+    if let Err(e) = Tray::global().update_menu().await {
+        logging!(warn, Type::Cmd, "Warning: 异步更新托盘菜单失败: {e}");
+    }
     if should_update {
         Config::profiles().await.apply();
         match CoreManager::global().update_config().await {
