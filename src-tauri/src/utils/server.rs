@@ -70,11 +70,93 @@ fn singleton_unauthorized() -> warp::reply::WithStatus<std::string::String> {
     )
 }
 
+async fn notify_existing_instance_visible(
+    client: &reqwest::Client,
+    port: u16,
+    token: Option<&str>,
+) -> Result<()> {
+    if let Some(token) = token {
+        match client
+            .post(format!("http://127.0.0.1:{port}/commands/visible"))
+            .header(SINGLETON_TOKEN_HEADER, token)
+            .send()
+            .await?
+            .error_for_status()
+        {
+            Ok(_) => return Ok(()),
+            Err(err) => {
+                logging!(
+                    warn,
+                    Type::Window,
+                    "singleton auth visible request failed, fallback to legacy GET: {err}"
+                );
+            }
+        }
+    }
+
+    client
+        .get(format!("http://127.0.0.1:{port}/commands/visible"))
+        .send()
+        .await?
+        .error_for_status()?;
+    Ok(())
+}
+
+#[cfg(not(target_os = "macos"))]
+async fn notify_existing_instance_scheme(
+    client: &reqwest::Client,
+    port: u16,
+    param: &str,
+    token: Option<&str>,
+) -> Result<()> {
+    let query = QueryParam {
+        param: param.to_string().into(),
+    };
+
+    if let Some(token) = token {
+        match client
+            .post(format!("http://127.0.0.1:{port}/commands/scheme"))
+            .header(SINGLETON_TOKEN_HEADER, token)
+            .form(&query)
+            .send()
+            .await?
+            .error_for_status()
+        {
+            Ok(_) => return Ok(()),
+            Err(err) => {
+                logging!(
+                    warn,
+                    Type::Window,
+                    "singleton auth scheme request failed, fallback to legacy GET: {err}"
+                );
+            }
+        }
+    }
+
+    client
+        .get(format!("http://127.0.0.1:{port}/commands/scheme"))
+        .query(&query)
+        .send()
+        .await?
+        .error_for_status()?;
+    Ok(())
+}
+
 /// check whether there is already exists
 pub async fn check_singleton() -> Result<()> {
     let port = IVerge::get_singleton_port();
     if is_port_in_use(port) {
-        let token = read_singleton_token()?;
+        let token = match read_singleton_token() {
+            Ok(token) => Some(token),
+            Err(err) => {
+                logging!(
+                    warn,
+                    Type::Window,
+                    "singleton auth token unavailable, fallback to legacy notify: {err}"
+                );
+                None
+            }
+        };
         let client = ClientBuilder::new().timeout(Duration::from_millis(500)).build()?;
         // 需要确保 Send
         #[allow(clippy::needless_collect)]
@@ -84,22 +166,26 @@ pub async fn check_singleton() -> Result<()> {
             {
                 let param = argvs[1].as_str();
                 if param.starts_with("clash:") {
-                    client
-                        .post(format!("http://127.0.0.1:{port}/commands/scheme"))
-                        .header(SINGLETON_TOKEN_HEADER, token.as_str())
-                        .form(&QueryParam {
-                            param: param.to_string().into(),
-                        })
-                        .send()
-                        .await?;
+                    if let Err(err) =
+                        notify_existing_instance_scheme(&client, port, param, token.as_deref()).await
+                    {
+                        logging!(
+                            warn,
+                            Type::Window,
+                            "failed to notify existing instance scheme handler: {err}"
+                        );
+                    }
                 }
             }
         } else {
-            client
-                .post(format!("http://127.0.0.1:{port}/commands/visible"))
-                .header(SINGLETON_TOKEN_HEADER, token.as_str())
-                .send()
-                .await?;
+            if let Err(err) = notify_existing_instance_visible(&client, port, token.as_deref()).await
+            {
+                logging!(
+                    warn,
+                    Type::Window,
+                    "failed to notify existing instance visible handler: {err}"
+                );
+            }
         }
         logging!(error, Type::Window, "failed to setup singleton listen server");
         bail!("app exists");
