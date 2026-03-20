@@ -1,10 +1,12 @@
 import Visibility from '@mui/icons-material/Visibility'
 import VisibilityOff from '@mui/icons-material/VisibilityOff'
 import {
+  FormControlLabel,
   TextField,
   Button,
   Grid,
   Stack,
+  Switch,
   IconButton,
   InputAdornment,
 } from '@mui/material'
@@ -41,27 +43,38 @@ export const BackupConfigViewer = memo(
   }: BackupConfigViewerProps) => {
     const { t } = useTranslation()
     const { verge, mutateVerge } = useVerge()
-    const { webdav_url, webdav_username, webdav_password } = verge || {}
+    const {
+      webdav_url,
+      webdav_username,
+      webdav_password,
+      webdav_danger_accept_invalid_certs,
+    } = verge || {}
     const [showPassword, setShowPassword] = useState(false)
     const usernameRef = useRef<HTMLInputElement>(null)
     const passwordRef = useRef<HTMLInputElement>(null)
     const urlRef = useRef<HTMLInputElement>(null)
 
-    const { register, handleSubmit, watch } = useForm<IWebDavConfig>({
+    const { register, handleSubmit, watch, setValue } = useForm<IWebDavConfig>({
       defaultValues: {
         url: webdav_url,
         username: webdav_username,
         password: webdav_password,
+        danger_accept_invalid_certs:
+          webdav_danger_accept_invalid_certs ?? false,
       },
     })
     const url = watch('url')
     const username = watch('username')
     const password = watch('password')
+    const dangerAcceptInvalidCerts =
+      watch('danger_accept_invalid_certs') ?? false
 
     const webdavChanged =
       webdav_url !== url ||
       webdav_username !== username ||
-      webdav_password !== password
+      webdav_password !== password ||
+      (webdav_danger_accept_invalid_certs ?? false) !==
+        dangerAcceptInvalidCerts
 
     const webdavSignature = buildWebdavSignature(verge)
     const webdavStatus = getWebdavStatus(webdavSignature)
@@ -113,13 +126,19 @@ export const BackupConfigViewer = memo(
         webdav_url: data.url,
         webdav_username: data.username,
         webdav_password: data.password,
+        webdav_danger_accept_invalid_certs: data.danger_accept_invalid_certs,
       })
       const trimmedUrl = data.url.trim()
       const trimmedUsername = data.username.trim()
 
       try {
         setLoading(true)
-        await saveWebdavConfig(trimmedUrl, trimmedUsername, data.password)
+        await saveWebdavConfig(
+          trimmedUrl,
+          trimmedUsername,
+          data.password,
+          data.danger_accept_invalid_certs,
+        )
         await mutateVerge(
           (current) =>
             current
@@ -128,6 +147,8 @@ export const BackupConfigViewer = memo(
                   webdav_url: trimmedUrl,
                   webdav_username: trimmedUsername,
                   webdav_password: data.password,
+                  webdav_danger_accept_invalid_certs:
+                    data.danger_accept_invalid_certs,
                 }
               : current,
           false,
@@ -152,6 +173,7 @@ export const BackupConfigViewer = memo(
         webdav_url: url,
         webdav_username: username,
         webdav_password: password,
+        webdav_danger_accept_invalid_certs: dangerAcceptInvalidCerts,
       })
 
       try {
@@ -227,6 +249,21 @@ export const BackupConfigViewer = memo(
                       ),
                     },
                   }}
+                />
+              </Grid>
+              <Grid size={{ xs: 12 }}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={dangerAcceptInvalidCerts}
+                      onChange={(_, checked) =>
+                        setValue('danger_accept_invalid_certs', checked)
+                      }
+                    />
+                  }
+                  label={t(
+                    'profiles.modals.profileForm.fields.acceptInvalidCerts',
+                  )}
                 />
               </Grid>
             </Grid>

@@ -976,6 +976,7 @@ interface IVergeConfig {
   webdav_url?: string
   webdav_username?: string
   webdav_password?: string
+  webdav_danger_accept_invalid_certs?: boolean
   home_cards?: Record<string, boolean>
   enable_hover_jump_navigator?: boolean
   hover_jump_navigator_delay?: number
@@ -1002,6 +1003,7 @@ interface IWebDavConfig {
   url: string
   username: string
   password: string
+  danger_accept_invalid_certs: boolean
 }
 
 // Traffic monitor types

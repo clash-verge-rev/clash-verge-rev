@@ -9,11 +9,17 @@ use smartstring::alias::String;
 
 /// 保存 WebDAV 配置
 #[tauri::command]
-pub async fn save_webdav_config(url: String, username: String, password: String) -> CmdResult<()> {
+pub async fn save_webdav_config(
+    url: String,
+    username: String,
+    password: String,
+    danger_accept_invalid_certs: bool,
+) -> CmdResult<()> {
     let patch = IVerge {
         webdav_url: Some(url),
         webdav_username: Some(username),
         webdav_password: Some(password),
+        webdav_danger_accept_invalid_certs: Some(danger_accept_invalid_certs),
         ..IVerge::default()
     };
     Config::verge().await.edit_draft(|e| e.patch_config(&patch));

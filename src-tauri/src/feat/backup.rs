@@ -30,6 +30,7 @@ async fn finalize_restored_verge_config(
     webdav_url: Option<String>,
     webdav_username: Option<String>,
     webdav_password: Option<String>,
+    webdav_danger_accept_invalid_certs: Option<bool>,
 ) -> Result<()> {
     // Do NOT silently fallback to defaults; a broken/missing verge.yaml means restore failed.
     // Propagate the error so the UI/user can react accordingly.
@@ -37,6 +38,7 @@ async fn finalize_restored_verge_config(
     restored.webdav_url = webdav_url;
     restored.webdav_username = webdav_username;
     restored.webdav_password = webdav_password;
+    restored.webdav_danger_accept_invalid_certs = webdav_danger_accept_invalid_certs;
     restored.save_file().await?;
 
     let restored_clash = IClashTemp::new().await;
@@ -114,6 +116,7 @@ pub async fn restore_webdav_backup(filename: String) -> Result<()> {
     let webdav_url = verge_data.webdav_url.clone();
     let webdav_username = verge_data.webdav_username.clone();
     let webdav_password = verge_data.webdav_password.clone();
+    let webdav_danger_accept_invalid_certs = verge_data.webdav_danger_accept_invalid_certs;
 
     let backup_storage_path = app_home_dir()
         .map_err(|e| anyhow::anyhow!("Failed to get app home dir: {e}"))?
@@ -131,7 +134,13 @@ pub async fn restore_webdav_backup(filename: String) -> Result<()> {
     let file = AsyncHandler::spawn_blocking(move || std::fs::File::open(&value)).await??;
     let mut zip = zip::ZipArchive::new(file)?;
     zip.extract(app_home_dir()?)?;
-    let res = finalize_restored_verge_config(webdav_url, webdav_username, webdav_password).await;
+    let res = finalize_restored_verge_config(
+        webdav_url,
+        webdav_username,
+        webdav_password,
+        webdav_danger_accept_invalid_certs,
+    )
+    .await;
     // Finally remove the temp file (attempt cleanup even if finalize fails)
     let _ = backup_storage_path.remove_if_exists().await;
     res
@@ -301,20 +310,32 @@ pub async fn restore_local_backup(filename: String) -> Result<()> {
         return Err(anyhow!("Backup file not found: {}", filename));
     }
 
-    let (webdav_url, webdav_username, webdav_password) = {
+    let (
+        webdav_url,
+        webdav_username,
+        webdav_password,
+        webdav_danger_accept_invalid_certs,
+    ) = {
         let verge = Config::verge().await;
         let verge = verge.latest_arc();
         (
             verge.webdav_url.clone(),
             verge.webdav_username.clone(),
             verge.webdav_password.clone(),
+            verge.webdav_danger_accept_invalid_certs,
         )
     };
 
     let file = AsyncHandler::spawn_blocking(move || std::fs::File::open(&target_path)).await??;
     let mut zip = zip::ZipArchive::new(file)?;
     zip.extract(app_home_dir()?)?;
-    finalize_restored_verge_config(webdav_url, webdav_username, webdav_password).await?;
+    finalize_restored_verge_config(
+        webdav_url,
+        webdav_username,
+        webdav_password,
+        webdav_danger_accept_invalid_certs,
+    )
+    .await?;
     Ok(())
 }
 

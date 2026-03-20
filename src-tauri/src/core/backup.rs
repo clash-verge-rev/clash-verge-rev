@@ -30,6 +30,7 @@ struct WebDavConfig {
     url: String,
     username: String,
     password: String,
+    danger_accept_invalid_certs: bool,
 }
 
 #[derive(Debug, Clone, Copy, Hash, Eq, PartialEq)]
@@ -99,6 +100,9 @@ impl WebDavClient {
                         .into(),
                     username: verge.webdav_username.clone().unwrap_or_default(),
                     password: verge.webdav_password.clone().unwrap_or_default(),
+                    danger_accept_invalid_certs: verge
+                        .webdav_danger_accept_invalid_certs
+                        .unwrap_or(false),
                 };
 
                 // 存储配置到 ArcSwapOption
@@ -112,7 +116,8 @@ impl WebDavClient {
             .set_agent(
                 reqwest::Client::builder()
                     .use_rustls_tls()
-                    .danger_accept_invalid_certs(true)
+                    .danger_accept_invalid_certs(config.danger_accept_invalid_certs)
+                    .danger_accept_invalid_hostnames(config.danger_accept_invalid_certs)
                     .timeout(Duration::from_secs(op.timeout()))
                     .user_agent(format!("clash-verge/{APP_VERSION} ({OS} WebDAV-Client)"))
                     .redirect(reqwest::redirect::Policy::custom(|attempt| {

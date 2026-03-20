@@ -233,6 +233,8 @@ pub struct IVerge {
     )]
     pub webdav_password: Option<String>,
 
+    pub webdav_danger_accept_invalid_certs: Option<bool>,
+
     #[serde(skip)]
     pub enable_tray_speed: Option<bool>,
 
@@ -438,6 +440,7 @@ impl IVerge {
             webdav_url: None,
             webdav_username: None,
             webdav_password: None,
+            webdav_danger_accept_invalid_certs: Some(false),
             enable_tray_speed: Some(false),
             // enable_tray_icon: Some(true),
             tray_proxy_groups_display_mode: Some("default".into()),
@@ -543,6 +546,7 @@ impl IVerge {
         patch!(webdav_url);
         patch!(webdav_username);
         patch!(webdav_password);
+        patch!(webdav_danger_accept_invalid_certs);
         patch!(enable_tray_speed);
         // patch!(enable_tray_icon);
         patch!(tray_proxy_groups_display_mode);
