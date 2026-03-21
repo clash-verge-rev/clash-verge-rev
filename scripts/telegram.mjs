@@ -44,17 +44,23 @@ async function sendTelegramNotification() {
 
   // Markdown 转换为 HTML
   function convertMarkdownToTelegramHTML(content) {
+    // Strip stray HTML tags and markdown bold from heading text
+    const cleanHeading = (text) =>
+      text
+        .replace(/<\/?[^>]+>/g, '')
+        .replace(/\*\*/g, '')
+        .trim()
     return content
       .split('\n')
       .map((line) => {
         if (line.trim().length === 0) {
           return ''
         } else if (line.startsWith('## ')) {
-          return `<b>${line.replace('## ', '')}</b>`
+          return `<b>${cleanHeading(line.replace('## ', ''))}</b>`
         } else if (line.startsWith('### ')) {
-          return `<b>${line.replace('### ', '')}</b>`
+          return `<b>${cleanHeading(line.replace('### ', ''))}</b>`
         } else if (line.startsWith('#### ')) {
-          return `<b>${line.replace('#### ', '')}</b>`
+          return `<b>${cleanHeading(line.replace('#### ', ''))}</b>`
         } else {
           let processedLine = line.replace(
             /\[([^\]]+)\]\(([^)]+)\)/g,
