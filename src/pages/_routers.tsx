@@ -1,11 +1,11 @@
-import DnsRoundedIcon from '@mui/icons-material/DnsRounded'
-import ForkRightRoundedIcon from '@mui/icons-material/ForkRightRounded'
-import HomeRoundedIcon from '@mui/icons-material/HomeRounded'
-import LanguageRoundedIcon from '@mui/icons-material/LanguageRounded'
-import LockOpenRoundedIcon from '@mui/icons-material/LockOpenRounded'
-import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded'
-import SubjectRoundedIcon from '@mui/icons-material/SubjectRounded'
-import WifiRoundedIcon from '@mui/icons-material/WifiRounded'
+import DnsOutlinedIcon from '@mui/icons-material/DnsOutlined'
+import ForkRightOutlinedIcon from '@mui/icons-material/ForkRightOutlined'
+import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined'
+import LanguageOutlinedIcon from '@mui/icons-material/LanguageOutlined'
+import LockOpenOutlinedIcon from '@mui/icons-material/LockOpenOutlined'
+import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined'
+import SubjectOutlinedIcon from '@mui/icons-material/SubjectOutlined'
+import WifiOutlinedIcon from '@mui/icons-material/WifiOutlined'
 import { createBrowserRouter, RouteObject } from 'react-router'
 
 import ConnectionsSvg from '@/assets/image/itemicon/connections.svg?react'
@@ -31,49 +31,49 @@ export const navItems = [
   {
     label: 'layout.components.navigation.tabs.home',
     path: '/',
-    icon: [<HomeRoundedIcon key="mui" />, <HomeSvg key="svg" />],
+    icon: [<HomeOutlinedIcon key="mui" />, <HomeSvg key="svg" />],
     Component: HomePage,
   },
   {
     label: 'layout.components.navigation.tabs.proxies',
     path: '/proxies',
-    icon: [<WifiRoundedIcon key="mui" />, <ProxiesSvg key="svg" />],
+    icon: [<WifiOutlinedIcon key="mui" />, <ProxiesSvg key="svg" />],
     Component: ProxiesPage,
   },
   {
     label: 'layout.components.navigation.tabs.profiles',
     path: '/profile',
-    icon: [<DnsRoundedIcon key="mui" />, <ProfilesSvg key="svg" />],
+    icon: [<DnsOutlinedIcon key="mui" />, <ProfilesSvg key="svg" />],
     Component: ProfilesPage,
   },
   {
     label: 'layout.components.navigation.tabs.connections',
     path: '/connections',
-    icon: [<LanguageRoundedIcon key="mui" />, <ConnectionsSvg key="svg" />],
+    icon: [<LanguageOutlinedIcon key="mui" />, <ConnectionsSvg key="svg" />],
     Component: ConnectionsPage,
   },
   {
     label: 'layout.components.navigation.tabs.rules',
     path: '/rules',
-    icon: [<ForkRightRoundedIcon key="mui" />, <RulesSvg key="svg" />],
+    icon: [<ForkRightOutlinedIcon key="mui" />, <RulesSvg key="svg" />],
     Component: RulesPage,
   },
   {
     label: 'layout.components.navigation.tabs.logs',
     path: '/logs',
-    icon: [<SubjectRoundedIcon key="mui" />, <LogsSvg key="svg" />],
+    icon: [<SubjectOutlinedIcon key="mui" />, <LogsSvg key="svg" />],
     Component: LogsPage,
   },
   {
     label: 'layout.components.navigation.tabs.unlock',
     path: '/unlock',
-    icon: [<LockOpenRoundedIcon key="mui" />, <UnlockSvg key="svg" />],
+    icon: [<LockOpenOutlinedIcon key="mui" />, <UnlockSvg key="svg" />],
     Component: UnlockPage,
   },
   {
     label: 'layout.components.navigation.tabs.settings',
     path: '/settings',
-    icon: [<SettingsRoundedIcon key="mui" />, <SettingsSvg key="svg" />],
+    icon: [<SettingsOutlinedIcon key="mui" />, <SettingsSvg key="svg" />],
     Component: SettingsPage,
   },
 ]
