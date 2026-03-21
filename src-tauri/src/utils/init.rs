@@ -178,8 +178,11 @@ async fn init_dns_config() -> Result<()> {
         (
             "proxy-server-nameserver".into(),
             Value::Sequence(vec![
-                Value::String("https://doh.pub/dns-query".into()),
-                Value::String("https://dns.alidns.com/dns-query".into()),
+                // Use IP addresses to avoid DNS resolution loops
+                // when proxy-server-nameserver domain matches a rule routing to proxy
+                // See: https://github.com/clash-verge-rev/clash-verge-rev/issues/6158
+                Value::String("223.6.6.6".into()),
+                Value::String("8.8.8.8".into()),
                 Value::String("tls://223.5.5.5".into()),
             ]),
         ),
