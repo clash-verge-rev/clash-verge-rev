@@ -25,6 +25,26 @@ use tauri::{
     AppHandle, Wry,
     menu::{CheckMenuItem, IsMenuItem, MenuEvent, MenuItem, PredefinedMenuItem, Submenu},
 };
+
+#[cfg(target_os = "macos")]
+fn format_speed(bytes_per_sec: u64) -> std::string::String {
+    const KB: u64 = 1024;
+    const MB: u64 = 1024 * KB;
+    const GB: u64 = 1024 * MB;
+
+    if bytes_per_sec >= GB {
+        format!("{:.1}G/s", bytes_per_sec as f64 / GB as f64)
+    } else if bytes_per_sec >= MB {
+        format!("{:.1}M/s", bytes_per_sec as f64 / MB as f64)
+    } else {
+        format!("{}K/s", bytes_per_sec / KB)
+    }
+}
+
+#[cfg(target_os = "macos")]
+fn format_tray_speed(up: u64, down: u64) -> std::string::String {
+    format!("↑{} ↓{}", format_speed(up), format_speed(down))
+}
 mod menu_def;
 use menu_def::{MenuIds, MenuTexts};
 
@@ -39,6 +59,8 @@ struct TrayState {}
 
 pub struct Tray {
     limiter: SystemLimiter,
+    #[cfg(target_os = "macos")]
+    speed_task: parking_lot::Mutex<Option<tokio::task::JoinHandle<()>>>,
 }
 
 impl TrayState {
@@ -136,6 +158,8 @@ impl Default for Tray {
     fn default() -> Self {
         Self {
             limiter: Limiter::new(Duration::from_millis(TRAY_CLICK_DEBOUNCE_MS), SystemClock),
+            #[cfg(target_os = "macos")]
+            speed_task: parking_lot::Mutex::new(None),
         }
     }
 }
@@ -272,6 +296,12 @@ impl Tray {
             tray.set_icon(Some(tauri::image::Image::from_bytes(&icon_bytes)?))
         );
         logging_error!(Type::Tray, tray.set_icon_as_template(!is_colorful));
+
+        if verge.enable_tray_speed.unwrap_or(false) {
+            self.start_speed_task();
+        } else {
+            self.stop_speed_task();
+        }
         Ok(())
     }
 
@@ -340,7 +370,7 @@ impl Tray {
             |(main, rest)| format!("{main}+{}", rest.split('.').next().unwrap_or("")),
         );
 
-        let tooltip = format!(
+        let base_tooltip = format!(
             "Clash Verge {}\n{}: {}\n{}: {}\n{}: {}",
             reassembled_version,
             sys_proxy_text,
@@ -350,6 +380,7 @@ impl Tray {
             profile_text,
             current_profile_name
         );
+        let tooltip = base_tooltip;
 
         let Some(tray) = app_handle.tray_by_id("main") else {
             logging!(warn, Type::Tray, "Failed to update tray tooltip: tray not found");
@@ -419,6 +450,79 @@ impl Tray {
             logging!(debug, Type::Tray, "tray click rate limited");
         }
         allow
+    }
+
+    /// 启动托盘速率采集后台任务（1秒轮询）
+    #[cfg(target_os = "macos")]
+    pub fn start_speed_task(&self) {
+        if handle::Handle::global().is_exiting() {
+            return;
+        }
+        let mut guard = self.speed_task.lock();
+        if guard.as_ref().is_some_and(|t| !t.is_finished()) {
+            return; // 已在运行，无需重复启动
+        }
+        let task = tokio::spawn(async move {
+            let mut interval = tokio::time::interval(Duration::from_secs(1));
+            let mut prev_upload: u64 = 0;
+            let mut prev_download: u64 = 0;
+            let mut first = true;
+            loop {
+                interval.tick().await;
+                if handle::Handle::global().is_exiting() {
+                    break;
+                }
+                if !Config::verge().await.latest_arc().enable_tray_speed.unwrap_or(false) {
+                    break;
+                }
+                let result = handle::Handle::mihomo().await.get_connections().await;
+                match result {
+                    Ok(conn) => {
+                        let up_total = conn.upload_total;
+                        let down_total = conn.download_total;
+                        if !first {
+                            let up_speed = up_total.saturating_sub(prev_upload);
+                            let down_speed = down_total.saturating_sub(prev_download);
+                            Self::apply_tray_speed(up_speed, down_speed);
+                        }
+                        first = false;
+                        prev_upload = up_total;
+                        prev_download = down_total;
+                    }
+                    Err(_) => {
+                        if !first {
+                            Self::apply_tray_speed(0, 0);
+                        }
+                    }
+                }
+            }
+        });
+        *guard = Some(task);
+    }
+
+    /// 停止托盘速率采集后台任务并清除速率显示
+    #[cfg(target_os = "macos")]
+    pub fn stop_speed_task(&self) {
+        let mut guard = self.speed_task.lock();
+        if let Some(task) = guard.take() {
+            task.abort();
+        }
+        drop(guard);
+
+        let app_handle = handle::Handle::app_handle();
+        if let Some(tray) = app_handle.tray_by_id("main") {
+            let _ = tray.set_title(Some(""));
+        }
+    }
+
+    /// 将计算出的速率更新到托盘标题（macOS）
+    #[cfg(target_os = "macos")]
+    fn apply_tray_speed(up: u64, down: u64) {
+        let speed_str = format_tray_speed(up, down);
+        let app_handle = handle::Handle::app_handle();
+        if let Some(tray) = app_handle.tray_by_id("main") {
+            logging_error!(Type::Tray, tray.set_title(Some(speed_str.as_str())));
+        }
     }
 }
 

@@ -233,7 +233,6 @@ pub struct IVerge {
     )]
     pub webdav_password: Option<String>,
 
-    #[serde(skip)]
     pub enable_tray_speed: Option<bool>,
 
     // pub enable_tray_icon: Option<bool>,
