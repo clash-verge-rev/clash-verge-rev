@@ -82,8 +82,26 @@ async function sendTelegramNotification() {
       .replace(/<br\s*\/?>/g, '\n')
   }
 
+  // Strip HTML tags not supported by Telegram and escape stray angle brackets
+  function sanitizeTelegramHTML(content) {
+    // Telegram supports: b, strong, i, em, u, ins, s, strike, del,
+    // a, code, pre, blockquote, tg-spoiler, tg-emoji
+    const allowedTags =
+      /^\/?(b|strong|i|em|u|ins|s|strike|del|a|code|pre|blockquote|tg-spoiler|tg-emoji)(\s|>|$)/i
+    return content.replace(/<\/?[^>]*>/g, (tag) => {
+      const inner = tag.replace(/^<\/?/, '').replace(/>$/, '')
+      if (allowedTags.test(inner) || allowedTags.test(tag.slice(1))) {
+        return tag
+      }
+      // Escape unsupported tags so they display as text
+      return tag.replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    })
+  }
+
   releaseContent = normalizeDetailsTags(releaseContent)
-  const formattedContent = convertMarkdownToTelegramHTML(releaseContent)
+  const formattedContent = sanitizeTelegramHTML(
+    convertMarkdownToTelegramHTML(releaseContent),
+  )
 
   const releaseTitle = isAutobuild ? '滚动更新版发布' : '正式发布'
   const encodedVersion = encodeURIComponent(version)
