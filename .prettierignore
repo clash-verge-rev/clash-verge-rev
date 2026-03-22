@@ -10,3 +10,4 @@ src-tauri/gen/
 
 target
 Cargo.lock
+.github/workflows/*.lock.yml

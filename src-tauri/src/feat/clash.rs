@@ -78,10 +78,12 @@ pub async fn change_clash_mode(mode: String) {
     match handle::Handle::mihomo().await.patch_base_config(&json_value).await {
         Ok(_) => {
             // 更新订阅
-            Config::clash().await.edit_draft(|d| d.patch_config(&mapping));
+            let clash = Config::clash().await;
+            clash.edit_draft(|d| d.patch_config(&mapping));
+            clash.apply();
 
             // 分离数据获取和异步调用
-            let clash_data = Config::clash().await.data_arc();
+            let clash_data = clash.data_arc();
             if clash_data.save_config().await.is_ok() {
                 handle::Handle::refresh_clash();
                 logging_error!(Type::Tray, tray::Tray::global().update_mode_menus().await);

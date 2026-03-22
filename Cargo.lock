@@ -1124,7 +1124,7 @@ checksum = "c8d4a3bb8b1e0c1050499d1815f5ab16d04f0959b233085fb31653fbfc9d98f9"
 
 [[package]]
 name = "clash-verge"
-version = "2.4.7"
+version = "2.4.8"
 dependencies = [
  "aes-gcm",
  "anyhow",
