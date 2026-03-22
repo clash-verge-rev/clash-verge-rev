@@ -34,14 +34,38 @@ type ProxyMenuItem = (Option<Submenu<Wry>>, Vec<Box<dyn IsMenuItem<Wry>>>);
 
 const TRAY_CLICK_DEBOUNCE_MS: u64 = 300;
 
-#[derive(Clone)]
-struct TrayState {}
+struct TrayState {
+    menu_texts: MenuTexts,
+    submenu_for_mode: bool,
+    mode_submenu: Option<Submenu<Wry>>,
+    mode_menus: Vec<CheckMenuItem<Wry>>,
 
-pub struct Tray {
-    limiter: SystemLimiter,
+    profile_menus: Vec<CheckMenuItem<Wry>>,
+
+    submenu_for_proxy_group: bool,
+    proxy_group_menus: HashMap<String, Vec<CheckMenuItem<Wry>>>,
+
+    sysproxy_menus: Vec<CheckMenuItem<Wry>>,
 }
 
 impl TrayState {
+    pub fn new() -> Self {
+        Self {
+            menu_texts: MenuTexts::new(),
+            submenu_for_mode: true,
+            mode_submenu: None,
+            mode_menus: Vec::new(),
+            profile_menus: Vec::new(),
+            submenu_for_proxy_group: true,
+            proxy_group_menus: HashMap::new(),
+            sysproxy_menus: Vec::new(),
+        }
+    }
+
+    pub fn get_mode_menus(&self) -> &[CheckMenuItem<Wry>] {
+        &self.mode_menus
+    }
+
     async fn get_tray_icon(verge: &IVerge) -> (bool, Vec<u8>) {
         let system_mode = verge.enable_system_proxy.as_ref().unwrap_or(&false);
         let tun_mode = verge.enable_tun_mode.as_ref().unwrap_or(&false);
@@ -131,20 +155,71 @@ impl TrayState {
     }
 }
 
-impl Default for Tray {
-    #[allow(clippy::unwrap_used)]
-    fn default() -> Self {
-        Self {
-            limiter: Limiter::new(Duration::from_millis(TRAY_CLICK_DEBOUNCE_MS), SystemClock),
-        }
-    }
+pub struct Tray {
+    limiter: SystemLimiter,
+    state: TrayState,
 }
 
 singleton!(Tray, TRAY);
 
 impl Tray {
     fn new() -> Self {
-        Self::default()
+        let app_handle = handle::Handle::app_handle();
+        let mut state = TrayState::new();
+
+        let texts = &state.menu_texts;
+        let rule_mode = CheckMenuItem::with_id(
+            app_handle,
+            MenuIds::RULE_MODE,
+            &texts.rule_mode,
+            true,
+            false,
+            None::<&str>,
+        )
+        .unwrap();
+        let global_mode = CheckMenuItem::with_id(
+            app_handle,
+            MenuIds::GLOBAL_MODE,
+            &texts.global_mode,
+            true,
+            false,
+            None::<&str>,
+        )
+        .unwrap();
+        let direct_mode = CheckMenuItem::with_id(
+            app_handle,
+            MenuIds::DIRECT_MODE,
+            &texts.direct_mode,
+            true,
+            false,
+            None::<&str>,
+        )
+        .unwrap();
+        let mode_menus = vec![rule_mode, global_mode, direct_mode];
+        let mode_menus_refs = &mode_menus
+            .iter()
+            .map(|menu| menu as &dyn IsMenuItem<Wry>)
+            .collect::<Vec<_>>();
+
+        let outbound_modes_label = format!("{} ({})", texts.outbound_modes, clash_verge_i18n::t!("tray.rule"));
+        let mode_submenu = Some(
+            Submenu::with_id_and_items(
+                app_handle,
+                MenuIds::OUTBOUND_MODES,
+                &outbound_modes_label,
+                true,
+                mode_menus_refs,
+            )
+            .unwrap(),
+        );
+
+        state.mode_menus = mode_menus;
+        state.mode_submenu = mode_submenu;
+
+        Self {
+            limiter: Limiter::new(Duration::from_millis(TRAY_CLICK_DEBOUNCE_MS), SystemClock),
+            state,
+        }
     }
 
     pub async fn init(&self) -> Result<()> {
@@ -167,6 +242,36 @@ impl Tray {
                     "System tray creation failed: {e}, Application will continue running without tray icon",
                 );
             }
+        }
+        Ok(())
+    }
+
+    pub async fn update_mode_menus(&self) -> Result<()> {
+        let mode = {
+            Config::clash()
+                .await
+                .latest_arc()
+                .0
+                .get("mode")
+                .map(|val| val.as_str().unwrap_or("rule"))
+                .unwrap_or("rule")
+                .to_owned()
+        };
+        for menu in self.state.mode_menus.iter() {
+            menu.set_checked(menu.id().as_ref().trim_start_matches("tray_").trim_end_matches("_mode") == mode)?;
+        }
+        if self.state.submenu_for_mode
+            && let Some(mode_submenu) = self.state.mode_submenu.as_ref()
+        {
+            let current_mode_text = match mode.as_str() {
+                "global" => clash_verge_i18n::t!("tray.global"),
+                "direct" => clash_verge_i18n::t!("tray.direct"),
+                _ => clash_verge_i18n::t!("tray.rule"),
+            };
+            let outbound_modes_label = format!("{} ({})", self.state.menu_texts.outbound_modes, current_mode_text);
+            println!("{}", outbound_modes_label);
+            // TODO: not take effect on Linux?
+            mode_submenu.set_text(outbound_modes_label)?;
         }
         Ok(())
     }
@@ -680,55 +785,15 @@ async fn create_tray_menu(
         true,
         hotkeys.get("open_or_close_dashboard").map(|s| s.as_str()),
     )?;
-
-    let rule_mode = &CheckMenuItem::with_id(
-        app_handle,
-        MenuIds::RULE_MODE,
-        &texts.rule_mode,
-        true,
-        current_proxy_mode == "rule",
-        hotkeys.get("clash_mode_rule").map(|s| s.as_str()),
-    )?;
-
-    let global_mode = &CheckMenuItem::with_id(
-        app_handle,
-        MenuIds::GLOBAL_MODE,
-        &texts.global_mode,
-        true,
-        current_proxy_mode == "global",
-        hotkeys.get("clash_mode_global").map(|s| s.as_str()),
-    )?;
-
-    let direct_mode = &CheckMenuItem::with_id(
-        app_handle,
-        MenuIds::DIRECT_MODE,
-        &texts.direct_mode,
-        true,
-        current_proxy_mode == "direct",
-        hotkeys.get("clash_mode_direct").map(|s| s.as_str()),
-    )?;
-
-    let outbound_modes = if show_outbound_modes_inline {
-        None
-    } else {
-        let current_mode_text = match current_proxy_mode {
-            "global" => clash_verge_i18n::t!("tray.global"),
-            "direct" => clash_verge_i18n::t!("tray.direct"),
-            _ => clash_verge_i18n::t!("tray.rule"),
-        };
-        let outbound_modes_label = format!("{} ({})", texts.outbound_modes, current_mode_text);
-        Some(Submenu::with_id_and_items(
-            app_handle,
-            MenuIds::OUTBOUND_MODES,
-            outbound_modes_label.as_str(),
-            true,
-            &[
-                rule_mode as &dyn IsMenuItem<Wry>,
-                global_mode as &dyn IsMenuItem<Wry>,
-                direct_mode as &dyn IsMenuItem<Wry>,
-            ],
-        )?)
-    };
+    let mode_menus = Tray::global().state.get_mode_menus();
+    let current_mode = mode.unwrap_or("rule");
+    for menu in mode_menus {
+        menu.set_checked(menu.id().as_ref().trim_start_matches("tray_").trim_end_matches("_mode") == current_mode)?;
+    }
+    let mode_menus = &mode_menus
+        .iter()
+        .map(|menu| menu as &dyn IsMenuItem<Wry>)
+        .collect::<Vec<_>>();
 
     let profiles = &Submenu::with_id_and_items(
         app_handle,
@@ -847,12 +912,8 @@ async fn create_tray_menu(
     let mut menu_items: Vec<&dyn IsMenuItem<Wry>> = vec![open_window, separator];
 
     if show_outbound_modes_inline {
-        menu_items.extend_from_slice(&[
-            rule_mode as &dyn IsMenuItem<Wry>,
-            global_mode as &dyn IsMenuItem<Wry>,
-            direct_mode as &dyn IsMenuItem<Wry>,
-        ]);
-    } else if let Some(ref outbound_modes) = outbound_modes {
+        menu_items.extend_from_slice(mode_menus);
+    } else if let Some(ref outbound_modes) = Tray::global().state.mode_submenu {
         menu_items.push(outbound_modes);
     }
 
