@@ -34,6 +34,7 @@ type ProxyMenuItem = (Option<Submenu<Wry>>, Vec<Box<dyn IsMenuItem<Wry>>>);
 
 const TRAY_CLICK_DEBOUNCE_MS: u64 = 300;
 
+#[allow(dead_code)]
 struct TrayState {
     menu_texts: MenuTexts,
     submenu_for_mode: bool,
@@ -163,6 +164,7 @@ pub struct Tray {
 singleton!(Tray, TRAY);
 
 impl Tray {
+    #[allow(clippy::unwrap_used)]
     fn new() -> Self {
         let app_handle = handle::Handle::app_handle();
         let mut state = TrayState::new();
