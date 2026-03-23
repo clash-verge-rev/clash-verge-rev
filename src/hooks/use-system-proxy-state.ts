@@ -1,4 +1,4 @@
-import { useLockFn } from 'ahooks'
+import { useRef } from 'react'
 import useSWR, { mutate } from 'swr'
 import { closeAllConnections } from 'tauri-plugin-mihomo-api'
 
@@ -9,71 +9,62 @@ import { getAutotemProxy } from '@/services/cmds'
 // 系统代理状态检测统一逻辑
 export const useSystemProxyState = () => {
   const { verge, mutateVerge, patchVerge } = useVerge()
-  const { sysproxy } = useAppData()
+  const { sysproxy, clashConfig } = useAppData()
   const { data: autoproxy } = useSWR('getAutotemProxy', getAutotemProxy, {
     revalidateOnFocus: true,
     revalidateOnReconnect: true,
   })
 
-  const { enable_system_proxy, proxy_auto_config } = verge ?? {}
+  const {
+    enable_system_proxy,
+    proxy_auto_config,
+    proxy_host,
+    verge_mixed_port,
+  } = verge ?? {}
 
-  const getSystemProxyActualState = () => {
-    const userEnabled = enable_system_proxy ?? false
-
-    // 用户配置状态应该与系统实际状态一致
-    // 如果用户启用了系统代理，检查实际的系统状态
-    if (userEnabled) {
-      if (proxy_auto_config) {
-        return autoproxy?.enable ?? false
-      } else {
-        return sysproxy?.enable ?? false
-      }
-    }
-
-    // 用户没有启用时，返回 false
-    return false
-  }
-
-  const getSystemProxyIndicator = () => {
+  // OS 实际状态：enable + 地址匹配本应用
+  const indicator = (() => {
+    const host = proxy_host || '127.0.0.1'
     if (proxy_auto_config) {
-      return autoproxy?.enable ?? false
+      if (!autoproxy?.enable) return false
+      const pacPort = import.meta.env.DEV ? 11233 : 33331
+      return autoproxy.url === `http://${host}:${pacPort}/commands/pac`
     } else {
-      return sysproxy?.enable ?? false
+      if (!sysproxy?.enable) return false
+      const port = verge_mixed_port || clashConfig?.mixedPort || 7897
+      return sysproxy.server === `${host}:${port}`
     }
-  }
+  })()
 
-  const updateProxyStatus = async (isEnabling: boolean) => {
-    // 关闭时更快响应，开启时等待系统确认
-    const delay = isEnabling ? 20 : 10
-    await new Promise((resolve) => setTimeout(resolve, delay))
-    await mutate('getSystemProxy')
-    await mutate('getAutotemProxy')
-  }
+  // "最后一次生效"模式：快速连续点击时，只执行最终状态
+  const pendingRef = useRef<boolean | null>(null)
+  const busyRef = useRef(false)
 
-  const toggleSystemProxy = useLockFn(async (enabled: boolean) => {
+  const toggleSystemProxy = async (enabled: boolean) => {
     mutateVerge({ ...verge, enable_system_proxy: enabled }, false)
+    pendingRef.current = enabled
+
+    if (busyRef.current) return
+    busyRef.current = true
 
     try {
-      if (!enabled && verge?.auto_close_connection) {
-        await closeAllConnections()
+      while (pendingRef.current !== null) {
+        const target = pendingRef.current
+        pendingRef.current = null
+        if (!target && verge?.auto_close_connection) {
+          await closeAllConnections().catch(() => {})
+        }
+        await patchVerge({ enable_system_proxy: target })
       }
-      await patchVerge({ enable_system_proxy: enabled })
-      await updateProxyStatus(enabled)
-    } catch (error) {
-      console.warn('[useSystemProxyState] toggleSystemProxy failed:', error)
-      mutateVerge({ ...verge, enable_system_proxy: !enabled }, false)
-      await updateProxyStatus(!enabled)
-      throw error
+    } finally {
+      busyRef.current = false
+      await Promise.all([mutate('getSystemProxy'), mutate('getAutotemProxy')])
     }
-  })
+  }
 
   return {
-    actualState: getSystemProxyActualState(),
-    indicator: getSystemProxyIndicator(),
+    indicator,
     configState: enable_system_proxy ?? false,
-    sysproxy,
-    autoproxy,
-    proxy_auto_config,
     toggleSystemProxy,
   }
 }

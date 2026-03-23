@@ -1,6 +1,6 @@
 [package]
 name = "clash-verge"
-version = "2.4.7"
+version = "2.4.8"
 description = "clash verge"
 authors = ["zzzgydi", "Tunglies", "wonfen", "MystiPanda"]
 license = "GPL-3.0-only"
@@ -61,7 +61,7 @@ dunce = "1.0.5"
 nanoid = "0.4"
 chrono = "0.4.44"
 boa_engine = "0.21.0"
-once_cell = { version = "1.21.3", features = ["parking_lot"] }
+once_cell = { version = "1.21.4", features = ["parking_lot"] }
 delay_timer = "0.11.6"
 percent-encoding = "2.3.2"
 reqwest = { version = "0.13.2", features = [
@@ -81,7 +81,7 @@ tauri-plugin-fs = "2.4.5"
 tauri-plugin-process = "2.3.1"
 tauri-plugin-deep-link = "2.4.7"
 tauri-plugin-window-state = "2.4.1"
-zip = "8.2.0"
+zip = "8.3.1"
 reqwest_dav = "0.3.3"
 aes-gcm = { version = "0.10.3", features = ["std"] }
 base64 = "0.22.1"
@@ -101,7 +101,10 @@ async-trait = "0.1.89"
 clash_verge_service_ipc = { version = "2.1.3", features = [
   "client",
 ], git = "https://github.com/clash-verge-rev/clash-verge-service-ipc" }
-arc-swap = "1.8.2"
+arc-swap = "1.9.0"
+tokio-rustls = "0.26"
+rustls = { version = "0.23", features = ["ring"] }
+webpki-roots = "1.0"
 rust_iso3166 = "0.1.14"
 # Use the git repo until the next release after v2.0.0.
 dark-light = { git = "https://github.com/rust-dark-light/dark-light" }

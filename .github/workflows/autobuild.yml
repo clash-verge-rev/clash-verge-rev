@@ -38,7 +38,7 @@ jobs:
         run: bash ./scripts/extract_update_logs.sh
         shell: bash
 
-      - uses: pnpm/action-setup@v4.4.0
+      - uses: pnpm/action-setup@v5.0.0
         name: Install pnpm
         with:
           run_install: false
@@ -137,7 +137,7 @@ jobs:
             target: aarch64-apple-darwin
           - os: macos-latest
             target: x86_64-apple-darwin
-          - os: ubuntu-24.04
+          - os: ubuntu-22.04
             target: x86_64-unknown-linux-gnu
     runs-on: ${{ matrix.os }}
     steps:
@@ -165,19 +165,10 @@ jobs:
           cache-workspace-crates: true
 
       - name: Install dependencies (ubuntu only)
-        if: matrix.os == 'ubuntu-24.04'
+        if: matrix.os == 'ubuntu-22.04'
         run: |
           sudo apt-get update
-          sudo apt install \
-            libwebkit2gtk-4.1-dev \
-            build-essential \
-            curl \
-            wget \
-            file \
-            libxdo-dev \
-            libssl-dev \
-            libayatana-appindicator3-dev \
-            librsvg2-dev
+          sudo apt-get install -y libxslt1.1 libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf
 
       - name: Install x86 OpenSSL (macOS only)
         if: matrix.target == 'x86_64-apple-darwin'
@@ -188,7 +179,7 @@ jobs:
           echo "OPENSSL_LIB_DIR=$(brew --prefix openssl@3)/lib" >> $GITHUB_ENV
           echo "PKG_CONFIG_PATH=$(brew --prefix openssl@3)/lib/pkgconfig" >> $GITHUB_ENV
 
-      - uses: pnpm/action-setup@v4.4.0
+      - uses: pnpm/action-setup@v5.0.0
         name: Install pnpm
         with:
           run_install: false
@@ -287,7 +278,7 @@ jobs:
           cache-workspace-crates: true
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v4.4.0
+        uses: pnpm/action-setup@v5.0.0
         with:
           run_install: false
 
@@ -432,7 +423,7 @@ jobs:
           cache-workspace-crates: true
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v4.4.0
+        uses: pnpm/action-setup@v5.0.0
         with:
           run_install: false
 
@@ -543,7 +534,7 @@ jobs:
         with:
           node-version: '24.14.0'
 
-      - uses: pnpm/action-setup@v4.4.0
+      - uses: pnpm/action-setup@v5.0.0
         name: Install pnpm
         with:
           run_install: false

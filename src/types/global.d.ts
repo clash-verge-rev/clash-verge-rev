@@ -904,6 +904,7 @@ interface IVergeConfig {
   traffic_graph?: boolean
   enable_memory_usage?: boolean
   enable_group_icon?: boolean
+  pause_render_traffic_stats_on_blur?: boolean
   menu_icon?: 'monochrome' | 'colorful' | 'disable'
   menu_order?: string[]
   notice_position?: 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right'

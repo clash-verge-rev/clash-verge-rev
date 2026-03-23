@@ -116,11 +116,9 @@ pub async fn reorder_profile(active_id: String, over_id: String) -> CmdResult {
     match profiles_reorder_safe(&active_id, &over_id).await {
         Ok(_) => {
             logging!(info, Type::Cmd, "重新排序配置文件");
-            Config::profiles().await.apply();
             Ok(())
         }
         Err(err) => {
-            Config::profiles().await.discard();
             logging!(error, Type::Cmd, "重新排序配置文件失败: {}", err);
             Err(format!("重新排序配置文件失败: {}", err).into())
         }
@@ -133,21 +131,18 @@ pub async fn reorder_profile(active_id: String, over_id: String) -> CmdResult {
 pub async fn create_profile(item: PrfItem, file_data: Option<String>) -> CmdResult {
     match profiles_append_item_with_filedata_safe(&item, file_data).await {
         Ok(_) => {
+            profiles_save_file_safe().await.stringify_err()?;
             // 发送配置变更通知
             if let Some(uid) = &item.uid {
                 logging!(info, Type::Cmd, "[创建订阅] 发送配置变更通知: {}", uid);
                 handle::Handle::notify_profile_changed(uid);
             }
-            Config::profiles().await.apply();
             Ok(())
         }
-        Err(err) => {
-            Config::profiles().await.discard();
-            match err.to_string().as_str() {
-                "the file already exists" => Err("the file already exists".into()),
-                _ => Err(format!("add profile error: {err}").into()),
-            }
-        }
+        Err(err) => match err.to_string().as_str() {
+            "the file already exists" => Err("the file already exists".into()),
+            _ => Err(format!("add profile error: {err}").into()),
+        },
     }
 }
 
@@ -155,12 +150,8 @@ pub async fn create_profile(item: PrfItem, file_data: Option<String>) -> CmdResu
 #[tauri::command]
 pub async fn update_profile(index: String, option: Option<PrfOption>) -> CmdResult {
     match feat::update_profile(&index, option.as_ref(), true, true, true).await {
-        Ok(_) => {
-            let _: () = Config::profiles().await.apply();
-            Ok(())
-        }
+        Ok(_) => Ok(()),
         Err(e) => {
-            Config::profiles().await.discard();
             logging!(error, Type::Cmd, "{}", e);
             Err(e.to_string().into())
         }
@@ -173,8 +164,14 @@ pub async fn delete_profile(index: String) -> CmdResult {
     // 使用Send-safe helper函数
     let should_update = profiles_delete_item_safe(&index).await.stringify_err()?;
     profiles_save_file_safe().await.stringify_err()?;
+    if let Err(e) = Tray::global().update_tooltip().await {
+        logging!(warn, Type::Cmd, "Warning: 异步更新托盘提示失败: {e}");
+    }
+
+    if let Err(e) = Tray::global().update_menu().await {
+        logging!(warn, Type::Cmd, "Warning: 异步更新托盘菜单失败: {e}");
+    }
     if should_update {
-        Config::profiles().await.apply();
         match CoreManager::global().update_config().await {
             Ok(_) => {
                 handle::Handle::refresh_clash();

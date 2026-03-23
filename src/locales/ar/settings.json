@@ -240,7 +240,8 @@
           "systemProxyTrayIcon": "أيقونة شريط المهام لوكيل النظام",
           "tunTrayIcon": "أيقونة شريط المهام لـ TUN",
           "enableTrayIcon": "Enable Tray Icon",
-          "enableTraySpeed": "تفعيل سرعة التراي"
+          "enableTraySpeed": "تفعيل سرعة التراي",
+          "pauseRenderTrafficStatsOnBlur": "إيقاف عرض إحصاءات حركة المرور مؤقتًا عند فقدان التركيز"
         },
         "tooltips": {
           "hoverNavigator": "Automatically scroll to the corresponding proxy group when hovering over alphabet letters",

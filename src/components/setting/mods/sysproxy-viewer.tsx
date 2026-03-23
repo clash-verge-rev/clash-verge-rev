@@ -33,6 +33,7 @@ import {
   TooltipIcon,
 } from '@/components/base'
 import { EditorViewer } from '@/components/profile/editor-viewer'
+import { useSystemProxyState } from '@/hooks/use-system-proxy-state'
 import { useVerge } from '@/hooks/use-verge'
 import { useAppData } from '@/providers/app-data-context'
 import {
@@ -108,13 +109,8 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
   const { verge, patchVerge, mutateVerge } = useVerge()
   const [hostOptions, setHostOptions] = useState<string[]>([])
 
-  type SysProxy = Awaited<ReturnType<typeof getSystemProxy>>
-  const [sysproxy, setSysproxy] = useState<SysProxy>()
-
-  type AutoProxy = Awaited<ReturnType<typeof getAutotemProxy>>
-  const [autoproxy, setAutoproxy] = useState<AutoProxy>()
-
   const { clashConfig } = useAppData()
+  const { indicator: isProxyReallyEnabled } = useSystemProxyState()
 
   const {
     enable_system_proxy: enabled,
@@ -248,8 +244,6 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
         pac_content: pac_file_content ?? DEFAULT_PAC,
         proxy_host: proxy_host ?? '127.0.0.1',
       })
-      getSystemProxy().then((p) => setSysproxy(p))
-      getAutotemProxy().then((p) => setAutoproxy(p))
       fetchNetworkInterfaces()
     },
     close: () => setOpen(false),
@@ -478,13 +472,9 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
               {t('settings.modals.sysproxy.fields.enableStatus')}
             </Typography>
             <Typography className="value">
-              {value.pac
-                ? autoproxy?.enable
-                  ? t('shared.statuses.enabled')
-                  : t('shared.statuses.disabled')
-                : sysproxy?.enable
-                  ? t('shared.statuses.enabled')
-                  : t('shared.statuses.disabled')}
+              {isProxyReallyEnabled
+                ? t('shared.statuses.enabled')
+                : t('shared.statuses.disabled')}
             </Typography>
           </FlexBox>
           {!value.pac && (

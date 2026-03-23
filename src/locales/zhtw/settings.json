@@ -240,7 +240,8 @@
           "systemProxyTrayIcon": "系統代理系統匣圖示",
           "tunTrayIcon": "虛擬網路介面卡模式系統匣圖示",
           "enableTrayIcon": "啟用系統匣圖示",
-          "enableTraySpeed": "啟用系統匣速率"
+          "enableTraySpeed": "啟用系統匣速率",
+          "pauseRenderTrafficStatsOnBlur": "失去焦點時暫停渲染流量統計"
         },
         "tooltips": {
           "hoverNavigator": "滑鼠懸停在字母上時自動捲動到對應代理組",
