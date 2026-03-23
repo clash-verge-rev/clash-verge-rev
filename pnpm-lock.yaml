@@ -42,7 +42,7 @@ importers:
         specifier: ^8.21.3
         version: 8.21.3(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@tanstack/react-virtual':
-        specifier: ^3.13.22
+        specifier: ^3.13.23
         version: 3.13.23(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
       '@tauri-apps/api':
         specifier: 2.10.1
@@ -87,7 +87,7 @@ importers:
         specifier: ^5.3.0
         version: 5.3.0
       i18next:
-        specifier: ^25.8.18
+        specifier: ^25.10.4
         version: 25.10.4(typescript@5.9.3)
       js-yaml:
         specifier: ^4.1.1
@@ -117,7 +117,7 @@ importers:
         specifier: 6.1.1
         version: 6.1.1(react@19.2.4)
       react-hook-form:
-        specifier: ^7.71.2
+        specifier: ^7.72.0
         version: 7.72.0(react@19.2.4)
       react-i18next:
         specifier: 16.6.1
@@ -196,7 +196,7 @@ importers:
         specifier: ^10.1.0
         version: 10.1.0
       eslint:
-        specifier: ^10.0.3
+        specifier: ^10.1.0
         version: 10.1.0(jiti@2.6.1)
       eslint-import-resolver-typescript:
         specifier: ^4.4.4
@@ -247,19 +247,19 @@ importers:
         specifier: ^1.98.0
         version: 1.98.0
       tar:
-        specifier: ^7.5.11
+        specifier: ^7.5.12
         version: 7.5.12
       terser:
-        specifier: ^5.46.0
+        specifier: ^5.46.1
         version: 5.46.1
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
       typescript-eslint:
-        specifier: ^8.57.0
+        specifier: ^8.57.1
         version: 8.57.1(eslint@10.1.0(jiti@2.6.1))(typescript@5.9.3)
       vite:
-        specifier: ^8.0.0
+        specifier: ^8.0.1
         version: 8.0.1(@types/node@24.12.0)(jiti@2.6.1)(sass@1.98.0)(terser@5.46.1)(yaml@2.8.3)
       vite-plugin-svgr:
         specifier: ^4.5.0
