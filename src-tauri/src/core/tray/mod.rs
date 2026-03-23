@@ -60,7 +60,7 @@ struct TrayState {}
 pub struct Tray {
     limiter: SystemLimiter,
     #[cfg(target_os = "macos")]
-    speed_task: parking_lot::Mutex<Option<tokio::task::JoinHandle<()>>>,
+    speed_task: parking_lot::Mutex<Option<tauri::async_runtime::JoinHandle<()>>>,
 }
 
 impl TrayState {
@@ -296,12 +296,6 @@ impl Tray {
             tray.set_icon(Some(tauri::image::Image::from_bytes(&icon_bytes)?))
         );
         logging_error!(Type::Tray, tray.set_icon_as_template(!is_colorful));
-
-        if verge.enable_tray_speed.unwrap_or(false) {
-            self.start_speed_task();
-        } else {
-            self.stop_speed_task();
-        }
         Ok(())
     }
 
@@ -400,6 +394,8 @@ impl Tray {
         let verge = Config::verge().await.data_arc();
         self.update_menu().await?;
         self.update_icon(&verge).await?;
+        #[cfg(target_os = "macos")]
+        self.update_speed_task(verge.enable_tray_speed.unwrap_or(false));
         self.update_tooltip().await?;
         Ok(())
     }
@@ -459,10 +455,10 @@ impl Tray {
             return;
         }
         let mut guard = self.speed_task.lock();
-        if guard.as_ref().is_some_and(|t| !t.is_finished()) {
+        if guard.as_ref().is_some_and(|t| !t.inner().is_finished()) {
             return; // 已在运行，无需重复启动
         }
-        let task = tokio::spawn(async move {
+        let task = AsyncHandler::spawn(|| async move {
             let mut interval = tokio::time::interval(Duration::from_secs(1));
             let mut prev_upload: u64 = 0;
             let mut prev_download: u64 = 0;
@@ -470,9 +466,6 @@ impl Tray {
             loop {
                 interval.tick().await;
                 if handle::Handle::global().is_exiting() {
-                    break;
-                }
-                if !Config::verge().await.latest_arc().enable_tray_speed.unwrap_or(false) {
                     break;
                 }
                 let result = handle::Handle::mihomo().await.get_connections().await;
@@ -498,6 +491,16 @@ impl Tray {
             }
         });
         *guard = Some(task);
+    }
+
+    /// 根据配置统一更新托盘速率采集任务状态（macOS）
+    #[cfg(target_os = "macos")]
+    pub fn update_speed_task(&self, enable_tray_speed: bool) {
+        if enable_tray_speed {
+            self.start_speed_task();
+        } else {
+            self.stop_speed_task();
+        }
     }
 
     /// 停止托盘速率采集后台任务并清除速率显示
