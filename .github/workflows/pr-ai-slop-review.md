@@ -19,6 +19,7 @@ tools:
   github:
     toolsets: [default]
     lockdown: false
+    min-integrity: unapproved
 
 safe-outputs:
   mentions: false
