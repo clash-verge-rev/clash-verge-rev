@@ -5,7 +5,7 @@ use crate::{
     process::AsyncHandler,
     utils::{self, resolve::reset_resolve_done},
 };
-use clash_verge_logging::{Type, logging, logging_error};
+use clash_verge_logging::{Type, logging};
 use serde_yaml_ng::{Mapping, Value};
 use smartstring::alias::String;
 
@@ -86,13 +86,7 @@ pub async fn change_clash_mode(mode: String) {
             let clash_data = clash.data_arc();
             if clash_data.save_config().await.is_ok() {
                 handle::Handle::refresh_clash();
-                logging_error!(Type::Tray, tray::Tray::global().update_menu().await);
-                logging_error!(
-                    Type::Tray,
-                    tray::Tray::global()
-                        .update_icon(&Config::verge().await.data_arc())
-                        .await
-                );
+                tray::Tray::global().update_menu_and_icon().await;
             }
 
             let is_auto_close_connection = Config::verge().await.data_arc().auto_close_connection.unwrap_or(false);
