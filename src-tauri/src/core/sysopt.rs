@@ -157,8 +157,9 @@ impl Sysopt {
 
         self.access_guard().write().set_guard_type(GuardType::None);
 
-        if !sys_enable && !pac_enable {
-            // disable proxy
+        // `enable_system_proxy` is the master switch.
+        // When disabled, force clear both global proxy and PAC at OS level.
+        if !sys_enable {
             sys.set_system_proxy()?;
             auto.set_auto_proxy()?;
             return Ok(());
