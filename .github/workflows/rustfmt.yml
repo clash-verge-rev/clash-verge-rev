@@ -18,7 +18,7 @@ jobs:
 
       - name: Check Rust changes
         id: check_rust
-        uses: dorny/paths-filter@v4
+        uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4
         with:
           filters: |
             rust:
@@ -31,7 +31,7 @@ jobs:
 
       - name: install Rust stable and rustfmt
         if: steps.check_rust.outputs.rust == 'true'
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@631a55b12751854ce901bb631d5902ceb48146f7 # stable
         with:
           components: rustfmt
 

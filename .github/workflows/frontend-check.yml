@@ -15,7 +15,7 @@ jobs:
 
       - name: Check frontend changes
         id: check_frontend
-        uses: dorny/paths-filter@v4
+        uses: dorny/paths-filter@fbd0ab8f3e69293af611ebaee6363fc25e6d187d # v4
         with:
           filters: |
             frontend:
@@ -40,7 +40,7 @@ jobs:
 
       - name: Install pnpm
         if: steps.check_frontend.outputs.frontend == 'true'
-        uses: pnpm/action-setup@v5
+        uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v5
         with:
           run_install: false
 
