@@ -2,20 +2,20 @@
   "page": {
     "actions": {
       "updateAll": "Обновить все профили",
-      "viewRuntimeConfig": "Просмотреть используемый конфиг",
+      "viewRuntimeConfig": "Просмотреть текущую конфигурацию",
       "reactivate": "Перезапустить профиль",
-      "import": "Импорт"
+      "import": "Импортировать"
     },
     "batch": {
       "actions": {
         "delete": "Удалить выбранные профили",
         "selectAll": "Выбрать все",
-        "deselectAll": "Отменить выбор всех",
+        "deselectAll": "Снять выделение",
         "done": "Готово"
       },
       "summary": {
         "selected": "Выбрано",
-        "items": "элементы"
+        "items": "элементов"
       },
       "title": "Пакетные операции"
     },
@@ -27,22 +27,22 @@
     },
     "feedback": {
       "errors": {
-        "invalidUrl": "Недопустимая ссылка на профиль, введите адрес, начинающийся с http:// или https://",
+        "invalidUrl": "Недопустимый URL профиля. Укажите адрес, начинающийся с http:// или https://",
         "onlyYaml": "Поддерживаются только файлы YAML"
       },
       "notifications": {
-        "importRetry": "Import failed, retrying with Clash proxy...",
-        "importFail": "Import failed even with Clash proxy",
-        "importNeedsRefresh": "Profile imported but may need manual refresh",
-        "importSuccess": "Profile imported successfully, please restart if not visible",
-        "profileSwitched": "Профиль изменен",
+        "importRetry": "Не удалось импортировать, повторная попытка через Clash proxy...",
+        "importFail": "Не удалось импортировать даже через Clash proxy",
+        "importNeedsRefresh": "Профиль импортирован, но может потребоваться обновление вручную",
+        "importSuccess": "Профиль успешно импортирован. Перезапустите приложение, если он не появился",
+        "profileSwitched": "Профиль переключён",
         "profileReactivated": "Профиль перезапущен",
-        "switchInterrupted": "Profile switch interrupted by new selection",
-        "batchDeleted": "Выбранные профили успешно удалены"
+        "switchInterrupted": "Переключение профиля прервано новым выбором",
+        "batchDeleted": "Выбранные профили удалены"
       },
       "notices": {
-        "forceRefreshCompleted": "Force refresh completed",
-        "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
+        "forceRefreshCompleted": "Принудительное обновление завершено",
+        "emergencyRefreshFailed": "Экстренное обновление не удалось: {{message}}"
       }
     },
     "title": "Профили"
@@ -50,7 +50,7 @@
   "components": {
     "card": {
       "labels": {
-        "clickToImport": "Нажмите, чтобы импортировать подписку"
+        "clickToImport": "Нажмите для импорта подписки"
       }
     },
     "fileInput": {
@@ -64,16 +64,16 @@
       "editRules": "Редактировать правила",
       "editProxies": "Редактировать прокси",
       "editGroups": "Редактировать группы прокси",
-      "extendConfig": "Изменить Merge",
+      "extendConfig": "Изменить Merge-конфигурацию",
       "extendScript": "Изменить Script",
       "openFile": "Открыть файл",
       "update": "Обновить",
-      "updateViaProxy": "Update via proxy"
+      "updateViaProxy": "Обновить через прокси"
     },
     "more": {
       "global": {
-        "merge": "Global Extend Config",
-        "script": "Global Extend Script"
+        "merge": "Глобальная Merge-конфигурация",
+        "script": "Глобальный Script"
       },
       "chips": {
         "merge": "Merge",
@@ -82,15 +82,15 @@
     },
     "profileItem": {
       "tooltips": {
-        "showLast": "Click to show last update time",
-        "showNext": "Click to show next update"
+        "showLast": "Показать время последнего обновления",
+        "showNext": "Показать следующее обновление"
       },
       "status": {
-        "lastUpdateFailed": "Last Update failed",
-        "nextUp": "Next Up",
-        "noSchedule": "No schedule",
-        "unknown": "Unknown",
-        "autoUpdateDisabled": "Auto update disabled"
+        "lastUpdateFailed": "Последнее обновление не удалось",
+        "nextUp": "Следующее обновление",
+        "noSchedule": "Без расписания",
+        "unknown": "Неизвестно",
+        "autoUpdateDisabled": "Автообновление отключено"
       }
     }
   },
@@ -98,30 +98,30 @@
     "profileForm": {
       "title": {
         "create": "Создать профиль",
-        "edit": "Изменить профиль"
+        "edit": "Редактировать профиль"
       },
       "fields": {
         "type": "Тип",
         "description": "Описание",
         "subscriptionUrl": "URL подписки",
-        "httpTimeout": "HTTP Request Timeout",
+        "httpTimeout": "Тайм-аут HTTP-запроса",
         "updateInterval": "Интервал обновления",
         "useSystemProxy": "Использовать системный прокси для обновления",
-        "useClashProxy": "Использовать прокси Clash для обновления",
+        "useClashProxy": "Использовать Clash proxy для обновления",
         "acceptInvalidCerts": "Принимать недействительные сертификаты (ОПАСНО)",
-        "allowAutoUpdate": "Allow Auto Update"
+        "allowAutoUpdate": "Разрешить автообновление"
       },
       "feedback": {
         "notifications": {
-          "creationRetry": "Profile creation failed, retrying with Clash proxy...",
-          "creationSuccess": "Profile creation succeeded with Clash proxy"
+          "creationRetry": "Не удалось создать профиль, повторная попытка через Clash proxy...",
+          "creationSuccess": "Профиль успешно создан через Clash proxy"
         }
       }
     },
     "proxiesEditor": {
       "title": "Редактировать прокси",
       "placeholders": {
-        "multiUri": "Используйте символы новой строки для нескольких URI (поддерживается кодировка Base64)"
+        "multiUri": "Используйте перенос строки для нескольких URI (поддерживается Base64)"
       },
       "actions": {
         "prepend": "Добавить прокси в начало",
@@ -131,32 +131,32 @@
     "groupsEditor": {
       "title": "Редактировать группы прокси",
       "errors": {
-        "nameRequired": "Требуется имя группы",
-        "nameExists": "Имя группы уже существует"
+        "nameRequired": "Введите имя группы",
+        "nameExists": "Группа с таким именем уже существует"
       },
       "fields": {
         "type": "Тип группы",
         "name": "Имя группы",
-        "icon": "Иконка Группы прокси",
+        "icon": "Значок группы прокси",
         "proxies": "Использовать прокси",
         "provider": "Использовать провайдера",
-        "healthCheckUrl": "URL проверки здоровья",
+        "healthCheckUrl": "URL проверки доступности",
         "expectedStatus": "Ожидаемый статус",
         "interval": "Интервал",
-        "maxFailedTimes": "Максимальное количество неудач",
+        "maxFailedTimes": "Максимальное число ошибок",
         "interfaceName": "Имя интерфейса",
         "routingMark": "Марка маршрутизации",
         "filter": "Фильтр",
-        "excludeFilter": "Исключить фильтр",
+        "excludeFilter": "Исключающий фильтр",
         "excludeType": "Тип исключения",
         "includeAll": "Включить все прокси и провайдеры",
         "includeAllProxies": "Включить все прокси",
         "includeAllProviders": "Включить всех провайдеров"
       },
       "toggles": {
-        "lazy": "Ленивый",
+        "lazy": "Ленивая загрузка",
         "disableUdp": "Отключить UDP",
-        "hidden": "Скрытый"
+        "hidden": "Скрытая"
       },
       "actions": {
         "prepend": "Добавить группу в начало",
@@ -168,12 +168,12 @@
         "format": "Форматировать документ"
       },
       "messages": {
-        "readOnly": "Невозможно редактировать в режиме только для чтения"
+        "readOnly": "Редактирование недоступно в режиме только для чтения"
       }
     },
     "confirmDelete": {
       "title": "Подтвердите удаление",
-      "message": "Эта операция необратима"
+      "message": "Это действие необратимо"
     },
     "logViewer": {
       "title": "Консоль скрипта"

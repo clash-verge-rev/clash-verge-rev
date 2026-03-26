@@ -3,7 +3,7 @@
     "title": "Логи"
   },
   "actions": {
-    "showDescending": "Newest first",
-    "showAscending": "Oldest first"
+    "showDescending": "Сначала новые",
+    "showAscending": "Сначала старые"
   }
 }
