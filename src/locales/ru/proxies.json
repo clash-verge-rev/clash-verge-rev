@@ -1,31 +1,31 @@
 {
   "page": {
     "modes": {
-      "rule": "Rule",
-      "global": "Global",
-      "direct": "Direct"
+      "rule": "Правила",
+      "global": "Глобальный",
+      "direct": "Прямой"
     },
     "actions": {
-      "toggleChain": "Цепной прокси",
-      "connect": "Connect",
-      "disconnect": "Disconnect",
-      "connecting": "Connecting...",
-      "clearChainConfig": "Delete Chain Config"
+      "toggleChain": "Цепочка прокси",
+      "connect": "Подключиться",
+      "disconnect": "Отключиться",
+      "connecting": "Подключение...",
+      "clearChainConfig": "Очистить цепочку"
     },
     "provider": {
-      "title": "Провайдер прокси",
+      "title": "Провайдеры прокси",
       "actions": {
         "updateAll": "Обновить все",
         "update": "Обновить"
       }
     },
     "rules": {
-      "title": "Proxy Rules",
-      "select": "Select Rules"
+      "title": "Правила прокси",
+      "select": "Выбрать правила"
     },
     "labels": {
-      "proxyCount": "Proxy Count",
-      "delayCheckReset": "Проверка задержки для отмены фиксированного"
+      "proxyCount": "Количество прокси",
+      "delayCheckReset": "Сброс проверки задержки"
     },
     "tooltips": {
       "locate": "Местоположение",
@@ -33,23 +33,23 @@
       "sortDefault": "Сортировать по умолчанию",
       "sortDelay": "Сортировать по задержке",
       "sortName": "Сортировать по названию",
-      "delayCheckUrl": "URL проверки задержки",
-      "showBasic": "Отображать меньше сведений о прокси",
-      "showDetail": "Отображать больше сведений о прокси",
+      "delayCheckUrl": "URL для проверки задержки",
+      "showBasic": "Показывать меньше информации о прокси",
+      "showDetail": "Показывать больше информации о прокси",
       "filter": "Фильтр"
     },
     "placeholders": {
-      "delayCheckUrl": "URL проверки задержки"
+      "delayCheckUrl": "URL для проверки задержки"
     },
     "chain": {
-      "header": "Конфигурация цепочки прокси",
+      "header": "Цепочка прокси",
       "empty": "Цепочка прокси не настроена",
-      "instruction": "Нажимайте узлы по порядку, чтобы добавить в цепочку прокси",
-      "minimumNodes": "Chain proxy requires at least 2 nodes",
-      "minimumNodesHint": "Chain proxy requires at least 2 nodes. Please add one more node.",
-      "connectFailed": "Failed to connect to proxy chain",
-      "disconnectFailed": "Failed to disconnect from proxy chain",
-      "duplicateNode": "Proxy node already exists in chain",
+      "instruction": "Нажимайте на узлы по порядку, чтобы добавить их в цепочку",
+      "minimumNodes": "Для цепочки требуется минимум 2 узла",
+      "minimumNodesHint": "Для цепочки требуется минимум 2 узла. Добавьте ещё один узел.",
+      "connectFailed": "Не удалось подключиться к цепочке прокси",
+      "disconnectFailed": "Не удалось отключиться от цепочки прокси",
+      "duplicateNode": "Этот узел уже добавлен в цепочку",
       "entryNode": "Вход",
       "exitNode": "Выход"
     },
@@ -58,17 +58,17 @@
     },
     "title": {
       "default": "Группы прокси",
-      "chainMode": "Proxy Chain Mode"
+      "chainMode": "Режим цепочки прокси"
     }
   },
   "feedback": {
     "notifications": {
       "provider": {
-        "updateSuccess": "{{name}} updated successfully",
-        "updateFailed": "Failed to update {{name}}: {{message}}",
-        "genericError": "Update failed: {{message}}",
-        "none": "No providers available to update",
-        "allUpdated": "All providers updated successfully"
+        "updateSuccess": "{{name}} успешно обновлён",
+        "updateFailed": "Не удалось обновить {{name}}: {{message}}",
+        "genericError": "Ошибка обновления: {{message}}",
+        "none": "Нет доступных провайдеров для обновления",
+        "allUpdated": "Все провайдеры успешно обновлены"
       }
     }
   },

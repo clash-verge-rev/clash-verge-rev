@@ -1,14 +1,14 @@
 {
   "page": {
     "actions": {
-      "testAll": "Тестировать все"
+      "testAll": "Проверить все"
     },
     "title": "Тест"
   },
   "components": {
     "item": {
       "actions": {
-        "test": "Тест"
+        "test": "Проверить"
       }
     }
   },
@@ -19,7 +19,7 @@
         "edit": "Редактировать тест"
       },
       "fields": {
-        "url": "URL проверка"
+        "url": "URL для проверки"
       }
     }
   },
@@ -30,24 +30,24 @@
       "no": "Нет",
       "failed": "Ошибка",
       "completed": "Завершено",
-      "disallowedIsp": "ISP заблокирован",
+      "disallowedIsp": "Провайдер заблокирован",
       "originalsOnly": "Только Originals",
-      "noDisney": "Нет (IP забанен Disney+)",
-      "unsupportedRegion": "Страна/регион не поддерживается",
+      "noDisney": "Нет (IP заблокирован Disney+)",
+      "unsupportedRegion": "Страна или регион не поддерживаются",
       "failedNetwork": "Ошибка подключения"
     }
   },
   "unlock": {
     "page": {
       "actions": {
-        "testing": "Тестирование ..."
+        "testing": "Проверка..."
       },
-      "empty": "No unlock test items",
+      "empty": "Нет элементов для проверки разблокировки",
       "messages": {
-        "detectionFailedWithName": "Не удалось обнаружить {{name}}",
-        "detectionTimeout": "Detection timeout or failed"
+        "detectionFailedWithName": "Не удалось определить {{name}}",
+        "detectionTimeout": "Истекло время ожидания проверки или произошла ошибка"
       },
-      "title": "Тест доступности веб-сайтов"
+      "title": "Проверка доступности веб-сайтов"
     }
   }
 }
