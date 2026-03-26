@@ -7,7 +7,7 @@ description: |
 on:
   roles: all
   pull_request_target:
-    types: [opened, synchronize]
+    types: [opened, reopened, synchronize]
   workflow_dispatch:
 
 permissions:
