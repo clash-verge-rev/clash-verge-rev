@@ -10,7 +10,8 @@ pub enum NotificationEvent<'a> {
         mode: &'a str,
     },
     SystemProxyToggled,
-    TunModeToggled,
+    TunModeOn,
+    TunModeOff,
     LightweightModeEntered,
     ProfilesReactivated,
     AppQuit,
@@ -42,9 +43,14 @@ pub async fn notify_event<'a>(event: NotificationEvent<'a>) {
             let body = clash_verge_i18n::t!("notifications.systemProxyToggled.body");
             notify(title, body);
         }
-        NotificationEvent::TunModeToggled => {
-            let title = clash_verge_i18n::t!("notifications.tunModeToggled.title");
-            let body = clash_verge_i18n::t!("notifications.tunModeToggled.body");
+        NotificationEvent::TunModeOn => {
+            let title = clash_verge_i18n::t!("notifications.tunModeOn.title");
+            let body = clash_verge_i18n::t!("notifications.tunModeOn.body");
+            notify(title, body);
+        }
+        NotificationEvent::TunModeOff => {
+            let title = clash_verge_i18n::t!("notifications.tunModeOff.title");
+            let body = clash_verge_i18n::t!("notifications.tunModeOff.body");
             notify(title, body);
         }
         NotificationEvent::LightweightModeEntered => {

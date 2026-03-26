@@ -9,7 +9,10 @@ notifications:
   systemProxyToggled:
     title: پروکسی سیستم
     body: وضعیت پروکسی سیستم به‌روزرسانی شد.
-  tunModeToggled:
+  tunModeOn:
+    title: حالت TUN
+    body: وضعیت حالت TUN به‌روزرسانی شد.
+  tunModeOff:
     title: حالت TUN
     body: وضعیت حالت TUN به‌روزرسانی شد.
   lightweightModeEntered:

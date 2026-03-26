@@ -9,7 +9,10 @@ notifications:
   systemProxyToggled:
     title: Proksi Sistem
     body: Status proksi sistem telah diperbarui.
-  tunModeToggled:
+  tunModeOn:
+    title: Mode TUN
+    body: Status mode TUN telah diperbarui.
+  tunModeOff:
     title: Mode TUN
     body: Status mode TUN telah diperbarui.
   lightweightModeEntered:

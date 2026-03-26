@@ -9,9 +9,12 @@ notifications:
   systemProxyToggled:
     title: System Proxy
     body: System proxy status has been updated.
-  tunModeToggled:
+  tunModeOn:
     title: TUN Mode
-    body: TUN mode status has been updated.
+    body: TUN mode has been enabled.
+  tunModeOff:
+    title: TUN Mode
+    body: TUN mode has been disabled.
   lightweightModeEntered:
     title: Lightweight Mode
     body: Entered lightweight mode.

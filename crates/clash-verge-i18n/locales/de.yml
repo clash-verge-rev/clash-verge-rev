@@ -9,7 +9,10 @@ notifications:
   systemProxyToggled:
     title: Systemproxy
     body: Der Status des Systemproxys wurde aktualisiert.
-  tunModeToggled:
+  tunModeOn:
+    title: TUN-Modus
+    body: Der Status des TUN-Modus wurde aktualisiert.
+  tunModeOff:
     title: TUN-Modus
     body: Der Status des TUN-Modus wurde aktualisiert.
   lightweightModeEntered:

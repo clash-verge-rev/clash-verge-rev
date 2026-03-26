@@ -9,9 +9,12 @@ notifications:
   systemProxyToggled:
     title: システムプロキシ
     body: システムプロキシの状態が更新されました。
-  tunModeToggled:
+  tunModeOn:
     title: TUN モード
     body: TUN モードの状態が更新されました。
+  tunModeOff:
+    title: TUNード
+    body: TUNードの状態が更新されました。
   lightweightModeEntered:
     title: 軽量モード
     body: 軽量モードに入りました。

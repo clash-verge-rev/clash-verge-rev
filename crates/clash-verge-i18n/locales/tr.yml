@@ -9,7 +9,10 @@ notifications:
   systemProxyToggled:
     title: Sistem Vekil'i
     body: Sistem vekil'i durumu güncellendi.
-  tunModeToggled:
+  tunModeOn:
+    title: TUN Modu
+    body: TUN modu durumu güncellendi.
+  tunModeOff:
     title: TUN Modu
     body: TUN modu durumu güncellendi.
   lightweightModeEntered:

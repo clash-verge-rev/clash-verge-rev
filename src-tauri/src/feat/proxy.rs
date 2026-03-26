@@ -36,13 +36,15 @@ pub async fn toggle_system_proxy() {
 }
 
 /// Toggle TUN mode on/off
-pub async fn toggle_tun_mode(not_save_file: Option<bool>) {
+/// @return 切换后的开关状态
+pub async fn toggle_tun_mode(not_save_file: Option<bool>) -> bool {
     let enable = Config::verge().await.latest_arc().enable_tun_mode;
-    let enable = enable.unwrap_or(false);
+    let mut enable = enable.unwrap_or(false);
+    enable = !enable;
 
     match super::patch_verge(
         &IVerge {
-            enable_tun_mode: Some(!enable),
+            enable_tun_mode: Some(enable),
             ..IVerge::default()
         },
         not_save_file.unwrap_or(false),
@@ -52,6 +54,8 @@ pub async fn toggle_tun_mode(not_save_file: Option<bool>) {
         Ok(_) => handle::Handle::refresh_verge(),
         Err(err) => logging!(error, Type::ProxyMode, "{err}"),
     }
+
+    enable
 }
 
 /// Copy proxy environment variables to clipboard

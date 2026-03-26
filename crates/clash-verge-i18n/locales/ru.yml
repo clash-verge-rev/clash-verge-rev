@@ -9,7 +9,10 @@ notifications:
   systemProxyToggled:
     title: Системный прокси
     body: Статус системного прокси обновлен.
-  tunModeToggled:
+  tunModeOn:
+    title: Режим TUN
+    body: Статус режима TUN обновлен.
+  tunModeOff:
     title: Режим TUN
     body: Статус режима TUN обновлен.
   lightweightModeEntered:

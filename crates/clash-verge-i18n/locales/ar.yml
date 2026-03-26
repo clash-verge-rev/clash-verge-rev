@@ -9,7 +9,10 @@ notifications:
   systemProxyToggled:
     title: وكيل النظام
     body: تم تحديث حالة وكيل النظام.
-  tunModeToggled:
+  tunModeOn:
+    title: وضع TUN
+    body: تم تحديث حالة وضع TUN.
+  tunModeOff:
     title: وضع TUN
     body: تم تحديث حالة وضع TUN.
   lightweightModeEntered:

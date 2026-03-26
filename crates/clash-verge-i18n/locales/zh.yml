@@ -9,9 +9,12 @@ notifications:
   systemProxyToggled:
     title: 系统代理
     body: 系统代理状态已更新。
-  tunModeToggled:
+  tunModeOn:
     title: TUN 模式
-    body: TUN 模式状态已更新。
+    body: TUN 模式已开启。
+  tunModeOff:
+    title: TUN 模式
+    body: TUN 模式已关闭。
   lightweightModeEntered:
     title: 轻量模式
     body: 已进入轻量模式。

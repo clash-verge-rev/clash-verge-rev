@@ -9,7 +9,10 @@ notifications:
   systemProxyToggled:
     title: 시스템 프록시
     body: 시스템 프록시 상태가 업데이트되었습니다.
-  tunModeToggled:
+  tunModeOn:
+    title: TUN 모드
+    body: TUN 모드 상태가 업데이트되었습니다.
+  tunModeOff:
     title: TUN 모드
     body: TUN 모드 상태가 업데이트되었습니다.
   lightweightModeEntered:
