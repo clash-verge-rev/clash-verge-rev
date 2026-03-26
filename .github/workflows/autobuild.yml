@@ -236,26 +236,6 @@ jobs:
           args: --target ${{ matrix.target }}
           # includeUpdaterJson: true
 
-      - name: Attest Windows bundles
-        if: matrix.os == 'windows-latest'
-        uses: actions/attest-build-provenance@v3
-        with:
-          subject-path: target/${{ matrix.target }}/release/bundle/nsis/*setup*
-
-      - name: Attest macOS bundles
-        if: matrix.os == 'macos-latest'
-        uses: actions/attest-build-provenance@v3
-        with:
-          subject-path: target/${{ matrix.target }}/release/bundle/dmg/*.dmg
-
-      - name: Attest Linux bundles
-        if: matrix.os == 'ubuntu-22.04'
-        uses: actions/attest-build-provenance@v3
-        with:
-          subject-path: |
-            target/${{ matrix.target }}/release/bundle/deb/*.deb
-            target/${{ matrix.target }}/release/bundle/rpm/*.rpm
-
   autobuild-arm-linux:
     name: Autobuild ARM Linux
     needs: [check_commit, update_tag]
@@ -398,13 +378,6 @@ jobs:
           echo "VERSION=$(cat package.json | jq '.version' | tr -d '"')" >> $GITHUB_ENV
           echo "BUILDTIME=$(TZ=Asia/Shanghai date)" >> $GITHUB_ENV
 
-      - name: Attest Linux bundles
-        uses: actions/attest-build-provenance@v3
-        with:
-          subject-path: |
-            target/${{ matrix.target }}/release/bundle/deb/*.deb
-            target/${{ matrix.target }}/release/bundle/rpm/*.rpm
-
       - name: Upload Release
         uses: softprops/action-gh-release@v2
         with:
@@ -522,11 +495,6 @@ jobs:
             $newName = $file.Name -replace "-setup\.exe\.sig$", "_fixed_webview2-setup.exe.sig"
             Rename-Item $file.FullName $newName
           }
-
-      - name: Attest Windows bundles
-        uses: actions/attest-build-provenance@v3
-        with:
-          subject-path: target/${{ matrix.target }}/release/bundle/nsis/*setup*
 
       - name: Upload Release
         uses: softprops/action-gh-release@v2
