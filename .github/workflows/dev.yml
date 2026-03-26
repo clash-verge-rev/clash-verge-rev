@@ -137,8 +137,19 @@ jobs:
           rustup target list --installed
           echo "Rust target ${{ matrix.target }} installed."
 
+      - name: Tauri build (Linux CI config)
+        if: matrix.os == 'ubuntu-22.04' && github.event.inputs[matrix.input] == 'true'
+        uses: tauri-apps/tauri-action@v0
+        env:
+          NODE_OPTIONS: '--max_old_space_size=4096'
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tauriScript: pnpm
+          args: --config src-tauri/tauri.ci.linux.conf.json --target ${{ matrix.target }} -b ${{ matrix.bundle }}
+          includeUpdaterJson: false
+
       - name: Tauri build
-        if: github.event.inputs[matrix.input] == 'true'
+        if: matrix.os != 'ubuntu-22.04' && github.event.inputs[matrix.input] == 'true'
         uses: tauri-apps/tauri-action@v0
         env:
           NODE_OPTIONS: '--max_old_space_size=4096'
