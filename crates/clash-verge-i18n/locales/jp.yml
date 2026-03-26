@@ -13,8 +13,8 @@ notifications:
     title: TUN モード
     body: TUN モードの状態が更新されました。
   tunModeOff:
-    title: TUNード
-    body: TUNードの状態が更新されました。
+    title: TUN モード
+    body: TUN モードの状態が更新されました。
   lightweightModeEntered:
     title: 軽量モード
     body: 軽量モードに入りました。
