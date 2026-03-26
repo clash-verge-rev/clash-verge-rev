@@ -65,7 +65,7 @@ jobs:
       title: ${{ steps.sanitized.outputs.title }}
     steps:
       - name: Setup Scripts
-        uses: github/gh-aw-actions/setup@7438f792fb4bb08052251020ae0a0642d6f8a6c1 # v0.64.0
+        uses: github/gh-aw-actions/setup@ef6d19b6ddd5d24eb2787355d2afcd70bd8392bf # v0.64.1
         with:
           destination: ${{ runner.temp }}/gh-aw/actions
       - name: Generate agentic run info
@@ -277,7 +277,7 @@ jobs:
       output_types: ${{ steps.collect_output.outputs.output_types }}
     steps:
       - name: Setup Scripts
-        uses: github/gh-aw-actions/setup@7438f792fb4bb08052251020ae0a0642d6f8a6c1 # v0.64.0
+        uses: github/gh-aw-actions/setup@ef6d19b6ddd5d24eb2787355d2afcd70bd8392bf # v0.64.1
         with:
           destination: ${{ runner.temp }}/gh-aw/actions
       - name: Set runtime paths
@@ -800,7 +800,7 @@ jobs:
       total_count: ${{ steps.missing_tool.outputs.total_count }}
     steps:
       - name: Setup Scripts
-        uses: github/gh-aw-actions/setup@7438f792fb4bb08052251020ae0a0642d6f8a6c1 # v0.64.0
+        uses: github/gh-aw-actions/setup@ef6d19b6ddd5d24eb2787355d2afcd70bd8392bf # v0.64.1
         with:
           destination: ${{ runner.temp }}/gh-aw/actions
       - name: Download agent output artifact
@@ -895,7 +895,7 @@ jobs:
       detection_success: ${{ steps.detection_conclusion.outputs.success }}
     steps:
       - name: Setup Scripts
-        uses: github/gh-aw-actions/setup@7438f792fb4bb08052251020ae0a0642d6f8a6c1 # v0.64.0
+        uses: github/gh-aw-actions/setup@ef6d19b6ddd5d24eb2787355d2afcd70bd8392bf # v0.64.1
         with:
           destination: ${{ runner.temp }}/gh-aw/actions
       - name: Download agent output artifact
@@ -1056,7 +1056,7 @@ jobs:
       process_safe_outputs_temporary_id_map: ${{ steps.process_safe_outputs.outputs.temporary_id_map }}
     steps:
       - name: Setup Scripts
-        uses: github/gh-aw-actions/setup@7438f792fb4bb08052251020ae0a0642d6f8a6c1 # v0.64.0
+        uses: github/gh-aw-actions/setup@ef6d19b6ddd5d24eb2787355d2afcd70bd8392bf # v0.64.1
         with:
           destination: ${{ runner.temp }}/gh-aw/actions
       - name: Download agent output artifact
