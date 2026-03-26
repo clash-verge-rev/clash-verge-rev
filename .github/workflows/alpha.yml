@@ -2,17 +2,23 @@ name: Alpha Build
 
 on:
   # 因为 alpha 不再负责频繁构建，且需要相对于 autobuild 更稳定使用环境
+  # 所以不再使用 workflow_dispatch 触发
+  # 应当通过 git tag 来触发构建
+  # TODO 手动控制版本号
   workflow_dispatch:
-    inputs:
-      tag_name:
-        description: 'Alpha tag name (e.g. v1.2.3-alpha.1)'
-        required: true
-        type: string
+    # inputs:
+    #   tag_name:
+    #     description: "Alpha tag name (e.g. v1.2.3-alpha.1)"
+    #     required: true
+    #     type: string
 
-  push:
-    # 应当限制 v*.*.*-alpha* 的 tag 来触发发布。
-    tags:
-      - 'v*.*.*-alpha*'
+  # push:
+  #   # 应当限制在 dev 分支上触发发布。
+  #   branches:
+  #     - dev
+  #   # 应当限制 v*.*.*-alpha* 的 tag 来触发发布。
+  #   tags:
+  #     - "v*.*.*-alpha*"
 permissions: write-all
 env:
   TAG_NAME: alpha
@@ -34,32 +40,22 @@ jobs:
       - name: Check tag and package.json version
         id: check_tag
         run: |
-          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            TAG_REF="${{ github.event.inputs.tag_name }}"
-          else
-            TAG_REF="${GITHUB_REF_NAME:-${GITHUB_REF##*/}}"
-          fi
-
+          TAG_REF="${GITHUB_REF##*/}"
           echo "Current tag: $TAG_REF"
-
           if [[ ! "$TAG_REF" =~ -alpha ]]; then
             echo "Current tag is not an alpha tag."
             exit 1
           fi
-
           PKG_VERSION=$(jq -r .version package.json)
           echo "package.json version: $PKG_VERSION"
-
           if [[ "$PKG_VERSION" != *alpha* ]]; then
             echo "package.json version is not an alpha version."
             exit 1
           fi
-
           if [[ "$TAG_REF" != "v$PKG_VERSION" ]]; then
             echo "Tag ($TAG_REF) does not match package.json version (v$PKG_VERSION)."
             exit 1
           fi
-
           echo "Alpha tag and package.json version are consistent."
 
   delete_old_assets:
