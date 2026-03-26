@@ -258,10 +258,6 @@ jobs:
   alpha-x86-windows-macos-linux:
     name: Alpha x86 Windows, MacOS and Linux
     needs: update_tag
-    permissions:
-      contents: write
-      id-token: write
-      attestations: write
     strategy:
       fail-fast: false
       matrix:
@@ -371,10 +367,6 @@ jobs:
   alpha-arm-linux:
     name: Alpha ARM Linux
     needs: update_tag
-    permissions:
-      contents: write
-      id-token: write
-      attestations: write
     strategy:
       fail-fast: false
       matrix:
@@ -513,10 +505,6 @@ jobs:
   alpha-x86-arm-windows_webview2:
     name: Alpha x86 and ARM Windows with WebView2
     needs: update_tag
-    permissions:
-      contents: write
-      id-token: write
-      attestations: write
     strategy:
       fail-fast: false
       matrix:
