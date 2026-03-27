@@ -26,26 +26,9 @@ use tauri::{
     menu::{CheckMenuItem, IsMenuItem, MenuEvent, MenuItem, PredefinedMenuItem, Submenu},
 };
 
-#[cfg(target_os = "macos")]
-fn format_speed(bytes_per_sec: u64) -> std::string::String {
-    const KB: u64 = 1024;
-    const MB: u64 = 1024 * KB;
-    const GB: u64 = 1024 * MB;
-
-    if bytes_per_sec >= GB {
-        format!("{:.1}G/s", bytes_per_sec as f64 / GB as f64)
-    } else if bytes_per_sec >= MB {
-        format!("{:.1}M/s", bytes_per_sec as f64 / MB as f64)
-    } else {
-        format!("{}K/s", bytes_per_sec / KB)
-    }
-}
-
-#[cfg(target_os = "macos")]
-fn format_tray_speed(up: u64, down: u64) -> std::string::String {
-    format!("↑{} ↓{}", format_speed(up), format_speed(down))
-}
 mod menu_def;
+#[cfg(target_os = "macos")]
+mod speed;
 use menu_def::{MenuIds, MenuTexts};
 
 // TODO: 是否需要将可变菜单抽离存储起来，后续直接更新对应菜单实例，无需重新创建菜单(待考虑)
@@ -514,17 +497,30 @@ impl Tray {
 
         let app_handle = handle::Handle::app_handle();
         if let Some(tray) = app_handle.tray_by_id("main") {
-            let _ = tray.set_title(Some(""));
+            let result = tray.with_inner_tray_icon(|inner| {
+                if let Some(status_item) = inner.ns_status_item() {
+                    speed::clear_speed_attributed_title(&status_item);
+                }
+            });
+            if let Err(e) = result {
+                logging!(warn, Type::Tray, "清除富文本速率失败: {e}");
+            }
         }
     }
 
-    /// 将计算出的速率更新到托盘标题（macOS）
+    /// 将计算出的速率以富文本形式更新到托盘标题（macOS）
     #[cfg(target_os = "macos")]
     fn apply_tray_speed(up: u64, down: u64) {
-        let speed_str = format_tray_speed(up, down);
         let app_handle = handle::Handle::app_handle();
         if let Some(tray) = app_handle.tray_by_id("main") {
-            logging_error!(Type::Tray, tray.set_title(Some(speed_str.as_str())));
+            let result = tray.with_inner_tray_icon(move |inner| {
+                if let Some(status_item) = inner.ns_status_item() {
+                    speed::set_speed_attributed_title(&status_item, up, down);
+                }
+            });
+            if let Err(e) = result {
+                logging!(warn, Type::Tray, "设置富文本速率失败: {e}");
+            }
         }
     }
 }
