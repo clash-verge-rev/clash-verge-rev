@@ -7,7 +7,7 @@ fn deep_merge(a: &mut Value, b: Value) {
     match (a, b) {
         (&mut Value::Mapping(ref mut a), Value::Mapping(b)) => {
             for (k, v) in b {
-                deep_merge(a.entry(k.clone()).or_insert(Value::Null), v);
+                deep_merge(a.entry(k).or_insert(Value::Null), v);
             }
         }
         (a, b) => *a = b,
