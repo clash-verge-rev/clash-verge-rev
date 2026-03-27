@@ -141,8 +141,8 @@ impl Hotkey {
             }
             HotkeyFunction::ToggleTunMode => {
                 AsyncHandler::spawn(async move || {
-                    let toggleRs = feat::toggle_tun_mode(None).await;
-                    if toggleRs {
+                    let toggle_rs = feat::toggle_tun_mode(None).await;
+                    if toggle_rs {
                         notify_event(NotificationEvent::TunModeOn).await;
                     } else {
                         notify_event(NotificationEvent::TunModeOff).await;
