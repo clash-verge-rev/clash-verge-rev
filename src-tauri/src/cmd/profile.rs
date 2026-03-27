@@ -185,6 +185,7 @@ pub async fn delete_profile(index: String) -> CmdResult {
             }
         }
     }
+    Timer::global().refresh().await.stringify_err()?;
     Ok(())
 }
 
