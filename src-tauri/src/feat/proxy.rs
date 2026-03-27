@@ -39,8 +39,7 @@ pub async fn toggle_system_proxy() {
 /// Returns the updated toggle state
 pub async fn toggle_tun_mode(not_save_file: Option<bool>) -> bool {
     let enable = Config::verge().await.latest_arc().enable_tun_mode;
-    let mut enable = enable.unwrap_or(false);
-    enable = !enable;
+    let enable = !enable.unwrap_or(false);
 
     match super::patch_verge(
         &IVerge {
