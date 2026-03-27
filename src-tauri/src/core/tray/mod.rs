@@ -4,6 +4,8 @@ use crate::core::tray::menu_def::TrayAction;
 use crate::module::lightweight;
 use crate::process::AsyncHandler;
 use crate::singleton;
+#[cfg(target_os = "macos")]
+use crate::utils::tray_speed;
 use crate::utils::window_manager::WindowManager;
 use crate::{
     Type, cmd, config::Config, feat, logging, module::lightweight::is_in_lightweight_mode,
@@ -27,8 +29,6 @@ use tauri::{
 };
 
 mod menu_def;
-#[cfg(target_os = "macos")]
-mod speed;
 use menu_def::{MenuIds, MenuTexts};
 
 // TODO: 是否需要将可变菜单抽离存储起来，后续直接更新对应菜单实例，无需重新创建菜单(待考虑)
@@ -499,7 +499,7 @@ impl Tray {
         if let Some(tray) = app_handle.tray_by_id("main") {
             let result = tray.with_inner_tray_icon(|inner| {
                 if let Some(status_item) = inner.ns_status_item() {
-                    speed::clear_speed_attributed_title(&status_item);
+                    tray_speed::clear_speed_attributed_title(&status_item);
                 }
             });
             if let Err(e) = result {
@@ -515,7 +515,7 @@ impl Tray {
         if let Some(tray) = app_handle.tray_by_id("main") {
             let result = tray.with_inner_tray_icon(move |inner| {
                 if let Some(status_item) = inner.ns_status_item() {
-                    speed::set_speed_attributed_title(&status_item, up, down);
+                    tray_speed::set_speed_attributed_title(&status_item, up, down);
                 }
             });
             if let Err(e) = result {
