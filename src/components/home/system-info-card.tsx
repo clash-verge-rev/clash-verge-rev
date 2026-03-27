@@ -157,6 +157,12 @@ export const SystemInfoCard = () => {
   const onCheckUpdate = useLockFn(async () => {
     try {
       const info = await triggerCheckUpdate()
+      const now = Date.now()
+      localStorage.setItem('last_check_update', now.toString())
+      dispatchSystemState({
+        type: 'set-last-check-update',
+        payload: new Date(now).toLocaleString(),
+      })
       if (!info?.available) {
         showNotice.success(
           'settings.components.verge.advanced.notifications.latestVersion',
