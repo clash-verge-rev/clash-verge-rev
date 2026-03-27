@@ -578,6 +578,8 @@ export const ProfileItem = (props: Props) => {
       const customEvent = event as CustomEvent<{ uid?: string }>
       if (customEvent.detail?.uid === itemData.uid) {
         setLoadingCache((cache) => ({ ...cache, [itemData.uid]: false }))
+        // 刷新 profile 数据以获取最新的 updated 时间戳
+        mutate('getProfiles')
         // 更新完成后刷新显示
         if (showNextUpdate) {
           fetchNextUpdateTime()
