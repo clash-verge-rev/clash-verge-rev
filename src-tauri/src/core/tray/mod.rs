@@ -347,7 +347,7 @@ impl Tray {
             |(main, rest)| format!("{main}+{}", rest.split('.').next().unwrap_or("")),
         );
 
-        let base_tooltip = format!(
+        let tooltip = format!(
             "Clash Verge {}\n{}: {}\n{}: {}\n{}: {}",
             reassembled_version,
             sys_proxy_text,
@@ -357,7 +357,6 @@ impl Tray {
             profile_text,
             current_profile_name
         );
-        let tooltip = base_tooltip;
 
         let Some(tray) = app_handle.tray_by_id("main") else {
             logging!(warn, Type::Tray, "Failed to update tray tooltip: tray not found");

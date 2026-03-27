@@ -19,7 +19,7 @@ const KB: u64 = 1024;
 const SPEED_UNITS: [&str; 5] = ["B/s", "K/s", "M/s", "G/s", "T/s"];
 
 /// 富文本渲染使用的字号（适配两行在托盘栏的高度）
-const TRAY_FONT_SIZE: f64 = 9.0;
+const TRAY_FONT_SIZE: f64 = 9.5;
 
 /// 每行速率数值的固定字符宽度（含单位，右对齐）
 const SPEED_FIELD_WIDTH: usize = 7;
