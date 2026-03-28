@@ -13,7 +13,11 @@ import { useNavigate } from 'react-router'
 
 import { useServiceInstaller } from '@/hooks/use-service-installer'
 import { useSystemState } from '@/hooks/use-system-state'
-import { useUpdate, updateLastCheckTime } from '@/hooks/use-update'
+import {
+  useUpdate,
+  updateLastCheckTime,
+  readLastCheckTime,
+} from '@/hooks/use-update'
 import { useVerge } from '@/hooks/use-verge'
 import { getSystemInfo } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
@@ -63,8 +67,7 @@ export const SystemInfoCard = () => {
   // 如果启用了自动检查更新但没有记录，设置当前时间并延迟检查
   useEffect(() => {
     if (!verge?.auto_check_update) return
-    const stored = localStorage.getItem('last_check_update')
-    if (stored) return
+    if (readLastCheckTime() !== null) return
 
     updateLastCheckTime()
     const timeoutId = window.setTimeout(() => {
