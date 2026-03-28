@@ -60,7 +60,7 @@
     "dayjs": "1.11.20",
     "foxact": "^0.3.0",
     "foxts": "^5.3.0",
-    "i18next": "^25.10.4",
+    "i18next": "^26.0.0",
     "js-yaml": "^4.1.1",
     "lodash-es": "^4.17.23",
     "meta-json-schema": "^1.19.21",
@@ -71,7 +71,7 @@
     "react-dom": "19.2.4",
     "react-error-boundary": "6.1.1",
     "react-hook-form": "^7.72.0",
-    "react-i18next": "16.6.6",
+    "react-i18next": "17.0.1",
     "react-markdown": "10.1.0",
     "react-router": "^7.13.1",
     "react-virtuoso": "^4.18.3",
@@ -120,7 +120,7 @@
     "typescript": "^6.0.0",
     "typescript-eslint": "^8.57.1",
     "vite": "^8.0.1",
-    "vite-plugin-svgr": "^4.5.0"
+    "vite-plugin-svgr": "^5.0.0"
   },
   "lint-staged": {
     "*.{ts,tsx}": [
