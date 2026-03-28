@@ -7,42 +7,19 @@ import {
 } from '@mui/icons-material'
 import { Typography, Stack, Divider, Chip, IconButton } from '@mui/material'
 import { useLockFn } from 'ahooks'
-import { useCallback, useEffect, useMemo, useReducer } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
 
 import { useServiceInstaller } from '@/hooks/use-service-installer'
 import { useSystemState } from '@/hooks/use-system-state'
-import { useUpdate } from '@/hooks/use-update'
+import { useUpdate, updateLastCheckTime } from '@/hooks/use-update'
 import { useVerge } from '@/hooks/use-verge'
 import { getSystemInfo } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
 import { version as appVersion } from '@root/package.json'
 
 import { EnhancedCard } from './enhanced-card'
-
-interface SystemState {
-  osInfo: string
-  lastCheckUpdate: string
-}
-
-type SystemStateAction =
-  | { type: 'set-os-info'; payload: string }
-  | { type: 'set-last-check-update'; payload: string }
-
-const systemStateReducer = (
-  state: SystemState,
-  action: SystemStateAction,
-): SystemState => {
-  switch (action.type) {
-    case 'set-os-info':
-      return { ...state, osInfo: action.payload }
-    case 'set-last-check-update':
-      return { ...state, lastCheckUpdate: action.payload }
-    default:
-      return state
-  }
-}
 
 export const SystemInfoCard = () => {
   const { t } = useTranslation()
@@ -51,28 +28,18 @@ export const SystemInfoCard = () => {
   const { isAdminMode, isSidecarMode } = useSystemState()
   const { installServiceAndRestartCore } = useServiceInstaller()
 
-  // 自动检查更新逻辑
-  const { checkUpdate: triggerCheckUpdate } = useUpdate(true, {
-    onSuccess: () => {
-      const now = Date.now()
-      localStorage.setItem('last_check_update', now.toString())
-      dispatchSystemState({
-        type: 'set-last-check-update',
-        payload: new Date(now).toLocaleString(),
-      })
-    },
-  })
+  // 自动检查更新逻辑（lastCheckUpdate 由 useUpdate 统一管理）
+  const { checkUpdate: triggerCheckUpdate, lastCheckUpdate } = useUpdate(true)
 
-  // 系统信息状态
-  const [systemState, dispatchSystemState] = useReducer(systemStateReducer, {
-    osInfo: '',
-    lastCheckUpdate: '-',
-  })
+  const [osInfo, setOsInfo] = useState('')
+
+  const lastCheckUpdateText = useMemo(
+    () => (lastCheckUpdate ? new Date(lastCheckUpdate).toLocaleString() : '-'),
+    [lastCheckUpdate],
+  )
 
   // 初始化系统信息
   useEffect(() => {
-    let timeoutId: number | undefined
-
     getSystemInfo()
       .then((info) => {
         const lines = info.split('\n')
@@ -87,49 +54,24 @@ export const SystemInfoCard = () => {
             sysVersion = sysVersion.substring(sysName.length).trim()
           }
 
-          dispatchSystemState({
-            type: 'set-os-info',
-            payload: `${sysName} ${sysVersion}`,
-          })
+          setOsInfo(`${sysName} ${sysVersion}`)
         }
       })
       .catch(console.error)
+  }, [])
 
-    // 获取最后检查更新时间
-    const lastCheck = localStorage.getItem('last_check_update')
-    if (lastCheck) {
-      try {
-        const timestamp = parseInt(lastCheck, 10)
-        if (!isNaN(timestamp)) {
-          dispatchSystemState({
-            type: 'set-last-check-update',
-            payload: new Date(timestamp).toLocaleString(),
-          })
-        }
-      } catch (e) {
-        console.error('Error parsing last check update time', e)
-      }
-    } else if (verge?.auto_check_update) {
-      // 如果启用了自动检查更新但没有记录，设置当前时间并延迟检查
-      const now = Date.now()
-      localStorage.setItem('last_check_update', now.toString())
-      dispatchSystemState({
-        type: 'set-last-check-update',
-        payload: new Date(now).toLocaleString(),
-      })
+  // 如果启用了自动检查更新但没有记录，设置当前时间并延迟检查
+  useEffect(() => {
+    if (!verge?.auto_check_update) return
+    const stored = localStorage.getItem('last_check_update')
+    if (stored) return
 
-      timeoutId = window.setTimeout(() => {
-        if (verge?.auto_check_update) {
-          triggerCheckUpdate().catch(console.error)
-        }
-      }, 5000)
-    }
-    return () => {
-      if (timeoutId !== undefined) {
-        window.clearTimeout(timeoutId)
-      }
-    }
-  }, [verge?.auto_check_update, dispatchSystemState, triggerCheckUpdate])
+    updateLastCheckTime()
+    const timeoutId = window.setTimeout(() => {
+      triggerCheckUpdate().catch(console.error)
+    }, 5000)
+    return () => window.clearTimeout(timeoutId)
+  }, [verge?.auto_check_update, triggerCheckUpdate])
 
   // 导航到设置页面
   const goToSettings = useCallback(() => {
@@ -157,12 +99,6 @@ export const SystemInfoCard = () => {
   const onCheckUpdate = useLockFn(async () => {
     try {
       const info = await triggerCheckUpdate()
-      const now = Date.now()
-      localStorage.setItem('last_check_update', now.toString())
-      dispatchSystemState({
-        type: 'set-last-check-update',
-        payload: new Date(now).toLocaleString(),
-      })
       if (!info?.available) {
         showNotice.success(
           'settings.components.verge.advanced.notifications.latestVersion',
@@ -280,7 +216,7 @@ export const SystemInfoCard = () => {
             {t('home.components.systemInfo.fields.osInfo')}
           </Typography>
           <Typography variant="body2" fontWeight="medium">
-            {systemState.osInfo}
+            {osInfo}
           </Typography>
         </Stack>
         <Divider />
@@ -341,7 +277,7 @@ export const SystemInfoCard = () => {
               '&:hover': { opacity: 0.7 },
             }}
           >
-            {systemState.lastCheckUpdate}
+            {lastCheckUpdateText}
           </Typography>
         </Stack>
         <Divider />
