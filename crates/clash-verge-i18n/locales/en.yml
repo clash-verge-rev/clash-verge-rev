@@ -10,12 +10,10 @@ notifications:
     title: System Proxy
     'on': System proxy has been enabled.
     'off': System proxy has been disabled.
-  tunModeOn:
+  tunModeToggled:
     title: TUN Mode
-    body: TUN mode has been enabled.
-  tunModeOff:
-    title: TUN Mode
-    body: TUN mode has been disabled.
+    'on': TUN mode has been enabled.
+    'off': TUN mode has been disabled.
   lightweightModeEntered:
     title: Lightweight Mode
     body: Entered lightweight mode.

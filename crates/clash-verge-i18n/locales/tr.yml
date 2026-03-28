@@ -10,12 +10,10 @@ notifications:
     title: Sistem Vekil'i
     'on': System proxy has been enabled.
     'off': System proxy has been disabled.
-  tunModeOn:
+  tunModeToggled:
     title: TUN Modu
-    body: TUN modu durumu güncellendi.
-  tunModeOff:
-    title: TUN Modu
-    body: TUN modu durumu güncellendi.
+    'on': TUN mode has been enabled.
+    'off': TUN mode has been disabled.
   lightweightModeEntered:
     title: Hafif Mod
     body: Hafif moda geçildi.

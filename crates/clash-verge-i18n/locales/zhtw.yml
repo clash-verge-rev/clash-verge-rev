@@ -10,12 +10,10 @@ notifications:
     title: 系統代理
     'on': System proxy has been enabled.
     'off': System proxy has been disabled.
-  tunModeOn:
+  tunModeToggled:
     title: 虛擬網路介面卡模式
-    body: 已更新虛擬網路介面卡模式狀態。
-  tunModeOff:
-    title: 虛擬網路介面卡模式
-    body: 已更新虛擬網路介面卡模式狀態。
+    'on': TUN mode has been enabled.
+    'off': TUN mode has been disabled.
   lightweightModeEntered:
     title: 輕量模式
     body: 已進入輕量模式。

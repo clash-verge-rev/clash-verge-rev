@@ -10,12 +10,10 @@ notifications:
     title: 시스템 프록시
     'on': System proxy has been enabled.
     'off': System proxy has been disabled.
-  tunModeOn:
+  tunModeToggled:
     title: TUN 모드
-    body: TUN 모드 상태가 업데이트되었습니다.
-  tunModeOff:
-    title: TUN 모드
-    body: TUN 모드 상태가 업데이트되었습니다.
+    'on': TUN mode has been enabled.
+    'off': TUN mode has been disabled.
   lightweightModeEntered:
     title: 경량 모드
     body: 경량 모드에 진입했습니다.

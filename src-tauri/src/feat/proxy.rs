@@ -20,9 +20,10 @@ pub async fn toggle_system_proxy() -> bool {
         logging!(error, Type::ProxyMode, "Failed to close all connections: {err}");
     }
 
+    let enable = !enable;
     let patch_result = super::patch_verge(
         &IVerge {
-            enable_system_proxy: Some(!enable),
+            enable_system_proxy: Some(enable),
             ..IVerge::default()
         },
         false,
