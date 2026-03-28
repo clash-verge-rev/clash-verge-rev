@@ -9,7 +9,7 @@ pub enum NotificationEvent<'a> {
     ClashModeChanged {
         mode: &'a str,
     },
-    SystemProxyToggled,
+    SystemProxyToggled(bool),
     TunModeOn,
     TunModeOff,
     LightweightModeEntered,
@@ -38,9 +38,15 @@ pub async fn notify_event<'a>(event: NotificationEvent<'a>) {
                 .into();
             notify(title, body);
         }
-        NotificationEvent::SystemProxyToggled => {
+        NotificationEvent::SystemProxyToggled(enabled) => {
             let title = clash_verge_i18n::t!("notifications.systemProxyToggled.title");
-            let body = clash_verge_i18n::t!("notifications.systemProxyToggled.body");
+            let key = if enabled {
+                "notifications.systemProxyToggled.on"
+            } else {
+                "notifications.systemProxyToggled.off"
+            };
+
+            let body = clash_verge_i18n::t!(key);
             notify(title, body);
         }
         NotificationEvent::TunModeOn => {

@@ -8,7 +8,8 @@ notifications:
     body: '{mode} moduna geçildi.'
   systemProxyToggled:
     title: Sistem Vekil'i
-    body: Sistem vekil'i durumu güncellendi.
+    'on': System proxy has been enabled.
+    'off': System proxy has been disabled.
   tunModeOn:
     title: TUN Modu
     body: TUN modu durumu güncellendi.

@@ -8,7 +8,8 @@ notifications:
     body: '{mode}(으)로 전환되었습니다.'
   systemProxyToggled:
     title: 시스템 프록시
-    body: 시스템 프록시 상태가 업데이트되었습니다.
+    'on': System proxy has been enabled.
+    'off': System proxy has been disabled.
   tunModeOn:
     title: TUN 모드
     body: TUN 모드 상태가 업데이트되었습니다.

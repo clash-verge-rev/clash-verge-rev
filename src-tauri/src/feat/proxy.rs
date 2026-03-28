@@ -7,7 +7,7 @@ use std::env;
 use tauri_plugin_clipboard_manager::ClipboardExt as _;
 
 /// Toggle system proxy on/off
-pub async fn toggle_system_proxy() {
+pub async fn toggle_system_proxy() -> bool {
     let verge = Config::verge().await;
     let enable = verge.latest_arc().enable_system_proxy.unwrap_or(false);
     let auto_close_connection = verge.latest_arc().auto_close_connection.unwrap_or(false);
@@ -33,6 +33,8 @@ pub async fn toggle_system_proxy() {
         Ok(_) => handle::Handle::refresh_verge(),
         Err(err) => logging!(error, Type::ProxyMode, "{err}"),
     }
+
+    enable
 }
 
 /// Toggle TUN mode on/off

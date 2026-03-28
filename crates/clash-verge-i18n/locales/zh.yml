@@ -8,7 +8,8 @@ notifications:
     body: 已切换至 {mode}。
   systemProxyToggled:
     title: 系统代理
-    body: 系统代理状态已更新。
+    'on': 系统代理已启用。
+    'off': 系统代理已禁用。
   tunModeOn:
     title: TUN 模式
     body: TUN 模式已开启。

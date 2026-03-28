@@ -135,8 +135,8 @@ impl Hotkey {
             }
             HotkeyFunction::ToggleSystemProxy => {
                 AsyncHandler::spawn(async move || {
-                    feat::toggle_system_proxy().await;
-                    notify_event(NotificationEvent::SystemProxyToggled).await;
+                    let is_proxy_enabled = feat::toggle_system_proxy().await;
+                    notify_event(NotificationEvent::SystemProxyToggled(is_proxy_enabled)).await;
                 });
             }
             HotkeyFunction::ToggleTunMode => {
