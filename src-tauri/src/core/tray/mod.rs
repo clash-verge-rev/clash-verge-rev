@@ -4,6 +4,8 @@ use crate::core::tray::menu_def::TrayAction;
 use crate::module::lightweight;
 use crate::process::AsyncHandler;
 use crate::singleton;
+#[cfg(target_os = "macos")]
+use crate::utils::tray_speed;
 use crate::utils::window_manager::WindowManager;
 use crate::{
     Type, cmd, config::Config, feat, logging, module::lightweight::is_in_lightweight_mode,
@@ -25,6 +27,7 @@ use tauri::{
     AppHandle, Wry,
     menu::{CheckMenuItem, IsMenuItem, MenuEvent, MenuItem, PredefinedMenuItem, Submenu},
 };
+
 mod menu_def;
 use menu_def::{MenuIds, MenuTexts};
 
@@ -45,6 +48,8 @@ enum IconKind {
 
 pub struct Tray {
     limiter: SystemLimiter,
+    #[cfg(target_os = "macos")]
+    speed_task: parking_lot::Mutex<Option<tauri::async_runtime::JoinHandle<()>>>,
 }
 
 impl TrayState {
@@ -113,6 +118,8 @@ impl Default for Tray {
     fn default() -> Self {
         Self {
             limiter: Limiter::new(Duration::from_millis(TRAY_CLICK_DEBOUNCE_MS), SystemClock),
+            #[cfg(target_os = "macos")]
+            speed_task: parking_lot::Mutex::new(None),
         }
     }
 }
@@ -325,6 +332,8 @@ impl Tray {
         let verge = Config::verge().await.data_arc();
         self.update_menu().await?;
         self.update_icon(&verge).await?;
+        #[cfg(target_os = "macos")]
+        self.update_speed_task(verge.enable_tray_speed.unwrap_or(false));
         self.update_tooltip().await?;
         Ok(())
     }
@@ -381,6 +390,99 @@ impl Tray {
             logging!(debug, Type::Tray, "tray click rate limited");
         }
         allow
+    }
+
+    /// 启动托盘速率采集后台任务（1秒轮询）
+    #[cfg(target_os = "macos")]
+    pub fn start_speed_task(&self) {
+        if handle::Handle::global().is_exiting() {
+            return;
+        }
+        let mut guard = self.speed_task.lock();
+        if guard.as_ref().is_some_and(|t| !t.inner().is_finished()) {
+            return; // 已在运行，无需重复启动
+        }
+        let task = AsyncHandler::spawn(|| async move {
+            let mut interval = tokio::time::interval(Duration::from_secs(1));
+            let mut prev_upload: u64 = 0;
+            let mut prev_download: u64 = 0;
+            let mut first = true;
+            loop {
+                interval.tick().await;
+                if handle::Handle::global().is_exiting() {
+                    break;
+                }
+                let result = handle::Handle::mihomo().await.get_connections().await;
+                match result {
+                    Ok(conn) => {
+                        let up_total = conn.upload_total;
+                        let down_total = conn.download_total;
+                        if !first {
+                            let up_speed = up_total.saturating_sub(prev_upload);
+                            let down_speed = down_total.saturating_sub(prev_download);
+                            Self::apply_tray_speed(up_speed, down_speed);
+                        }
+                        first = false;
+                        prev_upload = up_total;
+                        prev_download = down_total;
+                    }
+                    Err(_) => {
+                        if !first {
+                            Self::apply_tray_speed(0, 0);
+                        }
+                    }
+                }
+            }
+        });
+        *guard = Some(task);
+    }
+
+    /// 根据配置统一更新托盘速率采集任务状态（macOS）
+    #[cfg(target_os = "macos")]
+    pub fn update_speed_task(&self, enable_tray_speed: bool) {
+        if enable_tray_speed {
+            self.start_speed_task();
+        } else {
+            self.stop_speed_task();
+        }
+    }
+
+    /// 停止托盘速率采集后台任务并清除速率显示
+    #[cfg(target_os = "macos")]
+    pub fn stop_speed_task(&self) {
+        let mut guard = self.speed_task.lock();
+        if let Some(task) = guard.take() {
+            task.abort();
+        }
+        drop(guard);
+
+        let app_handle = handle::Handle::app_handle();
+        if let Some(tray) = app_handle.tray_by_id("main") {
+            let result = tray.with_inner_tray_icon(|inner| {
+                if let Some(status_item) = inner.ns_status_item() {
+                    tray_speed::clear_speed_attributed_title(&status_item);
+                }
+            });
+            if let Err(e) = result {
+                logging!(warn, Type::Tray, "清除富文本速率失败: {e}");
+            }
+        }
+    }
+
+    /// 将计算出的速率以富文本形式更新到托盘标题（macOS）
+    #[cfg(target_os = "macos")]
+    fn apply_tray_speed(up: u64, down: u64) {
+        let app_handle = handle::Handle::app_handle();
+        if let Some(tray) = app_handle.tray_by_id("main") {
+            let result = tray.with_inner_tray_icon(move |inner| {
+                if let Some(status_item) = inner.ns_status_item() {
+                    tray_speed::set_speed_attributed_title(&status_item, up, down);
+                }
+            });
+            if let Err(e) = result {
+                logging!(warn, Type::Tray, "设置富文本速率失败: {e}");
+            }
+        }
     }
 }
 
