@@ -8,10 +8,12 @@ notifications:
     body: به {mode} تغییر کرد.
   systemProxyToggled:
     title: پروکسی سیستم
-    body: وضعیت پروکسی سیستم به‌روزرسانی شد.
+    'on': System proxy has been enabled.
+    'off': System proxy has been disabled.
   tunModeToggled:
     title: حالت TUN
-    body: وضعیت حالت TUN به‌روزرسانی شد.
+    'on': TUN mode has been enabled.
+    'off': TUN mode has been disabled.
   lightweightModeEntered:
     title: حالت سبک
     body: به حالت سبک وارد شد.

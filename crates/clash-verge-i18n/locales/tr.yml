@@ -8,10 +8,12 @@ notifications:
     body: '{mode} moduna geçildi.'
   systemProxyToggled:
     title: Sistem Vekil'i
-    body: Sistem vekil'i durumu güncellendi.
+    'on': System proxy has been enabled.
+    'off': System proxy has been disabled.
   tunModeToggled:
     title: TUN Modu
-    body: TUN modu durumu güncellendi.
+    'on': TUN mode has been enabled.
+    'off': TUN mode has been disabled.
   lightweightModeEntered:
     title: Hafif Mod
     body: Hafif moda geçildi.

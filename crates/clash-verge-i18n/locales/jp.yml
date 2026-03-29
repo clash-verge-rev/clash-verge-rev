@@ -8,10 +8,12 @@ notifications:
     body: '{mode} に切り替えました。'
   systemProxyToggled:
     title: システムプロキシ
-    body: システムプロキシの状態が更新されました。
+    'on': System proxy has been enabled.
+    'off': System proxy has been disabled.
   tunModeToggled:
     title: TUN モード
-    body: TUN モードの状態が更新されました。
+    'on': TUN mode has been enabled.
+    'off': TUN mode has been disabled.
   lightweightModeEntered:
     title: 軽量モード
     body: 軽量モードに入りました。
