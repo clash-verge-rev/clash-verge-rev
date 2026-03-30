@@ -7,7 +7,7 @@ use std::env;
 use tauri_plugin_clipboard_manager::ClipboardExt as _;
 
 /// Toggle system proxy on/off
-pub async fn toggle_system_proxy() {
+pub async fn toggle_system_proxy() -> bool {
     let verge = Config::verge().await;
     let enable = verge.latest_arc().enable_system_proxy.unwrap_or(false);
     let auto_close_connection = verge.latest_arc().auto_close_connection.unwrap_or(false);
@@ -20,9 +20,10 @@ pub async fn toggle_system_proxy() {
         logging!(error, Type::ProxyMode, "Failed to close all connections: {err}");
     }
 
+    let enable = !enable;
     let patch_result = super::patch_verge(
         &IVerge {
-            enable_system_proxy: Some(!enable),
+            enable_system_proxy: Some(enable),
             ..IVerge::default()
         },
         false,
@@ -33,24 +34,33 @@ pub async fn toggle_system_proxy() {
         Ok(_) => handle::Handle::refresh_verge(),
         Err(err) => logging!(error, Type::ProxyMode, "{err}"),
     }
+
+    enable
 }
 
 /// Toggle TUN mode on/off
-pub async fn toggle_tun_mode(not_save_file: Option<bool>) {
-    let enable = Config::verge().await.latest_arc().enable_tun_mode;
-    let enable = enable.unwrap_or(false);
+/// Returns the updated toggle state
+pub async fn toggle_tun_mode(not_save_file: Option<bool>) -> bool {
+    let current = Config::verge().await.latest_arc().enable_tun_mode.unwrap_or(false);
+    let enable = !current;
 
     match super::patch_verge(
         &IVerge {
-            enable_tun_mode: Some(!enable),
+            enable_tun_mode: Some(enable),
             ..IVerge::default()
         },
         not_save_file.unwrap_or(false),
     )
     .await
     {
-        Ok(_) => handle::Handle::refresh_verge(),
-        Err(err) => logging!(error, Type::ProxyMode, "{err}"),
+        Ok(_) => {
+            handle::Handle::refresh_verge();
+            enable
+        }
+        Err(err) => {
+            logging!(error, Type::ProxyMode, "{err}");
+            current
+        }
     }
 }
 

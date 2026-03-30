@@ -8,10 +8,12 @@ notifications:
     body: Beralih ke {mode}.
   systemProxyToggled:
     title: Proksi Sistem
-    body: Status proksi sistem telah diperbarui.
+    'on': System proxy has been enabled.
+    'off': System proxy has been disabled.
   tunModeToggled:
     title: Mode TUN
-    body: Status mode TUN telah diperbarui.
+    'on': TUN mode has been enabled.
+    'off': TUN mode has been disabled.
   lightweightModeEntered:
     title: Mode Ringan
     body: Masuk ke mode ringan.
