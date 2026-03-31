@@ -4,7 +4,7 @@ import { mutate, type MutatorCallback } from 'swr'
 import useSWRSubscription from 'swr/subscription'
 import { type Message, type MihomoWebSocket } from 'tauri-plugin-mihomo-api'
 
-export const RECONNECT_DELAY_MS = 100
+export const RECONNECT_DELAY_MS = 1000
 
 type NextFn<T> = (error?: any, data?: T | MutatorCallback<T>) => void
 
@@ -26,6 +26,15 @@ interface UseMihomoWsSubscriptionOptions<T> {
   fallbackData: T
   connect: () => Promise<MihomoWebSocket>
   keepPreviousData?: boolean
+  /**
+   * When > 0, coalesce rapid WebSocket messages by wrapping the `next`
+   * function passed to `setupHandlers`.  Only the most recent value is
+   * flushed, at most once per `throttleMs` milliseconds.
+   *
+   * Uses `setTimeout` (not `requestAnimationFrame`) so it keeps working
+   * when the window is backgrounded or minimized.
+   */
+  throttleMs?: number
   setupHandlers: (ctx: HandlerContext<T>) => HandlerResult
 }
 
@@ -38,6 +47,7 @@ export const useMihomoWsSubscription = <T>(
     fallbackData,
     connect,
     keepPreviousData = true,
+    throttleMs,
     setupHandlers,
   } = options
 
@@ -77,18 +87,59 @@ export const useMihomoWsSubscription = <T>(
         timeoutRef.current = setTimeout(connectWs, RECONNECT_DELAY_MS)
       }
 
+      let throttleCleanup: (() => void) | undefined
+      let wrappedNext: NextFn<T> = next
+
+      if (throttleMs && throttleMs > 0) {
+        let pendingData: T | MutatorCallback<T> | undefined
+        let hasPending = false
+        let timerId: ReturnType<typeof setTimeout> | null = null
+
+        const flush = () => {
+          timerId = null
+          if (hasPending) {
+            const data = pendingData
+            pendingData = undefined
+            hasPending = false
+            next(undefined, data)
+          }
+        }
+
+        wrappedNext = (error?: any, data?: T | MutatorCallback<T>) => {
+          if (error !== undefined && error !== null) {
+            next(error, data)
+            return
+          }
+          if (!timerId) {
+            next(undefined, data)
+            timerId = setTimeout(flush, throttleMs)
+          } else {
+            pendingData = data
+            hasPending = true
+          }
+        }
+
+        throttleCleanup = () => {
+          if (timerId) {
+            clearTimeout(timerId)
+            timerId = null
+          }
+        }
+      }
+
       const {
         handleMessage: handleTextMessage,
         onConnected,
         cleanup,
       } = setupHandlers({
-        next,
+        next: wrappedNext,
         scheduleReconnect,
         isMounted: () => isMounted,
       })
 
       const cleanupAll = () => {
         clearReconnectTimer()
+        throttleCleanup?.()
         cleanup?.()
         void closeSocket()
       }
