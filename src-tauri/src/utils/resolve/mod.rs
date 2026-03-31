@@ -75,6 +75,8 @@ pub fn resolve_setup_async() {
             init_auto_lightweight_boot(),
             init_auto_backup(),
         );
+
+        refresh_tray_menu().await;
     });
 }
 

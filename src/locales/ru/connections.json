@@ -13,22 +13,22 @@
       "time": "Время подключения",
       "source": "Исходный адрес",
       "destination": "IP-адрес назначения",
-      "destinationPort": "Целевой порт",
+      "destinationPort": "Порт назначения",
       "type": "Тип"
     },
     "order": {
-      "default": "Default",
+      "default": "По умолчанию",
       "uploadSpeed": "Скорость загрузки",
       "downloadSpeed": "Скорость скачивания"
     },
     "actions": {
-      "active": "Active",
-      "closed": "Closed",
+      "active": "Активные",
+      "closed": "Закрытые",
       "closeConnection": "Закрыть соединение"
     },
     "columnManager": {
       "title": "Столбцы",
-      "dragHandle": "Drag handle"
+      "dragHandle": "Маркер перетаскивания"
     }
   }
 }

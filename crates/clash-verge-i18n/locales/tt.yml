@@ -8,10 +8,12 @@ notifications:
     body: '{mode} режимына күчтел.'
   systemProxyToggled:
     title: Системалы прокси
-    body: Системалы прокси хәле яңартылды.
+    'on': System proxy has been enabled.
+    'off': System proxy has been disabled.
   tunModeToggled:
     title: TUN режимы
-    body: TUN режимы хәле яңартылды.
+    'on': TUN mode has been enabled.
+    'off': TUN mode has been disabled.
   lightweightModeEntered:
     title: Җиңел режим
     body: Җиңел режимга күчелде.

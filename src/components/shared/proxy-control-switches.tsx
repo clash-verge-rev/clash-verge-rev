@@ -67,10 +67,14 @@ const SwitchRow = ({
   const handleChange = (_: React.ChangeEvent, value: boolean) => {
     pendingRef.current = true
     setChecked(value)
-    onToggle(value).catch((err: any) => {
-      pendingRef.current = false
-      onError?.(err)
-    })
+    onToggle(value)
+      .catch((err: any) => {
+        setChecked(active)
+        onError?.(err)
+      })
+      .finally(() => {
+        pendingRef.current = false
+      })
   }
 
   return (
