@@ -87,7 +87,7 @@ export const useClashInfo = () => {
     getClashInfo,
   )
 
-  const patchInfo = async (patch: ClashInfoPatch) => {
+  const patchInfo = useLockFn(async (patch: ClashInfoPatch) => {
     if (!hasClashInfoPayload(patch)) return
 
     validatePorts(patch)
@@ -95,7 +95,7 @@ export const useClashInfo = () => {
     await patchClashConfig(patch)
     mutateInfo()
     mutate('getClashConfig')
-  }
+  })
 
   return {
     clashInfo,

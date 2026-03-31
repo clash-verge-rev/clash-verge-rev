@@ -120,9 +120,9 @@ export const useProfiles = () => {
       ])
 
       // 处理所有代理组
-      ;[global, ...groups].forEach((group) => {
+      for (const group of [global, ...groups]) {
         if (!group) {
-          return
+          continue
         }
 
         const { type, name, now } = group
@@ -134,14 +134,14 @@ export const useProfiles = () => {
             const preferredProxy = now ? now : savedProxy
             newSelected.push({ name, now: preferredProxy })
           }
-          return
+          continue
         }
 
         if (savedProxy == null) {
           if (now != null) {
             newSelected.push({ name, now })
           }
-          return
+          continue
         }
 
         const existsInGroup = availableProxies.some((proxy) => {
@@ -158,7 +158,7 @@ export const useProfiles = () => {
           )
           hasChange = true
           newSelected.push({ name, now: now ?? savedProxy })
-          return
+          continue
         }
 
         if (savedProxy !== now) {
@@ -166,11 +166,18 @@ export const useProfiles = () => {
             `[ActivateSelected] 需要切换代理组 ${name}: ${now} -> ${savedProxy}`,
           )
           hasChange = true
-          selectNodeForGroup(name, savedProxy)
+          try {
+            await selectNodeForGroup(name, savedProxy)
+          } catch (error: any) {
+            console.warn(
+              `[ActivateSelected] 切换代理组 ${name} 失败:`,
+              error.message,
+            )
+          }
         }
 
         newSelected.push({ name, now: savedProxy })
-      })
+      }
 
       if (!hasChange) {
         debugLog('[ActivateSelected] 所有代理选择已经是目标状态，无需更新')
@@ -183,9 +190,7 @@ export const useProfiles = () => {
         await patchProfile(profileData.current!, { selected: newSelected })
         debugLog('[ActivateSelected] 代理选择配置保存成功')
 
-        setTimeout(() => {
-          mutate('getProxies', calcuProxies())
-        }, 100)
+        await mutate('getProxies', calcuProxies())
       } catch (error: any) {
         console.error('[ActivateSelected] 保存代理选择配置失败:', error.message)
       }
