@@ -13,11 +13,11 @@
   "feedback": {
     "notifications": {
       "provider": {
-        "updateSuccess": "{{name}} updated successfully",
-        "updateFailed": "Failed to update {{name}}: {{message}}",
-        "genericError": "Update failed: {{message}}",
-        "none": "No providers available to update",
-        "allUpdated": "All providers updated successfully"
+        "updateSuccess": "{{name}} успешно обновлён",
+        "updateFailed": "Не удалось обновить {{name}}: {{message}}",
+        "genericError": "Ошибка обновления: {{message}}",
+        "none": "Нет доступных провайдеров для обновления",
+        "allUpdated": "Все провайдеры успешно обновлены"
       }
     }
   },
@@ -30,7 +30,7 @@
           "proxyPolicy": "Политика прокси"
         },
         "toggles": {
-          "noResolve": "Без разрешения"
+          "noResolve": "Без DNS-разрешения"
         },
         "actions": {
           "prependRule": "Добавить правило в начало",
