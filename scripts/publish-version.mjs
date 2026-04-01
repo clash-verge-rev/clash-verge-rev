@@ -49,15 +49,18 @@ async function run() {
 
   if (tag) {
     // 打 tag 并推送
-    const { execSync } = await import('child_process')
-    try {
-      execSync(`git tag ${tag}`, { stdio: 'inherit' })
-      execSync(`git push origin ${tag}`, { stdio: 'inherit' })
-      console.log(`[INFO]: Git tag ${tag} created and pushed.`)
-    } catch {
-      console.error(`[ERROR]: Failed to create or push git tag: ${tag}`)
+    const { spawnSync } = await import('child_process')
+    const tagResult = spawnSync('git', ['tag', tag], { stdio: 'inherit' })
+    if (tagResult.status !== 0) {
+      console.error(`[ERROR]: Failed to create git tag: ${tag}`)
       process.exit(1)
     }
+    const pushResult = spawnSync('git', ['push', 'origin', tag], { stdio: 'inherit' })
+    if (pushResult.status !== 0) {
+      console.error(`[ERROR]: Failed to push git tag: ${tag}`)
+      process.exit(1)
+    }
+    console.log(`[INFO]: Git tag ${tag} created and pushed.`)
   } else {
     console.log('[INFO]: No git tag created for this version.')
   }
