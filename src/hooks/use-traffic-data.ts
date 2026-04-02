@@ -16,6 +16,7 @@ export const useTrafficData = (options?: { enabled?: boolean }) => {
     buildSubscriptKey: (date) => `getClashTraffic-${date}`,
     fallbackData: FALLBACK_TRAFFIC,
     connect: () => MihomoWebSocket.connect_traffic(),
+    throttleMs: 200,
     setupHandlers: ({ next, scheduleReconnect }) => ({
       handleMessage: (data) => {
         if (data.startsWith('Websocket error')) {

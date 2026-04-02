@@ -81,6 +81,7 @@ export const useConnectionData = () => {
       buildSubscriptKey: (date) => `getClashConnection-${date}`,
       fallbackData: initConnData,
       connect: () => MihomoWebSocket.connect_connections(),
+      throttleMs: 16,
       setupHandlers: ({ next, scheduleReconnect }) => ({
         handleMessage: (data) => {
           if (data.startsWith('Websocket error')) {
@@ -89,14 +90,9 @@ export const useConnectionData = () => {
             return
           }
 
-          try {
-            const parsed = JSON.parse(data) as IConnections
-            next(null, (old = initConnData) =>
-              mergeConnectionSnapshot(parsed, old),
-            )
-          } catch (error) {
-            next(error)
-          }
+          next(null, (old = initConnData) =>
+            mergeConnectionSnapshot(JSON.parse(data) as IConnections, old),
+          )
         },
       }),
     })

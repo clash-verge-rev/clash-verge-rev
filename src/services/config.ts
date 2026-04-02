@@ -23,8 +23,8 @@ export const SWR_SLOW_POLL = {
 
 export const SWR_MIHOMO = {
   ...SWR_NOT_SMART,
-  errorRetryInterval: 500,
-  errorRetryCount: 15,
+  errorRetryInterval: 2000,
+  errorRetryCount: 3,
 }
 
 export const SWR_EXTERNAL_API = {
