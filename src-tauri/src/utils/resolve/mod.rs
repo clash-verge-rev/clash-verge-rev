@@ -74,6 +74,7 @@ pub fn resolve_setup_async() {
             init_hotkey(),
             init_auto_lightweight_boot(),
             init_auto_backup(),
+            init_silent_updater(),
         );
 
         refresh_tray_menu().await;
@@ -130,6 +131,32 @@ pub(super) async fn init_auto_lightweight_boot() {
 
 pub(super) async fn init_auto_backup() {
     logging_error!(Type::Setup, AutoBackupManager::global().init().await);
+}
+
+async fn init_silent_updater() {
+    use crate::core::SilentUpdater;
+    use crate::core::handle::Handle;
+
+    logging!(info, Type::Setup, "Initializing silent updater...");
+
+    let app_handle = Handle::app_handle();
+
+    // Check for cached update and attempt install before main app initialization.
+    // If install succeeds:
+    //   - Windows: NSIS takes over and the process exits automatically
+    //   - macOS/Linux: binary is replaced, we restart the app
+    if SilentUpdater::global().try_install_on_startup(app_handle).await {
+        logging!(info, Type::Setup, "Update installed at startup, restarting...");
+        app_handle.restart();
+    }
+
+    // No pending install — start background check/download loop
+    let app_handle = app_handle.clone();
+    tokio::spawn(async move {
+        SilentUpdater::global().start_background_check(app_handle).await;
+    });
+
+    logging!(info, Type::Setup, "Silent updater initialized");
 }
 
 pub fn init_signal() {
