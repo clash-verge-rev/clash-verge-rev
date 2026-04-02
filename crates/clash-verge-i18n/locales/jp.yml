@@ -26,6 +26,11 @@ notifications:
   appHidden:
     title: アプリが非表示
     body: Clash Verge はバックグラウンドで実行中です。
+  updateReady:
+    title: Clash Verge Update
+    body: A new version (v{version}) has been downloaded and is ready to install.
+    installNow: Install Now
+    later: Later
 service:
   adminInstallPrompt: Clash Verge サービスのインストールには管理者権限が必要です。
   adminUninstallPrompt: Clash Verge サービスのアンインストールには管理者権限が必要です。

@@ -26,6 +26,11 @@ notifications:
   appHidden:
     title: 應用已隱藏
     body: Clash Verge 正在背景執行。
+  updateReady:
+    title: Clash Verge Update
+    body: A new version (v{version}) has been downloaded and is ready to install.
+    installNow: Install Now
+    later: Later
 service:
   adminInstallPrompt: 安裝 Clash Verge 服務需要管理員權限
   adminUninstallPrompt: 卸载 Clash Verge 服務需要管理員權限

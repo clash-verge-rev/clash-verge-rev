@@ -26,6 +26,11 @@ notifications:
   appHidden:
     title: Uygulama Gizlendi
     body: Clash Verge arka planda çalışıyor.
+  updateReady:
+    title: Clash Verge Update
+    body: A new version (v{version}) has been downloaded and is ready to install.
+    installNow: Install Now
+    later: Later
 service:
   adminInstallPrompt: Clash Verge hizmetini kurmak için yönetici ayrıcalıkları gerekir.
   adminUninstallPrompt: Clash Verge hizmetini kaldırmak için yönetici ayrıcalıkları gerekir.

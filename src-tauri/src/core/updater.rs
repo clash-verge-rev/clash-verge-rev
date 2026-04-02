@@ -158,10 +158,17 @@ impl SilentUpdater {
         logging!(
             info,
             Type::System,
-            "Update cache version ({}) > current ({}), attempting startup install",
+            "Update cache version ({}) > current ({}), asking user to install",
             cached_version,
             current_version
         );
+
+        // Ask user for confirmation — they can skip and use the app normally.
+        // The cache is preserved so next launch will ask again.
+        if !Self::ask_user_to_install(app_handle, cached_version).await {
+            logging!(info, Type::System, "User skipped update install, starting normally");
+            return false;
+        }
 
         // Read cached bytes
         let bytes = match Self::read_cache_bytes() {
@@ -177,8 +184,8 @@ impl SilentUpdater {
             }
         };
 
-        // Need a fresh Update object from the server to call install()
-        // Network should be available at startup (user just booted)
+        // Need a fresh Update object from the server to call install().
+        // This is a lightweight HTTP request (< 1s), not a re-download.
         let update = match app_handle.updater() {
             Ok(updater) => match updater.check().await {
                 Ok(Some(u)) => u,
@@ -210,6 +217,20 @@ impl SilentUpdater {
             }
         };
 
+        // Verify the server's version matches the cached version.
+        // If server now has a newer version, our cached bytes are stale.
+        if update.version != *cached_version {
+            logging!(
+                info,
+                Type::System,
+                "Server version ({}) != cached version ({}), cache is stale, cleaning up",
+                update.version,
+                cached_version
+            );
+            Self::delete_cache();
+            return false;
+        }
+
         let version = update.version.clone();
         logging!(info, Type::System, "Installing cached update v{version} at startup...");
 
@@ -231,18 +252,15 @@ impl SilentUpdater {
                 true
             }
             Ok(Ok(Err(e))) => {
-                logging!(warn, Type::System, "Startup install failed: {e}, cleaning up");
-                Self::delete_cache();
+                logging!(warn, Type::System, "Startup install failed: {e}, will retry next launch");
                 false
             }
             Ok(Err(e)) => {
-                logging!(warn, Type::System, "Startup install task panicked: {e}, cleaning up");
-                Self::delete_cache();
+                logging!(warn, Type::System, "Startup install task panicked: {e}, will retry next launch");
                 false
             }
             Err(_) => {
-                logging!(warn, Type::System, "Startup install timed out (30s), cleaning up");
-                Self::delete_cache();
+                logging!(warn, Type::System, "Startup install timed out (30s), will retry next launch");
                 false
             }
         };
@@ -253,6 +271,36 @@ impl SilentUpdater {
         }
 
         success
+    }
+}
+
+// ─── User Confirmation Dialog ────────────────────────────────────────────────
+
+impl SilentUpdater {
+    /// Show a native dialog asking the user to install or skip the update.
+    /// Returns true if user chose to install, false if they chose to skip.
+    async fn ask_user_to_install(app_handle: &tauri::AppHandle, version: &str) -> bool {
+        use tauri_plugin_dialog::{DialogExt as _, MessageDialogButtons, MessageDialogKind};
+
+        let title = clash_verge_i18n::t!("notifications.updateReady.title").to_string();
+        let body = clash_verge_i18n::t!("notifications.updateReady.body")
+            .replace("{version}", version);
+        let install_now = clash_verge_i18n::t!("notifications.updateReady.installNow").to_string();
+        let later = clash_verge_i18n::t!("notifications.updateReady.later").to_string();
+
+        let (tx, rx) = tokio::sync::oneshot::channel();
+
+        app_handle
+            .dialog()
+            .message(body)
+            .title(title)
+            .buttons(MessageDialogButtons::OkCancelCustom(install_now, later))
+            .kind(MessageDialogKind::Info)
+            .show(move |confirmed| {
+                let _ = tx.send(confirmed);
+            });
+
+        rx.await.unwrap_or(false)
     }
 }
 
@@ -513,7 +561,7 @@ mod tests {
     }
 
     #[test]
-    fn test_cache_meta_missing_field() {
+    fn test_cache_meta_missing_required_field() {
         let result = serde_json::from_str::<UpdateCacheMeta>(r#"{"version":"2.5.0"}"#);
         assert!(result.is_err()); // missing downloaded_at
     }
