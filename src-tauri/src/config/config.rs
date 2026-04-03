@@ -13,7 +13,7 @@ use crate::{
     utils::{dirs, help},
 };
 use anyhow::{Result, anyhow};
-use backoff::{Error as BackoffError, ExponentialBackoff};
+use backon::{ExponentialBuilder, Retryable as _};
 use clash_verge_draft::Draft;
 use clash_verge_logging::{Type, logging, logging_error};
 use serde_yaml_ng::{Mapping, Value};
@@ -204,23 +204,21 @@ impl Config {
     }
 
     pub async fn verify_config_initialization() {
-        let backoff_strategy = ExponentialBackoff {
-            initial_interval: std::time::Duration::from_millis(100),
-            max_interval: std::time::Duration::from_secs(2),
-            max_elapsed_time: Some(std::time::Duration::from_secs(10)),
-            multiplier: 2.0,
-            ..Default::default()
-        };
+        let backoff = ExponentialBuilder::default()
+            .with_min_delay(std::time::Duration::from_millis(100))
+            .with_max_delay(std::time::Duration::from_secs(2))
+            .with_factor(2.0)
+            .with_max_times(10);
 
-        let operation = || async {
+        if let Err(e) = (|| async {
             if Self::runtime().await.latest_arc().config.is_some() {
-                return Ok::<(), BackoffError<anyhow::Error>>(());
+                return Ok::<(), anyhow::Error>(());
             }
-
-            Self::generate().await.map_err(BackoffError::transient)
-        };
-
-        if let Err(e) = backoff::future::retry(backoff_strategy, operation).await {
+            Self::generate().await
+        })
+        .retry(backoff)
+        .await
+        {
             logging!(error, Type::Setup, "Config init verification failed: {}", e);
         }
     }

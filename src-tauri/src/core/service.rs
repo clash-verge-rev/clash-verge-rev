@@ -4,6 +4,7 @@ use crate::{
     utils::dirs,
 };
 use anyhow::{Context as _, Result, anyhow, bail};
+use backon::{ConstantBuilder, Retryable as _};
 use clash_verge_logging::{Type, logging, logging_error};
 use clash_verge_service_ipc::CoreConfig;
 use compact_str::CompactString;
@@ -15,7 +16,7 @@ use std::{
     process::Command as StdCommand,
     time::Duration,
 };
-use tokio::{sync::Mutex, time::sleep};
+use tokio::sync::Mutex;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ServiceStatus {
@@ -441,31 +442,27 @@ pub async fn wait_and_check_service_available(status: &mut ServiceManager) -> Re
 async fn wait_for_service_ipc(status: &mut ServiceManager, reason: &str) -> Result<()> {
     status.0 = ServiceStatus::Unavailable(reason.into());
     let config = ServiceManager::config();
-    let mut attempts = 0u32;
-    #[allow(unused_assignments)]
-    let mut last_err = anyhow!("service not ready");
 
-    loop {
+    let backoff = ConstantBuilder::default()
+        .with_delay(config.retry_delay)
+        .with_max_times(config.max_retries);
+
+    let result = (|| async {
         if Path::new(clash_verge_service_ipc::IPC_PATH).exists() {
-            match clash_verge_service_ipc::connect().await {
-                Ok(_) => {
-                    status.0 = ServiceStatus::Ready;
-                    return Ok(());
-                }
-                Err(e) => last_err = e,
-            }
+            clash_verge_service_ipc::connect().await?;
+            Ok(())
         } else {
-            last_err = anyhow!("IPC path not ready");
+            Err(anyhow!("IPC path not ready"))
         }
+    })
+    .retry(backoff)
+    .await;
 
-        if attempts >= config.max_retries as u32 {
-            break;
-        }
-        attempts += 1;
-        sleep(config.retry_delay).await;
+    if result.is_ok() {
+        status.0 = ServiceStatus::Ready;
     }
 
-    Err(last_err)
+    result
 }
 
 pub fn is_service_ipc_path_exists() -> bool {

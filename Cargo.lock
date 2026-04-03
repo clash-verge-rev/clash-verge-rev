@@ -559,16 +559,13 @@ dependencies = [
 ]
 
 [[package]]
-name = "backoff"
-version = "0.4.0"
+name = "backon"
+version = "1.6.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b62ddb9cb1ec0a098ad4bbf9344d0713fa193ae1a80af55febcff2627b6a00c1"
+checksum = "cffb0e931875b666fc4fcb20fee52e9bbd1ef836fd9e9e04ec21555f9f85f7ef"
 dependencies = [
- "futures-core",
- "getrandom 0.2.17",
- "instant",
- "pin-project-lite",
- "rand 0.8.5",
+ "fastrand 2.3.0",
+ "gloo-timers",
  "tokio",
 ]
 
@@ -1117,7 +1114,7 @@ dependencies = [
  "anyhow",
  "arc-swap",
  "async-trait",
- "backoff",
+ "backon",
  "base64 0.22.1",
  "bitflags 2.11.0",
  "boa_engine",
@@ -1243,7 +1240,7 @@ dependencies = [
 [[package]]
 name = "clash_verge_service_ipc"
 version = "2.2.0"
-source = "git+https://github.com/clash-verge-rev/clash-verge-service-ipc#b73568a9ecc9e62577e9ce81a123b554f06a9fb3"
+source = "git+https://github.com/clash-verge-rev/clash-verge-service-ipc#62e0fe76279350303373e13cbdb6af32a04abe0f"
 dependencies = [
  "anyhow",
  "compact_str",
@@ -3037,6 +3034,18 @@ dependencies = [
  "bitflags 1.3.2",
  "ignore",
  "walkdir",
+]
+
+[[package]]
+name = "gloo-timers"
+version = "0.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bbb143cf96099802033e0d4f4963b19fd2e0b728bcf076cd9cf7f6634f092994"
+dependencies = [
+ "futures-channel",
+ "futures-core",
+ "js-sys",
+ "wasm-bindgen",
 ]
 
 [[package]]
