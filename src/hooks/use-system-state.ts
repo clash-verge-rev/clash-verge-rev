@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { getRunningMode, isAdmin, isServiceAvailable } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
@@ -18,6 +18,9 @@ const defaultSystemState = {
   isServiceOk: false,
 } as SystemState
 
+// Grace period for service initialization during startup
+const STARTUP_GRACE_MS = 10_000
+
 /**
  * 自定义 hook 用于获取系统运行状态
  * 包括运行模式、管理员状态、系统服务是否可用
@@ -25,6 +28,12 @@ const defaultSystemState = {
 export function useSystemState() {
   const { verge, patchVerge } = useVerge()
   const disablingTunRef = useRef(false)
+  const [isStartingUp, setIsStartingUp] = useState(true)
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsStartingUp(false), STARTUP_GRACE_MS)
+    return () => clearTimeout(timer)
+  }, [])
 
   const {
     data: systemState = defaultSystemState,
@@ -40,8 +49,7 @@ export function useSystemState() {
       ])
       return { runningMode, isAdminMode, isServiceOk } as SystemState
     },
-    refetchInterval: 30000,
-    placeholderData: defaultSystemState,
+    refetchInterval: isStartingUp ? 2000 : 30000,
   })
 
   const isSidecarMode = systemState.runningMode === 'Sidecar'
@@ -58,7 +66,8 @@ export function useSystemState() {
       !disablingTunRef.current &&
       enable_tun_mode &&
       !isTunModeAvailable &&
-      !isLoading
+      !isLoading &&
+      !isStartingUp
     ) {
       disablingTunRef.current = true
       patchVerge({ enable_tun_mode: false })
@@ -89,7 +98,7 @@ export function useSystemState() {
         disablingTunRef.current = false
       }
     }
-  }, [enable_tun_mode, isTunModeAvailable, patchVerge, isLoading])
+  }, [enable_tun_mode, isTunModeAvailable, patchVerge, isLoading, isStartingUp])
 
   return {
     runningMode: systemState.runningMode,
