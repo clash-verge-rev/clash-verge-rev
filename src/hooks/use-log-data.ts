@@ -101,7 +101,12 @@ export const useLogData = () => {
         async onConnected() {
           const logs = await getClashLogs()
           if (isMounted()) {
-            next(null, clampLogs(filterLogsByLevel(logs, allowedTypes)))
+            next(null, (current) => {
+              if (!current || current.length === 0) {
+                return clampLogs(filterLogsByLevel(logs, allowedTypes))
+              }
+              return current
+            })
           }
         },
         cleanup: clearFlushTimer,

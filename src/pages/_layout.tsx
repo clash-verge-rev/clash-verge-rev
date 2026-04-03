@@ -26,7 +26,7 @@ import relativeTime from 'dayjs/plugin/relativeTime'
 import type { CSSProperties } from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Outlet, useNavigate } from 'react-router'
+import { Outlet, useLocation, useNavigate } from 'react-router'
 import { SWRConfig } from 'swr'
 
 import iconDark from '@/assets/image/icon_dark.svg?react'
@@ -53,6 +53,7 @@ import {
 } from './_layout/hooks'
 import { handleNoticeMessage } from './_layout/utils'
 import { navItems } from './_routers'
+import LogsPage from './logs'
 
 import 'dayjs/locale/ru'
 import 'dayjs/locale/zh-cn'
@@ -120,6 +121,10 @@ const Layout = () => {
   const navCollapsed = verge?.collapse_navbar ?? false
   const { switchLanguage } = useI18n()
   const navigate = useNavigate()
+  const { pathname } = useLocation()
+  const isLogsPage = pathname === '/logs'
+  const logsPageMountedRef = useRef(false)
+  if (isLogsPage) logsPageMountedRef.current = true
   const themeReady = useMemo(() => Boolean(theme), [theme])
 
   const [menuUnlocked, setMenuUnlocked] = useState(false)
@@ -477,6 +482,20 @@ const Layout = () => {
                 <BaseErrorBoundary>
                   <Outlet />
                 </BaseErrorBoundary>
+                {logsPageMountedRef.current && (
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      display: isLogsPage ? undefined : 'none',
+                    }}
+                  >
+                    <LogsPage />
+                  </div>
+                )}
               </div>
             </div>
           </div>
