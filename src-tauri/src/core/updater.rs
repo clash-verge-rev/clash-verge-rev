@@ -252,15 +252,27 @@ impl SilentUpdater {
                 true
             }
             Ok(Ok(Err(e))) => {
-                logging!(warn, Type::System, "Startup install failed: {e}, will retry next launch");
+                logging!(
+                    warn,
+                    Type::System,
+                    "Startup install failed: {e}, will retry next launch"
+                );
                 false
             }
             Ok(Err(e)) => {
-                logging!(warn, Type::System, "Startup install task panicked: {e}, will retry next launch");
+                logging!(
+                    warn,
+                    Type::System,
+                    "Startup install task panicked: {e}, will retry next launch"
+                );
                 false
             }
             Err(_) => {
-                logging!(warn, Type::System, "Startup install timed out (30s), will retry next launch");
+                logging!(
+                    warn,
+                    Type::System,
+                    "Startup install timed out (30s), will retry next launch"
+                );
                 false
             }
         };
@@ -283,8 +295,7 @@ impl SilentUpdater {
         use tauri_plugin_dialog::{DialogExt as _, MessageDialogButtons, MessageDialogKind};
 
         let title = clash_verge_i18n::t!("notifications.updateReady.title").to_string();
-        let body = clash_verge_i18n::t!("notifications.updateReady.body")
-            .replace("{version}", version);
+        let body = clash_verge_i18n::t!("notifications.updateReady.body").replace("{version}", version);
         let install_now = clash_verge_i18n::t!("notifications.updateReady.installNow").to_string();
         let later = clash_verge_i18n::t!("notifications.updateReady.later").to_string();
 
