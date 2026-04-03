@@ -74,9 +74,6 @@ importers:
       ahooks:
         specifier: ^3.9.6
         version: 3.9.7(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
-      axios:
-        specifier: ^1.13.6
-        version: 1.14.0
       cidr-block:
         specifier: ^2.3.0
         version: 2.3.0
@@ -183,6 +180,9 @@ importers:
       adm-zip:
         specifier: ^0.5.16
         version: 0.5.16
+      axios:
+        specifier: ^1.13.6
+        version: 1.14.0
       cli-color:
         specifier: ^2.0.4
         version: 2.0.4
