@@ -37,9 +37,8 @@ import {
   useState,
 } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Virtuoso } from 'react-virtuoso'
 
-import { BaseSearchBox, Switch } from '@/components/base'
+import { BaseSearchBox, Switch, VirtualList } from '@/components/base'
 import { RuleItem } from '@/components/profile/rule-item'
 import { readProfileFile, saveProfileFile } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
@@ -282,6 +281,87 @@ export const RulesEditorViewer = (props: Props) => {
     () => appendSeq.filter((rule) => match(rule)),
     [appendSeq, match],
   )
+
+  const renderItem = (index: number): React.ReactNode => {
+    const shift = filteredPrependSeq.length > 0 ? 1 : 0
+    if (filteredPrependSeq.length > 0 && index === 0) {
+      return (
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={onPrependDragEnd}
+        >
+          <SortableContext
+            items={filteredPrependSeq.map((x) => {
+              return x
+            })}
+          >
+            {filteredPrependSeq.map((item) => {
+              return (
+                <RuleItem
+                  key={item}
+                  type="prepend"
+                  ruleRaw={item}
+                  onDelete={() => {
+                    setPrependSeq(prependSeq.filter((v) => v !== item))
+                  }}
+                />
+              )
+            })}
+          </SortableContext>
+        </DndContext>
+      )
+    } else if (index < filteredRuleList.length + shift) {
+      const newIndex = index - shift
+      return (
+        <RuleItem
+          key={filteredRuleList[newIndex]}
+          type={
+            deleteSeq.includes(filteredRuleList[newIndex])
+              ? 'delete'
+              : 'original'
+          }
+          ruleRaw={filteredRuleList[newIndex]}
+          onDelete={() => {
+            if (deleteSeq.includes(filteredRuleList[newIndex])) {
+              setDeleteSeq(
+                deleteSeq.filter((v) => v !== filteredRuleList[newIndex]),
+              )
+            } else {
+              setDeleteSeq((prev) => [...prev, filteredRuleList[newIndex]])
+            }
+          }}
+        />
+      )
+    } else {
+      return (
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={onAppendDragEnd}
+        >
+          <SortableContext
+            items={filteredAppendSeq.map((x) => {
+              return x
+            })}
+          >
+            {filteredAppendSeq.map((item) => {
+              return (
+                <RuleItem
+                  key={item}
+                  type="append"
+                  ruleRaw={item}
+                  onDelete={() => {
+                    setAppendSeq(appendSeq.filter((v) => v !== item))
+                  }}
+                />
+              )
+            })}
+          </SortableContext>
+        </DndContext>
+      )
+    }
+  }
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -672,103 +752,15 @@ export const RulesEditorViewer = (props: Props) => {
               }}
             >
               <BaseSearchBox onSearch={(match) => setMatch(() => match)} />
-              <Virtuoso
-                style={{ height: 'calc(100% - 24px)', marginTop: '8px' }}
-                totalCount={
+              <VirtualList
+                count={
                   filteredRuleList.length +
                   (filteredPrependSeq.length > 0 ? 1 : 0) +
                   (filteredAppendSeq.length > 0 ? 1 : 0)
                 }
-                increaseViewportBy={256}
-                itemContent={(index) => {
-                  const shift = filteredPrependSeq.length > 0 ? 1 : 0
-                  if (filteredPrependSeq.length > 0 && index === 0) {
-                    return (
-                      <DndContext
-                        sensors={sensors}
-                        collisionDetection={closestCenter}
-                        onDragEnd={onPrependDragEnd}
-                      >
-                        <SortableContext
-                          items={filteredPrependSeq.map((x) => {
-                            return x
-                          })}
-                        >
-                          {filteredPrependSeq.map((item) => {
-                            return (
-                              <RuleItem
-                                key={item}
-                                type="prepend"
-                                ruleRaw={item}
-                                onDelete={() => {
-                                  setPrependSeq(
-                                    prependSeq.filter((v) => v !== item),
-                                  )
-                                }}
-                              />
-                            )
-                          })}
-                        </SortableContext>
-                      </DndContext>
-                    )
-                  } else if (index < filteredRuleList.length + shift) {
-                    const newIndex = index - shift
-                    return (
-                      <RuleItem
-                        key={filteredRuleList[newIndex]}
-                        type={
-                          deleteSeq.includes(filteredRuleList[newIndex])
-                            ? 'delete'
-                            : 'original'
-                        }
-                        ruleRaw={filteredRuleList[newIndex]}
-                        onDelete={() => {
-                          if (deleteSeq.includes(filteredRuleList[newIndex])) {
-                            setDeleteSeq(
-                              deleteSeq.filter(
-                                (v) => v !== filteredRuleList[newIndex],
-                              ),
-                            )
-                          } else {
-                            setDeleteSeq((prev) => [
-                              ...prev,
-                              filteredRuleList[newIndex],
-                            ])
-                          }
-                        }}
-                      />
-                    )
-                  } else {
-                    return (
-                      <DndContext
-                        sensors={sensors}
-                        collisionDetection={closestCenter}
-                        onDragEnd={onAppendDragEnd}
-                      >
-                        <SortableContext
-                          items={filteredAppendSeq.map((x) => {
-                            return x
-                          })}
-                        >
-                          {filteredAppendSeq.map((item) => {
-                            return (
-                              <RuleItem
-                                key={item}
-                                type="append"
-                                ruleRaw={item}
-                                onDelete={() => {
-                                  setAppendSeq(
-                                    appendSeq.filter((v) => v !== item),
-                                  )
-                                }}
-                              />
-                            )
-                          })}
-                        </SortableContext>
-                      </DndContext>
-                    )
-                  }
-                }}
+                estimateSize={56}
+                renderItem={renderItem}
+                style={{ height: 'calc(100% - 24px)', marginTop: '8px' }}
               />
             </List>
           </>

@@ -4,9 +4,8 @@ import {
   SwapVertRounded,
 } from '@mui/icons-material'
 import { Box, Button, IconButton, MenuItem } from '@mui/material'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Virtuoso } from 'react-virtuoso'
 
 import {
   BaseEmpty,
@@ -14,6 +13,8 @@ import {
   BaseSearchBox,
   BaseStyledSelect,
   type SearchState,
+  VirtualList,
+  type VirtualListHandle,
 } from '@/components/base'
 import LogItem from '@/components/log/log-item'
 import { useClashLog } from '@/hooks/use-clash-log'
@@ -59,6 +60,16 @@ const LogPage = () => {
     () => (isDescending ? [...filterLogs].reverse() : filterLogs),
     [filterLogs, isDescending],
   )
+
+  const virtuosoRef = useRef<VirtualListHandle>(null)
+
+  useEffect(() => {
+    if (!isDescending && filteredLogs.length > 0) {
+      virtuosoRef.current?.scrollToIndex(filteredLogs.length - 1, {
+        behavior: 'smooth',
+      })
+    }
+  }, [filteredLogs.length, isDescending])
 
   const handleLogLevelChange = (newLevel: string) => {
     setClashLog((pre: any) => ({ ...pre, logFilter: newLevel }))
@@ -170,16 +181,14 @@ const LogPage = () => {
       </Box>
 
       {filteredLogs.length > 0 ? (
-        <Virtuoso
-          initialTopMostItemIndex={isDescending ? 0 : 999}
-          data={filteredLogs}
-          style={{
-            flex: 1,
-          }}
-          itemContent={(index, item) => (
-            <LogItem value={item} searchState={searchState} />
+        <VirtualList
+          ref={virtuosoRef}
+          count={filteredLogs.length}
+          estimateSize={50}
+          renderItem={(i) => (
+            <LogItem value={filteredLogs[i]} searchState={searchState} />
           )}
-          followOutput={isDescending ? false : 'smooth'}
+          style={{ flex: 1 }}
         />
       ) : (
         <BaseEmpty />

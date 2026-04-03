@@ -43,9 +43,8 @@ import {
 } from 'react'
 import { Controller, useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
-import { Virtuoso } from 'react-virtuoso'
 
-import { BaseSearchBox, Switch } from '@/components/base'
+import { BaseSearchBox, Switch, VirtualList } from '@/components/base'
 import { GroupItem } from '@/components/profile/group-item'
 import {
   getNetworkInterfaces,
@@ -184,6 +183,92 @@ export const GroupsEditorViewer = (props: Props) => {
     () => appendSeq.filter((group) => match(group.name)),
     [appendSeq, match],
   )
+
+  const renderItem = (index: number): React.ReactNode => {
+    const shift = filteredPrependSeq.length > 0 ? 1 : 0
+    if (filteredPrependSeq.length > 0 && index === 0) {
+      return (
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={onPrependDragEnd}
+        >
+          <SortableContext
+            items={filteredPrependSeq.map((x) => {
+              return x.name
+            })}
+          >
+            {filteredPrependSeq.map((item) => {
+              return (
+                <GroupItem
+                  key={item.name}
+                  type="prepend"
+                  group={item}
+                  onDelete={() => {
+                    setPrependSeq(
+                      prependSeq.filter((v) => v.name !== item.name),
+                    )
+                  }}
+                />
+              )
+            })}
+          </SortableContext>
+        </DndContext>
+      )
+    } else if (index < filteredGroupList.length + shift) {
+      const newIndex = index - shift
+      return (
+        <GroupItem
+          key={filteredGroupList[newIndex].name}
+          type={
+            deleteSeq.includes(filteredGroupList[newIndex].name)
+              ? 'delete'
+              : 'original'
+          }
+          group={filteredGroupList[newIndex]}
+          onDelete={() => {
+            if (deleteSeq.includes(filteredGroupList[newIndex].name)) {
+              setDeleteSeq(
+                deleteSeq.filter((v) => v !== filteredGroupList[newIndex].name),
+              )
+            } else {
+              setDeleteSeq((prev) => [
+                ...prev,
+                filteredGroupList[newIndex].name,
+              ])
+            }
+          }}
+        />
+      )
+    } else {
+      return (
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={onAppendDragEnd}
+        >
+          <SortableContext
+            items={filteredAppendSeq.map((x) => {
+              return x.name
+            })}
+          >
+            {filteredAppendSeq.map((item) => {
+              return (
+                <GroupItem
+                  key={item.name}
+                  type="append"
+                  group={item}
+                  onDelete={() => {
+                    setAppendSeq(appendSeq.filter((v) => v.name !== item.name))
+                  }}
+                />
+              )
+            })}
+          </SortableContext>
+        </DndContext>
+      )
+    }
+  }
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -1002,109 +1087,15 @@ export const GroupsEditorViewer = (props: Props) => {
               }}
             >
               <BaseSearchBox onSearch={(match) => setMatch(() => match)} />
-              <Virtuoso
-                style={{ height: 'calc(100% - 24px)', marginTop: '8px' }}
-                totalCount={
+              <VirtualList
+                count={
                   filteredGroupList.length +
                   (filteredPrependSeq.length > 0 ? 1 : 0) +
                   (filteredAppendSeq.length > 0 ? 1 : 0)
                 }
-                increaseViewportBy={256}
-                itemContent={(index) => {
-                  const shift = filteredPrependSeq.length > 0 ? 1 : 0
-                  if (filteredPrependSeq.length > 0 && index === 0) {
-                    return (
-                      <DndContext
-                        sensors={sensors}
-                        collisionDetection={closestCenter}
-                        onDragEnd={onPrependDragEnd}
-                      >
-                        <SortableContext
-                          items={filteredPrependSeq.map((x) => {
-                            return x.name
-                          })}
-                        >
-                          {filteredPrependSeq.map((item) => {
-                            return (
-                              <GroupItem
-                                key={item.name}
-                                type="prepend"
-                                group={item}
-                                onDelete={() => {
-                                  setPrependSeq(
-                                    prependSeq.filter(
-                                      (v) => v.name !== item.name,
-                                    ),
-                                  )
-                                }}
-                              />
-                            )
-                          })}
-                        </SortableContext>
-                      </DndContext>
-                    )
-                  } else if (index < filteredGroupList.length + shift) {
-                    const newIndex = index - shift
-                    return (
-                      <GroupItem
-                        key={filteredGroupList[newIndex].name}
-                        type={
-                          deleteSeq.includes(filteredGroupList[newIndex].name)
-                            ? 'delete'
-                            : 'original'
-                        }
-                        group={filteredGroupList[newIndex]}
-                        onDelete={() => {
-                          if (
-                            deleteSeq.includes(filteredGroupList[newIndex].name)
-                          ) {
-                            setDeleteSeq(
-                              deleteSeq.filter(
-                                (v) => v !== filteredGroupList[newIndex].name,
-                              ),
-                            )
-                          } else {
-                            setDeleteSeq((prev) => [
-                              ...prev,
-                              filteredGroupList[newIndex].name,
-                            ])
-                          }
-                        }}
-                      />
-                    )
-                  } else {
-                    return (
-                      <DndContext
-                        sensors={sensors}
-                        collisionDetection={closestCenter}
-                        onDragEnd={onAppendDragEnd}
-                      >
-                        <SortableContext
-                          items={filteredAppendSeq.map((x) => {
-                            return x.name
-                          })}
-                        >
-                          {filteredAppendSeq.map((item) => {
-                            return (
-                              <GroupItem
-                                key={item.name}
-                                type="append"
-                                group={item}
-                                onDelete={() => {
-                                  setAppendSeq(
-                                    appendSeq.filter(
-                                      (v) => v.name !== item.name,
-                                    ),
-                                  )
-                                }}
-                              />
-                            )
-                          })}
-                        </SortableContext>
-                      </DndContext>
-                    )
-                  }
-                }}
+                estimateSize={56}
+                renderItem={renderItem}
+                style={{ height: 'calc(100% - 24px)', marginTop: '8px' }}
               />
             </List>
           </>
