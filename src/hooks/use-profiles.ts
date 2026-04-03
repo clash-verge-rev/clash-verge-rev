@@ -1,4 +1,4 @@
-import useSWR, { mutate } from 'swr'
+import { useQuery } from '@tanstack/react-query'
 import { selectNodeForGroup } from 'tauri-plugin-mihomo-api'
 
 import {
@@ -7,31 +7,36 @@ import {
   patchProfile,
   patchProfilesConfig,
 } from '@/services/cmds'
+import { queryClient } from '@/services/query-client'
 import { debugLog } from '@/utils/debug'
 
 export const useProfiles = () => {
   const {
     data: profiles,
-    mutate: mutateProfiles,
+    refetch,
     error,
-    isValidating,
-  } = useSWR('getProfiles', getProfiles, {
-    revalidateOnFocus: false,
-    revalidateOnReconnect: false,
-    dedupingInterval: 500, // 减少去重时间，提高响应性
-    errorRetryCount: 3,
-    errorRetryInterval: 1000,
-    refreshInterval: 0, // 完全由手动控制
-    onError: (error) => {
-      console.error('[useProfiles] SWR错误:', error)
-    },
-    onSuccess: (data) => {
+    isFetching: isValidating,
+  } = useQuery({
+    queryKey: ['getProfiles'],
+    queryFn: async () => {
+      const data = await getProfiles()
       debugLog(
         '[useProfiles] 配置数据更新成功，配置数量:',
         data?.items?.length || 0,
       )
+      return data
     },
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    staleTime: 500,
+    retry: 3,
+    retryDelay: 1000,
+    refetchInterval: false,
   })
+
+  const mutateProfiles = async () => {
+    await refetch()
+  }
 
   const patchProfiles = async (
     value: Partial<IProfilesConfig>,
@@ -105,8 +110,14 @@ export const useProfiles = () => {
         `[ActivateSelected] 当前profile有 ${selected.length} 个代理选择配置`,
       )
 
+      type SelectedEntry = { name?: string; now?: string }
       const selectedMap = Object.fromEntries(
-        selected.map((each) => [each.name!, each.now!]),
+        (selected as SelectedEntry[])
+          .filter(
+            (each): each is SelectedEntry & { name: string; now: string } =>
+              each.name != null && each.now != null,
+          )
+          .map((each) => [each.name, each.now]),
       )
 
       let hasChange = false
@@ -168,10 +179,10 @@ export const useProfiles = () => {
           hasChange = true
           try {
             await selectNodeForGroup(name, savedProxy)
-          } catch (error: any) {
+          } catch (error: unknown) {
             console.warn(
               `[ActivateSelected] 切换代理组 ${name} 失败:`,
-              error.message,
+              error instanceof Error ? error.message : String(error),
             )
           }
         }
@@ -187,15 +198,21 @@ export const useProfiles = () => {
       debugLog(`[ActivateSelected] 完成代理切换，保存新的选择配置`)
 
       try {
-        await patchProfile(profileData.current!, { selected: newSelected })
+        await patchProfile(current.uid, { selected: newSelected })
         debugLog('[ActivateSelected] 代理选择配置保存成功')
 
-        await mutate('getProxies', calcuProxies())
-      } catch (error: any) {
-        console.error('[ActivateSelected] 保存代理选择配置失败:', error.message)
+        queryClient.setQueryData(['getProxies'], await calcuProxies())
+      } catch (error: unknown) {
+        console.error(
+          '[ActivateSelected] 保存代理选择配置失败:',
+          error instanceof Error ? error.message : String(error),
+        )
       }
-    } catch (error: any) {
-      console.error('[ActivateSelected] 处理代理选择失败:', error.message)
+    } catch (error: unknown) {
+      console.error(
+        '[ActivateSelected] 处理代理选择失败:',
+        error instanceof Error ? error.message : String(error),
+      )
     }
   }
 

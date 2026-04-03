@@ -1,6 +1,6 @@
+import { useQuery } from '@tanstack/react-query'
 import { listen } from '@tauri-apps/api/event'
 import React, { useCallback, useEffect, useMemo } from 'react'
-import useSWR from 'swr'
 import {
   getBaseConfig,
   getRuleProviders,
@@ -15,9 +15,23 @@ import {
   getRunningMode,
   getSystemProxy,
 } from '@/services/cmds'
-import { SWR_DEFAULTS, SWR_MIHOMO } from '@/services/config'
 
 import { AppDataContext, AppDataContextType } from './app-data-context'
+
+const TQ_MIHOMO = {
+  refetchOnWindowFocus: false,
+  refetchOnReconnect: false,
+  staleTime: 1500,
+  retry: 3,
+  retryDelay: 2000,
+} as const
+
+const TQ_DEFAULTS = {
+  refetchOnWindowFocus: false,
+  refetchOnReconnect: false,
+  staleTime: 5000,
+  retry: 2,
+} as const
 
 // 全局数据提供者组件
 export const AppDataProvider = ({
@@ -27,35 +41,35 @@ export const AppDataProvider = ({
 }) => {
   const { verge } = useVerge()
 
-  const { data: proxiesData, mutate: refreshProxy } = useSWR(
-    'getProxies',
-    calcuProxies,
-    SWR_MIHOMO,
-  )
+  const { data: proxiesData, refetch: refreshProxy } = useQuery({
+    queryKey: ['getProxies'],
+    queryFn: calcuProxies,
+    ...TQ_MIHOMO,
+  })
 
-  const { data: clashConfig, mutate: refreshClashConfig } = useSWR(
-    'getClashConfig',
-    getBaseConfig,
-    SWR_MIHOMO,
-  )
+  const { data: clashConfig, refetch: refreshClashConfig } = useQuery({
+    queryKey: ['getClashConfig'],
+    queryFn: getBaseConfig,
+    ...TQ_MIHOMO,
+  })
 
-  const { data: proxyProviders, mutate: refreshProxyProviders } = useSWR(
-    'getProxyProviders',
-    calcuProxyProviders,
-    SWR_MIHOMO,
-  )
+  const { data: proxyProviders, refetch: refreshProxyProviders } = useQuery({
+    queryKey: ['getProxyProviders'],
+    queryFn: calcuProxyProviders,
+    ...TQ_MIHOMO,
+  })
 
-  const { data: ruleProviders, mutate: refreshRuleProviders } = useSWR(
-    'getRuleProviders',
-    getRuleProviders,
-    SWR_MIHOMO,
-  )
+  const { data: ruleProviders, refetch: refreshRuleProviders } = useQuery({
+    queryKey: ['getRuleProviders'],
+    queryFn: getRuleProviders,
+    ...TQ_MIHOMO,
+  })
 
-  const { data: rulesData, mutate: refreshRules } = useSWR(
-    'getRules',
-    getRules,
-    SWR_MIHOMO,
-  )
+  const { data: rulesData, refetch: refreshRules } = useQuery({
+    queryKey: ['getRules'],
+    queryFn: getRules,
+    ...TQ_MIHOMO,
+  })
 
   useEffect(() => {
     let lastProfileId: string | null = null
@@ -79,7 +93,7 @@ export const AppDataProvider = ({
     }
 
     const addWindowListener = (eventName: string, handler: EventListener) => {
-      // eslint-disable-next-line @eslint-react/web-api/no-leaked-event-listener
+      // eslint-disable-next-line @eslint-react/web-api-no-leaked-event-listener
       window.addEventListener(eventName, handler)
       return () => window.removeEventListener(eventName, handler)
     }
@@ -222,22 +236,24 @@ export const AppDataProvider = ({
     }
   }, [refreshProxy, refreshClashConfig, refreshRules, refreshRuleProviders])
 
-  const { data: sysproxy, mutate: refreshSysproxy } = useSWR(
-    'getSystemProxy',
-    getSystemProxy,
-    SWR_DEFAULTS,
-  )
+  const { data: sysproxy, refetch: refreshSysproxy } = useQuery({
+    queryKey: ['getSystemProxy'],
+    queryFn: getSystemProxy,
+    ...TQ_DEFAULTS,
+  })
 
-  const { data: runningMode } = useSWR(
-    'getRunningMode',
-    getRunningMode,
-    SWR_DEFAULTS,
-  )
+  const { data: runningMode } = useQuery({
+    queryKey: ['getRunningMode'],
+    queryFn: getRunningMode,
+    ...TQ_DEFAULTS,
+  })
 
-  const { data: uptimeData } = useSWR('appUptime', getAppUptime, {
-    ...SWR_DEFAULTS,
-    refreshInterval: 3000,
-    errorRetryCount: 1,
+  const { data: uptimeData } = useQuery({
+    queryKey: ['appUptime'],
+    queryFn: getAppUptime,
+    ...TQ_DEFAULTS,
+    refetchInterval: 3000,
+    retry: 1,
   })
 
   // 提供统一的刷新方法

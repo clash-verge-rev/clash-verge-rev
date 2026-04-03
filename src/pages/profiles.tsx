@@ -22,15 +22,22 @@ import {
 } from '@mui/icons-material'
 import { LoadingButton } from '@mui/lab'
 import { Box, Button, Divider, Grid, IconButton, Stack } from '@mui/material'
+import { useQuery } from '@tanstack/react-query'
 import { listen, TauriEvent } from '@tauri-apps/api/event'
 import { readText } from '@tauri-apps/plugin-clipboard-manager'
 import { readTextFile } from '@tauri-apps/plugin-fs'
 import { useLockFn } from 'ahooks'
 import { throttle } from 'lodash-es'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type RefObject,
+} from 'react'
 import { useTranslation } from 'react-i18next'
 import { useLocation } from 'react-router'
-import useSWR, { mutate } from 'swr'
 import { closeAllConnections } from 'tauri-plugin-mihomo-api'
 
 import { BasePage, BaseStyledTextField, DialogRef } from '@/components/base'
@@ -55,6 +62,7 @@ import {
   updateProfile,
 } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
+import { queryClient } from '@/services/query-client'
 import { useSetLoadingCache, useThemeMode } from '@/services/states'
 import { debugLog } from '@/utils/debug'
 
@@ -67,7 +75,7 @@ const debugProfileSwitch = (action: string, profile: string, extra?: any) => {
 // 检查请求是否已过期
 const isRequestOutdated = (
   currentSequence: number,
-  requestSequenceRef: any,
+  requestSequenceRef: RefObject<number>,
   profile: string,
 ) => {
   if (currentSequence !== requestSequenceRef.current) {
@@ -222,14 +230,14 @@ const ProfilePage = () => {
     debugLog('[紧急刷新] 开始强制刷新所有数据')
 
     try {
-      // 清除所有SWR缓存
-      await mutate(() => true, undefined, { revalidate: false })
+      // 只失效 profiles 相关 query，不影响 WS 订阅、IP 缓存等其他 query
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['getProfiles'] }),
+        queryClient.invalidateQueries({ queryKey: ['getRuntimeLogs'] }),
+      ])
 
       // 强制重新获取配置数据
-      await mutateProfiles(undefined, {
-        revalidate: true,
-        rollbackOnError: false,
-      })
+      await mutateProfiles()
 
       // 等待状态稳定后增强配置
       await new Promise((resolve) => setTimeout(resolve, 500))
@@ -249,10 +257,10 @@ const ProfilePage = () => {
     }
   })
 
-  const { data: chainLogs = {}, mutate: mutateLogs } = useSWR(
-    'getRuntimeLogs',
-    getRuntimeLogs,
-  )
+  const { data: chainLogs = {}, refetch: mutateLogs } = useQuery({
+    queryKey: ['getRuntimeLogs'],
+    queryFn: getRuntimeLogs,
+  })
 
   const viewerRef = useRef<ProfileViewerRef>(null)
   const configRef = useRef<DialogRef>(null)
@@ -316,9 +324,10 @@ const ProfilePage = () => {
   }
 
   // 强化的刷新策略
+  // maxRetries 设为 1：useProfiles 内部 useQuery 已配置 retry:3，业务层只需 1 次额外重试
   const performRobustRefresh = async () => {
     let retryCount = 0
-    const maxRetries = 5
+    const maxRetries = 1
     const baseDelay = 200
 
     while (retryCount < maxRetries) {
@@ -326,10 +335,7 @@ const ProfilePage = () => {
         debugLog(`[导入刷新] 第${retryCount + 1}次尝试刷新配置数据`)
 
         // 强制刷新，绕过所有缓存
-        await mutateProfiles(undefined, {
-          revalidate: true,
-          rollbackOnError: false,
-        })
+        await mutateProfiles()
 
         // 等待状态稳定
         await new Promise((resolve) =>
@@ -350,8 +356,11 @@ const ProfilePage = () => {
     // 所有重试失败后的最后尝试
     console.warn(`[导入刷新] 常规刷新失败，尝试清除缓存重新获取`)
     try {
-      // 清除SWR缓存并重新获取
-      await mutate('getProfiles', getProfiles(), { revalidate: true })
+      // 清除缓存并重新获取
+      await queryClient.fetchQuery({
+        queryKey: ['getProfiles'],
+        queryFn: getProfiles,
+      })
       await onEnhance(false)
       showNotice.error(
         'profiles.page.feedback.notifications.importNeedsRefresh',
@@ -1007,6 +1016,7 @@ const ProfilePage = () => {
                       selected={profiles.current === item.uid}
                       activating={activatings.includes(item.uid)}
                       itemData={item}
+                      mutateProfiles={mutateProfiles}
                       onSelect={(f) => onSelect(item.uid, f)}
                       onEdit={() => viewerRef.current?.edit(item)}
                       onSave={async (prev, curr) => {

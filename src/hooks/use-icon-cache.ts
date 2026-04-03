@@ -1,9 +1,8 @@
+import { useQuery } from '@tanstack/react-query'
 import { convertFileSrc } from '@tauri-apps/api/core'
 import { useMemo } from 'react'
-import useSWR from 'swr'
 
 import { downloadIconCache } from '@/services/cmds'
-import { SWR_DEFAULTS } from '@/services/config'
 
 export interface UseIconCacheOptions {
   icon?: string | null
@@ -24,17 +23,13 @@ export const useIconCache = ({
   const iconValue = icon?.trim() ?? ''
   const cacheKeyValue = cacheKey?.trim() ?? ''
 
-  const swrKey = useMemo(() => {
-    if (!enabled || !iconValue.startsWith('http') || cacheKeyValue === '') {
-      return null
-    }
-
-    return ['icon-cache', iconValue, cacheKeyValue] as const
+  const isEnabled = useMemo(() => {
+    return enabled && iconValue.startsWith('http') && cacheKeyValue !== ''
   }, [enabled, iconValue, cacheKeyValue])
 
-  const { data } = useSWR(
-    swrKey,
-    async () => {
+  const { data } = useQuery({
+    queryKey: ['icon-cache', iconValue, cacheKeyValue],
+    queryFn: async () => {
       try {
         const fileName = `${cacheKeyValue}-${getFileNameFromUrl(iconValue)}`
         const iconPath = await downloadIconCache(iconValue, fileName)
@@ -43,10 +38,15 @@ export const useIconCache = ({
         return ''
       }
     },
-    SWR_DEFAULTS,
-  )
+    enabled: isEnabled,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    staleTime: Infinity,
+    gcTime: Infinity,
+    retry: 2,
+  })
 
-  if (!swrKey) {
+  if (!isEnabled) {
     return ''
   }
 

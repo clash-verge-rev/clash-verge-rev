@@ -21,7 +21,6 @@ import { useLockFn } from 'ahooks'
 import dayjs from 'dayjs'
 import { useCallback, useEffect, useReducer, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { mutate } from 'swr'
 
 import { ConfirmViewer } from '@/components/profile/confirm-viewer'
 import { EditorViewer } from '@/components/profile/editor-viewer'
@@ -53,6 +52,7 @@ interface Props {
   selected: boolean
   activating: boolean
   itemData: IProfileItem
+  mutateProfiles: () => Promise<void>
   onSelect: (force: boolean) => void
   onEdit: () => void
   onSave?: (prev?: string, curr?: string) => void
@@ -68,6 +68,7 @@ export const ProfileItem = (props: Props) => {
     selected,
     activating,
     itemData,
+    mutateProfiles,
     onSelect,
     onEdit,
     onSave,
@@ -383,7 +384,7 @@ export const ProfileItem = (props: Props) => {
       await updateProfile(itemData.uid, payload)
 
       // 更新成功，刷新列表
-      mutate('getProfiles')
+      void mutateProfiles()
     } catch {
       // 更新完全失败（包括后端的回退尝试）
       // 不需要做处理，后端会通过事件通知系统发送错误
@@ -579,7 +580,7 @@ export const ProfileItem = (props: Props) => {
       if (customEvent.detail?.uid === itemData.uid) {
         setLoadingCache((cache) => ({ ...cache, [itemData.uid]: false }))
         // 刷新 profile 数据以获取最新的 updated 时间戳
-        mutate('getProfiles')
+        void mutateProfiles()
         // 更新完成后刷新显示
         if (showNextUpdate) {
           fetchNextUpdateTime()
@@ -599,7 +600,13 @@ export const ProfileItem = (props: Props) => {
         handleUpdateCompleted,
       )
     }
-  }, [fetchNextUpdateTime, itemData.uid, setLoadingCache, showNextUpdate])
+  }, [
+    fetchNextUpdateTime,
+    itemData.uid,
+    mutateProfiles,
+    setLoadingCache,
+    showNextUpdate,
+  ])
 
   const handleSaveProfileDocument = useLockFn(async () => {
     const currentValue = profileDocument.value

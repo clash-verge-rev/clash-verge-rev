@@ -5,23 +5,22 @@ import {
   VisibilityOutlined,
 } from '@mui/icons-material'
 import { Box, Button, IconButton, Skeleton, Typography } from '@mui/material'
+import { useQuery } from '@tanstack/react-query'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useEffect } from 'foxact/use-abortable-effect'
 import { useIntersection } from 'foxact/use-intersection'
 import type { XOR } from 'foxts/ts-xor'
 import {
+  forwardRef,
   memo,
   useCallback,
-  useState,
   useEffectEvent,
   useMemo,
-  forwardRef,
+  useState,
 } from 'react'
 import { useTranslation } from 'react-i18next'
-import useSWRImmutable from 'swr/immutable'
 
 import { getIpInfo } from '@/services/api'
-import { SWR_EXTERNAL_API } from '@/services/config'
 
 import { EnhancedCard } from './enhanced-card'
 
@@ -78,7 +77,7 @@ type CountDownState = XOR<
 const IPInfoCardContainer = forwardRef<HTMLElement, React.PropsWithChildren>(
   ({ children }, ref) => {
     const { t } = useTranslation()
-    const { mutate } = useIPInfo()
+    const { refetch: mutate } = useIPInfo()
 
     return (
       <EnhancedCard
@@ -117,7 +116,7 @@ export const IpInfoCard = () => {
     remainingSeconds: IP_REFRESH_SECONDS,
   })
 
-  const { data: ipInfo, error, isLoading, mutate } = useIPInfo()
+  const { data: ipInfo, error, isLoading, refetch: mutate } = useIPInfo()
 
   // function useEffectEvent
   const onCountdownTick = useEffectEvent(async () => {
@@ -422,5 +421,14 @@ export const IpInfoCard = () => {
 }
 
 function useIPInfo() {
-  return useSWRImmutable(IP_INFO_CACHE_KEY, getIpInfo, SWR_EXTERNAL_API)
+  return useQuery({
+    queryKey: [IP_INFO_CACHE_KEY],
+    queryFn: getIpInfo,
+    staleTime: Infinity,
+    gcTime: Infinity,
+    refetchOnWindowFocus: false,
+    refetchOnReconnect: false,
+    retry: 1,
+    retryDelay: 30_000,
+  })
 }

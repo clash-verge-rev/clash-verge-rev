@@ -44,6 +44,7 @@
     "@mui/icons-material": "^7.3.9",
     "@mui/lab": "7.0.0-beta.17",
     "@mui/material": "^7.3.9",
+    "@tanstack/react-query": "^5.96.1",
     "@tanstack/react-table": "^8.21.3",
     "@tanstack/react-virtual": "^3.13.23",
     "@tauri-apps/api": "2.10.1",
@@ -76,7 +77,6 @@
     "react-router": "^7.13.1",
     "react-virtuoso": "^4.18.3",
     "rehype-raw": "^7.0.0",
-    "swr": "^2.4.1",
     "tauri-plugin-mihomo-api": "github:clash-verge-rev/tauri-plugin-mihomo#revert",
     "types-pac": "^1.0.3",
     "validator": "^13.15.26"
