@@ -1,4 +1,4 @@
-import { mutate } from 'swr'
+import { useQueryClient } from '@tanstack/react-query'
 import { MihomoWebSocket } from 'tauri-plugin-mihomo-api'
 
 import { useMihomoWsSubscription } from './use-mihomo-ws-subscription'
@@ -33,7 +33,6 @@ const mergeConnectionSnapshot = (
   const nextConnections = payload.connections ?? []
   const previousActive = previous.activeConnections ?? []
   const nextById = new Map(nextConnections.map((conn) => [conn.id, conn]))
-  const newIds = new Set(nextConnections.map((conn) => conn.id))
 
   // Keep surviving connections in their previous relative order to reduce row reshuffle,
   // but constrain the array to the incoming snapshot length.
@@ -60,10 +59,11 @@ const mergeConnectionSnapshot = (
     }))
 
   const activeConnections = [...carried, ...newcomers]
+  const activeIds = new Set(activeConnections.map((conn) => conn.id))
 
   const closedConnections = trimClosedConnections([
     ...(previous.closedConnections ?? []),
-    ...previousActive.filter((conn) => !newIds.has(conn.id)),
+    ...previousActive.filter((conn) => !activeIds.has(conn.id)),
   ])
 
   return {
@@ -75,6 +75,7 @@ const mergeConnectionSnapshot = (
 }
 
 export const useConnectionData = () => {
+  const queryClient = useQueryClient()
   const { response, refresh, subscriptionCacheKey } =
     useMihomoWsSubscription<ConnectionMonitorData>({
       storageKey: 'mihomo_connection_date',
@@ -99,7 +100,7 @@ export const useConnectionData = () => {
 
   const clearClosedConnections = () => {
     if (!subscriptionCacheKey) return
-    mutate(subscriptionCacheKey, {
+    queryClient.setQueryData<ConnectionMonitorData>([subscriptionCacheKey], {
       uploadTotal: response.data?.uploadTotal ?? 0,
       downloadTotal: response.data?.downloadTotal ?? 0,
       activeConnections: response.data?.activeConnections ?? [],

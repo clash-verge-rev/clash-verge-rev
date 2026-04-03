@@ -15,10 +15,10 @@ import { useLockFn } from 'ahooks'
 import type { Ref } from 'react'
 import { useImperativeHandle, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { mutate } from 'swr'
 import { closeAllConnections, upgradeCore } from 'tauri-plugin-mihomo-api'
 
 import { BaseDialog, DialogRef } from '@/components/base'
+import { useClash, useClashInfo } from '@/hooks/use-clash'
 import { useVerge } from '@/hooks/use-verge'
 import { changeClashCore, restartCore } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
@@ -40,6 +40,8 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
   const { t } = useTranslation()
 
   const { verge, mutateVerge } = useVerge()
+  const { mutateVersion } = useClash()
+  const { invalidateClashConfig } = useClashInfo()
 
   const [open, setOpen] = useState(false)
   const [upgrading, setUpgrading] = useState(false)
@@ -69,8 +71,8 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
 
       mutateVerge()
       setTimeout(async () => {
-        mutate('getClashConfig')
-        mutate('getVersion')
+        invalidateClashConfig()
+        mutateVersion()
         setChangingCore(null)
       }, 500)
     } catch (err) {

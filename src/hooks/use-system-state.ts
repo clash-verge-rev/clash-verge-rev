@@ -1,5 +1,5 @@
+import { useQuery } from '@tanstack/react-query'
 import { useEffect, useRef } from 'react'
-import useSWR from 'swr'
 
 import { getRunningMode, isAdmin, isServiceAvailable } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
@@ -27,12 +27,12 @@ export function useSystemState() {
   const disablingTunRef = useRef(false)
 
   const {
-    data: systemState,
-    mutate: mutateSystemState,
+    data: systemState = defaultSystemState,
+    refetch: mutateSystemState,
     isLoading,
-  } = useSWR(
-    'getSystemState',
-    async () => {
+  } = useQuery({
+    queryKey: ['getSystemState'],
+    queryFn: async () => {
       const [runningMode, isAdminMode, isServiceOk] = await Promise.all([
         getRunningMode(),
         isAdmin(),
@@ -40,12 +40,9 @@ export function useSystemState() {
       ])
       return { runningMode, isAdminMode, isServiceOk } as SystemState
     },
-    {
-      suspense: true,
-      refreshInterval: 30000,
-      fallback: defaultSystemState,
-    },
-  )
+    refetchInterval: 30000,
+    placeholderData: defaultSystemState,
+  })
 
   const isSidecarMode = systemState.runningMode === 'Sidecar'
   const isServiceMode = systemState.runningMode === 'Service'

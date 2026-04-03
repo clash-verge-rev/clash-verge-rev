@@ -2,6 +2,7 @@ import './assets/styles/index.scss'
 import './services/monaco'
 
 import { ResizeObserver } from '@juggle/resize-observer'
+import { QueryClientProvider } from '@tanstack/react-query'
 import { ComposeContextProvider } from 'foxact/compose-context-provider'
 import React from 'react'
 import { createRoot } from 'react-dom/client'
@@ -18,6 +19,7 @@ import {
   resolveThemeMode,
   getPreloadConfig,
 } from './services/preload'
+import { queryClient } from './services/query-client'
 import {
   LoadingCacheProvider,
   ThemeModeProvider,
@@ -50,11 +52,13 @@ const initializeApp = (initialThemeMode: 'light' | 'dark') => {
     <React.StrictMode>
       <ComposeContextProvider contexts={contexts}>
         <BaseErrorBoundary>
-          <WindowProvider>
-            <AppDataProvider>
-              <RouterProvider router={router} />
-            </AppDataProvider>
-          </WindowProvider>
+          <QueryClientProvider client={queryClient}>
+            <WindowProvider>
+              <AppDataProvider>
+                <RouterProvider router={router} />
+              </AppDataProvider>
+            </WindowProvider>
+          </QueryClientProvider>
         </BaseErrorBoundary>
       </ComposeContextProvider>
     </React.StrictMode>,
