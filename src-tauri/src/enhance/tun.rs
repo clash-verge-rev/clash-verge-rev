@@ -57,6 +57,19 @@ pub fn use_tun(mut config: Mapping, enable: bool) -> Mapping {
                 revise!(dns_val, "fake-ip-range", "198.18.0.1/16");
             }
 
+            let proxy_server_nameserver_key = Value::from("proxy-server-nameserver");
+            let has_proxy_server_nameserver = dns_val
+                .get(&proxy_server_nameserver_key)
+                .and_then(Value::as_sequence)
+                .is_some_and(|servers| !servers.is_empty());
+
+            if !has_proxy_server_nameserver {
+                dns_val.insert(
+                    proxy_server_nameserver_key,
+                    Value::Sequence(vec![Value::String("system".into())]),
+                );
+            }
+
             #[cfg(target_os = "macos")]
             {
                 AsyncHandler::spawn(move || async move {
@@ -81,4 +94,35 @@ pub fn use_tun(mut config: Mapping, enable: bool) -> Mapping {
     revise!(config, "tun", tun_val);
 
     config
+}
+
+#[cfg(test)]
+mod tests {
+    use super::use_tun;
+    use serde_yaml_ng::{Mapping, Value};
+
+    #[test]
+    fn enable_tun_adds_system_proxy_server_nameserver_when_missing() {
+        let mut config = Mapping::new();
+        config.insert(Value::from("ipv6"), Value::Bool(false));
+        config.insert(
+            Value::from("dns"),
+            Value::Mapping(Mapping::from_iter([(
+                Value::from("enhanced-mode"),
+                Value::from("fake-ip"),
+            )])),
+        );
+
+        let updated = use_tun(config, true);
+        let dns = updated
+            .get(Value::from("dns"))
+            .and_then(Value::as_mapping)
+            .expect("dns mapping");
+        let servers = dns
+            .get(Value::from("proxy-server-nameserver"))
+            .and_then(Value::as_sequence)
+            .expect("proxy-server-nameserver sequence");
+
+        assert_eq!(servers, &vec![Value::String("system".into())]);
+    }
 }

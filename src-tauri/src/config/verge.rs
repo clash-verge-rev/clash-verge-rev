@@ -445,7 +445,7 @@ impl IVerge {
             enable_global_hotkey: Some(true),
             enable_auto_light_weight_mode: Some(false),
             auto_light_weight_minutes: Some(10),
-            enable_dns_settings: Some(false),
+            enable_dns_settings: Some(true),
             home_cards: None,
             enable_external_controller: Some(false),
             ..Self::default()
@@ -573,5 +573,15 @@ impl IVerge {
         } else {
             LevelFilter::Info
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::IVerge;
+
+    #[test]
+    fn dns_settings_are_enabled_by_default() {
+        assert_eq!(IVerge::template().enable_dns_settings, Some(true));
     }
 }
