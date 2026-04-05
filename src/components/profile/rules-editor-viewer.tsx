@@ -29,11 +29,13 @@ import {
 } from '@mui/material'
 import { useLockFn } from 'ahooks'
 import yaml from 'js-yaml'
+import type { editor } from 'monaco-editor'
 import {
   startTransition,
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -250,6 +252,8 @@ export const RulesEditorViewer = (props: Props) => {
     props
   const { t } = useTranslation()
   const themeMode = useThemeMode()
+
+  const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
 
   const [prevData, setPrevData] = useState('')
   const [currData, setCurrData] = useState('')
@@ -536,6 +540,13 @@ export const RulesEditorViewer = (props: Props) => {
     fetchProfile()
   }, [fetchContent, fetchProfile, open])
 
+  useEffect(() => {
+    return () => {
+      editorRef.current?.dispose()
+      editorRef.current = null
+    }
+  }, [])
+
   const validateRule = () => {
     if ((ruleType.required ?? true) && !ruleContent) {
       throw new Error(
@@ -770,6 +781,9 @@ export const RulesEditorViewer = (props: Props) => {
             language="yaml"
             value={currData}
             theme={themeMode === 'light' ? 'light' : 'vs-dark'}
+            onMount={(editorInstance) => {
+              editorRef.current = editorInstance
+            }}
             options={{
               tabSize: 2, // 根据语言类型设置缩进大小
               minimap: {

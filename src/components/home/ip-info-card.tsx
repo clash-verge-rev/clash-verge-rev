@@ -425,7 +425,7 @@ function useIPInfo() {
     queryKey: [IP_INFO_CACHE_KEY],
     queryFn: getIpInfo,
     staleTime: Infinity,
-    gcTime: Infinity,
+    gcTime: 60 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     retry: 1,

@@ -444,6 +444,12 @@ export const CurrentProxyCard = () => {
     [setState],
   )
 
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current) clearTimeout(timeoutRef.current)
+    }
+  }, [])
+
   // 处理代理组变更
   const handleGroupChange = useCallback(
     (event: SelectChangeEvent<string>) => {

@@ -19,7 +19,7 @@ import {
 import { open } from '@tauri-apps/plugin-shell'
 import { useLockFn } from 'ahooks'
 import dayjs from 'dayjs'
-import { useCallback, useEffect, useReducer, useState } from 'react'
+import { useCallback, useEffect, useReducer, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { ConfirmViewer } from '@/components/profile/confirm-viewer'
@@ -96,7 +96,11 @@ export const ProfileItem = (props: Props) => {
 
   // 新增状态：是否显示下次更新时间
   const [showNextUpdate, setShowNextUpdate] = useState(false)
+  const showNextUpdateRef = useRef(false)
   const [nextUpdateTime, setNextUpdateTime] = useState('')
+  const refreshTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  )
 
   const { uid, name = 'Profile', extra, updated = 0, option } = itemData
 
@@ -178,6 +182,10 @@ export const ProfileItem = (props: Props) => {
     setShowNextUpdate(!showNextUpdate)
   }
 
+  useEffect(() => {
+    showNextUpdateRef.current = showNextUpdate
+  }, [showNextUpdate])
+
   // 当组件加载或更新间隔变化时更新下次更新时间
   useEffect(() => {
     if (showNextUpdate) {
@@ -192,19 +200,18 @@ export const ProfileItem = (props: Props) => {
 
   // 订阅定时器更新事件
   useEffect(() => {
-    let refreshTimeout: number | undefined
     // 处理定时器更新事件 - 这个事件专门用于通知定时器变更
     const handleTimerUpdate = (event: Event) => {
       const source = event as CustomEvent<string> & { payload?: string }
       const updatedUid = source.detail ?? source.payload
 
       // 只有当更新的是当前配置时才刷新显示
-      if (updatedUid === itemData.uid && showNextUpdate) {
+      if (updatedUid === itemData.uid && showNextUpdateRef.current) {
         debugLog(`收到定时器更新事件: uid=${updatedUid}`)
-        if (refreshTimeout !== undefined) {
-          clearTimeout(refreshTimeout)
+        if (refreshTimeoutRef.current !== undefined) {
+          clearTimeout(refreshTimeoutRef.current)
         }
-        refreshTimeout = window.setTimeout(() => {
+        refreshTimeoutRef.current = window.setTimeout(() => {
           fetchNextUpdateTime(true)
         }, 1000)
       }
@@ -214,13 +221,13 @@ export const ProfileItem = (props: Props) => {
     window.addEventListener('verge://timer-updated', handleTimerUpdate)
 
     return () => {
-      if (refreshTimeout !== undefined) {
-        clearTimeout(refreshTimeout)
+      if (refreshTimeoutRef.current !== undefined) {
+        clearTimeout(refreshTimeoutRef.current)
       }
       // 清理事件监听
       window.removeEventListener('verge://timer-updated', handleTimerUpdate)
     }
-  }, [fetchNextUpdateTime, itemData.uid, showNextUpdate])
+  }, [fetchNextUpdateTime, itemData.uid])
 
   // local file mode
   // remote file mode

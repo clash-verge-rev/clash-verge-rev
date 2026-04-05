@@ -42,7 +42,7 @@ export const useIconCache = ({
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     staleTime: Infinity,
-    gcTime: Infinity,
+    gcTime: 30 * 60 * 1000,
     retry: 2,
   })
 

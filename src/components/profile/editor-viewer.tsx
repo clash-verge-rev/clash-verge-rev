@@ -168,6 +168,13 @@ export const EditorViewer = ({
     }
   }, [open, syncMaximizedState])
 
+  useEffect(() => {
+    return () => {
+      editorRef.current?.dispose()
+      editorRef.current = null
+    }
+  }, [])
+
   return (
     <Dialog
       open={open}

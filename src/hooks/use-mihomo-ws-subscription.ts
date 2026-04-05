@@ -93,7 +93,7 @@ export const useMihomoWsSubscription = <T>(
         subscriptionCacheKey ?? '$sub$__disabled__',
       ]) ?? fallbackData,
     staleTime: Infinity,
-    gcTime: Infinity,
+    gcTime: 30_000,
     enabled: subscriptionCacheKey !== null,
   })
 
@@ -243,8 +243,11 @@ export const useMihomoWsSubscription = <T>(
   }, [subscriptionCacheKey])
 
   const refresh = useCallback(() => {
+    if (subscriptionCacheKey) {
+      queryClient.removeQueries({ queryKey: [subscriptionCacheKey] })
+    }
     setDate(Date.now())
-  }, [setDate])
+  }, [queryClient, subscriptionCacheKey, setDate])
 
   return { response, refresh, subscriptionCacheKey, wsRef }
 }

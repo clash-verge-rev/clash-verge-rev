@@ -34,11 +34,13 @@ import {
   requestIdleCallback,
 } from 'foxact/request-idle-callback'
 import yaml from 'js-yaml'
+import type { editor } from 'monaco-editor'
 import {
   startTransition,
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react'
 import { Controller, useForm } from 'react-hook-form'
@@ -149,6 +151,7 @@ export const GroupsEditorViewer = (props: Props) => {
     [t],
   )
   const themeMode = useThemeMode()
+  const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
   const [prevData, setPrevData] = useState('')
   const [currData, setCurrData] = useState('')
   const [visualization, setVisualization] = useState(true)
@@ -480,6 +483,13 @@ export const GroupsEditorViewer = (props: Props) => {
     fetchProfile()
     getInterfaceNameList()
   }, [fetchContent, fetchProfile, getInterfaceNameList, open])
+
+  useEffect(() => {
+    return () => {
+      editorRef.current?.dispose()
+      editorRef.current = null
+    }
+  }, [])
 
   const validateGroup = () => {
     const group = formIns.getValues()
@@ -1105,6 +1115,9 @@ export const GroupsEditorViewer = (props: Props) => {
             language="yaml"
             value={currData}
             theme={themeMode === 'light' ? 'light' : 'vs-dark'}
+            onMount={(editorInstance) => {
+              editorRef.current = editorInstance
+            }}
             options={{
               tabSize: 2, // 根据语言类型设置缩进大小
               minimap: {
