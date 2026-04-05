@@ -109,6 +109,28 @@ rust_iso3166 = "0.1.14"
 # Use the git repo until the next release after v2.0.0.
 dark-light = { git = "https://github.com/rust-dark-light/dark-light" }
 
+[target.'cfg(target_os = "macos")'.dependencies]
+objc2 = "0.6"
+objc2-foundation = { version = "0.3", features = [
+  "NSString",
+  "NSDictionary",
+  "NSAttributedString",
+] }
+objc2-app-kit = { version = "0.3", features = [
+  "NSAttributedString",
+  "NSStatusItem",
+  "NSStatusBarButton",
+  "NSButton",
+  "NSControl",
+  "NSResponder",
+  "NSView",
+  "NSFont",
+  "NSFontDescriptor",
+  "NSColor",
+  "NSParagraphStyle",
+  "NSText",
+] }
+
 [target.'cfg(windows)'.dependencies]
 deelevate = { workspace = true }
 runas = "=1.2.0"
