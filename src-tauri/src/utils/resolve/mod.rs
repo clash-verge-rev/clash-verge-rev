@@ -6,6 +6,7 @@ use crate::{
     config::Config,
     core::{
         CoreManager, Timer,
+        handle::Handle,
         hotkey::Hotkey,
         logger::Logger,
         service::{SERVICE_MANAGER, ServiceManager, is_service_ipc_path_exists},
@@ -22,7 +23,6 @@ use clash_verge_signal;
 
 pub mod dns;
 pub mod scheme;
-pub mod ui;
 pub mod window;
 pub mod window_script;
 
@@ -77,6 +77,7 @@ pub fn resolve_setup_async() {
             init_silent_updater(),
         );
 
+        Handle::refresh_clash();
         refresh_tray_menu().await;
     });
 }
