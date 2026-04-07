@@ -1,0 +1,46 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.4.10/schema.json",
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "off"
+      }
+    }
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true
+    }
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineWidth": 80
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single",
+      "trailingCommas": "all",
+      "semicolons": "asNeeded"
+    }
+  },
+  "files": {
+    "includes": [
+      "**",
+      "!dist",
+      "!node_modules",
+      "!src-tauri/target",
+      "!src-tauri/gen",
+      "!target",
+      "!Cargo.lock",
+      "!pnpm-lock.yaml",
+      "!README.md",
+      "!Changelog.md",
+      "!CONTRIBUTING.md",
+      "!.changelog_backups",
+      "!.github/workflows/*.lock.yml"
+    ]
+  }
+}

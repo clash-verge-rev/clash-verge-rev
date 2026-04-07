@@ -26,8 +26,8 @@
     "publish-version": "node scripts/publish-version.mjs",
     "lint": "eslint -c eslint.config.ts --max-warnings=0 --cache --cache-location .eslintcache src",
     "lint:fix": "eslint -c eslint.config.ts --max-warnings=0 --cache --cache-location .eslintcache --fix src",
-    "format": "prettier --write .",
-    "format:check": "prettier --check .",
+    "format": "biome format --write .",
+    "format:check": "biome format .",
     "i18n:check": "node scripts/cleanup-unused-i18n.mjs",
     "i18n:format": "node scripts/cleanup-unused-i18n.mjs --align --apply",
     "i18n:types": "node scripts/generate-i18n-keys.mjs",
@@ -81,6 +81,7 @@
   },
   "devDependencies": {
     "@actions/github": "^9.0.0",
+    "@biomejs/biome": "^2.4.10",
     "@eslint-react/eslint-plugin": "^4.0.0",
     "@eslint/js": "^10.0.1",
     "@tauri-apps/cli": "2.10.1",
@@ -111,8 +112,6 @@
     "jiti": "^2.6.1",
     "lint-staged": "^16.4.0",
     "node-fetch": "^3.3.2",
-    "prettier": "^3.8.1",
-    "prettier-plugin-toml": "^2.0.6",
     "sass": "^1.98.0",
     "tar": "^7.5.12",
     "terser": "^5.46.1",
@@ -122,12 +121,12 @@
     "vite-plugin-svgr": "^5.0.0"
   },
   "lint-staged": {
-    "*.{ts,tsx}": [
+    "*.{ts,tsx,js,mjs}": [
       "eslint --fix --max-warnings=0",
-      "prettier --write"
+      "biome format --write"
     ],
-    "*.{js,mjs,css,scss,json,md,toml,yaml,yml}": [
-      "prettier --write"
+    "*.{css,scss,json,md,yaml,yml}": [
+      "biome format --write"
     ]
   },
   "type": "module",

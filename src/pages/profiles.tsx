@@ -212,6 +212,7 @@ const ProfilePage = () => {
             await createProfile(item, data)
             await mutateProfiles()
           }
+          await enhanceProfiles()
         },
       )
 
