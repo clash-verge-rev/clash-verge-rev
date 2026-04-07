@@ -238,12 +238,30 @@ impl Tray {
             return Ok(());
         };
 
-        let (_is_custom_icon, icon_bytes) = TrayState::get_tray_icon(verge).await;
+        let (is_custom_icon, icon_bytes) = TrayState::get_tray_icon(verge).await;
 
-        logging_error!(
-            Type::Tray,
-            tray.set_icon(Some(tauri::image::Image::from_bytes(&icon_bytes)?))
-        );
+        let icon = match tauri::image::Image::from_bytes(&icon_bytes) {
+            Ok(img) => img,
+            Err(e) if is_custom_icon => {
+                logging!(
+                    warn,
+                    Type::Tray,
+                    "Failed to load custom tray icon: {e}, falling back to default"
+                );
+                let kind = if verge.enable_tun_mode.unwrap_or(false) {
+                    IconKind::Tun
+                } else if verge.enable_system_proxy.unwrap_or(false) {
+                    IconKind::SysProxy
+                } else {
+                    IconKind::Common
+                };
+                let (_, default_bytes) = TrayState::default_icon(verge, kind);
+                tauri::image::Image::from_bytes(&default_bytes)?
+            }
+            Err(e) => return Err(e.into()),
+        };
+
+        logging_error!(Type::Tray, tray.set_icon(Some(icon)));
 
         #[cfg(target_os = "macos")]
         {
@@ -345,8 +363,27 @@ impl Tray {
 
         let verge = Config::verge().await.data_arc();
 
-        let icon_bytes = TrayState::get_tray_icon(&verge).await.1;
-        let icon = tauri::image::Image::from_bytes(&icon_bytes)?;
+        let (is_custom_icon, icon_bytes) = TrayState::get_tray_icon(&verge).await;
+        let icon = match tauri::image::Image::from_bytes(&icon_bytes) {
+            Ok(img) => img,
+            Err(e) if is_custom_icon => {
+                logging!(
+                    warn,
+                    Type::Tray,
+                    "Failed to load custom tray icon: {e}, falling back to default"
+                );
+                let kind = if verge.enable_tun_mode.unwrap_or(false) {
+                    IconKind::Tun
+                } else if verge.enable_system_proxy.unwrap_or(false) {
+                    IconKind::SysProxy
+                } else {
+                    IconKind::Common
+                };
+                let (_, default_bytes) = TrayState::default_icon(&verge, kind);
+                tauri::image::Image::from_bytes(&default_bytes)?
+            }
+            Err(e) => return Err(e.into()),
+        };
 
         #[cfg(target_os = "linux")]
         let builder = TrayIconBuilder::with_id("main").icon(icon).icon_as_template(false);
