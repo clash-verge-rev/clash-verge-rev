@@ -4,6 +4,7 @@ import {
   NetworkCheckRounded,
   FilterAltRounded,
   FilterAltOffRounded,
+  RuleRounded,
   VisibilityRounded,
   VisibilityOffRounded,
   WifiTetheringRounded,
@@ -11,8 +12,8 @@ import {
   SortByAlphaRounded,
   SortRounded,
 } from '@mui/icons-material'
-import { Box, IconButton, TextField, SxProps } from '@mui/material'
-import { useEffect, useState } from 'react'
+import { Box, IconButton, Menu, SxProps, TextField, Typography } from '@mui/material'
+import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BaseSearchBox } from '@/components/base'
@@ -20,7 +21,7 @@ import { useVerge } from '@/hooks/use-verge'
 import delayManager from '@/services/delay'
 import { debugLog } from '@/utils/debug'
 
-import type { ProxySortType } from './use-filter-sort'
+import { buildRegexRuleState, type ProxySortType } from './use-filter-sort'
 import type { HeadState } from './use-head-state'
 
 interface Props {
@@ -57,6 +58,13 @@ export const ProxyHead = ({
 
   const { t } = useTranslation()
   const [autoFocus, setAutoFocus] = useState(false)
+  const [regexMenuAnchor, setRegexMenuAnchor] = useState<null | HTMLElement>(
+    null,
+  )
+  const regexRuleState = useMemo(
+    () => buildRegexRuleState(headState.regexFilter),
+    [headState.regexFilter],
+  )
 
   useEffect(() => {
     // fix the focus conflict
@@ -99,6 +107,15 @@ export const ProxyHead = ({
         }}
       >
         <NetworkCheckRounded />
+      </IconButton>
+
+      <IconButton
+        size="small"
+        color={regexRuleState.hasRule ? 'primary' : 'inherit'}
+        title={t('proxies.page.tooltips.regexFilter')}
+        onClick={(event) => setRegexMenuAnchor(event.currentTarget)}
+      >
+        <RuleRounded />
       </IconButton>
 
       <IconButton
@@ -199,6 +216,46 @@ export const ProxyHead = ({
           sx={{ ml: 0.5, flex: '1 1 auto', input: { py: 0.65, px: 1 } }}
         />
       )}
+
+      <Menu
+        anchorEl={regexMenuAnchor}
+        open={Boolean(regexMenuAnchor)}
+        onClose={() => setRegexMenuAnchor(null)}
+        slotProps={{
+          paper: {
+            sx: {
+              width: 360,
+              p: 1.5,
+            },
+          },
+        }}
+      >
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+          <Typography variant="subtitle2">
+            {t('proxies.page.regexFilter.title')}
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {t('proxies.page.regexFilter.description')}
+          </Typography>
+          <TextField
+            autoFocus
+            multiline
+            minRows={3}
+            maxRows={6}
+            value={headState.regexFilter}
+            error={regexRuleState.hasRule && !regexRuleState.isValid}
+            placeholder={t('proxies.page.regexFilter.placeholder')}
+            helperText={
+              regexRuleState.hasRule && !regexRuleState.isValid
+                ? regexRuleState.error
+                : t('proxies.page.regexFilter.helper')
+            }
+            onChange={(event) =>
+              onHeadState({ regexFilter: event.target.value })
+            }
+          />
+        </Box>
+      </Menu>
     </Box>
   )
 }

@@ -13,6 +13,13 @@ export type ProxySearchState = {
   useRegularExpression?: boolean
 }
 
+export interface RegexRuleState {
+  hasRule: boolean
+  isValid: boolean
+  error?: string
+  matcher: (value: string) => boolean
+}
+
 export default function useFilterSort(
   proxies: IProxyItem[],
   groupName: string,
@@ -107,6 +114,35 @@ export function filterSort(
   const fp = filterProxies(proxies, groupName, filterText, searchState)
   const sp = sortProxies(fp, groupName, sortType, latencyTimeout)
   return sp
+}
+
+export function buildRegexRuleState(value?: string | null): RegexRuleState {
+  const rule = (value ?? '').trim()
+
+  if (!rule) {
+    return {
+      hasRule: false,
+      isValid: true,
+      matcher: () => true,
+    }
+  }
+
+  try {
+    const expression = new RegExp(rule, 'i')
+
+    return {
+      hasRule: true,
+      isValid: true,
+      matcher: (target: string) => expression.test(target),
+    }
+  } catch (error) {
+    return {
+      hasRule: true,
+      isValid: false,
+      error: error instanceof Error ? error.message : String(error),
+      matcher: () => true,
+    }
+  }
 }
 
 /**

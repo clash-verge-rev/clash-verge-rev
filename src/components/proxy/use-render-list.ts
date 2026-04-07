@@ -6,7 +6,7 @@ import { useAppData } from '@/providers/app-data-context'
 import delayManager from '@/services/delay'
 import { debugLog } from '@/utils/debug'
 
-import { filterSort } from './use-filter-sort'
+import { buildRegexRuleState, filterSort } from './use-filter-sort'
 import {
   DEFAULT_STATE,
   useHeadStateNew,
@@ -373,11 +373,20 @@ export const useRenderList = (
 
     const retList = renderGroups.flatMap((group: ProxyGroup) => {
       const headState = headStates[group.name] || DEFAULT_STATE
+      const regexRuleState = buildRegexRuleState(headState.regexFilter)
+      const sourceProxies =
+        regexRuleState.hasRule && regexRuleState.isValid
+          ? group.all.filter((proxy) => regexRuleState.matcher(proxy.name))
+          : group.all
+      const displayGroup =
+        regexRuleState.hasRule && regexRuleState.isValid
+          ? { ...group, all: sourceProxies }
+          : group
       const ret: IRenderItem[] = [
         {
           type: 0,
           key: group.name,
-          group,
+          group: displayGroup,
           headState,
           icon: group.icon,
           testUrl: group.testUrl,
@@ -386,7 +395,7 @@ export const useRenderList = (
 
       if (headState?.open || !useRule) {
         const proxies = filterSort(
-          group.all,
+          sourceProxies,
           group.name,
           headState.filterText,
           headState.sortType,
@@ -409,7 +418,7 @@ export const useRenderList = (
           ret.push({
             type: 3,
             key: `empty-${group.name}`,
-            group,
+            group: displayGroup,
             headState,
           })
         } else if (col > 1) {
@@ -417,7 +426,7 @@ export const useRenderList = (
             groupProxies(proxies, col).map((proxyCol, colIndex) => ({
               type: 4,
               key: `col-${group.name}-${proxyCol[0].name}-${colIndex}`,
-              group,
+              group: displayGroup,
               headState,
               col,
               proxyCol,
@@ -429,7 +438,7 @@ export const useRenderList = (
             proxies.map((proxy) => ({
               type: 2,
               key: `${group.name}-${proxy!.name}`,
-              group,
+              group: displayGroup,
               proxy,
               headState,
               provider: proxy.provider,

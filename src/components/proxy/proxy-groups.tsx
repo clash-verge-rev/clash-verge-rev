@@ -31,6 +31,7 @@ import {
   ProxyGroupNavigator,
 } from './proxy-group-navigator'
 import { ProxyRender } from './proxy-render'
+import { buildRegexRuleState } from './use-filter-sort'
 import { useRenderList } from './use-render-list'
 
 interface Props {
@@ -310,6 +311,18 @@ export const ProxyGroups = (props: Props) => {
       )
       .flatMap((e) => e.proxyCol || e.proxy!)
       .filter(Boolean)
+    const matchedProxies = proxies as IProxyItem[]
+    const regexRuleState = buildRegexRuleState(
+      getGroupHeadState(groupName)?.regexFilter || '',
+    )
+    const currentGroup = availableGroups.find(
+      (group: any) => group.name === groupName,
+    )
+    const shouldLimitAutoSelection =
+      currentGroup &&
+      ['URLTest', 'Fallback'].includes(currentGroup.type) &&
+      regexRuleState.hasRule &&
+      regexRuleState.isValid
 
     debugLog(`[ProxyGroups] 找到代理数量: ${proxies.length}`)
 
@@ -329,6 +342,42 @@ export const ProxyGroups = (props: Props) => {
     debugLog(`[ProxyGroups] 过滤后需要测试的代理数量: ${names.length}`)
 
     const url = delayManager.getUrl(groupName)
+    if (shouldLimitAutoSelection && currentGroup) {
+      try {
+        await delayManager.checkListDelay(names, groupName, timeout)
+      } catch (error) {
+        console.error(
+          `[ProxyGroups] regex-limited delay check failed: ${groupName}`,
+          error,
+        )
+      } finally {
+        const headState = getGroupHeadState(groupName)
+        if (headState?.sortType === 1) {
+          onHeadState(groupName, { sortType: headState.sortType })
+        }
+
+        const bestProxy = matchedProxies
+          .map((proxy) => ({
+            proxy,
+            delay: delayManager.getDelayFix(proxy, groupName),
+          }))
+          .filter(
+            (item) =>
+              Number.isFinite(item.delay) &&
+              item.delay > 0 &&
+              item.delay < Math.max(timeout, 1e5),
+          )
+          .sort((left, right) => left.delay - right.delay)[0]?.proxy
+
+        if (bestProxy && currentGroup.now !== bestProxy.name) {
+          handleProxyGroupChange(currentGroup, bestProxy)
+        }
+
+        onProxies()
+      }
+
+      return
+    }
     debugLog(`[ProxyGroups] 测试URL: ${url}, 超时: ${timeout}ms`)
 
     try {
@@ -349,6 +398,35 @@ export const ProxyGroups = (props: Props) => {
       if (headState?.sortType === 1) {
         onHeadState(groupName, { sortType: headState.sortType })
       }
+
+      const currentGroup = availableGroups.find(
+        (group: any) => group.name === groupName,
+      )
+      const shouldLimitAutoSelection =
+        currentGroup &&
+        ['URLTest', 'Fallback'].includes(currentGroup.type) &&
+        regexRuleState.hasRule &&
+        regexRuleState.isValid
+
+      if (shouldLimitAutoSelection) {
+        const bestProxy = matchedProxies
+          .map((proxy) => ({
+            proxy,
+            delay: delayManager.getDelayFix(proxy, groupName),
+          }))
+          .filter(
+            (item) =>
+              Number.isFinite(item.delay) &&
+              item.delay > 0 &&
+              item.delay < Math.max(timeout, 1e5),
+          )
+          .sort((left, right) => left.delay - right.delay)[0]?.proxy
+
+        if (bestProxy && currentGroup.now !== bestProxy.name) {
+          handleProxyGroupChange(currentGroup, bestProxy)
+        }
+      }
+
       onProxies()
     }
   })

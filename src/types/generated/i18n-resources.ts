@@ -458,6 +458,12 @@ export interface TranslationResources {
           }
           title: string
         }
+        regexFilter: {
+          description: string
+          helper: string
+          placeholder: string
+          title: string
+        }
         rules: {
           select: string
           title: string
@@ -471,6 +477,7 @@ export interface TranslationResources {
           delayCheckUrl: string
           filter: string
           locate: string
+          regexFilter: string
           showBasic: string
           showDetail: string
           sortDefault: string

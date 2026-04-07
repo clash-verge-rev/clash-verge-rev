@@ -27,9 +27,16 @@
       "proxyCount": "Proxy Count",
       "delayCheckReset": "Delay check to cancel fixed"
     },
+    "regexFilter": {
+      "title": "Regex Filter",
+      "description": "Only proxies whose names match the regex are available in this group.",
+      "placeholder": "Enter a regex expression",
+      "helper": "Matched proxies remain visible, and auto-select groups only choose from the matched proxies after delay checks."
+    },
     "tooltips": {
       "locate": "locate",
       "delayCheck": "Delay check",
+      "regexFilter": "Regex filter",
       "sortDefault": "Sort by default",
       "sortDelay": "Sort by delay",
       "sortName": "Sort by name",

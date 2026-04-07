@@ -9,6 +9,7 @@ export interface HeadState {
   showType: boolean
   sortType: ProxySortType
   filterText: string
+  regexFilter: string
   filterMatchCase?: boolean
   filterMatchWholeWord?: boolean
   filterUseRegularExpression?: boolean
@@ -24,6 +25,7 @@ export const DEFAULT_STATE: HeadState = {
   showType: true,
   sortType: 0,
   filterText: '',
+  regexFilter: '',
   filterMatchCase: false,
   filterMatchWholeWord: false,
   filterUseRegularExpression: false,
@@ -54,6 +56,17 @@ function headStateReducer(
   }
 }
 
+function normalizeHeadStates(
+  payload: Record<string, Partial<HeadState>>,
+): Record<string, HeadState> {
+  return Object.fromEntries(
+    Object.entries(payload).map(([groupName, value]) => [
+      groupName,
+      { ...DEFAULT_STATE, ...value },
+    ]),
+  )
+}
+
 export function useHeadStateNew() {
   const { profiles } = useProfiles()
   const current = profiles?.current || ''
@@ -69,7 +82,7 @@ export function useHeadStateNew() {
       const value = data[current] || {}
 
       if (value && typeof value === 'object') {
-        dispatch({ type: 'replace', payload: value })
+        dispatch({ type: 'replace', payload: normalizeHeadStates(value) })
       } else {
         dispatch({ type: 'reset' })
       }

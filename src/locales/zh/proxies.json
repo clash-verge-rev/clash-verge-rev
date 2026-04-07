@@ -27,9 +27,16 @@
       "proxyCount": "节点数量",
       "delayCheckReset": "进行延迟测试，以取消固定"
     },
+    "regexFilter": {
+      "title": "正则过滤",
+      "description": "只有代理名称匹配正则表达式的节点才会在这个组里可用。",
+      "placeholder": "输入正则表达式",
+      "helper": "匹配到的节点会保留在列表中，自动选择组在测速后也只会从这些节点里选择。"
+    },
     "tooltips": {
       "locate": "当前节点",
       "delayCheck": "延迟测试",
+      "regexFilter": "正则过滤",
       "sortDefault": "默认排序",
       "sortDelay": "按延迟排序",
       "sortName": "按名称排序",
