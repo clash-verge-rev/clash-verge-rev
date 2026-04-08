@@ -1,6 +1,6 @@
+import { useQueryClient } from '@tanstack/react-query'
 import dayjs from 'dayjs'
 import { useEffect, useRef } from 'react'
-import { mutate } from 'swr'
 import { MihomoWebSocket, type LogLevel } from 'tauri-plugin-mihomo-api'
 
 import { getClashLogs } from '@/services/cmds'
@@ -39,6 +39,7 @@ const appendLogs = (
 ): ILogItem[] => clampLogs([...(current ?? []), ...incoming])
 
 export const useLogData = () => {
+  const queryClient = useQueryClient()
   const [clashLog] = useClashLog()
   const enableLog = clashLog.enable
   const logLevel = clashLog.logLevel
@@ -50,7 +51,6 @@ export const useLogData = () => {
     storageKey: 'mihomo_logs_date',
     buildSubscriptKey: (date) => (enableLog ? `getClashLog-${date}` : null),
     fallbackData: [],
-    keepPreviousData: true,
     connect: () => MihomoWebSocket.connect_logs(logLevel),
     setupHandlers: ({ next, scheduleReconnect, isMounted }) => {
       let flushTimer: ReturnType<typeof setTimeout> | null = null
@@ -91,6 +91,9 @@ export const useLogData = () => {
             }
             parsed.time = dayjs().format('MM-DD HH:mm:ss')
             buffer.push(parsed)
+            if (buffer.length > MAX_LOG_NUM) {
+              buffer.splice(0, buffer.length - MAX_LOG_NUM)
+            }
             if (!flushTimer) {
               flushTimer = setTimeout(flush, FLUSH_DELAY_MS)
             }
@@ -101,7 +104,12 @@ export const useLogData = () => {
         async onConnected() {
           const logs = await getClashLogs()
           if (isMounted()) {
-            next(null, clampLogs(filterLogsByLevel(logs, allowedTypes)))
+            next(null, (current) => {
+              if (!current || current.length === 0) {
+                return clampLogs(filterLogsByLevel(logs, allowedTypes))
+              }
+              return current
+            })
           }
         },
         cleanup: clearFlushTimer,
@@ -128,7 +136,7 @@ export const useLogData = () => {
   const refreshGetClashLog = (clear = false) => {
     if (clear) {
       if (subscriptionCacheKey) {
-        mutate(subscriptionCacheKey, [])
+        queryClient.setQueryData<ILogItem[]>([subscriptionCacheKey], [])
       }
     } else {
       refresh()

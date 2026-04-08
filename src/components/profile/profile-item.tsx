@@ -19,9 +19,8 @@ import {
 import { open } from '@tauri-apps/plugin-shell'
 import { useLockFn } from 'ahooks'
 import dayjs from 'dayjs'
-import { useCallback, useEffect, useReducer, useState } from 'react'
+import { useCallback, useEffect, useReducer, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { mutate } from 'swr'
 
 import { ConfirmViewer } from '@/components/profile/confirm-viewer'
 import { EditorViewer } from '@/components/profile/editor-viewer'
@@ -53,6 +52,7 @@ interface Props {
   selected: boolean
   activating: boolean
   itemData: IProfileItem
+  mutateProfiles: () => Promise<void>
   onSelect: (force: boolean) => void
   onEdit: () => void
   onSave?: (prev?: string, curr?: string) => void
@@ -68,6 +68,7 @@ export const ProfileItem = (props: Props) => {
     selected,
     activating,
     itemData,
+    mutateProfiles,
     onSelect,
     onEdit,
     onSave,
@@ -95,7 +96,11 @@ export const ProfileItem = (props: Props) => {
 
   // 新增状态：是否显示下次更新时间
   const [showNextUpdate, setShowNextUpdate] = useState(false)
+  const showNextUpdateRef = useRef(false)
   const [nextUpdateTime, setNextUpdateTime] = useState('')
+  const refreshTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  )
 
   const { uid, name = 'Profile', extra, updated = 0, option } = itemData
 
@@ -177,6 +182,10 @@ export const ProfileItem = (props: Props) => {
     setShowNextUpdate(!showNextUpdate)
   }
 
+  useEffect(() => {
+    showNextUpdateRef.current = showNextUpdate
+  }, [showNextUpdate])
+
   // 当组件加载或更新间隔变化时更新下次更新时间
   useEffect(() => {
     if (showNextUpdate) {
@@ -191,19 +200,18 @@ export const ProfileItem = (props: Props) => {
 
   // 订阅定时器更新事件
   useEffect(() => {
-    let refreshTimeout: number | undefined
     // 处理定时器更新事件 - 这个事件专门用于通知定时器变更
     const handleTimerUpdate = (event: Event) => {
       const source = event as CustomEvent<string> & { payload?: string }
       const updatedUid = source.detail ?? source.payload
 
       // 只有当更新的是当前配置时才刷新显示
-      if (updatedUid === itemData.uid && showNextUpdate) {
+      if (updatedUid === itemData.uid && showNextUpdateRef.current) {
         debugLog(`收到定时器更新事件: uid=${updatedUid}`)
-        if (refreshTimeout !== undefined) {
-          clearTimeout(refreshTimeout)
+        if (refreshTimeoutRef.current !== undefined) {
+          clearTimeout(refreshTimeoutRef.current)
         }
-        refreshTimeout = window.setTimeout(() => {
+        refreshTimeoutRef.current = window.setTimeout(() => {
           fetchNextUpdateTime(true)
         }, 1000)
       }
@@ -213,13 +221,13 @@ export const ProfileItem = (props: Props) => {
     window.addEventListener('verge://timer-updated', handleTimerUpdate)
 
     return () => {
-      if (refreshTimeout !== undefined) {
-        clearTimeout(refreshTimeout)
+      if (refreshTimeoutRef.current !== undefined) {
+        clearTimeout(refreshTimeoutRef.current)
       }
       // 清理事件监听
       window.removeEventListener('verge://timer-updated', handleTimerUpdate)
     }
-  }, [fetchNextUpdateTime, itemData.uid, showNextUpdate])
+  }, [fetchNextUpdateTime, itemData.uid])
 
   // local file mode
   // remote file mode
@@ -383,7 +391,7 @@ export const ProfileItem = (props: Props) => {
       await updateProfile(itemData.uid, payload)
 
       // 更新成功，刷新列表
-      mutate('getProfiles')
+      void mutateProfiles()
     } catch {
       // 更新完全失败（包括后端的回退尝试）
       // 不需要做处理，后端会通过事件通知系统发送错误
@@ -579,7 +587,7 @@ export const ProfileItem = (props: Props) => {
       if (customEvent.detail?.uid === itemData.uid) {
         setLoadingCache((cache) => ({ ...cache, [itemData.uid]: false }))
         // 刷新 profile 数据以获取最新的 updated 时间戳
-        mutate('getProfiles')
+        void mutateProfiles()
         // 更新完成后刷新显示
         if (showNextUpdate) {
           fetchNextUpdateTime()
@@ -599,7 +607,13 @@ export const ProfileItem = (props: Props) => {
         handleUpdateCompleted,
       )
     }
-  }, [fetchNextUpdateTime, itemData.uid, setLoadingCache, showNextUpdate])
+  }, [
+    fetchNextUpdateTime,
+    itemData.uid,
+    mutateProfiles,
+    setLoadingCache,
+    showNextUpdate,
+  ])
 
   const handleSaveProfileDocument = useLockFn(async () => {
     const currentValue = profileDocument.value

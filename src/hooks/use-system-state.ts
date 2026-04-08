@@ -1,5 +1,5 @@
-import { useEffect } from 'react'
-import useSWR from 'swr'
+import { useQuery } from '@tanstack/react-query'
+import { useEffect, useRef, useState } from 'react'
 
 import { getRunningMode, isAdmin, isServiceAvailable } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
@@ -18,7 +18,8 @@ const defaultSystemState = {
   isServiceOk: false,
 } as SystemState
 
-let disablingTunMode = false
+// Grace period for service initialization during startup
+const STARTUP_GRACE_MS = 10_000
 
 /**
  * 自定义 hook 用于获取系统运行状态
@@ -26,14 +27,21 @@ let disablingTunMode = false
  */
 export function useSystemState() {
   const { verge, patchVerge } = useVerge()
+  const disablingTunRef = useRef(false)
+  const [isStartingUp, setIsStartingUp] = useState(true)
+
+  useEffect(() => {
+    const timer = setTimeout(() => setIsStartingUp(false), STARTUP_GRACE_MS)
+    return () => clearTimeout(timer)
+  }, [])
 
   const {
-    data: systemState,
-    mutate: mutateSystemState,
+    data: systemState = defaultSystemState,
+    refetch: mutateSystemState,
     isLoading,
-  } = useSWR(
-    'getSystemState',
-    async () => {
+  } = useQuery({
+    queryKey: ['getSystemState'],
+    queryFn: async () => {
       const [runningMode, isAdminMode, isServiceOk] = await Promise.all([
         getRunningMode(),
         isAdmin(),
@@ -41,28 +49,27 @@ export function useSystemState() {
       ])
       return { runningMode, isAdminMode, isServiceOk } as SystemState
     },
-    {
-      suspense: true,
-      refreshInterval: 30000,
-      fallback: defaultSystemState,
-    },
-  )
+    refetchInterval: isStartingUp ? 2000 : 30000,
+  })
 
   const isSidecarMode = systemState.runningMode === 'Sidecar'
   const isServiceMode = systemState.runningMode === 'Service'
   const isTunModeAvailable = systemState.isAdminMode || systemState.isServiceOk
 
   const enable_tun_mode = verge?.enable_tun_mode
+  const cooldownTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
   useEffect(() => {
     if (enable_tun_mode === undefined) return
 
     if (
-      !disablingTunMode &&
+      !disablingTunRef.current &&
       enable_tun_mode &&
       !isTunModeAvailable &&
-      !isLoading
+      !isLoading &&
+      !isStartingUp
     ) {
-      disablingTunMode = true
+      disablingTunRef.current = true
       patchVerge({ enable_tun_mode: false })
         .then(() => {
           showNotice.info(
@@ -76,14 +83,22 @@ export function useSystemState() {
           )
         })
         .finally(() => {
-          const tid = setTimeout(() => {
-            // 避免 verge 数据更新不及时导致重复执行关闭 Tun 模式
-            disablingTunMode = false
-            clearTimeout(tid)
+          // 避免 verge 数据更新不及时导致重复执行关闭 Tun 模式
+          cooldownTimerRef.current = setTimeout(() => {
+            disablingTunRef.current = false
+            cooldownTimerRef.current = null
           }, 1000)
         })
     }
-  }, [enable_tun_mode, isTunModeAvailable, patchVerge, isLoading])
+
+    return () => {
+      if (cooldownTimerRef.current != null) {
+        clearTimeout(cooldownTimerRef.current)
+        cooldownTimerRef.current = null
+        disablingTunRef.current = false
+      }
+    }
+  }, [enable_tun_mode, isTunModeAvailable, patchVerge, isLoading, isStartingUp])
 
   return {
     runningMode: systemState.runningMode,

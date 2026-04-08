@@ -309,20 +309,22 @@ export const useCustomTheme = () => {
       styleElement.innerHTML = effectiveInjectedCss + globalStyles
     }
 
-    const { palette } = muiTheme
-    setTimeout(() => {
+    return muiTheme
+  }, [mode, theme_setting, userBackgroundImage, hasUserBackground])
+
+  useEffect(() => {
+    const id = setTimeout(() => {
       const dom = document.querySelector('#Gradient2')
       if (dom) {
         dom.innerHTML = `
-        <stop offset="0%" stop-color="${palette.primary.main}" />
-        <stop offset="80%" stop-color="${palette.primary.dark}" />
-        <stop offset="100%" stop-color="${palette.primary.dark}" />
+        <stop offset="0%" stop-color="${theme.palette.primary.main}" />
+        <stop offset="80%" stop-color="${theme.palette.primary.dark}" />
+        <stop offset="100%" stop-color="${theme.palette.primary.dark}" />
         `
       }
     }, 0)
-
-    return muiTheme
-  }, [mode, theme_setting, userBackgroundImage, hasUserBackground])
+    return () => clearTimeout(id)
+  }, [theme.palette.primary.main, theme.palette.primary.dark])
 
   return { theme }
 }

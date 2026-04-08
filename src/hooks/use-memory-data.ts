@@ -15,6 +15,7 @@ export const useMemoryData = () => {
     buildSubscriptKey: (date) => `getClashMemory-${date}`,
     fallbackData: FALLBACK_MEMORY_USAGE,
     connect: () => MihomoWebSocket.connect_memory(),
+    throttleMs: 500,
     setupHandlers: ({ next, scheduleReconnect }) => ({
       handleMessage: (data) => {
         if (data.startsWith('Websocket error')) {

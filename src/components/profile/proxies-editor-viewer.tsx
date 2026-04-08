@@ -27,17 +27,18 @@ import {
 } from '@mui/material'
 import { useLockFn } from 'ahooks'
 import yaml from 'js-yaml'
+import type { editor } from 'monaco-editor'
 import {
   startTransition,
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
 } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Virtuoso } from 'react-virtuoso'
 
-import { BaseSearchBox } from '@/components/base'
+import { BaseSearchBox, VirtualList } from '@/components/base'
 import { ProxyItem } from '@/components/profile/proxy-item'
 import { readProfileFile, saveProfileFile } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
@@ -57,6 +58,7 @@ export const ProxiesEditorViewer = (props: Props) => {
   const { profileUid, property, open, onClose, onSave } = props
   const { t } = useTranslation()
   const themeMode = useThemeMode()
+  const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
   const [prevData, setPrevData] = useState('')
   const [currData, setCurrData] = useState('')
   const [visualization, setVisualization] = useState(true)
@@ -80,6 +82,92 @@ export const ProxiesEditorViewer = (props: Props) => {
     () => appendSeq.filter((proxy) => match(proxy.name)),
     [appendSeq, match],
   )
+
+  const renderItem = (index: number): React.ReactNode => {
+    const shift = filteredPrependSeq.length > 0 ? 1 : 0
+    if (filteredPrependSeq.length > 0 && index === 0) {
+      return (
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={onPrependDragEnd}
+        >
+          <SortableContext
+            items={filteredPrependSeq.map((x) => {
+              return x.name
+            })}
+          >
+            {filteredPrependSeq.map((item) => {
+              return (
+                <ProxyItem
+                  key={item.name}
+                  type="prepend"
+                  proxy={item}
+                  onDelete={() => {
+                    setPrependSeq(
+                      prependSeq.filter((v) => v.name !== item.name),
+                    )
+                  }}
+                />
+              )
+            })}
+          </SortableContext>
+        </DndContext>
+      )
+    } else if (index < filteredProxyList.length + shift) {
+      const newIndex = index - shift
+      return (
+        <ProxyItem
+          key={filteredProxyList[newIndex].name}
+          type={
+            deleteSeq.includes(filteredProxyList[newIndex].name)
+              ? 'delete'
+              : 'original'
+          }
+          proxy={filteredProxyList[newIndex]}
+          onDelete={() => {
+            if (deleteSeq.includes(filteredProxyList[newIndex].name)) {
+              setDeleteSeq(
+                deleteSeq.filter((v) => v !== filteredProxyList[newIndex].name),
+              )
+            } else {
+              setDeleteSeq((prev) => [
+                ...prev,
+                filteredProxyList[newIndex].name,
+              ])
+            }
+          }}
+        />
+      )
+    } else {
+      return (
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={onAppendDragEnd}
+        >
+          <SortableContext
+            items={filteredAppendSeq.map((x) => {
+              return x.name
+            })}
+          >
+            {filteredAppendSeq.map((item) => {
+              return (
+                <ProxyItem
+                  key={item.name}
+                  type="append"
+                  proxy={item}
+                  onDelete={() => {
+                    setAppendSeq(appendSeq.filter((v) => v.name !== item.name))
+                  }}
+                />
+              )
+            })}
+          </SortableContext>
+        </DndContext>
+      )
+    }
+  }
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -258,6 +346,13 @@ export const ProxiesEditorViewer = (props: Props) => {
     fetchProfile()
   }, [fetchContent, fetchProfile, open])
 
+  useEffect(() => {
+    return () => {
+      editorRef.current?.dispose()
+      editorRef.current = null
+    }
+  }, [])
+
   const handleSave = useLockFn(async () => {
     try {
       await saveProfileFile(property, currData)
@@ -366,109 +461,15 @@ export const ProxiesEditorViewer = (props: Props) => {
               }}
             >
               <BaseSearchBox onSearch={(match) => setMatch(() => match)} />
-              <Virtuoso
-                style={{ height: 'calc(100% - 24px)', marginTop: '8px' }}
-                totalCount={
+              <VirtualList
+                count={
                   filteredProxyList.length +
                   (filteredPrependSeq.length > 0 ? 1 : 0) +
                   (filteredAppendSeq.length > 0 ? 1 : 0)
                 }
-                increaseViewportBy={256}
-                itemContent={(index) => {
-                  const shift = filteredPrependSeq.length > 0 ? 1 : 0
-                  if (filteredPrependSeq.length > 0 && index === 0) {
-                    return (
-                      <DndContext
-                        sensors={sensors}
-                        collisionDetection={closestCenter}
-                        onDragEnd={onPrependDragEnd}
-                      >
-                        <SortableContext
-                          items={filteredPrependSeq.map((x) => {
-                            return x.name
-                          })}
-                        >
-                          {filteredPrependSeq.map((item) => {
-                            return (
-                              <ProxyItem
-                                key={item.name}
-                                type="prepend"
-                                proxy={item}
-                                onDelete={() => {
-                                  setPrependSeq(
-                                    prependSeq.filter(
-                                      (v) => v.name !== item.name,
-                                    ),
-                                  )
-                                }}
-                              />
-                            )
-                          })}
-                        </SortableContext>
-                      </DndContext>
-                    )
-                  } else if (index < filteredProxyList.length + shift) {
-                    const newIndex = index - shift
-                    return (
-                      <ProxyItem
-                        key={filteredProxyList[newIndex].name}
-                        type={
-                          deleteSeq.includes(filteredProxyList[newIndex].name)
-                            ? 'delete'
-                            : 'original'
-                        }
-                        proxy={filteredProxyList[newIndex]}
-                        onDelete={() => {
-                          if (
-                            deleteSeq.includes(filteredProxyList[newIndex].name)
-                          ) {
-                            setDeleteSeq(
-                              deleteSeq.filter(
-                                (v) => v !== filteredProxyList[newIndex].name,
-                              ),
-                            )
-                          } else {
-                            setDeleteSeq((prev) => [
-                              ...prev,
-                              filteredProxyList[newIndex].name,
-                            ])
-                          }
-                        }}
-                      />
-                    )
-                  } else {
-                    return (
-                      <DndContext
-                        sensors={sensors}
-                        collisionDetection={closestCenter}
-                        onDragEnd={onAppendDragEnd}
-                      >
-                        <SortableContext
-                          items={filteredAppendSeq.map((x) => {
-                            return x.name
-                          })}
-                        >
-                          {filteredAppendSeq.map((item) => {
-                            return (
-                              <ProxyItem
-                                key={item.name}
-                                type="append"
-                                proxy={item}
-                                onDelete={() => {
-                                  setAppendSeq(
-                                    appendSeq.filter(
-                                      (v) => v.name !== item.name,
-                                    ),
-                                  )
-                                }}
-                              />
-                            )
-                          })}
-                        </SortableContext>
-                      </DndContext>
-                    )
-                  }
-                }}
+                estimateSize={56}
+                renderItem={renderItem}
+                style={{ height: 'calc(100% - 24px)', marginTop: '8px' }}
               />
             </List>
           </>
@@ -478,6 +479,9 @@ export const ProxiesEditorViewer = (props: Props) => {
             language="yaml"
             value={currData}
             theme={themeMode === 'light' ? 'light' : 'vs-dark'}
+            onMount={(editorInstance) => {
+              editorRef.current = editorInstance
+            }}
             options={{
               tabSize: 2, // 根据语言类型设置缩进大小
               minimap: {

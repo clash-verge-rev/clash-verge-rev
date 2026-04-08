@@ -1,18 +1,21 @@
+import { useQuery } from '@tanstack/react-query'
 import { useRef } from 'react'
-import useSWR, { mutate } from 'swr'
 import { closeAllConnections } from 'tauri-plugin-mihomo-api'
 
 import { useVerge } from '@/hooks/use-verge'
 import { useAppData } from '@/providers/app-data-context'
 import { getAutotemProxy } from '@/services/cmds'
+import { queryClient } from '@/services/query-client'
 
 // 系统代理状态检测统一逻辑
 export const useSystemProxyState = () => {
   const { verge, mutateVerge, patchVerge } = useVerge()
   const { sysproxy, clashConfig } = useAppData()
-  const { data: autoproxy } = useSWR('getAutotemProxy', getAutotemProxy, {
-    revalidateOnFocus: true,
-    revalidateOnReconnect: true,
+  const { data: autoproxy } = useQuery({
+    queryKey: ['getAutotemProxy'],
+    queryFn: getAutotemProxy,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
   })
 
   const {
@@ -41,7 +44,10 @@ export const useSystemProxyState = () => {
   const busyRef = useRef(false)
 
   const toggleSystemProxy = async (enabled: boolean) => {
-    mutateVerge({ ...verge, enable_system_proxy: enabled }, false)
+    mutateVerge(
+      (prev) => (prev ? { ...prev, enable_system_proxy: enabled } : prev),
+      false,
+    )
     pendingRef.current = enabled
 
     if (busyRef.current) return
@@ -58,13 +64,23 @@ export const useSystemProxyState = () => {
       }
     } finally {
       busyRef.current = false
-      await Promise.all([mutate('getSystemProxy'), mutate('getAutotemProxy')])
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['getSystemProxy'] }),
+        queryClient.invalidateQueries({ queryKey: ['getAutotemProxy'] }),
+      ])
     }
   }
+
+  const invalidateProxyState = () =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: ['getSystemProxy'] }),
+      queryClient.invalidateQueries({ queryKey: ['getAutotemProxy'] }),
+    ])
 
   return {
     indicator,
     configState: enable_system_proxy ?? false,
     toggleSystemProxy,
+    invalidateProxyState,
   }
 }

@@ -15,7 +15,6 @@ import {
 import { useLockFn } from 'ahooks'
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Virtuoso } from 'react-virtuoso'
 import { closeAllConnections } from 'tauri-plugin-mihomo-api'
 
 import {
@@ -23,6 +22,7 @@ import {
   BasePage,
   BaseSearchBox,
   BaseStyledSelect,
+  VirtualList,
 } from '@/components/base'
 import {
   ConnectionDetail,
@@ -243,23 +243,27 @@ const ConnectionsPage = () => {
           onCloseColumnManager={() => setIsColumnManagerOpen(false)}
         />
       ) : (
-        <Virtuoso
+        <VirtualList
+          count={filterConn.length}
+          estimateSize={56}
+          renderItem={(i) => (
+            <ConnectionItem
+              value={filterConn[i]}
+              closed={connectionsType === 'closed'}
+              onShowDetail={() =>
+                detailRef.current?.open(
+                  filterConn[i],
+                  connectionsType === 'closed',
+                )
+              }
+            />
+          )}
           style={{
             flex: 1,
             borderRadius: '8px',
             WebkitOverflowScrolling: 'touch',
             overscrollBehavior: 'contain',
           }}
-          data={filterConn}
-          itemContent={(_, item) => (
-            <ConnectionItem
-              value={item}
-              closed={connectionsType === 'closed'}
-              onShowDetail={() =>
-                detailRef.current?.open(item, connectionsType === 'closed')
-              }
-            />
-          )}
         />
       )}
       <ConnectionDetail ref={detailRef} />

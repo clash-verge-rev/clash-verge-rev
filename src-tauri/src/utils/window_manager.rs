@@ -129,7 +129,7 @@ impl WindowManager {
                 logging!(info, Type::Window, "窗口不存在，创建新窗口");
                 if Self::create_window(true).await {
                     logging!(info, Type::Window, "窗口创建成功");
-                    std::thread::sleep(std::time::Duration::from_millis(50));
+                    tokio::time::sleep(std::time::Duration::from_millis(50)).await;
                     WindowOperationResult::Created
                 } else {
                     logging!(warn, Type::Window, "窗口创建失败");
@@ -285,31 +285,31 @@ impl WindowManager {
     }
 
     /// 创建新窗口,防抖避免重复调用
-    pub fn create_window(is_show: bool) -> Pin<Box<dyn Future<Output = bool> + Send>> {
+    /// 窗口创建后保持隐藏，由前端 index.html 在 overlay 渲染后调用 show，避免主题闪烁
+    pub fn create_window(should_create: bool) -> Pin<Box<dyn Future<Output = bool> + Send>> {
         Box::pin(async move {
-            logging!(info, Type::Window, "开始创建/显示主窗口, is_show={}", is_show);
+            logging!(info, Type::Window, "开始创建主窗口, should_create={}", should_create);
 
-            if !is_show {
+            if !should_create {
                 return false;
             }
 
-            let window = match build_new_window().await {
-                Ok(window) => {
-                    logging!(info, Type::Window, "新窗口创建成功");
-                    window
+            match build_new_window().await {
+                Ok(_) => {
+                    logging!(info, Type::Window, "新窗口创建成功，等待前端渲染后显示");
+
+                    #[cfg(target_os = "macos")]
+                    {
+                        handle::Handle::global().set_activation_policy_regular();
+                    }
+
+                    true
                 }
                 Err(e) => {
                     logging!(error, Type::Window, "新窗口创建失败: {}", e);
-                    return false;
+                    false
                 }
-            };
-
-            // 直接激活刚创建的窗口，避免因防抖导致首次显示被跳过
-            if WindowOperationResult::Failed == Self::activate_window(&window) {
-                return false;
             }
-
-            true
         })
     }
 

@@ -22,7 +22,6 @@ import {
   useState,
 } from 'react'
 import { useTranslation } from 'react-i18next'
-import { mutate } from 'swr'
 
 import {
   BaseDialog,
@@ -110,7 +109,8 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
   const [hostOptions, setHostOptions] = useState<string[]>([])
 
   const { clashConfig } = useAppData()
-  const { indicator: isProxyReallyEnabled } = useSystemProxyState()
+  const { indicator: isProxyReallyEnabled, invalidateProxyState } =
+    useSystemProxyState()
 
   const {
     enable_system_proxy: enabled,
@@ -166,10 +166,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
           await patchVergeConfig({ enable_system_proxy: false })
           await sleep(200)
           await patchVergeConfig({ enable_system_proxy: true })
-          await Promise.all([
-            mutate('getSystemProxy'),
-            mutate('getAutotemProxy'),
-          ])
+          await invalidateProxyState()
         }
       } catch (err) {
         showNotice.error(err)
@@ -177,7 +174,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
     }
 
     updateProxy()
-  }, [clashConfig?.mixedPort, value.pac])
+  }, [clashConfig?.mixedPort, value.pac, invalidateProxyState])
 
   const { systemProxyAddress } = useAppData()
 
@@ -410,10 +407,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
         }
         setTimeout(async () => {
           try {
-            await Promise.all([
-              mutate('getSystemProxy'),
-              mutate('getAutotemProxy'),
-            ])
+            await invalidateProxyState()
 
             // 如果需要重置代理且代理当前启用
             if (needResetProxy && enabled) {
@@ -430,10 +424,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
                 await patchVergeConfig({ enable_system_proxy: false })
                 await new Promise((resolve) => setTimeout(resolve, 50))
                 await patchVergeConfig({ enable_system_proxy: true })
-                await Promise.all([
-                  mutate('getSystemProxy'),
-                  mutate('getAutotemProxy'),
-                ])
+                await invalidateProxyState()
               }
             }
           } catch (err) {

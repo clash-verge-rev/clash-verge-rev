@@ -1,5 +1,5 @@
+import { useQuery } from '@tanstack/react-query'
 import { useLockFn } from 'ahooks'
-import useSWR, { mutate } from 'swr'
 import { getVersion } from 'tauri-plugin-mihomo-api'
 
 import {
@@ -7,6 +7,12 @@ import {
   getRuntimeConfig,
   patchClashConfig,
 } from '@/services/cmds'
+import { queryClient } from '@/services/query-client'
+
+type MutateClashUpdater =
+  | ((old: IConfigData | undefined) => IConfigData | undefined)
+  | IConfigData
+  | undefined
 
 const PORT_KEYS = [
   'port',
@@ -38,7 +44,7 @@ const validatePortRange = (port: number) => {
   if (port < 1000) {
     throw new Error('The port should not < 1000')
   }
-  if (port > 65536) {
+  if (port > 65535) {
     throw new Error('The port should not > 65536')
   }
 }
@@ -52,16 +58,35 @@ const validatePorts = (patch: ClashInfoPatch) => {
 }
 
 export const useRuntimeConfig = (shouldFetch: boolean = true) => {
-  return useSWR(shouldFetch ? 'getRuntimeConfig' : null, getRuntimeConfig)
+  return useQuery({
+    queryKey: ['getRuntimeConfig'],
+    queryFn: getRuntimeConfig,
+    enabled: shouldFetch,
+  })
 }
 
 export const useClash = () => {
-  const { data: clash, mutate: mutateClash } = useRuntimeConfig()
+  const { data: clash, refetch } = useRuntimeConfig()
 
-  const { data: versionData, mutate: mutateVersion } = useSWR(
-    'getVersion',
-    getVersion,
-  )
+  const { data: versionData, refetch: mutateVersion } = useQuery({
+    queryKey: ['getVersion'],
+    queryFn: getVersion,
+  })
+
+  const mutateClash = (updater?: MutateClashUpdater, revalidate?: boolean) => {
+    if (updater === undefined) {
+      return refetch()
+    }
+    const next =
+      typeof updater === 'function'
+        ? updater(queryClient.getQueryData<IConfigData>(['getRuntimeConfig']))
+        : updater
+    queryClient.setQueryData(['getRuntimeConfig'], next)
+    if (revalidate !== false) {
+      return refetch()
+    }
+    return Promise.resolve()
+  }
 
   const patchClash = useLockFn(async (patch: Partial<IConfigData>) => {
     await patchClashConfig(patch)
@@ -82,24 +107,28 @@ export const useClash = () => {
 }
 
 export const useClashInfo = () => {
-  const { data: clashInfo, mutate: mutateInfo } = useSWR(
-    'getClashInfo',
-    getClashInfo,
-  )
+  const { data: clashInfo, refetch: mutateInfo } = useQuery({
+    queryKey: ['getClashInfo'],
+    queryFn: getClashInfo,
+  })
 
-  const patchInfo = async (patch: ClashInfoPatch) => {
+  const patchInfo = useLockFn(async (patch: ClashInfoPatch) => {
     if (!hasClashInfoPayload(patch)) return
 
     validatePorts(patch)
 
     await patchClashConfig(patch)
     mutateInfo()
-    mutate('getClashConfig')
-  }
+    queryClient.invalidateQueries({ queryKey: ['getClashConfig'] })
+  })
+
+  const invalidateClashConfig = () =>
+    queryClient.invalidateQueries({ queryKey: ['getClashConfig'] })
 
   return {
     clashInfo,
     mutateInfo,
     patchInfo,
+    invalidateClashConfig,
   }
 }

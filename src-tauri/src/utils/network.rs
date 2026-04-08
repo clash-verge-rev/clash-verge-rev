@@ -155,7 +155,13 @@ impl NetworkManager {
         if !parsed.username().is_empty()
             && let Some(pass) = parsed.password()
         {
-            let auth_str = format!("{}:{}", parsed.username(), pass);
+            let username = percent_encoding::percent_decode_str(parsed.username())
+                .decode_utf8_lossy()
+                .into_owned();
+            let password = percent_encoding::percent_decode_str(pass)
+                .decode_utf8_lossy()
+                .into_owned();
+            let auth_str = format!("{}:{}", username, password);
             let encoded = general_purpose::STANDARD.encode(auth_str);
             extra_headers.insert("Authorization", HeaderValue::from_str(&format!("Basic {}", encoded))?);
         }

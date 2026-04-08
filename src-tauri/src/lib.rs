@@ -149,8 +149,6 @@ mod app_init {
             cmd::start_core,
             cmd::stop_core,
             cmd::restart_core,
-            cmd::notify_ui_ready,
-            cmd::update_ui_stage,
             cmd::get_running_mode,
             cmd::get_auto_launch_status,
             cmd::entry_lightweight_mode,
@@ -253,7 +251,6 @@ pub fn run() {
             resolve::resolve_setup_async();
             resolve::resolve_setup_sync();
             resolve::init_signal();
-            resolve::resolve_done();
 
             logging!(info, Type::Setup, "初始化已启动");
             Ok(())

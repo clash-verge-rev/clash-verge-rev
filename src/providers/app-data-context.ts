@@ -16,6 +16,7 @@ export interface AppDataContextType {
   proxyProviders: Record<string, ProxyProvider>
   ruleProviders: Record<string, RuleProvider>
   systemProxyAddress: string
+  isCoreDataPending: boolean
 
   refreshProxy: () => Promise<any>
   refreshClashConfig: () => Promise<any>

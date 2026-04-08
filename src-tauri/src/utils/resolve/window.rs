@@ -2,11 +2,7 @@ use dark_light::{Mode as SystemTheme, detect as detect_system_theme};
 use tauri::utils::config::Color;
 use tauri::{Theme, WebviewWindow};
 
-use crate::{
-    config::Config,
-    core::handle,
-    utils::resolve::window_script::{INITIAL_LOADING_OVERLAY, build_window_initial_script},
-};
+use crate::{config::Config, core::handle, utils::resolve::window_script::build_window_initial_script};
 use clash_verge_logging::{Type, logging_error};
 
 const DARK_BACKGROUND_COLOR: Color = Color(46, 48, 61, 255); // #2E303D
@@ -82,7 +78,6 @@ pub async fn build_new_window() -> Result<WebviewWindow, String> {
     match builder.build() {
         Ok(window) => {
             logging_error!(Type::Window, window.set_background_color(Some(background_color)));
-            logging_error!(Type::Window, window.eval(INITIAL_LOADING_OVERLAY));
             Ok(window)
         }
         Err(e) => Err(e.to_string()),

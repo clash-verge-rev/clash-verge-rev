@@ -1,9 +1,9 @@
 import { listen } from '@tauri-apps/api/event'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useEffect } from 'react'
-import { mutate } from 'swr'
 
 import { useListen } from '@/hooks/use-listen'
+import { queryClient } from '@/services/query-client'
 
 export const useLayoutEvents = (
   handleNotice: (payload: [string, string]) => void,
@@ -14,8 +14,9 @@ export const useLayoutEvents = (
     const unlisteners: Array<() => void> = []
     let disposed = false
     const revalidateKeys = (keys: readonly string[]) => {
-      const keySet = new Set(keys)
-      mutate((key) => typeof key === 'string' && keySet.has(key))
+      keys.forEach((key) => {
+        queryClient.invalidateQueries({ queryKey: [key] })
+      })
     }
 
     const register = (
@@ -61,6 +62,7 @@ export const useLayoutEvents = (
           'getAutotemProxy',
           'getRunningMode',
           'isServiceAvailable',
+          'getSystemState',
         ])
       }),
     )

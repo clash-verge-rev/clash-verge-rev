@@ -26,6 +26,11 @@ notifications:
   appHidden:
     title: Приложение скрыто
     body: Clash Verge работает в фоновом режиме.
+  updateReady:
+    title: Clash Verge Update
+    body: A new version (v{version}) has been downloaded and is ready to install.
+    installNow: Install Now
+    later: Later
 service:
   adminInstallPrompt: Для установки службы Clash Verge требуются права администратора.
   adminUninstallPrompt: Для удаления службы Clash Verge требуются права администратора.

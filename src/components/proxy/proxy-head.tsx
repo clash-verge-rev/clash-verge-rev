@@ -66,7 +66,8 @@ export const ProxyHead = ({
 
   const { verge } = useVerge()
   const defaultLatencyUrl =
-    verge?.default_latency_test?.trim() || 'http://cp.cloudflare.com'
+    verge?.default_latency_test?.trim() ||
+    'http://cp.cloudflare.com/generate_204'
 
   useEffect(() => {
     delayManager.setUrl(groupName, testUrl?.trim() || url || defaultLatencyUrl)
