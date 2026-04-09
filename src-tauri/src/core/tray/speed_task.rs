@@ -45,7 +45,7 @@ impl TraySpeedController {
     }
 
     /// 启动托盘速率采集后台任务（基于 `/traffic` WebSocket 流）。
-    pub fn start_task(&self) {
+    fn start_task(&self) {
         if handle::Handle::global().is_exiting() {
             return;
         }
@@ -127,15 +127,20 @@ impl TraySpeedController {
     }
 
     /// 停止托盘速率采集后台任务并清除速率显示。
-    pub fn stop_task(&self) {
-        let mut guard = self.speed_task.lock();
-        if let Some(task) = guard.take() {
-            task.abort();
-        }
-        drop(guard);
-
+    fn stop_task(&self) {
+        // 取出任务句柄，与 speed_connection_id 一同传入清理任务。
+        let task = self.speed_task.lock().take();
         let speed_connection_id = Arc::clone(&self.speed_connection_id);
+
         AsyncHandler::spawn(move || async move {
+            // 关键步骤：先等待 abort 完成，再断开 WebSocket 连接。
+            // 若直接 abort 后立即 disconnect，任务可能已通过 take 取走 connection_id
+            // 但尚未完成断开，导致 connection_id 丢失、连接泄漏。
+            // await task handle 可保证原任务已退出，connection_id 不再被占用。
+            if let Some(task) = task {
+                task.abort();
+                let _ = task.await;
+            }
             Self::disconnect_speed_connection(&speed_connection_id).await;
         });
 
