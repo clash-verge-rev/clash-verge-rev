@@ -19,11 +19,11 @@ use objc2_foundation::{NSAttributedString, NSDictionary, NSNumber, NSString};
 const TRAY_FONT_SIZE: f64 = 9.5;
 
 /// 每行速率数值的固定字符宽度（含单位，右对齐）
-const SPEED_FIELD_WIDTH: usize = 7;
+const SPEED_FIELD_WIDTH: usize = 6;
 /// 两行文本的行间距（负值可压缩两行高度，便于与图标纵向居中）
 const TRAY_LINE_SPACING: f64 = -1.0;
 /// 两行文本整体行高倍数（用于进一步压缩文本块高度）
-const TRAY_LINE_HEIGHT_MULTIPLE: f64 = 0.92;
+const TRAY_LINE_HEIGHT_MULTIPLE: f64 = 1.00;
 /// 文本块段前偏移（用于将两行文本整体下移）
 const TRAY_PARAGRAPH_SPACING_BEFORE: f64 = -5.0;
 /// 文字基线偏移（负值向下移动，更容易与托盘图标垂直居中）
