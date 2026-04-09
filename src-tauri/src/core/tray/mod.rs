@@ -4,8 +4,6 @@ use crate::core::tray::menu_def::TrayAction;
 use crate::module::lightweight;
 use crate::process::AsyncHandler;
 use crate::singleton;
-#[cfg(target_os = "macos")]
-use crate::utils::tray_speed;
 use crate::utils::window_manager::WindowManager;
 use crate::{
     Type, cmd, config::Config, feat, logging, module::lightweight::is_in_lightweight_mode,
@@ -16,8 +14,6 @@ use clash_verge_logging::logging_error;
 use tauri::tray::{MouseButton, MouseButtonState, TrayIcon, TrayIconBuilder, TrayIconEvent};
 use tauri_plugin_clash_verge_sysinfo::is_current_app_handle_admin;
 use tauri_plugin_mihomo::models::Proxies;
-#[cfg(target_os = "macos")]
-use tauri_plugin_mihomo::models::{ConnectionId, Connections, WebSocketMessage};
 use tokio::fs;
 
 use super::handle;
@@ -31,6 +27,8 @@ use tauri::{
 };
 
 mod menu_def;
+#[cfg(target_os = "macos")]
+mod speed_task;
 use menu_def::{MenuIds, MenuTexts};
 
 // TODO: 是否需要将可变菜单抽离存储起来，后续直接更新对应菜单实例，无需重新创建菜单(待考虑)
@@ -42,40 +40,16 @@ const TRAY_CLICK_DEBOUNCE_MS: u64 = 300;
 #[derive(Clone)]
 struct TrayState {}
 
-#[cfg(target_os = "macos")]
-enum SpeedStreamEvent {
-    Totals { upload_total: u64, download_total: u64 },
-    Closed,
-}
-
 enum IconKind {
     Common,
     SysProxy,
     Tun,
 }
 
-#[cfg(target_os = "macos")]
-fn parse_speed_stream_event(data: serde_json::Value) -> Option<SpeedStreamEvent> {
-    let ws_message = serde_json::from_value::<WebSocketMessage>(data).ok()?;
-    match ws_message {
-        WebSocketMessage::Text(text) => {
-            let connections = serde_json::from_str::<Connections>(&text).ok()?;
-            Some(SpeedStreamEvent::Totals {
-                upload_total: connections.upload_total,
-                download_total: connections.download_total,
-            })
-        }
-        WebSocketMessage::Close(_) => Some(SpeedStreamEvent::Closed),
-        _ => None,
-    }
-}
-
 pub struct Tray {
     limiter: SystemLimiter,
     #[cfg(target_os = "macos")]
-    speed_task: parking_lot::Mutex<Option<tauri::async_runtime::JoinHandle<()>>>,
-    #[cfg(target_os = "macos")]
-    speed_connection_id: parking_lot::Mutex<Option<ConnectionId>>,
+    speed_controller: speed_task::TraySpeedController,
 }
 
 impl TrayState {
@@ -145,9 +119,7 @@ impl Default for Tray {
         Self {
             limiter: Limiter::new(Duration::from_millis(TRAY_CLICK_DEBOUNCE_MS), SystemClock),
             #[cfg(target_os = "macos")]
-            speed_task: parking_lot::Mutex::new(None),
-            #[cfg(target_os = "macos")]
-            speed_connection_id: parking_lot::Mutex::new(None),
+            speed_controller: speed_task::TraySpeedController::new(),
         }
     }
 }
@@ -420,167 +392,10 @@ impl Tray {
         allow
     }
 
-    /// 设置托盘速率订阅连接 ID
-    #[cfg(target_os = "macos")]
-    fn set_speed_connection_id(&self, connection_id: Option<ConnectionId>) {
-        *self.speed_connection_id.lock() = connection_id;
-    }
-
-    /// 获取并清空托盘速率订阅连接 ID
-    #[cfg(target_os = "macos")]
-    fn take_speed_connection_id(&self) -> Option<ConnectionId> {
-        self.speed_connection_id.lock().take()
-    }
-
-    /// 断开指定的 Mihomo WebSocket 连接
-    #[cfg(target_os = "macos")]
-    async fn disconnect_ws_connection(connection_id: ConnectionId) {
-        if let Err(err) = handle::Handle::mihomo()
-            .await
-            .disconnect(connection_id, Some(300))
-            .await
-        {
-            logging!(debug, Type::Tray, "断开托盘速率流连接失败: {err}");
-        }
-    }
-
-    /// 断开当前托盘速率订阅连接
-    #[cfg(target_os = "macos")]
-    async fn disconnect_speed_connection(&self) {
-        if let Some(connection_id) = self.take_speed_connection_id() {
-            Self::disconnect_ws_connection(connection_id).await;
-        }
-    }
-
-    /// 启动托盘速率采集后台任务（基于 `/connections` WebSocket 流）
-    #[cfg(target_os = "macos")]
-    pub fn start_speed_task(&self) {
-        if handle::Handle::global().is_exiting() {
-            return;
-        }
-        let mut guard = self.speed_task.lock();
-        if guard.as_ref().is_some_and(|t| !t.inner().is_finished()) {
-            return; // 已在运行，无需重复启动
-        }
-        let tray = Self::global();
-        let task = AsyncHandler::spawn(move || async move {
-            loop {
-                if handle::Handle::global().is_exiting() {
-                    break;
-                }
-
-                let (message_tx, mut message_rx) = tokio::sync::mpsc::unbounded_channel::<SpeedStreamEvent>();
-                let stream_connect_result = handle::Handle::mihomo()
-                    .await
-                    .ws_connections({
-                        let message_tx = message_tx.clone();
-                        move |message| {
-                            if let Some(event) = parse_speed_stream_event(message) {
-                                let _ = message_tx.send(event);
-                            }
-                        }
-                    })
-                    .await;
-                drop(message_tx);
-
-                let connection_id = match stream_connect_result {
-                    Ok(connection_id) => connection_id,
-                    Err(err) => {
-                        logging!(debug, Type::Tray, "托盘速率流连接失败，稍后重试: {err}");
-                        Self::apply_tray_speed(0, 0);
-                        tokio::time::sleep(Duration::from_secs(1)).await;
-                        continue;
-                    }
-                };
-                tray.set_speed_connection_id(Some(connection_id));
-
-                let mut previous_totals: Option<(u64, u64)> = None;
-                loop {
-                    tokio::select! {
-                        maybe_event = message_rx.recv() => {
-                            match maybe_event {
-                                Some(SpeedStreamEvent::Totals { upload_total, download_total }) => {
-                                    if let Some((prev_upload_total, prev_download_total)) = previous_totals {
-                                        let up_speed = upload_total.saturating_sub(prev_upload_total);
-                                        let down_speed = download_total.saturating_sub(prev_download_total);
-                                        Self::apply_tray_speed(up_speed, down_speed);
-                                    }
-                                    previous_totals = Some((upload_total, download_total));
-                                }
-                                Some(SpeedStreamEvent::Closed) | None => break,
-                            }
-                        }
-                        _ = tokio::time::sleep(Duration::from_millis(200)) => {
-                            if handle::Handle::global().is_exiting() {
-                                break;
-                            }
-                        }
-                    }
-                }
-
-                tray.disconnect_speed_connection().await;
-                if handle::Handle::global().is_exiting() {
-                    break;
-                }
-
-                Self::apply_tray_speed(0, 0);
-                tokio::time::sleep(Duration::from_secs(1)).await;
-            }
-        });
-        *guard = Some(task);
-    }
-
     /// 根据配置统一更新托盘速率采集任务状态（macOS）
     #[cfg(target_os = "macos")]
     pub fn update_speed_task(&self, enable_tray_speed: bool) {
-        if enable_tray_speed {
-            self.start_speed_task();
-        } else {
-            self.stop_speed_task();
-        }
-    }
-
-    /// 停止托盘速率采集后台任务并清除速率显示
-    #[cfg(target_os = "macos")]
-    pub fn stop_speed_task(&self) {
-        let mut guard = self.speed_task.lock();
-        if let Some(task) = guard.take() {
-            task.abort();
-        }
-        drop(guard);
-        if let Some(connection_id) = self.take_speed_connection_id() {
-            AsyncHandler::spawn(move || async move {
-                Self::disconnect_ws_connection(connection_id).await;
-            });
-        }
-
-        let app_handle = handle::Handle::app_handle();
-        if let Some(tray) = app_handle.tray_by_id("main") {
-            let result = tray.with_inner_tray_icon(|inner| {
-                if let Some(status_item) = inner.ns_status_item() {
-                    tray_speed::clear_speed_attributed_title(&status_item);
-                }
-            });
-            if let Err(e) = result {
-                logging!(warn, Type::Tray, "清除富文本速率失败: {e}");
-            }
-        }
-    }
-
-    /// 将计算出的速率以富文本形式更新到托盘标题（macOS）
-    #[cfg(target_os = "macos")]
-    fn apply_tray_speed(up: u64, down: u64) {
-        let app_handle = handle::Handle::app_handle();
-        if let Some(tray) = app_handle.tray_by_id("main") {
-            let result = tray.with_inner_tray_icon(move |inner| {
-                if let Some(status_item) = inner.ns_status_item() {
-                    tray_speed::set_speed_attributed_title(&status_item, up, down);
-                }
-            });
-            if let Err(e) = result {
-                logging!(warn, Type::Tray, "设置富文本速率失败: {e}");
-            }
-        }
+        self.speed_controller.update_task(enable_tray_speed);
     }
 }
 

@@ -4,6 +4,7 @@
 //! 支持等宽字体、自适应深色/浅色模式配色、两行定宽布局。
 
 use crate::utils::speed::format_bytes_per_second;
+use crate::{Type, logging};
 use objc2::MainThreadMarker;
 use objc2::rc::Retained;
 use objc2::runtime::AnyObject;
@@ -85,6 +86,9 @@ fn create_attributed_string(
 
 /// 在主线程下设置 NSStatusItem 按钮的富文本标题
 ///
+/// 依赖 Tauri `with_inner_tray_icon` 保证回调在主线程执行；
+/// 若意外在非主线程调用，`MainThreadMarker::new()` 返回 `None` 并记录警告。
+///
 /// # Arguments
 /// * `status_item` - macOS 托盘 NSStatusItem 引用
 /// * `text` - 富文本字符串内容
@@ -94,12 +98,21 @@ fn apply_status_item_attributed_title(
     text: &NSString,
     attrs: Option<&NSDictionary<NSString, AnyObject>>,
 ) {
-    if let Some(mtm) = MainThreadMarker::new()
-        && let Some(button) = status_item.button(mtm)
-    {
-        let attr_str = create_attributed_string(text, attrs);
-        button.setAttributedTitle(&attr_str);
-    }
+    let Some(mtm) = MainThreadMarker::new() else {
+        logging!(warn, Type::Tray, "托盘速率富文本设置跳过：非主线程调用");
+        return;
+    };
+    let Some(button) = status_item.button(mtm) else {
+        return;
+    };
+    let attr_str = create_attributed_string(text, attrs);
+    button.setAttributedTitle(&attr_str);
+}
+
+thread_local! {
+    /// 托盘速率富文本属性字典（主线程缓存，避免每帧重建 ObjC 对象）。
+    /// 仅在首次调用时初始化，后续复用同一实例。
+    static TRAY_SPEED_ATTRS: Retained<NSDictionary<NSString, AnyObject>> = build_attributes();
 }
 
 /// 将速率以富文本形式设置到 NSStatusItem 的按钮上
@@ -111,8 +124,9 @@ fn apply_status_item_attributed_title(
 pub fn set_speed_attributed_title(status_item: &NSStatusItem, up: u64, down: u64) {
     let speed_text = format_tray_speed(up, down);
     let ns_string = NSString::from_str(&speed_text);
-    let attrs = build_attributes();
-    apply_status_item_attributed_title(status_item, &ns_string, Some(&attrs));
+    TRAY_SPEED_ATTRS.with(|attrs| {
+        apply_status_item_attributed_title(status_item, &ns_string, Some(&**attrs));
+    });
 }
 
 /// 清除 NSStatusItem 按钮上的富文本速率显示
