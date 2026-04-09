@@ -3,6 +3,8 @@
 //! 通过 objc2 调用 NSAttributedString 实现托盘速率的富文本显示，
 //! 支持等宽字体、自适应深色/浅色模式配色、两行定宽布局。
 
+use std::cell::RefCell;
+
 use crate::utils::speed::format_bytes_per_second;
 use crate::{Type, logging};
 use objc2::MainThreadMarker;
@@ -17,9 +19,6 @@ use objc2_foundation::{NSAttributedString, NSDictionary, NSNumber, NSString};
 
 /// 富文本渲染使用的字号（适配两行在托盘栏的高度）
 const TRAY_FONT_SIZE: f64 = 9.5;
-
-/// 每行速率数值的固定字符宽度（含单位，右对齐）
-const SPEED_FIELD_WIDTH: usize = 6;
 /// 两行文本的行间距（负值可压缩两行高度，便于与图标纵向居中）
 const TRAY_LINE_SPACING: f64 = -1.0;
 /// 两行文本整体行高倍数（用于进一步压缩文本块高度）
@@ -28,6 +27,13 @@ const TRAY_LINE_HEIGHT_MULTIPLE: f64 = 1.00;
 const TRAY_PARAGRAPH_SPACING_BEFORE: f64 = -5.0;
 /// 文字基线偏移（负值向下移动，更容易与托盘图标垂直居中）
 const TRAY_BASELINE_OFFSET: f64 = -4.0;
+
+thread_local! {
+    /// 托盘速率富文本属性字典（主线程缓存，避免每帧重建 ObjC 对象）。
+    /// 仅在首次调用时初始化，后续复用同一实例。
+    static TRAY_SPEED_ATTRS: Retained<NSDictionary<NSString, AnyObject>> = build_attributes();
+    static LAST_DISPLAY_STR: RefCell<String> = RefCell::new(String::new());
+}
 
 /// 将上行/下行速率格式化为两行定宽文本
 ///
@@ -38,7 +44,7 @@ fn format_tray_speed(up: u64, down: u64) -> String {
     // 上行放在第一行，下行放在第二行；通过上下布局表达方向，不再显示箭头字符。
     let up_str = format_bytes_per_second(up);
     let down_str = format_bytes_per_second(down);
-    format!("{:>width$}\n{:>width$}", up_str, down_str, width = SPEED_FIELD_WIDTH)
+    format!("{:>6}\n{:>6}", up_str, down_str)
 }
 
 /// 构造带富文本样式属性的 NSDictionary
@@ -109,12 +115,6 @@ fn apply_status_item_attributed_title(
     button.setAttributedTitle(&attr_str);
 }
 
-thread_local! {
-    /// 托盘速率富文本属性字典（主线程缓存，避免每帧重建 ObjC 对象）。
-    /// 仅在首次调用时初始化，后续复用同一实例。
-    static TRAY_SPEED_ATTRS: Retained<NSDictionary<NSString, AnyObject>> = build_attributes();
-}
-
 /// 将速率以富文本形式设置到 NSStatusItem 的按钮上
 ///
 /// # Arguments
@@ -123,6 +123,19 @@ thread_local! {
 /// * `down` - 下行速率（字节/秒）
 pub fn set_speed_attributed_title(status_item: &NSStatusItem, up: u64, down: u64) {
     let speed_text = format_tray_speed(up, down);
+    let changed = LAST_DISPLAY_STR.with(|last| {
+        let mut last_borrow = last.borrow_mut();
+        if *last_borrow == speed_text {
+            false
+        } else {
+            *last_borrow = speed_text.clone();
+            true
+        }
+    });
+
+    if !changed {
+        return;
+    }
     let ns_string = NSString::from_str(&speed_text);
     TRAY_SPEED_ATTRS.with(|attrs| {
         apply_status_item_attributed_title(status_item, &ns_string, Some(&**attrs));
