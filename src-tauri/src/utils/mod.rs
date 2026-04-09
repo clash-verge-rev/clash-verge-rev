@@ -10,6 +10,7 @@ pub mod resolve;
 pub mod schtasks;
 pub mod server;
 pub mod singleton;
+pub mod speed;
 pub mod tmpl;
 #[cfg(target_os = "macos")]
 pub mod tray_speed;

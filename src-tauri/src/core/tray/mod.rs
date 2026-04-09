@@ -16,6 +16,8 @@ use clash_verge_logging::logging_error;
 use tauri::tray::{MouseButton, MouseButtonState, TrayIcon, TrayIconBuilder, TrayIconEvent};
 use tauri_plugin_clash_verge_sysinfo::is_current_app_handle_admin;
 use tauri_plugin_mihomo::models::Proxies;
+#[cfg(target_os = "macos")]
+use tauri_plugin_mihomo::models::{ConnectionId, Connections, WebSocketMessage};
 use tokio::fs;
 
 use super::handle;
@@ -40,16 +42,40 @@ const TRAY_CLICK_DEBOUNCE_MS: u64 = 300;
 #[derive(Clone)]
 struct TrayState {}
 
+#[cfg(target_os = "macos")]
+enum SpeedStreamEvent {
+    Totals { upload_total: u64, download_total: u64 },
+    Closed,
+}
+
 enum IconKind {
     Common,
     SysProxy,
     Tun,
 }
 
+#[cfg(target_os = "macos")]
+fn parse_speed_stream_event(data: serde_json::Value) -> Option<SpeedStreamEvent> {
+    let ws_message = serde_json::from_value::<WebSocketMessage>(data).ok()?;
+    match ws_message {
+        WebSocketMessage::Text(text) => {
+            let connections = serde_json::from_str::<Connections>(&text).ok()?;
+            Some(SpeedStreamEvent::Totals {
+                upload_total: connections.upload_total,
+                download_total: connections.download_total,
+            })
+        }
+        WebSocketMessage::Close(_) => Some(SpeedStreamEvent::Closed),
+        _ => None,
+    }
+}
+
 pub struct Tray {
     limiter: SystemLimiter,
     #[cfg(target_os = "macos")]
     speed_task: parking_lot::Mutex<Option<tauri::async_runtime::JoinHandle<()>>>,
+    #[cfg(target_os = "macos")]
+    speed_connection_id: parking_lot::Mutex<Option<ConnectionId>>,
 }
 
 impl TrayState {
@@ -120,6 +146,8 @@ impl Default for Tray {
             limiter: Limiter::new(Duration::from_millis(TRAY_CLICK_DEBOUNCE_MS), SystemClock),
             #[cfg(target_os = "macos")]
             speed_task: parking_lot::Mutex::new(None),
+            #[cfg(target_os = "macos")]
+            speed_connection_id: parking_lot::Mutex::new(None),
         }
     }
 }
@@ -392,7 +420,39 @@ impl Tray {
         allow
     }
 
-    /// 启动托盘速率采集后台任务（1秒轮询）
+    /// 设置托盘速率订阅连接 ID
+    #[cfg(target_os = "macos")]
+    fn set_speed_connection_id(&self, connection_id: Option<ConnectionId>) {
+        *self.speed_connection_id.lock() = connection_id;
+    }
+
+    /// 获取并清空托盘速率订阅连接 ID
+    #[cfg(target_os = "macos")]
+    fn take_speed_connection_id(&self) -> Option<ConnectionId> {
+        self.speed_connection_id.lock().take()
+    }
+
+    /// 断开指定的 Mihomo WebSocket 连接
+    #[cfg(target_os = "macos")]
+    async fn disconnect_ws_connection(connection_id: ConnectionId) {
+        if let Err(err) = handle::Handle::mihomo()
+            .await
+            .disconnect(connection_id, Some(300))
+            .await
+        {
+            logging!(debug, Type::Tray, "断开托盘速率流连接失败: {err}");
+        }
+    }
+
+    /// 断开当前托盘速率订阅连接
+    #[cfg(target_os = "macos")]
+    async fn disconnect_speed_connection(&self) {
+        if let Some(connection_id) = self.take_speed_connection_id() {
+            Self::disconnect_ws_connection(connection_id).await;
+        }
+    }
+
+    /// 启动托盘速率采集后台任务（基于 `/connections` WebSocket 流）
     #[cfg(target_os = "macos")]
     pub fn start_speed_task(&self) {
         if handle::Handle::global().is_exiting() {
@@ -402,36 +462,69 @@ impl Tray {
         if guard.as_ref().is_some_and(|t| !t.inner().is_finished()) {
             return; // 已在运行，无需重复启动
         }
-        let task = AsyncHandler::spawn(|| async move {
-            let mut interval = tokio::time::interval(Duration::from_secs(1));
-            let mut prev_upload: u64 = 0;
-            let mut prev_download: u64 = 0;
-            let mut first = true;
+        let tray = Self::global();
+        let task = AsyncHandler::spawn(move || async move {
             loop {
-                interval.tick().await;
                 if handle::Handle::global().is_exiting() {
                     break;
                 }
-                let result = handle::Handle::mihomo().await.get_connections().await;
-                match result {
-                    Ok(conn) => {
-                        let up_total = conn.upload_total;
-                        let down_total = conn.download_total;
-                        if !first {
-                            let up_speed = up_total.saturating_sub(prev_upload);
-                            let down_speed = down_total.saturating_sub(prev_download);
-                            Self::apply_tray_speed(up_speed, down_speed);
+
+                let (message_tx, mut message_rx) = tokio::sync::mpsc::unbounded_channel::<SpeedStreamEvent>();
+                let stream_connect_result = handle::Handle::mihomo()
+                    .await
+                    .ws_connections({
+                        let message_tx = message_tx.clone();
+                        move |message| {
+                            if let Some(event) = parse_speed_stream_event(message) {
+                                let _ = message_tx.send(event);
+                            }
                         }
-                        first = false;
-                        prev_upload = up_total;
-                        prev_download = down_total;
+                    })
+                    .await;
+                drop(message_tx);
+
+                let connection_id = match stream_connect_result {
+                    Ok(connection_id) => connection_id,
+                    Err(err) => {
+                        logging!(debug, Type::Tray, "托盘速率流连接失败，稍后重试: {err}");
+                        Self::apply_tray_speed(0, 0);
+                        tokio::time::sleep(Duration::from_secs(1)).await;
+                        continue;
                     }
-                    Err(_) => {
-                        if !first {
-                            Self::apply_tray_speed(0, 0);
+                };
+                tray.set_speed_connection_id(Some(connection_id));
+
+                let mut previous_totals: Option<(u64, u64)> = None;
+                loop {
+                    tokio::select! {
+                        maybe_event = message_rx.recv() => {
+                            match maybe_event {
+                                Some(SpeedStreamEvent::Totals { upload_total, download_total }) => {
+                                    if let Some((prev_upload_total, prev_download_total)) = previous_totals {
+                                        let up_speed = upload_total.saturating_sub(prev_upload_total);
+                                        let down_speed = download_total.saturating_sub(prev_download_total);
+                                        Self::apply_tray_speed(up_speed, down_speed);
+                                    }
+                                    previous_totals = Some((upload_total, download_total));
+                                }
+                                Some(SpeedStreamEvent::Closed) | None => break,
+                            }
+                        }
+                        _ = tokio::time::sleep(Duration::from_millis(200)) => {
+                            if handle::Handle::global().is_exiting() {
+                                break;
+                            }
                         }
                     }
                 }
+
+                tray.disconnect_speed_connection().await;
+                if handle::Handle::global().is_exiting() {
+                    break;
+                }
+
+                Self::apply_tray_speed(0, 0);
+                tokio::time::sleep(Duration::from_secs(1)).await;
             }
         });
         *guard = Some(task);
@@ -455,6 +548,11 @@ impl Tray {
             task.abort();
         }
         drop(guard);
+        if let Some(connection_id) = self.take_speed_connection_id() {
+            AsyncHandler::spawn(move || async move {
+                Self::disconnect_ws_connection(connection_id).await;
+            });
+        }
 
         let app_handle = handle::Handle::app_handle();
         if let Some(tray) = app_handle.tray_by_id("main") {
