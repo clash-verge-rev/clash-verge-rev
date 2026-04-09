@@ -53,8 +53,15 @@ struct TrafficPayload {
 }
 
 fn parse_traffic_event(data: Value) -> Option<InternalWsEvent<TrafficSpeedEvent>> {
+    if let Ok(payload) = serde_json::from_value::<TrafficPayload>(data.clone()) {
+        return Some(InternalWsEvent::Data(TrafficSpeedEvent {
+            up: payload.up,
+            down: payload.down,
+        }));
+    }
+
     if let Ok(ws_message) = WebSocketMessage::deserialize(&data) {
-        return match ws_message {
+        match ws_message {
             WebSocketMessage::Text(text) => {
                 let payload = serde_json::from_str::<TrafficPayload>(&text).ok()?;
                 Some(InternalWsEvent::Data(TrafficSpeedEvent {
@@ -64,14 +71,10 @@ fn parse_traffic_event(data: Value) -> Option<InternalWsEvent<TrafficSpeedEvent>
             }
             WebSocketMessage::Close(_) => Some(InternalWsEvent::Closed),
             _ => None,
-        };
+        }
+    } else {
+        None
     }
-
-    let payload = serde_json::from_value::<TrafficPayload>(data).ok()?;
-    Some(InternalWsEvent::Data(TrafficSpeedEvent {
-        up: payload.up,
-        down: payload.down,
-    }))
 }
 
 fn try_send_internal_event<T>(message_tx: &mpsc::Sender<InternalWsEvent<T>>, event: InternalWsEvent<T>) {
@@ -118,30 +121,37 @@ impl<T> MihomoWsEventStream<T> {
     /// * `should_exit` - 上层退出判定函数
     pub async fn next_event<F>(
         &mut self,
-        idle_poll_interval: Duration,
+        _idle_poll_interval: Duration, // 签名保留，但内部逻辑已进化为更高效的驱动方式
         stale_timeout: Duration,
         should_exit: F,
     ) -> StreamConsumeState<T>
     where
         F: Fn() -> bool,
     {
+        let sleep = tokio::time::sleep(stale_timeout);
+        tokio::pin!(sleep);
+
         loop {
+            if should_exit() {
+                return StreamConsumeState::ExitRequested;
+            }
+
             tokio::select! {
                 maybe_event = self.receiver.recv() => {
                     match maybe_event {
                         Some(InternalWsEvent::Data(event)) => {
                             self.last_valid_event_at = Instant::now();
+                            sleep.as_mut().reset(self.last_valid_event_at + stale_timeout);
                             return StreamConsumeState::Event(event);
                         }
                         Some(InternalWsEvent::Closed) | None => return StreamConsumeState::Closed,
                     }
                 }
-                _ = tokio::time::sleep(idle_poll_interval) => {
-                    if should_exit() {
-                        return StreamConsumeState::ExitRequested;
-                    }
+                _ = &mut sleep => {
                     if self.last_valid_event_at.elapsed() >= stale_timeout {
                         return StreamConsumeState::Stale;
+                    } else {
+                        sleep.as_mut().reset(self.last_valid_event_at + stale_timeout);
                     }
                 }
             }
