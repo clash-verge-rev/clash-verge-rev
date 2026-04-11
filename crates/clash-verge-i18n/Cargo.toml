@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-rust-i18n = "3.1.5"
+rust-i18n = "4.0.0"
 sys-locale = "0.3.2"
 
 [lints]
