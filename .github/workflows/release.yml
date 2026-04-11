@@ -139,10 +139,6 @@ jobs:
   release:
     name: Release Build
     needs: [check_tag_version]
-    permissions:
-      contents: write
-      id-token: write
-      attestations: write
     strategy:
       fail-fast: false
       matrix:
@@ -267,10 +263,6 @@ jobs:
   release-for-linux-arm:
     name: Release Build for Linux ARM
     needs: [check_tag_version]
-    permissions:
-      contents: write
-      id-token: write
-      attestations: write
     strategy:
       fail-fast: false
       matrix:
@@ -417,10 +409,6 @@ jobs:
   release-for-fixed-webview2:
     name: Release Build for Fixed WebView2
     needs: [check_tag_version]
-    permissions:
-      contents: write
-      id-token: write
-      attestations: write
     strategy:
       fail-fast: false
       matrix:

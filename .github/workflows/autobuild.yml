@@ -125,10 +125,6 @@ jobs:
     name: Autobuild x86 Windows, MacOS and Linux
     needs: [check_commit, update_tag]
     if: ${{ needs.check_commit.outputs.should_run == 'true' }}
-    permissions:
-      contents: write
-      id-token: write
-      attestations: write
     strategy:
       fail-fast: false
       matrix:
@@ -264,10 +260,6 @@ jobs:
     name: Autobuild ARM Linux
     needs: [check_commit, update_tag]
     if: ${{ needs.check_commit.outputs.should_run == 'true' }}
-    permissions:
-      contents: write
-      id-token: write
-      attestations: write
     strategy:
       fail-fast: false
       matrix:
@@ -428,10 +420,6 @@ jobs:
     name: Autobuild x86 and ARM Windows with WebView2
     needs: [check_commit, update_tag]
     if: ${{ needs.check_commit.outputs.should_run == 'true' }}
-    permissions:
-      contents: write
-      id-token: write
-      attestations: write
     strategy:
       fail-fast: false
       matrix:
