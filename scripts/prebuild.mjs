@@ -173,8 +173,6 @@ async function updateHashCache(targetPath) {
 const META_ALPHA_VERSION_URL =
   'https://github.com/MetaCubeX/mihomo/releases/download/Prerelease-Alpha/version.txt'
 const META_ALPHA_URL_PREFIX = `https://github.com/MetaCubeX/mihomo/releases/download/Prerelease-Alpha`
-const META_ALPHA_RELEASE_API_URL =
-  'https://api.github.com/repos/MetaCubeX/mihomo/releases/tags/Prerelease-Alpha'
 let META_ALPHA_VERSION
 
 const META_VERSION_URL =
@@ -243,52 +241,7 @@ async function getLatestAlphaVersion() {
     await setCachedVersion('META_ALPHA_VERSION', META_ALPHA_VERSION)
   } catch (err) {
     log_error('Error fetching latest alpha version:', err.message)
-    try {
-      const releaseResponse = await fetch(META_ALPHA_RELEASE_API_URL, {
-        ...options,
-        method: 'GET',
-        headers: {
-          Accept: 'application/vnd.github+json',
-          'User-Agent': 'clash-verge-prebuild',
-        },
-      })
-      if (!releaseResponse.ok) {
-        throw new Error(
-          `Failed to fetch ${META_ALPHA_RELEASE_API_URL}: ${releaseResponse.status}`,
-        )
-      }
-
-      const release = await releaseResponse.json()
-      const expectedPrefix = `${META_ALPHA_MAP[`${platform}-${arch}`]}-`
-      const matchedAsset = release.assets?.find((asset) =>
-        asset.name?.startsWith(expectedPrefix),
-      )
-
-      if (!matchedAsset?.name) {
-        throw new Error(
-          `No release asset matched prefix "${expectedPrefix}" in Prerelease-Alpha`,
-        )
-      }
-
-      const versionMatch = matchedAsset.name.match(
-        new RegExp(`^${expectedPrefix}(.+)\\.(zip|gz)$`),
-      )
-      if (!versionMatch?.[1]) {
-        throw new Error(
-          `Failed to parse alpha version from asset "${matchedAsset.name}"`,
-        )
-      }
-
-      META_ALPHA_VERSION = versionMatch[1]
-      log_info(`Latest alpha version from release assets: ${META_ALPHA_VERSION}`)
-      await setCachedVersion('META_ALPHA_VERSION', META_ALPHA_VERSION)
-    } catch (fallbackErr) {
-      log_error(
-        'Error fetching latest alpha version from release assets:',
-        fallbackErr.message,
-      )
-      process.exit(1)
-    }
+    process.exit(1)
   }
 }
 
