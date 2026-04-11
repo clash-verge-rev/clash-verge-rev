@@ -1,0 +1,33 @@
+name: Provenance Smoke Test
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+  attestations: write
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+
+      - name: Create smoke artifact
+        run: |
+          mkdir -p dist
+          printf 'provenance smoke %s\n' "${GITHUB_SHA}" > dist/provenance-smoke.txt
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: provenance-smoke
+          path: dist/provenance-smoke.txt
+          if-no-files-found: error
+
+      - name: Attest smoke artifact
+        uses: actions/attest-build-provenance@v3
+        with:
+          subject-path: dist/provenance-smoke.txt
