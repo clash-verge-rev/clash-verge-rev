@@ -78,6 +78,17 @@ pub fn use_tun(mut config: Mapping, enable: bool) -> Mapping {
 
     // 更新TUN配置
     revise!(tun_val, "enable", enable);
+
+    // 当 TUN 启用时，确保所有必需的 TUN 配置项都被正确设置
+    // 这对于热重载配置时尤为重要，因为 mihomo 需要这些显式配置来重新初始化路由规则
+    if enable {
+        revise!(tun_val, "auto-route", true);
+        revise!(tun_val, "auto-detect-interface", true);
+        revise!(tun_val, "strict-route", false);
+        revise!(tun_val, "stack", "gvisor");
+        revise!(tun_val, "dns-hijack", vec!["any:53", "tcp://any:53"]);
+    }
+
     revise!(config, "tun", tun_val);
 
     config
