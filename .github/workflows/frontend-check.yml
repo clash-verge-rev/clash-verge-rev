@@ -40,7 +40,7 @@ jobs:
 
       - name: Install pnpm
         if: steps.check_frontend.outputs.frontend == 'true'
-        uses: pnpm/action-setup@v5
+        uses: pnpm/action-setup@v6
         with:
           run_install: false
 

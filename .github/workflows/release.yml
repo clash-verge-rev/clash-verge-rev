@@ -126,7 +126,7 @@ jobs:
           EOF
 
       - name: Upload Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ env.TAG_NAME }}
           name: 'Clash Verge Rev ${{ env.TAG_NAME }}'
@@ -199,7 +199,7 @@ jobs:
         with:
           node-version: '24.14.1'
 
-      - uses: pnpm/action-setup@v5
+      - uses: pnpm/action-setup@v6
         name: Install pnpm
         with:
           run_install: false
@@ -242,19 +242,19 @@ jobs:
 
       - name: Attest Windows bundles
         if: matrix.os == 'windows-latest'
-        uses: actions/attest-build-provenance@v3
+        uses: actions/attest-build-provenance@v4
         with:
           subject-path: target/${{ matrix.target }}/release/bundle/nsis/*setup*
 
       - name: Attest macOS bundles
         if: matrix.os == 'macos-latest'
-        uses: actions/attest-build-provenance@v3
+        uses: actions/attest-build-provenance@v4
         with:
           subject-path: target/${{ matrix.target }}/release/bundle/dmg/*.dmg
 
       - name: Attest Linux bundles
         if: matrix.os == 'ubuntu-22.04'
-        uses: actions/attest-build-provenance@v3
+        uses: actions/attest-build-provenance@v4
         with:
           subject-path: |
             target/${{ matrix.target }}/release/bundle/deb/*.deb
@@ -304,7 +304,7 @@ jobs:
           node-version: '24.14.1'
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v5
+        uses: pnpm/action-setup@v6
         with:
           run_install: false
 
@@ -388,14 +388,14 @@ jobs:
           echo "BUILDTIME=$(TZ=Asia/Shanghai date)" >> $GITHUB_ENV
 
       - name: Attest Linux bundles
-        uses: actions/attest-build-provenance@v3
+        uses: actions/attest-build-provenance@v4
         with:
           subject-path: |
             target/${{ matrix.target }}/release/bundle/deb/*.deb
             target/${{ matrix.target }}/release/bundle/rpm/*.rpm
 
       - name: Upload Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: v${{env.VERSION}}
           name: 'Clash Verge Rev v${{env.VERSION}}'
@@ -449,7 +449,7 @@ jobs:
         with:
           node-version: '24.14.1'
 
-      - uses: pnpm/action-setup@v5
+      - uses: pnpm/action-setup@v6
         name: Install pnpm
         with:
           run_install: false
@@ -506,12 +506,12 @@ jobs:
           }
 
       - name: Attest Windows bundles
-        uses: actions/attest-build-provenance@v3
+        uses: actions/attest-build-provenance@v4
         with:
           subject-path: target/${{ matrix.target }}/release/bundle/nsis/*setup*
 
       - name: Upload Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: v${{steps.build.outputs.appVersion}}
           name: 'Clash Verge Rev v${{steps.build.outputs.appVersion}}'
@@ -539,7 +539,7 @@ jobs:
         with:
           node-version: '24.14.1'
 
-      - uses: pnpm/action-setup@v5
+      - uses: pnpm/action-setup@v6
         name: Install pnpm
         with:
           run_install: false
@@ -565,7 +565,7 @@ jobs:
         with:
           node-version: '24.14.1'
 
-      - uses: pnpm/action-setup@v5
+      - uses: pnpm/action-setup@v6
         name: Install pnpm
         with:
           run_install: false
@@ -627,7 +627,7 @@ jobs:
         with:
           node-version: '24.14.1'
 
-      - uses: pnpm/action-setup@v5
+      - uses: pnpm/action-setup@v6
         name: Install pnpm
         with:
           run_install: false
