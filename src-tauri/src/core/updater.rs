@@ -294,10 +294,10 @@ impl SilentUpdater {
     async fn ask_user_to_install(app_handle: &tauri::AppHandle, version: &str) -> bool {
         use tauri_plugin_dialog::{DialogExt as _, MessageDialogButtons, MessageDialogKind};
 
-        let title = clash_verge_i18n::t!("notifications.updateReady.title").to_string();
+        let title = clash_verge_i18n::t!("notifications.updateReady.title");
         let body = clash_verge_i18n::t!("notifications.updateReady.body").replace("{version}", version);
-        let install_now = clash_verge_i18n::t!("notifications.updateReady.installNow").to_string();
-        let later = clash_verge_i18n::t!("notifications.updateReady.later").to_string();
+        let install_now = clash_verge_i18n::t!("notifications.updateReady.installNow").into_owned();
+        let later = clash_verge_i18n::t!("notifications.updateReady.later").into_owned();
 
         let (tx, rx) = tokio::sync::oneshot::channel();
 
