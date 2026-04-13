@@ -4421,11 +4421,11 @@ dependencies = [
 
 [[package]]
 name = "nanoid"
-version = "0.4.0"
+version = "0.5.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3ffa00dec017b5b1a8b7cf5e2c008bfda1aa7e0697ac1508b491fdf2622fb4d8"
+checksum = "8628de41fe064cc3f0cf07f3d299ee3e73521adaff72278731d5c8cae3797873"
 dependencies = [
- "rand 0.8.5",
+ "rand 0.9.3",
 ]
 
 [[package]]
