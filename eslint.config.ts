@@ -38,6 +38,7 @@ export default defineConfig([
             'eslint.config.ts',
             `vite.config.mts`,
             'src/polyfills/*.js',
+            'scripts/*.mjs',
           ],
         },
       },

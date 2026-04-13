@@ -379,7 +379,15 @@ pub(super) async fn start_with_existing_service(config_file: &PathBuf) -> Result
 pub(super) async fn run_core_by_service(config_file: &PathBuf) -> Result<()> {
     logging!(info, Type::Service, "正在尝试通过服务启动核心");
 
-    SERVICE_MANAGER.lock().await.refresh().await?;
+    // 若 init_service_manager 已将状态置为 Ready，无需再次 refresh，
+    // 避免重复触发 is_reinstall_service_needed 检查导致双重重装弹框。
+    // 持有同一个 guard 跨 check + use，消除 TOCTOU 竞态；
+    // 用后立即 drop，避免在后续 IPC 调用期间不必要地持有锁。
+    let mut manager = SERVICE_MANAGER.lock().await;
+    if manager.current() != ServiceStatus::Ready {
+        manager.refresh().await?;
+    }
+    drop(manager);
 
     logging!(info, Type::Service, "服务已运行且版本匹配，直接使用");
     start_with_existing_service(config_file).await

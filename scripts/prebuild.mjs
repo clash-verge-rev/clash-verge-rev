@@ -19,6 +19,7 @@ import { log_debug, log_error, log_info, log_success } from './utils.mjs'
  * 2. Cache version information for 1 hour to avoid repeated version checks
  * 3. Use file hash to detect changes and skip unnecessary chmod/copy operations
  * 4. Use --force or -f flag to force re-download and update all resources
+ * 5. Service binary version-aware: re-download when IPC crate version changes
  *
  */
 
@@ -27,6 +28,8 @@ const TEMP_DIR = path.join(cwd, 'node_modules/.verge')
 const FORCE = process.argv.includes('--force') || process.argv.includes('-f')
 const VERSION_CACHE_FILE = path.join(TEMP_DIR, '.version_cache.json')
 const HASH_CACHE_FILE = path.join(TEMP_DIR, '.hash_cache.json')
+/** 记录上次下载 service binary 时对应的 IPC crate 版本 */
+const SERVICE_VERSION_FILE = path.join(TEMP_DIR, '.service_ipc_version.json')
 
 const PLATFORM_MAP = {
   'x86_64-pc-windows-msvc': 'win32',
@@ -166,6 +169,87 @@ async function updateHashCache(targetPath) {
     await saveHashCache(hashCache)
   }
 }
+
+/**
+ * 清除指定文件的 chmod 缓存，确保文件被重新下载后 resolveServicePermission 能重新执行 chmod
+ * @param {string} targetPath - 目标文件路径
+ */
+async function invalidateChmodCache(targetPath) {
+  const hashCache = await loadHashCache()
+  const cacheKey = `${targetPath}_chmod`
+  if (cacheKey in hashCache) {
+    delete hashCache[cacheKey]
+    await saveHashCache(hashCache)
+    log_debug(`Invalidated chmod cache for: ${path.basename(targetPath)}`)
+  }
+}
+
+// =======================
+// Service IPC version check
+// =======================
+
+/**
+ * 从根目录 Cargo.lock 中解析 clash_verge_service_ipc 的版本号
+ * @returns {string|null} 版本号，如 "2.2.0"，解析失败返回 null
+ */
+function getServiceIpcVersionFromCargoLock() {
+  const cargoLockPath = path.join(cwd, 'Cargo.lock')
+  try {
+    const content = fs.readFileSync(cargoLockPath, 'utf-8')
+    // 匹配 [[package]] 块中 name = "clash_verge_service_ipc" 紧跟的 version 字段
+    // 用 [\r\n]+ 兼容 Windows（CRLF）和 Unix（LF）换行格式
+    const match = content.match(
+      /name\s*=\s*"clash_verge_service_ipc"\s*[\r\n]+version\s*=\s*"([^"]+)"/,
+    )
+    return match ? match[1] : null
+  } catch {
+    return null
+  }
+}
+
+/**
+ * 保存当前 service binary 对应的 IPC 版本
+ * @param {string} version
+ */
+async function saveServiceIpcVersion(version) {
+  await fsp.mkdir(TEMP_DIR, { recursive: true })
+  await fsp.writeFile(SERVICE_VERSION_FILE, JSON.stringify({ version }))
+}
+
+/**
+ * 判断 service binary 是否需要因 IPC 版本变更而强制重新下载
+ * @returns {boolean}
+ */
+function isServiceBinaryOutdated() {
+  const expected = getServiceIpcVersionFromCargoLock()
+  if (!expected) {
+    log_debug(
+      'Cannot read service IPC version from Cargo.lock, skipping version check',
+    )
+    return false
+  }
+  // 同步读取已记录版本（prebuild 启动阶段调用，避免 async 传染）
+  // 文件不存在或解析失败均视为需要重新下载
+  try {
+    const recorded = JSON.parse(
+      fs.readFileSync(SERVICE_VERSION_FILE, 'utf-8'),
+    ).version
+    if (recorded !== expected) {
+      log_info(
+        `Service IPC version changed: ${recorded} → ${expected}, forcing re-download`,
+      )
+      return true
+    }
+    return false
+  } catch {
+    return true
+  }
+}
+
+/** 当前 Cargo.lock 中的 service IPC 期望版本 */
+const SERVICE_IPC_VERSION = getServiceIpcVersionFromCargoLock()
+/** service binary 是否因版本变更需要强制重下 */
+const SERVICE_BINARY_OUTDATED = isServiceBinaryOutdated()
 
 // =======================
 // Meta maps (stable & alpha)
@@ -477,6 +561,9 @@ async function resolveResource(binInfo) {
     await fsp.mkdir(baseDir, { recursive: true })
     await downloadFile(downloadURL, targetPath)
     await updateHashCache(targetPath)
+    // 下载会覆盖写入并重置文件权限，需要清除 _chmod 缓存，
+    // 确保 resolveServicePermission 在后续步骤中重新应用 chmod
+    await invalidateChmodCache(targetPath)
   }
 
   if (localPath) {
@@ -578,15 +665,36 @@ const resolveServicePermission = async () => {
 // Other resource resolvers (service, mmdb, geosite, geoip, enableLoopback)
 // =======================
 const SERVICE_URL = `https://github.com/clash-verge-rev/clash-verge-service-ipc/releases/download/${SIDECAR_HOST}`
-const resolveService = () => {
+
+/**
+ * 下载主 service binary。
+ * 若检测到 IPC 版本变更（SERVICE_BINARY_OUTDATED），先删除三个旧 binary 以触发
+ * resolveInstall / resolveUninstall 强制重下；IPC 版本写入由独立任务 service_ipc_version 负责。
+ */
+const resolveService = async () => {
   const ext = platform === 'win32' ? '.exe' : ''
   const suffix = platform === 'linux' ? '-' + SIDECAR_HOST : ''
-  return resolveResource({
+  // IPC 版本变更时，删除旧 binary 以触发 resolveResource 强制重下
+  if (!FORCE && SERVICE_BINARY_OUTDATED) {
+    const targets = [
+      path.join(SERVICE_DIR, `clash-verge-service${suffix}${ext}`),
+      path.join(SERVICE_DIR, `clash-verge-service-install${suffix}${ext}`),
+      path.join(SERVICE_DIR, `clash-verge-service-uninstall${suffix}${ext}`),
+    ]
+    for (const t of targets) {
+      if (fs.existsSync(t)) {
+        await fsp.rm(t, { force: true })
+        log_info(`Removed outdated service binary: ${path.basename(t)}`)
+      }
+    }
+  }
+  await resolveResource({
     file: 'clash-verge-service' + suffix + ext,
     dir: SERVICE_DIR,
     downloadURL: `${SERVICE_URL}/clash-verge-service${ext}`,
   })
 }
+
 const resolveInstall = () => {
   const ext = platform === 'win32' ? '.exe' : ''
   const suffix = platform === 'linux' ? '-' + SIDECAR_HOST : ''
@@ -658,6 +766,16 @@ const tasks = [
   { name: 'service', func: resolveService, retry: 5 },
   { name: 'install', func: resolveInstall, retry: 5 },
   { name: 'uninstall', func: resolveUninstall, retry: 5 },
+  {
+    // 三个 service binary 全部下载成功后，记录当前 IPC 版本供下次比对
+    name: 'service_ipc_version',
+    func: async () => {
+      if (SERVICE_IPC_VERSION) {
+        await saveServiceIpcVersion(SERVICE_IPC_VERSION)
+      }
+    },
+    retry: 1,
+  },
   { name: 'mmdb', func: resolveMmdb, retry: 5 },
   { name: 'geosite', func: resolveGeosite, retry: 5 },
   { name: 'geoip', func: resolveGeoIP, retry: 5 },
