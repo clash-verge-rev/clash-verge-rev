@@ -135,6 +135,7 @@ fn determine_update_flags(patch: &IVerge) -> UpdateFlags {
     #[cfg(target_os = "linux")]
     {
         restart_core_needed |= tproxy_enabled.is_some() || tproxy_port.is_some();
+        restart_core_needed |= tun_mode == Some(true);
     }
 
     let mut update_flags = UpdateFlags::empty();
