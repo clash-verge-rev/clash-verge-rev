@@ -22,6 +22,7 @@ tools:
     min-integrity: unapproved
 
 safe-outputs:
+  report-failure-as-issue: false
   mentions: false
   allowed-github-references: []
   add-labels:
