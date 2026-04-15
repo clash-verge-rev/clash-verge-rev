@@ -1,4 +1,4 @@
-import DeleteOutline from '@mui/icons-material/DeleteOutline'
+import DeleteOutlined from '@mui/icons-material/DeleteOutlined'
 import DownloadRounded from '@mui/icons-material/DownloadRounded'
 import RefreshRounded from '@mui/icons-material/RefreshRounded'
 import RestoreRounded from '@mui/icons-material/RestoreRounded'
@@ -371,7 +371,7 @@ export const BackupHistoryViewer = ({
                             disabled={isBusy}
                             onClick={() => handleDelete(row.filename)}
                           >
-                            <DeleteOutline fontSize="small" />
+                            <DeleteOutlined fontSize="small" />
                           </IconButton>
                           <IconButton
                             size="small"
