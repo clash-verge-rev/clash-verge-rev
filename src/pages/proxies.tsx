@@ -137,7 +137,7 @@ const ProxyPage = () => {
           : t('proxies.page.title.default')
       }
       header={
-        <Box display="flex" alignItems="center" gap={1}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <ProviderButton />
 
           <ButtonGroup size="small">

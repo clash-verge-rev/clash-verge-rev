@@ -182,8 +182,7 @@ const TrafficErrorFallback: React.FC<TrafficErrorFallbackProps> = ({
       <Typography
         variant="body2"
         color="text.secondary"
-        textAlign="center"
-        sx={{ mb: 2 }}
+        sx={{ mb: 2, textAlign: 'center' }}
       >
         {t('shared.feedback.errors.trafficStatsDescription')}
       </Typography>
@@ -194,7 +193,7 @@ const TrafficErrorFallback: React.FC<TrafficErrorFallbackProps> = ({
           {error instanceof Error ? error.message : 'Unknown error'}
         </Typography>
         {retryCount > 0 && (
-          <Typography variant="caption" display="block" sx={{ mt: 1 }}>
+          <Typography variant="caption" sx={{ mt: 1, display: 'block' }}>
             {t('shared.labels.retryAttempts')}: {retryCount}/{maxRetries}
           </Typography>
         )}

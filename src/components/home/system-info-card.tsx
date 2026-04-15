@@ -215,24 +215,23 @@ export const SystemInfoCard = () => {
       }
     >
       <Stack spacing={1.5}>
-        <Stack direction="row" justifyContent="space-between">
+        <Stack direction="row" sx={{ justifyContent: 'space-between' }}>
           <Typography variant="body2" color="text.secondary">
             {t('home.components.systemInfo.fields.osInfo')}
           </Typography>
-          <Typography variant="body2" fontWeight="medium">
+          <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
             {osInfo}
           </Typography>
         </Stack>
         <Divider />
         <Stack
           direction="row"
-          justifyContent="space-between"
-          alignItems="center"
+          sx={{ justifyContent: 'space-between', alignItems: 'center' }}
         >
           <Typography variant="body2" color="text.secondary">
             {t('home.components.systemInfo.fields.autoLaunch')}
           </Typography>
-          <Stack direction="row" spacing={1} alignItems="center">
+          <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
             <Chip
               size="small"
               label={
@@ -250,34 +249,32 @@ export const SystemInfoCard = () => {
         <Divider />
         <Stack
           direction="row"
-          justifyContent="space-between"
-          alignItems="center"
+          sx={{ justifyContent: 'space-between', alignItems: 'center' }}
         >
           <Typography variant="body2" color="text.secondary">
             {t('home.components.systemInfo.fields.runningMode')}
           </Typography>
           <Typography
             variant="body2"
-            fontWeight="medium"
             onClick={handleRunningModeClick}
-            sx={runningModeStyle}
+            sx={{ ...runningModeStyle, fontWeight: 'medium' }}
           >
             {getModeIcon()}
             {getModeText()}
           </Typography>
         </Stack>
         <Divider />
-        <Stack direction="row" justifyContent="space-between">
+        <Stack direction="row" sx={{ justifyContent: 'space-between' }}>
           <Typography variant="body2" color="text.secondary">
             {t('home.components.systemInfo.fields.lastCheckUpdate')}
           </Typography>
           <Typography
             variant="body2"
-            fontWeight="medium"
             onClick={onCheckUpdate}
             sx={{
               cursor: 'pointer',
               textDecoration: 'underline',
+              fontWeight: 'medium',
               '&:hover': { opacity: 0.7 },
             }}
           >
@@ -285,11 +282,11 @@ export const SystemInfoCard = () => {
           </Typography>
         </Stack>
         <Divider />
-        <Stack direction="row" justifyContent="space-between">
+        <Stack direction="row" sx={{ justifyContent: 'space-between' }}>
           <Typography variant="body2" color="text.secondary">
             {t('home.components.systemInfo.fields.vergeVersion')}
           </Typography>
-          <Typography variant="body2" fontWeight="medium">
+          <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
             v{appVersion}
           </Typography>
         </Stack>

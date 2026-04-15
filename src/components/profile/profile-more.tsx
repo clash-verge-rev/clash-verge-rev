@@ -103,17 +103,19 @@ export const ProfileMore = (props: Props) => {
         }}
       >
         <Box
-          display="flex"
-          justifyContent="space-between"
-          alignItems="center"
-          mb={0.5}
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            mb: 0.5,
+          }}
         >
           <Typography
-            width="calc(100% - 52px)"
             variant="h6"
             component="h2"
             noWrap
             title={t(globalTitles[id])}
+            sx={{ width: 'calc(100% - 52px)' }}
           >
             {t(globalTitles[id])}
           </Typography>
@@ -162,7 +164,7 @@ export const ProfileMore = (props: Props) => {
         anchorPosition={position}
         anchorReference="anchorPosition"
         transitionDuration={225}
-        MenuListProps={{ sx: { py: 0.5 } }}
+        slotProps={{ list: { sx: { py: 0.5 } } }}
         onContextMenu={(e) => {
           setAnchorEl(null)
           e.preventDefault()

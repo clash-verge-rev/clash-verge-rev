@@ -1245,13 +1245,13 @@ export const EnhancedCanvasTrafficGraph = memo(
                 whiteSpace: 'nowrap',
               }}
             >
-              <Box color="text.secondary" mb={0.2}>
+              <Box sx={{ color: 'text.secondary', mb: 0.2 }}>
                 {tooltipData.timestamp}
               </Box>
-              <Box color="secondary.main" fontWeight="500">
+              <Box sx={{ color: 'secondary.main', fontWeight: 500 }}>
                 ↑ {tooltipData.upSpeed}
               </Box>
-              <Box color="primary.main" fontWeight="500">
+              <Box sx={{ color: 'primary.main', fontWeight: 500 }}>
                 ↓ {tooltipData.downSpeed}
               </Box>
             </Box>

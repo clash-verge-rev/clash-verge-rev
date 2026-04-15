@@ -120,9 +120,8 @@ const CompactStatCard = memo(
           >
             <Typography
               variant="body1"
-              fontWeight="bold"
               noWrap
-              sx={{ mr: 0.5 }}
+              sx={{ mr: 0.5, fontWeight: 'bold' }}
             >
               {value}
             </Typography>

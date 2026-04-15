@@ -690,7 +690,7 @@ export const ProfileItem = (props: Props) => {
             />
           </Box>
         )}
-        <Box position="relative">
+        <Box sx={{ position: 'relative' }}>
           <Box sx={{ display: 'flex', justifyContent: 'start' }}>
             {batchMode && (
               <IconButton
@@ -731,8 +731,12 @@ export const ProfileItem = (props: Props) => {
             </Box>
 
             <Typography
-              width={batchMode ? 'calc(100% - 56px)' : 'calc(100% - 36px)'}
-              sx={{ fontSize: '18px', fontWeight: '600', lineHeight: '26px' }}
+              sx={{
+                width: batchMode ? 'calc(100% - 56px)' : 'calc(100% - 36px)',
+                fontSize: '18px',
+                fontWeight: '600',
+                lineHeight: '26px',
+              }}
               variant="h6"
               component="h2"
               noWrap
@@ -802,14 +806,14 @@ export const ProfileItem = (props: Props) => {
                   <Typography
                     noWrap
                     component="span"
-                    fontSize={14}
-                    textAlign="right"
                     title={
                       showNextUpdate
                         ? t('profiles.components.profileItem.tooltips.showLast')
                         : `${t('shared.labels.updateTime')}: ${parseExpire(updated)}\n${t('profiles.components.profileItem.tooltips.showNext')}`
                     }
                     sx={{
+                      fontSize: 14,
+                      textAlign: 'right',
                       cursor: 'pointer',
                       display: 'inline-block',
                       borderBottom: '1px dashed transparent',
@@ -861,7 +865,7 @@ export const ProfileItem = (props: Props) => {
         anchorPosition={position}
         anchorReference="anchorPosition"
         transitionDuration={225}
-        MenuListProps={{ sx: { py: 0.5 } }}
+        slotProps={{ list: { sx: { py: 0.5 } } }}
         onContextMenu={(e) => {
           setAnchorEl(null)
           e.preventDefault()

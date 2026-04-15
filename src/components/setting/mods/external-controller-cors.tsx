@@ -194,10 +194,12 @@ export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
         <List sx={{ width: '90%', padding: 2 }}>
           <ListItem sx={{ padding: '8px 0' }}>
             <Box
-              display="flex"
-              justifyContent="space-between"
-              alignItems="center"
-              width="100%"
+              sx={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                width: '100%',
+              }}
             >
               <span style={{ fontWeight: 'normal' }}>
                 {t('settings.sections.externalCors.fields.allowPrivateNetwork')}
@@ -240,7 +242,7 @@ export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
                     placeholder={t(
                       'settings.sections.externalCors.placeholders.origin',
                     )}
-                    inputProps={{ style: { fontSize: 14 } }}
+                    slotProps={{ htmlInput: { style: { fontSize: 14 } } }}
                   />
                   <Button
                     variant="contained"

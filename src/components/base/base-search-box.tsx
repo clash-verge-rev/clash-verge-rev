@@ -205,7 +205,7 @@ export const BaseSearchBox = ({
           input: {
             sx: { pr: 1 },
             endAdornment: (
-              <Box display="flex">
+              <Box sx={{ display: 'flex' }}>
                 {!!text && (
                   <Tooltip title={t('shared.placeholders.resetInput')}>
                     <IconButton

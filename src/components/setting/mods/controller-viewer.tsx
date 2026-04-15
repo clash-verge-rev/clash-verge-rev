@@ -111,7 +111,7 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
       contentSx={{ width: 400 }}
       okBtn={
         isSaving ? (
-          <Box display="flex" alignItems="center" gap={1}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <CircularProgress size={16} color="inherit" />
             {t('shared.statuses.saving')}
           </Box>
@@ -153,7 +153,7 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
           <ListItemText
             primary={t('settings.sections.externalController.fields.address')}
           />
-          <Box display="flex" alignItems="center" gap={1}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <TextField
               size="small"
               sx={{
@@ -193,7 +193,7 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
           <ListItemText
             primary={t('settings.sections.externalController.fields.secret')}
           />
-          <Box display="flex" alignItems="center" gap={1}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <TextField
               size="small"
               sx={{

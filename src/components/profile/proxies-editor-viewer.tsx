@@ -374,7 +374,7 @@ export const ProxiesEditorViewer = (props: Props) => {
     >
       <DialogTitle>
         {
-          <Box display="flex" justifyContent="space-between">
+          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
             {t('profiles.modals.proxiesEditor.title')}
             <Box>
               <Button

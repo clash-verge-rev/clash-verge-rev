@@ -112,7 +112,7 @@ export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
     <BaseDialog
       open={open}
       title={
-        <Box display="flex" justifyContent="space-between">
+        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
           {t('settings.modals.update.title', {
             version: updateInfo?.version ?? '',
           })}

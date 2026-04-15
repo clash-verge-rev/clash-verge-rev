@@ -116,8 +116,7 @@ export const TestItem = ({
         }}
       >
         <Box
-          position="relative"
-          sx={{ cursor: 'move' }}
+          sx={{ position: 'relative', cursor: 'move' }}
           ref={setNodeRef}
           {...attributes}
           {...listeners}
@@ -208,7 +207,7 @@ export const TestItem = ({
         anchorPosition={position}
         anchorReference="anchorPosition"
         transitionDuration={225}
-        MenuListProps={{ sx: { py: 0.5 } }}
+        slotProps={{ list: { sx: { py: 0.5 } } }}
         onContextMenu={(e) => {
           setAnchorEl(null)
           e.preventDefault()

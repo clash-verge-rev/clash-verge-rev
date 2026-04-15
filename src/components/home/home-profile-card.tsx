@@ -103,7 +103,7 @@ const ProfileDetails = ({
     <Box>
       <Stack spacing={2}>
         {current.url && (
-          <Stack direction="row" alignItems="center" spacing={1}>
+          <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
             <DnsOutlined fontSize="small" color="action" />
             <Typography
               variant="body2"
@@ -115,7 +115,6 @@ const ProfileDetails = ({
               {current.home ? (
                 <Link
                   component="button"
-                  fontWeight="medium"
                   onClick={() => current.home && openWebUrl(current.home)}
                   sx={{
                     display: 'inline-flex',
@@ -123,6 +122,7 @@ const ProfileDetails = ({
                     minWidth: 0,
                     maxWidth: 'calc(100% - 40px)',
                     ml: 0.5,
+                    fontWeight: 'medium',
                   }}
                   title={parseUrl(current.url)}
                 >
@@ -151,7 +151,6 @@ const ProfileDetails = ({
               ) : (
                 <Typography
                   component="span"
-                  fontWeight="medium"
                   sx={{
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
@@ -159,6 +158,7 @@ const ProfileDetails = ({
                     minWidth: 0,
                     flex: 1,
                     ml: 0.5,
+                    fontWeight: 'medium',
                   }}
                   title={parseUrl(current.url)}
                 >
@@ -170,7 +170,7 @@ const ProfileDetails = ({
         )}
 
         {current.updated && (
-          <Stack direction="row" alignItems="center" spacing={1}>
+          <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
             <UpdateOutlined
               fontSize="small"
               color="action"
@@ -187,7 +187,7 @@ const ProfileDetails = ({
               onClick={onUpdateProfile}
             >
               {t('shared.labels.updateTime')}:{' '}
-              <Box component="span" fontWeight="medium">
+              <Box component="span" sx={{ fontWeight: 'medium' }}>
                 {dayjs(current.updated * 1000).format('YYYY-MM-DD HH:mm')}
               </Box>
             </Typography>
@@ -196,11 +196,11 @@ const ProfileDetails = ({
 
         {current.extra && (
           <>
-            <Stack direction="row" alignItems="center" spacing={1}>
+            <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
               <SpeedOutlined fontSize="small" color="action" />
               <Typography variant="body2" color="text.secondary">
                 {t('shared.labels.usedTotal')}:{' '}
-                <Box component="span" fontWeight="medium">
+                <Box component="span" sx={{ fontWeight: 'medium' }}>
                   {parseTraffic(usedTraffic)} /{' '}
                   {parseTraffic(current.extra.total)}
                 </Box>
@@ -208,11 +208,11 @@ const ProfileDetails = ({
             </Stack>
 
             {current.extra.expire > 0 && (
-              <Stack direction="row" alignItems="center" spacing={1}>
+              <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
                 <EventOutlined fontSize="small" color="action" />
                 <Typography variant="body2" color="text.secondary">
                   {t('shared.labels.expireTime')}:{' '}
-                  <Box component="span" fontWeight="medium">
+                  <Box component="span" sx={{ fontWeight: 'medium' }}>
                     {parseExpire(current.extra.expire)}
                   </Box>
                 </Typography>
@@ -318,8 +318,6 @@ export const HomeProfileCard = ({
       <Link
         component="button"
         variant="h6"
-        fontWeight="medium"
-        fontSize={18}
         onClick={() => current.home && openWebUrl(current.home)}
         sx={{
           color: 'inherit',
@@ -328,6 +326,8 @@ export const HomeProfileCard = ({
           alignItems: 'center',
           minWidth: 0,
           maxWidth: '100%',
+          fontWeight: 'medium',
+          fontSize: 18,
           '& > span': {
             overflow: 'hidden',
             textOverflow: 'ellipsis',

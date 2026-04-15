@@ -234,9 +234,11 @@ export const BackupConfigViewer = memo(
           <Grid size={{ xs: 12, sm: 3 }}>
             <Stack
               direction="column"
-              justifyContent="space-between"
-              alignItems="stretch"
-              sx={{ height: '100%' }}
+              sx={{
+                justifyContent: 'space-between',
+                alignItems: 'stretch',
+                height: '100%',
+              }}
             >
               {webdavChanged ||
               webdav_url === undefined ||

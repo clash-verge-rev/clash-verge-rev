@@ -237,8 +237,7 @@ export function BackupViewer({ ref }: { ref?: Ref<DialogRef> }) {
                     direction="row"
                     spacing={1}
                     useFlexGap
-                    flexWrap="wrap"
-                    alignItems="center"
+                    sx={{ flexWrap: 'wrap', alignItems: 'center' }}
                   >
                     {item.actions}
                   </Stack>

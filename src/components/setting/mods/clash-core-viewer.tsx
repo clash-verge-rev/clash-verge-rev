@@ -117,7 +117,7 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
     <BaseDialog
       open={open}
       title={
-        <Box display="flex" justifyContent="space-between">
+        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
           {t('settings.sections.clash.form.fields.clashCore')}
           <Box>
             <LoadingButton

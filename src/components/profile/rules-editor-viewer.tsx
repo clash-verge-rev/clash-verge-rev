@@ -584,7 +584,7 @@ export const RulesEditorViewer = (props: Props) => {
     >
       <DialogTitle>
         {
-          <Box display="flex" justifyContent="space-between">
+          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
             {t('rules.modals.editor.title')}
             <Box>
               <Button

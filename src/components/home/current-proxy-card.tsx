@@ -930,7 +930,7 @@ export const CurrentProxyCard = () => {
             }}
           >
             <Box>
-              <Typography variant="body1" fontWeight="medium">
+              <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
                 {currentProxy.name}
               </Typography>
 
@@ -1026,9 +1026,11 @@ export const CurrentProxyCard = () => {
               disabled={isDirectMode}
               renderValue={renderProxyValue}
               MenuProps={{
-                PaperProps: {
-                  style: {
-                    maxHeight: 500,
+                slotProps: {
+                  paper: {
+                    style: {
+                      maxHeight: 500,
+                    },
                   },
                 },
               }}

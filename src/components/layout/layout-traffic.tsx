@@ -53,29 +53,33 @@ export const LayoutTraffic = () => {
   const [inuse, inuseUnit] = parseTraffic(memory?.inuse || 0)
 
   const boxStyle: any = {
-    display: 'flex',
-    alignItems: 'center',
-    whiteSpace: 'nowrap',
+    sx: {
+      display: 'flex',
+      alignItems: 'center',
+      whiteSpace: 'nowrap',
+    },
   }
   const iconStyle: any = {
     sx: { mr: '8px', fontSize: 16 },
   }
   const valStyle: any = {
     component: 'span',
-    textAlign: 'center',
-    sx: { flex: '1 1 56px', userSelect: 'none' },
+    sx: { flex: '1 1 56px', userSelect: 'none', textAlign: 'center' },
   }
   const unitStyle: any = {
     component: 'span',
     color: 'grey.500',
-    fontSize: '12px',
-    textAlign: 'right',
-    sx: { flex: '0 1 27px', userSelect: 'none' },
+    sx: {
+      flex: '0 1 27px',
+      userSelect: 'none',
+      fontSize: '12px',
+      textAlign: 'right',
+    },
   }
 
   return (
     <LightweightTrafficErrorBoundary>
-      <Box position="relative">
+      <Box sx={{ position: 'relative' }}>
         {trafficGraph && pageVisible && (
           <div
             style={{ width: '100%', height: 60, marginBottom: 6 }}
@@ -85,7 +89,7 @@ export const LayoutTraffic = () => {
           </div>
         )}
 
-        <Box display="flex" flexDirection="column" gap={0.75}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>
           <Box
             title={`${t('home.components.traffic.metrics.uploadSpeed')}`}
             {...boxStyle}

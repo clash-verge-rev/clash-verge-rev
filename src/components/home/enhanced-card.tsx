@@ -90,9 +90,11 @@ export const EnhancedCard = forwardRef<HTMLElement, EnhancedCardProps>(
               {typeof title === 'string' ? (
                 <Typography
                   variant="h6"
-                  fontWeight="medium"
-                  fontSize={18}
-                  sx={titleTruncateStyle}
+                  sx={{
+                    ...titleTruncateStyle,
+                    fontWeight: 'medium',
+                    fontSize: 18,
+                  }}
                   title={title}
                 >
                   {title}

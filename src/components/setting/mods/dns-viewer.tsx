@@ -623,9 +623,15 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
       open={open}
       disableEnforceFocus={!visualization}
       title={
-        <Box display="flex" justifyContent="space-between" alignItems="center">
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
           {t('settings.modals.dns.dialog.title')}
-          <Box display="flex" alignItems="center" gap={1}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Button
               variant="outlined"
               size="small"

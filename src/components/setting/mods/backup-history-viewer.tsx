@@ -282,8 +282,7 @@ export const BackupHistoryViewer = ({
         <Stack spacing={2}>
           <Stack
             direction="row"
-            alignItems="center"
-            justifyContent="space-between"
+            sx={{ alignItems: 'center', justifyContent: 'space-between' }}
           >
             <Tabs
               value={source}
@@ -345,9 +344,11 @@ export const BackupHistoryViewer = ({
                     secondary={
                       <Stack
                         direction="row"
-                        alignItems="center"
-                        justifyContent="space-between"
                         spacing={1.5}
+                        sx={{
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                        }}
                       >
                         <Typography variant="caption" color="text.secondary">
                           {`${row.platform} · ${row.display_time}`}
@@ -355,7 +356,7 @@ export const BackupHistoryViewer = ({
                         <Stack
                           direction="row"
                           spacing={0.5}
-                          alignItems="center"
+                          sx={{ alignItems: 'center' }}
                         >
                           {isLocal && (
                             <IconButton
@@ -393,8 +394,7 @@ export const BackupHistoryViewer = ({
             <Stack
               direction="row"
               spacing={1}
-              justifyContent="flex-end"
-              alignItems="center"
+              sx={{ justifyContent: 'flex-end', alignItems: 'center' }}
             >
               <Typography variant="caption">
                 {currentPage + 1} / {pageCount}

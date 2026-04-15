@@ -528,7 +528,7 @@ export const GroupsEditorViewer = (props: Props) => {
     >
       <DialogTitle>
         {
-          <Box display="flex" justifyContent="space-between">
+          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
             {t('profiles.modals.groupsEditor.title')}
             <Box>
               <Button

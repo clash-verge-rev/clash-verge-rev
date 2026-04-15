@@ -141,7 +141,7 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
     <BaseDialog
       open={open}
       title={
-        <Box display="flex" justifyContent="space-between" gap={1}>
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', gap: 1 }}>
           <Typography variant="h6">{t('settings.modals.tun.title')}</Typography>
           <Button
             variant="outlined"
