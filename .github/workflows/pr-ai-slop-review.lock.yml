@@ -83,7 +83,7 @@ jobs:
     steps:
       - name: Setup Scripts
         id: setup
-        uses: github/gh-aw-actions/setup@2fe53acc038ba01c3bbdc767d4b25df31ca5bdfc # v0.68.1
+        uses: github/gh-aw-actions/setup@abea67e08ee83539ea33aaae67bf0cddaa0b03b5 # v0.68.3
         with:
           destination: ${{ runner.temp }}/gh-aw/actions
           job-name: ${{ github.job }}
@@ -275,7 +275,7 @@ jobs:
         run: bash "${RUNNER_TEMP}/gh-aw/actions/print_prompt_summary.sh"
       - name: Upload activation artifact
         if: success()
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: activation
           path: |
@@ -311,7 +311,7 @@ jobs:
     steps:
       - name: Setup Scripts
         id: setup
-        uses: github/gh-aw-actions/setup@2fe53acc038ba01c3bbdc767d4b25df31ca5bdfc # v0.68.1
+        uses: github/gh-aw-actions/setup@abea67e08ee83539ea33aaae67bf0cddaa0b03b5 # v0.68.3
         with:
           destination: ${{ runner.temp }}/gh-aw/actions
           job-name: ${{ github.job }}
@@ -812,7 +812,7 @@ jobs:
       - name: Upload agent artifacts
         if: always()
         continue-on-error: true
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: agent
           path: |
@@ -834,7 +834,7 @@ jobs:
       - name: Upload firewall audit logs
         if: always()
         continue-on-error: true
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: firewall-audit-logs
           path: |
@@ -868,7 +868,7 @@ jobs:
     steps:
       - name: Setup Scripts
         id: setup
-        uses: github/gh-aw-actions/setup@2fe53acc038ba01c3bbdc767d4b25df31ca5bdfc # v0.68.1
+        uses: github/gh-aw-actions/setup@abea67e08ee83539ea33aaae67bf0cddaa0b03b5 # v0.68.3
         with:
           destination: ${{ runner.temp }}/gh-aw/actions
           job-name: ${{ github.job }}
@@ -974,7 +974,7 @@ jobs:
     steps:
       - name: Setup Scripts
         id: setup
-        uses: github/gh-aw-actions/setup@2fe53acc038ba01c3bbdc767d4b25df31ca5bdfc # v0.68.1
+        uses: github/gh-aw-actions/setup@abea67e08ee83539ea33aaae67bf0cddaa0b03b5 # v0.68.3
         with:
           destination: ${{ runner.temp }}/gh-aw/actions
           job-name: ${{ github.job }}
@@ -1092,7 +1092,7 @@ jobs:
           XDG_CONFIG_HOME: /home/runner
       - name: Upload threat detection log
         if: always() && steps.detection_guard.outputs.run_detection == 'true'
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: detection
           path: /tmp/gh-aw/threat-detection/detection.log
@@ -1142,7 +1142,7 @@ jobs:
     steps:
       - name: Setup Scripts
         id: setup
-        uses: github/gh-aw-actions/setup@2fe53acc038ba01c3bbdc767d4b25df31ca5bdfc # v0.68.1
+        uses: github/gh-aw-actions/setup@abea67e08ee83539ea33aaae67bf0cddaa0b03b5 # v0.68.3
         with:
           destination: ${{ runner.temp }}/gh-aw/actions
           job-name: ${{ github.job }}
@@ -1188,7 +1188,7 @@ jobs:
             await main();
       - name: Upload Safe Outputs Items
         if: always()
-        uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
         with:
           name: safe-outputs-items
           path: /tmp/gh-aw/safe-output-items.jsonl
