@@ -71,7 +71,7 @@
     "react-dom": "19.2.5",
     "react-error-boundary": "6.1.1",
     "react-hook-form": "^7.72.0",
-    "react-i18next": "17.0.3",
+    "react-i18next": "17.0.4",
     "react-markdown": "10.1.0",
     "react-router": "^7.13.1",
     "rehype-raw": "^7.0.0",
