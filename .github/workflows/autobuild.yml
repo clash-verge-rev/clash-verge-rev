@@ -38,7 +38,7 @@ jobs:
         run: bash ./scripts/extract_update_logs.sh
         shell: bash
 
-      - uses: pnpm/action-setup@v6.0.0
+      - uses: pnpm/action-setup@v6.0.1
         name: Install pnpm
         with:
           run_install: false
@@ -46,7 +46,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v6
         with:
-          node-version: '24.14.1'
+          node-version: '24.15.0'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -179,7 +179,7 @@ jobs:
           echo "OPENSSL_LIB_DIR=$(brew --prefix openssl@3)/lib" >> $GITHUB_ENV
           echo "PKG_CONFIG_PATH=$(brew --prefix openssl@3)/lib/pkgconfig" >> $GITHUB_ENV
 
-      - uses: pnpm/action-setup@v6.0.0
+      - uses: pnpm/action-setup@v6.0.1
         name: Install pnpm
         with:
           run_install: false
@@ -187,7 +187,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v6
         with:
-          node-version: '24.14.1'
+          node-version: '24.15.0'
           cache: 'pnpm'
 
       - name: Pnpm Cache
@@ -278,14 +278,14 @@ jobs:
           cache-workspace-crates: true
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v6.0.0
+        uses: pnpm/action-setup@v6.0.1
         with:
           run_install: false
 
       - name: Install Node
         uses: actions/setup-node@v6
         with:
-          node-version: '24.14.1'
+          node-version: '24.15.0'
           cache: 'pnpm'
 
       - name: Pnpm Cache
@@ -423,14 +423,14 @@ jobs:
           cache-workspace-crates: true
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v6.0.0
+        uses: pnpm/action-setup@v6.0.1
         with:
           run_install: false
 
       - name: Install Node
         uses: actions/setup-node@v6
         with:
-          node-version: '24.14.1'
+          node-version: '24.15.0'
           cache: 'pnpm'
 
       - name: Pnpm Cache
@@ -532,9 +532,9 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v6
         with:
-          node-version: '24.14.1'
+          node-version: '24.15.0'
 
-      - uses: pnpm/action-setup@v6.0.0
+      - uses: pnpm/action-setup@v6.0.1
         name: Install pnpm
         with:
           run_install: false
