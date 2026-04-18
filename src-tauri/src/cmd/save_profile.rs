@@ -34,18 +34,26 @@ pub async fn save_profile_file(index: String, file_data: Option<String>) -> CmdR
         (path, is_merge)
     };
 
-    // 读取原始内容（在释放profiles_guard后进行）
-    let original_content = PrfItem {
-        file: Some(rel_path.clone()),
-        ..Default::default()
-    }
-    .read_file()
-    .await
-    .stringify_err()?;
-
     let profiles_dir = dirs::app_profiles_dir().stringify_err()?;
     let file_path = profiles_dir.join(rel_path.as_str());
     let file_path_str = file_path.to_string_lossy().to_string();
+
+    // Read the original content to enable rollback if validation fails.
+    // Chain profile files (rules/proxies/groups/merge/script) are lazily
+    // created: they are registered in profiles.yaml but only materialized on
+    // disk the first time the user edits them. Treat a missing file as empty
+    // original content instead of surfacing a confusing read error.
+    let original_content = if fs::try_exists(&file_path).await.unwrap_or(false) {
+        PrfItem {
+            file: Some(rel_path.clone()),
+            ..Default::default()
+        }
+        .read_file()
+        .await
+        .stringify_err()?
+    } else {
+        String::new()
+    };
 
     // 保存新的配置文件
     fs::write(&file_path, &file_data).await.stringify_err()?;
