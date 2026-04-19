@@ -235,6 +235,6 @@ pub trait HandleExt {
 impl HandleExt for HANDLE {
     fn is_valid(&self) -> bool {
         // Only handles that are neither 0 nor -1 are truly valid
-        *self != 0 as HANDLE && *self != INVALID_HANDLE_VALUE
+        *self != 0 as Self && *self != INVALID_HANDLE_VALUE
     }
 }
