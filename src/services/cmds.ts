@@ -534,6 +534,31 @@ export const isServiceAvailable = async () => {
     return false
   }
 }
+
+export const isSystemProxyHelperInstalled = async () => {
+  try {
+    const status = await invoke<{
+      state: string
+      installed: boolean
+      xpcReady: boolean
+      message?: string
+    }>('get_system_proxy_helper_status')
+    return status.installed && status.xpcReady
+  } catch (error) {
+    console.error('System proxy helper check failed:', error)
+    return false
+  }
+}
+
+export const requestSystemProxyHelperInstall = async () => {
+  return invoke<{
+    state: string
+    installed: boolean
+    needsSignedEnvironment: boolean
+    message: string
+  }>('request_system_proxy_helper_install')
+}
+
 export const entry_lightweight_mode = async () => {
   return invoke<void>('entry_lightweight_mode')
 }

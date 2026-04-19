@@ -159,6 +159,12 @@ mod app_init {
             cmd::reinstall_service,
             cmd::repair_service,
             cmd::is_service_available,
+            #[cfg(target_os = "macos")]
+            cmd::get_system_proxy_helper_status,
+            #[cfg(target_os = "macos")]
+            cmd::is_system_proxy_helper_installed,
+            #[cfg(target_os = "macos")]
+            cmd::request_system_proxy_helper_install,
             cmd::get_clash_info,
             cmd::patch_clash_config,
             cmd::patch_clash_mode,

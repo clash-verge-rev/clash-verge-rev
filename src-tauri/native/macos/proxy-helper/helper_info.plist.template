@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+ "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>CFBundleIdentifier</key>
+  <string>__HELPER_LABEL__</string>
+  <key>CFBundleName</key>
+  <string>Clash Verge System Proxy Helper</string>
+  <key>CFBundleVersion</key>
+  <string>1</string>
+  <key>SMAuthorizedClients</key>
+  <array>
+    <string>identifier "__APP_BUNDLE_ID__" and anchor apple generic and certificate leaf[subject.OU] = "__TEAM_ID__"</string>
+  </array>
+</dict>
+</plist>

@@ -29,7 +29,7 @@
           "y": 180
         }
       },
-      "infoPlist": "packages/macos/info_merge.plist"
+      "infoPlist": "packages/macos/info_generated.plist"
     }
   }
 }

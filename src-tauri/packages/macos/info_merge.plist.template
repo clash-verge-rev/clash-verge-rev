@@ -6,5 +6,10 @@
     <array>
         <string>io.github.clash-verge-rev.clash-verge-rev.service</string>
     </array>
+    <key>SMPrivilegedExecutables</key>
+    <dict>
+        <key>__HELPER_LABEL__</key>
+        <string>identifier "__HELPER_LABEL__" and anchor apple generic and certificate leaf[subject.OU] = "__TEAM_ID__"</string>
+    </dict>
 </dict>
 </plist>

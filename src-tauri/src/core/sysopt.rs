@@ -162,9 +162,18 @@ impl Sysopt {
         self.access_guard().write().set_guard_type(guard_type);
 
         tokio::task::spawn_blocking(move || -> Result<()> {
-            sys.set_system_proxy()?;
-            auto.set_auto_proxy()?;
-            Ok(())
+            #[cfg(target_os = "macos")]
+            {
+                crate::core::sysproxy_helper::apply_proxy_settings(&sys, &auto)?;
+                Ok(())
+            }
+
+            #[cfg(not(target_os = "macos"))]
+            {
+                sys.set_system_proxy()?;
+                auto.set_auto_proxy()?;
+                Ok(())
+            }
         })
         .await??;
 
@@ -196,9 +205,18 @@ impl Sysopt {
         };
 
         tokio::task::spawn_blocking(move || -> Result<()> {
-            sys.set_system_proxy()?;
-            auto.set_auto_proxy()?;
-            Ok(())
+            #[cfg(target_os = "macos")]
+            {
+                crate::core::sysproxy_helper::apply_proxy_settings(&sys, &auto)?;
+                Ok(())
+            }
+
+            #[cfg(not(target_os = "macos"))]
+            {
+                sys.set_system_proxy()?;
+                auto.set_auto_proxy()?;
+                Ok(())
+            }
         })
         .await??;
 

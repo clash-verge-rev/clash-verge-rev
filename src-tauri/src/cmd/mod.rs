@@ -15,6 +15,8 @@ pub mod proxy;
 pub mod runtime;
 pub mod save_profile;
 pub mod service;
+#[cfg(target_os = "macos")]
+pub mod sysproxy_helper;
 pub mod system;
 pub mod uwp;
 pub mod validate;
@@ -33,6 +35,8 @@ pub use proxy::*;
 pub use runtime::*;
 pub use save_profile::*;
 pub use service::*;
+#[cfg(target_os = "macos")]
+pub use sysproxy_helper::*;
 pub use system::*;
 pub use uwp::*;
 pub use validate::*;

@@ -7,6 +7,10 @@ pub mod manager;
 mod notification;
 pub mod service;
 pub mod sysopt;
+#[cfg(target_os = "macos")]
+pub mod sysproxy_helper;
+#[cfg(target_os = "macos")]
+pub mod sysproxy_helper_bridge;
 pub mod timer;
 pub mod tray;
 pub mod updater;

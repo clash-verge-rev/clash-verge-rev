@@ -6,5 +6,10 @@
     <array>
         <string>io.github.clash-verge-rev.clash-verge-rev.service</string>
     </array>
+    <key>SMPrivilegedExecutables</key>
+    <dict>
+        <key>io.github.clash-verge-rev.clash-verge-rev.proxyhelper</key>
+        <string>identifier "io.github.clash-verge-rev.clash-verge-rev.proxyhelper" and anchor apple generic and certificate leaf[subject.OU] = "[TEAM_ID]"</string>
+    </dict>
 </dict>
 </plist>
