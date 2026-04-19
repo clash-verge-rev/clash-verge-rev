@@ -34,6 +34,8 @@ impl fmt::Display for RunningMode {
 pub struct CoreManager {
     state: ArcSwap<State>,
     last_update: ArcSwapOption<Instant>,
+    #[cfg(target_os = "windows")]
+    job_handle: ArcSwapOption<isize>,
 }
 
 #[derive(Debug)]
@@ -56,6 +58,8 @@ impl Default for CoreManager {
         Self {
             state: ArcSwap::new(Arc::new(State::default())),
             last_update: ArcSwapOption::new(None),
+            #[cfg(target_os = "windows")]
+            job_handle: ArcSwapOption::new(None),
         }
     }
 }
@@ -93,6 +97,26 @@ impl CoreManager {
 
     pub fn set_last_update(&self, time: Instant) {
         self.last_update.store(Some(Arc::new(time)));
+    }
+
+    /// A value of 0 indicates an invalid handle; any other value indicates a valid handle.
+    ///
+    /// This method is currently only used on Windows.
+    #[cfg(target_os = "windows")]
+    pub fn set_job_handle(&self, handle: isize) {
+        let old_handle = self.job_handle.load();
+        if let Some(&old_val) = old_handle.as_deref() {
+            unsafe {
+                if old_val != 0 {
+                    windows_sys::Win32::Foundation::CloseHandle(old_val as _);
+                }
+            }
+        }
+        if handle != 0 {
+            self.job_handle.store(Some(Arc::new(handle)));
+        } else {
+            self.job_handle.store(None);
+        }
     }
 
     pub async fn init(&self) -> Result<()> {
