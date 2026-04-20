@@ -4,8 +4,10 @@ import { TooltipIcon } from "@/components/base/base-tooltip-icon";
 import { EditorViewer } from "@/components/profile/editor-viewer";
 import { useVerge } from "@/hooks/use-verge";
 import { useAppData } from "@/providers/app-data-provider";
+import { readTextFile } from "@tauri-apps/plugin-fs";
 import { getClashConfig } from "@/services/cmds";
 import {
+  getAppDir,
   getAutotemProxy,
   getNetworkInterfacesInfo,
   getSystemHostname,
@@ -14,7 +16,7 @@ import {
 } from "@/services/cmds";
 import { showNotice } from "@/services/noticeService";
 import getSystem from "@/utils/get-system";
-import { EditRounded } from "@mui/icons-material";
+import { AutoFixHighRounded, EditRounded } from "@mui/icons-material";
 import {
   Autocomplete,
   Button,
@@ -27,6 +29,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useLockFn } from "ahooks";
+import yaml from "js-yaml";
 import {
   forwardRef,
   useEffect,
@@ -275,6 +278,58 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
       setHostOptions(["127.0.0.1", "localhost"]);
     }
   };
+
+  const onGeneratePacFromRules = useLockFn(async () => {
+    try {
+      const appDir = await getAppDir();
+      const sep = appDir.includes("\\") ? "\\" : "/";
+      const content = await readTextFile(`${appDir}${sep}clash-verge.yaml`);
+      const obj = yaml.load(content) as { rules?: string[] } | null;
+      const rawRules: string[] = obj?.rules || [];
+
+      const patterns: string[] = [];
+      for (const raw of rawRules) {
+        const parts = raw.split(",");
+        if (parts.length < 3) continue;
+        const [type, payload, proxy] = parts;
+        if (proxy === "DIRECT" || proxy === "REJECT" || proxy === "REJECT-DROP") continue;
+
+        if (type === "DOMAIN") {
+          patterns.push(payload);
+        } else if (type === "DOMAIN-SUFFIX") {
+          patterns.push(`*.${payload}`);
+          patterns.push(payload);
+        } else if (type === "DOMAIN-KEYWORD") {
+          patterns.push(`*${payload}*`);
+        }
+      }
+
+      if (patterns.length === 0) {
+        showNotice("error", t("No valid patterns found"));
+        return;
+      }
+
+      const patternsStr = patterns.map((p) => `    "${p}"`).join(",\n");
+      const pac = `function FindProxyForURL(url, host) {
+  var proxyPatterns = [
+${patternsStr}
+  ];
+
+  for (var i = 0; i < proxyPatterns.length; i++) {
+    if (shExpMatch(host, proxyPatterns[i])) {
+      return "PROXY %proxy_host%:%mixed-port%; SOCKS5 %proxy_host%:%mixed-port%;";
+    }
+  }
+
+  return "DIRECT";
+}`;
+
+      setValue((v) => ({ ...v, pac_content: pac }));
+      showNotice("success", t("PAC generated from rules", { count: patterns.length }));
+    } catch (err: any) {
+      showNotice("error", err.toString());
+    }
+  });
 
   const onSave = useLockFn(async () => {
     if (value.duration < 1) {
@@ -587,6 +642,14 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
                 primary={t("PAC Script Content")}
                 sx={{ padding: "3px 0" }}
               />
+              <Button
+                startIcon={<AutoFixHighRounded />}
+                variant="outlined"
+                sx={{ mr: 1 }}
+                onClick={onGeneratePacFromRules}
+              >
+                {t("Generate from Rules")}
+              </Button>
               <Button
                 startIcon={<EditRounded />}
                 variant="outlined"
