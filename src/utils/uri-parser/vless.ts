@@ -102,7 +102,7 @@ export function URI_VLESS(line: string): IProxyVlessConfig {
 
   proxy['client-fingerprint'] = params.fp as ClientFingerprint
   proxy.alpn = params.alpn ? params.alpn.split(',') : undefined
-  if (Object.prototype.hasOwnProperty.call(params, 'allowInsecure')) {
+  if (Object.hasOwn(params, 'allowInsecure')) {
     proxy['skip-cert-verify'] = parseBoolOrPresence(params.allowInsecure)
   }
 

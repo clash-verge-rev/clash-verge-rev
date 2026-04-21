@@ -67,13 +67,13 @@ export function URI_AnyTLS(line: string): IProxyAnyTLSConfig {
     proxy['client-fingerprint'] = clientFingerprint as ClientFingerprint
   }
 
-  if (Object.prototype.hasOwnProperty.call(params, 'skip-cert-verify')) {
+  if (Object.hasOwn(params, 'skip-cert-verify')) {
     proxy['skip-cert-verify'] = parseBoolOrPresence(params['skip-cert-verify'])
-  } else if (Object.prototype.hasOwnProperty.call(params, 'insecure')) {
+  } else if (Object.hasOwn(params, 'insecure')) {
     proxy['skip-cert-verify'] = parseBoolOrPresence(params.insecure)
   }
 
-  if (Object.prototype.hasOwnProperty.call(params, 'udp')) {
+  if (Object.hasOwn(params, 'udp')) {
     proxy.udp = parseBoolOrPresence(params.udp)
   }
 

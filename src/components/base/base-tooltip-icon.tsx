@@ -2,8 +2,8 @@ import { InfoRounded } from '@mui/icons-material'
 import {
   Tooltip,
   IconButton,
-  IconButtonProps,
-  SvgIconProps,
+  type IconButtonProps,
+  type SvgIconProps,
 } from '@mui/material'
 
 interface Props extends IconButtonProps {

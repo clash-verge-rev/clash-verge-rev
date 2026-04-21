@@ -26,7 +26,7 @@ import {
 } from '@/components/base'
 import {
   ConnectionDetail,
-  ConnectionDetailRef,
+  type ConnectionDetailRef,
 } from '@/components/connection/connection-detail'
 import { ConnectionItem } from '@/components/connection/connection-item'
 import { ConnectionTable } from '@/components/connection/connection-table'

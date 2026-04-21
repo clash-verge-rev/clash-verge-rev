@@ -1,4 +1,4 @@
-import { MihomoWebSocket, Traffic } from 'tauri-plugin-mihomo-api'
+import { MihomoWebSocket, type Traffic } from 'tauri-plugin-mihomo-api'
 
 import { useMihomoWsSubscription } from './use-mihomo-ws-subscription'
 import { useTrafficMonitorEnhanced } from './use-traffic-monitor'

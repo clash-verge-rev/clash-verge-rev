@@ -1,5 +1,5 @@
-import { ReactNode } from 'react'
-import { ErrorBoundary, FallbackProps } from 'react-error-boundary'
+import type { ReactNode } from 'react'
+import { ErrorBoundary, type FallbackProps } from 'react-error-boundary'
 
 function ErrorFallback({ error }: FallbackProps) {
   const errorMessage = error instanceof Error ? error.message : String(error)

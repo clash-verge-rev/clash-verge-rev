@@ -4,7 +4,7 @@ import type { Ref } from 'react'
 import { useImperativeHandle, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { BaseDialog, BaseEmpty, DialogRef } from '@/components/base'
+import { BaseDialog, BaseEmpty, type DialogRef } from '@/components/base'
 import { useClashInfo } from '@/hooks/use-clash'
 import { useVerge } from '@/hooks/use-verge'
 import { openWebUrl } from '@/services/cmds'

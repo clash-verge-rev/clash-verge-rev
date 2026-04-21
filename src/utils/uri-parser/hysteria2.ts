@@ -54,10 +54,10 @@ export function URI_Hysteria2(line: string): IProxyHysteria2Config {
 
   proxy.ports = params.mport
   proxy['obfs-password'] = params['obfs-password']
-  if (Object.prototype.hasOwnProperty.call(params, 'insecure')) {
+  if (Object.hasOwn(params, 'insecure')) {
     proxy['skip-cert-verify'] = parseBoolOrPresence(params.insecure)
   }
-  if (Object.prototype.hasOwnProperty.call(params, 'fastopen')) {
+  if (Object.hasOwn(params, 'fastopen')) {
     proxy.tfo = parseBoolOrPresence(params.fastopen)
   }
   proxy.fingerprint = params.pinSHA256

@@ -9,7 +9,7 @@ import { useTranslation } from 'react-i18next'
 import ReactMarkdown from 'react-markdown'
 import rehypeRaw from 'rehype-raw'
 
-import { BaseDialog, DialogRef } from '@/components/base'
+import { BaseDialog, type DialogRef } from '@/components/base'
 import { useUpdate } from '@/hooks/use-update'
 import { portableFlag } from '@/pages/_layout'
 import { showNotice } from '@/services/notice-service'

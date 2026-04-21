@@ -1,7 +1,7 @@
 import {
   closestCenter,
   DndContext,
-  DragEndEvent,
+  type DragEndEvent,
   KeyboardSensor,
   PointerSensor,
   useSensor,
@@ -22,7 +22,7 @@ import youtube from '@/assets/image/test/youtube.svg?raw'
 import { BasePage } from '@/components/base'
 import { ScrollTopButton } from '@/components/layout/scroll-top-button'
 import { TestItem } from '@/components/test/test-item'
-import { TestViewer, TestViewerRef } from '@/components/test/test-viewer'
+import { TestViewer, type TestViewerRef } from '@/components/test/test-viewer'
 import { useVerge } from '@/hooks/use-verge'
 
 const TestPage = () => {

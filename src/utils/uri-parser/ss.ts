@@ -96,13 +96,13 @@ export function URI_SS(line: string): IProxyShadowsocksConfig {
   }
 
   if (
-    Object.prototype.hasOwnProperty.call(queryParams, 'uot') &&
+    Object.hasOwn(queryParams, 'uot') &&
     parseBoolOrPresence(queryParams.uot)
   ) {
     proxy['udp-over-tcp'] = true
   }
   if (
-    Object.prototype.hasOwnProperty.call(queryParams, 'tfo') &&
+    Object.hasOwn(queryParams, 'tfo') &&
     parseBoolOrPresence(queryParams.tfo)
   ) {
     proxy.tfo = true

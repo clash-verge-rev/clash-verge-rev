@@ -5,7 +5,7 @@ import type { Ref } from 'react'
 import { useImperativeHandle, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { BaseDialog, DialogRef } from '@/components/base'
+import { BaseDialog, type DialogRef } from '@/components/base'
 import { useNetworkInterfaces } from '@/hooks/use-network'
 import { showNotice } from '@/services/notice-service'
 

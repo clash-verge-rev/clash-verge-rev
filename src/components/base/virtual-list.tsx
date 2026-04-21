@@ -1,8 +1,8 @@
 import { useVirtualizer } from '@tanstack/react-virtual'
 import {
-  CSSProperties,
+  type CSSProperties,
   forwardRef,
-  ReactNode,
+  type ReactNode,
   useEffect,
   useImperativeHandle,
   useRef,

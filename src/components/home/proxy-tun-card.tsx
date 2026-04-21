@@ -2,7 +2,7 @@ import {
   ComputerRounded,
   TroubleshootRounded,
   HelpOutlineRounded,
-  SvgIconComponent,
+  type SvgIconComponent,
 } from '@mui/icons-material'
 import {
   Box,
@@ -14,7 +14,7 @@ import {
   useTheme,
   Fade,
 } from '@mui/material'
-import { useState, useMemo, memo, FC } from 'react'
+import { useState, useMemo, memo, type FC } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import ProxyControlSwitches from '@/components/shared/proxy-control-switches'

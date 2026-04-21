@@ -23,7 +23,7 @@ import { useThemeMode } from '@/services/states'
 import { ProxyHead } from './proxy-head'
 import { ProxyItem } from './proxy-item'
 import { ProxyItemMini } from './proxy-item-mini'
-import { HeadState } from './use-head-state'
+import type { HeadState } from './use-head-state'
 import type { IRenderItem } from './use-render-list'
 
 interface RenderProps {

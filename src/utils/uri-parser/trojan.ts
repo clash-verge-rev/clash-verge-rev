@@ -51,7 +51,7 @@ export function URI_Trojan(line: string): IProxyTrojanConfig {
   if (params.sni) {
     proxy.sni = params.sni
   }
-  if (Object.prototype.hasOwnProperty.call(params, 'skip-cert-verify')) {
+  if (Object.hasOwn(params, 'skip-cert-verify')) {
     proxy['skip-cert-verify'] = parseBoolOrPresence(params['skip-cert-verify'])
   }
 

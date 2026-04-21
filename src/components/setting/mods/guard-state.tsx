@@ -1,4 +1,4 @@
-import { createElement, isValidElement, ReactNode, useRef } from 'react'
+import { createElement, isValidElement, type ReactNode, useRef } from 'react'
 
 import noop from '@/utils/noop'
 

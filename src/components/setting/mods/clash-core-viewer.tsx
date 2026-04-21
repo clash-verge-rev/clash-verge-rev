@@ -17,7 +17,7 @@ import { useImperativeHandle, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { closeAllConnections, upgradeCore } from 'tauri-plugin-mihomo-api'
 
-import { BaseDialog, DialogRef } from '@/components/base'
+import { BaseDialog, type DialogRef } from '@/components/base'
 import { useClash, useClashInfo } from '@/hooks/use-clash'
 import { useVerge } from '@/hooks/use-verge'
 import { changeClashCore, restartCore } from '@/services/cmds'

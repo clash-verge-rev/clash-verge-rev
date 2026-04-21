@@ -1,6 +1,6 @@
 import { useTheme } from '@mui/material'
 import { useEffect, useImperativeHandle, useRef, type Ref } from 'react'
-import { Traffic } from 'tauri-plugin-mihomo-api'
+import type { Traffic } from 'tauri-plugin-mihomo-api'
 
 const maxPoint = 30
 

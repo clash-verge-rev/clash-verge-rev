@@ -28,7 +28,7 @@ import {
 } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { BaseDialog, DialogRef, Switch } from '@/components/base'
+import { BaseDialog, type DialogRef, Switch } from '@/components/base'
 import { useClash } from '@/hooks/use-clash'
 import { showNotice } from '@/services/notice-service'
 import { useThemeMode } from '@/services/states'

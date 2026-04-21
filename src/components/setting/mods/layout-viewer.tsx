@@ -17,7 +17,12 @@ import { exists } from '@tauri-apps/plugin-fs'
 import { forwardRef, useEffect, useImperativeHandle, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { BaseDialog, DialogRef, Switch, TooltipIcon } from '@/components/base'
+import {
+  BaseDialog,
+  type DialogRef,
+  Switch,
+  TooltipIcon,
+} from '@/components/base'
 import { DEFAULT_HOVER_DELAY } from '@/components/proxy/proxy-group-navigator'
 import { useVerge } from '@/hooks/use-verge'
 import { useWindowDecorations } from '@/hooks/use-window'

@@ -10,7 +10,12 @@
   "linter": {
     "enabled": true,
     "rules": {
-      "recommended": true
+      "recommended": true,
+      "complexity": "off",
+      "style": {
+        "useNodejsImportProtocol": "off",
+        "useImportType": "error"
+      }
     }
   },
   "formatter": {

@@ -1,7 +1,8 @@
-import React, { useRef } from 'react'
+import type React from 'react'
+import { useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { DialogRef, Switch, TooltipIcon } from '@/components/base'
+import { type DialogRef, Switch, TooltipIcon } from '@/components/base'
 import ProxyControlSwitches from '@/components/shared/proxy-control-switches'
 import { useVerge } from '@/hooks/use-verge'
 

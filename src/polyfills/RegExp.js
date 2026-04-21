@@ -11,23 +11,13 @@
     }
 
     if (flags) {
-      if (
-        !Object.prototype.hasOwnProperty.call(
-          originalRegExp.prototype,
-          'unicodeSets',
-        )
-      ) {
+      if (!Object.hasOwn(originalRegExp.prototype, 'unicodeSets')) {
         if (flags.includes('v')) {
           flags = flags.replace('v', 'u')
         }
       }
 
-      if (
-        !Object.prototype.hasOwnProperty.call(
-          originalRegExp.prototype,
-          'hasIndices',
-        )
-      ) {
+      if (!Object.hasOwn(originalRegExp.prototype, 'hasIndices')) {
         if (flags.includes('d')) {
           flags = flags.replace('d', '')
         }

@@ -1,7 +1,7 @@
 import {
   closestCenter,
   DndContext,
-  DragEndEvent,
+  type DragEndEvent,
   DragOverlay,
   KeyboardSensor,
   PointerSensor,
@@ -40,12 +40,16 @@ import { useTranslation } from 'react-i18next'
 import { useLocation } from 'react-router'
 import { closeAllConnections } from 'tauri-plugin-mihomo-api'
 
-import { BasePage, BaseStyledTextField, DialogRef } from '@/components/base'
+import {
+  BasePage,
+  BaseStyledTextField,
+  type DialogRef,
+} from '@/components/base'
 import { ProfileItem } from '@/components/profile/profile-item'
 import { ProfileMore } from '@/components/profile/profile-more'
 import {
   ProfileViewer,
-  ProfileViewerRef,
+  type ProfileViewerRef,
 } from '@/components/profile/profile-viewer'
 import { ConfigViewer } from '@/components/setting/mods/config-viewer'
 import { useListen } from '@/hooks/use-listen'

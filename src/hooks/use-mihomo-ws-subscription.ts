@@ -1,7 +1,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useLocalStorage } from 'foxact/use-local-storage'
 import { useCallback, useEffect, useRef } from 'react'
-import { type Message, type MihomoWebSocket } from 'tauri-plugin-mihomo-api'
+import type { Message, MihomoWebSocket } from 'tauri-plugin-mihomo-api'
 
 export const RECONNECT_DELAY_MS = 1000
 

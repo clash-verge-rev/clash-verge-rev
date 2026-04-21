@@ -2,7 +2,7 @@ import { ClearRounded } from '@mui/icons-material'
 import { Box, SvgIcon, TextField, styled, IconButton } from '@mui/material'
 import Tooltip from '@mui/material/Tooltip'
 import {
-  ChangeEvent,
+  type ChangeEvent,
   useCallback,
   useEffect,
   useMemo,

@@ -1,5 +1,5 @@
 import { styled, Box, Typography } from '@mui/material'
-import { Rule } from 'tauri-plugin-mihomo-api'
+import type { Rule } from 'tauri-plugin-mihomo-api'
 
 const Item = styled(Box)(({ theme }) => ({
   display: 'flex',

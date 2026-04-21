@@ -1,5 +1,5 @@
-import { Context, createContext, use } from 'react'
-import {
+import { type Context, createContext, use } from 'react'
+import type {
   BaseConfig,
   ProxyProvider,
   Rule,
