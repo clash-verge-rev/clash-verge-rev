@@ -1,0 +1,25 @@
+# See https://docs.github.com/en/repositories/working-with-files/using-files/viewing-and-understanding-files#ignore-commits-in-the-blame-view
+
+# change prettier config to `semi: false` `singleQuote: true`
+c672a6fef36cae7e77364642a57e544def7284d9
+
+# refactor(base): expand barrel exports and standardize imports
+a981be80efa39b7865ce52a7e271c771e21b79af
+
+# chore: rename files to kebab-case and update imports
+bae65a523a727751a13266452d245362a1d1e779
+
+# feat: add rustfmt configuration and CI workflow for code formatting
+09969d95ded3099f6a2a399b1db0006e6a9778a5
+
+# style: adjust rustfmt max_width to 120
+2ca8e6716daf5975601c0780a8b2e4d8f328b05c
+
+# Refactor imports across multiple components for consistency and clarity
+e414b4987905dabf78d7f0204bf13624382b8acf
+
+# Refactor imports and improve code organization across multiple components and hooks
+627119bb22a530efed45ca6479f1643b201c4dc4
+
+# refactor: replace 'let' with 'const' for better variable scoping and immutability
+324628dd3d6fd1c4ddc455c422e7a1cb9149b322

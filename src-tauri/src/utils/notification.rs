@@ -1,7 +1,8 @@
-use crate::utils::i18n::t;
+use std::borrow::Cow;
 
-use tauri::AppHandle;
-use tauri_plugin_notification::NotificationExt;
+use crate::core::handle;
+use clash_verge_i18n;
+use tauri_plugin_notification::NotificationExt as _;
 
 pub enum NotificationEvent<'a> {
     DashboardToggled,
@@ -11,68 +12,61 @@ pub enum NotificationEvent<'a> {
     SystemProxyToggled,
     TunModeToggled,
     LightweightModeEntered,
+    ProfilesReactivated,
     AppQuit,
     #[cfg(target_os = "macos")]
     AppHidden,
 }
 
-fn notify(app: &AppHandle, title: &str, body: &str) {
-    app.notification()
-        .builder()
-        .title(title)
-        .body(body)
-        .show()
-        .ok();
+fn notify(title: Cow<'_, str>, body: Cow<'_, str>) {
+    let app_handle = handle::Handle::app_handle();
+    app_handle.notification().builder().title(title).body(body).show().ok();
 }
 
-pub async fn notify_event<'a>(app: AppHandle, event: NotificationEvent<'a>) {
+pub async fn notify_event<'a>(event: NotificationEvent<'a>) {
     match event {
         NotificationEvent::DashboardToggled => {
-            notify(
-                &app,
-                &t("DashboardToggledTitle").await,
-                &t("DashboardToggledBody").await,
-            );
+            let title = clash_verge_i18n::t!("notifications.dashboardToggled.title");
+            let body = clash_verge_i18n::t!("notifications.dashboardToggled.body");
+            notify(title, body);
         }
         NotificationEvent::ClashModeChanged { mode } => {
-            notify(
-                &app,
-                &t("ClashModeChangedTitle").await,
-                &t_with_args("ClashModeChangedBody", mode).await,
-            );
+            let title = clash_verge_i18n::t!("notifications.clashModeChanged.title");
+            let body = clash_verge_i18n::t!("notifications.clashModeChanged.body")
+                .replace("{mode}", mode)
+                .into();
+            notify(title, body);
         }
         NotificationEvent::SystemProxyToggled => {
-            notify(
-                &app,
-                &t("SystemProxyToggledTitle").await,
-                &t("SystemProxyToggledBody").await,
-            );
+            let title = clash_verge_i18n::t!("notifications.systemProxyToggled.title");
+            let body = clash_verge_i18n::t!("notifications.systemProxyToggled.body");
+            notify(title, body);
         }
         NotificationEvent::TunModeToggled => {
-            notify(
-                &app,
-                &t("TunModeToggledTitle").await,
-                &t("TunModeToggledBody").await,
-            );
+            let title = clash_verge_i18n::t!("notifications.tunModeToggled.title");
+            let body = clash_verge_i18n::t!("notifications.tunModeToggled.body");
+            notify(title, body);
         }
         NotificationEvent::LightweightModeEntered => {
-            notify(
-                &app,
-                &t("LightweightModeEnteredTitle").await,
-                &t("LightweightModeEnteredBody").await,
-            );
+            let title = clash_verge_i18n::t!("notifications.lightweightModeEntered.title");
+            let body = clash_verge_i18n::t!("notifications.lightweightModeEntered.body");
+            notify(title, body);
+        }
+        NotificationEvent::ProfilesReactivated => {
+            let title = clash_verge_i18n::t!("notifications.profilesReactivated.title");
+            let body = clash_verge_i18n::t!("notifications.profilesReactivated.body");
+            notify(title, body);
         }
         NotificationEvent::AppQuit => {
-            notify(&app, &t("AppQuitTitle").await, &t("AppQuitBody").await);
+            let title = clash_verge_i18n::t!("notifications.appQuit.title");
+            let body = clash_verge_i18n::t!("notifications.appQuit.body");
+            notify(title, body);
         }
         #[cfg(target_os = "macos")]
         NotificationEvent::AppHidden => {
-            notify(&app, &t("AppHiddenTitle").await, &t("AppHiddenBody").await);
+            let title = clash_verge_i18n::t!("notifications.appHidden.title");
+            let body = clash_verge_i18n::t!("notifications.appHidden.body");
+            notify(title, body);
         }
     }
-}
-
-// 辅助函数，带参数的i18n
-async fn t_with_args(key: &str, mode: &str) -> String {
-    t(key).await.replace("{mode}", mode)
 }

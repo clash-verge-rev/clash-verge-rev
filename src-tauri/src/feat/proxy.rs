@@ -1,37 +1,27 @@
 use crate::{
     config::{Config, IVerge},
     core::handle,
-    ipc::IpcManager,
-    logging,
-    utils::logging::Type,
 };
+use clash_verge_logging::{Type, logging};
 use std::env;
-use tauri_plugin_clipboard_manager::ClipboardExt;
+use tauri_plugin_clipboard_manager::ClipboardExt as _;
 
 /// Toggle system proxy on/off
 pub async fn toggle_system_proxy() {
-    // 获取当前系统代理状态
-    let enable = {
-        let verge = Config::verge().await;
-        let enable = verge.latest_ref().enable_system_proxy.unwrap_or(false);
-        enable
-    };
-    // 获取自动关闭连接设置
-    let auto_close_connection = {
-        let verge = Config::verge().await;
-        let auto_close = verge.latest_ref().auto_close_connection.unwrap_or(false);
-        auto_close
-    };
+    let verge = Config::verge().await;
+    let enable = verge.latest_arc().enable_system_proxy.unwrap_or(false);
+    let auto_close_connection = verge.latest_arc().auto_close_connection.unwrap_or(false);
 
     // 如果当前系统代理即将关闭，且自动关闭连接设置为true，则关闭所有连接
-    if enable && auto_close_connection {
-        if let Err(err) = IpcManager::global().close_all_connections().await {
-            log::error!(target: "app", "Failed to close all connections: {err}");
-        }
+    if enable
+        && auto_close_connection
+        && let Err(err) = handle::Handle::mihomo().await.close_all_connections().await
+    {
+        logging!(error, Type::ProxyMode, "Failed to close all connections: {err}");
     }
 
     let patch_result = super::patch_verge(
-        IVerge {
+        &IVerge {
             enable_system_proxy: Some(!enable),
             ..IVerge::default()
         },
@@ -41,17 +31,17 @@ pub async fn toggle_system_proxy() {
 
     match patch_result {
         Ok(_) => handle::Handle::refresh_verge(),
-        Err(err) => log::error!(target: "app", "{err}"),
+        Err(err) => logging!(error, Type::ProxyMode, "{err}"),
     }
 }
 
 /// Toggle TUN mode on/off
 pub async fn toggle_tun_mode(not_save_file: Option<bool>) {
-    let enable = Config::verge().await.data_mut().enable_tun_mode;
+    let enable = Config::verge().await.latest_arc().enable_tun_mode;
     let enable = enable.unwrap_or(false);
 
     match super::patch_verge(
-        IVerge {
+        &IVerge {
             enable_tun_mode: Some(!enable),
             ..IVerge::default()
         },
@@ -60,59 +50,39 @@ pub async fn toggle_tun_mode(not_save_file: Option<bool>) {
     .await
     {
         Ok(_) => handle::Handle::refresh_verge(),
-        Err(err) => log::error!(target: "app", "{err}"),
+        Err(err) => logging!(error, Type::ProxyMode, "{err}"),
     }
 }
 
 /// Copy proxy environment variables to clipboard
 pub async fn copy_clash_env() {
-    // 从环境变量获取IP地址，如果没有则从配置中获取 proxy_host，默认为 127.0.0.1
-    let clash_verge_rev_ip = match env::var("CLASH_VERGE_REV_IP") {
-        Ok(ip) => ip,
-        Err(_) => Config::verge()
-            .await
-            .latest_ref()
-            .proxy_host
-            .clone()
-            .unwrap_or_else(|| "127.0.0.1".to_string()),
-    };
+    let env_ip = env::var("CLASH_VERGE_REV_IP").ok();
+    let verge_cfg = Config::verge().await.latest_arc();
+    let ip = env_ip
+        .as_deref()
+        .unwrap_or_else(|| verge_cfg.proxy_host.as_deref().unwrap_or("127.0.0.1"));
 
-    let Some(app_handle) = handle::Handle::global().app_handle() else {
-        logging!(
-            error,
-            Type::System,
-            "Failed to get app handle for proxy operation"
-        );
-        return;
-    };
-    let port = {
-        Config::verge()
-            .await
-            .latest_ref()
-            .verge_mixed_port
-            .unwrap_or(7897)
-    };
-    let http_proxy = format!("http://{clash_verge_rev_ip}:{port}");
-    let socks5_proxy = format!("socks5://{clash_verge_rev_ip}:{port}");
+    let app_handle = handle::Handle::app_handle();
+    let port = verge_cfg.verge_mixed_port.unwrap_or(7897);
+    let http_proxy = format!("http://{ip}:{port}");
+    let socks5_proxy = format!("socks5://{ip}:{port}");
 
-    let cliboard = app_handle.clipboard();
-    let env_type = { Config::verge().await.latest_ref().env_type.clone() };
-    let env_type = match env_type {
-        Some(env_type) => env_type,
-        None => {
-            #[cfg(not(target_os = "windows"))]
-            let default = "bash";
-            #[cfg(target_os = "windows")]
-            let default = "powershell";
+    let clipboard = app_handle.clipboard();
 
-            default.to_string()
+    let default_env = {
+        #[cfg(not(target_os = "windows"))]
+        {
+            "bash"
+        }
+        #[cfg(target_os = "windows")]
+        {
+            "powershell"
         }
     };
+    let env_type = verge_cfg.env_type.as_deref().unwrap_or(default_env);
 
-    let export_text = match env_type.as_str() {
-        "bash" => format!(
-            "export https_proxy={http_proxy} http_proxy={http_proxy} all_proxy={socks5_proxy}"
-        ),
+    let export_text = match env_type {
+        "bash" => format!("export https_proxy={http_proxy} http_proxy={http_proxy} all_proxy={socks5_proxy}"),
         "cmd" => format!("set http_proxy={http_proxy}\r\nset https_proxy={http_proxy}"),
         "powershell" => {
             format!("$env:HTTP_PROXY=\"{http_proxy}\"; $env:HTTPS_PROXY=\"{http_proxy}\"")
@@ -122,12 +92,12 @@ pub async fn copy_clash_env() {
         }
         "fish" => format!("set -x http_proxy {http_proxy}; set -x https_proxy {http_proxy}"),
         _ => {
-            log::error!(target: "app", "copy_clash_env: Invalid env type! {env_type}");
+            logging!(error, Type::ProxyMode, "copy_clash_env: Invalid env type! {env_type}");
             return;
         }
     };
 
-    if cliboard.write_text(export_text).is_err() {
-        log::error!(target: "app", "Failed to write to clipboard");
+    if clipboard.write_text(&export_text).is_err() {
+        logging!(error, Type::ProxyMode, "Failed to write to clipboard");
     }
 }

@@ -9,7 +9,7 @@
       "timestampUrl": "",
       "webviewInstallMode": {
         "type": "fixedRuntime",
-        "path": "./Microsoft.WebView2.FixedVersionRuntime.109.0.1518.78.x64/"
+        "path": "./Microsoft.WebView2.FixedVersionRuntime.133.0.3065.92.x64/"
       },
       "nsis": {
         "displayLanguageSelector": true,

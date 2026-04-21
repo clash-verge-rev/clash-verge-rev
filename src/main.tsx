@@ -1,91 +1,107 @@
 /// <reference types="vite/client" />
 /// <reference types="vite-plugin-svgr/client" />
-import "./assets/styles/index.scss";
+import './assets/styles/index.scss'
+import './services/monaco'
 
-import { ResizeObserver } from "@juggle/resize-observer";
-if (!window.ResizeObserver) {
-  window.ResizeObserver = ResizeObserver;
-}
+import { ResizeObserver } from '@juggle/resize-observer'
+import { ComposeContextProvider } from 'foxact/compose-context-provider'
+import React from 'react'
+import { createRoot } from 'react-dom/client'
+import { RouterProvider } from 'react-router'
+import { MihomoWebSocket } from 'tauri-plugin-mihomo-api'
 
-import React from "react";
-import { createRoot } from "react-dom/client";
-import { ComposeContextProvider } from "foxact/compose-context-provider";
-import { BrowserRouter } from "react-router-dom";
-import { BaseErrorBoundary } from "./components/base";
-import Layout from "./pages/_layout";
-import { initializeLanguage } from "./services/i18n";
+import { BaseErrorBoundary } from './components/base'
+import { router } from './pages/_routers'
+import { AppDataProvider } from './providers/app-data-provider'
+import { WindowProvider } from './providers/window'
+import { FALLBACK_LANGUAGE, initializeLanguage } from './services/i18n'
+import {
+  preloadAppData,
+  resolveThemeMode,
+  getPreloadConfig,
+} from './services/preload'
 import {
   LoadingCacheProvider,
   ThemeModeProvider,
   UpdateStateProvider,
-} from "./services/states";
-import { AppDataProvider } from "./providers/app-data-provider";
+} from './services/states'
+import { disableWebViewShortcuts } from './utils/disable-webview-shortcuts'
 
-const mainElementId = "root";
-const container = document.getElementById(mainElementId);
-
-if (!container) {
-  throw new Error(
-    `No container '${mainElementId}' found to render application`,
-  );
+if (!window.ResizeObserver) {
+  window.ResizeObserver = ResizeObserver
 }
 
-document.addEventListener("keydown", (event) => {
-  // Disable WebView keyboard shortcuts
-  const disabledShortcuts =
-    ["F5", "F7"].includes(event.key) ||
-    (event.altKey && ["ArrowLeft", "ArrowRight"].includes(event.key)) ||
-    ((event.ctrlKey || event.metaKey) &&
-      ["F", "G", "H", "J", "P", "Q", "R", "U"].includes(
-        event.key.toUpperCase(),
-      ));
-  if (disabledShortcuts) {
-    event.preventDefault();
-  }
-});
+const mainElementId = 'root'
+const container = document.getElementById(mainElementId)
 
-const initializeApp = async () => {
-  try {
-    await initializeLanguage("zh");
+if (!container) {
+  throw new Error(`No container '${mainElementId}' found to render application`)
+}
 
-    const contexts = [
-      <ThemeModeProvider key="theme" />,
-      <LoadingCacheProvider key="loading" />,
-      <UpdateStateProvider key="update" />,
-    ];
+disableWebViewShortcuts()
 
-    const root = createRoot(container);
-    root.render(
-      <React.StrictMode>
-        <ComposeContextProvider contexts={contexts}>
-          <BaseErrorBoundary>
+const initializeApp = (initialThemeMode: 'light' | 'dark') => {
+  const contexts = [
+    <ThemeModeProvider key="theme" initialState={initialThemeMode} />,
+    <LoadingCacheProvider key="loading" />,
+    <UpdateStateProvider key="update" />,
+  ]
+
+  const root = createRoot(container)
+  root.render(
+    <React.StrictMode>
+      <ComposeContextProvider contexts={contexts}>
+        <BaseErrorBoundary>
+          <WindowProvider>
             <AppDataProvider>
-              <BrowserRouter>
-                <Layout />
-              </BrowserRouter>
+              <RouterProvider router={router} />
             </AppDataProvider>
-          </BaseErrorBoundary>
-        </ComposeContextProvider>
-      </React.StrictMode>,
-    );
-  } catch (error) {
-    console.error("[main.tsx] 应用初始化失败:", error);
-    const root = createRoot(container);
-    root.render(
-      <div style={{ padding: "20px", color: "red" }}>
-        应用初始化失败: {error instanceof Error ? error.message : String(error)}
-      </div>,
-    );
-  }
-};
+          </WindowProvider>
+        </BaseErrorBoundary>
+      </ComposeContextProvider>
+    </React.StrictMode>,
+  )
+}
 
-initializeApp();
+const bootstrap = async () => {
+  const { initialThemeMode } = await preloadAppData()
+  initializeApp(initialThemeMode)
+}
 
-// 错误处理
-window.addEventListener("error", (event) => {
-  console.error("[main.tsx] 全局错误:", event.error);
-});
+bootstrap().catch((error) => {
+  console.error(
+    '[main.tsx] App bootstrap failed, falling back to default language:',
+    error,
+  )
+  initializeLanguage(FALLBACK_LANGUAGE)
+    .catch((fallbackError) => {
+      console.error(
+        '[main.tsx] Fallback language initialization failed:',
+        fallbackError,
+      )
+    })
+    .finally(() => {
+      initializeApp(resolveThemeMode(getPreloadConfig()))
+    })
+})
 
-window.addEventListener("unhandledrejection", (event) => {
-  console.error("[main.tsx] 未处理的Promise拒绝:", event.reason);
-});
+// Error handling
+window.addEventListener('error', (event) => {
+  console.error('[main.tsx] Global error:', event.error)
+})
+
+window.addEventListener('unhandledrejection', (event) => {
+  console.error('[main.tsx] Unhandled promise rejection:', event.reason)
+})
+
+// Page close/refresh events
+window.addEventListener('beforeunload', () => {
+  // Clean up all WebSocket instances to prevent memory leaks
+  MihomoWebSocket.cleanupAll()
+})
+
+// Page loaded event
+window.addEventListener('DOMContentLoaded', () => {
+  // Clean up all WebSocket instances to prevent memory leaks
+  MihomoWebSocket.cleanupAll()
+})

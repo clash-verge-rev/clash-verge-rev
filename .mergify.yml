@@ -1,0 +1,5 @@
+queue_rules:
+  - name: LetMeMergeForYou
+    batch_size: 3
+    allow_queue_branch_edit: true
+    queue_conditions: []

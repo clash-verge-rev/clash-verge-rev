@@ -2,5 +2,6 @@
 fn main() {
     #[cfg(feature = "tokio-trace")]
     console_subscriber::init();
+
     app_lib::run();
 }

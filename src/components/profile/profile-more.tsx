@@ -1,76 +1,105 @@
-import { useState } from "react";
-import { useTranslation } from "react-i18next";
-import { useLockFn } from "ahooks";
+import { FeaturedPlayListRounded } from '@mui/icons-material'
 import {
   Box,
   Badge,
   Chip,
-  Typography,
-  MenuItem,
-  Menu,
   IconButton,
-} from "@mui/material";
-import { FeaturedPlayListRounded } from "@mui/icons-material";
-import { viewProfile, readProfileFile, saveProfileFile } from "@/services/cmds";
-import { EditorViewer } from "@/components/profile/editor-viewer";
-import { ProfileBox } from "./profile-box";
-import { LogViewer } from "./log-viewer";
-import { showNotice } from "@/services/noticeService";
+  Menu,
+  MenuItem,
+  Typography,
+} from '@mui/material'
+import { useLockFn } from 'ahooks'
+import { useCallback, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+
+import { EditorViewer } from '@/components/profile/editor-viewer'
+import { useEditorDocument } from '@/hooks/use-editor-document'
+import { viewProfile, readProfileFile, saveProfileFile } from '@/services/cmds'
+import { showNotice } from '@/services/notice-service'
+
+import { LogViewer } from './log-viewer'
+import { ProfileBox } from './profile-box'
 
 interface Props {
-  logInfo?: [string, string][];
-  id: "Merge" | "Script";
-  onSave?: (prev?: string, curr?: string) => void;
+  logInfo?: [string, string][]
+  id: 'Merge' | 'Script'
+  onSave?: (prev?: string, curr?: string) => void
 }
+
+const EMPTY_LOG_INFO: [string, string][] = []
 
 // profile enhanced item
 export const ProfileMore = (props: Props) => {
-  const { id, logInfo = [], onSave } = props;
+  const { id, logInfo, onSave } = props
 
-  const { t } = useTranslation();
-  const [anchorEl, setAnchorEl] = useState<any>(null);
-  const [position, setPosition] = useState({ left: 0, top: 0 });
-  const [fileOpen, setFileOpen] = useState(false);
-  const [logOpen, setLogOpen] = useState(false);
+  const entries = logInfo ?? EMPTY_LOG_INFO
+  const { t } = useTranslation()
+  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null)
+  const [position, setPosition] = useState({ left: 0, top: 0 })
+  const [fileOpen, setFileOpen] = useState(false)
+  const [logOpen, setLogOpen] = useState(false)
+
+  const loadDocument = useCallback(() => readProfileFile(id), [id])
+  const document = useEditorDocument({
+    open: fileOpen,
+    load: loadDocument,
+  })
 
   const onEditFile = () => {
-    setAnchorEl(null);
-    setFileOpen(true);
-  };
+    setAnchorEl(null)
+    setFileOpen(true)
+  }
 
   const onOpenFile = useLockFn(async () => {
-    setAnchorEl(null);
+    setAnchorEl(null)
     try {
-      await viewProfile(id);
-    } catch (err: any) {
-      showNotice("error", err?.message || err.toString());
+      await viewProfile(id)
+    } catch (err) {
+      showNotice.error(err)
     }
-  });
+  })
 
-  const hasError = !!logInfo.find((e) => e[0] === "exception");
+  const hasError = entries.some(([level]) => level === 'exception')
+
+  const globalTitles: Record<Props['id'], string> = {
+    Merge: 'profiles.components.more.global.merge',
+    Script: 'profiles.components.more.global.script',
+  }
+
+  const chipLabels: Record<Props['id'], string> = {
+    Merge: 'profiles.components.more.chips.merge',
+    Script: 'profiles.components.more.chips.script',
+  }
 
   const itemMenu = [
-    { label: "Edit File", handler: onEditFile },
-    { label: "Open File", handler: onOpenFile },
-  ];
+    { label: 'profiles.components.menu.editFile', handler: onEditFile },
+    { label: 'profiles.components.menu.openFile', handler: onOpenFile },
+  ]
 
   const boxStyle = {
     height: 26,
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     lineHeight: 1,
-  };
+  }
+
+  const handleSave = useLockFn(async () => {
+    const currentValue = document.value
+    await saveProfileFile(id, currentValue)
+    onSave?.(document.savedValue, currentValue)
+    document.markSaved(currentValue)
+  })
 
   return (
     <>
       <ProfileBox
         onDoubleClick={onEditFile}
         onContextMenu={(event) => {
-          const { clientX, clientY } = event;
-          setPosition({ top: clientY, left: clientX });
-          setAnchorEl(event.currentTarget);
-          event.preventDefault();
+          const { clientX, clientY } = event
+          setPosition({ top: clientY, left: clientX })
+          setAnchorEl(event.currentTarget as HTMLElement)
+          event.preventDefault()
         }}
       >
         <Box
@@ -84,29 +113,29 @@ export const ProfileMore = (props: Props) => {
             variant="h6"
             component="h2"
             noWrap
-            title={t(`Global ${id}`)}
+            title={t(globalTitles[id])}
           >
-            {t(`Global ${id}`)}
+            {t(globalTitles[id])}
           </Typography>
 
           <Chip
-            label={id}
+            label={t(chipLabels[id])}
             color="primary"
             size="small"
             variant="outlined"
-            sx={{ height: 20, textTransform: "capitalize" }}
+            sx={{ height: 20, textTransform: 'capitalize' }}
           />
         </Box>
 
         <Box sx={boxStyle}>
-          {id === "Script" &&
+          {id === 'Script' &&
             (hasError ? (
               <Badge color="error" variant="dot" overlap="circular">
                 <IconButton
                   size="small"
                   edge="start"
                   color="error"
-                  title={t("Script Console")}
+                  title={t('profiles.modals.logViewer.title')}
                   onClick={() => setLogOpen(true)}
                 >
                   <FeaturedPlayListRounded fontSize="inherit" />
@@ -117,7 +146,7 @@ export const ProfileMore = (props: Props) => {
                 size="small"
                 edge="start"
                 color="inherit"
-                title={t("Script Console")}
+                title={t('profiles.modals.logViewer.title')}
                 onClick={() => setLogOpen(true)}
               >
                 <FeaturedPlayListRounded fontSize="inherit" />
@@ -135,8 +164,8 @@ export const ProfileMore = (props: Props) => {
         transitionDuration={225}
         MenuListProps={{ sx: { py: 0.5 } }}
         onContextMenu={(e) => {
-          setAnchorEl(null);
-          e.preventDefault();
+          setAnchorEl(null)
+          e.preventDefault()
         }}
       >
         {itemMenu
@@ -150,10 +179,10 @@ export const ProfileMore = (props: Props) => {
                 (theme) => {
                   return {
                     color:
-                      item.label === "Delete"
+                      item.label === 'Delete'
                         ? theme.palette.error.main
                         : undefined,
-                  };
+                  }
                 },
               ]}
               dense
@@ -165,24 +194,24 @@ export const ProfileMore = (props: Props) => {
       {fileOpen && (
         <EditorViewer
           open={true}
-          title={`${t("Global " + id)}`}
-          initialData={readProfileFile(id)}
-          language={id === "Merge" ? "yaml" : "javascript"}
-          schema={id === "Merge" ? "clash" : undefined}
-          onSave={async (prev, curr) => {
-            await saveProfileFile(id, curr ?? "");
-            onSave && onSave(prev, curr);
-          }}
+          title={t(globalTitles[id])}
+          value={document.value}
+          language={id === 'Merge' ? 'yaml' : 'javascript'}
+          path={`profile-more:${id}.${id === 'Merge' ? 'yaml' : 'js'}`}
+          loading={document.loading}
+          dirty={document.dirty}
+          onChange={document.setValue}
+          onSave={handleSave}
           onClose={() => setFileOpen(false)}
         />
       )}
       {logOpen && (
         <LogViewer
           open={logOpen}
-          logInfo={logInfo}
+          logInfo={entries}
           onClose={() => setLogOpen(false)}
         />
       )}
     </>
-  );
-};
+  )
+}

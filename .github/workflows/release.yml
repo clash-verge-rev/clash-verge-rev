@@ -5,15 +5,17 @@ on:
   # ! 不再使用 workflow_dispatch 触发。
   # workflow_dispatch:
   push:
+    # -rc tag 时预览发布, 跳过 telegram 通知、跳过 winget 提交、跳过 latest.json 文件更新
     tags:
-      - "v*.*.*"
+      - 'v*.*.*'
 permissions: write-all
 env:
   CARGO_INCREMENTAL: 0
   RUST_BACKTRACE: short
+  HUSKY: 0
 concurrency:
   # only allow per workflow per commit (and not pr) to run at a time
-  group: "${{ github.workflow }} - ${{ github.head_ref || github.ref }}"
+  group: '${{ github.workflow }} - ${{ github.head_ref || github.ref }}'
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
@@ -22,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -67,24 +69,11 @@ jobs:
     needs: [release, release-for-linux-arm, release-for-fixed-webview2]
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Fetch UPDATE logs
         id: fetch_update_logs
-        run: |
-          if [ -f "UPDATELOG.md" ]; then
-            UPDATE_LOGS=$(awk '/^## v/{if(flag) exit; flag=1} flag' UPDATELOG.md)
-            if [ -n "$UPDATE_LOGS" ]; then
-              echo "Found update logs"
-              echo "UPDATE_LOGS<<EOF" >> $GITHUB_ENV
-              echo "$UPDATE_LOGS" >> $GITHUB_ENV
-              echo "EOF" >> $GITHUB_ENV
-            else
-              echo "No update sections found in UPDATELOG.md"
-            fi
-          else
-            echo "UPDATELOG.md file not found"
-          fi
+        run: bash ./scripts/extract_update_logs.sh
         shell: bash
 
       - name: Set Env
@@ -132,6 +121,7 @@ jobs:
 
           ### 稳定机场VPN推荐
           - [狗狗加速](https://verge.dginv.click/#/register?code=oaxsAGo6)
+
           Created at ${{ env.BUILDTIME }}.
           EOF
 
@@ -139,10 +129,10 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.TAG_NAME }}
-          name: "Clash Verge Rev ${{ env.TAG_NAME }}"
+          name: 'Clash Verge Rev ${{ env.TAG_NAME }}'
           body_path: release.txt
           draft: false
-          prerelease: false
+          prerelease: ${{ contains(github.ref_name, '-rc') }}
           token: ${{ secrets.GITHUB_TOKEN }}
           # generate_release_notes: true
 
@@ -167,10 +157,13 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install Rust Stable
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: '1.91.0'
+          targets: ${{ matrix.target }}
 
       - name: Add Rust Target
         run: rustup target add ${{ matrix.target }}
@@ -178,8 +171,13 @@ jobs:
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
         with:
-          workspaces: src-tauri
-          save-if: false
+          save-if: ${{ github.ref == 'refs/heads/dev' }}
+          prefix-key: 'v1-rust'
+          key: 'rust-shared-stable-${{ matrix.os }}-${{ matrix.target }}'
+          workspaces: |
+            . -> target
+          cache-all-crates: true
+          cache-workspace-crates: true
 
       - name: Install dependencies (ubuntu only)
         if: matrix.os == 'ubuntu-22.04'
@@ -197,11 +195,11 @@ jobs:
           echo "PKG_CONFIG_PATH=$(brew --prefix openssl@3)/lib/pkgconfig" >> $GITHUB_ENV
 
       - name: Install Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: "22"
+          node-version: '24.14.0'
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v5
         name: Install pnpm
         with:
           run_install: false
@@ -211,10 +209,18 @@ jobs:
           pnpm i
           pnpm run prebuild ${{ matrix.target }}
 
+      - name: Add Rust Target
+        run: |
+          # Ensure cross target is installed for the pinned toolchain; fallback without explicit toolchain if needed
+          rustup target add ${{ matrix.target }} --toolchain 1.91.0 || rustup target add ${{ matrix.target }}
+          rustup target list --installed
+          echo "Rust target ${{ matrix.target }} installed."
+
       - name: Tauri build
-        uses: tauri-apps/tauri-action@v0
+        # 上游 5.24 修改了 latest.json 的生成逻辑，且依赖 tauri-plugin-update 2.10.0 暂未发布，故锁定在 0.5.23 版本
+        uses: tauri-apps/tauri-action@v0.6.2
         env:
-          NODE_OPTIONS: "--max_old_space_size=4096"
+          NODE_OPTIONS: '--max_old_space_size=4096'
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
@@ -226,10 +232,10 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         with:
           tagName: ${{ github.ref_name }}
-          releaseName: "Clash Verge Rev ${{ github.ref_name }}"
-          releaseBody: "Draft release, will be updated later."
+          releaseName: 'Clash Verge Rev ${{ github.ref_name }}'
+          releaseBody: 'Draft release, will be updated later.'
           releaseDraft: true
-          prerelease: false
+          prerelease: ${{ contains(github.ref_name, '-rc') }}
           tauriScript: pnpm
           args: --target ${{ matrix.target }}
           includeUpdaterJson: true
@@ -250,10 +256,13 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install Rust Stable
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: '1.91.0'
+          targets: ${{ matrix.target }}
 
       - name: Add Rust Target
         run: rustup target add ${{ matrix.target }}
@@ -261,16 +270,21 @@ jobs:
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
         with:
-          workspaces: src-tauri
-          save-if: false
+          save-if: ${{ github.ref == 'refs/heads/dev' }}
+          prefix-key: 'v1-rust'
+          key: 'rust-shared-stable-${{ matrix.os }}-${{ matrix.target }}'
+          workspaces: |
+            . -> target
+          cache-all-crates: true
+          cache-workspace-crates: true
 
       - name: Install Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: "22"
+          node-version: '24.14.0'
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v5
         with:
           run_install: false
 
@@ -279,7 +293,7 @@ jobs:
           pnpm i
           pnpm run prebuild ${{ matrix.target }}
 
-      - name: "Setup for linux"
+      - name: 'Setup for linux'
         run: |-
           sudo ls -lR /etc/apt/
 
@@ -309,19 +323,26 @@ jobs:
             patchelf:${{ matrix.arch }} \
             librsvg2-dev:${{ matrix.arch }}
 
-      - name: "Install aarch64 tools"
+      - name: 'Install aarch64 tools'
         if: matrix.target == 'aarch64-unknown-linux-gnu'
         run: |
           sudo apt install -y \
             gcc-aarch64-linux-gnu \
             g++-aarch64-linux-gnu
 
-      - name: "Install armv7 tools"
+      - name: 'Install armv7 tools'
         if: matrix.target == 'armv7-unknown-linux-gnueabihf'
         run: |
           sudo apt install -y \
             gcc-arm-linux-gnueabihf \
             g++-arm-linux-gnueabihf
+
+      - name: Add Rust Target
+        run: |
+          # Ensure cross target is installed for the pinned toolchain; fallback without explicit toolchain if needed
+          rustup target add ${{ matrix.target }} --toolchain 1.91.0 || rustup target add ${{ matrix.target }}
+          rustup target list --installed
+          echo "Rust target ${{ matrix.target }} installed."
 
       - name: Build for Linux
         run: |
@@ -335,7 +356,7 @@ jobs:
           fi
           pnpm build --target ${{ matrix.target }}
         env:
-          NODE_OPTIONS: "--max_old_space_size=4096"
+          NODE_OPTIONS: '--max_old_space_size=4096'
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
 
@@ -350,12 +371,13 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{env.VERSION}}
-          name: "Clash Verge Rev v${{env.VERSION}}"
-          body: "See release notes for detailed changelog."
+          name: 'Clash Verge Rev v${{env.VERSION}}'
+          body: 'See release notes for detailed changelog.'
           token: ${{ secrets.GITHUB_TOKEN }}
+          prerelease: ${{ contains(github.ref_name, '-rc') }}
           files: |
-            src-tauri/target/${{ matrix.target }}/release/bundle/deb/*.deb
-            src-tauri/target/${{ matrix.target }}/release/bundle/rpm/*.rpm
+            target/${{ matrix.target }}/release/bundle/deb/*.deb
+            target/${{ matrix.target }}/release/bundle/rpm/*.rpm
 
   release-for-fixed-webview2:
     name: Release Build for Fixed WebView2
@@ -373,7 +395,13 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
+
+      - name: Install Rust Stable
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: '1.91.0'
+          targets: ${{ matrix.target }}
 
       - name: Add Rust Target
         run: rustup target add ${{ matrix.target }}
@@ -381,15 +409,20 @@ jobs:
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
         with:
-          workspaces: src-tauri
-          save-if: false
+          save-if: ${{ github.ref == 'refs/heads/dev' }}
+          prefix-key: 'v1-rust'
+          key: 'rust-shared-stable-${{ matrix.os }}-${{ matrix.target }}'
+          workspaces: |
+            . -> target
+          cache-all-crates: true
+          cache-workspace-crates: true
 
       - name: Install Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: "22"
+          node-version: '24.14.0'
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v5
         name: Install pnpm
         with:
           run_install: false
@@ -401,16 +434,23 @@ jobs:
 
       - name: Download WebView2 Runtime
         run: |
-          invoke-webrequest -uri https://github.com/westinyang/WebView2RuntimeArchive/releases/download/109.0.1518.78/Microsoft.WebView2.FixedVersionRuntime.109.0.1518.78.${{ matrix.arch }}.cab -outfile Microsoft.WebView2.FixedVersionRuntime.109.0.1518.78.${{ matrix.arch }}.cab
-          Expand .\Microsoft.WebView2.FixedVersionRuntime.109.0.1518.78.${{ matrix.arch }}.cab -F:* ./src-tauri
+          invoke-webrequest -uri https://github.com/westinyang/WebView2RuntimeArchive/releases/download/133.0.3065.92/Microsoft.WebView2.FixedVersionRuntime.133.0.3065.92.${{ matrix.arch }}.cab -outfile Microsoft.WebView2.FixedVersionRuntime.133.0.3065.92.${{ matrix.arch }}.cab
+          Expand .\Microsoft.WebView2.FixedVersionRuntime.133.0.3065.92.${{ matrix.arch }}.cab -F:* ./src-tauri
           Remove-Item .\src-tauri\tauri.windows.conf.json
           Rename-Item .\src-tauri\webview2.${{ matrix.arch }}.json tauri.windows.conf.json
 
+      - name: Add Rust Target
+        run: |
+          # Ensure cross target is installed for the pinned toolchain; fallback without explicit toolchain if needed
+          rustup target add ${{ matrix.target }} --toolchain 1.91.0 || rustup target add ${{ matrix.target }}
+          rustup target list --installed
+          echo "Rust target ${{ matrix.target }} installed."
+
       - name: Tauri build
         id: build
-        uses: tauri-apps/tauri-action@v0
+        uses: tauri-apps/tauri-action@v0.6.2
         env:
-          NODE_OPTIONS: "--max_old_space_size=4096"
+          NODE_OPTIONS: '--max_old_space_size=4096'
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
@@ -420,19 +460,19 @@ jobs:
 
       - name: Rename
         run: |
-          $files = Get-ChildItem ".\src-tauri\target\${{ matrix.target }}\release\bundle\nsis\*-setup.exe"
+          $files = Get-ChildItem ".\target\${{ matrix.target }}\release\bundle\nsis\*-setup.exe"
           foreach ($file in $files) {
             $newName = $file.Name -replace "-setup\.exe$", "_fixed_webview2-setup.exe"
             Rename-Item $file.FullName $newName
           }
 
-          $files = Get-ChildItem ".\src-tauri\target\${{ matrix.target }}\release\bundle\nsis\*.nsis.zip"
+          $files = Get-ChildItem ".\target\${{ matrix.target }}\release\bundle\nsis\*.nsis.zip"
           foreach ($file in $files) {
             $newName = $file.Name -replace "-setup\.nsis\.zip$", "_fixed_webview2-setup.nsis.zip"
             Rename-Item $file.FullName $newName
           }
 
-          $files = Get-ChildItem ".\src-tauri\target\${{ matrix.target }}\release\bundle\nsis\*-setup.exe.sig"
+          $files = Get-ChildItem ".\target\${{ matrix.target }}\release\bundle\nsis\*-setup.exe.sig"
           foreach ($file in $files) {
             $newName = $file.Name -replace "-setup\.exe\.sig$", "_fixed_webview2-setup.exe.sig"
             Rename-Item $file.FullName $newName
@@ -442,10 +482,11 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{steps.build.outputs.appVersion}}
-          name: "Clash Verge Rev v${{steps.build.outputs.appVersion}}"
-          body: "See release notes for detailed changelog."
+          name: 'Clash Verge Rev v${{steps.build.outputs.appVersion}}'
+          body: 'See release notes for detailed changelog.'
           token: ${{ secrets.GITHUB_TOKEN }}
-          files: src-tauri/target/${{ matrix.target }}/release/bundle/nsis/*setup*
+          prerelease: ${{ contains(github.ref_name, '-rc') }}
+          files: target/${{ matrix.target }}/release/bundle/nsis/*setup*
 
       - name: Portable Bundle
         run: pnpm portable-fixed-webview2 ${{ matrix.target }}
@@ -453,19 +494,20 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   release-update:
+    if: ${{ !contains(github.ref_name, '-rc') }}
     name: Release Update
     runs-on: ubuntu-latest
     needs: [update_tag]
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: "22"
+          node-version: '24.14.0'
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v5
         name: Install pnpm
         with:
           run_install: false
@@ -479,18 +521,19 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   release-update-for-fixed-webview2:
+    if: ${{ !contains(github.ref_name, '-rc') }}
     runs-on: ubuntu-latest
     needs: [update_tag]
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: "22"
+          node-version: '24.14.0'
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v5
         name: Install pnpm
         with:
           run_install: false
@@ -504,12 +547,13 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
   submit-to-winget:
+    if: ${{ !contains(github.ref_name, '-rc') }}
     name: Submit to Winget
     runs-on: ubuntu-latest
     needs: [update_tag, release-update]
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
       - name: Get Version
@@ -527,6 +571,7 @@ jobs:
           token: ${{ secrets.WINGET_TOKEN  }}
 
   notify-telegram:
+    if: ${{ !contains(github.ref_name, '-rc') }}
     name: Notify Telegram
     runs-on: ubuntu-latest
     needs:
@@ -538,32 +583,19 @@ jobs:
       ]
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Fetch UPDATE logs
         id: fetch_update_logs
-        run: |
-          if [ -f "UPDATELOG.md" ]; then
-            UPDATE_LOGS=$(awk '/^## v/{if(flag) exit; flag=1} flag' UPDATELOG.md)
-            if [ -n "$UPDATE_LOGS" ]; then
-              echo "Found update logs"
-              echo "UPDATE_LOGS<<EOF" >> $GITHUB_ENV
-              echo "$UPDATE_LOGS" >> $GITHUB_ENV
-              echo "EOF" >> $GITHUB_ENV
-            else
-              echo "No update sections found in UPDATELOG.md"
-            fi
-          else
-            echo "UPDATELOG.md file not found"
-          fi
+        run: bash ./scripts/extract_update_logs.sh
         shell: bash
 
       - name: Install Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: "22"
+          node-version: '24.14.0'
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v5
         name: Install pnpm
         with:
           run_install: false
@@ -615,6 +647,7 @@ jobs:
 
           ### 稳定机场VPN推荐
           - [狗狗加速](https://verge.dginv.click/#/register?code=oaxsAGo6)
+
           Created at ${{ env.BUILDTIME }}.
           EOF
 

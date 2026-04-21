@@ -1,0 +1,34 @@
+{
+  "page": {
+    "title": "Соединения"
+  },
+  "components": {
+    "fields": {
+      "host": "Хост",
+      "dlSpeed": "Скорость скачивания",
+      "ulSpeed": "Скорость загрузки",
+      "chains": "Цепочки",
+      "rule": "Правило",
+      "process": "Процесс",
+      "time": "Время подключения",
+      "source": "Исходный адрес",
+      "destination": "IP-адрес назначения",
+      "destinationPort": "Целевой порт",
+      "type": "Тип"
+    },
+    "order": {
+      "default": "Default",
+      "uploadSpeed": "Скорость загрузки",
+      "downloadSpeed": "Скорость скачивания"
+    },
+    "actions": {
+      "active": "Active",
+      "closed": "Closed",
+      "closeConnection": "Закрыть соединение"
+    },
+    "columnManager": {
+      "title": "Столбцы",
+      "dragHandle": "Drag handle"
+    }
+  }
+}

@@ -1,12 +1,13 @@
-use super::{prfitem::PrfItem, PrfOption};
-use crate::{
-    logging_error,
-    process::AsyncHandler,
-    utils::{dirs, help, logging::Type},
+use super::{PrfOption, prfitem::PrfItem};
+use crate::utils::{
+    dirs::{self, PathBufExec as _},
+    help,
 };
-use anyhow::{bail, Context, Result};
+use anyhow::{Context as _, Result, bail};
+use clash_verge_logging::{Type, logging};
 use serde::{Deserialize, Serialize};
 use serde_yaml_ng::Mapping;
+use smartstring::alias::String;
 use std::collections::HashSet;
 use tokio::fs;
 
@@ -20,118 +21,115 @@ pub struct IProfiles {
     pub items: Option<Vec<PrfItem>>,
 }
 
+pub struct IProfilePreview<'a> {
+    pub uid: &'a String,
+    pub name: &'a String,
+    pub is_current: bool,
+}
+
 /// 清理结果
 #[derive(Debug, Clone)]
 pub struct CleanupResult {
     pub total_files: usize,
-    pub deleted_files: Vec<String>,
-    pub failed_deletions: Vec<String>,
+    pub deleted_files: usize,
+    pub failed_deletions: usize,
 }
 
 macro_rules! patch {
     ($lv: expr, $rv: expr, $key: tt) => {
         if ($rv.$key).is_some() {
-            $lv.$key = $rv.$key;
+            $lv.$key = $rv.$key.to_owned();
         }
     };
 }
 
 impl IProfiles {
-    pub async fn new() -> Self {
-        match dirs::profiles_path() {
-            Ok(path) => match help::read_yaml::<Self>(&path).await {
-                Ok(mut profiles) => {
-                    if profiles.items.is_none() {
-                        profiles.items = Some(vec![]);
-                    }
-                    // compatible with the old old old version
-                    if let Some(items) = profiles.items.as_mut() {
-                        for item in items.iter_mut() {
-                            if item.uid.is_none() {
-                                item.uid = Some(help::get_uid("d"));
-                            }
-                        }
-                    }
-                    profiles
-                }
-                Err(err) => {
-                    log::error!(target: "app", "{err}");
-                    Self::template()
-                }
-            },
-            Err(err) => {
-                log::error!(target: "app", "{err}");
-                Self::template()
-            }
-        }
+    // Helper to find and remove an item by uid from the items vec, returning its file name (if any).
+    fn take_item_file_by_uid(items: &mut Vec<PrfItem>, target_uid: Option<&str>) -> Option<String> {
+        let index = items.iter().position(|item| item.uid.as_deref() == target_uid)?;
+        items.remove(index).file
     }
 
-    pub fn template() -> Self {
-        Self {
-            items: Some(vec![]),
-            ..Self::default()
+    pub async fn new() -> Self {
+        let path = match dirs::profiles_path() {
+            Ok(p) => p,
+            Err(err) => {
+                logging!(error, Type::Config, "{err}");
+                return Self::default();
+            }
+        };
+
+        match help::read_yaml::<Self>(&path).await {
+            Ok(mut profiles) => {
+                let items = profiles.items.get_or_insert_with(Vec::new);
+                for item in items.iter_mut() {
+                    if item.uid.is_none() {
+                        item.uid = Some(help::get_uid("d").into());
+                    }
+                }
+                profiles
+            }
+            Err(err) => {
+                logging!(error, Type::Config, "{err}");
+                Self::default()
+            }
         }
     }
 
     pub async fn save_file(&self) -> Result<()> {
-        help::save_yaml(
-            &dirs::profiles_path()?,
-            self,
-            Some("# Profiles Config for Clash Verge"),
-        )
-        .await
+        help::save_yaml(&dirs::profiles_path()?, self, Some("# Profiles Config for Clash Verge")).await
     }
 
     /// 只修改current，valid和chain
-    pub fn patch_config(&mut self, patch: IProfiles) -> Result<()> {
+    pub fn patch_config(&mut self, patch: &Self) {
         if self.items.is_none() {
             self.items = Some(vec![]);
         }
 
-        if let Some(current) = patch.current {
-            if let Some(items) = self.items.as_ref() {
-                let some_uid = Some(current);
-                if items.iter().any(|e| e.uid == some_uid) {
-                    self.current = some_uid;
-                }
+        if let Some(current) = &patch.current
+            && let Some(items) = self.items.as_ref()
+        {
+            let some_uid = Some(current);
+            if items.iter().any(|e| e.uid.as_ref() == some_uid) {
+                self.current = some_uid.cloned();
             }
         }
-
-        Ok(())
     }
 
-    pub fn get_current(&self) -> Option<String> {
-        self.current.clone()
+    pub const fn get_current(&self) -> Option<&String> {
+        self.current.as_ref()
     }
 
     /// get items ref
-    pub fn get_items(&self) -> Option<&Vec<PrfItem>> {
+    pub const fn get_items(&self) -> Option<&Vec<PrfItem>> {
         self.items.as_ref()
     }
 
     /// find the item by the uid
-    pub fn get_item(&self, uid: &String) -> Result<&PrfItem> {
-        if let Some(items) = self.items.as_ref() {
-            let some_uid = Some(uid.clone());
+    pub fn get_item(&self, uid: impl AsRef<str>) -> Result<&PrfItem> {
+        let uid_str = uid.as_ref();
 
+        if let Some(items) = self.items.as_ref() {
             for each in items.iter() {
-                if each.uid == some_uid {
+                if let Some(uid_val) = &each.uid
+                    && uid_val.as_str() == uid_str
+                {
                     return Ok(each);
                 }
             }
         }
 
-        bail!("failed to get the profile item \"uid:{uid}\"");
+        bail!("failed to get the profile item \"uid:{}\"", uid_str);
     }
 
     /// append new item
     /// if the file_data is some
     /// then should save the data to file
-    pub async fn append_item(&mut self, mut item: PrfItem) -> Result<()> {
-        if item.uid.is_none() {
+    pub async fn append_item(&mut self, item: &mut PrfItem) -> Result<()> {
+        let uid = &item.uid;
+        if uid.is_none() {
             bail!("the uid should not be null");
         }
-        let uid = item.uid.clone();
 
         // save the file data
         // move the field value after save
@@ -140,20 +138,19 @@ impl IProfiles {
                 bail!("the file should not be null");
             }
 
-            let file = item.file.clone().ok_or_else(|| {
-                anyhow::anyhow!("file field is required when file_data is provided")
-            })?;
-            let path = dirs::app_profiles_dir()?.join(&file);
+            let file = item
+                .file
+                .clone()
+                .ok_or_else(|| anyhow::anyhow!("file field is required when file_data is provided"))?;
+            let path = dirs::app_profiles_dir()?.join(file.as_str());
 
             fs::write(&path, file_data.as_bytes())
                 .await
                 .with_context(|| format!("failed to write to file \"{file}\""))?;
         }
 
-        if self.current.is_none()
-            && (item.itype == Some("remote".to_string()) || item.itype == Some("local".to_string()))
-        {
-            self.current = uid;
+        if self.current.is_none() && (item.itype == Some("remote".into()) || item.itype == Some("local".into())) {
+            self.current = uid.to_owned();
         }
 
         if self.items.is_none() {
@@ -161,23 +158,23 @@ impl IProfiles {
         }
 
         if let Some(items) = self.items.as_mut() {
-            items.push(item)
+            items.push(item.to_owned());
         }
 
-        self.save_file().await
+        Ok(())
     }
 
     /// reorder items
-    pub async fn reorder(&mut self, active_id: String, over_id: String) -> Result<()> {
+    pub async fn reorder(&mut self, active_id: &String, over_id: &String) -> Result<()> {
         let mut items = self.items.take().unwrap_or_default();
         let mut old_index = None;
         let mut new_index = None;
 
         for (i, _) in items.iter().enumerate() {
-            if items[i].uid == Some(active_id.clone()) {
+            if items[i].uid.as_ref() == Some(active_id) {
                 old_index = Some(i);
             }
-            if items[i].uid == Some(over_id.clone()) {
+            if items[i].uid.as_ref() == Some(over_id) {
                 new_index = Some(i);
             }
         }
@@ -193,11 +190,11 @@ impl IProfiles {
     }
 
     /// update the item value
-    pub async fn patch_item(&mut self, uid: String, item: PrfItem) -> Result<()> {
+    pub async fn patch_item(&mut self, uid: &String, item: &PrfItem) -> Result<()> {
         let mut items = self.items.take().unwrap_or_default();
 
         for each in items.iter_mut() {
-            if each.uid == Some(uid.clone()) {
+            if each.uid.as_ref() == Some(uid) {
                 patch!(each, item, itype);
                 patch!(each, item, name);
                 patch!(each, item, desc);
@@ -219,13 +216,13 @@ impl IProfiles {
 
     /// be used to update the remote item
     /// only patch `updated` `extra` `file_data`
-    pub async fn update_item(&mut self, uid: String, mut item: PrfItem) -> Result<()> {
+    pub async fn update_item(&mut self, uid: &String, item: &mut PrfItem) -> Result<()> {
         if self.items.is_none() {
             self.items = Some(vec![]);
         }
 
         // find the item
-        let _ = self.get_item(&uid)?;
+        let _ = self.get_item(uid)?;
 
         if let Some(items) = self.items.as_mut() {
             let some_uid = Some(uid.clone());
@@ -234,19 +231,19 @@ impl IProfiles {
                 if each.uid == some_uid {
                     each.extra = item.extra;
                     each.updated = item.updated;
-                    each.home = item.home;
-                    each.option = PrfOption::merge(each.option.clone(), item.option);
+                    each.home = item.home.to_owned();
+                    each.option = PrfOption::merge(each.option.as_ref(), item.option.as_ref());
                     // save the file data
                     // move the field value after save
                     if let Some(file_data) = item.file_data.take() {
                         let file = each.file.take();
                         let file =
-                            file.unwrap_or(item.file.take().unwrap_or(format!("{}.yaml", &uid)));
+                            file.unwrap_or_else(|| item.file.take().unwrap_or_else(|| format!("{}.yaml", &uid).into()));
 
                         // the file must exists
                         each.file = Some(file.clone());
 
-                        let path = dirs::app_profiles_dir()?.join(&file);
+                        let path = dirs::app_profiles_dir()?.join(file.as_str());
 
                         fs::write(&path, file_data.as_bytes())
                             .await
@@ -263,186 +260,42 @@ impl IProfiles {
 
     /// delete item
     /// if delete the current then return true
-    pub async fn delete_item(&mut self, uid: String) -> Result<bool> {
-        let current = self.current.as_ref().unwrap_or(&uid);
+    pub async fn delete_item(&mut self, uid: &String) -> Result<bool> {
+        let current = self.current.as_ref().unwrap_or(uid);
         let current = current.clone();
-        let item = self.get_item(&uid)?;
-        let merge_uid = item.option.as_ref().and_then(|e| e.merge.clone());
-        let script_uid = item.option.as_ref().and_then(|e| e.script.clone());
-        let rules_uid = item.option.as_ref().and_then(|e| e.rules.clone());
-        let proxies_uid = item.option.as_ref().and_then(|e| e.proxies.clone());
-        let groups_uid = item.option.as_ref().and_then(|e| e.groups.clone());
+        let delete_uids = {
+            let item = self.get_item(uid)?;
+            let option = item.option.as_ref();
+            option.map_or(Vec::new(), |op| {
+                [
+                    op.merge.clone(),
+                    op.script.clone(),
+                    op.rules.clone(),
+                    op.proxies.clone(),
+                    op.groups.clone(),
+                ]
+                .into_iter()
+                .collect::<Vec<_>>()
+            })
+        };
         let mut items = self.items.take().unwrap_or_default();
-        let mut index = None;
-        let mut merge_index = None;
-        let mut script_index = None;
-        let mut rules_index = None;
-        let mut proxies_index = None;
-        let mut groups_index = None;
 
-        // get the index
-        for (i, _) in items.iter().enumerate() {
-            if items[i].uid == Some(uid.clone()) {
-                index = Some(i);
-                break;
+        // remove the main item (if exists) and delete its file
+        if let Some(file) = Self::take_item_file_by_uid(&mut items, Some(uid.as_str())) {
+            let _ = dirs::app_profiles_dir()?.join(file.as_str()).remove_if_exists().await;
+        }
+
+        for delete_uid in delete_uids {
+            if let Some(file) = Self::take_item_file_by_uid(&mut items, delete_uid.as_deref()) {
+                let _ = dirs::app_profiles_dir()?.join(file.as_str()).remove_if_exists().await;
             }
         }
-        if let Some(index) = index {
-            if let Some(file) = items.remove(index).file {
-                let _ = dirs::app_profiles_dir().map(async move |path| {
-                    let path = path.join(file);
-                    if path.exists() {
-                        let result = fs::remove_file(path.clone()).await;
-                        if let Err(err) = result {
-                            logging_error!(
-                                Type::Config,
-                                false,
-                                "[配置文件删除] 删除文件 {} 失败: {}",
-                                path.display(),
-                                err
-                            );
-                        }
-                    }
-                });
-            }
-        }
-        // get the merge index
-        for (i, _) in items.iter().enumerate() {
-            if items[i].uid == merge_uid {
-                merge_index = Some(i);
-                break;
-            }
-        }
-        if let Some(index) = merge_index {
-            if let Some(file) = items.remove(index).file {
-                let _ = dirs::app_profiles_dir().map(async move |path| {
-                    let path = path.join(file);
-                    if path.exists() {
-                        let result = fs::remove_file(path.clone()).await;
-                        if let Err(err) = result {
-                            logging_error!(
-                                Type::Config,
-                                false,
-                                "[配置文件删除] 删除文件 {} 失败: {}",
-                                path.display(),
-                                err
-                            );
-                        }
-                    }
-                });
-            }
-        }
-        // get the script index
-        for (i, _) in items.iter().enumerate() {
-            if items[i].uid == script_uid {
-                script_index = Some(i);
-                break;
-            }
-        }
-        if let Some(index) = script_index {
-            if let Some(file) = items.remove(index).file {
-                let _ = dirs::app_profiles_dir().map(async move |path| {
-                    let path = path.join(file);
-                    if path.exists() {
-                        let result = fs::remove_file(path.clone()).await;
-                        if let Err(err) = result {
-                            logging_error!(
-                                Type::Config,
-                                false,
-                                "[配置文件删除] 删除文件 {} 失败: {}",
-                                path.display(),
-                                err
-                            );
-                        }
-                    }
-                });
-            }
-        }
-        // get the rules index
-        for (i, _) in items.iter().enumerate() {
-            if items[i].uid == rules_uid {
-                rules_index = Some(i);
-                break;
-            }
-        }
-        if let Some(index) = rules_index {
-            if let Some(file) = items.remove(index).file {
-                let _ = dirs::app_profiles_dir().map(async move |path| {
-                    let path = path.join(file);
-                    if path.exists() {
-                        let result = fs::remove_file(path.clone()).await;
-                        if let Err(err) = result {
-                            logging_error!(
-                                Type::Config,
-                                false,
-                                "[配置文件删除] 删除文件 {} 失败: {}",
-                                path.display(),
-                                err
-                            );
-                        }
-                    }
-                });
-            }
-        }
-        // get the proxies index
-        for (i, _) in items.iter().enumerate() {
-            if items[i].uid == proxies_uid {
-                proxies_index = Some(i);
-                break;
-            }
-        }
-        if let Some(index) = proxies_index {
-            if let Some(file) = items.remove(index).file {
-                let _ = dirs::app_profiles_dir().map(async move |path| {
-                    let path = path.join(file);
-                    if path.exists() {
-                        let result = fs::remove_file(path.clone()).await;
-                        if let Err(err) = result {
-                            logging_error!(
-                                Type::Config,
-                                false,
-                                "[配置文件删除] 删除文件 {} 失败: {}",
-                                path.display(),
-                                err
-                            );
-                        }
-                    }
-                });
-            }
-        }
-        // get the groups index
-        for (i, _) in items.iter().enumerate() {
-            if items[i].uid == groups_uid {
-                groups_index = Some(i);
-                break;
-            }
-        }
-        if let Some(index) = groups_index {
-            if let Some(file) = items.remove(index).file {
-                let _ = dirs::app_profiles_dir().map(async move |path| {
-                    let path = path.join(file);
-                    if path.exists() {
-                        let result = fs::remove_file(path.clone()).await;
-                        if let Err(err) = result {
-                            logging_error!(
-                                Type::Config,
-                                false,
-                                "[配置文件删除] 删除文件 {} 失败: {}",
-                                path.display(),
-                                err
-                            );
-                        }
-                    }
-                });
-            }
-        }
+
         // delete the original uid
-        if current == uid {
+        if current == *uid {
             self.current = None;
             for item in items.iter() {
-                if item.itype == Some("remote".to_string())
-                    || item.itype == Some("local".to_string())
-                {
+                if item.itype == Some("remote".into()) || item.itype == Some("local".into()) {
                     self.current = item.uid.clone();
                     break;
                 }
@@ -451,7 +304,7 @@ impl IProfiles {
 
         self.items = Some(items);
         self.save_file().await?;
-        Ok(current == uid)
+        Ok(current == *uid)
     }
 
     /// 获取current指向的订阅内容
@@ -460,7 +313,7 @@ impl IProfiles {
             (Some(current), Some(items)) => {
                 if let Some(item) = items.iter().find(|e| e.uid.as_ref() == Some(current)) {
                     let file_path = match item.file.as_ref() {
-                        Some(file) => dirs::app_profiles_dir()?.join(file),
+                        Some(file) => dirs::app_profiles_dir()?.join(file.as_str()),
                         None => bail!("failed to get the file field"),
                     };
                     return help::read_mapping(&file_path).await;
@@ -471,89 +324,21 @@ impl IProfiles {
         }
     }
 
-    /// 获取current指向的订阅的merge
-    pub fn current_merge(&self) -> Option<String> {
-        match (self.current.as_ref(), self.items.as_ref()) {
-            (Some(current), Some(items)) => {
-                if let Some(item) = items.iter().find(|e| e.uid.as_ref() == Some(current)) {
-                    let merge = item.option.as_ref().and_then(|e| e.merge.clone());
-                    return merge;
-                }
-                None
-            }
-            _ => None,
-        }
-    }
-
-    /// 获取current指向的订阅的script
-    pub fn current_script(&self) -> Option<String> {
-        match (self.current.as_ref(), self.items.as_ref()) {
-            (Some(current), Some(items)) => {
-                if let Some(item) = items.iter().find(|e| e.uid.as_ref() == Some(current)) {
-                    let script = item.option.as_ref().and_then(|e| e.script.clone());
-                    return script;
-                }
-                None
-            }
-            _ => None,
-        }
-    }
-
-    /// 获取current指向的订阅的rules
-    pub fn current_rules(&self) -> Option<String> {
-        match (self.current.as_ref(), self.items.as_ref()) {
-            (Some(current), Some(items)) => {
-                if let Some(item) = items.iter().find(|e| e.uid.as_ref() == Some(current)) {
-                    let rules = item.option.as_ref().and_then(|e| e.rules.clone());
-                    return rules;
-                }
-                None
-            }
-            _ => None,
-        }
-    }
-
-    /// 获取current指向的订阅的proxies
-    pub fn current_proxies(&self) -> Option<String> {
-        match (self.current.as_ref(), self.items.as_ref()) {
-            (Some(current), Some(items)) => {
-                if let Some(item) = items.iter().find(|e| e.uid.as_ref() == Some(current)) {
-                    let proxies = item.option.as_ref().and_then(|e| e.proxies.clone());
-                    return proxies;
-                }
-                None
-            }
-            _ => None,
-        }
-    }
-
-    /// 获取current指向的订阅的groups
-    pub fn current_groups(&self) -> Option<String> {
-        match (self.current.as_ref(), self.items.as_ref()) {
-            (Some(current), Some(items)) => {
-                if let Some(item) = items.iter().find(|e| e.uid.as_ref() == Some(current)) {
-                    let groups = item.option.as_ref().and_then(|e| e.groups.clone());
-                    return groups;
-                }
-                None
-            }
-            _ => None,
-        }
-    }
-
     /// 判断profile是否是current指向的
-    pub fn is_current_profile_index(&self, index: String) -> bool {
-        self.current == Some(index)
+    pub fn is_current_profile_index(&self, index: &String) -> bool {
+        self.current.as_ref() == Some(index)
     }
 
-    /// 获取所有的profiles(uid，名称)
-    pub fn all_profile_uid_and_name(&self) -> Option<Vec<(String, String)>> {
+    /// 获取所有的profiles(uid，名称, 是否为 current)
+    pub fn profiles_preview(&self) -> Option<Vec<IProfilePreview<'_>>> {
         self.items.as_ref().map(|items| {
             items
                 .iter()
                 .filter_map(|e| {
-                    if let (Some(uid), Some(name)) = (e.uid.clone(), e.name.clone()) {
-                        Some((uid, name))
+                    if let (Some(uid), Some(name)) = (e.uid.as_ref(), e.name.as_ref()) {
+                        let is_current = self.is_current_profile_index(uid);
+                        let preview = IProfilePreview { uid, name, is_current };
+                        Some(preview)
                     } else {
                         None
                     }
@@ -562,16 +347,24 @@ impl IProfiles {
         })
     }
 
+    /// 通过 uid 获取名称
+    pub fn get_name_by_uid(&self, uid: &String) -> Option<&String> {
+        if let Some(items) = &self.items {
+            for item in items {
+                if item.uid.as_ref() == Some(uid) {
+                    return item.name.as_ref();
+                }
+            }
+        }
+        None
+    }
+
     /// 以 app 中的 profile 列表为准，删除不再需要的文件
-    pub fn cleanup_orphaned_files(&self) -> Result<CleanupResult> {
+    pub async fn cleanup_orphaned_files(&self) -> Result<()> {
         let profiles_dir = dirs::app_profiles_dir()?;
 
         if !profiles_dir.exists() {
-            return Ok(CleanupResult {
-                total_files: 0,
-                deleted_files: vec![],
-                failed_deletions: vec![],
-            });
+            return Ok(());
         }
 
         // 获取所有 active profile 的文件名集合
@@ -582,11 +375,11 @@ impl IProfiles {
 
         // 扫描 profiles 目录下的所有文件
         let mut total_files = 0;
-        let mut deleted_files = vec![];
-        let mut failed_deletions = vec![];
+        let mut deleted_files = 0;
+        let mut failed_deletions = 0;
 
-        for entry in std::fs::read_dir(&profiles_dir)? {
-            let entry = entry?;
+        let mut dir_entries = tokio::fs::read_dir(&profiles_dir).await?;
+        while let Some(entry) = dir_entries.next_entry().await? {
             let path = entry.path();
 
             if !path.is_file() {
@@ -595,25 +388,25 @@ impl IProfiles {
 
             total_files += 1;
 
-            if let Some(file_name) = path.file_name().and_then(|n| n.to_str()) {
-                if Self::is_profile_file(file_name) {
-                    // 检查是否为全局扩展文件
-                    if protected_files.contains(file_name) {
-                        log::debug!(target: "app", "保护全局扩展配置文件: {file_name}");
-                        continue;
-                    }
+            if let Some(file_name) = path.file_name().and_then(|n| n.to_str())
+                && Self::is_profile_file(file_name)
+            {
+                // 检查是否为全局扩展文件
+                if protected_files.contains(file_name) {
+                    logging!(debug, Type::Config, "保护全局扩展配置文件: {file_name}");
+                    continue;
+                }
 
-                    // 检查是否为活跃文件
-                    if !active_files.contains(file_name) {
-                        match std::fs::remove_file(&path) {
-                            Ok(_) => {
-                                deleted_files.push(file_name.to_string());
-                                log::info!(target: "app", "已清理冗余文件: {file_name}");
-                            }
-                            Err(e) => {
-                                failed_deletions.push(format!("{file_name}: {e}"));
-                                log::warn!(target: "app", "清理文件失败: {file_name} - {e}");
-                            }
+                // 检查是否为活跃文件
+                if !active_files.contains(file_name) {
+                    match path.to_path_buf().remove_if_exists().await {
+                        Ok(_) => {
+                            deleted_files += 1;
+                            logging!(debug, Type::Config, "已清理冗余文件: {file_name}");
+                        }
+                        Err(e) => {
+                            failed_deletions += 1;
+                            logging!(warn, Type::Config, "Warning: 清理文件失败: {file_name} - {e}");
                         }
                     }
                 }
@@ -626,83 +419,78 @@ impl IProfiles {
             failed_deletions,
         };
 
-        log::info!(
-            target: "app",
+        logging!(
+            info,
+            Type::Config,
             "Profile 文件清理完成: 总文件数={}, 删除文件数={}, 失败数={}",
             result.total_files,
-            result.deleted_files.len(),
-            result.failed_deletions.len()
+            result.deleted_files,
+            result.failed_deletions
         );
 
-        Ok(result)
+        Ok(())
     }
 
     /// 不删除全局扩展配置
     fn get_protected_global_files(&self) -> HashSet<String> {
         let mut protected_files = HashSet::new();
 
-        protected_files.insert("Merge.yaml".to_string());
-        protected_files.insert("Script.js".to_string());
+        protected_files.insert("Merge.yaml".into());
+        protected_files.insert("Script.js".into());
 
         protected_files
     }
 
     /// 获取所有 active profile 关联的文件名
-    fn get_all_active_files(&self) -> HashSet<String> {
-        let mut active_files = HashSet::new();
+    fn get_all_active_files(&self) -> HashSet<&str> {
+        let mut active_files: HashSet<&str> = HashSet::new();
 
         if let Some(items) = &self.items {
             for item in items {
                 // 收集所有类型 profile 的文件
                 if let Some(file) = &item.file {
-                    active_files.insert(file.clone());
+                    active_files.insert(file);
                 }
 
                 // 对于主 profile 类型（remote/local），还需要收集其关联的扩展文件
-                if let Some(itype) = &item.itype {
-                    if itype == "remote" || itype == "local" {
-                        if let Some(option) = &item.option {
-                            // 收集关联的扩展文件
-                            if let Some(merge_uid) = &option.merge {
-                                if let Ok(merge_item) = self.get_item(merge_uid) {
-                                    if let Some(file) = &merge_item.file {
-                                        active_files.insert(file.clone());
-                                    }
-                                }
-                            }
+                if let Some(itype) = &item.itype
+                    && (itype == "remote" || itype == "local")
+                    && let Some(option) = &item.option
+                {
+                    // 收集关联的扩展文件
+                    if let Some(merge_uid) = &option.merge
+                        && let Ok(merge_item) = self.get_item(merge_uid)
+                        && let Some(file) = &merge_item.file
+                    {
+                        active_files.insert(file);
+                    }
 
-                            if let Some(script_uid) = &option.script {
-                                if let Ok(script_item) = self.get_item(script_uid) {
-                                    if let Some(file) = &script_item.file {
-                                        active_files.insert(file.clone());
-                                    }
-                                }
-                            }
+                    if let Some(script_uid) = &option.script
+                        && let Ok(script_item) = self.get_item(script_uid)
+                        && let Some(file) = &script_item.file
+                    {
+                        active_files.insert(file);
+                    }
 
-                            if let Some(rules_uid) = &option.rules {
-                                if let Ok(rules_item) = self.get_item(rules_uid) {
-                                    if let Some(file) = &rules_item.file {
-                                        active_files.insert(file.clone());
-                                    }
-                                }
-                            }
+                    if let Some(rules_uid) = &option.rules
+                        && let Ok(rules_item) = self.get_item(rules_uid)
+                        && let Some(file) = &rules_item.file
+                    {
+                        active_files.insert(file);
+                    }
 
-                            if let Some(proxies_uid) = &option.proxies {
-                                if let Ok(proxies_item) = self.get_item(proxies_uid) {
-                                    if let Some(file) = &proxies_item.file {
-                                        active_files.insert(file.clone());
-                                    }
-                                }
-                            }
+                    if let Some(proxies_uid) = &option.proxies
+                        && let Ok(proxies_item) = self.get_item(proxies_uid)
+                        && let Some(file) = &proxies_item.file
+                    {
+                        active_files.insert(file);
+                    }
 
-                            if let Some(groups_uid) = &option.groups {
-                                if let Ok(groups_item) = self.get_item(groups_uid) {
-                                    if let Some(file) = &groups_item.file {
-                                        active_files.insert(file.clone());
-                                    }
-                                }
-                            }
-                        }
+                    if let Some(groups_uid) = &option.groups
+                        && let Ok(groups_item) = self.get_item(groups_uid)
+                        && let Some(file) = &groups_item.file
+                    {
+                        active_files.insert(file);
                     }
                 }
             }
@@ -740,90 +528,67 @@ impl IProfiles {
 // 特殊的Send-safe helper函数，完全避免跨await持有guard
 use crate::config::Config;
 
-pub async fn profiles_append_item_with_filedata_safe(
-    item: PrfItem,
-    file_data: Option<String>,
-) -> Result<()> {
-    AsyncHandler::spawn_blocking(move || {
-        AsyncHandler::handle().block_on(async {
-            let item = PrfItem::from(item, file_data).await?;
-            let profiles = Config::profiles().await;
-            let mut profiles_guard = profiles.data_mut();
-            profiles_guard.append_item(item).await
-        })
-    })
-    .await
-    .map_err(|e| anyhow::anyhow!("Task join error: {}", e))?
+pub async fn profiles_append_item_with_filedata_safe(item: &PrfItem, file_data: Option<String>) -> Result<()> {
+    let item = &mut PrfItem::from(item, file_data).await?;
+    profiles_append_item_safe(item).await
 }
 
-pub async fn profiles_append_item_safe(item: PrfItem) -> Result<()> {
-    AsyncHandler::spawn_blocking(move || {
-        AsyncHandler::handle().block_on(async {
-            let profiles = Config::profiles().await;
-            let mut profiles_guard = profiles.data_mut();
-            profiles_guard.append_item(item).await
+pub async fn profiles_append_item_safe(item: &mut PrfItem) -> Result<()> {
+    Config::profiles()
+        .await
+        .with_data_modify(|mut profiles| async move {
+            profiles.append_item(item).await?;
+            Ok((profiles, ()))
         })
-    })
-    .await
-    .map_err(|e| anyhow::anyhow!("Task join error: {}", e))?
+        .await
 }
 
-pub async fn profiles_patch_item_safe(index: String, item: PrfItem) -> Result<()> {
-    AsyncHandler::spawn_blocking(move || {
-        AsyncHandler::handle().block_on(async {
-            let profiles = Config::profiles().await;
-            let mut profiles_guard = profiles.data_mut();
-            profiles_guard.patch_item(index, item).await
+pub async fn profiles_patch_item_safe(index: &String, item: &PrfItem) -> Result<()> {
+    Config::profiles()
+        .await
+        .with_data_modify(|mut profiles| async move {
+            profiles.patch_item(index, item).await?;
+            Ok((profiles, ()))
         })
-    })
-    .await
-    .map_err(|e| anyhow::anyhow!("Task join error: {}", e))?
+        .await
 }
 
-pub async fn profiles_delete_item_safe(index: String) -> Result<bool> {
-    AsyncHandler::spawn_blocking(move || {
-        AsyncHandler::handle().block_on(async {
-            let profiles = Config::profiles().await;
-            let mut profiles_guard = profiles.data_mut();
-            profiles_guard.delete_item(index).await
+pub async fn profiles_delete_item_safe(index: &String) -> Result<bool> {
+    Config::profiles()
+        .await
+        .with_data_modify(|mut profiles| async move {
+            let deleted = profiles.delete_item(index).await?;
+            Ok((profiles, deleted))
         })
-    })
-    .await
-    .map_err(|e| anyhow::anyhow!("Task join error: {}", e))?
+        .await
 }
 
-pub async fn profiles_reorder_safe(active_id: String, over_id: String) -> Result<()> {
-    AsyncHandler::spawn_blocking(move || {
-        AsyncHandler::handle().block_on(async {
-            let profiles = Config::profiles().await;
-            let mut profiles_guard = profiles.data_mut();
-            profiles_guard.reorder(active_id, over_id).await
+pub async fn profiles_reorder_safe(active_id: &String, over_id: &String) -> Result<()> {
+    Config::profiles()
+        .await
+        .with_data_modify(|mut profiles| async move {
+            profiles.reorder(active_id, over_id).await?;
+            Ok((profiles, ()))
         })
-    })
-    .await
-    .map_err(|e| anyhow::anyhow!("Task join error: {}", e))?
+        .await
 }
 
 pub async fn profiles_save_file_safe() -> Result<()> {
-    AsyncHandler::spawn_blocking(move || {
-        AsyncHandler::handle().block_on(async {
-            let profiles = Config::profiles().await;
-            let profiles_guard = profiles.data_mut();
-            profiles_guard.save_file().await
+    Config::profiles()
+        .await
+        .with_data_modify(|profiles| async move {
+            profiles.save_file().await?;
+            Ok((profiles, ()))
         })
-    })
-    .await
-    .map_err(|e| anyhow::anyhow!("Task join error: {}", e))?
+        .await
 }
 
-pub async fn profiles_draft_update_item_safe(index: String, item: PrfItem) -> Result<()> {
-    AsyncHandler::spawn_blocking(move || {
-        AsyncHandler::handle().block_on(async {
-            let profiles = Config::profiles().await;
-            let mut profiles_guard = profiles.draft_mut();
-            profiles_guard.update_item(index, item).await
+pub async fn profiles_draft_update_item_safe(index: &String, item: &mut PrfItem) -> Result<()> {
+    Config::profiles()
+        .await
+        .with_data_modify(|mut profiles| async move {
+            profiles.update_item(index, item).await?;
+            Ok((profiles, ()))
         })
-    })
-    .await
-    .map_err(|e| anyhow::anyhow!("Task join error: {}", e))?
+        .await
 }

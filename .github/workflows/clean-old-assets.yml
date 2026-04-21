@@ -4,24 +4,24 @@ on:
   workflow_dispatch:
     inputs:
       tag_name:
-        description: "Release tag name to clean (default: autobuild)"
+        description: 'Release tag name to clean (default: autobuild)'
         required: false
-        default: "autobuild"
+        default: 'autobuild'
         type: string
       dry_run:
-        description: "Dry run mode (only show what would be deleted)"
+        description: 'Dry run mode (only show what would be deleted)'
         required: false
         default: false
         type: boolean
   workflow_call:
     inputs:
       tag_name:
-        description: "Release tag name to clean (default: autobuild)"
+        description: 'Release tag name to clean (default: autobuild)'
         required: false
-        default: "autobuild"
+        default: 'autobuild'
         type: string
       dry_run:
-        description: "Dry run mode (only show what would be deleted)"
+        description: 'Dry run mode (only show what would be deleted)'
         required: false
         default: false
         type: boolean
@@ -42,7 +42,7 @@ jobs:
       autobuild_version: ${{ steps.check.outputs.autobuild_version }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 50
 
@@ -56,7 +56,7 @@ jobs:
           echo "🔍 Finding last commit with Tauri-related changes..."
 
           # Define patterns for Tauri-related files
-          TAURI_PATTERNS="src/ src-tauri/src src-tauri/Cargo.toml src-tauri/Cargo.lock src-tauri/tauri.*.conf.json src-tauri/build.rs src-tauri/capabilities"
+          TAURI_PATTERNS="src/ src-tauri/src src-tauri/Cargo.toml Cargo.lock src-tauri/tauri.*.conf.json src-tauri/build.rs src-tauri/capabilities"
 
           # Get the last commit that changed any of these patterns (excluding build artifacts)
           LAST_TAURI_COMMIT=""
@@ -105,7 +105,7 @@ jobs:
     needs: check_current_version
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Clean old assets from release
         env:

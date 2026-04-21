@@ -1,0 +1,24 @@
+{
+  "components": {
+    "navigation": {
+      "tabs": {
+        "home": "Home",
+        "proxies": "پراکسی‌ها",
+        "profiles": "پروفایل‌ها",
+        "connections": "اتصالات",
+        "rules": "قوانین",
+        "logs": "لاگ‌ها",
+        "unlock": "Test",
+        "settings": "تنظیمات"
+      },
+      "menu": {
+        "reorderMode": "Menu reorder mode",
+        "restoreDefaultOrder": "Restore default order",
+        "unlock": "Unlock menu order",
+        "lock": "Lock menu order",
+        "collapseNavBar": "Collapse navigation bar",
+        "expandNavBar": "Expand navigation bar"
+      }
+    }
+  }
+}

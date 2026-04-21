@@ -1,0 +1,134 @@
+{
+  "actions": {
+    "cancel": "Баш тарту",
+    "close": "Ябу",
+    "confirm": "Растау",
+    "save": "Саклау",
+    "delete": "Бетерү",
+    "edit": "Үзгәртү",
+    "new": "Яңа",
+    "enable": "Кушу",
+    "upgrade": "Яңарту",
+    "restart": "Перезапуск",
+    "resetToDefault": "Башлангычка кайтару",
+    "refresh": "Яңарту",
+    "retry": "Retry",
+    "refreshPage": "Refresh Page",
+    "showDetails": "Show Details",
+    "hideDetails": "Hide Details",
+    "listView": "Исемлек күзаллау",
+    "tableView": "Таблица күзаллау",
+    "pause": "Туктау",
+    "resume": "Дәвам",
+    "closeAll": "Барысын да ябу",
+    "clear": "Чистарту",
+    "previous": "Previous",
+    "next": "Next"
+  },
+  "labels": {
+    "updateAt": "Яңартылган вакыт",
+    "timeout": "Timeout",
+    "icon": "Иконка",
+    "name": "Исем",
+    "readOnly": "Уку режимы гына",
+    "expireTime": "Тамамлану вакыты",
+    "updateTime": "Яңарту вакыты",
+    "usedTotal": "Кулланылган / Барлыгы",
+    "from": "Каян",
+    "password": "Пароль",
+    "retryAttempts": "Retry attempts",
+    "downloaded": "Йөкләнгән",
+    "uploaded": "Чыгарылган"
+  },
+  "statuses": {
+    "enabled": "Кушылган",
+    "disabled": "Сүнгән",
+    "saving": "Saving...",
+    "empty": "Буш"
+  },
+  "units": {
+    "milliseconds": "Миллисекундлар",
+    "seconds": "Секундлар",
+    "minutes": "Минутлар",
+    "hours": "Сәгатьләр",
+    "kilobytes": "KB",
+    "files": "Files"
+  },
+  "placeholders": {
+    "resetInput": "кертү кырын чистарту",
+    "filter": "Фильтр шартлары",
+    "matchCase": "Регистрны исәпкә алу",
+    "matchWholeWord": "Сүзнең тулы туры килүе",
+    "useRegex": "Регуляр выражениеләр куллану"
+  },
+  "validation": {
+    "invalidRegex": "Invalid regular expression"
+  },
+  "window": {
+    "maximize": "Зурайту",
+    "minimize": "Кечерәйтү"
+  },
+  "editorModes": {
+    "visualization": "Визуализация",
+    "advanced": "Өстәмә"
+  },
+  "feedback": {
+    "errors": {
+      "trafficStats": "Traffic Statistics Error",
+      "trafficStatsDescription": "The traffic statistics component encountered an error and has been disabled to prevent crashes."
+    },
+    "notices": {
+      "raw": "{{message}}",
+      "prefixedRaw": "{{prefix}} {{message}}"
+    },
+    "notifications": {
+      "importSuccess": "Профиль уңышлы импортланды",
+      "importSubscriptionSuccess": "Import subscription successful",
+      "importWithClashProxy": "Profile Imported with Clash proxy",
+      "updateAvailable": "Update Available",
+      "saved": "Saved successfully",
+      "common": {
+        "copySuccess": "Күчерелде",
+        "saveSuccess": "Configuration saved successfully",
+        "saveFailed": "Failed to save configuration",
+        "refreshFailed": "Refresh failed"
+      }
+    },
+    "validation": {
+      "config": {
+        "failed": "Язылу көйләү тикшерүе уңышсыз, көйләү файлын тикшерегез, үзгәрешләр кире кайтарылды, хата:",
+        "bootFailed": "Йөкләү вакытында көйләү тикшерүе уңышсыз, стандарт көйләү кулланылды, көйләү файлын тикшерегез, хата:",
+        "coreChangeFailed": "Ядро алыштырганда көйләү тикшерүе уңышсыз, стандарт көйләү кулланылды, көйләү файлын тикшерегез, хата:",
+        "processTerminated": "Тикшерү процессы туктатылды"
+      },
+      "script": {
+        "syntaxError": "Скрипт синтаксик хатасы, үзгәрешләр кире кайтарылды",
+        "missingMain": "Скрипт хатасы, үзгәрешләр кире кайтарылды",
+        "fileNotFound": "Файл табылмады, үзгәрешләр кире кайтарылды",
+        "fileError": "Скрипт файлы хатасы, үзгәрешләр кире кайтарылды"
+      },
+      "yaml": {
+        "syntaxError": "YAML syntax error, changes reverted",
+        "readError": "YAML read error, changes reverted",
+        "mappingError": "YAML mapping error, changes reverted",
+        "keyError": "YAML key error, changes reverted",
+        "generalError": "YAML error, changes reverted"
+      },
+      "merge": {
+        "syntaxError": "Merge file syntax error, changes reverted",
+        "mappingError": "Merge file mapping error, changes reverted",
+        "keyError": "Merge file key error, changes reverted",
+        "generalError": "Merge file error, changes reverted"
+      }
+    }
+  },
+  "filters": {
+    "logLevels": {
+      "all": "ALL",
+      "debug": "DEBUG",
+      "info": "INFO",
+      "warn": "WARN",
+      "error": "ERROR"
+    }
+  }
+}

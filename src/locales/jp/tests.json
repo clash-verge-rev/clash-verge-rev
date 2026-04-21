@@ -1,0 +1,53 @@
+{
+  "page": {
+    "actions": {
+      "testAll": "すべてテスト"
+    },
+    "title": "テスト"
+  },
+  "components": {
+    "item": {
+      "actions": {
+        "test": "テスト"
+      }
+    }
+  },
+  "modals": {
+    "test": {
+      "title": {
+        "create": "新規テストを作成",
+        "edit": "テストを編集"
+      },
+      "fields": {
+        "url": "テストURL"
+      }
+    }
+  },
+  "statuses": {
+    "test": {
+      "pending": "検査待ち",
+      "yes": "サポートする",
+      "no": "サポートしない",
+      "failed": "テストに失敗しました。",
+      "completed": "検査完了",
+      "disallowedIsp": "許可されていないインターネットサービスプロバイダー",
+      "originalsOnly": "オリジナルのみ",
+      "noDisney": "No (IP Banned By Disney+)",
+      "unsupportedRegion": "サポートされていない国/地域",
+      "failedNetwork": "Failed (Network Connection)"
+    }
+  },
+  "unlock": {
+    "page": {
+      "actions": {
+        "testing": "テスト中..."
+      },
+      "empty": "アンロックテスト項目はありません",
+      "messages": {
+        "detectionFailedWithName": "{{name}} の検出に失敗しました",
+        "detectionTimeout": "Detection timeout or failed"
+      },
+      "title": "ロック解除テスト"
+    }
+  }
+}

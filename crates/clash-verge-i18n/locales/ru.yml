@@ -1,0 +1,60 @@
+_version: 1
+notifications:
+  dashboardToggled:
+    title: Панель
+    body: Видимость панели обновлена.
+  clashModeChanged:
+    title: Смена режима
+    body: Переключено на {mode}.
+  systemProxyToggled:
+    title: Системный прокси
+    body: Статус системного прокси обновлен.
+  tunModeToggled:
+    title: Режим TUN
+    body: Статус режима TUN обновлен.
+  lightweightModeEntered:
+    title: Легкий режим
+    body: Включен легкий режим.
+  profilesReactivated:
+    title: Профили
+    body: Профиль повторно активирован.
+  appQuit:
+    title: Скорый выход
+    body: Clash Verge скоро завершит работу.
+  appHidden:
+    title: Приложение скрыто
+    body: Clash Verge работает в фоновом режиме.
+service:
+  adminInstallPrompt: Для установки службы Clash Verge требуются права администратора.
+  adminUninstallPrompt: Для удаления службы Clash Verge требуются права администратора.
+tray:
+  dashboard: Панель
+  ruleMode: Режим правил
+  globalMode: Глобальный режим
+  directMode: Прямой режим
+  outboundModes: Исходящие режимы
+  rule: Правило
+  direct: Прямой
+  global: Глобальный
+  profiles: Профили
+  proxies: Прокси
+  systemProxy: Системный прокси
+  tunMode: Режим TUN
+  closeAllConnections: Закрыть все соединения
+  lightweightMode: Легкий режим
+  copyEnv: Копировать переменные среды
+  confDir: Каталог конфигурации
+  coreDir: Каталог ядра
+  logsDir: Каталог журналов
+  openDir: Открыть каталог
+  appLog: Журнал приложения
+  coreLog: Журнал ядра
+  restartClash: Перезапустить ядро Clash
+  restartApp: Перезапустить приложение
+  vergeVersion: Версия Verge
+  more: Еще
+  exit: Выход
+  tooltip:
+    systemProxy: Системный прокси
+    tun: TUN
+    profile: Профиль

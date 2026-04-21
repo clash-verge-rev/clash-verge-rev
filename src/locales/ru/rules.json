@@ -1,0 +1,82 @@
+{
+  "page": {
+    "provider": {
+      "trigger": "Провайдеры правил",
+      "dialogTitle": "Провайдеры правил",
+      "actions": {
+        "updateAll": "Обновить все",
+        "update": "Обновить"
+      }
+    },
+    "title": "Правила"
+  },
+  "feedback": {
+    "notifications": {
+      "provider": {
+        "updateSuccess": "{{name}} updated successfully",
+        "updateFailed": "Failed to update {{name}}: {{message}}",
+        "genericError": "Update failed: {{message}}",
+        "none": "No providers available to update",
+        "allUpdated": "All providers updated successfully"
+      }
+    }
+  },
+  "modals": {
+    "editor": {
+      "form": {
+        "labels": {
+          "type": "Тип правила",
+          "content": "Содержимое правила",
+          "proxyPolicy": "Политика прокси"
+        },
+        "toggles": {
+          "noResolve": "Без разрешения"
+        },
+        "actions": {
+          "prependRule": "Добавить правило в начало",
+          "appendRule": "Добавить правило в конец"
+        },
+        "validation": {
+          "conditionRequired": "Требуется условие правила",
+          "invalidRule": "Недействительное правило"
+        }
+      },
+      "ruleTypes": {
+        "DOMAIN": "DOMAIN",
+        "DOMAIN-SUFFIX": "DOMAIN-SUFFIX",
+        "DOMAIN-KEYWORD": "DOMAIN-KEYWORD",
+        "DOMAIN-REGEX": "DOMAIN-REGEX",
+        "GEOSITE": "GEOSITE",
+        "GEOIP": "GEOIP",
+        "SRC-GEOIP": "SRC-GEOIP",
+        "IP-ASN": "IP-ASN",
+        "SRC-IP-ASN": "SRC-IP-ASN",
+        "IP-CIDR": "IP-CIDR",
+        "IP-CIDR6": "IP-CIDR6",
+        "SRC-IP-CIDR": "SRC-IP-CIDR",
+        "IP-SUFFIX": "IP-SUFFIX",
+        "SRC-IP-SUFFIX": "SRC-IP-SUFFIX",
+        "SRC-PORT": "SRC-PORT",
+        "DST-PORT": "DST-PORT",
+        "IN-PORT": "IN-PORT",
+        "DSCP": "DSCP",
+        "PROCESS-NAME": "PROCESS-NAME",
+        "PROCESS-PATH": "PROCESS-PATH",
+        "PROCESS-NAME-REGEX": "PROCESS-NAME-REGEX",
+        "PROCESS-PATH-REGEX": "PROCESS-PATH-REGEX",
+        "NETWORK": "NETWORK",
+        "UID": "UID",
+        "IN-TYPE": "IN-TYPE",
+        "IN-USER": "IN-USER",
+        "IN-NAME": "IN-NAME",
+        "SUB-RULE": "SUB-RULE",
+        "RULE-SET": "RULE-SET",
+        "AND": "AND",
+        "OR": "OR",
+        "NOT": "NOT",
+        "MATCH": "MATCH"
+      },
+      "title": "Редактировать правила"
+    }
+  }
+}

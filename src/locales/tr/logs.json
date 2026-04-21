@@ -1,0 +1,9 @@
+{
+  "page": {
+    "title": "Günlükler"
+  },
+  "actions": {
+    "showDescending": "Newest first",
+    "showAscending": "Oldest first"
+  }
+}

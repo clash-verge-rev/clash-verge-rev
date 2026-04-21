@@ -1,0 +1,134 @@
+{
+  "actions": {
+    "cancel": "Abbrechen",
+    "close": "Schließen",
+    "confirm": "Bestätigen",
+    "save": "Speichern",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "new": "Neu",
+    "enable": "Aktivieren",
+    "upgrade": "Kern aktualisieren",
+    "restart": "Kern neustarten",
+    "resetToDefault": "Auf Standardwerte zurücksetzen",
+    "refresh": "Aktualisieren",
+    "retry": "Retry",
+    "refreshPage": "Refresh Page",
+    "showDetails": "Show Details",
+    "hideDetails": "Hide Details",
+    "listView": "Listenansicht",
+    "tableView": "Tabellenansicht",
+    "pause": "Pausieren",
+    "resume": "Fortsetzen",
+    "closeAll": "Alle schließen",
+    "clear": "Löschen",
+    "previous": "Previous",
+    "next": "Next"
+  },
+  "labels": {
+    "updateAt": "Aktualisiert am",
+    "timeout": "Timeout",
+    "icon": "Symbol",
+    "name": "Name",
+    "readOnly": "Schreibgeschützt",
+    "expireTime": "Ablaufzeit",
+    "updateTime": "Aktualisierungszeit",
+    "usedTotal": "Verwendet / Gesamt",
+    "from": "Von",
+    "password": "Passwort",
+    "retryAttempts": "Retry attempts",
+    "downloaded": "Heruntergeladen",
+    "uploaded": "Hochgeladen"
+  },
+  "statuses": {
+    "enabled": "Aktiviert",
+    "disabled": "Deaktiviert",
+    "saving": "Saving...",
+    "empty": "Leer"
+  },
+  "units": {
+    "milliseconds": "Millisekunden",
+    "seconds": "Sekunden",
+    "minutes": "Minuten",
+    "hours": "Stunden",
+    "kilobytes": "KB",
+    "files": "Files"
+  },
+  "placeholders": {
+    "resetInput": "Eingabefeld leeren",
+    "filter": "Filterbedingungen",
+    "matchCase": "Groß-/Kleinschreibung beachten",
+    "matchWholeWord": "Ganzes Wort übereinstimmen",
+    "useRegex": "Regulären Ausdruck verwenden"
+  },
+  "validation": {
+    "invalidRegex": "Invalid regular expression"
+  },
+  "window": {
+    "maximize": "Maximieren",
+    "minimize": "Minimieren"
+  },
+  "editorModes": {
+    "visualization": "Visualisierung",
+    "advanced": "Erweitert"
+  },
+  "feedback": {
+    "errors": {
+      "trafficStats": "Traffic Statistics Error",
+      "trafficStatsDescription": "The traffic statistics component encountered an error and has been disabled to prevent crashes."
+    },
+    "notices": {
+      "raw": "{{message}}",
+      "prefixedRaw": "{{prefix}} {{message}}"
+    },
+    "notifications": {
+      "importSuccess": "Abonnement erfolgreich importiert",
+      "importSubscriptionSuccess": "Abonnement erfolgreich importiert",
+      "importWithClashProxy": "Abonnement mit Clash-Proxy importiert",
+      "updateAvailable": "Update Available",
+      "saved": "Saved successfully",
+      "common": {
+        "copySuccess": "Kopieren erfolgreich",
+        "saveSuccess": "Zufalls-Konfiguration erfolgreich gespeichert",
+        "saveFailed": "Failed to save configuration",
+        "refreshFailed": "Aktualisierung fehlgeschlagen"
+      }
+    },
+    "validation": {
+      "config": {
+        "failed": "Abonnement-Konfigurationsüberprüfung fehlgeschlagen. Bitte überprüfen Sie die Abonnement-Konfigurationsdatei. Die Änderungen wurden rückgängig gemacht. Fehlerdetails: ",
+        "bootFailed": "Start-Abonnement-Konfigurationsüberprüfung fehlgeschlagen. Die Standardkonfiguration wurde verwendet, um die App zu starten. Bitte überprüfen Sie die Abonnement-Konfigurationsdatei. Fehlerdetails: ",
+        "coreChangeFailed": "Konfigurationsüberprüfung beim Wechsel des Kerns fehlgeschlagen. Die Standardkonfiguration wurde verwendet, um die App zu starten. Bitte überprüfen Sie die Abonnement-Konfigurationsdatei. Fehlerdetails: ",
+        "processTerminated": "Validierungsprozess abgebrochen"
+      },
+      "script": {
+        "syntaxError": "Skript-Syntaxfehler. Die Änderungen wurden rückgängig gemacht.",
+        "missingMain": "Skriptfehler. Die Änderungen wurden rückgängig gemacht.",
+        "fileNotFound": "Datei nicht gefunden. Die Änderungen wurden rückgängig gemacht.",
+        "fileError": "Skript-Dateifehler. Die Änderungen wurden rückgängig gemacht."
+      },
+      "yaml": {
+        "syntaxError": "YAML-Syntaxfehler. Die Änderungen wurden rückgängig gemacht.",
+        "readError": "YAML-Lesefehler. Die Änderungen wurden rückgängig gemacht.",
+        "mappingError": "YAML-Mappingfehler. Die Änderungen wurden rückgängig gemacht.",
+        "keyError": "YAML-Schlüsselfehler. Die Änderungen wurden rückgängig gemacht.",
+        "generalError": "YAML-Fehler. Die Änderungen wurden rückgängig gemacht."
+      },
+      "merge": {
+        "syntaxError": "Syntaxfehler in der Überdeckungsdatei. Die Änderungen wurden rückgängig gemacht.",
+        "mappingError": "Mappingfehler in der Überdeckungsdatei. Die Änderungen wurden rückgängig gemacht.",
+        "keyError": "Schlüsselfehler in der Überdeckungsdatei. Die Änderungen wurden rückgängig gemacht.",
+        "generalError": "Fehler in der Überdeckungsdatei. Die Änderungen wurden rückgängig gemacht."
+      }
+    }
+  },
+  "filters": {
+    "logLevels": {
+      "all": "ALL",
+      "debug": "DEBUG",
+      "info": "INFO",
+      "warn": "WARN",
+      "error": "ERROR"
+    }
+  }
+}

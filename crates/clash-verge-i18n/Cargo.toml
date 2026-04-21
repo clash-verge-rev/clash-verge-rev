@@ -1,0 +1,11 @@
+[package]
+name = "clash-verge-i18n"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+rust-i18n = "3.1.5"
+sys-locale = "0.3.2"
+
+[lints]
+workspace = true

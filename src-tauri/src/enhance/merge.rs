@@ -1,29 +1,33 @@
+use clash_verge_logging::{Type, logging};
+
 use super::use_lowercase;
 use serde_yaml_ng::{self, Mapping, Value};
 
-fn deep_merge(a: &mut Value, b: &Value) {
+fn deep_merge(a: &mut Value, b: Value) {
     match (a, b) {
         (&mut Value::Mapping(ref mut a), Value::Mapping(b)) => {
             for (k, v) in b {
                 deep_merge(a.entry(k.clone()).or_insert(Value::Null), v);
             }
         }
-        (a, b) => *a = b.clone(),
+        (a, b) => *a = b,
     }
 }
 
-pub fn use_merge(merge: Mapping, config: Mapping) -> Mapping {
+pub fn use_merge(merge: &Mapping, config: Mapping) -> Mapping {
     let mut config = Value::from(config);
-    let merge = use_lowercase(merge.clone());
+    let merge = use_lowercase(merge);
 
-    deep_merge(&mut config, &Value::from(merge));
+    deep_merge(&mut config, Value::from(merge));
 
-    let config = config.as_mapping().cloned().unwrap_or_else(|| {
-        log::error!("Failed to convert merged config to mapping, using empty mapping");
+    config.as_mapping().cloned().unwrap_or_else(|| {
+        logging!(
+            error,
+            Type::Core,
+            "Failed to convert merged config to mapping, using empty mapping"
+        );
         Mapping::new()
-    });
-
-    config
+    })
 }
 
 #[test]
@@ -57,7 +61,7 @@ fn test_merge() -> anyhow::Result<()> {
     let merge = serde_yaml_ng::from_str::<Mapping>(merge)?;
     let config = serde_yaml_ng::from_str::<Mapping>(config)?;
 
-    let _ = serde_yaml_ng::to_string(&use_merge(merge, config))?;
+    let _ = serde_yaml_ng::to_string(&use_merge(&merge, config))?;
 
     Ok(())
 }

@@ -1,198 +1,127 @@
 [package]
 name = "clash-verge"
-version = "2.4.2"
+version = "2.4.7"
 description = "clash verge"
 authors = ["zzzgydi", "Tunglies", "wonfen", "MystiPanda"]
 license = "GPL-3.0-only"
 repository = "https://github.com/clash-verge-rev/clash-verge-rev.git"
 default-run = "clash-verge"
-edition = "2021"
 build = "build.rs"
+edition = "2024"
+rust-version = "1.91"
+
+[lib]
+name = "app_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[features]
+default = ["custom-protocol"]
+custom-protocol = ["tauri/custom-protocol"]
+verge-dev = ["clash_verge_logger/color"]
+tauri-dev = []
+tokio-trace = ["console-subscriber"]
+clippy = ["tauri/test"]
+tracing = []
 
 [package.metadata.bundle]
 identifier = "io.github.clash-verge-rev.clash-verge-rev"
 
 [build-dependencies]
-tauri-build = { version = "2.4.1", features = [] }
+tauri-build = { version = "2.5.6", features = [] }
 
 [dependencies]
-warp = { version = "0.4.2", features = ["server"] }
-anyhow = "1.0.99"
-dirs = "6.0"
-open = "5.3.2"
-log = "0.4.28"
-dunce = "1.0.5"
-log4rs = "1.4.0"
-nanoid = "0.4"
-chrono = "0.4.41"
-sysinfo = { version = "0.37.0", features = ["network", "system"] }
-boa_engine = "0.20.0"
-serde_json = "1.0.143"
-serde_yaml_ng = "0.10.0"
-once_cell = "1.21.3"
-port_scanner = "0.1.5"
-delay_timer = "0.11.6"
-parking_lot = "0.12.4"
-percent-encoding = "2.3.2"
-tokio = { version = "1.47.1", features = [
-  "rt-multi-thread",
-  "macros",
-  "time",
-  "sync",
-] }
-serde = { version = "1.0.219", features = ["derive"] }
-reqwest = { version = "0.12.23", features = ["json", "cookies"] }
-regex = "1.11.2"
-sysproxy = { git = "https://github.com/clash-verge-rev/sysproxy-rs" }
-tauri = { version = "2.8.5", features = [
+clash-verge-draft = { workspace = true }
+clash-verge-logging = { workspace = true }
+clash-verge-signal = { workspace = true }
+clash-verge-i18n = { workspace = true }
+clash-verge-limiter = { workspace = true }
+tauri-plugin-clash-verge-sysinfo = { workspace = true }
+tauri-plugin-clipboard-manager = { workspace = true }
+tauri = { workspace = true, features = [
   "protocol-asset",
   "devtools",
   "tray-icon",
   "image-ico",
   "image-png",
 ] }
-network-interface = { version = "2.0.3", features = ["serde"] }
-tauri-plugin-shell = "2.3.1"
-tauri-plugin-dialog = "2.4.0"
-tauri-plugin-fs = "2.4.2"
-tauri-plugin-process = "2.3.0"
-tauri-plugin-clipboard-manager = "2.3.0"
-tauri-plugin-deep-link = "2.4.3"
-tauri-plugin-devtools = "2.0.1"
-tauri-plugin-window-state = "2.4.0"
-zip = "5.0.0"
-reqwest_dav = "0.2.2"
+parking_lot = { workspace = true }
+anyhow = { workspace = true }
+tokio = { workspace = true }
+compact_str = { workspace = true }
+flexi_logger = { workspace = true }
+log = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_json = { workspace = true }
+serde_yaml_ng = { workspace = true }
+smartstring = { workspace = true, features = ["serde"] }
+bitflags = { workspace = true }
+warp = { version = "0.4.2", features = ["server"] }
+open = "5.3.3"
+dunce = "1.0.5"
+nanoid = "0.4"
+chrono = "0.4.44"
+boa_engine = "0.21.0"
+once_cell = { version = "1.21.4", features = ["parking_lot"] }
+delay_timer = "0.11.6"
+percent-encoding = "2.3.2"
+reqwest = { version = "0.13.2", features = [
+  "json",
+  "cookies",
+  "rustls",
+  "form",
+] }
+regex = "1.12.3"
+sysproxy = { git = "https://github.com/clash-verge-rev/sysproxy-rs", branch = "0.4.5", features = [
+  "guard",
+] }
+network-interface = { version = "2.0.5", features = ["serde"] }
+tauri-plugin-shell = "2.3.5"
+tauri-plugin-dialog = "2.6.0"
+tauri-plugin-fs = "2.4.5"
+tauri-plugin-process = "2.3.1"
+tauri-plugin-deep-link = "2.4.7"
+tauri-plugin-window-state = "2.4.1"
+zip = "8.2.0"
+reqwest_dav = "0.3.3"
 aes-gcm = { version = "0.10.3", features = ["std"] }
 base64 = "0.22.1"
-getrandom = "0.3.3"
-futures = "0.3.31"
-sys-locale = "0.3.2"
-libc = "0.2.175"
-gethostname = "1.0.2"
-hmac = "0.12.1"
-sha2 = "0.10.9"
-hex = "0.4.3"
+getrandom = "0.4.2"
+futures = "0.3.32"
+gethostname = "1.1.0"
 scopeguard = "1.2.0"
-kode-bridge = "0.2.1-rc2"
-dashmap = "6.1.0"
-tauri-plugin-notification = "2.3.1"
-console-subscriber = { version = "0.4.1", optional = true }
-tokio-stream = "0.1.17"
-isahc = { version = "1.7.2", default-features = false, features = [
-  "text-decoding",
-  "parking_lot",
-] }
-
+tauri-plugin-notification = "2.3.3"
+tokio-stream = "0.1.18"
+backoff = { version = "0.4.0", features = ["tokio"] }
+tauri-plugin-http = "2.5.7"
+console-subscriber = { version = "0.5.0", optional = true }
+tauri-plugin-devtools = { version = "2.0.1" }
+tauri-plugin-mihomo = { git = "https://github.com/clash-verge-rev/tauri-plugin-mihomo", branch = "revert" }
+clash_verge_logger = { git = "https://github.com/clash-verge-rev/clash-verge-logger" }
+async-trait = "0.1.89"
+clash_verge_service_ipc = { version = "2.1.3", features = [
+  "client",
+], git = "https://github.com/clash-verge-rev/clash-verge-service-ipc" }
+arc-swap = "1.8.2"
+tokio-rustls = "0.26"
+rustls = { version = "0.23", features = ["ring"] }
+webpki-roots = "1.0"
+rust_iso3166 = "0.1.14"
+# Use the git repo until the next release after v2.0.0.
+dark-light = { git = "https://github.com/rust-dark-light/dark-light" }
 
 [target.'cfg(windows)'.dependencies]
+deelevate = { workspace = true }
 runas = "=1.2.0"
-deelevate = "0.2.0"
-winreg = "0.55.0"
-winapi = { version = "0.3.9", features = [
-  "winbase",
-  "fileapi",
-  "winnt",
-  "handleapi",
-  "errhandlingapi",
-  "minwindef",
-  "winerror",
-  "tlhelp32",
-  "processthreadsapi",
-  "winhttp",
-  "winreg",
-] }
-
-[target.'cfg(target_os = "linux")'.dependencies]
-users = "0.11.0"
+winreg = "0.56.0"
+windows = { version = "0.62.2", features = ["Win32_Globalization"] }
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
-tauri-plugin-autostart = "2.5.0"
-tauri-plugin-global-shortcut = "2.3.0"
-tauri-plugin-updater = "2.9.0"
-
-[features]
-default = ["custom-protocol"]
-custom-protocol = ["tauri/custom-protocol"]
-verge-dev = []
-tokio-trace = ["console-subscriber"]
-
-[profile.release]
-panic = "abort"
-codegen-units = 1
-lto = true
-opt-level = "s"
-strip = true
-
-[profile.dev]
-incremental = true
-codegen-units = 256 # 增加编译单元，提升编译速度
-opt-level = 0       # 禁用优化，进一步提升编译速度
-debug = true        # 保留调试信息
-strip = false       # 不剥离符号，保留调试信息
-
-[profile.fast-release]
-inherits = "release" # 继承 release 的配置
-panic = "abort"      # 与 release 相同
-codegen-units = 256  # 增加编译单元，提升编译速度
-lto = false          # 禁用 LTO，提升编译速度
-opt-level = 0        # 禁用优化，大幅提升编译速度
-debug = true         # 保留调试信息
-strip = false        # 不剥离符号，保留调试信息
-
-[lib]
-name = "app_lib"
-crate-type = ["staticlib", "cdylib", "rlib"]
+tauri-plugin-autostart = "2.5.1"
+tauri-plugin-global-shortcut = "2.3.1"
+tauri-plugin-updater = "2.10.0"
 
 [dev-dependencies]
-criterion = "0.7.0"
+criterion = { workspace = true }
 
-[lints.clippy]
-# Core categories - most important for code safety and correctness
-correctness = { level = "deny", priority = -1 }
-suspicious = { level = "deny", priority = -1 }
-
-# Critical safety lints - warn for now due to extensive existing usage
-unwrap_used = "warn"
-expect_used = "warn"
-panic = "deny"
-unimplemented = "deny"
-
-# Development quality lints
-todo = "warn"
-dbg_macro = "warn"
-#print_stdout = "warn"
-#print_stderr = "warn"
-
-# Performance lints for proxy application
-clone_on_ref_ptr = "warn"
-rc_clone_in_vec_init = "warn"
-large_stack_arrays = "warn"
-large_const_arrays = "warn"
-
-# Security lints
-#integer_division = "warn"
-#lossy_float_literal = "warn"
-#default_numeric_fallback = "warn"
-
-# Mutex and async lints - strict control
-async_yields_async = "deny" # Prevents missing await in async blocks
-mutex_atomic = "deny"       # Use atomics instead of Mutex<bool/int>
-mutex_integer = "deny"      # Use AtomicInt instead of Mutex<int>
-rc_mutex = "deny"           # Single-threaded Rc with Mutex is wrong
-unused_async = "deny"       # Too many false positives in Tauri/framework code
-await_holding_lock = "deny"
-large_futures = "deny"
-future_not_send = "deny"
-
-# Common style improvements
-redundant_else = "deny"             # Too many in existing code
-needless_continue = "deny"          # Too many in existing code
-needless_raw_string_hashes = "deny" # Too many in existing code
-
-# Disable noisy categories for existing codebase but keep them available
-#style = { level = "allow", priority = -1 }
-#complexity = { level = "allow", priority = -1 }
-#perf = { level = "allow", priority = -1 }
-#pedantic = { level = "allow", priority = -1 }
-#nursery = { level = "allow", priority = -1 }
-#restriction = { level = "allow", priority = -1 }
+[lints]
+workspace = true

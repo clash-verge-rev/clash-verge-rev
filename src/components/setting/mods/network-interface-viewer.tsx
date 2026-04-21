@@ -1,55 +1,50 @@
-import { forwardRef, useImperativeHandle, useState } from "react";
-import { useTranslation } from "react-i18next";
-import { BaseDialog, DialogRef } from "@/components/base";
-import { getNetworkInterfacesInfo } from "@/services/cmds";
-import { alpha, Box, Button, IconButton } from "@mui/material";
-import { ContentCopyRounded } from "@mui/icons-material";
-import { writeText } from "@tauri-apps/plugin-clipboard-manager";
-import { showNotice } from "@/services/noticeService";
-import useSWR from "swr";
+import { ContentCopyRounded } from '@mui/icons-material'
+import { alpha, Box, Button, IconButton } from '@mui/material'
+import { writeText } from '@tauri-apps/plugin-clipboard-manager'
+import type { Ref } from 'react'
+import { useImperativeHandle, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
-export const NetworkInterfaceViewer = forwardRef<DialogRef>((props, ref) => {
-  const { t } = useTranslation();
-  const [open, setOpen] = useState(false);
-  const [isV4, setIsV4] = useState(true);
+import { BaseDialog, DialogRef } from '@/components/base'
+import { useNetworkInterfaces } from '@/hooks/use-network'
+import { showNotice } from '@/services/notice-service'
+
+export function NetworkInterfaceViewer({ ref }: { ref?: Ref<DialogRef> }) {
+  const { t } = useTranslation()
+  const [open, setOpen] = useState(false)
+  const [isV4, setIsV4] = useState(true)
 
   useImperativeHandle(ref, () => ({
     open: () => {
-      setOpen(true);
+      setOpen(true)
     },
     close: () => setOpen(false),
-  }));
+  }))
 
-  const { data: networkInterfaces } = useSWR(
-    "clash-verge-rev-internal://network-interfaces",
-    getNetworkInterfacesInfo,
-    {
-      fallbackData: [], // default data before fetch
-    },
-  );
+  const { networkInterfaces } = useNetworkInterfaces()
 
   return (
     <BaseDialog
       open={open}
       title={
         <Box display="flex" justifyContent="space-between">
-          {t("Network Interface")}
+          {t('settings.modals.networkInterface.title')}
           <Box>
             <Button
               variant="contained"
               size="small"
               onClick={() => {
-                setIsV4((prev) => !prev);
+                setIsV4((prev) => !prev)
               }}
             >
-              {isV4 ? "Ipv6" : "Ipv4"}
+              {isV4 ? 'Ipv6' : 'Ipv4'}
             </Button>
           </Box>
         </Box>
       }
       contentSx={{ width: 450 }}
       disableOk
-      cancelBtn={t("Close")}
+      cancelBtn={t('shared.actions.close')}
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}
     >
@@ -64,14 +59,18 @@ export const NetworkInterfaceViewer = forwardRef<DialogRef>((props, ref) => {
                     address.V4 && (
                       <AddressDisplay
                         key={address.V4.ip}
-                        label={t("Ip Address")}
+                        label={t(
+                          'settings.modals.networkInterface.fields.ipAddress',
+                        )}
                         content={address.V4.ip}
                       />
                     ),
                 )}
                 <AddressDisplay
-                  label={t("Mac Address")}
-                  content={item.mac_addr ?? ""}
+                  label={t(
+                    'settings.modals.networkInterface.fields.macAddress',
+                  )}
+                  content={item.mac_addr ?? ''}
                 />
               </>
             )}
@@ -82,14 +81,18 @@ export const NetworkInterfaceViewer = forwardRef<DialogRef>((props, ref) => {
                     address.V6 && (
                       <AddressDisplay
                         key={address.V6.ip}
-                        label={t("Ip Address")}
+                        label={t(
+                          'settings.modals.networkInterface.fields.ipAddress',
+                        )}
                         content={address.V6.ip}
                       />
                     ),
                 )}
                 <AddressDisplay
-                  label={t("Mac Address")}
-                  content={item.mac_addr ?? ""}
+                  label={t(
+                    'settings.modals.networkInterface.fields.macAddress',
+                  )}
+                  content={item.mac_addr ?? ''}
                 />
               </>
             )}
@@ -97,44 +100,48 @@ export const NetworkInterfaceViewer = forwardRef<DialogRef>((props, ref) => {
         </Box>
       ))}
     </BaseDialog>
-  );
-});
+  )
+}
 
-const AddressDisplay = (props: { label: string; content: string }) => {
-  const { t } = useTranslation();
-
+const AddressDisplay = ({
+  label,
+  content,
+}: {
+  label: string
+  content: string
+}) => {
   return (
     <Box
       sx={{
-        display: "flex",
-        justifyContent: "space-between",
-        margin: "8px 0",
+        display: 'flex',
+        justifyContent: 'space-between',
+        margin: '8px 0',
       }}
     >
-      <Box>{props.label}</Box>
+      <Box>{label}</Box>
       <Box
         sx={({ palette }) => ({
-          borderRadius: "8px",
-          padding: "2px 2px 2px 8px",
+          borderRadius: '8px',
+          padding: '2px 2px 2px 8px',
           background:
-            palette.mode === "dark"
+            palette.mode === 'dark'
               ? alpha(palette.background.paper, 0.3)
               : alpha(palette.grey[400], 0.3),
         })}
       >
-        <Box sx={{ display: "inline", userSelect: "text" }}>
-          {props.content}
-        </Box>
+        <Box sx={{ display: 'inline', userSelect: 'text' }}>{content}</Box>
         <IconButton
           size="small"
           onClick={async () => {
-            await writeText(props.content);
-            showNotice("success", t("Copy Success"));
+            await writeText(content)
+            showNotice.success(
+              'shared.feedback.notifications.common.copySuccess',
+            )
           }}
         >
-          <ContentCopyRounded sx={{ fontSize: "18px" }} />
+          <ContentCopyRounded sx={{ fontSize: '18px' }} />
         </IconButton>
       </Box>
     </Box>
-  );
-};
+  )
+}

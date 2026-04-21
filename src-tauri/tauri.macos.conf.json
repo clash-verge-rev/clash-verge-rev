@@ -6,7 +6,7 @@
     "targets": ["app", "dmg"],
     "macOS": {
       "frameworks": [],
-      "minimumSystemVersion": "10.15",
+      "minimumSystemVersion": "11.0",
       "exceptionDomain": "",
       "signingIdentity": null,
       "entitlements": "packages/macos/entitlements.plist",
@@ -28,7 +28,8 @@
           "x": 200,
           "y": 180
         }
-      }
+      },
+      "infoPlist": "packages/macos/info_merge.plist"
     }
   }
 }

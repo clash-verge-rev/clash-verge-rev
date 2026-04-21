@@ -1,88 +1,91 @@
-import { forwardRef, useImperativeHandle, useState } from "react";
-import { useLockFn } from "ahooks";
-import { useTranslation } from "react-i18next";
 import {
+  InputAdornment,
   List,
   ListItem,
   ListItemText,
   TextField,
   Typography,
-  InputAdornment,
-} from "@mui/material";
-import { useVerge } from "@/hooks/use-verge";
-import { BaseDialog, DialogRef, Switch } from "@/components/base";
-import { TooltipIcon } from "@/components/base/base-tooltip-icon";
-import { entry_lightweight_mode } from "@/services/cmds";
-import { showNotice } from "@/services/noticeService";
+} from '@mui/material'
+import { useLockFn } from 'ahooks'
+import type { Ref } from 'react'
+import { useImperativeHandle, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
-export const LiteModeViewer = forwardRef<DialogRef>((props, ref) => {
-  const { t } = useTranslation();
-  const { verge, patchVerge } = useVerge();
+import { BaseDialog, DialogRef, Switch, TooltipIcon } from '@/components/base'
+import { useVerge } from '@/hooks/use-verge'
+import { entry_lightweight_mode } from '@/services/cmds'
+import { showNotice } from '@/services/notice-service'
 
-  const [open, setOpen] = useState(false);
+export function LiteModeViewer({ ref }: { ref?: Ref<DialogRef> }) {
+  const { t } = useTranslation()
+  const { verge, patchVerge } = useVerge()
+
+  const [open, setOpen] = useState(false)
   const [values, setValues] = useState({
     autoEnterLiteMode: false,
     autoEnterLiteModeDelay: 10, // 默认10分钟
-  });
+  })
 
   useImperativeHandle(ref, () => ({
     open: () => {
-      setOpen(true);
+      setOpen(true)
       setValues({
         autoEnterLiteMode: verge?.enable_auto_light_weight_mode ?? false,
         autoEnterLiteModeDelay: verge?.auto_light_weight_minutes ?? 10,
-      });
+      })
     },
     close: () => setOpen(false),
-  }));
+  }))
 
   const onSave = useLockFn(async () => {
     try {
       await patchVerge({
         enable_auto_light_weight_mode: values.autoEnterLiteMode,
         auto_light_weight_minutes: values.autoEnterLiteModeDelay,
-      });
-      setOpen(false);
-    } catch (err: any) {
-      showNotice("error", err.message || err.toString());
+      })
+      setOpen(false)
+    } catch (err) {
+      showNotice.error(err)
     }
-  });
+  })
 
   return (
     <BaseDialog
       open={open}
-      title={t("LightWeight Mode Settings")}
+      title={t('settings.modals.liteMode.title')}
       contentSx={{ width: 450 }}
-      okBtn={t("Save")}
-      cancelBtn={t("Cancel")}
+      okBtn={t('shared.actions.save')}
+      cancelBtn={t('shared.actions.cancel')}
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}
       onOk={onSave}
     >
       <List>
-        <ListItem sx={{ padding: "5px 2px" }}>
-          <ListItemText primary={t("Enter LightWeight Mode Now")} />
+        <ListItem sx={{ padding: '5px 2px' }}>
+          <ListItemText
+            primary={t('settings.modals.liteMode.actions.enterNow')}
+          />
           <Typography
             variant="button"
             sx={{
-              cursor: "pointer",
-              color: "primary.main",
-              "&:hover": { textDecoration: "underline" },
+              cursor: 'pointer',
+              color: 'primary.main',
+              '&:hover': { textDecoration: 'underline' },
             }}
             onClick={async () => await entry_lightweight_mode()}
           >
-            {t("Enable")}
+            {t('shared.actions.enable')}
           </Typography>
         </ListItem>
 
-        <ListItem sx={{ padding: "5px 2px" }}>
+        <ListItem sx={{ padding: '5px 2px' }}>
           <ListItemText
-            primary={t("Auto Enter LightWeight Mode")}
-            sx={{ maxWidth: "fit-content" }}
+            primary={t('settings.modals.liteMode.toggles.autoEnter')}
+            sx={{ maxWidth: 'fit-content' }}
           />
           <TooltipIcon
-            title={t("Auto Enter LightWeight Mode Info")}
-            sx={{ opacity: "0.7" }}
+            title={t('settings.modals.liteMode.tooltips.autoEnter')}
+            sx={{ opacity: '0.7' }}
           />
           <Switch
             edge="end"
@@ -90,14 +93,16 @@ export const LiteModeViewer = forwardRef<DialogRef>((props, ref) => {
             onChange={(_, c) =>
               setValues((v) => ({ ...v, autoEnterLiteMode: c }))
             }
-            sx={{ marginLeft: "auto" }}
+            sx={{ marginLeft: 'auto' }}
           />
         </ListItem>
 
         {values.autoEnterLiteMode && (
           <>
-            <ListItem sx={{ padding: "5px 2px" }}>
-              <ListItemText primary={t("Auto Enter LightWeight Mode Delay")} />
+            <ListItem sx={{ padding: '5px 2px' }}>
+              <ListItemText
+                primary={t('settings.modals.liteMode.fields.delay')}
+              />
               <TextField
                 autoComplete="off"
                 size="small"
@@ -117,7 +122,7 @@ export const LiteModeViewer = forwardRef<DialogRef>((props, ref) => {
                   input: {
                     endAdornment: (
                       <InputAdornment position="end">
-                        {t("mins")}
+                        {t('shared.units.minutes')}
                       </InputAdornment>
                     ),
                   },
@@ -125,21 +130,20 @@ export const LiteModeViewer = forwardRef<DialogRef>((props, ref) => {
               />
             </ListItem>
 
-            <ListItem sx={{ padding: "5px 2px" }}>
+            <ListItem sx={{ padding: '5px 2px' }}>
               <Typography
                 variant="body2"
                 color="text.secondary"
-                sx={{ fontStyle: "italic" }}
+                sx={{ fontStyle: 'italic' }}
               >
-                {t(
-                  "When closing the window, LightWeight Mode will be automatically activated after _n minutes",
-                  { n: values.autoEnterLiteModeDelay },
-                )}
+                {t('settings.modals.liteMode.messages.autoEnterHint', {
+                  n: values.autoEnterLiteModeDelay,
+                })}
               </Typography>
             </ListItem>
           </>
         )}
       </List>
     </BaseDialog>
-  );
-});
+  )
+}

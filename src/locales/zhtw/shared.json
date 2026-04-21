@@ -1,0 +1,134 @@
+{
+  "actions": {
+    "cancel": "取消",
+    "close": "關閉",
+    "confirm": "確認",
+    "save": "儲存",
+    "delete": "刪除",
+    "edit": "編輯",
+    "new": "新增",
+    "enable": "啟用",
+    "upgrade": "升級內核",
+    "restart": "重啟內核",
+    "resetToDefault": "重設為預設值",
+    "refresh": "重整",
+    "retry": "重試",
+    "refreshPage": "重新整理頁面",
+    "showDetails": "顯示詳情",
+    "hideDetails": "隱藏詳情",
+    "listView": "列表檢視",
+    "tableView": "表格檢視",
+    "pause": "暫停",
+    "resume": "繼續",
+    "closeAll": "關閉全部",
+    "clear": "清除",
+    "previous": "上一頁",
+    "next": "下一頁"
+  },
+  "labels": {
+    "updateAt": "更新於",
+    "timeout": "逾時",
+    "icon": "圖示",
+    "name": "名稱",
+    "readOnly": "唯讀",
+    "expireTime": "到期時間",
+    "updateTime": "更新時間",
+    "usedTotal": "已使用 / 總量",
+    "from": "來自",
+    "password": "密碼",
+    "retryAttempts": "重試次數",
+    "downloaded": "下載量",
+    "uploaded": "上傳量"
+  },
+  "statuses": {
+    "enabled": "已啟用",
+    "disabled": "已停用",
+    "saving": "儲存中...",
+    "empty": "空空如也"
+  },
+  "units": {
+    "milliseconds": "毫秒",
+    "seconds": "秒",
+    "minutes": "分鐘",
+    "hours": "小時",
+    "kilobytes": "KB",
+    "files": "檔案"
+  },
+  "placeholders": {
+    "resetInput": "清空輸入框",
+    "filter": "篩選條件",
+    "matchCase": "區分大小寫",
+    "matchWholeWord": "完整字詞配對",
+    "useRegex": "使用正規表示式"
+  },
+  "validation": {
+    "invalidRegex": "無效的正規表示式"
+  },
+  "window": {
+    "maximize": "最大化",
+    "minimize": "最小化"
+  },
+  "editorModes": {
+    "visualization": "視覺化",
+    "advanced": "進階"
+  },
+  "feedback": {
+    "errors": {
+      "trafficStats": "流量統計錯誤",
+      "trafficStatsDescription": "流量統計元件發生錯誤，已停用以避免當機。"
+    },
+    "notices": {
+      "raw": "{{message}}",
+      "prefixedRaw": "{{prefix}} {{message}}"
+    },
+    "notifications": {
+      "importSuccess": "匯入設定檔成功",
+      "importSubscriptionSuccess": "匯入訂閱成功",
+      "importWithClashProxy": "使用 Clash 代理匯入訂閱成功",
+      "updateAvailable": "有可用更新",
+      "saved": "儲存成功",
+      "common": {
+        "copySuccess": "複製成功",
+        "saveSuccess": "設定儲存完成",
+        "saveFailed": "設定儲存失敗",
+        "refreshFailed": "重整失敗"
+      }
+    },
+    "validation": {
+      "config": {
+        "failed": "訂閱配置校驗失敗，請檢查訂閱配置文件，變更已撤銷，錯誤詳情：",
+        "bootFailed": "啟動訂閱配置校驗失敗，已使用預設配置啟動；請檢查訂閱配置文件，錯誤詳情：",
+        "coreChangeFailed": "切換內核時配置校驗失敗，已使用預設配置啟動；請檢查訂閱配置文件，錯誤詳情：",
+        "processTerminated": "驗證程序被終止"
+      },
+      "script": {
+        "syntaxError": "指令碼語法錯誤，變更已撤銷",
+        "missingMain": "指令碼錯誤，變更已撤銷",
+        "fileNotFound": "檔案遺失，變更已撤銷",
+        "fileError": "指令碼檔案錯誤，變更已撤銷"
+      },
+      "yaml": {
+        "syntaxError": "YAML 語法錯誤，變更已撤銷",
+        "readError": "YAML 讀取錯誤，變更已撤銷",
+        "mappingError": "YAML 映射錯誤，變更已撤銷",
+        "keyError": "YAML 鍵錯誤，變更已撤銷",
+        "generalError": "YAML 錯誤，變更已撤銷"
+      },
+      "merge": {
+        "syntaxError": "覆寫檔案語法錯誤，變更已撤銷",
+        "mappingError": "覆寫檔案映射錯誤，變更已撤銷",
+        "keyError": "覆寫檔案鍵錯誤，變更已撤銷",
+        "generalError": "覆寫檔案錯誤，變更已撤銷"
+      }
+    }
+  },
+  "filters": {
+    "logLevels": {
+      "all": "ALL",
+      "debug": "DEBUG",
+      "info": "INFO",
+      "warn": "WARN",
+      "error": "ERROR"
+    }
+  }
+}

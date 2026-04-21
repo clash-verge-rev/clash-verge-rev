@@ -1,0 +1,654 @@
+{
+  "page": {
+    "actions": {
+      "manual": "راهنما",
+      "telegram": "کانال تلگرام",
+      "github": "مخزن GitHub"
+    },
+    "title": "تنظیمات"
+  },
+  "sections": {
+    "system": {
+      "title": "تنظیمات سیستم",
+      "toggles": {
+        "tunMode": "Tun (کارت شبکه مجازی)",
+        "systemProxy": "پراکسی سیستم"
+      },
+      "tooltips": {
+        "silentStart": "برنامه را در حالت پس‌زمینه بدون نمایش پانل اجرا کنید"
+      },
+      "fields": {
+        "autoLaunch": "اجرای خودکار",
+        "silentStart": "اجرای بی‌صدا"
+      },
+      "notifications": {
+        "tunMode": {
+          "autoDisabled": "حالت TUN به دلیل عدم دسترسی به سرویس، به طور خودکار غیرفعال می‌شود",
+          "autoDisableFailed": "غیرفعال کردن خودکار حالت TUN ناموفق بود"
+        }
+      }
+    },
+    "proxyControl": {
+      "tooltips": {
+        "systemProxy": "به امکانات تنظیم پروکسی سیستم عامل دسترسی پیدا کنید. اگر فعال‌سازی ناموفق بود، پروکسی سیستم عامل را به‌صورت دستی تغییر دهید",
+        "tunMode": "حالت Tun (NIC مجازی): تمام ترافیک سیستم را ضبط می کند، وقتی فعال باشد، نیازی به فعال کردن پروکسی سیستم نیست.",
+        "tunUnavailable": "TUN به حالت سرویس یا حالت ادمین نیاز دارد"
+      },
+      "actions": {
+        "installService": "نصب سرویس",
+        "uninstallService": "حذف سرویس"
+      },
+      "fields": {
+        "systemProxy": "پراکسی سیستم",
+        "tunMode": "Tun (کارت شبکه مجازی)"
+      }
+    },
+    "externalController": {
+      "title": "کنترل‌کننده خارجی",
+      "fields": {
+        "enable": "فعال کردن کنترل‌کننده خارجی",
+        "address": "کنترل‌کننده خارجی",
+        "secret": "رمز اصلی"
+      },
+      "placeholders": {
+        "address": "مورد نیاز",
+        "secret": "توصیه شده"
+      },
+      "tooltips": {
+        "copy": "کپی در کلیپ بورد"
+      },
+      "messages": {
+        "addressRequired": "آدرس کنترلر نمی‌تواند خالی باشد",
+        "secretRequired": "راز نمی‌تواند خالی باشد",
+        "copyFailed": "کپی نشد",
+        "controllerCopied": "آدرس کنترلر در کلیپ بورد کپی شد",
+        "secretCopied": "Secret copied to clipboard"
+      }
+    },
+    "externalCors": {
+      "title": "External Cors Configuration",
+      "fields": {
+        "allowPrivateNetwork": "Allow private network access",
+        "allowedOrigins": "Allowed Origins"
+      },
+      "placeholders": {
+        "origin": "لطفا یک url معتبر وارد کنید"
+      },
+      "actions": {
+        "add": "افزودن"
+      },
+      "messages": {
+        "alwaysIncluded": "Always included origins: {{urls}}"
+      },
+      "tooltips": {
+        "open": "External Cors Settings"
+      }
+    },
+    "appearance": {
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System"
+    },
+    "clash": {
+      "title": "تنظیمات Clash",
+      "form": {
+        "fields": {
+          "allowLan": "اجازه LAN",
+          "dnsOverwrite": "بازنویسی DNS",
+          "ipv6": "IPv6",
+          "unifiedDelay": "معادلDELAY",
+          "logLevel": "سطح لاگ",
+          "portConfig": "پیکربندی پورت",
+          "external": "خارجی",
+          "webUI": "رابط وب",
+          "clashCore": "هسته Clash",
+          "openUwpTool": "باز کردن ابزار UWP",
+          "updateGeoData": "به‌روزرسانی GeoData",
+          "tunnels": {
+            "title": "مدیریت تونل‌ها",
+            "localAddr": "آدرس شنود محلی",
+            "localPort": "پورت شنود محلی",
+            "targetAddr": "آدرس هدف",
+            "targetPort": "پورت هدف",
+            "proxyGroup": "گروه پراکسی",
+            "proxyNode": "گره پراکسی",
+            "protocols": "پروتکل",
+            "existing": "تونل‌های موجود",
+            "default": "پیروی از تنظیمات فعلی",
+            "optional": "اختیاری",
+            "messages": {
+              "incomplete": "لطفاً تمام فیلدهای الزامی تونل را تکمیل کنید",
+              "invalidLocalAddr": "آدرس شنود محلی نامعتبر است",
+              "invalidLocalPort": "پورت شنود محلی نامعتبر است",
+              "invalidTargetAddr": "آدرس هدف نامعتبر",
+              "invalidTargetPort": "پورت هدف نامعتبر"
+            },
+            "actions": {
+              "add": "افزودن",
+              "addNew": "افزودن تونل جدید"
+            }
+          }
+        },
+        "tooltips": {
+          "networkInterface": "رابط شبکه",
+          "unifiedDelay": "معادلDELAY را فعال کنید تا ترافیک شبکه به سرعت رسید",
+          "logLevel": "این فقط روی فایل‌های لاگ هسته تحت فایل سرویس در فهرست ورود اثر می‌گذارد.",
+          "openUwpTool": "از ویندوز 8 به بعد، برنامه‌های UWP (مانند Microsoft Store) از دسترسی مستقیم به خدمات شبکه محلی محدود شده‌اند و این ابزار می‌تواند برای دور زدن این محدودیت استفاده شود"
+        },
+        "options": {
+          "logLevel": {
+            "debug": "Debug",
+            "info": "Info",
+            "warning": "Warn",
+            "error": "Error",
+            "silent": "Silent"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "verge": {
+      "basic": {
+        "title": "تنظیمات پایه Verge",
+        "actions": {
+          "browse": "مرور کردن"
+        },
+        "trayOptions": {
+          "showMainWindow": "نمایش پنجره اصلی",
+          "showTrayMenu": "Show Tray Menu",
+          "disable": "غیرفعال کردن"
+        },
+        "fields": {
+          "language": "زبان",
+          "themeMode": "حالت تم",
+          "trayClickEvent": "رویداد کلیک در سینی سیستم",
+          "copyEnvType": "کپی نوع محیط",
+          "startPage": "صفحه شروع",
+          "startupScript": "اسکریپت راه‌اندازی",
+          "themeSetting": "تنظیمات تم",
+          "layoutSetting": "تنظیمات چیدمان",
+          "misc": "متفرقه",
+          "hotkeySetting": "تنظیمات کلیدهای میانبر"
+        }
+      },
+      "advanced": {
+        "title": "تنظیمات پیشرفته Verge",
+        "tooltips": {
+          "backupInfo": "از فایل های پیکربندی پشتیبان WebDAV پشتیبانی می کند",
+          "openConfDir": "اگر نرم‌افزار به‌طور غیرعادی اجرا می‌شود، از تمام فایل‌های موجود در این پوشه نسخه پشتیبان تهیه و پاک کنید تا نرم‌افزار را مجدداً راه‌اندازی کنید",
+          "liteMode": "رابط کاربری گرافیکی را ببندید و فقط هسته را در حال اجرا نگه دارید"
+        },
+        "actions": {
+          "copyVersion": "کپی نسخه"
+        },
+        "notifications": {
+          "latestVersion": "در حال حاضر در آخرین نسخه",
+          "versionCopied": "نسخه در کلیپ بورد کپی شد"
+        },
+        "fields": {
+          "backupSetting": "تنظیمات پشتیبان گیری",
+          "runtimeConfig": "پیکربندی زمان اجرا",
+          "openConfDir": "باز کردن پوشه برنامه",
+          "openCoreDir": "باز کردن پوشه هسته",
+          "openLogsDir": "باز کردن پوشه لاگ‌ها",
+          "checkUpdates": "بررسی برای به‌روزرسانی‌ها",
+          "openDevTools": "باز کردن ابزارهای توسعه‌دهنده",
+          "liteModeSettings": "LightWeight Mode Settings",
+          "exit": "خروج",
+          "exportDiagnostics": "Export Diagnostic Info",
+          "vergeVersion": "نسخه Verge"
+        }
+      },
+      "theme": {
+        "title": "تنظیمات تم",
+        "fields": {
+          "primaryColor": "رنگ اصلی",
+          "secondaryColor": "رنگ ثانویه",
+          "primaryText": "متن اصلی",
+          "secondaryText": "متن ثانویه",
+          "infoColor": "رنگ اطلاعات",
+          "warningColor": "رنگ هشدار",
+          "errorColor": "رنگ خطا",
+          "successColor": "رنگ موفقیت",
+          "fontFamily": "خانواده فونت",
+          "cssInjection": "تزریق CSS"
+        },
+        "actions": {
+          "editCss": "Edit CSS"
+        },
+        "dialogs": {
+          "editCssTitle": "Edit CSS"
+        }
+      },
+      "layout": {
+        "title": "تنظیمات چیدمان",
+        "fields": {
+          "preferSystemTitlebar": "Prefer System Titlebar",
+          "trafficGraph": "نمودار ترافیک",
+          "memoryUsage": "استفاده از حافظه",
+          "proxyGroupIcon": "آیکون گروه پراکسی",
+          "toastPosition": "Toast Position",
+          "hoverNavigator": "Hover Jump Navigator",
+          "hoverNavigatorDelay": "Hover Jump Navigator Delay",
+          "navIcon": "آیکون ناوبری",
+          "collapseNavBar": "جمع کردن نوار ناوبری",
+          "trayIcon": "آیکون سینی سیستم",
+          "proxyGroupsDisplayMode": "Proxy Groups Display Mode",
+          "showOutboundModesInline": "Show Outbound Modes Inline",
+          "commonTrayIcon": "آیکون مشترک سینی سیستم",
+          "systemProxyTrayIcon": "آیکون سینی پراکسی سیستم",
+          "tunTrayIcon": "آیکون سینی Tun",
+          "enableTrayIcon": "Enable Tray Icon",
+          "enableTraySpeed": "فعال کردن سرعت ترای",
+          "pauseRenderTrafficStatsOnBlur": "توقف رندر آمار ترافیک هنگام از دست رفتن فوکوس"
+        },
+        "tooltips": {
+          "hoverNavigator": "Automatically scroll to the corresponding proxy group when hovering over alphabet letters",
+          "hoverNavigatorDelay": "Delay before auto scrolling when hovering, in milliseconds"
+        },
+        "options": {
+          "icon": {
+            "monochrome": "تک رنگ",
+            "colorful": "رنگارنگ",
+            "disable": "غیرفعال کردن"
+          },
+          "toastPosition": {
+            "topLeft": "Top Left",
+            "topRight": "Top Right",
+            "bottomLeft": "Bottom Left",
+            "bottomRight": "Bottom Right"
+          },
+          "proxyGroupsDisplayMode": {
+            "default": "Default",
+            "inline": "Inline",
+            "disable": "Disable"
+          }
+        }
+      }
+    }
+  },
+  "modals": {
+    "clashPort": {
+      "title": "پیکربندی پورت",
+      "fields": {
+        "mixed": "پورت پروکسی ترکیبی",
+        "socks": "پورت پروکسی Socks",
+        "http": "پورت پروکسی Http(s)",
+        "redir": "پورت پروکسی شفاف Redir",
+        "tproxy": "پورت پروکسی شفاف Tproxy"
+      },
+      "actions": {
+        "random": "پورت تصادفی"
+      },
+      "messages": {
+        "portInUse": "Port {{port}} is already in use",
+        "saved": "Port settings saved",
+        "saveFailed": "Failed to save port settings"
+      }
+    },
+    "clashCore": {
+      "variants": {
+        "release": "نسخه نهایی",
+        "alpha": "نسخه آلفا"
+      }
+    },
+    "liteMode": {
+      "title": "LightWeight Mode Settings",
+      "actions": {
+        "enterNow": "Enter LightWeight Mode Now"
+      },
+      "toggles": {
+        "autoEnter": "Auto Enter LightWeight Mode"
+      },
+      "tooltips": {
+        "autoEnter": "فعال کردن حالت LightWeight به صورت خودکار پس از بسته شدن پنجره برای مدت زمانی خاص"
+      },
+      "fields": {
+        "delay": "تأخیر ورود خودکار به حالت LightWeight"
+      },
+      "messages": {
+        "autoEnterHint": "هنگام بستن پنجره، حالت LightWeight پس از {{n}} دقیقه به طور خودکار فعال می‌شود"
+      }
+    },
+    "backup": {
+      "title": "تنظیمات پشتیبان گیری",
+      "tabs": {
+        "local": "Local backup",
+        "webdav": "WebDAV backup"
+      },
+      "actions": {
+        "selectTarget": "Select backup target",
+        "backup": "پشتیبان‌گیری",
+        "export": "Export",
+        "exportBackup": "Export Backup",
+        "importBackup": "Import Backup",
+        "deleteBackup": "حذف پشتیبان",
+        "restore": "بازیابی",
+        "restoreBackup": "بازیابی پشتیبان",
+        "viewHistory": "View history"
+      },
+      "fields": {
+        "webdavUrl": "http(s):// URL سرور WebDAV",
+        "username": "نام کاربری",
+        "info": "Backups are stored locally in the application data directory. Use the list below to restore or delete backups."
+      },
+      "messages": {
+        "webdavUrlRequired": "آدرس WebDAV نمی‌تواند خالی باشد",
+        "invalidWebdavUrl": "فرمت آدرس WebDAV نامعتبر است",
+        "usernameRequired": "نام کاربری نمی‌تواند خالی باشد",
+        "passwordRequired": "رمز عبور نمی‌تواند خالی باشد",
+        "webdavConfigSaved": "پیکربندی WebDAV با موفقیت ذخیره شد",
+        "webdavConfigSaveFailed": "خطا در ذخیره تنظیمات WebDAV: {{error}}",
+        "backupCreated": "پشتیبان‌گیری با موفقیت ایجاد شد",
+        "backupFailed": "خطا در پشتیبان‌گیری: {{error}}",
+        "localBackupCreated": "Local backup created successfully",
+        "localBackupFailed": "Local backup failed",
+        "restoreSuccess": "بازیابی با موفقیت انجام شد، برنامه در 1 ثانیه راه‌اندازی مجدد می‌شود",
+        "localBackupExported": "Local backup exported successfully",
+        "localBackupExportFailed": "Failed to export local backup",
+        "localBackupImported": "Local backup imported successfully",
+        "localBackupImportFailed": "Failed to import local backup: {{error}}",
+        "webdavRefreshSuccess": "WebDAV refresh succeeded",
+        "webdavRefreshFailed": "WebDAV refresh failed: {{error}}",
+        "confirmDelete": "آیا از حذف این فایل پشتیبان اطمینان دارید؟",
+        "confirmRestore": "آیا از بازیابی این فایل پشتیبان اطمینان دارید؟"
+      },
+      "auto": {
+        "title": "Automatic backup",
+        "scheduleLabel": "Enable scheduled backup",
+        "scheduleHelper": "Create local backups in the background at the configured interval.",
+        "intervalLabel": "Backup frequency",
+        "changeLabel": "Backup on critical changes",
+        "changeHelper": "Automatically backup when Global Extend Config/Script changes.",
+        "options": {
+          "hours": "Every {{n}} hours",
+          "days": "Every {{n}} days"
+        }
+      },
+      "manual": {
+        "title": "پشتیبان گیری دستی",
+        "local": "یک اسنپ‌شات روی این دستگاه ایجاد می‌کند که در پوشه‌ی داده‌های برنامه ذخیره می‌شود.",
+        "webdav": "پس از تنظیم اعتبارنامه‌ها، یک اسنپ‌شات (عکس فوری) در سرور WebDAV خود آپلود کنید.",
+        "configureWebdav": "پیکربندی WebDAV"
+      },
+      "history": {
+        "title": "تاریخچه پشتیبان گیری",
+        "summary": "{{count}} backups • latest {{recent}}",
+        "empty": "هیچ نسخه پشتیبان در دسترس نیست",
+        "unknownPlatform": "unknown",
+        "unknownTime": "Unknown time"
+      },
+      "webdav": {
+        "title": "پیکربندی WebDAV"
+      },
+      "table": {
+        "filename": "نام فایل",
+        "backupTime": "زمان پشتیبان‌گیری",
+        "actions": "عملیات",
+        "noBackups": "هیچ پشتیبانی موجود نیست",
+        "rowsPerPage": "Rows per page"
+      }
+    },
+    "misc": {
+      "title": "متفرقه",
+      "fields": {
+        "appLogLevel": "سطح لاگ برنامه",
+        "appLogMaxSize": "App Log Max Size",
+        "appLogMaxCount": "App Log Max Count",
+        "autoCloseConnections": "بستن خودکار اتصالات",
+        "autoCheckUpdate": "بررسی خودکار به‌روزرسانی",
+        "enableBuiltinEnhanced": "فعال کردن تقویت داخلی",
+        "proxyLayoutColumns": "ستون چیدمان پراکسی",
+        "autoLogClean": "پاکسازی خودکار لاگ",
+        "autoDelayDetection": "تشخیص تأخیر خودکار",
+        "autoDelayDetectionInterval": "فاصله تشخیص تأخیر خودکار",
+        "defaultLatencyTest": "آزمون تأخیر پیش‌فرض",
+        "defaultLatencyTimeout": "زمان انتظار تأخیر پیش‌فرض"
+      },
+      "tooltips": {
+        "autoCloseConnections": "اتصالات برقرار شده را هنگام تغییر انتخاب گروه پروکسی یا حالت پروکسی خاتمه دهید",
+        "enableBuiltinEnhanced": "مدیریت سازگاری برای فایل پیکربندی",
+        "autoDelayDetection": "به‌صورت دوره‌ای تأخیر گره فعلی را در پس‌زمینه آزمایش می‌کند",
+        "defaultLatencyTest": "فقط برای تست درخواست‌های کلاینت HTTP استفاده می‌شود و بر فایل پیکربندی تأثیری نخواهد داشت"
+      },
+      "options": {
+        "proxyLayoutColumns": {
+          "auto": "ستون‌های خودکار"
+        },
+        "autoLogClean": {
+          "never": "هرگز پاک نکن",
+          "retainDays": "نگهداری به مدت {{n}} روز"
+        }
+      }
+    },
+    "update": {
+      "title": "New Version v{{version}}",
+      "actions": {
+        "goToRelease": "رفتن به صفحه انتشار",
+        "update": "به‌روزرسانی"
+      },
+      "messages": {
+        "portableError": "نسخه پرتابل از به‌روزرسانی درون برنامه‌ای پشتیبانی نمی‌کند. لطفاً به صورت دستی دانلود و جایگزین کنید",
+        "breakChangeError": "این نسخه یک به‌روزرسانی اساسی است و پشتیبانی از به‌روزرسانی درون برنامه را پشتیبانی نمی‌کند. لطفاً پس از حذف، دستی دانلود و نصب کنید."
+      }
+    },
+    "sysproxy": {
+      "title": "تنظیمات پراکسی سیستم",
+      "fieldsets": {
+        "currentStatus": "پراکسی سیستم فعلی"
+      },
+      "fields": {
+        "enableStatus": "وضعیت فعال",
+        "serverAddr": "آدرس سرور: ",
+        "pacUrl": "PAC URL: ",
+        "proxyHost": "میزبان پراکسی",
+        "usePacMode": "استفاده از حالت PAC",
+        "proxyGuard": "محافظ پراکسی",
+        "guardDuration": "مدت محافظت",
+        "alwaysUseDefaultBypass": "همیشه از دور زدن پیش‌فرض استفاده کنید",
+        "enableBypassCheck": "اعتبارسنجی قالب دور زدن پراکسی",
+        "proxyBypass": "دور زدن پراکسی: ",
+        "bypass": "دور زدن: ",
+        "pacScriptContent": "محتوای اسکریپت PAC"
+      },
+      "tooltips": {
+        "proxyGuard": "امکان جلوگیری از نرم‌افزارهای دیگر از تغییر تنظیمات پروکسی سیستم عامل را فعال کنید"
+      },
+      "messages": {
+        "durationTooShort": "مدت زمان دیمن پراکسی نمی‌تواند کمتر از 1 ثانیه باشد",
+        "invalidBypass": "فرمت عبور نامعتبر است",
+        "invalidProxyHost": "فرمت میزبان پراکسی نامعتبر است"
+      },
+      "actions": {
+        "editPac": "ویرایش PAC"
+      }
+    },
+    "tun": {
+      "title": "Tun (کارت شبکه مجازی)",
+      "fields": {
+        "stack": "انباشته Tun",
+        "device": "Device Name",
+        "autoRoute": "مسیر خودکار",
+        "routeExcludeAddress": "نشانی‌های مستثنا از مسیردهی",
+        "strictRoute": "مسیر دقیق",
+        "autoDetectInterface": "تشخیص خودکار رابط",
+        "dnsHijack": "ربایش DNS",
+        "mtu": "واحد حداکثر انتقال",
+        "autoRedirect": "Auto Redirect"
+      },
+      "tooltips": {
+        "dnsHijack": "لطفا برای جدا کردن چندین سرور DNS از , استفاده کنید.",
+        "autoRedirect": "پیکربندی خودکار ریدایرکت‌های TCP در nftables/iptables"
+      },
+      "messages": {
+        "applied": "تنظیمات اعمال شد",
+        "invalidRouteExcludeAddress": "لطفاً یک محدوده CIDR معتبر وارد کنید",
+        "routeExcludeAddressHint": "فقط CIDRهای IPv4/IPv6 پشتیبانی می‌شوند، مانند 192.168.0.0/16 یا fd00::/8"
+      }
+    },
+    "dns": {
+      "dialog": {
+        "title": "بازنویسی DNS",
+        "warning": "اگر با این تنظیمات آشنا نیستید، لطفاً آنها را تغییر ندهید و DNS Overwrite را فعال نگه دارید."
+      },
+      "sections": {
+        "general": "تنظیمات DNS",
+        "fallbackFilter": "Fallback Filter Settings",
+        "hosts": "Hosts Settings"
+      },
+      "fields": {
+        "enable": "Enable DNS",
+        "listen": "DNS Listen",
+        "enhancedMode": "Enhanced Mode",
+        "fakeIpRange": "Fake IP Range",
+        "fakeIpFilterMode": "Fake IP Filter Mode",
+        "ipv6": {
+          "label": "IPv6",
+          "description": "Enable IPv6 DNS resolution"
+        },
+        "preferH3": {
+          "label": "Prefer H3",
+          "description": "DNS DOH uses HTTP/3"
+        },
+        "respectRules": {
+          "label": "Respect Rules",
+          "description": "اتصالات DNS از قوانین مسیریابی پیروی می‌کنند"
+        },
+        "useHosts": {
+          "label": "Use Hosts",
+          "description": "Enable to resolve hosts through hosts file"
+        },
+        "useSystemHosts": {
+          "label": "Use System Hosts",
+          "description": "Enable to resolve hosts through system hosts file"
+        },
+        "directPolicy": {
+          "label": "Direct Nameserver Follow Policy",
+          "description": "Whether to follow nameserver policy"
+        },
+        "defaultNameserver": {
+          "label": "Default Nameserver",
+          "description": "Default DNS servers used to resolve DNS servers"
+        },
+        "nameserver": {
+          "label": "Nameserver",
+          "description": "فهرست سرورهای DNS، جدا شده با کاما"
+        },
+        "fallback": {
+          "label": "Fallback",
+          "description": "فهرست سرورهای DNS جایگزین، جدا شده با کاما"
+        },
+        "proxy": {
+          "label": "Proxy Server Nameserver",
+          "description": "DNS servers for proxy node domain resolution"
+        },
+        "directNameserver": {
+          "label": "Direct Nameserver",
+          "description": "DNS servers for direct exit domain resolution, supports 'system' keyword, comma separated"
+        },
+        "fakeIpFilter": {
+          "label": "Fake IP Filter",
+          "description": "Domains that skip fake IP resolution, comma separated"
+        },
+        "nameserverPolicy": {
+          "label": "Nameserver Policy",
+          "description": "Domain-specific DNS server, multiple servers separated by semicolons, format: domain=server1;server2"
+        },
+        "geoipFiltering": {
+          "label": "GeoIP Filtering",
+          "description": "Enable GeoIP filtering for fallback"
+        },
+        "geoipCode": "GeoIP Code",
+        "fallbackIpCidr": {
+          "label": "Fallback IP CIDR",
+          "description": "IP CIDRs not using fallback servers, comma separated"
+        },
+        "fallbackDomain": {
+          "label": "دامنه جایگزین",
+          "description": "دامنه‌هایی که از سرورهای جایگزین استفاده می‌کنند، با کاما از هم جدا شده‌اند"
+        },
+        "hosts": {
+          "label": "میزبان‌ها",
+          "description": "تبدیل دامنه به IP یا نگاشت دامنه سفارشی"
+        }
+      },
+      "messages": {
+        "saved": "تنظیمات DNS ذخیره شد",
+        "configError": "خطای پیکربندی DNS:"
+      },
+      "errors": {
+        "invalid": "پیکربندی نامعتبر",
+        "invalidYaml": "قالب YAML نامعتبر است"
+      }
+    },
+    "webUI": {
+      "actions": {
+        "openUrl": "باز کردن آدرس اینترنتی"
+      },
+      "title": "رابط وب",
+      "messages": {
+        "supportedPlaceholders": "پشتیبانی از %host، %port و %secret",
+        "placeholderInstruction": "جایگزین کردن میزبان، پورت و رمز با %host، %port، %secret"
+      }
+    },
+    "hotkey": {
+      "toggles": {
+        "enableGlobal": "فعال کردن کلید میانبر سراسری"
+      },
+      "title": "تنظیمات کلیدهای میانبر",
+      "functions": {
+        "rule": "حالت قانون",
+        "global": "حالت جهانی",
+        "openOrCloseDashboard": "باز/بستن داشبورد",
+        "toggleSystemProxy": "فعال/غیرفعال کردن پراکسی سیستم",
+        "toggleTunMode": "فعال/غیرفعال کردن حالت Tun",
+        "entryLightweightMode": "Entry Lightweight Mode",
+        "direct": "حالت مستقیم",
+        "reactivateProfiles": "فعال‌سازی مجدد پروفایل‌ها"
+      }
+    },
+    "password": {
+      "prompts": {
+        "enterRoot": "لطفاً رمز ریشه خود را وارد کنید"
+      }
+    },
+    "networkInterface": {
+      "title": "رابط شبکه",
+      "fields": {
+        "ipAddress": "آدرس IP",
+        "macAddress": "آدرس MAC"
+      }
+    }
+  },
+  "feedback": {
+    "notifications": {
+      "clash": {
+        "restartSuccess": "هسته Clash مجدداً راه‌اندازی شد",
+        "versionUpdated": "نسخه هسته به‌روزرسانی شد",
+        "alreadyLatestVersion": "در حال حاضر از آخرین نسخه هسته استفاده می‌کنید",
+        "changeSuccess": "هسته با موفقیت تغییر کرد",
+        "changeFailed": "تغییر هسته ناموفق بود",
+        "geoDataUpdated": "GeoData به‌روزرسانی شد"
+      },
+      "clashService": {
+        "installSuccess": "سرویس با موفقیت نصب شد",
+        "uninstallSuccess": "سرویس با موفقیت حذف نصب شد"
+      },
+      "updater": {
+        "withClashProxySuccess": "با موفقیت با پروکسی کلش به‌روزرسانی شد",
+        "withClashProxyFailed": "به‌روزرسانی حتی با پروکسی کلش هم انجام نشد"
+      }
+    }
+  },
+  "statuses": {
+    "clash": {
+      "stopping": "Stopping Core...",
+      "restarting": "Restarting Core..."
+    },
+    "clashService": {
+      "installing": "در حال نصب سرویس...",
+      "uninstalling": "در حال حذف سرویس..."
+    }
+  }
+}

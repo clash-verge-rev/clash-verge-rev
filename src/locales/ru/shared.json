@@ -1,0 +1,134 @@
+{
+  "actions": {
+    "cancel": "Отмена",
+    "close": "Закрыть",
+    "confirm": "Подтвердить",
+    "save": "Сохранить",
+    "delete": "Удалить",
+    "edit": "Редактировать",
+    "new": "Новый",
+    "enable": "Включить",
+    "upgrade": "Обновить",
+    "restart": "Перезапустить",
+    "resetToDefault": "Сбросить настройки",
+    "refresh": "Обновить",
+    "retry": "Retry",
+    "refreshPage": "Refresh Page",
+    "showDetails": "Show Details",
+    "hideDetails": "Hide Details",
+    "listView": "Отображать в виде списка",
+    "tableView": "Отображать в виде таблицы",
+    "pause": "Пауза",
+    "resume": "Возобновить",
+    "closeAll": "Закрыть всё",
+    "clear": "Очистить",
+    "previous": "Previous",
+    "next": "Next"
+  },
+  "labels": {
+    "updateAt": "Обновлено в",
+    "timeout": "Тайм-аут",
+    "icon": "Иконка",
+    "name": "Название",
+    "readOnly": "Только для чтения",
+    "expireTime": "Время окончания",
+    "updateTime": "Время обновления",
+    "usedTotal": "Использовано / Всего",
+    "from": "От",
+    "password": "Пароль",
+    "retryAttempts": "Retry attempts",
+    "downloaded": "Скачано",
+    "uploaded": "Загружено"
+  },
+  "statuses": {
+    "enabled": "Включено",
+    "disabled": "Отключено",
+    "saving": "Saving...",
+    "empty": "Пусто"
+  },
+  "units": {
+    "milliseconds": "миллисекунды",
+    "seconds": "секунды",
+    "minutes": "минуты",
+    "hours": "часы",
+    "kilobytes": "KB",
+    "files": "Files"
+  },
+  "placeholders": {
+    "resetInput": "Очистить поле ввода",
+    "filter": "Условия фильтрации",
+    "matchCase": "Учитывать регистр",
+    "matchWholeWord": "Полное совпадение слова",
+    "useRegex": "Использовать регулярные выражения"
+  },
+  "validation": {
+    "invalidRegex": "Invalid regular expression"
+  },
+  "window": {
+    "maximize": "Развернуть",
+    "minimize": "Свернуть"
+  },
+  "editorModes": {
+    "visualization": "Визуализация",
+    "advanced": "Дополнительно"
+  },
+  "feedback": {
+    "errors": {
+      "trafficStats": "Traffic Statistics Error",
+      "trafficStatsDescription": "The traffic statistics component encountered an error and has been disabled to prevent crashes."
+    },
+    "notices": {
+      "raw": "{{message}}",
+      "prefixedRaw": "{{prefix}} {{message}}"
+    },
+    "notifications": {
+      "importSuccess": "Профиль успешно импортирован",
+      "importSubscriptionSuccess": "Подписка успешно импортирована",
+      "importWithClashProxy": "Profile Imported with Clash proxy",
+      "updateAvailable": "Update Available",
+      "saved": "Saved successfully",
+      "common": {
+        "copySuccess": "Скопировано",
+        "saveSuccess": "Configuration saved successfully",
+        "saveFailed": "Failed to save configuration",
+        "refreshFailed": "Не удалось обновить"
+      }
+    },
+    "validation": {
+      "config": {
+        "failed": "Ошибка проверки конфигурации подписки, проверьте файл конфигурации, изменения отменены, ошибка:",
+        "bootFailed": "Ошибка проверки конфигурации при запуске, используется конфигурация по умолчанию, проверьте файл конфигурации, ошибка:",
+        "coreChangeFailed": "Ошибка проверки конфигурации при смене ядра, используется конфигурация по умолчанию, проверьте файл конфигурации, ошибка:",
+        "processTerminated": "Процесс проверки прерван"
+      },
+      "script": {
+        "syntaxError": "Ошибка синтаксиса скрипта, изменения отменены",
+        "missingMain": "Ошибка скрипта, изменения отменены",
+        "fileNotFound": "Файл не найден, изменения отменены",
+        "fileError": "Ошибка файла скрипта, изменения отменены"
+      },
+      "yaml": {
+        "syntaxError": "Ошибка синтаксиса YAML, откат изменений",
+        "readError": "Ошибка чтения YAML, откат изменений",
+        "mappingError": "Ошибка YAML Mapping, откат изменений",
+        "keyError": "Ошибка ключа YAML, откат изменений",
+        "generalError": "Ошибка YAML, откат изменений"
+      },
+      "merge": {
+        "syntaxError": "Ошибка синтаксиса Merge File, откат изменений",
+        "mappingError": "Ошибка сопоставления в Merge File, откат изменений",
+        "keyError": "Ошибка ключа в Merge File, откат изменений",
+        "generalError": "Ошибка Merge File, откат изменений"
+      }
+    }
+  },
+  "filters": {
+    "logLevels": {
+      "all": "ALL",
+      "debug": "DEBUG",
+      "info": "INFO",
+      "warn": "WARN",
+      "error": "ERROR"
+    }
+  }
+}

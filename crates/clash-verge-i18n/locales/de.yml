@@ -1,0 +1,60 @@
+_version: 1
+notifications:
+  dashboardToggled:
+    title: Übersicht
+    body: Die Sichtbarkeit der Übersicht wurde aktualisiert.
+  clashModeChanged:
+    title: Moduswechsel
+    body: Auf {mode} umgeschaltet.
+  systemProxyToggled:
+    title: Systemproxy
+    body: Der Status des Systemproxys wurde aktualisiert.
+  tunModeToggled:
+    title: TUN-Modus
+    body: Der Status des TUN-Modus wurde aktualisiert.
+  lightweightModeEntered:
+    title: Leichtmodus
+    body: Leichtmodus aktiviert.
+  profilesReactivated:
+    title: Profile
+    body: Profil reaktiviert.
+  appQuit:
+    title: Beenden steht bevor
+    body: Clash Verge wird gleich beendet.
+  appHidden:
+    title: Anwendung ausgeblendet
+    body: Clash Verge läuft im Hintergrund.
+service:
+  adminInstallPrompt: Für die Installation des Clash-Verge-Dienstes sind Administratorrechte erforderlich.
+  adminUninstallPrompt: Für die Deinstallation des Clash-Verge-Dienstes sind Administratorrechte erforderlich.
+tray:
+  dashboard: Übersicht
+  ruleMode: Regelmodus
+  globalMode: Globaler Modus
+  directMode: Direktmodus
+  outboundModes: Ausgangsmodi
+  rule: Regel
+  direct: Direkt
+  global: Global
+  profiles: Profile
+  proxies: Proxy
+  systemProxy: Systemproxy
+  tunMode: TUN-Modus
+  closeAllConnections: Alle Verbindungen schließen
+  lightweightMode: Leichtmodus
+  copyEnv: Umgebungsvariablen kopieren
+  confDir: Konfigurationsverzeichnis
+  coreDir: Core-Verzeichnis
+  logsDir: Log-Verzeichnis
+  openDir: Verzeichnis öffnen
+  appLog: Anwendungslog
+  coreLog: Core-Log
+  restartClash: Clash-Core neu starten
+  restartApp: Anwendung neu starten
+  vergeVersion: Verge-Version
+  more: Mehr
+  exit: Beenden
+  tooltip:
+    systemProxy: Systemproxy
+    tun: TUN
+    profile: Profil

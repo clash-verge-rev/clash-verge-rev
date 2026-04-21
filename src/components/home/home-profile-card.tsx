@@ -1,76 +1,78 @@
-import { useTranslation } from "react-i18next";
-import {
-  Box,
-  Typography,
-  Button,
-  Stack,
-  LinearProgress,
-  alpha,
-  useTheme,
-  Link,
-  keyframes,
-} from "@mui/material";
-import { useNavigate } from "react-router-dom";
 import {
   CloudUploadOutlined,
-  StorageOutlined,
-  UpdateOutlined,
   DnsOutlined,
-  SpeedOutlined,
   EventOutlined,
   LaunchOutlined,
-} from "@mui/icons-material";
-import dayjs from "dayjs";
-import parseTraffic from "@/utils/parse-traffic";
-import { useMemo, useCallback, useState } from "react";
-import { openWebUrl, updateProfile } from "@/services/cmds";
-import { useLockFn } from "ahooks";
-import { showNotice } from "@/services/noticeService";
-import { EnhancedCard } from "./enhanced-card";
-import { useAppData } from "@/providers/app-data-provider";
+  SpeedOutlined,
+  StorageOutlined,
+  UpdateOutlined,
+} from '@mui/icons-material'
+import {
+  Box,
+  Button,
+  LinearProgress,
+  Link,
+  Stack,
+  Typography,
+  alpha,
+  keyframes,
+  useTheme,
+} from '@mui/material'
+import { useLockFn } from 'ahooks'
+import dayjs from 'dayjs'
+import { useCallback, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router'
+
+import { useAppData } from '@/providers/app-data-context'
+import { openWebUrl, updateProfile } from '@/services/cmds'
+import { showNotice } from '@/services/notice-service'
+import parseTraffic from '@/utils/parse-traffic'
+
+import { EnhancedCard } from './enhanced-card'
 
 // 定义旋转动画
 const round = keyframes`
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
-`;
+`
 
 // 辅助函数解析URL和过期时间
 const parseUrl = (url?: string) => {
-  if (!url) return "-";
-  if (url.startsWith("http")) return new URL(url).host;
-  return "local";
-};
+  if (!url) return '-'
+  if (url.startsWith('http')) return new URL(url).host
+  return 'local'
+}
 
 const parseExpire = (expire?: number) => {
-  if (!expire) return "-";
-  return dayjs(expire * 1000).format("YYYY-MM-DD");
-};
+  if (!expire) return '-'
+  return dayjs(expire * 1000).format('YYYY-MM-DD')
+}
 
 // 使用类型定义，而不是导入
 interface ProfileExtra {
-  upload: number;
-  download: number;
-  total: number;
-  expire: number;
+  upload: number
+  download: number
+  total: number
+  expire: number
 }
 
-export interface ProfileItem {
-  uid: string;
-  type?: "local" | "remote" | "merge" | "script";
-  name?: string;
-  desc?: string;
-  file?: string;
-  url?: string;
-  updated?: number;
-  extra?: ProfileExtra;
-  home?: string;
-  option?: any;
+interface ProfileItem {
+  uid: string
+  type?: 'local' | 'remote' | 'merge' | 'script'
+  name?: string
+  desc?: string
+  file?: string
+  url?: string
+  updated?: number
+  extra?: ProfileExtra
+  home?: string
+  option?: any
 }
 
-export interface HomeProfileCardProps {
-  current: ProfileItem | null | undefined;
-  onProfileUpdated?: () => void;
+interface HomeProfileCardProps {
+  current: ProfileItem | null | undefined
+  onProfileUpdated?: () => void
 }
 
 // 提取独立组件减少主组件复杂度
@@ -79,23 +81,23 @@ const ProfileDetails = ({
   onUpdateProfile,
   updating,
 }: {
-  current: ProfileItem;
-  onUpdateProfile: () => void;
-  updating: boolean;
+  current: ProfileItem
+  onUpdateProfile: () => void
+  updating: boolean
 }) => {
-  const { t } = useTranslation();
-  const theme = useTheme();
+  const { t } = useTranslation()
+  const theme = useTheme()
 
   const usedTraffic = useMemo(() => {
-    if (!current.extra) return 0;
-    return current.extra.upload + current.extra.download;
-  }, [current.extra]);
+    if (!current.extra) return 0
+    return current.extra.upload + current.extra.download
+  }, [current.extra])
 
   const trafficPercentage = useMemo(() => {
     if (!current.extra || !current.extra.total || current.extra.total <= 0)
-      return 0;
-    return Math.min(Math.round((usedTraffic / current.extra.total) * 100), 100);
-  }, [current.extra, usedTraffic]);
+      return 0
+    return Math.min(Math.round((usedTraffic / current.extra.total) * 100), 100)
+  }, [current.extra, usedTraffic])
 
   return (
     <Box>
@@ -107,19 +109,19 @@ const ProfileDetails = ({
               variant="body2"
               color="text.secondary"
               noWrap
-              sx={{ display: "flex", alignItems: "center" }}
+              sx={{ display: 'flex', alignItems: 'center' }}
             >
-              <span style={{ flexShrink: 0 }}>{t("From")}: </span>
+              <span style={{ flexShrink: 0 }}>{t('shared.labels.from')}: </span>
               {current.home ? (
                 <Link
                   component="button"
                   fontWeight="medium"
                   onClick={() => current.home && openWebUrl(current.home)}
                   sx={{
-                    display: "inline-flex",
-                    alignItems: "center",
+                    display: 'inline-flex',
+                    alignItems: 'center',
                     minWidth: 0,
-                    maxWidth: "calc(100% - 40px)",
+                    maxWidth: 'calc(100% - 40px)',
                     ml: 0.5,
                   }}
                   title={parseUrl(current.url)}
@@ -127,9 +129,9 @@ const ProfileDetails = ({
                   <Typography
                     component="span"
                     sx={{
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
                       minWidth: 0,
                       flex: 1,
                     }}
@@ -140,7 +142,7 @@ const ProfileDetails = ({
                     fontSize="inherit"
                     sx={{
                       ml: 0.5,
-                      fontSize: "0.8rem",
+                      fontSize: '0.8rem',
                       opacity: 0.7,
                       flexShrink: 0,
                     }}
@@ -151,9 +153,9 @@ const ProfileDetails = ({
                   component="span"
                   fontWeight="medium"
                   sx={{
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                    whiteSpace: "nowrap",
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
                     minWidth: 0,
                     flex: 1,
                     ml: 0.5,
@@ -173,20 +175,20 @@ const ProfileDetails = ({
               fontSize="small"
               color="action"
               sx={{
-                cursor: "pointer",
-                animation: updating ? `${round} 1.5s linear infinite` : "none",
+                cursor: 'pointer',
+                animation: updating ? `${round} 1.5s linear infinite` : 'none',
               }}
               onClick={onUpdateProfile}
             />
             <Typography
               variant="body2"
               color="text.secondary"
-              sx={{ cursor: "pointer" }}
+              sx={{ cursor: 'pointer' }}
               onClick={onUpdateProfile}
             >
-              {t("Update Time")}:{" "}
+              {t('shared.labels.updateTime')}:{' '}
               <Box component="span" fontWeight="medium">
-                {dayjs(current.updated * 1000).format("YYYY-MM-DD HH:mm")}
+                {dayjs(current.updated * 1000).format('YYYY-MM-DD HH:mm')}
               </Box>
             </Typography>
           </Stack>
@@ -197,9 +199,9 @@ const ProfileDetails = ({
             <Stack direction="row" alignItems="center" spacing={1}>
               <SpeedOutlined fontSize="small" color="action" />
               <Typography variant="body2" color="text.secondary">
-                {t("Used / Total")}:{" "}
+                {t('shared.labels.usedTotal')}:{' '}
                 <Box component="span" fontWeight="medium">
-                  {parseTraffic(usedTraffic)} /{" "}
+                  {parseTraffic(usedTraffic)} /{' '}
                   {parseTraffic(current.extra.total)}
                 </Box>
               </Typography>
@@ -209,7 +211,7 @@ const ProfileDetails = ({
               <Stack direction="row" alignItems="center" spacing={1}>
                 <EventOutlined fontSize="small" color="action" />
                 <Typography variant="body2" color="text.secondary">
-                  {t("Expire Time")}:{" "}
+                  {t('shared.labels.expireTime')}:{' '}
                   <Box component="span" fontWeight="medium">
                     {parseExpire(current.extra.expire)}
                   </Box>
@@ -221,7 +223,7 @@ const ProfileDetails = ({
               <Typography
                 variant="caption"
                 color="text.secondary"
-                sx={{ mb: 0.5, display: "block" }}
+                sx={{ mb: 0.5, display: 'block' }}
               >
                 {trafficPercentage}%
               </Typography>
@@ -239,79 +241,78 @@ const ProfileDetails = ({
         )}
       </Stack>
     </Box>
-  );
-};
+  )
+}
 
 // 提取空配置组件
 const EmptyProfile = ({ onClick }: { onClick: () => void }) => {
-  const { t } = useTranslation();
+  const { t } = useTranslation()
 
   return (
     <Box
       sx={{
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
         py: 2.4,
-        cursor: "pointer",
-        "&:hover": { bgcolor: "action.hover" },
+        cursor: 'pointer',
+        '&:hover': { bgcolor: 'action.hover' },
         borderRadius: 2,
       }}
       onClick={onClick}
     >
       <CloudUploadOutlined
-        sx={{ fontSize: 60, color: "primary.main", mb: 2 }}
+        sx={{ fontSize: 60, color: 'primary.main', mb: 2 }}
       />
       <Typography variant="h6" gutterBottom>
-        {t("Import")} {t("Profiles")}
+        {t('profiles.page.actions.import')} {t('profiles.page.title')}
       </Typography>
       <Typography variant="body2" color="text.secondary">
-        {t("Click to import subscription")}
+        {t('profiles.components.card.labels.clickToImport')}
       </Typography>
     </Box>
-  );
-};
+  )
+}
 
 export const HomeProfileCard = ({
   current,
   onProfileUpdated,
 }: HomeProfileCardProps) => {
-  const { t } = useTranslation();
-  const navigate = useNavigate();
-  const { refreshAll } = useAppData();
+  const { t } = useTranslation()
+  const navigate = useNavigate()
+  const { refreshAll } = useAppData()
 
   // 更新当前订阅
-  const [updating, setUpdating] = useState(false);
+  const [updating, setUpdating] = useState(false)
 
   const onUpdateProfile = useLockFn(async () => {
-    if (!current?.uid) return;
+    if (!current?.uid) return
 
-    setUpdating(true);
+    setUpdating(true)
     try {
-      await updateProfile(current.uid, current.option);
-      showNotice("success", t("Update subscription successfully"), 1000);
-      onProfileUpdated?.();
+      await updateProfile(current.uid, current.option)
+      onProfileUpdated?.()
 
       // 刷新首页数据
-      refreshAll();
-    } catch (err: any) {
-      showNotice("error", err.message || err.toString(), 3000);
+      refreshAll()
+    } catch (err) {
+      showNotice.error(err, 3000)
     } finally {
-      setUpdating(false);
+      setUpdating(false)
     }
-  });
+  })
 
   // 导航到订阅页面
   const goToProfiles = useCallback(() => {
-    navigate("/profile");
-  }, [navigate]);
+    navigate('/profile')
+  }, [navigate])
 
   // 卡片标题
   const cardTitle = useMemo(() => {
-    if (!current) return t("Profiles");
+    if (!current) return t('profiles.page.title')
 
-    if (!current.home) return current.name;
+    if (!current.home) return current.name
 
     return (
       <Link
@@ -321,16 +322,16 @@ export const HomeProfileCard = ({
         fontSize={18}
         onClick={() => current.home && openWebUrl(current.home)}
         sx={{
-          color: "inherit",
-          textDecoration: "none",
-          display: "flex",
-          alignItems: "center",
+          color: 'inherit',
+          textDecoration: 'none',
+          display: 'flex',
+          alignItems: 'center',
           minWidth: 0,
-          maxWidth: "100%",
-          "& > span": {
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            whiteSpace: "nowrap",
+          maxWidth: '100%',
+          '& > span': {
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
             flex: 1,
           },
         }}
@@ -341,18 +342,18 @@ export const HomeProfileCard = ({
           fontSize="inherit"
           sx={{
             ml: 0.5,
-            fontSize: "0.8rem",
+            fontSize: '0.8rem',
             opacity: 0.7,
             flexShrink: 0,
           }}
         />
       </Link>
-    );
-  }, [current, t]);
+    )
+  }, [current, t])
 
   // 卡片操作按钮
   const cardAction = useMemo(() => {
-    if (!current) return null;
+    if (!current) return null
 
     return (
       <Button
@@ -362,10 +363,10 @@ export const HomeProfileCard = ({
         endIcon={<StorageOutlined fontSize="small" />}
         sx={{ borderRadius: 1.5 }}
       >
-        {t("Label-Profiles")}
+        {t('layout.components.navigation.tabs.profiles')}
       </Button>
-    );
-  }, [current, goToProfiles, t]);
+    )
+  }, [current, goToProfiles, t])
 
   return (
     <EnhancedCard
@@ -384,5 +385,5 @@ export const HomeProfileCard = ({
         <EmptyProfile onClick={goToProfiles} />
       )}
     </EnhancedCard>
-  );
-};
+  )
+}

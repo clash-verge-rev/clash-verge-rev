@@ -1,0 +1,134 @@
+{
+  "actions": {
+    "cancel": "Cancelar",
+    "close": "Cerrar",
+    "confirm": "Confirmar",
+    "save": "Guardar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "new": "Nuevo",
+    "enable": "Habilitar",
+    "upgrade": "Actualizar núcleo",
+    "restart": "Reiniciar núcleo",
+    "resetToDefault": "Restablecer a los valores predeterminados",
+    "refresh": "Actualizar",
+    "retry": "Retry",
+    "refreshPage": "Refresh Page",
+    "showDetails": "Show Details",
+    "hideDetails": "Hide Details",
+    "listView": "Vista de lista",
+    "tableView": "Vista de tabla",
+    "pause": "Pausar",
+    "resume": "Reanudar",
+    "closeAll": "Cerrar todas",
+    "clear": "Limpiar",
+    "previous": "Previous",
+    "next": "Next"
+  },
+  "labels": {
+    "updateAt": "Actualizado el",
+    "timeout": "Timeout",
+    "icon": "Icono",
+    "name": "Nombre",
+    "readOnly": "Solo lectura",
+    "expireTime": "Tiempo de expiración",
+    "updateTime": "Hora de actualización",
+    "usedTotal": "Utilizado / Total",
+    "from": "De",
+    "password": "Contraseña",
+    "retryAttempts": "Retry attempts",
+    "downloaded": "Descargado",
+    "uploaded": "Subido"
+  },
+  "statuses": {
+    "enabled": "Habilitado",
+    "disabled": "Deshabilitado",
+    "saving": "Saving...",
+    "empty": "Vacío"
+  },
+  "units": {
+    "milliseconds": "Milisegundos",
+    "seconds": "Segundos",
+    "minutes": "Minutos",
+    "hours": "Horas",
+    "kilobytes": "KB",
+    "files": "Files"
+  },
+  "placeholders": {
+    "resetInput": "Borrar el cuadro de entrada",
+    "filter": "Condiciones de filtrado",
+    "matchCase": "Distinguir mayúsculas y minúsculas",
+    "matchWholeWord": "Coincidencia exacta de palabras",
+    "useRegex": "Usar expresiones regulares"
+  },
+  "validation": {
+    "invalidRegex": "Invalid regular expression"
+  },
+  "window": {
+    "maximize": "Maximizar",
+    "minimize": "Minimizar"
+  },
+  "editorModes": {
+    "visualization": "Visualización",
+    "advanced": "Avanzado"
+  },
+  "feedback": {
+    "errors": {
+      "trafficStats": "Traffic Statistics Error",
+      "trafficStatsDescription": "The traffic statistics component encountered an error and has been disabled to prevent crashes."
+    },
+    "notices": {
+      "raw": "{{message}}",
+      "prefixedRaw": "{{prefix}} {{message}}"
+    },
+    "notifications": {
+      "importSuccess": "Suscripción importada con éxito",
+      "importSubscriptionSuccess": "Suscripción importada con éxito",
+      "importWithClashProxy": "Suscripción importada con el proxy de Clash",
+      "updateAvailable": "Update Available",
+      "saved": "Saved successfully",
+      "common": {
+        "copySuccess": "Copia exitosa",
+        "saveSuccess": "Configuración aleatoria guardada correctamente",
+        "saveFailed": "Failed to save configuration",
+        "refreshFailed": "Error al actualizar"
+      }
+    },
+    "validation": {
+      "config": {
+        "failed": "Error de validación de la configuración de la suscripción. Compruebe el archivo de configuración de la suscripción. Los cambios se han deshecho. Detalles del error: ",
+        "bootFailed": "Error de validación de la configuración de la suscripción de arranque. Se ha iniciado con la configuración predeterminada. Compruebe el archivo de configuración de la suscripción. Detalles del error: ",
+        "coreChangeFailed": "Error de validación de la configuración al cambiar el núcleo. Se ha iniciado con la configuración predeterminada. Compruebe el archivo de configuración de la suscripción. Detalles del error: ",
+        "processTerminated": "Proceso de validación terminado"
+      },
+      "script": {
+        "syntaxError": "Error de sintaxis en el script. Los cambios se han deshecho",
+        "missingMain": "Error en el script. Los cambios se han deshecho",
+        "fileNotFound": "Archivo no encontrado. Los cambios se han deshecho",
+        "fileError": "Error en el archivo de script. Los cambios se han deshecho"
+      },
+      "yaml": {
+        "syntaxError": "Error de sintaxis YAML. Los cambios se han deshecho",
+        "readError": "Error al leer el archivo YAML. Los cambios se han deshecho",
+        "mappingError": "Error de mapeo YAML. Los cambios se han deshecho",
+        "keyError": "Error de clave YAML. Los cambios se han deshecho",
+        "generalError": "Error YAML. Los cambios se han deshecho"
+      },
+      "merge": {
+        "syntaxError": "Error de sintaxis en el archivo de sobrescritura. Los cambios se han deshecho",
+        "mappingError": "Error de mapeo en el archivo de sobrescritura. Los cambios se han deshecho",
+        "keyError": "Error de clave en el archivo de sobrescritura. Los cambios se han deshecho",
+        "generalError": "Error en el archivo de sobrescritura. Los cambios se han deshecho"
+      }
+    }
+  },
+  "filters": {
+    "logLevels": {
+      "all": "ALL",
+      "debug": "DEBUG",
+      "info": "INFO",
+      "warn": "WARN",
+      "error": "ERROR"
+    }
+  }
+}

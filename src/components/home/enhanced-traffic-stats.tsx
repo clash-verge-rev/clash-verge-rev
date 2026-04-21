@@ -1,87 +1,86 @@
-import { useRef, useCallback, memo, useMemo } from "react";
-import { useTranslation } from "react-i18next";
 import {
-  Typography,
+  ArrowDownwardRounded,
+  ArrowUpwardRounded,
+  CloudDownloadRounded,
+  CloudUploadRounded,
+  LinkRounded,
+  MemoryRounded,
+} from '@mui/icons-material'
+import {
+  Grid,
+  PaletteColor,
   Paper,
+  Typography,
   alpha,
   useTheme,
-  PaletteColor,
-  Grid,
-  Box,
-} from "@mui/material";
-import {
-  ArrowUpwardRounded,
-  ArrowDownwardRounded,
-  MemoryRounded,
-  LinkRounded,
-  CloudUploadRounded,
-  CloudDownloadRounded,
-} from "@mui/icons-material";
+} from '@mui/material'
+import { ReactNode, memo, useMemo, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
+
+import { TrafficErrorBoundary } from '@/components/shared/traffic-error-boundary'
+import { useConnectionData } from '@/hooks/use-connection-data'
+import { useMemoryData } from '@/hooks/use-memory-data'
+import { useTrafficData } from '@/hooks/use-traffic-data'
+import { useVerge } from '@/hooks/use-verge'
+import { useVisibility } from '@/hooks/use-visibility'
+import parseTraffic from '@/utils/parse-traffic'
+
 import {
   EnhancedCanvasTrafficGraph,
   type EnhancedCanvasTrafficGraphRef,
-} from "./enhanced-canvas-traffic-graph";
-import { useVisibility } from "@/hooks/use-visibility";
-import { useVerge } from "@/hooks/use-verge";
-import parseTraffic from "@/utils/parse-traffic";
-import { isDebugEnabled, gc } from "@/services/cmds";
-import { ReactNode } from "react";
-import { useAppData } from "@/providers/app-data-provider";
-import { useTrafficDataEnhanced } from "@/hooks/use-traffic-monitor";
-import { TrafficErrorBoundary } from "@/components/common/traffic-error-boundary";
-import useSWR from "swr";
+} from './enhanced-canvas-traffic-graph'
 
 interface StatCardProps {
-  icon: ReactNode;
-  title: string;
-  value: string | number;
-  unit: string;
-  color: "primary" | "secondary" | "error" | "warning" | "info" | "success";
-  onClick?: () => void;
+  icon: ReactNode
+  title: string
+  value: string | number
+  unit: string
+  color: 'primary' | 'secondary' | 'error' | 'warning' | 'info' | 'success'
+  onClick?: () => void
 }
 
 // 全局变量类型定义
 declare global {
   interface Window {
-    animationFrameId?: number;
+    animationFrameId?: number
     lastTrafficData?: {
-      up: number;
-      down: number;
-    };
+      up: number
+      down: number
+    }
   }
 }
 
 // 统计卡片组件 - 使用memo优化
 const CompactStatCard = memo(
   ({ icon, title, value, unit, color, onClick }: StatCardProps) => {
-    const theme = useTheme();
+    const theme = useTheme()
 
     // 获取调色板颜色 - 使用useMemo避免重复计算
     const colorValue = useMemo(() => {
-      const palette = theme.palette;
+      const palette = theme.palette
       if (
         color in palette &&
         palette[color as keyof typeof palette] &&
-        "main" in (palette[color as keyof typeof palette] as PaletteColor)
+        'main' in (palette[color as keyof typeof palette] as PaletteColor)
       ) {
-        return (palette[color as keyof typeof palette] as PaletteColor).main;
+        return (palette[color as keyof typeof palette] as PaletteColor).main
       }
-      return palette.primary.main;
-    }, [theme.palette, color]);
+      return palette.primary.main
+    }, [theme.palette, color])
 
     return (
       <Paper
         elevation={0}
         sx={{
-          display: "flex",
-          alignItems: "center",
+          display: 'flex',
+          alignItems: 'center',
           borderRadius: 2,
           bgcolor: alpha(colorValue, 0.05),
           border: `1px solid ${alpha(colorValue, 0.15)}`,
-          padding: "8px",
-          transition: "all 0.2s ease-in-out",
-          cursor: onClick ? "pointer" : "default",
-          "&:hover": onClick
+          padding: '8px',
+          transition: 'all 0.2s ease-in-out',
+          cursor: onClick ? 'pointer' : 'default',
+          '&:hover': onClick
             ? {
                 bgcolor: alpha(colorValue, 0.1),
                 border: `1px solid ${alpha(colorValue, 0.3)}`,
@@ -96,13 +95,13 @@ const CompactStatCard = memo(
           component="div"
           sx={{
             mr: 1,
-            ml: "2px",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
+            ml: '2px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
             width: 32,
             height: 32,
-            borderRadius: "50%",
+            borderRadius: '50%',
             bgcolor: alpha(colorValue, 0.1),
             color: colorValue,
           }}
@@ -117,7 +116,7 @@ const CompactStatCard = memo(
           </Typography>
           <Grid
             component="div"
-            sx={{ display: "flex", alignItems: "baseline" }}
+            sx={{ display: 'flex', alignItems: 'baseline' }}
           >
             <Typography
               variant="body1"
@@ -133,66 +132,48 @@ const CompactStatCard = memo(
           </Grid>
         </Grid>
       </Paper>
-    );
+    )
   },
-);
+)
 
 // 添加显示名称
-CompactStatCard.displayName = "CompactStatCard";
+CompactStatCard.displayName = 'CompactStatCard'
 
 export const EnhancedTrafficStats = () => {
-  const { t } = useTranslation();
-  const theme = useTheme();
-  const { verge } = useVerge();
-  const trafficRef = useRef<EnhancedCanvasTrafficGraphRef>(null);
-  const pageVisible = useVisibility();
-
-  // 使用AppDataProvider
-  const { connections } = useAppData();
-
-  // 使用增强版的统一流量数据Hook
-  const { traffic, memory, isLoading, isDataFresh, hasValidData } =
-    useTrafficDataEnhanced();
+  const { t } = useTranslation()
+  const theme = useTheme()
+  const { verge } = useVerge()
+  const trafficRef = useRef<EnhancedCanvasTrafficGraphRef>(null)
+  const pageVisible = useVisibility()
 
   // 是否显示流量图表
-  const trafficGraph = verge?.traffic_graph ?? true;
+  const trafficGraph = verge?.traffic_graph ?? true
 
-  // 检查是否支持调试
-  // TODO: merge this hook with layout-traffic.tsx
-  const { data: isDebug } = useSWR(
-    `clash-verge-rev-internal://isDebugEnabled`,
-    () => isDebugEnabled(),
-    {
-      // default value before is fetched
-      fallbackData: false,
-    },
-  );
+  const {
+    response: { data: traffic },
+  } = useTrafficData({ enabled: trafficGraph && pageVisible })
+
+  const {
+    response: { data: memory },
+  } = useMemoryData()
+
+  const {
+    response: { data: connections },
+  } = useConnectionData()
 
   // Canvas组件现在直接从全局Hook获取数据，无需手动添加数据点
 
-  // 执行垃圾回收
-  const handleGarbageCollection = useCallback(async () => {
-    if (isDebug) {
-      try {
-        await gc();
-        console.log("[Debug] 垃圾回收已执行");
-      } catch (err) {
-        console.error("[Debug] 垃圾回收失败:", err);
-      }
-    }
-  }, [isDebug]);
-
   // 使用useMemo计算解析后的流量数据
   const parsedData = useMemo(() => {
-    const [up, upUnit] = parseTraffic(traffic?.raw?.up_rate || 0);
-    const [down, downUnit] = parseTraffic(traffic?.raw?.down_rate || 0);
-    const [inuse, inuseUnit] = parseTraffic(memory?.raw?.inuse || 0);
+    const [up, upUnit] = parseTraffic(traffic?.up || 0)
+    const [down, downUnit] = parseTraffic(traffic?.down || 0)
+    const [inuse, inuseUnit] = parseTraffic(memory?.inuse || 0)
     const [uploadTotal, uploadTotalUnit] = parseTraffic(
-      connections.uploadTotal,
-    );
+      connections?.uploadTotal,
+    )
     const [downloadTotal, downloadTotalUnit] = parseTraffic(
-      connections.downloadTotal,
-    );
+      connections?.downloadTotal,
+    )
 
     return {
       up,
@@ -205,110 +186,87 @@ export const EnhancedTrafficStats = () => {
       uploadTotalUnit,
       downloadTotal,
       downloadTotalUnit,
-      connectionsCount: connections.count,
-    };
-  }, [traffic, memory, connections]);
+      connectionsCount: connections?.activeConnections.length,
+    }
+  }, [traffic, memory, connections])
 
   // 渲染流量图表 - 使用useMemo缓存渲染结果
   const trafficGraphComponent = useMemo(() => {
-    if (!trafficGraph || !pageVisible) return null;
+    if (!trafficGraph || !pageVisible) return null
 
     return (
       <Paper
         elevation={0}
         sx={{
           height: 130,
-          cursor: "pointer",
+          cursor: 'pointer',
           border: `1px solid ${alpha(theme.palette.divider, 0.2)}`,
           borderRadius: 2,
-          overflow: "hidden",
+          overflow: 'hidden',
         }}
         onClick={() => trafficRef.current?.toggleStyle()}
       >
-        <div style={{ height: "100%", position: "relative" }}>
+        <div style={{ height: '100%', position: 'relative' }}>
           <EnhancedCanvasTrafficGraph ref={trafficRef} />
-          {isDebug && (
-            <div
-              style={{
-                position: "absolute",
-                top: "2px",
-                left: "2px",
-                zIndex: 10,
-                backgroundColor: "rgba(0,0,0,0.5)",
-                color: "white",
-                fontSize: "8px",
-                padding: "2px 4px",
-                borderRadius: "4px",
-              }}
-            >
-              DEBUG: {trafficRef.current ? "图表已初始化" : "图表未初始化"}
-              <br />
-              状态: {isDataFresh ? "active" : "inactive"}
-              <br />
-              数据新鲜度: {traffic?.is_fresh ? "Fresh" : "Stale"}
-              <br />
-              {new Date().toISOString().slice(11, 19)}
-            </div>
-          )}
         </div>
       </Paper>
-    );
-  }, [trafficGraph, pageVisible, theme.palette.divider, isDebug]);
+    )
+  }, [trafficGraph, pageVisible, theme.palette.divider])
 
   // 使用useMemo计算统计卡片配置
   const statCards = useMemo(
     () => [
       {
         icon: <ArrowUpwardRounded fontSize="small" />,
-        title: t("Upload Speed"),
+        title: t('home.components.traffic.metrics.uploadSpeed'),
         value: parsedData.up,
         unit: `${parsedData.upUnit}/s`,
-        color: "secondary" as const,
+        color: 'secondary' as const,
       },
       {
         icon: <ArrowDownwardRounded fontSize="small" />,
-        title: t("Download Speed"),
+        title: t('home.components.traffic.metrics.downloadSpeed'),
         value: parsedData.down,
         unit: `${parsedData.downUnit}/s`,
-        color: "primary" as const,
+        color: 'primary' as const,
       },
       {
         icon: <LinkRounded fontSize="small" />,
-        title: t("Active Connections"),
+        title: t('home.components.traffic.metrics.activeConnections'),
         value: parsedData.connectionsCount,
-        unit: "",
-        color: "success" as const,
+        unit: '',
+        color: 'success' as const,
       },
       {
         icon: <CloudUploadRounded fontSize="small" />,
-        title: t("Uploaded"),
+        title: t('shared.labels.uploaded'),
         value: parsedData.uploadTotal,
         unit: parsedData.uploadTotalUnit,
-        color: "secondary" as const,
+        color: 'secondary' as const,
       },
       {
         icon: <CloudDownloadRounded fontSize="small" />,
-        title: t("Downloaded"),
+        title: t('shared.labels.downloaded'),
         value: parsedData.downloadTotal,
         unit: parsedData.downloadTotalUnit,
-        color: "primary" as const,
+        color: 'primary' as const,
       },
       {
         icon: <MemoryRounded fontSize="small" />,
-        title: t("Memory Usage"),
+        title: t('home.components.traffic.metrics.memoryUsage'),
         value: parsedData.inuse,
         unit: parsedData.inuseUnit,
-        color: "error" as const,
-        onClick: isDebug ? handleGarbageCollection : undefined,
+        color: 'error' as const,
+        onClick: undefined,
       },
     ],
-    [t, parsedData, isDebug, handleGarbageCollection],
-  );
+    [t, parsedData],
+  )
 
   return (
     <TrafficErrorBoundary
       onError={(error, errorInfo) => {
-        console.error("[EnhancedTrafficStats] 组件错误:", error, errorInfo);
+        console.error('[EnhancedTrafficStats] 组件错误:', error, errorInfo)
       }}
     >
       <Grid container spacing={1} columns={{ xs: 8, sm: 8, md: 12 }}>
@@ -319,29 +277,12 @@ export const EnhancedTrafficStats = () => {
           </Grid>
         )}
         {/* 统计卡片区域 */}
-        {statCards.map((card, index) => (
-          <Grid key={index} size={4}>
-            <CompactStatCard {...card} />
+        {statCards.map((card) => (
+          <Grid key={card.title} size={4}>
+            <CompactStatCard {...(card as StatCardProps)} />
           </Grid>
         ))}
-
-        {/* 数据状态指示器（调试用）*/}
-        {isDebug && (
-          <Grid size={12}>
-            <Box
-              sx={{
-                p: 1,
-                bgcolor: "action.hover",
-                borderRadius: 1,
-                fontSize: "0.75rem",
-              }}
-            >
-              数据状态: {isDataFresh ? "新鲜" : "过期"} | 有效数据:{" "}
-              {hasValidData ? "是" : "否"} | 加载中: {isLoading ? "是" : "否"}
-            </Box>
-          </Grid>
-        )}
       </Grid>
     </TrafficErrorBoundary>
-  );
-};
+  )
+}

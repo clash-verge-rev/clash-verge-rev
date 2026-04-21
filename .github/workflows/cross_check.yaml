@@ -9,11 +9,14 @@ on:
 permissions:
   contents: read
 
+env:
+  HUSKY: 0
+
 jobs:
   cargo-check:
     # Treat all Rust compiler warnings as errors
     env:
-      RUSTFLAGS: "-D warnings"
+      RUSTFLAGS: '-D warnings'
     strategy:
       fail-fast: false
       matrix:
@@ -27,7 +30,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install Rust Stable
         uses: dtolnay/rust-toolchain@stable
@@ -38,11 +41,11 @@ jobs:
         run: rustup target add ${{ matrix.target }}
 
       - name: Install Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: "20"
+          node-version: '24.14.0'
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v5
         name: Install pnpm
         with:
           run_install: false

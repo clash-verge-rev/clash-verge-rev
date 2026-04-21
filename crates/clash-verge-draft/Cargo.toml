@@ -1,0 +1,17 @@
+[package]
+name = "clash-verge-draft"
+version = "0.1.0"
+edition = "2024"
+
+[[bench]]
+name = "draft_bench"
+path = "bench/benche_me.rs"
+harness = false
+
+[dependencies]
+parking_lot = { workspace = true }
+anyhow = { workspace = true }
+
+[dev-dependencies]
+criterion = { workspace = true }
+tokio = { workspace = true }

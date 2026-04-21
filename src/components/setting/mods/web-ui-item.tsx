@@ -1,27 +1,27 @@
-import { useState } from "react";
-import {
-  Divider,
-  IconButton,
-  Stack,
-  TextField,
-  Typography,
-} from "@mui/material";
 import {
   CheckRounded,
   CloseRounded,
   DeleteRounded,
   EditRounded,
   OpenInNewRounded,
-} from "@mui/icons-material";
-import { useTranslation } from "react-i18next";
+} from '@mui/icons-material'
+import {
+  Divider,
+  IconButton,
+  Stack,
+  TextField,
+  Typography,
+} from '@mui/material'
+import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 interface Props {
-  value?: string;
-  onlyEdit?: boolean;
-  onChange: (value?: string) => void;
-  onOpenUrl?: (value?: string) => void;
-  onDelete?: () => void;
-  onCancel?: () => void;
+  value?: string
+  onlyEdit?: boolean
+  onChange: (value?: string) => void
+  onOpenUrl?: (value?: string) => void
+  onDelete?: () => void
+  onCancel?: () => void
 }
 
 export const WebUIItem = (props: Props) => {
@@ -32,11 +32,19 @@ export const WebUIItem = (props: Props) => {
     onDelete,
     onOpenUrl,
     onCancel,
-  } = props;
+  } = props
 
-  const [editing, setEditing] = useState(false);
-  const [editValue, setEditValue] = useState(value);
-  const { t } = useTranslation();
+  const [editing, setEditing] = useState(false)
+  const [editValue, setEditValue] = useState(value)
+  const { t } = useTranslation()
+
+  const highlightedParts = useMemo(() => {
+    const placeholderRegex = /(%host|%port|%secret)/g
+    if (!value) {
+      return ['NULL']
+    }
+    return value.split(placeholderRegex).filter((part) => part !== '')
+  }, [value])
 
   if (editing || onlyEdit) {
     return (
@@ -48,26 +56,28 @@ export const WebUIItem = (props: Props) => {
             size="small"
             value={editValue}
             onChange={(e) => setEditValue(e.target.value)}
-            placeholder={t("Support %host, %port, %secret")}
+            placeholder={t(
+              'settings.modals.webUI.messages.supportedPlaceholders',
+            )}
           />
           <IconButton
             size="small"
-            title={t("Save")}
+            title={t('shared.actions.save')}
             color="inherit"
             onClick={() => {
-              onChange(editValue);
-              setEditing(false);
+              onChange(editValue)
+              setEditing(false)
             }}
           >
             <CheckRounded fontSize="inherit" />
           </IconButton>
           <IconButton
             size="small"
-            title={t("Cancel")}
+            title={t('shared.actions.cancel')}
             color="inherit"
             onClick={() => {
-              onCancel?.();
-              setEditing(false);
+              onCancel?.()
+              setEditing(false)
             }}
           >
             <CloseRounded fontSize="inherit" />
@@ -75,13 +85,23 @@ export const WebUIItem = (props: Props) => {
         </Stack>
         <Divider />
       </>
-    );
+    )
   }
 
-  const html = value
-    ?.replace("%host", "<span>%host</span>")
-    .replace("%port", "<span>%port</span>")
-    .replace("%secret", "<span>%secret</span>");
+  const renderedParts = highlightedParts.map((part, index) => {
+    const isPlaceholder =
+      part === '%host' || part === '%port' || part === '%secret'
+    const repeatIndex = highlightedParts
+      .slice(0, index)
+      .filter((prev) => prev === part).length
+    const key = `${part || 'empty'}-${repeatIndex}`
+
+    return (
+      <span key={key} className={isPlaceholder ? 'placeholder' : undefined}>
+        {part}
+      </span>
+    )
+  })
 
   return (
     <>
@@ -90,19 +110,20 @@ export const WebUIItem = (props: Props) => {
           component="div"
           width="100%"
           title={value}
-          color={value ? "text.primary" : "text.secondary"}
+          color={value ? 'text.primary' : 'text.secondary'}
           sx={({ palette }) => ({
-            overflow: "hidden",
-            textOverflow: "ellipsis",
-            "> span": {
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            '> .placeholder': {
               color: palette.primary.main,
             },
           })}
-          dangerouslySetInnerHTML={{ __html: html || "NULL" }}
-        />
+        >
+          {renderedParts}
+        </Typography>
         <IconButton
           size="small"
-          title={t("Open URL")}
+          title={t('settings.modals.webUI.actions.openUrl')}
           color="inherit"
           onClick={() => onOpenUrl?.(value)}
         >
@@ -110,18 +131,18 @@ export const WebUIItem = (props: Props) => {
         </IconButton>
         <IconButton
           size="small"
-          title={t("Edit")}
+          title={t('shared.actions.edit')}
           color="inherit"
           onClick={() => {
-            setEditing(true);
-            setEditValue(value);
+            setEditing(true)
+            setEditValue(value)
           }}
         >
           <EditRounded fontSize="inherit" />
         </IconButton>
         <IconButton
           size="small"
-          title={t("Delete")}
+          title={t('shared.actions.delete')}
           color="inherit"
           onClick={onDelete}
         >
@@ -130,5 +151,5 @@ export const WebUIItem = (props: Props) => {
       </Stack>
       <Divider />
     </>
-  );
-};
+  )
+}

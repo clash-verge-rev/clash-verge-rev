@@ -1,0 +1,24 @@
+{
+  "components": {
+    "navigation": {
+      "tabs": {
+        "home": "Ana Sayfa",
+        "proxies": "Vekil'ler",
+        "profiles": "Profiller",
+        "connections": "Bağlantılar",
+        "rules": "Kurallar",
+        "logs": "Günlükler",
+        "unlock": "Test",
+        "settings": "Ayarlar"
+      },
+      "menu": {
+        "reorderMode": "Menu reorder mode",
+        "restoreDefaultOrder": "Restore default order",
+        "unlock": "Unlock menu order",
+        "lock": "Lock menu order",
+        "collapseNavBar": "Collapse navigation bar",
+        "expandNavBar": "Expand navigation bar"
+      }
+    }
+  }
+}

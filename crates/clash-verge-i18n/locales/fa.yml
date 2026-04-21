@@ -1,0 +1,60 @@
+_version: 1
+notifications:
+  dashboardToggled:
+    title: داشبورد
+    body: وضعیت نمایش داشبورد به‌روزرسانی شد.
+  clashModeChanged:
+    title: تغییر حالت
+    body: به {mode} تغییر کرد.
+  systemProxyToggled:
+    title: پروکسی سیستم
+    body: وضعیت پروکسی سیستم به‌روزرسانی شد.
+  tunModeToggled:
+    title: حالت TUN
+    body: وضعیت حالت TUN به‌روزرسانی شد.
+  lightweightModeEntered:
+    title: حالت سبک
+    body: به حالت سبک وارد شد.
+  profilesReactivated:
+    title: پروفایل‌ها
+    body: پروفایل دوباره فعال شد.
+  appQuit:
+    title: در آستانه خروج
+    body: Clash Verge در آستانه خروج است.
+  appHidden:
+    title: برنامه پنهان شد
+    body: Clash Verge در پس‌زمینه در حال اجراست.
+service:
+  adminInstallPrompt: نصب سرویس Clash Verge به دسترسی مدیر نیاز دارد.
+  adminUninstallPrompt: حذف سرویس Clash Verge به دسترسی مدیر نیاز دارد.
+tray:
+  dashboard: داشبورد
+  ruleMode: حالت قوانین
+  globalMode: حالت سراسری
+  directMode: حالت مستقیم
+  outboundModes: حالت‌های خروجی
+  rule: قانون
+  direct: مستقیم
+  global: سراسری
+  profiles: پروفایل‌ها
+  proxies: پروکسی‌ها
+  systemProxy: پروکسی سیستم
+  tunMode: حالت TUN
+  closeAllConnections: بستن همه اتصال‌ها
+  lightweightMode: حالت سبک
+  copyEnv: کپی متغیرهای محیطی
+  confDir: پوشه پیکربندی
+  coreDir: پوشه هسته
+  logsDir: پوشه گزارش‌ها
+  openDir: باز کردن پوشه
+  appLog: گزارش برنامه
+  coreLog: گزارش هسته
+  restartClash: راه‌اندازی مجدد هسته Clash
+  restartApp: راه‌اندازی مجدد برنامه
+  vergeVersion: نسخه Verge
+  more: بیشتر
+  exit: خروج
+  tooltip:
+    systemProxy: پروکسی سیستم
+    tun: TUN
+    profile: پروفایل

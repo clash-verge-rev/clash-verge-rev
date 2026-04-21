@@ -1,9 +1,5 @@
-import { useState, useRef, memo, useEffect } from "react";
-import { useTranslation } from "react-i18next";
-import { useForm } from "react-hook-form";
-import { useVerge } from "@/hooks/use-verge";
-import { isValidUrl } from "@/utils/helper";
-import { useLockFn } from "ahooks";
+import Visibility from '@mui/icons-material/Visibility'
+import VisibilityOff from '@mui/icons-material/VisibilityOff'
 import {
   TextField,
   Button,
@@ -11,18 +7,28 @@ import {
   Stack,
   IconButton,
   InputAdornment,
-} from "@mui/material";
-import Visibility from "@mui/icons-material/Visibility";
-import VisibilityOff from "@mui/icons-material/VisibilityOff";
-import { saveWebdavConfig, createWebdavBackup } from "@/services/cmds";
-import { showNotice } from "@/services/noticeService";
+} from '@mui/material'
+import { useLockFn } from 'ahooks'
+import { useState, useRef, memo, useEffect } from 'react'
+import { useForm } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 
-export interface BackupConfigViewerProps {
-  onBackupSuccess: () => Promise<void>;
-  onSaveSuccess: () => Promise<void>;
-  onRefresh: () => Promise<void>;
-  onInit: () => Promise<void>;
-  setLoading: (loading: boolean) => void;
+import { useVerge } from '@/hooks/use-verge'
+import { saveWebdavConfig, createWebdavBackup } from '@/services/cmds'
+import { showNotice } from '@/services/notice-service'
+import {
+  buildWebdavSignature,
+  getWebdavStatus,
+  setWebdavStatus,
+} from '@/services/webdav-status'
+import { isValidUrl } from '@/utils/network'
+
+interface BackupConfigViewerProps {
+  onBackupSuccess: () => Promise<void>
+  onSaveSuccess: (signature?: string) => Promise<void>
+  onRefresh: () => Promise<void>
+  onInit: () => Promise<void>
+  setLoading: (loading: boolean) => void
 }
 
 export const BackupConfigViewer = memo(
@@ -33,13 +39,13 @@ export const BackupConfigViewer = memo(
     onInit,
     setLoading,
   }: BackupConfigViewerProps) => {
-    const { t } = useTranslation();
-    const { verge } = useVerge();
-    const { webdav_url, webdav_username, webdav_password } = verge || {};
-    const [showPassword, setShowPassword] = useState(false);
-    const usernameRef = useRef<HTMLInputElement>(null);
-    const passwordRef = useRef<HTMLInputElement>(null);
-    const urlRef = useRef<HTMLInputElement>(null);
+    const { t } = useTranslation()
+    const { verge, mutateVerge } = useVerge()
+    const { webdav_url, webdav_username, webdav_password } = verge || {}
+    const [showPassword, setShowPassword] = useState(false)
+    const usernameRef = useRef<HTMLInputElement>(null)
+    const passwordRef = useRef<HTMLInputElement>(null)
+    const urlRef = useRef<HTMLInputElement>(null)
 
     const { register, handleSubmit, watch } = useForm<IWebDavConfig>({
       defaultValues: {
@@ -47,93 +53,123 @@ export const BackupConfigViewer = memo(
         username: webdav_username,
         password: webdav_password,
       },
-    });
-    const url = watch("url");
-    const username = watch("username");
-    const password = watch("password");
+    })
+    const url = watch('url')
+    const username = watch('username')
+    const password = watch('password')
 
     const webdavChanged =
       webdav_url !== url ||
       webdav_username !== username ||
-      webdav_password !== password;
+      webdav_password !== password
 
-    console.log(
-      "webdavChanged",
-      webdavChanged,
-      webdav_url,
-      webdav_username,
-      webdav_password,
-    );
+    const webdavSignature = buildWebdavSignature(verge)
+    const webdavStatus = getWebdavStatus(webdavSignature)
+    const shouldAutoInit = webdavStatus !== 'failed'
 
     const handleClickShowPassword = () => {
-      setShowPassword((prev) => !prev);
-    };
+      setShowPassword((prev) => !prev)
+    }
 
     useEffect(() => {
-      if (webdav_url && webdav_username && webdav_password) {
-        onInit();
+      if (!webdav_url || !webdav_username || !webdav_password) {
+        return
       }
-    }, []);
+      if (!shouldAutoInit) {
+        return
+      }
+      void onInit()
+    }, [webdav_url, webdav_username, webdav_password, onInit, shouldAutoInit])
 
     const checkForm = () => {
-      const username = usernameRef.current?.value;
-      const password = passwordRef.current?.value;
-      const url = urlRef.current?.value;
+      const username = usernameRef.current?.value
+      const password = passwordRef.current?.value
+      const url = urlRef.current?.value
 
       if (!url) {
-        urlRef.current?.focus();
-        showNotice("error", t("WebDAV URL Required"));
-        throw new Error(t("WebDAV URL Required"));
+        urlRef.current?.focus()
+        showNotice.error('settings.modals.backup.messages.webdavUrlRequired')
+        throw new Error(t('settings.modals.backup.messages.webdavUrlRequired'))
       } else if (!isValidUrl(url)) {
-        urlRef.current?.focus();
-        showNotice("error", t("Invalid WebDAV URL"));
-        throw new Error(t("Invalid WebDAV URL"));
+        urlRef.current?.focus()
+        showNotice.error('settings.modals.backup.messages.invalidWebdavUrl')
+        throw new Error(t('settings.modals.backup.messages.invalidWebdavUrl'))
       }
       if (!username) {
-        usernameRef.current?.focus();
-        showNotice("error", t("WebDAV URL Required"));
-        throw new Error(t("Username Required"));
+        usernameRef.current?.focus()
+        showNotice.error('settings.modals.backup.messages.usernameRequired')
+        throw new Error(t('settings.modals.backup.messages.usernameRequired'))
       }
       if (!password) {
-        passwordRef.current?.focus();
-        showNotice("error", t("WebDAV URL Required"));
-        throw new Error(t("Password Required"));
+        passwordRef.current?.focus()
+        showNotice.error('settings.modals.backup.messages.passwordRequired')
+        throw new Error(t('settings.modals.backup.messages.passwordRequired'))
       }
-    };
+    }
 
     const save = useLockFn(async (data: IWebDavConfig) => {
-      checkForm();
+      checkForm()
+      const signature = buildWebdavSignature({
+        webdav_url: data.url,
+        webdav_username: data.username,
+        webdav_password: data.password,
+      })
+      const trimmedUrl = data.url.trim()
+      const trimmedUsername = data.username.trim()
+
       try {
-        setLoading(true);
-        await saveWebdavConfig(
-          data.url.trim(),
-          data.username.trim(),
-          data.password,
-        ).then(() => {
-          showNotice("success", t("WebDAV Config Saved"));
-          onSaveSuccess();
-        });
+        setLoading(true)
+        await saveWebdavConfig(trimmedUrl, trimmedUsername, data.password)
+        await mutateVerge(
+          (current) =>
+            current
+              ? {
+                  ...current,
+                  webdav_url: trimmedUrl,
+                  webdav_username: trimmedUsername,
+                  webdav_password: data.password,
+                }
+              : current,
+          false,
+        )
+        setWebdavStatus(signature, 'unknown')
+        showNotice.success('settings.modals.backup.messages.webdavConfigSaved')
+        await onSaveSuccess(signature)
       } catch (error) {
-        showNotice("error", t("WebDAV Config Save Failed", { error }), 3000);
+        showNotice.error(
+          'settings.modals.backup.messages.webdavConfigSaveFailed',
+          { error },
+          3000,
+        )
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    });
+    })
 
     const handleBackup = useLockFn(async () => {
-      checkForm();
+      checkForm()
+      const signature = buildWebdavSignature({
+        webdav_url: url,
+        webdav_username: username,
+        webdav_password: password,
+      })
+
       try {
-        setLoading(true);
+        setLoading(true)
         await createWebdavBackup().then(async () => {
-          showNotice("success", t("Backup Created"));
-          await onBackupSuccess();
-        });
+          showNotice.success('settings.modals.backup.messages.backupCreated')
+          await onBackupSuccess()
+        })
+        setWebdavStatus(signature, 'ready')
       } catch (error) {
-        showNotice("error", t("Backup Failed", { error }));
+        showNotice.error('settings.modals.backup.messages.backupFailed', {
+          error,
+        })
+        setWebdavStatus(signature, 'failed')
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    });
+    })
 
     return (
       <form onSubmit={(e) => e.preventDefault()}>
@@ -143,22 +179,23 @@ export const BackupConfigViewer = memo(
               <Grid size={{ xs: 12 }}>
                 <TextField
                   fullWidth
-                  label={t("WebDAV Server URL")}
+                  label={t('settings.modals.backup.fields.webdavUrl')}
                   variant="outlined"
                   size="small"
-                  {...register("url")}
+                  {...register('url')}
                   autoCorrect="off"
                   autoCapitalize="off"
                   spellCheck="false"
                   inputRef={urlRef}
+                  sx={{ mt: 1 }}
                 />
               </Grid>
               <Grid size={{ xs: 6 }}>
                 <TextField
-                  label={t("Username")}
+                  label={t('settings.modals.backup.fields.username')}
                   variant="outlined"
                   size="small"
-                  {...register("username")}
+                  {...register('username')}
                   autoCorrect="off"
                   autoCapitalize="off"
                   spellCheck="false"
@@ -167,15 +204,15 @@ export const BackupConfigViewer = memo(
               </Grid>
               <Grid size={{ xs: 6 }}>
                 <TextField
-                  label={t("Password")}
-                  type={showPassword ? "text" : "password"}
+                  label={t('shared.labels.password')}
+                  type={showPassword ? 'text' : 'password'}
                   variant="outlined"
                   size="small"
                   autoCorrect="off"
                   autoCapitalize="off"
                   spellCheck="false"
                   inputRef={passwordRef}
-                  {...register("password")}
+                  {...register('password')}
                   slotProps={{
                     input: {
                       endAdornment: (
@@ -199,7 +236,7 @@ export const BackupConfigViewer = memo(
               direction="column"
               justifyContent="space-between"
               alignItems="stretch"
-              sx={{ height: "100%" }}
+              sx={{ height: '100%' }}
             >
               {webdavChanged ||
               webdav_url === undefined ||
@@ -207,12 +244,12 @@ export const BackupConfigViewer = memo(
               webdav_password === undefined ? (
                 <Button
                   variant="contained"
-                  color={"primary"}
-                  sx={{ height: "100%" }}
+                  color={'primary'}
+                  sx={{ height: '100%' }}
                   type="button"
                   onClick={handleSubmit(save)}
                 >
-                  {t("Save")}
+                  {t('shared.actions.save')}
                 </Button>
               ) : (
                 <>
@@ -223,7 +260,7 @@ export const BackupConfigViewer = memo(
                     type="button"
                     size="large"
                   >
-                    {t("Backup")}
+                    {t('settings.modals.backup.actions.backup')}
                   </Button>
                   <Button
                     variant="outlined"
@@ -231,7 +268,7 @@ export const BackupConfigViewer = memo(
                     type="button"
                     size="large"
                   >
-                    {t("Refresh")}
+                    {t('shared.actions.refresh')}
                   </Button>
                 </>
               )}
@@ -239,6 +276,6 @@ export const BackupConfigViewer = memo(
           </Grid>
         </Grid>
       </form>
-    );
+    )
   },
-);
+)

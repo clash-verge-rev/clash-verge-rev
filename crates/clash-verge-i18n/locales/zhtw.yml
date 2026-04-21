@@ -1,0 +1,60 @@
+_version: 1
+notifications:
+  dashboardToggled:
+    title: 儀表板
+    body: 儀表板顯示狀態已更新。
+  clashModeChanged:
+    title: 模式切換
+    body: 已切換至 {mode}。
+  systemProxyToggled:
+    title: 系統代理
+    body: 系統代理狀態已更新。
+  tunModeToggled:
+    title: 虛擬網路介面卡模式
+    body: 已更新虛擬網路介面卡模式狀態。
+  lightweightModeEntered:
+    title: 輕量模式
+    body: 已進入輕量模式。
+  profilesReactivated:
+    title: 訂閱
+    body: 訂閱已啟用。
+  appQuit:
+    title: 即將退出
+    body: Clash Verge 即將退出。
+  appHidden:
+    title: 應用已隱藏
+    body: Clash Verge 正在背景執行。
+service:
+  adminInstallPrompt: 安裝 Clash Verge 服務需要管理員權限
+  adminUninstallPrompt: 卸载 Clash Verge 服務需要管理員權限
+tray:
+  dashboard: 儀表板
+  ruleMode: 規則模式
+  globalMode: 全域模式
+  directMode: 直連模式
+  outboundModes: 出站模式
+  rule: 規則
+  direct: 直連
+  global: 全域
+  profiles: 訂閱
+  proxies: 代理
+  systemProxy: 系統代理
+  tunMode: 虛擬網路介面卡模式
+  closeAllConnections: 關閉所有連線
+  lightweightMode: 輕量模式
+  copyEnv: 複製環境變數
+  confDir: 設定目錄
+  coreDir: 核心目錄
+  logsDir: 日誌目錄
+  openDir: 開啟目錄
+  appLog: 應用程式日誌
+  coreLog: 核心日誌
+  restartClash: 重新啟動 Clash 核心
+  restartApp: 重新啟動應用程式
+  vergeVersion: Verge 版本
+  more: 更多
+  exit: 離開
+  tooltip:
+    systemProxy: 系統代理
+    tun: 虛擬網路介面卡
+    profile: 訂閱

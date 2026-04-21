@@ -1,0 +1,60 @@
+_version: 1
+notifications:
+  dashboardToggled:
+    title: Идарә панеле
+    body: Идарә панеленең күренеше яңартылды.
+  clashModeChanged:
+    title: Режим алыштыру
+    body: '{mode} режимына күчтел.'
+  systemProxyToggled:
+    title: Системалы прокси
+    body: Системалы прокси хәле яңартылды.
+  tunModeToggled:
+    title: TUN режимы
+    body: TUN режимы хәле яңартылды.
+  lightweightModeEntered:
+    title: Җиңел режим
+    body: Җиңел режимга күчелде.
+  profilesReactivated:
+    title: Профильләр
+    body: Профиль яңадан активлаштырылды.
+  appQuit:
+    title: Чыгар алдыннан
+    body: Clash Verge чыгарга җыена.
+  appHidden:
+    title: Кушымта яшерелде
+    body: Clash Verge фон режимында эшли.
+service:
+  adminInstallPrompt: Clash Verge хезмәтен урнаштыру өчен администратор хокуклары кирәк.
+  adminUninstallPrompt: Clash Verge хезмәтен бетерү өчен администратор хокуклары кирәк.
+tray:
+  dashboard: Идарә панеле
+  ruleMode: Кагыйдә режимы
+  globalMode: Глобаль режим
+  directMode: Турыдан-туры режим
+  outboundModes: Чыгыш режимнары
+  rule: Кагыйдә
+  direct: Турыдан-туры
+  global: Глобаль
+  profiles: Профильләр
+  proxies: Проксилар
+  systemProxy: Системалы прокси
+  tunMode: TUN режимы
+  closeAllConnections: Барлык тоташуларны ябу
+  lightweightMode: Җиңел режим
+  copyEnv: Мохит үзгәрүчәннәрен күчерү
+  confDir: Конфигурация каталогы
+  coreDir: Ядро каталогы
+  logsDir: Журнал каталогы
+  openDir: Каталогны ачу
+  appLog: Кушымта журналы
+  coreLog: Ядро журналы
+  restartClash: Clash ядрәсен кабат җибәрү
+  restartApp: Кушымтаны кабат җибәрү
+  vergeVersion: Verge версиясе
+  more: Күбрәк
+  exit: Чыгу
+  tooltip:
+    systemProxy: Системалы прокси
+    tun: TUN
+    profile: Профиль

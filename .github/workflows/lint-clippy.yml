@@ -3,6 +3,8 @@ name: Clippy Lint
 on:
   pull_request:
   workflow_dispatch:
+env:
+  HUSKY: 0
 
 jobs:
   clippy:
@@ -19,11 +21,36 @@ jobs:
 
     runs-on: ${{ matrix.os }}
     steps:
+      - name: Check src-tauri changes
+        if: github.event_name != 'workflow_dispatch'
+        id: check_changes
+        uses: dorny/paths-filter@v4
+        with:
+          filters: |
+            rust:
+              - 'src-tauri/**'
+
+      - name: Skip if src-tauri not changed
+        if: github.event_name != 'workflow_dispatch' && steps.check_changes.outputs.rust != 'true'
+        run: echo "No src-tauri changes, skipping clippy lint."
+
+      - name: Continue if src-tauri changed
+        if: github.event_name != 'workflow_dispatch' && steps.check_changes.outputs.rust == 'true'
+        run: echo "src-tauri changed, running clippy lint."
+
+      - name: Manual trigger - always run
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          echo "Manual trigger detected: skipping changes check and running clippy."
+
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install Rust Stable
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+          components: clippy
 
       - name: Add Rust Target
         run: rustup target add ${{ matrix.target }}
@@ -31,10 +58,13 @@ jobs:
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
         with:
-          workspaces: src-tauri
-          save-if: false
-          cache-all-crates: false
-          shared-key: autobuild-shared
+          save-if: ${{ github.ref == 'refs/heads/dev' }}
+          prefix-key: 'v1-rust'
+          key: 'rust-shared-stable-${{ matrix.os }}-${{ matrix.target }}'
+          workspaces: |
+            . -> target
+          cache-all-crates: true
+          cache-workspace-crates: true
 
       - name: Install dependencies (ubuntu only)
         if: matrix.os == 'ubuntu-22.04'
@@ -42,29 +72,13 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libxslt1.1 libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf
 
-      - name: Install pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          run_install: false
-
-      - name: Install Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: "pnpm"
-
-      - name: Pnpm install and check
-        run: |
-          pnpm i
-          pnpm run prebuild ${{ matrix.target }}
-
-      # This workflow runs linting using cargo clippy.
-      # Note: If the web build step is skipped,
-      # cargo clippy will fail to run due to missing web dist in the Tauri environment.
-      - name: Build Web Assets
-        run: pnpm run web:build
-        env:
-          NODE_OPTIONS: "--max_old_space_size=4096"
-
       - name: Run Clippy
-        run: cargo clippy --manifest-path src-tauri/Cargo.toml --all-targets --all-features -- -D warnings
+        working-directory: ./src-tauri
+        run: cargo clippy-all
+
+      - name: Run Logging Check
+        working-directory: ./src-tauri
+        shell: bash
+        run: |
+          cargo install --git https://github.com/clash-verge-rev/clash-verge-logging-check.git
+          clash-verge-logging-check

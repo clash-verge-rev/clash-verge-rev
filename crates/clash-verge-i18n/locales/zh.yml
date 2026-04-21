@@ -1,0 +1,60 @@
+_version: 1
+notifications:
+  dashboardToggled:
+    title: 仪表板
+    body: 仪表板显示状态已更新。
+  clashModeChanged:
+    title: 模式切换
+    body: 已切换至 {mode}。
+  systemProxyToggled:
+    title: 系统代理
+    body: 系统代理状态已更新。
+  tunModeToggled:
+    title: TUN 模式
+    body: TUN 模式状态已更新。
+  lightweightModeEntered:
+    title: 轻量模式
+    body: 已进入轻量模式。
+  profilesReactivated:
+    title: 订阅
+    body: 订阅已激活。
+  appQuit:
+    title: 即将退出
+    body: Clash Verge 即将退出。
+  appHidden:
+    title: 应用已隐藏
+    body: Clash Verge 正在后台运行。
+service:
+  adminInstallPrompt: 安装 Clash Verge 服务需要管理员权限
+  adminUninstallPrompt: 卸载 Clash Verge 服务需要管理员权限
+tray:
+  dashboard: 仪表板
+  ruleMode: 规则模式
+  globalMode: 全局模式
+  directMode: 直连模式
+  outboundModes: 出站模式
+  rule: 规则
+  direct: 直连
+  global: 全局
+  profiles: 订阅
+  proxies: 代理
+  systemProxy: 系统代理
+  tunMode: TUN 模式
+  closeAllConnections: 关闭所有连接
+  lightweightMode: 轻量模式
+  copyEnv: 复制环境变量
+  confDir: 配置目录
+  coreDir: 内核目录
+  logsDir: 日志目录
+  openDir: 打开目录
+  appLog: 应用日志
+  coreLog: 内核日志
+  restartClash: 重启 Clash 内核
+  restartApp: 重启应用
+  vergeVersion: Verge 版本
+  more: 更多
+  exit: 退出
+  tooltip:
+    systemProxy: 系统代理
+    tun: TUN
+    profile: 订阅

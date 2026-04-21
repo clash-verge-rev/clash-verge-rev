@@ -1,0 +1,60 @@
+_version: 1
+notifications:
+  dashboardToggled:
+    title: لوحة التحكم
+    body: تم تحديث حالة عرض لوحة التحكم.
+  clashModeChanged:
+    title: تبديل الوضع
+    body: تم التبديل إلى {mode}.
+  systemProxyToggled:
+    title: وكيل النظام
+    body: تم تحديث حالة وكيل النظام.
+  tunModeToggled:
+    title: وضع TUN
+    body: تم تحديث حالة وضع TUN.
+  lightweightModeEntered:
+    title: الوضع الخفيف
+    body: تم الدخول إلى الوضع الخفيف.
+  profilesReactivated:
+    title: الملفات التعريفية
+    body: تمت إعادة تفعيل الملف التعريفي.
+  appQuit:
+    title: على وشك الخروج
+    body: Clash Verge على وشك الخروج.
+  appHidden:
+    title: تم إخفاء التطبيق
+    body: Clash Verge يعمل في الخلفية.
+service:
+  adminInstallPrompt: يتطلب تثبيت خدمة Clash Verge صلاحيات المسؤول.
+  adminUninstallPrompt: يتطلب إلغاء تثبيت خدمة Clash Verge صلاحيات المسؤول.
+tray:
+  dashboard: لوحة التحكم
+  ruleMode: وضع القواعد
+  globalMode: الوضع العام
+  directMode: الوضع المباشر
+  outboundModes: أوضاع الخروج
+  rule: قاعدة
+  direct: مباشر
+  global: عام
+  profiles: الملفات التعريفية
+  proxies: وكلاء
+  systemProxy: وكيل النظام
+  tunMode: وضع TUN
+  closeAllConnections: إغلاق كل الاتصالات
+  lightweightMode: الوضع الخفيف
+  copyEnv: نسخ متغيرات البيئة
+  confDir: دليل الإعدادات
+  coreDir: دليل النواة
+  logsDir: دليل السجلات
+  openDir: فتح الدليل
+  appLog: سجل التطبيق
+  coreLog: سجل النواة
+  restartClash: إعادة تشغيل نواة Clash
+  restartApp: إعادة تشغيل التطبيق
+  vergeVersion: إصدار Verge
+  more: المزيد
+  exit: خروج
+  tooltip:
+    systemProxy: وكيل النظام
+    tun: TUN
+    profile: ملف تعريفي

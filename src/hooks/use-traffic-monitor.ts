@@ -1,398 +1,476 @@
-import { useState, useEffect, useRef, useCallback } from "react";
-import useSWR from "swr";
-import { useClashInfo } from "@/hooks/use-clash";
-import { useVisibility } from "@/hooks/use-visibility";
-import { getSystemMonitorOverviewSafe } from "@/services/cmds";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+} from 'react'
+import { Traffic } from 'tauri-plugin-mihomo-api'
 
-// 增强的流量数据点接口
-export interface ITrafficDataPoint {
-  up: number;
-  down: number;
-  timestamp: number;
-  name: string;
-}
-
-// 压缩的数据点（用于长期存储）
-interface ICompressedDataPoint {
-  up: number;
-  down: number;
-  timestamp: number;
-  samples: number; // 压缩了多少个原始数据点
-}
-
-// 数据采样器配置
-interface ISamplingConfig {
-  // 原始数据保持时间（分钟）
-  rawDataMinutes: number;
-  // 压缩数据保持时间（分钟）
-  compressedDataMinutes: number;
-  // 压缩比例（多少个原始点压缩成1个）
-  compressionRatio: number;
-}
+import { debugLog } from '@/utils/debug'
+import { TrafficDataSampler, formatTrafficName } from '@/utils/traffic-sampler'
 
 // 引用计数管理器
 class ReferenceCounter {
-  private count = 0;
-  private callbacks: (() => void)[] = [];
+  private count = 0
+  private callbacks = new Set<() => void>()
+
+  private notify() {
+    this.callbacks.forEach((cb) => cb())
+  }
 
   increment(): () => void {
-    this.count++;
-    console.log(`[ReferenceCounter] 引用计数增加: ${this.count}`);
+    this.count++
+    debugLog(`[ReferenceCounter] 引用计数增加: ${this.count}`)
 
-    if (this.count === 1) {
-      // 从0到1，开始数据收集
-      this.callbacks.forEach((cb) => cb());
-    }
+    this.notify()
 
     return () => {
-      this.count--;
-      console.log(`[ReferenceCounter] 引用计数减少: ${this.count}`);
+      this.count--
+      debugLog(`[ReferenceCounter] 引用计数减少: ${this.count}`)
 
-      if (this.count === 0) {
-        // 从1到0，停止数据收集
-        this.callbacks.forEach((cb) => cb());
-      }
-    };
+      this.notify()
+    }
   }
 
   onCountChange(callback: () => void) {
-    this.callbacks.push(callback);
+    this.callbacks.add(callback)
+    return () => this.callbacks.delete(callback)
   }
 
   getCount(): number {
-    return this.count;
+    return this.count
   }
 }
 
-// 智能数据采样器
-class TrafficDataSampler {
-  private rawBuffer: ITrafficDataPoint[] = [];
-  private compressedBuffer: ICompressedDataPoint[] = [];
-  private config: ISamplingConfig;
-  private compressionQueue: ITrafficDataPoint[] = [];
+const WORKER_CONFIG = {
+  rawDataMinutes: 10,
+  compressedDataMinutes: 60,
+  compressionRatio: 5,
+  snapshotIntervalMs: 100,
+  defaultRangeMinutes: 10,
+}
 
-  constructor(config: ISamplingConfig) {
-    this.config = config;
+class InlineTrafficMonitor {
+  private config = { ...WORKER_CONFIG }
+  private sampler = new TrafficDataSampler(this.config)
+  private throttleTimer: ReturnType<typeof setTimeout> | null = null
+  private currentRange = this.config.defaultRangeMinutes
+  private lastTimestamp: number | undefined
+
+  constructor(
+    private emit: (snapshot: ITrafficWorkerSnapshotMessage) => void,
+  ) {}
+
+  start(rangeMinutes?: number) {
+    this.currentRange = rangeMinutes ?? this.currentRange
+    this.handle({
+      type: 'init',
+      config: {
+        ...this.config,
+        defaultRangeMinutes: this.currentRange,
+      },
+    })
   }
 
-  addDataPoint(point: ITrafficDataPoint): void {
-    // 添加到原始缓冲区
-    this.rawBuffer.push(point);
+  stop() {
+    if (this.throttleTimer !== null) {
+      clearTimeout(this.throttleTimer)
+      this.throttleTimer = null
+    }
+    this.sampler.clear()
+    this.lastTimestamp = undefined
+  }
 
-    // 清理过期的原始数据
-    const rawCutoff = Date.now() - this.config.rawDataMinutes * 60 * 1000;
-    this.rawBuffer = this.rawBuffer.filter((p) => p.timestamp > rawCutoff);
+  handle(message: TrafficWorkerRequestMessage) {
+    switch (message.type) {
+      case 'init': {
+        this.config = { ...message.config }
+        this.sampler = new TrafficDataSampler(this.config)
+        this.currentRange = message.config.defaultRangeMinutes
+        this.emitSnapshot('init')
+        break
+      }
+      case 'append': {
+        const timestamp = message.payload.timestamp ?? Date.now()
+        const dataPoint: ITrafficDataPoint = {
+          up: message.payload.up || 0,
+          down: message.payload.down || 0,
+          timestamp,
+          name: formatTrafficName(timestamp),
+        }
 
-    // 添加到压缩队列
-    this.compressionQueue.push(point);
+        this.lastTimestamp = timestamp
+        this.sampler.addDataPoint(dataPoint)
+        this.scheduleSnapshot('append-throttle')
+        break
+      }
+      case 'clear': {
+        this.sampler.clear()
+        this.lastTimestamp = undefined
+        this.emitSnapshot('clear')
+        break
+      }
+      case 'setRange': {
+        if (this.currentRange !== message.minutes) {
+          this.currentRange = message.minutes
+          this.emitSnapshot('range-change')
+        }
+        break
+      }
+      case 'requestSnapshot': {
+        this.emitSnapshot('request')
+        break
+      }
+      default:
+        break
+    }
+  }
 
-    // 当压缩队列达到压缩比例时，执行压缩
-    if (this.compressionQueue.length >= this.config.compressionRatio) {
-      this.compressData();
+  private emitSnapshot(reason: ITrafficWorkerSnapshotMessage['reason']) {
+    const dataPoints = this.sampler.getDataForTimeRange(this.currentRange)
+    const availableDataPoints = this.sampler.getDataForTimeRange(
+      this.config.compressedDataMinutes,
+    )
+
+    this.emit({
+      type: 'snapshot',
+      dataPoints,
+      availableDataPoints,
+      samplerStats: this.sampler.getStats(),
+      rangeMinutes: this.currentRange,
+      lastTimestamp: this.lastTimestamp,
+      reason,
+    })
+  }
+
+  private scheduleSnapshot(reason: ITrafficWorkerSnapshotMessage['reason']) {
+    if (this.throttleTimer !== null) return
+    this.throttleTimer = setTimeout(() => {
+      this.throttleTimer = null
+      this.emitSnapshot(reason)
+    }, this.config.snapshotIntervalMs)
+  }
+}
+
+class TrafficWorkerClient {
+  private worker: Worker | null = null
+  private inlineMonitor: InlineTrafficMonitor | null = null
+  private mode: 'worker' | 'inline' | null = null
+  private listeners = new Set<
+    (snapshot: ITrafficWorkerSnapshotMessage) => void
+  >()
+  private pendingMessages: TrafficWorkerRequestMessage[] = []
+  private ready = false
+  private currentRange = WORKER_CONFIG.defaultRangeMinutes
+
+  start(rangeMinutes?: number) {
+    if (typeof window === 'undefined') {
+      debugLog('[TrafficWorkerClient] Window not available, skip start')
+      return
     }
 
-    // 清理过期的压缩数据
-    const compressedCutoff =
-      Date.now() - this.config.compressedDataMinutes * 60 * 1000;
-    this.compressedBuffer = this.compressedBuffer.filter(
-      (p) => p.timestamp > compressedCutoff,
-    );
-  }
+    this.currentRange = rangeMinutes ?? this.currentRange
 
-  private compressData(): void {
-    if (this.compressionQueue.length === 0) return;
+    if (this.ready) return
 
-    // 计算平均值进行压缩
-    const totalUp = this.compressionQueue.reduce((sum, p) => sum + p.up, 0);
-    const totalDown = this.compressionQueue.reduce((sum, p) => sum + p.down, 0);
-    const avgTimestamp =
-      this.compressionQueue.reduce((sum, p) => sum + p.timestamp, 0) /
-      this.compressionQueue.length;
-
-    const compressedPoint: ICompressedDataPoint = {
-      up: totalUp / this.compressionQueue.length,
-      down: totalDown / this.compressionQueue.length,
-      timestamp: avgTimestamp,
-      samples: this.compressionQueue.length,
-    };
-
-    this.compressedBuffer.push(compressedPoint);
-    this.compressionQueue = [];
-
-    console.log(`[DataSampler] 压缩了 ${compressedPoint.samples} 个数据点`);
-  }
-
-  getDataForTimeRange(minutes: number): ITrafficDataPoint[] {
-    const cutoff = Date.now() - minutes * 60 * 1000;
-
-    // 如果请求的时间范围在原始数据范围内，直接返回原始数据
-    if (minutes <= this.config.rawDataMinutes) {
-      return this.rawBuffer.filter((p) => p.timestamp > cutoff);
+    const initMessage: TrafficWorkerRequestMessage = {
+      type: 'init',
+      config: {
+        rawDataMinutes: WORKER_CONFIG.rawDataMinutes,
+        compressedDataMinutes: WORKER_CONFIG.compressedDataMinutes,
+        compressionRatio: WORKER_CONFIG.compressionRatio,
+        snapshotIntervalMs: WORKER_CONFIG.snapshotIntervalMs,
+        defaultRangeMinutes: this.currentRange,
+      },
     }
 
-    // 否则组合原始数据和压缩数据
-    const rawData = this.rawBuffer.filter((p) => p.timestamp > cutoff);
-    const compressedData = this.compressedBuffer
-      .filter(
-        (p) =>
-          p.timestamp > cutoff &&
-          p.timestamp <= Date.now() - this.config.rawDataMinutes * 60 * 1000,
+    if (typeof Worker !== 'undefined') {
+      try {
+        this.worker = new Worker(
+          new URL('../services/traffic-monitor-worker.ts', import.meta.url),
+          { type: 'module' },
+        )
+        this.mode = 'worker'
+
+        this.worker.onmessage = (
+          event: MessageEvent<TrafficWorkerResponseMessage>,
+        ) => {
+          const message = event.data
+          if (message.type === 'snapshot') {
+            this.listeners.forEach((listener) => listener(message))
+          }
+        }
+
+        this.worker.onerror = (error) => {
+          debugLog(`[TrafficWorkerClient] Worker error: ${String(error)}`)
+        }
+
+        this.ready = true
+        this.post(initMessage)
+        this.flushQueue()
+        return
+      } catch (error) {
+        debugLog(
+          `[TrafficWorkerClient] Worker initialization failed, falling back to inline sampler: ${String(error)}`,
+        )
+        this.worker = null
+        this.mode = null
+      }
+    } else {
+      debugLog(
+        '[TrafficWorkerClient] Worker not supported, using inline sampler',
       )
-      .map((p) => ({
-        up: p.up,
-        down: p.down,
-        timestamp: p.timestamp,
-        name: new Date(p.timestamp).toLocaleTimeString("en-US", {
-          hour12: false,
-          hour: "2-digit",
-          minute: "2-digit",
-          second: "2-digit",
-        }),
-      }));
+    }
 
-    return [...compressedData, ...rawData].sort(
-      (a, b) => a.timestamp - b.timestamp,
-    );
+    this.startInline(initMessage)
   }
 
-  getStats() {
-    return {
-      rawBufferSize: this.rawBuffer.length,
-      compressedBufferSize: this.compressedBuffer.length,
-      compressionQueueSize: this.compressionQueue.length,
-      totalMemoryPoints: this.rawBuffer.length + this.compressedBuffer.length,
-    };
+  private startInline(initMessage: TrafficWorkerRequestMessage) {
+    this.inlineMonitor = new InlineTrafficMonitor((snapshot) =>
+      this.listeners.forEach((listener) => listener(snapshot)),
+    )
+    this.mode = 'inline'
+    this.ready = true
+    this.post(initMessage)
+    this.flushQueue()
   }
 
-  clear(): void {
-    this.rawBuffer = [];
-    this.compressedBuffer = [];
-    this.compressionQueue = [];
+  stop() {
+    if (this.worker) {
+      this.worker.terminate()
+    }
+    if (this.inlineMonitor) {
+      this.inlineMonitor.stop()
+    }
+    this.worker = null
+    this.inlineMonitor = null
+    this.mode = null
+    this.ready = false
+    this.pendingMessages = []
+  }
+
+  onSnapshot(listener: (snapshot: ITrafficWorkerSnapshotMessage) => void) {
+    this.listeners.add(listener)
+    return () => {
+      this.listeners.delete(listener)
+    }
+  }
+
+  private post(message: TrafficWorkerRequestMessage) {
+    if (!this.ready) {
+      this.pendingMessages.push(message)
+      return
+    }
+
+    if (this.mode === 'worker' && this.worker) {
+      this.worker.postMessage(message)
+      return
+    }
+
+    if (this.mode === 'inline' && this.inlineMonitor) {
+      this.inlineMonitor.handle(message)
+      return
+    }
+
+    this.pendingMessages.push(message)
+  }
+
+  private flushQueue() {
+    if (!this.ready || this.pendingMessages.length === 0) {
+      return
+    }
+    const queued = [...this.pendingMessages]
+    this.pendingMessages = []
+    queued.forEach((message) => {
+      this.post(message)
+    })
+  }
+
+  private ensureStarted() {
+    if (!this.ready) {
+      this.start(this.currentRange)
+    }
+  }
+
+  appendData(traffic: Traffic) {
+    this.ensureStarted()
+    this.post({
+      type: 'append',
+      payload: {
+        up: traffic?.up ?? 0,
+        down: traffic?.down ?? 0,
+        timestamp: Date.now(),
+      },
+    })
+  }
+
+  clearData() {
+    this.ensureStarted()
+    this.post({ type: 'clear' })
+  }
+
+  setRange(minutes: number) {
+    this.currentRange = minutes
+    this.post({ type: 'setRange', minutes })
+  }
+
+  requestSnapshot() {
+    this.ensureStarted()
+    this.post({ type: 'requestSnapshot' })
   }
 }
 
-// 全局单例
-const refCounter = new ReferenceCounter();
-let globalSampler: TrafficDataSampler | null = null;
-let lastValidData: ISystemMonitorOverview | null = null;
+const refCounter = new ReferenceCounter()
+let workerClient: TrafficWorkerClient | null = null
+const getWorkerClient = () => {
+  if (!workerClient) {
+    workerClient = new TrafficWorkerClient()
+  }
+  return workerClient
+}
+
+const EMPTY_STATS: ISamplerStats = {
+  rawBufferSize: 0,
+  compressedBufferSize: 0,
+  compressionQueueSize: 0,
+  totalMemoryPoints: 0,
+}
 
 /**
- * 增强的流量监控Hook - 支持数据压缩、采样和引用计数
+ * 增强的流量监控Hook - Web Worker驱动的数据采样与压缩
  */
-export const useTrafficMonitorEnhanced = () => {
-  const { clashInfo } = useClashInfo();
-  const pageVisible = useVisibility();
+export const useTrafficMonitorEnhanced = (options?: {
+  subscribe?: boolean
+  enabled?: boolean
+}) => {
+  const subscribeToSnapshots = options?.subscribe ?? true
+  const enabled = options?.enabled ?? true
+  const [latestSnapshot, setLatestSnapshot] = useState<{
+    availableDataPoints: ITrafficDataPoint[]
+    samplerStats: ISamplerStats
+    lastTimestamp?: number
+  }>({
+    availableDataPoints: [],
+    samplerStats: EMPTY_STATS,
+    lastTimestamp: undefined,
+  })
+  const [rangeMinutes, setRangeMinutes] = useState(
+    WORKER_CONFIG.defaultRangeMinutes,
+  )
+  const [now, setNow] = useState(() => Date.now())
+  const [, forceRefCountRender] = useReducer((value) => value + 1, 0)
 
-  // 初始化采样器
-  if (!globalSampler) {
-    globalSampler = new TrafficDataSampler({
-      rawDataMinutes: 10, // 原始数据保持10分钟
-      compressedDataMinutes: 60, // 压缩数据保持1小时
-      compressionRatio: 5, // 每5个原始点压缩成1个
-    });
-  }
+  const clientRef = useRef<TrafficWorkerClient | null>(getWorkerClient())
+  const currentRangeRef = useRef<number>(WORKER_CONFIG.defaultRangeMinutes)
 
-  const [, forceUpdate] = useState({});
-  const cleanupRef = useRef<(() => void) | null>(null);
-
-  // 强制组件更新
-  const triggerUpdate = useCallback(() => {
-    forceUpdate({});
-  }, []);
-
-  // 注册引用计数
+  // 注册引用计数与Worker生命周期
   useEffect(() => {
-    console.log("[TrafficMonitorEnhanced] 组件挂载，注册引用计数");
-    const cleanup = refCounter.increment();
-    cleanupRef.current = cleanup;
+    if (!enabled) return
+
+    const client = getWorkerClient()
+    clientRef.current = client
+
+    const stopWatchRefCount = refCounter.onCountChange(() =>
+      forceRefCountRender(),
+    )
+    const cleanup = refCounter.increment()
+    client.start(currentRangeRef.current)
+
+    let unsubscribe: (() => void) | undefined
+    if (subscribeToSnapshots) {
+      unsubscribe = client.onSnapshot((message) => {
+        setLatestSnapshot({
+          availableDataPoints:
+            message.availableDataPoints ?? message.dataPoints,
+          samplerStats: message.samplerStats,
+          lastTimestamp: message.lastTimestamp,
+        })
+      })
+
+      client.requestSnapshot()
+    }
 
     return () => {
-      console.log("[TrafficMonitorEnhanced] 组件卸载，清理引用计数");
-      cleanup();
-      cleanupRef.current = null;
-    };
-  }, []);
-
-  // 设置引用计数变化回调
-  useEffect(() => {
-    const handleCountChange = () => {
-      console.log(
-        `[TrafficMonitorEnhanced] 引用计数变化: ${refCounter.getCount()}`,
-      );
+      unsubscribe?.()
+      stopWatchRefCount()
+      cleanup()
       if (refCounter.getCount() === 0) {
-        console.log("[TrafficMonitorEnhanced] 所有组件已卸载，暂停数据收集");
-      } else {
-        console.log("[TrafficMonitorEnhanced] 开始数据收集");
+        client.stop()
       }
-    };
+    }
+  }, [enabled, subscribeToSnapshots])
 
-    refCounter.onCountChange(handleCountChange);
-  }, []);
+  // Periodically refresh "now" so idle streams age out of the selected window when subscribed
+  useEffect(() => {
+    if (!enabled || !subscribeToSnapshots) return
 
-  // 只有在有引用时才启用SWR
-  const shouldFetch = clashInfo && pageVisible && refCounter.getCount() > 0;
+    const timer = window.setInterval(() => {
+      setNow(Date.now())
+    }, 1000)
 
-  const { data: monitorData, error } = useSWR<ISystemMonitorOverview>(
-    shouldFetch ? "getSystemMonitorOverviewSafe" : null,
-    getSystemMonitorOverviewSafe,
-    {
-      refreshInterval: shouldFetch ? 1000 : 0, // 只有在需要时才刷新
-      keepPreviousData: true,
-      onSuccess: (data) => {
-        // console.log("[TrafficMonitorEnhanced] 获取到监控数据:", data);
+    return () => window.clearInterval(timer)
+  }, [enabled, subscribeToSnapshots])
 
-        if (data?.traffic?.raw && globalSampler) {
-          // 保存最后有效数据
-          lastValidData = data;
-
-          // 添加到采样器
-          const timestamp = Date.now();
-          const dataPoint: ITrafficDataPoint = {
-            up: data.traffic.raw.up_rate || 0,
-            down: data.traffic.raw.down_rate || 0,
-            timestamp,
-            name: new Date(timestamp).toLocaleTimeString("en-US", {
-              hour12: false,
-              hour: "2-digit",
-              minute: "2-digit",
-              second: "2-digit",
-            }),
-          };
-
-          globalSampler.addDataPoint(dataPoint);
-          triggerUpdate();
-        }
-      },
-      onError: (error) => {
-        console.error(
-          "[TrafficMonitorEnhanced] 网络错误，使用最后有效数据. 错误详情:",
-          {
-            message: error?.message || "未知错误",
-            stack: error?.stack || "无堆栈信息",
-          },
-        );
-        // 网络错误时不清空数据，继续使用最后有效值
-        // 但是添加一个错误标记的数据点（流量为0）
-        if (globalSampler) {
-          const timestamp = Date.now();
-          const errorPoint: ITrafficDataPoint = {
-            up: 0,
-            down: 0,
-            timestamp,
-            name: new Date(timestamp).toLocaleTimeString("en-US", {
-              hour12: false,
-              hour: "2-digit",
-              minute: "2-digit",
-              second: "2-digit",
-            }),
-          };
-          globalSampler.addDataPoint(errorPoint);
-          triggerUpdate();
-        }
-      },
+  // 添加流量数据
+  const appendData = useCallback(
+    (traffic: Traffic) => {
+      if (!enabled) return
+      clientRef.current?.appendData(traffic)
     },
-  );
+    [enabled],
+  )
 
-  // 获取指定时间范围的数据
-  const getDataForTimeRange = useCallback(
-    (minutes: number): ITrafficDataPoint[] => {
-      if (!globalSampler) return [];
-      return globalSampler.getDataForTimeRange(minutes);
+  // 请求不同时间范围的数据
+  const requestRange = useCallback(
+    (minutes: number) => {
+      if (!enabled) return
+      currentRangeRef.current = minutes
+      setRangeMinutes(minutes)
+      clientRef.current?.setRange(minutes)
     },
-    [],
-  );
+    [enabled],
+  )
 
   // 清空数据
   const clearData = useCallback(() => {
-    if (globalSampler) {
-      globalSampler.clear();
-      triggerUpdate();
-    }
-  }, [triggerUpdate]);
+    if (!enabled) return
+    clientRef.current?.clearData()
+  }, [enabled])
 
-  // 获取采样器统计信息
-  const getSamplerStats = useCallback(() => {
-    return (
-      globalSampler?.getStats() || {
-        rawBufferSize: 0,
-        compressedBufferSize: 0,
-        compressionQueueSize: 0,
-        totalMemoryPoints: 0,
-      }
-    );
-  }, []);
+  const filteredDataPoints = useMemo(() => {
+    if (!enabled) return []
+    const sourceData = latestSnapshot.availableDataPoints
+    if (sourceData.length === 0) return []
 
-  // 构建返回的监控数据，优先使用当前数据，fallback到最后有效数据
-  const currentData = monitorData || lastValidData;
-  const trafficMonitorData = {
-    traffic: currentData?.traffic || {
-      raw: { up: 0, down: 0, up_rate: 0, down_rate: 0 },
-      formatted: {
-        up_rate: "0B",
-        down_rate: "0B",
-        total_up: "0B",
-        total_down: "0B",
-      },
-      is_fresh: false,
-    },
-    memory: currentData?.memory || {
-      raw: { inuse: 0, oslimit: 0, usage_percent: 0 },
-      formatted: { inuse: "0B", oslimit: "0B", usage_percent: 0 },
-      is_fresh: false,
-    },
-  };
+    const cutoff = now - rangeMinutes * 60 * 1000
+    return sourceData.filter((point) => point.timestamp > cutoff)
+  }, [enabled, latestSnapshot.availableDataPoints, rangeMinutes, now])
 
   return {
-    // 监控数据
-    monitorData: trafficMonitorData,
-
-    // 图表数据管理
     graphData: {
-      dataPoints: globalSampler?.getDataForTimeRange(60) || [], // 默认获取1小时数据
-      getDataForTimeRange,
+      dataPoints: filteredDataPoints,
+      currentRangeMinutes: rangeMinutes,
+      requestRange,
+      appendData,
       clearData,
     },
-
-    // 状态信息
-    isLoading: !currentData && !error,
-    error,
-    isDataFresh: currentData?.traffic?.is_fresh || false,
-    hasValidData: !!lastValidData,
-
-    // 性能统计
-    samplerStats: getSamplerStats(),
+    samplerStats: latestSnapshot.samplerStats,
     referenceCount: refCounter.getCount(),
-  };
-};
-
-/**
- * 轻量级流量数据Hook
- */
-export const useTrafficDataEnhanced = () => {
-  const { monitorData, isLoading, error, isDataFresh, hasValidData } =
-    useTrafficMonitorEnhanced();
-
-  return {
-    traffic: monitorData.traffic,
-    memory: monitorData.memory,
-    isLoading,
-    error,
-    isDataFresh,
-    hasValidData,
-  };
-};
+  }
+}
 
 /**
  * 图表数据Hook
  */
 export const useTrafficGraphDataEnhanced = () => {
-  const { graphData, isDataFresh, samplerStats, referenceCount } =
-    useTrafficMonitorEnhanced();
+  const { graphData, samplerStats, referenceCount } =
+    useTrafficMonitorEnhanced()
 
   return {
     ...graphData,
-    isDataFresh,
     samplerStats,
     referenceCount,
-  };
-};
+  }
+}

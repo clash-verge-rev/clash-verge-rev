@@ -1,0 +1,9 @@
+{
+  "page": {
+    "title": "Registros"
+  },
+  "actions": {
+    "showDescending": "Newest first",
+    "showAscending": "Oldest first"
+  }
+}

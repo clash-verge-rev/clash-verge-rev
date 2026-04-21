@@ -1,13 +1,14 @@
-use super::CmdResult;
+use crate::cmd::CmdResult;
 
 /// Platform-specific implementation for UWP functionality
 #[cfg(windows)]
 mod platform {
-    use super::CmdResult;
-    use crate::{core::win_uwp, wrap_err};
+    use crate::cmd::CmdResult;
+    use crate::cmd::StringifyErr as _;
+    use crate::core::win_uwp;
 
     pub fn invoke_uwp_tool() -> CmdResult {
-        wrap_err!(win_uwp::invoke_uwptools())
+        win_uwp::invoke_uwptools().stringify_err()
     }
 }
 
@@ -16,7 +17,8 @@ mod platform {
 mod platform {
     use super::CmdResult;
 
-    pub fn invoke_uwp_tool() -> CmdResult {
+    #[allow(clippy::unnecessary_wraps)]
+    pub const fn invoke_uwp_tool() -> CmdResult {
         Ok(())
     }
 }

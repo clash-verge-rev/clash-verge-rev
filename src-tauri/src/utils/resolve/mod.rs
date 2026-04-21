@@ -1,14 +1,24 @@
+use std::sync::atomic::{AtomicBool, Ordering};
+
 use anyhow::Result;
-use tauri::AppHandle;
 
 use crate::{
     config::Config,
-    core::{handle, hotkey::Hotkey, sysopt, tray::Tray, CoreManager, Timer},
-    logging, logging_error,
-    module::lightweight::auto_lightweight_mode_init,
+    core::{
+        CoreManager, Timer,
+        hotkey::Hotkey,
+        logger::Logger,
+        service::{SERVICE_MANAGER, ServiceManager, is_service_ipc_path_exists},
+        sysopt,
+        tray::Tray,
+    },
+    feat,
+    module::{auto_backup::AutoBackupManager, lightweight::auto_lightweight_boot},
     process::AsyncHandler,
-    utils::{init, logging::Type, resolve::window::create_window, server},
+    utils::{init, server, window_manager::WindowManager},
 };
+use clash_verge_logging::{Type, logging, logging_error};
+use clash_verge_signal;
 
 pub mod dns;
 pub mod scheme;
@@ -16,8 +26,17 @@ pub mod ui;
 pub mod window;
 pub mod window_script;
 
-pub fn resolve_setup_handle(app_handle: AppHandle) {
-    init_handle(app_handle);
+static RESOLVE_DONE: AtomicBool = AtomicBool::new(false);
+
+pub fn init_work_dir_and_logger() -> anyhow::Result<()> {
+    AsyncHandler::block_on(async {
+        init_work_config().await;
+        init_resources().await;
+        logging!(info, Type::Setup, "Initializing logger");
+        // #[cfg(not(feature = "tokio-trace"))]
+        Logger::global().init().await?;
+        Ok(())
+    })
 }
 
 pub fn resolve_setup_sync() {
@@ -28,206 +47,150 @@ pub fn resolve_setup_sync() {
 }
 
 pub fn resolve_setup_async() {
-    let start_time = std::time::Instant::now();
-    logging!(
-        info,
-        Type::Setup,
-        true,
-        "开始执行异步设置任务... 线程ID: {:?}",
-        std::thread::current().id()
-    );
-
     AsyncHandler::spawn(|| async {
-        futures::join!(
-            init_work_config(),
-            init_resources(),
-            init_startup_script(),
-            init_hotkey(),
-        );
+        logging!(info, Type::ClashVergeRev, "Version: {}", env!("CARGO_PKG_VERSION"));
 
-        init_timer().await;
-        init_auto_lightweight_mode().await;
-
+        init_startup_script().await;
         init_verge_config().await;
-        init_core_manager().await;
+        Config::verify_config_initialization().await;
+        init_window().await;
 
-        init_system_proxy().await;
-        AsyncHandler::spawn_blocking(|| {
-            init_system_proxy_guard();
+        let core_init = AsyncHandler::spawn(|| async {
+            init_service_manager().await;
+            init_core_manager().await;
+            init_system_proxy().await;
+            init_system_proxy_guard().await;
         });
 
-        let tray_and_refresh = async {
+        let tray_init = async {
             init_tray().await;
             refresh_tray_menu().await;
         };
-        futures::join!(init_window(), tray_and_refresh,);
-    });
 
-    let elapsed = start_time.elapsed();
-    logging!(
-        info,
-        Type::Setup,
-        true,
-        "异步设置任务完成，耗时: {:?}",
-        elapsed
-    );
-
-    if elapsed.as_secs() > 10 {
-        logging!(
-            warn,
-            Type::Setup,
-            true,
-            "异步设置任务耗时较长({:?})",
-            elapsed
+        let _ = futures::join!(
+            core_init,
+            tray_init,
+            init_timer(),
+            init_hotkey(),
+            init_auto_lightweight_boot(),
+            init_auto_backup(),
         );
-    }
+    });
 }
 
-// 其它辅助函数不变
-pub async fn resolve_reset_async() {
-    logging!(info, Type::Tray, true, "Resetting system proxy");
-    logging_error!(
-        Type::System,
-        true,
-        sysopt::Sysopt::global().reset_sysproxy().await
-    );
-
-    logging!(info, Type::Core, true, "Stopping core service");
-    logging_error!(Type::Core, true, CoreManager::global().stop_core().await);
+pub async fn resolve_reset_async() -> Result<(), anyhow::Error> {
+    sysopt::Sysopt::global().reset_sysproxy().await?;
+    CoreManager::global().stop_core().await?;
 
     #[cfg(target_os = "macos")]
     {
         use dns::restore_public_dns;
-
-        logging!(info, Type::System, true, "Restoring system DNS settings");
         restore_public_dns().await;
     }
-}
 
-pub fn init_handle(app_handle: AppHandle) {
-    logging!(info, Type::Setup, true, "Initializing app handle...");
-    handle::Handle::global().init(app_handle);
+    Ok(())
 }
 
 pub(super) fn init_scheme() {
-    logging!(info, Type::Setup, true, "Initializing custom URL scheme");
-    logging_error!(Type::Setup, true, init::init_scheme());
+    logging_error!(Type::Setup, init::init_scheme());
 }
 
-pub async fn resolve_scheme(param: String) -> Result<()> {
-    logging!(
-        info,
-        Type::Setup,
-        true,
-        "Resolving scheme for param: {}",
-        param
-    );
-    logging_error!(Type::Setup, true, scheme::resolve_scheme(param).await);
+pub async fn resolve_scheme(param: &str) -> Result<()> {
+    logging_error!(Type::Setup, scheme::resolve_scheme(param).await);
     Ok(())
 }
 
 pub(super) fn init_embed_server() {
-    logging!(info, Type::Setup, true, "Initializing embedded server...");
     server::embed_server();
 }
+
 pub(super) async fn init_resources() {
-    logging!(info, Type::Setup, true, "Initializing resources...");
-    logging_error!(Type::Setup, true, init::init_resources().await);
+    logging_error!(Type::Setup, init::init_resources().await);
 }
 
 pub(super) async fn init_startup_script() {
-    logging!(info, Type::Setup, true, "Initializing startup script");
-    logging_error!(Type::Setup, true, init::startup_script().await);
+    logging_error!(Type::Setup, init::startup_script().await);
 }
 
 pub(super) async fn init_timer() {
-    logging!(info, Type::Setup, true, "Initializing timer...");
-    logging_error!(Type::Setup, true, Timer::global().init().await);
+    logging_error!(Type::Setup, Timer::global().init().await);
 }
 
 pub(super) async fn init_hotkey() {
-    logging!(info, Type::Setup, true, "Initializing hotkey...");
-    logging_error!(Type::Setup, true, Hotkey::global().init().await);
+    // if hotkey is not use by global, skip init it
+    let skip_register_hotkeys = !Config::verge().await.latest_arc().enable_global_hotkey.unwrap_or(true);
+    logging_error!(Type::Setup, Hotkey::global().init(skip_register_hotkeys).await);
 }
 
-pub(super) async fn init_auto_lightweight_mode() {
-    logging!(
-        info,
-        Type::Setup,
-        true,
-        "Initializing auto lightweight mode..."
-    );
-    logging_error!(Type::Setup, true, auto_lightweight_mode_init().await);
+pub(super) async fn init_auto_lightweight_boot() {
+    logging_error!(Type::Setup, auto_lightweight_boot().await);
+}
+
+pub(super) async fn init_auto_backup() {
+    logging_error!(Type::Setup, AutoBackupManager::global().init().await);
+}
+
+pub fn init_signal() {
+    logging!(info, Type::Setup, "Initializing signal handlers...");
+    clash_verge_signal::register(feat::quit);
 }
 
 pub async fn init_work_config() {
-    logging!(
-        info,
-        Type::Setup,
-        true,
-        "Initializing work configuration..."
-    );
-    logging_error!(Type::Setup, true, init::init_config().await);
+    logging_error!(Type::Setup, init::init_config().await);
 }
 
 pub(super) async fn init_tray() {
-    logging!(info, Type::Setup, true, "Initializing system tray...");
-    logging_error!(Type::Setup, true, Tray::global().init().await);
+    logging_error!(Type::Setup, Tray::global().init().await);
 }
 
 pub(super) async fn init_verge_config() {
-    logging!(
-        info,
-        Type::Setup,
-        true,
-        "Initializing verge configuration..."
-    );
-    logging_error!(Type::Setup, true, Config::init_config().await);
+    logging_error!(Type::Setup, Config::init_config().await);
+}
+
+pub(super) async fn init_service_manager() {
+    clash_verge_service_ipc::set_config(Some(ServiceManager::config())).await;
+    if !is_service_ipc_path_exists() {
+        return;
+    }
+    if SERVICE_MANAGER.lock().await.init().await.is_ok() {
+        logging_error!(Type::Setup, SERVICE_MANAGER.lock().await.refresh().await);
+    }
 }
 
 pub(super) async fn init_core_manager() {
-    logging!(info, Type::Setup, true, "Initializing core manager...");
-    logging_error!(Type::Setup, true, CoreManager::global().init().await);
+    logging_error!(Type::Setup, CoreManager::global().init().await);
 }
 
 pub(super) async fn init_system_proxy() {
-    logging!(info, Type::Setup, true, "Initializing system proxy...");
-    logging_error!(
-        Type::Setup,
-        true,
-        sysopt::Sysopt::global().update_sysproxy().await
-    );
+    logging_error!(Type::Setup, sysopt::Sysopt::global().update_sysproxy().await);
 }
 
-pub(super) fn init_system_proxy_guard() {
-    logging!(
-        info,
-        Type::Setup,
-        true,
-        "Initializing system proxy guard..."
-    );
-    logging_error!(
-        Type::Setup,
-        true,
-        sysopt::Sysopt::global().init_guard_sysproxy()
-    );
+pub(super) async fn init_system_proxy_guard() {
+    sysopt::Sysopt::global().refresh_guard().await;
 }
 
 pub(super) async fn refresh_tray_menu() {
-    logging!(info, Type::Setup, true, "Refreshing tray menu...");
-    logging_error!(Type::Setup, true, Tray::global().update_part().await);
+    logging_error!(Type::Setup, Tray::global().update_part().await);
 }
 
 pub(super) async fn init_window() {
-    let is_silent_start =
-        { Config::verge().await.latest_ref().enable_silent_start }.unwrap_or(false);
+    let is_silent_start = Config::verge().await.data_arc().enable_silent_start.unwrap_or(false);
     #[cfg(target_os = "macos")]
-    {
-        if is_silent_start {
-            use crate::core::handle::Handle;
-
-            Handle::global().set_activation_policy_accessory();
-        }
+    if is_silent_start {
+        use crate::core::handle::Handle;
+        Handle::global().set_activation_policy_accessory();
     }
-    create_window(!is_silent_start).await;
+    WindowManager::create_window(!is_silent_start).await;
+}
+
+pub fn resolve_done() {
+    RESOLVE_DONE.store(true, Ordering::Release);
+}
+
+pub fn is_resolve_done() -> bool {
+    RESOLVE_DONE.load(Ordering::Acquire)
+}
+
+pub fn reset_resolve_done() {
+    RESOLVE_DONE.store(false, Ordering::Release);
 }

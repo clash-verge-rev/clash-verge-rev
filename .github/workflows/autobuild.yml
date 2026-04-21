@@ -3,16 +3,17 @@ name: Auto Build
 on:
   workflow_dispatch:
   schedule:
-    # UTC+8 0,6,12,18
-    - cron: "0 16,22,4,10 * * *"
+    # UTC+8 12:00, 18:00 -> UTC 4:00, 10:00
+    - cron: '0 4,10 * * *'
 permissions: write-all
 env:
   TAG_NAME: autobuild
   TAG_CHANNEL: AutoBuild
   CARGO_INCREMENTAL: 0
   RUST_BACKTRACE: short
+  HUSKY: 0
 concurrency:
-  group: "${{ github.workflow }} - ${{ github.head_ref || github.ref }}"
+  group: '${{ github.workflow }} - ${{ github.head_ref || github.ref }}'
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
@@ -30,35 +31,22 @@ jobs:
     if: ${{ needs.check_commit.outputs.should_run == 'true' }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Fetch UPDATE logs
         id: fetch_update_logs
-        run: |
-          if [ -f "UPDATELOG.md" ]; then
-            UPDATE_LOGS=$(awk '/^## v/{if(flag) exit; flag=1} flag' UPDATELOG.md)
-            if [ -n "$UPDATE_LOGS" ]; then
-              echo "Found update logs"
-              echo "UPDATE_LOGS<<EOF" >> $GITHUB_ENV
-              echo "$UPDATE_LOGS" >> $GITHUB_ENV
-              echo "EOF" >> $GITHUB_ENV
-            else
-              echo "No update sections found in UPDATELOG.md"
-            fi
-          else
-            echo "UPDATELOG.md file not found"
-          fi
+        run: bash ./scripts/extract_update_logs.sh
         shell: bash
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v5.0.0
         name: Install pnpm
         with:
           run_install: false
 
       - name: Install Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: "22"
+          node-version: '24.14.0'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -99,10 +87,10 @@ jobs:
 
           ### Linux
           #### DEB包(Debian系) 使用 apt ./路径 安装
-          - [64位](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_amd64.deb) | [ARM64](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_aarch64.deb) | [ARMv7](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_armhf.deb)
+          - [64位](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_amd64.deb) | [ARM64](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_arm64.deb) | [ARMv7](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_armhf.deb)
 
           #### RPM包(Redhat系) 使用 dnf ./路径 安装
-          - [64位](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_amd64.rpm) | [ARM64](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_aarch64.rpm) | [ARMv7](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_armhfp.rpm)
+          - [64位](${{ env.DOWNLOAD_URL }}/Clash.Verge-${{ env.VERSION }}-1.x86_64.rpm) | [ARM64](${{ env.DOWNLOAD_URL }}/Clash.Verge-${{ env.VERSION }}-1.aarch64.rpm) | [ARMv7](${{ env.DOWNLOAD_URL }}/Clash.Verge-${{ env.VERSION }}-1.armhfp.rpm)
 
           ### FAQ
           - [常见问题](https://clash-verge-rev.github.io/faq/windows.html)
@@ -117,11 +105,11 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.TAG_NAME }}
-          name: "Clash Verge Rev ${{ env.TAG_CHANNEL }}"
+          name: 'Clash Verge Rev ${{ env.TAG_CHANNEL }}'
           body_path: release.txt
           prerelease: true
           token: ${{ secrets.GITHUB_TOKEN }}
-          generate_release_notes: true
+          generate_release_notes: false
 
   clean_old_assets:
     name: Clean Old Release Assets
@@ -154,10 +142,13 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install Rust Stable
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: '1.91.0'
+          targets: ${{ matrix.target }}
 
       - name: Add Rust Target
         run: rustup target add ${{ matrix.target }}
@@ -165,10 +156,13 @@ jobs:
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
         with:
-          workspaces: src-tauri
-          cache-all-crates: true
           save-if: ${{ github.ref == 'refs/heads/dev' }}
-          shared-key: autobuild-shared
+          prefix-key: 'v1-rust'
+          key: 'rust-shared-stable-${{ matrix.os }}-${{ matrix.target }}'
+          workspaces: |
+            . -> target
+          cache-all-crates: true
+          cache-workspace-crates: true
 
       - name: Install dependencies (ubuntu only)
         if: matrix.os == 'ubuntu-22.04'
@@ -185,16 +179,24 @@ jobs:
           echo "OPENSSL_LIB_DIR=$(brew --prefix openssl@3)/lib" >> $GITHUB_ENV
           echo "PKG_CONFIG_PATH=$(brew --prefix openssl@3)/lib/pkgconfig" >> $GITHUB_ENV
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v5.0.0
         name: Install pnpm
         with:
           run_install: false
 
       - name: Install Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: "22"
-          cache: "pnpm"
+          node-version: '24.14.0'
+          cache: 'pnpm'
+
+      - name: Pnpm Cache
+        uses: actions/cache@v5
+        with:
+          path: ~/.pnpm-store
+          key: 'pnpm-shared-stable-${{ matrix.os }}-${{ matrix.target }}'
+          restore-keys: |
+            pnpm-shared-stable-${{ matrix.os }}-${{ matrix.target }}
 
       - name: Pnpm install and check
         run: |
@@ -204,10 +206,17 @@ jobs:
       - name: Release ${{ env.TAG_CHANNEL }} Version
         run: pnpm release-version autobuild-latest
 
+      - name: Add Rust Target
+        run: |
+          # Ensure cross target is installed for the pinned toolchain; fallback without explicit toolchain if needed
+          rustup target add ${{ matrix.target }} --toolchain 1.91.0 || rustup target add ${{ matrix.target }}
+          rustup target list --installed
+          echo "Rust target ${{ matrix.target }} installed."
+
       - name: Tauri build for Windows-macOS-Linux
         uses: tauri-apps/tauri-action@v0
         env:
-          NODE_OPTIONS: "--max_old_space_size=4096"
+          NODE_OPTIONS: '--max_old_space_size=4096'
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
@@ -219,8 +228,8 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         with:
           tagName: ${{ env.TAG_NAME }}
-          releaseName: "Clash Verge Rev ${{ env.TAG_CHANNEL }}"
-          releaseBody: "More new features are now supported."
+          releaseName: 'Clash Verge Rev ${{ env.TAG_CHANNEL }}'
+          releaseBody: 'More new features are now supported.'
           releaseDraft: false
           prerelease: true
           tauriScript: pnpm
@@ -235,6 +244,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # It should be ubuntu-22.04 to match the cross-compilation environment
+          # ortherwise it is hard to resolve the dependencies
           - os: ubuntu-22.04
             target: aarch64-unknown-linux-gnu
             arch: arm64
@@ -244,10 +255,13 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Install Rust Stable
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: '1.91.0'
+          targets: ${{ matrix.target }}
 
       - name: Add Rust Target
         run: rustup target add ${{ matrix.target }}
@@ -255,21 +269,32 @@ jobs:
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
         with:
-          workspaces: src-tauri
-          cache-all-crates: true
           save-if: ${{ github.ref == 'refs/heads/dev' }}
-          shared-key: autobuild-shared
+          prefix-key: 'v1-rust'
+          key: 'rust-shared-stable-${{ matrix.os }}-${{ matrix.target }}'
+          workspaces: |
+            . -> target
+          cache-all-crates: true
+          cache-workspace-crates: true
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v5.0.0
         with:
           run_install: false
 
       - name: Install Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: "22"
-          cache: "pnpm"
+          node-version: '24.14.0'
+          cache: 'pnpm'
+
+      - name: Pnpm Cache
+        uses: actions/cache@v5
+        with:
+          path: ~/.pnpm-store
+          key: 'pnpm-shared-stable-${{ matrix.os }}-${{ matrix.target }}'
+          restore-keys: |
+            pnpm-shared-stable-${{ matrix.os }}-${{ matrix.target }}
 
       - name: Pnpm install and check
         run: |
@@ -279,8 +304,8 @@ jobs:
       - name: Release ${{ env.TAG_CHANNEL }} Version
         run: pnpm release-version autobuild-latest
 
-      - name: Setup for linux
-        run: |
+      - name: 'Setup for linux'
+        run: |-
           sudo ls -lR /etc/apt/
 
           cat > /tmp/sources.list << EOF
@@ -299,14 +324,9 @@ jobs:
           sudo mv /tmp/sources.list /etc/apt/sources.list
 
           sudo dpkg --add-architecture ${{ matrix.arch }}
-          sudo apt-get update -y
-          sudo apt-get -f install -y
+          sudo apt update
 
-          sudo apt-get install -y \
-            linux-libc-dev:${{ matrix.arch }} \
-            libc6-dev:${{ matrix.arch }}
-
-          sudo apt-get install -y \
+          sudo apt install -y \
             libxslt1.1:${{ matrix.arch }} \
             libwebkit2gtk-4.1-dev:${{ matrix.arch }} \
             libayatana-appindicator3-dev:${{ matrix.arch }} \
@@ -328,6 +348,13 @@ jobs:
             gcc-arm-linux-gnueabihf \
             g++-arm-linux-gnueabihf
 
+      - name: Add Rust Target
+        run: |
+          # Ensure cross target is installed for the pinned toolchain; fallback without explicit toolchain if needed
+          rustup target add ${{ matrix.target }} --toolchain 1.91.0 || rustup target add ${{ matrix.target }}
+          rustup target list --installed
+          echo "Rust target ${{ matrix.target }} installed."
+
       - name: Tauri Build for Linux
         run: |
           export PKG_CONFIG_ALLOW_CROSS=1
@@ -340,7 +367,7 @@ jobs:
           fi
           pnpm build --target ${{ matrix.target }}
         env:
-          NODE_OPTIONS: "--max_old_space_size=4096"
+          NODE_OPTIONS: '--max_old_space_size=4096'
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
 
@@ -355,12 +382,12 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.TAG_NAME }}
-          name: "Clash Verge Rev ${{ env.TAG_CHANNEL }}"
+          name: 'Clash Verge Rev ${{ env.TAG_CHANNEL }}'
           prerelease: true
           token: ${{ secrets.GITHUB_TOKEN }}
           files: |
-            src-tauri/target/${{ matrix.target }}/release/bundle/deb/*.deb
-            src-tauri/target/${{ matrix.target }}/release/bundle/rpm/*.rpm
+            target/${{ matrix.target }}/release/bundle/deb/*.deb
+            target/${{ matrix.target }}/release/bundle/rpm/*.rpm
 
   autobuild-x86-arm-windows_webview2:
     name: Autobuild x86 and ARM Windows with WebView2
@@ -379,7 +406,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Add Rust Target
         run: rustup target add ${{ matrix.target }}
@@ -387,21 +414,32 @@ jobs:
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
         with:
-          workspaces: src-tauri
-          cache-all-crates: true
           save-if: ${{ github.ref == 'refs/heads/dev' }}
-          shared-key: autobuild-shared
+          prefix-key: 'v1-rust'
+          key: 'rust-shared-stable-${{ matrix.os }}-${{ matrix.target }}'
+          workspaces: |
+            . -> target
+          cache-all-crates: true
+          cache-workspace-crates: true
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v5.0.0
         with:
           run_install: false
 
       - name: Install Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: "22"
-          cache: "pnpm"
+          node-version: '24.14.0'
+          cache: 'pnpm'
+
+      - name: Pnpm Cache
+        uses: actions/cache@v5
+        with:
+          path: ~/.pnpm-store
+          key: 'pnpm-shared-stable-${{ matrix.os }}-${{ matrix.target }}'
+          restore-keys: |
+            pnpm-shared-stable-${{ matrix.os }}-${{ matrix.target }}
 
       - name: Pnpm install and check
         run: |
@@ -413,16 +451,23 @@ jobs:
 
       - name: Download WebView2 Runtime
         run: |
-          invoke-webrequest -uri https://github.com/westinyang/WebView2RuntimeArchive/releases/download/109.0.1518.78/Microsoft.WebView2.FixedVersionRuntime.109.0.1518.78.${{ matrix.arch }}.cab -outfile Microsoft.WebView2.FixedVersionRuntime.109.0.1518.78.${{ matrix.arch }}.cab
-          Expand .\Microsoft.WebView2.FixedVersionRuntime.109.0.1518.78.${{ matrix.arch }}.cab -F:* ./src-tauri
+          invoke-webrequest -uri https://github.com/westinyang/WebView2RuntimeArchive/releases/download/133.0.3065.92/Microsoft.WebView2.FixedVersionRuntime.133.0.3065.92.${{ matrix.arch }}.cab -outfile Microsoft.WebView2.FixedVersionRuntime.133.0.3065.92.${{ matrix.arch }}.cab
+          Expand .\Microsoft.WebView2.FixedVersionRuntime.133.0.3065.92.${{ matrix.arch }}.cab -F:* ./src-tauri
           Remove-Item .\src-tauri\tauri.windows.conf.json
           Rename-Item .\src-tauri\webview2.${{ matrix.arch }}.json tauri.windows.conf.json
+
+      - name: Add Rust Target
+        run: |
+          # Ensure cross target is installed for the pinned toolchain; fallback without explicit toolchain if needed
+          rustup target add ${{ matrix.target }} --toolchain 1.91.0 || rustup target add ${{ matrix.target }}
+          rustup target list --installed
+          echo "Rust target ${{ matrix.target }} installed."
 
       - name: Tauri build for Windows
         id: build
         uses: tauri-apps/tauri-action@v0
         env:
-          NODE_OPTIONS: "--max_old_space_size=4096"
+          NODE_OPTIONS: '--max_old_space_size=4096'
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
@@ -433,19 +478,19 @@ jobs:
 
       - name: Rename
         run: |
-          $files = Get-ChildItem ".\src-tauri\target\${{ matrix.target }}\release\bundle\nsis\*-setup.exe"
+          $files = Get-ChildItem ".\target\${{ matrix.target }}\release\bundle\nsis\*-setup.exe"
           foreach ($file in $files) {
             $newName = $file.Name -replace "-setup\.exe$", "_fixed_webview2-setup.exe"
             Rename-Item $file.FullName $newName
           }
 
-          $files = Get-ChildItem ".\src-tauri\target\${{ matrix.target }}\release\bundle\nsis\*.nsis.zip"
+          $files = Get-ChildItem ".\target\${{ matrix.target }}\release\bundle\nsis\*.nsis.zip"
           foreach ($file in $files) {
             $newName = $file.Name -replace "-setup\.nsis\.zip$", "_fixed_webview2-setup.nsis.zip"
             Rename-Item $file.FullName $newName
           }
 
-          $files = Get-ChildItem ".\src-tauri\target\${{ matrix.target }}\release\bundle\nsis\*-setup.exe.sig"
+          $files = Get-ChildItem ".\target\${{ matrix.target }}\release\bundle\nsis\*-setup.exe.sig"
           foreach ($file in $files) {
             $newName = $file.Name -replace "-setup\.exe\.sig$", "_fixed_webview2-setup.exe.sig"
             Rename-Item $file.FullName $newName
@@ -455,10 +500,10 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.TAG_NAME }}
-          name: "Clash Verge Rev ${{ env.TAG_CHANNEL }}"
+          name: 'Clash Verge Rev ${{ env.TAG_CHANNEL }}'
           prerelease: true
           token: ${{ secrets.GITHUB_TOKEN }}
-          files: src-tauri/target/${{ matrix.target }}/release/bundle/nsis/*setup*
+          files: target/${{ matrix.target }}/release/bundle/nsis/*setup*
 
       - name: Portable Bundle
         run: pnpm portable-fixed-webview2 ${{ matrix.target }} --${{ env.TAG_NAME }}
@@ -477,32 +522,19 @@ jobs:
       ]
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Fetch UPDATE logs
         id: fetch_update_logs
-        run: |
-          if [ -f "UPDATELOG.md" ]; then
-            UPDATE_LOGS=$(awk '/^## v/{if(flag) exit; flag=1} flag' UPDATELOG.md)
-            if [ -n "$UPDATE_LOGS" ]; then
-              echo "Found update logs"
-              echo "UPDATE_LOGS<<EOF" >> $GITHUB_ENV
-              echo "$UPDATE_LOGS" >> $GITHUB_ENV
-              echo "EOF" >> $GITHUB_ENV
-            else
-              echo "No update sections found in UPDATELOG.md"
-            fi
-          else
-            echo "UPDATELOG.md file not found"
-          fi
+        run: bash ./scripts/extract_update_logs.sh
         shell: bash
 
       - name: Install Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
-          node-version: "22"
+          node-version: '24.14.0'
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@v5.0.0
         name: Install pnpm
         with:
           run_install: false
@@ -547,10 +579,10 @@ jobs:
 
           ### Linux
           #### DEB包(Debian系) 使用 apt ./路径 安装
-          - [64位](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_amd64.deb) | [ARM64](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_aarch64.deb) | [ARMv7](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_armhf.deb)
+          - [64位](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_amd64.deb) | [ARM64](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_arm64.deb) | [ARMv7](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_armhf.deb)
 
           #### RPM包(Redhat系) 使用 dnf ./路径 安装
-          - [64位](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_amd64.rpm) | [ARM64](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_aarch64.rpm) | [ARMv7](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_armhfp.rpm)
+          - [64位](${{ env.DOWNLOAD_URL }}/Clash.Verge-${{ env.VERSION }}-1.x86_64.rpm) | [ARM64](${{ env.DOWNLOAD_URL }}/Clash.Verge-${{ env.VERSION }}-1.aarch64.rpm) | [ARMv7](${{ env.DOWNLOAD_URL }}/Clash.Verge-${{ env.VERSION }}-1.armhfp.rpm)
 
           ### FAQ
           - [常见问题](https://clash-verge-rev.github.io/faq/windows.html)

@@ -1,4 +1,5 @@
 use serde_yaml_ng::{Mapping, Value};
+use smartstring::alias::String;
 use std::collections::HashSet;
 
 pub const HANDLE_FIELDS: [&str; 12] = [
@@ -16,22 +17,16 @@ pub const HANDLE_FIELDS: [&str; 12] = [
     "unified-delay",
 ];
 
-pub const DEFAULT_FIELDS: [&str; 5] = [
-    "proxies",
-    "proxy-providers",
-    "proxy-groups",
-    "rule-providers",
-    "rules",
-];
+pub const DEFAULT_FIELDS: [&str; 5] = ["proxies", "proxy-providers", "proxy-groups", "rule-providers", "rules"];
 
-pub fn use_lowercase(config: Mapping) -> Mapping {
+pub fn use_lowercase(config: &Mapping) -> Mapping {
     let mut ret = Mapping::new();
 
     for (key, value) in config.into_iter() {
         if let Some(key_str) = key.as_str() {
             let mut key_str = String::from(key_str);
             key_str.make_ascii_lowercase();
-            ret.insert(Value::from(key_str), value);
+            ret.insert(Value::from(key_str.as_str()), value.clone());
         }
     }
     ret
@@ -66,14 +61,11 @@ pub fn use_sort(config: Mapping) -> Mapping {
     ret
 }
 
-pub fn use_keys(config: &Mapping) -> Vec<String> {
-    config
-        .iter()
-        .filter_map(|(key, _)| key.as_str())
-        .map(|s| {
-            let mut s = s.to_string();
-            s.make_ascii_lowercase();
-            s
-        })
-        .collect()
+#[inline]
+pub fn use_keys<'a>(config: &'a Mapping) -> impl Iterator<Item = String> + 'a {
+    config.iter().filter_map(|(key, _)| key.as_str()).map(|s: &str| {
+        let mut s: String = s.into();
+        s.make_ascii_lowercase();
+        s
+    })
 }

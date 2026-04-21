@@ -1,0 +1,134 @@
+{
+  "actions": {
+    "cancel": "取消",
+    "close": "关闭",
+    "confirm": "确认",
+    "save": "保存",
+    "delete": "删除",
+    "edit": "编辑",
+    "new": "新建",
+    "enable": "启用",
+    "upgrade": "升级内核",
+    "restart": "重启内核",
+    "resetToDefault": "重置为默认值",
+    "refresh": "刷新",
+    "retry": "重试",
+    "refreshPage": "刷新页面",
+    "showDetails": "显示详情",
+    "hideDetails": "隐藏详情",
+    "listView": "列表视图",
+    "tableView": "表格视图",
+    "pause": "暂停",
+    "resume": "继续",
+    "closeAll": "关闭全部",
+    "clear": "清除",
+    "previous": "上一页",
+    "next": "下一页"
+  },
+  "labels": {
+    "updateAt": "更新于",
+    "timeout": "超时",
+    "icon": "图标",
+    "name": "名称",
+    "readOnly": "只读",
+    "expireTime": "到期时间",
+    "updateTime": "更新时间",
+    "usedTotal": "已使用 / 总量",
+    "from": "来自",
+    "password": "密码",
+    "retryAttempts": "重试次数",
+    "downloaded": "下载量",
+    "uploaded": "上传量"
+  },
+  "statuses": {
+    "enabled": "已启用",
+    "disabled": "未启用",
+    "saving": "保存中...",
+    "empty": "空空如也"
+  },
+  "units": {
+    "milliseconds": "毫秒",
+    "seconds": "秒",
+    "minutes": "分钟",
+    "hours": "小时",
+    "kilobytes": "KB",
+    "files": "文件"
+  },
+  "placeholders": {
+    "resetInput": "清空输入框",
+    "filter": "过滤条件",
+    "matchCase": "区分大小写",
+    "matchWholeWord": "全字匹配",
+    "useRegex": "使用正则表达式"
+  },
+  "validation": {
+    "invalidRegex": "无效的正则表达式"
+  },
+  "window": {
+    "maximize": "最大化",
+    "minimize": "最小化"
+  },
+  "editorModes": {
+    "visualization": "可视化",
+    "advanced": "高级"
+  },
+  "feedback": {
+    "errors": {
+      "trafficStats": "流量统计错误",
+      "trafficStatsDescription": "流量统计组件发生错误，为防止崩溃已暂时停用。"
+    },
+    "notices": {
+      "raw": "{{message}}",
+      "prefixedRaw": "{{prefix}} {{message}}"
+    },
+    "notifications": {
+      "importSuccess": "导入订阅成功",
+      "importSubscriptionSuccess": "导入订阅成功",
+      "importWithClashProxy": "使用 Clash 代理导入订阅成功",
+      "updateAvailable": "有可用更新",
+      "saved": "保存成功",
+      "common": {
+        "copySuccess": "复制成功",
+        "saveSuccess": "配置保存成功",
+        "saveFailed": "配置保存失败",
+        "refreshFailed": "刷新失败"
+      }
+    },
+    "validation": {
+      "config": {
+        "failed": "订阅配置校验失败，请检查订阅配置文件，变更已撤销，错误详情：",
+        "bootFailed": "启动订阅配置校验失败，已使用默认配置启动；请检查订阅配置文件，错误详情：",
+        "coreChangeFailed": "切换内核时配置校验失败，已使用默认配置启动；请检查订阅配置文件，错误详情：",
+        "processTerminated": "验证进程被终止"
+      },
+      "script": {
+        "syntaxError": "脚本语法错误，变更已撤销",
+        "missingMain": "脚本错误，变更已撤销",
+        "fileNotFound": "文件丢失，变更已撤销",
+        "fileError": "脚本文件错误，变更已撤销"
+      },
+      "yaml": {
+        "syntaxError": "YAML 语法错误，变更已撤销",
+        "readError": "YAML 读取错误，变更已撤销",
+        "mappingError": "YAML 映射错误，变更已撤销",
+        "keyError": "YAML 键错误，变更已撤销",
+        "generalError": "YAML 错误，变更已撤销"
+      },
+      "merge": {
+        "syntaxError": "覆写文件语法错误，变更已撤销",
+        "mappingError": "覆写文件映射错误，变更已撤销",
+        "keyError": "覆写文件键错误，变更已撤销",
+        "generalError": "覆写文件错误，变更已撤销"
+      }
+    }
+  },
+  "filters": {
+    "logLevels": {
+      "all": "ALL",
+      "debug": "DEBUG",
+      "info": "INFO",
+      "warn": "WARN",
+      "error": "ERROR"
+    }
+  }
+}

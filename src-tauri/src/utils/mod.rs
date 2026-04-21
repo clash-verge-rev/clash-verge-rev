@@ -1,13 +1,13 @@
-pub mod autostart;
 pub mod dirs;
-pub mod format;
 pub mod help;
-pub mod i18n;
 pub mod init;
-pub mod logging;
+#[cfg(target_os = "linux")]
+pub mod linux;
 pub mod network;
 pub mod notification;
 pub mod resolve;
+#[cfg(target_os = "windows")]
+pub mod schtasks;
 pub mod server;
 pub mod singleton;
 pub mod tmpl;

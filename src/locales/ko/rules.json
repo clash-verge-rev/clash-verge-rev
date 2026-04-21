@@ -1,0 +1,82 @@
+{
+  "page": {
+    "provider": {
+      "trigger": "규칙 제공자",
+      "dialogTitle": "규칙 제공자",
+      "actions": {
+        "updateAll": "모두 업데이트",
+        "update": "업데이트"
+      }
+    },
+    "title": "규칙"
+  },
+  "feedback": {
+    "notifications": {
+      "provider": {
+        "updateSuccess": "{{name}} 업데이트 성공",
+        "updateFailed": "{{name}} 업데이트 실패: {{message}}",
+        "genericError": "업데이트 실패: {{message}}",
+        "none": "업데이트할 제공자가 없습니다",
+        "allUpdated": "모든 제공자가 업데이트되었습니다"
+      }
+    }
+  },
+  "modals": {
+    "editor": {
+      "form": {
+        "labels": {
+          "type": "규칙 유형",
+          "content": "규칙 내용",
+          "proxyPolicy": "프록시 정책"
+        },
+        "toggles": {
+          "noResolve": "해석 안함"
+        },
+        "actions": {
+          "prependRule": "규칙 앞에 추가",
+          "appendRule": "규칙 뒤에 추가"
+        },
+        "validation": {
+          "conditionRequired": "규칙 조건 필요",
+          "invalidRule": "잘못된 규칙"
+        }
+      },
+      "ruleTypes": {
+        "DOMAIN": "전체 도메인 이름과 일치",
+        "DOMAIN-SUFFIX": "도메인 접미사와 일치",
+        "DOMAIN-KEYWORD": "도메인 키워드와 일치",
+        "DOMAIN-REGEX": "정규 표현식을 사용한 도메인 일치",
+        "GEOSITE": "Geosite 내의 도메인과 일치",
+        "GEOIP": "IP 주소의 국가 코드와 일치",
+        "SRC-GEOIP": "소스 IP 주소의 국가 코드와 일치",
+        "IP-ASN": "IP 주소의 ASN과 일치",
+        "SRC-IP-ASN": "소스 IP 주소의 ASN과 일치",
+        "IP-CIDR": "IP 주소 범위와 일치",
+        "IP-CIDR6": "IPv6 주소 범위와 일치",
+        "SRC-IP-CIDR": "소스 IP 주소 범위와 일치",
+        "IP-SUFFIX": "IP 주소 접미사 범위와 일치",
+        "SRC-IP-SUFFIX": "소스 IP 주소 접미사 범위와 일치",
+        "SRC-PORT": "소스 포트 범위와 일치",
+        "DST-PORT": "대상 포트 범위와 일치",
+        "IN-PORT": "인바운드 포트와 일치",
+        "DSCP": "DSCP 마킹(tproxy UDP 인바운드만 해당)",
+        "PROCESS-NAME": "프로세스 이름과 일치(안드로이드 패키지 이름)",
+        "PROCESS-PATH": "전체 프로세스 경로와 일치",
+        "PROCESS-NAME-REGEX": "정규 표현식을 사용한 전체 프로세스 이름 일치(안드로이드 패키지 이름)",
+        "PROCESS-PATH-REGEX": "정규 표현식을 사용한 전체 프로세스 경로 일치",
+        "NETWORK": "전송 프로토콜과 일치(tcp/udp)",
+        "UID": "Linux 사용자 ID와 일치",
+        "IN-TYPE": "인바운드 유형과 일치",
+        "IN-USER": "인바운드 사용자 이름과 일치",
+        "IN-NAME": "인바운드 이름과 일치",
+        "SUB-RULE": "하위 규칙",
+        "RULE-SET": "규칙 세트와 일치",
+        "AND": "논리 AND",
+        "OR": "논리 OR",
+        "NOT": "논리 NOT",
+        "MATCH": "모든 요청과 일치"
+      },
+      "title": "규칙 편집"
+    }
+  }
+}

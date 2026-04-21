@@ -1,95 +1,114 @@
-import { forwardRef, useImperativeHandle, useState } from "react";
-import { useLockFn } from "ahooks";
-import { useTranslation } from "react-i18next";
-import { Button, Box, Typography } from "@mui/material";
-import { useVerge } from "@/hooks/use-verge";
-import { openWebUrl } from "@/services/cmds";
-import { BaseDialog, BaseEmpty, DialogRef } from "@/components/base";
-import { useClashInfo } from "@/hooks/use-clash";
-import { WebUIItem } from "./web-ui-item";
-import { showNotice } from "@/services/noticeService";
+import { Box, Button, Typography } from '@mui/material'
+import { useLockFn } from 'ahooks'
+import type { Ref } from 'react'
+import { useImperativeHandle, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
-export const WebUIViewer = forwardRef<DialogRef>((props, ref) => {
-  const { t } = useTranslation();
+import { BaseDialog, BaseEmpty, DialogRef } from '@/components/base'
+import { useClashInfo } from '@/hooks/use-clash'
+import { useVerge } from '@/hooks/use-verge'
+import { openWebUrl } from '@/services/cmds'
+import { showNotice } from '@/services/notice-service'
 
-  const { clashInfo } = useClashInfo();
-  const { verge, patchVerge, mutateVerge } = useVerge();
+import { WebUIItem } from './web-ui-item'
 
-  const [open, setOpen] = useState(false);
-  const [editing, setEditing] = useState(false);
+const DEFAULT_WEB_UI_LIST = [
+  'https://metacubex.github.io/metacubexd/#/setup?http=true&hostname=%host&port=%port&secret=%secret',
+  'https://yacd.metacubex.one/?hostname=%host&port=%port&secret=%secret',
+  'https://board.zash.run.place/#/setup?http=true&hostname=%host&port=%port&secret=%secret',
+]
+
+export function WebUIViewer({ ref }: { ref?: Ref<DialogRef> }) {
+  const { t } = useTranslation()
+
+  const { clashInfo } = useClashInfo()
+  const { verge, patchVerge, mutateVerge } = useVerge()
+
+  const [open, setOpen] = useState(false)
+  const [editing, setEditing] = useState(false)
 
   useImperativeHandle(ref, () => ({
     open: () => setOpen(true),
     close: () => setOpen(false),
-  }));
+  }))
 
-  const webUIList = verge?.web_ui_list || [
-    "https://metacubex.github.io/metacubexd/#/setup?http=true&hostname=%host&port=%port&secret=%secret",
-    "https://yacd.metacubex.one/?hostname=%host&port=%port&secret=%secret",
-    "https://board.zash.run.place/#/setup?http=true&hostname=%host&port=%port&secret=%secret",
-  ];
+  const webUIList = verge?.web_ui_list || DEFAULT_WEB_UI_LIST
+
+  const webUIEntries = useMemo(() => {
+    const counts: Record<string, number> = {}
+    return webUIList.map((item, index) => {
+      const keyBase = item && item.trim().length > 0 ? item : 'entry'
+      const count = counts[keyBase] ?? 0
+      counts[keyBase] = count + 1
+      return {
+        item,
+        index,
+        key: `${keyBase}-${count}`,
+      }
+    })
+  }, [webUIList])
 
   const handleAdd = useLockFn(async (value: string) => {
-    const newList = [...webUIList, value];
-    mutateVerge((old) => (old ? { ...old, web_ui_list: newList } : old), false);
-    await patchVerge({ web_ui_list: newList });
-  });
+    const newList = [...webUIList, value]
+    mutateVerge((old) => (old ? { ...old, web_ui_list: newList } : old), false)
+    await patchVerge({ web_ui_list: newList })
+  })
 
   const handleChange = useLockFn(async (index: number, value?: string) => {
-    const newList = [...webUIList];
-    newList[index] = value ?? "";
-    mutateVerge((old) => (old ? { ...old, web_ui_list: newList } : old), false);
-    await patchVerge({ web_ui_list: newList });
-  });
+    const newList = [...webUIList]
+    newList[index] = value ?? ''
+    mutateVerge((old) => (old ? { ...old, web_ui_list: newList } : old), false)
+    await patchVerge({ web_ui_list: newList })
+  })
 
   const handleDelete = useLockFn(async (index: number) => {
-    const newList = [...webUIList];
-    newList.splice(index, 1);
-    mutateVerge((old) => (old ? { ...old, web_ui_list: newList } : old), false);
-    await patchVerge({ web_ui_list: newList });
-  });
+    const newList = [...webUIList]
+    newList.splice(index, 1)
+    mutateVerge((old) => (old ? { ...old, web_ui_list: newList } : old), false)
+    await patchVerge({ web_ui_list: newList })
+  })
 
   const handleOpenUrl = useLockFn(async (value?: string) => {
-    if (!value) return;
+    if (!value) return
     try {
-      let url = value.trim().replaceAll("%host", "127.0.0.1");
+      let url = value.trim().replaceAll('%host', '127.0.0.1')
 
-      if (url.includes("%port") || url.includes("%secret")) {
-        if (!clashInfo) throw new Error("failed to get clash info");
-        if (!clashInfo.server?.includes(":")) {
-          throw new Error(`failed to parse the server "${clashInfo.server}"`);
+      if (url.includes('%port') || url.includes('%secret')) {
+        if (!clashInfo) throw new Error('failed to get clash info')
+        if (!clashInfo.server?.includes(':')) {
+          throw new Error(`failed to parse the server "${clashInfo.server}"`)
         }
 
         const port = clashInfo.server
-          .slice(clashInfo.server.indexOf(":") + 1)
-          .trim();
+          .slice(clashInfo.server.indexOf(':') + 1)
+          .trim()
 
-        url = url.replaceAll("%port", port || "9097");
+        url = url.replaceAll('%port', port || '9097')
         url = url.replaceAll(
-          "%secret",
-          encodeURIComponent(clashInfo.secret || ""),
-        );
+          '%secret',
+          encodeURIComponent(clashInfo.secret || ''),
+        )
       }
 
-      await openWebUrl(url);
+      await openWebUrl(url)
     } catch (e: any) {
-      showNotice("error", e.message || e.toString());
+      showNotice.error(e)
     }
-  });
+  })
 
   return (
     <BaseDialog
       open={open}
       title={
         <Box display="flex" justifyContent="space-between">
-          {t("Web UI")}
+          {t('settings.modals.webUI.title')}
           <Button
             variant="contained"
             size="small"
             disabled={editing}
             onClick={() => setEditing(true)}
           >
-            {t("New")}
+            {t('shared.actions.new')}
           </Button>
         </Box>
       }
@@ -97,10 +116,10 @@ export const WebUIViewer = forwardRef<DialogRef>((props, ref) => {
         width: 450,
         height: 300,
         pb: 1,
-        overflowY: "auto",
-        userSelect: "text",
+        overflowY: 'auto',
+        userSelect: 'text',
       }}
-      cancelBtn={t("Close")}
+      cancelBtn={t('shared.actions.close')}
       disableOk
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}
@@ -108,16 +127,16 @@ export const WebUIViewer = forwardRef<DialogRef>((props, ref) => {
       {!editing && webUIList.length === 0 && (
         <BaseEmpty
           extra={
-            <Typography mt={2} sx={{ fontSize: "12px" }}>
-              {t("Replace host, port, secret with %host, %port, %secret")}
+            <Typography mt={2} sx={{ fontSize: '12px' }}>
+              {t('settings.modals.webUI.messages.placeholderInstruction')}
             </Typography>
           }
         />
       )}
 
-      {webUIList.map((item, index) => (
+      {webUIEntries.map(({ item, index, key }) => (
         <WebUIItem
-          key={index}
+          key={key}
           value={item}
           onChange={(v) => handleChange(index, v)}
           onDelete={() => handleDelete(index)}
@@ -129,12 +148,12 @@ export const WebUIViewer = forwardRef<DialogRef>((props, ref) => {
           value=""
           onlyEdit
           onChange={(v) => {
-            setEditing(false);
-            handleAdd(v || "");
+            setEditing(false)
+            handleAdd(v || '')
           }}
           onCancel={() => setEditing(false)}
         />
       )}
     </BaseDialog>
-  );
-});
+  )
+}

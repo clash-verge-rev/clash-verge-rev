@@ -1,0 +1,9 @@
+{
+  "page": {
+    "title": "السجلات"
+  },
+  "actions": {
+    "showDescending": "Newest first",
+    "showAscending": "Oldest first"
+  }
+}

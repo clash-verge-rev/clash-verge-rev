@@ -1,15 +1,19 @@
-use crate::{config::Config, feat, logging, logging_error, singleton, utils::logging::Type};
-use anyhow::{Context, Result};
+use crate::{config::Config, feat, singleton, utils::resolve::is_resolve_done};
+use anyhow::{Context as _, Result};
+use clash_verge_logging::{Type, logging, logging_error};
 use delay_timer::prelude::{DelayTimer, DelayTimerBuilder, TaskBuilder};
 use parking_lot::RwLock;
+use smartstring::alias::String;
 use std::{
     collections::HashMap,
     pin::Pin,
     sync::{
-        atomic::{AtomicBool, AtomicU64, Ordering},
         Arc,
+        atomic::{AtomicBool, AtomicU64, Ordering},
     },
+    time::Duration,
 };
+use tokio::time::{sleep, timeout};
 
 type TaskID = u64;
 
@@ -40,7 +44,7 @@ singleton!(Timer, TIMER_INSTANCE);
 
 impl Timer {
     fn new() -> Self {
-        Timer {
+        Self {
             delay_timer: Arc::new(RwLock::new(DelayTimerBuilder::default().build())),
             timer_map: Arc::new(RwLock::new(HashMap::new())),
             timer_count: AtomicU64::new(1),
@@ -64,19 +68,14 @@ impl Timer {
         if let Err(e) = self.refresh().await {
             // Reset initialization flag on error
             self.initialized.store(false, Ordering::SeqCst);
-            logging_error!(Type::Timer, false, "Failed to initialize timer: {}", e);
+            logging_error!(Type::Timer, "Failed to initialize timer: {}", e);
             return Err(e);
         }
 
         // Log timer info first
         {
             let timer_map = self.timer_map.read();
-            logging!(
-                info,
-                Type::Timer,
-                "已注册的定时任务数量: {}",
-                timer_map.len()
-            );
+            logging!(info, Type::Timer, "已注册的定时任务数量: {}", timer_map.len());
 
             for (uid, task) in timer_map.iter() {
                 logging!(
@@ -93,26 +92,30 @@ impl Timer {
         let cur_timestamp = chrono::Local::now().timestamp();
 
         // Collect profiles that need immediate update
-        let profiles_to_update =
-            if let Some(items) = Config::profiles().await.latest_ref().get_items() {
-                items
-                    .iter()
-                    .filter_map(|item| {
-                        let interval = item.option.as_ref()?.update_interval? as i64;
-                        let updated = item.updated? as i64;
-                        let uid = item.uid.as_ref()?;
+        let profiles_to_update = if let Some(items) = Config::profiles().await.latest_arc().get_items() {
+            items
+                .iter()
+                .filter_map(|item| {
+                    let allow_auto_update = item.option.as_ref()?.allow_auto_update.unwrap_or_default();
+                    if !allow_auto_update {
+                        return None;
+                    }
 
-                        if interval > 0 && cur_timestamp - updated >= interval * 60 {
-                            logging!(info, Type::Timer, "需要立即更新的配置: uid={}", uid);
-                            Some(uid.clone())
-                        } else {
-                            None
-                        }
-                    })
-                    .collect::<Vec<String>>()
-            } else {
-                Vec::new()
-            };
+                    let interval = item.option.as_ref()?.update_interval? as i64;
+                    let updated = item.updated? as i64;
+                    let uid = item.uid.as_ref()?;
+
+                    if interval > 0 && cur_timestamp - updated >= interval * 60 {
+                        logging!(info, Type::Timer, "需要立即更新的配置: uid={}", uid);
+                        Some(uid.clone())
+                    } else {
+                        None
+                    }
+                })
+                .collect::<Vec<String>>()
+        } else {
+            Vec::new()
+        };
 
         // Advance tasks outside of locks to minimize lock contention
         if !profiles_to_update.is_empty() {
@@ -149,12 +152,7 @@ impl Timer {
             return Ok(());
         }
 
-        logging!(
-            info,
-            Type::Timer,
-            "Refreshing {} timer tasks",
-            diff_map.len()
-        );
+        logging!(info, Type::Timer, "Refreshing {} timer tasks", diff_map.len());
 
         // Apply changes - first collect operations to perform without holding locks
         let mut operations_to_add: Vec<(String, TaskID, u64)> = Vec::new();
@@ -162,14 +160,12 @@ impl Timer {
 
         // Perform sync operations while holding locks
         {
-            let mut timer_map = self.timer_map.write();
-            let delay_timer = self.delay_timer.write();
-
             for (uid, diff) in diff_map {
                 match diff {
                     DiffFlag::Del(tid) => {
-                        timer_map.remove(&uid);
-                        if let Err(e) = delay_timer.remove_task(tid) {
+                        self.timer_map.write().remove(&uid);
+                        let value = self.delay_timer.write().remove_task(tid);
+                        if let Err(e) = value {
                             logging!(
                                 warn,
                                 Type::Timer,
@@ -189,12 +185,13 @@ impl Timer {
                             last_run: chrono::Local::now().timestamp(),
                         };
 
-                        timer_map.insert(uid.clone(), task);
+                        self.timer_map.write().insert(uid.clone(), task);
                         operations_to_add.push((uid, tid, interval));
                     }
                     DiffFlag::Mod(tid, interval) => {
                         // Remove old task first
-                        if let Err(e) = delay_timer.remove_task(tid) {
+                        let value = self.delay_timer.write().remove_task(tid);
+                        if let Err(e) = value {
                             logging!(
                                 warn,
                                 Type::Timer,
@@ -212,7 +209,7 @@ impl Timer {
                             last_run: chrono::Local::now().timestamp(),
                         };
 
-                        timer_map.insert(uid.clone(), task);
+                        self.timer_map.write().insert(uid.clone(), task);
                         operations_to_add.push((uid, tid, interval));
                     }
                 }
@@ -220,12 +217,10 @@ impl Timer {
         } // Locks are dropped here
 
         // Now perform async operations without holding locks
+        let delay_timer = self.delay_timer.write();
         for (uid, tid, interval) in operations_to_add {
-            // Re-acquire locks for individual operations
-            let mut delay_timer = self.delay_timer.write();
-            if let Err(e) = self.add_task(&mut delay_timer, uid.clone(), tid, interval) {
+            if let Err(e) = self.add_task(&delay_timer, uid.clone(), tid, interval) {
                 logging_error!(Type::Timer, "Failed to add task for uid {}: {}", uid, e);
-
                 // Rollback on failure - remove from timer_map
                 self.timer_map.write().remove(&uid);
             } else {
@@ -240,31 +235,27 @@ impl Timer {
     async fn gen_map(&self) -> HashMap<String, u64> {
         let mut new_map = HashMap::new();
 
-        if let Some(items) = Config::profiles().await.latest_ref().get_items() {
+        if let Some(items) = Config::profiles().await.latest_arc().get_items() {
             for item in items.iter() {
-                if let Some(option) = item.option.as_ref() {
-                    if let (Some(interval), Some(uid)) = (option.update_interval, &item.uid) {
-                        if interval > 0 {
-                            logging!(
-                                debug,
-                                Type::Timer,
-                                "找到定时更新配置: uid={}, interval={}min",
-                                uid,
-                                interval
-                            );
-                            new_map.insert(uid.clone(), interval);
-                        }
-                    }
+                if let Some(option) = item.option.as_ref()
+                    && let Some(allow_auto_update) = option.allow_auto_update
+                    && let (Some(interval), Some(uid)) = (option.update_interval, &item.uid)
+                    && allow_auto_update
+                    && interval > 0
+                {
+                    logging!(
+                        debug,
+                        Type::Timer,
+                        "找到定时更新配置: uid={}, interval={}min",
+                        uid,
+                        interval
+                    );
+                    new_map.insert(uid.clone(), interval);
                 }
             }
         }
 
-        logging!(
-            debug,
-            Type::Timer,
-            "生成的定时更新配置数量: {}",
-            new_map.len()
-        );
+        logging!(debug, Type::Timer, "生成的定时更新配置数量: {}", new_map.len());
         new_map
     }
 
@@ -275,12 +266,7 @@ impl Timer {
 
         // Read lock for comparing current state
         let timer_map = self.timer_map.read();
-        logging!(
-            debug,
-            Type::Timer,
-            "当前 timer_map 大小: {}",
-            timer_map.len()
-        );
+        logging!(debug, Type::Timer, "当前 timer_map 大小: {}", timer_map.len());
 
         // Find tasks to modify or delete
         for (uid, task) in timer_map.iter() {
@@ -337,13 +323,7 @@ impl Timer {
     }
 
     /// Add a timer task with better error handling
-    fn add_task(
-        &self,
-        delay_timer: &mut DelayTimer,
-        uid: String,
-        tid: TaskID,
-        minutes: u64,
-    ) -> Result<()> {
+    fn add_task(&self, delay_timer: &DelayTimer, uid: String, tid: TaskID, minutes: u64) -> Result<()> {
         logging!(
             info,
             Type::Timer,
@@ -361,14 +341,13 @@ impl Timer {
             .spawn_async_routine(move || {
                 let uid = uid.clone();
                 Box::pin(async move {
-                    Self::async_task(uid).await;
+                    Self::wait_until_resolve_done(Duration::from_millis(5000)).await;
+                    Self::async_task(&uid).await;
                 }) as Pin<Box<dyn std::future::Future<Output = ()> + Send>>
             })
             .context("failed to create timer task")?;
 
-        delay_timer
-            .add_task(task)
-            .context("failed to add timer task")?;
+        delay_timer.add_task(task).context("failed to add timer task")?;
 
         Ok(())
     }
@@ -390,12 +369,15 @@ impl Timer {
         };
 
         // Get the profile updated timestamp - now safe to await
-        let profiles = { Config::profiles().await.clone().data_ref() }.clone();
-        let items = match profiles.get_items() {
-            Some(i) => i,
-            None => {
-                logging!(warn, Type::Timer, "获取配置列表失败");
-                return None;
+        let items = {
+            let profiles = Config::profiles().await;
+            let profiles_guard = profiles.latest_arc();
+            match profiles_guard.get_items() {
+                Some(i) => i.clone(),
+                None => {
+                    logging!(warn, Type::Timer, "获取配置列表失败");
+                    return None;
+                }
             }
         };
 
@@ -412,13 +394,7 @@ impl Timer {
         // Calculate next update time
         if updated > 0 && task_interval > 0 {
             let next_time = updated + (task_interval as i64 * 60);
-            logging!(
-                info,
-                Type::Timer,
-                "计算得到下次更新时间: {}, uid={}",
-                next_time,
-                uid
-            );
+            logging!(info, Type::Timer, "计算得到下次更新时间: {}, uid={}", next_time, uid);
             Some(next_time)
         } else {
             logging!(
@@ -433,35 +409,28 @@ impl Timer {
     }
 
     /// Emit update events for frontend notification
-    fn emit_update_event(_uid: &str, _is_start: bool) {
-        #[cfg(any(feature = "verge-dev", feature = "default"))]
+    fn emit_update_event(uid: &String, is_start: bool) {
         {
-            if _is_start {
-                super::handle::Handle::notify_profile_update_started(_uid.to_string());
+            if is_start {
+                super::handle::Handle::notify_profile_update_started(uid);
             } else {
-                super::handle::Handle::notify_profile_update_completed(_uid.to_string());
+                super::handle::Handle::notify_profile_update_completed(uid);
             }
         }
     }
 
     /// Async task with better error handling and logging
-    async fn async_task(uid: String) {
+    async fn async_task(uid: &String) {
         let task_start = std::time::Instant::now();
         logging!(info, Type::Timer, "Running timer task for profile: {}", uid);
 
         match tokio::time::timeout(std::time::Duration::from_secs(40), async {
-            Self::emit_update_event(&uid, true);
+            Self::emit_update_event(uid, true);
 
-            let is_current = Config::profiles().await.latest_ref().current.as_ref() == Some(&uid);
-            logging!(
-                info,
-                Type::Timer,
-                "配置 {} 是否为当前激活配置: {}",
-                uid,
-                is_current
-            );
+            let is_current = Config::profiles().await.latest_arc().current.as_ref() == Some(uid);
+            logging!(info, Type::Timer, "配置 {} 是否为当前激活配置: {}", uid, is_current);
 
-            feat::update_profile(uid.clone(), None, Some(is_current)).await
+            feat::update_profile(uid, None, is_current, false, false).await
         })
         .await
         {
@@ -481,12 +450,22 @@ impl Timer {
                 }
             },
             Err(_) => {
-                logging_error!(Type::Timer, false, "Timer task timed out for uid: {}", uid);
+                logging_error!(Type::Timer, "Timer task timed out for uid: {}", uid);
             }
         }
 
         // Emit completed event
-        Self::emit_update_event(&uid, false);
+        Self::emit_update_event(uid, false);
+    }
+
+    async fn wait_until_resolve_done(max_wait: Duration) {
+        let _ = timeout(max_wait, async {
+            while !is_resolve_done() {
+                logging!(debug, Type::Timer, "Waiting for resolve to be done...");
+                sleep(Duration::from_millis(200)).await;
+            }
+        })
+        .await;
     }
 }
 

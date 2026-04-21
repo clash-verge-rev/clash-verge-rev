@@ -24,22 +24,19 @@ macro_rules! append {
 pub fn use_tun(mut config: Mapping, enable: bool) -> Mapping {
     let tun_key = Value::from("tun");
     let tun_val = config.get(&tun_key);
-    let mut tun_val = tun_val.map_or(Mapping::new(), |val| {
-        val.as_mapping().cloned().unwrap_or(Mapping::new())
+    let mut tun_val = tun_val.map_or_else(Mapping::new, |val| {
+        val.as_mapping().cloned().unwrap_or_else(Mapping::new)
     });
 
     if enable {
         // 读取DNS配置
         let dns_key = Value::from("dns");
         let dns_val = config.get(&dns_key);
-        let mut dns_val = dns_val.map_or(Mapping::new(), |val| {
-            val.as_mapping().cloned().unwrap_or(Mapping::new())
+        let mut dns_val = dns_val.map_or_else(Mapping::new, |val| {
+            val.as_mapping().cloned().unwrap_or_else(Mapping::new)
         });
         let ipv6_key = Value::from("ipv6");
-        let ipv6_val = config
-            .get(&ipv6_key)
-            .and_then(|v| v.as_bool())
-            .unwrap_or(false);
+        let ipv6_val = config.get(&ipv6_key).and_then(|v| v.as_bool()).unwrap_or(false);
 
         // 检查现有的 enhanced-mode 设置
         let current_mode = dns_val
@@ -64,7 +61,7 @@ pub fn use_tun(mut config: Mapping, enable: bool) -> Mapping {
             {
                 AsyncHandler::spawn(move || async move {
                     crate::utils::resolve::dns::restore_public_dns().await;
-                    crate::utils::resolve::dns::set_public_dns("223.6.6.6".to_string()).await;
+                    crate::utils::resolve::dns::set_public_dns("114.114.114.114".to_string()).await;
                 });
             }
         }

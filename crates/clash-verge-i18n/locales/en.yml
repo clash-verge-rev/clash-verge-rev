@@ -1,0 +1,60 @@
+_version: 1
+notifications:
+  dashboardToggled:
+    title: Dashboard
+    body: Dashboard visibility has been updated.
+  clashModeChanged:
+    title: Mode Switch
+    body: Switched to {mode}.
+  systemProxyToggled:
+    title: System Proxy
+    body: System proxy status has been updated.
+  tunModeToggled:
+    title: TUN Mode
+    body: TUN mode status has been updated.
+  lightweightModeEntered:
+    title: Lightweight Mode
+    body: Entered lightweight mode.
+  profilesReactivated:
+    title: Profiles
+    body: Profile Reactivated.
+  appQuit:
+    title: About to Exit
+    body: Clash Verge is about to exit.
+  appHidden:
+    title: Application Hidden
+    body: Clash Verge is running in the background.
+service:
+  adminInstallPrompt: Installing the Clash Verge service requires administrator privileges.
+  adminUninstallPrompt: Uninstalling the Clash Verge service requires administrator privileges.
+tray:
+  dashboard: Dashboard
+  ruleMode: Rule Mode
+  globalMode: Global Mode
+  directMode: Direct Mode
+  outboundModes: Outbound Modes
+  rule: Rule
+  direct: Direct
+  global: Global
+  profiles: Profiles
+  proxies: Proxies
+  systemProxy: System Proxy
+  tunMode: TUN Mode
+  closeAllConnections: Close All Connections
+  lightweightMode: Lightweight Mode
+  copyEnv: Copy Environment Variables
+  confDir: Configuration Directory
+  coreDir: Core Directory
+  logsDir: Log Directory
+  openDir: Open Directory
+  appLog: Application Log
+  coreLog: Core Log
+  restartClash: Restart Clash Core
+  restartApp: Restart Application
+  vergeVersion: Verge Version
+  more: More
+  exit: Exit
+  tooltip:
+    systemProxy: System Proxy
+    tun: TUN
+    profile: Profile

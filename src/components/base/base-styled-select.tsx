@@ -1,4 +1,4 @@
-import { Select, SelectProps, styled } from "@mui/material";
+import { Select, SelectProps, styled } from '@mui/material'
 
 export const BaseStyledSelect = styled((props: SelectProps<string>) => {
   return (
@@ -13,7 +13,7 @@ export const BaseStyledSelect = styled((props: SelectProps<string>) => {
       }}
       {...props}
     />
-  );
+  )
 })(({ theme }) => ({
-  background: theme.palette.mode === "light" ? "#fff" : undefined,
-}));
+  background: theme.palette.mode === 'light' ? '#fff' : undefined,
+}))

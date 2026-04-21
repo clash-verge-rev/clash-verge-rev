@@ -1,0 +1,134 @@
+{
+  "actions": {
+    "cancel": "İptal",
+    "close": "Kapat",
+    "confirm": "Onayla",
+    "save": "Kaydet",
+    "delete": "Sil",
+    "edit": "Düzenle",
+    "new": "Yeni",
+    "enable": "Etkinleştir",
+    "upgrade": "Yükselt",
+    "restart": "Yeniden Başlat",
+    "resetToDefault": "Varsayılana Sıfırla",
+    "refresh": "Yenile",
+    "retry": "Retry",
+    "refreshPage": "Refresh Page",
+    "showDetails": "Show Details",
+    "hideDetails": "Hide Details",
+    "listView": "Liste Görünümü",
+    "tableView": "Tablo Görünümü",
+    "pause": "Duraklat",
+    "resume": "Sürdür",
+    "closeAll": "Tümünü Kapat",
+    "clear": "Temizle",
+    "previous": "Previous",
+    "next": "Next"
+  },
+  "labels": {
+    "updateAt": "Güncelleme Zamanı",
+    "timeout": "Timeout",
+    "icon": "Simge",
+    "name": "İsim",
+    "readOnly": "Salt Okunur",
+    "expireTime": "Sona Erme Zamanı",
+    "updateTime": "Güncelleme Zamanı",
+    "usedTotal": "Kullanılan / Toplam",
+    "from": "Kaynak",
+    "password": "Şifre",
+    "retryAttempts": "Retry attempts",
+    "downloaded": "İndirilen",
+    "uploaded": "Yüklenen"
+  },
+  "statuses": {
+    "enabled": "Etkin",
+    "disabled": "Devre Dışı",
+    "saving": "Saving...",
+    "empty": "Boş"
+  },
+  "units": {
+    "milliseconds": "ms",
+    "seconds": "saniye",
+    "minutes": "dakika",
+    "hours": "saat",
+    "kilobytes": "KB",
+    "files": "Files"
+  },
+  "placeholders": {
+    "resetInput": "Giriş alanını temizle",
+    "filter": "Filtre koşulları",
+    "matchCase": "Büyük/Küçük Harf Eşleştir",
+    "matchWholeWord": "Tam Kelime Eşleştir",
+    "useRegex": "Düzenli İfade Kullan"
+  },
+  "validation": {
+    "invalidRegex": "Invalid regular expression"
+  },
+  "window": {
+    "maximize": "Büyüt",
+    "minimize": "Küçült"
+  },
+  "editorModes": {
+    "visualization": "Görselleştirme",
+    "advanced": "Gelişmiş"
+  },
+  "feedback": {
+    "errors": {
+      "trafficStats": "Traffic Statistics Error",
+      "trafficStatsDescription": "The traffic statistics component encountered an error and has been disabled to prevent crashes."
+    },
+    "notices": {
+      "raw": "{{message}}",
+      "prefixedRaw": "{{prefix}} {{message}}"
+    },
+    "notifications": {
+      "importSuccess": "Profil Başarıyla İçe Aktarıldı",
+      "importSubscriptionSuccess": "Abonelik içe aktarımı başarılı",
+      "importWithClashProxy": "Profil Clash vekil ile içe aktarıldı",
+      "updateAvailable": "Update Available",
+      "saved": "Saved successfully",
+      "common": {
+        "copySuccess": "Kopyalama Başarılı",
+        "saveSuccess": "Configuration saved successfully",
+        "saveFailed": "Failed to save configuration",
+        "refreshFailed": "Yenileme başarısız"
+      }
+    },
+    "validation": {
+      "config": {
+        "failed": "Abonelik yapılandırması doğrulaması başarısız oldu. Lütfen abonelik yapılandırma dosyasını kontrol edin; değişiklikler geri alındı.",
+        "bootFailed": "Başlangıç abonelik yapılandırması doğrulaması başarısız oldu. Varsayılan yapılandırma ile başlatıldı; lütfen abonelik yapılandırma dosyasını kontrol edin.",
+        "coreChangeFailed": "Çekirdek değiştirilirken yapılandırma doğrulaması başarısız oldu. Varsayılan yapılandırma ile başlatıldı; lütfen abonelik yapılandırma dosyasını kontrol edin.",
+        "processTerminated": "Doğrulama işlemi sonlandırıldı."
+      },
+      "script": {
+        "syntaxError": "Betik sözdizimi hatası, değişiklikler geri alındı",
+        "missingMain": "Betik hatası, değişiklikler geri alındı",
+        "fileNotFound": "Dosya eksik, değişiklikler geri alındı",
+        "fileError": "Betik dosyası hatası, değişiklikler geri alındı"
+      },
+      "yaml": {
+        "syntaxError": "YAML sözdizimi hatası, değişiklikler geri alındı",
+        "readError": "YAML okuma hatası, değişiklikler geri alındı",
+        "mappingError": "YAML eşleme hatası, değişiklikler geri alındı",
+        "keyError": "YAML anahtar hatası, değişiklikler geri alındı",
+        "generalError": "YAML hatası, değişiklikler geri alındı"
+      },
+      "merge": {
+        "syntaxError": "Birleştirme dosyası sözdizimi hatası, değişiklikler geri alındı",
+        "mappingError": "Birleştirme dosyası eşleme hatası, değişiklikler geri alındı",
+        "keyError": "Birleştirme dosyası anahtar hatası, değişiklikler geri alındı",
+        "generalError": "Birleştirme dosyası hatası, değişiklikler geri alındı"
+      }
+    }
+  },
+  "filters": {
+    "logLevels": {
+      "all": "ALL",
+      "debug": "DEBUG",
+      "info": "INFO",
+      "warn": "WARN",
+      "error": "ERROR"
+    }
+  }
+}

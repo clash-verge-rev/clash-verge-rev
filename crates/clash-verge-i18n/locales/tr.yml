@@ -1,0 +1,60 @@
+_version: 1
+notifications:
+  dashboardToggled:
+    title: Gösterge Paneli
+    body: Gösterge panelinin görünürlüğü güncellendi.
+  clashModeChanged:
+    title: Mod Değişimi
+    body: '{mode} moduna geçildi.'
+  systemProxyToggled:
+    title: Sistem Vekil'i
+    body: Sistem vekil'i durumu güncellendi.
+  tunModeToggled:
+    title: TUN Modu
+    body: TUN modu durumu güncellendi.
+  lightweightModeEntered:
+    title: Hafif Mod
+    body: Hafif moda geçildi.
+  profilesReactivated:
+    title: Profiller
+    body: Profil yeniden etkinleştirildi.
+  appQuit:
+    title: Çıkış Yapılmak Üzere
+    body: Clash Verge kapanmak üzere.
+  appHidden:
+    title: Uygulama Gizlendi
+    body: Clash Verge arka planda çalışıyor.
+service:
+  adminInstallPrompt: Clash Verge hizmetini kurmak için yönetici ayrıcalıkları gerekir.
+  adminUninstallPrompt: Clash Verge hizmetini kaldırmak için yönetici ayrıcalıkları gerekir.
+tray:
+  dashboard: Gösterge Paneli
+  ruleMode: Kural Modu
+  globalMode: Küresel Mod
+  directMode: Doğrudan Mod
+  outboundModes: Giden Modlar
+  rule: Kural
+  direct: Doğrudan
+  global: Küresel
+  profiles: Profiller
+  proxies: Vekil'ler
+  systemProxy: Sistem Vekil'i
+  tunMode: TUN Modu
+  closeAllConnections: Tüm Bağlantıları Kapat
+  lightweightMode: Hafif Mod
+  copyEnv: Ortam Değişkenlerini Kopyala
+  confDir: Yapılandırma Dizini
+  coreDir: Çekirdek Dizini
+  logsDir: Günlük Dizini
+  openDir: Dizini Aç
+  appLog: Uygulama Günlüğü
+  coreLog: Çekirdek Günlüğü
+  restartClash: Clash Çekirdeğini Yeniden Başlat
+  restartApp: Uygulamayı Yeniden Başlat
+  vergeVersion: Verge Sürümü
+  more: Daha Fazla
+  exit: Çıkış
+  tooltip:
+    systemProxy: Sistem Vekil'i
+    tun: TUN
+    profile: Profil

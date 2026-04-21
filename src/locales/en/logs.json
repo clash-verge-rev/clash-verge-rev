@@ -1,0 +1,9 @@
+{
+  "page": {
+    "title": "Logs"
+  },
+  "actions": {
+    "showDescending": "Newest first",
+    "showAscending": "Oldest first"
+  }
+}

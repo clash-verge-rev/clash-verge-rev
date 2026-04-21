@@ -1,5 +1,3 @@
-import { Fragment } from "react";
-import { useTranslation } from "react-i18next";
 import {
   Button,
   Chip,
@@ -9,44 +7,47 @@ import {
   DialogTitle,
   Divider,
   Typography,
-} from "@mui/material";
-import { BaseEmpty } from "@/components/base";
+} from '@mui/material'
+import { Fragment } from 'react'
+import { useTranslation } from 'react-i18next'
+
+import { BaseEmpty } from '@/components/base'
 
 interface Props {
-  open: boolean;
-  logInfo: [string, string][];
-  onClose: () => void;
+  open: boolean
+  logInfo: [string, string][]
+  onClose: () => void
 }
 
 export const LogViewer = (props: Props) => {
-  const { open, logInfo, onClose } = props;
+  const { open, logInfo, onClose } = props
 
-  const { t } = useTranslation();
+  const { t } = useTranslation()
 
   return (
     <Dialog open={open} onClose={onClose}>
-      <DialogTitle>{t("Script Console")}</DialogTitle>
+      <DialogTitle>{t('profiles.modals.logViewer.title')}</DialogTitle>
 
       <DialogContent
         sx={{
           width: 400,
           height: 300,
-          overflowX: "hidden",
-          userSelect: "text",
+          overflowX: 'hidden',
+          userSelect: 'text',
           pb: 1,
         }}
       >
-        {logInfo.map(([level, log], index) => (
-          <Fragment key={index.toString()}>
+        {logInfo.map(([level, log]) => (
+          <Fragment key={`${level}-${log}`}>
             <Typography color="text.secondary" component="div">
               <Chip
                 label={level}
                 size="small"
                 variant="outlined"
                 color={
-                  level === "error" || level === "exception"
-                    ? "error"
-                    : "default"
+                  level === 'error' || level === 'exception'
+                    ? 'error'
+                    : 'default'
                 }
                 sx={{ mr: 1 }}
               />
@@ -61,9 +62,9 @@ export const LogViewer = (props: Props) => {
 
       <DialogActions>
         <Button onClick={onClose} variant="outlined">
-          {t("Close")}
+          {t('shared.actions.close')}
         </Button>
       </DialogActions>
     </Dialog>
-  );
-};
+  )
+}

@@ -1,11 +1,13 @@
+use crate::config::Config;
 use crate::{
-    config::{deserialize_encrypted, serialize_encrypted, DEFAULT_PAC},
-    logging,
-    utils::{dirs, help, i18n, logging::Type},
+    config::{DEFAULT_PAC, deserialize_encrypted, serialize_encrypted},
+    utils::{dirs, help},
 };
 use anyhow::Result;
+use clash_verge_logging::{Type, logging};
 use log::LevelFilter;
 use serde::{Deserialize, Serialize};
+use smartstring::alias::String;
 
 /// ### `verge.yaml` schema
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
@@ -13,6 +15,12 @@ pub struct IVerge {
     /// app log level
     /// silent | error | warn | info | debug | trace
     pub app_log_level: Option<String>,
+
+    /// app log max size in KB
+    pub app_log_max_size: Option<u64>,
+
+    /// app log max count
+    pub app_log_max_count: Option<usize>,
 
     // i18n
     pub language: Option<String>,
@@ -38,17 +46,35 @@ pub struct IVerge {
     pub enable_memory_usage: Option<bool>,
 
     /// enable group icon
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub enable_group_icon: Option<bool>,
 
+    /// pause render traffic stats on blur
+    pub pause_render_traffic_stats_on_blur: Option<bool>,
+
     /// common tray icon
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub common_tray_icon: Option<bool>,
 
     /// tray icon
     #[cfg(target_os = "macos")]
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub tray_icon: Option<String>,
 
     /// menu icon
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub menu_icon: Option<String>,
+
+    /// menu order
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub menu_order: Option<Vec<String>>,
+
+    /// toast / notice position on screen
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub notice_position: Option<String>,
+
+    /// collapse navigation bar
+    pub collapse_navbar: Option<bool>,
 
     /// sysproxy tray icon
     pub sysproxy_tray_icon: Option<bool>,
@@ -70,6 +96,9 @@ pub struct IVerge {
 
     /// enable proxy guard
     pub enable_proxy_guard: Option<bool>,
+
+    /// enable bypass format check
+    pub enable_bypass_check: Option<bool>,
 
     /// enable dns settings - this controls whether dns_config.yaml is applied
     pub enable_dns_settings: Option<bool>,
@@ -104,6 +133,7 @@ pub struct IVerge {
 
     /// hotkey map
     /// format: {func},{key}
+    #[serde(skip_serializing_if = "Option::is_none")]
     pub hotkeys: Option<Vec<String>>,
 
     /// enable global hotkey
@@ -123,13 +153,19 @@ pub struct IVerge {
     pub default_latency_test: Option<String>,
 
     /// 默认的延迟测试超时时间
-    pub default_latency_timeout: Option<i32>,
+    pub default_latency_timeout: Option<i16>,
+
+    /// 是否自动检测当前节点延迟
+    pub enable_auto_delay_detection: Option<bool>,
+
+    /// 自动检测当前节点延迟的间隔（分钟）
+    pub auto_delay_detection_interval_minutes: Option<u64>,
 
     /// 是否使用内部的脚本支持，默认为真
     pub enable_builtin_enhanced: Option<bool>,
 
     /// proxy 页面布局 列数
-    pub proxy_layout_column: Option<i32>,
+    pub proxy_layout_column: Option<u8>,
 
     /// 测试站列表
     pub test_list: Option<Vec<IVergeTestItem>>,
@@ -137,6 +173,15 @@ pub struct IVerge {
     /// 日志清理
     /// 0: 不清理; 1: 1天；2: 7天; 3: 30天; 4: 90天
     pub auto_log_clean: Option<i32>,
+
+    /// Enable scheduled automatic backups
+    pub enable_auto_backup_schedule: Option<bool>,
+
+    /// Automatic backup interval in hours
+    pub auto_backup_interval_hours: Option<u64>,
+
+    /// Create backups automatically when critical configs change
+    pub auto_backup_on_change: Option<bool>,
 
     /// verge 的各种 port 用于覆盖 clash 的各种 port
     #[cfg(not(target_os = "windows"))]
@@ -188,9 +233,15 @@ pub struct IVerge {
     )]
     pub webdav_password: Option<String>,
 
+    #[serde(skip)]
     pub enable_tray_speed: Option<bool>,
 
-    pub enable_tray_icon: Option<bool>,
+    // pub enable_tray_icon: Option<bool>,
+    /// show proxy groups directly on tray root menu
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub tray_proxy_groups_display_mode: Option<String>,
+    /// show outbound modes directly on tray root menu
+    pub tray_inline_outbound_modes: Option<bool>,
 
     /// 自动进入轻量模式
     pub enable_auto_light_weight_mode: Option<bool>,
@@ -201,11 +252,11 @@ pub struct IVerge {
     /// 启用代理页面自动滚动
     pub enable_hover_jump_navigator: Option<bool>,
 
+    /// 代理页面自动滚动延迟（毫秒）
+    pub hover_jump_navigator_delay: Option<u64>,
+
     /// 启用外部控制器
     pub enable_external_controller: Option<bool>,
-
-    /// 服务状态跟踪
-    pub service_state: Option<crate::core::service::ServiceState>,
 }
 
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
@@ -239,7 +290,7 @@ impl IVerge {
     /// 验证并修正配置文件中的clash_core值
     pub async fn validate_and_fix_config() -> Result<()> {
         let config_path = dirs::verge_path()?;
-        let mut config = match help::read_yaml::<IVerge>(&config_path).await {
+        let mut config = match help::read_yaml::<Self>(&config_path).await {
             Ok(config) => config,
             Err(_) => Self::template(),
         };
@@ -252,100 +303,77 @@ impl IVerge {
                 logging!(
                     warn,
                     Type::Config,
-                    true,
                     "启动时发现无效的clash_core配置: '{}', 将自动修正为 'verge-mihomo'",
                     core
                 );
-                config.clash_core = Some("verge-mihomo".to_string());
+                config.clash_core = Some("verge-mihomo".into());
                 needs_fix = true;
             }
         } else {
             logging!(
                 info,
                 Type::Config,
-                true,
                 "启动时发现未配置clash_core, 将设置为默认值 'verge-mihomo'"
             );
-            config.clash_core = Some("verge-mihomo".to_string());
+            config.clash_core = Some("verge-mihomo".into());
             needs_fix = true;
         }
 
         // 修正后保存配置
         if needs_fix {
-            logging!(info, Type::Config, true, "正在保存修正后的配置文件...");
+            logging!(info, Type::Config, "正在保存修正后的配置文件...");
             help::save_yaml(&config_path, &config, Some("# Clash Verge Config")).await?;
-            logging!(
-                info,
-                Type::Config,
-                true,
-                "配置文件修正完成，需要重新加载配置"
-            );
+            logging!(info, Type::Config, "配置文件修正完成，需要重新加载配置");
 
             Self::reload_config_after_fix(config).await?;
         } else {
-            logging!(
-                info,
-                Type::Config,
-                true,
-                "clash_core配置验证通过: {:?}",
-                config.clash_core
-            );
+            logging!(info, Type::Config, "clash_core配置验证通过: {:?}", config.clash_core);
         }
 
         Ok(())
     }
 
     /// 配置修正后重新加载配置
-    async fn reload_config_after_fix(updated_config: IVerge) -> Result<()> {
-        use crate::config::Config;
-
-        let config_draft = Config::verge().await;
-        *config_draft.draft_mut() = Box::new(updated_config.clone());
-        config_draft.apply();
-
+    async fn reload_config_after_fix(updated_config: Self) -> Result<()> {
         logging!(
             info,
             Type::Config,
-            true,
             "内存配置已强制更新，新的clash_core: {:?}",
-            updated_config.clash_core
+            &updated_config.clash_core
         );
+
+        let config_draft = Config::verge().await;
+        config_draft.edit_draft(|d| {
+            *d = updated_config;
+        });
+        config_draft.apply();
 
         Ok(())
     }
 
     pub fn get_valid_clash_core(&self) -> String {
-        self.clash_core
-            .clone()
-            .unwrap_or_else(|| "verge-mihomo".to_string())
-    }
-
-    fn get_system_language() -> String {
-        let sys_lang = sys_locale::get_locale()
-            .unwrap_or_else(|| String::from("en"))
-            .to_lowercase();
-
-        let lang_code = sys_lang.split(['_', '-']).next().unwrap_or("en");
-        let supported_languages = i18n::get_supported_languages();
-
-        if supported_languages.contains(&lang_code.to_string()) {
-            lang_code.to_string()
-        } else {
-            String::from("en")
-        }
+        self.clash_core.clone().unwrap_or_else(|| "verge-mihomo".into())
     }
 
     pub async fn new() -> Self {
         match dirs::verge_path() {
-            Ok(path) => match help::read_yaml::<IVerge>(&path).await {
-                Ok(config) => config,
+            Ok(path) => match help::read_yaml::<Self>(&path).await {
+                Ok(mut config) => {
+                    // compatibility
+                    if let Some(start_page) = config.start_page.clone()
+                        && start_page == "/home"
+                    {
+                        config.start_page = Some(String::from("/"));
+                    }
+                    config
+                }
                 Err(err) => {
-                    log::error!(target: "app", "{err}");
+                    logging!(error, Type::Config, "{err}");
                     Self::template()
                 }
             },
             Err(err) => {
-                log::error!(target: "app", "{err}");
+                logging!(error, Type::Config, "{err}");
                 Self::template()
             }
         }
@@ -353,26 +381,32 @@ impl IVerge {
 
     pub fn template() -> Self {
         Self {
+            app_log_max_size: Some(128),
+            app_log_max_count: Some(8),
             clash_core: Some("verge-mihomo".into()),
-            language: Some(Self::get_system_language()),
+            language: Some(clash_verge_i18n::system_language().into()),
             theme_mode: Some("system".into()),
             #[cfg(not(target_os = "windows"))]
             env_type: Some("bash".into()),
             #[cfg(target_os = "windows")]
             env_type: Some("powershell".into()),
-            start_page: Some("/home".into()),
+            start_page: Some("/".into()),
             traffic_graph: Some(true),
             enable_memory_usage: Some(true),
             enable_group_icon: Some(true),
+            pause_render_traffic_stats_on_blur: Some(true),
             #[cfg(target_os = "macos")]
             tray_icon: Some("monochrome".into()),
             menu_icon: Some("monochrome".into()),
+            notice_position: Some("top-right".into()),
+            collapse_navbar: Some(false),
             common_tray_icon: Some(false),
             sysproxy_tray_icon: Some(false),
             tun_tray_icon: Some(false),
             enable_auto_launch: Some(false),
             enable_silent_start: Some(false),
             enable_hover_jump_navigator: Some(true),
+            hover_jump_navigator_delay: Some(280),
             enable_system_proxy: Some(false),
             proxy_auto_config: Some(false),
             pac_file_content: Some(DEFAULT_PAC.into()),
@@ -391,23 +425,28 @@ impl IVerge {
             verge_port: Some(7899),
             verge_http_enabled: Some(false),
             enable_proxy_guard: Some(false),
+            enable_bypass_check: Some(true),
             use_default_bypass: Some(true),
             proxy_guard_duration: Some(30),
             auto_close_connection: Some(true),
             auto_check_update: Some(true),
             enable_builtin_enhanced: Some(true),
             auto_log_clean: Some(2), // 1: 1天, 2: 7天, 3: 30天, 4: 90天
+            enable_auto_backup_schedule: Some(false),
+            auto_backup_interval_hours: Some(24),
+            auto_backup_on_change: Some(true),
             webdav_url: None,
             webdav_username: None,
             webdav_password: None,
             enable_tray_speed: Some(false),
-            enable_tray_icon: Some(true),
+            // enable_tray_icon: Some(true),
+            tray_proxy_groups_display_mode: Some("default".into()),
+            tray_inline_outbound_modes: Some(false),
             enable_global_hotkey: Some(true),
             enable_auto_light_weight_mode: Some(false),
             auto_light_weight_minutes: Some(10),
             enable_dns_settings: Some(false),
             home_cards: None,
-            service_state: None,
             enable_external_controller: Some(false),
             ..Self::default()
         }
@@ -420,16 +459,20 @@ impl IVerge {
 
     /// patch verge config
     /// only save to file
-    pub fn patch_config(&mut self, patch: IVerge) {
+    #[allow(clippy::cognitive_complexity)]
+    pub fn patch_config(&mut self, patch: &Self) {
         macro_rules! patch {
             ($key: tt) => {
                 if patch.$key.is_some() {
-                    self.$key = patch.$key;
+                    self.$key = patch.$key.clone();
                 }
             };
         }
 
         patch!(app_log_level);
+        patch!(app_log_max_size);
+        patch!(app_log_max_count);
+
         patch!(language);
         patch!(theme_mode);
         patch!(tray_event);
@@ -439,9 +482,13 @@ impl IVerge {
         patch!(traffic_graph);
         patch!(enable_memory_usage);
         patch!(enable_group_icon);
+        patch!(pause_render_traffic_stats_on_blur);
         #[cfg(target_os = "macos")]
         patch!(tray_icon);
         patch!(menu_icon);
+        patch!(menu_order);
+        patch!(notice_position);
+        patch!(collapse_navbar);
         patch!(common_tray_icon);
         patch!(sysproxy_tray_icon);
         patch!(tun_tray_icon);
@@ -450,6 +497,7 @@ impl IVerge {
         patch!(enable_auto_launch);
         patch!(enable_silent_start);
         patch!(enable_hover_jump_navigator);
+        patch!(hover_jump_navigator_delay);
         #[cfg(not(target_os = "windows"))]
         patch!(verge_redir_port);
         #[cfg(not(target_os = "windows"))]
@@ -465,6 +513,7 @@ impl IVerge {
         patch!(verge_http_enabled);
         patch!(enable_system_proxy);
         patch!(enable_proxy_guard);
+        patch!(enable_bypass_check);
         patch!(use_default_bypass);
         patch!(system_proxy_bypass);
         patch!(proxy_guard_duration);
@@ -481,31 +530,32 @@ impl IVerge {
         patch!(auto_check_update);
         patch!(default_latency_test);
         patch!(default_latency_timeout);
+        patch!(enable_auto_delay_detection);
+        patch!(auto_delay_detection_interval_minutes);
         patch!(enable_builtin_enhanced);
         patch!(proxy_layout_column);
         patch!(test_list);
         patch!(auto_log_clean);
+        patch!(enable_auto_backup_schedule);
+        patch!(auto_backup_interval_hours);
+        patch!(auto_backup_on_change);
 
         patch!(webdav_url);
         patch!(webdav_username);
         patch!(webdav_password);
         patch!(enable_tray_speed);
-        patch!(enable_tray_icon);
+        // patch!(enable_tray_icon);
+        patch!(tray_proxy_groups_display_mode);
+        patch!(tray_inline_outbound_modes);
         patch!(enable_auto_light_weight_mode);
         patch!(auto_light_weight_minutes);
         patch!(enable_dns_settings);
         patch!(home_cards);
-        patch!(service_state);
         patch!(enable_external_controller);
     }
 
-    /// 在初始化前尝试拿到单例端口的值
-    pub fn get_singleton_port() -> u16 {
-        #[cfg(not(feature = "verge-dev"))]
-        const SERVER_PORT: u16 = 33331;
-        #[cfg(feature = "verge-dev")]
-        const SERVER_PORT: u16 = 11233;
-        SERVER_PORT
+    pub const fn get_singleton_port() -> u16 {
+        crate::constants::network::ports::SINGLETON_SERVER
     }
 
     /// 获取日志等级
@@ -522,149 +572,6 @@ impl IVerge {
             }
         } else {
             LevelFilter::Info
-        }
-    }
-}
-
-#[derive(Debug, Clone, Serialize)]
-pub struct IVergeResponse {
-    pub app_log_level: Option<String>,
-    pub language: Option<String>,
-    pub theme_mode: Option<String>,
-    pub tray_event: Option<String>,
-    pub env_type: Option<String>,
-    pub start_page: Option<String>,
-    pub startup_script: Option<String>,
-    pub traffic_graph: Option<bool>,
-    pub enable_memory_usage: Option<bool>,
-    pub enable_group_icon: Option<bool>,
-    pub common_tray_icon: Option<bool>,
-    #[cfg(target_os = "macos")]
-    pub tray_icon: Option<String>,
-    pub menu_icon: Option<String>,
-    pub sysproxy_tray_icon: Option<bool>,
-    pub tun_tray_icon: Option<bool>,
-    pub enable_tun_mode: Option<bool>,
-    pub enable_auto_launch: Option<bool>,
-    pub enable_silent_start: Option<bool>,
-    pub enable_system_proxy: Option<bool>,
-    pub enable_proxy_guard: Option<bool>,
-    pub enable_global_hotkey: Option<bool>,
-    pub use_default_bypass: Option<bool>,
-    pub system_proxy_bypass: Option<String>,
-    pub proxy_guard_duration: Option<u64>,
-    pub proxy_auto_config: Option<bool>,
-    pub pac_file_content: Option<String>,
-    pub proxy_host: Option<String>,
-    pub theme_setting: Option<IVergeTheme>,
-    pub web_ui_list: Option<Vec<String>>,
-    pub clash_core: Option<String>,
-    pub hotkeys: Option<Vec<String>>,
-    pub auto_close_connection: Option<bool>,
-    pub auto_check_update: Option<bool>,
-    pub default_latency_test: Option<String>,
-    pub default_latency_timeout: Option<i32>,
-    pub enable_builtin_enhanced: Option<bool>,
-    pub proxy_layout_column: Option<i32>,
-    pub test_list: Option<Vec<IVergeTestItem>>,
-    pub auto_log_clean: Option<i32>,
-    #[cfg(not(target_os = "windows"))]
-    pub verge_redir_port: Option<u16>,
-    #[cfg(not(target_os = "windows"))]
-    pub verge_redir_enabled: Option<bool>,
-    #[cfg(target_os = "linux")]
-    pub verge_tproxy_port: Option<u16>,
-    #[cfg(target_os = "linux")]
-    pub verge_tproxy_enabled: Option<bool>,
-    pub verge_mixed_port: Option<u16>,
-    pub verge_socks_port: Option<u16>,
-    pub verge_socks_enabled: Option<bool>,
-    pub verge_port: Option<u16>,
-    pub verge_http_enabled: Option<bool>,
-    pub webdav_url: Option<String>,
-    pub webdav_username: Option<String>,
-    pub webdav_password: Option<String>,
-    pub enable_tray_speed: Option<bool>,
-    pub enable_tray_icon: Option<bool>,
-    pub enable_auto_light_weight_mode: Option<bool>,
-    pub auto_light_weight_minutes: Option<u64>,
-    pub enable_dns_settings: Option<bool>,
-    pub home_cards: Option<serde_json::Value>,
-    pub enable_hover_jump_navigator: Option<bool>,
-    pub enable_external_controller: Option<bool>,
-    pub service_state: Option<crate::core::service::ServiceState>,
-}
-
-impl From<IVerge> for IVergeResponse {
-    fn from(verge: IVerge) -> Self {
-        // 先获取验证后的clash_core值，避免后续借用冲突
-        let valid_clash_core = verge.get_valid_clash_core();
-        Self {
-            app_log_level: verge.app_log_level,
-            language: verge.language,
-            theme_mode: verge.theme_mode,
-            tray_event: verge.tray_event,
-            env_type: verge.env_type,
-            start_page: verge.start_page,
-            startup_script: verge.startup_script,
-            traffic_graph: verge.traffic_graph,
-            enable_memory_usage: verge.enable_memory_usage,
-            enable_group_icon: verge.enable_group_icon,
-            common_tray_icon: verge.common_tray_icon,
-            #[cfg(target_os = "macos")]
-            tray_icon: verge.tray_icon,
-            menu_icon: verge.menu_icon,
-            sysproxy_tray_icon: verge.sysproxy_tray_icon,
-            tun_tray_icon: verge.tun_tray_icon,
-            enable_tun_mode: verge.enable_tun_mode,
-            enable_auto_launch: verge.enable_auto_launch,
-            enable_silent_start: verge.enable_silent_start,
-            enable_system_proxy: verge.enable_system_proxy,
-            enable_proxy_guard: verge.enable_proxy_guard,
-            enable_global_hotkey: verge.enable_global_hotkey,
-            use_default_bypass: verge.use_default_bypass,
-            system_proxy_bypass: verge.system_proxy_bypass,
-            proxy_guard_duration: verge.proxy_guard_duration,
-            proxy_auto_config: verge.proxy_auto_config,
-            pac_file_content: verge.pac_file_content,
-            proxy_host: verge.proxy_host,
-            theme_setting: verge.theme_setting,
-            web_ui_list: verge.web_ui_list,
-            clash_core: Some(valid_clash_core),
-            hotkeys: verge.hotkeys,
-            auto_close_connection: verge.auto_close_connection,
-            auto_check_update: verge.auto_check_update,
-            default_latency_test: verge.default_latency_test,
-            default_latency_timeout: verge.default_latency_timeout,
-            enable_builtin_enhanced: verge.enable_builtin_enhanced,
-            proxy_layout_column: verge.proxy_layout_column,
-            test_list: verge.test_list,
-            auto_log_clean: verge.auto_log_clean,
-            #[cfg(not(target_os = "windows"))]
-            verge_redir_port: verge.verge_redir_port,
-            #[cfg(not(target_os = "windows"))]
-            verge_redir_enabled: verge.verge_redir_enabled,
-            #[cfg(target_os = "linux")]
-            verge_tproxy_port: verge.verge_tproxy_port,
-            #[cfg(target_os = "linux")]
-            verge_tproxy_enabled: verge.verge_tproxy_enabled,
-            verge_mixed_port: verge.verge_mixed_port,
-            verge_socks_port: verge.verge_socks_port,
-            verge_socks_enabled: verge.verge_socks_enabled,
-            verge_port: verge.verge_port,
-            verge_http_enabled: verge.verge_http_enabled,
-            webdav_url: verge.webdav_url,
-            webdav_username: verge.webdav_username,
-            webdav_password: verge.webdav_password,
-            enable_tray_speed: verge.enable_tray_speed,
-            enable_tray_icon: verge.enable_tray_icon,
-            enable_auto_light_weight_mode: verge.enable_auto_light_weight_mode,
-            auto_light_weight_minutes: verge.auto_light_weight_minutes,
-            enable_dns_settings: verge.enable_dns_settings,
-            home_cards: verge.home_cards,
-            enable_hover_jump_navigator: verge.enable_hover_jump_navigator,
-            enable_external_controller: verge.enable_external_controller,
-            service_state: verge.service_state,
         }
     }
 }

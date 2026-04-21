@@ -1,12 +1,14 @@
 use crate::config::Config;
+use crate::constants::{network, tun as tun_const};
 use crate::utils::dirs::{ipc_path, path_to_str};
 use crate::utils::{dirs, help};
 use anyhow::Result;
+use clash_verge_logging::{Type, logging};
 use serde::{Deserialize, Serialize};
 use serde_yaml_ng::{Mapping, Value};
 use std::{
     net::{IpAddr, Ipv4Addr, SocketAddr},
-    str::FromStr,
+    str::FromStr as _,
 };
 
 #[derive(Default, Debug, Clone)]
@@ -14,7 +16,6 @@ pub struct IClashTemp(pub Mapping);
 
 impl IClashTemp {
     pub async fn new() -> Self {
-        let template = Self::template();
         let clash_path_result = dirs::clash_path();
         let map_result = if let Ok(path) = clash_path_result {
             help::read_mapping(&path).await
@@ -24,50 +25,58 @@ impl IClashTemp {
 
         match map_result {
             Ok(mut map) => {
-                template.0.keys().for_each(|key| {
-                    if !map.contains_key(key) {
-                        if let Some(value) = template.0.get(key) {
-                            map.insert(key.clone(), value.clone());
-                        }
-                    }
-                });
-                // 确保 secret 字段存在且不为空
-                if let Some(Value::String(s)) = map.get_mut("secret") {
-                    if s.is_empty() {
-                        *s = "set-your-secret".to_string();
+                let template_map = Self::template().0;
+                for (key, value) in template_map.into_iter() {
+                    if !map.contains_key(&key) {
+                        map.insert(key, value);
                     }
                 }
+
+                // 确保 secret 字段存在且不为空
+                if let Some(val) = map.get_mut("secret")
+                    && let Value::String(s) = val
+                    && s.is_empty()
+                {
+                    *s = "set-your-secret".into();
+                }
+
                 Self(Self::guard(map))
             }
             Err(err) => {
-                log::error!(target: "app", "{err}");
-                template
+                logging!(error, Type::Config, "{err}");
+                Self::template()
             }
         }
     }
 
     pub fn template() -> Self {
         let mut map = Mapping::new();
-        let mut tun = Mapping::new();
+        let mut tun_config = Mapping::new();
         let mut cors_map = Mapping::new();
-        tun.insert("enable".into(), false.into());
-        tun.insert("stack".into(), "gvisor".into());
-        tun.insert("auto-route".into(), true.into());
-        tun.insert("strict-route".into(), false.into());
-        tun.insert("auto-detect-interface".into(), true.into());
-        tun.insert("dns-hijack".into(), vec!["any:53"].into());
+
+        tun_config.insert("enable".into(), false.into());
+        tun_config.insert("stack".into(), tun_const::DEFAULT_STACK.into());
+        tun_config.insert("auto-route".into(), true.into());
+        tun_config.insert("strict-route".into(), false.into());
+        tun_config.insert("auto-detect-interface".into(), true.into());
+        tun_config.insert("dns-hijack".into(), tun_const::DNS_HIJACK.into());
+
         #[cfg(not(target_os = "windows"))]
-        map.insert("redir-port".into(), 7895.into());
+        map.insert("redir-port".into(), network::ports::DEFAULT_REDIR.into());
         #[cfg(target_os = "linux")]
-        map.insert("tproxy-port".into(), 7896.into());
-        map.insert("mixed-port".into(), 7897.into());
-        map.insert("socks-port".into(), 7898.into());
-        map.insert("port".into(), 7899.into());
-        map.insert("log-level".into(), "warning".into());
+        map.insert("tproxy-port".into(), network::ports::DEFAULT_TPROXY.into());
+
+        map.insert("mixed-port".into(), network::ports::DEFAULT_MIXED.into());
+        map.insert("socks-port".into(), network::ports::DEFAULT_SOCKS.into());
+        map.insert("port".into(), network::ports::DEFAULT_HTTP.into());
+        map.insert("log-level".into(), "info".into());
         map.insert("allow-lan".into(), false.into());
         map.insert("ipv6".into(), true.into());
         map.insert("mode".into(), "rule".into());
-        map.insert("external-controller".into(), "127.0.0.1:9097".into());
+        map.insert(
+            "external-controller".into(),
+            network::DEFAULT_EXTERNAL_CONTROLLER.into(),
+        );
         #[cfg(unix)]
         map.insert(
             "external-controller-unix".into(),
@@ -78,6 +87,7 @@ impl IClashTemp {
             "external-controller-pipe".into(),
             Self::guard_external_controller_ipc().into(),
         );
+        map.insert("tun".into(), tun_config.into());
         cors_map.insert("allow-private-network".into(), true.into());
         cors_map.insert(
             "allow-origins".into(),
@@ -94,7 +104,6 @@ impl IClashTemp {
             .into(),
         );
         map.insert("secret".into(), "set-your-secret".into());
-        map.insert("tun".into(), tun.into());
         map.insert("external-controller-cors".into(), cors_map.into());
         map.insert("unified-delay".into(), true.into());
         Self(map)
@@ -124,31 +133,20 @@ impl IClashTemp {
         config.insert("external-controller".into(), ctrl.into());
 
         #[cfg(unix)]
-        config.insert(
-            "external-controller-unix".into(),
-            external_controller_unix.into(),
-        );
+        config.insert("external-controller-unix".into(), external_controller_unix.into());
         #[cfg(windows)]
-        config.insert(
-            "external-controller-pipe".into(),
-            external_controller_pipe.into(),
-        );
+        config.insert("external-controller-pipe".into(), external_controller_pipe.into());
         config
     }
 
-    pub fn patch_config(&mut self, patch: Mapping) {
-        for (key, value) in patch.into_iter() {
-            self.0.insert(key, value);
+    pub fn patch_config(&mut self, patch: &Mapping) {
+        for (key, value) in patch.iter() {
+            self.0.insert(key.to_owned(), value.to_owned());
         }
     }
 
     pub async fn save_config(&self) -> Result<()> {
-        help::save_yaml(
-            &dirs::clash_path()?,
-            &self.0,
-            Some("# Generated by Clash Verge"),
-        )
-        .await
+        help::save_yaml(&dirs::clash_path()?, &self.0, Some("# Generated by Clash Verge")).await
     }
 
     pub fn get_mixed_port(&self) -> u16 {
@@ -206,9 +204,9 @@ impl IClashTemp {
                 Value::Number(val_num) => val_num.as_u64().map(|u| u as u16),
                 _ => None,
             })
-            .unwrap_or(7896);
+            .unwrap_or(network::ports::DEFAULT_TPROXY);
         if port == 0 {
-            port = 7896;
+            port = network::ports::DEFAULT_TPROXY;
         }
         port
     }
@@ -273,13 +271,11 @@ impl IClashTemp {
                         false => val_str.to_owned(),
                     };
 
-                    SocketAddr::from_str(val.as_str())
-                        .ok()
-                        .map(|s| s.to_string())
+                    SocketAddr::from_str(val.as_str()).ok().map(|s| s.to_string())
                 }
                 None => None,
             })
-            .unwrap_or("127.0.0.1:9097".into())
+            .unwrap_or_else(|| "127.0.0.1:9097".into())
     }
 
     pub fn guard_external_controller(config: &Mapping) -> String {
@@ -292,7 +288,7 @@ impl IClashTemp {
         // 检查 enable_external_controller 设置，用于运行时配置生成
         let enable_external_controller = Config::verge()
             .await
-            .latest_ref()
+            .latest_arc()
             .enable_external_controller
             .unwrap_or(false);
 
@@ -320,10 +316,10 @@ impl IClashTemp {
         // 总是使用当前的 IPC 路径，确保配置文件与运行时路径一致
         ipc_path()
             .ok()
-            .and_then(|path| path_to_str(&path).ok().map(|s| s.to_string()))
+            .and_then(|path| path_to_str(&path).ok().map(|s| s.into()))
             .unwrap_or_else(|| {
-                log::error!(target: "app", "Failed to get IPC path, using default");
-                "127.0.0.1:9090".to_string()
+                logging!(error, Type::Config, "Failed to get IPC path");
+                crate::constants::network::DEFAULT_EXTERNAL_CONTROLLER.into()
             })
     }
 }
@@ -369,40 +365,19 @@ fn test_clash_info() {
 
     assert_eq!(get_case(65537, ""), get_result(1, "127.0.0.1:9097"));
 
-    assert_eq!(
-        get_case(8888, "127.0.0.1:8888"),
-        get_result(8888, "127.0.0.1:8888")
-    );
+    assert_eq!(get_case(8888, "127.0.0.1:8888"), get_result(8888, "127.0.0.1:8888"));
 
-    assert_eq!(
-        get_case(8888, "   :98888 "),
-        get_result(8888, "127.0.0.1:9097")
-    );
+    assert_eq!(get_case(8888, "   :98888 "), get_result(8888, "127.0.0.1:9097"));
 
-    assert_eq!(
-        get_case(8888, "0.0.0.0:8080  "),
-        get_result(8888, "127.0.0.1:8080")
-    );
+    assert_eq!(get_case(8888, "0.0.0.0:8080  "), get_result(8888, "127.0.0.1:8080"));
 
-    assert_eq!(
-        get_case(8888, "0.0.0.0:8080"),
-        get_result(8888, "127.0.0.1:8080")
-    );
+    assert_eq!(get_case(8888, "0.0.0.0:8080"), get_result(8888, "127.0.0.1:8080"));
 
-    assert_eq!(
-        get_case(8888, "[::]:8080"),
-        get_result(8888, "127.0.0.1:8080")
-    );
+    assert_eq!(get_case(8888, "[::]:8080"), get_result(8888, "127.0.0.1:8080"));
 
-    assert_eq!(
-        get_case(8888, "192.168.1.1:8080"),
-        get_result(8888, "192.168.1.1:8080")
-    );
+    assert_eq!(get_case(8888, "192.168.1.1:8080"), get_result(8888, "192.168.1.1:8080"));
 
-    assert_eq!(
-        get_case(8888, "192.168.1.1:80800"),
-        get_result(8888, "127.0.0.1:9097")
-    );
+    assert_eq!(get_case(8888, "192.168.1.1:80800"), get_result(8888, "127.0.0.1:9097"));
 }
 
 #[derive(Default, Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
