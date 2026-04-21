@@ -458,10 +458,13 @@
       "messages": {
         "durationTooShort": "Proxy Daemon Duration Cannot be Less than 1 Second",
         "invalidBypass": "Invalid Bypass Format",
-        "invalidProxyHost": "Invalid Proxy Host Format"
+        "invalidProxyHost": "Invalid Proxy Host Format",
+        "noPacPatterns": "No valid domain rules found in runtime config",
+        "pacGenerated": "PAC script generated from rules"
       },
       "actions": {
-        "editPac": "Edit PAC"
+        "editPac": "Edit PAC",
+        "generatePac": "Generate from Rules"
       }
     },
     "tun": {

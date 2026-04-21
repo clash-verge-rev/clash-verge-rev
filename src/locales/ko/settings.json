@@ -458,10 +458,13 @@
       "messages": {
         "durationTooShort": "프록시 데몬 지속시간은 1초 미만일 수 없습니다",
         "invalidBypass": "잘못된 우회 형식",
-        "invalidProxyHost": "잘못된 프록시 호스트 형식"
+        "invalidProxyHost": "잘못된 프록시 호스트 형식",
+        "noPacPatterns": "No valid domain rules found in runtime config",
+        "pacGenerated": "PAC script generated from rules"
       },
       "actions": {
-        "editPac": "PAC 편집"
+        "editPac": "PAC 편집",
+        "generatePac": "Generate from Rules"
       }
     },
     "tun": {

@@ -458,10 +458,13 @@
       "messages": {
         "durationTooShort": "プロキシデーモンの間隔は1秒以上に設定する必要があります。",
         "invalidBypass": "無効なバイパス形式",
-        "invalidProxyHost": "プロキシホストの形式が無効です"
+        "invalidProxyHost": "プロキシホストの形式が無効です",
+        "noPacPatterns": "No valid domain rules found in runtime config",
+        "pacGenerated": "PAC script generated from rules"
       },
       "actions": {
-        "editPac": "編集 PAC"
+        "editPac": "編集 PAC",
+        "generatePac": "Generate from Rules"
       }
     },
     "tun": {

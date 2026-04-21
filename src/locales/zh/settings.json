@@ -458,10 +458,13 @@
       "messages": {
         "durationTooShort": "代理守护间隔时间不得低于 1 秒",
         "invalidBypass": "无效的代理绕过格式",
-        "invalidProxyHost": "代理主机格式无效"
+        "invalidProxyHost": "代理主机格式无效",
+        "noPacPatterns": "运行时配置中未找到有效的域名规则",
+        "pacGenerated": "已从规则生成 PAC 脚本"
       },
       "actions": {
-        "editPac": "编辑 PAC"
+        "editPac": "编辑 PAC",
+        "generatePac": "从规则生成"
       }
     },
     "tun": {

@@ -458,10 +458,13 @@
       "messages": {
         "durationTooShort": "مدت زمان دیمن پراکسی نمی‌تواند کمتر از 1 ثانیه باشد",
         "invalidBypass": "فرمت عبور نامعتبر است",
-        "invalidProxyHost": "فرمت میزبان پراکسی نامعتبر است"
+        "invalidProxyHost": "فرمت میزبان پراکسی نامعتبر است",
+        "noPacPatterns": "No valid domain rules found in runtime config",
+        "pacGenerated": "PAC script generated from rules"
       },
       "actions": {
-        "editPac": "ویرایش PAC"
+        "editPac": "ویرایش PAC",
+        "generatePac": "Generate from Rules"
       }
     },
     "tun": {

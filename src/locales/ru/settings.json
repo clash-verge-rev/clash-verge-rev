@@ -458,10 +458,13 @@
       "messages": {
         "durationTooShort": "Продолжительность работы прокси-демона не может быть меньше 1 секунды",
         "invalidBypass": "Неверный формат обхода",
-        "invalidProxyHost": "Неверный формат хоста прокси"
+        "invalidProxyHost": "Неверный формат хоста прокси",
+        "noPacPatterns": "No valid domain rules found in runtime config",
+        "pacGenerated": "PAC script generated from rules"
       },
       "actions": {
-        "editPac": "Редактировать PAC"
+        "editPac": "Редактировать PAC",
+        "generatePac": "Generate from Rules"
       }
     },
     "tun": {

@@ -458,10 +458,13 @@
       "messages": {
         "durationTooShort": "Durasi Daemon Proksi Tidak Boleh Kurang dari 1 Detik",
         "invalidBypass": "Format Bypass Tidak Valid",
-        "invalidProxyHost": "Format Host Proksi Tidak Valid"
+        "invalidProxyHost": "Format Host Proksi Tidak Valid",
+        "noPacPatterns": "No valid domain rules found in runtime config",
+        "pacGenerated": "PAC script generated from rules"
       },
       "actions": {
-        "editPac": "Ubah PAC"
+        "editPac": "Ubah PAC",
+        "generatePac": "Generate from Rules"
       }
     },
     "tun": {

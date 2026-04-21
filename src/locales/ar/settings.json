@@ -458,10 +458,13 @@
       "messages": {
         "durationTooShort": "لا يمكن أن تقل مدة خادم الوكيل عن ثانية واحدة",
         "invalidBypass": "تنسيق التخطي غير صالح",
-        "invalidProxyHost": "تنسيق مضيف الوكيل غير صالح"
+        "invalidProxyHost": "تنسيق مضيف الوكيل غير صالح",
+        "noPacPatterns": "No valid domain rules found in runtime config",
+        "pacGenerated": "PAC script generated from rules"
       },
       "actions": {
-        "editPac": "تعديل PAC"
+        "editPac": "تعديل PAC",
+        "generatePac": "Generate from Rules"
       }
     },
     "tun": {
