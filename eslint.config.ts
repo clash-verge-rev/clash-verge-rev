@@ -38,6 +38,8 @@ export default defineConfig([
             'eslint.config.ts',
             `vite.config.mts`,
             'src/polyfills/*.js',
+            'scripts/*.mjs',
+            'src-tauri/src/enhance/builtin/*.js',
           ],
         },
       },

@@ -32,6 +32,7 @@
     }
   },
   "files": {
+    "ignoreUnknown": false,
     "includes": [
       "**",
       "!dist",
@@ -39,6 +40,8 @@
       "!src-tauri/target",
       "!src-tauri/gen",
       "!target",
+      "!src-tauri/src/enhance/builtin/*.js",
+      "!scripts/*.mjs",
       "!Cargo.lock",
       "!pnpm-lock.yaml",
       "!README.md",
