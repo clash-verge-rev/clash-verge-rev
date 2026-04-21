@@ -458,10 +458,13 @@
       "messages": {
         "durationTooShort": "Прокси-демон эш вакыты 1 секундтан ким була алмый",
         "invalidBypass": "Дөрес булмаган Bypass форматы",
-        "invalidProxyHost": "Прокси хосты форматы дөрес түгел"
+        "invalidProxyHost": "Прокси хосты форматы дөрес түгел",
+        "noPacPatterns": "No valid domain rules found in runtime config",
+        "pacGenerated": "PAC script generated from rules"
       },
       "actions": {
-        "editPac": "Үзгәртү PAC"
+        "editPac": "Үзгәртү PAC",
+        "generatePac": "Generate from Rules"
       }
     },
     "tun": {

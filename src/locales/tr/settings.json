@@ -458,10 +458,13 @@
       "messages": {
         "durationTooShort": "Vekil Koruyucu Süresi 1 Saniyeden Az Olamaz",
         "invalidBypass": "Geçersiz Baypas Formatı",
-        "invalidProxyHost": "Geçersiz Vekil Sunucusu Formatı"
+        "invalidProxyHost": "Geçersiz Vekil Sunucusu Formatı",
+        "noPacPatterns": "No valid domain rules found in runtime config",
+        "pacGenerated": "PAC script generated from rules"
       },
       "actions": {
-        "editPac": "Düzenle PAC"
+        "editPac": "Düzenle PAC",
+        "generatePac": "Generate from Rules"
       }
     },
     "tun": {

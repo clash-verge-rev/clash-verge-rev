@@ -1,4 +1,4 @@
-import { EditRounded } from '@mui/icons-material'
+import { AutoFixHighRounded, EditRounded } from '@mui/icons-material'
 import {
   Autocomplete,
   Box,
@@ -12,7 +12,9 @@ import {
   TextField,
   Typography,
 } from '@mui/material'
+import { readTextFile } from '@tauri-apps/plugin-fs'
 import { useLockFn } from 'ahooks'
+import yaml from 'js-yaml'
 import {
   forwardRef,
   useEffect,
@@ -37,6 +39,7 @@ import { useSystemProxyState } from '@/hooks/use-system-proxy-state'
 import { useVerge } from '@/hooks/use-verge'
 import { useAppData } from '@/providers/app-data-context'
 import {
+  getAppDir,
   getAutotemProxy,
   getNetworkInterfacesInfo,
   getSystemHostname,
@@ -307,6 +310,59 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
       setHostOptions(['127.0.0.1', 'localhost'])
     }
   }
+
+  const onGeneratePacFromRules = useLockFn(async () => {
+    try {
+      const appDir = await getAppDir()
+      const sep = appDir.includes('\\') ? '\\' : '/'
+      const content = await readTextFile(`${appDir}${sep}clash-verge.yaml`)
+      const obj = yaml.load(content) as { rules?: string[] } | null
+      const rawRules: string[] = obj?.rules || []
+
+      const patterns: string[] = []
+      for (const raw of rawRules) {
+        const parts = raw.split(',')
+        if (parts.length < 3) continue
+        const [type, payload, proxy] = parts
+        if (proxy === 'DIRECT' || proxy === 'REJECT' || proxy === 'REJECT-DROP')
+          continue
+
+        if (type === 'DOMAIN') {
+          patterns.push(payload)
+        } else if (type === 'DOMAIN-SUFFIX') {
+          patterns.push(`*.${payload}`)
+          patterns.push(payload)
+        } else if (type === 'DOMAIN-KEYWORD') {
+          patterns.push(`*${payload}*`)
+        }
+      }
+
+      if (patterns.length === 0) {
+        showNotice.error('settings.modals.sysproxy.messages.noPacPatterns')
+        return
+      }
+
+      const patternsStr = patterns.map((p) => `    "${p}"`).join(',\n')
+      const pac = `function FindProxyForURL(url, host) {
+  var proxyPatterns = [
+${patternsStr}
+  ];
+
+  for (var i = 0; i < proxyPatterns.length; i++) {
+    if (shExpMatch(host, proxyPatterns[i])) {
+      return "PROXY %proxy_host%:%mixed-port%; SOCKS5 %proxy_host%:%mixed-port%;";
+    }
+  }
+
+  return "DIRECT";
+}`
+
+      setValue((v) => ({ ...v, pac_content: pac }))
+      showNotice.success('settings.modals.sysproxy.messages.pacGenerated')
+    } catch (err) {
+      showNotice.error(err)
+    }
+  })
 
   const onSave = useLockFn(async () => {
     if (value.duration < 1) {
@@ -669,6 +725,14 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
               primary={t('settings.modals.sysproxy.fields.pacScriptContent')}
               sx={{ padding: '3px 0' }}
             />
+            <Button
+              startIcon={<AutoFixHighRounded />}
+              variant="outlined"
+              sx={{ mr: 1 }}
+              onClick={onGeneratePacFromRules}
+            >
+              {t('settings.modals.sysproxy.actions.generatePac')}
+            </Button>
             <Button
               startIcon={<EditRounded />}
               variant="outlined"

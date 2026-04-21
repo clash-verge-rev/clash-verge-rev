@@ -983,6 +983,7 @@ export interface TranslationResources {
         sysproxy: {
           actions: {
             editPac: string
+            generatePac: string
           }
           fields: {
             alwaysUseDefaultBypass: string
@@ -1005,6 +1006,8 @@ export interface TranslationResources {
             durationTooShort: string
             invalidBypass: string
             invalidProxyHost: string
+            noPacPatterns: string
+            pacGenerated: string
           }
           title: string
           tooltips: {

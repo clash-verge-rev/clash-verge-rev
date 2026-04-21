@@ -458,10 +458,13 @@
       "messages": {
         "durationTooShort": "Das Intervall des Proxy-Daemons darf nicht weniger als 1 Sekunde betragen.",
         "invalidBypass": "Ungültiges Format für die Proxy-Umgehung",
-        "invalidProxyHost": "Ungültiges Format für den Proxy-Host"
+        "invalidProxyHost": "Ungültiges Format für den Proxy-Host",
+        "noPacPatterns": "No valid domain rules found in runtime config",
+        "pacGenerated": "PAC script generated from rules"
       },
       "actions": {
-        "editPac": "Bearbeiten PAC"
+        "editPac": "Bearbeiten PAC",
+        "generatePac": "Generate from Rules"
       }
     },
     "tun": {

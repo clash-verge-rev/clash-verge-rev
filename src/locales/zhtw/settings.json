@@ -458,10 +458,13 @@
       "messages": {
         "durationTooShort": "代理守護間隔時間不得低於 1 秒",
         "invalidBypass": "無效的代理繞過格式",
-        "invalidProxyHost": "代理主機格式無效"
+        "invalidProxyHost": "代理主機格式無效",
+        "noPacPatterns": "No valid domain rules found in runtime config",
+        "pacGenerated": "PAC script generated from rules"
       },
       "actions": {
-        "editPac": "編輯 PAC"
+        "editPac": "編輯 PAC",
+        "generatePac": "Generate from Rules"
       }
     },
     "tun": {
