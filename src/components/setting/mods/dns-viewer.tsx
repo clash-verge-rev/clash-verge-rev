@@ -35,6 +35,8 @@ import { useThemeMode } from '@/services/states'
 import { debugLog } from '@/utils/debug'
 import getSystem from '@/utils/get-system'
 
+const LOG_MSG_RE = /msg="([^"]+)"/
+
 const Item = styled(ListItem)(() => ({
   padding: '5px 2px',
   '& textarea': {
@@ -548,7 +550,7 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
           if (errorLines.length > 0) {
             cleanErrorMsg = errorLines
               .map((line) => {
-                const msgMatch = line.match(/msg="([^"]+)"/)
+                const msgMatch = line.match(LOG_MSG_RE)
                 return msgMatch ? msgMatch[1] : line
               })
               .join(', ')

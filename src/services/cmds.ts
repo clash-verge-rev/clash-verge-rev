@@ -5,6 +5,9 @@ import { getProxies, getProxyProviders } from 'tauri-plugin-mihomo-api'
 import { showNotice } from '@/services/notice-service'
 import { debugLog } from '@/utils/debug'
 
+const LOG_ENTRY_RE = /time="(.+?)"\s+level=(.+?)\s+msg="(.+?)"/
+const LOG_ENTRY_NEW_RE = /(.+?)\s+(.+?)\s+(.+)/
+
 export async function copyClashEnv() {
   return invoke<void>('copy_clash_env')
 }
@@ -131,8 +134,9 @@ export async function calcuProxies(): Promise<{
 
   // provider name map
   const providerMap = Object.fromEntries(
-    Object.entries(providerRecord).flatMap(([provider, item]) =>
-      item?.proxies.map((p) => [p.name, { ...p, provider }]),
+    Object.entries(providerRecord).flatMap(
+      ([provider, item]) =>
+        item?.proxies.map((p) => [p.name, { ...p, provider }]) ?? [],
     ),
   )
 
@@ -221,12 +225,10 @@ export async function calcuProxyProviders() {
 }
 
 export async function getClashLogs() {
-  const regex = /time="(.+?)"\s+level=(.+?)\s+msg="(.+?)"/
-  const newRegex = /(.+?)\s+(.+?)\s+(.+)/
   const logs = await invoke<string[]>('get_clash_logs')
 
   return logs.reduce<ILogItem[]>((acc, log) => {
-    const result = log.match(regex)
+    const result = log.match(LOG_ENTRY_RE)
     if (result) {
       const [_, _time, type, payload] = result
       const time = dayjs(_time).format('MM-DD HH:mm:ss')
@@ -234,7 +236,7 @@ export async function getClashLogs() {
       return acc
     }
 
-    const result2 = log.match(newRegex)
+    const result2 = log.match(LOG_ENTRY_NEW_RE)
     if (result2) {
       const [_, time, type, payload] = result2
       acc.push({ time, type, payload })

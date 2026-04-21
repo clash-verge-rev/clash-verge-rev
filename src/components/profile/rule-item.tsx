@@ -9,6 +9,10 @@ import {
   alpha,
   styled,
 } from '@mui/material'
+
+const RULE_TYPE_RE = /^[^,]+/
+const RULE_POLICY_RE = /[^,]+$/
+
 interface Props {
   type: 'prepend' | 'original' | 'delete' | 'append'
   ruleRaw: string
@@ -20,8 +24,8 @@ export const RuleItem = (props: Props) => {
   const sortable = type === 'prepend' || type === 'append'
   const rule = ruleRaw.replace(',no-resolve', '')
 
-  const ruleType = rule.match(/^[^,]+/)?.[0] ?? ''
-  const proxyPolicy = rule.match(/[^,]+$/)?.[0] ?? ''
+  const ruleType = rule.match(RULE_TYPE_RE)?.[0] ?? ''
+  const proxyPolicy = rule.match(RULE_POLICY_RE)?.[0] ?? ''
   const ruleContent = rule.slice(ruleType.length + 1, -proxyPolicy.length - 1)
 
   const $sortable = useSortable({ id: ruleRaw })

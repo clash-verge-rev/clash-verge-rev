@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.4.10/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.4.11/schema.json",
   "assist": {
     "actions": {
       "source": {
@@ -11,6 +11,13 @@
     "enabled": true,
     "rules": {
       "recommended": true,
+      "performance": {
+        "noBarrelFile": "off",
+        "noAwaitInLoops": "warn",
+        "noDelete": "warn",
+        "noNamespaceImport": "warn",
+        "useTopLevelRegex": "warn"
+      },
       "complexity": "off",
       "suspicious": {
         "noExplicitAny": "off",

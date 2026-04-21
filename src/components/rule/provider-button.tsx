@@ -98,6 +98,7 @@ export const ProviderButton = () => {
       // 改为串行逐个更新所有provider
       for (const name of allProviders) {
         try {
+          // biome-ignore lint/performance/noAwaitInLoops: sequential execution required
           await updateRuleProvider(name)
           // 每个更新完成后更新状态
           setUpdating((prev) => ({ ...prev, [name]: false }))

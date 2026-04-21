@@ -82,10 +82,11 @@ const LogPage = () => {
   }
 
   const handleToggleOrder = () => {
-    setClashLog((pre) => ({
-      ...pre,
-      logOrder: pre?.logOrder === 'desc' ? 'asc' : 'desc',
-    }))
+    setClashLog((pre) =>
+      pre
+        ? { ...pre, logOrder: pre.logOrder === 'desc' ? 'asc' : 'desc' }
+        : pre,
+    )
   }
 
   return (

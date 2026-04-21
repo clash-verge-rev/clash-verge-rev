@@ -159,6 +159,7 @@ export const getIpInfo = async (): Promise<
     }, service.timeout || serviceTimeout)
 
     try {
+      // biome-ignore lint/performance/noAwaitInLoops: sequential execution required
       return await asyncRetry(
         async (bail) => {
           console.debug('Fetching IP information:', service.url)

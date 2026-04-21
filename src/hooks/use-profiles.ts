@@ -178,6 +178,7 @@ export const useProfiles = () => {
           )
           hasChange = true
           try {
+            // biome-ignore lint/performance/noAwaitInLoops: sequential group switching avoids backend race conditions
             await selectNodeForGroup(name, savedProxy)
           } catch (error: unknown) {
             console.warn(

@@ -105,6 +105,9 @@ const isOperationAborted = (
   return false
 }
 
+const PATH_SEP_RE = /\/|\\/
+const HTTPS_URL_RE = /^https?:\/\//i
+
 const ProfilePage = () => {
   const { t } = useTranslation()
   const location = useLocation()
@@ -204,7 +207,7 @@ const ProfilePage = () => {
             }
             const item = {
               type: 'local',
-              name: file.split(/\/|\\/).pop() ?? 'New Profile',
+              name: file.split(PATH_SEP_RE).pop() ?? 'New Profile',
               desc: '',
               url: '',
               option: {
@@ -212,6 +215,7 @@ const ProfilePage = () => {
                 self_proxy: false,
               },
             } as IProfileItem
+            // biome-ignore lint/performance/noAwaitInLoops: sequential execution required
             const data = await readTextFile(file)
             await createProfile(item, data)
             await mutateProfiles()
@@ -286,7 +290,7 @@ const ProfilePage = () => {
   const onImport = async () => {
     if (!url) return
     // 校验url是否为http/https
-    if (!/^https?:\/\//i.test(url)) {
+    if (!HTTPS_URL_RE.test(url)) {
       showNotice.error('profiles.page.feedback.errors.invalidUrl')
       return
     }
@@ -339,7 +343,7 @@ const ProfilePage = () => {
       try {
         debugLog(`[导入刷新] 第${retryCount + 1}次尝试刷新配置数据`)
 
-        // 强制刷新，绕过所有缓存
+        // biome-ignore lint/performance/noAwaitInLoops: sequential execution required
         await mutateProfiles()
 
         // 等待状态稳定
@@ -718,6 +722,7 @@ const ProfilePage = () => {
 
       // Delete all selected profiles
       for (const uid of selectedProfiles) {
+        // biome-ignore lint/performance/noAwaitInLoops: sequential execution required
         await deleteProfile(uid)
       }
 

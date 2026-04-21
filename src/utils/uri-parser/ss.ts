@@ -11,6 +11,8 @@ import {
   stripUriScheme,
 } from './helpers'
 
+const SS_USER_INFO_RE = /(^.*?):(.*$)/
+
 export function URI_SS(line: string): IProxyShadowsocksConfig {
   const afterScheme = stripUriScheme(line, 'ss', 'Invalid ss uri')
   if (!afterScheme) {
@@ -41,7 +43,7 @@ export function URI_SS(line: string): IProxyShadowsocksConfig {
   const portRaw = serverAndPort.slice(portIdx + 1)
   const port = parseRequiredPort(portRaw, 'Invalid ss uri: invalid port')
 
-  const userInfo = userInfoStr.match(/(^.*?):(.*$)/)
+  const userInfo = userInfoStr.match(SS_USER_INFO_RE)
 
   const proxy: IProxyShadowsocksConfig = {
     name: nameFromHash ?? `SS ${server}:${port}`,

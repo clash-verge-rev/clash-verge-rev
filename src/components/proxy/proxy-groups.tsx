@@ -333,7 +333,9 @@ export const ProxyGroups = (props: Props) => {
 
       debugLog(`[ProxyGroups] 找到代理数量: ${proxies.length}`)
 
-      const providers = new Set(proxies.map((p) => p?.provider).filter(Boolean))
+      const providers = new Set(
+        proxies.map((p) => p?.provider).filter((p): p is string => Boolean(p)),
+      )
 
       if (providers.size) {
         debugLog(`[ProxyGroups] 发现提供者，数量: ${providers.size}`)
@@ -345,7 +347,10 @@ export const ProxyGroups = (props: Props) => {
         })
       }
 
-      const names = proxies.filter((p) => !p?.provider).map((p) => p?.name)
+      const names = proxies
+        .filter((p) => !p?.provider)
+        .map((p) => p?.name)
+        .filter((n): n is string => n !== undefined)
       debugLog(`[ProxyGroups] 过滤后需要测试的代理数量: ${names.length}`)
 
       const url = delayManager.getUrl(groupName)

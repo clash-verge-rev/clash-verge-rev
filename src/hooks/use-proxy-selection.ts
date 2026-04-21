@@ -140,6 +140,7 @@ export const useProxySelection = (options: ProxySelectionOptions = {}) => {
       while (pendingRequestRef.current) {
         const request = pendingRequestRef.current
         pendingRequestRef.current = null
+        // biome-ignore lint/performance/noAwaitInLoops: sequential execution required
         await executeChange(request)
       }
     } finally {

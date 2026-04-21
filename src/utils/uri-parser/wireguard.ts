@@ -11,6 +11,10 @@ import {
   stripUriScheme,
 } from './helpers'
 
+const WG_CIDR_SUFFIX_RE = /\/\d+$/
+const WG_BRACKET_OPEN_RE = /^\[/
+const WG_BRACKET_CLOSE_RE = /\]$/
+
 export function URI_Wireguard(line: string): IProxyWireguardConfig {
   const afterScheme = stripUriScheme(
     line,
@@ -50,9 +54,9 @@ export function URI_Wireguard(line: string): IProxyWireguardConfig {
         value.split(',').forEach((i) => {
           const ip = i
             .trim()
-            .replace(/\/\d+$/, '')
-            .replace(/^\[/, '')
-            .replace(/\]$/, '')
+            .replace(WG_CIDR_SUFFIX_RE, '')
+            .replace(WG_BRACKET_OPEN_RE, '')
+            .replace(WG_BRACKET_CLOSE_RE, '')
           if (isIPv4(ip)) {
             proxy.ip = ip
           } else if (isIPv6(ip)) {

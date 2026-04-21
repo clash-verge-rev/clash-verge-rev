@@ -18,7 +18,8 @@ interface ItemProps {
   extra?: ReactNode
   children?: ReactNode
   secondary?: ReactNode
-  onClick?: () => undefined | Promise<any>
+  // biome-ignore lint/suspicious/noConfusingVoidType: component calls onClick()?.finally() — void (sync) and Promise (async) are both valid returns
+  onClick?: () => void | Promise<any>
 }
 
 export const SettingItem: React.FC<ItemProps> = ({

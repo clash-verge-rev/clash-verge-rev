@@ -29,9 +29,11 @@ import { StackModeSwitch } from './stack-mode-switch'
 
 const OS = getSystem()
 
+const ROUTE_SPLIT_RE = /[,\n;\r]+/
+
 const splitRouteExcludeAddress = (value: string) =>
   value
-    .split(/[,\n;\r]+/)
+    .split(ROUTE_SPLIT_RE)
     .map((item) => item.trim())
     .filter(Boolean)
 

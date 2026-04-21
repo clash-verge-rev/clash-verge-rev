@@ -21,6 +21,8 @@ import getSystem from '@/utils/get-system'
 
 const OS = getSystem()
 
+const NON_DIGIT_RE = /\D+/
+
 interface ClashPortViewerRef {
   open: () => void
   close: () => void
@@ -151,6 +153,7 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
 
     for (const port of changedPorts) {
       try {
+        // biome-ignore lint/performance/noAwaitInLoops: sequential execution required
         const inUse = await isPortInUse(port)
         if (inUse) {
           showNotice.error('settings.modals.clashPort.messages.portInUse', {
@@ -246,7 +249,9 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
               sx={{ width: 80, mr: 0.5, fontSize: 12 }}
               value={mixedPort}
               onChange={(e) =>
-                setMixedPort(+e.target.value?.replace(/\D+/, '').slice(0, 5))
+                setMixedPort(
+                  +e.target.value?.replace(NON_DIGIT_RE, '').slice(0, 5),
+                )
               }
               slotProps={{ htmlInput: { style: { fontSize: 12 } } }}
             />
@@ -278,7 +283,9 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
               sx={{ width: 80, mr: 0.5, fontSize: 12 }}
               value={socksPort}
               onChange={(e) =>
-                setSocksPort(+e.target.value?.replace(/\D+/, '').slice(0, 5))
+                setSocksPort(
+                  +e.target.value?.replace(NON_DIGIT_RE, '').slice(0, 5),
+                )
               }
               disabled={!socksEnabled}
               slotProps={{ htmlInput: { style: { fontSize: 12 } } }}
@@ -312,7 +319,9 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
               sx={{ width: 80, mr: 0.5, fontSize: 12 }}
               value={httpPort}
               onChange={(e) =>
-                setHttpPort(+e.target.value?.replace(/\D+/, '').slice(0, 5))
+                setHttpPort(
+                  +e.target.value?.replace(NON_DIGIT_RE, '').slice(0, 5),
+                )
               }
               disabled={!httpEnabled}
               slotProps={{ htmlInput: { style: { fontSize: 12 } } }}
@@ -347,7 +356,9 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
                 sx={{ width: 80, mr: 0.5, fontSize: 12 }}
                 value={redirPort}
                 onChange={(e) =>
-                  setRedirPort(+e.target.value?.replace(/\D+/, '').slice(0, 5))
+                  setRedirPort(
+                    +e.target.value?.replace(NON_DIGIT_RE, '').slice(0, 5),
+                  )
                 }
                 disabled={!redirEnabled}
                 slotProps={{ htmlInput: { style: { fontSize: 12 } } }}
@@ -383,7 +394,9 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
                 sx={{ width: 80, mr: 0.5, fontSize: 12 }}
                 value={tproxyPort}
                 onChange={(e) =>
-                  setTproxyPort(+e.target.value?.replace(/\D+/, '').slice(0, 5))
+                  setTproxyPort(
+                    +e.target.value?.replace(NON_DIGIT_RE, '').slice(0, 5),
+                  )
                 }
                 disabled={!tproxyEnabled}
                 slotProps={{ htmlInput: { style: { fontSize: 12 } } }}

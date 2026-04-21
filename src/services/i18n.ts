@@ -1,6 +1,8 @@
 import i18n from 'i18next'
 import { initReactI18next } from 'react-i18next'
 
+const LOCALE_PATH_RE = /[/\\]locales[/\\]([^/\\]+)[/\\]index\.ts$/
+
 export const supportedLanguages = [
   'en',
   'ru',
@@ -86,7 +88,7 @@ const localeModules = import.meta.glob<LocaleModule>('@/locales/*/index.ts')
 const localeLoaders = Object.entries(localeModules).reduce<
   Record<string, () => Promise<LocaleModule>>
 >((acc, [path, loader]) => {
-  const match = path.match(/[/\\]locales[/\\]([^/\\]+)[/\\]index\.ts$/)
+  const match = path.match(LOCALE_PATH_RE)
   if (match) {
     acc[match[1]] = loader
   }

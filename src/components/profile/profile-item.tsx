@@ -43,6 +43,9 @@ import parseTraffic from '@/utils/parse-traffic'
 import { ProfileBox } from './profile-box'
 import { ProxiesEditorViewer } from './proxies-editor-viewer'
 import { QrViewer } from './qr-viewer'
+
+const URL_HOST_RE = /https?:\/\/(.+?)\//
+
 const round = keyframes`
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
@@ -999,8 +1002,7 @@ export const ProfileItem = (props: Props) => {
 
 function parseUrl(url?: string) {
   if (!url) return ''
-  const regex = /https?:\/\/(.+?)\//
-  const result = url.match(regex)
+  const result = url.match(URL_HOST_RE)
   return result ? result[1] : 'local file'
 }
 

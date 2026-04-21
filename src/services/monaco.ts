@@ -1,5 +1,6 @@
 import { loader } from '@monaco-editor/react'
 import metaSchema from 'meta-json-schema/schemas/meta-json-schema.json'
+// biome-ignore lint/performance/noNamespaceImport: monaco-editor requires namespace import
 import * as monaco from 'monaco-editor'
 import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker'
 import cssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker'

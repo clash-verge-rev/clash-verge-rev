@@ -58,6 +58,7 @@ export const useSystemProxyState = () => {
         const target = pendingRef.current
         pendingRef.current = null
         if (!target && verge?.auto_close_connection) {
+          // biome-ignore lint/performance/noAwaitInLoops: sequential execution required
           await closeAllConnections().catch(() => {})
         }
         await patchVerge({ enable_system_proxy: target })

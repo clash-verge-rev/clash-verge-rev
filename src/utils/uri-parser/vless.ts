@@ -13,6 +13,8 @@ import {
   trimStr,
 } from './helpers'
 
+const VLESS_SHADOWROCKET_RE = /^(.*?)(\?.*?$)/
+
 /**
  * VLess URL Decode.
  */
@@ -58,7 +60,7 @@ export function URI_VLESS(line: string): IProxyVlessConfig {
   try {
     parsed = parseVlessRest(rest)
   } catch {
-    const shadowMatch = /^(.*?)(\?.*?$)/.exec(rest)
+    const shadowMatch = VLESS_SHADOWROCKET_RE.exec(rest)
     if (!shadowMatch) {
       throw new Error('Invalid vless uri')
     }

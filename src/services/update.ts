@@ -15,6 +15,7 @@ const SEMVER_FULL_REGEX =
   /^\d+(?:\.\d+){1,2}(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?$/
 const SEMVER_SEARCH_REGEX =
   /v?\d+(?:\.\d+){1,2}(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?/i
+const VERSION_V_PREFIX_RE = /^v/i
 
 export const normalizeVersion = (
   input: string | null | undefined,
@@ -22,7 +23,7 @@ export const normalizeVersion = (
   if (typeof input !== 'string') return null
   const trimmed = input.trim()
   if (!trimmed) return null
-  return trimmed.replace(/^v/i, '')
+  return trimmed.replace(VERSION_V_PREFIX_RE, '')
 }
 
 export const ensureSemver = (

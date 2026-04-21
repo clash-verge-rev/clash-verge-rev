@@ -13,8 +13,14 @@ import {
   trimStr,
 } from './helpers'
 
+const VMESS_SR_PARAMS_RE = /(^[^?]+?)\/?\?(.*)$/
+const VMESS_SR_CONTENT_RE = /(^[^:]+?):([^:]+?)@(.*):(\d+)$/
+const VMESS_QX_HOST_OBFS_RE = /Host:\s*([a-zA-Z0-9-.]*)/
+const VMESS_QUANTUMULT_RE = /=\s*vmess/
+const VMESS_QX_PATH_UNQUOTE_RE = /^"(.*)"$/
+
 function parseVmessShadowrocketParams(raw: string): Record<string, any> {
-  const match = /(^[^?]+?)\/?\?(.*)$/.exec(raw)
+  const match = VMESS_SR_PARAMS_RE.exec(raw)
   if (!match) return {}
 
   const [, base64Line, qs] = match
@@ -34,7 +40,7 @@ function parseVmessShadowrocketParams(raw: string): Record<string, any> {
     params[key] = value.includes(',') ? value.split(',') : value
   }
 
-  const contentMatch = /(^[^:]+?):([^:]+?)@(.*):(\d+)$/.exec(content)
+  const contentMatch = VMESS_SR_CONTENT_RE.exec(content)
   if (!contentMatch) return params
 
   const [, cipher, uuid, server, port] = contentMatch
@@ -75,7 +81,7 @@ function parseVmessQuantumult(content: string): IProxyVmessConfig {
     server: partitions[1],
     port: parseRequiredPort(partitions[2], 'Invalid vmess uri: invalid port'),
     cipher: getCipher(getIfNotBlank(partitions[3], 'auto')),
-    uuid: partitions[4].match(/^"(.*)"$/)?.[1] || '',
+    uuid: partitions[4].match(VMESS_QX_PATH_UNQUOTE_RE)?.[1] || '',
     tls: params.obfs === 'wss',
     udp: parseBool(params['udp-relay']),
     tfo: parseBool(params['fast-open']),
@@ -91,11 +97,10 @@ function parseVmessQuantumult(content: string): IProxyVmessConfig {
       proxy['ws-opts'] = {
         path:
           (getIfNotBlank(params['obfs-path']) || '"/"').match(
-            /^"(.*)"$/,
+            VMESS_QX_PATH_UNQUOTE_RE,
           )?.[1] || '/',
         headers: {
-          Host:
-            params['obfs-header']?.match(/Host:\s*([a-zA-Z0-9-.]*)/)?.[1] || '',
+          Host: params['obfs-header']?.match(VMESS_QX_HOST_OBFS_RE)?.[1] || '',
         },
       }
     } else {
@@ -113,7 +118,7 @@ export function URI_VMESS(line: string): IProxyVmessConfig {
   }
   const raw = afterScheme
   const content = decodeBase64OrOriginal(raw)
-  if (/=\s*vmess/.test(content)) {
+  if (VMESS_QUANTUMULT_RE.test(content)) {
     return parseVmessQuantumult(content)
   }
 
@@ -188,7 +193,7 @@ export function URI_VMESS(line: string): IProxyVmessConfig {
     switch (proxy.network) {
       case 'grpc': {
         if (!hostFirst && !pathFirst) {
-          delete proxy.network
+          proxy.network = undefined
           break
         }
         const serviceName = getIfNotBlank(pathFirst)
@@ -199,7 +204,7 @@ export function URI_VMESS(line: string): IProxyVmessConfig {
       }
       case 'h2': {
         if (!hostFirst && !pathFirst) {
-          delete proxy.network
+          proxy.network = undefined
           break
         }
         const h2Opts: H2Options = {}
@@ -238,7 +243,7 @@ export function URI_VMESS(line: string): IProxyVmessConfig {
       }
       case 'ws': {
         if (!hostFirst && !pathFirst && !httpupgrade) {
-          delete proxy.network
+          proxy.network = undefined
           break
         }
         const wsOpts: WsOptions = {

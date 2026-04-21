@@ -1,4 +1,11 @@
 const URI_SCHEME_RE = /^([a-zA-Z][a-zA-Z0-9+.-]*):\/\//
+const BOOL_TRUE_RE = /^(?:true|1)$/i
+const VLESS_FLOW_NONE_RE = /^none$/i
+const VLESS_FLOW_VALID_RE = /^[a-zA-Z0-9][a-zA-Z0-9-]*$/
+const DIGITS_ONLY_RE = /^\d+$/
+const IPV4_ADDR_RE = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/
+const IPV6_ADDR_RE =
+  /^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$|^::$|^::1$|^([0-9a-fA-F]{1,4}:)*::([0-9a-fA-F]{1,4}:)*[0-9a-fA-F]{1,4}$/
 
 export function normalizeUriAndGetScheme(input: string): {
   uri: string
@@ -114,21 +121,21 @@ export function parseQueryStringNormalized(
 
 export function parseBool(value: string | undefined): boolean | undefined {
   if (value === undefined) return undefined
-  return /^(?:true|1)$/i.test(value)
+  return BOOL_TRUE_RE.test(value)
 }
 
 export function parseBoolOrPresence(value: string | undefined): boolean {
   if (value === undefined) return true
   const trimmed = value.trim()
   if (trimmed === '') return true
-  return /^(?:true|1)$/i.test(trimmed)
+  return BOOL_TRUE_RE.test(trimmed)
 }
 
 export function parseVlessFlow(value: string | undefined): string | undefined {
   const flow = getIfNotBlank(value)
   if (!flow) return undefined
-  if (/^none$/i.test(flow)) return undefined
-  if (!/^[a-zA-Z0-9][a-zA-Z0-9-]*$/.test(flow)) return undefined
+  if (VLESS_FLOW_NONE_RE.test(flow)) return undefined
+  if (!VLESS_FLOW_VALID_RE.test(flow)) return undefined
   return flow
 }
 
@@ -143,7 +150,7 @@ function parsePortStrict(
 ): number | undefined {
   if (value === null || value === undefined) return undefined
   const raw = String(value).trim()
-  if (!/^\d+$/.test(raw)) return undefined
+  if (!DIGITS_ONLY_RE.test(raw)) return undefined
   const parsed = Number.parseInt(raw, 10)
   if (!Number.isSafeInteger(parsed) || parsed < 1 || parsed > 65535) {
     return undefined
@@ -238,16 +245,11 @@ export function parseUrlLike(
 }
 
 export function isIPv4(address: string): boolean {
-  // Check if the address is IPv4
-  const ipv4Regex = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/
-  return ipv4Regex.test(address)
+  return IPV4_ADDR_RE.test(address)
 }
 
 export function isIPv6(address: string): boolean {
-  // Check if the address is IPv6 - simplified regex to avoid backreference issues
-  const ipv6Regex =
-    /^([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}$|^::$|^::1$|^([0-9a-fA-F]{1,4}:)*::([0-9a-fA-F]{1,4}:)*[0-9a-fA-F]{1,4}$/
-  return ipv6Regex.test(address)
+  return IPV6_ADDR_RE.test(address)
 }
 
 export function decodeBase64OrOriginal(str: string): string {
