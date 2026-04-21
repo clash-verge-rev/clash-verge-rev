@@ -13,6 +13,7 @@
       "recommended": true,
       "complexity": "off",
       "suspicious": {
+        "noExplicitAny": "off",
         "noNonNullAssertedOptionalChain": "off"
       },
       "correctness": {
@@ -41,6 +42,7 @@
     "ignoreUnknown": false,
     "includes": [
       "**",
+      "!src/polyfills/**",
       "!dist",
       "!node_modules",
       "!src-tauri/target",
