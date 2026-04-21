@@ -13,6 +13,7 @@ import { useVerge } from '@/hooks/use-verge'
 import { invoke_uwp_tool } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
 import getSystem from '@/utils/get-system'
+import { DEFAULT_PORTS } from '@/utils/ports'
 
 import { ClashCoreViewer } from './mods/clash-core-viewer'
 import { ClashPortViewer } from './mods/clash-port-viewer'
@@ -220,7 +221,7 @@ const SettingClash = ({ onError }: Props) => {
           autoComplete="new-password"
           disabled={false}
           size="small"
-          value={verge_mixed_port ?? 7897}
+          value={verge_mixed_port ?? DEFAULT_PORTS.MIXED}
           sx={{ width: 100, input: { py: '7.5px', cursor: 'pointer' } }}
           onClick={(e) => {
             portRef.current?.open()

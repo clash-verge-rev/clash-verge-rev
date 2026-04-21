@@ -204,6 +204,7 @@ async fn process_terminated_flags(update_flags: UpdateFlags, patch: &IVerge) -> 
     if update_flags.contains(UpdateFlags::RESTART_CORE) {
         Config::generate().await?;
         CoreManager::global().restart_core().await?;
+        handle::Handle::refresh_verge();
     }
     if update_flags.contains(UpdateFlags::CLASH_CONFIG) {
         CoreManager::global().update_config().await?;
