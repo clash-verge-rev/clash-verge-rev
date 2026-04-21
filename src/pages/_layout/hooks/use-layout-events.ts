@@ -20,7 +20,7 @@ export const useLayoutEvents = (
     }
 
     const register = (
-      maybeUnlisten: void | (() => void) | Promise<void | (() => void)>,
+      maybeUnlisten: void | (() => void) | Promise<undefined | (() => void)>,
     ) => {
       if (!maybeUnlisten) return
 

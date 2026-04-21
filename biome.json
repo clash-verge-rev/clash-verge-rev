@@ -12,6 +12,12 @@
     "rules": {
       "recommended": true,
       "complexity": "off",
+      "suspicious": {
+        "noNonNullAssertedOptionalChain": "off"
+      },
+      "correctness": {
+        "noUnusedVariables": "off"
+      },
       "style": {
         "useNodejsImportProtocol": "off",
         "useImportType": "error"

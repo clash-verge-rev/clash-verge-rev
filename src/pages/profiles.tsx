@@ -228,7 +228,7 @@ const ProfilePage = () => {
     return () => {
       unsubscribe.then((cleanup) => cleanup())
     }
-  }, [addListener, mutateProfiles, t])
+  }, [addListener, mutateProfiles])
 
   // 添加紧急恢复功能
   const onEmergencyRefresh = useLockFn(async () => {

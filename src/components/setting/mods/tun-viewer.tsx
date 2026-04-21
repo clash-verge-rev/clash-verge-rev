@@ -319,7 +319,7 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
             onChange={(e) =>
               setValues((v) => ({
                 ...v,
-                mtu: parseInt(e.target.value),
+                mtu: parseInt(e.target.value, 10),
               }))
             }
           />

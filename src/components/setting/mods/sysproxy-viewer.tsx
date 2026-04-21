@@ -94,7 +94,7 @@ const splitBypass = (value?: string) =>
     .map((item) => item.trim())
     .filter(Boolean)
 
-export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
+export const SysproxyViewer = forwardRef<DialogRef>((_props, ref) => {
   const { t } = useTranslation()
   const systemName = getSystem()
   const isWindows = systemName === 'windows'
@@ -284,7 +284,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
       if (hostname) {
         // 如果主机名不是localhost或127.0.0.1，则添加它
         if (hostname !== 'localhost' && hostname !== '127.0.0.1') {
-          hostname = hostname + '.local'
+          hostname = `${hostname}.local`
           options.push(hostname)
           debugLog('主机名已添加到选项中:', hostname)
         } else {

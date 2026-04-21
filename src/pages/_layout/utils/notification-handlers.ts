@@ -6,7 +6,7 @@ type TranslateFunction = (key: string) => string
 export const handleNoticeMessage = (
   status: string,
   msg: string,
-  t: TranslateFunction,
+  _t: TranslateFunction,
   navigate: NavigateFunction,
 ) => {
   const handlers: Record<string, () => void> = {

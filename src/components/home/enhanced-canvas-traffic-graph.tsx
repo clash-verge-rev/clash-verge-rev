@@ -313,7 +313,7 @@ export const EnhancedCanvasTrafficGraph = memo(
           if (up < minValue) minValue = up
           if (down < minValue) minValue = down
         }
-        if (!isFinite(minValue)) minValue = 0
+        if (!Number.isFinite(minValue)) minValue = 0
 
         if (maxValue === 0) return { topValue: 1024, bottomValue: 0 }
 
@@ -977,7 +977,7 @@ export const EnhancedCanvasTrafficGraph = memo(
           setCurrentFPS(nextTarget)
         }
       },
-      [setCurrentFPS],
+      [],
     )
 
     // 受控的动画循环

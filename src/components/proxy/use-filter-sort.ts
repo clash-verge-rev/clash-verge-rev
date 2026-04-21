@@ -142,7 +142,7 @@ function filterProxies(
       if (symbol === '=' && symbol2 === 'error') return delay >= 1e5
       if (symbol === '=' && symbol2 === 'timeout')
         return delay < 1e5 && delay >= 3000
-      if (symbol === '=') return delay == value
+      if (symbol === '=') return delay === value
       if (symbol === '<') return delay <= value
       if (symbol === '>') return delay >= value
       return false

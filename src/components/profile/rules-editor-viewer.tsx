@@ -558,7 +558,7 @@ export const RulesEditorViewer = (props: Props) => {
     }
 
     const condition = (ruleType.required ?? true) ? ruleContent : ''
-    return `${ruleType.name}${condition ? ',' + condition : ''},${proxyPolicy}${
+    return `${ruleType.name}${condition ? `,${condition}` : ''},${proxyPolicy}${
       ruleType.noResolve && noResolve ? ',no-resolve' : ''
     }`
   }

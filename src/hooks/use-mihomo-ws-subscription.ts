@@ -240,7 +240,14 @@ export const useMihomoWsSubscription = <T>(
     }
     // eslint-disable-next-line react-compiler/react-compiler
     // eslint-disable-next-line react-hooks/exhaustive-deps, @eslint-react/exhaustive-deps
-  }, [subscriptionCacheKey])
+  }, [
+    subscriptionCacheKey,
+    queryClient.setQueryData,
+    throttleMs,
+    setupHandlers,
+    resolveNextData,
+    connect,
+  ])
 
   const refresh = useCallback(() => {
     if (subscriptionCacheKey) {

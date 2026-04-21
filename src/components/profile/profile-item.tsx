@@ -192,12 +192,7 @@ export const ProfileItem = (props: Props) => {
     if (showNextUpdate) {
       fetchNextUpdateTime()
     }
-  }, [
-    fetchNextUpdateTime,
-    showNextUpdate,
-    itemData.option?.update_interval,
-    updated,
-  ])
+  }, [fetchNextUpdateTime, showNextUpdate])
 
   // 订阅定时器更新事件
   useEffect(() => {
@@ -277,7 +272,7 @@ export const ProfileItem = (props: Props) => {
         timer = undefined
       }
     }
-  }, [forceRefresh, hasUrl, updated])
+  }, [hasUrl, updated])
 
   const [fileOpen, setFileOpen] = useState(false)
   const [rulesOpen, setRulesOpen] = useState(false)

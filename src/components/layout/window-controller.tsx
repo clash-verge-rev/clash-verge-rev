@@ -5,7 +5,7 @@ import { forwardRef, useImperativeHandle } from 'react'
 import { useWindowControls } from '@/hooks/use-window'
 import getSystem from '@/utils/get-system'
 
-export const WindowControls = forwardRef(function WindowControls(props, ref) {
+export const WindowControls = forwardRef(function WindowControls(_props, ref) {
   const OS = getSystem()
   const {
     currentWindow,

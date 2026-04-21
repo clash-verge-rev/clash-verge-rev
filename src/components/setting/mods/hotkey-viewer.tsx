@@ -40,7 +40,7 @@ const HOTKEY_FUNC_LABELS: Record<(typeof HOTKEY_FUNC)[number], string> = {
   reactivate_profiles: 'settings.modals.hotkey.functions.reactivateProfiles',
 }
 
-export const HotkeyViewer = forwardRef<DialogRef>((props, ref) => {
+export const HotkeyViewer = forwardRef<DialogRef>((_props, ref) => {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
 

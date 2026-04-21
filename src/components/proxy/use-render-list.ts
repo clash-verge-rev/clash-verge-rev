@@ -217,7 +217,7 @@ export const useRenderList = (
           } else {
             return proxies.map((proxy) => ({
               type: 2,
-              key: `chain-${selectedGroup}-${proxy!.name}`,
+              key: `chain-${selectedGroup}-${proxy?.name}`,
               group: targetGroup,
               proxy,
               headState: DEFAULT_STATE,
@@ -252,7 +252,7 @@ export const useRenderList = (
         } else {
           return proxies.map((proxy) => ({
             type: 2,
-            key: `chain-first-${proxy!.name}`,
+            key: `chain-first-${proxy?.name}`,
             group: firstGroup,
             proxy,
             headState: DEFAULT_STATE,
@@ -457,7 +457,7 @@ export const useRenderList = (
           ret.push(
             ...proxies.map((proxy) => ({
               type: 2 as const,
-              key: `${group.name}-${proxy!.name}`,
+              key: `${group.name}-${proxy?.name}`,
               group,
               proxy,
               headState,

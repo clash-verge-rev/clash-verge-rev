@@ -132,7 +132,7 @@ export async function calcuProxies(): Promise<{
   // provider name map
   const providerMap = Object.fromEntries(
     Object.entries(providerRecord).flatMap(([provider, item]) =>
-      item!.proxies.map((p) => [p.name, { ...p, provider }]),
+      item?.proxies.map((p) => [p.name, { ...p, provider }]),
     ),
   )
 
@@ -160,7 +160,7 @@ export async function calcuProxies(): Promise<{
     if (each?.name !== 'GLOBAL' && each?.all) {
       acc.push({
         ...each,
-        all: each.all!.map((item) => generateItem(item)),
+        all: each.all?.map((item) => generateItem(item)),
       })
     }
 
@@ -174,7 +174,7 @@ export async function calcuProxies(): Promise<{
       if (proxyRecord[name]?.all) {
         acc.push({
           ...proxyRecord[name],
-          all: proxyRecord[name].all!.map((item) => generateItem(item)),
+          all: proxyRecord[name].all?.map((item) => generateItem(item)),
         })
       }
       return acc

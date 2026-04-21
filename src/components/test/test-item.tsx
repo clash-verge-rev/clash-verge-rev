@@ -96,7 +96,7 @@ export const TestItem = ({
         unlistenFn()
       }
     }
-  }, [url, addListener, onDelay, id])
+  }, [addListener, onDelay, id])
 
   return (
     <Box

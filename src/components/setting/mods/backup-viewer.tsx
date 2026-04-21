@@ -101,12 +101,9 @@ export function BackupViewer({ ref }: { ref?: Ref<DialogRef> }) {
     }
   })
 
-  const setWebdavBusy = useCallback(
-    (loading: boolean) => {
-      setBusyAction(loading ? 'webdav' : null)
-    },
-    [setBusyAction],
-  )
+  const setWebdavBusy = useCallback((loading: boolean) => {
+    setBusyAction(loading ? 'webdav' : null)
+  }, [])
 
   const isLocalBusy = busyAction === 'local' || localImporting
 

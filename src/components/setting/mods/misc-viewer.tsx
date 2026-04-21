@@ -20,7 +20,7 @@ import {
 import { useVerge } from '@/hooks/use-verge'
 import { showNotice } from '@/services/notice-service'
 
-export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
+export const MiscViewer = forwardRef<DialogRef>((_props, ref) => {
   const { t } = useTranslation()
   const { verge, patchVerge } = useVerge()
 
@@ -137,7 +137,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
             onChange={(e) =>
               setValues((v) => ({
                 ...v,
-                appLogMaxSize: Math.max(1, parseInt(e.target.value) || 128),
+                appLogMaxSize: Math.max(1, parseInt(e.target.value, 10) || 128),
               }))
             }
             slotProps={{
@@ -169,7 +169,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
             onChange={(e) =>
               setValues((v) => ({
                 ...v,
-                appLogMaxCount: Math.max(1, parseInt(e.target.value) || 1),
+                appLogMaxCount: Math.max(1, parseInt(e.target.value, 10) || 1),
               }))
             }
             slotProps={{
@@ -412,7 +412,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
             onChange={(e) =>
               setValues((v) => ({
                 ...v,
-                defaultLatencyTimeout: parseInt(e.target.value),
+                defaultLatencyTimeout: parseInt(e.target.value, 10),
               }))
             }
             slotProps={{

@@ -1,5 +1,5 @@
 import { Box, Typography, alpha, useTheme } from '@mui/material'
-import React, { forwardRef, type ReactNode } from 'react'
+import { forwardRef, type ReactNode } from 'react'
 
 // 自定义卡片组件接口
 interface EnhancedCardProps {

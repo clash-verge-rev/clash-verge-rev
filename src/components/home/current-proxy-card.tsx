@@ -442,7 +442,7 @@ export const CurrentProxyCard = () => {
         setState(updateFn)
       }, 300)
     },
-    [setState],
+    [],
   )
 
   useEffect(() => {
@@ -591,7 +591,6 @@ export const CurrentProxyCard = () => {
     state.selection.group,
     state.selection.proxy,
     sortType,
-    setDelaySortRefresh,
   ])
 
   useEffect(() => {

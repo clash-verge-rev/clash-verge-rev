@@ -90,7 +90,7 @@ export function TrafficGraph({ ref }: { ref?: Ref<TrafficRef> }) {
     const countY = (v: number) => {
       const h = height
 
-      if (v == 0) return h - 1
+      if (v === 0) return h - 1
       if (v <= 10) return h - (v / 10) * dy
       if (v <= 100) return h - (v / 100 + 1) * dy
       if (v <= 1024) return h - (v / 1024 + 2) * dy

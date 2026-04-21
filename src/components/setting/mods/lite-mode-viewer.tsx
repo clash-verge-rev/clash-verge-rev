@@ -120,7 +120,7 @@ export function LiteModeViewer({ ref }: { ref?: Ref<DialogRef> }) {
                 onChange={(e) =>
                   setValues((v) => ({
                     ...v,
-                    autoEnterLiteModeDelay: parseInt(e.target.value) || 1,
+                    autoEnterLiteModeDelay: parseInt(e.target.value, 10) || 1,
                   }))
                 }
                 slotProps={{

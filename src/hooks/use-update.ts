@@ -19,7 +19,7 @@ export const readLastCheckTime = (): number | null => {
   const stored = localStorage.getItem(LAST_CHECK_KEY)
   if (!stored) return null
   const ts = parseInt(stored, 10)
-  return isNaN(ts) ? null : ts
+  return Number.isNaN(ts) ? null : ts
 }
 
 export const updateLastCheckTime = (timestamp?: number): number => {

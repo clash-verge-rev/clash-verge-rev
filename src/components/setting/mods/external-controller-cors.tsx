@@ -73,7 +73,7 @@ interface ClashHeaderConfigingRef {
 }
 
 export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
-  (props, ref) => {
+  (_props, ref) => {
     const { t } = useTranslation()
     const { clash, mutateClash, patchClash } = useClash()
     const [open, setOpen] = useState(false)

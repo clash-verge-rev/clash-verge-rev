@@ -231,7 +231,7 @@ const SortableItem = ({
         sx={{
           color: theme.palette.error.main,
           '&:hover': {
-            backgroundColor: theme.palette.error.light + '20',
+            backgroundColor: `${theme.palette.error.light}20`,
           },
         }}
       >
@@ -513,7 +513,7 @@ export const ProxyChain = ({
               sx={{
                 color: theme.palette.error.main,
                 '&:hover': {
-                  backgroundColor: theme.palette.error.light + '20',
+                  backgroundColor: `${theme.palette.error.light}20`,
                 },
               }}
               title={

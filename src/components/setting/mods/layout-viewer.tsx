@@ -14,7 +14,13 @@ import { convertFileSrc } from '@tauri-apps/api/core'
 import { join } from '@tauri-apps/api/path'
 import { open as openDialog } from '@tauri-apps/plugin-dialog'
 import { exists } from '@tauri-apps/plugin-fs'
-import { forwardRef, useEffect, useImperativeHandle, useState } from 'react'
+import {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useImperativeHandle,
+  useState,
+} from 'react'
 import { useTranslation } from 'react-i18next'
 
 import {
@@ -64,11 +70,7 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
 
   const { decorated, toggleDecorations } = useWindowDecorations()
 
-  useEffect(() => {
-    initIconPath()
-  }, [])
-
-  async function initIconPath() {
+  const initIconPath = useCallback(async () => {
     const appDir = await getAppDir()
 
     const icon_dir = await join(appDir, 'icons')
@@ -99,7 +101,11 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
     } else {
       setTunIcon(tun_icon_png)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    initIconPath()
+  }, [initIconPath])
 
   useImperativeHandle(ref, () => ({
     open: () => setOpen(true),

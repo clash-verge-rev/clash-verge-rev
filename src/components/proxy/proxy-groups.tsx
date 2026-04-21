@@ -328,14 +328,12 @@ export const ProxyGroups = (props: Props) => {
         .filter(
           (e) => e.group?.name === groupName && (e.type === 2 || e.type === 4),
         )
-        .flatMap((e) => e.proxyCol || e.proxy!)
+        .flatMap((e) => e.proxyCol || e?.proxy)
         .filter(Boolean)
 
       debugLog(`[ProxyGroups] 找到代理数量: ${proxies.length}`)
 
-      const providers = new Set(
-        proxies.map((p) => p!.provider!).filter(Boolean),
-      )
+      const providers = new Set(proxies.map((p) => p?.provider).filter(Boolean))
 
       if (providers.size) {
         debugLog(`[ProxyGroups] 发现提供者，数量: ${providers.size}`)
@@ -347,7 +345,7 @@ export const ProxyGroups = (props: Props) => {
         })
       }
 
-      const names = proxies.filter((p) => !p!.provider).map((p) => p!.name)
+      const names = proxies.filter((p) => !p?.provider).map((p) => p?.name)
       debugLog(`[ProxyGroups] 过滤后需要测试的代理数量: ${names.length}`)
 
       const url = delayManager.getUrl(groupName)
@@ -410,7 +408,7 @@ export const ProxyGroups = (props: Props) => {
   const proxyGroupNames = useMemo(() => {
     const names = renderList
       .filter((item) => item.type === 0 && item.group?.name)
-      .map((item) => item.group!.name)
+      .map((item) => item.group?.name)
     return Array.from(new Set(names))
   }, [renderList])
 

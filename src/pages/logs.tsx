@@ -50,7 +50,7 @@ const LogPage = () => {
       const matchesSearch = match(searchText)
 
       return (
-        (logState == 'all' ? true : data.type.includes(logState)) &&
+        (logState === 'all' ? true : data.type.includes(logState)) &&
         matchesSearch
       )
     })
@@ -82,7 +82,7 @@ const LogPage = () => {
   const handleToggleOrder = () => {
     setClashLog((pre) => ({
       ...pre!,
-      logOrder: pre!.logOrder === 'desc' ? 'asc' : 'desc',
+      logOrder: pre?.logOrder === 'desc' ? 'asc' : 'desc',
     }))
   }
 

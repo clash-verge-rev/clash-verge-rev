@@ -64,7 +64,7 @@ const IP_CHECK_SERVICES: ServiceConfig[] = [
       region: data.region || '',
       city: data.city || '',
       organization: data.org || '',
-      asn: data.asn ? parseInt(data.asn.replace('AS', '')) : 0,
+      asn: data.asn ? parseInt(data.asn.replace('AS', ''), 10) : 0,
       asn_organization: data.org || '',
       longitude: data.longitude || 0,
       latitude: data.latitude || 0,
