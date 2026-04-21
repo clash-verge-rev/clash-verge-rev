@@ -59,6 +59,7 @@ export function GuardState<T>(props: Props<T>) {
       lastRef.current = now
 
       if (waitTime <= 0) {
+        // biome-ignore lint/style/noNonNullAssertion: value is set before this callback fires
         await onGuard(newValue, value!)
         lockRef.current = false
       } else {
@@ -67,9 +68,11 @@ export function GuardState<T>(props: Props<T>) {
 
         timeRef.current = setTimeout(async () => {
           try {
+            // biome-ignore lint/style/noNonNullAssertion: saveRef is populated before debounce fires
             await onGuard(newValue, saveRef.current!)
           } catch (err: any) {
             // 状态回退
+            // biome-ignore lint/style/noNonNullAssertion: saveRef is populated before debounce fires
             onChange(saveRef.current!)
             onCatch(err)
           } finally {
@@ -79,6 +82,7 @@ export function GuardState<T>(props: Props<T>) {
       }
     } catch (err: any) {
       // 状态回退
+      // biome-ignore lint/style/noNonNullAssertion: saveRef is populated before error handler runs
       onChange(saveRef.current!)
       onCatch(err)
       lockRef.current = false

@@ -170,7 +170,8 @@ export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
     const originEntries = useMemo(() => {
       const counts: Record<string, number> = {}
       return corsConfig.allowOrigins.map((origin, index) => {
-        const occurrence = (counts[origin] = (counts[origin] ?? 0) + 1)
+        counts[origin] = (counts[origin] ?? 0) + 1
+        const occurrence = counts[origin]
         const keyBase = origin || 'origin'
         return {
           origin,

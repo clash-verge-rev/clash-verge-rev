@@ -71,8 +71,8 @@ export const TestViewer = forwardRef<TestViewerRef, Props>(
           if (!form.name) throw new Error('`Name` should not be null')
           if (!form.url) throw new Error('`Url` should not be null')
 
-          let newList
-          let uid
+          let newList: IVergeTestItem[] | undefined
+          let uid: string | undefined
 
           if (form.icon && form.icon.startsWith('<svg')) {
             // 移除 icon 中的注释

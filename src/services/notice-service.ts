@@ -51,7 +51,9 @@ let notices: NoticeItem[] = []
 const subscribers: Set<NoticeSubscriber> = new Set()
 
 function notifySubscribers() {
-  subscribers.forEach((subscriber) => subscriber())
+  subscribers.forEach((subscriber) => {
+    subscriber()
+  })
 }
 
 interface ParsedNoticeExtras {

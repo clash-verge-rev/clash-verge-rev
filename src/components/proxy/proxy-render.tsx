@@ -72,9 +72,11 @@ export const ProxyRender = (props: RenderProps) => {
       <ProxyItemMini
         key={`${item.key}-${proxyItem?.name ?? 'unknown'}`}
         group={group}
+        // biome-ignore lint/style/noNonNullAssertion: proxyCol items are defined at render time
         proxy={proxyItem!}
         selected={group.now === proxyItem?.name}
         showType={showType}
+        // biome-ignore lint/style/noNonNullAssertion: proxyCol items are defined at render time
         onClick={() => onChangeProxy(group, proxyItem!)}
       />
     ))
@@ -97,6 +99,7 @@ export const ProxyRender = (props: RenderProps) => {
           group.icon.trim().startsWith('http') && (
             <img
               src={iconCachePath === '' ? group.icon : iconCachePath}
+              alt=""
               width="32px"
               style={{ marginRight: '12px', borderRadius: '6px' }}
             />
@@ -106,6 +109,7 @@ export const ProxyRender = (props: RenderProps) => {
           group.icon.trim().startsWith('data') && (
             <img
               src={group.icon}
+              alt=""
               width="32px"
               style={{ marginRight: '12px', borderRadius: '6px' }}
             />
@@ -115,6 +119,7 @@ export const ProxyRender = (props: RenderProps) => {
           group.icon.trim().startsWith('<svg') && (
             <img
               src={`data:image/svg+xml;base64,${btoa(group.icon)}`}
+              alt=""
               width="32px"
             />
           )}
@@ -169,6 +174,7 @@ export const ProxyRender = (props: RenderProps) => {
         sx={{ pl: 2, pr: 3, mt: indent ? 1 : 0.5, mb: 1 }}
         url={group.testUrl}
         groupName={group.name}
+        // biome-ignore lint/style/noNonNullAssertion: headState is defined when type===1
         headState={headState!}
         onLocation={() => onLocation(group)}
         onCheckDelay={() => onCheckAll(group.name)}
@@ -181,10 +187,12 @@ export const ProxyRender = (props: RenderProps) => {
     return (
       <ProxyItem
         group={group}
+        // biome-ignore lint/style/noNonNullAssertion: proxy is defined when type===2
         proxy={proxy!}
         selected={group.now === proxy?.name}
         showType={headState?.showType}
         sx={{ py: 0, pl: 2 }}
+        // biome-ignore lint/style/noNonNullAssertion: proxy is defined when type===2
         onClick={() => onChangeProxy(group, proxy!)}
       />
     )
@@ -218,7 +226,7 @@ export const ProxyRender = (props: RenderProps) => {
           pl: 2,
           pr: 2,
           pb: 1,
-          gridTemplateColumns: `repeat(${item.col! || 2}, 1fr)`,
+          gridTemplateColumns: `repeat(${item.col ?? 2}, 1fr)`,
         }}
       >
         {proxyColItemsMemo}

@@ -82,12 +82,26 @@ export const LayoutTraffic = () => {
     <LightweightTrafficErrorBoundary>
       <Box sx={{ position: 'relative' }}>
         {trafficGraph && pageVisible && (
-          <div
-            style={{ width: '100%', height: 60, marginBottom: 6 }}
+          <button
+            type="button"
+            style={{
+              width: '100%',
+              height: 60,
+              marginBottom: 6,
+              background: 'none',
+              border: 'none',
+              padding: 0,
+              cursor: 'pointer',
+              display: 'block',
+            }}
             onClick={trafficRef.current?.toggleStyle}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ')
+                trafficRef.current?.toggleStyle?.()
+            }}
           >
             <TrafficGraph ref={trafficRef} />
-          </div>
+          </button>
         )}
 
         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 0.75 }}>

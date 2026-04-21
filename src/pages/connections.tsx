@@ -43,21 +43,21 @@ const ORDER_OPTIONS = [
     fn: (list: IConnectionsItem[]) =>
       list.sort(
         (a, b) =>
-          new Date(b.start || '0').getTime()! -
-          new Date(a.start || '0').getTime()!,
+          new Date(b.start || '0').getTime() -
+          new Date(a.start || '0').getTime(),
       ),
   },
   {
     id: 'uploadSpeed',
     labelKey: 'connections.components.order.uploadSpeed',
     fn: (list: IConnectionsItem[]) =>
-      list.sort((a, b) => b.curUpload! - a.curUpload!),
+      list.sort((a, b) => (b.curUpload ?? 0) - (a.curUpload ?? 0)),
   },
   {
     id: 'downloadSpeed',
     labelKey: 'connections.components.order.downloadSpeed',
     fn: (list: IConnectionsItem[]) =>
-      list.sort((a, b) => b.curDownload! - a.curDownload!),
+      list.sort((a, b) => (b.curDownload ?? 0) - (a.curDownload ?? 0)),
   },
 ] as const
 
@@ -112,6 +112,7 @@ const ConnectionsPage = () => {
 
   const onCloseAll = useLockFn(closeAllConnections)
 
+  // biome-ignore lint/style/noNonNullAssertion: ref is populated before any open() call
   const detailRef = useRef<ConnectionDetailRef>(null!)
 
   const handleSearch = useCallback((match: (content: string) => boolean) => {

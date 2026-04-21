@@ -7,19 +7,21 @@ export const TestBox = styled(Box)(({ theme, 'aria-selected': selected }) => {
   const backgroundColor =
     mode === 'light' ? alpha(primary.main, 0.05) : alpha(primary.main, 0.08)
 
-  const color = {
-    'light-true': text.secondary,
-    'light-false': text.secondary,
-    'dark-true': alpha(text.secondary, 0.65),
-    'dark-false': alpha(text.secondary, 0.65),
-  }[key]!
+  const color =
+    {
+      'light-true': text.secondary,
+      'light-false': text.secondary,
+      'dark-true': alpha(text.secondary, 0.65),
+      'dark-false': alpha(text.secondary, 0.65),
+    }[key] ?? text.secondary
 
-  const h2color = {
-    'light-true': primary.main,
-    'light-false': text.primary,
-    'dark-true': primary.main,
-    'dark-false': text.primary,
-  }[key]!
+  const h2color =
+    {
+      'light-true': primary.main,
+      'light-false': text.primary,
+      'dark-true': primary.main,
+      'dark-false': text.primary,
+    }[key] ?? text.primary
 
   return {
     position: 'relative',

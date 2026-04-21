@@ -253,7 +253,7 @@ export const useCustomTheme = () => {
     if (!styleElement) {
       styleElement = document.createElement('style')
       styleElement.id = 'verge-theme'
-      document.head.appendChild(styleElement!)
+      document.head.appendChild(styleElement)
     }
 
     if (styleElement) {

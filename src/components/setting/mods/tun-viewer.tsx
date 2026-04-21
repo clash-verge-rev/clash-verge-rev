@@ -122,6 +122,7 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
       await patchClash({ tun })
       await mutateClash(
         (old) => ({
+          // biome-ignore lint/style/noNonNullAssertion: old is defined; mutate is called after initial data load
           ...old!,
           tun,
         }),
@@ -176,6 +177,7 @@ export function TunViewer({ ref }: { ref?: Ref<DialogRef> }) {
               await patchClash({ tun })
               await mutateClash(
                 (old) => ({
+                  // biome-ignore lint/style/noNonNullAssertion: old is defined; mutate is called after initial data load
                   ...old!,
                   tun,
                 }),

@@ -73,12 +73,14 @@ const LogItem = ({ value, searchState }: Props) => {
       let lastIndex = 0
       let match: RegExpExecArray | null
 
-      while ((match = regex.exec(text)) !== null) {
+      match = regex.exec(text)
+      while (match !== null) {
         const start = match.index
         const matchText = match[0]
 
         if (matchText === '') {
           regex.lastIndex += 1
+          match = regex.exec(text)
           continue
         }
 
@@ -93,6 +95,7 @@ const LogItem = ({ value, searchState }: Props) => {
         )
 
         lastIndex = start + matchText.length
+        match = regex.exec(text)
       }
 
       if (lastIndex < text.length) {

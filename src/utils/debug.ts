@@ -51,10 +51,12 @@ export const setDebugLoggingEnabled = (enabled: boolean) => {
   cachedDebugEnabled = enabled
 }
 
-export const isDebugLoggingEnabled = () =>
-  runtimeOverride ??
-  cachedDebugEnabled ??
-  (cachedDebugEnabled = computeDebugEnabled())
+export const isDebugLoggingEnabled = (): boolean => {
+  if (runtimeOverride !== undefined) return runtimeOverride
+  if (cachedDebugEnabled !== undefined) return cachedDebugEnabled
+  cachedDebugEnabled = computeDebugEnabled()
+  return cachedDebugEnabled
+}
 
 /**
  * Logs to the console only when debug logging is enabled.

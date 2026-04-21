@@ -13,6 +13,7 @@ export interface ConnectionDetailRef {
 
 export function ConnectionDetail({ ref }: { ref?: Ref<ConnectionDetailRef> }) {
   const [open, setOpen] = useState(false)
+  // biome-ignore lint/style/noNonNullAssertion: populated via imperative handle before dialog opens
   const [detail, setDetail] = useState<IConnectionsItem>(null!)
   const [closed, setClosed] = useState(false)
   const theme = useTheme()

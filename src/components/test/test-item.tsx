@@ -126,15 +126,17 @@ export const TestItem = ({
               {icon.trim().startsWith('http') && (
                 <img
                   src={iconCachePath === '' ? icon : iconCachePath}
+                  alt=""
                   height="40px"
                 />
               )}
               {icon.trim().startsWith('data') && (
-                <img src={icon} height="40px" />
+                <img src={icon} alt="" height="40px" />
               )}
               {icon.trim().startsWith('<svg') && (
                 <img
                   src={`data:image/svg+xml;base64,${btoa(icon)}`}
+                  alt=""
                   height="40px"
                 />
               )}

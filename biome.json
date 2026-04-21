@@ -42,7 +42,7 @@
     "ignoreUnknown": false,
     "includes": [
       "**",
-      "!src/polyfills/**",
+      "!src/polyfills",
       "!dist",
       "!node_modules",
       "!src-tauri/target",

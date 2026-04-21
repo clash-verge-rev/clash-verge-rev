@@ -190,7 +190,8 @@ export const useRenderList = (
       // 使用正常的规则模式代理组
       const allGroups = proxiesData.groups.length
         ? proxiesData.groups
-        : [proxiesData.global!]
+        : // biome-ignore lint/style/noNonNullAssertion: global group is always present when groups list is empty
+          [proxiesData.global!]
 
       // 如果选择了特定代理组，只显示该组的节点
       if (selectedGroup) {
@@ -381,7 +382,8 @@ export const useRenderList = (
     const renderGroups =
       useRule && proxiesData.groups.length
         ? proxiesData.groups
-        : [proxiesData.global!]
+        : // biome-ignore lint/style/noNonNullAssertion: global group is always present when groups list is empty
+          [proxiesData.global!]
 
     const cache = groupCacheRef.current
     let anyChanged = false

@@ -44,7 +44,9 @@ const _startTick = () => {
   if (_tickTimer !== null) return
   _tickTimer = setInterval(() => {
     _tickNow = Date.now()
-    _tickListeners.forEach((fn) => fn())
+    _tickListeners.forEach((fn) => {
+      fn()
+    })
   }, 5000)
 }
 

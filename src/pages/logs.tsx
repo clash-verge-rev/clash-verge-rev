@@ -72,16 +72,18 @@ const LogPage = () => {
   }, [filteredLogs.length, isDescending])
 
   const handleLogLevelChange = (newLevel: LogFilter) => {
+    // biome-ignore lint/style/noNonNullAssertion: pre is always defined (state initialized with value)
     setClashLog((pre) => ({ ...pre!, logFilter: newLevel }))
   }
 
   const handleToggleLog = async () => {
+    // biome-ignore lint/style/noNonNullAssertion: pre is always defined
     setClashLog((pre) => ({ ...pre!, enable: !enableLog }))
   }
 
   const handleToggleOrder = () => {
     setClashLog((pre) => ({
-      ...pre!,
+      ...pre,
       logOrder: pre?.logOrder === 'desc' ? 'asc' : 'desc',
     }))
   }

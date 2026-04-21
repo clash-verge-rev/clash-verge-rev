@@ -38,7 +38,7 @@ export const ConnectionItem = (props: Props) => {
   const { t } = useTranslation()
 
   const onDelete = useLockFn(async () => closeConnection(id))
-  const showTraffic = curUpload! >= 100 || curDownload! >= 100
+  const showTraffic = (curUpload ?? 0) >= 100 || (curDownload ?? 0) >= 100
 
   return (
     <ListItem
@@ -80,7 +80,8 @@ export const ConnectionItem = (props: Props) => {
 
             {showTraffic && (
               <Tag>
-                {parseTraffic(curUpload!)} / {parseTraffic(curDownload!)}
+                {parseTraffic(curUpload ?? 0)} /{' '}
+                {parseTraffic(curDownload ?? 0)}
               </Tag>
             )}
           </Box>

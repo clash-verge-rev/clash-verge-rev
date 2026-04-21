@@ -63,7 +63,7 @@ export function useHeadStateNew() {
   useEffect(() => {
     try {
       const data = JSON.parse(
-        localStorage.getItem(HEAD_STATE_KEY)!,
+        localStorage.getItem(HEAD_STATE_KEY) ?? 'null',
       ) as HeadStateStorage
 
       const value = data[current] || {}

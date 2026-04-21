@@ -27,6 +27,7 @@ export function TrafficGraph({ ref }: { ref?: Ref<TrafficRef> }) {
   const countRef = useRef(0)
   const styleRef = useRef(true)
   const listRef = useRef<Traffic[]>(defaultList)
+  // biome-ignore lint/style/noNonNullAssertion: canvas element is assigned after mount
   const canvasRef = useRef<HTMLCanvasElement>(null!)
 
   const cacheRef = useRef<Traffic | null>(null)
@@ -67,11 +68,11 @@ export function TrafficGraph({ ref }: { ref?: Ref<TrafficRef> }) {
 
   useEffect(() => {
     let raf = 0
-    const canvas = canvasRef.current!
+    const canvas = canvasRef.current
 
     if (!canvas) return
 
-    const context = canvas.getContext('2d')!
+    const context = canvas.getContext('2d')
 
     if (!context) return
 

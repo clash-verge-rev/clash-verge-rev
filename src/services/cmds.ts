@@ -477,7 +477,7 @@ export async function saveWebdavConfig(
 
 export async function listWebDavBackup() {
   const list: IWebDavFile[] = await invoke<IWebDavFile[]>('list_webdav_backup')
-  list.map((item) => {
+  list.forEach((item) => {
     item.filename = item.href.split('/').pop() as string
   })
   return list

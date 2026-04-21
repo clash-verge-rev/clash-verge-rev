@@ -65,6 +65,7 @@ export const GroupItem = (props: Props) => {
       {group.icon && group.icon?.trim().startsWith('http') && (
         <img
           src={iconCachePath === '' ? group.icon : iconCachePath}
+          alt=""
           width="32px"
           style={{
             marginRight: '12px',
@@ -75,6 +76,7 @@ export const GroupItem = (props: Props) => {
       {group.icon && group.icon?.trim().startsWith('data') && (
         <img
           src={group.icon}
+          alt=""
           width="32px"
           style={{
             marginRight: '12px',
@@ -85,6 +87,7 @@ export const GroupItem = (props: Props) => {
       {group.icon && group.icon?.trim().startsWith('<svg') && (
         <img
           src={`data:image/svg+xml;base64,${btoa(group.icon ?? '')}`}
+          alt=""
           width="32px"
           style={{
             marginRight: '12px',

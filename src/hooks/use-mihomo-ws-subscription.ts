@@ -87,7 +87,9 @@ export const useMihomoWsSubscription = <T>(
       ? [subscriptionCacheKey]
       : ['$sub$__disabled__'],
     queryFn: () =>
-      queryClient.getQueryData<T>([subscriptionCacheKey!]) ?? fallbackData,
+      queryClient.getQueryData<T>([
+        subscriptionCacheKey ?? '$sub$__disabled__',
+      ]) ?? fallbackData,
     initialData: () =>
       queryClient.getQueryData<T>([
         subscriptionCacheKey ?? '$sub$__disabled__',

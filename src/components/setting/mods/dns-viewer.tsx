@@ -53,7 +53,8 @@ function parseNameserverPolicy(str: string): NameserverPolicy {
   const ruleRegex = /\s*([^=]+?)\s*=\s*([^,]+)(?:,|$)/g
   let match: RegExpExecArray | null
 
-  while ((match = ruleRegex.exec(str)) !== null) {
+  match = ruleRegex.exec(str)
+  while (match !== null) {
     const [, domainsPart, serversPart] = match
 
     const domains = [domainsPart.trim()]
@@ -62,6 +63,7 @@ function parseNameserverPolicy(str: string): NameserverPolicy {
     domains.forEach((domain) => {
       result[domain] = servers
     })
+    match = ruleRegex.exec(str)
   }
 
   return result

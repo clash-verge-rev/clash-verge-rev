@@ -527,7 +527,7 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
               startIcon={
                 verge?.common_tray_icon &&
                 commonIcon && (
-                  <img height="20px" src={convertFileSrc(commonIcon)} />
+                  <img alt="" height="20px" src={convertFileSrc(commonIcon)} />
                 )
               }
               onClick={async () => {
@@ -580,7 +580,11 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
               startIcon={
                 verge?.sysproxy_tray_icon &&
                 sysproxyIcon && (
-                  <img height="20px" src={convertFileSrc(sysproxyIcon)} />
+                  <img
+                    alt=""
+                    height="20px"
+                    src={convertFileSrc(sysproxyIcon)}
+                  />
                 )
               }
               onClick={async () => {
@@ -629,7 +633,9 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
               size="small"
               startIcon={
                 verge?.tun_tray_icon &&
-                tunIcon && <img height="20px" src={convertFileSrc(tunIcon)} />
+                tunIcon && (
+                  <img alt="" height="20px" src={convertFileSrc(tunIcon)} />
+                )
               }
               onClick={async () => {
                 if (verge?.tun_tray_icon) {

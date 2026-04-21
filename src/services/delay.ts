@@ -260,7 +260,9 @@ class DelayManager {
     )
     const names = nameList.filter(Boolean)
     // 设置正在延迟测试中
-    names.forEach((name) => this.setDelay(name, group, -2))
+    names.forEach((name) => {
+      this.setDelay(name, group, -2)
+    })
 
     let index = 0
     const startTime = Date.now()

@@ -80,7 +80,8 @@ export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
     const counts: Record<string, number> = {}
     return draftTunnels.map((tunnel, index) => {
       const base = `${tunnel.address}_${tunnel.target}_${tunnel.network.join('+')}`
-      const occurrence = (counts[base] = (counts[base] ?? 0) + 1)
+      counts[base] = (counts[base] ?? 0) + 1
+      const occurrence = counts[base]
       return {
         index,
         key: `${base}_${occurrence}`,

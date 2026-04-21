@@ -63,7 +63,14 @@ const SettingClash = ({ onError }: Props) => {
 
   const onSwitchFormat = (_e: any, value: boolean) => value
   const onChangeData = (patch: Partial<IConfigData>) => {
-    mutateClash((old) => ({ ...old!, ...patch }), false)
+    mutateClash(
+      (old) => ({
+        // biome-ignore lint/style/noNonNullAssertion: previous state is always defined
+        ...old!,
+        ...patch,
+      }),
+      false,
+    )
   }
   const onUpdateGeo = async () => {
     try {
@@ -191,7 +198,11 @@ const SettingClash = ({ onError }: Props) => {
           onFormat={(e: any) => e.target.value}
           onChange={(e) => onChangeData({ 'log-level': e })}
           onGuard={(e) => {
-            setClashLog((pre) => ({ ...pre!, logLevel: e }))
+            setClashLog((pre) => ({
+              // biome-ignore lint/style/noNonNullAssertion: previous state is always defined
+              ...pre!,
+              logLevel: e,
+            }))
             return patchClash({ 'log-level': e })
           }}
         >
