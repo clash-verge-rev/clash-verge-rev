@@ -136,7 +136,14 @@ objc2-app-kit = { version = "0.3", features = [
 deelevate = { workspace = true }
 runas = "=1.2.0"
 winreg = "0.56.0"
-windows = { version = "0.62.2", features = ["Win32_Globalization"] }
+windows = { version = "0.62.2", features = [
+  "Win32_Foundation",
+  "Win32_Globalization",
+  "Win32_NetworkManagement_IpHelper",
+  "Win32_NetworkManagement_Ndis",
+  "Win32_NetworkManagement_WiFi",
+  "Win32_Networking_WinSock",
+] }
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-autostart = "2.5.1"

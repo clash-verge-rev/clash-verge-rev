@@ -20,7 +20,9 @@ use async_trait::async_trait;
 use tokio::sync::mpsc;
 
 use super::TriggerReason;
-use super::sampler::{Sampler, StubSampler};
+use super::sampler::Sampler;
+#[cfg(not(target_os = "windows"))]
+use super::sampler::StubSampler;
 
 #[async_trait]
 pub trait PlatformMonitor: Send + Sync {
@@ -38,21 +40,38 @@ mod macos;
 #[cfg(target_os = "windows")]
 mod windows;
 
-/// 按编译目标返回对应平台的 monitor 实例。骨架阶段三平台统一走 `StubMonitor`，
-/// 平台 impl 接入后由 cfg 分支决定。
+/// 按编译目标返回对应平台的 monitor 实例。当前 Windows 已接入真实 monitor；
+/// Linux / macOS 仍走 `StubMonitor`，等后续 commit 落地后替换。
 pub fn new_platform_monitor() -> Arc<dyn PlatformMonitor> {
-    Arc::new(StubMonitor)
+    #[cfg(target_os = "windows")]
+    {
+        Arc::new(windows::WindowsMonitor::new())
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+        Arc::new(StubMonitor)
+    }
 }
 
-/// 按编译目标返回对应平台的 sampler 实例。骨架阶段三平台统一走 `StubSampler`
-/// （一律返回 `Sample::Unknown`），平台 impl 接入后由 cfg 分支决定。
+/// 按编译目标返回对应平台的 sampler 实例。当前 Windows 已接入真实 sampler；
+/// Linux / macOS 仍走 `StubSampler`（一律返回 `Sample::Unknown`），等后续 commit
+/// 落地后替换。
 pub fn new_sampler() -> Arc<dyn Sampler> {
-    Arc::new(StubSampler)
+    #[cfg(target_os = "windows")]
+    {
+        Arc::new(windows::WindowsSampler)
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+        Arc::new(StubSampler)
+    }
 }
 
 /// 未支持平台 fallback 使用；从不触发事件。
+#[cfg(not(target_os = "windows"))]
 struct StubMonitor;
 
+#[cfg(not(target_os = "windows"))]
 #[async_trait]
 impl PlatformMonitor for StubMonitor {
     async fn start(&self, _tx: mpsc::UnboundedSender<TriggerReason>) -> Result<()> {
