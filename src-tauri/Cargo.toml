@@ -110,6 +110,12 @@ rust_iso3166 = "0.1.14"
 dark-light = { git = "https://github.com/rust-dark-light/dark-light" }
 bytes = "1.11.1"
 
+[target.'cfg(target_os = "linux")'.dependencies]
+# netmon: rtnetlink dump + monitor. re-exports netlink_packet_route / netlink_sys.
+rtnetlink = "0.17"
+# netmon SSID/BSSID via Wireless Extensions ioctls (SIOCGIWESSID / SIOCGIWAP).
+libc = "0.2"
+
 [target.'cfg(target_os = "macos")'.dependencies]
 # netmon: SCDynamicStore + CFRunLoop + sysctl ARP parsing. Transitively already in Cargo.lock.
 system-configuration = "0.7"
