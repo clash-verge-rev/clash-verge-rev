@@ -209,6 +209,7 @@ pub async fn update_profile(
             Ok(_) => {
                 logging!(info, Type::Config, "[订阅更新] 更新成功");
                 handle::Handle::refresh_clash();
+                handle::Handle::notify_profile_changed(uid);
             }
             Err(err) => {
                 logging!(error, Type::Config, "[订阅更新] 更新失败: {}", err);
