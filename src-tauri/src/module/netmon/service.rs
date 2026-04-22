@@ -19,10 +19,12 @@ use super::{
     pusher::ContextPusher,
     sampler::{Sample, Sampler},
 };
+use crate::core::handle::Handle;
 
-/// UI 通知钩子：骨架阶段仅打 debug 日志；真实 Handle / Tray 调用由后续 commit 接入。
+/// UI 通知钩子：转发 netmon 的最新决策到前端。走 `Handle::notify_network_context_updated`
+/// 发出 `verge://network-context-updated` 事件，前端诊断面板订阅此事件即可刷新。
 fn notify_ui(matched: Option<&str>) {
-    logging!(debug, Type::Network, "netmon notify_ui (stub): matched={:?}", matched);
+    Handle::notify_network_context_updated(matched);
 }
 
 /// 事件去抖窗口 3 秒，合并 Wi-Fi 抖动 / 插拔网线 onLost+onAvailable 的事件风暴。
@@ -40,7 +42,6 @@ const FORCE_PUT_MAX_DELAY: Duration = Duration::from_secs(2);
 // 单次 PUT HTTP 硬上界从 mod.rs::MIHOMO_HTTP_TIMEOUT 导入，与 content_matched_delete
 // 的 get_status/delete timeout 共用同一常量，保持 SHUTDOWN_TIMEOUT 预算推导准确。
 
-#[allow(dead_code)] // 由 mod.rs::start() 调用，骨架阶段尚未接入
 pub async fn run(
     mut rx: mpsc::UnboundedReceiver<TriggerReason>,
     sampler: Arc<dyn Sampler>,
@@ -218,7 +219,15 @@ fn log_push_error(op: &'static str, err: &anyhow::Error) {
             logging!(warn, Type::Network, "netmon {} timed out: {:?}", op, err);
         }
         pusher::PutErrorKind::FailedResponse => {
-            logging!(warn, Type::Network, "netmon {} rejected by mihomo: {:?}", op, err);
+            // 升 error 级：mihomo 返回非 2xx 属于需要暴露的 push failure——可能
+            // 根因包括 mihomo manager 未就绪 503（启动期 / 配置热重载期）、
+            // sampler 构造的 body 触发 kernel schema 校验、CVR/mihomo 版本不匹配
+            // 等。单条日志不保证根因是 CVR sampler bug，但这类错误不应和瞬时
+            // timeout / connect refused 混在 warn 级被忽略。`{:?}` 沿 anyhow chain
+            // 暴露 plugin `FailedResponse(String)` 的 message 原文（pusher.rs 顶
+            // "已知限制" 说明 REST code 字段在 plugin 层就被丢弃，triage 只能
+            // 依赖 message）。
+            logging!(error, Type::Network, "netmon {} rejected by mihomo: {:?}", op, err);
         }
         pusher::PutErrorKind::Other => {
             logging!(warn, Type::Network, "netmon {} failed: {:?}", op, err);

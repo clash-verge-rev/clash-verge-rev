@@ -5,10 +5,13 @@
 //! 事件到达时向 service loop 发送 [`super::TriggerReason::NetworkEvent`] 或
 //! [`super::TriggerReason::Resumed`]。
 //!
-//! 骨架阶段三平台 `sampler.rs` / `monitor.rs` / `probe.rs` / `wifi.rs` /
-//! `dns_suffix.rs` 尚未接入，统一走 `StubMonitor`（no-op）+ `StubSampler`
-//! （返回 Unknown），保证运行时不动 mihomo；真实 platform 实现由后续 commit
-//! 接入。
+//! 骨架阶段三平台 `sampler.rs` / `monitor.rs` / `probe.rs` / `wifi.rs` 尚未接入，
+//! 统一走 `StubMonitor`（no-op）+ `StubSampler`（返回 Unknown），保证运行时不动
+//! mihomo；真实 platform 实现由后续 commit 接入。
+//!
+//! `dns_suffix.rs` 已作为 stub 落地（恒返回空 `Vec<String>`），为各平台 sampler
+//! 先行打好调用点；真实采集（systemd-resolved / `GetAdaptersAddresses.SuffixSearchList`
+//! / SCDynamicStore `SearchDomains`）由后续 commit 落地。
 
 use std::sync::Arc;
 
@@ -37,14 +40,12 @@ mod windows;
 
 /// 按编译目标返回对应平台的 monitor 实例。骨架阶段三平台统一走 `StubMonitor`，
 /// 平台 impl 接入后由 cfg 分支决定。
-#[allow(dead_code)] // 由 mod.rs::start() 调用，骨架阶段尚未接入
 pub fn new_platform_monitor() -> Arc<dyn PlatformMonitor> {
     Arc::new(StubMonitor)
 }
 
 /// 按编译目标返回对应平台的 sampler 实例。骨架阶段三平台统一走 `StubSampler`
 /// （一律返回 `Sample::Unknown`），平台 impl 接入后由 cfg 分支决定。
-#[allow(dead_code)] // 由 mod.rs::start() 调用，骨架阶段尚未接入
 pub fn new_sampler() -> Arc<dyn Sampler> {
     Arc::new(StubSampler)
 }

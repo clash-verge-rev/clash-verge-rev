@@ -62,6 +62,13 @@ impl Handle {
         Self::send_event(FrontendEvent::ProfileUpdateCompleted { uid });
     }
 
+    /// netmon 成功 PUT /network/context 之后调用；转发到前端事件
+    /// `verge://network-context-updated`，payload 含 `matched` 字段（mihomo 决策
+    /// 出的 network name 或 null）。
+    pub fn notify_network_context_updated(matched: Option<&str>) {
+        Self::send_event(FrontendEvent::NetworkContextUpdated { matched });
+    }
+
     pub fn notice_message<S: AsRef<str>, M: Into<String>>(status: S, msg: M) {
         let status_str = status.as_ref();
         let msg_str = msg.into();

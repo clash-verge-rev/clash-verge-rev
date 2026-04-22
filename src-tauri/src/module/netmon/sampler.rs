@@ -16,12 +16,11 @@ use tauri_plugin_mihomo::models::NetworkContext;
 
 #[allow(clippy::large_enum_variant)] // Online 携带 NetworkContext，按值传避免 Box 分配
 pub enum Sample {
+    /// 成功采样（含"活跃 iface 为空"的离线）。真实 platform sampler 构造此变体；
+    /// 骨架阶段 StubSampler 不构造，暂挂 allow(dead_code)。
+    #[allow(dead_code)]
     Online(NetworkContext),
-    /// 骨架阶段 StubSampler 使用；真实 platform sampler 只在采集硬失败时返回。
-    #[cfg_attr(
-        any(target_os = "linux", target_os = "windows", target_os = "macos"),
-        allow(dead_code)
-    )]
+    /// 采集硬失败 / sampler 不可用；骨架阶段 StubSampler 一律返回此变体。
     Unknown,
 }
 

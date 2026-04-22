@@ -64,7 +64,6 @@ pub enum TriggerReason {
     /// mihomo 核心 start / restart / change 成功后：本进程内的 fingerprint 还是
     /// 旧的，但 mihomo 侧的 /network/context 已被重置，需要强制重推一次，
     /// 否则在"网络没变 + 核心刚重启"时 network-policy 永远不会生效
-    #[allow(dead_code)] // 由 lifecycle.rs::start_core 成功后调用，骨架阶段尚未接入
     CoreReady,
     /// 平台原生事件（netlink / NotifyIpInterfaceChange / SCDynamicStore）
     #[allow(dead_code)] // 真实 platform monitor 构造；StubMonitor 下不触发
@@ -156,7 +155,7 @@ const SHUTDOWN_TIMEOUT: Duration = Duration::from_secs(9);
 /// 等待 cancel 返回确认）。
 const MONITOR_STOP_TIMEOUT: Duration = Duration::from_secs(3);
 
-#[allow(dead_code)] // 由 lib.rs::setup 与 UpdateFlags::WIFI_DETECTION_SYNC 调用
+#[allow(dead_code)] // 由 feat/config.rs 和 lib.rs::setup 调用，后续 commit 接入
 pub(crate) fn set_wifi_detection_enabled(enabled: bool) {
     WIFI_DETECTION_ENABLED.store(enabled, Ordering::Release);
 }
@@ -172,7 +171,7 @@ pub(crate) fn wifi_detection_enabled() -> bool {
 /// service loop 本身不主动退出——依赖进程终止时 tokio runtime 回收；
 /// `stop_with_delete` 通过 `stopping` 标志让 service::process 拒绝继续推送，
 /// 实现"软停止"语义。
-#[allow(dead_code, clippy::unnecessary_wraps)] // 调用方 lib.rs::setup 骨架阶段尚未接入
+#[allow(clippy::unnecessary_wraps)] // Result 保留以便未来 fallible 初始化扩展
 pub fn start() -> Result<()> {
     if HANDLE.get().is_some() {
         return Ok(());
@@ -225,7 +224,6 @@ pub fn start() -> Result<()> {
 
 /// 手动触发一次重采（resume hook / 前端命令 / on_host_config_reload 都走这条）。
 /// netmon 未启动或已进入 stopping 状态时是 no-op。
-#[allow(dead_code)] // 调用方（resume hook / lifecycle / cmd）骨架阶段尚未接入
 pub fn trigger(reason: TriggerReason) {
     if let Some(h) = HANDLE.get() {
         if h.stopping.load(Ordering::Acquire) {
@@ -233,6 +231,39 @@ pub fn trigger(reason: TriggerReason) {
         }
         let _ = h.tx.send(reason);
     }
+}
+
+/// Mihomo 核心 start / restart / change 成功后调用（挂在
+/// `core/manager/lifecycle.rs::start_core` 的 `Ok(_)` 末尾）。
+///
+/// 语义：发送 `TriggerReason::CoreReady`，借 service loop 的 debounce + force_put
+/// OR 聚合路径完成重采 + 强制 PUT（绕过 fingerprint-skip，因为 mihomo 刚启动时
+/// 其内部 ctx 已清空）。
+///
+/// **仅挂 leaf `start_core`**：`restart_core` = `stop_core + start_core`，必然经
+/// leaf；`change_core` = `update_config → apply_config`，成功路径走
+/// `reload_config`（HTTP 热重载，不重启 core、不清空 /network/context，也就**不
+/// 该**触发 CoreReady），仅在 reload 失败 fallback 到 `restart_core` 时才间接
+/// 到 leaf——这恰好是正确语义。挂 leaf 可覆盖所有"mihomo 真正启动"的路径，
+/// 避免 wrapper + leaf 双 fire 带来的重复 `GET /configs`（后续 self_tun_filter
+/// 接入真实状态机后会有 HTTP 调用，重复 fire 代价非零）。
+///
+/// **骨架阶段**：self_tun_filter 是 stub（只返 NoFilter，不发 GET），本函数只
+/// `trigger(CoreReady)`；真实状态机接入后会同步触发 `self_tun_filter::on_core_ready()`。
+pub fn on_core_ready() {
+    trigger(TriggerReason::CoreReady);
+}
+
+/// 系统从 sleep / resume 回来后调用（tauri `RunEvent::Resumed`）。
+///
+/// 唤醒时底层 route/link 变化事件未必会被 platform monitor 重新捕获
+/// （尤其是 macOS SCDynamicStore key 通知 / Windows NotifyIpInterfaceChange
+/// 在休眠期可能丢失），若不显式补一次采样，`last_pushed_fingerprint` 会
+/// 一直停留在休眠前的状态 —— 即便用户已切换到另一个 Wi-Fi，`network-policy`
+/// 也不会重新命中。`TriggerReason::Resumed` 走一次条件 PUT，借 service loop
+/// 的 3s 去抖 + fingerprint-skip，让真实变化才触达 mihomo。
+pub fn on_resumed() {
+    trigger(TriggerReason::Resumed);
 }
 
 /// `content_matched_delete` 的结果：用 enum 而非 bool + Option 便于单测精确断言。
@@ -316,7 +347,6 @@ async fn content_matched_delete(
 ///
 /// 整条 3.1–3.x 路径包一层 `tokio::time::timeout(SHUTDOWN_TIMEOUT)`——mihomo 挂死 /
 /// HTTP 阻塞不会拖住 app shutdown，超时就 warn+放弃 DELETE。
-#[allow(dead_code)] // 由 feat/window.rs::clean_async 调用，骨架阶段尚未接入
 pub async fn stop_with_delete() {
     let Some(h) = HANDLE.get() else { return };
     h.stopping.store(true, Ordering::Release);

@@ -96,6 +96,14 @@ pub async fn clean_async() -> bool {
             }
         }
 
+        // netmon final DELETE：必须在 stop_core 之前串行 await，禁止与 stop_core
+        // 并发。netmon::stop_with_delete 内部自有 SHUTDOWN_TIMEOUT=9s 兜底，若
+        // mihomo 挂死会 warn + 放弃 DELETE，不会拖住 app shutdown。同步串行而非
+        // `tokio::join!` 并发，避免 DELETE 与 mihomo 进程关闭 race 出 Connect error
+        // 造成"每次退出都报一次 connection refused"的日志噪声。
+        logging!(info, Type::System, "netmon stop_with_delete before stop_core");
+        crate::module::netmon::stop_with_delete().await;
+
         #[cfg(target_os = "windows")]
         let stop_timeout = Duration::from_secs(2);
         #[cfg(not(target_os = "windows"))]

@@ -239,6 +239,22 @@ pub fn run() {
                 logging!(error, Type::Setup, "Failed to setup window state: {}", e);
             }
 
+            // netmon 必须在任何可能触发 `CoreManager::start_core()` 的后台任务之前
+            // 启动，确保 `HANDLE` 已就位——否则 `lifecycle.rs` 里 `netmon::on_core_ready()`
+            // 的 `trigger(CoreReady)` 会因 `HANDLE.get() == None` 静默 no-op，丢
+            // 掉一次 force PUT 的机会。`resolve_setup_async` 之后 `AsyncHandler::spawn`
+            // 返回的 future 内部链路较长，实务上不会抢先到 `start_core`，但把顺序
+            // 调整到 `resolve_setup_async` 之前更卫生，消除这条隐式时序假设。
+            //
+            // atomic 初始值 = `DEFAULT_WIFI_DETECTION`（false）；`IVerge::enable_wifi_detection`
+            // 字段接入后，此处会补上 `netmon::set_wifi_detection_enabled(
+            // cfg.enable_wifi_detection.unwrap_or(false))` 让用户持久化的配置在
+            // 首次 Startup 采样之前同步到 atomic。当前 StubSampler 永远返回 Unknown，
+            // atomic 值不影响行为。
+            if let Err(e) = crate::module::netmon::start() {
+                logging!(error, Type::Setup, "netmon start failed: {}", e);
+            }
+
             resolve::resolve_setup_async();
             resolve::resolve_setup_sync();
             resolve::init_signal();
@@ -368,11 +384,22 @@ pub fn run() {
     });
 
     app.run(|app_handle, e| match e {
-        tauri::RunEvent::Ready | tauri::RunEvent::Resumed => {
+        tauri::RunEvent::Ready => {
             if core::handle::Handle::global().is_exiting() {
                 return;
             }
             event_handlers::handle_ready_resumed(app_handle);
+        }
+        tauri::RunEvent::Resumed => {
+            if core::handle::Handle::global().is_exiting() {
+                return;
+            }
+            // Ready 路径里启动流程已经各自触发了初次 netmon 采样，但 Resumed 路径
+            // 需要显式补一次：休眠期底层 route/link 事件可能未被 platform monitor
+            // 捕获（见 netmon::on_resumed 注释），不补发会让 network-policy 一直
+            // 停留在休眠前的网络环境。
+            event_handlers::handle_ready_resumed(app_handle);
+            crate::module::netmon::on_resumed();
         }
         #[cfg(target_os = "macos")]
         tauri::RunEvent::Reopen {
