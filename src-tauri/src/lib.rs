@@ -246,11 +246,26 @@ pub fn run() {
             // 返回的 future 内部链路较长，实务上不会抢先到 `start_core`，但把顺序
             // 调整到 `resolve_setup_async` 之前更卫生，消除这条隐式时序假设。
             //
-            // atomic 初始值 = `DEFAULT_WIFI_DETECTION`（false）；`IVerge::enable_wifi_detection`
-            // 字段接入后，此处会补上 `netmon::set_wifi_detection_enabled(
-            // cfg.enable_wifi_detection.unwrap_or(false))` 让用户持久化的配置在
-            // 首次 Startup 采样之前同步到 atomic。当前 StubSampler 永远返回 Unknown，
-            // atomic 值不影响行为。
+            // 先用持久化的 `enable_wifi_detection` 初始化 atomic，让首次 Startup
+            // 采样（由 `netmon::start` 调度）读到用户设置值而非编译期默认。
+            // `enable_virtual_iface_reporting` 每次采样都从 `Config::verge()` 读，
+            // 无需在此处同步。
+            //
+            // setup 期同步读一次，让首次 Startup 采样读到用户持久化的 toggle 值
+            // 而非编译期默认。用 `AsyncHandler::block_on`（对
+            // `tauri::async_runtime::block_on` 的薄 wrapper）与 `lib.rs` 其它
+            // setup 阶段 `block_on` 驱动 async 的风格保持一致。`Config::global()`
+            // 的 OnceCell 初始化可能已由更早的 setup 路径（例如 `Logger::init`）
+            // 完成，也可能在此处首次 `get_or_init` —— 两条路径都走 `IVerge::new()`
+            // 读持久化 YAML，正确性不受先后影响。
+            let initial_wifi_detection = AsyncHandler::block_on(async {
+                crate::config::Config::verge()
+                    .await
+                    .latest_arc()
+                    .enable_wifi_detection
+                    .unwrap_or(crate::module::netmon::DEFAULT_WIFI_DETECTION)
+            });
+            crate::module::netmon::set_wifi_detection_enabled(initial_wifi_detection);
             if let Err(e) = crate::module::netmon::start() {
                 logging!(error, Type::Setup, "netmon start failed: {}", e);
             }

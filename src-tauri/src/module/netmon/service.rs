@@ -20,11 +20,19 @@ use super::{
     sampler::{Sample, Sampler, collect_and_build},
     self_tun_filter::SelfTunFilter,
 };
+use crate::config::Config;
 use crate::core::handle::Handle;
 
-/// 是否启用虚拟桥上报的 placeholder，恒 `false`。后续 commit 引入
-/// `IVerge::enable_virtual_iface_reporting` 字段后会替换为 per-sample 读取。
-const ENABLE_VIRTUAL_DEFAULT: bool = false;
+/// 每次采样前从 `IVerge::enable_virtual_iface_reporting` 读当前值；字段缺失或
+/// `None` 时回退到 `false`（过滤虚拟桥，默认隐私优先）。per-sample 读取的代价
+/// 是一次 `Config::verge()` 获取 + 一次 Option 解包，远小于采样本身的 I/O。
+async fn enable_virtual_iface_reporting() -> bool {
+    Config::verge()
+        .await
+        .latest_arc()
+        .enable_virtual_iface_reporting
+        .unwrap_or(false)
+}
 
 /// UI 通知钩子：转发 netmon 的最新决策到前端。走 `Handle::notify_network_context_updated`
 /// 发出 `verge://network-context-updated` 事件，前端诊断面板订阅此事件即可刷新。
@@ -143,7 +151,8 @@ async fn process(
     // 代价：sampler 随后返回 Unknown / Err 时本次 refresh 是"白跑"——由 60s/300s
     // 节流窗兜底，每窗口至多一次冗余 GET，换得 collect_and_build 的纯函数可测性。
     let self_tun_snap = self_tun.for_sample().await;
-    let sample = match collect_and_build(sampler, self_tun_snap, ENABLE_VIRTUAL_DEFAULT).await {
+    let enable_virtual = enable_virtual_iface_reporting().await;
+    let sample = match collect_and_build(sampler, self_tun_snap, enable_virtual).await {
         Ok(s) => s,
         Err(e) => {
             logging!(warn, Type::Network, "netmon sampler failed: {:?}", e);

@@ -117,13 +117,18 @@ static HANDLE: OnceCell<NetmonHandle> = OnceCell::new();
 /// 前端改动后由 `feat/config.rs` 的 `UpdateFlags::WIFI_DETECTION_SYNC` 同步。
 /// sampler 每次采样前读一次（原子 load），决定是否调 `wifi::read_wifi_info`。
 ///
-/// **默认 false**（三平台统一）：开启可能带来 PII / 隐私成本（macOS CoreLocation
-/// 授权、Wi-Fi API 授权），统一保守默认。骨架阶段 atomic 直接取常量值，
-/// 外部同步链路（`IVerge` 字段 + `UpdateFlags::WIFI_DETECTION_SYNC`）由后续 commit 接入。
+/// **平台差异化默认**：macOS 默认 `false`（开启需 CoreLocation 授权，避免首次
+/// 启动弹窗骚扰）；Linux / Windows 默认 `true`（WEXT / WlanAPI 无授权成本，
+/// 让 network-policy 按 SSID 匹配开箱可用）。atomic 初始值由 `lib.rs::setup`
+/// 读持久化的 `IVerge::enable_wifi_detection` 写入（fallback 到本常量），用户
+/// toggle 后由 `UpdateFlags::WIFI_DETECTION_SYNC` 同步。
 static WIFI_DETECTION_ENABLED: AtomicBool = AtomicBool::new(DEFAULT_WIFI_DETECTION);
 
-/// 平台默认值——三平台统一为 `false`（隐私优先）。
+/// 平台默认值：macOS `false`（定位授权成本），其他平台 `true`。
+#[cfg(target_os = "macos")]
 pub(crate) const DEFAULT_WIFI_DETECTION: bool = false;
+#[cfg(not(target_os = "macos"))]
+pub(crate) const DEFAULT_WIFI_DETECTION: bool = true;
 
 /// mihomo 单次 HTTP 调用的硬上界。三处复用：
 /// - `service.rs::put_once_with_timeout` 包 PUT
@@ -162,7 +167,7 @@ const SHUTDOWN_TIMEOUT: Duration = Duration::from_secs(9);
 /// 等待 cancel 返回确认）。
 const MONITOR_STOP_TIMEOUT: Duration = Duration::from_secs(3);
 
-#[allow(dead_code)] // 由 feat/config.rs 和 lib.rs::setup 调用，后续 commit 接入
+
 pub(crate) fn set_wifi_detection_enabled(enabled: bool) {
     WIFI_DETECTION_ENABLED.store(enabled, Ordering::Release);
 }
