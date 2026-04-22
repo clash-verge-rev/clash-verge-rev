@@ -70,8 +70,8 @@ pub enum TriggerReason {
     /// 平台原生事件（netlink / NotifyIpInterfaceChange / SCDynamicStore）
     #[allow(dead_code)] // 真实 platform monitor 构造；StubMonitor 下不触发
     NetworkEvent,
-    /// 手动触发：resume hook / 前端命令 / on_host_config_reload 都走这条
-    #[allow(dead_code)] // trigger() 消费，骨架阶段尚未接入
+    /// 手动触发：`on_host_config_reload` 借此走 service loop debounce + 条件 PUT；
+    /// 前端命令 / 未来的 GUI "重新采样" 按钮也走这条
     Manual,
 }
 
@@ -90,10 +90,9 @@ struct NetmonHandle {
     /// 这样 `stop_with_delete` 的 GET-compare-DELETE 时序也能被单测 mock。
     pusher: Arc<dyn ContextPusher>,
     /// self-TUN 过滤器（状态机：{Uninitialized, Known, Unavailable}），service loop
-    /// 与 `on_core_ready` / `on_host_config_reload` 共享同一实例。当前阶段是 stub
-    /// （恒返回 NoFilter），后续 commit 填充真实状态机（Clash REST GET /configs 查
-    /// `tun.device` + 懒式 retry 节流）。
-    #[allow(dead_code)] // 真实状态机接入后由 on_core_ready / apply_config hook 读取
+    /// 经 `for_sample()` 消费，`on_core_ready` / `on_host_config_reload` 直接驱动
+    /// HTTP refresh；四个触发点共享同一实例的 `Mutex<Inner>`，三段式锁保证不持锁
+    /// 跨 HTTP await。
     self_tun: Arc<SelfTunFilter>,
     /// `stop_with_delete` 后置为 true：
     /// - `trigger()` 据此拒绝派发新事件
@@ -256,22 +255,42 @@ pub fn trigger(reason: TriggerReason) {
 /// Mihomo 核心 start / restart / change 成功后调用（挂在
 /// `core/manager/lifecycle.rs::start_core` 的 `Ok(_)` 末尾）。
 ///
-/// 语义：发送 `TriggerReason::CoreReady`，借 service loop 的 debounce + force_put
-/// OR 聚合路径完成重采 + 强制 PUT（绕过 fingerprint-skip，因为 mihomo 刚启动时
-/// 其内部 ctx 已清空）。
+/// 执行顺序：
+/// 1. `self_tun_filter.on_core_ready()`：强制 refresh mihomo `tun.device`——此刻
+///    mihomo 确保就绪，这是 Known(name) 状态的主获取点
+/// 2. `trigger(CoreReady)`：借 service loop 的 debounce + force_put OR 聚合路径
+///    完成重采 + 强制 PUT（绕过 fingerprint-skip，因为 mihomo 刚启动时其内部
+///    ctx 已清空）
 ///
 /// **仅挂 leaf `start_core`**：`restart_core` = `stop_core + start_core`，必然经
 /// leaf；`change_core` = `update_config → apply_config`，成功路径走
 /// `reload_config`（HTTP 热重载，不重启 core、不清空 /network/context，也就**不
 /// 该**触发 CoreReady），仅在 reload 失败 fallback 到 `restart_core` 时才间接
 /// 到 leaf——这恰好是正确语义。挂 leaf 可覆盖所有"mihomo 真正启动"的路径，
-/// 避免 wrapper + leaf 双 fire 带来的重复 `GET /configs`（后续 self_tun_filter
-/// 接入真实状态机后会有 HTTP 调用，重复 fire 代价非零）。
-///
-/// **骨架阶段**：self_tun_filter 是 stub（只返 NoFilter，不发 GET），本函数只
-/// `trigger(CoreReady)`；真实状态机接入后会同步触发 `self_tun_filter::on_core_ready()`。
-pub fn on_core_ready() {
+/// 避免 wrapper + leaf 双 fire 带来的重复 `GET /configs`。
+pub async fn on_core_ready() {
+    if let Some(h) = HANDLE.get() {
+        h.self_tun.on_core_ready().await;
+    }
     trigger(TriggerReason::CoreReady);
+}
+
+/// Mihomo 配置热重载（`apply_config` 的 reload 子路径 A）成功后调用。
+///
+/// 执行顺序：
+/// 1. `self_tun_filter.on_host_config_reload()`：强制 refresh mihomo `tun.device`
+///    （用户可能改了 tun 配置）
+/// 2. `trigger(Manual)`：借 service loop 的 debounce + 条件 PUT 完成重采 + 若
+///    fingerprint 变化则 PUT（非 force，走幂等短路；mihomo 侧 ctx 未被清空，无需
+///    force 重推）
+///
+/// **不在 restart_core fallback 路径调用**：那条路径交给 `on_core_ready` 独占，
+/// 避免双 fire 两次 `GET /configs`。
+pub async fn on_host_config_reload() {
+    if let Some(h) = HANDLE.get() {
+        h.self_tun.on_host_config_reload().await;
+    }
+    trigger(TriggerReason::Manual);
 }
 
 /// 系统从 sleep / resume 回来后调用（tauri `RunEvent::Resumed`）。

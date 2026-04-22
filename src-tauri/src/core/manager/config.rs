@@ -86,6 +86,11 @@ impl CoreManager {
             Ok(_) => {
                 Config::runtime().await.apply();
                 logging!(info, Type::Core, "Configuration applied");
+                // netmon host_config_reload hook：mihomo 热重载可能改了 `tun.device`，
+                // 刷新 self_tun_filter 缓存 + 重采 + 条件 PUT。
+                // **仅挂 reload 成功子路径 A**；子路径 B（restart_core fallback）交给
+                // `lifecycle.rs::start_core` 里的 `on_core_ready` 独占，避免双 fire。
+                crate::module::netmon::on_host_config_reload().await;
                 Ok(())
             }
             Err(err) => {

@@ -31,7 +31,7 @@ impl CoreManager {
         // 时才间接经过这里——这恰好是正确语义。单挂 leaf 覆盖所有"mihomo 真正
         // 启动"的路径（见 `module::netmon::on_core_ready` 文档）。
         if result.is_ok() {
-            crate::module::netmon::on_core_ready();
+            crate::module::netmon::on_core_ready().await;
         }
         result
     }

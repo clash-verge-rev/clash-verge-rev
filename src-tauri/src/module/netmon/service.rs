@@ -138,7 +138,12 @@ async fn process(
         trigger.force_put
     );
 
-    let sample = match collect_and_build(sampler, self_tun, ENABLE_VIRTUAL_DEFAULT).await {
+    // `self_tun.for_sample()` 走的是网络 I/O（可能触发 HTTP refresh）且持有内部锁，
+    // 放在 `collect_and_build` 之外调用让后者保持纯数据转换（方便 mock 测试）。
+    // 代价：sampler 随后返回 Unknown / Err 时本次 refresh 是"白跑"——由 60s/300s
+    // 节流窗兜底，每窗口至多一次冗余 GET，换得 collect_and_build 的纯函数可测性。
+    let self_tun_snap = self_tun.for_sample().await;
+    let sample = match collect_and_build(sampler, self_tun_snap, ENABLE_VIRTUAL_DEFAULT).await {
         Ok(s) => s,
         Err(e) => {
             logging!(warn, Type::Network, "netmon sampler failed: {:?}", e);

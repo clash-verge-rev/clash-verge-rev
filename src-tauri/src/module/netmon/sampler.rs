@@ -14,7 +14,7 @@ use async_trait::async_trait;
 use tauri_plugin_mihomo::models::NetworkContext;
 
 use super::context::{RawIfaceInventory, build_context};
-use super::self_tun_filter::SelfTunFilter;
+use super::self_tun_filter::SelfTunSnapshot;
 
 #[allow(clippy::large_enum_variant)] // Online 携带 NetworkContext，按值传避免 Box 分配
 pub enum Sample {
@@ -62,20 +62,22 @@ impl Sampler for StubSampler {
 ///
 /// 流程：
 /// 1. `sampler.collect_raw()` 拿 raw inventory；`None` → `Sample::Unknown`
-/// 2. `self_tun.for_sample()` 拿当前 self-TUN snapshot（用于 context.rs 的 step 1 过滤）
-/// 3. `build_context(raw, snap, enable_virtual)`；`None` → `Sample::Unknown`
-///    （step 4 的 duplicate-iface-name sampler bug 降级）
-/// 4. 否则 `Sample::Online(ctx)`
+/// 2. `build_context(raw, self_tun_snap, enable_virtual)`；`None` → `Sample::Unknown`
+///    （context.rs step 4 的 duplicate-iface-name sampler bug 降级）
+/// 3. 否则 `Sample::Online(ctx)`
+///
+/// **self_tun snapshot 由 caller 预先 `for_sample()` 取好后传入**，不在此函数内部
+/// 调 `SelfTunFilter`——这样 `collect_and_build` 可以用 `SelfTunSnapshot` 做 mock
+/// 单测，不必真跑 HTTP refresh 路径。
 pub async fn collect_and_build(
     sampler: &dyn Sampler,
-    self_tun: &SelfTunFilter,
+    self_tun_snap: SelfTunSnapshot,
     enable_virtual: bool,
 ) -> Result<Sample> {
     let Some(raw) = sampler.collect_raw().await? else {
         return Ok(Sample::Unknown);
     };
-    let snap = self_tun.for_sample().await;
-    let Some(ctx) = build_context(raw, snap, enable_virtual) else {
+    let Some(ctx) = build_context(raw, self_tun_snap, enable_virtual) else {
         return Ok(Sample::Unknown);
     };
     Ok(Sample::Online(ctx))
@@ -129,8 +131,9 @@ mod tests {
     #[tokio::test]
     async fn collect_and_build_sampler_ok_none_yields_unknown() {
         let sampler = OkNoneSampler;
-        let self_tun = SelfTunFilter::new();
-        let sample = collect_and_build(&sampler, &self_tun, false).await.unwrap();
+        let sample = collect_and_build(&sampler, SelfTunSnapshot::NoFilter, false)
+            .await
+            .unwrap();
         assert!(matches!(sample, Sample::Unknown));
     }
 
@@ -140,8 +143,9 @@ mod tests {
             interfaces: vec![iface("en0")],
             dns_suffix: Vec::new(),
         });
-        let self_tun = SelfTunFilter::new();
-        let sample = collect_and_build(&sampler, &self_tun, false).await.unwrap();
+        let sample = collect_and_build(&sampler, SelfTunSnapshot::NoFilter, false)
+            .await
+            .unwrap();
         match sample {
             Sample::Online(ctx) => {
                 assert_eq!(ctx.interfaces.len(), 1);
@@ -155,8 +159,7 @@ mod tests {
     #[tokio::test]
     async fn collect_and_build_sampler_err_propagates() {
         let sampler = ErrSampler;
-        let self_tun = SelfTunFilter::new();
-        let result = collect_and_build(&sampler, &self_tun, false).await;
+        let result = collect_and_build(&sampler, SelfTunSnapshot::NoFilter, false).await;
         assert!(result.is_err());
     }
 
@@ -167,8 +170,28 @@ mod tests {
             interfaces: vec![iface("en0"), iface("en0")],
             dns_suffix: Vec::new(),
         });
-        let self_tun = SelfTunFilter::new();
-        let sample = collect_and_build(&sampler, &self_tun, false).await.unwrap();
+        let sample = collect_and_build(&sampler, SelfTunSnapshot::NoFilter, false)
+            .await
+            .unwrap();
         assert!(matches!(sample, Sample::Unknown));
+    }
+
+    #[tokio::test]
+    async fn collect_and_build_known_snapshot_filters_tun() {
+        // SelfTunSnapshot::Known 传入后，build_context 的 step 1 过滤该 iface
+        let sampler = OkSomeSampler(RawIfaceInventory {
+            interfaces: vec![iface("utun4"), iface("en0")],
+            dns_suffix: Vec::new(),
+        });
+        let sample = collect_and_build(&sampler, SelfTunSnapshot::Known("utun4".into()), false)
+            .await
+            .unwrap();
+        match sample {
+            Sample::Online(ctx) => {
+                assert_eq!(ctx.interfaces.len(), 1);
+                assert_eq!(ctx.interfaces[0].name, "en0");
+            }
+            Sample::Unknown => panic!("expected Online"),
+        }
     }
 }
