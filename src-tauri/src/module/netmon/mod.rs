@@ -177,6 +177,35 @@ pub(crate) fn wifi_detection_enabled() -> bool {
     WIFI_DETECTION_ENABLED.load(Ordering::Acquire)
 }
 
+/// macOS 专属：CoreLocation 授权 API 的 shim 层，供 `cmd::network` / `lib.rs::setup`
+/// 调用，不直接 re-export `platform::macos::location` 内部项以保持 `mod platform`
+/// 的封装。
+///
+/// 线程约束：`init_on_main_thread` / `request_authorization` / `current_status_str`
+/// 要求主线程调用（由 `location` 内部 `MainThreadMarker::new()` 做运行时校验）；
+/// `services_enabled` 可任意线程调。调用方通过 `AppHandle::run_on_main_thread`
+/// 派发保证主线程前提。
+#[cfg(target_os = "macos")]
+pub(crate) mod wifi_auth {
+    use super::platform::macos::location;
+
+    pub fn init_on_main_thread() {
+        location::init_on_main_thread();
+    }
+
+    pub fn request_authorization() {
+        location::request_authorization();
+    }
+
+    pub fn current_status_str() -> &'static str {
+        location::status_to_str(location::current_status())
+    }
+
+    pub fn services_enabled() -> bool {
+        location::services_enabled()
+    }
+}
+
 /// 启动 netmon：spawn service loop + 平台事件订阅 + 发送首次 Startup 触发。
 ///
 /// 幂等（二次调用直接返回 Ok）。由 `lib.rs::setup` 末尾调用。

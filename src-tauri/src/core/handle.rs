@@ -69,6 +69,15 @@ impl Handle {
         Self::send_event(FrontendEvent::NetworkContextUpdated { matched });
     }
 
+    /// macOS 专属：CoreLocation `locationManagerDidChangeAuthorization:` 回调
+    /// 调用，转发到前端事件 `verge://wifi-auth-changed`。Denied 场景下 sampler
+    /// fingerprint 可能不变，`network-context-updated` 不触发，UI 需要本事件
+    /// 独立感知授权变化。
+    #[cfg(target_os = "macos")]
+    pub fn notify_wifi_auth_changed() {
+        Self::send_event(FrontendEvent::WifiAuthChanged);
+    }
+
     pub fn notice_message<S: AsRef<str>, M: Into<String>>(status: S, msg: M) {
         let status_str = status.as_ref();
         let msg_str = msg.into();

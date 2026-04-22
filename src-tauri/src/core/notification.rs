@@ -32,6 +32,13 @@ pub enum FrontendEvent<'a> {
     NetworkContextUpdated {
         matched: Option<&'a str>,
     },
+    /// macOS 专属：CoreLocation 授权状态变化（delegate
+    /// `locationManagerDidChangeAuthorization:` 回调触发）。
+    /// 前端监听 `verge://wifi-auth-changed` 在 Denied 场景下刷新 UI——
+    /// Denied 时 sampler fingerprint 可能不变，`network-context-updated`
+    /// 不会触发，UI 需要独立事件感知授权变化。
+    #[cfg(target_os = "macos")]
+    WifiAuthChanged,
 }
 
 #[derive(Debug)]
@@ -62,6 +69,8 @@ impl NotificationSystem {
             FrontendEvent::NetworkContextUpdated { matched } => {
                 ("verge://network-context-updated", Ok(json!({ "matched": matched })))
             }
+            #[cfg(target_os = "macos")]
+            FrontendEvent::WifiAuthChanged => ("verge://wifi-auth-changed", Ok(json!("yes"))),
         }
     }
 

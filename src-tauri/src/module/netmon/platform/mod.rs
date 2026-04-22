@@ -21,7 +21,7 @@ use tokio::sync::mpsc;
 
 use super::TriggerReason;
 use super::sampler::Sampler;
-#[cfg(not(target_os = "windows"))]
+#[cfg(not(any(target_os = "windows", target_os = "macos")))]
 use super::sampler::StubSampler;
 
 #[async_trait]
@@ -35,43 +35,54 @@ pub trait PlatformMonitor: Send + Sync {
 
 #[cfg(target_os = "linux")]
 mod linux;
+// `pub(super)` 而非 `mod`：`super::super::wifi_auth`（`netmon/mod.rs`）需要
+// 绕过 `PlatformMonitor` / `Sampler` 公共抽象直接 re-export `macos::location`
+// 的 3 个 fn（主线程 CoreLocation wrapper），避免把 CoreLocation UX 硬塞进
+// `PlatformMonitor` trait。linux / windows 没有类似跨层引用，保持私有即可。
 #[cfg(target_os = "macos")]
-mod macos;
+pub(super) mod macos;
 #[cfg(target_os = "windows")]
 mod windows;
 
-/// 按编译目标返回对应平台的 monitor 实例。当前 Windows 已接入真实 monitor；
-/// Linux / macOS 仍走 `StubMonitor`，等后续 commit 落地后替换。
+/// 按编译目标返回对应平台的 monitor 实例。当前 Windows / macOS 已接入真实 monitor；
+/// Linux 仍走 `StubMonitor`，等后续 commit 落地后替换。
 pub fn new_platform_monitor() -> Arc<dyn PlatformMonitor> {
     #[cfg(target_os = "windows")]
     {
         Arc::new(windows::WindowsMonitor::new())
     }
-    #[cfg(not(target_os = "windows"))]
+    #[cfg(target_os = "macos")]
+    {
+        Arc::new(macos::MacosMonitor::new())
+    }
+    #[cfg(not(any(target_os = "windows", target_os = "macos")))]
     {
         Arc::new(StubMonitor)
     }
 }
 
-/// 按编译目标返回对应平台的 sampler 实例。当前 Windows 已接入真实 sampler；
-/// Linux / macOS 仍走 `StubSampler`（一律返回 `Sample::Unknown`），等后续 commit
-/// 落地后替换。
+/// 按编译目标返回对应平台的 sampler 实例。当前 Windows / macOS 已接入真实 sampler；
+/// Linux 仍走 `StubSampler`（一律返回 `Sample::Unknown`），等后续 commit 落地后替换。
 pub fn new_sampler() -> Arc<dyn Sampler> {
     #[cfg(target_os = "windows")]
     {
         Arc::new(windows::WindowsSampler)
     }
-    #[cfg(not(target_os = "windows"))]
+    #[cfg(target_os = "macos")]
+    {
+        Arc::new(macos::MacosSampler)
+    }
+    #[cfg(not(any(target_os = "windows", target_os = "macos")))]
     {
         Arc::new(StubSampler)
     }
 }
 
 /// 未支持平台 fallback 使用；从不触发事件。
-#[cfg(not(target_os = "windows"))]
+#[cfg(not(any(target_os = "windows", target_os = "macos")))]
 struct StubMonitor;
 
-#[cfg(not(target_os = "windows"))]
+#[cfg(not(any(target_os = "windows", target_os = "macos")))]
 #[async_trait]
 impl PlatformMonitor for StubMonitor {
     async fn start(&self, _tx: mpsc::UnboundedSender<TriggerReason>) -> Result<()> {

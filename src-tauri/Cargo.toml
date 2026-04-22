@@ -111,6 +111,10 @@ dark-light = { git = "https://github.com/rust-dark-light/dark-light" }
 bytes = "1.11.1"
 
 [target.'cfg(target_os = "macos")'.dependencies]
+# netmon: SCDynamicStore + CFRunLoop + sysctl ARP parsing. Transitively already in Cargo.lock.
+system-configuration = "0.7"
+core-foundation = "0.9"
+libc = "0.2"
 objc2 = "0.6"
 objc2-foundation = { version = "0.3", features = [
   "NSString",
@@ -130,6 +134,15 @@ objc2-app-kit = { version = "0.3", features = [
   "NSColor",
   "NSParagraphStyle",
   "NSText",
+] }
+# netmon SSID/BSSID via CoreWLAN; on macOS 14+ without Location permission
+# `ssid()` / `bssid()` return nil and we fall back to `None`.
+objc2-core-wlan = { version = "0.3", features = ["CWWiFiClient", "CWInterface"] }
+# CoreLocation authorization is the gate for reading CWInterface.ssid/bssid on macOS 14+.
+objc2-core-location = { version = "0.3", features = [
+  "CLLocationManager",
+  "CLLocationManagerDelegate",
+  "CLError",
 ] }
 
 [target.'cfg(windows)'.dependencies]

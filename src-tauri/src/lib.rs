@@ -125,6 +125,9 @@ mod app_init {
             tauri_plugin_clash_verge_sysinfo::commands::app_is_admin,
             tauri_plugin_clash_verge_sysinfo::commands::export_diagnostic_info,
             cmd::is_port_in_use,
+            cmd::get_wifi_detection_status,
+            cmd::request_wifi_detection_auth,
+            cmd::open_location_settings,
             cmd::get_sys_proxy,
             cmd::get_auto_proxy,
             cmd::open_app_dir,
@@ -266,8 +269,27 @@ pub fn run() {
                     .unwrap_or(crate::module::netmon::DEFAULT_WIFI_DETECTION)
             });
             crate::module::netmon::set_wifi_detection_enabled(initial_wifi_detection);
+
+            // macOS CoreLocation manager 必须主线程创建（当前 setup 闭包即主线程）；
+            // 此步仅注册 delegate，不弹任何授权窗口。授权弹窗由前端 toggle 翻 ON
+            // 时通过 `request_wifi_detection_auth` 命令触发，或由下方启动期主动
+            // 请求在"用户已 opt-in 但 TCC 尚未确定"时补齐。`init_on_main_thread`
+            // 内部用 `MainThreadMarker::new()` 做运行时校验，非主线程会拒绝并 warn。
+            #[cfg(target_os = "macos")]
+            crate::module::netmon::wifi_auth::init_on_main_thread();
+
             if let Err(e) = crate::module::netmon::start() {
                 logging!(error, Type::Setup, "netmon start failed: {}", e);
+            }
+
+            // 启动期主动授权请求：用户 config 里 enable_wifi_detection=true 就是明确
+            // opt-in。若系统 TCC 授权为 NotDetermined（fresh install / 重装 /
+            // tccutil reset / 签名变化后 TCC 重置），主动弹一次系统授权窗，避免 UI
+            // 卡在"等待授权"的死角。`request_authorization` 内部只在 NotDetermined
+            // 时请求，其他状态（Authorized/Denied/Restricted）自动 no-op。
+            #[cfg(target_os = "macos")]
+            if initial_wifi_detection {
+                crate::module::netmon::wifi_auth::request_authorization();
             }
 
             resolve::resolve_setup_async();
