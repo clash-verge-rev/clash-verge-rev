@@ -17,9 +17,14 @@ use tokio::{
 use super::{
     MIHOMO_HTTP_TIMEOUT, TriggerReason, fingerprint, pusher,
     pusher::ContextPusher,
-    sampler::{Sample, Sampler},
+    sampler::{Sample, Sampler, collect_and_build},
+    self_tun_filter::SelfTunFilter,
 };
 use crate::core::handle::Handle;
+
+/// 是否启用虚拟桥上报的 placeholder，恒 `false`。后续 commit 引入
+/// `IVerge::enable_virtual_iface_reporting` 字段后会替换为 per-sample 读取。
+const ENABLE_VIRTUAL_DEFAULT: bool = false;
 
 /// UI 通知钩子：转发 netmon 的最新决策到前端。走 `Handle::notify_network_context_updated`
 /// 发出 `verge://network-context-updated` 事件，前端诊断面板订阅此事件即可刷新。
@@ -46,6 +51,7 @@ pub async fn run(
     mut rx: mpsc::UnboundedReceiver<TriggerReason>,
     sampler: Arc<dyn Sampler>,
     pusher: Arc<dyn ContextPusher>,
+    self_tun: Arc<SelfTunFilter>,
     stopping: Arc<AtomicBool>,
     last_pushed_fingerprint: Arc<Mutex<Option<String>>>,
     op_lock: Arc<Mutex<()>>,
@@ -61,6 +67,7 @@ pub async fn run(
             trigger,
             sampler.as_ref(),
             pusher.as_ref(),
+            self_tun.as_ref(),
             stopping.as_ref(),
             last_pushed_fingerprint.as_ref(),
             op_lock.as_ref(),
@@ -108,6 +115,7 @@ async fn process(
     trigger: DebouncedTrigger,
     sampler: &dyn Sampler,
     pusher: &dyn ContextPusher,
+    self_tun: &SelfTunFilter,
     stopping: &AtomicBool,
     last_pushed_fingerprint: &Mutex<Option<String>>,
     op_lock: &Mutex<()>,
@@ -130,7 +138,7 @@ async fn process(
         trigger.force_put
     );
 
-    let sample = match sampler.collect().await {
+    let sample = match collect_and_build(sampler, self_tun, ENABLE_VIRTUAL_DEFAULT).await {
         Ok(s) => s,
         Err(e) => {
             logging!(warn, Type::Network, "netmon sampler failed: {:?}", e);

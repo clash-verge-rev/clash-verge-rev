@@ -45,7 +45,6 @@ impl SelfTunFilter {
     pub async fn on_host_config_reload(&self) {}
 
     /// Sample 前获取当前快照（stub：一律返回 `NoFilter`）。
-    #[allow(dead_code)] // 由 context.rs 采样路径调用，骨架阶段尚未接入
     pub async fn for_sample(&self) -> SelfTunSnapshot {
         SelfTunSnapshot::NoFilter
     }

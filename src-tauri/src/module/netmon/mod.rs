@@ -31,6 +31,7 @@
 //! CVR 是唯一 host；headless 场景下用户自行协调不同客户端。service loop 的非 force
 //! fingerprint-skip 也建立在同一假设上（见 service.rs::process 里的注释）。
 
+mod context;
 mod fingerprint;
 mod platform;
 mod pusher;
@@ -52,6 +53,7 @@ use crate::process::AsyncHandler;
 use platform::{PlatformMonitor, new_platform_monitor, new_sampler};
 use pusher::{ContextPusher, MihomoPusher};
 use sampler::Sampler;
+use self_tun_filter::SelfTunFilter;
 
 /// 触发 netmon 重采 + 推送的原因。
 #[derive(Debug, Clone, Copy)]
@@ -87,6 +89,12 @@ struct NetmonHandle {
     /// 所有 PUT/DELETE 走同一个 `ContextPusher` trait 实例（exit 路径也不例外）。
     /// 这样 `stop_with_delete` 的 GET-compare-DELETE 时序也能被单测 mock。
     pusher: Arc<dyn ContextPusher>,
+    /// self-TUN 过滤器（状态机：{Uninitialized, Known, Unavailable}），service loop
+    /// 与 `on_core_ready` / `on_host_config_reload` 共享同一实例。当前阶段是 stub
+    /// （恒返回 NoFilter），后续 commit 填充真实状态机（Clash REST GET /configs 查
+    /// `tun.device` + 懒式 retry 节流）。
+    #[allow(dead_code)] // 真实状态机接入后由 on_core_ready / apply_config hook 读取
+    self_tun: Arc<SelfTunFilter>,
     /// `stop_with_delete` 后置为 true：
     /// - `trigger()` 据此拒绝派发新事件
     /// - service loop 外层据此跳过已排队事件
@@ -181,6 +189,7 @@ pub fn start() -> Result<()> {
     let monitor = new_platform_monitor();
     let sampler: Arc<dyn Sampler> = new_sampler();
     let pusher: Arc<dyn ContextPusher> = Arc::new(MihomoPusher);
+    let self_tun = Arc::new(SelfTunFilter::new());
     let stopping = Arc::new(AtomicBool::new(false));
     let last_pushed_fingerprint: Arc<Mutex<Option<String>>> = Arc::new(Mutex::new(None));
     let op_lock = Arc::new(Mutex::new(()));
@@ -190,6 +199,7 @@ pub fn start() -> Result<()> {
             tx: tx.clone(),
             monitor: Arc::clone(&monitor),
             pusher: Arc::clone(&pusher),
+            self_tun: Arc::clone(&self_tun),
             stopping: Arc::clone(&stopping),
             last_pushed_fingerprint: Arc::clone(&last_pushed_fingerprint),
             op_lock: Arc::clone(&op_lock),
@@ -204,8 +214,18 @@ pub fn start() -> Result<()> {
     let service_stopping = Arc::clone(&stopping);
     let service_fp = Arc::clone(&last_pushed_fingerprint);
     let service_lock = Arc::clone(&op_lock);
+    let service_self_tun = Arc::clone(&self_tun);
     AsyncHandler::spawn(move || async move {
-        service::run(rx, sampler, pusher, service_stopping, service_fp, service_lock).await;
+        service::run(
+            rx,
+            sampler,
+            pusher,
+            service_self_tun,
+            service_stopping,
+            service_fp,
+            service_lock,
+        )
+        .await;
     });
 
     // 平台事件订阅
