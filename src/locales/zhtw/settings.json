@@ -96,6 +96,9 @@
           "allowLan": "區域網路連線",
           "dnsOverwrite": "DNS 覆寫",
           "ipv6": "IPv6",
+          "wifiDetection": "Wi-Fi 識別",
+          "virtualIfaceReporting": "上報虛擬介面",
+          "networkContext": "網路環境診斷",
           "unifiedDelay": "統一延遲",
           "logLevel": "日誌等級",
           "portConfig": "連接埠設定",
@@ -133,7 +136,9 @@
           "networkInterface": "網路介面",
           "unifiedDelay": "開啟統一延遲時，會進行兩次延遲測試，以消除連線握手等帶來的不同類型節點的延遲差異",
           "logLevel": "僅對日誌目錄 Service 資料夾下的內核日誌檔案生效",
-          "openUwpTool": "Windows 8 開始限制 UWP 應用程式（如Microsoft Store）直接存取本機主機的網路服務，使用此工具可繞過該限制"
+          "openUwpTool": "Windows 8 開始限制 UWP 應用程式（如Microsoft Store）直接存取本機主機的網路服務，使用此工具可繞過該限制",
+          "wifiDetection": "採集 Wi-Fi 的 SSID / BSSID，用於 mihomo 依照不同網路切換代理策略。macOS 上需要位置權限。",
+          "virtualIfaceReporting": "把 docker / br-* / veth / vmnet / vEthernet / virbr / vnic 這類虛擬橋接介面也上報給 mihomo。預設關閉以保護虛擬網路拓撲不外洩；僅在 network-policy 規則需要依這些虛擬介面名匹配時啟用。"
         },
         "options": {
           "logLevel": {
@@ -143,6 +148,43 @@
             "error": "Error",
             "silent": "Silent"
           }
+        },
+        "secondary": {
+          "wifiDetection": {
+            "disabled": "已停用 —— 不會採集 Wi-Fi 資訊",
+            "authorized": "已授權",
+            "waiting": "等待授權…",
+            "notAuthorized": "位置權限已拒絕",
+            "restricted": "系統原則限制",
+            "locationDisabled": "系統定位服務未啟用"
+          }
+        },
+        "actions": {
+          "openLocationSettings": "開啟定位服務設定"
+        }
+      },
+      "diagnostic": {
+        "title": "網路環境診斷",
+        "labels": {
+          "matched": "已命中規則",
+          "unmatched": "未命中",
+          "ageSeconds": "({{n}} 秒前)",
+          "hasContext": "mihomo 已接收到網路環境",
+          "interfaces": "介面清單",
+          "moreIfaces": "+{{n}} 項未顯示",
+          "virtualInterfaces": "虛擬介面清單",
+          "dnsSuffix": "DNS 後綴"
+        },
+        "columns": {
+          "name": "名稱",
+          "type": "類型",
+          "ssid": "SSID",
+          "gateway": "閘道"
+        },
+        "hints": {
+          "unmatched": "目前沒有任何 networks: 規則命中，請檢查設定檔 YAML。",
+          "noContext": "mihomo 尚未收到網路環境；請確認內核設定中已啟用 network-policy。",
+          "fetchFailed": "取得網路環境失敗"
         }
       }
     }

@@ -96,6 +96,9 @@
           "allowLan": "Conexión a la red local",
           "dnsOverwrite": "Sobrescritura de DNS",
           "ipv6": "IPv6",
+          "wifiDetection": "Detección de Wi-Fi",
+          "virtualIfaceReporting": "Reportar interfaces virtuales",
+          "networkContext": "Contexto de red",
           "unifiedDelay": "Latencia unificada",
           "logLevel": "Nivel de registro",
           "portConfig": "Configuración de puerto",
@@ -133,7 +136,9 @@
           "networkInterface": "Interfaz de red",
           "unifiedDelay": "Al habilitar la latencia unificada, se realizarán dos pruebas de latencia para eliminar las diferencias de latencia entre diferentes tipos de nodos causadas por el handshake de conexión, etc.",
           "logLevel": "Solo se aplica al archivo de registro del núcleo en la carpeta Service del directorio de registros.",
-          "openUwpTool": "A partir de Windows 8, las aplicaciones UWP (como la Tienda de Microsoft) tienen restricciones para acceder directamente a los servicios de red del host local. Use esta herramienta para evitar esta restricción."
+          "openUwpTool": "A partir de Windows 8, las aplicaciones UWP (como la Tienda de Microsoft) tienen restricciones para acceder directamente a los servicios de red del host local. Use esta herramienta para evitar esta restricción.",
+          "wifiDetection": "Recopila el SSID / BSSID de Wi-Fi para que mihomo pueda cambiar políticas de proxy por red. En macOS requiere permiso de ubicación.",
+          "virtualIfaceReporting": "Incluye los puentes docker / br-* / veth / vmnet / vEthernet / virbr / vnic en la lista de interfaces que se envía a mihomo. Desactivado por defecto para no filtrar la topología virtual; actívalo solo si tus reglas network-policy necesitan coincidir con estos nombres."
         },
         "options": {
           "logLevel": {
@@ -143,6 +148,43 @@
             "error": "Error",
             "silent": "Silent"
           }
+        },
+        "secondary": {
+          "wifiDetection": {
+            "disabled": "Desactivado — no se recopilarán detalles de Wi-Fi",
+            "authorized": "Autorizado",
+            "waiting": "Esperando autorización…",
+            "notAuthorized": "Permiso de ubicación denegado",
+            "restricted": "Restringido por política del sistema",
+            "locationDisabled": "Los servicios de ubicación del sistema están desactivados"
+          }
+        },
+        "actions": {
+          "openLocationSettings": "Abrir ajustes de ubicación"
+        }
+      },
+      "diagnostic": {
+        "title": "Contexto de red",
+        "labels": {
+          "matched": "Red coincidente",
+          "unmatched": "Sin coincidencia",
+          "ageSeconds": "(hace {{n}} s)",
+          "hasContext": "Contexto recibido por mihomo",
+          "interfaces": "Interfaces",
+          "moreIfaces": "+{{n}} más",
+          "virtualInterfaces": "Interfaces virtuales",
+          "dnsSuffix": "Sufijo DNS"
+        },
+        "columns": {
+          "name": "Nombre",
+          "type": "Tipo",
+          "ssid": "SSID",
+          "gateway": "Puerta de enlace"
+        },
+        "hints": {
+          "unmatched": "Ninguna regla networks: coincidió. Revisa el YAML del perfil.",
+          "noContext": "mihomo aún no ha recibido un contexto. Asegúrate de que network-policy esté habilitado en la configuración del núcleo.",
+          "fetchFailed": "No se pudo obtener el contexto de red"
         }
       }
     }

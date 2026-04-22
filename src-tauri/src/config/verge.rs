@@ -268,8 +268,8 @@ pub struct IVerge {
     /// `module::netmon::WIFI_DETECTION_ENABLED` atomic。
     pub enable_wifi_detection: Option<bool>,
 
-    /// netmon：是否把 docker / br-* / veth / vmnet / vEthernet / virbr 这类
-    /// 虚拟桥接口也上报给 mihomo。默认 `false`（过滤掉）。
+    /// netmon：是否把 docker / br-* / veth / vmnet / vEthernet / virbr / vnic
+    /// 这类虚拟桥接口也上报给 mihomo。默认 `false`（过滤掉）。
     ///
     /// 用户想在 matcher 里写 `match: { name: docker0 }` 这类规则时才需要开启；
     /// 开启后接口集合抖动频率会显著上升（容器起停触发重采）。前端 toggle 变化

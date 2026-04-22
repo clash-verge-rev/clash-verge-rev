@@ -9,7 +9,7 @@
 //! # 流程（7 步）
 //!
 //! 1. **tun_filter**：按 [`SelfTunSnapshot::Known`] 过滤 mihomo 自身的 TUN iface
-//! 2. **virtual_bridge_filter**：按正则 `^(docker|br-|veth|vmnet|vEthernet|virbr)`
+//! 2. **virtual_bridge_filter**：按正则 `^(docker|br-|veth|vmnet|vEthernet|virbr|vnic)`
 //!    过滤虚拟桥，除非 `enable_virtual_iface_reporting = true`
 //! 3. **per-iface canonicalize**（详见 [`canonicalize_iface`]）：
 //!    - `iface_type` 小写化

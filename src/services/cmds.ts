@@ -563,3 +563,28 @@ export const isPortInUse = async (port: number) => {
     return false
   }
 }
+
+// Wi-Fi 识别开关的授权状态快照（macOS CoreLocation；其他平台 needsAuthorization=false）
+export interface IWifiDetectionStatus {
+  enabled: boolean
+  needsAuthorization: boolean
+  authStatus:
+    | 'notDetermined'
+    | 'authorized'
+    | 'denied'
+    | 'restricted'
+    | 'notApplicable'
+  locationServicesEnabled: boolean
+}
+
+export async function getWifiDetectionStatus() {
+  return invoke<IWifiDetectionStatus>('get_wifi_detection_status')
+}
+
+export async function requestWifiDetectionAuth() {
+  return invoke<IWifiDetectionStatus>('request_wifi_detection_auth')
+}
+
+export async function openLocationSettings() {
+  return invoke<void>('open_location_settings')
+}

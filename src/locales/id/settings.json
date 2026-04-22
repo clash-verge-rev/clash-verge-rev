@@ -96,6 +96,9 @@
           "allowLan": "Izinkan LAN",
           "dnsOverwrite": "DNS Overwrite",
           "ipv6": "IPv6",
+          "wifiDetection": "Deteksi Wi-Fi",
+          "virtualIfaceReporting": "Laporkan Antarmuka Virtual",
+          "networkContext": "Konteks Jaringan",
           "unifiedDelay": "Keterlambatan Terpadu",
           "logLevel": "Tingkat Log",
           "portConfig": "Konfigurasi Port",
@@ -133,7 +136,9 @@
           "networkInterface": "Antarmuka Jaringan",
           "unifiedDelay": "Saat keterlambatan terpadu diaktifkan, dua tes keterlambatan akan dilakukan untuk menghilangkan perbedaan keterlambatan antara berbagai jenis node yang disebabkan oleh jabat tangan koneksi, dll.",
           "logLevel": "Ini hanya berlaku untuk file log kernel di folder layanan di direktori log.",
-          "openUwpTool": "Sejak Windows 8, aplikasi UWP (seperti Microsoft Store) dibatasi dari mengakses layanan jaringan host lokal secara langsung, dan alat ini dapat digunakan untuk melewati pembatasan ini"
+          "openUwpTool": "Sejak Windows 8, aplikasi UWP (seperti Microsoft Store) dibatasi dari mengakses layanan jaringan host lokal secara langsung, dan alat ini dapat digunakan untuk melewati pembatasan ini",
+          "wifiDetection": "Kumpulkan SSID / BSSID Wi-Fi agar mihomo dapat mengganti kebijakan proxy per jaringan. Di macOS memerlukan izin Lokasi.",
+          "virtualIfaceReporting": "Sertakan bridge docker / br-* / veth / vmnet / vEthernet / virbr / vnic dalam daftar antarmuka yang dilaporkan ke mihomo. Dinonaktifkan secara default untuk menghindari membocorkan topologi jaringan virtual; aktifkan hanya jika aturan network-policy Anda perlu mencocokkan nama-nama ini."
         },
         "options": {
           "logLevel": {
@@ -143,6 +148,43 @@
             "error": "Error",
             "silent": "Silent"
           }
+        },
+        "secondary": {
+          "wifiDetection": {
+            "disabled": "Dinonaktifkan — detail Wi-Fi tidak akan dikumpulkan",
+            "authorized": "Diizinkan",
+            "waiting": "Menunggu otorisasi…",
+            "notAuthorized": "Izin Lokasi ditolak",
+            "restricted": "Dibatasi oleh kebijakan sistem",
+            "locationDisabled": "Layanan Lokasi sistem mati"
+          }
+        },
+        "actions": {
+          "openLocationSettings": "Buka Pengaturan Lokasi"
+        }
+      },
+      "diagnostic": {
+        "title": "Konteks Jaringan",
+        "labels": {
+          "matched": "Jaringan Cocok",
+          "unmatched": "Tidak Ada Kecocokan",
+          "ageSeconds": "({{n}} d lalu)",
+          "hasContext": "Konteks diterima oleh mihomo",
+          "interfaces": "Antarmuka",
+          "moreIfaces": "+{{n}} lainnya",
+          "virtualInterfaces": "Antarmuka Virtual",
+          "dnsSuffix": "DNS Suffix"
+        },
+        "columns": {
+          "name": "Nama",
+          "type": "Tipe",
+          "ssid": "SSID",
+          "gateway": "Gateway"
+        },
+        "hints": {
+          "unmatched": "Tidak ada aturan networks: yang cocok. Periksa YAML profil Anda.",
+          "noContext": "mihomo belum menerima konteks. Pastikan network-policy aktif di konfigurasi kernel.",
+          "fetchFailed": "Gagal mengambil konteks jaringan"
         }
       }
     }

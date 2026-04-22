@@ -96,6 +96,9 @@
           "allowLan": "LAN'a İzin Ver",
           "dnsOverwrite": "DNS Üzerine Yazma",
           "ipv6": "IPv6",
+          "wifiDetection": "Wi-Fi Algılama",
+          "virtualIfaceReporting": "Sanal arabirimleri raporla",
+          "networkContext": "Ağ bağlamı",
           "unifiedDelay": "Birleşik Gecikme",
           "logLevel": "Günlük Seviyesi",
           "portConfig": "Port Yapılandırması",
@@ -133,7 +136,9 @@
           "networkInterface": "Ağ Arayüzü",
           "unifiedDelay": "Birleşik gecikme açıldığında, bağlantı el sıkışmaları vb. nedeniyle farklı tür düğümler arasındaki gecikme farklarını ortadan kaldırmak için iki gecikme testi gerçekleştirilir",
           "logLevel": "Bu parametre yalnızca günlük dizini Hizmet klasöründeki çekirdek günlük dosyaları için geçerlidir",
-          "openUwpTool": "Windows 8'den beri, UWP uygulamaları (Microsoft Store gibi) yerel ana bilgisayar ağ hizmetlerine doğrudan erişmekten kısıtlanmıştır ve bu araç bu kısıtlamayı atlatmak için kullanılabilir"
+          "openUwpTool": "Windows 8'den beri, UWP uygulamaları (Microsoft Store gibi) yerel ana bilgisayar ağ hizmetlerine doğrudan erişmekten kısıtlanmıştır ve bu araç bu kısıtlamayı atlatmak için kullanılabilir",
+          "wifiDetection": "mihomo'nun her ağ için proxy ilkelerini değiştirebilmesi adına Wi-Fi SSID / BSSID bilgilerini topla. macOS'ta Konum izni gerekir.",
+          "virtualIfaceReporting": "mihomo'ya raporlanan arabirim listesine docker / br-* / veth / vmnet / vEthernet / virbr / vnic köprülerini dâhil eder. Sanal ağ topolojisinin dışarı sızmasını önlemek için varsayılan olarak kapalıdır; yalnızca network-policy kurallarınız bu adlarla eşleşmek zorundaysa etkinleştirin."
         },
         "options": {
           "logLevel": {
@@ -143,6 +148,43 @@
             "error": "Error",
             "silent": "Silent"
           }
+        },
+        "secondary": {
+          "wifiDetection": {
+            "disabled": "Devre dışı — Wi-Fi ayrıntıları toplanmayacak",
+            "authorized": "İzin verildi",
+            "waiting": "Yetkilendirme bekleniyor…",
+            "notAuthorized": "Konum izni reddedildi",
+            "restricted": "Sistem ilkesi tarafından kısıtlandı",
+            "locationDisabled": "Sistem Konum Hizmetleri kapalı"
+          }
+        },
+        "actions": {
+          "openLocationSettings": "Konum Ayarlarını Aç"
+        }
+      },
+      "diagnostic": {
+        "title": "Ağ bağlamı",
+        "labels": {
+          "matched": "Eşleşen ağ",
+          "unmatched": "Eşleşme yok",
+          "ageSeconds": "({{n}} sn önce)",
+          "hasContext": "Bağlam mihomo tarafından alındı",
+          "interfaces": "Arabirimler",
+          "moreIfaces": "+{{n}} daha",
+          "virtualInterfaces": "Sanal Arayüzler",
+          "dnsSuffix": "DNS Son Eki"
+        },
+        "columns": {
+          "name": "Ad",
+          "type": "Tür",
+          "ssid": "SSID",
+          "gateway": "Ağ geçidi"
+        },
+        "hints": {
+          "unmatched": "Hiçbir networks: kuralı eşleşmedi. Profil YAML'ınızı kontrol edin.",
+          "noContext": "mihomo henüz bir bağlam almadı. Çekirdek yapılandırmasında network-policy'nin etkin olduğundan emin olun.",
+          "fetchFailed": "Ağ bağlamı alınamadı"
         }
       }
     }

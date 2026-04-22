@@ -96,6 +96,9 @@
           "allowLan": "LAN接続を許可",
           "dnsOverwrite": "DNS上書き",
           "ipv6": "IPv6",
+          "wifiDetection": "Wi-Fi 検出",
+          "virtualIfaceReporting": "仮想インターフェースを報告",
+          "networkContext": "ネットワーク コンテキスト",
           "unifiedDelay": "統一遅延",
           "logLevel": "ログレベル",
           "portConfig": "ポート設定",
@@ -133,7 +136,9 @@
           "networkInterface": "ネットワークインターフェース",
           "unifiedDelay": "統一遅延を有効にすると、2回の遅延テストが行われ、接続ハンドシェイクなどによる異なるタイプのノードの遅延差を解消します。",
           "logLevel": "ログディレクトリのServiceフォルダ内のコアログファイルにのみ適用されます。",
-          "openUwpTool": "Windows 8以降では、UWPアプリケーション（Microsoft Storeなど）がローカルホストのネットワークサービスに直接アクセスすることが制限されています。このツールを使用すると、この制限を回避できます。"
+          "openUwpTool": "Windows 8以降では、UWPアプリケーション（Microsoft Storeなど）がローカルホストのネットワークサービスに直接アクセスすることが制限されています。このツールを使用すると、この制限を回避できます。",
+          "wifiDetection": "mihomo がネットワークごとにプロキシポリシーを切り替えられるよう、Wi-Fi の SSID / BSSID を収集します。macOS では位置情報の許可が必要です。",
+          "virtualIfaceReporting": "docker / br-* / veth / vmnet / vEthernet / virbr / vnic といった仮想ブリッジを、mihomo へ報告するインターフェース一覧に含めます。仮想ネットワークの構成漏洩を防ぐため既定では無効。network-policy ルールがこれらの名前でマッチする必要があるときだけ有効にしてください。"
         },
         "options": {
           "logLevel": {
@@ -143,6 +148,43 @@
             "error": "Error",
             "silent": "Silent"
           }
+        },
+        "secondary": {
+          "wifiDetection": {
+            "disabled": "無効 — Wi-Fi の詳細情報は収集されません",
+            "authorized": "許可済み",
+            "waiting": "許可を待っています…",
+            "notAuthorized": "位置情報の許可が拒否されました",
+            "restricted": "システムポリシーにより制限されています",
+            "locationDisabled": "システムの位置情報サービスがオフです"
+          }
+        },
+        "actions": {
+          "openLocationSettings": "位置情報設定を開く"
+        }
+      },
+      "diagnostic": {
+        "title": "ネットワーク コンテキスト",
+        "labels": {
+          "matched": "一致したネットワーク",
+          "unmatched": "一致なし",
+          "ageSeconds": "({{n}} 秒前)",
+          "hasContext": "mihomo がコンテキストを受信済み",
+          "interfaces": "インターフェース一覧",
+          "moreIfaces": "他 {{n}} 件",
+          "virtualInterfaces": "仮想インターフェース一覧",
+          "dnsSuffix": "DNS サフィックス"
+        },
+        "columns": {
+          "name": "名前",
+          "type": "種類",
+          "ssid": "SSID",
+          "gateway": "ゲートウェイ"
+        },
+        "hints": {
+          "unmatched": "networks: のいずれのルールにも一致しません。プロファイルの YAML を確認してください。",
+          "noContext": "mihomo はまだコンテキストを受信していません。カーネル設定で network-policy が有効か確認してください。",
+          "fetchFailed": "ネットワーク コンテキストの取得に失敗しました"
         }
       }
     }

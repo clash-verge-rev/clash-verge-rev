@@ -96,6 +96,9 @@
           "allowLan": "局域网连接",
           "dnsOverwrite": "DNS 覆写",
           "ipv6": "IPv6",
+          "wifiDetection": "Wi-Fi 识别",
+          "virtualIfaceReporting": "上报虚拟接口",
+          "networkContext": "网络环境诊断",
           "unifiedDelay": "统一延迟",
           "logLevel": "日志等级",
           "portConfig": "端口设置",
@@ -133,7 +136,9 @@
           "networkInterface": "网络接口",
           "unifiedDelay": "开启统一延迟时，会进行两次延迟测试，以消除连接握手等带来的不同类型节点的延迟差异",
           "logLevel": "仅对日志目录 Service 文件夹下的内核日志文件生效",
-          "openUwpTool": "Windows 8 开始限制 UWP 应用（如微软商店）直接访问本地主机的网络服务，使用此工具可绕过该限制"
+          "openUwpTool": "Windows 8 开始限制 UWP 应用（如微软商店）直接访问本地主机的网络服务，使用此工具可绕过该限制",
+          "wifiDetection": "采集 Wi-Fi 的 SSID / BSSID，用于 mihomo 按不同网络切换代理策略。macOS 上需要位置权限。",
+          "virtualIfaceReporting": "把 docker / br-* / veth / vmnet / vEthernet / virbr / vnic 这类虚拟桥接口也上报给 mihomo。默认关闭以保护虚拟网络拓扑不外泄；仅在 network-policy 规则需要按这些虚拟接口名匹配时开启。"
         },
         "options": {
           "logLevel": {
@@ -143,6 +148,43 @@
             "error": "Error",
             "silent": "Silent"
           }
+        },
+        "secondary": {
+          "wifiDetection": {
+            "disabled": "已关闭 —— 不会采集 Wi-Fi 信息",
+            "authorized": "已授权",
+            "waiting": "等待授权…",
+            "notAuthorized": "位置权限已拒绝",
+            "restricted": "系统策略限制",
+            "locationDisabled": "系统定位服务未开启"
+          }
+        },
+        "actions": {
+          "openLocationSettings": "打开定位服务设置"
+        }
+      },
+      "diagnostic": {
+        "title": "网络环境诊断",
+        "labels": {
+          "matched": "已命中规则",
+          "unmatched": "未命中",
+          "ageSeconds": "({{n}} 秒前)",
+          "hasContext": "mihomo 已接收到网络环境",
+          "interfaces": "接口列表",
+          "moreIfaces": "+{{n}} 项未展示",
+          "virtualInterfaces": "虚拟接口列表",
+          "dnsSuffix": "DNS 后缀"
+        },
+        "columns": {
+          "name": "名称",
+          "type": "类型",
+          "ssid": "SSID",
+          "gateway": "网关"
+        },
+        "hints": {
+          "unmatched": "当前没有任何 networks: 规则命中，请检查配置文件 YAML。",
+          "noContext": "mihomo 尚未收到网络环境；请确认内核配置里启用了 network-policy。",
+          "fetchFailed": "获取网络环境失败"
         }
       }
     }

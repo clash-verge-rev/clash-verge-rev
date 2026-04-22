@@ -1,5 +1,10 @@
-import { LanRounded, SettingsRounded } from '@mui/icons-material'
-import { MenuItem, Select, TextField, Typography } from '@mui/material'
+import {
+  LanRounded,
+  NetworkCheckRounded,
+  SettingsRounded,
+} from '@mui/icons-material'
+import { MenuItem, Select, Stack, TextField, Typography } from '@mui/material'
+import { useQueryClient } from '@tanstack/react-query'
 import { invoke } from '@tauri-apps/api/core'
 import { useLockFn } from 'ahooks'
 import { useRef, useState } from 'react'
@@ -10,8 +15,10 @@ import { DialogRef, Switch, TooltipIcon } from '@/components/base'
 import { useClash } from '@/hooks/use-clash'
 import { useClashLog } from '@/hooks/use-clash-log'
 import { useVerge } from '@/hooks/use-verge'
-import { invoke_uwp_tool } from '@/services/cmds'
+import { WIFI_DETECTION_QUERY_KEY } from '@/hooks/use-wifi-detection-status'
+import { invoke_uwp_tool, requestWifiDetectionAuth } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
+import { debugLog } from '@/utils/debug'
 import getSystem from '@/utils/get-system'
 
 import { ClashCoreViewer } from './mods/clash-core-viewer'
@@ -20,12 +27,15 @@ import { ControllerViewer } from './mods/controller-viewer'
 import { DnsViewer } from './mods/dns-viewer'
 import { HeaderConfiguration } from './mods/external-controller-cors'
 import { GuardState } from './mods/guard-state'
+import { NetworkContextViewer } from './mods/network-context-viewer'
 import { NetworkInterfaceViewer } from './mods/network-interface-viewer'
 import { SettingItem, SettingList } from './mods/setting-comp'
 import { TunnelsViewer } from './mods/tunnels-viewer'
 import { WebUIViewer } from './mods/web-ui-viewer'
+import { WifiDetectionStatusLine } from './mods/wifi-detection-status-line'
 
 const isWIN = getSystem() === 'windows'
+const isMAC = getSystem() === 'macos'
 
 interface Props {
   onError: (err: Error) => void
@@ -33,6 +43,7 @@ interface Props {
 
 const SettingClash = ({ onError }: Props) => {
   const { t } = useTranslation()
+  const queryClient = useQueryClient()
 
   const { clash, version, mutateClash, patchClash } = useClash()
   const { verge, patchVerge } = useVerge()
@@ -47,6 +58,13 @@ const SettingClash = ({ onError }: Props) => {
 
   const { verge_mixed_port } = verge ?? {}
 
+  // Wi-Fi 识别开关默认值与后端 `module::netmon::DEFAULT_WIFI_DETECTION` 一致：
+  // macOS 默认关（CoreLocation 授权成本），其他平台默认开（WEXT / WlanAPI
+  // 无授权开销）。
+  const wifiDetectionDefault = !isMAC
+  const wifiDetectionEnabled =
+    verge?.enable_wifi_detection ?? wifiDetectionDefault
+
   // 独立跟踪DNS设置开关状态
   const [dnsSettingsEnabled, setDnsSettingsEnabled] = useState(() => {
     return verge?.enable_dns_settings ?? false
@@ -60,6 +78,7 @@ const SettingClash = ({ onError }: Props) => {
   const dnsRef = useRef<DialogRef>(null)
   const corsRef = useRef<DialogRef>(null)
   const tunnelRef = useRef<DialogRef>(null)
+  const netCtxRef = useRef<DialogRef>(null)
 
   const onSwitchFormat = (_e: any, value: boolean) => value
   const onChangeData = (patch: Partial<IConfigData>) => {
@@ -101,6 +120,7 @@ const SettingClash = ({ onError }: Props) => {
       <DnsViewer ref={dnsRef} />
       <HeaderConfiguration ref={corsRef} />
       <TunnelsViewer ref={tunnelRef} />
+      <NetworkContextViewer ref={netCtxRef} />
       <SettingItem
         label={t('settings.sections.clash.form.fields.allowLan')}
         extra={
@@ -150,6 +170,83 @@ const SettingClash = ({ onError }: Props) => {
           onFormat={onSwitchFormat}
           onChange={(e) => onChangeData({ ipv6: e })}
           onGuard={(e) => patchClash({ ipv6: e })}
+        >
+          <Switch edge="end" />
+        </GuardState>
+      </SettingItem>
+
+      <SettingItem
+        label={t('settings.sections.clash.form.fields.wifiDetection')}
+        secondary={<WifiDetectionStatusLine />}
+        extra={
+          <Stack direction="row" spacing={0.5} sx={{ alignItems: 'center' }}>
+            <TooltipIcon
+              title={t('settings.sections.clash.form.tooltips.wifiDetection')}
+              sx={{ opacity: '0.7' }}
+            />
+            <TooltipIcon
+              icon={NetworkCheckRounded}
+              title={t('settings.sections.clash.form.fields.networkContext')}
+              aria-label={t(
+                'settings.sections.clash.form.fields.networkContext',
+              )}
+              sx={{ opacity: '0.7' }}
+              onClick={() => netCtxRef.current?.open()}
+            />
+          </Stack>
+        }
+      >
+        <GuardState
+          value={wifiDetectionEnabled}
+          valueProps="checked"
+          onCatch={onError}
+          onFormat={onSwitchFormat}
+          onChange={() => {
+            /* 不做 optimistic 本地更新：实际值经 patchVerge 回写 + useQuery 刷新 */
+          }}
+          onGuard={async (v: boolean) => {
+            await patchVerge({ enable_wifi_detection: v })
+            // macOS 翻 ON 时触发 CoreLocation 授权弹窗；delegate 回调会 emit
+            // wifi-auth-changed 事件驱动 UI。这里再显式 invalidate 一次以覆盖
+            // 未弹窗场景（状态已是 Authorized / Denied，delegate 不会回调）。
+            // 授权请求失败不视作 toggle 失败（用户意图已被 patchVerge 持久化），
+            // 但记录到 debug 日志便于排查"UI 停在 waiting"这类现象。
+            if (v && isMAC) {
+              await requestWifiDetectionAuth().catch((err) => {
+                debugLog('[wifi-detection] request auth failed:', err)
+              })
+            }
+            await queryClient.invalidateQueries({
+              queryKey: WIFI_DETECTION_QUERY_KEY,
+            })
+          }}
+        >
+          <Switch edge="end" />
+        </GuardState>
+      </SettingItem>
+
+      <SettingItem
+        label={t('settings.sections.clash.form.fields.virtualIfaceReporting')}
+        extra={
+          <TooltipIcon
+            title={t(
+              'settings.sections.clash.form.tooltips.virtualIfaceReporting',
+            )}
+            sx={{ opacity: '0.7' }}
+          />
+        }
+      >
+        <GuardState
+          value={verge?.enable_virtual_iface_reporting ?? false}
+          valueProps="checked"
+          onCatch={onError}
+          onFormat={onSwitchFormat}
+          onChange={() => {
+            /* 不做 optimistic 本地更新：实际值经 patchVerge 回写 + useVerge 刷新 */
+          }}
+          onGuard={(v: boolean) =>
+            patchVerge({ enable_virtual_iface_reporting: v })
+          }
         >
           <Switch edge="end" />
         </GuardState>

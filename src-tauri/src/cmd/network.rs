@@ -220,15 +220,54 @@ mod macos_wifi {
 }
 
 /// 打开系统设置的位置服务面板；仅 macOS 实现，其他平台 no-op。
+///
+/// 返回 `Result<(), String>` 而非 `()`，覆盖两类失败：
+/// 1. `open` 子进程**无法运行**（`open` 二进制缺失、沙盒拒绝 fork/exec、
+///    wait/reap 过程失败等）—— `output()` 本身返回 `Err`
+/// 2. `open` **成功启动但以非零退出码结束**（URL scheme 无人处理、deep link
+///    目标不存在等 Launch Services 层面的失败）—— `output().status.success()
+///    == false`，本函数把退出码与 stderr 组合成错误字符串
+///
+/// 这两种都透传到前端，`openLocationSettings().catch(showNotice.error)` 才能
+/// 真正对用户可见。改用 `output()` 而非 `spawn()` 的理由：`spawn()` 只捕获
+/// 第 1 类的创建阶段失败，第 2 类会被前端 Promise resolve，用户点链接没反应
+/// 时毫无线索。`output()` 顺带通过内部 `wait` 回收子进程，避免 zombie。
+///
+/// `open` 命令本身是 fire-and-forget 语义——它 fork 目标 app 后立即退出，
+/// `output()` 等待的是 `open` 本身而非目标 app，实际阻塞通常在毫秒级。
 #[tauri::command]
 #[cfg(target_os = "macos")]
-pub fn open_location_settings() {
-    use std::process::Command;
-    let _ = Command::new("open")
+pub fn open_location_settings() -> Result<(), String> {
+    use std::process::{Command, Stdio};
+    let output = Command::new("open")
         .arg("x-apple.systempreferences:com.apple.preference.security?Privacy_LocationServices")
-        .spawn();
+        .stdout(Stdio::null())
+        .stderr(Stdio::piped())
+        .output()
+        .map_err(|e| format!("run `open` failed: {e}"))?;
+    if output.status.success() {
+        return Ok(());
+    }
+    let code = output
+        .status
+        .code()
+        .map_or_else(|| "signal".to_string(), |c| c.to_string());
+    let stderr = String::from_utf8_lossy(&output.stderr);
+    let stderr = stderr.trim();
+    if stderr.is_empty() {
+        Err(format!("`open` exited with code {code}"))
+    } else {
+        Err(format!("`open` exited with code {code}: {stderr}"))
+    }
 }
 
 #[tauri::command]
 #[cfg(not(target_os = "macos"))]
-pub const fn open_location_settings() {}
+// 非 macOS 平台不需要打开位置设置面板（没有 CoreLocation 概念），但返回
+// `Result<(), String>` 与 macOS 保持一致：前端 `openLocationSettings()` 的
+// `invoke<void>` 绑定对两个平台走同一条 `.catch(showNotice.error)` 路径。
+// 拆成 `() -> ()` 会让前端 TypeScript 绑定也需要平台条件，得不偿失。
+#[expect(clippy::unnecessary_wraps, reason = "cross-platform type parity")]
+pub const fn open_location_settings() -> Result<(), String> {
+    Ok(())
+}

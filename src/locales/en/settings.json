@@ -96,6 +96,9 @@
           "allowLan": "Allow LAN",
           "dnsOverwrite": "DNS Overwrite",
           "ipv6": "IPv6",
+          "wifiDetection": "Wi-Fi Detection",
+          "virtualIfaceReporting": "Report Virtual Interfaces",
+          "networkContext": "Network Context",
           "unifiedDelay": "Unified Delay",
           "logLevel": "Log Level",
           "portConfig": "Port Config",
@@ -133,7 +136,9 @@
           "networkInterface": "Network Interface",
           "unifiedDelay": "When unified delay is turned on, two delay tests will be performed to eliminate the delay differences between different types of nodes caused by connection handshakes, etc",
           "logLevel": "This parameter is valid only for kernel log files in the log directory Service folder",
-          "openUwpTool": "Since Windows 8, UWP apps (such as Microsoft Store) are restricted from directly accessing local host network services, and this tool can be used to bypass this restriction"
+          "openUwpTool": "Since Windows 8, UWP apps (such as Microsoft Store) are restricted from directly accessing local host network services, and this tool can be used to bypass this restriction",
+          "wifiDetection": "Collect Wi-Fi SSID / BSSID so mihomo can switch proxy policies per network. On macOS this requires Location permission.",
+          "virtualIfaceReporting": "Include docker / br-* / veth / vmnet / vEthernet / virbr / vnic bridges in the interface list reported to mihomo. Off by default to avoid leaking virtual network topology; enable only if your network-policy rules target virtual interface names."
         },
         "options": {
           "logLevel": {
@@ -143,6 +148,43 @@
             "error": "Error",
             "silent": "Silent"
           }
+        },
+        "secondary": {
+          "wifiDetection": {
+            "disabled": "Disabled — Wi-Fi details will not be collected",
+            "authorized": "Authorized",
+            "waiting": "Waiting for authorization…",
+            "notAuthorized": "Location permission denied",
+            "restricted": "Restricted by system policy",
+            "locationDisabled": "System Location Services are off"
+          }
+        },
+        "actions": {
+          "openLocationSettings": "Open Location Settings"
+        }
+      },
+      "diagnostic": {
+        "title": "Network Context",
+        "labels": {
+          "matched": "Matched Network",
+          "unmatched": "No match",
+          "ageSeconds": "({{n}}s ago)",
+          "hasContext": "Context received by mihomo",
+          "interfaces": "Interfaces",
+          "moreIfaces": "+{{n}} more",
+          "virtualInterfaces": "Virtual Interfaces",
+          "dnsSuffix": "DNS Suffix"
+        },
+        "columns": {
+          "name": "Name",
+          "type": "Type",
+          "ssid": "SSID",
+          "gateway": "Gateway"
+        },
+        "hints": {
+          "unmatched": "No networks: rule matched. Check your profile YAML.",
+          "noContext": "mihomo has not received a context yet. Make sure network-policy is enabled in the kernel config.",
+          "fetchFailed": "Failed to fetch network context"
         }
       }
     }
