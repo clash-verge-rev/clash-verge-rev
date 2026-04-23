@@ -370,6 +370,16 @@ export async function cmdTestDelay(url: string) {
   return invoke<number>('test_delay', { url })
 }
 
+/** 通过当前活跃代理的混合端口下载指定 URL，测量速度（MB/s）。
+ *  失败时返回 0。
+ */
+export async function cmdTestDownloadSpeed(
+  url: string,
+  timeoutMs = 15_000,
+): Promise<number> {
+  return invoke<number>('test_download_speed', { url, timeoutMs })
+}
+
 export async function invoke_uwp_tool() {
   return invoke<void>('invoke_uwp_tool').catch((err) =>
     showNotice.error(err, 1500),

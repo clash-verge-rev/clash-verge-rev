@@ -30,6 +30,7 @@
     "tooltips": {
       "locate": "当前节点",
       "delayCheck": "延迟测试",
+      "speedCheck": "下载速度测试（仅绿色节点）",
       "sortDefault": "默认排序",
       "sortDelay": "按延迟排序",
       "sortName": "按名称排序",

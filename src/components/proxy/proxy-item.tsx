@@ -13,7 +13,9 @@ import {
 
 import { BaseLoading } from '@/components/base'
 import { useProxyDelayState } from '@/hooks/use-proxy-delay-state'
+import { useProxySpeedState } from '@/hooks/use-proxy-speed-state'
 import delayManager from '@/services/delay'
+import speedManager from '@/services/speed'
 
 interface Props {
   group: IProxyGroupItem
@@ -50,6 +52,7 @@ export const ProxyItem = (props: Props) => {
     proxy,
     group.name,
   )
+  const { speedValue } = useProxySpeedState(proxy, group.name)
 
   return (
     <ListItem sx={sx}>
@@ -79,7 +82,7 @@ export const ProxyItem = (props: Props) => {
               },
               backgroundColor: bgcolor,
               marginBottom: '8px',
-              height: '40px',
+              height: speedValue > 0 ? '52px' : '40px',
             }
           },
         ]}
@@ -119,58 +122,76 @@ export const ProxyItem = (props: Props) => {
             display: isPreset ? 'none' : '',
           }}
         >
-          {delayValue === -2 && (
-            <Widget>
-              <BaseLoading />
-            </Widget>
-          )}
+          <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+            {/* 下载速度（有数据时显示在 ping 上方） */}
+            {speedValue > 0 && (
+              <Box
+                sx={{
+                  fontSize: '10px',
+                  lineHeight: 1.2,
+                  color: speedManager.formatSpeedColor(speedValue),
+                  fontVariantNumeric: 'tabular-nums',
+                  px: '6px',
+                  pb: '1px',
+                }}
+              >
+                {speedManager.formatSpeed(speedValue)}
+              </Box>
+            )}
 
-          {!proxy.provider && delayValue !== -2 && (
-            // provider 的节点不支持检测
-            <Widget
-              className="the-check"
-              onClick={(e) => {
-                e.preventDefault()
-                e.stopPropagation()
-                onDelay()
-              }}
-              sx={({ palette }) => ({
-                display: 'none', // hover 时显示
-                ':hover': { bgcolor: alpha(palette.primary.main, 0.15) },
-              })}
-            >
-              Check
-            </Widget>
-          )}
+            {delayValue === -2 && (
+              <Widget>
+                <BaseLoading />
+              </Widget>
+            )}
 
-          {delayValue > 0 && (
-            // 显示延迟
-            <Widget
-              className="the-delay"
-              onClick={(e) => {
-                if (proxy.provider) return
-                e.preventDefault()
-                e.stopPropagation()
-                onDelay()
-              }}
-              sx={({ palette }) => ({
-                color: delayManager.formatDelayColor(delayValue, timeout),
-                ...(!proxy.provider
-                  ? { ':hover': { bgcolor: alpha(palette.primary.main, 0.15) } }
-                  : {}),
-              })}
-            >
-              {delayManager.formatDelay(delayValue, timeout)}
-            </Widget>
-          )}
+            {!proxy.provider && delayValue !== -2 && (
+              // provider 的节点不支持检测
+              <Widget
+                className="the-check"
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  onDelay()
+                }}
+                sx={({ palette }) => ({
+                  display: 'none', // hover 时显示
+                  ':hover': { bgcolor: alpha(palette.primary.main, 0.15) },
+                })}
+              >
+                Check
+              </Widget>
+            )}
 
-          {delayValue !== -2 && delayValue <= 0 && selected && (
-            // 展示已选择的 icon
-            <CheckCircleOutlineRounded
-              className="the-icon"
-              sx={{ fontSize: 16 }}
-            />
-          )}
+            {delayValue > 0 && (
+              // 显示延迟
+              <Widget
+                className="the-delay"
+                onClick={(e) => {
+                  if (proxy.provider) return
+                  e.preventDefault()
+                  e.stopPropagation()
+                  onDelay()
+                }}
+                sx={({ palette }) => ({
+                  color: delayManager.formatDelayColor(delayValue, timeout),
+                  ...(!proxy.provider
+                    ? { ':hover': { bgcolor: alpha(palette.primary.main, 0.15) } }
+                    : {}),
+                })}
+              >
+                {delayManager.formatDelay(delayValue, timeout)}
+              </Widget>
+            )}
+
+            {delayValue !== -2 && delayValue <= 0 && selected && (
+              // 展示已选择的 icon
+              <CheckCircleOutlineRounded
+                className="the-icon"
+                sx={{ fontSize: 16 }}
+              />
+            )}
+          </Box>
         </ListItemIcon>
       </ListItemButton>
     </ListItem>

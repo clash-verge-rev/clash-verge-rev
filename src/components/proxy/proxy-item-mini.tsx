@@ -4,7 +4,9 @@ import { useTranslation } from 'react-i18next'
 
 import { BaseLoading } from '@/components/base'
 import { useProxyDelayState } from '@/hooks/use-proxy-delay-state'
+import { useProxySpeedState } from '@/hooks/use-proxy-speed-state'
 import delayManager from '@/services/delay'
+import speedManager from '@/services/speed'
 
 interface Props {
   group: IProxyGroupItem
@@ -25,6 +27,7 @@ export const ProxyItemMini = (props: Props) => {
     proxy,
     group.name,
   )
+  const { speedValue } = useProxySpeedState(proxy, group.name)
 
   return (
     <ListItemButton
@@ -154,6 +157,22 @@ export const ProxyItemMini = (props: Props) => {
       <Box
         sx={{ ml: 0.5, color: 'primary.main', display: isPreset ? 'none' : '' }}
       >
+        {/* 下载速度（有数据时显示在 ping 上方） */}
+        {speedValue > 0 && (
+          <Box
+            sx={{
+              fontSize: '10px',
+              lineHeight: 1.2,
+              textAlign: 'right',
+              color: speedManager.formatSpeedColor(speedValue),
+              fontVariantNumeric: 'tabular-nums',
+              px: '4px',
+              mb: '1px',
+            }}
+          >
+            {speedManager.formatSpeed(speedValue)}
+          </Box>
+        )}
         {delayValue === -2 && (
           <Widget>
             <BaseLoading />
