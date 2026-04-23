@@ -32,6 +32,18 @@ pub fn open_web_url(url: String) -> CmdResult<()> {
     open::that(url.as_str()).stringify_err()
 }
 
+/// 返回后端 `app-log` ring buffer 的 owned 快照，供前端日志页在 onConnected
+/// 时回填错过的 `[Network]` 条目。
+///
+/// 为什么需要：`tauri::Emitter::emit` 在无 listener 时静默丢事件，而
+/// `useLogData::listen("app-log")` 仅在日志页挂载时注册——启动早期产生的
+/// netmon 诊断日志会在用户进日志页前被 drop。与 mihomo 内核自带的 `/logs`
+/// 历史回放形成对称；实现细节见 `core::logger::AppLogRecord` 的 doc comment。
+#[tauri::command]
+pub fn get_app_log_history() -> Vec<crate::core::logger::AppLogRecord> {
+    crate::core::logger::get_app_log_history_snapshot()
+}
+
 // TODO 后续可以为前端提供接口，当前作为托盘菜单使用
 /// 打开 Verge 最新日志
 #[tauri::command]

@@ -134,6 +134,7 @@ mod app_init {
             cmd::open_logs_dir,
             cmd::open_web_url,
             cmd::open_core_dir,
+            cmd::get_app_log_history,
             cmd::open_app_log,
             cmd::open_core_log,
             cmd::get_portable_flag,

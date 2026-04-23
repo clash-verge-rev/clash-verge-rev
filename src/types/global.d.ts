@@ -195,6 +195,11 @@ interface ISystemMonitorOverviewValidator {
 
 interface ILogItem {
   type: string
+  /**
+   * 应用侧日志来源标签（如 "Network"）。undefined 表示 mihomo 内核 /logs
+   * WebSocket 推送的日志，无归属来源。
+   */
+  source?: string
   time?: string
   payload: string
 }

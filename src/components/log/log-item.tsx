@@ -31,6 +31,17 @@ const Item = styled(Box)(({ theme: { palette, typography } }) => ({
   '& .type[data-type="info"], & .type[data-type="inf"]': {
     color: palette.info.main,
   },
+  // 与 `.type` 级别徽章风格一致：仅前景色染色，不加背景。避免绿色实心块在
+  // 日志列表里权重过高喧宾夺主。`fontWeight: '600'` 字符串形式与上方 `.type`
+  // 规则保持一致（MUI 接受数字/字符串，但同一 styled 内混用读起来扎眼）。
+  '& .source': {
+    display: 'inline-block',
+    marginLeft: 8,
+    textAlign: 'center',
+    textTransform: 'uppercase',
+    fontWeight: '600',
+    color: palette.success.main,
+  },
   '& .data': {
     color: palette.text.primary,
     overflowWrap: 'anywhere',
@@ -112,6 +123,9 @@ const LogItem = ({ value, searchState }: Props) => {
         <span className="type" data-type={value.type.toLowerCase()}>
           {renderHighlightText(value.type)}
         </span>
+        {value.source && (
+          <span className="source">{renderHighlightText(value.source)}</span>
+        )}
       </div>
       <div>
         <span className="data">{renderHighlightText(value.payload)}</span>
