@@ -42,9 +42,8 @@ pub trait Sampler: Send + Sync {
 
 /// 占位 sampler：一律返回 `Ok(None)`。
 ///
-/// 在三平台真实实现接入前使用。service 看到 `Sample::Unknown` 会直接跳过，不会
-/// 向 mihomo 发请求，保证骨架 commit 运行时完全 no-op——不会覆盖用户通过其他
-/// 方式推送过的 sticky context。
+/// 未支持平台（BSD 等非 tier-1 target）的降级实现。service 看到 `Sample::Unknown`
+/// 会直接跳过，不向 mihomo 发请求，也不会覆盖用户通过其他方式推送过的 sticky context。
 #[cfg_attr(
     any(target_os = "linux", target_os = "windows", target_os = "macos"),
     allow(dead_code)

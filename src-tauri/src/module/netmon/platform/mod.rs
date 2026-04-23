@@ -5,13 +5,8 @@
 //! 事件到达时向 service loop 发送 [`super::TriggerReason::NetworkEvent`] 或
 //! [`super::TriggerReason::Resumed`]。
 //!
-//! 骨架阶段三平台 `sampler.rs` / `monitor.rs` / `probe.rs` / `wifi.rs` 尚未接入，
-//! 统一走 `StubMonitor`（no-op）+ `StubSampler`（返回 Unknown），保证运行时不动
-//! mihomo；真实 platform 实现由后续 commit 接入。
-//!
-//! `dns_suffix.rs` 已作为 stub 落地（恒返回空 `Vec<String>`），为各平台 sampler
-//! 先行打好调用点；真实采集（systemd-resolved / `GetAdaptersAddresses.SuffixSearchList`
-//! / SCDynamicStore `SearchDomains`）由后续 commit 落地。
+//! 未支持平台（BSD 等非 tier-1 target）走 `StubMonitor`（no-op）+ `StubSampler`
+//! （返回 Unknown），运行时不向 mihomo 发请求。
 
 use std::sync::Arc;
 

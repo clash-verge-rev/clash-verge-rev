@@ -6,8 +6,8 @@
 //!
 //! **Location 权限（macOS 14+）**：无 Location 授权时 `ssid()` / `bssid()` 返回 nil
 //! （Apple 在 Sonoma 起强制）。我们静默降级到 `None`，不影响 iface_type=wifi / 其他
-//! 字段采集。后续应在 `Info.plist` 加 `NSLocationWhenInUseUsageDescription` 并在首次
-//! 启用 network-policy 功能时引导用户授权；此处仅接入 API，权限 UX 留到后续 commit。
+//! 字段采集。授权 UX 由 [`super::location`] 模块负责（CoreLocation delegate +
+//! `verge://wifi-auth-changed` 事件驱动前端刷新）；此模块只负责 API 调用。
 //!
 //! 失败场景（静默返回 None）：
 //! - iface 名不存在 / 非 Wi-Fi 接口（`interfaceWithName:` 返回 nil）

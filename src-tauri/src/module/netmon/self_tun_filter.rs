@@ -16,10 +16,9 @@
 //!
 //! # 触发器
 //!
-//! - **on_startup**（**当前未接线**）：预留 best-effort 探测 hook。mihomo 在 host
-//!   启动早期多半未就绪，按 backlog 计划由独立 PR 把 `netmon::start` 开头挂上；在那
-//!   之前，启动期的首个 `for_sample` 在 `Uninitialized` 状态下走懒式重试路径
-//!   （`last_attempt is None` → 立即发 HTTP），效果等价。
+//! - **on_startup**：预留 best-effort 探测 hook，当前未在 `netmon::start` 中调用。
+//!   启动期的首个 `for_sample` 在 `Uninitialized` 状态下立即发 HTTP（`last_attempt is
+//!   None` → 进 due 分支），效果等价。
 //! - **on_core_ready**（每次 CoreManager::start_core Ok 后）：强制 refresh。mihomo
 //!   此刻确保就绪，这是 Known(name) 状态的主获取点。
 //! - **on_host_config_reload**（每次 apply_config 的 reload 子路径 A 成功后）：用户
@@ -115,7 +114,11 @@ impl SelfTunFilter {
     }
 
     /// 应用启动触发：best-effort 一次查询，失败不 retry（走懒式重试兜底）。
-    #[allow(dead_code)] // 0.4 本 commit 定义；具体 wire 归后续 backlog（startup hook）
+    ///
+    /// 当前未在 `netmon::start` 中调用；启动期的首个 `for_sample` 在 `Uninitialized`
+    /// 状态下走懒式重试路径（`last_attempt is None` → 立即发 HTTP），效果等价。
+    /// 留作未来把 startup hook 正式接到 `netmon::start` 开头的扩展点。
+    #[allow(dead_code)]
     pub async fn on_startup(&self) {
         self.refresh_http(TriggerCtx::StartupBestEffort).await;
     }

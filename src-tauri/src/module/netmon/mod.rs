@@ -61,7 +61,6 @@ pub enum TriggerReason {
     /// 应用启动首次推送
     Startup,
     /// 系统 resume（从 sleep 唤醒）或 app 从后台切前台
-    #[allow(dead_code)] // 由 RunEvent::Resumed hook 消费，骨架阶段尚未接入
     Resumed,
     /// mihomo 核心 start / restart / change 成功后：本进程内的 fingerprint 还是
     /// 旧的，但 mihomo 侧的 /network/context 已被重置，需要强制重推一次，
@@ -119,9 +118,7 @@ static HANDLE: OnceCell<NetmonHandle> = OnceCell::new();
 ///
 /// **平台差异化默认**：macOS 默认 `false`（开启需 CoreLocation 授权，避免首次
 /// 启动弹窗骚扰）；Linux / Windows 默认 `true`（WEXT / WlanAPI 无授权成本，
-/// 让 network-policy 按 SSID 匹配开箱可用）。atomic 初始值由 `lib.rs::setup`
-/// 读持久化的 `IVerge::enable_wifi_detection` 写入（fallback 到本常量），用户
-/// toggle 后由 `UpdateFlags::WIFI_DETECTION_SYNC` 同步。
+/// 让 network-policy 按 SSID 匹配开箱可用）。
 static WIFI_DETECTION_ENABLED: AtomicBool = AtomicBool::new(DEFAULT_WIFI_DETECTION);
 
 /// 平台默认值：macOS `false`（定位授权成本），其他平台 `true`。

@@ -49,9 +49,9 @@ fn collect_sync() -> Result<Option<RawIfaceInventory>> {
 
     // 1. 枚举所有 active service 的 (InterfaceName, Router)；两族合并
     //    按 iface 名聚合（同一 iface 可能同时出现在 v4/v6）。v4 router 优先；
-    //    无 v4 → 用 v6。§2.3 b 的 metric / next_hop 字典序 tie-break 在
-    //    SCDynamicStore 层面不适用——service 级别不暴露 metric，同 iface 同族
-    //    多 Router 极罕见；ServiceOrder 的先到胜出等价"按系统偏好第一个"。
+    //    无 v4 → 用 v6。SCDynamicStore 层面不暴露 metric / next_hop，且同 iface
+    //    同族多 Router 极罕见，因此不做进一步 tie-break；ServiceOrder 的先到胜出
+    //    等价"按系统偏好第一个"。
     let iface_data = enumerate_active_services(&store);
 
     // 2. v4 + v6 邻居表各拉一次，建立 (if_index, ip) → mac 的查找索引，避免

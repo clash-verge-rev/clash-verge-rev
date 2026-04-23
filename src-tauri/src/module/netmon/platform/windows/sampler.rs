@@ -119,11 +119,12 @@ impl<T> Drop for MibTable<T> {
 
 /// 合并 v4 / v6 的 default route 集合 → per-LUID 最佳 [`GatewayChoice`]。
 ///
-/// §2.3 (b) 规则：
+/// 合并规则：
 /// 1. `gateway_ip` 填充优先级：v4 default → v6 fallback（同 LUID 同时有 v4/v6 时 v4 胜）
 /// 2. 同族多 default：effective_metric（route.Metric + interface.Metric）最小 →
 ///    next_hop 字典序最小
-/// 3. `if_index` tie-break 只在跨 iface 竞争"主 iface"时用，per-iface 内恒同不适用
+/// 3. 本函数在 per-iface（LUID）粒度聚合，不再跨 iface 竞争；跨 iface 的"主 iface"
+///    选择由上层 `build_context` 的截断策略负责
 ///
 /// 两族 dump 任一失败 / 无此 family 静默跳过，另一族继续；IP Helper 完全失败的
 /// 极端情形下所有 iface 的 `has_default_route=false`，上层视为离线网络（`PUT {
@@ -182,7 +183,7 @@ fn collect_default_routes(family: ADDRESS_FAMILY, out: &mut HashMap<u64, Gateway
     }
 }
 
-/// 把 `candidate` 与 `out[luid]` 按 §2.3 (b) 优先级合并。
+/// 把 `candidate` 与 `out[luid]` 按 v4-over-v6 + 同族 metric / next_hop 规则合并。
 fn merge_candidate(out: &mut HashMap<u64, GatewayChoice>, luid: u64, candidate: GatewayChoice) {
     match out.get(&luid) {
         None => {
@@ -352,9 +353,10 @@ fn adapter_to_raw_iface(
 
     // LUID 取 union 的 u64 字段
     let luid_value = unsafe { adapter.Luid.Value };
-    // gateway_ip / gateway_mac：per-iface 按 §2.3 (b) 填充。GatewayChoice.next_hop
-    // 为 None（on-link default route）时 gateway_ip 保持 None，但 has_default_route
-    // 仍然是 true —— 让前端诊断 / matcher 能识别该 iface 确实承担 default 路由。
+    // gateway_ip / gateway_mac：从 `gateways` 聚合结果按本 LUID 取最佳候选填充。
+    // GatewayChoice.next_hop 为 None（on-link default route）时 gateway_ip 保持 None，
+    // 但 has_default_route 仍然是 true —— 让前端诊断 / matcher 能识别该 iface 确实承担
+    // default 路由。
     let (gateway_ip, gateway_mac, has_default_route) = match gateways.get(&luid_value) {
         Some(g) => match g.next_hop {
             Some(ip) => {
@@ -547,7 +549,7 @@ mod tests {
         // v6 先到
         merge_candidate(&mut map, luid, gw(AF_INET6, "fe80::1", 10));
         assert!(matches!(map[&luid].next_hop, Some(IpAddr::V6(_))));
-        // v4 后到：即便 metric 更大也胜（§2.3 b 规则 1）
+        // v4 后到：即便 metric 更大也胜（v4-over-v6 规则）
         merge_candidate(&mut map, luid, gw(AF_INET, "10.0.0.1", 100));
         assert!(matches!(map[&luid].next_hop, Some(IpAddr::V4(_))));
         assert_eq!(map[&luid].effective_metric, 100);

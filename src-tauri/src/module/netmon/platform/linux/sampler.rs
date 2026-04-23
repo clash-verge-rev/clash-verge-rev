@@ -51,9 +51,10 @@ async fn collect_with_handle(handle: &Handle) -> Result<Option<RawIfaceInventory
     // 1. dump 所有 link，按 admin-up 过滤；保序（rtnetlink 返回顺序通常是 ifindex 升序）
     let links = dump_admin_up_links(handle).await?;
 
-    // 2. dump default routes 构造 per-ifindex 最佳 gateway 选择（§2.3 b）：
-    //    v4 优先 → v6 fallback；同族 priority（metric）最小 → next_hop 字典序。
-    //    per-iface 内 if_index 恒等，第 3 条 tie-break 不适用。
+    // 2. dump default routes 构造 per-ifindex 最佳 gateway 选择：
+    //    v4 优先 → v6 fallback；同族 priority（metric）最小 → next_hop 字典序
+    //    （具体 Some 优于 on-link None）。per-iface 内 if_index 恒等，不再做 iface 级
+    //    tie-break。
     let gateways = collect_per_iface_gateways(handle).await;
 
     // 3. NetworkInterface::show 一次，供所有 iface 查询复用
@@ -80,9 +81,10 @@ async fn collect_with_handle(handle: &Handle) -> Result<Option<RawIfaceInventory
         let gateway = gateways.get(&link.if_index);
         let has_default_route = gateway.is_some();
 
-        // gateway_ip / gateway_mac：per-iface 按 §2.3 (b) 填充。GatewayChoice.next_hop
-        // 为 None（on-link default，罕见）时 gateway_ip 保持 None 但 has_default_route
-        // 仍为 true。MAC 查询：v4 走 /proc/net/arp；v6 走 rtnetlink RTM_GETNEIGH。
+        // gateway_ip / gateway_mac：从 `gateways` 聚合结果按本 if_index 取最佳候选填充。
+        // GatewayChoice.next_hop 为 None（on-link default，罕见）时 gateway_ip 保持 None
+        // 但 has_default_route 仍为 true。MAC 查询：v4 走 /proc/net/arp；v6 走 rtnetlink
+        // RTM_GETNEIGH。
         let (gateway_ip, gateway_mac) = match gateway.and_then(|g| g.next_hop) {
             Some(IpAddr::V4(ip)) => {
                 let mac = probe::read_gateway_mac_v4(ip, &link.name).ok();
@@ -249,7 +251,7 @@ async fn collect_default_candidates(
     Ok(())
 }
 
-/// 把 `candidate` 与 `out[ifindex]` 按 §2.3 (b) 优先级合并。
+/// 把 `candidate` 与 `out[ifindex]` 按 v4-over-v6 + 同族 metric / next_hop 规则合并。
 fn merge_candidate(out: &mut HashMap<u32, GatewayChoice>, ifindex: u32, candidate: GatewayChoice) {
     match out.get(&ifindex) {
         None => {
@@ -503,7 +505,7 @@ mod tests {
         nh
     }
 
-    // ---------- merge_candidate（§2.3 b）----------
+    // ---------- merge_candidate ----------
 
     fn gw(family: AddressFamily, ip: &str, priority: u32) -> GatewayChoice {
         GatewayChoice {

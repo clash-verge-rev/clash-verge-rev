@@ -108,7 +108,8 @@ impl PlatformMonitor for WindowsMonitor {
 
         let mut iface_handle = HANDLE(ptr::null_mut());
         // SAFETY: ctx_ptr 指向 Box<MonitorState>，生命周期由 stop() 保证。
-        // initialnotification=false：本 commit 的 Startup trigger 已经驱动首次 PUT。
+        // initialnotification=false：`netmon::start` 已经发送 Startup trigger
+        // 驱动首次 PUT，无需 IP Helper 再合成一次 fake initial notification。
         let err = unsafe {
             NotifyIpInterfaceChange(
                 AF_UNSPEC,

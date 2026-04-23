@@ -68,9 +68,10 @@ static VIRTUAL_BRIDGE_RE: Lazy<Regex> = Lazy::new(|| {
 
 /// iface 类型枚举。与 wire 上的 `iface_type` 字符串一一对应。
 ///
-/// 当前阶段只有测试构造这些 variant；真实 platform sampler 落地后由平台代码
-/// 按 `classify_iface_type` 的返回分别构造 —— `#[allow(dead_code)]` 保留至
-/// 平台接入。
+/// 各平台 sampler 通过 `classify_iface_type` / `classify_iface_type_pure` 构造
+/// 这些 variant，与 mihomo 内核 matcher 识别的 `iface_type` 值保持一致。部分
+/// variant 只在特定 target 下被构造（例如 `Cellular` 仅 macOS），`#[allow(dead_code)]`
+/// 用于在其它 target 下压住 dead_code lint。
 #[allow(dead_code)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum IfaceType {
