@@ -24,8 +24,7 @@ use crate::config::Config;
 use crate::core::handle::Handle;
 
 /// 每次采样前从 `IVerge::enable_virtual_iface_reporting` 读当前值；字段缺失或
-/// `None` 时回退到 `false`（过滤虚拟桥，默认隐私优先）。per-sample 读取的代价
-/// 是一次 `Config::verge()` 获取 + 一次 Option 解包，远小于采样本身的 I/O。
+/// `None` 时回退到 `false`（过滤虚拟桥，默认隐私优先）。
 async fn enable_virtual_iface_reporting() -> bool {
     Config::verge()
         .await
@@ -43,17 +42,12 @@ fn notify_ui(matched: Option<&str>) {
 /// 事件去抖窗口 3 秒，合并 Wi-Fi 抖动 / 插拔网线 onLost+onAvailable 的事件风暴。
 const DEBOUNCE_WINDOW: Duration = Duration::from_millis(3000);
 
-/// Startup / CoreReady 的 force PUT 重试参数：启动期或核心刚重启时 REST endpoint
-/// 可能尚未就绪（连接拒绝）或 manager 未初始化（503），短退避几次比放弃更稳。
-/// 普通网络事件失败只 log，等下次事件即可。
-///
-/// 4 attempts → 3 次退避 sleep（200ms / 400ms / 800ms），总退避 ≤ 1.4s。
+/// Startup / CoreReady 的 force PUT 重试参数：启动期 / 核心刚重启时 REST endpoint
+/// 可能尚未就绪（连接拒绝 / 503），短退避几次比放弃更稳。普通网络事件失败只 log
+/// 等下次事件即可，不走 retry。
 const FORCE_PUT_ATTEMPTS: u32 = 4;
 const FORCE_PUT_INITIAL_DELAY: Duration = Duration::from_millis(200);
 const FORCE_PUT_MAX_DELAY: Duration = Duration::from_secs(2);
-
-// 单次 PUT HTTP 硬上界从 mod.rs::MIHOMO_HTTP_TIMEOUT 导入，与 content_matched_delete
-// 的 get_status/delete timeout 共用同一常量，保持 SHUTDOWN_TIMEOUT 预算推导准确。
 
 pub async fn run(
     mut rx: mpsc::UnboundedReceiver<TriggerReason>,
@@ -128,12 +122,10 @@ async fn process(
     last_pushed_fingerprint: &Mutex<Option<String>>,
     op_lock: &Mutex<()>,
 ) {
-    // Early stopping check：`trigger()` 的 `stopping.load` check-and-send 不是原子
-    // 的——TOCTOU 窗口内可能有事件已入队（例如 Resumed、platform NetworkEvent）
-    // 但 shutdown 已启动。若不在此处兜底，下面 `self_tun.for_sample()` 会白跑一
-    // 次 HTTP GET `/configs`，macOS 还可能触发 CoreLocation 查询——纯浪费且污染
-    // shutdown 日志。`op_lock` 下的二次检查保护的是 PUT/DELETE 的幂等性，这里
-    // 是早期 fast-path。
+    // Early stopping fast-path：`trigger()` 的 load-and-send 非原子，shutdown 后
+    // 仍可能有事件在 queue。不拦住会让下方的 `self_tun.for_sample()` 白跑 HTTP，
+    // macOS 上还会触发 CoreLocation 查询。`op_lock` 内的二次检查负责 PUT/DELETE
+    // 幂等。
     if stopping.load(Ordering::Acquire) {
         return;
     }
@@ -146,10 +138,9 @@ async fn process(
         trigger.force_put
     );
 
-    // `self_tun.for_sample()` 走的是网络 I/O（可能触发 HTTP refresh）且持有内部锁，
-    // 放在 `collect_and_build` 之外调用让后者保持纯数据转换（方便 mock 测试）。
-    // 代价：sampler 随后返回 Unknown / Err 时本次 refresh 是"白跑"——由 60s/300s
-    // 节流窗兜底，每窗口至多一次冗余 GET，换得 collect_and_build 的纯函数可测性。
+    // 先取 self_tun snapshot（可能发 HTTP），再把纯数据转换交给 `collect_and_build`
+    // （让后者保持可 mock 的纯函数）。sampler 后续失败时本次 refresh "白跑"，
+    // 由 60s/300s 节流窗兜底。
     let self_tun_snap = self_tun.for_sample().await;
     let enable_virtual = enable_virtual_iface_reporting().await;
     let sample = match collect_and_build(sampler, self_tun_snap, enable_virtual).await {
@@ -179,13 +170,8 @@ async fn process(
             // Startup / CoreReady 必须绕过 fingerprint skip：mihomo 刚启动 / 刚重启时
             // 内核侧的 /network/context 已清空，而本进程的 last_fingerprint 还是旧的，
             // 若此时网络没变我们会误判为"与上次相同"而跳过，network-policy 从此失效。
-            //
-            // **Single-writer 假设**（见 mod.rs 顶 "Single-writer 假设" 章节）：
-            // 本分支只看本地 `last_pushed_fingerprint`，**不核对 mihomo 远端 ctx**。
-            // 多 client 场景下（脚本 / 第二台 CVR）如果第三方把 mihomo 的 ctx 改成
-            // 了不同内容，本进程采到相同 ctx 会跳过 PUT，mihomo 会继续带着第三方
-            // 推的 ctx。Multi-client 安全需 mihomo 侧 etag / owner token（跨项目
-            // backlog），本模块当前按 CVR 是唯一 host 假设工作。
+            // 非 force 分支只看本地 fingerprint，不核对 mihomo 远端（见模块顶
+            // "Single-writer 假设"）。
             if !force {
                 let cached = last_pushed_fingerprint.lock().await.clone();
                 if cached.as_deref() == Some(fp.as_str()) {
@@ -241,14 +227,9 @@ fn log_push_error(op: &'static str, err: &anyhow::Error) {
             logging!(warn, Type::Network, "netmon {} timed out: {:?}", op, err);
         }
         pusher::PutErrorKind::FailedResponse => {
-            // 升 error 级：mihomo 返回非 2xx 属于需要暴露的 push failure——可能
-            // 根因包括 mihomo manager 未就绪 503（启动期 / 配置热重载期）、
-            // sampler 构造的 body 触发 kernel schema 校验、CVR/mihomo 版本不匹配
-            // 等。单条日志不保证根因是 CVR sampler bug，但这类错误不应和瞬时
-            // timeout / connect refused 混在 warn 级被忽略。`{:?}` 沿 anyhow chain
-            // 暴露 plugin `FailedResponse(String)` 的 message 原文（pusher.rs 顶
-            // "已知限制" 说明 REST code 字段在 plugin 层就被丢弃，triage 只能
-            // 依赖 message）。
+            // 升 error 级：非 2xx 响应（manager 503 / schema 校验失败 / 版本不匹配）
+            // 是需要暴露的 push failure，不应和瞬时 timeout / connect refused 混在
+            // warn 级被淹没。
             logging!(error, Type::Network, "netmon {} rejected by mihomo: {:?}", op, err);
         }
         pusher::PutErrorKind::Other => {
@@ -319,11 +300,8 @@ fn format_applied(applied: &[tauri_plugin_mihomo::models::AppliedGroup]) -> Stri
         .join(", ")
 }
 
-/// 单次 PUT + 硬超时，用于非 force 分支。
-///
-/// 本地 timeout 用 `std::io::ErrorKind::TimedOut` 构造 error 并挂进 anyhow chain，
-/// 让 `classify_put_error` 能识别为 `PutErrorKind::Timeout`（与 plugin 内部 reqwest
-/// timeout 的分类保持一致），日志就能准确打成 "timed out" 而不是笼统的 "failed"。
+/// 单次 PUT + 硬超时。超时错误带 `io::ErrorKind::TimedOut` 便于
+/// `classify_put_error` 归到 `PutErrorKind::Timeout`。
 async fn put_once_with_timeout(
     pusher: &dyn ContextPusher,
     ctx: &tauri_plugin_mihomo::models::NetworkContext,

@@ -103,7 +103,10 @@ fn run_resolvectl_domain() -> Option<String> {
     // spawn reader 线程 drain stdout —— 避免大输出卡 pipe
     // `take()` 在 `Stdio::piped()` + spawn 成功后**必定** Some；invariant 用
     // `expect` 显式化，违反该不变式意味着代码重构 bug，panic 比悄悄返回更快暴露
-    let stdout = child.stdout.take().expect("stdout configured as piped and not taken elsewhere");
+    let stdout = child
+        .stdout
+        .take()
+        .expect("stdout configured as piped and not taken elsewhere");
     let reader_handle = std::thread::spawn(move || {
         let mut buf = String::new();
         let mut s = stdout;
@@ -185,23 +188,9 @@ pub fn parse_resolvectl_output(text: &str) -> Vec<String> {
     out
 }
 
-/// 解析 `/etc/resolv.conf` 的 `search` 行（也兼容 `domain` 关键字，后者历史
-/// 上是单 domain 的 fallback）。
-///
-/// ```text
-/// # /etc/resolv.conf
-/// nameserver 8.8.8.8
-/// search corp.example.com home.lan
-/// ```
-///
-/// **last-wins 语义**（`man 5 resolv.conf`）：
-/// > If there are multiple `search` directives, only the search list from the
-/// > last instance is used. `domain` and `search` lines are mutually exclusive.
-/// > If more than one instance of these keywords is present, the last instance
-/// > wins.
-///
-/// 多个 `search` → 取最后一个；混合 `search` + `domain` → 取**最后出现的那个
-/// keyword**（与 glibc `__res_vinit` 行为一致）。
+/// 解析 `/etc/resolv.conf` 的 `search` / `domain` 行（`domain` 是单 domain 的历史
+/// fallback）。按 `man 5 resolv.conf` 的 last-wins 语义：多个 `search` 或 `search`
+/// 与 `domain` 混用时只保留最后一条（与 glibc `__res_vinit` 一致）。
 pub fn parse_resolv_conf_search(text: &str) -> Vec<String> {
     let mut last: Vec<String> = Vec::new();
     for line in text.lines() {
@@ -258,10 +247,7 @@ mod tests {
         let text = "# comment\n\
                     nameserver 8.8.8.8\n\
                     search corp.example.com home.lan\n";
-        assert_eq!(
-            parse_resolv_conf_search(text),
-            vec!["corp.example.com", "home.lan"]
-        );
+        assert_eq!(parse_resolv_conf_search(text), vec!["corp.example.com", "home.lan"]);
     }
 
     #[test]
@@ -287,20 +273,14 @@ mod tests {
     fn parse_resolv_conf_multiple_search_last_wins() {
         // man 5 resolv.conf: "only the search list from the last instance is used"
         let text = "search first.lan\nsearch second.lan third.lan\n";
-        assert_eq!(
-            parse_resolv_conf_search(text),
-            vec!["second.lan", "third.lan"]
-        );
+        assert_eq!(parse_resolv_conf_search(text), vec!["second.lan", "third.lan"]);
     }
 
     #[test]
     fn parse_resolv_conf_domain_then_search_last_wins() {
         // `domain` 和 `search` 互斥，"last instance wins"
         let text = "domain example.com\nsearch corp.example.com home.lan\n";
-        assert_eq!(
-            parse_resolv_conf_search(text),
-            vec!["corp.example.com", "home.lan"]
-        );
+        assert_eq!(parse_resolv_conf_search(text), vec!["corp.example.com", "home.lan"]);
     }
 
     #[test]

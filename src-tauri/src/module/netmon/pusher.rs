@@ -2,14 +2,10 @@
 //!
 //! 用 trait 抽象方便单测注入 mock。
 //!
-//! **已知限制**：`tauri_plugin_mihomo::Error::FailedResponse(String)` 只保留 mihomo
-//! 返回的 message；plugin 的 `ErrorResponse` 结构体也**只**反序列化 `message` 字段，
-//! REST body 里的 `code` 在 plugin 层就被丢弃。因此 CVR 侧无法做 REST error code
-//! 级别的日志分流；只能基于 plugin 暴露的粗粒度 `Error` variant
-//! （`Reqwest::is_connect` / `is_timeout` / `FailedResponse`）做四分类 +
-//! 对应 log 级别。结构化 code 支持需要先在 plugin 侧扩展
-//! `Error::FailedResponse { status, code, message }`，再由 CVR 独立 PR 消费——两
-//! 项都是跨项目后续 backlog。
+//! **已知限制**：plugin `Error::FailedResponse(String)` 只保留 message，REST body 的
+//! `code` 字段在 plugin 层就被丢弃，CVR 侧只能按粗粒度 `Error` variant 做四分类
+//! （见 [`PutErrorKind`]）。结构化 code 需要 plugin 侧先扩展 `Error::FailedResponse
+//! { status, code, message }`——跨项目 backlog。
 
 use anyhow::{Context as _, Result};
 use async_trait::async_trait;
@@ -21,10 +17,8 @@ use crate::core::handle::Handle;
 pub trait ContextPusher: Send + Sync {
     async fn put(&self, ctx: &NetworkContext) -> Result<PutResponse>;
     async fn delete(&self) -> Result<()>;
-    /// 查询 mihomo 当前 `/network/context`（用于 shutdown 时 **content-match**
-    /// 校验：若 mihomo 当前 ctx 的 fingerprint 与本进程 last_pushed_fingerprint
-    /// 不同，CVR 不应发 DELETE。注意：内容匹配 ≠ ownership proof；见
-    /// `netmon/mod.rs` 顶的 "Single-writer 假设"章节）。
+    /// 查询 mihomo 当前 `/network/context`；用于 `stop_with_delete` 的 content-match
+    /// 校验。
     async fn get_status(&self) -> Result<NetworkStatus>;
 }
 
@@ -39,7 +33,7 @@ pub enum PutErrorKind {
     Connect,
     /// 请求超时
     Timeout,
-    /// mihomo 返回非 2xx 响应（400 / 500 / 503 等均落这里；plugin 丢弃了 code 字段）
+    /// mihomo 返回非 2xx 响应（400 / 500 / 503 等均落这里）
     FailedResponse,
     /// 其他（JSON 解析失败 / IO / TLS / ...）
     Other,

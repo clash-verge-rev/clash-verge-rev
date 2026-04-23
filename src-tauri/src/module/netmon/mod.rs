@@ -98,12 +98,9 @@ struct NetmonHandle {
     /// - service loop 外层据此跳过已排队事件
     /// - service::process 据此在持锁后放弃对 mihomo 的 PUT/DELETE
     stopping: Arc<AtomicBool>,
-    /// 上一次**成功 PUT** 写入的 fingerprint（service loop 内成功 PUT 后更新）。
-    /// `None` 表示本进程未成功 PUT 过；`Some(fp)` 表示本进程最后推的 ctx 指纹。
-    /// `stop_with_delete` 用这个字段与 `GET /network/context` 的当前 ctx 指纹比对：
-    /// 相等 → 发 final DELETE；不等 → 说明 mihomo 的 ctx **内容** 已变（最常见的是
-    /// 别的 client 推了不同 ctx），跳过 DELETE。**Best-effort：相等也可能是
-    /// 别的 client 推了相同内容，见 mod.rs 顶 "Single-writer 假设"**。
+    /// 上一次**成功 PUT** 写入的 fingerprint；`None` 表示本进程未成功 PUT 过。
+    /// 用于 service loop 的 fingerprint-skip 与 `stop_with_delete` 的 content-match
+    /// 判定（best-effort，见模块顶 "Single-writer 假设"）。
     last_pushed_fingerprint: Arc<Mutex<Option<String>>>,
     /// 串行化所有对 mihomo 的 PUT / DELETE / GET；见模块级 "并发契约" 注释。
     op_lock: Arc<Mutex<()>>,
@@ -127,43 +124,18 @@ pub(crate) const DEFAULT_WIFI_DETECTION: bool = false;
 #[cfg(not(target_os = "macos"))]
 pub(crate) const DEFAULT_WIFI_DETECTION: bool = true;
 
-/// mihomo 单次 HTTP 调用的硬上界。三处复用：
-/// - `service.rs::put_once_with_timeout` 包 PUT
-/// - `content_matched_delete` 内包 `get_status` 和 `delete`
-///
-/// 共用一个常量让 `SHUTDOWN_TIMEOUT = 3 × MIHOMO_HTTP_TIMEOUT` 的预算推导
-/// 始终准确。
+/// mihomo 单次 HTTP（PUT / GET / DELETE）的硬上界。
 pub(super) const MIHOMO_HTTP_TIMEOUT: Duration = Duration::from_secs(3);
 
-/// `stop_with_delete` 整条退出路径的上界超时（见函数文档）。
-///
-/// 值选定 `9s = 3 × MIHOMO_HTTP_TIMEOUT`——三次连续 mihomo HTTP 的 worst-case：
-/// - **worst-case 等锁 ≤ 3s**：`stop_with_delete` 触发时 service loop 正在做一次
-///   force PUT attempt，in-flight HTTP 无法中断，必须等 `MIHOMO_HTTP_TIMEOUT` 触发
-///   才释放 `op_lock`
-/// - **释放锁后 `get_status` ≤ 3s**：`content_matched_delete` 内用
-///   `tokio::time::timeout(MIHOMO_HTTP_TIMEOUT, ...)` 显式包裹 GET
-/// - **GET 匹配后 `delete` ≤ 3s**：同理显式包 DELETE
-///
-/// 常规（健康 mihomo）场景下三次 HTTP 远小于各自 3s；本 timeout 只在 mihomo
-/// 挂死时触发，此时 warn + 放弃 final DELETE。
+/// `stop_with_delete` 退出路径的总预算：3 × `MIHOMO_HTTP_TIMEOUT`，覆盖
+/// worst-case "等锁 + GET + DELETE" 三次 HTTP 的挂死兜底。超时 warn + 放弃
+/// final DELETE。
 const SHUTDOWN_TIMEOUT: Duration = Duration::from_secs(9);
 
-/// `monitor.stop()` 的独立超时。三平台的真实 monitor 停机包含：
-/// - Linux：`drop` rtnetlink multicast socket、signal netlink listen task
-/// - macOS：CFRunLoopStop + 等 runloop 线程 join
-/// - Windows：`CancelMibChangeNotify2` ×2、`WlanRegisterNotification(SOURCE_NONE)`，
-///   三者都阻塞到 in-flight callback 返回
-///
-/// 健康场景下这些都是毫秒级；极端情况下（OS 内部死锁 / wgservice 挂死）需要
-/// 一个独立上限防止拖住 app 退出。3s 同 `MIHOMO_HTTP_TIMEOUT`，在 wall-clock
-/// 上足以覆盖正常 drain，又远小于用户感知的"关不掉"阈值。超时后 warn log，
-/// 让进程继续退出——此时 monitor 的回调可能仍在 in-flight，但本进程即将结束、
-/// OS 会回收所有 file handle 与内存，属于可接受降级（见 Windows monitor.rs 顶
-/// "MonitorState UAF 防御" 说明：cancel 超时不会引入额外 UAF 风险，只是放弃
-/// 等待 cancel 返回确认）。
+/// `monitor.stop()` 的硬上界，防止 OS 内部死锁 / 驱动挂死拖住 app 退出。
+/// 健康场景下毫秒级完成；超时 warn 并放弃等 drain 确认（进程即将退出，OS
+/// 回收资源是可接受降级；Windows 的 UAF 防御见 `platform/windows/monitor.rs`）。
 const MONITOR_STOP_TIMEOUT: Duration = Duration::from_secs(3);
-
 
 pub(crate) fn set_wifi_detection_enabled(enabled: bool) {
     WIFI_DETECTION_ENABLED.store(enabled, Ordering::Release);
@@ -341,9 +313,8 @@ pub fn on_resumed() {
 enum FinalDeleteOutcome {
     /// 本进程从未成功 PUT 过 —— 不用发 DELETE
     NeverPushed,
-    /// GET 成功 + fingerprint 内容匹配 + DELETE 成功。**注意**：内容匹配不等于
-    /// "本进程是最后写入者"；见 mod.rs 顶 "Single-writer 假设" 及本模块单测
-    /// `same_content_from_other_client_would_still_delete`
+    /// GET 成功 + fingerprint 内容匹配 + DELETE 成功（best-effort，见模块顶
+    /// "Single-writer 假设"）。
     Deleted,
     /// GET 成功但 fingerprint 内容不匹配 —— mihomo 的 ctx 已变（最常见：别的 client
     /// 推了不同内容，或 TTL 已过期使 `context=null`），跳过 DELETE
@@ -354,20 +325,11 @@ enum FinalDeleteOutcome {
     DeleteFailed(anyhow::Error),
 }
 
-/// 基于 fingerprint **内容**匹配的 final DELETE 纯业务逻辑（抽取出来便于 mock 单测）。
+/// Best-effort content-match DELETE（抽出来方便 mock 单测）。
 ///
-/// **语义限定**：本函数做的是 "best-effort content-match delete"，**不是**
-/// multi-client-safe 的 ownership verification。fingerprint 相等只证明 mihomo 当前
-/// ctx 的内容与本进程最后成功 PUT 的内容相同；若另一 client 在本进程之后推了
-/// 内容相同的 ctx，本函数仍会返回 `Deleted`（即误删对方 ctx）。真正的 multi-client
-/// safety 需 mihomo 提供 owner token / CAS API（跨项目 backlog）。见 mod.rs 顶
-/// "Single-writer 假设"章节。
-///
-/// 流程：
-/// 1. 读 `last_pushed_fingerprint` —— 若本进程从未 PUT 过直接返回 `NeverPushed`
-/// 2. 调 `pusher.get_status()`（包 [`MIHOMO_HTTP_TIMEOUT`]）读 mihomo 当前 `/network/context`
-/// 3. 计算当前 ctx 的 fingerprint，与 `last_pushed_fingerprint` 比对
-/// 4. 相等 → 调 `pusher.delete()`（包 [`MIHOMO_HTTP_TIMEOUT`]）；不等 → `ContentMismatch`
+/// 流程：读 `last_pushed_fingerprint` → `get_status` → 比对 fingerprint 相等时
+/// `delete`，不等时 `ContentMismatch`。两次 HTTP 都包 [`MIHOMO_HTTP_TIMEOUT`]。
+/// 语义限制见模块顶 "Single-writer 假设"。
 async fn content_matched_delete(
     pusher: &dyn ContextPusher,
     last_pushed_fingerprint: &Mutex<Option<String>>,

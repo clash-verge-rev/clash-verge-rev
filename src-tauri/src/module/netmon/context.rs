@@ -61,10 +61,8 @@ const NAME_MAX_BYTES: usize = 255;
 // 仅作为"永不触发"的防御性描述，不是运行时错误处理。用 `#[expect]` 在出现运行时
 // 错误路径（意味 pattern 被人误改）时由 clippy 再次报警。
 #[expect(clippy::expect_used, reason = "compile-time constant regex")]
-static VIRTUAL_BRIDGE_RE: Lazy<Regex> = Lazy::new(|| {
-    Regex::new(r"^(docker|br-|veth|vmnet|vEthernet|virbr|vnic)")
-        .expect("virtual bridge regex compiles")
-});
+static VIRTUAL_BRIDGE_RE: Lazy<Regex> =
+    Lazy::new(|| Regex::new(r"^(docker|br-|veth|vmnet|vEthernet|virbr|vnic)").expect("virtual bridge regex compiles"));
 
 /// iface 类型枚举。与 wire 上的 `iface_type` 字符串一一对应。
 ///
@@ -408,13 +406,10 @@ fn canonicalize_mac(s: &str) -> Option<String> {
     Some(out)
 }
 
-/// IP 规范化：剥 IPv6 zone 后缀（`%eth0`）→ parse → to_string。
-/// 非法 IP 返回 `None`。
+/// IP 规范化：剥 IPv6 zone 后缀（`%eth0`）→ parse → to_string。非法 IP 返回 `None`。
 ///
-/// **空 zone 拒绝**：形如 `"fe80::1%"`（`%` 后为空串）是语法上可疑的输入——
-/// 调用者要么没有 zone，要么应该写明具体的 `%eth0`。`split_once('%')` 会
-/// 把它剥成 `"fe80::1"` 并静默解析成功，等于默默接受了 sampler bug。显式返
-/// `None` 把"双端 fingerprint 收敛不了"之类的故障暴露出来，而不是偷偷修好。
+/// 空 zone（`fe80::1%`）视作 sampler bug，显式拒绝而非静默接受——否则双端 fingerprint
+/// 不收敛这类故障会被静默吞掉。
 fn canonicalize_ip(s: &str) -> Option<String> {
     let (no_zone, zone) = s.split_once('%').unwrap_or((s, ""));
     if s.contains('%') && zone.is_empty() {
@@ -424,12 +419,9 @@ fn canonicalize_ip(s: &str) -> Option<String> {
     Some(addr.to_string())
 }
 
-/// CIDR 规范化：`A.B.C.D/N` 或 `v6addr/N`（可含 `%scope`）→ network address（mask）+ prefix。
-/// 例 `192.168.1.5/24` → `192.168.1.0/24`；`fe80::1%eth0/128` → `fe80::1/128`。
-/// 非法返回 `None`。
-///
-/// 与 `canonicalize_ip` 对齐：`"fe80::1%/64"`（`%` 后空 zone）语法可疑，显式
-/// 拒绝而非静默接受，把 sampler 的输入验证 bug 暴露出来。
+/// CIDR 规范化：`A.B.C.D/N` 或 `v6addr/N`（可含 `%scope`）→ network address（mask）+
+/// prefix。例 `192.168.1.5/24` → `192.168.1.0/24`；`fe80::1%eth0/128` → `fe80::1/128`。
+/// 非法返回 `None`（空 zone 的拒绝理由与 [`canonicalize_ip`] 一致）。
 fn canonicalize_cidr(s: &str) -> Option<String> {
     let (addr_str, prefix_str) = s.split_once('/')?;
     let prefix: u8 = prefix_str.parse().ok()?;

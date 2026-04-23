@@ -80,9 +80,8 @@ struct SelfTunInner {
     /// 目前不被外部读取，为未来诊断 / 自愈策略留存。
     #[allow(dead_code)]
     last_refresh: Option<Instant>,
-    /// 单调递增的 refresh 编号。每次进入 step 1 `+= 1` 并记作调用方的 `my_seq`；
-    /// step 3 写入前比对 `inner.refresh_seq == my_seq`，不等则放弃本次写入——
-    /// 保证并发两次 HTTP 乱序回来时，"较晚进入 step 1 的"那次结果获胜。
+    /// 单调递增的 refresh 编号；step 1 `+= 1` 得到 my_seq，step 3 校验相等才写入
+    /// （语义见模块头"并发契约"）。
     refresh_seq: u64,
 }
 
@@ -210,10 +209,8 @@ fn snapshot_of(inner: &SelfTunInner) -> SelfTunSnapshot {
     }
 }
 
-/// 纯同步：把 HTTP 结果写入 inner。调用方保证在锁内调用。
-///
-/// `my_seq` 是调用方 step 1 拿到的 seq；与当前 `inner.refresh_seq` 不等时整个写入
-/// 被丢弃（已有更新的 attempt 跑完了），避免较晚到达的较旧 HTTP 结果覆盖较新状态。
+/// 纯同步：把 HTTP 结果写入 inner。调用方保证在锁内调用；`my_seq` 与
+/// `inner.refresh_seq` 不等时丢弃本次写入（见模块头"并发契约"）。
 fn apply_refresh_result_locked(
     inner: &mut SelfTunInner,
     my_seq: u64,
@@ -493,13 +490,7 @@ mod tests {
         inner.state = SelfTunState::Unavailable;
         let now = Instant::now();
         let seq = step1(&mut inner, now);
-        apply_refresh_result_locked(
-            &mut inner,
-            seq,
-            now,
-            TriggerCtx::LazyRetry,
-            Ok(Some("utun5".into())),
-        );
+        apply_refresh_result_locked(&mut inner, seq, now, TriggerCtx::LazyRetry, Ok(Some("utun5".into())));
         assert!(matches!(&inner.state, SelfTunState::Known(n) if n == "utun5"));
     }
 
