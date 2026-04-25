@@ -78,7 +78,8 @@
     "rehype-raw": "^7.0.0",
     "tauri-plugin-mihomo-api": "github:clash-verge-rev/tauri-plugin-mihomo#revert",
     "types-pac": "^1.0.3",
-    "validator": "^13.15.26"
+    "validator": "^13.15.26",
+    "zustand": "^5.0.12"
   },
   "devDependencies": {
     "@actions/github": "^9.0.0",

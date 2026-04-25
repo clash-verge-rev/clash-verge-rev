@@ -114,3 +114,13 @@ export const useAppData = (): AppDataContextType => {
     ...refreshers,
   }
 }
+
+export const useProxiesData = () => useCtx(ProxiesContext)
+
+export const useClashConfigData = () => useCtx(ClashConfigContext)
+
+export const useRulesData = () => useCtx(RulesContext)
+
+export const useSystemProxyData = () => useCtx(SystemContext)
+
+export const useRefreshers = () => useCtx(RefreshersContext)

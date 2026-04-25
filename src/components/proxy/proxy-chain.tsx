@@ -40,8 +40,13 @@ import {
   selectNodeForGroup,
 } from 'tauri-plugin-mihomo-api'
 
-import { useAppData } from '@/providers/app-data-context'
+import { useProxiesData, useRefreshers } from '@/providers/app-data-context'
 import { updateProxyChainConfigInRuntime } from '@/services/cmds'
+import {
+  getProxyChainTargetGroup,
+  useClearProxyChainConnection,
+  useSetProxyChainConnection,
+} from '@/stores/proxy-ui-store'
 import { debugLog } from '@/utils/debug'
 
 interface ProxyChainItem {
@@ -251,7 +256,10 @@ export const ProxyChain = ({
 }: ProxyChainProps) => {
   const theme = useTheme()
   const { t } = useTranslation()
-  const { proxies, refreshProxy } = useAppData()
+  const { proxies } = useProxiesData()
+  const { refreshProxy } = useRefreshers()
+  const setChainConnection = useSetProxyChainConnection()
+  const clearChainConnection = useClearProxyChainConnection()
   const [isConnecting, setIsConnecting] = useState(false)
   const markUnsavedChanges = useCallback(() => {
     onMarkUnsavedChanges?.()
@@ -334,7 +342,7 @@ export const ProxyChain = ({
         const targetGroup =
           mode === 'global'
             ? 'GLOBAL'
-            : selectedGroup || localStorage.getItem('proxy-chain-group')
+            : selectedGroup || getProxyChainTargetGroup()
 
         if (targetGroup) {
           try {
@@ -350,9 +358,7 @@ export const ProxyChain = ({
           }
         }
 
-        localStorage.removeItem('proxy-chain-group')
-        localStorage.removeItem('proxy-chain-exit-node')
-        localStorage.removeItem('proxy-chain-items')
+        clearChainConnection()
 
         await closeAllConnections()
         await refreshProxy()
@@ -392,8 +398,7 @@ export const ProxyChain = ({
       const targetGroup = mode === 'global' ? 'GLOBAL' : selectedGroup
 
       await selectNodeForGroup(targetGroup || 'GLOBAL', lastNode.name)
-      localStorage.setItem('proxy-chain-group', targetGroup || 'GLOBAL')
-      localStorage.setItem('proxy-chain-exit-node', lastNode.name)
+      setChainConnection(targetGroup || 'GLOBAL', lastNode.name)
 
       // 刷新代理信息以更新连接状态
       refreshProxy()
@@ -412,6 +417,8 @@ export const ProxyChain = ({
     mode,
     selectedGroup,
     onUpdateChain,
+    setChainConnection,
+    clearChainConnection,
   ])
 
   const proxyChainRef = useRef(proxyChain)
@@ -505,9 +512,7 @@ export const ProxyChain = ({
               size="small"
               onClick={() => {
                 updateProxyChainConfigInRuntime(null)
-                localStorage.removeItem('proxy-chain-group')
-                localStorage.removeItem('proxy-chain-exit-node')
-                localStorage.removeItem('proxy-chain-items')
+                clearChainConnection()
                 onUpdateChain([])
               }}
               sx={{

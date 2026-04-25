@@ -3,7 +3,6 @@ import './services/monaco'
 
 import { ResizeObserver } from '@juggle/resize-observer'
 import { QueryClientProvider } from '@tanstack/react-query'
-import { ComposeContextProvider } from 'foxact/compose-context-provider'
 import React from 'react'
 import { createRoot } from 'react-dom/client'
 import { RouterProvider } from 'react-router'
@@ -20,11 +19,7 @@ import {
   getPreloadConfig,
 } from './services/preload'
 import { queryClient } from './services/query-client'
-import {
-  LoadingCacheProvider,
-  ThemeModeProvider,
-  UpdateStateProvider,
-} from './services/states'
+import { initializeUiStore, type ThemeMode } from './stores'
 import { disableWebViewShortcuts } from './utils/disable-webview-shortcuts'
 
 if (!window.ResizeObserver) {
@@ -40,27 +35,21 @@ if (!container) {
 
 disableWebViewShortcuts()
 
-const initializeApp = (initialThemeMode: 'light' | 'dark') => {
-  const contexts = [
-    <ThemeModeProvider key="theme" initialState={initialThemeMode} />,
-    <LoadingCacheProvider key="loading" />,
-    <UpdateStateProvider key="update" />,
-  ]
+const initializeApp = (initialThemeMode: ThemeMode) => {
+  initializeUiStore(initialThemeMode)
 
   const root = createRoot(container)
   root.render(
     <React.StrictMode>
-      <ComposeContextProvider contexts={contexts}>
-        <BaseErrorBoundary>
-          <QueryClientProvider client={queryClient}>
-            <WindowProvider>
-              <AppDataProvider>
-                <RouterProvider router={router} />
-              </AppDataProvider>
-            </WindowProvider>
-          </QueryClientProvider>
-        </BaseErrorBoundary>
-      </ComposeContextProvider>
+      <BaseErrorBoundary>
+        <QueryClientProvider client={queryClient}>
+          <WindowProvider>
+            <AppDataProvider>
+              <RouterProvider router={router} />
+            </AppDataProvider>
+          </WindowProvider>
+        </QueryClientProvider>
+      </BaseErrorBoundary>
     </React.StrictMode>,
   )
 }

@@ -19,9 +19,19 @@ import { delayGroup, healthcheckProxyProvider } from 'tauri-plugin-mihomo-api'
 import { BaseEmpty } from '@/components/base'
 import { useProxySelection } from '@/hooks/use-proxy-selection'
 import { useVerge } from '@/hooks/use-verge'
-import { useAppData } from '@/providers/app-data-context'
+import { useProxiesData } from '@/providers/app-data-context'
 import { calcuProxies, updateProxyChainConfigInRuntime } from '@/services/cmds'
 import delayManager from '@/services/delay'
+import {
+  getProxyScrollPosition,
+  useClearProxyChain,
+  useProxyChainItems,
+  useProxySelectedGroup,
+  useSetProxyChainItems,
+  useSetProxyScrollPosition,
+  useSetProxySelectedGroup,
+  type ProxyChainItem,
+} from '@/stores/proxy-ui-store'
 import { debugLog } from '@/utils/debug'
 
 import { ScrollTopButton } from '../layout/scroll-top-button'
@@ -46,18 +56,11 @@ interface Props {
   chainConfigData?: string | null
 }
 
-interface ProxyChainItem {
-  id: string
-  name: string
-  type?: string
-  delay?: number
-}
-
 export const ProxyGroups = (props: Props) => {
   const { t } = useTranslation()
   const { mode, isChainMode = false, chainConfigData } = props
 
-  // Drive 3s polling on the shared TQ cache; data is read via useAppData() below
+  // Drive 3s polling on the shared TQ cache; data is read via a narrow context hook below.
   useQuery({
     queryKey: ['getProxies'],
     queryFn: calcuProxies,
@@ -68,26 +71,11 @@ export const ProxyGroups = (props: Props) => {
     refetchOnReconnect: false,
   })
 
-  const [proxyChain, setProxyChain] = useState<ProxyChainItem[]>(() => {
-    try {
-      const saved = localStorage.getItem('proxy-chain-items')
-      if (saved) {
-        return JSON.parse(saved)
-      }
-    } catch {
-      // ignore
-    }
-    return []
-  })
-  const [selectedGroup, setSelectedGroup] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (proxyChain.length > 0) {
-      localStorage.setItem('proxy-chain-items', JSON.stringify(proxyChain))
-    } else {
-      localStorage.removeItem('proxy-chain-items')
-    }
-  }, [proxyChain])
+  const proxyChain = useProxyChainItems()
+  const setProxyChain = useSetProxyChainItems()
+  const clearProxyChain = useClearProxyChain()
+  const selectedGroup = useProxySelectedGroup()
+  const setSelectedGroup = useSetProxySelectedGroup()
   const [ruleMenuAnchor, setRuleMenuAnchor] = useState<null | HTMLElement>(null)
   const [duplicateWarning, setDuplicateWarning] = useState<{
     open: boolean
@@ -95,7 +83,7 @@ export const ProxyGroups = (props: Props) => {
   }>({ open: false, message: '' })
 
   const { verge } = useVerge()
-  const { proxies: proxiesData } = useAppData()
+  const { proxies: proxiesData } = useProxiesData()
   const groups = proxiesData?.groups
   const availableGroups = useMemo(() => {
     if (!groups) return []
@@ -147,8 +135,8 @@ export const ProxyGroups = (props: Props) => {
   const timeout = verge?.default_latency_timeout || 10000
 
   const parentRef = useRef<HTMLDivElement>(null)
-  const scrollPositionRef = useRef<Record<string, number>>({})
   const [showScrollTop, setShowScrollTop] = useState(false)
+  const setScrollPosition = useSetProxyScrollPosition()
 
   const virtualizer = useVirtualizer({
     count: renderList.length,
@@ -164,23 +152,14 @@ export const ProxyGroups = (props: Props) => {
 
     let restoreTimer: ReturnType<typeof setTimeout> | null = null
 
-    try {
-      const savedPositions = localStorage.getItem('proxy-scroll-positions')
-      if (savedPositions) {
-        const positions = JSON.parse(savedPositions)
-        scrollPositionRef.current = positions
-        const savedPosition = positions[mode]
+    const savedPosition = getProxyScrollPosition(mode)
 
-        if (savedPosition !== undefined) {
-          restoreTimer = setTimeout(() => {
-            if (parentRef.current) {
-              parentRef.current.scrollTop = savedPosition
-            }
-          }, 100)
+    if (savedPosition !== undefined) {
+      restoreTimer = setTimeout(() => {
+        if (parentRef.current) {
+          parentRef.current.scrollTop = savedPosition
         }
-      }
-    } catch (e) {
-      console.error('Error restoring scroll position:', e)
+      }, 100)
     }
 
     return () => {
@@ -193,17 +172,9 @@ export const ProxyGroups = (props: Props) => {
   // 改为使用节流函数保存滚动位置
   const saveScrollPosition = useCallback(
     (scrollTop: number) => {
-      try {
-        scrollPositionRef.current[mode] = scrollTop
-        localStorage.setItem(
-          'proxy-scroll-positions',
-          JSON.stringify(scrollPositionRef.current),
-        )
-      } catch (e) {
-        console.error('Error saving scroll position:', e)
-      }
+      setScrollPosition(mode, scrollTop)
     },
-    [mode],
+    [mode, setScrollPosition],
   )
 
   // 使用改进的滚动处理
@@ -272,10 +243,7 @@ export const ProxyGroups = (props: Props) => {
 
     if (isChainMode && mode === 'rule') {
       updateProxyChainConfigInRuntime(null)
-      localStorage.removeItem('proxy-chain-group')
-      localStorage.removeItem('proxy-chain-exit-node')
-      localStorage.removeItem('proxy-chain-items')
-      setProxyChain([])
+      clearProxyChain()
     }
   }
 
@@ -316,7 +284,7 @@ export const ProxyGroups = (props: Props) => {
 
       handleProxyGroupChange(group, proxy)
     },
-    [handleProxyGroupChange, isChainMode, t],
+    [handleProxyGroupChange, isChainMode, setProxyChain, t],
   )
 
   // 测全部延迟

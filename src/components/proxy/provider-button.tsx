@@ -20,9 +20,12 @@ import { useLockFn } from 'ahooks'
 import dayjs from 'dayjs'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { updateProxyProvider } from 'tauri-plugin-mihomo-api'
+import {
+  updateProxyProvider,
+  type ProxyProvider,
+} from 'tauri-plugin-mihomo-api'
 
-import { useAppData } from '@/providers/app-data-context'
+import { useProxiesData, useRefreshers } from '@/providers/app-data-context'
 import { showNotice } from '@/services/notice-service'
 import parseTraffic from '@/utils/parse-traffic'
 
@@ -48,11 +51,15 @@ const parseExpire = (expire?: number) => {
 export const ProviderButton = () => {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
-  const { proxyProviders, refreshProxy, refreshProxyProviders } = useAppData()
+  const { proxyProviders } = useProxiesData()
+  const { refreshProxy, refreshProxyProviders } = useRefreshers()
   const [updating, setUpdating] = useState<Record<string, boolean>>({})
+  const providerEntries = Object.entries(proxyProviders || {}).filter(
+    (entry): entry is [string, ProxyProvider] => Boolean(entry[1]),
+  )
 
   // 检查是否有提供者
-  const hasProviders = Object.keys(proxyProviders || {}).length > 0
+  const hasProviders = providerEntries.length > 0
 
   // 更新单个代理提供者
   const updateProvider = useLockFn(async (name: string) => {
@@ -87,7 +94,7 @@ export const ProviderButton = () => {
   const updateAllProviders = useLockFn(async () => {
     try {
       // 获取所有provider的名称
-      const allProviders = Object.keys(proxyProviders || {})
+      const allProviders = providerEntries.map(([name]) => name)
       if (allProviders.length === 0) {
         showNotice.info('proxies.feedback.notifications.provider.none')
         return
@@ -175,8 +182,8 @@ export const ProviderButton = () => {
 
         <DialogContent>
           <List sx={{ py: 0, minHeight: 250 }}>
-            {Object.entries(proxyProviders || {})
-              .sort()
+            {providerEntries
+              .sort(([a], [b]) => a.localeCompare(b))
               .map(([key, item]) => {
                 const provider = item
                 const time = dayjs(provider.updatedAt)
