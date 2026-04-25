@@ -96,6 +96,9 @@
           "allowLan": "السماح بالشبكة المحلية",
           "dnsOverwrite": "DNS Overwrite",
           "ipv6": "IPv6",
+          "wifiDetection": "اكتشاف Wi-Fi",
+          "virtualIfaceReporting": "الإبلاغ عن الواجهات الافتراضية",
+          "networkContext": "سياق الشبكة",
           "unifiedDelay": "تأخير موحد",
           "logLevel": "مستوى السجلات",
           "portConfig": "تكوين المنافذ",
@@ -133,7 +136,9 @@
           "networkInterface": "واجهة الشبكة",
           "unifiedDelay": "عند تفعيل التأخير الموحد، سيتم إجراء اختبارين للتأخير لتقليل الفروقات الناتجة عن مفاوضات الاتصال",
           "logLevel": "This parameter is valid only for kernel log files in the log directory Service folder",
-          "openUwpTool": "منذ نظام ويندوز 8، يتم تقييد تطبيقات UWP من الوصول المباشر إلى المضيف المحلي. هذه الأداة تتيح تجاوز هذا التقييد"
+          "openUwpTool": "منذ نظام ويندوز 8، يتم تقييد تطبيقات UWP من الوصول المباشر إلى المضيف المحلي. هذه الأداة تتيح تجاوز هذا التقييد",
+          "wifiDetection": "اجمع SSID / BSSID لشبكة Wi-Fi حتى يتمكن mihomo من تبديل سياسات الوكيل لكل شبكة. يتطلب ذلك إذن الموقع على macOS.",
+          "virtualIfaceReporting": "تضمين جسور docker / br-* / veth / vmnet / vEthernet / virbr / vnic في قائمة الواجهات المُبلَّغ عنها لـ mihomo. معطلة افتراضيًا لتفادي تسريب طوبولوجيا الشبكة الافتراضية؛ فعّلها فقط إذا كانت قواعد network-policy بحاجة لمطابقة أسماء هذه الواجهات."
         },
         "options": {
           "logLevel": {
@@ -143,6 +148,43 @@
             "error": "Error",
             "silent": "Silent"
           }
+        },
+        "secondary": {
+          "wifiDetection": {
+            "disabled": "معطل — لن يتم جمع تفاصيل Wi-Fi",
+            "authorized": "مصرح",
+            "waiting": "في انتظار التفويض…",
+            "notAuthorized": "تم رفض إذن الموقع",
+            "restricted": "مقيد بواسطة سياسة النظام",
+            "locationDisabled": "خدمات الموقع في النظام معطلة"
+          }
+        },
+        "actions": {
+          "openLocationSettings": "فتح إعدادات الموقع"
+        }
+      },
+      "diagnostic": {
+        "title": "سياق الشبكة",
+        "labels": {
+          "matched": "الشبكة المطابِقة",
+          "unmatched": "لا يوجد تطابق",
+          "ageSeconds": "(قبل {{n}} ث)",
+          "hasContext": "تم استلام السياق بواسطة mihomo",
+          "interfaces": "الواجهات",
+          "moreIfaces": "+{{n}} أخرى",
+          "virtualInterfaces": "الواجهات الافتراضية",
+          "dnsSuffix": "لاحقة DNS"
+        },
+        "columns": {
+          "name": "الاسم",
+          "type": "النوع",
+          "ssid": "SSID",
+          "gateway": "البوابة"
+        },
+        "hints": {
+          "unmatched": "لم تتطابق أي قاعدة من networks: ؛ راجع ملف YAML للملف الشخصي.",
+          "noContext": "لم يستلم mihomo أي سياق بعد. تأكد من تفعيل network-policy في إعدادات النواة.",
+          "fetchFailed": "تعذّر جلب سياق الشبكة"
         }
       }
     }

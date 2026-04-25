@@ -257,6 +257,24 @@ pub struct IVerge {
 
     /// 启用外部控制器
     pub enable_external_controller: Option<bool>,
+
+    /// netmon：是否启用 Wi-Fi SSID / BSSID 采集。
+    ///
+    /// 平台差异化默认：macOS 默认 `false`（开启需 CoreLocation 授权，避免首次
+    /// 启动弹窗骚扰）；Linux / Windows 默认 `true`（WEXT / WlanAPI 无授权成本，
+    /// 让 network-policy 按 SSID 匹配开箱可用）。字段为 `None` 时消费方 fallback
+    /// 到 `module::netmon::DEFAULT_WIFI_DETECTION` 常量。前端 toggle 变化经
+    /// `UpdateFlags::WIFI_DETECTION_SYNC` 同步到
+    /// `module::netmon::WIFI_DETECTION_ENABLED` atomic。
+    pub enable_wifi_detection: Option<bool>,
+
+    /// netmon：是否把 docker / br-* / veth / vmnet / vEthernet / virbr / vnic
+    /// 这类虚拟桥接口也上报给 mihomo。默认 `false`（过滤掉）。
+    ///
+    /// 用户想在 matcher 里写 `match: { name: docker0 }` 这类规则时才需要开启；
+    /// 开启后接口集合抖动频率会显著上升（容器起停触发重采）。前端 toggle 变化
+    /// 经 `UpdateFlags::NETMON_TRIGGER_MANUAL` 触发一次 `Manual` 评估。
+    pub enable_virtual_iface_reporting: Option<bool>,
 }
 
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
@@ -554,6 +572,8 @@ impl IVerge {
         patch!(enable_dns_settings);
         patch!(home_cards);
         patch!(enable_external_controller);
+        patch!(enable_wifi_detection);
+        patch!(enable_virtual_iface_reporting);
     }
 
     pub const fn get_singleton_port() -> u16 {

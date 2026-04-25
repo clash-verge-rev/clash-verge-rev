@@ -95,7 +95,7 @@ backon = { version = "1.6.0", features = ["tokio-sleep"] }
 tauri-plugin-http = "2.5.7"
 console-subscriber = { version = "0.5.0", optional = true }
 tauri-plugin-devtools = { version = "2.0.1" }
-tauri-plugin-mihomo = { git = "https://github.com/clash-verge-rev/tauri-plugin-mihomo", branch = "revert" }
+tauri-plugin-mihomo = { git = "https://github.com/wangwei354/tauri-plugin-mihomo", branch = "feat/network-context" }
 clash_verge_logger = { git = "https://github.com/clash-verge-rev/clash-verge-logger" }
 async-trait = "0.1.89"
 clash_verge_service_ipc = { version = "2.3.0", features = [
@@ -110,7 +110,17 @@ rust_iso3166 = "0.1.14"
 dark-light = { git = "https://github.com/rust-dark-light/dark-light" }
 bytes = "1.11.1"
 
+[target.'cfg(target_os = "linux")'.dependencies]
+# netmon: rtnetlink dump + monitor. re-exports netlink_packet_route / netlink_sys.
+rtnetlink = "0.17"
+# netmon SSID/BSSID via Wireless Extensions ioctls (SIOCGIWESSID / SIOCGIWAP).
+libc = "0.2"
+
 [target.'cfg(target_os = "macos")'.dependencies]
+# netmon: SCDynamicStore + CFRunLoop + sysctl ARP parsing. Transitively already in Cargo.lock.
+system-configuration = "0.7"
+core-foundation = "0.9"
+libc = "0.2"
 objc2 = "0.6"
 objc2-foundation = { version = "0.3", features = [
   "NSString",
@@ -131,12 +141,28 @@ objc2-app-kit = { version = "0.3", features = [
   "NSParagraphStyle",
   "NSText",
 ] }
+# netmon SSID/BSSID via CoreWLAN; on macOS 14+ without Location permission
+# `ssid()` / `bssid()` return nil and we fall back to `None`.
+objc2-core-wlan = { version = "0.3", features = ["CWWiFiClient", "CWInterface"] }
+# CoreLocation authorization is the gate for reading CWInterface.ssid/bssid on macOS 14+.
+objc2-core-location = { version = "0.3", features = [
+  "CLLocationManager",
+  "CLLocationManagerDelegate",
+  "CLError",
+] }
 
 [target.'cfg(windows)'.dependencies]
 deelevate = { workspace = true }
 runas = "=1.2.0"
 winreg = "0.56.0"
-windows = { version = "0.62.2", features = ["Win32_Globalization"] }
+windows = { version = "0.62.2", features = [
+  "Win32_Foundation",
+  "Win32_Globalization",
+  "Win32_NetworkManagement_IpHelper",
+  "Win32_NetworkManagement_Ndis",
+  "Win32_NetworkManagement_WiFi",
+  "Win32_Networking_WinSock",
+] }
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-autostart = "2.5.1"

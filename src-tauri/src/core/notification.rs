@@ -9,11 +9,36 @@ use tauri::{Emitter as _, WebviewWindow};
 pub enum FrontendEvent<'a> {
     RefreshClash,
     RefreshVerge,
-    NoticeMessage { status: &'a str, message: String },
-    ProfileChanged { current_profile_id: &'a String },
-    TimerUpdated { profile_index: &'a String },
-    ProfileUpdateStarted { uid: &'a String },
-    ProfileUpdateCompleted { uid: &'a String },
+    NoticeMessage {
+        status: &'a str,
+        message: String,
+    },
+    ProfileChanged {
+        current_profile_id: &'a String,
+    },
+    TimerUpdated {
+        profile_index: &'a String,
+    },
+    ProfileUpdateStarted {
+        uid: &'a String,
+    },
+    ProfileUpdateCompleted {
+        uid: &'a String,
+    },
+    /// netmon 成功 PUT /network/context 之后的前端刷新信号。`matched` 直接透传
+    /// mihomo 响应里的 `matched_network` 字段：`Some(name)` = 匹配到的 network
+    /// 名；`None` = mihomo 返回 null，通常表示未命中任何 network-policy，走默认
+    /// 出站。对应 Tauri event 名 `verge://network-context-updated`。
+    NetworkContextUpdated {
+        matched: Option<&'a str>,
+    },
+    /// macOS 专属：CoreLocation 授权状态变化（delegate
+    /// `locationManagerDidChangeAuthorization:` 回调触发）。
+    /// 前端监听 `verge://wifi-auth-changed` 在 Denied 场景下刷新 UI——
+    /// Denied 时 sampler fingerprint 可能不变，`network-context-updated`
+    /// 不会触发，UI 需要独立事件感知授权变化。
+    #[cfg(target_os = "macos")]
+    WifiAuthChanged,
 }
 
 #[derive(Debug)]
@@ -41,6 +66,11 @@ impl NotificationSystem {
             FrontendEvent::TimerUpdated { profile_index } => ("verge://timer-updated", Ok(json!(profile_index))),
             FrontendEvent::ProfileUpdateStarted { uid } => ("profile-update-started", Ok(json!({ "uid": uid }))),
             FrontendEvent::ProfileUpdateCompleted { uid } => ("profile-update-completed", Ok(json!({ "uid": uid }))),
+            FrontendEvent::NetworkContextUpdated { matched } => {
+                ("verge://network-context-updated", Ok(json!({ "matched": matched })))
+            }
+            #[cfg(target_os = "macos")]
+            FrontendEvent::WifiAuthChanged => ("verge://wifi-auth-changed", Ok(json!("yes"))),
         }
     }
 

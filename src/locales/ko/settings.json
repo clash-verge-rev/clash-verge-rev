@@ -96,6 +96,9 @@
           "allowLan": "LAN 허용",
           "dnsOverwrite": "DNS 덮어쓰기",
           "ipv6": "IPv6",
+          "wifiDetection": "Wi-Fi 감지",
+          "virtualIfaceReporting": "가상 인터페이스 보고",
+          "networkContext": "네트워크 컨텍스트",
           "unifiedDelay": "지연 통합",
           "logLevel": "로그 레벨",
           "portConfig": "포트 설정",
@@ -133,7 +136,9 @@
           "networkInterface": "네트워크 인터페이스",
           "unifiedDelay": "지연 통합을 켜면, 서로 다른 유형의 노드에서 연결 핸드셰이크 등으로 발생하는 지연 차이를 제거하기 위해 두 번의 지연 테스트를 수행합니다",
           "logLevel": "이 매개변수는 로그 디렉터리 Service 폴더의 커널 로그 파일에만 적용됩니다",
-          "openUwpTool": "Windows 8 이후 UWP 앱(예: Microsoft Store)은 로컬 호스트 네트워크 서비스에 직접 접근이 제한됩니다. 이 도구로 해당 제한을 우회할 수 있습니다"
+          "openUwpTool": "Windows 8 이후 UWP 앱(예: Microsoft Store)은 로컬 호스트 네트워크 서비스에 직접 접근이 제한됩니다. 이 도구로 해당 제한을 우회할 수 있습니다",
+          "wifiDetection": "mihomo가 네트워크별로 프록시 정책을 전환할 수 있도록 Wi-Fi의 SSID / BSSID를 수집합니다. macOS에서는 위치 권한이 필요합니다.",
+          "virtualIfaceReporting": "mihomo로 보고되는 인터페이스 목록에 docker / br-* / veth / vmnet / vEthernet / virbr / vnic 같은 가상 브리지를 포함합니다. 가상 네트워크 토폴로지 유출을 막기 위해 기본값은 비활성화이며, network-policy 규칙이 이러한 이름과 일치해야 할 때만 활성화하세요."
         },
         "options": {
           "logLevel": {
@@ -143,6 +148,43 @@
             "error": "오류",
             "silent": "무음"
           }
+        },
+        "secondary": {
+          "wifiDetection": {
+            "disabled": "비활성화됨 — Wi-Fi 세부 정보를 수집하지 않습니다",
+            "authorized": "허가됨",
+            "waiting": "권한 대기 중…",
+            "notAuthorized": "위치 권한이 거부되었습니다",
+            "restricted": "시스템 정책에 의해 제한됨",
+            "locationDisabled": "시스템 위치 서비스가 꺼져 있습니다"
+          }
+        },
+        "actions": {
+          "openLocationSettings": "위치 설정 열기"
+        }
+      },
+      "diagnostic": {
+        "title": "네트워크 컨텍스트",
+        "labels": {
+          "matched": "일치한 네트워크",
+          "unmatched": "일치 없음",
+          "ageSeconds": "({{n}}초 전)",
+          "hasContext": "mihomo가 컨텍스트를 수신함",
+          "interfaces": "인터페이스 목록",
+          "moreIfaces": "그 외 {{n}}개",
+          "virtualInterfaces": "가상 인터페이스 목록",
+          "dnsSuffix": "DNS 접미사"
+        },
+        "columns": {
+          "name": "이름",
+          "type": "유형",
+          "ssid": "SSID",
+          "gateway": "게이트웨이"
+        },
+        "hints": {
+          "unmatched": "일치하는 networks: 규칙이 없습니다. 프로필 YAML을 확인하세요.",
+          "noContext": "mihomo가 아직 컨텍스트를 받지 못했습니다. 커널 설정에서 network-policy가 활성화되었는지 확인하세요.",
+          "fetchFailed": "네트워크 컨텍스트를 가져오지 못했습니다"
         }
       }
     }

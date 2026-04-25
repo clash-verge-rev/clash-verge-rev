@@ -46,7 +46,7 @@ pub async fn patch_clash(patch: &Mapping) -> Result<()> {
 // Define update flags as bitflags for better performance
 bitflags! {
      #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
-     struct UpdateFlags: u16 {
+     struct UpdateFlags: u32 {
         const RESTART_CORE = 1 << 0;
         const CLASH_CONFIG = 1 << 1;
         const VERGE_CONFIG = 1 << 2;
@@ -61,6 +61,11 @@ bitflags! {
         const LANGUAGE = 1 << 11;
         const LOG_LEVEL = 1 << 12;
         const LOG_FILE = 1 << 13;
+        /// Sync `enable_wifi_detection` → `module::netmon::WIFI_DETECTION_ENABLED` atomic.
+        const WIFI_DETECTION_SYNC = 1 << 14;
+        /// Trigger a netmon `Manual` re-sample (used by toggles whose effect is read
+        /// per-sample rather than stored in an atomic — e.g. `enable_virtual_iface_reporting`).
+        const NETMON_TRIGGER_MANUAL = 1 << 15;
 
         const GROUP_SYS_TRAY = Self::SYSTRAY_MENU.bits()
                              | Self::SYSTRAY_TOOLTIP.bits()
@@ -194,6 +199,15 @@ fn determine_update_flags(patch: &IVerge) -> UpdateFlags {
     if tray_inline_outbound_modes.is_some() {
         update_flags.insert(UpdateFlags::SYSTRAY_MENU);
     }
+    if patch.enable_wifi_detection.is_some() {
+        update_flags.insert(UpdateFlags::WIFI_DETECTION_SYNC);
+    }
+    // `enable_virtual_iface_reporting` 不需要独立 atomic——service loop 每次采样
+    // 从 `Config::verge()` 读最新值。变更时只需借 `trigger(Manual)` 让下次采样
+    // 立即生效，而不是等 OS 事件或 60s 节流窗。
+    if patch.enable_virtual_iface_reporting.is_some() {
+        update_flags.insert(UpdateFlags::NETMON_TRIGGER_MANUAL);
+    }
 
     update_flags
 }
@@ -264,6 +278,19 @@ async fn process_terminated_flags(update_flags: UpdateFlags, patch: &IVerge) -> 
         let log_max_size = patch.app_log_max_size.unwrap_or(128);
         let log_max_count = patch.app_log_max_count.unwrap_or(8);
         Logger::global().update_log_config(log_max_size, log_max_count).await?;
+    }
+    if update_flags.contains(UpdateFlags::WIFI_DETECTION_SYNC)
+        && let Some(enabled) = patch.enable_wifi_detection
+    {
+        crate::module::netmon::set_wifi_detection_enabled(enabled);
+    }
+    // 两个 netmon toggle 共用单次 `trigger(Manual)`；service loop 的 3s debounce
+    // 也会合并连发 trigger，但预先合并读起来更明确。PUT 仅在 fingerprint 变化时
+    // 触发，不会冗余上报（即使 toggle 改变后 iface 列表实际不变）。
+    if update_flags
+        .intersects(UpdateFlags::WIFI_DETECTION_SYNC | UpdateFlags::NETMON_TRIGGER_MANUAL)
+    {
+        crate::module::netmon::trigger(crate::module::netmon::TriggerReason::Manual);
     }
     Ok(())
 }

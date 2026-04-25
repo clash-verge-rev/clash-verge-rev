@@ -1,0 +1,125 @@
+[
+  {
+    "name": "empty_ctx",
+    "context": {
+      "version": 1,
+      "interfaces": []
+    },
+    "expected_hex_v1": ""
+  },
+  {
+    "name": "single_iface_full_fields",
+    "context": {
+      "version": 1,
+      "interfaces": [
+        {
+          "name": "wlan0",
+          "iface_type": "wifi",
+          "ssid": "office-5g",
+          "bssid": "aa:bb:cc:dd:ee:00",
+          "gateway_ip": "10.0.0.1",
+          "gateway_mac": "11:22:33:44:55:66",
+          "subnets": ["10.0.0.0/24"],
+          "metered": false
+        }
+      ]
+    },
+    "expected_hex_v1": ""
+  },
+  {
+    "name": "multi_iface_sorted_by_name",
+    "context": {
+      "version": 1,
+      "interfaces": [
+        {
+          "name": "en0",
+          "iface_type": "ethernet",
+          "gateway_ip": "192.168.1.1"
+        },
+        { "name": "wg0", "iface_type": "vpn" },
+        { "name": "wlan0", "iface_type": "wifi", "ssid": "home" }
+      ]
+    },
+    "expected_hex_v1": ""
+  },
+  {
+    "name": "metered_tristate_null",
+    "context": {
+      "version": 1,
+      "interfaces": [{ "name": "en0", "iface_type": "ethernet" }]
+    },
+    "expected_hex_v1": ""
+  },
+  {
+    "name": "metered_tristate_true",
+    "context": {
+      "version": 1,
+      "interfaces": [
+        { "name": "en0", "iface_type": "cellular", "metered": true }
+      ]
+    },
+    "expected_hex_v1": ""
+  },
+  {
+    "name": "metered_tristate_false",
+    "context": {
+      "version": 1,
+      "interfaces": [
+        { "name": "en0", "iface_type": "ethernet", "metered": false }
+      ]
+    },
+    "expected_hex_v1": ""
+  },
+  {
+    "name": "subnets_sorted_dedup",
+    "context": {
+      "version": 1,
+      "interfaces": [
+        {
+          "name": "en0",
+          "iface_type": "ethernet",
+          "subnets": ["10.0.0.0/8", "192.168.0.0/16"]
+        }
+      ]
+    },
+    "expected_hex_v1": ""
+  },
+  {
+    "name": "dns_suffix_only_no_interfaces",
+    "context": {
+      "version": 1,
+      "interfaces": [],
+      "dns_suffix": ["corp.example.com"]
+    },
+    "expected_hex_v1": ""
+  },
+  {
+    "name": "ssid_non_ascii",
+    "context": {
+      "version": 1,
+      "interfaces": [
+        {
+          "name": "wlan0",
+          "iface_type": "wifi",
+          "ssid": "办公室-5G",
+          "bssid": "00:11:22:33:44:55"
+        }
+      ]
+    },
+    "expected_hex_v1": ""
+  },
+  {
+    "name": "bssid_canonical_lowercase",
+    "context": {
+      "version": 1,
+      "interfaces": [
+        {
+          "name": "wlan0",
+          "iface_type": "wifi",
+          "bssid": "aa:bb:cc:dd:ee:ff"
+        }
+      ]
+    },
+    "expected_hex_v1": ""
+  }
+]

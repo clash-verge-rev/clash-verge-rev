@@ -96,6 +96,9 @@
           "allowLan": "اجازه LAN",
           "dnsOverwrite": "بازنویسی DNS",
           "ipv6": "IPv6",
+          "wifiDetection": "شناسایی Wi-Fi",
+          "virtualIfaceReporting": "گزارش واسط‌های مجازی",
+          "networkContext": "زمینهٔ شبکه",
           "unifiedDelay": "معادلDELAY",
           "logLevel": "سطح لاگ",
           "portConfig": "پیکربندی پورت",
@@ -133,7 +136,9 @@
           "networkInterface": "رابط شبکه",
           "unifiedDelay": "معادلDELAY را فعال کنید تا ترافیک شبکه به سرعت رسید",
           "logLevel": "این فقط روی فایل‌های لاگ هسته تحت فایل سرویس در فهرست ورود اثر می‌گذارد.",
-          "openUwpTool": "از ویندوز 8 به بعد، برنامه‌های UWP (مانند Microsoft Store) از دسترسی مستقیم به خدمات شبکه محلی محدود شده‌اند و این ابزار می‌تواند برای دور زدن این محدودیت استفاده شود"
+          "openUwpTool": "از ویندوز 8 به بعد، برنامه‌های UWP (مانند Microsoft Store) از دسترسی مستقیم به خدمات شبکه محلی محدود شده‌اند و این ابزار می‌تواند برای دور زدن این محدودیت استفاده شود",
+          "wifiDetection": "جمع‌آوری SSID / BSSID وای‌فای تا mihomo بتواند سیاست‌های پروکسی را بر اساس شبکه تغییر دهد. در macOS به مجوز موقعیت مکانی نیاز دارد.",
+          "virtualIfaceReporting": "پل‌های docker / br-* / veth / vmnet / vEthernet / virbr / vnic را در فهرست واسط‌های ارسال‌شده به mihomo بگنجان. به‌طور پیش‌فرض غیرفعال است تا توپولوژی شبکهٔ مجازی فاش نشود؛ تنها زمانی فعال کنید که قوانین network-policy نیاز به تطبیق این نام‌ها داشته باشند."
         },
         "options": {
           "logLevel": {
@@ -143,6 +148,43 @@
             "error": "Error",
             "silent": "Silent"
           }
+        },
+        "secondary": {
+          "wifiDetection": {
+            "disabled": "غیرفعال — جزئیات Wi-Fi جمع‌آوری نخواهد شد",
+            "authorized": "مجاز",
+            "waiting": "در انتظار دسترسی…",
+            "notAuthorized": "مجوز موقعیت مکانی رد شد",
+            "restricted": "توسط سیاست سیستم محدود شده",
+            "locationDisabled": "سرویس‌های موقعیت مکانی سیستم خاموش است"
+          }
+        },
+        "actions": {
+          "openLocationSettings": "باز کردن تنظیمات موقعیت مکانی"
+        }
+      },
+      "diagnostic": {
+        "title": "زمینهٔ شبکه",
+        "labels": {
+          "matched": "شبکهٔ مطابق",
+          "unmatched": "بدون تطابق",
+          "ageSeconds": "({{n}} ث پیش)",
+          "hasContext": "mihomo زمینه را دریافت کرده",
+          "interfaces": "واسط‌ها",
+          "moreIfaces": "+{{n}} مورد دیگر",
+          "virtualInterfaces": "رابط‌های مجازی",
+          "dnsSuffix": "پسوند DNS"
+        },
+        "columns": {
+          "name": "نام",
+          "type": "نوع",
+          "ssid": "SSID",
+          "gateway": "دروازه"
+        },
+        "hints": {
+          "unmatched": "هیچ قاعده‌ای از networks: تطبیق نیافت. پروفایل YAML را بررسی کنید.",
+          "noContext": "mihomo هنوز زمینه‌ای دریافت نکرده است. مطمئن شوید network-policy در پیکربندی هسته فعال است.",
+          "fetchFailed": "دریافت زمینهٔ شبکه ناموفق بود"
         }
       }
     }

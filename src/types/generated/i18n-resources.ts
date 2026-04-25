@@ -1075,7 +1075,34 @@ export interface TranslationResources {
           system: string
         }
         clash: {
+          diagnostic: {
+            columns: {
+              gateway: string
+              name: string
+              ssid: string
+              type: string
+            }
+            hints: {
+              fetchFailed: string
+              noContext: string
+              unmatched: string
+            }
+            labels: {
+              ageSeconds: string
+              dnsSuffix: string
+              hasContext: string
+              interfaces: string
+              matched: string
+              moreIfaces: string
+              unmatched: string
+              virtualInterfaces: string
+            }
+            title: string
+          }
           form: {
+            actions: {
+              openLocationSettings: string
+            }
             fields: {
               allowLan: string
               clashCore: string
@@ -1083,6 +1110,7 @@ export interface TranslationResources {
               external: string
               ipv6: string
               logLevel: string
+              networkContext: string
               openUwpTool: string
               portConfig: string
               tunnels: {
@@ -1111,7 +1139,9 @@ export interface TranslationResources {
               }
               unifiedDelay: string
               updateGeoData: string
+              virtualIfaceReporting: string
               webUI: string
+              wifiDetection: string
             }
             options: {
               logLevel: {
@@ -1122,11 +1152,23 @@ export interface TranslationResources {
                 warning: string
               }
             }
+            secondary: {
+              wifiDetection: {
+                authorized: string
+                disabled: string
+                locationDisabled: string
+                notAuthorized: string
+                restricted: string
+                waiting: string
+              }
+            }
             tooltips: {
               logLevel: string
               networkInterface: string
               openUwpTool: string
               unifiedDelay: string
+              virtualIfaceReporting: string
+              wifiDetection: string
             }
           }
           title: string

@@ -24,7 +24,6 @@ use tauri::{AppHandle, Manager as _};
 #[cfg(target_os = "macos")]
 use tauri_plugin_autostart::MacosLauncher;
 use tauri_plugin_deep_link::DeepLinkExt as _;
-use tauri_plugin_mihomo::RejectPolicy;
 
 pub static APP_HANDLE: OnceCell<AppHandle> = OnceCell::new();
 /// Application initialization helper functions
@@ -59,15 +58,6 @@ mod app_init {
                 tauri_plugin_mihomo::Builder::new()
                     .protocol(tauri_plugin_mihomo::models::Protocol::LocalSocket)
                     .socket_path(crate::config::IClashTemp::guard_external_controller_ipc())
-                    .pool_config(
-                        tauri_plugin_mihomo::IpcPoolConfigBuilder::new()
-                            .min_connections(3)
-                            .max_connections(32)
-                            .idle_timeout(std::time::Duration::from_secs(60))
-                            .health_check_interval(std::time::Duration::from_secs(60))
-                            .reject_policy(RejectPolicy::Wait)
-                            .build(),
-                    )
                     .build(),
             );
 
@@ -135,12 +125,16 @@ mod app_init {
             tauri_plugin_clash_verge_sysinfo::commands::app_is_admin,
             tauri_plugin_clash_verge_sysinfo::commands::export_diagnostic_info,
             cmd::is_port_in_use,
+            cmd::get_wifi_detection_status,
+            cmd::request_wifi_detection_auth,
+            cmd::open_location_settings,
             cmd::get_sys_proxy,
             cmd::get_auto_proxy,
             cmd::open_app_dir,
             cmd::open_logs_dir,
             cmd::open_web_url,
             cmd::open_core_dir,
+            cmd::get_app_log_history,
             cmd::open_app_log,
             cmd::open_core_log,
             cmd::get_portable_flag,
@@ -247,6 +241,56 @@ pub fn run() {
 
             if let Err(e) = app_init::setup_window_state(app) {
                 logging!(error, Type::Setup, "Failed to setup window state: {}", e);
+            }
+
+            // netmon 必须在任何可能触发 `CoreManager::start_core()` 的后台任务之前
+            // 启动，确保 `HANDLE` 已就位——否则 `lifecycle.rs` 里 `netmon::on_core_ready()`
+            // 的 `trigger(CoreReady)` 会因 `HANDLE.get() == None` 静默 no-op，丢
+            // 掉一次 force PUT 的机会。`resolve_setup_async` 之后 `AsyncHandler::spawn`
+            // 返回的 future 内部链路较长，实务上不会抢先到 `start_core`，但把顺序
+            // 调整到 `resolve_setup_async` 之前更卫生，消除这条隐式时序假设。
+            //
+            // 先用持久化的 `enable_wifi_detection` 初始化 atomic，让首次 Startup
+            // 采样（由 `netmon::start` 调度）读到用户设置值而非编译期默认。
+            // `enable_virtual_iface_reporting` 每次采样都从 `Config::verge()` 读，
+            // 无需在此处同步。
+            //
+            // setup 期同步读一次，让首次 Startup 采样读到用户持久化的 toggle 值
+            // 而非编译期默认。用 `AsyncHandler::block_on`（对
+            // `tauri::async_runtime::block_on` 的薄 wrapper）与 `lib.rs` 其它
+            // setup 阶段 `block_on` 驱动 async 的风格保持一致。`Config::global()`
+            // 的 OnceCell 初始化可能已由更早的 setup 路径（例如 `Logger::init`）
+            // 完成，也可能在此处首次 `get_or_init` —— 两条路径都走 `IVerge::new()`
+            // 读持久化 YAML，正确性不受先后影响。
+            let initial_wifi_detection = AsyncHandler::block_on(async {
+                crate::config::Config::verge()
+                    .await
+                    .latest_arc()
+                    .enable_wifi_detection
+                    .unwrap_or(crate::module::netmon::DEFAULT_WIFI_DETECTION)
+            });
+            crate::module::netmon::set_wifi_detection_enabled(initial_wifi_detection);
+
+            // macOS CoreLocation manager 必须主线程创建（当前 setup 闭包即主线程）；
+            // 此步仅注册 delegate，不弹任何授权窗口。授权弹窗由前端 toggle 翻 ON
+            // 时通过 `request_wifi_detection_auth` 命令触发，或由下方启动期主动
+            // 请求在"用户已 opt-in 但 TCC 尚未确定"时补齐。`init_on_main_thread`
+            // 内部用 `MainThreadMarker::new()` 做运行时校验，非主线程会拒绝并 warn。
+            #[cfg(target_os = "macos")]
+            crate::module::netmon::wifi_auth::init_on_main_thread();
+
+            if let Err(e) = crate::module::netmon::start() {
+                logging!(error, Type::Setup, "netmon start failed: {}", e);
+            }
+
+            // 启动期主动授权请求：用户 config 里 enable_wifi_detection=true 就是明确
+            // opt-in。若系统 TCC 授权为 NotDetermined（fresh install / 重装 /
+            // tccutil reset / 签名变化后 TCC 重置），主动弹一次系统授权窗，避免 UI
+            // 卡在"等待授权"的死角。`request_authorization` 内部只在 NotDetermined
+            // 时请求，其他状态（Authorized/Denied/Restricted）自动 no-op。
+            #[cfg(target_os = "macos")]
+            if initial_wifi_detection {
+                crate::module::netmon::wifi_auth::request_authorization();
             }
 
             resolve::resolve_setup_async();
@@ -378,11 +422,22 @@ pub fn run() {
     });
 
     app.run(|app_handle, e| match e {
-        tauri::RunEvent::Ready | tauri::RunEvent::Resumed => {
+        tauri::RunEvent::Ready => {
             if core::handle::Handle::global().is_exiting() {
                 return;
             }
             event_handlers::handle_ready_resumed(app_handle);
+        }
+        tauri::RunEvent::Resumed => {
+            if core::handle::Handle::global().is_exiting() {
+                return;
+            }
+            // Ready 路径里启动流程已经各自触发了初次 netmon 采样，但 Resumed 路径
+            // 需要显式补一次：休眠期底层 route/link 事件可能未被 platform monitor
+            // 捕获（见 netmon::on_resumed 注释），不补发会让 network-policy 一直
+            // 停留在休眠前的网络环境。
+            event_handlers::handle_ready_resumed(app_handle);
+            crate::module::netmon::on_resumed();
         }
         #[cfg(target_os = "macos")]
         tauri::RunEvent::Reopen {

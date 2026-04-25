@@ -6,5 +6,10 @@
     <array>
         <string>io.github.clash-verge-rev.clash-verge-rev.service</string>
     </array>
+    <!-- netmon network-policy: CoreWLAN's CWInterface.ssid()/bssid() requires
+         Location authorization on macOS 14+. Requested only when the user
+         opts in via the "Wi-Fi identification" toggle. -->
+    <key>NSLocationWhenInUseUsageDescription</key>
+    <string>Clash Verge needs Wi-Fi location access to read SSID/BSSID, used by network-policy rules to switch proxies based on which Wi-Fi you're connected to. You can turn this off in settings.</string>
 </dict>
 </plist>

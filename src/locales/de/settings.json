@@ -96,6 +96,9 @@
           "allowLan": "Netzwerkverbindung im lokalen Netzwerk zulassen",
           "dnsOverwrite": "DNS-Überschreibung",
           "ipv6": "IPv6",
+          "wifiDetection": "Wi-Fi-Erkennung",
+          "virtualIfaceReporting": "Virtuelle Schnittstellen melden",
+          "networkContext": "Netzwerkkontext",
           "unifiedDelay": "Einheitliche Latenz",
           "logLevel": "Protokolliergrad",
           "portConfig": "Port-Konfiguration",
@@ -133,7 +136,9 @@
           "networkInterface": "Netzwerkschnittstelle",
           "unifiedDelay": "Wenn die einheitliche Latenz aktiviert ist, werden zwei Latenztests durchgeführt, um die Latenzunterschiede zwischen verschiedenen Knotentypen aufgrund von Verbindungsaufbau und anderen Faktoren zu eliminieren.",
           "logLevel": "Dies wirkt sich nur auf die Kernprotokolldateien im Verzeichnis Service im Protokollverzeichnis aus.",
-          "openUwpTool": "Ab Windows 8 wird die direkte Netzwerkverbindung von UWP-Anwendungen (z. B. Microsoft Store) zu lokalen Hosts eingeschränkt. Mit diesem Tool können Sie diese Einschränkung umgehen."
+          "openUwpTool": "Ab Windows 8 wird die direkte Netzwerkverbindung von UWP-Anwendungen (z. B. Microsoft Store) zu lokalen Hosts eingeschränkt. Mit diesem Tool können Sie diese Einschränkung umgehen.",
+          "wifiDetection": "SSID / BSSID des Wi-Fi erfassen, damit mihomo Proxy-Richtlinien pro Netzwerk wechseln kann. Unter macOS ist dafür die Ortungsberechtigung erforderlich.",
+          "virtualIfaceReporting": "Bridges vom Typ docker / br-* / veth / vmnet / vEthernet / virbr / vnic in die an mihomo gemeldete Schnittstellenliste aufnehmen. Standardmäßig deaktiviert, um die virtuelle Netzwerktopologie nicht preiszugeben; nur aktivieren, wenn network-policy-Regeln diese Namen abgleichen müssen."
         },
         "options": {
           "logLevel": {
@@ -143,6 +148,43 @@
             "error": "Error",
             "silent": "Silent"
           }
+        },
+        "secondary": {
+          "wifiDetection": {
+            "disabled": "Deaktiviert — Wi-Fi-Details werden nicht erfasst",
+            "authorized": "Autorisiert",
+            "waiting": "Warte auf Autorisierung…",
+            "notAuthorized": "Ortungsberechtigung verweigert",
+            "restricted": "Durch Systemrichtlinie eingeschränkt",
+            "locationDisabled": "System-Ortungsdienste sind deaktiviert"
+          }
+        },
+        "actions": {
+          "openLocationSettings": "Ortungseinstellungen öffnen"
+        }
+      },
+      "diagnostic": {
+        "title": "Netzwerkkontext",
+        "labels": {
+          "matched": "Passende Regel",
+          "unmatched": "Kein Treffer",
+          "ageSeconds": "(vor {{n}} s)",
+          "hasContext": "Kontext bei mihomo eingegangen",
+          "interfaces": "Schnittstellen",
+          "moreIfaces": "+{{n}} weitere",
+          "virtualInterfaces": "Virtuelle Schnittstellen",
+          "dnsSuffix": "DNS-Suffix"
+        },
+        "columns": {
+          "name": "Name",
+          "type": "Typ",
+          "ssid": "SSID",
+          "gateway": "Gateway"
+        },
+        "hints": {
+          "unmatched": "Keine networks:-Regel hat gegriffen. Prüfen Sie Ihre Profil-YAML.",
+          "noContext": "mihomo hat noch keinen Kontext erhalten. Stellen Sie sicher, dass network-policy in der Kernel-Konfiguration aktiviert ist.",
+          "fetchFailed": "Netzwerkkontext konnte nicht abgerufen werden"
         }
       }
     }

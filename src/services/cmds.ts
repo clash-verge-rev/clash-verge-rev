@@ -232,6 +232,31 @@ export async function calcuProxyProviders() {
   )
 }
 
+/**
+ * 后端 `app-log` ring buffer 的单条记录。与 Rust `AppLogRecord` 对齐
+ * （camelCase serialize）。`seq` 是后端原子计数器分配的单调序号，前端用它
+ * 做 live listener 与 history replay 之间的去重。
+ */
+export interface IAppLogRecord {
+  seq: number
+  /**
+   * 可选：后端 `SystemTime::now() - UNIX_EPOCH` 失败时省略（时钟回拨 / NTP
+   * 异常 / VM 漂移）。渲染端在缺失时回落到 `Date.now()`，避免时间戳显示 1970。
+   */
+  unixMs?: number
+  level: string
+  source: string
+  message: string
+}
+
+/**
+ * 拉取后端 app-log ring buffer 快照，供日志页进入时回填错过的 [Network]
+ * 条目——补偿 `tauri::Emitter::emit` 在无 listener 时丢事件的行为。
+ */
+export async function getAppLogHistory() {
+  return invoke<IAppLogRecord[]>('get_app_log_history')
+}
+
 export async function getClashLogs() {
   const regex = /time="(.+?)"\s+level=(.+?)\s+msg="(.+?)"/
   const newRegex = /(.+?)\s+(.+?)\s+(.+)/
@@ -574,4 +599,29 @@ export const isPortInUse = async (port: number) => {
     console.error('检查端口使用状态失败:', error)
     return false
   }
+}
+
+// Wi-Fi 识别开关的授权状态快照（macOS CoreLocation；其他平台 needsAuthorization=false）
+export interface IWifiDetectionStatus {
+  enabled: boolean
+  needsAuthorization: boolean
+  authStatus:
+    | 'notDetermined'
+    | 'authorized'
+    | 'denied'
+    | 'restricted'
+    | 'notApplicable'
+  locationServicesEnabled: boolean
+}
+
+export async function getWifiDetectionStatus() {
+  return invoke<IWifiDetectionStatus>('get_wifi_detection_status')
+}
+
+export async function requestWifiDetectionAuth() {
+  return invoke<IWifiDetectionStatus>('request_wifi_detection_auth')
+}
+
+export async function openLocationSettings() {
+  return invoke<void>('open_location_settings')
 }
