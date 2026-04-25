@@ -23,6 +23,14 @@ export const handleNoticeMessage = (
       navigate('/profile')
       showNotice.error(msg)
     },
+    'profile_switch::ok': () => {
+      navigate('/profile')
+      showNotice.success(msg)
+    },
+    'profile_switch::error': () => {
+      navigate('/profile')
+      showNotice.error(msg)
+    },
     'set_config::error': () => showNotice.error(msg),
     update_with_clash_proxy: () =>
       showNotice.success(
