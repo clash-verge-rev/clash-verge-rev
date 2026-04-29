@@ -45,6 +45,9 @@ inherits = "fast-release"
 codegen-units = 1
 split-debuginfo = "unpacked"
 
+[patch.crates-io]
+tray-icon = { git = "https://github.com/tauri-apps/tray-icon.git", rev = "215e972" }
+
 [workspace.dependencies]
 clash-verge-draft = { path = "crates/clash-verge-draft" }
 clash-verge-logging = { path = "crates/clash-verge-logging" }
