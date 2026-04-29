@@ -19,9 +19,13 @@
       "correctness": {
         "useExhaustiveDependencies": "off"
       },
+      "style": {
+        "noNonNullAssertion": "off"
+      },
       "suspicious": {
         "noAssignInExpressions": "warn",
         "noDoubleEquals": "warn",
+        "noExplicitAny": "off",
         "noImplicitAnyLet": "warn",
         "noShadowRestrictedNames": "warn",
         "useIterableCallbackReturn": "warn"
