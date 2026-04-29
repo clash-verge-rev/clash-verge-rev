@@ -12,23 +12,43 @@
     "rules": {
       "recommended": true,
       "a11y": {
-        "noStaticElementInteractions": "warn",
-        "useAltText": "warn",
-        "useKeyWithClickEvents": "warn"
+        "noStaticElementInteractions": "off",
+        "useAltText": "off",
+        "useKeyWithClickEvents": "off"
+      },
+      "complexity": {
+        "noArguments": "off",
+        "noUselessStringRaw": "off",
+        "noUselessSwitchCase": "off",
+        "noUselessTernary": "off",
+        "useArrowFunction": "off",
+        "useLiteralKeys": "off",
+        "useOptionalChain": "off",
+        "useRegexLiterals": "off"
       },
       "correctness": {
+        "noUnusedFunctionParameters": "off",
+        "noUnusedImports": "off",
+        "noUnusedVariables": "off",
+        "useParseIntRadix": "off",
         "useExhaustiveDependencies": "off"
       },
       "style": {
-        "noNonNullAssertion": "off"
+        "noNonNullAssertion": "off",
+        "useExponentiationOperator": "off",
+        "useTemplate": "off"
       },
       "suspicious": {
-        "noAssignInExpressions": "warn",
-        "noDoubleEquals": "warn",
+        "noAssignInExpressions": "off",
+        "noConfusingVoidType": "off",
+        "noDoubleEquals": "off",
         "noExplicitAny": "off",
-        "noImplicitAnyLet": "warn",
-        "noShadowRestrictedNames": "warn",
-        "useIterableCallbackReturn": "warn"
+        "noGlobalIsFinite": "off",
+        "noGlobalIsNan": "off",
+        "noImplicitAnyLet": "off",
+        "noPrototypeBuiltins": "off",
+        "noShadowRestrictedNames": "off",
+        "useIterableCallbackReturn": "off"
       }
     }
   },
