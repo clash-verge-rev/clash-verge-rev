@@ -38,7 +38,7 @@ jobs:
         run: bash ./scripts/extract_update_logs.sh
         shell: bash
 
-      - uses: pnpm/action-setup@v6.0.1
+      - uses: pnpm/action-setup@v6.0.3
         name: Install pnpm
         with:
           run_install: false
@@ -179,7 +179,7 @@ jobs:
           echo "OPENSSL_LIB_DIR=$(brew --prefix openssl@3)/lib" >> $GITHUB_ENV
           echo "PKG_CONFIG_PATH=$(brew --prefix openssl@3)/lib/pkgconfig" >> $GITHUB_ENV
 
-      - uses: pnpm/action-setup@v6.0.1
+      - uses: pnpm/action-setup@v6.0.3
         name: Install pnpm
         with:
           run_install: false
@@ -278,7 +278,7 @@ jobs:
           cache-workspace-crates: true
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v6.0.1
+        uses: pnpm/action-setup@v6.0.3
         with:
           run_install: false
 
@@ -423,7 +423,7 @@ jobs:
           cache-workspace-crates: true
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v6.0.1
+        uses: pnpm/action-setup@v6.0.3
         with:
           run_install: false
 
@@ -534,7 +534,7 @@ jobs:
         with:
           node-version: '24.15.0'
 
-      - uses: pnpm/action-setup@v6.0.1
+      - uses: pnpm/action-setup@v6.0.3
         name: Install pnpm
         with:
           run_install: false
