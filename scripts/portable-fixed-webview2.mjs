@@ -6,14 +6,19 @@ import path from 'path'
 import { context, getOctokit } from '@actions/github'
 import AdmZip from 'adm-zip'
 
-const target = process.argv.slice(2)[0]
-const alpha = process.argv.slice(2)[1]
-
 const ARCH_MAP = {
   'x86_64-pc-windows-msvc': 'x64',
   'i686-pc-windows-msvc': 'x86',
   'aarch64-pc-windows-msvc': 'arm64',
 }
+
+const rawTarget = process.argv.slice(2)[0]
+if (rawTarget !== undefined && !Object.hasOwn(ARCH_MAP, rawTarget)) {
+  console.error(`[ERROR]: Invalid target platform: ${rawTarget}`)
+  process.exit(1)
+}
+const target = rawTarget
+const alpha = process.argv.slice(2)[1]
 
 const PROCESS_MAP = {
   x64: 'x64',

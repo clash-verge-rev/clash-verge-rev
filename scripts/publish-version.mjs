@@ -49,10 +49,10 @@ async function run() {
 
   if (tag) {
     // 打 tag 并推送
-    const { execSync } = await import('child_process')
+    const { execFileSync } = await import('child_process')
     try {
-      execSync(`git tag ${tag}`, { stdio: 'inherit' })
-      execSync(`git push origin ${tag}`, { stdio: 'inherit' })
+      execFileSync('git', ['tag', tag], { stdio: 'inherit' })
+      execFileSync('git', ['push', 'origin', tag], { stdio: 'inherit' })
       console.log(`[INFO]: Git tag ${tag} created and pushed.`)
     } catch {
       console.error(`[ERROR]: Failed to create or push git tag: ${tag}`)
