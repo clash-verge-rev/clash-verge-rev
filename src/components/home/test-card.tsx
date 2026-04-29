@@ -4,7 +4,7 @@ import {
   PointerSensor,
   useSensor,
   useSensors,
-  DragEndEvent,
+  type DragEndEvent,
   DragOverlay,
 } from '@dnd-kit/core'
 import { SortableContext } from '@dnd-kit/sortable'
@@ -21,7 +21,7 @@ import github from '@/assets/image/test/github.svg?raw'
 import google from '@/assets/image/test/google.svg?raw'
 import youtube from '@/assets/image/test/youtube.svg?raw'
 import { TestItem } from '@/components/test/test-item'
-import { TestViewer, TestViewerRef } from '@/components/test/test-viewer'
+import { TestViewer, type TestViewerRef } from '@/components/test/test-viewer'
 import { useVerge } from '@/hooks/use-verge'
 
 import { EnhancedCard } from './enhanced-card'

@@ -4,7 +4,7 @@ import * as monaco from 'monaco-editor'
 import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker'
 import cssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker'
 import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker'
-import { configureMonacoYaml, JSONSchema } from 'monaco-yaml'
+import { configureMonacoYaml, type JSONSchema } from 'monaco-yaml'
 import pac from 'types-pac/pac.d.ts?raw'
 
 import yamlWorker from '@/utils/yaml.worker?worker'

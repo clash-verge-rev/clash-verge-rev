@@ -4,7 +4,8 @@ import {
   BugReportRounded,
 } from '@mui/icons-material'
 import { Box, Typography, Button, Alert, Collapse } from '@mui/material'
-import React, { Component, ErrorInfo, ReactNode } from 'react'
+import type React from 'react'
+import { Component, type ErrorInfo, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
 interface Props {

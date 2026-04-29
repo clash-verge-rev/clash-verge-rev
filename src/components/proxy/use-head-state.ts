@@ -2,7 +2,7 @@ import { useCallback, useEffect, useReducer } from 'react'
 
 import { useProfiles } from '@/hooks/use-profiles'
 
-import { ProxySortType } from './use-filter-sort'
+import type { ProxySortType } from './use-filter-sort'
 
 export interface HeadState {
   open?: boolean

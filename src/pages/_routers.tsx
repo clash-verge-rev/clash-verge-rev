@@ -6,7 +6,7 @@ import LockOpenRoundedIcon from '@mui/icons-material/LockOpenRounded'
 import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded'
 import SubjectRoundedIcon from '@mui/icons-material/SubjectRounded'
 import WifiRoundedIcon from '@mui/icons-material/WifiRounded'
-import { createBrowserRouter, RouteObject } from 'react-router'
+import { createBrowserRouter, type RouteObject } from 'react-router'
 
 import ConnectionsSvg from '@/assets/image/itemicon/connections.svg?react'
 import HomeSvg from '@/assets/image/itemicon/home.svg?react'

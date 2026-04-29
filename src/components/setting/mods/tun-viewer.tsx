@@ -16,7 +16,7 @@ import {
   BaseDialog,
   BaseSplitChipEditor,
   TooltipIcon,
-  DialogRef,
+  type DialogRef,
   Switch,
 } from '@/components/base'
 import { useClash } from '@/hooks/use-clash'

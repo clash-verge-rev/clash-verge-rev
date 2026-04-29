@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { listen } from '@tauri-apps/api/event'
-import React, { useCallback, useEffect, useMemo, useRef } from 'react'
+import type React from 'react'
+import { useCallback, useEffect, useMemo, useRef } from 'react'
 import {
   getBaseConfig,
   getRuleProviders,

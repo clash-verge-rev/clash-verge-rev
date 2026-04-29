@@ -8,7 +8,8 @@ import {
   ListSubheader,
 } from '@mui/material'
 import CircularProgress from '@mui/material/CircularProgress'
-import React, { ReactNode, useState } from 'react'
+import type React from 'react'
+import { type ReactNode, useState } from 'react'
 
 import isAsyncFunction from '@/utils/is-async-function'
 

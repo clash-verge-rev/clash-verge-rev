@@ -13,7 +13,7 @@ import type { ReactNode, Ref } from 'react'
 import { useCallback, useImperativeHandle, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { BaseDialog, DialogRef } from '@/components/base'
+import { BaseDialog, type DialogRef } from '@/components/base'
 import { useVerge } from '@/hooks/use-verge'
 import {
   createLocalBackup,

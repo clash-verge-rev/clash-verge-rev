@@ -1,4 +1,4 @@
-import { getCurrentWindow } from '@tauri-apps/api/window'
+import type { getCurrentWindow } from '@tauri-apps/api/window'
 import { createContext } from 'react'
 
 export interface WindowContextType {

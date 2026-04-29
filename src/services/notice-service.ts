@@ -1,5 +1,5 @@
 import i18n from 'i18next'
-import { ReactNode, isValidElement } from 'react'
+import { type ReactNode, isValidElement } from 'react'
 
 type NoticeType = 'success' | 'error' | 'info'
 

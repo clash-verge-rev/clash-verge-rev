@@ -7,8 +7,8 @@ import {
   ListItemIcon,
   ListItemText,
   styled,
-  SxProps,
-  Theme,
+  type SxProps,
+  type Theme,
 } from '@mui/material'
 
 import { BaseLoading } from '@/components/base'

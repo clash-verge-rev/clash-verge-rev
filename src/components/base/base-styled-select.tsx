@@ -1,4 +1,4 @@
-import { Select, SelectProps, styled } from '@mui/material'
+import { Select, type SelectProps, styled } from '@mui/material'
 
 export const BaseStyledSelect = styled((props: SelectProps<string>) => {
   return (

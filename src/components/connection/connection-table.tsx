@@ -1,17 +1,17 @@
 import { ViewColumnRounded } from '@mui/icons-material'
 import { Box, IconButton, Tooltip } from '@mui/material'
 import {
-  ColumnDef,
-  ColumnOrderState,
-  ColumnSizingState,
+  type ColumnDef,
+  type ColumnOrderState,
+  type ColumnSizingState,
   flexRender,
   getCoreRowModel,
   getSortedRowModel,
-  Row,
-  SortingState,
-  Updater,
+  type Row,
+  type SortingState,
+  type Updater,
   useReactTable,
-  VisibilityState,
+  type VisibilityState,
 } from '@tanstack/react-table'
 import { useVirtualizer } from '@tanstack/react-virtual'
 import dayjs from 'dayjs'

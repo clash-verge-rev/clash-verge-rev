@@ -27,7 +27,7 @@ import {
   BaseDialog,
   BaseFieldset,
   BaseSplitChipEditor,
-  DialogRef,
+  type DialogRef,
   Switch,
   TooltipIcon,
 } from '@/components/base'

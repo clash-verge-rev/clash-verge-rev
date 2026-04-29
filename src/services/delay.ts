@@ -1,4 +1,4 @@
-import { delayProxyByName, ProxyDelay } from 'tauri-plugin-mihomo-api'
+import { delayProxyByName, type ProxyDelay } from 'tauri-plugin-mihomo-api'
 
 import { debugLog } from '@/utils/debug'
 

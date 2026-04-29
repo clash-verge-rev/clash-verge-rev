@@ -1,5 +1,5 @@
 import { styled } from '@mui/material/styles'
-import { default as MuiSwitch, SwitchProps } from '@mui/material/Switch'
+import { default as MuiSwitch, type SwitchProps } from '@mui/material/Switch'
 
 export const Switch = styled((props: SwitchProps) => (
   <MuiSwitch

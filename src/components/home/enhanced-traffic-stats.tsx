@@ -8,13 +8,13 @@ import {
 } from '@mui/icons-material'
 import {
   Grid,
-  PaletteColor,
+  type PaletteColor,
   Paper,
   Typography,
   alpha,
   useTheme,
 } from '@mui/material'
-import { ReactNode, memo, useMemo, useRef } from 'react'
+import { type ReactNode, memo, useMemo, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { TrafficErrorBoundary } from '@/components/shared/traffic-error-boundary'
