@@ -30,6 +30,7 @@
     "tooltips": {
       "locate": "locate",
       "delayCheck": "Delay check",
+      "speedCheck": "Download speed test (green nodes only)",
       "sortDefault": "Sort by default",
       "sortDelay": "Sort by delay",
       "sortName": "Sort by name",

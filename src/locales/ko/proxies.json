@@ -30,6 +30,7 @@
     "tooltips": {
       "locate": "위치 찾기",
       "delayCheck": "지연 확인",
+      "speedCheck": "다운로드 속도 테스트 (녹색 노드만)",
       "sortDefault": "기본 정렬",
       "sortDelay": "지연으로 정렬",
       "sortName": "이름으로 정렬",

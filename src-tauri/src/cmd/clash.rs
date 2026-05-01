@@ -121,6 +121,21 @@ pub async fn test_delay(url: String) -> CmdResult<u32> {
     Ok(result)
 }
 
+/// 通过混合端口代理测试下载速度，返回 MB/s。失败时返回 0.0。
+#[tauri::command]
+pub async fn test_download_speed(url: String, timeout_ms: u64) -> CmdResult<f64> {
+    match feat::test_download_speed(url, timeout_ms).await {
+        Ok(speed) => {
+            logging!(info, Type::Cmd, "speed test result: {:.2} MB/s", speed);
+            Ok(speed)
+        }
+        Err(e) => {
+            logging!(error, Type::Cmd, "speed test error: {}", e);
+            Ok(0.0)
+        }
+    }
+}
+
 /// 保存DNS配置到单独文件
 #[tauri::command]
 pub async fn save_dns_config(dns_config: Mapping) -> CmdResult {

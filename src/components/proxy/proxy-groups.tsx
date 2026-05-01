@@ -22,6 +22,7 @@ import { useVerge } from '@/hooks/use-verge'
 import { useProxiesData } from '@/providers/app-data-context'
 import { calcuProxies, updateProxyChainConfigInRuntime } from '@/services/cmds'
 import delayManager from '@/services/delay'
+import speedManager from '@/services/speed'
 import { debugLog } from '@/utils/debug'
 
 import { ScrollTopButton } from '../layout/scroll-top-button'
@@ -376,6 +377,55 @@ export const ProxyGroups = (props: Props) => {
     }),
   )
 
+  // 仅对 ping < 250ms（绿色）的代理依次进行下载速度测试
+  const handleCheckSpeed = useStableCallback(
+    useLockFn(async (groupName: string) => {
+      // 收集该组的所有代理
+      const proxies = renderList
+        .filter(
+          (e) => e.group?.name === groupName && (e.type === 2 || e.type === 4),
+        )
+        .flatMap((e) => e.proxyCol || e.proxy!)
+        .filter(Boolean)
+
+      // 仅筛选 ping < 250ms 的绿色代理（排除 provider 节点）
+      const greenProxies = proxies.filter((p) => {
+        if (!p || p.provider) return false
+        const delay = delayManager.getDelay(p.name, groupName)
+        return delay > 0 && delay < 250
+      })
+
+      if (greenProxies.length === 0) {
+        debugLog(`[ProxyGroups] 速度测试：无绿色节点（请先运行延迟测试）`)
+        return
+      }
+
+      // 查找当前组对象（用于恢复 group.now）
+      const group = renderList.find(
+        (e) => e.type === 1 && e.group?.name === groupName,
+      )?.group
+
+      if (!group) return
+
+      debugLog(
+        `[ProxyGroups] 开始速度测试，组: ${groupName}，目标数量: ${greenProxies.length}`,
+      )
+
+      const downloadUrl = 'https://speed.cloudflare.com/__down?bytes=10000000'
+
+      await speedManager.checkListSpeed(
+        greenProxies.map((p) => ({ name: p!.name })),
+        { name: groupName, now: group.now },
+        downloadUrl,
+        15_000,
+        () => onProxies(),
+      )
+
+      debugLog(`[ProxyGroups] 速度测试完成，组: ${groupName}`)
+      onProxies()
+    }),
+  )
+
   // 滚到对应的节点
   const handleLocation = useStableCallback((group: IProxyGroupItem) => {
     if (!group) return
@@ -528,6 +578,7 @@ export const ProxyGroups = (props: Props) => {
                       indent={mode === 'rule' || mode === 'script'}
                       onLocation={handleLocation}
                       onCheckAll={handleCheckAll}
+                      onCheckSpeed={handleCheckSpeed}
                       onHeadState={onHeadState}
                       onChangeProxy={handleChangeProxy}
                       isChainMode={isChainMode}
@@ -660,6 +711,7 @@ export const ProxyGroups = (props: Props) => {
                 indent={mode === 'rule' || mode === 'script'}
                 onLocation={handleLocation}
                 onCheckAll={handleCheckAll}
+                onCheckSpeed={handleCheckSpeed}
                 onHeadState={onHeadState}
                 onChangeProxy={handleChangeProxy}
               />

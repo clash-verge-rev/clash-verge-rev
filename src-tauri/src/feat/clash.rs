@@ -183,3 +183,76 @@ pub async fn test_delay(url: String) -> anyhow::Result<u32> {
     .await
     .unwrap_or(Ok(10000u32))
 }
+
+/// 通过混合端口代理下载字节并返回速度（MB/s）。
+/// 当系统代理或 TUN 模式启用时，流量经由 127.0.0.1:{mixed_port} 路由。
+/// 失败时返回 Err（调用方将其映射为 0.0）。
+pub async fn test_download_speed(url: String, timeout_ms: u64) -> anyhow::Result<f64> {
+    use std::time::Duration;
+    use tokio::time::Instant;
+
+    let verge = Config::verge().await.latest_arc();
+    let proxy_port: Option<u16> = {
+        let enabled = verge.enable_system_proxy.unwrap_or(false)
+            || verge.enable_tun_mode.unwrap_or(false);
+        if enabled {
+            Some(match verge.verge_mixed_port {
+                Some(p) => p,
+                None => Config::clash().await.data_arc().get_mixed_port(),
+            })
+        } else {
+            None
+        }
+    };
+
+    let client = {
+        let mut builder = reqwest::Client::builder()
+            .timeout(Duration::from_millis(timeout_ms))
+            .danger_accept_invalid_certs(true);
+        if let Some(port) = proxy_port {
+            let proxy_url = format!("http://127.0.0.1:{port}");
+            builder = builder.proxy(
+                reqwest::Proxy::all(&proxy_url)
+                    .map_err(|e| anyhow::anyhow!("bad proxy url: {e}"))?,
+            );
+        }
+        builder
+            .build()
+            .map_err(|e| anyhow::anyhow!("reqwest build: {e}"))?
+    };
+
+    let start = Instant::now();
+    let mut response = client
+        .get(&*url)
+        .send()
+        .await
+        .map_err(|e| anyhow::anyhow!("request failed: {e}"))?;
+
+    if !response.status().is_success() {
+        return Err(anyhow::anyhow!(
+            "HTTP {} from speed-test URL",
+            response.status()
+        ));
+    }
+
+    const BYTES_CAP: u64 = 10 * 1024 * 1024; // 最多下载 10 MB
+    let mut total_bytes: u64 = 0;
+
+    while let Some(chunk) = response
+        .chunk()
+        .await
+        .map_err(|e| anyhow::anyhow!("chunk error: {e}"))?
+    {
+        total_bytes += chunk.len() as u64;
+        if total_bytes >= BYTES_CAP || start.elapsed() >= Duration::from_millis(timeout_ms) {
+            break;
+        }
+    }
+
+    let elapsed_secs = start.elapsed().as_secs_f64();
+    if elapsed_secs < 0.1 || total_bytes == 0 {
+        return Err(anyhow::anyhow!("too few bytes received"));
+    }
+
+    Ok((total_bytes as f64) / elapsed_secs / (1024.0 * 1024.0))
+}
