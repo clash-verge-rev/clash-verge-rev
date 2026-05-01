@@ -121,22 +121,24 @@ impl NetworkManager {
     }
 
     fn should_retry_with_static_webpki_roots(err: &anyhow::Error) -> bool {
-        let err_text = format!("{err:?}").to_ascii_lowercase();
-        [
-            "certificate",
-            "cert",
-            "tls",
-            "ssl",
-            "rustls",
-            "webpki",
-            "revocation",
-            "ocsp",
-            "crl",
-            "issuer",
-            "unknownissuer",
-        ]
-        .iter()
-        .any(|needle| err_text.contains(needle))
+        err.chain().any(|e| {
+            let msg = e.to_string().to_ascii_lowercase();
+            [
+                "certificate",
+                "cert",
+                "tls",
+                "ssl",
+                "rustls",
+                "webpki",
+                "revocation",
+                "ocsp",
+                "crl",
+                "issuer",
+                "unknownissuer",
+            ]
+            .iter()
+            .any(|kw| msg.contains(kw))
+        })
     }
 
     pub async fn create_request(
@@ -205,7 +207,7 @@ impl NetworkManager {
         let response = match request_builder.send().await {
             Ok(resp) => resp,
             Err(e) => {
-                return Err(anyhow::anyhow!("Request failed: {}", e));
+                return Err(anyhow::Error::new(e).context("Request failed"));
             }
         };
 
