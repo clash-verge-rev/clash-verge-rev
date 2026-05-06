@@ -401,6 +401,7 @@ jobs:
           name: 'Clash Verge Rev v${{env.VERSION}}'
           body: 'See release notes for detailed changelog.'
           token: ${{ secrets.GITHUB_TOKEN }}
+          draft: true
           prerelease: ${{ contains(github.ref_name, '-rc') }}
           files: |
             target/${{ matrix.target }}/release/bundle/deb/*.deb
@@ -517,6 +518,7 @@ jobs:
           name: 'Clash Verge Rev v${{steps.build.outputs.appVersion}}'
           body: 'See release notes for detailed changelog.'
           token: ${{ secrets.GITHUB_TOKEN }}
+          draft: true
           prerelease: ${{ contains(github.ref_name, '-rc') }}
           files: target/${{ matrix.target }}/release/bundle/nsis/*setup*
 
