@@ -4,20 +4,17 @@ use super::use_lowercase;
 use serde_yaml_ng::{self, Mapping, Value};
 
 fn deep_merge(a: &mut Value, b: Value) {
-    let mut stack: Vec<(*mut Value, Value)> = vec![(a as *mut Value, b)];
-
-    while let Some((a_ptr, b)) = stack.pop() {
-        let a = unsafe { &mut *a_ptr };
-
-        match (a, b) {
-            (Value::Mapping(a_map), Value::Mapping(b_map)) => {
-                for (k, v) in b_map {
-                    let child = a_map.entry(k).or_insert(Value::Null);
-                    stack.push((child as *mut Value, v));
+    match (a, b) {
+        (Value::Mapping(a_map), Value::Mapping(b_map)) => {
+            for (key, value) in b_map {
+                if let Some(existing) = a_map.get_mut(&key) {
+                    deep_merge(existing, value);
+                } else {
+                    a_map.insert(key, value);
                 }
             }
-            (a, b) => *a = b,
         }
+        (a, b) => *a = b,
     }
 }
 

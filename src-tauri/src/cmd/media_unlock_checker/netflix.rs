@@ -22,7 +22,7 @@ pub(super) async fn check_netflix(client: &Client) -> UnlockItem {
         .await;
 
     if let Err(e) = &result1 {
-        eprintln!("Netflix请求错误: {e}");
+        logging!(error, Type::Network, "Netflix请求错误: {e}");
         return UnlockItem {
             name: "Netflix".to_string(),
             status: "Failed".to_string(),
@@ -38,7 +38,7 @@ pub(super) async fn check_netflix(client: &Client) -> UnlockItem {
         .await;
 
     if let Err(e) = &result2 {
-        eprintln!("Netflix请求错误: {e}");
+        logging!(error, Type::Network, "Netflix请求错误: {e}");
         return UnlockItem {
             name: "Netflix".to_string(),
             status: "Failed".to_string(),
@@ -125,7 +125,7 @@ pub(super) async fn check_netflix(client: &Client) -> UnlockItem {
                 }
             }
             Err(e) => {
-                eprintln!("获取Netflix区域信息失败: {e}");
+                logging!(error, Type::Network, "获取Netflix区域信息失败: {e}");
                 UnlockItem {
                     name: "Netflix".to_string(),
                     status: "Yes (但无法获取区域)".to_string(),
@@ -182,7 +182,7 @@ async fn check_netflix_cdn(client: &Client) -> UnlockItem {
                     }
                 }
                 Err(e) => {
-                    eprintln!("解析Fast.com API响应失败: {e}");
+                    logging!(error, Type::Network, "解析Fast.com API响应失败: {e}");
                     UnlockItem {
                         name: "Netflix".to_string(),
                         status: "Failed (解析错误)".to_string(),
@@ -193,7 +193,7 @@ async fn check_netflix_cdn(client: &Client) -> UnlockItem {
             }
         }
         Err(e) => {
-            eprintln!("Fast.com API请求失败: {e}");
+            logging!(error, Type::Network, "Fast.com API请求失败: {e}");
             UnlockItem {
                 name: "Netflix".to_string(),
                 status: "Failed (CDN API)".to_string(),

@@ -439,6 +439,18 @@ pub async fn wait_and_check_service_available(status: &mut ServiceManager) -> Re
     wait_for_service_ipc(status, "Waiting for service to be available").await
 }
 
+async fn wait_and_check_service_version(status: &mut ServiceManager) -> Result<()> {
+    wait_and_check_service_available(status).await?;
+
+    if clash_verge_service_ipc::is_reinstall_service_needed().await {
+        logging!(info, Type::Service, "服务版本不匹配，执行重装流程");
+        reinstall_service()?;
+        wait_and_check_service_available(status).await?;
+    }
+
+    Ok(())
+}
+
 async fn wait_for_service_ipc(status: &mut ServiceManager, reason: &str) -> Result<()> {
     status.0 = ServiceStatus::Unavailable(reason.into());
     let config = ServiceManager::config();
@@ -530,7 +542,7 @@ impl ServiceManager {
             ServiceStatus::InstallRequired => {
                 logging!(info, Type::Service, "需要安装服务，执行安装流程");
                 install_service()?;
-                wait_and_check_service_available(self).await?;
+                wait_and_check_service_version(self).await?;
             }
             ServiceStatus::UninstallRequired => {
                 logging!(info, Type::Service, "服务需要卸载，执行卸载流程");

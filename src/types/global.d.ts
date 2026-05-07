@@ -16,6 +16,11 @@ type Platform =
  */
 declare const OS_PLATFORM: Platform
 
+type ValidationOutcome =
+  | { status: 'valid' | 'busy' }
+  | { status: 'invalid'; kind: string; message: string }
+  | { status: 'skipped'; reason: string }
+
 /**
  * Some interface for clash api
  */

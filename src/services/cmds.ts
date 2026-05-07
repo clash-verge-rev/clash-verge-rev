@@ -14,11 +14,16 @@ export async function getProfiles() {
 }
 
 export async function enhanceProfiles() {
-  return invoke<void>('enhance_profiles')
+  return (
+    (await invoke<ValidationOutcome>('enhance_profiles')).status === 'valid'
+  )
 }
 
 export async function patchProfilesConfig(profiles: IProfilesConfig) {
-  return invoke<boolean>('patch_profiles_config', { profiles })
+  return (
+    (await invoke<ValidationOutcome>('patch_profiles_config', { profiles }))
+      .status === 'valid'
+  )
 }
 
 export async function createProfile(
@@ -37,7 +42,14 @@ export async function readProfileFile(index: string) {
 }
 
 export async function saveProfileFile(index: string, fileData: string) {
-  return invoke<void>('save_profile_file', { index, fileData })
+  return (
+    (
+      await invoke<ValidationOutcome>('save_profile_file', {
+        index,
+        fileData,
+      })
+    ).status === 'valid'
+  )
 }
 
 export async function importProfile(url: string, option?: IProfileOption) {
@@ -492,7 +504,7 @@ export async function scriptValidateNotice(status: string, msg: string) {
 }
 
 export async function validateScriptFile(filePath: string) {
-  return invoke<boolean>('validate_script_file', { filePath })
+  return invoke<ValidationOutcome>('validate_script_file', { filePath })
 }
 
 // 获取当前运行模式

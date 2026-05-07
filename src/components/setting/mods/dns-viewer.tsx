@@ -528,12 +528,16 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
       await invoke('save_dns_config', { dnsConfig: config })
 
       // 验证配置
-      const [isValid, errorMsg] = await invoke<[boolean, string]>(
+      const validation = await invoke<ValidationOutcome>(
         'validate_dns_config',
         {},
       )
 
-      if (!isValid) {
+      if (validation.status !== 'valid') {
+        const errorMsg =
+          validation.status === 'invalid'
+            ? validation.message
+            : 'Configuration validation skipped'
         let cleanErrorMsg = errorMsg
 
         // 提取关键错误信息

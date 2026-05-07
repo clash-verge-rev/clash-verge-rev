@@ -1,7 +1,17 @@
 use super::CmdResult;
-use crate::core::{handle, validate::CoreConfigValidator};
+use crate::core::{
+    handle,
+    validate::{CoreConfigValidator, ValidationErrorKind, ValidationOutcome},
+};
 use clash_verge_logging::{Type, logging};
 use smartstring::alias::String;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ValidationNoticeTarget {
+    Runtime,
+    Merge,
+    Script,
+}
 
 /// 发送脚本验证通知消息
 #[tauri::command]
@@ -10,100 +20,64 @@ pub async fn script_validate_notice(status: String, msg: String) -> CmdResult {
     Ok(())
 }
 
-/// 处理脚本验证相关的所有消息通知
-/// 统一通知接口，保持消息类型一致性
-pub fn handle_script_validation_notice(result: &(bool, String), file_type: &str) {
-    if !result.0 {
-        let error_msg = &result.1;
-
-        // 根据错误消息内容判断错误类型
-        let status = if error_msg.starts_with("File not found:") {
-            "config_validate::file_not_found"
-        } else if error_msg.starts_with("Failed to read script file:") {
-            "config_validate::script_error"
-        } else if error_msg.starts_with("Script syntax error:") {
-            "config_validate::script_syntax_error"
-        } else if error_msg == "Script must contain a main function" {
-            "config_validate::script_missing_main"
-        } else {
-            // 如果是其他类型错误，作为一般脚本错误处理
-            "config_validate::script_error"
-        };
-
-        logging!(warn, Type::Config, "{} 验证失败: {}", file_type, error_msg);
-        handle::Handle::notice_message(status, error_msg.to_owned());
-    }
-}
-
 /// 验证指定脚本文件
 #[tauri::command]
-pub async fn validate_script_file(file_path: String) -> CmdResult<bool> {
+pub async fn validate_script_file(file_path: String) -> CmdResult<ValidationOutcome> {
     logging!(info, Type::Config, "验证脚本文件: {}", file_path);
 
-    match CoreConfigValidator::validate_config_file(&file_path, None).await {
-        Ok(result) => {
-            handle_script_validation_notice(&result, "脚本文件");
-            Ok(result.0) // 返回验证结果布尔值
+    match CoreConfigValidator::validate_config_file_outcome(&file_path, None).await {
+        Ok(outcome) => {
+            handle_validation_notice(&outcome, ValidationNoticeTarget::Script, "脚本文件");
+            Ok(outcome)
         }
         Err(e) => {
             let error_msg = e.to_string();
             logging!(error, Type::Config, "验证脚本文件过程发生错误: {}", error_msg);
             handle::Handle::notice_message("config_validate::process_terminated", &error_msg);
-            Ok(false)
+            Ok(ValidationOutcome::invalid(
+                ValidationErrorKind::ProcessTerminated,
+                error_msg,
+            ))
         }
     }
 }
 
-/// 处理YAML验证相关的所有消息通知
-/// 统一通知接口，保持消息类型一致性
-pub fn handle_yaml_validation_notice(result: &(bool, String), file_type: &str) {
-    if !result.0 {
-        let error_msg = &result.1;
-        logging!(info, Type::Config, "[通知] 处理{}验证错误: {}", file_type, error_msg);
+const fn notice_key(kind: ValidationErrorKind, target: ValidationNoticeTarget) -> &'static str {
+    match kind {
+        ValidationErrorKind::FileMissing => "config_validate::file_not_found",
+        ValidationErrorKind::FileRead => match target {
+            ValidationNoticeTarget::Script => "config_validate::script_error",
+            _ => "config_validate::yaml_read_error",
+        },
+        ValidationErrorKind::YamlSyntax => match target {
+            ValidationNoticeTarget::Merge => "config_validate::merge_syntax_error",
+            ValidationNoticeTarget::Script => "config_validate::script_error",
+            ValidationNoticeTarget::Runtime => "config_validate::yaml_syntax_error",
+        },
+        ValidationErrorKind::YamlMapping => match target {
+            ValidationNoticeTarget::Merge => "config_validate::merge_mapping_error",
+            ValidationNoticeTarget::Script => "config_validate::script_error",
+            ValidationNoticeTarget::Runtime => "config_validate::yaml_mapping_error",
+        },
+        ValidationErrorKind::ScriptSyntax => "config_validate::script_syntax_error",
+        ValidationErrorKind::ScriptMissingMain => "config_validate::script_missing_main",
+        ValidationErrorKind::ProcessTerminated => "config_validate::process_terminated",
+        ValidationErrorKind::CoreRejected | ValidationErrorKind::Timeout => "config_validate::error",
+    }
+}
 
-        // 检查是否为merge文件
-        let is_merge_file = file_type.contains("合并");
-
-        // 根据错误消息内容判断错误类型
-        let status = if error_msg.starts_with("File not found:") {
-            "config_validate::file_not_found"
-        } else if error_msg.starts_with("Failed to read file:") {
-            "config_validate::yaml_read_error"
-        } else if error_msg.starts_with("YAML syntax error:") {
-            if is_merge_file {
-                "config_validate::merge_syntax_error"
-            } else {
-                "config_validate::yaml_syntax_error"
-            }
-        } else if error_msg.contains("mapping values are not allowed") {
-            if is_merge_file {
-                "config_validate::merge_mapping_error"
-            } else {
-                "config_validate::yaml_mapping_error"
-            }
-        } else if error_msg.contains("did not find expected key") {
-            if is_merge_file {
-                "config_validate::merge_key_error"
-            } else {
-                "config_validate::yaml_key_error"
-            }
-        } else {
-            // 如果是其他类型错误，根据文件类型作为一般错误处理
-            if is_merge_file {
-                "config_validate::merge_error"
-            } else {
-                "config_validate::yaml_error"
-            }
-        };
-
-        logging!(warn, Type::Config, "{} 验证失败: {}", file_type, error_msg);
-        logging!(
-            info,
-            Type::Config,
-            "[通知] 发送通知: status={}, msg={}",
-            status,
-            error_msg
-        );
-        handle::Handle::notice_message(status, error_msg.to_owned());
+pub fn handle_validation_notice(outcome: &ValidationOutcome, target: ValidationNoticeTarget, file_type: &str) {
+    match outcome {
+        ValidationOutcome::Invalid { kind, message } => {
+            let status = notice_key(*kind, target);
+            logging!(warn, Type::Config, "{} 验证失败: {}", file_type, message);
+            handle::Handle::notice_message(status, message.to_owned());
+        }
+        ValidationOutcome::Busy | ValidationOutcome::Skipped { .. } => {
+            let message = outcome.to_string();
+            logging!(warn, Type::Config, "{} 验证跳过: {}", file_type, message);
+            handle::Handle::notice_message("config_validate::error", message);
+        }
+        ValidationOutcome::Valid => {}
     }
 }

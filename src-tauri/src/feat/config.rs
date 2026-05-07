@@ -23,7 +23,7 @@ pub async fn patch_clash(patch: &Mapping) -> Result<()> {
                 tray::Tray::global().update_menu_and_icon().await;
             }
             Config::runtime().await.edit_draft(|d| d.patch_config(patch));
-            CoreManager::global().update_config().await?;
+            CoreManager::global().update_config_checked().await?;
         }
         handle::Handle::refresh_clash();
         <Result<()>>::Ok(())
@@ -206,7 +206,7 @@ async fn process_terminated_flags(update_flags: UpdateFlags, patch: &IVerge) -> 
         CoreManager::global().restart_core().await?;
     }
     if update_flags.contains(UpdateFlags::CLASH_CONFIG) {
-        CoreManager::global().update_config().await?;
+        CoreManager::global().update_config_checked().await?;
         handle::Handle::refresh_clash();
     }
     if update_flags.contains(UpdateFlags::VERGE_CONFIG) {

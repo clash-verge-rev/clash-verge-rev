@@ -17,6 +17,22 @@ use std::{
 use sysproxy::{Autoproxy, GuardMonitor, GuardType, Sysproxy};
 use tokio::sync::Mutex as TokioMutex;
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum ProxyApplyStep {
+    Sysproxy,
+    Autoproxy,
+}
+
+const fn proxy_apply_steps(sys_enabled: bool, auto_enabled: bool) -> [ProxyApplyStep; 2] {
+    // Disabling PAC clears WinINET proxy flags on Windows, so pure global
+    // proxy mode must clear PAC before enabling Sysproxy.
+    if sys_enabled && !auto_enabled {
+        [ProxyApplyStep::Autoproxy, ProxyApplyStep::Sysproxy]
+    } else {
+        [ProxyApplyStep::Sysproxy, ProxyApplyStep::Autoproxy]
+    }
+}
+
 pub struct Sysopt {
     update_lock: TokioMutex<()>,
     reset_sysproxy: AtomicBool,
@@ -106,6 +122,14 @@ impl Sysopt {
         }
     }
 
+    /// Wait for any in-progress `update_sysproxy` to finish, so that a
+    /// subsequent read of OS-level sysproxy state sees a fully applied
+    /// configuration instead of a partially-applied one (e.g. SOCKS already
+    /// disabled but HTTP still enabled mid-transition).
+    pub async fn wait_idle(&self) {
+        let _ = self.update_lock.lock().await;
+    }
+
     /// init the sysproxy
     pub async fn update_sysproxy(&self) -> Result<()> {
         let _lock = self.update_lock.lock().await;
@@ -161,9 +185,15 @@ impl Sysopt {
 
         self.access_guard().write().set_guard_type(guard_type);
 
+        let apply_steps = proxy_apply_steps(sys.enable, auto.enable);
+
         tokio::task::spawn_blocking(move || -> Result<()> {
-            sys.set_system_proxy()?;
-            auto.set_auto_proxy()?;
+            for step in apply_steps {
+                match step {
+                    ProxyApplyStep::Autoproxy => auto.set_auto_proxy()?,
+                    ProxyApplyStep::Sysproxy => sys.set_system_proxy()?,
+                }
+            }
             Ok(())
         })
         .await??;
@@ -203,5 +233,34 @@ impl Sysopt {
         .await??;
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{ProxyApplyStep, proxy_apply_steps};
+
+    #[test]
+    fn pure_sysproxy_mode_clears_pac_before_enabling_global_proxy() {
+        assert_eq!(
+            proxy_apply_steps(true, false),
+            [ProxyApplyStep::Autoproxy, ProxyApplyStep::Sysproxy]
+        );
+    }
+
+    #[test]
+    fn pac_mode_clears_global_proxy_before_enabling_pac() {
+        assert_eq!(
+            proxy_apply_steps(false, true),
+            [ProxyApplyStep::Sysproxy, ProxyApplyStep::Autoproxy]
+        );
+    }
+
+    #[test]
+    fn disabled_mode_clears_global_proxy_before_pac() {
+        assert_eq!(
+            proxy_apply_steps(false, false),
+            [ProxyApplyStep::Sysproxy, ProxyApplyStep::Autoproxy]
+        );
     }
 }

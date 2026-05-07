@@ -1,6 +1,10 @@
 import { useMemo } from 'react'
 
-import { useAppData } from '@/providers/app-data-context'
+import {
+  useAppRefreshers,
+  useClashConfigData,
+  useProxiesData,
+} from '@/providers/app-data-context'
 
 // 定义代理组类型
 interface ProxyGroup {
@@ -11,7 +15,9 @@ interface ProxyGroup {
 // 获取当前代理节点信息的自定义Hook
 export const useCurrentProxy = () => {
   // 从AppDataProvider获取数据
-  const { proxies, clashConfig, refreshProxy } = useAppData()
+  const { proxies } = useProxiesData()
+  const { clashConfig } = useClashConfigData()
+  const { refreshProxy } = useAppRefreshers()
 
   // 获取当前模式
   const currentMode = clashConfig?.mode?.toLowerCase() || 'rule'

@@ -508,7 +508,11 @@ export const GroupsEditorViewer = (props: Props) => {
         setCurrData(nextData)
       }
 
-      await saveProfileFile(property, nextData)
+      if (!(await saveProfileFile(property, nextData))) {
+        await fetchContent()
+        onClose()
+        return
+      }
       showNotice.success('shared.feedback.notifications.saved')
       setPrevData(nextData)
       onSave?.(prevData, nextData)

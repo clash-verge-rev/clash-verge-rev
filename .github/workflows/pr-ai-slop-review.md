@@ -38,7 +38,7 @@ safe-outputs:
 
 # PR AI Slop Review
 
-Assess the triggering pull request for AI slop risk, keep the AI-slop labels in sync with that assessment, and always leave one comment with the result.
+Assess the triggering pull request for AI slop risk through "behavioral fingerprinting." Focus strictly on the logical alignment between the stated problem (Issue) and the implemented solution (Diff).
 
 This workflow is not a technical code reviewer. Do not judge correctness, architecture quality, or whether the patch should merge on technical grounds. Your only job is to estimate the AI slop factor: whether the PR looks like a low-accountability, one-shot AI submission rather than a human-owned change.
 
@@ -46,6 +46,7 @@ This workflow is not a technical code reviewer. Do not judge correctness, archit
 
 - A pull request should reference the issue it fixes.
 - AI assistance by itself is not a problem.
+- Domain Isolation, do not let the author's personal background, hobbies, or professional titles influence the risk score. High-quality code is its own evidence; poor logic cannot be excused by status.
 - Missing issue linkage is a strong negative signal.
 - Always leave exactly one comment on the PR.
 - Always remove stale AI-slop labels before adding a replacement label.
@@ -73,8 +74,9 @@ If the PR references an issue, inspect that issue as well and compare the stated
 - Explicit AI provenance links or bot-authored commits from coding agents
 - Large-scale mechanical edits with little behavioral justification
 - Random renames, comment rewrites, or same-meaning text changes that do not support the fix
+- Ghost Comments, code comments that explain the obvious (e.g., explaining a variable name) or use AI-typical hedging language.
 - New tests that are generic, padded, or not clearly connected to the reported issue
-- Scope drift: the PR claims one fix but touches many unrelated modules or concerns
+- Scope Drift, the PR claims to fix a specific bug but touches unrelated modules, config files, or documentation without justification.
 - Draft or vague "ongoing optimization" style PRs with broad churn and weak problem statement
 
 ## Counter-Signals
@@ -84,6 +86,7 @@ If the PR references an issue, inspect that issue as well and compare the stated
 - Commits that show iteration, review response, or narrowing of scope
 - Tests that directly validate the reported regression or expected behavior
 - Clear explanation of why each changed area is necessary for the fix
+- Cross-Contextual Logic, the author explains *why* a change was made in a way that shows understanding of the project's specific constraints, rather than just repeating the issue text.
 - Evidence of established repository ownership or ongoing stewardship may reduce slop likelihood, but must never be disclosed in the public comment
 
 ## Decision Rules

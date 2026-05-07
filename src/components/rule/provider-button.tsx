@@ -21,7 +21,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { updateRuleProvider } from 'tauri-plugin-mihomo-api'
 
-import { useAppData } from '@/providers/app-data-context'
+import { useAppRefreshers, useRulesData } from '@/providers/app-data-context'
 import { showNotice } from '@/services/notice-service'
 
 // 辅助组件 - 类型框
@@ -40,7 +40,8 @@ const TypeBox = styled(Box)<{ component?: React.ElementType }>(({ theme }) => ({
 export const ProviderButton = () => {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
-  const { ruleProviders, refreshRules, refreshRuleProviders } = useAppData()
+  const { ruleProviders } = useRulesData()
+  const { refreshRules, refreshRuleProviders } = useAppRefreshers()
   const [updating, setUpdating] = useState<Record<string, boolean>>({})
 
   // 检查是否有提供者

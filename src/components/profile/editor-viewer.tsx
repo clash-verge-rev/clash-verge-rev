@@ -70,6 +70,13 @@ export const EditorViewer = ({
   const resolvedTitle = title ?? t('profiles.components.menu.editFile')
   const disableSave = loading || saveDisabled || dirty === false
 
+  const syncEditorValue = useCallback(() => {
+    const model = editorRef.current?.getModel()
+    if (model && model.getValue() !== value) {
+      model.setValue(value)
+    }
+  }, [value])
+
   const syncMaximizedState = useCallback(async () => {
     try {
       setIsMaximized(await appWindow.isMaximized())
@@ -150,6 +157,11 @@ export const EditorViewer = ({
   }, [open, syncMaximizedState])
 
   useEffect(() => {
+    if (!open || loading) return
+    syncEditorValue()
+  }, [loading, open, syncEditorValue])
+
+  useEffect(() => {
     if (!open) return
 
     const onResized = debounce(() => {
@@ -209,6 +221,7 @@ export const EditorViewer = ({
               beforeMount={beforeEditorMount}
               onMount={(editorInstance) => {
                 editorRef.current = editorInstance
+                syncEditorValue()
               }}
               onChange={(nextValue) => onChange?.(nextValue ?? '')}
               onValidate={onValidate}

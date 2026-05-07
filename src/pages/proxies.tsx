@@ -9,7 +9,10 @@ import { BasePage } from '@/components/base'
 import { ProviderButton } from '@/components/proxy/provider-button'
 import { ProxyGroups } from '@/components/proxy/proxy-groups'
 import { useVerge } from '@/hooks/use-verge'
-import { useAppData } from '@/providers/app-data-context'
+import {
+  useAppRefreshers,
+  useClashConfigData,
+} from '@/providers/app-data-context'
 import {
   getRuntimeProxyChainConfig,
   patchClashMode,
@@ -41,7 +44,8 @@ const ProxyPage = () => {
     null as string | null,
   )
 
-  const { clashConfig, refreshClashConfig } = useAppData()
+  const { clashConfig } = useClashConfigData()
+  const { refreshClashConfig } = useAppRefreshers()
 
   const updateChainConfigData = useCallback((value: string | null) => {
     dispatchChainConfigData(value)

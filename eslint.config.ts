@@ -37,6 +37,7 @@ export default defineConfig([
           allowDefaultProject: [
             'eslint.config.ts',
             `vite.config.mts`,
+            'scripts/*.mjs',
             'src/polyfills/*.js',
           ],
         },
