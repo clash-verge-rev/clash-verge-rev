@@ -201,33 +201,172 @@ export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
     <BaseDialog
       open={open}
       title={
-        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-          {t('settings.modals.update.title', {
-            version: updateInfo?.version ?? '',
-          })}
-          <Box>
-            <Button
-              variant="contained"
-              size="small"
-              onClick={() => {
-                openUrl(
-                  `https://github.com/clash-verge-rev/clash-verge-rev/releases/tag/v${updateInfo?.version}`,
-                )
-              }}
-            >
-              {t('settings.modals.update.actions.goToRelease')}
-            </Button>
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 2,
+            minWidth: 0,
+          }}
+        >
+          <Box
+            component="span"
+            sx={{
+              minWidth: 0,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {t('settings.modals.update.title', {
+              version: updateInfo?.version ?? '',
+            })}
           </Box>
+          <Button
+            variant="contained"
+            size="small"
+            sx={{ whiteSpace: 'nowrap' }}
+            onClick={() => {
+              openUrl(
+                `https://github.com/clash-verge-rev/clash-verge-rev/releases/tag/v${updateInfo?.version}`,
+              )
+            }}
+          >
+            {t('settings.modals.update.actions.goToRelease')}
+          </Button>
         </Box>
       }
-      contentSx={{ minWidth: 360, maxWidth: 400, height: '50vh' }}
+      contentSx={{
+        width: { xs: 'calc(100vw - 56px)', sm: 560 },
+        maxWidth: 'calc(100vw - 56px)',
+        height: 'min(64vh, 680px)',
+        display: 'flex',
+        flexDirection: 'column',
+        pb: 1,
+      }}
       okBtn={t('settings.modals.update.actions.update')}
       cancelBtn={t('shared.actions.cancel')}
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}
       onOk={onUpdate}
     >
-      <Box sx={{ height: 'calc(100% - 10px)', overflow: 'auto' }}>
+      <Box
+        sx={{
+          flex: 1,
+          minHeight: 0,
+          overflow: 'auto',
+          pr: 1.5,
+          mr: -1,
+          fontSize: 14,
+          lineHeight: 1.65,
+          color: 'text.primary',
+          overflowWrap: 'break-word',
+          '& > :first-child': {
+            mt: 0,
+          },
+          '& > :last-child': {
+            mb: 0,
+          },
+          '& h1': {
+            mt: 0,
+            mb: 1.5,
+            fontSize: 24,
+            lineHeight: 1.25,
+          },
+          '& h2': {
+            mt: 2.25,
+            mb: 1,
+            fontSize: 19,
+            lineHeight: 1.3,
+          },
+          '& h3': {
+            mt: 2,
+            mb: 0.75,
+            fontSize: 16,
+            lineHeight: 1.35,
+          },
+          '& h4, & h5, & h6': {
+            mt: 1.5,
+            mb: 0.75,
+            fontSize: 14,
+            lineHeight: 1.4,
+          },
+          '& p': {
+            my: 1,
+          },
+          '& ul, & ol': {
+            my: 1,
+            pl: 2.75,
+          },
+          '& li': {
+            my: 0.35,
+            pl: 0.25,
+          },
+          '& a': {
+            color: 'primary.main',
+            overflowWrap: 'anywhere',
+          },
+          '& strong': {
+            fontWeight: 700,
+          },
+          '& code': {
+            px: 0.5,
+            py: 0.125,
+            borderRadius: 0.5,
+            bgcolor: 'action.hover',
+            fontSize: '0.92em',
+          },
+          '& pre': {
+            my: 1.5,
+            p: 1.5,
+            overflow: 'auto',
+            borderRadius: 1,
+            bgcolor: 'action.hover',
+          },
+          '& pre code': {
+            p: 0,
+            bgcolor: 'transparent',
+            fontSize: '0.9em',
+          },
+          '& table': {
+            display: 'block',
+            width: '100%',
+            my: 1.5,
+            overflowX: 'auto',
+            borderCollapse: 'collapse',
+          },
+          '& th, & td': {
+            px: 1,
+            py: 0.75,
+            border: '1px solid',
+            borderColor: 'divider',
+            verticalAlign: 'top',
+          },
+          '& th': {
+            bgcolor: 'action.hover',
+            fontWeight: 700,
+          },
+          '& hr': {
+            my: 2,
+            border: 0,
+            borderTop: '1px solid',
+            borderColor: 'divider',
+          },
+          '& img': {
+            maxWidth: '100%',
+            height: 'auto',
+            borderRadius: 1,
+          },
+          '& blockquote:not(.markdown-alert)': {
+            m: '12px 0 18px',
+            pl: 2,
+            color: 'text.secondary',
+            borderLeft: '4px solid',
+            borderColor: 'divider',
+          },
+        }}
+      >
         <ReactMarkdown
           remarkPlugins={[remarkGitHubAlerts]}
           rehypePlugins={[rehypeRaw]}
@@ -289,7 +428,7 @@ export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
         <LinearProgress
           variant={total > 0 ? 'determinate' : 'indeterminate'}
           value={progress}
-          sx={{ marginTop: '5px' }}
+          sx={{ mt: 1 }}
         />
       )}
     </BaseDialog>
