@@ -12,8 +12,8 @@ use objc2::rc::Retained;
 use objc2::runtime::AnyObject;
 use objc2_app_kit::{
     NSBaselineOffsetAttributeName, NSColor, NSFont, NSFontAttributeName, NSFontWeightRegular,
-    NSForegroundColorAttributeName, NSMutableParagraphStyle, NSParagraphStyleAttributeName, NSStatusItem,
-    NSTextAlignment,
+    NSForegroundColorAttributeName, NSMutableParagraphStyle, NSParagraphStyleAttributeName, NSStatusBarButton,
+    NSStatusItem, NSTextAlignment,
 };
 use objc2_foundation::{NSAttributedString, NSDictionary, NSNumber, NSString};
 
@@ -90,6 +90,16 @@ fn create_attributed_string(
     }
 }
 
+fn sync_click_target_frame(button: &NSStatusBarButton) {
+    let bounds = button.bounds();
+    let subviews = button.subviews();
+
+    for index in 0..subviews.count() {
+        let subview = subviews.objectAtIndex(index);
+        subview.setFrame(bounds);
+    }
+}
+
 /// 在主线程下设置 NSStatusItem 按钮的富文本标题
 ///
 /// 依赖 Tauri `with_inner_tray_icon` 保证回调在主线程执行；
@@ -113,6 +123,7 @@ fn apply_status_item_attributed_title(
     };
     let attr_str = create_attributed_string(text, attrs);
     button.setAttributedTitle(&attr_str);
+    sync_click_target_frame(&button);
 }
 
 /// 将速率以富文本形式设置到 NSStatusItem 的按钮上
