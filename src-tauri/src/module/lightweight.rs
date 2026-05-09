@@ -126,7 +126,6 @@ pub async fn exit_lightweight_mode() -> bool {
             Type::Lightweight,
             "轻量模式不在退出条件（可能已退出或正在退出），跳过调用"
         );
-        refresh_lightweight_tray_state().await;
         return false;
     }
     record_state_and_log(LightweightState::Exiting);

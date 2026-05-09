@@ -102,6 +102,19 @@ const groupProxies = <T = any>(list: T[], size: number): T[][] => {
   }, [] as T[][])
 }
 
+const isSameProxyList = (
+  a: IProxyItem[] | undefined,
+  b: IProxyItem[] | undefined,
+) => {
+  if (a === b) return true
+  if (!a || !b) return false
+  if (a.length !== b.length) return false
+  for (let i = 0; i < a.length; i++) {
+    if (a[i].name !== b[i].name) return false
+  }
+  return true
+}
+
 export const useRenderList = (
   mode: string,
   isChainMode?: boolean,
@@ -391,10 +404,17 @@ export const useRenderList = (
       const headState = headStates[group.name] || DEFAULT_STATE
       const cached = cache.get(group.name)
 
+      // 优化：即使 all 数组引用变化，如果内容一致且非延迟排序，也复用缓存
+      const isSameAll =
+        cached?.all === group.all ||
+        (headState.sortType !== 1 &&
+          cached?.all &&
+          isSameProxyList(cached.all, group.all))
+
       if (
         cached &&
         cached.now === group.now &&
-        cached.all === group.all &&
+        isSameAll &&
         cached.headState === headState &&
         cached.col === col &&
         cached.latencyTimeout === latencyTimeout

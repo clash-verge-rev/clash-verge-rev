@@ -148,20 +148,33 @@ export async function calcuProxies(): Promise<{
     ),
   )
 
+  // Local cache for generated items to reuse references
+  const itemCache: Record<string, IProxyItem> = {}
+
   // compatible with proxy-providers
-  const generateItem = (name: string) => {
-    if (proxyRecord[name]) return proxyRecord[name]
-    if (providerMap[name]) return providerMap[name]
-    return {
-      name,
-      type: 'unknown',
-      udp: false,
-      xudp: false,
-      tfo: false,
-      mptcp: false,
-      smux: false,
-      history: [],
+  const generateItem = (name: string): IProxyItem => {
+    if (itemCache[name]) return itemCache[name]
+
+    let item: IProxyItem
+    if (proxyRecord[name]) {
+      item = proxyRecord[name] as IProxyItem
+    } else if (providerMap[name]) {
+      item = providerMap[name] as IProxyItem
+    } else {
+      item = {
+        name,
+        type: 'unknown',
+        udp: false,
+        xudp: false,
+        tfo: false,
+        mptcp: false,
+        smux: false,
+        history: [],
+      }
     }
+
+    itemCache[name] = item
+    return item
   }
 
   const { GLOBAL: global, DIRECT: direct, REJECT: reject } = proxyRecord
