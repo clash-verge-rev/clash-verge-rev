@@ -2,6 +2,7 @@ import {
   DeleteForeverRounded,
   TableChartRounded,
   TableRowsRounded,
+  ViewColumnRounded,
 } from '@mui/icons-material'
 import {
   Box,
@@ -10,6 +11,7 @@ import {
   Fab,
   IconButton,
   MenuItem,
+  Tooltip,
   Zoom,
 } from '@mui/material'
 import { useLockFn } from 'ahooks'
@@ -228,6 +230,18 @@ const ConnectionsPage = () => {
         >
           <BaseSearchBox onSearch={handleSearch} />
         </Box>
+        {isTableLayout && hasTableData && (
+          <Tooltip title={t('connections.components.columnManager.title')}>
+            <IconButton
+              size="small"
+              aria-label={t('connections.components.columnManager.title')}
+              onClick={() => setIsColumnManagerOpen(true)}
+              sx={{ flex: '0 0 auto' }}
+            >
+              <ViewColumnRounded fontSize="small" />
+            </IconButton>
+          </Tooltip>
+        )}
       </Box>
 
       {!hasTableData ? (
@@ -239,7 +253,6 @@ const ConnectionsPage = () => {
             detailRef.current?.open(detail, connectionsType === 'closed')
           }
           columnManagerOpen={isTableLayout && isColumnManagerOpen}
-          onOpenColumnManager={() => setIsColumnManagerOpen(true)}
           onCloseColumnManager={() => setIsColumnManagerOpen(false)}
         />
       ) : (
