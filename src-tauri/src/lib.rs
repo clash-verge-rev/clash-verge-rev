@@ -396,22 +396,24 @@ pub fn run() {
             });
         }
         tauri::RunEvent::Exit => AsyncHandler::block_on(async {
+            // TODO: Do not perform cleanup in RunEvent::Exit.
+            // At this point the exit can no longer be prevented,
+            // so async cleanup is not reliable.
+            // Do not breaking changes yet version.
             if !handle::Handle::global().is_exiting() {
                 feat::quit().await;
             }
         }),
+        #[allow(unused_variables)]
         tauri::RunEvent::ExitRequested { api, code, .. } => {
-            if core::handle::Handle::global().is_exiting() {
-                return;
-            }
+            // TODO: Migrate the cleanup logic from RunEvent::Exit to RunEvent::ExitRequested.
+            // This lets us call api.prevent_exit(), run async cleanup first,
+            // and then call app_handle.exit(code) after cleanup has completed.
+            // Do not breaking changes yet version.
 
-            AsyncHandler::block_on(async {
-                let _ = handle::Handle::mihomo().await.clear_all_ws_connections().await;
-            });
-
-            if code.is_none() {
-                api.prevent_exit();
-            }
+            // if Some(0) == code {
+            //     api.prevent_exit();
+            // }
         }
         tauri::RunEvent::WindowEvent { label, event, .. } if label == "main" => match event {
             tauri::WindowEvent::CloseRequested { .. } => {
