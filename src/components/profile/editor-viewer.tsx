@@ -17,7 +17,14 @@ import {
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useLockFn } from 'ahooks'
 import type { editor } from 'monaco-editor'
-import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react'
+import {
+  type ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BaseLoadingOverlay } from '@/components/base'
@@ -26,8 +33,6 @@ import { showNotice } from '@/services/notice-service'
 import { useThemeMode } from '@/services/states'
 import debounce from '@/utils/debounce'
 import getSystem from '@/utils/get-system'
-
-const appWindow = getCurrentWebviewWindow()
 
 export type EditorLanguage = 'yaml' | 'javascript' | 'css'
 
@@ -64,6 +69,13 @@ export const EditorViewer = ({
 }: EditorViewerProps) => {
   const { t } = useTranslation()
   const themeMode = useThemeMode()
+  const appWindow = useMemo(
+    () =>
+      typeof window === 'undefined' || !('__TAURI_INTERNALS__' in window)
+        ? null
+        : getCurrentWebviewWindow(),
+    [],
+  )
   const [isMaximized, setIsMaximized] = useState(false)
   const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
 
@@ -78,12 +90,17 @@ export const EditorViewer = ({
   }, [value])
 
   const syncMaximizedState = useCallback(async () => {
+    if (!appWindow) {
+      setIsMaximized(false)
+      return
+    }
+
     try {
       setIsMaximized(await appWindow.isMaximized())
     } catch {
       setIsMaximized(false)
     }
-  }, [])
+  }, [appWindow])
 
   const handleSave = useLockFn(async () => {
     try {
@@ -143,6 +160,7 @@ export const EditorViewer = ({
 
   const handleToggleMaximize = useLockFn(async () => {
     try {
+      if (!appWindow) return
       await appWindow.toggleMaximize()
       await syncMaximizedState()
       editorRef.current?.layout()
@@ -162,7 +180,7 @@ export const EditorViewer = ({
   }, [loading, open, syncEditorValue])
 
   useEffect(() => {
-    if (!open) return
+    if (!open || !appWindow) return
 
     const onResized = debounce(() => {
       void syncMaximizedState()
@@ -178,7 +196,7 @@ export const EditorViewer = ({
     return () => {
       unlistenResized.then((unlisten) => unlisten())
     }
-  }, [open, syncMaximizedState])
+  }, [appWindow, open, syncMaximizedState])
 
   useEffect(() => {
     return () => {
@@ -291,6 +309,7 @@ export const EditorViewer = ({
             title={t(
               isMaximized ? 'shared.window.minimize' : 'shared.window.maximize',
             )}
+            disabled={!appWindow}
             onClick={() => {
               void handleToggleMaximize()
             }}
