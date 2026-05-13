@@ -1,4 +1,3 @@
-import MonacoEditor from '@monaco-editor/react'
 import {
   CloseFullscreenRounded,
   ContentPasteRounded,
@@ -16,14 +15,13 @@ import {
 } from '@mui/material'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useLockFn } from 'ahooks'
-import type { editor } from 'monaco-editor'
 import { type ReactNode, useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { BaseLoadingOverlay } from '@/components/base'
-import { beforeEditorMount } from '@/services/monaco'
+import { BaseLoadingOverlay, MonacoEditor } from '@/components/base'
 import { showNotice } from '@/services/notice-service'
 import { useThemeMode } from '@/services/states'
+import type { MonacoEditorInstance, MonacoMarker } from '@/types/monaco'
 import debounce from '@/utils/debounce'
 import getSystem from '@/utils/get-system'
 
@@ -44,7 +42,7 @@ export interface EditorViewerProps {
   onChange?: (value: string) => void
   onSave?: () => void | Promise<void>
   onClose: () => void
-  onValidate?: (markers: editor.IMarker[]) => void
+  onValidate?: (markers: MonacoMarker[]) => void
 }
 
 export const EditorViewer = ({
@@ -65,7 +63,7 @@ export const EditorViewer = ({
   const { t } = useTranslation()
   const themeMode = useThemeMode()
   const [isMaximized, setIsMaximized] = useState(false)
-  const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
+  const editorRef = useRef<MonacoEditorInstance | null>(null)
 
   const resolvedTitle = title ?? t('profiles.components.menu.editFile')
   const disableSave = loading || saveDisabled || dirty === false
@@ -218,7 +216,6 @@ export const EditorViewer = ({
               loading={null}
               saveViewState
               keepCurrentModel={false}
-              beforeMount={beforeEditorMount}
               onMount={(editorInstance) => {
                 editorRef.current = editorInstance
                 syncEditorValue()

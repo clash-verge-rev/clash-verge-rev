@@ -12,6 +12,7 @@ export {
 } from './base-split-chip-editor'
 export { BaseStyledSelect } from './base-styled-select'
 export { BaseStyledTextField } from './base-styled-text-field'
+export { MonacoEditor } from './monaco-editor'
 export { Switch } from './base-switch'
 export { TooltipIcon } from './base-tooltip-icon'
 export { VirtualList, type VirtualListHandle } from './virtual-list'
