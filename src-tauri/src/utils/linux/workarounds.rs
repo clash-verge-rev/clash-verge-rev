@@ -4,7 +4,7 @@
 //! These helpers are not fixes and may stop working as environments change.
 
 use clash_verge_logging::{Type, logging};
-use std::{fs, path::Path};
+use std::{env, fs, path::Path, process::Command};
 
 pub fn apply_nvidia_dmabuf_renderer_workaround() {
     if std::env::var_os("WEBKIT_DISABLE_DMABUF_RENDERER").is_some() {
@@ -20,6 +20,29 @@ pub fn apply_nvidia_dmabuf_renderer_workaround() {
             Type::Setup,
             "Detected NVIDIA GPU, set WEBKIT_DISABLE_DMABUF_RENDERER=1"
         );
+    }
+}
+
+/// !Might cause more memory footpoint
+pub fn apply_wayland_webkit_fix() {
+    let is_wayland = env::var("XDG_SESSION_TYPE").unwrap_or_default() == "wayland";
+
+    if !is_wayland {
+        return;
+    }
+
+    let version = Command::new("pkg-config")
+        .args(["--modversion", "wayland-client"])
+        .output()
+        .ok()
+        .and_then(|output| String::from_utf8(output.stdout).ok());
+
+    if let Some(v) = version
+        && v.trim() <= "1.23.0"
+    {
+        unsafe {
+            env::set_var("WEBKIT_DISABLE_DMABUF_RENDERER", "1");
+        }
     }
 }
 
