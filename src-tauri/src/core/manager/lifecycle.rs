@@ -58,7 +58,7 @@ impl CoreManager {
         let verge_data = Config::verge().await.latest_arc();
         verge_data.save_file().await.map_err(|e| e.to_string())?;
 
-        self.update_config().await.stringify_err()?;
+        self.update_config_checked().await.stringify_err()?;
         Ok(())
     }
 

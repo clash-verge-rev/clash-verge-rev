@@ -19,6 +19,7 @@ import { DEFAULT_PORTS } from '@/utils/ports'
 
 import {
   ClashConfigContext,
+  CoreDataStatusContext,
   ProxiesContext,
   RefreshersContext,
   RulesContext,
@@ -268,6 +269,11 @@ export const AppDataProvider = ({
 
   const uptimeValue = useMemo(() => ({ uptime: uptimeData || 0 }), [uptimeData])
 
+  const coreDataStatusValue = useMemo(
+    () => ({ isCoreDataPending: isProxiesPending || isClashConfigPending }),
+    [isProxiesPending, isClashConfigPending],
+  )
+
   const refreshersValue = useMemo(
     () => ({
       refreshProxy,
@@ -295,9 +301,11 @@ export const AppDataProvider = ({
         <ClashConfigContext value={clashConfigValue}>
           <SystemContext value={systemValue}>
             <UptimeContext value={uptimeValue}>
-              <RefreshersContext value={refreshersValue}>
-                {children}
-              </RefreshersContext>
+              <CoreDataStatusContext value={coreDataStatusValue}>
+                <RefreshersContext value={refreshersValue}>
+                  {children}
+                </RefreshersContext>
+              </CoreDataStatusContext>
             </UptimeContext>
           </SystemContext>
         </ClashConfigContext>

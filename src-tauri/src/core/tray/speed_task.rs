@@ -6,7 +6,7 @@ use parking_lot::Mutex;
 use std::sync::Arc;
 use std::time::Duration;
 use tauri::async_runtime::JoinHandle;
-use tauri_plugin_mihomo::models::ConnectionId;
+use tauri_plugin_mihomo::models::WebSocketConnectionId;
 
 /// 托盘速率流异常后的重连间隔。
 const TRAY_SPEED_RETRY_DELAY: Duration = Duration::from_secs(1);
@@ -19,7 +19,7 @@ const TRAY_SPEED_STALE_TIMEOUT: Duration = Duration::from_secs(5);
 #[derive(Clone)]
 pub struct TraySpeedController {
     speed_task: Arc<Mutex<Option<JoinHandle<()>>>>,
-    speed_connection_id: Arc<Mutex<Option<ConnectionId>>>,
+    speed_connection_id: Arc<Mutex<Option<WebSocketConnectionId>>>,
 }
 
 impl Default for TraySpeedController {
@@ -162,17 +162,19 @@ impl TraySpeedController {
     }
 
     fn set_speed_connection_id(
-        speed_connection_id: &Arc<Mutex<Option<ConnectionId>>>,
-        connection_id: Option<ConnectionId>,
+        speed_connection_id: &Arc<Mutex<Option<WebSocketConnectionId>>>,
+        connection_id: Option<WebSocketConnectionId>,
     ) {
         *speed_connection_id.lock() = connection_id;
     }
 
-    fn take_speed_connection_id(speed_connection_id: &Arc<Mutex<Option<ConnectionId>>>) -> Option<ConnectionId> {
+    fn take_speed_connection_id(
+        speed_connection_id: &Arc<Mutex<Option<WebSocketConnectionId>>>,
+    ) -> Option<WebSocketConnectionId> {
         speed_connection_id.lock().take()
     }
 
-    async fn disconnect_speed_connection(speed_connection_id: &Arc<Mutex<Option<ConnectionId>>>) {
+    async fn disconnect_speed_connection(speed_connection_id: &Arc<Mutex<Option<WebSocketConnectionId>>>) {
         if let Some(connection_id) = Self::take_speed_connection_id(speed_connection_id) {
             connections_stream::disconnect_connection(connection_id).await;
         }

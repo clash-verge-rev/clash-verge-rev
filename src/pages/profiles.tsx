@@ -584,7 +584,7 @@ const ProfilePage = () => {
     setActivatings((prev) => [...new Set([...prev, ...currentProfiles])])
 
     try {
-      await enhanceProfiles()
+      if (!(await enhanceProfiles())) return
       mutateLogs()
       if (notifySuccess) {
         showNotice.success(

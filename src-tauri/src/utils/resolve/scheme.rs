@@ -138,14 +138,10 @@ async fn refresh_core_config() {
         Type::Config,
         "Deep link import set current profile; refreshing core config"
     );
-    match CoreManager::global().update_config().await {
-        Ok((true, _)) => handle::Handle::refresh_clash(),
-        Ok((false, msg)) => {
-            let message = if msg.is_empty() {
-                String::from("Failed to apply subscription configuration")
-            } else {
-                msg
-            };
+    match CoreManager::global().update_config_forced().await {
+        Ok(outcome) if outcome.is_valid() => handle::Handle::refresh_clash(),
+        Ok(outcome) => {
+            let message = outcome.to_string();
             logging!(warn, Type::Config, "Apply config failed: {}", message);
             handle::Handle::notice_message("config_validate::error", message);
         }

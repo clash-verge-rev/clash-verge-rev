@@ -16,6 +16,11 @@ import { useTrafficGraphDataEnhanced } from '@/hooks/use-traffic-monitor'
 import { useVerge } from '@/hooks/use-verge'
 import { debugLog } from '@/utils/debug'
 import parseTraffic from '@/utils/parse-traffic'
+import {
+  formatTrafficHourMinute,
+  formatTrafficMinuteSecond,
+  formatTrafficName,
+} from '@/utils/traffic-sampler'
 
 // 流量数据项接口
 interface ITrafficItem {
@@ -76,25 +81,40 @@ const GRAPH_CONFIG = {
   },
 }
 
-const MIN_FPS = 8
-const MAX_FPS = 20
-const FPS_ADJUST_INTERVAL = 3000 // ms
-const FPS_SAMPLE_WINDOW = 12
 const STALE_DATA_THRESHOLD = 2500 // ms without fresh data => drop FPS
-const RESUME_FPS_TARGET = 12
-const RESUME_COOLDOWN_MS = 2000
-
-const getNow = () =>
-  typeof performance !== 'undefined' ? performance.now() : Date.now()
 
 interface EnhancedCanvasTrafficGraphProps {
   ref?: Ref<EnhancedCanvasTrafficGraphRef>
 }
 
+const isSameTrafficData = (
+  current: ITrafficDataPoint[],
+  next: ITrafficDataPoint[],
+) => {
+  if (current === next) return true
+  if (current.length !== next.length) return false
+
+  for (let i = 0; i < current.length; i++) {
+    const currentPoint = current[i]
+    const nextPoint = next[i]
+
+    if (
+      currentPoint.timestamp !== nextPoint.timestamp ||
+      currentPoint.up !== nextPoint.up ||
+      currentPoint.down !== nextPoint.down
+    ) {
+      return false
+    }
+  }
+
+  return true
+}
+
 const displayDataReducer = (
-  _: ITrafficDataPoint[],
+  current: ITrafficDataPoint[],
   payload: ITrafficDataPoint[],
-): ITrafficDataPoint[] => payload
+): ITrafficDataPoint[] =>
+  isSameTrafficData(current, payload) ? current : payload
 
 /**
  * 稳定版Canvas流量图表组件
@@ -136,24 +156,21 @@ export const EnhancedCanvasTrafficGraph = memo(
       dataIndex: -1,
       highlightY: 0,
     })
+    const tooltipDataRef = useRef<TooltipData>(tooltipData)
 
     // Canvas引用和渲染状态
     const canvasRef = useRef<HTMLCanvasElement>(null)
-    const animationFrameRef = useRef<number | undefined>(undefined)
-    const lastRenderTimeRef = useRef<number>(0)
-    const isInitializedRef = useRef<boolean>(false)
+    const hoverCanvasRef = useRef<HTMLCanvasElement>(null)
+    const drawFrameRef = useRef<number | undefined>(undefined)
+    const hoverFrameRef = useRef<number | undefined>(undefined)
+    const mouseMoveFrameRef = useRef<number | undefined>(undefined)
+    const scheduleDrawGraphRef = useRef<() => void>(() => {})
+    const pendingMousePositionRef = useRef<{
+      clientX: number
+      clientY: number
+    } | null>(null)
     const isWindowFocusedRef = useRef<boolean>(initialFocusState)
-    const fpsControllerRef = useRef<{
-      target: number
-      samples: number[]
-      lastAdjustTime: number
-    }>({
-      target: GRAPH_CONFIG.targetFPS,
-      samples: [],
-      lastAdjustTime: 0,
-    })
     const lastDataTimestampRef = useRef<number>(0)
-    const resumeCooldownRef = useRef<number>(0)
     const dataStaleRef = useRef<boolean>(false)
 
     // 当前显示的数据缓存
@@ -206,9 +223,6 @@ export const EnhancedCanvasTrafficGraph = memo(
       if (displayData.length === 0) {
         lastDataTimestampRef.current = 0
         dataStaleRef.current = false
-        fpsControllerRef.current.target = GRAPH_CONFIG.targetFPS
-        fpsControllerRef.current.samples = []
-        fpsControllerRef.current.lastAdjustTime = 0
         // eslint-disable-next-line @eslint-react/set-state-in-effect
         setCurrentFPS(GRAPH_CONFIG.targetFPS)
         return
@@ -231,22 +245,8 @@ export const EnhancedCanvasTrafficGraph = memo(
         isWindowFocusedRef.current = focused
         setIsWindowFocused(focused)
 
-        const highResNow = getNow()
-        lastRenderTimeRef.current = highResNow
-
         if (focused || !pause_render_traffic_stats_on_blur) {
-          resumeCooldownRef.current = Date.now()
-          const controller = fpsControllerRef.current
-          const resumeTarget = Math.max(
-            MIN_FPS,
-            Math.min(controller.target, RESUME_FPS_TARGET),
-          )
-          controller.target = resumeTarget
-          controller.samples = []
-          controller.lastAdjustTime = 0
-          setCurrentFPS(resumeTarget)
-        } else {
-          resumeCooldownRef.current = 0
+          setCurrentFPS(GRAPH_CONFIG.targetFPS)
         }
       },
       [pause_render_traffic_stats_on_blur],
@@ -329,25 +329,51 @@ export const EnhancedCanvasTrafficGraph = memo(
       [],
     )
 
+    const yScale = useMemo(
+      () => computeYScale(displayData),
+      [computeYScale, displayData],
+    )
+
     // 鼠标悬浮处理 - 计算最近的数据点
     const handleMouseMove = useCallback(
-      (event: React.MouseEvent<HTMLCanvasElement>) => {
-        const canvas = canvasRef.current
-        if (!canvas || displayData.length === 0) return
+      (event: React.MouseEvent<HTMLElement>) => {
+        if (displayData.length === 0) return
 
-        const rect = canvas.getBoundingClientRect()
-        const mouseX = event.clientX - rect.left
-        const mouseY = event.clientY - rect.top
+        pendingMousePositionRef.current = {
+          clientX: event.clientX,
+          clientY: event.clientY,
+        }
 
-        const padding = GRAPH_CONFIG.padding
-        const effectiveWidth = rect.width - padding.left - padding.right
+        if (mouseMoveFrameRef.current !== undefined) return
 
-        // 计算最接近的数据点索引
-        const relativeMouseX = mouseX - padding.left
-        const ratio = Math.max(0, Math.min(1, relativeMouseX / effectiveWidth))
-        const dataIndex = Math.round(ratio * (displayData.length - 1))
+        mouseMoveFrameRef.current = requestAnimationFrame(() => {
+          mouseMoveFrameRef.current = undefined
 
-        if (dataIndex >= 0 && dataIndex < displayData.length) {
+          const pendingMousePosition = pendingMousePositionRef.current
+          pendingMousePositionRef.current = null
+          if (!pendingMousePosition) return
+
+          const canvas = canvasRef.current
+          if (!canvas || displayData.length === 0) return
+
+          const rect = canvas.getBoundingClientRect()
+          const mouseX = pendingMousePosition.clientX - rect.left
+          const mouseY = pendingMousePosition.clientY - rect.top
+
+          const padding = GRAPH_CONFIG.padding
+          const effectiveWidth = rect.width - padding.left - padding.right
+          if (effectiveWidth <= 0) return
+
+          // 计算最接近的数据点索引
+          const relativeMouseX = mouseX - padding.left
+          const ratio = Math.max(
+            0,
+            Math.min(1, relativeMouseX / effectiveWidth),
+          )
+          const dataIndex = Math.round(ratio * (displayData.length - 1))
+
+          if (dataIndex < 0 || dataIndex >= displayData.length) return
+
           const dataPoint = displayData[dataIndex]
 
           // 格式化流量数据
@@ -356,15 +382,11 @@ export const EnhancedCanvasTrafficGraph = memo(
 
           // 格式化时间戳
           const timeStr = dataPoint.timestamp
-            ? new Date(dataPoint.timestamp).toLocaleTimeString('zh-CN', {
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit',
-              })
+            ? formatTrafficName(dataPoint.timestamp)
             : '未知时间'
 
           // 计算数据点对应的Y坐标位置（用于高亮）
-          const { topValue: tvH, bottomValue: bvH } = computeYScale(displayData)
+          const { topValue: tvH, bottomValue: bvH } = yScale
           const upY = calculateY(dataPoint.up, rect.height, tvH, bvH)
           const downY = calculateY(dataPoint.down, rect.height, tvH, bvH)
           const highlightY =
@@ -372,7 +394,7 @@ export const EnhancedCanvasTrafficGraph = memo(
               ? upY
               : downY
 
-          setTooltipData({
+          const nextTooltipData = {
             x: mouseX,
             y: mouseY,
             upSpeed: `${upValue}${upUnit}/s`,
@@ -381,15 +403,41 @@ export const EnhancedCanvasTrafficGraph = memo(
             visible: true,
             dataIndex,
             highlightY,
+          }
+
+          setTooltipData((prev) => {
+            if (
+              prev.visible &&
+              prev.dataIndex === nextTooltipData.dataIndex &&
+              Math.abs(prev.x - nextTooltipData.x) < 1 &&
+              Math.abs(prev.y - nextTooltipData.y) < 1 &&
+              Math.abs(prev.highlightY - nextTooltipData.highlightY) < 1 &&
+              prev.upSpeed === nextTooltipData.upSpeed &&
+              prev.downSpeed === nextTooltipData.downSpeed &&
+              prev.timestamp === nextTooltipData.timestamp
+            ) {
+              return prev
+            }
+
+            return nextTooltipData
           })
-        }
+        })
       },
-      [displayData, calculateY, computeYScale],
+      [displayData, calculateY, yScale],
     )
 
     // 鼠标离开处理
     const handleMouseLeave = useCallback(() => {
-      setTooltipData((prev) => ({ ...prev, visible: false }))
+      pendingMousePositionRef.current = null
+
+      if (mouseMoveFrameRef.current !== undefined) {
+        cancelAnimationFrame(mouseMoveFrameRef.current)
+        mouseMoveFrameRef.current = undefined
+      }
+
+      setTooltipData((prev) =>
+        prev.visible ? { ...prev, visible: false } : prev,
+      )
     }, [])
 
     // 获取智能Y轴刻度（三刻度系统：最小值、中间值、最大值）
@@ -506,26 +554,14 @@ export const EnhancedCanvasTrafficGraph = memo(
           case 1: // 1分钟：更密集的时间标签，显示 MM:SS
             return {
               maxLabels: 6, // 减少到6个，更适合短时间
-              formatTime: (timestamp: number) => {
-                const date = new Date(timestamp)
-                const minutes = date.getMinutes().toString().padStart(2, '0')
-                const seconds = date.getSeconds().toString().padStart(2, '0')
-                return `${minutes}:${seconds}` // 显示 MM:SS
-              },
+              formatTime: formatTrafficMinuteSecond,
               intervalSeconds: 10, // 每10秒一个标签，更合理
               minPixelDistance: 35, // 减少间距，允许更多标签
             }
           case 5: // 5分钟：中等密度，显示 HH:MM
             return {
               maxLabels: 6, // 6个标签比较合适
-              formatTime: (timestamp: number) => {
-                const date = new Date(timestamp)
-                return date.toLocaleTimeString('en-US', {
-                  hour12: false,
-                  hour: '2-digit',
-                  minute: '2-digit',
-                }) // 显示 HH:MM
-              },
+              formatTime: formatTrafficHourMinute,
               intervalSeconds: 30, // 约30秒间隔
               minPixelDistance: 38, // 减少间距，允许更多标签
             }
@@ -533,14 +569,7 @@ export const EnhancedCanvasTrafficGraph = memo(
           default:
             return {
               maxLabels: 8, // 保持8个
-              formatTime: (timestamp: number) => {
-                const date = new Date(timestamp)
-                return date.toLocaleTimeString('en-US', {
-                  hour12: false,
-                  hour: '2-digit',
-                  minute: '2-digit',
-                }) // 显示 HH:MM
-              },
+              formatTime: formatTrafficHourMinute,
               intervalSeconds: 60, // 1分钟间隔
               minPixelDistance: 40, // 减少间距，允许更多标签
             }
@@ -689,7 +718,8 @@ export const EnhancedCanvasTrafficGraph = memo(
     const drawTrafficLine = useCallback(
       (
         ctx: CanvasRenderingContext2D,
-        values: number[],
+        data: ITrafficDataPoint[],
+        valueKey: 'up' | 'down',
         width: number,
         height: number,
         color: string,
@@ -697,15 +727,15 @@ export const EnhancedCanvasTrafficGraph = memo(
         topValue: number,
         bottomValue: number,
       ) => {
-        if (values.length < 2) return
+        if (data.length < 2) return
 
         const padding = GRAPH_CONFIG.padding
         const effectiveWidth = width - padding.left - padding.right
-
-        const points = values.map((value, index) => [
-          padding.left + (index / (values.length - 1)) * effectiveWidth,
-          calculateY(value, height, topValue, bottomValue),
-        ])
+        const lastIndex = data.length - 1
+        const getX = (index: number) =>
+          padding.left + (index / lastIndex) * effectiveWidth
+        const getY = (index: number) =>
+          calculateY(data[index][valueKey], height, topValue, bottomValue)
 
         ctx.save()
 
@@ -726,24 +756,25 @@ export const EnhancedCanvasTrafficGraph = memo(
           gradient.addColorStop(1, `${color}00`)
 
           ctx.beginPath()
-          ctx.moveTo(points[0][0], points[0][1])
+          ctx.moveTo(getX(0), getY(0))
 
           if (chartStyle === 'bezier') {
-            for (let i = 1; i < points.length; i++) {
-              const current = points[i]
-              const next = points[i + 1] || current
-              const controlX = (current[0] + next[0]) / 2
-              const controlY = (current[1] + next[1]) / 2
-              ctx.quadraticCurveTo(current[0], current[1], controlX, controlY)
+            for (let i = 1; i < data.length; i++) {
+              const currentX = getX(i)
+              const currentY = getY(i)
+              const nextIndex = Math.min(i + 1, lastIndex)
+              const controlX = (currentX + getX(nextIndex)) / 2
+              const controlY = (currentY + getY(nextIndex)) / 2
+              ctx.quadraticCurveTo(currentX, currentY, controlX, controlY)
             }
           } else {
-            for (let i = 1; i < points.length; i++) {
-              ctx.lineTo(points[i][0], points[i][1])
+            for (let i = 1; i < data.length; i++) {
+              ctx.lineTo(getX(i), getY(i))
             }
           }
 
-          ctx.lineTo(points[points.length - 1][0], height - padding.bottom)
-          ctx.lineTo(points[0][0], height - padding.bottom)
+          ctx.lineTo(getX(lastIndex), height - padding.bottom)
+          ctx.lineTo(getX(0), height - padding.bottom)
           ctx.closePath()
           ctx.fillStyle = gradient
           ctx.fill()
@@ -757,19 +788,20 @@ export const EnhancedCanvasTrafficGraph = memo(
         ctx.lineJoin = 'round'
         ctx.globalAlpha = GRAPH_CONFIG.alpha.line
 
-        ctx.moveTo(points[0][0], points[0][1])
+        ctx.moveTo(getX(0), getY(0))
 
         if (chartStyle === 'bezier') {
-          for (let i = 1; i < points.length; i++) {
-            const current = points[i]
-            const next = points[i + 1] || current
-            const controlX = (current[0] + next[0]) / 2
-            const controlY = (current[1] + next[1]) / 2
-            ctx.quadraticCurveTo(current[0], current[1], controlX, controlY)
+          for (let i = 1; i < data.length; i++) {
+            const currentX = getX(i)
+            const currentY = getY(i)
+            const nextIndex = Math.min(i + 1, lastIndex)
+            const controlX = (currentX + getX(nextIndex)) / 2
+            const controlY = (currentY + getY(nextIndex)) / 2
+            ctx.quadraticCurveTo(currentX, currentY, controlX, controlY)
           }
         } else {
-          for (let i = 1; i < points.length; i++) {
-            ctx.lineTo(points[i][0], points[i][1])
+          for (let i = 1; i < data.length; i++) {
+            ctx.lineTo(getX(i), getY(i))
           }
         }
 
@@ -779,17 +811,10 @@ export const EnhancedCanvasTrafficGraph = memo(
       [calculateY, chartStyle],
     )
 
-    // 主绘制函数
-    const drawGraph = useCallback(() => {
-      const canvas = canvasRef.current
-      if (!canvas || displayData.length === 0) return
-
+    const syncCanvasSize = useCallback((canvas: HTMLCanvasElement) => {
       const ctx = canvas.getContext('2d')
-      if (!ctx) return
+      if (!ctx) return null
 
-      // Compute CSS size and pixel buffer size.
-      // Note: WebView2 on Windows may return fractional CSS sizes after maximize.
-      // We round pixel buffer to integers to avoid 1px gaps/cropping artifacts.
       const rect = canvas.getBoundingClientRect()
       const dpr = window.devicePixelRatio || 1
       const cssWidth = rect.width
@@ -797,7 +822,6 @@ export const EnhancedCanvasTrafficGraph = memo(
       const pixelWidth = Math.max(1, Math.floor(cssWidth * dpr))
       const pixelHeight = Math.max(1, Math.floor(cssHeight * dpr))
 
-      // Keep CSS-driven sizing so the canvas stretches with its container (e.g., on maximize).
       if (canvas.style.width !== '100%') {
         canvas.style.width = '100%'
       }
@@ -808,15 +832,40 @@ export const EnhancedCanvasTrafficGraph = memo(
       if (canvas.width !== pixelWidth || canvas.height !== pixelHeight) {
         canvas.width = pixelWidth
         canvas.height = pixelHeight
-        // Reset transform before scaling to avoid cumulative scaling offsets.
         ctx.setTransform(1, 0, 0, 1, 0, 0)
-        ctx.scale(dpr, dpr) // map CSS units to device pixels
+        ctx.scale(dpr, dpr)
       }
+
+      return { ctx, cssWidth, cssHeight }
+    }, [])
+
+    const clearCanvas = useCallback(
+      (canvas: HTMLCanvasElement | null) => {
+        if (!canvas) return
+        const synced = syncCanvasSize(canvas)
+        if (!synced) return
+        synced.ctx.clearRect(0, 0, synced.cssWidth, synced.cssHeight)
+      },
+      [syncCanvasSize],
+    )
+
+    // 主绘制函数
+    const drawGraph = useCallback(() => {
+      const canvas = canvasRef.current
+      if (!canvas || displayData.length === 0) {
+        clearCanvas(canvasRef.current)
+        clearCanvas(hoverCanvasRef.current)
+        return
+      }
+
+      const synced = syncCanvasSize(canvas)
+      if (!synced) return
+      const { ctx, cssWidth, cssHeight } = synced
 
       // Clear using CSS dimensions; context is already scaled by DPR.
       ctx.clearRect(0, 0, cssWidth, cssHeight)
 
-      const { topValue, bottomValue } = computeYScale(displayData)
+      const { topValue, bottomValue } = yScale
 
       // 绘制Y轴刻度线（背景层）
       drawYAxis(ctx, cssWidth, cssHeight, topValue, bottomValue)
@@ -827,14 +876,11 @@ export const EnhancedCanvasTrafficGraph = memo(
       // 绘制时间轴
       drawTimeAxis(ctx, cssWidth, cssHeight, displayData)
 
-      // 提取流量数据
-      const upValues = displayData.map((d) => d.up)
-      const downValues = displayData.map((d) => d.down)
-
       // 绘制下载线（背景层）
       drawTrafficLine(
         ctx,
-        downValues,
+        displayData,
+        'down',
         cssWidth,
         cssHeight,
         colors.down,
@@ -846,7 +892,8 @@ export const EnhancedCanvasTrafficGraph = memo(
       // 绘制上传线（前景层）
       drawTrafficLine(
         ctx,
-        upValues,
+        displayData,
+        'up',
         cssWidth,
         cssHeight,
         colors.up,
@@ -855,13 +902,39 @@ export const EnhancedCanvasTrafficGraph = memo(
         bottomValue,
       )
 
-      // 绘制悬浮高亮线
-      if (tooltipData.visible && tooltipData.dataIndex >= 0) {
+      clearCanvas(hoverCanvasRef.current)
+    }, [
+      displayData,
+      colors,
+      yScale,
+      drawYAxis,
+      drawGrid,
+      drawTimeAxis,
+      drawTrafficLine,
+      syncCanvasSize,
+      clearCanvas,
+    ])
+
+    const drawHoverOverlay = useCallback(() => {
+      const canvas = hoverCanvasRef.current
+      if (!canvas || displayData.length < 2) {
+        clearCanvas(canvas)
+        return
+      }
+
+      const synced = syncCanvasSize(canvas)
+      if (!synced) return
+      const { ctx, cssWidth, cssHeight } = synced
+
+      ctx.clearRect(0, 0, cssWidth, cssHeight)
+
+      const currentTooltip = tooltipDataRef.current
+      if (currentTooltip.visible && currentTooltip.dataIndex >= 0) {
         const padding = GRAPH_CONFIG.padding
         const effectiveWidth = cssWidth - padding.left - padding.right
         const dataX =
           padding.left +
-          (tooltipData.dataIndex / (displayData.length - 1)) * effectiveWidth
+          (currentTooltip.dataIndex / (displayData.length - 1)) * effectiveWidth
 
         ctx.save()
         ctx.strokeStyle = colors.text
@@ -877,190 +950,106 @@ export const EnhancedCanvasTrafficGraph = memo(
 
         // 绘制水平指示线（高亮Y轴位置）
         ctx.beginPath()
-        ctx.moveTo(padding.left, tooltipData.highlightY)
-        ctx.lineTo(cssWidth - padding.right, tooltipData.highlightY)
+        ctx.moveTo(padding.left, currentTooltip.highlightY)
+        ctx.lineTo(cssWidth - padding.right, currentTooltip.highlightY)
         ctx.stroke()
 
         ctx.restore()
       }
+    }, [displayData, colors, syncCanvasSize, clearCanvas])
 
-      isInitializedRef.current = true
-    }, [
-      displayData,
-      colors,
-      computeYScale,
-      drawYAxis,
-      drawGrid,
-      drawTimeAxis,
-      drawTrafficLine,
-      tooltipData,
-    ])
+    const shouldSkipGraphDraw = useCallback(() => {
+      if (!isDocumentVisibleRef.current) return true
 
-    const collectFrameSample = useCallback(
-      (renderDuration: number, frameBudget: number) => {
-        const controller = fpsControllerRef.current
-        controller.samples.push(renderDuration)
-        if (controller.samples.length > FPS_SAMPLE_WINDOW) {
-          controller.samples.shift()
-        }
+      if (!isWindowFocusedRef.current && pause_render_traffic_stats_on_blur) {
+        return true
+      }
 
-        const perfNow = getNow()
-        const lastDataAge =
-          lastDataTimestampRef.current > 0
-            ? Date.now() - lastDataTimestampRef.current
-            : null
-        const isDataStale =
-          typeof lastDataAge === 'number' && lastDataAge > STALE_DATA_THRESHOLD
-
-        let inResumeCooldown = false
-        if (resumeCooldownRef.current) {
-          const elapsedSinceResume = Date.now() - resumeCooldownRef.current
-          if (elapsedSinceResume < RESUME_COOLDOWN_MS) {
-            inResumeCooldown = true
-          } else {
-            resumeCooldownRef.current = 0
-          }
-        }
-
-        if (isDataStale && controller.target !== MIN_FPS) {
-          controller.target = MIN_FPS
-          controller.samples = []
-          controller.lastAdjustTime = perfNow
-          setCurrentFPS(controller.target)
-          return
-        }
-
-        if (
-          !isDataStale &&
-          !inResumeCooldown &&
-          controller.target < GRAPH_CONFIG.targetFPS
-        ) {
-          controller.target = Math.min(
-            GRAPH_CONFIG.targetFPS,
-            controller.target + 2,
-          )
-          controller.samples = []
-          controller.lastAdjustTime = perfNow
-          setCurrentFPS(controller.target)
-        }
-
-        if (
-          controller.lastAdjustTime !== 0 &&
-          perfNow - controller.lastAdjustTime < FPS_ADJUST_INTERVAL
-        ) {
-          return
-        }
-
-        if (controller.samples.length === 0) return
-
-        const avgRender =
-          controller.samples.reduce((sum, value) => sum + value, 0) /
-          controller.samples.length
-
-        let nextTarget = controller.target
-
-        if (avgRender > frameBudget * 0.75 && controller.target > MIN_FPS) {
-          nextTarget = Math.max(MIN_FPS, controller.target - 2)
-        } else if (
-          avgRender < Math.max(4, frameBudget * 0.4) &&
-          controller.target < MAX_FPS &&
-          !inResumeCooldown
-        ) {
-          nextTarget = Math.min(MAX_FPS, controller.target + 2)
-        }
-
-        controller.samples = []
-        controller.lastAdjustTime = perfNow
-
-        if (nextTarget !== controller.target) {
-          controller.target = nextTarget
-          setCurrentFPS(nextTarget)
-        }
-      },
-      [setCurrentFPS],
-    )
-
-    // 受控的动画循环
-    useEffect(() => {
+      const lastDataTimestamp = lastDataTimestampRef.current
       if (
-        !isDocumentVisible ||
-        (!isWindowFocused && pause_render_traffic_stats_on_blur) ||
-        displayData.length === 0 ||
-        dataStaleRef.current
+        lastDataTimestamp > 0 &&
+        Date.now() - lastDataTimestamp > STALE_DATA_THRESHOLD
       ) {
-        if (animationFrameRef.current) {
-          cancelAnimationFrame(animationFrameRef.current)
-          animationFrameRef.current = undefined
-        }
-        lastRenderTimeRef.current = getNow()
-        return
+        dataStaleRef.current = true
+        return true
       }
 
-      const animate = (currentTime: number) => {
-        if (!isDocumentVisibleRef.current) {
-          if (animationFrameRef.current) {
-            cancelAnimationFrame(animationFrameRef.current)
-            animationFrameRef.current = undefined
-          }
-          lastRenderTimeRef.current = getNow()
-          return
+      return dataStaleRef.current
+    }, [pause_render_traffic_stats_on_blur])
+
+    const scheduleHoverDraw = useCallback(() => {
+      if (hoverFrameRef.current !== undefined) return
+
+      hoverFrameRef.current = requestAnimationFrame(() => {
+        hoverFrameRef.current = undefined
+        drawHoverOverlay()
+      })
+    }, [drawHoverOverlay])
+
+    const scheduleDrawGraph = useCallback(() => {
+      if (drawFrameRef.current !== undefined) return
+
+      drawFrameRef.current = requestAnimationFrame(() => {
+        drawFrameRef.current = undefined
+
+        if (shouldSkipGraphDraw()) return
+
+        drawGraph()
+        drawHoverOverlay()
+      })
+    }, [drawGraph, drawHoverOverlay, shouldSkipGraphDraw])
+
+    useEffect(() => {
+      tooltipDataRef.current = tooltipData
+      scheduleHoverDraw()
+    }, [tooltipData, scheduleHoverDraw])
+
+    useEffect(() => {
+      scheduleDrawGraph()
+    }, [scheduleDrawGraph, isDocumentVisible, isWindowFocused])
+
+    useEffect(() => {
+      scheduleDrawGraphRef.current = scheduleDrawGraph
+    }, [scheduleDrawGraph])
+
+    useEffect(() => {
+      const canvas = canvasRef.current
+      if (!canvas || typeof window === 'undefined') return
+
+      if (typeof ResizeObserver === 'undefined') {
+        const handleResize = () => scheduleDrawGraphRef.current()
+        window.addEventListener('resize', handleResize)
+        return () => {
+          window.removeEventListener('resize', handleResize)
         }
-        if (!isWindowFocusedRef.current && pause_render_traffic_stats_on_blur) {
-          lastRenderTimeRef.current = getNow()
-          animationFrameRef.current = undefined
-          return
-        }
-
-        const lastDataAge =
-          lastDataTimestampRef.current > 0
-            ? Date.now() - lastDataTimestampRef.current
-            : null
-        const targetFPS = fpsControllerRef.current.target
-        const frameBudget = 1000 / targetFPS
-
-        if (
-          typeof lastDataAge === 'number' &&
-          lastDataAge > STALE_DATA_THRESHOLD
-        ) {
-          if (animationFrameRef.current) {
-            cancelAnimationFrame(animationFrameRef.current)
-            animationFrameRef.current = undefined
-          }
-          dataStaleRef.current = true
-          return
-        }
-
-        if (
-          currentTime - lastRenderTimeRef.current >= frameBudget ||
-          !isInitializedRef.current
-        ) {
-          const drawStart = getNow()
-          drawGraph()
-          const drawEnd = getNow()
-
-          lastRenderTimeRef.current = currentTime
-          collectFrameSample(drawEnd - drawStart, frameBudget)
-        }
-
-        animationFrameRef.current = requestAnimationFrame(animate)
       }
 
-      animationFrameRef.current = requestAnimationFrame(animate)
+      const resizeObserver = new ResizeObserver(() =>
+        scheduleDrawGraphRef.current(),
+      )
+      resizeObserver.observe(canvas)
 
       return () => {
-        if (animationFrameRef.current) {
-          cancelAnimationFrame(animationFrameRef.current)
-          animationFrameRef.current = undefined
+        resizeObserver.disconnect()
+      }
+    }, [])
+
+    useEffect(() => {
+      return () => {
+        if (drawFrameRef.current !== undefined) {
+          cancelAnimationFrame(drawFrameRef.current)
+          drawFrameRef.current = undefined
+        }
+        if (hoverFrameRef.current !== undefined) {
+          cancelAnimationFrame(hoverFrameRef.current)
+          hoverFrameRef.current = undefined
+        }
+        if (mouseMoveFrameRef.current !== undefined) {
+          cancelAnimationFrame(mouseMoveFrameRef.current)
+          mouseMoveFrameRef.current = undefined
         }
       }
-    }, [
-      drawGraph,
-      displayData.length,
-      isDocumentVisible,
-      isWindowFocused,
-      pause_render_traffic_stats_on_blur,
-      collectFrameSample,
-    ])
+    }, [])
 
     // 切换时间范围
     const handleTimeRangeClick = useCallback((event: React.MouseEvent) => {
@@ -1112,6 +1101,8 @@ export const EnhancedCanvasTrafficGraph = memo(
           overflow: 'hidden',
         }}
         onClick={toggleStyle}
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
       >
         <canvas
           ref={canvasRef}
@@ -1120,10 +1111,22 @@ export const EnhancedCanvasTrafficGraph = memo(
             height: '100%',
             display: 'block',
           }}
-          onMouseMove={handleMouseMove}
-          onMouseLeave={handleMouseLeave}
           onClick={toggleStyle}
         />
+
+        {tooltipData.visible && (
+          <canvas
+            ref={hoverCanvasRef}
+            style={{
+              position: 'absolute',
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              display: 'block',
+              pointerEvents: 'none',
+            }}
+          />
+        )}
 
         {/* 控制层覆盖 */}
         <Box

@@ -208,7 +208,11 @@ const Layout = () => {
   const customTitlebar = useMemo(
     () =>
       !decorated ? (
-        <div className="the_titlebar" data-tauri-drag-region="true">
+        <div className="the_titlebar">
+          <div
+            className="the_titlebar-drag-region"
+            data-tauri-drag-region="true"
+          />
           <WindowControls ref={windowControlsRef} />
         </div>
       ) : null,

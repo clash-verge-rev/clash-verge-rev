@@ -1,7 +1,7 @@
 use crate::{
     cmd,
     config::{Config, PrfItem, PrfOption, profiles::profiles_draft_update_item_safe},
-    core::{CoreManager, handle, tray},
+    core::{CoreManager, handle, tray, validate::ValidationOutcome},
     utils::help::{mask_err, mask_url},
 };
 use anyhow::{Result, bail};
@@ -205,10 +205,18 @@ pub async fn update_profile(
 
     if should_refresh {
         logging!(info, Type::Config, "[订阅更新] 更新内核配置");
-        match CoreManager::global().update_config().await {
-            Ok(_) => {
+        match CoreManager::global().update_config_with_force(is_mannual_trigger).await {
+            Ok(outcome) if outcome.is_valid() => {
                 logging!(info, Type::Config, "[订阅更新] 更新成功");
                 handle::Handle::refresh_clash();
+            }
+            Ok(outcome @ (ValidationOutcome::Skipped { .. } | ValidationOutcome::Busy)) if !is_mannual_trigger => {
+                logging!(info, Type::Config, "[订阅更新] 本次配置刷新已跳过: {}", outcome);
+            }
+            Ok(outcome) => {
+                let message = outcome.to_string();
+                logging!(error, Type::Config, "[订阅更新] 更新失败: {}", message);
+                handle::Handle::notice_message("update_failed", message);
             }
             Err(err) => {
                 logging!(error, Type::Config, "[订阅更新] 更新失败: {}", err);
@@ -222,6 +230,6 @@ pub async fn update_profile(
 }
 
 /// 增强配置
-pub async fn enhance_profiles() -> Result<(bool, String)> {
-    crate::core::CoreManager::global().update_config().await
+pub async fn enhance_profiles() -> Result<ValidationOutcome> {
+    CoreManager::global().update_config_forced().await
 }

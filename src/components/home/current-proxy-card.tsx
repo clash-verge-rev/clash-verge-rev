@@ -37,7 +37,13 @@ import { EnhancedCard } from '@/components/home/enhanced-card'
 import { useProfiles } from '@/hooks/use-profiles'
 import { useProxySelection } from '@/hooks/use-proxy-selection'
 import { useVerge } from '@/hooks/use-verge'
-import { useAppData } from '@/providers/app-data-context'
+import {
+  useAppRefreshers,
+  useClashConfigData,
+  useCoreDataStatus,
+  useProxiesData,
+  useRulesData,
+} from '@/providers/app-data-context'
 import delayManager from '@/services/delay'
 import { debugLog } from '@/utils/debug'
 
@@ -105,8 +111,11 @@ export const CurrentProxyCard = () => {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const theme = useTheme()
-  const { proxies, clashConfig, isCoreDataPending, refreshProxy, rules } =
-    useAppData()
+  const { proxies } = useProxiesData()
+  const { clashConfig } = useClashConfigData()
+  const { rules } = useRulesData()
+  const { refreshProxy } = useAppRefreshers()
+  const { isCoreDataPending } = useCoreDataStatus()
   const { verge } = useVerge()
   const { current: currentProfile } = useProfiles()
   const autoDelayEnabled = verge?.enable_auto_delay_detection ?? false

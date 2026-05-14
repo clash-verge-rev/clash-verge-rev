@@ -6,7 +6,7 @@ use reqwest::{
     header::{HeaderMap, HeaderValue, USER_AGENT},
 };
 use smartstring::alias::String;
-use std::time::Duration;
+use std::{sync::Arc, time::Duration};
 use sysproxy::Sysproxy;
 use tauri::Url;
 
@@ -42,6 +42,12 @@ pub enum ProxyType {
     System,
 }
 
+#[derive(Debug, Clone, Copy)]
+enum TlsRootMode {
+    PlatformVerifier,
+    StaticWebpkiRoots,
+}
+
 pub struct NetworkManager;
 
 impl Default for NetworkManager {
@@ -61,13 +67,18 @@ impl NetworkManager {
         default_headers: HeaderMap,
         accept_invalid_certs: bool,
         timeout_secs: Option<u64>,
+        tls_root_mode: TlsRootMode,
     ) -> Result<Client> {
         let mut builder = Client::builder()
-            .use_rustls_tls()
+            .tls_backend_rustls()
             .redirect(reqwest::redirect::Policy::limited(10))
             .tcp_keepalive(Duration::from_secs(60))
             .pool_max_idle_per_host(0)
             .pool_idle_timeout(None);
+
+        if matches!(tls_root_mode, TlsRootMode::StaticWebpkiRoots) {
+            builder = builder.tls_backend_preconfigured(Self::build_static_webpki_tls_config()?);
+        }
 
         // 设置代理
         if let Some(proxy_str) = proxy_url {
@@ -96,12 +107,129 @@ impl NetworkManager {
         Ok(builder.build()?)
     }
 
+    fn build_static_webpki_tls_config() -> Result<rustls::ClientConfig> {
+        let root_store = rustls::RootCertStore::from_iter(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
+        let mut config =
+            rustls::ClientConfig::builder_with_provider(Arc::new(rustls::crypto::ring::default_provider()))
+                .with_safe_default_protocol_versions()?
+                .with_root_certificates(root_store)
+                .with_no_client_auth();
+
+        config.alpn_protocols = vec![b"h2".to_vec(), b"http/1.1".to_vec()];
+
+        Ok(config)
+    }
+
+    fn should_retry_with_static_webpki_roots(err: &anyhow::Error) -> bool {
+        err.chain().any(|e| {
+            let msg = e.to_string().to_ascii_lowercase();
+            [
+                "certificate",
+                "cert",
+                "tls",
+                "ssl",
+                "rustls",
+                "webpki",
+                "revocation",
+                "ocsp",
+                "crl",
+                "issuer",
+                "unknownissuer",
+            ]
+            .iter()
+            .any(|kw| msg.contains(kw))
+        })
+    }
+
     pub async fn create_request(
         &self,
         proxy_type: ProxyType,
         timeout_secs: Option<u64>,
         user_agent: Option<String>,
         accept_invalid_certs: bool,
+    ) -> Result<Client> {
+        self.create_request_with_tls_mode(
+            proxy_type,
+            timeout_secs,
+            user_agent,
+            accept_invalid_certs,
+            TlsRootMode::PlatformVerifier,
+        )
+        .await
+    }
+
+    async fn get_with_tls_mode(
+        &self,
+        url: &str,
+        proxy_type: ProxyType,
+        timeout_secs: Option<u64>,
+        user_agent: Option<String>,
+        accept_invalid_certs: bool,
+        tls_root_mode: TlsRootMode,
+    ) -> Result<HttpResponse> {
+        let mut parsed = Url::parse(url)?;
+        let mut extra_headers = HeaderMap::new();
+
+        if !parsed.username().is_empty()
+            && let Some(pass) = parsed.password()
+        {
+            let username = percent_encoding::percent_decode_str(parsed.username())
+                .decode_utf8_lossy()
+                .into_owned();
+            let password = percent_encoding::percent_decode_str(pass)
+                .decode_utf8_lossy()
+                .into_owned();
+            let auth_str = format!("{}:{}", username, password);
+            let encoded = general_purpose::STANDARD.encode(auth_str);
+            extra_headers.insert("Authorization", HeaderValue::from_str(&format!("Basic {}", encoded))?);
+        }
+
+        parsed.set_username("").ok();
+        parsed.set_password(None).ok();
+
+        // 创建请求
+        let client = self
+            .create_request_with_tls_mode(
+                proxy_type,
+                timeout_secs,
+                user_agent,
+                accept_invalid_certs,
+                tls_root_mode,
+            )
+            .await?;
+
+        let mut request_builder = client.get(parsed);
+
+        for (key, value) in extra_headers.iter() {
+            request_builder = request_builder.header(key, value);
+        }
+
+        let response = match request_builder.send().await {
+            Ok(resp) => resp,
+            Err(e) => {
+                return Err(anyhow::Error::new(e).context("Request failed"));
+            }
+        };
+
+        let status = response.status();
+        let headers = response.headers().to_owned();
+        let body = match response.text().await {
+            Ok(text) => text.into(),
+            Err(e) => {
+                return Err(anyhow::anyhow!("Failed to read response body: {}", e));
+            }
+        };
+
+        Ok(HttpResponse::new(status, headers, body))
+    }
+
+    async fn create_request_with_tls_mode(
+        &self,
+        proxy_type: ProxyType,
+        timeout_secs: Option<u64>,
+        user_agent: Option<String>,
+        accept_invalid_certs: bool,
+        tls_root_mode: TlsRootMode,
     ) -> Result<Client> {
         let proxy_url: Option<std::string::String> = match proxy_type {
             ProxyType::None => None,
@@ -136,9 +264,7 @@ impl NetworkManager {
             );
         }
 
-        let client = self.build_client(proxy_url, headers, accept_invalid_certs, timeout_secs)?;
-
-        Ok(client)
+        self.build_client(proxy_url, headers, accept_invalid_certs, timeout_secs, tls_root_mode)
     }
 
     pub async fn get_with_interrupt(
@@ -149,53 +275,35 @@ impl NetworkManager {
         user_agent: Option<String>,
         accept_invalid_certs: bool,
     ) -> Result<HttpResponse> {
-        let mut parsed = Url::parse(url)?;
-        let mut extra_headers = HeaderMap::new();
+        let platform_result = self
+            .get_with_tls_mode(
+                url,
+                proxy_type,
+                timeout_secs,
+                user_agent.clone(),
+                accept_invalid_certs,
+                TlsRootMode::PlatformVerifier,
+            )
+            .await;
 
-        if !parsed.username().is_empty()
-            && let Some(pass) = parsed.password()
-        {
-            let username = percent_encoding::percent_decode_str(parsed.username())
-                .decode_utf8_lossy()
-                .into_owned();
-            let password = percent_encoding::percent_decode_str(pass)
-                .decode_utf8_lossy()
-                .into_owned();
-            let auth_str = format!("{}:{}", username, password);
-            let encoded = general_purpose::STANDARD.encode(auth_str);
-            extra_headers.insert("Authorization", HeaderValue::from_str(&format!("Basic {}", encoded))?);
+        match platform_result {
+            Ok(response) => Ok(response),
+            Err(err) if !accept_invalid_certs && Self::should_retry_with_static_webpki_roots(&err) => self
+                .get_with_tls_mode(
+                    url,
+                    proxy_type,
+                    timeout_secs,
+                    user_agent,
+                    accept_invalid_certs,
+                    TlsRootMode::StaticWebpkiRoots,
+                )
+                .await
+                .map_err(|fallback_err| {
+                    anyhow::anyhow!(
+                        "platform TLS verifier failed: {err}; static webpki roots fallback failed: {fallback_err}"
+                    )
+                }),
+            Err(err) => Err(err),
         }
-
-        parsed.set_username("").ok();
-        parsed.set_password(None).ok();
-
-        // 创建请求
-        let client = self
-            .create_request(proxy_type, timeout_secs, user_agent, accept_invalid_certs)
-            .await?;
-
-        let mut request_builder = client.get(parsed);
-
-        for (key, value) in extra_headers.iter() {
-            request_builder = request_builder.header(key, value);
-        }
-
-        let response = match request_builder.send().await {
-            Ok(resp) => resp,
-            Err(e) => {
-                return Err(anyhow::anyhow!("Request failed: {}", e));
-            }
-        };
-
-        let status = response.status();
-        let headers = response.headers().to_owned();
-        let body = match response.text().await {
-            Ok(text) => text.into(),
-            Err(e) => {
-                return Err(anyhow::anyhow!("Failed to read response body: {}", e));
-            }
-        };
-
-        Ok(HttpResponse::new(status, headers, body))
     }
 }

@@ -125,16 +125,34 @@ jobs:
           Created at ${{ env.BUILDTIME }}.
           EOF
 
-      - name: Upload Release
-        uses: softprops/action-gh-release@v3
-        with:
-          tag_name: ${{ env.TAG_NAME }}
-          name: 'Clash Verge Rev ${{ env.TAG_NAME }}'
-          body_path: release.txt
-          draft: false
-          prerelease: ${{ contains(github.ref_name, '-rc') }}
-          token: ${{ secrets.GITHUB_TOKEN }}
-          # generate_release_notes: true
+      - name: Publish Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PRERELEASE: ${{ contains(github.ref_name, '-rc') }}
+        run: |
+          matches=$(gh api repos/{owner}/{repo}/releases --paginate --jq '.[] | select(.tag_name == env.TAG_NAME) | [.id, .draft, (.assets | length), .html_url] | @tsv')
+          release_count=$(grep -c . <<< "$matches" || true)
+
+          if [ "$release_count" -eq 0 ]; then
+            echo "::error::No release found for $TAG_NAME."
+            exit 1
+          fi
+
+          if [ "$release_count" -gt 1 ]; then
+            printf '%s\n' "$matches"
+            echo "::error::Multiple releases found for $TAG_NAME. Merge or delete duplicate releases before rerunning."
+            exit 1
+          fi
+
+          IFS=$'\t' read -r release_id _ asset_count release_url <<< "$matches"
+          echo "Publishing release $release_id ($release_url) with $asset_count assets."
+
+          gh api --method PATCH repos/{owner}/{repo}/releases/"$release_id" \
+            -f name="Clash Verge Rev $TAG_NAME" \
+            -F body=@release.txt \
+            -F draft=false \
+            -F prerelease="$PRERELEASE" \
+            --silent
 
   release:
     name: Release Build
@@ -401,6 +419,7 @@ jobs:
           name: 'Clash Verge Rev v${{env.VERSION}}'
           body: 'See release notes for detailed changelog.'
           token: ${{ secrets.GITHUB_TOKEN }}
+          draft: true
           prerelease: ${{ contains(github.ref_name, '-rc') }}
           files: |
             target/${{ matrix.target }}/release/bundle/deb/*.deb
@@ -517,6 +536,7 @@ jobs:
           name: 'Clash Verge Rev v${{steps.build.outputs.appVersion}}'
           body: 'See release notes for detailed changelog.'
           token: ${{ secrets.GITHUB_TOKEN }}
+          draft: true
           prerelease: ${{ contains(github.ref_name, '-rc') }}
           files: target/${{ matrix.target }}/release/bundle/nsis/*setup*
 

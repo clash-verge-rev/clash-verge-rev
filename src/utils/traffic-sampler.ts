@@ -5,13 +5,24 @@ interface ICompressedDataPoint {
   samples: number
 }
 
-export const formatTrafficName = (timestamp: number) =>
-  new Date(timestamp).toLocaleTimeString('en-US', {
-    hour12: false,
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  })
+const pad2 = (value: number) => value.toString().padStart(2, '0')
+
+export const formatTrafficHourMinute = (timestamp: number) => {
+  const date = new Date(timestamp)
+  return `${pad2(date.getHours())}:${pad2(date.getMinutes())}`
+}
+
+export const formatTrafficMinuteSecond = (timestamp: number) => {
+  const date = new Date(timestamp)
+  return `${pad2(date.getMinutes())}:${pad2(date.getSeconds())}`
+}
+
+export const formatTrafficName = (timestamp: number) => {
+  const date = new Date(timestamp)
+  return `${pad2(date.getHours())}:${pad2(date.getMinutes())}:${pad2(
+    date.getSeconds(),
+  )}`
+}
 
 export class TrafficDataSampler {
   private rawBuffer: ITrafficDataPoint[] = []

@@ -40,7 +40,7 @@
       "!Changelog.md",
       "!CONTRIBUTING.md",
       "!.changelog_backups",
-      "!.github/workflows/*.lock.yml",
+      "!.github",
       "!.pnpm-lock.yaml"
     ]
   }

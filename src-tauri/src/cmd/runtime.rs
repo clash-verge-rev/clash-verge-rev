@@ -1,7 +1,7 @@
 use super::CmdResult;
 use crate::{cmd::StringifyErr as _, config::Config, core::CoreManager};
 use anyhow::{Context as _, anyhow};
-use clash_verge_logging::{Type, logging_error};
+use clash_verge_logging::{Type, logging};
 use serde_yaml_ng::Mapping;
 use smartstring::alias::String;
 use std::collections::{HashMap, HashSet};
@@ -99,7 +99,16 @@ pub async fn update_proxy_chain_config_in_runtime(proxy_chain_config: Option<ser
         runtime.edit_draft(|d| d.update_proxy_chain_config(proxy_chain_config));
         // 我们需要在 CoreManager 中验证并应用配置，这里不应该直接调用 runtime.apply()
     }
-    logging_error!(Type::Core, CoreManager::global().apply_generate_config().await);
+    match CoreManager::global().apply_generate_config().await {
+        Ok(outcome) if outcome.is_valid() => {}
+        Ok(outcome) => logging!(
+            warn,
+            Type::Core,
+            "Failed to apply runtime proxy chain config: {}",
+            outcome
+        ),
+        Err(err) => logging!(error, Type::Core, "Failed to apply runtime proxy chain config: {}", err),
+    }
 
     Ok(())
 }
