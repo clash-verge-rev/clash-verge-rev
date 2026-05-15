@@ -9,8 +9,9 @@ import {
   Snackbar,
   Typography,
 } from '@mui/material'
+import { useTheme } from '@mui/material/styles'
 import { useQuery } from '@tanstack/react-query'
-import { useVirtualizer } from '@tanstack/react-virtual'
+import { defaultRangeExtractor, useVirtualizer } from '@tanstack/react-virtual'
 import { useLockFn } from 'ahooks'
 import {
   type Key,
@@ -18,11 +19,13 @@ import {
   type RefObject,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
 } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useLocation } from 'react-router'
 import { delayGroup, healthcheckProxyProvider } from 'tauri-plugin-mihomo-api'
 
 import { BaseEmpty } from '@/components/base'
@@ -65,6 +68,7 @@ interface ProxyChainItem {
 
 export const ProxyGroups = (props: Props) => {
   const { t } = useTranslation()
+  const { pathname } = useLocation()
   const { mode, isChainMode = false, chainConfigData } = props
 
   // Drive 3s polling on the shared TQ cache; data is read via granular context below
@@ -158,8 +162,40 @@ export const ProxyGroups = (props: Props) => {
 
   const parentRef = useRef<HTMLDivElement>(null)
   const scrollPositionRef = useRef<Record<string, number>>({})
+  const scrollTopRef = useRef(0)
   const showScrollTopRef = useRef(false)
+  const activeStickyIndexRef = useRef<number | null>(null)
+  const restoredScrollKeyRef = useRef<string | null>(null)
   const [showScrollTop, setShowScrollTop] = useState(false)
+  const scrollPositionKey = useMemo(
+    () =>
+      isChainMode
+        ? `${mode}:chain:${activeSelectedGroup ?? 'all'}`
+        : `${mode}:normal`,
+    [activeSelectedGroup, isChainMode, mode],
+  )
+  const stickyGroupIndexes = useMemo(
+    () =>
+      renderList.flatMap((item, index) =>
+        item.type === 0 && !item.group.hidden ? [index] : [],
+      ),
+    [renderList],
+  )
+
+  const rangeExtractor = useCallback(
+    (range: Parameters<typeof defaultRangeExtractor>[0]) => {
+      const activeStickyIndex = [...stickyGroupIndexes]
+        .reverse()
+        .find((index) => index <= range.startIndex)
+      activeStickyIndexRef.current = activeStickyIndex ?? null
+
+      const indexes = defaultRangeExtractor(range)
+      return activeStickyIndex == null || indexes.includes(activeStickyIndex)
+        ? indexes
+        : [activeStickyIndex, ...indexes]
+    },
+    [stickyGroupIndexes],
+  )
 
   const virtualizer = useVirtualizer({
     count: renderList.length,
@@ -167,58 +203,49 @@ export const ProxyGroups = (props: Props) => {
     estimateSize: () => 56,
     overscan: 15,
     getItemKey: (index) => renderList[index]?.key ?? index,
+    rangeExtractor,
   })
   const virtualItems = virtualizer.getVirtualItems()
-  const stickyGroupByIndex = useMemo(
-    () => getStickyGroupByIndex(renderList),
-    [renderList],
-  )
-  const stickyGroupItem = getStickyGroupItem(
-    stickyGroupByIndex,
-    virtualItems,
-    virtualizer.scrollOffset ?? 0,
-  )
+  const activeStickyIndex = activeStickyIndexRef.current
 
   // 从 localStorage 恢复滚动位置
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (renderList.length === 0) return
-
-    let restoreTimer: ReturnType<typeof setTimeout> | null = null
+    const node = parentRef.current
+    if (!node) return
+    if (
+      restoredScrollKeyRef.current === scrollPositionKey &&
+      node.scrollTop === scrollTopRef.current
+    ) {
+      return
+    }
 
     try {
       const savedPositions = localStorage.getItem('proxy-scroll-positions')
       if (savedPositions) {
         const positions = JSON.parse(savedPositions)
         scrollPositionRef.current = positions
-        const savedPosition = positions[mode]
+        const savedPosition = positions[scrollPositionKey]
 
         if (savedPosition !== undefined) {
-          restoreTimer = setTimeout(() => {
-            if (parentRef.current) {
-              parentRef.current.scrollTop = savedPosition
-              const nextShowScrollTop = savedPosition > 100
-              showScrollTopRef.current = nextShowScrollTop
-              setShowScrollTop(nextShowScrollTop)
-            }
-          }, 100)
+          node.scrollTop = savedPosition
+          scrollTopRef.current = savedPosition
+          const nextShowScrollTop = savedPosition > 100
+          showScrollTopRef.current = nextShowScrollTop
+          queueMicrotask(() => setShowScrollTop(nextShowScrollTop))
         }
       }
     } catch (e) {
       console.error('Error restoring scroll position:', e)
     }
-
-    return () => {
-      if (restoreTimer) {
-        clearTimeout(restoreTimer)
-      }
-    }
-  }, [mode, renderList.length])
+    restoredScrollKeyRef.current = scrollPositionKey
+  }, [pathname, renderList.length, scrollPositionKey])
 
   // 改为使用节流函数保存滚动位置
   const saveScrollPosition = useCallback(
     (scrollTop: number) => {
       try {
-        scrollPositionRef.current[mode] = scrollTop
+        scrollPositionRef.current[scrollPositionKey] = scrollTop
         localStorage.setItem(
           'proxy-scroll-positions',
           JSON.stringify(scrollPositionRef.current),
@@ -227,7 +254,7 @@ export const ProxyGroups = (props: Props) => {
         console.error('Error saving scroll position:', e)
       }
     },
-    [mode],
+    [scrollPositionKey],
   )
 
   const saveScrollPositionThrottled = useMemo(
@@ -240,6 +267,7 @@ export const ProxyGroups = (props: Props) => {
       const target = event.target as HTMLElement | null
       const nextScrollTop = target?.scrollTop ?? 0
       const nextShowScrollTop = nextScrollTop > 100
+      scrollTopRef.current = nextScrollTop
 
       if (showScrollTopRef.current !== nextShowScrollTop) {
         showScrollTopRef.current = nextShowScrollTop
@@ -262,9 +290,12 @@ export const ProxyGroups = (props: Props) => {
     node.addEventListener('scroll', listener, options)
 
     return () => {
+      if (restoredScrollKeyRef.current === scrollPositionKey) {
+        saveScrollPosition(scrollTopRef.current)
+      }
       node.removeEventListener('scroll', listener, options)
     }
-  }, [handleScroll])
+  }, [handleScroll, saveScrollPosition, scrollPositionKey])
 
   // 滚动到顶部
   const scrollToTop = useCallback(() => {
@@ -272,6 +303,7 @@ export const ProxyGroups = (props: Props) => {
       top: 0,
       behavior: 'smooth',
     })
+    scrollTopRef.current = 0
     saveScrollPosition(0)
   }, [saveScrollPosition])
 
@@ -453,7 +485,7 @@ export const ProxyGroups = (props: Props) => {
       totalSize={virtualizer.getTotalSize()}
       virtualItems={virtualItems}
       renderList={renderList}
-      stickyItem={stickyGroupItem}
+      activeStickyIndex={activeStickyIndex}
       indent={mode === 'rule' || mode === 'script'}
       isChainMode={isChainMode}
       measureElement={virtualizer.measureElement}
@@ -564,7 +596,7 @@ interface ProxyVirtualListProps {
   totalSize: number
   virtualItems: VirtualListItem[]
   renderList: IRenderItem[]
-  stickyItem: IRenderItem | null
+  activeStickyIndex: number | null
   indent: boolean
   isChainMode?: boolean
   measureElement: (node: Element | null) => void
@@ -728,7 +760,7 @@ function ProxyVirtualList({
   totalSize,
   virtualItems,
   renderList,
-  stickyItem,
+  activeStickyIndex,
   indent,
   isChainMode,
   measureElement,
@@ -737,39 +769,12 @@ function ProxyVirtualList({
   onHeadState,
   onChangeProxy,
 }: ProxyVirtualListProps) {
+  const theme = useTheme()
+  const stickyBackground =
+    theme.palette.mode === 'dark' ? '#1e1f27' : 'var(--background-color)'
+
   return (
     <div ref={parentRef} style={{ height, overflow: 'auto' }}>
-      {stickyItem && (
-        <Box
-          sx={{
-            position: 'sticky',
-            top: 0,
-            height: 0,
-            zIndex: 5,
-            pointerEvents: 'none',
-          }}
-        >
-          <Box
-            sx={{
-              pointerEvents: 'auto',
-              '& .MuiListItemButton-root': {
-                boxShadow: 3,
-              },
-            }}
-          >
-            <ProxyRender
-              item={stickyItem}
-              indent={indent}
-              onLocation={onLocation}
-              onCheckAll={onCheckAll}
-              onHeadState={onHeadState}
-              onChangeProxy={onChangeProxy}
-              isChainMode={isChainMode}
-            />
-          </Box>
-        </Box>
-      )}
-
       <div style={{ height: totalSize, position: 'relative' }}>
         {virtualItems.map((virtualItem) => (
           <div
@@ -777,11 +782,24 @@ function ProxyVirtualList({
             data-index={virtualItem.index}
             ref={measureElement}
             style={{
-              position: 'absolute',
+              position:
+                virtualItem.index === activeStickyIndex ? 'sticky' : 'absolute',
               top: 0,
               left: 0,
+              zIndex: virtualItem.index === activeStickyIndex ? 5 : undefined,
+              display:
+                virtualItem.index === activeStickyIndex
+                  ? 'flow-root'
+                  : undefined,
+              backgroundColor:
+                virtualItem.index === activeStickyIndex
+                  ? stickyBackground
+                  : undefined,
               width: '100%',
-              transform: `translateY(${virtualItem.start}px)`,
+              transform:
+                virtualItem.index === activeStickyIndex
+                  ? undefined
+                  : `translateY(${virtualItem.start}px)`,
             }}
           >
             <ProxyRender
@@ -801,30 +819,6 @@ function ProxyVirtualList({
   )
 }
 
-function getStickyGroupByIndex(renderList: IRenderItem[]) {
-  let stickyGroup: IRenderItem | null = null
-
-  return renderList.map((item) => {
-    if (item?.type === 0 && item.group && !item.group.hidden) {
-      stickyGroup = item
-    }
-    return stickyGroup
-  })
-}
-
-function getStickyGroupItem(
-  stickyGroupByIndex: (IRenderItem | null)[],
-  virtualItems: VirtualListItem[],
-  scrollTop: number,
-) {
-  const firstVisibleItem =
-    virtualItems.find((item) => item.end > scrollTop + 1) ?? virtualItems[0]
-
-  if (!firstVisibleItem) return null
-
-  return stickyGroupByIndex[firstVisibleItem.index] ?? null
-}
-
 // 替换简单防抖函数为更优的节流函数
 function throttle<T extends (...args: any[]) => any>(
   func: T,
@@ -832,23 +826,30 @@ function throttle<T extends (...args: any[]) => any>(
 ): (...args: Parameters<T>) => void {
   let timer: ReturnType<typeof setTimeout> | null = null
   let previous = 0
+  let lastArgs: Parameters<T> | null = null
+
+  const run = (args: Parameters<T>) => {
+    previous = Date.now()
+    timer = null
+    lastArgs = null
+    func(...args)
+  }
 
   return function (...args: Parameters<T>) {
     const now = Date.now()
     const remaining = wait - (now - previous)
+    lastArgs = args
 
     if (remaining <= 0 || remaining > wait) {
       if (timer) {
         clearTimeout(timer)
-        timer = null
       }
-      previous = now
-      func(...args)
+      run(args)
     } else if (!timer) {
       timer = setTimeout(() => {
-        previous = Date.now()
-        timer = null
-        func(...args)
+        if (lastArgs) {
+          run(lastArgs)
+        }
       }, remaining)
     }
   }
