@@ -1,4 +1,4 @@
-use std::time::Duration;
+use std::{borrow::Cow, time::Duration};
 
 use anyhow::Result;
 use percent_encoding::percent_decode_str;
@@ -6,10 +6,22 @@ use smartstring::alias::String;
 use tauri::Url;
 
 use crate::{
+    cmd,
     config::{Config, PrfItem, profiles},
     core::{CoreManager, handle},
 };
 use clash_verge_logging::{Type, logging, logging_error};
+
+#[derive(Debug, PartialEq, Eq)]
+enum DeepLinkAction {
+    ImportSubscription {
+        url: std::string::String,
+        name: Option<String>,
+    },
+    SwitchProfile {
+        uid: String,
+    },
+}
 
 pub(super) async fn resolve_scheme(param: &str) -> Result<()> {
     logging!(info, Type::Config, "received deep link: {param}");
@@ -25,34 +37,63 @@ pub(super) async fn resolve_scheme(param: &str) -> Result<()> {
     let link_parsed =
         Url::parse(param_str).map_err(|e| anyhow::anyhow!("failed to parse deep link: {:?}, param: {:?}", e, param))?;
 
-    let Some((url, name)) = extract_subscription_info(&link_parsed) else {
-        logging!(error, Type::Config, "missing url parameter in deep link: {}", param_str);
+    let Some(action) = parse_deep_link_action(&link_parsed) else {
+        logging!(error, Type::Config, "unsupported deep link: {}", param_str);
         return Ok(());
     };
 
-    import_subscription(&url, name.as_ref()).await;
+    match action {
+        DeepLinkAction::ImportSubscription { url, name } => {
+            import_subscription(&url, name.as_ref()).await;
+        }
+        DeepLinkAction::SwitchProfile { uid } => {
+            switch_profile(&uid).await;
+        }
+    }
+
     Ok(())
 }
 
-fn extract_subscription_info(link_parsed: &Url) -> Option<(std::string::String, Option<String>)> {
+fn parse_deep_link_action(link_parsed: &Url) -> Option<DeepLinkAction> {
     if !matches!(link_parsed.scheme(), "clash" | "clash-verge") {
         return None;
     }
 
-    let name = link_parsed
-        .query_pairs()
-        .find(|(key, _)| key == "name")
-        .map(|(_, value)| value.into_owned().into());
+    if let Some(uid) = extract_switch_profile_uid(link_parsed) {
+        return Some(DeepLinkAction::SwitchProfile { uid });
+    }
+
+    let name = extract_query_param(link_parsed, "name").map(|value| value.into_owned().into());
     let url = extract_subscription_url(link_parsed)?;
-    Some((url, name))
+    Some(DeepLinkAction::ImportSubscription { url, name })
+}
+
+fn extract_switch_profile_uid(link_parsed: &Url) -> Option<String> {
+    let host = link_parsed.host_str().unwrap_or_default();
+    let path = link_parsed.path().trim_matches('/');
+
+    let is_switch_route = matches!(
+        (host, path),
+        ("profile", "switch") | ("switch", "") | ("switch", "switch") | ("", "profile/switch")
+    );
+
+    if !is_switch_route {
+        return None;
+    }
+
+    extract_query_param(link_parsed, "uid").map(|value| value.into_owned().into())
+}
+
+fn extract_query_param<'a>(link_parsed: &'a Url, key: &str) -> Option<Cow<'a, str>> {
+    link_parsed
+        .query_pairs()
+        .find(|(query_key, _)| query_key == key)
+        .map(|(_, value)| value)
 }
 
 fn extract_subscription_url(link_parsed: &Url) -> Option<std::string::String> {
-    let query = link_parsed.query()?;
-    let prefix = "url=";
-    let pos = query.find(prefix)?;
-    let raw_url = query[pos + prefix.len()..].trim();
-    Some(decode_subscription_url(raw_url))
+    let raw_url = extract_query_param(link_parsed, "url")?;
+    Some(decode_subscription_url(raw_url.as_ref()))
 }
 
 fn decode_subscription_url(raw_url: &str) -> std::string::String {
@@ -73,6 +114,45 @@ fn decode_subscription_url(raw_url: &str) -> std::string::String {
         }
     }
     candidate
+}
+
+async fn switch_profile(uid: &String) {
+    let profiles = Config::profiles().await;
+    let profile_name = match resolve_switch_profile_label(profiles.latest_arc().as_ref(), uid) {
+        Ok(label) => label,
+        Err(err) => {
+            logging!(warn, Type::Config, "Deep link switch profile rejected: {}", err);
+            handle::Handle::notice_message("profile_switch::error", err.to_string());
+            return;
+        }
+    };
+    drop(profiles);
+
+    match cmd::patch_profiles_config_by_profile_index(uid.to_owned()).await {
+        Ok(outcome) if outcome.is_valid() => {
+            logging!(info, Type::Config, "Deep link switched profile: {}", uid);
+            handle::Handle::notice_message("profile_switch::ok", profile_name);
+        }
+        Ok(outcome) => {
+            let message = outcome.to_string();
+            logging!(
+                warn,
+                Type::Config,
+                "Deep link switch profile validation failed: {}",
+                message
+            );
+            handle::Handle::notice_message("config_validate::error", message);
+        }
+        Err(err) => {
+            logging!(error, Type::Config, "Deep link switch profile failed: {}", err);
+            handle::Handle::notice_message("profile_switch::error", err.to_string());
+        }
+    }
+}
+
+fn resolve_switch_profile_label(profiles: &crate::config::profiles::IProfiles, uid: &String) -> Result<String> {
+    let item = profiles.get_item(uid)?;
+    Ok(item.name.clone().unwrap_or_else(|| uid.clone()))
 }
 
 async fn import_subscription(url: &str, name: Option<&String>) {
