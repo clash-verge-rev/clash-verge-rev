@@ -1,5 +1,6 @@
 use dark_light::{Mode as SystemTheme, detect as detect_system_theme};
 use tauri::utils::config::Color;
+use tauri::webview::PageLoadEvent;
 use tauri::{Theme, WebviewWindow};
 
 use crate::{config::Config, core::handle, utils::resolve::window_script::build_window_initial_script};
@@ -67,7 +68,15 @@ pub async fn build_new_window() -> Result<WebviewWindow, String> {
     .inner_size(DEFAULT_WIDTH, DEFAULT_HEIGHT)
     .min_inner_size(MINIMAL_WIDTH, MINIMAL_HEIGHT)
     .visible(false) // 等待主题色准备好后再展示，避免启动色差
-    .initialization_script(&initial_script);
+    .initialization_script(&initial_script)
+    .on_page_load(move |window, payload| {
+        if payload.event() != PageLoadEvent::Finished {
+            return;
+        }
+
+        logging_error!(Type::Window, window.show());
+        logging_error!(Type::Window, window.set_focus());
+    });
 
     if let Some(theme) = resolved_theme {
         builder = builder.theme(Some(theme));

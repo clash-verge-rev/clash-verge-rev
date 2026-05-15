@@ -53,16 +53,6 @@
   </head>
   <body>
     <div id="initial-loading-overlay"></div>
-    <script>
-      if (window.__TAURI_INTERNALS__) {
-        window.__TAURI_INTERNALS__
-          .invoke('plugin:window|show', { label: 'main' })
-          .catch(function () {});
-        window.__TAURI_INTERNALS__
-          .invoke('plugin:window|set_focus', { label: 'main' })
-          .catch(function () {});
-      }
-    </script>
     <div id="root"></div>
     <script type="module" src="./main.tsx"></script>
   </body>
