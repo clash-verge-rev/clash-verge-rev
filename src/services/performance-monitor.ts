@@ -87,12 +87,12 @@ class PerformanceMonitor {
 
         try {
           observer.observe({ entryTypes: ['largest-contentful-paint'] })
-        } catch (e) {
+        } catch {
           // LCP not supported
         }
       }
-    } catch (e) {
-      console.warn('WebVitals monitoring failed:', e)
+    } catch (ignoreError) {
+      console.warn('WebVitals monitoring failed:', ignoreError)
     }
   }
 
@@ -113,7 +113,7 @@ class PerformanceMonitor {
         })
 
         observer.observe({ entryTypes: ['longtask'] })
-      } catch (e) {
+      } catch (ignoreError) {
         // LongTask not supported
       }
     }

@@ -3,6 +3,7 @@
  * 仅在开发模式显示
  */
 import { useState } from 'react'
+
 import { printPerfReport, perfMonitor } from '@/services/performance-monitor'
 
 const PerformanceDashboard = () => {

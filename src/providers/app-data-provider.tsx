@@ -7,7 +7,6 @@ import {
   getRules,
 } from 'tauri-plugin-mihomo-api'
 
-import { useVerge } from '@/hooks/use-verge'
 import {
   useCachedProxies,
   useCachedRules,
@@ -16,6 +15,7 @@ import {
   useRulesCachedInitial,
   useClashConfigCachedInitial,
 } from '@/hooks/use-config-cache'
+import { useVerge } from '@/hooks/use-verge'
 import {
   calcuProxies,
   calcuProxyProviders,

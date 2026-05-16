@@ -7,18 +7,19 @@
  * - 减少总加载时间
  */
 
-import { recordIpcCall } from '@/services/performance-monitor'
-import {
-  getVergeConfig,
-  getClashInfo,
-  getProfiles,
-} from '@/services/cmds'
 import {
   getBaseConfig,
   getProxies,
   getRules,
   getRuleProviders,
 } from 'tauri-plugin-mihomo-api'
+
+import {
+  getVergeConfig,
+  getClashInfo,
+  getProfiles,
+} from '@/services/cmds'
+import { recordIpcCall } from '@/services/performance-monitor'
 
 export interface AppStartupData {
   vergeConfig: IVergeConfig | null
@@ -125,7 +126,7 @@ export async function refreshMultipleQueries<T = any>(
   const startTime = performance.now()
 
   try {
-    const results = await Promise.all(queryFns.map((fn) => fn().catch((e) => null)))
+    const results = await Promise.all(queryFns.map((fn) => fn().catch(() => null)))
     const duration = performance.now() - startTime
 
     recordIpcCall(duration / queryFns.length)

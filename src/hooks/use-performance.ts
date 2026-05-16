@@ -1,22 +1,24 @@
-import React, { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
+
 import { perfMonitor } from '@/services/performance-monitor'
 
 /**
  * Hook: 监测组件渲染性能
  */
 export function useRenderPerformance(componentName: string) {
-  const startTimeRef = useRef(performance.now())
+  const startTimeRef = useRef<number | null>(null)
 
   useEffect(() => {
-    // 使用 requestAnimationFrame 确保渲染完成后测量
+    startTimeRef.current = performance.now()
     const measureFrame = requestAnimationFrame(() => {
+      if (startTimeRef.current === null) return
       const endTime = performance.now()
       const duration = endTime - startTimeRef.current
       perfMonitor.recordComponentRenderTime(componentName, duration)
     })
 
     return () => cancelAnimationFrame(measureFrame)
-  })
+  }, [componentName])
 }
 
 /**
@@ -27,7 +29,7 @@ export function useDataFetchPerformance<T>(
   isPending: boolean,
   data?: T,
 ) {
-  const startTimeRef = useRef(performance.now())
+  const startTimeRef = useRef<number | null>(null)
   const hasReportedRef = useRef(false)
 
   useEffect(() => {
@@ -35,6 +37,7 @@ export function useDataFetchPerformance<T>(
       startTimeRef.current = performance.now()
       hasReportedRef.current = false
     } else if (!isPending && !hasReportedRef.current && data !== undefined) {
+      if (startTimeRef.current === null) return
       const duration = performance.now() - startTimeRef.current
       perfMonitor.recordDataFetchTime(queryKey, duration)
       hasReportedRef.current = true

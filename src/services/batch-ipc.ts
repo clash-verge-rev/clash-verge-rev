@@ -106,7 +106,6 @@ class BatchIpcManager {
     }
 
     const requests = Array.from(this.pendingRequests.values())
-    const ids = Array.from(this.pendingRequests.keys())
     this.pendingRequests.clear()
 
     const startTime = performance.now()
@@ -119,7 +118,7 @@ class BatchIpcManager {
 
       // 暂时使用并行单个调用作为实现
       // TODO: 后端实现真正的批量 API
-      const responses = await Promise.allSettled(
+      const _responses = await Promise.allSettled(
         requests.map(async (req) => {
           try {
             // 这里应该是真正的 batch_ipc_call

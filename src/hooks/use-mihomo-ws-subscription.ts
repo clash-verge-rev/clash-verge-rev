@@ -2,6 +2,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useLocalStorage } from 'foxact/use-local-storage'
 import { type MutableRefObject, useCallback, useEffect, useRef } from 'react'
 import { type Message, type MihomoWebSocket } from 'tauri-plugin-mihomo-api'
+
 import { subscribeToPageVisibility } from './use-page-visibility'
 
 export const RECONNECT_DELAY_MS = 1000
@@ -197,10 +198,9 @@ export const useMihomoWsSubscription = <T>(
     setupHandlers,
   } = options
 
-  const isVisibleRef = useRef(() => {
-    if (typeof document === 'undefined') return true
-    return !document.hidden
-  }())
+  const isVisibleRef = useRef(
+    typeof document === 'undefined' ? true : !document.hidden,
+  )
 
   // eslint-disable-next-line @eslint-react/purity
   const [date, setDate] = useLocalStorage(storageKey, Date.now())
