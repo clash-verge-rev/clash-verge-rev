@@ -397,7 +397,13 @@ pub fn run() {
             }
         }),
         #[allow(unused_variables)]
-        tauri::RunEvent::ExitRequested { api, code, .. } => {
+        tauri::RunEvent::ExitRequested { api, code, .. }
+            if module::lightweight::is_in_lightweight_mode() && !handle::Handle::global().is_exiting() =>
+        {
+            {
+                api.prevent_exit();
+            }
+
             // TODO: Migrate the cleanup logic from RunEvent::Exit to RunEvent::ExitRequested.
             // This lets us call api.prevent_exit(), run async cleanup first,
             // and then call app_handle.exit(code) after cleanup has completed.
