@@ -30,6 +30,7 @@ import { delayGroup, healthcheckProxyProvider } from 'tauri-plugin-mihomo-api'
 
 import { BaseEmpty } from '@/components/base'
 import { useProxySelection } from '@/hooks/use-proxy-selection'
+import { useRenderPerformance } from '@/hooks/use-performance'
 import { useVerge } from '@/hooks/use-verge'
 import { useProxiesData } from '@/providers/app-data-context'
 import { calcuProxies, updateProxyChainConfigInRuntime } from '@/services/cmds'
@@ -71,13 +72,17 @@ export const ProxyGroups = (props: Props) => {
   const { pathname } = useLocation()
   const { mode, isChainMode = false, chainConfigData } = props
 
-  // Drive 3s polling on the shared TQ cache; data is read via granular context below
+  // 性能监测
+  useRenderPerformance('ProxyGroups')
+
+  // Drive 5s polling on the shared TQ cache; data is read via granular context below
+  // 优化：将轮询间隔从 3s 改为 5s，减少不必要的数据获取
   useQuery({
     queryKey: ['getProxies'],
     queryFn: calcuProxies,
-    refetchInterval: 3000,
+    refetchInterval: 5000,
     refetchIntervalInBackground: false,
-    staleTime: 1500,
+    staleTime: 2000,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
   })
