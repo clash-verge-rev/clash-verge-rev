@@ -9,6 +9,14 @@ import {
 
 import { useVerge } from '@/hooks/use-verge'
 import {
+  useCachedProxies,
+  useCachedRules,
+  useCachedClashConfig,
+  useProxiesCachedInitial,
+  useRulesCachedInitial,
+  useClashConfigCachedInitial,
+} from '@/hooks/use-config-cache'
+import {
   calcuProxies,
   calcuProxyProviders,
   getAppUptime,
@@ -55,6 +63,11 @@ export const AppDataProvider = ({
 }) => {
   const { verge } = useVerge()
 
+  // 获取缓存的初始数据
+  const cachedProxiesInitial = useProxiesCachedInitial()
+  const cachedRulesInitial = useRulesCachedInitial()
+  const cachedClashConfigInitial = useClashConfigCachedInitial()
+
   // 优化：延迟非关键数据加载
   // 设置状态以跟踪初始化完成
   const [isInitialLoadComplete, setIsInitialLoadComplete] = useState(false)
@@ -76,6 +89,7 @@ export const AppDataProvider = ({
   } = useQuery({
     queryKey: ['getProxies'],
     queryFn: calcuProxies,
+    initialData: cachedProxiesInitial,  // 优化：使用缓存的初始数据
     ...TQ_MIHOMO,
   })
 
@@ -86,6 +100,7 @@ export const AppDataProvider = ({
   } = useQuery({
     queryKey: ['getClashConfig'],
     queryFn: getBaseConfig,
+    initialData: cachedClashConfigInitial,  // 优化：使用缓存的初始数据
     ...TQ_MIHOMO,
   })
 
@@ -105,6 +120,7 @@ export const AppDataProvider = ({
   const { data: rulesData, refetch: _refetchRules } = useQuery({
     queryKey: ['getRules'],
     queryFn: getRules,
+    initialData: cachedRulesInitial,  // 优化：使用缓存的初始数据
     enabled: isInitialLoadComplete,  // 优化：延迟加载非关键规则数据
     ...TQ_MIHOMO,
   })
@@ -217,6 +233,11 @@ export const AppDataProvider = ({
     refreshProxyProviders,
     refreshRuleProviders,
   ])
+
+  // 优化：同步数据到缓存
+  useCachedProxies(proxiesData)
+  useCachedRules(rulesData)
+  useCachedClashConfig(clashConfig)
 
   const proxiesValue = useMemo(
     () => ({
