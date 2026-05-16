@@ -26,7 +26,7 @@ class ConfigCache {
     hits: 0,
     misses: 0,
   }
-  private invalidateTimers = new Map<string, NodeJS.Timeout>()
+  private invalidateTimers = new Map<string, ReturnType<typeof setTimeout>>()
   private changeListeners = new Set<(key: string) => void>()
 
   /**

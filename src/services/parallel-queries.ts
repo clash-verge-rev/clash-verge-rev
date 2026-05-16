@@ -122,7 +122,7 @@ export async function loadStartupDataInParallel(): Promise<AppStartupData> {
  */
 export async function refreshMultipleQueries<T = any>(
   queryFns: Array<() => Promise<T>>,
-): Promise<T[]> {
+): Promise<(T | null)[]> {
   const startTime = performance.now()
 
   try {
@@ -161,7 +161,7 @@ export async function raceQueries<T = any>(
   queryFns: Array<() => Promise<T>>,
 ): Promise<T | null> {
   try {
-    return await Promise.race(queryFns)
+    return await Promise.race(queryFns.map((fn) => fn()))
   } catch (error) {
     console.error('[Race] All queries failed:', error)
     return null

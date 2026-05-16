@@ -18,10 +18,14 @@ import React, { ComponentType, Suspense, lazy } from 'react'
  * const LazyComponent = dynamicImport(() => import('./Component'))
  * ```
  */
-export function dynamicImport<P extends object>(
-  importFn: () => Promise<{ default: ComponentType<P> }>,
+export function dynamicImport<P extends object = object>(
+  importFn: () => Promise<any>,
 ): ComponentType<P> {
-  return lazy(importFn)
+  return lazy(() =>
+    importFn().then((module) => ({
+      default: module.default || module,
+    }))
+  )
 }
 
 /**
@@ -35,11 +39,15 @@ export function dynamicImport<P extends object>(
  * )
  * ```
  */
-export function withLazyLoading<P extends object>(
-  importFn: () => Promise<{ default: ComponentType<P> }>,
+export function withLazyLoading<P extends object = object>(
+  importFn: () => Promise<any>,
   fallback?: React.ReactNode,
 ): ComponentType<P> {
-  const Component = lazy(importFn)
+  const Component = lazy(() =>
+    importFn().then((module) => ({
+      default: module.default || module,
+    }))
+  )
 
   return (props: P) => (
     <Suspense fallback={fallback || <div>Loading...</div>}>

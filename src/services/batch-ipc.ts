@@ -40,7 +40,7 @@ export interface BatchResult {
  */
 class BatchIpcManager {
   private pendingRequests = new Map<string, BatchRequest>()
-  private batchTimer: NodeJS.Timeout | null = null
+  private batchTimer: ReturnType<typeof setTimeout> | null = null
   private batchWindowMs = 50 // 批处理时间窗口
   private maxBatchSize = 20 // 最大批大小
   private isProcessing = false

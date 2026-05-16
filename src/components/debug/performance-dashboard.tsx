@@ -6,6 +6,12 @@ import { useState } from 'react'
 
 import { printPerfReport, perfMonitor } from '@/services/performance-monitor'
 
+declare global {
+  interface Window {
+    __PERF_DEBUG__?: boolean
+  }
+}
+
 const PerformanceDashboard = () => {
   const [isVisible, setIsVisible] = useState(false)
   const [report, setReport] = useState<any>(null)
@@ -33,7 +39,8 @@ const PerformanceDashboard = () => {
     console.info('Performance metrics reset')
   }
 
-  if (process.env.NODE_ENV !== 'development' && !window.__PERF_DEBUG__) {
+  const isDev = import.meta.env.DEV
+  if (!isDev && !window.__PERF_DEBUG__) {
     return null
   }
 
