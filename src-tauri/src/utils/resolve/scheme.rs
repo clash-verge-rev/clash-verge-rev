@@ -8,12 +8,11 @@ use tauri::Url;
 use crate::{
     config::{Config, PrfItem, profiles},
     core::{CoreManager, handle},
+    utils::help,
 };
 use clash_verge_logging::{Type, logging, logging_error};
 
 pub(super) async fn resolve_scheme(param: &str) -> Result<()> {
-    logging!(info, Type::Config, "received deep link: {param}");
-
     let param_str = if param.starts_with("[") && param.len() > 4 {
         param
             .get(2..param.len() - 2)
@@ -21,12 +20,19 @@ pub(super) async fn resolve_scheme(param: &str) -> Result<()> {
     } else {
         param
     };
+    let masked_deep_link = help::mask_url(param_str);
 
-    let link_parsed =
-        Url::parse(param_str).map_err(|e| anyhow::anyhow!("failed to parse deep link: {:?}, param: {:?}", e, param))?;
+    logging!(debug, Type::Config, "received deep link: {masked_deep_link}");
+
+    let link_parsed = Url::parse(param_str)
+        .map_err(|e| anyhow::anyhow!("failed to parse deep link: {e:?}, param: {masked_deep_link}"))?;
 
     let Some((url, name)) = extract_subscription_info(&link_parsed) else {
-        logging!(error, Type::Config, "missing url parameter in deep link: {}", param_str);
+        logging!(
+            warn,
+            Type::Config,
+            "missing url parameter in deep link: {masked_deep_link}"
+        );
         return Ok(());
     };
 
