@@ -167,6 +167,7 @@ const DEFAULT_DNS_CONFIG = {
   fallback: [],
   'nameserver-policy': {},
   'proxy-server-nameserver': [
+    'system',
     'https://doh.pub/dns-query',
     'https://dns.alidns.com/dns-query',
     'tls://223.5.5.5',
