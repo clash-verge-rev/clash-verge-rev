@@ -8,7 +8,7 @@ repository = "https://github.com/clash-verge-rev/clash-verge-rev.git"
 default-run = "clash-verge"
 build = "build.rs"
 edition = "2024"
-rust-version = "1.91"
+rust-version = "1.95"
 
 [lib]
 name = "app_lib"
