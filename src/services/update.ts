@@ -134,7 +134,11 @@ const localVersionNormalized = normalizeVersion(appVersion)
 export const checkUpdateSafe = async (
   options?: CheckOptions,
 ): Promise<Update | null> => {
-  const result = await check({ ...(options ?? {}), allowDowngrades: false })
+  // allowDowngrades: true so the Tauri plugin always returns an Update object.
+  // Semver ignores build metadata (+autobuild.MMDD.hash), so the plugin would
+  // treat same-base autobuild versions as equal and return null.
+  // Our custom compareVersions below handles the actual upgrade decision.
+  const result = await check({ ...(options ?? {}), allowDowngrades: true })
   if (!result) return null
 
   const remoteVersion = resolveRemoteVersion(result)
