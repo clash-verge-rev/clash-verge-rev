@@ -439,6 +439,7 @@ export interface TranslationResources {
           instruction: string
           minimumNodes: string
           minimumNodesHint: string
+          warning: string
         }
         labels: {
           delayCheckReset: string
