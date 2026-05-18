@@ -1,11 +1,19 @@
 use crate::utils::dirs::{self, PathBufExec as _};
 use anyhow::{Result, anyhow};
 use clash_verge_logging::{Type, logging};
+use std::ffi::c_void;
 use std::fs;
 use std::os::windows::process::CommandExt as _;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Output};
+use windows::core::PWSTR;
+use windows::Win32::Foundation::{CloseHandle, HLOCAL, LocalFree, HANDLE};
 use windows::Win32::Globalization::{GetACP, GetOEMCP, MULTI_BYTE_TO_WIDE_CHAR_FLAGS, MultiByteToWideChar};
+use windows::Win32::Security::Authorization::ConvertSidToStringSidW;
+use windows::Win32::Security::{
+    GetTokenInformation, OpenProcessToken, TOKEN_QUERY, TOKEN_USER, TokenUser,
+};
+use windows::Win32::System::Threading::GetCurrentProcess;
 
 const CREATE_NO_WINDOW: u32 = 0x08000000;
 const TASK_NAME_USER: &str = "Clash Verge";
@@ -56,27 +64,60 @@ fn get_exe_path() -> Result<PathBuf> {
 }
 
 fn get_task_user_id() -> Result<String> {
-    let username = std::env::var_os("USERNAME")
-        .or_else(|| std::env::var_os("USER"))
-        .ok_or_else(|| anyhow!("failed to get current user name"))?;
-    let username = username.to_string_lossy();
-    let username = username.trim();
-    if username.is_empty() {
-        return Err(anyhow!("current user name is empty"));
-    }
+    // Use the current process token SID instead of USERDOMAIN\USERNAME so scheduled
+    // tasks can be created reliably for Microsoft/AAD accounts on Windows 11.
+    let mut token = HANDLE::default();
+    unsafe { OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &mut token) }
+        .map_err(|e| anyhow!("failed to open current process token: {}", e))?;
 
-    let domain = std::env::var_os("USERDOMAIN")
-        .or_else(|| std::env::var_os("COMPUTERNAME"))
-        .map(|value| value.to_string_lossy().to_string());
+    let mut token_info_len = 0u32;
+    let _ = unsafe { GetTokenInformation(token, TokenUser, None, 0, &mut token_info_len) };
 
-    if let Some(domain) = domain {
-        let domain = domain.trim();
-        if !domain.is_empty() {
-            return Ok(format!("{domain}\\{username}"));
+    if token_info_len == 0 {
+        unsafe {
+            let _ = CloseHandle(token);
         }
+        return Err(anyhow!("failed to query token user info length"));
     }
 
-    Ok(username.to_string())
+    let mut token_info = vec![0u8; token_info_len as usize];
+    unsafe {
+        GetTokenInformation(
+            token,
+            TokenUser,
+            Some(token_info.as_mut_ptr() as *mut c_void),
+            token_info_len,
+            &mut token_info_len,
+        )
+    }
+    .map_err(|e| {
+        unsafe {
+            let _ = CloseHandle(token);
+        }
+        anyhow!("failed to get token user info: {}", e)
+    })?;
+
+    unsafe {
+        let _ = CloseHandle(token);
+    }
+
+    let token_user = unsafe { &*(token_info.as_ptr() as *const TOKEN_USER) };
+    let mut sid_string = PWSTR::null();
+    unsafe { ConvertSidToStringSidW(token_user.User.Sid, &mut sid_string) }
+        .map_err(|e| anyhow!("failed to convert token SID to string: {}", e))?;
+
+    let sid = unsafe { sid_string.to_string() }
+        .map_err(|e| anyhow!("failed to read token SID string: {}", e))?;
+
+    unsafe {
+        let _ = LocalFree(Some(HLOCAL(sid_string.0.cast())));
+    }
+
+    if sid.trim().is_empty() {
+        return Err(anyhow!("current user SID is empty"));
+    }
+
+    Ok(sid)
 }
 
 fn get_startup_dir() -> Result<PathBuf> {
