@@ -393,6 +393,19 @@ pub async fn read_profile_file(index: String) -> CmdResult<String> {
             ..Default::default()
         }
     };
+
+    // Chain profile files (rules/proxies/groups/merge/script) are lazily
+    // materialized: registered in profiles.yaml on subscription import but
+    // only written to disk on first edit. Return an empty document when the
+    // file is missing so the editor opens cleanly instead of surfacing
+    // "failed to read the file" to the user.
+    if let Some(file) = item.file.as_ref() {
+        let path = dirs::app_profiles_dir().stringify_err()?.join(file.as_str());
+        if !tokio::fs::try_exists(&path).await.unwrap_or(false) {
+            return Ok(String::new());
+        }
+    }
+
     let data = item.read_file().await.stringify_err()?;
     Ok(data)
 }

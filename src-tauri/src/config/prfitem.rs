@@ -533,8 +533,7 @@ impl PrfItem {
             .as_ref()
             .ok_or_else(|| anyhow::anyhow!("could not find the file"))?;
         let path = dirs::app_profiles_dir()?.join(file.as_str());
-        let content = fs::read_to_string(path).await.context("failed to read the file")?;
-        Ok(content.into())
+        read_file_from_path(&path).await
     }
 
     /// save the file data
@@ -610,4 +609,46 @@ fn fix_dirty_url(input: &str) -> Result<Url> {
     }
 
     Ok(url)
+}
+
+/// Read a profile file at an absolute path, returning the content as a string.
+/// On failure, the error context includes the path so users and logs can pinpoint
+/// the missing or unreadable file rather than seeing a bare "failed to read the file".
+async fn read_file_from_path(path: &std::path::Path) -> Result<String> {
+    let content = fs::read_to_string(path)
+        .await
+        .with_context(|| format!("failed to read the file \"{}\"", path.display()))?;
+    Ok(content.into())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    #[allow(clippy::unwrap_used)]
+    #[allow(clippy::expect_used)]
+    async fn read_file_from_path_error_contains_path() {
+        let missing = std::env::temp_dir().join("clash-verge-rev-nonexistent-8f3a2c91.yaml");
+        let _ = fs::remove_file(&missing).await;
+        let err = read_file_from_path(&missing)
+            .await
+            .expect_err("reading a missing file should fail");
+        let msg = format!("{err:#}");
+        assert!(
+            msg.contains(&missing.display().to_string()),
+            "error message should include the file path, got: {msg}"
+        );
+    }
+
+    #[tokio::test]
+    #[allow(clippy::unwrap_used)]
+    #[allow(clippy::expect_used)]
+    async fn read_file_from_path_returns_content() {
+        let path = std::env::temp_dir().join("clash-verge-rev-read-test-9d1e.yaml");
+        fs::write(&path, "hello: world\n").await.unwrap();
+        let content = read_file_from_path(&path).await.unwrap();
+        assert_eq!(content.as_str(), "hello: world\n");
+        let _ = fs::remove_file(&path).await;
+    }
 }
