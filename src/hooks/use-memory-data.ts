@@ -36,6 +36,7 @@ export const useMemoryData = () => {
     fallbackData: FALLBACK_MEMORY_USAGE,
     connect: () => MihomoWebSocket.connect_memory(),
     throttleMs: 500,
+    pauseWhenHidden: true,
     setupHandlers: ({ next, scheduleReconnect }) => ({
       handleMessage: (data) => {
         if (data.startsWith('Websocket error')) {

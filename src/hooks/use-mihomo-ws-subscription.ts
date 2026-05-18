@@ -3,6 +3,8 @@ import { useLocalStorage } from 'foxact/use-local-storage'
 import { type MutableRefObject, useCallback, useEffect, useRef } from 'react'
 import { type Message, type MihomoWebSocket } from 'tauri-plugin-mihomo-api'
 
+import { subscribeToPageVisibility } from './use-page-visibility'
+
 export const RECONNECT_DELAY_MS = 1000
 
 interface SharedSubscriptionOwner {
@@ -169,6 +171,17 @@ interface UseMihomoWsSubscriptionOptions<T> {
    * when the window is backgrounded or minimized.
    */
   throttleMs?: number
+  /**
+   * 当标签页在后台时暂停更新
+   *
+   * 用途:
+   * - 减少后台流量和 CPU 占用
+   * - 通常对非关键数据（流量、内存）启用
+   * - 不应对实时日志、连接数据等启用
+   *
+   * 默认: false（始终更新）
+   */
+  pauseWhenHidden?: boolean
   setupHandlers: (ctx: HandlerContext<T>) => HandlerResult
 }
 
@@ -181,8 +194,13 @@ export const useMihomoWsSubscription = <T>(
     fallbackData,
     connect,
     throttleMs,
+    pauseWhenHidden,
     setupHandlers,
   } = options
+
+  const isVisibleRef = useRef(
+    typeof document === 'undefined' ? true : !document.hidden,
+  )
 
   // eslint-disable-next-line @eslint-react/purity
   const [date, setDate] = useLocalStorage(storageKey, Date.now())
@@ -198,6 +216,22 @@ export const useMihomoWsSubscription = <T>(
   const queryClient = useQueryClient()
 
   const wsRef = useRef<MihomoWebSocket | null>(null)
+
+  // 订阅页面可见性变化（如果启用了 pauseWhenHidden）
+  useEffect(() => {
+    if (!pauseWhenHidden) return
+
+    const unsubscribe = subscribeToPageVisibility((visible) => {
+      isVisibleRef.current = visible
+      if (visible) {
+        console.debug('[MihomoWsSubscription] Page is visible, resuming updates')
+      } else {
+        console.debug('[MihomoWsSubscription] Page is hidden, pausing updates')
+      }
+    })
+
+    return unsubscribe
+  }, [pauseWhenHidden])
 
   const resolveNextData = useCallback(
     (
@@ -244,6 +278,11 @@ export const useMihomoWsSubscription = <T>(
     let wrappedNext: NextFn<T>
 
     const baseNext: NextFn<T> = (error, data) => {
+      // 如果启用了后台暂停，检查页面可见性
+      if (pauseWhenHidden && !isVisibleRef.current) {
+        return
+      }
+
       if (error !== undefined && error !== null) {
         return
       }

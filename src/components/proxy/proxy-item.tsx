@@ -10,6 +10,7 @@ import {
   SxProps,
   Theme,
 } from '@mui/material'
+import { memo, useCallback } from 'react'
 
 import { BaseLoading } from '@/components/base'
 import { useProxyDelayState } from '@/hooks/use-proxy-delay-state'
@@ -42,7 +43,7 @@ const TypeBox = styled('span')(({ theme }) => ({
   lineHeight: 1.25,
 }))
 
-export const ProxyItem = (props: Props) => {
+export const ProxyItem = memo((props: Props) => {
   const { group, proxy, selected, showType = true, sx, onClick } = props
 
   // -1/<=0 为不显示，-2 为 loading
@@ -51,12 +52,17 @@ export const ProxyItem = (props: Props) => {
     group.name,
   )
 
+  // 使用 useCallback 稳定 onClick 引用，防止不必要的子组件重新渲染
+  const handleClick = useCallback(() => {
+    onClick?.(proxy.name)
+  }, [proxy.name, onClick])
+
   return (
     <ListItem sx={sx}>
       <ListItemButton
         dense
         selected={selected}
-        onClick={() => onClick?.(proxy.name)}
+        onClick={handleClick}
         sx={[
           { borderRadius: 1 },
           ({ palette: { mode, primary } }) => {
@@ -175,4 +181,4 @@ export const ProxyItem = (props: Props) => {
       </ListItemButton>
     </ListItem>
   )
-}
+})

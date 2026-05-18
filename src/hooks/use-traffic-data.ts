@@ -37,6 +37,7 @@ export const useTrafficData = (options?: { enabled?: boolean }) => {
     fallbackData: FALLBACK_TRAFFIC,
     connect: () => MihomoWebSocket.connect_traffic(),
     throttleMs: 200,
+    pauseWhenHidden: true,
     setupHandlers: ({ next, scheduleReconnect }) => ({
       handleMessage: (data) => {
         if (data.startsWith('Websocket error')) {
