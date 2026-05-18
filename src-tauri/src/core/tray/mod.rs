@@ -36,6 +36,7 @@ use menu_def::{MenuIds, MenuTexts};
 type ProxyMenuItem = (Option<Submenu<Wry>>, Vec<Box<dyn IsMenuItem<Wry>>>);
 
 const TRAY_CLICK_DEBOUNCE_MS: u64 = 300;
+pub const TRAY_ID: &str = "clash-verge";
 
 #[derive(Clone)]
 struct TrayState {}
@@ -166,7 +167,7 @@ impl Tray {
         let tray_event = { Config::verge().await.latest_arc().tray_event.clone() };
         let tray_event = TrayAction::from(tray_event.as_deref().unwrap_or("main_window"));
         let tray = app_handle
-            .tray_by_id("main")
+            .tray_by_id(TRAY_ID)
             .ok_or_else(|| anyhow::anyhow!("Failed to get main tray"))?;
         match tray_event {
             TrayAction::TrayMenu => tray.set_show_menu_on_left_click(true)?,
@@ -186,7 +187,7 @@ impl Tray {
     }
 
     async fn update_menu_internal(&self, app_handle: &AppHandle) -> Result<()> {
-        let Some(tray) = app_handle.tray_by_id("main") else {
+        let Some(tray) = app_handle.tray_by_id(TRAY_ID) else {
             logging!(warn, Type::Tray, "Failed to update tray menu: tray not found");
             return Ok(());
         };
@@ -240,7 +241,7 @@ impl Tray {
 
         let app_handle = handle::Handle::app_handle();
 
-        let Some(tray) = app_handle.tray_by_id("main") else {
+        let Some(tray) = app_handle.tray_by_id(TRAY_ID) else {
             logging!(warn, Type::Tray, "Failed to update tray icon: tray not found");
             return Ok(());
         };
@@ -314,7 +315,7 @@ impl Tray {
             current_profile_name
         );
 
-        let Some(tray) = app_handle.tray_by_id("main") else {
+        let Some(tray) = app_handle.tray_by_id(TRAY_ID) else {
             logging!(warn, Type::Tray, "Failed to update tray tooltip: tray not found");
             return Ok(());
         };
@@ -358,13 +359,13 @@ impl Tray {
         let icon = tauri::image::Image::from_bytes(&icon_bytes)?;
 
         #[cfg(target_os = "linux")]
-        let builder = TrayIconBuilder::with_id("main").icon(icon).icon_as_template(false);
+        let builder = TrayIconBuilder::with_id(TRAY_ID).icon(icon).icon_as_template(false);
 
         #[cfg(any(target_os = "macos", target_os = "windows"))]
         let show_menu_on_left_click = verge.tray_event.as_ref().is_some_and(|v| v == "tray_menu");
 
         #[cfg(not(target_os = "linux"))]
-        let mut builder = TrayIconBuilder::with_id("main").icon(icon).icon_as_template(false);
+        let mut builder = TrayIconBuilder::with_id(TRAY_ID).icon(icon).icon_as_template(false);
         #[cfg(target_os = "macos")]
         {
             let is_monochrome = verge.tray_icon.as_ref().is_none_or(|v| v == "monochrome");
@@ -396,6 +397,17 @@ impl Tray {
     #[cfg(target_os = "macos")]
     pub fn update_speed_task(&self, enable_tray_speed: bool) {
         self.speed_controller.update_task(enable_tray_speed);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::TRAY_ID;
+
+    #[test]
+    fn tray_id_is_unique_to_app() {
+        assert_eq!(TRAY_ID, "clash-verge");
+        assert_ne!(TRAY_ID, "main");
     }
 }
 
