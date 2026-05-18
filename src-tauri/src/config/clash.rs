@@ -188,9 +188,9 @@ impl IClashTemp {
                 Value::Number(val_num) => val_num.as_u64().map(|u| u as u16),
                 _ => None,
             })
-            .unwrap_or(7895);
+            .unwrap_or(network::ports::DEFAULT_REDIR);
         if port == 0 {
-            port = 7895;
+            port = network::ports::DEFAULT_REDIR;
         }
         port
     }
@@ -220,10 +220,10 @@ impl IClashTemp {
                 Value::Number(val_num) => val_num.as_u64().map(|u| u as u16),
                 _ => None,
             })
-            .unwrap_or(7897);
+            .unwrap_or(network::ports::DEFAULT_MIXED);
 
         if port == 0 {
-            port = 7897;
+            port = network::ports::DEFAULT_MIXED;
         }
 
         port
@@ -237,9 +237,9 @@ impl IClashTemp {
                 Value::Number(val_num) => val_num.as_u64().map(|u| u as u16),
                 _ => None,
             })
-            .unwrap_or(7898);
+            .unwrap_or(network::ports::DEFAULT_SOCKS);
         if port == 0 {
-            port = 7898;
+            port = network::ports::DEFAULT_SOCKS;
         }
         port
     }
@@ -252,9 +252,9 @@ impl IClashTemp {
                 Value::Number(val_num) => val_num.as_u64().map(|u| u as u16),
                 _ => None,
             })
-            .unwrap_or(7899);
+            .unwrap_or(network::ports::DEFAULT_HTTP);
         if port == 0 {
-            port = 7899;
+            port = network::ports::DEFAULT_HTTP;
         }
         port
     }

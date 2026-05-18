@@ -18,6 +18,7 @@ import { useVerge } from '@/hooks/use-verge'
 import { isPortInUse } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
 import getSystem from '@/utils/get-system'
+import { DEFAULT_PORTS } from '@/utils/ports'
 
 const OS = getSystem()
 
@@ -37,23 +38,31 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
 
   // Mixed Port
   const [mixedPort, setMixedPort] = useState(
-    verge?.verge_mixed_port ?? clashInfo?.mixed_port ?? 7897,
+    verge?.verge_mixed_port ?? clashInfo?.mixed_port ?? DEFAULT_PORTS.MIXED,
   )
 
   // 其他端口状态
-  const [socksPort, setSocksPort] = useState(verge?.verge_socks_port ?? 7898)
+  const [socksPort, setSocksPort] = useState(
+    verge?.verge_socks_port ?? DEFAULT_PORTS.SOCKS,
+  )
   const [socksEnabled, setSocksEnabled] = useState(
     verge?.verge_socks_enabled ?? false,
   )
-  const [httpPort, setHttpPort] = useState(verge?.verge_port ?? 7899)
+  const [httpPort, setHttpPort] = useState(
+    verge?.verge_port ?? DEFAULT_PORTS.HTTP,
+  )
   const [httpEnabled, setHttpEnabled] = useState(
     verge?.verge_http_enabled ?? false,
   )
-  const [redirPort, setRedirPort] = useState(verge?.verge_redir_port ?? 7895)
+  const [redirPort, setRedirPort] = useState(
+    verge?.verge_redir_port ?? DEFAULT_PORTS.REDIR,
+  )
   const [redirEnabled, setRedirEnabled] = useState(
     verge?.verge_redir_enabled ?? false,
   )
-  const [tproxyPort, setTproxyPort] = useState(verge?.verge_tproxy_port ?? 7896)
+  const [tproxyPort, setTproxyPort] = useState(
+    verge?.verge_tproxy_port ?? DEFAULT_PORTS.TPROXY,
+  )
   const [tproxyEnabled, setTproxyEnabled] = useState(
     verge?.verge_tproxy_enabled ?? false,
   )
@@ -65,7 +74,8 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
   const { loading, run: saveSettings } = useRequest(
     async (params: { clashConfig: any; vergeConfig: any }) => {
       const { clashConfig, vergeConfig } = params
-      await Promise.all([patchInfo(clashConfig), patchVerge(vergeConfig)])
+      await patchVerge(vergeConfig)
+      await patchInfo(clashConfig)
     },
     {
       manual: true,
@@ -82,14 +92,17 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
   useImperativeHandle(ref, () => ({
     open: () => {
       originalPortsRef.current = {
-        mixedPort: verge?.verge_mixed_port ?? clashInfo?.mixed_port ?? 7897,
-        socksPort: verge?.verge_socks_port ?? 7898,
+        mixedPort:
+          verge?.verge_mixed_port ??
+          clashInfo?.mixed_port ??
+          DEFAULT_PORTS.MIXED,
+        socksPort: verge?.verge_socks_port ?? DEFAULT_PORTS.SOCKS,
         socksEnabled: verge?.verge_socks_enabled ?? false,
-        httpPort: verge?.verge_port ?? 7899,
+        httpPort: verge?.verge_port ?? DEFAULT_PORTS.HTTP,
         httpEnabled: verge?.verge_http_enabled ?? false,
-        redirPort: verge?.verge_redir_port ?? 7895,
+        redirPort: verge?.verge_redir_port ?? DEFAULT_PORTS.REDIR,
         redirEnabled: verge?.verge_redir_enabled ?? false,
-        tproxyPort: verge?.verge_tproxy_port ?? 7896,
+        tproxyPort: verge?.verge_tproxy_port ?? DEFAULT_PORTS.TPROXY,
         tproxyEnabled: verge?.verge_tproxy_enabled ?? false,
       }
 
@@ -168,15 +181,17 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
             setTproxyEnabled(original.tproxyEnabled)
           } else {
             setMixedPort(
-              verge?.verge_mixed_port ?? clashInfo?.mixed_port ?? 7897,
+              verge?.verge_mixed_port ??
+                clashInfo?.mixed_port ??
+                DEFAULT_PORTS.MIXED,
             )
-            setSocksPort(verge?.verge_socks_port ?? 7898)
+            setSocksPort(verge?.verge_socks_port ?? DEFAULT_PORTS.SOCKS)
             setSocksEnabled(verge?.verge_socks_enabled ?? false)
-            setHttpPort(verge?.verge_port ?? 7899)
+            setHttpPort(verge?.verge_port ?? DEFAULT_PORTS.HTTP)
             setHttpEnabled(verge?.verge_http_enabled ?? false)
-            setRedirPort(verge?.verge_redir_port ?? 7895)
+            setRedirPort(verge?.verge_redir_port ?? DEFAULT_PORTS.REDIR)
             setRedirEnabled(verge?.verge_redir_enabled ?? false)
-            setTproxyPort(verge?.verge_tproxy_port ?? 7896)
+            setTproxyPort(verge?.verge_tproxy_port ?? DEFAULT_PORTS.TPROXY)
             setTproxyEnabled(verge?.verge_tproxy_enabled ?? false)
           }
           return

@@ -6,6 +6,7 @@ import { useVerge } from '@/hooks/use-verge'
 import { useClashConfigData, useSystemData } from '@/providers/app-data-context'
 import { getAutotemProxy } from '@/services/cmds'
 import { queryClient } from '@/services/query-client'
+import { DEFAULT_PORTS } from '@/utils/ports'
 
 // 系统代理状态检测统一逻辑
 export const useSystemProxyState = () => {
@@ -35,7 +36,8 @@ export const useSystemProxyState = () => {
       return autoproxy.url === `http://${host}:${pacPort}/commands/pac`
     } else {
       if (!sysproxy?.enable) return false
-      const port = verge_mixed_port || clashConfig?.mixedPort || 7897
+      const port =
+        verge_mixed_port || clashConfig?.mixedPort || DEFAULT_PORTS.MIXED
       return sysproxy.server === `${host}:${port}`
     }
   })()

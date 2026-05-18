@@ -1,4 +1,5 @@
 use crate::config::Config;
+use crate::constants::network::ports;
 use crate::{
     config::{DEFAULT_PAC, deserialize_encrypted, serialize_encrypted},
     utils::{dirs, help},
@@ -412,17 +413,17 @@ impl IVerge {
             pac_file_content: Some(DEFAULT_PAC.into()),
             proxy_host: Some("127.0.0.1".into()),
             #[cfg(not(target_os = "windows"))]
-            verge_redir_port: Some(7895),
+            verge_redir_port: Some(ports::DEFAULT_REDIR),
             #[cfg(not(target_os = "windows"))]
             verge_redir_enabled: Some(false),
             #[cfg(target_os = "linux")]
-            verge_tproxy_port: Some(7896),
+            verge_tproxy_port: Some(ports::DEFAULT_TPROXY),
             #[cfg(target_os = "linux")]
             verge_tproxy_enabled: Some(false),
-            verge_mixed_port: Some(7897),
-            verge_socks_port: Some(7898),
+            verge_mixed_port: Some(ports::DEFAULT_MIXED),
+            verge_socks_port: Some(ports::DEFAULT_SOCKS),
             verge_socks_enabled: Some(false),
-            verge_port: Some(7899),
+            verge_port: Some(ports::DEFAULT_HTTP),
             verge_http_enabled: Some(false),
             enable_proxy_guard: Some(false),
             enable_bypass_check: Some(true),
