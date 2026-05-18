@@ -4,7 +4,7 @@ use tauri::webview::PageLoadEvent;
 use tauri::{Theme, WebviewWindow};
 
 use crate::{config::Config, core::handle, utils::resolve::window_script::build_window_initial_script};
-use clash_verge_logging::{Type, logging_error};
+use clash_verge_logging::{Type, logging, logging_error};
 
 const DARK_BACKGROUND_COLOR: Color = Color(46, 48, 61, 255); // #2E303D
 const LIGHT_BACKGROUND_COLOR: Color = Color(245, 245, 245, 255); // #F5F5F5
@@ -87,6 +87,33 @@ pub async fn build_new_window() -> Result<WebviewWindow, String> {
     match builder.build() {
         Ok(window) => {
             logging_error!(Type::Window, window.set_background_color(Some(background_color)));
+
+            // Ensure the window is on-screen after state restore.
+            // tauri-plugin-window-state may restore a position outside visible
+            // monitors (e.g. after a monitor disconnect or an off-screen
+            // lightweight-mode cycle), making the window invisible.
+            if let Ok(pos) = window.outer_position() {
+                let is_on_screen = window
+                    .available_monitors()
+                    .ok()
+                    .map(|monitors| {
+                        monitors.iter().any(|m| {
+                            let mp = m.position();
+                            let ms = m.size();
+                            let win_size = window.outer_size().unwrap_or(m.size());
+                            pos.x + win_size.width as i32 > mp.x
+                                && pos.x < mp.x + ms.width as i32
+                                && pos.y + win_size.height as i32 > mp.y
+                                && pos.y < mp.y + ms.height as i32
+                        })
+                    })
+                    .unwrap_or(true);
+                if !is_on_screen {
+                    logging!(warn, Type::Window, "Window is off-screen at ({}, {}), recentering", pos.x, pos.y);
+                    let _ = window.center();
+                }
+            }
+
             Ok(window)
         }
         Err(e) => Err(e.to_string()),
