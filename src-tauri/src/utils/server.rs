@@ -65,67 +65,58 @@ pub fn embed_server() {
         .expect("failed to set shutdown signal for embedded server");
     let port = IVerge::get_singleton_port();
 
-    let visible = warp::path!("commands" / "visible").and_then(|| async {
-        logging!(info, Type::Window, "检测到从单例模式恢复应用窗口");
-        if !lightweight::exit_lightweight_mode().await {
-            WindowManager::show_main_window().await;
-        } else {
-            logging!(error, Type::Window, "轻量模式退出失败，无法恢复应用窗口");
-        };
-        Ok::<_, warp::Rejection>(warp::reply::with_status::<std::string::String>(
-            "ok".to_string(),
-            warp::http::StatusCode::OK,
-        ))
-    });
+    let visible = warp::path!("commands" / "visible").and_then(current_visible);
 
-    let pac = warp::path!("commands" / "pac").and_then(|| async move {
-        let verge_config = Config::verge().await;
-        let clash_config = Config::clash().await;
-
-        let pac_content = verge_config
-            .data_arc()
-            .pac_file_content
-            .clone()
-            .unwrap_or_else(|| DEFAULT_PAC.into());
-
-        let pac_port = verge_config
-            .data_arc()
-            .verge_mixed_port
-            .unwrap_or_else(|| clash_config.data_arc().get_mixed_port());
-        let processed_content = pac_content.replace("%mixed-port%", &format!("{pac_port}"));
-        Ok::<_, warp::Rejection>(
-            warp::http::Response::builder()
-                .header("Content-Type", "application/x-ns-proxy-autoconfig")
-                .body(processed_content)
-                .unwrap_or_default(),
-        )
-    });
+    let pac = warp::path!("commands" / "pac").and_then(get_current_pac_content);
 
     // Use map instead of and_then to avoid Send issues
     let scheme = warp::path!("commands" / "scheme")
         .and(warp::query::<QueryParam>())
-        .and_then(|query: QueryParam| async move {
-            AsyncHandler::spawn(|| async move {
-                logging_error!(Type::Setup, resolve::resolve_scheme(&query.param).await);
-            });
-            Ok::<_, warp::Rejection>(warp::reply::with_status::<std::string::String>(
-                "ok".to_string(),
-                warp::http::StatusCode::OK,
-            ))
+        .and_then(current_scheme);
+
+    let commands = visible.or(scheme).or(pac).boxed();
+
+    #[cfg(target_os = "linux")]
+    {
+        // On Linux, spawing through a new tokio runtime cause to create a new app instance
+        // So we have to spawn through AsyncHandler(tauri::async_runtime) to avoid that
+        // See relate comments in https://github.com/clash-verge-rev/clash-verge-rev/pull/5908#issuecomment-3678727040
+        AsyncHandler::spawn(move || async move {
+            run(commands, port, shutdown_rx).await;
         });
+    }
 
-    let commands = visible.or(scheme).or(pac);
+    #[cfg(not(target_os = "linux"))]
+    if let Ok(rt) = tokio::runtime::Builder::new_current_thread()
+        .thread_name("clash-verge-rev-embed-server")
+        .worker_threads(1)
+        .build()
+    {
+        rt.spawn(async move {
+            run(commands, port, shutdown_rx).await;
+        });
+    } else {
+        // Running in tauri's tokio runtime will cause blocking issues and lots of large task stacks
+        // But we should keep this as a fallback plan or we can't start the app in some environments
+        AsyncHandler::spawn(move || async move {
+            run(commands, port, shutdown_rx).await;
+        });
+    }
+}
 
-    AsyncHandler::spawn(move || async move {
-        warp::serve(commands)
-            .bind(([127, 0, 0, 1], port))
-            .await
-            .graceful(async {
-                shutdown_rx.await.ok();
-            })
-            .run()
-            .await;
-    });
+async fn run(
+    commands: impl warp::Filter<Extract = impl warp::Reply> + Clone + Send + Sync + 'static,
+    port: u16,
+    shutdown_rx: oneshot::Receiver<()>,
+) {
+    warp::serve(commands)
+        .bind(([127, 0, 0, 1], port))
+        .await
+        .graceful(async {
+            shutdown_rx.await.ok();
+        })
+        .run()
+        .await;
 }
 
 pub fn shutdown_embedded_server() {
@@ -135,4 +126,51 @@ pub fn shutdown_embedded_server() {
     {
         sender.send(()).ok();
     }
+}
+
+async fn current_visible() -> std::result::Result<impl warp::Reply, warp::Rejection> {
+    logging!(info, Type::Window, "检测到从单例模式恢复应用窗口");
+    if !lightweight::exit_lightweight_mode().await {
+        WindowManager::show_main_window().await;
+    } else {
+        logging!(error, Type::Window, "轻量模式退出失败，无法恢复应用窗口");
+    };
+    Ok::<_, warp::Rejection>(warp::reply::with_status::<std::string::String>(
+        "ok".to_string(),
+        warp::http::StatusCode::OK,
+    ))
+}
+
+async fn get_current_pac_content() -> std::result::Result<impl warp::Reply, warp::Rejection> {
+    let pac_content = {
+        Config::verge()
+            .await
+            .data_arc()
+            .pac_file_content
+            .clone()
+            .unwrap_or_else(|| DEFAULT_PAC.into())
+    };
+    let clash_mixed_port = { Config::clash().await.data_arc().get_mixed_port() };
+    let pac_port = {
+        Config::verge()
+            .await
+            .data_arc()
+            .verge_mixed_port
+            .unwrap_or(clash_mixed_port)
+    };
+    let pac_content = pac_content.replace("%mixed-port%", &format!("{pac_port}"));
+    Ok::<_, warp::Rejection>(
+        warp::http::Response::builder()
+            .header("Content-Type", "application/x-ns-proxy-autoconfig")
+            .body(pac_content)
+            .unwrap_or_default(),
+    )
+}
+
+async fn current_scheme(query: QueryParam) -> std::result::Result<impl warp::Reply, warp::Rejection> {
+    logging_error!(Type::Setup, resolve::resolve_scheme(&query.param).await);
+    Ok::<_, warp::Rejection>(warp::reply::with_status::<std::string::String>(
+        "ok".to_string(),
+        warp::http::StatusCode::OK,
+    ))
 }
