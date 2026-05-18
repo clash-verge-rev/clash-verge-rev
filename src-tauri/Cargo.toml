@@ -27,7 +27,7 @@ tracing = []
 identifier = "io.github.clash-verge-rev.clash-verge-rev"
 
 [build-dependencies]
-tauri-build = { version = "2.5.6", features = [] }
+tauri-build = { version = "2.6.2", features = [] }
 
 [dependencies]
 clash-verge-draft = { workspace = true }
@@ -55,16 +55,16 @@ serde_json = { workspace = true }
 serde_yaml_ng = { workspace = true }
 smartstring = { workspace = true, features = ["serde"] }
 bitflags = { workspace = true }
-warp = { version = "0.4.2", features = ["server"] }
-open = "5.3.3"
+warp = { version = "0.4.3", features = ["server"] }
+open = "5.3.5"
 dunce = "1.0.5"
 nanoid = "0.5"
 chrono = "0.4.44"
-boa_engine = "0.21.0"
+boa_engine = "0.21.1"
 once_cell = { version = "1.21.4", features = ["parking_lot"] }
 delay_timer = "0.11.6"
 percent-encoding = "2.3.2"
-reqwest = { version = "0.13.2", features = [
+reqwest = { version = "0.13.3", features = [
   "json",
   "cookies",
   "rustls",
@@ -76,12 +76,12 @@ sysproxy = { git = "https://github.com/clash-verge-rev/sysproxy-rs", branch = "0
 ] }
 network-interface = { version = "2.0.5", features = ["serde"] }
 tauri-plugin-shell = "2.3.5"
-tauri-plugin-dialog = "2.6.0"
-tauri-plugin-fs = "2.4.5"
+tauri-plugin-dialog = "2.7.1"
+tauri-plugin-fs = "2.5.1"
 tauri-plugin-process = "2.3.1"
-tauri-plugin-deep-link = "2.4.7"
+tauri-plugin-deep-link = "2.4.9"
 tauri-plugin-window-state = "2.4.1"
-zip = "8.3.1"
+zip = "8.6.0"
 reqwest_dav = "0.3.3"
 aes-gcm = { version = "0.10.3", features = ["std"] }
 base64 = "0.22.1"
@@ -92,32 +92,32 @@ scopeguard = "1.2.0"
 tauri-plugin-notification = "2.3.3"
 tokio-stream = "0.1.18"
 backon = { version = "1.6.0", features = ["tokio-sleep"] }
-tauri-plugin-http = "2.5.7"
+tauri-plugin-http = "2.5.9"
 console-subscriber = { version = "0.5.0", optional = true }
-tauri-plugin-devtools = { version = "2.0.1" }
+tauri-plugin-devtools = { version = "2.1.0" }
 tauri-plugin-mihomo = { git = "https://github.com/clash-verge-rev/tauri-plugin-mihomo" }
 clash_verge_logger = { git = "https://github.com/clash-verge-rev/clash-verge-logger" }
 async-trait = "0.1.89"
 clash_verge_service_ipc = { version = "2.3.0", features = [
   "client",
 ], git = "https://github.com/clash-verge-rev/clash-verge-service-ipc" }
-arc-swap = "1.9.0"
-tokio-rustls = "0.26"
-rustls = { version = "0.23", features = ["ring"] }
-webpki-roots = "1.0"
+arc-swap = "1.9.1"
+tokio-rustls = "0.26.4"
+rustls = { version = "0.23.40", features = ["ring"] }
+webpki-roots = "1.0.7"
 rust_iso3166 = "0.1.14"
 # Use the git repo until the next release after v2.0.0.
 dark-light = { git = "https://github.com/rust-dark-light/dark-light" }
 bytes = "1.11.1"
 
 [target.'cfg(target_os = "macos")'.dependencies]
-objc2 = "0.6"
-objc2-foundation = { version = "0.3", features = [
+objc2 = "0.6.4"
+objc2-foundation = { version = "0.3.2", features = [
   "NSString",
   "NSDictionary",
   "NSAttributedString",
 ] }
-objc2-app-kit = { version = "0.3", features = [
+objc2-app-kit = { version = "0.3.2", features = [
   "NSAttributedString",
   "NSStatusItem",
   "NSStatusBarButton",
@@ -141,7 +141,7 @@ windows = { version = "0.62.2", features = ["Win32_Globalization"] }
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-autostart = "2.5.1"
 tauri-plugin-global-shortcut = "2.3.1"
-tauri-plugin-updater = "2.10.0"
+tauri-plugin-updater = "2.10.1"
 
 [dev-dependencies]
 criterion = { workspace = true }
