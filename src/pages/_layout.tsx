@@ -21,6 +21,7 @@ import {
   SvgIcon,
   ThemeProvider,
 } from '@mui/material'
+import { listen } from '@tauri-apps/api/event'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import type { CSSProperties } from 'react'
@@ -38,8 +39,10 @@ import { NoticeManager } from '@/components/layout/notice-manager'
 import { UpdateButton } from '@/components/layout/update-button'
 import { WindowControls } from '@/components/layout/window-controller'
 import { useI18n } from '@/hooks/use-i18n'
+import { useProfiles } from '@/hooks/use-profiles'
 import { useVerge } from '@/hooks/use-verge'
 import { useWindowDecorations } from '@/hooks/use-window'
+import { useAppData } from '@/providers/app-data-context'
 import { useThemeMode } from '@/services/states'
 import getSystem from '@/utils/get-system'
 
@@ -124,6 +127,31 @@ const Layout = () => {
   const logsPageMountedRef = useRef(false)
   if (isLogsPage) logsPageMountedRef.current = true
   const themeReady = useMemo(() => Boolean(theme), [theme])
+
+  // 启动时恢复代理选择（mihomo 就绪且配置加载后执行一次）
+  const { proxies } = useAppData()
+  const { activateSelected, profiles } = useProfiles()
+  const hasRestoredSelectionRef = useRef(false)
+  useEffect(() => {
+    if (
+      !hasRestoredSelectionRef.current &&
+      proxies != null &&
+      profiles != null
+    ) {
+      hasRestoredSelectionRef.current = true
+      activateSelected().catch(console.error)
+    }
+  }, [proxies, profiles, activateSelected])
+
+  // 订阅自动更新完成后恢复代理选择（profile-update-completed 由 timer 发出，不经过 profile-changed）
+  useEffect(() => {
+    const unlistenPromise = listen('profile-update-completed', () => {
+      activateSelected().catch(console.error)
+    })
+    return () => {
+      unlistenPromise.then((unlisten) => unlisten()).catch(console.error)
+    }
+  }, [activateSelected])
 
   const [menuUnlocked, setMenuUnlocked] = useState(false)
   const [menuContextPosition, setMenuContextPosition] =

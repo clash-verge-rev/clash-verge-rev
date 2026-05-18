@@ -778,9 +778,11 @@ const ProfilePage = () => {
 
         // 使用异步调度避免阻塞事件处理
         refreshTimer = window.setTimeout(() => {
-          mutateProfiles().catch((error) => {
-            console.error('[Profile] 配置数据刷新失败:', error)
-          })
+          mutateProfiles()
+            .then(() => activateSelected())
+            .catch((error) => {
+              console.error('[Profile] 配置数据刷新失败:', error)
+            })
           refreshTimer = null
         }, 0)
       })
@@ -794,7 +796,7 @@ const ProfilePage = () => {
       }
       unlistenPromise?.then((unlisten) => unlisten()).catch(console.error)
     }
-  }, [mutateProfiles])
+  }, [mutateProfiles, activateSelected])
 
   // 组件卸载时清理中断控制器
   useEffect(() => {
