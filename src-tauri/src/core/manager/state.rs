@@ -13,6 +13,18 @@ use log::Level;
 use scopeguard::defer;
 use tauri_plugin_shell::ShellExt as _;
 
+#[cfg(target_os = "windows")]
+use windows_sys::Win32::{
+    Foundation::{GetLastError, HANDLE, INVALID_HANDLE_VALUE},
+    System::{
+        JobObjects::{
+            AssignProcessToJobObject, CreateJobObjectW, JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE,
+            JOBOBJECT_EXTENDED_LIMIT_INFORMATION, JobObjectExtendedLimitInformation, SetInformationJobObject,
+        },
+        Threading::{OpenProcess, PROCESS_QUERY_INFORMATION, PROCESS_SET_QUOTA, PROCESS_TERMINATE},
+    },
+};
+
 impl CoreManager {
     pub async fn get_clash_logs(&self) -> Result<Vec<CompactString>> {
         match *self.get_running_mode() {
@@ -48,6 +60,82 @@ impl CoreManager {
                 &IClashTemp::guard_external_controller_ipc(),
             ])
             .spawn()?;
+        #[cfg(target_os = "windows")]
+        {
+            unsafe {
+                let job: HANDLE = CreateJobObjectW(std::ptr::null(), std::ptr::null());
+
+                if job.is_valid() {
+                    logging!(trace, Type::Core, "Created job object for sidecar process: {:?}", job);
+                    let mut info: JOBOBJECT_EXTENDED_LIMIT_INFORMATION = std::mem::zeroed();
+                    info.BasicLimitInformation.LimitFlags = JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE;
+
+                    let set_info_result = SetInformationJobObject(
+                        job,
+                        JobObjectExtendedLimitInformation,
+                        &mut info as *mut _ as *mut _,
+                        std::mem::size_of::<JOBOBJECT_EXTENDED_LIMIT_INFORMATION>() as u32,
+                    );
+                    if set_info_result == 0 {
+                        logging!(
+                            error,
+                            Type::Core,
+                            "Failed to set information for job object: {}",
+                            GetLastError()
+                        );
+                    } else {
+                        logging!(trace, Type::Core, "Set job object information successfully");
+                    }
+
+                    let child_pid = child.pid();
+                    let process_handle = OpenProcess(
+                        PROCESS_SET_QUOTA | PROCESS_TERMINATE | PROCESS_QUERY_INFORMATION,
+                        0,
+                        child_pid,
+                    );
+                    if process_handle.is_valid() {
+                        logging!(
+                            trace,
+                            Type::Core,
+                            "Opened process handle for sidecar (PID: {}, Handle: {:?})",
+                            child_pid,
+                            process_handle
+                        );
+                        let assign_result = AssignProcessToJobObject(job, process_handle);
+                        if assign_result == 0 {
+                            logging!(
+                                error,
+                                Type::Core,
+                                "Failed to assign sidecar process (PID: {}) to job object {:?}: {}",
+                                child_pid,
+                                job,
+                                std::io::Error::last_os_error()
+                            );
+                        } else {
+                            logging!(
+                                trace,
+                                Type::Core,
+                                "Assigned sidecar process (PID: {}) to job object {:?}",
+                                child_pid,
+                                job
+                            );
+                        }
+                    } else {
+                        logging!(
+                            error,
+                            Type::Core,
+                            "Failed to open process handle for sidecar (PID: {})",
+                            child_pid
+                        );
+                    }
+                } else {
+                    logging!(error, Type::Core, "Failed to create job object for sidecar process");
+                }
+
+                self.set_job_handle(job as isize);
+            }
+        }
+
         #[cfg(unix)]
         unsafe {
             tauri_plugin_clash_verge_sysinfo::libc::umask(previous_mask)
@@ -95,6 +183,20 @@ impl CoreManager {
         }
         if let Some(child) = self.take_child_sidecar() {
             let pid = child.pid();
+
+            #[cfg(target_os = "windows")]
+            {
+                // Setting the job handle to 0 clears the stored handle and
+                // closes the previous Windows job handle in `set_job_handle`.
+                self.set_job_handle(0);
+                logging!(
+                    trace,
+                    Type::Core,
+                    "Closed job handle for sidecar process (PID: {})",
+                    pid
+                );
+            }
+
             let result = child.kill();
             logging!(
                 trace,
@@ -121,5 +223,18 @@ impl CoreManager {
         }
         service::stop_core_by_service().await?;
         Ok(())
+    }
+}
+
+#[cfg(target_os = "windows")]
+pub trait HandleExt {
+    fn is_valid(&self) -> bool;
+}
+
+#[cfg(target_os = "windows")]
+impl HandleExt for HANDLE {
+    fn is_valid(&self) -> bool {
+        // Only handles that are neither 0 nor -1 are truly valid
+        *self != 0 as Self && *self != INVALID_HANDLE_VALUE
     }
 }

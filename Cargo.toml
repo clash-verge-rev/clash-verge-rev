@@ -77,6 +77,11 @@ bitflags = { version = "2.11.0" }
 
 # *** For Windows platform only ***
 deelevate = "0.2.0"
+windows-sys = { version = "0.61.2", features = [
+  "Win32_Foundation",
+  "Win32_System_Threading",
+  "Win32_System_JobObjects"
+] }
 # *********************************
 
 [workspace.lints.clippy]
