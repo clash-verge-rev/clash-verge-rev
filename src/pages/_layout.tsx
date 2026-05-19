@@ -32,6 +32,7 @@ import iconDark from '@/assets/image/icon_dark.svg?react'
 import iconLight from '@/assets/image/icon_light.svg?react'
 import LogoSvg from '@/assets/image/logo.svg?react'
 import { BaseErrorBoundary } from '@/components/base'
+import { DailyTrafficProvider } from '@/providers/daily-traffic-provider'
 import { LayoutItem } from '@/components/layout/layout-item'
 import { LayoutTraffic } from '@/components/layout/layout-traffic'
 import { NoticeManager } from '@/components/layout/notice-manager'
@@ -452,9 +453,11 @@ const Layout = () => {
           <div className="layout-content__right">
             <div className="the-bar"></div>
             <div className="the-content">
-              <BaseErrorBoundary>
-                <Outlet />
-              </BaseErrorBoundary>
+              <DailyTrafficProvider>
+                <BaseErrorBoundary>
+                  <Outlet />
+                </BaseErrorBoundary>
+              </DailyTrafficProvider>
               {logsPageMountedRef.current && (
                 <div
                   style={{

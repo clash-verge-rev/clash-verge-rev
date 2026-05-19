@@ -19,6 +19,7 @@ pub mod system;
 pub mod uwp;
 pub mod validate;
 pub mod verge;
+pub mod traffic;
 pub mod webdav;
 
 // Re-export all command functions for backwards compatibility
@@ -37,6 +38,7 @@ pub use system::*;
 pub use uwp::*;
 pub use validate::*;
 pub use verge::*;
+pub use traffic::*;
 pub use webdav::*;
 
 pub trait StringifyErr<T> {

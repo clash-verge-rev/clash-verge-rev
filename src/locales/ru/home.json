@@ -116,6 +116,19 @@
         "minutes": "{{time}} мин"
       }
     },
+    "dailyTraffic": {
+      "title": "Today's Traffic",
+      "totalDownload": "Download",
+      "totalUpload": "Upload",
+      "noData": "Waiting for traffic data...",
+      "viewAll": "View All",
+      "columns": {
+        "host": "Domain",
+        "download": "Download",
+        "share": "Share",
+        "lastActive": "Last Active"
+      }
+    },
     "clashMode": {
       "errors": {
         "communication": "Ошибка связи с ядром"

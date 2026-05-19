@@ -1,0 +1,21 @@
+{
+  "page": {
+    "title": "Traffic Statistics"
+  },
+  "components": {
+    "searchPlaceholder": "Search host...",
+    "totalDownload": "Total Download",
+    "totalUpload": "Total Upload",
+    "totalHosts": "Destinations",
+    "emptyText": "No traffic data yet. Make sure the Clash core is running.",
+    "clear": "Clear",
+    "columns": {
+      "host": "Host",
+      "download": "Download",
+      "upload": "Upload",
+      "trafficShare": "Share",
+      "connections": "Connections",
+      "lastActive": "Last Active"
+    }
+  }
+}

@@ -116,6 +116,19 @@
         "minutes": "{{time}}분"
       }
     },
+    "dailyTraffic": {
+      "title": "Today's Traffic",
+      "totalDownload": "Download",
+      "totalUpload": "Upload",
+      "noData": "Waiting for traffic data...",
+      "viewAll": "View All",
+      "columns": {
+        "host": "Domain",
+        "download": "Download",
+        "share": "Share",
+        "lastActive": "Last Active"
+      }
+    },
     "clashMode": {
       "errors": {
         "communication": "코어 통신 오류"

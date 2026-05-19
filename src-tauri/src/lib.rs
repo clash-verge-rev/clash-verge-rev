@@ -205,6 +205,8 @@ mod app_init {
             cmd::restore_webdav_backup,
             cmd::get_unlock_items,
             cmd::check_media_unlock,
+            cmd::load_daily_traffic,
+            cmd::save_daily_traffic,
         ]
     }
 }

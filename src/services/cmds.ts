@@ -575,3 +575,11 @@ export const isPortInUse = async (port: number) => {
     return false
   }
 }
+
+export async function loadDailyTraffic() {
+  return invoke<string | null>('load_daily_traffic')
+}
+
+export async function saveDailyTraffic(data: string) {
+  return invoke<void>('save_daily_traffic', { data })
+}

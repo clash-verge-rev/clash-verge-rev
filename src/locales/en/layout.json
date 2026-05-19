@@ -6,6 +6,7 @@
         "proxies": "Proxies",
         "profiles": "Profiles",
         "connections": "Connections",
+        "traffic": "Traffic",
         "rules": "Rules",
         "logs": "Logs",
         "unlock": "Test",

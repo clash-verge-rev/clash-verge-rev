@@ -1,4 +1,6 @@
 import {
+  ArrowForwardRounded,
+  CloudDownloadRounded,
   DnsOutlined,
   HelpOutlineRounded,
   HistoryEduOutlined,
@@ -24,10 +26,12 @@ import {
 import { useLockFn } from 'ahooks'
 import { Suspense, lazy, useCallback, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router'
 
 import { BasePage } from '@/components/base'
 import { ClashModeCard } from '@/components/home/clash-mode-card'
 import { CurrentProxyCard } from '@/components/home/current-proxy-card'
+import { DailyTrafficCard } from '@/components/home/daily-traffic-card'
 import { EnhancedCard } from '@/components/home/enhanced-card'
 import { EnhancedTrafficStats } from '@/components/home/enhanced-traffic-stats'
 import { HomeProfileCard } from '@/components/home/home-profile-card'
@@ -64,6 +68,7 @@ interface HomeCardsSettings {
   network: boolean
   mode: boolean
   traffic: boolean
+  dailyTraffic: boolean
   info: boolean
   clashinfo: boolean
   systeminfo: boolean
@@ -212,6 +217,7 @@ const HomePage = () => {
   const { t } = useTranslation()
   const { verge } = useVerge()
   const { current, mutateProfiles } = useProfiles()
+  const navigate = useNavigate()
 
   // 设置弹窗的状态
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -229,6 +235,7 @@ const HomePage = () => {
       network: true,
       mode: true,
       traffic: true,
+      dailyTraffic: true,
       clashinfo: true,
       systeminfo: true,
       test: true,
@@ -287,14 +294,42 @@ const HomePage = () => {
   const criticalCards = useMemo(
     () => [
       renderCard(
+        'dailyTraffic',
+        <EnhancedCard
+          title={t('home.components.dailyTraffic.title')}
+          icon={<CloudDownloadRounded />}
+          iconColor="primary"
+          noContentPadding
+          action={
+            <Button
+              size="small"
+              endIcon={<ArrowForwardRounded />}
+              onClick={() => navigate('/traffic')}
+              sx={{ textTransform: 'none' }}
+            >
+              {t('home.components.dailyTraffic.viewAll')}
+            </Button>
+          }
+        >
+          <DailyTrafficCard />
+        </EnhancedCard>,
+        6,
+      ),
+      renderCard(
         'profile',
         <HomeProfileCard current={current} onProfileUpdated={mutateProfiles} />,
       ),
       renderCard('proxy', <CurrentProxyCard />),
       renderCard('network', <NetworkSettingsCard />),
       renderCard('mode', <ClashModeEnhancedCard />),
+      renderCard(
+        'test',
+        <Suspense fallback={<Skeleton variant="rectangular" height={200} />}>
+          <LazyTestCard />
+        </Suspense>,
+      ),
     ],
-    [current, mutateProfiles, renderCard],
+    [current, mutateProfiles, renderCard, t, navigate],
   )
 
   // 新增：保存设置时用requestIdleCallback/setTimeout
@@ -330,12 +365,6 @@ const HomePage = () => {
           <EnhancedTrafficStats />
         </EnhancedCard>,
         12,
-      ),
-      renderCard(
-        'test',
-        <Suspense fallback={<Skeleton variant="rectangular" height={200} />}>
-          <LazyTestCard />
-        </Suspense>,
       ),
       renderCard(
         'ip',

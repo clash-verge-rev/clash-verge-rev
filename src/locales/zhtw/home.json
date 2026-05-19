@@ -116,6 +116,19 @@
         "minutes": "{{time}} 分"
       }
     },
+    "dailyTraffic": {
+      "title": "今日流量",
+      "totalDownload": "總下載",
+      "totalUpload": "總上傳",
+      "noData": "等待流量数据...",
+      "viewAll": "查看全部",
+      "columns": {
+        "host": "域名",
+        "download": "下載量",
+        "share": "佔比",
+        "lastActive": "最後活躍"
+      }
+    },
     "clashMode": {
       "errors": {
         "communication": "內核通信錯誤"

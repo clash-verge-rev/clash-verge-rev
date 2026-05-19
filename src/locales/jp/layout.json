@@ -6,6 +6,7 @@
         "proxies": "プロキシ",
         "profiles": "プロファイル",
         "connections": "接続",
+        "traffic": "Traffic",
         "rules": "ルール",
         "logs": "ログ",
         "unlock": "テスト",

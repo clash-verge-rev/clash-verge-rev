@@ -1,3 +1,4 @@
+import BarChartRoundedIcon from '@mui/icons-material/BarChartRounded'
 import DnsRoundedIcon from '@mui/icons-material/DnsRounded'
 import ForkRightRoundedIcon from '@mui/icons-material/ForkRightRounded'
 import HomeRoundedIcon from '@mui/icons-material/HomeRounded'
@@ -15,6 +16,7 @@ import ProfilesSvg from '@/assets/image/itemicon/profiles.svg?react'
 import ProxiesSvg from '@/assets/image/itemicon/proxies.svg?react'
 import RulesSvg from '@/assets/image/itemicon/rules.svg?react'
 import SettingsSvg from '@/assets/image/itemicon/settings.svg?react'
+import TrafficSvg from '@/assets/image/itemicon/traffic.svg?react'
 import UnlockSvg from '@/assets/image/itemicon/unlock.svg?react'
 
 import Layout from './_layout'
@@ -24,6 +26,7 @@ import ProfilesPage from './profiles'
 import ProxiesPage from './proxies'
 import RulesPage from './rules'
 import SettingsPage from './settings'
+import TrafficPage from './traffic'
 import UnlockPage from './unlock'
 
 export const navItems = [
@@ -50,6 +53,12 @@ export const navItems = [
     path: '/connections',
     icon: [<LanguageRoundedIcon key="mui" />, <ConnectionsSvg key="svg" />],
     Component: ConnectionsPage,
+  },
+  {
+    label: 'layout.components.navigation.tabs.traffic',
+    path: '/traffic',
+    icon: [<BarChartRoundedIcon key="mui" />, <TrafficSvg key="svg" />],
+    Component: TrafficPage,
   },
   {
     label: 'layout.components.navigation.tabs.rules',

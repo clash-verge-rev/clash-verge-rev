@@ -77,6 +77,19 @@ export interface TranslationResources {
           }
           title: string
         }
+        dailyTraffic: {
+          columns: {
+            download: string
+            host: string
+            lastActive: string
+            share: string
+          }
+          noData: string
+          title: string
+          totalDownload: string
+          totalUpload: string
+          viewAll: string
+        }
         ipInfo: {
           errors: {
             load: string
@@ -191,6 +204,7 @@ export interface TranslationResources {
             proxies: string
             rules: string
             settings: string
+            traffic: string
             unlock: string
           }
         }
@@ -1405,6 +1419,27 @@ export interface TranslationResources {
           }
           title: string
         }
+      }
+    }
+    traffic: {
+      components: {
+        clear: string
+        columns: {
+          connections: string
+          download: string
+          host: string
+          lastActive: string
+          trafficShare: string
+          upload: string
+        }
+        emptyText: string
+        searchPlaceholder: string
+        totalDownload: string
+        totalHosts: string
+        totalUpload: string
+      }
+      page: {
+        title: string
       }
     }
   }

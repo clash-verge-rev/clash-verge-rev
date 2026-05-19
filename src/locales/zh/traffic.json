@@ -1,0 +1,21 @@
+{
+  "page": {
+    "title": "流量统计"
+  },
+  "components": {
+    "searchPlaceholder": "搜索域名...",
+    "totalDownload": "总下载",
+    "totalUpload": "总上传",
+    "totalHosts": "目的地数",
+    "emptyText": "暂无流量数据，请确保 Clash 核心正在运行",
+    "clear": "清空",
+    "columns": {
+      "host": "域名/IP",
+      "download": "下载量",
+      "upload": "上传量",
+      "trafficShare": "占比",
+      "connections": "连接数",
+      "lastActive": "最后活跃"
+    }
+  }
+}
