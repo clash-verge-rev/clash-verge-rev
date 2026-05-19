@@ -101,6 +101,7 @@ impl Sysopt {
         }
         if !verge.enable_proxy_guard.unwrap_or_default() {
             logging!(info, Type::Core, "System proxy guard is disabled.");
+            self.access_guard().write().stop();
             return;
         }
         logging!(

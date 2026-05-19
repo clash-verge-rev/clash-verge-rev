@@ -5,7 +5,6 @@ use regex::Regex;
 use reqwest::{Client, cookie::Jar};
 
 use super::UnlockItem;
-use super::utils::{country_code_to_emoji, get_local_date_string};
 
 pub(super) async fn check_bahamut_anime(client: &Client) -> UnlockItem {
     let cookie_store = Arc::new(Jar::default());
@@ -54,12 +53,7 @@ pub(super) async fn check_bahamut_anime(client: &Client) -> UnlockItem {
     };
 
     if device_id.is_empty() {
-        return UnlockItem {
-            name: "Bahamut Anime".to_string(),
-            status: "Failed".to_string(),
-            region: None,
-            check_time: Some(get_local_date_string()),
-        };
+        return UnlockItem::checked("Bahamut Anime", "Failed", None);
     }
 
     let url = format!("https://ani.gamer.com.tw/ajax/token.php?adID=89422&sn=37783&device={device_id}");
@@ -79,12 +73,7 @@ pub(super) async fn check_bahamut_anime(client: &Client) -> UnlockItem {
     };
 
     if token_result.is_none() {
-        return UnlockItem {
-            name: "Bahamut Anime".to_string(),
-            status: "No".to_string(),
-            region: None,
-            check_time: Some(get_local_date_string()),
-        };
+        return UnlockItem::checked("Bahamut Anime", "No", None);
     }
 
     let region = match client_with_cookies.get("https://ani.gamer.com.tw/").send().await {
@@ -92,8 +81,7 @@ pub(super) async fn check_bahamut_anime(client: &Client) -> UnlockItem {
             Ok(body) => match Regex::new(r#"data-geo="([^"]+)"#) {
                 Ok(region_re) => region_re.captures(&body).and_then(|caps| caps.get(1)).map(|m| {
                     let country_code = m.as_str();
-                    let emoji = country_code_to_emoji(country_code);
-                    format!("{emoji}{country_code}")
+                    UnlockItem::region_label(country_code)
                 }),
                 Err(e) => {
                     logging!(
@@ -110,10 +98,5 @@ pub(super) async fn check_bahamut_anime(client: &Client) -> UnlockItem {
         Err(_) => None,
     };
 
-    UnlockItem {
-        name: "Bahamut Anime".to_string(),
-        status: "Yes".to_string(),
-        region,
-        check_time: Some(get_local_date_string()),
-    }
+    UnlockItem::checked("Bahamut Anime", "Yes", region)
 }

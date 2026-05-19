@@ -4,16 +4,10 @@ use reqwest::Client;
 use clash_verge_logging::{Type, logging};
 
 use super::UnlockItem;
-use super::utils::{country_code_to_emoji, get_local_date_string};
 
 pub(super) async fn check_youtube_premium(client: &Client) -> UnlockItem {
     let url = "https://www.youtube.com/premium?hl=en";
-    let item = |status: &str, region: Option<String>| UnlockItem {
-        name: "YouTube Premium".to_string(),
-        status: status.to_string(),
-        region,
-        check_time: Some(get_local_date_string()),
-    };
+    let item = |status: &str, region: Option<String>| UnlockItem::checked("YouTube Premium", status, region);
 
     match client.get(url).send().await {
         Ok(response) => {
@@ -38,10 +32,7 @@ pub(super) async fn check_youtube_premium(client: &Client) -> UnlockItem {
                         None
                     }
                 })
-                .map(|country_code| {
-                    let emoji = country_code_to_emoji(&country_code);
-                    format!("{emoji}{country_code}")
-                });
+                .map(|country_code| UnlockItem::region_label(&country_code));
 
                 let status = if body_lower.contains("youtube premium is not available in your country")
                     || body_lower.contains("premium is not available in your country")
