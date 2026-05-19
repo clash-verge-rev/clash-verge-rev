@@ -4,7 +4,6 @@ use regex::Regex;
 use reqwest::Client;
 
 use super::UnlockItem;
-use super::utils::{country_code_to_emoji, get_local_date_string};
 
 pub(super) async fn check_tiktok(client: &Client) -> UnlockItem {
     let trace_url = "https://www.tiktok.com/cdn-cgi/trace";
@@ -38,12 +37,7 @@ pub(super) async fn check_tiktok(client: &Client) -> UnlockItem {
         }
     }
 
-    UnlockItem {
-        name: "TikTok".to_string(),
-        status,
-        region,
-        check_time: Some(get_local_date_string()),
-    }
+    UnlockItem::checked("TikTok", status, region)
 }
 
 fn determine_status(status: u16, body: &str) -> &'static str {
@@ -78,8 +72,7 @@ fn extract_region_from_body(body: &str) -> Option<String> {
         let raw = matched.as_str();
         let country_code = raw.split('-').next().unwrap_or(raw).to_uppercase();
         if !country_code.is_empty() {
-            let emoji = country_code_to_emoji(&country_code);
-            return Some(format!("{emoji}{country_code}"));
+            return Some(UnlockItem::region_label(&country_code));
         }
     }
 

@@ -1,7 +1,6 @@
 use reqwest::{Client, Url};
 
 use super::UnlockItem;
-use super::utils::{country_code_to_emoji, get_local_date_string};
 
 pub(super) async fn check_spotify(client: &Client) -> UnlockItem {
     let url = "https://www.spotify.com/api/content/v1/country-selector?platform=web&format=json";
@@ -15,19 +14,9 @@ pub(super) async fn check_spotify(client: &Client) -> UnlockItem {
             let region = extract_region(&final_url).or_else(|| extract_region_from_body(&body));
             let status = determine_status(status_code.as_u16(), &body);
 
-            UnlockItem {
-                name: "Spotify".to_string(),
-                status: status.to_string(),
-                region,
-                check_time: Some(get_local_date_string()),
-            }
+            UnlockItem::checked("Spotify", status, region)
         }
-        Err(_) => UnlockItem {
-            name: "Spotify".to_string(),
-            status: "Failed".to_string(),
-            region: None,
-            check_time: Some(get_local_date_string()),
-        },
+        Err(_) => UnlockItem::checked("Spotify", "Failed", None),
     }
 }
 
@@ -58,8 +47,7 @@ fn extract_region(url: &Url) -> Option<String> {
 
     let country_code = first_segment.split('-').next().unwrap_or(first_segment);
     let upper = country_code.to_uppercase();
-    let emoji = country_code_to_emoji(&upper);
-    Some(format!("{emoji}{upper}"))
+    Some(UnlockItem::region_label(&upper))
 }
 
 fn extract_region_from_body(body: &str) -> Option<String> {
@@ -70,8 +58,7 @@ fn extract_region_from_body(body: &str) -> Option<String> {
         if let Some(end) = rest.find('"') {
             let code = rest[..end].to_uppercase();
             if !code.is_empty() {
-                let emoji = country_code_to_emoji(&code);
-                return Some(format!("{emoji}{code}"));
+                return Some(UnlockItem::region_label(&code));
             }
         }
     }

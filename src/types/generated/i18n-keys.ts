@@ -238,6 +238,7 @@ export const translationKeys = [
   'proxies.page.tooltips.filter',
   'proxies.page.placeholders.delayCheckUrl',
   'proxies.page.chain.header',
+  'proxies.page.chain.warning',
   'proxies.page.chain.empty',
   'proxies.page.chain.instruction',
   'proxies.page.chain.minimumNodes',

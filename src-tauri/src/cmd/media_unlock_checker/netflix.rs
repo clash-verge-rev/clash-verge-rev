@@ -4,7 +4,12 @@ use serde_json::Value;
 use clash_verge_logging::{Type, logging};
 
 use super::UnlockItem;
-use super::utils::{country_code_to_emoji, get_local_date_string};
+
+const NETFLIX: &str = "Netflix";
+
+fn netflix_item(status: impl Into<String>, region: Option<String>) -> UnlockItem {
+    UnlockItem::checked(NETFLIX, status, region)
+}
 
 pub(super) async fn check_netflix(client: &Client) -> UnlockItem {
     let cdn_result = check_netflix_cdn(client).await;
@@ -23,12 +28,7 @@ pub(super) async fn check_netflix(client: &Client) -> UnlockItem {
 
     if let Err(e) = &result1 {
         logging!(error, Type::Network, "Netflix请求错误: {e}");
-        return UnlockItem {
-            name: "Netflix".to_string(),
-            status: "Failed".to_string(),
-            region: None,
-            check_time: Some(get_local_date_string()),
-        };
+        return netflix_item("Failed", None);
     }
 
     let result2 = client
@@ -39,24 +39,14 @@ pub(super) async fn check_netflix(client: &Client) -> UnlockItem {
 
     if let Err(e) = &result2 {
         logging!(error, Type::Network, "Netflix请求错误: {e}");
-        return UnlockItem {
-            name: "Netflix".to_string(),
-            status: "Failed".to_string(),
-            region: None,
-            check_time: Some(get_local_date_string()),
-        };
+        return netflix_item("Failed", None);
     }
 
     let status1 = match result1 {
         Ok(response) => response.status().as_u16(),
         Err(e) => {
             logging!(error, Type::Network, "Failed to get Netflix response 1: {}", e);
-            return UnlockItem {
-                name: "Netflix".to_string(),
-                status: "Failed".to_string(),
-                region: None,
-                check_time: Some(get_local_date_string()),
-            };
+            return netflix_item("Failed", None);
         }
     };
 
@@ -64,31 +54,16 @@ pub(super) async fn check_netflix(client: &Client) -> UnlockItem {
         Ok(response) => response.status().as_u16(),
         Err(e) => {
             logging!(error, Type::Network, "Failed to get Netflix response 2: {}", e);
-            return UnlockItem {
-                name: "Netflix".to_string(),
-                status: "Failed".to_string(),
-                region: None,
-                check_time: Some(get_local_date_string()),
-            };
+            return netflix_item("Failed", None);
         }
     };
 
     if status1 == 404 && status2 == 404 {
-        return UnlockItem {
-            name: "Netflix".to_string(),
-            status: "Originals Only".to_string(),
-            region: None,
-            check_time: Some(get_local_date_string()),
-        };
+        return netflix_item("Originals Only", None);
     }
 
     if status1 == 403 || status2 == 403 {
-        return UnlockItem {
-            name: "Netflix".to_string(),
-            status: "No".to_string(),
-            region: None,
-            check_time: Some(get_local_date_string()),
-        };
+        return netflix_item("No", None);
     }
 
     if status1 == 200 || status1 == 301 || status2 == 200 || status2 == 301 {
@@ -106,41 +81,19 @@ pub(super) async fn check_netflix(client: &Client) -> UnlockItem {
                     let parts: Vec<&str> = location_str.split('/').collect();
                     if parts.len() >= 4 {
                         let region_code = parts[3].split('-').next().unwrap_or("unknown");
-                        let emoji = country_code_to_emoji(region_code);
-                        return UnlockItem {
-                            name: "Netflix".to_string(),
-                            status: "Yes".to_string(),
-                            region: Some(format!("{emoji}{region_code}")),
-                            check_time: Some(get_local_date_string()),
-                        };
+                        return UnlockItem::checked_region(NETFLIX, "Yes", region_code);
                     }
                 }
 
-                let emoji = country_code_to_emoji("us");
-                UnlockItem {
-                    name: "Netflix".to_string(),
-                    status: "Yes".to_string(),
-                    region: Some(format!("{emoji}{}", "us")),
-                    check_time: Some(get_local_date_string()),
-                }
+                UnlockItem::checked_region(NETFLIX, "Yes", "us")
             }
             Err(e) => {
                 logging!(error, Type::Network, "获取Netflix区域信息失败: {e}");
-                UnlockItem {
-                    name: "Netflix".to_string(),
-                    status: "Yes (但无法获取区域)".to_string(),
-                    region: None,
-                    check_time: Some(get_local_date_string()),
-                }
+                netflix_item("Yes (但无法获取区域)", None)
             }
         }
     } else {
-        UnlockItem {
-            name: "Netflix".to_string(),
-            status: format!("Failed (状态码: {status1}_{status2}"),
-            region: None,
-            check_time: Some(get_local_date_string()),
-        }
+        netflix_item(format!("Failed (状态码: {status1}_{status2}"), None)
     }
 }
 
@@ -150,12 +103,7 @@ async fn check_netflix_cdn(client: &Client) -> UnlockItem {
     match client.get(url).timeout(std::time::Duration::from_secs(30)).send().await {
         Ok(response) => {
             if response.status().as_u16() == 403 {
-                return UnlockItem {
-                    name: "Netflix".to_string(),
-                    status: "No (IP Banned By Netflix)".to_string(),
-                    region: None,
-                    check_time: Some(get_local_date_string()),
-                };
+                return netflix_item("No (IP Banned By Netflix)", None);
             }
 
             match response.json::<Value>().await {
@@ -165,41 +113,20 @@ async fn check_netflix_cdn(client: &Client) -> UnlockItem {
                         && let Some(location) = targets[0].get("location")
                         && let Some(country) = location.get("country").and_then(|c| c.as_str())
                     {
-                        let emoji = country_code_to_emoji(country);
-                        return UnlockItem {
-                            name: "Netflix".to_string(),
-                            status: "Yes".to_string(),
-                            region: Some(format!("{emoji}{country}")),
-                            check_time: Some(get_local_date_string()),
-                        };
+                        return UnlockItem::checked_region(NETFLIX, "Yes", country);
                     }
 
-                    UnlockItem {
-                        name: "Netflix".to_string(),
-                        status: "Unknown".to_string(),
-                        region: None,
-                        check_time: Some(get_local_date_string()),
-                    }
+                    netflix_item("Unknown", None)
                 }
                 Err(e) => {
                     logging!(error, Type::Network, "解析Fast.com API响应失败: {e}");
-                    UnlockItem {
-                        name: "Netflix".to_string(),
-                        status: "Failed (解析错误)".to_string(),
-                        region: None,
-                        check_time: Some(get_local_date_string()),
-                    }
+                    netflix_item("Failed (解析错误)", None)
                 }
             }
         }
         Err(e) => {
             logging!(error, Type::Network, "Fast.com API请求失败: {e}");
-            UnlockItem {
-                name: "Netflix".to_string(),
-                status: "Failed (CDN API)".to_string(),
-                region: None,
-                check_time: Some(get_local_date_string()),
-            }
+            netflix_item("Failed (CDN API)", None)
         }
     }
 }
