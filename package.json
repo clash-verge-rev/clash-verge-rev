@@ -104,6 +104,7 @@
     "eslint-plugin-react-compiler": "19.1.0-rc.2",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.5.2",
+    "eslint-plugin-sukka": "^9.5.0",
     "eslint-plugin-unused-imports": "^4.4.1",
     "glob": "^13.0.6",
     "globals": "^17.4.0",
