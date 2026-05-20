@@ -82,7 +82,7 @@
   "devDependencies": {
     "@actions/github": "^9.0.0",
     "@biomejs/biome": "^2.4.10",
-    "@eslint-react/eslint-plugin": "^4.0.0",
+    "@eslint-react/eslint-plugin": "^5.0.0",
     "@eslint/js": "^10.0.1",
     "@tauri-apps/cli": "2.11.2",
     "@types/js-yaml": "^4.0.9",
@@ -110,7 +110,7 @@
     "https-proxy-agent": "^9.0.0",
     "husky": "^9.1.7",
     "jiti": "^2.6.1",
-    "lint-staged": "^16.4.0",
+    "lint-staged": "^17.0.0",
     "node-fetch": "^3.3.2",
     "sass": "^1.98.0",
     "tar": "^7.5.12",
