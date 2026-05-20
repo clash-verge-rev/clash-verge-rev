@@ -526,7 +526,6 @@ const ProfilePage = () => {
       profiles,
       patchProfiles,
       mutateLogs,
-      // executeBackgroundTasks,
       handleProfileInterrupt,
       cleanupSwitchState,
     ],
