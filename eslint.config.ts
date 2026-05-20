@@ -88,7 +88,6 @@ export default defineConfig([
       '@eslint-react/no-unused-class-component-members': 'error',
       '@eslint-react/no-unused-state': 'error',
       '@eslint-react/jsx-no-useless-fragment': 'warn',
-      '@eslint-react/prefer-destructuring-assignment': 'warn',
 
       // TypeScript
       '@typescript-eslint/no-explicit-any': 'off',
