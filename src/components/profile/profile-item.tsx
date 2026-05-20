@@ -22,7 +22,7 @@ import dayjs from 'dayjs'
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { ConfirmViewer } from '@/components/profile/confirm-viewer'
+import { BaseDialog } from '@/components/base'
 import { EditorViewer } from '@/components/profile/editor-viewer'
 import { GroupsEditorViewer } from '@/components/profile/groups-editor-viewer'
 import { RulesEditorViewer } from '@/components/profile/rules-editor-viewer'
@@ -990,16 +990,23 @@ export const ProfileItem = (props: Props) => {
         />
       )}
 
-      <ConfirmViewer
+      <BaseDialog
         title={t('profiles.modals.confirmDelete.title')}
-        message={t('profiles.modals.confirmDelete.message')}
         open={confirmOpen}
+        okBtn={t('shared.actions.confirm')}
+        cancelBtn={t('shared.actions.cancel')}
+        contentSx={{ width: { xs: 320, sm: 420 }, userSelect: 'text' }}
+        onCancel={() => setConfirmOpen(false)}
         onClose={() => setConfirmOpen(false)}
-        onConfirm={() => {
+        onOk={() => {
           onDelete()
           setConfirmOpen(false)
         }}
-      />
+      >
+        <Typography variant="body2" sx={{ wordBreak: 'break-word' }}>
+          {t('profiles.modals.confirmDelete.message')}
+        </Typography>
+      </BaseDialog>
       {qrOpen && itemData.url && (
         <QrViewer
           open={true}

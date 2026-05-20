@@ -20,7 +20,6 @@ import {
   RefreshRounded,
   TextSnippetOutlined,
 } from '@mui/icons-material'
-import { LoadingButton } from '@mui/lab'
 import { Box, Button, Divider, Grid, IconButton, Stack } from '@mui/material'
 import { useQuery } from '@tanstack/react-query'
 import { listen, TauriEvent } from '@tauri-apps/api/event'
@@ -970,7 +969,7 @@ const ProfilePage = () => {
             },
           }}
         />
-        <LoadingButton
+        <Button
           disabled={!url || disabled}
           loading={loading}
           variant="contained"
@@ -979,7 +978,7 @@ const ProfilePage = () => {
           onClick={onImport}
         >
           {t('profiles.page.actions.import')}
-        </LoadingButton>
+        </Button>
         <Button
           variant="contained"
           size="small"

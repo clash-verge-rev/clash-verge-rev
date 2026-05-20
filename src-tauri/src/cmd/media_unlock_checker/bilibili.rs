@@ -2,7 +2,6 @@ use reqwest::Client;
 use serde_json::Value;
 
 use super::UnlockItem;
-use super::utils::get_local_date_string;
 
 pub(super) async fn check_bilibili_china_mainland(client: &Client) -> UnlockItem {
     let url = "https://api.bilibili.com/pgc/player/web/playurl?avid=82846771&qn=0&type=&otype=json&ep_id=307247&fourk=1&fnver=0&fnval=16&module=bangumi";
@@ -24,26 +23,11 @@ pub(super) async fn check_bilibili_china_mainland(client: &Client) -> UnlockItem
                     })
                     .unwrap_or("Failed");
 
-                UnlockItem {
-                    name: "哔哩哔哩大陆".to_string(),
-                    status: status.to_string(),
-                    region: None,
-                    check_time: Some(get_local_date_string()),
-                }
+                UnlockItem::checked("哔哩哔哩大陆", status, None)
             }
-            Err(_) => UnlockItem {
-                name: "哔哩哔哩大陆".to_string(),
-                status: "Failed".to_string(),
-                region: None,
-                check_time: Some(get_local_date_string()),
-            },
+            Err(_) => UnlockItem::checked("哔哩哔哩大陆", "Failed", None),
         },
-        Err(_) => UnlockItem {
-            name: "哔哩哔哩大陆".to_string(),
-            status: "Failed".to_string(),
-            region: None,
-            check_time: Some(get_local_date_string()),
-        },
+        Err(_) => UnlockItem::checked("哔哩哔哩大陆", "Failed", None),
     }
 }
 
@@ -67,25 +51,10 @@ pub(super) async fn check_bilibili_hk_mc_tw(client: &Client) -> UnlockItem {
                     })
                     .unwrap_or("Failed");
 
-                UnlockItem {
-                    name: "哔哩哔哩港澳台".to_string(),
-                    status: status.to_string(),
-                    region: None,
-                    check_time: Some(get_local_date_string()),
-                }
+                UnlockItem::checked("哔哩哔哩港澳台", status, None)
             }
-            Err(_) => UnlockItem {
-                name: "哔哩哔哩港澳台".to_string(),
-                status: "Failed".to_string(),
-                region: None,
-                check_time: Some(get_local_date_string()),
-            },
+            Err(_) => UnlockItem::checked("哔哩哔哩港澳台", "Failed", None),
         },
-        Err(_) => UnlockItem {
-            name: "哔哩哔哩港澳台".to_string(),
-            status: "Failed".to_string(),
-            region: None,
-            check_time: Some(get_local_date_string()),
-        },
+        Err(_) => UnlockItem::checked("哔哩哔哩港澳台", "Failed", None),
     }
 }
