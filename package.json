@@ -42,7 +42,6 @@
     "@juggle/resize-observer": "^3.4.0",
     "@monaco-editor/react": "^4.7.0",
     "@mui/icons-material": "^9.0.0",
-    "@mui/lab": "9.0.0-beta.2",
     "@mui/material": "^9.0.0",
     "@tanstack/react-query": "^5.96.1",
     "@tanstack/react-table": "^8.21.3",
