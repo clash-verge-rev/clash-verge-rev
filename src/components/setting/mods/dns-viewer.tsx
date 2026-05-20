@@ -1,4 +1,3 @@
-import MonacoEditor from '@monaco-editor/react'
 import { RestartAltRounded } from '@mui/icons-material'
 import {
   Box,
@@ -16,7 +15,6 @@ import {
 import { invoke } from '@tauri-apps/api/core'
 import { useLockFn } from 'ahooks'
 import yaml from 'js-yaml'
-import type { editor } from 'monaco-editor'
 import type { Ref } from 'react'
 import {
   useCallback,
@@ -28,10 +26,11 @@ import {
 } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { BaseDialog, DialogRef, Switch } from '@/components/base'
+import { BaseDialog, DialogRef, MonacoEditor, Switch } from '@/components/base'
 import { useClash } from '@/hooks/use-clash'
 import { showNotice } from '@/services/notice-service'
 import { useThemeMode } from '@/services/states'
+import type { MonacoEditorInstance } from '@/types/monaco'
 import { debugLog } from '@/utils/debug'
 import getSystem from '@/utils/get-system'
 
@@ -190,7 +189,7 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
   const [open, setOpen] = useState(false)
   const [visualization, setVisualization] = useState(true)
   const skipYamlSyncRef = useRef(false)
-  const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
+  const editorRef = useRef<MonacoEditorInstance | null>(null)
   const [values, setValues] = useState<{
     enable: boolean
     listen: string

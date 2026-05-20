@@ -8,7 +8,6 @@ import {
   useSensors,
 } from '@dnd-kit/core'
 import { SortableContext, sortableKeyboardCoordinates } from '@dnd-kit/sortable'
-import MonacoEditor from '@monaco-editor/react'
 import {
   VerticalAlignBottomRounded,
   VerticalAlignTopRounded,
@@ -29,7 +28,6 @@ import {
 } from '@mui/material'
 import { useLockFn } from 'ahooks'
 import yaml from 'js-yaml'
-import type { editor } from 'monaco-editor'
 import {
   startTransition,
   useCallback,
@@ -40,12 +38,18 @@ import {
 } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { BaseSearchBox, Switch, VirtualList } from '@/components/base'
+import {
+  BaseSearchBox,
+  MonacoEditor,
+  Switch,
+  VirtualList,
+} from '@/components/base'
 import { RuleItem } from '@/components/profile/rule-item'
 import { readProfileFile, saveProfileFile } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
 import { useThemeMode } from '@/services/states'
 import type { TranslationKey } from '@/types/generated/i18n-keys'
+import type { MonacoEditorInstance } from '@/types/monaco'
 import getSystem from '@/utils/get-system'
 import { isValidIpCidr } from '@/utils/network'
 
@@ -253,7 +257,7 @@ export const RulesEditorViewer = (props: Props) => {
   const { t } = useTranslation()
   const themeMode = useThemeMode()
 
-  const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
+  const editorRef = useRef<MonacoEditorInstance | null>(null)
 
   const [prevData, setPrevData] = useState('')
   const [currData, setCurrData] = useState('')

@@ -120,6 +120,11 @@
       box-sizing: border-box;
       height: 36px;
       border-bottom: 1px solid var(--divider-color);
+
+      &-drag-region {
+        align-self: stretch;
+        flex: 1 1 auto;
+      }
     }
 
     .layout-content__left .the-logo {
@@ -148,6 +153,12 @@
       box-sizing: border-box;
       height: 36px;
       border-bottom: 1px solid var(--divider-color);
+
+      &-drag-region {
+        align-self: stretch;
+        flex: 1 1 auto;
+        order: 1;
+      }
     }
 
     .layout-content__left {

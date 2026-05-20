@@ -71,6 +71,7 @@ If the PR references an issue, inspect that issue as well and compare the stated
 - No referenced issue, or only vague claims like "fixes multiple issues" without a concrete issue number
 - Single large commit or a very small number of commits covering many unrelated areas
 - PR body reads like a generated report rather than a maintainer-owned change description
+- PR body or author replies use stock report sections such as "Root Cause", "Root Case", "Checklist", or "Check List" without concrete issue evidence, reproduction context, or project-specific reasoning
 - Explicit AI provenance links or bot-authored commits from coding agents
 - Large-scale mechanical edits with little behavioral justification
 - Random renames, comment rewrites, or same-meaning text changes that do not support the fix
@@ -87,6 +88,7 @@ If the PR references an issue, inspect that issue as well and compare the stated
 - Tests that directly validate the reported regression or expected behavior
 - Clear explanation of why each changed area is necessary for the fix
 - Cross-Contextual Logic, the author explains *why* a change was made in a way that shows understanding of the project's specific constraints, rather than just repeating the issue text.
+- Report-style sections are backed by concrete reproduction steps, failure evidence, or repository-specific constraints; template-required checklists should not count as a slop signal by themselves
 - Evidence of established repository ownership or ongoing stewardship may reduce slop likelihood, but must never be disclosed in the public comment
 
 ## Decision Rules

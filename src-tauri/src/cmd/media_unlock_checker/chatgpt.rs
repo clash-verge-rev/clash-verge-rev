@@ -3,7 +3,6 @@ use std::collections::HashMap;
 use reqwest::Client;
 
 use super::UnlockItem;
-use super::utils::{country_code_to_emoji, get_local_date_string};
 
 pub(super) async fn check_chatgpt_combined(client: &Client) -> Vec<UnlockItem> {
     let mut results = Vec::new();
@@ -23,10 +22,7 @@ pub(super) async fn check_chatgpt_combined(client: &Client) -> Vec<UnlockItem> {
                     }
                 }
 
-                map.get("loc").map(|loc| {
-                    let emoji = country_code_to_emoji(loc);
-                    format!("{emoji}{loc}")
-                })
+                map.get("loc").map(|loc| UnlockItem::region_label(loc))
             } else {
                 None
             }
@@ -76,19 +72,9 @@ pub(super) async fn check_chatgpt_combined(client: &Client) -> Vec<UnlockItem> {
         Err(_) => "Failed",
     };
 
-    results.push(UnlockItem {
-        name: "ChatGPT iOS".to_string(),
-        status: ios_status.to_string(),
-        region: region.clone(),
-        check_time: Some(get_local_date_string()),
-    });
+    results.push(UnlockItem::checked("ChatGPT iOS", ios_status, region.clone()));
 
-    results.push(UnlockItem {
-        name: "ChatGPT Web".to_string(),
-        status: web_status.to_string(),
-        region,
-        check_time: Some(get_local_date_string()),
-    });
+    results.push(UnlockItem::checked("ChatGPT Web", web_status, region));
 
     results
 }

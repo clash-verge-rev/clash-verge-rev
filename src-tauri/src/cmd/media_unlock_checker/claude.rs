@@ -1,7 +1,6 @@
 use reqwest::Client;
 
 use super::UnlockItem;
-use super::utils::{country_code_to_emoji, get_local_date_string};
 
 const BLOCKED_CODES: [&str; 10] = ["AF", "BY", "CN", "CU", "HK", "IR", "KP", "MO", "RU", "SY"];
 
@@ -21,40 +20,19 @@ pub(super) async fn check_claude(client: &Client) -> UnlockItem {
                 }
 
                 if let Some(code) = country_code {
-                    let emoji = country_code_to_emoji(&code);
                     let status = if BLOCKED_CODES.contains(&code.as_str()) {
                         "No"
                     } else {
                         "Yes"
                     };
 
-                    UnlockItem {
-                        name: "Claude".to_string(),
-                        status: status.to_string(),
-                        region: Some(format!("{emoji}{code}")),
-                        check_time: Some(get_local_date_string()),
-                    }
+                    UnlockItem::checked_region("Claude", status, &code)
                 } else {
-                    UnlockItem {
-                        name: "Claude".to_string(),
-                        status: "Failed".to_string(),
-                        region: None,
-                        check_time: Some(get_local_date_string()),
-                    }
+                    UnlockItem::checked("Claude", "Failed", None)
                 }
             }
-            Err(_) => UnlockItem {
-                name: "Claude".to_string(),
-                status: "Failed".to_string(),
-                region: None,
-                check_time: Some(get_local_date_string()),
-            },
+            Err(_) => UnlockItem::checked("Claude", "Failed", None),
         },
-        Err(_) => UnlockItem {
-            name: "Claude".to_string(),
-            status: "Failed".to_string(),
-            region: None,
-            check_time: Some(get_local_date_string()),
-        },
+        Err(_) => UnlockItem::checked("Claude", "Failed", None),
     }
 }

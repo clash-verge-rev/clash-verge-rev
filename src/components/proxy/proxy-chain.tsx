@@ -21,6 +21,7 @@ import {
   DragIndicator,
   Link,
   LinkOff,
+  WarningRounded,
 } from '@mui/icons-material'
 import {
   Alert,
@@ -40,6 +41,7 @@ import {
   selectNodeForGroup,
 } from 'tauri-plugin-mihomo-api'
 
+import { TooltipIcon } from '@/components/base'
 import { useAppRefreshers, useProxiesData } from '@/providers/app-data-context'
 import { updateProxyChainConfigInRuntime } from '@/services/cmds'
 import { debugLog } from '@/utils/debug'
@@ -251,6 +253,7 @@ export const ProxyChain = ({
 }: ProxyChainProps) => {
   const theme = useTheme()
   const { t } = useTranslation()
+  const chainWarning = t('proxies.page.chain.warning')
   const { proxies } = useProxiesData()
   const { refreshProxy } = useAppRefreshers()
   const [isConnecting, setIsConnecting] = useState(false)
@@ -499,7 +502,15 @@ export const ProxyChain = ({
           mb: 2,
         }}
       >
-        <Typography variant="h6">{t('proxies.page.chain.header')}</Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+          <Typography variant="h6">{t('proxies.page.chain.header')}</Typography>
+          <TooltipIcon
+            title={chainWarning}
+            icon={WarningRounded}
+            color="warning"
+            sx={{ p: 0.25 }}
+          />
+        </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           {proxyChain.length > 0 && (
             <IconButton

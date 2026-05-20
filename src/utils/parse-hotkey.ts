@@ -31,6 +31,7 @@ export const parseHotkey = (keyEvent: KeyboardEvent) => {
         return 'ALT'
       }
     case 'META':
+    case 'OS':
       return 'CMD'
     case ' ':
       return 'SPACE'
