@@ -210,7 +210,11 @@ async fn setup_light_weight_timer() {
 
     let mut cancel_tx_guard = CANCEL_TX.lock();
     if cancel_tx_guard.is_some() {
-        logging!(debug, Type::Timer, "轻量模式计时器已存在，跳过创建");
+        logging!(
+            debug,
+            Type::Timer,
+            "Lightweight mode timer already exists, skipping setup"
+        );
         return;
     }
 
@@ -221,7 +225,7 @@ async fn setup_light_weight_timer() {
     AsyncHandler::spawn(move || async move {
         tokio::select! {
             _ = sleep(Duration::from_secs(once_by_minutes * 60)) => {
-                logging!(info, Type::Timer, "计时器到期，开始进入轻量模式");
+                logging!(info, Type::Timer, "Lightweight mode timer expired, entering lightweight mode");
                 {
                     let mut guard = CANCEL_TX.lock();
                     *guard = None;
@@ -229,7 +233,7 @@ async fn setup_light_weight_timer() {
                 entry_lightweight_mode().await;
             }
             _ = rx => {
-                logging!(debug, Type::Timer, "接收到取消信号，轻量模式计时器中断退出");
+                logging!(debug, Type::Timer, "Received cancel signal, stopping lightweight mode timer");
             }
         }
     });
@@ -237,7 +241,7 @@ async fn setup_light_weight_timer() {
     logging!(
         info,
         Type::Timer,
-        "计时器已设置，{} 分钟后将自动进入轻量模式",
+        "Lightweight mode timer set, entering lightweight mode in {} minutes",
         once_by_minutes
     );
 }
@@ -246,6 +250,6 @@ fn cancel_light_weight_timer() {
     let mut cancel_tx_guard = CANCEL_TX.lock();
     if let Some(tx) = cancel_tx_guard.take() {
         let _ = tx.send(());
-        logging!(debug, Type::Timer, "计时器已取消");
+        logging!(debug, Type::Timer, "Timer cancelled");
     }
 }

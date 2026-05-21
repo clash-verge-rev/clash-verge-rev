@@ -85,12 +85,12 @@ impl Timer {
 
         {
             let timer_map = self.timer_map.read();
-            logging!(debug, Type::Timer, "已注册的定时任务数量: {}", timer_map.len());
+            logging!(debug, Type::Timer, "Registered timer task count: {}", timer_map.len());
             for (uid, interval) in timer_map.iter() {
                 logging!(
                     debug,
                     Type::Timer,
-                    "注册了定时任务 - uid={}, interval={}min",
+                    "Registered timer task: uid={}, interval={}min",
                     uid,
                     interval
                 );
@@ -109,7 +109,7 @@ impl Timer {
                     && let Some(updated) = item.updated
                     && cur_timestamp - (updated as i64) >= (interval as i64) * 60
                 {
-                    logging!(info, Type::Timer, "立即执行到期落后任务: uid={}", uid);
+                    logging!(info, Type::Timer, "Running overdue timer task immediately: uid={}", uid);
                     let _ = self.command_tx.send(TimerCommand::RunNow(uid.clone()));
                 }
             }
@@ -325,7 +325,7 @@ impl Timer {
     }
 
     fn spawn_update_task(uid: String, command_tx: mpsc::UnboundedSender<TimerCommand>) {
-        logging!(info, Type::Timer, "开始执行定时任务: uid={}", uid);
+        logging!(info, Type::Timer, "Starting timer task: uid={}", uid);
         AsyncHandler::spawn(move || async move {
             Self::wait_until_resolve_done(Duration::from_millis(5000)).await;
             Self::async_task(&uid).await;
@@ -342,7 +342,7 @@ impl Timer {
     }
 
     pub async fn get_next_update_time(&self, uid: &str) -> Option<i64> {
-        logging!(debug, Type::Timer, "获取下次更新时间, uid={}", uid);
+        logging!(debug, Type::Timer, "Getting next update time, uid={}", uid);
 
         let task_interval = *self.timer_map.read().get(uid)?;
         let profiles = Config::profiles().await;
@@ -375,7 +375,13 @@ impl Timer {
             Self::emit_update_event(uid, true);
 
             let is_current = Config::profiles().await.latest_arc().current.as_ref() == Some(uid);
-            logging!(debug, Type::Timer, "配置 {} 是否为当前激活配置: {}", uid, is_current);
+            logging!(
+                debug,
+                Type::Timer,
+                "Profile {} is current active profile: {}",
+                uid,
+                is_current
+            );
 
             feat::update_profile(uid, None, is_current, false, false).await
         })
