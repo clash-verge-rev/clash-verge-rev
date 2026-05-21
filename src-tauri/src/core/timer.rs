@@ -1,4 +1,4 @@
-use crate::{config::Config, core::handle, feat, process::AsyncHandler, singleton, utils::resolve::is_resolve_done};
+use crate::{config::Config, feat, process::AsyncHandler, singleton, utils::resolve::is_resolve_done};
 use anyhow::Result;
 use clash_verge_logging::{Type, logging, logging_error};
 use parking_lot::{Mutex, RwLock};
@@ -396,7 +396,6 @@ impl Timer {
                     uid,
                     task_start.elapsed().as_millis()
                 );
-                handle::Handle::notify_profile_update_completed(uid);
             }
             Ok(Err(e)) => logging_error!(Type::Timer, "Failed to update profile uid {}: {}", uid, e),
             Err(_) => logging_error!(Type::Timer, "Timer task timed out for uid: {}", uid),
