@@ -1,8 +1,6 @@
-## v2.5.1
+## v2.5.2
 
 ### 🐞 修复问题
-
-- 备份设置功能异常
 
 <details>
 <summary><strong> ✨ 新增功能 </strong></summary>

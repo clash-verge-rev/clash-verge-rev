@@ -38,7 +38,7 @@ jobs:
         run: bash ./scripts/extract_update_logs.sh
         shell: bash
 
-      - uses: pnpm/action-setup@v6.0.4
+      - uses: pnpm/action-setup@v6.0.8
         name: Install pnpm
         with:
           run_install: false
@@ -147,7 +147,7 @@ jobs:
       - name: Install Rust Stable
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: '1.91.0'
+          toolchain: '1.95.0'
           targets: ${{ matrix.target }}
 
       - name: Add Rust Target
@@ -179,7 +179,7 @@ jobs:
           echo "OPENSSL_LIB_DIR=$(brew --prefix openssl@3)/lib" >> $GITHUB_ENV
           echo "PKG_CONFIG_PATH=$(brew --prefix openssl@3)/lib/pkgconfig" >> $GITHUB_ENV
 
-      - uses: pnpm/action-setup@v6.0.4
+      - uses: pnpm/action-setup@v6.0.8
         name: Install pnpm
         with:
           run_install: false
@@ -209,7 +209,7 @@ jobs:
       - name: Add Rust Target
         run: |
           # Ensure cross target is installed for the pinned toolchain; fallback without explicit toolchain if needed
-          rustup target add ${{ matrix.target }} --toolchain 1.91.0 || rustup target add ${{ matrix.target }}
+          rustup target add ${{ matrix.target }} --toolchain 1.95.0 || rustup target add ${{ matrix.target }}
           rustup target list --installed
           echo "Rust target ${{ matrix.target }} installed."
 
@@ -260,7 +260,7 @@ jobs:
       - name: Install Rust Stable
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: '1.91.0'
+          toolchain: '1.95.0'
           targets: ${{ matrix.target }}
 
       - name: Add Rust Target
@@ -278,7 +278,7 @@ jobs:
           cache-workspace-crates: true
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v6.0.4
+        uses: pnpm/action-setup@v6.0.8
         with:
           run_install: false
 
@@ -351,7 +351,7 @@ jobs:
       - name: Add Rust Target
         run: |
           # Ensure cross target is installed for the pinned toolchain; fallback without explicit toolchain if needed
-          rustup target add ${{ matrix.target }} --toolchain 1.91.0 || rustup target add ${{ matrix.target }}
+          rustup target add ${{ matrix.target }} --toolchain 1.95.0 || rustup target add ${{ matrix.target }}
           rustup target list --installed
           echo "Rust target ${{ matrix.target }} installed."
 
@@ -423,7 +423,7 @@ jobs:
           cache-workspace-crates: true
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v6.0.4
+        uses: pnpm/action-setup@v6.0.8
         with:
           run_install: false
 
@@ -459,7 +459,7 @@ jobs:
       - name: Add Rust Target
         run: |
           # Ensure cross target is installed for the pinned toolchain; fallback without explicit toolchain if needed
-          rustup target add ${{ matrix.target }} --toolchain 1.91.0 || rustup target add ${{ matrix.target }}
+          rustup target add ${{ matrix.target }} --toolchain 1.95.0 || rustup target add ${{ matrix.target }}
           rustup target list --installed
           echo "Rust target ${{ matrix.target }} installed."
 
@@ -534,7 +534,7 @@ jobs:
         with:
           node-version: '24.15.0'
 
-      - uses: pnpm/action-setup@v6.0.4
+      - uses: pnpm/action-setup@v6.0.8
         name: Install pnpm
         with:
           run_install: false
