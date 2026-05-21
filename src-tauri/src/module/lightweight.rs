@@ -224,7 +224,7 @@ async fn setup_light_weight_timer() {
 
     AsyncHandler::spawn(move || async move {
         tokio::select! {
-            _ = sleep(Duration::from_secs(once_by_minutes * 60)) => {
+            _ = sleep(Duration::from_secs(once_by_minutes.saturating_mul(60))) => {
                 logging!(info, Type::Timer, "Lightweight mode timer expired, entering lightweight mode");
                 {
                     let mut guard = CANCEL_TX.lock();
