@@ -17,9 +17,11 @@ permissions:
 
 tools:
   github:
+    mode: gh-proxy
     toolsets: [issues, pull_requests]
     lockdown: false
     min-integrity: unapproved
+  bash: [gh]
 
 safe-outputs:
   report-failure-as-issue: false
@@ -59,7 +61,7 @@ Use GitHub tools to inspect the triggering pull request in full:
 
 - Pull request title and body
 - Linked issue references in the body, title, metadata, timeline, and cross-links when available
-- Commit history and commit authors
+- Commit history and commit authors. Use the authenticated `gh` CLI for commit data, for example `gh api repos/${{ github.repository }}/pulls/${{ github.event.pull_request.number }}/commits`, because this workflow does not check out PR code.
 - PR author association, repository role signals, and visible ownership history when available
 - Changed files and diff shape
 - Existing review comments and author replies when available

@@ -1,5 +1,5 @@
-# gh-aw-metadata: {"schema_version":"v3","frontmatter_hash":"5739d04453980e3c1f7884e62c9557e1b7987b58b57465c5df1d0111976d76da","compiler_version":"v0.74.8","strict":true,"agent_id":"copilot"}
-# gh-aw-manifest: {"version":1,"secrets":["COPILOT_GITHUB_TOKEN","GH_AW_GITHUB_MCP_SERVER_TOKEN","GH_AW_GITHUB_TOKEN","GITHUB_TOKEN"],"actions":[{"repo":"actions/checkout","sha":"de0fac2e4500dabe0009e67214ff5f5447ce83dd","version":"v6.0.2"},{"repo":"actions/download-artifact","sha":"3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c","version":"v8.0.1"},{"repo":"actions/github-script","sha":"3a2844b7e9c422d3c10d287c895573f7108da1b3","version":"v9.0.0"},{"repo":"actions/setup-node","sha":"48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e","version":"v6.4.0"},{"repo":"actions/upload-artifact","sha":"043fb46d1a93c77aae656e7c1c64a875d1fc6a0a","version":"v7.0.1"},{"repo":"github/gh-aw-actions/setup","sha":"efa55847f72aadb03490d955263ff911bf758700","version":"v0.74.8"}],"containers":[{"image":"ghcr.io/github/gh-aw-firewall/agent:0.25.49","digest":"sha256:9e4b936d4215af09fa412e12a5fc82f97f2cde4993eefc85980a900122fa9062","pinned_image":"ghcr.io/github/gh-aw-firewall/agent:0.25.49@sha256:9e4b936d4215af09fa412e12a5fc82f97f2cde4993eefc85980a900122fa9062"},{"image":"ghcr.io/github/gh-aw-firewall/api-proxy:0.25.49","digest":"sha256:b795506f6b4fd12694a29f964b4d38d2d29ac3aaafe3394131619ce36020b646","pinned_image":"ghcr.io/github/gh-aw-firewall/api-proxy:0.25.49@sha256:b795506f6b4fd12694a29f964b4d38d2d29ac3aaafe3394131619ce36020b646"},{"image":"ghcr.io/github/gh-aw-firewall/squid:0.25.49","digest":"sha256:f6c6998edfb9f58b6e12d3f148e6f2104747a7702d563a9e8b13d4b2ae6997dd","pinned_image":"ghcr.io/github/gh-aw-firewall/squid:0.25.49@sha256:f6c6998edfb9f58b6e12d3f148e6f2104747a7702d563a9e8b13d4b2ae6997dd"},{"image":"ghcr.io/github/gh-aw-mcpg:v0.3.9","digest":"sha256:64828b42a4482f58fab16509d7f8f495a6d97c972a98a68aff20543531ac0388","pinned_image":"ghcr.io/github/gh-aw-mcpg:v0.3.9@sha256:64828b42a4482f58fab16509d7f8f495a6d97c972a98a68aff20543531ac0388"},{"image":"ghcr.io/github/github-mcp-server:v1.0.4","digest":"sha256:e3816a476a977cfb836e7d221510011436c654d11861db66ecfd826601aba6a4","pinned_image":"ghcr.io/github/github-mcp-server:v1.0.4@sha256:e3816a476a977cfb836e7d221510011436c654d11861db66ecfd826601aba6a4"},{"image":"node:lts-alpine","digest":"sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f","pinned_image":"node:lts-alpine@sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f"}]}
+# gh-aw-metadata: {"schema_version":"v3","frontmatter_hash":"f5c70c4c663267b0bf8b82e269f0c460ad27a318287acc398f5ef077632f35b6","compiler_version":"v0.74.8","strict":true,"agent_id":"copilot"}
+# gh-aw-manifest: {"version":1,"secrets":["COPILOT_GITHUB_TOKEN","GH_AW_GITHUB_MCP_SERVER_TOKEN","GH_AW_GITHUB_TOKEN","GITHUB_TOKEN"],"actions":[{"repo":"actions/checkout","sha":"de0fac2e4500dabe0009e67214ff5f5447ce83dd","version":"v6.0.2"},{"repo":"actions/download-artifact","sha":"3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c","version":"v8.0.1"},{"repo":"actions/github-script","sha":"3a2844b7e9c422d3c10d287c895573f7108da1b3","version":"v9.0.0"},{"repo":"actions/setup-node","sha":"48b55a011bda9f5d6aeb4c2d9c7362e8dae4041e","version":"v6.4.0"},{"repo":"actions/upload-artifact","sha":"043fb46d1a93c77aae656e7c1c64a875d1fc6a0a","version":"v7.0.1"},{"repo":"github/gh-aw-actions/setup","sha":"efa55847f72aadb03490d955263ff911bf758700","version":"v0.74.8"}],"containers":[{"image":"ghcr.io/github/gh-aw-firewall/agent:0.25.49","digest":"sha256:9e4b936d4215af09fa412e12a5fc82f97f2cde4993eefc85980a900122fa9062","pinned_image":"ghcr.io/github/gh-aw-firewall/agent:0.25.49@sha256:9e4b936d4215af09fa412e12a5fc82f97f2cde4993eefc85980a900122fa9062"},{"image":"ghcr.io/github/gh-aw-firewall/api-proxy:0.25.49","digest":"sha256:b795506f6b4fd12694a29f964b4d38d2d29ac3aaafe3394131619ce36020b646","pinned_image":"ghcr.io/github/gh-aw-firewall/api-proxy:0.25.49@sha256:b795506f6b4fd12694a29f964b4d38d2d29ac3aaafe3394131619ce36020b646"},{"image":"ghcr.io/github/gh-aw-firewall/cli-proxy:0.25.49"},{"image":"ghcr.io/github/gh-aw-firewall/squid:0.25.49","digest":"sha256:f6c6998edfb9f58b6e12d3f148e6f2104747a7702d563a9e8b13d4b2ae6997dd","pinned_image":"ghcr.io/github/gh-aw-firewall/squid:0.25.49@sha256:f6c6998edfb9f58b6e12d3f148e6f2104747a7702d563a9e8b13d4b2ae6997dd"},{"image":"ghcr.io/github/gh-aw-mcpg:v0.3.9","digest":"sha256:64828b42a4482f58fab16509d7f8f495a6d97c972a98a68aff20543531ac0388","pinned_image":"ghcr.io/github/gh-aw-mcpg:v0.3.9@sha256:64828b42a4482f58fab16509d7f8f495a6d97c972a98a68aff20543531ac0388"},{"image":"ghcr.io/github/github-mcp-server:v1.0.4","digest":"sha256:e3816a476a977cfb836e7d221510011436c654d11861db66ecfd826601aba6a4","pinned_image":"ghcr.io/github/github-mcp-server:v1.0.4@sha256:e3816a476a977cfb836e7d221510011436c654d11861db66ecfd826601aba6a4"},{"image":"node:lts-alpine","digest":"sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f","pinned_image":"node:lts-alpine@sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f"}]}
 #    ___                   _   _      
 #   / _ \                 | | (_)     
 #  | |_| | __ _  ___ _ __ | |_ _  ___ 
@@ -43,6 +43,7 @@
 # Container images used:
 #   - ghcr.io/github/gh-aw-firewall/agent:0.25.49@sha256:9e4b936d4215af09fa412e12a5fc82f97f2cde4993eefc85980a900122fa9062
 #   - ghcr.io/github/gh-aw-firewall/api-proxy:0.25.49@sha256:b795506f6b4fd12694a29f964b4d38d2d29ac3aaafe3394131619ce36020b646
+#   - ghcr.io/github/gh-aw-firewall/cli-proxy:0.25.49
 #   - ghcr.io/github/gh-aw-firewall/squid:0.25.49@sha256:f6c6998edfb9f58b6e12d3f148e6f2104747a7702d563a9e8b13d4b2ae6997dd
 #   - ghcr.io/github/gh-aw-mcpg:v0.3.9@sha256:64828b42a4482f58fab16509d7f8f495a6d97c972a98a68aff20543531ac0388
 #   - ghcr.io/github/github-mcp-server:v1.0.4@sha256:e3816a476a977cfb836e7d221510011436c654d11861db66ecfd826601aba6a4
@@ -198,6 +199,7 @@ jobs:
           GH_AW_EXPR_802A9F6A: ${{ github.event.issue.number || (fromJSON(github.event.inputs.aw_context || github.event.client_payload.aw_context || '{}').item_type == 'issue' && fromJSON(github.event.inputs.aw_context || github.event.client_payload.aw_context || '{}').item_number) }}
           GH_AW_EXPR_FF1D34CE: ${{ github.event.comment.id || fromJSON(github.event.inputs.aw_context || github.event.client_payload.aw_context || '{}').comment_id }}
           GH_AW_GITHUB_ACTOR: ${{ github.actor }}
+          GH_AW_GITHUB_EVENT_PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number }}
           GH_AW_GITHUB_REPOSITORY: ${{ github.repository }}
           GH_AW_GITHUB_RUN_ID: ${{ github.run_id }}
           GH_AW_GITHUB_WORKSPACE: ${{ github.workspace }}
@@ -205,20 +207,20 @@ jobs:
         run: |
           bash "${RUNNER_TEMP}/gh-aw/actions/create_prompt_first.sh"
           {
-          cat << 'GH_AW_PROMPT_21f30e88fbf855ec_EOF'
+          cat << 'GH_AW_PROMPT_e59f4f5c48ccc470_EOF'
           <system>
-          GH_AW_PROMPT_21f30e88fbf855ec_EOF
+          GH_AW_PROMPT_e59f4f5c48ccc470_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/xpia.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/temp_folder_prompt.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/markdown.md"
           cat "${RUNNER_TEMP}/gh-aw/prompts/safe_outputs_prompt.md"
-          cat << 'GH_AW_PROMPT_21f30e88fbf855ec_EOF'
+          cat << 'GH_AW_PROMPT_e59f4f5c48ccc470_EOF'
           <safe-output-tools>
           Tools: add_comment, add_labels, remove_labels(max:2), missing_tool, missing_data, noop
           </safe-output-tools>
-          GH_AW_PROMPT_21f30e88fbf855ec_EOF
+          GH_AW_PROMPT_e59f4f5c48ccc470_EOF
           cat "${RUNNER_TEMP}/gh-aw/prompts/mcp_cli_tools_prompt.md"
-          cat << 'GH_AW_PROMPT_21f30e88fbf855ec_EOF'
+          cat << 'GH_AW_PROMPT_e59f4f5c48ccc470_EOF'
           <github-context>
           The following GitHub context information is available for this workflow:
           {{#if github.actor}}
@@ -247,18 +249,20 @@ jobs:
           {{/if}}
           </github-context>
           
-          GH_AW_PROMPT_21f30e88fbf855ec_EOF
-          cat "${RUNNER_TEMP}/gh-aw/prompts/github_mcp_tools_with_safeoutputs_prompt.md"
-          cat << 'GH_AW_PROMPT_21f30e88fbf855ec_EOF'
+          GH_AW_PROMPT_e59f4f5c48ccc470_EOF
+          cat "${RUNNER_TEMP}/gh-aw/prompts/cli_proxy_with_safeoutputs_prompt.md"
+          cat << 'GH_AW_PROMPT_e59f4f5c48ccc470_EOF'
           </system>
           {{#runtime-import .github/workflows/pr-ai-slop-review.md}}
-          GH_AW_PROMPT_21f30e88fbf855ec_EOF
+          GH_AW_PROMPT_e59f4f5c48ccc470_EOF
           } > "$GH_AW_PROMPT"
       - name: Interpolate variables and render templates
         uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
         env:
           GH_AW_PROMPT: /tmp/gh-aw/aw-prompts/prompt.txt
           GH_AW_ENGINE_ID: "copilot"
+          GH_AW_GITHUB_EVENT_PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number }}
+          GH_AW_GITHUB_REPOSITORY: ${{ github.repository }}
         with:
           script: |
             const { setupGlobals } = require('${{ runner.temp }}/gh-aw/actions/setup_globals.cjs');
@@ -274,6 +278,7 @@ jobs:
           GH_AW_EXPR_802A9F6A: ${{ github.event.issue.number || (fromJSON(github.event.inputs.aw_context || github.event.client_payload.aw_context || '{}').item_type == 'issue' && fromJSON(github.event.inputs.aw_context || github.event.client_payload.aw_context || '{}').item_number) }}
           GH_AW_EXPR_FF1D34CE: ${{ github.event.comment.id || fromJSON(github.event.inputs.aw_context || github.event.client_payload.aw_context || '{}').comment_id }}
           GH_AW_GITHUB_ACTOR: ${{ github.actor }}
+          GH_AW_GITHUB_EVENT_PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number }}
           GH_AW_GITHUB_REPOSITORY: ${{ github.repository }}
           GH_AW_GITHUB_RUN_ID: ${{ github.run_id }}
           GH_AW_GITHUB_WORKSPACE: ${{ github.workspace }}
@@ -294,6 +299,7 @@ jobs:
                 GH_AW_EXPR_802A9F6A: process.env.GH_AW_EXPR_802A9F6A,
                 GH_AW_EXPR_FF1D34CE: process.env.GH_AW_EXPR_FF1D34CE,
                 GH_AW_GITHUB_ACTOR: process.env.GH_AW_GITHUB_ACTOR,
+                GH_AW_GITHUB_EVENT_PULL_REQUEST_NUMBER: process.env.GH_AW_GITHUB_EVENT_PULL_REQUEST_NUMBER,
                 GH_AW_GITHUB_REPOSITORY: process.env.GH_AW_GITHUB_REPOSITORY,
                 GH_AW_GITHUB_RUN_ID: process.env.GH_AW_GITHUB_RUN_ID,
                 GH_AW_GITHUB_WORKSPACE: process.env.GH_AW_GITHUB_WORKSPACE,
@@ -406,15 +412,15 @@ jobs:
           GH_AW_SUB_AGENT_EXT: ".agent.md"
         run: bash "${RUNNER_TEMP}/gh-aw/actions/restore_inline_sub_agents.sh"
       - name: Download container images
-        run: bash "${RUNNER_TEMP}/gh-aw/actions/download_docker_images.sh" ghcr.io/github/gh-aw-firewall/agent:0.25.49@sha256:9e4b936d4215af09fa412e12a5fc82f97f2cde4993eefc85980a900122fa9062 ghcr.io/github/gh-aw-firewall/api-proxy:0.25.49@sha256:b795506f6b4fd12694a29f964b4d38d2d29ac3aaafe3394131619ce36020b646 ghcr.io/github/gh-aw-firewall/squid:0.25.49@sha256:f6c6998edfb9f58b6e12d3f148e6f2104747a7702d563a9e8b13d4b2ae6997dd ghcr.io/github/gh-aw-mcpg:v0.3.9@sha256:64828b42a4482f58fab16509d7f8f495a6d97c972a98a68aff20543531ac0388 ghcr.io/github/github-mcp-server:v1.0.4@sha256:e3816a476a977cfb836e7d221510011436c654d11861db66ecfd826601aba6a4 node:lts-alpine@sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f
+        run: bash "${RUNNER_TEMP}/gh-aw/actions/download_docker_images.sh" ghcr.io/github/gh-aw-firewall/agent:0.25.49@sha256:9e4b936d4215af09fa412e12a5fc82f97f2cde4993eefc85980a900122fa9062 ghcr.io/github/gh-aw-firewall/api-proxy:0.25.49@sha256:b795506f6b4fd12694a29f964b4d38d2d29ac3aaafe3394131619ce36020b646 ghcr.io/github/gh-aw-firewall/cli-proxy:0.25.49 ghcr.io/github/gh-aw-firewall/squid:0.25.49@sha256:f6c6998edfb9f58b6e12d3f148e6f2104747a7702d563a9e8b13d4b2ae6997dd ghcr.io/github/gh-aw-mcpg:v0.3.9@sha256:64828b42a4482f58fab16509d7f8f495a6d97c972a98a68aff20543531ac0388 ghcr.io/github/github-mcp-server:v1.0.4@sha256:e3816a476a977cfb836e7d221510011436c654d11861db66ecfd826601aba6a4 node:lts-alpine@sha256:d1b3b4da11eefd5941e7f0b9cf17783fc99d9c6fc34884a665f40a06dbdfc94f
       - name: Generate Safe Outputs Config
         run: |
           mkdir -p "${RUNNER_TEMP}/gh-aw/safeoutputs"
           mkdir -p /tmp/gh-aw/safeoutputs
           mkdir -p /tmp/gh-aw/mcp-logs/safeoutputs
-          cat > "${RUNNER_TEMP}/gh-aw/safeoutputs/config.json" << 'GH_AW_SAFE_OUTPUTS_CONFIG_81df8dc3cafa94eb_EOF'
+          cat > "${RUNNER_TEMP}/gh-aw/safeoutputs/config.json" << 'GH_AW_SAFE_OUTPUTS_CONFIG_fdd599da9f6b2849_EOF'
           {"add_comment":{"hide_older_comments":true,"max":1},"add_labels":{"allowed":["ai-slop:high","ai-slop:med"],"max":1},"create_report_incomplete_issue":{},"mentions":{"enabled":false},"missing_data":{},"missing_tool":{},"noop":{"max":1,"report-as-issue":"true"},"remove_labels":{"allowed":["ai-slop:high","ai-slop:med"],"max":2},"report_incomplete":{}}
-          GH_AW_SAFE_OUTPUTS_CONFIG_81df8dc3cafa94eb_EOF
+          GH_AW_SAFE_OUTPUTS_CONFIG_fdd599da9f6b2849_EOF
       - name: Generate Safe Outputs Tools
         env:
           GH_AW_TOOLS_META_JSON: |
@@ -616,7 +622,6 @@ jobs:
           GH_AW_SAFE_OUTPUTS: ${{ steps.set-runtime-paths.outputs.GH_AW_SAFE_OUTPUTS }}
           GH_AW_SAFE_OUTPUTS_API_KEY: ${{ steps.safe-outputs-start.outputs.api_key }}
           GH_AW_SAFE_OUTPUTS_PORT: ${{ steps.safe-outputs-start.outputs.port }}
-          GITHUB_MCP_SERVER_TOKEN: ${{ secrets.GH_AW_GITHUB_MCP_SERVER_TOKEN || secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
         run: |
           set -eo pipefail
           mkdir -p "${RUNNER_TEMP}/gh-aw/mcp-config"
@@ -646,28 +651,9 @@ jobs:
           
           mkdir -p /home/runner/.copilot
           GH_AW_NODE=$(which node 2>/dev/null || command -v node 2>/dev/null || echo node)
-          cat << GH_AW_MCP_CONFIG_fb7d88a2ef2972de_EOF | "$GH_AW_NODE" "${RUNNER_TEMP}/gh-aw/actions/start_mcp_gateway.cjs"
+          cat << GH_AW_MCP_CONFIG_eeff70c8dab647b4_EOF | "$GH_AW_NODE" "${RUNNER_TEMP}/gh-aw/actions/start_mcp_gateway.cjs"
           {
             "mcpServers": {
-              "github": {
-                "type": "stdio",
-                "container": "ghcr.io/github/github-mcp-server:v1.0.4",
-                "env": {
-                  "GITHUB_HOST": "\${GITHUB_SERVER_URL}",
-                  "GITHUB_PERSONAL_ACCESS_TOKEN": "\${GITHUB_MCP_SERVER_TOKEN}",
-                  "GITHUB_READ_ONLY": "1",
-                  "GITHUB_TOOLSETS": "issues,pull_requests"
-                },
-                "guard-policies": {
-                  "allow-only": {
-                    "approval-labels": ${{ steps.parse-guard-vars.outputs.approval_labels }},
-                    "blocked-users": ${{ steps.parse-guard-vars.outputs.blocked_users }},
-                    "min-integrity": "unapproved",
-                    "repos": "all",
-                    "trusted-users": ${{ steps.parse-guard-vars.outputs.trusted_users }}
-                  }
-                }
-              },
               "safeoutputs": {
                 "type": "http",
                 "url": "http://host.docker.internal:$GH_AW_SAFE_OUTPUTS_PORT",
@@ -690,7 +676,7 @@ jobs:
               "payloadDir": "${MCP_GATEWAY_PAYLOAD_DIR}"
             }
           }
-          GH_AW_MCP_CONFIG_fb7d88a2ef2972de_EOF
+          GH_AW_MCP_CONFIG_eeff70c8dab647b4_EOF
       - name: Mount MCP servers as CLIs
         id: mount-mcp-clis
         continue-on-error: true
@@ -712,9 +698,35 @@ jobs:
         id: pre_agent_audit
         continue-on-error: true
         run: bash "${RUNNER_TEMP}/gh-aw/actions/audit_pre_agent_workspace.sh"
+      - name: Start CLI Proxy
+        env:
+          GH_TOKEN: ${{ secrets.GH_AW_GITHUB_MCP_SERVER_TOKEN || secrets.GH_AW_GITHUB_TOKEN || secrets.GITHUB_TOKEN }}
+          GITHUB_SERVER_URL: ${{ github.server_url }}
+          CLI_PROXY_POLICY: '{"allow-only":{"min-integrity":"unapproved","repos":"all"}}'
+          CLI_PROXY_IMAGE: 'ghcr.io/github/gh-aw-mcpg:v0.3.9'
+        run: |
+          bash "${RUNNER_TEMP}/gh-aw/actions/start_cli_proxy.sh"
       - name: Execute GitHub Copilot CLI
         id: agentic_execution
         # Copilot CLI tool arguments (sorted):
+        # --allow-tool github
+        # --allow-tool safeoutputs
+        # --allow-tool shell(cat)
+        # --allow-tool shell(date)
+        # --allow-tool shell(echo)
+        # --allow-tool shell(gh:*)
+        # --allow-tool shell(grep)
+        # --allow-tool shell(head)
+        # --allow-tool shell(ls)
+        # --allow-tool shell(printf)
+        # --allow-tool shell(pwd)
+        # --allow-tool shell(safeoutputs:*)
+        # --allow-tool shell(sort)
+        # --allow-tool shell(tail)
+        # --allow-tool shell(uniq)
+        # --allow-tool shell(wc)
+        # --allow-tool shell(yq)
+        # --allow-tool write
         timeout-minutes: 20
         run: |
           set -o pipefail
@@ -731,8 +743,8 @@ jobs:
             GH_AW_DOCKER_HOST_PATH_PREFIX_ARGS="--docker-host-path-prefix /tmp/gh-aw"
           fi
           # shellcheck disable=SC1003
-          sudo -E awf --config "${RUNNER_TEMP}/gh-aw/awf-config.json" --container-workdir "${GITHUB_WORKSPACE}" --mount "${RUNNER_TEMP}/gh-aw:${RUNNER_TEMP}/gh-aw:ro" --mount "${RUNNER_TEMP}/gh-aw:/host${RUNNER_TEMP}/gh-aw:ro" ${GH_AW_DOCKER_HOST_PATH_PREFIX_ARGS} --env-all --exclude-env COPILOT_GITHUB_TOKEN --exclude-env GITHUB_MCP_SERVER_TOKEN --exclude-env MCP_GATEWAY_API_KEY --log-level info --proxy-logs-dir /tmp/gh-aw/sandbox/firewall/logs --audit-dir /tmp/gh-aw/sandbox/firewall/audit --enable-host-access --allow-host-ports 80,443,8080 --skip-pull \
-            -- /bin/bash -c 'export PATH="${RUNNER_TEMP}/gh-aw/mcp-cli/bin:$PATH" && export PATH="$(find /opt/hostedtoolcache /home/runner/work/_tool -maxdepth 5 -type d -name bin 2>/dev/null | tr '\''\n'\'' '\'':'\'')$PATH"; [ -n "$GOROOT" ] && export PATH="$GOROOT/bin:$PATH" || true && GH_AW_NODE_EXEC="${GH_AW_NODE_BIN:-}"; if [ -z "$GH_AW_NODE_EXEC" ] || [ ! -x "$GH_AW_NODE_EXEC" ]; then GH_AW_NODE_EXEC="$(command -v node 2>/dev/null || true)"; fi; if [ -z "$GH_AW_NODE_EXEC" ]; then echo "node runtime missing on this runner — check runtimes.node in workflow YAML" >&2; exit 127; fi; "$GH_AW_NODE_EXEC" ${RUNNER_TEMP}/gh-aw/actions/copilot_harness.cjs /usr/local/bin/copilot --add-dir /tmp/gh-aw/ --log-level all --log-dir /tmp/gh-aw/sandbox/agent/logs/ --disable-builtin-mcps --no-ask-user --allow-all-tools --allow-all-paths --add-dir "${GITHUB_WORKSPACE}" --prompt-file /tmp/gh-aw/aw-prompts/prompt.txt' 2>&1 | tee -a /tmp/gh-aw/agent-stdio.log
+          sudo -E awf --config "${RUNNER_TEMP}/gh-aw/awf-config.json" --container-workdir "${GITHUB_WORKSPACE}" --mount "${RUNNER_TEMP}/gh-aw:${RUNNER_TEMP}/gh-aw:ro" --mount "${RUNNER_TEMP}/gh-aw:/host${RUNNER_TEMP}/gh-aw:ro" ${GH_AW_DOCKER_HOST_PATH_PREFIX_ARGS} --env-all --exclude-env COPILOT_GITHUB_TOKEN --exclude-env GH_TOKEN --exclude-env GITHUB_MCP_SERVER_TOKEN --exclude-env MCP_GATEWAY_API_KEY --log-level info --proxy-logs-dir /tmp/gh-aw/sandbox/firewall/logs --audit-dir /tmp/gh-aw/sandbox/firewall/audit --enable-host-access --allow-host-ports 80,443,8080 --skip-pull --difc-proxy-host host.docker.internal:18443 --difc-proxy-ca-cert /tmp/gh-aw/difc-proxy-tls/ca.crt \
+            -- /bin/bash -c 'export PATH="${RUNNER_TEMP}/gh-aw/mcp-cli/bin:$PATH" && export PATH="$(find /opt/hostedtoolcache /home/runner/work/_tool -maxdepth 5 -type d -name bin 2>/dev/null | tr '\''\n'\'' '\'':'\'')$PATH"; [ -n "$GOROOT" ] && export PATH="$GOROOT/bin:$PATH" || true && GH_AW_NODE_EXEC="${GH_AW_NODE_BIN:-}"; if [ -z "$GH_AW_NODE_EXEC" ] || [ ! -x "$GH_AW_NODE_EXEC" ]; then GH_AW_NODE_EXEC="$(command -v node 2>/dev/null || true)"; fi; if [ -z "$GH_AW_NODE_EXEC" ]; then echo "node runtime missing on this runner — check runtimes.node in workflow YAML" >&2; exit 127; fi; "$GH_AW_NODE_EXEC" ${RUNNER_TEMP}/gh-aw/actions/copilot_harness.cjs /usr/local/bin/copilot --add-dir /tmp/gh-aw/ --log-level all --log-dir /tmp/gh-aw/sandbox/agent/logs/ --disable-builtin-mcps --no-ask-user --allow-tool github --allow-tool safeoutputs --allow-tool '\''shell(cat)'\'' --allow-tool '\''shell(date)'\'' --allow-tool '\''shell(echo)'\'' --allow-tool '\''shell(gh:*)'\'' --allow-tool '\''shell(grep)'\'' --allow-tool '\''shell(head)'\'' --allow-tool '\''shell(ls)'\'' --allow-tool '\''shell(printf)'\'' --allow-tool '\''shell(pwd)'\'' --allow-tool '\''shell(safeoutputs:*)'\'' --allow-tool '\''shell(sort)'\'' --allow-tool '\''shell(tail)'\'' --allow-tool '\''shell(uniq)'\'' --allow-tool '\''shell(wc)'\'' --allow-tool '\''shell(yq)'\'' --allow-tool write --allow-all-paths --add-dir "${GITHUB_WORKSPACE}" --prompt-file /tmp/gh-aw/aw-prompts/prompt.txt' 2>&1 | tee -a /tmp/gh-aw/agent-stdio.log
         env:
           AWF_REFLECT_ENABLED: 1
           COPILOT_AGENT_RUNNER_TYPE: STANDALONE
@@ -744,6 +756,7 @@ jobs:
           GH_AW_PROMPT: /tmp/gh-aw/aw-prompts/prompt.txt
           GH_AW_SAFE_OUTPUTS: ${{ steps.set-runtime-paths.outputs.GH_AW_SAFE_OUTPUTS }}
           GH_AW_VERSION: v0.74.8
+          GH_TOKEN: ${{ secrets.GH_AW_GITHUB_TOKEN || github.token }}
           GITHUB_API_URL: ${{ github.api_url }}
           GITHUB_AW: true
           GITHUB_COPILOT_INTEGRATION_ID: agentic-workflows
@@ -758,6 +771,10 @@ jobs:
           GIT_COMMITTER_EMAIL: github-actions[bot]@users.noreply.github.com
           GIT_COMMITTER_NAME: github-actions[bot]
           XDG_CONFIG_HOME: /home/runner
+      - name: Stop CLI Proxy
+        if: always()
+        continue-on-error: true
+        run: bash "${RUNNER_TEMP}/gh-aw/actions/stop_cli_proxy.sh"
       - name: Detect Copilot errors
         id: detect-copilot-errors
         if: always()
