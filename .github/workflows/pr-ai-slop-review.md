@@ -10,6 +10,7 @@ on:
     types: [opened, reopened, synchronize]
   workflow_dispatch:
 
+checkout: false
 permissions:
   contents: read
   issues: read
