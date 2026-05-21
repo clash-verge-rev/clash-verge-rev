@@ -12,13 +12,12 @@ on:
 
 checkout: false
 permissions:
-  contents: read
   issues: read
   pull-requests: read
 
 tools:
   github:
-    toolsets: [default]
+    toolsets: [issues, pull_requests]
     lockdown: false
     min-integrity: unapproved
 
