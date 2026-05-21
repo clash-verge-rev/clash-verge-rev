@@ -31,7 +31,7 @@ struct TaskState {
 }
 
 impl TaskState {
-    fn new(key: Key, interval_minutes: u64) -> Self {
+    const fn new(key: Key, interval_minutes: u64) -> Self {
         Self {
             key: Some(key),
             interval_minutes,
@@ -70,7 +70,8 @@ impl Timer {
             return Ok(());
         }
 
-        if let Some(command_rx) = self.command_rx.lock().take() {
+        let command_rx = { self.command_rx.lock().take() };
+        if let Some(command_rx) = command_rx {
             let command_tx = self.command_tx.clone();
             AsyncHandler::spawn(move || async move {
                 Self::run_scheduler(command_rx, command_tx).await;
@@ -333,7 +334,7 @@ impl Timer {
         });
     }
 
-    fn interval_duration(interval_minutes: u64) -> Duration {
+    const fn interval_duration(interval_minutes: u64) -> Duration {
         Duration::from_secs(interval_minutes.saturating_mul(60))
     }
 
