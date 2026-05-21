@@ -596,7 +596,7 @@ export const ProfileItem = (props: Props) => {
     let disposed = false
     let unlisteners: Array<() => void> = []
 
-    Promise.all([
+    Promise.allSettled([
       listen<{ uid?: string }>('profile-update-started', ({ payload }) => {
         if (payload.uid === itemData.uid) {
           setLoadingCache((cache) => ({ ...cache, [itemData.uid]: true }))
@@ -615,15 +615,21 @@ export const ProfileItem = (props: Props) => {
           fetchNextUpdateTime()
         }
       }),
-    ])
-      .then((registeredUnlisteners) => {
-        if (disposed) {
-          registeredUnlisteners.forEach((unlisten) => unlisten())
-          return
-        }
-        unlisteners = registeredUnlisteners
-      })
-      .catch(console.error)
+    ]).then((results) => {
+      const registeredUnlisteners = results.flatMap((result) =>
+        result.status === 'fulfilled' ? [result.value] : [],
+      )
+
+      if (disposed || results.some((result) => result.status === 'rejected')) {
+        registeredUnlisteners.forEach((unlisten) => unlisten())
+        results.forEach((result) => {
+          if (result.status === 'rejected') console.error(result.reason)
+        })
+        return
+      }
+
+      unlisteners = registeredUnlisteners
+    })
 
     return () => {
       disposed = true
