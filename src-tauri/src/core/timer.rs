@@ -73,7 +73,6 @@ impl Timer {
                 let current_tasks = notify_rx.borrow_and_update().clone();
 
                 if current_tasks.is_empty() {
-                    logging!(debug, Type::Timer, "当前无定时任务，调度中心静默中...");
                     if notify_rx.changed().await.is_err() {
                         break;
                     }
@@ -86,13 +85,11 @@ impl Timer {
                     queue.insert((uid, interval_minutes), delay);
                 }
 
-                logging!(debug, Type::Timer, "统一调度中心已就绪，正在轮询时间轮...");
-
                 loop {
                     tokio::select! {
                         Some(expired) = queue.next() => {
                             let (uid, interval_minutes) = expired.into_inner();
-                            logging!(info, Type::Timer, "时钟信号触发，开始执行定时任务: uid={}", uid);
+                            logging!(info, Type::Timer, "开始执行定时任务: uid={}", uid);
 
                             let uid_clone = uid.clone();
                             AsyncHandler::spawn(move || async move {
@@ -108,7 +105,7 @@ impl Timer {
                             if res.is_err() {
                                 return;
                             }
-                            logging!(debug, Type::Timer, "接收到定时任务变更通知，重建统一时间轮中...");
+                            logging!(debug, Type::Timer, "刷新定时任务列表...");
                             break;
                         }
                     }
@@ -186,7 +183,7 @@ impl Timer {
     }
 
     pub async fn get_next_update_time(&self, uid: &str) -> Option<i64> {
-        logging!(debug, Type::Timer, "获取下次更新时间，uid={}", uid);
+        logging!(debug, Type::Timer, "获取下次更新时间, uid={}", uid);
 
         let task_interval = *self.timer_map.read().get(uid)?;
         let profiles = Config::profiles().await;
