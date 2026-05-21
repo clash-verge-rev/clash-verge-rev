@@ -81,7 +81,7 @@ impl Timer {
 
                 let mut queue = DelayQueue::new();
                 for (uid, interval_minutes) in current_tasks {
-                    let delay = Duration::from_secs(interval_minutes * 60);
+                    let delay = Duration::from_secs(interval_minutes.saturating_mul(60));
                     queue.insert((uid, interval_minutes), delay);
                 }
 
@@ -97,7 +97,7 @@ impl Timer {
                                 Self::async_task(&uid_clone).await;
                             });
 
-                            let next_delay = Duration::from_secs(interval_minutes * 60);
+                            let next_delay = Duration::from_secs(interval_minutes.saturating_mul(60));
                             queue.insert((uid, interval_minutes), next_delay);
                         }
 
