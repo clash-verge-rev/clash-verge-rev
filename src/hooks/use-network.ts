@@ -7,10 +7,20 @@ export const useNetworkInterfaces = () => {
     data,
     error,
     isLoading,
+    isFetching,
     refetch: mutate,
   } = useQuery({
     queryKey: ['getNetworkInterfacesInfo'],
-    queryFn: getNetworkInterfacesInfo,
+    queryFn: async () => {
+      try {
+        const res = await getNetworkInterfacesInfo()
+        console.log('[Network] Backend returned interfaces:', res)
+        return res
+      } catch (err) {
+        console.error('[Network] Backend returned error:', err)
+        throw err
+      }
+    },
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     initialData: [],
@@ -18,7 +28,7 @@ export const useNetworkInterfaces = () => {
 
   return {
     networkInterfaces: data || [],
-    loading: isLoading,
+    loading: isLoading || isFetching,
     error,
     mutate,
   }

@@ -14,14 +14,15 @@ export function NetworkInterfaceViewer({ ref }: { ref?: Ref<DialogRef> }) {
   const [open, setOpen] = useState(false)
   const [isV4, setIsV4] = useState(true)
 
+  const { networkInterfaces, mutate, error, loading } = useNetworkInterfaces()
+
   useImperativeHandle(ref, () => ({
     open: () => {
+      mutate()
       setOpen(true)
     },
     close: () => setOpen(false),
   }))
-
-  const { networkInterfaces } = useNetworkInterfaces()
 
   return (
     <BaseDialog
@@ -48,6 +49,15 @@ export function NetworkInterfaceViewer({ ref }: { ref?: Ref<DialogRef> }) {
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}
     >
+      {loading && <Box>Loading interfaces...</Box>}
+      {error && (
+        <Box color="error.main" sx={{ mb: 2 }}>
+          Error loading interfaces: {String((error as Error)?.message || error)}
+        </Box>
+      )}
+      {!loading && !error && networkInterfaces.length === 0 && (
+        <Box>No interfaces found.</Box>
+      )}
       {networkInterfaces.map((item) => (
         <Box key={item.name}>
           <h4>{item.name}</h4>

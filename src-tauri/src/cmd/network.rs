@@ -3,11 +3,9 @@ use crate::cmd::StringifyErr as _;
 use crate::core::sysopt::Sysopt;
 use clash_verge_logging::{Type, logging};
 use gethostname::gethostname;
-use network_interface::NetworkInterface;
 use serde_yaml_ng::Mapping;
 use std::net::TcpListener;
 use sysproxy::{Autoproxy, Sysproxy};
-use tauri_plugin_clash_verge_sysinfo;
 
 /// get the system proxy
 #[tauri::command]
@@ -77,25 +75,63 @@ pub fn get_system_hostname() -> String {
 
 /// 获取网络接口列表
 #[tauri::command]
-pub fn get_network_interfaces() -> Vec<String> {
-    tauri_plugin_clash_verge_sysinfo::list_network_interfaces()
+pub async fn get_network_interfaces() -> Vec<String> {
+    tokio::task::spawn_blocking(|| {
+        let mut networks = sysinfo::Networks::new();
+        networks.refresh(false);
+        networks.keys().map(|k| k.to_string()).collect()
+    })
+    .await
+    .unwrap_or_default()
 }
 
 /// 获取网络接口详细信息
 #[tauri::command]
-pub fn get_network_interfaces_info() -> CmdResult<Vec<NetworkInterface>> {
-    use network_interface::{NetworkInterface, NetworkInterfaceConfig as _};
+pub async fn get_network_interfaces_info() -> CmdResult<Vec<serde_json::Value>> {
+    let result = tokio::task::spawn_blocking(|| {
+        let mut networks = sysinfo::Networks::new();
+        networks.refresh(false);
 
-    let names = get_network_interfaces();
-    let interfaces = NetworkInterface::show().stringify_err()?;
+        let mut list = Vec::new();
+        for (name, network) in networks.iter() {
+            let mut addrs = Vec::new();
+            for ip_net in network.ip_networks() {
+                match ip_net.addr {
+                    std::net::IpAddr::V4(v4) => {
+                        addrs.push(serde_json::json!({
+                            "V4": {
+                                "ip": v4.to_string()
+                            }
+                        }));
+                    }
+                    std::net::IpAddr::V6(v6) => {
+                        addrs.push(serde_json::json!({
+                            "V6": {
+                                "ip": v6.to_string()
+                            }
+                        }));
+                    }
+                }
+            }
 
-    let mut result = Vec::new();
+            let mac_addr = network.mac_address().to_string();
+            let mac_addr_opt = if mac_addr == "00:00:00:00:00:00" {
+                None::<String>
+            } else {
+                Some(mac_addr.replace('-', ":").to_uppercase())
+            };
 
-    for interface in interfaces {
-        if names.contains(&interface.name) {
-            result.push(interface);
+            list.push(serde_json::json!({
+                "name": name,
+                "addr": addrs,
+                "mac_addr": mac_addr_opt,
+                "index": 0,
+            }));
         }
-    }
+        list
+    })
+    .await
+    .unwrap_or_default();
 
     Ok(result)
 }
