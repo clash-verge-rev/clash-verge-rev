@@ -5,7 +5,9 @@ use arc_swap::{ArcSwap, ArcSwapOption};
 use backon::{ConstantBuilder, Retryable as _};
 use clash_verge_logging::{Type, logging};
 use once_cell::sync::OnceCell;
+use reqwest::StatusCode;
 use reqwest_dav::list_cmd::{ListEntity, ListFile};
+use reqwest_dav::{DecodeError, Error as WebDavError};
 use smartstring::alias::String;
 use std::{
     collections::HashMap,
@@ -23,8 +25,8 @@ const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 const TIMEOUT_UPLOAD: u64 = 300; // 上传超时 5 分钟
 const TIMEOUT_DOWNLOAD: u64 = 300; // 下载超时 5 分钟
-const TIMEOUT_LIST: u64 = 3; // 列表超时 30 秒
-const TIMEOUT_DELETE: u64 = 3; // 删除超时 30 秒
+const TIMEOUT_LIST: u64 = 30; // 列表超时 30 秒
+const TIMEOUT_DELETE: u64 = 3; // 删除超时 3 秒
 
 #[derive(Clone)]
 struct WebDavConfig {
@@ -130,22 +132,7 @@ impl WebDavClient {
             .set_auth(reqwest_dav::Auth::Basic(config.username.into(), config.password.into()))
             .build()?;
 
-        // 尝试检查目录是否存在，如果不存在尝试创建
-        if client
-            .list(dirs::BACKUP_DIR, reqwest_dav::Depth::Number(0))
-            .await
-            .is_err()
-        {
-            match client.mkcol(dirs::BACKUP_DIR).await {
-                Ok(_) => logging!(info, Type::Backup, "Successfully created backup directory"),
-                Err(e) => {
-                    logging!(warn, Type::Backup, "Warning: Failed to create backup directory: {}", e);
-                    // 清除缓存，强制下次重新尝试
-                    self.reset();
-                    return Err(anyhow::Error::msg(format!("Failed to create backup directory: {}", e)));
-                }
-            }
-        }
+        self.ensure_backup_dir(&client).await?;
 
         {
             self.clients.rcu(|clients_map| {
@@ -161,6 +148,34 @@ impl WebDavClient {
     pub fn reset(&self) {
         self.config.store(None);
         self.clients.store(Arc::new(HashMap::new()));
+    }
+
+    async fn ensure_backup_dir(&self, client: &reqwest_dav::Client) -> Result<(), Error> {
+        match client.list(dirs::BACKUP_DIR, reqwest_dav::Depth::Number(0)).await {
+            Ok(_) => Ok(()),
+            // 只有明确 404 才创建目录，避免把超时/服务端错误误判成不存在。
+            Err(err) if is_webdav_status(&err, StatusCode::NOT_FOUND) => match client.mkcol(dirs::BACKUP_DIR).await {
+                Ok(_) => {
+                    logging!(info, Type::Backup, "Successfully created backup directory");
+                    Ok(())
+                }
+                // 405 通常表示目录已存在，可能是并发创建或服务端语义差异。
+                Err(err) if is_webdav_status(&err, StatusCode::METHOD_NOT_ALLOWED) => {
+                    logging!(info, Type::Backup, "Backup directory already exists");
+                    Ok(())
+                }
+                Err(err) => {
+                    logging!(warn, Type::Backup, "Warning: Failed to create backup directory: {err}");
+                    self.reset();
+                    Err(anyhow::Error::msg(format!("Failed to create backup directory: {err}")))
+                }
+            },
+            Err(err) => {
+                logging!(warn, Type::Backup, "Warning: Failed to check backup directory: {err}");
+                self.reset();
+                Err(anyhow::Error::msg(format!("Failed to check backup directory: {err}")))
+            }
+        }
     }
 
     pub async fn upload(&self, file_path: PathBuf, file_name: String) -> Result<(), Error> {
@@ -228,6 +243,15 @@ impl WebDavClient {
         let fut = client.delete(&path);
         timeout(Duration::from_secs(TIMEOUT_DELETE), fut).await??;
         Ok(())
+    }
+}
+
+fn is_webdav_status(err: &WebDavError, status_code: StatusCode) -> bool {
+    match err {
+        WebDavError::Decode(DecodeError::StatusMismatched(err)) => err.response_code == status_code.as_u16(),
+        WebDavError::Decode(DecodeError::Server(err)) => err.response_code == status_code.as_u16(),
+        WebDavError::Reqwest(err) => err.status() == Some(status_code),
+        _ => false,
     }
 }
 
