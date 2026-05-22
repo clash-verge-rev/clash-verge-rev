@@ -15,10 +15,21 @@ pub const ITEM_MERGE: &str = "# Profile Enhancement Merge Template for Clash Ver
 
 profile:
   store-selected: true
+
+# Sequence helpers are applied around the current profile lists.
+# prepend-rules:
+#   - 'DOMAIN-SUFFIX,example.com,DIRECT'
+# append-rules:
+#   - 'MATCH,Proxy'
 ";
 
 pub const ITEM_MERGE_EMPTY: &str = "# Profile Enhancement Merge Template for Clash Verge
 
+# Sequence helpers are applied around the current profile lists.
+# prepend-rules:
+#   - 'DOMAIN-SUFFIX,example.com,DIRECT'
+# append-rules:
+#   - 'MATCH,Proxy'
 ";
 
 /// enhanced profile
