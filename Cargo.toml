@@ -71,7 +71,7 @@ smartstring = { version = "1.0.1" }
 compact_str = { version = "0.9.0", features = ["serde"] }
 
 serde = { version = "1.0.228" }
-serde_json = { version = "1.0.149" }
+serde_json = { version = "1.0.150" }
 serde_yaml_ng = { version = "0.10.0" }
 bitflags = { version = "2.11.1" }
 
