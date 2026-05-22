@@ -396,7 +396,6 @@ impl Timer {
                     uid,
                     task_start.elapsed().as_millis()
                 );
-                handle::Handle::notify_profile_update_completed(uid);
             }
             Ok(Err(e)) => logging_error!(Type::Timer, "Failed to update profile uid {}: {}", uid, e),
             Err(_) => logging_error!(Type::Timer, "Timer task timed out for uid: {}", uid),
