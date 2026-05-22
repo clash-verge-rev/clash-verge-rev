@@ -1,6 +1,7 @@
 use super::CmdResult;
 use crate::cmd::StringifyErr as _;
 use crate::core::sysopt::Sysopt;
+use crate::process::AsyncHandler;
 use clash_verge_logging::{Type, logging};
 use gethostname::gethostname;
 use serde_yaml_ng::Mapping;
@@ -76,7 +77,7 @@ pub fn get_system_hostname() -> String {
 /// 获取网络接口列表
 #[tauri::command]
 pub async fn get_network_interfaces() -> Vec<String> {
-    tokio::task::spawn_blocking(|| {
+    AsyncHandler::spawn_blocking(|| {
         let mut networks = sysinfo::Networks::new();
         networks.refresh(false);
         networks.keys().map(|k| k.to_string()).collect()
@@ -88,52 +89,40 @@ pub async fn get_network_interfaces() -> Vec<String> {
 /// 获取网络接口详细信息
 #[tauri::command]
 pub async fn get_network_interfaces_info() -> CmdResult<Vec<serde_json::Value>> {
-    let result = tokio::task::spawn_blocking(|| {
+    let result = AsyncHandler::spawn_blocking(|| {
         let mut networks = sysinfo::Networks::new();
         networks.refresh(false);
 
-        let mut list = Vec::new();
-        for (name, network) in networks.iter() {
-            let mut addrs = Vec::new();
-            for ip_net in network.ip_networks() {
-                match ip_net.addr {
-                    std::net::IpAddr::V4(v4) => {
-                        addrs.push(serde_json::json!({
-                            "V4": {
-                                "ip": v4.to_string()
-                            }
-                        }));
-                    }
-                    std::net::IpAddr::V6(v6) => {
-                        addrs.push(serde_json::json!({
-                            "V6": {
-                                "ip": v6.to_string()
-                            }
-                        }));
-                    }
-                }
-            }
-
-            let mac_addr = network.mac_address().to_string();
-            let mac_addr_opt = if mac_addr == "00:00:00:00:00:00" {
-                None::<String>
-            } else {
-                Some(mac_addr.replace('-', ":").to_uppercase())
-            };
-
-            list.push(serde_json::json!({
-                "name": name,
-                "addr": addrs,
-                "mac_addr": mac_addr_opt,
-                "index": 0,
-            }));
-        }
-        list
+        networks.iter().map(format_network_interface).collect::<Vec<_>>()
     })
     .await
     .unwrap_or_default();
 
     Ok(result)
+}
+
+/// 格式化 IP 网络地址
+fn format_ip_network(ip_net: &sysinfo::IpNetwork) -> serde_json::Value {
+    match ip_net.addr {
+        std::net::IpAddr::V4(v4) => serde_json::json!({ "V4": { "ip": v4.to_string() } }),
+        std::net::IpAddr::V6(v6) => serde_json::json!({ "V6": { "ip": v6.to_string() } }),
+    }
+}
+
+/// 格式化单个网络接口信息
+fn format_network_interface(item: (&String, &sysinfo::NetworkData)) -> serde_json::Value {
+    let (name, network) = item;
+    let addrs: Vec<_> = network.ip_networks().iter().map(format_ip_network).collect();
+
+    let mac_addr = network.mac_address().to_string();
+    let mac_addr_opt = (mac_addr != "00:00:00:00:00:00").then(|| mac_addr.replace('-', ":").to_uppercase());
+
+    serde_json::json!({
+        "name": name,
+        "addr": addrs,
+        "mac_addr": mac_addr_opt,
+        "index": 0,
+    })
 }
 
 #[tauri::command]
