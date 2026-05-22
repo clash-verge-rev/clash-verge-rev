@@ -1,4 +1,3 @@
-import { event } from '@tauri-apps/api'
 import { listen, UnlistenFn, EventCallback } from '@tauri-apps/api/event'
 import { useCallback, useRef } from 'react'
 
@@ -35,15 +34,8 @@ export const useListen = () => {
     unlistenFnsRef.current.length = 0
   }, [])
 
-  const setupCloseListener = useCallback(async () => {
-    await event.once('tauri://close-requested', async () => {
-      removeAllListeners()
-    })
-  }, [removeAllListeners])
-
   return {
     addListener,
     removeAllListeners,
-    setupCloseListener,
   }
 }
