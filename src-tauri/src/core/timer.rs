@@ -1,4 +1,4 @@
-use crate::{config::Config, core::handle, feat, process::AsyncHandler, singleton, utils::resolve::is_resolve_done};
+use crate::{config::Config, feat, process::AsyncHandler, singleton, utils::resolve::is_resolve_done};
 use anyhow::Result;
 use clash_verge_logging::{Type, logging, logging_error};
 use parking_lot::{Mutex, RwLock};

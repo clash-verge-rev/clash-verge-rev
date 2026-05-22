@@ -1,5 +1,3 @@
-use std::time::Duration;
-
 use anyhow::Result;
 use percent_encoding::percent_decode_str;
 use smartstring::alias::String;
@@ -123,7 +121,6 @@ async fn fetch_profile_item(url: &str, name: Option<&String>) -> Option<PrfItem>
 async fn post_import_updates(uid: &String, had_current_profile: bool) {
     handle::Handle::refresh_verge();
     handle::Handle::notify_profile_changed(uid);
-    tokio::time::sleep(Duration::from_millis(100)).await;
 
     let should_update_core = if uid.is_empty() || had_current_profile {
         false
@@ -131,7 +128,6 @@ async fn post_import_updates(uid: &String, had_current_profile: bool) {
         let profiles = Config::profiles().await;
         profiles.latest_arc().is_current_profile_index(uid)
     };
-    handle::Handle::notify_profile_changed(uid);
 
     if should_update_core {
         refresh_core_config().await;
