@@ -127,10 +127,38 @@ pub fn current_gid() -> u32 {
 }
 
 #[inline]
-pub fn list_network_interfaces() -> Vec<String> {
+pub fn list_network_interfaces() -> Vec<serde_json::Value> {
     let mut networks = Networks::new();
     networks.refresh(false);
-    networks.keys().map(|name| name.to_owned()).collect()
+    networks.iter().map(format_network_interface).collect()
+}
+
+/// 格式化 IP 网络地址
+fn format_ip_network(ip_net: &sysinfo::IpNetwork) -> serde_json::Value {
+    match ip_net.addr {
+        std::net::IpAddr::V4(v4) => serde_json::json!({ "V4": { "ip": v4.to_string() } }),
+        std::net::IpAddr::V6(v6) => serde_json::json!({ "V6": { "ip": v6.to_string() } }),
+    }
+}
+
+/// 格式化单个网络接口信息
+fn format_network_interface(item: (&String, &sysinfo::NetworkData)) -> serde_json::Value {
+    let (name, network) = item;
+    let addrs: Vec<_> = network.ip_networks().iter().map(format_ip_network).collect();
+
+    let mac_addr = network.mac_address().to_string();
+    let mac_addr_opt = if mac_addr == "00:00:00:00:00:00" {
+        None::<String>
+    } else {
+        Some(mac_addr.replace('-', ":").to_uppercase())
+    };
+
+    serde_json::json!({
+        "name": name,
+        "addr": addrs,
+        "mac_addr": mac_addr_opt,
+        "index": 0,
+    })
 }
 
 #[inline]

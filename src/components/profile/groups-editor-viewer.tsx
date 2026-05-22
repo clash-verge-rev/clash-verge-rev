@@ -52,7 +52,7 @@ import {
 } from '@/components/base'
 import { GroupItem } from '@/components/profile/group-item'
 import {
-  getNetworkInterfaces,
+  getNetworkInterfacesInfo,
   readProfileFile,
   saveProfileFile,
 } from '@/services/cmds'
@@ -473,8 +473,8 @@ export const GroupsEditorViewer = (props: Props) => {
     setGroupList(originGroupsObj?.['proxy-groups'] || [])
   }, [mergeUid, profileUid])
   const getInterfaceNameList = useCallback(async () => {
-    const list = await getNetworkInterfaces()
-    setInterfaceNameList(list)
+    const list = await getNetworkInterfacesInfo()
+    setInterfaceNameList(list.map((item) => item.name))
   }, [])
   useEffect(() => {
     if (!open) return
