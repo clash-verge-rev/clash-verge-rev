@@ -294,9 +294,6 @@ pub async fn init_config() -> Result<()> {
     // let _ = dirs::init_portable_flag();
 
     // We do not need init_log here anymore due to resolve will to the things
-    // if let Err(e) = init_log().await {
-    //     eprintln!("Failed to initialize logging: {}", e);
-    // }
 
     ensure_directories().await?;
 

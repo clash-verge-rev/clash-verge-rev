@@ -1,5 +1,4 @@
-import { ViewColumnRounded } from '@mui/icons-material'
-import { Box, IconButton, Tooltip } from '@mui/material'
+import { Box } from '@mui/material'
 import {
   ColumnDef,
   ColumnOrderState,
@@ -125,20 +124,6 @@ const SX_RESIZE_HANDLE: React.ComponentProps<typeof Box>['sx'] = {
   transform: 'translateX(50%)',
   '&:hover': {
     backgroundColor: (theme) => theme.palette.action.active,
-  },
-}
-
-const SX_ICON_BTN: React.ComponentProps<typeof IconButton>['sx'] = {
-  position: 'absolute',
-  top: 4,
-  right: 4,
-  zIndex: 3,
-  backgroundColor: (theme) =>
-    theme.palette.mode === 'dark'
-      ? theme.palette.background.default
-      : theme.palette.background.paper,
-  '&:hover': {
-    backgroundColor: (theme) => theme.palette.action.hover,
   },
 }
 
@@ -311,7 +296,6 @@ interface Props {
   connections: IConnectionsItem[]
   onShowDetail: (data: IConnectionsItem) => void
   columnManagerOpen: boolean
-  onOpenColumnManager: () => void
   onCloseColumnManager: () => void
 }
 
@@ -320,7 +304,6 @@ export const ConnectionTable = (props: Props) => {
     connections,
     onShowDetail: rawOnShowDetail,
     columnManagerOpen,
-    onOpenColumnManager,
     onCloseColumnManager,
   } = props
   const onShowDetailRef = useRef(rawOnShowDetail)
@@ -633,15 +616,6 @@ export const ConnectionTable = (props: Props) => {
   return (
     <>
       <Box sx={SX_OUTER}>
-        <Tooltip title={t('connections.components.columnManager.title')}>
-          <IconButton
-            size="small"
-            onClick={onOpenColumnManager}
-            sx={SX_ICON_BTN}
-          >
-            <ViewColumnRounded fontSize="small" />
-          </IconButton>
-        </Tooltip>
         <Box ref={tableContainerRef} sx={SX_SCROLL_CONTAINER}>
           <Box
             sx={{

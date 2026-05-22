@@ -22,7 +22,7 @@ import dayjs from 'dayjs'
 import { useCallback, useEffect, useReducer, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { ConfirmViewer } from '@/components/profile/confirm-viewer'
+import { BaseDialog } from '@/components/base'
 import { EditorViewer } from '@/components/profile/editor-viewer'
 import { GroupsEditorViewer } from '@/components/profile/groups-editor-viewer'
 import { RulesEditorViewer } from '@/components/profile/rules-editor-viewer'
@@ -630,7 +630,10 @@ export const ProfileItem = (props: Props) => {
 
   const handleSaveProfileDocument = useLockFn(async () => {
     const currentValue = profileDocument.value
-    await saveProfileFile(uid, currentValue)
+    if (!(await saveProfileFile(uid, currentValue))) {
+      await profileDocument.reload()
+      return
+    }
     onSave?.(profileDocument.savedValue, currentValue)
     profileDocument.markSaved(currentValue)
   })
@@ -638,7 +641,10 @@ export const ProfileItem = (props: Props) => {
   const handleSaveMergeDocument = useLockFn(async () => {
     const mergeUid = option?.merge ?? ''
     const currentValue = mergeDocument.value
-    await saveProfileFile(mergeUid, currentValue)
+    if (!(await saveProfileFile(mergeUid, currentValue))) {
+      await mergeDocument.reload()
+      return
+    }
     onSave?.(mergeDocument.savedValue, currentValue)
     mergeDocument.markSaved(currentValue)
   })
@@ -646,7 +652,10 @@ export const ProfileItem = (props: Props) => {
   const handleSaveScriptDocument = useLockFn(async () => {
     const scriptUid = option?.script ?? ''
     const currentValue = scriptDocument.value
-    await saveProfileFile(scriptUid, currentValue)
+    if (!(await saveProfileFile(scriptUid, currentValue))) {
+      await scriptDocument.reload()
+      return
+    }
     onSave?.(scriptDocument.savedValue, currentValue)
     scriptDocument.markSaved(currentValue)
   })
@@ -981,16 +990,23 @@ export const ProfileItem = (props: Props) => {
         />
       )}
 
-      <ConfirmViewer
+      <BaseDialog
         title={t('profiles.modals.confirmDelete.title')}
-        message={t('profiles.modals.confirmDelete.message')}
         open={confirmOpen}
+        okBtn={t('shared.actions.confirm')}
+        cancelBtn={t('shared.actions.cancel')}
+        contentSx={{ width: { xs: 320, sm: 420 }, userSelect: 'text' }}
+        onCancel={() => setConfirmOpen(false)}
         onClose={() => setConfirmOpen(false)}
-        onConfirm={() => {
+        onOk={() => {
           onDelete()
           setConfirmOpen(false)
         }}
-      />
+      >
+        <Typography variant="body2" sx={{ wordBreak: 'break-word' }}>
+          {t('profiles.modals.confirmDelete.message')}
+        </Typography>
+      </BaseDialog>
       {qrOpen && itemData.url && (
         <QrViewer
           open={true}

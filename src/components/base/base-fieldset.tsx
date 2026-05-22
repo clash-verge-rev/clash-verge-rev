@@ -1,12 +1,12 @@
-import { Box, styled } from '@mui/material'
-import React from 'react'
+import { Box } from '@mui/material'
+import type { ReactNode } from 'react'
 
 type Props = {
   label: string
   fontSize?: string
   width?: string
   padding?: string
-  children?: React.ReactNode
+  children?: ReactNode
 }
 
 export const BaseFieldset: React.FC<Props> = ({
@@ -16,29 +16,35 @@ export const BaseFieldset: React.FC<Props> = ({
   padding,
   children,
 }: Props) => {
-  const Fieldset = styled(Box)<{ component?: string }>(() => ({
-    position: 'relative',
-    border: '1px solid #bbb',
-    borderRadius: '5px',
-    width: width ?? 'auto',
-    padding: padding ?? '15px',
-  }))
-
-  const Label = styled('legend')(({ theme }) => ({
-    position: 'absolute',
-    top: '-10px',
-    left: padding ?? '15px',
-    backgroundColor: theme.palette.background.paper,
-    backgroundImage:
-      'linear-gradient(rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.16))',
-    color: theme.palette.text.primary,
-    fontSize: fontSize ?? '1em',
-  }))
+  const fieldsetPadding = padding ?? '15px'
 
   return (
-    <Fieldset component="fieldset">
-      <Label>{label}</Label>
+    <Box
+      component="fieldset"
+      sx={{
+        position: 'relative',
+        border: '1px solid #bbb',
+        borderRadius: '5px',
+        width: width ?? 'auto',
+        padding: fieldsetPadding,
+      }}
+    >
+      <Box
+        component="legend"
+        sx={{
+          position: 'absolute',
+          top: '-10px',
+          left: fieldsetPadding,
+          backgroundColor: 'background.paper',
+          backgroundImage:
+            'linear-gradient(rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.16))',
+          color: 'text.primary',
+          fontSize: fontSize ?? '1em',
+        }}
+      >
+        {label}
+      </Box>
       {children}
-    </Fieldset>
+    </Box>
   )
 }

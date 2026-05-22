@@ -86,7 +86,10 @@ export const ProfileMore = (props: Props) => {
 
   const handleSave = useLockFn(async () => {
     const currentValue = document.value
-    await saveProfileFile(id, currentValue)
+    if (!(await saveProfileFile(id, currentValue))) {
+      await document.reload()
+      return
+    }
     onSave?.(document.savedValue, currentValue)
     document.markSaved(currentValue)
   })

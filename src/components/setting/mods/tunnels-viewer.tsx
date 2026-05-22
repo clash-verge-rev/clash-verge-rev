@@ -16,7 +16,7 @@ import { useTranslation } from 'react-i18next'
 
 import { BaseDialog } from '@/components/base'
 import { useClash } from '@/hooks/use-clash'
-import { useAppData } from '@/providers/app-data-context'
+import { useProxiesData } from '@/providers/app-data-context'
 import { isPortInUse } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
 import {
@@ -92,7 +92,7 @@ export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
     })
   }, [draftTunnels])
 
-  const { proxies } = useAppData()
+  const { proxies } = useProxiesData()
 
   const proxyGroups = useMemo<IProxyGroupItem[]>(() => {
     return proxies?.groups ?? []

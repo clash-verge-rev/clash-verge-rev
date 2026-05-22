@@ -16,10 +16,10 @@ use self::{
 use crate::utils::dirs;
 use crate::{config::Config, utils::tmpl};
 use crate::{config::IVerge, constants};
+use anyhow::{Context as _, Result};
 use clash_verge_logging::{Type, logging};
 use serde_yaml_ng::{Mapping, Value};
 use smartstring::alias::String;
-use std::borrow::Cow;
 use std::collections::{HashMap, HashSet};
 use tokio::fs;
 
@@ -142,60 +142,47 @@ async fn get_config_values() -> ConfigValues {
 }
 
 #[allow(clippy::cognitive_complexity)]
-async fn collect_profile_items() -> ProfileItems {
+async fn collect_profile_items() -> Result<ProfileItems> {
     let profiles = Config::profiles().await;
     let profiles_arc = profiles.latest_arc();
     drop(profiles);
 
-    let current = profiles_arc.current_mapping().await.unwrap_or_default();
-
-    let current_profile_uid = match profiles_arc.get_current() {
+    let current_profile_uid = match profiles_arc.get_current().cloned() {
         Some(uid) => uid,
         None => {
             drop(profiles_arc);
-            return ProfileItems::default();
+            return Ok(ProfileItems::default());
         }
     };
 
-    let current_item = match profiles_arc.get_item(current_profile_uid) {
+    let current = profiles_arc
+        .current_mapping()
+        .await
+        .with_context(|| format!("failed to read current profile \"{current_profile_uid}\""))?;
+
+    let current_item = match profiles_arc.get_item(&current_profile_uid) {
         Ok(item) => item,
-        Err(_) => {
-            drop(profiles_arc);
-            return ProfileItems::default();
+        Err(err) => {
+            return Err(err).with_context(|| format!("failed to get current profile \"{current_profile_uid}\""));
         }
     };
 
-    let merge_uid: Cow<'_, str> = if let Some(s) = current_item.current_merge() {
-        Cow::Borrowed(s)
-    } else {
-        Cow::Owned("Merge".into())
-    };
-    let script_uid: Cow<'_, str> = if let Some(s) = current_item.current_script() {
-        Cow::Borrowed(s)
-    } else {
-        Cow::Owned("Script".into())
-    };
-    let rules_uid: Cow<'_, str> = if let Some(s) = current_item.current_rules() {
-        Cow::Borrowed(s)
-    } else {
-        Cow::Owned("Rules".into())
-    };
-    let proxies_uid: Cow<'_, str> = if let Some(s) = current_item.current_proxies() {
-        Cow::Borrowed(s)
-    } else {
-        Cow::Owned("Proxies".into())
-    };
-    let groups_uid: Cow<'_, str> = if let Some(s) = current_item.current_groups() {
-        Cow::Borrowed(s)
-    } else {
-        Cow::Owned("Groups".into())
-    };
+    let merge_uid = current_item.current_merge().cloned().unwrap_or_else(|| "Merge".into());
+    let script_uid = current_item
+        .current_script()
+        .cloned()
+        .unwrap_or_else(|| "Script".into());
+    let rules_uid = current_item.current_rules().cloned().unwrap_or_else(|| "Rules".into());
+    let proxies_uid = current_item
+        .current_proxies()
+        .cloned()
+        .unwrap_or_else(|| "Proxies".into());
+    let groups_uid = current_item
+        .current_groups()
+        .cloned()
+        .unwrap_or_else(|| "Groups".into());
 
-    let name = profiles_arc
-        .get_item(current_profile_uid)
-        .ok()
-        .and_then(|item| item.name.clone())
-        .unwrap_or_default();
+    let name = current_item.name.clone().unwrap_or_default();
 
     let merge_item = {
         let item = profiles_arc.get_item(&merge_uid).ok().cloned();
@@ -290,7 +277,7 @@ async fn collect_profile_items() -> ProfileItems {
 
     drop(profiles_arc);
 
-    ProfileItems {
+    Ok(ProfileItems {
         config: current,
         merge_item,
         script_item,
@@ -300,7 +287,7 @@ async fn collect_profile_items() -> ProfileItems {
         global_merge,
         global_script,
         profile_name: name,
-    }
+    })
 }
 
 async fn process_global_items(
@@ -592,7 +579,7 @@ async fn apply_dns_settings(mut config: Mapping, enable_dns_settings: bool) -> M
 
 /// Enhance mode
 /// 返回最终订阅、该订阅包含的键、和script执行的结果
-pub async fn enhance() -> (Mapping, HashSet<String>, HashMap<String, ResultLog>) {
+pub async fn enhance() -> Result<(Mapping, HashSet<String>, HashMap<String, ResultLog>)> {
     // gather config values
     let cfg_vals = get_config_values().await;
     let ConfigValues {
@@ -610,7 +597,7 @@ pub async fn enhance() -> (Mapping, HashSet<String>, HashMap<String, ResultLog>)
     } = cfg_vals;
 
     // collect profile items
-    let profile = collect_profile_items().await;
+    let profile = collect_profile_items().await?;
     let config = profile.config;
     let merge_item = profile.merge_item;
     let script_item = profile.script_item;
@@ -666,7 +653,7 @@ pub async fn enhance() -> (Mapping, HashSet<String>, HashMap<String, ResultLog>)
     let mut exists_keys_set = HashSet::new();
     exists_keys_set.extend(exists_keys);
 
-    (config, exists_keys_set, result_map)
+    Ok((config, exists_keys_set, result_map))
 }
 
 #[allow(clippy::expect_used)]

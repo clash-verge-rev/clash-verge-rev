@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef } from 'react'
 
 import { useRuntimeConfig } from '@/hooks/use-clash'
 import { useVerge } from '@/hooks/use-verge'
-import { useAppData } from '@/providers/app-data-context'
+import { useAppRefreshers, useProxiesData } from '@/providers/app-data-context'
 import delayManager from '@/services/delay'
 import { debugLog } from '@/utils/debug'
 
@@ -108,7 +108,8 @@ export const useRenderList = (
   selectedGroup?: string | null,
 ) => {
   // 使用全局数据提供者
-  const { proxies: proxiesData, refreshProxy } = useAppData()
+  const { proxies: proxiesData } = useProxiesData()
+  const { refreshProxy } = useAppRefreshers()
   const { verge } = useVerge()
   const { width } = useWindowWidth()
   const [headStates, setHeadState] = useHeadStateNew()

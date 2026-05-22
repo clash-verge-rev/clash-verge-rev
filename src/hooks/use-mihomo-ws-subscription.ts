@@ -1,9 +1,137 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useLocalStorage } from 'foxact/use-local-storage'
-import { useCallback, useEffect, useRef } from 'react'
+import { type MutableRefObject, useCallback, useEffect, useRef } from 'react'
 import { type Message, type MihomoWebSocket } from 'tauri-plugin-mihomo-api'
 
 export const RECONNECT_DELAY_MS = 1000
+
+interface SharedSubscriptionOwner {
+  handleMessage: (data: string) => void
+  onConnected?: (ws: MihomoWebSocket) => Promise<void> | void
+  cleanup?: () => void
+  isMounted: () => boolean
+}
+
+interface SharedSubscriptionEntry {
+  refs: number
+  ws: MihomoWebSocket | null
+  reconnectTimer: ReturnType<typeof setTimeout> | null
+  connecting: boolean
+  refHolders: Set<MutableRefObject<MihomoWebSocket | null>>
+  owners: Set<SharedSubscriptionOwner>
+  activeOwner: SharedSubscriptionOwner | null
+  closed: boolean
+  connectWs: () => Promise<void>
+  scheduleReconnect: () => Promise<void>
+}
+
+const sharedSubscriptions = new Map<string, SharedSubscriptionEntry>()
+
+const syncSharedWsRefs = (entry: SharedSubscriptionEntry) => {
+  entry.refHolders.forEach((ref) => {
+    ref.current = entry.ws
+  })
+}
+
+const pickActiveOwner = (entry: SharedSubscriptionEntry) => {
+  if (entry.activeOwner?.isMounted()) return entry.activeOwner
+
+  for (const owner of entry.owners) {
+    if (owner.isMounted()) {
+      entry.activeOwner = owner
+      return owner
+    }
+  }
+
+  entry.activeOwner = null
+  return null
+}
+
+const closeSharedSocket = async (entry: SharedSubscriptionEntry) => {
+  const ws = entry.ws
+  if (!ws) return
+
+  entry.ws = null
+  syncSharedWsRefs(entry)
+  await ws.close()
+}
+
+const createSharedSubscriptionEntry = (
+  connect: () => Promise<MihomoWebSocket>,
+): SharedSubscriptionEntry => {
+  const entry: SharedSubscriptionEntry = {
+    refs: 0,
+    ws: null,
+    reconnectTimer: null,
+    connecting: false,
+    refHolders: new Set(),
+    owners: new Set(),
+    activeOwner: null,
+    closed: false,
+    connectWs: async () => {},
+    scheduleReconnect: async () => {},
+  }
+
+  const clearReconnectTimer = () => {
+    if (entry.reconnectTimer) {
+      clearTimeout(entry.reconnectTimer)
+      entry.reconnectTimer = null
+    }
+  }
+
+  entry.connectWs = async () => {
+    if (entry.closed || entry.connecting || entry.ws) return
+
+    entry.connecting = true
+    try {
+      const ws = await connect()
+      if (entry.closed) {
+        await ws.close()
+        return
+      }
+
+      entry.ws = ws
+      syncSharedWsRefs(entry)
+      clearReconnectTimer()
+
+      const owner = pickActiveOwner(entry)
+      if (owner?.onConnected) {
+        await owner.onConnected(ws)
+        if (entry.closed) {
+          await ws.close()
+          return
+        }
+      }
+
+      ws.addListener((msg: Message) => {
+        if (msg.type !== 'Text') return
+        const activeOwner = pickActiveOwner(entry)
+        if (!activeOwner) return
+
+        activeOwner.handleMessage(msg.data)
+      })
+    } catch (ignoreError) {
+      if (!entry.closed && !entry.ws) {
+        clearReconnectTimer()
+        entry.reconnectTimer = setTimeout(entry.connectWs, RECONNECT_DELAY_MS)
+      }
+    } finally {
+      entry.connecting = false
+    }
+  }
+
+  entry.scheduleReconnect = async () => {
+    if (entry.closed) return
+
+    clearReconnectTimer()
+    await closeSharedSocket(entry)
+    if (!entry.closed) {
+      entry.reconnectTimer = setTimeout(entry.connectWs, RECONNECT_DELAY_MS)
+    }
+  }
+
+  return entry
+}
 
 /**
  * Mirrors SWR's MutatorCallback: consumers can pass either a plain value or a
@@ -60,12 +188,16 @@ export const useMihomoWsSubscription = <T>(
   const [date, setDate] = useLocalStorage(storageKey, Date.now())
   const subscriptKey = buildSubscriptKey(date)
   const subscriptionCacheKey = subscriptKey ? `$sub$${subscriptKey}` : null
+  const lastSubscriptionCacheKeyRef = useRef<string | null>(null)
+  if (subscriptionCacheKey) {
+    lastSubscriptionCacheKeyRef.current = subscriptionCacheKey
+  }
+  const responseCacheKey =
+    subscriptionCacheKey ?? lastSubscriptionCacheKeyRef.current
 
   const queryClient = useQueryClient()
 
   const wsRef = useRef<MihomoWebSocket | null>(null)
-  const wsFirstConnectionRef = useRef<boolean>(true)
-  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const resolveNextData = useCallback(
     (
@@ -83,15 +215,12 @@ export const useMihomoWsSubscription = <T>(
   )
 
   const response = useQuery<T>({
-    queryKey: subscriptionCacheKey
-      ? [subscriptionCacheKey]
-      : ['$sub$__disabled__'],
+    queryKey: responseCacheKey ? [responseCacheKey] : ['$sub$__disabled__'],
     queryFn: () =>
-      queryClient.getQueryData<T>([subscriptionCacheKey!]) ?? fallbackData,
+      queryClient.getQueryData<T>([responseCacheKey!]) ?? fallbackData,
     initialData: () =>
-      queryClient.getQueryData<T>([
-        subscriptionCacheKey ?? '$sub$__disabled__',
-      ]) ?? fallbackData,
+      queryClient.getQueryData<T>([responseCacheKey ?? '$sub$__disabled__']) ??
+      fallbackData,
     staleTime: Infinity,
     gcTime: 30_000,
     enabled: subscriptionCacheKey !== null,
@@ -101,28 +230,15 @@ export const useMihomoWsSubscription = <T>(
     if (!subscriptionCacheKey) return
 
     let isMounted = true
-
-    const clearReconnectTimer = () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current)
-        timeoutRef.current = null
-      }
+    let entry = sharedSubscriptions.get(subscriptionCacheKey)
+    if (!entry) {
+      entry = createSharedSubscriptionEntry(connect)
+      sharedSubscriptions.set(subscriptionCacheKey, entry)
     }
 
-    const closeSocket = async () => {
-      if (wsRef.current) {
-        await wsRef.current.close()
-        wsRef.current = null
-      }
-    }
-
-    const scheduleReconnect = async () => {
-      if (!isMounted) return
-      clearReconnectTimer()
-      await closeSocket()
-      if (!isMounted) return
-      timeoutRef.current = setTimeout(connectWs, RECONNECT_DELAY_MS)
-    }
+    entry.refs += 1
+    entry.refHolders.add(wsRef)
+    wsRef.current = entry.ws
 
     let throttleCleanup: (() => void) | undefined
     let wrappedNext: NextFn<T>
@@ -184,59 +300,51 @@ export const useMihomoWsSubscription = <T>(
       cleanup,
     } = setupHandlers({
       next: wrappedNext,
-      scheduleReconnect,
+      scheduleReconnect: entry.scheduleReconnect,
       isMounted: () => isMounted,
     })
 
-    const cleanupAll = () => {
-      clearReconnectTimer()
-      throttleCleanup?.()
-      cleanup?.()
-      void closeSocket()
+    const owner: SharedSubscriptionOwner = {
+      handleMessage: handleTextMessage,
+      onConnected,
+      cleanup: () => {
+        throttleCleanup?.()
+        cleanup?.()
+      },
+      isMounted: () => isMounted,
     }
 
-    const handleMessage = (msg: Message) => {
-      if (msg.type !== 'Text') return
-      handleTextMessage(msg.data)
+    entry.owners.add(owner)
+    if (!entry.activeOwner) {
+      entry.activeOwner = owner
     }
-
-    async function connectWs() {
-      try {
-        const ws_ = await connect()
-        if (!isMounted) {
-          await ws_.close()
-          return
-        }
-
-        wsRef.current = ws_
-        clearReconnectTimer()
-
-        if (onConnected) {
-          await onConnected(ws_)
-          if (!isMounted) {
-            await ws_.close()
-            return
-          }
-        }
-
-        ws_.addListener(handleMessage)
-      } catch (ignoreError) {
-        if (!wsRef.current && isMounted) {
-          timeoutRef.current = setTimeout(connectWs, RECONNECT_DELAY_MS)
-        }
-      }
-    }
-
-    if (wsFirstConnectionRef.current || !wsRef.current) {
-      wsFirstConnectionRef.current = false
-      cleanupAll()
-      void connectWs()
-    }
+    void entry.connectWs()
 
     return () => {
       isMounted = false
-      wsFirstConnectionRef.current = true
-      cleanupAll()
+      entry.refHolders.delete(wsRef)
+      wsRef.current = null
+      entry.owners.delete(owner)
+      owner.cleanup?.()
+
+      if (entry.activeOwner === owner) {
+        entry.activeOwner = null
+        const nextOwner = pickActiveOwner(entry)
+        if (entry.ws && nextOwner?.onConnected) {
+          void nextOwner.onConnected(entry.ws)
+        }
+      }
+
+      entry.refs -= 1
+      if (entry.refs <= 0) {
+        entry.closed = true
+        if (entry.reconnectTimer) {
+          clearTimeout(entry.reconnectTimer)
+          entry.reconnectTimer = null
+        }
+        sharedSubscriptions.delete(subscriptionCacheKey)
+        void closeSharedSocket(entry)
+      }
     }
     // eslint-disable-next-line react-compiler/react-compiler
     // eslint-disable-next-line react-hooks/exhaustive-deps, @eslint-react/exhaustive-deps
@@ -249,5 +357,5 @@ export const useMihomoWsSubscription = <T>(
     setDate(Date.now())
   }, [queryClient, subscriptionCacheKey, setDate])
 
-  return { response, refresh, subscriptionCacheKey, wsRef }
+  return { response, refresh, subscriptionCacheKey: responseCacheKey, wsRef }
 }

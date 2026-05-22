@@ -2,7 +2,10 @@ use super::CoreManager;
 use crate::{
     config::{Config, ConfigType, runtime::IRuntime},
     constants::timing,
-    core::{handle, validate::CoreConfigValidator},
+    core::{
+        handle,
+        validate::{CoreConfigValidator, ValidationOutcome, ValidationSkipReason},
+    },
     utils::{dirs, help},
 };
 use anyhow::{Result, anyhow};
@@ -31,16 +34,38 @@ impl CoreManager {
         Ok(())
     }
 
-    pub async fn update_config(&self) -> Result<(bool, String)> {
+    pub async fn update_config_forced(&self) -> Result<ValidationOutcome> {
+        self.update_config_with_force(true).await
+    }
+
+    pub async fn update_config_with_force(&self, force: bool) -> Result<ValidationOutcome> {
         if handle::Handle::global().is_exiting() {
-            return Ok((true, String::new()));
+            return Ok(ValidationOutcome::Skipped {
+                reason: ValidationSkipReason::Exiting,
+            });
         }
 
-        if !self.should_update_config() {
-            return Ok((true, String::new()));
+        if !force && !self.should_update_config() {
+            logging!(debug, Type::Core, "Skipping config update due to debounce");
+            return Ok(ValidationOutcome::Skipped {
+                reason: ValidationSkipReason::Debounced,
+            });
+        }
+
+        if force {
+            self.set_last_update(Instant::now());
         }
 
         self.perform_config_update().await
+    }
+
+    pub async fn update_config_checked(&self) -> Result<()> {
+        let outcome = self.update_config_forced().await?;
+        if outcome.is_valid() {
+            Ok(())
+        } else {
+            Err(anyhow!("{outcome}"))
+        }
     }
 
     fn should_update_config(&self) -> bool {
@@ -57,21 +82,26 @@ impl CoreManager {
         true
     }
 
-    async fn perform_config_update(&self) -> Result<(bool, String)> {
-        Config::generate().await?;
+    async fn perform_config_update(&self) -> Result<ValidationOutcome> {
+        if let Err(err) = Config::generate().await {
+            let message: String = err.to_string().into();
+            Config::runtime().await.discard();
+            return Ok(ValidationOutcome::invalid_from_message(message));
+        }
+
         self.apply_generate_config().await
     }
 
-    pub async fn apply_generate_config(&self) -> Result<(bool, String)> {
-        match CoreConfigValidator::global().validate_config().await {
-            Ok((true, _)) => {
+    pub async fn apply_generate_config(&self) -> Result<ValidationOutcome> {
+        match CoreConfigValidator::global().validate_config_outcome().await {
+            Ok(outcome) if outcome.is_valid() => {
                 let run_path = Config::generate_file(ConfigType::Run).await?;
                 self.apply_config(run_path).await?;
-                Ok((true, String::new()))
+                Ok(ValidationOutcome::Valid)
             }
-            Ok((false, error_msg)) => {
+            Ok(outcome) => {
                 Config::runtime().await.discard();
-                Ok((false, error_msg))
+                Ok(outcome)
             }
             Err(e) => {
                 Config::runtime().await.discard();

@@ -7,7 +7,15 @@ use anyhow::{Result, bail};
 use arc_swap::ArcSwap;
 use clash_verge_logging::{Type, logging};
 use smartstring::alias::String;
-use std::{collections::HashMap, fmt, str::FromStr, sync::Arc};
+use std::{
+    collections::HashMap,
+    fmt,
+    str::FromStr,
+    sync::{
+        Arc,
+        atomic::{AtomicBool, Ordering},
+    },
+};
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt as _, ShortcutState};
 
 /// Enum representing all available hotkey functions
@@ -153,16 +161,12 @@ impl Hotkey {
             }
             HotkeyFunction::ReactivateProfiles => {
                 AsyncHandler::spawn(async move || match feat::enhance_profiles().await {
-                    Ok((true, _)) => {
+                    Ok(outcome) if outcome.is_valid() => {
                         handle::Handle::refresh_clash();
                         notify_event(NotificationEvent::ProfilesReactivated).await;
                     }
-                    Ok((false, msg)) => {
-                        let message = if msg.is_empty() {
-                            "Failed to reactivate profiles.".to_string()
-                        } else {
-                            msg.to_string()
-                        };
+                    Ok(outcome) => {
+                        let message = outcome.to_string();
                         logging!(
                             warn,
                             Type::Hotkey,
@@ -238,9 +242,23 @@ impl Hotkey {
         }
 
         let is_quit = matches!(function, HotkeyFunction::Quit);
+        let pressed = AtomicBool::new(false);
 
-        manager.on_shortcut(hotkey, move |_app_handle, hotkey_event, event| {
-            if event.state == ShortcutState::Pressed {
+        manager.on_shortcut(hotkey, move |_app_handle, hotkey_event, event| match event.state {
+            ShortcutState::Released => {
+                pressed.store(false, Ordering::Relaxed);
+            }
+            ShortcutState::Pressed => {
+                if pressed.swap(true, Ordering::Relaxed) {
+                    logging!(
+                        debug,
+                        Type::Hotkey,
+                        "Ignoring repeated hotkey press: {:?}",
+                        hotkey_event
+                    );
+                    return;
+                }
+
                 logging!(debug, Type::Hotkey, "Hotkey pressed: {:?}", hotkey_event);
                 let hotkey = hotkey_event.key;
                 if hotkey == Code::KeyQ && is_quit {

@@ -34,7 +34,7 @@ import {
 import { EditorViewer } from '@/components/profile/editor-viewer'
 import { useSystemProxyState } from '@/hooks/use-system-proxy-state'
 import { useVerge } from '@/hooks/use-verge'
-import { useAppData } from '@/providers/app-data-context'
+import { useClashConfigData, useSystemData } from '@/providers/app-data-context'
 import {
   getAutotemProxy,
   getNetworkInterfacesInfo,
@@ -108,7 +108,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
   const { verge, patchVerge, mutateVerge } = useVerge()
   const [hostOptions, setHostOptions] = useState<string[]>([])
 
-  const { clashConfig } = useAppData()
+  const { clashConfig } = useClashConfigData()
   const { indicator: isProxyReallyEnabled, invalidateProxyState } =
     useSystemProxyState()
 
@@ -179,7 +179,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
     updateProxy()
   }, [clashConfig?.mixedPort, enabled, value.pac, invalidateProxyState])
 
-  const { systemProxyAddress } = useAppData()
+  const { systemProxyAddress } = useSystemData()
 
   // 为当前状态计算系统代理地址
   const getSystemProxyAddress = useMemo(() => {

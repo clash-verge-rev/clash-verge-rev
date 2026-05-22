@@ -1,5 +1,4 @@
 import './assets/styles/index.scss'
-import './services/monaco'
 
 import { ResizeObserver } from '@juggle/resize-observer'
 import { QueryClientProvider } from '@tanstack/react-query'

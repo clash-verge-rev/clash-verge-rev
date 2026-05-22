@@ -118,10 +118,14 @@ impl Config {
     async fn generate_and_validate() -> Result<Option<(&'static str, String)>> {
         // 生成运行时配置
         if let Err(err) = Self::generate().await {
-            logging!(error, Type::Config, "生成运行时配置失败: {}", err);
-        } else {
-            logging!(info, Type::Config, "生成运行时配置成功");
+            let error_msg: String = err.to_string().into();
+            logging!(error, Type::Config, "生成运行时配置失败: {}", error_msg);
+            CoreManager::global()
+                .use_default_config("config_validate::boot_error", &error_msg)
+                .await?;
+            return Ok(Some(("config_validate::boot_error", error_msg)));
         }
+        logging!(info, Type::Config, "生成运行时配置成功");
 
         // 生成运行时配置文件并验证
         let config_result = Self::generate_file(ConfigType::Run).await;
@@ -130,25 +134,25 @@ impl Config {
             // 验证配置文件
             logging!(info, Type::Config, "开始验证配置");
 
-            match CoreConfigValidator::global().validate_config().await {
-                Ok((is_valid, error_msg)) => {
-                    if !is_valid {
-                        logging!(
-                            warn,
-                            Type::Config,
-                            "[首次启动] 配置验证失败，使用默认最小配置启动: {}",
-                            error_msg
-                        );
-                        CoreManager::global()
-                            .use_default_config("config_validate::boot_error", &error_msg)
-                            .await?;
-                        Ok(Some(("config_validate::boot_error", error_msg)))
-                    } else {
-                        logging!(info, Type::Config, "配置验证成功");
-                        // 前端没有必要知道验证成功的消息，也没有事件驱动
-                        // Some(("config_validate::success", String::new()))
-                        Ok(None)
-                    }
+            match CoreConfigValidator::global().validate_config_outcome().await {
+                Ok(outcome) if outcome.is_valid() => {
+                    logging!(info, Type::Config, "配置验证成功");
+                    // 前端没有必要知道验证成功的消息，也没有事件驱动
+                    // Some(("config_validate::success", String::new()))
+                    Ok(None)
+                }
+                Ok(outcome) => {
+                    let error_msg: String = outcome.to_string().into();
+                    logging!(
+                        warn,
+                        Type::Config,
+                        "[首次启动] 配置验证未通过，使用默认最小配置启动: {}",
+                        error_msg
+                    );
+                    CoreManager::global()
+                        .use_default_config("config_validate::boot_error", &error_msg)
+                        .await?;
+                    Ok(Some(("config_validate::boot_error", error_msg)))
                 }
                 Err(err) => {
                     logging!(warn, Type::Config, "验证过程执行失败: {}", err);
@@ -188,7 +192,7 @@ impl Config {
     }
 
     pub async fn generate() -> Result<()> {
-        let (mut config, exists_keys, logs) = enhance::enhance().await;
+        let (mut config, exists_keys, logs) = enhance::enhance().await?;
 
         sanitize_tunnels_proxy(&mut config);
 

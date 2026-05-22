@@ -11,22 +11,30 @@ use objc2::MainThreadMarker;
 use objc2::rc::Retained;
 use objc2::runtime::AnyObject;
 use objc2_app_kit::{
-    NSBaselineOffsetAttributeName, NSColor, NSFont, NSFontAttributeName, NSFontWeightRegular,
-    NSForegroundColorAttributeName, NSMutableParagraphStyle, NSParagraphStyleAttributeName, NSStatusItem,
-    NSTextAlignment,
+    NSAttributedStringNSStringDrawing as _, NSBaselineOffsetAttributeName, NSColor, NSFont, NSFontAttributeName,
+    NSFontWeightRegular, NSForegroundColorAttributeName, NSLineBreakMode, NSMutableParagraphStyle,
+    NSParagraphStyleAttributeName, NSStatusBarButton, NSStatusItem, NSTextAlignment,
 };
 use objc2_foundation::{NSAttributedString, NSDictionary, NSNumber, NSString};
 
 /// 富文本渲染使用的字号（适配两行在托盘栏的高度）
 const TRAY_FONT_SIZE: f64 = 9.5;
-/// 两行文本的行间距（负值可压缩两行高度，便于与图标纵向居中）
-const TRAY_LINE_SPACING: f64 = -1.0;
+/// 两行文本的固定行高，避免不同菜单栏高度/缩放下使用系统默认行高导致裁剪
+const TRAY_LINE_HEIGHT: f64 = 10.0;
+/// 两行文本的行间距
+const TRAY_LINE_SPACING: f64 = 0.0;
 /// 两行文本整体行高倍数（用于进一步压缩文本块高度）
 const TRAY_LINE_HEIGHT_MULTIPLE: f64 = 1.00;
 /// 文本块段前偏移（用于将两行文本整体下移）
-const TRAY_PARAGRAPH_SPACING_BEFORE: f64 = -5.0;
-/// 文字基线偏移（负值向下移动，更容易与托盘图标垂直居中）
-const TRAY_BASELINE_OFFSET: f64 = -4.0;
+const TRAY_PARAGRAPH_SPACING_BEFORE: f64 = 0.0;
+/// 文字基线偏移（负值向下移动，避免上行速率贴住菜单栏顶部）
+const TRAY_BASELINE_OFFSET: f64 = -3.0;
+/// Tauri tray-icon 将图标缩放为 18pt；这里额外预留图标、图文间距与系统内边距
+const TRAY_STATUS_ITEM_EXTRA_WIDTH: f64 = 30.0;
+/// 典型 6 字符速率文本的最小宽度，避免 0B/s 等短文本让状态项反复收缩
+const TRAY_STATUS_ITEM_MIN_LENGTH: f64 = 58.0;
+/// AppKit 的 NSVariableStatusItemLength。清空速率标题后恢复系统按图标自适应
+const NS_VARIABLE_STATUS_ITEM_LENGTH: f64 = -1.0;
 
 thread_local! {
     /// 托盘速率富文本属性字典（主线程缓存，避免每帧重建 ObjC 对象）。
@@ -59,8 +67,11 @@ fn build_attributes() -> Retained<NSDictionary<NSString, AnyObject>> {
         // 段落样式：右对齐，保证定宽视觉一致
         let para_style = NSMutableParagraphStyle::new();
         para_style.setAlignment(NSTextAlignment::Right);
+        para_style.setLineBreakMode(NSLineBreakMode::ByClipping);
         para_style.setLineSpacing(TRAY_LINE_SPACING);
         para_style.setLineHeightMultiple(TRAY_LINE_HEIGHT_MULTIPLE);
+        para_style.setMinimumLineHeight(TRAY_LINE_HEIGHT);
+        para_style.setMaximumLineHeight(TRAY_LINE_HEIGHT);
         para_style.setParagraphSpacingBefore(TRAY_PARAGRAPH_SPACING_BEFORE);
         // 基线偏移：用于精确控制两行速率整体的纵向位置
         let baseline_offset = NSNumber::new_f64(TRAY_BASELINE_OFFSET);
@@ -90,6 +101,20 @@ fn create_attributed_string(
     }
 }
 
+fn status_item_length_for_speed(attr_str: &NSAttributedString) -> f64 {
+    (attr_str.size().width.ceil() + TRAY_STATUS_ITEM_EXTRA_WIDTH).max(TRAY_STATUS_ITEM_MIN_LENGTH)
+}
+
+fn sync_click_target_frame(button: &NSStatusBarButton) {
+    let bounds = button.bounds();
+    let subviews = button.subviews();
+
+    for index in 0..subviews.count() {
+        let subview = subviews.objectAtIndex(index);
+        subview.setFrame(bounds);
+    }
+}
+
 /// 在主线程下设置 NSStatusItem 按钮的富文本标题
 ///
 /// 依赖 Tauri `with_inner_tray_icon` 保证回调在主线程执行；
@@ -112,7 +137,11 @@ fn apply_status_item_attributed_title(
         return;
     };
     let attr_str = create_attributed_string(text, attrs);
+    if attrs.is_some() {
+        status_item.setLength(status_item_length_for_speed(&attr_str));
+    }
     button.setAttributedTitle(&attr_str);
+    sync_click_target_frame(&button);
 }
 
 /// 将速率以富文本形式设置到 NSStatusItem 的按钮上
@@ -147,6 +176,10 @@ pub fn set_speed_attributed_title(status_item: &NSStatusItem, up: u64, down: u64
 /// # Arguments
 /// * `status_item` - macOS 托盘 NSStatusItem 引用
 pub fn clear_speed_attributed_title(status_item: &NSStatusItem) {
+    LAST_DISPLAY_STR.with(|last| {
+        last.borrow_mut().clear();
+    });
     let empty = NSString::from_str("");
+    status_item.setLength(NS_VARIABLE_STATUS_ITEM_LENGTH);
     apply_status_item_attributed_title(status_item, &empty, None);
 }

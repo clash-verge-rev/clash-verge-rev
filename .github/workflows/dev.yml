@@ -74,7 +74,7 @@ jobs:
 
       - name: Install Rust Stable
         if: github.event.inputs[matrix.input] == 'true'
-        uses: dtolnay/rust-toolchain@1.91.0
+        uses: dtolnay/rust-toolchain@1.95.0
 
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
@@ -129,7 +129,7 @@ jobs:
         if: github.event.inputs[matrix.input] == 'true'
         run: |
           # Ensure cross target is installed for the pinned toolchain; fallback without explicit toolchain if needed
-          rustup target add ${{ matrix.target }} --toolchain 1.91.0 || rustup target add ${{ matrix.target }}
+          rustup target add ${{ matrix.target }} --toolchain 1.95.0 || rustup target add ${{ matrix.target }}
           rustup target list --installed
           echo "Rust target ${{ matrix.target }} installed."
 

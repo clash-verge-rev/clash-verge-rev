@@ -53,6 +53,7 @@ export const useLogData = () => {
   const enableLog = clashLog.enable
   const logLevel = clashLog.logLevel
   const allowedTypes = LOG_LEVEL_FILTERS[logLevel] ?? DEFAULT_LOG_TYPES
+  const hasLoadedInitialLogsRef = useRef(false)
 
   const { response, refresh, subscriptionCacheKey } = useMihomoWsSubscription<
     ILogItem[]
@@ -116,7 +117,11 @@ export const useLogData = () => {
           }
         },
         async onConnected() {
+          if (hasLoadedInitialLogsRef.current) {
+            return
+          }
           const logs = await getClashLogs()
+          hasLoadedInitialLogsRef.current = true
           if (isMounted()) {
             next(null, (current) => {
               if (!current || current.length === 0) {
@@ -131,7 +136,7 @@ export const useLogData = () => {
     },
   })
 
-  const previousLogLevelRef = useRef<string | undefined>(undefined)
+  const previousLogLevelRef = useRef<LogLevel | undefined>(logLevel)
 
   useEffect(() => {
     if (!logLevel) {
@@ -144,6 +149,7 @@ export const useLogData = () => {
     }
 
     previousLogLevelRef.current = logLevel
+    hasLoadedInitialLogsRef.current = false
     refresh()
   }, [logLevel, refresh])
 
@@ -153,6 +159,7 @@ export const useLogData = () => {
         queryClient.setQueryData<ILogItem[]>([subscriptionCacheKey], [])
       }
     } else {
+      hasLoadedInitialLogsRef.current = false
       refresh()
     }
   }

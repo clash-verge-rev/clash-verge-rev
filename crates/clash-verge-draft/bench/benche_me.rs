@@ -1,6 +1,5 @@
 use criterion::{Criterion, criterion_group, criterion_main};
 use std::hint::black_box;
-use std::process;
 use tokio::runtime::Runtime;
 
 use clash_verge_draft::Draft;
@@ -20,10 +19,7 @@ fn make_draft() -> Draft<IVerge> {
 }
 
 pub fn bench_draft(c: &mut Criterion) {
-    let rt = Runtime::new().unwrap_or_else(|e| {
-        eprintln!("Tokio runtime init failed: {e}");
-        process::exit(1);
-    });
+    let rt = Runtime::new().unwrap_or_else(|e| panic!("Tokio runtime init failed: {e}"));
 
     let mut group = c.benchmark_group("draft");
     group.sample_size(100);

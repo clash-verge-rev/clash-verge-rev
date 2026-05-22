@@ -1,15 +1,18 @@
-import { LanOutlined, LanRounded } from '@mui/icons-material'
+import { LanOutlined, LanRounded, WarningRounded } from '@mui/icons-material'
 import { Box, Button, ButtonGroup } from '@mui/material'
 import { useLockFn } from 'ahooks'
 import { useCallback, useEffect, useReducer, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { closeAllConnections } from 'tauri-plugin-mihomo-api'
 
-import { BasePage } from '@/components/base'
+import { BasePage, TooltipIcon } from '@/components/base'
 import { ProviderButton } from '@/components/proxy/provider-button'
 import { ProxyGroups } from '@/components/proxy/proxy-groups'
 import { useVerge } from '@/hooks/use-verge'
-import { useAppData } from '@/providers/app-data-context'
+import {
+  useAppRefreshers,
+  useClashConfigData,
+} from '@/providers/app-data-context'
 import {
   getRuntimeProxyChainConfig,
   patchClashMode,
@@ -41,7 +44,8 @@ const ProxyPage = () => {
     null as string | null,
   )
 
-  const { clashConfig, refreshClashConfig } = useAppData()
+  const { clashConfig } = useClashConfigData()
+  const { refreshClashConfig } = useAppRefreshers()
 
   const updateChainConfigData = useCallback((value: string | null) => {
     dispatchChainConfigData(value)
@@ -50,6 +54,7 @@ const ProxyPage = () => {
 
   const normalizedMode = clashConfig?.mode?.toLowerCase()
   const curMode = isMode(normalizedMode) ? normalizedMode : undefined
+  const chainWarning = t('proxies.page.chain.warning')
 
   const onChangeMode = useLockFn(async (mode: Mode) => {
     // 断开连接
@@ -130,9 +135,23 @@ const ProxyPage = () => {
       full
       contentStyle={{ height: '101.5%' }}
       title={
-        isChainMode
-          ? t('proxies.page.title.chainMode')
-          : t('proxies.page.title.default')
+        isChainMode ? (
+          <Box
+            component="span"
+            data-tauri-drag-region="true"
+            sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.75 }}
+          >
+            {t('proxies.page.title.chainMode')}
+            <TooltipIcon
+              title={chainWarning}
+              icon={WarningRounded}
+              color="warning"
+              sx={{ p: 0.25 }}
+            />
+          </Box>
+        ) : (
+          t('proxies.page.title.default')
+        )
       }
       header={
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
