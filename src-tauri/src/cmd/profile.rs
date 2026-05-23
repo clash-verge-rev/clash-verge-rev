@@ -94,14 +94,6 @@ pub async fn import_profile(url: std::string::String, option: Option<PrfOption>)
         handle::Handle::notify_profile_changed(uid);
     }
 
-    // 异步保存配置文件并发送全局通知
-    if let Some(uid) = &item.uid {
-        // 延迟发送，确保文件已完全写入
-        tokio::time::sleep(Duration::from_millis(100)).await;
-        logging!(info, Type::Cmd, "[导入订阅] 发送配置变更通知: {}", uid);
-        handle::Handle::notify_profile_changed(uid);
-    }
-
     logging!(info, Type::Cmd, "[导入订阅] 导入完成: {}", help::mask_url(&url));
     Ok(())
 }
@@ -349,9 +341,9 @@ pub async fn patch_profile(index: String, profile: PrfItem) -> CmdResult {
     // 如果更新间隔或允许自动更新变更，异步刷新定时器
     if should_refresh_timer {
         crate::process::AsyncHandler::spawn(move || async move {
-            logging!(info, Type::Timer, "定时器更新间隔已变更，正在刷新定时器...");
+            logging!(info, Type::Timer, "Timer update settings changed, refreshing timer...");
             if let Err(e) = crate::core::Timer::global().refresh().await {
-                logging!(error, Type::Timer, "刷新定时器失败: {}", e);
+                logging!(error, Type::Timer, "Failed to refresh timer: {}", e);
             } else {
                 // 刷新成功后发送自定义事件，不触发配置重载
                 crate::core::handle::Handle::notify_timer_updated(&index);

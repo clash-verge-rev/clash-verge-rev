@@ -69,6 +69,7 @@ pub async fn build_new_window() -> Result<WebviewWindow, String> {
     .min_inner_size(MINIMAL_WIDTH, MINIMAL_HEIGHT)
     .visible(false) // 等待主题色准备好后再展示，避免启动色差
     .initialization_script(&initial_script)
+    .general_autofill_enabled(false) // 禁用自动填充
     .on_page_load(move |window, payload| {
         if payload.event() != PageLoadEvent::Finished {
             return;

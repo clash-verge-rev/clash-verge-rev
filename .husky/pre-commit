@@ -1,5 +1,4 @@
 #!/bin/bash
-set -euo pipefail
 
 if ! command -v "cargo-make" >/dev/null 2>&1; then
   echo "❌ cargo-make is required for pre-commit checks."

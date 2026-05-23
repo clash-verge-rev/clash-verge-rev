@@ -6,6 +6,7 @@ import pluginImportX from 'eslint-plugin-import-x'
 import pluginReactCompiler from 'eslint-plugin-react-compiler'
 import pluginReactHooks from 'eslint-plugin-react-hooks'
 import pluginReactRefresh from 'eslint-plugin-react-refresh'
+import PluginSukka from 'eslint-plugin-sukka'
 import pluginUnusedImports from 'eslint-plugin-unused-imports'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
@@ -22,6 +23,7 @@ export default defineConfig([
       'import-x': pluginImportX,
       'react-refresh': pluginReactRefresh,
       'unused-imports': pluginUnusedImports,
+      sukka: PluginSukka,
     },
 
     extends: [
@@ -88,7 +90,7 @@ export default defineConfig([
       '@eslint-react/no-unused-class-component-members': 'error',
       '@eslint-react/no-unused-state': 'error',
       '@eslint-react/jsx-no-useless-fragment': 'warn',
-      '@eslint-react/prefer-destructuring-assignment': 'warn',
+      'sukka/react-prefer-destructuring-assignment': 'warn',
 
       // TypeScript
       '@typescript-eslint/no-explicit-any': 'off',

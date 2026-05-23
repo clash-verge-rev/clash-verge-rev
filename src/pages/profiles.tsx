@@ -20,10 +20,9 @@ import {
   RefreshRounded,
   TextSnippetOutlined,
 } from '@mui/icons-material'
-import { LoadingButton } from '@mui/lab'
 import { Box, Button, Divider, Grid, IconButton, Stack } from '@mui/material'
 import { useQuery } from '@tanstack/react-query'
-import { listen, TauriEvent } from '@tauri-apps/api/event'
+import { TauriEvent } from '@tauri-apps/api/event'
 import { readText } from '@tauri-apps/plugin-clipboard-manager'
 import { readTextFile } from '@tauri-apps/plugin-fs'
 import { useLockFn } from 'ahooks'
@@ -743,59 +742,6 @@ const ProfilePage = () => {
     ? 'rgba(0, 0, 0, 0.06)'
     : 'rgba(255, 255, 255, 0.06)'
 
-  // 监听后端配置变更
-  useEffect(() => {
-    let unlistenPromise: Promise<() => void> | undefined
-    let lastProfileId: string | null = null
-    let lastUpdateTime = 0
-    const debounceDelay = 200
-
-    let refreshTimer: number | null = null
-
-    const setupListener = async () => {
-      unlistenPromise = listen<string>('profile-changed', (event) => {
-        const newProfileId = event.payload
-        const now = Date.now()
-
-        debugLog(`[Profile] 收到配置变更事件: ${newProfileId}`)
-
-        if (
-          lastProfileId === newProfileId &&
-          now - lastUpdateTime < debounceDelay
-        ) {
-          debugLog(`[Profile] 重复事件被防抖，跳过`)
-          return
-        }
-
-        lastProfileId = newProfileId
-        lastUpdateTime = now
-
-        debugLog(`[Profile] 执行配置数据刷新`)
-
-        if (refreshTimer !== null) {
-          window.clearTimeout(refreshTimer)
-        }
-
-        // 使用异步调度避免阻塞事件处理
-        refreshTimer = window.setTimeout(() => {
-          mutateProfiles().catch((error) => {
-            console.error('[Profile] 配置数据刷新失败:', error)
-          })
-          refreshTimer = null
-        }, 0)
-      })
-    }
-
-    setupListener()
-
-    return () => {
-      if (refreshTimer !== null) {
-        window.clearTimeout(refreshTimer)
-      }
-      unlistenPromise?.then((unlisten) => unlisten()).catch(console.error)
-    }
-  }, [mutateProfiles])
-
   // 组件卸载时清理中断控制器
   useEffect(() => {
     return () => {
@@ -970,7 +916,7 @@ const ProfilePage = () => {
             },
           }}
         />
-        <LoadingButton
+        <Button
           disabled={!url || disabled}
           loading={loading}
           variant="contained"
@@ -979,7 +925,7 @@ const ProfilePage = () => {
           onClick={onImport}
         >
           {t('profiles.page.actions.import')}
-        </LoadingButton>
+        </Button>
         <Button
           variant="contained"
           size="small"

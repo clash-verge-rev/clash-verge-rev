@@ -1,5 +1,3 @@
-import { listen } from '@tauri-apps/api/event'
-import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useEffect } from 'react'
 
 import { useListen } from '@/hooks/use-listen'
@@ -71,20 +69,6 @@ export const useLayoutEvents = (
       addListener('verge://notice-message', ({ payload }) =>
         handleNotice(payload as [string, string]),
       ),
-    )
-
-    const appWindow = getCurrentWebviewWindow()
-    register(
-      (async () => {
-        const [hideUnlisten, showUnlisten] = await Promise.all([
-          listen('verge://hide-window', () => appWindow.hide()),
-          listen('verge://show-window', () => appWindow.show()),
-        ])
-        return () => {
-          hideUnlisten()
-          showUnlisten()
-        }
-      })(),
     )
 
     return () => {
