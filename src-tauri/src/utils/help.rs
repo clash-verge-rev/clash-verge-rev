@@ -203,6 +203,22 @@ pub fn open_file(path: PathBuf) -> Result<()> {
     Ok(())
 }
 
+pub fn open_latest_log(path: PathBuf) -> Result<()> {
+    #[cfg(target_os = "windows")]
+    let path = snapshot_path(&path)?;
+    open_file(path)
+}
+
+pub fn open_app_latest_log() -> Result<()> {
+    let path = crate::utils::dirs::app_latest_log()?;
+    open_latest_log(path)
+}
+
+pub fn open_core_latest_log() -> Result<()> {
+    let path = crate::utils::dirs::clash_latest_log()?;
+    open_latest_log(path)
+}
+
 #[cfg(target_os = "linux")]
 pub fn linux_elevator() -> String {
     use std::process::Command;

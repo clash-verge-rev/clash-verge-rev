@@ -6,8 +6,11 @@ use crate::process::AsyncHandler;
 use crate::singleton;
 use crate::utils::window_manager::WindowManager;
 use crate::{
-    Type, cmd, config::Config, feat, logging, module::lightweight::is_in_lightweight_mode,
-    utils::dirs::find_target_icons,
+    Type, cmd,
+    config::Config,
+    feat, logging,
+    module::lightweight::is_in_lightweight_mode,
+    utils::{dirs::find_target_icons, help},
 };
 use clash_verge_limiter::{Limiter, SystemClock, SystemLimiter};
 use clash_verge_logging::logging_error;
@@ -953,10 +956,10 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
                 let _ = cmd::open_logs_dir().await;
             }
             MenuIds::APP_LOG => {
-                let _ = cmd::open_app_log().await;
+                let _ = help::open_app_latest_log();
             }
             MenuIds::CORE_LOG => {
-                let _ = cmd::open_core_log().await;
+                let _ = help::open_core_latest_log();
             }
             MenuIds::RESTART_CLASH => feat::restart_clash_core().await,
             MenuIds::RESTART_APP => feat::restart_app().await,
