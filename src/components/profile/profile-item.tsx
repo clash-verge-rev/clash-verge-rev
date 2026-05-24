@@ -16,6 +16,7 @@ import {
   MenuItem,
   Typography,
 } from '@mui/material'
+import { listen } from '@tauri-apps/api/event'
 import { open } from '@tauri-apps/plugin-shell'
 import { useLockFn } from 'ahooks'
 import dayjs from 'dayjs'
@@ -201,11 +202,10 @@ export const ProfileItem = (props: Props) => {
 
   // 订阅定时器更新事件
   useEffect(() => {
-    // 处理定时器更新事件 - 这个事件专门用于通知定时器变更
-    const handleTimerUpdate = (event: Event) => {
-      const source = event as CustomEvent<string> & { payload?: string }
-      const updatedUid = source.detail ?? source.payload
+    let disposed = false
+    let unlistenTimerUpdate: (() => void) | undefined
 
+    listen<string>('verge://timer-updated', ({ payload: updatedUid }) => {
       // 只有当更新的是当前配置时才刷新显示
       if (updatedUid === itemData.uid && showNextUpdateRef.current) {
         debugLog(`收到定时器更新事件: uid=${updatedUid}`)
@@ -216,17 +216,22 @@ export const ProfileItem = (props: Props) => {
           fetchNextUpdateTime(true)
         }, 1000)
       }
-    }
-
-    // 只注册定时器更新事件监听
-    window.addEventListener('verge://timer-updated', handleTimerUpdate)
+    })
+      .then((unlisten) => {
+        if (disposed) {
+          unlisten()
+          return
+        }
+        unlistenTimerUpdate = unlisten
+      })
+      .catch(console.error)
 
     return () => {
+      disposed = true
       if (refreshTimeoutRef.current !== undefined) {
         clearTimeout(refreshTimeoutRef.current)
       }
-      // 清理事件监听
-      window.removeEventListener('verge://timer-updated', handleTimerUpdate)
+      unlistenTimerUpdate?.()
     }
   }, [fetchNextUpdateTime, itemData.uid])
 
@@ -588,45 +593,49 @@ export const ProfileItem = (props: Props) => {
 
   // 监听自动更新事件
   useEffect(() => {
-    const handleUpdateStarted = (event: Event) => {
-      const customEvent = event as CustomEvent<{ uid?: string }>
-      if (customEvent.detail?.uid === itemData.uid) {
-        setLoadingCache((cache) => ({ ...cache, [itemData.uid]: true }))
-      }
-    }
+    let disposed = false
+    let unlisteners: Array<() => void> = []
 
-    const handleUpdateCompleted = (event: Event) => {
-      const customEvent = event as CustomEvent<{ uid?: string }>
-      if (customEvent.detail?.uid === itemData.uid) {
+    Promise.allSettled([
+      listen<{ uid?: string }>('profile-update-started', ({ payload }) => {
+        if (payload.uid === itemData.uid) {
+          setLoadingCache((cache) => ({ ...cache, [itemData.uid]: true }))
+        }
+      }),
+      listen<{ uid?: string }>('profile-update-completed', ({ payload }) => {
+        if (payload.uid !== itemData.uid) {
+          return
+        }
+
         setLoadingCache((cache) => ({ ...cache, [itemData.uid]: false }))
         // 刷新 profile 数据以获取最新的 updated 时间戳
         void mutateProfiles()
         // 更新完成后刷新显示
-        if (showNextUpdate) {
+        if (showNextUpdateRef.current) {
           fetchNextUpdateTime()
         }
-      }
-    }
+      }),
+    ]).then((results) => {
+      const registeredUnlisteners = results.flatMap((result) =>
+        result.status === 'fulfilled' ? [result.value] : [],
+      )
 
-    // 注册事件监听
-    window.addEventListener('profile-update-started', handleUpdateStarted)
-    window.addEventListener('profile-update-completed', handleUpdateCompleted)
+      if (disposed || results.some((result) => result.status === 'rejected')) {
+        registeredUnlisteners.forEach((unlisten) => unlisten())
+        results.forEach((result) => {
+          if (result.status === 'rejected') console.error(result.reason)
+        })
+        return
+      }
+
+      unlisteners = registeredUnlisteners
+    })
 
     return () => {
-      // 清理事件监听
-      window.removeEventListener('profile-update-started', handleUpdateStarted)
-      window.removeEventListener(
-        'profile-update-completed',
-        handleUpdateCompleted,
-      )
+      disposed = true
+      unlisteners.forEach((unlisten) => unlisten())
     }
-  }, [
-    fetchNextUpdateTime,
-    itemData.uid,
-    mutateProfiles,
-    setLoadingCache,
-    showNextUpdate,
-  ])
+  }, [fetchNextUpdateTime, itemData.uid, mutateProfiles, setLoadingCache])
 
   const handleSaveProfileDocument = useLockFn(async () => {
     const currentValue = profileDocument.value

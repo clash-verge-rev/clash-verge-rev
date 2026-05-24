@@ -71,14 +71,16 @@ If the PR references an issue, inspect that issue as well and compare the stated
 - No referenced issue, or only vague claims like "fixes multiple issues" without a concrete issue number
 - Single large commit or a very small number of commits covering many unrelated areas
 - PR body reads like a generated report rather than a maintainer-owned change description
-- PR body or author replies use stock report sections such as "Root Cause", "Root Case", "Checklist", or "Check List" without concrete issue evidence, reproduction context, or project-specific reasoning
+- PR body includes duplicated or performative testing claims, such as both "Test" and "Testing" sections, repeated verification language, or generic lint/static-analysis output that does not explain how the reported issue was reproduced or validated.
 - Explicit AI provenance links or bot-authored commits from coding agents
 - Large-scale mechanical edits with little behavioral justification
 - Random renames, comment rewrites, or same-meaning text changes that do not support the fix
-- Ghost Comments, code comments that explain the obvious (e.g., explaining a variable name) or use AI-typical hedging language.
+- Code comments that restate obvious behavior or narrate trivial operations without contributing repository-specific reasoning
 - New tests that are generic, padded, or not clearly connected to the reported issue
 - Scope Drift, the PR claims to fix a specific bug but touches unrelated modules, config files, or documentation without justification.
 - Draft or vague "ongoing optimization" style PRs with broad churn and weak problem statement
+- Lint/Static Analysis Padding: The PR body includes exhaustive, unnecessary listings of "Lint" results, static analysis summaries, or tool outputs intended to pad the appearance of rigor without providing actual insight without explaining how these results directly relate to the reported issue.
+- Performative Verification/Testing: The PR contains elaborate "Verify" or "Test" sections that look structurally impressive (using templated checklists or fancy headers) but lack project-specific context, concrete reproduction steps, or meaningful assertions of correctness or where the 'Test' steps are just a generic echo of the implementation code..
 
 ## Counter-Signals
 
@@ -89,7 +91,15 @@ If the PR references an issue, inspect that issue as well and compare the stated
 - Clear explanation of why each changed area is necessary for the fix
 - Cross-Contextual Logic, the author explains *why* a change was made in a way that shows understanding of the project's specific constraints, rather than just repeating the issue text.
 - Report-style sections are backed by concrete reproduction steps, failure evidence, or repository-specific constraints; template-required checklists should not count as a slop signal by themselves
+- Incremental commit evolution where later commits refine or partially revert earlier assumptions instead of only appending generated output
+- Reviewer interaction that changes implementation direction, scope, or reasoning in response to feedback
+- Explicit tradeoff discussion tied to repository-specific constraints, historical behavior, or compatibility concerns
+- Small corrective follow-up commits that indicate active maintenance rather than one-pass generation
+- Diffs that preserve existing project conventions even when alternative "cleaner" patterns exist
+- Evidence that the author investigated prior behavior, regressions, or historical implementation choices before modifying code
 - Evidence of established repository ownership or ongoing stewardship may reduce slop likelihood, but must never be disclosed in the public comment
+- References to prior repository behavior, historical regressions, earlier PRs, or subsystem-specific constraints that are not obvious from the current diff alone
+- Report-style sections should be discounted when they match this repository's own PR template or established maintainer convention.
 
 ## Decision Rules
 

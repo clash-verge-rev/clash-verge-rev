@@ -15,6 +15,7 @@ import {
   getRunningMode,
   getSystemProxy,
 } from '@/services/cmds'
+import { queryClient } from '@/services/query-client'
 
 import {
   ClashConfigContext,
@@ -137,6 +138,7 @@ export const AppDataProvider = ({
       }
       lastProfileId = newProfileId
       lastUpdateTime = now
+      void queryClient.invalidateQueries({ queryKey: ['getProfiles'] })
       refreshRules().catch(() => {})
       refreshRuleProviders().catch(() => {})
     }

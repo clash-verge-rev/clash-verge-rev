@@ -215,7 +215,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v6
         with:
-          node-version: '24.15.0'
+          node-version: '24.16.0'
 
       - uses: pnpm/action-setup@v6
         name: Install pnpm
@@ -319,7 +319,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v6
         with:
-          node-version: '24.15.0'
+          node-version: '24.16.0'
 
       - name: Install pnpm
         uses: pnpm/action-setup@v6
@@ -466,7 +466,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v6
         with:
-          node-version: '24.15.0'
+          node-version: '24.16.0'
 
       - uses: pnpm/action-setup@v6
         name: Install pnpm
@@ -557,7 +557,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v6
         with:
-          node-version: '24.15.0'
+          node-version: '24.16.0'
 
       - uses: pnpm/action-setup@v6
         name: Install pnpm
@@ -583,7 +583,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v6
         with:
-          node-version: '24.15.0'
+          node-version: '24.16.0'
 
       - uses: pnpm/action-setup@v6
         name: Install pnpm
@@ -645,7 +645,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v6
         with:
-          node-version: '24.15.0'
+          node-version: '24.16.0'
 
       - uses: pnpm/action-setup@v6
         name: Install pnpm

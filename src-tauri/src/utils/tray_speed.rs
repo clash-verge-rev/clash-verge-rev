@@ -27,8 +27,8 @@ const TRAY_LINE_SPACING: f64 = 0.0;
 const TRAY_LINE_HEIGHT_MULTIPLE: f64 = 1.00;
 /// 文本块段前偏移（用于将两行文本整体下移）
 const TRAY_PARAGRAPH_SPACING_BEFORE: f64 = 0.0;
-/// 文字基线偏移（负值向下移动，避免上行速率贴住菜单栏顶部）
-const TRAY_BASELINE_OFFSET: f64 = -3.0;
+/// 基线基准位移按字体上沿比例生成（避免硬编码常量）
+const TRAY_BASELINE_OFFSET_GLYPH_HEIGHT_RATIO: f64 = 3.0;
 /// Tauri tray-icon 将图标缩放为 18pt；这里额外预留图标、图文间距与系统内边距
 const TRAY_STATUS_ITEM_EXTRA_WIDTH: f64 = 30.0;
 /// 典型 6 字符速率文本的最小宽度，避免 0B/s 等短文本让状态项反复收缩
@@ -37,9 +37,6 @@ const TRAY_STATUS_ITEM_MIN_LENGTH: f64 = 58.0;
 const NS_VARIABLE_STATUS_ITEM_LENGTH: f64 = -1.0;
 
 thread_local! {
-    /// 托盘速率富文本属性字典（主线程缓存，避免每帧重建 ObjC 对象）。
-    /// 仅在首次调用时初始化，后续复用同一实例。
-    static TRAY_SPEED_ATTRS: Retained<NSDictionary<NSString, AnyObject>> = build_attributes();
     static LAST_DISPLAY_STR: RefCell<String> = const { RefCell::new(String::new()) };
 }
 
@@ -55,10 +52,7 @@ fn format_tray_speed(up: u64, down: u64) -> String {
     format!("{:>6}\n{:>6}", up_str, down_str)
 }
 
-/// 构造带富文本样式属性的 NSDictionary
-///
-/// 包含：等宽字体、自适应标签颜色、右对齐段落样式
-fn build_attributes() -> Retained<NSDictionary<NSString, AnyObject>> {
+fn build_attributes(button_height: f64) -> Retained<NSDictionary<NSString, AnyObject>> {
     unsafe {
         // 等宽系统字体，确保数字不跳动
         let font = NSFont::monospacedSystemFontOfSize_weight(TRAY_FONT_SIZE, NSFontWeightRegular);
@@ -73,8 +67,10 @@ fn build_attributes() -> Retained<NSDictionary<NSString, AnyObject>> {
         para_style.setMinimumLineHeight(TRAY_LINE_HEIGHT);
         para_style.setMaximumLineHeight(TRAY_LINE_HEIGHT);
         para_style.setParagraphSpacingBefore(TRAY_PARAGRAPH_SPACING_BEFORE);
-        // 基线偏移：用于精确控制两行速率整体的纵向位置
-        let baseline_offset = NSNumber::new_f64(TRAY_BASELINE_OFFSET);
+        let glyph_height = font.ascender() - font.descender();
+        let base_offset = -(glyph_height / TRAY_BASELINE_OFFSET_GLYPH_HEIGHT_RATIO);
+        let free_space = TRAY_LINE_HEIGHT * 2.0 - button_height;
+        let baseline_offset = NSNumber::new_f64(base_offset + free_space / 2.0);
 
         let keys: &[&NSString] = &[
             NSFontAttributeName,
@@ -91,7 +87,7 @@ fn build_attributes() -> Retained<NSDictionary<NSString, AnyObject>> {
 ///
 /// # Arguments
 /// * `text` - 富文本字符串内容
-/// * `attrs` - 富文本属性字典
+/// * `attrs` - 可选富文本属性字典（None 表示用默认属性）
 fn create_attributed_string(
     text: &NSString,
     attrs: Option<&NSDictionary<NSString, AnyObject>>,
@@ -115,20 +111,16 @@ fn sync_click_target_frame(button: &NSStatusBarButton) {
     }
 }
 
-/// 在主线程下设置 NSStatusItem 按钮的富文本标题
+/// 在主线程下设置 NSStatusItem 按钮的标题内容
 ///
 /// 依赖 Tauri `with_inner_tray_icon` 保证回调在主线程执行；
 /// 若意外在非主线程调用，`MainThreadMarker::new()` 返回 `None` 并记录警告。
 ///
 /// # Arguments
 /// * `status_item` - macOS 托盘 NSStatusItem 引用
-/// * `text` - 富文本字符串内容
-/// * `attrs` - 富文本属性字典
-fn apply_status_item_attributed_title(
-    status_item: &NSStatusItem,
-    text: &NSString,
-    attrs: Option<&NSDictionary<NSString, AnyObject>>,
-) {
+/// * `text` - 标题字符串内容
+/// * `show_speed` - 是否以速率富文本样式绘制；false 时清空为普通空标题
+fn apply_status_item_attributed_title(status_item: &NSStatusItem, text: &NSString, show_speed: bool) {
     let Some(mtm) = MainThreadMarker::new() else {
         logging!(warn, Type::Tray, "托盘速率富文本设置跳过：非主线程调用");
         return;
@@ -136,10 +128,15 @@ fn apply_status_item_attributed_title(
     let Some(button) = status_item.button(mtm) else {
         return;
     };
-    let attr_str = create_attributed_string(text, attrs);
-    if attrs.is_some() {
+    let attr_str = if show_speed {
+        let attrs = build_attributes(button.bounds().size.height);
+        let attrs: &NSDictionary<NSString, AnyObject> = &attrs;
+        let attr_str = create_attributed_string(text, Some(attrs));
         status_item.setLength(status_item_length_for_speed(&attr_str));
-    }
+        attr_str
+    } else {
+        create_attributed_string(text, None)
+    };
     button.setAttributedTitle(&attr_str);
     sync_click_target_frame(&button);
 }
@@ -166,9 +163,7 @@ pub fn set_speed_attributed_title(status_item: &NSStatusItem, up: u64, down: u64
         return;
     }
     let ns_string = NSString::from_str(&speed_text);
-    TRAY_SPEED_ATTRS.with(|attrs| {
-        apply_status_item_attributed_title(status_item, &ns_string, Some(&**attrs));
-    });
+    apply_status_item_attributed_title(status_item, &ns_string, true);
 }
 
 /// 清除 NSStatusItem 按钮上的富文本速率显示
@@ -181,5 +176,5 @@ pub fn clear_speed_attributed_title(status_item: &NSStatusItem) {
     });
     let empty = NSString::from_str("");
     status_item.setLength(NS_VARIABLE_STATUS_ITEM_LENGTH);
-    apply_status_item_attributed_title(status_item, &empty, None);
+    apply_status_item_attributed_title(status_item, &empty, false);
 }

@@ -4,15 +4,15 @@ use crate::{
     process::AsyncHandler,
 };
 
-use clash_verge_logging::{Type, logging, logging_error};
+use clash_verge_logging::{Type, logging};
 
 use crate::utils::window_manager::WindowManager;
-use anyhow::{Context as _, Result};
-use delay_timer::prelude::TaskBuilder;
+use anyhow::Result;
+use parking_lot::Mutex;
 use std::sync::atomic::{AtomicU8, AtomicU32, Ordering};
 use tauri::Listener as _;
-
-const LIGHT_WEIGHT_TASK_UID: &str = "light_weight_task";
+use tokio::sync::oneshot;
+use tokio::time::{Duration, sleep};
 
 #[repr(u8)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -42,6 +42,8 @@ static LIGHTWEIGHT_STATE: AtomicU8 = AtomicU8::new(LightweightState::Normal as u
 
 static WINDOW_CLOSE_HANDLER_ID: AtomicU32 = AtomicU32::new(0);
 static WEBVIEW_FOCUS_HANDLER_ID: AtomicU32 = AtomicU32::new(0);
+
+static CANCEL_TX: Mutex<Option<oneshot::Sender<()>>> = Mutex::new(None);
 
 #[inline]
 fn get_state() -> LightweightState {
@@ -101,7 +103,7 @@ pub async fn enable_auto_light_weight_mode() {
 
 pub fn disable_auto_light_weight_mode() {
     logging!(info, Type::Lightweight, "关闭自动轻量模式");
-    let _ = cancel_light_weight_timer();
+    cancel_light_weight_timer();
     cancel_window_close_listener();
     cancel_webview_focus_listener();
 }
@@ -114,7 +116,7 @@ pub async fn entry_lightweight_mode() -> bool {
     }
     record_state_and_log(LightweightState::In);
     WindowManager::destroy_main_window();
-    let _ = cancel_light_weight_timer();
+    cancel_light_weight_timer();
     refresh_lightweight_tray_state().await;
     true
 }
@@ -140,7 +142,7 @@ pub async fn exit_lightweight_mode() -> bool {
         setup_window_close_listener();
         setup_webview_focus_listener();
     }
-    let _ = cancel_light_weight_timer();
+    cancel_light_weight_timer();
     record_state_and_log(LightweightState::Normal);
     refresh_lightweight_tray_state().await;
     true
@@ -148,7 +150,7 @@ pub async fn exit_lightweight_mode() -> bool {
 
 #[cfg(target_os = "macos")]
 pub async fn add_light_weight_timer() {
-    logging_error!(Type::Lightweight, setup_light_weight_timer().await);
+    setup_light_weight_timer().await;
 }
 
 fn setup_window_close_listener() {
@@ -160,13 +162,7 @@ fn setup_window_close_listener() {
         }
         let handler_id = window.listen("tauri://close-requested", move |_event| {
             std::mem::drop(AsyncHandler::spawn(|| async {
-                if let Err(e) = setup_light_weight_timer().await {
-                    logging!(
-                        warn,
-                        Type::Lightweight,
-                        "Warning: Failed to setup light weight timer: {e}"
-                    );
-                }
+                setup_light_weight_timer().await;
             }));
             logging!(info, Type::Lightweight, "监听到关闭请求，开始轻量模式计时");
         });
@@ -192,7 +188,7 @@ fn setup_webview_focus_listener() {
             logging!(debug, Type::Lightweight, "覆盖旧的窗口焦点监听");
         }
         let handler_id = window.listen("tauri://focus", move |_event| {
-            logging_error!(Type::Lightweight, cancel_light_weight_timer());
+            cancel_light_weight_timer();
             logging!(debug, Type::Lightweight, "监听到窗口获得焦点，取消轻量模式计时");
         });
         WEBVIEW_FOCUS_HANDLER_ID.store(handler_id, Ordering::Release);
@@ -209,72 +205,51 @@ fn cancel_webview_focus_listener() {
     }
 }
 
-async fn setup_light_weight_timer() -> Result<()> {
-    if let Err(e) = Timer::global().init().await {
-        return Err(e).context("failed to initialize timer");
-    }
-
+async fn setup_light_weight_timer() {
     let once_by_minutes = Config::verge().await.data_arc().auto_light_weight_minutes.unwrap_or(10);
 
-    {
-        let timer_map = Timer::global().timer_map.read();
-        if timer_map.contains_key(LIGHT_WEIGHT_TASK_UID) {
-            logging!(debug, Type::Timer, "轻量模式计时器已存在，跳过创建");
-            return Ok(());
+    let mut cancel_tx_guard = CANCEL_TX.lock();
+    if cancel_tx_guard.is_some() {
+        logging!(
+            debug,
+            Type::Timer,
+            "Lightweight mode timer already exists, skipping setup"
+        );
+        return;
+    }
+
+    let (tx, rx) = oneshot::channel::<()>();
+    *cancel_tx_guard = Some(tx);
+    drop(cancel_tx_guard);
+
+    AsyncHandler::spawn(move || async move {
+        tokio::select! {
+            _ = sleep(Duration::from_secs(once_by_minutes.saturating_mul(60))) => {
+                logging!(info, Type::Timer, "Lightweight mode timer expired, entering lightweight mode");
+                {
+                    let mut guard = CANCEL_TX.lock();
+                    *guard = None;
+                }
+                entry_lightweight_mode().await;
+            }
+            _ = rx => {
+                logging!(debug, Type::Timer, "Received cancel signal, stopping lightweight mode timer");
+            }
         }
-    }
-
-    let task_id = {
-        Timer::global()
-            .timer_count
-            .fetch_add(1, std::sync::atomic::Ordering::Relaxed)
-    };
-
-    let task = TaskBuilder::default()
-        .set_task_id(task_id)
-        .set_maximum_parallel_runnable_num(1)
-        .set_frequency_once_by_minutes(once_by_minutes)
-        .spawn_async_routine(move || async move {
-            logging!(info, Type::Timer, "计时器到期，开始进入轻量模式");
-            entry_lightweight_mode().await;
-        })
-        .context("failed to create timer task")?;
-
-    {
-        let delay_timer = Timer::global().delay_timer.write();
-        delay_timer.add_task(task).context("failed to add timer task")?;
-    }
-
-    {
-        let mut timer_map = Timer::global().timer_map.write();
-        let timer_task = crate::core::timer::TimerTask {
-            task_id,
-            interval_minutes: once_by_minutes,
-            last_run: chrono::Local::now().timestamp(),
-        };
-        timer_map.insert(LIGHT_WEIGHT_TASK_UID.into(), timer_task);
-    }
+    });
 
     logging!(
         info,
         Type::Timer,
-        "计时器已设置，{} 分钟后将自动进入轻量模式",
+        "Lightweight mode timer set, entering lightweight mode in {} minutes",
         once_by_minutes
     );
-
-    Ok(())
 }
 
-fn cancel_light_weight_timer() -> Result<()> {
-    let value = Timer::global().timer_map.write().remove(LIGHT_WEIGHT_TASK_UID);
-    if let Some(task) = value {
-        Timer::global()
-            .delay_timer
-            .write()
-            .remove_task(task.task_id)
-            .context("failed to remove timer task")?;
-        logging!(debug, Type::Timer, "计时器已取消");
+fn cancel_light_weight_timer() {
+    let mut cancel_tx_guard = CANCEL_TX.lock();
+    if let Some(tx) = cancel_tx_guard.take() {
+        let _ = tx.send(());
+        logging!(debug, Type::Timer, "Timer cancelled");
     }
-
-    Ok(())
 }
