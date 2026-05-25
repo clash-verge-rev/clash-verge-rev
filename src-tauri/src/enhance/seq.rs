@@ -52,10 +52,10 @@ pub fn use_seq(seq: SeqMap, mut config: Mapping, field: &str) -> Mapping {
     let mut new_seq = Sequence::new();
     new_seq.extend(prepend);
 
-    if let Some(Value::Sequence(origin)) = config.get(field) {
+    if let Some(Value::Sequence(origin)) = config.remove(field) {
         // Filter out deleted items
         let filtered: Sequence = origin
-            .iter()
+            .into_iter()
             .filter(|item| {
                 if let Value::String(s) = item {
                     !delete.contains(s)
@@ -69,7 +69,6 @@ pub fn use_seq(seq: SeqMap, mut config: Mapping, field: &str) -> Mapping {
                     true
                 }
             })
-            .cloned()
             .collect();
         new_seq.extend(filtered);
     }
@@ -79,27 +78,33 @@ pub fn use_seq(seq: SeqMap, mut config: Mapping, field: &str) -> Mapping {
 
     // If this is proxies field, we also need to filter proxy-groups
     if field == "proxies"
-        && let Some(Value::Sequence(groups)) = config.get_mut("proxy-groups")
+        && let Some(Value::Sequence(groups)) = config.remove("proxy-groups")
     {
         let mut new_groups = Sequence::new();
         let mut appended_to_selector = false;
         for group in groups {
-            if let Value::Mapping(group_map) = group {
-                let mut proxies_seq = group_map.get("proxies").and_then(Value::as_sequence).map(|proxies| {
-                    proxies
-                        .iter()
-                        .filter(|p| {
-                            if let Value::String(name) = p {
-                                !delete.contains(name)
-                            } else {
-                                true
-                            }
-                        })
-                        .cloned()
-                        .collect::<Sequence>()
-                });
+            if let Value::Mapping(mut group_map) = group {
+                let mut proxies_seq = match group_map.remove("proxies") {
+                    Some(Value::Sequence(proxies)) => Some(
+                        proxies
+                            .into_iter()
+                            .filter(|p| {
+                                if let Value::String(name) = p {
+                                    !delete.contains(name)
+                                } else {
+                                    true
+                                }
+                            })
+                            .collect::<Sequence>(),
+                    ),
+                    Some(value) => {
+                        group_map.insert(Value::String("proxies".into()), value);
+                        None
+                    }
+                    None => None,
+                };
 
-                if !appended_to_selector && !added_proxy_names.is_empty() && is_selector_group(group_map) {
+                if !appended_to_selector && !added_proxy_names.is_empty() && is_selector_group(&group_map) {
                     let base_seq = proxies_seq.unwrap_or_else(Sequence::new);
                     let mut seq = Sequence::new();
                     let mut existing = HashSet::new();
@@ -124,9 +129,9 @@ pub fn use_seq(seq: SeqMap, mut config: Mapping, field: &str) -> Mapping {
                 if let Some(seq) = proxies_seq {
                     group_map.insert(Value::String("proxies".into()), Value::Sequence(seq));
                 }
-                new_groups.push(Value::Mapping(group_map.to_owned()));
+                new_groups.push(Value::Mapping(group_map));
             } else {
-                new_groups.push(group.to_owned());
+                new_groups.push(group);
             }
         }
         config.insert(Value::String("proxy-groups".into()), Value::Sequence(new_groups));
