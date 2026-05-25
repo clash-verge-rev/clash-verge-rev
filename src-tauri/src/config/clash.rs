@@ -7,6 +7,7 @@ use clash_verge_logging::{Type, logging};
 use serde::{Deserialize, Serialize};
 use serde_yaml_ng::{Mapping, Value};
 use std::{
+    borrow::Cow,
     net::{IpAddr, Ipv4Addr, SocketAddr},
     str::FromStr as _,
 };
@@ -267,11 +268,11 @@ impl IClashTemp {
                     let val_str = val_str.trim();
 
                     let val = match val_str.starts_with(':') {
-                        true => format!("127.0.0.1{val_str}"),
-                        false => val_str.to_owned(),
+                        true => Cow::Owned(format!("127.0.0.1{val_str}")),
+                        false => Cow::Borrowed(val_str),
                     };
 
-                    SocketAddr::from_str(val.as_str()).ok().map(|s| s.to_string())
+                    SocketAddr::from_str(&val).ok().map(|s| s.to_string())
                 }
                 None => None,
             })
