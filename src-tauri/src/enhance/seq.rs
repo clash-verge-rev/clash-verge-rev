@@ -76,66 +76,74 @@ pub fn use_seq(seq: SeqMap, mut config: Mapping, field: &str) -> Mapping {
     new_seq.extend(append);
     config.insert(Value::String(field.into()), Value::Sequence(new_seq));
 
-    // If this is proxies field, we also need to filter proxy-groups
-    if field == "proxies"
-        && let Some(Value::Sequence(groups)) = config.remove("proxy-groups")
-    {
-        let mut new_groups = Sequence::new();
-        let mut appended_to_selector = false;
-        for group in groups {
-            if let Value::Mapping(mut group_map) = group {
-                let mut proxies_seq = match group_map.remove("proxies") {
-                    Some(Value::Sequence(proxies)) => Some(
-                        proxies
-                            .into_iter()
-                            .filter(|p| {
-                                if let Value::String(name) = p {
-                                    !delete.contains(name)
-                                } else {
-                                    true
-                                }
-                            })
-                            .collect::<Sequence>(),
-                    ),
-                    Some(value) => {
-                        group_map.insert(Value::String("proxies".into()), value);
-                        None
-                    }
-                    None => None,
-                };
-
-                if !appended_to_selector && !added_proxy_names.is_empty() && is_selector_group(&group_map) {
-                    let base_seq = proxies_seq.unwrap_or_else(Sequence::new);
-                    let mut seq = Sequence::new();
-                    let mut existing = HashSet::new();
-                    for name in &added_proxy_names {
-                        if existing.insert(name.clone()) {
-                            seq.push(Value::String(name.clone()));
-                        }
-                    }
-                    for value in base_seq {
-                        if let Value::String(name) = &value
-                            && !existing.insert(name.to_owned())
-                        {
-                            continue;
-                        }
-
-                        seq.push(value);
-                    }
-                    proxies_seq = Some(seq);
-                    appended_to_selector = true;
-                }
-
-                if let Some(seq) = proxies_seq {
-                    group_map.insert(Value::String("proxies".into()), Value::Sequence(seq));
-                }
-                new_groups.push(Value::Mapping(group_map));
-            } else {
-                new_groups.push(group);
-            }
-        }
-        config.insert(Value::String("proxy-groups".into()), Value::Sequence(new_groups));
+    if field != "proxies" {
+        return config;
     }
+
+    let Some(groups) = config.remove("proxy-groups") else {
+        return config;
+    };
+
+    let Value::Sequence(groups) = groups else {
+        config.insert(Value::String("proxy-groups".into()), groups);
+        return config;
+    };
+
+    let mut new_groups = Sequence::new();
+    let mut appended_to_selector = false;
+    for group in groups {
+        if let Value::Mapping(mut group_map) = group {
+            let mut proxies_seq = match group_map.remove("proxies") {
+                Some(Value::Sequence(proxies)) => Some(
+                    proxies
+                        .into_iter()
+                        .filter(|p| {
+                            if let Value::String(name) = p {
+                                !delete.contains(name)
+                            } else {
+                                true
+                            }
+                        })
+                        .collect::<Sequence>(),
+                ),
+                Some(value) => {
+                    group_map.insert(Value::String("proxies".into()), value);
+                    None
+                }
+                None => None,
+            };
+
+            if !appended_to_selector && !added_proxy_names.is_empty() && is_selector_group(&group_map) {
+                let base_seq = proxies_seq.unwrap_or_else(Sequence::new);
+                let mut seq = Sequence::new();
+                let mut existing = HashSet::new();
+                for name in &added_proxy_names {
+                    if existing.insert(name.clone()) {
+                        seq.push(Value::String(name.clone()));
+                    }
+                }
+                for value in base_seq {
+                    if let Value::String(name) = &value
+                        && !existing.insert(name.to_owned())
+                    {
+                        continue;
+                    }
+
+                    seq.push(value);
+                }
+                proxies_seq = Some(seq);
+                appended_to_selector = true;
+            }
+
+            if let Some(seq) = proxies_seq {
+                group_map.insert(Value::String("proxies".into()), Value::Sequence(seq));
+            }
+            new_groups.push(Value::Mapping(group_map));
+        } else {
+            new_groups.push(group);
+        }
+    }
+    config.insert(Value::String("proxy-groups".into()), Value::Sequence(new_groups));
 
     config
 }
@@ -292,5 +300,28 @@ proxy-groups:
             .expect("group proxies should be a sequence");
         let names: Vec<&str> = group2_proxies.iter().filter_map(Value::as_str).collect();
         assert_eq!(names, vec!["proxy1"]);
+    }
+
+    #[test]
+    #[allow(clippy::unwrap_used)]
+    #[allow(clippy::expect_used)]
+    fn test_preserve_non_sequence_proxy_groups() {
+        let config_str = r#"
+proxies:
+- name: "proxy1"
+  type: "ss"
+proxy-groups: "invalid"
+"#;
+        let mut config: Mapping = serde_yaml_ng::from_str(config_str).expect("Failed to parse test config YAML");
+
+        let seq = SeqMap {
+            prepend: Sequence::new(),
+            append: Sequence::new(),
+            delete: vec!["proxy1".to_string()],
+        };
+
+        config = use_seq(seq, config, "proxies");
+
+        assert_eq!(config.get("proxy-groups").and_then(Value::as_str), Some("invalid"));
     }
 }
