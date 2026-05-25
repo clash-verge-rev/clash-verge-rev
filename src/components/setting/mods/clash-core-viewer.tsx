@@ -2,9 +2,9 @@ import {
   RestartAltRounded,
   SwitchAccessShortcutRounded,
 } from '@mui/icons-material'
-import { LoadingButton } from '@mui/lab'
 import {
   Box,
+  Button,
   Chip,
   CircularProgress,
   List,
@@ -120,7 +120,7 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
           {t('settings.sections.clash.form.fields.clashCore')}
           <Box>
-            <LoadingButton
+            <Button
               variant="contained"
               size="small"
               startIcon={<SwitchAccessShortcutRounded />}
@@ -131,8 +131,8 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
               onClick={onUpgrade}
             >
               {t('shared.actions.upgrade')}
-            </LoadingButton>
-            <LoadingButton
+            </Button>
+            <Button
               variant="contained"
               size="small"
               startIcon={<RestartAltRounded />}
@@ -142,7 +142,7 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
               onClick={onRestart}
             >
               {t('shared.actions.restart')}
-            </LoadingButton>
+            </Button>
           </Box>
         </Box>
       }

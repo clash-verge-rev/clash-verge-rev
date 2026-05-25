@@ -238,7 +238,7 @@ impl IProfiles {
                     if let Some(file_data) = item.file_data.take() {
                         let file = each.file.take();
                         let file =
-                            file.unwrap_or_else(|| item.file.take().unwrap_or_else(|| format!("{}.yaml", &uid).into()));
+                            file.unwrap_or_else(|| item.file.take().unwrap_or_else(|| format!("{}.yaml", uid).into()));
 
                         // the file must exists
                         each.file = Some(file.clone());

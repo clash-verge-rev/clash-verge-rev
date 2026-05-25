@@ -49,6 +49,11 @@ const DATE_FORMAT = 'YYYY-MM-DD_HH-mm-ss'
 const FILENAME_PATTERN = /\d{4}-\d{2}-\d{2}_\d{2}-\d{2}-\d{2}/
 
 type BackupSource = 'local' | 'webdav'
+type PendingConfirmation = {
+  action: 'delete' | 'restore'
+  filename: string
+  source: BackupSource
+} | null
 
 interface BackupHistoryViewerProps {
   open: boolean
@@ -67,11 +72,6 @@ interface BackupRow {
   sort_value: number
 }
 
-const confirmAsync = async (message: string) => {
-  const fn = window.confirm as (msg?: string) => boolean
-  return fn(message)
-}
-
 export const BackupHistoryViewer = ({
   open,
   source,
@@ -86,6 +86,9 @@ export const BackupHistoryViewer = ({
   const [loading, setLoading] = useState(false)
   const [isRestoring, setIsRestoring] = useState(false)
   const [isRestarting, setIsRestarting] = useState(false)
+  const [isConfirming, setIsConfirming] = useState(false)
+  const [pendingConfirmation, setPendingConfirmation] =
+    useState<PendingConfirmation>(null)
   const isLocal = source === 'local'
   const isWebDavConfigured = Boolean(
     verge?.webdav_url && verge?.webdav_username && verge?.webdav_password,
@@ -94,7 +97,7 @@ export const BackupHistoryViewer = ({
   const webdavStatus = getWebdavStatus(webdavSignature)
   const shouldSkipWebDav = !isLocal && !isWebDavConfigured
   const pageSize = 8
-  const isBusy = loading || isRestoring || isRestarting
+  const isBusy = loading || isRestoring || isRestarting || isConfirming
 
   const buildRow = useCallback(
     (item: ILocalBackupFile | IWebDavFile): BackupRow | null => {
@@ -204,45 +207,54 @@ export const BackupHistoryViewer = ({
     })
   }, [isLocal, rows, shouldSkipWebDav, t, total, webdavStatus])
 
-  const handleDelete = useLockFn(async (filename: string) => {
+  const handleDelete = (filename: string) => {
     if (isRestarting) return
-    if (
-      !(await confirmAsync(t('settings.modals.backup.messages.confirmDelete')))
-    )
-      return
-    if (isLocal) {
-      await deleteLocalBackup(filename)
-    } else {
-      await deleteWebdavBackup(filename)
-    }
-    await fetchRows()
-  })
+    setPendingConfirmation({ action: 'delete', filename, source })
+  }
 
-  const handleRestore = useLockFn(async (filename: string) => {
+  const handleRestore = (filename: string) => {
     if (isRestoring || isRestarting) return
-    if (
-      !(await confirmAsync(t('settings.modals.backup.messages.confirmRestore')))
-    )
-      return
-    setIsRestoring(true)
+    setPendingConfirmation({ action: 'restore', filename, source })
+  }
+
+  const handleConfirmAction = useLockFn(async () => {
+    if (!pendingConfirmation) return
+    const { action, filename, source: actionSource } = pendingConfirmation
+    const actionIsLocal = actionSource === 'local'
+    setIsConfirming(true)
+    if (action === 'restore') {
+      setIsRestoring(true)
+    }
     try {
-      if (isLocal) {
-        await restoreLocalBackup(filename)
+      if (action === 'delete') {
+        if (actionIsLocal) {
+          await deleteLocalBackup(filename)
+        } else {
+          await deleteWebdavBackup(filename)
+        }
+        setPendingConfirmation(null)
+        await fetchRows()
       } else {
-        await restoreWebDavBackup(filename)
+        if (actionIsLocal) {
+          await restoreLocalBackup(filename)
+        } else {
+          await restoreWebDavBackup(filename)
+        }
+        setPendingConfirmation(null)
+        showNotice.success('settings.modals.backup.messages.restoreSuccess')
+        setIsRestarting(true)
+        window.setTimeout(() => {
+          void restartApp().catch((err: unknown) => {
+            setIsRestarting(false)
+            showNotice.error(err)
+          })
+        }, 1000)
       }
-      showNotice.success('settings.modals.backup.messages.restoreSuccess')
-      setIsRestarting(true)
-      window.setTimeout(() => {
-        void restartApp().catch((err: unknown) => {
-          setIsRestarting(false)
-          showNotice.error(err)
-        })
-      }, 1000)
     } catch (error) {
       console.error(error)
       showNotice.error(error)
     } finally {
+      setIsConfirming(false)
       setIsRestoring(false)
     }
   })
@@ -266,6 +278,20 @@ export const BackupHistoryViewer = ({
     if (isRestarting) return
     void fetchRows({ force: true })
   }
+
+  const closeConfirmDialog = () => {
+    if (isConfirming) return
+    setPendingConfirmation(null)
+  }
+
+  const confirmTitle =
+    pendingConfirmation?.action === 'delete'
+      ? t('settings.modals.backup.actions.deleteBackup')
+      : t('settings.modals.backup.actions.restoreBackup')
+  const confirmMessage =
+    pendingConfirmation?.action === 'delete'
+      ? t('settings.modals.backup.messages.confirmDelete')
+      : t('settings.modals.backup.messages.confirmRestore')
 
   return (
     <BaseDialog
@@ -423,6 +449,30 @@ export const BackupHistoryViewer = ({
           )}
         </Stack>
       </Box>
+      <BaseDialog
+        open={pendingConfirmation !== null}
+        title={confirmTitle}
+        okBtn={t('shared.actions.confirm')}
+        cancelBtn={t('shared.actions.cancel')}
+        contentSx={{ width: { xs: 320, sm: 420 } }}
+        loading={isConfirming}
+        onCancel={closeConfirmDialog}
+        onClose={closeConfirmDialog}
+        onOk={handleConfirmAction}
+      >
+        <Typography variant="body2" sx={{ wordBreak: 'break-word' }}>
+          {confirmMessage}
+        </Typography>
+        {pendingConfirmation?.filename && (
+          <Typography
+            variant="caption"
+            color="text.secondary"
+            sx={{ display: 'block', mt: 1, wordBreak: 'break-all' }}
+          >
+            {pendingConfirmation.filename}
+          </Typography>
+        )}
+      </BaseDialog>
     </BaseDialog>
   )
 }

@@ -140,9 +140,6 @@ export const EnhancedCanvasTrafficGraph = memo(
 
     const initialFocusState =
       typeof document !== 'undefined' ? !document.hidden : true
-    const [isWindowFocused, setIsWindowFocused] = useState(initialFocusState)
-    const [isDocumentVisible, setIsDocumentVisible] =
-      useState(initialFocusState)
     const isDocumentVisibleRef = useRef(initialFocusState)
 
     // 悬浮提示状态
@@ -243,11 +240,12 @@ export const EnhancedCanvasTrafficGraph = memo(
     const handleFocusStateChange = useCallback(
       (focused: boolean) => {
         isWindowFocusedRef.current = focused
-        setIsWindowFocused(focused)
 
         if (focused || !pause_render_traffic_stats_on_blur) {
           setCurrentFPS(GRAPH_CONFIG.targetFPS)
         }
+
+        scheduleDrawGraphRef.current()
       },
       [pause_render_traffic_stats_on_blur],
     )
@@ -262,7 +260,6 @@ export const EnhancedCanvasTrafficGraph = memo(
       const handleVisibilityChange = () => {
         const visible = !document.hidden
         isDocumentVisibleRef.current = visible
-        setIsDocumentVisible(visible)
         handleFocusStateChange(visible)
       }
 
@@ -1006,7 +1003,7 @@ export const EnhancedCanvasTrafficGraph = memo(
 
     useEffect(() => {
       scheduleDrawGraph()
-    }, [scheduleDrawGraph, isDocumentVisible, isWindowFocused])
+    }, [scheduleDrawGraph])
 
     useEffect(() => {
       scheduleDrawGraphRef.current = scheduleDrawGraph

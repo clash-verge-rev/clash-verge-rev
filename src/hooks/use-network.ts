@@ -6,6 +6,7 @@ export const useNetworkInterfaces = () => {
   const {
     data,
     error,
+    isFetching,
     isLoading,
     refetch: mutate,
   } = useQuery({
@@ -13,12 +14,12 @@ export const useNetworkInterfaces = () => {
     queryFn: getNetworkInterfacesInfo,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
-    initialData: [],
+    placeholderData: [],
   })
 
   return {
     networkInterfaces: data || [],
-    loading: isLoading,
+    loading: isLoading || isFetching,
     error,
     mutate,
   }
