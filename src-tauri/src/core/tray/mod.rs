@@ -402,7 +402,7 @@ impl Tray {
     }
 }
 
-fn create_hotkeys(hotkeys: &Option<Vec<String>>) -> HashMap<String, String> {
+fn create_hotkeys(hotkeys: &Option<Vec<String>>) -> HashMap<&str, &str> {
     hotkeys
         .as_ref()
         .map(|h| {
@@ -415,13 +415,13 @@ fn create_hotkeys(hotkeys: &Option<Vec<String>>) -> HashMap<String, String> {
                             if key.to_uppercase().contains("NUMPAD") {
                                 None
                             } else {
-                                Some((func.into(), key.into()))
+                                Some((func, key))
                             }
                         }
                         _ => None,
                     }
                 })
-                .collect::<std::collections::HashMap<String, String>>()
+                .collect::<HashMap<&str, &str>>()
         })
         .unwrap_or_default()
 }
@@ -658,7 +658,7 @@ async fn create_tray_menu(
         MenuIds::DASHBOARD,
         &texts.dashboard,
         true,
-        hotkeys.get("open_or_close_dashboard").map(|s| s.as_str()),
+        hotkeys.get("open_or_close_dashboard").copied(),
     )?;
 
     let rule_mode = &CheckMenuItem::with_id(
@@ -667,7 +667,7 @@ async fn create_tray_menu(
         &texts.rule_mode,
         true,
         current_proxy_mode == "rule",
-        hotkeys.get("clash_mode_rule").map(|s| s.as_str()),
+        hotkeys.get("clash_mode_rule").copied(),
     )?;
 
     let global_mode = &CheckMenuItem::with_id(
@@ -676,7 +676,7 @@ async fn create_tray_menu(
         &texts.global_mode,
         true,
         current_proxy_mode == "global",
-        hotkeys.get("clash_mode_global").map(|s| s.as_str()),
+        hotkeys.get("clash_mode_global").copied(),
     )?;
 
     let direct_mode = &CheckMenuItem::with_id(
@@ -685,7 +685,7 @@ async fn create_tray_menu(
         &texts.direct_mode,
         true,
         current_proxy_mode == "direct",
-        hotkeys.get("clash_mode_direct").map(|s| s.as_str()),
+        hotkeys.get("clash_mode_direct").copied(),
     )?;
 
     let outbound_modes = if show_outbound_modes_inline {
@@ -733,7 +733,7 @@ async fn create_tray_menu(
         &texts.system_proxy,
         true,
         system_proxy_enabled,
-        hotkeys.get("toggle_system_proxy").map(|s| s.as_str()),
+        hotkeys.get("toggle_system_proxy").copied(),
     )?;
 
     let tun_mode = &CheckMenuItem::with_id(
@@ -742,7 +742,7 @@ async fn create_tray_menu(
         &texts.tun_mode,
         tun_mode_available,
         tun_mode_enabled,
-        hotkeys.get("toggle_tun_mode").map(|s| s.as_str()),
+        hotkeys.get("toggle_tun_mode").copied(),
     )?;
 
     let close_all_connections = &MenuItem::with_id(
@@ -759,7 +759,7 @@ async fn create_tray_menu(
         &texts.lightweight_mode,
         true,
         is_lightweight_mode,
-        hotkeys.get("entry_lightweight_mode").map(|s| s.as_str()),
+        hotkeys.get("entry_lightweight_mode").copied(),
     )?;
 
     let copy_env = &MenuItem::with_id(app_handle, MenuIds::COPY_ENV, &texts.copy_env, true, None::<&str>)?;
@@ -814,7 +814,7 @@ async fn create_tray_menu(
         ],
     )?;
 
-    let quit_accelerator = hotkeys.get("quit").map(|s| s.as_str());
+    let quit_accelerator = hotkeys.get("quit").copied();
 
     #[cfg(target_os = "macos")]
     let quit_accelerator = quit_accelerator.or(Some("Cmd+Q"));
