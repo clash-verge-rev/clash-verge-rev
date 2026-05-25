@@ -1,6 +1,6 @@
 use crate::process::AsyncHandler;
 
-use super::use_lowercase;
+use super::field::{use_lowercase, use_lowercase_owned};
 use anyhow::{Error, Result};
 use boa_engine::{Context, JsString, JsValue, Source, native_function::NativeFunction};
 use clash_verge_logging::{Type, logging_error};
@@ -126,7 +126,7 @@ fn use_script_sync(script: String, config: &Mapping, name: &String) -> Result<(M
         let res: Result<Mapping, Error> = parse_json_safely(&result);
 
         match res {
-            Ok(config) => Ok((use_lowercase(&config), outputs.lock().to_vec())),
+            Ok(config) => Ok((use_lowercase_owned(config), outputs.lock().to_vec())),
             Err(err) => {
                 outputs
                     .lock()
