@@ -404,8 +404,18 @@ export async function exportDiagnosticInfo() {
   return invoke('export_diagnostic_info')
 }
 
+interface SystemInfo {
+  system_name: string
+  system_version: string
+  system_kernel_version: string
+  system_arch: string
+  app_version: string
+  app_core_mode: string
+  app_is_admin: boolean
+}
+
 export async function getSystemInfo() {
-  return invoke<string>('get_system_info')
+  return invoke<SystemInfo>('get_system_info')
 }
 
 export async function copyIconFile(

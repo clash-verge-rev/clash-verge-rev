@@ -7571,6 +7571,7 @@ dependencies = [
  "deelevate",
  "libc",
  "parking_lot",
+ "serde",
  "sysinfo",
  "tauri",
  "tauri-plugin-clipboard-manager",

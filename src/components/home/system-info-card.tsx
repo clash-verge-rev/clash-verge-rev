@@ -46,20 +46,17 @@ export const SystemInfoCard = () => {
   useEffect(() => {
     getSystemInfo()
       .then((info) => {
-        const lines = info.split('\n')
-        if (lines.length > 0) {
-          const sysName = lines[0].split(': ')[1] || ''
-          let sysVersion = lines[1].split(': ')[1] || ''
+        const sysName = info.system_name
+        let sysVersion = info.system_version
 
-          if (
-            sysName &&
-            sysVersion.toLowerCase().startsWith(sysName.toLowerCase())
-          ) {
-            sysVersion = sysVersion.substring(sysName.length).trim()
-          }
-
-          setOsInfo(`${sysName} ${sysVersion}`)
+        if (
+          sysName &&
+          sysVersion.toLowerCase().startsWith(sysName.toLowerCase())
+        ) {
+          sysVersion = sysVersion.substring(sysName.length).trim()
         }
+
+        setOsInfo(`${sysName} ${sysVersion}`)
       })
       .catch(console.error)
   }, [])
