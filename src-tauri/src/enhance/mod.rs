@@ -301,7 +301,7 @@ async fn process_global_items(
 
     if let ChainType::Merge(merge) = global_merge.data {
         exists_keys.extend(use_keys(&merge));
-        config = use_merge(&merge, config.to_owned());
+        config = use_merge(&merge, config);
     }
 
     if let ChainType::Script(script) = global_script.data {
@@ -333,20 +333,20 @@ async fn process_profile_items(
     profile_name: &String,
 ) -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
     if let ChainType::Rules(rules) = rules_item.data {
-        config = use_seq(rules, config.to_owned(), "rules");
+        config = use_seq(rules, config, "rules");
     }
 
     if let ChainType::Proxies(proxies) = proxies_item.data {
-        config = use_seq(proxies, config.to_owned(), "proxies");
+        config = use_seq(proxies, config, "proxies");
     }
 
     if let ChainType::Groups(groups) = groups_item.data {
-        config = use_seq(groups, config.to_owned(), "proxy-groups");
+        config = use_seq(groups, config, "proxy-groups");
     }
 
     if let ChainType::Merge(merge) = merge_item.data {
         exists_keys.extend(use_keys(&merge));
-        config = use_merge(&merge, config.to_owned());
+        config = use_merge(&merge, config);
     }
 
     if let ChainType::Script(script) = script_item.data {
