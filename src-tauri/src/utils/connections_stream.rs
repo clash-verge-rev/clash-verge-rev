@@ -53,7 +53,7 @@ struct TrafficPayload {
 }
 
 fn parse_traffic_event(data: Value) -> Option<InternalWsEvent<TrafficSpeedEvent>> {
-    if let Ok(payload) = serde_json::from_value::<TrafficPayload>(data.clone()) {
+    if let Ok(payload) = TrafficPayload::deserialize(&data) {
         return Some(InternalWsEvent::Data(TrafficSpeedEvent {
             up: payload.up,
             down: payload.down,

@@ -37,23 +37,19 @@ impl IRuntime {
             }
         }
 
-        let patch_tun = patch.get("tun");
-        if let Some(patch_tun_value) = patch_tun {
-            let mut tun = config
-                .get("tun")
-                .and_then(|val| val.as_mapping())
-                .cloned()
-                .unwrap_or_else(Mapping::new);
+        if let Some(patch_tun_mapping) = patch.get("tun").and_then(Value::as_mapping) {
+            let tun_key = Value::from("tun");
+            if !matches!(config.get(&tun_key), Some(Value::Mapping(_))) {
+                config.insert(tun_key.clone(), Value::Mapping(Mapping::new()));
+            }
 
-            if let Some(patch_tun_mapping) = patch_tun_value.as_mapping() {
+            if let Some(Value::Mapping(tun)) = config.get_mut(&tun_key) {
                 for key in use_keys(patch_tun_mapping) {
                     if let Some(value) = patch_tun_mapping.get(key.as_str()) {
                         tun.insert(Value::from(key.as_str()), value.clone());
                     }
                 }
             }
-
-            config.insert("tun".into(), Value::from(tun));
         }
     }
 
