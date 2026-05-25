@@ -25,55 +25,55 @@ fn lowercase_key(key: &str) -> Value {
 }
 
 pub fn use_lowercase(config: &Mapping) -> Mapping {
-    let mut ret = Mapping::new();
+    let mut lowercased = Mapping::new();
 
     for (key, value) in config.into_iter() {
         if let Some(key_str) = key.as_str() {
-            ret.insert(lowercase_key(key_str), value.clone());
+            lowercased.insert(lowercase_key(key_str), value.clone());
         }
     }
-    ret
+    lowercased
 }
 
 pub fn use_lowercase_owned(config: Mapping) -> Mapping {
-    let mut ret = Mapping::new();
+    let mut lowercased = Mapping::new();
 
     for (key, value) in config {
         if let Some(key_str) = key.as_str() {
-            ret.insert(lowercase_key(key_str), value);
+            lowercased.insert(lowercase_key(key_str), value);
         }
     }
-    ret
+    lowercased
 }
 
 pub fn use_sort(mut config: Mapping) -> Mapping {
-    let mut ret = Mapping::new();
+    let mut sorted = Mapping::new();
     HANDLE_FIELDS.into_iter().for_each(|key| {
         let key = Value::from(key);
         if let Some(value) = config.remove(&key) {
-            ret.insert(key, value);
+            sorted.insert(key, value);
         }
     });
 
-    let mut default_fields = Mapping::new();
+    let mut default_field_values = Mapping::new();
     for (key, value) in config {
         if let Some(key_str) = key.as_str() {
             if DEFAULT_FIELDS.contains(&key_str) {
-                default_fields.insert(key, value);
+                default_field_values.insert(key, value);
             } else if !HANDLE_FIELDS.contains(&key_str) {
-                ret.insert(key, value);
+                sorted.insert(key, value);
             }
         }
     }
 
     DEFAULT_FIELDS.into_iter().for_each(|key| {
         let key = Value::from(key);
-        if let Some(value) = default_fields.remove(&key) {
-            ret.insert(key, value);
+        if let Some(value) = default_field_values.remove(&key) {
+            sorted.insert(key, value);
         }
     });
 
-    ret
+    sorted
 }
 
 #[inline]

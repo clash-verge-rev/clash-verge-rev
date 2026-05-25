@@ -49,12 +49,12 @@ pub fn use_seq(seq: SeqMap, mut config: Mapping, field: &str) -> Mapping {
         Vec::new()
     };
 
-    let mut new_seq = Sequence::new();
-    new_seq.extend(prepend);
+    let mut updated_items = Sequence::new();
+    updated_items.extend(prepend);
 
-    if let Some(Value::Sequence(origin)) = config.remove(field) {
+    if let Some(Value::Sequence(existing_items)) = config.remove(field) {
         // Filter out deleted items
-        let filtered: Sequence = origin
+        let kept_items: Sequence = existing_items
             .into_iter()
             .filter(|item| {
                 if let Value::String(s) = item {
@@ -70,30 +70,30 @@ pub fn use_seq(seq: SeqMap, mut config: Mapping, field: &str) -> Mapping {
                 }
             })
             .collect();
-        new_seq.extend(filtered);
+        updated_items.extend(kept_items);
     }
 
-    new_seq.extend(append);
-    config.insert(Value::String(field.into()), Value::Sequence(new_seq));
+    updated_items.extend(append);
+    config.insert(Value::String(field.into()), Value::Sequence(updated_items));
 
     if field != "proxies" {
         return config;
     }
 
-    let Some(groups) = config.remove("proxy-groups") else {
+    let Some(proxy_groups_value) = config.remove("proxy-groups") else {
         return config;
     };
 
-    let Value::Sequence(groups) = groups else {
-        config.insert(Value::String("proxy-groups".into()), groups);
+    let Value::Sequence(proxy_groups) = proxy_groups_value else {
+        config.insert(Value::String("proxy-groups".into()), proxy_groups_value);
         return config;
     };
 
-    let mut new_groups = Sequence::new();
+    let mut updated_groups = Sequence::new();
     let mut appended_to_selector = false;
-    for group in groups {
+    for group in proxy_groups {
         if let Value::Mapping(mut group_map) = group {
-            let mut proxies_seq = match group_map.remove("proxies") {
+            let mut group_proxies = match group_map.remove("proxies") {
                 Some(Value::Sequence(proxies)) => Some(
                     proxies
                         .into_iter()
@@ -114,36 +114,36 @@ pub fn use_seq(seq: SeqMap, mut config: Mapping, field: &str) -> Mapping {
             };
 
             if !appended_to_selector && !added_proxy_names.is_empty() && is_selector_group(&group_map) {
-                let base_seq = proxies_seq.unwrap_or_else(Sequence::new);
-                let mut seq = Sequence::new();
-                let mut existing = HashSet::new();
+                let base_group_proxies = group_proxies.unwrap_or_else(Sequence::new);
+                let mut merged_proxies = Sequence::new();
+                let mut seen_proxy_names = HashSet::new();
                 for name in &added_proxy_names {
-                    if existing.insert(name.clone()) {
-                        seq.push(Value::String(name.clone()));
+                    if seen_proxy_names.insert(name.clone()) {
+                        merged_proxies.push(Value::String(name.clone()));
                     }
                 }
-                for value in base_seq {
+                for value in base_group_proxies {
                     if let Value::String(name) = &value
-                        && !existing.insert(name.to_owned())
+                        && !seen_proxy_names.insert(name.to_owned())
                     {
                         continue;
                     }
 
-                    seq.push(value);
+                    merged_proxies.push(value);
                 }
-                proxies_seq = Some(seq);
+                group_proxies = Some(merged_proxies);
                 appended_to_selector = true;
             }
 
-            if let Some(seq) = proxies_seq {
-                group_map.insert(Value::String("proxies".into()), Value::Sequence(seq));
+            if let Some(group_proxies) = group_proxies {
+                group_map.insert(Value::String("proxies".into()), Value::Sequence(group_proxies));
             }
-            new_groups.push(Value::Mapping(group_map));
+            updated_groups.push(Value::Mapping(group_map));
         } else {
-            new_groups.push(group);
+            updated_groups.push(group);
         }
     }
-    config.insert(Value::String("proxy-groups".into()), Value::Sequence(new_groups));
+    config.insert(Value::String("proxy-groups".into()), Value::Sequence(updated_groups));
 
     config
 }
