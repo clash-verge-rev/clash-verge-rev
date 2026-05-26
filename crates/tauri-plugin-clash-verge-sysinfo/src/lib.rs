@@ -16,6 +16,7 @@ use tauri::{
     plugin::{Builder, TauriPlugin},
 };
 
+#[derive(Clone)]
 pub struct SysInfo {
     system_name: String,
     system_version: String,
@@ -39,6 +40,7 @@ impl Default for SysInfo {
     }
 }
 
+#[derive(Clone)]
 pub struct AppInfo {
     app_version: String,
     app_core_mode: String,
@@ -62,7 +64,7 @@ impl Default for AppInfo {
     }
 }
 
-#[derive(Default)]
+#[derive(Default, Clone)]
 pub struct Platform {
     pub sysinfo: SysInfo,
     pub appinfo: AppInfo,
