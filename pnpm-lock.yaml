@@ -2120,6 +2120,9 @@ packages:
     resolution: {integrity: sha512-MOqHvMWF9/9MX6nza0KgvFH4HpMU0EF5uUDXqX/BtxtU8NfB0QzRtJ8Oe/6SuS4kbhyzVJwjd97EA4PKrzJ8bw==}
     engines: {node: '>=0.12'}
 
+  dayjs@1.11.20:
+    resolution: {integrity: sha512-YbwwqR/uYpeoP4pu043q+LTDLFBLApUP6VxRihdfNTqu4ubqMlGDLd6ErXhEgsyvY0K6nCs7nggYumAN+9uEuQ==}
+
   dayjs@1.11.21:
     resolution: {integrity: sha512-98IT+HOahAisibz/yjKbzuOBwYcjJ7BCLPzARyHiyEBmRz4fatF+KPJszEHXsGYjUG234aH/cOjW1wwTbKUZlA==}
 
@@ -5372,7 +5375,7 @@ snapshots:
     dependencies:
       '@babel/runtime': 7.29.2
       '@types/js-cookie': 3.0.6
-      dayjs: 1.11.21
+      dayjs: 1.11.20
       intersection-observer: 0.12.2
       js-cookie: 3.0.7
       lodash: 4.18.1
@@ -5583,6 +5586,8 @@ snapshots:
     dependencies:
       es5-ext: 0.10.64
       type: 2.7.3
+
+  dayjs@1.11.20: {}
 
   dayjs@1.11.21: {}
 
