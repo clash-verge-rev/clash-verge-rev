@@ -64,8 +64,8 @@ tokio = { version = "1.52.3", features = [
   "time",
   "sync",
 ] }
-flexi_logger = "0.31.8"
-log = "0.4.29"
+flexi_logger = "0.31.9"
+log = "0.4.30"
 
 smartstring = { version = "1.0.1" }
 compact_str = { version = "0.9.0", features = ["serde"] }

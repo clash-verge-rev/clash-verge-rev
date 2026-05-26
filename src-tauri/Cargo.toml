@@ -63,7 +63,7 @@ chrono = "0.4.44"
 boa_engine = "0.21.1"
 once_cell = { version = "1.21.4", features = ["parking_lot"] }
 percent-encoding = "2.3.2"
-reqwest = { version = "0.13.3", features = [
+reqwest = { version = "0.13.4", features = [
   "json",
   "cookies",
   "gzip",
