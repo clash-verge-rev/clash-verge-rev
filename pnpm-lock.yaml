@@ -3399,7 +3399,7 @@ packages:
     engines: {node: '>=18'}
 
   tauri-plugin-mihomo-api@https://codeload.github.com/clash-verge-rev/tauri-plugin-mihomo/tar.gz/74bf6befa42511f0fb21994249cb0ce542417028:
-    resolution: {tarball: https://codeload.github.com/clash-verge-rev/tauri-plugin-mihomo/tar.gz/74bf6befa42511f0fb21994249cb0ce542417028}
+    resolution: {gitHosted: true, tarball: https://codeload.github.com/clash-verge-rev/tauri-plugin-mihomo/tar.gz/74bf6befa42511f0fb21994249cb0ce542417028}
     version: 0.5.0
 
   terser@5.46.2:
