@@ -7,6 +7,7 @@ skip_crate_env_info = true
 # --- Backend ---
 
 [tasks.rust-format]
+description = "Run rustfmt on Rust code"
 install_crate = "rustfmt"
 command = "cargo"
 args = ["fmt", "--", "--emit=files"]
@@ -22,6 +23,7 @@ args = ["clippy", "--all-targets", "--all-features", "--", "-D", "warnings"]
 description = "Run type checks"
 command = "pnpm"
 args = ["typecheck"]
+
 [tasks.typecheck.windows]
 command = "pnpm.cmd"
 
@@ -29,6 +31,7 @@ command = "pnpm.cmd"
 description = "Run lint-staged for staged files"
 command = "pnpm"
 args = ["exec", "lint-staged"]
+
 [tasks.lint-staged.windows]
 command = "pnpm.cmd"
 
@@ -36,6 +39,7 @@ command = "pnpm.cmd"
 description = "Format i18n keys"
 command = "pnpm"
 args = ["i18n:format"]
+
 [tasks.i18n-format.windows]
 command = "pnpm.cmd"
 
@@ -43,11 +47,12 @@ command = "pnpm.cmd"
 description = "Generate i18n key types"
 command = "pnpm"
 args = ["i18n:types"]
+
 [tasks.i18n-types.windows]
 command = "pnpm.cmd"
 
 [tasks.git-add]
-description = "Add changed files to git"
+description = "Add generated files back to git index"
 command = "git"
 args = [
   "add",
@@ -60,14 +65,52 @@ args = [
 
 [tasks.frontend-format]
 description = "Frontend format checks"
-dependencies = ["i18n-format", "i18n-types", "git-add", "lint-staged"]
+script_runner = "@duckscript"
+script = '''
+# i18n related changes
+has_i18n = exec git diff --cached --quiet -- src/locales crates/clash-verge-i18n/locales
+if eq ${has_i18n.code} 1
+  cm_run_task i18n-format
+  cm_run_task i18n-types
+  cm_run_task git-add
+end
+
+# frontend related changes
+has_frontend = exec git diff --cached --quiet -- "*.js" "*.jsx" "*.ts" "*.tsx" "*.json" "*.css" "*.scss" "*.html"
+if eq ${has_frontend.code} 1
+  cm_run_task lint-staged
+end
+'''
 
 # --- Git Hooks ---
 
 [tasks.pre-commit]
 description = "Pre-commit checks: format only"
-dependencies = ["rust-format", "frontend-format"]
+script_runner = "@duckscript"
+script = '''
+# rust related changes
+has_rust = exec git diff --cached --quiet -- "*.rs" Cargo.toml Cargo.lock
+if eq ${has_rust.code} 1
+  cm_run_task rust-format
+end
+
+# frontend checks
+cm_run_task frontend-format
+'''
 
 [tasks.pre-push]
 description = "Pre-push checks: lint and typecheck"
-dependencies = ["rust-clippy", "typecheck"]
+script_runner = "@duckscript"
+script = '''
+# rust related changes
+has_rust = exec git diff --cached --quiet -- "*.rs" Cargo.toml Cargo.lock
+if eq ${has_rust.code} 1
+  cm_run_task rust-clippy
+end
+
+# frontend related changes
+has_frontend = exec git diff --cached --quiet -- "*.js" "*.jsx" "*.ts" "*.tsx" "*.json" "*.css" "*.scss" "*.html"
+if eq ${has_frontend.code} 1
+  cm_run_task typecheck
+end
+'''

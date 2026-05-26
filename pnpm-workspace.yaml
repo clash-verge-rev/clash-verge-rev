@@ -1,0 +1,6 @@
+allowBuilds:
+  "@parcel/watcher": true
+  core-js: true
+  es5-ext: true
+  meta-json-schema: true
+  unrs-resolver: true

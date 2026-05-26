@@ -1,5 +1,4 @@
-import { getOctokit, context } from '@actions/github'
-import fetch from 'node-fetch'
+import { context, getOctokit } from '@actions/github'
 
 import { resolveUpdateLog, resolveUpdateLogDefault } from './updatelog.mjs'
 
