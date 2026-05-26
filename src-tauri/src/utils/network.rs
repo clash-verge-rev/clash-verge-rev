@@ -6,7 +6,7 @@ use reqwest::{
     header::{HeaderMap, HeaderValue, USER_AGENT},
 };
 use smartstring::alias::String;
-use std::{sync::Arc, time::Duration};
+use std::time::Duration;
 use sysproxy::Sysproxy;
 use tauri::Url;
 
@@ -42,12 +42,6 @@ pub enum ProxyType {
     System,
 }
 
-#[derive(Debug, Clone, Copy)]
-enum TlsRootMode {
-    PlatformVerifier,
-    StaticWebpkiRoots,
-}
-
 pub struct NetworkManager;
 
 impl Default for NetworkManager {
@@ -67,7 +61,6 @@ impl NetworkManager {
         default_headers: HeaderMap,
         accept_invalid_certs: bool,
         timeout_secs: Option<u64>,
-        tls_root_mode: TlsRootMode,
     ) -> Result<Client> {
         let mut builder = Client::builder()
             .tls_backend_rustls()
@@ -75,10 +68,6 @@ impl NetworkManager {
             .tcp_keepalive(Duration::from_secs(60))
             .pool_max_idle_per_host(0)
             .pool_idle_timeout(None);
-
-        if matches!(tls_root_mode, TlsRootMode::StaticWebpkiRoots) {
-            builder = builder.tls_backend_preconfigured(Self::build_static_webpki_tls_config()?);
-        }
 
         // 设置代理
         if let Some(proxy_str) = proxy_url {
@@ -107,38 +96,20 @@ impl NetworkManager {
         Ok(builder.build()?)
     }
 
-    fn build_static_webpki_tls_config() -> Result<rustls::ClientConfig> {
-        let root_store = rustls::RootCertStore::from_iter(webpki_roots::TLS_SERVER_ROOTS.iter().cloned());
-        let mut config =
-            rustls::ClientConfig::builder_with_provider(Arc::new(rustls::crypto::ring::default_provider()))
-                .with_safe_default_protocol_versions()?
-                .with_root_certificates(root_store)
-                .with_no_client_auth();
+    fn context_reqwest_error(err: reqwest::Error, context: &'static str) -> anyhow::Error {
+        let legacy_tls = Self::is_legacy_tls_protocol_error(&err);
+        let err = anyhow::Error::new(err).context(context);
 
-        config.alpn_protocols = vec![b"h2".to_vec(), b"http/1.1".to_vec()];
-
-        Ok(config)
+        if legacy_tls {
+            err.context("Subscription server uses legacy TLS; only TLS 1.2/1.3 is supported. TLS 1.0/1.1 is insecure")
+        } else {
+            err
+        }
     }
 
-    fn should_retry_with_static_webpki_roots(err: &anyhow::Error) -> bool {
-        err.chain().any(|e| {
-            let msg = e.to_string().to_ascii_lowercase();
-            [
-                "certificate",
-                "cert",
-                "tls",
-                "ssl",
-                "rustls",
-                "webpki",
-                "revocation",
-                "ocsp",
-                "crl",
-                "issuer",
-                "unknownissuer",
-            ]
-            .iter()
-            .any(|kw| msg.contains(kw))
-        })
+    fn is_legacy_tls_protocol_error(err: &(dyn std::error::Error + 'static)) -> bool {
+        let detail = format!("{err:#?}").to_ascii_lowercase();
+        detail.contains("protocolversion") || detail.contains("protocol version")
     }
 
     pub async fn create_request(
@@ -148,35 +119,26 @@ impl NetworkManager {
         user_agent: Option<String>,
         accept_invalid_certs: bool,
     ) -> Result<Client> {
-        self.create_request_with_tls_mode(
-            proxy_type,
-            timeout_secs,
-            user_agent,
-            accept_invalid_certs,
-            TlsRootMode::PlatformVerifier,
-        )
-        .await
+        self.create_request_with_tls_mode(proxy_type, timeout_secs, user_agent, accept_invalid_certs)
+            .await
     }
 
-    async fn get_with_tls_mode(
+    async fn get(
         &self,
         url: &str,
         proxy_type: ProxyType,
         timeout_secs: Option<u64>,
         user_agent: Option<String>,
         accept_invalid_certs: bool,
-        tls_root_mode: TlsRootMode,
     ) -> Result<HttpResponse> {
         let mut parsed = Url::parse(url)?;
         let mut extra_headers = HeaderMap::new();
 
-        if !parsed.username().is_empty()
-            && let Some(pass) = parsed.password()
-        {
+        if !parsed.username().is_empty() {
             let username = percent_encoding::percent_decode_str(parsed.username())
                 .decode_utf8_lossy()
                 .into_owned();
-            let password = percent_encoding::percent_decode_str(pass)
+            let password = percent_encoding::percent_decode_str(parsed.password().unwrap_or_default())
                 .decode_utf8_lossy()
                 .into_owned();
             let auth_str = format!("{}:{}", username, password);
@@ -189,13 +151,7 @@ impl NetworkManager {
 
         // 创建请求
         let client = self
-            .create_request_with_tls_mode(
-                proxy_type,
-                timeout_secs,
-                user_agent,
-                accept_invalid_certs,
-                tls_root_mode,
-            )
+            .create_request_with_tls_mode(proxy_type, timeout_secs, user_agent, accept_invalid_certs)
             .await?;
 
         let mut request_builder = client.get(parsed);
@@ -207,7 +163,7 @@ impl NetworkManager {
         let response = match request_builder.send().await {
             Ok(resp) => resp,
             Err(e) => {
-                return Err(anyhow::Error::new(e).context("Request failed"));
+                return Err(Self::context_reqwest_error(e, "Request failed"));
             }
         };
 
@@ -216,7 +172,7 @@ impl NetworkManager {
         let body = match response.text().await {
             Ok(text) => text.into(),
             Err(e) => {
-                return Err(anyhow::anyhow!("Failed to read response body: {}", e));
+                return Err(Self::context_reqwest_error(e, "Failed to read response body"));
             }
         };
 
@@ -229,7 +185,6 @@ impl NetworkManager {
         timeout_secs: Option<u64>,
         user_agent: Option<String>,
         accept_invalid_certs: bool,
-        tls_root_mode: TlsRootMode,
     ) -> Result<Client> {
         let proxy_url: Option<std::string::String> = match proxy_type {
             ProxyType::None => None,
@@ -264,7 +219,7 @@ impl NetworkManager {
             );
         }
 
-        self.build_client(proxy_url, headers, accept_invalid_certs, timeout_secs, tls_root_mode)
+        self.build_client(proxy_url, headers, accept_invalid_certs, timeout_secs)
     }
 
     pub async fn get_with_interrupt(
@@ -275,35 +230,7 @@ impl NetworkManager {
         user_agent: Option<String>,
         accept_invalid_certs: bool,
     ) -> Result<HttpResponse> {
-        let platform_result = self
-            .get_with_tls_mode(
-                url,
-                proxy_type,
-                timeout_secs,
-                user_agent.clone(),
-                accept_invalid_certs,
-                TlsRootMode::PlatformVerifier,
-            )
-            .await;
-
-        match platform_result {
-            Ok(response) => Ok(response),
-            Err(err) if !accept_invalid_certs && Self::should_retry_with_static_webpki_roots(&err) => self
-                .get_with_tls_mode(
-                    url,
-                    proxy_type,
-                    timeout_secs,
-                    user_agent,
-                    accept_invalid_certs,
-                    TlsRootMode::StaticWebpkiRoots,
-                )
-                .await
-                .map_err(|fallback_err| {
-                    anyhow::anyhow!(
-                        "platform TLS verifier failed: {err}; static webpki roots fallback failed: {fallback_err}"
-                    )
-                }),
-            Err(err) => Err(err),
-        }
+        self.get(url, proxy_type, timeout_secs, user_agent, accept_invalid_certs)
+            .await
     }
 }
