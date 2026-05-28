@@ -8,7 +8,40 @@
         "update": "更新"
       }
     },
-    "title": "規則"
+    "title": "規則",
+    "actions": {
+      "add": "Add Rule",
+      "standard": "Standard Rule",
+      "logical": "Logical Rule",
+      "ruleset": "Ruleset",
+      "edit": "Edit Rule",
+      "duplicate": "Duplicate Rule",
+      "delete": "Delete Rule"
+    },
+    "table": {
+      "id": "ID",
+      "type": "Type",
+      "value": "Value",
+      "policy": "Policy",
+      "source": "Source"
+    },
+    "sources": {
+      "manual": "Manual",
+      "runtime": "Config"
+    },
+    "policyGroups": {
+      "builtin": "Built-in Policies",
+      "proxies": "Proxy Nodes",
+      "groups": "Proxy Groups",
+      "other": "Other"
+    },
+    "dialogs": {
+      "editTitle": "Edit Rule",
+      "duplicateTitle": "Duplicate Rule"
+    },
+    "validation": {
+      "required": "Rule type and proxy policy are required"
+    }
   },
   "feedback": {
     "notifications": {
@@ -31,6 +64,9 @@
         },
         "toggles": {
           "noResolve": "跳過 DNS 解析"
+        },
+        "helpers": {
+          "geosite": "Examples: CN, geolocation-!cn, youtube, google, category-ads-all"
         },
         "actions": {
           "prependRule": "新增前置規則",

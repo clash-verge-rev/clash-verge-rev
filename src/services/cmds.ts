@@ -81,6 +81,15 @@ export async function patchProfile(
   return invoke<void>('patch_profile', { index, profile })
 }
 
+export async function ensureProfileProxies(index?: string) {
+  return invoke<{
+    profileUid: string
+    proxiesUid: string
+    groupsUid: string
+    rulesUid: string
+  }>('ensure_profile_proxies', { index: index ?? null })
+}
+
 export async function getClashInfo() {
   return invoke<IClashInfo | null>('get_clash_info')
 }

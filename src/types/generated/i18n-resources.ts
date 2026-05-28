@@ -259,6 +259,16 @@ export interface TranslationResources {
           message: string
           title: string
         }
+        deleteDependency: {
+          blockedNotice: string
+          deleteAndClean: string
+          fallbackHint: string
+          groupRefsHint: string
+          groupRefsTitle: string
+          noRefs: string
+          ruleRefsHint: string
+          ruleRefsTitle: string
+        }
         editor: {
           actions: {
             format: string
@@ -305,6 +315,195 @@ export interface TranslationResources {
         logViewer: {
           title: string
         }
+        manualGroup: {
+          actions: {
+            add: string
+            append: string
+            back: string
+            delete: string
+            duplicate: string
+            edit: string
+            next: string
+            options: string
+            prepend: string
+          }
+          deleteConfirm: {
+            message: string
+            title: string
+          }
+          editTitle: string
+          errors: {
+            nameExists: string
+            nameRequired: string
+            notEditable: string
+            policiesRequired: string
+          }
+          fields: {
+            disableUdp: string
+            excludeFilter: string
+            filter: string
+            hidden: string
+            icon: string
+            includeAll: string
+            includeAllProviders: string
+            includeAllProxies: string
+            interval: string
+            lazy: string
+            name: string
+            strategy: string
+            tolerance: string
+            url: string
+          }
+          options: {
+            default: string
+          }
+          policyGroups: {
+            builtin: string
+            groups: string
+            other: string
+            proxies: string
+          }
+          sections: {
+            external: string
+            policies: string
+          }
+          steps: {
+            '0': string
+            '1': string
+            '2': string
+          }
+          title: string
+          types: {
+            fallback: {
+              description: string
+              title: string
+            }
+            loadBalance: {
+              description: string
+              title: string
+            }
+            relay: {
+              description: string
+              title: string
+            }
+            select: {
+              description: string
+              title: string
+            }
+            urlTest: {
+              description: string
+              title: string
+            }
+          }
+        }
+        manualProxy: {
+          actions: {
+            append: string
+            delete: string
+            duplicate: string
+            edit: string
+            prepend: string
+          }
+          deleteConfirm: {
+            message: string
+            title: string
+          }
+          editTitle: string
+          errors: {
+            authRequired: string
+            dialerCycle: string
+            dialerSelf: string
+            ipRequired: string
+            nameExists: string
+            nameRequired: string
+            noProfile: string
+            notEditable: string
+            passwordRequired: string
+            portInvalid: string
+            portRequired: string
+            privateKeyRequired: string
+            publicKeyRequired: string
+            serverRequired: string
+            uuidRequired: string
+          }
+          fields: {
+            alpn: string
+            alterId: string
+            auth: string
+            cipher: string
+            clientFingerprint: string
+            congestionController: string
+            dialerProxy: string
+            dns: string
+            down: string
+            fingerprint: string
+            flow: string
+            grpcServiceName: string
+            h2Host: string
+            h2Path: string
+            interfaceName: string
+            ip: string
+            ipv6: string
+            ipVersion: string
+            mtu: string
+            name: string
+            network: string
+            obfs: string
+            obfsParam: string
+            obfsPassword: string
+            password: string
+            persistentKeepalive: string
+            plugin: string
+            pluginHost: string
+            pluginMode: string
+            pluginPath: string
+            port: string
+            ports: string
+            preSharedKey: string
+            privateKey: string
+            protocol: string
+            protocolParam: string
+            publicKey: string
+            realityPublicKey: string
+            realityShortId: string
+            server: string
+            servername: string
+            sni: string
+            ssrObfs: string
+            ssrProtocol: string
+            token: string
+            tuicPassword: string
+            up: string
+            username: string
+            uuid: string
+            wsHost: string
+            wsPath: string
+          }
+          options: {
+            default: string
+            none: string
+          }
+          placeholders: {
+            name: string
+          }
+          sections: {
+            interface: string
+            obfs: string
+            options: string
+            plugin: string
+            protocol: string
+            server: string
+            tls: string
+            transport: string
+          }
+          title: string
+          toggles: {
+            skipCertVerify: string
+            tfo: string
+            tls: string
+            udp: string
+          }
+        }
         profileForm: {
           feedback: {
             notifications: {
@@ -331,6 +530,7 @@ export interface TranslationResources {
         proxiesEditor: {
           actions: {
             append: string
+            manual: string
             prepend: string
           }
           placeholders: {
@@ -426,6 +626,7 @@ export interface TranslationResources {
           connect: string
           connecting: string
           disconnect: string
+          testAll: string
           toggleChain: string
         }
         chain: {
@@ -467,6 +668,10 @@ export interface TranslationResources {
           select: string
           title: string
         }
+        sections: {
+          proxy: string
+          proxyGroup: string
+        }
         title: {
           chainMode: string
           default: string
@@ -502,6 +707,9 @@ export interface TranslationResources {
             actions: {
               appendRule: string
               prependRule: string
+            }
+            helpers: {
+              geosite: string
             }
             labels: {
               content: string
@@ -555,6 +763,25 @@ export interface TranslationResources {
         }
       }
       page: {
+        actions: {
+          add: string
+          delete: string
+          duplicate: string
+          edit: string
+          logical: string
+          ruleset: string
+          standard: string
+        }
+        dialogs: {
+          duplicateTitle: string
+          editTitle: string
+        }
+        policyGroups: {
+          builtin: string
+          groups: string
+          other: string
+          proxies: string
+        }
         provider: {
           actions: {
             update: string
@@ -563,7 +790,21 @@ export interface TranslationResources {
           dialogTitle: string
           trigger: string
         }
+        sources: {
+          manual: string
+          runtime: string
+        }
+        table: {
+          id: string
+          policy: string
+          source: string
+          type: string
+          value: string
+        }
         title: string
+        validation: {
+          required: string
+        }
       }
     }
     settings: {

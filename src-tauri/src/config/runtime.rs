@@ -1,10 +1,13 @@
 use serde_yaml_ng::{Mapping, Value};
 use smartstring::alias::String;
 use std::collections::{HashMap, HashSet};
+use std::sync::{LazyLock, Mutex};
 
 use crate::enhance::field::use_keys;
 
 const PATCH_CONFIG_INNER: [&str; 5] = ["allow-lan", "ipv6", "log-level", "unified-delay", "tunnels"];
+static PROXY_CHAIN_DIALER_BACKUP: LazyLock<Mutex<HashMap<String, Option<Value>>>> =
+    LazyLock::new(|| Mutex::new(HashMap::new()));
 
 #[derive(Default, Clone)]
 pub struct IRuntime {
@@ -113,26 +116,47 @@ impl IRuntime {
         };
 
         if let Some(Value::Sequence(proxies)) = config.get_mut("proxies") {
-            proxies.iter_mut().for_each(|proxy| {
-                if let Some(proxy) = proxy.as_mapping_mut()
-                    && proxy.get("dialer-proxy").is_some()
-                {
-                    proxy.remove("dialer-proxy");
+            if let Ok(mut backup) = PROXY_CHAIN_DIALER_BACKUP.lock() {
+                for proxy in proxies.iter_mut() {
+                    let Some(proxy) = proxy.as_mapping_mut() else {
+                        continue;
+                    };
+                    let Some(name) = proxy.get("name").and_then(|name| name.as_str()) else {
+                        continue;
+                    };
+                    let Some(previous_dialer_proxy) = backup.remove(name) else {
+                        continue;
+                    };
+
+                    if let Some(previous_dialer_proxy) = previous_dialer_proxy {
+                        proxy.insert("dialer-proxy".into(), previous_dialer_proxy);
+                    } else {
+                        proxy.remove("dialer-proxy");
+                    }
                 }
-            });
+            }
         }
 
         if let Some(Value::Sequence(dialer_proxies)) = proxy_chain_config
             && let Some(Value::Sequence(proxies)) = config.get_mut("proxies")
         {
+            let mut next_backup = HashMap::new();
             for (i, dialer_proxy) in dialer_proxies.iter().enumerate() {
                 if let Some(Value::Mapping(proxy)) =
                     proxies.iter_mut().find(|proxy| proxy.get("name") == Some(dialer_proxy))
                     && i != 0
                     && let Some(dialer_proxy) = dialer_proxies.get(i - 1)
                 {
+                    if let Some(name) = proxy.get("name").and_then(|name| name.as_str()) {
+                        next_backup
+                            .entry(name.into())
+                            .or_insert_with(|| proxy.get("dialer-proxy").cloned());
+                    }
                     proxy.insert("dialer-proxy".into(), dialer_proxy.to_owned());
                 }
+            }
+            if let Ok(mut backup) = PROXY_CHAIN_DIALER_BACKUP.lock() {
+                *backup = next_backup;
             }
         }
     }

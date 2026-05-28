@@ -125,8 +125,208 @@
         "multiUri": "Use newlines for multiple uri(Base64 encoding supported)"
       },
       "actions": {
+        "manual": "Add Manually",
         "prepend": "Prepend Proxy",
         "append": "Append Proxy"
+      }
+    },
+    "manualProxy": {
+      "title": "Add Proxy",
+      "editTitle": "Edit Proxy",
+      "sections": {
+        "server": "Server Information",
+        "protocol": "Protocol",
+        "transport": "Transport",
+        "tls": "TLS",
+        "plugin": "Plugin",
+        "obfs": "Obfuscation",
+        "interface": "Interface",
+        "options": "Options"
+      },
+      "fields": {
+        "name": "Name",
+        "protocol": "Protocol",
+        "server": "Server Address",
+        "port": "Port",
+        "username": "Username",
+        "password": "Password",
+        "tuicPassword": "UUID Password",
+        "auth": "Auth",
+        "cipher": "Encryption Method",
+        "uuid": "UUID",
+        "alterId": "Alter ID",
+        "flow": "Flow",
+        "token": "Token",
+        "congestionController": "Congestion Control",
+        "ports": "Port Hopping",
+        "up": "Upload",
+        "down": "Download",
+        "privateKey": "Private Key",
+        "publicKey": "Peer Public Key",
+        "preSharedKey": "Pre-shared Key",
+        "ssrProtocol": "Protocol",
+        "ssrObfs": "Obfs",
+        "protocolParam": "Protocol Param",
+        "obfsParam": "Obfs Param",
+        "network": "Network",
+        "wsPath": "WebSocket Path",
+        "wsHost": "WebSocket Host",
+        "grpcServiceName": "gRPC Service",
+        "h2Path": "HTTP/2 Path",
+        "h2Host": "HTTP/2 Host",
+        "sni": "SNI",
+        "servername": "Server Name",
+        "alpn": "ALPN",
+        "fingerprint": "Fingerprint",
+        "clientFingerprint": "Client Fingerprint",
+        "realityPublicKey": "Reality Public Key",
+        "realityShortId": "Reality Short ID",
+        "plugin": "Plugin",
+        "pluginMode": "Plugin Mode",
+        "pluginHost": "Plugin Host",
+        "pluginPath": "Plugin Path",
+        "obfs": "Obfs",
+        "obfsPassword": "Obfs Password",
+        "ip": "IPv4 CIDR",
+        "ipv6": "IPv6 CIDR",
+        "dns": "DNS",
+        "mtu": "MTU",
+        "persistentKeepalive": "Keepalive",
+        "ipVersion": "IP Version",
+        "interfaceName": "Interface Name",
+        "dialerProxy": "Underlying Proxy"
+      },
+      "placeholders": {
+        "name": "Proxy Name (Required)"
+      },
+      "toggles": {
+        "tls": "TLS",
+        "skipCertVerify": "Skip Cert Verify",
+        "udp": "Allow UDP Relay",
+        "tfo": "TCP Fast Open"
+      },
+      "options": {
+        "none": "None",
+        "default": "Default"
+      },
+      "errors": {
+        "nameRequired": "Proxy name is required",
+        "nameExists": "Proxy name already exists",
+        "serverRequired": "Server address is required",
+        "portRequired": "Port is required",
+        "portInvalid": "Port must be 1-65535",
+        "passwordRequired": "Password is required",
+        "authRequired": "Auth is required",
+        "uuidRequired": "UUID is required",
+        "privateKeyRequired": "Private key is required",
+        "publicKeyRequired": "Peer public key is required",
+        "ipRequired": "IPv4 or IPv6 CIDR is required",
+        "dialerSelf": "Underlying proxy cannot be itself",
+        "dialerCycle": "Underlying proxy cannot create a cycle",
+        "noProfile": "Select a profile first",
+        "notEditable": "Only manually added proxies can be edited here"
+      },
+      "actions": {
+        "prepend": "Add to Top",
+        "append": "Add to Bottom",
+        "edit": "Edit Proxy...",
+        "duplicate": "Duplicate",
+        "delete": "Delete Proxy..."
+      },
+      "deleteConfirm": {
+        "title": "Delete Proxy",
+        "message": "Delete proxy \"{{name}}\"?"
+      }
+    },
+    "deleteDependency": {
+      "deleteAndClean": "Delete and Remove References",
+      "groupRefsTitle": "Used by these proxy groups",
+      "groupRefsHint": "Continuing will also remove this reference from those groups' sub-policies.",
+      "fallbackHint": "If a manually added group would become empty, DIRECT will be kept as a fallback.",
+      "ruleRefsTitle": "Used by these rules",
+      "ruleRefsHint": "Change these rules' proxy policy before deleting this proxy or group.",
+      "noRefs": "No proxy group or rule references were found.",
+      "blockedNotice": "This policy is still used by rules. Update those rules first."
+    },
+    "manualGroup": {
+      "title": "Add Policy Group",
+      "editTitle": "Edit Policy Group",
+      "steps": {
+        "0": "Select Group Type",
+        "1": "Select Included Policies",
+        "2": "Parameters"
+      },
+      "types": {
+        "select": {
+          "title": "Select Group",
+          "description": "Select which policy will be used on the user interface."
+        },
+        "urlTest": {
+          "title": "Auto Test Group",
+          "description": "Automatically select which policy will be used by benchmarking the latency to a URL."
+        },
+        "fallback": {
+          "title": "Fallback Group",
+          "description": "Automatically select an available policy by priority. Availability is tested by accessing a URL."
+        },
+        "loadBalance": {
+          "title": "Load Balance Group",
+          "description": "Use a sub-policy for connections based on the configured strategy."
+        },
+        "relay": {
+          "title": "Relay Group",
+          "description": "Relay connections through policies in order."
+        }
+      },
+      "sections": {
+        "policies": "Select Sub-policies",
+        "external": "External Policies and Filters"
+      },
+      "policyGroups": {
+        "builtin": "Built-in Policies",
+        "proxies": "Proxy Nodes",
+        "groups": "Proxy Groups",
+        "other": "Other"
+      },
+      "fields": {
+        "name": "Group Name",
+        "url": "Testing URL",
+        "interval": "Auto-test Interval",
+        "tolerance": "Tolerance",
+        "strategy": "Strategy",
+        "icon": "Icon",
+        "filter": "List Filter",
+        "excludeFilter": "Exclude Filter",
+        "includeAll": "Include all proxies and providers",
+        "includeAllProxies": "Include all proxies",
+        "includeAllProviders": "Include all providers",
+        "lazy": "Lazy",
+        "disableUdp": "Disable UDP",
+        "hidden": "Hidden"
+      },
+      "options": {
+        "default": "Default"
+      },
+      "errors": {
+        "nameRequired": "Group name is required",
+        "nameExists": "Group name already exists",
+        "policiesRequired": "Select at least one sub-policy or include all proxies",
+        "notEditable": "Only manually added groups can be edited here"
+      },
+      "actions": {
+        "add": "Add Group",
+        "next": "Next",
+        "back": "Back",
+        "prepend": "Add to Top",
+        "append": "Add to Bottom",
+        "edit": "Edit Group...",
+        "duplicate": "Duplicate",
+        "delete": "Delete Group...",
+        "options": "Options"
+      },
+      "deleteConfirm": {
+        "title": "Delete Group",
+        "message": "Delete group \"{{name}}\"?"
       }
     },
     "groupsEditor": {
