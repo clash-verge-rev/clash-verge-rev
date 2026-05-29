@@ -10,7 +10,8 @@
       "connect": "Connect",
       "disconnect": "Disconnect",
       "connecting": "Connecting...",
-      "clearChainConfig": "Delete Chain Config"
+      "clearChainConfig": "Delete Chain Config",
+      "testAll": "Test All"
     },
     "provider": {
       "title": "تأمین‌کننده پروکسی",
@@ -22,6 +23,10 @@
     "rules": {
       "title": "Proxy Rules",
       "select": "Select Rules"
+    },
+    "sections": {
+      "proxy": "Proxy",
+      "proxyGroup": "Proxy Group"
     },
     "labels": {
       "proxyCount": "Proxy Count",

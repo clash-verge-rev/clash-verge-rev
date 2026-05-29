@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { type MutableRefObject, useEffect, useMemo, useRef } from 'react'
 
 import { useRuntimeConfig } from '@/hooks/use-clash'
 import { useVerge } from '@/hooks/use-verge'
@@ -77,6 +77,29 @@ type GroupCache = {
   items: IRenderItem[]
 }
 
+const stabilizeGroups = <T extends { name: string }>(
+  groups: T[],
+  orderRef: MutableRefObject<string[]>,
+) => {
+  const currentNames = new Set(groups.map((group) => group.name))
+  const nextOrder = orderRef.current.filter((name) => currentNames.has(name))
+
+  for (const group of groups) {
+    if (!nextOrder.includes(group.name)) {
+      nextOrder.push(group.name)
+    }
+  }
+
+  orderRef.current = nextOrder
+  const orderMap = new Map(nextOrder.map((name, index) => [name, index]))
+
+  return [...groups].sort(
+    (prev, next) =>
+      (orderMap.get(prev.name) ?? Number.MAX_SAFE_INTEGER) -
+      (orderMap.get(next.name) ?? Number.MAX_SAFE_INTEGER),
+  )
+}
+
 // 优化列布局计算
 const calculateColumns = (width: number, configCol: number): number => {
   if (configCol > 0 && configCol < 6) return configCol
@@ -123,6 +146,7 @@ export const useRenderList = (
     () => calculateColumns(width, verge?.proxy_layout_column || 6),
     [width, verge?.proxy_layout_column],
   )
+  const chainCol = isChainMode ? 1 : col
 
   // 确保代理数据加载
   useEffect(() => {
@@ -180,6 +204,7 @@ export const useRenderList = (
   }, [isChainMode, runtimeConfig, verge?.default_latency_timeout, refreshProxy])
 
   const groupCacheRef = useRef<Map<string, GroupCache>>(new Map())
+  const groupOrderRef = useRef<string[]>([])
   const prevListRef = useRef<IRenderItem[]>([])
 
   // 处理渲染列表
@@ -205,16 +230,18 @@ export const useRenderList = (
             latencyTimeout,
           )
 
-          if (col > 1) {
-            return groupProxies(proxies, col).map((proxyCol, colIndex) => ({
-              type: 4,
-              key: `chain-col-${selectedGroup}-${colIndex}`,
-              group: targetGroup,
-              headState: DEFAULT_STATE,
-              col,
-              proxyCol,
-              provider: proxyCol[0]?.provider,
-            }))
+          if (chainCol > 1) {
+            return groupProxies(proxies, chainCol).map(
+              (proxyCol, colIndex) => ({
+                type: 4,
+                key: `chain-col-${selectedGroup}-${colIndex}`,
+                group: targetGroup,
+                headState: DEFAULT_STATE,
+                col: chainCol,
+                proxyCol,
+                provider: proxyCol[0]?.provider,
+              }),
+            )
           } else {
             return proxies.map((proxy) => ({
               type: 2,
@@ -240,13 +267,13 @@ export const useRenderList = (
           latencyTimeout,
         )
 
-        if (col > 1) {
-          return groupProxies(proxies, col).map((proxyCol, colIndex) => ({
+        if (chainCol > 1) {
+          return groupProxies(proxies, chainCol).map((proxyCol, colIndex) => ({
             type: 4,
             key: `chain-col-first-${colIndex}`,
             group: firstGroup,
             headState: DEFAULT_STATE,
-            col,
+            col: chainCol,
             proxyCol,
             provider: proxyCol[0]?.provider,
           }))
@@ -294,14 +321,14 @@ export const useRenderList = (
         all: proxiesWithDelay,
       }
 
-      if (col > 1) {
-        return groupProxies(proxiesWithDelay, col).map(
+      if (chainCol > 1) {
+        return groupProxies(proxiesWithDelay, chainCol).map(
           (proxyCol, colIndex) => ({
             type: 4,
             key: `chain-col-all-${colIndex}`,
             group: virtualGroup,
             headState: DEFAULT_STATE,
-            col,
+            col: chainCol,
             proxyCol,
             provider: proxyCol[0]?.provider,
           }),
@@ -353,14 +380,14 @@ export const useRenderList = (
       }
 
       // 返回节点列表（不显示组头）
-      if (col > 1) {
-        return groupProxies(proxiesWithDelay, col).map(
+      if (chainCol > 1) {
+        return groupProxies(proxiesWithDelay, chainCol).map(
           (proxyCol, colIndex) => ({
             type: 4,
             key: `chain-col-${colIndex}`,
             group: virtualGroup,
             headState: DEFAULT_STATE,
-            col,
+            col: chainCol,
             proxyCol,
             provider: proxyCol[0]?.provider,
           }),
@@ -379,10 +406,12 @@ export const useRenderList = (
 
     // 正常模式的渲染逻辑
     const useRule = mode === 'rule' || mode === 'script'
-    const renderGroups =
+    const sourceGroups = (
       useRule && proxiesData.groups.length
         ? proxiesData.groups
         : [proxiesData.global!]
+    ) as ProxyGroup[]
+    const renderGroups = stabilizeGroups(sourceGroups, groupOrderRef)
 
     const cache = groupCacheRef.current
     let anyChanged = false
@@ -493,6 +522,7 @@ export const useRenderList = (
     proxiesData,
     mode,
     col,
+    chainCol,
     isChainMode,
     runtimeConfig,
     selectedGroup,

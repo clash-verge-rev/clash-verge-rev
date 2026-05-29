@@ -24,7 +24,10 @@
     "actions": {
       "active": "Active",
       "closed": "Closed",
-      "closeConnection": "Cerrar conexión"
+      "closeConnection": "Cerrar conexión",
+      "addDomainRule": "Add Domain Rule",
+      "addIpRule": "Add IP Rule",
+      "addProcessPathRule": "Add Process Path Rule"
     },
     "columnManager": {
       "title": "Columnas",

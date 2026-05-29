@@ -24,7 +24,10 @@
     "actions": {
       "active": "活跃",
       "closed": "已关闭",
-      "closeConnection": "关闭连接"
+      "closeConnection": "关闭连接",
+      "addDomainRule": "添加域名规则",
+      "addIpRule": "添加 IP 规则",
+      "addProcessPathRule": "添加进程路径规则"
     },
     "columnManager": {
       "title": "列设置",

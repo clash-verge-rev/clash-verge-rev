@@ -18,11 +18,26 @@ use crate::{
 use clash_verge_draft::SharedDraft;
 use clash_verge_logging::{Type, logging};
 use scopeguard::defer;
+use serde::Serialize;
 use smartstring::alias::String;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::Duration;
 
 static CURRENT_SWITCHING_PROFILE: AtomicBool = AtomicBool::new(false);
+
+const DEFAULT_MANUAL_PROFILE: &str = "# Profile Template for Clash Verge
+
+proxies: []
+
+proxy-groups:
+  - name: GLOBAL
+    type: select
+    proxies:
+      - DIRECT
+
+rules:
+  - MATCH,GLOBAL
+";
 
 fn profile_import_error(err: &anyhow::Error) -> std::string::String {
     if let Some(cause) = err.chain().find(|cause| cause.to_string().contains("TLS 1.0/1.1")) {
@@ -360,6 +375,166 @@ pub async fn patch_profile(index: String, profile: PrfItem) -> CmdResult {
     }
 
     Ok(())
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct EnsuredProfileProxies {
+    profile_uid: String,
+    proxies_uid: String,
+    groups_uid: String,
+    rules_uid: String,
+}
+
+/// 确保存在可编辑配置、rules/proxies/groups 增强文件，并返回对应 uid。
+#[tauri::command]
+pub async fn ensure_profile_proxies(index: Option<String>) -> CmdResult<EnsuredProfileProxies> {
+    Config::profiles()
+        .await
+        .with_data_modify(|mut profiles| async move {
+            let profile_uid = match index.or_else(|| profiles.get_current().cloned()) {
+                Some(uid) if profiles.get_item(&uid).is_ok() => uid,
+                _ => {
+                    let mut merge_item = PrfItem::from_merge(None)?;
+                    let merge_uid = merge_item
+                        .uid
+                        .clone()
+                        .ok_or_else(|| anyhow::anyhow!("merge uid is missing"))?;
+                    profiles.append_item(&mut merge_item).await?;
+
+                    let mut script_item = PrfItem::from_script(None)?;
+                    let script_uid = script_item
+                        .uid
+                        .clone()
+                        .ok_or_else(|| anyhow::anyhow!("script uid is missing"))?;
+                    profiles.append_item(&mut script_item).await?;
+
+                    let mut rules_item = PrfItem::from_rules()?;
+                    let rules_uid = rules_item
+                        .uid
+                        .clone()
+                        .ok_or_else(|| anyhow::anyhow!("rules uid is missing"))?;
+                    profiles.append_item(&mut rules_item).await?;
+
+                    let mut proxies_item = PrfItem::from_proxies()?;
+                    let proxies_uid = proxies_item
+                        .uid
+                        .clone()
+                        .ok_or_else(|| anyhow::anyhow!("proxies uid is missing"))?;
+                    profiles.append_item(&mut proxies_item).await?;
+
+                    let mut groups_item = PrfItem::from_groups()?;
+                    let groups_uid = groups_item
+                        .uid
+                        .clone()
+                        .ok_or_else(|| anyhow::anyhow!("groups uid is missing"))?;
+                    profiles.append_item(&mut groups_item).await?;
+
+                    let uid: String = help::get_uid("L").into();
+                    let mut local_item = PrfItem {
+                        uid: Some(uid.clone()),
+                        itype: Some("local".into()),
+                        name: Some("Default".into()),
+                        desc: Some("".into()),
+                        file: Some(format!("{uid}.yaml").into()),
+                        option: Some(PrfOption {
+                            merge: Some(merge_uid),
+                            script: Some(script_uid),
+                            rules: Some(rules_uid.clone()),
+                            proxies: Some(proxies_uid.clone()),
+                            groups: Some(groups_uid.clone()),
+                            ..PrfOption::default()
+                        }),
+                        updated: Some(chrono::Local::now().timestamp() as usize),
+                        file_data: Some(DEFAULT_MANUAL_PROFILE.into()),
+                        ..Default::default()
+                    };
+                    profiles.append_item(&mut local_item).await?;
+                    profiles.current = Some(uid.clone());
+                    profiles.save_file().await?;
+
+                    return Ok((
+                        profiles,
+                        EnsuredProfileProxies {
+                            profile_uid: uid,
+                            proxies_uid,
+                            groups_uid,
+                            rules_uid,
+                        },
+                    ));
+                }
+            };
+
+            let current_item = profiles.get_item(&profile_uid)?.clone();
+            let mut option = current_item.option.unwrap_or_default();
+            let mut should_patch = false;
+
+            let proxies_uid = match option.proxies.clone() {
+                Some(uid) if profiles.get_item(&uid).is_ok() => uid,
+                _ => {
+                    let mut proxies_item = PrfItem::from_proxies()?;
+                    let uid = proxies_item
+                        .uid
+                        .clone()
+                        .ok_or_else(|| anyhow::anyhow!("proxies uid is missing"))?;
+                    profiles.append_item(&mut proxies_item).await?;
+                    option.proxies = Some(uid.clone());
+                    should_patch = true;
+                    uid
+                }
+            };
+
+            let groups_uid = match option.groups.clone() {
+                Some(uid) if profiles.get_item(&uid).is_ok() => uid,
+                _ => {
+                    let mut groups_item = PrfItem::from_groups()?;
+                    let uid = groups_item
+                        .uid
+                        .clone()
+                        .ok_or_else(|| anyhow::anyhow!("groups uid is missing"))?;
+                    profiles.append_item(&mut groups_item).await?;
+                    option.groups = Some(uid.clone());
+                    should_patch = true;
+                    uid
+                }
+            };
+
+            let rules_uid = match option.rules.clone() {
+                Some(uid) if profiles.get_item(&uid).is_ok() => uid,
+                _ => {
+                    let mut rules_item = PrfItem::from_rules()?;
+                    let uid = rules_item
+                        .uid
+                        .clone()
+                        .ok_or_else(|| anyhow::anyhow!("rules uid is missing"))?;
+                    profiles.append_item(&mut rules_item).await?;
+                    option.rules = Some(uid.clone());
+                    should_patch = true;
+                    uid
+                }
+            };
+
+            if should_patch {
+                let patch = PrfItem {
+                    option: Some(option),
+                    ..Default::default()
+                };
+                profiles.patch_item(&profile_uid, &patch).await?;
+                profiles.save_file().await?;
+            }
+
+            Ok((
+                profiles,
+                EnsuredProfileProxies {
+                    profile_uid,
+                    proxies_uid,
+                    groups_uid,
+                    rules_uid,
+                },
+            ))
+        })
+        .await
+        .stringify_err()
 }
 
 /// 查看配置文件

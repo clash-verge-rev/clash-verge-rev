@@ -10,7 +10,8 @@
       "connect": "连接",
       "disconnect": "断开",
       "connecting": "连接中...",
-      "clearChainConfig": "删除链式配置"
+      "clearChainConfig": "删除链式配置",
+      "testAll": "测试全部"
     },
     "provider": {
       "title": "代理集合",
@@ -22,6 +23,10 @@
     "rules": {
       "title": "代理规则",
       "select": "选择规则"
+    },
+    "sections": {
+      "proxy": "代理节点",
+      "proxyGroup": "代理组"
     },
     "labels": {
       "proxyCount": "节点数量",

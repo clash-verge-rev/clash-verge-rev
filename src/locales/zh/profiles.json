@@ -125,8 +125,208 @@
         "multiUri": "多条 URI 请使用换行分隔（支持 Base64 编码）"
       },
       "actions": {
+        "manual": "手动添加",
         "prepend": "添加前置代理节点",
         "append": "添加后置代理节点"
+      }
+    },
+    "manualProxy": {
+      "title": "添加代理节点",
+      "editTitle": "编辑代理节点",
+      "sections": {
+        "server": "服务器信息",
+        "protocol": "协议配置",
+        "transport": "传输设置",
+        "tls": "TLS 设置",
+        "plugin": "插件",
+        "obfs": "混淆",
+        "interface": "接口",
+        "options": "选项"
+      },
+      "fields": {
+        "name": "名称",
+        "protocol": "协议",
+        "server": "服务器地址",
+        "port": "端口",
+        "username": "用户名",
+        "password": "密码",
+        "tuicPassword": "UUID 密码",
+        "auth": "认证",
+        "cipher": "加密方法",
+        "uuid": "UUID",
+        "alterId": "Alter ID",
+        "flow": "Flow",
+        "token": "Token",
+        "congestionController": "拥塞控制",
+        "ports": "跳端口",
+        "up": "上传",
+        "down": "下载",
+        "privateKey": "私钥",
+        "publicKey": "Peer 公钥",
+        "preSharedKey": "预共享密钥",
+        "ssrProtocol": "协议",
+        "ssrObfs": "混淆",
+        "protocolParam": "协议参数",
+        "obfsParam": "混淆参数",
+        "network": "传输网络",
+        "wsPath": "WebSocket 路径",
+        "wsHost": "WebSocket Host",
+        "grpcServiceName": "gRPC 服务名",
+        "h2Path": "HTTP/2 路径",
+        "h2Host": "HTTP/2 Host",
+        "sni": "SNI",
+        "servername": "Server Name",
+        "alpn": "ALPN",
+        "fingerprint": "证书指纹",
+        "clientFingerprint": "客户端指纹",
+        "realityPublicKey": "Reality 公钥",
+        "realityShortId": "Reality Short ID",
+        "plugin": "插件",
+        "pluginMode": "插件模式",
+        "pluginHost": "插件 Host",
+        "pluginPath": "插件路径",
+        "obfs": "混淆",
+        "obfsPassword": "混淆密码",
+        "ip": "IPv4 CIDR",
+        "ipv6": "IPv6 CIDR",
+        "dns": "DNS",
+        "mtu": "MTU",
+        "persistentKeepalive": "Keepalive",
+        "ipVersion": "IP 版本",
+        "interfaceName": "出站接口",
+        "dialerProxy": "前置代理"
+      },
+      "placeholders": {
+        "name": "节点名称（必填）"
+      },
+      "toggles": {
+        "tls": "TLS",
+        "skipCertVerify": "跳过证书验证",
+        "udp": "允许 UDP 转发",
+        "tfo": "TCP Fast Open"
+      },
+      "options": {
+        "none": "无",
+        "default": "默认"
+      },
+      "errors": {
+        "nameRequired": "节点名称不能为空",
+        "nameExists": "节点名称已存在",
+        "serverRequired": "服务器地址不能为空",
+        "portRequired": "端口不能为空",
+        "portInvalid": "端口必须在 1-65535 之间",
+        "passwordRequired": "密码不能为空",
+        "authRequired": "认证不能为空",
+        "uuidRequired": "UUID 不能为空",
+        "privateKeyRequired": "私钥不能为空",
+        "publicKeyRequired": "Peer 公钥不能为空",
+        "ipRequired": "IPv4 或 IPv6 CIDR 不能为空",
+        "dialerSelf": "前置代理不能选择自身",
+        "dialerCycle": "前置代理不能形成循环链",
+        "noProfile": "请先选择一个配置",
+        "notEditable": "只能编辑通过手动添加创建的节点"
+      },
+      "actions": {
+        "prepend": "添加到顶部",
+        "append": "添加到底部",
+        "edit": "编辑代理...",
+        "duplicate": "复制",
+        "delete": "删除代理..."
+      },
+      "deleteConfirm": {
+        "title": "删除代理节点",
+        "message": "确定要删除代理节点“{{name}}”吗？"
+      }
+    },
+    "deleteDependency": {
+      "deleteAndClean": "删除并移除引用",
+      "groupRefsTitle": "以下代理组正在使用它",
+      "groupRefsHint": "继续删除会同时从这些代理组的子策略中移除该引用。",
+      "fallbackHint": "如果某个手动代理组因此没有任何子策略，会自动保留 DIRECT 作为兜底。",
+      "ruleRefsTitle": "以下规则正在使用它",
+      "ruleRefsHint": "请先修改这些规则的 Proxy Policy，再删除该节点或代理组。",
+      "noRefs": "没有发现其他代理组或规则引用它。",
+      "blockedNotice": "该策略仍被规则使用，请先修改相关规则"
+    },
+    "manualGroup": {
+      "title": "添加代理组",
+      "editTitle": "编辑代理组",
+      "steps": {
+        "0": "选择组类型",
+        "1": "选择包含的策略",
+        "2": "参数"
+      },
+      "types": {
+        "select": {
+          "title": "Select Group",
+          "description": "在用户界面中手动选择要使用的策略。"
+        },
+        "urlTest": {
+          "title": "Auto Test Group",
+          "description": "通过测试指定 URL 的延迟自动选择策略。"
+        },
+        "fallback": {
+          "title": "Fallback Group",
+          "description": "按优先级自动选择可用策略，可用性通过访问测试 URL 判断。"
+        },
+        "loadBalance": {
+          "title": "Load Balance Group",
+          "description": "为连接分配不同的子策略。"
+        },
+        "relay": {
+          "title": "Relay Group",
+          "description": "按顺序通过多个策略转发连接。"
+        }
+      },
+      "sections": {
+        "policies": "选择子策略",
+        "external": "外部策略与过滤"
+      },
+      "policyGroups": {
+        "builtin": "内置策略",
+        "proxies": "代理节点",
+        "groups": "代理组",
+        "other": "其他"
+      },
+      "fields": {
+        "name": "组名称",
+        "url": "测试 URL",
+        "interval": "自动测试间隔",
+        "tolerance": "容差",
+        "strategy": "策略",
+        "icon": "图标",
+        "filter": "列表过滤",
+        "excludeFilter": "排除过滤",
+        "includeAll": "包含所有代理节点和 Provider 节点",
+        "includeAllProxies": "包含所有代理节点",
+        "includeAllProviders": "包含所有 Provider 节点",
+        "lazy": "懒加载",
+        "disableUdp": "禁用 UDP",
+        "hidden": "隐藏"
+      },
+      "options": {
+        "default": "默认"
+      },
+      "errors": {
+        "nameRequired": "代理组名称不能为空",
+        "nameExists": "代理组名称已存在",
+        "policiesRequired": "请至少选择一个子策略，或启用包含所有节点",
+        "notEditable": "只能编辑通过手动添加创建的代理组"
+      },
+      "actions": {
+        "add": "添加代理组",
+        "next": "下一步",
+        "back": "返回",
+        "prepend": "添加到顶部",
+        "append": "添加到底部",
+        "edit": "编辑代理组...",
+        "duplicate": "复制",
+        "delete": "删除代理组...",
+        "options": "选项"
+      },
+      "deleteConfirm": {
+        "title": "删除代理组",
+        "message": "确定要删除代理组“{{name}}”吗？"
       }
     },
     "groupsEditor": {

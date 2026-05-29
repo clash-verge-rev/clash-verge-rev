@@ -8,7 +8,40 @@
         "update": "Aktualisieren"
       }
     },
-    "title": "Regeln"
+    "title": "Regeln",
+    "actions": {
+      "add": "Add Rule",
+      "standard": "Standard Rule",
+      "logical": "Logical Rule",
+      "ruleset": "Ruleset",
+      "edit": "Edit Rule",
+      "duplicate": "Duplicate Rule",
+      "delete": "Delete Rule"
+    },
+    "table": {
+      "id": "ID",
+      "type": "Type",
+      "value": "Value",
+      "policy": "Policy",
+      "source": "Source"
+    },
+    "sources": {
+      "manual": "Manual",
+      "runtime": "Config"
+    },
+    "policyGroups": {
+      "builtin": "Built-in Policies",
+      "proxies": "Proxy Nodes",
+      "groups": "Proxy Groups",
+      "other": "Other"
+    },
+    "dialogs": {
+      "editTitle": "Edit Rule",
+      "duplicateTitle": "Duplicate Rule"
+    },
+    "validation": {
+      "required": "Rule type and proxy policy are required"
+    }
   },
   "feedback": {
     "notifications": {
@@ -32,14 +65,28 @@
         "toggles": {
           "noResolve": "DNS-Auflösung überspringen"
         },
+        "helpers": {
+          "geosite": "Examples: CN, geolocation-!cn, youtube, google, category-ads-all"
+        },
         "actions": {
           "prependRule": "Vorherige Regel hinzufügen",
           "appendRule": "Nachfolgende Regel hinzufügen"
         },
         "validation": {
           "conditionRequired": "Regelbedingung fehlt",
+          "subrulesRequired": "Add at least one sub-rule",
+          "subruleConditionRequired": "Complete all sub-rule conditions",
           "invalidRule": "Ungültige Regel"
         }
+      },
+      "logical": {
+        "operator": "Logical Operator",
+        "addSubrule": "Add Sub-rule",
+        "standardSubrule": "Standard Rule",
+        "logicalSubrule": "AND/OR/NOT Rule",
+        "rulesetSubrule": "Ruleset",
+        "configureSubrule": "Click to configure logical rule",
+        "deleteSubrule": "Delete sub-rule"
       },
       "ruleTypes": {
         "DOMAIN": "Vollständigen Domainnamen übereinstimmen",

@@ -10,7 +10,8 @@
       "connect": "Подключиться",
       "disconnect": "Отключиться",
       "connecting": "Подключение...",
-      "clearChainConfig": "Очистить цепочку"
+      "clearChainConfig": "Очистить цепочку",
+      "testAll": "Test All"
     },
     "provider": {
       "title": "Провайдеры прокси",
@@ -22,6 +23,10 @@
     "rules": {
       "title": "Правила прокси",
       "select": "Выбрать правила"
+    },
+    "sections": {
+      "proxy": "Proxy",
+      "proxyGroup": "Proxy Group"
     },
     "labels": {
       "proxyCount": "Количество прокси",

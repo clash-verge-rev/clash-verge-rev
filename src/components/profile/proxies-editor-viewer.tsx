@@ -9,6 +9,7 @@ import {
 } from '@dnd-kit/core'
 import { SortableContext, sortableKeyboardCoordinates } from '@dnd-kit/sortable'
 import {
+  AddRounded,
   VerticalAlignBottomRounded,
   VerticalAlignTopRounded,
 } from '@mui/icons-material'
@@ -37,6 +38,7 @@ import {
 import { useTranslation } from 'react-i18next'
 
 import { BaseSearchBox, MonacoEditor, VirtualList } from '@/components/base'
+import { ManualProxyViewer } from '@/components/profile/manual-proxy-viewer'
 import { ProxyItem } from '@/components/profile/proxy-item'
 import { readProfileFile, saveProfileFile } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
@@ -63,6 +65,7 @@ export const ProxiesEditorViewer = (props: Props) => {
   const [visualization, setVisualization] = useState(true)
   const [match, setMatch] = useState(() => (_: string) => true)
   const [proxyUri, setProxyUri] = useState<string>('')
+  const [manualOpen, setManualOpen] = useState(false)
 
   const [proxyList, setProxyList] = useState<IProxyConfig[]>([])
   const [prependSeq, setPrependSeq] = useState<IProxyConfig[]>([])
@@ -80,6 +83,17 @@ export const ProxiesEditorViewer = (props: Props) => {
   const filteredAppendSeq = useMemo(
     () => appendSeq.filter((proxy) => match(proxy.name)),
     [appendSeq, match],
+  )
+  const proxyNames = useMemo(
+    () =>
+      Array.from(
+        new Set(
+          [...prependSeq, ...proxyList, ...appendSeq]
+            .map((proxy) => proxy.name)
+            .filter(Boolean),
+        ),
+      ),
+    [appendSeq, prependSeq, proxyList],
   )
 
   const renderItem = (index: number): React.ReactNode => {
@@ -367,159 +381,187 @@ export const ProxiesEditorViewer = (props: Props) => {
     }
   })
 
+  const handleAddManualProxy = (
+    proxy: IProxyConfig,
+    placement: 'prepend' | 'append',
+  ) => {
+    if (placement === 'prepend') {
+      setPrependSeq((prev) => [proxy, ...prev])
+    } else {
+      setAppendSeq((prev) => [...prev, proxy])
+    }
+  }
+
   return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      maxWidth="xl"
-      fullWidth
-      disableEnforceFocus={!visualization}
-    >
-      <DialogTitle>
-        {
-          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-            {t('profiles.modals.proxiesEditor.title')}
-            <Box>
-              <Button
-                variant="contained"
-                size="small"
-                onClick={() => {
-                  setVisualization((prev) => !prev)
-                }}
-              >
-                {visualization
-                  ? t('shared.editorModes.advanced')
-                  : t('shared.editorModes.visualization')}
-              </Button>
-            </Box>
-          </Box>
-        }
-      </DialogTitle>
-
-      <DialogContent
-        sx={{ display: 'flex', width: 'auto', height: 'calc(100vh - 185px)' }}
+    <>
+      <Dialog
+        open={open}
+        onClose={onClose}
+        maxWidth="xl"
+        fullWidth
+        disableEnforceFocus={!visualization}
       >
-        {visualization ? (
-          <>
-            <List
-              sx={{
-                width: '50%',
-                padding: '0 10px',
-              }}
-            >
-              <Box
+        <DialogTitle>
+          {
+            <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+              {t('profiles.modals.proxiesEditor.title')}
+              <Box sx={{ display: 'flex', gap: 1 }}>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<AddRounded />}
+                  onClick={() => setManualOpen(true)}
+                >
+                  {t('profiles.modals.proxiesEditor.actions.manual')}
+                </Button>
+                <Button
+                  variant="contained"
+                  size="small"
+                  onClick={() => {
+                    setVisualization((prev) => !prev)
+                  }}
+                >
+                  {visualization
+                    ? t('shared.editorModes.advanced')
+                    : t('shared.editorModes.visualization')}
+                </Button>
+              </Box>
+            </Box>
+          }
+        </DialogTitle>
+
+        <DialogContent
+          sx={{ display: 'flex', width: 'auto', height: 'calc(100vh - 185px)' }}
+        >
+          {visualization ? (
+            <>
+              <List
                 sx={{
-                  height: 'calc(100% - 80px)',
-                  overflowY: 'auto',
+                  width: '50%',
+                  padding: '0 10px',
                 }}
               >
+                <Box
+                  sx={{
+                    height: 'calc(100% - 80px)',
+                    overflowY: 'auto',
+                  }}
+                >
+                  <Item>
+                    <TextField
+                      autoComplete="new-password"
+                      placeholder={t(
+                        'profiles.modals.proxiesEditor.placeholders.multiUri',
+                      )}
+                      fullWidth
+                      rows={9}
+                      multiline
+                      size="small"
+                      onChange={(e) => setProxyUri(e.target.value)}
+                    />
+                  </Item>
+                </Box>
                 <Item>
-                  <TextField
-                    autoComplete="new-password"
-                    placeholder={t(
-                      'profiles.modals.proxiesEditor.placeholders.multiUri',
-                    )}
+                  <Button
                     fullWidth
-                    rows={9}
-                    multiline
-                    size="small"
-                    onChange={(e) => setProxyUri(e.target.value)}
-                  />
+                    variant="contained"
+                    startIcon={<VerticalAlignTopRounded />}
+                    onClick={() => {
+                      handleParseAsync((proxies) => {
+                        setPrependSeq((prev) => [...proxies, ...prev])
+                      })
+                    }}
+                  >
+                    {t('profiles.modals.proxiesEditor.actions.prepend')}
+                  </Button>
                 </Item>
-              </Box>
-              <Item>
-                <Button
-                  fullWidth
-                  variant="contained"
-                  startIcon={<VerticalAlignTopRounded />}
-                  onClick={() => {
-                    handleParseAsync((proxies) => {
-                      setPrependSeq((prev) => [...proxies, ...prev])
-                    })
-                  }}
-                >
-                  {t('profiles.modals.proxiesEditor.actions.prepend')}
-                </Button>
-              </Item>
-              <Item>
-                <Button
-                  fullWidth
-                  variant="contained"
-                  startIcon={<VerticalAlignBottomRounded />}
-                  onClick={() => {
-                    handleParseAsync((proxies) => {
-                      setAppendSeq((prev) => [...prev, ...proxies])
-                    })
-                  }}
-                >
-                  {t('profiles.modals.proxiesEditor.actions.append')}
-                </Button>
-              </Item>
-            </List>
+                <Item>
+                  <Button
+                    fullWidth
+                    variant="contained"
+                    startIcon={<VerticalAlignBottomRounded />}
+                    onClick={() => {
+                      handleParseAsync((proxies) => {
+                        setAppendSeq((prev) => [...prev, ...proxies])
+                      })
+                    }}
+                  >
+                    {t('profiles.modals.proxiesEditor.actions.append')}
+                  </Button>
+                </Item>
+              </List>
 
-            <List
-              sx={{
-                width: '50%',
-                padding: '0 10px',
+              <List
+                sx={{
+                  width: '50%',
+                  padding: '0 10px',
+                }}
+              >
+                <BaseSearchBox onSearch={(match) => setMatch(() => match)} />
+                <VirtualList
+                  count={
+                    filteredProxyList.length +
+                    (filteredPrependSeq.length > 0 ? 1 : 0) +
+                    (filteredAppendSeq.length > 0 ? 1 : 0)
+                  }
+                  estimateSize={56}
+                  renderItem={renderItem}
+                  style={{ height: 'calc(100% - 24px)', marginTop: '8px' }}
+                />
+              </List>
+            </>
+          ) : (
+            <MonacoEditor
+              height="100%"
+              language="yaml"
+              value={currData}
+              theme={themeMode === 'light' ? 'light' : 'vs-dark'}
+              onMount={(editorInstance) => {
+                editorRef.current = editorInstance
               }}
-            >
-              <BaseSearchBox onSearch={(match) => setMatch(() => match)} />
-              <VirtualList
-                count={
-                  filteredProxyList.length +
-                  (filteredPrependSeq.length > 0 ? 1 : 0) +
-                  (filteredAppendSeq.length > 0 ? 1 : 0)
-                }
-                estimateSize={56}
-                renderItem={renderItem}
-                style={{ height: 'calc(100% - 24px)', marginTop: '8px' }}
-              />
-            </List>
-          </>
-        ) : (
-          <MonacoEditor
-            height="100%"
-            language="yaml"
-            value={currData}
-            theme={themeMode === 'light' ? 'light' : 'vs-dark'}
-            onMount={(editorInstance) => {
-              editorRef.current = editorInstance
-            }}
-            options={{
-              tabSize: 2, // 根据语言类型设置缩进大小
-              minimap: {
-                enabled: document.documentElement.clientWidth >= 1500, // 超过一定宽度显示minimap滚动条
-              },
-              mouseWheelZoom: true, // 按住Ctrl滚轮调节缩放比例
-              quickSuggestions: {
-                strings: true, // 字符串类型的建议
-                comments: true, // 注释类型的建议
-                other: true, // 其他类型的建议
-              },
-              padding: {
-                top: 33, // 顶部padding防止遮挡snippets
-              },
-              fontFamily: `Fira Code, JetBrains Mono, Roboto Mono, "Source Code Pro", Consolas, Menlo, Monaco, monospace, "Courier New", "Apple Color Emoji"${
-                getSystem() === 'windows' ? ', twemoji mozilla' : ''
-              }`,
-              fontLigatures: false, // 连字符
-              smoothScrolling: true, // 平滑滚动
-            }}
-            onChange={(value) => setCurrData(value ?? '')}
-          />
-        )}
-      </DialogContent>
+              options={{
+                tabSize: 2, // 根据语言类型设置缩进大小
+                minimap: {
+                  enabled: document.documentElement.clientWidth >= 1500, // 超过一定宽度显示minimap滚动条
+                },
+                mouseWheelZoom: true, // 按住Ctrl滚轮调节缩放比例
+                quickSuggestions: {
+                  strings: true, // 字符串类型的建议
+                  comments: true, // 注释类型的建议
+                  other: true, // 其他类型的建议
+                },
+                padding: {
+                  top: 33, // 顶部padding防止遮挡snippets
+                },
+                fontFamily: `Fira Code, JetBrains Mono, Roboto Mono, "Source Code Pro", Consolas, Menlo, Monaco, monospace, "Courier New", "Apple Color Emoji"${
+                  getSystem() === 'windows' ? ', twemoji mozilla' : ''
+                }`,
+                fontLigatures: false, // 连字符
+                smoothScrolling: true, // 平滑滚动
+              }}
+              onChange={(value) => setCurrData(value ?? '')}
+            />
+          )}
+        </DialogContent>
 
-      <DialogActions>
-        <Button onClick={onClose} variant="outlined">
-          {t('shared.actions.cancel')}
-        </Button>
+        <DialogActions>
+          <Button onClick={onClose} variant="outlined">
+            {t('shared.actions.cancel')}
+          </Button>
 
-        <Button onClick={handleSave} variant="contained">
-          {t('shared.actions.save')}
-        </Button>
-      </DialogActions>
-    </Dialog>
+          <Button onClick={handleSave} variant="contained">
+            {t('shared.actions.save')}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <ManualProxyViewer
+        open={manualOpen}
+        existingNames={proxyNames}
+        onClose={() => setManualOpen(false)}
+        onAdd={handleAddManualProxy}
+      />
+    </>
   )
 }
 

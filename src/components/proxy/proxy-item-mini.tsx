@@ -1,5 +1,13 @@
-import { CheckCircleOutlineRounded } from '@mui/icons-material'
-import { alpha, Box, ListItemButton, styled, Typography } from '@mui/material'
+import { CheckCircleOutlineRounded, EditRounded } from '@mui/icons-material'
+import {
+  alpha,
+  Box,
+  IconButton,
+  ListItemButton,
+  styled,
+  Typography,
+} from '@mui/material'
+import type { MouseEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BaseLoading } from '@/components/base'
@@ -12,11 +20,23 @@ interface Props {
   selected: boolean
   showType?: boolean
   onClick?: (name: string) => void
+  onEdit?: (name: string) => void
+  onContextMenu?: (event: MouseEvent<HTMLElement>, name: string) => void
+  large?: boolean
 }
 
 // 多列布局
 export const ProxyItemMini = (props: Props) => {
-  const { group, proxy, selected, showType = true, onClick } = props
+  const {
+    group,
+    proxy,
+    selected,
+    showType = true,
+    onClick,
+    onEdit,
+    onContextMenu,
+    large = false,
+  } = props
 
   const { t } = useTranslation()
 
@@ -31,14 +51,27 @@ export const ProxyItemMini = (props: Props) => {
       dense
       selected={selected}
       onClick={() => onClick?.(proxy.name)}
+      onContextMenu={(event) => {
+        if (!onContextMenu) return
+        event.preventDefault()
+        event.stopPropagation()
+        onContextMenu(event, proxy.name)
+      }}
+      onDoubleClick={(event) => {
+        if (!onEdit) return
+        event.preventDefault()
+        event.stopPropagation()
+        onEdit(proxy.name)
+      }}
       sx={[
         {
-          height: 56,
+          height: large ? 96 : 56,
           borderRadius: 1.5,
-          pl: 1.5,
-          pr: 1,
+          p: large ? 1.5 : undefined,
+          pl: large ? 1.5 : 1.5,
+          pr: large ? 1.5 : 1,
           justifyContent: 'space-between',
-          alignItems: 'center',
+          alignItems: large ? 'stretch' : 'center',
         },
         ({ palette: { mode, primary } }) => {
           const bgcolor = mode === 'light' ? '#ffffff' : '#24252f'
@@ -48,6 +81,7 @@ export const ProxyItemMini = (props: Props) => {
           return {
             '&:hover .the-check': { display: !showDelay ? 'block' : 'none' },
             '&:hover .the-delay': { display: showDelay ? 'block' : 'none' },
+            '&:hover .the-edit': { opacity: 1 },
             '&:hover .the-icon': { display: 'none' },
             '& .the-pin, & .the-unpin': {
               position: 'absolute',
@@ -72,7 +106,14 @@ export const ProxyItemMini = (props: Props) => {
     >
       <Box
         title={`${proxy.name}\n${proxy.now ?? ''}`}
-        sx={{ overflow: 'hidden' }}
+        sx={{
+          minWidth: 0,
+          flex: 1,
+          overflow: 'hidden',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: large ? 'space-between' : 'center',
+        }}
       >
         <Typography
           variant="body2"
@@ -96,6 +137,7 @@ export const ProxyItemMini = (props: Props) => {
               flexWrap: 'nowrap',
               flex: 'none',
               marginTop: '4px',
+              overflow: 'hidden',
             }}
           >
             {proxy.now && (
@@ -152,8 +194,36 @@ export const ProxyItemMini = (props: Props) => {
         )}
       </Box>
       <Box
-        sx={{ ml: 0.5, color: 'primary.main', display: isPreset ? 'none' : '' }}
+        sx={{
+          ml: 0.5,
+          color: 'primary.main',
+          display: 'inline-flex',
+          alignItems: 'center',
+          alignSelf: 'center',
+          gap: 0.25,
+          visibility: isPreset && !onEdit ? 'hidden' : 'visible',
+        }}
       >
+        {onEdit && (
+          <IconButton
+            className="the-edit"
+            size="small"
+            title={t('shared.actions.edit')}
+            onClick={(event) => {
+              event.preventDefault()
+              event.stopPropagation()
+              onEdit(proxy.name)
+            }}
+            sx={{
+              width: 22,
+              height: 22,
+              opacity: selected ? 1 : 0,
+              transition: 'opacity 120ms ease',
+            }}
+          >
+            <EditRounded sx={{ fontSize: 15 }} />
+          </IconButton>
+        )}
         {delayValue === -2 && (
           <Widget>
             <BaseLoading />

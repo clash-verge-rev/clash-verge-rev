@@ -1,13 +1,15 @@
-import { ExpandMoreRounded } from '@mui/icons-material'
+import { AddRounded, ExpandMoreRounded } from '@mui/icons-material'
 import {
   Alert,
   Box,
+  Button,
   Chip,
   IconButton,
   Menu,
   MenuItem,
   Snackbar,
   Typography,
+  alpha,
 } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
 import { useQuery } from '@tanstack/react-query'
@@ -15,7 +17,9 @@ import { defaultRangeExtractor, useVirtualizer } from '@tanstack/react-virtual'
 import { useLockFn } from 'ahooks'
 import {
   type Key,
+  type MutableRefObject,
   type MouseEvent,
+  type ReactNode,
   type RefObject,
   useCallback,
   useEffect,
@@ -43,6 +47,7 @@ import {
   DEFAULT_HOVER_DELAY,
   ProxyGroupNavigator,
 } from './proxy-group-navigator'
+import { ProxyItemMini } from './proxy-item-mini'
 import { ProxyRender } from './proxy-render'
 import type { HeadState } from './use-head-state'
 import { type IRenderItem, useRenderList } from './use-render-list'
@@ -57,6 +62,62 @@ interface Props {
   mode: string
   isChainMode?: boolean
   chainConfigData?: string | null
+  editableProxyNames?: string[]
+  onEditProxy?: (name: string) => void
+  onProxyContextMenu?: (event: MouseEvent<HTMLElement>, name: string) => void
+  onGroupContextMenu?: (
+    event: MouseEvent<HTMLElement>,
+    group: IRenderItem['group'],
+  ) => void
+  onAddProxy?: () => void
+  onAddGroup?: () => void
+}
+
+const EMPTY_EDITABLE_PROXY_NAMES: string[] = []
+const BUILTIN_PROXY_NAMES = new Set([
+  'DIRECT',
+  'REJECT',
+  'REJECT-DROP',
+  'PASS',
+  'COMPATIBLE',
+])
+
+function isProxyAsset(proxy: IProxyItem | undefined) {
+  if (!proxy?.name) return false
+  const type = proxy.type?.toLowerCase()
+
+  return (
+    !BUILTIN_PROXY_NAMES.has(proxy.name.toUpperCase()) &&
+    !['direct', 'reject', 'reject-drop', 'pass', 'compatible'].includes(type)
+  )
+}
+
+function stabilizeNamedItems<T extends { name: string }>(
+  items: T[],
+  orderRef: MutableRefObject<string[]>,
+) {
+  const currentNames = new Set(items.map((item) => item.name))
+  const nextOrder = orderRef.current.filter((name) => currentNames.has(name))
+
+  for (const item of items) {
+    if (!nextOrder.includes(item.name)) {
+      nextOrder.push(item.name)
+    }
+  }
+
+  orderRef.current = nextOrder
+  const orderMap = new Map(nextOrder.map((name, index) => [name, index]))
+
+  return [...items].sort(
+    (prev, next) =>
+      (orderMap.get(prev.name) ?? Number.MAX_SAFE_INTEGER) -
+      (orderMap.get(next.name) ?? Number.MAX_SAFE_INTEGER),
+  )
+}
+
+function useStableNamedItems<T extends { name: string }>(items: T[]) {
+  const orderRef = useRef<string[]>([])
+  return useMemo(() => stabilizeNamedItems(items, orderRef), [items])
 }
 
 interface ProxyChainItem {
@@ -69,7 +130,17 @@ interface ProxyChainItem {
 export const ProxyGroups = (props: Props) => {
   const { t } = useTranslation()
   const { pathname } = useLocation()
-  const { mode, isChainMode = false, chainConfigData } = props
+  const {
+    mode,
+    isChainMode = false,
+    chainConfigData,
+    editableProxyNames = EMPTY_EDITABLE_PROXY_NAMES,
+    onEditProxy,
+    onProxyContextMenu,
+    onGroupContextMenu,
+    onAddProxy,
+    onAddGroup,
+  } = props
 
   // Drive 3s polling on the shared TQ cache; data is read via granular context below
   useQuery({
@@ -110,14 +181,15 @@ export const ProxyGroups = (props: Props) => {
 
   const { verge } = useVerge()
   const { proxies: proxiesData } = useProxiesData()
-  const groups = proxiesData?.groups
+  const stableGroups = useStableNamedItems<IProxyGroupItem>(
+    ((proxiesData?.groups ?? []) as IProxyGroupItem[]).filter(Boolean),
+  )
   const availableGroups = useMemo(() => {
-    if (!groups) return []
     // 在链式代理模式下，仅显示支持选择节点的 Selector 代理组
     return isChainMode
-      ? groups.filter((g: any) => g.type === 'Selector')
-      : groups
-  }, [groups, isChainMode])
+      ? stableGroups.filter((group) => group.type === 'Selector')
+      : stableGroups
+  }, [isChainMode, stableGroups])
 
   const defaultRuleGroup = useMemo(() => {
     if (isChainMode && mode === 'rule' && availableGroups.length > 0) {
@@ -129,6 +201,36 @@ export const ProxyGroups = (props: Props) => {
   const activeSelectedGroup = useMemo(
     () => selectedGroup ?? defaultRuleGroup,
     [selectedGroup, defaultRuleGroup],
+  )
+  const editableProxyNameSet = useMemo(
+    () => new Set(editableProxyNames),
+    [editableProxyNames],
+  )
+  const rawProxyAssets = useMemo<IProxyItem[]>(
+    () => ((proxiesData?.proxies ?? []) as IProxyItem[]).filter(isProxyAsset),
+    [proxiesData?.proxies],
+  )
+  const proxyAssets = useStableNamedItems<IProxyItem>(rawProxyAssets)
+  const policyGroups = useStableNamedItems<IProxyGroupItem>(
+    ((proxiesData?.groups ?? []) as IProxyGroupItem[]).filter(
+      (group) => !group.hidden,
+    ),
+  )
+  const proxyAssetGroup = useMemo<IProxyGroupItem>(
+    () => ({
+      name: 'GLOBAL',
+      type: 'Selector',
+      udp: false,
+      xudp: false,
+      tfo: false,
+      mptcp: false,
+      smux: false,
+      history: [],
+      now: '',
+      ...(proxiesData?.global ?? {}),
+      all: proxyAssets,
+    }),
+    [proxiesData?.global, proxyAssets],
   )
 
   const { renderList, onProxies, onHeadState } = useRenderList(
@@ -200,7 +302,7 @@ export const ProxyGroups = (props: Props) => {
   const virtualizer = useVirtualizer({
     count: renderList.length,
     getScrollElement: () => parentRef.current,
-    estimateSize: () => 56,
+    estimateSize: () => (isChainMode ? 68 : 56),
     overscan: 15,
     getItemKey: (index) => renderList[index]?.key ?? index,
     rangeExtractor,
@@ -322,7 +424,7 @@ export const ProxyGroups = (props: Props) => {
   }, [activeSelectedGroup, availableGroups])
 
   // 处理代理组选择菜单
-  const handleGroupMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
+  const handleGroupMenuOpen = (event: MouseEvent<HTMLElement>) => {
     setRuleMenuAnchor(event.currentTarget)
   }
 
@@ -440,6 +542,30 @@ export const ProxyGroups = (props: Props) => {
     }),
   )
 
+  const handleCheckProxyAssets = useStableCallback(
+    useLockFn(async () => {
+      if (!proxyAssets.length) return
+
+      const providers = new Set(
+        proxyAssets.map((proxy) => proxy.provider).filter(Boolean),
+      )
+      if (providers.size) {
+        await Promise.allSettled(
+          [...providers].map((provider) => healthcheckProxyProvider(provider!)),
+        )
+      }
+
+      const names = proxyAssets
+        .filter((proxy) => !proxy.provider)
+        .map((proxy) => proxy.name)
+      if (names.length) {
+        await delayManager.checkListDelay(names, proxyAssetGroup.name, timeout)
+      }
+
+      onProxies()
+    }),
+  )
+
   // 滚到对应的节点
   const handleLocation = useStableCallback((group: IProxyGroupItem) => {
     if (!group) return
@@ -493,6 +619,10 @@ export const ProxyGroups = (props: Props) => {
       onCheckAll={handleCheckAll}
       onHeadState={onHeadState}
       onChangeProxy={handleChangeProxy}
+      editableProxyNames={editableProxyNameSet}
+      onEditProxy={onEditProxy}
+      onProxyContextMenu={onProxyContextMenu}
+      onGroupContextMenu={onGroupContextMenu}
     />
   )
 
@@ -563,6 +693,27 @@ export const ProxyGroups = (props: Props) => {
     )
   }
 
+  if (!isChainMode && (mode === 'rule' || mode === 'script')) {
+    return (
+      <Box sx={{ position: 'relative', height: '100%' }}>
+        <PolicyAssetView
+          scrollRef={parentRef}
+          proxyAssets={proxyAssets}
+          proxyAssetGroup={proxyAssetGroup}
+          policyGroups={policyGroups}
+          editableProxyNames={editableProxyNameSet}
+          onEditProxy={onEditProxy}
+          onProxyContextMenu={onProxyContextMenu}
+          onGroupContextMenu={onGroupContextMenu}
+          onAddProxy={onAddProxy}
+          onAddGroup={onAddGroup}
+          onCheckProxyAssets={handleCheckProxyAssets}
+        />
+        <ScrollTopButton show={showScrollTop} onClick={scrollToTop} />
+      </Box>
+    )
+  }
+
   return (
     <div
       style={{ position: 'relative', height: '100%', willChange: 'transform' }}
@@ -606,6 +757,13 @@ interface ProxyVirtualListProps {
   onChangeProxy: (
     group: IRenderItem['group'],
     proxy: IRenderItem['proxy'] & { name: string },
+  ) => void
+  editableProxyNames: Set<string>
+  onEditProxy?: (name: string) => void
+  onProxyContextMenu?: (event: MouseEvent<HTMLElement>, name: string) => void
+  onGroupContextMenu?: (
+    event: MouseEvent<HTMLElement>,
+    group: IRenderItem['group'],
   ) => void
 }
 
@@ -754,6 +912,330 @@ function GroupSelectMenu({
   )
 }
 
+interface PolicyAssetViewProps {
+  scrollRef: RefObject<HTMLDivElement | null>
+  proxyAssets: IProxyItem[]
+  proxyAssetGroup: IProxyGroupItem
+  policyGroups: IProxyGroupItem[]
+  editableProxyNames: Set<string>
+  onEditProxy?: (name: string) => void
+  onProxyContextMenu?: (event: MouseEvent<HTMLElement>, name: string) => void
+  onGroupContextMenu?: (
+    event: MouseEvent<HTMLElement>,
+    group: IRenderItem['group'],
+  ) => void
+  onAddProxy?: () => void
+  onAddGroup?: () => void
+  onCheckProxyAssets: () => void
+}
+
+function PolicyAssetView({
+  scrollRef,
+  proxyAssets,
+  proxyAssetGroup,
+  policyGroups,
+  editableProxyNames,
+  onEditProxy,
+  onProxyContextMenu,
+  onGroupContextMenu,
+  onAddProxy,
+  onAddGroup,
+  onCheckProxyAssets,
+}: PolicyAssetViewProps) {
+  const { t } = useTranslation()
+
+  return (
+    <Box
+      ref={scrollRef}
+      sx={{
+        height: 'calc(100% - 14px)',
+        overflow: 'auto',
+        px: 2,
+        py: 2,
+      }}
+    >
+      <PolicySectionHeader
+        title={t('proxies.page.sections.proxy')}
+        action={
+          proxyAssets.length > 0 ? (
+            <Button
+              size="small"
+              variant="contained"
+              onClick={onCheckProxyAssets}
+            >
+              {t('proxies.page.actions.testAll')}
+            </Button>
+          ) : null
+        }
+        color="secondary.main"
+      />
+
+      <PolicyGrid>
+        {proxyAssets.map((proxy) => {
+          const canEdit = editableProxyNames.has(proxy.name)
+
+          return (
+            <ProxyItemMini
+              key={proxy.name}
+              group={proxyAssetGroup}
+              proxy={proxy}
+              selected={proxyAssetGroup.now === proxy.name}
+              large
+              onEdit={canEdit ? onEditProxy : undefined}
+              onContextMenu={canEdit ? onProxyContextMenu : undefined}
+            />
+          )
+        })}
+        {onAddProxy && (
+          <AddPolicyTile
+            title={t('profiles.modals.proxiesEditor.actions.manual')}
+            onClick={onAddProxy}
+          />
+        )}
+      </PolicyGrid>
+
+      <PolicySectionHeader
+        title={t('proxies.page.sections.proxyGroup')}
+        color="primary.main"
+        sx={{ mt: 4 }}
+      />
+
+      <PolicyGrid>
+        {policyGroups.map((group) => (
+          <PolicyGroupCard
+            key={group.name}
+            group={group}
+            onContextMenu={onGroupContextMenu}
+          />
+        ))}
+        {onAddGroup && (
+          <AddPolicyTile
+            title={t('profiles.modals.manualGroup.actions.add')}
+            onClick={onAddGroup}
+          />
+        )}
+      </PolicyGrid>
+    </Box>
+  )
+}
+
+interface PolicySectionHeaderProps {
+  title: string
+  color: string
+  action?: ReactNode
+  sx?: object
+}
+
+function PolicySectionHeader({
+  title,
+  color,
+  action,
+  sx,
+}: PolicySectionHeaderProps) {
+  return (
+    <Box
+      sx={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: 2,
+        mb: 1.5,
+        pb: 0.75,
+        borderBottom: '1px solid',
+        borderColor: 'divider',
+        ...sx,
+      }}
+    >
+      <Typography
+        component="h2"
+        sx={{
+          color,
+          fontSize: 18,
+          fontWeight: 800,
+          letterSpacing: 0,
+          textTransform: 'uppercase',
+        }}
+      >
+        {title}
+      </Typography>
+      {action}
+    </Box>
+  )
+}
+
+function PolicyGrid({ children }: { children: ReactNode }) {
+  return (
+    <Box
+      sx={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
+        gap: 1.5,
+      }}
+    >
+      {children}
+    </Box>
+  )
+}
+
+interface PolicyGroupCardProps {
+  group: IProxyGroupItem
+  onContextMenu?: (
+    event: MouseEvent<HTMLElement>,
+    group: IRenderItem['group'],
+  ) => void
+}
+
+function PolicyGroupCard({ group, onContextMenu }: PolicyGroupCardProps) {
+  const handleOpen = (event: MouseEvent<HTMLElement>) => {
+    if (!onContextMenu) return
+    event.preventDefault()
+    event.stopPropagation()
+    onContextMenu(event, group as IRenderItem['group'])
+  }
+
+  return (
+    <Box
+      component="button"
+      type="button"
+      onClick={handleOpen}
+      onContextMenu={handleOpen}
+      sx={({ palette }) => ({
+        position: 'relative',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'stretch',
+        height: 96,
+        p: 1.5,
+        border: 0,
+        borderRadius: 1.5,
+        textAlign: 'left',
+        color: 'text.primary',
+        cursor: onContextMenu ? 'pointer' : 'default',
+        backgroundColor: palette.mode === 'light' ? '#ffffff' : '#24252f',
+        '&:hover': {
+          backgroundColor: alpha(palette.primary.main, 0.15),
+        },
+      })}
+    >
+      <Box sx={{ minWidth: 0 }}>
+        <Typography
+          sx={{
+            color: 'text.secondary',
+            fontSize: 12,
+            fontWeight: 700,
+            lineHeight: 1.2,
+          }}
+        >
+          {formatGroupType(group.type)}
+        </Typography>
+        <Typography
+          sx={{
+            mt: 0.5,
+            fontSize: 16,
+            fontWeight: 800,
+            lineHeight: 1.2,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}
+          title={group.name}
+        >
+          {group.name}
+        </Typography>
+      </Box>
+
+      <Box
+        sx={{
+          mt: 'auto',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 1,
+        }}
+      >
+        <Typography
+          sx={{
+            color: 'text.secondary',
+            fontSize: 13,
+            minWidth: 0,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            whiteSpace: 'nowrap',
+          }}
+          title={group.now}
+        >
+          {group.now}
+        </Typography>
+        <Chip
+          size="small"
+          label={group.all?.length ?? 0}
+          sx={({ palette }) => ({
+            height: 24,
+            minWidth: 28,
+            color: palette.primary.main,
+            backgroundColor: alpha(palette.primary.main, 0.12),
+          })}
+        />
+      </Box>
+    </Box>
+  )
+}
+
+function AddPolicyTile({
+  title,
+  onClick,
+}: {
+  title: string
+  onClick: () => void
+}) {
+  return (
+    <Box
+      component="button"
+      type="button"
+      title={title}
+      onClick={onClick}
+      sx={({ palette }) => ({
+        height: 96,
+        border: '1px dashed',
+        borderColor: alpha(palette.text.primary, 0.25),
+        borderRadius: 1.5,
+        color: 'text.secondary',
+        backgroundColor: 'transparent',
+        cursor: 'pointer',
+        '&:hover': {
+          color: 'primary.main',
+          borderColor: 'primary.main',
+          backgroundColor: alpha(palette.primary.main, 0.08),
+        },
+      })}
+    >
+      <AddRounded />
+    </Box>
+  )
+}
+
+function formatGroupType(type: string) {
+  switch (type) {
+    case 'Selector':
+    case 'select':
+      return 'Select Group'
+    case 'URLTest':
+    case 'url-test':
+      return 'Auto Test Group'
+    case 'Fallback':
+    case 'fallback':
+      return 'Fallback Group'
+    case 'LoadBalance':
+    case 'load-balance':
+      return 'Load Balance Group'
+    case 'Relay':
+    case 'relay':
+      return 'Relay Group'
+    default:
+      return type
+  }
+}
+
 function ProxyVirtualList({
   parentRef,
   height,
@@ -768,6 +1250,10 @@ function ProxyVirtualList({
   onCheckAll,
   onHeadState,
   onChangeProxy,
+  editableProxyNames,
+  onEditProxy,
+  onProxyContextMenu,
+  onGroupContextMenu,
 }: ProxyVirtualListProps) {
   const theme = useTheme()
   const stickyBackground =
@@ -809,6 +1295,10 @@ function ProxyVirtualList({
               onCheckAll={onCheckAll}
               onHeadState={onHeadState}
               onChangeProxy={onChangeProxy}
+              editableProxyNames={editableProxyNames}
+              onEditProxy={onEditProxy}
+              onProxyContextMenu={onProxyContextMenu}
+              onGroupContextMenu={onGroupContextMenu}
               isChainMode={isChainMode}
             />
           </div>

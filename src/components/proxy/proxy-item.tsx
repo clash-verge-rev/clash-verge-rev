@@ -1,7 +1,8 @@
-import { CheckCircleOutlineRounded } from '@mui/icons-material'
+import { CheckCircleOutlineRounded, EditRounded } from '@mui/icons-material'
 import {
   alpha,
   Box,
+  IconButton,
   ListItem,
   ListItemButton,
   ListItemIcon,
@@ -10,6 +11,8 @@ import {
   SxProps,
   Theme,
 } from '@mui/material'
+import type { MouseEvent } from 'react'
+import { useTranslation } from 'react-i18next'
 
 import { BaseLoading } from '@/components/base'
 import { useProxyDelayState } from '@/hooks/use-proxy-delay-state'
@@ -21,7 +24,10 @@ interface Props {
   selected: boolean
   showType?: boolean
   sx?: SxProps<Theme>
+  large?: boolean
   onClick?: (name: string) => void
+  onEdit?: (name: string) => void
+  onContextMenu?: (event: MouseEvent<HTMLElement>, name: string) => void
 }
 
 const Widget = styled(Box)(() => ({
@@ -43,7 +49,18 @@ const TypeBox = styled('span')(({ theme }) => ({
 }))
 
 export const ProxyItem = (props: Props) => {
-  const { group, proxy, selected, showType = true, sx, onClick } = props
+  const {
+    group,
+    proxy,
+    selected,
+    showType = true,
+    sx,
+    large = false,
+    onClick,
+    onEdit,
+    onContextMenu,
+  } = props
+  const { t } = useTranslation()
 
   // -1/<=0 为不显示，-2 为 loading
   const { delayValue, isPreset, timeout, onDelay } = useProxyDelayState(
@@ -57,6 +74,18 @@ export const ProxyItem = (props: Props) => {
         dense
         selected={selected}
         onClick={() => onClick?.(proxy.name)}
+        onContextMenu={(event) => {
+          if (!onContextMenu) return
+          event.preventDefault()
+          event.stopPropagation()
+          onContextMenu(event, proxy.name)
+        }}
+        onDoubleClick={(event) => {
+          if (!onEdit) return
+          event.preventDefault()
+          event.stopPropagation()
+          onEdit(proxy.name)
+        }}
         sx={[
           { borderRadius: 1 },
           ({ palette: { mode, primary } }) => {
@@ -67,6 +96,7 @@ export const ProxyItem = (props: Props) => {
             return {
               '&:hover .the-check': { display: !showDelay ? 'block' : 'none' },
               '&:hover .the-delay': { display: showDelay ? 'block' : 'none' },
+              '&:hover .the-edit': { opacity: 1 },
               '&:hover .the-icon': { display: 'none' },
               '&.Mui-selected': {
                 width: `calc(100% + 3px)`,
@@ -78,8 +108,8 @@ export const ProxyItem = (props: Props) => {
                     : alpha(primary.main, 0.35),
               },
               backgroundColor: bgcolor,
-              marginBottom: '8px',
-              height: '40px',
+              marginBottom: large ? '10px' : '8px',
+              height: large ? '56px' : '40px',
             }
           },
         ]}
@@ -116,9 +146,31 @@ export const ProxyItem = (props: Props) => {
           sx={{
             justifyContent: 'flex-end',
             color: 'primary.main',
-            display: isPreset ? 'none' : '',
+            display: isPreset && !onEdit ? 'none' : '',
+            gap: 0.25,
           }}
         >
+          {onEdit && (
+            <IconButton
+              className="the-edit"
+              size="small"
+              title={t('shared.actions.edit')}
+              onClick={(event) => {
+                event.preventDefault()
+                event.stopPropagation()
+                onEdit(proxy.name)
+              }}
+              sx={{
+                width: 24,
+                height: 24,
+                opacity: selected ? 1 : 0,
+                transition: 'opacity 120ms ease',
+              }}
+            >
+              <EditRounded sx={{ fontSize: 16 }} />
+            </IconButton>
+          )}
+
           {delayValue === -2 && (
             <Widget>
               <BaseLoading />

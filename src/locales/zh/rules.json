@@ -8,7 +8,40 @@
         "update": "更新"
       }
     },
-    "title": "规则"
+    "title": "规则",
+    "actions": {
+      "add": "添加规则",
+      "standard": "标准规则",
+      "logical": "逻辑规则",
+      "ruleset": "规则集合",
+      "edit": "编辑规则",
+      "duplicate": "复制规则",
+      "delete": "删除规则"
+    },
+    "table": {
+      "id": "ID",
+      "type": "类型",
+      "value": "值",
+      "policy": "策略",
+      "source": "来源"
+    },
+    "sources": {
+      "manual": "手动",
+      "runtime": "配置"
+    },
+    "policyGroups": {
+      "builtin": "内置策略",
+      "proxies": "代理节点",
+      "groups": "代理组",
+      "other": "其他"
+    },
+    "dialogs": {
+      "editTitle": "编辑规则",
+      "duplicateTitle": "复制规则"
+    },
+    "validation": {
+      "required": "规则类型和代理策略不能为空"
+    }
   },
   "feedback": {
     "notifications": {
@@ -32,14 +65,28 @@
         "toggles": {
           "noResolve": "跳过 DNS 解析"
         },
+        "helpers": {
+          "geosite": "示例：CN、geolocation-!cn、youtube、google、category-ads-all"
+        },
         "actions": {
           "prependRule": "添加前置规则",
           "appendRule": "添加后置规则"
         },
         "validation": {
           "conditionRequired": "规则条件缺失",
+          "subrulesRequired": "请至少添加一条子规则",
+          "subruleConditionRequired": "请补全所有子规则条件",
           "invalidRule": "无效规则"
         }
+      },
+      "logical": {
+        "operator": "逻辑操作符",
+        "addSubrule": "添加子规则",
+        "standardSubrule": "标准规则",
+        "logicalSubrule": "AND/OR/NOT 规则",
+        "rulesetSubrule": "规则集合",
+        "configureSubrule": "点击配置逻辑规则",
+        "deleteSubrule": "删除子规则"
       },
       "ruleTypes": {
         "DOMAIN": "匹配完整域名 (DOMAIN)",

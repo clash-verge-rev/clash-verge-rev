@@ -73,3 +73,7 @@ jobs:
       - name: Run TypeScript typecheck
         if: steps.check_frontend.outputs.frontend == 'true'
         run: pnpm typecheck
+
+      - name: Run tests
+        if: steps.check_frontend.outputs.frontend == 'true'
+        run: pnpm test

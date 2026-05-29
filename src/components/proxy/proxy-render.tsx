@@ -11,9 +11,10 @@ import {
   Typography,
   styled,
   Chip,
+  IconButton,
   Tooltip,
 } from '@mui/material'
-import { useMemo } from 'react'
+import { type MouseEvent, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { useIconCache } from '@/hooks/use-icon-cache'
@@ -37,6 +38,13 @@ interface RenderProps {
     group: IRenderItem['group'],
     proxy: IRenderItem['proxy'] & { name: string },
   ) => void
+  editableProxyNames?: Set<string>
+  onEditProxy?: (name: string) => void
+  onProxyContextMenu?: (event: MouseEvent<HTMLElement>, name: string) => void
+  onGroupContextMenu?: (
+    event: MouseEvent<HTMLElement>,
+    group: IRenderItem['group'],
+  ) => void
 }
 
 export const ProxyRender = (props: RenderProps) => {
@@ -48,7 +56,11 @@ export const ProxyRender = (props: RenderProps) => {
     onCheckAll,
     onHeadState,
     onChangeProxy,
-    isChainMode: _ = false,
+    editableProxyNames,
+    onEditProxy,
+    onProxyContextMenu,
+    onGroupContextMenu,
+    isChainMode = false,
   } = props
   const { type, group, headState, proxy, proxyCol } = item
   const { verge } = useVerge()
@@ -68,17 +80,34 @@ export const ProxyRender = (props: RenderProps) => {
       return null
     }
 
-    return proxyCol.map((proxyItem) => (
-      <ProxyItemMini
-        key={`${item.key}-${proxyItem?.name ?? 'unknown'}`}
-        group={group}
-        proxy={proxyItem!}
-        selected={group.now === proxyItem?.name}
-        showType={showType}
-        onClick={() => onChangeProxy(group, proxyItem!)}
-      />
-    ))
-  }, [type, proxyCol, item.key, group, showType, onChangeProxy])
+    return proxyCol.map((proxyItem) => {
+      const name = proxyItem?.name ?? ''
+      const canEdit = editableProxyNames?.has(name)
+
+      return (
+        <ProxyItemMini
+          key={`${item.key}-${name || 'unknown'}`}
+          group={group}
+          proxy={proxyItem!}
+          selected={group.now === name}
+          showType={showType}
+          onClick={() => onChangeProxy(group, proxyItem!)}
+          onEdit={canEdit ? onEditProxy : undefined}
+          onContextMenu={canEdit ? onProxyContextMenu : undefined}
+        />
+      )
+    })
+  }, [
+    type,
+    proxyCol,
+    item.key,
+    group,
+    showType,
+    onChangeProxy,
+    editableProxyNames,
+    onEditProxy,
+    onProxyContextMenu,
+  ])
 
   if (type === 0) {
     return (
@@ -90,7 +119,17 @@ export const ProxyRender = (props: RenderProps) => {
           margin: '8px 8px',
           borderRadius: '8px',
         }}
-        onClick={() => onHeadState(group.name, { open: !headState?.open })}
+        onContextMenu={(event) => {
+          if (!onGroupContextMenu) return
+          event.preventDefault()
+          event.stopPropagation()
+          onGroupContextMenu(event, group)
+        }}
+        onClick={(event) => {
+          event.preventDefault()
+          event.stopPropagation()
+          onHeadState(group.name, { open: !headState?.open })
+        }}
       >
         {enable_group_icon &&
           group.icon &&
@@ -157,7 +196,16 @@ export const ProxyRender = (props: RenderProps) => {
               }}
             />
           </Tooltip>
-          {headState?.open ? <ExpandLessRounded /> : <ExpandMoreRounded />}
+          <IconButton
+            size="small"
+            onClick={(event) => {
+              event.preventDefault()
+              event.stopPropagation()
+              onHeadState(group.name, { open: !headState?.open })
+            }}
+          >
+            {headState?.open ? <ExpandLessRounded /> : <ExpandMoreRounded />}
+          </IconButton>
         </Box>
       </ListItemButton>
     )
@@ -184,8 +232,17 @@ export const ProxyRender = (props: RenderProps) => {
         proxy={proxy!}
         selected={group.now === proxy?.name}
         showType={headState?.showType}
+        large={isChainMode}
         sx={{ py: 0, pl: 2 }}
         onClick={() => onChangeProxy(group, proxy!)}
+        onEdit={
+          editableProxyNames?.has(proxy?.name ?? '') ? onEditProxy : undefined
+        }
+        onContextMenu={
+          editableProxyNames?.has(proxy?.name ?? '')
+            ? onProxyContextMenu
+            : undefined
+        }
       />
     )
   }

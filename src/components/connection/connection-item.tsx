@@ -9,6 +9,7 @@ import {
 } from '@mui/material'
 import { useLockFn } from 'ahooks'
 import dayjs from 'dayjs'
+import type { MouseEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import { closeConnection } from 'tauri-plugin-mihomo-api'
 
@@ -29,10 +30,11 @@ interface Props {
   value: IConnectionsItem
   closed: boolean
   onShowDetail?: () => void
+  onContextMenu?: (event: MouseEvent<HTMLElement>) => void
 }
 
 export const ConnectionItem = (props: Props) => {
-  const { value, closed, onShowDetail } = props
+  const { value, closed, onShowDetail, onContextMenu } = props
 
   const { id, metadata, chains, start, curUpload, curDownload } = value
   const { t } = useTranslation()
@@ -44,6 +46,7 @@ export const ConnectionItem = (props: Props) => {
     <ListItem
       dense
       sx={{ borderBottom: '1px solid var(--divider-color)' }}
+      onContextMenu={onContextMenu}
       secondaryAction={
         !closed && (
           <IconButton

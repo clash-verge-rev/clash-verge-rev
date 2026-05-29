@@ -24,7 +24,10 @@
     "actions": {
       "active": "Active",
       "closed": "Closed",
-      "closeConnection": "연결 닫기"
+      "closeConnection": "연결 닫기",
+      "addDomainRule": "Add Domain Rule",
+      "addIpRule": "Add IP Rule",
+      "addProcessPathRule": "Add Process Path Rule"
     },
     "columnManager": {
       "title": "열",

@@ -23,6 +23,7 @@ import {
   useRef,
   useState,
   useSyncExternalStore,
+  type MouseEvent,
   type ReactNode,
 } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -235,6 +236,10 @@ interface RowComponentProps {
   virtualStart: number
   virtualSize: number
   onShowDetail: (data: IConnectionsItem) => void
+  onConnectionContextMenu?: (
+    event: MouseEvent<HTMLElement>,
+    data: IConnectionsItem,
+  ) => void
 }
 
 const RowComponent = memo(
@@ -243,10 +248,16 @@ const RowComponent = memo(
     virtualStart,
     virtualSize,
     onShowDetail,
+    onConnectionContextMenu,
   }: RowComponentProps) {
     const handleClick = useCallback(
       () => onShowDetail(row.original),
       [onShowDetail, row.original],
+    )
+    const handleContextMenu = useCallback(
+      (event: MouseEvent<HTMLElement>) =>
+        onConnectionContextMenu?.(event, row.original),
+      [onConnectionContextMenu, row.original],
     )
 
     return (
@@ -259,6 +270,7 @@ const RowComponent = memo(
           },
         ]}
         onClick={handleClick}
+        onContextMenu={handleContextMenu}
       >
         {row.getVisibleCells().map((cell) => {
           const meta = cell.column.columnDef.meta as {
@@ -289,12 +301,17 @@ const RowComponent = memo(
     prev.row === next.row &&
     prev.virtualStart === next.virtualStart &&
     prev.virtualSize === next.virtualSize &&
-    prev.onShowDetail === next.onShowDetail,
+    prev.onShowDetail === next.onShowDetail &&
+    prev.onConnectionContextMenu === next.onConnectionContextMenu,
 )
 
 interface Props {
   connections: IConnectionsItem[]
   onShowDetail: (data: IConnectionsItem) => void
+  onConnectionContextMenu?: (
+    event: MouseEvent<HTMLElement>,
+    data: IConnectionsItem,
+  ) => void
   columnManagerOpen: boolean
   onCloseColumnManager: () => void
 }
@@ -303,6 +320,7 @@ export const ConnectionTable = (props: Props) => {
   const {
     connections,
     onShowDetail: rawOnShowDetail,
+    onConnectionContextMenu,
     columnManagerOpen,
     onCloseColumnManager,
   } = props
@@ -712,6 +730,7 @@ export const ConnectionTable = (props: Props) => {
                     virtualStart={virtualRow.start}
                     virtualSize={virtualRow.size}
                     onShowDetail={onShowDetail}
+                    onConnectionContextMenu={onConnectionContextMenu}
                   />
                 )
               })}

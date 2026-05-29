@@ -10,14 +10,17 @@ import {
   ButtonGroup,
   Fab,
   IconButton,
+  Menu,
   MenuItem,
   Tooltip,
   Zoom,
 } from '@mui/material'
 import { useLockFn } from 'ahooks'
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useMemo, useRef, useState, type MouseEvent } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router'
 import { closeAllConnections } from 'tauri-plugin-mihomo-api'
+import validator from 'validator'
 
 import {
   BaseEmpty,
@@ -34,9 +37,21 @@ import { ConnectionItem } from '@/components/connection/connection-item'
 import { ConnectionTable } from '@/components/connection/connection-table'
 import { useConnectionData } from '@/hooks/use-connection-data'
 import { useConnectionSetting } from '@/hooks/use-connection-setting'
+import { normalizeHost } from '@/utils/network'
 import parseTraffic from '@/utils/parse-traffic'
 
 type OrderFunc = (list: IConnectionsItem[]) => IConnectionsItem[]
+type RulePreset = {
+  type: string
+  value: string
+  noResolve?: boolean
+}
+
+type ConnectionRuleMenu = {
+  mouseX: number
+  mouseY: number
+  connection: IConnectionsItem
+}
 
 const ORDER_OPTIONS = [
   {
@@ -73,8 +88,46 @@ const orderFunctionMap = ORDER_OPTIONS.reduce<Record<OrderKey, OrderFunc>>(
   {} as Record<OrderKey, OrderFunc>,
 )
 
+const getIpRulePreset = (connection: IConnectionsItem): RulePreset | null => {
+  const { destinationIP, remoteDestination } = connection.metadata
+  const ip = [destinationIP, remoteDestination]
+    .map((value) => normalizeHost(value ?? '') ?? '')
+    .find((value) => validator.isIP(value))
+
+  if (!ip) return null
+
+  if (validator.isIP(ip, 6)) {
+    return { type: 'IP-CIDR6', value: `${ip}/128`, noResolve: false }
+  }
+
+  return { type: 'IP-CIDR', value: `${ip}/32`, noResolve: false }
+}
+
+const getDomainRulePreset = (
+  connection: IConnectionsItem,
+): RulePreset | null => {
+  const host = normalizeHost(
+    connection.metadata.host || connection.metadata.remoteDestination || '',
+  )
+
+  if (!host || validator.isIP(host)) return null
+
+  return { type: 'DOMAIN', value: host, noResolve: false }
+}
+
+const getProcessPathRulePreset = (
+  connection: IConnectionsItem,
+): RulePreset | null => {
+  const processPath = connection.metadata.processPath?.trim()
+
+  return processPath
+    ? { type: 'PROCESS-PATH', value: processPath, noResolve: false }
+    : null
+}
+
 const ConnectionsPage = () => {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const [match, setMatch] = useState<(input: string) => boolean>(
     () => () => true,
   )
@@ -93,6 +146,7 @@ const ConnectionsPage = () => {
   const isTableLayout = setting.layout === 'table'
 
   const [isColumnManagerOpen, setIsColumnManagerOpen] = useState(false)
+  const [ruleMenu, setRuleMenu] = useState<ConnectionRuleMenu | null>(null)
 
   const [filterConn] = useMemo(() => {
     const orderFunc = orderFunctionMap[curOrderOpt]
@@ -120,7 +174,41 @@ const ConnectionsPage = () => {
     setMatch(() => match)
   }, [])
 
+  const handleConnectionContextMenu = useCallback(
+    (event: MouseEvent<HTMLElement>, connection: IConnectionsItem) => {
+      event.preventDefault()
+      event.stopPropagation()
+      setRuleMenu({
+        mouseX: event.clientX + 2,
+        mouseY: event.clientY - 6,
+        connection,
+      })
+    },
+    [],
+  )
+
+  const openRulePreset = useCallback(
+    (preset: RulePreset | null) => {
+      if (!preset) return
+
+      setRuleMenu(null)
+      navigate('/rules', {
+        state: {
+          rulePreset: preset,
+        },
+      })
+    },
+    [navigate],
+  )
+
   const hasTableData = filterConn.length > 0
+  const domainRulePreset = ruleMenu
+    ? getDomainRulePreset(ruleMenu.connection)
+    : null
+  const ipRulePreset = ruleMenu ? getIpRulePreset(ruleMenu.connection) : null
+  const processPathRulePreset = ruleMenu
+    ? getProcessPathRulePreset(ruleMenu.connection)
+    : null
 
   return (
     <BasePage
@@ -254,6 +342,7 @@ const ConnectionsPage = () => {
           }
           columnManagerOpen={isTableLayout && isColumnManagerOpen}
           onCloseColumnManager={() => setIsColumnManagerOpen(false)}
+          onConnectionContextMenu={handleConnectionContextMenu}
         />
       ) : (
         <VirtualList
@@ -268,6 +357,9 @@ const ConnectionsPage = () => {
                   filterConn[i],
                   connectionsType === 'closed',
                 )
+              }
+              onContextMenu={(event) =>
+                handleConnectionContextMenu(event, filterConn[i])
               }
             />
           )}
@@ -299,6 +391,35 @@ const ConnectionsPage = () => {
           {t('shared.actions.clear')}
         </Fab>
       </Zoom>
+      <Menu
+        open={ruleMenu !== null}
+        onClose={() => setRuleMenu(null)}
+        anchorReference="anchorPosition"
+        anchorPosition={
+          ruleMenu !== null
+            ? { top: ruleMenu.mouseY, left: ruleMenu.mouseX }
+            : undefined
+        }
+      >
+        <MenuItem
+          disabled={!domainRulePreset}
+          onClick={() => openRulePreset(domainRulePreset)}
+        >
+          {t('connections.components.actions.addDomainRule')}
+        </MenuItem>
+        <MenuItem
+          disabled={!ipRulePreset}
+          onClick={() => openRulePreset(ipRulePreset)}
+        >
+          {t('connections.components.actions.addIpRule')}
+        </MenuItem>
+        <MenuItem
+          disabled={!processPathRulePreset}
+          onClick={() => openRulePreset(processPathRulePreset)}
+        >
+          {t('connections.components.actions.addProcessPathRule')}
+        </MenuItem>
+      </Menu>
     </BasePage>
   )
 }

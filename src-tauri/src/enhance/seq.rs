@@ -30,6 +30,49 @@ fn is_selector_group(group_map: &Mapping) -> bool {
         .unwrap_or(false)
 }
 
+fn rule_identity(raw: &str) -> Option<String> {
+    let mut parts = raw
+        .split(',')
+        .map(str::trim)
+        .filter(|part| !part.is_empty())
+        .collect::<Vec<_>>();
+
+    if parts.len() < 2 {
+        return None;
+    }
+
+    let rule_type = parts.remove(0).to_ascii_uppercase();
+    if parts.last().is_some_and(|part| part.eq_ignore_ascii_case("no-resolve")) {
+        parts.pop();
+    }
+
+    let policy = parts.pop()?;
+    if rule_type.is_empty() || policy.is_empty() {
+        return None;
+    }
+
+    let value = if rule_type == "MATCH" {
+        String::new()
+    } else {
+        let value = parts.join(",");
+        if rule_type == "GEOIP" || rule_type == "SRC-GEOIP" {
+            value.to_ascii_uppercase()
+        } else {
+            value.trim().to_owned()
+        }
+    };
+
+    Some(format!("{rule_type}\n{value}\n{policy}"))
+}
+
+fn should_delete_string(field: &str, value: &str, delete: &[String], delete_rule_signatures: &HashSet<String>) -> bool {
+    if delete.iter().any(|item| item == value) {
+        return true;
+    }
+
+    field == "rules" && rule_identity(value).is_some_and(|signature| delete_rule_signatures.contains(&signature))
+}
+
 pub fn use_seq(seq: SeqMap, mut config: Mapping, field: &str) -> Mapping {
     let SeqMap {
         prepend,
@@ -49,6 +92,12 @@ pub fn use_seq(seq: SeqMap, mut config: Mapping, field: &str) -> Mapping {
         Vec::new()
     };
 
+    let delete_rule_signatures = if field == "rules" {
+        delete.iter().filter_map(|raw| rule_identity(raw)).collect()
+    } else {
+        HashSet::new()
+    };
+
     let mut updated_items = Sequence::new();
     updated_items.extend(prepend);
 
@@ -58,7 +107,7 @@ pub fn use_seq(seq: SeqMap, mut config: Mapping, field: &str) -> Mapping {
             .into_iter()
             .filter(|item| {
                 if let Value::String(s) = item {
-                    !delete.contains(s)
+                    !should_delete_string(field, s, &delete, &delete_rule_signatures)
                 } else if let Value::Mapping(m) = item {
                     if let Some(Value::String(name)) = m.get("name") {
                         !delete.contains(name)
@@ -323,5 +372,34 @@ proxy-groups: "invalid"
         config = use_seq(seq, config, "proxies");
 
         assert_eq!(config.get("proxy-groups").and_then(Value::as_str), Some("invalid"));
+    }
+
+    #[test]
+    #[allow(clippy::unwrap_used)]
+    #[allow(clippy::expect_used)]
+    fn test_delete_rule_matches_no_resolve_variant() {
+        let config_str = r#"
+rules:
+- GEOIP,CN,DIRECT,no-resolve
+- MATCH,GLOBAL
+"#;
+        let mut config: Mapping = serde_yaml_ng::from_str(config_str).expect("Failed to parse test config YAML");
+
+        let seq = SeqMap {
+            prepend: Sequence::new(),
+            append: Sequence::new(),
+            delete: vec!["GEOIP,CN,DIRECT".to_string()],
+        };
+
+        config = use_seq(seq, config, "rules");
+
+        let rules = config
+            .get("rules")
+            .expect("rules field should exist")
+            .as_sequence()
+            .expect("rules should be a sequence");
+
+        assert_eq!(rules.len(), 1);
+        assert_eq!(rules[0].as_str(), Some("MATCH,GLOBAL"));
     }
 }

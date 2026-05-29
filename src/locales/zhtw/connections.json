@@ -24,7 +24,10 @@
     "actions": {
       "active": "活躍",
       "closed": "已關閉",
-      "closeConnection": "關閉連線"
+      "closeConnection": "關閉連線",
+      "addDomainRule": "Add Domain Rule",
+      "addIpRule": "Add IP Rule",
+      "addProcessPathRule": "Add Process Path Rule"
     },
     "columnManager": {
       "title": "欄位設定",

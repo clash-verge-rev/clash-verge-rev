@@ -10,7 +10,8 @@
       "connect": "연결",
       "disconnect": "연결 해제",
       "connecting": "연결 중...",
-      "clearChainConfig": "체인 구성 삭제"
+      "clearChainConfig": "체인 구성 삭제",
+      "testAll": "Test All"
     },
     "provider": {
       "title": "프록시 제공자",
@@ -22,6 +23,10 @@
     "rules": {
       "title": "프록시 규칙",
       "select": "규칙 선택"
+    },
+    "sections": {
+      "proxy": "Proxy",
+      "proxyGroup": "Proxy Group"
     },
     "labels": {
       "proxyCount": "프록시 개수",

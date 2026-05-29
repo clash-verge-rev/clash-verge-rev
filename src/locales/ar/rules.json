@@ -8,7 +8,40 @@
         "update": "تحديث"
       }
     },
-    "title": "القواعد"
+    "title": "القواعد",
+    "actions": {
+      "add": "Add Rule",
+      "standard": "Standard Rule",
+      "logical": "Logical Rule",
+      "ruleset": "Ruleset",
+      "edit": "Edit Rule",
+      "duplicate": "Duplicate Rule",
+      "delete": "Delete Rule"
+    },
+    "table": {
+      "id": "ID",
+      "type": "Type",
+      "value": "Value",
+      "policy": "Policy",
+      "source": "Source"
+    },
+    "sources": {
+      "manual": "Manual",
+      "runtime": "Config"
+    },
+    "policyGroups": {
+      "builtin": "Built-in Policies",
+      "proxies": "Proxy Nodes",
+      "groups": "Proxy Groups",
+      "other": "Other"
+    },
+    "dialogs": {
+      "editTitle": "Edit Rule",
+      "duplicateTitle": "Duplicate Rule"
+    },
+    "validation": {
+      "required": "Rule type and proxy policy are required"
+    }
   },
   "feedback": {
     "notifications": {
@@ -32,14 +65,28 @@
         "toggles": {
           "noResolve": "لا يوجد حل"
         },
+        "helpers": {
+          "geosite": "Examples: CN, geolocation-!cn, youtube, google, category-ads-all"
+        },
         "actions": {
           "prependRule": "إضافة قاعدة في البداية",
           "appendRule": "إضافة قاعدة في النهاية"
         },
         "validation": {
           "conditionRequired": "شرط القاعدة مطلوب",
+          "subrulesRequired": "Add at least one sub-rule",
+          "subruleConditionRequired": "Complete all sub-rule conditions",
           "invalidRule": "قاعدة غير صالحة"
         }
+      },
+      "logical": {
+        "operator": "Logical Operator",
+        "addSubrule": "Add Sub-rule",
+        "standardSubrule": "Standard Rule",
+        "logicalSubrule": "AND/OR/NOT Rule",
+        "rulesetSubrule": "Ruleset",
+        "configureSubrule": "Click to configure logical rule",
+        "deleteSubrule": "Delete sub-rule"
       },
       "ruleTypes": {
         "DOMAIN": "مطابقة اسم المجال الكامل",
