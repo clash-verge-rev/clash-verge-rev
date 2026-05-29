@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       tag_name:
-        description: 'Release tag name to clean (default: autobuild)'
+        description: 'Release tag name to clean (default: custom-autobuild)'
         required: false
-        default: 'autobuild'
+        default: 'custom-autobuild'
         type: string
       dry_run:
         description: 'Dry run mode (only show what would be deleted)'
@@ -16,9 +16,9 @@ on:
   workflow_call:
     inputs:
       tag_name:
-        description: 'Release tag name to clean (default: autobuild)'
+        description: 'Release tag name to clean (default: custom-autobuild)'
         required: false
-        default: 'autobuild'
+        default: 'custom-autobuild'
         type: string
       dry_run:
         description: 'Dry run mode (only show what would be deleted)'
@@ -29,8 +29,8 @@ on:
 permissions: write-all
 
 env:
-  TAG_NAME: ${{ inputs.tag_name || 'autobuild' }}
-  TAG_CHANNEL: AutoBuild
+  TAG_NAME: ${{ inputs.tag_name || 'custom-autobuild' }}
+  TAG_CHANNEL: Custom AutoBuild
 
 jobs:
   check_current_version:
@@ -109,7 +109,7 @@ jobs:
 
       - name: Clean old assets from release
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ github.token }}
           TAG_NAME: ${{ env.TAG_NAME }}
           DRY_RUN: ${{ inputs.dry_run }}
         run: |

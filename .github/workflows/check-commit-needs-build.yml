@@ -4,9 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       tag_name:
-        description: 'Release tag name to check against (default: autobuild)'
+        description: 'Release tag name to check against (default: custom-autobuild)'
         required: false
-        default: 'autobuild'
+        default: 'custom-autobuild'
         type: string
       force_build:
         description: 'Force build regardless of checks'
@@ -16,9 +16,9 @@ on:
   workflow_call:
     inputs:
       tag_name:
-        description: 'Release tag name to check against (default: autobuild)'
+        description: 'Release tag name to check against (default: custom-autobuild)'
         required: false
-        default: 'autobuild'
+        default: 'custom-autobuild'
         type: string
       force_build:
         description: 'Force build regardless of checks'
@@ -41,7 +41,7 @@ permissions:
   actions: read
 
 env:
-  TAG_NAME: ${{ inputs.tag_name || 'autobuild' }}
+  TAG_NAME: ${{ inputs.tag_name || 'custom-autobuild' }}
 
 jobs:
   check_commit:
@@ -60,7 +60,8 @@ jobs:
       - name: Check if version changed or src changed
         id: check
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ github.token }}
         run: |
           # Force build if requested
           if [ "${{ inputs.force_build }}" == "true" ]; then
@@ -132,9 +133,12 @@ jobs:
             else
               # Download and parse latest.json to check version and commit hash
               echo "📥 Downloading latest.json to check version..."
-              LATEST_JSON_URL="https://github.com/clash-verge-rev/clash-verge-rev/releases/download/autobuild/latest.json"
-              
-              LATEST_JSON_CONTENT=$(curl -sL "$LATEST_JSON_URL" 2>/dev/null || echo "")
+
+              if gh release download "${{ env.TAG_NAME }}" --pattern latest.json --output latest.json --clobber 2>/dev/null; then
+                LATEST_JSON_CONTENT=$(cat latest.json)
+              else
+                LATEST_JSON_CONTENT=""
+              fi
               
               if [ -n "$LATEST_JSON_CONTENT" ]; then
                 LATEST_VERSION=$(echo "$LATEST_JSON_CONTENT" | jq -r '.version' 2>/dev/null || echo "")

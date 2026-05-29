@@ -3,10 +3,16 @@ name: Autobuild Check Logic Test
 on:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   check_autobuild_logic:
     name: Check Autobuild Should Run Logic
     runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TAG_NAME: custom-autobuild
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -82,14 +88,14 @@ jobs:
           echo "📝 当前 commit: $CURRENT_COMMIT"
 
           # 检查 autobuild release 是否存在
-          AUTOBUILD_RELEASE_EXISTS=$(gh release view "autobuild" --json id -q '.id' 2>/dev/null || echo "")
+          AUTOBUILD_RELEASE_EXISTS=$(gh release view "$TAG_NAME" --json id -q '.id' 2>/dev/null || echo "")
 
           if [ -z "$AUTOBUILD_RELEASE_EXISTS" ]; then
             echo "should_run=true" >> $GITHUB_OUTPUT
-            echo "🟢 没有 autobuild release，需构建"
+            echo "🟢 没有 $TAG_NAME release，需构建"
           else
             # 检查 latest.json 是否存在
-            LATEST_JSON_EXISTS=$(gh release view "autobuild" --json assets -q '.assets[] | select(.name == "latest.json") | .name' 2>/dev/null || echo "")
+            LATEST_JSON_EXISTS=$(gh release view "$TAG_NAME" --json assets -q '.assets[] | select(.name == "latest.json") | .name' 2>/dev/null || echo "")
             
             if [ -z "$LATEST_JSON_EXISTS" ]; then
               echo "should_run=true" >> $GITHUB_OUTPUT
@@ -97,7 +103,7 @@ jobs:
             else
               # 下载并解析 latest.json 检查版本和 commit hash
               echo "📥 下载 latest.json 检查版本..."
-              LATEST_JSON_URL=$(gh release view "autobuild" --json assets -q '.assets[] | select(.name == "latest.json") | .browser_download_url' 2>/dev/null)
+              LATEST_JSON_URL=$(gh release view "$TAG_NAME" --json assets -q '.assets[] | select(.name == "latest.json") | .browser_download_url' 2>/dev/null)
               
               if [ -n "$LATEST_JSON_URL" ]; then
                 LATEST_JSON_CONTENT=$(curl -s "$LATEST_JSON_URL" 2>/dev/null || echo "")

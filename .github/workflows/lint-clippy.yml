@@ -44,18 +44,22 @@ jobs:
           echo "Manual trigger detected: skipping changes check and running clippy."
 
       - name: Checkout Repository
+        if: github.event_name == 'workflow_dispatch' || steps.check_changes.outputs.rust == 'true'
         uses: actions/checkout@v6
 
       - name: Install Rust Stable
+        if: github.event_name == 'workflow_dispatch' || steps.check_changes.outputs.rust == 'true'
         uses: dtolnay/rust-toolchain@master
         with:
           toolchain: stable
           components: clippy
 
       - name: Add Rust Target
+        if: github.event_name == 'workflow_dispatch' || steps.check_changes.outputs.rust == 'true'
         run: rustup target add ${{ matrix.target }}
 
       - name: Rust Cache
+        if: github.event_name == 'workflow_dispatch' || steps.check_changes.outputs.rust == 'true'
         uses: Swatinem/rust-cache@v2
         with:
           save-if: ${{ github.ref == 'refs/heads/dev' }}
@@ -67,16 +71,18 @@ jobs:
           cache-workspace-crates: true
 
       - name: Install dependencies (ubuntu only)
-        if: matrix.os == 'ubuntu-22.04'
+        if: (github.event_name == 'workflow_dispatch' || steps.check_changes.outputs.rust == 'true') && matrix.os == 'ubuntu-22.04'
         run: |
           sudo apt-get update
           sudo apt-get install -y libxslt1.1 libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf
 
       - name: Run Clippy
+        if: github.event_name == 'workflow_dispatch' || steps.check_changes.outputs.rust == 'true'
         working-directory: ./src-tauri
         run: cargo clippy-all
 
       - name: Run Logging Check
+        if: github.event_name == 'workflow_dispatch' || steps.check_changes.outputs.rust == 'true'
         working-directory: ./src-tauri
         shell: bash
         run: |

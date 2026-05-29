@@ -2,26 +2,29 @@ name: Auto Build
 
 on:
   workflow_dispatch:
+  push:
+    branches:
+      - custom/dev
   schedule:
     # UTC+8 12:00, 18:00 -> UTC 4:00, 10:00
     - cron: '0 4,10 * * *'
 permissions: write-all
 env:
-  TAG_NAME: autobuild
-  TAG_CHANNEL: AutoBuild
+  TAG_NAME: custom-autobuild
+  TAG_CHANNEL: Custom AutoBuild
   CARGO_INCREMENTAL: 0
   RUST_BACKTRACE: short
   HUSKY: 0
 concurrency:
   group: '${{ github.workflow }} - ${{ github.head_ref || github.ref }}'
-  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/custom/dev' }}
 
 jobs:
   check_commit:
     name: Check Commit Needs Build
-    uses: clash-verge-rev/clash-verge-rev/.github/workflows/check-commit-needs-build.yml@dev
+    uses: ./.github/workflows/check-commit-needs-build.yml
     with:
-      tag_name: autobuild
+      tag_name: custom-autobuild
       force_build: ${{ github.event_name == 'workflow_dispatch' }}
 
   update_tag:
@@ -59,7 +62,7 @@ jobs:
           echo "BUILDTIME=$(TZ=Asia/Shanghai date)" >> $GITHUB_ENV
           VERSION=$(jq -r .version package.json)
           echo "VERSION=$VERSION" >> $GITHUB_ENV
-          echo "DOWNLOAD_URL=https://github.com/clash-verge-rev/clash-verge-rev/releases/download/autobuild" >> $GITHUB_ENV
+          echo "DOWNLOAD_URL=https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG_NAME}" >> $GITHUB_ENV
         shell: bash
 
       - run: |
@@ -116,9 +119,9 @@ jobs:
     needs: [check_commit, update_tag]
     if: ${{ needs.check_commit.outputs.should_run == 'true' && needs.update_tag.result == 'success' }}
 
-    uses: clash-verge-rev/clash-verge-rev/.github/workflows/clean-old-assets.yml@dev
+    uses: ./.github/workflows/clean-old-assets.yml
     with:
-      tag_name: autobuild
+      tag_name: custom-autobuild
       dry_run: false
 
   autobuild-x86-windows-macos-linux:
@@ -156,7 +159,7 @@ jobs:
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
         with:
-          save-if: ${{ github.ref == 'refs/heads/dev' }}
+          save-if: ${{ github.ref == 'refs/heads/custom/dev' }}
           prefix-key: 'v1-rust'
           key: 'rust-shared-stable-${{ matrix.os }}-${{ matrix.target }}'
           workspaces: |
@@ -269,7 +272,7 @@ jobs:
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
         with:
-          save-if: ${{ github.ref == 'refs/heads/dev' }}
+          save-if: ${{ github.ref == 'refs/heads/custom/dev' }}
           prefix-key: 'v1-rust'
           key: 'rust-shared-stable-${{ matrix.os }}-${{ matrix.target }}'
           workspaces: |
@@ -414,7 +417,7 @@ jobs:
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
         with:
-          save-if: ${{ github.ref == 'refs/heads/dev' }}
+          save-if: ${{ github.ref == 'refs/heads/custom/dev' }}
           prefix-key: 'v1-rust'
           key: 'rust-shared-stable-${{ matrix.os }}-${{ matrix.target }}'
           workspaces: |
@@ -513,6 +516,7 @@ jobs:
   notify-telegram:
     name: Notify Telegram
     runs-on: ubuntu-latest
+    if: ${{ vars.ENABLE_TELEGRAM_NOTIFY == 'true' }}
     needs:
       [
         update_tag,
@@ -550,7 +554,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install jq
           echo "VERSION=$(cat package.json | jq '.version' | tr -d '"')" >> $GITHUB_ENV
-          echo "DOWNLOAD_URL=https://github.com/clash-verge-rev/clash-verge-rev/releases/download/autobuild" >> $GITHUB_ENV
+          echo "DOWNLOAD_URL=https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG_NAME}" >> $GITHUB_ENV
           echo "BUILDTIME=$(TZ=Asia/Shanghai date)" >> $GITHUB_ENV
 
       - name: Generate release.txt
@@ -597,6 +601,10 @@ jobs:
         run: node scripts/telegram.mjs
         env:
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          BUILD_TYPE: autobuild
+          TELEGRAM_CHAT_ID: ${{ vars.TELEGRAM_CHAT_ID }}
+          TELEGRAM_CHAT_ID_RELEASE: ${{ vars.TELEGRAM_CHAT_ID_RELEASE }}
+          TELEGRAM_CHAT_ID_TEST: ${{ vars.TELEGRAM_CHAT_ID_TEST }}
+          BUILD_TYPE: custom-autobuild
           VERSION: ${{ env.VERSION }}
           DOWNLOAD_URL: ${{ env.DOWNLOAD_URL }}
+          RELEASE_TAG: ${{ env.TAG_NAME }}
