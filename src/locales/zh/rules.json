@@ -74,8 +74,19 @@
         },
         "validation": {
           "conditionRequired": "规则条件缺失",
+          "subrulesRequired": "请至少添加一条子规则",
+          "subruleConditionRequired": "请补全所有子规则条件",
           "invalidRule": "无效规则"
         }
+      },
+      "logical": {
+        "operator": "逻辑操作符",
+        "addSubrule": "添加子规则",
+        "standardSubrule": "标准规则",
+        "logicalSubrule": "AND/OR/NOT 规则",
+        "rulesetSubrule": "规则集合",
+        "configureSubrule": "点击配置逻辑规则",
+        "deleteSubrule": "删除子规则"
       },
       "ruleTypes": {
         "DOMAIN": "匹配完整域名 (DOMAIN)",

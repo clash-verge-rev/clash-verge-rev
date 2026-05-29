@@ -74,8 +74,19 @@
         },
         "validation": {
           "conditionRequired": "Falta la condición de la regla",
+          "subrulesRequired": "Add at least one sub-rule",
+          "subruleConditionRequired": "Complete all sub-rule conditions",
           "invalidRule": "Regla no válida"
         }
+      },
+      "logical": {
+        "operator": "Logical Operator",
+        "addSubrule": "Add Sub-rule",
+        "standardSubrule": "Standard Rule",
+        "logicalSubrule": "AND/OR/NOT Rule",
+        "rulesetSubrule": "Ruleset",
+        "configureSubrule": "Click to configure logical rule",
+        "deleteSubrule": "Delete sub-rule"
       },
       "ruleTypes": {
         "DOMAIN": "Coincidir con el nombre de dominio completo",

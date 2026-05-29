@@ -24,7 +24,10 @@
     "actions": {
       "active": "Active",
       "closed": "Closed",
-      "closeConnection": "接続を閉じる"
+      "closeConnection": "接続を閉じる",
+      "addDomainRule": "Add Domain Rule",
+      "addIpRule": "Add IP Rule",
+      "addProcessPathRule": "Add Process Path Rule"
     },
     "columnManager": {
       "title": "列",

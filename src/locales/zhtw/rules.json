@@ -74,8 +74,19 @@
         },
         "validation": {
           "conditionRequired": "規則條件為必填",
+          "subrulesRequired": "Add at least one sub-rule",
+          "subruleConditionRequired": "Complete all sub-rule conditions",
           "invalidRule": "無效規則"
         }
+      },
+      "logical": {
+        "operator": "Logical Operator",
+        "addSubrule": "Add Sub-rule",
+        "standardSubrule": "Standard Rule",
+        "logicalSubrule": "AND/OR/NOT Rule",
+        "rulesetSubrule": "Ruleset",
+        "configureSubrule": "Click to configure logical rule",
+        "deleteSubrule": "Delete sub-rule"
       },
       "ruleTypes": {
         "DOMAIN": "匹配完整網域 (DOMAIN)",

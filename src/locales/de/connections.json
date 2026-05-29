@@ -24,7 +24,10 @@
     "actions": {
       "active": "Active",
       "closed": "Closed",
-      "closeConnection": "Verbindung schließen"
+      "closeConnection": "Verbindung schließen",
+      "addDomainRule": "Add Domain Rule",
+      "addIpRule": "Add IP Rule",
+      "addProcessPathRule": "Add Process Path Rule"
     },
     "columnManager": {
       "title": "Spalten",

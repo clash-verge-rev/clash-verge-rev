@@ -24,7 +24,10 @@
     "actions": {
       "active": "Активные",
       "closed": "Закрытые",
-      "closeConnection": "Закрыть соединение"
+      "closeConnection": "Закрыть соединение",
+      "addDomainRule": "Add Domain Rule",
+      "addIpRule": "Add IP Rule",
+      "addProcessPathRule": "Add Process Path Rule"
     },
     "columnManager": {
       "title": "Столбцы",

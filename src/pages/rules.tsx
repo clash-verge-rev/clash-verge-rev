@@ -34,6 +34,7 @@ import {
   DialogTitle,
   Divider,
   FormControlLabel,
+  IconButton,
   ListSubheader,
   ListItemIcon,
   Menu,
@@ -42,7 +43,6 @@ import {
   Typography,
 } from '@mui/material'
 import { useLockFn } from 'ahooks'
-import yaml from 'js-yaml'
 import {
   useCallback,
   useEffect,
@@ -53,7 +53,7 @@ import {
   type UIEvent,
 } from 'react'
 import { useTranslation } from 'react-i18next'
-import type { Rule } from 'tauri-plugin-mihomo-api'
+import { useLocation, useNavigate } from 'react-router'
 
 import {
   BaseEmpty,
@@ -77,24 +77,48 @@ import {
   saveProfileFile,
 } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
+import {
+  addRuleDelete,
+  buildLogicalRuleValue,
+  buildRuleRaw,
+  cloneManualRules,
+  createLogicalRuleItem,
+  dumpManualRules,
+  emptyManualRules,
+  getDefaultRuleForm,
+  getKindFromType,
+  getRawRuleIdentitySignature,
+  getRuleIdentitySignature,
+  getRulePresetDialogState,
+  getTypeOptions,
+  insertAt,
+  isGeoipRule,
+  isLogicalRuleItemComplete,
+  isManualRuleSource,
+  logicalRuleTypes,
+  logicalSubruleTypes,
+  makeSearchText,
+  networkRuleValues,
+  noResolveRuleTypes,
+  normalizeManualRules,
+  parseLogicalRuleItems,
+  parseRuleRaw,
+  removeAt,
+  replaceAt,
+  revealRuntimeRuleIfUnshadowed,
+  ruleTypeExamples,
+  runtimeRuleToRaw,
+  sanitizeManualRules,
+  type LogicalRuleItem,
+  type ManualRulesDocument,
+  type ParsedRule,
+  type RuleDialogKind,
+  type RuleForm,
+  type RulePresetRouteState,
+  type RuleSource,
+} from '@/utils/rule-utils'
 
-type RuleSource = 'prepend' | 'runtime' | 'append'
-type ManualRuleSource = Exclude<RuleSource, 'runtime'>
-type RuleDialogKind = 'standard' | 'logical' | 'ruleset'
 type RuleDialogMode = 'add' | 'edit' | 'duplicate'
-
-interface ManualRulesDocument {
-  prepend: string[]
-  append: string[]
-  delete: string[]
-}
-
-interface ParsedRule {
-  type: string
-  value: string
-  policy: string
-  noResolve: boolean
-}
 
 interface ManagedRuleRow extends ParsedRule {
   id: string
@@ -105,23 +129,10 @@ interface ManagedRuleRow extends ParsedRule {
   searchText: string
 }
 
-interface RuleForm {
-  type: string
-  value: string
-  policy: string
-  noResolve: boolean
-}
-
 interface PolicyOptionGroup {
   key: 'builtin' | 'proxy' | 'group' | 'other'
   label: string
   options: string[]
-}
-
-interface RuleDedupEntry {
-  list: string[]
-  index: number
-  noResolve: boolean
 }
 
 const builtinProxyPolicies = ['DIRECT', 'REJECT', 'REJECT-DROP', 'PASS']
@@ -380,381 +391,6 @@ const geoipRegionCodes = [
   'ZW',
 ]
 
-const standardRuleTypes = [
-  'DOMAIN',
-  'DOMAIN-SUFFIX',
-  'DOMAIN-KEYWORD',
-  'DOMAIN-REGEX',
-  'GEOSITE',
-  'GEOIP',
-  'SRC-GEOIP',
-  'IP-ASN',
-  'SRC-IP-ASN',
-  'IP-CIDR',
-  'IP-CIDR6',
-  'SRC-IP-CIDR',
-  'IP-SUFFIX',
-  'SRC-IP-SUFFIX',
-  'SRC-PORT',
-  'DST-PORT',
-  'IN-PORT',
-  'DSCP',
-  'PROCESS-NAME',
-  'PROCESS-PATH',
-  'PROCESS-NAME-REGEX',
-  'PROCESS-PATH-REGEX',
-  'NETWORK',
-  'UID',
-  'IN-TYPE',
-  'IN-USER',
-  'IN-NAME',
-  'SUB-RULE',
-  'MATCH',
-]
-
-const logicalRuleTypes = ['AND', 'OR', 'NOT']
-const rulesetRuleTypes = ['RULE-SET']
-
-const noResolveRuleTypes = new Set([
-  'GEOIP',
-  'IP-ASN',
-  'IP-CIDR',
-  'IP-CIDR6',
-  'IP-SUFFIX',
-  'RULE-SET',
-])
-
-const ruleTypeExamples: Record<string, string> = {
-  DOMAIN: 'example.com',
-  'DOMAIN-SUFFIX': 'example.com',
-  'DOMAIN-KEYWORD': 'example',
-  'DOMAIN-REGEX': 'example.*',
-  GEOSITE: 'youtube / CN / geolocation-!cn',
-  GEOIP: 'CN',
-  'SRC-GEOIP': 'CN',
-  'IP-ASN': '13335',
-  'SRC-IP-ASN': '9808',
-  'IP-CIDR': '127.0.0.0/8',
-  'IP-CIDR6': '2620:0:2d0:200::7/32',
-  'SRC-IP-CIDR': '192.168.1.201/32',
-  'IP-SUFFIX': '8.8.8.8/24',
-  'SRC-IP-SUFFIX': '192.168.1.201/8',
-  'SRC-PORT': '7777',
-  'DST-PORT': '80',
-  'IN-PORT': '7897',
-  DSCP: '4',
-  'PROCESS-NAME': 'curl',
-  'PROCESS-PATH': '/usr/bin/wget',
-  'PROCESS-NAME-REGEX': '.*telegram.*',
-  'PROCESS-PATH-REGEX': '.*bin/wget',
-  NETWORK: 'udp',
-  UID: '1001',
-  'IN-TYPE': 'SOCKS/HTTP',
-  'IN-USER': 'mihomo',
-  'IN-NAME': 'ss',
-  'SUB-RULE': '(NETWORK,tcp)',
-  'RULE-SET': 'provider-name',
-  AND: '((DOMAIN,example.com),(NETWORK,UDP))',
-  OR: '((DOMAIN,example.com),(NETWORK,UDP))',
-  NOT: '((DOMAIN,example.com))',
-}
-
-const runtimeRuleTypeMap: Record<string, string> = {
-  Domain: 'DOMAIN',
-  DomainSuffix: 'DOMAIN-SUFFIX',
-  DomainKeyword: 'DOMAIN-KEYWORD',
-  DomainRegex: 'DOMAIN-REGEX',
-  GeoSite: 'GEOSITE',
-  GeoIP: 'GEOIP',
-  SrcGeoIP: 'SRC-GEOIP',
-  IPASN: 'IP-ASN',
-  SrcIPASN: 'SRC-IP-ASN',
-  IPCIDR: 'IP-CIDR',
-  SrcIPCIDR: 'SRC-IP-CIDR',
-  IPSuffix: 'IP-SUFFIX',
-  SrcIPSuffix: 'SRC-IP-SUFFIX',
-  SrcPort: 'SRC-PORT',
-  DstPort: 'DST-PORT',
-  InPort: 'IN-PORT',
-  InUser: 'IN-USER',
-  InName: 'IN-NAME',
-  InType: 'IN-TYPE',
-  ProcessName: 'PROCESS-NAME',
-  ProcessPath: 'PROCESS-PATH',
-  ProcessNameRegex: 'PROCESS-NAME-REGEX',
-  ProcessPathRegex: 'PROCESS-PATH-REGEX',
-  Match: 'MATCH',
-  RuleSet: 'RULE-SET',
-  Network: 'NETWORK',
-  DSCP: 'DSCP',
-  Uid: 'UID',
-  SubRules: 'SUB-RULE',
-  AND: 'AND',
-  OR: 'OR',
-  NOT: 'NOT',
-}
-
-const emptyManualRules = (): ManualRulesDocument => ({
-  prepend: [],
-  append: [],
-  delete: [],
-})
-
-const cloneManualRules = (
-  document: ManualRulesDocument,
-): ManualRulesDocument => ({
-  prepend: [...document.prepend],
-  append: [...document.append],
-  delete: [...document.delete],
-})
-
-const toStringArray = (value: unknown) =>
-  Array.isArray(value)
-    ? value.filter((item): item is string => typeof item === 'string')
-    : []
-
-const normalizeManualRules = (data: string): ManualRulesDocument => {
-  const obj = yaml.load(data) as Partial<ManualRulesDocument> | null
-  return {
-    prepend: toStringArray(obj?.prepend),
-    append: toStringArray(obj?.append),
-    delete: toStringArray(obj?.delete),
-  }
-}
-
-const dumpManualRules = (document: ManualRulesDocument) =>
-  yaml.dump(document, { forceQuotes: true })
-
-const parseRuleRaw = (raw: string): ParsedRule => {
-  const parts = raw
-    .split(',')
-    .map((item) => item.trim())
-    .filter(Boolean)
-  const type = parts.shift()?.toUpperCase() ?? ''
-  const noResolve = parts.at(-1)?.toLowerCase() === 'no-resolve'
-
-  if (noResolve) parts.pop()
-
-  const policy = parts.pop() ?? ''
-
-  return {
-    type,
-    value: parts.join(','),
-    policy,
-    noResolve,
-  }
-}
-
-const normalizeRuleValue = (type: string, value: string) => {
-  const normalizedType = type.trim().toUpperCase()
-  const trimmedValue = value.trim()
-
-  if (isGeoipRule(normalizedType)) return trimmedValue.toUpperCase()
-
-  return trimmedValue
-}
-
-const buildParsedRuleRaw = (rule: ParsedRule) => {
-  const type = rule.type.trim().toUpperCase()
-  const policy = rule.policy.trim()
-  const value =
-    type === 'MATCH' ? '' : normalizeRuleValue(type, rule.value.trim())
-  const base = value ? `${type},${value},${policy}` : `${type},${policy}`
-
-  return rule.noResolve && noResolveRuleTypes.has(type)
-    ? `${base},no-resolve`
-    : base
-}
-
-const buildRuleRaw = (form: RuleForm) =>
-  buildParsedRuleRaw({
-    type: form.type,
-    value: form.value,
-    policy: form.policy,
-    noResolve: form.noResolve,
-  })
-
-const runtimeRuleToRaw = (rule: Rule) => {
-  const type = runtimeRuleTypeMap[rule.type] ?? rule.type.toUpperCase()
-  const payload = rule.payload?.trim()
-
-  return payload ? `${type},${payload},${rule.proxy}` : `${type},${rule.proxy}`
-}
-
-const getRuleIdentitySignature = (rule: ParsedRule) =>
-  [
-    rule.type.trim().toUpperCase(),
-    normalizeRuleValue(rule.type, rule.value),
-    rule.policy.trim(),
-  ].join('\n')
-
-const getRawRuleIdentitySignature = (raw: string) => {
-  const parsed = parseRuleRaw(raw)
-  return parsed.type && parsed.policy
-    ? getRuleIdentitySignature(parsed)
-    : raw.trim()
-}
-
-const normalizeRuleRaw = (raw: string) => {
-  const parsed = parseRuleRaw(raw)
-
-  if (!parsed.type || !parsed.policy) return raw.trim()
-
-  return buildParsedRuleRaw(parsed)
-}
-
-const sanitizeRuleList = (
-  list: string[],
-  seen = new Map<string, RuleDedupEntry>(),
-) => {
-  const next: string[] = []
-
-  list.forEach((raw) => {
-    const normalizedRaw = normalizeRuleRaw(raw)
-    if (!normalizedRaw) return
-
-    const parsed = parseRuleRaw(normalizedRaw)
-    const signature =
-      parsed.type && parsed.policy
-        ? getRuleIdentitySignature(parsed)
-        : normalizedRaw.trim()
-    const existing = seen.get(signature)
-
-    if (existing) {
-      if (!existing.noResolve && parsed.noResolve) {
-        existing.list[existing.index] = normalizedRaw
-        existing.noResolve = true
-      }
-      return
-    }
-
-    seen.set(signature, {
-      list: next,
-      index: next.length,
-      noResolve: parsed.noResolve,
-    })
-    next.push(normalizedRaw)
-  })
-
-  return next
-}
-
-const sanitizeManualRules = (
-  document: ManualRulesDocument,
-): ManualRulesDocument => {
-  const manualSeen = new Map<string, RuleDedupEntry>()
-
-  return {
-    prepend: sanitizeRuleList(document.prepend, manualSeen),
-    append: sanitizeRuleList(document.append, manualSeen),
-    delete: sanitizeRuleList(document.delete),
-  }
-}
-
-const makeSearchText = (row: ParsedRule, source: string, raw: string) =>
-  [row.type, row.value, row.policy, source, raw].join(' ')
-
-const removeAt = (list: string[], index?: number, fallbackRaw?: string) => {
-  if (typeof index === 'number' && index >= 0 && index < list.length) {
-    return list.filter((_, currentIndex) => currentIndex !== index)
-  }
-
-  if (fallbackRaw) {
-    const next = [...list]
-    const foundIndex = next.indexOf(fallbackRaw)
-    if (foundIndex >= 0) next.splice(foundIndex, 1)
-    return next
-  }
-
-  return list
-}
-
-const replaceAt = (
-  list: string[],
-  index: number | undefined,
-  fallbackRaw: string | undefined,
-  raw: string,
-) => {
-  const next = [...list]
-
-  if (typeof index === 'number' && index >= 0 && index < next.length) {
-    next[index] = raw
-    return next
-  }
-
-  if (fallbackRaw) {
-    const foundIndex = next.indexOf(fallbackRaw)
-    if (foundIndex >= 0) {
-      next[foundIndex] = raw
-      return next
-    }
-  }
-
-  next.unshift(raw)
-  return next
-}
-
-const insertAt = (list: string[], index: number | undefined, raw: string) => {
-  const next = [...list]
-  const safeIndex =
-    typeof index === 'number' && index >= 0 && index <= next.length ? index : 0
-
-  next.splice(safeIndex, 0, raw)
-  return next
-}
-
-const isManualRuleSource = (source: RuleSource): source is ManualRuleSource =>
-  source !== 'runtime'
-
-const addRuleDelete = (document: ManualRulesDocument, raw: string) => {
-  const signature = getRawRuleIdentitySignature(raw)
-  const exists = document.delete.some(
-    (item) => getRawRuleIdentitySignature(item) === signature,
-  )
-
-  if (!exists) document.delete.push(raw)
-}
-
-const revealRuntimeRuleIfUnshadowed = (
-  document: ManualRulesDocument,
-  raw: string,
-) => {
-  const signature = getRawRuleIdentitySignature(raw)
-  const hasManualRule = [...document.prepend, ...document.append].some(
-    (item) => getRawRuleIdentitySignature(item) === signature,
-  )
-
-  if (!hasManualRule) {
-    document.delete = document.delete.filter(
-      (item) => getRawRuleIdentitySignature(item) !== signature,
-    )
-  }
-}
-
-const getTypeOptions = (kind: RuleDialogKind) => {
-  if (kind === 'logical') return logicalRuleTypes
-  if (kind === 'ruleset') return rulesetRuleTypes
-  return standardRuleTypes
-}
-
-const getKindFromType = (type: string): RuleDialogKind => {
-  if (logicalRuleTypes.includes(type)) return 'logical'
-  if (rulesetRuleTypes.includes(type)) return 'ruleset'
-  return 'standard'
-}
-
-const getDefaultRuleForm = (
-  kind: RuleDialogKind,
-  policy: string,
-): RuleForm => ({
-  type: getTypeOptions(kind)[0],
-  value: '',
-  policy,
-  noResolve: false,
-})
-
-const isGeoipRule = (type: string) => type === 'GEOIP' || type === 'SRC-GEOIP'
-
 const getGeoipRegionLabel = (code: string, language: string) => {
   const normalizedCode = code.toUpperCase()
   if (normalizedCode === 'PRIVATE') {
@@ -927,9 +563,10 @@ interface RuleEditorDialogProps {
   form: RuleForm
   policyOptionGroups: PolicyOptionGroup[]
   providerOptions: string[]
+  policyDisabled?: boolean
   onClose: () => void
   onChange: (form: RuleForm) => void
-  onSubmit: () => void
+  onSubmit: (form?: RuleForm) => void
 }
 
 const RuleEditorDialog = (props: RuleEditorDialogProps) => {
@@ -940,6 +577,7 @@ const RuleEditorDialog = (props: RuleEditorDialogProps) => {
     form,
     policyOptionGroups,
     providerOptions,
+    policyDisabled = false,
     onClose,
     onChange,
     onSubmit,
@@ -1018,6 +656,20 @@ const RuleEditorDialog = (props: RuleEditorDialogProps) => {
       ]),
     [selectablePolicyGroups],
   )
+  const [logicalItems, setLogicalItems] = useState<LogicalRuleItem[]>(() =>
+    parseLogicalRuleItems(form.type, form.value),
+  )
+  const [logicalAddAnchor, setLogicalAddAnchor] = useState<null | HTMLElement>(
+    null,
+  )
+  const [logicalError, setLogicalError] = useState('')
+  const [nestedLogicalOpen, setNestedLogicalOpen] = useState(false)
+  const [nestedLogicalTargetId, setNestedLogicalTargetId] = useState<
+    string | null
+  >(null)
+  const [nestedLogicalForm, setNestedLogicalForm] = useState<RuleForm>(() =>
+    getDefaultRuleForm('logical', ''),
+  )
 
   const updateForm = (patch: Partial<RuleForm>) => {
     const next = { ...form, ...patch }
@@ -1026,124 +678,607 @@ const RuleEditorDialog = (props: RuleEditorDialogProps) => {
     onChange(next)
   }
 
-  return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle>{title}</DialogTitle>
-      <DialogContent
-        sx={{
-          display: 'grid',
-          gap: 2,
-          pt: '12px !important',
-        }}
-      >
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: '1fr', md: '220px 1fr' },
-            gap: 2,
+  const getDefaultLogicalItemValue = useCallback(
+    (type: string) => {
+      const normalizedType = type.trim().toUpperCase()
+
+      if (normalizedType === 'NETWORK') return 'UDP'
+      if (isGeoipRule(normalizedType)) return 'CN'
+      if (normalizedType === 'RULE-SET') return providerOptions[0] ?? ''
+
+      return ''
+    },
+    [providerOptions],
+  )
+
+  const openNestedLogicalDialog = (item?: LogicalRuleItem) => {
+    setLogicalAddAnchor(null)
+    setLogicalError('')
+    setNestedLogicalTargetId(item?.id ?? null)
+    setNestedLogicalForm({
+      type:
+        item && logicalRuleTypes.includes(item.type)
+          ? item.type
+          : logicalRuleTypes[0],
+      value: item?.value ?? '',
+      policy: '',
+      noResolve: false,
+    })
+    setNestedLogicalOpen(true)
+  }
+
+  const closeNestedLogicalDialog = () => {
+    setNestedLogicalOpen(false)
+    setNestedLogicalTargetId(null)
+  }
+
+  const updateLogicalItem = (
+    id: string,
+    patch: Partial<Omit<LogicalRuleItem, 'id'>>,
+  ) => {
+    setLogicalError('')
+    setLogicalItems((items) =>
+      items.map((item) => {
+        if (item.id !== id) return item
+
+        const next = { ...item, ...patch }
+        if (
+          patch.type &&
+          patch.type !== item.type &&
+          patch.value === undefined
+        ) {
+          next.value = getDefaultLogicalItemValue(patch.type)
+        }
+        if (!noResolveRuleTypes.has(next.type)) next.noResolve = false
+
+        return next
+      }),
+    )
+  }
+
+  const updateLogicalItemType = (item: LogicalRuleItem, type: string) => {
+    if (logicalRuleTypes.includes(type)) {
+      openNestedLogicalDialog({
+        ...item,
+        type,
+        value: '',
+        noResolve: false,
+      })
+      return
+    }
+
+    updateLogicalItem(item.id, { type })
+  }
+
+  const addLogicalItem = (type: string) => {
+    setLogicalError('')
+    setLogicalItems((items) => [
+      ...items,
+      createLogicalRuleItem(type, getDefaultLogicalItemValue(type)),
+    ])
+    setLogicalAddAnchor(null)
+  }
+
+  const removeLogicalItem = (id: string) => {
+    setLogicalError('')
+    setLogicalItems((items) => items.filter((item) => item.id !== id))
+  }
+
+  const submitNestedLogicalDialog = (submittedForm?: RuleForm) => {
+    const nextForm = submittedForm ?? nestedLogicalForm
+    const targetId = nestedLogicalTargetId
+    const nextItem = createLogicalRuleItem(nextForm.type, nextForm.value)
+
+    setLogicalError('')
+    setLogicalItems((items) =>
+      targetId
+        ? items.map((item) =>
+            item.id === targetId
+              ? {
+                  ...item,
+                  type: nextForm.type,
+                  value: nextForm.value,
+                  noResolve: false,
+                }
+              : item,
+          )
+        : [...items, nextItem],
+    )
+    closeNestedLogicalDialog()
+  }
+
+  const getGeoipOptions = (value: string) =>
+    Array.from(new Set([...geoipRegionCodes, value.toUpperCase()]))
+      .filter(Boolean)
+      .map((code) => ({
+        code,
+        label: getGeoipRegionLabel(code, i18n.language),
+      }))
+
+  const renderLogicalValueField = (item: LogicalRuleItem) => {
+    const itemType = item.type.trim().toUpperCase()
+    const placeholder = ruleTypeExamples[itemType] ?? ''
+
+    if (isGeoipRule(itemType)) {
+      const options = getGeoipOptions(item.value)
+      return (
+        <Autocomplete
+          size="small"
+          options={options}
+          value={
+            options.find(
+              (option) => option.code === item.value.toUpperCase(),
+            ) ?? null
+          }
+          getOptionLabel={(option) =>
+            typeof option === 'string' ? option : option.label
+          }
+          onChange={(_, value) => {
+            updateLogicalItem(item.id, { value: value?.code ?? '' })
           }}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label={t('rules.modals.editor.form.labels.content')}
+              placeholder="CN"
+            />
+          )}
+        />
+      )
+    }
+
+    if (itemType === 'NETWORK') {
+      const selectedValue = item.value.toUpperCase()
+      const options = Array.from(
+        new Set([...networkRuleValues, selectedValue].filter(Boolean)),
+      )
+
+      return (
+        <TextField
+          select
+          size="small"
+          label={t('rules.modals.editor.form.labels.content')}
+          value={selectedValue}
+          onChange={(event) =>
+            updateLogicalItem(item.id, { value: event.target.value })
+          }
         >
+          {options.map((value) => (
+            <MenuItem key={value} value={value}>
+              {value}
+            </MenuItem>
+          ))}
+        </TextField>
+      )
+    }
+
+    if (itemType === 'RULE-SET') {
+      const itemProviderOptions = Array.from(
+        new Set([...providerOptions, item.value].filter(Boolean)),
+      )
+
+      if (itemProviderOptions.length > 0) {
+        return (
           <TextField
             select
-            label={t('rules.modals.editor.form.labels.type')}
-            value={form.type}
-            onChange={(event) => updateForm({ type: event.target.value })}
+            size="small"
+            label={t('rules.modals.editor.form.labels.content')}
+            value={item.value}
+            onChange={(event) =>
+              updateLogicalItem(item.id, { value: event.target.value })
+            }
           >
-            {typeOptions.map((type) => (
-              <MenuItem key={type} value={type}>
-                {type}
+            {itemProviderOptions.map((provider) => (
+              <MenuItem key={provider} value={provider}>
+                {provider}
               </MenuItem>
             ))}
           </TextField>
+        )
+      }
+    }
 
-          {isGeoipRule(form.type) ? (
-            <Autocomplete
-              options={geoipRegionOptions}
-              value={
-                geoipRegionOptions.find(
-                  (option) => option.code === form.value.toUpperCase(),
-                ) ?? null
-              }
-              getOptionLabel={(option) =>
-                typeof option === 'string' ? option : option.label
-              }
-              onChange={(_, value) => {
-                updateForm({ value: value?.code ?? '' })
-              }}
-              renderInput={(params) => (
-                <TextField
-                  {...params}
-                  label={t('rules.modals.editor.form.labels.content')}
-                  placeholder="CN"
-                />
-              )}
-            />
-          ) : form.type === 'RULE-SET' && selectableProviders.length > 0 ? (
-            <TextField
-              select
-              label={t('rules.modals.editor.form.labels.content')}
-              value={form.value}
-              onChange={(event) => updateForm({ value: event.target.value })}
-            >
-              {selectableProviders.map((provider) => (
-                <MenuItem key={provider} value={provider}>
-                  {provider}
-                </MenuItem>
-              ))}
-            </TextField>
-          ) : (
-            <TextField
-              disabled={!requiresValue}
-              label={t('rules.modals.editor.form.labels.content')}
-              placeholder={requiresValue ? ruleTypeExamples[form.type] : ''}
-              helperText={
-                isGeositeRule
-                  ? t('rules.modals.editor.form.helpers.geosite')
-                  : undefined
-              }
-              value={form.value}
-              onChange={(event) => updateForm({ value: event.target.value })}
-            />
-          )}
-        </Box>
-
-        <Box>
-          <TextField
-            fullWidth
-            select
-            label={t('rules.modals.editor.form.labels.proxyPolicy')}
-            value={form.policy}
-            onChange={(event) => updateForm({ policy: event.target.value })}
-          >
-            {policyMenuItems}
-          </TextField>
-        </Box>
-
-        <FormControlLabel
-          disabled={!canUseNoResolve}
-          control={
-            <Checkbox
-              checked={form.noResolve}
-              onChange={(event) =>
-                updateForm({ noResolve: event.target.checked })
-              }
-            />
-          }
-          label={t('rules.modals.editor.form.toggles.noResolve')}
+    if (logicalRuleTypes.includes(itemType)) {
+      return (
+        <TextField
+          size="small"
+          label={t('rules.modals.editor.form.labels.content')}
+          placeholder={t('rules.modals.editor.logical.configureSubrule')}
+          value={item.value}
+          onClick={() => openNestedLogicalDialog(item)}
+          slotProps={{ input: { readOnly: true } }}
+          sx={{
+            cursor: 'pointer',
+            '& .MuiInputBase-input': {
+              cursor: 'pointer',
+            },
+          }}
         />
-      </DialogContent>
-      <DialogActions sx={{ px: 3, pb: 2 }}>
-        <Button onClick={onClose}>{t('shared.actions.cancel')}</Button>
-        <Button variant="contained" onClick={onSubmit}>
-          {t('shared.actions.save')}
-        </Button>
-      </DialogActions>
-    </Dialog>
+      )
+    }
+
+    return (
+      <TextField
+        size="small"
+        label={t('rules.modals.editor.form.labels.content')}
+        placeholder={placeholder}
+        value={item.value}
+        onChange={(event) =>
+          updateLogicalItem(item.id, { value: event.target.value })
+        }
+      />
+    )
+  }
+
+  const handleSubmit = () => {
+    if (kind !== 'logical') {
+      onSubmit(form)
+      return
+    }
+
+    if (logicalItems.length === 0) {
+      setLogicalError(t('rules.modals.editor.form.validation.subrulesRequired'))
+      return
+    }
+
+    if (logicalItems.some((item) => !isLogicalRuleItemComplete(item))) {
+      setLogicalError(
+        t('rules.modals.editor.form.validation.subruleConditionRequired'),
+      )
+      return
+    }
+
+    const value = buildLogicalRuleValue(logicalItems)
+    if (!value) {
+      setLogicalError(t('rules.modals.editor.form.validation.subrulesRequired'))
+      return
+    }
+
+    setLogicalError('')
+    onSubmit({ ...form, value, noResolve: false })
+  }
+
+  return (
+    <>
+      <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+        <DialogTitle>{title}</DialogTitle>
+        <DialogContent
+          sx={{
+            display: 'grid',
+            gap: 2,
+            pt: '12px !important',
+          }}
+        >
+          {kind === 'logical' ? (
+            <>
+              <Box
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: { xs: '1fr', md: '220px 1fr' },
+                  gap: 2,
+                }}
+              >
+                <TextField
+                  select
+                  label={t('rules.modals.editor.logical.operator')}
+                  value={form.type}
+                  onChange={(event) => updateForm({ type: event.target.value })}
+                >
+                  {typeOptions.map((type) => (
+                    <MenuItem key={type} value={type}>
+                      {type}
+                    </MenuItem>
+                  ))}
+                </TextField>
+
+                <TextField
+                  fullWidth
+                  select
+                  disabled={policyDisabled}
+                  label={t('rules.modals.editor.form.labels.proxyPolicy')}
+                  value={policyDisabled ? '' : form.policy}
+                  onChange={(event) =>
+                    updateForm({ policy: event.target.value })
+                  }
+                >
+                  {policyDisabled ? (
+                    <MenuItem value="">-</MenuItem>
+                  ) : (
+                    policyMenuItems
+                  )}
+                </TextField>
+              </Box>
+
+              <Box
+                sx={{
+                  border: '1px solid var(--divider-color)',
+                  borderRadius: 1,
+                  overflow: 'hidden',
+                }}
+              >
+                <Box
+                  sx={{
+                    display: { xs: 'none', md: 'grid' },
+                    gridTemplateColumns:
+                      'minmax(184px, 240px) minmax(260px, 1fr) 116px 48px',
+                    alignItems: 'center',
+                    gap: 1,
+                    px: 1.5,
+                    py: 1,
+                    bgcolor: 'rgba(255,255,255,0.03)',
+                    borderBottom: '1px solid var(--divider-color)',
+                    color: 'text.secondary',
+                    fontSize: 13,
+                    fontWeight: 700,
+                  }}
+                >
+                  <Box>{t('rules.page.table.type')}</Box>
+                  <Box>{t('rules.page.table.value')}</Box>
+                  <Box>{t('rules.modals.editor.form.toggles.noResolve')}</Box>
+                  <Box />
+                </Box>
+
+                {logicalItems.map((item) => {
+                  const canUseItemNoResolve = noResolveRuleTypes.has(item.type)
+
+                  return (
+                    <Box
+                      key={item.id}
+                      sx={{
+                        display: 'grid',
+                        gridTemplateColumns: {
+                          xs: '1fr',
+                          md: 'minmax(184px, 240px) minmax(260px, 1fr) 116px 48px',
+                        },
+                        alignItems: { xs: 'stretch', md: 'center' },
+                        gap: 1,
+                        p: 1.5,
+                        borderBottom: '1px solid var(--divider-color)',
+                        '&:last-of-type': {
+                          borderBottom: 'none',
+                        },
+                      }}
+                    >
+                      <TextField
+                        select
+                        size="small"
+                        label={t('rules.modals.editor.form.labels.type')}
+                        value={item.type}
+                        onChange={(event) =>
+                          updateLogicalItemType(item, event.target.value)
+                        }
+                      >
+                        {logicalSubruleTypes.map((type) => (
+                          <MenuItem key={type} value={type}>
+                            {type}
+                          </MenuItem>
+                        ))}
+                      </TextField>
+
+                      {renderLogicalValueField(item)}
+
+                      <FormControlLabel
+                        disabled={!canUseItemNoResolve}
+                        control={
+                          <Checkbox
+                            size="small"
+                            checked={item.noResolve}
+                            onChange={(event) =>
+                              updateLogicalItem(item.id, {
+                                noResolve: event.target.checked,
+                              })
+                            }
+                          />
+                        }
+                        label={t('rules.modals.editor.form.toggles.noResolve')}
+                        sx={{
+                          m: 0,
+                          whiteSpace: 'nowrap',
+                        }}
+                      />
+
+                      <IconButton
+                        aria-label={t(
+                          'rules.modals.editor.logical.deleteSubrule',
+                        )}
+                        onClick={() => removeLogicalItem(item.id)}
+                        sx={{ justifySelf: { xs: 'end', md: 'center' } }}
+                      >
+                        <DeleteRounded fontSize="small" />
+                      </IconButton>
+                    </Box>
+                  )
+                })}
+
+                <Box
+                  sx={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 1,
+                    px: 1.5,
+                    py: 1,
+                    borderTop:
+                      logicalItems.length > 0
+                        ? '1px solid var(--divider-color)'
+                        : undefined,
+                  }}
+                >
+                  <Button
+                    startIcon={<AddRounded />}
+                    onClick={(event) =>
+                      setLogicalAddAnchor(event.currentTarget)
+                    }
+                  >
+                    {t('rules.modals.editor.logical.addSubrule')}
+                  </Button>
+                  {logicalError ? (
+                    <Typography color="error" sx={{ fontSize: 13 }}>
+                      {logicalError}
+                    </Typography>
+                  ) : null}
+                </Box>
+              </Box>
+
+              <Menu
+                anchorEl={logicalAddAnchor}
+                open={Boolean(logicalAddAnchor)}
+                onClose={() => setLogicalAddAnchor(null)}
+              >
+                <MenuItem onClick={() => addLogicalItem('DOMAIN')}>
+                  {t('rules.modals.editor.logical.standardSubrule')}
+                </MenuItem>
+                <MenuItem onClick={() => openNestedLogicalDialog()}>
+                  {t('rules.modals.editor.logical.logicalSubrule')}
+                </MenuItem>
+                <MenuItem onClick={() => addLogicalItem('RULE-SET')}>
+                  {t('rules.modals.editor.logical.rulesetSubrule')}
+                </MenuItem>
+              </Menu>
+            </>
+          ) : (
+            <>
+              <Box
+                sx={{
+                  display: 'grid',
+                  gridTemplateColumns: { xs: '1fr', md: '220px 1fr' },
+                  gap: 2,
+                }}
+              >
+                <TextField
+                  select
+                  label={t('rules.modals.editor.form.labels.type')}
+                  value={form.type}
+                  onChange={(event) => updateForm({ type: event.target.value })}
+                >
+                  {typeOptions.map((type) => (
+                    <MenuItem key={type} value={type}>
+                      {type}
+                    </MenuItem>
+                  ))}
+                </TextField>
+
+                {isGeoipRule(form.type) ? (
+                  <Autocomplete
+                    options={geoipRegionOptions}
+                    value={
+                      geoipRegionOptions.find(
+                        (option) => option.code === form.value.toUpperCase(),
+                      ) ?? null
+                    }
+                    getOptionLabel={(option) =>
+                      typeof option === 'string' ? option : option.label
+                    }
+                    onChange={(_, value) => {
+                      updateForm({ value: value?.code ?? '' })
+                    }}
+                    renderInput={(params) => (
+                      <TextField
+                        {...params}
+                        label={t('rules.modals.editor.form.labels.content')}
+                        placeholder="CN"
+                      />
+                    )}
+                  />
+                ) : form.type === 'RULE-SET' &&
+                  selectableProviders.length > 0 ? (
+                  <TextField
+                    select
+                    label={t('rules.modals.editor.form.labels.content')}
+                    value={form.value}
+                    onChange={(event) =>
+                      updateForm({ value: event.target.value })
+                    }
+                  >
+                    {selectableProviders.map((provider) => (
+                      <MenuItem key={provider} value={provider}>
+                        {provider}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                ) : (
+                  <TextField
+                    disabled={!requiresValue}
+                    label={t('rules.modals.editor.form.labels.content')}
+                    placeholder={
+                      requiresValue ? ruleTypeExamples[form.type] : ''
+                    }
+                    helperText={
+                      isGeositeRule
+                        ? t('rules.modals.editor.form.helpers.geosite')
+                        : undefined
+                    }
+                    value={form.value}
+                    onChange={(event) =>
+                      updateForm({ value: event.target.value })
+                    }
+                  />
+                )}
+              </Box>
+
+              <Box>
+                <TextField
+                  fullWidth
+                  select
+                  label={t('rules.modals.editor.form.labels.proxyPolicy')}
+                  value={form.policy}
+                  onChange={(event) =>
+                    updateForm({ policy: event.target.value })
+                  }
+                >
+                  {policyMenuItems}
+                </TextField>
+              </Box>
+
+              <FormControlLabel
+                disabled={!canUseNoResolve}
+                control={
+                  <Checkbox
+                    checked={form.noResolve}
+                    onChange={(event) =>
+                      updateForm({ noResolve: event.target.checked })
+                    }
+                  />
+                }
+                label={t('rules.modals.editor.form.toggles.noResolve')}
+              />
+            </>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button onClick={onClose}>{t('shared.actions.cancel')}</Button>
+          <Button variant="contained" onClick={handleSubmit}>
+            {t('shared.actions.save')}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {kind === 'logical' && nestedLogicalOpen ? (
+        <RuleEditorDialog
+          key={`nested-logical:${nestedLogicalOpen ? 'open' : 'closed'}:${nestedLogicalTargetId ?? 'add'}`}
+          open={nestedLogicalOpen}
+          mode={nestedLogicalTargetId ? 'edit' : 'add'}
+          kind="logical"
+          form={nestedLogicalForm}
+          policyOptionGroups={policyOptionGroups}
+          providerOptions={providerOptions}
+          policyDisabled
+          onClose={closeNestedLogicalDialog}
+          onChange={setNestedLogicalForm}
+          onSubmit={submitNestedLogicalDialog}
+        />
+      ) : null}
+    </>
   )
 }
 
 const RulesPage = () => {
   const { t } = useTranslation()
+  const location = useLocation()
+  const navigate = useNavigate()
+  const routePresetDialog = getRulePresetDialogState(
+    (location.state as RulePresetRouteState | null)?.rulePreset,
+    'DIRECT',
+  )
   const { rules = [], ruleProviders = {} } = useRulesData()
   const { proxies: proxiesData } = useProxiesData()
   const { refreshRules, refreshRuleProviders } = useAppRefreshers()
@@ -1160,16 +1295,19 @@ const RulesPage = () => {
     mouseY: number
     row: ManagedRuleRow
   } | null>(null)
-  const [dialogOpen, setDialogOpen] = useState(false)
+  const [dialogOpen, setDialogOpen] = useState(() => Boolean(routePresetDialog))
   const [dialogMode, setDialogMode] = useState<RuleDialogMode>('add')
-  const [dialogKind, setDialogKind] = useState<RuleDialogKind>('standard')
+  const [dialogKind, setDialogKind] = useState<RuleDialogKind>(
+    () => routePresetDialog?.kind ?? 'standard',
+  )
   const [activeRow, setActiveRow] = useState<ManagedRuleRow | null>(null)
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null)
-  const [form, setForm] = useState<RuleForm>(() =>
-    getDefaultRuleForm('standard', 'DIRECT'),
+  const [form, setForm] = useState<RuleForm>(
+    () => routePresetDialog?.form ?? getDefaultRuleForm('standard', 'DIRECT'),
   )
   const scrollContainerRef = useRef<HTMLDivElement>(null)
   const mutateProfilesRef = useRef(mutateProfiles)
+  const consumedRoutePresetKeyRef = useRef<string | null>(null)
   const [showScrollTop, setShowScrollTop] = useState(false)
   const pageVisible = useVisibility()
   const sensors = useSensors(
@@ -1251,6 +1389,55 @@ const RulesPage = () => {
     () => Object.keys(ruleProviders ?? {}).sort((a, b) => a.localeCompare(b)),
     [ruleProviders],
   )
+
+  useEffect(() => {
+    const presetDialog = getRulePresetDialogState(
+      (location.state as RulePresetRouteState | null)?.rulePreset,
+      policyOptions[0] ?? 'DIRECT',
+    )
+    if (!presetDialog || consumedRoutePresetKeyRef.current === location.key) {
+      return
+    }
+
+    let cancelled = false
+
+    queueMicrotask(() => {
+      if (cancelled || consumedRoutePresetKeyRef.current === location.key) {
+        return
+      }
+
+      consumedRoutePresetKeyRef.current = location.key
+      setAddMenuAnchor(null)
+      setRowMenu(null)
+      setDialogMode('add')
+      setDialogKind(presetDialog.kind)
+      setActiveRow(null)
+      setSelectedRowId(null)
+      setForm(presetDialog.form)
+      setDialogOpen(true)
+
+      navigate(
+        {
+          pathname: location.pathname,
+          search: location.search,
+          hash: location.hash,
+        },
+        { replace: true, state: null },
+      )
+    })
+
+    return () => {
+      cancelled = true
+    }
+  }, [
+    location.hash,
+    location.key,
+    location.pathname,
+    location.search,
+    location.state,
+    navigate,
+    policyOptions,
+  ])
 
   const ensureRulesFile = useCallback(async () => {
     const ensured = await ensureProfileProxies(currentProfile?.uid)
@@ -1458,15 +1645,16 @@ const RulesPage = () => {
     [manualRules, saveManualRules],
   )
 
-  const handleSubmitDialog = useLockFn(async () => {
-    const raw = buildRuleRaw(form)
+  const handleSubmitDialog = useLockFn(async (submittedForm?: RuleForm) => {
+    const currentForm = submittedForm ?? form
+    const raw = buildRuleRaw(currentForm)
 
-    if (!form.type || !form.policy) {
+    if (!currentForm.type || !currentForm.policy) {
       showNotice.error('rules.page.validation.required')
       return
     }
 
-    if (form.type !== 'MATCH' && !form.value.trim()) {
+    if (currentForm.type !== 'MATCH' && !currentForm.value.trim()) {
       showNotice.error('rules.modals.editor.form.validation.conditionRequired')
       return
     }
@@ -1724,6 +1912,7 @@ const RulesPage = () => {
       </Menu>
 
       <RuleEditorDialog
+        key={`${dialogOpen ? 'open' : 'closed'}:${dialogMode}:${dialogKind}:${activeRow?.id ?? 'add'}`}
         open={dialogOpen}
         mode={dialogMode}
         kind={dialogKind}

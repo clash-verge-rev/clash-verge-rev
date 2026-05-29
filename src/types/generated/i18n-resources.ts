@@ -7,6 +7,9 @@ export interface TranslationResources {
       components: {
         actions: {
           active: string
+          addDomainRule: string
+          addIpRule: string
+          addProcessPathRule: string
           closeConnection: string
           closed: string
         }
@@ -722,7 +725,18 @@ export interface TranslationResources {
             validation: {
               conditionRequired: string
               invalidRule: string
+              subruleConditionRequired: string
+              subrulesRequired: string
             }
+          }
+          logical: {
+            addSubrule: string
+            configureSubrule: string
+            deleteSubrule: string
+            logicalSubrule: string
+            operator: string
+            rulesetSubrule: string
+            standardSubrule: string
           }
           ruleTypes: {
             AND: string

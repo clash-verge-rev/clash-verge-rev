@@ -74,8 +74,19 @@
         },
         "validation": {
           "conditionRequired": "شرط القاعدة مطلوب",
+          "subrulesRequired": "Add at least one sub-rule",
+          "subruleConditionRequired": "Complete all sub-rule conditions",
           "invalidRule": "قاعدة غير صالحة"
         }
+      },
+      "logical": {
+        "operator": "Logical Operator",
+        "addSubrule": "Add Sub-rule",
+        "standardSubrule": "Standard Rule",
+        "logicalSubrule": "AND/OR/NOT Rule",
+        "rulesetSubrule": "Ruleset",
+        "configureSubrule": "Click to configure logical rule",
+        "deleteSubrule": "Delete sub-rule"
       },
       "ruleTypes": {
         "DOMAIN": "مطابقة اسم المجال الكامل",
