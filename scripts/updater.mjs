@@ -147,6 +147,73 @@ async function processRelease(github, options, tag, isAlpha) {
         updateData.platforms['windows-aarch64'].signature = sig
       }
 
+      // linux x86_64 url
+      if (name.endsWith('.x86_64.rpm')) {
+        updateData.platforms['linux-x86_64'].url = browser_download_url
+        updateData.platforms.linux.url = browser_download_url
+      }
+      if (name.endsWith('_amd64.deb')) {
+        if (!updateData.platforms['linux-x86_64'].url) {
+          updateData.platforms['linux-x86_64'].url = browser_download_url
+          updateData.platforms.linux.url = browser_download_url
+        }
+      }
+      // linux x86_64 signature
+      if (name.endsWith('.x86_64.rpm.sig')) {
+        const sig = await getSignature(browser_download_url)
+        updateData.platforms['linux-x86_64'].signature = sig
+        updateData.platforms.linux.signature = sig
+      }
+      if (name.endsWith('_amd64.deb.sig')) {
+        if (!updateData.platforms['linux-x86_64'].signature) {
+          const sig = await getSignature(browser_download_url)
+          updateData.platforms['linux-x86_64'].signature = sig
+          updateData.platforms.linux.signature = sig
+        }
+      }
+
+      // linux aarch64 url
+      if (name.endsWith('.aarch64.rpm')) {
+        updateData.platforms['linux-aarch64'].url = browser_download_url
+      }
+      if (name.endsWith('_arm64.deb')) {
+        if (!updateData.platforms['linux-aarch64'].url) {
+          updateData.platforms['linux-aarch64'].url = browser_download_url
+        }
+      }
+      // linux aarch64 signature
+      if (name.endsWith('.aarch64.rpm.sig')) {
+        const sig = await getSignature(browser_download_url)
+        updateData.platforms['linux-aarch64'].signature = sig
+      }
+      if (name.endsWith('_arm64.deb.sig')) {
+        if (!updateData.platforms['linux-aarch64'].signature) {
+          const sig = await getSignature(browser_download_url)
+          updateData.platforms['linux-aarch64'].signature = sig
+        }
+      }
+
+      // linux armv7 url
+      if (name.endsWith('.armhfp.rpm')) {
+        updateData.platforms['linux-armv7'].url = browser_download_url
+      }
+      if (name.endsWith('_armhf.deb')) {
+        if (!updateData.platforms['linux-armv7'].url) {
+          updateData.platforms['linux-armv7'].url = browser_download_url
+        }
+      }
+      // linux armv7 signature
+      if (name.endsWith('.armhfp.rpm.sig')) {
+        const sig = await getSignature(browser_download_url)
+        updateData.platforms['linux-armv7'].signature = sig
+      }
+      if (name.endsWith('_armhf.deb.sig')) {
+        if (!updateData.platforms['linux-armv7'].signature) {
+          const sig = await getSignature(browser_download_url)
+          updateData.platforms['linux-armv7'].signature = sig
+        }
+      }
+
       // darwin url (intel)
       if (name.endsWith('.app.tar.gz') && !name.includes('aarch')) {
         updateData.platforms.darwin.url = browser_download_url
@@ -164,24 +231,11 @@ async function processRelease(github, options, tag, isAlpha) {
       // darwin url (aarch)
       if (name.endsWith('aarch64.app.tar.gz')) {
         updateData.platforms['darwin-aarch64'].url = browser_download_url
-        // 使linux可以检查更新
-        updateData.platforms.linux.url = browser_download_url
-        updateData.platforms['linux-x86_64'].url = browser_download_url
-        updateData.platforms['linux-x86'].url = browser_download_url
-        updateData.platforms['linux-i686'].url = browser_download_url
-        updateData.platforms['linux-aarch64'].url = browser_download_url
-        updateData.platforms['linux-armv7'].url = browser_download_url
       }
       // darwin signature (aarch)
       if (name.endsWith('aarch64.app.tar.gz.sig')) {
         const sig = await getSignature(browser_download_url)
         updateData.platforms['darwin-aarch64'].signature = sig
-        updateData.platforms.linux.signature = sig
-        updateData.platforms['linux-x86_64'].signature = sig
-        updateData.platforms['linux-x86'].url = browser_download_url
-        updateData.platforms['linux-i686'].url = browser_download_url
-        updateData.platforms['linux-aarch64'].signature = sig
-        updateData.platforms['linux-armv7'].signature = sig
       }
     })
 
