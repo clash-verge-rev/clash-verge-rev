@@ -82,6 +82,7 @@ import {
   buildLogicalRuleValue,
   buildRuleRaw,
   cloneManualRules,
+  createManualRuleItem,
   createLogicalRuleItem,
   dumpManualRules,
   emptyManualRules,
@@ -123,6 +124,7 @@ type RuleDialogMode = 'add' | 'edit' | 'duplicate'
 interface ManagedRuleRow extends ParsedRule {
   id: string
   raw: string
+  enabled: boolean
   lineNo: number
   source: RuleSource
   manualIndex?: number
@@ -423,7 +425,7 @@ const getPolicyName = (item: unknown, fallback?: string) => {
 }
 
 const ruleTableColumns =
-  '40px 64px minmax(132px, 180px) minmax(220px, 1fr) minmax(120px, 180px) 96px'
+  '40px 48px 64px minmax(132px, 180px) minmax(220px, 1fr) minmax(120px, 180px) 96px'
 
 const RuleTableHeader = () => {
   const { t } = useTranslation()
@@ -445,6 +447,7 @@ const RuleTableHeader = () => {
       }}
     >
       <Box />
+      <Box />
       <Box>{t('rules.page.table.id')}</Box>
       <Box>{t('rules.page.table.type')}</Box>
       <Box>{t('rules.page.table.value')}</Box>
@@ -460,11 +463,20 @@ interface RuleRowProps {
   dragDisabled: boolean
   onSelect: (row: ManagedRuleRow) => void
   onEdit: (row: ManagedRuleRow) => void
+  onToggleEnabled: (row: ManagedRuleRow, enabled: boolean) => void
   onContextMenu: (event: MouseEvent<HTMLElement>, row: ManagedRuleRow) => void
 }
 
 const RuleTableRow = (props: RuleRowProps) => {
-  const { row, selected, dragDisabled, onSelect, onContextMenu, onEdit } = props
+  const {
+    row,
+    selected,
+    dragDisabled,
+    onSelect,
+    onContextMenu,
+    onEdit,
+    onToggleEnabled,
+  } = props
   const { t } = useTranslation()
   const {
     attributes,
@@ -492,7 +504,7 @@ const RuleTableRow = (props: RuleRowProps) => {
         minHeight: 44,
         px: 2,
         borderBottom: '1px solid var(--divider-color)',
-        color: 'text.primary',
+        color: row.enabled ? 'text.primary' : 'text.disabled',
         cursor: 'pointer',
         transform: CSS.Transform.toString(transform),
         transition,
@@ -522,6 +534,15 @@ const RuleTableRow = (props: RuleRowProps) => {
       >
         <DragIndicatorRounded fontSize="small" />
       </Box>
+      <Checkbox
+        size="small"
+        checked={row.enabled}
+        onClick={(event) => event.stopPropagation()}
+        onDoubleClick={(event) => event.stopPropagation()}
+        onChange={(event) => onToggleEnabled(row, event.target.checked)}
+        slotProps={{ input: { 'aria-label': 'Toggle rule enabled state' } }}
+        sx={{ p: 0.5, justifySelf: 'flex-start' }}
+      />
       <Typography
         color="text.secondary"
         sx={{ fontVariantNumeric: 'tabular-nums' }}
@@ -545,7 +566,13 @@ const RuleTableRow = (props: RuleRowProps) => {
       </Typography>
       <Typography
         noWrap
-        color={row.policy === 'REJECT' ? 'error.main' : 'text.primary'}
+        color={
+          !row.enabled
+            ? 'text.disabled'
+            : row.policy === 'REJECT'
+              ? 'error.main'
+              : 'text.primary'
+        }
       >
         {row.policy || '-'}
       </Typography>
@@ -1285,6 +1312,10 @@ const RulesPage = () => {
   const { profiles, mutateProfiles } = useProfiles()
   const [searchText, setSearchText] = useState('')
   const [match, setMatch] = useState(() => (_: string) => true)
+  const [
+    pendingRuntimeSuppressedSignatures,
+    setPendingRuntimeSuppressedSignatures,
+  ] = useState<Set<string>>(() => new Set())
   const [manualRules, setManualRules] = useState<ManualRulesDocument>(() =>
     emptyManualRules(),
   )
@@ -1450,6 +1481,20 @@ const RulesPage = () => {
     return ensured.rulesUid
   }, [currentProfile?.uid])
 
+  const releaseRuntimeSuppression = useCallback((signatures: string[]) => {
+    if (signatures.length === 0) return
+
+    const clear = () => {
+      setPendingRuntimeSuppressedSignatures((prev) => {
+        const nextSignatures = new Set(prev)
+        signatures.forEach((signature) => nextSignatures.delete(signature))
+        return nextSignatures
+      })
+    }
+
+    window.requestAnimationFrame(() => window.requestAnimationFrame(clear))
+  }, [])
+
   const fetchManualRules = useCallback(async () => {
     try {
       const uid = await ensureRulesFile()
@@ -1460,26 +1505,61 @@ const RulesPage = () => {
     }
   }, [ensureRulesFile])
 
-  const saveManualRules = useLockFn(async (next: ManualRulesDocument) => {
-    try {
-      const sanitizedNext = sanitizeManualRules(next)
-      const uid = rulesUid || (await ensureRulesFile())
-      if (!(await saveProfileFile(uid, dumpManualRules(sanitizedNext)))) {
-        await fetchManualRules()
-        return
-      }
+  const saveManualRules = useLockFn(
+    async (
+      next: ManualRulesDocument,
+      options?: { suppressRuntimeRaws?: string[] },
+    ) => {
+      const suppressRuntimeSignatures = (
+        options?.suppressRuntimeRaws ?? []
+      ).map(getRawRuleIdentitySignature)
+      let runtimeRefreshed = false
+      let shouldFallbackReleaseSuppression = false
 
-      setManualRules(sanitizedNext)
-      showNotice.success('shared.feedback.notifications.saved')
+      try {
+        const sanitizedNext = sanitizeManualRules(next)
+        const uid = rulesUid || (await ensureRulesFile())
+        if (!(await saveProfileFile(uid, dumpManualRules(sanitizedNext)))) {
+          await fetchManualRules()
+          return
+        }
 
-      if (await enhanceProfiles()) {
-        await Promise.all([refreshRules(), refreshRuleProviders()])
+        if (suppressRuntimeSignatures.length > 0) {
+          setPendingRuntimeSuppressedSignatures((prev) => {
+            const nextSignatures = new Set(prev)
+            suppressRuntimeSignatures.forEach((signature) =>
+              nextSignatures.add(signature),
+            )
+            return nextSignatures
+          })
+        }
+
+        setManualRules(sanitizedNext)
+        showNotice.success('shared.feedback.notifications.saved')
+
+        const enhanced = await enhanceProfiles()
+        if (enhanced) {
+          await Promise.all([refreshRules(), refreshRuleProviders()])
+        } else {
+          await refreshRules()
+        }
+        runtimeRefreshed = true
+        await mutateProfilesRef.current()
+      } catch (err: any) {
+        shouldFallbackReleaseSuppression = suppressRuntimeSignatures.length > 0
+        showNotice.error(err)
+      } finally {
+        if (runtimeRefreshed) {
+          releaseRuntimeSuppression(suppressRuntimeSignatures)
+        } else if (shouldFallbackReleaseSuppression) {
+          window.setTimeout(
+            () => releaseRuntimeSuppression(suppressRuntimeSignatures),
+            3000,
+          )
+        }
       }
-      await mutateProfilesRef.current()
-    } catch (err: any) {
-      showNotice.error(err)
-    }
-  })
+    },
+  )
 
   useEffect(() => {
     refreshRules()
@@ -1498,13 +1578,15 @@ const RulesPage = () => {
 
   const rows = useMemo<ManagedRuleRow[]>(() => {
     const manualRows = [
-      ...manualRules.prepend.map((raw, index) => ({
-        raw,
+      ...manualRules.prepend.map((item, index) => ({
+        raw: item.raw,
+        enabled: item.enabled,
         source: 'prepend' as const,
         manualIndex: index,
       })),
-      ...manualRules.append.map((raw, index) => ({
-        raw,
+      ...manualRules.append.map((item, index) => ({
+        raw: item.raw,
+        enabled: item.enabled,
         source: 'append' as const,
         manualIndex: index,
       })),
@@ -1516,6 +1598,19 @@ const RulesPage = () => {
     const deletedSignatures = new Set(
       manualRules.delete.map(getRawRuleIdentitySignature),
     )
+    const deletedRows = manualRules.delete
+      .filter((raw) => !manualSignatures.has(getRawRuleIdentitySignature(raw)))
+      .map((raw, index) => {
+        const parsed = parseRuleRaw(raw)
+        return {
+          ...parsed,
+          id: `delete:${index}:${raw}`,
+          raw,
+          enabled: false,
+          source: 'runtime' as const,
+          searchText: makeSearchText(parsed, 'runtime', raw),
+        }
+      })
 
     const runtimeRows = rules
       .map((rule, index) => {
@@ -1525,6 +1620,7 @@ const RulesPage = () => {
           ...parsed,
           id: `runtime:${index}:${raw}`,
           raw,
+          enabled: true,
           source: 'runtime' as const,
           searchText: makeSearchText(parsed, 'runtime', raw),
         }
@@ -1532,39 +1628,44 @@ const RulesPage = () => {
       .filter((row) => {
         const signature = getRuleIdentitySignature(row)
         return (
-          !manualSignatures.has(signature) && !deletedSignatures.has(signature)
+          !manualSignatures.has(signature) &&
+          !deletedSignatures.has(signature) &&
+          !pendingRuntimeSuppressedSignatures.has(signature)
         )
       })
 
     return [
-      ...manualRules.prepend.map((raw, index) => {
-        const parsed = parseRuleRaw(raw)
+      ...manualRules.prepend.map((item, index) => {
+        const parsed = parseRuleRaw(item.raw)
         return {
           ...parsed,
-          id: `prepend:${index}:${raw}`,
-          raw,
+          id: `prepend:${index}:${item.raw}`,
+          raw: item.raw,
+          enabled: item.enabled,
           source: 'prepend' as const,
           manualIndex: index,
-          searchText: makeSearchText(parsed, 'manual', raw),
+          searchText: makeSearchText(parsed, 'manual', item.raw),
         }
       }),
+      ...deletedRows,
       ...runtimeRows,
-      ...manualRules.append.map((raw, index) => {
-        const parsed = parseRuleRaw(raw)
+      ...manualRules.append.map((item, index) => {
+        const parsed = parseRuleRaw(item.raw)
         return {
           ...parsed,
-          id: `append:${index}:${raw}`,
-          raw,
+          id: `append:${index}:${item.raw}`,
+          raw: item.raw,
+          enabled: item.enabled,
           source: 'append' as const,
           manualIndex: index,
-          searchText: makeSearchText(parsed, 'manual', raw),
+          searchText: makeSearchText(parsed, 'manual', item.raw),
         }
       }),
     ].map((row, index) => ({
       ...row,
       lineNo: index + 1,
     }))
-  }, [manualRules, rules])
+  }, [manualRules, pendingRuntimeSuppressedSignatures, rules])
 
   const filteredRows = useMemo(
     () => rows.filter((item) => match(item.searchText)),
@@ -1640,7 +1741,9 @@ const RulesPage = () => {
       }
 
       setRowMenu(null)
-      await saveManualRules(next)
+      await saveManualRules(next, {
+        suppressRuntimeRaws: isManualRuleSource(row.source) ? [row.raw] : [],
+      })
     },
     [manualRules, saveManualRules],
   )
@@ -1664,20 +1767,28 @@ const RulesPage = () => {
     if (dialogMode === 'edit' && activeRow) {
       if (activeRow.source === 'runtime') {
         addRuleDelete(next, activeRow.raw)
-        next.prepend.unshift(raw)
+        next.prepend.unshift(createManualRuleItem(raw))
       } else if (isManualRuleSource(activeRow.source)) {
         next[activeRow.source] = replaceAt(
           next[activeRow.source],
           activeRow.manualIndex,
           activeRow.raw,
           raw,
+          activeRow.enabled,
         )
         revealRuntimeRuleIfUnshadowed(next, activeRow.raw)
       }
 
-      addRuntimeDeletesForRules(next, [raw])
+      if (activeRow.source === 'runtime' || activeRow.enabled) {
+        addRuntimeDeletesForRules(next, [raw])
+      } else {
+        addRuleDelete(next, raw)
+      }
       setDialogOpen(false)
-      await saveManualRules(next)
+      await saveManualRules(next, {
+        suppressRuntimeRaws:
+          activeRow.source === 'runtime' ? [] : [activeRow.raw],
+      })
       return
     }
 
@@ -1696,7 +1807,7 @@ const RulesPage = () => {
           raw,
         )
       } else {
-        next.prepend.unshift(raw)
+        next.prepend.unshift(createManualRuleItem(raw))
       }
 
       addRuntimeDeletesForRules(next, [raw])
@@ -1726,6 +1837,47 @@ const RulesPage = () => {
   const handleSelectRow = (row: ManagedRuleRow) => {
     setSelectedRowId(row.id)
   }
+
+  const handleToggleRuleEnabled = useCallback(
+    async (row: ManagedRuleRow, enabled: boolean) => {
+      const next = cloneManualRules(manualRules)
+
+      if (isManualRuleSource(row.source)) {
+        const list = next[row.source]
+        const signature = getRawRuleIdentitySignature(row.raw)
+        const index =
+          typeof row.manualIndex === 'number' &&
+          row.manualIndex >= 0 &&
+          row.manualIndex < list.length
+            ? row.manualIndex
+            : list.findIndex(
+                (item) =>
+                  item.raw === row.raw ||
+                  getRawRuleIdentitySignature(item.raw) === signature,
+              )
+
+        if (index < 0) return
+
+        list[index] = { ...list[index], enabled }
+
+        if (enabled) {
+          addRuntimeDeletesForRules(next, [list[index].raw])
+        } else {
+          addRuleDelete(next, list[index].raw)
+        }
+      } else if (enabled) {
+        const signature = getRawRuleIdentitySignature(row.raw)
+        next.delete = next.delete.filter(
+          (raw) => getRawRuleIdentitySignature(raw) !== signature,
+        )
+      } else {
+        addRuleDelete(next, row.raw)
+      }
+
+      await saveManualRules(next)
+    },
+    [addRuntimeDeletesForRules, manualRules, saveManualRules],
+  )
 
   const dragDisabled = searchText.trim().length > 0
 
@@ -1834,6 +1986,7 @@ const RulesPage = () => {
                     dragDisabled={dragDisabled || row.source === 'runtime'}
                     onSelect={handleSelectRow}
                     onEdit={(row) => openRowDialog(row, 'edit')}
+                    onToggleEnabled={handleToggleRuleEnabled}
                     onContextMenu={handleContextMenu}
                   />
                 ))}
@@ -1899,16 +2052,21 @@ const RulesPage = () => {
           </ListItemIcon>
           {t('rules.page.actions.duplicate')}
         </MenuItem>
-        <Divider />
-        <MenuItem
-          onClick={() => rowMenu?.row && applyDelete(rowMenu.row)}
-          sx={{ color: 'error.main' }}
-        >
-          <ListItemIcon>
-            <DeleteRounded color="error" fontSize="small" />
-          </ListItemIcon>
-          {t('rules.page.actions.delete')}
-        </MenuItem>
+        {rowMenu?.row &&
+        (isManualRuleSource(rowMenu.row.source) || rowMenu.row.enabled) ? (
+          <>
+            <Divider />
+            <MenuItem
+              onClick={() => rowMenu?.row && applyDelete(rowMenu.row)}
+              sx={{ color: 'error.main' }}
+            >
+              <ListItemIcon>
+                <DeleteRounded color="error" fontSize="small" />
+              </ListItemIcon>
+              {t('rules.page.actions.delete')}
+            </MenuItem>
+          </>
+        ) : null}
       </Menu>
 
       <RuleEditorDialog

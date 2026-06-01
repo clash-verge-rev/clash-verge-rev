@@ -73,12 +73,39 @@ fn should_delete_string(field: &str, value: &str, delete: &[String], delete_rule
     field == "rules" && rule_identity(value).is_some_and(|signature| delete_rule_signatures.contains(&signature))
 }
 
+fn rule_item_to_value(item: Value) -> Option<Value> {
+    match item {
+        Value::String(_) => Some(item),
+        Value::Mapping(map) => {
+            if map.get("enabled").and_then(Value::as_bool) == Some(false) {
+                return None;
+            }
+
+            map.get("rule")
+                .or_else(|| map.get("raw"))
+                .or_else(|| map.get("value"))
+                .and_then(Value::as_str)
+                .map(|rule| Value::String(rule.to_owned()))
+        }
+        _ => None,
+    }
+}
+
+fn normalize_rule_sequence(sequence: Sequence) -> Sequence {
+    sequence.into_iter().filter_map(rule_item_to_value).collect()
+}
+
 pub fn use_seq(seq: SeqMap, mut config: Mapping, field: &str) -> Mapping {
     let SeqMap {
-        prepend,
-        append,
+        mut prepend,
+        mut append,
         delete,
     } = seq;
+
+    if field == "rules" {
+        prepend = normalize_rule_sequence(prepend);
+        append = normalize_rule_sequence(append);
+    }
 
     let added_proxy_names = if field == "proxies" {
         let mut names = collect_proxy_names(&prepend);
@@ -401,5 +428,50 @@ rules:
 
         assert_eq!(rules.len(), 1);
         assert_eq!(rules[0].as_str(), Some("MATCH,GLOBAL"));
+    }
+
+    #[test]
+    #[allow(clippy::unwrap_used)]
+    #[allow(clippy::expect_used)]
+    fn test_disabled_rule_items_are_not_applied() {
+        let config_str = r"
+rules:
+- MATCH,GLOBAL
+";
+        let mut config: Mapping = serde_yaml_ng::from_str(config_str).expect("Failed to parse test config YAML");
+        let prepend: Sequence = serde_yaml_ng::from_str(
+            r"
+- DOMAIN,enabled.example,DIRECT
+- rule: DOMAIN,disabled.example,DIRECT
+  enabled: false
+- raw: DOMAIN,object-enabled.example,DIRECT
+  enabled: true
+",
+        )
+        .expect("Failed to parse prepend rules");
+
+        let seq = SeqMap {
+            prepend,
+            append: Sequence::new(),
+            delete: vec![],
+        };
+
+        config = use_seq(seq, config, "rules");
+
+        let rules = config
+            .get("rules")
+            .expect("rules field should exist")
+            .as_sequence()
+            .expect("rules should be a sequence");
+        let values = rules.iter().filter_map(Value::as_str).collect::<Vec<_>>();
+
+        assert_eq!(
+            values,
+            vec![
+                "DOMAIN,enabled.example,DIRECT",
+                "DOMAIN,object-enabled.example,DIRECT",
+                "MATCH,GLOBAL",
+            ],
+        );
     }
 }

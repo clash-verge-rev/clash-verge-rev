@@ -4,8 +4,10 @@ import { test } from 'node:test'
 import {
   buildLogicalRuleValue,
   buildRuleRaw,
+  dumpManualRules,
   getRawRuleIdentitySignature,
   getRulePresetDialogState,
+  normalizeManualRules,
   normalizeLogicalRuleValue,
   parseLogicalRuleItems,
   runtimeRuleToRaw,
@@ -88,13 +90,28 @@ test('keeps no-resolve only on supported logical sub-rule types', () => {
 
 test('deduplicates manual rules across canonical and runtime logical forms', () => {
   const sanitized = sanitizeManualRules({
-    prepend: ['AND,((NETWORK,UDP),(PROCESS-PATH,/tmp/app)),DIRECT'],
-    append: ['AND,((Network,udp) && (ProcessPath,/tmp/app)),DIRECT'],
+    prepend: [
+      {
+        raw: 'AND,((NETWORK,UDP),(PROCESS-PATH,/tmp/app)),DIRECT',
+        enabled: true,
+      },
+    ],
+    append: [
+      {
+        raw: 'AND,((Network,udp) && (ProcessPath,/tmp/app)),DIRECT',
+        enabled: true,
+      },
+    ],
     delete: [],
   })
 
   assert.deepEqual(sanitized, {
-    prepend: ['AND,((NETWORK,UDP),(PROCESS-PATH,/tmp/app)),DIRECT'],
+    prepend: [
+      {
+        raw: 'AND,((NETWORK,UDP),(PROCESS-PATH,/tmp/app)),DIRECT',
+        enabled: true,
+      },
+    ],
     append: [],
     delete: [],
   })
@@ -106,6 +123,45 @@ test('deduplicates manual rules across canonical and runtime logical forms', () 
       'AND,((NETWORK,UDP),(PROCESS-PATH,/tmp/app)),DIRECT',
     ),
   )
+})
+
+test('preserves disabled manual rule state through sanitize and dump', () => {
+  const document = normalizeManualRules(`
+prepend:
+  - DOMAIN,enabled.example,DIRECT
+  - rule: DOMAIN,disabled.example,DIRECT
+    enabled: false
+append:
+  - raw: GEOIP,CN,DIRECT,no-resolve
+    enabled: true
+delete:
+  - MATCH,GLOBAL
+`)
+  const sanitized = sanitizeManualRules(document)
+
+  assert.deepEqual(sanitized, {
+    prepend: [
+      { raw: 'DOMAIN,enabled.example,DIRECT', enabled: true },
+      { raw: 'DOMAIN,disabled.example,DIRECT', enabled: false },
+    ],
+    append: [{ raw: 'GEOIP,CN,DIRECT,no-resolve', enabled: true }],
+    delete: ['MATCH,GLOBAL', 'DOMAIN,disabled.example,DIRECT'],
+  })
+  assert.deepEqual(normalizeManualRules(dumpManualRules(sanitized)), sanitized)
+})
+
+test('prefers enabled duplicate manual rules over disabled copies', () => {
+  const sanitized = sanitizeManualRules({
+    prepend: [{ raw: 'DOMAIN,example.com,DIRECT', enabled: false }],
+    append: [{ raw: 'DOMAIN,example.com,DIRECT', enabled: true }],
+    delete: [],
+  })
+
+  assert.deepEqual(sanitized, {
+    prepend: [{ raw: 'DOMAIN,example.com,DIRECT', enabled: true }],
+    append: [],
+    delete: [],
+  })
 })
 
 test('normalizes routed rule presets before opening the editor', () => {

@@ -3,6 +3,7 @@ import { CSS } from '@dnd-kit/utilities'
 import { DeleteForeverRounded, UndoRounded } from '@mui/icons-material'
 import {
   Box,
+  Checkbox,
   IconButton,
   ListItem,
   ListItemText,
@@ -12,11 +13,13 @@ import {
 interface Props {
   type: 'prepend' | 'original' | 'delete' | 'append'
   ruleRaw: string
+  enabled?: boolean
+  onToggleEnabled?: (enabled: boolean) => void
   onDelete: () => void
 }
 
 export const RuleItem = (props: Props) => {
-  const { type, ruleRaw, onDelete } = props
+  const { type, ruleRaw, enabled = true, onToggleEnabled, onDelete } = props
   const sortable = type === 'prepend' || type === 'append'
   const rule = ruleRaw.replace(',no-resolve', '')
 
@@ -48,8 +51,9 @@ export const RuleItem = (props: Props) => {
       dense
       sx={({ palette }) => ({
         position: 'relative',
-        background:
-          type === 'original'
+        background: !enabled
+          ? alpha(palette.text.disabled, 0.18)
+          : type === 'original'
             ? palette.mode === 'dark'
               ? alpha(palette.background.paper, 0.3)
               : alpha(palette.grey[400], 0.3)
@@ -64,6 +68,16 @@ export const RuleItem = (props: Props) => {
         zIndex: isDragging ? 'calc(infinity)' : undefined,
       })}
     >
+      {onToggleEnabled ? (
+        <Checkbox
+          size="small"
+          checked={enabled}
+          onClick={(event) => event.stopPropagation()}
+          onChange={(event) => onToggleEnabled(event.target.checked)}
+          slotProps={{ input: { 'aria-label': 'Toggle rule enabled state' } }}
+          sx={{ alignSelf: 'center', mr: 1, p: 0.5 }}
+        />
+      ) : null}
       <ListItemText
         {...attributes}
         {...listeners}
@@ -72,7 +86,10 @@ export const RuleItem = (props: Props) => {
         primary={
           <StyledPrimary
             title={ruleContent || '-'}
-            sx={{ textDecoration: type === 'delete' ? 'line-through' : '' }}
+            sx={{
+              color: enabled ? undefined : 'text.disabled',
+              textDecoration: type === 'delete' ? 'line-through' : '',
+            }}
           >
             {ruleContent || '-'}
           </StyledPrimary>
@@ -90,7 +107,9 @@ export const RuleItem = (props: Props) => {
             <Box sx={{ marginTop: '2px' }}>
               <StyledTypeBox>{ruleType}</StyledTypeBox>
             </Box>
-            <StyledSubtitle sx={{ color: 'text.secondary' }}>
+            <StyledSubtitle
+              sx={{ color: enabled ? 'text.secondary' : 'text.disabled' }}
+            >
               {proxyPolicy}
             </StyledSubtitle>
           </ListItemTextChild>

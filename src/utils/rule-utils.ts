@@ -4,9 +4,14 @@ export type RuleSource = 'prepend' | 'runtime' | 'append'
 export type ManualRuleSource = Exclude<RuleSource, 'runtime'>
 export type RuleDialogKind = 'standard' | 'logical' | 'ruleset'
 
+export interface ManualRuleItem {
+  raw: string
+  enabled: boolean
+}
+
 export interface ManualRulesDocument {
-  prepend: string[]
-  append: string[]
+  prepend: ManualRuleItem[]
+  append: ManualRuleItem[]
   delete: string[]
 }
 
@@ -47,6 +52,12 @@ export interface LogicalRuleItem {
 
 interface RuleDedupEntry {
   list: string[]
+  index: number
+  noResolve: boolean
+}
+
+interface ManualRuleDedupEntry {
+  list: ManualRuleItem[]
   index: number
   noResolve: boolean
 }
@@ -177,11 +188,19 @@ export const emptyManualRules = (): ManualRulesDocument => ({
   delete: [],
 })
 
+export const createManualRuleItem = (
+  raw: string,
+  enabled = true,
+): ManualRuleItem => ({
+  raw,
+  enabled,
+})
+
 export const cloneManualRules = (
   document: ManualRulesDocument,
 ): ManualRulesDocument => ({
-  prepend: [...document.prepend],
-  append: [...document.append],
+  prepend: document.prepend.map((item) => ({ ...item })),
+  append: document.append.map((item) => ({ ...item })),
   delete: [...document.delete],
 })
 
@@ -190,17 +209,61 @@ const toStringArray = (value: unknown) =>
     ? value.filter((item): item is string => typeof item === 'string')
     : []
 
+const getManualRuleRawFromUnknown = (item: unknown) => {
+  if (typeof item === 'string') return item
+  if (!item || typeof item !== 'object') return ''
+
+  const ruleItem = item as {
+    raw?: unknown
+    rule?: unknown
+    value?: unknown
+  }
+
+  if (typeof ruleItem.raw === 'string') return ruleItem.raw
+  if (typeof ruleItem.rule === 'string') return ruleItem.rule
+  if (typeof ruleItem.value === 'string') return ruleItem.value
+
+  return ''
+}
+
+const getManualRuleEnabledFromUnknown = (item: unknown) => {
+  if (!item || typeof item !== 'object') return true
+
+  const enabled = (item as { enabled?: unknown }).enabled
+  return enabled !== false
+}
+
+const toManualRuleItems = (value: unknown) =>
+  Array.isArray(value)
+    ? value.flatMap((item) => {
+        const raw = getManualRuleRawFromUnknown(item).trim()
+        return raw
+          ? [createManualRuleItem(raw, getManualRuleEnabledFromUnknown(item))]
+          : []
+      })
+    : []
+
+const dumpManualRuleItem = (item: ManualRuleItem) =>
+  item.enabled ? item.raw : { rule: item.raw, enabled: false }
+
 export const normalizeManualRules = (data: string): ManualRulesDocument => {
   const obj = yaml.load(data) as Partial<ManualRulesDocument> | null
   return {
-    prepend: toStringArray(obj?.prepend),
-    append: toStringArray(obj?.append),
+    prepend: toManualRuleItems(obj?.prepend),
+    append: toManualRuleItems(obj?.append),
     delete: toStringArray(obj?.delete),
   }
 }
 
 export const dumpManualRules = (document: ManualRulesDocument) =>
-  yaml.dump(document, { forceQuotes: true })
+  yaml.dump(
+    {
+      prepend: document.prepend.map(dumpManualRuleItem),
+      append: document.append.map(dumpManualRuleItem),
+      delete: document.delete,
+    },
+    { forceQuotes: true },
+  )
 
 export const parseRuleRaw = (raw: string): ParsedRule => {
   const parts = raw
@@ -324,15 +387,63 @@ export const sanitizeRuleList = (
   return next
 }
 
+export const sanitizeManualRuleList = (
+  list: ManualRuleItem[],
+  seen = new Map<string, ManualRuleDedupEntry>(),
+) => {
+  const next: ManualRuleItem[] = []
+
+  list.forEach((item) => {
+    const normalizedRaw = normalizeRuleRaw(item.raw)
+    if (!normalizedRaw) return
+
+    const parsed = parseRuleRaw(normalizedRaw)
+    const signature =
+      parsed.type && parsed.policy
+        ? getRuleIdentitySignature(parsed)
+        : normalizedRaw.trim()
+    const existing = seen.get(signature)
+
+    if (existing) {
+      const existingItem = existing.list[existing.index]
+
+      if (!existing.noResolve && parsed.noResolve) {
+        existingItem.raw = normalizedRaw
+        existing.noResolve = true
+      }
+
+      if (!existingItem.enabled && item.enabled) {
+        existingItem.enabled = true
+      }
+
+      return
+    }
+
+    seen.set(signature, {
+      list: next,
+      index: next.length,
+      noResolve: parsed.noResolve,
+    })
+    next.push(createManualRuleItem(normalizedRaw, item.enabled))
+  })
+
+  return next
+}
+
 export const sanitizeManualRules = (
   document: ManualRulesDocument,
 ): ManualRulesDocument => {
-  const manualSeen = new Map<string, RuleDedupEntry>()
+  const manualSeen = new Map<string, ManualRuleDedupEntry>()
+  const prepend = sanitizeManualRuleList(document.prepend, manualSeen)
+  const append = sanitizeManualRuleList(document.append, manualSeen)
+  const disabledRules = [...prepend, ...append]
+    .filter((item) => !item.enabled)
+    .map((item) => item.raw)
 
   return {
-    prepend: sanitizeRuleList(document.prepend, manualSeen),
-    append: sanitizeRuleList(document.append, manualSeen),
-    delete: sanitizeRuleList(document.delete),
+    prepend,
+    append,
+    delete: sanitizeRuleList([...document.delete, ...disabledRules]),
   }
 }
 
@@ -340,7 +451,7 @@ export const makeSearchText = (row: ParsedRule, source: string, raw: string) =>
   [row.type, row.value, row.policy, source, raw].join(' ')
 
 export const removeAt = (
-  list: string[],
+  list: ManualRuleItem[],
   index?: number,
   fallbackRaw?: string,
 ) => {
@@ -350,7 +461,12 @@ export const removeAt = (
 
   if (fallbackRaw) {
     const next = [...list]
-    const foundIndex = next.indexOf(fallbackRaw)
+    const signature = getRawRuleIdentitySignature(fallbackRaw)
+    const foundIndex = next.findIndex(
+      (item) =>
+        item.raw === fallbackRaw ||
+        getRawRuleIdentitySignature(item.raw) === signature,
+    )
     if (foundIndex >= 0) next.splice(foundIndex, 1)
     return next
   }
@@ -359,40 +475,50 @@ export const removeAt = (
 }
 
 export const replaceAt = (
-  list: string[],
+  list: ManualRuleItem[],
   index: number | undefined,
   fallbackRaw: string | undefined,
   raw: string,
+  enabled = true,
 ) => {
   const next = [...list]
 
   if (typeof index === 'number' && index >= 0 && index < next.length) {
-    next[index] = raw
+    next[index] = createManualRuleItem(raw, next[index]?.enabled ?? enabled)
     return next
   }
 
   if (fallbackRaw) {
-    const foundIndex = next.indexOf(fallbackRaw)
+    const signature = getRawRuleIdentitySignature(fallbackRaw)
+    const foundIndex = next.findIndex(
+      (item) =>
+        item.raw === fallbackRaw ||
+        getRawRuleIdentitySignature(item.raw) === signature,
+    )
     if (foundIndex >= 0) {
-      next[foundIndex] = raw
+      next[foundIndex] = createManualRuleItem(
+        raw,
+        next[foundIndex]?.enabled ?? enabled,
+      )
       return next
     }
   }
 
-  next.unshift(raw)
+  next.unshift(createManualRuleItem(raw, enabled))
   return next
 }
 
 export const insertAt = (
-  list: string[],
+  list: ManualRuleItem[],
   index: number | undefined,
   raw: string,
+  enabled = true,
 ) => {
   const next = [...list]
   const safeIndex =
     typeof index === 'number' && index >= 0 && index <= next.length ? index : 0
 
-  next.splice(safeIndex, 0, raw)
+  next.splice(safeIndex, 0, createManualRuleItem(raw, enabled))
   return next
 }
 
@@ -415,7 +541,8 @@ export const revealRuntimeRuleIfUnshadowed = (
 ) => {
   const signature = getRawRuleIdentitySignature(raw)
   const hasManualRule = [...document.prepend, ...document.append].some(
-    (item) => getRawRuleIdentitySignature(item) === signature,
+    (item) =>
+      item.enabled && getRawRuleIdentitySignature(item.raw) === signature,
   )
 
   if (!hasManualRule) {
