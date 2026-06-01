@@ -96,7 +96,7 @@
     "adm-zip": "^0.5.17",
     "axios": "^1.16.1",
     "cli-color": "^2.0.4",
-    "commander": "^14.0.3",
+    "commander": "^15.0.0",
     "cross-env": "^10.1.0",
     "eslint": "^10.4.0",
     "eslint-import-resolver-typescript": "^4.4.4",
