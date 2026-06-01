@@ -79,21 +79,10 @@ jobs:
           ## 下载地址
 
           ### Windows (不再支持Win7)
-          #### 正常版本(推荐)
-          - [64位(常用)](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_x64-setup.exe) | [ARM64(不常用)](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_arm64-setup.exe)
-
-          #### 内置Webview2版(体积较大，仅在企业版系统或无法安装webview2时使用)
-          - [64位](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_x64_fixed_webview2-setup.exe) | [ARM64](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_arm64_fixed_webview2-setup.exe)
+          - [64位](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_x64-setup.exe)
 
           ### macOS
-          - [Apple M芯片](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_aarch64.dmg) | [Intel芯片](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_x64.dmg)
-
-          ### Linux
-          #### DEB包(Debian系) 使用 apt ./路径 安装
-          - [64位](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_amd64.deb) | [ARM64](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_arm64.deb) | [ARMv7](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_armhf.deb)
-
-          #### RPM包(Redhat系) 使用 dnf ./路径 安装
-          - [64位](${{ env.DOWNLOAD_URL }}/Clash.Verge-${{ env.VERSION }}-1.x86_64.rpm) | [ARM64](${{ env.DOWNLOAD_URL }}/Clash.Verge-${{ env.VERSION }}-1.aarch64.rpm) | [ARMv7](${{ env.DOWNLOAD_URL }}/Clash.Verge-${{ env.VERSION }}-1.armhfp.rpm)
+          - [Apple M芯片](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_aarch64.dmg)
 
           ### FAQ
           - [常见问题](https://clash-verge-rev.github.io/faq/windows.html)
@@ -125,7 +114,7 @@ jobs:
       dry_run: false
 
   autobuild-x86-windows-macos-linux:
-    name: Autobuild x86 Windows, MacOS and Linux
+    name: Autobuild Windows x64 and macOS Apple Silicon
     needs: [check_commit, update_tag]
     if: ${{ needs.check_commit.outputs.should_run == 'true' }}
     strategy:
@@ -134,14 +123,8 @@ jobs:
         include:
           - os: windows-latest
             target: x86_64-pc-windows-msvc
-          - os: windows-latest
-            target: aarch64-pc-windows-msvc
           - os: macos-latest
             target: aarch64-apple-darwin
-          - os: macos-latest
-            target: x86_64-apple-darwin
-          - os: ubuntu-22.04
-            target: x86_64-unknown-linux-gnu
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout Repository
@@ -166,21 +149,6 @@ jobs:
             . -> target
           cache-all-crates: true
           cache-workspace-crates: true
-
-      - name: Install dependencies (ubuntu only)
-        if: matrix.os == 'ubuntu-22.04'
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libxslt1.1 libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf
-
-      - name: Install x86 OpenSSL (macOS only)
-        if: matrix.target == 'x86_64-apple-darwin'
-        run: |
-          arch -x86_64 brew install openssl@3
-          echo "OPENSSL_DIR=$(brew --prefix openssl@3)" >> $GITHUB_ENV
-          echo "OPENSSL_INCLUDE_DIR=$(brew --prefix openssl@3)/include" >> $GITHUB_ENV
-          echo "OPENSSL_LIB_DIR=$(brew --prefix openssl@3)/lib" >> $GITHUB_ENV
-          echo "PKG_CONFIG_PATH=$(brew --prefix openssl@3)/lib/pkgconfig" >> $GITHUB_ENV
 
       - uses: pnpm/action-setup@v6.0.8
         name: Install pnpm
@@ -216,7 +184,7 @@ jobs:
           rustup target list --installed
           echo "Rust target ${{ matrix.target }} installed."
 
-      - name: Tauri build for Windows-macOS-Linux
+      - name: Tauri build for Windows and macOS
         uses: tauri-apps/tauri-action@v0
         env:
           NODE_OPTIONS: '--max_old_space_size=4096'
@@ -233,291 +201,12 @@ jobs:
           args: --target ${{ matrix.target }}
           # includeUpdaterJson: true
 
-  autobuild-arm-linux:
-    name: Autobuild ARM Linux
-    needs: [check_commit, update_tag]
-    if: ${{ needs.check_commit.outputs.should_run == 'true' }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          # It should be ubuntu-22.04 to match the cross-compilation environment
-          # ortherwise it is hard to resolve the dependencies
-          - os: ubuntu-22.04
-            target: aarch64-unknown-linux-gnu
-            arch: arm64
-          - os: ubuntu-22.04
-            target: armv7-unknown-linux-gnueabihf
-            arch: armhf
-    runs-on: ${{ matrix.os }}
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v6
-
-      - name: Install Rust Stable
-        uses: dtolnay/rust-toolchain@master
-        with:
-          toolchain: '1.95.0'
-          targets: ${{ matrix.target }}
-
-      - name: Add Rust Target
-        run: rustup target add ${{ matrix.target }}
-
-      - name: Rust Cache
-        uses: Swatinem/rust-cache@v2
-        with:
-          save-if: ${{ github.ref == 'refs/heads/custom/dev' }}
-          prefix-key: 'v1-rust'
-          key: 'rust-shared-stable-${{ matrix.os }}-${{ matrix.target }}'
-          workspaces: |
-            . -> target
-          cache-all-crates: true
-          cache-workspace-crates: true
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v6.0.8
-        with:
-          run_install: false
-
-      - name: Install Node
-        uses: actions/setup-node@v6
-        with:
-          node-version: '24.16.0'
-          cache: 'pnpm'
-
-      - name: Pnpm Cache
-        uses: actions/cache@v5
-        with:
-          path: ~/.pnpm-store
-          key: 'pnpm-shared-stable-${{ matrix.os }}-${{ matrix.target }}'
-          restore-keys: |
-            pnpm-shared-stable-${{ matrix.os }}-${{ matrix.target }}
-
-      - name: Pnpm install and check
-        run: |
-          pnpm i
-          pnpm run prebuild ${{ matrix.target }}
-
-      - name: Release ${{ env.TAG_CHANNEL }} Version
-        run: pnpm release-version autobuild-latest
-
-      - name: 'Setup for linux'
-        run: |-
-          sudo ls -lR /etc/apt/
-
-          cat > /tmp/sources.list << EOF
-          deb [arch=amd64,i386] http://archive.ubuntu.com/ubuntu jammy main multiverse universe restricted
-          deb [arch=amd64,i386] http://archive.ubuntu.com/ubuntu jammy-security main multiverse universe restricted
-          deb [arch=amd64,i386] http://archive.ubuntu.com/ubuntu jammy-updates main multiverse universe restricted
-          deb [arch=amd64,i386] http://archive.ubuntu.com/ubuntu jammy-backports main multiverse universe restricted
-
-          deb [arch=armhf,arm64] http://ports.ubuntu.com/ubuntu-ports jammy main multiverse universe restricted
-          deb [arch=armhf,arm64] http://ports.ubuntu.com/ubuntu-ports jammy-security main multiverse universe restricted
-          deb [arch=armhf,arm64] http://ports.ubuntu.com/ubuntu-ports jammy-updates main multiverse universe restricted
-          deb [arch=armhf,arm64] http://ports.ubuntu.com/ubuntu-ports jammy-backports main multiverse universe restricted
-          EOF
-
-          sudo mv /etc/apt/sources.list /etc/apt/sources.list.default
-          sudo mv /tmp/sources.list /etc/apt/sources.list
-
-          sudo dpkg --add-architecture ${{ matrix.arch }}
-          sudo apt update
-
-          sudo apt install -y \
-            libxslt1.1:${{ matrix.arch }} \
-            libwebkit2gtk-4.1-dev:${{ matrix.arch }} \
-            libayatana-appindicator3-dev:${{ matrix.arch }} \
-            libssl-dev:${{ matrix.arch }} \
-            patchelf:${{ matrix.arch }} \
-            librsvg2-dev:${{ matrix.arch }}
-
-      - name: Install aarch64 tools
-        if: matrix.target == 'aarch64-unknown-linux-gnu'
-        run: |
-          sudo apt install -y \
-            gcc-aarch64-linux-gnu \
-            g++-aarch64-linux-gnu
-
-      - name: Install armv7 tools
-        if: matrix.target == 'armv7-unknown-linux-gnueabihf'
-        run: |
-          sudo apt install -y \
-            gcc-arm-linux-gnueabihf \
-            g++-arm-linux-gnueabihf
-
-      - name: Add Rust Target
-        run: |
-          # Ensure cross target is installed for the pinned toolchain; fallback without explicit toolchain if needed
-          rustup target add ${{ matrix.target }} --toolchain 1.95.0 || rustup target add ${{ matrix.target }}
-          rustup target list --installed
-          echo "Rust target ${{ matrix.target }} installed."
-
-      - name: Tauri Build for Linux
-        run: |
-          export PKG_CONFIG_ALLOW_CROSS=1
-          if [ "${{ matrix.target }}" == "aarch64-unknown-linux-gnu" ]; then
-            export PKG_CONFIG_PATH=/usr/lib/aarch64-linux-gnu/pkgconfig/:$PKG_CONFIG_PATH
-            export PKG_CONFIG_SYSROOT_DIR=/usr/aarch64-linux-gnu/
-          elif [ "${{ matrix.target }}" == "armv7-unknown-linux-gnueabihf" ]; then
-            export PKG_CONFIG_PATH=/usr/lib/arm-linux-gnueabihf/pkgconfig/:$PKG_CONFIG_PATH
-            export PKG_CONFIG_SYSROOT_DIR=/usr/arm-linux-gnueabihf/
-          fi
-          pnpm build --target ${{ matrix.target }}
-        env:
-          NODE_OPTIONS: '--max_old_space_size=4096'
-          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
-
-      - name: Get Version
-        run: |
-          sudo apt-get update
-          sudo apt-get install jq
-          echo "VERSION=$(cat package.json | jq '.version' | tr -d '"')" >> $GITHUB_ENV
-          echo "BUILDTIME=$(TZ=Asia/Shanghai date)" >> $GITHUB_ENV
-
-      - name: Upload Release
-        uses: softprops/action-gh-release@v3
-        with:
-          tag_name: ${{ env.TAG_NAME }}
-          name: 'Clash Verge Rev ${{ env.TAG_CHANNEL }}'
-          prerelease: true
-          token: ${{ secrets.GITHUB_TOKEN }}
-          files: |
-            target/${{ matrix.target }}/release/bundle/deb/*.deb
-            target/${{ matrix.target }}/release/bundle/rpm/*.rpm
-
-  autobuild-x86-arm-windows_webview2:
-    name: Autobuild x86 and ARM Windows with WebView2
-    needs: [check_commit, update_tag]
-    if: ${{ needs.check_commit.outputs.should_run == 'true' }}
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: windows-latest
-            target: x86_64-pc-windows-msvc
-            arch: x64
-          - os: windows-latest
-            target: aarch64-pc-windows-msvc
-            arch: arm64
-    runs-on: ${{ matrix.os }}
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v6
-
-      - name: Add Rust Target
-        run: rustup target add ${{ matrix.target }}
-
-      - name: Rust Cache
-        uses: Swatinem/rust-cache@v2
-        with:
-          save-if: ${{ github.ref == 'refs/heads/custom/dev' }}
-          prefix-key: 'v1-rust'
-          key: 'rust-shared-stable-${{ matrix.os }}-${{ matrix.target }}'
-          workspaces: |
-            . -> target
-          cache-all-crates: true
-          cache-workspace-crates: true
-
-      - name: Install pnpm
-        uses: pnpm/action-setup@v6.0.8
-        with:
-          run_install: false
-
-      - name: Install Node
-        uses: actions/setup-node@v6
-        with:
-          node-version: '24.16.0'
-          cache: 'pnpm'
-
-      - name: Pnpm Cache
-        uses: actions/cache@v5
-        with:
-          path: ~/.pnpm-store
-          key: 'pnpm-shared-stable-${{ matrix.os }}-${{ matrix.target }}'
-          restore-keys: |
-            pnpm-shared-stable-${{ matrix.os }}-${{ matrix.target }}
-
-      - name: Pnpm install and check
-        run: |
-          pnpm i
-          pnpm run prebuild ${{ matrix.target }}
-
-      - name: Release ${{ env.TAG_CHANNEL }} Version
-        run: pnpm release-version autobuild-latest
-
-      - name: Download WebView2 Runtime
-        run: |
-          invoke-webrequest -uri https://github.com/westinyang/WebView2RuntimeArchive/releases/download/133.0.3065.92/Microsoft.WebView2.FixedVersionRuntime.133.0.3065.92.${{ matrix.arch }}.cab -outfile Microsoft.WebView2.FixedVersionRuntime.133.0.3065.92.${{ matrix.arch }}.cab
-          Expand .\Microsoft.WebView2.FixedVersionRuntime.133.0.3065.92.${{ matrix.arch }}.cab -F:* ./src-tauri
-          Remove-Item .\src-tauri\tauri.windows.conf.json
-          Rename-Item .\src-tauri\webview2.${{ matrix.arch }}.json tauri.windows.conf.json
-
-      - name: Add Rust Target
-        run: |
-          # Ensure cross target is installed for the pinned toolchain; fallback without explicit toolchain if needed
-          rustup target add ${{ matrix.target }} --toolchain 1.95.0 || rustup target add ${{ matrix.target }}
-          rustup target list --installed
-          echo "Rust target ${{ matrix.target }} installed."
-
-      - name: Tauri build for Windows
-        id: build
-        uses: tauri-apps/tauri-action@v0
-        env:
-          NODE_OPTIONS: '--max_old_space_size=4096'
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
-          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
-        with:
-          tauriScript: pnpm
-          args: --target ${{ matrix.target }}
-          # includeUpdaterJson: true
-
-      - name: Rename
-        run: |
-          $files = Get-ChildItem ".\target\${{ matrix.target }}\release\bundle\nsis\*-setup.exe"
-          foreach ($file in $files) {
-            $newName = $file.Name -replace "-setup\.exe$", "_fixed_webview2-setup.exe"
-            Rename-Item $file.FullName $newName
-          }
-
-          $files = Get-ChildItem ".\target\${{ matrix.target }}\release\bundle\nsis\*.nsis.zip"
-          foreach ($file in $files) {
-            $newName = $file.Name -replace "-setup\.nsis\.zip$", "_fixed_webview2-setup.nsis.zip"
-            Rename-Item $file.FullName $newName
-          }
-
-          $files = Get-ChildItem ".\target\${{ matrix.target }}\release\bundle\nsis\*-setup.exe.sig"
-          foreach ($file in $files) {
-            $newName = $file.Name -replace "-setup\.exe\.sig$", "_fixed_webview2-setup.exe.sig"
-            Rename-Item $file.FullName $newName
-          }
-
-      - name: Upload Release
-        uses: softprops/action-gh-release@v3
-        with:
-          tag_name: ${{ env.TAG_NAME }}
-          name: 'Clash Verge Rev ${{ env.TAG_CHANNEL }}'
-          prerelease: true
-          token: ${{ secrets.GITHUB_TOKEN }}
-          files: target/${{ matrix.target }}/release/bundle/nsis/*setup*
-
-      - name: Portable Bundle
-        run: pnpm portable-fixed-webview2 ${{ matrix.target }} --${{ env.TAG_NAME }}
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   notify-telegram:
     name: Notify Telegram
     runs-on: ubuntu-latest
     if: ${{ vars.ENABLE_TELEGRAM_NOTIFY == 'true' }}
     needs:
-      [
-        update_tag,
-        autobuild-x86-windows-macos-linux,
-        autobuild-arm-linux,
-        autobuild-x86-arm-windows_webview2,
-      ]
+      [update_tag, autobuild-x86-windows-macos-linux]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v6
@@ -566,21 +255,10 @@ jobs:
           ## 下载地址
 
           ### Windows (不再支持Win7)
-          #### 正常版本(推荐)
-          - [64位(常用)](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_x64-setup.exe) | [ARM64(不常用)](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_arm64-setup.exe)
-
-          #### 内置Webview2版(体积较大，仅在企业版系统或无法安装webview2时使用)
-          - [64位](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_x64_fixed_webview2-setup.exe) | [ARM64](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_arm64_fixed_webview2-setup.exe)
+          - [64位](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_x64-setup.exe)
 
           ### macOS
-          - [Apple M芯片](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_aarch64.dmg) | [Intel芯片](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_x64.dmg)
-
-          ### Linux
-          #### DEB包(Debian系) 使用 apt ./路径 安装
-          - [64位](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_amd64.deb) | [ARM64](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_arm64.deb) | [ARMv7](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_armhf.deb)
-
-          #### RPM包(Redhat系) 使用 dnf ./路径 安装
-          - [64位](${{ env.DOWNLOAD_URL }}/Clash.Verge-${{ env.VERSION }}-1.x86_64.rpm) | [ARM64](${{ env.DOWNLOAD_URL }}/Clash.Verge-${{ env.VERSION }}-1.aarch64.rpm) | [ARMv7](${{ env.DOWNLOAD_URL }}/Clash.Verge-${{ env.VERSION }}-1.armhfp.rpm)
+          - [Apple M芯片](${{ env.DOWNLOAD_URL }}/Clash.Verge_${{ env.VERSION }}_aarch64.dmg)
 
           ### FAQ
           - [常见问题](https://clash-verge-rev.github.io/faq/windows.html)
