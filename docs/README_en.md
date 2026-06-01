@@ -49,37 +49,6 @@ Join [@clash_verge_rev](https://t.me/clash_verge_re) for update announcements.
 
 ---
 
-## Promotion
-
-### ✈️ [Doggygo VPN — A Technical-Grade Proxy Service](https://verge.dginv.click/#/register?code=oaxsAGo6)
-
-🚀 A high-performance, overseas, technical-grade proxy service offering free trials and discounted plans, fully unlocking streaming platforms and AI services. The world’s first provider to adopt the **QUIC protocol**.
-
-🎁 Register via the **Clash Verge exclusive invitation link** to receive **3 days of free trial**, with **1GB traffic per day**: 👉 [Register here](https://verge.dginv.click/#/register?code=oaxsAGo6)
-
-#### **Core Advantages:**
-
-- 📱 Self-developed iOS client (the industry’s “only one”), with technology proven in production and **significant ongoing R&D investment**
-- 🧑‍💻 **12-hour live customer support** (also assists with Clash Verge usage issues)
-- 💰 Discounted plans at **only CNY 21 per month, 160GB traffic, 20% off with annual billing**
-- 🌍 Overseas team, no risk of shutdown or exit scams, with up to **50% referral commission**
-- ⚙️ **Cluster-based load balancing** architecture with **real-time load monitoring and elastic scaling**, high-speed dedicated lines (compatible with legacy clients), ultra-low latency, unaffected by peak hours, **4K streaming loads instantly**
-- ⚡ The world’s first **QUIC-protocol-based proxy service**, now featuring faster **QUIC-family protocols** (best paired with the Clash Verge client)
-- 🎬 Unlocks **streaming platforms and mainstream AI services**
-
-🌐 Official Website: 👉 [https://狗狗加速.com](https://verge.dginv.click/#/register?code=oaxsAGo6)
-
-### 🤖 [GPTKefu — AI-Powered Customer Service Platform Deeply Integrated with Crisp](https://gptkefu.com)
-
-- 🧠 Deep understanding of full conversation context + image recognition, automatically providing professional and precise replies — no more robotic responses.
-- ♾️ **Unlimited replies**, no quota anxiety — unlike other AI customer service products that charge per message.
-- 💬 Pre-sales inquiries, after-sales support, complex Q&A — covers all scenarios effortlessly, with real user cases to prove it.
-- ⚡ 3-minute setup, zero learning curve — instantly boost customer service efficiency and satisfaction.
-- 🎁 Free 14-day trial of the Premium plan — try before you pay: 👉 [Start Free Trial](https://gptkefu.com)
-- 📢 AI Customer Service TG Channel: [@crisp_ai](https://t.me/crisp_ai)
-
----
-
 ## Features
 
 - Built on high-performance Rust with the Tauri 2 framework

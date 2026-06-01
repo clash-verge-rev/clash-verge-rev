@@ -49,31 +49,6 @@ Consulta la [documentación del proyecto](https://clash-verge-rev.github.io/) pa
 
 ---
 
-## Promociones
-
-#### [Doggygo VPN — Acelerador global orientado al rendimiento](https://verge.dginv.click/#/register?code=oaxsAGo6)
-
-- Servicio internacional de alto rendimiento con prueba gratuita, planes con descuento, desbloqueo de streaming y soporte de protocolo Hysteria de primera clase.
-- Regístrate mediante el enlace exclusivo de Clash Verge y obtén una prueba de 3 días con 1 GB de tráfico diario: [Regístrate](https://verge.dginv.click/#/register?code=oaxsAGo6)
-- Cupón exclusivo de 20% de descuento para usuarios de Clash Verge: `verge20` (limitado a 500 usos)
-- Plan promocional desde ¥15.8 al mes con 160 GB, más 20% de descuento adicional por pago anual
-- Equipo ubicado en el extranjero para un servicio confiable, con hasta 50% de comisión compartida
-- Clústeres balanceados con rutas dedicadas de alta velocidad (compatibles con clientes antiguos), latencia extremadamente baja, reproducción 4K sin interrupciones
-- Primer proveedor global con **protocolo QUIC**, ahora con protocolos de la familia QUIC más rápidos (ideal para el cliente Clash Verge)
-- Desbloquea servicios de streaming y acceso a ChatGPT
-- Sitio oficial: [https://狗狗加速.com](https://verge.dginv.click/#/register?code=oaxsAGo6)
-
-### 🤖 [GPTKefu — Plataforma de atención al cliente con IA integrada con Crisp](https://gptkefu.com)
-
-- 🧠 Comprensión profunda del contexto completo de la conversación + reconocimiento de imágenes, respuestas profesionales y precisas de forma automática, sin respuestas robóticas.
-- ♾️ **Respuestas ilimitadas**, sin preocupaciones por cuotas — a diferencia de otros productos de IA que cobran por mensaje.
-- 💬 Consultas preventa, soporte postventa, resolución de problemas complejos — cubre todos los escenarios con facilidad, con casos reales verificados.
-- ⚡ Configuración en 3 minutos, sin curva de aprendizaje — mejora al instante la eficiencia y la satisfacción del cliente.
-- 🎁 Prueba gratuita de 14 días del plan Premium — prueba antes de pagar: 👉 [Probar gratis](https://gptkefu.com)
-- 📢 Canal TG de atención al cliente IA: [@crisp_ai](https://t.me/crisp_ai)
-
----
-
 ## Funciones
 
 - Basado en Rust de alto rendimiento y en el framework Tauri 2

@@ -49,31 +49,6 @@ Windows (x64/x86), Linux (x64/arm64), macOS 10.15+ (Intel/Apple)을 지원합니
 
 ---
 
-## 프로모션
-
-#### [Doggygo VPN — 고성능 글로벌 가속기](https://verge.dginv.click/#/register?code=oaxsAGo6)
-
-- 무료 체험, 할인 요금제, 스트리밍 해제, 선도적인 Hysteria 프로토콜 지원을 갖춘 고성능 해외 네트워크 서비스
-- Clash Verge 전용 초대 링크로 가입 시 3일간 매일 1GB 무료 체험 제공: [가입하기](https://verge.dginv.click/#/register?code=oaxsAGo6)
-- Clash Verge 전용 20% 할인 코드: `verge20` (선착순 500회)
-- 월 15.8위안부터 160GB 제공, 연간 결제 시 추가 20% 할인
-- 해외 팀 운영, 높은 신뢰성, 최대 50% 커미션
-- 로드밸런싱 클러스터, 고속 전용 회선(구 클라이언트 호환), 매우 낮은 지연, 4K도 쾌적
-- 세계 최초 **QUIC 프로토콜** 지원, 더 빠른 QUIC 계열 프로토콜 제공 (Clash Verge 클라이언트와 최적의 궁합)
-- 스트리밍 및 ChatGPT 접근 지원
-- 공식 사이트: [https://狗狗加速.com](https://verge.dginv.click/#/register?code=oaxsAGo6)
-
-### 🤖 [GPTKefu — Crisp과 긴밀히 통합된 AI 스마트 고객 서비스 플랫폼](https://gptkefu.com)
-
-- 🧠 전체 대화 맥락 + 이미지 인식을 깊이 이해하여 전문적이고 정확한 답변을 자동 제공 — 기계적인 응답은 이제 그만.
-- ♾️ **무제한 답변**, 할당량 걱정 없음 — 건당 과금하는 다른 AI 고객 서비스 제품과 차별화.
-- 💬 사전 상담, 사후 지원, 복잡한 문제 해결 — 모든 시나리오를 손쉽게 커버, 실제 사용 사례로 효과 검증.
-- ⚡ 3분 만에 설정, 러닝 커브 제로 — 고객 서비스 효율성과 고객 만족도를 즉시 향상.
-- 🎁 프리미엄 플랜 14일 무료 체험 — 먼저 체험 후 결제: 👉 [무료 체험 시작](https://gptkefu.com)
-- 📢 AI 고객 서비스 TG 채널: [@crisp_ai](https://t.me/crisp_ai)
-
----
-
 ## 기능
 
 - 고성능 Rust와 Tauri 2 프레임워크 기반 데스크톱 앱
