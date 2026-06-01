@@ -378,11 +378,11 @@ proxy-groups: "invalid"
     #[allow(clippy::unwrap_used)]
     #[allow(clippy::expect_used)]
     fn test_delete_rule_matches_no_resolve_variant() {
-        let config_str = r#"
+        let config_str = r"
 rules:
 - GEOIP,CN,DIRECT,no-resolve
 - MATCH,GLOBAL
-"#;
+";
         let mut config: Mapping = serde_yaml_ng::from_str(config_str).expect("Failed to parse test config YAML");
 
         let seq = SeqMap {

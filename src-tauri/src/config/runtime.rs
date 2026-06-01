@@ -115,24 +115,24 @@ impl IRuntime {
             return;
         };
 
-        if let Some(Value::Sequence(proxies)) = config.get_mut("proxies") {
-            if let Ok(mut backup) = PROXY_CHAIN_DIALER_BACKUP.lock() {
-                for proxy in proxies.iter_mut() {
-                    let Some(proxy) = proxy.as_mapping_mut() else {
-                        continue;
-                    };
-                    let Some(name) = proxy.get("name").and_then(|name| name.as_str()) else {
-                        continue;
-                    };
-                    let Some(previous_dialer_proxy) = backup.remove(name) else {
-                        continue;
-                    };
+        if let Some(Value::Sequence(proxies)) = config.get_mut("proxies")
+            && let Ok(mut backup) = PROXY_CHAIN_DIALER_BACKUP.lock()
+        {
+            for proxy in proxies.iter_mut() {
+                let Some(proxy) = proxy.as_mapping_mut() else {
+                    continue;
+                };
+                let Some(name) = proxy.get("name").and_then(|name| name.as_str()) else {
+                    continue;
+                };
+                let Some(previous_dialer_proxy) = backup.remove(name) else {
+                    continue;
+                };
 
-                    if let Some(previous_dialer_proxy) = previous_dialer_proxy {
-                        proxy.insert("dialer-proxy".into(), previous_dialer_proxy);
-                    } else {
-                        proxy.remove("dialer-proxy");
-                    }
+                if let Some(previous_dialer_proxy) = previous_dialer_proxy {
+                    proxy.insert("dialer-proxy".into(), previous_dialer_proxy);
+                } else {
+                    proxy.remove("dialer-proxy");
                 }
             }
         }
