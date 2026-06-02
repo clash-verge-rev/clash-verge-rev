@@ -1,7 +1,6 @@
 import {
   ComputerRounded,
   TroubleshootRounded,
-  HelpOutlineRounded,
   SvgIconComponent,
 } from '@mui/icons-material'
 import {
@@ -9,7 +8,6 @@ import {
   Typography,
   Stack,
   Paper,
-  Tooltip,
   alpha,
   useTheme,
   Fade,
@@ -95,44 +93,36 @@ const TabButton: FC<TabButtonProps> = memo(
 
 interface TabDescriptionProps {
   description: string
-  tooltipTitle: string
 }
 
 // 描述文本组件
-const TabDescription: FC<TabDescriptionProps> = memo(
-  ({ description, tooltipTitle }) => (
-    <Fade in={true} timeout={200}>
-      <Typography
-        variant="caption"
-        component="div"
-        sx={{
-          width: '95%',
-          textAlign: 'center',
-          color: 'text.secondary',
-          p: 0.8,
-          borderRadius: 1,
-          borderColor: 'primary.main',
-          borderWidth: 1,
-          borderStyle: 'solid',
-          backgroundColor: 'background.paper',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 0.5,
-          wordBreak: 'break-word',
-          hyphens: 'auto',
-        }}
-      >
-        {description}
-        <Tooltip title={tooltipTitle}>
-          <HelpOutlineRounded
-            sx={{ fontSize: 14, opacity: 0.7, flexShrink: 0 }}
-          />
-        </Tooltip>
-      </Typography>
-    </Fade>
-  ),
-)
+const TabDescription: FC<TabDescriptionProps> = memo(({ description }) => (
+  <Fade in={true} timeout={200}>
+    <Typography
+      variant="caption"
+      component="div"
+      sx={{
+        width: '95%',
+        textAlign: 'center',
+        color: 'text.secondary',
+        p: 0.8,
+        borderRadius: 1,
+        borderColor: 'primary.main',
+        borderWidth: 1,
+        borderStyle: 'solid',
+        backgroundColor: 'background.paper',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 0.5,
+        wordBreak: 'break-word',
+        hyphens: 'auto',
+      }}
+    >
+      {description}
+    </Typography>
+  </Fade>
+))
 
 export const ProxyTunCard: FC = () => {
   const { t } = useTranslation()
@@ -162,7 +152,6 @@ export const ProxyTunCard: FC = () => {
         text: systemProxyConfigState
           ? t('home.components.proxyTun.status.systemProxyEnabled')
           : t('home.components.proxyTun.status.systemProxyDisabled'),
-        tooltip: t('home.components.proxyTun.tooltips.systemProxy'),
       }
     } else {
       return {
@@ -171,7 +160,6 @@ export const ProxyTunCard: FC = () => {
           : enable_tun_mode
             ? t('home.components.proxyTun.status.tunModeEnabled')
             : t('home.components.proxyTun.status.tunModeDisabled'),
-        tooltip: t('home.components.proxyTun.tooltips.tunMode'),
       }
     }
   }, [
@@ -220,10 +208,7 @@ export const ProxyTunCard: FC = () => {
           overflow: 'visible',
         }}
       >
-        <TabDescription
-          description={tabDescription.text}
-          tooltipTitle={tabDescription.tooltip}
-        />
+        <TabDescription description={tabDescription.text} />
       </Box>
 
       <Box

@@ -405,7 +405,7 @@ impl IVerge {
             tun_tray_icon: Some(false),
             enable_auto_launch: Some(false),
             enable_silent_start: Some(false),
-            enable_hover_jump_navigator: Some(true),
+            enable_hover_jump_navigator: Some(false),
             hover_jump_navigator_delay: Some(280),
             enable_system_proxy: Some(false),
             proxy_auto_config: Some(false),

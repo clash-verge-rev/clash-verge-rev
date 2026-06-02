@@ -41,6 +41,7 @@ import { ScrollTopButton } from '../layout/scroll-top-button'
 import { ProxyChain } from './proxy-chain'
 import {
   DEFAULT_HOVER_DELAY,
+  NAVIGATOR_GUTTER_WIDTH,
   ProxyGroupNavigator,
 } from './proxy-group-navigator'
 import { ProxyRender } from './proxy-render'
@@ -477,11 +478,13 @@ export const ProxyGroups = (props: Props) => {
       .map((item) => item.group!.name)
     return Array.from(new Set(names))
   }, [renderList])
+  const showGroupNavigator = mode === 'rule' && proxyGroupNames.length > 0
 
-  const renderProxyList = (height: string) => (
+  const renderProxyList = (height: string, endGutter = 0) => (
     <ProxyVirtualList
       parentRef={parentRef}
       height={height}
+      endGutter={endGutter}
       totalSize={virtualizer.getTotalSize()}
       virtualItems={virtualItems}
       renderList={renderList}
@@ -568,16 +571,19 @@ export const ProxyGroups = (props: Props) => {
       style={{ position: 'relative', height: '100%', willChange: 'transform' }}
     >
       {/* 代理组导航栏 */}
-      {mode === 'rule' && (
+      {showGroupNavigator && (
         <ProxyGroupNavigator
           proxyGroupNames={proxyGroupNames}
           onGroupLocation={handleGroupLocationByName}
-          enableHoverJump={verge?.enable_hover_jump_navigator ?? true}
+          enableHoverJump={verge?.enable_hover_jump_navigator ?? false}
           hoverDelay={verge?.hover_jump_navigator_delay ?? DEFAULT_HOVER_DELAY}
         />
       )}
 
-      {renderProxyList('calc(100% - 14px)')}
+      {renderProxyList(
+        'calc(100% - 14px)',
+        showGroupNavigator ? NAVIGATOR_GUTTER_WIDTH : 0,
+      )}
       <ScrollTopButton show={showScrollTop} onClick={scrollToTop} />
     </div>
   )
@@ -593,6 +599,7 @@ type VirtualListItem = {
 interface ProxyVirtualListProps {
   parentRef: RefObject<HTMLDivElement | null>
   height: string
+  endGutter?: number
   totalSize: number
   virtualItems: VirtualListItem[]
   renderList: IRenderItem[]
@@ -757,6 +764,7 @@ function GroupSelectMenu({
 function ProxyVirtualList({
   parentRef,
   height,
+  endGutter = 0,
   totalSize,
   virtualItems,
   renderList,
@@ -774,7 +782,15 @@ function ProxyVirtualList({
     theme.palette.mode === 'dark' ? '#1e1f27' : 'var(--background-color)'
 
   return (
-    <div ref={parentRef} style={{ height, overflow: 'auto' }}>
+    <div
+      ref={parentRef}
+      style={{
+        height,
+        overflow: 'auto',
+        paddingRight: endGutter,
+        boxSizing: 'border-box',
+      }}
+    >
       <div style={{ height: totalSize, position: 'relative' }}>
         {virtualItems.map((virtualItem) => (
           <div

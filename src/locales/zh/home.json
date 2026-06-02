@@ -7,14 +7,14 @@
     },
     "cards": {
       "trafficStats": "流量统计",
-      "networkSettings": "网络设置",
+      "networkSettings": "代理开关",
       "proxyMode": "代理模式"
     },
     "settings": {
       "cards": {
         "profile": "订阅卡",
         "currentProxy": "当前代理卡",
-        "network": "网络设置卡",
+        "network": "代理开关卡",
         "proxyMode": "代理模式卡",
         "traffic": "流量统计卡",
         "tests": "网站测试卡",
@@ -31,13 +31,13 @@
       "status": {
         "systemProxyEnabled": "系统代理已启用，您的应用将通过代理访问网络",
         "systemProxyDisabled": "系统代理已关闭，建议大多数用户打开此选项",
-        "tunModeServiceRequired": "TUN 模式需要服务模式，请先安装服务",
-        "tunModeEnabled": "TUN 模式已启用，应用将通过虚拟网卡访问网络",
-        "tunModeDisabled": "TUN 模式已关闭，适用于特殊应用"
+        "tunModeServiceRequired": "虚拟网卡需要服务模式，请先安装服务",
+        "tunModeEnabled": "虚拟网卡已启用，应用流量将通过虚拟网卡访问网络",
+        "tunModeDisabled": "虚拟网卡已关闭，适用于不遵循系统代理的应用"
       },
       "tooltips": {
         "systemProxy": "修改操作系统的代理设置，如果开启失败，可手动修改操作系统的代理设置",
-        "tunMode": "TUN 模式可以接管所有应用流量，适用于特殊不遵循系统代理设置的应用"
+        "tunMode": "虚拟网卡模式（TUN）可以接管所有应用流量，适用于不遵循系统代理设置的应用"
       }
     },
     "clashInfo": {

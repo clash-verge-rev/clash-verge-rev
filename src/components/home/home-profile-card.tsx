@@ -15,27 +15,17 @@ import {
   Stack,
   Typography,
   alpha,
-  keyframes,
   useTheme,
 } from '@mui/material'
-import { useLockFn } from 'ahooks'
 import dayjs from 'dayjs'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
 
-import { useAppRefreshers } from '@/providers/app-data-context'
-import { openWebUrl, updateProfile } from '@/services/cmds'
-import { showNotice } from '@/services/notice-service'
+import { openWebUrl } from '@/services/cmds'
 import parseTraffic from '@/utils/parse-traffic'
 
 import { EnhancedCard } from './enhanced-card'
-
-// 定义旋转动画
-const round = keyframes`
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-`
 
 // 辅助函数解析URL和过期时间
 const parseUrl = (url?: string) => {
@@ -76,15 +66,7 @@ interface HomeProfileCardProps {
 }
 
 // 提取独立组件减少主组件复杂度
-const ProfileDetails = ({
-  current,
-  onUpdateProfile,
-  updating,
-}: {
-  current: ProfileItem
-  onUpdateProfile: () => void
-  updating: boolean
-}) => {
+const ProfileDetails = ({ current }: { current: ProfileItem }) => {
   const { t } = useTranslation()
   const theme = useTheme()
 
@@ -111,7 +93,7 @@ const ProfileDetails = ({
               noWrap
               sx={{ display: 'flex', alignItems: 'center' }}
             >
-              <span style={{ flexShrink: 0 }}>{t('shared.labels.from')}: </span>
+              <span style={{ flexShrink: 0 }}>{t('shared.labels.from')}：</span>
               {current.home ? (
                 <Link
                   component="button"
@@ -171,22 +153,9 @@ const ProfileDetails = ({
 
         {current.updated && (
           <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
-            <UpdateOutlined
-              fontSize="small"
-              color="action"
-              sx={{
-                cursor: 'pointer',
-                animation: updating ? `${round} 1.5s linear infinite` : 'none',
-              }}
-              onClick={onUpdateProfile}
-            />
-            <Typography
-              variant="body2"
-              color="text.secondary"
-              sx={{ cursor: 'pointer' }}
-              onClick={onUpdateProfile}
-            >
-              {t('shared.labels.updateTime')}:{' '}
+            <UpdateOutlined fontSize="small" color="action" />
+            <Typography variant="body2" color="text.secondary">
+              {t('shared.labels.updateTime')}：
               <Box component="span" sx={{ fontWeight: 'medium' }}>
                 {dayjs(current.updated * 1000).format('YYYY-MM-DD HH:mm')}
               </Box>
@@ -199,7 +168,7 @@ const ProfileDetails = ({
             <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
               <SpeedOutlined fontSize="small" color="action" />
               <Typography variant="body2" color="text.secondary">
-                {t('shared.labels.usedTotal')}:{' '}
+                {t('shared.labels.usedTotal')}：
                 <Box component="span" sx={{ fontWeight: 'medium' }}>
                   {parseTraffic(usedTraffic)} /{' '}
                   {parseTraffic(current.extra.total)}
@@ -211,7 +180,7 @@ const ProfileDetails = ({
               <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
                 <EventOutlined fontSize="small" color="action" />
                 <Typography variant="body2" color="text.secondary">
-                  {t('shared.labels.expireTime')}:{' '}
+                  {t('shared.labels.expireTime')}：
                   <Box component="span" sx={{ fontWeight: 'medium' }}>
                     {parseExpire(current.extra.expire)}
                   </Box>
@@ -275,33 +244,9 @@ const EmptyProfile = ({ onClick }: { onClick: () => void }) => {
   )
 }
 
-export const HomeProfileCard = ({
-  current,
-  onProfileUpdated,
-}: HomeProfileCardProps) => {
+export const HomeProfileCard = ({ current }: HomeProfileCardProps) => {
   const { t } = useTranslation()
   const navigate = useNavigate()
-  const { refreshAll } = useAppRefreshers()
-
-  // 更新当前订阅
-  const [updating, setUpdating] = useState(false)
-
-  const onUpdateProfile = useLockFn(async () => {
-    if (!current?.uid) return
-
-    setUpdating(true)
-    try {
-      await updateProfile(current.uid, current.option)
-      onProfileUpdated?.()
-
-      // 刷新首页数据
-      refreshAll()
-    } catch (err) {
-      showNotice.error(err, 3000)
-    } finally {
-      setUpdating(false)
-    }
-  })
 
   // 导航到订阅页面
   const goToProfiles = useCallback(() => {
@@ -376,11 +321,7 @@ export const HomeProfileCard = ({
       action={cardAction}
     >
       {current ? (
-        <ProfileDetails
-          current={current}
-          onUpdateProfile={onUpdateProfile}
-          updating={updating}
-        />
+        <ProfileDetails current={current} />
       ) : (
         <EmptyProfile onClick={goToProfiles} />
       )}

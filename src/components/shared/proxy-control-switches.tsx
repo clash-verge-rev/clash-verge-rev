@@ -189,7 +189,7 @@ const ProxyControlSwitches = ({
         <SwitchRow
           label={t('settings.sections.proxyControl.fields.systemProxy')}
           active={systemProxyIndicator}
-          infoTitle={t('settings.sections.proxyControl.tooltips.systemProxy')}
+          infoTitle={t('settings.modals.sysproxy.title')}
           onInfoClick={() => sysproxyRef.current?.open()}
           onToggle={(value) => toggleSystemProxy(value)}
           onError={onError}
@@ -201,7 +201,7 @@ const ProxyControlSwitches = ({
         <SwitchRow
           label={t('settings.sections.proxyControl.fields.tunMode')}
           active={enable_tun_mode || false}
-          infoTitle={t('settings.sections.proxyControl.tooltips.tunMode')}
+          infoTitle={t('settings.modals.tun.title')}
           onInfoClick={() => tunRef.current?.open()}
           onToggle={handleTunToggle}
           onError={onError}

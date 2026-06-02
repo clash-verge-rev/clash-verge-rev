@@ -11,7 +11,7 @@
     "system": {
       "title": "System Setting",
       "toggles": {
-        "tunMode": "Tun Mode",
+        "tunMode": "Virtual NIC",
         "systemProxy": "System Proxy"
       },
       "tooltips": {
@@ -23,16 +23,16 @@
       },
       "notifications": {
         "tunMode": {
-          "autoDisabled": "TUN Mode automatically disabled due to service unavailable",
-          "autoDisableFailed": "Failed to disable TUN Mode automatically"
+          "autoDisabled": "Virtual NIC automatically disabled due to service unavailable",
+          "autoDisableFailed": "Failed to disable Virtual NIC automatically"
         }
       }
     },
     "proxyControl": {
       "tooltips": {
         "systemProxy": "Enable to modify the operating system's proxy settings. If enabling fails, modify the operating system's proxy settings manually",
-        "tunMode": "Tun (Virtual NIC) mode: Captures all system traffic, when enabled, there is no need to enable system proxy.",
-        "tunUnavailable": "TUN requires Service Mode or Admin Mode"
+        "tunMode": "Virtual NIC (TUN) captures all system traffic, so System Proxy is not required when enabled.",
+        "tunUnavailable": "Virtual NIC requires Service Mode or Admin Mode"
       },
       "actions": {
         "installService": "Install Service",
@@ -40,7 +40,7 @@
       },
       "fields": {
         "systemProxy": "System Proxy",
-        "tunMode": "Tun Mode"
+        "tunMode": "Virtual NIC"
       }
     },
     "externalController": {
@@ -238,7 +238,7 @@
           "showOutboundModesInline": "Show Outbound Modes Inline",
           "commonTrayIcon": "Common Tray Icon",
           "systemProxyTrayIcon": "System Proxy Tray Icon",
-          "tunTrayIcon": "Tun Tray Icon",
+          "tunTrayIcon": "Virtual NIC Tray Icon",
           "enableTrayIcon": "Enable Tray Icon",
           "enableTraySpeed": "Enable Tray Speed",
           "pauseRenderTrafficStatsOnBlur": "Pause rendering traffic statistics when blurred"
@@ -465,9 +465,9 @@
       }
     },
     "tun": {
-      "title": "Tun Mode",
+      "title": "Virtual NIC Settings",
       "fields": {
-        "stack": "Tun Stack",
+        "stack": "TUN Stack",
         "device": "Device Name",
         "autoRoute": "Auto Route",
         "routeExcludeAddress": "Route Exclude Address",
@@ -602,7 +602,7 @@
         "global": "Global Mode",
         "openOrCloseDashboard": "Open/Close Dashboard",
         "toggleSystemProxy": "Enable/Disable System Proxy",
-        "toggleTunMode": "Enable/Disable Tun Mode",
+        "toggleTunMode": "Enable/Disable Virtual NIC",
         "entryLightweightMode": "Entry Lightweight Mode",
         "direct": "Direct Mode",
         "reactivateProfiles": "Reactivate Profiles"

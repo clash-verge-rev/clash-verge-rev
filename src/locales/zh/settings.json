@@ -11,7 +11,7 @@
     "system": {
       "title": "系统设置",
       "toggles": {
-        "tunMode": "虚拟网卡模式",
+        "tunMode": "虚拟网卡",
         "systemProxy": "系统代理"
       },
       "tooltips": {
@@ -23,16 +23,16 @@
       },
       "notifications": {
         "tunMode": {
-          "autoDisabled": "由于服务不可用，TUN 模式已自动关闭",
-          "autoDisableFailed": "自动关闭 TUN 模式失败"
+          "autoDisabled": "由于服务不可用，虚拟网卡已自动关闭",
+          "autoDisableFailed": "自动关闭虚拟网卡失败"
         }
       }
     },
     "proxyControl": {
       "tooltips": {
         "systemProxy": "修改操作系统的代理设置，如果开启失败，可手动修改操作系统的代理设置",
-        "tunMode": "TUN（虚拟网卡）模式接管系统所有流量，启用时无须打开系统代理",
-        "tunUnavailable": "TUN 模式需要安装服务模式或管理员模式"
+        "tunMode": "虚拟网卡模式（TUN）接管系统所有流量，启用时无须打开系统代理",
+        "tunUnavailable": "虚拟网卡需要服务模式或管理员模式"
       },
       "actions": {
         "installService": "安装服务",
@@ -40,7 +40,7 @@
       },
       "fields": {
         "systemProxy": "系统代理",
-        "tunMode": "虚拟网卡模式"
+        "tunMode": "虚拟网卡"
       }
     },
     "externalController": {
@@ -238,7 +238,7 @@
           "showOutboundModesInline": "将出站模式显示在托盘一级菜单",
           "commonTrayIcon": "常规托盘图标",
           "systemProxyTrayIcon": "系统代理托盘图标",
-          "tunTrayIcon": "TUN 模式托盘图标",
+          "tunTrayIcon": "虚拟网卡托盘图标",
           "enableTrayIcon": "启用托盘图标",
           "enableTraySpeed": "启用托盘速率",
           "pauseRenderTrafficStatsOnBlur": "失去焦点时暂停渲染流量统计"
@@ -465,9 +465,9 @@
       }
     },
     "tun": {
-      "title": "虚拟网卡模式",
+      "title": "虚拟网卡设置",
       "fields": {
-        "stack": "TUN 模式堆栈",
+        "stack": "TUN 堆栈",
         "device": "虚拟网卡名称",
         "autoRoute": "自动设置全局路由",
         "routeExcludeAddress": "排除自定义网段",
@@ -602,7 +602,7 @@
         "global": "全局模式",
         "openOrCloseDashboard": "打开/关闭面板",
         "toggleSystemProxy": "打开/关闭系统代理",
-        "toggleTunMode": "打开/关闭 TUN 模式",
+        "toggleTunMode": "打开/关闭虚拟网卡",
         "entryLightweightMode": "进入轻量模式",
         "direct": "直连模式",
         "reactivateProfiles": "重新激活订阅"

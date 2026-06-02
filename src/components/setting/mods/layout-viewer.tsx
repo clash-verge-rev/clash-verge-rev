@@ -264,7 +264,7 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
             }
           />
           <GuardState
-            value={verge?.enable_hover_jump_navigator ?? true}
+            value={verge?.enable_hover_jump_navigator ?? false}
             valueProps="checked"
             onCatch={onError}
             onFormat={onSwitchFormat}
@@ -315,7 +315,7 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
               autoCapitalize="off"
               spellCheck={false}
               sx={{ width: 120 }}
-              disabled={!(verge?.enable_hover_jump_navigator ?? true)}
+              disabled={!(verge?.enable_hover_jump_navigator ?? false)}
               slotProps={{
                 input: {
                   endAdornment: (

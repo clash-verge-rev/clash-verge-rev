@@ -9,6 +9,7 @@ interface ProxyGroupNavigatorProps {
 }
 
 export const DEFAULT_HOVER_DELAY = 280
+export const NAVIGATOR_GUTTER_WIDTH = 18
 
 // 提取代理组名的第一个字符
 const getGroupDisplayChar = (groupName: string): string => {
@@ -93,17 +94,19 @@ export const ProxyGroupNavigator = ({
     <Box
       sx={{
         position: 'absolute',
-        right: 2,
+        right: 10,
         top: '50%',
         transform: 'translateY(-50%)',
         zIndex: 10,
         display: 'flex',
         flexDirection: 'column',
+        alignItems: 'center',
         gap: 0.25,
         bgcolor: 'transparent',
         borderRadius: 0.5,
         boxShadow: 0,
-        p: 0.25,
+        p: 0,
+        width: 28,
         maxHeight: '70vh',
         overflowY: 'auto',
         scrollbarWidth: 'none',
