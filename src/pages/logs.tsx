@@ -171,6 +171,7 @@ const LogPage = () => {
           <MenuItem value="info">{t('shared.filters.logLevels.info')}</MenuItem>
           <MenuItem value="warn">{t('shared.filters.logLevels.warn')}</MenuItem>
           <MenuItem value="err">{t('shared.filters.logLevels.error')}</MenuItem>
+          <MenuItem value="test">TEST</MenuItem>
         </BaseStyledSelect>
         <BaseSearchBox
           onSearch={(matcher, state) => {

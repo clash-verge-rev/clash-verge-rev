@@ -1,10 +1,24 @@
 import { CheckCircleOutlineRounded } from '@mui/icons-material'
-import { alpha, Box, ListItemButton, styled, Typography } from '@mui/material'
+import {
+  alpha,
+  Box,
+  ListItemButton,
+  styled,
+  Tooltip,
+  Typography,
+} from '@mui/material'
+import { useLockFn } from 'ahooks'
+import { useEffect, useReducer } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BaseLoading } from '@/components/base'
 import { useProxyDelayState } from '@/hooks/use-proxy-delay-state'
 import delayManager from '@/services/delay'
+import speedManager, {
+  loadSpeedTestConfig,
+  saveSpeedTestConfig,
+  SpeedUpdate,
+} from '@/services/speed'
 
 interface Props {
   group: IProxyGroupItem
@@ -21,10 +35,58 @@ export const ProxyItemMini = (props: Props) => {
   const { t } = useTranslation()
 
   // -1/<=0 为不显示，-2 为 loading
-  const { delayValue, isPreset, timeout, onDelay } = useProxyDelayState(
-    proxy,
-    group.name,
+  const { delayState, delayValue, isPreset, timeout, onDelay } =
+    useProxyDelayState(proxy, group.name)
+  const [speedState, setSpeedState] = useReducer(
+    (_: SpeedUpdate, next: SpeedUpdate) => next,
+    {
+      speed: -1,
+      updatedAt: 0,
+    },
   )
+
+  useEffect(() => {
+    if (isPreset) return
+    speedManager.setListener(proxy.name, group.name, setSpeedState)
+    return () => {
+      speedManager.removeListener(proxy.name, group.name)
+    }
+  }, [isPreset, proxy.name, group.name])
+
+  useEffect(() => {
+    if (isPreset) return
+    const cachedUpdate = speedManager.getSpeedUpdate(proxy.name, group.name)
+    if (cachedUpdate) {
+      setSpeedState(cachedUpdate)
+    }
+  }, [proxy.name, group.name, isPreset])
+
+  const onSpeed = useLockFn(async () => {
+    const config = await loadSpeedTestConfig()
+    setSpeedState({ speed: -2, updatedAt: Date.now() })
+    setSpeedState(
+      await speedManager.checkSpeed(proxy.name, group.name, timeout, {
+        config,
+        onConfigChange: saveSpeedTestConfig,
+      }),
+    )
+  })
+
+  const speedValue = speedState.speed
+  const delayTitle =
+    delayState.error ||
+    (delayValue === 0 || (delayValue >= timeout && delayValue <= 1e5)
+      ? `Delay test timed out after ${timeout}ms`
+      : delayValue > 1e5
+        ? 'Delay test error'
+        : '')
+  const speedTitle = [
+    speedState.error,
+    typeof speedState.ttfb === 'number' ? `TTFB ${speedState.ttfb}ms` : '',
+    speedState.earlyEof ? 'Early EOF' : '',
+  ]
+    .filter(Boolean)
+    .join('\n')
 
   return (
     <ListItemButton
@@ -37,12 +99,20 @@ export const ProxyItemMini = (props: Props) => {
           borderRadius: 1.5,
           pl: 1.5,
           pr: 1,
+          containerType: 'inline-size',
           justifyContent: 'space-between',
           alignItems: 'center',
+          '@container (min-width: 340px)': {
+            '& .the-metrics': {
+              flexDirection: 'row',
+              flexWrap: 'nowrap',
+              maxWidth: 'none',
+            },
+          },
         },
         ({ palette: { mode, primary } }) => {
           const bgcolor = mode === 'light' ? '#ffffff' : '#24252f'
-          const showDelay = delayValue > 0
+          const showDelay = delayValue >= 0
           const selectColor = mode === 'light' ? primary.main : primary.light
 
           return {
@@ -72,7 +142,7 @@ export const ProxyItemMini = (props: Props) => {
     >
       <Box
         title={`${proxy.name}\n${proxy.now ?? ''}`}
-        sx={{ overflow: 'hidden' }}
+        sx={{ overflow: 'hidden', flex: '1 1 auto', minWidth: 0, pr: 1 }}
       >
         <Typography
           variant="body2"
@@ -152,14 +222,27 @@ export const ProxyItemMini = (props: Props) => {
         )}
       </Box>
       <Box
-        sx={{ ml: 0.5, color: 'primary.main', display: isPreset ? 'none' : '' }}
+        className="the-metrics"
+        sx={{
+          ml: 1,
+          minWidth: 64,
+          maxWidth: '48%',
+          flexShrink: 0,
+          color: 'primary.main',
+          display: isPreset ? 'none' : 'flex',
+          flexDirection: 'column',
+          flexWrap: 'wrap',
+          alignItems: 'flex-end',
+          justifyContent: 'center',
+          gap: '2px 6px',
+        }}
       >
-        {delayValue === -2 && (
+        {(delayValue === -2 || speedValue === -2) && (
           <Widget>
             <BaseLoading />
           </Widget>
         )}
-        {!proxy.provider && delayValue !== -2 && (
+        {!proxy.provider && delayValue !== -2 && speedValue !== -2 && (
           // provider 的节点不支持检测
           <Widget
             className="the-check"
@@ -177,10 +260,11 @@ export const ProxyItemMini = (props: Props) => {
           </Widget>
         )}
 
-        {delayValue >= 0 && (
+        {delayValue >= 0 && speedValue !== -2 && (
           // 显示延迟
           <Widget
             className="the-delay"
+            title={delayTitle || undefined}
             onClick={(e) => {
               if (proxy.provider) return
               e.preventDefault()
@@ -197,8 +281,48 @@ export const ProxyItemMini = (props: Props) => {
             {delayManager.formatDelay(delayValue, timeout)}
           </Widget>
         )}
+        {speedValue > 0 && speedValue !== -2 && (
+          <Tooltip title={speedTitle} arrow disableHoverListener={!speedTitle}>
+            <Widget
+              className="the-delay"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                onSpeed()
+              }}
+              sx={({ palette }) => ({
+                color: speedManager.formatSpeedColor(
+                  speedValue,
+                  speedState.earlyEof,
+                ),
+                ':hover': { bgcolor: alpha(palette.primary.main, 0.15) },
+              })}
+            >
+              {speedManager.formatSpeed(speedValue)}
+            </Widget>
+          </Tooltip>
+        )}
+        {speedValue === -3 && (
+          <Tooltip title={speedTitle || 'Error'} arrow>
+            <Widget
+              className="the-delay"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                onSpeed()
+              }}
+              sx={({ palette }) => ({
+                color: 'error.main',
+                ':hover': { bgcolor: alpha(palette.primary.main, 0.15) },
+              })}
+            >
+              Error
+            </Widget>
+          </Tooltip>
+        )}
         {proxy.type !== 'Direct' &&
           delayValue !== -2 &&
+          speedValue !== -2 &&
           delayValue < 0 &&
           selected && (
             // 展示已选择的 icon
@@ -226,9 +350,17 @@ export const ProxyItemMini = (props: Props) => {
 }
 
 const Widget = styled(Box)(({ theme: { typography } }) => ({
-  padding: '2px 4px',
-  fontSize: 14,
+  padding: '1px 2px',
+  fontSize: 13,
   fontFamily: typography.fontFamily,
+  fontVariantNumeric: 'tabular-nums',
+  lineHeight: 1.3,
+  maxWidth: '100%',
+  minHeight: 18,
+  overflow: 'hidden',
+  textAlign: 'right',
+  textOverflow: 'ellipsis',
+  whiteSpace: 'nowrap',
   borderRadius: '4px',
 }))
 

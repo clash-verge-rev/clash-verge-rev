@@ -32,6 +32,9 @@ interface RenderProps {
   isChainMode?: boolean
   onLocation: (group: IRenderItem['group']) => void
   onCheckAll: (groupName: string) => void
+  onCheckSpeedAll: (groupName: string) => void
+  onCheckBoth: (groupName: string) => void
+  onCancelTests: () => void
   onHeadState: (groupName: string, patch: Partial<HeadState>) => void
   onChangeProxy: (
     group: IRenderItem['group'],
@@ -46,6 +49,9 @@ export const ProxyRender = (props: RenderProps) => {
     item,
     onLocation,
     onCheckAll,
+    onCheckSpeedAll,
+    onCheckBoth,
+    onCancelTests,
     onHeadState,
     onChangeProxy,
     isChainMode: _ = false,
@@ -172,6 +178,9 @@ export const ProxyRender = (props: RenderProps) => {
         headState={headState!}
         onLocation={() => onLocation(group)}
         onCheckDelay={() => onCheckAll(group.name)}
+        onCheckSpeed={() => onCheckSpeedAll(group.name)}
+        onCheckBoth={() => onCheckBoth(group.name)}
+        onCancelTests={onCancelTests}
         onHeadState={(p) => onHeadState(group.name, p)}
       />
     )

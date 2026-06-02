@@ -2,10 +2,11 @@ import { useEffect, useMemo, useReducer, useRef } from 'react'
 
 import { useVerge } from '@/hooks/use-verge'
 import delayManager from '@/services/delay'
+import speedManager from '@/services/speed'
 import { compileStringMatcher } from '@/utils/search-matcher'
 
-// default | delay | alphabet
-export type ProxySortType = 0 | 1 | 2
+// default | delay | alphabet | speed | value
+export type ProxySortType = 0 | 1 | 2 | 3 | 4
 
 export type ProxySearchState = {
   matchCase?: boolean
@@ -38,9 +39,17 @@ export default function useFilterSort(
         bumpRefresh()
       }
     })
+    speedManager.setGroupListener(groupName, () => {
+      const now = Date.now()
+      if (now - last > 666) {
+        last = now
+        bumpRefresh()
+      }
+    })
 
     return () => {
       delayManager.removeGroupListener(groupName)
+      speedManager.removeGroupListener(groupName)
     }
   }, [groupName])
 
@@ -211,8 +220,56 @@ function sortProxies(
       if (ar !== br) return ar - br
       return av - bv
     })
-  } else {
+  } else if (sortType === 2) {
     list.sort((a, b) => a.name.localeCompare(b.name))
+  } else if (sortType === 3) {
+    list.sort((a, b) => {
+      const av = speedManager.getSortSpeed(a.name, groupName)
+      const bv = speedManager.getSortSpeed(b.name, groupName)
+      const ar = av > 0 ? 0 : 1
+      const br = bv > 0 ? 0 : 1
+      if (ar !== br) return ar - br
+      return bv - av
+    })
+  } else if (sortType === 4) {
+    const isDelayBad = (delay: number) =>
+      delay === 0 || (delay >= effectiveTimeout && delay <= 1e5) || delay > 1e5
+    const rankValue = (name: string, score: number, delay: number) => {
+      if (speedManager.isNodeRouteIssue(name, groupName) && isDelayBad(delay)) {
+        return 3
+      }
+      if (score > 0) return 0
+      if (
+        speedManager.hasMeasuredFailure(name, groupName) ||
+        isDelayBad(delay)
+      ) {
+        return 2
+      }
+      return 1
+    }
+
+    list.sort((a, b) => {
+      const ad = delayManager.getDelayFix(a, groupName)
+      const bd = delayManager.getDelayFix(b, groupName)
+      const as = speedManager.getQualityScore(
+        a.name,
+        groupName,
+        ad,
+        delayManager.getJitter(a.name, groupName),
+        effectiveTimeout,
+      )
+      const bs = speedManager.getQualityScore(
+        b.name,
+        groupName,
+        bd,
+        delayManager.getJitter(b.name, groupName),
+        effectiveTimeout,
+      )
+      const ar = rankValue(a.name, as, ad)
+      const br = rankValue(b.name, bs, bd)
+      if (ar !== br) return ar - br
+      return bs - as
+    })
   }
 
   return list

@@ -1,5 +1,11 @@
 import { delayProxyByName, ProxyDelay } from 'tauri-plugin-mihomo-api'
 
+import {
+  appendTestLog,
+  getTestErrorMessage,
+  sanitizeTestMessage,
+  showTestErrorSummary,
+} from '@/services/test-log'
 import { debugLog } from '@/utils/debug'
 
 const hashKey = (name: string, group: string) => `${group ?? ''}::${name}`
@@ -7,14 +13,21 @@ const hashKey = (name: string, group: string) => `${group ?? ''}::${name}`
 export interface DelayUpdate {
   delay: number
   elapsed?: number
+  error?: string
   updatedAt: number
 }
 
 const CACHE_TTL = 30 * 60 * 1000
+const MAX_LATENCY_SAMPLES = 20
 
 class DelayManager {
   private cache = new Map<string, DelayUpdate>()
   private urlMap = new Map<string, string>()
+  private latencySamples = new Map<string, number[]>()
+  private activeTests = new Map<string, { name: string; group: string }>()
+  private heldResultKeys = new Set<string>()
+  private heldResults = new Map<string, DelayUpdate>()
+  private cancelGeneration = 0
 
   // 每个节点的监听
   private listenerMap = new Map<string, (update: DelayUpdate) => void>()
@@ -134,11 +147,31 @@ class DelayManager {
     this.groupListenerMap.delete(group)
   }
 
+  cancelAll() {
+    this.cancelGeneration += 1
+    const active = [...this.activeTests.values()]
+    this.activeTests.clear()
+    active.forEach(({ name, group }) => this.setDelay(name, group, -1))
+  }
+
+  holdResult(name: string, group: string) {
+    this.heldResultKeys.add(hashKey(name, group))
+  }
+
+  releaseHeldResult(name: string, group: string) {
+    const key = hashKey(name, group)
+    this.heldResultKeys.delete(key)
+    const update = this.heldResults.get(key)
+    if (!update) return
+    this.heldResults.delete(key)
+    this.publishDelayUpdate(key, group, update)
+  }
+
   setDelay(
     name: string,
     group: string,
     delay: number,
-    meta?: { elapsed?: number },
+    meta?: { elapsed?: number; error?: string },
   ): DelayUpdate {
     const key = hashKey(name, group)
     debugLog(
@@ -147,9 +180,29 @@ class DelayManager {
     const update: DelayUpdate = {
       delay,
       elapsed: meta?.elapsed,
+      error: meta?.error,
       updatedAt: Date.now(),
     }
 
+    if (delay === -2) {
+      this.activeTests.set(key, { name, group })
+    } else {
+      this.activeTests.delete(key)
+    }
+    if (delay > 0 && delay < 1e5) {
+      this.recordLatencySample(key, delay)
+    }
+
+    if (this.heldResultKeys.has(key) && delay !== -2) {
+      this.heldResults.set(key, update)
+      return update
+    }
+
+    this.publishDelayUpdate(key, group, update)
+    return update
+  }
+
+  private publishDelayUpdate(key: string, group: string, update: DelayUpdate) {
     this.cache.set(key, update)
 
     const queue = this.pendingItemUpdates.get(key)
@@ -159,8 +212,27 @@ class DelayManager {
       this.pendingItemUpdates.set(key, [update])
     }
     this.scheduleItemFlush()
+    this.queueGroupNotification(group)
+  }
 
-    return update
+  private recordLatencySample(key: string, delay: number) {
+    const samples = this.latencySamples.get(key) ?? []
+    samples.push(delay)
+    this.latencySamples.set(key, samples.slice(-MAX_LATENCY_SAMPLES))
+  }
+
+  getJitter(name: string, group: string) {
+    const samples = this.latencySamples.get(hashKey(name, group)) ?? []
+    if (samples.length < 2) return 0
+
+    const mean = samples.reduce((sum, value) => sum + value, 0) / samples.length
+    const variance =
+      samples.reduce((sum, value) => {
+        const diff = value - mean
+        return sum + diff * diff
+      }, 0) / samples.length
+
+    return Math.sqrt(variance)
   }
 
   getDelayUpdate(name: string, group: string) {
@@ -177,6 +249,10 @@ class DelayManager {
   }
 
   getDelay(name: string, group: string) {
+    const key = hashKey(name, group)
+    const held = this.heldResults.get(key)
+    if (held) return held.delay
+
     const update = this.getDelayUpdate(name, group)
     return update ? update.delay : -1
   }
@@ -202,6 +278,7 @@ class DelayManager {
     name: string,
     group: string,
     timeout: number,
+    generation = this.cancelGeneration,
   ): Promise<DelayUpdate> {
     debugLog(
       `[DelayManager] 开始测试延迟，代理: ${name}, 组: ${group}, 超时: ${timeout}ms`,
@@ -213,6 +290,11 @@ class DelayManager {
     const startTime = Date.now()
 
     try {
+      if (this.isCancelled(generation)) {
+        appendTestLog({ kind: 'delay', status: 'cancelled', group, name })
+        return this.setDelay(name, group, -1)
+      }
+
       const url = this.getUrl(group)
       debugLog(`[DelayManager] 调用API测试延迟，代理: ${name}, URL: ${url}`)
 
@@ -227,6 +309,11 @@ class DelayManager {
         timeoutPromise,
       ])
 
+      if (this.isCancelled(generation)) {
+        appendTestLog({ kind: 'delay', status: 'cancelled', group, name })
+        return this.setDelay(name, group, -1)
+      }
+
       // 确保至少显示500ms的加载动画
       const elapsedTime = Date.now() - startTime
       if (elapsedTime < 500) {
@@ -237,15 +324,42 @@ class DelayManager {
       const elapsed = elapsedTime
       debugLog(`[DelayManager] 延迟测试完成，代理: ${name}, 结果: ${delay}ms`)
 
-      return this.setDelay(name, group, delay, { elapsed })
+      const error =
+        delay === 0 || delay >= timeout
+          ? `Delay test timed out after ${timeout}ms`
+          : undefined
+      appendTestLog({
+        kind: 'delay',
+        status: error ? 'timeout' : 'success',
+        group,
+        name,
+        delay,
+        elapsed,
+        message: error,
+      })
+
+      return this.setDelay(name, group, delay, { elapsed, error })
     } catch (error) {
       // 确保至少显示500ms的加载动画
       await new Promise((resolve) => setTimeout(resolve, 500))
       console.error(`[DelayManager] 延迟测试出错，代理: ${name}`, error)
       const delay = 1e6 // error
       const elapsed = Date.now() - startTime
+      const message = getTestErrorMessage(error)
+      appendTestLog({
+        kind: 'delay',
+        status: 'error',
+        group,
+        name,
+        delay,
+        elapsed,
+        message,
+      })
 
-      return this.setDelay(name, group, delay, { elapsed })
+      return this.setDelay(name, group, delay, {
+        elapsed,
+        error: sanitizeTestMessage(message),
+      })
     }
   }
 
@@ -259,14 +373,17 @@ class DelayManager {
       `[DelayManager] 批量测试延迟开始，组: ${group}, 数量: ${nameList.length}, 并发数: ${concurrency}`,
     )
     const names = nameList.filter(Boolean)
+    const generation = this.cancelGeneration
     // 设置正在延迟测试中
     names.forEach((name) => this.setDelay(name, group, -2))
 
     let index = 0
     const startTime = Date.now()
     const listener = this.groupListenerMap.get(group)
+    let failed = 0
 
     const help = async (): Promise<void> => {
+      if (this.isCancelled(generation)) return
       const currName = names[index++]
       if (!currName) return
 
@@ -282,7 +399,10 @@ class DelayManager {
           )
         }
 
-        await this.checkDelay(currName, group, timeout)
+        const update = await this.checkDelay(currName, group, timeout, generation)
+        if (update.delay === 0 || update.delay >= timeout) {
+          failed += 1
+        }
         if (listener) {
           this.queueGroupNotification(group)
         }
@@ -292,7 +412,10 @@ class DelayManager {
           error,
         )
         // 设置为错误状态
-        this.setDelay(currName, group, 1e6)
+        failed += 1
+        this.setDelay(currName, group, 1e6, {
+          error: sanitizeTestMessage(getTestErrorMessage(error)),
+        })
       }
 
       return help()
@@ -308,10 +431,21 @@ class DelayManager {
     }
 
     await Promise.all(promiseList)
+    if (!this.isCancelled(generation)) {
+      showTestErrorSummary({
+        kind: 'delay',
+        total: names.length,
+        failed,
+      })
+    }
     const totalTime = Date.now() - startTime
     debugLog(
       `[DelayManager] 批量测试延迟完成，组: ${group}, 总耗时: ${totalTime}ms`,
     )
+  }
+
+  private isCancelled(generation: number) {
+    return generation !== this.cancelGeneration
   }
 
   formatDelay(delay: number, timeout = 10000) {
@@ -319,7 +453,7 @@ class DelayManager {
     if (delay === -2) return 'testing'
     if (delay === 0 || (delay >= timeout && delay <= 1e5)) return 'Timeout'
     if (delay > 1e5) return 'Error'
-    return `${delay}`
+    return `${Math.round(delay)} ms`
   }
 
   formatDelayColor(delay: number, timeout = 10000) {

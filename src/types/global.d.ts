@@ -205,7 +205,7 @@ interface ILogItem {
 }
 
 type LogLevel = import('tauri-plugin-mihomo-api').LogLevel
-type LogFilter = 'all' | 'debug' | 'info' | 'warn' | 'err'
+type LogFilter = 'all' | 'debug' | 'info' | 'warn' | 'err' | 'test'
 type LogOrder = 'asc' | 'desc'
 
 interface IClashLog {
@@ -213,6 +213,34 @@ interface IClashLog {
   logLevel: LogLevel
   logFilter: LogFilter
   logOrder: LogOrder
+}
+
+interface ISpeedTestUrlFailure {
+  error?: string
+  kind?: string
+  count?: number
+  first_at?: string
+  last_at?: string
+  at?: string
+}
+
+interface ISpeedTestUrlItem {
+  name?: string
+  url: string
+  region?: string
+  priority?: number
+  enabled?: boolean
+  note?: string
+  failures?: ISpeedTestUrlFailure[]
+  last_error?: string
+  last_error_kind?: string
+  updated_at?: string
+}
+
+interface ISpeedTestUrlConfig {
+  version?: number
+  test_duration_ms?: number
+  targets?: ISpeedTestUrlItem[]
 }
 
 interface IConnectionsItem {

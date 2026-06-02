@@ -1,4 +1,6 @@
 import {
+  Box,
+  Button,
   InputAdornment,
   List,
   ListItem,
@@ -12,12 +14,28 @@ import { forwardRef, useImperativeHandle, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BaseDialog, DialogRef, Switch, TooltipIcon } from '@/components/base'
+import { EditorViewer } from '@/components/profile/editor-viewer'
 import { useVerge } from '@/hooks/use-verge'
+import {
+  openSpeedTestUrlsConfigFile,
+  readSpeedTestUrlsConfigFile,
+  saveSpeedTestUrlsConfigFile,
+} from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
+import {
+  DEFAULT_SPEED_TEST_CONFIG,
+  formatSpeedTestConfig,
+  parseSpeedTestConfig,
+} from '@/services/speed'
 
 export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation()
   const { verge, patchVerge } = useVerge()
+  const [editorOpen, setEditorOpen] = useState(false)
+  const [editorValue, setEditorValue] = useState('')
+  const [editorDirty, setEditorDirty] = useState(false)
+  const [editorLoading, setEditorLoading] = useState(false)
+  const [editorInvalid, setEditorInvalid] = useState(false)
 
   const [open, setOpen] = useState(false)
   const [values, setValues] = useState({
@@ -75,6 +93,40 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
         auto_log_clean: values.autoLogClean as any,
       })
       setOpen(false)
+    } catch (err) {
+      showNotice.error(err)
+    }
+  })
+
+  const openSpeedConfigEditor = useLockFn(async () => {
+    try {
+      setEditorLoading(true)
+      setEditorOpen(true)
+      const content = await readSpeedTestUrlsConfigFile()
+      setEditorValue(formatSpeedTestConfig(parseSpeedTestConfig(content)))
+      setEditorDirty(false)
+      setEditorInvalid(false)
+    } catch (err) {
+      setEditorOpen(false)
+      showNotice.error(err)
+    } finally {
+      setEditorLoading(false)
+    }
+  })
+
+  const saveSpeedConfigEditor = useLockFn(async () => {
+    const formatted = formatSpeedTestConfig(parseSpeedTestConfig(editorValue))
+    await saveSpeedTestUrlsConfigFile(formatted)
+    setEditorValue(formatted)
+    setEditorDirty(false)
+  })
+
+  const resetSpeedConfigEditor = useLockFn(async () => {
+    try {
+      const content = formatSpeedTestConfig(DEFAULT_SPEED_TEST_CONFIG)
+      setEditorValue(content)
+      setEditorDirty(true)
+      setEditorInvalid(false)
     } catch (err) {
       showNotice.error(err)
     }
@@ -421,7 +473,64 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
             }}
           />
         </ListItem>
+
+        <ListItem sx={{ padding: '5px 2px' }}>
+          <ListItemText primary="下载测速地址" />
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <Button
+              size="small"
+              variant="outlined"
+              onClick={() => {
+                void openSpeedTestUrlsConfigFile().catch(showNotice.error)
+              }}
+            >
+              打开文件
+            </Button>
+            <Button
+              size="small"
+              variant="contained"
+              onClick={() => void openSpeedConfigEditor()}
+            >
+              编辑文件
+            </Button>
+          </Box>
+        </ListItem>
       </List>
+
+      <EditorViewer
+        open={editorOpen}
+        title="编辑下载测速地址"
+        value={editorValue}
+        language="json"
+        path="speed-test-urls.json"
+        loading={editorLoading}
+        dirty={editorDirty}
+        saveDisabled={editorInvalid}
+        onChange={(value) => {
+          setEditorValue(value)
+          setEditorDirty(true)
+          try {
+            parseSpeedTestConfig(value)
+            setEditorInvalid(false)
+          } catch {
+            setEditorInvalid(true)
+          }
+        }}
+        onSave={saveSpeedConfigEditor}
+        onClose={() => setEditorOpen(false)}
+        onValidate={(markers) => {
+          setEditorInvalid(markers.some((marker) => marker.severity >= 8))
+        }}
+        extraActions={
+          <Button
+            onClick={() => void resetSpeedConfigEditor()}
+            variant="outlined"
+            color="warning"
+          >
+            重置初始值
+          </Button>
+        }
+      />
     </BaseDialog>
   )
 })

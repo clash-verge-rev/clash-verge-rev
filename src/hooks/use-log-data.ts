@@ -3,7 +3,12 @@ import dayjs from 'dayjs'
 import { useEffect, useRef } from 'react'
 import { MihomoWebSocket, type LogLevel } from 'tauri-plugin-mihomo-api'
 
-import { getClashLogs } from '@/services/cmds'
+import { clearTestLogs, getClashLogs } from '@/services/cmds'
+import {
+  clearTestLogSnapshot,
+  loadPersistedTestLogs,
+  subscribeTestLogs,
+} from '@/services/test-log'
 
 import { useClashLog } from './use-clash-log'
 import { useMihomoWsSubscription } from './use-mihomo-ws-subscription'
@@ -12,12 +17,18 @@ const MAX_LOG_NUM = 1000
 const FLUSH_DELAY_MS = 50
 type LogType = ILogItem['type']
 
-const DEFAULT_LOG_TYPES: LogType[] = ['debug', 'info', 'warning', 'error']
+const DEFAULT_LOG_TYPES: LogType[] = [
+  'debug',
+  'info',
+  'warning',
+  'error',
+  'test',
+]
 const LOG_LEVEL_FILTERS: Record<LogLevel, LogType[]> = {
   debug: DEFAULT_LOG_TYPES,
-  info: ['info', 'warning', 'error'],
-  warning: ['warning', 'error'],
-  error: ['error'],
+  info: ['info', 'warning', 'error', 'test'],
+  warning: ['warning', 'error', 'test'],
+  error: ['error', 'test'],
   silent: [],
 }
 
@@ -120,12 +131,17 @@ export const useLogData = () => {
           if (hasLoadedInitialLogsRef.current) {
             return
           }
-          const logs = await getClashLogs()
+          const [logs, testLogs] = await Promise.all([
+            getClashLogs(),
+            loadPersistedTestLogs(),
+          ])
           hasLoadedInitialLogsRef.current = true
           if (isMounted()) {
             next(null, (current) => {
               if (!current || current.length === 0) {
-                return clampLogs(filterLogsByLevel(logs, allowedTypes))
+                return clampLogs(
+                  filterLogsByLevel(logs.concat(testLogs), allowedTypes),
+                )
               }
               return current
             })
@@ -135,6 +151,20 @@ export const useLogData = () => {
       }
     },
   })
+
+  useEffect(() => {
+    if (!enableLog) return
+
+    return subscribeTestLogs((incoming) => {
+      if (!subscriptionCacheKey) return
+      const filtered = filterLogsByLevel(incoming, allowedTypes)
+      if (filtered.length > 0) {
+        queryClient.setQueryData<ILogItem[]>([subscriptionCacheKey], (current) =>
+          appendLogs(current, filtered),
+        )
+      }
+    })
+  }, [allowedTypes, enableLog, queryClient, subscriptionCacheKey])
 
   const previousLogLevelRef = useRef<LogLevel | undefined>(logLevel)
 
@@ -158,6 +188,8 @@ export const useLogData = () => {
       if (subscriptionCacheKey) {
         queryClient.setQueryData<ILogItem[]>([subscriptionCacheKey], [])
       }
+      clearTestLogSnapshot()
+      void clearTestLogs()
     } else {
       hasLoadedInitialLogsRef.current = false
       refresh()

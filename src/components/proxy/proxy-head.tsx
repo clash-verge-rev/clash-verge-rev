@@ -1,9 +1,12 @@
 import {
   AccessTimeRounded,
+  BoltRounded,
   MyLocationRounded,
   NetworkCheckRounded,
   FilterAltRounded,
   FilterAltOffRounded,
+  SpeedRounded,
+  StopCircleRounded,
   VisibilityRounded,
   VisibilityOffRounded,
   WifiTetheringRounded,
@@ -30,6 +33,9 @@ interface Props {
   headState: HeadState
   onLocation: () => void
   onCheckDelay: () => void
+  onCheckSpeed: () => void
+  onCheckBoth: () => void
+  onCancelTests: () => void
   onHeadState: (val: Partial<HeadState>) => void
 }
 
@@ -43,6 +49,9 @@ export const ProxyHead = ({
   onHeadState,
   onLocation,
   onCheckDelay,
+  onCheckSpeed,
+  onCheckBoth,
+  onCancelTests,
 }: Props) => {
   const {
     showType,
@@ -104,20 +113,51 @@ export const ProxyHead = ({
       <IconButton
         size="small"
         color="inherit"
+        title="下载测速"
+        onClick={onCheckSpeed}
+      >
+        <SpeedRounded />
+      </IconButton>
+
+      <IconButton
+        size="small"
+        color="inherit"
+        title="延迟 + 下载测速"
+        onClick={onCheckBoth}
+      >
+        <BoltRounded />
+      </IconButton>
+
+      <IconButton
+        size="small"
+        color="inherit"
+        title="中断所有测试"
+        onClick={onCancelTests}
+      >
+        <StopCircleRounded />
+      </IconButton>
+
+      <IconButton
+        size="small"
+        color="inherit"
         title={
           [
             t('proxies.page.tooltips.sortDefault'),
             t('proxies.page.tooltips.sortDelay'),
             t('proxies.page.tooltips.sortName'),
+            '按速度排序',
+            '最佳性价比排序',
           ][sortType]
         }
         onClick={() =>
-          onHeadState({ sortType: ((sortType + 1) % 3) as ProxySortType })
+          onHeadState({ sortType: ((sortType + 1) % 5) as ProxySortType })
         }
       >
-        {sortType !== 1 && sortType !== 2 && <SortRounded />}
+        {sortType === 0 && <SortRounded />}
         {sortType === 1 && <AccessTimeRounded />}
         {sortType === 2 && <SortByAlphaRounded />}
+        {sortType === 3 && <SpeedRounded />}
+        {sortType === 4 && <BoltRounded />}
       </IconButton>
 
       <IconButton

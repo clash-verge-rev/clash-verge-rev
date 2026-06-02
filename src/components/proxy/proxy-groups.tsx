@@ -34,6 +34,10 @@ import { useVerge } from '@/hooks/use-verge'
 import { useProxiesData } from '@/providers/app-data-context'
 import { calcuProxies, updateProxyChainConfigInRuntime } from '@/services/cmds'
 import delayManager from '@/services/delay'
+import speedManager, {
+  loadSpeedTestConfig,
+  saveSpeedTestConfig,
+} from '@/services/speed'
 import { debugLog } from '@/utils/debug'
 
 import { ScrollTopButton } from '../layout/scroll-top-button'
@@ -159,6 +163,8 @@ export const ProxyGroups = (props: Props) => {
   })
 
   const timeout = verge?.default_latency_timeout || 10000
+  const speedConfigRef = useRef<ISpeedTestUrlConfig | null>(null)
+  const testCancelRef = useRef(0)
 
   const parentRef = useRef<HTMLDivElement>(null)
   const scrollPositionRef = useRef<Record<string, number>>({})
@@ -441,6 +447,85 @@ export const ProxyGroups = (props: Props) => {
   )
 
   // 滚到对应的节点
+  const getSpeedConfig = useCallback(async () => {
+    const config = await loadSpeedTestConfig()
+    speedConfigRef.current = config
+    return config
+  }, [])
+
+  const getTestableProxyNames = useCallback(
+    (groupName: string) => {
+      const preset = new Set([
+        'DIRECT',
+        'REJECT',
+        'REJECT-DROP',
+        'PASS',
+        'COMPATIBLE',
+      ])
+      return renderList
+        .filter(
+          (e) => e.group?.name === groupName && (e.type === 2 || e.type === 4),
+        )
+        .flatMap((e) => e.proxyCol || e.proxy!)
+        .filter((proxy): proxy is IProxyItem => Boolean(proxy))
+        .filter((proxy) => !preset.has(proxy.name))
+        .map((proxy) => proxy.name)
+    },
+    [renderList],
+  )
+
+  const handleCheckSpeedAll = useStableCallback(
+    useLockFn(
+      async (
+        groupName: string,
+        options?: {
+          onItemDone?: (name: string) => void | Promise<void>
+        },
+      ) => {
+        const names = getTestableProxyNames(groupName)
+        if (!names.length) return
+
+        const config = await getSpeedConfig()
+        await speedManager.checkListSpeed(names, groupName, timeout, {
+          config,
+          onItemDone: options?.onItemDone,
+          onConfigChange: async (nextConfig) => {
+            speedConfigRef.current = nextConfig
+            await saveSpeedTestConfig(nextConfig)
+          },
+        })
+
+        const headState = getGroupHeadState(groupName)
+        if (headState?.sortType === 3 || headState?.sortType === 4) {
+          onHeadState(groupName, { sortType: headState.sortType })
+        }
+      },
+    ),
+  )
+
+  const handleCheckBoth = useStableCallback(
+    useLockFn(async (groupName: string) => {
+      const runId = testCancelRef.current
+      const names = getTestableProxyNames(groupName)
+      names.forEach((name) => delayManager.holdResult(name, groupName))
+      try {
+        await handleCheckAll(groupName)
+        if (runId !== testCancelRef.current) return
+        await handleCheckSpeedAll(groupName, {
+          onItemDone: (name) => delayManager.releaseHeldResult(name, groupName),
+        })
+      } finally {
+        names.forEach((name) => delayManager.releaseHeldResult(name, groupName))
+      }
+    }),
+  )
+
+  const handleCancelTests = useCallback(() => {
+    testCancelRef.current += 1
+    delayManager.cancelAll()
+    void speedManager.cancelAll()
+  }, [])
+
   const handleLocation = useStableCallback((group: IProxyGroupItem) => {
     if (!group) return
     const { name, now } = group
@@ -491,6 +576,9 @@ export const ProxyGroups = (props: Props) => {
       measureElement={virtualizer.measureElement}
       onLocation={handleLocation}
       onCheckAll={handleCheckAll}
+      onCheckSpeedAll={handleCheckSpeedAll}
+      onCheckBoth={handleCheckBoth}
+      onCancelTests={handleCancelTests}
       onHeadState={onHeadState}
       onChangeProxy={handleChangeProxy}
     />
@@ -602,6 +690,9 @@ interface ProxyVirtualListProps {
   measureElement: (node: Element | null) => void
   onLocation: (group: IRenderItem['group']) => void
   onCheckAll: (groupName: string) => void
+  onCheckSpeedAll: (groupName: string) => void
+  onCheckBoth: (groupName: string) => void
+  onCancelTests: () => void
   onHeadState: (groupName: string, patch: Partial<HeadState>) => void
   onChangeProxy: (
     group: IRenderItem['group'],
@@ -766,6 +857,9 @@ function ProxyVirtualList({
   measureElement,
   onLocation,
   onCheckAll,
+  onCheckSpeedAll,
+  onCheckBoth,
+  onCancelTests,
   onHeadState,
   onChangeProxy,
 }: ProxyVirtualListProps) {
@@ -807,6 +901,9 @@ function ProxyVirtualList({
               indent={indent}
               onLocation={onLocation}
               onCheckAll={onCheckAll}
+              onCheckSpeedAll={onCheckSpeedAll}
+              onCheckBoth={onCheckBoth}
+              onCancelTests={onCancelTests}
               onHeadState={onHeadState}
               onChangeProxy={onChangeProxy}
               isChainMode={isChainMode}

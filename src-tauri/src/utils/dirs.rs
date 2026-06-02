@@ -130,6 +130,14 @@ pub fn clash_path() -> Result<PathBuf> {
     Ok(app_home_dir()?.join(CLASH_CONFIG))
 }
 
+pub fn speed_test_urls_path() -> Result<PathBuf> {
+    Ok(app_home_dir()?.join(crate::constants::files::SPEED_TEST_URLS))
+}
+
+pub fn test_log_path() -> Result<PathBuf> {
+    Ok(app_logs_dir()?.join(crate::constants::files::TEST_LOG))
+}
+
 pub fn verge_path() -> Result<PathBuf> {
     Ok(app_home_dir()?.join(VERGE_CONFIG))
 }

@@ -27,7 +27,7 @@ import getSystem from '@/utils/get-system'
 
 const appWindow = getCurrentWebviewWindow()
 
-export type EditorLanguage = 'yaml' | 'javascript' | 'css'
+export type EditorLanguage = 'yaml' | 'javascript' | 'css' | 'json'
 
 export interface EditorViewerProps {
   open: boolean
@@ -43,6 +43,7 @@ export interface EditorViewerProps {
   onSave?: () => void | Promise<void>
   onClose: () => void
   onValidate?: (markers: MonacoMarker[]) => void
+  extraActions?: ReactNode
 }
 
 export const EditorViewer = ({
@@ -59,6 +60,7 @@ export const EditorViewer = ({
   onSave,
   onClose,
   onValidate,
+  extraActions,
 }: EditorViewerProps) => {
   const { t } = useTranslation()
   const themeMode = useThemeMode()
@@ -130,10 +132,47 @@ export const EditorViewer = ({
     }
   })
 
+  const formatEditorValue = useCallback(() => {
+    if (readOnly || loading || !editorRef.current) return false
+    if (language !== 'json') return false
+
+    const editorInstance = editorRef.current
+    const model = editorInstance.getModel()
+    if (!model) return false
+
+    const formatted = `${JSON.stringify(
+      JSON.parse(model.getValue().replace(/^\uFEFF/, '')),
+      null,
+      2,
+    )}\n`
+    editorInstance.pushUndoStop()
+    editorInstance.executeEdits('json-format-fallback', [
+      {
+        range: model.getFullModelRange(),
+        text: formatted,
+        forceMoveMarkers: true,
+      },
+    ])
+    editorInstance.pushUndoStop()
+    editorInstance.focus()
+    return true
+  }, [language, loading, readOnly])
+
   const handleFormat = useLockFn(async () => {
     try {
       if (loading) return
-      await editorRef.current?.getAction('editor.action.formatDocument')?.run()
+      const editorInstance = editorRef.current
+      const action = editorInstance?.getAction('editor.action.formatDocument')
+      if (action) {
+        try {
+          await action.run()
+          return
+        } catch (error) {
+          if (formatEditorValue()) return
+          throw error
+        }
+      }
+      formatEditorValue()
     } catch (error) {
       showNotice.error(error)
     }
@@ -253,51 +292,64 @@ export const EditorViewer = ({
             />
           )}
         </div>
-
-        <ButtonGroup
-          variant="contained"
-          sx={{ position: 'absolute', left: '14px', bottom: '8px' }}
-        >
-          <IconButton
-            size="medium"
-            color="inherit"
-            sx={{ display: readOnly ? 'none' : '' }}
-            title={t('profiles.page.importForm.actions.paste')}
-            disabled={loading}
-            onClick={() => {
-              void handlePaste()
-            }}
-          >
-            <ContentPasteRounded fontSize="inherit" />
-          </IconButton>
-          <IconButton
-            size="medium"
-            color="inherit"
-            sx={{ display: readOnly ? 'none' : '' }}
-            title={t('profiles.modals.editor.actions.format')}
-            disabled={loading}
-            onClick={() => {
-              void handleFormat()
-            }}
-          >
-            <FormatPaintRounded fontSize="inherit" />
-          </IconButton>
-          <IconButton
-            size="medium"
-            color="inherit"
-            title={t(
-              isMaximized ? 'shared.window.minimize' : 'shared.window.maximize',
-            )}
-            onClick={() => {
-              void handleToggleMaximize()
-            }}
-          >
-            {isMaximized ? <CloseFullscreenRounded /> : <OpenInFullRounded />}
-          </IconButton>
-        </ButtonGroup>
       </DialogContent>
 
-      <DialogActions>
+      <DialogActions sx={{ px: 3, gap: 1, minHeight: 64 }}>
+        <div
+          style={{
+            marginRight: 'auto',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            minWidth: 0,
+          }}
+        >
+          {extraActions}
+          <ButtonGroup variant="outlined" size="small">
+            <IconButton
+              size="small"
+              color="inherit"
+              sx={{ display: readOnly ? 'none' : '' }}
+              title={t('profiles.page.importForm.actions.paste')}
+              disabled={loading}
+              onClick={() => {
+                void handlePaste()
+              }}
+            >
+              <ContentPasteRounded fontSize="small" />
+            </IconButton>
+            <IconButton
+              size="small"
+              color="inherit"
+              sx={{ display: readOnly ? 'none' : '' }}
+              title={t('profiles.modals.editor.actions.format')}
+              disabled={loading}
+              onClick={() => {
+                void handleFormat()
+              }}
+            >
+              <FormatPaintRounded fontSize="small" />
+            </IconButton>
+            <IconButton
+              size="small"
+              color="inherit"
+              title={t(
+                isMaximized
+                  ? 'shared.window.minimize'
+                  : 'shared.window.maximize',
+              )}
+              onClick={() => {
+                void handleToggleMaximize()
+              }}
+            >
+              {isMaximized ? (
+                <CloseFullscreenRounded fontSize="small" />
+              ) : (
+                <OpenInFullRounded fontSize="small" />
+              )}
+            </IconButton>
+          </ButtonGroup>
+        </div>
         <Button onClick={handleClose} variant="outlined">
           {t(readOnly ? 'shared.actions.close' : 'shared.actions.cancel')}
         </Button>

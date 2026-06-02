@@ -31,6 +31,9 @@ const Item = styled(Box)(({ theme: { palette, typography } }) => ({
   '& .type[data-type="info"], & .type[data-type="inf"]': {
     color: palette.info.main,
   },
+  '& .type[data-type="test"]': {
+    color: palette.success.main,
+  },
   '& .data': {
     color: palette.text.primary,
     overflowWrap: 'anywhere',

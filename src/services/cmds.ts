@@ -255,6 +255,31 @@ export async function getClashLogs() {
   }, [])
 }
 
+export interface TestLogEntry {
+  time?: string
+  type?: 'test'
+  payload: string
+}
+
+export async function appendTestLogs(entries: TestLogEntry[]) {
+  return invoke<void>('append_test_logs', { entries })
+}
+
+export async function getTestLogs() {
+  const logs = await invoke<TestLogEntry[]>('get_test_logs')
+  return logs
+    .filter((log) => typeof log.payload === 'string' && log.payload.length > 0)
+    .map<ILogItem>((log) => ({
+      time: log.time,
+      type: 'test',
+      payload: log.payload,
+    }))
+}
+
+export async function clearTestLogs() {
+  return invoke<void>('clear_test_logs')
+}
+
 export async function clearLogs() {
   return invoke<void>('clear_logs')
 }
@@ -338,6 +363,24 @@ export async function openLogsDir() {
   return invoke<void>('open_logs_dir').catch((err) => showNotice.error(err))
 }
 
+export async function readSpeedTestUrlsConfigFile() {
+  return invoke<string>('read_speed_test_urls_config_file')
+}
+
+export async function saveSpeedTestUrlsConfigFile(content: string) {
+  return invoke<void>('save_speed_test_urls_config_file', { content })
+}
+
+export async function resetSpeedTestUrlsConfigFile() {
+  return invoke<string>('reset_speed_test_urls_config_file')
+}
+
+export async function openSpeedTestUrlsConfigFile() {
+  return invoke<void>('open_speed_test_urls_config_file').catch((err) =>
+    showNotice.error(err),
+  )
+}
+
 export const openWebUrl = async (url: string) => {
   try {
     await invoke('open_web_url', { url })
@@ -380,6 +423,43 @@ export async function cmdGetProxyDelay(
 
 export async function cmdTestDelay(url: string) {
   return invoke<number>('test_delay', { url })
+}
+
+export interface ProxyDownloadSpeedResult {
+  bytes: number
+  measuredBytes: number
+  elapsedMs: number
+  warmupMs: number
+  ttfbMs: number
+  bytesPerSecond: number
+  sampleCount: number
+  dropCount: number
+  dropRate: number
+  stability: number
+  jitterMs: number
+  earlyEof: boolean
+}
+
+export async function cmdTestProxyDownloadSpeed(
+  groupName: string,
+  proxyName: string,
+  url: string,
+  timeout: number,
+  maxBytes: number,
+  durationMs: number,
+) {
+  return invoke<ProxyDownloadSpeedResult>('test_proxy_download_speed', {
+    groupName,
+    proxyName,
+    url,
+    timeout,
+    maxBytes,
+    durationMs,
+  })
+}
+
+export async function cmdCancelProxyDownloadSpeedTests() {
+  return invoke<void>('cancel_proxy_download_speed_tests')
 }
 
 export async function invoke_uwp_tool() {

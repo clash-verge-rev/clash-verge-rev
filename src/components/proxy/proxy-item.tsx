@@ -9,11 +9,19 @@ import {
   styled,
   SxProps,
   Theme,
+  Tooltip,
 } from '@mui/material'
+import { useLockFn } from 'ahooks'
+import { useEffect, useReducer } from 'react'
 
 import { BaseLoading } from '@/components/base'
 import { useProxyDelayState } from '@/hooks/use-proxy-delay-state'
 import delayManager from '@/services/delay'
+import speedManager, {
+  loadSpeedTestConfig,
+  saveSpeedTestConfig,
+  SpeedUpdate,
+} from '@/services/speed'
 
 interface Props {
   group: IProxyGroupItem
@@ -25,8 +33,16 @@ interface Props {
 }
 
 const Widget = styled(Box)(() => ({
-  padding: '3px 6px',
-  fontSize: 14,
+  padding: '1px 2px',
+  fontSize: 13,
+  fontVariantNumeric: 'tabular-nums',
+  lineHeight: 1.3,
+  maxWidth: '100%',
+  minHeight: 18,
+  overflow: 'hidden',
+  textAlign: 'right',
+  textOverflow: 'ellipsis',
+  whiteSpace: 'nowrap',
   borderRadius: '4px',
 }))
 
@@ -46,10 +62,58 @@ export const ProxyItem = (props: Props) => {
   const { group, proxy, selected, showType = true, sx, onClick } = props
 
   // -1/<=0 为不显示，-2 为 loading
-  const { delayValue, isPreset, timeout, onDelay } = useProxyDelayState(
-    proxy,
-    group.name,
+  const { delayState, delayValue, isPreset, timeout, onDelay } =
+    useProxyDelayState(proxy, group.name)
+  const [speedState, setSpeedState] = useReducer(
+    (_: SpeedUpdate, next: SpeedUpdate) => next,
+    {
+      speed: -1,
+      updatedAt: 0,
+    },
   )
+
+  useEffect(() => {
+    if (isPreset) return
+    speedManager.setListener(proxy.name, group.name, setSpeedState)
+    return () => {
+      speedManager.removeListener(proxy.name, group.name)
+    }
+  }, [proxy.name, group.name, isPreset])
+
+  useEffect(() => {
+    if (isPreset) return
+    const cachedUpdate = speedManager.getSpeedUpdate(proxy.name, group.name)
+    if (cachedUpdate) {
+      setSpeedState(cachedUpdate)
+    }
+  }, [proxy.name, group.name, isPreset])
+
+  const onSpeed = useLockFn(async () => {
+    const config = await loadSpeedTestConfig()
+    setSpeedState({ speed: -2, updatedAt: Date.now() })
+    setSpeedState(
+      await speedManager.checkSpeed(proxy.name, group.name, timeout, {
+        config,
+        onConfigChange: saveSpeedTestConfig,
+      }),
+    )
+  })
+
+  const speedValue = speedState.speed
+  const delayTitle =
+    delayState.error ||
+    (delayValue === 0 || (delayValue >= timeout && delayValue <= 1e5)
+      ? `Delay test timed out after ${timeout}ms`
+      : delayValue > 1e5
+        ? 'Delay test error'
+        : '')
+  const speedTitle = [
+    speedState.error,
+    typeof speedState.ttfb === 'number' ? `TTFB ${speedState.ttfb}ms` : '',
+    speedState.earlyEof ? 'Early EOF' : '',
+  ]
+    .filter(Boolean)
+    .join('\n')
 
   return (
     <ListItem sx={sx}>
@@ -62,9 +126,17 @@ export const ProxyItem = (props: Props) => {
           ({ palette: { mode, primary } }) => {
             const bgcolor = mode === 'light' ? '#ffffff' : '#24252f'
             const selectColor = mode === 'light' ? primary.main : primary.light
-            const showDelay = delayValue > 0
+            const showDelay = delayValue >= 0
 
             return {
+              containerType: 'inline-size',
+              '@container (min-width: 340px)': {
+                '& .the-metrics': {
+                  flexDirection: 'row',
+                  flexWrap: 'nowrap',
+                  maxWidth: 'none',
+                },
+              },
               '&:hover .the-check': { display: !showDelay ? 'block' : 'none' },
               '&:hover .the-delay': { display: showDelay ? 'block' : 'none' },
               '&:hover .the-icon': { display: 'none' },
@@ -86,6 +158,7 @@ export const ProxyItem = (props: Props) => {
       >
         <ListItemText
           title={proxy.name}
+          sx={{ minWidth: 0, pr: 1 }}
           secondary={
             <>
               <Box
@@ -113,19 +186,27 @@ export const ProxyItem = (props: Props) => {
         />
 
         <ListItemIcon
+          className="the-metrics"
           sx={{
+            minWidth: 64,
+            maxWidth: '48%',
+            flexShrink: 0,
+            flexDirection: 'column',
+            flexWrap: 'wrap',
+            alignItems: 'flex-end',
             justifyContent: 'flex-end',
             color: 'primary.main',
             display: isPreset ? 'none' : '',
+            gap: '2px 6px',
           }}
         >
-          {delayValue === -2 && (
+          {(delayValue === -2 || speedValue === -2) && (
             <Widget>
               <BaseLoading />
             </Widget>
           )}
 
-          {!proxy.provider && delayValue !== -2 && (
+          {!proxy.provider && delayValue !== -2 && speedValue !== -2 && (
             // provider 的节点不支持检测
             <Widget
               className="the-check"
@@ -143,10 +224,11 @@ export const ProxyItem = (props: Props) => {
             </Widget>
           )}
 
-          {delayValue > 0 && (
+          {delayValue >= 0 && speedValue !== -2 && (
             // 显示延迟
             <Widget
               className="the-delay"
+              title={delayTitle || undefined}
               onClick={(e) => {
                 if (proxy.provider) return
                 e.preventDefault()
@@ -164,7 +246,48 @@ export const ProxyItem = (props: Props) => {
             </Widget>
           )}
 
-          {delayValue !== -2 && delayValue <= 0 && selected && (
+          {speedValue !== -2 && speedValue > 0 && (
+            <Tooltip title={speedTitle} arrow disableHoverListener={!speedTitle}>
+              <Widget
+                className="the-delay"
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  onSpeed()
+                }}
+                sx={({ palette }) => ({
+                  color: speedManager.formatSpeedColor(
+                    speedValue,
+                    speedState.earlyEof,
+                  ),
+                  ':hover': { bgcolor: alpha(palette.primary.main, 0.15) },
+                })}
+              >
+                {speedManager.formatSpeed(speedValue)}
+              </Widget>
+            </Tooltip>
+          )}
+
+          {speedValue === -3 && (
+            <Tooltip title={speedTitle || 'Error'} arrow>
+              <Widget
+                className="the-delay"
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  onSpeed()
+                }}
+                sx={({ palette }) => ({
+                  color: 'error.main',
+                  ':hover': { bgcolor: alpha(palette.primary.main, 0.15) },
+                })}
+              >
+                Error
+              </Widget>
+            </Tooltip>
+          )}
+
+          {delayValue !== -2 && speedValue !== -2 && delayValue <= 0 && selected && (
             // 展示已选择的 icon
             <CheckCircleOutlineRounded
               className="the-icon"
