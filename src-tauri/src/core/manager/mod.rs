@@ -6,7 +6,14 @@ use anyhow::Result;
 use arc_swap::{ArcSwap, ArcSwapOption};
 use clash_verge_logger::AsyncLogger;
 use once_cell::sync::Lazy;
-use std::{fmt, sync::Arc, time::Instant};
+use std::{
+    fmt,
+    sync::{
+        Arc,
+        atomic::{AtomicBool, Ordering},
+    },
+    time::Instant,
+};
 use tauri_plugin_shell::process::CommandChild;
 
 use crate::singleton;
@@ -36,6 +43,7 @@ pub struct CoreManager {
     last_update: ArcSwapOption<Instant>,
     #[cfg(target_os = "windows")]
     job_handle: ArcSwapOption<isize>,
+    config_update_in_progress: AtomicBool,
 }
 
 #[derive(Debug)]
@@ -60,6 +68,7 @@ impl Default for CoreManager {
             last_update: ArcSwapOption::new(None),
             #[cfg(target_os = "windows")]
             job_handle: ArcSwapOption::new(None),
+            config_update_in_progress: AtomicBool::new(false),
         }
     }
 }
@@ -117,6 +126,12 @@ impl CoreManager {
         } else {
             self.job_handle.store(None);
         }
+    fn try_start_config_update(&self) -> bool {
+        !self.config_update_in_progress.swap(true, Ordering::AcqRel)
+    }
+
+    fn finish_config_update(&self) {
+        self.config_update_in_progress.store(false, Ordering::Release);
     }
 
     pub async fn init(&self) -> Result<()> {

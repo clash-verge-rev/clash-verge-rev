@@ -490,7 +490,7 @@
     "dns": {
       "dialog": {
         "title": "DNS 덮어쓰기",
-        "warning": "이 설정에 익숙하지 않다면 수정하지 말고 DNS 덮어쓰기를 활성화 상태로 유지하세요"
+        "warning": "이 설정에 익숙하지 않다면 수정하지 말고 DNS 덮어쓰기를 비활성화 상태로 유지하세요"
       },
       "sections": {
         "general": "DNS 설정",

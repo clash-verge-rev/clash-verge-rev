@@ -12,7 +12,7 @@ use tauri_plugin_clash_verge_sysinfo;
 
 impl CoreManager {
     pub async fn start_core(&self) -> Result<()> {
-        self.prepare_startup().await?;
+        self.prepare_startup().await;
         defer! {
             self.after_core_process();
         }
@@ -62,18 +62,13 @@ impl CoreManager {
         Ok(())
     }
 
-    async fn prepare_startup(&self) -> Result<()> {
+    async fn prepare_startup(&self) {
         #[cfg(target_os = "windows")]
         self.wait_for_service_if_needed().await;
-
-        let value = SERVICE_MANAGER.lock().await.current();
-        let mode = match value {
+        self.set_running_mode(match SERVICE_MANAGER.current().await {
             ServiceStatus::Ready => RunningMode::Service,
             _ => RunningMode::Sidecar,
-        };
-
-        self.set_running_mode(mode);
-        Ok(())
+        });
     }
 
     fn after_core_process(&self) {
@@ -98,9 +93,7 @@ impl CoreManager {
             .with_max_times(max_times as usize);
 
         let _ = (|| async {
-            let mut manager = SERVICE_MANAGER.lock().await;
-
-            if matches!(manager.current(), ServiceStatus::Ready) {
+            if matches!(SERVICE_MANAGER.current().await, ServiceStatus::Ready) {
                 return Ok(());
             }
 
@@ -110,10 +103,10 @@ impl CoreManager {
                 return Err(anyhow::anyhow!("Service IPC not ready"));
             }
 
-            manager.init().await?;
-            let _ = manager.refresh().await;
+            SERVICE_MANAGER.init().await?;
+            let _ = SERVICE_MANAGER.refresh().await;
 
-            if matches!(manager.current(), ServiceStatus::Ready) {
+            if matches!(SERVICE_MANAGER.current().await, ServiceStatus::Ready) {
                 Ok(())
             } else {
                 Err(anyhow::anyhow!("Service not ready"))

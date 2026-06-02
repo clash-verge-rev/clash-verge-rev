@@ -490,7 +490,7 @@
     "dns": {
       "dialog": {
         "title": "DNS 覆写",
-        "warning": "如果你不清楚这里的设置请不要修改，并保持 DNS 覆写开启"
+        "warning": "如果你不清楚这里的设置请不要修改，并保持 DNS 覆写关闭"
       },
       "sections": {
         "general": "DNS 设置",

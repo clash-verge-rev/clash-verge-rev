@@ -490,7 +490,7 @@
     "dns": {
       "dialog": {
         "title": "Sobrescritura de DNS",
-        "warning": "Si no está seguro de cómo configurar esto, no realice cambios y mantenga habilitada la sobrescritura de DNS."
+        "warning": "Si no está seguro de cómo configurar esto, no realice cambios y mantenga deshabilitada la sobrescritura de DNS."
       },
       "sections": {
         "general": "Configuración de DNS",

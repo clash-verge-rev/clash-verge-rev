@@ -37,7 +37,10 @@ import {
 } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useLocation } from 'react-router'
-import { closeAllConnections } from 'tauri-plugin-mihomo-api'
+import {
+  closeAllConnections,
+  selectNodeForGroup,
+} from 'tauri-plugin-mihomo-api'
 
 import { BasePage, BaseStyledTextField, DialogRef } from '@/components/base'
 import { ProfileItem } from '@/components/profile/profile-item'
@@ -50,6 +53,7 @@ import { ConfigViewer } from '@/components/setting/mods/config-viewer'
 import { useListen } from '@/hooks/use-listen'
 import { useProfiles } from '@/hooks/use-profiles'
 import {
+  calcuProxies,
   createProfile,
   deleteProfile,
   enhanceProfiles,
@@ -62,8 +66,15 @@ import {
 } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
 import { queryClient } from '@/services/query-client'
-import { useSetLoadingCache, useThemeMode } from '@/services/states'
+import {
+  useLoadingCache,
+  useSetLoadingCache,
+  useThemeMode,
+} from '@/services/states'
 import { debugLog } from '@/utils/debug'
+
+// 与 src-tauri/src/main.rs 的 worker_limit 上限(8)保持一致，避免前后端更新风暴不对齐
+const PROFILE_UPDATE_WORKER_LIMIT = 8
 
 // 记录profile切换状态
 const debugProfileSwitch = (action: string, profile: string, extra?: any) => {
@@ -178,7 +189,6 @@ const ProfilePage = () => {
 
   const {
     profiles = {},
-    activateSelected,
     patchProfiles,
     mutateProfiles,
     error,
@@ -292,13 +302,17 @@ const ProfilePage = () => {
       setUrl('')
       await performRobustRefresh()
     }
-
     try {
       // 尝试正常导入
       await importProfile(url)
       await handleImportSuccess('shared.feedback.notifications.importSuccess')
     } catch (initialErr) {
       console.warn('[订阅导入] 首次导入失败:', initialErr)
+
+      if (String(initialErr).toLowerCase().includes('legacy tls')) {
+        showNotice.error(String(initialErr))
+        return
+      }
 
       showNotice.info('profiles.page.feedback.notifications.importRetry')
       try {
@@ -385,34 +399,6 @@ const ProfilePage = () => {
     }
   }
 
-  const executeBackgroundTasks = useCallback(
-    async (
-      profile: string,
-      sequence: number,
-      abortController: AbortController,
-    ) => {
-      try {
-        if (
-          sequence === requestSequenceRef.current &&
-          switchingProfileRef.current === profile &&
-          !abortController.signal.aborted
-        ) {
-          await activateSelected(profiles)
-          debugLog(`[Profile] 后台处理完成，序列号: ${sequence}`)
-        } else {
-          debugProfileSwitch(
-            'BACKGROUND_TASK_SKIPPED',
-            profile,
-            `序列号过期或被中断: ${sequence} vs ${requestSequenceRef.current}`,
-          )
-        }
-      } catch (err: any) {
-        console.warn('Failed to activate selected proxies:', err)
-      }
-    },
-    [activateSelected, profiles],
-  )
-
   const activateProfile = useCallback(
     async (profile: string, notifySuccess: boolean) => {
       if (profiles.current === profile && !notifySuccess) {
@@ -482,6 +468,22 @@ const ProfilePage = () => {
           return
         }
 
+        // 选择所记忆的节点
+        const current = profiles.items?.find((e) => e.uid === profile)
+        for (const item of current?.selected ?? []) {
+          if (item.name && item.now) {
+            try {
+              await selectNodeForGroup(item.name, item.now)
+            } catch (err) {
+              debugLog(
+                `[Profile] 选择节点失败: ${item.name} -> ${item.now}`,
+                err,
+              )
+            }
+          }
+        }
+        queryClient.setQueryData(['getProxies'], await calcuProxies())
+
         // 完成切换
         await mutateLogs()
         closeAllConnections()
@@ -495,17 +497,6 @@ const ProfilePage = () => {
 
         debugLog(
           `[Profile] 切换到 ${profile} 完成，序列号: ${currentSequence}，开始后台处理`,
-        )
-
-        // 延迟执行后台任务
-        setTimeout(
-          () =>
-            executeBackgroundTasks(
-              profile,
-              currentSequence,
-              currentAbortController,
-            ),
-          50,
         )
       } catch (err: any) {
         if (pendingRequestRef.current) {
@@ -542,7 +533,6 @@ const ProfilePage = () => {
       profiles,
       patchProfiles,
       mutateLogs,
-      executeBackgroundTasks,
       handleProfileInterrupt,
       cleanupSwitchState,
     ],
@@ -619,34 +609,68 @@ const ProfilePage = () => {
   })
 
   // 更新所有订阅
+  const loadingCache = useLoadingCache()
   const setLoadingCache = useSetLoadingCache()
-  const onUpdateAll = useLockFn(async () => {
-    const throttleMutate = throttle(mutateProfiles, 2000, {
-      trailing: true,
-    })
-    const updateOne = async (uid: string) => {
-      try {
-        await updateProfile(uid)
-        throttleMutate()
-      } catch (err: any) {
-        console.error(`更新订阅 ${uid} 失败:`, err)
-      } finally {
-        setLoadingCache((cache) => ({ ...cache, [uid]: false }))
-      }
-    }
-
-    return new Promise((resolve) => {
+  const setLoadingProfiles = useCallback(
+    (uids: string[], loading: boolean) => {
       setLoadingCache((cache) => {
-        // 获取没有正在更新的订阅
-        const items = profileItems.filter(
-          (e) => e.type === 'remote' && !cache[e.uid],
-        )
-        const change = Object.fromEntries(items.map((e) => [e.uid, true]))
-
-        Promise.allSettled(items.map((e) => updateOne(e.uid))).then(resolve)
-        return { ...cache, ...change }
+        const next = new Set(cache)
+        for (const uid of uids) {
+          if (loading) {
+            next.add(uid)
+          } else {
+            next.delete(uid)
+          }
+        }
+        return next
       })
-    })
+    },
+    [setLoadingCache],
+  )
+  const runProfileUpdates = useCallback(
+    async (uids: string[]) => {
+      if (uids.length === 0) return
+
+      const throttleMutate = throttle(mutateProfiles, 2000, {
+        trailing: true,
+      })
+      let cursor = 0
+
+      const updateOne = async (uid: string) => {
+        try {
+          await updateProfile(uid)
+          throttleMutate()
+        } catch (err: any) {
+          console.error(`更新订阅 ${uid} 失败:`, err)
+        }
+      }
+
+      const worker = async () => {
+        while (cursor < uids.length) {
+          const uid = uids[cursor++]
+          await updateOne(uid)
+        }
+      }
+
+      try {
+        const active = Math.min(PROFILE_UPDATE_WORKER_LIMIT, uids.length)
+        await Promise.allSettled(Array.from({ length: active }, worker))
+      } finally {
+        setLoadingProfiles(uids, false)
+        // 避免长时间批量更新后列表数据过晚刷新
+        void mutateProfiles()
+      }
+    },
+    [mutateProfiles, setLoadingProfiles],
+  )
+  const onUpdateAll = useLockFn(async () => {
+    const items = profileItems.filter((e) => e.type === 'remote')
+    const target = items
+      .map((item) => item.uid)
+      .filter((uid) => !loadingCache.has(uid))
+
+    setLoadingProfiles(target, true)
+    await runProfileUpdates(target)
   })
 
   const onCopyLink = async () => {

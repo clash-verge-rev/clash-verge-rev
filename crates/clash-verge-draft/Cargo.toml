@@ -11,7 +11,7 @@ harness = false
 [dependencies]
 parking_lot = { workspace = true }
 anyhow = { workspace = true }
+tokio = { workspace = true }
 
 [dev-dependencies]
 criterion = { workspace = true }
-tokio = { workspace = true }

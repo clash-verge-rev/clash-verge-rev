@@ -8,7 +8,6 @@ import zlib from 'zlib'
 import AdmZip from 'adm-zip'
 import { glob } from 'glob'
 import { HttpsProxyAgent } from 'https-proxy-agent'
-import fetch from 'node-fetch'
 import { extract } from 'tar'
 
 import { log_debug, log_error, log_info, log_success } from './utils.mjs'

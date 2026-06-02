@@ -103,6 +103,20 @@ export const ProfileItem = (props: Props) => {
   const refreshTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
   )
+  const setLoading = useCallback(
+    (loading: boolean) => {
+      setLoadingCache((cache) => {
+        const next = new Set(cache)
+        if (loading) {
+          next.add(itemData.uid)
+        } else {
+          next.delete(itemData.uid)
+        }
+        return next
+      })
+    },
+    [itemData.uid, setLoadingCache],
+  )
 
   const { uid, name = 'Profile', extra, updated = 0, option } = itemData
 
@@ -251,7 +265,7 @@ export const ProfileItem = (props: Props) => {
     100,
   )
 
-  const loading = loadingCache[itemData.uid] ?? false
+  const loading = loadingCache.has(itemData.uid)
 
   // interval update fromNow field
   const [, forceRefresh] = useReducer((value: number) => value + 1, 0)
@@ -380,7 +394,7 @@ export const ProfileItem = (props: Props) => {
   /// 2 至少使用一个代理，根据订阅，如果没订阅，默认使用系统代理
   const onUpdate = useLockFn(async (type: 0 | 1 | 2): Promise<void> => {
     setAnchorEl(null)
-    setLoadingCache((cache) => ({ ...cache, [itemData.uid]: true }))
+    setLoading(true)
 
     // 根据类型设置初始更新选项
     const option: Partial<IProfileOption> = {}
@@ -408,7 +422,7 @@ export const ProfileItem = (props: Props) => {
       // 更新完全失败（包括后端的回退尝试）
       // 不需要做处理，后端会通过事件通知系统发送错误
     } finally {
-      setLoadingCache((cache) => ({ ...cache, [itemData.uid]: false }))
+      setLoading(false)
     }
   })
 
@@ -599,7 +613,7 @@ export const ProfileItem = (props: Props) => {
     Promise.allSettled([
       listen<{ uid?: string }>('profile-update-started', ({ payload }) => {
         if (payload.uid === itemData.uid) {
-          setLoadingCache((cache) => ({ ...cache, [itemData.uid]: true }))
+          setLoading(true)
         }
       }),
       listen<{ uid?: string }>('profile-update-completed', ({ payload }) => {
@@ -607,7 +621,7 @@ export const ProfileItem = (props: Props) => {
           return
         }
 
-        setLoadingCache((cache) => ({ ...cache, [itemData.uid]: false }))
+        setLoading(false)
         // 刷新 profile 数据以获取最新的 updated 时间戳
         void mutateProfiles()
         // 更新完成后刷新显示
@@ -635,7 +649,7 @@ export const ProfileItem = (props: Props) => {
       disposed = true
       unlisteners.forEach((unlisten) => unlisten())
     }
-  }, [fetchNextUpdateTime, itemData.uid, mutateProfiles, setLoadingCache])
+  }, [fetchNextUpdateTime, itemData.uid, mutateProfiles, setLoading])
 
   const handleSaveProfileDocument = useLockFn(async () => {
     const currentValue = profileDocument.value

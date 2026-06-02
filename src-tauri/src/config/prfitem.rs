@@ -297,7 +297,7 @@ impl PrfItem {
             Ok(r) => r,
             Err(e) => {
                 tokio::time::sleep(Duration::from_millis(100)).await;
-                bail!("failed to fetch remote profile: {}", e);
+                return Err(e).context("failed to fetch remote profile");
             }
         };
 

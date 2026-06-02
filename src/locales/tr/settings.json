@@ -490,7 +490,7 @@
     "dns": {
       "dialog": {
         "title": "DNS Üzerine Yazma",
-        "warning": "Bu ayarlarla ilgili bilginiz yoksa, lütfen bunları değiştirmeyin ve DNS Üzerine Yazma'yı etkin tutun"
+        "warning": "Bu ayarlarla ilgili bilginiz yoksa, lütfen bunları değiştirmeyin ve DNS Üzerine Yazma'yı devre dışı tutun"
       },
       "sections": {
         "general": "DNS Ayarları",
