@@ -31,13 +31,13 @@
       "status": {
         "systemProxyEnabled": "System Proxy Enabled",
         "systemProxyDisabled": "System Proxy Disabled",
-        "tunModeServiceRequired": "Virtual NIC requires Service Mode",
-        "tunModeEnabled": "Virtual NIC enabled",
-        "tunModeDisabled": "Virtual NIC disabled"
+        "tunModeServiceRequired": "TUN Mode requires Service Mode",
+        "tunModeEnabled": "TUN Mode enabled",
+        "tunModeDisabled": "TUN Mode disabled"
       },
       "tooltips": {
         "systemProxy": "System Proxy Info",
-        "tunMode": "Virtual NIC (TUN) traffic interception info"
+        "tunMode": "TUN Mode traffic interception info"
       }
     },
     "clashInfo": {
