@@ -85,7 +85,7 @@ zip = "8.6.0"
 reqwest_dav = "0.3.3"
 aes-gcm = { version = "0.10.3", features = ["std"] }
 base64 = "0.22.1"
-keyring = { version = "3", features = ["apple-native", "windows-native", "sync-secret-service", "crypto-rust"] }
+keyring = { version = "4.0.1", features = ["apple-native", "windows-native", "sync-secret-service", "crypto-rust"] }
 hpke = { version = "0.12", default-features = false, features = ["x25519", "alloc"] }
 x25519-dalek = { version = "2", features = ["static_secrets", "zeroize"] }
 zeroize = "1"
