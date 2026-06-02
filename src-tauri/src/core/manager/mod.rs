@@ -126,6 +126,8 @@ impl CoreManager {
         } else {
             self.job_handle.store(None);
         }
+    }
+    
     fn try_start_config_update(&self) -> bool {
         !self.config_update_in_progress.swap(true, Ordering::AcqRel)
     }
