@@ -211,7 +211,7 @@ const HomeSettingsDialog = ({
 const HomePage = () => {
   const { t } = useTranslation()
   const { verge } = useVerge()
-  const { current, mutateProfiles } = useProfiles()
+  const { current } = useProfiles()
 
   // 设置弹窗的状态
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -286,15 +286,12 @@ const HomePage = () => {
 
   const criticalCards = useMemo(
     () => [
-      renderCard(
-        'profile',
-        <HomeProfileCard current={current} onProfileUpdated={mutateProfiles} />,
-      ),
+      renderCard('profile', <HomeProfileCard current={current} />),
       renderCard('proxy', <CurrentProxyCard />),
       renderCard('network', <NetworkSettingsCard />),
       renderCard('mode', <ClashModeEnhancedCard />),
     ],
-    [current, mutateProfiles, renderCard],
+    [current, renderCard],
   )
 
   // 新增：保存设置时用requestIdleCallback/setTimeout

@@ -62,7 +62,6 @@ interface ProfileItem {
 
 interface HomeProfileCardProps {
   current: ProfileItem | null | undefined
-  onProfileUpdated?: () => void
 }
 
 // 提取独立组件减少主组件复杂度
