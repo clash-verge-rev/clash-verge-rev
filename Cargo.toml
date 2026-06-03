@@ -65,15 +65,15 @@ tokio = { version = "1.52.3", features = [
   "sync",
 ] }
 flexi_logger = "0.31.9"
-log = "0.4.30"
+log = "0.4.31"
 
 smartstring = { version = "1.0.1" }
-compact_str = { version = "0.9.0", features = ["serde"] }
+compact_str = { version = "0.9.1", features = ["serde"] }
 
 serde = { version = "1.0.228" }
 serde_json = { version = "1.0.150" }
 serde_yaml_ng = { version = "0.10.0" }
-bitflags = { version = "2.11.1" }
+bitflags = { version = "2.12.1" }
 
 # *** For Windows platform only ***
 deelevate = "0.2.0"
