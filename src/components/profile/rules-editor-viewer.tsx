@@ -276,6 +276,7 @@ export const RulesEditorViewer = (props: Props) => {
   const [prependSeq, setPrependSeq] = useState<string[]>([])
   const [appendSeq, setAppendSeq] = useState<string[]>([])
   const [deleteSeq, setDeleteSeq] = useState<string[]>([])
+  const [hasLoadedSeqConfig, setHasLoadedSeqConfig] = useState(false)
 
   const filteredPrependSeq = useMemo(
     () => prependSeq.filter((rule) => match(rule)),
@@ -406,6 +407,7 @@ export const RulesEditorViewer = (props: Props) => {
     }
   }
   const fetchContent = useCallback(async () => {
+    setHasLoadedSeqConfig(false)
     const data = await readProfileFile(property)
     const obj = yaml.load(data) as ISeqProfileConfig | null
 
@@ -415,6 +417,7 @@ export const RulesEditorViewer = (props: Props) => {
 
     setPrevData(data)
     setCurrData(data)
+    setHasLoadedSeqConfig(true)
   }, [property])
 
   useEffect(() => {
@@ -432,6 +435,10 @@ export const RulesEditorViewer = (props: Props) => {
 
   // 优化：异步处理大数据yaml.dump，避免UI卡死
   useEffect(() => {
+    if (!hasLoadedSeqConfig) {
+      return
+    }
+
     if (!(prependSeq && appendSeq && deleteSeq)) {
       return
     }
@@ -463,7 +470,7 @@ export const RulesEditorViewer = (props: Props) => {
         clearTimeout(timeoutId)
       }
     }
-  }, [prependSeq, appendSeq, deleteSeq])
+  }, [prependSeq, appendSeq, deleteSeq, hasLoadedSeqConfig])
 
   const fetchProfile = useCallback(async () => {
     const data = await readProfileFile(profileUid) // 原配置文件
