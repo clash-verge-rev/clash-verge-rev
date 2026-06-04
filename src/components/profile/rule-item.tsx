@@ -1,7 +1,8 @@
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { DeleteForeverRounded, UndoRounded } from '@mui/icons-material'
 import {
+  DeleteForeverRounded,
+  UndoRounded,
   VerticalAlignBottomRounded,
   VerticalAlignTopRounded,
 } from '@mui/icons-material'
