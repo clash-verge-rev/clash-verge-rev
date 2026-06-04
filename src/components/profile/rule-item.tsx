@@ -2,6 +2,10 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { DeleteForeverRounded, UndoRounded } from '@mui/icons-material'
 import {
+  VerticalAlignBottomRounded,
+  VerticalAlignTopRounded,
+} from '@mui/icons-material'
+import {
   Box,
   IconButton,
   ListItem,
@@ -13,10 +17,12 @@ interface Props {
   type: 'prepend' | 'original' | 'delete' | 'append'
   ruleRaw: string
   onDelete: () => void
+  onPrepend?: () => void
+  onAppend?: () => void
 }
 
 export const RuleItem = (props: Props) => {
-  const { type, ruleRaw, onDelete } = props
+  const { type, ruleRaw, onDelete, onPrepend, onAppend } = props
   const sortable = type === 'prepend' || type === 'append'
   const rule = ruleRaw.replace(',no-resolve', '')
 
@@ -105,6 +111,16 @@ export const RuleItem = (props: Props) => {
           },
         }}
       />
+      {type === 'prepend' && (
+        <IconButton onClick={onAppend}>
+          <VerticalAlignBottomRounded />
+        </IconButton>
+      )}
+      {type === 'append' && (
+        <IconButton onClick={onPrepend}>
+          <VerticalAlignTopRounded />
+        </IconButton>
+      )}
       <IconButton onClick={onDelete}>
         {type === 'delete' ? <UndoRounded /> : <DeleteForeverRounded />}
       </IconButton>

@@ -19,5 +19,6 @@
 <summary><strong> 🚀 优化改进 </strong></summary>
 
 - 关闭 autofill 弹出窗口
+- 支持在前置规则与后置规则之间直接切换规则位置
 
 </details>
