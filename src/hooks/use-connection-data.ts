@@ -4,6 +4,7 @@ import { MihomoWebSocket } from 'tauri-plugin-mihomo-api'
 import { useMihomoWsSubscription } from './use-mihomo-ws-subscription'
 
 const MAX_CLOSED_CONNS_NUM = 500
+const CONNECTION_UPDATE_THROTTLE_MS = 500
 
 export const initConnData: ConnectionMonitorData = {
   uploadTotal: 0,
@@ -67,6 +68,15 @@ const mergeConnectionSnapshot = (
     }
   }
 
+  if (dropped.length === 0) {
+    return {
+      uploadTotal: payload.uploadTotal ?? 0,
+      downloadTotal: payload.downloadTotal ?? 0,
+      activeConnections,
+      closedConnections: previousClosed,
+    }
+  }
+
   const rawClosedLen = previousClosed.length + dropped.length
   let closedConnections: IConnectionsItem[]
   if (rawClosedLen <= MAX_CLOSED_CONNS_NUM) {
@@ -95,7 +105,7 @@ export const useConnectionData = () => {
       buildSubscriptKey: (date) => `getClashConnection-${date}`,
       fallbackData: initConnData,
       connect: () => MihomoWebSocket.connect_connections(),
-      throttleMs: 16,
+      throttleMs: CONNECTION_UPDATE_THROTTLE_MS,
       setupHandlers: ({ next, scheduleReconnect }) => ({
         handleMessage: (data) => {
           if (data.startsWith('Websocket error')) {

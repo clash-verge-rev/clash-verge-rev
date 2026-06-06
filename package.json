@@ -44,7 +44,6 @@
     "@mui/icons-material": "^9.0.1",
     "@mui/material": "^9.0.1",
     "@tanstack/react-query": "^5.100.14",
-    "@tanstack/react-table": "^8.21.3",
     "@tanstack/react-virtual": "^3.13.25",
     "@tauri-apps/api": "2.11.0",
     "@tauri-apps/plugin-clipboard-manager": "^2.3.2",

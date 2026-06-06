@@ -30,7 +30,8 @@ import {
   ConnectionDetail,
   ConnectionDetailRef,
 } from '@/components/connection/connection-detail'
-import { ConnectionItem } from '@/components/connection/connection-item'
+import { ConnectionRowItem } from '@/components/connection/connection-row-item'
+import { useConnectionRowViews } from '@/components/connection/connection-row-view'
 import { ConnectionTable } from '@/components/connection/connection-table'
 import { useConnectionData } from '@/hooks/use-connection-data'
 import { useConnectionSetting } from '@/hooks/use-connection-setting'
@@ -112,9 +113,22 @@ const ConnectionsPage = () => {
     return [matchConns]
   }, [connections, connectionsType, match, curOrderOpt])
 
-  const onCloseAll = useLockFn(closeAllConnections)
+  const { rows: displayRows, getConnectionById } =
+    useConnectionRowViews(filterConn)
 
   const detailRef = useRef<ConnectionDetailRef>(null!)
+
+  const showDetailById = useCallback(
+    (id: string) => {
+      const connection = getConnectionById(id)
+      if (connection) {
+        detailRef.current?.open(connection, connectionsType === 'closed')
+      }
+    },
+    [connectionsType, getConnectionById],
+  )
+
+  const onCloseAll = useLockFn(closeAllConnections)
 
   const handleSearch = useCallback((match: (content: string) => boolean) => {
     setMatch(() => match)
@@ -248,10 +262,8 @@ const ConnectionsPage = () => {
         <BaseEmpty />
       ) : isTableLayout ? (
         <ConnectionTable
-          connections={filterConn}
-          onShowDetail={(detail) =>
-            detailRef.current?.open(detail, connectionsType === 'closed')
-          }
+          connections={displayRows}
+          onShowDetail={showDetailById}
           columnManagerOpen={isTableLayout && isColumnManagerOpen}
           onCloseColumnManager={() => setIsColumnManagerOpen(false)}
         />
@@ -260,15 +272,10 @@ const ConnectionsPage = () => {
           count={filterConn.length}
           estimateSize={56}
           renderItem={(i) => (
-            <ConnectionItem
-              value={filterConn[i]}
+            <ConnectionRowItem
+              row={displayRows[i]}
               closed={connectionsType === 'closed'}
-              onShowDetail={() =>
-                detailRef.current?.open(
-                  filterConn[i],
-                  connectionsType === 'closed',
-                )
-              }
+              onShowDetail={showDetailById}
             />
           )}
           style={{
