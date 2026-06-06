@@ -33,6 +33,7 @@ import {
 const ROW_HEIGHT = 40
 const RESIZE_HANDLE_WIDTH = 6
 const OVERSCAN_ROWS = 6
+const MAX_ROW_SNAPSHOT_CACHE_SIZE = 2_000
 
 const reconcileColumnOrder = (
   storedOrder: string[],
@@ -67,7 +68,7 @@ interface BaseColumn {
   minWidth: number
   maxWidth?: number
   align?: 'left' | 'right'
-  cell?: (row: IConnectionsItem) => string
+  cell?: (row: IConnectionsItem, snapshot: TableRowSnapshot) => string
 }
 
 interface DisplayColumn extends BaseColumn {
@@ -77,6 +78,22 @@ interface DisplayColumn extends BaseColumn {
 interface SortingState {
   id: ColumnField
   desc: boolean
+}
+
+interface TableRowSnapshot {
+  row: IConnectionsItem
+  host: string
+  process: string
+  source: string
+  destination: string
+  chainsText: string
+  ruleText: string
+  typeLabel: string
+  startTime: number
+  uploadText: string
+  downloadText: string
+  uploadSpeedText: string
+  downloadSpeedText: string
 }
 
 const resolveColumnSize = (
@@ -93,32 +110,108 @@ const resolveColumnSize = (
     : Math.min(column.maxWidth, boundedMin)
 }
 
-const getConnectionCellValue = (field: ColumnField, row: IConnectionsItem) => {
+const sameStaticConnection = (
+  left: IConnectionsItem,
+  right: IConnectionsItem,
+) =>
+  left.metadata === right.metadata &&
+  left.chains === right.chains &&
+  left.rule === right.rule &&
+  left.rulePayload === right.rulePayload &&
+  left.start === right.start
+
+const sameTrafficConnection = (
+  left: IConnectionsItem,
+  right: IConnectionsItem,
+) =>
+  left.upload === right.upload &&
+  left.download === right.download &&
+  left.curUpload === right.curUpload &&
+  left.curDownload === right.curDownload
+
+const createTableRowSnapshot = (
+  row: IConnectionsItem,
+  previous?: TableRowSnapshot,
+) => {
+  const previousRow = previous?.row
+  const sameStatic = previousRow && sameStaticConnection(previousRow, row)
+  const sameTraffic = previousRow && sameTrafficConnection(previousRow, row)
+
+  if (sameStatic && sameTraffic && previous) return previous
+
+  const upload = row.upload ?? 0
+  const download = row.download ?? 0
+  const curUpload = row.curUpload ?? 0
+  const curDownload = row.curDownload ?? 0
+
+  return {
+    row,
+    host: sameStatic && previous ? previous.host : getConnectionHost(row),
+    process:
+      sameStatic && previous ? previous.process : getConnectionProcess(row),
+    source: sameStatic && previous ? previous.source : getConnectionSource(row),
+    destination:
+      sameStatic && previous
+        ? previous.destination
+        : getConnectionDestination(row),
+    chainsText:
+      sameStatic && previous
+        ? previous.chainsText
+        : formatConnectionChains(row.chains),
+    ruleText:
+      sameStatic && previous ? previous.ruleText : getConnectionRule(row),
+    typeLabel:
+      sameStatic && previous ? previous.typeLabel : getConnectionTypeLabel(row),
+    startTime:
+      sameStatic && previous ? previous.startTime : getConnectionStartTime(row),
+    uploadText:
+      sameTraffic && previous
+        ? previous.uploadText
+        : formatConnectionTraffic(upload),
+    downloadText:
+      sameTraffic && previous
+        ? previous.downloadText
+        : formatConnectionTraffic(download),
+    uploadSpeedText:
+      sameTraffic && previous
+        ? previous.uploadSpeedText
+        : `${formatConnectionTraffic(curUpload)}/s`,
+    downloadSpeedText:
+      sameTraffic && previous
+        ? previous.downloadSpeedText
+        : `${formatConnectionTraffic(curDownload)}/s`,
+  }
+}
+
+const getConnectionCellValue = (
+  field: ColumnField,
+  snapshot: TableRowSnapshot,
+) => {
   switch (field) {
     case 'host':
-      return getConnectionHost(row)
+      return snapshot.host
     case 'download':
-      return row.download ?? 0
+      return snapshot.row.download ?? 0
     case 'upload':
-      return row.upload ?? 0
+      return snapshot.row.upload ?? 0
     case 'dlSpeed':
-      return row.curDownload ?? 0
+      return snapshot.row.curDownload ?? 0
     case 'ulSpeed':
-      return row.curUpload ?? 0
+      return snapshot.row.curUpload ?? 0
     case 'chains':
-      return formatConnectionChains(row.chains)
+      return snapshot.chainsText
     case 'rule':
-      return getConnectionRule(row)
+      return snapshot.ruleText
     case 'process':
-      return getConnectionProcess(row)
+      return snapshot.process
     case 'time':
-      return row.start
+      return snapshot.startTime
     case 'source':
-      return getConnectionSource(row)
+      return snapshot.source
     case 'remoteDestination':
-      return getConnectionDestination(row)
+      return snapshot.destination
     case 'type':
-      return getConnectionTypeLabel(row)
+      return snapshot.typeLabel
     default:
       return ''
   }
@@ -128,13 +221,10 @@ const compareConnectionCellValue = (
   field: ColumnField,
   left: IConnectionsItem,
   right: IConnectionsItem,
+  getSnapshot: (row: IConnectionsItem) => TableRowSnapshot,
 ) => {
-  if (field === 'time') {
-    return getConnectionStartTime(left) - getConnectionStartTime(right)
-  }
-
-  const leftValue = getConnectionCellValue(field, left)
-  const rightValue = getConnectionCellValue(field, right)
+  const leftValue = getConnectionCellValue(field, getSnapshot(left))
+  const rightValue = getConnectionCellValue(field, getSnapshot(right))
 
   if (typeof leftValue === 'number' || typeof rightValue === 'number') {
     return (Number(leftValue) || 0) - (Number(rightValue) || 0)
@@ -143,16 +233,22 @@ const compareConnectionCellValue = (
   return String(leftValue ?? '').localeCompare(String(rightValue ?? ''))
 }
 
-const renderCell = (column: DisplayColumn, row: IConnectionsItem) => {
-  if (column.cell) return column.cell(row)
-  if (column.field === 'time') return <RelativeTime start={row.start} />
-  return getConnectionCellValue(column.field, row)
+const renderCell = (
+  column: DisplayColumn,
+  row: IConnectionsItem,
+  snapshot: TableRowSnapshot,
+) => {
+  if (column.cell) return column.cell(row, snapshot)
+  if (column.field === 'time')
+    return <RelativeTime start={snapshot.row.start} />
+  return getConnectionCellValue(column.field, snapshot)
 }
 
 interface RowComponentProps {
   row: IConnectionsItem
   columns: DisplayColumn[]
   onShowDetail: (id: string) => void
+  getSnapshot: (row: IConnectionsItem) => TableRowSnapshot
   borderColor: string
   virtualTop: number
 }
@@ -162,6 +258,7 @@ const RowComponent = memo(
     row,
     columns,
     onShowDetail,
+    getSnapshot,
     borderColor,
     virtualTop,
   }: RowComponentProps) {
@@ -169,6 +266,7 @@ const RowComponent = memo(
       () => onShowDetail(row.id),
       [onShowDetail, row.id],
     )
+    const snapshot = getSnapshot(row)
 
     return (
       <div
@@ -203,7 +301,7 @@ const RowComponent = memo(
               textOverflow: 'ellipsis',
             }}
           >
-            {renderCell(column, row)}
+            {renderCell(column, row, snapshot)}
           </div>
         ))}
       </div>
@@ -214,6 +312,7 @@ const RowComponent = memo(
     prev.columns === next.columns &&
     prev.virtualTop === next.virtualTop &&
     prev.onShowDetail === next.onShowDetail &&
+    prev.getSnapshot === next.getSnapshot &&
     prev.borderColor === next.borderColor,
 )
 
@@ -293,7 +392,7 @@ export const ConnectionTable = (props: Props) => {
         width: 76,
         minWidth: 60,
         align: 'right',
-        cell: (row) => formatConnectionTraffic(row.download),
+        cell: (_, snapshot) => snapshot.downloadText,
       },
       {
         field: 'upload',
@@ -301,7 +400,7 @@ export const ConnectionTable = (props: Props) => {
         width: 76,
         minWidth: 60,
         align: 'right',
-        cell: (row) => formatConnectionTraffic(row.upload),
+        cell: (_, snapshot) => snapshot.uploadText,
       },
       {
         field: 'dlSpeed',
@@ -309,7 +408,7 @@ export const ConnectionTable = (props: Props) => {
         width: 76,
         minWidth: 60,
         align: 'right',
-        cell: (row) => `${formatConnectionTraffic(row.curDownload ?? 0)}/s`,
+        cell: (_, snapshot) => snapshot.downloadSpeedText,
       },
       {
         field: 'ulSpeed',
@@ -317,7 +416,7 @@ export const ConnectionTable = (props: Props) => {
         width: 76,
         minWidth: 60,
         align: 'right',
-        cell: (row) => `${formatConnectionTraffic(row.curUpload ?? 0)}/s`,
+        cell: (_, snapshot) => snapshot.uploadSpeedText,
       },
       {
         field: 'chains',
@@ -407,6 +506,17 @@ export const ConnectionTable = (props: Props) => {
   const [sorting, setSorting] = useState<SortingState | null>(null)
   const [viewport, setViewport] = useState({ scrollTop: 0, height: 0 })
   const scrollContainerRef = useRef<HTMLDivElement | null>(null)
+  const rowSnapshotCacheRef = useRef(new Map<string, TableRowSnapshot>())
+  const getRowSnapshot = useCallback((row: IConnectionsItem) => {
+    const cache = rowSnapshotCacheRef.current
+    const snapshot = createTableRowSnapshot(row, cache.get(row.id))
+    cache.set(row.id, snapshot)
+    if (cache.size > MAX_ROW_SNAPSHOT_CACHE_SIZE) {
+      const oldestKey = cache.keys().next().value
+      if (oldestKey && oldestKey !== row.id) cache.delete(oldestKey)
+    }
+    return snapshot
+  }, [])
   const updateViewport = useCallback((element: HTMLDivElement) => {
     setViewport((current) => {
       const next = {
@@ -456,15 +566,29 @@ export const ConnectionTable = (props: Props) => {
     element.scrollTop = maxScrollTop
   }, [connections.length])
 
+  useEffect(() => {
+    const cache = rowSnapshotCacheRef.current
+    if (cache.size <= connections.length + OVERSCAN_ROWS * 4) return
+
+    const activeIds = new Set<string>()
+    for (let i = 0; i < connections.length; i++) {
+      activeIds.add(connections[i].id)
+    }
+    cache.forEach((_, id) => {
+      if (!activeIds.has(id)) cache.delete(id)
+    })
+  }, [connections])
+
   const sortedConnections = useMemo(() => {
     if (!sorting) return connections
 
     const direction = sorting.desc ? -1 : 1
     return [...connections].sort(
       (left, right) =>
-        compareConnectionCellValue(sorting.id, left, right) * direction,
+        compareConnectionCellValue(sorting.id, left, right, getRowSnapshot) *
+        direction,
     )
-  }, [connections, sorting])
+  }, [connections, sorting, getRowSnapshot])
 
   const tableWidth = useMemo(
     () => visibleColumns.reduce((total, column) => total + column.size, 0),
@@ -750,6 +874,7 @@ export const ConnectionTable = (props: Props) => {
                       row={row}
                       columns={visibleColumns}
                       onShowDetail={onShowDetail}
+                      getSnapshot={getRowSnapshot}
                       borderColor={borderColor}
                       virtualTop={index * ROW_HEIGHT}
                     />

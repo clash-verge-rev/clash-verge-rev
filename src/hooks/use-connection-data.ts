@@ -232,10 +232,13 @@ const flushPendingMessage = () => {
   }
 
   lastFlushAt = Date.now()
-  connectionData = mergeConnectionSnapshot(payload, connectionData)
   connectionSummary = mergeConnectionSummary(payload)
-  notifyConnectionListeners()
   notifySummaryListeners()
+
+  if (connectionListeners.size === 0) return
+
+  connectionData = mergeConnectionSnapshot(payload, connectionData)
+  notifyConnectionListeners()
 }
 
 const enqueueConnectionMessage = (messageData: string) => {
