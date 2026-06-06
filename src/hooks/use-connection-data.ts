@@ -8,6 +8,8 @@ const CONNECTION_RECONNECT_DELAY_MS = 1_000
 type ConnectionMetadata = IConnectionsItem['metadata']
 type ConnectionListener = () => void
 
+const metadataValue = (value?: string) => value || ''
+
 export const initConnData: ConnectionMonitorData = {
   uploadTotal: 0,
   downloadTotal: 0,
@@ -41,7 +43,7 @@ let connectionStarted = false
 let connectionConnecting = false
 let reconnectTimer: ReturnType<typeof setTimeout> | null = null
 let flushTimer: ReturnType<typeof setTimeout> | null = null
-let pendingPayload: IConnections | null = null
+let pendingMessageData: string | null = null
 let lastFlushAt = 0
 
 const connectionListeners = new Set<ConnectionListener>()
@@ -56,16 +58,18 @@ const notifySummaryListeners = () => {
 }
 
 const sameMetadata = (left: ConnectionMetadata, right: ConnectionMetadata) =>
-  left.network === right.network &&
-  left.type === right.type &&
-  left.host === right.host &&
-  left.sourceIP === right.sourceIP &&
-  left.sourcePort === right.sourcePort &&
-  left.destinationPort === right.destinationPort &&
-  left.destinationIP === right.destinationIP &&
-  left.remoteDestination === right.remoteDestination &&
-  left.process === right.process &&
-  left.processPath === right.processPath
+  metadataValue(left.network) === metadataValue(right.network) &&
+  metadataValue(left.type) === metadataValue(right.type) &&
+  metadataValue(left.host) === metadataValue(right.host) &&
+  metadataValue(left.sourceIP) === metadataValue(right.sourceIP) &&
+  metadataValue(left.sourcePort) === metadataValue(right.sourcePort) &&
+  metadataValue(left.destinationPort) ===
+    metadataValue(right.destinationPort) &&
+  metadataValue(left.destinationIP) === metadataValue(right.destinationIP) &&
+  metadataValue(left.remoteDestination) ===
+    metadataValue(right.remoteDestination) &&
+  metadataValue(left.process) === metadataValue(right.process) &&
+  metadataValue(left.processPath) === metadataValue(right.processPath)
 
 const normalizeMetadata = (
   metadata: ConnectionMetadata,
@@ -206,11 +210,19 @@ const mergeConnectionSummary = (
   activeConnectionCount: payload.connections?.length ?? 0,
 })
 
-const flushPendingPayload = () => {
+const flushPendingMessage = () => {
   flushTimer = null
-  const payload = pendingPayload
-  pendingPayload = null
-  if (!payload) return
+  const messageData = pendingMessageData
+  pendingMessageData = null
+  if (!messageData) return
+
+  let payload: IConnections
+  try {
+    payload = JSON.parse(messageData) as IConnections
+  } catch (err) {
+    console.error('[Connections] Failed to parse websocket payload', err)
+    return
+  }
 
   lastFlushAt = Date.now()
   connectionData = mergeConnectionSnapshot(payload, connectionData)
@@ -219,18 +231,18 @@ const flushPendingPayload = () => {
   notifySummaryListeners()
 }
 
-const enqueueConnectionPayload = (payload: IConnections) => {
-  pendingPayload = payload
+const enqueueConnectionMessage = (messageData: string) => {
+  pendingMessageData = messageData
   if (flushTimer) return
 
   const elapsed = Date.now() - lastFlushAt
   if (elapsed >= CONNECTION_UPDATE_THROTTLE_MS) {
-    flushPendingPayload()
+    flushPendingMessage()
     return
   }
 
   flushTimer = window.setTimeout(
-    flushPendingPayload,
+    flushPendingMessage,
     CONNECTION_UPDATE_THROTTLE_MS - elapsed,
   )
 }
@@ -282,11 +294,7 @@ async function connectConnectionSocket() {
         return
       }
 
-      try {
-        enqueueConnectionPayload(JSON.parse(message.data) as IConnections)
-      } catch (err) {
-        console.error('[Connections] Failed to parse websocket payload', err)
-      }
+      enqueueConnectionMessage(message.data)
     })
   } catch {
     scheduleReconnect()
@@ -321,7 +329,7 @@ const subscribeConnectionSummary = (listener: ConnectionListener) => {
 }
 
 const refreshConnectionData = () => {
-  pendingPayload = null
+  pendingMessageData = null
   if (flushTimer) {
     window.clearTimeout(flushTimer)
     flushTimer = null
