@@ -74,6 +74,8 @@ const orderFunctionMap = ORDER_OPTIONS.reduce<Record<OrderKey, OrderFunc>>(
   {} as Record<OrderKey, OrderFunc>,
 )
 
+const EMPTY_CONNECTIONS: IConnectionsItem[] = []
+
 const ConnectionsPage = () => {
   const { t } = useTranslation()
   const [match, setMatch] = useState<(input: string) => boolean>(
@@ -95,13 +97,14 @@ const ConnectionsPage = () => {
 
   const [isColumnManagerOpen, setIsColumnManagerOpen] = useState(false)
 
-  const [filterConn] = useMemo(() => {
+  const selectedConnections =
+    connectionsType === 'active'
+      ? (connections?.activeConnections ?? EMPTY_CONNECTIONS)
+      : (connections?.closedConnections ?? EMPTY_CONNECTIONS)
+
+  const filterConn = useMemo(() => {
     const orderFunc = orderFunctionMap[curOrderOpt]
-    const conns =
-      (connectionsType === 'active'
-        ? connections?.activeConnections
-        : connections?.closedConnections) ?? []
-    let matchConns = conns.filter((conn) => {
+    let matchConns = selectedConnections.filter((conn) => {
       const { host, destinationIP, process } = conn.metadata
       return (
         match(host || '') || match(destinationIP || '') || match(process || '')
@@ -110,13 +113,23 @@ const ConnectionsPage = () => {
 
     if (orderFunc) matchConns = orderFunc(matchConns ?? [])
 
-    return [matchConns]
-  }, [connections, connectionsType, match, curOrderOpt])
+    return matchConns
+  }, [selectedConnections, match, curOrderOpt])
 
   const { rows: displayRows, getConnectionById } =
     useConnectionRowViews(filterConn)
 
   const detailRef = useRef<ConnectionDetailRef>(null!)
+
+  const selectConnectionsType = useCallback(
+    (type: 'active' | 'closed') => {
+      if (type === connectionsType) return
+      detailRef.current?.close()
+      setIsColumnManagerOpen(false)
+      setConnectionsType(type)
+    },
+    [connectionsType],
+  )
 
   const showDetailById = useCallback(
     (id: string) => {
@@ -206,7 +219,7 @@ const ConnectionsPage = () => {
           <Button
             size="small"
             variant={connectionsType === 'active' ? 'contained' : 'outlined'}
-            onClick={() => setConnectionsType('active')}
+            onClick={() => selectConnectionsType('active')}
           >
             {t('connections.components.actions.active')}{' '}
             {connections?.activeConnections.length}
@@ -214,7 +227,7 @@ const ConnectionsPage = () => {
           <Button
             size="small"
             variant={connectionsType === 'closed' ? 'contained' : 'outlined'}
-            onClick={() => setConnectionsType('closed')}
+            onClick={() => selectConnectionsType('closed')}
           >
             {t('connections.components.actions.closed')}{' '}
             {connections?.closedConnections.length}
@@ -262,6 +275,7 @@ const ConnectionsPage = () => {
         <BaseEmpty />
       ) : isTableLayout ? (
         <ConnectionTable
+          key={connectionsType}
           connections={displayRows}
           onShowDetail={showDetailById}
           columnManagerOpen={isTableLayout && isColumnManagerOpen}
@@ -269,6 +283,7 @@ const ConnectionsPage = () => {
         />
       ) : (
         <VirtualList
+          key={connectionsType}
           count={filterConn.length}
           estimateSize={56}
           renderItem={(i) => (

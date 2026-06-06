@@ -5,6 +5,7 @@ import { useMihomoWsSubscription } from './use-mihomo-ws-subscription'
 
 const MAX_CLOSED_CONNS_NUM = 500
 const CONNECTION_UPDATE_THROTTLE_MS = 500
+const CONNECTION_QUERY_GC_TIME_MS = 1_000
 
 export const initConnData: ConnectionMonitorData = {
   uploadTotal: 0,
@@ -18,6 +19,18 @@ export interface ConnectionMonitorData {
   downloadTotal: number
   activeConnections: IConnectionsItem[]
   closedConnections: IConnectionsItem[]
+}
+
+export interface ConnectionSummaryData {
+  uploadTotal: number
+  downloadTotal: number
+  activeConnectionCount: number
+}
+
+export const initConnSummaryData: ConnectionSummaryData = {
+  uploadTotal: 0,
+  downloadTotal: 0,
+  activeConnectionCount: 0,
 }
 
 const mergeConnectionSnapshot = (
@@ -97,6 +110,14 @@ const mergeConnectionSnapshot = (
   }
 }
 
+const mergeConnectionSummary = (
+  payload: IConnections,
+): ConnectionSummaryData => ({
+  uploadTotal: payload.uploadTotal ?? 0,
+  downloadTotal: payload.downloadTotal ?? 0,
+  activeConnectionCount: payload.connections?.length ?? 0,
+})
+
 export const useConnectionData = () => {
   const queryClient = useQueryClient()
   const { response, refresh, subscriptionCacheKey } =
@@ -106,6 +127,7 @@ export const useConnectionData = () => {
       fallbackData: initConnData,
       connect: () => MihomoWebSocket.connect_connections(),
       throttleMs: CONNECTION_UPDATE_THROTTLE_MS,
+      gcTime: CONNECTION_QUERY_GC_TIME_MS,
       setupHandlers: ({ next, scheduleReconnect }) => ({
         handleMessage: (data) => {
           if (data.startsWith('Websocket error')) {
@@ -135,5 +157,31 @@ export const useConnectionData = () => {
     response,
     refreshGetClashConnection: refresh,
     clearClosedConnections,
+  }
+}
+
+export const useConnectionSummaryData = () => {
+  const { response, refresh } = useMihomoWsSubscription<ConnectionSummaryData>({
+    storageKey: 'mihomo_connection_summary_date',
+    buildSubscriptKey: (date) => `getClashConnectionSummary-${date}`,
+    fallbackData: initConnSummaryData,
+    connect: () => MihomoWebSocket.connect_connections(),
+    throttleMs: CONNECTION_UPDATE_THROTTLE_MS,
+    setupHandlers: ({ next, scheduleReconnect }) => ({
+      handleMessage: (data) => {
+        if (data.startsWith('Websocket error')) {
+          next(data)
+          void scheduleReconnect()
+          return
+        }
+
+        next(null, mergeConnectionSummary(JSON.parse(data) as IConnections))
+      },
+    }),
+  })
+
+  return {
+    response,
+    refreshGetClashConnectionSummary: refresh,
   }
 }
