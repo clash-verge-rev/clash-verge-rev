@@ -178,20 +178,27 @@ const mergeConnectionSnapshot = (
     }
   }
 
-  const rawClosedLen = previousClosed.length + previousActiveById.size
-  const closedConnections: IConnectionsItem[] =
-    rawClosedLen <= MAX_CLOSED_CONNS_NUM
-      ? previousClosed.slice()
-      : previousClosed.slice(Math.max(0, rawClosedLen - MAX_CLOSED_CONNS_NUM))
+  const removedConnectionCount = previousActiveById.size
+  const dropFromClosed = Math.max(
+    0,
+    previousClosed.length + removedConnectionCount - MAX_CLOSED_CONNS_NUM,
+  )
+  const closedConnections =
+    dropFromClosed >= previousClosed.length
+      ? []
+      : previousClosed.slice(dropFromClosed)
 
-  previousActive.forEach((connection) => {
-    if (previousActiveById.has(connection.id)) {
-      closedConnections.push(connection)
+  const keepFromRemoved = MAX_CLOSED_CONNS_NUM - closedConnections.length
+  let skipRemoved = Math.max(0, removedConnectionCount - keepFromRemoved)
+
+  for (let i = 0; i < previousActive.length; i++) {
+    const connection = previousActive[i]
+    if (!previousActiveById.has(connection.id)) continue
+    if (skipRemoved > 0) {
+      skipRemoved -= 1
+      continue
     }
-  })
-
-  if (closedConnections.length > MAX_CLOSED_CONNS_NUM) {
-    closedConnections.splice(0, closedConnections.length - MAX_CLOSED_CONNS_NUM)
+    closedConnections.push(connection)
   }
 
   return {
