@@ -5,33 +5,31 @@ type RelativeTimeListener = () => void
 
 let currentTime = Date.now()
 let timerId: number | null = null
-const listeners: RelativeTimeListener[] = []
+const listeners = new Set<RelativeTimeListener>()
 
 const startTimer = () => {
   if (timerId !== null) return
 
+  currentTime = Date.now()
   timerId = window.setInterval(() => {
     currentTime = Date.now()
-    for (let i = 0; i < listeners.length; i++) {
-      listeners[i]()
-    }
+    listeners.forEach((listener) => listener())
   }, 5_000)
 }
 
 const stopTimer = () => {
-  if (listeners.length > 0 || timerId === null) return
+  if (listeners.size > 0 || timerId === null) return
 
   window.clearInterval(timerId)
   timerId = null
 }
 
 const subscribeRelativeTime = (listener: RelativeTimeListener) => {
-  listeners.push(listener)
+  listeners.add(listener)
   startTimer()
 
   return () => {
-    const index = listeners.indexOf(listener)
-    if (index !== -1) listeners.splice(index, 1)
+    listeners.delete(listener)
     stopTimer()
   }
 }

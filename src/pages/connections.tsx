@@ -277,7 +277,7 @@ const ConnectionsPage = () => {
         <ConnectionTable
           connections={displayRows}
           onShowDetail={showDetailById}
-          columnManagerOpen={isTableLayout && isColumnManagerOpen}
+          columnManagerOpen={isColumnManagerOpen}
           onCloseColumnManager={() => setIsColumnManagerOpen(false)}
         />
       ) : (

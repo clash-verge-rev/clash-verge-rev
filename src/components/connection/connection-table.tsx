@@ -119,14 +119,12 @@ const compareConnectionCellValue = (
   left: ConnectionRowView,
   right: ConnectionRowView,
 ) => {
+  if (field === 'time') {
+    return left.startTime - right.startTime
+  }
+
   const leftValue = getConnectionCellValue(field, left)
   const rightValue = getConnectionCellValue(field, right)
-
-  if (field === 'time') {
-    const leftTime = Date.parse(String(leftValue || '')) || 0
-    const rightTime = Date.parse(String(rightValue || '')) || 0
-    return leftTime - rightTime
-  }
 
   if (typeof leftValue === 'number' || typeof rightValue === 'number') {
     return (Number(leftValue) || 0) - (Number(rightValue) || 0)

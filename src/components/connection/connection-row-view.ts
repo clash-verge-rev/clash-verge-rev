@@ -111,7 +111,6 @@ const sameConnectionRowView = (
   left.download === right.download &&
   left.uploadSpeed === right.uploadSpeed &&
   left.downloadSpeed === right.downloadSpeed &&
-  left.startTime === right.startTime &&
   left.searchableHost === right.searchableHost &&
   left.searchableDestinationIP === right.searchableDestinationIP &&
   left.searchableProcess === right.searchableProcess
