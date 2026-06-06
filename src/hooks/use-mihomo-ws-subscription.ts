@@ -169,7 +169,6 @@ interface UseMihomoWsSubscriptionOptions<T> {
    * when the window is backgrounded or minimized.
    */
   throttleMs?: number
-  gcTime?: number
   setupHandlers: (ctx: HandlerContext<T>) => HandlerResult
 }
 
@@ -182,7 +181,6 @@ export const useMihomoWsSubscription = <T>(
     fallbackData,
     connect,
     throttleMs,
-    gcTime = 30_000,
     setupHandlers,
   } = options
 
@@ -224,7 +222,7 @@ export const useMihomoWsSubscription = <T>(
       queryClient.getQueryData<T>([responseCacheKey ?? '$sub$__disabled__']) ??
       fallbackData,
     staleTime: Infinity,
-    gcTime,
+    gcTime: 30_000,
     enabled: subscriptionCacheKey !== null,
   })
 
