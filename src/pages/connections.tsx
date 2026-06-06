@@ -24,6 +24,7 @@ import {
   BasePage,
   BaseSearchBox,
   BaseStyledSelect,
+  type SearchState,
   VirtualList,
 } from '@/components/base'
 import {
@@ -31,7 +32,10 @@ import {
   ConnectionDetailRef,
 } from '@/components/connection/connection-detail'
 import { ConnectionRowItem } from '@/components/connection/connection-row-item'
-import { useConnectionRowViews } from '@/components/connection/connection-row-view'
+import {
+  getConnectionStartTime,
+  useConnectionRowViews,
+} from '@/components/connection/connection-row-view'
 import { ConnectionTable } from '@/components/connection/connection-table'
 import { useConnectionData } from '@/hooks/use-connection-data'
 import { useConnectionSetting } from '@/hooks/use-connection-setting'
@@ -45,22 +49,20 @@ const ORDER_OPTIONS = [
     labelKey: 'connections.components.order.default',
     fn: (list: IConnectionsItem[]) =>
       list.sort(
-        (a, b) =>
-          new Date(b.start || '0').getTime()! -
-          new Date(a.start || '0').getTime()!,
+        (a, b) => getConnectionStartTime(b) - getConnectionStartTime(a),
       ),
   },
   {
     id: 'uploadSpeed',
     labelKey: 'connections.components.order.uploadSpeed',
     fn: (list: IConnectionsItem[]) =>
-      list.sort((a, b) => b.curUpload! - a.curUpload!),
+      list.sort((a, b) => (b.curUpload ?? 0) - (a.curUpload ?? 0)),
   },
   {
     id: 'downloadSpeed',
     labelKey: 'connections.components.order.downloadSpeed',
     fn: (list: IConnectionsItem[]) =>
-      list.sort((a, b) => b.curDownload! - a.curDownload!),
+      list.sort((a, b) => (b.curDownload ?? 0) - (a.curDownload ?? 0)),
   },
 ] as const
 
@@ -75,12 +77,12 @@ const orderFunctionMap = ORDER_OPTIONS.reduce<Record<OrderKey, OrderFunc>>(
 )
 
 const EMPTY_CONNECTIONS: IConnectionsItem[] = []
-
 const ConnectionsPage = () => {
   const { t } = useTranslation()
   const [match, setMatch] = useState<(input: string) => boolean>(
     () => () => true,
   )
+  const [hasSearch, setHasSearch] = useState(false)
   const [curOrderOpt, setCurOrderOpt] = useState<OrderKey>('default')
   const [connectionsType, setConnectionsType] = useState<'active' | 'closed'>(
     'active',
@@ -104,17 +106,19 @@ const ConnectionsPage = () => {
 
   const filterConn = useMemo(() => {
     const orderFunc = orderFunctionMap[curOrderOpt]
-    let matchConns = selectedConnections.filter((conn) => {
+
+    if (isTableLayout && !hasSearch) return selectedConnections
+    if (!hasSearch) return orderFunc([...selectedConnections])
+
+    const matchConns = selectedConnections.filter((conn) => {
       const { host, destinationIP, process } = conn.metadata
       return (
         match(host || '') || match(destinationIP || '') || match(process || '')
       )
     })
 
-    if (orderFunc) matchConns = orderFunc(matchConns ?? [])
-
-    return matchConns
-  }, [selectedConnections, match, curOrderOpt])
+    return orderFunc ? orderFunc(matchConns) : matchConns
+  }, [selectedConnections, isTableLayout, hasSearch, match, curOrderOpt])
 
   const displayRows = useConnectionRowViews(
     isTableLayout ? EMPTY_CONNECTIONS : filterConn,
@@ -144,10 +148,13 @@ const ConnectionsPage = () => {
 
   const onCloseAll = useLockFn(closeAllConnections)
 
-  const handleSearch = useCallback((match: (content: string) => boolean) => {
-    setMatch(() => match)
-  }, [])
-
+  const handleSearch = useCallback(
+    (match: (content: string) => boolean, state: SearchState) => {
+      setMatch(() => match)
+      setHasSearch(state.text.length > 0)
+    },
+    [],
+  )
   const hasTableData = filterConn.length > 0
 
   return (

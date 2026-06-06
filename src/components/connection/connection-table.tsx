@@ -407,7 +407,6 @@ export const ConnectionTable = (props: Props) => {
   const [sorting, setSorting] = useState<SortingState | null>(null)
   const [viewport, setViewport] = useState({ scrollTop: 0, height: 0 })
   const scrollContainerRef = useRef<HTMLDivElement | null>(null)
-
   const updateViewport = useCallback((element: HTMLDivElement) => {
     setViewport((current) => {
       const next = {
