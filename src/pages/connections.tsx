@@ -275,7 +275,6 @@ const ConnectionsPage = () => {
         <BaseEmpty />
       ) : isTableLayout ? (
         <ConnectionTable
-          key={connectionsType}
           connections={displayRows}
           onShowDetail={showDetailById}
           columnManagerOpen={isTableLayout && isColumnManagerOpen}

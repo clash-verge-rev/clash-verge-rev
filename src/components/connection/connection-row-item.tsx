@@ -5,6 +5,7 @@ import { memo, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { closeConnection } from 'tauri-plugin-mihomo-api'
 
+import { RelativeTime } from './connection-relative-time'
 import type { ConnectionRowView } from './connection-row-view'
 
 interface Props {
@@ -87,7 +88,9 @@ export const ConnectionRowItem = memo(
             <span style={tagStyle}>{row.type}</span>
             {row.process && <span style={tagStyle}>{row.process}</span>}
             {row.chains && <span style={tagStyle}>{row.chains}</span>}
-            <span style={tagStyle}>{row.time}</span>
+            <span style={tagStyle}>
+              <RelativeTime start={row.time} />
+            </span>
             {showTraffic && (
               <span style={tagStyle}>
                 {row.uploadSpeedText} / {row.downloadSpeedText}

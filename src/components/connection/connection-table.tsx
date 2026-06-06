@@ -1,5 +1,4 @@
 import { useTheme } from '@mui/material/styles'
-import dayjs from 'dayjs'
 import { useLocalStorage } from 'foxact/use-local-storage'
 import {
   memo,
@@ -8,7 +7,6 @@ import {
   useMemo,
   useRef,
   useState,
-  useSyncExternalStore,
   type MouseEvent as ReactMouseEvent,
   type TouchEvent as ReactTouchEvent,
   type UIEvent as ReactUIEvent,
@@ -19,54 +17,12 @@ import {
   ConnectionColumnManager,
   type ConnectionColumnOption,
 } from './connection-column-manager'
+import { RelativeTime } from './connection-relative-time'
 import type { ConnectionRowView } from './connection-row-view'
 
 const ROW_HEIGHT = 40
 const RESIZE_HANDLE_WIDTH = 6
 const OVERSCAN_ROWS = 6
-
-type TickListener = () => void
-let _tickNow = Date.now()
-const _tickListeners = new Set<TickListener>()
-let _tickTimer: number | null = null
-
-const _startTick = () => {
-  if (_tickTimer !== null) return
-  _tickTimer = window.setInterval(() => {
-    _tickNow = Date.now()
-    _tickListeners.forEach((fn) => fn())
-  }, 5000)
-}
-
-const _stopTick = () => {
-  if (_tickListeners.size === 0 && _tickTimer !== null) {
-    window.clearInterval(_tickTimer)
-    _tickTimer = null
-  }
-}
-
-const tickStore = {
-  subscribe: (listener: TickListener) => {
-    _tickListeners.add(listener)
-    _startTick()
-    return () => {
-      _tickListeners.delete(listener)
-      _stopTick()
-    }
-  },
-  getSnapshot: () => _tickNow,
-}
-
-interface RelativeTimeCellProps {
-  start: string
-}
-
-const RelativeTimeCell = memo(function RelativeTimeCell({
-  start,
-}: RelativeTimeCellProps) {
-  const now = useSyncExternalStore(tickStore.subscribe, tickStore.getSnapshot)
-  return <>{dayjs(start).from(now)}</>
-})
 
 const reconcileColumnOrder = (
   storedOrder: string[],
@@ -181,7 +137,7 @@ const compareConnectionCellValue = (
 
 const renderCell = (column: DisplayColumn, row: ConnectionRowView) => {
   if (column.cell) return column.cell(row)
-  if (column.field === 'time') return <RelativeTimeCell start={row.time} />
+  if (column.field === 'time') return <RelativeTime start={row.time} />
   return getConnectionCellValue(column.field, row)
 }
 
@@ -441,7 +397,44 @@ export const ConnectionTable = (props: Props) => {
   }, [columnVisibilityModel, columnWidths, orderedColumns])
 
   const [sorting, setSorting] = useState<SortingState | null>(null)
-  const [viewport, setViewport] = useState({ scrollTop: 0, height: 1200 })
+  const [viewport, setViewport] = useState({ scrollTop: 0, height: 0 })
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null)
+
+  const updateViewport = useCallback((element: HTMLDivElement) => {
+    setViewport((current) => {
+      const next = {
+        scrollTop: element.scrollTop,
+        height: element.clientHeight,
+      }
+      return current.scrollTop === next.scrollTop &&
+        current.height === next.height
+        ? current
+        : next
+    })
+  }, [])
+
+  const setScrollContainer = useCallback(
+    (element: HTMLDivElement | null) => {
+      scrollContainerRef.current = element
+      if (element) updateViewport(element)
+    },
+    [updateViewport],
+  )
+
+  useEffect(() => {
+    const element = scrollContainerRef.current
+    if (!element) return
+
+    if (typeof ResizeObserver === 'undefined') {
+      const handleResize = () => updateViewport(element)
+      window.addEventListener('resize', handleResize)
+      return () => window.removeEventListener('resize', handleResize)
+    }
+
+    const observer = new ResizeObserver(() => updateViewport(element))
+    observer.observe(element)
+    return () => observer.disconnect()
+  }, [updateViewport])
 
   const sortedConnections = useMemo(() => {
     if (!sorting) return connections
@@ -457,19 +450,12 @@ export const ConnectionTable = (props: Props) => {
     () => visibleColumns.reduce((total, column) => total + column.size, 0),
     [visibleColumns],
   )
-  const handleScroll = useCallback((event: ReactUIEvent<HTMLDivElement>) => {
-    const element = event.currentTarget
-    setViewport((current) => {
-      const next = {
-        scrollTop: element.scrollTop,
-        height: element.clientHeight,
-      }
-      return current.scrollTop === next.scrollTop &&
-        current.height === next.height
-        ? current
-        : next
-    })
-  }, [])
+  const handleScroll = useCallback(
+    (event: ReactUIEvent<HTMLDivElement>) => {
+      updateViewport(event.currentTarget)
+    },
+    [updateViewport],
+  )
 
   const bodyScrollTop = Math.max(0, viewport.scrollTop - ROW_HEIGHT)
   const firstVisibleRow = Math.min(
@@ -630,6 +616,7 @@ export const ConnectionTable = (props: Props) => {
         }}
       >
         <div
+          ref={setScrollContainer}
           onScroll={handleScroll}
           style={{
             flex: 1,

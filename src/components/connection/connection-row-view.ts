@@ -124,6 +124,7 @@ export const useConnectionRowViews = (
 
   const rows = useMemo(() => {
     const previousRows = previousRowsRef.current
+    const previousConnections = latestConnectionsRef.current
     const nextRows = new Map<string, ConnectionRowView>()
     const latestConnections = new Map<string, IConnectionsItem>()
     const nextList: ConnectionRowView[] = []
@@ -131,12 +132,18 @@ export const useConnectionRowViews = (
     connections.forEach((connection) => {
       latestConnections.set(connection.id, connection)
 
-      const nextRow = createConnectionRowView(connection)
       const previousRow = previousRows.get(connection.id)
-      const row =
-        previousRow && sameConnectionRowView(previousRow, nextRow)
-          ? previousRow
-          : nextRow
+      const previousConnection = previousConnections.get(connection.id)
+      let row: ConnectionRowView
+      if (previousRow && previousConnection === connection) {
+        row = previousRow
+      } else {
+        const nextRow = createConnectionRowView(connection)
+        row =
+          previousRow && sameConnectionRowView(previousRow, nextRow)
+            ? previousRow
+            : nextRow
+      }
 
       nextRows.set(connection.id, row)
       nextList.push(row)
