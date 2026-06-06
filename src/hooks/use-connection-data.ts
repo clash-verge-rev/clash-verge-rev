@@ -1,11 +1,12 @@
-import { useQueryClient } from '@tanstack/react-query'
+import { useCallback, useMemo, useSyncExternalStore } from 'react'
 import { MihomoWebSocket } from 'tauri-plugin-mihomo-api'
-
-import { useMihomoWsSubscription } from './use-mihomo-ws-subscription'
 
 const MAX_CLOSED_CONNS_NUM = 500
 const CONNECTION_UPDATE_THROTTLE_MS = 500
-const CONNECTION_QUERY_GC_TIME_MS = 1_000
+const CONNECTION_RECONNECT_DELAY_MS = 1_000
+
+type ConnectionMetadata = IConnectionsItem['metadata']
+type ConnectionListener = () => void
 
 export const initConnData: ConnectionMonitorData = {
   uploadTotal: 0,
@@ -33,6 +34,115 @@ export const initConnSummaryData: ConnectionSummaryData = {
   activeConnectionCount: 0,
 }
 
+let connectionData: ConnectionMonitorData = initConnData
+let connectionSummary: ConnectionSummaryData = initConnSummaryData
+let connectionSocket: MihomoWebSocket | null = null
+let connectionStarted = false
+let connectionConnecting = false
+let reconnectTimer: ReturnType<typeof setTimeout> | null = null
+let flushTimer: ReturnType<typeof setTimeout> | null = null
+let pendingPayload: IConnections | null = null
+let lastFlushAt = 0
+
+const connectionListeners = new Set<ConnectionListener>()
+const summaryListeners = new Set<ConnectionListener>()
+
+const notifyConnectionListeners = () => {
+  connectionListeners.forEach((listener) => listener())
+}
+
+const notifySummaryListeners = () => {
+  summaryListeners.forEach((listener) => listener())
+}
+
+const sameMetadata = (left: ConnectionMetadata, right: ConnectionMetadata) =>
+  left.network === right.network &&
+  left.type === right.type &&
+  left.host === right.host &&
+  left.sourceIP === right.sourceIP &&
+  left.sourcePort === right.sourcePort &&
+  left.destinationPort === right.destinationPort &&
+  left.destinationIP === right.destinationIP &&
+  left.remoteDestination === right.remoteDestination &&
+  left.process === right.process &&
+  left.processPath === right.processPath
+
+const normalizeMetadata = (
+  metadata: ConnectionMetadata,
+  previous?: ConnectionMetadata,
+): ConnectionMetadata => {
+  if (previous && sameMetadata(previous, metadata)) return previous
+
+  return {
+    network: metadata.network || '',
+    type: metadata.type || '',
+    host: metadata.host || '',
+    sourceIP: metadata.sourceIP || '',
+    sourcePort: metadata.sourcePort || '',
+    destinationPort: metadata.destinationPort || '',
+    destinationIP: metadata.destinationIP || '',
+    remoteDestination: metadata.remoteDestination || '',
+    process: metadata.process || '',
+    processPath: metadata.processPath || '',
+  }
+}
+
+const sameChains = (left: string[], right: string[]) => {
+  if (left.length !== right.length) return false
+  for (let i = 0; i < left.length; i++) {
+    if (left[i] !== right[i]) return false
+  }
+  return true
+}
+
+const normalizeChains = (chains: string[], previous?: string[]) => {
+  if (previous && sameChains(previous, chains)) return previous
+  return chains.slice()
+}
+
+const normalizeConnection = (
+  connection: IConnectionsItem,
+  previous?: IConnectionsItem,
+): IConnectionsItem => {
+  const metadata = normalizeMetadata(connection.metadata, previous?.metadata)
+  const chains = normalizeChains(connection.chains || [], previous?.chains)
+  const upload = connection.upload ?? 0
+  const download = connection.download ?? 0
+  const curUpload = previous ? upload - previous.upload : 0
+  const curDownload = previous ? download - previous.download : 0
+  const rule = connection.rule || ''
+  const rulePayload = connection.rulePayload || ''
+  const start = connection.start || ''
+
+  if (
+    previous &&
+    previous.metadata === metadata &&
+    previous.chains === chains &&
+    previous.upload === upload &&
+    previous.download === download &&
+    previous.curUpload === curUpload &&
+    previous.curDownload === curDownload &&
+    previous.rule === rule &&
+    previous.rulePayload === rulePayload &&
+    previous.start === start
+  ) {
+    return previous
+  }
+
+  return {
+    id: connection.id,
+    metadata,
+    upload,
+    download,
+    start,
+    chains,
+    rule,
+    rulePayload,
+    curUpload,
+    curDownload,
+  }
+}
+
 const mergeConnectionSnapshot = (
   payload: IConnections,
   previous: ConnectionMonitorData = initConnData,
@@ -40,48 +150,22 @@ const mergeConnectionSnapshot = (
   const nextConnections = payload.connections ?? []
   const previousActive = previous.activeConnections ?? []
   const previousClosed = previous.closedConnections ?? []
-
-  const nextById = new Map<string, IConnectionsItem>()
-  for (let i = 0; i < nextConnections.length; i++) {
-    nextById.set(nextConnections[i].id, nextConnections[i])
-  }
-
-  const carried: IConnectionsItem[] = []
-  const dropped: IConnectionsItem[] = []
+  const previousActiveById = new Map<string, IConnectionsItem>()
 
   for (let i = 0; i < previousActive.length; i++) {
-    const prev = previousActive[i]
-    const next = nextById.get(prev.id)
-    if (next !== undefined) {
-      nextById.delete(prev.id)
-      if (prev.upload === next.upload && prev.download === next.download) {
-        // Reuse prev reference: row identity stability is the contract Stage 2 memo relies on.
-        carried.push(prev)
-      } else {
-        carried.push({
-          ...next,
-          curUpload: next.upload - prev.upload,
-          curDownload: next.download - prev.download,
-        })
-      }
-    } else {
-      dropped.push(prev)
-    }
+    const previousConnection = previousActive[i]
+    previousActiveById.set(previousConnection.id, previousConnection)
   }
 
-  const activeConnections: IConnectionsItem[] = carried
+  const activeConnections: IConnectionsItem[] = []
   for (let i = 0; i < nextConnections.length; i++) {
-    const conn = nextConnections[i]
-    if (nextById.has(conn.id)) {
-      activeConnections.push({
-        ...conn,
-        curUpload: 0,
-        curDownload: 0,
-      })
-    }
+    const connection = nextConnections[i]
+    const previousConnection = previousActiveById.get(connection.id)
+    if (previousConnection) previousActiveById.delete(connection.id)
+    activeConnections.push(normalizeConnection(connection, previousConnection))
   }
 
-  if (dropped.length === 0) {
+  if (previousActiveById.size === 0) {
     return {
       uploadTotal: payload.uploadTotal ?? 0,
       downloadTotal: payload.downloadTotal ?? 0,
@@ -90,16 +174,20 @@ const mergeConnectionSnapshot = (
     }
   }
 
-  const rawClosedLen = previousClosed.length + dropped.length
-  let closedConnections: IConnectionsItem[]
-  if (rawClosedLen <= MAX_CLOSED_CONNS_NUM) {
-    closedConnections = previousClosed.concat(dropped)
-  } else {
-    const skipPrev = rawClosedLen - MAX_CLOSED_CONNS_NUM
-    closedConnections =
-      skipPrev >= previousClosed.length
-        ? dropped.slice(skipPrev - previousClosed.length)
-        : previousClosed.slice(skipPrev).concat(dropped)
+  const rawClosedLen = previousClosed.length + previousActiveById.size
+  const closedConnections: IConnectionsItem[] =
+    rawClosedLen <= MAX_CLOSED_CONNS_NUM
+      ? previousClosed.slice()
+      : previousClosed.slice(Math.max(0, rawClosedLen - MAX_CLOSED_CONNS_NUM))
+
+  previousActive.forEach((connection) => {
+    if (previousActiveById.has(connection.id)) {
+      closedConnections.push(connection)
+    }
+  })
+
+  if (closedConnections.length > MAX_CLOSED_CONNS_NUM) {
+    closedConnections.splice(0, closedConnections.length - MAX_CLOSED_CONNS_NUM)
   }
 
   return {
@@ -118,70 +206,173 @@ const mergeConnectionSummary = (
   activeConnectionCount: payload.connections?.length ?? 0,
 })
 
-export const useConnectionData = () => {
-  const queryClient = useQueryClient()
-  const { response, refresh, subscriptionCacheKey } =
-    useMihomoWsSubscription<ConnectionMonitorData>({
-      storageKey: 'mihomo_connection_date',
-      buildSubscriptKey: (date) => `getClashConnection-${date}`,
-      fallbackData: initConnData,
-      connect: () => MihomoWebSocket.connect_connections(),
-      throttleMs: CONNECTION_UPDATE_THROTTLE_MS,
-      gcTime: CONNECTION_QUERY_GC_TIME_MS,
-      setupHandlers: ({ next, scheduleReconnect }) => ({
-        handleMessage: (data) => {
-          if (data.startsWith('Websocket error')) {
-            next(data)
-            void scheduleReconnect()
-            return
-          }
+const flushPendingPayload = () => {
+  flushTimer = null
+  const payload = pendingPayload
+  pendingPayload = null
+  if (!payload) return
 
-          next(null, (old = initConnData) =>
-            mergeConnectionSnapshot(JSON.parse(data) as IConnections, old),
-          )
-        },
-      }),
-    })
+  lastFlushAt = Date.now()
+  connectionData = mergeConnectionSnapshot(payload, connectionData)
+  connectionSummary = mergeConnectionSummary(payload)
+  notifyConnectionListeners()
+  notifySummaryListeners()
+}
 
-  const clearClosedConnections = () => {
-    if (!subscriptionCacheKey) return
-    queryClient.setQueryData<ConnectionMonitorData>([subscriptionCacheKey], {
-      uploadTotal: response.data?.uploadTotal ?? 0,
-      downloadTotal: response.data?.downloadTotal ?? 0,
-      activeConnections: response.data?.activeConnections ?? [],
-      closedConnections: [],
-    })
+const enqueueConnectionPayload = (payload: IConnections) => {
+  pendingPayload = payload
+  if (flushTimer) return
+
+  const elapsed = Date.now() - lastFlushAt
+  if (elapsed >= CONNECTION_UPDATE_THROTTLE_MS) {
+    flushPendingPayload()
+    return
   }
+
+  flushTimer = window.setTimeout(
+    flushPendingPayload,
+    CONNECTION_UPDATE_THROTTLE_MS - elapsed,
+  )
+}
+
+const clearReconnectTimer = () => {
+  if (!reconnectTimer) return
+  window.clearTimeout(reconnectTimer)
+  reconnectTimer = null
+}
+
+const closeConnectionSocket = async () => {
+  const socket = connectionSocket
+  connectionSocket = null
+  if (!socket) return
+
+  try {
+    await socket.close()
+  } catch (err) {
+    console.warn('Failed to close connection websocket', err)
+  }
+}
+
+const scheduleReconnect = () => {
+  if (reconnectTimer) return
+  reconnectTimer = window.setTimeout(() => {
+    reconnectTimer = null
+    void connectConnectionSocket()
+  }, CONNECTION_RECONNECT_DELAY_MS)
+}
+
+async function reconnectConnectionSocket() {
+  await closeConnectionSocket()
+  scheduleReconnect()
+}
+
+async function connectConnectionSocket() {
+  if (connectionSocket || connectionConnecting) return
+
+  clearReconnectTimer()
+  connectionConnecting = true
+
+  try {
+    const socket = await MihomoWebSocket.connect_connections()
+    connectionSocket = socket
+    socket.addListener((message) => {
+      if (message.type !== 'Text') return
+      if (message.data.startsWith('Websocket error')) {
+        void reconnectConnectionSocket()
+        return
+      }
+
+      try {
+        enqueueConnectionPayload(JSON.parse(message.data) as IConnections)
+      } catch (err) {
+        console.error('[Connections] Failed to parse websocket payload', err)
+      }
+    })
+  } catch {
+    scheduleReconnect()
+  } finally {
+    connectionConnecting = false
+  }
+}
+
+const startConnectionMonitor = () => {
+  if (connectionStarted) return
+  connectionStarted = true
+  void connectConnectionSocket()
+}
+
+const getConnectionSnapshot = () => connectionData
+const getConnectionSummarySnapshot = () => connectionSummary
+
+const subscribeConnectionData = (listener: ConnectionListener) => {
+  startConnectionMonitor()
+  connectionListeners.add(listener)
+  return () => {
+    connectionListeners.delete(listener)
+  }
+}
+
+const subscribeConnectionSummary = (listener: ConnectionListener) => {
+  startConnectionMonitor()
+  summaryListeners.add(listener)
+  return () => {
+    summaryListeners.delete(listener)
+  }
+}
+
+const refreshConnectionData = () => {
+  pendingPayload = null
+  if (flushTimer) {
+    window.clearTimeout(flushTimer)
+    flushTimer = null
+  }
+
+  void reconnectConnectionSocket()
+}
+
+const clearClosedConnectionData = () => {
+  if (connectionData.closedConnections.length === 0) return
+  connectionData = {
+    ...connectionData,
+    closedConnections: [],
+  }
+  notifyConnectionListeners()
+}
+
+export const useConnectionData = () => {
+  const data = useSyncExternalStore(
+    subscribeConnectionData,
+    getConnectionSnapshot,
+    getConnectionSnapshot,
+  )
+  const response = useMemo(() => ({ data }), [data])
+  const refreshGetClashConnection = useCallback(() => {
+    refreshConnectionData()
+  }, [])
+  const clearClosedConnections = useCallback(() => {
+    clearClosedConnectionData()
+  }, [])
 
   return {
     response,
-    refreshGetClashConnection: refresh,
+    refreshGetClashConnection,
     clearClosedConnections,
   }
 }
 
 export const useConnectionSummaryData = () => {
-  const { response, refresh } = useMihomoWsSubscription<ConnectionSummaryData>({
-    storageKey: 'mihomo_connection_summary_date',
-    buildSubscriptKey: (date) => `getClashConnectionSummary-${date}`,
-    fallbackData: initConnSummaryData,
-    connect: () => MihomoWebSocket.connect_connections(),
-    throttleMs: CONNECTION_UPDATE_THROTTLE_MS,
-    setupHandlers: ({ next, scheduleReconnect }) => ({
-      handleMessage: (data) => {
-        if (data.startsWith('Websocket error')) {
-          next(data)
-          void scheduleReconnect()
-          return
-        }
-
-        next(null, mergeConnectionSummary(JSON.parse(data) as IConnections))
-      },
-    }),
-  })
+  const data = useSyncExternalStore(
+    subscribeConnectionSummary,
+    getConnectionSummarySnapshot,
+    getConnectionSummarySnapshot,
+  )
+  const response = useMemo(() => ({ data }), [data])
+  const refreshGetClashConnectionSummary = useCallback(() => {
+    refreshConnectionData()
+  }, [])
 
   return {
     response,
-    refreshGetClashConnectionSummary: refresh,
+    refreshGetClashConnectionSummary,
   }
 }
