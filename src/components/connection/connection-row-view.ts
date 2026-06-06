@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef } from 'react'
+import { useMemo, useRef } from 'react'
 
 const TRAFFIC_UNITS = ['B', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB']
 
@@ -27,12 +27,7 @@ export interface ConnectionRowView {
   searchableProcess: string
 }
 
-export interface ConnectionRowViews {
-  rows: ConnectionRowView[]
-  getConnectionById: (id: string) => IConnectionsItem | undefined
-}
-
-const formatTraffic = (value?: number) => {
+export const formatConnectionTraffic = (value?: number) => {
   if (typeof value !== 'number') return 'NaN'
 
   const exp =
@@ -44,7 +39,7 @@ const formatTraffic = (value?: number) => {
   return `${text} ${TRAFFIC_UNITS[exp]}`
 }
 
-const formatChains = (chains: string[]) => {
+export const formatConnectionChains = (chains: string[]) => {
   let value = ''
   for (let i = chains.length - 1; i >= 0; i -= 1) {
     if (value) value += ' / '
@@ -53,40 +48,70 @@ const formatChains = (chains: string[]) => {
   return value
 }
 
-const createConnectionRowView = (connection: IConnectionsItem) => {
-  const { metadata, rulePayload } = connection
-  const destination = metadata.destinationIP
+export const getConnectionDestination = (connection: IConnectionsItem) => {
+  const { metadata } = connection
+  return metadata.destinationIP
     ? `${metadata.destinationIP}:${metadata.destinationPort}`
     : `${metadata.remoteDestination}:${metadata.destinationPort}`
-  const host = metadata.host
+}
+
+export const getConnectionHost = (connection: IConnectionsItem) => {
+  const { metadata } = connection
+  return metadata.host
     ? `${metadata.host}:${metadata.destinationPort}`
     : `${metadata.remoteDestination}:${metadata.destinationPort}`
+}
+
+export const getConnectionProcess = (connection: IConnectionsItem) => {
+  const { metadata } = connection
+  return metadata.process || metadata.processPath || ''
+}
+
+export const getConnectionRule = (connection: IConnectionsItem) => {
+  const { rulePayload } = connection
+  return rulePayload ? `${connection.rule}(${rulePayload})` : connection.rule
+}
+
+export const getConnectionSource = (connection: IConnectionsItem) => {
+  const { metadata } = connection
+  return `${metadata.sourceIP}:${metadata.sourcePort}`
+}
+
+export const getConnectionTypeLabel = (connection: IConnectionsItem) => {
+  const { metadata } = connection
+  return `${metadata.type}(${metadata.network})`
+}
+
+export const getConnectionStartTime = (connection: IConnectionsItem) =>
+  Date.parse(connection.start || '') || 0
+
+const createConnectionRowView = (connection: IConnectionsItem) => {
   const uploadSpeed = connection.curUpload ?? 0
   const downloadSpeed = connection.curDownload ?? 0
 
   return {
     id: connection.id,
-    host,
-    process: metadata.process || metadata.processPath || '',
-    network: metadata.network,
-    type: metadata.type,
-    chains: formatChains(connection.chains),
-    rule: rulePayload ? `${connection.rule}(${rulePayload})` : connection.rule,
+    host: getConnectionHost(connection),
+    process: getConnectionProcess(connection),
+    network: connection.metadata.network,
+    type: connection.metadata.type,
+    chains: formatConnectionChains(connection.chains),
+    rule: getConnectionRule(connection),
     time: connection.start,
-    source: `${metadata.sourceIP}:${metadata.sourcePort}`,
-    destination,
-    uploadText: formatTraffic(connection.upload),
-    downloadText: formatTraffic(connection.download),
-    uploadSpeedText: `${formatTraffic(uploadSpeed)}/s`,
-    downloadSpeedText: `${formatTraffic(downloadSpeed)}/s`,
+    source: getConnectionSource(connection),
+    destination: getConnectionDestination(connection),
+    uploadText: formatConnectionTraffic(connection.upload),
+    downloadText: formatConnectionTraffic(connection.download),
+    uploadSpeedText: `${formatConnectionTraffic(uploadSpeed)}/s`,
+    downloadSpeedText: `${formatConnectionTraffic(downloadSpeed)}/s`,
     upload: connection.upload ?? 0,
     download: connection.download ?? 0,
     uploadSpeed,
     downloadSpeed,
-    startTime: Date.parse(connection.start || '') || 0,
-    searchableHost: metadata.host || '',
-    searchableDestinationIP: metadata.destinationIP || '',
-    searchableProcess: metadata.process || '',
+    startTime: getConnectionStartTime(connection),
+    searchableHost: connection.metadata.host || '',
+    searchableDestinationIP: connection.metadata.destinationIP || '',
+    searchableProcess: connection.metadata.process || '',
   } satisfies ConnectionRowView
 }
 
@@ -115,24 +140,23 @@ const sameConnectionRowView = (
   left.searchableDestinationIP === right.searchableDestinationIP &&
   left.searchableProcess === right.searchableProcess
 
-export const useConnectionRowViews = (
-  connections: IConnectionsItem[],
-): ConnectionRowViews => {
+export const useConnectionRowViews = (connections: IConnectionsItem[]) => {
   const previousRowsRef = useRef(new Map<string, ConnectionRowView>())
-  const latestConnectionsRef = useRef(new Map<string, IConnectionsItem>())
+  const previousConnectionsRef = useRef(new Map<string, IConnectionsItem>())
 
-  const rows = useMemo(() => {
+  return useMemo(() => {
     const previousRows = previousRowsRef.current
-    const previousConnections = latestConnectionsRef.current
+    const previousConnections = previousConnectionsRef.current
     const nextRows = new Map<string, ConnectionRowView>()
-    const latestConnections = new Map<string, IConnectionsItem>()
-    const nextList: ConnectionRowView[] = []
+    const nextConnections = new Map<string, IConnectionsItem>()
+    const rows: ConnectionRowView[] = []
 
     connections.forEach((connection) => {
-      latestConnections.set(connection.id, connection)
+      nextConnections.set(connection.id, connection)
 
       const previousRow = previousRows.get(connection.id)
       const previousConnection = previousConnections.get(connection.id)
+
       let row: ConnectionRowView
       if (previousRow && previousConnection === connection) {
         row = previousRow
@@ -145,18 +169,11 @@ export const useConnectionRowViews = (
       }
 
       nextRows.set(connection.id, row)
-      nextList.push(row)
+      rows.push(row)
     })
 
     previousRowsRef.current = nextRows
-    latestConnectionsRef.current = latestConnections
-    return nextList
+    previousConnectionsRef.current = nextConnections
+    return rows
   }, [connections])
-
-  const getConnectionById = useCallback(
-    (id: string) => latestConnectionsRef.current.get(id),
-    [],
-  )
-
-  return { rows, getConnectionById }
 }

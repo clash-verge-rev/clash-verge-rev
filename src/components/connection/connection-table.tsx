@@ -18,7 +18,17 @@ import {
   type ConnectionColumnOption,
 } from './connection-column-manager'
 import { RelativeTime } from './connection-relative-time'
-import type { ConnectionRowView } from './connection-row-view'
+import {
+  formatConnectionChains,
+  formatConnectionTraffic,
+  getConnectionDestination,
+  getConnectionHost,
+  getConnectionProcess,
+  getConnectionRule,
+  getConnectionSource,
+  getConnectionStartTime,
+  getConnectionTypeLabel,
+} from './connection-row-view'
 
 const ROW_HEIGHT = 40
 const RESIZE_HANDLE_WIDTH = 6
@@ -57,7 +67,7 @@ interface BaseColumn {
   minWidth: number
   maxWidth?: number
   align?: 'left' | 'right'
-  cell?: (row: ConnectionRowView) => string
+  cell?: (row: IConnectionsItem) => string
 }
 
 interface DisplayColumn extends BaseColumn {
@@ -83,32 +93,32 @@ const resolveColumnSize = (
     : Math.min(column.maxWidth, boundedMin)
 }
 
-const getConnectionCellValue = (field: ColumnField, row: ConnectionRowView) => {
+const getConnectionCellValue = (field: ColumnField, row: IConnectionsItem) => {
   switch (field) {
     case 'host':
-      return row.host
+      return getConnectionHost(row)
     case 'download':
-      return row.download
+      return row.download ?? 0
     case 'upload':
-      return row.upload
+      return row.upload ?? 0
     case 'dlSpeed':
-      return row.downloadSpeed
+      return row.curDownload ?? 0
     case 'ulSpeed':
-      return row.uploadSpeed
+      return row.curUpload ?? 0
     case 'chains':
-      return row.chains
+      return formatConnectionChains(row.chains)
     case 'rule':
-      return row.rule
+      return getConnectionRule(row)
     case 'process':
-      return row.process
+      return getConnectionProcess(row)
     case 'time':
-      return row.time
+      return row.start
     case 'source':
-      return row.source
+      return getConnectionSource(row)
     case 'remoteDestination':
-      return row.destination
+      return getConnectionDestination(row)
     case 'type':
-      return `${row.type}(${row.network})`
+      return getConnectionTypeLabel(row)
     default:
       return ''
   }
@@ -116,11 +126,11 @@ const getConnectionCellValue = (field: ColumnField, row: ConnectionRowView) => {
 
 const compareConnectionCellValue = (
   field: ColumnField,
-  left: ConnectionRowView,
-  right: ConnectionRowView,
+  left: IConnectionsItem,
+  right: IConnectionsItem,
 ) => {
   if (field === 'time') {
-    return left.startTime - right.startTime
+    return getConnectionStartTime(left) - getConnectionStartTime(right)
   }
 
   const leftValue = getConnectionCellValue(field, left)
@@ -133,14 +143,14 @@ const compareConnectionCellValue = (
   return String(leftValue ?? '').localeCompare(String(rightValue ?? ''))
 }
 
-const renderCell = (column: DisplayColumn, row: ConnectionRowView) => {
+const renderCell = (column: DisplayColumn, row: IConnectionsItem) => {
   if (column.cell) return column.cell(row)
-  if (column.field === 'time') return <RelativeTime start={row.time} />
+  if (column.field === 'time') return <RelativeTime start={row.start} />
   return getConnectionCellValue(column.field, row)
 }
 
 interface RowComponentProps {
-  row: ConnectionRowView
+  row: IConnectionsItem
   columns: DisplayColumn[]
   onShowDetail: (id: string) => void
   borderColor: string
@@ -208,7 +218,7 @@ const RowComponent = memo(
 )
 
 interface Props {
-  connections: ConnectionRowView[]
+  connections: IConnectionsItem[]
   onShowDetail: (id: string) => void
   columnManagerOpen: boolean
   onCloseColumnManager: () => void
@@ -283,7 +293,7 @@ export const ConnectionTable = (props: Props) => {
         width: 76,
         minWidth: 60,
         align: 'right',
-        cell: (row) => row.downloadText,
+        cell: (row) => formatConnectionTraffic(row.download),
       },
       {
         field: 'upload',
@@ -291,7 +301,7 @@ export const ConnectionTable = (props: Props) => {
         width: 76,
         minWidth: 60,
         align: 'right',
-        cell: (row) => row.uploadText,
+        cell: (row) => formatConnectionTraffic(row.upload),
       },
       {
         field: 'dlSpeed',
@@ -299,7 +309,7 @@ export const ConnectionTable = (props: Props) => {
         width: 76,
         minWidth: 60,
         align: 'right',
-        cell: (row) => row.downloadSpeedText,
+        cell: (row) => `${formatConnectionTraffic(row.curDownload ?? 0)}/s`,
       },
       {
         field: 'ulSpeed',
@@ -307,7 +317,7 @@ export const ConnectionTable = (props: Props) => {
         width: 76,
         minWidth: 60,
         align: 'right',
-        cell: (row) => row.uploadSpeedText,
+        cell: (row) => `${formatConnectionTraffic(row.curUpload ?? 0)}/s`,
       },
       {
         field: 'chains',
@@ -433,6 +443,19 @@ export const ConnectionTable = (props: Props) => {
     observer.observe(element)
     return () => observer.disconnect()
   }, [updateViewport])
+
+  useEffect(() => {
+    const element = scrollContainerRef.current
+    if (!element) return
+
+    const maxScrollTop = Math.max(
+      0,
+      element.scrollHeight - element.clientHeight,
+    )
+    if (element.scrollTop <= maxScrollTop) return
+
+    element.scrollTop = maxScrollTop
+  }, [connections.length])
 
   const sortedConnections = useMemo(() => {
     if (!sorting) return connections

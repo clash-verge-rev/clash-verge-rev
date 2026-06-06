@@ -116,8 +116,9 @@ const ConnectionsPage = () => {
     return matchConns
   }, [selectedConnections, match, curOrderOpt])
 
-  const { rows: displayRows, getConnectionById } =
-    useConnectionRowViews(filterConn)
+  const displayRows = useConnectionRowViews(
+    isTableLayout ? EMPTY_CONNECTIONS : filterConn,
+  )
 
   const detailRef = useRef<ConnectionDetailRef>(null!)
 
@@ -133,12 +134,12 @@ const ConnectionsPage = () => {
 
   const showDetailById = useCallback(
     (id: string) => {
-      const connection = getConnectionById(id)
+      const connection = filterConn.find((item) => item.id === id)
       if (connection) {
         detailRef.current?.open(connection, connectionsType === 'closed')
       }
     },
-    [connectionsType, getConnectionById],
+    [connectionsType, filterConn],
   )
 
   const onCloseAll = useLockFn(closeAllConnections)
@@ -275,7 +276,7 @@ const ConnectionsPage = () => {
         <BaseEmpty />
       ) : isTableLayout ? (
         <ConnectionTable
-          connections={displayRows}
+          connections={filterConn}
           onShowDetail={showDetailById}
           columnManagerOpen={isColumnManagerOpen}
           onCloseColumnManager={() => setIsColumnManagerOpen(false)}
@@ -283,7 +284,7 @@ const ConnectionsPage = () => {
       ) : (
         <VirtualList
           key={connectionsType}
-          count={filterConn.length}
+          count={displayRows.length}
           estimateSize={56}
           renderItem={(i) => (
             <ConnectionRowItem
