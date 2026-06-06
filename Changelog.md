@@ -7,6 +7,7 @@
 - 修复 gzip 压缩订阅响应被当作无效 YAML 导致导入失败的问题
 - 修复订阅 URL 使用空密码 Basic Auth 时未发送认证信息的问题
 - Linux 托盘可能与其他 tauri 程序托盘冲突导致图标异常
+- 修复前端 Connection 页面导致的内存泄漏
 
 <details>
 <summary><strong> ✨ 新增功能 </strong></summary>
@@ -19,5 +20,6 @@
 <summary><strong> 🚀 优化改进 </strong></summary>
 
 - 关闭 autofill 弹出窗口
+- 优化前端性能
 
 </details>
