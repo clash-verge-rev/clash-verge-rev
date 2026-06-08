@@ -137,3 +137,40 @@ unwrap_used = "warn"
 use_self = "deny"
 useless_let_if_seq = "deny"
 wildcard_imports = "deny"
+
+# ── FreeBSD port: redirect upstream dependencies to local fork ──────────────────────────────
+# Official tauri does not yet support FreeBSD; this points to the local tauri-freebsd fork (with FreeBSD adaptation).
+# Crates within the fork already reference each other using relative paths, but other dependencies on crates.io
+# (such as various tauri plugins) will independently request these crates, so the entire tauri crate set must be
+# patched together to avoid symbol conflicts from “patched version + crates.io version” coexisting.
+# Relative path base: clash-verge-rev-freebsd and tauri-freebsd are at the same level under ~/Documents.
+[patch.crates-io]
+tauri = { path = "../tauri-freebsd/crates/tauri" }
+tauri-build = { path = "../tauri-freebsd/crates/tauri-build" }
+tauri-codegen = { path = "../tauri-freebsd/crates/tauri-codegen" }
+tauri-macros = { path = "../tauri-freebsd/crates/tauri-macros" }
+tauri-plugin = { path = "../tauri-freebsd/crates/tauri-plugin" }
+tauri-runtime = { path = "../tauri-freebsd/crates/tauri-runtime" }
+tauri-runtime-wry = { path = "../tauri-freebsd/crates/tauri-runtime-wry" }
+tauri-utils = { path = "../tauri-freebsd/crates/tauri-utils" }
+# System proxy library: FreeBSD reuses the Linux implementation (gsettings/KDE), other platforms behave consistently with upstream.
+# sysproxy is introduced via git dependency, so it is redirected below in the git patch section (see end of file).
+# Autostart: requires two layers of fork to work on FreeBSD --
+#   1) auto-launch (base library, 0.6.0): allows FreeBSD to reuse Linux's XDG autostart implementation (write .desktop).
+#   2) tauri-plugin-autostart (upper layer plugin): upstream set_app_path only in windows/macos/linux three
+#      cfg branches, FreeBSD completely missing → app_path=None → build() reports AppPathNotSpecified →
+#      AutoLaunchManager initialization fails, autostart completely broken. Fork expands the cfg to freebsd,
+#      and upgrades the plugin's auto-launch dependency to 0.6 (using set_macos_launch_mode etc., 0.6 official API).
+auto-launch = { path = "../auto-launch-freebsd" }
+tauri-plugin-autostart = { path = "../plugins-workspace-freebsd/plugins/autostart" }
+
+# Privileged service IPC library: local fork adds FreeBSD rc.d service install/uninstall implementation.
+# It is a git dependency, so use git URL form of patch to redirect to local.
+[patch."https://github.com/clash-verge-rev/clash-verge-service-ipc"]
+clash_verge_service_ipc = { path = "../clash-verge-service-ipc-freebsd" }
+
+# System proxy library: upstream introduced via git (branch 0.5.4), so use git URL form of patch to redirect to local
+# fork (FreeBSD is a no-op stub, other platforms behave consistently with upstream).
+[patch."https://github.com/clash-verge-rev/sysproxy-rs"]
+sysproxy = { path = "../sysproxy-rs-freebsd" }
+

@@ -361,13 +361,13 @@ impl Tray {
         let icon_bytes = TrayState::get_tray_icon(&verge).await.1;
         let icon = tauri::image::Image::from_bytes(&icon_bytes)?;
 
-        #[cfg(target_os = "linux")]
+        #[cfg(any(target_os = "linux", target_os = "freebsd"))]
         let builder = TrayIconBuilder::with_id(TRAY_ID).icon(icon).icon_as_template(false);
 
         #[cfg(any(target_os = "macos", target_os = "windows"))]
         let show_menu_on_left_click = verge.tray_event.as_ref().is_some_and(|v| v == "tray_menu");
 
-        #[cfg(not(target_os = "linux"))]
+        #[cfg(any(target_os = "macos", target_os = "windows"))]
         let mut builder = TrayIconBuilder::with_id(TRAY_ID).icon(icon).icon_as_template(false);
         #[cfg(target_os = "macos")]
         {

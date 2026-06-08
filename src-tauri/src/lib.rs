@@ -46,7 +46,6 @@ mod app_init {
         let mut builder = builder
             .plugin(tauri_plugin_clash_verge_sysinfo::init())
             .plugin(tauri_plugin_notification::init())
-            .plugin(tauri_plugin_updater::Builder::new().build())
             .plugin(tauri_plugin_clipboard_manager::init())
             .plugin(tauri_plugin_process::init())
             .plugin(tauri_plugin_global_shortcut::Builder::new().build())
@@ -71,6 +70,12 @@ mod app_init {
                     .build(),
             );
 
+        // FreeBSD: tauri has not yet ported the updater component, only register this plugin on non-FreeBSD platforms.
+        #[cfg(not(target_os = "freebsd"))]
+        {
+            builder = builder.plugin(tauri_plugin_updater::Builder::new().build());
+        }
+
         // Devtools plugin only in debug mode with feature tauri-dev
         // to avoid duplicated registering of logger since the devtools plugin also registers a logger
         #[cfg(all(debug_assertions, not(feature = "tokio-trace"), feature = "tauri-dev"))]
@@ -82,7 +87,7 @@ mod app_init {
 
     /// Setup deep link handling
     pub fn setup_deep_links(app: &tauri::App) {
-        #[cfg(any(target_os = "linux", all(debug_assertions, windows)))]
+        #[cfg(any(target_os = "linux", target_os = "freebsd", all(debug_assertions, windows)))]
         {
             logging!(info, Type::Setup, "注册深层链接...");
             let _ = app.deep_link().register_all();

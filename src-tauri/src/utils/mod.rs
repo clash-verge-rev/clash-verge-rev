@@ -3,7 +3,10 @@ pub mod connections_stream;
 pub mod dirs;
 pub mod help;
 pub mod init;
-#[cfg(target_os = "linux")]
+// Linux and FreeBSD share this module: mime (freedesktop xdg-mime integration) is common to both platforms;
+// workarounds (Nvidia DMABUF / Wayland fixes) only called on Linux, but only depend on std, can compile
+// together on FreeBSD (just not called).
+#[cfg(any(target_os = "linux", target_os = "freebsd"))]
 pub mod linux;
 pub mod network;
 pub mod notification;

@@ -379,7 +379,7 @@ pub fn init_scheme() -> Result<()> {
 
     Ok(())
 }
-#[cfg(target_os = "linux")]
+#[cfg(any(target_os = "linux", target_os = "freebsd"))]
 pub fn init_scheme() -> Result<()> {
     const DESKTOP_FILE: &str = "clash-verge.desktop";
 
@@ -406,7 +406,7 @@ pub const fn init_scheme() -> Result<()> {
     Ok(())
 }
 
-#[cfg(target_os = "linux")]
+#[cfg(any(target_os = "linux", target_os = "freebsd"))]
 const DEEP_LINK_SCHEMES: &[&str] = &["clash", "clash-verge"];
 
 pub async fn startup_script() -> Result<()> {

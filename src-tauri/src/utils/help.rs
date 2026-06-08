@@ -218,7 +218,8 @@ pub fn open_core_latest_log() -> Result<()> {
     open_latest_log(path)
 }
 
-#[cfg(target_os = "linux")]
+// Linux and FreeBSD shared: prefer pkexec (FreeBSD can install polkit via pkg), fallback to sudo.
+#[cfg(any(target_os = "linux", target_os = "freebsd"))]
 pub fn linux_elevator() -> String {
     use std::process::Command;
     match Command::new("which").arg("pkexec").output() {

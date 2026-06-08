@@ -18,9 +18,9 @@ const DEFAULT_HEIGHT: f64 = 700.0;
 const MINIMAL_WIDTH: f64 = 520.0;
 const MINIMAL_HEIGHT: f64 = 520.0;
 
-#[cfg(target_os = "linux")]
+#[cfg(any(target_os = "linux", target_os = "freebsd"))]
 const DEFAULT_DECORATIONS: bool = false;
-#[cfg(not(target_os = "linux"))]
+#[cfg(not(any(target_os = "linux", target_os = "freebsd")))]
 const DEFAULT_DECORATIONS: bool = true;
 
 /// 构建新的 WebView 窗口

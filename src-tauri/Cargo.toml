@@ -143,6 +143,10 @@ windows = { version = "0.62.2", features = ["Win32_Globalization"] }
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-autostart = "2.5.1"
 tauri-plugin-global-shortcut = "2.3.2"
+
+# updater: tauri-plugin-updater cannot compile on FreeBSD (contains AppImage/flate2/tar etc.
+# Linux-specific logic and Env lacks appimage field), FreeBSD does not provide auto-update, so exclude this platform.
+[target.'cfg(not(any(target_os = "android", target_os = "ios", target_os = "freebsd")))'.dependencies]
 tauri-plugin-updater = "2.10.1"
 
 [dev-dependencies]

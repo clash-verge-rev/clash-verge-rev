@@ -377,8 +377,6 @@ checksum = "1505bd5d3d116872e7271a6d4e16d81d0c8570876c8de68093a09ac269d8aac0"
 [[package]]
 name = "auto-launch"
 version = "0.5.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "1f012b8cc0c850f34117ec8252a44418f2e34a2cf501de89e29b241ae5f79471"
 dependencies = [
  "dirs 4.0.0",
  "thiserror 1.0.69",
@@ -1227,7 +1225,6 @@ dependencies = [
 [[package]]
 name = "clash_verge_service_ipc"
 version = "2.3.0"
-source = "git+https://github.com/clash-verge-rev/clash-verge-service-ipc#808f730f90e8b905310187f8c7746eeff78d720e"
 dependencies = [
  "anyhow",
  "compact_str",
@@ -6977,7 +6974,6 @@ dependencies = [
 [[package]]
 name = "sysproxy"
 version = "0.5.4"
-source = "git+https://github.com/clash-verge-rev/sysproxy-rs?branch=0.5.4#f0775f6f4173c9dd6228cd7c3d183019b9ba6a7b"
 dependencies = [
  "iptools",
  "log",
@@ -7107,8 +7103,6 @@ checksum = "61c41af27dd6d1e27b1b16b489db798443478cef1f06a660c96db617ba5de3b1"
 [[package]]
 name = "tauri"
 version = "2.11.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "437404997acf375d85f1177afa7e11bb971f274ed6a7b83a2a3e339015f4cc28"
 dependencies = [
  "anyhow",
  "bytes",
@@ -7161,8 +7155,6 @@ dependencies = [
 [[package]]
 name = "tauri-build"
 version = "2.6.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4aa1f9055fc23919a54e4e125052bed16ed04aef0487086e758fe01a67b451c7"
 dependencies = [
  "anyhow",
  "cargo_toml",
@@ -7182,8 +7174,6 @@ dependencies = [
 [[package]]
 name = "tauri-codegen"
 version = "2.6.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e4a0319528a025a38c4078e7dae2c446f4e63620ddb0659a643ede1cb38f90e9"
 dependencies = [
  "base64 0.22.1",
  "brotli",
@@ -7209,8 +7199,6 @@ dependencies = [
 [[package]]
 name = "tauri-macros"
 version = "2.6.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ae6cb4e3896c21d2f6da5b31251d2faea0153bba56ed0e970f918115dbee4924"
 dependencies = [
  "heck 0.5.0",
  "proc-macro2",
@@ -7223,8 +7211,6 @@ dependencies = [
 [[package]]
 name = "tauri-plugin"
 version = "2.6.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e126abc9e84e35cdfd01596140a73a1850cdb0df0a23acf0185776c30b469a6e"
 dependencies = [
  "anyhow",
  "glob",
@@ -7538,8 +7524,6 @@ dependencies = [
 [[package]]
 name = "tauri-runtime"
 version = "2.11.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "48222d7116c8807eaa6fe2f372e023fae125084e61e6eca6d70b7961cdf129ef"
 dependencies = [
  "cookie",
  "dpi",
@@ -7563,8 +7547,6 @@ dependencies = [
 [[package]]
 name = "tauri-runtime-wry"
 version = "2.11.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b83849ee63ecb27a8e8d0fe51915ca215076914aca43f96db1179f0f415f6cd9"
 dependencies = [
  "gtk",
  "http 1.4.1",
@@ -7590,8 +7572,6 @@ dependencies = [
 [[package]]
 name = "tauri-utils"
 version = "2.9.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "092379df9a707631978e6c56b1bc2401d387f01e2d4a3c123360d167bbb9aa95"
 dependencies = [
  "anyhow",
  "brotli",
@@ -7618,7 +7598,7 @@ dependencies = [
  "serde_with",
  "swift-rs",
  "thiserror 2.0.18",
- "toml 1.1.2+spec-1.1.0",
+ "toml 0.9.12+spec-1.1.0",
  "url",
  "urlpattern",
  "uuid",
@@ -8372,9 +8352,9 @@ dependencies = [
 
 [[package]]
 name = "tray-icon"
-version = "0.23.1"
+version = "0.24.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "15edbb0d80583e85ee8df283410038e17314df5cba30da2087a54a85216c0773"
+checksum = "e47e6d063cfe4ad2e416fcbb310be3a37c5fd85c745b62cb562bfa4a003df674"
 dependencies = [
  "crossbeam-channel",
  "dirs 6.0.0",
@@ -8389,7 +8369,7 @@ dependencies = [
  "png 0.18.1",
  "serde",
  "thiserror 2.0.18",
- "windows-sys 0.61.2",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]

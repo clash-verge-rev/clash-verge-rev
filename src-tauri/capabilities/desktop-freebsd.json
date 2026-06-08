@@ -1,0 +1,29 @@
+{
+  "identifier": "desktop-freebsd-capability",
+  "description": "permissions for desktop applications on FreeBSD (updater excluded: plugin not registered on FreeBSD)",
+  "platforms": ["freebsd"],
+  "webviews": ["main"],
+  "windows": ["main"],
+  "permissions": [
+    "global-shortcut:default",
+    "dialog:default",
+    "dialog:allow-ask",
+    "dialog:allow-message",
+    "process:allow-restart",
+    "deep-link:default",
+    "autostart:allow-enable",
+    "autostart:allow-disable",
+    "autostart:allow-is-enabled",
+    "core:window:allow-set-theme",
+    "core:webview:allow-create-webview",
+    "core:webview:allow-create-webview-window",
+    "notification:default",
+    "http:default",
+    "http:allow-fetch",
+    {
+      "identifier": "http:default",
+      "allow": [{ "url": "https://*/*" }, { "url": "http://*/*" }]
+    },
+    "mihomo:default"
+  ]
+}

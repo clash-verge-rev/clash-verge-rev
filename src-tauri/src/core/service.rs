@@ -118,7 +118,10 @@ fn install_service() -> Result<()> {
     Ok(())
 }
 
-#[cfg(target_os = "linux")]
+// Linux and FreeBSD share the same install/uninstall process: call clash-verge-service-install/uninstall
+// binary and elevate privilege via pkexec/sudo. The differences between the two platforms (systemd vs rc.d)
+// are encapsulated inside the service-ipc installation binary, this layer does not need to distinguish.
+#[cfg(any(target_os = "linux", target_os = "freebsd"))]
 fn uninstall_service() -> Result<()> {
     logging!(info, Type::Service, "uninstall service");
 
@@ -174,7 +177,7 @@ fn uninstall_service() -> Result<()> {
     Ok(())
 }
 
-#[cfg(target_os = "linux")]
+#[cfg(any(target_os = "linux", target_os = "freebsd"))]
 fn install_service() -> Result<()> {
     logging!(info, Type::Service, "install service");
 
@@ -228,7 +231,7 @@ fn install_service() -> Result<()> {
     Ok(())
 }
 
-#[cfg(target_os = "linux")]
+#[cfg(any(target_os = "linux", target_os = "freebsd"))]
 fn linux_running_as_root() -> bool {
     use crate::core::handle;
     use tauri_plugin_clash_verge_sysinfo::is_current_app_handle_admin;

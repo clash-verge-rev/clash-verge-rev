@@ -1,0 +1,19 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+  "identifier": "io.github.clash-verge-rev.clash-verge-rev",
+  "app": {
+    "security": {
+      "capabilities": ["desktop-freebsd-capability", "migrated"]
+    }
+  },
+  "bundle": {
+    "targets": ["pkg"],
+    "externalBin": [
+      "./sidecar/clash-verge-service",
+      "./sidecar/clash-verge-service-install",
+      "./sidecar/clash-verge-service-uninstall",
+      "./sidecar/verge-mihomo",
+      "./sidecar/verge-mihomo-alpha"
+    ]
+  }
+}

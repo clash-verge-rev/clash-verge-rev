@@ -39,6 +39,8 @@ const PLATFORM_MAP = {
   'armv7-unknown-linux-gnueabihf': 'linux',
   'riscv64gc-unknown-linux-gnu': 'linux',
   'loongarch64-unknown-linux-gnu': 'linux',
+  'x86_64-unknown-freebsd': 'freebsd',
+  'aarch64-unknown-freebsd': 'freebsd',
 }
 const ARCH_MAP = {
   'x86_64-pc-windows-msvc': 'x64',
@@ -52,6 +54,8 @@ const ARCH_MAP = {
   'armv7-unknown-linux-gnueabihf': 'arm',
   'riscv64gc-unknown-linux-gnu': 'riscv64',
   'loongarch64-unknown-linux-gnu': 'loong64',
+  'x86_64-unknown-freebsd': 'x64',
+  'aarch64-unknown-freebsd': 'arm64',
 }
 
 const arg1 = process.argv.slice(2)[0]
@@ -69,8 +73,10 @@ const SIDECAR_HOST = target
 
 const RESOURCES_DIR = path.join(cwd, 'src-tauri', 'resources')
 const SIDECAR_DIR = path.join(cwd, 'src-tauri', 'sidecar')
-// Linux service binaries are bundled as externalBin sidecars (see tauri.linux.conf.json)
-const SERVICE_DIR = platform === 'linux' ? SIDECAR_DIR : RESOURCES_DIR
+// Linux/FreeBSD service binaries are bundled as externalBin sidecars
+// (see tauri.linux.conf.json / tauri.freebsd.conf.json)
+const SERVICE_DIR =
+  platform === 'linux' || platform === 'freebsd' ? SIDECAR_DIR : RESOURCES_DIR
 
 // =======================
 // Version Cache
@@ -279,11 +285,17 @@ async function getLatestReleaseVersion() {
 // =======================
 // Validate availability
 // =======================
-if (!META_MAP[`${platform}-${arch}`]) {
-  throw new Error(`clash meta unsupported platform "${platform}-${arch}"`)
-}
-if (!META_ALPHA_MAP[`${platform}-${arch}`]) {
-  throw new Error(`clash meta alpha unsupported platform "${platform}-${arch}"`)
+// FreeBSD has no official precompiled mihomo / service binaries; instead use local cross/native compilation
+// and place in sidecar, so skip META_MAP validation and download (see skipFreebsd flag in tasks).
+if (platform !== 'freebsd') {
+  if (!META_MAP[`${platform}-${arch}`]) {
+    throw new Error(`clash meta unsupported platform "${platform}-${arch}"`)
+  }
+  if (!META_ALPHA_MAP[`${platform}-${arch}`]) {
+    throw new Error(
+      `clash meta alpha unsupported platform "${platform}-${arch}"`,
+    )
+  }
 }
 
 // =======================
@@ -590,7 +602,8 @@ const SERVICE_BINARIES = [
 
 function serviceFileInfo(name) {
   const ext = platform === 'win32' ? '.exe' : ''
-  const suffix = platform === 'linux' ? '-' + SIDECAR_HOST : ''
+  const suffix =
+    platform === 'linux' || platform === 'freebsd' ? '-' + SIDECAR_HOST : ''
   return {
     sourceFile: `${name}${ext}`,
     targetFile: `${name}${suffix}${ext}`,
@@ -756,15 +769,17 @@ const tasks = [
     func: () =>
       getLatestAlphaVersion().then(() => resolveSidecar(clashMetaAlpha())),
     retry: 5,
+    skipFreebsd: true,
   },
   {
     name: 'verge-mihomo',
     func: () =>
       getLatestReleaseVersion().then(() => resolveSidecar(clashMeta())),
     retry: 5,
+    skipFreebsd: true,
   },
   { name: 'plugin', func: resolvePlugin, retry: 5, winOnly: true },
-  { name: 'service', func: resolveServiceBundle, retry: 5 },
+  { name: 'service', func: resolveServiceBundle, retry: 5, skipFreebsd: true },
   { name: 'mmdb', func: resolveMmdb, retry: 5 },
   { name: 'geosite', func: resolveGeosite, retry: 5 },
   { name: 'geoip', func: resolveGeoIP, retry: 5 },
@@ -778,7 +793,8 @@ const tasks = [
     name: 'service_chmod',
     func: resolveServicePermission,
     retry: 5,
-    unixOnly: platform === 'linux' || platform === 'darwin',
+    unixOnly:
+      platform === 'linux' || platform === 'darwin' || platform === 'freebsd',
   },
   {
     name: 'set_dns_script',
@@ -801,6 +817,8 @@ async function runTask() {
   if (task.winOnly && platform !== 'win32') return runTask()
   if (task.macosOnly && platform !== 'darwin') return runTask()
   if (task.linuxOnly && platform !== 'linux') return runTask()
+  // FreeBSD: mihomo / service binaries provided by local compilation, skip these download tasks.
+  if (task.skipFreebsd && platform === 'freebsd') return runTask()
 
   for (let i = 0; i < task.retry; i++) {
     try {

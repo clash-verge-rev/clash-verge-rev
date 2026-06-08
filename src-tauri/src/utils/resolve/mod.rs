@@ -130,6 +130,11 @@ pub(super) async fn init_auto_backup() {
     logging_error!(Type::Setup, AutoBackupManager::global().init().await);
 }
 
+// FreeBSD: tauri has not yet ported the updater component, disable silent update here (empty implementation).
+#[cfg(target_os = "freebsd")]
+async fn init_silent_updater() {}
+
+#[cfg(not(target_os = "freebsd"))]
 async fn init_silent_updater() {
     use crate::core::SilentUpdater;
     use crate::core::handle::Handle;
