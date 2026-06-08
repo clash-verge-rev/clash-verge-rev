@@ -46,12 +46,16 @@ async fn delete_snapshot_logs(log_dir: &Path) -> Result<()> {
 /// 删除log文件
 pub async fn delete_log() -> Result<()> {
     let log_dir = dirs::app_logs_dir()?;
-    if !log_dir.exists() {
+    let service_log_dir = dirs::service_log_dir()?;
+
+    if !log_dir.exists() && !service_log_dir.exists() {
         return Ok(());
     }
 
     #[cfg(target_os = "windows")]
-    delete_snapshot_logs(&log_dir).await?;
+    if log_dir.exists() {
+        delete_snapshot_logs(&log_dir).await?;
+    }
 
     let auto_log_clean = {
         let verge = Config::verge().await;
@@ -108,15 +112,18 @@ pub async fn delete_log() -> Result<()> {
         Ok(())
     };
 
-    let mut log_read_dir = fs::read_dir(&log_dir).await?;
-    while let Some(entry) = log_read_dir.next_entry().await? {
-        std::mem::drop(process_file(entry).await);
+    if log_dir.exists() {
+        let mut log_read_dir = fs::read_dir(&log_dir).await?;
+        while let Some(entry) = log_read_dir.next_entry().await? {
+            std::mem::drop(process_file(entry).await);
+        }
     }
 
-    let service_log_dir = log_dir.join("service");
-    let mut service_log_read_dir = fs::read_dir(service_log_dir).await?;
-    while let Some(entry) = service_log_read_dir.next_entry().await? {
-        std::mem::drop(process_file(entry).await);
+    if service_log_dir.exists() {
+        let mut service_log_read_dir = fs::read_dir(service_log_dir).await?;
+        while let Some(entry) = service_log_read_dir.next_entry().await? {
+            std::mem::drop(process_file(entry).await);
+        }
     }
 
     Ok(())
@@ -233,6 +240,7 @@ async fn ensure_directories() -> Result<()> {
         ("app_home", dirs::app_home_dir()?),
         ("app_profiles", dirs::app_profiles_dir()?),
         ("app_logs", dirs::app_logs_dir()?),
+        ("service_logs", dirs::service_log_dir()?),
     ];
 
     for (name, dir) in directories {
