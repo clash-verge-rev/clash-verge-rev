@@ -21,13 +21,19 @@ import {
   ListItem,
   ListItemText,
 } from '@mui/material'
-import type { Column } from '@tanstack/react-table'
 import { useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
+export interface ConnectionColumnOption {
+  id: string
+  label: string
+  visible: boolean
+  toggleVisibility: (visible: boolean) => void
+}
+
 interface Props {
   open: boolean
-  columns: Column<IConnectionsItem, unknown>[]
+  columns: ConnectionColumnOption[]
   onClose: () => void
   onOrderChange: (order: string[]) => void
   onReset: () => void
@@ -49,7 +55,7 @@ export const ConnectionColumnManager = ({
 
   const items = useMemo(() => columns.map((column) => column.id), [columns])
   const visibleCount = useMemo(
-    () => columns.filter((column) => column.getIsVisible()).length,
+    () => columns.filter((column) => column.visible).length,
     [columns],
   )
 
@@ -89,14 +95,10 @@ export const ConnectionColumnManager = ({
                 <SortableColumnItem
                   key={column.id}
                   column={column}
-                  label={getColumnLabel(column)}
                   dragHandleLabel={t(
                     'connections.components.columnManager.dragHandle',
                   )}
-                  disableToggle={
-                    !column.getCanHide() ||
-                    (column.getIsVisible() && visibleCount <= 1)
-                  }
+                  disableToggle={column.visible && visibleCount <= 1}
                 />
               ))}
             </List>
@@ -116,15 +118,13 @@ export const ConnectionColumnManager = ({
 }
 
 interface SortableColumnItemProps {
-  column: Column<IConnectionsItem, unknown>
-  label: string
+  column: ConnectionColumnOption
   dragHandleLabel: string
   disableToggle?: boolean
 }
 
 const SortableColumnItem = ({
   column,
-  label,
   dragHandleLabel,
   disableToggle = false,
 }: SortableColumnItemProps) => {
@@ -163,12 +163,12 @@ const SortableColumnItem = ({
     >
       <Checkbox
         edge="start"
-        checked={column.getIsVisible()}
+        checked={column.visible}
         disabled={disableToggle}
         onChange={(event) => column.toggleVisibility(event.target.checked)}
       />
       <ListItemText
-        primary={label}
+        primary={column.label}
         slotProps={{ primary: { variant: 'body2' } }}
         sx={{ mr: 1 }}
       />
@@ -184,12 +184,4 @@ const SortableColumnItem = ({
       </IconButton>
     </ListItem>
   )
-}
-
-const getColumnLabel = (column: Column<IConnectionsItem, unknown>) => {
-  const meta = column.columnDef.meta as { label?: string } | undefined
-  if (meta?.label) return meta.label
-
-  const header = column.columnDef.header
-  return typeof header === 'string' ? header : column.id
 }
