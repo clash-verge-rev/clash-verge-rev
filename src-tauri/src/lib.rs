@@ -238,6 +238,19 @@ pub fn run() {
 
             resolve::init_work_dir_and_logger()?;
 
+            #[cfg(target_os = "macos")]
+            {
+                use crate::config::Config;
+                use crate::core::handle::Handle;
+
+                AsyncHandler::block_on(async {
+                    let is_silent_start = Config::verge().await.data_arc().enable_silent_start.unwrap_or(false);
+                    if is_silent_start {
+                        Handle::global().set_activation_policy_accessory();
+                    }
+                });
+            }
+
             logging!(info, Type::Setup, "开始应用初始化...");
             if let Err(e) = app_init::setup_autostart(app) {
                 logging!(error, Type::Setup, "Failed to setup autostart: {}", e);

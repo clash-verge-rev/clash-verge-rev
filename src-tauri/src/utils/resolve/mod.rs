@@ -198,11 +198,6 @@ pub(super) async fn refresh_tray_menu() {
 
 pub(super) async fn init_window() {
     let is_silent_start = Config::verge().await.data_arc().enable_silent_start.unwrap_or(false);
-    #[cfg(target_os = "macos")]
-    if is_silent_start {
-        use crate::core::handle::Handle;
-        Handle::global().set_activation_policy_accessory();
-    }
     WindowManager::create_window(!is_silent_start).await;
 }
 
