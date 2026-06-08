@@ -3,7 +3,15 @@
     "title": "日志"
   },
   "actions": {
+    "copy": "复制日志",
+    "export": "导出日志",
     "showDescending": "按时间倒序",
     "showAscending": "按时间正序"
+  },
+  "feedback": {
+    "copySuccess": "日志已复制到剪贴板",
+    "copyFailed": "复制日志失败",
+    "exportSuccess": "日志已导出",
+    "exportFailed": "导出日志失败"
   }
 }

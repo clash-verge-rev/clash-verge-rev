@@ -26,6 +26,13 @@ pub async fn open_logs_dir() -> CmdResult<()> {
     open::that(log_dir).stringify_err()
 }
 
+#[tauri::command]
+pub async fn export_logs(content: String, destination: String) -> CmdResult<()> {
+    tokio::fs::write(destination.as_str(), content.as_bytes())
+        .await
+        .stringify_err()
+}
+
 /// 打开网页链接
 #[tauri::command]
 pub fn open_web_url(url: String) -> CmdResult<()> {

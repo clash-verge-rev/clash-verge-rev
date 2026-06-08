@@ -3,7 +3,15 @@
     "title": "Günlükler"
   },
   "actions": {
+    "copy": "Copy logs",
+    "export": "Export logs",
     "showDescending": "Newest first",
     "showAscending": "Oldest first"
+  },
+  "feedback": {
+    "copySuccess": "Logs copied to clipboard",
+    "copyFailed": "Failed to copy logs",
+    "exportSuccess": "Logs exported",
+    "exportFailed": "Failed to export logs"
   }
 }

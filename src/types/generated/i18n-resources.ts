@@ -198,8 +198,16 @@ export interface TranslationResources {
     }
     logs: {
       actions: {
+        copy: string
+        export: string
         showAscending: string
         showDescending: string
+      }
+      feedback: {
+        copyFailed: string
+        copySuccess: string
+        exportFailed: string
+        exportSuccess: string
       }
       page: {
         title: string

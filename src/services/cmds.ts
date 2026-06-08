@@ -338,6 +338,10 @@ export async function openLogsDir() {
   return invoke<void>('open_logs_dir').catch((err) => showNotice.error(err))
 }
 
+export async function exportLogs(content: string, destination: string) {
+  return invoke<void>('export_logs', { content, destination })
+}
+
 export const openWebUrl = async (url: string) => {
   try {
     await invoke('open_web_url', { url })

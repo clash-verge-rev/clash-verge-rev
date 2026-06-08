@@ -1,9 +1,15 @@
 import {
+  ContentCopyRounded,
+  DownloadRounded,
   PlayCircleOutlineRounded,
   PauseCircleOutlineRounded,
   SwapVertRounded,
 } from '@mui/icons-material'
 import { Box, Button, IconButton, MenuItem } from '@mui/material'
+import { writeText } from '@tauri-apps/plugin-clipboard-manager'
+import { save } from '@tauri-apps/plugin-dialog'
+import { useLockFn } from 'ahooks'
+import dayjs from 'dayjs'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -19,6 +25,9 @@ import {
 import LogItem from '@/components/log/log-item'
 import { useClashLog } from '@/hooks/use-clash-log'
 import { useLogData } from '@/hooks/use-log-data'
+import { exportLogs } from '@/services/cmds'
+import { showNotice } from '@/services/notice-service'
+import { formatLogsForExport } from '@/utils/format-logs-for-export'
 
 const LogPage = () => {
   const { t } = useTranslation()
@@ -60,6 +69,7 @@ const LogPage = () => {
     () => (isDescending ? [...filterLogs].reverse() : filterLogs),
     [filterLogs, isDescending],
   )
+  const hasFilteredLogs = filteredLogs.length > 0
 
   const scrollRef = useRef({ isNearBottom: true, length: 0 })
   const virtuosoRef = useRef<VirtualListHandle>(null)
@@ -92,6 +102,40 @@ const LogPage = () => {
       logOrder: pre!.logOrder === 'desc' ? 'asc' : 'desc',
     }))
   }
+
+  const handleCopyLogs = useLockFn(async () => {
+    if (!hasFilteredLogs) return
+
+    try {
+      await writeText(formatLogsForExport(filteredLogs))
+      showNotice.success('logs.feedback.copySuccess')
+    } catch (error) {
+      showNotice.error('logs.feedback.copyFailed', error)
+    }
+  })
+
+  const handleExportLogs = useLockFn(async () => {
+    if (!hasFilteredLogs) return
+
+    const savePath = await save({
+      defaultPath: `clash-verge-logs-${dayjs().format('YYYY-MM-DD_HH-mm-ss')}.log`,
+      filters: [
+        {
+          name: 'Log',
+          extensions: ['log', 'txt'],
+        },
+      ],
+    })
+
+    if (!savePath || Array.isArray(savePath)) return
+
+    try {
+      await exportLogs(formatLogsForExport(filteredLogs), savePath)
+      showNotice.success('logs.feedback.exportSuccess')
+    } catch (error) {
+      showNotice.error('logs.feedback.exportFailed', error)
+    }
+  })
 
   return (
     <BasePage
@@ -143,6 +187,26 @@ const LogPage = () => {
                 transition: 'transform 0.2s ease',
               }}
             />
+          </IconButton>
+          <IconButton
+            title={t('logs.actions.copy')}
+            aria-label={t('logs.actions.copy')}
+            size="small"
+            color="inherit"
+            disabled={!hasFilteredLogs}
+            onClick={handleCopyLogs}
+          >
+            <ContentCopyRounded />
+          </IconButton>
+          <IconButton
+            title={t('logs.actions.export')}
+            aria-label={t('logs.actions.export')}
+            size="small"
+            color="inherit"
+            disabled={!hasFilteredLogs}
+            onClick={handleExportLogs}
+          >
+            <DownloadRounded />
           </IconButton>
 
           <Button

@@ -139,6 +139,7 @@ mod app_init {
             cmd::get_auto_proxy,
             cmd::open_app_dir,
             cmd::open_logs_dir,
+            cmd::export_logs,
             cmd::open_web_url,
             cmd::open_core_dir,
             cmd::get_portable_flag,
