@@ -2,6 +2,7 @@ import eslintJS from '@eslint/js'
 import eslintReact from '@eslint-react/eslint-plugin'
 import { defineConfig } from 'eslint/config'
 import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript'
+import pluginESx from 'eslint-plugin-es-x'
 import pluginImportX from 'eslint-plugin-import-x'
 import pluginReactCompiler from 'eslint-plugin-react-compiler'
 import pluginReactHooks from 'eslint-plugin-react-hooks'
@@ -12,6 +13,7 @@ import globals from 'globals'
 import tseslint from 'typescript-eslint'
 
 export default defineConfig([
+  pluginESx.configs['flat/restrict-to-es2022'],
   {
     files: ['**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
 
@@ -20,6 +22,7 @@ export default defineConfig([
       // @ts-expect-error -- https://github.com/typescript-eslint/typescript-eslint/issues/11543
       'react-hooks': pluginReactHooks,
       'react-compiler': pluginReactCompiler,
+      'es-x': pluginESx,
       'import-x': pluginImportX,
       'react-refresh': pluginReactRefresh,
       'unused-imports': pluginUnusedImports,
