@@ -145,7 +145,9 @@ export const getIpInfo = async (): Promise<
   const maxRetries = 2
   const serviceTimeout = 5000
 
-  const shuffledServices = IP_CHECK_SERVICES.slice().sort(() => Math.random() - 0.5)
+  const shuffledServices = IP_CHECK_SERVICES.slice().sort(
+    () => Math.random() - 0.5,
+  )
   let lastError: unknown | null = null
   const userAgent = await getUserAgentPromise()
   console.debug('User-Agent for IP detection:', userAgent)
