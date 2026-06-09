@@ -91,6 +91,9 @@ async function processRelease(github, options, tag, isAlpha) {
       ),
       pub_date: new Date().toISOString(),
       platforms: {
+        // platform format:
+        //    standard: "{os}-{arch}-{installer}",
+        //    fallback: "{os}-{arch}"
         'darwin-x86_64': { signature: '', url: '' },
         'darwin-x86_64-app': { signature: '', url: '' },
         'darwin-aarch64': { signature: '', url: '' },
