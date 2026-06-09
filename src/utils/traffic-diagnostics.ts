@@ -39,8 +39,7 @@ export function recordTrafficError(error: Error, component: string) {
  */
 function getMemoryUsage(): number {
   if ('memory' in performance) {
-    // @ts-expect-error - performance.memory is a non-standard Chrome API
-    const memory = performance.memory
+    const memory = (performance as any).memory
     if (memory && memory.usedJSHeapSize) {
       return memory.usedJSHeapSize / 1024 / 1024 // 转换为MB
     }
