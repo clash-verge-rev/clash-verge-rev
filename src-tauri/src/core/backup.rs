@@ -23,8 +23,8 @@ const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 const TIMEOUT_UPLOAD: u64 = 300; // 上传超时 5 分钟
 const TIMEOUT_DOWNLOAD: u64 = 300; // 下载超时 5 分钟
-const TIMEOUT_LIST: u64 = 3; // 列表超时 30 秒
-const TIMEOUT_DELETE: u64 = 3; // 删除超时 30 秒
+const TIMEOUT_LIST: u64 = 30; // 列表超时 30 秒
+const TIMEOUT_DELETE: u64 = 30; // 删除超时 30 秒
 
 #[derive(Clone)]
 struct WebDavConfig {
@@ -130,19 +130,35 @@ impl WebDavClient {
             .set_auth(reqwest_dav::Auth::Basic(config.username.into(), config.password.into()))
             .build()?;
 
-        // 尝试检查目录是否存在，如果不存在尝试创建
-        if client
-            .list(dirs::BACKUP_DIR, reqwest_dav::Depth::Number(0))
-            .await
-            .is_err()
         {
+            // 直接尝试创建
             match client.mkcol(dirs::BACKUP_DIR).await {
                 Ok(_) => logging!(info, Type::Backup, "Successfully created backup directory"),
                 Err(e) => {
-                    logging!(warn, Type::Backup, "Warning: Failed to create backup directory: {}", e);
-                    // 清除缓存，强制下次重新尝试
-                    self.reset();
-                    return Err(anyhow::Error::msg(format!("Failed to create backup directory: {}", e)));
+                    // 提取网络状态码
+                    let status_code = match &e {
+                        reqwest_dav::Error::Decode(reqwest_dav::DecodeError::Server(server_err)) => Some(server_err.response_code),
+                        reqwest_dav::Error::Decode(reqwest_dav::DecodeError::StatusMismatched(status_err)) => Some(status_err.response_code),
+                        reqwest_dav::Error::Reqwest(http_err) => http_err.status().map(|s| s.as_u16()),
+                        _ => None,
+                    };
+                    match status_code {
+                        Some(405) => {
+                            // 按照 RFC 4918 的规定：
+                            // 405 代表 如果目标 URI 已经映射到一个资源（集合或非集合），则 MKCOL 必须返回 405（Method Not Allowed）。
+                            logging!(info, Type::Backup, "Backup directory already exists");
+                        }
+                        Some(409) => {
+                            // 按照 RFC 4918 的规定：
+                            // 409 代表 父目录不存在，需要先创建父目录
+                            logging!(warn, Type::Backup, "Backup directory cannot be created because its parent folder does not exist");
+                            return Err(anyhow::Error::msg(format!("Failed to create backup directory: {}", "Parent directory does not exist")));
+                        }
+                        _ => {
+                            logging!(warn, Type::Backup, "Failed to create backup directory: {}", e);
+                            return Err(anyhow::Error::msg(format!("Failed to create backup directory: {}", e)));
+                        }
+                    }
                 }
             }
         }

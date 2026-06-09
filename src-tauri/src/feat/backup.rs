@@ -95,6 +95,8 @@ pub async fn create_backup_and_upload_webdav() -> Result<()> {
 pub async fn list_wevdav_backup() -> Result<Vec<ListFile>> {
     backup::WebDavClient::global().list().await.map_err(|err| {
         logging!(error, Type::Backup, "Failed to list WebDAV backup files: {err:#?}");
+        // 列表失败时重置客户端缓存
+        backup::WebDavClient::global().reset();
         err
     })
 }
@@ -103,6 +105,8 @@ pub async fn list_wevdav_backup() -> Result<Vec<ListFile>> {
 pub async fn delete_webdav_backup(filename: String) -> Result<()> {
     backup::WebDavClient::global().delete(filename).await.map_err(|err| {
         logging!(error, Type::Backup, "Failed to delete WebDAV backup file: {err:#?}");
+        // 删除失败时重置客户端缓存
+        backup::WebDavClient::global().reset();
         err
     })
 }
@@ -123,6 +127,8 @@ pub async fn restore_webdav_backup(filename: String) -> Result<()> {
         .await
         .map_err(|err| {
             logging!(error, Type::Backup, "Failed to download WebDAV backup file: {err:#?}");
+            // 下载失败时重置客户端缓存
+            backup::WebDavClient::global().reset();
             err
         })?;
 
