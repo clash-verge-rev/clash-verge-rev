@@ -93,7 +93,9 @@ export function URI_SS(line: string): IProxyShadowsocksConfig {
   if (!proxy.plugin && v2rayPluginParam) {
     proxy.plugin = 'v2ray-plugin'
     try {
-      proxy['plugin-opts'] = JSON.parse(decodeBase64OrOriginal(v2rayPluginParam))
+      proxy['plugin-opts'] = JSON.parse(
+        decodeBase64OrOriginal(v2rayPluginParam),
+      )
     } catch (e) {
       console.warn('[URI_SS] v2ray-plugin JSON.parse failed:', e)
       proxy['plugin-opts'] = {}
