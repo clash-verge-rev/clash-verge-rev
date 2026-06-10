@@ -15,7 +15,7 @@ use tauri_plugin_shell::ShellExt as _;
 
 #[cfg(target_os = "windows")]
 use windows_sys::Win32::{
-    Foundation::{GetLastError, HANDLE, INVALID_HANDLE_VALUE},
+    Foundation::{CloseHandle, GetLastError, HANDLE, INVALID_HANDLE_VALUE},
     System::{
         JobObjects::{
             AssignProcessToJobObject, CreateJobObjectW, JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE,
@@ -120,6 +120,7 @@ impl CoreManager {
                                 job
                             );
                         }
+                        CloseHandle(process_handle);
                     } else {
                         logging!(
                             error,
