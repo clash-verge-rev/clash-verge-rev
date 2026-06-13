@@ -16,7 +16,7 @@ const sampleIntervalMs = 1000
 const frameIntervalMs = 1000 / 15
 const animationDurationMs = sampleIntervalMs
 
-const zeroTraffic: Traffic = { up: 0, down: 0 }
+const zeroTraffic: Traffic = { up: 0, down: 0, upTotal: 0, downTotal: 0 }
 const createDefaultList = () =>
   Array.from({ length: maxPoint + 2 }, () => ({ ...zeroTraffic }))
 

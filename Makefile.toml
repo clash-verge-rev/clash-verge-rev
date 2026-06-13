@@ -102,14 +102,20 @@ cm_run_task frontend-format
 description = "Pre-push checks: lint and typecheck"
 script_runner = "@duckscript"
 script = '''
+has_upstream = exec git rev-parse --abbrev-ref --symbolic-full-name @{u}
+if not eq ${has_upstream.code} 0
+  echo "No upstream found, skipping diff-based checks"
+  exit 0
+end
+
 # rust related changes
-has_rust = exec git diff --cached --quiet -- "*.rs" Cargo.toml Cargo.lock
+has_rust = exec git diff @{u}..HEAD --quiet -- "*.rs" Cargo.toml Cargo.lock
 if eq ${has_rust.code} 1
   cm_run_task rust-clippy
 end
 
 # frontend related changes
-has_frontend = exec git diff --cached --quiet -- "*.js" "*.jsx" "*.ts" "*.tsx" "*.json" "*.css" "*.scss" "*.html"
+has_frontend = exec git diff @{u}..HEAD --quiet -- "*.js" "*.jsx" "*.ts" "*.tsx" "*.json" "*.css" "*.scss" "*.html"
 if eq ${has_frontend.code} 1
   cm_run_task typecheck
 end

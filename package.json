@@ -99,6 +99,7 @@
     "cross-env": "^10.1.0",
     "eslint": "^10.4.0",
     "eslint-import-resolver-typescript": "^4.4.4",
+    "eslint-plugin-es-x": "^9.6.0",
     "eslint-plugin-import-x": "^4.16.2",
     "eslint-plugin-react-compiler": "19.1.0-rc.2",
     "eslint-plugin-react-hooks": "^7.1.1",
