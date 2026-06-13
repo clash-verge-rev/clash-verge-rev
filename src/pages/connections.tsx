@@ -40,6 +40,7 @@ import { ConnectionTable } from '@/components/connection/connection-table'
 import { useConnectionData } from '@/hooks/use-connection-data'
 import { useConnectionSetting } from '@/hooks/use-connection-setting'
 import { useTrafficData } from '@/hooks/use-traffic-data'
+import { useVisibility } from '@/hooks/use-visibility'
 import parseTraffic from '@/utils/parse-traffic'
 
 type OrderFunc = (list: IConnectionsItem[]) => IConnectionsItem[]
@@ -89,13 +90,14 @@ const ConnectionsPage = () => {
     'active',
   )
 
+  const pageVisible = useVisibility()
   const {
     response: { data: connections },
     clearClosedConnections,
-  } = useConnectionData()
+  } = useConnectionData({ enabled: pageVisible })
   const {
     response: { data: traffic },
-  } = useTrafficData()
+  } = useTrafficData({ enabled: pageVisible })
 
   const [setting, setSetting] = useConnectionSetting()
 

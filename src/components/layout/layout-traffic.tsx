@@ -28,9 +28,11 @@ export const LayoutTraffic = () => {
   const trafficRef = useRef<TrafficRef>(null)
   const pageVisible = useVisibility()
 
+  // Gate only on visibility: the up/down speed numbers are always shown, so the
+  // traffic stream must keep flowing even when the graph is hidden.
   const {
     response: { data: traffic },
-  } = useTrafficData({ enabled: trafficGraph && pageVisible })
+  } = useTrafficData({ enabled: pageVisible })
   const {
     response: { data: memory },
   } = useMemoryData()

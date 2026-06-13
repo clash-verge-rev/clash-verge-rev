@@ -148,9 +148,11 @@ export const EnhancedTrafficStats = () => {
   // 是否显示流量图表
   const trafficGraph = verge?.traffic_graph ?? true
 
+  // Gate only on visibility: the speed/total stat cards are always rendered,
+  // so the traffic stream must keep flowing even when the graph is hidden.
   const {
     response: { data: traffic },
-  } = useTrafficData({ enabled: trafficGraph && pageVisible })
+  } = useTrafficData({ enabled: pageVisible })
 
   const {
     response: { data: memory },
@@ -158,7 +160,7 @@ export const EnhancedTrafficStats = () => {
 
   const {
     response: { data: connectionSummary },
-  } = useConnectionSummaryData()
+  } = useConnectionSummaryData({ enabled: pageVisible })
 
   // Canvas组件现在直接从全局Hook获取数据，无需手动添加数据点
 

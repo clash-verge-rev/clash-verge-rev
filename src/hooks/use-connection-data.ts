@@ -217,6 +217,10 @@ const flushPendingMessage = () => {
   pendingMessageData = null
   if (!messageData) return
 
+  const needsConnectionData = connectionListeners.size > 0
+  const needsSummary = summaryListeners.size > 0
+  if (!needsConnectionData && !needsSummary) return
+
   let payload: IConnections
   try {
     payload = JSON.parse(messageData) as IConnections
@@ -229,7 +233,7 @@ const flushPendingMessage = () => {
   connectionSummary = mergeConnectionSummary(payload)
   notifySummaryListeners()
 
-  if (connectionListeners.size === 0) return
+  if (!needsConnectionData) return
 
   connectionData = mergeConnectionSnapshot(payload, connectionData)
   notifyConnectionListeners()
@@ -290,6 +294,14 @@ async function connectConnectionSocket() {
 
   try {
     const socket = await MihomoWebSocket.connect_connections()
+    // The monitor may have been stopped while we were connecting; discard the
+    // socket instead of holding it open with no listeners.
+    if (!connectionStarted) {
+      void socket.close().catch((err) => {
+        console.warn('Failed to close connection websocket', err)
+      })
+      return
+    }
     connectionSocket = socket
     socket.addListener((message) => {
       if (message.type !== 'Text') return
@@ -301,7 +313,7 @@ async function connectConnectionSocket() {
       enqueueConnectionMessage(message.data)
     })
   } catch {
-    scheduleReconnect()
+    if (connectionStarted) scheduleReconnect()
   } finally {
     connectionConnecting = false
   }
@@ -313,14 +325,34 @@ const startConnectionMonitor = () => {
   void connectConnectionSocket()
 }
 
+const stopConnectionMonitor = () => {
+  if (connectionListeners.size > 0 || summaryListeners.size > 0) return
+  if (!connectionStarted) return
+  // Leave connectionConnecting untouched: an in-flight connect keeps the guard
+  // closed so a quick re-subscribe can't open a second concurrent socket.
+  connectionStarted = false
+  clearReconnectTimer()
+  if (flushTimer) {
+    window.clearTimeout(flushTimer)
+    flushTimer = null
+  }
+  pendingMessageData = null
+  void closeConnectionSocket()
+}
+
 const getConnectionSnapshot = () => connectionData
 const getConnectionSummarySnapshot = () => connectionSummary
+
+// Stable no-op subscriber used when a hook is disabled, so it registers no
+// listener and lets stopConnectionMonitor close the socket.
+const noopSubscribe = () => () => {}
 
 const subscribeConnectionData = (listener: ConnectionListener) => {
   startConnectionMonitor()
   connectionListeners.add(listener)
   return () => {
     connectionListeners.delete(listener)
+    stopConnectionMonitor()
   }
 }
 
@@ -329,6 +361,7 @@ const subscribeConnectionSummary = (listener: ConnectionListener) => {
   summaryListeners.add(listener)
   return () => {
     summaryListeners.delete(listener)
+    stopConnectionMonitor()
   }
 }
 
@@ -351,9 +384,10 @@ const clearClosedConnectionData = () => {
   notifyConnectionListeners()
 }
 
-export const useConnectionData = () => {
+export const useConnectionData = (options?: { enabled?: boolean }) => {
+  const enabled = options?.enabled ?? true
   const data = useSyncExternalStore(
-    subscribeConnectionData,
+    enabled ? subscribeConnectionData : noopSubscribe,
     getConnectionSnapshot,
     getConnectionSnapshot,
   )
@@ -372,9 +406,10 @@ export const useConnectionData = () => {
   }
 }
 
-export const useConnectionSummaryData = () => {
+export const useConnectionSummaryData = (options?: { enabled?: boolean }) => {
+  const enabled = options?.enabled ?? true
   const data = useSyncExternalStore(
-    subscribeConnectionSummary,
+    enabled ? subscribeConnectionSummary : noopSubscribe,
     getConnectionSummarySnapshot,
     getConnectionSummarySnapshot,
   )
