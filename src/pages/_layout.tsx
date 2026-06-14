@@ -203,9 +203,12 @@ const Layout = () => {
     void patchVerge({ collapse_navbar: !navCollapsed })
   }, [navCollapsed, patchVerge])
 
+  // On Linux decorations are configured false at build time — the custom
+  // HTML titlebar should always render. The runtime decorated state from
+  // tauri may be unreliable (especially with patched tao on Wayland).
   const customTitlebar = useMemo(
     () =>
-      !decorated ? (
+      OS === 'linux' || !decorated ? (
         <div className="the_titlebar">
           <div
             className="the_titlebar-drag-region"

@@ -41,6 +41,7 @@ export const WindowControls = forwardRef(function WindowControls(props, ref) {
 
   return (
     <Box
+      data-tauri-drag-region="false"
       sx={{
         display: 'flex',
         gap: 1,

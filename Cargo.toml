@@ -79,6 +79,13 @@ bitflags = { version = "2.13.0" }
 deelevate = "0.2.0"
 # *********************************
 
+[patch.crates-io]
+# Workaround for tauri-apps/tauri#14597 — tao's Wayland window event
+# propagation is broken, causing custom titlebar buttons to not respond
+# to clicks/hover. Replace with patched tao from tauri-apps/tao#1218.
+# Remove when upstream releases the fix.
+tao = { git = "https://github.com/dgerhardt/tao", branch = "fix-wayland-csd" }
+
 [workspace.lints.clippy]
 # fallible_impl_from = "deny" // 过于激进，暂时不开启
 # implicit_clone = "deny" // 可能会造成额外开销，暂时不开启
