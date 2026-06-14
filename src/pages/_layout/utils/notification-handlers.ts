@@ -29,11 +29,13 @@ export const handleNoticeMessage = (
         'settings.feedback.notifications.updater.withClashProxySuccess',
         msg,
       ),
+    update_with_fallback: () => showNotice.success(msg),
     update_failed_even_with_clash: () =>
       showNotice.error(
         'settings.feedback.notifications.updater.withClashProxyFailed',
         msg,
       ),
+    update_failed_after_fallback: () => showNotice.error(msg),
     'reactivate_profiles::error': () => showNotice.error(msg),
     update_failed: () => showNotice.error(msg),
     'config_validate::boot_error': () =>

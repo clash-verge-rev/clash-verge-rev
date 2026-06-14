@@ -9,6 +9,64 @@ use clash_verge_logging::{Type, logging, logging_error};
 use smartstring::alias::String;
 use tauri::Emitter as _;
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum ProfileUpdateProxyMode {
+    Direct,
+    Clash,
+    System,
+}
+
+impl ProfileUpdateProxyMode {
+    const fn label(self) -> &'static str {
+        match self {
+            Self::Direct => "direct",
+            Self::Clash => "Clash proxy",
+            Self::System => "system proxy",
+        }
+    }
+}
+
+fn profile_update_proxy_mode(option: Option<&PrfOption>) -> ProfileUpdateProxyMode {
+    match option {
+        Some(option) if option.self_proxy.unwrap_or(false) => ProfileUpdateProxyMode::Clash,
+        Some(option) if option.with_proxy.unwrap_or(false) => ProfileUpdateProxyMode::System,
+        _ => ProfileUpdateProxyMode::Direct,
+    }
+}
+
+fn set_profile_update_proxy_mode(option: &mut PrfOption, mode: ProfileUpdateProxyMode) {
+    match mode {
+        ProfileUpdateProxyMode::Direct => {
+            option.self_proxy = Some(false);
+            option.with_proxy = Some(false);
+        }
+        ProfileUpdateProxyMode::Clash => {
+            option.self_proxy = Some(true);
+            option.with_proxy = Some(false);
+        }
+        ProfileUpdateProxyMode::System => {
+            option.self_proxy = Some(false);
+            option.with_proxy = Some(true);
+        }
+    }
+}
+
+fn profile_update_attempts(initial_mode: ProfileUpdateProxyMode) -> Vec<ProfileUpdateProxyMode> {
+    let mut attempts = vec![initial_mode];
+
+    for mode in [ProfileUpdateProxyMode::Clash, ProfileUpdateProxyMode::System] {
+        if !attempts.contains(&mode) {
+            attempts.push(mode);
+        }
+    }
+
+    if initial_mode != ProfileUpdateProxyMode::Direct {
+        attempts.push(ProfileUpdateProxyMode::Direct);
+    }
+
+    attempts
+}
+
 /// Toggle proxy profile
 pub async fn toggle_proxy_profile(profile_index: String) {
     logging_error!(
@@ -106,6 +164,7 @@ async fn perform_profile_update(
 ) -> Result<bool> {
     logging!(info, Type::Config, "[订阅更新] 开始下载新的订阅内容");
     let mut merged_opt = PrfOption::merge(opt, option);
+    let initial_mode = profile_update_proxy_mode(merged_opt.as_ref());
     let is_current = {
         let profiles = Config::profiles().await;
         profiles.latest_arc().is_current_profile_index(uid)
@@ -117,73 +176,101 @@ async fn perform_profile_update(
         .cloned()
         .unwrap_or_else(|| String::from("UnKnown Profile"));
 
-    let mut last_err;
+    let mut last_err = None;
 
-    match PrfItem::from_url(url, None, None, merged_opt.as_ref()).await {
-        Ok(mut item) => {
-            logging!(info, Type::Config, "[订阅更新] 更新订阅配置成功");
-            profiles_draft_update_item_safe(uid, &mut item).await?;
-            return Ok(is_current);
-        }
-        Err(err) => {
-            logging!(
-                warn,
-                Type::Config,
-                "Warning: [订阅更新] 正常更新失败: {}，尝试使用Clash代理更新",
-                mask_err(&err.to_string())
-            );
-            last_err = err;
-        }
-    }
+    for mode in profile_update_attempts(initial_mode) {
+        set_profile_update_proxy_mode(merged_opt.get_or_insert_with(PrfOption::default), mode);
 
-    merged_opt.get_or_insert_with(PrfOption::default).self_proxy = Some(true);
-    merged_opt.get_or_insert_with(PrfOption::default).with_proxy = Some(false);
-
-    match PrfItem::from_url(url, None, None, merged_opt.as_ref()).await {
-        Ok(mut item) => {
-            logging!(info, Type::Config, "[订阅更新] 使用 Clash代理 更新订阅配置成功");
-            profiles_draft_update_item_safe(uid, &mut item).await?;
-            handle::Handle::notice_message("update_with_clash_proxy", profile_name);
-            drop(last_err);
-            return Ok(is_current);
-        }
-        Err(err) => {
-            logging!(
-                warn,
-                Type::Config,
-                "Warning: [订阅更新] Clash代理更新失败: {}，尝试使用系统代理更新",
-                mask_err(&err.to_string())
-            );
-            last_err = err;
-        }
-    }
-
-    merged_opt.get_or_insert_with(PrfOption::default).self_proxy = Some(false);
-    merged_opt.get_or_insert_with(PrfOption::default).with_proxy = Some(true);
-
-    match PrfItem::from_url(url, None, None, merged_opt.as_ref()).await {
-        Ok(mut item) => {
-            logging!(info, Type::Config, "[订阅更新] 使用 系统代理 更新订阅配置成功");
-            profiles_draft_update_item_safe(uid, &mut item).await?;
-            handle::Handle::notice_message("update_with_clash_proxy", profile_name);
-            drop(last_err);
-            return Ok(is_current);
-        }
-        Err(err) => {
-            logging!(
-                warn,
-                Type::Config,
-                "Warning: [订阅更新] 系统代理更新失败: {}，所有重试均已失败",
-                mask_err(&err.to_string())
-            );
-            last_err = err;
+        match PrfItem::from_url(url, None, None, merged_opt.as_ref()).await {
+            Ok(mut item) => {
+                logging!(info, Type::Config, "[订阅更新] 使用 {} 更新订阅配置成功", mode.label());
+                profiles_draft_update_item_safe(uid, &mut item).await?;
+                if mode != initial_mode {
+                    handle::Handle::notice_message(
+                        "update_with_fallback",
+                        format!("{profile_name} - updated with {}", mode.label()),
+                    );
+                }
+                return Ok(is_current);
+            }
+            Err(err) => {
+                logging!(
+                    warn,
+                    Type::Config,
+                    "Warning: [订阅更新] 使用 {} 更新失败: {}",
+                    mode.label(),
+                    mask_err(&err.to_string())
+                );
+                last_err = Some(err);
+            }
         }
     }
 
     if is_mannual_trigger {
-        handle::Handle::notice_message("update_failed_even_with_clash", format!("{profile_name} - {last_err}"));
+        let last_err = last_err
+            .map(|err| err.to_string())
+            .unwrap_or_else(|| "unknown error".into());
+        handle::Handle::notice_message("update_failed_after_fallback", format!("{profile_name} - {last_err}"));
     }
     Ok(is_current)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{
+        ProfileUpdateProxyMode, profile_update_attempts, profile_update_proxy_mode, set_profile_update_proxy_mode,
+    };
+    use crate::config::PrfOption;
+
+    #[test]
+    fn direct_updates_still_fallback_to_proxies() {
+        assert_eq!(
+            profile_update_attempts(ProfileUpdateProxyMode::Direct),
+            vec![
+                ProfileUpdateProxyMode::Direct,
+                ProfileUpdateProxyMode::Clash,
+                ProfileUpdateProxyMode::System,
+            ]
+        );
+    }
+
+    #[test]
+    fn clash_proxy_updates_fallback_to_system_then_direct() {
+        assert_eq!(
+            profile_update_attempts(ProfileUpdateProxyMode::Clash),
+            vec![
+                ProfileUpdateProxyMode::Clash,
+                ProfileUpdateProxyMode::System,
+                ProfileUpdateProxyMode::Direct,
+            ]
+        );
+    }
+
+    #[test]
+    fn system_proxy_updates_fallback_to_clash_then_direct() {
+        assert_eq!(
+            profile_update_attempts(ProfileUpdateProxyMode::System),
+            vec![
+                ProfileUpdateProxyMode::System,
+                ProfileUpdateProxyMode::Clash,
+                ProfileUpdateProxyMode::Direct,
+            ]
+        );
+    }
+
+    #[test]
+    fn proxy_mode_round_trips_through_profile_options() {
+        let mut option = PrfOption::default();
+
+        set_profile_update_proxy_mode(&mut option, ProfileUpdateProxyMode::Clash);
+        assert_eq!(profile_update_proxy_mode(Some(&option)), ProfileUpdateProxyMode::Clash);
+
+        set_profile_update_proxy_mode(&mut option, ProfileUpdateProxyMode::System);
+        assert_eq!(profile_update_proxy_mode(Some(&option)), ProfileUpdateProxyMode::System);
+
+        set_profile_update_proxy_mode(&mut option, ProfileUpdateProxyMode::Direct);
+        assert_eq!(profile_update_proxy_mode(Some(&option)), ProfileUpdateProxyMode::Direct);
+    }
 }
 
 pub async fn update_profile(
