@@ -121,7 +121,6 @@ export const LayoutItem = (props: Props) => {
         <ListItemText
           sx={{
             textAlign: 'center',
-            marginLeft: effectiveMenuIcon === 'disable' ? '' : '-35px',
           }}
           primary={children}
         />
