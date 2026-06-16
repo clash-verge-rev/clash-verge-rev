@@ -88,7 +88,7 @@ impl TrayState {
         Self::default_icon(verge, kind)
     }
 
-    fn default_icon(verge: &IVerge, kind: IconKind) -> (bool, Cow<'_, [u8]>) {
+    const fn default_icon(verge: &IVerge, kind: IconKind) -> (bool, Cow<'_, [u8]>) {
         #[cfg(target_os = "macos")]
         {
             let is_mono = verge.tray_icon.as_deref().unwrap_or("monochrome") == "monochrome";
