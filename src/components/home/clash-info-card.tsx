@@ -34,8 +34,6 @@ export const ClashInfoCard = () => {
 
   // 使用备忘录组件内容，减少重新渲染
   const cardContent = useMemo(() => {
-    if (!clashConfig) return null
-
     return (
       <Stack spacing={1.5}>
         <Stack direction="row" sx={{ justifyContent: 'space-between' }}>
@@ -61,7 +59,7 @@ export const ClashInfoCard = () => {
             {t('home.components.clashInfo.fields.mixedPort')}
           </Typography>
           <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
-            {clashConfig.mixedPort || '-'}
+            {clashConfig?.mixedPort || '-'}
           </Typography>
         </Stack>
         <Divider />
