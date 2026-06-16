@@ -167,11 +167,9 @@ export const EnhancedTrafficStats = () => {
     const [up, upUnit] = parseTraffic(traffic?.up || 0)
     const [down, downUnit] = parseTraffic(traffic?.down || 0)
     const [inuse, inuseUnit] = parseTraffic(memory?.inuse || 0)
-    const [uploadTotal, uploadTotalUnit] = parseTraffic(
-      connectionSummary?.uploadTotal,
-    )
+    const [uploadTotal, uploadTotalUnit] = parseTraffic(traffic?.upTotal || 0)
     const [downloadTotal, downloadTotalUnit] = parseTraffic(
-      connectionSummary?.downloadTotal,
+      traffic?.downTotal || 0,
     )
 
     return {
