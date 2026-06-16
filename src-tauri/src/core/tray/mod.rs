@@ -88,35 +88,36 @@ impl TrayState {
         Self::default_icon(verge, kind)
     }
 
-    const fn default_icon(verge: &IVerge, kind: IconKind) -> (bool, Cow<'_, [u8]>) {
-        #[cfg(target_os = "macos")]
-        {
-            let is_mono = verge.tray_icon.as_deref().unwrap_or("monochrome") == "monochrome";
-            if is_mono {
-                return (
-                    false,
-                    match kind {
-                        IconKind::Common => Cow::Borrowed(include_bytes!("../../../icons/tray-icon-mono.ico")),
-                        IconKind::SysProxy => {
-                            Cow::Borrowed(include_bytes!("../../../icons/tray-icon-sys-mono-new.ico"))
-                        }
-                        IconKind::Tun => Cow::Borrowed(include_bytes!("../../../icons/tray-icon-tun-mono-new.ico")),
-                    },
-                );
-            }
+    const fn default_color_icon(kind: IconKind) -> Cow<'static, [u8]> {
+        match kind {
+            IconKind::Common => Cow::Borrowed(include_bytes!("../../../icons/tray-icon.ico")),
+            IconKind::SysProxy => Cow::Borrowed(include_bytes!("../../../icons/tray-icon-sys.ico")),
+            IconKind::Tun => Cow::Borrowed(include_bytes!("../../../icons/tray-icon-tun.ico")),
         }
+    }
 
-        #[cfg(not(target_os = "macos"))]
-        let _ = verge;
+    #[cfg(target_os = "macos")]
+    const fn default_mono_icon(kind: IconKind) -> Cow<'static, [u8]> {
+        match kind {
+            IconKind::Common => Cow::Borrowed(include_bytes!("../../../icons/tray-icon-mono.ico")),
+            IconKind::SysProxy => Cow::Borrowed(include_bytes!("../../../icons/tray-icon-sys-mono-new.ico")),
+            IconKind::Tun => Cow::Borrowed(include_bytes!("../../../icons/tray-icon-tun-mono-new.ico")),
+        }
+    }
 
-        (
-            false,
-            match kind {
-                IconKind::Common => Cow::Borrowed(include_bytes!("../../../icons/tray-icon.ico")),
-                IconKind::SysProxy => Cow::Borrowed(include_bytes!("../../../icons/tray-icon-sys.ico")),
-                IconKind::Tun => Cow::Borrowed(include_bytes!("../../../icons/tray-icon-tun.ico")),
-            },
-        )
+    #[cfg(target_os = "macos")]
+    fn default_icon(verge: &IVerge, kind: IconKind) -> (bool, Cow<'_, [u8]>) {
+        let is_mono = verge.tray_icon.as_deref().unwrap_or("monochrome") == "monochrome";
+        if is_mono {
+            (false, Self::default_mono_icon(kind))
+        } else {
+            (false, Self::default_color_icon(kind))
+        }
+    }
+
+    #[cfg(not(target_os = "macos"))]
+    const fn default_icon(_verge: &IVerge, kind: IconKind) -> (bool, Cow<'_, [u8]>) {
+        (false, Self::default_color_icon(kind))
     }
 }
 
