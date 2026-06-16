@@ -14,11 +14,11 @@ type LogType = ILogItem['type']
 
 const DEFAULT_LOG_TYPES: LogType[] = ['debug', 'info', 'warning', 'error']
 const LOG_LEVEL_FILTERS: Record<LogLevel, LogType[]> = {
-  debug: DEFAULT_LOG_TYPES,
-  info: ['info', 'warning', 'error'],
-  warning: ['warning', 'error'],
-  error: ['error'],
-  silent: [],
+  DEBUG: DEFAULT_LOG_TYPES,
+  INFO: ['info', 'warning', 'error'],
+  WARNING: ['warning', 'error'],
+  ERROR: ['error'],
+  SILENT: [],
 }
 
 const clampLogs = (logs: ILogItem[]): ILogItem[] =>

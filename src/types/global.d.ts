@@ -142,6 +142,8 @@ interface ITrafficItem {
   up_rate?: number
   down_rate?: number
   last_updated?: number
+  upTotal?: number
+  downTotal?: number
 }
 
 interface IFormattedTrafficData {
