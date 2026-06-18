@@ -5,10 +5,11 @@ import {
 } from '@mui/icons-material'
 import { Box, Paper, Stack, Typography } from '@mui/material'
 import { useLockFn } from 'ahooks'
-import { useMemo } from 'react'
+import { type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import { closeAllConnections } from 'tauri-plugin-mihomo-api'
 
+import { useRuntimeConfig } from '@/hooks/use-clash'
 import { useVerge } from '@/hooks/use-verge'
 import {
   useAppRefreshers,
@@ -23,6 +24,11 @@ type ClashMode = (typeof CLASH_MODES)[number]
 
 const isClashMode = (mode: string): mode is ClashMode =>
   (CLASH_MODES as readonly string[]).includes(mode)
+
+const toClashMode = (mode?: string | null) => {
+  const normalized = mode?.toLowerCase()
+  return normalized && isClashMode(normalized) ? normalized : undefined
+}
 
 const MODE_META: Record<
   ClashMode,
@@ -42,6 +48,12 @@ const MODE_META: Record<
   },
 }
 
+const MODE_ICONS: Record<ClashMode, ReactNode> = {
+  rule: <MultipleStopRounded fontSize="small" />,
+  global: <LanguageRounded fontSize="small" />,
+  direct: <DirectionsRounded fontSize="small" />,
+}
+
 export const ClashModeCard = () => {
   const { t } = useTranslation()
   const { verge } = useVerge()
@@ -49,39 +61,21 @@ export const ClashModeCard = () => {
   const { isCoreDataPending } = useCoreDataStatus()
   const { refreshClashConfig } = useAppRefreshers()
 
-  // 支持的模式列表
-  const modeList = CLASH_MODES
+  const controllerMode = toClashMode(clashConfig?.mode)
+  const { data: runtimeConfig, isPending: isRuntimeConfigPending } =
+    useRuntimeConfig(!controllerMode)
+  const runtimeMode = toClashMode(runtimeConfig?.mode)
+  const currentMode = controllerMode ?? runtimeMode
 
-  // 直接使用API返回的模式，不维护本地状态
-  const currentMode = clashConfig?.mode?.toLowerCase()
-  const currentModeKey =
-    typeof currentMode === 'string' && isClashMode(currentMode)
-      ? currentMode
-      : undefined
-
-  const modeDescription = useMemo(() => {
-    if (currentModeKey) {
-      return t(MODE_META[currentModeKey].description)
-    }
-    if (isCoreDataPending) {
-      return '\u00A0'
-    }
-    return t('home.components.clashMode.errors.communication')
-  }, [currentModeKey, isCoreDataPending, t])
-
-  // 模式图标映射
-  const modeIcons = useMemo(
-    () => ({
-      rule: <MultipleStopRounded fontSize="small" />,
-      global: <LanguageRounded fontSize="small" />,
-      direct: <DirectionsRounded fontSize="small" />,
-    }),
-    [],
-  )
+  const modeDescription = currentMode
+    ? t(MODE_META[currentMode].description)
+    : isCoreDataPending || isRuntimeConfigPending
+      ? '\u00A0'
+      : t('home.components.clashMode.errors.communication')
 
   // 切换模式的处理函数
   const onChangeMode = useLockFn(async (mode: ClashMode) => {
-    if (mode === currentModeKey) return
+    if (mode === currentMode) return
     if (verge?.auto_close_connection) {
       closeAllConnections()
     }
@@ -104,8 +98,8 @@ export const ClashModeCard = () => {
     alignItems: 'center',
     justifyContent: 'center',
     gap: 1,
-    bgcolor: mode === currentModeKey ? 'primary.main' : 'background.paper',
-    color: mode === currentModeKey ? 'primary.contrastText' : 'text.primary',
+    bgcolor: mode === currentMode ? 'primary.main' : 'background.paper',
+    color: mode === currentMode ? 'primary.contrastText' : 'text.primary',
     borderRadius: 1.5,
     transition: 'all 0.2s ease-in-out',
     position: 'relative',
@@ -118,7 +112,7 @@ export const ClashModeCard = () => {
       transform: 'translateY(1px)',
     },
     '&::after':
-      mode === currentModeKey
+      mode === currentMode
         ? {
             content: '""',
             position: 'absolute',
@@ -161,19 +155,19 @@ export const ClashModeCard = () => {
           zIndex: 2,
         }}
       >
-        {modeList.map((mode) => (
+        {CLASH_MODES.map((mode) => (
           <Paper
             key={mode}
-            elevation={mode === currentModeKey ? 2 : 0}
+            elevation={mode === currentMode ? 2 : 0}
             onClick={() => onChangeMode(mode)}
             sx={buttonStyles(mode)}
           >
-            {modeIcons[mode]}
+            {MODE_ICONS[mode]}
             <Typography
               variant="body2"
               sx={{
                 textTransform: 'capitalize',
-                fontWeight: mode === currentModeKey ? 600 : 400,
+                fontWeight: mode === currentMode ? 600 : 400,
               }}
             >
               {t(MODE_META[mode].label)}

@@ -149,21 +149,15 @@ fn apply_status_item_attributed_title(status_item: &NSStatusItem, text: &NSStrin
 /// * `down` - 下行速率（字节/秒）
 pub fn set_speed_attributed_title(status_item: &NSStatusItem, up: u64, down: u64) {
     let speed_text = format_tray_speed(up, down);
-    let changed = LAST_DISPLAY_STR.with(|last| {
-        let mut last_borrow = last.borrow_mut();
-        if *last_borrow == speed_text {
-            false
-        } else {
-            *last_borrow = speed_text.clone();
-            true
+    LAST_DISPLAY_STR.with(|last| {
+        let mut last = last.borrow_mut();
+        if last.as_str() == speed_text {
+            return;
         }
+        *last = speed_text;
+        let ns_string = NSString::from_str(last.as_str());
+        apply_status_item_attributed_title(status_item, &ns_string, true);
     });
-
-    if !changed {
-        return;
-    }
-    let ns_string = NSString::from_str(&speed_text);
-    apply_status_item_attributed_title(status_item, &ns_string, true);
 }
 
 /// 清除 NSStatusItem 按钮上的富文本速率显示
