@@ -88,6 +88,7 @@ impl TrayState {
         Self::default_icon(verge, kind)
     }
 
+    #[allow(clippy::missing_const_for_fn)]
     fn default_icon(verge: &IVerge, kind: IconKind) -> (bool, Cow<'_, [u8]>) {
         #[cfg(target_os = "macos")]
         {

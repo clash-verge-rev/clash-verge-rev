@@ -224,7 +224,7 @@ const SettingClash = ({ onError }: Props) => {
           sx={{ width: 100, input: { py: '7.5px', cursor: 'pointer' } }}
           onClick={(e) => {
             portRef.current?.open()
-            ;(e.target as any).blur()
+            ;(e.target as HTMLElement).blur()
           }}
         />
       </SettingItem>

@@ -70,7 +70,7 @@ reqwest = { version = "0.13.4", features = [
   "rustls",
   "form",
 ] }
-regex = "1.12.3"
+regex = "1.12.4"
 sysproxy = { git = "https://github.com/clash-verge-rev/sysproxy-rs", features = [
   "guard",
 ] }
