@@ -180,7 +180,7 @@ jobs:
       - name: Install Rust Stable
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: '1.95.0'
+          toolchain: '1.96.0'
           targets: ${{ matrix.target }}
 
       - name: Add Rust Target
@@ -215,7 +215,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v6
         with:
-          node-version: '24.16.0'
+          node-version: '24.17.0'
 
       - uses: pnpm/action-setup@v6
         name: Install pnpm
@@ -299,7 +299,7 @@ jobs:
       - name: Install Rust Stable
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: '1.95.0'
+          toolchain: '1.96.0'
           targets: ${{ matrix.target }}
 
       - name: Add Rust Target
@@ -319,7 +319,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v6
         with:
-          node-version: '24.16.0'
+          node-version: '24.17.0'
 
       - name: Install pnpm
         uses: pnpm/action-setup@v6
@@ -446,7 +446,7 @@ jobs:
       - name: Install Rust Stable
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: '1.95.0'
+          toolchain: '1.96.0'
           targets: ${{ matrix.target }}
 
       - name: Add Rust Target
@@ -466,7 +466,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v6
         with:
-          node-version: '24.16.0'
+          node-version: '24.17.0'
 
       - uses: pnpm/action-setup@v6
         name: Install pnpm
@@ -557,7 +557,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v6
         with:
-          node-version: '24.16.0'
+          node-version: '24.17.0'
 
       - uses: pnpm/action-setup@v6
         name: Install pnpm
@@ -583,7 +583,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v6
         with:
-          node-version: '24.16.0'
+          node-version: '24.17.0'
 
       - uses: pnpm/action-setup@v6
         name: Install pnpm
@@ -645,7 +645,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v6
         with:
-          node-version: '24.16.0'
+          node-version: '24.17.0'
 
       - uses: pnpm/action-setup@v6
         name: Install pnpm

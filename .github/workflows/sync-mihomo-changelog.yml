@@ -27,7 +27,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v6
         with:
-          node-version: '24.16.0'
+          node-version: '24.17.0'
 
       - name: Sync Mihomo version
         run: node scripts/sync-mihomo-version.mjs
