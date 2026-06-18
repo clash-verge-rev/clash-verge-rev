@@ -15,6 +15,7 @@
 <summary><strong> ✨ 新增功能 </strong></summary>
 
 - 增加 TrustTunnel, OpenVPN, Tailscale, GostRelay 节点显示支持
+- 全局扩展脚本增加恢复默认按钮、
 
 </details>
 
