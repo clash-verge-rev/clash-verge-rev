@@ -61,7 +61,7 @@ export const navItems = [
     label: 'layout.components.navigation.tabs.logs',
     path: '/logs',
     icon: [<SubjectRoundedIcon key="mui" />, <LogsSvg key="svg" />],
-    Component: () => null /* KeepAlive: real LogsPage rendered in Layout */,
+    Component: () => null /* LogsPage rendered in Layout only on /logs route */,
   },
   {
     label: 'layout.components.navigation.tabs.unlock',

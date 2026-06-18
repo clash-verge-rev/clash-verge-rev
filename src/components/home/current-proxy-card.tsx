@@ -439,27 +439,6 @@ export const CurrentProxyCard = () => {
     matchPolicyName,
   ])
 
-  // 使用防抖包装状态更新
-  const timeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  const debouncedSetState = useCallback(
-    (updateFn: (prev: ProxyState) => ProxyState) => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current)
-      }
-      timeoutRef.current = setTimeout(() => {
-        setState(updateFn)
-      }, 300)
-    },
-    [setState],
-  )
-
-  useEffect(() => {
-    return () => {
-      if (timeoutRef.current) clearTimeout(timeoutRef.current)
-    }
-  }, [])
-
   // 处理代理组变更
   const handleGroupChange = useCallback(
     (event: SelectChangeEvent<string>) => {
@@ -504,7 +483,7 @@ export const CurrentProxyCard = () => {
       const currentGroup = state.selection.group
       const previousProxy = state.selection.proxy
 
-      debouncedSetState((prev: ProxyState) => ({
+      setState((prev: ProxyState) => ({
         ...prev,
         selection: {
           ...prev.selection,
@@ -524,7 +503,6 @@ export const CurrentProxyCard = () => {
       isDirectMode,
       isGlobalMode,
       state.selection,
-      debouncedSetState,
       handleSelectChange,
       writeProfileScopedItem,
     ],

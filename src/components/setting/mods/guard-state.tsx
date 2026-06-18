@@ -45,7 +45,7 @@ export function GuardState<T>(props: Props<T>) {
     lockRef.current = true
 
     try {
-      const newValue = onFormat ? (onFormat as any)(...args) : (args[0] as T)
+      const newValue = onFormat ? onFormat(...args) : (args[0] as T)
       // 先在ui上响应操作
       onChange(newValue)
 
