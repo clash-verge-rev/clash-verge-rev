@@ -8,6 +8,11 @@
   },
   "bundle": {
     "targets": ["pkg"],
+    "freebsd": {
+      "pkg": {
+        "depends": ["libappindicator"]
+      }
+    },
     "externalBin": [
       "./sidecar/clash-verge-service",
       "./sidecar/clash-verge-service-install",
