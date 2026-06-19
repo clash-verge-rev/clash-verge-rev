@@ -243,13 +243,12 @@ async fn collect_profile_items() -> Result<ProfileItems> {
 
 async fn process_global_items(
     mut config: Mapping,
+    mut exists_keys: Vec<String>,
+    mut result_map: HashMap<String, ResultLog>,
     global_merge: ChainItem,
     global_script: ChainItem,
     profile_name: &String,
 ) -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
-    let mut result_map = HashMap::new();
-    let mut exists_keys = use_keys(&config).collect::<Vec<_>>();
-
     if let ChainType::Merge(merge) = global_merge.data {
         exists_keys.extend(use_keys(&merge));
         config = use_merge(&merge, config);
@@ -259,7 +258,7 @@ async fn process_global_items(
         let mut logs = vec![];
         match use_script(script, config.clone(), profile_name.clone()).await {
             Ok((res_config, res_logs)) => {
-                exists_keys.extend(use_keys(&res_config));
+                extend_changed_keys(&mut exists_keys, &config, &res_config);
                 config = res_config;
                 logs.extend(res_logs);
             }
@@ -271,18 +270,12 @@ async fn process_global_items(
     (config, exists_keys, result_map)
 }
 
-#[allow(clippy::too_many_arguments)]
-async fn process_profile_items(
+fn process_seq_items(
     mut config: Mapping,
-    mut exists_keys: Vec<String>,
-    mut result_map: HashMap<String, ResultLog>,
     rules_item: ChainItem,
     proxies_item: ChainItem,
     groups_item: ChainItem,
-    merge_item: ChainItem,
-    script_item: ChainItem,
-    profile_name: &String,
-) -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
+) -> Mapping {
     if let ChainType::Rules(rules) = rules_item.data {
         config = use_seq(rules, config, "rules");
     }
@@ -295,6 +288,31 @@ async fn process_profile_items(
         config = use_seq(groups, config, "proxy-groups");
     }
 
+    config
+}
+
+fn extend_changed_keys(exists_keys: &mut Vec<String>, config: &Mapping, res_config: &Mapping) {
+    exists_keys.extend(res_config.iter().filter_map(|(key, value)| {
+        if config.get(key) == Some(value) {
+            return None;
+        }
+
+        key.as_str().map(|key| {
+            let mut key: String = key.into();
+            key.make_ascii_lowercase();
+            key
+        })
+    }));
+}
+
+async fn process_profile_items(
+    mut config: Mapping,
+    mut exists_keys: Vec<String>,
+    mut result_map: HashMap<String, ResultLog>,
+    merge_item: ChainItem,
+    script_item: ChainItem,
+    profile_name: &String,
+) -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
     if let ChainType::Merge(merge) = merge_item.data {
         exists_keys.extend(use_keys(&merge));
         config = use_merge(&merge, config);
@@ -304,7 +322,7 @@ async fn process_profile_items(
         let mut logs = vec![];
         match use_script(script, config.clone(), profile_name.clone()).await {
             Ok((res_config, res_logs)) => {
-                exists_keys.extend(use_keys(&res_config));
+                extend_changed_keys(&mut exists_keys, &config, &res_config);
                 config = res_config;
                 logs.extend(res_logs);
             }
@@ -588,23 +606,11 @@ pub async fn enhance() -> Result<(Mapping, HashSet<String>, HashMap<String, Resu
     let global_script = profile.global_script;
     let profile_name = profile.profile_name;
 
-    // process globals
-    let (config, exists_keys, result_map) =
-        process_global_items(config, global_merge, global_script, &profile_name).await;
+    let result_map = HashMap::new();
 
-    // process profile-specific items
-    let (config, exists_keys, result_map) = process_profile_items(
-        config,
-        exists_keys,
-        result_map,
-        rules_item,
-        proxies_item,
-        groups_item,
-        merge_item,
-        script_item,
-        &profile_name,
-    )
-    .await;
+    // process sequence items before manual overrides
+    let config = process_seq_items(config, rules_item, proxies_item, groups_item);
+    let exists_keys = use_keys(&config).collect::<Vec<_>>();
 
     // merge default clash config
     let config = merge_default_config(
@@ -619,16 +625,28 @@ pub async fn enhance() -> Result<(Mapping, HashSet<String>, HashMap<String, Resu
     )
     .await;
 
-    // builtin scripts
-    let mut config = apply_builtin_scripts(config, clash_core, enable_builtin).await;
+    // process built-in and application settings before manual overrides
+    let config = apply_builtin_scripts(config, clash_core, enable_builtin).await;
+    let config = use_tun(config, enable_tun);
+    let config = apply_dns_settings(config, enable_dns_settings).await;
 
-    config = cleanup_proxy_groups(config);
+    // process globals
+    let (config, exists_keys, result_map) = process_global_items(
+        config,
+        exists_keys,
+        result_map,
+        global_merge,
+        global_script,
+        &profile_name,
+    )
+    .await;
 
-    config = use_tun(config, enable_tun);
-    config = use_sort(config);
+    // process profile-specific items
+    let (config, exists_keys, result_map) =
+        process_profile_items(config, exists_keys, result_map, merge_item, script_item, &profile_name).await;
 
-    // dns settings
-    config = apply_dns_settings(config, enable_dns_settings).await;
+    let config = cleanup_proxy_groups(config);
+    let config = use_sort(config);
 
     let mut exists_keys_set = HashSet::new();
     exists_keys_set.extend(exists_keys);
@@ -639,7 +657,98 @@ pub async fn enhance() -> Result<(Mapping, HashSet<String>, HashMap<String, Resu
 #[allow(clippy::expect_used)]
 #[cfg(test)]
 mod tests {
-    use super::cleanup_proxy_groups;
+    use super::{ChainItem, ChainType, cleanup_proxy_groups, process_global_items, process_profile_items, use_keys};
+    use std::collections::HashMap;
+
+    fn mapping(yaml: &str) -> serde_yaml_ng::Mapping {
+        serde_yaml_ng::from_str(yaml).expect("test config should be valid")
+    }
+
+    #[tokio::test]
+    async fn manual_overrides_follow_expected_priority() {
+        let mut config = mapping(
+            r"{global-merge-wins: other, global-script-wins: other, profile-merge-wins: other,
+               profile-script-wins: other, nested: {winner: other}, dns: {enable: true}, tun: {enable: true}}",
+        );
+        let exists_keys = use_keys(&config).collect();
+        config.insert("application-only".into(), true.into());
+
+        let global_merge = ChainItem {
+            uid: "Merge".into(),
+            data: ChainType::Merge(mapping(
+                r"{global-merge-wins: global-merge, global-script-wins: global-merge,
+                   profile-merge-wins: global-merge, profile-script-wins: global-merge,
+                   nested: {winner: global-merge}, dns: {enable: false}, tun: {enable: false}}",
+            )),
+        };
+        let global_script = ChainItem::to_script(
+            "Script",
+            r#"function main(config) {
+              config["global-script-wins"] = "global-script";
+              config["profile-merge-wins"] = "global-script";
+              config["profile-script-wins"] = "global-script";
+              config.nested.winner = "global-script";
+              return config;
+            }"#,
+        );
+        let profile_merge = ChainItem {
+            uid: "profile-merge".into(),
+            data: ChainType::Merge(mapping(
+                r"{profile-merge-wins: profile-merge, profile-script-wins: profile-merge,
+                   nested: {winner: profile-merge}}",
+            )),
+        };
+        let profile_script = ChainItem::to_script(
+            "profile-script",
+            r#"function main(config) {
+              config["profile-script-wins"] = "profile-script";
+              config.nested.winner = "profile-script";
+              return config;
+            }"#,
+        );
+
+        let profile_name = "test-profile".into();
+        let (config, exists_keys, result_map) = process_global_items(
+            config,
+            exists_keys,
+            HashMap::new(),
+            global_merge,
+            global_script,
+            &profile_name,
+        )
+        .await;
+        let (config, exists_keys, _) = process_profile_items(
+            config,
+            exists_keys,
+            result_map,
+            profile_merge,
+            profile_script,
+            &profile_name,
+        )
+        .await;
+
+        let string_value = |key| config.get(key).and_then(serde_yaml_ng::Value::as_str);
+        assert_eq!(string_value("global-merge-wins"), Some("global-merge"));
+        assert_eq!(string_value("global-script-wins"), Some("global-script"));
+        assert_eq!(string_value("profile-merge-wins"), Some("profile-merge"));
+        assert_eq!(string_value("profile-script-wins"), Some("profile-script"));
+        assert_eq!(
+            config
+                .get("nested")
+                .and_then(|value| value.get("winner"))
+                .and_then(serde_yaml_ng::Value::as_str),
+            Some("profile-script")
+        );
+        let enabled = |key| {
+            config
+                .get(key)
+                .and_then(|value| value.get("enable"))
+                .and_then(serde_yaml_ng::Value::as_bool)
+        };
+        assert_eq!(enabled("dns"), Some(false));
+        assert_eq!(enabled("tun"), Some(false));
+        assert!(!exists_keys.contains(&"application-only".into()));
+    }
 
     #[test]
     fn remove_missing_proxies_from_groups() {
