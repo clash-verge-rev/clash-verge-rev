@@ -10,7 +10,7 @@
     "targets": ["pkg"],
     "freebsd": {
       "pkg": {
-        "depends": ["libappindicator"]
+        "depends": ["libayatana-appindicator"]
       }
     },
     "externalBin": [
