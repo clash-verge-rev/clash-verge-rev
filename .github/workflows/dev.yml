@@ -70,7 +70,7 @@ jobs:
 
       - name: Checkout Repository
         if: github.event.inputs[matrix.input] == 'true'
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Install Rust Stable
         if: github.event.inputs[matrix.input] == 'true'
@@ -103,7 +103,7 @@ jobs:
         if: github.event.inputs[matrix.input] == 'true'
         uses: actions/setup-node@v6
         with:
-          node-version: '24.16.0'
+          node-version: '24.17.0'
           cache: 'pnpm'
 
       - name: Pnpm Cache

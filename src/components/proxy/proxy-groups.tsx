@@ -184,9 +184,14 @@ export const ProxyGroups = (props: Props) => {
 
   const rangeExtractor = useCallback(
     (range: Parameters<typeof defaultRangeExtractor>[0]) => {
-      const activeStickyIndex = [...stickyGroupIndexes]
-        .reverse()
-        .find((index) => index <= range.startIndex)
+      let activeStickyIndex: number | undefined
+      for (let i = stickyGroupIndexes.length - 1; i >= 0; i -= 1) {
+        const index = stickyGroupIndexes[i]
+        if (index <= range.startIndex) {
+          activeStickyIndex = index
+          break
+        }
+      }
       activeStickyIndexRef.current = activeStickyIndex ?? null
 
       const indexes = defaultRangeExtractor(range)
@@ -201,7 +206,7 @@ export const ProxyGroups = (props: Props) => {
     count: renderList.length,
     getScrollElement: () => parentRef.current,
     estimateSize: () => 56,
-    overscan: 15,
+    overscan: 8,
     getItemKey: (index) => renderList[index]?.key ?? index,
     rangeExtractor,
   })

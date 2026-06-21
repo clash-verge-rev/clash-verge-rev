@@ -118,7 +118,7 @@
     },
     "clashMode": {
       "errors": {
-        "communication": "Core communication error"
+        "communication": "コアの通信エラーです。パソコンを再起動してから再試行してください"
       },
       "labels": {
         "rule": "ルールモード",

@@ -118,7 +118,7 @@
     },
     "clashMode": {
       "errors": {
-        "communication": "Core communication error"
+        "communication": "Үзәк белән элемтә хатасы, компьютерны яңадан кабызып карагыз"
       },
       "labels": {
         "rule": "Кагыйдәләр режимы",

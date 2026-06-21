@@ -8,8 +8,20 @@ use clash_verge_logging::{Type, logging};
 use serde::{Deserialize, Serialize};
 use serde_yaml_ng::Mapping;
 use smartstring::alias::String;
-use std::collections::HashSet;
+use std::{collections::HashSet, sync::LazyLock};
 use tokio::fs;
+
+/// Regex to check profile file names, eg.
+/// R12345678.yaml (remote)
+/// L12345678.yaml (local)
+/// m12345678.yaml (merge)
+/// s12345678.js (script)
+/// r12345678.yaml (rules)
+/// p12345678.yaml (proxies)
+/// g12345678.yaml (groups)
+#[allow(clippy::unwrap_used)]
+static REGEX_PROFILE_FILE: LazyLock<regex::Regex> =
+    LazyLock::new(|| regex::Regex::new(r"^(?:[RLmrpg][a-zA-Z0-9]+\.yaml|s[a-zA-Z0-9]+\.js)$").unwrap());
 
 /// Define the `profiles.yaml` schema
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
@@ -501,27 +513,7 @@ impl IProfiles {
 
     /// 检查文件名是否符合 profile 文件的命名规则
     fn is_profile_file(filename: &str) -> bool {
-        // 匹配各种 profile 文件格式
-        // R12345678.yaml (remote)
-        // L12345678.yaml (local)
-        // m12345678.yaml (merge)
-        // s12345678.js (script)
-        // r12345678.yaml (rules)
-        // p12345678.yaml (proxies)
-        // g12345678.yaml (groups)
-
-        let patterns = [
-            r"^[RL][a-zA-Z0-9]+\.yaml$",  // Remote/Local profiles
-            r"^m[a-zA-Z0-9]+\.yaml$",     // Merge files
-            r"^s[a-zA-Z0-9]+\.js$",       // Script files
-            r"^[rpg][a-zA-Z0-9]+\.yaml$", // Rules/Proxies/Groups files
-        ];
-
-        patterns.iter().any(|pattern| {
-            regex::Regex::new(pattern)
-                .map(|re| re.is_match(filename))
-                .unwrap_or(false)
-        })
+        REGEX_PROFILE_FILE.is_match(filename)
     }
 }
 
