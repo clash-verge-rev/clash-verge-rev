@@ -22,6 +22,14 @@ const PORT_KEYS = [
   'tproxy-port',
 ] as const
 
+const TQ_MIHOMO = {
+  refetchOnWindowFocus: false,
+  refetchOnReconnect: false,
+  staleTime: 1500,
+  retry: 5,
+  retryDelay: (attempt: number) => Math.min(200 * 2 ** attempt, 3000),
+} as const
+
 type ClashInfoPatch = Partial<
   Pick<
     IConfigData,
@@ -71,6 +79,7 @@ export const useClash = () => {
   const { data: versionData, refetch: mutateVersion } = useQuery({
     queryKey: ['getVersion'],
     queryFn: getVersion,
+    ...TQ_MIHOMO,
   })
 
   const mutateClash = (updater?: MutateClashUpdater, revalidate?: boolean) => {

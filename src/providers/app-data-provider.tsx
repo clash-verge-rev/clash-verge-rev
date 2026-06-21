@@ -35,6 +35,9 @@ const TQ_MIHOMO = {
   retryDelay: (attempt: number) => Math.min(200 * 2 ** attempt, 3000),
 } as const
 
+const CORE_READY_RETRY_LIMIT = 15
+const CORE_READY_RETRY_INTERVAL = 1000
+
 const TQ_DEFAULTS = {
   refetchOnWindowFocus: false,
   refetchOnReconnect: false,
@@ -203,6 +206,30 @@ export const AppDataProvider = ({
     refreshSysproxy,
     refreshProxyProviders,
     refreshRuleProviders,
+  ])
+
+  useEffect(() => {
+    if (proxiesData && clashConfig) return
+
+    let attempts = 0
+    const timer = window.setInterval(() => {
+      attempts += 1
+      refreshProxy().catch(() => {})
+      refreshClashConfig().catch(() => {})
+      refreshProxyProviders().catch(() => {})
+
+      if (attempts >= CORE_READY_RETRY_LIMIT) {
+        window.clearInterval(timer)
+      }
+    }, CORE_READY_RETRY_INTERVAL)
+
+    return () => window.clearInterval(timer)
+  }, [
+    clashConfig,
+    proxiesData,
+    refreshClashConfig,
+    refreshProxy,
+    refreshProxyProviders,
   ])
 
   const proxiesValue = useMemo(
