@@ -28,6 +28,15 @@ interface Props {
 
 const EMPTY_LOG_INFO: [string, string][] = []
 
+// Default global extend script content (mirrors `ITEM_SCRIPT` in
+// src-tauri/src/utils/tmpl.rs).
+const DEFAULT_SCRIPT = `// Define main function (script entry)
+
+function main(config, profileName) {
+  return config;
+}
+`
+
 // profile enhanced item
 export const ProfileMore = (props: Props) => {
   const { id, logInfo, onSave } = props
@@ -93,6 +102,10 @@ export const ProfileMore = (props: Props) => {
     onSave?.(document.savedValue, currentValue)
     document.markSaved(currentValue)
   })
+
+  const handleResetToDefault = useCallback(() => {
+    document.setValue(DEFAULT_SCRIPT)
+  }, [document])
 
   return (
     <>
@@ -207,6 +220,7 @@ export const ProfileMore = (props: Props) => {
           dirty={document.dirty}
           onChange={document.setValue}
           onSave={handleSave}
+          onResetToDefault={id === 'Script' ? handleResetToDefault : undefined}
           onClose={() => setFileOpen(false)}
         />
       )}

@@ -51,7 +51,7 @@ export const useLogData = () => {
   const queryClient = useQueryClient()
   const [clashLog] = useClashLog()
   const enableLog = clashLog.enable
-  const logLevel = clashLog.logLevel
+  const logLevel = clashLog.logLevel.toUpperCase() as LogLevel
   const allowedTypes = LOG_LEVEL_FILTERS[logLevel] ?? DEFAULT_LOG_TYPES
   const hasLoadedInitialLogsRef = useRef(false)
 

@@ -118,7 +118,7 @@
     },
     "clashMode": {
       "errors": {
-        "communication": "Core communication error"
+        "communication": "Kesalahan komunikasi inti, mulai ulang komputer dan coba lagi"
       },
       "labels": {
         "rule": "Mode Aturan",
