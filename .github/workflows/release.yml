@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
@@ -69,7 +69,7 @@ jobs:
     needs: [release, release-for-linux-arm, release-for-fixed-webview2]
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Fetch UPDATE logs
         id: fetch_update_logs
@@ -175,12 +175,12 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Install Rust Stable
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: '1.95.0'
+          toolchain: '1.96.0'
           targets: ${{ matrix.target }}
 
       - name: Add Rust Target
@@ -215,7 +215,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v6
         with:
-          node-version: '24.16.0'
+          node-version: '24.17.0'
 
       - uses: pnpm/action-setup@v6
         name: Install pnpm
@@ -294,12 +294,12 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Install Rust Stable
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: '1.95.0'
+          toolchain: '1.96.0'
           targets: ${{ matrix.target }}
 
       - name: Add Rust Target
@@ -319,7 +319,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v6
         with:
-          node-version: '24.16.0'
+          node-version: '24.17.0'
 
       - name: Install pnpm
         uses: pnpm/action-setup@v6
@@ -441,12 +441,12 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Install Rust Stable
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: '1.95.0'
+          toolchain: '1.96.0'
           targets: ${{ matrix.target }}
 
       - name: Add Rust Target
@@ -466,7 +466,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v6
         with:
-          node-version: '24.16.0'
+          node-version: '24.17.0'
 
       - uses: pnpm/action-setup@v6
         name: Install pnpm
@@ -552,12 +552,12 @@ jobs:
     needs: [update_tag]
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Install Node
         uses: actions/setup-node@v6
         with:
-          node-version: '24.16.0'
+          node-version: '24.17.0'
 
       - uses: pnpm/action-setup@v6
         name: Install pnpm
@@ -578,12 +578,12 @@ jobs:
     needs: [update_tag]
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Install Node
         uses: actions/setup-node@v6
         with:
-          node-version: '24.16.0'
+          node-version: '24.17.0'
 
       - uses: pnpm/action-setup@v6
         name: Install pnpm
@@ -605,7 +605,7 @@ jobs:
     needs: [update_tag, release-update]
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
       - name: Get Version
@@ -635,7 +635,7 @@ jobs:
       ]
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Fetch UPDATE logs
         id: fetch_update_logs
@@ -645,7 +645,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v6
         with:
-          node-version: '24.16.0'
+          node-version: '24.17.0'
 
       - uses: pnpm/action-setup@v6
         name: Install pnpm

@@ -42,8 +42,8 @@ importers:
         specifier: ^3.13.25
         version: 3.13.25(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       '@tauri-apps/api':
-        specifier: 2.11.0
-        version: 2.11.0
+        specifier: 2.11.1
+        version: 2.11.1
       '@tauri-apps/plugin-clipboard-manager':
         specifier: ^2.3.2
         version: 2.3.2
@@ -123,14 +123,14 @@ importers:
         specifier: 10.1.0
         version: 10.1.0(@types/react@19.2.17)(react@19.2.7)
       react-router:
-        specifier: ^7.15.1
-        version: 7.15.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
+        specifier: ^8.0.0
+        version: 8.0.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7)
       rehype-raw:
         specifier: ^7.0.0
         version: 7.0.0
       tauri-plugin-mihomo-api:
         specifier: github:clash-verge-rev/tauri-plugin-mihomo
-        version: https://codeload.github.com/clash-verge-rev/tauri-plugin-mihomo/tar.gz/2b2c88d38a982196cbbd8b93bca3453c8e52bce6
+        version: https://codeload.github.com/clash-verge-rev/tauri-plugin-mihomo/tar.gz/ff75ee3edd61923e6c76a7f3cf3c3fbd0f8e22c0
       types-pac:
         specifier: ^1.0.3
         version: 1.0.3
@@ -1492,8 +1492,8 @@ packages:
   '@tanstack/virtual-core@3.15.0':
     resolution: {integrity: sha512-0AwPGx0I8QxPYjAxShT/+z+ZOe9u8mW5rsXvivCTjRfRmz9a43+3mRyi4wwlyoUqOC56q/jatKa0Bh9M99BEHQ==}
 
-  '@tauri-apps/api@2.11.0':
-    resolution: {integrity: sha512-7CinYODhky9lmO23xHnUFv0Xt43fbtWMyxZcLcRBlFkcgXKuEirBvHpmtJ89YMhyeGcq20Wuc47Fa4XjyniywA==}
+  '@tauri-apps/api@2.11.1':
+    resolution: {integrity: sha512-M2FPuYND2m+wh5hfW9ZpSdxMPdEJovPBWwoHJmwUpysTYNHaOkVFN419m/K0LIgjb/7KU2vBgsUepJWugQCvAA==}
 
   '@tauri-apps/cli-darwin-arm64@2.11.2':
     resolution: {integrity: sha512-+4UZzLt+eOAEQCwgd+TqKgyUJMrvx+BgdXLLaqJYmPqzP+nE6YZr/hY6CWLYGQb8jFn99jEkmC6uA3tNvamA1w==}
@@ -2070,9 +2070,8 @@ packages:
   convert-source-map@2.0.0:
     resolution: {integrity: sha512-Kvp459HrV2FEJ1CAsi1Ku+MY3kasH19TFykTz2xWmMeq6bk2NU3XXvfJ+Q61m0xktWwt+1HSYf3JZsTms3aRJg==}
 
-  cookie@1.1.1:
-    resolution: {integrity: sha512-ei8Aos7ja0weRpFzJnEA9UHJ/7XQmqglbRwnf2ATjcB9Wq874VKH9kfjjirM6UhU2/E5fFYadylyhFldcqSidQ==}
-    engines: {node: '>=18'}
+  cookie-es@3.1.1:
+    resolution: {integrity: sha512-UaXxwISYJPTr9hwQxMFYZ7kNhSXboMXP+Z3TRX6f1/NyaGPfuNUZOWP1pUEb75B2HjfklIYLVRfWiFZJyC6Npg==}
 
   core-js-compat@3.49.0:
     resolution: {integrity: sha512-VQXt1jr9cBz03b331DFDCCP90b3fanciLkgiOoy8SBHy06gNf+vQ1A3WFLqG7I8TipYIKeYK9wxd0tUrvHcOZA==}
@@ -3159,12 +3158,12 @@ packages:
       '@types/react': '>=18'
       react: '>=18'
 
-  react-router@7.15.1:
-    resolution: {integrity: sha512-R8rl9HhgikFYoPJymnUtPXWbnDb3oget6lQnfIoupbt61aT9aOhRkDsY2XRhZRyX1Z/8a5sL74fXmFNm3NRK5A==}
-    engines: {node: '>=20.0.0'}
+  react-router@8.0.0:
+    resolution: {integrity: sha512-AyS7LUn9M3g2/IBJDJNpWqElaQjPVBHGgMsdLGee6B2JLwP9STSpRwN8N4SauOeFTb0X5ZN0wxa1Iek78jF8Iw==}
+    engines: {node: '>=22.22.0'}
     peerDependencies:
-      react: '>=18'
-      react-dom: '>=18'
+      react: '>=19.2.7'
+      react-dom: '>=19.2.7'
     peerDependenciesMeta:
       react-dom:
         optional: true
@@ -3264,9 +3263,6 @@ packages:
   server-only@0.0.1:
     resolution: {integrity: sha512-qepMx2JxAa5jjfzxG79yPPq+8BuFToHd1hm7kI+Z4zAq1ftQiP7HcxMhDDItrbtwVeLg/cY2JnKnrcFkmiswNA==}
 
-  set-cookie-parser@2.7.2:
-    resolution: {integrity: sha512-oeM1lpU/UvhTxw+g3cIfxXHyJRc/uidd3yK1P242gzHds0udQBYzs3y8j4gCCW+ZJ7ad0yctld8RYO+bdurlvw==}
-
   shebang-command@2.0.0:
     resolution: {integrity: sha512-kHxr2zZpYtdmrN1qDjrrX/Z1rR1kG8Dx+gkpK1G4eXmvXswmcE1hTWBWYUzlraYw1/yZp6YuDY77YtvbN0dmDA==}
     engines: {node: '>=8'}
@@ -3360,9 +3356,9 @@ packages:
     resolution: {integrity: sha512-dzGK0boVlC4W5QFuQN1EFSl3bIDYsk7Tj40U6eIBnK2k/8ml7TZ5agbI5j5+qnoVcAA+rNtBml8SEiLxZpNqRQ==}
     engines: {node: '>=18'}
 
-  tauri-plugin-mihomo-api@https://codeload.github.com/clash-verge-rev/tauri-plugin-mihomo/tar.gz/2b2c88d38a982196cbbd8b93bca3453c8e52bce6:
-    resolution: {gitHosted: true, tarball: https://codeload.github.com/clash-verge-rev/tauri-plugin-mihomo/tar.gz/2b2c88d38a982196cbbd8b93bca3453c8e52bce6}
-    version: 0.5.2
+  tauri-plugin-mihomo-api@https://codeload.github.com/clash-verge-rev/tauri-plugin-mihomo/tar.gz/ff75ee3edd61923e6c76a7f3cf3c3fbd0f8e22c0:
+    resolution: {gitHosted: true, tarball: https://codeload.github.com/clash-verge-rev/tauri-plugin-mihomo/tar.gz/ff75ee3edd61923e6c76a7f3cf3c3fbd0f8e22c0}
+    version: 0.5.4
 
   terser@5.48.0:
     resolution: {integrity: sha512-J/9An6vs9Us6wKRriSFXBWdRZapREHqFzdNUKk0pmu804EMR6dr6winwo7e5JDxN4xahxQsuysyYFwlwj4XN/Q==}
@@ -5011,7 +5007,7 @@ snapshots:
 
   '@tanstack/virtual-core@3.15.0': {}
 
-  '@tauri-apps/api@2.11.0': {}
+  '@tauri-apps/api@2.11.1': {}
 
   '@tauri-apps/cli-darwin-arm64@2.11.2':
     optional: true
@@ -5062,31 +5058,31 @@ snapshots:
 
   '@tauri-apps/plugin-clipboard-manager@2.3.2':
     dependencies:
-      '@tauri-apps/api': 2.11.0
+      '@tauri-apps/api': 2.11.1
 
   '@tauri-apps/plugin-dialog@2.7.1':
     dependencies:
-      '@tauri-apps/api': 2.11.0
+      '@tauri-apps/api': 2.11.1
 
   '@tauri-apps/plugin-fs@2.5.1':
     dependencies:
-      '@tauri-apps/api': 2.11.0
+      '@tauri-apps/api': 2.11.1
 
   '@tauri-apps/plugin-http@2.5.9':
     dependencies:
-      '@tauri-apps/api': 2.11.0
+      '@tauri-apps/api': 2.11.1
 
   '@tauri-apps/plugin-process@2.3.1':
     dependencies:
-      '@tauri-apps/api': 2.11.0
+      '@tauri-apps/api': 2.11.1
 
   '@tauri-apps/plugin-shell@2.3.5':
     dependencies:
-      '@tauri-apps/api': 2.11.0
+      '@tauri-apps/api': 2.11.1
 
   '@tauri-apps/plugin-updater@2.10.1':
     dependencies:
-      '@tauri-apps/api': 2.11.0
+      '@tauri-apps/api': 2.11.1
 
   '@tybys/wasm-util@0.10.2':
     dependencies:
@@ -5534,7 +5530,7 @@ snapshots:
 
   convert-source-map@2.0.0: {}
 
-  cookie@1.1.1: {}
+  cookie-es@3.1.1: {}
 
   core-js-compat@3.49.0:
     dependencies:
@@ -6833,11 +6829,10 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  react-router@7.15.1(react-dom@19.2.7(react@19.2.7))(react@19.2.7):
+  react-router@8.0.0(react-dom@19.2.7(react@19.2.7))(react@19.2.7):
     dependencies:
-      cookie: 1.1.1
+      cookie-es: 3.1.1
       react: 19.2.7
-      set-cookie-parser: 2.7.2
     optionalDependencies:
       react-dom: 19.2.7(react@19.2.7)
 
@@ -6959,8 +6954,6 @@ snapshots:
 
   server-only@0.0.1: {}
 
-  set-cookie-parser@2.7.2: {}
-
   shebang-command@2.0.0:
     dependencies:
       shebang-regex: 3.0.0
@@ -7049,9 +7042,9 @@ snapshots:
       minizlib: 3.1.0
       yallist: 5.0.0
 
-  tauri-plugin-mihomo-api@https://codeload.github.com/clash-verge-rev/tauri-plugin-mihomo/tar.gz/2b2c88d38a982196cbbd8b93bca3453c8e52bce6:
+  tauri-plugin-mihomo-api@https://codeload.github.com/clash-verge-rev/tauri-plugin-mihomo/tar.gz/ff75ee3edd61923e6c76a7f3cf3c3fbd0f8e22c0:
     dependencies:
-      '@tauri-apps/api': 2.11.0
+      '@tauri-apps/api': 2.11.1
 
   terser@5.48.0:
     dependencies:

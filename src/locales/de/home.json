@@ -118,7 +118,7 @@
     },
     "clashMode": {
       "errors": {
-        "communication": "Core communication error"
+        "communication": "Kernkommunikationsfehler, bitte starten Sie den Computer neu und versuchen Sie es erneut"
       },
       "labels": {
         "rule": "Regel-Modus",
