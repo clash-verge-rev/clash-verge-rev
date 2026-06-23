@@ -255,16 +255,19 @@ impl Tray {
 
         let (_is_custom_icon, icon_bytes) = TrayState::get_tray_icon(verge).await;
 
-        logging_error!(
-            Type::Tray,
-            tray.set_icon(Some(tauri::image::Image::from_bytes(&icon_bytes)?))
-        );
+        let template = {
+            #[cfg(target_os = "macos")]
+            {
+                verge.tray_icon.as_ref().is_none_or(|v| v == "monochrome")
+            }
+            #[cfg(not(target_os = "macos"))]
+            {
+                false
+            }
+        };
+        let icon = Some(tauri::image::Image::from_bytes(&icon_bytes)?);
 
-        #[cfg(target_os = "macos")]
-        {
-            let is_colorful = verge.tray_icon.as_deref().unwrap_or("monochrome") == "colorful";
-            logging_error!(Type::Tray, tray.set_icon_as_template(!is_colorful));
-        }
+        logging_error!(Type::Tray, tray.set_icon_with_as_template(icon, template));
 
         Ok(())
     }
