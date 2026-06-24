@@ -178,6 +178,7 @@ async fn init_dns_config() -> Result<()> {
         (
             "proxy-server-nameserver".into(),
             Value::Sequence(vec![
+                Value::String("system".into()),
                 Value::String("https://doh.pub/dns-query".into()),
                 Value::String("https://dns.alidns.com/dns-query".into()),
                 Value::String("tls://223.5.5.5".into()),
