@@ -23,6 +23,26 @@ const DEFAULT_DECORATIONS: bool = false;
 #[cfg(not(target_os = "linux"))]
 const DEFAULT_DECORATIONS: bool = true;
 
+const fn restored_window_size_is_too_small(width: u32, height: u32) -> bool {
+    width < MINIMAL_WIDTH as u32 || height < MINIMAL_HEIGHT as u32
+}
+
+fn restore_default_size_if_needed(window: &WebviewWindow) {
+    let Ok(size) = window.outer_size() else {
+        return;
+    };
+
+    if !restored_window_size_is_too_small(size.width, size.height) {
+        return;
+    }
+
+    logging_error!(
+        Type::Window,
+        window.set_size(tauri::LogicalSize::new(DEFAULT_WIDTH, DEFAULT_HEIGHT))
+    );
+    logging_error!(Type::Window, window.center());
+}
+
 /// 构建新的 WebView 窗口
 pub async fn build_new_window() -> Result<WebviewWindow, String> {
     let app_handle = handle::Handle::app_handle();
@@ -88,8 +108,32 @@ pub async fn build_new_window() -> Result<WebviewWindow, String> {
     match builder.build() {
         Ok(window) => {
             logging_error!(Type::Window, window.set_background_color(Some(background_color)));
+            restore_default_size_if_needed(&window);
             Ok(window)
         }
         Err(e) => Err(e.to_string()),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::restored_window_size_is_too_small;
+
+    #[test]
+    fn restored_window_size_rejects_zero_dimensions() {
+        assert!(restored_window_size_is_too_small(0, 700));
+        assert!(restored_window_size_is_too_small(940, 0));
+    }
+
+    #[test]
+    fn restored_window_size_rejects_dimensions_below_minimum() {
+        assert!(restored_window_size_is_too_small(519, 700));
+        assert!(restored_window_size_is_too_small(940, 519));
+    }
+
+    #[test]
+    fn restored_window_size_accepts_minimum_or_larger_dimensions() {
+        assert!(!restored_window_size_is_too_small(520, 520));
+        assert!(!restored_window_size_is_too_small(940, 700));
     }
 }

@@ -118,7 +118,7 @@
     },
     "clashMode": {
       "errors": {
-        "communication": "Core communication error"
+        "communication": "خطأ في الاتصال بالنواة، يرجى إعادة تشغيل الكمبيوتر والمحاولة مرة أخرى"
       },
       "labels": {
         "rule": "وضع القواعد",

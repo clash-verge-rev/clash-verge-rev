@@ -27,7 +27,7 @@ tracing = []
 identifier = "io.github.clash-verge-rev.clash-verge-rev"
 
 [build-dependencies]
-tauri-build = { version = "2.6.2", features = [] }
+tauri-build = { version = "2.6.3", features = [] }
 
 [dependencies]
 clash-verge-draft = { workspace = true }
@@ -85,7 +85,7 @@ zip = "8.6.0"
 reqwest_dav = "0.3.3"
 aes-gcm = { version = "0.10.3", features = ["std"] }
 base64 = "0.22.1"
-getrandom = "0.4.2"
+getrandom = "0.4.3"
 futures = "0.3.32"
 gethostname = "1.1.0"
 scopeguard = "1.2.0"
@@ -104,11 +104,11 @@ clash_verge_service_ipc = { version = "2.3.0", features = [
 arc-swap = "1.9.1"
 tokio-rustls = "0.26.4"
 rustls = { version = "0.23.40", features = ["ring"] }
-webpki-roots = "1.0.7"
+webpki-roots = "1.0.8"
 rust_iso3166 = "0.1.14"
 # Use the git repo until the next release after v2.0.0.
 dark-light = { git = "https://github.com/rust-dark-light/dark-light" }
-bytes = "1.11.1"
+bytes = "1.12.0"
 tokio-util = { version = "0.7.18", features = ["time"] }
 
 [target.'cfg(target_os = "macos")'.dependencies]

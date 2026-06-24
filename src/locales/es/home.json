@@ -118,7 +118,7 @@
     },
     "clashMode": {
       "errors": {
-        "communication": "Core communication error"
+        "communication": "Error de comunicación del núcleo, reinicie el equipo e inténtelo de nuevo"
       },
       "labels": {
         "rule": "Modo de reglas",

@@ -118,7 +118,7 @@
     },
     "clashMode": {
       "errors": {
-        "communication": "内核通信错误"
+        "communication": "内核通信错误，请重启电脑再试"
       },
       "labels": {
         "rule": "规则",
