@@ -245,12 +245,12 @@ impl CoreConfigValidator {
 
         let mut context = Context::default();
         let _ = context.eval(Source::from_bytes(
-            r#"var console = Object.freeze({
+            "var console = Object.freeze({
               log(...data){},
               info(...data){},
               error(...data){},
               debug(...data){},
-            });"#,
+            });",
         ));
         let result = context.eval(Source::from_bytes(&content));
 
