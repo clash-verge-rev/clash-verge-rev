@@ -59,7 +59,7 @@
     "foxact": "^0.3.4",
     "foxts": "^5.4.2",
     "i18next": "^26.2.0",
-    "js-yaml": "^4.1.1",
+    "js-yaml": "^5.0.0",
     "lodash-es": "^4.18.1",
     "meta-json-schema": "^1.19.25",
     "monaco-editor": "^0.55.1",
