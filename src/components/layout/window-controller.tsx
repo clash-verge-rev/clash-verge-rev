@@ -41,6 +41,8 @@ export const WindowControls = forwardRef(function WindowControls(props, ref) {
 
   return (
     <Box
+      // 必须显式排除拖拽区域，否则 Linux/WebKitGTK 下 Tauri 的拖拽事件
+      // 会渗透到按钮区域，拦截点击事件导致关闭/最小化/最大化按钮无法响应
       data-tauri-drag-region="false"
       sx={{
         display: 'flex',
