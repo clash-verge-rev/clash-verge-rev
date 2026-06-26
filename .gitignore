@@ -3,6 +3,7 @@ node_modules
 .DS_Store
 dist
 dist-ssr
+builder/
 *.local
 update.json
 scripts/_env.sh
