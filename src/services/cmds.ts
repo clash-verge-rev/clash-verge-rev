@@ -85,6 +85,12 @@ export async function getClashInfo() {
   return invoke<IClashInfo | null>('get_clash_info')
 }
 
+// Fault-tolerant current proxy mode read (does not depend on mihomo /configs
+// strict BaseConfig deserialization); used as a fallback for the home mode card.
+export async function getClashMode() {
+  return invoke<string | null>('get_clash_mode')
+}
+
 // Get runtime config which controlled by verge
 export async function getRuntimeConfig() {
   return invoke<IConfigData | null>('get_runtime_config')

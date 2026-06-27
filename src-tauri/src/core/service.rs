@@ -39,6 +39,97 @@ pub struct ServiceManager {
     operation_done: Notify,
 }
 
+#[cfg(not(target_os = "macos"))]
+fn service_core_path(clash_core: &str, bin_ext: &str) -> Result<PathBuf> {
+    Ok(current_exe()?.with_file_name(format!("{clash_core}{bin_ext}")))
+}
+
+#[cfg(target_os = "macos")]
+fn service_core_path(clash_core: &str, bin_ext: &str) -> Result<PathBuf> {
+    let binary_name = format!("{clash_core}{bin_ext}");
+    let exe_path = current_exe()?;
+    let candidate = exe_path.with_file_name(&binary_name);
+
+    if !is_macos_app_translocated(&exe_path) {
+        return Ok(candidate);
+    }
+
+    if let Some(stable_path) = stable_macos_core_path_for_translocated_app(&exe_path, &binary_name) {
+        logging!(
+            warn,
+            Type::Service,
+            "macOS App Translocation detected for core path {:?}; using stable installed path {:?}",
+            candidate,
+            stable_path
+        );
+        return Ok(stable_path);
+    }
+
+    bail!(
+        "macOS App Translocation detected; refusing to start service with temporary core path {:?}",
+        candidate
+    )
+}
+
+#[cfg(target_os = "macos")]
+fn is_macos_app_translocated(path: &Path) -> bool {
+    path.components()
+        .any(|component| component.as_os_str() == "AppTranslocation")
+}
+
+#[cfg(target_os = "macos")]
+fn stable_macos_core_path_for_translocated_app(exe_path: &Path, binary_name: &str) -> Option<PathBuf> {
+    let bundle_name = macos_app_bundle_name(exe_path)?;
+    macos_core_path_in_install_roots(
+        &bundle_name,
+        binary_name,
+        [Path::new("/Applications"), Path::new("/Applications/Utilities")],
+    )
+}
+
+#[cfg(target_os = "macos")]
+fn macos_app_bundle_name(path: &Path) -> Option<std::ffi::OsString> {
+    path.ancestors().find_map(|ancestor| {
+        let is_app_bundle = ancestor
+            .extension()
+            .and_then(|extension| extension.to_str())
+            .is_some_and(|extension| extension.eq_ignore_ascii_case("app"));
+
+        if is_app_bundle {
+            ancestor.file_name().map(std::ffi::OsString::from)
+        } else {
+            None
+        }
+    })
+}
+
+#[cfg(target_os = "macos")]
+fn macos_core_path_in_install_roots<'a>(
+    bundle_name: &std::ffi::OsStr,
+    binary_name: &str,
+    install_roots: impl IntoIterator<Item = &'a Path>,
+) -> Option<PathBuf> {
+    install_roots.into_iter().find_map(|root| {
+        let core_path = root
+            .join(Path::new(bundle_name))
+            .join("Contents")
+            .join("MacOS")
+            .join(binary_name);
+
+        core_path.is_file().then_some(core_path)
+    })
+}
+
+#[cfg(target_os = "macos")]
+const fn macos_cleanup_translocated_desired_state_shell() -> &'static str {
+    "for f in '/var/root/.local/state/clash-verge-service/desired-state.json' '/var/lib/clash-verge-service/desired-state.json'; do if [ -f \"$f\" ] && /usr/bin/grep -q AppTranslocation \"$f\"; then backup=\"$f.apptranslocation.bak\"; if [ -e \"$backup\" ]; then backup=\"$f.apptranslocation.$(/bin/date +%s).bak\"; fi; /bin/mv \"$f\" \"$backup\"; fi; done"
+}
+
+#[cfg(target_os = "macos")]
+fn escape_osascript_double_quoted_string(value: &str) -> String {
+    value.replace('\\', "\\\\").replace('"', "\\\"")
+}
+
 #[cfg(target_os = "windows")]
 fn uninstall_service() -> Result<()> {
     logging!(info, Type::Service, "uninstall service");
@@ -286,9 +377,12 @@ fn install_service() -> Result<()> {
 
     let gid = tauri_plugin_clash_verge_sysinfo::current_gid();
     let prompt = clash_verge_i18n::t!("service.adminInstallPrompt");
-    let command = format!(
-        r#"do shell script "sudo CLASH_VERGE_SERVICE_GID={gid} '{install_shell}'" with administrator privileges with prompt "{prompt}""#
+    let shell = format!(
+        "{}; sudo CLASH_VERGE_SERVICE_GID={gid} '{install_shell}'",
+        macos_cleanup_translocated_desired_state_shell()
     );
+    let shell = escape_osascript_double_quoted_string(&shell);
+    let command = format!(r#"do shell script "{shell}" with administrator privileges with prompt "{prompt}""#);
 
     let output = StdCommand::new("osascript").args(vec!["-e", &command]).output()?;
     if let Some((code, err)) = check_output_error(&output) {
@@ -356,7 +450,7 @@ pub(super) async fn start_with_existing_service(config_file: &PathBuf) -> Result
     drop(verge_config);
 
     let bin_ext = if cfg!(windows) { ".exe" } else { "" };
-    let bin_path = current_exe()?.with_file_name(format!("{clash_core}{bin_ext}"));
+    let bin_path = service_core_path(&clash_core, bin_ext)?;
 
     let payload = clash_verge_service_ipc::ClashConfig {
         core_config: CoreConfig {
@@ -586,3 +680,56 @@ pub static SERVICE_MANAGER: Lazy<ServiceManager> = Lazy::new(|| ServiceManager {
     operation_running: AtomicBool::new(false),
     operation_done: Notify::new(),
 });
+
+#[cfg(all(test, target_os = "macos"))]
+mod tests {
+    use super::*;
+    use std::fs;
+
+    fn test_dir(name: &str) -> std::io::Result<PathBuf> {
+        let path = std::env::temp_dir().join(format!("clash-verge-service-path-test-{}-{name}", std::process::id()));
+        let _ = fs::remove_dir_all(&path);
+        fs::create_dir_all(&path)?;
+        Ok(path)
+    }
+
+    #[test]
+    fn detects_app_translocation_paths() {
+        let path = Path::new(
+            "/private/var/folders/example/T/AppTranslocation/123/d/Clash Verge.app/Contents/MacOS/Clash Verge",
+        );
+
+        assert!(is_macos_app_translocated(path));
+    }
+
+    #[test]
+    fn extracts_app_bundle_name_from_executable_path() {
+        let path = Path::new("/Applications/Clash Verge.app/Contents/MacOS/Clash Verge");
+
+        assert_eq!(
+            macos_app_bundle_name(path).as_deref(),
+            Some(std::ffi::OsStr::new("Clash Verge.app"))
+        );
+    }
+
+    #[test]
+    fn resolves_existing_core_path_from_install_roots() -> std::io::Result<()> {
+        let root = test_dir("resolve-existing-core-path")?;
+        let core_dir = root.join("Clash Verge.app").join("Contents").join("MacOS");
+        let core_path = core_dir.join("verge-mihomo");
+
+        fs::create_dir_all(&core_dir)?;
+        fs::write(&core_path, b"")?;
+
+        let resolved = macos_core_path_in_install_roots(
+            std::ffi::OsStr::new("Clash Verge.app"),
+            "verge-mihomo",
+            [root.as_path()],
+        );
+
+        assert_eq!(resolved, Some(core_path));
+
+        fs::remove_dir_all(root)?;
+        Ok(())
+    }
+}

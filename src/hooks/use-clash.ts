@@ -4,6 +4,7 @@ import { getVersion } from 'tauri-plugin-mihomo-api'
 
 import {
   getClashInfo,
+  getClashMode,
   getRuntimeConfig,
   patchClashConfig,
 } from '@/services/cmds'
@@ -61,6 +62,16 @@ export const useRuntimeConfig = (shouldFetch: boolean = true) => {
   return useQuery({
     queryKey: ['getRuntimeConfig'],
     queryFn: getRuntimeConfig,
+    enabled: shouldFetch,
+  })
+}
+
+// Fault-tolerant fallback for the current proxy mode, read straight from the
+// saved clash config on the backend (bypasses the strict BaseConfig path).
+export const useClashMode = (shouldFetch: boolean = true) => {
+  return useQuery({
+    queryKey: ['getClashMode'],
+    queryFn: getClashMode,
     enabled: shouldFetch,
   })
 }
