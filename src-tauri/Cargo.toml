@@ -103,9 +103,9 @@ clash_verge_service_ipc = { version = "2.3.1", features = [
 ], git = "https://github.com/clash-verge-rev/clash-verge-service-ipc" }
 arc-swap = "1.9.1"
 tokio-rustls = "0.26.4"
-rustls = { version = "0.23.40", features = ["ring"] }
+rustls = { version = "0.23.41", features = ["ring"] }
 webpki-roots = "1.0.8"
-rust_iso3166 = "0.1.14"
+rust_iso3166 = "0.2.0"
 # Use the git repo until the next release after v2.0.0.
 dark-light = { git = "https://github.com/rust-dark-light/dark-light" }
 bytes = "1.12.0"
