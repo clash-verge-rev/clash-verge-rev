@@ -502,6 +502,7 @@
         "listen": "DNS 监听地址",
         "enhancedMode": "增强模式",
         "fakeIpRange": "Fake IP 范围",
+        "fakeIpRange6": "Fake IP 范围 (IPv6)",
         "fakeIpFilterMode": "Fake IP 过滤模式",
         "ipv6": {
           "label": "IPv6",

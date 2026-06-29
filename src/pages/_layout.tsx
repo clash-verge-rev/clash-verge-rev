@@ -24,7 +24,15 @@ import {
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import type { CSSProperties } from 'react'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { useTranslation } from 'react-i18next'
 import { Outlet, useLocation, useNavigate } from 'react-router'
 
@@ -40,6 +48,7 @@ import { WindowControls } from '@/components/layout/window-controller'
 import { useI18n } from '@/hooks/use-i18n'
 import { useVerge } from '@/hooks/use-verge'
 import { useWindowDecorations } from '@/hooks/use-window'
+import { ensureLanguageSections } from '@/services/i18n'
 import { useThemeMode } from '@/services/states'
 import getSystem from '@/utils/get-system'
 
@@ -51,12 +60,16 @@ import {
 } from './_layout/hooks'
 import { handleNoticeMessage } from './_layout/utils'
 import { navItems } from './_routers'
-import LogsPage from './logs'
 
 import 'dayjs/locale/ru'
 import 'dayjs/locale/zh-cn'
 
 export const portableFlag = false
+
+const LogsPage = lazy(async () => {
+  await ensureLanguageSections('logs')
+  return import('./logs')
+})
 
 type NavItem = (typeof navItems)[number]
 
@@ -463,7 +476,9 @@ const Layout = () => {
                     bottom: 0,
                   }}
                 >
-                  <LogsPage />
+                  <Suspense fallback={null}>
+                    <LogsPage />
+                  </Suspense>
                 </div>
               )}
             </div>

@@ -10,7 +10,6 @@ import {
   Typography,
 } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
-import { useQuery } from '@tanstack/react-query'
 import { defaultRangeExtractor, useVirtualizer } from '@tanstack/react-virtual'
 import { useLockFn } from 'ahooks'
 import {
@@ -34,6 +33,7 @@ import { useVerge } from '@/hooks/use-verge'
 import { useProxiesData } from '@/providers/app-data-context'
 import { calcuProxies, updateProxyChainConfigInRuntime } from '@/services/cmds'
 import delayManager from '@/services/delay'
+import { useQuery } from '@/services/query-client'
 import { debugLog } from '@/utils/debug'
 
 import { ScrollTopButton } from '../layout/scroll-top-button'
@@ -113,9 +113,9 @@ export const ProxyGroups = (props: Props) => {
   const groups = proxiesData?.groups
   const availableGroups = useMemo(() => {
     if (!groups) return []
-    // 在链式代理模式下，仅显示支持选择节点的 Selector 代理组
+    // 在链式代理模式下，仅显示支持选择节点的代理组
     return isChainMode
-      ? groups.filter((g: any) => g.type === 'Selector')
+      ? groups.filter((g: any) => g.type === 'Selector' || g.type === 'URLTest')
       : groups
   }, [groups, isChainMode])
 

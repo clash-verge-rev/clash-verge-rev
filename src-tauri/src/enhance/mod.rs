@@ -547,6 +547,31 @@ fn cleanup_proxy_groups(mut config: Mapping) -> Mapping {
     config
 }
 
+/// 当 DNS 处于 fake-ip 模式且启用 IPv6 时，补充缺失的 `fake-ip-range6`，
+/// 否则 AAAA 查询无法获得 fake-ip，导致 IPv6 解析失败（见 issue #7373）。
+/// 兼容旧版本生成的、缺少该字段的 dns_config.yaml。
+fn ensure_fake_ip_range6(dns: &mut Mapping) {
+    use serde_yaml_ng::Value;
+
+    let ipv6_enabled = dns.get("ipv6").and_then(|v| v.as_bool()).unwrap_or(false);
+    let is_fake_ip = dns
+        .get("enhanced-mode")
+        .and_then(|v| v.as_str())
+        .map(|m| m == "fake-ip")
+        .unwrap_or(true);
+
+    // 缺失或为空字符串（可能来自手动编辑的 YAML）时都需要补充
+    let range6_missing = dns
+        .get("fake-ip-range6")
+        .and_then(|v| v.as_str())
+        .map(|s| s.trim().is_empty())
+        .unwrap_or(true);
+
+    if ipv6_enabled && is_fake_ip && range6_missing {
+        dns.insert(Value::from("fake-ip-range6"), Value::from("fdfe:dcba:9876::1/64"));
+    }
+}
+
 async fn apply_dns_settings(mut config: Mapping, enable_dns_settings: bool) -> Mapping {
     if enable_dns_settings && let Ok(app_dir) = dirs::app_home_dir() {
         let dns_path = app_dir.join(constants::files::DNS_CONFIG);
@@ -564,10 +589,14 @@ async fn apply_dns_settings(mut config: Mapping, enable_dns_settings: bool) -> M
 
             if let Some(dns_value) = dns_config.get("dns") {
                 if let Some(dns_mapping) = dns_value.as_mapping() {
-                    config.insert("dns".into(), dns_mapping.clone().into());
+                    let mut dns_mapping = dns_mapping.clone();
+                    ensure_fake_ip_range6(&mut dns_mapping);
+                    config.insert("dns".into(), dns_mapping.into());
                     logging!(info, Type::Core, "apply dns_config.yaml (dns section)");
                 }
             } else {
+                let mut dns_config = dns_config;
+                ensure_fake_ip_range6(&mut dns_config);
                 config.insert("dns".into(), dns_config.into());
                 logging!(info, Type::Core, "apply dns_config.yaml");
             }

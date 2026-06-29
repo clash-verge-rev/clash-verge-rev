@@ -933,7 +933,8 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
                     && let Some(final_mode) = stripped.strip_suffix("_mode")
                 {
                     logging!(info, Type::ProxyMode, "Switch Proxy Mode To: {}", final_mode);
-                    feat::change_clash_mode(final_mode.into()).await;
+                    // 错误已在 change_clash_mode 内部记录，此处显式忽略返回值
+                    let _ = feat::change_clash_mode(final_mode.into()).await;
                 }
             }
             MenuIds::DASHBOARD => {

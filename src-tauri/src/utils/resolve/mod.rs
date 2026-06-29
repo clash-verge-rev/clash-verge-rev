@@ -53,9 +53,12 @@ pub fn resolve_setup_async() {
         #[cfg(target_os = "macos")]
         resolve_dock_show().await;
         init_startup_script().await;
-        init_verge_config().await;
-        Config::verify_config_initialization().await;
+        let config_initialized = init_verge_config_before_window().await;
         init_window().await;
+        if config_initialized {
+            init_verge_config().await;
+        }
+        Config::verify_config_initialization().await;
 
         let core_init = AsyncHandler::spawn(|| async {
             init_service_manager().await;
@@ -172,7 +175,14 @@ pub(super) async fn init_tray() {
 }
 
 pub(super) async fn init_verge_config() {
-    logging_error!(Type::Setup, Config::init_config().await);
+    logging_error!(Type::Setup, Config::init_runtime_config().await);
+}
+
+pub(super) async fn init_verge_config_before_window() -> bool {
+    let result = Config::init_config_before_window().await;
+    let success = result.is_ok();
+    logging_error!(Type::Setup, result);
+    success
 }
 
 pub(super) async fn init_service_manager() {

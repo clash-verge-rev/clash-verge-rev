@@ -1,9 +1,9 @@
-import { useQueryClient } from '@tanstack/react-query'
 import dayjs from 'dayjs'
 import { useEffect, useRef } from 'react'
 import { MihomoWebSocket, type LogLevel } from 'tauri-plugin-mihomo-api'
 
 import { getClashLogs } from '@/services/cmds'
+import { setCacheData } from '@/services/query-client'
 
 import { useClashLog } from './use-clash-log'
 import { useMihomoWsSubscription } from './use-mihomo-ws-subscription'
@@ -48,7 +48,6 @@ const appendLogs = (
 }
 
 export const useLogData = () => {
-  const queryClient = useQueryClient()
   const [clashLog] = useClashLog()
   const enableLog = clashLog.enable
   const logLevel = clashLog.logLevel.toUpperCase() as LogLevel
@@ -156,7 +155,7 @@ export const useLogData = () => {
   const refreshGetClashLog = (clear = false) => {
     if (clear) {
       if (subscriptionCacheKey) {
-        queryClient.setQueryData<ILogItem[]>([subscriptionCacheKey], [])
+        setCacheData<ILogItem[]>([subscriptionCacheKey], [])
       }
     } else {
       hasLoadedInitialLogsRef.current = false
