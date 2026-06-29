@@ -1,18 +1,18 @@
 {
   "name": "Clash Verge Rev Development Environment",
-  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-22.04",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
 
   "features": {
     "ghcr.io/devcontainers/features/node:1": {
-      "version": "24.18.1"
+      "version": "24.18.1",
+      "packageManager": "pnpm"
     },
     "ghcr.io/devcontainers/features/rust:1": {
-      "version": "latest",
+      "version": "1.96",
       "profile": "default"
     },
     "ghcr.io/devcontainers/features/git:1": {},
-    "ghcr.io/devcontainers/features/github-cli:1": {},
-    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+    "ghcr.io/devcontainers/features/github-cli:1": {}
   },
 
   "customizations": {
@@ -21,36 +21,32 @@
         "rust-lang.rust-analyzer",
         "tauri-apps.tauri-vscode",
         "ms-vscode.vscode-typescript-next",
-        "esbenp.prettier-vscode",
         "bradlc.vscode-tailwindcss",
-        "ms-vscode.vscode-json",
         "redhat.vscode-yaml",
-        "formulahendry.auto-rename-tag",
         "ms-vscode.hexeditor",
-        "christian-kohler.path-intellisense",
-        "yzhang.markdown-all-in-one",
         "streetsidesoftware.code-spell-checker",
-        "ms-vscode.vscode-eslint"
+        "ms-vscode.vscode-eslint",
+        "biomejs.biome"
       ],
       "settings": {
         "rust-analyzer.cargo.features": ["verge-dev"],
         "rust-analyzer.check.command": "clippy",
         "editor.formatOnSave": true,
-        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "editor.defaultFormatter": "biomejs.biome",
         "[rust]": {
           "editor.defaultFormatter": "rust-lang.rust-analyzer"
         },
         "[json]": {
-          "editor.defaultFormatter": "esbenp.prettier-vscode"
+          "editor.defaultFormatter": "biomejs.biome"
         },
         "[yaml]": {
-          "editor.defaultFormatter": "redhat.vscode-yaml"
+          "editor.defaultFormatter": "biomejs.biome"
         },
         "[typescript]": {
-          "editor.defaultFormatter": "esbenp.prettier-vscode"
+          "editor.defaultFormatter": "biomejs.biome"
         },
         "[typescriptreact]": {
-          "editor.defaultFormatter": "esbenp.prettier-vscode"
+          "editor.defaultFormatter": "biomejs.biome"
         }
       }
     }
@@ -85,8 +81,9 @@
 
   "mounts": [
     "source=clash-verge-node-modules,target=${containerWorkspaceFolder}/node_modules,type=volume",
-    "source=clash-verge-cargo-registry,target=/usr/local/cargo/registry,type=volume",
-    "source=clash-verge-cargo-git,target=/usr/local/cargo/git,type=volume"
+    "source=clash-verge-pnpm-store,target=/home/vscode/.local/share/pnpm/store,type=volume",
+    "source=clash-verge-cargo-registry,target=/home/vscode/.cargo/registry,type=volume",
+    "source=clash-verge-cargo-git,target=/home/vscode/.cargo/git,type=volume"
   ],
 
   "containerEnv": {
