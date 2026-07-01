@@ -53,7 +53,6 @@ import { ConfigViewer } from '@/components/setting/mods/config-viewer'
 import { useListen } from '@/hooks/use-listen'
 import { useProfiles } from '@/hooks/use-profiles'
 import {
-  calcuProxies,
   createProfile,
   deleteProfile,
   enhanceProfiles,
@@ -68,7 +67,6 @@ import { showNotice } from '@/services/notice-service'
 import {
   fetchCacheData,
   revalidateQueries,
-  setCacheData,
   useQuery,
 } from '@/services/query-client'
 import {
@@ -466,8 +464,6 @@ const ProfilePage = () => {
         ) {
           return
         }
-
-        setCacheData(['getProxies'], await calcuProxies())
 
         // 完成切换
         await mutateLogs()
