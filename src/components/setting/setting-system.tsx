@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 
 import { DialogRef, Switch, TooltipIcon } from '@/components/base'
 import ProxyControlSwitches from '@/components/shared/proxy-control-switches'
-import { useVerge } from '@/hooks/use-verge'
+import { useDefaultVergeConfig, useVerge } from '@/hooks/use-verge'
 
 import { GuardState } from './mods/guard-state'
 import { SettingList, SettingItem } from './mods/setting-comp'
@@ -18,6 +18,10 @@ const SettingSystem = ({ onError }: Props) => {
   const { t } = useTranslation()
 
   const { verge, mutateVerge, patchVerge } = useVerge()
+  const {
+    enable_auto_launch: defaultEnableAutoLaunch,
+    enable_silent_start: defaultEnableSilentStart,
+  } = useDefaultVergeConfig() ?? {}
 
   const { enable_auto_launch, enable_silent_start } = verge ?? {}
 
@@ -47,7 +51,10 @@ const SettingSystem = ({ onError }: Props) => {
         onError={onError}
       />
 
-      <SettingItem label={t('settings.sections.system.fields.autoLaunch')}>
+      <SettingItem
+        label={t('settings.sections.system.fields.autoLaunch')}
+        modified={enable_auto_launch !== defaultEnableAutoLaunch}
+      >
         <GuardState
           value={enable_auto_launch ?? false}
           valueProps="checked"
@@ -81,6 +88,7 @@ const SettingSystem = ({ onError }: Props) => {
             sx={{ opacity: '0.7' }}
           />
         }
+        modified={enable_silent_start !== defaultEnableSilentStart}
       >
         <GuardState
           value={enable_silent_start ?? false}

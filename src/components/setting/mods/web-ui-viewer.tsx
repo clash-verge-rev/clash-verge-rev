@@ -1,3 +1,4 @@
+import { RestartAltRounded } from '@mui/icons-material'
 import { Box, Button, Typography } from '@mui/material'
 import { useLockFn } from 'ahooks'
 import type { Ref } from 'react'
@@ -6,23 +7,19 @@ import { useTranslation } from 'react-i18next'
 
 import { BaseDialog, BaseEmpty, DialogRef } from '@/components/base'
 import { useClashInfo } from '@/hooks/use-clash'
-import { useVerge } from '@/hooks/use-verge'
+import { useDefaultVergeConfig, useVerge } from '@/hooks/use-verge'
 import { openWebUrl } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
 
 import { WebUIItem } from './web-ui-item'
 
-const DEFAULT_WEB_UI_LIST = [
-  'https://metacubex.github.io/metacubexd/#/setup?http=true&hostname=%host&port=%port&secret=%secret',
-  'https://yacd.metacubex.one/?hostname=%host&port=%port&secret=%secret',
-  'https://board.zash.run.place/#/setup?http=true&hostname=%host&port=%port&secret=%secret',
-]
-
+const DEFAULT_WEB_UI_LIST: string[] = []
 export function WebUIViewer({ ref }: { ref?: Ref<DialogRef> }) {
   const { t } = useTranslation()
 
   const { clashInfo } = useClashInfo()
   const { verge, patchVerge, mutateVerge } = useVerge()
+  const { web_ui_list: defaultWebUIList } = useDefaultVergeConfig() ?? {}
 
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(false)
@@ -102,14 +99,33 @@ export function WebUIViewer({ ref }: { ref?: Ref<DialogRef> }) {
       title={
         <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
           {t('settings.modals.webUI.title')}
-          <Button
-            variant="contained"
-            size="small"
-            disabled={editing}
-            onClick={() => setEditing(true)}
-          >
-            {t('shared.actions.new')}
-          </Button>
+          <Box>
+            <Button
+              variant="contained"
+              size="small"
+              disabled={editing}
+              onClick={() => setEditing(true)}
+              sx={{ marginRight: '8px' }}
+            >
+              {t('shared.actions.new')}
+            </Button>
+            <Button
+              variant="outlined"
+              size="small"
+              color="warning"
+              startIcon={<RestartAltRounded />}
+              onClick={() => {
+                mutateVerge(
+                  (old) =>
+                    old ? { ...old, web_ui_list: defaultWebUIList ?? [] } : old,
+                  false,
+                )
+                patchVerge({ web_ui_list: defaultWebUIList ?? [] })
+              }}
+            >
+              {t('shared.actions.resetToDefault')}
+            </Button>
+          </Box>
         </Box>
       }
       contentSx={{

@@ -7,9 +7,9 @@ import { useTranslation } from 'react-i18next'
 import { updateGeo, type LogLevel } from 'tauri-plugin-mihomo-api'
 
 import { DialogRef, Switch, TooltipIcon } from '@/components/base'
-import { useClash } from '@/hooks/use-clash'
+import { useClash, useDefaultClashConfig } from '@/hooks/use-clash'
 import { useClashLog } from '@/hooks/use-clash-log'
-import { useVerge } from '@/hooks/use-verge'
+import { useDefaultVergeConfig, useVerge } from '@/hooks/use-verge'
 import { invoke_uwp_tool } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
 import getSystem from '@/utils/get-system'
@@ -37,6 +37,24 @@ const SettingClash = ({ onError }: Props) => {
   const { clash, version, mutateClash, patchClash } = useClash()
   const { verge, patchVerge } = useVerge()
   const [, setClashLog] = useClashLog()
+  const {
+    ipv6: defaultIpv6,
+    'allow-lan': defaultAllowLan,
+    'log-level': defaultLogLevel,
+    'unified-delay': defaultUnifiedDelay,
+  } = useDefaultClashConfig() ?? {}
+  const {
+    enable_dns_settings: defaultEnableDnsSettings,
+    verge_mixed_port: defaultVergeMixedPort,
+    verge_socks_port: defaultVergeSocksPort,
+    verge_socks_enabled: defaultVergeSocksEnabled,
+    verge_port: defaultVergeHttpPort,
+    verge_http_enabled: defaultVergeHttpEnabled,
+    verge_redir_port: defaultVergeRedirPort,
+    verge_redir_enabled: defaultVergeRedirEnabled,
+    verge_tproxy_port: defaultVergeTproxyPort,
+    verge_tproxy_enabled: defaultVergeTproxyEnabled,
+  } = useDefaultVergeConfig() ?? {}
 
   const {
     ipv6,
@@ -45,7 +63,17 @@ const SettingClash = ({ onError }: Props) => {
     'unified-delay': unifiedDelay,
   } = clash ?? {}
 
-  const { verge_mixed_port } = verge ?? {}
+  const {
+    verge_mixed_port,
+    verge_socks_port,
+    verge_socks_enabled,
+    verge_port: verge_http_port,
+    verge_http_enabled,
+    verge_redir_port,
+    verge_redir_enabled,
+    verge_tproxy_port,
+    verge_tproxy_enabled,
+  } = verge ?? {}
 
   // 独立跟踪DNS设置开关状态
   const [dnsSettingsEnabled, setDnsSettingsEnabled] = useState(() => {
@@ -113,6 +141,7 @@ const SettingClash = ({ onError }: Props) => {
             }}
           />
         }
+        modified={allowLan !== defaultAllowLan}
       >
         <GuardState
           value={allowLan ?? false}
@@ -134,6 +163,7 @@ const SettingClash = ({ onError }: Props) => {
             onClick={() => dnsRef.current?.open()}
           />
         }
+        modified={dnsSettingsEnabled !== defaultEnableDnsSettings}
       >
         <Switch
           edge="end"
@@ -142,7 +172,10 @@ const SettingClash = ({ onError }: Props) => {
         />
       </SettingItem>
 
-      <SettingItem label={t('settings.sections.clash.form.fields.ipv6')}>
+      <SettingItem
+        label={t('settings.sections.clash.form.fields.ipv6')}
+        modified={ipv6 !== defaultIpv6}
+      >
         <GuardState
           value={ipv6 ?? false}
           valueProps="checked"
@@ -163,6 +196,7 @@ const SettingClash = ({ onError }: Props) => {
             sx={{ opacity: '0.7' }}
           />
         }
+        modified={unifiedDelay !== defaultUnifiedDelay}
       >
         <GuardState
           value={unifiedDelay ?? false}
@@ -184,6 +218,7 @@ const SettingClash = ({ onError }: Props) => {
             sx={{ opacity: '0.7' }}
           />
         }
+        modified={logLevel !== defaultLogLevel}
       >
         <GuardState
           value={logLevel === 'warn' ? 'warning' : (logLevel ?? 'info')}
@@ -218,7 +253,21 @@ const SettingClash = ({ onError }: Props) => {
         </GuardState>
       </SettingItem>
 
-      <SettingItem label={t('settings.sections.clash.form.fields.portConfig')}>
+      <SettingItem
+        label={t('settings.sections.clash.form.fields.portConfig')}
+        modified={
+          verge_mixed_port !== defaultVergeMixedPort ||
+          (verge_socks_enabled && verge_socks_port !== defaultVergeSocksPort) ||
+          verge_socks_enabled !== defaultVergeSocksEnabled ||
+          (verge_http_enabled && verge_http_port !== defaultVergeHttpPort) ||
+          verge_http_enabled !== defaultVergeHttpEnabled ||
+          (verge_redir_enabled && verge_redir_port !== defaultVergeRedirPort) ||
+          verge_redir_enabled !== defaultVergeRedirEnabled ||
+          (verge_tproxy_enabled &&
+            verge_tproxy_port !== defaultVergeTproxyPort) ||
+          verge_tproxy_enabled !== defaultVergeTproxyEnabled
+        }
+      >
         <TextField
           autoComplete="new-password"
           disabled={false}

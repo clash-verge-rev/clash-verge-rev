@@ -1,10 +1,9 @@
-import { Shuffle } from '@mui/icons-material'
+import { RestartAltRounded, Shuffle } from '@mui/icons-material'
 import {
   CircularProgress,
   IconButton,
   List,
   ListItem,
-  ListItemText,
   Stack,
   TextField,
 } from '@mui/material'
@@ -14,10 +13,12 @@ import { useTranslation } from 'react-i18next'
 
 import { BaseDialog, Switch } from '@/components/base'
 import { useClashInfo } from '@/hooks/use-clash'
-import { useVerge } from '@/hooks/use-verge'
+import { useDefaultVergeConfig, useVerge } from '@/hooks/use-verge'
 import { isPortInUse } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
 import getSystem from '@/utils/get-system'
+
+import SettingListItemText from './setting-list-item-text-comp'
 
 const OS = getSystem()
 
@@ -33,6 +34,17 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
   const { t } = useTranslation()
   const { clashInfo, patchInfo } = useClashInfo()
   const { verge, patchVerge } = useVerge()
+  const {
+    verge_mixed_port: defaultVergeMixedPort,
+    verge_socks_port: defaultVergeSocksPort,
+    verge_socks_enabled: defaultVergeSocksEnabled,
+    verge_port: defaultVergeHttpPort,
+    verge_http_enabled: defaultVergeHttpEnabled,
+    verge_redir_port: defaultVergeRedirPort,
+    verge_redir_enabled: defaultVergeRedirEnabled,
+    verge_tproxy_port: defaultVergeTproxyPort,
+    verge_tproxy_enabled: defaultVergeTproxyEnabled,
+  } = useDefaultVergeConfig() ?? {}
   const [open, setOpen] = useState(false)
 
   // Mixed Port
@@ -236,11 +248,30 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
     >
       <List sx={{ width: '100%' }}>
         <ListItem sx={{ padding: '4px 0', minHeight: 36 }}>
-          <ListItemText
-            primary={t('settings.modals.clashPort.fields.mixed')}
+          <SettingListItemText
+            label={t('settings.modals.clashPort.fields.mixed')}
+            modified={mixedPort !== defaultVergeMixedPort}
             slotProps={{ primary: { sx: { fontSize: 12 } } }}
           />
           <div style={{ display: 'flex', alignItems: 'center' }}>
+            <IconButton
+              size="small"
+              onClick={() => setMixedPort(generateRandomPort())}
+              title={t('settings.modals.clashPort.actions.random')}
+              sx={{ mr: 0.5 }}
+            >
+              <Shuffle fontSize="small" />
+            </IconButton>
+            <IconButton
+              size="small"
+              onClick={() =>
+                defaultVergeMixedPort && setMixedPort(defaultVergeMixedPort)
+              }
+              title={t('shared.actions.resetToDefault')}
+              sx={{ mr: 0.5 }}
+            >
+              <RestartAltRounded fontSize="small" />
+            </IconButton>
             <TextField
               size="small"
               sx={{ width: 80, mr: 0.5, fontSize: 12 }}
@@ -250,14 +281,6 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
               }
               slotProps={{ htmlInput: { style: { fontSize: 12 } } }}
             />
-            <IconButton
-              size="small"
-              onClick={() => setMixedPort(generateRandomPort())}
-              title={t('settings.modals.clashPort.actions.random')}
-              sx={{ mr: 0.5 }}
-            >
-              <Shuffle fontSize="small" />
-            </IconButton>
             <Switch
               size="small"
               checked={true}
@@ -268,11 +291,35 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
         </ListItem>
 
         <ListItem sx={{ padding: '4px 0', minHeight: 36 }}>
-          <ListItemText
-            primary={t('settings.modals.clashPort.fields.socks')}
+          <SettingListItemText
+            label={t('settings.modals.clashPort.fields.socks')}
+            modified={
+              socksEnabled !== defaultVergeSocksEnabled ||
+              (socksEnabled && socksPort !== defaultVergeSocksPort)
+            }
             slotProps={{ primary: { sx: { fontSize: 12 } } }}
           />
           <div style={{ display: 'flex', alignItems: 'center' }}>
+            <IconButton
+              size="small"
+              onClick={() => setSocksPort(generateRandomPort())}
+              title={t('settings.modals.clashPort.actions.random')}
+              disabled={!socksEnabled}
+              sx={{ mr: 0.5 }}
+            >
+              <Shuffle fontSize="small" />
+            </IconButton>
+            <IconButton
+              size="small"
+              onClick={() =>
+                defaultVergeSocksPort && setSocksPort(defaultVergeSocksPort)
+              }
+              title={t('shared.actions.resetToDefault')}
+              sx={{ mr: 0.5 }}
+              disabled={!socksEnabled}
+            >
+              <RestartAltRounded fontSize="small" />
+            </IconButton>
             <TextField
               size="small"
               sx={{ width: 80, mr: 0.5, fontSize: 12 }}
@@ -283,15 +330,6 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
               disabled={!socksEnabled}
               slotProps={{ htmlInput: { style: { fontSize: 12 } } }}
             />
-            <IconButton
-              size="small"
-              onClick={() => setSocksPort(generateRandomPort())}
-              title={t('settings.modals.clashPort.actions.random')}
-              disabled={!socksEnabled}
-              sx={{ mr: 0.5 }}
-            >
-              <Shuffle fontSize="small" />
-            </IconButton>
             <Switch
               size="small"
               checked={socksEnabled}
@@ -302,11 +340,35 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
         </ListItem>
 
         <ListItem sx={{ padding: '4px 0', minHeight: 36 }}>
-          <ListItemText
-            primary={t('settings.modals.clashPort.fields.http')}
+          <SettingListItemText
+            label={t('settings.modals.clashPort.fields.http')}
+            modified={
+              httpEnabled !== defaultVergeHttpEnabled ||
+              (httpEnabled && httpPort !== defaultVergeHttpPort)
+            }
             slotProps={{ primary: { sx: { fontSize: 12 } } }}
           />
           <div style={{ display: 'flex', alignItems: 'center' }}>
+            <IconButton
+              size="small"
+              onClick={() => setHttpPort(generateRandomPort())}
+              title={t('settings.modals.clashPort.actions.random')}
+              disabled={!httpEnabled}
+              sx={{ mr: 0.5 }}
+            >
+              <Shuffle fontSize="small" />
+            </IconButton>
+            <IconButton
+              size="small"
+              onClick={() =>
+                defaultVergeHttpPort && setHttpPort(defaultVergeHttpPort)
+              }
+              title={t('shared.actions.resetToDefault')}
+              sx={{ mr: 0.5 }}
+              disabled={!httpEnabled}
+            >
+              <RestartAltRounded fontSize="small" />
+            </IconButton>
             <TextField
               size="small"
               sx={{ width: 80, mr: 0.5, fontSize: 12 }}
@@ -317,15 +379,6 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
               disabled={!httpEnabled}
               slotProps={{ htmlInput: { style: { fontSize: 12 } } }}
             />
-            <IconButton
-              size="small"
-              onClick={() => setHttpPort(generateRandomPort())}
-              title={t('settings.modals.clashPort.actions.random')}
-              disabled={!httpEnabled}
-              sx={{ mr: 0.5 }}
-            >
-              <Shuffle fontSize="small" />
-            </IconButton>
             <Switch
               size="small"
               checked={httpEnabled}
@@ -337,11 +390,35 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
 
         {OS !== 'windows' && (
           <ListItem sx={{ padding: '4px 0', minHeight: 36 }}>
-            <ListItemText
-              primary={t('settings.modals.clashPort.fields.redir')}
+            <SettingListItemText
+              label={t('settings.modals.clashPort.fields.redir')}
+              modified={
+                redirEnabled !== defaultVergeRedirEnabled ||
+                (redirEnabled && redirPort !== defaultVergeRedirPort)
+              }
               slotProps={{ primary: { sx: { fontSize: 12 } } }}
             />
             <div style={{ display: 'flex', alignItems: 'center' }}>
+              <IconButton
+                size="small"
+                onClick={() => setRedirPort(generateRandomPort())}
+                title={t('settings.modals.clashPort.actions.random')}
+                disabled={!redirEnabled}
+                sx={{ mr: 0.5 }}
+              >
+                <Shuffle fontSize="small" />
+              </IconButton>
+              <IconButton
+                size="small"
+                onClick={() =>
+                  defaultVergeRedirPort && setRedirPort(defaultVergeRedirPort)
+                }
+                title={t('shared.actions.resetToDefault')}
+                sx={{ mr: 0.5 }}
+                disabled={!redirEnabled}
+              >
+                <RestartAltRounded fontSize="small" />
+              </IconButton>
               <TextField
                 size="small"
                 sx={{ width: 80, mr: 0.5, fontSize: 12 }}
@@ -352,15 +429,6 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
                 disabled={!redirEnabled}
                 slotProps={{ htmlInput: { style: { fontSize: 12 } } }}
               />
-              <IconButton
-                size="small"
-                onClick={() => setRedirPort(generateRandomPort())}
-                title={t('settings.modals.clashPort.actions.random')}
-                disabled={!redirEnabled}
-                sx={{ mr: 0.5 }}
-              >
-                <Shuffle fontSize="small" />
-              </IconButton>
               <Switch
                 size="small"
                 checked={redirEnabled}
@@ -373,11 +441,36 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
 
         {OS === 'linux' && (
           <ListItem sx={{ padding: '4px 0', minHeight: 36 }}>
-            <ListItemText
-              primary={t('settings.modals.clashPort.fields.tproxy')}
+            <SettingListItemText
+              label={t('settings.modals.clashPort.fields.tproxy')}
+              modified={
+                tproxyEnabled !== defaultVergeTproxyEnabled ||
+                (tproxyEnabled && tproxyPort !== defaultVergeTproxyPort)
+              }
               slotProps={{ primary: { sx: { fontSize: 12 } } }}
             />
             <div style={{ display: 'flex', alignItems: 'center' }}>
+              <IconButton
+                size="small"
+                onClick={() => setTproxyPort(generateRandomPort())}
+                title={t('settings.modals.clashPort.actions.random')}
+                disabled={!tproxyEnabled}
+                sx={{ mr: 0.5 }}
+              >
+                <Shuffle fontSize="small" />
+              </IconButton>
+              <IconButton
+                size="small"
+                onClick={() =>
+                  defaultVergeTproxyPort &&
+                  setTproxyPort(defaultVergeTproxyPort)
+                }
+                title={t('shared.actions.resetToDefault')}
+                sx={{ mr: 0.5 }}
+                disabled={!tproxyEnabled}
+              >
+                <RestartAltRounded fontSize="small" />
+              </IconButton>
               <TextField
                 size="small"
                 sx={{ width: 80, mr: 0.5, fontSize: 12 }}
@@ -388,15 +481,6 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
                 disabled={!tproxyEnabled}
                 slotProps={{ htmlInput: { style: { fontSize: 12 } } }}
               />
-              <IconButton
-                size="small"
-                onClick={() => setTproxyPort(generateRandomPort())}
-                title={t('settings.modals.clashPort.actions.random')}
-                disabled={!tproxyEnabled}
-                sx={{ mr: 0.5 }}
-              >
-                <Shuffle fontSize="small" />
-              </IconButton>
               <Switch
                 size="small"
                 checked={tproxyEnabled}

@@ -1,11 +1,11 @@
-import { Delete as DeleteIcon } from '@mui/icons-material'
+import { Delete as DeleteIcon, RestartAltRounded } from '@mui/icons-material'
 import { Box, Button, Divider, List, ListItem, TextField } from '@mui/material'
 import { useLockFn, useRequest } from 'ahooks'
 import { forwardRef, useImperativeHandle, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BaseDialog, Switch } from '@/components/base'
-import { useClash } from '@/hooks/use-clash'
+import { useClash, useDefaultClashConfig } from '@/hooks/use-clash'
 import { restartCore } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
 
@@ -77,6 +77,12 @@ export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
     const { t } = useTranslation()
     const { clash, mutateClash, patchClash } = useClash()
     const [open, setOpen] = useState(false)
+    const { 'external-controller-cors': defaultCorsConfig } =
+      useDefaultClashConfig() ?? {}
+    const {
+      'allow-private-network': defaultAllowPrivateNetwork,
+      'allow-origins': defaultAllowOrigins,
+    } = defaultCorsConfig ?? {}
 
     // CORS配置状态管理
     const [corsConfig, setCorsConfig] = useState<{
@@ -183,7 +189,33 @@ export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
     return (
       <BaseDialog
         open={open}
-        title={t('settings.sections.externalCors.title')}
+        title={
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
+          >
+            {t('settings.sections.externalCors.title')}
+            <Button
+              variant="outlined"
+              size="small"
+              color="warning"
+              startIcon={<RestartAltRounded />}
+              onClick={() => {
+                setCorsConfig({
+                  allowPrivateNetwork: defaultAllowPrivateNetwork ?? true,
+                  allowOrigins: filterBaseOriginsForUI(
+                    defaultAllowOrigins ?? [],
+                  ),
+                })
+              }}
+            >
+              {t('shared.actions.resetToDefault')}
+            </Button>
+          </Box>
+        }
         contentSx={{ width: 500 }}
         okBtn={loading ? t('shared.statuses.saving') : t('shared.actions.save')}
         cancelBtn={t('shared.actions.cancel')}

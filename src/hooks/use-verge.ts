@@ -1,6 +1,10 @@
 import { useCallback } from 'react'
 
-import { getVergeConfig, patchVergeConfig } from '@/services/cmds'
+import {
+  getDefaultVergeConfig,
+  getVergeConfig,
+  patchVergeConfig,
+} from '@/services/cmds'
 import { getPreloadConfig, setPreloadConfig } from '@/services/preload'
 import { getCacheData, setCacheData, useQuery } from '@/services/query-client'
 
@@ -52,4 +56,13 @@ export const useVerge = () => {
     mutateVerge,
     patchVerge,
   }
+}
+
+export const useDefaultVergeConfig = () => {
+  const { data: defaultVergeConfig } = useQuery({
+    queryKey: ['getDefaultVergeConfig'],
+    queryFn: getDefaultVergeConfig,
+  })
+
+  return defaultVergeConfig
 }

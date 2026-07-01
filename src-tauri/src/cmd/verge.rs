@@ -13,3 +13,9 @@ pub async fn get_verge_config() -> CmdResult<SharedDraft<IVerge>> {
 pub async fn patch_verge_config(payload: IVerge) -> CmdResult {
     feat::patch_verge(&payload, false).await.stringify_err()
 }
+
+/// 获取默认Verge配置
+#[tauri::command]
+pub async fn get_default_verge_config() -> IVerge {
+    IVerge::template()
+}

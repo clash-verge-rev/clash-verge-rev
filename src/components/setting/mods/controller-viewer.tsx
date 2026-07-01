@@ -1,7 +1,8 @@
-import { ContentCopy } from '@mui/icons-material'
+import { ContentCopy, RestartAltRounded } from '@mui/icons-material'
 import {
   Alert,
   Box,
+  Button,
   CircularProgress,
   IconButton,
   List,
@@ -16,9 +17,11 @@ import { useImperativeHandle, useState, type Ref } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BaseDialog, DialogRef, Switch } from '@/components/base'
-import { useClashInfo } from '@/hooks/use-clash'
-import { useVerge } from '@/hooks/use-verge'
+import { useClashInfo, useDefaultClashConfig } from '@/hooks/use-clash'
+import { useDefaultVergeConfig, useVerge } from '@/hooks/use-verge'
 import { showNotice } from '@/services/notice-service'
+
+import SettingListItemText from './setting-list-item-text-comp'
 
 export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
   const { t } = useTranslation()
@@ -33,6 +36,12 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
   const [enableController, setEnableController] = useState(
     verge?.enable_external_controller ?? false,
   )
+  const {
+    'external-controller': defaultExternalController,
+    secret: defaultSecret,
+  } = useDefaultClashConfig() || {}
+  const { enable_external_controller: defaultEnableExternalController } =
+    useDefaultVergeConfig() ?? {}
 
   // 对话框打开时初始化配置
   useImperativeHandle(ref, () => ({
@@ -107,7 +116,30 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
   return (
     <BaseDialog
       open={open}
-      title={t('settings.sections.externalController.title')}
+      title={
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
+          {t('settings.sections.externalController.title')}
+          <Button
+            variant="outlined"
+            size="small"
+            color="warning"
+            startIcon={<RestartAltRounded />}
+            onClick={() => {
+              setEnableController(defaultEnableExternalController ?? false)
+              setController(defaultExternalController ?? '')
+              setSecret(defaultSecret ?? '')
+            }}
+          >
+            {t('shared.actions.resetToDefault')}
+          </Button>
+        </Box>
+      }
       contentSx={{ width: 400 }}
       okBtn={
         isSaving ? (
@@ -132,8 +164,9 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
             justifyContent: 'space-between',
           }}
         >
-          <ListItemText
-            primary={t('settings.sections.externalController.fields.enable')}
+          <SettingListItemText
+            label={t('settings.sections.externalController.fields.enable')}
+            modified={enableController !== defaultEnableExternalController}
           />
           <Switch
             edge="end"

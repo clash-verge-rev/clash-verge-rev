@@ -591,3 +591,11 @@ export const isPortInUse = async (port: number) => {
     return false
   }
 }
+
+export async function getDefaultClashConfig() {
+  return invoke<IConfigData>('get_default_clash_config')
+}
+
+export async function getDefaultVergeConfig() {
+  return invoke<IVergeConfig>('get_default_verge_config')
+}

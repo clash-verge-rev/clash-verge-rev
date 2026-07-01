@@ -2,6 +2,7 @@ import { useLockFn } from 'ahooks'
 import { getVersion } from 'tauri-plugin-mihomo-api'
 
 import {
+  getDefaultClashConfig,
   getClashInfo,
   getClashMode,
   getRuntimeConfig,
@@ -145,4 +146,13 @@ export const useClashInfo = () => {
     patchInfo,
     invalidateClashConfig,
   }
+}
+
+export const useDefaultClashConfig = () => {
+  const { data: defaultClashConfig } = useQuery({
+    queryKey: ['getDefaultClashConfig'],
+    queryFn: getDefaultClashConfig,
+  })
+
+  return defaultClashConfig
 }

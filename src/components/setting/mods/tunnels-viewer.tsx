@@ -1,4 +1,9 @@
-import { Delete, ExpandLess, ExpandMore } from '@mui/icons-material'
+import {
+  Delete,
+  ExpandLess,
+  ExpandMore,
+  RestartAltRounded,
+} from '@mui/icons-material'
 import {
   Button,
   Divider,
@@ -10,12 +15,13 @@ import {
   TextField,
   Select,
   MenuItem,
+  Box,
 } from '@mui/material'
 import { forwardRef, useImperativeHandle, useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BaseDialog } from '@/components/base'
-import { useClash } from '@/hooks/use-clash'
+import { useClash, useDefaultClashConfig } from '@/hooks/use-clash'
 import { useProxiesData } from '@/providers/app-data-context'
 import { isPortInUse } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
@@ -54,6 +60,7 @@ export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
     proxy: '',
   })
   const [draftTunnels, setDraftTunnels] = useState<TunnelEntry[]>([])
+  const { tunnels: defaultTunnels } = useDefaultClashConfig() ?? {}
 
   useImperativeHandle(ref, () => ({
     open: () => {
@@ -200,7 +207,28 @@ export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
   return (
     <BaseDialog
       open={open}
-      title={t('settings.sections.clash.form.fields.tunnels.title')}
+      title={
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
+          {t('settings.sections.clash.form.fields.tunnels.title')}
+          <Button
+            variant="outlined"
+            size="small"
+            color="warning"
+            startIcon={<RestartAltRounded />}
+            onClick={() => {
+              setDraftTunnels(defaultTunnels ?? [])
+            }}
+          >
+            {t('shared.actions.resetToDefault')}
+          </Button>
+        </Box>
+      }
       contentSx={{ width: 450 }}
       okBtn={t('shared.actions.save')}
       cancelBtn={t('shared.actions.cancel')}

@@ -18,7 +18,7 @@ import { useServiceInstaller } from '@/hooks/use-service-installer'
 import { useServiceUninstaller } from '@/hooks/use-service-uninstaller'
 import { useSystemProxyState } from '@/hooks/use-system-proxy-state'
 import { useSystemState } from '@/hooks/use-system-state'
-import { useVerge } from '@/hooks/use-verge'
+import { useDefaultVergeConfig, useVerge } from '@/hooks/use-verge'
 import { showNotice } from '@/services/notice-service'
 
 interface ProxySwitchProps {
@@ -37,11 +37,13 @@ interface SwitchRowProps {
   onToggle: (value: boolean) => Promise<void>
   onError?: (err: Error) => void
   highlight?: boolean
+  defaultActive?: boolean
 }
 
 /**
  * 抽取的子组件：统一的开关 UI
  * active = 真实状态OS/配置 乐观更新
+ * defaultActive = 默认配置
  */
 const SwitchRow = ({
   label,
@@ -53,6 +55,7 @@ const SwitchRow = ({
   onToggle,
   onError,
   highlight,
+  defaultActive,
 }: SwitchRowProps) => {
   const theme = useTheme()
   const [checked, setChecked] = useState(active)
@@ -104,6 +107,11 @@ const SwitchRow = ({
           sx={{ fontWeight: 500, fontSize: '15px' }}
         >
           {label}
+          <Box
+            sx={{ display: 'inline-block', minWidth: '10px', fontSize: '15px' }}
+          >
+            {defaultActive !== undefined && defaultActive !== active && '*'}
+          </Box>
         </Typography>
         <TooltipIcon
           title={infoTitle}
@@ -137,6 +145,10 @@ const ProxyControlSwitches = ({
     useSystemProxyState()
   const { isServiceOk, isTunModeAvailable, mutateSystemState } =
     useSystemState()
+  const {
+    enable_system_proxy: defaultEnableSystemProxy,
+    enable_tun_mode: defaultEnableTunMode,
+  } = useDefaultVergeConfig() ?? {}
 
   const sysproxyRef = useRef<DialogRef>(null)
   const tunRef = useRef<DialogRef>(null)
@@ -194,6 +206,7 @@ const ProxyControlSwitches = ({
           onToggle={(value) => toggleSystemProxy(value)}
           onError={onError}
           highlight={systemProxyIndicator}
+          defaultActive={defaultEnableSystemProxy}
         />
       )}
 
@@ -207,6 +220,7 @@ const ProxyControlSwitches = ({
           onError={onError}
           disabled={!isTunModeAvailable}
           highlight={enable_tun_mode || false}
+          defaultActive={defaultEnableTunMode}
           extraIcons={
             <>
               {!isTunModeAvailable && (
