@@ -1,7 +1,15 @@
 import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { LanguageRounded } from '@mui/icons-material'
-import { Box, Divider, MenuItem, Menu, styled, alpha } from '@mui/material'
+import {
+  Box,
+  Divider,
+  MenuItem,
+  Menu,
+  Tooltip,
+  styled,
+  alpha,
+} from '@mui/material'
 import { UnlistenFn } from '@tauri-apps/api/event'
 import { useLockFn } from 'ahooks'
 import { useCallback, useEffect, useState } from 'react'
@@ -45,14 +53,17 @@ export const TestItem = ({
   const [anchorEl, setAnchorEl] = useState<any>(null)
   const [position, setPosition] = useState({ left: 0, top: 0 })
   const [delay, setDelay] = useState(-1)
+  const [chains, setChains] = useState<string[]>([])
   const { uid, name, icon, url } = itemData
   const iconCachePath = useIconCache({ icon, cacheKey: uid })
   const { addListener } = useListen()
 
   const onDelay = useCallback(async () => {
     setDelay(-2)
+    setChains([])
     const result = await cmdTestDelay(url)
-    setDelay(result)
+    setDelay(result.delay)
+    setChains(result.chains)
   }, [url])
 
   const onEditTest = () => {
@@ -73,6 +84,18 @@ export const TestItem = ({
     { label: 'Edit', handler: onEditTest },
     { label: 'Delete', handler: onDelete },
   ]
+
+  // mihomo chains: exit node first, top-level group last.
+  // chains[0] = actual exit node; chains[last] = top-level group.
+  const exitNode = chains[0]
+  const isDirect = !exitNode || exitNode === 'DIRECT' || exitNode === 'DIRECT-'
+  // top-level group = the outermost selector the user picked (skip DIRECT).
+  const group = isDirect
+    ? ''
+    : ([...chains].reverse().find((n) => n !== 'DIRECT' && n !== 'DIRECT-') ??
+      '')
+  const showGroup = !!group && group !== exitNode
+  const fullChainText = [...chains].reverse().join(' / ')
 
   useEffect(() => {
     let unlistenFn: UnlistenFn | null = null
@@ -198,6 +221,46 @@ export const TestItem = ({
             </Widget>
           )}
         </Box>
+        {delay >= 0 && exitNode && (
+          <Tooltip
+            title={isDirect ? '' : fullChainText}
+            arrow
+            disableHoverListener={isDirect || !fullChainText}
+          >
+            <Box
+              sx={{
+                marginTop: '2px',
+                minHeight: '40px',
+                px: 0.5,
+                textAlign: 'center',
+                fontSize: 12,
+                lineHeight: '18px',
+                color: isDirect ? 'text.disabled' : 'text.secondary',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                overflow: 'hidden',
+              }}
+            >
+              {isDirect ? (
+                <Box component="span" sx={chainLineSx}>
+                  {t('tests.components.item.direct')}
+                </Box>
+              ) : (
+                <>
+                  {showGroup && (
+                    <Box component="span" sx={chainLineSx}>
+                      {group}
+                    </Box>
+                  )}
+                  <Box component="span" sx={chainLineSx}>
+                    {exitNode}
+                  </Box>
+                </>
+              )}
+            </Box>
+          </Tooltip>
+        )}
       </TestBox>
 
       <Menu
@@ -233,3 +296,10 @@ const Widget = styled(Box)(({ theme: { typography } }) => ({
   fontFamily: typography.fontFamily,
   borderRadius: '4px',
 }))
+
+const chainLineSx = {
+  width: '100%',
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  whiteSpace: 'nowrap',
+} as const

@@ -9,7 +9,8 @@
     "item": {
       "actions": {
         "test": "測試"
-      }
+      },
+      "direct": "直連"
     }
   },
   "modals": {

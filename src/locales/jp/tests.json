@@ -9,7 +9,8 @@
     "item": {
       "actions": {
         "test": "テスト"
-      }
+      },
+      "direct": "直接"
     }
   },
   "modals": {

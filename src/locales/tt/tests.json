@@ -9,7 +9,8 @@
     "item": {
       "actions": {
         "test": "Тест"
-      }
+      },
+      "direct": "Турыдан"
     }
   },
   "modals": {

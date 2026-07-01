@@ -384,8 +384,13 @@ export async function cmdGetProxyDelay(
   }
 }
 
-export async function cmdTestDelay(url: string) {
-  return invoke<number>('test_delay', { url })
+export interface TestDelayResult {
+  delay: number
+  chains: string[]
+}
+
+export async function cmdTestDelay(url: string): Promise<TestDelayResult> {
+  return invoke<TestDelayResult>('test_delay', { url })
 }
 
 export async function invoke_uwp_tool() {

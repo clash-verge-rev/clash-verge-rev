@@ -785,6 +785,7 @@ export const translationKeys = [
   'tests.page.actions.testAll',
   'tests.page.title',
   'tests.components.item.actions.test',
+  'tests.components.item.direct',
   'tests.modals.test.title.create',
   'tests.modals.test.title.edit',
   'tests.modals.test.fields.url',

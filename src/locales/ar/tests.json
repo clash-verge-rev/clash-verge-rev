@@ -9,7 +9,8 @@
     "item": {
       "actions": {
         "test": "اختبار"
-      }
+      },
+      "direct": "مباشر"
     }
   },
   "modals": {

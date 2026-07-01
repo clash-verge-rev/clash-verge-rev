@@ -121,12 +121,15 @@ pub async fn restart_core() -> CmdResult {
 
 /// 测试URL延迟
 #[tauri::command]
-pub async fn test_delay(url: String) -> CmdResult<u32> {
+pub async fn test_delay(url: String) -> CmdResult<feat::TestDelayResult> {
     let result = match feat::test_delay(url).await {
-        Ok(delay) => delay,
+        Ok(result) => result,
         Err(e) => {
             logging!(error, Type::Cmd, "{}", e);
-            10000u32
+            feat::TestDelayResult {
+                delay: 10000,
+                chains: vec![],
+            }
         }
     };
     Ok(result)

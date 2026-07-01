@@ -116,9 +116,70 @@ pub async fn change_clash_mode(mode: String) -> Result<(), String> {
     Ok(())
 }
 
+/// Test delay result with the proxy chain actually used for the request.
+///
+/// `chains` follows mihomo's convention: exit node first, top-level group last.
+/// Empty when the request did not go through mihomo (system proxy & TUN both off)
+/// or the connection could not be matched.
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TestDelayResult {
+    pub delay: u32,
+    pub chains: Vec<String>,
+}
+
+/// Look up the proxy chain of the mihomo connection whose source port matches
+/// the given local port. The test request from `test_delay` reaches mihomo via
+/// the mixed port, so mihomo records our local source port as `sourcePort`.
+/// Matching by port (not host) avoids misattributing a stale same-host connection.
+async fn chains_by_source_port(source_port: u16, mixed_port: u16) -> anyhow::Result<Vec<String>> {
+    let mihomo = handle::Handle::mihomo().await;
+    let conns = mihomo.get_connections().await?;
+    drop(mihomo);
+    // plugin returns `Vec<std::string::String>` (it doesn't use smartstring);
+    // convert into this crate's `SmartString` alias to match the rest of the file.
+    //
+    // Match on (sourcePort, sourceIP, inboundPort), not sourcePort alone:
+    // sourcePort isn't globally unique across TUN/mixed/other inbounds, so under
+    // TUN traffic or concurrency a bare port match could surface another connection.
+    // Our test reaches mihomo over loopback (sourceIP 127.0.0.1) at the mixed
+    // inbound (inboundPort == mixed_port), which uniquely identifies it.
+    let chains = conns
+        .connections
+        .unwrap_or_default()
+        .into_iter()
+        .find(|c| {
+            let m = &c.metadata;
+            m.source_port.trim().parse::<u16>().ok() == Some(source_port)
+                && m.source_ip == "127.0.0.1"
+                && m.inbound_port.trim().parse::<u16>().ok() == Some(mixed_port)
+        })
+        .map(|c| c.chains.into_iter().map(Into::into).collect())
+        .unwrap_or_default();
+    Ok(chains)
+}
+
+/// Resolve the proxy chain for the test connection. Returns `["DIRECT"]` for
+/// direct connections (no source port — request bypassed mihomo). Wrapped in a
+/// 1s timeout so a slow /connections lookup never affects the already-measured
+/// delay; any failure degrades to an empty/`DIRECT` chain.
+async fn chains_for_source_port(source_port: Option<u16>, mixed_port: Option<u16>) -> Vec<String> {
+    match (source_port, mixed_port) {
+        (Some(src), Some(mixed)) => tokio::time::timeout(
+            std::time::Duration::from_millis(1000),
+            chains_by_source_port(src, mixed),
+        )
+        .await
+        .ok()
+        .and_then(|r| r.ok())
+        .unwrap_or_default(),
+        _ => vec![String::from("DIRECT")],
+    }
+}
+
 /// Test delay to a URL through proxy.
 /// HTTPS: measures TLS handshake time. HTTP: measures HEAD round-trip time.
-pub async fn test_delay(url: String) -> anyhow::Result<u32> {
+pub async fn test_delay(url: String) -> anyhow::Result<TestDelayResult> {
     use std::sync::Arc;
     use std::time::Duration;
     use tokio::io::{AsyncReadExt as _, AsyncWriteExt as _};
@@ -147,6 +208,11 @@ pub async fn test_delay(url: String) -> anyhow::Result<u32> {
     tokio::time::timeout(Duration::from_secs(10), async {
         let start = Instant::now();
         let mut buf = BytesMut::with_capacity(1024);
+        // Local source port of the connection to mihomo's mixed port. Used to
+        // match the exact connection in /connections after the handshake, so the
+        // resolved chain cannot be confused with a stale same-host connection.
+        // None for direct connections (proxy & TUN off) — those bypass mihomo.
+        let mut source_port: Option<u16> = None;
 
         if is_https {
             let stream = match proxy_port {
@@ -158,6 +224,8 @@ pub async fn test_delay(url: String) -> anyhow::Result<u32> {
                     if !buf.windows(3).any(|w| w == b"200") {
                         return Err(anyhow::anyhow!("Proxy CONNECT failed"));
                     }
+                    // Capture before handing `s` to the TLS connector (which moves it).
+                    source_port = s.local_addr().ok().map(|a| a.port());
                     s
                 }
                 None => TcpStream::connect(format!("{host}:{port}")).await?,
@@ -166,13 +234,27 @@ pub async fn test_delay(url: String) -> anyhow::Result<u32> {
             let server_name = rustls::pki_types::ServerName::try_from(host.as_str())
                 .map_err(|_| anyhow::anyhow!("Invalid DNS name: {host}"))?
                 .to_owned();
-            connector.connect(server_name, stream).await?;
+            // Keep the TLS stream alive until after we query /connections: the
+            // connection must still be in mihomo's manager when we look it up.
+            let _tls = connector.connect(server_name, stream).await?;
+
+            // frontend treats 0 as timeout
+            let delay = (start.elapsed().as_millis() as u32).max(1);
+            // Local round-trip to mihomo (unix socket / loopback), only a few ms —
+            // negligible vs the 10s timeout, so it won't flip a slow success into a
+            // timeout in practice.
+            let chains = chains_for_source_port(source_port, proxy_port).await;
+            Ok(TestDelayResult { delay, chains })
         } else {
             let (mut stream, req) = match proxy_port {
-                Some(pp) => (
-                    TcpStream::connect(format!("127.0.0.1:{pp}")).await?,
-                    format!("HEAD {url} HTTP/1.1\r\nHost: {host}\r\nConnection: close\r\n\r\n"),
-                ),
+                Some(pp) => {
+                    let s = TcpStream::connect(format!("127.0.0.1:{pp}")).await?;
+                    source_port = s.local_addr().ok().map(|a| a.port());
+                    (
+                        s,
+                        format!("HEAD {url} HTTP/1.1\r\nHost: {host}\r\nConnection: keep-alive\r\n\r\n"),
+                    )
+                }
                 None => (
                     TcpStream::connect(format!("{host}:{port}")).await?,
                     format!("HEAD / HTTP/1.1\r\nHost: {host}\r\nConnection: close\r\n\r\n"),
@@ -180,11 +262,19 @@ pub async fn test_delay(url: String) -> anyhow::Result<u32> {
             };
             stream.write_all(req.as_bytes()).await?;
             let _ = stream.read(&mut buf).await?;
-        }
 
-        // frontend treats 0 as timeout
-        Ok((start.elapsed().as_millis() as u32).max(1))
+            // frontend treats 0 as timeout
+            let delay = (start.elapsed().as_millis() as u32).max(1);
+            // Local round-trip to mihomo (unix socket / loopback), only a few ms —
+            // negligible vs the 10s timeout, so it won't flip a slow success into a
+            // timeout in practice.
+            let chains = chains_for_source_port(source_port, proxy_port).await;
+            Ok(TestDelayResult { delay, chains })
+        }
     })
     .await
-    .unwrap_or(Ok(10000u32))
+    .unwrap_or(Ok(TestDelayResult {
+        delay: 10000,
+        chains: vec![],
+    }))
 }

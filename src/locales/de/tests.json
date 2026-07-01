@@ -9,7 +9,8 @@
     "item": {
       "actions": {
         "test": "Testen"
-      }
+      },
+      "direct": "Direkt"
     }
   },
   "modals": {

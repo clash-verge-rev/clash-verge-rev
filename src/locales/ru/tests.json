@@ -9,7 +9,8 @@
     "item": {
       "actions": {
         "test": "Проверить"
-      }
+      },
+      "direct": "Напрямую"
     }
   },
   "modals": {
