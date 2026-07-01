@@ -257,6 +257,25 @@ const clearReconnectTimer = () => {
   reconnectTimer = null
 }
 
+const hasConnectionSubscribers = () =>
+  connectionListeners.size > 0 || summaryListeners.size > 0
+
+const stopConnectionMonitorIfIdle = () => {
+  if (hasConnectionSubscribers()) return
+
+  connectionStarted = false
+  clearReconnectTimer()
+
+  if (flushTimer) {
+    window.clearTimeout(flushTimer)
+    flushTimer = null
+  }
+
+  pendingMessageData = null
+  connectionData = initConnData
+  void closeConnectionSocket()
+}
+
 const closeConnectionSocket = async () => {
   const socket = connectionSocket
   connectionSocket = null
@@ -270,6 +289,7 @@ const closeConnectionSocket = async () => {
 }
 
 const scheduleReconnect = () => {
+  if (!hasConnectionSubscribers()) return
   if (reconnectTimer) return
   reconnectTimer = window.setTimeout(() => {
     reconnectTimer = null
@@ -317,18 +337,20 @@ const getConnectionSnapshot = () => connectionData
 const getConnectionSummarySnapshot = () => connectionSummary
 
 const subscribeConnectionData = (listener: ConnectionListener) => {
-  startConnectionMonitor()
   connectionListeners.add(listener)
+  startConnectionMonitor()
   return () => {
     connectionListeners.delete(listener)
+    stopConnectionMonitorIfIdle()
   }
 }
 
 const subscribeConnectionSummary = (listener: ConnectionListener) => {
-  startConnectionMonitor()
   summaryListeners.add(listener)
+  startConnectionMonitor()
   return () => {
     summaryListeners.delete(listener)
+    stopConnectionMonitorIfIdle()
   }
 }
 
@@ -372,9 +394,11 @@ export const useConnectionData = () => {
   }
 }
 
-export const useConnectionSummaryData = () => {
+export const useConnectionSummaryData = (options?: { enabled?: boolean }) => {
+  const enabled = options?.enabled ?? true
+
   const data = useSyncExternalStore(
-    subscribeConnectionSummary,
+    enabled ? subscribeConnectionSummary : () => () => {},
     getConnectionSummarySnapshot,
     getConnectionSummarySnapshot,
   )

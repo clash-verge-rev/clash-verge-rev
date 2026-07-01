@@ -1045,6 +1045,15 @@ export const EnhancedCanvasTrafficGraph = memo(
           cancelAnimationFrame(mouseMoveFrameRef.current)
           mouseMoveFrameRef.current = undefined
         }
+
+        // Release canvas GPU backing stores
+        const releaseCanvas = (canvas: HTMLCanvasElement | null) => {
+          if (!canvas) return
+          canvas.width = 1
+          canvas.height = 1
+        }
+        releaseCanvas(canvasRef.current)
+        releaseCanvas(hoverCanvasRef.current)
       }
     }, [])
 

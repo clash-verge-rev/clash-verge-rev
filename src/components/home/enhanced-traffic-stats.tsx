@@ -158,7 +158,7 @@ export const EnhancedTrafficStats = () => {
 
   const {
     response: { data: connectionSummary },
-  } = useConnectionSummaryData()
+  } = useConnectionSummaryData({ enabled: pageVisible })
 
   // Canvas组件现在直接从全局Hook获取数据，无需手动添加数据点
 
