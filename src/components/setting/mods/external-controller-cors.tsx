@@ -72,6 +72,11 @@ interface ClashHeaderConfigingRef {
   close: () => void
 }
 
+interface AllowOriginItem {
+  key: number
+  value: string
+}
+
 export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
   (props, ref) => {
     const { t } = useTranslation()
@@ -83,7 +88,7 @@ export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
     // CORS配置状态管理
     const [corsConfig, setCorsConfig] = useState<{
       allowPrivateNetwork: boolean
-      allowOrigins: { key: number; value: string }[]
+      allowOrigins: AllowOriginItem[]
     }>(() => {
       const cors = clash?.['external-controller-cors']
       const origins = cors?.['allow-origins'] ?? []
@@ -99,7 +104,7 @@ export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
     // 处理CORS配置变更
     const handleCorsConfigChange = (
       key: 'allowPrivateNetwork' | 'allowOrigins',
-      value: boolean | { key: number; value: string }[],
+      value: boolean | AllowOriginItem[],
     ) => {
       setCorsConfig((prev) => ({
         ...prev,
