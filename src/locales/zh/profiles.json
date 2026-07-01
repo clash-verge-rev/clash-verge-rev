@@ -150,12 +150,19 @@
         "filter": "过滤节点",
         "excludeFilter": "排除节点",
         "excludeType": "排除节点类型",
+        "policyPriority": "节点优先级",
+        "sampleRate": "数据采样率",
+        "maxUploadRate": "最大上传速率",
+        "maxDownloadRate": "最大下载速率",
         "includeAll": "引入所有出站代理、代理集合",
         "includeAllProxies": "引入所有出站代理",
         "includeAllProviders": "引入所有代理集合"
       },
       "toggles": {
         "lazy": "懒惰状态",
+        "useLightgbm": "使用 LightGBM",
+        "collectData": "收集训练数据",
+        "preferAsn": "优先 ASN 匹配",
         "disableUdp": "禁用 UDP",
         "hidden": "隐藏代理组"
       },

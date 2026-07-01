@@ -150,12 +150,19 @@
         "filter": "Фильтр",
         "excludeFilter": "Фильтр аша чыгару",
         "excludeType": "Чыгару төре",
+        "policyPriority": "Policy Priority",
+        "sampleRate": "Sample Rate",
+        "maxUploadRate": "Max Upload Rate",
+        "maxDownloadRate": "Max Download Rate",
         "includeAll": "Барлык прокси һәм провайдерларны кертү",
         "includeAllProxies": "Барлык проксины кертү",
         "includeAllProviders": "Барлык провайдерларны кертү"
       },
       "toggles": {
         "lazy": "Сак режим (lazy)",
+        "useLightgbm": "Use LightGBM",
+        "collectData": "Collect Data",
+        "preferAsn": "Prefer ASN",
         "disableUdp": "UDP'ны сүндерү",
         "hidden": "Яшерен"
       },

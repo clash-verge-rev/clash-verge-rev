@@ -80,7 +80,8 @@
         "url-test": "Proxy basierend auf URL-Latenztest auswählen",
         "fallback": "Bei Nichtverfügbarkeit zu einem anderen Proxy wechseln",
         "load-balance": "Proxy basierend auf Lastverteilung zuweisen",
-        "relay": "Basierend auf definiertem Proxy-Kette weiterleiten"
+        "relay": "Basierend auf definiertem Proxy-Kette weiterleiten",
+        "smart": "Select proxy by historical connection quality"
       },
       "policies": {
         "DIRECT": "Direktverbindung",

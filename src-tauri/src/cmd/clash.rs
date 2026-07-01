@@ -1,6 +1,5 @@
 use super::CmdResult;
 use crate::feat;
-use crate::utils::dirs;
 use crate::{
     cmd::StringifyErr as _,
     config::{ClashInfo, Config},
@@ -9,6 +8,7 @@ use crate::{
         CoreManager, handle,
         validate::{CoreConfigValidator, ValidationOutcome},
     },
+    utils::{dirs, mihomo_api},
 };
 use clash_verge_logging::{Type, logging, logging_error};
 use compact_str::CompactString;
@@ -117,6 +117,36 @@ pub async fn restart_core() -> CmdResult {
         handle::Handle::refresh_clash();
     }
     result
+}
+
+/// 清理 Smart 训练数据。保留 LightGBM 模型文件 Model.bin。
+async fn clear_smart_data() -> CmdResult {
+    let app_dir = dirs::app_home_dir().stringify_err()?;
+    let data_path = app_dir.join("smart_weight_data.csv");
+
+    if !data_path.starts_with(&app_dir) {
+        return Err("invalid smart data path".into());
+    }
+
+    if fs::try_exists(&data_path).await.stringify_err()? {
+        fs::remove_file(&data_path).await.stringify_err()?;
+        logging!(info, Type::Config, "Smart data file removed: {data_path:?}");
+    }
+
+    Ok(())
+}
+
+/// 更新 Smart LightGBM 模型。
+#[tauri::command]
+pub async fn upgrade_lgbm_model() -> CmdResult {
+    mihomo_api::upgrade_lgbm().await
+}
+
+/// 清理 Smart 内核缓存。
+#[tauri::command]
+pub async fn flush_smart_cache() -> CmdResult {
+    mihomo_api::flush_smart_cache().await?;
+    clear_smart_data().await
 }
 
 /// 测试URL延迟

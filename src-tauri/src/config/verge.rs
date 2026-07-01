@@ -9,6 +9,10 @@ use log::LevelFilter;
 use serde::{Deserialize, Serialize};
 use smartstring::alias::String;
 
+pub(crate) const DEFAULT_SMART_POLICY_PRIORITY: &str = "Premium:0.9;SG:1.3";
+pub(crate) const DEFAULT_SMART_LGBM_URL: &str =
+    "https://github.com/vernesong/mihomo/releases/download/LightGBM-Model/Model.bin";
+
 /// ### `verge.yaml` schema
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
 pub struct IVerge {
@@ -164,6 +168,36 @@ pub struct IVerge {
     /// 是否使用内部的脚本支持，默认为真
     pub enable_builtin_enhanced: Option<bool>,
 
+    /// 自动将 url-test/load-balance 策略组切换为 smart 策略组
+    pub smart_strategy_auto_switch: Option<bool>,
+
+    /// Smart 策略组默认 policy-priority
+    pub smart_policy_priority: Option<String>,
+
+    /// Smart 策略组默认 prefer-asn
+    pub smart_prefer_asn: Option<bool>,
+
+    /// Smart 策略组默认 uselightgbm
+    pub smart_use_lightgbm: Option<bool>,
+
+    /// Smart 策略组默认 collectdata
+    pub smart_collect_data: Option<bool>,
+
+    /// Smart 策略组默认 sample-rate
+    pub smart_sample_rate: Option<f64>,
+
+    /// Smart LightGBM 是否自动更新
+    pub smart_lgbm_auto_update: Option<bool>,
+
+    /// Smart LightGBM 自动更新间隔（小时）
+    pub smart_lgbm_update_interval: Option<u64>,
+
+    /// Smart LightGBM 模型下载 URL
+    pub smart_lgbm_url: Option<String>,
+
+    /// Smart 训练数据采集文件大小（MB）
+    pub smart_collector_size: Option<u64>,
+
     /// proxy 页面布局 列数
     pub proxy_layout_column: Option<u8>,
 
@@ -285,7 +319,8 @@ pub struct IVergeTheme {
 
 impl IVerge {
     /// 有效的clash核心名称
-    pub const VALID_CLASH_CORES: &'static [&'static str] = &["verge-mihomo", "verge-mihomo-alpha"];
+    pub const VALID_CLASH_CORES: &'static [&'static str] =
+        &["verge-mihomo", "verge-mihomo-alpha", "verge-mihomo-smart"];
 
     /// 验证并修正配置文件中的clash_core值
     pub async fn validate_and_fix_config() -> Result<()> {
@@ -431,6 +466,16 @@ impl IVerge {
             auto_close_connection: Some(true),
             auto_check_update: Some(true),
             enable_builtin_enhanced: Some(true),
+            smart_strategy_auto_switch: Some(false),
+            smart_policy_priority: Some(DEFAULT_SMART_POLICY_PRIORITY.into()),
+            smart_prefer_asn: Some(false),
+            smart_use_lightgbm: Some(false),
+            smart_collect_data: Some(false),
+            smart_sample_rate: Some(1.0),
+            smart_lgbm_auto_update: Some(false),
+            smart_lgbm_update_interval: Some(72),
+            smart_lgbm_url: Some(DEFAULT_SMART_LGBM_URL.into()),
+            smart_collector_size: Some(100),
             auto_log_clean: Some(2), // 1: 1天, 2: 7天, 3: 30天, 4: 90天
             enable_auto_backup_schedule: Some(false),
             auto_backup_interval_hours: Some(24),
@@ -534,6 +579,16 @@ impl IVerge {
         patch!(enable_auto_delay_detection);
         patch!(auto_delay_detection_interval_minutes);
         patch!(enable_builtin_enhanced);
+        patch!(smart_strategy_auto_switch);
+        patch!(smart_policy_priority);
+        patch!(smart_prefer_asn);
+        patch!(smart_use_lightgbm);
+        patch!(smart_collect_data);
+        patch!(smart_sample_rate);
+        patch!(smart_lgbm_auto_update);
+        patch!(smart_lgbm_update_interval);
+        patch!(smart_lgbm_url);
+        patch!(smart_collector_size);
         patch!(proxy_layout_column);
         patch!(test_list);
         patch!(auto_log_clean);

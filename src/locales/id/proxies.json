@@ -80,7 +80,8 @@
         "url-test": "Pilih proksi berdasarkan keterlambatan tes URL",
         "fallback": "Beralih ke proksi lain saat terjadi kesalahan",
         "load-balance": "Distribusikan proksi berdasarkan penyeimbangan beban",
-        "relay": "Lewatkan melalui rantai proksi yang ditentukan"
+        "relay": "Lewatkan melalui rantai proksi yang ditentukan",
+        "smart": "Select proxy by historical connection quality"
       },
       "policies": {
         "DIRECT": "Data langsung keluar",

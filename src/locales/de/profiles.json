@@ -150,12 +150,19 @@
         "filter": "Knoten filtern",
         "excludeFilter": "Knoten ausschließen",
         "excludeType": "Typ der auszuschließenden Knoten",
+        "policyPriority": "Policy Priority",
+        "sampleRate": "Sample Rate",
+        "maxUploadRate": "Max Upload Rate",
+        "maxDownloadRate": "Max Download Rate",
         "includeAll": "Alle Ausgangsproxy und Proxy-Sammlungen einführen",
         "includeAllProxies": "Alle Ausgangsproxy einführen",
         "includeAllProviders": "Alle Proxy-Sammlungen einführen"
       },
       "toggles": {
         "lazy": "Lazy-Status",
+        "useLightgbm": "Use LightGBM",
+        "collectData": "Collect Data",
+        "preferAsn": "Prefer ASN",
         "disableUdp": "UDP deaktivieren",
         "hidden": "Proxy-Gruppe ausblenden"
       },

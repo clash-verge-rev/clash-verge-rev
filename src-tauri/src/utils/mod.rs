@@ -5,6 +5,7 @@ pub mod help;
 pub mod init;
 #[cfg(target_os = "linux")]
 pub mod linux;
+pub mod mihomo_api;
 pub mod network;
 pub mod notification;
 pub mod resolve;

@@ -148,6 +148,8 @@ mod app_init {
             cmd::start_core,
             cmd::stop_core,
             cmd::restart_core,
+            cmd::upgrade_lgbm_model,
+            cmd::flush_smart_cache,
             cmd::get_running_mode,
             cmd::get_auto_launch_status,
             cmd::entry_lightweight_mode,

@@ -15,7 +15,7 @@ use self::{
 };
 use crate::utils::dirs;
 use crate::{
-    config::{Config, IVerge, PrfItem},
+    config::{Config, DEFAULT_SMART_LGBM_URL, IVerge, PrfItem},
     constants,
     utils::tmpl,
 };
@@ -31,6 +31,7 @@ type ResultLog = Vec<(String, String)>;
 struct ConfigValues {
     clash_config: Mapping,
     clash_core: Option<String>,
+    smart_settings: SmartSettings,
     enable_tun: bool,
     enable_builtin: bool,
     socks_enabled: bool,
@@ -40,6 +41,20 @@ struct ConfigValues {
     redir_enabled: bool,
     #[cfg(target_os = "linux")]
     tproxy_enabled: bool,
+}
+
+#[derive(Debug, Clone, Default)]
+struct SmartSettings {
+    strategy_auto_switch: bool,
+    policy_priority: Option<String>,
+    prefer_asn: bool,
+    use_lightgbm: bool,
+    collect_data: bool,
+    sample_rate: f64,
+    lgbm_auto_update: bool,
+    lgbm_update_interval: u64,
+    lgbm_url: String,
+    collector_size: u64,
 }
 
 #[derive(Debug)]
@@ -116,6 +131,16 @@ async fn get_config_values() -> ConfigValues {
         ref verge_socks_enabled,
         ref verge_http_enabled,
         ref enable_dns_settings,
+        ref smart_strategy_auto_switch,
+        ref smart_policy_priority,
+        ref smart_prefer_asn,
+        ref smart_use_lightgbm,
+        ref smart_collect_data,
+        ref smart_sample_rate,
+        ref smart_lgbm_auto_update,
+        ref smart_lgbm_update_interval,
+        ref smart_lgbm_url,
+        ref smart_collector_size,
         ..
     } = **verge_arc;
 
@@ -134,12 +159,37 @@ async fn get_config_values() -> ConfigValues {
     #[cfg(target_os = "linux")]
     let tproxy_enabled = verge_arc.verge_tproxy_enabled.unwrap_or(false);
 
+    let policy_priority = match smart_policy_priority.as_ref() {
+        Some(value) if value.trim().is_empty() => None,
+        Some(value) => Some(value.trim().into()),
+        None => Some(crate::config::DEFAULT_SMART_POLICY_PRIORITY.into()),
+    };
+
+    let smart_settings = SmartSettings {
+        strategy_auto_switch: smart_strategy_auto_switch.unwrap_or(false),
+        policy_priority,
+        prefer_asn: smart_prefer_asn.unwrap_or(false),
+        use_lightgbm: smart_use_lightgbm.unwrap_or(false),
+        collect_data: smart_collect_data.unwrap_or(false),
+        sample_rate: smart_sample_rate.unwrap_or(1.0).clamp(0.0, 1.0),
+        lgbm_auto_update: smart_lgbm_auto_update.unwrap_or(false),
+        lgbm_update_interval: smart_lgbm_update_interval.unwrap_or(72).max(1),
+        lgbm_url: smart_lgbm_url
+            .as_ref()
+            .map(|value| value.trim())
+            .filter(|value| !value.is_empty())
+            .unwrap_or(DEFAULT_SMART_LGBM_URL)
+            .into(),
+        collector_size: smart_collector_size.unwrap_or(100).max(1),
+    };
+
     drop(verge_arc);
     drop(verge);
 
     ConfigValues {
         clash_config,
         clash_core,
+        smart_settings,
         enable_tun,
         enable_builtin,
         socks_enabled,
@@ -498,6 +548,85 @@ fn cleanup_proxy_groups(mut config: Mapping) -> Mapping {
     config
 }
 
+fn insert_if_missing(group: &mut Mapping, key: &str, value: Value) {
+    if !group.contains_key(key) {
+        group.insert(Value::String(key.into()), value);
+    }
+}
+
+fn is_smart_core(clash_core: Option<&String>) -> bool {
+    matches!(clash_core.map(|core| core.as_str()), Some("verge-mihomo-smart"))
+}
+
+fn apply_smart_strategy_auto_switch(mut config: Mapping, settings: &SmartSettings) -> Mapping {
+    if !settings.strategy_auto_switch {
+        return config;
+    }
+
+    if let Some(Value::Sequence(groups)) = config.get_mut("proxy-groups") {
+        for group in groups {
+            let Some(group_map) = group.as_mapping_mut() else {
+                continue;
+            };
+
+            let group_type = group_map.get("type").and_then(Value::as_str);
+            if !matches!(group_type, Some("url-test" | "load-balance")) {
+                continue;
+            }
+
+            group_map.insert(Value::String("type".into()), Value::String("smart".into()));
+            group_map.remove("strategy");
+
+            if let Some(policy_priority) = settings.policy_priority.as_ref() {
+                insert_if_missing(
+                    group_map,
+                    "policy-priority",
+                    Value::String(policy_priority.as_str().into()),
+                );
+            }
+            insert_if_missing(group_map, "prefer-asn", Value::Bool(settings.prefer_asn));
+            insert_if_missing(group_map, "uselightgbm", Value::Bool(settings.use_lightgbm));
+            insert_if_missing(group_map, "collectdata", Value::Bool(settings.collect_data));
+            if let Ok(value) = serde_yaml_ng::to_value(settings.sample_rate) {
+                insert_if_missing(group_map, "sample-rate", value);
+            }
+        }
+    }
+
+    config
+}
+
+fn apply_smart_core_settings(mut config: Mapping, settings: &SmartSettings) -> Mapping {
+    config.insert(
+        Value::String("lgbm-auto-update".into()),
+        Value::Bool(settings.lgbm_auto_update),
+    );
+    if let Ok(value) = serde_yaml_ng::to_value(settings.lgbm_update_interval) {
+        config.insert(Value::String("lgbm-update-interval".into()), value);
+    }
+    config.insert(
+        Value::String("lgbm-url".into()),
+        Value::String(settings.lgbm_url.to_string()),
+    );
+
+    let profile_key = Value::String("profile".into());
+    let collector_key = Value::String("smart-collector-size".into());
+    if let Ok(collector_size) = serde_yaml_ng::to_value(settings.collector_size) {
+        match config.get_mut(&profile_key) {
+            Some(Value::Mapping(profile)) => {
+                profile.insert(collector_key, collector_size);
+            }
+            _ => {
+                let mut profile = Mapping::new();
+                profile.insert(collector_key, collector_size);
+                config.insert(profile_key, Value::Mapping(profile));
+            }
+        }
+    }
+
+    config
+}
+
 /// 当 DNS 处于 fake-ip 模式且启用 IPv6 时，补充缺失的 `fake-ip-range6`，
 /// 否则 AAAA 查询无法获得 fake-ip，导致 IPv6 解析失败（见 issue #7373）。
 /// 兼容旧版本生成的、缺少该字段的 dns_config.yaml。
@@ -565,6 +694,7 @@ pub async fn enhance() -> Result<(Mapping, HashSet<String>, HashMap<String, Resu
     let ConfigValues {
         clash_config,
         clash_core,
+        smart_settings,
         enable_tun,
         enable_builtin,
         socks_enabled,
@@ -575,6 +705,7 @@ pub async fn enhance() -> Result<(Mapping, HashSet<String>, HashMap<String, Resu
         #[cfg(target_os = "linux")]
         tproxy_enabled,
     } = cfg_vals;
+    let smart_core = is_smart_core(clash_core.as_ref());
 
     // collect profile items
     let profile = collect_profile_items().await?;
@@ -621,6 +752,11 @@ pub async fn enhance() -> Result<(Mapping, HashSet<String>, HashMap<String, Resu
 
     // builtin scripts
     let mut config = apply_builtin_scripts(config, clash_core, enable_builtin).await;
+
+    if smart_core {
+        config = apply_smart_strategy_auto_switch(config, &smart_settings);
+        config = apply_smart_core_settings(config, &smart_settings);
+    }
 
     config = cleanup_proxy_groups(config);
 

@@ -324,6 +324,14 @@ export async function restartCore() {
   return invoke<void>('restart_core')
 }
 
+export async function upgradeLightgbmModel() {
+  return invoke<void>('upgrade_lgbm_model')
+}
+
+export async function flushSmartCache() {
+  return invoke<void>('flush_smart_cache')
+}
+
 export async function restartApp() {
   return invoke<void>('restart_app')
 }

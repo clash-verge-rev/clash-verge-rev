@@ -150,12 +150,19 @@
         "filter": "ノードをフィルタリング",
         "excludeFilter": "除外ノード",
         "excludeType": "除外ノードタイプ",
+        "policyPriority": "Policy Priority",
+        "sampleRate": "Sample Rate",
+        "maxUploadRate": "Max Upload Rate",
+        "maxDownloadRate": "Max Download Rate",
         "includeAll": "すべての出力プロキシ、プロキシプロバイダーを導入",
         "includeAllProxies": "すべての出力プロキシを導入",
         "includeAllProviders": "すべてのプロキシプロバイダーを導入"
       },
       "toggles": {
         "lazy": "遅延モード",
+        "useLightgbm": "Use LightGBM",
+        "collectData": "Collect Data",
+        "preferAsn": "Prefer ASN",
         "disableUdp": "UDPを無効にする",
         "hidden": "プロキシグループを隠す"
       },

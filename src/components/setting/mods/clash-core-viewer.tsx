@@ -34,12 +34,17 @@ const VALID_CORE = [
     core: 'verge-mihomo-alpha',
     chipKey: 'settings.modals.clashCore.variants.alpha',
   },
+  {
+    name: 'Mihomo Smart',
+    core: 'verge-mihomo-smart',
+    chipKey: 'settings.modals.clashCore.variants.smart',
+  },
 ]
 
 export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
   const { t } = useTranslation()
 
-  const { verge, mutateVerge } = useVerge()
+  const { verge, mutateVerge, patchVerge } = useVerge()
   const { mutateVersion } = useClash()
   const { invalidateClashConfig } = useClashInfo()
 
@@ -47,6 +52,9 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
   const [upgrading, setUpgrading] = useState(false)
   const [restarting, setRestarting] = useState(false)
   const [changingCore, setChangingCore] = useState<string | null>(null)
+  const [pendingThirdPartyCore, setPendingThirdPartyCore] = useState<
+    string | null
+  >(null)
 
   useImperativeHandle(ref, () => ({
     open: () => setOpen(true),
@@ -61,6 +69,14 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
     try {
       setChangingCore(core)
       closeAllConnections()
+
+      if (
+        clash_core === 'verge-mihomo-smart' &&
+        core !== 'verge-mihomo-smart'
+      ) {
+        await patchVerge({ smart_strategy_auto_switch: false })
+      }
+
       const errorMsg = await changeClashCore(core)
 
       if (errorMsg) {
@@ -79,6 +95,15 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
       setChangingCore(null)
     }
   })
+
+  const requestCoreChange = (core: string) => {
+    if (core === 'verge-mihomo-smart' && core !== clash_core) {
+      setPendingThirdPartyCore(core)
+      return
+    }
+
+    onCoreChange(core)
+  }
 
   const onRestart = useLockFn(async () => {
     try {
@@ -114,68 +139,86 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
   })
 
   return (
-    <BaseDialog
-      open={open}
-      title={
-        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-          {t('settings.sections.clash.form.fields.clashCore')}
-          <Box>
-            <Button
-              variant="contained"
-              size="small"
-              startIcon={<SwitchAccessShortcutRounded />}
-              loadingPosition="start"
-              loading={upgrading}
-              disabled={restarting || changingCore !== null}
-              sx={{ marginRight: '8px' }}
-              onClick={onUpgrade}
-            >
-              {t('shared.actions.upgrade')}
-            </Button>
-            <Button
-              variant="contained"
-              size="small"
-              startIcon={<RestartAltRounded />}
-              loadingPosition="start"
-              loading={restarting}
-              disabled={upgrading}
-              onClick={onRestart}
-            >
-              {t('shared.actions.restart')}
-            </Button>
+    <>
+      <BaseDialog
+        open={open}
+        title={
+          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
+            {t('settings.sections.clash.form.fields.clashCore')}
+            <Box>
+              <Button
+                variant="contained"
+                size="small"
+                startIcon={<SwitchAccessShortcutRounded />}
+                loadingPosition="start"
+                loading={upgrading}
+                disabled={restarting || changingCore !== null}
+                sx={{ marginRight: '8px' }}
+                onClick={onUpgrade}
+              >
+                {t('shared.actions.upgrade')}
+              </Button>
+              <Button
+                variant="contained"
+                size="small"
+                startIcon={<RestartAltRounded />}
+                loadingPosition="start"
+                loading={restarting}
+                disabled={upgrading}
+                onClick={onRestart}
+              >
+                {t('shared.actions.restart')}
+              </Button>
+            </Box>
           </Box>
-        </Box>
-      }
-      contentSx={{
-        pb: 0,
-        width: 400,
-        height: 180,
-        overflowY: 'auto',
-        userSelect: 'text',
-        marginTop: '-8px',
-      }}
-      disableOk
-      cancelBtn={t('shared.actions.close')}
-      onClose={() => setOpen(false)}
-      onCancel={() => setOpen(false)}
-    >
-      <List component="nav">
-        {VALID_CORE.map((each) => (
-          <ListItemButton
-            key={each.core}
-            selected={each.core === clash_core}
-            onClick={() => onCoreChange(each.core)}
-            disabled={changingCore !== null || restarting || upgrading}
-          >
-            <ListItemText primary={each.name} secondary={`/${each.core}`} />
-            {changingCore === each.core ? (
-              <CircularProgress size={20} sx={{ mr: 1 }} />
-            ) : (
-              <Chip label={t(each.chipKey)} size="small" />
-            )}
-          </ListItemButton>
-        ))}
-      </List>
-    </BaseDialog>
+        }
+        contentSx={{
+          pb: 0,
+          width: 400,
+          height: 230,
+          overflowY: 'auto',
+          userSelect: 'text',
+          marginTop: '-8px',
+        }}
+        disableOk
+        cancelBtn={t('shared.actions.close')}
+        onClose={() => setOpen(false)}
+        onCancel={() => setOpen(false)}
+      >
+        <List component="nav">
+          {VALID_CORE.map((each) => (
+            <ListItemButton
+              key={each.core}
+              selected={each.core === clash_core}
+              onClick={() => requestCoreChange(each.core)}
+              disabled={changingCore !== null || restarting || upgrading}
+            >
+              <ListItemText primary={each.name} secondary={`/${each.core}`} />
+              {changingCore === each.core ? (
+                <CircularProgress size={20} sx={{ mr: 1 }} />
+              ) : (
+                <Chip label={t(each.chipKey)} size="small" />
+              )}
+            </ListItemButton>
+          ))}
+        </List>
+      </BaseDialog>
+
+      <BaseDialog
+        open={pendingThirdPartyCore !== null}
+        title={t('settings.modals.clashCore.thirdPartySmart.title')}
+        okBtn={t('shared.actions.confirm')}
+        cancelBtn={t('shared.actions.cancel')}
+        onClose={() => setPendingThirdPartyCore(null)}
+        onCancel={() => setPendingThirdPartyCore(null)}
+        onOk={() => {
+          const core = pendingThirdPartyCore
+          setPendingThirdPartyCore(null)
+          if (core) onCoreChange(core)
+        }}
+      >
+        {t('settings.modals.clashCore.thirdPartySmart.message')}
+      </BaseDialog>
+    </>
   )
 }

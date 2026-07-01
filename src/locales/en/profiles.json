@@ -150,12 +150,19 @@
         "filter": "Filter",
         "excludeFilter": "Exclude Filter",
         "excludeType": "Exclude Type",
+        "policyPriority": "Policy Priority",
+        "sampleRate": "Sample Rate",
+        "maxUploadRate": "Max Upload Rate",
+        "maxDownloadRate": "Max Download Rate",
         "includeAll": "Include All Proxies and Providers",
         "includeAllProxies": "Include All Proxies",
         "includeAllProviders": "Include All Providers"
       },
       "toggles": {
         "lazy": "Lazy",
+        "useLightgbm": "Use LightGBM",
+        "collectData": "Collect Data",
+        "preferAsn": "Prefer ASN",
         "disableUdp": "Disable UDP",
         "hidden": "Hidden"
       },

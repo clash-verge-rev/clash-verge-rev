@@ -102,6 +102,7 @@
           "external": "外部控制",
           "webUI": "网页界面",
           "clashCore": "Clash 内核",
+          "smartSettings": "Smart 设置",
           "openUwpTool": "UWP 工具",
           "updateGeoData": "更新 GeoData",
           "tunnels": {
@@ -290,7 +291,49 @@
     "clashCore": {
       "variants": {
         "release": "正式版",
-        "alpha": "预览版"
+        "alpha": "预览版",
+        "smart": "Smart 版"
+      },
+      "thirdPartySmart": {
+        "title": "确认切换第三方内核",
+        "message": "Mihomo Smart 是 vernesong/mihomo 提供的第三方 Smart 内核，不是项目默认内核。兼容性、策略行为和更新节奏由第三方内核决定。确认后将切换并重启内核。"
+      }
+    },
+    "smart": {
+      "title": "Smart 设置",
+      "nonSmartCoreWarning": "当前未使用 Mihomo Smart 内核。你可以预先保存设置，模型更新和缓存清理需要切换到 Smart 内核后使用。",
+      "fields": {
+        "strategyAutoSwitch": "Smart 策略自动切换",
+        "policyPriority": "Policy Priority",
+        "preferAsn": "ASN 优先",
+        "useLightgbm": "启用 LightGBM 模型",
+        "collectData": "收集训练数据",
+        "sampleRate": "数据收集采样率",
+        "autoUpdate": "自动更新模型",
+        "updateInterval": "模型更新间隔",
+        "modelUrl": "模型版本",
+        "customModelUrl": "自定义模型 URL",
+        "collectorSize": "数据收集文件大小",
+        "actions": "模型与缓存"
+      },
+      "modelOptions": {
+        "large": "大型模型 Model-large.bin",
+        "middle": "中型模型 Model-middle.bin",
+        "default": "默认模型 Model.bin",
+        "custom": "自定义 URL"
+      },
+      "actions": {
+        "updateModel": "检查并更新",
+        "clearCache": "清理 Smart 缓存"
+      },
+      "messages": {
+        "modelUpdated": "模型更新完成",
+        "cacheCleared": "Smart 缓存已清理",
+        "smartCoreRequired": "请先切换到 Mihomo Smart 内核"
+      },
+      "confirmClear": {
+        "title": "确认清理 Smart 缓存",
+        "message": "将清理 Smart 内核缓存和训练数据 smart_weight_data.csv，不会删除 LightGBM 模型文件 Model.bin。"
       }
     },
     "liteMode": {

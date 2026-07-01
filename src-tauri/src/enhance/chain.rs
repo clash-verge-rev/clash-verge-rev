@@ -26,6 +26,7 @@ pub enum ChainType {
 pub enum ChainSupport {
     ClashMeta,
     ClashMetaAlpha,
+    ClashMetaSmart,
 }
 
 // impl From<&PrfItem> for Option<ChainItem> {
@@ -129,11 +130,17 @@ impl ChainItem {
         // meta 1.13.2 alpn string 转 数组
         let hy_alpn_alpha = Self::to_script("verge_hy_alpn", include_str!("./builtin/meta_hy_alpn.js"));
 
+        // smart 内核基于 mihomo alpha，沿用相同兼容性处理
+        let meta_guard_smart = Self::to_script("verge_meta_guard", include_str!("./builtin/meta_guard.js"));
+        let hy_alpn_smart = Self::to_script("verge_hy_alpn", include_str!("./builtin/meta_hy_alpn.js"));
+
         vec![
             (ChainSupport::ClashMeta, hy_alpn),
             (ChainSupport::ClashMeta, meta_guard),
             (ChainSupport::ClashMetaAlpha, hy_alpn_alpha),
             (ChainSupport::ClashMetaAlpha, meta_guard_alpha),
+            (ChainSupport::ClashMetaSmart, hy_alpn_smart),
+            (ChainSupport::ClashMetaSmart, meta_guard_smart),
         ]
     }
 
@@ -150,7 +157,9 @@ impl ChainSupport {
         match core {
             Some(core) => matches!(
                 (self, core.as_str()),
-                (Self::ClashMeta, "verge-mihomo") | (Self::ClashMetaAlpha, "verge-mihomo-alpha")
+                (Self::ClashMeta, "verge-mihomo")
+                    | (Self::ClashMetaAlpha, "verge-mihomo-alpha")
+                    | (Self::ClashMetaSmart, "verge-mihomo-smart")
             ),
             None => true,
         }

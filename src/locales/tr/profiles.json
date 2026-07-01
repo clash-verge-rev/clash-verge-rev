@@ -150,12 +150,19 @@
         "filter": "Filtre",
         "excludeFilter": "Hariç Tutma Filtresi",
         "excludeType": "Hariç Tutma Tipi",
+        "policyPriority": "Policy Priority",
+        "sampleRate": "Sample Rate",
+        "maxUploadRate": "Max Upload Rate",
+        "maxDownloadRate": "Max Download Rate",
         "includeAll": "Tüm Vekil'leri ve Sağlayıcıları Dahil Et",
         "includeAllProxies": "Tüm Vekil'leri Dahil Et",
         "includeAllProviders": "Tüm Sağlayıcıları Dahil Et"
       },
       "toggles": {
         "lazy": "Tembel",
+        "useLightgbm": "Use LightGBM",
+        "collectData": "Collect Data",
+        "preferAsn": "Prefer ASN",
         "disableUdp": "UDP'yi Devre Dışı Bırak",
         "hidden": "Gizli"
       },

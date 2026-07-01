@@ -80,7 +80,8 @@
         "url-test": "Seleccionar proxy según la prueba de latencia de la URL",
         "fallback": "Cambiar a otro proxy cuando no esté disponible",
         "load-balance": "Asignar proxy según el equilibrio de carga",
-        "relay": "Transferir según la cadena de proxy definida"
+        "relay": "Transferir según la cadena de proxy definida",
+        "smart": "Select proxy by historical connection quality"
       },
       "policies": {
         "DIRECT": "Conexión directa",
