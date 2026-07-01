@@ -502,6 +502,7 @@
         "listen": "DNS Dinleme",
         "enhancedMode": "Geliştirilmiş Mod",
         "fakeIpRange": "Sahte IP Aralığı",
+        "fakeIpRange6": "Sahte IP Aralığı (IPv6)",
         "fakeIpFilterMode": "Sahte IP Filtre Modu",
         "ipv6": {
           "label": "IPv6",

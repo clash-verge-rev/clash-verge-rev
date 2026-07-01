@@ -1,11 +1,10 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useCallback } from 'react'
 
 import { getVergeConfig, patchVergeConfig } from '@/services/cmds'
 import { getPreloadConfig, setPreloadConfig } from '@/services/preload'
+import { getCacheData, setCacheData, useQuery } from '@/services/query-client'
 
 export const useVerge = () => {
-  const qc = useQueryClient()
   const initialVergeConfig = getPreloadConfig()
 
   const { data: verge, refetch } = useQuery({
@@ -16,6 +15,7 @@ export const useVerge = () => {
       return config
     },
     initialData: initialVergeConfig ?? undefined,
+    revalidateOnMount: initialVergeConfig ? false : undefined,
     staleTime: 5000,
   })
 
@@ -31,11 +31,11 @@ export const useVerge = () => {
       return
     }
     if (typeof updaterOrData === 'function') {
-      const prev = qc.getQueryData<IVergeConfig>(['getVergeConfig'])
+      const prev = getCacheData<IVergeConfig>(['getVergeConfig'])
       const next = updaterOrData(prev)
-      qc.setQueryData(['getVergeConfig'], next)
+      setCacheData(['getVergeConfig'], next)
     } else {
-      qc.setQueryData(['getVergeConfig'], updaterOrData)
+      setCacheData(['getVergeConfig'], updaterOrData)
     }
   }
 

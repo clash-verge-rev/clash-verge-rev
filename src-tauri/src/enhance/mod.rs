@@ -14,8 +14,11 @@ use self::{
     tun::use_tun,
 };
 use crate::utils::dirs;
-use crate::{config::Config, utils::tmpl};
-use crate::{config::IVerge, constants};
+use crate::{
+    config::{Config, IVerge, PrfItem},
+    constants,
+    utils::tmpl,
+};
 use anyhow::{Context as _, Result};
 use clash_verge_logging::{Type, logging};
 use serde_yaml_ng::{Mapping, Value};
@@ -86,6 +89,14 @@ impl Default for ProfileItems {
                 data: ChainType::Script(tmpl::ITEM_SCRIPT.into()),
             },
         }
+    }
+}
+
+async fn chain_item_or_default(item: Option<&PrfItem>, default_item: impl FnOnce() -> ChainItem) -> ChainItem {
+    if let Some(item) = item {
+        <Option<ChainItem>>::from_async(item).await.unwrap_or_else(default_item)
+    } else {
+        default_item()
     }
 }
 
@@ -184,96 +195,36 @@ async fn collect_profile_items() -> Result<ProfileItems> {
 
     let name = current_item.name.clone().unwrap_or_default();
 
-    let merge_item = {
-        let item = profiles_arc.get_item(&merge_uid).ok().cloned();
-        if let Some(item) = item {
-            <Option<ChainItem>>::from_async(&item).await
-        } else {
-            None
-        }
-    }
-    .unwrap_or_else(|| ChainItem {
-        uid: "".into(),
-        data: ChainType::Merge(Mapping::new()),
-    });
-
-    let script_item = {
-        let item = profiles_arc.get_item(&script_uid).ok().cloned();
-        if let Some(item) = item {
-            <Option<ChainItem>>::from_async(&item).await
-        } else {
-            None
-        }
-    }
-    .unwrap_or_else(|| ChainItem {
-        uid: "".into(),
-        data: ChainType::Script(tmpl::ITEM_SCRIPT.into()),
-    });
-
-    let rules_item = {
-        let item = profiles_arc.get_item(&rules_uid).ok().cloned();
-        if let Some(item) = item {
-            <Option<ChainItem>>::from_async(&item).await
-        } else {
-            None
-        }
-    }
-    .unwrap_or_else(|| ChainItem {
-        uid: "".into(),
-        data: ChainType::Rules(SeqMap::default()),
-    });
-
-    let proxies_item = {
-        let item = profiles_arc.get_item(&proxies_uid).ok().cloned();
-        if let Some(item) = item {
-            <Option<ChainItem>>::from_async(&item).await
-        } else {
-            None
-        }
-    }
-    .unwrap_or_else(|| ChainItem {
-        uid: "".into(),
-        data: ChainType::Proxies(SeqMap::default()),
-    });
-
-    let groups_item = {
-        let item = profiles_arc.get_item(&groups_uid).ok().cloned();
-        if let Some(item) = item {
-            <Option<ChainItem>>::from_async(&item).await
-        } else {
-            None
-        }
-    }
-    .unwrap_or_else(|| ChainItem {
-        uid: "".into(),
-        data: ChainType::Groups(SeqMap::default()),
-    });
-
-    let global_merge = {
-        let item = profiles_arc.get_item("Merge").ok().cloned();
-        if let Some(item) = item {
-            <Option<ChainItem>>::from_async(&item).await
-        } else {
-            None
-        }
-    }
-    .unwrap_or_else(|| ChainItem {
-        uid: "Merge".into(),
-        data: ChainType::Merge(Mapping::new()),
-    });
-
-    let global_script = {
-        let item = profiles_arc.get_item("Script").ok().cloned();
-        if let Some(item) = item {
-            <Option<ChainItem>>::from_async(&item).await
-        } else {
-            None
-        }
-    }
-    .unwrap_or_else(|| ChainItem {
-        uid: "Script".into(),
-        data: ChainType::Script(tmpl::ITEM_SCRIPT.into()),
-    });
+    let (merge_item, script_item, rules_item, proxies_item, groups_item, global_merge, global_script) = tokio::join!(
+        chain_item_or_default(profiles_arc.get_item(&merge_uid).ok(), || ChainItem {
+            uid: "".into(),
+            data: ChainType::Merge(Mapping::new()),
+        },),
+        chain_item_or_default(profiles_arc.get_item(&script_uid).ok(), || ChainItem {
+            uid: "".into(),
+            data: ChainType::Script(tmpl::ITEM_SCRIPT.into()),
+        },),
+        chain_item_or_default(profiles_arc.get_item(&rules_uid).ok(), || ChainItem {
+            uid: "".into(),
+            data: ChainType::Rules(SeqMap::default()),
+        },),
+        chain_item_or_default(profiles_arc.get_item(&proxies_uid).ok(), || ChainItem {
+            uid: "".into(),
+            data: ChainType::Proxies(SeqMap::default()),
+        },),
+        chain_item_or_default(profiles_arc.get_item(&groups_uid).ok(), || ChainItem {
+            uid: "".into(),
+            data: ChainType::Groups(SeqMap::default()),
+        },),
+        chain_item_or_default(profiles_arc.get_item("Merge").ok(), || ChainItem {
+            uid: "Merge".into(),
+            data: ChainType::Merge(Mapping::new()),
+        },),
+        chain_item_or_default(profiles_arc.get_item("Script").ok(), || ChainItem {
+            uid: "Script".into(),
+            data: ChainType::Script(tmpl::ITEM_SCRIPT.into()),
+        },),
+    );
 
     drop(profiles_arc);
 
@@ -547,6 +498,31 @@ fn cleanup_proxy_groups(mut config: Mapping) -> Mapping {
     config
 }
 
+/// 当 DNS 处于 fake-ip 模式且启用 IPv6 时，补充缺失的 `fake-ip-range6`，
+/// 否则 AAAA 查询无法获得 fake-ip，导致 IPv6 解析失败（见 issue #7373）。
+/// 兼容旧版本生成的、缺少该字段的 dns_config.yaml。
+fn ensure_fake_ip_range6(dns: &mut Mapping) {
+    use serde_yaml_ng::Value;
+
+    let ipv6_enabled = dns.get("ipv6").and_then(|v| v.as_bool()).unwrap_or(false);
+    let is_fake_ip = dns
+        .get("enhanced-mode")
+        .and_then(|v| v.as_str())
+        .map(|m| m == "fake-ip")
+        .unwrap_or(true);
+
+    // 缺失或为空字符串（可能来自手动编辑的 YAML）时都需要补充
+    let range6_missing = dns
+        .get("fake-ip-range6")
+        .and_then(|v| v.as_str())
+        .map(|s| s.trim().is_empty())
+        .unwrap_or(true);
+
+    if ipv6_enabled && is_fake_ip && range6_missing {
+        dns.insert(Value::from("fake-ip-range6"), Value::from("fdfe:dcba:9876::1/64"));
+    }
+}
+
 async fn apply_dns_settings(mut config: Mapping, enable_dns_settings: bool) -> Mapping {
     if enable_dns_settings && let Ok(app_dir) = dirs::app_home_dir() {
         let dns_path = app_dir.join(constants::files::DNS_CONFIG);
@@ -564,10 +540,14 @@ async fn apply_dns_settings(mut config: Mapping, enable_dns_settings: bool) -> M
 
             if let Some(dns_value) = dns_config.get("dns") {
                 if let Some(dns_mapping) = dns_value.as_mapping() {
-                    config.insert("dns".into(), dns_mapping.clone().into());
+                    let mut dns_mapping = dns_mapping.clone();
+                    ensure_fake_ip_range6(&mut dns_mapping);
+                    config.insert("dns".into(), dns_mapping.into());
                     logging!(info, Type::Core, "apply dns_config.yaml (dns section)");
                 }
             } else {
+                let mut dns_config = dns_config;
+                ensure_fake_ip_range6(&mut dns_config);
                 config.insert("dns".into(), dns_config.into());
                 logging!(info, Type::Core, "apply dns_config.yaml");
             }

@@ -502,6 +502,7 @@
         "listen": "DNS-Lauschangabe",
         "enhancedMode": "Erweiterter Modus",
         "fakeIpRange": "Fake-IP-Bereich",
+        "fakeIpRange6": "Fake-IP-Bereich (IPv6)",
         "fakeIpFilterMode": "Fake-IP-Filtermodus",
         "ipv6": {
           "label": "IPv6",

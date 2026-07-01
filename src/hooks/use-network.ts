@@ -1,6 +1,5 @@
-import { useQuery } from '@tanstack/react-query'
-
 import { getNetworkInterfacesInfo } from '@/services/cmds'
+import { useQuery } from '@/services/query-client'
 
 export const useNetworkInterfaces = () => {
   const {

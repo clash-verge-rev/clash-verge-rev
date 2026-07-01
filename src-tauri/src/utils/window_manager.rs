@@ -187,7 +187,7 @@ impl WindowManager {
     fn hide_main_window(window: Option<&WebviewWindow<Wry>>) -> WindowOperationResult {
         logging!(info, Type::Window, "窗口可见，将隐藏窗口");
         if let Some(window) = window {
-            match window.hide() {
+            match window.close() {
                 Ok(_) => {
                     logging!(info, Type::Window, "窗口已成功隐藏");
                     WindowOperationResult::Hidden

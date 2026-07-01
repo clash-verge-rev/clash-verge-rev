@@ -18,7 +18,7 @@ import {
 } from '@mui/material'
 import { useLockFn } from 'ahooks'
 import dayjs from 'dayjs'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { updateProxyProvider } from 'tauri-plugin-mihomo-api'
 
@@ -51,6 +51,10 @@ export const ProviderButton = () => {
   const { proxyProviders } = useProxiesData()
   const { refreshProxy, refreshProxyProviders } = useAppRefreshers()
   const [updating, setUpdating] = useState<Record<string, boolean>>({})
+
+  useEffect(() => {
+    refreshProxyProviders().catch(() => {})
+  }, [refreshProxyProviders])
 
   // 检查是否有提供者
   const hasProviders = Object.keys(proxyProviders || {}).length > 0

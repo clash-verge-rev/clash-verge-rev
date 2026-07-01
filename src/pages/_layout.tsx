@@ -24,7 +24,15 @@ import {
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import type { CSSProperties } from 'react'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { useTranslation } from 'react-i18next'
 import { Outlet, useLocation, useNavigate } from 'react-router'
 
@@ -50,13 +58,14 @@ import {
   useNavMenuOrder,
 } from './_layout/hooks'
 import { handleNoticeMessage } from './_layout/utils'
-import { navItems } from './_routers'
-import LogsPage from './logs'
+import { navItems, preloadLogsPage, preloadNavigationRoutes } from './_routers'
 
 import 'dayjs/locale/ru'
 import 'dayjs/locale/zh-cn'
 
 export const portableFlag = false
+
+const LogsPage = lazy(() => preloadLogsPage())
 
 type NavItem = (typeof navItems)[number]
 
@@ -92,6 +101,7 @@ const SortableNavMenuItem = ({ item, label }: SortableNavMenuItemProps) => {
     <LayoutItem
       to={item.path}
       icon={item.icon}
+      onPreload={item.preload}
       sortable={{
         setNodeRef,
         attributes,
@@ -218,6 +228,22 @@ const Layout = () => {
   )
 
   useLoadingOverlay(themeReady)
+
+  useEffect(() => {
+    if (!themeReady) {
+      return
+    }
+
+    const controller = new AbortController()
+    const timerId = window.setTimeout(() => {
+      void preloadNavigationRoutes(controller.signal)
+    }, 2000)
+
+    return () => {
+      controller.abort()
+      window.clearTimeout(timerId)
+    }
+  }, [themeReady])
 
   const handleNotice = useCallback(
     (payload: [string, string]) => {
@@ -393,7 +419,12 @@ const Layout = () => {
                     return null
                   }
                   return (
-                    <LayoutItem key={item.path} to={item.path} icon={item.icon}>
+                    <LayoutItem
+                      key={item.path}
+                      to={item.path}
+                      icon={item.icon}
+                      onPreload={item.preload}
+                    >
                       {t(item.label)}
                     </LayoutItem>
                   )
@@ -463,7 +494,9 @@ const Layout = () => {
                     bottom: 0,
                   }}
                 >
-                  <LogsPage />
+                  <Suspense fallback={null}>
+                    <LogsPage />
+                  </Suspense>
                 </div>
               )}
             </div>

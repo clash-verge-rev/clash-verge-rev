@@ -18,6 +18,7 @@ import {
   patchClashMode,
   updateProxyChainConfigInRuntime,
 } from '@/services/cmds'
+import { showNotice } from '@/services/notice-service'
 import { debugLog } from '@/utils/debug'
 
 const MODES = ['rule', 'global', 'direct'] as const
@@ -61,8 +62,13 @@ const ProxyPage = () => {
     if (mode !== curMode && verge?.auto_close_connection) {
       closeAllConnections()
     }
-    await patchClashMode(mode)
-    refreshClashConfig()
+    try {
+      // patchClashMode 在后端 PATCH 失败时会 reject，需提示用户而非静默失败
+      await patchClashMode(mode)
+      refreshClashConfig()
+    } catch (error) {
+      showNotice.error(error)
+    }
   })
 
   const onToggleChainMode = useLockFn(async () => {

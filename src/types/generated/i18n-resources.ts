@@ -842,6 +842,7 @@ export interface TranslationResources {
             }
             fakeIpFilterMode: string
             fakeIpRange: string
+            fakeIpRange6: string
             fallback: {
               description: string
               label: string

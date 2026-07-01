@@ -1,4 +1,3 @@
-import { useQuery } from '@tanstack/react-query'
 import { defaultRangeExtractor, useVirtualizer } from '@tanstack/react-virtual'
 import { useLockFn } from 'ahooks'
 import { throttle } from 'lodash-es'
@@ -25,6 +24,7 @@ import { useVerge } from '@/hooks/use-verge'
 import { useProxiesData } from '@/providers/app-data-context'
 import { calcuProxies } from '@/services/cmds'
 import delayManager from '@/services/delay'
+import { useQuery } from '@/services/query-client'
 import { debugLog } from '@/utils/debug'
 
 import {
@@ -193,7 +193,9 @@ function ChainProxyGroups(props: {
   const availableGroups = useMemo(() => {
     const groups = proxiesData?.groups
     if (!groups) return []
-    return groups.filter((group: any) => group.type === 'Selector')
+    return groups.filter(
+      (group: any) => group.type === 'Selector' || group.type === 'URLTest',
+    )
   }, [proxiesData?.groups])
 
   const defaultRuleGroup = useMemo(() => {
