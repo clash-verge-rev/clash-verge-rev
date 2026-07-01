@@ -63,6 +63,11 @@ impl Config {
 
     /// 初始化订阅
     pub async fn init_config() -> Result<()> {
+        Self::init_config_before_window().await?;
+        Self::init_runtime_config().await
+    }
+
+    pub async fn init_config_before_window() -> Result<()> {
         Self::ensure_default_profile_items().await?;
 
         let verge = Self::verge().await.latest_arc();
@@ -85,6 +90,10 @@ impl Config {
             logging_error!(Type::Core, verge_data.save_file().await);
         }
 
+        Ok(())
+    }
+
+    pub async fn init_runtime_config() -> Result<()> {
         let validation_result = Self::generate_and_validate().await?;
 
         if let Some((msg_type, msg_content)) = validation_result {

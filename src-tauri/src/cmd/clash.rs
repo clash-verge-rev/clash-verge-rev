@@ -36,10 +36,21 @@ pub async fn patch_clash_config(payload: Mapping) -> CmdResult {
 }
 
 /// 修改Clash模式
+///
+/// 将 `change_clash_mode` 的失败上抛给前端，使前端 `catch` 能真正感知后端 PATCH 失败
+/// 并提示用户（此前命令始终返回 `Ok(())`，吞掉了后端错误）。
 #[tauri::command]
 pub async fn patch_clash_mode(payload: String) -> CmdResult {
-    feat::change_clash_mode(payload).await;
-    Ok(())
+    feat::change_clash_mode(payload).await
+}
+
+/// 获取当前 Clash 模式（容错读取）
+///
+/// 直接读取已保存的 clash 配置中的 `mode`，绕开 mihomo `/configs` 的严格
+/// `BaseConfig` 反序列化，作为主页 mode 显示的兜底来源。
+#[tauri::command]
+pub async fn get_clash_mode() -> CmdResult<Option<String>> {
+    Ok(Config::clash().await.data_arc().get_mode().map(Into::into))
 }
 
 /// 切换Clash核心

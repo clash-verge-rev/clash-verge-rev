@@ -1,11 +1,11 @@
 import { ContentCopyRounded } from '@mui/icons-material'
-import { alpha, Box, Button, IconButton } from '@mui/material'
+import { alpha, Box, Button, CircularProgress, IconButton } from '@mui/material'
 import { writeText } from '@tauri-apps/plugin-clipboard-manager'
 import type { Ref } from 'react'
 import { useImperativeHandle, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { BaseDialog, DialogRef } from '@/components/base'
+import { BaseDialog, BaseEmpty, DialogRef } from '@/components/base'
 import { useNetworkInterfaces } from '@/hooks/use-network'
 import { showNotice } from '@/services/notice-service'
 
@@ -21,7 +21,10 @@ export function NetworkInterfaceViewer({ ref }: { ref?: Ref<DialogRef> }) {
     close: () => setOpen(false),
   }))
 
-  const { networkInterfaces } = useNetworkInterfaces()
+  const { networkInterfaces, loading } = useNetworkInterfaces()
+  const isEmpty = networkInterfaces.length === 0
+  const getAddressIp = (address: IAddress) =>
+    isV4 ? address.V4?.ip : address.V6?.ip
 
   return (
     <BaseDialog
@@ -48,57 +51,41 @@ export function NetworkInterfaceViewer({ ref }: { ref?: Ref<DialogRef> }) {
       onClose={() => setOpen(false)}
       onCancel={() => setOpen(false)}
     >
-      {networkInterfaces.map((item) => (
-        <Box key={item.name}>
-          <h4>{item.name}</h4>
-          <Box>
-            {isV4 && (
-              <>
-                {item.addr.map(
-                  (address) =>
-                    address.V4 && (
-                      <AddressDisplay
-                        key={address.V4.ip}
-                        label={t(
-                          'settings.modals.networkInterface.fields.ipAddress',
-                        )}
-                        content={address.V4.ip}
-                      />
-                    ),
-                )}
-                <AddressDisplay
-                  label={t(
-                    'settings.modals.networkInterface.fields.macAddress',
-                  )}
-                  content={item.mac_addr ?? ''}
-                />
-              </>
-            )}
-            {!isV4 && (
-              <>
-                {item.addr.map(
-                  (address) =>
-                    address.V6 && (
-                      <AddressDisplay
-                        key={address.V6.ip}
-                        label={t(
-                          'settings.modals.networkInterface.fields.ipAddress',
-                        )}
-                        content={address.V6.ip}
-                      />
-                    ),
-                )}
-                <AddressDisplay
-                  label={t(
-                    'settings.modals.networkInterface.fields.macAddress',
-                  )}
-                  content={item.mac_addr ?? ''}
-                />
-              </>
-            )}
-          </Box>
+      {loading && isEmpty ? (
+        <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+          <CircularProgress size={24} />
         </Box>
-      ))}
+      ) : isEmpty ? (
+        <Box sx={{ minHeight: 160 }}>
+          <BaseEmpty />
+        </Box>
+      ) : (
+        networkInterfaces.map((item) => (
+          <Box key={item.name}>
+            <h4>{item.name}</h4>
+            <Box>
+              {item.addr.map((address) => {
+                const ip = getAddressIp(address)
+                return (
+                  ip && (
+                    <AddressDisplay
+                      key={ip}
+                      label={t(
+                        'settings.modals.networkInterface.fields.ipAddress',
+                      )}
+                      content={ip}
+                    />
+                  )
+                )
+              })}
+              <AddressDisplay
+                label={t('settings.modals.networkInterface.fields.macAddress')}
+                content={item.mac_addr ?? ''}
+              />
+            </Box>
+          </Box>
+        ))
+      )}
     </BaseDialog>
   )
 }

@@ -10,7 +10,6 @@ import {
   Typography,
 } from '@mui/material'
 import { useTheme } from '@mui/material/styles'
-import { useQuery } from '@tanstack/react-query'
 import { defaultRangeExtractor, useVirtualizer } from '@tanstack/react-virtual'
 import { useLockFn } from 'ahooks'
 import {
@@ -34,6 +33,7 @@ import { useVerge } from '@/hooks/use-verge'
 import { useProxiesData } from '@/providers/app-data-context'
 import { calcuProxies, updateProxyChainConfigInRuntime } from '@/services/cmds'
 import delayManager from '@/services/delay'
+import { useQuery } from '@/services/query-client'
 import { debugLog } from '@/utils/debug'
 
 import { ScrollTopButton } from '../layout/scroll-top-button'
@@ -113,9 +113,9 @@ export const ProxyGroups = (props: Props) => {
   const groups = proxiesData?.groups
   const availableGroups = useMemo(() => {
     if (!groups) return []
-    // 在链式代理模式下，仅显示支持选择节点的 Selector 代理组
+    // 在链式代理模式下，仅显示支持选择节点的代理组
     return isChainMode
-      ? groups.filter((g: any) => g.type === 'Selector')
+      ? groups.filter((g: any) => g.type === 'Selector' || g.type === 'URLTest')
       : groups
   }, [groups, isChainMode])
 
@@ -184,9 +184,14 @@ export const ProxyGroups = (props: Props) => {
 
   const rangeExtractor = useCallback(
     (range: Parameters<typeof defaultRangeExtractor>[0]) => {
-      const activeStickyIndex = [...stickyGroupIndexes]
-        .reverse()
-        .find((index) => index <= range.startIndex)
+      let activeStickyIndex: number | undefined
+      for (let i = stickyGroupIndexes.length - 1; i >= 0; i -= 1) {
+        const index = stickyGroupIndexes[i]
+        if (index <= range.startIndex) {
+          activeStickyIndex = index
+          break
+        }
+      }
       activeStickyIndexRef.current = activeStickyIndex ?? null
 
       const indexes = defaultRangeExtractor(range)
@@ -201,7 +206,7 @@ export const ProxyGroups = (props: Props) => {
     count: renderList.length,
     getScrollElement: () => parentRef.current,
     estimateSize: () => 56,
-    overscan: 15,
+    overscan: 8,
     getItemKey: (index) => renderList[index]?.key ?? index,
     rangeExtractor,
   })

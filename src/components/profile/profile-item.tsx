@@ -16,6 +16,7 @@ import {
   MenuItem,
   Typography,
 } from '@mui/material'
+import { listen } from '@tauri-apps/api/event'
 import { open } from '@tauri-apps/plugin-shell'
 import { useLockFn } from 'ahooks'
 import dayjs from 'dayjs'
@@ -101,6 +102,20 @@ export const ProfileItem = (props: Props) => {
   const [nextUpdateTime, setNextUpdateTime] = useState('')
   const refreshTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
+  )
+  const setLoading = useCallback(
+    (loading: boolean) => {
+      setLoadingCache((cache) => {
+        const next = new Set(cache)
+        if (loading) {
+          next.add(itemData.uid)
+        } else {
+          next.delete(itemData.uid)
+        }
+        return next
+      })
+    },
+    [itemData.uid, setLoadingCache],
   )
 
   const { uid, name = 'Profile', extra, updated = 0, option } = itemData
@@ -201,11 +216,10 @@ export const ProfileItem = (props: Props) => {
 
   // 订阅定时器更新事件
   useEffect(() => {
-    // 处理定时器更新事件 - 这个事件专门用于通知定时器变更
-    const handleTimerUpdate = (event: Event) => {
-      const source = event as CustomEvent<string> & { payload?: string }
-      const updatedUid = source.detail ?? source.payload
+    let disposed = false
+    let unlistenTimerUpdate: (() => void) | undefined
 
+    listen<string>('verge://timer-updated', ({ payload: updatedUid }) => {
       // 只有当更新的是当前配置时才刷新显示
       if (updatedUid === itemData.uid && showNextUpdateRef.current) {
         debugLog(`收到定时器更新事件: uid=${updatedUid}`)
@@ -216,17 +230,22 @@ export const ProfileItem = (props: Props) => {
           fetchNextUpdateTime(true)
         }, 1000)
       }
-    }
-
-    // 只注册定时器更新事件监听
-    window.addEventListener('verge://timer-updated', handleTimerUpdate)
+    })
+      .then((unlisten) => {
+        if (disposed) {
+          unlisten()
+          return
+        }
+        unlistenTimerUpdate = unlisten
+      })
+      .catch(console.error)
 
     return () => {
+      disposed = true
       if (refreshTimeoutRef.current !== undefined) {
         clearTimeout(refreshTimeoutRef.current)
       }
-      // 清理事件监听
-      window.removeEventListener('verge://timer-updated', handleTimerUpdate)
+      unlistenTimerUpdate?.()
     }
   }, [fetchNextUpdateTime, itemData.uid])
 
@@ -246,7 +265,7 @@ export const ProfileItem = (props: Props) => {
     100,
   )
 
-  const loading = loadingCache[itemData.uid] ?? false
+  const loading = loadingCache.has(itemData.uid)
 
   // interval update fromNow field
   const [, forceRefresh] = useReducer((value: number) => value + 1, 0)
@@ -375,7 +394,7 @@ export const ProfileItem = (props: Props) => {
   /// 2 至少使用一个代理，根据订阅，如果没订阅，默认使用系统代理
   const onUpdate = useLockFn(async (type: 0 | 1 | 2): Promise<void> => {
     setAnchorEl(null)
-    setLoadingCache((cache) => ({ ...cache, [itemData.uid]: true }))
+    setLoading(true)
 
     // 根据类型设置初始更新选项
     const option: Partial<IProfileOption> = {}
@@ -403,7 +422,7 @@ export const ProfileItem = (props: Props) => {
       // 更新完全失败（包括后端的回退尝试）
       // 不需要做处理，后端会通过事件通知系统发送错误
     } finally {
-      setLoadingCache((cache) => ({ ...cache, [itemData.uid]: false }))
+      setLoading(false)
     }
   })
 
@@ -588,45 +607,49 @@ export const ProfileItem = (props: Props) => {
 
   // 监听自动更新事件
   useEffect(() => {
-    const handleUpdateStarted = (event: Event) => {
-      const customEvent = event as CustomEvent<{ uid?: string }>
-      if (customEvent.detail?.uid === itemData.uid) {
-        setLoadingCache((cache) => ({ ...cache, [itemData.uid]: true }))
-      }
-    }
+    let disposed = false
+    let unlisteners: Array<() => void> = []
 
-    const handleUpdateCompleted = (event: Event) => {
-      const customEvent = event as CustomEvent<{ uid?: string }>
-      if (customEvent.detail?.uid === itemData.uid) {
-        setLoadingCache((cache) => ({ ...cache, [itemData.uid]: false }))
+    Promise.allSettled([
+      listen<{ uid?: string }>('profile-update-started', ({ payload }) => {
+        if (payload.uid === itemData.uid) {
+          setLoading(true)
+        }
+      }),
+      listen<{ uid?: string }>('profile-update-completed', ({ payload }) => {
+        if (payload.uid !== itemData.uid) {
+          return
+        }
+
+        setLoading(false)
         // 刷新 profile 数据以获取最新的 updated 时间戳
         void mutateProfiles()
         // 更新完成后刷新显示
-        if (showNextUpdate) {
+        if (showNextUpdateRef.current) {
           fetchNextUpdateTime()
         }
-      }
-    }
+      }),
+    ]).then((results) => {
+      const registeredUnlisteners = results.flatMap((result) =>
+        result.status === 'fulfilled' ? [result.value] : [],
+      )
 
-    // 注册事件监听
-    window.addEventListener('profile-update-started', handleUpdateStarted)
-    window.addEventListener('profile-update-completed', handleUpdateCompleted)
+      if (disposed || results.some((result) => result.status === 'rejected')) {
+        registeredUnlisteners.forEach((unlisten) => unlisten())
+        results.forEach((result) => {
+          if (result.status === 'rejected') console.error(result.reason)
+        })
+        return
+      }
+
+      unlisteners = registeredUnlisteners
+    })
 
     return () => {
-      // 清理事件监听
-      window.removeEventListener('profile-update-started', handleUpdateStarted)
-      window.removeEventListener(
-        'profile-update-completed',
-        handleUpdateCompleted,
-      )
+      disposed = true
+      unlisteners.forEach((unlisten) => unlisten())
     }
-  }, [
-    fetchNextUpdateTime,
-    itemData.uid,
-    mutateProfiles,
-    setLoadingCache,
-    showNextUpdate,
-  ])
+  }, [fetchNextUpdateTime, itemData.uid, mutateProfiles, setLoading])
 
   const handleSaveProfileDocument = useLockFn(async () => {
     const currentValue = profileDocument.value

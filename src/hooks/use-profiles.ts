@@ -1,4 +1,3 @@
-import { useQuery } from '@tanstack/react-query'
 import { selectNodeForGroup } from 'tauri-plugin-mihomo-api'
 
 import {
@@ -7,7 +6,7 @@ import {
   patchProfile,
   patchProfilesConfig,
 } from '@/services/cmds'
-import { queryClient } from '@/services/query-client'
+import { setCacheData, useQuery } from '@/services/query-client'
 import { debugLog } from '@/utils/debug'
 
 export const useProfiles = () => {
@@ -201,7 +200,7 @@ export const useProfiles = () => {
         await patchProfile(current.uid, { selected: newSelected })
         debugLog('[ActivateSelected] 代理选择配置保存成功')
 
-        queryClient.setQueryData(['getProxies'], await calcuProxies())
+        setCacheData(['getProxies'], await calcuProxies())
       } catch (error: unknown) {
         console.error(
           '[ActivateSelected] 保存代理选择配置失败:',

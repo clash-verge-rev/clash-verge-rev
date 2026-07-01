@@ -118,7 +118,7 @@
     },
     "clashMode": {
       "errors": {
-        "communication": "코어 통신 오류"
+        "communication": "코어 통신 오류입니다. 컴퓨터를 다시 시작한 후 다시 시도하세요"
       },
       "labels": {
         "rule": "규칙",

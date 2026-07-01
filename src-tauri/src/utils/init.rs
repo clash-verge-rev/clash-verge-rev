@@ -123,7 +123,7 @@ pub async fn delete_log() -> Result<()> {
 }
 
 /// 初始化DNS配置文件
-async fn init_dns_config() -> Result<()> {
+pub(super) async fn init_dns_config() -> Result<()> {
     use serde_yaml_ng::Value;
 
     // 创建DNS子配置
@@ -132,6 +132,7 @@ async fn init_dns_config() -> Result<()> {
         ("listen".into(), Value::String(":53".into())),
         ("enhanced-mode".into(), Value::String("fake-ip".into())),
         ("fake-ip-range".into(), Value::String("198.18.0.1/16".into())),
+        ("fake-ip-range6".into(), Value::String("fdfe:dcba:9876::1/64".into())),
         ("fake-ip-filter-mode".into(), Value::String("blacklist".into())),
         ("prefer-h3".into(), Value::Bool(false)),
         ("respect-rules".into(), Value::Bool(false)),
@@ -305,10 +306,6 @@ pub async fn init_config() -> Result<()> {
         }
         logging!(info, Type::Setup, "后台日志清理任务完成");
     });
-
-    if let Err(e) = init_dns_config().await {
-        logging!(warn, Type::Setup, "DNS config initialization failed: {}", e);
-    }
 
     Ok(())
 }

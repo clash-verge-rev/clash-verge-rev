@@ -1,9 +1,9 @@
-import { useQueryClient } from '@tanstack/react-query'
 import dayjs from 'dayjs'
 import { useEffect, useRef } from 'react'
 import { MihomoWebSocket, type LogLevel } from 'tauri-plugin-mihomo-api'
 
 import { getClashLogs } from '@/services/cmds'
+import { setCacheData } from '@/services/query-client'
 
 import { useClashLog } from './use-clash-log'
 import { useMihomoWsSubscription } from './use-mihomo-ws-subscription'
@@ -14,11 +14,11 @@ type LogType = ILogItem['type']
 
 const DEFAULT_LOG_TYPES: LogType[] = ['debug', 'info', 'warning', 'error']
 const LOG_LEVEL_FILTERS: Record<LogLevel, LogType[]> = {
-  debug: DEFAULT_LOG_TYPES,
-  info: ['info', 'warning', 'error'],
-  warning: ['warning', 'error'],
-  error: ['error'],
-  silent: [],
+  DEBUG: DEFAULT_LOG_TYPES,
+  INFO: ['info', 'warning', 'error'],
+  WARNING: ['warning', 'error'],
+  ERROR: ['error'],
+  SILENT: [],
 }
 
 const clampLogs = (logs: ILogItem[]): ILogItem[] =>
@@ -48,10 +48,9 @@ const appendLogs = (
 }
 
 export const useLogData = () => {
-  const queryClient = useQueryClient()
   const [clashLog] = useClashLog()
   const enableLog = clashLog.enable
-  const logLevel = clashLog.logLevel
+  const logLevel = clashLog.logLevel.toUpperCase() as LogLevel
   const allowedTypes = LOG_LEVEL_FILTERS[logLevel] ?? DEFAULT_LOG_TYPES
   const hasLoadedInitialLogsRef = useRef(false)
 
@@ -156,7 +155,7 @@ export const useLogData = () => {
   const refreshGetClashLog = (clear = false) => {
     if (clear) {
       if (subscriptionCacheKey) {
-        queryClient.setQueryData<ILogItem[]>([subscriptionCacheKey], [])
+        setCacheData<ILogItem[]>([subscriptionCacheKey], [])
       }
     } else {
       hasLoadedInitialLogsRef.current = false

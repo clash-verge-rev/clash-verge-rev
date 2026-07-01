@@ -18,13 +18,12 @@ use std::{
 use tokio::{fs, time::timeout};
 use zip::write::SimpleFileOptions;
 
-// 应用版本常量，来自 tauri.conf.json
 const APP_VERSION: &str = env!("CARGO_PKG_VERSION");
 
-const TIMEOUT_UPLOAD: u64 = 300; // 上传超时 5 分钟
-const TIMEOUT_DOWNLOAD: u64 = 300; // 下载超时 5 分钟
-const TIMEOUT_LIST: u64 = 3; // 列表超时 30 秒
-const TIMEOUT_DELETE: u64 = 3; // 删除超时 30 秒
+const TIMEOUT_UPLOAD: u64 = 300;
+const TIMEOUT_DOWNLOAD: u64 = 300;
+const TIMEOUT_LIST: u64 = 30;
+const TIMEOUT_DELETE: u64 = 30;
 
 #[derive(Clone)]
 struct WebDavConfig {
@@ -67,7 +66,6 @@ impl WebDavClient {
     }
 
     async fn get_client(&self, op: Operation) -> Result<reqwest_dav::Client, Error> {
-        // 先尝试从缓存获取
         {
             let clients_map = self.clients.load();
             if let Some(client) = clients_map.get(&op) {
@@ -75,15 +73,12 @@ impl WebDavClient {
             }
         }
 
-        // 获取或创建配置
         let config = {
-            // 首先检查是否已有配置
             let existing_config = self.config.load();
 
             if let Some(cfg_arc) = existing_config.clone() {
                 (*cfg_arc).clone()
             } else {
-                // 释放锁后获取异步配置
                 let verge = Config::verge().await.data_arc();
                 if verge.webdav_url.is_none() || verge.webdav_username.is_none() || verge.webdav_password.is_none() {
                     let msg: String =
@@ -102,13 +97,11 @@ impl WebDavClient {
                     password: verge.webdav_password.clone().unwrap_or_default(),
                 };
 
-                // 存储配置到 ArcSwapOption
                 self.config.store(Some(Arc::new(config.clone())));
                 config
             }
         };
 
-        // 创建新的客户端
         let client = reqwest_dav::ClientBuilder::new()
             .set_agent(
                 reqwest::Client::builder()
@@ -117,7 +110,6 @@ impl WebDavClient {
                     .timeout(Duration::from_secs(op.timeout()))
                     .user_agent(format!("clash-verge/{APP_VERSION} ({OS} WebDAV-Client)"))
                     .redirect(reqwest::redirect::Policy::custom(|attempt| {
-                        // 允许所有请求类型的重定向，包括PUT
                         if attempt.previous().len() >= 5 {
                             attempt.error("重定向次数过多")
                         } else {
@@ -130,21 +122,48 @@ impl WebDavClient {
             .set_auth(reqwest_dav::Auth::Basic(config.username.into(), config.password.into()))
             .build()?;
 
-        // 尝试检查目录是否存在，如果不存在尝试创建
-        if client
-            .list(dirs::BACKUP_DIR, reqwest_dav::Depth::Number(0))
-            .await
-            .is_err()
-        {
-            match client.mkcol(dirs::BACKUP_DIR).await {
-                Ok(_) => logging!(info, Type::Backup, "Successfully created backup directory"),
-                Err(e) => {
-                    logging!(warn, Type::Backup, "Warning: Failed to create backup directory: {}", e);
-                    // 清除缓存，强制下次重新尝试
-                    self.reset();
-                    return Err(anyhow::Error::msg(format!("Failed to create backup directory: {}", e)));
+        // 直接使用 MKCOL；部分服务器的 depth-0 PROPFIND 会误报解码错误。
+        if let Err(e) = client.mkcol(dirs::BACKUP_DIR).await {
+            let (status_code, message) = match &e {
+                reqwest_dav::Error::Decode(reqwest_dav::DecodeError::Server(server_err)) => {
+                    (Some(server_err.response_code), Some(server_err.message.as_str()))
                 }
+                reqwest_dav::Error::Decode(reqwest_dav::DecodeError::StatusMismatched(status_err)) => {
+                    (Some(status_err.response_code), None)
+                }
+                reqwest_dav::Error::Reqwest(http_err) => (http_err.status().map(|s| s.as_u16()), None),
+                _ => (None, None),
+            };
+
+            // 409 表示父目录不存在，不能按消息启发式处理。
+            if status_code == Some(409) {
+                logging!(
+                    warn,
+                    Type::Backup,
+                    "Backup directory cannot be created because its parent folder does not exist"
+                );
+                self.reset();
+                return Err(anyhow::Error::msg(
+                    "Failed to create backup directory: parent directory does not exist",
+                ));
             }
+
+            // 405 是标准的已存在响应；部分服务器只在消息里说明。
+            let already_exists = status_code == Some(405)
+                || message.is_some_and(|m| {
+                    let m = m.to_ascii_lowercase();
+                    m.contains("already exist") || m.contains("already taken")
+                });
+
+            if already_exists {
+                logging!(info, Type::Backup, "Backup directory already exists");
+            } else {
+                logging!(warn, Type::Backup, "Failed to create backup directory: {}", e);
+                self.reset();
+                return Err(anyhow::Error::msg(format!("Failed to create backup directory: {}", e)));
+            }
+        } else {
+            logging!(info, Type::Backup, "Successfully created backup directory");
         }
 
         {

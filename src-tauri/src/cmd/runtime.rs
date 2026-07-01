@@ -94,12 +94,10 @@ pub async fn get_runtime_proxy_chain_config(proxy_chain_exit_node: String) -> Cm
 /// 更新运行时链式代理配置
 #[tauri::command]
 pub async fn update_proxy_chain_config_in_runtime(proxy_chain_config: Option<serde_yaml_ng::Value>) -> CmdResult<()> {
+    match CoreManager::global()
+        .update_runtime_config(|d| d.update_proxy_chain_config(proxy_chain_config))
+        .await
     {
-        let runtime = Config::runtime().await;
-        runtime.edit_draft(|d| d.update_proxy_chain_config(proxy_chain_config));
-        // 我们需要在 CoreManager 中验证并应用配置，这里不应该直接调用 runtime.apply()
-    }
-    match CoreManager::global().apply_generate_config().await {
         Ok(outcome) if outcome.is_valid() => {}
         Ok(outcome) => logging!(
             warn,

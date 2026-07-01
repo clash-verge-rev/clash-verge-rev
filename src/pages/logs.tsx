@@ -61,15 +61,16 @@ const LogPage = () => {
     [filterLogs, isDescending],
   )
 
+  const scrollRef = useRef({ isNearBottom: true })
   const virtuosoRef = useRef<VirtualListHandle>(null)
 
   useEffect(() => {
-    if (!isDescending && filteredLogs.length > 0) {
+    if (!isDescending && scrollRef.current.isNearBottom) {
       virtuosoRef.current?.scrollToIndex(filteredLogs.length - 1, {
         behavior: 'smooth',
       })
     }
-  }, [filteredLogs.length, isDescending])
+  }, [isDescending, filteredLogs.length])
 
   const handleLogLevelChange = (newLevel: LogFilter) => {
     setClashLog((pre) => ({ ...pre!, logFilter: newLevel }))
@@ -188,6 +189,12 @@ const LogPage = () => {
           renderItem={(i) => (
             <LogItem value={filteredLogs[i]} searchState={searchState} />
           )}
+          onScroll={(event) => {
+            const element = event.currentTarget as HTMLDivElement
+            scrollRef.current.isNearBottom =
+              element.scrollHeight - element.scrollTop - element.clientHeight <=
+              20
+          }}
           style={{ flex: 1 }}
         />
       ) : (

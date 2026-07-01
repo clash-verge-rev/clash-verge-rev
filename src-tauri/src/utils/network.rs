@@ -121,6 +121,10 @@ impl NetworkManager {
     }
 
     fn should_retry_with_static_webpki_roots(err: &anyhow::Error) -> bool {
+        if err.chain().any(Self::is_legacy_tls_protocol_error) {
+            return false;
+        }
+
         err.chain().any(|e| {
             let msg = e.to_string().to_ascii_lowercase();
             [
@@ -139,6 +143,22 @@ impl NetworkManager {
             .iter()
             .any(|kw| msg.contains(kw))
         })
+    }
+
+    fn context_reqwest_error(err: reqwest::Error, context: &'static str) -> anyhow::Error {
+        let legacy_tls = Self::is_legacy_tls_protocol_error(&err);
+        let err = anyhow::Error::new(err).context(context);
+
+        if legacy_tls {
+            err.context("Subscription server uses legacy TLS; only TLS 1.2/1.3 is supported. TLS 1.0/1.1 is insecure")
+        } else {
+            err
+        }
+    }
+
+    fn is_legacy_tls_protocol_error(err: &(dyn std::error::Error + 'static)) -> bool {
+        let detail = format!("{err:#?}").to_ascii_lowercase();
+        detail.contains("protocolversion") || detail.contains("protocol version")
     }
 
     pub async fn create_request(
@@ -170,13 +190,11 @@ impl NetworkManager {
         let mut parsed = Url::parse(url)?;
         let mut extra_headers = HeaderMap::new();
 
-        if !parsed.username().is_empty()
-            && let Some(pass) = parsed.password()
-        {
+        if !parsed.username().is_empty() {
             let username = percent_encoding::percent_decode_str(parsed.username())
                 .decode_utf8_lossy()
                 .into_owned();
-            let password = percent_encoding::percent_decode_str(pass)
+            let password = percent_encoding::percent_decode_str(parsed.password().unwrap_or_default())
                 .decode_utf8_lossy()
                 .into_owned();
             let auth_str = format!("{}:{}", username, password);
@@ -207,7 +225,7 @@ impl NetworkManager {
         let response = match request_builder.send().await {
             Ok(resp) => resp,
             Err(e) => {
-                return Err(anyhow::Error::new(e).context("Request failed"));
+                return Err(Self::context_reqwest_error(e, "Request failed"));
             }
         };
 
@@ -216,7 +234,7 @@ impl NetworkManager {
         let body = match response.text().await {
             Ok(text) => text.into(),
             Err(e) => {
-                return Err(anyhow::anyhow!("Failed to read response body: {}", e));
+                return Err(Self::context_reqwest_error(e, "Failed to read response body"));
             }
         };
 
@@ -299,9 +317,7 @@ impl NetworkManager {
                 )
                 .await
                 .map_err(|fallback_err| {
-                    anyhow::anyhow!(
-                        "platform TLS verifier failed: {err}; static webpki roots fallback failed: {fallback_err}"
-                    )
+                    fallback_err.context("static webpki roots fallback failed after platform TLS verifier failed")
                 }),
             Err(err) => Err(err),
         }

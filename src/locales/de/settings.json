@@ -490,7 +490,7 @@
     "dns": {
       "dialog": {
         "title": "DNS-Überschreibung",
-        "warning": "Wenn Sie sich nicht mit diesen Einstellungen auskennen, ändern Sie sie nicht und lassen Sie die DNS-Überschreibung aktiviert."
+        "warning": "Wenn Sie sich nicht mit diesen Einstellungen auskennen, ändern Sie sie nicht und lassen Sie die DNS-Überschreibung deaktiviert."
       },
       "sections": {
         "general": "DNS-Einstellungen",
@@ -502,6 +502,7 @@
         "listen": "DNS-Lauschangabe",
         "enhancedMode": "Erweiterter Modus",
         "fakeIpRange": "Fake-IP-Bereich",
+        "fakeIpRange6": "Fake-IP-Bereich (IPv6)",
         "fakeIpFilterMode": "Fake-IP-Filtermodus",
         "ipv6": {
           "label": "IPv6",

@@ -141,8 +141,6 @@ mod app_init {
             cmd::open_logs_dir,
             cmd::open_web_url,
             cmd::open_core_dir,
-            cmd::open_app_log,
-            cmd::open_core_log,
             cmd::get_portable_flag,
             cmd::get_network_interfaces,
             cmd::get_system_hostname,
@@ -162,6 +160,7 @@ mod app_init {
             cmd::get_clash_info,
             cmd::patch_clash_config,
             cmd::patch_clash_mode,
+            cmd::get_clash_mode,
             cmd::change_clash_core,
             cmd::get_runtime_config,
             cmd::get_runtime_yaml,
@@ -233,29 +232,59 @@ pub fn run() {
 
     let builder = app_init::setup_plugins(tauri::Builder::default())
         .setup(|app| {
-            #[allow(clippy::expect_used)]
-            APP_HANDLE
-                .set(app.app_handle().clone())
-                .expect("failed to set global app handle");
-
-            resolve::init_work_dir_and_logger()?;
-
-            logging!(info, Type::Setup, "开始应用初始化...");
-            if let Err(e) = app_init::setup_autostart(app) {
-                logging!(error, Type::Setup, "Failed to setup autostart: {}", e);
+            // Logger may not be ready yet, so mirror setup panics to stderr.
+            fn log_setup_panic(stage: &str, panic: Box<dyn std::any::Any + Send>) {
+                let msg = panic
+                    .downcast_ref::<&str>()
+                    .map(|s| (*s).to_string())
+                    .or_else(|| panic.downcast_ref::<String>().cloned())
+                    .unwrap_or_else(|| "unknown panic payload".to_string());
+                eprintln!("[clash-verge] panic during app setup ({stage}), continuing in degraded mode: {msg}");
+                logging!(
+                    error,
+                    Type::Setup,
+                    "setup 阶段 panic（{}）—— 降级继续启动: {}",
+                    stage,
+                    msg
+                );
             }
 
-            app_init::setup_deep_links(app);
+            // Prevent setup panics from aborting across macOS applicationDidFinishLaunching.
+            // Keep pre-init separate so window/core/tray startup is still scheduled after a panic.
+            if let Err(panic) = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                #[allow(clippy::expect_used)]
+                APP_HANDLE
+                    .set(app.app_handle().clone())
+                    .expect("failed to set global app handle");
 
-            if let Err(e) = app_init::setup_window_state(app) {
-                logging!(error, Type::Setup, "Failed to setup window state: {}", e);
+                if let Err(e) = resolve::init_work_dir_and_logger() {
+                    logging!(error, Type::Setup, "Failed to init work dir/logger: {}", e);
+                }
+
+                logging!(info, Type::Setup, "开始应用初始化...");
+                if let Err(e) = app_init::setup_autostart(app) {
+                    logging!(error, Type::Setup, "Failed to setup autostart: {}", e);
+                }
+
+                app_init::setup_deep_links(app);
+
+                if let Err(e) = app_init::setup_window_state(app) {
+                    logging!(error, Type::Setup, "Failed to setup window state: {}", e);
+                }
+            })) {
+                log_setup_panic("pre-init", panic);
             }
 
-            resolve::resolve_setup_async();
-            resolve::resolve_setup_sync();
-            resolve::init_signal();
+            // Always attempt the startup stage, even if pre-init degraded.
+            if let Err(panic) = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                resolve::resolve_setup_async();
+                resolve::resolve_setup_sync();
+                resolve::init_signal();
+                logging!(info, Type::Setup, "初始化已启动");
+            })) {
+                log_setup_panic("window-core", panic);
+            }
 
-            logging!(info, Type::Setup, "初始化已启动");
             Ok(())
         })
         .invoke_handler(app_init::generate_handlers());
@@ -397,9 +426,14 @@ pub fn run() {
                 event_handlers::handle_reopen(has_visible_windows).await;
             });
         }
-        tauri::RunEvent::Exit => {
+        tauri::RunEvent::Exit => AsyncHandler::block_on(async {
+            // Windows session ending currently reaches Tao as WM_ENDSESSION and
+            // destroys the loop without a preventable ExitRequested event.
+            if !handle::Handle::global().is_exiting() {
+                feat::quit().await;
+            }
             logging!(info, Type::System, "Application exited");
-        }
+        }),
         #[allow(unused_variables)]
         tauri::RunEvent::ExitRequested { api, code, .. } => {
             if module::lightweight::is_in_lightweight_mode() && !handle::Handle::global().is_exiting() {
@@ -407,7 +441,7 @@ pub fn run() {
             } else if code.is_none() {
                 api.prevent_exit();
                 if !handle::Handle::global().is_exiting() {
-                    AsyncHandler::spawn(|| async {
+                    AsyncHandler::block_on(async {
                         feat::quit().await;
                     });
                 }

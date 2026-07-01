@@ -3,7 +3,7 @@ use anyhow::{Context as _, Result, anyhow, bail};
 use clash_verge_logging::{Type, logging};
 use nanoid::nanoid;
 use serde::{Serialize, de::DeserializeOwned};
-use serde_yaml_ng::Mapping;
+use serde_yaml_ng::{Mapping, Value};
 #[cfg(target_os = "windows")]
 use std::path::Path;
 use std::{path::PathBuf, str::FromStr};
@@ -35,10 +35,10 @@ pub async fn read_mapping(path: &PathBuf) -> Result<Mapping> {
             val.apply_merge()
                 .with_context(|| format!("failed to apply merge \"{}\"", path.display()))?;
 
-            Ok(val
-                .as_mapping()
-                .ok_or_else(|| anyhow!("failed to transform to yaml mapping \"{}\"", path.display()))?
-                .to_owned())
+            match val {
+                Value::Mapping(map) => Ok(map),
+                _ => Err(anyhow!("failed to transform to yaml mapping \"{}\"", path.display())),
+            }
         }
         Err(err) => {
             let error_msg = format!("YAML syntax error in {}: {}", path.display(), err);
@@ -66,10 +66,9 @@ pub async fn save_yaml<T: Serialize + Sync>(path: &PathBuf, data: &T, prefix: Op
         None => data_str,
     };
 
-    let path_str = path.as_os_str().to_string_lossy().to_string();
     tokio::fs::write(path, yaml_str.as_bytes())
         .await
-        .with_context(|| format!("failed to save file \"{path_str}\""))?;
+        .with_context(|| format!("failed to save file \"{}\"", path.display()))?;
     tokio::time::sleep(std::time::Duration::from_millis(50)).await;
     Ok(())
 }
@@ -201,6 +200,22 @@ pub fn get_last_part_and_decode(url: &str) -> Option<String> {
 pub fn open_file(path: PathBuf) -> Result<()> {
     open::that_detached(path.as_os_str())?;
     Ok(())
+}
+
+pub fn open_latest_log(path: PathBuf) -> Result<()> {
+    #[cfg(target_os = "windows")]
+    let path = snapshot_path(&path)?;
+    open_file(path)
+}
+
+pub fn open_app_latest_log() -> Result<()> {
+    let path = crate::utils::dirs::app_latest_log()?;
+    open_latest_log(path)
+}
+
+pub fn open_core_latest_log() -> Result<()> {
+    let path = crate::utils::dirs::clash_latest_log()?;
+    open_latest_log(path)
 }
 
 #[cfg(target_os = "linux")]

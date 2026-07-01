@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.4.10/schema.json",
+  "$schema": "node_modules/@biomejs/biome/configuration_schema.json",
   "assist": {
     "actions": {
       "source": {
@@ -41,7 +41,8 @@
       "!CONTRIBUTING.md",
       "!.changelog_backups",
       "!.github",
-      "!.pnpm-lock.yaml"
+      "!.pnpm-lock.yaml",
+      "!.vfox"
     ]
   }
 }

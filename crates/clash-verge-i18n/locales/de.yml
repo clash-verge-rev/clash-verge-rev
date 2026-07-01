@@ -34,6 +34,7 @@ notifications:
 service:
   adminInstallPrompt: Für die Installation des Clash-Verge-Dienstes sind Administratorrechte erforderlich.
   adminUninstallPrompt: Für die Deinstallation des Clash-Verge-Dienstes sind Administratorrechte erforderlich.
+  translocatedCorePath: Clash Verge is running from a temporary (App Translocation) path and can't locate the core. Please move Clash Verge into the Applications folder and reopen it.
 tray:
   dashboard: Übersicht
   ruleMode: Regelmodus

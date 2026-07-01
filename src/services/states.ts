@@ -6,7 +6,7 @@ const [ThemeModeProvider, useThemeMode, useSetThemeMode] = createContextState<
 
 // save the state of each profile item loading
 const [LoadingCacheProvider, useLoadingCache, useSetLoadingCache] =
-  createContextState<Record<string, boolean>>({})
+  createContextState<Set<string>>(new Set())
 
 // save update state
 const [UpdateStateProvider, useUpdateState, useSetUpdateState] =

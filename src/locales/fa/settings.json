@@ -490,7 +490,7 @@
     "dns": {
       "dialog": {
         "title": "بازنویسی DNS",
-        "warning": "اگر با این تنظیمات آشنا نیستید، لطفاً آنها را تغییر ندهید و DNS Overwrite را فعال نگه دارید."
+        "warning": "اگر با این تنظیمات آشنا نیستید، لطفاً آنها را تغییر ندهید و DNS Overwrite را غیرفعال نگه دارید."
       },
       "sections": {
         "general": "تنظیمات DNS",
@@ -502,6 +502,7 @@
         "listen": "DNS Listen",
         "enhancedMode": "Enhanced Mode",
         "fakeIpRange": "Fake IP Range",
+        "fakeIpRange6": "Fake IP Range (IPv6)",
         "fakeIpFilterMode": "Fake IP Filter Mode",
         "ipv6": {
           "label": "IPv6",

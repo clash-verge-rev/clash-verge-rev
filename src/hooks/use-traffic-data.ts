@@ -3,7 +3,7 @@ import { MihomoWebSocket, Traffic } from 'tauri-plugin-mihomo-api'
 import { useMihomoWsSubscription } from './use-mihomo-ws-subscription'
 import { useTrafficMonitorEnhanced } from './use-traffic-monitor'
 
-const FALLBACK_TRAFFIC: Traffic = { up: 0, down: 0 }
+const FALLBACK_TRAFFIC: Traffic = { up: 0, down: 0, upTotal: 0, downTotal: 0 }
 const DUPLICATE_TRAFFIC_WINDOW_MS = 50
 
 let lastTrafficSignature = ''
@@ -11,7 +11,7 @@ let lastTrafficTimestamp = 0
 
 const shouldSkipDuplicateTraffic = (traffic: Traffic) => {
   const now = Date.now()
-  const signature = `${traffic.up}:${traffic.down}`
+  const signature = `${traffic.up}:${traffic.down}:${traffic.upTotal}:${traffic.downTotal}`
 
   if (
     signature === lastTrafficSignature &&
