@@ -180,7 +180,7 @@ jobs:
       - name: Install Rust Stable
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: '1.96.0'
+          toolchain: '1.96.1'
           targets: ${{ matrix.target }}
 
       - name: Add Rust Target
@@ -299,7 +299,7 @@ jobs:
       - name: Install Rust Stable
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: '1.96.0'
+          toolchain: '1.96.1'
           targets: ${{ matrix.target }}
 
       - name: Add Rust Target
@@ -446,7 +446,7 @@ jobs:
       - name: Install Rust Stable
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: '1.96.0'
+          toolchain: '1.96.1'
           targets: ${{ matrix.target }}
 
       - name: Add Rust Target
