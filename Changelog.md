@@ -21,7 +21,7 @@
 
 - 增加 TrustTunnel, OpenVPN, Tailscale, GostRelay 节点显示支持
 - 全局扩展脚本增加恢复默认按钮
-- DNS 添加 fake-ip-range6 可配置项 
+- DNS 添加 fake-ip-range6 可配置项
 
 </details>
 
@@ -32,5 +32,6 @@
 - 更健壮的 Mihomo API 通信机制
 - 关闭 autofill 弹出窗口
 - 改进切换订阅后激活选中节点的逻辑
+- 实现代理组粘性滚动列表
 
 </details>
