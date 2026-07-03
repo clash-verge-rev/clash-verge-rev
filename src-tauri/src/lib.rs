@@ -289,6 +289,12 @@ pub fn run() {
         })
         .invoke_handler(app_init::generate_handlers());
 
+    // macOS 内存压力下 WKWebView 渲染进程可能被系统终止（表现为白屏），
+    // 注册恢复钩子：清理孤儿 WebSocket 订阅防止内存泄漏；窗口可见时立即 reload
+    // 恢复页面，不可见时延迟到用户下次打开窗口再 reload。
+    #[cfg(target_os = "macos")]
+    let builder = builder.on_web_content_process_terminate(resolve::window::on_web_content_process_terminated);
+
     mod event_handlers {
         #[cfg(target_os = "macos")]
         use crate::module::lightweight;

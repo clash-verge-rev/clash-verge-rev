@@ -218,6 +218,16 @@ impl WindowManager {
     fn activate_window(window: &WebviewWindow<Wry>) -> WindowOperationResult {
         logging!(info, Type::Window, "开始激活窗口");
 
+        // 关键步骤：渲染进程曾在窗口不可见时被系统终止（macOS 内存压力），
+        // 页面当前是死亡的白屏状态，显示窗口前先 reload 重新拉起渲染进程。
+        #[cfg(target_os = "macos")]
+        if crate::utils::resolve::window::take_webview_needs_reload() {
+            logging!(info, Type::Window, "渲染进程曾被系统终止，激活窗口前重载页面");
+            if let Err(e) = window.reload() {
+                logging!(warn, Type::Window, "重载页面失败: {}", e);
+            }
+        }
+
         let mut operations_successful = true;
 
         // 1. 如果窗口最小化，先取消最小化
