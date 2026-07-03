@@ -4,7 +4,10 @@ use tauri::webview::PageLoadEvent;
 use tauri::{Theme, WebviewWindow};
 
 use crate::{config::Config, core::handle, utils::resolve::window_script::build_window_initial_script};
-use clash_verge_logging::{Type, logging, logging_error};
+use clash_verge_logging::{Type, logging_error};
+// logging 仅在 macOS 的渲染进程恢复逻辑中使用
+#[cfg(target_os = "macos")]
+use clash_verge_logging::logging;
 
 const DARK_BACKGROUND_COLOR: Color = Color(46, 48, 61, 255); // #2E303D
 const LIGHT_BACKGROUND_COLOR: Color = Color(245, 245, 245, 255); // #F5F5F5
