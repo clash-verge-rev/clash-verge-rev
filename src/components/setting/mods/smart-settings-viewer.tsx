@@ -43,12 +43,14 @@ type SmartSettings = {
   preferAsn: boolean
   useLightgbm: boolean
   collectData: boolean
-  sampleRate: number
+  // 数字字段编辑期间保存原始字符串，避免受控输入打断
+  // 清空/小数中间态（如 "0."），保存时再解析限幅
+  sampleRate: string
   lgbmAutoUpdate: boolean
-  lgbmUpdateInterval: number
+  lgbmUpdateInterval: string
   lgbmModelPreset: LgbmModelPreset
   lgbmUrl: string
-  smartCollectorSize: number
+  smartCollectorSize: string
 }
 
 const DEFAULT_VALUES: SmartSettings = {
@@ -58,12 +60,12 @@ const DEFAULT_VALUES: SmartSettings = {
   preferAsn: false,
   useLightgbm: false,
   collectData: false,
-  sampleRate: 1,
+  sampleRate: '1',
   lgbmAutoUpdate: false,
-  lgbmUpdateInterval: 72,
+  lgbmUpdateInterval: '72',
   lgbmModelPreset: 'default',
   lgbmUrl: DEFAULT_LGBM_URL,
-  smartCollectorSize: 100,
+  smartCollectorSize: '100',
 }
 
 const getLgbmModelPreset = (url?: string): LgbmModelPreset => {
@@ -90,6 +92,8 @@ const toNumber = (
   min: number,
   max?: number,
 ) => {
+  // Number('') === 0，清空输入应回到默认值而不是 0/min
+  if (value.trim() === '') return fallback
   const parsed = Number(value)
   if (!Number.isFinite(parsed)) return fallback
   const upperBounded = max == null ? parsed : Math.min(parsed, max)
@@ -117,12 +121,12 @@ export function SmartSettingsViewer({ ref }: { ref?: Ref<DialogRef> }) {
         preferAsn: verge?.smart_prefer_asn ?? false,
         useLightgbm: verge?.smart_use_lightgbm ?? false,
         collectData: verge?.smart_collect_data ?? false,
-        sampleRate: verge?.smart_sample_rate ?? 1,
+        sampleRate: String(verge?.smart_sample_rate ?? 1),
         lgbmAutoUpdate: verge?.smart_lgbm_auto_update ?? false,
-        lgbmUpdateInterval: verge?.smart_lgbm_update_interval ?? 72,
+        lgbmUpdateInterval: String(verge?.smart_lgbm_update_interval ?? 72),
         lgbmModelPreset: getLgbmModelPreset(verge?.smart_lgbm_url),
         lgbmUrl: verge?.smart_lgbm_url || DEFAULT_LGBM_URL,
-        smartCollectorSize: verge?.smart_collector_size ?? 100,
+        smartCollectorSize: String(verge?.smart_collector_size ?? 100),
       })
       setOpen(true)
     },
@@ -156,11 +160,15 @@ export function SmartSettingsViewer({ ref }: { ref?: Ref<DialogRef> }) {
       smart_prefer_asn: nextValues.preferAsn,
       smart_use_lightgbm: nextValues.useLightgbm,
       smart_collect_data: nextValues.collectData,
-      smart_sample_rate: nextValues.sampleRate,
+      smart_sample_rate: toNumber(nextValues.sampleRate, 1, 0, 1),
       smart_lgbm_auto_update: nextValues.lgbmAutoUpdate,
-      smart_lgbm_update_interval: nextValues.lgbmUpdateInterval,
+      smart_lgbm_update_interval: toNumber(
+        nextValues.lgbmUpdateInterval,
+        72,
+        1,
+      ),
       smart_lgbm_url: resolveLgbmUrl(nextValues),
-      smart_collector_size: nextValues.smartCollectorSize,
+      smart_collector_size: toNumber(nextValues.smartCollectorSize, 100, 1),
     })
 
   const resetToDefaults = useLockFn(async () => {
@@ -345,9 +353,7 @@ export function SmartSettingsViewer({ ref }: { ref?: Ref<DialogRef> }) {
               sx={{ width: 160 }}
               value={values.smartCollectorSize}
               onChange={(e) =>
-                updateValues({
-                  smartCollectorSize: toNumber(e.target.value, 100, 1),
-                })
+                updateValues({ smartCollectorSize: e.target.value })
               }
               slotProps={{
                 input: {
@@ -369,11 +375,7 @@ export function SmartSettingsViewer({ ref }: { ref?: Ref<DialogRef> }) {
               type="number"
               sx={{ width: 160 }}
               value={values.sampleRate}
-              onChange={(e) =>
-                updateValues({
-                  sampleRate: toNumber(e.target.value, 1, 0, 1),
-                })
-              }
+              onChange={(e) => updateValues({ sampleRate: e.target.value })}
             />
           </ListItem>
 
@@ -401,9 +403,7 @@ export function SmartSettingsViewer({ ref }: { ref?: Ref<DialogRef> }) {
               sx={{ width: 160 }}
               value={values.lgbmUpdateInterval}
               onChange={(e) =>
-                updateValues({
-                  lgbmUpdateInterval: toNumber(e.target.value, 72, 1),
-                })
+                updateValues({ lgbmUpdateInterval: e.target.value })
               }
               slotProps={{
                 input: {

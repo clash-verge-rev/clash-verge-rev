@@ -789,9 +789,12 @@ export const GroupsEditorViewer = (props: Props) => {
                             type="number"
                             size="small"
                             sx={{ width: 'calc(100% - 150px)' }}
-                            value={field.value ?? ''}
                             onChange={(e) => {
-                              field.onChange(parseFloat(e.target.value))
+                              field.onChange(
+                                e.target.value === ''
+                                  ? undefined
+                                  : parseFloat(e.target.value),
+                              )
                             }}
                           />
                         </Item>
@@ -813,9 +816,12 @@ export const GroupsEditorViewer = (props: Props) => {
                             type="number"
                             size="small"
                             sx={{ width: 'calc(100% - 150px)' }}
-                            value={field.value ?? ''}
                             onChange={(e) => {
-                              field.onChange(parseInt(e.target.value))
+                              field.onChange(
+                                e.target.value === ''
+                                  ? undefined
+                                  : parseInt(e.target.value),
+                              )
                             }}
                           />
                         </Item>
@@ -837,9 +843,12 @@ export const GroupsEditorViewer = (props: Props) => {
                             type="number"
                             size="small"
                             sx={{ width: 'calc(100% - 150px)' }}
-                            value={field.value ?? ''}
                             onChange={(e) => {
-                              field.onChange(parseInt(e.target.value))
+                              field.onChange(
+                                e.target.value === ''
+                                  ? undefined
+                                  : parseInt(e.target.value),
+                              )
                             }}
                           />
                         </Item>
