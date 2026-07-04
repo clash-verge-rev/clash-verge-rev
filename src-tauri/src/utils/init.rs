@@ -129,6 +129,8 @@ pub(super) async fn init_dns_config() -> Result<()> {
     // 创建DNS子配置
     let dns_config = serde_yaml_ng::Mapping::from_iter([
         ("enable".into(), Value::Bool(true)),
+        // 与前端 DNS 默认一致,并供 dns.ipv6 锁定使用
+        ("ipv6".into(), Value::Bool(true)),
         ("listen".into(), Value::String(":53".into())),
         ("enhanced-mode".into(), Value::String("fake-ip".into())),
         ("fake-ip-range".into(), Value::String("198.18.0.1/16".into())),

@@ -15,6 +15,7 @@
 - 修复部分非标准 WebDAV 服务器在备份目录已存在时的问题
 - 修复 Linux 应用内更新问题
 - 修复 JS 脚本验证因 console 方法调用导致的执行失败问题
+- 修复 macOS 内存压力下 WebView 渲染进程被系统终止引发的白屏与主进程内存泄漏
 
 <details>
 <summary><strong> ✨ 新增功能 </strong></summary>
@@ -33,5 +34,6 @@
 - 关闭 autofill 弹出窗口
 - 改进切换订阅后激活选中节点的逻辑
 - 实现代理组粘性滚动列表
+- 完善了配置覆写的相关逻辑
 
 </details>
