@@ -9,7 +9,6 @@ use log::LevelFilter;
 use serde::{Deserialize, Serialize};
 use smartstring::alias::String;
 
-pub(crate) const DEFAULT_SMART_POLICY_PRIORITY: &str = "Premium:0.9;SG:1.3";
 pub(crate) const DEFAULT_SMART_LGBM_URL: &str =
     "https://github.com/vernesong/mihomo/releases/download/LightGBM-Model/Model.bin";
 
@@ -471,7 +470,7 @@ impl IVerge {
             enable_builtin_enhanced: Some(true),
             smart_strategy_auto_switch: Some(false),
             smart_group_downgrade: Some(true),
-            smart_policy_priority: Some(DEFAULT_SMART_POLICY_PRIORITY.into()),
+            smart_policy_priority: None,
             smart_prefer_asn: Some(false),
             smart_use_lightgbm: Some(false),
             smart_collect_data: Some(false),

@@ -23,7 +23,8 @@ import { showNotice } from '@/services/notice-service'
 
 const DEFAULT_LGBM_URL =
   'https://github.com/vernesong/mihomo/releases/download/LightGBM-Model/Model.bin'
-const DEFAULT_POLICY_PRIORITY = 'Premium:0.9;SG:1.3'
+// 仅作输入示例展示，不能作为实际默认值下发（会按节点名匹配加权）
+const EXAMPLE_POLICY_PRIORITY = 'Premium:0.9;SG:1.3'
 
 const LGBM_MODEL_URLS = {
   large:
@@ -53,7 +54,7 @@ type SmartSettings = {
 const DEFAULT_VALUES: SmartSettings = {
   strategyAutoSwitch: false,
   groupDowngrade: true,
-  policyPriority: DEFAULT_POLICY_PRIORITY,
+  policyPriority: '',
   preferAsn: false,
   useLightgbm: false,
   collectData: false,
@@ -112,7 +113,7 @@ export function SmartSettingsViewer({ ref }: { ref?: Ref<DialogRef> }) {
       setValues({
         strategyAutoSwitch: verge?.smart_strategy_auto_switch ?? false,
         groupDowngrade: verge?.smart_group_downgrade ?? true,
-        policyPriority: verge?.smart_policy_priority ?? DEFAULT_POLICY_PRIORITY,
+        policyPriority: verge?.smart_policy_priority ?? '',
         preferAsn: verge?.smart_prefer_asn ?? false,
         useLightgbm: verge?.smart_use_lightgbm ?? false,
         collectData: verge?.smart_collect_data ?? false,
@@ -292,7 +293,7 @@ export function SmartSettingsViewer({ ref }: { ref?: Ref<DialogRef> }) {
             />
             <TextField
               autoComplete="new-password"
-              placeholder={DEFAULT_POLICY_PRIORITY}
+              placeholder={EXAMPLE_POLICY_PRIORITY}
               size="small"
               sx={{ width: 330 }}
               value={values.policyPriority}

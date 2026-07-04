@@ -168,7 +168,7 @@ async fn get_config_values() -> ConfigValues {
     let policy_priority = match smart_policy_priority.as_ref() {
         Some(value) if value.trim().is_empty() => None,
         Some(value) => Some(value.trim().into()),
-        None => Some(crate::config::DEFAULT_SMART_POLICY_PRIORITY.into()),
+        None => None,
     };
 
     let smart_settings = SmartSettings {
