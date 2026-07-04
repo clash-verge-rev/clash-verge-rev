@@ -44,7 +44,7 @@ const VALID_CORE = [
 export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
   const { t } = useTranslation()
 
-  const { verge, mutateVerge, patchVerge } = useVerge()
+  const { verge, mutateVerge } = useVerge()
   const { mutateVersion } = useClash()
   const { invalidateClashConfig } = useClashInfo()
 
@@ -69,13 +69,6 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
     try {
       setChangingCore(core)
       closeAllConnections()
-
-      if (
-        clash_core === 'verge-mihomo-smart' &&
-        core !== 'verge-mihomo-smart'
-      ) {
-        await patchVerge({ smart_strategy_auto_switch: false })
-      }
 
       const errorMsg = await changeClashCore(core)
 

@@ -1,6 +1,7 @@
 mod chain;
 pub mod field;
 mod merge;
+mod runtime;
 mod script;
 pub mod seq;
 mod tun;
@@ -9,6 +10,7 @@ use self::{
     chain::{AsyncChainItemFrom as _, ChainItem, ChainType},
     field::{use_keys, use_lowercase, use_sort},
     merge::use_merge,
+    runtime::apply_core_runtime_settings,
     script::use_script,
     seq::{SeqMap, use_seq},
     tun::use_tun,
@@ -443,11 +445,11 @@ async fn merge_default_config(
     config
 }
 
-async fn apply_builtin_scripts(mut config: Mapping, clash_core: Option<String>, enable_builtin: bool) -> Mapping {
+async fn apply_builtin_scripts(mut config: Mapping, clash_core: Option<&String>, enable_builtin: bool) -> Mapping {
     if enable_builtin {
         let items: Vec<_> = ChainItem::builtin()
             .into_iter()
-            .filter(|(s, _)| s.is_support(clash_core.as_ref()))
+            .filter(|(s, _)| s.is_support(clash_core))
             .map(|(_, c)| c)
             .collect();
         for item in items {
@@ -548,85 +550,6 @@ fn cleanup_proxy_groups(mut config: Mapping) -> Mapping {
     config
 }
 
-fn insert_if_missing(group: &mut Mapping, key: &str, value: Value) {
-    if !group.contains_key(key) {
-        group.insert(Value::String(key.into()), value);
-    }
-}
-
-fn is_smart_core(clash_core: Option<&String>) -> bool {
-    matches!(clash_core.map(|core| core.as_str()), Some("verge-mihomo-smart"))
-}
-
-fn apply_smart_strategy_auto_switch(mut config: Mapping, settings: &SmartSettings) -> Mapping {
-    if !settings.strategy_auto_switch {
-        return config;
-    }
-
-    if let Some(Value::Sequence(groups)) = config.get_mut("proxy-groups") {
-        for group in groups {
-            let Some(group_map) = group.as_mapping_mut() else {
-                continue;
-            };
-
-            let group_type = group_map.get("type").and_then(Value::as_str);
-            if !matches!(group_type, Some("url-test" | "load-balance")) {
-                continue;
-            }
-
-            group_map.insert(Value::String("type".into()), Value::String("smart".into()));
-            group_map.remove("strategy");
-
-            if let Some(policy_priority) = settings.policy_priority.as_ref() {
-                insert_if_missing(
-                    group_map,
-                    "policy-priority",
-                    Value::String(policy_priority.as_str().into()),
-                );
-            }
-            insert_if_missing(group_map, "prefer-asn", Value::Bool(settings.prefer_asn));
-            insert_if_missing(group_map, "uselightgbm", Value::Bool(settings.use_lightgbm));
-            insert_if_missing(group_map, "collectdata", Value::Bool(settings.collect_data));
-            if let Ok(value) = serde_yaml_ng::to_value(settings.sample_rate) {
-                insert_if_missing(group_map, "sample-rate", value);
-            }
-        }
-    }
-
-    config
-}
-
-fn apply_smart_core_settings(mut config: Mapping, settings: &SmartSettings) -> Mapping {
-    config.insert(
-        Value::String("lgbm-auto-update".into()),
-        Value::Bool(settings.lgbm_auto_update),
-    );
-    if let Ok(value) = serde_yaml_ng::to_value(settings.lgbm_update_interval) {
-        config.insert(Value::String("lgbm-update-interval".into()), value);
-    }
-    config.insert(
-        Value::String("lgbm-url".into()),
-        Value::String(settings.lgbm_url.to_string()),
-    );
-
-    let profile_key = Value::String("profile".into());
-    let collector_key = Value::String("smart-collector-size".into());
-    if let Ok(collector_size) = serde_yaml_ng::to_value(settings.collector_size) {
-        match config.get_mut(&profile_key) {
-            Some(Value::Mapping(profile)) => {
-                profile.insert(collector_key, collector_size);
-            }
-            _ => {
-                let mut profile = Mapping::new();
-                profile.insert(collector_key, collector_size);
-                config.insert(profile_key, Value::Mapping(profile));
-            }
-        }
-    }
-
-    config
-}
-
 /// 当 DNS 处于 fake-ip 模式且启用 IPv6 时，补充缺失的 `fake-ip-range6`，
 /// 否则 AAAA 查询无法获得 fake-ip，导致 IPv6 解析失败（见 issue #7373）。
 /// 兼容旧版本生成的、缺少该字段的 dns_config.yaml。
@@ -705,7 +628,6 @@ pub async fn enhance() -> Result<(Mapping, HashSet<String>, HashMap<String, Resu
         #[cfg(target_os = "linux")]
         tproxy_enabled,
     } = cfg_vals;
-    let smart_core = is_smart_core(clash_core.as_ref());
 
     // collect profile items
     let profile = collect_profile_items().await?;
@@ -751,12 +673,8 @@ pub async fn enhance() -> Result<(Mapping, HashSet<String>, HashMap<String, Resu
     .await;
 
     // builtin scripts
-    let mut config = apply_builtin_scripts(config, clash_core, enable_builtin).await;
-
-    if smart_core {
-        config = apply_smart_strategy_auto_switch(config, &smart_settings);
-        config = apply_smart_core_settings(config, &smart_settings);
-    }
+    let mut config = apply_builtin_scripts(config, clash_core.as_ref(), enable_builtin).await;
+    config = apply_core_runtime_settings(config, clash_core.as_deref(), &smart_settings);
 
     config = cleanup_proxy_groups(config);
 
@@ -775,7 +693,10 @@ pub async fn enhance() -> Result<(Mapping, HashSet<String>, HashMap<String, Resu
 #[allow(clippy::expect_used)]
 #[cfg(test)]
 mod tests {
-    use super::cleanup_proxy_groups;
+    use super::{
+        SmartSettings, cleanup_proxy_groups,
+        runtime::{SMART_CORE, apply_core_runtime_settings},
+    };
 
     #[test]
     fn remove_missing_proxies_from_groups() {
@@ -930,5 +851,149 @@ proxy-groups:
             .expect("proxies should be a sequence");
         assert_eq!(proxies.len(), 1);
         assert_eq!(proxies[0].as_str(), Some("DIRECT"));
+    }
+
+    #[test]
+    fn strip_smart_runtime_settings_keeps_regular_profile_settings() {
+        let config_str = r"
+lgbm-auto-update: true
+lgbm-update-interval: 72
+lgbm-url: https://example.com/model.bin
+mode: rule
+profile:
+  smart-collector-size: 100
+  store-selected: true
+proxy-groups:
+  - name: smart-group
+    type: smart
+    url: http://example.com/generate_204
+    policy-priority: Premium:0.9;SG:1.3
+    prefer-asn: true
+    uselightgbm: true
+    collectdata: true
+    sample-rate: 0.5
+";
+
+        let config: serde_yaml_ng::Mapping = serde_yaml_ng::from_str(config_str).expect("Failed to parse test yaml");
+        let config = apply_core_runtime_settings(config, Some("verge-mihomo"), &SmartSettings::default());
+
+        assert!(!config.contains_key("lgbm-auto-update"));
+        assert!(!config.contains_key("lgbm-update-interval"));
+        assert!(!config.contains_key("lgbm-url"));
+        assert_eq!(config.get("mode").and_then(serde_yaml_ng::Value::as_str), Some("rule"));
+        assert_eq!(
+            config
+                .get("profile")
+                .and_then(|value| value.get("store-selected"))
+                .and_then(serde_yaml_ng::Value::as_bool),
+            Some(true)
+        );
+        assert!(
+            config
+                .get("profile")
+                .and_then(|value| value.get("smart-collector-size"))
+                .is_none()
+        );
+        let smart_group = config
+            .get("proxy-groups")
+            .and_then(serde_yaml_ng::Value::as_sequence)
+            .and_then(|groups| groups.first())
+            .and_then(serde_yaml_ng::Value::as_mapping)
+            .expect("smart group should exist");
+
+        for key in [
+            "policy-priority",
+            "prefer-asn",
+            "uselightgbm",
+            "collectdata",
+            "sample-rate",
+        ] {
+            assert!(!smart_group.contains_key(key));
+        }
+        assert_eq!(
+            smart_group.get("url").and_then(serde_yaml_ng::Value::as_str),
+            Some("http://example.com/generate_204")
+        );
+    }
+
+    #[test]
+    fn smart_core_runtime_settings_apply_without_overwriting_group_values() {
+        let config_str = r"
+profile:
+  store-selected: true
+proxy-groups:
+  - name: auto-smart
+    type: url-test
+    strategy: consistent-hashing
+    sample-rate: 0.25
+";
+
+        let config: serde_yaml_ng::Mapping = serde_yaml_ng::from_str(config_str).expect("Failed to parse test yaml");
+        let settings = SmartSettings {
+            strategy_auto_switch: true,
+            policy_priority: Some("Premium:0.9;SG:1.3".into()),
+            prefer_asn: true,
+            use_lightgbm: true,
+            collect_data: true,
+            sample_rate: 0.75,
+            lgbm_auto_update: true,
+            lgbm_update_interval: 24,
+            lgbm_url: "https://example.com/model.bin".into(),
+            collector_size: 256,
+        };
+
+        let config = apply_core_runtime_settings(config, Some(SMART_CORE), &settings);
+
+        assert_eq!(
+            config.get("lgbm-auto-update").and_then(serde_yaml_ng::Value::as_bool),
+            Some(true)
+        );
+        assert_eq!(
+            config
+                .get("lgbm-update-interval")
+                .and_then(serde_yaml_ng::Value::as_u64),
+            Some(24)
+        );
+        assert_eq!(
+            config.get("lgbm-url").and_then(serde_yaml_ng::Value::as_str),
+            Some("https://example.com/model.bin")
+        );
+        assert_eq!(
+            config
+                .get("profile")
+                .and_then(|value| value.get("smart-collector-size"))
+                .and_then(serde_yaml_ng::Value::as_u64),
+            Some(256)
+        );
+        assert_eq!(
+            config
+                .get("profile")
+                .and_then(|value| value.get("store-selected"))
+                .and_then(serde_yaml_ng::Value::as_bool),
+            Some(true)
+        );
+
+        let smart_group = config
+            .get("proxy-groups")
+            .and_then(serde_yaml_ng::Value::as_sequence)
+            .and_then(|groups| groups.first())
+            .and_then(serde_yaml_ng::Value::as_mapping)
+            .expect("smart group should exist");
+
+        assert_eq!(
+            smart_group.get("type").and_then(serde_yaml_ng::Value::as_str),
+            Some("smart")
+        );
+        assert!(smart_group.get("strategy").is_none());
+        assert_eq!(
+            smart_group
+                .get("policy-priority")
+                .and_then(serde_yaml_ng::Value::as_str),
+            Some("Premium:0.9;SG:1.3")
+        );
+        assert_eq!(
+            smart_group.get("sample-rate").and_then(serde_yaml_ng::Value::as_f64),
+            Some(0.25)
+        );
     }
 }
