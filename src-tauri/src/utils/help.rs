@@ -1,4 +1,4 @@
-use crate::{config::with_encryption, enhance::seq::SeqMap};
+use crate::{config::with_encryption, enhance::seq::SeqMap, utils::yaml_emitter};
 use anyhow::{Context as _, Result, anyhow, bail};
 use clash_verge_logging::{Type, logging};
 use nanoid::nanoid;
@@ -59,7 +59,7 @@ pub async fn read_seq_map(path: &PathBuf) -> Result<SeqMap> {
 /// save the data to the file
 /// can set `prefix` string to add some comments
 pub async fn save_yaml<T: Serialize + Sync>(path: &PathBuf, data: &T, prefix: Option<&str>) -> Result<()> {
-    let data_str = with_encryption(|| async { serde_yaml_ng::to_string(data) }).await?;
+    let data_str = with_encryption(|| async { yaml_emitter::to_mihomo_config_string(data) }).await?;
 
     let yaml_str = match prefix {
         Some(prefix) => format!("{prefix}\n\n{data_str}"),
