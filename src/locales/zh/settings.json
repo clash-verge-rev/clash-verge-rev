@@ -304,6 +304,7 @@
       "nonSmartCoreWarning": "当前未使用 Mihomo Smart 内核。你可以预先保存设置，模型更新和缓存清理需要切换到 Smart 内核后使用。",
       "fields": {
         "strategyAutoSwitch": "Smart 策略自动切换",
+        "groupDowngrade": "非 Smart 内核时降级 Smart 策略组",
         "policyPriority": "Policy Priority",
         "preferAsn": "ASN 优先",
         "useLightgbm": "启用 LightGBM 模型",

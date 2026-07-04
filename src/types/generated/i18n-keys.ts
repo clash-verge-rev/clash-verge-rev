@@ -501,6 +501,7 @@ export const translationKeys = [
   'settings.modals.smart.title',
   'settings.modals.smart.nonSmartCoreWarning',
   'settings.modals.smart.fields.strategyAutoSwitch',
+  'settings.modals.smart.fields.groupDowngrade',
   'settings.modals.smart.fields.policyPriority',
   'settings.modals.smart.fields.preferAsn',
   'settings.modals.smart.fields.useLightgbm',

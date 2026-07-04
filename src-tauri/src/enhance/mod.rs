@@ -48,6 +48,8 @@ struct ConfigValues {
 #[derive(Debug, Clone, Default)]
 struct SmartSettings {
     strategy_auto_switch: bool,
+    group_downgrade: bool,
+    latency_test_url: Option<String>,
     policy_priority: Option<String>,
     prefer_asn: bool,
     use_lightgbm: bool,
@@ -133,7 +135,9 @@ async fn get_config_values() -> ConfigValues {
         ref verge_socks_enabled,
         ref verge_http_enabled,
         ref enable_dns_settings,
+        ref default_latency_test,
         ref smart_strategy_auto_switch,
+        ref smart_group_downgrade,
         ref smart_policy_priority,
         ref smart_prefer_asn,
         ref smart_use_lightgbm,
@@ -169,6 +173,8 @@ async fn get_config_values() -> ConfigValues {
 
     let smart_settings = SmartSettings {
         strategy_auto_switch: smart_strategy_auto_switch.unwrap_or(false),
+        group_downgrade: smart_group_downgrade.unwrap_or(true),
+        latency_test_url: default_latency_test.clone(),
         policy_priority,
         prefer_asn: smart_prefer_asn.unwrap_or(false),
         use_lightgbm: smart_use_lightgbm.unwrap_or(false),

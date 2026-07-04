@@ -982,6 +982,7 @@ interface IVergeConfig {
   auto_delay_detection_interval_minutes?: number
   enable_builtin_enhanced?: boolean
   smart_strategy_auto_switch?: boolean
+  smart_group_downgrade?: boolean
   smart_policy_priority?: string
   smart_prefer_asn?: boolean
   smart_use_lightgbm?: boolean

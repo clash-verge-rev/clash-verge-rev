@@ -1014,6 +1014,7 @@ export interface TranslationResources {
             collectData: string
             collectorSize: string
             customModelUrl: string
+            groupDowngrade: string
             modelUrl: string
             policyPriority: string
             preferAsn: string

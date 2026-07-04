@@ -146,6 +146,7 @@ fn determine_update_flags(patch: &IVerge) -> UpdateFlags {
         update_flags.insert(UpdateFlags::CLASH_CONFIG | UpdateFlags::GROUP_SYS_TRAY);
     }
     if patch.smart_strategy_auto_switch.is_some()
+        || patch.smart_group_downgrade.is_some()
         || patch.smart_policy_priority.is_some()
         || patch.smart_prefer_asn.is_some()
         || patch.smart_use_lightgbm.is_some()

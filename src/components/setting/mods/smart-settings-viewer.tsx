@@ -37,6 +37,7 @@ type LgbmModelPreset = keyof typeof LGBM_MODEL_URLS | 'custom'
 
 type SmartSettings = {
   strategyAutoSwitch: boolean
+  groupDowngrade: boolean
   policyPriority: string
   preferAsn: boolean
   useLightgbm: boolean
@@ -51,6 +52,7 @@ type SmartSettings = {
 
 const DEFAULT_VALUES: SmartSettings = {
   strategyAutoSwitch: false,
+  groupDowngrade: true,
   policyPriority: DEFAULT_POLICY_PRIORITY,
   preferAsn: false,
   useLightgbm: false,
@@ -109,6 +111,7 @@ export function SmartSettingsViewer({ ref }: { ref?: Ref<DialogRef> }) {
     open: () => {
       setValues({
         strategyAutoSwitch: verge?.smart_strategy_auto_switch ?? false,
+        groupDowngrade: verge?.smart_group_downgrade ?? true,
         policyPriority: verge?.smart_policy_priority ?? DEFAULT_POLICY_PRIORITY,
         preferAsn: verge?.smart_prefer_asn ?? false,
         useLightgbm: verge?.smart_use_lightgbm ?? false,
@@ -147,6 +150,7 @@ export function SmartSettingsViewer({ ref }: { ref?: Ref<DialogRef> }) {
   const saveSmartSettings = (nextValues = values) =>
     patchVerge({
       smart_strategy_auto_switch: nextValues.strategyAutoSwitch,
+      smart_group_downgrade: nextValues.groupDowngrade,
       smart_policy_priority: nextValues.policyPriority.trim(),
       smart_prefer_asn: nextValues.preferAsn,
       smart_use_lightgbm: nextValues.useLightgbm,
@@ -265,6 +269,19 @@ export function SmartSettingsViewer({ ref }: { ref?: Ref<DialogRef> }) {
               checked={values.strategyAutoSwitch}
               onChange={(_, checked) =>
                 updateValues({ strategyAutoSwitch: checked })
+              }
+            />
+          </ListItem>
+
+          <ListItem sx={{ padding: '5px 2px' }}>
+            <ListItemText
+              primary={t('settings.modals.smart.fields.groupDowngrade')}
+            />
+            <Switch
+              edge="end"
+              checked={values.groupDowngrade}
+              onChange={(_, checked) =>
+                updateValues({ groupDowngrade: checked })
               }
             />
           </ListItem>

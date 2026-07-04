@@ -304,6 +304,7 @@
       "nonSmartCoreWarning": "Mihomo Smart is not the active core. You can save settings now, but model updates and cache cleanup require the Smart core.",
       "fields": {
         "strategyAutoSwitch": "Smart Strategy Auto Switch",
+        "groupDowngrade": "Downgrade Smart Groups on Non-Smart Cores",
         "policyPriority": "Policy Priority",
         "preferAsn": "Prefer ASN",
         "useLightgbm": "Enable LightGBM Model",

@@ -11,7 +11,13 @@ const SMART_GROUP_KEYS: &[&str] = &[
     "uselightgbm",
     "collectdata",
     "sample-rate",
+    "maxuploadrate",
+    "maxdownloadrate",
 ];
+const SMART_GROUP_DOWNGRADE_TYPE: &str = "url-test";
+// 与 src/services/delay.ts 的默认测速地址保持一致，仅在 default_latency_test 未配置时兜底
+const FALLBACK_LATENCY_TEST_URL: &str = "http://cp.cloudflare.com/generate_204";
+const FALLBACK_LATENCY_TEST_INTERVAL: u64 = 300;
 const SMART_AUTO_SWITCH_REMOVED_KEYS: &[&str] =
     &["strategy", "url", "interval", "tolerance", "lazy", "expected-status"];
 
@@ -19,7 +25,7 @@ pub(super) fn apply_core_runtime_settings(config: Mapping, core: Option<&str>, s
     if is_smart_core(core) {
         apply_smart_runtime_settings(config, settings)
     } else {
-        strip_smart_runtime_settings(config)
+        strip_smart_runtime_settings(config, settings)
     }
 }
 
@@ -108,7 +114,7 @@ fn apply_smart_core_settings(mut config: Mapping, settings: &SmartSettings) -> M
     config
 }
 
-fn strip_smart_runtime_settings(mut config: Mapping) -> Mapping {
+fn strip_smart_runtime_settings(mut config: Mapping, settings: &SmartSettings) -> Mapping {
     for key in SMART_TOP_LEVEL_KEYS {
         config.remove(*key);
     }
@@ -118,6 +124,27 @@ fn strip_smart_runtime_settings(mut config: Mapping) -> Mapping {
             let Some(group_map) = group.as_mapping_mut() else {
                 continue;
             };
+
+            // 标准内核不认识 smart 组类型，残留会导致配置校验失败，
+            // 默认降级为语义最接近的 url-test（auto-switch 正向转换的镜像）
+            if settings.group_downgrade && group_map.get("type").and_then(Value::as_str) == Some("smart") {
+                group_map.insert(
+                    Value::String("type".into()),
+                    Value::String(SMART_GROUP_DOWNGRADE_TYPE.into()),
+                );
+                let url = settings
+                    .latency_test_url
+                    .as_deref()
+                    .map(str::trim)
+                    .filter(|value| !value.is_empty())
+                    .unwrap_or(FALLBACK_LATENCY_TEST_URL);
+                insert_if_missing(group_map, "url", Value::String(url.into()));
+                insert_if_missing(
+                    group_map,
+                    "interval",
+                    Value::Number(FALLBACK_LATENCY_TEST_INTERVAL.into()),
+                );
+            }
 
             for key in SMART_GROUP_KEYS {
                 group_map.remove(*key);
@@ -140,4 +167,120 @@ fn strip_smart_runtime_settings(mut config: Mapping) -> Mapping {
     }
 
     config
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn config_with_group(group_yaml: &str) -> Mapping {
+        let yaml = format!("proxy-groups:\n{group_yaml}");
+        serde_yaml_ng::from_str(&yaml).unwrap()
+    }
+
+    fn first_group(config: &Mapping) -> &Mapping {
+        config
+            .get("proxy-groups")
+            .and_then(Value::as_sequence)
+            .and_then(|groups| groups.first())
+            .and_then(Value::as_mapping)
+            .unwrap()
+    }
+
+    #[test]
+    fn strip_downgrades_smart_group_to_url_test() {
+        let config = config_with_group(
+            "  - name: Auto\n    type: smart\n    proxies: [a, b]\n    uselightgbm: true\n    maxuploadrate: 10\n    maxdownloadrate: 20\n",
+        );
+        let settings = SmartSettings {
+            group_downgrade: true,
+            ..SmartSettings::default()
+        };
+
+        let result = strip_smart_runtime_settings(config, &settings);
+        let group = first_group(&result);
+
+        assert_eq!(group.get("type").and_then(Value::as_str), Some("url-test"));
+        assert_eq!(
+            group.get("url").and_then(Value::as_str),
+            Some(FALLBACK_LATENCY_TEST_URL)
+        );
+        assert_eq!(
+            group.get("interval").and_then(Value::as_u64),
+            Some(FALLBACK_LATENCY_TEST_INTERVAL)
+        );
+        for key in SMART_GROUP_KEYS {
+            assert!(!group.contains_key(*key), "{key} should be stripped");
+        }
+    }
+
+    #[test]
+    fn strip_downgrade_uses_configured_latency_test_url() {
+        let config = config_with_group("  - name: Auto\n    type: smart\n    proxies: [a]\n");
+        let settings = SmartSettings {
+            group_downgrade: true,
+            latency_test_url: Some("http://www.gstatic.com/generate_204".into()),
+            ..SmartSettings::default()
+        };
+
+        let result = strip_smart_runtime_settings(config, &settings);
+        let group = first_group(&result);
+
+        assert_eq!(
+            group.get("url").and_then(Value::as_str),
+            Some("http://www.gstatic.com/generate_204")
+        );
+    }
+
+    #[test]
+    fn strip_downgrade_keeps_existing_url_and_interval() {
+        let config = config_with_group(
+            "  - name: Auto\n    type: smart\n    proxies: [a]\n    url: http://example.com/204\n    interval: 60\n",
+        );
+        let settings = SmartSettings {
+            group_downgrade: true,
+            ..SmartSettings::default()
+        };
+
+        let result = strip_smart_runtime_settings(config, &settings);
+        let group = first_group(&result);
+
+        assert_eq!(group.get("type").and_then(Value::as_str), Some("url-test"));
+        assert_eq!(group.get("url").and_then(Value::as_str), Some("http://example.com/204"));
+        assert_eq!(group.get("interval").and_then(Value::as_u64), Some(60));
+    }
+
+    #[test]
+    fn strip_without_downgrade_keeps_type_but_strips_keys() {
+        let config = config_with_group("  - name: Auto\n    type: smart\n    proxies: [a]\n    collectdata: true\n");
+        let settings = SmartSettings::default();
+
+        let result = strip_smart_runtime_settings(config, &settings);
+        let group = first_group(&result);
+
+        assert_eq!(group.get("type").and_then(Value::as_str), Some("smart"));
+        assert!(!group.contains_key("collectdata"));
+        assert!(!group.contains_key("url"));
+    }
+
+    #[test]
+    fn strip_leaves_ordinary_groups_untouched() {
+        let config = config_with_group(
+            "  - name: Manual\n    type: select\n    proxies: [a]\n  - name: Fast\n    type: url-test\n    proxies: [a]\n    url: http://example.com/204\n    interval: 120\n",
+        );
+        let settings = SmartSettings {
+            group_downgrade: true,
+            ..SmartSettings::default()
+        };
+
+        let result = strip_smart_runtime_settings(config, &settings);
+        let groups = result.get("proxy-groups").and_then(Value::as_sequence).unwrap();
+
+        assert_eq!(
+            groups[0].as_mapping().unwrap().get("type").and_then(Value::as_str),
+            Some("select")
+        );
+        let fast = groups[1].as_mapping().unwrap();
+        assert_eq!(fast.get("interval").and_then(Value::as_u64), Some(120));
+    }
 }

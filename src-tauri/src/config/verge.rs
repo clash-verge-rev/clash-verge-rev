@@ -171,6 +171,9 @@ pub struct IVerge {
     /// 自动将 url-test/load-balance 策略组切换为 smart 策略组
     pub smart_strategy_auto_switch: Option<bool>,
 
+    /// 非 Smart 内核时将残留的 smart 策略组降级为 url-test
+    pub smart_group_downgrade: Option<bool>,
+
     /// Smart 策略组默认 policy-priority
     pub smart_policy_priority: Option<String>,
 
@@ -467,6 +470,7 @@ impl IVerge {
             auto_check_update: Some(true),
             enable_builtin_enhanced: Some(true),
             smart_strategy_auto_switch: Some(false),
+            smart_group_downgrade: Some(true),
             smart_policy_priority: Some(DEFAULT_SMART_POLICY_PRIORITY.into()),
             smart_prefer_asn: Some(false),
             smart_use_lightgbm: Some(false),
@@ -580,6 +584,7 @@ impl IVerge {
         patch!(auto_delay_detection_interval_minutes);
         patch!(enable_builtin_enhanced);
         patch!(smart_strategy_auto_switch);
+        patch!(smart_group_downgrade);
         patch!(smart_policy_priority);
         patch!(smart_prefer_asn);
         patch!(smart_use_lightgbm);
