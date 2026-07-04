@@ -25,17 +25,26 @@ pub async fn flush_smart_cache() -> CmdResult {
     post(FLUSH_SMART_CACHE_PATH).await
 }
 
+/// IPC 请求失败的阶段：仅连接失败可以安全回退 HTTP 重试；
+/// 连接建立之后的失败（写入、读取、响应解析、HTTP 状态码）内核可能已经
+/// 执行过请求，重放会让 /upgrade/lgbm 这类非幂等操作执行两次
+enum IpcError {
+    Connect(String),
+    Request(String),
+}
+
 async fn post(path: &str) -> CmdResult {
     match post_by_ipc(path).await {
         Ok(()) => Ok(()),
-        Err(ipc_err) => {
+        Err(IpcError::Connect(err)) => {
             logging!(
                 warn,
                 Type::Config,
-                "Mihomo API IPC request failed, fallback to HTTP: {ipc_err}"
+                "Mihomo API IPC connection failed, fallback to HTTP: {err}"
             );
             post_by_http(path).await
         }
+        Err(IpcError::Request(err)) => Err(err),
     }
 }
 
@@ -111,7 +120,7 @@ where
     Ok(response)
 }
 
-async fn post_by_ipc(path: &str) -> CmdResult {
+async fn post_by_ipc(path: &str) -> Result<(), IpcError> {
     let clash_info = Config::clash().await.data_arc().get_client_info();
     let auth_header = clash_info
         .secret
@@ -127,19 +136,33 @@ async fn post_by_ipc(path: &str) -> CmdResult {
 
     #[cfg(windows)]
     let response = {
-        let mut stream = ClientOptions::new().open(socket_path.as_str()).stringify_err()?;
-        stream.write_all(request.as_bytes()).await.stringify_err()?;
-        read_http_response(&mut stream).await?
+        let mut stream = ClientOptions::new()
+            .open(socket_path.as_str())
+            .stringify_err()
+            .map_err(IpcError::Connect)?;
+        stream
+            .write_all(request.as_bytes())
+            .await
+            .stringify_err()
+            .map_err(IpcError::Request)?;
+        read_http_response(&mut stream).await.map_err(IpcError::Request)?
     };
 
     #[cfg(unix)]
     let response = {
-        let mut stream = UnixStream::connect(socket_path.as_str()).await.stringify_err()?;
-        stream.write_all(request.as_bytes()).await.stringify_err()?;
-        read_http_response(&mut stream).await?
+        let mut stream = UnixStream::connect(socket_path.as_str())
+            .await
+            .stringify_err()
+            .map_err(IpcError::Connect)?;
+        stream
+            .write_all(request.as_bytes())
+            .await
+            .stringify_err()
+            .map_err(IpcError::Request)?;
+        read_http_response(&mut stream).await.map_err(IpcError::Request)?
     };
 
-    parse_http_response(response.as_slice())
+    parse_http_response(response.as_slice()).map_err(IpcError::Request)
 }
 
 async fn post_by_http(path: &str) -> CmdResult {
