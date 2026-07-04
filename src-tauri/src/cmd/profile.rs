@@ -1,6 +1,7 @@
 use super::CmdResult;
 use super::StringifyErr as _;
 use crate::cmd::validate::{ValidationNoticeTarget, handle_validation_notice};
+use crate::config::profiles;
 use crate::utils::window_manager::WindowManager;
 use crate::{
     config::{
@@ -212,6 +213,7 @@ async fn restore_previous_profile(prev_profile: &String) -> CmdResult<()> {
 
 async fn handle_success(current_value: Option<&String>) -> CmdResult<ValidationOutcome> {
     Config::profiles().await.apply();
+    profiles::activate_selected_nodes().await.stringify_err()?;
     handle::Handle::refresh_clash();
 
     if let Err(e) = Tray::global().update_tooltip().await {

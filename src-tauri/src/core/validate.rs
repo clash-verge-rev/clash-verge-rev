@@ -244,6 +244,14 @@ impl CoreConfigValidator {
         use boa_engine::{Context, Source};
 
         let mut context = Context::default();
+        let _ = context.eval(Source::from_bytes(
+            "var console = Object.freeze({
+              log(...data){},
+              info(...data){},
+              error(...data){},
+              debug(...data){},
+            });",
+        ));
         let result = context.eval(Source::from_bytes(&content));
 
         match result {

@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 
 import { useListen } from '@/hooks/use-listen'
-import { queryClient } from '@/services/query-client'
+import { revalidateQueries } from '@/services/query-client'
 
 export const useLayoutEvents = (
   handleNotice: (payload: [string, string]) => void,
@@ -12,9 +12,7 @@ export const useLayoutEvents = (
     const unlisteners: Array<() => void> = []
     let disposed = false
     const revalidateKeys = (keys: readonly string[]) => {
-      keys.forEach((key) => {
-        queryClient.invalidateQueries({ queryKey: [key] })
-      })
+      void revalidateQueries(keys.map((key) => [key]))
     }
 
     const register = (
@@ -42,12 +40,16 @@ export const useLayoutEvents = (
     }
 
     register(
-      addListener('verge://refresh-clash-config', async () => {
+      addListener('verge://refresh-clash-config', () => {
         revalidateKeys([
           'getProxies',
           'getVersion',
           'getClashConfig',
+          'getClashMode',
+          'getRuntimeConfig',
           'getProxyProviders',
+          'getRules',
+          'getRuleProviders',
         ])
       }),
     )

@@ -3,8 +3,8 @@ import {
   ArrowUpwardRounded,
   MemoryRounded,
 } from '@mui/icons-material'
-import { Box, Typography } from '@mui/material'
 import type { BoxProps, SvgIconProps, TypographyProps } from '@mui/material'
+import { Box, Typography } from '@mui/material'
 import { useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -41,6 +41,8 @@ export const LayoutTraffic = () => {
       trafficRef.current.appendData({
         up: traffic?.up || 0,
         down: traffic?.down || 0,
+        upTotal: traffic?.upTotal || 0,
+        downTotal: traffic?.downTotal || 0,
       })
     }
   }, [traffic])

@@ -25,14 +25,10 @@ export interface ConnectionMonitorData {
 }
 
 export interface ConnectionSummaryData {
-  uploadTotal: number
-  downloadTotal: number
   activeConnectionCount: number
 }
 
 export const initConnSummaryData: ConnectionSummaryData = {
-  uploadTotal: 0,
-  downloadTotal: 0,
   activeConnectionCount: 0,
 }
 
@@ -212,8 +208,6 @@ const mergeConnectionSnapshot = (
 const mergeConnectionSummary = (
   payload: IConnections,
 ): ConnectionSummaryData => ({
-  uploadTotal: payload.uploadTotal ?? 0,
-  downloadTotal: payload.downloadTotal ?? 0,
   activeConnectionCount: payload.connections?.length ?? 0,
 })
 

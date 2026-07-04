@@ -180,6 +180,17 @@ impl IClashTemp {
             }),
         }
     }
+
+    /// 容错读取当前代理模式。
+    ///
+    /// 仅从已保存的 clash 配置 Mapping 中提取 `mode` 字段，不依赖 mihomo `/configs`
+    /// 的严格 `BaseConfig` 反序列化，因此即使核心返回的字段与插件结构体不匹配也能取到。
+    pub fn get_mode(&self) -> Option<String> {
+        self.0.get("mode").and_then(|value| match value {
+            Value::String(val_str) => Some(val_str.clone()),
+            _ => None,
+        })
+    }
     #[cfg(not(target_os = "windows"))]
     pub fn guard_redir_port(config: &Mapping) -> u16 {
         let mut port = config
@@ -422,6 +433,7 @@ pub struct IClashDNS {
     pub default_nameserver: Option<Vec<String>>,
     pub enhanced_mode: Option<String>,
     pub fake_ip_range: Option<String>,
+    pub fake_ip_range6: Option<String>,
     pub use_hosts: Option<bool>,
     pub fake_ip_filter: Option<Vec<String>>,
     pub nameserver: Option<Vec<String>>,

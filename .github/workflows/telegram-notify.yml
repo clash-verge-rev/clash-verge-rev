@@ -24,7 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Fetch UPDATE logs
         id: fetch_update_logs
@@ -34,7 +34,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v6
         with:
-          node-version: '24.16.0'
+          node-version: '24.18.0'
 
       - uses: pnpm/action-setup@v6
         name: Install pnpm
