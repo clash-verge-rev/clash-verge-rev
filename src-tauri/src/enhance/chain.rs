@@ -23,6 +23,7 @@ pub enum ChainType {
 }
 
 #[derive(Debug, Clone)]
+#[expect(clippy::enum_variant_names, reason = "variant names match upstream core names")]
 pub enum ChainSupport {
     ClashMeta,
     ClashMetaAlpha,

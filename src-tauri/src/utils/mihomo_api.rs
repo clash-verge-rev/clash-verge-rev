@@ -5,7 +5,7 @@ use crate::{
 use clash_verge_logging::{Type, logging};
 use smartstring::alias::String;
 use std::time::Duration;
-use tokio::io::{AsyncRead, AsyncReadExt, AsyncWriteExt};
+use tokio::io::{AsyncRead, AsyncReadExt as _, AsyncWriteExt as _};
 
 #[cfg(unix)]
 use tokio::net::UnixStream;
@@ -112,7 +112,17 @@ where
 }
 
 async fn post_by_ipc(path: &str) -> CmdResult {
-    let request = format!("POST {path} HTTP/1.1\r\nHost: localhost\r\nContent-Length: 0\r\nConnection: close\r\n\r\n");
+    let clash_info = Config::clash().await.data_arc().get_client_info();
+    let auth_header = clash_info
+        .secret
+        .as_ref()
+        .map(|value| value.trim())
+        .filter(|value| !value.is_empty())
+        .map(|secret| format!("Authorization: Bearer {secret}\r\n"))
+        .unwrap_or_default();
+    let request = format!(
+        "POST {path} HTTP/1.1\r\nHost: localhost\r\n{auth_header}Content-Length: 0\r\nConnection: close\r\n\r\n"
+    );
     let socket_path = IClashTemp::guard_external_controller_ipc();
 
     #[cfg(windows)]

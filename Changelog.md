@@ -22,6 +22,7 @@
 - 增加 TrustTunnel, OpenVPN, Tailscale, GostRelay 节点显示支持
 - 全局扩展脚本增加恢复默认按钮
 - DNS 添加 fake-ip-range6 可配置项
+- 新增 Mihomo Smart 内核支持
 
 </details>
 

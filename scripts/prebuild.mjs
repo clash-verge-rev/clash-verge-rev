@@ -179,10 +179,11 @@ const META_VERSION_URL =
 const META_URL_PREFIX = `https://github.com/MetaCubeX/mihomo/releases/download`
 let META_VERSION
 
-const SMART_ASSETS_URL =
-  'https://github.com/vernesong/mihomo/releases/expanded_assets/Prerelease-Alpha'
+const SMART_VERSION_URL =
+  'https://github.com/vernesong/mihomo/releases/download/Prerelease-Alpha/version.txt'
 const SMART_URL_PREFIX =
   'https://github.com/vernesong/mihomo/releases/download/Prerelease-Alpha'
+let SMART_VERSION
 
 const META_ALPHA_MAP = {
   'win32-x64': 'mihomo-windows-amd64-v2',
@@ -295,6 +296,38 @@ async function getLatestReleaseVersion() {
   }
 }
 
+async function getLatestSmartVersion() {
+  if (!FORCE) {
+    const cached = await getCachedVersion('SMART_VERSION')
+    if (cached) {
+      SMART_VERSION = cached
+      return
+    }
+  }
+  const options = {}
+  const httpProxy =
+    process.env.HTTP_PROXY ||
+    process.env.http_proxy ||
+    process.env.HTTPS_PROXY ||
+    process.env.https_proxy
+  if (httpProxy) options.agent = new HttpsProxyAgent(httpProxy)
+
+  try {
+    const response = await fetch(SMART_VERSION_URL, {
+      ...options,
+      method: 'GET',
+    })
+    if (!response.ok)
+      throw new Error(`Failed to fetch ${SMART_VERSION_URL}: ${response.status}`)
+    SMART_VERSION = (await response.text()).trim()
+    log_info(`Latest smart version: ${SMART_VERSION}`)
+    await setCachedVersion('SMART_VERSION', SMART_VERSION)
+  } catch (err) {
+    log_error('Error fetching latest smart version:', err.message)
+    process.exit(1)
+  }
+}
+
 // =======================
 // Validate availability
 // =======================
@@ -337,58 +370,11 @@ function clashMeta() {
   }
 }
 
-async function getLatestSmartAsset(name, urlExt) {
-  const cacheKey = `SMART_ASSET_${platform}_${arch}`
-  if (!FORCE) {
-    const cached = await getCachedVersion(cacheKey)
-    if (cached) return cached
-  }
-
-  const options = {}
-  const httpProxy =
-    process.env.HTTP_PROXY ||
-    process.env.http_proxy ||
-    process.env.HTTPS_PROXY ||
-    process.env.https_proxy
-  if (httpProxy) options.agent = new HttpsProxyAgent(httpProxy)
-
-  try {
-    const response = await fetch(SMART_ASSETS_URL, {
-      ...options,
-      method: 'GET',
-    })
-    if (!response.ok)
-      throw new Error(`Failed to fetch ${SMART_ASSETS_URL}: ${response.status}`)
-
-    const html = await response.text()
-    const assetRe =
-      /\/vernesong\/mihomo\/releases\/download\/Prerelease-Alpha\/([^" ]+)/g
-    const assets = Array.from(html.matchAll(assetRe), (match) =>
-      decodeURIComponent(match[1].replaceAll('&amp;', '&')),
-    )
-    const asset = assets.find(
-      (item) =>
-        item.startsWith(`${name}-alpha-smart-`) && item.endsWith(`.${urlExt}`),
-    )
-
-    if (!asset) {
-      throw new Error(`Unable to find smart mihomo asset for ${name}.${urlExt}`)
-    }
-
-    log_info(`Latest smart asset: ${asset}`)
-    await setCachedVersion(cacheKey, asset)
-    return asset
-  } catch (err) {
-    log_error('Error fetching latest smart asset:', err.message)
-    process.exit(1)
-  }
-}
-
-async function clashMetaSmart() {
+function clashMetaSmart() {
   const name = SMART_MAP[`${platform}-${arch}`]
   const isWin = platform === 'win32'
   const urlExt = isWin ? 'zip' : 'gz'
-  const zipFile = await getLatestSmartAsset(name, urlExt)
+  const zipFile = `${name}-${SMART_VERSION}.${urlExt}`
   const exeFile = isWin ? `${zipFile.replace(/\.zip$/, '')}.exe` : name
   return {
     name: 'verge-mihomo-smart',
@@ -849,7 +835,8 @@ const tasks = [
   },
   {
     name: 'verge-mihomo-smart',
-    func: async () => resolveSidecar(await clashMetaSmart()),
+    func: () =>
+      getLatestSmartVersion().then(() => resolveSidecar(clashMetaSmart())),
     retry: 5,
   },
   { name: 'plugin', func: resolvePlugin, retry: 5, winOnly: true },
