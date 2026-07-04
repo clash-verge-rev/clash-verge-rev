@@ -54,14 +54,14 @@ type SmartSettings = {
 }
 
 const DEFAULT_VALUES: SmartSettings = {
-  strategyAutoSwitch: false,
+  strategyAutoSwitch: true,
   groupDowngrade: true,
   policyPriority: '',
   preferAsn: false,
-  useLightgbm: false,
+  useLightgbm: true,
   collectData: false,
   sampleRate: '1',
-  lgbmAutoUpdate: false,
+  lgbmAutoUpdate: true,
   lgbmUpdateInterval: '72',
   lgbmModelPreset: 'default',
   lgbmUrl: DEFAULT_LGBM_URL,
@@ -115,14 +115,14 @@ export function SmartSettingsViewer({ ref }: { ref?: Ref<DialogRef> }) {
   useImperativeHandle(ref, () => ({
     open: () => {
       setValues({
-        strategyAutoSwitch: verge?.smart_strategy_auto_switch ?? false,
+        strategyAutoSwitch: verge?.smart_strategy_auto_switch ?? true,
         groupDowngrade: verge?.smart_group_downgrade ?? true,
         policyPriority: verge?.smart_policy_priority ?? '',
         preferAsn: verge?.smart_prefer_asn ?? false,
-        useLightgbm: verge?.smart_use_lightgbm ?? false,
+        useLightgbm: verge?.smart_use_lightgbm ?? true,
         collectData: verge?.smart_collect_data ?? false,
         sampleRate: String(verge?.smart_sample_rate ?? 1),
-        lgbmAutoUpdate: verge?.smart_lgbm_auto_update ?? false,
+        lgbmAutoUpdate: verge?.smart_lgbm_auto_update ?? true,
         lgbmUpdateInterval: String(verge?.smart_lgbm_update_interval ?? 72),
         lgbmModelPreset: getLgbmModelPreset(verge?.smart_lgbm_url),
         lgbmUrl: verge?.smart_lgbm_url || DEFAULT_LGBM_URL,

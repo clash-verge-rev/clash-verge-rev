@@ -172,15 +172,15 @@ async fn get_config_values() -> ConfigValues {
     };
 
     let smart_settings = SmartSettings {
-        strategy_auto_switch: smart_strategy_auto_switch.unwrap_or(false),
+        strategy_auto_switch: smart_strategy_auto_switch.unwrap_or(true),
         group_downgrade: smart_group_downgrade.unwrap_or(true),
         latency_test_url: default_latency_test.clone(),
         policy_priority,
         prefer_asn: smart_prefer_asn.unwrap_or(false),
-        use_lightgbm: smart_use_lightgbm.unwrap_or(false),
+        use_lightgbm: smart_use_lightgbm.unwrap_or(true),
         collect_data: smart_collect_data.unwrap_or(false),
         sample_rate: smart_sample_rate.unwrap_or(1.0).clamp(0.0, 1.0),
-        lgbm_auto_update: smart_lgbm_auto_update.unwrap_or(false),
+        lgbm_auto_update: smart_lgbm_auto_update.unwrap_or(true),
         lgbm_update_interval: smart_lgbm_update_interval.unwrap_or(72).max(1),
         lgbm_url: smart_lgbm_url
             .as_ref()
