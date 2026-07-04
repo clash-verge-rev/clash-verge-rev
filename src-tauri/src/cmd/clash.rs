@@ -124,10 +124,6 @@ async fn clear_smart_data() -> CmdResult {
     let app_dir = dirs::app_home_dir().stringify_err()?;
     let data_path = app_dir.join("smart_weight_data.csv");
 
-    if !data_path.starts_with(&app_dir) {
-        return Err("invalid smart data path".into());
-    }
-
     if fs::try_exists(&data_path).await.stringify_err()? {
         fs::remove_file(&data_path).await.stringify_err()?;
         logging!(info, Type::Config, "Smart data file removed: {data_path:?}");

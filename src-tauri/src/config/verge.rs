@@ -11,6 +11,9 @@ use smartstring::alias::String;
 
 pub(crate) const DEFAULT_SMART_LGBM_URL: &str =
     "https://github.com/vernesong/mihomo/releases/download/LightGBM-Model/Model.bin";
+pub(crate) const DEFAULT_SMART_SAMPLE_RATE: f64 = 1.0;
+pub(crate) const DEFAULT_SMART_LGBM_UPDATE_INTERVAL: u64 = 72;
+pub(crate) const DEFAULT_SMART_COLLECTOR_SIZE: u64 = 100;
 
 /// ### `verge.yaml` schema
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
@@ -324,6 +327,22 @@ impl IVerge {
     pub const VALID_CLASH_CORES: &'static [&'static str] =
         &["verge-mihomo", "verge-mihomo-alpha", "verge-mihomo-smart"];
 
+    /// 任一 Smart 运行时字段被 patch 时需要重新生成 clash 配置；
+    /// 新增 smart_* 字段时同步维护此列表
+    pub const fn has_smart_runtime_patch(&self) -> bool {
+        self.smart_strategy_auto_switch.is_some()
+            || self.smart_group_downgrade.is_some()
+            || self.smart_policy_priority.is_some()
+            || self.smart_prefer_asn.is_some()
+            || self.smart_use_lightgbm.is_some()
+            || self.smart_collect_data.is_some()
+            || self.smart_sample_rate.is_some()
+            || self.smart_lgbm_auto_update.is_some()
+            || self.smart_lgbm_update_interval.is_some()
+            || self.smart_lgbm_url.is_some()
+            || self.smart_collector_size.is_some()
+    }
+
     /// 验证并修正配置文件中的clash_core值
     pub async fn validate_and_fix_config() -> Result<()> {
         let config_path = dirs::verge_path()?;
@@ -474,11 +493,11 @@ impl IVerge {
             smart_prefer_asn: Some(false),
             smart_use_lightgbm: Some(true),
             smart_collect_data: Some(false),
-            smart_sample_rate: Some(1.0),
+            smart_sample_rate: Some(DEFAULT_SMART_SAMPLE_RATE),
             smart_lgbm_auto_update: Some(true),
-            smart_lgbm_update_interval: Some(72),
+            smart_lgbm_update_interval: Some(DEFAULT_SMART_LGBM_UPDATE_INTERVAL),
             smart_lgbm_url: Some(DEFAULT_SMART_LGBM_URL.into()),
-            smart_collector_size: Some(100),
+            smart_collector_size: Some(DEFAULT_SMART_COLLECTOR_SIZE),
             auto_log_clean: Some(2), // 1: 1天, 2: 7天, 3: 30天, 4: 90天
             enable_auto_backup_schedule: Some(false),
             auto_backup_interval_hours: Some(24),

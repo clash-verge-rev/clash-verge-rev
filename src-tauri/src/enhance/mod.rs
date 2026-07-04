@@ -17,7 +17,10 @@ use self::{
 };
 use crate::utils::dirs;
 use crate::{
-    config::{Config, DEFAULT_SMART_LGBM_URL, IVerge, PrfItem},
+    config::{
+        Config, DEFAULT_SMART_COLLECTOR_SIZE, DEFAULT_SMART_LGBM_UPDATE_INTERVAL, DEFAULT_SMART_LGBM_URL,
+        DEFAULT_SMART_SAMPLE_RATE, IVerge, PrfItem,
+    },
     constants,
     utils::tmpl,
 };
@@ -179,16 +182,18 @@ async fn get_config_values() -> ConfigValues {
         prefer_asn: smart_prefer_asn.unwrap_or(false),
         use_lightgbm: smart_use_lightgbm.unwrap_or(true),
         collect_data: smart_collect_data.unwrap_or(false),
-        sample_rate: smart_sample_rate.unwrap_or(1.0).clamp(0.0, 1.0),
+        sample_rate: smart_sample_rate.unwrap_or(DEFAULT_SMART_SAMPLE_RATE).clamp(0.0, 1.0),
         lgbm_auto_update: smart_lgbm_auto_update.unwrap_or(true),
-        lgbm_update_interval: smart_lgbm_update_interval.unwrap_or(72).max(1),
+        lgbm_update_interval: smart_lgbm_update_interval
+            .unwrap_or(DEFAULT_SMART_LGBM_UPDATE_INTERVAL)
+            .max(1),
         lgbm_url: smart_lgbm_url
             .as_ref()
             .map(|value| value.trim())
             .filter(|value| !value.is_empty())
             .unwrap_or(DEFAULT_SMART_LGBM_URL)
             .into(),
-        collector_size: smart_collector_size.unwrap_or(100).max(1),
+        collector_size: smart_collector_size.unwrap_or(DEFAULT_SMART_COLLECTOR_SIZE).max(1),
     };
 
     drop(verge_arc);
