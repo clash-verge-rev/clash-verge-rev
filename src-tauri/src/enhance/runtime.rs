@@ -12,6 +12,8 @@ const SMART_GROUP_KEYS: &[&str] = &[
     "collectdata",
     "sample-rate",
 ];
+const SMART_AUTO_SWITCH_REMOVED_KEYS: &[&str] =
+    &["strategy", "url", "interval", "tolerance", "lazy", "expected-status"];
 
 pub(super) fn apply_core_runtime_settings(config: Mapping, core: Option<&str>, settings: &SmartSettings) -> Mapping {
     if is_smart_core(core) {
@@ -47,7 +49,9 @@ fn apply_smart_strategy_auto_switch(mut config: Mapping, settings: &SmartSetting
             }
 
             group_map.insert(Value::String("type".into()), Value::String("smart".into()));
-            group_map.remove("strategy");
+            for key in SMART_AUTO_SWITCH_REMOVED_KEYS {
+                group_map.remove(*key);
+            }
 
             if let Some(policy_priority) = settings.policy_priority.as_ref() {
                 insert_if_missing(

@@ -926,6 +926,11 @@ proxy-groups:
   - name: auto-smart
     type: url-test
     strategy: consistent-hashing
+    url: http://example.com/generate_204
+    interval: 300
+    tolerance: 50
+    lazy: true
+    expected-status: 204
     sample-rate: 0.25
 ";
 
@@ -996,5 +1001,45 @@ proxy-groups:
             smart_group.get("sample-rate").and_then(serde_yaml_ng::Value::as_f64),
             Some(0.25)
         );
+        for key in ["strategy", "url", "interval", "tolerance", "lazy", "expected-status"] {
+            assert!(!smart_group.contains_key(key));
+        }
+    }
+
+    #[test]
+    fn smart_core_runtime_settings_clean_load_balance_fields() {
+        let config_str = r"
+proxy-groups:
+  - name: auto-smart
+    type: load-balance
+    strategy: consistent-hashing
+    url: http://example.com/generate_204
+    interval: 300
+    tolerance: 50
+    lazy: true
+    expected-status: 204
+";
+
+        let config: serde_yaml_ng::Mapping = serde_yaml_ng::from_str(config_str).expect("Failed to parse test yaml");
+        let settings = SmartSettings {
+            strategy_auto_switch: true,
+            ..SmartSettings::default()
+        };
+
+        let config = apply_core_runtime_settings(config, Some(SMART_CORE), &settings);
+        let smart_group = config
+            .get("proxy-groups")
+            .and_then(serde_yaml_ng::Value::as_sequence)
+            .and_then(|groups| groups.first())
+            .and_then(serde_yaml_ng::Value::as_mapping)
+            .expect("smart group should exist");
+
+        assert_eq!(
+            smart_group.get("type").and_then(serde_yaml_ng::Value::as_str),
+            Some("smart")
+        );
+        for key in ["strategy", "url", "interval", "tolerance", "lazy", "expected-status"] {
+            assert!(!smart_group.contains_key(key));
+        }
     }
 }
