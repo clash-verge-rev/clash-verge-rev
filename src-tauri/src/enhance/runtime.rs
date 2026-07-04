@@ -173,50 +173,52 @@ fn strip_smart_runtime_settings(mut config: Mapping, settings: &SmartSettings) -
 mod tests {
     use super::*;
 
-    fn config_with_group(group_yaml: &str) -> Mapping {
-        let yaml = format!("proxy-groups:\n{group_yaml}");
-        serde_yaml_ng::from_str(&yaml).unwrap()
+    fn config_with_group(group_yaml: &str) -> Result<Mapping, serde_yaml_ng::Error> {
+        serde_yaml_ng::from_str(&format!("proxy-groups:\n{group_yaml}"))
     }
 
-    fn first_group(config: &Mapping) -> &Mapping {
+    fn group_field<'a>(config: &'a Mapping, index: usize, key: &str) -> Option<&'a Value> {
         config
             .get("proxy-groups")
             .and_then(Value::as_sequence)
-            .and_then(|groups| groups.first())
+            .and_then(|groups| groups.get(index))
             .and_then(Value::as_mapping)
-            .unwrap()
+            .and_then(|group| group.get(key))
     }
 
     #[test]
-    fn strip_downgrades_smart_group_to_url_test() {
+    fn strip_downgrades_smart_group_to_url_test() -> Result<(), serde_yaml_ng::Error> {
         let config = config_with_group(
             "  - name: Auto\n    type: smart\n    proxies: [a, b]\n    uselightgbm: true\n    maxuploadrate: 10\n    maxdownloadrate: 20\n",
-        );
+        )?;
         let settings = SmartSettings {
             group_downgrade: true,
             ..SmartSettings::default()
         };
 
         let result = strip_smart_runtime_settings(config, &settings);
-        let group = first_group(&result);
 
-        assert_eq!(group.get("type").and_then(Value::as_str), Some("url-test"));
         assert_eq!(
-            group.get("url").and_then(Value::as_str),
+            group_field(&result, 0, "type").and_then(Value::as_str),
+            Some("url-test")
+        );
+        assert_eq!(
+            group_field(&result, 0, "url").and_then(Value::as_str),
             Some(FALLBACK_LATENCY_TEST_URL)
         );
         assert_eq!(
-            group.get("interval").and_then(Value::as_u64),
+            group_field(&result, 0, "interval").and_then(Value::as_u64),
             Some(FALLBACK_LATENCY_TEST_INTERVAL)
         );
         for key in SMART_GROUP_KEYS {
-            assert!(!group.contains_key(*key), "{key} should be stripped");
+            assert_eq!(group_field(&result, 0, key), None, "{key} should be stripped");
         }
+        Ok(())
     }
 
     #[test]
-    fn strip_downgrade_uses_configured_latency_test_url() {
-        let config = config_with_group("  - name: Auto\n    type: smart\n    proxies: [a]\n");
+    fn strip_downgrade_uses_configured_latency_test_url() -> Result<(), serde_yaml_ng::Error> {
+        let config = config_with_group("  - name: Auto\n    type: smart\n    proxies: [a]\n")?;
         let settings = SmartSettings {
             group_downgrade: true,
             latency_test_url: Some("http://www.gstatic.com/generate_204".into()),
@@ -224,63 +226,65 @@ mod tests {
         };
 
         let result = strip_smart_runtime_settings(config, &settings);
-        let group = first_group(&result);
 
         assert_eq!(
-            group.get("url").and_then(Value::as_str),
+            group_field(&result, 0, "url").and_then(Value::as_str),
             Some("http://www.gstatic.com/generate_204")
         );
+        Ok(())
     }
 
     #[test]
-    fn strip_downgrade_keeps_existing_url_and_interval() {
+    fn strip_downgrade_keeps_existing_url_and_interval() -> Result<(), serde_yaml_ng::Error> {
         let config = config_with_group(
             "  - name: Auto\n    type: smart\n    proxies: [a]\n    url: http://example.com/204\n    interval: 60\n",
-        );
+        )?;
         let settings = SmartSettings {
             group_downgrade: true,
             ..SmartSettings::default()
         };
 
         let result = strip_smart_runtime_settings(config, &settings);
-        let group = first_group(&result);
 
-        assert_eq!(group.get("type").and_then(Value::as_str), Some("url-test"));
-        assert_eq!(group.get("url").and_then(Value::as_str), Some("http://example.com/204"));
-        assert_eq!(group.get("interval").and_then(Value::as_u64), Some(60));
+        assert_eq!(
+            group_field(&result, 0, "type").and_then(Value::as_str),
+            Some("url-test")
+        );
+        assert_eq!(
+            group_field(&result, 0, "url").and_then(Value::as_str),
+            Some("http://example.com/204")
+        );
+        assert_eq!(group_field(&result, 0, "interval").and_then(Value::as_u64), Some(60));
+        Ok(())
     }
 
     #[test]
-    fn strip_without_downgrade_keeps_type_but_strips_keys() {
-        let config = config_with_group("  - name: Auto\n    type: smart\n    proxies: [a]\n    collectdata: true\n");
+    fn strip_without_downgrade_keeps_type_but_strips_keys() -> Result<(), serde_yaml_ng::Error> {
+        let config = config_with_group("  - name: Auto\n    type: smart\n    proxies: [a]\n    collectdata: true\n")?;
         let settings = SmartSettings::default();
 
         let result = strip_smart_runtime_settings(config, &settings);
-        let group = first_group(&result);
 
-        assert_eq!(group.get("type").and_then(Value::as_str), Some("smart"));
-        assert!(!group.contains_key("collectdata"));
-        assert!(!group.contains_key("url"));
+        assert_eq!(group_field(&result, 0, "type").and_then(Value::as_str), Some("smart"));
+        assert_eq!(group_field(&result, 0, "collectdata"), None);
+        assert_eq!(group_field(&result, 0, "url"), None);
+        Ok(())
     }
 
     #[test]
-    fn strip_leaves_ordinary_groups_untouched() {
+    fn strip_leaves_ordinary_groups_untouched() -> Result<(), serde_yaml_ng::Error> {
         let config = config_with_group(
             "  - name: Manual\n    type: select\n    proxies: [a]\n  - name: Fast\n    type: url-test\n    proxies: [a]\n    url: http://example.com/204\n    interval: 120\n",
-        );
+        )?;
         let settings = SmartSettings {
             group_downgrade: true,
             ..SmartSettings::default()
         };
 
         let result = strip_smart_runtime_settings(config, &settings);
-        let groups = result.get("proxy-groups").and_then(Value::as_sequence).unwrap();
 
-        assert_eq!(
-            groups[0].as_mapping().unwrap().get("type").and_then(Value::as_str),
-            Some("select")
-        );
-        let fast = groups[1].as_mapping().unwrap();
-        assert_eq!(fast.get("interval").and_then(Value::as_u64), Some(120));
+        assert_eq!(group_field(&result, 0, "type").and_then(Value::as_str), Some("select"));
+        assert_eq!(group_field(&result, 1, "interval").and_then(Value::as_u64), Some(120));
+        Ok(())
     }
 }
