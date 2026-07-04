@@ -1,4 +1,6 @@
+use super::runtime::SMART_CORE;
 use serde_yaml_ng::{Mapping, Value};
+use std::{collections::HashSet, net::IpAddr};
 
 #[cfg(target_os = "macos")]
 use crate::process::AsyncHandler;
@@ -86,4 +88,191 @@ pub fn use_tun(mut config: Mapping, enable: bool) -> Mapping {
     revise!(config, "tun", tun_val);
 
     config
+}
+
+pub(super) fn use_smart_tun_route_exclude(mut config: Mapping, core: Option<&str>, enable_tun: bool) -> Mapping {
+    if !enable_tun || !matches!(core, Some(SMART_CORE)) {
+        return config;
+    }
+
+    let proxy_server_cidrs = collect_proxy_server_cidrs(&config);
+    if proxy_server_cidrs.is_empty() {
+        return config;
+    }
+
+    let tun_key = Value::from("tun");
+    let mut tun = config.get(&tun_key).map_or_else(Mapping::new, |val| {
+        val.as_mapping().cloned().unwrap_or_else(Mapping::new)
+    });
+
+    let route_exclude_key = Value::from("route-exclude-address");
+    let mut route_exclude_addresses = tun
+        .get(&route_exclude_key)
+        .and_then(Value::as_sequence)
+        .cloned()
+        .unwrap_or_default();
+
+    let mut existing = HashSet::new();
+    for address in &route_exclude_addresses {
+        if let Some(address) = address.as_str() {
+            add_route_exclude_keys(&mut existing, address);
+        }
+    }
+
+    for cidr in proxy_server_cidrs {
+        if existing.contains(&cidr) {
+            continue;
+        }
+
+        route_exclude_addresses.push(Value::String(cidr.clone()));
+        add_route_exclude_keys(&mut existing, &cidr);
+    }
+
+    tun.insert(route_exclude_key, Value::Sequence(route_exclude_addresses));
+    config.insert(tun_key, Value::Mapping(tun));
+    config
+}
+
+fn collect_proxy_server_cidrs(config: &Mapping) -> Vec<std::string::String> {
+    let Some(proxies) = config.get("proxies").and_then(Value::as_sequence) else {
+        return Vec::new();
+    };
+
+    let mut cidrs = Vec::new();
+    let mut seen = HashSet::new();
+    for proxy in proxies {
+        let Some(proxy) = proxy.as_mapping() else {
+            continue;
+        };
+        let Some(server) = proxy.get("server").and_then(value_to_server_string) else {
+            continue;
+        };
+        let Some(cidr) = cidr_from_host(&server) else {
+            continue;
+        };
+        if seen.insert(cidr.clone()) {
+            cidrs.push(cidr);
+        }
+    }
+
+    cidrs
+}
+
+fn value_to_server_string(value: &Value) -> Option<std::string::String> {
+    match value {
+        Value::String(value) => Some(value.to_string()),
+        Value::Number(value) => Some(value.to_string()),
+        _ => None,
+    }
+}
+
+fn cidr_from_host(host: &str) -> Option<std::string::String> {
+    let host = host.trim().trim_start_matches('[').trim_end_matches(']');
+    let ip: IpAddr = host.parse().ok()?;
+    Some(match ip {
+        IpAddr::V4(ip) => format!("{ip}/32"),
+        IpAddr::V6(ip) => format!("{ip}/128"),
+    })
+}
+
+fn add_route_exclude_keys(existing: &mut HashSet<std::string::String>, address: &str) {
+    let address = address.trim();
+    if address.is_empty() {
+        return;
+    }
+
+    existing.insert(address.to_ascii_lowercase());
+
+    let host = address.split_once('/').map_or(address, |(host, _)| host);
+    if let Some(cidr) = cidr_from_host(host) {
+        existing.insert(cidr);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn yaml_to_mapping(yaml: &str) -> Result<Mapping, serde_yaml_ng::Error> {
+        serde_yaml_ng::from_str(yaml)
+    }
+
+    fn route_exclude_addresses(config: &Mapping) -> Option<Vec<&str>> {
+        config
+            .get("tun")
+            .and_then(|value| value.get("route-exclude-address"))
+            .and_then(Value::as_sequence)
+            .map(|addresses| addresses.iter().filter_map(Value::as_str).collect())
+    }
+
+    #[test]
+    fn smart_tun_route_exclude_adds_ip_proxy_servers() -> Result<(), serde_yaml_ng::Error> {
+        let config = yaml_to_mapping(
+            r#"
+proxies:
+  - name: ipv4
+    server: 1.2.3.4
+  - name: ipv6
+    server: "[2001:db8::1]"
+tun:
+  enable: true
+  route-exclude-address:
+    - 10.0.0.0/8
+"#,
+        )?;
+
+        let config = use_smart_tun_route_exclude(config, Some(SMART_CORE), true);
+        let route_exclude_addresses = route_exclude_addresses(&config);
+
+        assert_eq!(
+            route_exclude_addresses,
+            Some(vec!["10.0.0.0/8", "1.2.3.4/32", "2001:db8::1/128"])
+        );
+        Ok(())
+    }
+
+    #[test]
+    fn smart_tun_route_exclude_skips_domains_and_deduplicates_existing_values() -> Result<(), serde_yaml_ng::Error> {
+        let config = yaml_to_mapping(
+            r"
+proxies:
+  - name: domain
+    server: example.com
+  - name: duplicate-cidr
+    server: 1.2.3.4
+  - name: duplicate-bare
+    server: 5.6.7.8
+tun:
+  route-exclude-address:
+    - 1.2.3.4/32
+    - 5.6.7.8
+",
+        )?;
+
+        let config = use_smart_tun_route_exclude(config, Some(SMART_CORE), true);
+        let route_exclude_addresses = route_exclude_addresses(&config);
+
+        assert_eq!(route_exclude_addresses, Some(vec!["1.2.3.4/32", "5.6.7.8"]));
+        Ok(())
+    }
+
+    #[test]
+    fn smart_tun_route_exclude_requires_smart_core_and_tun() -> Result<(), serde_yaml_ng::Error> {
+        let config = yaml_to_mapping(
+            r"
+proxies:
+  - name: ipv4
+    server: 1.2.3.4
+tun:
+  route-exclude-address: []
+",
+        )?;
+
+        let non_smart_config = use_smart_tun_route_exclude(config.clone(), Some("verge-mihomo"), true);
+        assert_eq!(route_exclude_addresses(&non_smart_config), Some(Vec::new()));
+
+        let disabled_tun_config = use_smart_tun_route_exclude(config, Some(SMART_CORE), false);
+        assert_eq!(route_exclude_addresses(&disabled_tun_config), Some(Vec::new()));
+        Ok(())
+    }
 }

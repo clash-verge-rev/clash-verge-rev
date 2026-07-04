@@ -13,7 +13,7 @@ use self::{
     runtime::apply_core_runtime_settings,
     script::use_script,
     seq::{SeqMap, use_seq},
-    tun::use_tun,
+    tun::{use_smart_tun_route_exclude, use_tun},
 };
 use crate::utils::dirs;
 use crate::{
@@ -679,6 +679,7 @@ pub async fn enhance() -> Result<(Mapping, HashSet<String>, HashMap<String, Resu
     config = cleanup_proxy_groups(config);
 
     config = use_tun(config, enable_tun);
+    config = use_smart_tun_route_exclude(config, clash_core.as_deref(), enable_tun);
     config = use_sort(config);
 
     // dns settings
