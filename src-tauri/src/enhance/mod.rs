@@ -1,6 +1,7 @@
 mod chain;
 pub mod field;
 mod merge;
+mod runtime;
 mod script;
 pub mod seq;
 mod tun;
@@ -9,13 +10,14 @@ use self::{
     chain::{AsyncChainItemFrom as _, ChainItem, ChainType},
     field::{use_keys, use_lowercase, use_sort},
     merge::use_merge,
+    runtime::apply_core_runtime_settings,
     script::use_script,
     seq::{SeqMap, use_seq},
-    tun::use_tun,
+    tun::{use_smart_tun_route_exclude, use_tun},
 };
 use crate::utils::dirs;
 use crate::{
-    config::{Config, IVerge, PrfItem},
+    config::{Config, DEFAULT_SMART_LGBM_URL, IVerge, PrfItem},
     constants,
     utils::tmpl,
 };
@@ -31,6 +33,7 @@ type ResultLog = Vec<(String, String)>;
 struct ConfigValues {
     clash_config: Mapping,
     clash_core: Option<String>,
+    smart_settings: SmartSettings,
     enable_tun: bool,
     enable_builtin: bool,
     socks_enabled: bool,
@@ -40,6 +43,20 @@ struct ConfigValues {
     redir_enabled: bool,
     #[cfg(target_os = "linux")]
     tproxy_enabled: bool,
+}
+
+#[derive(Debug, Clone, Default)]
+struct SmartSettings {
+    strategy_auto_switch: bool,
+    policy_priority: Option<String>,
+    prefer_asn: bool,
+    use_lightgbm: bool,
+    collect_data: bool,
+    sample_rate: f64,
+    lgbm_auto_update: bool,
+    lgbm_update_interval: u64,
+    lgbm_url: String,
+    collector_size: u64,
 }
 
 #[derive(Debug)]
@@ -116,6 +133,16 @@ async fn get_config_values() -> ConfigValues {
         ref verge_socks_enabled,
         ref verge_http_enabled,
         ref enable_dns_settings,
+        ref smart_strategy_auto_switch,
+        ref smart_policy_priority,
+        ref smart_prefer_asn,
+        ref smart_use_lightgbm,
+        ref smart_collect_data,
+        ref smart_sample_rate,
+        ref smart_lgbm_auto_update,
+        ref smart_lgbm_update_interval,
+        ref smart_lgbm_url,
+        ref smart_collector_size,
         ..
     } = **verge_arc;
 
@@ -134,12 +161,37 @@ async fn get_config_values() -> ConfigValues {
     #[cfg(target_os = "linux")]
     let tproxy_enabled = verge_arc.verge_tproxy_enabled.unwrap_or(false);
 
+    let policy_priority = match smart_policy_priority.as_ref() {
+        Some(value) if value.trim().is_empty() => None,
+        Some(value) => Some(value.trim().into()),
+        None => Some(crate::config::DEFAULT_SMART_POLICY_PRIORITY.into()),
+    };
+
+    let smart_settings = SmartSettings {
+        strategy_auto_switch: smart_strategy_auto_switch.unwrap_or(false),
+        policy_priority,
+        prefer_asn: smart_prefer_asn.unwrap_or(false),
+        use_lightgbm: smart_use_lightgbm.unwrap_or(false),
+        collect_data: smart_collect_data.unwrap_or(false),
+        sample_rate: smart_sample_rate.unwrap_or(1.0).clamp(0.0, 1.0),
+        lgbm_auto_update: smart_lgbm_auto_update.unwrap_or(false),
+        lgbm_update_interval: smart_lgbm_update_interval.unwrap_or(72).max(1),
+        lgbm_url: smart_lgbm_url
+            .as_ref()
+            .map(|value| value.trim())
+            .filter(|value| !value.is_empty())
+            .unwrap_or(DEFAULT_SMART_LGBM_URL)
+            .into(),
+        collector_size: smart_collector_size.unwrap_or(100).max(1),
+    };
+
     drop(verge_arc);
     drop(verge);
 
     ConfigValues {
         clash_config,
         clash_core,
+        smart_settings,
         enable_tun,
         enable_builtin,
         socks_enabled,
@@ -474,11 +526,11 @@ async fn merge_default_config(
     config
 }
 
-async fn apply_builtin_scripts(mut config: Mapping, clash_core: Option<String>, enable_builtin: bool) -> Mapping {
+async fn apply_builtin_scripts(mut config: Mapping, clash_core: Option<&String>, enable_builtin: bool) -> Mapping {
     if enable_builtin {
         let items: Vec<_> = ChainItem::builtin()
             .into_iter()
-            .filter(|(s, _)| s.is_support(clash_core.as_ref()))
+            .filter(|(s, _)| s.is_support(clash_core))
             .map(|(_, c)| c)
             .collect();
         for item in items {
@@ -646,6 +698,7 @@ pub async fn enhance() -> Result<(Mapping, HashSet<String>, HashMap<String, Resu
     let ConfigValues {
         clash_config,
         clash_core,
+        smart_settings,
         enable_tun,
         enable_builtin,
         socks_enabled,
@@ -738,11 +791,7 @@ pub async fn enhance() -> Result<(Mapping, HashSet<String>, HashMap<String, Resu
 #[allow(clippy::expect_used)]
 #[cfg(test)]
 mod tests {
-    use super::{
-        ChainItem, ChainType, SmartSettings, cleanup_proxy_groups, process_global_items, process_profile_items,
-        runtime::{SMART_CORE, apply_core_runtime_settings},
-        use_keys,
-    };
+    use super::{ChainItem, ChainType, cleanup_proxy_groups, process_global_items, process_profile_items, use_keys};
     use std::collections::HashMap;
 
     fn mapping(yaml: &str) -> serde_yaml_ng::Mapping {
@@ -894,10 +943,10 @@ mod tests {
 
     #[test]
     fn control_plane_removes_reenabled_disabled_port() {
-        let app_config = mapping(r#"{mixed-port: 7890, mode: rule}"#);
+        let app_config = mapping(r"{mixed-port: 7890, mode: rule}");
         let snapshot = super::snapshot_control_plane(&app_config);
 
-        let hijacked = mapping(r#"{mixed-port: 7890, mode: rule, socks-port: 1080}"#);
+        let hijacked = mapping(r"{mixed-port: 7890, mode: rule, socks-port: 1080}");
         let result = super::enforce_control_plane(hijacked, snapshot);
 
         assert!(!result.contains_key("socks-port"));
@@ -935,7 +984,7 @@ mod tests {
 
     #[test]
     fn snapshot_control_plane_skips_absent_keys() {
-        let app_config = mapping(r#"{mode: rule, mixed-port: 7890}"#);
+        let app_config = mapping(r"{mode: rule, mixed-port: 7890}");
         let snapshot = super::snapshot_control_plane(&app_config);
         assert!(snapshot.contains_key("mode"));
         assert!(snapshot.contains_key("mixed-port"));
