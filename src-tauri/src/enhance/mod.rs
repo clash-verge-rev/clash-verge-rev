@@ -243,13 +243,12 @@ async fn collect_profile_items() -> Result<ProfileItems> {
 
 async fn process_global_items(
     mut config: Mapping,
+    mut exists_keys: Vec<String>,
+    mut result_map: HashMap<String, ResultLog>,
     global_merge: ChainItem,
     global_script: ChainItem,
     profile_name: &String,
 ) -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
-    let mut result_map = HashMap::new();
-    let mut exists_keys = use_keys(&config).collect::<Vec<_>>();
-
     if let ChainType::Merge(merge) = global_merge.data {
         exists_keys.extend(use_keys(&merge));
         config = use_merge(&merge, config);
@@ -259,7 +258,7 @@ async fn process_global_items(
         let mut logs = vec![];
         match use_script(script, config.clone(), profile_name.clone()).await {
             Ok((res_config, res_logs)) => {
-                exists_keys.extend(use_keys(&res_config));
+                extend_changed_keys(&mut exists_keys, &config, &res_config);
                 config = res_config;
                 logs.extend(res_logs);
             }
@@ -271,18 +270,12 @@ async fn process_global_items(
     (config, exists_keys, result_map)
 }
 
-#[allow(clippy::too_many_arguments)]
-async fn process_profile_items(
+fn process_seq_items(
     mut config: Mapping,
-    mut exists_keys: Vec<String>,
-    mut result_map: HashMap<String, ResultLog>,
     rules_item: ChainItem,
     proxies_item: ChainItem,
     groups_item: ChainItem,
-    merge_item: ChainItem,
-    script_item: ChainItem,
-    profile_name: &String,
-) -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
+) -> Mapping {
     if let ChainType::Rules(rules) = rules_item.data {
         config = use_seq(rules, config, "rules");
     }
@@ -295,6 +288,94 @@ async fn process_profile_items(
         config = use_seq(groups, config, "proxy-groups");
     }
 
+    config
+}
+
+fn extend_changed_keys(exists_keys: &mut Vec<String>, config: &Mapping, res_config: &Mapping) {
+    exists_keys.extend(res_config.iter().filter_map(|(key, value)| {
+        if config.get(key) == Some(value) {
+            return None;
+        }
+
+        key.as_str().map(|key| {
+            let mut key: String = key.into();
+            key.make_ascii_lowercase();
+            key
+        })
+    }));
+}
+
+/// App 权威的顶层控制面键:核心连接、监听端口、UI/托盘开关。
+/// 平台键随 cfg 门控;`dns.ipv6` 单独处理。
+const CONTROL_PLANE_KEYS: &[&str] = &[
+    "external-controller",
+    #[cfg(unix)]
+    "external-controller-unix",
+    #[cfg(windows)]
+    "external-controller-pipe",
+    "external-controller-cors",
+    "secret",
+    "mixed-port",
+    "socks-port",
+    "port",
+    #[cfg(not(target_os = "windows"))]
+    "redir-port",
+    #[cfg(target_os = "linux")]
+    "tproxy-port",
+    "mode",
+    "allow-lan",
+    "log-level",
+    "ipv6",
+    "unified-delay",
+];
+
+/// 手动 merge/script 前保存 app 最终控制面值,只记录当前存在的键。
+fn snapshot_control_plane(config: &Mapping) -> Mapping {
+    let mut snapshot = Mapping::new();
+    for &key in CONTROL_PLANE_KEYS {
+        let key = Value::from(key);
+        if let Some(value) = config.get(&key) {
+            snapshot.insert(key, value.clone());
+        }
+    }
+    snapshot
+}
+
+/// 手动覆盖后恢复控制面快照;快照缺失的控制面键从最终配置删除。
+fn enforce_control_plane(mut config: Mapping, snapshot: Mapping) -> Mapping {
+    for &key in CONTROL_PLANE_KEYS {
+        let key = Value::from(key);
+        if !snapshot.contains_key(&key) {
+            config.remove(&key);
+        }
+    }
+    config.extend(snapshot);
+    config
+}
+
+/// DNS 页权威的嵌套开关;只在 `enable_dns_settings` 时快照。
+fn snapshot_dns_ipv6(config: &Mapping) -> Option<Value> {
+    config.get("dns")?.get("ipv6").cloned()
+}
+
+/// 恢复 `dns.ipv6`,但不创建缺失的 `dns` 块。
+fn enforce_dns_ipv6(mut config: Mapping, dns_ipv6: Option<Value>) -> Mapping {
+    if let Some(dns_ipv6) = dns_ipv6
+        && let Some(Value::Mapping(dns)) = config.get_mut("dns")
+    {
+        dns.insert(Value::from("ipv6"), dns_ipv6);
+    }
+    config
+}
+
+async fn process_profile_items(
+    mut config: Mapping,
+    mut exists_keys: Vec<String>,
+    mut result_map: HashMap<String, ResultLog>,
+    merge_item: ChainItem,
+    script_item: ChainItem,
+    profile_name: &String,
+) -> (Mapping, Vec<String>, HashMap<String, ResultLog>) {
     if let ChainType::Merge(merge) = merge_item.data {
         exists_keys.extend(use_keys(&merge));
         config = use_merge(&merge, config);
@@ -304,7 +385,7 @@ async fn process_profile_items(
         let mut logs = vec![];
         match use_script(script, config.clone(), profile_name.clone()).await {
             Ok((res_config, res_logs)) => {
-                exists_keys.extend(use_keys(&res_config));
+                extend_changed_keys(&mut exists_keys, &config, &res_config);
                 config = res_config;
                 logs.extend(res_logs);
             }
@@ -588,23 +669,11 @@ pub async fn enhance() -> Result<(Mapping, HashSet<String>, HashMap<String, Resu
     let global_script = profile.global_script;
     let profile_name = profile.profile_name;
 
-    // process globals
-    let (config, exists_keys, result_map) =
-        process_global_items(config, global_merge, global_script, &profile_name).await;
+    let result_map = HashMap::new();
 
-    // process profile-specific items
-    let (config, exists_keys, result_map) = process_profile_items(
-        config,
-        exists_keys,
-        result_map,
-        rules_item,
-        proxies_item,
-        groups_item,
-        merge_item,
-        script_item,
-        &profile_name,
-    )
-    .await;
+    // 顺序项先于手动覆盖。
+    let config = process_seq_items(config, rules_item, proxies_item, groups_item);
+    let exists_keys = use_keys(&config).collect::<Vec<_>>();
 
     // merge default clash config
     let config = merge_default_config(
@@ -619,16 +688,41 @@ pub async fn enhance() -> Result<(Mapping, HashSet<String>, HashMap<String, Resu
     )
     .await;
 
-    // builtin scripts
-    let mut config = apply_builtin_scripts(config, clash_core, enable_builtin).await;
+    // app 生成项先于手动覆盖。
+    let config = apply_builtin_scripts(config, clash_core, enable_builtin).await;
+    let config = use_tun(config, enable_tun);
+    let config = apply_dns_settings(config, enable_dns_settings).await;
 
-    config = cleanup_proxy_groups(config);
+    // 手动覆盖前锁定 app 权威字段。
+    let control_plane = snapshot_control_plane(&config);
+    // DNS 页开启时,仅 `dns.ipv6` 跟随 UI;其余 DNS 字段仍可覆盖。
+    let dns_ipv6 = if enable_dns_settings {
+        snapshot_dns_ipv6(&config)
+    } else {
+        None
+    };
 
-    config = use_tun(config, enable_tun);
-    config = use_sort(config);
+    // 全局手动覆盖。
+    let (config, exists_keys, result_map) = process_global_items(
+        config,
+        exists_keys,
+        result_map,
+        global_merge,
+        global_script,
+        &profile_name,
+    )
+    .await;
 
-    // dns settings
-    config = apply_dns_settings(config, enable_dns_settings).await;
+    // 当前 profile 手动覆盖。
+    let (config, exists_keys, result_map) =
+        process_profile_items(config, exists_keys, result_map, merge_item, script_item, &profile_name).await;
+
+    // 手动覆盖后恢复 app 权威字段。
+    let config = enforce_control_plane(config, control_plane);
+    let config = enforce_dns_ipv6(config, dns_ipv6);
+
+    let config = cleanup_proxy_groups(config);
+    let config = use_sort(config);
 
     let mut exists_keys_set = HashSet::new();
     exists_keys_set.extend(exists_keys);
@@ -639,7 +733,206 @@ pub async fn enhance() -> Result<(Mapping, HashSet<String>, HashMap<String, Resu
 #[allow(clippy::expect_used)]
 #[cfg(test)]
 mod tests {
-    use super::cleanup_proxy_groups;
+    use super::{ChainItem, ChainType, cleanup_proxy_groups, process_global_items, process_profile_items, use_keys};
+    use std::collections::HashMap;
+
+    fn mapping(yaml: &str) -> serde_yaml_ng::Mapping {
+        serde_yaml_ng::from_str(yaml).expect("test config should be valid")
+    }
+
+    #[tokio::test]
+    async fn manual_overrides_follow_expected_priority() {
+        let mut config = mapping(
+            r"{global-merge-wins: other, global-script-wins: other, profile-merge-wins: other,
+               profile-script-wins: other, nested: {winner: other}, dns: {enable: true}, tun: {enable: true}}",
+        );
+        let exists_keys = use_keys(&config).collect();
+        config.insert("application-only".into(), true.into());
+
+        let global_merge = ChainItem {
+            uid: "Merge".into(),
+            data: ChainType::Merge(mapping(
+                r"{global-merge-wins: global-merge, global-script-wins: global-merge,
+                   profile-merge-wins: global-merge, profile-script-wins: global-merge,
+                   nested: {winner: global-merge}, dns: {enable: false}, tun: {enable: false}}",
+            )),
+        };
+        let global_script = ChainItem::to_script(
+            "Script",
+            r#"function main(config) {
+              config["global-script-wins"] = "global-script";
+              config["profile-merge-wins"] = "global-script";
+              config["profile-script-wins"] = "global-script";
+              config.nested.winner = "global-script";
+              return config;
+            }"#,
+        );
+        let profile_merge = ChainItem {
+            uid: "profile-merge".into(),
+            data: ChainType::Merge(mapping(
+                r"{profile-merge-wins: profile-merge, profile-script-wins: profile-merge,
+                   nested: {winner: profile-merge}}",
+            )),
+        };
+        let profile_script = ChainItem::to_script(
+            "profile-script",
+            r#"function main(config) {
+              config["profile-script-wins"] = "profile-script";
+              config.nested.winner = "profile-script";
+              return config;
+            }"#,
+        );
+
+        let profile_name = "test-profile".into();
+        let (config, exists_keys, result_map) = process_global_items(
+            config,
+            exists_keys,
+            HashMap::new(),
+            global_merge,
+            global_script,
+            &profile_name,
+        )
+        .await;
+        let (config, exists_keys, _) = process_profile_items(
+            config,
+            exists_keys,
+            result_map,
+            profile_merge,
+            profile_script,
+            &profile_name,
+        )
+        .await;
+
+        let string_value = |key| config.get(key).and_then(serde_yaml_ng::Value::as_str);
+        assert_eq!(string_value("global-merge-wins"), Some("global-merge"));
+        assert_eq!(string_value("global-script-wins"), Some("global-script"));
+        assert_eq!(string_value("profile-merge-wins"), Some("profile-merge"));
+        assert_eq!(string_value("profile-script-wins"), Some("profile-script"));
+        assert_eq!(
+            config
+                .get("nested")
+                .and_then(|value| value.get("winner"))
+                .and_then(serde_yaml_ng::Value::as_str),
+            Some("profile-script")
+        );
+        assert!(!exists_keys.contains(&"application-only".into()));
+    }
+
+    #[test]
+    fn control_plane_survives_manual_overrides() {
+        let app_config = mapping(
+            r#"{external-controller: "",
+                external-controller-cors: {allow-origins: ["app-only"]},
+                mixed-port: 7890, socks-port: 7891, secret: "app-secret", mode: rule, allow-lan: false,
+                log-level: info, ipv6: false, unified-delay: true,
+                dns: {proxy-server-nameserver: ["1.1.1.1"]}}"#,
+        );
+        let snapshot = super::snapshot_control_plane(&app_config);
+
+        let hijacked = mapping(
+            r#"{external-controller: "0.0.0.0:9090",
+                external-controller-cors: {allow-origins: ["*"]},
+                mixed-port: 1080, socks-port: 1080, secret: "hijacked", mode: global, allow-lan: true,
+                log-level: debug, ipv6: true, unified-delay: false,
+                dns: {proxy-server-nameserver: ["8.8.8.8"]}}"#,
+        );
+
+        let result = super::enforce_control_plane(hijacked, snapshot);
+
+        let as_str = |key| result.get(key).and_then(serde_yaml_ng::Value::as_str);
+        assert_eq!(as_str("external-controller"), Some(""));
+        assert_eq!(
+            result.get("mixed-port").and_then(serde_yaml_ng::Value::as_u64),
+            Some(7890)
+        );
+        assert_eq!(
+            result.get("socks-port").and_then(serde_yaml_ng::Value::as_u64),
+            Some(7891)
+        );
+        assert_eq!(
+            result
+                .get("external-controller-cors")
+                .and_then(|value| value.get("allow-origins"))
+                .and_then(serde_yaml_ng::Value::as_sequence)
+                .and_then(|seq| seq.first())
+                .and_then(serde_yaml_ng::Value::as_str),
+            Some("app-only")
+        );
+        assert_eq!(as_str("secret"), Some("app-secret"));
+        assert_eq!(as_str("mode"), Some("rule"));
+        assert_eq!(
+            result.get("allow-lan").and_then(serde_yaml_ng::Value::as_bool),
+            Some(false)
+        );
+        assert_eq!(as_str("log-level"), Some("info"));
+        assert_eq!(result.get("ipv6").and_then(serde_yaml_ng::Value::as_bool), Some(false));
+        assert_eq!(
+            result.get("unified-delay").and_then(serde_yaml_ng::Value::as_bool),
+            Some(true)
+        );
+
+        // DNS 数据面不属于顶层控制面。
+        assert_eq!(
+            result
+                .get("dns")
+                .and_then(|value| value.get("proxy-server-nameserver"))
+                .and_then(serde_yaml_ng::Value::as_sequence)
+                .and_then(|seq| seq.first())
+                .and_then(serde_yaml_ng::Value::as_str),
+            Some("8.8.8.8")
+        );
+    }
+
+    #[test]
+    fn control_plane_removes_reenabled_disabled_port() {
+        let app_config = mapping(r#"{mixed-port: 7890, mode: rule}"#);
+        let snapshot = super::snapshot_control_plane(&app_config);
+
+        let hijacked = mapping(r#"{mixed-port: 7890, mode: rule, socks-port: 1080}"#);
+        let result = super::enforce_control_plane(hijacked, snapshot);
+
+        assert!(!result.contains_key("socks-port"));
+        assert_eq!(
+            result.get("mixed-port").and_then(serde_yaml_ng::Value::as_u64),
+            Some(7890)
+        );
+    }
+
+    #[test]
+    fn dns_ipv6_follows_ui_but_other_dns_stays_overridable() {
+        let app_config = mapping(r#"{dns: {ipv6: false, proxy-server-nameserver: ["1.1.1.1"]}}"#);
+        let dns_ipv6 = super::snapshot_dns_ipv6(&app_config);
+
+        let hijacked = mapping(r#"{dns: {ipv6: true, proxy-server-nameserver: ["8.8.8.8"]}}"#);
+        let result = super::enforce_dns_ipv6(hijacked, dns_ipv6);
+
+        assert_eq!(
+            result
+                .get("dns")
+                .and_then(|value| value.get("ipv6"))
+                .and_then(serde_yaml_ng::Value::as_bool),
+            Some(false)
+        );
+        assert_eq!(
+            result
+                .get("dns")
+                .and_then(|value| value.get("proxy-server-nameserver"))
+                .and_then(serde_yaml_ng::Value::as_sequence)
+                .and_then(|seq| seq.first())
+                .and_then(serde_yaml_ng::Value::as_str),
+            Some("8.8.8.8")
+        );
+    }
+
+    #[test]
+    fn snapshot_control_plane_skips_absent_keys() {
+        let app_config = mapping(r#"{mode: rule, mixed-port: 7890}"#);
+        let snapshot = super::snapshot_control_plane(&app_config);
+        assert!(snapshot.contains_key("mode"));
+        assert!(snapshot.contains_key("mixed-port"));
+        assert!(!snapshot.contains_key("secret"));
+        assert!(!snapshot.contains_key("allow-lan"));
+    }
 
     #[test]
     fn remove_missing_proxies_from_groups() {
