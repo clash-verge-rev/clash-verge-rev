@@ -330,35 +330,27 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
               />
             )}
           />
-        </>
-      )}
-
-      {isRemote && (
-        <Controller
-          name="option.update_interval"
-          control={control}
-          render={({ field }) => (
-            <TextField
-              {...text}
-              {...field}
-              type="number"
-              label={t('profiles.modals.profileForm.fields.updateInterval')}
-              slotProps={{
-                input: {
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      {t('shared.units.minutes')}
-                    </InputAdornment>
-                  ),
-                },
-              }}
-            />
-          )}
-        />
-      )}
-
-      {isRemote && (
-        <>
+          <Controller
+            name="option.update_interval"
+            control={control}
+            render={({ field }) => (
+              <TextField
+                {...text}
+                {...field}
+                type="number"
+                label={t('profiles.modals.profileForm.fields.updateInterval')}
+                slotProps={{
+                  input: {
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        {t('shared.units.minutes')}
+                      </InputAdornment>
+                    ),
+                  },
+                }}
+              />
+            )}
+          />
           <Controller
             name="option.with_proxy"
             control={control}
