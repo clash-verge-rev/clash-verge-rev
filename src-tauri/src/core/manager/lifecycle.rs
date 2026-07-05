@@ -1,5 +1,4 @@
 use super::{CoreManager, RunningMode};
-use crate::cmd::StringifyErr as _;
 use crate::config::{Config, IVerge};
 use crate::core::handle::Handle;
 use crate::core::manager::CLASH_LOGGER;
@@ -110,15 +109,25 @@ impl CoreManager {
             return Err(format!("Invalid clash core: {}", clash_core).into());
         }
 
+        let old_core = Config::verge().await.latest_arc().clash_core.clone();
+
+        // 校验器基于已 apply 的配置生成，须先切到新内核
         Config::verge().await.edit_draft(|d| {
             d.clash_core = Some(clash_core.to_owned());
         });
         Config::verge().await.apply();
 
+        // 校验通过才落盘；失败回滚内存态，避免下次启动带着坏内核起
+        if let Err(e) = self.update_config_checked().await {
+            Config::verge().await.edit_draft(|d| {
+                d.clash_core = old_core;
+            });
+            Config::verge().await.apply();
+            return Err(e.to_string().into());
+        }
+
         let verge_data = Config::verge().await.latest_arc();
         verge_data.save_file().await.map_err(|e| e.to_string())?;
-
-        self.update_config_checked().await.stringify_err()?;
         Ok(())
     }
 

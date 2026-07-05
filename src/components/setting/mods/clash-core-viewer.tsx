@@ -75,6 +75,8 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
       if (errorMsg) {
         showNotice.error(errorMsg)
         setChangingCore(null)
+        // 切换失败时后端可能已回滚，重新对齐 UI 与实际内核
+        mutateVerge()
         return
       }
 
