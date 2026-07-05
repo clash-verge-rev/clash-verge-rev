@@ -152,8 +152,6 @@
         "excludeType": "Tipo de nodo a excluir",
         "policyPriority": "Policy Priority",
         "sampleRate": "Sample Rate",
-        "maxUploadRate": "Max Upload Rate",
-        "maxDownloadRate": "Max Download Rate",
         "includeAll": "Incluir todos los proxies de salida y proveedores de proxies",
         "includeAllProxies": "Incluir todos los proxies de salida",
         "includeAllProviders": "Incluir todos los proveedores de proxies"

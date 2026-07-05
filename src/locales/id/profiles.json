@@ -152,8 +152,6 @@
         "excludeType": "Kecualikan Jenis",
         "policyPriority": "Policy Priority",
         "sampleRate": "Sample Rate",
-        "maxUploadRate": "Max Upload Rate",
-        "maxDownloadRate": "Max Download Rate",
         "includeAll": "Sertakan Semua Proksi dan Penyedia",
         "includeAllProxies": "Sertakan Semua Proksi",
         "includeAllProviders": "Sertakan Semua Penyedia"

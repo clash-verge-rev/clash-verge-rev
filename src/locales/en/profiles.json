@@ -152,8 +152,6 @@
         "excludeType": "Exclude Type",
         "policyPriority": "Policy Priority",
         "sampleRate": "Sample Rate",
-        "maxUploadRate": "Max Upload Rate",
-        "maxDownloadRate": "Max Download Rate",
         "includeAll": "Include All Proxies and Providers",
         "includeAllProxies": "Include All Proxies",
         "includeAllProviders": "Include All Providers"

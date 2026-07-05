@@ -152,8 +152,6 @@
         "excludeType": "Тип исключения",
         "policyPriority": "Policy Priority",
         "sampleRate": "Sample Rate",
-        "maxUploadRate": "Max Upload Rate",
-        "maxDownloadRate": "Max Download Rate",
         "includeAll": "Включить все прокси и провайдеры",
         "includeAllProxies": "Включить все прокси",
         "includeAllProviders": "Включить всех провайдеров"

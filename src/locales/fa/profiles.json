@@ -152,8 +152,6 @@
         "excludeType": "نوع استثناء",
         "policyPriority": "Policy Priority",
         "sampleRate": "Sample Rate",
-        "maxUploadRate": "Max Upload Rate",
-        "maxDownloadRate": "Max Download Rate",
         "includeAll": "شامل همه پروکسی‌ها و ارائه‌دهنده‌ها",
         "includeAllProxies": "شامل همه پروکسی‌ها",
         "includeAllProviders": "شامل همه ارائه‌دهنده‌ها"

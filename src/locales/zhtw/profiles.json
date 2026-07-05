@@ -152,8 +152,6 @@
         "excludeType": "排除節點類型",
         "policyPriority": "Policy Priority",
         "sampleRate": "Sample Rate",
-        "maxUploadRate": "Max Upload Rate",
-        "maxDownloadRate": "Max Download Rate",
         "includeAll": "包含所有輸出代理、代理集合",
         "includeAllProxies": "包含所有輸出代理",
         "includeAllProviders": "包含所有代理集合"

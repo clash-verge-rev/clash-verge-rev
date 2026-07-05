@@ -154,8 +154,6 @@ const cleanGroup = (group: IProxyGroupConfig): IProxyGroupConfig => {
     delete next.collectdata
     delete next['sample-rate']
     delete next['prefer-asn']
-    delete next.maxuploadrate
-    delete next.maxdownloadrate
   }
 
   return next
@@ -794,60 +792,6 @@ export const GroupsEditorViewer = (props: Props) => {
                                 e.target.value === ''
                                   ? undefined
                                   : parseFloat(e.target.value),
-                              )
-                            }}
-                          />
-                        </Item>
-                      )}
-                    />
-                    <Controller
-                      name="maxuploadrate"
-                      control={control}
-                      render={({ field }) => (
-                        <Item>
-                          <ListItemText
-                            primary={t(
-                              'profiles.modals.groupsEditor.fields.maxUploadRate',
-                            )}
-                          />
-                          <TextField
-                            autoComplete="new-password"
-                            placeholder="0"
-                            type="number"
-                            size="small"
-                            sx={{ width: 'calc(100% - 150px)' }}
-                            onChange={(e) => {
-                              field.onChange(
-                                e.target.value === ''
-                                  ? undefined
-                                  : parseInt(e.target.value),
-                              )
-                            }}
-                          />
-                        </Item>
-                      )}
-                    />
-                    <Controller
-                      name="maxdownloadrate"
-                      control={control}
-                      render={({ field }) => (
-                        <Item>
-                          <ListItemText
-                            primary={t(
-                              'profiles.modals.groupsEditor.fields.maxDownloadRate',
-                            )}
-                          />
-                          <TextField
-                            autoComplete="new-password"
-                            placeholder="0"
-                            type="number"
-                            size="small"
-                            sx={{ width: 'calc(100% - 150px)' }}
-                            onChange={(e) => {
-                              field.onChange(
-                                e.target.value === ''
-                                  ? undefined
-                                  : parseInt(e.target.value),
                               )
                             }}
                           />

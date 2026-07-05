@@ -200,8 +200,6 @@ export const translationKeys = [
   'profiles.modals.groupsEditor.fields.excludeType',
   'profiles.modals.groupsEditor.fields.policyPriority',
   'profiles.modals.groupsEditor.fields.sampleRate',
-  'profiles.modals.groupsEditor.fields.maxUploadRate',
-  'profiles.modals.groupsEditor.fields.maxDownloadRate',
   'profiles.modals.groupsEditor.fields.includeAll',
   'profiles.modals.groupsEditor.fields.includeAllProxies',
   'profiles.modals.groupsEditor.fields.includeAllProviders',

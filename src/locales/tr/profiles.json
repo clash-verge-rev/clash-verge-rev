@@ -152,8 +152,6 @@
         "excludeType": "Hariç Tutma Tipi",
         "policyPriority": "Policy Priority",
         "sampleRate": "Sample Rate",
-        "maxUploadRate": "Max Upload Rate",
-        "maxDownloadRate": "Max Download Rate",
         "includeAll": "Tüm Vekil'leri ve Sağlayıcıları Dahil Et",
         "includeAllProxies": "Tüm Vekil'leri Dahil Et",
         "includeAllProviders": "Tüm Sağlayıcıları Dahil Et"

@@ -288,9 +288,7 @@ export interface TranslationResources {
             includeAllProxies: string
             interfaceName: string
             interval: string
-            maxDownloadRate: string
             maxFailedTimes: string
-            maxUploadRate: string
             name: string
             policyPriority: string
             provider: string

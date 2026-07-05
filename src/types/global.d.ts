@@ -365,8 +365,6 @@ interface IProxyGroupConfig {
   collectdata?: boolean
   'sample-rate'?: number
   'prefer-asn'?: boolean
-  maxuploadrate?: number
-  maxdownloadrate?: number
   hidden?: boolean
   icon?: string
 }

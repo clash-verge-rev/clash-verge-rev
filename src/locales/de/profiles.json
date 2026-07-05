@@ -152,8 +152,6 @@
         "excludeType": "Typ der auszuschließenden Knoten",
         "policyPriority": "Policy Priority",
         "sampleRate": "Sample Rate",
-        "maxUploadRate": "Max Upload Rate",
-        "maxDownloadRate": "Max Download Rate",
         "includeAll": "Alle Ausgangsproxy und Proxy-Sammlungen einführen",
         "includeAllProxies": "Alle Ausgangsproxy einführen",
         "includeAllProviders": "Alle Proxy-Sammlungen einführen"

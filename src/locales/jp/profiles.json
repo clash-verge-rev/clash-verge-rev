@@ -152,8 +152,6 @@
         "excludeType": "除外ノードタイプ",
         "policyPriority": "Policy Priority",
         "sampleRate": "Sample Rate",
-        "maxUploadRate": "Max Upload Rate",
-        "maxDownloadRate": "Max Download Rate",
         "includeAll": "すべての出力プロキシ、プロキシプロバイダーを導入",
         "includeAllProxies": "すべての出力プロキシを導入",
         "includeAllProviders": "すべてのプロキシプロバイダーを導入"
