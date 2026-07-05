@@ -90,8 +90,14 @@ pub fn use_tun(mut config: Mapping, enable: bool) -> Mapping {
     config
 }
 
-pub(super) fn use_smart_tun_route_exclude(mut config: Mapping, core: Option<&str>, enable_tun: bool) -> Mapping {
-    if !enable_tun || !matches!(core, Some(SMART_CORE)) {
+pub(super) fn use_smart_tun_route_exclude(mut config: Mapping, core: Option<&str>) -> Mapping {
+    // tun 不在控制面键内，merge/script 可翻转 tun.enable，以最终配置为准
+    let tun_enabled = config
+        .get("tun")
+        .and_then(|tun| tun.get("enable"))
+        .and_then(Value::as_bool)
+        .unwrap_or(false);
+    if !tun_enabled || !matches!(core, Some(SMART_CORE)) {
         return config;
     }
 
@@ -221,7 +227,7 @@ tun:
 "#,
         )?;
 
-        let config = use_smart_tun_route_exclude(config, Some(SMART_CORE), true);
+        let config = use_smart_tun_route_exclude(config, Some(SMART_CORE));
         let route_exclude_addresses = route_exclude_addresses(&config);
 
         assert_eq!(
@@ -243,13 +249,14 @@ proxies:
   - name: duplicate-bare
     server: 5.6.7.8
 tun:
+  enable: true
   route-exclude-address:
     - 1.2.3.4/32
     - 5.6.7.8
 ",
         )?;
 
-        let config = use_smart_tun_route_exclude(config, Some(SMART_CORE), true);
+        let config = use_smart_tun_route_exclude(config, Some(SMART_CORE));
         let route_exclude_addresses = route_exclude_addresses(&config);
 
         assert_eq!(route_exclude_addresses, Some(vec!["1.2.3.4/32", "5.6.7.8"]));
@@ -258,21 +265,30 @@ tun:
 
     #[test]
     fn smart_tun_route_exclude_requires_smart_core_and_tun() -> Result<(), serde_yaml_ng::Error> {
-        let config = yaml_to_mapping(
+        let enabled_config = yaml_to_mapping(
             r"
 proxies:
   - name: ipv4
     server: 1.2.3.4
 tun:
+  enable: true
   route-exclude-address: []
 ",
         )?;
 
-        let non_smart_config = use_smart_tun_route_exclude(config.clone(), Some("verge-mihomo"), true);
+        let non_smart_config = use_smart_tun_route_exclude(enabled_config, Some("verge-mihomo"));
         assert_eq!(route_exclude_addresses(&non_smart_config), Some(Vec::new()));
 
-        let disabled_tun_config = use_smart_tun_route_exclude(config, Some(SMART_CORE), false);
-        assert_eq!(route_exclude_addresses(&disabled_tun_config), Some(Vec::new()));
+        // 门控读最终配置的 tun.enable（可能被 merge/script 翻转），而非 verge 开关
+        for tun_yaml in [
+            "tun:\n  enable: false\n  route-exclude-address: []",
+            "tun:\n  route-exclude-address: []",
+        ] {
+            let disabled_config =
+                yaml_to_mapping(&format!("proxies:\n  - name: ipv4\n    server: 1.2.3.4\n{tun_yaml}\n"))?;
+            let result = use_smart_tun_route_exclude(disabled_config, Some(SMART_CORE));
+            assert_eq!(route_exclude_addresses(&result), Some(Vec::new()));
+        }
         Ok(())
     }
 }

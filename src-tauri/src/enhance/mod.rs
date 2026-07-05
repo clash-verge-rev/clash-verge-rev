@@ -790,7 +790,7 @@ pub async fn enhance() -> Result<(Mapping, HashSet<String>, HashMap<String, Resu
     // - 非 Smart core: 剥掉 lgbm/smart group 字段，防止手动覆写塞回来
     let config = apply_core_runtime_settings(config, clash_core.as_deref(), &smart_settings);
     let config = cleanup_proxy_groups(config);
-    let config = use_smart_tun_route_exclude(config, clash_core.as_deref(), enable_tun);
+    let config = use_smart_tun_route_exclude(config, clash_core.as_deref());
     let config = use_sort(config);
 
     let mut exists_keys_set = HashSet::new();
