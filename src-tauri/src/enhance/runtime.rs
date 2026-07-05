@@ -18,8 +18,10 @@ const SMART_GROUP_DOWNGRADE_TYPE: &str = "url-test";
 // 与 src/services/delay.ts 的默认测速地址保持一致，仅在 default_latency_test 未配置时兜底
 const FALLBACK_LATENCY_TEST_URL: &str = "http://cp.cloudflare.com/generate_204";
 const FALLBACK_LATENCY_TEST_INTERVAL: u64 = 300;
-const SMART_AUTO_SWITCH_REMOVED_KEYS: &[&str] =
-    &["strategy", "url", "interval", "tolerance", "lazy", "expected-status"];
+// strategy/tolerance 分别是 load-balance / url-test 专属语义，转换为 smart 后无意义；
+// url/interval/lazy/expected-status 仍被 smart 组用于健康检查（内核以 url 作为 testUrl
+// 参与存活判定与权重排名），保留订阅原值
+const SMART_AUTO_SWITCH_REMOVED_KEYS: &[&str] = &["strategy", "tolerance"];
 
 pub(super) fn apply_core_runtime_settings(config: Mapping, core: Option<&str>, settings: &SmartSettings) -> Mapping {
     if is_smart_core(core) {
@@ -184,6 +186,33 @@ mod tests {
             .and_then(|groups| groups.get(index))
             .and_then(Value::as_mapping)
             .and_then(|group| group.get(key))
+    }
+
+    #[test]
+    fn auto_switch_converts_group_and_keeps_health_check_keys() -> Result<(), serde_yaml_ng::Error> {
+        let config = config_with_group(
+            "  - name: Auto\n    type: url-test\n    proxies: [a]\n    url: http://example.com/204\n    interval: 1800\n    lazy: false\n    expected-status: \"204\"\n    tolerance: 50\n",
+        )?;
+        let settings = SmartSettings {
+            strategy_auto_switch: true,
+            ..SmartSettings::default()
+        };
+
+        let result = apply_smart_strategy_auto_switch(config, &settings);
+
+        assert_eq!(group_field(&result, 0, "type").and_then(Value::as_str), Some("smart"));
+        assert_eq!(
+            group_field(&result, 0, "url").and_then(Value::as_str),
+            Some("http://example.com/204")
+        );
+        assert_eq!(group_field(&result, 0, "interval").and_then(Value::as_u64), Some(1800));
+        assert_eq!(group_field(&result, 0, "lazy").and_then(Value::as_bool), Some(false));
+        assert_eq!(
+            group_field(&result, 0, "expected-status").and_then(Value::as_str),
+            Some("204")
+        );
+        assert_eq!(group_field(&result, 0, "tolerance"), None);
+        Ok(())
     }
 
     #[test]
