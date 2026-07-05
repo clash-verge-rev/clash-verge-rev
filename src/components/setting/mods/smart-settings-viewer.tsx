@@ -162,13 +162,14 @@ export function SmartSettingsViewer({ ref }: { ref?: Ref<DialogRef> }) {
       smart_collect_data: nextValues.collectData,
       smart_sample_rate: toNumber(nextValues.sampleRate, 1, 0, 1),
       smart_lgbm_auto_update: nextValues.lgbmAutoUpdate,
-      smart_lgbm_update_interval: toNumber(
-        nextValues.lgbmUpdateInterval,
-        72,
-        1,
+      // 后端为 u64，小数会被 serde 拒绝导致整体保存失败
+      smart_lgbm_update_interval: Math.round(
+        toNumber(nextValues.lgbmUpdateInterval, 72, 1),
       ),
       smart_lgbm_url: resolveLgbmUrl(nextValues),
-      smart_collector_size: toNumber(nextValues.smartCollectorSize, 100, 1),
+      smart_collector_size: Math.round(
+        toNumber(nextValues.smartCollectorSize, 100, 1),
+      ),
     })
 
   const resetToDefaults = useLockFn(async () => {
