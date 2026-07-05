@@ -130,6 +130,7 @@ export const ProxyRender = memo(function ProxyRender(props: RenderProps) {
             />
           )}
           <ListItemText
+            sx={{ flex: '0 1 auto', mr: 1, minWidth: 0 }}
             primary={<StyledPrimary>{group.name}</StyledPrimary>}
             secondary={
               <Box
@@ -163,7 +164,15 @@ export const ProxyRender = memo(function ProxyRender(props: RenderProps) {
               },
             }}
           />
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
+          <Box
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'end',
+              flex: '1 1 auto',
+              minWidth: 0,
+            }}
+          >
             <ProxyGroupTools
               url={group.testUrl}
               groupName={group.name}

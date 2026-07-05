@@ -69,13 +69,15 @@ export const ProxyGroupTools = memo(function ProxyGroupTools(props: Props) {
     <Box
       sx={{
         display: 'flex',
+        justifyContent: 'end',
         alignItems: 'center',
         gap: 0.5,
+        flex: 1,
         ...sx,
       }}
     >
       {textState === 'filter' && (
-        <Box sx={{ display: 'inline-block', width: 180 }}>
+        <Box sx={{ flex: '1 1 auto' }}>
           <BaseSearchBox
             value={filterText}
             onClick={(e) => {
@@ -113,7 +115,7 @@ export const ProxyGroupTools = memo(function ProxyGroupTools(props: Props) {
             e.stopPropagation()
           }}
           onChange={(e) => onHeadState({ testUrl: e.target.value })}
-          sx={{ width: 180, input: { py: 0.65, px: 1 } }}
+          sx={{ flex: '1 1 auto', input: { py: 0.65, px: 1 } }}
         />
       )}
 
@@ -235,10 +237,7 @@ export const ProxyGroupTools = memo(function ProxyGroupTools(props: Props) {
           if (!headState.open)
             // eslint-disable-next-line @eslint-react/dom-no-flush-sync
             flushSync(() => onHeadState({ open: true }))
-          onHeadState({
-            textState: textState === 'filter' ? null : 'filter',
-            filterText: '',
-          })
+          onHeadState({ textState: textState === 'filter' ? null : 'filter' })
         }}
       >
         {textState === 'filter' ? (
