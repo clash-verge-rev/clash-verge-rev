@@ -271,6 +271,15 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
         )}
       />
 
+      {isLocal && openType === 'new' && (
+        <FileInput
+          onChange={(file, val) => {
+            setValue('name', getValues('name') || file.name)
+            fileDataRef.current = val
+          }}
+        />
+      )}
+
       {isRemote && (
         <>
           <Controller
@@ -324,7 +333,7 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
         </>
       )}
 
-      {(isRemote || isLocal) && (
+      {isRemote && (
         <Controller
           name="option.update_interval"
           control={control}
@@ -345,15 +354,6 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
               }}
             />
           )}
-        />
-      )}
-
-      {isLocal && openType === 'new' && (
-        <FileInput
-          onChange={(file, val) => {
-            setValue('name', getValues('name') || file.name)
-            fileDataRef.current = val
-          }}
         />
       )}
 
