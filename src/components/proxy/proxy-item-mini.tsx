@@ -213,7 +213,7 @@ export const ProxyItemMini = (props: Props) => {
         <span
           className={proxy.name === group.now ? 'the-pin' : 'the-unpin'}
           title={
-            group.type === 'URLTest'
+            ['URLTest', 'Smart'].includes(group.type)
               ? t('proxies.page.labels.delayCheckReset')
               : ''
           }

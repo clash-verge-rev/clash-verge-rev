@@ -357,9 +357,12 @@ export const CurrentProxyCard = () => {
         const uniqueAll = Array.from(new Set(allNames))
         if (uniqueAll.length === 0) return
 
+        // Smart 组未固定节点时 now 为占位串（如 "Smart - Select"），不在 all 里，
+        // 直接透传会让 Select 的 value 越界
+        const now = normalizePolicyName(group?.now)
         groupsMap.set(name, {
           name,
-          now: normalizePolicyName(group?.now),
+          now: uniqueAll.includes(now) ? now : '',
           all: uniqueAll,
           type: group?.type,
         })
@@ -378,7 +381,9 @@ export const CurrentProxyCard = () => {
       ;(proxies.groups || [])
         .filter(
           (g: { type?: string }) =>
-            g?.type === 'Selector' || g?.type === 'URLTest',
+            g?.type === 'Selector' ||
+            g?.type === 'URLTest' ||
+            g?.type === 'Smart',
         )
         .forEach((selectableGroup: any) => registerGroup(selectableGroup))
 

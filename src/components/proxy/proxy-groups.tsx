@@ -194,7 +194,10 @@ function ChainProxyGroups(props: {
     const groups = proxiesData?.groups
     if (!groups) return []
     return groups.filter(
-      (group: any) => group.type === 'Selector' || group.type === 'URLTest',
+      (group: any) =>
+        group.type === 'Selector' ||
+        group.type === 'URLTest' ||
+        group.type === 'Smart',
     )
   }, [proxiesData?.groups])
 
@@ -433,7 +436,8 @@ function NormalProxyGroups(props: { mode: string }) {
 
   const handleChangeProxy = useCallback(
     (group: IProxyGroupItem, proxy: IProxyItem) => {
-      if (!['Selector', 'URLTest', 'Fallback'].includes(group.type)) return
+      if (!['Selector', 'URLTest', 'Fallback', 'Smart'].includes(group.type))
+        return
 
       handleProxyGroupChange(group, proxy)
     },
