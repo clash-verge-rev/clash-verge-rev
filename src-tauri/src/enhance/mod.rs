@@ -368,6 +368,26 @@ fn enforce_dns_ipv6(mut config: Mapping, dns_ipv6: Option<Value>) -> Mapping {
     config
 }
 
+fn is_loopback_bind_address(addr: &str) -> bool {
+    let addr = addr.trim();
+    addr.eq_ignore_ascii_case("localhost") || matches!(addr, "127.0.0.1" | "::1" | "[::1]")
+}
+
+fn ensure_lan_bind_address(mut config: Mapping) -> Mapping {
+    let allow_lan = config.get("allow-lan").and_then(Value::as_bool).unwrap_or(false);
+
+    if allow_lan
+        && config
+            .get("bind-address")
+            .and_then(Value::as_str)
+            .is_some_and(is_loopback_bind_address)
+    {
+        config.insert(Value::from("bind-address"), Value::from("*"));
+    }
+
+    config
+}
+
 async fn process_profile_items(
     mut config: Mapping,
     mut exists_keys: Vec<String>,
@@ -720,6 +740,7 @@ pub async fn enhance() -> Result<(Mapping, HashSet<String>, HashMap<String, Resu
     // 手动覆盖后恢复 app 权威字段。
     let config = enforce_control_plane(config, control_plane);
     let config = enforce_dns_ipv6(config, dns_ipv6);
+    let config = ensure_lan_bind_address(config);
 
     let config = cleanup_proxy_groups(config);
     let config = use_sort(config);
@@ -733,7 +754,10 @@ pub async fn enhance() -> Result<(Mapping, HashSet<String>, HashMap<String, Resu
 #[allow(clippy::expect_used)]
 #[cfg(test)]
 mod tests {
-    use super::{ChainItem, ChainType, cleanup_proxy_groups, process_global_items, process_profile_items, use_keys};
+    use super::{
+        ChainItem, ChainType, cleanup_proxy_groups, ensure_lan_bind_address, process_global_items,
+        process_profile_items, use_keys,
+    };
     use std::collections::HashMap;
 
     fn mapping(yaml: &str) -> serde_yaml_ng::Mapping {
@@ -880,6 +904,31 @@ mod tests {
                 .and_then(|seq| seq.first())
                 .and_then(serde_yaml_ng::Value::as_str),
             Some("8.8.8.8")
+        );
+    }
+
+    #[test]
+    fn lan_bind_address_loopback_is_widened() {
+        let result = ensure_lan_bind_address(mapping(r#"{allow-lan: true, bind-address: "127.0.0.1"}"#));
+
+        assert_eq!(
+            result.get("bind-address").and_then(serde_yaml_ng::Value::as_str),
+            Some("*")
+        );
+    }
+
+    #[test]
+    fn lan_bind_address_preserves_custom_or_disabled() {
+        let custom = ensure_lan_bind_address(mapping(r#"{allow-lan: true, bind-address: "192.168.1.2"}"#));
+        assert_eq!(
+            custom.get("bind-address").and_then(serde_yaml_ng::Value::as_str),
+            Some("192.168.1.2")
+        );
+
+        let disabled = ensure_lan_bind_address(mapping(r#"{allow-lan: false, bind-address: "127.0.0.1"}"#));
+        assert_eq!(
+            disabled.get("bind-address").and_then(serde_yaml_ng::Value::as_str),
+            Some("127.0.0.1")
         );
     }
 
