@@ -83,7 +83,7 @@ tauri-plugin-deep-link = "2.4.9"
 tauri-plugin-window-state = "2.4.1"
 zip = "8.6.0"
 reqwest_dav = "0.3.3"
-aes-gcm = { version = "0.11.0", features = ["std"] }
+aes-gcm = { version = "0.11.0" }
 base64 = "0.22.1"
 getrandom = "0.4.3"
 futures = "0.3.32"
