@@ -424,7 +424,7 @@ function NormalProxyGroups(props: { mode: string }) {
     }
   }, [handleScroll])
 
-  const { handleProxyGroupChange } = useProxySelection({
+  const { clearProxySelection, handleProxyGroupChange } = useProxySelection({
     onSuccess: () => {
       onProxies()
     },
@@ -439,9 +439,18 @@ function NormalProxyGroups(props: { mode: string }) {
       if (!['Selector', 'URLTest', 'Fallback', 'Smart'].includes(group.type))
         return
 
+      if (
+        ['Smart', 'URLTest'].includes(group.type) &&
+        group.now === proxy.name &&
+        group.fixed === proxy.name
+      ) {
+        void clearProxySelection(group.name)
+        return
+      }
+
       handleProxyGroupChange(group, proxy)
     },
-    [handleProxyGroupChange],
+    [clearProxySelection, handleProxyGroupChange],
   )
 
   // 滚到对应的节点

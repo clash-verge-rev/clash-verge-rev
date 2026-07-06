@@ -3,6 +3,7 @@ import {
   closeConnection,
   getConnections,
   selectNodeForGroup,
+  unfixedProxy,
 } from 'tauri-plugin-mihomo-api'
 
 import { useProfiles } from '@/hooks/use-profiles'
@@ -80,6 +81,22 @@ export const useProxySelection = (options: ProxySelectionOptions = {}) => {
 
       patchCurrent({ selected }).catch((error) => {
         console.error('[ProxySelection] 保存代理选择失败:', error)
+      })
+    },
+    [current, patchCurrent],
+  )
+
+  const removePersistedSelection = useCallback(
+    (groupName: string) => {
+      if (!current?.selected) return
+
+      const selected = current.selected.filter(
+        (item) => item.name !== groupName,
+      )
+      if (selected.length === current.selected.length) return
+
+      patchCurrent({ selected }).catch((error) => {
+        console.error('[ProxySelection] 清除代理选择保存失败:', error)
       })
     },
     [current, patchCurrent],
@@ -173,8 +190,27 @@ export const useProxySelection = (options: ProxySelectionOptions = {}) => {
     [changeProxy],
   )
 
+  const clearProxySelection = useCallback(
+    async (groupName: string) => {
+      debugLog(`[ProxySelection] 取消固定代理: ${groupName}`)
+
+      try {
+        await unfixedProxy(groupName)
+        onSuccess?.()
+        syncTraySelection()
+        removePersistedSelection(groupName)
+        debugLog(`[ProxySelection] 代理固定状态已取消: ${groupName}`)
+      } catch (error) {
+        console.error(`[ProxySelection] 取消固定代理失败: ${groupName}`, error)
+        onError?.(error)
+      }
+    },
+    [onError, onSuccess, removePersistedSelection, syncTraySelection],
+  )
+
   return {
     changeProxy,
+    clearProxySelection,
     handleSelectChange,
     handleProxyGroupChange,
   }
