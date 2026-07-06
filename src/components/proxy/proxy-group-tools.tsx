@@ -11,7 +11,6 @@ import WifiTetheringOffRounded from '@mui/icons-material/WifiTetheringOffRounded
 import WifiTetheringRounded from '@mui/icons-material/WifiTetheringRounded'
 import { Box, IconButton, type SxProps, TextField } from '@mui/material'
 import { memo, useEffect } from 'react'
-import { flushSync } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 
 import { useVerge } from '@/hooks/use-verge'
@@ -83,9 +82,6 @@ export const ProxyGroupTools = memo(function ProxyGroupTools(props: Props) {
         onClick={(e) => {
           e.preventDefault()
           e.stopPropagation()
-          if (!headState.open)
-            // eslint-disable-next-line @eslint-react/dom-no-flush-sync
-            flushSync(() => onHeadState({ open: true }))
           onLocation()
         }}
       >
@@ -99,9 +95,6 @@ export const ProxyGroupTools = memo(function ProxyGroupTools(props: Props) {
         onClick={(e) => {
           e.preventDefault()
           e.stopPropagation()
-          if (!headState.open)
-            // eslint-disable-next-line @eslint-react/dom-no-flush-sync
-            flushSync(() => onHeadState({ open: true }))
           // Remind the user that it is custom test url
           if (testUrl?.trim() && textState !== 'filter') {
             onHeadState({ textState: 'url' })
@@ -125,9 +118,6 @@ export const ProxyGroupTools = memo(function ProxyGroupTools(props: Props) {
         onClick={(e) => {
           e.preventDefault()
           e.stopPropagation()
-          if (!headState.open)
-            // eslint-disable-next-line @eslint-react/dom-no-flush-sync
-            flushSync(() => onHeadState({ open: true }))
           onHeadState({
             sortType: ((sortType + 1) % 3) as ProxySortType,
           })
@@ -145,9 +135,6 @@ export const ProxyGroupTools = memo(function ProxyGroupTools(props: Props) {
         onClick={(e) => {
           e.preventDefault()
           e.stopPropagation()
-          if (!headState.open)
-            // eslint-disable-next-line @eslint-react/dom-no-flush-sync
-            flushSync(() => onHeadState({ open: true }))
           onHeadState({
             textState: textState === 'url' ? null : 'url',
           })
@@ -171,9 +158,6 @@ export const ProxyGroupTools = memo(function ProxyGroupTools(props: Props) {
         onClick={(e) => {
           e.preventDefault()
           e.stopPropagation()
-          if (!headState.open)
-            // eslint-disable-next-line @eslint-react/dom-no-flush-sync
-            flushSync(() => onHeadState({ open: true }))
           onHeadState({ showType: !showType })
         }}
       >
@@ -191,9 +175,6 @@ export const ProxyGroupTools = memo(function ProxyGroupTools(props: Props) {
         onClick={(e) => {
           e.preventDefault()
           e.stopPropagation()
-          if (!headState.open)
-            // eslint-disable-next-line @eslint-react/dom-no-flush-sync
-            flushSync(() => onHeadState({ open: true }))
           onHeadState({ textState: textState === 'filter' ? null : 'filter' })
         }}
       >
