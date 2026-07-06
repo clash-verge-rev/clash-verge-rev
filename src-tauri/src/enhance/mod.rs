@@ -885,10 +885,10 @@ mod tests {
 
     #[test]
     fn control_plane_removes_reenabled_disabled_port() {
-        let app_config = mapping(r#"{mixed-port: 7890, mode: rule}"#);
+        let app_config = mapping(r"{mixed-port: 7890, mode: rule}");
         let snapshot = super::snapshot_control_plane(&app_config);
 
-        let hijacked = mapping(r#"{mixed-port: 7890, mode: rule, socks-port: 1080}"#);
+        let hijacked = mapping(r"{mixed-port: 7890, mode: rule, socks-port: 1080}");
         let result = super::enforce_control_plane(hijacked, snapshot);
 
         assert!(!result.contains_key("socks-port"));
@@ -926,7 +926,7 @@ mod tests {
 
     #[test]
     fn snapshot_control_plane_skips_absent_keys() {
-        let app_config = mapping(r#"{mode: rule, mixed-port: 7890}"#);
+        let app_config = mapping(r"{mode: rule, mixed-port: 7890}");
         let snapshot = super::snapshot_control_plane(&app_config);
         assert!(snapshot.contains_key("mode"));
         assert!(snapshot.contains_key("mixed-port"));

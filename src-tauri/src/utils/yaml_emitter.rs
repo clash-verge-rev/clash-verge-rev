@@ -63,6 +63,7 @@ fn contains_wildcard(value: &str) -> bool {
 }
 
 #[cfg(test)]
+#[allow(clippy::expect_used)]
 mod tests {
     use super::to_mihomo_config_string;
 
@@ -101,13 +102,13 @@ dns:
     #[test]
     fn nested_multiline_strings_roundtrip() {
         roundtrip(
-            r#"
+            r"
 items:
   - name: demo
     desc: |
       line1
       line2
-"#,
+",
         );
     }
 }
