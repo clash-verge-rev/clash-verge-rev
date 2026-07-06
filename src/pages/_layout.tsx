@@ -50,6 +50,7 @@ import {
 } from '@/components/layout/window-controller'
 import { useI18n } from '@/hooks/use-i18n'
 import { useVerge } from '@/hooks/use-verge'
+import { useVisibility } from '@/hooks/use-visibility'
 import { useWindowDecorations } from '@/hooks/use-window'
 import { useThemeMode } from '@/services/states'
 import getSystem from '@/utils/get-system'
@@ -134,6 +135,7 @@ const Layout = () => {
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const isLogsPage = pathname === '/logs'
+  const pageVisible = useVisibility()
   const themeReady = useMemo(() => Boolean(theme), [theme])
 
   const [menuUnlocked, setMenuUnlocked] = useState(false)
@@ -233,7 +235,7 @@ const Layout = () => {
   useLoadingOverlay(themeReady)
 
   useEffect(() => {
-    if (!themeReady) {
+    if (!themeReady || !pageVisible) {
       return
     }
 
@@ -246,7 +248,7 @@ const Layout = () => {
       controller.abort()
       window.clearTimeout(timerId)
     }
-  }, [themeReady])
+  }, [themeReady, pageVisible])
 
   const handleNotice = useCallback(
     (payload: [string, string]) => {

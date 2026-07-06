@@ -8,7 +8,7 @@ use crate::{
         CoreManager, handle,
         validate::{CoreConfigValidator, ValidationOutcome},
     },
-    utils::{dirs, mihomo_api},
+    utils::{dirs, mihomo_api, yaml_emitter},
 };
 use clash_verge_logging::{Type, logging, logging_error};
 use compact_str::CompactString;
@@ -162,14 +162,13 @@ pub async fn test_delay(url: String) -> CmdResult<u32> {
 #[tauri::command]
 pub async fn save_dns_config(dns_config: Mapping) -> CmdResult {
     use crate::utils::dirs;
-    use serde_yaml_ng;
     use tokio::fs;
 
     // 获取DNS配置文件路径
     let dns_path = dirs::app_home_dir().stringify_err()?.join(constants::files::DNS_CONFIG);
 
     // 保存DNS配置到文件
-    let yaml_str = serde_yaml_ng::to_string(&dns_config).stringify_err()?;
+    let yaml_str = yaml_emitter::to_mihomo_config_string(&dns_config).stringify_err()?;
     fs::write(&dns_path, yaml_str).await.stringify_err()?;
     logging!(info, Type::Config, "DNS config saved to {dns_path:?}");
 
