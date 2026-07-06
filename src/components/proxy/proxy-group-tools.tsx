@@ -69,56 +69,13 @@ export const ProxyGroupTools = memo(function ProxyGroupTools(props: Props) {
     <Box
       sx={{
         display: 'flex',
-        justifyContent: 'end',
         alignItems: 'center',
         gap: 0.5,
+        height: 36,
         flex: 1,
         ...sx,
       }}
     >
-      {textState === 'filter' && (
-        <Box sx={{ flex: '1 1 auto' }}>
-          <BaseSearchBox
-            value={filterText}
-            onClick={(e) => {
-              e.preventDefault()
-              e.stopPropagation()
-            }}
-            searchState={{
-              matchCase: filterMatchCase,
-              matchWholeWord: filterMatchWholeWord,
-              useRegularExpression: filterUseRegularExpression,
-            }}
-            onSearch={(_, state) =>
-              onHeadState({
-                filterText: state.text,
-                filterMatchCase: state.matchCase,
-                filterMatchWholeWord: state.matchWholeWord,
-                filterUseRegularExpression: state.useRegularExpression,
-              })
-            }
-          />
-        </Box>
-      )}
-
-      {textState === 'url' && (
-        <TextField
-          autoComplete="new-password"
-          hiddenLabel
-          autoSave="off"
-          value={testUrl}
-          size="small"
-          variant="outlined"
-          placeholder={t('proxies.page.placeholders.delayCheckUrl')}
-          onClick={(e) => {
-            e.preventDefault()
-            e.stopPropagation()
-          }}
-          onChange={(e) => onHeadState({ testUrl: e.target.value })}
-          sx={{ flex: '1 1 auto', input: { py: 0.65, px: 1 } }}
-        />
-      )}
-
       <IconButton
         size="small"
         color="inherit"
@@ -246,6 +203,49 @@ export const ProxyGroupTools = memo(function ProxyGroupTools(props: Props) {
           <FilterAltOffRounded fontSize="inherit" />
         )}
       </IconButton>
+
+      {textState === 'filter' && (
+        <Box sx={{ flex: '1 1 auto' }}>
+          <BaseSearchBox
+            value={filterText}
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+            }}
+            searchState={{
+              matchCase: filterMatchCase,
+              matchWholeWord: filterMatchWholeWord,
+              useRegularExpression: filterUseRegularExpression,
+            }}
+            onSearch={(_, state) =>
+              onHeadState({
+                filterText: state.text,
+                filterMatchCase: state.matchCase,
+                filterMatchWholeWord: state.matchWholeWord,
+                filterUseRegularExpression: state.useRegularExpression,
+              })
+            }
+          />
+        </Box>
+      )}
+
+      {textState === 'url' && (
+        <TextField
+          autoComplete="new-password"
+          hiddenLabel
+          autoSave="off"
+          value={testUrl}
+          size="small"
+          variant="outlined"
+          placeholder={t('proxies.page.placeholders.delayCheckUrl')}
+          onClick={(e) => {
+            e.preventDefault()
+            e.stopPropagation()
+          }}
+          onChange={(e) => onHeadState({ testUrl: e.target.value })}
+          sx={{ flex: '1 1 auto', input: { py: 0.65, px: 1 } }}
+        />
+      )}
     </Box>
   )
 })
