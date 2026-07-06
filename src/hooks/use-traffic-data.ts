@@ -11,7 +11,7 @@ let lastTrafficTimestamp = 0
 
 const shouldSkipDuplicateTraffic = (traffic: Traffic) => {
   const now = Date.now()
-  const signature = `${traffic.up}:${traffic.down}`
+  const signature = `${traffic.up}:${traffic.down}:${traffic.upTotal}:${traffic.downTotal}`
 
   if (
     signature === lastTrafficSignature &&
@@ -33,7 +33,7 @@ export const useTrafficData = (options?: { enabled?: boolean }) => {
   } = useTrafficMonitorEnhanced({ subscribe: false, enabled })
   const { response, refresh } = useMihomoWsSubscription<ITrafficItem>({
     storageKey: 'mihomo_traffic_date',
-    buildSubscriptKey: (date) => `getClashTraffic-${date}`,
+    buildSubscriptKey: (date) => (enabled ? `getClashTraffic-${date}` : null),
     fallbackData: FALLBACK_TRAFFIC,
     connect: () => MihomoWebSocket.connect_traffic(),
     throttleMs: 200,

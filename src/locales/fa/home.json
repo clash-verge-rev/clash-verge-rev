@@ -118,7 +118,7 @@
     },
     "clashMode": {
       "errors": {
-        "communication": "Core communication error"
+        "communication": "خطای ارتباط با هسته، لطفاً رایانه را مجدداً راه‌اندازی کرده و دوباره تلاش کنید"
       },
       "labels": {
         "rule": "حالت قانون",

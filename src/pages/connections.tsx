@@ -39,6 +39,8 @@ import {
 import { ConnectionTable } from '@/components/connection/connection-table'
 import { useConnectionData } from '@/hooks/use-connection-data'
 import { useConnectionSetting } from '@/hooks/use-connection-setting'
+import { useTrafficData } from '@/hooks/use-traffic-data'
+import { useVisibility } from '@/hooks/use-visibility'
 import parseTraffic from '@/utils/parse-traffic'
 
 type OrderFunc = (list: IConnectionsItem[]) => IConnectionsItem[]
@@ -79,6 +81,7 @@ const orderFunctionMap = ORDER_OPTIONS.reduce<Record<OrderKey, OrderFunc>>(
 const EMPTY_CONNECTIONS: IConnectionsItem[] = []
 const ConnectionsPage = () => {
   const { t } = useTranslation()
+  const pageVisible = useVisibility()
   const [match, setMatch] = useState<(input: string) => boolean>(
     () => () => true,
   )
@@ -91,7 +94,10 @@ const ConnectionsPage = () => {
   const {
     response: { data: connections },
     clearClosedConnections,
-  } = useConnectionData()
+  } = useConnectionData({ enabled: pageVisible })
+  const {
+    response: { data: traffic },
+  } = useTrafficData({ enabled: pageVisible })
 
   const [setting, setSetting] = useConnectionSetting()
 
@@ -177,11 +183,10 @@ const ConnectionsPage = () => {
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
           <Box sx={{ mx: 1 }}>
             {t('shared.labels.downloaded')}:{' '}
-            {parseTraffic(connections?.downloadTotal)}
+            {parseTraffic(traffic?.downTotal || 0)}
           </Box>
           <Box sx={{ mx: 1 }}>
-            {t('shared.labels.uploaded')}:{' '}
-            {parseTraffic(connections?.uploadTotal)}
+            {t('shared.labels.uploaded')}: {parseTraffic(traffic?.upTotal || 0)}
           </Box>
           <IconButton
             color="inherit"

@@ -1,6 +1,6 @@
 use super::CmdResult;
 use crate::feat;
-use crate::utils::dirs;
+use crate::utils::{dirs, yaml_emitter};
 use crate::{
     cmd::StringifyErr as _,
     config::{ClashInfo, Config},
@@ -36,10 +36,21 @@ pub async fn patch_clash_config(payload: Mapping) -> CmdResult {
 }
 
 /// 修改Clash模式
+///
+/// 将 `change_clash_mode` 的失败上抛给前端，使前端 `catch` 能真正感知后端 PATCH 失败
+/// 并提示用户（此前命令始终返回 `Ok(())`，吞掉了后端错误）。
 #[tauri::command]
 pub async fn patch_clash_mode(payload: String) -> CmdResult {
-    feat::change_clash_mode(payload).await;
-    Ok(())
+    feat::change_clash_mode(payload).await
+}
+
+/// 获取当前 Clash 模式（容错读取）
+///
+/// 直接读取已保存的 clash 配置中的 `mode`，绕开 mihomo `/configs` 的严格
+/// `BaseConfig` 反序列化，作为主页 mode 显示的兜底来源。
+#[tauri::command]
+pub async fn get_clash_mode() -> CmdResult<Option<String>> {
+    Ok(Config::clash().await.data_arc().get_mode().map(Into::into))
 }
 
 /// 切换Clash核心
@@ -125,14 +136,13 @@ pub async fn test_delay(url: String) -> CmdResult<u32> {
 #[tauri::command]
 pub async fn save_dns_config(dns_config: Mapping) -> CmdResult {
     use crate::utils::dirs;
-    use serde_yaml_ng;
     use tokio::fs;
 
     // 获取DNS配置文件路径
     let dns_path = dirs::app_home_dir().stringify_err()?.join(constants::files::DNS_CONFIG);
 
     // 保存DNS配置到文件
-    let yaml_str = serde_yaml_ng::to_string(&dns_config).stringify_err()?;
+    let yaml_str = yaml_emitter::to_mihomo_config_string(&dns_config).stringify_err()?;
     fs::write(&dns_path, yaml_str).await.stringify_err()?;
     logging!(info, Type::Config, "DNS config saved to {dns_path:?}");
 

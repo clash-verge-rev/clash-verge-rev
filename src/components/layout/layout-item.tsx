@@ -9,7 +9,8 @@ import {
   ListItemIcon,
   ListItemText,
 } from '@mui/material'
-import type { CSSProperties, ReactNode } from 'react'
+import type { CSSProperties, PointerEvent, ReactNode } from 'react'
+import { useCallback } from 'react'
 import { useMatch, useNavigate, useResolvedPath } from 'react-router'
 
 import { useVerge } from '@/hooks/use-verge'
@@ -28,9 +29,10 @@ interface Props {
   children: string
   icon: ReactNode[]
   sortable?: SortableProps
+  onPreload?: () => Promise<unknown>
 }
 export const LayoutItem = (props: Props) => {
-  const { to, children, icon, sortable } = props
+  const { to, children, icon, sortable, onPreload } = props
   const { verge } = useVerge()
   const { menu_icon } = verge ?? {}
   const navCollapsed = verge?.collapse_navbar ?? false
@@ -45,9 +47,21 @@ export const LayoutItem = (props: Props) => {
     sortable ?? {}
 
   const draggable = Boolean(sortable) && !disabled
-  const dragHandleProps = draggable
-    ? { ...(attributes ?? {}), ...(listeners ?? {}) }
-    : undefined
+  const { onPointerDown, ...otherListeners } = draggable
+    ? (listeners ?? {})
+    : {}
+
+  const handlePreload = useCallback(() => {
+    void onPreload?.().catch(() => {})
+  }, [onPreload])
+
+  const handlePointerDown = useCallback(
+    (event: PointerEvent<HTMLDivElement>) => {
+      handlePreload()
+      onPointerDown?.(event)
+    },
+    [handlePreload, onPointerDown],
+  )
 
   return (
     <ListItem
@@ -60,7 +74,8 @@ export const LayoutItem = (props: Props) => {
     >
       <ListItemButton
         selected={!!match}
-        {...(dragHandleProps ?? {})}
+        {...(draggable ? (attributes ?? {}) : {})}
+        {...(draggable ? otherListeners : {})}
         sx={[
           {
             borderRadius: 2,
@@ -90,6 +105,9 @@ export const LayoutItem = (props: Props) => {
         ]}
         title={navCollapsed ? children : undefined}
         aria-label={navCollapsed ? children : undefined}
+        onFocus={handlePreload}
+        onMouseEnter={handlePreload}
+        onPointerDown={handlePointerDown}
         onClick={() => navigate(to)}
       >
         {(effectiveMenuIcon === 'monochrome' || !effectiveMenuIcon) && (

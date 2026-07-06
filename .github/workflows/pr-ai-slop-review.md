@@ -6,6 +6,7 @@ description: |
 
 on:
   roles: all
+  skip-bots: [dependabot, renovate]
   pull_request_target:
     types: [opened, reopened, synchronize]
   workflow_dispatch:

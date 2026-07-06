@@ -187,7 +187,7 @@ impl WindowManager {
     fn hide_main_window(window: Option<&WebviewWindow<Wry>>) -> WindowOperationResult {
         logging!(info, Type::Window, "窗口可见，将隐藏窗口");
         if let Some(window) = window {
-            match window.hide() {
+            match window.close() {
                 Ok(_) => {
                     logging!(info, Type::Window, "窗口已成功隐藏");
                     WindowOperationResult::Hidden
@@ -218,6 +218,19 @@ impl WindowManager {
     fn activate_window(window: &WebviewWindow<Wry>) -> WindowOperationResult {
         logging!(info, Type::Window, "开始激活窗口");
 
+        // 渲染进程曾被系统终止：先 reload，并把 show+focus 交给 on_page_load(Finished)，
+        // 内容就绪再显示，避免白屏闪烁。reload 成功才 defer，失败则走下方直接显示。
+        #[allow(unused_mut)]
+        let mut defer_show_to_page_load = false;
+        #[cfg(target_os = "macos")]
+        if crate::utils::resolve::window::take_webview_needs_reload() {
+            logging!(info, Type::Window, "渲染进程曾被系统终止，激活窗口前重载页面");
+            match window.reload() {
+                Ok(()) => defer_show_to_page_load = true,
+                Err(e) => logging!(warn, Type::Window, "重载页面失败，退回直接显示: {}", e),
+            }
+        }
+
         let mut operations_successful = true;
 
         // 1. 如果窗口最小化，先取消最小化
@@ -229,16 +242,16 @@ impl WindowManager {
             }
         }
 
-        // 2. 显示窗口
-        if let Err(e) = window.show() {
-            logging!(warn, Type::Window, "显示窗口失败: {}", e);
-            operations_successful = false;
-        }
-
-        // 3. 设置焦点
-        if let Err(e) = window.set_focus() {
-            logging!(warn, Type::Window, "设置窗口焦点失败: {}", e);
-            operations_successful = false;
+        // 2/3. 显示 + 焦点（reload 分支跳过，交给 on_page_load）
+        if !defer_show_to_page_load {
+            if let Err(e) = window.show() {
+                logging!(warn, Type::Window, "显示窗口失败: {}", e);
+                operations_successful = false;
+            }
+            if let Err(e) = window.set_focus() {
+                logging!(warn, Type::Window, "设置窗口焦点失败: {}", e);
+                operations_successful = false;
+            }
         }
 
         // 4. 平台特定的激活策略

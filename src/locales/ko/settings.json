@@ -502,6 +502,7 @@
         "listen": "DNS 리슨",
         "enhancedMode": "향상 모드",
         "fakeIpRange": "가짜 IP 범위",
+        "fakeIpRange6": "가짜 IP 범위 (IPv6)",
         "fakeIpFilterMode": "가짜 IP 필터 모드",
         "ipv6": {
           "label": "IPv6",

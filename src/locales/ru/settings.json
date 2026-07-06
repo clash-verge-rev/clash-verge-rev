@@ -502,6 +502,7 @@
         "listen": "Прослушивание DNS",
         "enhancedMode": "Расширенный режим",
         "fakeIpRange": "Диапазон FakeIP",
+        "fakeIpRange6": "Диапазон FakeIP (IPv6)",
         "fakeIpFilterMode": "Режим фильтра FakeIP",
         "ipv6": {
           "label": "IPv6",

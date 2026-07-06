@@ -25,21 +25,16 @@ export interface ConnectionMonitorData {
 }
 
 export interface ConnectionSummaryData {
-  uploadTotal: number
-  downloadTotal: number
   activeConnectionCount: number
 }
 
 export const initConnSummaryData: ConnectionSummaryData = {
-  uploadTotal: 0,
-  downloadTotal: 0,
   activeConnectionCount: 0,
 }
 
 let connectionData: ConnectionMonitorData = initConnData
 let connectionSummary: ConnectionSummaryData = initConnSummaryData
 let connectionSocket: MihomoWebSocket | null = null
-let connectionStarted = false
 let connectionConnecting = false
 let reconnectTimer: ReturnType<typeof setTimeout> | null = null
 let flushTimer: ReturnType<typeof setTimeout> | null = null
@@ -56,6 +51,9 @@ const notifyConnectionListeners = () => {
 const notifySummaryListeners = () => {
   summaryListeners.forEach((listener) => listener())
 }
+
+const hasConnectionSubscribers = () =>
+  connectionListeners.size > 0 || summaryListeners.size > 0
 
 const sameMetadata = (left: ConnectionMetadata, right: ConnectionMetadata) =>
   metadataValue(left.network) === metadataValue(right.network) &&
@@ -212,8 +210,6 @@ const mergeConnectionSnapshot = (
 const mergeConnectionSummary = (
   payload: IConnections,
 ): ConnectionSummaryData => ({
-  uploadTotal: payload.uploadTotal ?? 0,
-  downloadTotal: payload.downloadTotal ?? 0,
   activeConnectionCount: payload.connections?.length ?? 0,
 })
 
@@ -221,7 +217,7 @@ const flushPendingMessage = () => {
   flushTimer = null
   const messageData = pendingMessageData
   pendingMessageData = null
-  if (!messageData) return
+  if (!messageData || !hasConnectionSubscribers()) return
 
   let payload: IConnections
   try {
@@ -276,6 +272,7 @@ const closeConnectionSocket = async () => {
 }
 
 const scheduleReconnect = () => {
+  if (!hasConnectionSubscribers()) return
   if (reconnectTimer) return
   reconnectTimer = window.setTimeout(() => {
     reconnectTimer = null
@@ -284,20 +281,27 @@ const scheduleReconnect = () => {
 }
 
 async function reconnectConnectionSocket() {
+  if (!hasConnectionSubscribers()) return
   await closeConnectionSocket()
   scheduleReconnect()
 }
 
 async function connectConnectionSocket() {
   if (connectionSocket || connectionConnecting) return
+  if (!hasConnectionSubscribers()) return
 
   clearReconnectTimer()
   connectionConnecting = true
 
   try {
     const socket = await MihomoWebSocket.connect_connections()
+    if (!hasConnectionSubscribers()) {
+      await socket.close()
+      return
+    }
     connectionSocket = socket
     socket.addListener((message) => {
+      if (connectionSocket !== socket) return
       if (message.type !== 'Text') return
       if (message.data.startsWith('Websocket error')) {
         void reconnectConnectionSocket()
@@ -314,27 +318,39 @@ async function connectConnectionSocket() {
 }
 
 const startConnectionMonitor = () => {
-  if (connectionStarted) return
-  connectionStarted = true
   void connectConnectionSocket()
+}
+
+const stopConnectionMonitorIfIdle = () => {
+  if (hasConnectionSubscribers()) return
+
+  clearReconnectTimer()
+  pendingMessageData = null
+  if (flushTimer) {
+    window.clearTimeout(flushTimer)
+    flushTimer = null
+  }
+  void closeConnectionSocket()
 }
 
 const getConnectionSnapshot = () => connectionData
 const getConnectionSummarySnapshot = () => connectionSummary
 
 const subscribeConnectionData = (listener: ConnectionListener) => {
-  startConnectionMonitor()
   connectionListeners.add(listener)
+  startConnectionMonitor()
   return () => {
     connectionListeners.delete(listener)
+    stopConnectionMonitorIfIdle()
   }
 }
 
 const subscribeConnectionSummary = (listener: ConnectionListener) => {
-  startConnectionMonitor()
   summaryListeners.add(listener)
+  startConnectionMonitor()
   return () => {
     summaryListeners.delete(listener)
+    stopConnectionMonitorIfIdle()
   }
 }
 
@@ -357,9 +373,15 @@ const clearClosedConnectionData = () => {
   notifyConnectionListeners()
 }
 
-export const useConnectionData = () => {
+export const useConnectionData = (options?: { enabled?: boolean }) => {
+  const enabled = options?.enabled ?? true
+  const subscribe = useCallback(
+    (listener: ConnectionListener) =>
+      enabled ? subscribeConnectionData(listener) : () => {},
+    [enabled],
+  )
   const data = useSyncExternalStore(
-    subscribeConnectionData,
+    subscribe,
     getConnectionSnapshot,
     getConnectionSnapshot,
   )
@@ -378,9 +400,15 @@ export const useConnectionData = () => {
   }
 }
 
-export const useConnectionSummaryData = () => {
+export const useConnectionSummaryData = (options?: { enabled?: boolean }) => {
+  const enabled = options?.enabled ?? true
+  const subscribe = useCallback(
+    (listener: ConnectionListener) =>
+      enabled ? subscribeConnectionSummary(listener) : () => {},
+    [enabled],
+  )
   const data = useSyncExternalStore(
-    subscribeConnectionSummary,
+    subscribe,
     getConnectionSummarySnapshot,
     getConnectionSummarySnapshot,
   )

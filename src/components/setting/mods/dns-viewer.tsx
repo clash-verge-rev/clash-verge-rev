@@ -31,7 +31,6 @@ import { useClash } from '@/hooks/use-clash'
 import { showNotice } from '@/services/notice-service'
 import { useThemeMode } from '@/services/states'
 import type { MonacoEditorInstance } from '@/types/monaco'
-import { debugLog } from '@/utils/debug'
 import getSystem from '@/utils/get-system'
 
 const Item = styled(ListItem)(() => ({
@@ -134,6 +133,7 @@ const DEFAULT_DNS_CONFIG = {
   listen: ':53',
   'enhanced-mode': 'fake-ip' as 'fake-ip' | 'redir-host',
   'fake-ip-range': '198.18.0.1/16',
+  'fake-ip-range6': 'fdfe:dcba:9876::1/64',
   'fake-ip-filter-mode': 'blacklist' as 'blacklist' | 'whitelist',
   'prefer-h3': false,
   'respect-rules': false,
@@ -195,6 +195,7 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
     listen: string
     enhancedMode: 'fake-ip' | 'redir-host'
     fakeIpRange: string
+    fakeIpRange6: string
     fakeIpFilterMode: 'blacklist' | 'whitelist'
     preferH3: boolean
     respectRules: boolean
@@ -219,6 +220,7 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
     listen: DEFAULT_DNS_CONFIG.listen,
     enhancedMode: DEFAULT_DNS_CONFIG['enhanced-mode'],
     fakeIpRange: DEFAULT_DNS_CONFIG['fake-ip-range'],
+    fakeIpRange6: DEFAULT_DNS_CONFIG['fake-ip-range6'],
     fakeIpFilterMode: DEFAULT_DNS_CONFIG['fake-ip-filter-mode'],
     preferH3: DEFAULT_DNS_CONFIG['prefer-h3'],
     respectRules: DEFAULT_DNS_CONFIG['respect-rules'],
@@ -279,6 +281,8 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
         enhancedMode: validEnhancedMode,
         fakeIpRange:
           dnsConfig['fake-ip-range'] ?? DEFAULT_DNS_CONFIG['fake-ip-range'],
+        fakeIpRange6:
+          dnsConfig['fake-ip-range6'] ?? DEFAULT_DNS_CONFIG['fake-ip-range6'],
         fakeIpFilterMode: validFakeIpFilterMode,
         preferH3: dnsConfig['prefer-h3'] ?? DEFAULT_DNS_CONFIG['prefer-h3'],
         respectRules:
@@ -335,6 +339,8 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
       listen: values.listen,
       'enhanced-mode': values.enhancedMode,
       'fake-ip-range': values.fakeIpRange,
+      'fake-ip-range6':
+        values.fakeIpRange6 || DEFAULT_DNS_CONFIG['fake-ip-range6'],
       'fake-ip-filter-mode': values.fakeIpFilterMode,
       'prefer-h3': values.preferH3,
       'respect-rules': values.respectRules,
@@ -388,6 +394,7 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
       listen: DEFAULT_DNS_CONFIG.listen,
       enhancedMode: DEFAULT_DNS_CONFIG['enhanced-mode'],
       fakeIpRange: DEFAULT_DNS_CONFIG['fake-ip-range'],
+      fakeIpRange6: DEFAULT_DNS_CONFIG['fake-ip-range6'],
       fakeIpFilterMode: DEFAULT_DNS_CONFIG['fake-ip-filter-mode'],
       preferH3: DEFAULT_DNS_CONFIG['prefer-h3'],
       respectRules: DEFAULT_DNS_CONFIG['respect-rules'],
@@ -583,18 +590,6 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
   // YAML编辑器内容变更处理
   const handleYamlChange = (value?: string) => {
     setYamlContent(value || '')
-
-    // 允许YAML编辑后立即分析和更新表单值
-    try {
-      const config = yaml.load(value || '') as any
-      if (config && typeof config === 'object') {
-        setTimeout(() => {
-          updateValuesFromConfig(config)
-        }, 300)
-      }
-    } catch (err) {
-      debugLog('YAML解析错误，忽略自动更新', err)
-    }
   }
 
   // 处理表单值变化
@@ -738,6 +733,21 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
               onChange={handleChange('fakeIpRange')}
               placeholder="198.18.0.1/16"
               sx={{ width: 150 }}
+            />
+          </Item>
+
+          <Item>
+            <ListItemText
+              primary={t('settings.modals.dns.fields.fakeIpRange6')}
+            />
+            <TextField
+              size="small"
+              autoComplete="off"
+              spellCheck="false"
+              value={values.fakeIpRange6}
+              onChange={handleChange('fakeIpRange6')}
+              placeholder="fdfe:dcba:9876::1/64"
+              sx={{ width: 200 }}
             />
           </Item>
 
