@@ -514,7 +514,6 @@ function NormalProxyGroups(props: { mode: string }) {
         onLocation={handleLocation}
         onCheckAll={handleCheckAll}
         onHeadState={(groupName, patch) => {
-          console.log(patch)
           if (stickyed && patch.filterText !== undefined) {
             stickyListRef.current?.scrollToIndex(index)
           }
