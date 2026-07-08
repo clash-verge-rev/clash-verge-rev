@@ -412,6 +412,10 @@ async fn merge_default_config(
             });
             let patch_tun = value.as_mapping().cloned().unwrap_or_else(Mapping::new);
             for (key, value) in patch_tun.into_iter() {
+                // 将全局空列表视为未配置，避免覆盖 Profile 中的排除路由。
+                if is_empty_route_exclude_override(&tun, &key, &value) {
+                    continue;
+                }
                 tun.insert(key, value);
             }
             config.insert("tun".into(), tun.into());
@@ -472,6 +476,15 @@ async fn merge_default_config(
     }
 
     config
+}
+
+fn is_empty_route_exclude_override(tun: &Mapping, key: &Value, value: &Value) -> bool {
+    key.as_str() == Some("route-exclude-address")
+        && matches!(value.as_sequence(), Some(seq) if seq.is_empty())
+        && matches!(
+            tun.get(key).and_then(Value::as_sequence),
+            Some(seq) if !seq.is_empty()
+        )
 }
 
 async fn apply_builtin_scripts(mut config: Mapping, clash_core: Option<String>, enable_builtin: bool) -> Mapping {
@@ -816,6 +829,38 @@ mod tests {
             Some("profile-script")
         );
         assert!(!exists_keys.contains(&"application-only".into()));
+    }
+
+    #[tokio::test]
+    async fn empty_global_tun_route_exclude_does_not_override_profile_values() {
+        let config = mapping(
+            r#"{tun: {enable: true, route-exclude-address: ["100.64.0.0/10", "fd7a:115c:a1e0::/48"]}}"#,
+        );
+        let clash_config = mapping(
+            r#"{tun: {auto-route: true, route-exclude-address: []}}"#,
+        );
+
+        let config = super::merge_default_config(
+            config,
+            clash_config,
+            false,
+            false,
+            #[cfg(not(target_os = "windows"))]
+            false,
+            #[cfg(target_os = "linux")]
+            false,
+        )
+        .await;
+
+        let route_exclude = config
+            .get("tun")
+            .and_then(|value| value.get("route-exclude-address"))
+            .and_then(serde_yaml_ng::Value::as_sequence)
+            .expect("route-exclude-address should be preserved");
+
+        assert_eq!(route_exclude.len(), 2);
+        assert_eq!(route_exclude.first().and_then(serde_yaml_ng::Value::as_str), Some("100.64.0.0/10"));
+        assert_eq!(route_exclude.get(1).and_then(serde_yaml_ng::Value::as_str), Some("fd7a:115c:a1e0::/48"));
     }
 
     #[test]
