@@ -10,13 +10,14 @@ import VisibilityRounded from '@mui/icons-material/VisibilityRounded'
 import WifiTetheringOffRounded from '@mui/icons-material/WifiTetheringOffRounded'
 import WifiTetheringRounded from '@mui/icons-material/WifiTetheringRounded'
 import { Box, IconButton, type SxProps, TextField } from '@mui/material'
+import { useDebounceFn } from 'ahooks'
 import { memo, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { useVerge } from '@/hooks/use-verge'
 import delayManager from '@/services/delay'
 
-import { BaseSearchBox } from '../base'
+import { BaseSearchBox, type SearchState } from '../base'
 
 import type { ProxySortType } from './use-filter-sort'
 import type { HeadState } from './use-head-state'
@@ -63,6 +64,26 @@ export const ProxyGroupTools = memo(function ProxyGroupTools(props: Props) {
   useEffect(() => {
     delayManager.setUrl(groupName, testUrl?.trim() || url || defaultLatencyUrl)
   }, [groupName, testUrl, defaultLatencyUrl, url])
+
+  // 过滤输入是高频操作，且每次都会触发整组代理的重新过滤/排序与虚拟列表重渲染，
+  // 因此对写入 headState 的动作做防抖，避免每输入一个字符就过滤一次。
+  const { run: applyFilter, flush: flushFilter } = useDebounceFn(
+    (state: SearchState) => {
+      onHeadState({
+        filterText: state.text,
+        filterMatchCase: state.matchCase,
+        filterMatchWholeWord: state.matchWholeWord,
+        filterUseRegularExpression: state.useRegularExpression,
+      })
+    },
+    { wait: 300 },
+  )
+
+  // 关闭过滤框或卸载时立即应用最后一次输入，避免丢失未生效的过滤条件。
+  useEffect(() => {
+    if (textState !== 'filter') flushFilter()
+  }, [textState, flushFilter])
+  useEffect(() => () => flushFilter(), [flushFilter])
 
   return (
     <Box
@@ -188,24 +209,15 @@ export const ProxyGroupTools = memo(function ProxyGroupTools(props: Props) {
       {textState === 'filter' && (
         <Box sx={{ flex: '1 1 auto' }}>
           <BaseSearchBox
-            value={filterText}
+            defaultValue={filterText}
+            matchCase={filterMatchCase}
+            matchWholeWord={filterMatchWholeWord}
+            useRegularExpression={filterUseRegularExpression}
             onClick={(e) => {
               e.preventDefault()
               e.stopPropagation()
             }}
-            searchState={{
-              matchCase: filterMatchCase,
-              matchWholeWord: filterMatchWholeWord,
-              useRegularExpression: filterUseRegularExpression,
-            }}
-            onSearch={(_, state) =>
-              onHeadState({
-                filterText: state.text,
-                filterMatchCase: state.matchCase,
-                filterMatchWholeWord: state.matchWholeWord,
-                filterUseRegularExpression: state.useRegularExpression,
-              })
-            }
+            onSearch={(_, state) => applyFilter(state)}
           />
         </Box>
       )}
