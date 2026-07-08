@@ -371,24 +371,56 @@ function NormalProxyGroups(props: { mode: string }) {
     saveScrollPosition,
   } = useProxyRenderState(mode, false, null)
   const renderFirstRef = useRef(true)
+  // 恢复滚动位置期间设为 true，避免程序化滚动触发的 scroll 事件把中间值写回存储
+  const isRestoringRef = useRef(false)
 
   // 目前无法使用 StickyVirtualList 的 initialOffset 值设置初始化，具体原因需排查
   // 从 localStorage 恢复滚动位置
   useLayoutEffect(() => {
     if (renderList.length === 0) return
+    if (!renderFirstRef.current) return
     const node = stickyListRef.current?.getScrollElement()
     if (!node) return
-    if (!renderFirstRef.current) return
 
     const savedPosition = getScrollPosition()
-    if (savedPosition !== undefined) {
-      node.scrollTop = savedPosition
-      if (node.scrollTop === savedPosition) {
-        renderFirstRef.current = false
-      }
-    } else {
-      // The position that hasn't been saved yet during the first render
+    // 未保存过位置或位置为 0（顶部）时无需恢复
+    if (!savedPosition) {
       renderFirstRef.current = false
+      return
+    }
+
+    // 虚拟列表初始使用预估高度，真实高度测量完成后总高度才会稳定。
+    // 尤其是过滤后节点数变少时，预估总高度常常不足以一次性滚动到目标位置，
+    // 因此跨帧重试，直到到达目标位置（或内容确实不够高）为止。
+    isRestoringRef.current = true
+    let rafId = 0
+    let attempts = 0
+    const maxAttempts = 30
+
+    const step = () => {
+      const el = stickyListRef.current?.getScrollElement()
+      if (!el) {
+        isRestoringRef.current = false
+        return
+      }
+
+      el.scrollTop = savedPosition
+      attempts += 1
+
+      const reached = Math.abs(el.scrollTop - savedPosition) <= 1
+      if (reached || attempts >= maxAttempts) {
+        renderFirstRef.current = false
+        isRestoringRef.current = false
+        return
+      }
+
+      rafId = requestAnimationFrame(step)
+    }
+
+    rafId = requestAnimationFrame(step)
+    return () => {
+      cancelAnimationFrame(rafId)
+      isRestoringRef.current = false
     }
   }, [renderList.length, getScrollPosition])
 
@@ -399,6 +431,8 @@ function NormalProxyGroups(props: { mode: string }) {
 
   const handleScroll = useCallback(
     (event: Event) => {
+      // 恢复位置过程中产生的滚动不写回存储，避免中间的钳制值覆盖真实位置
+      if (isRestoringRef.current) return
       const target = event.target as HTMLElement | null
       const nextScrollTop = target?.scrollTop ?? 0
 
