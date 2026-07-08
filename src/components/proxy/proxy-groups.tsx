@@ -507,15 +507,16 @@ function NormalProxyGroups(props: { mode: string }) {
   )
 
   const renderGroupItem = useCallback(
-    (item: IRenderItem, index: number, stickyed: boolean) => (
+    (item: IRenderItem, _index: number, stickyed: boolean) => (
       <ProxyRender
         item={item}
         stickyed={stickyed}
         onLocation={handleLocation}
         onCheckAll={handleCheckAll}
-        onHeadState={(groupName, patch) => {
+        onHeadState={async (groupName, patch) => {
           if (stickyed && patch.filterText !== undefined) {
-            stickyListRef.current?.scrollToIndex(index)
+            handleGroupLocationByName(groupName)
+            await stickyListRef.current?.waitForScrollEnd()
           }
           onHeadState(groupName, patch)
         }}
@@ -529,6 +530,7 @@ function NormalProxyGroups(props: { mode: string }) {
       onHeadState,
       handleLocation,
       handleGroupToggle,
+      handleGroupLocationByName,
     ],
   )
 
