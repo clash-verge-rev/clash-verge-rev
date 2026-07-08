@@ -44,6 +44,12 @@ pub struct CoreManager {
     #[cfg(target_os = "windows")]
     job_handle: ArcSwapOption<isize>,
     config_update_in_progress: AtomicBool,
+    // 串行化 start/stop/restart 和 sidecar→service 交接。
+    // 锁序固定为 config_update_in_progress → lifecycle_lock。
+    lifecycle_lock: tokio::sync::Mutex<()>,
+    // sidecar→service 交接 watcher 单实例标志。
+    #[cfg(target_os = "windows")]
+    handoff_watcher_running: AtomicBool,
 }
 
 #[derive(Debug)]
@@ -69,6 +75,9 @@ impl Default for CoreManager {
             #[cfg(target_os = "windows")]
             job_handle: ArcSwapOption::new(None),
             config_update_in_progress: AtomicBool::new(false),
+            lifecycle_lock: tokio::sync::Mutex::new(()),
+            #[cfg(target_os = "windows")]
+            handoff_watcher_running: AtomicBool::new(false),
         }
     }
 }

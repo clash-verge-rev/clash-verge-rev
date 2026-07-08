@@ -16,3 +16,7 @@ export { MonacoEditor } from './monaco-editor'
 export { Switch } from './base-switch'
 export { TooltipIcon } from './base-tooltip-icon'
 export { VirtualList, type VirtualListHandle } from './virtual-list'
+export {
+  StickyVirtualList,
+  type StickyVirtualListHandle,
+} from './sticky-virtual-list'

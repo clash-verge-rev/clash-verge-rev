@@ -58,6 +58,7 @@ interface IConfigData {
     listen?: string
     'enhanced-mode'?: 'fake-ip' | 'redir-host'
     'fake-ip-range'?: string
+    'fake-ip-range6'?: string
     'fake-ip-filter'?: string[]
     'fake-ip-filter-mode'?: 'blacklist' | 'whitelist'
     'prefer-h3'?: boolean

@@ -502,6 +502,7 @@
         "listen": "Dirección de escucha de DNS",
         "enhancedMode": "Modo mejorado",
         "fakeIpRange": "Rango de Fake IP",
+        "fakeIpRange6": "Rango de Fake IP (IPv6)",
         "fakeIpFilterMode": "Modo de filtrado de Fake IP",
         "ipv6": {
           "label": "IPv6",

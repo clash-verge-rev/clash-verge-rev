@@ -1,4 +1,3 @@
-import { useQuery } from '@tanstack/react-query'
 import { listen } from '@tauri-apps/api/event'
 import React, { useCallback, useEffect, useMemo, useRef } from 'react'
 import {
@@ -15,7 +14,7 @@ import {
   getRunningMode,
   getSystemProxy,
 } from '@/services/cmds'
-import { queryClient } from '@/services/query-client'
+import { revalidateQueries, useQuery } from '@/services/query-client'
 
 import {
   ClashConfigContext,
@@ -80,12 +79,14 @@ export const AppDataProvider = ({
     queryKey: ['getProxyProviders'],
     queryFn: calcuProxyProviders,
     ...TQ_MIHOMO,
+    revalidateOnMount: false,
   })
 
   const { data: ruleProviders, refetch: _refetchRuleProviders } = useQuery({
     queryKey: ['getRuleProviders'],
     queryFn: getRuleProviders,
     ...TQ_MIHOMO,
+    revalidateOnMount: false,
   })
 
   const { data: rulesData, refetch: _refetchRules } = useQuery({
@@ -138,11 +139,13 @@ export const AppDataProvider = ({
       }
       lastProfileId = newProfileId
       lastUpdateTime = now
-      void queryClient.invalidateQueries({ queryKey: ['getProfiles'] })
-      refreshProxy().catch(() => {})
-      refreshProxyProviders().catch(() => {})
-      refreshRules().catch(() => {})
-      refreshRuleProviders().catch(() => {})
+      void Promise.allSettled([
+        revalidateQueries([['getProfiles']]),
+        refreshProxy(),
+        refreshProxyProviders(),
+        refreshRules(),
+        refreshRuleProviders(),
+      ])
     }
 
     const handleRefreshProxy = () => {

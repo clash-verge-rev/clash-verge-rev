@@ -617,6 +617,7 @@ export const translationKeys = [
   'settings.modals.dns.fields.listen',
   'settings.modals.dns.fields.enhancedMode',
   'settings.modals.dns.fields.fakeIpRange',
+  'settings.modals.dns.fields.fakeIpRange6',
   'settings.modals.dns.fields.fakeIpFilterMode',
   'settings.modals.dns.fields.ipv6.label',
   'settings.modals.dns.fields.ipv6.description',

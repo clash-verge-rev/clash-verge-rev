@@ -81,14 +81,26 @@ type LocaleModule = {
   default: Record<string, unknown>
 }
 
-const localeModules = import.meta.glob<LocaleModule>('@/locales/*/index.ts')
+const STARTUP_LANGUAGE_SECTIONS = [
+  'layout',
+  'home',
+  'shared',
+  'settings',
+  'profiles',
+  'proxies',
+  'tests',
+] as const
+
+const localeModules = import.meta.glob<LocaleModule>('@/locales/*/*.json')
 
 const localeLoaders = Object.entries(localeModules).reduce<
-  Record<string, () => Promise<LocaleModule>>
+  Record<string, Record<string, () => Promise<LocaleModule>>>
 >((acc, [path, loader]) => {
-  const match = path.match(/[/\\]locales[/\\]([^/\\]+)[/\\]index\.ts$/)
+  const match = path.match(/[/\\]locales[/\\]([^/\\]+)[/\\]([^/\\]+)\.json$/)
   if (match) {
-    acc[match[1]] = loader
+    const [, language, section] = match
+    acc[language] ??= {}
+    acc[language][section] = loader
   }
   return acc
 }, {})
@@ -101,32 +113,42 @@ export const languages: Record<string, any> = supportedLanguages.reduce(
   {} as Record<string, any>,
 )
 
-export const loadLanguage = async (language: string) => {
+const loadLanguageSections = async (
+  language: string,
+  sections: readonly string[],
+) => {
   try {
-    const loader = localeLoaders[language]
-    if (!loader) {
-      throw new Error(`Locale loader not found for language "${language}"`)
-    }
-    const module = await loader()
-    return module.default
+    const entries = await Promise.all(
+      sections.map(async (section) => {
+        const loader = localeLoaders[language]?.[section]
+        if (!loader) {
+          throw new Error(
+            `Locale loader not found for language "${language}" section "${section}"`,
+          )
+        }
+
+        const module = await loader()
+        return [section, module.default] as const
+      }),
+    )
+
+    return Object.fromEntries(entries)
   } catch (error) {
     if (language !== FALLBACK_LANGUAGE) {
       console.warn(
         `Failed to load language ${language}, fallback to ${FALLBACK_LANGUAGE}, ${error}`,
       )
-      const fallbackLoader = localeLoaders[FALLBACK_LANGUAGE]
-      if (!fallbackLoader) {
-        throw new Error(
-          `Fallback language "${FALLBACK_LANGUAGE}" resources are missing.`,
-          { cause: error },
-        )
-      }
-      const fallback = await fallbackLoader()
-      return fallback.default
+      return loadLanguageSections(FALLBACK_LANGUAGE, sections)
     }
     throw error
   }
 }
+
+export const loadLanguage = async (language: string) =>
+  loadLanguageSections(language, STARTUP_LANGUAGE_SECTIONS)
+
+const getLoadedLanguageSections = (language: string) =>
+  Object.keys(i18n.getResourceBundle(language, 'translation') ?? {})
 
 i18n.use(initReactI18next).init({
   resources: {},
@@ -137,13 +159,35 @@ i18n.use(initReactI18next).init({
   },
 })
 
+export const ensureLanguageSections = async (
+  sections: string | readonly string[],
+  language: string = i18n.language || FALLBACK_LANGUAGE,
+) => {
+  const targetLanguage = resolveLanguage(language)
+  const sectionList = Array.isArray(sections) ? sections : [sections]
+  const loadedSections = new Set(getLoadedLanguageSections(targetLanguage))
+  const missingSections = sectionList.filter(
+    (section) => !loadedSections.has(section),
+  )
+
+  if (!missingSections.length) {
+    return
+  }
+
+  const resources = await loadLanguageSections(targetLanguage, missingSections)
+  i18n.addResourceBundle(targetLanguage, 'translation', resources, true, true)
+}
+
 export const changeLanguage = async (language: string) => {
   const targetLanguage = resolveLanguage(language)
+  const loadedSections = getLoadedLanguageSections(
+    i18n.language || FALLBACK_LANGUAGE,
+  )
 
-  if (!i18n.hasResourceBundle(targetLanguage, 'translation')) {
-    const resources = await loadLanguage(targetLanguage)
-    i18n.addResourceBundle(targetLanguage, 'translation', resources)
-  }
+  await ensureLanguageSections(
+    loadedSections.length ? loadedSections : STARTUP_LANGUAGE_SECTIONS,
+    targetLanguage,
+  )
 
   await i18n.changeLanguage(targetLanguage)
   cacheLanguage(targetLanguage)

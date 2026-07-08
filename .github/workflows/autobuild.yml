@@ -46,7 +46,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v6
         with:
-          node-version: '24.17.0'
+          node-version: '24.18.0'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -147,7 +147,7 @@ jobs:
       - name: Install Rust Stable
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: '1.96.0'
+          toolchain: '1.96.1'
           targets: ${{ matrix.target }}
 
       - name: Add Rust Target
@@ -170,15 +170,6 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libxslt1.1 libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf
 
-      - name: Install x86 OpenSSL (macOS only)
-        if: matrix.target == 'x86_64-apple-darwin'
-        run: |
-          arch -x86_64 brew install openssl@3
-          echo "OPENSSL_DIR=$(brew --prefix openssl@3)" >> $GITHUB_ENV
-          echo "OPENSSL_INCLUDE_DIR=$(brew --prefix openssl@3)/include" >> $GITHUB_ENV
-          echo "OPENSSL_LIB_DIR=$(brew --prefix openssl@3)/lib" >> $GITHUB_ENV
-          echo "PKG_CONFIG_PATH=$(brew --prefix openssl@3)/lib/pkgconfig" >> $GITHUB_ENV
-
       - uses: pnpm/action-setup@v6.0.9
         name: Install pnpm
         with:
@@ -187,11 +178,11 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v6
         with:
-          node-version: '24.17.0'
+          node-version: '24.18.0'
           cache: 'pnpm'
 
       - name: Pnpm Cache
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ~/.pnpm-store
           key: 'pnpm-shared-stable-${{ matrix.os }}-${{ matrix.target }}'
@@ -214,7 +205,7 @@ jobs:
           echo "Rust target ${{ matrix.target }} installed."
 
       - name: Tauri build for Windows-macOS-Linux
-        uses: tauri-apps/tauri-action@v0
+        uses: tauri-apps/tauri-action@v1
         env:
           NODE_OPTIONS: '--max_old_space_size=4096'
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -260,7 +251,7 @@ jobs:
       - name: Install Rust Stable
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: '1.96.0'
+          toolchain: '1.96.1'
           targets: ${{ matrix.target }}
 
       - name: Add Rust Target
@@ -285,11 +276,11 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v6
         with:
-          node-version: '24.17.0'
+          node-version: '24.18.0'
           cache: 'pnpm'
 
       - name: Pnpm Cache
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ~/.pnpm-store
           key: 'pnpm-shared-stable-${{ matrix.os }}-${{ matrix.target }}'
@@ -430,11 +421,11 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v6
         with:
-          node-version: '24.17.0'
+          node-version: '24.18.0'
           cache: 'pnpm'
 
       - name: Pnpm Cache
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ~/.pnpm-store
           key: 'pnpm-shared-stable-${{ matrix.os }}-${{ matrix.target }}'
@@ -465,7 +456,7 @@ jobs:
 
       - name: Tauri build for Windows
         id: build
-        uses: tauri-apps/tauri-action@v0
+        uses: tauri-apps/tauri-action@v1
         env:
           NODE_OPTIONS: '--max_old_space_size=4096'
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -532,7 +523,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v6
         with:
-          node-version: '24.17.0'
+          node-version: '24.18.0'
 
       - uses: pnpm/action-setup@v6.0.9
         name: Install pnpm
