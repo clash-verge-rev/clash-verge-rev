@@ -59,6 +59,7 @@
     "menu": {
       "home": "Home",
       "select": "Select",
+      "shareQrCode": "Share QR Code",
       "editInfo": "Edit Info",
       "editFile": "Edit File",
       "editRules": "Edit Rules",
@@ -177,6 +178,9 @@
     },
     "logViewer": {
       "title": "Script Console"
+    },
+    "qrViewer": {
+      "title": "Subscription QR Code"
     }
   }
 }

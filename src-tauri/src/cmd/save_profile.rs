@@ -1,8 +1,12 @@
 use super::CmdResult;
 use crate::{
     cmd::StringifyErr as _,
-    config::{Config, PrfItem},
-    core::{CoreManager, handle, validate::CoreConfigValidator},
+    cmd::validate::{ValidationNoticeTarget, handle_validation_notice},
+    config::{Config, IProfiles, PrfItem},
+    core::{
+        CoreManager, handle,
+        validate::{CoreConfigValidator, ValidationOutcome},
+    },
     module::auto_backup::{AutoBackupManager, AutoBackupTrigger},
     utils::dirs,
 };
@@ -12,10 +16,10 @@ use tokio::fs;
 
 /// 保存profiles的配置
 #[tauri::command]
-pub async fn save_profile_file(index: String, file_data: Option<String>) -> CmdResult {
+pub async fn save_profile_file(index: String, file_data: Option<String>) -> CmdResult<ValidationOutcome> {
     let file_data = match file_data {
         Some(d) => d,
-        None => return Ok(()),
+        None => return Ok(ValidationOutcome::Valid),
     };
 
     let backup_trigger = match index.as_str() {
@@ -25,13 +29,15 @@ pub async fn save_profile_file(index: String, file_data: Option<String>) -> CmdR
     };
 
     // 在异步操作前获取必要元数据并释放锁
-    let (rel_path, is_merge_file) = {
+    let (rel_path, is_merge_file, is_script_file, affects_runtime) = {
         let profiles = Config::profiles().await;
         let profiles_guard = profiles.latest_arc();
         let item = profiles_guard.get_item(&index).stringify_err()?;
         let is_merge = item.itype.as_ref().is_some_and(|t| t == "merge");
         let path = item.file.clone().ok_or("file field is null")?;
-        (path, is_merge)
+        let is_script = item.itype.as_ref().is_some_and(|t| t == "script") || path.ends_with(".js");
+        let affects_runtime = profile_affects_runtime(&profiles_guard, &index);
+        (path, is_merge, is_script, affects_runtime)
     };
 
     // 读取原始内容（在释放profiles_guard后进行）
@@ -58,98 +64,115 @@ pub async fn save_profile_file(index: String, file_data: Option<String>) -> CmdR
         is_merge_file
     );
 
-    let changes_applied = if is_merge_file {
-        handle_merge_file(&file_path_str, &file_path, &original_content).await?
-    } else {
-        handle_full_validation(&file_path_str, &file_path, &original_content).await?
-    };
+    let changes_applied = handle_saved_profile_file(
+        &file_path_str,
+        &file_path,
+        &original_content,
+        is_merge_file,
+        is_script_file,
+        affects_runtime,
+    )
+    .await?;
 
-    if changes_applied && let Some(trigger) = backup_trigger {
+    if changes_applied.is_valid()
+        && let Some(trigger) = backup_trigger
+    {
         AutoBackupManager::trigger_backup(trigger);
     }
 
-    Ok(())
+    Ok(changes_applied)
 }
 
 async fn restore_original(file_path: &std::path::Path, original_content: &str) -> Result<(), String> {
     fs::write(file_path, original_content).await.stringify_err()
 }
 
-fn is_script_error(err: &str, file_path_str: &str) -> bool {
-    file_path_str.ends_with(".js")
-        || err.contains("Script syntax error")
-        || err.contains("Script must contain a main function")
-        || err.contains("Failed to read script file")
+fn profile_affects_runtime(profiles: &IProfiles, index: &str) -> bool {
+    let Some(current_uid) = profiles.get_current() else {
+        return false;
+    };
+    if current_uid == index {
+        return true;
+    }
+
+    let Ok(item) = profiles.get_item(current_uid) else {
+        return false;
+    };
+    [
+        item.current_merge().map_or("Merge", String::as_str),
+        item.current_script().map_or("Script", String::as_str),
+        item.current_rules().map_or("Rules", String::as_str),
+        item.current_proxies().map_or("Proxies", String::as_str),
+        item.current_groups().map_or("Groups", String::as_str),
+    ]
+    .contains(&index)
 }
 
-async fn handle_merge_file(
+async fn handle_saved_profile_file(
     file_path_str: &str,
     file_path: &std::path::Path,
     original_content: &str,
-) -> CmdResult<bool> {
-    logging!(info, Type::Config, "[cmd配置save] 检测到merge文件，只进行语法验证");
+    is_merge_file: bool,
+    is_script_file: bool,
+    affects_runtime: bool,
+) -> CmdResult<ValidationOutcome> {
+    let (target, file_type) = if is_script_file {
+        (ValidationNoticeTarget::Script, "脚本文件")
+    } else if is_merge_file {
+        (ValidationNoticeTarget::Merge, "合并配置文件")
+    } else {
+        (ValidationNoticeTarget::Runtime, "YAML配置文件")
+    };
 
-    match CoreConfigValidator::validate_config_file(file_path_str, Some(true)).await {
-        Ok((true, _)) => {
-            logging!(info, Type::Config, "[cmd配置save] merge文件语法验证通过");
-            if let Err(e) = CoreManager::global().update_config().await {
-                logging!(warn, Type::Config, "[cmd配置save] 更新整体配置时发生错误: {}", e);
-            } else {
-                handle::Handle::refresh_clash();
-            }
-            Ok(true)
+    logging!(
+        info,
+        Type::Config,
+        "[cmd配置save] 开始{}验证: {}",
+        file_type,
+        file_path_str
+    );
+
+    match CoreConfigValidator::validate_config_file_outcome(file_path_str, Some(is_merge_file)).await {
+        Ok(outcome) if outcome.is_valid() => {
+            logging!(info, Type::Config, "[cmd配置save] 文件验证通过: {}", file_path_str);
         }
-        Ok((false, error_msg)) => {
-            logging!(warn, Type::Config, "[cmd配置save] merge文件语法验证失败: {}", error_msg);
+        Ok(outcome) => {
+            logging!(warn, Type::Config, "[cmd配置save] 文件验证失败: {}", outcome);
             restore_original(file_path, original_content).await?;
-            let result = (false, error_msg.clone());
-            crate::cmd::validate::handle_yaml_validation_notice(&result, "合并配置文件");
-            Ok(false)
+            handle_validation_notice(&outcome, target, file_type);
+            return Ok(outcome);
         }
         Err(e) => {
             logging!(error, Type::Config, "[cmd配置save] 验证过程发生错误: {}", e);
             restore_original(file_path, original_content).await?;
-            Err(e.to_string().into())
+            return Err(e.to_string().into());
         }
     }
-}
 
-async fn handle_full_validation(
-    file_path_str: &str,
-    file_path: &std::path::Path,
-    original_content: &str,
-) -> CmdResult<bool> {
-    match CoreConfigValidator::validate_config_file(file_path_str, None).await {
-        Ok((true, _)) => {
-            logging!(info, Type::Config, "[cmd配置save] 验证成功");
-            Ok(true)
+    if !affects_runtime {
+        return Ok(ValidationOutcome::Valid);
+    }
+
+    logging!(
+        info,
+        Type::Config,
+        "[cmd配置save] 保存项影响当前运行时配置，开始统一应用"
+    );
+    match CoreManager::global().update_config_forced().await {
+        Ok(outcome) if outcome.is_valid() => {
+            handle::Handle::refresh_clash();
+            Ok(ValidationOutcome::Valid)
         }
-        Ok((false, error_msg)) => {
-            logging!(warn, Type::Config, "[cmd配置save] 验证失败: {}", error_msg);
+        Ok(outcome) => {
+            logging!(warn, Type::Config, "[cmd配置save] 运行时配置应用失败: {}", outcome);
             restore_original(file_path, original_content).await?;
-
-            if error_msg.contains("YAML syntax error")
-                || error_msg.contains("Failed to read file:")
-                || (!file_path_str.ends_with(".js") && !is_script_error(&error_msg, file_path_str))
-            {
-                logging!(info, Type::Config, "[cmd配置save] YAML配置文件验证失败，发送通知");
-                let result = (false, error_msg.to_owned());
-                crate::cmd::validate::handle_yaml_validation_notice(&result, "YAML配置文件");
-            } else if is_script_error(&error_msg, file_path_str) {
-                logging!(info, Type::Config, "[cmd配置save] 脚本文件验证失败，发送通知");
-                let result = (false, error_msg.to_owned());
-                crate::cmd::validate::handle_script_validation_notice(&result, "脚本文件");
-            } else {
-                logging!(info, Type::Config, "[cmd配置save] 其他类型验证失败，发送一般通知");
-                handle::Handle::notice_message("config_validate::error", error_msg.to_owned());
-            }
-
-            Ok(false)
+            handle_validation_notice(&outcome, ValidationNoticeTarget::Runtime, "运行时配置");
+            Ok(outcome)
         }
-        Err(e) => {
-            logging!(error, Type::Config, "[cmd配置save] 验证过程发生错误: {}", e);
+        Err(err) => {
+            logging!(error, Type::Config, "[cmd配置save] 运行时配置应用错误: {}", err);
             restore_original(file_path, original_content).await?;
-            Err(e.to_string().into())
+            Err(err.to_string().into())
         }
     }
 }

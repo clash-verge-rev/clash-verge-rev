@@ -226,6 +226,7 @@ export interface TranslationResources {
           home: string
           openFile: string
           select: string
+          shareQrCode: string
           update: string
           updateViaProxy: string
         }
@@ -337,6 +338,9 @@ export interface TranslationResources {
           }
           title: string
         }
+        qrViewer: {
+          title: string
+        }
       }
       page: {
         actions: {
@@ -435,6 +439,7 @@ export interface TranslationResources {
           instruction: string
           minimumNodes: string
           minimumNodesHint: string
+          warning: string
         }
         labels: {
           delayCheckReset: string
@@ -837,6 +842,7 @@ export interface TranslationResources {
             }
             fakeIpFilterMode: string
             fakeIpRange: string
+            fakeIpRange6: string
             fallback: {
               description: string
               label: string

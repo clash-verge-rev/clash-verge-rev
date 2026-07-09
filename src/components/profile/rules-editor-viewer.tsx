@@ -8,7 +8,6 @@ import {
   useSensors,
 } from '@dnd-kit/core'
 import { SortableContext, sortableKeyboardCoordinates } from '@dnd-kit/sortable'
-import MonacoEditor from '@monaco-editor/react'
 import {
   VerticalAlignBottomRounded,
   VerticalAlignTopRounded,
@@ -29,7 +28,6 @@ import {
 } from '@mui/material'
 import { useLockFn } from 'ahooks'
 import yaml from 'js-yaml'
-import type { editor } from 'monaco-editor'
 import {
   startTransition,
   useCallback,
@@ -40,12 +38,18 @@ import {
 } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { BaseSearchBox, Switch, VirtualList } from '@/components/base'
+import {
+  BaseSearchBox,
+  MonacoEditor,
+  Switch,
+  VirtualList,
+} from '@/components/base'
 import { RuleItem } from '@/components/profile/rule-item'
 import { readProfileFile, saveProfileFile } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
 import { useThemeMode } from '@/services/states'
 import type { TranslationKey } from '@/types/generated/i18n-keys'
+import type { MonacoEditorInstance } from '@/types/monaco'
 import getSystem from '@/utils/get-system'
 import { isValidIpCidr } from '@/utils/network'
 
@@ -253,7 +257,7 @@ export const RulesEditorViewer = (props: Props) => {
   const { t } = useTranslation()
   const themeMode = useThemeMode()
 
-  const editorRef = useRef<editor.IStandaloneCodeEditor | null>(null)
+  const editorRef = useRef<MonacoEditorInstance | null>(null)
 
   const [prevData, setPrevData] = useState('')
   const [currData, setCurrData] = useState('')
@@ -272,6 +276,7 @@ export const RulesEditorViewer = (props: Props) => {
   const [prependSeq, setPrependSeq] = useState<string[]>([])
   const [appendSeq, setAppendSeq] = useState<string[]>([])
   const [deleteSeq, setDeleteSeq] = useState<string[]>([])
+  const hasLoadedSeqConfigRef = useRef(false)
 
   const filteredPrependSeq = useMemo(
     () => prependSeq.filter((rule) => match(rule)),
@@ -402,6 +407,7 @@ export const RulesEditorViewer = (props: Props) => {
     }
   }
   const fetchContent = useCallback(async () => {
+    hasLoadedSeqConfigRef.current = false
     const data = await readProfileFile(property)
     const obj = yaml.load(data) as ISeqProfileConfig | null
 
@@ -411,6 +417,7 @@ export const RulesEditorViewer = (props: Props) => {
 
     setPrevData(data)
     setCurrData(data)
+    hasLoadedSeqConfigRef.current = true
   }, [property])
 
   useEffect(() => {
@@ -428,11 +435,19 @@ export const RulesEditorViewer = (props: Props) => {
 
   // 优化：异步处理大数据yaml.dump，避免UI卡死
   useEffect(() => {
+    if (!hasLoadedSeqConfigRef.current) {
+      return
+    }
+
     if (!(prependSeq && appendSeq && deleteSeq)) {
       return
     }
 
     const serialize = () => {
+      if (!hasLoadedSeqConfigRef.current) {
+        return
+      }
+
       try {
         setCurrData(
           yaml.dump(
@@ -565,7 +580,11 @@ export const RulesEditorViewer = (props: Props) => {
 
   const handleSave = useLockFn(async () => {
     try {
-      await saveProfileFile(property, currData)
+      if (!(await saveProfileFile(property, currData))) {
+        await fetchContent()
+        onClose()
+        return
+      }
       showNotice.success('shared.feedback.notifications.saved')
       onSave?.(prevData, currData)
       onClose()
@@ -584,7 +603,7 @@ export const RulesEditorViewer = (props: Props) => {
     >
       <DialogTitle>
         {
-          <Box display="flex" justifyContent="space-between">
+          <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
             {t('rules.modals.editor.title')}
             <Box>
               <Button

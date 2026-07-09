@@ -100,7 +100,7 @@ export function WebUIViewer({ ref }: { ref?: Ref<DialogRef> }) {
     <BaseDialog
       open={open}
       title={
-        <Box display="flex" justifyContent="space-between">
+        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
           {t('settings.modals.webUI.title')}
           <Button
             variant="contained"
@@ -127,7 +127,7 @@ export function WebUIViewer({ ref }: { ref?: Ref<DialogRef> }) {
       {!editing && webUIList.length === 0 && (
         <BaseEmpty
           extra={
-            <Typography mt={2} sx={{ fontSize: '12px' }}>
+            <Typography sx={{ mt: 2, fontSize: '12px' }}>
               {t('settings.modals.webUI.messages.placeholderInstruction')}
             </Typography>
           }

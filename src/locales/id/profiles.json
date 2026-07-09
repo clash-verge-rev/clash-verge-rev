@@ -59,6 +59,7 @@
     "menu": {
       "home": "Home",
       "select": "Pilih",
+      "shareQrCode": "Share QR Code",
       "editInfo": "Ubah Info",
       "editFile": "Ubah Berkas",
       "editRules": "Ubah Aturan",
@@ -177,6 +178,9 @@
     },
     "logViewer": {
       "title": "Konsol Skrip"
+    },
+    "qrViewer": {
+      "title": "Subscription QR Code"
     }
   }
 }

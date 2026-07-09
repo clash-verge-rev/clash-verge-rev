@@ -109,9 +109,41 @@ impl CoreManager {
     pub(super) async fn start_core_by_service(&self) -> Result<()> {
         logging!(info, Type::Core, "Starting core in service mode");
         let config_file = Config::generate_file(crate::config::ConfigType::Run).await?;
-        service::run_core_by_service(&config_file).await?;
-        self.set_running_mode(RunningMode::Service);
-        Ok(())
+
+        // 交接时等待 sidecar 释放 ext-controller 通道。
+        #[cfg(target_os = "windows")]
+        {
+            use crate::constants::timing;
+            let mut last_err = None;
+            for attempt in 0..timing::SERVICE_START_RETRIES {
+                match service::run_core_by_service(&config_file).await {
+                    Ok(()) => {
+                        self.set_running_mode(RunningMode::Service);
+                        return Ok(());
+                    }
+                    Err(e) => {
+                        logging!(
+                            warn,
+                            Type::Core,
+                            "service start attempt {}/{} failed: {}",
+                            attempt + 1,
+                            timing::SERVICE_START_RETRIES,
+                            e
+                        );
+                        last_err = Some(e);
+                        tokio::time::sleep(timing::SERVICE_START_RETRY_DELAY).await;
+                    }
+                }
+            }
+            Err(last_err.unwrap_or_else(|| anyhow::anyhow!("service start failed")))
+        }
+
+        #[cfg(not(target_os = "windows"))]
+        {
+            service::run_core_by_service(&config_file).await?;
+            self.set_running_mode(RunningMode::Service);
+            Ok(())
+        }
     }
 
     pub(super) async fn stop_core_by_service(&self) -> Result<()> {

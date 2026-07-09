@@ -18,11 +18,11 @@ import {
 } from '@mui/material'
 import { useLockFn } from 'ahooks'
 import dayjs from 'dayjs'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { updateProxyProvider } from 'tauri-plugin-mihomo-api'
 
-import { useAppData } from '@/providers/app-data-context'
+import { useAppRefreshers, useProxiesData } from '@/providers/app-data-context'
 import { showNotice } from '@/services/notice-service'
 import parseTraffic from '@/utils/parse-traffic'
 
@@ -48,8 +48,13 @@ const parseExpire = (expire?: number) => {
 export const ProviderButton = () => {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
-  const { proxyProviders, refreshProxy, refreshProxyProviders } = useAppData()
+  const { proxyProviders } = useProxiesData()
+  const { refreshProxy, refreshProxyProviders } = useAppRefreshers()
   const [updating, setUpdating] = useState<Record<string, boolean>>({})
+
+  useEffect(() => {
+    refreshProxyProviders().catch(() => {})
+  }, [refreshProxyProviders])
 
   // 检查是否有提供者
   const hasProviders = Object.keys(proxyProviders || {}).length > 0
@@ -151,9 +156,11 @@ export const ProviderButton = () => {
       <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
         <DialogTitle>
           <Box
-            display="flex"
-            justifyContent="space-between"
-            alignItems="center"
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}
           >
             <Typography variant="h6">
               {t('proxies.page.provider.title')}

@@ -27,11 +27,26 @@ class DelayManager {
   private itemFlushScheduled = false
   private groupFlushScheduled = false
 
+  private scheduleOnNextFrame(run: () => void): void {
+    if (typeof window !== 'undefined') {
+      if (typeof window.requestAnimationFrame === 'function') {
+        window.requestAnimationFrame(run)
+        return
+      }
+      if (typeof window.setTimeout === 'function') {
+        window.setTimeout(run, 0)
+        return
+      }
+    }
+
+    Promise.resolve().then(run)
+  }
+
   private scheduleItemFlush() {
     if (this.itemFlushScheduled) return
     this.itemFlushScheduled = true
 
-    const run = () => {
+    this.scheduleOnNextFrame(() => {
       this.itemFlushScheduled = false
       const updates = this.pendingItemUpdates
       this.pendingItemUpdates = new Map()
@@ -51,27 +66,14 @@ class DelayManager {
           }
         })
       })
-    }
-
-    if (typeof window !== 'undefined') {
-      if (typeof window.requestAnimationFrame === 'function') {
-        window.requestAnimationFrame(run)
-        return
-      }
-      if (typeof window.setTimeout === 'function') {
-        window.setTimeout(run, 0)
-        return
-      }
-    }
-
-    Promise.resolve().then(run)
+    })
   }
 
   private scheduleGroupFlush() {
     if (this.groupFlushScheduled) return
     this.groupFlushScheduled = true
 
-    const run = () => {
+    this.scheduleOnNextFrame(() => {
       this.groupFlushScheduled = false
       const groups = this.pendingGroupUpdates
       this.pendingGroupUpdates = new Set()
@@ -88,20 +90,7 @@ class DelayManager {
           )
         }
       })
-    }
-
-    if (typeof window !== 'undefined') {
-      if (typeof window.requestAnimationFrame === 'function') {
-        window.requestAnimationFrame(run)
-        return
-      }
-      if (typeof window.setTimeout === 'function') {
-        window.setTimeout(run, 0)
-        return
-      }
-    }
-
-    Promise.resolve().then(run)
+    })
   }
 
   private queueGroupNotification(group: string) {

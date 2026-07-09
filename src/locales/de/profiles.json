@@ -59,6 +59,7 @@
     "menu": {
       "home": "Startseite",
       "select": "Verwenden",
+      "shareQrCode": "Share QR Code",
       "editInfo": "Informationen bearbeiten",
       "editFile": "Datei bearbeiten",
       "editRules": "Regeln bearbeiten",
@@ -177,6 +178,9 @@
     },
     "logViewer": {
       "title": "Skript-Konsole-Ausgabe"
+    },
+    "qrViewer": {
+      "title": "Subscription QR Code"
     }
   }
 }

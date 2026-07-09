@@ -59,6 +59,7 @@
     "menu": {
       "home": "Главная",
       "select": "Выбрать",
+      "shareQrCode": "Share QR Code",
       "editInfo": "Изменить информацию",
       "editFile": "Изменить файл",
       "editRules": "Редактировать правила",
@@ -177,6 +178,9 @@
     },
     "logViewer": {
       "title": "Консоль скрипта"
+    },
+    "qrViewer": {
+      "title": "Subscription QR Code"
     }
   }
 }

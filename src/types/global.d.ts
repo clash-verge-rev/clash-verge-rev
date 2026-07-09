@@ -16,6 +16,11 @@ type Platform =
  */
 declare const OS_PLATFORM: Platform
 
+type ValidationOutcome =
+  | { status: 'valid' | 'busy' }
+  | { status: 'invalid'; kind: string; message: string }
+  | { status: 'skipped'; reason: string }
+
 /**
  * Some interface for clash api
  */
@@ -53,6 +58,7 @@ interface IConfigData {
     listen?: string
     'enhanced-mode'?: 'fake-ip' | 'redir-host'
     'fake-ip-range'?: string
+    'fake-ip-range6'?: string
     'fake-ip-filter'?: string[]
     'fake-ip-filter-mode'?: 'blacklist' | 'whitelist'
     'prefer-h3'?: boolean
@@ -137,6 +143,8 @@ interface ITrafficItem {
   up_rate?: number
   down_rate?: number
   last_updated?: number
+  upTotal?: number
+  downTotal?: number
 }
 
 interface IFormattedTrafficData {

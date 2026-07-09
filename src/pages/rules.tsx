@@ -13,11 +13,12 @@ import { ScrollTopButton } from '@/components/layout/scroll-top-button'
 import { ProviderButton } from '@/components/rule/provider-button'
 import RuleItem from '@/components/rule/rule-item'
 import { useVisibility } from '@/hooks/use-visibility'
-import { useAppData } from '@/providers/app-data-context'
+import { useAppRefreshers, useRulesData } from '@/providers/app-data-context'
 
 const RulesPage = () => {
   const { t } = useTranslation()
-  const { rules = [], refreshRules, refreshRuleProviders } = useAppData()
+  const { rules = [] } = useRulesData()
+  const { refreshRules, refreshRuleProviders } = useAppRefreshers()
   const [match, setMatch] = useState(() => (_: string) => true)
   const virtuosoRef = useRef<VirtualListHandle>(null)
   const [showScrollTop, setShowScrollTop] = useState(false)
@@ -63,7 +64,7 @@ const RulesPage = () => {
         overflow: 'auto',
       }}
       header={
-        <Box display="flex" alignItems="center" gap={1}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <ProviderButton />
         </Box>
       }

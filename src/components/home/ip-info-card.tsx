@@ -5,7 +5,6 @@ import {
   VisibilityOutlined,
 } from '@mui/icons-material'
 import { Box, Button, IconButton, Skeleton, Typography } from '@mui/material'
-import { useQuery } from '@tanstack/react-query'
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow'
 import { useEffect } from 'foxact/use-abortable-effect'
 import { useIntersection } from 'foxact/use-intersection'
@@ -21,6 +20,7 @@ import {
 import { useTranslation } from 'react-i18next'
 
 import { getIpInfo } from '@/services/api'
+import { useQuery } from '@/services/query-client'
 
 import { EnhancedCard } from './enhanced-card'
 
@@ -425,7 +425,6 @@ function useIPInfo() {
     queryKey: [IP_INFO_CACHE_KEY],
     queryFn: getIpInfo,
     staleTime: Infinity,
-    gcTime: 60 * 60 * 1000,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
     retry: 1,

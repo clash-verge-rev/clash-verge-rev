@@ -108,6 +108,92 @@
   }
 }
 
+.window-resize-handles {
+  --resize-edge-size: 6px;
+  --resize-corner-size: 12px;
+
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  pointer-events: none;
+
+  .window-resize-handle {
+    position: absolute;
+    pointer-events: auto;
+    touch-action: none;
+
+    &--north,
+    &--south {
+      right: var(--resize-corner-size);
+      left: var(--resize-corner-size);
+      height: var(--resize-edge-size);
+      cursor: ns-resize;
+    }
+
+    &--north {
+      top: 0;
+    }
+
+    &--south {
+      bottom: 0;
+    }
+
+    &--east,
+    &--west {
+      top: var(--resize-corner-size);
+      bottom: var(--resize-corner-size);
+      width: var(--resize-edge-size);
+      cursor: ew-resize;
+    }
+
+    &--east {
+      right: 0;
+    }
+
+    &--west {
+      left: 0;
+    }
+
+    &--north-east,
+    &--north-west,
+    &--south-east,
+    &--south-west {
+      width: var(--resize-corner-size);
+      height: var(--resize-corner-size);
+    }
+
+    &--north-east,
+    &--south-west {
+      cursor: nesw-resize;
+    }
+
+    &--north-west,
+    &--south-east {
+      cursor: nwse-resize;
+    }
+
+    &--north-east,
+    &--north-west {
+      top: 0;
+    }
+
+    &--south-east,
+    &--south-west {
+      bottom: 0;
+    }
+
+    &--north-east,
+    &--south-east {
+      right: 0;
+    }
+
+    &--north-west,
+    &--south-west {
+      left: 0;
+    }
+  }
+}
+
 .linux,
 .windows,
 .unknown {
@@ -120,6 +206,11 @@
       box-sizing: border-box;
       height: 36px;
       border-bottom: 1px solid var(--divider-color);
+
+      &-drag-region {
+        align-self: stretch;
+        flex: 1 1 auto;
+      }
     }
 
     .layout-content__left .the-logo {
@@ -148,6 +239,12 @@
       box-sizing: border-box;
       height: 36px;
       border-bottom: 1px solid var(--divider-color);
+
+      &-drag-region {
+        align-self: stretch;
+        flex: 1 1 auto;
+        order: 1;
+      }
     }
 
     .layout-content__left {

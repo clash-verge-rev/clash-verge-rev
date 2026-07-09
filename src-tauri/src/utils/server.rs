@@ -82,16 +82,14 @@ pub fn embed_server() {
         let verge_config = Config::verge().await;
         let clash_config = Config::clash().await;
 
-        let pac_content = verge_config
-            .data_arc()
-            .pac_file_content
-            .clone()
-            .unwrap_or_else(|| DEFAULT_PAC.into());
+        let verge_data = verge_config.data_arc();
+        let clash_data = clash_config.data_arc();
 
-        let pac_port = verge_config
-            .data_arc()
+        let pac_content = verge_data.pac_file_content.as_deref().unwrap_or(DEFAULT_PAC);
+
+        let pac_port = verge_data
             .verge_mixed_port
-            .unwrap_or_else(|| clash_config.data_arc().get_mixed_port());
+            .unwrap_or_else(|| clash_data.get_mixed_port());
         let processed_content = pac_content.replace("%mixed-port%", &format!("{pac_port}"));
         Ok::<_, warp::Rejection>(
             warp::http::Response::builder()

@@ -49,7 +49,11 @@ export const WebUIItem = (props: Props) => {
   if (editing || onlyEdit) {
     return (
       <>
-        <Stack spacing={0.75} direction="row" mt={1} mb={1} alignItems="center">
+        <Stack
+          spacing={0.75}
+          direction="row"
+          sx={{ mt: 1, mb: 1, alignItems: 'center' }}
+        >
           <TextField
             autoComplete="new-password"
             fullWidth
@@ -105,13 +109,17 @@ export const WebUIItem = (props: Props) => {
 
   return (
     <>
-      <Stack spacing={0.75} direction="row" alignItems="center" mt={1} mb={1}>
+      <Stack
+        spacing={0.75}
+        direction="row"
+        sx={{ alignItems: 'center', mt: 1, mb: 1 }}
+      >
         <Typography
           component="div"
-          width="100%"
           title={value}
           color={value ? 'text.primary' : 'text.secondary'}
           sx={({ palette }) => ({
+            width: '100%',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             '> .placeholder': {

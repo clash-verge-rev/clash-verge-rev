@@ -1,15 +1,34 @@
 use super::{PrfOption, prfitem::PrfItem};
-use crate::utils::{
-    dirs::{self, PathBufExec as _},
-    help,
+use crate::{
+    core::handle,
+    utils::{
+        dirs::{self, PathBufExec as _},
+        help,
+    },
 };
 use anyhow::{Context as _, Result, bail};
 use clash_verge_logging::{Type, logging};
+use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
 use serde_yaml_ng::Mapping;
 use smartstring::alias::String;
-use std::collections::HashSet;
-use tokio::fs;
+use std::{collections::HashSet, sync::LazyLock, time::Duration};
+use tokio::{fs, task::JoinHandle};
+
+/// Regex to check profile file names, eg.
+/// R12345678.yaml (remote)
+/// L12345678.yaml (local)
+/// m12345678.yaml (merge)
+/// s12345678.js (script)
+/// r12345678.yaml (rules)
+/// p12345678.yaml (proxies)
+/// g12345678.yaml (groups)
+#[allow(clippy::unwrap_used)]
+static REGEX_PROFILE_FILE: LazyLock<regex::Regex> =
+    LazyLock::new(|| regex::Regex::new(r"^(?:[RLmrpg][a-zA-Z0-9]+\.yaml|s[a-zA-Z0-9]+\.js)$").unwrap());
+
+// activate selected nodes task handle
+static ACTIVATE_SELECTED_TASK: LazyLock<Mutex<Option<JoinHandle<()>>>> = LazyLock::new(|| Mutex::new(None));
 
 /// Define the `profiles.yaml` schema
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
@@ -238,7 +257,7 @@ impl IProfiles {
                     if let Some(file_data) = item.file_data.take() {
                         let file = each.file.take();
                         let file =
-                            file.unwrap_or_else(|| item.file.take().unwrap_or_else(|| format!("{}.yaml", &uid).into()));
+                            file.unwrap_or_else(|| item.file.take().unwrap_or_else(|| format!("{}.yaml", uid).into()));
 
                         // the file must exists
                         each.file = Some(file.clone());
@@ -501,27 +520,7 @@ impl IProfiles {
 
     /// 检查文件名是否符合 profile 文件的命名规则
     fn is_profile_file(filename: &str) -> bool {
-        // 匹配各种 profile 文件格式
-        // R12345678.yaml (remote)
-        // L12345678.yaml (local)
-        // m12345678.yaml (merge)
-        // s12345678.js (script)
-        // r12345678.yaml (rules)
-        // p12345678.yaml (proxies)
-        // g12345678.yaml (groups)
-
-        let patterns = [
-            r"^[RL][a-zA-Z0-9]+\.yaml$",  // Remote/Local profiles
-            r"^m[a-zA-Z0-9]+\.yaml$",     // Merge files
-            r"^s[a-zA-Z0-9]+\.js$",       // Script files
-            r"^[rpg][a-zA-Z0-9]+\.yaml$", // Rules/Proxies/Groups files
-        ];
-
-        patterns.iter().any(|pattern| {
-            regex::Regex::new(pattern)
-                .map(|re| re.is_match(filename))
-                .unwrap_or(false)
-        })
+        REGEX_PROFILE_FILE.is_match(filename)
     }
 }
 
@@ -591,4 +590,91 @@ pub async fn profiles_draft_update_item_safe(index: &String, item: &mut PrfItem)
             Ok((profiles, ()))
         })
         .await
+}
+
+pub async fn activate_selected_nodes() -> Result<()> {
+    logging!(info, Type::Config, "starting activating selected nodes");
+    let value = ACTIVATE_SELECTED_TASK.lock().take();
+    if let Some(handle) = value {
+        logging!(info, Type::Config, "aborting previous worker");
+        handle.abort();
+    }
+    let profiles = Config::profiles().await.latest_arc();
+    let Some(current) = profiles.get_current() else {
+        bail!("no current profile running");
+    };
+    let profile = profiles
+        .get_item(current)
+        .context("failed to get current profile")?
+        .clone();
+
+    let handle = tokio::spawn(async move {
+        let mihomo = handle::Handle::mihomo().await;
+        // check mihomo is running
+        let mut is_mihomo_ready = false;
+        for _ in 0..10 {
+            if mihomo.get_version().await.is_ok() {
+                logging!(debug, Type::Config, "check mihomo api success");
+                is_mihomo_ready = true;
+                break;
+            }
+            tokio::time::sleep(Duration::from_secs(1)).await;
+        }
+
+        if !is_mihomo_ready {
+            logging!(
+                error,
+                Type::Config,
+                "check that the mihomo api reaches the maximum number of retries, maybe mihomo core is not running"
+            );
+            return;
+        }
+
+        if let Some(selected) = profile.selected.as_ref() {
+            logging!(debug, Type::Config, "selected nodes: {selected:?}");
+            for selected_item in selected {
+                let mut retry = 10;
+                if let Some(group_name) = selected_item.name.as_ref()
+                    && let Some(node) = selected_item.now.as_ref()
+                {
+                    while retry >= 0 {
+                        logging!(debug, Type::Config, "check node[{node}] exists");
+                        if mihomo.get_proxy_by_name(node).await.is_ok() {
+                            logging!(debug, Type::Config, "node[{node}] exists");
+                            break;
+                        }
+                        retry -= 1;
+                        tokio::time::sleep(Duration::from_secs(1)).await;
+                    }
+                    if retry < 0 {
+                        logging!(
+                            error,
+                            Type::Config,
+                            "Failed to select node for proxy: {group_name}, node: {node}, because the node [{node}] does not exist"
+                        );
+                        continue;
+                    }
+                    if mihomo.select_node_for_group(group_name, node).await.is_err() {
+                        logging!(
+                            error,
+                            Type::Config,
+                            "Failed to select node for proxy: {group_name}, node: {node}"
+                        );
+                    } else {
+                        logging!(
+                            info,
+                            Type::Config,
+                            "Selected node for proxy: {group_name}, node: {node}"
+                        );
+                    }
+                }
+            }
+            // refresh clash
+            handle::Handle::refresh_clash();
+        }
+        logging!(info, Type::Config, "activating selected nodes done!");
+        *ACTIVATE_SELECTED_TASK.lock() = None;
+    });
+    *ACTIVATE_SELECTED_TASK.lock() = Some(handle);
+    Ok(())
 }

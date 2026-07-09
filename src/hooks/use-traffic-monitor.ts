@@ -8,6 +8,7 @@ import {
 } from 'react'
 import { Traffic } from 'tauri-plugin-mihomo-api'
 
+import { useVisibility } from '@/hooks/use-visibility'
 import { debugLog } from '@/utils/debug'
 import { TrafficDataSampler, formatTrafficName } from '@/utils/traffic-sampler'
 
@@ -17,7 +18,9 @@ class ReferenceCounter {
   private callbacks = new Set<() => void>()
 
   private notify() {
-    this.callbacks.forEach((cb) => cb())
+    this.callbacks.forEach((cb) => {
+      cb()
+    })
   }
 
   increment(): () => void {
@@ -48,7 +51,7 @@ const WORKER_CONFIG = {
   rawDataMinutes: 10,
   compressedDataMinutes: 60,
   compressionRatio: 5,
-  snapshotIntervalMs: 100,
+  snapshotIntervalMs: 200,
   defaultRangeMinutes: 10,
 }
 
@@ -199,7 +202,9 @@ class TrafficWorkerClient {
         ) => {
           const message = event.data
           if (message.type === 'snapshot') {
-            this.listeners.forEach((listener) => listener(message))
+            this.listeners.forEach((listener) => {
+              listener(message)
+            })
           }
         }
 
@@ -228,9 +233,11 @@ class TrafficWorkerClient {
   }
 
   private startInline(initMessage: TrafficWorkerRequestMessage) {
-    this.inlineMonitor = new InlineTrafficMonitor((snapshot) =>
-      this.listeners.forEach((listener) => listener(snapshot)),
-    )
+    this.inlineMonitor = new InlineTrafficMonitor((snapshot) => {
+      this.listeners.forEach((listener) => {
+        listener(snapshot)
+      })
+    })
     this.mode = 'inline'
     this.ready = true
     this.post(initMessage)
@@ -347,6 +354,7 @@ export const useTrafficMonitorEnhanced = (options?: {
 }) => {
   const subscribeToSnapshots = options?.subscribe ?? true
   const enabled = options?.enabled ?? true
+  const isVisible = useVisibility()
   const [latestSnapshot, setLatestSnapshot] = useState<{
     availableDataPoints: ITrafficDataPoint[]
     samplerStats: ISamplerStats
@@ -404,14 +412,14 @@ export const useTrafficMonitorEnhanced = (options?: {
 
   // Periodically refresh "now" so idle streams age out of the selected window when subscribed
   useEffect(() => {
-    if (!enabled || !subscribeToSnapshots) return
+    if (!enabled || !subscribeToSnapshots || !isVisible) return
 
     const timer = window.setInterval(() => {
       setNow(Date.now())
     }, 1000)
 
     return () => window.clearInterval(timer)
-  }, [enabled, subscribeToSnapshots])
+  }, [enabled, subscribeToSnapshots, isVisible])
 
   // 添加流量数据
   const appendData = useCallback(

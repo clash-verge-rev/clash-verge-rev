@@ -2,9 +2,9 @@ import {
   RestartAltRounded,
   SwitchAccessShortcutRounded,
 } from '@mui/icons-material'
-import { LoadingButton } from '@mui/lab'
 import {
   Box,
+  Button,
   Chip,
   CircularProgress,
   List,
@@ -70,14 +70,13 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
       }
 
       mutateVerge()
-      setTimeout(async () => {
-        invalidateClashConfig()
-        mutateVersion()
-        setChangingCore(null)
-      }, 500)
+      await new Promise((resolve) => setTimeout(resolve, 500))
+      invalidateClashConfig()
+      mutateVersion()
     } catch (err) {
-      setChangingCore(null)
       showNotice.error(err)
+    } finally {
+      setChangingCore(null)
     }
   })
 
@@ -100,6 +99,7 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
       setUpgrading(true)
       await upgradeCore()
       setUpgrading(false)
+      mutateVersion()
       showNotice.success(
         t('settings.feedback.notifications.clash.versionUpdated'),
       )
@@ -117,10 +117,10 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
     <BaseDialog
       open={open}
       title={
-        <Box display="flex" justifyContent="space-between">
+        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
           {t('settings.sections.clash.form.fields.clashCore')}
           <Box>
-            <LoadingButton
+            <Button
               variant="contained"
               size="small"
               startIcon={<SwitchAccessShortcutRounded />}
@@ -131,8 +131,8 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
               onClick={onUpgrade}
             >
               {t('shared.actions.upgrade')}
-            </LoadingButton>
-            <LoadingButton
+            </Button>
+            <Button
               variant="contained"
               size="small"
               startIcon={<RestartAltRounded />}
@@ -142,7 +142,7 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
               onClick={onRestart}
             >
               {t('shared.actions.restart')}
-            </LoadingButton>
+            </Button>
           </Box>
         </Box>
       }

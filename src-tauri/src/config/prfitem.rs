@@ -297,7 +297,7 @@ impl PrfItem {
             Ok(r) => r,
             Err(e) => {
                 tokio::time::sleep(Duration::from_millis(100)).await;
-                bail!("failed to fetch remote profile: {}", e);
+                return Err(e).context("failed to fetch remote profile");
             }
         };
 
@@ -591,9 +591,9 @@ fn fix_dirty_url(input: &str) -> Result<Url> {
         Ok(u) => u,
         Err(e) => {
             return Err(anyhow::anyhow!(
-                "failed to parse deep link url: {:?}, input: {:?}",
+                "failed to parse subscription URL: {:?}, input: {}",
                 e,
-                input
+                help::mask_url(input)
             ));
         }
     };

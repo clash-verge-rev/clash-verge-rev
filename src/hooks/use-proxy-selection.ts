@@ -104,29 +104,14 @@ export const useProxySelection = (options: ProxySelectionOptions = {}) => {
           config.autoCloseConnection &&
           previousProxy
         ) {
-          setTimeout(() => cleanupConnections(previousProxy), 0)
+          void cleanupConnections(previousProxy)
         }
       } catch (error) {
         console.error(
           `[ProxySelection] 代理切换失败: ${groupName} -> ${proxyName}`,
           error,
         )
-
-        try {
-          await selectNodeForGroup(groupName, proxyName)
-          onSuccess?.()
-          syncTraySelection()
-          persistSelection(groupName, proxyName, skipConfigSave)
-          debugLog(
-            `[ProxySelection] 代理切换回退成功: ${groupName} -> ${proxyName}`,
-          )
-        } catch (fallbackError) {
-          console.error(
-            `[ProxySelection] 代理切换回退也失败: ${groupName} -> ${proxyName}`,
-            fallbackError,
-          )
-          onError?.(fallbackError)
-        }
+        onError?.(error)
       }
     },
     [config, onError, onSuccess, persistSelection, syncTraySelection],

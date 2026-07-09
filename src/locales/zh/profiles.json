@@ -59,6 +59,7 @@
     "menu": {
       "home": "首 页",
       "select": "使用",
+      "shareQrCode": "分享二维码",
       "editInfo": "编辑信息",
       "editFile": "编辑文件",
       "editRules": "编辑规则",
@@ -177,6 +178,9 @@
     },
     "logViewer": {
       "title": "脚本控制台输出"
+    },
+    "qrViewer": {
+      "title": "订阅二维码"
     }
   }
 }

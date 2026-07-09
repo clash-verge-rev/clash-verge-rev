@@ -3,8 +3,10 @@ mod tests {
     use anyhow::anyhow;
     use clash_verge_draft::Draft;
     use std::future::Future;
-    use std::pin::Pin;
-    use std::task::{Context, Poll, RawWaker, RawWakerVTable, Waker};
+    use std::sync::Arc;
+    use std::time::Duration;
+    use tokio::sync::Notify;
+    use tokio::time::sleep;
 
     #[derive(Clone, Debug, Default, PartialEq)]
     struct IVerge {
@@ -12,69 +14,48 @@ mod tests {
         enable_tun_mode: Option<bool>,
     }
 
-    // Minimal single-threaded executor for immediately-ready futures
-    fn block_on_ready<F: Future>(fut: F) -> F::Output {
-        fn no_op_raw_waker() -> RawWaker {
-            fn clone(_: *const ()) -> RawWaker {
-                no_op_raw_waker()
-            }
-            fn wake(_: *const ()) {}
-            fn wake_by_ref(_: *const ()) {}
-            fn drop(_: *const ()) {}
-            static VTABLE: RawWakerVTable = RawWakerVTable::new(clone, wake, wake_by_ref, drop);
-            RawWaker::new(std::ptr::null(), &VTABLE)
-        }
+    const STRESS_LEVELS: [usize; 6] = [8, 16, 32, 64, 128, 256];
 
-        let waker = unsafe { Waker::from_raw(no_op_raw_waker()) };
-        let mut cx = Context::from_waker(&waker);
-        let mut fut = Box::pin(fut);
-        loop {
-            match Pin::as_mut(&mut fut).poll(&mut cx) {
-                Poll::Ready(v) => return v,
-                Poll::Pending => std::thread::yield_now(),
-            }
+    fn verge(enable_auto_launch: bool, enable_tun_mode: bool) -> IVerge {
+        IVerge {
+            enable_auto_launch: Some(enable_auto_launch),
+            enable_tun_mode: Some(enable_tun_mode),
         }
+    }
+
+    fn block_on_ready<F: Future>(fut: F) -> F::Output {
+        tokio::runtime::Runtime::new().unwrap().block_on(fut)
     }
 
     #[test]
     fn test_draft_basic_flow() {
-        let verge = IVerge {
-            enable_auto_launch: Some(true),
-            enable_tun_mode: Some(false),
-        };
-        let draft = Draft::new(verge);
+        let draft = Draft::new(verge(true, false));
 
-        // 读取正式数据（data_arc）
         {
             let data = draft.data_arc();
             assert_eq!(data.enable_auto_launch, Some(true));
             assert_eq!(data.enable_tun_mode, Some(false));
         }
 
-        // 修改草稿（使用 edit_draft）
         draft.edit_draft(|d| {
             d.enable_auto_launch = Some(false);
             d.enable_tun_mode = Some(true);
         });
 
-        // 正式数据未变
         {
             let data = draft.data_arc();
             assert_eq!(data.enable_auto_launch, Some(true));
             assert_eq!(data.enable_tun_mode, Some(false));
         }
 
-        // 草稿已变
         {
             let latest = draft.latest_arc();
             assert_eq!(latest.enable_auto_launch, Some(false));
             assert_eq!(latest.enable_tun_mode, Some(true));
         }
 
-        // 提交草稿
         draft.apply();
 
-        // 正式数据已更新
         {
             let data = draft.data_arc();
             assert_eq!(data.enable_auto_launch, Some(false));
@@ -91,18 +72,13 @@ mod tests {
             assert_eq!(latest.enable_tun_mode, Some(true));
         }
 
-        // 丢弃草稿
         draft.discard();
 
-        // 丢弃后再次创建草稿，会从已提交重新 clone
         {
             draft.edit_draft(|d| {
-                // 原 committed 是 enable_auto_launch = Some(false)
                 assert_eq!(d.enable_auto_launch, Some(false));
-                // 再修改一下
                 d.enable_tun_mode = Some(false);
             });
-            // 草稿中值已修改，但正式数据仍是 apply 后的值
             let data = draft.data_arc();
             assert_eq!(data.enable_auto_launch, Some(false));
             assert_eq!(data.enable_tun_mode, Some(true));
@@ -111,41 +87,29 @@ mod tests {
 
     #[test]
     fn test_arc_pointer_behavior_on_edit_and_apply() {
-        let draft = Draft::new(IVerge {
-            enable_auto_launch: Some(true),
-            enable_tun_mode: Some(false),
-        });
+        let draft = Draft::new(verge(true, false));
 
-        // 初始 latest == committed
         let committed = draft.data_arc();
         let latest = draft.latest_arc();
-        assert!(std::sync::Arc::ptr_eq(&committed, &latest));
+        assert!(Arc::ptr_eq(&committed, &latest));
 
-        // 第一次 edit：由于与 committed 共享，Arc::make_mut 会克隆
         draft.edit_draft(|d| d.enable_tun_mode = Some(true));
         let committed_after_first_edit = draft.data_arc();
         let draft_after_first_edit = draft.latest_arc();
-        assert!(!std::sync::Arc::ptr_eq(
-            &committed_after_first_edit,
-            &draft_after_first_edit
-        ));
-        // 提交会把 committed 指向草稿的 Arc
-        let prev_draft_ptr = std::sync::Arc::as_ptr(&draft_after_first_edit);
+        assert!(!Arc::ptr_eq(&committed_after_first_edit, &draft_after_first_edit));
+        let prev_draft_ptr = Arc::as_ptr(&draft_after_first_edit);
         draft.apply();
         let committed_after_apply = draft.data_arc();
-        assert_eq!(std::sync::Arc::as_ptr(&committed_after_apply), prev_draft_ptr);
+        assert_eq!(Arc::as_ptr(&committed_after_apply), prev_draft_ptr);
 
-        // 第二次编辑：此时草稿唯一持有（无其它引用），不应再克隆
-        // 获取草稿 Arc 的指针并立即丢弃本地引用，避免增加 strong_count
         draft.edit_draft(|d| d.enable_auto_launch = Some(false));
         let latest1 = draft.latest_arc();
-        let latest1_ptr = std::sync::Arc::as_ptr(&latest1);
-        drop(latest1); // 确保只有 Draft 内部持有草稿 Arc
+        let latest1_ptr = Arc::as_ptr(&latest1);
+        drop(latest1);
 
-        // 再次编辑（unique，Arc::make_mut 不应克隆）
         draft.edit_draft(|d| d.enable_tun_mode = Some(false));
         let latest2 = draft.latest_arc();
-        let latest2_ptr = std::sync::Arc::as_ptr(&latest2);
+        let latest2_ptr = Arc::as_ptr(&latest2);
 
         assert_eq!(latest1_ptr, latest2_ptr, "Unique edit should not clone Arc");
         assert_eq!(latest2.enable_auto_launch, Some(false));
@@ -154,22 +118,17 @@ mod tests {
 
     #[test]
     fn test_discard_restores_latest_to_committed() {
-        let draft = Draft::new(IVerge {
-            enable_auto_launch: Some(false),
-            enable_tun_mode: Some(false),
-        });
+        let draft = Draft::new(verge(false, false));
 
-        // 创建草稿并修改
         draft.edit_draft(|d| d.enable_auto_launch = Some(true));
         let committed = draft.data_arc();
         let latest = draft.latest_arc();
-        assert!(!std::sync::Arc::ptr_eq(&committed, &latest));
+        assert!(!Arc::ptr_eq(&committed, &latest));
 
-        // 丢弃草稿后 latest 应回到 committed
         draft.discard();
         let committed2 = draft.data_arc();
         let latest2 = draft.latest_arc();
-        assert!(std::sync::Arc::ptr_eq(&committed2, &latest2));
+        assert!(Arc::ptr_eq(&committed2, &latest2));
         assert_eq!(latest2.enable_auto_launch, Some(false));
     }
 
@@ -187,23 +146,13 @@ mod tests {
 
     #[test]
     fn test_with_data_modify_ok_and_replaces_committed() {
-        let draft = Draft::new(IVerge {
-            enable_auto_launch: Some(false),
-            enable_tun_mode: Some(false),
-        });
+        let draft = Draft::new(verge(false, false));
 
-        // 使用 with_data_modify 异步（立即就绪）地更新 committed
         let res = block_on_ready(draft.with_data_modify(|mut v| async move {
             v.enable_auto_launch = Some(true);
             Ok((v, "done"))
         }));
-        assert_eq!(
-            {
-                #[allow(clippy::unwrap_used)]
-                res.unwrap()
-            },
-            "done"
-        );
+        assert_eq!(res.unwrap(), "done");
 
         let committed = draft.data_arc();
         assert_eq!(committed.enable_auto_launch, Some(true));
@@ -211,7 +160,20 @@ mod tests {
     }
 
     #[test]
-    fn test_with_data_modify_error_propagation() {
+    fn test_with_data_modify_keeps_boxed_data_shape() {
+        let draft = Draft::new(Box::new(verge(false, false)));
+
+        block_on_ready(draft.with_data_modify(|mut v| async move {
+            v.enable_auto_launch = Some(true);
+            Ok((v, ()))
+        }))
+        .unwrap();
+
+        assert_eq!(draft.data_arc().enable_auto_launch, Some(true));
+    }
+
+    #[test]
+    fn test_with_data_modify_error_releases_permit() {
         let draft = Draft::new(IVerge::default());
 
         #[allow(clippy::unwrap_used)]
@@ -219,42 +181,122 @@ mod tests {
             .unwrap_err();
 
         assert_eq!(format!("{err}"), "boom");
+
+        #[allow(clippy::unwrap_used)]
+        block_on_ready(draft.with_data_modify(|mut v| async move {
+            v.enable_auto_launch = Some(true);
+            Ok((v, ()))
+        }))
+        .unwrap();
+
+        assert_eq!(draft.data_arc().enable_auto_launch, Some(true));
+    }
+
+    #[test]
+    fn test_with_data_modify_serialized_under_stress_levels() {
+        for task_count in STRESS_LEVELS {
+            run_with_data_modify_stress(task_count, Duration::from_millis(1));
+        }
+    }
+
+    #[test]
+    fn test_with_data_modify_keeps_apply_conflict_detection() {
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        let draft = Arc::new(Draft::new(verge(false, false)));
+        let started = Arc::new(Notify::new());
+        let finish = Arc::new(Notify::new());
+
+        rt.block_on(async {
+            let task = {
+                let draft = Arc::clone(&draft);
+                let started = Arc::clone(&started);
+                let finish = Arc::clone(&finish);
+                tokio::spawn(async move {
+                    draft
+                        .with_data_modify(|mut v| async move {
+                            started.notify_one();
+                            finish.notified().await;
+                            v.enable_auto_launch = Some(true);
+                            Ok((v, ()))
+                        })
+                        .await
+                })
+            };
+
+            started.notified().await;
+            draft.edit_draft(|d| d.enable_tun_mode = Some(true));
+            draft.apply();
+            finish.notify_one();
+
+            let err = task.await.expect("task panicked").unwrap_err();
+            assert_eq!(
+                format!("{err}"),
+                "Optimistic lock failed: Committed data has changed during async operation"
+            );
+        });
+
+        let committed = draft.data_arc();
+        assert_eq!(committed.enable_auto_launch, Some(false));
+        assert_eq!(committed.enable_tun_mode, Some(true));
+    }
+
+    fn run_with_data_modify_stress(task_count: usize, delay: Duration) {
+        let rt = tokio::runtime::Runtime::new().unwrap();
+        let draft = Arc::new(Draft::new(verge(false, false)));
+
+        rt.block_on(async {
+            let mut handles = Vec::with_capacity(task_count);
+            for _ in 0..task_count {
+                let draft = Arc::clone(&draft);
+                handles.push(tokio::spawn(async move {
+                    draft
+                        .with_data_modify(|mut v| async move {
+                            if !delay.is_zero() {
+                                sleep(delay).await;
+                            }
+                            v.enable_auto_launch = Some(!v.enable_auto_launch.unwrap_or(false));
+                            Ok((v, ()))
+                        })
+                        .await
+                }));
+            }
+
+            for handle in handles {
+                handle.await.expect("task panicked").expect("with_data_modify failed");
+            }
+
+            Ok::<(), anyhow::Error>(())
+        })
+        .unwrap();
     }
 
     #[test]
     fn test_with_data_modify_does_not_touch_existing_draft() {
-        let draft = Draft::new(IVerge {
-            enable_auto_launch: Some(false),
-            enable_tun_mode: Some(false),
-        });
+        let draft = Draft::new(verge(false, false));
 
-        // 创建草稿并修改
         draft.edit_draft(|d| {
             d.enable_auto_launch = Some(true);
             d.enable_tun_mode = Some(true);
         });
         let draft_before = draft.latest_arc();
-        let draft_before_ptr = std::sync::Arc::as_ptr(&draft_before);
+        let draft_before_ptr = Arc::as_ptr(&draft_before);
 
-        // 同时通过 with_data_modify 修改 committed
         #[allow(clippy::unwrap_used)]
         block_on_ready(draft.with_data_modify(|mut v| async move {
-            v.enable_auto_launch = Some(false); // 与草稿不同
+            v.enable_auto_launch = Some(false);
             Ok((v, ()))
         }))
         .unwrap();
 
-        // 草稿应保持不变
         let draft_after = draft.latest_arc();
         assert_eq!(
-            std::sync::Arc::as_ptr(&draft_after),
+            Arc::as_ptr(&draft_after),
             draft_before_ptr,
             "Existing draft should not be replaced by with_data_modify"
         );
         assert_eq!(draft_after.enable_auto_launch, Some(true));
         assert_eq!(draft_after.enable_tun_mode, Some(true));
 
-        // 丢弃草稿后 latest == committed，且 committed 为异步修改结果
         draft.discard();
         let latest = draft.latest_arc();
         assert_eq!(latest.enable_auto_launch, Some(false));

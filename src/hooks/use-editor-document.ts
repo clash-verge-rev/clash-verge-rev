@@ -20,6 +20,28 @@ export const useEditorDocument = ({ open, load }: UseEditorDocumentOptions) => {
     setLoading(true)
   }, [])
 
+  const applyLoadedValue = useCallback(
+    (nextValue: string | null | undefined) => {
+      const normalized = nextValue ?? ''
+      setValue(normalized)
+      setSavedValue(normalized)
+      return normalized
+    },
+    [],
+  )
+
+  const reload = useCallback(async () => {
+    setLoading(true)
+    try {
+      return applyLoadedValue(await load())
+    } catch (error) {
+      showNotice.error(error)
+      throw error
+    } finally {
+      setLoading(false)
+    }
+  }, [applyLoadedValue, load])
+
   useEffect(
     (signal) => {
       resetDocumentState()
@@ -29,10 +51,7 @@ export const useEditorDocument = ({ open, load }: UseEditorDocumentOptions) => {
       load()
         .then((nextValue) => {
           if (signal.aborted) return
-
-          const normalized = nextValue ?? ''
-          setValue(normalized)
-          setSavedValue(normalized)
+          applyLoadedValue(nextValue)
         })
         .catch((error) => {
           if (!signal.aborted) showNotice.error(error)
@@ -41,7 +60,7 @@ export const useEditorDocument = ({ open, load }: UseEditorDocumentOptions) => {
           if (!signal.aborted) setLoading(false)
         })
     },
-    [load, open, resetDocumentState],
+    [applyLoadedValue, load, open, resetDocumentState],
   )
 
   const markSaved = useCallback((nextValue: string) => {
@@ -57,5 +76,6 @@ export const useEditorDocument = ({ open, load }: UseEditorDocumentOptions) => {
     loading,
     dirty,
     markSaved,
+    reload,
   }
 }

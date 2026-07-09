@@ -70,11 +70,11 @@ jobs:
 
       - name: Checkout Repository
         if: github.event.inputs[matrix.input] == 'true'
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Install Rust Stable
         if: github.event.inputs[matrix.input] == 'true'
-        uses: dtolnay/rust-toolchain@1.91.0
+        uses: dtolnay/rust-toolchain@1.95.0
 
       - name: Rust Cache
         uses: Swatinem/rust-cache@v2
@@ -103,11 +103,11 @@ jobs:
         if: github.event.inputs[matrix.input] == 'true'
         uses: actions/setup-node@v6
         with:
-          node-version: '24.14.1'
+          node-version: '24.18.0'
           cache: 'pnpm'
 
       - name: Pnpm Cache
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ~/.pnpm-store
           key: 'pnpm-shared-stable-${{ matrix.os }}-${{ matrix.target }}'
@@ -129,13 +129,13 @@ jobs:
         if: github.event.inputs[matrix.input] == 'true'
         run: |
           # Ensure cross target is installed for the pinned toolchain; fallback without explicit toolchain if needed
-          rustup target add ${{ matrix.target }} --toolchain 1.91.0 || rustup target add ${{ matrix.target }}
+          rustup target add ${{ matrix.target }} --toolchain 1.95.0 || rustup target add ${{ matrix.target }}
           rustup target list --installed
           echo "Rust target ${{ matrix.target }} installed."
 
       - name: Tauri build
         if: github.event.inputs[matrix.input] == 'true'
-        uses: tauri-apps/tauri-action@v0
+        uses: tauri-apps/tauri-action@v1
         env:
           NODE_OPTIONS: '--max_old_space_size=4096'
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

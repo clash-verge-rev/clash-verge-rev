@@ -5,13 +5,20 @@ import {
 } from '@mui/icons-material'
 import { Box, Paper, Stack, Typography } from '@mui/material'
 import { useLockFn } from 'ahooks'
-import { useMemo } from 'react'
+import { type ReactNode, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { closeAllConnections } from 'tauri-plugin-mihomo-api'
+import { type BaseConfig, closeAllConnections } from 'tauri-plugin-mihomo-api'
 
+import { useClashMode, useRuntimeConfig } from '@/hooks/use-clash'
 import { useVerge } from '@/hooks/use-verge'
-import { useAppData } from '@/providers/app-data-context'
+import {
+  useAppRefreshers,
+  useClashConfigData,
+  useCoreDataStatus,
+} from '@/providers/app-data-context'
 import { patchClashMode } from '@/services/cmds'
+import { showNotice } from '@/services/notice-service'
+import { setCacheData } from '@/services/query-client'
 import type { TranslationKey } from '@/types/generated/i18n-keys'
 
 const CLASH_MODES = ['rule', 'global', 'direct'] as const
@@ -19,6 +26,11 @@ type ClashMode = (typeof CLASH_MODES)[number]
 
 const isClashMode = (mode: string): mode is ClashMode =>
   (CLASH_MODES as readonly string[]).includes(mode)
+
+const toClashMode = (mode?: string | null) => {
+  const normalized = mode?.toLowerCase()
+  return normalized && isClashMode(normalized) ? normalized : undefined
+}
 
 const MODE_META: Record<
   ClashMode,
@@ -38,55 +50,76 @@ const MODE_META: Record<
   },
 }
 
+const MODE_ICONS: Record<ClashMode, ReactNode> = {
+  rule: <MultipleStopRounded fontSize="small" />,
+  global: <LanguageRounded fontSize="small" />,
+  direct: <DirectionsRounded fontSize="small" />,
+}
+
 export const ClashModeCard = () => {
   const { t } = useTranslation()
   const { verge } = useVerge()
-  const { clashConfig, isCoreDataPending, refreshClashConfig } = useAppData()
+  const { clashConfig } = useClashConfigData()
+  const { isCoreDataPending } = useCoreDataStatus()
+  const { refreshClashConfig } = useAppRefreshers()
 
-  // 支持的模式列表
-  const modeList = CLASH_MODES
+  // 点击后到后端确认前的乐观模式，使按钮立即响应
+  const [optimisticMode, setOptimisticMode] = useState<ClashMode | null>(null)
 
-  // 直接使用API返回的模式，不维护本地状态
-  const currentMode = clashConfig?.mode?.toLowerCase()
-  const currentModeKey =
-    typeof currentMode === 'string' && isClashMode(currentMode)
-      ? currentMode
-      : undefined
+  // 主源：mihomo /configs 的实时 mode（最准，但依赖严格反序列化，可能整体失败）
+  const controllerMode = toClashMode(clashConfig?.mode)
+  // 主源不可用时，启用两个容错兜底来源
+  const needFallback = !controllerMode
+  const { data: runtimeConfig, isPending: isRuntimeConfigPending } =
+    useRuntimeConfig(needFallback)
+  const runtimeMode = toClashMode(runtimeConfig?.mode)
+  const {
+    data: backendMode,
+    isPending: isBackendModePending,
+    refetch: refetchBackendMode,
+  } = useClashMode(needFallback)
+  // backendMode（已保存 clash 配置）在每次切换时都会被 change_clash_mode 同步更新，
+  // 而 runtimeMode（生成的运行时配置）在 API 切换后不会刷新、可能陈旧，
+  // 因此优先用 backendMode，避免陈旧 runtime mode 遮住新值。
+  const fallbackMode = toClashMode(backendMode) ?? runtimeMode
 
-  const modeDescription = useMemo(() => {
-    if (currentModeKey) {
-      return t(MODE_META[currentModeKey].description)
-    }
-    if (isCoreDataPending) {
-      return '\u00A0'
-    }
-    return t('home.components.clashMode.errors.communication')
-  }, [currentModeKey, isCoreDataPending, t])
+  const resolvedMode = controllerMode ?? fallbackMode
+  const currentMode = optimisticMode ?? resolvedMode
 
-  // 模式图标映射
-  const modeIcons = useMemo(
-    () => ({
-      rule: <MultipleStopRounded fontSize="small" />,
-      global: <LanguageRounded fontSize="small" />,
-      direct: <DirectionsRounded fontSize="small" />,
-    }),
-    [],
-  )
+  const modeDescription = currentMode
+    ? t(MODE_META[currentMode].description)
+    : isCoreDataPending || isRuntimeConfigPending || isBackendModePending
+      ? '\u00A0'
+      : t('home.components.clashMode.errors.communication')
 
-  // 切换模式的处理函数
+  // 切换模式的处理函数：乐观更新 + 真实失败回滚并提示
   const onChangeMode = useLockFn(async (mode: ClashMode) => {
-    if (mode === currentModeKey) return
+    if (mode === currentMode) return
     if (verge?.auto_close_connection) {
       closeAllConnections()
     }
 
+    // 乐观置为目标模式，按钮立即反映点击
+    setOptimisticMode(mode)
     try {
+      // patchClashMode 现在会在后端 PATCH 失败时 reject
       await patchClashMode(mode)
-      // 使用共享的刷新方法
-      refreshClashConfig()
     } catch (error) {
-      console.error('Failed to change mode:', error)
+      // 真实失败：回滚乐观状态并提示用户
+      setOptimisticMode(null)
+      showNotice.error(error)
+      return
     }
+
+    // 成功：写穿主源缓存，使实时 mode 立即反映新值——即使随后的 /configs refetch
+    // 失败（TanStack 会保留旧 data），controllerMode 也不会再压过新值导致闪回。
+    // 若主源从未成功过（old 为 undefined）则保持不动，改由兜底来源反映。
+    setCacheData<BaseConfig>(['getClashConfig'], (old) =>
+      old ? { ...old, mode } : old,
+    )
+    // 刷新主源与兜底源以与后端对齐，待数据落地后再清除乐观状态
+    await Promise.allSettled([refreshClashConfig(), refetchBackendMode()])
+    setOptimisticMode(null)
   })
 
   // 按钮样式
@@ -98,8 +131,8 @@ export const ClashModeCard = () => {
     alignItems: 'center',
     justifyContent: 'center',
     gap: 1,
-    bgcolor: mode === currentModeKey ? 'primary.main' : 'background.paper',
-    color: mode === currentModeKey ? 'primary.contrastText' : 'text.primary',
+    bgcolor: mode === currentMode ? 'primary.main' : 'background.paper',
+    color: mode === currentMode ? 'primary.contrastText' : 'text.primary',
     borderRadius: 1.5,
     transition: 'all 0.2s ease-in-out',
     position: 'relative',
@@ -112,7 +145,7 @@ export const ClashModeCard = () => {
       transform: 'translateY(1px)',
     },
     '&::after':
-      mode === currentModeKey
+      mode === currentMode
         ? {
             content: '""',
             position: 'absolute',
@@ -155,19 +188,19 @@ export const ClashModeCard = () => {
           zIndex: 2,
         }}
       >
-        {modeList.map((mode) => (
+        {CLASH_MODES.map((mode) => (
           <Paper
             key={mode}
-            elevation={mode === currentModeKey ? 2 : 0}
+            elevation={mode === currentMode ? 2 : 0}
             onClick={() => onChangeMode(mode)}
             sx={buttonStyles(mode)}
           >
-            {modeIcons[mode]}
+            {MODE_ICONS[mode]}
             <Typography
               variant="body2"
               sx={{
                 textTransform: 'capitalize',
-                fontWeight: mode === currentModeKey ? 600 : 400,
+                fontWeight: mode === currentMode ? 600 : 400,
               }}
             >
               {t(MODE_META[mode].label)}

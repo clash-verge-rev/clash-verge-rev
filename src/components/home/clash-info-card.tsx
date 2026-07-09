@@ -4,7 +4,12 @@ import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { useClash } from '@/hooks/use-clash'
-import { useAppData } from '@/providers/app-data-context'
+import {
+  useClashConfigData,
+  useRulesData,
+  useSystemData,
+  useUptimeData,
+} from '@/providers/app-data-context'
 
 import { EnhancedCard } from './enhanced-card'
 
@@ -19,7 +24,10 @@ const formatUptime = (uptimeMs: number) => {
 export const ClashInfoCard = () => {
   const { t } = useTranslation()
   const { version: clashVersion } = useClash()
-  const { clashConfig, rules, uptime, systemProxyAddress } = useAppData()
+  const { clashConfig } = useClashConfigData()
+  const { rules } = useRulesData()
+  const { uptime } = useUptimeData()
+  const { systemProxyAddress } = useSystemData()
 
   // 使用useMemo缓存格式化后的uptime，避免频繁计算
   const formattedUptime = useMemo(() => formatUptime(uptime), [uptime])
@@ -30,47 +38,47 @@ export const ClashInfoCard = () => {
 
     return (
       <Stack spacing={1.5}>
-        <Stack direction="row" justifyContent="space-between">
+        <Stack direction="row" sx={{ justifyContent: 'space-between' }}>
           <Typography variant="body2" color="text.secondary">
             {t('home.components.clashInfo.fields.coreVersion')}
           </Typography>
-          <Typography variant="body2" fontWeight="medium">
+          <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
             {clashVersion || '-'}
           </Typography>
         </Stack>
         <Divider />
-        <Stack direction="row" justifyContent="space-between">
+        <Stack direction="row" sx={{ justifyContent: 'space-between' }}>
           <Typography variant="body2" color="text.secondary">
             {t('home.components.clashInfo.fields.systemProxyAddress')}
           </Typography>
-          <Typography variant="body2" fontWeight="medium">
+          <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
             {systemProxyAddress}
           </Typography>
         </Stack>
         <Divider />
-        <Stack direction="row" justifyContent="space-between">
+        <Stack direction="row" sx={{ justifyContent: 'space-between' }}>
           <Typography variant="body2" color="text.secondary">
             {t('home.components.clashInfo.fields.mixedPort')}
           </Typography>
-          <Typography variant="body2" fontWeight="medium">
+          <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
             {clashConfig.mixedPort || '-'}
           </Typography>
         </Stack>
         <Divider />
-        <Stack direction="row" justifyContent="space-between">
+        <Stack direction="row" sx={{ justifyContent: 'space-between' }}>
           <Typography variant="body2" color="text.secondary">
             {t('home.components.clashInfo.fields.uptime')}
           </Typography>
-          <Typography variant="body2" fontWeight="medium">
+          <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
             {formattedUptime}
           </Typography>
         </Stack>
         <Divider />
-        <Stack direction="row" justifyContent="space-between">
+        <Stack direction="row" sx={{ justifyContent: 'space-between' }}>
           <Typography variant="body2" color="text.secondary">
             {t('home.components.clashInfo.fields.rulesCount')}
           </Typography>
-          <Typography variant="body2" fontWeight="medium">
+          <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
             {rules.length}
           </Typography>
         </Stack>

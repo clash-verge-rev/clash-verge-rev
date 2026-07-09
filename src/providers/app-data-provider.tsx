@@ -1,4 +1,3 @@
-import { useQuery } from '@tanstack/react-query'
 import { listen } from '@tauri-apps/api/event'
 import React, { useCallback, useEffect, useMemo, useRef } from 'react'
 import {
@@ -15,8 +14,17 @@ import {
   getRunningMode,
   getSystemProxy,
 } from '@/services/cmds'
+import { revalidateQueries, useQuery } from '@/services/query-client'
 
-import { AppDataContext, AppDataContextType } from './app-data-context'
+import {
+  ClashConfigContext,
+  CoreDataStatusContext,
+  ProxiesContext,
+  RefreshersContext,
+  RulesContext,
+  SystemContext,
+  UptimeContext,
+} from './app-data-context'
 
 const TQ_MIHOMO = {
   refetchOnWindowFocus: false,
@@ -33,6 +41,12 @@ const TQ_DEFAULTS = {
   retry: 2,
 } as const
 
+function useStableFn<T extends (...args: any[]) => any>(fn: T): T {
+  const ref = useRef(fn)
+  ref.current = fn
+  return useCallback((...args: Parameters<T>) => ref.current(...args), []) as T
+}
+
 // 全局数据提供者组件
 export const AppDataProvider = ({
   children,
@@ -44,7 +58,7 @@ export const AppDataProvider = ({
   const {
     data: proxiesData,
     isPending: isProxiesPending,
-    refetch: refreshProxy,
+    refetch: _refetchProxy,
   } = useQuery({
     queryKey: ['getProxies'],
     queryFn: calcuProxies,
@@ -54,43 +68,59 @@ export const AppDataProvider = ({
   const {
     data: clashConfig,
     isPending: isClashConfigPending,
-    refetch: refreshClashConfig,
+    refetch: _refetchClashConfig,
   } = useQuery({
     queryKey: ['getClashConfig'],
     queryFn: getBaseConfig,
     ...TQ_MIHOMO,
   })
 
-  const { data: proxyProviders, refetch: refreshProxyProviders } = useQuery({
+  const { data: proxyProviders, refetch: _refetchProxyProviders } = useQuery({
     queryKey: ['getProxyProviders'],
     queryFn: calcuProxyProviders,
     ...TQ_MIHOMO,
+    revalidateOnMount: false,
   })
 
-  const { data: ruleProviders, refetch: refreshRuleProviders } = useQuery({
+  const { data: ruleProviders, refetch: _refetchRuleProviders } = useQuery({
     queryKey: ['getRuleProviders'],
     queryFn: getRuleProviders,
     ...TQ_MIHOMO,
+    revalidateOnMount: false,
   })
 
-  const { data: rulesData, refetch: refreshRules } = useQuery({
+  const { data: rulesData, refetch: _refetchRules } = useQuery({
     queryKey: ['getRules'],
     queryFn: getRules,
     ...TQ_MIHOMO,
   })
 
-  const refreshProxyRef = useRef(refreshProxy)
-  const refreshRulesRef = useRef(refreshRules)
-  const refreshRuleProvidersRef = useRef(refreshRuleProviders)
-  useEffect(() => {
-    refreshProxyRef.current = refreshProxy
-  }, [refreshProxy])
-  useEffect(() => {
-    refreshRulesRef.current = refreshRules
-  }, [refreshRules])
-  useEffect(() => {
-    refreshRuleProvidersRef.current = refreshRuleProviders
-  }, [refreshRuleProviders])
+  const { data: sysproxy, refetch: _refetchSysproxy } = useQuery({
+    queryKey: ['getSystemProxy'],
+    queryFn: getSystemProxy,
+    ...TQ_DEFAULTS,
+  })
+
+  const { data: runningMode } = useQuery({
+    queryKey: ['getRunningMode'],
+    queryFn: getRunningMode,
+    ...TQ_DEFAULTS,
+  })
+
+  const { data: uptimeData } = useQuery({
+    queryKey: ['appUptime'],
+    queryFn: getAppUptime,
+    ...TQ_DEFAULTS,
+    refetchInterval: 3000,
+    retry: 1,
+  })
+
+  const refreshProxy = useStableFn(_refetchProxy)
+  const refreshClashConfig = useStableFn(_refetchClashConfig)
+  const refreshRules = useStableFn(_refetchRules)
+  const refreshSysproxy = useStableFn(_refetchSysproxy)
+  const refreshProxyProviders = useStableFn(_refetchProxyProviders)
+  const refreshRuleProviders = useStableFn(_refetchRuleProviders)
 
   useEffect(() => {
     let lastProfileId: string | null = null
@@ -109,15 +139,20 @@ export const AppDataProvider = ({
       }
       lastProfileId = newProfileId
       lastUpdateTime = now
-      refreshRulesRef.current().catch(() => {})
-      refreshRuleProvidersRef.current().catch(() => {})
+      void Promise.allSettled([
+        revalidateQueries([['getProfiles']]),
+        refreshProxy(),
+        refreshProxyProviders(),
+        refreshRules(),
+        refreshRuleProviders(),
+      ])
     }
 
     const handleRefreshProxy = () => {
       const now = Date.now()
       if (now - lastUpdateTime <= refreshThrottle) return
       lastUpdateTime = now
-      refreshProxyRef.current().catch(() => {})
+      refreshProxy().catch(() => {})
     }
 
     const initializeListeners = async () => {
@@ -153,29 +188,8 @@ export const AppDataProvider = ({
         }
       })
     }
-  }, [])
+  }, [refreshProxy, refreshProxyProviders, refreshRules, refreshRuleProviders])
 
-  const { data: sysproxy, refetch: refreshSysproxy } = useQuery({
-    queryKey: ['getSystemProxy'],
-    queryFn: getSystemProxy,
-    ...TQ_DEFAULTS,
-  })
-
-  const { data: runningMode } = useQuery({
-    queryKey: ['getRunningMode'],
-    queryFn: getRunningMode,
-    ...TQ_DEFAULTS,
-  })
-
-  const { data: uptimeData } = useQuery({
-    queryKey: ['appUptime'],
-    queryFn: getAppUptime,
-    ...TQ_DEFAULTS,
-    refetchInterval: 3000,
-    retry: 1,
-  })
-
-  // 提供统一的刷新方法
   const refreshAll = useCallback(async () => {
     await Promise.all([
       refreshProxy(),
@@ -194,9 +208,32 @@ export const AppDataProvider = ({
     refreshRuleProviders,
   ])
 
-  // 聚合所有数据
-  const value = useMemo(() => {
-    // 计算系统代理地址
+  const proxiesValue = useMemo(
+    () => ({
+      proxies: proxiesData,
+      proxyProviders: proxyProviders || {},
+      isProxiesPending,
+    }),
+    [proxiesData, proxyProviders, isProxiesPending],
+  )
+
+  const rulesValue = useMemo(
+    () => ({
+      rules: rulesData?.rules ?? [],
+      ruleProviders: ruleProviders?.providers || {},
+    }),
+    [rulesData, ruleProviders],
+  )
+
+  const clashConfigValue = useMemo(
+    () => ({
+      clashConfig,
+      isClashConfigPending,
+    }),
+    [clashConfig, isClashConfigPending],
+  )
+
+  const systemValue = useMemo(() => {
     const calculateSystemProxyAddress = () => {
       if (!verge || !clashConfig) return '-'
 
@@ -228,24 +265,21 @@ export const AppDataProvider = ({
     }
 
     return {
-      // 数据
-      proxies: proxiesData,
-      clashConfig,
-      rules: rulesData?.rules ?? [],
       sysproxy,
       runningMode,
-      uptime: uptimeData || 0,
-
-      // 提供者数据
-      proxyProviders: proxyProviders || {},
-      ruleProviders: ruleProviders?.providers || {},
-
       systemProxyAddress: calculateSystemProxyAddress(),
+    }
+  }, [sysproxy, runningMode, verge, clashConfig])
 
-      // core 数据加载状态
-      isCoreDataPending: isProxiesPending || isClashConfigPending,
+  const uptimeValue = useMemo(() => ({ uptime: uptimeData || 0 }), [uptimeData])
 
-      // 刷新方法
+  const coreDataStatusValue = useMemo(
+    () => ({ isCoreDataPending: isProxiesPending || isClashConfigPending }),
+    [isProxiesPending, isClashConfigPending],
+  )
+
+  const refreshersValue = useMemo(
+    () => ({
       refreshProxy,
       refreshClashConfig,
       refreshRules,
@@ -253,27 +287,33 @@ export const AppDataProvider = ({
       refreshProxyProviders,
       refreshRuleProviders,
       refreshAll,
-    } as AppDataContextType
-  }, [
-    proxiesData,
-    clashConfig,
-    isProxiesPending,
-    isClashConfigPending,
-    rulesData,
-    sysproxy,
-    runningMode,
-    uptimeData,
-    proxyProviders,
-    ruleProviders,
-    verge,
-    refreshProxy,
-    refreshClashConfig,
-    refreshRules,
-    refreshSysproxy,
-    refreshProxyProviders,
-    refreshRuleProviders,
-    refreshAll,
-  ])
+    }),
+    [
+      refreshProxy,
+      refreshClashConfig,
+      refreshRules,
+      refreshSysproxy,
+      refreshProxyProviders,
+      refreshRuleProviders,
+      refreshAll,
+    ],
+  )
 
-  return <AppDataContext value={value}>{children}</AppDataContext>
+  return (
+    <ProxiesContext value={proxiesValue}>
+      <RulesContext value={rulesValue}>
+        <ClashConfigContext value={clashConfigValue}>
+          <SystemContext value={systemValue}>
+            <UptimeContext value={uptimeValue}>
+              <CoreDataStatusContext value={coreDataStatusValue}>
+                <RefreshersContext value={refreshersValue}>
+                  {children}
+                </RefreshersContext>
+              </CoreDataStatusContext>
+            </UptimeContext>
+          </SystemContext>
+        </ClashConfigContext>
+      </RulesContext>
+    </ProxiesContext>
+  )
 }

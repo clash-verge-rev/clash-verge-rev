@@ -59,6 +59,7 @@
     "menu": {
       "home": "홈",
       "select": "선택",
+      "shareQrCode": "Share QR Code",
       "editInfo": "정보 편집",
       "editFile": "파일 편집",
       "editRules": "규칙 편집",
@@ -177,6 +178,9 @@
     },
     "logViewer": {
       "title": "스크립트 콘솔"
+    },
+    "qrViewer": {
+      "title": "Subscription QR Code"
     }
   }
 }
