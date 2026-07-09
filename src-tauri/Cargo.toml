@@ -56,7 +56,7 @@ serde_yaml_ng = { workspace = true }
 smartstring = { workspace = true, features = ["serde"] }
 bitflags = { workspace = true }
 warp = { version = "0.4.3", features = ["server"] }
-open = "5.3.5"
+open = "5.3.6"
 dunce = "1.0.5"
 nanoid = "0.5"
 chrono = "0.4.45"
@@ -83,7 +83,7 @@ tauri-plugin-deep-link = "2.4.9"
 tauri-plugin-window-state = "2.4.1"
 zip = "8.6.0"
 reqwest_dav = "0.3.3"
-aes-gcm = { version = "0.10.3", features = ["std"] }
+aes-gcm = { version = "0.11.0" }
 base64 = "0.22.1"
 getrandom = "0.4.3"
 futures = "0.3.32"
@@ -101,7 +101,7 @@ async-trait = "0.1.89"
 clash_verge_service_ipc = { version = "2.3.2", features = [
   "client",
 ], git = "https://github.com/clash-verge-rev/clash-verge-service-ipc" }
-arc-swap = "1.9.1"
+arc-swap = "1.9.2"
 tokio-rustls = "0.26.4"
 rustls = { version = "0.23.41", features = ["ring"] }
 webpki-roots = "1.0.8"

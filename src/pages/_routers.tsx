@@ -60,22 +60,27 @@ const createRoutePreload = (
   load: () => Promise<{ default: ComponentType }>,
   sections?: string | readonly string[],
 ) => {
-  let preloadPromise: Promise<{ default: ComponentType }> | undefined
+  let componentPromise: Promise<{ default: ComponentType }> | undefined
 
-  const startPreload = sections
-    ? async () => {
-        await ensureLanguageSections(sections)
-        return load()
-      }
-    : load
-
-  return () => {
-    preloadPromise ??= startPreload().catch((error) => {
-      preloadPromise = undefined
+  const loadComponent = () => {
+    componentPromise ??= load().catch((error) => {
+      componentPromise = undefined
       throw error
     })
 
-    return preloadPromise
+    return componentPromise
+  }
+
+  if (!sections) {
+    return loadComponent
+  }
+
+  return async () => {
+    const [component] = await Promise.all([
+      loadComponent(),
+      ensureLanguageSections(sections),
+    ])
+    return component
   }
 }
 
@@ -151,8 +156,21 @@ export const navItems = [
   },
 ]
 
+const navigationWarmupPriority = ['/connections', '/logs', '/rules']
+
+const navigationWarmupItems = [...navItems].sort((left, right) => {
+  const leftIndex = navigationWarmupPriority.indexOf(left.path)
+  const rightIndex = navigationWarmupPriority.indexOf(right.path)
+  const leftRank =
+    leftIndex === -1 ? navigationWarmupPriority.length : leftIndex
+  const rightRank =
+    rightIndex === -1 ? navigationWarmupPriority.length : rightIndex
+
+  return leftRank - rightRank
+})
+
 export const preloadNavigationRoutes = async (signal: AbortSignal) => {
-  for (const item of navItems) {
+  for (const item of navigationWarmupItems) {
     if (signal.aborted) {
       return
     }

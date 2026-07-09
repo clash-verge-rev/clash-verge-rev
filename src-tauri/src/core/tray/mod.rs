@@ -933,7 +933,10 @@ fn on_tray_icon_event(_tray_icon: &TrayIcon, tray_event: TrayIconEvent) {
                         WindowManager::show_main_window().await;
                     };
                 }
-                _ => {
+                // tray_menu 模式下菜单由系统原生展示（见 set_show_menu_on_left_click），
+                // 左键点击事件无需额外处理
+                TrayAction::TrayMenu => {}
+                TrayAction::Unknown => {
                     logging!(warn, Type::Tray, "invalid tray event: {}", verge_tray_event);
                 }
             };
