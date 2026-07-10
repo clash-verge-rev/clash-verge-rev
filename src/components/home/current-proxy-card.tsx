@@ -21,7 +21,7 @@ import {
   InputLabel,
   MenuItem,
   Select,
-  SelectChangeEvent,
+  type SelectChangeEvent,
   Tooltip,
   Typography,
   alpha,
@@ -31,7 +31,7 @@ import { useLockFn } from 'ahooks'
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
-import { delayGroup, healthcheckProxyProvider } from 'tauri-plugin-mihomo-api'
+import { delayGroup } from 'tauri-plugin-mihomo-api'
 
 import { EnhancedCard } from '@/components/home/enhanced-card'
 import { useProfiles } from '@/hooks/use-profiles'
@@ -400,6 +400,7 @@ export const CurrentProxyCard = () => {
         const currentGroup = filteredGroups.find(
           (g: { name: string }) => g.name === prev.selection.group,
         )
+        console.log('---> 1', currentGroup, filteredGroups)
 
         if (!currentGroup && filteredGroups.length > 0) {
           const firstGroup = filteredGroups[0]
@@ -418,6 +419,7 @@ export const CurrentProxyCard = () => {
         } else if (currentGroup) {
           newProxy = currentGroup.now || currentGroup.all[0] || ''
           newDisplayProxy = proxies.records?.[newProxy] || null
+          console.log('---> 3', newDisplayProxy)
         }
       }
 
@@ -558,11 +560,12 @@ export const CurrentProxyCard = () => {
       debugLog(
         `[CurrentProxyCard] 自动检测当前节点延迟，组: ${groupName}, 节点: ${proxyName}`,
       )
-      if (proxyRecord.provider) {
-        await healthcheckProxyProvider(proxyRecord.provider)
-      } else {
-        await delayManager.checkDelay(proxyName, groupName, timeout)
-      }
+      await delayManager.checkDelay(
+        proxyRecord.name,
+        groupName,
+        timeout,
+        proxyRecord.provider,
+      )
     } catch (error) {
       console.error(
         `[CurrentProxyCard] 自动检测当前节点延迟失败，组: ${groupName}, 节点: ${proxyName}`,
@@ -658,8 +661,7 @@ export const CurrentProxyCard = () => {
     const timeout = verge?.default_latency_timeout || 10000
 
     // 获取当前组的所有代理
-    const proxyNames: string[] = []
-    const providers: Set<string> = new Set()
+    const delayProxies: IProxyItem[] = []
 
     if (isGlobalMode && proxies?.global) {
       // 全局模式
@@ -672,11 +674,7 @@ export const CurrentProxyCard = () => {
 
       allProxies.forEach((name: string) => {
         const proxy = state.proxyData.records[name]
-        if (proxy?.provider) {
-          providers.add(proxy.provider)
-        } else {
-          proxyNames.push(name)
-        }
+        delayProxies.push(proxy)
       })
     } else {
       // 规则模式
@@ -684,35 +682,19 @@ export const CurrentProxyCard = () => {
       if (group) {
         group.all.forEach((name: string) => {
           const proxy = state.proxyData.records[name]
-          if (proxy?.provider) {
-            providers.add(proxy.provider)
-          } else {
-            proxyNames.push(name)
-          }
+          delayProxies.push(proxy)
         })
       }
     }
 
-    debugLog(
-      `[CurrentProxyCard] 找到代理数量: ${proxyNames.length}, 提供者数量: ${providers.size}`,
-    )
-
-    // 测试提供者的节点
-    if (providers.size > 0) {
-      debugLog(`[CurrentProxyCard] 开始测试提供者节点`)
-      await Promise.allSettled(
-        [...providers].map((p) => healthcheckProxyProvider(p)),
-      )
-    }
-
-    // 测试非提供者的节点
-    if (proxyNames.length > 0) {
+    // 测试全部节点
+    if (delayProxies.length > 0) {
       const url = delayManager.getUrl(groupName)
       debugLog(`[CurrentProxyCard] 测试URL: ${url}, 超时: ${timeout}ms`)
 
       try {
         await Promise.race([
-          delayManager.checkListDelay(proxyNames, groupName, timeout),
+          delayManager.checkListDelay(delayProxies, groupName, timeout),
           delayGroup(groupName, url, timeout),
         ])
         debugLog(`[CurrentProxyCard] 延迟测试完成，组: ${groupName}`)

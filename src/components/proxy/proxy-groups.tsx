@@ -11,7 +11,7 @@ import {
   useRef,
   useState,
 } from 'react'
-import { delayGroup, healthcheckProxyProvider } from 'tauri-plugin-mihomo-api'
+import { delayGroup } from 'tauri-plugin-mihomo-api'
 
 import {
   BaseEmpty,
@@ -97,29 +97,12 @@ function useProxyRenderState(
 
       debugLog(`[ProxyGroups] 找到代理数量: ${proxies.length}`)
 
-      const providers = new Set(
-        proxies.map((p) => p!.provider!).filter(Boolean),
-      )
-
-      if (providers.size) {
-        debugLog(`[ProxyGroups] 发现提供者，数量: ${providers.size}`)
-        Promise.allSettled(
-          [...providers].map((p) => healthcheckProxyProvider(p)),
-        ).then(() => {
-          debugLog(`[ProxyGroups] 提供者健康检查完成`)
-          onProxies()
-        })
-      }
-
-      const names = proxies.filter((p) => !p!.provider).map((p) => p!.name)
-      debugLog(`[ProxyGroups] 过滤后需要测试的代理数量: ${names.length}`)
-
       const url = delayManager.getUrl(groupName)
       debugLog(`[ProxyGroups] 测试URL: ${url}, 超时: ${timeout}ms`)
 
       try {
         await Promise.race([
-          delayManager.checkListDelay(names, groupName, timeout),
+          delayManager.checkListDelay(proxies, groupName, timeout),
           delayGroup(groupName, url, timeout).then((result) => {
             debugLog(
               `[ProxyGroups] getGroupProxyDelays返回结果数量:`,
