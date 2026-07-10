@@ -12,6 +12,7 @@ import WifiTetheringRounded from '@mui/icons-material/WifiTetheringRounded'
 import { Box, IconButton, type SxProps, TextField } from '@mui/material'
 import { useDebounceFn } from 'ahooks'
 import { memo, useEffect } from 'react'
+import { flushSync } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 
 import { useVerge } from '@/hooks/use-verge'
@@ -89,6 +90,7 @@ export const ProxyGroupTools = memo(function ProxyGroupTools(props: Props) {
     <Box
       sx={{
         display: 'flex',
+        justifyContent: 'end',
         alignItems: 'center',
         gap: 0.5,
         height: 36,
@@ -96,116 +98,6 @@ export const ProxyGroupTools = memo(function ProxyGroupTools(props: Props) {
         ...sx,
       }}
     >
-      <IconButton
-        size="small"
-        color="inherit"
-        title={t('proxies.page.tooltips.locate')}
-        onClick={(e) => {
-          e.preventDefault()
-          e.stopPropagation()
-          onLocation()
-        }}
-      >
-        <MyLocationRounded fontSize="inherit" />
-      </IconButton>
-
-      <IconButton
-        size="small"
-        color="inherit"
-        title={t('proxies.page.tooltips.delayCheck')}
-        onClick={(e) => {
-          e.preventDefault()
-          e.stopPropagation()
-          // Remind the user that it is custom test url
-          if (testUrl?.trim() && textState !== 'filter') {
-            onHeadState({ textState: 'url' })
-          }
-          onCheckDelay()
-        }}
-      >
-        <NetworkCheckRounded fontSize="inherit" />
-      </IconButton>
-
-      <IconButton
-        size="small"
-        color="inherit"
-        title={
-          [
-            t('proxies.page.tooltips.sortDefault'),
-            t('proxies.page.tooltips.sortDelay'),
-            t('proxies.page.tooltips.sortName'),
-          ][sortType]
-        }
-        onClick={(e) => {
-          e.preventDefault()
-          e.stopPropagation()
-          onHeadState({
-            sortType: ((sortType + 1) % 3) as ProxySortType,
-          })
-        }}
-      >
-        {sortType !== 1 && sortType !== 2 && <SortRounded fontSize="inherit" />}
-        {sortType === 1 && <AccessTimeRounded fontSize="inherit" />}
-        {sortType === 2 && <SortByAlphaRounded fontSize="inherit" />}
-      </IconButton>
-
-      <IconButton
-        size="small"
-        color="inherit"
-        title={t('proxies.page.tooltips.delayCheckUrl')}
-        onClick={(e) => {
-          e.preventDefault()
-          e.stopPropagation()
-          onHeadState({
-            textState: textState === 'url' ? null : 'url',
-          })
-        }}
-      >
-        {textState === 'url' ? (
-          <WifiTetheringRounded fontSize="inherit" />
-        ) : (
-          <WifiTetheringOffRounded fontSize="inherit" />
-        )}
-      </IconButton>
-
-      <IconButton
-        size="small"
-        color="inherit"
-        title={
-          showType
-            ? t('proxies.page.tooltips.showBasic')
-            : t('proxies.page.tooltips.showDetail')
-        }
-        onClick={(e) => {
-          e.preventDefault()
-          e.stopPropagation()
-          onHeadState({ showType: !showType })
-        }}
-      >
-        {showType ? (
-          <VisibilityRounded fontSize="inherit" />
-        ) : (
-          <VisibilityOffRounded fontSize="inherit" />
-        )}
-      </IconButton>
-
-      <IconButton
-        size="small"
-        color="inherit"
-        title={t('proxies.page.tooltips.filter')}
-        onClick={(e) => {
-          e.preventDefault()
-          e.stopPropagation()
-          onHeadState({ textState: textState === 'filter' ? null : 'filter' })
-        }}
-      >
-        {textState === 'filter' ? (
-          <FilterAltRounded fontSize="inherit" />
-        ) : (
-          <FilterAltOffRounded fontSize="inherit" />
-        )}
-      </IconButton>
-
       {textState === 'filter' && (
         <Box sx={{ flex: '1 1 auto' }}>
           <BaseSearchBox
@@ -239,6 +131,133 @@ export const ProxyGroupTools = memo(function ProxyGroupTools(props: Props) {
           sx={{ flex: '1 1 auto', input: { py: 0.65, px: 1 } }}
         />
       )}
+      <IconButton
+        size="small"
+        color="inherit"
+        title={t('proxies.page.tooltips.locate')}
+        onClick={(e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          if (!headState.open)
+            // eslint-disable-next-line @eslint-react/dom-no-flush-sync
+            flushSync(() => onHeadState({ open: true }))
+          onLocation()
+        }}
+      >
+        <MyLocationRounded fontSize="inherit" />
+      </IconButton>
+
+      <IconButton
+        size="small"
+        color="inherit"
+        title={t('proxies.page.tooltips.delayCheck')}
+        onClick={(e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          if (!headState.open)
+            // eslint-disable-next-line @eslint-react/dom-no-flush-sync
+            flushSync(() => onHeadState({ open: true }))
+          // Remind the user that it is custom test url
+          if (testUrl?.trim() && textState !== 'filter') {
+            onHeadState({ textState: 'url' })
+          }
+          onCheckDelay()
+        }}
+      >
+        <NetworkCheckRounded fontSize="inherit" />
+      </IconButton>
+
+      <IconButton
+        size="small"
+        color="inherit"
+        title={
+          [
+            t('proxies.page.tooltips.sortDefault'),
+            t('proxies.page.tooltips.sortDelay'),
+            t('proxies.page.tooltips.sortName'),
+          ][sortType]
+        }
+        onClick={(e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          if (!headState.open)
+            // eslint-disable-next-line @eslint-react/dom-no-flush-sync
+            flushSync(() => onHeadState({ open: true }))
+          onHeadState({
+            sortType: ((sortType + 1) % 3) as ProxySortType,
+          })
+        }}
+      >
+        {sortType !== 1 && sortType !== 2 && <SortRounded fontSize="inherit" />}
+        {sortType === 1 && <AccessTimeRounded fontSize="inherit" />}
+        {sortType === 2 && <SortByAlphaRounded fontSize="inherit" />}
+      </IconButton>
+
+      <IconButton
+        size="small"
+        color="inherit"
+        title={t('proxies.page.tooltips.delayCheckUrl')}
+        onClick={(e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          if (!headState.open)
+            // eslint-disable-next-line @eslint-react/dom-no-flush-sync
+            flushSync(() => onHeadState({ open: true }))
+          onHeadState({
+            textState: textState === 'url' ? null : 'url',
+          })
+        }}
+      >
+        {textState === 'url' ? (
+          <WifiTetheringRounded fontSize="inherit" />
+        ) : (
+          <WifiTetheringOffRounded fontSize="inherit" />
+        )}
+      </IconButton>
+
+      <IconButton
+        size="small"
+        color="inherit"
+        title={
+          showType
+            ? t('proxies.page.tooltips.showBasic')
+            : t('proxies.page.tooltips.showDetail')
+        }
+        onClick={(e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          if (!headState.open)
+            // eslint-disable-next-line @eslint-react/dom-no-flush-sync
+            flushSync(() => onHeadState({ open: true }))
+          onHeadState({ showType: !showType })
+        }}
+      >
+        {showType ? (
+          <VisibilityRounded fontSize="inherit" />
+        ) : (
+          <VisibilityOffRounded fontSize="inherit" />
+        )}
+      </IconButton>
+
+      <IconButton
+        size="small"
+        color="inherit"
+        title={t('proxies.page.tooltips.filter')}
+        onClick={(e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          if (!headState.open)
+            // eslint-disable-next-line @eslint-react/dom-no-flush-sync
+            flushSync(() => onHeadState({ open: true }))
+          onHeadState({ textState: textState === 'filter' ? null : 'filter' })
+        }}
+      >
+        {textState === 'filter' ? (
+          <FilterAltRounded fontSize="inherit" />
+        ) : (
+          <FilterAltOffRounded fontSize="inherit" />
+        )}
+      </IconButton>
     </Box>
   )
 })

@@ -179,6 +179,14 @@ export const ProxyRender = memo(function ProxyRender(props: RenderProps) {
                   minWidth: 0,
                 }}
               >
+                <ProxyGroupTools
+                  url={group.testUrl}
+                  groupName={group.name}
+                  headState={headState!}
+                  onLocation={() => onLocation(group)}
+                  onCheckDelay={() => onCheckAll(group.name)}
+                  onHeadState={(p) => onHeadState(group.name, p)}
+                />
                 <Tooltip title={t('proxies.page.labels.proxyCount')} arrow>
                   <div
                     style={{
@@ -207,7 +215,7 @@ export const ProxyRender = memo(function ProxyRender(props: RenderProps) {
                 )}
               </Box>
             </Box>
-            {((stickyed && headState?.open) || headState?.open) && (
+            {/*{((stickyed && headState?.open) || headState?.open) && (
               <Box>
                 <ProxyGroupTools
                   url={group.testUrl}
@@ -218,7 +226,7 @@ export const ProxyRender = memo(function ProxyRender(props: RenderProps) {
                   onHeadState={(p) => onHeadState(group.name, p)}
                 />
               </Box>
-            )}
+            )}*/}
           </Box>
         </ListItemButton>
       </div>
