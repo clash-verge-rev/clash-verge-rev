@@ -149,7 +149,6 @@ export const ProxyItem = (props: Props) => {
               onClick={(e) => {
                 e.preventDefault()
                 e.stopPropagation()
-                console.log('---> ', proxy.provider)
                 onDelay(proxy.provider)
               }}
               sx={({ palette }) => ({

@@ -400,7 +400,6 @@ export const CurrentProxyCard = () => {
         const currentGroup = filteredGroups.find(
           (g: { name: string }) => g.name === prev.selection.group,
         )
-        console.log('---> 1', currentGroup, filteredGroups)
 
         if (!currentGroup && filteredGroups.length > 0) {
           const firstGroup = filteredGroups[0]
@@ -419,7 +418,6 @@ export const CurrentProxyCard = () => {
         } else if (currentGroup) {
           newProxy = currentGroup.now || currentGroup.all[0] || ''
           newDisplayProxy = proxies.records?.[newProxy] || null
-          console.log('---> 3', newDisplayProxy)
         }
       }
 
