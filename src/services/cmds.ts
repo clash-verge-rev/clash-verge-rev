@@ -217,11 +217,14 @@ export async function calcuProxies(): Promise<{
     all: global?.all?.map((item) => generateItem(item)) || [],
   }
 
+  // 原本的 records 拥有所有节点信息，新版本内核需要将 provider 的节点信息合并到 records 中, 同时兼容旧版本数据
+  const records = { ...proxyRecord, ...providerMap }
+
   return {
     global: _global as IProxyGroupItem,
     direct: direct as IProxyItem,
     groups,
-    records: proxyRecord as Record<string, IProxyItem>,
+    records: records as Record<string, IProxyItem>,
     proxies: (proxies as IProxyItem[]) ?? [],
   }
 }
@@ -505,7 +508,7 @@ export async function saveWebdavConfig(
 
 export async function listWebDavBackup() {
   const list: IWebDavFile[] = await invoke<IWebDavFile[]>('list_webdav_backup')
-  list.map((item) => {
+  list.forEach((item) => {
     item.filename = item.href.split('/').pop() as string
   })
   return list
