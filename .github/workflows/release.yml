@@ -63,10 +63,34 @@ jobs:
 
           echo "✅ Tag and package.json version are consistent."
 
+  prepare_release:
+    name: Prepare Draft Release
+    runs-on: ubuntu-latest
+    needs: [check_tag_version]
+    outputs:
+      release_id: ${{ steps.prepare_release.outputs.id }}
+    steps:
+      - name: Create or update draft release
+        id: prepare_release
+        uses: softprops/action-gh-release@v3
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: 'Clash Verge Rev ${{ github.ref_name }}'
+          body: 'Draft release, will be updated later.'
+          token: ${{ secrets.GITHUB_TOKEN }}
+          draft: true
+          prerelease: ${{ contains(github.ref_name, '-rc') }}
+
   update_tag:
     name: Update tag
     runs-on: ubuntu-latest
-    needs: [release, release-for-linux-arm, release-for-fixed-webview2]
+    needs:
+      [
+        prepare_release,
+        release,
+        release-for-linux-arm,
+        release-for-fixed-webview2,
+      ]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -130,21 +154,21 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PRERELEASE: ${{ contains(github.ref_name, '-rc') }}
         run: |
-          matches=$(gh api repos/{owner}/{repo}/releases --paginate --jq '.[] | select(.tag_name == env.TAG_NAME) | [.id, .draft, (.assets | length), .html_url] | @tsv')
-          release_count=$(grep -c . <<< "$matches" || true)
+          release_id="${{ needs.prepare_release.outputs.release_id }}"
 
-          if [ "$release_count" -eq 0 ]; then
-            echo "::error::No release found for $TAG_NAME."
+          if [ -z "$release_id" ]; then
+            echo "::error::No prepared release ID found for $TAG_NAME."
             exit 1
           fi
 
-          if [ "$release_count" -gt 1 ]; then
-            printf '%s\n' "$matches"
-            echo "::error::Multiple releases found for $TAG_NAME. Merge or delete duplicate releases before rerunning."
+          release_info=$(gh api repos/{owner}/{repo}/releases/"$release_id" --jq '[.tag_name, .draft, (.assets | length), .html_url] | @tsv')
+          IFS=$'\t' read -r release_tag _ asset_count release_url <<< "$release_info"
+
+          if [ "$release_tag" != "$TAG_NAME" ]; then
+            echo "::error::Prepared release $release_id belongs to $release_tag, expected $TAG_NAME."
             exit 1
           fi
 
-          IFS=$'\t' read -r release_id _ asset_count release_url <<< "$matches"
           echo "Publishing release $release_id ($release_url) with $asset_count assets."
 
           gh api --method PATCH repos/{owner}/{repo}/releases/"$release_id" \
@@ -156,7 +180,7 @@ jobs:
 
   release:
     name: Release Build
-    needs: [check_tag_version]
+    needs: [prepare_release]
     strategy:
       fail-fast: false
       matrix:
@@ -240,11 +264,9 @@ jobs:
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         with:
+          releaseId: ${{ needs.prepare_release.outputs.release_id }}
           tagName: ${{ github.ref_name }}
-          releaseName: 'Clash Verge Rev ${{ github.ref_name }}'
           releaseBody: 'Draft release, will be updated later.'
-          releaseDraft: true
-          prerelease: ${{ contains(github.ref_name, '-rc') }}
           tauriScript: pnpm
           args: --target ${{ matrix.target }}
           includeUpdaterJson: true
@@ -271,7 +293,7 @@ jobs:
 
   release-for-linux-arm:
     name: Release Build for Linux ARM
-    needs: [check_tag_version]
+    needs: [prepare_release]
     strategy:
       fail-fast: false
       matrix:
@@ -389,13 +411,6 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_KEY_PASSWORD }}
 
-      - name: Get Version
-        run: |
-          sudo apt-get update
-          sudo apt-get install jq
-          echo "VERSION=$(cat package.json | jq '.version' | tr -d '"')" >> $GITHUB_ENV
-          echo "BUILDTIME=$(TZ=Asia/Shanghai date)" >> $GITHUB_ENV
-
       - name: Attest Linux bundles
         uses: actions/attest-build-provenance@v4
         with:
@@ -403,22 +418,18 @@ jobs:
             target/${{ matrix.target }}/release/bundle/deb/*.deb
             target/${{ matrix.target }}/release/bundle/rpm/*.rpm
 
-      - name: Upload Release
-        uses: softprops/action-gh-release@v3
-        with:
-          tag_name: v${{env.VERSION}}
-          name: 'Clash Verge Rev v${{env.VERSION}}'
-          body: 'See release notes for detailed changelog.'
-          token: ${{ secrets.GITHUB_TOKEN }}
-          draft: true
-          prerelease: ${{ contains(github.ref_name, '-rc') }}
-          files: |
-            target/${{ matrix.target }}/release/bundle/deb/*.deb
-            target/${{ matrix.target }}/release/bundle/rpm/*.rpm
+      - name: Upload release assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload "${{ github.ref_name }}" \
+            target/${{ matrix.target }}/release/bundle/deb/*.deb \
+            target/${{ matrix.target }}/release/bundle/rpm/*.rpm \
+            --clobber
 
   release-for-fixed-webview2:
     name: Release Build for Fixed WebView2
-    needs: [check_tag_version]
+    needs: [prepare_release]
     strategy:
       fail-fast: false
       matrix:
@@ -484,7 +495,6 @@ jobs:
           echo "Rust target ${{ matrix.target }} installed."
 
       - name: Tauri build
-        id: build
         uses: tauri-apps/tauri-action@v1.0.0
         env:
           NODE_OPTIONS: '--max_old_space_size=4096'
@@ -520,16 +530,13 @@ jobs:
         with:
           subject-path: target/${{ matrix.target }}/release/bundle/nsis/*setup*
 
-      - name: Upload Release
-        uses: softprops/action-gh-release@v3
-        with:
-          tag_name: v${{steps.build.outputs.appVersion}}
-          name: 'Clash Verge Rev v${{steps.build.outputs.appVersion}}'
-          body: 'See release notes for detailed changelog.'
-          token: ${{ secrets.GITHUB_TOKEN }}
-          draft: true
-          prerelease: ${{ contains(github.ref_name, '-rc') }}
-          files: target/${{ matrix.target }}/release/bundle/nsis/*setup*
+      - name: Upload release assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          $files = Get-ChildItem "target\${{ matrix.target }}\release\bundle\nsis\*setup*" | Select-Object -ExpandProperty FullName
+          gh release upload "${{ github.ref_name }}" $files --clobber
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Portable Bundle
         run: pnpm portable-fixed-webview2 ${{ matrix.target }}
