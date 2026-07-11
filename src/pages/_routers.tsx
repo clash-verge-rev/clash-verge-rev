@@ -22,26 +22,87 @@ import { ensureLanguageSections } from '@/services/i18n'
 import Layout from './_layout'
 import HomePage from './home'
 
+const waitForWarmupIdle = (signal: AbortSignal) =>
+  new Promise<void>((resolve) => {
+    let idleId: number | undefined
+    let timeoutId: number | undefined
+
+    const cleanup = () => {
+      signal.removeEventListener('abort', finish)
+      if (idleId !== undefined) {
+        window.cancelIdleCallback(idleId)
+      }
+      if (timeoutId !== undefined) {
+        window.clearTimeout(timeoutId)
+      }
+    }
+
+    const finish = () => {
+      cleanup()
+      resolve()
+    }
+
+    if (signal.aborted) {
+      resolve()
+      return
+    }
+
+    signal.addEventListener('abort', finish, { once: true })
+
+    if (window.requestIdleCallback) {
+      idleId = window.requestIdleCallback(finish, { timeout: 500 })
+    } else {
+      timeoutId = window.setTimeout(finish, 120)
+    }
+  })
+
+const createRoutePreload = (
+  load: () => Promise<{ default: ComponentType }>,
+  sections?: string | readonly string[],
+) => {
+  let componentPromise: Promise<{ default: ComponentType }> | undefined
+
+  const loadComponent = () => {
+    componentPromise ??= load().catch((error) => {
+      componentPromise = undefined
+      throw error
+    })
+
+    return componentPromise
+  }
+
+  if (!sections) {
+    return loadComponent
+  }
+
+  return async () => {
+    const [component] = await Promise.all([
+      loadComponent(),
+      ensureLanguageSections(sections),
+    ])
+    return component
+  }
+}
+
 const createLazyRoute = (
   load: () => Promise<{ default: ComponentType }>,
   sections?: string | readonly string[],
 ) => {
-  const Component = lazy(
-    sections
-      ? async () => {
-          await ensureLanguageSections(sections)
-          return load()
-        }
-      : load,
-  )
+  const preload = createRoutePreload(load, sections)
+  const Component = lazy(preload)
   const LazyRoute = () => (
     <Suspense fallback={null}>
       <Component />
     </Suspense>
   )
 
-  return LazyRoute
+  return { Component: LazyRoute, preload }
 }
+
+export const preloadLogsPage = createRoutePreload(
+  () => import('./logs'),
+  'logs',
+)
 
 export const navItems = [
   {
@@ -54,45 +115,78 @@ export const navItems = [
     label: 'layout.components.navigation.tabs.proxies',
     path: '/proxies',
     icon: [<WifiRoundedIcon key="mui" />, <ProxiesSvg key="svg" />],
-    Component: createLazyRoute(() => import('./proxies')),
+    ...createLazyRoute(() => import('./proxies')),
   },
   {
     label: 'layout.components.navigation.tabs.profiles',
     path: '/profile',
     icon: [<DnsRoundedIcon key="mui" />, <ProfilesSvg key="svg" />],
-    Component: createLazyRoute(() => import('./profiles'), 'rules'),
+    ...createLazyRoute(() => import('./profiles'), 'rules'),
   },
   {
     label: 'layout.components.navigation.tabs.connections',
     path: '/connections',
     icon: [<LanguageRoundedIcon key="mui" />, <ConnectionsSvg key="svg" />],
-    Component: createLazyRoute(() => import('./connections'), 'connections'),
+    ...createLazyRoute(() => import('./connections'), 'connections'),
   },
   {
     label: 'layout.components.navigation.tabs.rules',
     path: '/rules',
     icon: [<ForkRightRoundedIcon key="mui" />, <RulesSvg key="svg" />],
-    Component: createLazyRoute(() => import('./rules'), 'rules'),
+    ...createLazyRoute(() => import('./rules'), 'rules'),
   },
   {
     label: 'layout.components.navigation.tabs.logs',
     path: '/logs',
     icon: [<SubjectRoundedIcon key="mui" />, <LogsSvg key="svg" />],
     Component: () => null /* LogsPage rendered in Layout only on /logs route */,
+    preload: preloadLogsPage,
   },
   {
     label: 'layout.components.navigation.tabs.unlock',
     path: '/unlock',
     icon: [<LockOpenRoundedIcon key="mui" />, <UnlockSvg key="svg" />],
-    Component: createLazyRoute(() => import('./unlock')),
+    ...createLazyRoute(() => import('./unlock')),
   },
   {
     label: 'layout.components.navigation.tabs.settings',
     path: '/settings',
     icon: [<SettingsRoundedIcon key="mui" />, <SettingsSvg key="svg" />],
-    Component: createLazyRoute(() => import('./settings')),
+    ...createLazyRoute(() => import('./settings')),
   },
 ]
+
+const navigationWarmupPriority = ['/connections', '/logs', '/rules']
+
+const navigationWarmupItems = [...navItems].sort((left, right) => {
+  const leftIndex = navigationWarmupPriority.indexOf(left.path)
+  const rightIndex = navigationWarmupPriority.indexOf(right.path)
+  const leftRank =
+    leftIndex === -1 ? navigationWarmupPriority.length : leftIndex
+  const rightRank =
+    rightIndex === -1 ? navigationWarmupPriority.length : rightIndex
+
+  return leftRank - rightRank
+})
+
+export const preloadNavigationRoutes = async (signal: AbortSignal) => {
+  for (const item of navigationWarmupItems) {
+    if (signal.aborted) {
+      return
+    }
+    const preload = 'preload' in item ? item.preload : undefined
+    if (!preload) {
+      continue
+    }
+
+    await waitForWarmupIdle(signal)
+    if (signal.aborted) {
+      return
+    }
+
+    await preload().catch(() => {})
+  }
+}
 
 export const router = createBrowserRouter([
   {

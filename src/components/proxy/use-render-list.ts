@@ -428,12 +428,15 @@ export const useRenderList = (
           },
         )
 
-        ret.push({
-          type: 1,
-          key: `head-${group.name}`,
-          group,
-          headState,
-        })
+        // 全局模式下，添加组头
+        if (!useRule) {
+          ret.push({
+            type: 1,
+            key: `head-${group.name}`,
+            group,
+            headState,
+          })
+        }
 
         if (!proxies.length) {
           ret.push({

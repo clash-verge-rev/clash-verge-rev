@@ -232,32 +232,68 @@ pub fn run() {
 
     let builder = app_init::setup_plugins(tauri::Builder::default())
         .setup(|app| {
-            #[allow(clippy::expect_used)]
-            APP_HANDLE
-                .set(app.app_handle().clone())
-                .expect("failed to set global app handle");
-
-            resolve::init_work_dir_and_logger()?;
-
-            logging!(info, Type::Setup, "开始应用初始化...");
-            if let Err(e) = app_init::setup_autostart(app) {
-                logging!(error, Type::Setup, "Failed to setup autostart: {}", e);
+            // Logger may not be ready yet, so mirror setup panics to stderr.
+            fn log_setup_panic(stage: &str, panic: Box<dyn std::any::Any + Send>) {
+                let msg = panic
+                    .downcast_ref::<&str>()
+                    .map(|s| (*s).to_string())
+                    .or_else(|| panic.downcast_ref::<String>().cloned())
+                    .unwrap_or_else(|| "unknown panic payload".to_string());
+                eprintln!("[clash-verge] panic during app setup ({stage}), continuing in degraded mode: {msg}");
+                logging!(
+                    error,
+                    Type::Setup,
+                    "setup 阶段 panic（{}）—— 降级继续启动: {}",
+                    stage,
+                    msg
+                );
             }
 
-            app_init::setup_deep_links(app);
+            // Prevent setup panics from aborting across macOS applicationDidFinishLaunching.
+            // Keep pre-init separate so window/core/tray startup is still scheduled after a panic.
+            if let Err(panic) = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                #[allow(clippy::expect_used)]
+                APP_HANDLE
+                    .set(app.app_handle().clone())
+                    .expect("failed to set global app handle");
 
-            if let Err(e) = app_init::setup_window_state(app) {
-                logging!(error, Type::Setup, "Failed to setup window state: {}", e);
+                if let Err(e) = resolve::init_work_dir_and_logger() {
+                    logging!(error, Type::Setup, "Failed to init work dir/logger: {}", e);
+                }
+
+                logging!(info, Type::Setup, "开始应用初始化...");
+                if let Err(e) = app_init::setup_autostart(app) {
+                    logging!(error, Type::Setup, "Failed to setup autostart: {}", e);
+                }
+
+                app_init::setup_deep_links(app);
+
+                if let Err(e) = app_init::setup_window_state(app) {
+                    logging!(error, Type::Setup, "Failed to setup window state: {}", e);
+                }
+            })) {
+                log_setup_panic("pre-init", panic);
             }
 
-            resolve::resolve_setup_async();
-            resolve::resolve_setup_sync();
-            resolve::init_signal();
+            // Always attempt the startup stage, even if pre-init degraded.
+            if let Err(panic) = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                resolve::resolve_setup_async();
+                resolve::resolve_setup_sync();
+                resolve::init_signal();
+                logging!(info, Type::Setup, "初始化已启动");
+            })) {
+                log_setup_panic("window-core", panic);
+            }
 
-            logging!(info, Type::Setup, "初始化已启动");
             Ok(())
         })
         .invoke_handler(app_init::generate_handlers());
+
+    // macOS 内存压力下 WKWebView 渲染进程可能被系统终止（表现为白屏），
+    // 注册恢复钩子：清理孤儿 WebSocket 订阅防止内存泄漏；窗口可见时立即 reload
+    // 恢复页面，不可见时延迟到用户下次打开窗口再 reload。
+    #[cfg(target_os = "macos")]
+    let builder = builder.on_web_content_process_terminate(resolve::window::on_web_content_process_terminated);
 
     mod event_handlers {
         #[cfg(target_os = "macos")]
@@ -422,6 +458,11 @@ pub fn run() {
                 event_handlers::handle_window_close(&event);
             }
             tauri::WindowEvent::Focused(focused) => {
+                // 兜底：原生取消最小化只触发 Focused、不走 activate_window（macOS）
+                #[cfg(target_os = "macos")]
+                if focused {
+                    crate::utils::resolve::window::reload_main_window_if_needed();
+                }
                 event_handlers::handle_window_focus(focused);
             }
             #[cfg(target_os = "macos")]

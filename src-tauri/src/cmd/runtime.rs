@@ -1,5 +1,5 @@
 use super::CmdResult;
-use crate::{cmd::StringifyErr as _, config::Config, core::CoreManager};
+use crate::{cmd::StringifyErr as _, config::Config, core::CoreManager, utils::yaml_emitter};
 use anyhow::{Context as _, anyhow};
 use clash_verge_logging::{Type, logging};
 use serde_yaml_ng::Mapping;
@@ -22,7 +22,7 @@ pub async fn get_runtime_yaml() -> CmdResult<String> {
     config
         .ok_or_else(|| anyhow!("failed to parse config to yaml file"))
         .and_then(|config| {
-            serde_yaml_ng::to_string(config)
+            yaml_emitter::to_mihomo_config_string(config)
                 .context("failed to convert config to yaml")
                 .map(|s| s.into())
         })
@@ -82,7 +82,7 @@ pub async fn get_runtime_proxy_chain_config(proxy_chain_exit_node: String) -> Cm
 
         config.insert("proxies".into(), proxies_chain);
 
-        serde_yaml_ng::to_string(&config)
+        yaml_emitter::to_mihomo_config_string(&config)
             .context("YAML generation failed")
             .map(|s| s.into())
             .stringify_err()

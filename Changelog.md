@@ -13,13 +13,19 @@
 - 修复 Fake-IP 模式开启 IPv6 后未生成 fake-ip-range6
 - 修复 DNS 覆写的高级模式无法正常编辑
 - 修复部分非标准 WebDAV 服务器在备份目录已存在时的问题
+- 修复 Linux 应用内更新问题
+- 修复 JS 脚本验证因 console 方法调用导致的执行失败问题
+- 修复 macOS 内存压力下 WebView 渲染进程被系统终止引发的白屏与主进程内存泄漏
+- 删除覆盖全局热键开关的冗余写入
+- 修复编辑节点下base64解码未能正确处理非ASCII字符
+- 修复订阅规则编辑器自定义规则偶发显示为空的问题
 
 <details>
 <summary><strong> ✨ 新增功能 </strong></summary>
 
 - 增加 TrustTunnel, OpenVPN, Tailscale, GostRelay 节点显示支持
 - 全局扩展脚本增加恢复默认按钮
-- DNS 添加 fake-ip-range6 可配置项 
+- DNS 添加 fake-ip-range6 可配置项
 
 </details>
 
@@ -29,6 +35,9 @@
 - 更健壮的 service 生命周期管理
 - 更健壮的 Mihomo API 通信机制
 - 关闭 autofill 弹出窗口
+- 改进切换订阅后激活选中节点的逻辑
+- 实现代理组粘性滚动列表
+- 完善了配置覆写的相关逻辑
 - 支持在前置规则与后置规则之间直接切换规则位置
 
 </details>

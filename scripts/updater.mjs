@@ -91,21 +91,38 @@ async function processRelease(github, options, tag, isAlpha) {
       ),
       pub_date: new Date().toISOString(),
       platforms: {
-        win64: { signature: '', url: '' }, // compatible with older formats
-        linux: { signature: '', url: '' }, // compatible with older formats
-        darwin: { signature: '', url: '' }, // compatible with older formats
-        'darwin-aarch64': { signature: '', url: '' },
-        'darwin-intel': { signature: '', url: '' },
+        // platform format:
+        //    standard: "{os}-{arch}-{installer}",
+        //    fallback: "{os}-{arch}"
         'darwin-x86_64': { signature: '', url: '' },
-        'linux-x86_64': { signature: '', url: '' },
+        'darwin-x86_64-app': { signature: '', url: '' },
+        'darwin-aarch64': { signature: '', url: '' },
+        'darwin-aarch64-app': { signature: '', url: '' },
+
         'linux-x86': { signature: '', url: '' },
+        'linux-x86-deb': { signature: '', url: '' },
+        'linux-x86-rpm': { signature: '', url: '' },
+        'linux-x86_64': { signature: '', url: '' },
+        'linux-x86_64-deb': { signature: '', url: '' },
+        'linux-x86_64-rpm': { signature: '', url: '' },
         'linux-i686': { signature: '', url: '' },
+        'linux-i686-deb': { signature: '', url: '' },
+        'linux-i686-rpm': { signature: '', url: '' },
         'linux-aarch64': { signature: '', url: '' },
+        'linux-aarch64-deb': { signature: '', url: '' },
+        'linux-aarch64-rpm': { signature: '', url: '' },
         'linux-armv7': { signature: '', url: '' },
-        'windows-x86_64': { signature: '', url: '' },
-        'windows-aarch64': { signature: '', url: '' },
+        'linux-armv7-deb': { signature: '', url: '' },
+        'linux-armv7-rpm': { signature: '', url: '' },
+
         'windows-x86': { signature: '', url: '' },
+        'windows-x86-nsis': { signature: '', url: '' },
+        'windows-x86_64': { signature: '', url: '' },
+        'windows-x86_64-nsis': { signature: '', url: '' },
+        'windows-aarch64': { signature: '', url: '' },
+        'windows-aarch64-nsis': { signature: '', url: '' },
         'windows-i686': { signature: '', url: '' },
+        'windows-i686-nsis': { signature: '', url: '' },
       },
     }
 
@@ -115,73 +132,139 @@ async function processRelease(github, options, tag, isAlpha) {
       // Process all the platform URL and signature data
       // win64 url
       if (name.endsWith('x64-setup.exe')) {
-        updateData.platforms.win64.url = browser_download_url
         updateData.platforms['windows-x86_64'].url = browser_download_url
+        updateData.platforms['windows-x86_64-nsis'].url = browser_download_url
       }
       // win64 signature
       if (name.endsWith('x64-setup.exe.sig')) {
         const sig = await getSignature(browser_download_url)
-        updateData.platforms.win64.signature = sig
         updateData.platforms['windows-x86_64'].signature = sig
+        updateData.platforms['windows-x86_64-nsis'].signature = sig
       }
-
       // win32 url
       if (name.endsWith('x86-setup.exe')) {
         updateData.platforms['windows-x86'].url = browser_download_url
-        updateData.platforms['windows-i686'].url = browser_download_url
+        updateData.platforms['windows-x86-nsis'].url = browser_download_url
+        updateData.platforms['windows-i686-nsis'].url = browser_download_url
       }
       // win32 signature
       if (name.endsWith('x86-setup.exe.sig')) {
         const sig = await getSignature(browser_download_url)
         updateData.platforms['windows-x86'].signature = sig
-        updateData.platforms['windows-i686'].signature = sig
+        updateData.platforms['windows-x86-nsis'].signature = sig
+        updateData.platforms['windows-i686-nsis'].signature = sig
       }
-
       // win arm url
       if (name.endsWith('arm64-setup.exe')) {
         updateData.platforms['windows-aarch64'].url = browser_download_url
+        updateData.platforms['windows-aarch64-nsis'].url = browser_download_url
       }
       // win arm signature
       if (name.endsWith('arm64-setup.exe.sig')) {
         const sig = await getSignature(browser_download_url)
         updateData.platforms['windows-aarch64'].signature = sig
+        updateData.platforms['windows-aarch64-nsis'].signature = sig
       }
 
       // darwin url (intel)
       if (name.endsWith('.app.tar.gz') && !name.includes('aarch')) {
-        updateData.platforms.darwin.url = browser_download_url
-        updateData.platforms['darwin-intel'].url = browser_download_url
         updateData.platforms['darwin-x86_64'].url = browser_download_url
+        updateData.platforms['darwin-x86_64-app'].url = browser_download_url
       }
       // darwin signature (intel)
       if (name.endsWith('.app.tar.gz.sig') && !name.includes('aarch')) {
         const sig = await getSignature(browser_download_url)
-        updateData.platforms.darwin.signature = sig
-        updateData.platforms['darwin-intel'].signature = sig
         updateData.platforms['darwin-x86_64'].signature = sig
+        updateData.platforms['darwin-x86_64-app'].signature = sig
       }
-
       // darwin url (aarch)
       if (name.endsWith('aarch64.app.tar.gz')) {
         updateData.platforms['darwin-aarch64'].url = browser_download_url
-        // 使linux可以检查更新
-        updateData.platforms.linux.url = browser_download_url
-        updateData.platforms['linux-x86_64'].url = browser_download_url
-        updateData.platforms['linux-x86'].url = browser_download_url
-        updateData.platforms['linux-i686'].url = browser_download_url
-        updateData.platforms['linux-aarch64'].url = browser_download_url
-        updateData.platforms['linux-armv7'].url = browser_download_url
+        updateData.platforms['darwin-aarch64-app'].url = browser_download_url
       }
       // darwin signature (aarch)
       if (name.endsWith('aarch64.app.tar.gz.sig')) {
         const sig = await getSignature(browser_download_url)
         updateData.platforms['darwin-aarch64'].signature = sig
-        updateData.platforms.linux.signature = sig
-        updateData.platforms['linux-x86_64'].signature = sig
+        updateData.platforms['darwin-aarch64-app'].signature = sig
+      }
+
+      // Linux x86
+      if (name.endsWith('i386.deb')) {
         updateData.platforms['linux-x86'].url = browser_download_url
+        updateData.platforms['linux-x86-deb'].url = browser_download_url
         updateData.platforms['linux-i686'].url = browser_download_url
+        updateData.platforms['linux-i686-deb'].url = browser_download_url
+      }
+      if (name.endsWith('i386.deb.sig')) {
+        const sig = await getSignature(browser_download_url)
+        updateData.platforms['linux-x86'].signature = sig
+        updateData.platforms['linux-x86-deb'].signature = sig
+        updateData.platforms['linux-i686'].signature = sig
+        updateData.platforms['linux-i686-deb'].signature = browser_download_url
+      }
+      if (name.endsWith('i386.rpm')) {
+        updateData.platforms['linux-x86-rpm'].url = browser_download_url
+        updateData.platforms['linux-i686-rpm'].url = browser_download_url
+      }
+      if (name.endsWith('i386.rpm.sig')) {
+        const sig = await getSignature(browser_download_url)
+        updateData.platforms['linux-x86-rpm'].signature = sig
+        updateData.platforms['linux-i686-rpm'].signature = sig
+      }
+
+      // Linux x86_64
+      if (name.endsWith('amd64.deb')) {
+        updateData.platforms['linux-x86_64'].url = browser_download_url
+        updateData.platforms['linux-x86_64-deb'].url = browser_download_url
+      }
+      if (name.endsWith('amd64.deb.sig')) {
+        const sig = await getSignature(browser_download_url)
+        updateData.platforms['linux-x86_64'].signature = sig
+        updateData.platforms['linux-x86_64-deb'].signature = sig
+      }
+      if (name.endsWith('x86_64.rpm')) {
+        updateData.platforms['linux-x86_64-rpm'].url = browser_download_url
+      }
+      if (name.endsWith('x86_64.rpm.sig')) {
+        const sig = await getSignature(browser_download_url)
+        updateData.platforms['linux-x86_64-rpm'].signature = sig
+      }
+
+      // Linux aarch64
+      if (name.endsWith('arm64.deb')) {
+        updateData.platforms['linux-aarch64'].url = browser_download_url
+        updateData.platforms['linux-aarch64-deb'].url = browser_download_url
+      }
+      if (name.endsWith('arm64.deb.sig')) {
+        const sig = await getSignature(browser_download_url)
         updateData.platforms['linux-aarch64'].signature = sig
+        updateData.platforms['linux-aarch64-deb'].signature = sig
+      }
+      if (name.endsWith('aarch64.rpm')) {
+        updateData.platforms['linux-aarch64-rpm'].url = browser_download_url
+      }
+      if (name.endsWith('aarch64.rpm.sig')) {
+        const sig = await getSignature(browser_download_url)
+        updateData.platforms['linux-aarch64-rpm'].signature = sig
+      }
+
+      // Linux armv7
+      if (name.endsWith('armhf.deb')) {
+        updateData.platforms['linux-armv7'].url = browser_download_url
+        updateData.platforms['linux-armv7-deb'].url = browser_download_url
+      }
+      if (name.endsWith('armhf.deb.sig')) {
+        const sig = await getSignature(browser_download_url)
         updateData.platforms['linux-armv7'].signature = sig
+        updateData.platforms['linux-armv7-deb'].signature = sig
+      }
+      if (name.endsWith('armhfp.rpm')) {
+        updateData.platforms['linux-armv7-rpm'].url = browser_download_url
+      }
+      if (name.endsWith('armhfp.rpm.sig')) {
+        const sig = await getSignature(browser_download_url)
+        updateData.platforms['linux-armv7-rpm'].signature = sig
       }
     })
 
@@ -203,7 +286,7 @@ async function processRelease(github, options, tag, isAlpha) {
     Object.entries(updateDataNew.platforms).forEach(([key, value]) => {
       if (value.url) {
         updateDataNew.platforms[key].url =
-          'https://update.hwdns.net/' + value.url
+          `https://update.hwdns.net/${value.url}`
       } else {
         console.log(`[Error]: updateDataNew.platforms.${key} is null`)
       }

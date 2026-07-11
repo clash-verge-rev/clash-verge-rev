@@ -44,11 +44,14 @@ import { LayoutItem } from '@/components/layout/layout-item'
 import { LayoutTraffic } from '@/components/layout/layout-traffic'
 import { NoticeManager } from '@/components/layout/notice-manager'
 import { UpdateButton } from '@/components/layout/update-button'
-import { WindowControls } from '@/components/layout/window-controller'
+import {
+  WindowControls,
+  WindowResizeHandles,
+} from '@/components/layout/window-controller'
 import { useI18n } from '@/hooks/use-i18n'
 import { useVerge } from '@/hooks/use-verge'
+import { useVisibility } from '@/hooks/use-visibility'
 import { useWindowDecorations } from '@/hooks/use-window'
-import { ensureLanguageSections } from '@/services/i18n'
 import { useThemeMode } from '@/services/states'
 import getSystem from '@/utils/get-system'
 
@@ -59,17 +62,14 @@ import {
   useNavMenuOrder,
 } from './_layout/hooks'
 import { handleNoticeMessage } from './_layout/utils'
-import { navItems } from './_routers'
+import { navItems, preloadLogsPage, preloadNavigationRoutes } from './_routers'
 
 import 'dayjs/locale/ru'
 import 'dayjs/locale/zh-cn'
 
 export const portableFlag = false
 
-const LogsPage = lazy(async () => {
-  await ensureLanguageSections('logs')
-  return import('./logs')
-})
+const LogsPage = lazy(() => preloadLogsPage())
 
 type NavItem = (typeof navItems)[number]
 
@@ -105,6 +105,7 @@ const SortableNavMenuItem = ({ item, label }: SortableNavMenuItemProps) => {
     <LayoutItem
       to={item.path}
       icon={item.icon}
+      onPreload={item.preload}
       sortable={{
         setNodeRef,
         attributes,
@@ -134,6 +135,7 @@ const Layout = () => {
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const isLogsPage = pathname === '/logs'
+  const pageVisible = useVisibility()
   const themeReady = useMemo(() => Boolean(theme), [theme])
 
   const [menuUnlocked, setMenuUnlocked] = useState(false)
@@ -218,7 +220,7 @@ const Layout = () => {
 
   const customTitlebar = useMemo(
     () =>
-      !decorated ? (
+      decorated === false ? (
         <div className="the_titlebar">
           <div
             className="the_titlebar-drag-region"
@@ -231,6 +233,22 @@ const Layout = () => {
   )
 
   useLoadingOverlay(themeReady)
+
+  useEffect(() => {
+    if (!themeReady || !pageVisible) {
+      return
+    }
+
+    const controller = new AbortController()
+    const timerId = window.setTimeout(() => {
+      void preloadNavigationRoutes(controller.signal)
+    }, 2000)
+
+    return () => {
+      controller.abort()
+      window.clearTimeout(timerId)
+    }
+  }, [themeReady, pageVisible])
 
   const handleNotice = useCallback(
     (payload: [string, string]) => {
@@ -318,6 +336,8 @@ const Layout = () => {
             : {},
         ]}
       >
+        {decorated === false && <WindowResizeHandles />}
+
         {/* Custom titlebar - rendered only when decorated is false, memoized for performance */}
         {customTitlebar}
 
@@ -406,7 +426,12 @@ const Layout = () => {
                     return null
                   }
                   return (
-                    <LayoutItem key={item.path} to={item.path} icon={item.icon}>
+                    <LayoutItem
+                      key={item.path}
+                      to={item.path}
+                      icon={item.icon}
+                      onPreload={item.preload}
+                    >
                       {t(item.label)}
                     </LayoutItem>
                   )

@@ -31,7 +31,6 @@ static RESOLVE_DONE: AtomicBool = AtomicBool::new(false);
 pub fn init_work_dir_and_logger() -> anyhow::Result<()> {
     AsyncHandler::block_on(async {
         init_work_config().await;
-        init_resources().await;
         logging!(info, Type::Setup, "Initializing logger");
         // #[cfg(not(feature = "tokio-trace"))]
         Logger::global().init().await?;
@@ -55,6 +54,10 @@ pub fn resolve_setup_async() {
         init_startup_script().await;
         let config_initialized = init_verge_config_before_window().await;
         init_window().await;
+        init_resources().await;
+        if let Err(e) = init::init_dns_config().await {
+            logging!(warn, Type::Setup, "DNS config initialization failed: {}", e);
+        }
         if config_initialized {
             init_verge_config().await;
         }
