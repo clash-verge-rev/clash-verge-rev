@@ -29,6 +29,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: check_commit
     if: ${{ needs.check_commit.outputs.should_run == 'true' }}
+    outputs:
+      release_id: ${{ steps.upload_release.outputs.id }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -102,6 +104,7 @@ jobs:
           EOF
 
       - name: Upload Release
+        id: upload_release
         uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ env.TAG_NAME }}
@@ -218,6 +221,7 @@ jobs:
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         with:
+          releaseId: ${{ needs.update_tag.outputs.release_id }}
           tagName: ${{ env.TAG_NAME }}
           releaseName: 'Clash Verge Rev ${{ env.TAG_CHANNEL }}'
           releaseBody: 'More new features are now supported.'

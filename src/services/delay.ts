@@ -1,4 +1,8 @@
-import { delayProxyByName, ProxyDelay } from 'tauri-plugin-mihomo-api'
+import {
+  delayProxyByName,
+  healthcheckNodeInProvider,
+  type ProxyDelay,
+} from 'tauri-plugin-mihomo-api'
 
 import { debugLog } from '@/utils/debug'
 
@@ -198,10 +202,23 @@ class DelayManager {
     return -1
   }
 
+  // 统一延迟测试检测
+  async unifiedDelayCheck(
+    name: string,
+    url: string,
+    timeout: number,
+    providerName?: string,
+  ) {
+    if (providerName)
+      return healthcheckNodeInProvider(providerName, name, url, timeout)
+    return delayProxyByName(name, url, timeout)
+  }
+
   async checkDelay(
     name: string,
     group: string,
     timeout: number,
+    providerName?: string,
   ): Promise<DelayUpdate> {
     debugLog(
       `[DelayManager] 开始测试延迟，代理: ${name}, 组: ${group}, 超时: ${timeout}ms`,
@@ -223,7 +240,7 @@ class DelayManager {
 
       // 使用Promise.race来实现超时控制
       const result = await Promise.race([
-        delayProxyByName(name, url, timeout),
+        this.unifiedDelayCheck(name, url, timeout, providerName),
         timeoutPromise,
       ])
 
@@ -250,25 +267,29 @@ class DelayManager {
   }
 
   async checkListDelay(
-    nameList: string[],
+    proxies: IProxyItem[],
     group: string,
     timeout: number,
     concurrency = 36,
   ) {
     debugLog(
-      `[DelayManager] 批量测试延迟开始，组: ${group}, 数量: ${nameList.length}, 并发数: ${concurrency}`,
+      `[DelayManager] 批量测试延迟开始，组: ${group}, 数量: ${proxies.length}, 并发数: ${concurrency}`,
     )
-    const names = nameList.filter(Boolean)
+    const names = proxies.map((p) => p.name)
     // 设置正在延迟测试中
-    names.forEach((name) => this.setDelay(name, group, -2))
+    names.forEach((name) => {
+      this.setDelay(name, group, -2)
+    })
 
     let index = 0
     const startTime = Date.now()
     const listener = this.groupListenerMap.get(group)
 
     const help = async (): Promise<void> => {
-      const currName = names[index++]
-      if (!currName) return
+      const currProxy = proxies[index++]
+      if (!currProxy) return
+      const currName = currProxy.name
+      const currProviderName = currProxy.provider
 
       try {
         // 确保API调用前状态为测试中
@@ -282,7 +303,7 @@ class DelayManager {
           )
         }
 
-        await this.checkDelay(currName, group, timeout)
+        await this.checkDelay(currName, group, timeout, currProviderName)
         if (listener) {
           this.queueGroupNotification(group)
         }

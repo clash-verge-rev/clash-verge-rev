@@ -6,6 +6,7 @@ import LockOpenRoundedIcon from '@mui/icons-material/LockOpenRounded'
 import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded'
 import SubjectRoundedIcon from '@mui/icons-material/SubjectRounded'
 import WifiRoundedIcon from '@mui/icons-material/WifiRounded'
+import { Box } from '@mui/material'
 import { lazy, Suspense, type ComponentType } from 'react'
 import { createBrowserRouter, RouteObject } from 'react-router'
 
@@ -17,6 +18,7 @@ import ProxiesSvg from '@/assets/image/itemicon/proxies.svg?react'
 import RulesSvg from '@/assets/image/itemicon/rules.svg?react'
 import SettingsSvg from '@/assets/image/itemicon/settings.svg?react'
 import UnlockSvg from '@/assets/image/itemicon/unlock.svg?react'
+import { BaseLoading } from '@/components/base'
 import { ensureLanguageSections } from '@/services/i18n'
 
 import Layout from './_layout'
@@ -91,7 +93,20 @@ const createLazyRoute = (
   const preload = createRoutePreload(load, sections)
   const Component = lazy(preload)
   const LazyRoute = () => (
-    <Suspense fallback={null}>
+    <Suspense
+      fallback={
+        <Box
+          sx={{
+            display: 'flex',
+            height: '100%',
+            alignItems: 'center',
+            justifyContent: 'center',
+          }}
+        >
+          <BaseLoading />
+        </Box>
+      }
+    >
       <Component />
     </Suspense>
   )
@@ -156,36 +171,18 @@ export const navItems = [
   },
 ]
 
-const navigationWarmupPriority = ['/connections', '/logs', '/rules']
-
-const navigationWarmupItems = [...navItems].sort((left, right) => {
-  const leftIndex = navigationWarmupPriority.indexOf(left.path)
-  const rightIndex = navigationWarmupPriority.indexOf(right.path)
-  const leftRank =
-    leftIndex === -1 ? navigationWarmupPriority.length : leftIndex
-  const rightRank =
-    rightIndex === -1 ? navigationWarmupPriority.length : rightIndex
-
-  return leftRank - rightRank
-})
-
 export const preloadNavigationRoutes = async (signal: AbortSignal) => {
-  for (const item of navigationWarmupItems) {
-    if (signal.aborted) {
-      return
-    }
-    const preload = 'preload' in item ? item.preload : undefined
-    if (!preload) {
-      continue
-    }
-
-    await waitForWarmupIdle(signal)
-    if (signal.aborted) {
-      return
-    }
-
-    await preload().catch(() => {})
+  await waitForWarmupIdle(signal)
+  if (signal.aborted) {
+    return
   }
+
+  await Promise.all(
+    navItems.map((item) => {
+      const preload = 'preload' in item ? item.preload : undefined
+      return preload?.().catch(() => {})
+    }),
+  )
 }
 
 export const router = createBrowserRouter([

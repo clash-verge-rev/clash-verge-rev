@@ -59,6 +59,12 @@ fn should_handle_window_operation() -> bool {
 pub struct WindowManager;
 
 impl WindowManager {
+    #[cfg(target_os = "macos")]
+    fn set_macos_activation_policy_regular() {
+        logging!(info, Type::Window, "应用 macOS 特定的激活策略");
+        handle::Handle::global().set_activation_policy_regular();
+    }
+
     pub fn get_main_window_with_state() -> (Option<WebviewWindow<Wry>>, WindowState) {
         let Some(window) = Self::get_main_window() else {
             return (None, WindowState::NotExist);
@@ -217,6 +223,8 @@ impl WindowManager {
     /// 激活窗口（取消最小化、显示、设置焦点）
     fn activate_window(window: &WebviewWindow<Wry>) -> WindowOperationResult {
         logging!(info, Type::Window, "开始激活窗口");
+        #[cfg(target_os = "macos")]
+        Self::set_macos_activation_policy_regular();
 
         // 渲染进程曾被系统终止：先 reload，并把 show+focus 交给 on_page_load(Finished)，
         // 内容就绪再显示，避免白屏闪烁。reload 成功才 defer，失败则走下方直接显示。
@@ -252,13 +260,6 @@ impl WindowManager {
                 logging!(warn, Type::Window, "设置窗口焦点失败: {}", e);
                 operations_successful = false;
             }
-        }
-
-        // 4. 平台特定的激活策略
-        #[cfg(target_os = "macos")]
-        {
-            logging!(info, Type::Window, "应用 macOS 特定的激活策略");
-            handle::Handle::global().set_activation_policy_regular();
         }
 
         #[cfg(target_os = "windows")]
@@ -307,14 +308,12 @@ impl WindowManager {
                 return false;
             }
 
+            #[cfg(target_os = "macos")]
+            Self::set_macos_activation_policy_regular();
+
             match build_new_window().await {
                 Ok(_) => {
                     logging!(info, Type::Window, "新窗口创建成功，等待前端渲染后显示");
-
-                    #[cfg(target_os = "macos")]
-                    {
-                        handle::Handle::global().set_activation_policy_regular();
-                    }
 
                     true
                 }

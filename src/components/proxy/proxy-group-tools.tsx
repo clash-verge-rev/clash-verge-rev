@@ -10,6 +10,7 @@ import VisibilityRounded from '@mui/icons-material/VisibilityRounded'
 import WifiTetheringOffRounded from '@mui/icons-material/WifiTetheringOffRounded'
 import WifiTetheringRounded from '@mui/icons-material/WifiTetheringRounded'
 import { Box, IconButton, type SxProps, TextField } from '@mui/material'
+import { useDebounceFn } from 'ahooks'
 import { memo, useEffect } from 'react'
 import { flushSync } from 'react-dom'
 import { useTranslation } from 'react-i18next'
@@ -17,7 +18,7 @@ import { useTranslation } from 'react-i18next'
 import { useVerge } from '@/hooks/use-verge'
 import delayManager from '@/services/delay'
 
-import { BaseSearchBox } from '../base'
+import { BaseSearchBox, type SearchState } from '../base'
 
 import type { ProxySortType } from './use-filter-sort'
 import type { HeadState } from './use-head-state'
@@ -65,36 +66,51 @@ export const ProxyGroupTools = memo(function ProxyGroupTools(props: Props) {
     delayManager.setUrl(groupName, testUrl?.trim() || url || defaultLatencyUrl)
   }, [groupName, testUrl, defaultLatencyUrl, url])
 
+  // 过滤输入是高频操作，且每次都会触发整组代理的重新过滤/排序与虚拟列表重渲染，
+  // 因此对写入 headState 的动作做防抖，避免每输入一个字符就过滤一次。
+  const { run: applyFilter, flush: flushFilter } = useDebounceFn(
+    (state: SearchState) => {
+      onHeadState({
+        filterText: state.text,
+        filterMatchCase: state.matchCase,
+        filterMatchWholeWord: state.matchWholeWord,
+        filterUseRegularExpression: state.useRegularExpression,
+      })
+    },
+    { wait: 300 },
+  )
+
+  // 关闭过滤框或卸载时立即应用最后一次输入，避免丢失未生效的过滤条件。
+  useEffect(() => {
+    if (textState !== 'filter') flushFilter()
+  }, [textState, flushFilter])
+  useEffect(() => () => flushFilter(), [flushFilter])
+
   return (
     <Box
       sx={{
         display: 'flex',
+        justifyContent: 'end',
         alignItems: 'center',
         gap: 0.5,
+        height: 36,
+        flex: 1,
+        ml: 2,
         ...sx,
       }}
     >
       {textState === 'filter' && (
-        <Box sx={{ display: 'inline-block', width: 180 }}>
+        <Box sx={{ flex: '1 1 auto' }}>
           <BaseSearchBox
-            value={filterText}
+            defaultValue={filterText}
+            matchCase={filterMatchCase}
+            matchWholeWord={filterMatchWholeWord}
+            useRegularExpression={filterUseRegularExpression}
             onClick={(e) => {
               e.preventDefault()
               e.stopPropagation()
             }}
-            searchState={{
-              matchCase: filterMatchCase,
-              matchWholeWord: filterMatchWholeWord,
-              useRegularExpression: filterUseRegularExpression,
-            }}
-            onSearch={(_, state) =>
-              onHeadState({
-                filterText: state.text,
-                filterMatchCase: state.matchCase,
-                filterMatchWholeWord: state.matchWholeWord,
-                filterUseRegularExpression: state.useRegularExpression,
-              })
-            }
+            onSearch={(_, state) => applyFilter(state)}
           />
         </Box>
       )}
@@ -113,10 +129,9 @@ export const ProxyGroupTools = memo(function ProxyGroupTools(props: Props) {
             e.stopPropagation()
           }}
           onChange={(e) => onHeadState({ testUrl: e.target.value })}
-          sx={{ width: 180, input: { py: 0.65, px: 1 } }}
+          sx={{ flex: '1 1 auto', input: { py: 0.65, px: 1 } }}
         />
       )}
-
       <IconButton
         size="small"
         color="inherit"
@@ -235,10 +250,7 @@ export const ProxyGroupTools = memo(function ProxyGroupTools(props: Props) {
           if (!headState.open)
             // eslint-disable-next-line @eslint-react/dom-no-flush-sync
             flushSync(() => onHeadState({ open: true }))
-          onHeadState({
-            textState: textState === 'filter' ? null : 'filter',
-            filterText: '',
-          })
+          onHeadState({ textState: textState === 'filter' ? null : 'filter' })
         }}
       >
         {textState === 'filter' ? (

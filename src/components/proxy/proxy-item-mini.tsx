@@ -159,8 +159,7 @@ export const ProxyItemMini = (props: Props) => {
             <BaseLoading />
           </Widget>
         )}
-        {!proxy.provider && delayValue !== -2 && (
-          // provider 的节点不支持检测
+        {delayValue !== -2 && (
           <Widget
             className="the-check"
             onClick={(e) => {
@@ -182,16 +181,13 @@ export const ProxyItemMini = (props: Props) => {
           <Widget
             className="the-delay"
             onClick={(e) => {
-              if (proxy.provider) return
               e.preventDefault()
               e.stopPropagation()
-              onDelay()
+              onDelay(proxy.provider)
             }}
             sx={({ palette }) => ({
               color: delayManager.formatDelayColor(delayValue, timeout),
-              ...(!proxy.provider
-                ? { ':hover': { bgcolor: alpha(palette.primary.main, 0.15) } }
-                : {}),
+              ':hover': { bgcolor: alpha(palette.primary.main, 0.15) },
             })}
           >
             {delayManager.formatDelay(delayValue, timeout)}

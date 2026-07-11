@@ -39,7 +39,7 @@ import { Outlet, useLocation, useNavigate } from 'react-router'
 import iconDark from '@/assets/image/icon_dark.svg?react'
 import iconLight from '@/assets/image/icon_light.svg?react'
 import LogoSvg from '@/assets/image/logo.svg?react'
-import { BaseErrorBoundary } from '@/components/base'
+import { BaseErrorBoundary, BaseLoading } from '@/components/base'
 import { LayoutItem } from '@/components/layout/layout-item'
 import { LayoutTraffic } from '@/components/layout/layout-traffic'
 import { NoticeManager } from '@/components/layout/notice-manager'
@@ -240,13 +240,10 @@ const Layout = () => {
     }
 
     const controller = new AbortController()
-    const timerId = window.setTimeout(() => {
-      void preloadNavigationRoutes(controller.signal)
-    }, 2000)
+    void preloadNavigationRoutes(controller.signal)
 
     return () => {
       controller.abort()
-      window.clearTimeout(timerId)
     }
   }, [themeReady, pageVisible])
 
@@ -501,7 +498,20 @@ const Layout = () => {
                     bottom: 0,
                   }}
                 >
-                  <Suspense fallback={null}>
+                  <Suspense
+                    fallback={
+                      <Box
+                        sx={{
+                          display: 'flex',
+                          height: '100%',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <BaseLoading />
+                      </Box>
+                    }
+                  >
                     <LogsPage />
                   </Suspense>
                 </div>
