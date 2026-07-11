@@ -95,6 +95,7 @@ export const ProxyGroupTools = memo(function ProxyGroupTools(props: Props) {
         gap: 0.5,
         height: 36,
         flex: 1,
+        ml: 2,
         ...sx,
       }}
     >
