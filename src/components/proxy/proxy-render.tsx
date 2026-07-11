@@ -215,18 +215,6 @@ export const ProxyRender = memo(function ProxyRender(props: RenderProps) {
                 )}
               </Box>
             </Box>
-            {/*{((stickyed && headState?.open) || headState?.open) && (
-              <Box>
-                <ProxyGroupTools
-                  url={group.testUrl}
-                  groupName={group.name}
-                  headState={headState!}
-                  onLocation={() => onLocation(group)}
-                  onCheckDelay={() => onCheckAll(group.name)}
-                  onHeadState={(p) => onHeadState(group.name, p)}
-                />
-              </Box>
-            )}*/}
           </Box>
         </ListItemButton>
       </div>
