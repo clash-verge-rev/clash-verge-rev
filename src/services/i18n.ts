@@ -105,14 +105,6 @@ const localeLoaders = Object.entries(localeModules).reduce<
   return acc
 }, {})
 
-export const languages: Record<string, any> = supportedLanguages.reduce(
-  (acc, lang) => {
-    acc[lang] = {}
-    return acc
-  },
-  {} as Record<string, any>,
-)
-
 const loadLanguageSections = async (
   language: string,
   sections: readonly string[],
@@ -143,9 +135,6 @@ const loadLanguageSections = async (
     throw error
   }
 }
-
-export const loadLanguage = async (language: string) =>
-  loadLanguageSections(language, STARTUP_LANGUAGE_SECTIONS)
 
 const getLoadedLanguageSections = (language: string) =>
   Object.keys(i18n.getResourceBundle(language, 'translation') ?? {})

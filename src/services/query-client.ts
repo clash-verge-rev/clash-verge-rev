@@ -31,7 +31,7 @@ type QueryResult<T> = SWRResponse<T> & {
 
 const serializeQueryKey = (queryKey: QueryKey) => unstable_serialize(queryKey)
 
-export const queryCache = new Map<string, unknown>()
+const queryCache = new Map<string, unknown>()
 
 const setCachedData = <T>(queryKey: QueryKey, data: T | undefined) => {
   const cacheKey = serializeQueryKey(queryKey)

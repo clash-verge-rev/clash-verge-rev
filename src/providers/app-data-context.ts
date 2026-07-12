@@ -134,27 +134,3 @@ export const useAppRefreshers = (): RefreshersContextType =>
 
 export const useCoreDataStatus = (): CoreDataStatusContextType =>
   useCtx(CoreDataStatusContext, 'useCoreDataStatus')
-
-export const useAppData = (): AppDataContextType => {
-  const { proxies, proxyProviders } = useProxiesData()
-  const { rules, ruleProviders } = useRulesData()
-  const { clashConfig } = useClashConfigData()
-  const { sysproxy, runningMode, systemProxyAddress } = useSystemData()
-  const { uptime } = useUptimeData()
-  const { isCoreDataPending } = useCoreDataStatus()
-  const refreshers = useAppRefreshers()
-
-  return {
-    proxies,
-    clashConfig: clashConfig as BaseConfig,
-    rules,
-    sysproxy,
-    runningMode,
-    uptime,
-    proxyProviders: proxyProviders as Record<string, ProxyProvider>,
-    ruleProviders: ruleProviders as Record<string, RuleProvider>,
-    systemProxyAddress,
-    isCoreDataPending,
-    ...refreshers,
-  }
-}
