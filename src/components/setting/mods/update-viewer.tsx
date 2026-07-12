@@ -17,7 +17,6 @@ import type { Options as ReactMarkdownOptions } from 'react-markdown'
 
 import { BaseDialog, DialogRef } from '@/components/base'
 import { useUpdate } from '@/hooks/use-update'
-import { portableFlag } from '@/pages/_layout'
 import { showNotice } from '@/services/notice-service'
 import { useSetUpdateState, useUpdateState } from '@/services/states'
 
@@ -160,10 +159,6 @@ export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
   }, [updateInfo])
 
   const onUpdate = useLockFn(async () => {
-    if (portableFlag) {
-      showNotice.error('settings.modals.update.messages.portableError')
-      return
-    }
     if (!updateInfo?.body) return
     if (breakChangeFlag) {
       showNotice.error('settings.modals.update.messages.breakChangeError')
