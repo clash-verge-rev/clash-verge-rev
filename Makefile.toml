@@ -28,7 +28,7 @@ args = ["typecheck"]
 command = "pnpm.cmd"
 
 [tasks.knip-report]
-description = "Report unused frontend files"
+description = "Report unused frontend code and dependencies"
 command = "pnpm"
 args = ["knip:report"]
 
