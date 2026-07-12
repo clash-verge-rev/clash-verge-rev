@@ -17,14 +17,14 @@ const initConnData: ConnectionMonitorData = {
   closedConnections: [],
 }
 
-export interface ConnectionMonitorData {
+interface ConnectionMonitorData {
   uploadTotal: number
   downloadTotal: number
   activeConnections: IConnectionsItem[]
   closedConnections: IConnectionsItem[]
 }
 
-export interface ConnectionSummaryData {
+interface ConnectionSummaryData {
   activeConnectionCount: number
 }
 

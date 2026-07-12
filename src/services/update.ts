@@ -6,7 +6,7 @@ import {
 
 import { version as appVersion } from '@root/package.json'
 
-export type VersionParts = {
+type VersionParts = {
   main: number[]
   pre: (number | string)[]
 }

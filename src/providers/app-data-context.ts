@@ -6,39 +6,6 @@ import {
   RuleProvider,
 } from 'tauri-plugin-mihomo-api'
 
-export interface AppDataContextType {
-  proxies: any
-  clashConfig: BaseConfig
-  rules: Rule[]
-  sysproxy: any
-  runningMode?: string
-  uptime: number
-  proxyProviders: Record<string, ProxyProvider>
-  ruleProviders: Record<string, RuleProvider>
-  systemProxyAddress: string
-  isCoreDataPending: boolean
-
-  refreshProxy: () => Promise<any>
-  refreshClashConfig: () => Promise<any>
-  refreshRules: () => Promise<any>
-  refreshSysproxy: () => Promise<any>
-  refreshProxyProviders: () => Promise<any>
-  refreshRuleProviders: () => Promise<any>
-  refreshAll: () => Promise<any>
-}
-
-export interface ConnectionWithSpeed extends IConnectionsItem {
-  curUpload: number
-  curDownload: number
-}
-
-export interface ConnectionSpeedData {
-  id: string
-  upload: number
-  download: number
-  timestamp: number
-}
-
 export interface ProxiesContextType {
   proxies: any
   proxyProviders: Record<string, ProxyProvider | undefined>
