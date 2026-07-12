@@ -77,7 +77,7 @@ export const ProxyGroupTools = memo(function ProxyGroupTools(props: Props) {
         filterUseRegularExpression: state.useRegularExpression,
       })
     },
-    { wait: 300 },
+    { wait: 600 },
   )
 
   // 关闭过滤框或卸载时立即应用最后一次输入，避免丢失未生效的过滤条件。
@@ -201,9 +201,6 @@ export const ProxyGroupTools = memo(function ProxyGroupTools(props: Props) {
         onClick={(e) => {
           e.preventDefault()
           e.stopPropagation()
-          if (!headState.open)
-            // eslint-disable-next-line @eslint-react/dom-no-flush-sync
-            flushSync(() => onHeadState({ open: true }))
           onHeadState({
             textState: textState === 'url' ? null : 'url',
           })
@@ -247,7 +244,7 @@ export const ProxyGroupTools = memo(function ProxyGroupTools(props: Props) {
         onClick={(e) => {
           e.preventDefault()
           e.stopPropagation()
-          if (!headState.open)
+          if (!headState.open && textState !== 'filter')
             // eslint-disable-next-line @eslint-react/dom-no-flush-sync
             flushSync(() => onHeadState({ open: true }))
           onHeadState({ textState: textState === 'filter' ? null : 'filter' })
