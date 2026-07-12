@@ -609,11 +609,6 @@
         "reactivateProfiles": "فعال‌سازی مجدد پروفایل‌ها"
       }
     },
-    "password": {
-      "prompts": {
-        "enterRoot": "لطفاً رمز ریشه خود را وارد کنید"
-      }
-    },
     "networkInterface": {
       "title": "رابط شبکه",
       "fields": {

@@ -609,11 +609,6 @@
         "reactivateProfiles": "Abonnement erneut aktivieren"
       }
     },
-    "password": {
-      "prompts": {
-        "enterRoot": "Bitte geben Sie Ihr Root-Passwort ein."
-      }
-    },
     "networkInterface": {
       "title": "Netzwerkschnittstelle",
       "fields": {

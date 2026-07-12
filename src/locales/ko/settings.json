@@ -609,11 +609,6 @@
         "reactivateProfiles": "프로필 재활성화"
       }
     },
-    "password": {
-      "prompts": {
-        "enterRoot": "루트 암호를 입력하세요"
-      }
-    },
     "networkInterface": {
       "title": "네트워크 인터페이스",
       "fields": {

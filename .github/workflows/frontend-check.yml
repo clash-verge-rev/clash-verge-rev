@@ -30,6 +30,7 @@ jobs:
               - 'package.json'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
+              - 'knip.json'
               - 'eslint.config.ts'
               - 'tsconfig.json'
               - 'vite.config.*'
@@ -73,3 +74,7 @@ jobs:
       - name: Run TypeScript typecheck
         if: steps.check_frontend.outputs.frontend == 'true'
         run: pnpm typecheck
+
+      - name: Report unused frontend files
+        if: steps.check_frontend.outputs.frontend == 'true'
+        run: pnpm knip:report

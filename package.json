@@ -31,7 +31,8 @@
     "i18n:check": "node scripts/cleanup-unused-i18n.mjs",
     "i18n:format": "node scripts/cleanup-unused-i18n.mjs --align --apply",
     "i18n:types": "node scripts/generate-i18n-keys.mjs",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "knip:report": "knip --files --no-exit-code"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -111,6 +112,7 @@
     "https-proxy-agent": "^9.0.0",
     "husky": "^9.1.7",
     "jiti": "^2.7.0",
+    "knip": "6.26.0",
     "lint-staged": "^17.0.5",
     "sass": "^1.100.0",
     "tar": "^7.5.15",

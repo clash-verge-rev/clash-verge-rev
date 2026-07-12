@@ -609,11 +609,6 @@
         "reactivateProfiles": "Reaktivasi Profil"
       }
     },
-    "password": {
-      "prompts": {
-        "enterRoot": "Harap masukkan kata sandi root Anda"
-      }
-    },
     "networkInterface": {
       "title": "Antarmuka Jaringan",
       "fields": {

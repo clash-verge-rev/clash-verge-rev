@@ -609,11 +609,6 @@
         "reactivateProfiles": "重新啟用訂閱"
       }
     },
-    "password": {
-      "prompts": {
-        "enterRoot": "請輸入您的 root 密碼"
-      }
-    },
     "networkInterface": {
       "title": "網路介面",
       "fields": {

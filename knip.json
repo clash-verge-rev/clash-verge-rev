@@ -1,0 +1,5 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "entry": ["src/polyfills/*.js!"],
+  "project": ["src/**/*.{js,jsx,ts,tsx}!"]
+}

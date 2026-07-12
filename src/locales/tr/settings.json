@@ -609,11 +609,6 @@
         "reactivateProfiles": "Profilleri Yeniden Etkinleştir"
       }
     },
-    "password": {
-      "prompts": {
-        "enterRoot": "Lütfen root şifrenizi girin"
-      }
-    },
     "networkInterface": {
       "title": "Ağ Arayüzü",
       "fields": {

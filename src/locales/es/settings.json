@@ -609,11 +609,6 @@
         "reactivateProfiles": "Reactivar suscripciones"
       }
     },
-    "password": {
-      "prompts": {
-        "enterRoot": "Ingrese su contraseña de root"
-      }
-    },
     "networkInterface": {
       "title": "Interfaz de red",
       "fields": {

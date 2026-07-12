@@ -981,11 +981,6 @@ export interface TranslationResources {
           }
           title: string
         }
-        password: {
-          prompts: {
-            enterRoot: string
-          }
-        }
         sysproxy: {
           actions: {
             editPac: string

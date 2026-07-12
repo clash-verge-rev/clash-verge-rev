@@ -609,11 +609,6 @@
         "reactivateProfiles": "Перезапустить профиль"
       }
     },
-    "password": {
-      "prompts": {
-        "enterRoot": "Пожалуйста, введите пароль root"
-      }
-    },
     "networkInterface": {
       "title": "Сетевой интерфейс",
       "fields": {

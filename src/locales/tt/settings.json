@@ -609,11 +609,6 @@
         "reactivateProfiles": "Профильләрне янәдән активлаштыру"
       }
     },
-    "password": {
-      "prompts": {
-        "enterRoot": "root паролен языгыз"
-      }
-    },
     "networkInterface": {
       "title": "Челтәр интерфейсы",
       "fields": {

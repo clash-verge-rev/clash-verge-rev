@@ -609,11 +609,6 @@
         "reactivateProfiles": "Reactivate Profiles"
       }
     },
-    "password": {
-      "prompts": {
-        "enterRoot": "Please enter your root password"
-      }
-    },
     "networkInterface": {
       "title": "Network Interface",
       "fields": {

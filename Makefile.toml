@@ -27,6 +27,14 @@ args = ["typecheck"]
 [tasks.typecheck.windows]
 command = "pnpm.cmd"
 
+[tasks.knip-report]
+description = "Report unused frontend files"
+command = "pnpm"
+args = ["knip:report"]
+
+[tasks.knip-report.windows]
+command = "pnpm.cmd"
+
 [tasks.lint-staged]
 description = "Run lint-staged for staged files"
 command = "pnpm"
@@ -99,7 +107,7 @@ cm_run_task frontend-format
 '''
 
 [tasks.pre-push]
-description = "Pre-push checks: lint and typecheck"
+description = "Pre-push checks: lint, typecheck, and unused files"
 script_runner = "@duckscript"
 script = '''
 has_upstream = exec git rev-parse --abbrev-ref --symbolic-full-name @{u}
@@ -118,5 +126,6 @@ end
 has_frontend = exec git diff @{u}..HEAD --quiet -- "*.js" "*.jsx" "*.ts" "*.tsx" "*.json" "*.css" "*.scss" "*.html"
 if eq ${has_frontend.code} 1
   cm_run_task typecheck
+  cm_run_task knip-report
 end
 '''

@@ -609,11 +609,6 @@
         "reactivateProfiles": "重新激活订阅"
       }
     },
-    "password": {
-      "prompts": {
-        "enterRoot": "请输入您的 root 密码"
-      }
-    },
     "networkInterface": {
       "title": "网络接口",
       "fields": {

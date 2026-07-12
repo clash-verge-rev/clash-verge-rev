@@ -609,11 +609,6 @@
         "reactivateProfiles": "إعادة تنشيط الملفات الشخصية"
       }
     },
-    "password": {
-      "prompts": {
-        "enterRoot": "يرجى إدخال كلمة مرور الرووت"
-      }
-    },
     "networkInterface": {
       "title": "واجهة الشبكة",
       "fields": {

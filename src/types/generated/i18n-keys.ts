@@ -672,7 +672,6 @@ export const translationKeys = [
   'settings.modals.hotkey.functions.entryLightweightMode',
   'settings.modals.hotkey.functions.direct',
   'settings.modals.hotkey.functions.reactivateProfiles',
-  'settings.modals.password.prompts.enterRoot',
   'settings.modals.networkInterface.title',
   'settings.modals.networkInterface.fields.ipAddress',
   'settings.modals.networkInterface.fields.macAddress',

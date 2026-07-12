@@ -609,11 +609,6 @@
         "reactivateProfiles": "プロファイルを再アクティブ化"
       }
     },
-    "password": {
-      "prompts": {
-        "enterRoot": "ルートパスワードを入力してください。"
-      }
-    },
     "networkInterface": {
       "title": "ネットワークインターフェース",
       "fields": {
