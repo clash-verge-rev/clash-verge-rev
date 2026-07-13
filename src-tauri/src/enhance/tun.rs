@@ -81,6 +81,11 @@ pub fn use_tun(mut config: Mapping, enable: bool) -> Mapping {
         });
     }
 
+    // mihomo 在 macOS 上默认把实验性的批量收包选项 recvmsgx 设为 true（走未公开的 utun
+    // 内核接口），已知会诱发 XNU 内核 panic；如果用户没有显式配置过，这里收敛为 false
+    #[cfg(target_os = "macos")]
+    append!(tun_val, "recvmsgx", false);
+
     // 更新TUN配置
     revise!(tun_val, "enable", enable);
     revise!(config, "tun", tun_val);
