@@ -429,7 +429,6 @@
         "update": "Actualizar"
       },
       "messages": {
-        "portableError": "La versión portátil no admite la actualización desde dentro de la aplicación. Descargue e instale manualmente la actualización.",
         "breakChangeError": "Esta es una actualización importante y no se admite la actualización desde dentro de la aplicación. Desinstale e instale manualmente la nueva versión."
       }
     },

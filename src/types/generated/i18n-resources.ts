@@ -1042,7 +1042,6 @@ export interface TranslationResources {
           }
           messages: {
             breakChangeError: string
-            portableError: string
           }
           title: string
         }

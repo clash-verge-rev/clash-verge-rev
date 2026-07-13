@@ -429,7 +429,6 @@
         "update": "更新"
       },
       "messages": {
-        "portableError": "便携版不支持应用内更新，请手动下载替换",
         "breakChangeError": "此版本为重大更新，不支持应用内更新，请卸载后手动下载安装"
       }
     },
