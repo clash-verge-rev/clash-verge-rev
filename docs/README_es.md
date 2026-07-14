@@ -45,7 +45,7 @@ Consulta la [documentación del proyecto](https://clash-verge-rev.github.io/) pa
 
 ### Canal de Telegram
 
-Únete a [@clash_verge_rev](https://t.me/clash_verge_re) para enterarte de las novedades.
+Únete a [@clash_verge_rev](https://t.me/clash_verge_rev) para enterarte de las novedades.
 
 ---
 

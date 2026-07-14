@@ -41,7 +41,7 @@ Clash Meta GUI базируется на <a href="https://github.com/tauri-apps/
 
 #### Инструкции по установке и ответы на часто задаваемые вопросы можно найти на [странице документации](https://clash-verge-rev.github.io/)
 
-### TG канал: [@clash_verge_rev](https://t.me/clash_verge_re)
+### TG канал: [@clash_verge_rev](https://t.me/clash_verge_rev)
 
 ---
 

@@ -44,7 +44,7 @@
 
 ### کانال تلگرام
 
-برای اطلاع از آخرین اخبار به [@clash_verge_rev](https://t.me/clash_verge_re) بپیوندید.
+برای اطلاع از آخرین اخبار به [@clash_verge_rev](https://t.me/clash_verge_rev) بپیوندید.
 
 ---
 

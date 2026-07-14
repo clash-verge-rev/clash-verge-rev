@@ -45,7 +45,7 @@ Read the [project documentation](https://clash-verge-rev.github.io/) for install
 
 ### Telegram Channel
 
-Join [@clash_verge_rev](https://t.me/clash_verge_re) for update announcements.
+Join [@clash_verge_rev](https://t.me/clash_verge_rev) for update announcements.
 
 ---
 

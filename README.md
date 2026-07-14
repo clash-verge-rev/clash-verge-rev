@@ -42,7 +42,7 @@ Supports Windows (x64/x86), Linux (x64/arm64) and macOS 11+ (intel/apple).
 
 #### 安装说明和常见问题，请到 [文档页](https://clash-verge-rev.github.io/) 查看
 
-### TG 频道: [@clash_verge_rev](https://t.me/clash_verge_re)
+### TG 频道: [@clash_verge_rev](https://t.me/clash_verge_rev)
 
 ---
 
