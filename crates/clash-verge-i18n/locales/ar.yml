@@ -1,0 +1,68 @@
+_version: 1
+notifications:
+  dashboardToggled:
+    title: لوحة التحكم
+    body: تم تحديث حالة عرض لوحة التحكم.
+  clashModeChanged:
+    title: تبديل الوضع
+    body: تم التبديل إلى {mode}.
+  systemProxyToggled:
+    title: وكيل النظام
+    'on': System proxy has been enabled.
+    'off': System proxy has been disabled.
+  tunModeToggled:
+    title: وضع TUN
+    'on': TUN mode has been enabled.
+    'off': TUN mode has been disabled.
+  lightweightModeEntered:
+    title: الوضع الخفيف
+    body: تم الدخول إلى الوضع الخفيف.
+  profilesReactivated:
+    title: الملفات التعريفية
+    body: تمت إعادة تفعيل الملف التعريفي.
+  appQuit:
+    title: على وشك الخروج
+    body: Clash Verge على وشك الخروج.
+  appHidden:
+    title: تم إخفاء التطبيق
+    body: Clash Verge يعمل في الخلفية.
+  updateReady:
+    title: Clash Verge Update
+    body: A new version (v{version}) has been downloaded and is ready to install.
+    installNow: Install Now
+    later: Later
+service:
+  adminInstallPrompt: يتطلب تثبيت خدمة Clash Verge صلاحيات المسؤول.
+  adminUninstallPrompt: يتطلب إلغاء تثبيت خدمة Clash Verge صلاحيات المسؤول.
+  translocatedCorePath: Clash Verge is running from a temporary (App Translocation) path and can't locate the core. Please move Clash Verge into the Applications folder and reopen it.
+tray:
+  dashboard: لوحة التحكم
+  ruleMode: وضع القواعد
+  globalMode: الوضع العام
+  directMode: الوضع المباشر
+  outboundModes: أوضاع الخروج
+  rule: قاعدة
+  direct: مباشر
+  global: عام
+  profiles: الملفات التعريفية
+  proxies: وكلاء
+  systemProxy: وكيل النظام
+  tunMode: وضع TUN
+  closeAllConnections: إغلاق كل الاتصالات
+  lightweightMode: الوضع الخفيف
+  copyEnv: نسخ متغيرات البيئة
+  confDir: دليل الإعدادات
+  coreDir: دليل النواة
+  logsDir: دليل السجلات
+  openDir: فتح الدليل
+  appLog: سجل التطبيق
+  coreLog: سجل النواة
+  restartClash: إعادة تشغيل نواة Clash
+  restartApp: إعادة تشغيل التطبيق
+  vergeVersion: إصدار Verge
+  more: المزيد
+  exit: خروج
+  tooltip:
+    systemProxy: وكيل النظام
+    tun: TUN
+    profile: ملف تعريفي

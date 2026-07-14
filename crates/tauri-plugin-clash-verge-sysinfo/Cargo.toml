@@ -1,0 +1,23 @@
+[package]
+name = "tauri-plugin-clash-verge-sysinfo"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.91"
+
+[dependencies]
+tauri = { workspace = true }
+tauri-plugin-clipboard-manager = { workspace = true }
+parking_lot = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+# sysinfo 0.38.2 conflicts with dark-light
+# see https://github.com/GuillaumeGomez/sysinfo/issues/1623
+sysinfo = { version = "0.39.5", features = ["network", "system"] }
+
+[target.'cfg(not(windows))'.dependencies]
+libc = "0.2.186"
+
+[target.'cfg(windows)'.dependencies]
+deelevate = { workspace = true }
+
+[lints]
+workspace = true

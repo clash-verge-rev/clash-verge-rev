@@ -1,0 +1,53 @@
+{
+  "page": {
+    "actions": {
+      "testAll": "Probar todo"
+    },
+    "title": "Prueba"
+  },
+  "components": {
+    "item": {
+      "actions": {
+        "test": "Prueba"
+      }
+    }
+  },
+  "modals": {
+    "test": {
+      "title": {
+        "create": "Crear prueba",
+        "edit": "Editar prueba"
+      },
+      "fields": {
+        "url": "URL de prueba"
+      }
+    }
+  },
+  "statuses": {
+    "test": {
+      "pending": "Pendiente de detección",
+      "yes": "Soportado",
+      "no": "No soportado",
+      "failed": "Prueba fallida",
+      "completed": "Detección completada",
+      "disallowedIsp": "Proveedor de servicios de Internet no permitido",
+      "originalsOnly": "Solo originales",
+      "noDisney": "No (IP Banned By Disney+)",
+      "unsupportedRegion": "País/región no soportado",
+      "failedNetwork": "Failed (Network Connection)"
+    }
+  },
+  "unlock": {
+    "page": {
+      "actions": {
+        "testing": "Probando..."
+      },
+      "empty": "No unlock test items",
+      "messages": {
+        "detectionFailedWithName": "Fallo en la detección para {{name}}",
+        "detectionTimeout": "Detection timeout or failed"
+      },
+      "title": "Prueba de desbloqueo"
+    }
+  }
+}

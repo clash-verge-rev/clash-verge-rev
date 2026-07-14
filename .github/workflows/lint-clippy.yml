@@ -1,0 +1,84 @@
+name: Clippy Lint
+
+on:
+  pull_request:
+  workflow_dispatch:
+env:
+  HUSKY: 0
+
+jobs:
+  clippy:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+          - os: macos-latest
+            target: aarch64-apple-darwin
+          - os: ubuntu-22.04
+            target: x86_64-unknown-linux-gnu
+
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Check src-tauri changes
+        if: github.event_name != 'workflow_dispatch'
+        id: check_changes
+        uses: dorny/paths-filter@v4
+        with:
+          filters: |
+            rust:
+              - 'src-tauri/**'
+
+      - name: Skip if src-tauri not changed
+        if: github.event_name != 'workflow_dispatch' && steps.check_changes.outputs.rust != 'true'
+        run: echo "No src-tauri changes, skipping clippy lint."
+
+      - name: Continue if src-tauri changed
+        if: github.event_name != 'workflow_dispatch' && steps.check_changes.outputs.rust == 'true'
+        run: echo "src-tauri changed, running clippy lint."
+
+      - name: Manual trigger - always run
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          echo "Manual trigger detected: skipping changes check and running clippy."
+
+      - name: Checkout Repository
+        uses: actions/checkout@v7
+
+      - name: Install Rust Stable
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: stable
+          components: clippy
+
+      - name: Add Rust Target
+        run: rustup target add ${{ matrix.target }}
+
+      - name: Rust Cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          save-if: ${{ github.ref == 'refs/heads/dev' }}
+          prefix-key: 'v1-rust'
+          key: 'rust-shared-stable-${{ matrix.os }}-${{ matrix.target }}'
+          workspaces: |
+            . -> target
+          cache-all-crates: true
+          cache-workspace-crates: true
+
+      - name: Install dependencies (ubuntu only)
+        if: matrix.os == 'ubuntu-22.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libxslt1.1 libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf
+
+      - name: Run Clippy
+        working-directory: ./src-tauri
+        run: cargo clippy-all
+
+      - name: Run Logging Check
+        working-directory: ./src-tauri
+        shell: bash
+        run: |
+          cargo install --git https://github.com/clash-verge-rev/clash-verge-logging-check.git
+          clash-verge-logging-check

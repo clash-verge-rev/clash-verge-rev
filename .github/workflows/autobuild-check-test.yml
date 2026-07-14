@@ -1,0 +1,133 @@
+name: Autobuild Check Logic Test
+
+on:
+  workflow_dispatch:
+
+jobs:
+  check_autobuild_logic:
+    name: Check Autobuild Should Run Logic
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 2
+
+      - name: Check if version or source changed, or assets already exist
+        id: check
+        run: |
+          # # 仅用于测试逻辑，手动触发自动跳过
+          # if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+          #   echo "should_run=skip" >> $GITHUB_OUTPUT
+          #   echo "🟡 手动触发，跳过 should_run 检查"
+          #   exit 0
+          # fi
+
+          # 确保有 HEAD~1
+          if ! git rev-parse HEAD~1 > /dev/null 2>&1; then
+            echo "should_run=true" >> $GITHUB_OUTPUT
+            echo "🟢 没有前一个提交，默认需要构建"
+            exit 0
+          fi
+
+          # 版本号变更判断
+          CURRENT_VERSION=$(jq -r '.version' package.json)
+          PREVIOUS_VERSION=$(git show HEAD~1:package.json | jq -r '.version' 2>/dev/null || echo "")
+
+          if [ "$CURRENT_VERSION" != "$PREVIOUS_VERSION" ]; then
+            echo "should_run=true" >> $GITHUB_OUTPUT
+            echo "🟢 版本号变更: $PREVIOUS_VERSION → $CURRENT_VERSION"
+            exit 0
+          fi
+
+          # 检查 src 变更（排除常见产物与缓存）
+          SRC_DIFF=$(git diff --name-only HEAD~1 HEAD -- src/ | grep -Ev '^src/(dist|build|node_modules|\.next|\.cache)' || true)
+          TAURI_DIFF=$(git diff --name-only HEAD~1 HEAD -- src-tauri/ | grep -Ev '^src-tauri/(target|node_modules|dist|\.cache)' || true)
+
+          if [ -n "$SRC_DIFF" ] || [ -n "$TAURI_DIFF" ]; then
+            echo "should_run=true" >> $GITHUB_OUTPUT
+            echo "🟢 源码变更 detected"
+            exit 0
+          fi
+
+          # 找到最后一个修改 Tauri 相关文件的 commit
+          echo "🔍 查找最后一个 Tauri 相关变更的 commit..."
+
+          LAST_TAURI_COMMIT=""
+          for commit in $(git rev-list HEAD --max-count=50); do
+            # 检查此 commit 是否修改了 Tauri 相关文件
+            CHANGED_FILES=$(git show --name-only --pretty=format: $commit | tr '\n' ' ')
+            HAS_TAURI_CHANGES=false
+            
+            # 检查各个模式
+            if echo "$CHANGED_FILES" | grep -q "src/" && echo "$CHANGED_FILES" | grep -qvE "src/(dist|build|node_modules|\.next|\.cache)"; then
+              HAS_TAURI_CHANGES=true
+            elif echo "$CHANGED_FILES" | grep -qE "src-tauri/(src|Cargo\.(toml|lock)|tauri\..*\.conf\.json|build\.rs|capabilities)"; then
+              HAS_TAURI_CHANGES=true
+            fi
+            
+            if [ "$HAS_TAURI_CHANGES" = true ]; then
+              LAST_TAURI_COMMIT=$(git rev-parse --short $commit)
+              break
+            fi
+          done
+
+          if [ -z "$LAST_TAURI_COMMIT" ]; then
+            echo "⚠️  最近的 commits 中未找到 Tauri 相关变更，使用当前 commit"
+            LAST_TAURI_COMMIT=$(git rev-parse --short HEAD)
+          fi
+
+          CURRENT_COMMIT=$(git rev-parse --short HEAD)
+          echo "📝 最后 Tauri 相关 commit: $LAST_TAURI_COMMIT"
+          echo "📝 当前 commit: $CURRENT_COMMIT"
+
+          # 检查 autobuild release 是否存在
+          AUTOBUILD_RELEASE_EXISTS=$(gh release view "autobuild" --json id -q '.id' 2>/dev/null || echo "")
+
+          if [ -z "$AUTOBUILD_RELEASE_EXISTS" ]; then
+            echo "should_run=true" >> $GITHUB_OUTPUT
+            echo "🟢 没有 autobuild release，需构建"
+          else
+            # 检查 latest.json 是否存在
+            LATEST_JSON_EXISTS=$(gh release view "autobuild" --json assets -q '.assets[] | select(.name == "latest.json") | .name' 2>/dev/null || echo "")
+            
+            if [ -z "$LATEST_JSON_EXISTS" ]; then
+              echo "should_run=true" >> $GITHUB_OUTPUT
+              echo "🟢 没有 latest.json，需构建"
+            else
+              # 下载并解析 latest.json 检查版本和 commit hash
+              echo "📥 下载 latest.json 检查版本..."
+              LATEST_JSON_URL=$(gh release view "autobuild" --json assets -q '.assets[] | select(.name == "latest.json") | .browser_download_url' 2>/dev/null)
+              
+              if [ -n "$LATEST_JSON_URL" ]; then
+                LATEST_JSON_CONTENT=$(curl -s "$LATEST_JSON_URL" 2>/dev/null || echo "")
+                
+                if [ -n "$LATEST_JSON_CONTENT" ]; then
+                  LATEST_VERSION=$(echo "$LATEST_JSON_CONTENT" | jq -r '.version' 2>/dev/null || echo "")
+                  echo "📦 最新 autobuild 版本: $LATEST_VERSION"
+                  
+                  # 从版本字符串中提取 commit hash (格式: X.Y.Z+autobuild.MMDD.commit)
+                  LATEST_COMMIT=$(echo "$LATEST_VERSION" | sed -n 's/.*+autobuild\.[0-9]\{4\}\.\([a-f0-9]*\)$/\1/p' || echo "")
+                  echo "📝 最新 autobuild commit: $LATEST_COMMIT"
+                  
+                  if [ "$LAST_TAURI_COMMIT" != "$LATEST_COMMIT" ]; then
+                    echo "should_run=true" >> $GITHUB_OUTPUT
+                    echo "🟢 Tauri commit hash 不匹配 ($LAST_TAURI_COMMIT != $LATEST_COMMIT)，需构建"
+                  else
+                    echo "should_run=false" >> $GITHUB_OUTPUT
+                    echo "🔴 相同 Tauri commit hash ($LAST_TAURI_COMMIT)，不需构建"
+                  fi
+                else
+                  echo "should_run=true" >> $GITHUB_OUTPUT
+                  echo "⚠️  无法下载或解析 latest.json，需构建"
+                fi
+              else
+                echo "should_run=true" >> $GITHUB_OUTPUT
+                echo "⚠️  无法获取 latest.json 下载 URL，需构建"
+              fi
+            fi
+          fi
+
+      - name: Output should_run result
+        run: |
+          echo "Result: ${{ steps.check.outputs.should_run }}"

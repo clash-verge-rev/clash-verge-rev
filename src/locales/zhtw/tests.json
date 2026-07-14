@@ -1,0 +1,53 @@
+{
+  "page": {
+    "actions": {
+      "testAll": "測試全部"
+    },
+    "title": "測試"
+  },
+  "components": {
+    "item": {
+      "actions": {
+        "test": "測試"
+      }
+    }
+  },
+  "modals": {
+    "test": {
+      "title": {
+        "create": "新增測試",
+        "edit": "編輯測試"
+      },
+      "fields": {
+        "url": "測試網址"
+      }
+    }
+  },
+  "statuses": {
+    "test": {
+      "pending": "待檢測",
+      "yes": "支援",
+      "no": "不支援",
+      "failed": "測試失敗",
+      "completed": "檢測完成",
+      "disallowedIsp": "不允許的網際網路服務供應商",
+      "originalsOnly": "僅限原創",
+      "noDisney": "不支援（IP被Disney+禁止）",
+      "unsupportedRegion": "不支援的國家/地區",
+      "failedNetwork": "測試失敗（網路連線問題）"
+    }
+  },
+  "unlock": {
+    "page": {
+      "actions": {
+        "testing": "測試中..."
+      },
+      "empty": "目前沒有解鎖測試項目",
+      "messages": {
+        "detectionFailedWithName": "{{name}} 檢測失敗",
+        "detectionTimeout": "檢測逾時或失敗"
+      },
+      "title": "解鎖測試"
+    }
+  }
+}

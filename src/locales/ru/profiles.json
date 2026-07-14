@@ -1,0 +1,186 @@
+{
+  "page": {
+    "actions": {
+      "updateAll": "Обновить все профили",
+      "viewRuntimeConfig": "Просмотреть текущую конфигурацию",
+      "reactivate": "Перезапустить профиль",
+      "import": "Импортировать"
+    },
+    "batch": {
+      "actions": {
+        "delete": "Удалить выбранные профили",
+        "selectAll": "Выбрать все",
+        "deselectAll": "Снять выделение",
+        "done": "Готово"
+      },
+      "summary": {
+        "selected": "Выбрано",
+        "items": "элементов"
+      },
+      "title": "Пакетные операции"
+    },
+    "importForm": {
+      "placeholder": "URL профиля",
+      "actions": {
+        "paste": "Вставить"
+      }
+    },
+    "feedback": {
+      "errors": {
+        "invalidUrl": "Недопустимый URL профиля. Укажите адрес, начинающийся с http:// или https://",
+        "onlyYaml": "Поддерживаются только файлы YAML"
+      },
+      "notifications": {
+        "importRetry": "Не удалось импортировать, повторная попытка через Clash proxy...",
+        "importFail": "Не удалось импортировать даже через Clash proxy",
+        "importNeedsRefresh": "Профиль импортирован, но может потребоваться обновление вручную",
+        "importSuccess": "Профиль успешно импортирован. Перезапустите приложение, если он не появился",
+        "profileSwitched": "Профиль переключён",
+        "profileReactivated": "Профиль перезапущен",
+        "switchInterrupted": "Переключение профиля прервано новым выбором",
+        "batchDeleted": "Выбранные профили удалены"
+      },
+      "notices": {
+        "forceRefreshCompleted": "Принудительное обновление завершено",
+        "emergencyRefreshFailed": "Экстренное обновление не удалось: {{message}}"
+      }
+    },
+    "title": "Профили"
+  },
+  "components": {
+    "card": {
+      "labels": {
+        "clickToImport": "Нажмите для импорта подписки"
+      }
+    },
+    "fileInput": {
+      "chooseFile": "Выбрать файл"
+    },
+    "menu": {
+      "home": "Главная",
+      "select": "Выбрать",
+      "shareQrCode": "Share QR Code",
+      "editInfo": "Изменить информацию",
+      "editFile": "Изменить файл",
+      "editRules": "Редактировать правила",
+      "editProxies": "Редактировать прокси",
+      "editGroups": "Редактировать группы прокси",
+      "extendConfig": "Изменить Merge-конфигурацию",
+      "extendScript": "Изменить Script",
+      "openFile": "Открыть файл",
+      "update": "Обновить",
+      "updateViaProxy": "Обновить через прокси"
+    },
+    "more": {
+      "global": {
+        "merge": "Глобальная Merge-конфигурация",
+        "script": "Глобальный Script"
+      },
+      "chips": {
+        "merge": "Merge",
+        "script": "Script"
+      }
+    },
+    "profileItem": {
+      "tooltips": {
+        "showLast": "Показать время последнего обновления",
+        "showNext": "Показать следующее обновление"
+      },
+      "status": {
+        "lastUpdateFailed": "Последнее обновление не удалось",
+        "nextUp": "Следующее обновление",
+        "noSchedule": "Без расписания",
+        "unknown": "Неизвестно",
+        "autoUpdateDisabled": "Автообновление отключено"
+      }
+    }
+  },
+  "modals": {
+    "profileForm": {
+      "title": {
+        "create": "Создать профиль",
+        "edit": "Редактировать профиль"
+      },
+      "fields": {
+        "type": "Тип",
+        "description": "Описание",
+        "subscriptionUrl": "URL подписки",
+        "httpTimeout": "Тайм-аут HTTP-запроса",
+        "updateInterval": "Интервал обновления",
+        "useSystemProxy": "Использовать системный прокси для обновления",
+        "useClashProxy": "Использовать Clash proxy для обновления",
+        "acceptInvalidCerts": "Принимать недействительные сертификаты (ОПАСНО)",
+        "allowAutoUpdate": "Разрешить автообновление"
+      },
+      "feedback": {
+        "notifications": {
+          "creationRetry": "Не удалось создать профиль, повторная попытка через Clash proxy...",
+          "creationSuccess": "Профиль успешно создан через Clash proxy"
+        }
+      }
+    },
+    "proxiesEditor": {
+      "title": "Редактировать прокси",
+      "placeholders": {
+        "multiUri": "Используйте перенос строки для нескольких URI (поддерживается Base64)"
+      },
+      "actions": {
+        "prepend": "Добавить прокси в начало",
+        "append": "Добавить прокси в конец"
+      }
+    },
+    "groupsEditor": {
+      "title": "Редактировать группы прокси",
+      "errors": {
+        "nameRequired": "Введите имя группы",
+        "nameExists": "Группа с таким именем уже существует"
+      },
+      "fields": {
+        "type": "Тип группы",
+        "name": "Имя группы",
+        "icon": "Значок группы прокси",
+        "proxies": "Использовать прокси",
+        "provider": "Использовать провайдера",
+        "healthCheckUrl": "URL проверки доступности",
+        "expectedStatus": "Ожидаемый статус",
+        "interval": "Интервал",
+        "maxFailedTimes": "Максимальное число ошибок",
+        "interfaceName": "Имя интерфейса",
+        "routingMark": "Марка маршрутизации",
+        "filter": "Фильтр",
+        "excludeFilter": "Исключающий фильтр",
+        "excludeType": "Тип исключения",
+        "includeAll": "Включить все прокси и провайдеры",
+        "includeAllProxies": "Включить все прокси",
+        "includeAllProviders": "Включить всех провайдеров"
+      },
+      "toggles": {
+        "lazy": "Ленивая загрузка",
+        "disableUdp": "Отключить UDP",
+        "hidden": "Скрытая"
+      },
+      "actions": {
+        "prepend": "Добавить группу в начало",
+        "append": "Добавить группу в конец"
+      }
+    },
+    "editor": {
+      "actions": {
+        "format": "Форматировать документ"
+      },
+      "messages": {
+        "readOnly": "Редактирование недоступно в режиме только для чтения"
+      }
+    },
+    "confirmDelete": {
+      "title": "Подтвердите удаление",
+      "message": "Это действие необратимо"
+    },
+    "logViewer": {
+      "title": "Консоль скрипта"
+    },
+    "qrViewer": {
+      "title": "Subscription QR Code"
+    }
+  }
+}

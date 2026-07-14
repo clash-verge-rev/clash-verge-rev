@@ -1,0 +1,134 @@
+{
+  "actions": {
+    "cancel": "لغو",
+    "close": "بستن",
+    "confirm": "تأیید",
+    "save": "ذخیره",
+    "delete": "حذف",
+    "edit": "ویرایش",
+    "new": "جدید",
+    "enable": "فعال کردن",
+    "upgrade": "ارتقاء",
+    "restart": "راه‌اندازی مجدد",
+    "resetToDefault": "بازنشانی به پیش‌فرض",
+    "refresh": "بازنشانی",
+    "retry": "Retry",
+    "refreshPage": "Refresh Page",
+    "showDetails": "Show Details",
+    "hideDetails": "Hide Details",
+    "listView": "نمای لیستی",
+    "tableView": "نمای جدولی",
+    "pause": "توقف",
+    "resume": "از سرگیری",
+    "closeAll": "بستن همه",
+    "clear": "پاک کردن",
+    "previous": "Previous",
+    "next": "Next"
+  },
+  "labels": {
+    "updateAt": "به‌روزرسانی در",
+    "timeout": "Timeout",
+    "icon": "آیکون",
+    "name": "نام",
+    "readOnly": "فقط خواندنی",
+    "expireTime": "زمان انقضا",
+    "updateTime": "زمان به‌روزرسانی",
+    "usedTotal": "استفاده‌شده / کل",
+    "from": "از",
+    "password": "رمز عبور",
+    "retryAttempts": "Retry attempts",
+    "downloaded": "دانلود شده",
+    "uploaded": "بارگذاری شده"
+  },
+  "statuses": {
+    "enabled": "توانایی فعال شد",
+    "disabled": "غیرفعال شد",
+    "saving": "Saving...",
+    "empty": "خالی خالی"
+  },
+  "units": {
+    "milliseconds": "میلی‌ثانیه",
+    "seconds": "ثانیه‌ها",
+    "minutes": "دقیقه",
+    "hours": "ساعت",
+    "kilobytes": "KB",
+    "files": "Files"
+  },
+  "placeholders": {
+    "resetInput": "پاک کردن فیلد ورودی",
+    "filter": "شرایط فیلتر",
+    "matchCase": "تطبیق حروف کوچک و بزرگ",
+    "matchWholeWord": "تطبیق کل کلمه",
+    "useRegex": "استفاده از عبارت منظم"
+  },
+  "validation": {
+    "invalidRegex": "Invalid regular expression"
+  },
+  "window": {
+    "maximize": "بزرگ‌نمایی",
+    "minimize": "کوچک‌نمایی"
+  },
+  "editorModes": {
+    "visualization": "تجسم",
+    "advanced": "پیشرفته"
+  },
+  "feedback": {
+    "errors": {
+      "trafficStats": "Traffic Statistics Error",
+      "trafficStatsDescription": "The traffic statistics component encountered an error and has been disabled to prevent crashes."
+    },
+    "notices": {
+      "raw": "{{message}}",
+      "prefixedRaw": "{{prefix}} {{message}}"
+    },
+    "notifications": {
+      "importSuccess": "پروفایل با موفقیت وارد شد",
+      "importSubscriptionSuccess": "وارد کردن اشتراک با موفقیت انجام شد",
+      "importWithClashProxy": "Profile Imported with Clash proxy",
+      "updateAvailable": "Update Available",
+      "saved": "Saved successfully",
+      "common": {
+        "copySuccess": "کپی با موفقیت انجام شد",
+        "saveSuccess": "Configuration saved successfully",
+        "saveFailed": "Failed to save configuration",
+        "refreshFailed": "به‌روزرسانی ناموفق بود"
+      }
+    },
+    "validation": {
+      "config": {
+        "failed": "اعتبارسنجی پیکربندی اشتراک ناموفق بود، فایل پیکربندی را بررسی کنید، تغییرات برگشت داده شد، جزئیات خطا:",
+        "bootFailed": "اعتبارسنجی پیکربندی هنگام راه‌اندازی ناموفق بود، پیکربندی پیش‌فرض استفاده شد، فایل پیکربندی را بررسی کنید، جزئیات خطا:",
+        "coreChangeFailed": "اعتبارسنجی پیکربندی هنگام تغییر هسته ناموفق بود، پیکربندی پیش‌فرض استفاده شد، فایل پیکربندی را بررسی کنید، جزئیات خطا:",
+        "processTerminated": "فرآیند اعتبارسنجی متوقف شد"
+      },
+      "script": {
+        "syntaxError": "خطای نحوی اسکریپت، تغییرات برگشت داده شد",
+        "missingMain": "خطای اسکریپت، تغییرات برگشت داده شد",
+        "fileNotFound": "فایل یافت نشد، تغییرات برگشت داده شد",
+        "fileError": "خطای فایل اسکریپت، تغییرات برگشت داده شد"
+      },
+      "yaml": {
+        "syntaxError": "YAML syntax error, changes reverted",
+        "readError": "YAML read error, changes reverted",
+        "mappingError": "YAML mapping error, changes reverted",
+        "keyError": "YAML key error, changes reverted",
+        "generalError": "YAML error, changes reverted"
+      },
+      "merge": {
+        "syntaxError": "Merge file syntax error, changes reverted",
+        "mappingError": "Merge file mapping error, changes reverted",
+        "keyError": "Merge file key error, changes reverted",
+        "generalError": "Merge file error, changes reverted"
+      }
+    }
+  },
+  "filters": {
+    "logLevels": {
+      "all": "ALL",
+      "debug": "DEBUG",
+      "info": "INFO",
+      "warn": "WARN",
+      "error": "ERROR"
+    }
+  }
+}

@@ -1,0 +1,55 @@
+name: Updater CI
+
+on: workflow_dispatch
+permissions: write-all
+env:
+  HUSKY: 0
+
+jobs:
+  release-update:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Install Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24.18.0'
+
+      - uses: pnpm/action-setup@v6
+        name: Install pnpm
+        with:
+          run_install: false
+
+      - name: Pnpm install
+        run: pnpm i
+
+      - name: Release updater file
+        run: pnpm updater
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  release-update-for-fixed-webview2:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Install Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24.18.0'
+
+      - uses: pnpm/action-setup@v6
+        name: Install pnpm
+        with:
+          run_install: false
+
+      - name: Pnpm install
+        run: pnpm i
+
+      - name: Release updater file
+        run: pnpm updater-fixed-webview2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

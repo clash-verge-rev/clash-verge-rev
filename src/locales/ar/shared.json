@@ -1,0 +1,134 @@
+{
+  "actions": {
+    "cancel": "إلغاء",
+    "close": "إغلاق",
+    "confirm": "تأكيد",
+    "save": "حفظ",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "new": "جديد",
+    "enable": "تمكين",
+    "upgrade": "ترقية",
+    "restart": "إعادة التشغيل",
+    "resetToDefault": "إعادة تعيين إلى الافتراضي",
+    "refresh": "تحديث",
+    "retry": "Retry",
+    "refreshPage": "Refresh Page",
+    "showDetails": "Show Details",
+    "hideDetails": "Hide Details",
+    "listView": "عرض القائمة",
+    "tableView": "عرض الجدول",
+    "pause": "إيقاف مؤقت",
+    "resume": "استأنف",
+    "closeAll": "إغلاق الكل",
+    "clear": "مسح",
+    "previous": "Previous",
+    "next": "Next"
+  },
+  "labels": {
+    "updateAt": "التحديث عند",
+    "timeout": "Timeout",
+    "icon": "أيقونة",
+    "name": "الاسم",
+    "readOnly": "للقراءة فقط",
+    "expireTime": "وقت الانتهاء",
+    "updateTime": "وقت التحديث",
+    "usedTotal": "المستخدم / الإجمالي",
+    "from": "من",
+    "password": "كلمة المرور",
+    "retryAttempts": "Retry attempts",
+    "downloaded": "تم التنزيل",
+    "uploaded": "تم الرفع"
+  },
+  "statuses": {
+    "enabled": "ممكّن",
+    "disabled": "معطّل",
+    "saving": "Saving...",
+    "empty": "فارغ"
+  },
+  "units": {
+    "milliseconds": "ميلي ثانية",
+    "seconds": "ثواني",
+    "minutes": "دقائق",
+    "hours": "ساعات",
+    "kilobytes": "KB",
+    "files": "Files"
+  },
+  "placeholders": {
+    "resetInput": "مربع إدخال واضح",
+    "filter": "شروط التصفية",
+    "matchCase": "مطابقة الحالة",
+    "matchWholeWord": "مطابقة الكلمة بأكملها",
+    "useRegex": "استخدام التعبيرات العادية"
+  },
+  "validation": {
+    "invalidRegex": "Invalid regular expression"
+  },
+  "window": {
+    "maximize": "تكبير",
+    "minimize": "تصغير"
+  },
+  "editorModes": {
+    "visualization": "تصور",
+    "advanced": "متقدم"
+  },
+  "feedback": {
+    "errors": {
+      "trafficStats": "Traffic Statistics Error",
+      "trafficStatsDescription": "The traffic statistics component encountered an error and has been disabled to prevent crashes."
+    },
+    "notices": {
+      "raw": "{{message}}",
+      "prefixedRaw": "{{prefix}} {{message}}"
+    },
+    "notifications": {
+      "importSuccess": "تم استيراد الملف الشخصي بنجاح",
+      "importSubscriptionSuccess": "تم استيراد الاشتراك بنجاح",
+      "importWithClashProxy": "Profile Imported with Clash proxy",
+      "updateAvailable": "Update Available",
+      "saved": "Saved successfully",
+      "common": {
+        "copySuccess": "تم النسخ بنجاح",
+        "saveSuccess": "Configuration saved successfully",
+        "saveFailed": "Failed to save configuration",
+        "refreshFailed": "فشل التحديث"
+      }
+    },
+    "validation": {
+      "config": {
+        "failed": "فشل التحقق من تكوين الاشتراك، يرجى فحص ملف التكوين، تم التراجع عن التغييرات، تفاصيل الخطأ:",
+        "bootFailed": "فشل التحقق من التكوين عند الإقلاع، تم استخدام التكوين الافتراضي، يرجى فحص ملف التكوين، تفاصيل الخطأ:",
+        "coreChangeFailed": "فشل التحقق من التكوين عند تغيير النواة، تم استخدام التكوين الافتراضي، يرجى فحص ملف التكوين، تفاصيل الخطأ:",
+        "processTerminated": "تم إنهاء عملية التحقق"
+      },
+      "script": {
+        "syntaxError": "خطأ في بناء جملة السكريبت، تم التراجع عن التغييرات",
+        "missingMain": "خطأ في السكريبت، تم التراجع عن التغييرات",
+        "fileNotFound": "الملف غير موجود، تم التراجع عن التغييرات",
+        "fileError": "خطأ في ملف السكريبت، تم التراجع عن التغييرات"
+      },
+      "yaml": {
+        "syntaxError": "YAML syntax error, changes reverted",
+        "readError": "YAML read error, changes reverted",
+        "mappingError": "YAML mapping error, changes reverted",
+        "keyError": "YAML key error, changes reverted",
+        "generalError": "YAML error, changes reverted"
+      },
+      "merge": {
+        "syntaxError": "Merge file syntax error, changes reverted",
+        "mappingError": "Merge file mapping error, changes reverted",
+        "keyError": "Merge file key error, changes reverted",
+        "generalError": "Merge file error, changes reverted"
+      }
+    }
+  },
+  "filters": {
+    "logLevels": {
+      "all": "ALL",
+      "debug": "DEBUG",
+      "info": "INFO",
+      "warn": "WARN",
+      "error": "ERROR"
+    }
+  }
+}

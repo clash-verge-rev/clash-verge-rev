@@ -1,0 +1,24 @@
+{
+  "components": {
+    "navigation": {
+      "tabs": {
+        "home": "Home",
+        "proxies": "Proxies",
+        "profiles": "Profiles",
+        "connections": "Connections",
+        "rules": "Rules",
+        "logs": "Logs",
+        "unlock": "Test",
+        "settings": "Settings"
+      },
+      "menu": {
+        "reorderMode": "Menu reorder mode",
+        "restoreDefaultOrder": "Restore default order",
+        "unlock": "Unlock menu order",
+        "lock": "Lock menu order",
+        "collapseNavBar": "Collapse navigation bar",
+        "expandNavBar": "Expand navigation bar"
+      }
+    }
+  }
+}

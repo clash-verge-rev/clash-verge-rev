@@ -1,0 +1,24 @@
+{
+  "components": {
+    "navigation": {
+      "tabs": {
+        "home": "Home",
+        "proxies": "Proksi",
+        "profiles": "Profil",
+        "connections": "Koneksi",
+        "rules": "Aturan",
+        "logs": "Log",
+        "unlock": "Test",
+        "settings": "Pengaturan"
+      },
+      "menu": {
+        "reorderMode": "Menu reorder mode",
+        "restoreDefaultOrder": "Restore default order",
+        "unlock": "Unlock menu order",
+        "lock": "Lock menu order",
+        "collapseNavBar": "Collapse navigation bar",
+        "expandNavBar": "Expand navigation bar"
+      }
+    }
+  }
+}

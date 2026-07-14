@@ -1,0 +1,9 @@
+{
+  "page": {
+    "title": "日誌"
+  },
+  "actions": {
+    "showDescending": "按時間倒序",
+    "showAscending": "按時間正序"
+  }
+}

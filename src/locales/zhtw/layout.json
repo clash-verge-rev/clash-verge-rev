@@ -1,0 +1,24 @@
+{
+  "components": {
+    "navigation": {
+      "tabs": {
+        "home": "首 頁",
+        "proxies": "代 理",
+        "profiles": "訂 閱",
+        "connections": "連 線",
+        "rules": "規 則",
+        "logs": "日 誌",
+        "unlock": "解 鎖",
+        "settings": "設 定"
+      },
+      "menu": {
+        "reorderMode": "選單排序模式",
+        "restoreDefaultOrder": "恢復預設排序",
+        "unlock": "解鎖選單排序",
+        "lock": "鎖定選單排序",
+        "collapseNavBar": "收起導覽列",
+        "expandNavBar": "展開導覽列"
+      }
+    }
+  }
+}

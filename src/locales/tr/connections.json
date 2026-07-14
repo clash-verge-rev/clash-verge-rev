@@ -1,0 +1,34 @@
+{
+  "page": {
+    "title": "Bağlantılar"
+  },
+  "components": {
+    "fields": {
+      "host": "Ana Bilgisayar",
+      "dlSpeed": "İndirme Hızı",
+      "ulSpeed": "Yükleme Hızı",
+      "chains": "Zincirler",
+      "rule": "Kural",
+      "process": "İşlem",
+      "time": "Zaman",
+      "source": "Kaynak",
+      "destination": "Hedef",
+      "destinationPort": "Hedef Port",
+      "type": "Tip"
+    },
+    "order": {
+      "default": "Default",
+      "uploadSpeed": "Yükleme Hızı",
+      "downloadSpeed": "İndirme Hızı"
+    },
+    "actions": {
+      "active": "Active",
+      "closed": "Closed",
+      "closeConnection": "Bağlantıyı Kapat"
+    },
+    "columnManager": {
+      "title": "Sütunlar",
+      "dragHandle": "Drag handle"
+    }
+  }
+}

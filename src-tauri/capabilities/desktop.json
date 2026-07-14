@@ -1,0 +1,30 @@
+{
+  "identifier": "desktop-capability",
+  "platforms": ["macOS", "windows", "linux"],
+  "webviews": ["main"],
+  "windows": ["main"],
+  "permissions": [
+    "global-shortcut:default",
+    "updater:default",
+    "dialog:default",
+    "dialog:allow-ask",
+    "dialog:allow-message",
+    "updater:default",
+    "updater:allow-check",
+    "updater:allow-download-and-install",
+    "process:allow-restart",
+    "deep-link:default",
+    "autostart:allow-enable",
+    "autostart:allow-disable",
+    "autostart:allow-is-enabled",
+    "core:window:allow-set-theme",
+    "notification:default",
+    "http:default",
+    "http:allow-fetch",
+    {
+      "identifier": "http:default",
+      "allow": [{ "url": "https://*/*" }, { "url": "http://*/*" }]
+    },
+    "mihomo:default"
+  ]
+}

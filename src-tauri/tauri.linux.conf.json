@@ -1,0 +1,34 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+  "identifier": "io.github.clash-verge-rev.clash-verge-rev",
+  "bundle": {
+    "targets": ["deb", "rpm"],
+    "linux": {
+      "deb": {
+        "depends": ["openssl", "libayatana-appindicator3-1"],
+        "desktopTemplate": "./packages/linux/clash-verge.desktop",
+        "provides": ["clash-verge"],
+        "conflicts": ["clash-verge"],
+        "replaces": ["clash-verge"],
+        "postInstallScript": "./packages/linux/post-install.sh",
+        "preRemoveScript": "./packages/linux/pre-remove.sh"
+      },
+      "rpm": {
+        "depends": ["openssl", "libayatana-appindicator-gtk3"],
+        "desktopTemplate": "./packages/linux/clash-verge.desktop",
+        "provides": ["clash-verge"],
+        "conflicts": ["clash-verge"],
+        "obsoletes": ["clash-verge"],
+        "postInstallScript": "./packages/linux/post-install.sh",
+        "preRemoveScript": "./packages/linux/pre-remove.sh"
+      }
+    },
+    "externalBin": [
+      "./sidecar/clash-verge-service",
+      "./sidecar/clash-verge-service-install",
+      "./sidecar/clash-verge-service-uninstall",
+      "./sidecar/verge-mihomo",
+      "./sidecar/verge-mihomo-alpha"
+    ]
+  }
+}

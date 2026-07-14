@@ -1,0 +1,13 @@
+[package]
+name = "clash-verge-signal"
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.91"
+
+[dependencies]
+clash-verge-logging = { workspace = true }
+log = { workspace = true }
+tokio = { workspace = true }
+
+[lints]
+workspace = true

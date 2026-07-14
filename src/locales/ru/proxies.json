@@ -1,0 +1,93 @@
+{
+  "page": {
+    "modes": {
+      "rule": "Правила",
+      "global": "Глобальный",
+      "direct": "Прямой"
+    },
+    "actions": {
+      "toggleChain": "Цепочка прокси",
+      "connect": "Подключиться",
+      "disconnect": "Отключиться",
+      "connecting": "Подключение...",
+      "clearChainConfig": "Очистить цепочку"
+    },
+    "provider": {
+      "title": "Провайдеры прокси",
+      "actions": {
+        "updateAll": "Обновить все",
+        "update": "Обновить"
+      }
+    },
+    "rules": {
+      "title": "Правила прокси",
+      "select": "Выбрать правила"
+    },
+    "labels": {
+      "proxyCount": "Количество прокси",
+      "delayCheckReset": "Сброс проверки задержки"
+    },
+    "tooltips": {
+      "locate": "Местоположение",
+      "delayCheck": "Проверка задержки",
+      "sortDefault": "Сортировать по умолчанию",
+      "sortDelay": "Сортировать по задержке",
+      "sortName": "Сортировать по названию",
+      "delayCheckUrl": "URL для проверки задержки",
+      "showBasic": "Показывать меньше информации о прокси",
+      "showDetail": "Показывать больше информации о прокси",
+      "filter": "Фильтр"
+    },
+    "placeholders": {
+      "delayCheckUrl": "URL для проверки задержки"
+    },
+    "chain": {
+      "header": "Цепочка прокси",
+      "warning": "Цепочка прокси может значительно снизить скорость сети. Если у вас нет явной рабочей необходимости или вы не понимаете эту настройку, оставьте ее отключенной.",
+      "empty": "Цепочка прокси может значительно снизить скорость сети. Если у вас нет явной рабочей необходимости или вы не понимаете эту настройку, оставьте ее отключенной.",
+      "instruction": "Нажимайте на узлы по порядку, чтобы добавить их в цепочку",
+      "minimumNodes": "Для цепочки требуется минимум 2 узла",
+      "minimumNodesHint": "Для цепочки требуется минимум 2 узла. Добавьте ещё один узел.",
+      "connectFailed": "Не удалось подключиться к цепочке прокси",
+      "disconnectFailed": "Не удалось отключиться от цепочки прокси",
+      "duplicateNode": "Этот узел уже добавлен в цепочку",
+      "entryNode": "Вход",
+      "exitNode": "Выход"
+    },
+    "messages": {
+      "directMode": "Прямой режим"
+    },
+    "title": {
+      "default": "Группы прокси",
+      "chainMode": "Режим цепочки прокси"
+    }
+  },
+  "feedback": {
+    "notifications": {
+      "provider": {
+        "updateSuccess": "{{name}} успешно обновлён",
+        "updateFailed": "Не удалось обновить {{name}}: {{message}}",
+        "genericError": "Ошибка обновления: {{message}}",
+        "none": "Нет доступных провайдеров для обновления",
+        "allUpdated": "Все провайдеры успешно обновлены"
+      }
+    }
+  },
+  "components": {
+    "enums": {
+      "strategies": {
+        "select": "select",
+        "url-test": "url-test",
+        "fallback": "fallback",
+        "load-balance": "load-balance",
+        "relay": "relay"
+      },
+      "policies": {
+        "DIRECT": "DIRECT",
+        "REJECT": "REJECT",
+        "REJECT-DROP": "REJECT-DROP",
+        "PASS": "PASS"
+      }
+    }
+  }
+}

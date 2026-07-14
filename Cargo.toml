@@ -1,0 +1,139 @@
+[workspace]
+members = [
+  "src-tauri",
+  "crates/clash-verge-draft",
+  "crates/clash-verge-logging",
+  "crates/clash-verge-signal",
+  "crates/tauri-plugin-clash-verge-sysinfo",
+  "crates/clash-verge-i18n",
+  "crates/clash-verge-limiter",
+]
+resolver = "2"
+
+[profile.release]
+panic = "unwind"
+codegen-units = 1
+lto = "thin"
+opt-level = 3
+debug = 1
+strip = "none"
+overflow-checks = false
+split-debuginfo = "unpacked"
+rpath = false
+
+[profile.dev]
+incremental = true
+codegen-units = 64
+opt-level = 0
+debug = true
+strip = "none"
+overflow-checks = true
+lto = false
+rpath = false
+
+[profile.fast-release]
+inherits = "release"
+codegen-units = 64
+incremental = true
+lto = false
+opt-level = 0
+debug = true
+strip = false
+
+[profile.debug-release]
+inherits = "fast-release"
+codegen-units = 1
+split-debuginfo = "unpacked"
+
+[workspace.dependencies]
+clash-verge-draft = { path = "crates/clash-verge-draft" }
+clash-verge-logging = { path = "crates/clash-verge-logging" }
+clash-verge-signal = { path = "crates/clash-verge-signal" }
+clash-verge-i18n = { path = "crates/clash-verge-i18n" }
+clash-verge-limiter = { path = "crates/clash-verge-limiter" }
+tauri-plugin-clash-verge-sysinfo = { path = "crates/tauri-plugin-clash-verge-sysinfo" }
+
+tauri = { version = "2.11.5" }
+tauri-plugin-clipboard-manager = "2.3.2"
+parking_lot = { version = "0.12.5", features = ["hardware-lock-elision"] }
+anyhow = "1.0.103"
+criterion = { version = "0.8.2", features = ["async_tokio"] }
+tokio = { version = "1.52.3", features = [
+  "rt-multi-thread",
+  "macros",
+  "time",
+  "sync",
+] }
+flexi_logger = "0.31.9"
+log = "0.4.33"
+
+smartstring = { version = "1.0.1" }
+compact_str = { version = "0.9.1", features = ["serde"] }
+
+serde = { version = "1.0.228" }
+serde_json = { version = "1.0.150" }
+serde_yaml_ng = { version = "0.10.0" }
+bitflags = { version = "2.13.0" }
+
+# *** For Windows platform only ***
+deelevate = "0.2.0"
+# *********************************
+
+[workspace.lints.clippy]
+# fallible_impl_from = "deny" // 过于激进，暂时不开启
+# implicit_clone = "deny" // 可能会造成额外开销，暂时不开启
+# option_if_let_else = "deny" // 过于激进，暂时不开启
+# self_only_used_in_recursion = "deny" // Since 1.92.0
+async_yields_async = "deny"
+await_holding_lock = "deny"
+branches_sharing_code = "deny"
+clone_on_ref_ptr = "warn"
+cloned_instead_of_copied = "deny"
+cognitive_complexity = "deny"
+collection_is_never_read = "deny"
+copy_iterator = "deny"
+correctness = { level = "deny", priority = -1 }
+dbg_macro = "warn"
+equatable_if_let = "deny"
+expect_used = "warn"
+expl_impl_clone_on_copy = "deny"
+future_not_send = "deny"
+iter_on_empty_collections = "deny"
+iter_on_single_items = "deny"
+iter_with_drain = "deny"
+large_const_arrays = "warn"
+large_futures = "deny"
+large_stack_arrays = "warn"
+large_types_passed_by_value = "deny"
+missing_const_for_fn = "deny"
+mutex_atomic = "deny"
+mutex_integer = "deny"
+needless_collect = "deny"
+needless_continue = "deny"
+needless_pass_by_ref_mut = "deny"
+needless_raw_string_hashes = "deny"
+option_as_ref_cloned = "deny"
+or_fun_call = "deny"
+panic = "deny"
+pathbuf_init_then_push = "deny"
+rc_clone_in_vec_init = "warn"
+rc_mutex = "deny"
+redundant_clone = "deny"
+redundant_else = "deny"
+significant_drop_in_scrutinee = "deny"
+significant_drop_tightening = "deny"
+string_lit_as_bytes = "deny"
+suspicious = { level = "deny", priority = -1 }
+suspicious_operation_groupings = "deny"
+todo = "warn"
+trait_duplication_in_bounds = "deny"
+tuple_array_conversions = "deny"
+unimplemented = "deny"
+unnecessary_self_imports = "deny"
+unnecessary_wraps = "deny"
+unused_async = "deny"
+unused_trait_names = "deny"
+unwrap_used = "warn"
+use_self = "deny"
+useless_let_if_seq = "deny"
+wildcard_imports = "deny"

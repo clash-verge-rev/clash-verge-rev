@@ -1,0 +1,24 @@
+{
+  "components": {
+    "navigation": {
+      "tabs": {
+        "home": "홈",
+        "proxies": "프록시",
+        "profiles": "프로필",
+        "connections": "연결",
+        "rules": "규칙",
+        "logs": "로그",
+        "unlock": "테스트",
+        "settings": "설정"
+      },
+      "menu": {
+        "reorderMode": "메뉴 재정렬 모드",
+        "restoreDefaultOrder": "Restore default order",
+        "unlock": "메뉴 순서 잠금 해제",
+        "lock": "메뉴 순서 잠금",
+        "collapseNavBar": "Collapse navigation bar",
+        "expandNavBar": "Expand navigation bar"
+      }
+    }
+  }
+}

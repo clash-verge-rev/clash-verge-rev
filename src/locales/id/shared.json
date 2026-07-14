@@ -1,0 +1,134 @@
+{
+  "actions": {
+    "cancel": "Batal",
+    "close": "Tutup",
+    "confirm": "Konfirmasi",
+    "save": "Simpan",
+    "delete": "Hapus",
+    "edit": "Ubah",
+    "new": "Baru",
+    "enable": "Aktifkan",
+    "upgrade": "Tingkatkan",
+    "restart": "Mulai Ulang",
+    "resetToDefault": "Setel Ulang ke Default",
+    "refresh": "Segarkan",
+    "retry": "Retry",
+    "refreshPage": "Refresh Page",
+    "showDetails": "Show Details",
+    "hideDetails": "Hide Details",
+    "listView": "Tampilan Daftar",
+    "tableView": "Tampilan Tabel",
+    "pause": "Jeda",
+    "resume": "Lanjut",
+    "closeAll": "Tutup Semua",
+    "clear": "Bersihkan",
+    "previous": "Previous",
+    "next": "Next"
+  },
+  "labels": {
+    "updateAt": "Diperbarui Pada",
+    "timeout": "Timeout",
+    "icon": "Ikon",
+    "name": "Nama",
+    "readOnly": "Hanya Baca",
+    "expireTime": "Waktu Kedaluwarsa",
+    "updateTime": "Waktu Pembaruan",
+    "usedTotal": "Digunakan / Total",
+    "from": "Dari",
+    "password": "Kata Sandi",
+    "retryAttempts": "Retry attempts",
+    "downloaded": "Diunduh",
+    "uploaded": "Diunggah"
+  },
+  "statuses": {
+    "enabled": "Diaktifkan",
+    "disabled": "Dinonaktifkan",
+    "saving": "Saving...",
+    "empty": "Kosong"
+  },
+  "units": {
+    "milliseconds": "milidetik",
+    "seconds": "detik",
+    "minutes": "menit",
+    "hours": "jam",
+    "kilobytes": "KB",
+    "files": "Files"
+  },
+  "placeholders": {
+    "resetInput": "Bersihkan kolom input",
+    "filter": "Kondisi Filter",
+    "matchCase": "Cocokkan Kasus",
+    "matchWholeWord": "Cocokkan Kata Utuh",
+    "useRegex": "Gunakan Ekspresi Reguler"
+  },
+  "validation": {
+    "invalidRegex": "Invalid regular expression"
+  },
+  "window": {
+    "maximize": "Maksimalkan",
+    "minimize": "Minimalkan"
+  },
+  "editorModes": {
+    "visualization": "Visualisasi",
+    "advanced": "Lanjutan"
+  },
+  "feedback": {
+    "errors": {
+      "trafficStats": "Traffic Statistics Error",
+      "trafficStatsDescription": "The traffic statistics component encountered an error and has been disabled to prevent crashes."
+    },
+    "notices": {
+      "raw": "{{message}}",
+      "prefixedRaw": "{{prefix}} {{message}}"
+    },
+    "notifications": {
+      "importSuccess": "Profil Berhasil Diimpor",
+      "importSubscriptionSuccess": "Berlangganan Berhasil Diimpor",
+      "importWithClashProxy": "Profile Imported with Clash proxy",
+      "updateAvailable": "Update Available",
+      "saved": "Saved successfully",
+      "common": {
+        "copySuccess": "Salin Berhasil",
+        "saveSuccess": "Configuration saved successfully",
+        "saveFailed": "Failed to save configuration",
+        "refreshFailed": "Penyegaran gagal"
+      }
+    },
+    "validation": {
+      "config": {
+        "failed": "Validasi konfigurasi langganan gagal, periksa file konfigurasi, perubahan dibatalkan, detail kesalahan:",
+        "bootFailed": "Validasi konfigurasi saat boot gagal, menggunakan konfigurasi default, periksa file konfigurasi, detail kesalahan:",
+        "coreChangeFailed": "Validasi konfigurasi saat ganti inti gagal, menggunakan konfigurasi default, periksa file konfigurasi, detail kesalahan:",
+        "processTerminated": "Proses validasi dihentikan"
+      },
+      "script": {
+        "syntaxError": "Kesalahan sintaks skrip, perubahan dibatalkan",
+        "missingMain": "Kesalahan skrip, perubahan dibatalkan",
+        "fileNotFound": "File tidak ditemukan, perubahan dibatalkan",
+        "fileError": "Kesalahan file skrip, perubahan dibatalkan"
+      },
+      "yaml": {
+        "syntaxError": "YAML syntax error, changes reverted",
+        "readError": "YAML read error, changes reverted",
+        "mappingError": "YAML mapping error, changes reverted",
+        "keyError": "YAML key error, changes reverted",
+        "generalError": "YAML error, changes reverted"
+      },
+      "merge": {
+        "syntaxError": "Merge file syntax error, changes reverted",
+        "mappingError": "Merge file mapping error, changes reverted",
+        "keyError": "Merge file key error, changes reverted",
+        "generalError": "Merge file error, changes reverted"
+      }
+    }
+  },
+  "filters": {
+    "logLevels": {
+      "all": "ALL",
+      "debug": "DEBUG",
+      "info": "INFO",
+      "warn": "WARN",
+      "error": "ERROR"
+    }
+  }
+}

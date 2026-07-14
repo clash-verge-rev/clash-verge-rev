@@ -1,0 +1,35 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+  "identifier": "io.github.clash-verge-rev.clash-verge-rev",
+  "productName": "Clash Verge",
+  "bundle": {
+    "targets": ["app", "dmg"],
+    "macOS": {
+      "frameworks": [],
+      "minimumSystemVersion": "11.0",
+      "exceptionDomain": "",
+      "signingIdentity": null,
+      "entitlements": "packages/macos/entitlements.plist",
+      "dmg": {
+        "background": "images/background.png",
+        "appPosition": {
+          "x": 180,
+          "y": 170
+        },
+        "applicationFolderPosition": {
+          "x": 480,
+          "y": 170
+        },
+        "windowSize": {
+          "height": 400,
+          "width": 660
+        },
+        "windowPosition": {
+          "x": 200,
+          "y": 180
+        }
+      },
+      "infoPlist": "packages/macos/info_merge.plist"
+    }
+  }
+}

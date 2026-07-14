@@ -1,0 +1,33 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+  "identifier": "io.github.clash-verge-rev.clash-verge-rev",
+  "bundle": {
+    "targets": ["nsis"],
+    "windows": {
+      "certificateThumbprint": null,
+      "digestAlgorithm": "sha256",
+      "timestampUrl": "",
+      "webviewInstallMode": {
+        "type": "embedBootstrapper",
+        "silent": true
+      },
+      "nsis": {
+        "displayLanguageSelector": true,
+        "installerIcon": "icons/icon.ico",
+        "languages": ["SimpChinese", "English", "Russian"],
+        "installMode": "perMachine",
+        "template": "./packages/windows/installer.nsi"
+      }
+    }
+  },
+  "app": {
+    "windows": [],
+    "security": {
+      "capabilities": [
+        "desktop-capability",
+        "desktop-windows-capability",
+        "migrated"
+      ]
+    }
+  }
+}

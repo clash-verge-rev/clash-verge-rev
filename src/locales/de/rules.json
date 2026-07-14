@@ -1,0 +1,82 @@
+{
+  "page": {
+    "provider": {
+      "trigger": "Regelsammlung",
+      "dialogTitle": "Regelsammlung",
+      "actions": {
+        "updateAll": "Alle aktualisieren",
+        "update": "Aktualisieren"
+      }
+    },
+    "title": "Regeln"
+  },
+  "feedback": {
+    "notifications": {
+      "provider": {
+        "updateSuccess": "{{name}} updated successfully",
+        "updateFailed": "Failed to update {{name}}: {{message}}",
+        "genericError": "Update failed: {{message}}",
+        "none": "No providers available to update",
+        "allUpdated": "All providers updated successfully"
+      }
+    }
+  },
+  "modals": {
+    "editor": {
+      "form": {
+        "labels": {
+          "type": "Regeltyp",
+          "content": "Regelinhalt",
+          "proxyPolicy": "Proxy-Strategie"
+        },
+        "toggles": {
+          "noResolve": "DNS-Auflösung überspringen"
+        },
+        "actions": {
+          "prependRule": "Vorherige Regel hinzufügen",
+          "appendRule": "Nachfolgende Regel hinzufügen"
+        },
+        "validation": {
+          "conditionRequired": "Regelbedingung fehlt",
+          "invalidRule": "Ungültige Regel"
+        }
+      },
+      "ruleTypes": {
+        "DOMAIN": "Vollständigen Domainnamen übereinstimmen",
+        "DOMAIN-SUFFIX": "Domain-Suffix übereinstimmen",
+        "DOMAIN-KEYWORD": "Domain-Schlüsselwort übereinstimmen",
+        "DOMAIN-REGEX": "Domain-Regulärer Ausdruck übereinstimmen",
+        "GEOSITE": "Domainnamen in Geosite übereinstimmen",
+        "GEOIP": "IP-Ländercode übereinstimmen",
+        "SRC-GEOIP": "Quell-IP-Ländercode übereinstimmen",
+        "IP-ASN": "IP-ASN übereinstimmen",
+        "SRC-IP-ASN": "Quell-IP-ASN übereinstimmen",
+        "IP-CIDR": "IP-Adressbereich übereinstimmen",
+        "IP-CIDR6": "IP-Adressbereich übereinstimmen",
+        "SRC-IP-CIDR": "Quell-IP-Adressbereich übereinstimmen",
+        "IP-SUFFIX": "IP-Suffix-Bereich übereinstimmen",
+        "SRC-IP-SUFFIX": "Quell-IP-Suffix-Bereich übereinstimmen",
+        "SRC-PORT": "Quellportbereich der Anfrage übereinstimmen",
+        "DST-PORT": "Zielportbereich der Anfrage übereinstimmen",
+        "IN-PORT": "Eingangsport übereinstimmen",
+        "DSCP": "DSCP-Markierung (nur für TPROXY UDP-Eingang)",
+        "PROCESS-NAME": "Prozessnamen übereinstimmen (Android-Paketname)",
+        "PROCESS-PATH": "Vollständigen Prozesspfad übereinstimmen",
+        "PROCESS-NAME-REGEX": "Regulärer Ausdruck für vollständigen Prozessnamen übereinstimmen (Android-Paketname)",
+        "PROCESS-PATH-REGEX": "Regulärer Ausdruck für vollständigen Prozesspfad übereinstimmen",
+        "NETWORK": "Übertragungsprotokoll übereinstimmen (TCP/UDP)",
+        "UID": "Linux-USER-ID übereinstimmen",
+        "IN-TYPE": "Eingangstyp übereinstimmen",
+        "IN-USER": "Eingangsbenutzername übereinstimmen",
+        "IN-NAME": "Eingangsname übereinstimmen",
+        "SUB-RULE": "Unterregel",
+        "RULE-SET": "Regelsatz übereinstimmen",
+        "AND": "Logisches UND",
+        "OR": "Logisches ODER",
+        "NOT": "Logisches NICHT",
+        "MATCH": "Alle Anfragen übereinstimmen"
+      },
+      "title": "Regeln bearbeiten"
+    }
+  }
+}

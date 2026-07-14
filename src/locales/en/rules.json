@@ -1,0 +1,82 @@
+{
+  "page": {
+    "provider": {
+      "trigger": "Rule Provider",
+      "dialogTitle": "Rule Providers",
+      "actions": {
+        "updateAll": "Update All",
+        "update": "Update"
+      }
+    },
+    "title": "Rules"
+  },
+  "feedback": {
+    "notifications": {
+      "provider": {
+        "updateSuccess": "{{name}} updated successfully",
+        "updateFailed": "Failed to update {{name}}: {{message}}",
+        "genericError": "Update failed: {{message}}",
+        "none": "No providers available to update",
+        "allUpdated": "All providers updated successfully"
+      }
+    }
+  },
+  "modals": {
+    "editor": {
+      "form": {
+        "labels": {
+          "type": "Rule Type",
+          "content": "Rule Content",
+          "proxyPolicy": "Proxy Policy"
+        },
+        "toggles": {
+          "noResolve": "No Resolve"
+        },
+        "actions": {
+          "prependRule": "Prepend Rule",
+          "appendRule": "Append Rule"
+        },
+        "validation": {
+          "conditionRequired": "Rule Condition Required",
+          "invalidRule": "Invalid Rule"
+        }
+      },
+      "ruleTypes": {
+        "DOMAIN": "Match full domain (DOMAIN)",
+        "DOMAIN-SUFFIX": "Match domain suffix (DOMAIN-SUFFIX)",
+        "DOMAIN-KEYWORD": "Match domain keyword (DOMAIN-KEYWORD)",
+        "DOMAIN-REGEX": "Match domain using regex (DOMAIN-REGEX)",
+        "GEOSITE": "Match domains in GeoSite (GEOSITE)",
+        "GEOIP": "Match IP country code (GEOIP)",
+        "SRC-GEOIP": "Match source IP country code (SRC-GEOIP)",
+        "IP-ASN": "Match IP ASN (IP-ASN)",
+        "SRC-IP-ASN": "Match source IP ASN (SRC-IP-ASN)",
+        "IP-CIDR": "Match IP address range (IP-CIDR)",
+        "IP-CIDR6": "Match IPv6 address range (IP-CIDR6)",
+        "SRC-IP-CIDR": "Match source IP address range (SRC-IP-CIDR)",
+        "IP-SUFFIX": "Match IP suffix range (IP-SUFFIX)",
+        "SRC-IP-SUFFIX": "Match source IP suffix range (SRC-IP-SUFFIX)",
+        "SRC-PORT": "Match source port range (SRC-PORT)",
+        "DST-PORT": "Match destination port range (DST-PORT)",
+        "IN-PORT": "Match inbound port (IN-PORT)",
+        "DSCP": "DSCP tag (TPROXY UDP inbound only) (DSCP)",
+        "PROCESS-NAME": "Match process name (PROCESS-NAME)",
+        "PROCESS-PATH": "Match full process path (PROCESS-PATH)",
+        "PROCESS-NAME-REGEX": "Match process name using regex (PROCESS-NAME-REGEX)",
+        "PROCESS-PATH-REGEX": "Match full process path using regex (PROCESS-PATH-REGEX)",
+        "NETWORK": "Match network protocol (TCP/UDP) (NETWORK)",
+        "UID": "Match Linux user ID (UID)",
+        "IN-TYPE": "Match inbound type (IN-TYPE)",
+        "IN-USER": "Match inbound username (IN-USER)",
+        "IN-NAME": "Match inbound name (IN-NAME)",
+        "SUB-RULE": "Sub-rule (SUB-RULE)",
+        "RULE-SET": "Match rule set (RULE-SET)",
+        "AND": "Logical AND (AND)",
+        "OR": "Logical OR (OR)",
+        "NOT": "Logical NOT (NOT)",
+        "MATCH": "Match all requests (MATCH)"
+      },
+      "title": "Edit Rules"
+    }
+  }
+}

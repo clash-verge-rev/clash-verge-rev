@@ -1,0 +1,101 @@
+{
+  "name": "Clash Verge Rev Development Environment",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-22.04",
+
+  "features": {
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "20"
+    },
+    "ghcr.io/devcontainers/features/rust:1": {
+      "version": "latest",
+      "profile": "default"
+    },
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {}
+  },
+
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "rust-lang.rust-analyzer",
+        "tauri-apps.tauri-vscode",
+        "ms-vscode.vscode-typescript-next",
+        "esbenp.prettier-vscode",
+        "bradlc.vscode-tailwindcss",
+        "ms-vscode.vscode-json",
+        "redhat.vscode-yaml",
+        "formulahendry.auto-rename-tag",
+        "ms-vscode.hexeditor",
+        "christian-kohler.path-intellisense",
+        "yzhang.markdown-all-in-one",
+        "streetsidesoftware.code-spell-checker",
+        "ms-vscode.vscode-eslint"
+      ],
+      "settings": {
+        "rust-analyzer.cargo.features": ["verge-dev"],
+        "rust-analyzer.check.command": "clippy",
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "[rust]": {
+          "editor.defaultFormatter": "rust-lang.rust-analyzer"
+        },
+        "[json]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode"
+        },
+        "[yaml]": {
+          "editor.defaultFormatter": "redhat.vscode-yaml"
+        },
+        "[typescript]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode"
+        },
+        "[typescriptreact]": {
+          "editor.defaultFormatter": "esbenp.prettier-vscode"
+        }
+      }
+    }
+  },
+
+  "forwardPorts": [1420, 3000, 8080, 9090, 7890, 7891],
+
+  "portsAttributes": {
+    "1420": {
+      "label": "Tauri Dev Server",
+      "onAutoForward": "notify"
+    },
+    "3000": {
+      "label": "Vite Dev Server",
+      "onAutoForward": "notify"
+    },
+    "7890": {
+      "label": "Clash HTTP Proxy",
+      "onAutoForward": "silent"
+    },
+    "7891": {
+      "label": "Clash SOCKS Proxy",
+      "onAutoForward": "silent"
+    },
+    "9090": {
+      "label": "Clash API",
+      "onAutoForward": "silent"
+    }
+  },
+
+  "postCreateCommand": "bash .devcontainer/post-create.sh",
+
+  "mounts": [
+    "source=clash-verge-node-modules,target=${containerWorkspaceFolder}/node_modules,type=volume",
+    "source=clash-verge-cargo-registry,target=/usr/local/cargo/registry,type=volume",
+    "source=clash-verge-cargo-git,target=/usr/local/cargo/git,type=volume"
+  ],
+
+  "containerEnv": {
+    "RUST_BACKTRACE": "1",
+    "NODE_OPTIONS": "--max-old-space-size=4096",
+    "TAURI_DEV_WATCHER_IGNORE_FILE": ".taurignore"
+  },
+
+  "remoteUser": "vscode",
+  "workspaceFolder": "/workspaces/clash-verge-rev",
+  "shutdownAction": "stopContainer"
+}

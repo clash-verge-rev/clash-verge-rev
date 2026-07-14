@@ -1,0 +1,34 @@
+{
+  "page": {
+    "title": "اتصالات"
+  },
+  "components": {
+    "fields": {
+      "host": "میزبان",
+      "dlSpeed": "سرعت دانلود",
+      "ulSpeed": "سرعت بارگذاری",
+      "chains": "زنجیره‌ها",
+      "rule": "قانون",
+      "process": "فرآیند",
+      "time": "زمان",
+      "source": "منبع",
+      "destination": "آدرس IP مقصد",
+      "destinationPort": "بندر هدف",
+      "type": "نوع"
+    },
+    "order": {
+      "default": "Default",
+      "uploadSpeed": "سرعت بارگذاری",
+      "downloadSpeed": "سرعت دانلود"
+    },
+    "actions": {
+      "active": "Active",
+      "closed": "Closed",
+      "closeConnection": "بستن اتصال"
+    },
+    "columnManager": {
+      "title": "ستون‌ها",
+      "dragHandle": "Drag handle"
+    }
+  }
+}
