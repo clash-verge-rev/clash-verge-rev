@@ -55,15 +55,16 @@ async fn finalize_restored_verge_config(
 
     let verge_draft = Config::verge().await;
     verge_draft.edit_draft(|d| {
-        *d = restored.clone();
+        *d = restored;
     });
     verge_draft.apply();
 
-    // Ensure side-effects (flags, tray, sysproxy, hotkeys, auto-backup refresh, etc.) run.
-    // Use not_save_file = true to avoid extra I/O (we already persisted the restored file).
-    if let Err(err) = super::patch_verge(&restored, true).await {
-        logging!(error, Type::Backup, "Failed to apply restored verge config: {err:#?}");
-    }
+    // Every caller restarts the whole app shortly after a successful restore, so the normal
+    // startup path applies verge's side effects (tray, sysproxy, hotkeys, core, auto-backup
+    // refresh, etc.) on a clean boot. Running patch_verge's live side-effect pipeline here too
+    // raced with that restart and with the frontend's own reactive config patches (e.g. the
+    // TUN availability guard), both colliding on the config validation lock and leaving the
+    // window stuck blank until the restart landed.
     Ok(())
 }
 
