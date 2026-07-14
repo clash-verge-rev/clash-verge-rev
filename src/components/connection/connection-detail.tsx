@@ -75,7 +75,7 @@ const InnerConnectionDetail = ({ data, closed, onClose }: InnerProps) => {
   const rule = rulePayload ? `${data.rule}(${rulePayload})` : data.rule
   const host = metadata.host
     ? `${metadata.host}:${metadata.destinationPort}`
-    : `${metadata.remoteDestination}:${metadata.destinationPort}`
+    : `${metadata.destinationIP}:${metadata.destinationPort}`
   const Destination = metadata.destinationIP
     ? metadata.destinationIP
     : metadata.remoteDestination

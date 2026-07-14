@@ -59,7 +59,7 @@ export const getConnectionHost = (connection: IConnectionsItem) => {
   const { metadata } = connection
   return metadata.host
     ? `${metadata.host}:${metadata.destinationPort}`
-    : `${metadata.remoteDestination}:${metadata.destinationPort}`
+    : `${metadata.destinationIP}:${metadata.destinationPort}`
 }
 
 export const getConnectionProcess = (connection: IConnectionsItem) => {
