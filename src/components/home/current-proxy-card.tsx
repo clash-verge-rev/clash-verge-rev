@@ -28,7 +28,7 @@ import {
   useTheme,
 } from '@mui/material'
 import { useLockFn } from 'ahooks'
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
 import { delayGroup } from 'tauri-plugin-mihomo-api'
@@ -380,7 +380,9 @@ export const CurrentProxyCard = () => {
           (g: { type?: string }) =>
             g?.type === 'Selector' || g?.type === 'URLTest',
         )
-        .forEach((selectableGroup: any) => registerGroup(selectableGroup))
+        .forEach((selectableGroup: any) => {
+          registerGroup(selectableGroup)
+        })
 
       const filteredGroups = Array.from(groupsMap.values())
 
@@ -582,7 +584,6 @@ export const CurrentProxyCard = () => {
     state.selection.group,
     state.selection.proxy,
     sortType,
-    setDelaySortRefresh,
   ])
 
   useEffect(() => {
@@ -883,7 +884,7 @@ export const CurrentProxyCard = () => {
       }
     >
       {isCoreDataPending ? (
-        <Box sx={{ py: 4 }} />
+        <Box sx={{ py: 4, height: 24 }} />
       ) : currentProxy ? (
         <Box>
           {/* 代理节点信息显示 */}
@@ -1049,7 +1050,11 @@ export const CurrentProxyCard = () => {
         </Box>
       ) : (
         <Box sx={{ textAlign: 'center', py: 4 }}>
-          <Typography variant="body1" color="text.secondary">
+          <Typography
+            sx={{ height: 24 }}
+            variant="body1"
+            color="text.secondary"
+          >
             {t('home.components.currentProxy.labels.noActiveNode')}
           </Typography>
         </Box>
