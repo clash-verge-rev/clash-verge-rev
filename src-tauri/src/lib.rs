@@ -27,6 +27,46 @@ use tauri_plugin_deep_link::DeepLinkExt as _;
 use tauri_plugin_mihomo::RejectPolicy;
 
 pub static APP_HANDLE: OnceCell<AppHandle> = OnceCell::new();
+
+#[cfg(target_os = "macos")]
+mod window_focus_generation {
+    use std::sync::atomic::{AtomicU64, Ordering};
+
+    pub(super) struct FocusGeneration(AtomicU64);
+
+    impl FocusGeneration {
+        pub(super) const fn new() -> Self {
+            Self(AtomicU64::new(0))
+        }
+
+        pub(super) fn advance(&self) -> u64 {
+            self.0.fetch_add(1, Ordering::AcqRel) + 1
+        }
+
+        pub(super) fn is_current(&self, generation: u64) -> bool {
+            generation == self.0.load(Ordering::Acquire)
+        }
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::FocusGeneration;
+
+        #[test]
+        fn advancing_focus_invalidates_older_work() {
+            let generations = FocusGeneration::new();
+            let focused = generations.advance();
+
+            assert!(generations.is_current(focused));
+
+            let unfocused = generations.advance();
+
+            assert!(!generations.is_current(focused));
+            assert!(generations.is_current(unfocused));
+        }
+    }
+}
+
 /// Application initialization helper functions
 mod app_init {
     use super::*;
@@ -299,6 +339,8 @@ pub fn run() {
         #[cfg(target_os = "macos")]
         use crate::module::lightweight;
         use crate::utils::window_manager::WindowManager;
+        #[cfg(target_os = "macos")]
+        use crate::window_focus_generation::FocusGeneration;
         use crate::{
             config::Config,
             core::{self, handle, hotkey},
@@ -308,6 +350,17 @@ pub fn run() {
         use tauri::AppHandle;
         #[cfg(target_os = "macos")]
         use tauri::Manager as _;
+
+        #[cfg(target_os = "macos")]
+        static WINDOW_FOCUS_GENERATION: FocusGeneration = FocusGeneration::new();
+
+        #[cfg(target_os = "macos")]
+        fn unregister_system_hotkeys() {
+            use crate::core::hotkey::SystemHotkey;
+
+            let _ = hotkey::Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdQ);
+            let _ = hotkey::Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdW);
+        }
 
         pub fn handle_ready_resumed(_app_handle: &AppHandle) {
             if handle::Handle::global().is_exiting() {
@@ -338,7 +391,11 @@ pub fn run() {
 
         pub fn handle_window_close(api: &tauri::WindowEvent) {
             #[cfg(target_os = "macos")]
-            handle::Handle::global().set_activation_policy_accessory();
+            {
+                WINDOW_FOCUS_GENERATION.advance();
+                unregister_system_hotkeys();
+                handle::Handle::global().set_activation_policy_accessory();
+            }
 
             if core::handle::Handle::global().is_exiting() {
                 return;
@@ -353,8 +410,21 @@ pub fn run() {
         }
 
         pub fn handle_window_focus(focused: bool) {
+            #[cfg(target_os = "macos")]
+            let focus_generation = WINDOW_FOCUS_GENERATION.advance();
+
+            #[cfg(target_os = "macos")]
+            if !focused {
+                unregister_system_hotkeys();
+            }
+
             AsyncHandler::spawn(move || async move {
                 let is_enable_global_hotkey = Config::verge().await.data_arc().enable_global_hotkey.unwrap_or(true);
+
+                #[cfg(target_os = "macos")]
+                if !WINDOW_FOCUS_GENERATION.is_current(focus_generation) {
+                    return;
+                }
 
                 if focused {
                     #[cfg(target_os = "macos")]
@@ -366,18 +436,17 @@ pub fn run() {
                         let _ = hotkey::Hotkey::global()
                             .register_system_hotkey(SystemHotkey::CmdW)
                             .await;
+
+                        // Focus may change while registration is awaiting the shortcut manager.
+                        if !WINDOW_FOCUS_GENERATION.is_current(focus_generation) {
+                            unregister_system_hotkeys();
+                            return;
+                        }
                     }
                     if !is_enable_global_hotkey {
                         let _ = hotkey::Hotkey::global().init(false).await;
                     }
                     return;
-                }
-
-                #[cfg(target_os = "macos")]
-                {
-                    use crate::core::hotkey::SystemHotkey;
-                    let _ = hotkey::Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdQ);
-                    let _ = hotkey::Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdW);
                 }
 
                 if !is_enable_global_hotkey {
@@ -388,10 +457,10 @@ pub fn run() {
 
         #[cfg(target_os = "macos")]
         pub fn handle_window_destroyed() {
-            use crate::core::hotkey::SystemHotkey;
+            WINDOW_FOCUS_GENERATION.advance();
+            unregister_system_hotkeys();
+
             AsyncHandler::spawn(move || async move {
-                let _ = hotkey::Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdQ);
-                let _ = hotkey::Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdW);
                 let is_enable_global_hotkey = Config::verge().await.data_arc().enable_global_hotkey.unwrap_or(true);
                 if !is_enable_global_hotkey {
                     let _ = hotkey::Hotkey::global().reset();
