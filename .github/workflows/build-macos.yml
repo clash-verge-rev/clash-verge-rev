@@ -1,0 +1,47 @@
+name: Build macOS (aarch64)
+
+on:
+  workflow_dispatch:        # 只手动触发，不要 tag/main 门禁
+
+jobs:
+  build:
+    runs-on: macos-latest   # = Apple Silicon (arm64)，和 M3 同架构
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+
+      - uses: pnpm/action-setup@v6
+        with:
+          run_install: false   # 自动读 package.json 里的 pnpm@11.3.0
+
+      - name: Install Rust (1.95.0, 由 rust-toolchain.toml 锁定)
+        uses: dtolnay/rust-toolchain@master
+        with:
+          toolchain: '1.95.0'
+
+      - name: Rust cache
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: '. -> target'
+
+      - name: Install deps + prebuild (aarch64 内核/资源)
+        run: |
+          pnpm i
+          pnpm run prebuild aarch64-apple-darwin
+
+      - name: Build (release)
+        run: pnpm build
+        env:
+          NODE_OPTIONS: '--max-old-space-size=4096'
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: clash-verge-macos-aarch64
+          path: |
+            src-tauri/target/release/bundle/dmg/*.dmg
+            src-tauri/target/release/bundle/macos/*.app
