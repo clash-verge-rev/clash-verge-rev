@@ -274,17 +274,17 @@ async function main(versionArg) {
       const baseVersion = getBaseVersion(currentVersion)
 
       if (versionArg.toLowerCase() === 'autobuild') {
-        // 格式: 2.3.0+autobuild.1004.cc39b27
+        // 格式: 2.3.0-autobuild.1004.cc39b27
         // 使用 Tauri 相关的最新 commit hash
-        newVersion = `${baseVersion}+autobuild.${generateShortTimestamp(true, true)}`
+        newVersion = `${baseVersion}-autobuild.${generateShortTimestamp(true, true)}`
       } else if (versionArg.toLowerCase() === 'autobuild-latest') {
-        // 格式: 2.3.0+autobuild.1004.a1b2c3d (使用最新 Tauri 提交)
+        // 格式: 2.3.0-autobuild.1004.a1b2c3d (使用最新 Tauri 提交)
         const latestTauriCommit = getLatestTauriCommit()
-        newVersion = `${baseVersion}+autobuild.${generateShortTimestamp()}.${latestTauriCommit}`
+        newVersion = `${baseVersion}-autobuild.${generateShortTimestamp()}.${latestTauriCommit}`
       } else if (versionArg.toLowerCase() === 'deploytest') {
-        // 格式: 2.3.0+deploytest.1004.cc39b27
+        // 格式: 2.3.0-deploytest.1004.cc39b27
         // 使用 Tauri 相关的最新 commit hash
-        newVersion = `${baseVersion}+deploytest.${generateShortTimestamp(true, true)}`
+        newVersion = `${baseVersion}-deploytest.${generateShortTimestamp(true, true)}`
       } else {
         newVersion = `${baseVersion}-${versionArg.toLowerCase()}`
       }

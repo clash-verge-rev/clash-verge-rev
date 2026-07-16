@@ -398,6 +398,7 @@
         "appLogMaxCount": "应用日志最大数量",
         "autoCloseConnections": "自动关闭连接",
         "autoCheckUpdate": "自动检查更新",
+        "updateChannel": "更新频道",
         "enableBuiltinEnhanced": "内置增强功能",
         "proxyLayoutColumns": "代理页布局列数",
         "autoLogClean": "自动清理日志",

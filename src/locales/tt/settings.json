@@ -398,6 +398,7 @@
         "appLogMaxCount": "App Log Max Count",
         "autoCloseConnections": "Тоташуларны автоматик ябу",
         "autoCheckUpdate": "Яңартуларны автоматик тикшерү",
+        "updateChannel": "Update Channel",
         "enableBuiltinEnhanced": "Эчке камилләштерүне кабызу",
         "proxyLayoutColumns": "Прокси күрсәтү баганалары саны",
         "autoLogClean": "Логларны автоматик чистарту",

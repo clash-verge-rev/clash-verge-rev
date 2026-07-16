@@ -100,7 +100,7 @@ export const SystemInfoCard = () => {
     try {
       const result = await triggerCheckUpdate()
       const info = result.data
-      if (!info?.available) {
+      if (!info) {
         showNotice.success(
           'settings.components.verge.advanced.notifications.latestVersion',
         )

@@ -398,6 +398,7 @@
         "appLogMaxCount": "App Log Max Count",
         "autoCloseConnections": "Verbindungen automatisch schließen",
         "autoCheckUpdate": "Automatisch auf Updates prüfen",
+        "updateChannel": "Update Channel",
         "enableBuiltinEnhanced": "Eingebaute Verbesserungen aktivieren",
         "proxyLayoutColumns": "Anzahl der Spalten im Proxy-Layout",
         "autoLogClean": "Protokolle automatisch bereinigen",

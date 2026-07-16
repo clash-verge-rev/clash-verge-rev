@@ -47,7 +47,7 @@ const SettingVergeAdvanced = ({ onError: _ }: Props) => {
     try {
       const info = await checkUpdate()
       updateLastCheckTime()
-      if (!info?.available) {
+      if (!info) {
         showNotice.success(
           'settings.components.verge.advanced.notifications.latestVersion',
         )

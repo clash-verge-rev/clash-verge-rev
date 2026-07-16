@@ -930,6 +930,7 @@ interface IVergeConfig {
   }
   auto_close_connection?: boolean
   auto_check_update?: boolean
+  update_channel?: 'stable' | 'autobuild'
   default_latency_test?: string
   default_latency_timeout?: number
   enable_auto_delay_detection?: boolean
@@ -1054,3 +1055,9 @@ interface ITrafficWorkerLogMessage {
 type TrafficWorkerResponseMessage =
   | ITrafficWorkerSnapshotMessage
   | ITrafficWorkerLogMessage
+
+interface UpdateInfo {
+  version: string
+  body: string | null
+  raw_json: Record<string, any>
+}

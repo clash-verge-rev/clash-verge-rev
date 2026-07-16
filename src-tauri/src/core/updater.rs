@@ -8,7 +8,8 @@ use std::{
     path::PathBuf,
     sync::atomic::{AtomicBool, Ordering},
 };
-use tauri_plugin_updater::{Update, UpdaterExt as _};
+use tauri::Url;
+use tauri_plugin_updater::{Update, Updater, UpdaterExt as _};
 
 pub struct SilentUpdater {
     update_ready: AtomicBool,
@@ -186,7 +187,7 @@ impl SilentUpdater {
 
         // Need a fresh Update object from the server to call install().
         // This is a lightweight HTTP request (< 1s), not a re-download.
-        let update = match app_handle.updater() {
+        let update = match verge_updater(app_handle).await {
             Ok(updater) => match updater.check().await {
                 Ok(Some(u)) => u,
                 Ok(None) => {
@@ -423,7 +424,7 @@ impl SilentUpdater {
 
         logging!(info, Type::System, "Silent updater: checking for updates...");
 
-        let updater = app_handle.updater()?;
+        let updater = verge_updater(app_handle).await?;
         let update = match updater.check().await {
             Ok(Some(update)) => update,
             Ok(None) => {
@@ -500,6 +501,34 @@ impl SilentUpdater {
             tokio::time::sleep(std::time::Duration::from_secs(24 * 60 * 60)).await;
         }
     }
+}
+
+const STABLE_ENDPOINTS: [&str; 3] = [
+    "https://update.hwdns.net/https://github.com/clash-verge-rev/clash-verge-rev/releases/download/updater/update-proxy.json",
+    "https://gh-proxy.org/https://github.com/clash-verge-rev/clash-verge-rev/releases/download/updater/update-proxy.json",
+    "https://github.com/clash-verge-rev/clash-verge-rev/releases/download/updater/update.json",
+];
+
+const AUTOBUILD_ENDPOINTS: [&str; 1] =
+    ["https://github.com/clash-verge-rev/clash-verge-rev/releases/download/autobuild/latest.json"];
+
+pub async fn verge_updater(app_handle: &tauri::AppHandle) -> Result<Updater> {
+    let update_channel = Config::verge()
+        .await
+        .latest_arc()
+        .update_channel
+        .clone()
+        .unwrap_or_else(|| "stable".into());
+    let endpoint_strs = match update_channel.as_str() {
+        "autobuild" => Vec::from(AUTOBUILD_ENDPOINTS),
+        _ => Vec::from(STABLE_ENDPOINTS),
+    };
+    let mut endpoints = vec![];
+    for s in endpoint_strs {
+        endpoints.push(Url::parse(s)?);
+    }
+    let updater = app_handle.updater_builder().endpoints(endpoints)?.build()?;
+    Ok(updater)
 }
 
 #[cfg(test)]

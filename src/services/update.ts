@@ -1,10 +1,6 @@
-import {
-  check,
-  type CheckOptions,
-  type Update,
-} from '@tauri-apps/plugin-updater'
-
 import { version as appVersion } from '@root/package.json'
+
+import { checkUpdate } from './cmds'
 
 type VersionParts = {
   main: number[]
@@ -94,14 +90,14 @@ const compareVersions = (a: string | null, b: string | null): number | null => {
   return compareVersionParts(partsA, partsB)
 }
 
-const resolveRemoteVersion = (update: Update): string | null => {
+const resolveRemoteVersion = (update: UpdateInfo): string | null => {
   const primary = ensureSemver(update.version)
   if (primary) return primary
 
   const fallbackPrimary = extractSemver(update.version)
   if (fallbackPrimary) return fallbackPrimary
 
-  const raw = update.rawJson ?? {}
+  const raw = update.raw_json ?? {}
   const rawVersion = ensureSemver(
     typeof raw.version === 'string' ? raw.version : null,
   )
@@ -122,25 +118,16 @@ const resolveRemoteVersion = (update: Update): string | null => {
 
 const localVersionNormalized = normalizeVersion(appVersion)
 
-export const checkUpdateSafe = async (
-  options?: CheckOptions,
-): Promise<Update | null> => {
-  const result = await check({ ...(options ?? {}), allowDowngrades: false })
+export const checkUpdateSafe = async (): Promise<UpdateInfo | null> => {
+  const result = await checkUpdate()
   if (!result) return null
 
   const remoteVersion = resolveRemoteVersion(result)
   const comparison = compareVersions(remoteVersion, localVersionNormalized)
 
   if (comparison !== null && comparison <= 0) {
-    try {
-      await result.close()
-    } catch (err) {
-      console.warn('[updater] failed to close stale update resource', err)
-    }
     return null
   }
 
   return result
 }
-
-export type { CheckOptions }

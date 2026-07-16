@@ -398,6 +398,7 @@
         "appLogMaxCount": "App Log Max Count",
         "autoCloseConnections": "Tutup Koneksi Otomatis",
         "autoCheckUpdate": "Periksa Pembaruan Otomatis",
+        "updateChannel": "Update Channel",
         "enableBuiltinEnhanced": "Aktifkan Peningkatan Bawaan",
         "proxyLayoutColumns": "Kolom Tata Letak Proksi",
         "autoLogClean": "Pembersihan Log Otomatis",

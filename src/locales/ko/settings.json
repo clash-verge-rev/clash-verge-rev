@@ -398,6 +398,7 @@
         "appLogMaxCount": "앱 로그 최대 개수",
         "autoCloseConnections": "연결 자동 종료",
         "autoCheckUpdate": "업데이트 자동 확인",
+        "updateChannel": "Update Channel",
         "enableBuiltinEnhanced": "내장 향상 기능 사용",
         "proxyLayoutColumns": "프록시 레이아웃 열 수",
         "autoLogClean": "로그 자동 정리",
