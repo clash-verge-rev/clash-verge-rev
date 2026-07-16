@@ -377,8 +377,8 @@ export const CurrentProxyCard = () => {
 
       ;(proxies.groups || [])
         .filter(
-          (g: { type?: string }) =>
-            g?.type === 'Selector' || g?.type === 'URLTest',
+          (g: { type?: string; hidden?: boolean }) =>
+            !g?.hidden && (g?.type === 'Selector' || g?.type === 'URLTest'),
         )
         .forEach((selectableGroup: any) => {
           registerGroup(selectableGroup)
