@@ -9,8 +9,8 @@ pub enum NotificationEvent<'a> {
     ClashModeChanged {
         mode: &'a str,
     },
-    SystemProxyToggled,
-    TunModeToggled,
+    SystemProxyToggled(bool),
+    TunModeToggled(bool),
     LightweightModeEntered,
     ProfilesReactivated,
     AppQuit,
@@ -37,14 +37,25 @@ pub async fn notify_event<'a>(event: NotificationEvent<'a>) {
                 .into();
             notify(title, body);
         }
-        NotificationEvent::SystemProxyToggled => {
+        NotificationEvent::SystemProxyToggled(enabled) => {
             let title = clash_verge_i18n::t!("notifications.systemProxyToggled.title");
-            let body = clash_verge_i18n::t!("notifications.systemProxyToggled.body");
+            let key = if enabled {
+                "notifications.systemProxyToggled.on"
+            } else {
+                "notifications.systemProxyToggled.off"
+            };
+
+            let body = clash_verge_i18n::t!(key);
             notify(title, body);
         }
-        NotificationEvent::TunModeToggled => {
+        NotificationEvent::TunModeToggled(enabled) => {
             let title = clash_verge_i18n::t!("notifications.tunModeToggled.title");
-            let body = clash_verge_i18n::t!("notifications.tunModeToggled.body");
+            let key = if enabled {
+                "notifications.tunModeToggled.on"
+            } else {
+                "notifications.tunModeToggled.off"
+            };
+            let body = clash_verge_i18n::t!(key);
             notify(title, body);
         }
         NotificationEvent::LightweightModeEntered => {

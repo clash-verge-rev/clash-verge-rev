@@ -21,15 +21,13 @@ src/locales/
     home.json
     shared.json
     ...
-    index.ts
   zh/
     ...
 ```
 
 - JSON files map to namespaces (for example `home.json` → `home.*`). Keep keys scoped to the file they belong to.
 - `shared.json` stores reusable vocabulary (buttons, validations, etc.); feature-specific wording should live in the relevant namespace.
-- `index.ts` re-exports a `resources` object that aggregates the namespace JSON files. When adding or removing namespaces, mirror the pattern from `src/locales/en/index.ts`.
-- Frontend bundles are lazy-loaded by `src/services/i18n.ts`. Only languages listed in `supportedLanguages` are fetched at runtime, so append new codes there when you add a locale.
+- `src/services/i18n.ts` automatically discovers and lazy-loads each locale's JSON sections, so no aggregate module is required. Keep locales aligned with `src/locales/en/`, and add new codes to `supportedLanguages`.
 
 Because backend translations now live in their own directory, you no longer need to run `pnpm prebuild` just to sync locales—the frontend folder is the sole source of truth for web bundles.
 
@@ -52,10 +50,9 @@ Native UI strings (tray menu, notifications, dialogs) use `rust-i18n` with YAML 
 ## Adding a new language
 
 1. Duplicate `src/locales/en/` into `src/locales/<new-lang>/` and translate the JSON files while preserving key structure.
-2. Update the locale’s `index.ts` to import every namespace. Matching the English file is the easiest way to avoid missing exports.
-3. Append the language code to `supportedLanguages` in `src/services/i18n.ts`.
-4. If the backend should expose the language, create `crates/clash-verge-i18n/<new-lang>.yml` and translate the keys used in existing YAML files.
-5. Run `pnpm i18n:format`, `pnpm i18n:types`, and (optionally) `pnpm i18n:check` in dry-run mode to confirm structure.
+2. Append the language code to `supportedLanguages` in `src/services/i18n.ts`.
+3. If the backend should expose the language, create `crates/clash-verge-i18n/<new-lang>.yml` and translate the keys used in existing YAML files.
+4. Run `pnpm i18n:format`, `pnpm i18n:types`, and (optionally) `pnpm i18n:check` in dry-run mode to confirm structure.
 
 ## Authoring guidelines
 

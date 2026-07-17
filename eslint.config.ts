@@ -2,15 +2,18 @@ import eslintJS from '@eslint/js'
 import eslintReact from '@eslint-react/eslint-plugin'
 import { defineConfig } from 'eslint/config'
 import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript'
+import pluginESx from 'eslint-plugin-es-x'
 import pluginImportX from 'eslint-plugin-import-x'
 import pluginReactCompiler from 'eslint-plugin-react-compiler'
 import pluginReactHooks from 'eslint-plugin-react-hooks'
 import pluginReactRefresh from 'eslint-plugin-react-refresh'
+import PluginSukka from 'eslint-plugin-sukka'
 import pluginUnusedImports from 'eslint-plugin-unused-imports'
 import globals from 'globals'
 import tseslint from 'typescript-eslint'
 
 export default defineConfig([
+  pluginESx.configs['flat/restrict-to-es2022'],
   {
     files: ['**/*.{js,mjs,cjs,ts,mts,cts,jsx,tsx}'],
 
@@ -19,9 +22,11 @@ export default defineConfig([
       // @ts-expect-error -- https://github.com/typescript-eslint/typescript-eslint/issues/11543
       'react-hooks': pluginReactHooks,
       'react-compiler': pluginReactCompiler,
+      'es-x': pluginESx,
       'import-x': pluginImportX,
       'react-refresh': pluginReactRefresh,
       'unused-imports': pluginUnusedImports,
+      sukka: PluginSukka,
     },
 
     extends: [
@@ -37,6 +42,7 @@ export default defineConfig([
           allowDefaultProject: [
             'eslint.config.ts',
             `vite.config.mts`,
+            'scripts/*.mjs',
             'src/polyfills/*.js',
           ],
         },
@@ -72,7 +78,7 @@ export default defineConfig([
       '@eslint-react/no-children-for-each': 'error',
       '@eslint-react/no-children-map': 'error',
       '@eslint-react/no-children-only': 'error',
-      '@eslint-react/no-children-prop': 'error',
+      '@eslint-react/jsx-no-children-prop': 'error',
       '@eslint-react/no-children-to-array': 'error',
       '@eslint-react/no-class-component': 'error',
       '@eslint-react/no-clone-element': 'error',
@@ -86,8 +92,8 @@ export default defineConfig([
       '@eslint-react/no-unstable-default-props': 'warn',
       '@eslint-react/no-unused-class-component-members': 'error',
       '@eslint-react/no-unused-state': 'error',
-      '@eslint-react/no-useless-fragment': 'warn',
-      '@eslint-react/prefer-destructuring-assignment': 'warn',
+      '@eslint-react/jsx-no-useless-fragment': 'warn',
+      'sukka/react-prefer-destructuring-assignment': 'warn',
 
       // TypeScript
       '@typescript-eslint/no-explicit-any': 'off',

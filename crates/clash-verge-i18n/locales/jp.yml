@@ -8,10 +8,12 @@ notifications:
     body: '{mode} に切り替えました。'
   systemProxyToggled:
     title: システムプロキシ
-    body: システムプロキシの状態が更新されました。
+    'on': System proxy has been enabled.
+    'off': System proxy has been disabled.
   tunModeToggled:
     title: TUN モード
-    body: TUN モードの状態が更新されました。
+    'on': TUN mode has been enabled.
+    'off': TUN mode has been disabled.
   lightweightModeEntered:
     title: 軽量モード
     body: 軽量モードに入りました。
@@ -24,9 +26,15 @@ notifications:
   appHidden:
     title: アプリが非表示
     body: Clash Verge はバックグラウンドで実行中です。
+  updateReady:
+    title: Clash Verge Update
+    body: A new version (v{version}) has been downloaded and is ready to install.
+    installNow: Install Now
+    later: Later
 service:
   adminInstallPrompt: Clash Verge サービスのインストールには管理者権限が必要です。
   adminUninstallPrompt: Clash Verge サービスのアンインストールには管理者権限が必要です。
+  translocatedCorePath: Clash Verge is running from a temporary (App Translocation) path and can't locate the core. Please move Clash Verge into the Applications folder and reopen it.
 tray:
   dashboard: ダッシュボード
   ruleMode: ルールモード

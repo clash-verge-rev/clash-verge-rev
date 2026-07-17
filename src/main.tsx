@@ -1,13 +1,11 @@
-/// <reference types="vite/client" />
-/// <reference types="vite-plugin-svgr/client" />
 import './assets/styles/index.scss'
-import './services/monaco'
 
 import { ResizeObserver } from '@juggle/resize-observer'
 import { ComposeContextProvider } from 'foxact/compose-context-provider'
 import React from 'react'
 import { createRoot } from 'react-dom/client'
 import { RouterProvider } from 'react-router'
+import { SWRConfig } from 'swr'
 import { MihomoWebSocket } from 'tauri-plugin-mihomo-api'
 
 import { BaseErrorBoundary } from './components/base'
@@ -20,6 +18,7 @@ import {
   resolveThemeMode,
   getPreloadConfig,
 } from './services/preload'
+import { swrConfig } from './services/query-client'
 import {
   LoadingCacheProvider,
   ThemeModeProvider,
@@ -52,11 +51,13 @@ const initializeApp = (initialThemeMode: 'light' | 'dark') => {
     <React.StrictMode>
       <ComposeContextProvider contexts={contexts}>
         <BaseErrorBoundary>
-          <WindowProvider>
-            <AppDataProvider>
-              <RouterProvider router={router} />
-            </AppDataProvider>
-          </WindowProvider>
+          <SWRConfig value={swrConfig}>
+            <WindowProvider>
+              <AppDataProvider>
+                <RouterProvider router={router} />
+              </AppDataProvider>
+            </WindowProvider>
+          </SWRConfig>
         </BaseErrorBoundary>
       </ComposeContextProvider>
     </React.StrictMode>,

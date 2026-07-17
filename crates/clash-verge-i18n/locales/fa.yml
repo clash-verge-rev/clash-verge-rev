@@ -8,10 +8,12 @@ notifications:
     body: به {mode} تغییر کرد.
   systemProxyToggled:
     title: پروکسی سیستم
-    body: وضعیت پروکسی سیستم به‌روزرسانی شد.
+    'on': System proxy has been enabled.
+    'off': System proxy has been disabled.
   tunModeToggled:
     title: حالت TUN
-    body: وضعیت حالت TUN به‌روزرسانی شد.
+    'on': TUN mode has been enabled.
+    'off': TUN mode has been disabled.
   lightweightModeEntered:
     title: حالت سبک
     body: به حالت سبک وارد شد.
@@ -24,9 +26,15 @@ notifications:
   appHidden:
     title: برنامه پنهان شد
     body: Clash Verge در پس‌زمینه در حال اجراست.
+  updateReady:
+    title: Clash Verge Update
+    body: A new version (v{version}) has been downloaded and is ready to install.
+    installNow: Install Now
+    later: Later
 service:
   adminInstallPrompt: نصب سرویس Clash Verge به دسترسی مدیر نیاز دارد.
   adminUninstallPrompt: حذف سرویس Clash Verge به دسترسی مدیر نیاز دارد.
+  translocatedCorePath: Clash Verge is running from a temporary (App Translocation) path and can't locate the core. Please move Clash Verge into the Applications folder and reopen it.
 tray:
   dashboard: داشبورد
   ruleMode: حالت قوانین

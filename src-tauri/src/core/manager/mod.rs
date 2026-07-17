@@ -6,7 +6,14 @@ use anyhow::Result;
 use arc_swap::{ArcSwap, ArcSwapOption};
 use clash_verge_logger::AsyncLogger;
 use once_cell::sync::Lazy;
-use std::{fmt, sync::Arc, time::Instant};
+use std::{
+    fmt,
+    sync::{
+        Arc,
+        atomic::{AtomicBool, Ordering},
+    },
+    time::Instant,
+};
 use tauri_plugin_shell::process::CommandChild;
 
 use crate::singleton;
@@ -34,6 +41,13 @@ impl fmt::Display for RunningMode {
 pub struct CoreManager {
     state: ArcSwap<State>,
     last_update: ArcSwapOption<Instant>,
+    config_update_in_progress: AtomicBool,
+    // 串行化 start/stop/restart 和 sidecar→service 交接。
+    // 锁序固定为 config_update_in_progress → lifecycle_lock。
+    lifecycle_lock: tokio::sync::Mutex<()>,
+    // sidecar→service 交接 watcher 单实例标志。
+    #[cfg(target_os = "windows")]
+    handoff_watcher_running: AtomicBool,
 }
 
 #[derive(Debug)]
@@ -56,6 +70,10 @@ impl Default for CoreManager {
         Self {
             state: ArcSwap::new(Arc::new(State::default())),
             last_update: ArcSwapOption::new(None),
+            config_update_in_progress: AtomicBool::new(false),
+            lifecycle_lock: tokio::sync::Mutex::new(()),
+            #[cfg(target_os = "windows")]
+            handoff_watcher_running: AtomicBool::new(false),
         }
     }
 }
@@ -93,6 +111,14 @@ impl CoreManager {
 
     pub fn set_last_update(&self, time: Instant) {
         self.last_update.store(Some(Arc::new(time)));
+    }
+
+    fn try_start_config_update(&self) -> bool {
+        !self.config_update_in_progress.swap(true, Ordering::AcqRel)
+    }
+
+    fn finish_config_update(&self) {
+        self.config_update_in_progress.store(false, Ordering::Release);
     }
 
     pub async fn init(&self) -> Result<()> {

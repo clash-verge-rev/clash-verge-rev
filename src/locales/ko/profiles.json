@@ -37,7 +37,7 @@
         "importSuccess": "프로필을 성공적으로 가져왔습니다. 보이지 않으면 재시작하세요",
         "profileSwitched": "프로필 전환됨",
         "profileReactivated": "프로필 재활성화됨",
-        "switchInterrupted": "새 선택으로 인해 프로필 전환이 중단되었습니다",
+        "switchBusy": "프로필 전환이 이미 진행 중입니다",
         "batchDeleted": "선택한 프로필이 삭제되었습니다"
       },
       "notices": {
@@ -59,6 +59,7 @@
     "menu": {
       "home": "홈",
       "select": "선택",
+      "shareQrCode": "Share QR Code",
       "editInfo": "정보 편집",
       "editFile": "파일 편집",
       "editRules": "규칙 편집",
@@ -177,6 +178,9 @@
     },
     "logViewer": {
       "title": "스크립트 콘솔"
+    },
+    "qrViewer": {
+      "title": "Subscription QR Code"
     }
   }
 }

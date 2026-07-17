@@ -7,42 +7,23 @@ import {
 } from '@mui/icons-material'
 import { Typography, Stack, Divider, Chip, IconButton } from '@mui/material'
 import { useLockFn } from 'ahooks'
-import { useCallback, useEffect, useMemo, useReducer } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
 
 import { useServiceInstaller } from '@/hooks/use-service-installer'
 import { useSystemState } from '@/hooks/use-system-state'
-import { useUpdate } from '@/hooks/use-update'
+import {
+  useUpdate,
+  updateLastCheckTime,
+  readLastCheckTime,
+} from '@/hooks/use-update'
 import { useVerge } from '@/hooks/use-verge'
 import { getSystemInfo } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
 import { version as appVersion } from '@root/package.json'
 
 import { EnhancedCard } from './enhanced-card'
-
-interface SystemState {
-  osInfo: string
-  lastCheckUpdate: string
-}
-
-type SystemStateAction =
-  | { type: 'set-os-info'; payload: string }
-  | { type: 'set-last-check-update'; payload: string }
-
-const systemStateReducer = (
-  state: SystemState,
-  action: SystemStateAction,
-): SystemState => {
-  switch (action.type) {
-    case 'set-os-info':
-      return { ...state, osInfo: action.payload }
-    case 'set-last-check-update':
-      return { ...state, lastCheckUpdate: action.payload }
-    default:
-      return state
-  }
-}
 
 export const SystemInfoCard = () => {
   const { t } = useTranslation()
@@ -51,85 +32,46 @@ export const SystemInfoCard = () => {
   const { isAdminMode, isSidecarMode } = useSystemState()
   const { installServiceAndRestartCore } = useServiceInstaller()
 
-  // 自动检查更新逻辑
-  const { checkUpdate: triggerCheckUpdate } = useUpdate(true, {
-    onSuccess: () => {
-      const now = Date.now()
-      localStorage.setItem('last_check_update', now.toString())
-      dispatchSystemState({
-        type: 'set-last-check-update',
-        payload: new Date(now).toLocaleString(),
-      })
-    },
-  })
+  // 自动检查更新逻辑（lastCheckUpdate 由 useUpdate 统一管理）
+  const { checkUpdate: triggerCheckUpdate, lastCheckUpdate } = useUpdate(true)
 
-  // 系统信息状态
-  const [systemState, dispatchSystemState] = useReducer(systemStateReducer, {
-    osInfo: '',
-    lastCheckUpdate: '-',
-  })
+  const [osInfo, setOsInfo] = useState('')
+
+  const lastCheckUpdateText = useMemo(
+    () => (lastCheckUpdate ? new Date(lastCheckUpdate).toLocaleString() : '-'),
+    [lastCheckUpdate],
+  )
 
   // 初始化系统信息
   useEffect(() => {
-    let timeoutId: number | undefined
-
     getSystemInfo()
       .then((info) => {
-        const lines = info.split('\n')
-        if (lines.length > 0) {
-          const sysName = lines[0].split(': ')[1] || ''
-          let sysVersion = lines[1].split(': ')[1] || ''
+        const sysName = info.system_name
+        let sysVersion = info.system_version
 
-          if (
-            sysName &&
-            sysVersion.toLowerCase().startsWith(sysName.toLowerCase())
-          ) {
-            sysVersion = sysVersion.substring(sysName.length).trim()
-          }
-
-          dispatchSystemState({
-            type: 'set-os-info',
-            payload: `${sysName} ${sysVersion}`,
-          })
+        if (
+          sysName &&
+          sysVersion.toLowerCase().startsWith(sysName.toLowerCase())
+        ) {
+          sysVersion = sysVersion.substring(sysName.length).trim()
         }
+
+        setOsInfo(`${sysName} ${sysVersion}`)
       })
       .catch(console.error)
+  }, [])
 
-    // 获取最后检查更新时间
-    const lastCheck = localStorage.getItem('last_check_update')
-    if (lastCheck) {
-      try {
-        const timestamp = parseInt(lastCheck, 10)
-        if (!isNaN(timestamp)) {
-          dispatchSystemState({
-            type: 'set-last-check-update',
-            payload: new Date(timestamp).toLocaleString(),
-          })
-        }
-      } catch (e) {
-        console.error('Error parsing last check update time', e)
-      }
-    } else if (verge?.auto_check_update) {
-      // 如果启用了自动检查更新但没有记录，设置当前时间并延迟检查
-      const now = Date.now()
-      localStorage.setItem('last_check_update', now.toString())
-      dispatchSystemState({
-        type: 'set-last-check-update',
-        payload: new Date(now).toLocaleString(),
-      })
+  // 如果启用了自动检查更新但没有记录，设置当前时间并延迟检查
+  useEffect(() => {
+    if (!verge?.auto_check_update) return
+    if (readLastCheckTime() !== null) return
 
-      timeoutId = window.setTimeout(() => {
-        if (verge?.auto_check_update) {
-          triggerCheckUpdate().catch(console.error)
-        }
-      }, 5000)
-    }
-    return () => {
-      if (timeoutId !== undefined) {
-        window.clearTimeout(timeoutId)
-      }
-    }
-  }, [verge?.auto_check_update, dispatchSystemState, triggerCheckUpdate])
+    updateLastCheckTime()
+    const timeoutId = window.setTimeout(() => {
+      triggerCheckUpdate().catch(console.error)
+    }, 5000)
+    return () => window.clearTimeout(timeoutId)
+  }, [verge?.auto_check_update, triggerCheckUpdate])
 
   // 导航到设置页面
   const goToSettings = useCallback(() => {
@@ -156,7 +98,8 @@ export const SystemInfoCard = () => {
   // 检查更新
   const onCheckUpdate = useLockFn(async () => {
     try {
-      const info = await triggerCheckUpdate()
+      const result = await triggerCheckUpdate()
+      const info = result.data
       if (!info?.available) {
         showNotice.success(
           'settings.components.verge.advanced.notifications.latestVersion',
@@ -269,24 +212,23 @@ export const SystemInfoCard = () => {
       }
     >
       <Stack spacing={1.5}>
-        <Stack direction="row" justifyContent="space-between">
+        <Stack direction="row" sx={{ justifyContent: 'space-between' }}>
           <Typography variant="body2" color="text.secondary">
             {t('home.components.systemInfo.fields.osInfo')}
           </Typography>
-          <Typography variant="body2" fontWeight="medium">
-            {systemState.osInfo}
+          <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
+            {osInfo}
           </Typography>
         </Stack>
         <Divider />
         <Stack
           direction="row"
-          justifyContent="space-between"
-          alignItems="center"
+          sx={{ justifyContent: 'space-between', alignItems: 'center' }}
         >
           <Typography variant="body2" color="text.secondary">
             {t('home.components.systemInfo.fields.autoLaunch')}
           </Typography>
-          <Stack direction="row" spacing={1} alignItems="center">
+          <Stack direction="row" spacing={1} sx={{ alignItems: 'center' }}>
             <Chip
               size="small"
               label={
@@ -304,46 +246,44 @@ export const SystemInfoCard = () => {
         <Divider />
         <Stack
           direction="row"
-          justifyContent="space-between"
-          alignItems="center"
+          sx={{ justifyContent: 'space-between', alignItems: 'center' }}
         >
           <Typography variant="body2" color="text.secondary">
             {t('home.components.systemInfo.fields.runningMode')}
           </Typography>
           <Typography
             variant="body2"
-            fontWeight="medium"
             onClick={handleRunningModeClick}
-            sx={runningModeStyle}
+            sx={{ ...runningModeStyle, fontWeight: 'medium' }}
           >
             {getModeIcon()}
             {getModeText()}
           </Typography>
         </Stack>
         <Divider />
-        <Stack direction="row" justifyContent="space-between">
+        <Stack direction="row" sx={{ justifyContent: 'space-between' }}>
           <Typography variant="body2" color="text.secondary">
             {t('home.components.systemInfo.fields.lastCheckUpdate')}
           </Typography>
           <Typography
             variant="body2"
-            fontWeight="medium"
             onClick={onCheckUpdate}
             sx={{
               cursor: 'pointer',
               textDecoration: 'underline',
+              fontWeight: 'medium',
               '&:hover': { opacity: 0.7 },
             }}
           >
-            {systemState.lastCheckUpdate}
+            {lastCheckUpdateText}
           </Typography>
         </Stack>
         <Divider />
-        <Stack direction="row" justifyContent="space-between">
+        <Stack direction="row" sx={{ justifyContent: 'space-between' }}>
           <Typography variant="body2" color="text.secondary">
             {t('home.components.systemInfo.fields.vergeVersion')}
           </Typography>
-          <Typography variant="body2" fontWeight="medium">
+          <Typography variant="body2" sx={{ fontWeight: 'medium' }}>
             v{appVersion}
           </Typography>
         </Stack>

@@ -1,20 +1,26 @@
 import { Box } from '@mui/material'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Virtuoso, VirtuosoHandle } from 'react-virtuoso'
 
-import { BaseEmpty, BasePage, BaseSearchBox } from '@/components/base'
+import {
+  BaseEmpty,
+  BasePage,
+  BaseSearchBox,
+  VirtualList,
+  type VirtualListHandle,
+} from '@/components/base'
 import { ScrollTopButton } from '@/components/layout/scroll-top-button'
 import { ProviderButton } from '@/components/rule/provider-button'
 import RuleItem from '@/components/rule/rule-item'
 import { useVisibility } from '@/hooks/use-visibility'
-import { useAppData } from '@/providers/app-data-context'
+import { useAppRefreshers, useRulesData } from '@/providers/app-data-context'
 
 const RulesPage = () => {
   const { t } = useTranslation()
-  const { rules = [], refreshRules, refreshRuleProviders } = useAppData()
+  const { rules = [] } = useRulesData()
+  const { refreshRules, refreshRuleProviders } = useAppRefreshers()
   const [match, setMatch] = useState(() => (_: string) => true)
-  const virtuosoRef = useRef<VirtuosoHandle>(null)
+  const virtuosoRef = useRef<VirtualListHandle>(null)
   const [showScrollTop, setShowScrollTop] = useState(false)
   const pageVisible = useVisibility()
 
@@ -39,15 +45,12 @@ const RulesPage = () => {
     return rulesWithLineNo.filter((item) => match(item.payload ?? ''))
   }, [rules, match])
 
-  const scrollToTop = () => {
-    virtuosoRef.current?.scrollTo({
-      top: 0,
-      behavior: 'smooth',
-    })
-  }
+  const handleScroll = useCallback((e: Event) => {
+    setShowScrollTop((e.target as HTMLElement).scrollTop > 100)
+  }, [])
 
-  const handleScroll = (e: any) => {
-    setShowScrollTop(e.target.scrollTop > 100)
+  const scrollToTop = () => {
+    virtuosoRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   return (
@@ -61,7 +64,7 @@ const RulesPage = () => {
         overflow: 'auto',
       }}
       header={
-        <Box display="flex" alignItems="center" gap={1}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <ProviderButton />
         </Box>
       }
@@ -81,17 +84,13 @@ const RulesPage = () => {
 
       {filteredRules && filteredRules.length > 0 ? (
         <>
-          <Virtuoso
+          <VirtualList
             ref={virtuosoRef}
-            data={filteredRules}
-            style={{
-              flex: 1,
-            }}
-            itemContent={(_index, item) => <RuleItem value={item} />}
-            followOutput={'smooth'}
-            scrollerRef={(ref) => {
-              if (ref) ref.addEventListener('scroll', handleScroll)
-            }}
+            count={filteredRules.length}
+            estimateSize={40}
+            renderItem={(i) => <RuleItem value={filteredRules[i]} />}
+            style={{ flex: 1 }}
+            onScroll={handleScroll}
           />
           <ScrollTopButton onClick={scrollToTop} show={showScrollTop} />
         </>

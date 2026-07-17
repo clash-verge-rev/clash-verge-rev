@@ -1,20 +1,24 @@
-import { LanOutlined, LanRounded } from '@mui/icons-material'
+import { LanOutlined, LanRounded, WarningRounded } from '@mui/icons-material'
 import { Box, Button, ButtonGroup } from '@mui/material'
 import { useLockFn } from 'ahooks'
-import { useCallback, useEffect, useMemo, useReducer, useState } from 'react'
+import { useCallback, useEffect, useReducer, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { closeAllConnections } from 'tauri-plugin-mihomo-api'
 
-import { BasePage } from '@/components/base'
+import { BasePage, TooltipIcon } from '@/components/base'
 import { ProviderButton } from '@/components/proxy/provider-button'
 import { ProxyGroups } from '@/components/proxy/proxy-groups'
 import { useVerge } from '@/hooks/use-verge'
-import { useAppData } from '@/providers/app-data-context'
+import {
+  useAppRefreshers,
+  useClashConfigData,
+} from '@/providers/app-data-context'
 import {
   getRuntimeProxyChainConfig,
   patchClashMode,
   updateProxyChainConfigInRuntime,
 } from '@/services/cmds'
+import { showNotice } from '@/services/notice-service'
 import { debugLog } from '@/utils/debug'
 
 const MODES = ['rule', 'global', 'direct'] as const
@@ -41,25 +45,30 @@ const ProxyPage = () => {
     null as string | null,
   )
 
-  const { clashConfig, refreshClashConfig } = useAppData()
+  const { clashConfig } = useClashConfigData()
+  const { refreshClashConfig } = useAppRefreshers()
 
   const updateChainConfigData = useCallback((value: string | null) => {
     dispatchChainConfigData(value)
   }, [])
   const { verge } = useVerge()
 
-  const modeList = useMemo(() => MODES, [])
-
   const normalizedMode = clashConfig?.mode?.toLowerCase()
   const curMode = isMode(normalizedMode) ? normalizedMode : undefined
+  const chainWarning = t('proxies.page.chain.warning')
 
   const onChangeMode = useLockFn(async (mode: Mode) => {
     // 断开连接
     if (mode !== curMode && verge?.auto_close_connection) {
       closeAllConnections()
     }
-    await patchClashMode(mode)
-    refreshClashConfig()
+    try {
+      // patchClashMode 在后端 PATCH 失败时会 reject，需提示用户而非静默失败
+      await patchClashMode(mode)
+      refreshClashConfig()
+    } catch (error) {
+      showNotice.error(error)
+    }
   })
 
   const onToggleChainMode = useLockFn(async () => {
@@ -130,18 +139,32 @@ const ProxyPage = () => {
   return (
     <BasePage
       full
-      contentStyle={{ height: '101.5%' }}
+      contentStyle={{ height: '100%' }}
       title={
-        isChainMode
-          ? t('proxies.page.title.chainMode')
-          : t('proxies.page.title.default')
+        isChainMode ? (
+          <Box
+            component="span"
+            data-tauri-drag-region="true"
+            sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.75 }}
+          >
+            {t('proxies.page.title.chainMode')}
+            <TooltipIcon
+              title={chainWarning}
+              icon={WarningRounded}
+              color="warning"
+              sx={{ p: 0.25 }}
+            />
+          </Box>
+        ) : (
+          t('proxies.page.title.default')
+        )
       }
       header={
-        <Box display="flex" alignItems="center" gap={1}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <ProviderButton />
 
           <ButtonGroup size="small">
-            {modeList.map((mode) => (
+            {MODES.map((mode) => (
               <Button
                 key={mode}
                 variant={mode === curMode ? 'contained' : 'outlined'}

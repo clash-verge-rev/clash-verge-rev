@@ -260,7 +260,14 @@ export function decodeBase64OrOriginal(str: string): string {
   const padded = padLen === 0 ? normalized : normalized + '='.repeat(4 - padLen)
 
   try {
-    const decoded = atob(padded)
+    const decodedArray = new Uint8Array(
+      atob(padded)
+        .split('')
+        .map((c) => c.charCodeAt(0)),
+    )
+    const decoded = new TextDecoder('utf-8', { fatal: true }).decode(
+      decodedArray,
+    )
     // Heuristic: only accept "text-like" results to avoid accidentally decoding
     // non-base64 strings that happen to be decodable.
     for (let i = 0; i < decoded.length; i++) {

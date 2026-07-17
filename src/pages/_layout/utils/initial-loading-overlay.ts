@@ -1,45 +1,17 @@
-const OVERLAY_ID = 'initial-loading-overlay'
-const REMOVE_DELAY = 300
+let removed = false
 
-let overlayRemoved = false
+export const hideInitialOverlay = (): number | undefined => {
+  if (removed) return undefined
 
-type HideOverlayOptions = {
-  schedule?: (handler: () => void, delay: number) => number
-  assumeMissingAsRemoved?: boolean
-}
-
-type HideOverlayResult = {
-  removed: boolean
-  removalTimer?: number
-}
-
-export const hideInitialOverlay = (
-  options: HideOverlayOptions = {},
-): HideOverlayResult => {
-  if (overlayRemoved) {
-    return { removed: true }
-  }
-
-  const overlay = document.getElementById(OVERLAY_ID)
+  const overlay = document.getElementById('initial-loading-overlay')
   if (!overlay) {
-    if (options.assumeMissingAsRemoved) {
-      overlayRemoved = true
-      return { removed: true }
-    }
-    return { removed: false }
+    removed = true
+    return undefined
   }
 
-  overlayRemoved = true
+  removed = true
   overlay.dataset.hidden = 'true'
 
-  const schedule = options.schedule ?? window.setTimeout
-  const removalTimer = schedule(() => {
-    try {
-      overlay.remove()
-    } catch (error) {
-      console.warn('[Loading Overlay] Removal failed:', error)
-    }
-  }, REMOVE_DELAY)
-
-  return { removed: true, removalTimer }
+  const timer = window.setTimeout(() => overlay.remove(), 200)
+  return timer
 }

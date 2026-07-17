@@ -42,9 +42,9 @@ Supports Windows (x64/x86), Linux (x64/arm64) and macOS 11+ (intel/apple).
 
 #### 安装说明和常见问题，请到 [文档页](https://clash-verge-rev.github.io/) 查看
 
----
-
 ### TG 频道: [@clash_verge_rev](https://t.me/clash_verge_re)
+
+---
 
 ## Promotion
 
@@ -61,10 +61,21 @@ Supports Windows (x64/x86), Linux (x64/arm64) and macOS 11+ (intel/apple).
 - 💰 优惠套餐每月**仅需 21 元，160G 流量，年付 8 折**
 - 🌍 海外团队，无跑路风险，高达 50% 返佣
 - ⚙️ **集群负载均衡**设计，**负载监控和随时扩容**，高速专线(兼容老客户端)，极低延迟，无视晚高峰，4K 秒开
-- ⚡ 全球首家**Quic 协议机场**，现已上线更快的 Tuic 协议(Clash Verge 客户端最佳搭配)
+- ⚡ 全球首家**Quic 协议机场**，现已上线更快的 Quic 类协议(Clash Verge 客户端最佳搭配)
 - 🎬 解锁**流媒体及 主流 AI**
 
 🌐 官网：👉 [https://狗狗加速.com](https://verge.dginv.click/#/register?code=oaxsAGo6)
+
+### 🤖 [GPTKefu —— 与 Crisp 深度整合的 AI 智能客服平台](https://gptkefu.com)
+
+- 🧠 深度理解完整对话上下文 + 图片识别，自动给出专业、精准的回复，告别机械式客服。
+- ♾️ **不限回答数量**，无额度焦虑，区别于其他按条计费的 AI 客服产品。
+- 💬 售前咨询、售后服务、复杂问题解答，全场景轻松覆盖，真实用户案例已验证效果。
+- ⚡ 3 分钟极速接入，零门槛上手，即刻提升客服效率与客户满意度。
+- 🎁 高级套餐免费试用 14 天，先体验后付费：👉 [立即试用](https://gptkefu.com)
+- 📢 智能客服TG 频道：[@crisp_ai](https://t.me/crisp_ai)
+
+---
 
 ## Features
 
@@ -114,3 +125,7 @@ Clash Verge rev was based on or inspired by these projects and so on:
 ## License
 
 GPL-3.0 License. See [License here](./LICENSE) for details.
+
+<p align="right">
+  <sub><a href="https://sponsorship.forztn.com/github/clash-verge-rev/clash-verge-rev">Supported By ForZTN</a></sub>
+</p>

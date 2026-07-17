@@ -1,18 +1,21 @@
 import { useRef } from 'react'
-import useSWR, { mutate } from 'swr'
 import { closeAllConnections } from 'tauri-plugin-mihomo-api'
 
 import { useVerge } from '@/hooks/use-verge'
-import { useAppData } from '@/providers/app-data-context'
+import { useClashConfigData, useSystemData } from '@/providers/app-data-context'
 import { getAutotemProxy } from '@/services/cmds'
+import { revalidateQueries, useQuery } from '@/services/query-client'
 
 // 系统代理状态检测统一逻辑
 export const useSystemProxyState = () => {
   const { verge, mutateVerge, patchVerge } = useVerge()
-  const { sysproxy, clashConfig } = useAppData()
-  const { data: autoproxy } = useSWR('getAutotemProxy', getAutotemProxy, {
-    revalidateOnFocus: true,
-    revalidateOnReconnect: true,
+  const { sysproxy } = useSystemData()
+  const { clashConfig } = useClashConfigData()
+  const { data: autoproxy } = useQuery({
+    queryKey: ['getAutotemProxy'],
+    queryFn: getAutotemProxy,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: true,
   })
 
   const {
@@ -41,7 +44,10 @@ export const useSystemProxyState = () => {
   const busyRef = useRef(false)
 
   const toggleSystemProxy = async (enabled: boolean) => {
-    mutateVerge({ ...verge, enable_system_proxy: enabled }, false)
+    mutateVerge(
+      (prev) => (prev ? { ...prev, enable_system_proxy: enabled } : prev),
+      false,
+    )
     pendingRef.current = enabled
 
     if (busyRef.current) return
@@ -51,20 +57,24 @@ export const useSystemProxyState = () => {
       while (pendingRef.current !== null) {
         const target = pendingRef.current
         pendingRef.current = null
+        await patchVerge({ enable_system_proxy: target })
         if (!target && verge?.auto_close_connection) {
           await closeAllConnections().catch(() => {})
         }
-        await patchVerge({ enable_system_proxy: target })
       }
     } finally {
       busyRef.current = false
-      await Promise.all([mutate('getSystemProxy'), mutate('getAutotemProxy')])
+      await revalidateQueries([['getSystemProxy'], ['getAutotemProxy']])
     }
   }
+
+  const invalidateProxyState = () =>
+    revalidateQueries([['getSystemProxy'], ['getAutotemProxy']])
 
   return {
     indicator,
     configState: enable_system_proxy ?? false,
     toggleSystemProxy,
+    invalidateProxyState,
   }
 }

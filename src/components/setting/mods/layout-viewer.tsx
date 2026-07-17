@@ -405,9 +405,13 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
             </GuardState>
           </Item>
         )}
-        {/* {OS === "macos" && (
+        {OS === 'macos' && (
           <Item>
-            <ListItemText primary={t("settings.components.verge.layout.fields.enableTraySpeed")} />
+            <ListItemText
+              primary={t(
+                'settings.components.verge.layout.fields.enableTraySpeed',
+              )}
+            />
             <GuardState
               value={verge?.enable_tray_speed ?? false}
               valueProps="checked"
@@ -419,7 +423,7 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
               <Switch edge="end" />
             </GuardState>
           </Item>
-        )} */}
+        )}
         {/* {OS === "macos" && (
           <Item>
             <ListItemText primary={t("settings.components.verge.layout.fields.enableTrayIcon")} />

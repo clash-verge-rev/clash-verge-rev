@@ -91,11 +91,3 @@ pub const WINDOW_INITIAL_SCRIPT: &str = r##"
 
     console.log('[Tauri] 窗口初始化脚本执行完成');
 "##;
-
-pub const INITIAL_LOADING_OVERLAY: &str = r"
-    const overlay = document.getElementById('initial-loading-overlay');
-    if (overlay) {
-        overlay.style.opacity = '0';
-        setTimeout(() => overlay.remove(), 300);
-    }
-";

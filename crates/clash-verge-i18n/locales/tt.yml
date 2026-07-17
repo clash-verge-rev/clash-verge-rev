@@ -8,10 +8,12 @@ notifications:
     body: '{mode} режимына күчтел.'
   systemProxyToggled:
     title: Системалы прокси
-    body: Системалы прокси хәле яңартылды.
+    'on': System proxy has been enabled.
+    'off': System proxy has been disabled.
   tunModeToggled:
     title: TUN режимы
-    body: TUN режимы хәле яңартылды.
+    'on': TUN mode has been enabled.
+    'off': TUN mode has been disabled.
   lightweightModeEntered:
     title: Җиңел режим
     body: Җиңел режимга күчелде.
@@ -24,9 +26,15 @@ notifications:
   appHidden:
     title: Кушымта яшерелде
     body: Clash Verge фон режимында эшли.
+  updateReady:
+    title: Clash Verge Update
+    body: A new version (v{version}) has been downloaded and is ready to install.
+    installNow: Install Now
+    later: Later
 service:
   adminInstallPrompt: Clash Verge хезмәтен урнаштыру өчен администратор хокуклары кирәк.
   adminUninstallPrompt: Clash Verge хезмәтен бетерү өчен администратор хокуклары кирәк.
+  translocatedCorePath: Clash Verge is running from a temporary (App Translocation) path and can't locate the core. Please move Clash Verge into the Applications folder and reopen it.
 tray:
   dashboard: Идарә панеле
   ruleMode: Кагыйдә режимы

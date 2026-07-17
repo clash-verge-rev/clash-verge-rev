@@ -2,9 +2,9 @@ import {
   RestartAltRounded,
   SwitchAccessShortcutRounded,
 } from '@mui/icons-material'
-import { LoadingButton } from '@mui/lab'
 import {
   Box,
+  Button,
   Chip,
   CircularProgress,
   List,
@@ -15,10 +15,10 @@ import { useLockFn } from 'ahooks'
 import type { Ref } from 'react'
 import { useImperativeHandle, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { mutate } from 'swr'
 import { closeAllConnections, upgradeCore } from 'tauri-plugin-mihomo-api'
 
 import { BaseDialog, DialogRef } from '@/components/base'
+import { useClash, useClashInfo } from '@/hooks/use-clash'
 import { useVerge } from '@/hooks/use-verge'
 import { changeClashCore, restartCore } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
@@ -40,6 +40,8 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
   const { t } = useTranslation()
 
   const { verge, mutateVerge } = useVerge()
+  const { mutateVersion } = useClash()
+  const { invalidateClashConfig } = useClashInfo()
 
   const [open, setOpen] = useState(false)
   const [upgrading, setUpgrading] = useState(false)
@@ -68,14 +70,13 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
       }
 
       mutateVerge()
-      setTimeout(async () => {
-        mutate('getClashConfig')
-        mutate('getVersion')
-        setChangingCore(null)
-      }, 500)
+      await new Promise((resolve) => setTimeout(resolve, 500))
+      invalidateClashConfig()
+      mutateVersion()
     } catch (err) {
-      setChangingCore(null)
       showNotice.error(err)
+    } finally {
+      setChangingCore(null)
     }
   })
 
@@ -98,6 +99,7 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
       setUpgrading(true)
       await upgradeCore()
       setUpgrading(false)
+      mutateVersion()
       showNotice.success(
         t('settings.feedback.notifications.clash.versionUpdated'),
       )
@@ -115,10 +117,10 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
     <BaseDialog
       open={open}
       title={
-        <Box display="flex" justifyContent="space-between">
+        <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
           {t('settings.sections.clash.form.fields.clashCore')}
           <Box>
-            <LoadingButton
+            <Button
               variant="contained"
               size="small"
               startIcon={<SwitchAccessShortcutRounded />}
@@ -129,8 +131,8 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
               onClick={onUpgrade}
             >
               {t('shared.actions.upgrade')}
-            </LoadingButton>
-            <LoadingButton
+            </Button>
+            <Button
               variant="contained"
               size="small"
               startIcon={<RestartAltRounded />}
@@ -140,7 +142,7 @@ export function ClashCoreViewer({ ref }: { ref?: Ref<DialogRef> }) {
               onClick={onRestart}
             >
               {t('shared.actions.restart')}
-            </LoadingButton>
+            </Button>
           </Box>
         </Box>
       }

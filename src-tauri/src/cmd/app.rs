@@ -1,8 +1,6 @@
 use super::CmdResult;
-use crate::core::{autostart, handle};
-use crate::utils::resolve::ui::{self, UiReadyStage};
+use crate::core::autostart;
 use crate::{cmd::StringifyErr as _, feat, utils::dirs};
-use clash_verge_logging::{Type, logging};
 use smartstring::alias::String;
 use tauri::{AppHandle, Manager as _};
 
@@ -32,26 +30,6 @@ pub async fn open_logs_dir() -> CmdResult<()> {
 #[tauri::command]
 pub fn open_web_url(url: String) -> CmdResult<()> {
     open::that(url.as_str()).stringify_err()
-}
-
-// TODO 后续可以为前端提供接口，当前作为托盘菜单使用
-/// 打开 Verge 最新日志
-#[tauri::command]
-pub async fn open_app_log() -> CmdResult<()> {
-    let log_path = dirs::app_latest_log().stringify_err()?;
-    #[cfg(target_os = "windows")]
-    let log_path = crate::utils::help::snapshot_path(&log_path).stringify_err()?;
-    open::that(log_path).stringify_err()
-}
-
-// TODO 后续可以为前端提供接口，当前作为托盘菜单使用
-/// 打开 Clash 最新日志
-#[tauri::command]
-pub async fn open_core_log() -> CmdResult<()> {
-    let log_path = dirs::clash_latest_log().stringify_err()?;
-    #[cfg(target_os = "windows")]
-    let log_path = crate::utils::help::snapshot_path(&log_path).stringify_err()?;
-    open::that(log_path).stringify_err()
 }
 
 /// 打开/关闭开发者工具
@@ -108,23 +86,4 @@ pub async fn download_icon_cache(url: String, name: String) -> CmdResult<String>
 #[tauri::command]
 pub async fn copy_icon_file(path: String, icon_info: feat::IconInfo) -> CmdResult<String> {
     feat::copy_icon_file(path, icon_info).await
-}
-
-/// 通知UI已准备就绪
-#[tauri::command]
-pub async fn notify_ui_ready() {
-    logging!(info, Type::Cmd, "前端UI已准备就绪");
-    ui::mark_ui_ready();
-
-    handle::Handle::refresh_clash();
-    let delayed_refresh_delay = std::time::Duration::from_millis(1500);
-    tokio::time::sleep(delayed_refresh_delay).await;
-    handle::Handle::refresh_clash();
-}
-
-/// UI加载阶段
-#[tauri::command]
-pub fn update_ui_stage(stage: UiReadyStage) {
-    logging!(info, Type::Cmd, "UI加载阶段更新: {:?}", &stage);
-    ui::update_ui_ready_stage(stage);
 }

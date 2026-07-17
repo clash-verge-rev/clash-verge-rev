@@ -1,7 +1,7 @@
 import { Box, Button, Snackbar, useTheme } from '@mui/material'
 import { useLockFn } from 'ahooks'
 import dayjs from 'dayjs'
-import { useImperativeHandle, useState, type Ref } from 'react'
+import { useCallback, useImperativeHandle, useState, type Ref } from 'react'
 import { useTranslation } from 'react-i18next'
 import { closeConnection } from 'tauri-plugin-mihomo-api'
 
@@ -9,13 +9,20 @@ import parseTraffic from '@/utils/parse-traffic'
 
 export interface ConnectionDetailRef {
   open: (detail: IConnectionsItem, closed: boolean) => void
+  close: () => void
 }
 
 export function ConnectionDetail({ ref }: { ref?: Ref<ConnectionDetailRef> }) {
   const [open, setOpen] = useState(false)
-  const [detail, setDetail] = useState<IConnectionsItem>(null!)
+  const [detail, setDetail] = useState<IConnectionsItem | null>(null)
   const [closed, setClosed] = useState(false)
   const theme = useTheme()
+
+  const onClose = useCallback(() => {
+    setOpen(false)
+    setDetail(null)
+    setClosed(false)
+  }, [])
 
   useImperativeHandle(ref, () => ({
     open: (detail: IConnectionsItem, closed: boolean) => {
@@ -24,9 +31,8 @@ export function ConnectionDetail({ ref }: { ref?: Ref<ConnectionDetailRef> }) {
       setDetail(detail)
       setClosed(closed)
     },
+    close: onClose,
   }))
-
-  const onClose = () => setOpen(false)
 
   return (
     <Snackbar
@@ -67,9 +73,9 @@ const InnerConnectionDetail = ({ data, closed, onClose }: InnerProps) => {
   const theme = useTheme()
   const chains = [...data.chains].reverse().join(' / ')
   const rule = rulePayload ? `${data.rule}(${rulePayload})` : data.rule
-  const host = metadata.host
-    ? `${metadata.host}:${metadata.destinationPort}`
-    : `${metadata.remoteDestination}:${metadata.destinationPort}`
+  const hostAddress =
+    metadata.host || metadata.destinationIP || metadata.remoteDestination
+  const host = `${hostAddress}:${metadata.destinationPort}`
   const Destination = metadata.destinationIP
     ? metadata.destinationIP
     : metadata.remoteDestination

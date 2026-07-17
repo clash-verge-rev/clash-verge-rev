@@ -9,7 +9,8 @@ pub mod service;
 pub mod sysopt;
 pub mod timer;
 pub mod tray;
+pub mod updater;
 pub mod validate;
 pub mod win_uwp;
 
-pub use self::{manager::CoreManager, timer::Timer};
+pub use self::{manager::CoreManager, timer::Timer, updater::SilentUpdater};

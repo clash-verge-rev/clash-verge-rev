@@ -37,7 +37,7 @@
         "importSuccess": "订阅已成功导入，如未显示请重启应用",
         "profileSwitched": "订阅已切换",
         "profileReactivated": "订阅已激活",
-        "switchInterrupted": "订阅切换被新选择中断",
+        "switchBusy": "正在切换订阅，请稍后重试",
         "batchDeleted": "选中的订阅已成功删除"
       },
       "notices": {
@@ -59,6 +59,7 @@
     "menu": {
       "home": "首 页",
       "select": "使用",
+      "shareQrCode": "分享二维码",
       "editInfo": "编辑信息",
       "editFile": "编辑文件",
       "editRules": "编辑规则",
@@ -177,6 +178,9 @@
     },
     "logViewer": {
       "title": "脚本控制台输出"
+    },
+    "qrViewer": {
+      "title": "订阅二维码"
     }
   }
 }

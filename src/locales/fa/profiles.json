@@ -37,7 +37,7 @@
         "importSuccess": "Profile imported successfully, please restart if not visible",
         "profileSwitched": "پروفایل تغییر یافت",
         "profileReactivated": "پروفایل مجدداً فعال شد",
-        "switchInterrupted": "Profile switch interrupted by new selection",
+        "switchBusy": "Profile switch is already in progress",
         "batchDeleted": "Selected profiles deleted successfully"
       },
       "notices": {
@@ -59,6 +59,7 @@
     "menu": {
       "home": "Home",
       "select": "انتخاب",
+      "shareQrCode": "Share QR Code",
       "editInfo": "ویرایش اطلاعات",
       "editFile": "ویرایش فایل",
       "editRules": "ویرایش قوانین",
@@ -177,6 +178,9 @@
     },
     "logViewer": {
       "title": "کنسول اسکریپت"
+    },
+    "qrViewer": {
+      "title": "Subscription QR Code"
     }
   }
 }

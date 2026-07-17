@@ -37,7 +37,7 @@
         "importSuccess": "Profile imported successfully, please restart if not visible",
         "profileSwitched": "Профиль алмаштырылды",
         "profileReactivated": "Профиль яңадан активлаштырылды",
-        "switchInterrupted": "Profile switch interrupted by new selection",
+        "switchBusy": "Profile switch is already in progress",
         "batchDeleted": "Selected profiles deleted successfully"
       },
       "notices": {
@@ -59,6 +59,7 @@
     "menu": {
       "home": "Home",
       "select": "Сайлау",
+      "shareQrCode": "Share QR Code",
       "editInfo": "Мәгълүматны үзгәртү",
       "editFile": "Файлны үзгәртү",
       "editRules": "Кагыйдәләрне үзгәртү",
@@ -177,6 +178,9 @@
     },
     "logViewer": {
       "title": "Скрипт консоле"
+    },
+    "qrViewer": {
+      "title": "Subscription QR Code"
     }
   }
 }

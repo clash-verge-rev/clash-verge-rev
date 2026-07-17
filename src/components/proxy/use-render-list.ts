@@ -1,8 +1,8 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 
 import { useRuntimeConfig } from '@/hooks/use-clash'
 import { useVerge } from '@/hooks/use-verge'
-import { useAppData } from '@/providers/app-data-context'
+import { useAppRefreshers, useProxiesData } from '@/providers/app-data-context'
 import delayManager from '@/services/delay'
 import { debugLog } from '@/utils/debug'
 
@@ -68,6 +68,15 @@ export interface IRenderItem {
   testUrl?: string
 }
 
+type GroupCache = {
+  now: string
+  all: IProxyItem[]
+  headState: HeadState
+  col: number
+  latencyTimeout: number | undefined
+  items: IRenderItem[]
+}
+
 // 优化列布局计算
 const calculateColumns = (width: number, configCol: number): number => {
   if (configCol > 0 && configCol < 6) return configCol
@@ -99,7 +108,8 @@ export const useRenderList = (
   selectedGroup?: string | null,
 ) => {
   // 使用全局数据提供者
-  const { proxies: proxiesData, refreshProxy } = useAppData()
+  const { proxies: proxiesData } = useProxiesData()
+  const { refreshProxy } = useAppRefreshers()
   const { verge } = useVerge()
   const { width } = useWindowWidth()
   const [headStates, setHeadState] = useHeadStateNew()
@@ -148,12 +158,11 @@ export const useRenderList = (
     const calculateDelays = async () => {
       try {
         const timeout = verge?.default_latency_timeout || 10000
-        const proxyNames = allProxies.map((proxy) => proxy.name)
 
-        debugLog(`[ChainMode] 开始计算 ${proxyNames.length} 个节点的延迟`)
+        debugLog(`[ChainMode] 开始计算 ${allProxies.length} 个节点的延迟`)
 
         // 使用 delayManager 计算延迟，每个节点计算完成后会自动触发监听器刷新界面
-        delayManager.checkListDelay(proxyNames, 'chain-mode', timeout)
+        delayManager.checkListDelay(allProxies, 'chain-mode', timeout)
       } catch (error) {
         console.error('Failed to calculate delays for chain mode:', error)
       }
@@ -168,6 +177,9 @@ export const useRenderList = (
       delayManager.removeGroupListener('chain-mode')
     }
   }, [isChainMode, runtimeConfig, verge?.default_latency_timeout, refreshProxy])
+
+  const groupCacheRef = useRef<Map<string, GroupCache>>(new Map())
+  const prevListRef = useRef<IRenderItem[]>([])
 
   // 处理渲染列表
   const renderList: IRenderItem[] = useMemo(() => {
@@ -371,8 +383,25 @@ export const useRenderList = (
         ? proxiesData.groups
         : [proxiesData.global!]
 
+    const cache = groupCacheRef.current
+    let anyChanged = false
+
     const retList = renderGroups.flatMap((group: ProxyGroup) => {
       const headState = headStates[group.name] || DEFAULT_STATE
+      const cached = cache.get(group.name)
+
+      if (
+        cached &&
+        cached.now === group.now &&
+        cached.all === group.all &&
+        cached.headState === headState &&
+        cached.col === col &&
+        cached.latencyTimeout === latencyTimeout
+      ) {
+        return cached.items
+      }
+
+      anyChanged = true
       const ret: IRenderItem[] = [
         {
           type: 0,
@@ -398,12 +427,15 @@ export const useRenderList = (
           },
         )
 
-        ret.push({
-          type: 1,
-          key: `head-${group.name}`,
-          group,
-          headState,
-        })
+        // 全局模式下，添加组头
+        if (!useRule) {
+          ret.push({
+            type: 1,
+            key: `head-${group.name}`,
+            group,
+            headState,
+          })
+        }
 
         if (!proxies.length) {
           ret.push({
@@ -413,9 +445,9 @@ export const useRenderList = (
             headState,
           })
         } else if (col > 1) {
-          return ret.concat(
-            groupProxies(proxies, col).map((proxyCol, colIndex) => ({
-              type: 4,
+          ret.push(
+            ...groupProxies(proxies, col).map((proxyCol, colIndex) => ({
+              type: 4 as const,
               key: `col-${group.name}-${proxyCol[0].name}-${colIndex}`,
               group,
               headState,
@@ -425,9 +457,9 @@ export const useRenderList = (
             })),
           )
         } else {
-          return ret.concat(
-            proxies.map((proxy) => ({
-              type: 2,
+          ret.push(
+            ...proxies.map((proxy) => ({
+              type: 2 as const,
               key: `${group.name}-${proxy!.name}`,
               group,
               proxy,
@@ -437,11 +469,27 @@ export const useRenderList = (
           )
         }
       }
+
+      cache.set(group.name, {
+        now: group.now,
+        all: group.all,
+        headState,
+        col,
+        latencyTimeout,
+        items: ret,
+      })
       return ret
     })
 
-    if (!useRule) return retList.slice(1)
-    return retList.filter((item: IRenderItem) => !item.group.hidden)
+    const filtered = !useRule
+      ? retList.slice(1)
+      : retList.filter((item: IRenderItem) => !item.group.hidden)
+
+    if (!anyChanged && prevListRef.current.length === filtered.length) {
+      return prevListRef.current
+    }
+    prevListRef.current = filtered
+    return filtered
   }, [
     headStates,
     proxiesData,

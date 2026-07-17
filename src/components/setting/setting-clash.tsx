@@ -4,7 +4,7 @@ import { invoke } from '@tauri-apps/api/core'
 import { useLockFn } from 'ahooks'
 import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { updateGeo } from 'tauri-plugin-mihomo-api'
+import { updateGeo, type LogLevel } from 'tauri-plugin-mihomo-api'
 
 import { DialogRef, Switch, TooltipIcon } from '@/components/base'
 import { useClash } from '@/hooks/use-clash'
@@ -78,7 +78,6 @@ const SettingClash = ({ onError }: Props) => {
   const handleDnsToggle = useLockFn(async (enable: boolean) => {
     try {
       setDnsSettingsEnabled(enable)
-      localStorage.setItem('dns_settings_enabled', String(enable))
       await patchVerge({ enable_dns_settings: enable })
       await invoke('apply_dns_config', { apply: enable })
       setTimeout(() => {
@@ -86,7 +85,6 @@ const SettingClash = ({ onError }: Props) => {
       }, 500)
     } catch (err: any) {
       setDnsSettingsEnabled(!enable)
-      localStorage.setItem('dns_settings_enabled', String(!enable))
       showNotice.error(err)
       await patchVerge({ enable_dns_settings: !enable }).catch(() => {})
       throw err
@@ -193,7 +191,10 @@ const SettingClash = ({ onError }: Props) => {
           onFormat={(e: any) => e.target.value}
           onChange={(e) => onChangeData({ 'log-level': e })}
           onGuard={(e) => {
-            setClashLog((pre: any) => ({ ...pre, logLevel: e }))
+            setClashLog((pre) => ({
+              ...pre!,
+              logLevel: e.toUpperCase() as LogLevel,
+            }))
             return patchClash({ 'log-level': e })
           }}
         >
@@ -226,7 +227,7 @@ const SettingClash = ({ onError }: Props) => {
           sx={{ width: 100, input: { py: '7.5px', cursor: 'pointer' } }}
           onClick={(e) => {
             portRef.current?.open()
-            ;(e.target as any).blur()
+            ;(e.target as HTMLElement).blur()
           }}
         />
       </SettingItem>

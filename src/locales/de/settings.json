@@ -429,7 +429,6 @@
         "update": "Aktualisieren"
       },
       "messages": {
-        "portableError": "Die portable Version unterstützt keine In-App-Aktualisierung. Bitte laden Sie die Dateien manuell herunter und ersetzen Sie sie.",
         "breakChangeError": "Dies ist eine wichtige Aktualisierung. Die In-App-Aktualisierung wird nicht unterstützt. Bitte deinstallieren Sie die Software und laden Sie die neue Version manuell herunter und installieren Sie sie."
       }
     },
@@ -490,7 +489,7 @@
     "dns": {
       "dialog": {
         "title": "DNS-Überschreibung",
-        "warning": "Wenn Sie sich nicht mit diesen Einstellungen auskennen, ändern Sie sie nicht und lassen Sie die DNS-Überschreibung aktiviert."
+        "warning": "Wenn Sie sich nicht mit diesen Einstellungen auskennen, ändern Sie sie nicht und lassen Sie die DNS-Überschreibung deaktiviert."
       },
       "sections": {
         "general": "DNS-Einstellungen",
@@ -502,6 +501,7 @@
         "listen": "DNS-Lauschangabe",
         "enhancedMode": "Erweiterter Modus",
         "fakeIpRange": "Fake-IP-Bereich",
+        "fakeIpRange6": "Fake-IP-Bereich (IPv6)",
         "fakeIpFilterMode": "Fake-IP-Filtermodus",
         "ipv6": {
           "label": "IPv6",
@@ -606,11 +606,6 @@
         "entryLightweightMode": "Leichtgewichtigen Modus betreten",
         "direct": "Direktverbindungs-Modus",
         "reactivateProfiles": "Abonnement erneut aktivieren"
-      }
-    },
-    "password": {
-      "prompts": {
-        "enterRoot": "Bitte geben Sie Ihr Root-Passwort ein."
       }
     },
     "networkInterface": {

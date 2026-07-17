@@ -13,7 +13,7 @@ import type { ReactNode } from 'react'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-export type BaseSplitChipEditorMode = 'visual' | 'advanced'
+type BaseSplitChipEditorMode = 'visual' | 'advanced'
 
 interface BaseSplitChipEditorProps {
   value?: string

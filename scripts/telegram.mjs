@@ -44,17 +44,23 @@ async function sendTelegramNotification() {
 
   // Markdown 转换为 HTML
   function convertMarkdownToTelegramHTML(content) {
+    // Strip stray HTML tags and markdown bold from heading text
+    const cleanHeading = (text) =>
+      text
+        .replace(/<\/?[^>]+>/g, '')
+        .replace(/\*\*/g, '')
+        .trim()
     return content
       .split('\n')
       .map((line) => {
         if (line.trim().length === 0) {
           return ''
         } else if (line.startsWith('## ')) {
-          return `<b>${line.replace('## ', '')}</b>`
+          return `<b>${cleanHeading(line.replace('## ', ''))}</b>`
         } else if (line.startsWith('### ')) {
-          return `<b>${line.replace('### ', '')}</b>`
+          return `<b>${cleanHeading(line.replace('### ', ''))}</b>`
         } else if (line.startsWith('#### ')) {
-          return `<b>${line.replace('#### ', '')}</b>`
+          return `<b>${cleanHeading(line.replace('#### ', ''))}</b>`
         } else {
           let processedLine = line.replace(
             /\[([^\]]+)\]\(([^)]+)\)/g,
@@ -82,8 +88,26 @@ async function sendTelegramNotification() {
       .replace(/<br\s*\/?>/g, '\n')
   }
 
+  // Strip HTML tags not supported by Telegram and escape stray angle brackets
+  function sanitizeTelegramHTML(content) {
+    // Telegram supports: b, strong, i, em, u, ins, s, strike, del,
+    // a, code, pre, blockquote, tg-spoiler, tg-emoji
+    const allowedTags =
+      /^\/?(b|strong|i|em|u|ins|s|strike|del|a|code|pre|blockquote|tg-spoiler|tg-emoji)(\s|>|$)/i
+    return content.replace(/<\/?[^>]*>/g, (tag) => {
+      const inner = tag.replace(/^<\/?/, '').replace(/>$/, '')
+      if (allowedTags.test(inner) || allowedTags.test(tag.slice(1))) {
+        return tag
+      }
+      // Escape unsupported tags so they display as text
+      return tag.replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    })
+  }
+
   releaseContent = normalizeDetailsTags(releaseContent)
-  const formattedContent = convertMarkdownToTelegramHTML(releaseContent)
+  const formattedContent = sanitizeTelegramHTML(
+    convertMarkdownToTelegramHTML(releaseContent),
+  )
 
   const releaseTitle = isAutobuild ? '滚动更新版发布' : '正式发布'
   const encodedVersion = encodeURIComponent(version)

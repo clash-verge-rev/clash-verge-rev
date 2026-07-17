@@ -7,15 +7,13 @@ import {
   ListItemIcon,
   ListItemText,
   styled,
-  SxProps,
-  Theme,
+  type SxProps,
+  type Theme,
 } from '@mui/material'
-import { useLockFn } from 'ahooks'
-import { useCallback, useEffect, useReducer } from 'react'
 
 import { BaseLoading } from '@/components/base'
-import { useVerge } from '@/hooks/use-verge'
-import delayManager, { DelayUpdate } from '@/services/delay'
+import { useProxyDelayState } from '@/hooks/use-proxy-delay-state'
+import delayManager from '@/services/delay'
 
 interface Props {
   group: IProxyGroupItem
@@ -47,70 +45,11 @@ const TypeBox = styled('span')(({ theme }) => ({
 export const ProxyItem = (props: Props) => {
   const { group, proxy, selected, showType = true, sx, onClick } = props
 
-  const presetList = ['DIRECT', 'REJECT', 'REJECT-DROP', 'PASS', 'COMPATIBLE']
-  const isPreset = presetList.includes(proxy.name)
   // -1/<=0 为不显示，-2 为 loading
-  const [delayState, setDelayState] = useReducer(
-    (_: DelayUpdate, next: DelayUpdate) => next,
-    {
-      delay: -1,
-      updatedAt: 0,
-    },
+  const { delayValue, isPreset, timeout, onDelay } = useProxyDelayState(
+    proxy,
+    group.name,
   )
-  const { verge } = useVerge()
-  const timeout = verge?.default_latency_timeout || 10000
-
-  useEffect(() => {
-    if (isPreset) return
-    delayManager.setListener(proxy.name, group.name, setDelayState)
-
-    return () => {
-      delayManager.removeListener(proxy.name, group.name)
-    }
-  }, [proxy.name, group.name, isPreset])
-
-  const updateDelay = useCallback(() => {
-    if (!proxy) return
-    const cachedUpdate = delayManager.getDelayUpdate(proxy.name, group.name)
-    if (cachedUpdate) {
-      setDelayState({ ...cachedUpdate })
-      return
-    }
-
-    const fallbackDelay = delayManager.getDelayFix(proxy, group.name)
-    if (fallbackDelay === -1) {
-      setDelayState({ delay: -1, updatedAt: 0 })
-      return
-    }
-
-    let updatedAt = 0
-    const history = proxy.history
-    if (history && history.length > 0) {
-      const lastRecord = history[history.length - 1]
-      const parsed = Date.parse(lastRecord.time)
-      if (!Number.isNaN(parsed)) {
-        updatedAt = parsed
-      }
-    }
-
-    setDelayState({
-      delay: fallbackDelay,
-      updatedAt,
-    })
-  }, [proxy, group.name])
-
-  useEffect(() => {
-    updateDelay()
-  }, [updateDelay])
-
-  const onDelay = useLockFn(async () => {
-    setDelayState({ delay: -2, updatedAt: Date.now() })
-    setDelayState(
-      await delayManager.checkDelay(proxy.name, group.name, timeout),
-    )
-  })
-
-  const delayValue = delayState.delay
 
   return (
     <ListItem sx={sx}>
@@ -186,14 +125,13 @@ export const ProxyItem = (props: Props) => {
             </Widget>
           )}
 
-          {!proxy.provider && delayValue !== -2 && (
-            // provider 的节点不支持检测
+          {delayValue !== -2 && (
             <Widget
               className="the-check"
               onClick={(e) => {
                 e.preventDefault()
                 e.stopPropagation()
-                onDelay()
+                onDelay(proxy.provider)
               }}
               sx={({ palette }) => ({
                 display: 'none', // hover 时显示
@@ -209,17 +147,14 @@ export const ProxyItem = (props: Props) => {
             <Widget
               className="the-delay"
               onClick={(e) => {
-                if (proxy.provider) return
                 e.preventDefault()
                 e.stopPropagation()
-                onDelay()
+                onDelay(proxy.provider)
               }}
-              color={delayManager.formatDelayColor(delayValue, timeout)}
-              sx={({ palette }) =>
-                !proxy.provider
-                  ? { ':hover': { bgcolor: alpha(palette.primary.main, 0.15) } }
-                  : {}
-              }
+              sx={({ palette }) => ({
+                color: delayManager.formatDelayColor(delayValue, timeout),
+                ':hover': { bgcolor: alpha(palette.primary.main, 0.15) },
+              })}
             >
               {delayManager.formatDelay(delayValue, timeout)}
             </Widget>

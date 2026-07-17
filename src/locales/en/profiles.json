@@ -37,7 +37,7 @@
         "importSuccess": "Profile imported successfully, please restart if not visible",
         "profileSwitched": "Profile Switched",
         "profileReactivated": "Profile Reactivated",
-        "switchInterrupted": "Profile switch interrupted by new selection",
+        "switchBusy": "Profile switch is already in progress",
         "batchDeleted": "Selected profiles deleted successfully"
       },
       "notices": {
@@ -59,6 +59,7 @@
     "menu": {
       "home": "Home",
       "select": "Select",
+      "shareQrCode": "Share QR Code",
       "editInfo": "Edit Info",
       "editFile": "Edit File",
       "editRules": "Edit Rules",
@@ -177,6 +178,9 @@
     },
     "logViewer": {
       "title": "Script Console"
+    },
+    "qrViewer": {
+      "title": "Subscription QR Code"
     }
   }
 }

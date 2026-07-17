@@ -37,7 +37,7 @@
         "importSuccess": "Profile imported successfully, please restart if not visible",
         "profileSwitched": "Profil Değiştirildi",
         "profileReactivated": "Profil Yeniden Etkinleştirildi",
-        "switchInterrupted": "Profile switch interrupted by new selection",
+        "switchBusy": "Profil değiştirme işlemi zaten devam ediyor",
         "batchDeleted": "Seçili profiller başarıyla silindi"
       },
       "notices": {
@@ -59,6 +59,7 @@
     "menu": {
       "home": "Ana Sayfa",
       "select": "Seç",
+      "shareQrCode": "Share QR Code",
       "editInfo": "Bilgileri Düzenle",
       "editFile": "Dosyayı Düzenle",
       "editRules": "Kuralları Düzenle",
@@ -177,6 +178,9 @@
     },
     "logViewer": {
       "title": "Betik Konsolu"
+    },
+    "qrViewer": {
+      "title": "Subscription QR Code"
     }
   }
 }

@@ -1,70 +1,93 @@
-import { loader } from '@monaco-editor/react'
-import metaSchema from 'meta-json-schema/schemas/meta-json-schema.json'
-import * as monaco from 'monaco-editor'
-import editorWorker from 'monaco-editor/esm/vs/editor/editor.worker?worker'
-import cssWorker from 'monaco-editor/esm/vs/language/css/css.worker?worker'
-import tsWorker from 'monaco-editor/esm/vs/language/typescript/ts.worker?worker'
-import { configureMonacoYaml, JSONSchema } from 'monaco-yaml'
-import pac from 'types-pac/pac.d.ts?raw'
+type MonacoModule = typeof import('monaco-editor')
+type MonacoEditorPackage = typeof import('@monaco-editor/react')
 
-import yamlWorker from '@/utils/yaml.worker?worker'
-
-self.MonacoEnvironment = {
-  getWorker(_, label) {
-    switch (label) {
-      case 'css':
-      case 'less':
-      case 'scss':
-        return new cssWorker()
-      case 'typescript':
-      case 'javascript':
-        return new tsWorker()
-      case 'yaml':
-        return new yamlWorker()
-      default:
-        return new editorWorker()
-    }
-  },
+type MonacoEditorBundle = {
+  Editor: MonacoEditorPackage['default']
+  beforeEditorMount: () => void
 }
 
-loader.config({ monaco })
+let loadPromise: Promise<MonacoEditorBundle> | undefined
+let monacoConfigured = false
 
-// Work around https://github.com/remcohaszing/monaco-yaml/issues/272.
-const patchCreateWebWorker = () => {
-  const oldCreateWebWorker = monaco.editor.createWebWorker
+const patchCreateWebWorker = (monaco: MonacoModule) => {
+  const createWebWorker = monaco.editor.createWebWorker
 
-  monaco.editor.createWebWorker = (
-    options: monaco.IWebWorkerOptions | monaco.editor.IInternalWebWorkerOptions,
-  ) => {
-    if ('worker' in options) {
-      return oldCreateWebWorker(options)
-    }
+  type CreateWebWorker = typeof createWebWorker
+  type WorkerOptions = Parameters<CreateWebWorker>[0] & { worker?: unknown }
 
-    return monaco.createWebWorker(options)
-  }
+  monaco.editor.createWebWorker = ((options: WorkerOptions) =>
+    'worker' in options
+      ? createWebWorker(options)
+      : monaco.createWebWorker(options)) as CreateWebWorker
 }
 
-let mounted = false
+export const loadMonacoEditor = () => {
+  loadPromise ??= Promise.all([
+    import('@monaco-editor/react'),
+    import('monaco-editor'),
+    import('monaco-editor/esm/vs/editor/editor.worker?worker'),
+    import('monaco-editor/esm/vs/language/css/css.worker?worker'),
+    import('monaco-editor/esm/vs/language/typescript/ts.worker?worker'),
+    import('monaco-yaml'),
+    import('meta-json-schema/schemas/meta-json-schema.json'),
+    import('types-pac/pac.d.ts?raw'),
+    import('@/utils/yaml.worker?worker'),
+  ]).then(
+    ([
+      editorModule,
+      monaco,
+      { default: EditorWorker },
+      { default: CssWorker },
+      { default: TsWorker },
+      { configureMonacoYaml },
+      { default: metaSchema },
+      { default: pac },
+      { default: YamlWorker },
+    ]) => {
+      const workers = {
+        css: CssWorker,
+        less: CssWorker,
+        scss: CssWorker,
+        typescript: TsWorker,
+        javascript: TsWorker,
+        yaml: YamlWorker,
+      }
 
-export const beforeEditorMount = () => {
-  if (mounted) return
+      self.MonacoEnvironment = {
+        getWorker(_, label) {
+          return new (workers[label as keyof typeof workers] ?? EditorWorker)()
+        },
+      }
 
-  patchCreateWebWorker()
+      editorModule.loader.config({ monaco })
 
-  monaco.typescript.javascriptDefaults.addExtraLib(pac, 'pac.d.ts')
+      return {
+        Editor: editorModule.default,
+        beforeEditorMount: () => {
+          if (monacoConfigured) return
 
-  configureMonacoYaml(monaco, {
-    validate: true,
-    enableSchemaRequest: true,
-    completion: true,
-    schemas: [
-      {
-        uri: 'http://example.com/meta-json-schema.json',
-        fileMatch: ['**/*.yaml', '**/*.yml'],
-        schema: metaSchema as unknown as JSONSchema, // JSON import is inferred as a literal type
-      },
-    ],
-  })
+          patchCreateWebWorker(monaco)
+          monaco.typescript.javascriptDefaults.addExtraLib(pac, 'pac.d.ts')
 
-  mounted = true
+          configureMonacoYaml(monaco, {
+            validate: true,
+            enableSchemaRequest: true,
+            completion: true,
+            schemas: [
+              {
+                uri: 'http://example.com/meta-json-schema.json',
+                fileMatch: ['**/*.yaml', '**/*.yml'],
+                schema:
+                  metaSchema as unknown as import('monaco-yaml').JSONSchema,
+              },
+            ],
+          })
+
+          monacoConfigured = true
+        },
+      }
+    },
+  )
+
+  return loadPromise
 }

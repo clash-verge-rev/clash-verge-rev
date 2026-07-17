@@ -1,7 +1,11 @@
 use rust_i18n::i18n;
+use std::borrow::Cow;
+use std::sync::LazyLock;
 
 const DEFAULT_LANGUAGE: &str = "zh";
 i18n!("locales", fallback = "zh");
+
+static SUPPORTED_LOCALES: LazyLock<Vec<Cow<'static, str>>> = LazyLock::new(|| rust_i18n::available_locales!());
 
 #[inline]
 fn locale_alias(locale: &str) -> Option<&'static str> {
@@ -14,54 +18,51 @@ fn locale_alias(locale: &str) -> Option<&'static str> {
 }
 
 #[inline]
-fn resolve_supported_language(language: &str) -> Option<&'static str> {
+fn resolve_supported_language(language: &str) -> Option<Cow<'static, str>> {
     if language.is_empty() {
         return None;
     }
     let normalized = language.to_lowercase().replace('_', "-");
     let segments: Vec<&str> = normalized.split('-').collect();
-    let supported = rust_i18n::available_locales!();
     for i in (1..=segments.len()).rev() {
         let prefix = segments[..i].join("-");
         if let Some(alias) = locale_alias(&prefix)
-            && let Some(&found) = supported.iter().find(|&&l| l.eq_ignore_ascii_case(alias))
+            && let Some(found) = SUPPORTED_LOCALES.iter().find(|l| l.eq_ignore_ascii_case(alias))
         {
-            return Some(found);
+            return Some(found.clone());
         }
-        if let Some(&found) = supported.iter().find(|&&l| l.eq_ignore_ascii_case(&prefix)) {
-            return Some(found);
+        if let Some(found) = SUPPORTED_LOCALES.iter().find(|l| l.eq_ignore_ascii_case(&prefix)) {
+            return Some(found.clone());
         }
     }
     None
 }
 
 #[inline]
-fn current_language(language: Option<&str>) -> &str {
+fn current_language(language: Option<&str>) -> Cow<'static, str> {
     language
-        .as_ref()
         .filter(|lang| !lang.is_empty())
-        .and_then(|lang| resolve_supported_language(lang))
+        .and_then(resolve_supported_language)
         .unwrap_or_else(system_language)
 }
 
 #[inline]
-pub fn system_language() -> &'static str {
+pub fn system_language() -> Cow<'static, str> {
     sys_locale::get_locale()
         .as_deref()
         .and_then(resolve_supported_language)
-        .unwrap_or(DEFAULT_LANGUAGE)
+        .unwrap_or(Cow::Borrowed(DEFAULT_LANGUAGE))
 }
 
 #[inline]
 pub fn sync_locale(language: Option<&str>) {
-    let language = current_language(language);
-    set_locale(language);
+    rust_i18n::set_locale(&current_language(language));
 }
 
 #[inline]
 pub fn set_locale(language: &str) {
-    let lang = resolve_supported_language(language).unwrap_or(DEFAULT_LANGUAGE);
-    rust_i18n::set_locale(lang);
+    let lang = resolve_supported_language(language).unwrap_or(Cow::Borrowed(DEFAULT_LANGUAGE));
+    rust_i18n::set_locale(&lang);
 }
 
 #[inline]
@@ -76,11 +77,11 @@ macro_rules! t {
     };
     ($key:expr, $($arg_name:ident = $arg_value:expr),*) => {
         {
-            let mut _text = $crate::translate(&$key);
+            let mut _text = $crate::translate(&$key).into_owned();
             $(
                 _text = _text.replace(&format!("{{{}}}", stringify!($arg_name)), &$arg_value);
             )*
-            _text
+            ::std::borrow::Cow::<'static, str>::Owned(_text)
         }
     };
 }
@@ -91,13 +92,13 @@ mod test {
 
     #[test]
     fn test_resolve_supported_language() {
-        assert_eq!(resolve_supported_language("en"), Some("en"));
-        assert_eq!(resolve_supported_language("en-US"), Some("en"));
-        assert_eq!(resolve_supported_language("zh"), Some("zh"));
-        assert_eq!(resolve_supported_language("zh-CN"), Some("zh"));
-        assert_eq!(resolve_supported_language("zh-Hant"), Some("zhtw"));
-        assert_eq!(resolve_supported_language("jp"), Some("jp"));
-        assert_eq!(resolve_supported_language("ja-JP"), Some("jp"));
+        assert_eq!(resolve_supported_language("en").as_deref(), Some("en"));
+        assert_eq!(resolve_supported_language("en-US").as_deref(), Some("en"));
+        assert_eq!(resolve_supported_language("zh").as_deref(), Some("zh"));
+        assert_eq!(resolve_supported_language("zh-CN").as_deref(), Some("zh"));
+        assert_eq!(resolve_supported_language("zh-Hant").as_deref(), Some("zhtw"));
+        assert_eq!(resolve_supported_language("jp").as_deref(), Some("jp"));
+        assert_eq!(resolve_supported_language("ja-JP").as_deref(), Some("jp"));
         assert_eq!(resolve_supported_language("fr"), None);
     }
 }

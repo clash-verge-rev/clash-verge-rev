@@ -21,23 +21,29 @@ import {
   InputLabel,
   MenuItem,
   Select,
-  SelectChangeEvent,
+  type SelectChangeEvent,
   Tooltip,
   Typography,
   alpha,
   useTheme,
 } from '@mui/material'
 import { useLockFn } from 'ahooks'
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
-import { delayGroup, healthcheckProxyProvider } from 'tauri-plugin-mihomo-api'
+import { delayGroup } from 'tauri-plugin-mihomo-api'
 
 import { EnhancedCard } from '@/components/home/enhanced-card'
 import { useProfiles } from '@/hooks/use-profiles'
 import { useProxySelection } from '@/hooks/use-proxy-selection'
 import { useVerge } from '@/hooks/use-verge'
-import { useAppData } from '@/providers/app-data-context'
+import {
+  useAppRefreshers,
+  useClashConfigData,
+  useCoreDataStatus,
+  useProxiesData,
+  useRulesData,
+} from '@/providers/app-data-context'
 import delayManager from '@/services/delay'
 import { debugLog } from '@/utils/debug'
 
@@ -105,7 +111,11 @@ export const CurrentProxyCard = () => {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const theme = useTheme()
-  const { proxies, clashConfig, refreshProxy, rules } = useAppData()
+  const { proxies } = useProxiesData()
+  const { clashConfig } = useClashConfigData()
+  const { rules } = useRulesData()
+  const { refreshProxy } = useAppRefreshers()
+  const { isCoreDataPending } = useCoreDataStatus()
   const { verge } = useVerge()
   const { current: currentProfile } = useProfiles()
   const autoDelayEnabled = verge?.enable_auto_delay_detection ?? false
@@ -366,8 +376,13 @@ export const CurrentProxyCard = () => {
       }
 
       ;(proxies.groups || [])
-        .filter((g: { type?: string }) => g?.type === 'Selector')
-        .forEach((selectorGroup: any) => registerGroup(selectorGroup))
+        .filter(
+          (g: { type?: string }) =>
+            g?.type === 'Selector' || g?.type === 'URLTest',
+        )
+        .forEach((selectableGroup: any) => {
+          registerGroup(selectableGroup)
+        })
 
       const filteredGroups = Array.from(groupsMap.values())
 
@@ -429,21 +444,6 @@ export const CurrentProxyCard = () => {
     matchPolicyName,
   ])
 
-  // 使用防抖包装状态更新
-  const timeoutRef = React.useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  const debouncedSetState = useCallback(
-    (updateFn: (prev: ProxyState) => ProxyState) => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current)
-      }
-      timeoutRef.current = setTimeout(() => {
-        setState(updateFn)
-      }, 300)
-    },
-    [setState],
-  )
-
   // 处理代理组变更
   const handleGroupChange = useCallback(
     (event: SelectChangeEvent<string>) => {
@@ -488,7 +488,7 @@ export const CurrentProxyCard = () => {
       const currentGroup = state.selection.group
       const previousProxy = state.selection.proxy
 
-      debouncedSetState((prev: ProxyState) => ({
+      setState((prev: ProxyState) => ({
         ...prev,
         selection: {
           ...prev.selection,
@@ -508,7 +508,6 @@ export const CurrentProxyCard = () => {
       isDirectMode,
       isGlobalMode,
       state.selection,
-      debouncedSetState,
       handleSelectChange,
       writeProfileScopedItem,
     ],
@@ -561,11 +560,12 @@ export const CurrentProxyCard = () => {
       debugLog(
         `[CurrentProxyCard] 自动检测当前节点延迟，组: ${groupName}, 节点: ${proxyName}`,
       )
-      if (proxyRecord.provider) {
-        await healthcheckProxyProvider(proxyRecord.provider)
-      } else {
-        await delayManager.checkDelay(proxyName, groupName, timeout)
-      }
+      await delayManager.checkDelay(
+        proxyRecord.name,
+        groupName,
+        timeout,
+        proxyRecord.provider,
+      )
     } catch (error) {
       console.error(
         `[CurrentProxyCard] 自动检测当前节点延迟失败，组: ${groupName}, 节点: ${proxyName}`,
@@ -584,7 +584,6 @@ export const CurrentProxyCard = () => {
     state.selection.group,
     state.selection.proxy,
     sortType,
-    setDelaySortRefresh,
   ])
 
   useEffect(() => {
@@ -661,8 +660,7 @@ export const CurrentProxyCard = () => {
     const timeout = verge?.default_latency_timeout || 10000
 
     // 获取当前组的所有代理
-    const proxyNames: string[] = []
-    const providers: Set<string> = new Set()
+    const delayProxies: IProxyItem[] = []
 
     if (isGlobalMode && proxies?.global) {
       // 全局模式
@@ -675,11 +673,7 @@ export const CurrentProxyCard = () => {
 
       allProxies.forEach((name: string) => {
         const proxy = state.proxyData.records[name]
-        if (proxy?.provider) {
-          providers.add(proxy.provider)
-        } else {
-          proxyNames.push(name)
-        }
+        delayProxies.push(proxy)
       })
     } else {
       // 规则模式
@@ -687,35 +681,19 @@ export const CurrentProxyCard = () => {
       if (group) {
         group.all.forEach((name: string) => {
           const proxy = state.proxyData.records[name]
-          if (proxy?.provider) {
-            providers.add(proxy.provider)
-          } else {
-            proxyNames.push(name)
-          }
+          delayProxies.push(proxy)
         })
       }
     }
 
-    debugLog(
-      `[CurrentProxyCard] 找到代理数量: ${proxyNames.length}, 提供者数量: ${providers.size}`,
-    )
-
-    // 测试提供者的节点
-    if (providers.size > 0) {
-      debugLog(`[CurrentProxyCard] 开始测试提供者节点`)
-      await Promise.allSettled(
-        [...providers].map((p) => healthcheckProxyProvider(p)),
-      )
-    }
-
-    // 测试非提供者的节点
-    if (proxyNames.length > 0) {
+    // 测试全部节点
+    if (delayProxies.length > 0) {
       const url = delayManager.getUrl(groupName)
       debugLog(`[CurrentProxyCard] 测试URL: ${url}, 超时: ${timeout}ms`)
 
       try {
         await Promise.race([
-          delayManager.checkListDelay(proxyNames, groupName, timeout),
+          delayManager.checkListDelay(delayProxies, groupName, timeout),
           delayGroup(groupName, url, timeout),
         ])
         debugLog(`[CurrentProxyCard] 延迟测试完成，组: ${groupName}`)
@@ -905,7 +883,9 @@ export const CurrentProxyCard = () => {
         </Box>
       }
     >
-      {currentProxy ? (
+      {isCoreDataPending ? (
+        <Box sx={{ py: 4, height: 24 }} />
+      ) : currentProxy ? (
         <Box>
           {/* 代理节点信息显示 */}
           <Box
@@ -921,7 +901,7 @@ export const CurrentProxyCard = () => {
             }}
           >
             <Box>
-              <Typography variant="body1" fontWeight="medium">
+              <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
                 {currentProxy.name}
               </Typography>
 
@@ -1017,9 +997,11 @@ export const CurrentProxyCard = () => {
               disabled={isDirectMode}
               renderValue={renderProxyValue}
               MenuProps={{
-                PaperProps: {
-                  style: {
-                    maxHeight: 500,
+                slotProps: {
+                  paper: {
+                    style: {
+                      maxHeight: 500,
+                    },
                   },
                 },
               }}
@@ -1068,7 +1050,11 @@ export const CurrentProxyCard = () => {
         </Box>
       ) : (
         <Box sx={{ textAlign: 'center', py: 4 }}>
-          <Typography variant="body1" color="text.secondary">
+          <Typography
+            sx={{ height: 24 }}
+            variant="body1"
+            color="text.secondary"
+          >
             {t('home.components.currentProxy.labels.noActiveNode')}
           </Typography>
         </Box>

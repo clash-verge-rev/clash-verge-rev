@@ -5,9 +5,13 @@ use serde_yaml_ng::{self, Mapping, Value};
 
 fn deep_merge(a: &mut Value, b: Value) {
     match (a, b) {
-        (&mut Value::Mapping(ref mut a), Value::Mapping(b)) => {
-            for (k, v) in b {
-                deep_merge(a.entry(k.clone()).or_insert(Value::Null), v);
+        (Value::Mapping(a_map), Value::Mapping(b_map)) => {
+            for (key, value) in b_map {
+                if let Some(existing) = a_map.get_mut(&key) {
+                    deep_merge(existing, value);
+                } else {
+                    a_map.insert(key, value);
+                }
             }
         }
         (a, b) => *a = b,

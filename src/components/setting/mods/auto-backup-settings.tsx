@@ -134,7 +134,11 @@ export function AutoBackupSettings() {
   return (
     <Fragment>
       <ListItem divider disableGutters>
-        <Stack direction="row" alignItems="center" spacing={1} width="100%">
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{ alignItems: 'center', width: '100%' }}
+        >
           <ListItemText
             primary={t('settings.modals.backup.auto.scheduleLabel')}
             secondary={t('settings.modals.backup.auto.scheduleHelper')}
@@ -149,7 +153,11 @@ export function AutoBackupSettings() {
       </ListItem>
 
       <ListItem divider disableGutters>
-        <Stack direction="row" alignItems="center" spacing={2} width="100%">
+        <Stack
+          direction="row"
+          spacing={2}
+          sx={{ alignItems: 'center', width: '100%' }}
+        >
           <ListItemText
             primary={t('settings.modals.backup.auto.intervalLabel')}
           />
@@ -187,7 +195,11 @@ export function AutoBackupSettings() {
       </ListItem>
 
       <ListItem divider disableGutters>
-        <Stack direction="row" alignItems="center" spacing={1} width="100%">
+        <Stack
+          direction="row"
+          spacing={1}
+          sx={{ alignItems: 'center', width: '100%' }}
+        >
           <ListItemText
             primary={t('settings.modals.backup.auto.changeLabel')}
             secondary={t('settings.modals.backup.auto.changeHelper')}

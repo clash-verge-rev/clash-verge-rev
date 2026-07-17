@@ -11,7 +11,7 @@ import {
   SortByAlphaRounded,
   SortRounded,
 } from '@mui/icons-material'
-import { Box, IconButton, TextField, SxProps } from '@mui/material'
+import { Box, IconButton, TextField, type SxProps } from '@mui/material'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -66,7 +66,8 @@ export const ProxyHead = ({
 
   const { verge } = useVerge()
   const defaultLatencyUrl =
-    verge?.default_latency_test?.trim() || 'http://cp.cloudflare.com'
+    verge?.default_latency_test?.trim() ||
+    'http://cp.cloudflare.com/generate_204'
 
   useEffect(() => {
     delayManager.setUrl(groupName, testUrl?.trim() || url || defaultLatencyUrl)

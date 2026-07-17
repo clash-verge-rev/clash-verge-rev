@@ -8,10 +8,12 @@ notifications:
     body: Переключено на {mode}.
   systemProxyToggled:
     title: Системный прокси
-    body: Статус системного прокси обновлен.
+    'on': System proxy has been enabled.
+    'off': System proxy has been disabled.
   tunModeToggled:
     title: Режим TUN
-    body: Статус режима TUN обновлен.
+    'on': TUN mode has been enabled.
+    'off': TUN mode has been disabled.
   lightweightModeEntered:
     title: Легкий режим
     body: Включен легкий режим.
@@ -24,9 +26,15 @@ notifications:
   appHidden:
     title: Приложение скрыто
     body: Clash Verge работает в фоновом режиме.
+  updateReady:
+    title: Clash Verge Update
+    body: A new version (v{version}) has been downloaded and is ready to install.
+    installNow: Install Now
+    later: Later
 service:
   adminInstallPrompt: Для установки службы Clash Verge требуются права администратора.
   adminUninstallPrompt: Для удаления службы Clash Verge требуются права администратора.
+  translocatedCorePath: Clash Verge is running from a temporary (App Translocation) path and can't locate the core. Please move Clash Verge into the Applications folder and reopen it.
 tray:
   dashboard: Панель
   ruleMode: Режим правил

@@ -429,7 +429,6 @@
         "update": "Güncelle"
       },
       "messages": {
-        "portableError": "Taşınabilir sürüm uygulama içi güncellemeleri desteklemez. Lütfen manuel olarak indirip değiştirin",
         "breakChangeError": "Bu sürüm büyük bir güncellemedir ve uygulama içi güncellemeleri desteklemez. Lütfen kaldırın ve yeni sürümü manuel olarak indirip kurun"
       }
     },
@@ -490,7 +489,7 @@
     "dns": {
       "dialog": {
         "title": "DNS Üzerine Yazma",
-        "warning": "Bu ayarlarla ilgili bilginiz yoksa, lütfen bunları değiştirmeyin ve DNS Üzerine Yazma'yı etkin tutun"
+        "warning": "Bu ayarlarla ilgili bilginiz yoksa, lütfen bunları değiştirmeyin ve DNS Üzerine Yazma'yı devre dışı tutun"
       },
       "sections": {
         "general": "DNS Ayarları",
@@ -502,6 +501,7 @@
         "listen": "DNS Dinleme",
         "enhancedMode": "Geliştirilmiş Mod",
         "fakeIpRange": "Sahte IP Aralığı",
+        "fakeIpRange6": "Sahte IP Aralığı (IPv6)",
         "fakeIpFilterMode": "Sahte IP Filtre Modu",
         "ipv6": {
           "label": "IPv6",
@@ -606,11 +606,6 @@
         "entryLightweightMode": "Hafif Moda Gir",
         "direct": "Doğrudan Mod",
         "reactivateProfiles": "Profilleri Yeniden Etkinleştir"
-      }
-    },
-    "password": {
-      "prompts": {
-        "enterRoot": "Lütfen root şifrenizi girin"
       }
     },
     "networkInterface": {

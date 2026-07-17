@@ -429,7 +429,6 @@
         "update": "更新"
       },
       "messages": {
-        "portableError": "可攜式版不支援應用程式內更新，請手動下載替換",
         "breakChangeError": "此版本為重大更新，不支援應用程式內更新，請解除安裝後手動下載安裝"
       }
     },
@@ -490,7 +489,7 @@
     "dns": {
       "dialog": {
         "title": "DNS 覆寫",
-        "warning": "如果你不清楚這裡的設定請不要修改，並保持 DNS 覆寫開啟"
+        "warning": "如果你不清楚這裡的設定請不要修改，並保持 DNS 覆寫關閉"
       },
       "sections": {
         "general": "DNS 設定",
@@ -502,6 +501,7 @@
         "listen": "DNS 監聽位址",
         "enhancedMode": "增強模式",
         "fakeIpRange": "Fake IP 範圍",
+        "fakeIpRange6": "Fake IP 範圍 (IPv6)",
         "fakeIpFilterMode": "Fake IP 篩選模式",
         "ipv6": {
           "label": "IPv6",
@@ -606,11 +606,6 @@
         "entryLightweightMode": "進入輕量模式",
         "direct": "直連模式",
         "reactivateProfiles": "重新啟用訂閱"
-      }
-    },
-    "password": {
-      "prompts": {
-        "enterRoot": "請輸入您的 root 密碼"
       }
     },
     "networkInterface": {

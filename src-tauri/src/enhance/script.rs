@@ -1,4 +1,6 @@
-use super::use_lowercase;
+use crate::process::AsyncHandler;
+
+use super::field::{use_lowercase, use_lowercase_owned};
 use anyhow::{Error, Result};
 use boa_engine::{Context, JsString, JsValue, Source, native_function::NativeFunction};
 use clash_verge_logging::{Type, logging_error};
@@ -10,10 +12,24 @@ use std::sync::Arc;
 const MAX_OUTPUTS: usize = 1000;
 const MAX_OUTPUT_SIZE: usize = 1024 * 1024; // 1MB
 const MAX_JSON_SIZE: usize = 10 * 1024 * 1024; // 10MB
+const MAX_LOOP_ITERATIONS: u64 = 10_000_000;
+const SCRIPT_TIMEOUT: std::time::Duration = std::time::Duration::from_secs(5);
 
-// TODO 使用引用改进上下相关处理，避免不必要 Clone
-pub fn use_script(script: String, config: &Mapping, name: &String) -> Result<(Mapping, Vec<(String, String)>)> {
+pub async fn use_script(script: String, config: Mapping, name: String) -> Result<(Mapping, Vec<(String, String)>)> {
+    let handle = AsyncHandler::spawn_blocking(move || use_script_sync(script, &config, &name));
+    match tokio::time::timeout(SCRIPT_TIMEOUT, handle).await {
+        Ok(Ok(result)) => result,
+        Ok(Err(join_err)) => Err(anyhow::anyhow!("script task panicked: {join_err}")),
+        Err(_elapsed) => Err(anyhow::anyhow!("script execution timed out after {:?}", SCRIPT_TIMEOUT)),
+    }
+}
+
+fn use_script_sync(script: String, config: &Mapping, name: &String) -> Result<(Mapping, Vec<(String, String)>)> {
     let mut context = Context::default();
+
+    context
+        .runtime_limits_mut()
+        .set_loop_iteration_limit(MAX_LOOP_ITERATIONS);
 
     let outputs = Arc::new(Mutex::new(vec![]));
     let total_size = Arc::new(Mutex::new(0usize));
@@ -110,7 +126,7 @@ pub fn use_script(script: String, config: &Mapping, name: &String) -> Result<(Ma
         let res: Result<Mapping, Error> = parse_json_safely(&result);
 
         match res {
-            Ok(config) => Ok((use_lowercase(&config), outputs.lock().to_vec())),
+            Ok(config) => Ok((use_lowercase_owned(config), outputs.lock().to_vec())),
             Err(err) => {
                 outputs
                     .lock()
@@ -189,7 +205,7 @@ fn test_script() {
 
     let config = &serde_yaml_ng::from_str(config).expect("Failed to parse test config YAML");
     let (config, results) =
-        use_script(script.into(), config, &String::from("")).expect("Script execution should succeed in test");
+        use_script_sync(script.into(), config, &String::from("")).expect("Script execution should succeed in test");
 
     let _ = serde_yaml_ng::to_string(&config).expect("Failed to serialize config to YAML");
     let yaml_config_size = std::mem::size_of_val(&config);
@@ -243,7 +259,7 @@ fn test_memory_limits() {
 
     #[allow(clippy::expect_used)]
     let config = &serde_yaml_ng::from_str("test: value").expect("Failed to parse test YAML");
-    let result = use_script(script.into(), config, &String::from(""));
+    let result = use_script_sync(script.into(), config, &String::from(""));
     // 应该失败或被限制
     assert!(result.is_ok()); // 会被限制但不会 panic
 }

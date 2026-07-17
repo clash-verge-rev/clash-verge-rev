@@ -8,10 +8,12 @@ notifications:
     body: تم التبديل إلى {mode}.
   systemProxyToggled:
     title: وكيل النظام
-    body: تم تحديث حالة وكيل النظام.
+    'on': System proxy has been enabled.
+    'off': System proxy has been disabled.
   tunModeToggled:
     title: وضع TUN
-    body: تم تحديث حالة وضع TUN.
+    'on': TUN mode has been enabled.
+    'off': TUN mode has been disabled.
   lightweightModeEntered:
     title: الوضع الخفيف
     body: تم الدخول إلى الوضع الخفيف.
@@ -24,9 +26,15 @@ notifications:
   appHidden:
     title: تم إخفاء التطبيق
     body: Clash Verge يعمل في الخلفية.
+  updateReady:
+    title: Clash Verge Update
+    body: A new version (v{version}) has been downloaded and is ready to install.
+    installNow: Install Now
+    later: Later
 service:
   adminInstallPrompt: يتطلب تثبيت خدمة Clash Verge صلاحيات المسؤول.
   adminUninstallPrompt: يتطلب إلغاء تثبيت خدمة Clash Verge صلاحيات المسؤول.
+  translocatedCorePath: Clash Verge is running from a temporary (App Translocation) path and can't locate the core. Please move Clash Verge into the Applications folder and reopen it.
 tray:
   dashboard: لوحة التحكم
   ruleMode: وضع القواعد

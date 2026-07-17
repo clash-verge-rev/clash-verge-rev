@@ -1,4 +1,3 @@
-import MonacoEditor from '@monaco-editor/react'
 import { RestartAltRounded } from '@mui/icons-material'
 import {
   Box,
@@ -27,11 +26,11 @@ import {
 } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { BaseDialog, DialogRef, Switch } from '@/components/base'
+import { BaseDialog, DialogRef, MonacoEditor, Switch } from '@/components/base'
 import { useClash } from '@/hooks/use-clash'
 import { showNotice } from '@/services/notice-service'
 import { useThemeMode } from '@/services/states'
-import { debugLog } from '@/utils/debug'
+import type { MonacoEditorInstance } from '@/types/monaco'
 import getSystem from '@/utils/get-system'
 
 const Item = styled(ListItem)(() => ({
@@ -134,6 +133,7 @@ const DEFAULT_DNS_CONFIG = {
   listen: ':53',
   'enhanced-mode': 'fake-ip' as 'fake-ip' | 'redir-host',
   'fake-ip-range': '198.18.0.1/16',
+  'fake-ip-range6': 'fdfe:dcba:9876::1/64',
   'fake-ip-filter-mode': 'blacklist' as 'blacklist' | 'whitelist',
   'prefer-h3': false,
   'respect-rules': false,
@@ -189,11 +189,13 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
   const [open, setOpen] = useState(false)
   const [visualization, setVisualization] = useState(true)
   const skipYamlSyncRef = useRef(false)
+  const editorRef = useRef<MonacoEditorInstance | null>(null)
   const [values, setValues] = useState<{
     enable: boolean
     listen: string
     enhancedMode: 'fake-ip' | 'redir-host'
     fakeIpRange: string
+    fakeIpRange6: string
     fakeIpFilterMode: 'blacklist' | 'whitelist'
     preferH3: boolean
     respectRules: boolean
@@ -218,6 +220,7 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
     listen: DEFAULT_DNS_CONFIG.listen,
     enhancedMode: DEFAULT_DNS_CONFIG['enhanced-mode'],
     fakeIpRange: DEFAULT_DNS_CONFIG['fake-ip-range'],
+    fakeIpRange6: DEFAULT_DNS_CONFIG['fake-ip-range6'],
     fakeIpFilterMode: DEFAULT_DNS_CONFIG['fake-ip-filter-mode'],
     preferH3: DEFAULT_DNS_CONFIG['prefer-h3'],
     respectRules: DEFAULT_DNS_CONFIG['respect-rules'],
@@ -278,6 +281,8 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
         enhancedMode: validEnhancedMode,
         fakeIpRange:
           dnsConfig['fake-ip-range'] ?? DEFAULT_DNS_CONFIG['fake-ip-range'],
+        fakeIpRange6:
+          dnsConfig['fake-ip-range6'] ?? DEFAULT_DNS_CONFIG['fake-ip-range6'],
         fakeIpFilterMode: validFakeIpFilterMode,
         preferH3: dnsConfig['prefer-h3'] ?? DEFAULT_DNS_CONFIG['prefer-h3'],
         respectRules:
@@ -334,6 +339,8 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
       listen: values.listen,
       'enhanced-mode': values.enhancedMode,
       'fake-ip-range': values.fakeIpRange,
+      'fake-ip-range6':
+        values.fakeIpRange6 || DEFAULT_DNS_CONFIG['fake-ip-range6'],
       'fake-ip-filter-mode': values.fakeIpFilterMode,
       'prefer-h3': values.preferH3,
       'respect-rules': values.respectRules,
@@ -387,6 +394,7 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
       listen: DEFAULT_DNS_CONFIG.listen,
       enhancedMode: DEFAULT_DNS_CONFIG['enhanced-mode'],
       fakeIpRange: DEFAULT_DNS_CONFIG['fake-ip-range'],
+      fakeIpRange6: DEFAULT_DNS_CONFIG['fake-ip-range6'],
       fakeIpFilterMode: DEFAULT_DNS_CONFIG['fake-ip-filter-mode'],
       preferH3: DEFAULT_DNS_CONFIG['prefer-h3'],
       respectRules: DEFAULT_DNS_CONFIG['respect-rules'],
@@ -452,6 +460,13 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
       latestUpdateYamlFromValuesRef.current()
     }
   }, [visualization])
+
+  useEffect(() => {
+    return () => {
+      editorRef.current?.dispose()
+      editorRef.current = null
+    }
+  }, [])
 
   const initDnsConfig = useCallback(async () => {
     try {
@@ -519,12 +534,16 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
       await invoke('save_dns_config', { dnsConfig: config })
 
       // 验证配置
-      const [isValid, errorMsg] = await invoke<[boolean, string]>(
+      const validation = await invoke<ValidationOutcome>(
         'validate_dns_config',
         {},
       )
 
-      if (!isValid) {
+      if (validation.status !== 'valid') {
+        const errorMsg =
+          validation.status === 'invalid'
+            ? validation.message
+            : 'Configuration validation skipped'
         let cleanErrorMsg = errorMsg
 
         // 提取关键错误信息
@@ -571,18 +590,6 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
   // YAML编辑器内容变更处理
   const handleYamlChange = (value?: string) => {
     setYamlContent(value || '')
-
-    // 允许YAML编辑后立即分析和更新表单值
-    try {
-      const config = yaml.load(value || '') as any
-      if (config && typeof config === 'object') {
-        setTimeout(() => {
-          updateValuesFromConfig(config)
-        }, 300)
-      }
-    } catch (err) {
-      debugLog('YAML解析错误，忽略自动更新', err)
-    }
   }
 
   // 处理表单值变化
@@ -614,9 +621,15 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
       open={open}
       disableEnforceFocus={!visualization}
       title={
-        <Box display="flex" justifyContent="space-between" alignItems="center">
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+          }}
+        >
           {t('settings.modals.dns.dialog.title')}
-          <Box display="flex" alignItems="center" gap={1}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
             <Button
               variant="outlined"
               size="small"
@@ -720,6 +733,21 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
               onChange={handleChange('fakeIpRange')}
               placeholder="198.18.0.1/16"
               sx={{ width: 150 }}
+            />
+          </Item>
+
+          <Item>
+            <ListItemText
+              primary={t('settings.modals.dns.fields.fakeIpRange6')}
+            />
+            <TextField
+              size="small"
+              autoComplete="off"
+              spellCheck="false"
+              value={values.fakeIpRange6}
+              onChange={handleChange('fakeIpRange6')}
+              placeholder="fdfe:dcba:9876::1/64"
+              sx={{ width: 200 }}
             />
           </Item>
 
@@ -1057,6 +1085,9 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
           value={yamlContent}
           theme={themeMode === 'light' ? 'light' : 'vs-dark'}
           className="flex-grow"
+          onMount={(editorInstance) => {
+            editorRef.current = editorInstance
+          }}
           options={{
             tabSize: 2,
             minimap: {

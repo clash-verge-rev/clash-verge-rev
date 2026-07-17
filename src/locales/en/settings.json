@@ -429,7 +429,6 @@
         "update": "Update"
       },
       "messages": {
-        "portableError": "The portable version does not support in-app updates. Please manually download and replace it",
         "breakChangeError": "This version is a major update and does not support in-app updates. Please uninstall it and manually download and install the new version"
       }
     },
@@ -490,7 +489,7 @@
     "dns": {
       "dialog": {
         "title": "DNS Overwrite",
-        "warning": "If you are not familiar with these settings, please do not modify them and keep DNS Overwrite enabled"
+        "warning": "If you are not familiar with these settings, please do not modify them and keep DNS Overwrite disabled"
       },
       "sections": {
         "general": "DNS Settings",
@@ -502,6 +501,7 @@
         "listen": "DNS Listen",
         "enhancedMode": "Enhanced Mode",
         "fakeIpRange": "Fake IP Range",
+        "fakeIpRange6": "Fake IP Range (IPv6)",
         "fakeIpFilterMode": "Fake IP Filter Mode",
         "ipv6": {
           "label": "IPv6",
@@ -606,11 +606,6 @@
         "entryLightweightMode": "Entry Lightweight Mode",
         "direct": "Direct Mode",
         "reactivateProfiles": "Reactivate Profiles"
-      }
-    },
-    "password": {
-      "prompts": {
-        "enterRoot": "Please enter your root password"
       }
     },
     "networkInterface": {

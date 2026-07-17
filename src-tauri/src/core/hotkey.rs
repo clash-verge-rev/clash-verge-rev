@@ -7,7 +7,15 @@ use anyhow::{Result, bail};
 use arc_swap::ArcSwap;
 use clash_verge_logging::{Type, logging};
 use smartstring::alias::String;
-use std::{collections::HashMap, fmt, str::FromStr, sync::Arc};
+use std::{
+    collections::HashMap,
+    fmt,
+    str::FromStr,
+    sync::{
+        Arc,
+        atomic::{AtomicBool, Ordering},
+    },
+};
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt as _, ShortcutState};
 
 /// Enum representing all available hotkey functions
@@ -117,32 +125,35 @@ impl Hotkey {
             }
             HotkeyFunction::ClashModeRule => {
                 AsyncHandler::spawn(async move || {
-                    feat::change_clash_mode("rule".into()).await;
+                    // 错误已在 change_clash_mode 内部记录，此处显式忽略返回值
+                    let _ = feat::change_clash_mode("rule".into()).await;
                     notify_event(NotificationEvent::ClashModeChanged { mode: "Rule" }).await;
                 });
             }
             HotkeyFunction::ClashModeGlobal => {
                 AsyncHandler::spawn(async move || {
-                    feat::change_clash_mode("global".into()).await;
+                    // 错误已在 change_clash_mode 内部记录，此处显式忽略返回值
+                    let _ = feat::change_clash_mode("global".into()).await;
                     notify_event(NotificationEvent::ClashModeChanged { mode: "Global" }).await;
                 });
             }
             HotkeyFunction::ClashModeDirect => {
                 AsyncHandler::spawn(async move || {
-                    feat::change_clash_mode("direct".into()).await;
+                    // 错误已在 change_clash_mode 内部记录，此处显式忽略返回值
+                    let _ = feat::change_clash_mode("direct".into()).await;
                     notify_event(NotificationEvent::ClashModeChanged { mode: "Direct" }).await;
                 });
             }
             HotkeyFunction::ToggleSystemProxy => {
                 AsyncHandler::spawn(async move || {
-                    feat::toggle_system_proxy().await;
-                    notify_event(NotificationEvent::SystemProxyToggled).await;
+                    let is_proxy_enabled = feat::toggle_system_proxy().await;
+                    notify_event(NotificationEvent::SystemProxyToggled(is_proxy_enabled)).await;
                 });
             }
             HotkeyFunction::ToggleTunMode => {
                 AsyncHandler::spawn(async move || {
-                    feat::toggle_tun_mode(None).await;
-                    notify_event(NotificationEvent::TunModeToggled).await;
+                    let is_tun_enable = feat::toggle_tun_mode(None).await;
+                    notify_event(NotificationEvent::TunModeToggled(is_tun_enable)).await;
                 });
             }
             HotkeyFunction::EntryLightweightMode => {
@@ -153,16 +164,12 @@ impl Hotkey {
             }
             HotkeyFunction::ReactivateProfiles => {
                 AsyncHandler::spawn(async move || match feat::enhance_profiles().await {
-                    Ok((true, _)) => {
+                    Ok(outcome) if outcome.is_valid() => {
                         handle::Handle::refresh_clash();
                         notify_event(NotificationEvent::ProfilesReactivated).await;
                     }
-                    Ok((false, msg)) => {
-                        let message = if msg.is_empty() {
-                            "Failed to reactivate profiles.".to_string()
-                        } else {
-                            msg.to_string()
-                        };
+                    Ok(outcome) => {
+                        let message = outcome.to_string();
                         logging!(
                             warn,
                             Type::Hotkey,
@@ -238,9 +245,23 @@ impl Hotkey {
         }
 
         let is_quit = matches!(function, HotkeyFunction::Quit);
+        let pressed = AtomicBool::new(false);
 
-        manager.on_shortcut(hotkey, move |_app_handle, hotkey_event, event| {
-            if event.state == ShortcutState::Pressed {
+        manager.on_shortcut(hotkey, move |_app_handle, hotkey_event, event| match event.state {
+            ShortcutState::Released => {
+                pressed.store(false, Ordering::Relaxed);
+            }
+            ShortcutState::Pressed => {
+                if pressed.swap(true, Ordering::Relaxed) {
+                    logging!(
+                        debug,
+                        Type::Hotkey,
+                        "Ignoring repeated hotkey press: {:?}",
+                        hotkey_event
+                    );
+                    return;
+                }
+
                 logging!(debug, Type::Hotkey, "Hotkey pressed: {:?}", hotkey_event);
                 let hotkey = hotkey_event.key;
                 if hotkey == Code::KeyQ && is_quit {

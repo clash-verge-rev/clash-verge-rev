@@ -1,7 +1,7 @@
 use super::CmdResult;
-use crate::{cmd::StringifyErr as _, config::Config, core::CoreManager};
+use crate::{cmd::StringifyErr as _, config::Config, core::CoreManager, utils::yaml_emitter};
 use anyhow::{Context as _, anyhow};
-use clash_verge_logging::{Type, logging_error};
+use clash_verge_logging::{Type, logging};
 use serde_yaml_ng::Mapping;
 use smartstring::alias::String;
 use std::collections::{HashMap, HashSet};
@@ -10,6 +10,28 @@ use std::collections::{HashMap, HashSet};
 #[tauri::command]
 pub async fn get_runtime_config() -> CmdResult<Option<Mapping>> {
     Ok(Config::runtime().await.latest_arc().config.clone())
+}
+
+/// 获取运行时代理组顺序
+#[tauri::command]
+pub async fn get_runtime_proxy_group_order() -> CmdResult<Vec<String>> {
+    let runtime = Config::runtime().await;
+    let runtime = runtime.latest_arc();
+
+    Ok(runtime
+        .config
+        .as_ref()
+        .and_then(|config| config.get("proxy-groups"))
+        .and_then(|groups| groups.as_sequence())
+        .map(|groups| {
+            groups
+                .iter()
+                .filter_map(|group| group.get("name"))
+                .filter_map(|name| name.as_str())
+                .map(String::from)
+                .collect()
+        })
+        .unwrap_or_default())
 }
 
 /// 获取运行时YAML配置
@@ -22,7 +44,7 @@ pub async fn get_runtime_yaml() -> CmdResult<String> {
     config
         .ok_or_else(|| anyhow!("failed to parse config to yaml file"))
         .and_then(|config| {
-            serde_yaml_ng::to_string(config)
+            yaml_emitter::to_mihomo_config_string(config)
                 .context("failed to convert config to yaml")
                 .map(|s| s.into())
         })
@@ -82,7 +104,7 @@ pub async fn get_runtime_proxy_chain_config(proxy_chain_exit_node: String) -> Cm
 
         config.insert("proxies".into(), proxies_chain);
 
-        serde_yaml_ng::to_string(&config)
+        yaml_emitter::to_mihomo_config_string(&config)
             .context("YAML generation failed")
             .map(|s| s.into())
             .stringify_err()
@@ -94,12 +116,19 @@ pub async fn get_runtime_proxy_chain_config(proxy_chain_exit_node: String) -> Cm
 /// 更新运行时链式代理配置
 #[tauri::command]
 pub async fn update_proxy_chain_config_in_runtime(proxy_chain_config: Option<serde_yaml_ng::Value>) -> CmdResult<()> {
+    match CoreManager::global()
+        .update_runtime_config(|d| d.update_proxy_chain_config(proxy_chain_config))
+        .await
     {
-        let runtime = Config::runtime().await;
-        runtime.edit_draft(|d| d.update_proxy_chain_config(proxy_chain_config));
-        // 我们需要在 CoreManager 中验证并应用配置，这里不应该直接调用 runtime.apply()
+        Ok(outcome) if outcome.is_valid() => {}
+        Ok(outcome) => logging!(
+            warn,
+            Type::Core,
+            "Failed to apply runtime proxy chain config: {}",
+            outcome
+        ),
+        Err(err) => logging!(error, Type::Core, "Failed to apply runtime proxy chain config: {}", err),
     }
-    logging_error!(Type::Core, CoreManager::global().apply_generate_config().await);
 
     Ok(())
 }

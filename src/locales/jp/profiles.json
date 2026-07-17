@@ -37,7 +37,7 @@
         "importSuccess": "Profile imported successfully, please restart if not visible",
         "profileSwitched": "プロファイルが切り替えられました。",
         "profileReactivated": "プロファイルが再アクティブ化されました。",
-        "switchInterrupted": "Profile switch interrupted by new selection",
+        "switchBusy": "Profile switch is already in progress",
         "batchDeleted": "選択したプロファイルが正常に削除されました"
       },
       "notices": {
@@ -59,6 +59,7 @@
     "menu": {
       "home": "ホーム",
       "select": "使用する",
+      "shareQrCode": "Share QR Code",
       "editInfo": "情報を編集",
       "editFile": "ファイルを編集",
       "editRules": "ルールを編集",
@@ -177,6 +178,9 @@
     },
     "logViewer": {
       "title": "スクリプトコンソール出力"
+    },
+    "qrViewer": {
+      "title": "Subscription QR Code"
     }
   }
 }

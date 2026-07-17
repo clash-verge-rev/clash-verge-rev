@@ -16,6 +16,11 @@ type Platform =
  */
 declare const OS_PLATFORM: Platform
 
+type ValidationOutcome =
+  | { status: 'valid' | 'busy' }
+  | { status: 'invalid'; kind: string; message: string }
+  | { status: 'skipped'; reason: string }
+
 /**
  * Some interface for clash api
  */
@@ -53,6 +58,7 @@ interface IConfigData {
     listen?: string
     'enhanced-mode'?: 'fake-ip' | 'redir-host'
     'fake-ip-range'?: string
+    'fake-ip-range6'?: string
     'fake-ip-filter'?: string[]
     'fake-ip-filter-mode'?: 'blacklist' | 'whitelist'
     'prefer-h3'?: boolean
@@ -137,6 +143,8 @@ interface ITrafficItem {
   up_rate?: number
   down_rate?: number
   last_updated?: number
+  upTotal?: number
+  downTotal?: number
 }
 
 interface IFormattedTrafficData {
@@ -152,45 +160,6 @@ interface IFormattedMemoryData {
   oslimit_formatted: string
   usage_percent: number
   is_fresh: boolean
-}
-
-// 增强的类型安全接口定义，确保所有字段必需
-interface ISystemMonitorOverview {
-  traffic: {
-    raw: {
-      up: number
-      down: number
-      up_rate: number
-      down_rate: number
-    }
-    formatted: {
-      up_rate: string
-      down_rate: string
-      total_up: string
-      total_down: string
-    }
-    is_fresh: boolean
-  }
-  memory: {
-    raw: {
-      inuse: number
-      oslimit: number
-      usage_percent: number
-    }
-    formatted: {
-      inuse: string
-      oslimit: string
-      usage_percent: number
-    }
-    is_fresh: boolean
-  }
-  overall_status: 'active' | 'inactive' | 'error' | 'unknown' | 'healthy'
-}
-
-// 类型安全的数据验证器
-interface ISystemMonitorOverviewValidator {
-  validate(data: any): data is ISystemMonitorOverview
-  sanitize(data: any): ISystemMonitorOverview
 }
 
 interface ILogItem {
@@ -841,8 +810,7 @@ interface IProxySnellConfig extends IProxyBaseConfig {
   version?: number
 }
 interface IProxyConfig
-  extends
-    IProxyBaseConfig,
+  extends IProxyBaseConfig,
     IProxyDirectConfig,
     IProxyDnsConfig,
     IProxyHttpConfig,
@@ -913,7 +881,7 @@ interface IVergeConfig {
   common_tray_icon?: boolean
   sysproxy_tray_icon?: boolean
   tun_tray_icon?: boolean
-  // enable_tray_speed?: boolean;
+  enable_tray_speed?: boolean
   // enable_tray_icon?: boolean;
   tray_proxy_groups_display_mode?: 'default' | 'inline' | 'disable'
   tray_inline_outbound_modes?: boolean
