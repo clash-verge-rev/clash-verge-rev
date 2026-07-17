@@ -1118,6 +1118,7 @@ dependencies = [
  "rust_iso3166",
  "rustls",
  "scopeguard",
+ "semver 1.0.28",
  "serde",
  "serde-xml-rs",
  "serde_json",

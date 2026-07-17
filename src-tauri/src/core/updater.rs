@@ -3,6 +3,7 @@ use anyhow::Result;
 use chrono::Utc;
 use clash_verge_logging::{Type, logging};
 use parking_lot::RwLock;
+use semver::Version;
 use serde::{Deserialize, Serialize};
 use std::{
     path::PathBuf,
@@ -96,38 +97,6 @@ impl SilentUpdater {
     }
 }
 
-// ─── Version Comparison ───────────────────────────────────────────────────────
-
-/// Returns true if version `a` <= version `b` using semver-like comparison.
-/// Strips leading 'v', splits on '.', handles pre-release suffixes.
-fn version_lte(a: &str, b: &str) -> bool {
-    let parse = |v: &str| -> Vec<u64> {
-        v.trim_start_matches('v')
-            .split('.')
-            .filter_map(|part| {
-                let numeric = part.split('-').next().unwrap_or("0");
-                numeric.parse::<u64>().ok()
-            })
-            .collect()
-    };
-
-    let a_parts = parse(a);
-    let b_parts = parse(b);
-    let len = a_parts.len().max(b_parts.len());
-
-    for i in 0..len {
-        let av = a_parts.get(i).copied().unwrap_or(0);
-        let bv = b_parts.get(i).copied().unwrap_or(0);
-        if av < bv {
-            return true;
-        }
-        if av > bv {
-            return false;
-        }
-    }
-    true // equal
-}
-
 // ─── Startup Install & Cache Management ─────────────────────────────────────
 
 impl SilentUpdater {
@@ -135,55 +104,13 @@ impl SilentUpdater {
     /// attempt to install it immediately (before the main app initializes).
     /// Returns true if install was triggered (app should relaunch), false otherwise.
     pub async fn try_install_on_startup(&self, app_handle: &tauri::AppHandle) -> bool {
-        let current_version = env!("CARGO_PKG_VERSION");
-
         let meta = match Self::read_cache_meta() {
             Ok(meta) => meta,
             Err(_) => return false, // No cache, nothing to do
         };
 
-        let cached_version = &meta.version;
-
-        if version_lte(cached_version, current_version) {
-            logging!(
-                info,
-                Type::System,
-                "Update cache version ({}) <= current ({}), cleaning up",
-                cached_version,
-                current_version
-            );
-            Self::delete_cache();
-            return false;
-        }
-
-        logging!(
-            info,
-            Type::System,
-            "Update cache version ({}) > current ({}), asking user to install",
-            cached_version,
-            current_version
-        );
-
-        // Ask user for confirmation — they can skip and use the app normally.
-        // The cache is preserved so next launch will ask again.
-        if !Self::ask_user_to_install(app_handle, cached_version).await {
-            logging!(info, Type::System, "User skipped update install, starting normally");
-            return false;
-        }
-
-        // Read cached bytes
-        let bytes = match Self::read_cache_bytes() {
-            Ok(b) => b,
-            Err(e) => {
-                logging!(
-                    warn,
-                    Type::System,
-                    "Failed to read cached update bytes: {e}, cleaning up"
-                );
-                Self::delete_cache();
-                return false;
-            }
-        };
+        let current_version_str = env!("CARGO_PKG_VERSION");
+        let cached_version_str = &meta.version;
 
         // Need a fresh Update object from the server to call install().
         // This is a lightweight HTTP request (< 1s), not a re-download.
@@ -218,25 +145,47 @@ impl SilentUpdater {
             }
         };
 
-        // Verify the server's version matches the cached version.
-        // If server now has a newer version, our cached bytes are stale.
-        if update.version != *cached_version {
-            logging!(
-                info,
-                Type::System,
-                "Server version ({}) != cached version ({}), cache is stale, cleaning up",
-                update.version,
-                cached_version
-            );
-            Self::delete_cache();
+        if !Self::need_install(current_version_str, cached_version_str, update.version.as_str()) {
             return false;
         }
 
-        let version = update.version.clone();
-        logging!(info, Type::System, "Installing cached update v{version} at startup...");
+        logging!(
+            info,
+            Type::System,
+            "Update cache version ({}) > current ({}), asking user to install",
+            cached_version_str,
+            current_version_str
+        );
+
+        // Ask user for confirmation — they can skip and use the app normally.
+        // The cache is preserved so next launch will ask again.
+        if !Self::ask_user_to_install(app_handle, cached_version_str).await {
+            logging!(info, Type::System, "User skipped update install, starting normally");
+            return false;
+        }
+
+        // Read cached bytes
+        let bytes = match Self::read_cache_bytes() {
+            Ok(b) => b,
+            Err(e) => {
+                logging!(
+                    warn,
+                    Type::System,
+                    "Failed to read cached update bytes: {e}, cleaning up"
+                );
+                Self::delete_cache();
+                return false;
+            }
+        };
+
+        logging!(
+            info,
+            Type::System,
+            "Installing cached update v{cached_version_str} at startup..."
+        );
 
         // Show splash window so user knows the app is updating, not frozen
-        Self::show_update_splash(app_handle, &version);
+        Self::show_update_splash(app_handle, cached_version_str);
 
         // install() is sync and may hang (known bug #2558), so run with a timeout.
         // On Windows, NSIS takes over the process so install() may never return — that's OK.
@@ -248,7 +197,11 @@ impl SilentUpdater {
 
         let success = match tokio::time::timeout(std::time::Duration::from_secs(30), install_result).await {
             Ok(Ok(Ok(()))) => {
-                logging!(info, Type::System, "Update v{version} install triggered at startup");
+                logging!(
+                    info,
+                    Type::System,
+                    "Update v{cached_version_str} install triggered at startup"
+                );
                 Self::delete_cache();
                 true
             }
@@ -284,6 +237,60 @@ impl SilentUpdater {
         }
 
         success
+    }
+
+    fn need_install(current_version_str: &str, cached_version_str: &str, remote_version_str: &str) -> bool {
+        let current_version = match Version::parse(current_version_str) {
+            Ok(v) => v,
+            Err(e) => {
+                logging!(
+                    warn,
+                    Type::System,
+                    "Failed to parse current version ({current_version_str}): {e}"
+                );
+                return false;
+            }
+        };
+        let cached_version = match Version::parse(cached_version_str) {
+            Ok(v) => v,
+            Err(e) => {
+                logging!(
+                    warn,
+                    Type::System,
+                    "Failed to parse cached version ({cached_version_str}): {e}, cleaning up"
+                );
+                Self::delete_cache();
+                return false;
+            }
+        };
+
+        if cached_version <= current_version {
+            logging!(
+                info,
+                Type::System,
+                "Update cache version ({}) <= current ({}), cleaning up",
+                cached_version_str,
+                current_version_str
+            );
+            Self::delete_cache();
+            return false;
+        }
+
+        // Verify the server's version matches the cached version.
+        // If server now has a newer version, our cached bytes are stale.
+        if remote_version_str != cached_version_str {
+            logging!(
+                info,
+                Type::System,
+                "Server version ({}) != cached version ({}), cache is stale, cleaning up",
+                remote_version_str,
+                cached_version_str
+            );
+            Self::delete_cache();
+            return false;
+        }
+
+        true
     }
 }
 
@@ -535,50 +542,6 @@ pub async fn verge_updater(app_handle: &tauri::AppHandle) -> Result<Updater> {
 #[allow(clippy::unwrap_used)]
 mod tests {
     use super::*;
-
-    // ─── version_lte tests ──────────────────────────────────────────────────
-
-    #[test]
-    fn test_version_equal() {
-        assert!(version_lte("2.4.7", "2.4.7"));
-    }
-
-    #[test]
-    fn test_version_less() {
-        assert!(version_lte("2.4.7", "2.4.8"));
-        assert!(version_lte("2.4.7", "2.5.0"));
-        assert!(version_lte("2.4.7", "3.0.0"));
-    }
-
-    #[test]
-    fn test_version_greater() {
-        assert!(!version_lte("2.4.8", "2.4.7"));
-        assert!(!version_lte("2.5.0", "2.4.7"));
-        assert!(!version_lte("3.0.0", "2.4.7"));
-    }
-
-    #[test]
-    fn test_version_with_v_prefix() {
-        assert!(version_lte("v2.4.7", "2.4.8"));
-        assert!(version_lte("2.4.7", "v2.4.8"));
-        assert!(version_lte("v2.4.7", "v2.4.8"));
-    }
-
-    #[test]
-    fn test_version_with_prerelease() {
-        // "2.4.8-alpha" → numeric part is still "2.4.8"
-        assert!(version_lte("2.4.7", "2.4.8-alpha"));
-        assert!(version_lte("2.4.8-alpha", "2.4.8"));
-        // Both have same numeric part, so equal → true
-        assert!(version_lte("2.4.8-alpha", "2.4.8-beta"));
-    }
-
-    #[test]
-    fn test_version_different_lengths() {
-        assert!(version_lte("2.4", "2.4.1"));
-        assert!(!version_lte("2.4.1", "2.4"));
-        assert!(version_lte("2.4.0", "2.4"));
-    }
 
     // ─── Cache metadata tests ───────────────────────────────────────────────
 
