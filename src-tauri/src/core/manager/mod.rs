@@ -17,6 +17,8 @@ use std::{
 use tauri_plugin_shell::process::CommandChild;
 
 use crate::singleton;
+#[cfg(target_os = "windows")]
+use std::os::windows::io::OwnedHandle;
 
 pub(crate) static CLASH_LOGGER: Lazy<Arc<AsyncLogger>> = Lazy::new(|| Arc::new(AsyncLogger::new()));
 
@@ -42,7 +44,7 @@ pub struct CoreManager {
     state: ArcSwap<State>,
     last_update: ArcSwapOption<Instant>,
     #[cfg(target_os = "windows")]
-    job_handle: ArcSwapOption<isize>,
+    job_handle: ArcSwapOption<OwnedHandle>,
     config_update_in_progress: AtomicBool,
     // 串行化 start/stop/restart 和 sidecar→service 交接。
     // 锁序固定为 config_update_in_progress → lifecycle_lock。
@@ -117,26 +119,17 @@ impl CoreManager {
         self.last_update.store(Some(Arc::new(time)));
     }
 
-    /// A value of 0 indicates an invalid handle; any other value indicates a valid handle.
+    /// Replaces the Windows Job Object handle owned by the core manager
+    ///
+    /// Passing `None` drops the current handle, which closes the Job Object
+    /// and terminates its assigned processes due to `KILL_ON_JOB_CLOSE`.
     ///
     /// This method is currently only used on Windows.
     #[cfg(target_os = "windows")]
-    pub fn set_job_handle(&self, handle: isize) {
-        let old_handle = self.job_handle.load();
-        if let Some(&old_val) = old_handle.as_deref() {
-            unsafe {
-                if old_val != 0 {
-                    windows_sys::Win32::Foundation::CloseHandle(old_val as _);
-                }
-            }
-        }
-        if handle != 0 {
-            self.job_handle.store(Some(Arc::new(handle)));
-        } else {
-            self.job_handle.store(None);
-        }
+    fn set_job_handle(&self, handle: Option<OwnedHandle>) {
+        self.job_handle.store(handle.map(Arc::new));
     }
-    
+
     fn try_start_config_update(&self) -> bool {
         !self.config_update_in_progress.swap(true, Ordering::AcqRel)
     }
