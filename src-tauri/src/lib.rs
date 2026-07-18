@@ -344,8 +344,17 @@ pub fn run() -> std::process::ExitCode {
         fn unregister_system_hotkeys() {
             use crate::core::hotkey::SystemHotkey;
 
-            let _ = hotkey::Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdQ);
-            let _ = hotkey::Hotkey::global().unregister_system_hotkey(SystemHotkey::CmdW);
+            for system_hotkey in [SystemHotkey::CmdQ, SystemHotkey::CmdW] {
+                if let Err(err) = hotkey::Hotkey::global().unregister_system_hotkey(system_hotkey) {
+                    logging!(
+                        warn,
+                        Type::Hotkey,
+                        "Failed to unregister system hotkey {}: {:?}",
+                        system_hotkey,
+                        err
+                    );
+                }
+            }
         }
 
         pub fn handle_ready_resumed(_app_handle: &AppHandle) {
