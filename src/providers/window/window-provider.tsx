@@ -2,6 +2,7 @@ import { getCurrentWindow } from '@tauri-apps/api/window'
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 
 import debounce from '@/utils/debounce'
+import getSystem from '@/utils/get-system'
 
 import { WindowContext } from './window-context'
 
@@ -17,6 +18,24 @@ export const WindowProvider: React.FC<{ children: React.ReactNode }> = ({
     await new Promise((resolve) => setTimeout(resolve, 20))
     await currentWindow.close()
   }, [currentWindow])
+
+  useEffect(() => {
+    const isWindows = getSystem() === 'windows'
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (
+        isWindows &&
+        event.ctrlKey &&
+        event.key.toLowerCase() === 'w'
+      ) {
+        event.preventDefault()
+        void close()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [close])
+
   const minimize = useCallback(async () => {
     // Delay one frame so the UI can clear :hover before the window hides.
     await new Promise((resolve) => setTimeout(resolve, 10))
