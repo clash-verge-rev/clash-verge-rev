@@ -107,7 +107,7 @@ impl Timer {
         }
 
         let cur_timestamp = chrono::Local::now().timestamp();
-        if let Some(items) = Config::profiles().await.latest_arc().get_items() {
+        if let Some(items) = Config::profiles().await.data_arc().get_items() {
             for item in items.iter() {
                 if let Some(option) = item.option.as_ref()
                     && option.allow_auto_update.unwrap_or(true)
@@ -152,7 +152,7 @@ impl Timer {
     }
 
     async fn gen_map(&self) -> HashMap<String, u64> {
-        if let Some(items) = Config::profiles().await.latest_arc().get_items() {
+        if let Some(items) = Config::profiles().await.data_arc().get_items() {
             return Self::gen_map_from_items(items);
         }
 

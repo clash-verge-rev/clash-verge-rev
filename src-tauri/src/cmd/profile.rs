@@ -15,7 +15,7 @@ use crate::{
     feat,
     utils::{dirs, help},
 };
-use clash_verge_draft::SharedDraft;
+use clash_verge_draft::{Draft, SharedDraft};
 use clash_verge_logging::{Type, logging, logging_error};
 use scopeguard::defer;
 use smartstring::alias::String;
@@ -208,8 +208,27 @@ async fn restore_previous_profile(prev_profile: &String) -> CmdResult<()> {
     Ok(())
 }
 
+async fn commit_current_profile(profiles: &Draft<IProfiles>, current: Option<String>) -> anyhow::Result<()> {
+    profiles.discard();
+    let Some(current) = current else {
+        return Ok(());
+    };
+
+    profiles
+        .with_data_modify(|mut committed| async move {
+            committed.patch_config(&IProfiles {
+                current: Some(current),
+                items: None,
+            });
+            Ok((committed, ()))
+        })
+        .await
+}
+
 async fn handle_success(current_value: Option<&String>) -> CmdResult<ValidationOutcome> {
-    Config::profiles().await.apply();
+    commit_current_profile(&Config::profiles().await, current_value.cloned())
+        .await
+        .stringify_err()?;
     handle::Handle::refresh_clash();
 
     if let Err(e) = Tray::global().update_tooltip().await {
@@ -401,4 +420,45 @@ pub async fn get_next_update_time(uid: String) -> CmdResult<Option<i64>> {
     let timer = Timer::global();
     let next_time = timer.get_next_update_time(&uid).await;
     Ok(next_time)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::commit_current_profile;
+    use crate::config::{IProfiles, PrfItem};
+    use clash_verge_draft::Draft;
+
+    fn profile(uid: &str) -> PrfItem {
+        PrfItem {
+            uid: Some(uid.into()),
+            ..PrfItem::default()
+        }
+    }
+
+    #[tokio::test]
+    async fn committing_profile_switch_preserves_profiles_added_after_draft_creation() -> anyhow::Result<()> {
+        let profiles = Draft::new(IProfiles {
+            current: Some("a".into()),
+            items: Some(vec![profile("a"), profile("b")]),
+        });
+        profiles.edit_draft(|draft| {
+            draft.patch_config(&IProfiles {
+                current: Some("b".into()),
+                items: None,
+            });
+        });
+        profiles
+            .with_data_modify(|mut committed| async move {
+                committed.items.get_or_insert_with(Vec::new).push(profile("new"));
+                Ok((committed, ()))
+            })
+            .await?;
+
+        commit_current_profile(&profiles, Some("b".into())).await?;
+
+        let committed = profiles.data_arc();
+        assert_eq!(committed.current.as_deref(), Some("b"));
+        assert!(committed.get_item("new").is_ok());
+        Ok(())
+    }
 }
