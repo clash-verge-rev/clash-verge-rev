@@ -1,11 +1,11 @@
-import DnsRoundedIcon from '@mui/icons-material/DnsRounded'
-import ForkRightRoundedIcon from '@mui/icons-material/ForkRightRounded'
-import HomeRoundedIcon from '@mui/icons-material/HomeRounded'
-import LanguageRoundedIcon from '@mui/icons-material/LanguageRounded'
-import LockOpenRoundedIcon from '@mui/icons-material/LockOpenRounded'
-import SettingsRoundedIcon from '@mui/icons-material/SettingsRounded'
-import SubjectRoundedIcon from '@mui/icons-material/SubjectRounded'
-import WifiRoundedIcon from '@mui/icons-material/WifiRounded'
+import DnsOutlinedIcon from '@mui/icons-material/DnsOutlined'
+import ForkRightOutlinedIcon from '@mui/icons-material/ForkRightOutlined'
+import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined'
+import LanguageOutlinedIcon from '@mui/icons-material/LanguageOutlined'
+import LockOpenOutlinedIcon from '@mui/icons-material/LockOpenOutlined'
+import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined'
+import SubjectOutlinedIcon from '@mui/icons-material/SubjectOutlined'
+import WifiOutlinedIcon from '@mui/icons-material/WifiOutlined'
 import { Box } from '@mui/material'
 import { lazy, Suspense, type ComponentType, type ReactNode } from 'react'
 
@@ -129,43 +129,43 @@ export const preloadLogsPage = createRoutePreload(
 export const navItems: NavigationItem[] = [
   {
     ...navigationItems.home,
-    icon: [<HomeRoundedIcon key="mui" />, <HomeSvg key="svg" />],
+    icon: [<HomeOutlinedIcon key="mui" />, <HomeSvg key="svg" />],
     Component: HomePage,
   },
   {
     ...navigationItems.proxies,
-    icon: [<WifiRoundedIcon key="mui" />, <ProxiesSvg key="svg" />],
+    icon: [<WifiOutlinedIcon key="mui" />, <ProxiesSvg key="svg" />],
     ...createLazyRoute(() => import('./proxies')),
   },
   {
     ...navigationItems.profiles,
-    icon: [<DnsRoundedIcon key="mui" />, <ProfilesSvg key="svg" />],
+    icon: [<DnsOutlinedIcon key="mui" />, <ProfilesSvg key="svg" />],
     ...createLazyRoute(() => import('./profiles'), 'rules'),
   },
   {
     ...navigationItems.connections,
-    icon: [<LanguageRoundedIcon key="mui" />, <ConnectionsSvg key="svg" />],
+    icon: [<LanguageOutlinedIcon key="mui" />, <ConnectionsSvg key="svg" />],
     ...createLazyRoute(() => import('./connections'), 'connections'),
   },
   {
     ...navigationItems.rules,
-    icon: [<ForkRightRoundedIcon key="mui" />, <RulesSvg key="svg" />],
+    icon: [<ForkRightOutlinedIcon key="mui" />, <RulesSvg key="svg" />],
     ...createLazyRoute(() => import('./rules'), 'rules'),
   },
   {
     ...navigationItems.logs,
-    icon: [<SubjectRoundedIcon key="mui" />, <LogsSvg key="svg" />],
+    icon: [<SubjectOutlinedIcon key="mui" />, <LogsSvg key="svg" />],
     Component: () => null /* LogsPage rendered in Layout only on /logs route */,
     preload: preloadLogsPage,
   },
   {
     ...navigationItems.unlock,
-    icon: [<LockOpenRoundedIcon key="mui" />, <UnlockSvg key="svg" />],
+    icon: [<LockOpenOutlinedIcon key="mui" />, <UnlockSvg key="svg" />],
     ...createLazyRoute(() => import('./unlock')),
   },
   {
     ...navigationItems.settings,
-    icon: [<SettingsRoundedIcon key="mui" />, <SettingsSvg key="svg" />],
+    icon: [<SettingsOutlinedIcon key="mui" />, <SettingsSvg key="svg" />],
     ...createLazyRoute(() => import('./settings')),
   },
 ]

@@ -108,6 +108,7 @@ jobs:
         uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ env.TAG_NAME }}
+          target_commitish: ${{ github.sha }}
           name: 'Clash Verge Rev ${{ env.TAG_CHANNEL }}'
           body_path: release.txt
           prerelease: true

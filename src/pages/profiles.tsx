@@ -8,7 +8,11 @@ import {
   useSensor,
   useSensors,
 } from '@dnd-kit/core'
-import { SortableContext, sortableKeyboardCoordinates } from '@dnd-kit/sortable'
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  type SortingStrategy,
+} from '@dnd-kit/sortable'
 import {
   CheckBoxOutlineBlankRounded,
   CheckBoxRounded,
@@ -21,7 +25,7 @@ import {
   TextSnippetOutlined,
 } from '@mui/icons-material'
 import { Box, Button, Divider, Grid, IconButton, Stack } from '@mui/material'
-import { TauriEvent } from '@tauri-apps/api/event'
+import { listen, TauriEvent } from '@tauri-apps/api/event'
 import { readText } from '@tauri-apps/plugin-clipboard-manager'
 import { readTextFile } from '@tauri-apps/plugin-fs'
 import { useLockFn } from 'ahooks'
@@ -36,12 +40,12 @@ import {
   BaseStyledTextField,
   type DialogRef,
 } from '@/components/base'
-import { ProfileItem } from '@/components/profile/profile-item'
 import { ProfileMore } from '@/components/profile/profile-more'
 import {
   ProfileViewer,
   type ProfileViewerRef,
 } from '@/components/profile/profile-viewer'
+import { SortableProfileItem } from '@/components/profile/sortable-profile-item'
 import { ConfigViewer } from '@/components/setting/mods/config-viewer'
 import { useListen } from '@/hooks/use-listen'
 import { useProfiles } from '@/hooks/use-profiles'
@@ -73,6 +77,43 @@ import { debugLog } from '@/utils/debug'
 const PROFILE_UPDATE_WORKER_LIMIT = 8
 const PROFILE_SWITCH_LOADING_DELAY = 400
 
+// Equivalent to rectSortingStrategy without copying the full rect array for every item.
+const profileRectSortingStrategy: SortingStrategy = ({
+  rects,
+  activeIndex,
+  overIndex,
+  index,
+}) => {
+  let newIndex = index
+
+  if (index === activeIndex) {
+    newIndex = overIndex
+  } else if (
+    activeIndex < overIndex &&
+    index > activeIndex &&
+    index <= overIndex
+  ) {
+    newIndex = index - 1
+  } else if (
+    activeIndex > overIndex &&
+    index >= overIndex &&
+    index < activeIndex
+  ) {
+    newIndex = index + 1
+  }
+
+  const oldRect = rects[index]
+  const newRect = rects[newIndex]
+  if (!oldRect || !newRect) return null
+
+  return {
+    x: newRect.left - oldRect.left,
+    y: newRect.top - oldRect.top,
+    scaleX: newRect.width / oldRect.width,
+    scaleY: newRect.height / oldRect.height,
+  }
+}
+
 interface ProfileSwitchRequest {
   profile: string
   notifySuccess: boolean
@@ -97,6 +138,12 @@ const ProfilePage = () => {
     string | null
   >(null)
   const [loading, setLoading] = useState(false)
+  const [timerUpdateRevisions, setTimerUpdateRevisions] = useState<
+    Map<string, number>
+  >(() => new Map())
+  const [completedUpdateRevisions, setCompletedUpdateRevisions] = useState<
+    Map<string, number>
+  >(() => new Map())
 
   // Batch selection states
   const [batchMode, setBatchMode] = useState(false)
@@ -536,6 +583,54 @@ const ProfilePage = () => {
     },
     [setLoadingCache],
   )
+
+  useEffect(() => {
+    let disposed = false
+    let unlisteners: Array<() => void> = []
+
+    Promise.allSettled([
+      listen<{ uid?: string }>('profile-update-started', ({ payload }) => {
+        if (payload.uid) setLoadingProfiles([payload.uid], true)
+      }),
+      listen<{ uid?: string }>('profile-update-completed', ({ payload }) => {
+        const { uid } = payload
+        if (!uid) return
+        setLoadingProfiles([uid], false)
+        setCompletedUpdateRevisions((current) => {
+          const next = new Map(current)
+          next.set(uid, (next.get(uid) ?? 0) + 1)
+          return next
+        })
+        void mutateProfiles()
+      }),
+      listen<string>('verge://timer-updated', ({ payload: uid }) => {
+        setTimerUpdateRevisions((current) => {
+          const next = new Map(current)
+          next.set(uid, (next.get(uid) ?? 0) + 1)
+          return next
+        })
+      }),
+    ]).then((results) => {
+      const registeredUnlisteners = results.flatMap((result) =>
+        result.status === 'fulfilled' ? [result.value] : [],
+      )
+      results.forEach((result) => {
+        if (result.status === 'rejected') console.error(result.reason)
+      })
+
+      if (disposed) {
+        registeredUnlisteners.forEach((unlisten) => unlisten())
+      } else {
+        unlisteners = registeredUnlisteners
+      }
+    })
+
+    return () => {
+      disposed = true
+      unlisteners.forEach((unlisten) => unlisten())
+    }
+  }, [mutateProfiles, setLoadingProfiles])
+
   const runProfileUpdates = useCallback(
     async (uids: string[]) => {
       if (uids.length === 0) return
@@ -889,13 +984,14 @@ const ProfilePage = () => {
           <Box sx={{ mb: 1.5 }}>
             <Grid container spacing={{ xs: 1, lg: 1 }}>
               <SortableContext
+                strategy={profileRectSortingStrategy}
                 items={profileItems.map((x) => {
                   return x.uid
                 })}
               >
                 {profileItems.map((item) => (
                   <Grid size={{ xs: 12, sm: 6, md: 4, lg: 3 }} key={item.file}>
-                    <ProfileItem
+                    <SortableProfileItem
                       id={item.uid}
                       selected={(switchTarget ?? profiles.current) === item.uid}
                       activating={
@@ -903,6 +999,12 @@ const ProfilePage = () => {
                         visibleSwitchingProfile === item.uid
                       }
                       itemData={item}
+                      timerUpdateRevision={
+                        timerUpdateRevisions.get(item.uid) ?? 0
+                      }
+                      completedUpdateRevision={
+                        completedUpdateRevisions.get(item.uid) ?? 0
+                      }
                       mutateProfiles={mutateProfiles}
                       onSelect={(f) => onSelect(item.uid, f)}
                       onEdit={() => viewerRef.current?.edit(item)}
