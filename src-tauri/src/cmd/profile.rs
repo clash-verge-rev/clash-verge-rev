@@ -16,7 +16,7 @@ use crate::{
     utils::{dirs, help},
 };
 use clash_verge_draft::SharedDraft;
-use clash_verge_logging::{Type, logging};
+use clash_verge_logging::{Type, logging, logging_error};
 use scopeguard::defer;
 use smartstring::alias::String;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -82,20 +82,17 @@ pub async fn import_profile(url: std::string::String, option: Option<PrfOption>)
         }
     };
 
-    match profiles_append_item_safe(item).await {
-        Ok(_) => match profiles_save_file_safe().await {
-            Ok(_) => {
-                logging!(info, Type::Cmd, "[导入订阅] 配置文件保存成功");
-            }
-            Err(e) => {
-                logging!(error, Type::Cmd, "[导入订阅] 保存配置文件失败: {}", e);
-            }
-        },
-        Err(e) => {
-            logging!(error, Type::Cmd, "[导入订阅] 保存配置失败: {}", e);
-            return Err(format!("导入订阅失败: {}", e).into());
-        }
+    if let Err(e) = profiles_append_item_safe(item).await {
+        logging!(error, Type::Cmd, "[导入订阅] 保存配置失败: {}", e);
+        return Err(format!("导入订阅失败: {}", e).into());
     }
+
+    if let Err(e) = profiles_save_file_safe().await {
+        logging!(error, Type::Cmd, "[导入订阅] 保存配置文件失败: {}", e);
+        return Err(format!("导入订阅失败: {}", e).into());
+    }
+    logging!(info, Type::Cmd, "[导入订阅] 配置文件保存成功");
+    logging_error!(Type::Timer, Timer::global().refresh().await);
 
     if let Some(uid) = &item.uid {
         logging!(info, Type::Cmd, "[导入订阅] 发送配置变更通知: {}", uid);
@@ -128,6 +125,7 @@ pub async fn create_profile(item: PrfItem, file_data: Option<String>) -> CmdResu
     match profiles_append_item_with_filedata_safe(&item, file_data).await {
         Ok(_) => {
             profiles_save_file_safe().await.stringify_err()?;
+            logging_error!(Type::Timer, Timer::global().refresh().await);
             // 发送配置变更通知
             if let Some(uid) = &item.uid {
                 logging!(info, Type::Cmd, "[创建订阅] 发送配置变更通知: {}", uid);
