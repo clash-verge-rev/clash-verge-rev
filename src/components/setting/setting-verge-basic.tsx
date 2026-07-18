@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next'
 
 import { DialogRef, TooltipIcon } from '@/components/base'
 import { useVerge } from '@/hooks/use-verge'
-import { navItems } from '@/pages/_routers'
+import { navigationItems } from '@/pages/_navigation-meta'
 import { copyClashEnv } from '@/services/cmds'
 import { supportedLanguages } from '@/services/i18n'
 import { showNotice } from '@/services/notice-service'
@@ -187,7 +187,7 @@ const SettingVergeBasic = ({ onError }: Props) => {
           onGuard={(e) => patchVerge({ start_page: e })}
         >
           <Select size="small" sx={{ width: 140, '> div': { py: '7.5px' } }}>
-            {navItems.map((page: { label: string; path: string }) => {
+            {Object.values(navigationItems).map((page) => {
               return (
                 <MenuItem key={page.path} value={page.path}>
                   {t(page.label)}

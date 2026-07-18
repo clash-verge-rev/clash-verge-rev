@@ -4,9 +4,7 @@
  * - env flag `VITE_ENABLE_DEBUG_LOGS` is truthy (1/true/yes)
  * - page sets `window.__VERGE_ENABLE_DEBUG_LOGS__ = true`
  * - localStorage item `VERGE_DEBUG_LOGS` is truthy (1/true/yes)
- * Use `setDebugLoggingEnabled` to force-enable/disable at runtime.
  */
-let runtimeOverride: boolean | undefined
 let cachedDebugEnabled: boolean | undefined
 
 const parseStringFlag = (value: unknown) => {
@@ -46,15 +44,8 @@ const computeDebugEnabled = (): boolean => {
   return false
 }
 
-export const setDebugLoggingEnabled = (enabled: boolean) => {
-  runtimeOverride = enabled
-  cachedDebugEnabled = enabled
-}
-
-export const isDebugLoggingEnabled = () =>
-  runtimeOverride ??
-  cachedDebugEnabled ??
-  (cachedDebugEnabled = computeDebugEnabled())
+const isDebugLoggingEnabled = () =>
+  cachedDebugEnabled ?? (cachedDebugEnabled = computeDebugEnabled())
 
 /**
  * Logs to the console only when debug logging is enabled.

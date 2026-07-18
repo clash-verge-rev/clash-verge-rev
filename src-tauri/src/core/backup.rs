@@ -5,7 +5,7 @@ use arc_swap::{ArcSwap, ArcSwapOption};
 use backon::{ConstantBuilder, Retryable as _};
 use clash_verge_logging::{Type, logging};
 use once_cell::sync::OnceCell;
-use reqwest_dav::list_cmd::{ListEntity, ListFile};
+use reqwest_dav::list_cmd::{ListEntity, ListFile, ListMultiStatus};
 use smartstring::alias::String;
 use std::{
     collections::HashMap,
@@ -227,17 +227,29 @@ impl WebDavClient {
         let path = format!("{}/", dirs::BACKUP_DIR);
 
         let fut = async {
-            let files = client.list(path.as_str(), reqwest_dav::Depth::Number(1)).await?;
+            let response = client.list_raw(path.as_str(), reqwest_dav::Depth::Number(1)).await?;
+            let status = response.status();
+            if !status.is_success() {
+                return Err(reqwest_dav::Error::Decode(reqwest_dav::DecodeError::StatusMismatched(
+                    reqwest_dav::StatusMismatchedError {
+                        response_code: status.as_u16(),
+                        expected_code: 207,
+                    },
+                )));
+            }
+
+            let xml = response.text().await?;
+            let files = parse_webdav_list(&xml)?;
             let mut final_files = Vec::new();
             for file in files {
                 if let ListEntity::File(file) = file {
                     final_files.push(file);
                 }
             }
-            Ok::<Vec<ListFile>, Error>(final_files)
+            Ok::<Vec<ListFile>, reqwest_dav::Error>(final_files)
         };
 
-        timeout(Duration::from_secs(TIMEOUT_LIST), fut).await?
+        Ok(timeout(Duration::from_secs(TIMEOUT_LIST), fut).await??)
     }
 
     pub async fn delete(&self, file_name: String) -> Result<(), Error> {
@@ -248,6 +260,13 @@ impl WebDavClient {
         timeout(Duration::from_secs(TIMEOUT_DELETE), fut).await??;
         Ok(())
     }
+}
+
+fn parse_webdav_list(xml: &str) -> Result<Vec<ListEntity>, reqwest_dav::Error> {
+    // Some WebDAV servers emit RFC 2822's numeric UTC offset instead of HTTP-date's `GMT`.
+    let normalized_xml = xml.replace(" +0000</", " GMT</");
+    let multi_status: ListMultiStatus = serde_xml_rs::from_str(&normalized_xml)?;
+    multi_status.responses.into_iter().map(ListEntity::try_from).collect()
 }
 
 pub async fn create_backup() -> Result<(String, PathBuf), Error> {

@@ -10,25 +10,25 @@ type ConnectionListener = () => void
 
 const metadataValue = (value?: string) => value || ''
 
-export const initConnData: ConnectionMonitorData = {
+const initConnData: ConnectionMonitorData = {
   uploadTotal: 0,
   downloadTotal: 0,
   activeConnections: [],
   closedConnections: [],
 }
 
-export interface ConnectionMonitorData {
+interface ConnectionMonitorData {
   uploadTotal: number
   downloadTotal: number
   activeConnections: IConnectionsItem[]
   closedConnections: IConnectionsItem[]
 }
 
-export interface ConnectionSummaryData {
+interface ConnectionSummaryData {
   activeConnectionCount: number
 }
 
-export const initConnSummaryData: ConnectionSummaryData = {
+const initConnSummaryData: ConnectionSummaryData = {
   activeConnectionCount: 0,
 }
 

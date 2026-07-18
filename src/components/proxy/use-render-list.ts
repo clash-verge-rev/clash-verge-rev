@@ -158,12 +158,11 @@ export const useRenderList = (
     const calculateDelays = async () => {
       try {
         const timeout = verge?.default_latency_timeout || 10000
-        const proxyNames = allProxies.map((proxy) => proxy.name)
 
-        debugLog(`[ChainMode] 开始计算 ${proxyNames.length} 个节点的延迟`)
+        debugLog(`[ChainMode] 开始计算 ${allProxies.length} 个节点的延迟`)
 
         // 使用 delayManager 计算延迟，每个节点计算完成后会自动触发监听器刷新界面
-        delayManager.checkListDelay(proxyNames, 'chain-mode', timeout)
+        delayManager.checkListDelay(allProxies, 'chain-mode', timeout)
       } catch (error) {
         console.error('Failed to calculate delays for chain mode:', error)
       }

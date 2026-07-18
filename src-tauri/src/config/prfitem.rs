@@ -63,7 +63,7 @@ pub struct PrfItem {
     pub file_data: Option<String>,
 }
 
-#[derive(Default, Debug, Clone, Deserialize, Serialize)]
+#[derive(Default, Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 pub struct PrfSelected {
     pub name: Option<String>,
     pub now: Option<String>,
@@ -262,7 +262,7 @@ impl PrfItem {
         let with_proxy = option.is_some_and(|o| o.with_proxy.unwrap_or(false));
         let self_proxy = option.is_some_and(|o| o.self_proxy.unwrap_or(false));
         let accept_invalid_certs = option.is_some_and(|o| o.danger_accept_invalid_certs.unwrap_or(false));
-        let allow_auto_update = option.map(|o| o.allow_auto_update.unwrap_or(true));
+        let allow_auto_update = Some(allow_auto_update_enabled(option));
         let user_agent = option.and_then(|o| o.user_agent.clone());
         let update_interval = option.and_then(|o| o.update_interval);
         let timeout = option.and_then(|o| o.timeout_seconds).unwrap_or(20);
@@ -583,6 +583,10 @@ const fn default_allow_auto_update() -> Option<bool> {
     Some(true)
 }
 
+fn allow_auto_update_enabled(option: Option<&PrfOption>) -> bool {
+    option.and_then(|o| o.allow_auto_update).unwrap_or(true)
+}
+
 /// Fix URLs where query parameters are incorrectly appended to the path segment
 ///
 /// Incorrect Example: https://example.com/path&param1=value1
@@ -610,4 +614,20 @@ fn fix_dirty_url(input: &str) -> Result<Url> {
     }
 
     Ok(url)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{PrfOption, allow_auto_update_enabled};
+
+    #[test]
+    fn auto_update_defaults_to_enabled_and_preserves_explicit_false() {
+        assert!(allow_auto_update_enabled(None));
+
+        let disabled = PrfOption {
+            allow_auto_update: Some(false),
+            ..PrfOption::default()
+        };
+        assert!(!allow_auto_update_enabled(Some(&disabled)));
+    }
 }

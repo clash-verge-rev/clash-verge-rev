@@ -193,6 +193,10 @@ export type UrlLikeParts = {
   fragment?: string
 }
 
+export function normalizeHost(host: string): string {
+  return host.startsWith('[') && host.endsWith(']') ? host.slice(1, -1) : host
+}
+
 const URLLIKE_RE =
   /^(?:(?<auth>.*?)@)?(?<host>.*?)(?::(?<port>\d+))?\/?(?:\?(?<query>.*?))?(?:#(?<fragment>.*?))?$/
 
@@ -227,7 +231,7 @@ export function parseUrlLike(
 
   const result: UrlLikeParts = {
     auth,
-    host: groups.host,
+    host: normalizeHost(groups.host),
     port: groups.port,
     query: groups.query,
     fragment: groups.fragment,

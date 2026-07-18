@@ -2,6 +2,7 @@ import {
   decodeBase64OrOriginal,
   getCipher,
   getIfNotBlank,
+  normalizeHost,
   parseQueryString,
   parseRequiredPort,
   stripUriScheme,
@@ -27,7 +28,7 @@ export function URI_SSR(uri: string): IProxyshadowsocksRConfig {
   if (portIdx === -1) {
     throw new Error('Invalid ssr uri: missing port')
   }
-  const server = serverAndPort.substring(0, portIdx)
+  const server = normalizeHost(serverAndPort.substring(0, portIdx))
   const port = parseRequiredPort(
     serverAndPort.substring(portIdx + 1),
     'Invalid ssr uri: invalid port',

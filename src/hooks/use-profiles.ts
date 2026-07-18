@@ -1,5 +1,7 @@
+import { useCallback, useRef } from 'react'
+
 import { getProfiles, patchProfile, patchProfilesConfig } from '@/services/cmds'
-import { useQuery } from '@/services/query-client'
+import { setCacheDataAsync, useQuery } from '@/services/query-client'
 import { debugLog } from '@/utils/debug'
 
 export const useProfiles = () => {
@@ -26,46 +28,44 @@ export const useProfiles = () => {
     refetchInterval: false,
   })
 
-  const mutateProfiles = async () => {
-    await refetch()
-  }
+  const refetchRef = useRef(refetch)
+  refetchRef.current = refetch
+  const mutateProfiles = useCallback(async () => {
+    await refetchRef.current()
+  }, [])
 
-  const patchProfiles = async (
-    value: Partial<IProfilesConfig>,
-    signal?: AbortSignal,
-    options?: { deferRefreshOnSuccess?: boolean },
-  ) => {
-    try {
-      if (signal?.aborted) {
-        throw new DOMException('Operation was aborted', 'AbortError')
-      }
-      const success = await patchProfilesConfig(value)
+  const patchProfiles = useCallback(
+    async (value: Partial<IProfilesConfig>) => {
+      try {
+        const outcome = await patchProfilesConfig(value)
 
-      if (signal?.aborted) {
-        throw new DOMException('Operation was aborted', 'AbortError')
-      }
+        if (outcome.status === 'valid') {
+          await setCacheDataAsync<IProfilesConfig>(
+            ['getProfiles'],
+            (current) => (current ? { ...current, ...value } : current),
+          )
+        } else if (outcome.status !== 'busy') {
+          await mutateProfiles()
+        }
 
-      if (!options?.deferRefreshOnSuccess || !success) {
+        return outcome
+      } catch (error) {
         await mutateProfiles()
-      }
-
-      return success
-    } catch (error) {
-      if (error instanceof DOMException && error.name === 'AbortError') {
         throw error
       }
+    },
+    [mutateProfiles],
+  )
 
-      await mutateProfiles()
-      throw error
-    }
-  }
-
-  const patchCurrent = async (value: Partial<IProfileItem>) => {
-    if (profiles?.current) {
-      await patchProfile(profiles.current, value)
-      mutateProfiles()
-    }
-  }
+  const patchCurrent = useCallback(
+    async (value: Partial<IProfileItem>) => {
+      if (profiles?.current) {
+        await patchProfile(profiles.current, value)
+        void mutateProfiles()
+      }
+    },
+    [mutateProfiles, profiles],
+  )
 
   return {
     profiles,
