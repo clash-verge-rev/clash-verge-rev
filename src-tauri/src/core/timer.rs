@@ -49,7 +49,6 @@ impl TaskState {
 pub struct Timer {
     command_tx: mpsc::UnboundedSender<TimerCommand>,
     command_rx: Mutex<Option<mpsc::UnboundedReceiver<TimerCommand>>>,
-    refresh_lock: tokio::sync::Mutex<()>,
     pub timer_map: Arc<RwLock<HashMap<String, u64>>>,
     pub initialized: AtomicBool,
 }
@@ -62,7 +61,6 @@ impl Timer {
         Self {
             command_tx,
             command_rx: Mutex::new(Some(command_rx)),
-            refresh_lock: tokio::sync::Mutex::new(()),
             timer_map: Arc::new(RwLock::new(HashMap::new())),
             initialized: AtomicBool::new(false),
         }
@@ -128,7 +126,6 @@ impl Timer {
     }
 
     pub async fn refresh(&self) -> Result<()> {
-        let _refresh_guard = self.refresh_lock.lock().await;
         let new_map = self.gen_map().await;
 
         let mut cache = self.timer_map.write();
