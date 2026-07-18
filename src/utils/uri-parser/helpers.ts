@@ -193,6 +193,10 @@ export type UrlLikeParts = {
   fragment?: string
 }
 
+export function normalizeHost(host: string): string {
+  return host.startsWith('[') && host.endsWith(']') ? host.slice(1, -1) : host
+}
+
 const URLLIKE_RE =
   /^(?:(?<auth>.*?)@)?(?<host>.*?)(?::(?<port>\d+))?\/?(?:\?(?<query>.*?))?(?:#(?<fragment>.*?))?$/
 
@@ -227,7 +231,7 @@ export function parseUrlLike(
 
   const result: UrlLikeParts = {
     auth,
-    host: groups.host,
+    host: normalizeHost(groups.host),
     port: groups.port,
     query: groups.query,
     fragment: groups.fragment,
@@ -260,7 +264,14 @@ export function decodeBase64OrOriginal(str: string): string {
   const padded = padLen === 0 ? normalized : normalized + '='.repeat(4 - padLen)
 
   try {
-    const decoded = atob(padded)
+    const decodedArray = new Uint8Array(
+      atob(padded)
+        .split('')
+        .map((c) => c.charCodeAt(0)),
+    )
+    const decoded = new TextDecoder('utf-8', { fatal: true }).decode(
+      decodedArray,
+    )
     // Heuristic: only accept "text-like" results to avoid accidentally decoding
     // non-base64 strings that happen to be decodable.
     for (let i = 0; i < decoded.length; i++) {

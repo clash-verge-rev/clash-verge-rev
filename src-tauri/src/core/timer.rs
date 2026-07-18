@@ -1,4 +1,10 @@
-use crate::{config::Config, feat, process::AsyncHandler, singleton, utils::resolve::is_resolve_done};
+use crate::{
+    config::{Config, PrfItem},
+    feat,
+    process::AsyncHandler,
+    singleton,
+    utils::resolve::is_resolve_done,
+};
 use anyhow::Result;
 use clash_verge_logging::{Type, logging, logging_error};
 use parking_lot::{Mutex, RwLock};
@@ -43,6 +49,7 @@ impl TaskState {
 pub struct Timer {
     command_tx: mpsc::UnboundedSender<TimerCommand>,
     command_rx: Mutex<Option<mpsc::UnboundedReceiver<TimerCommand>>>,
+    refresh_lock: tokio::sync::Mutex<()>,
     pub timer_map: Arc<RwLock<HashMap<String, u64>>>,
     pub initialized: AtomicBool,
 }
@@ -55,6 +62,7 @@ impl Timer {
         Self {
             command_tx,
             command_rx: Mutex::new(Some(command_rx)),
+            refresh_lock: tokio::sync::Mutex::new(()),
             timer_map: Arc::new(RwLock::new(HashMap::new())),
             initialized: AtomicBool::new(false),
         }
@@ -99,11 +107,10 @@ impl Timer {
         }
 
         let cur_timestamp = chrono::Local::now().timestamp();
-        if let Some(items) = Config::profiles().await.latest_arc().get_items() {
+        if let Some(items) = Config::profiles().await.data_arc().get_items() {
             for item in items.iter() {
                 if let Some(option) = item.option.as_ref()
-                    && let Some(allow_auto_update) = option.allow_auto_update
-                    && allow_auto_update
+                    && option.allow_auto_update.unwrap_or(true)
                     && let Some(interval) = option.update_interval
                     && interval > 0
                     && let Some(uid) = item.uid.as_ref()
@@ -121,6 +128,7 @@ impl Timer {
     }
 
     pub async fn refresh(&self) -> Result<()> {
+        let _refresh_guard = self.refresh_lock.lock().await;
         let new_map = self.gen_map().await;
 
         let mut cache = self.timer_map.write();
@@ -144,20 +152,26 @@ impl Timer {
     }
 
     async fn gen_map(&self) -> HashMap<String, u64> {
+        if let Some(items) = Config::profiles().await.data_arc().get_items() {
+            return Self::gen_map_from_items(items);
+        }
+
+        HashMap::new()
+    }
+
+    fn gen_map_from_items(items: &[PrfItem]) -> HashMap<String, u64> {
         let mut new_map = HashMap::new();
 
-        if let Some(items) = Config::profiles().await.latest_arc().get_items() {
-            for item in items.iter() {
-                if let Some(option) = item.option.as_ref()
-                    && let Some(allow_auto_update) = option.allow_auto_update
-                    && let (Some(interval), Some(uid)) = (option.update_interval, &item.uid)
-                    && allow_auto_update
-                    && interval > 0
-                {
-                    new_map.insert(uid.clone(), interval);
-                }
+        for item in items {
+            if let Some(option) = item.option.as_ref()
+                && let (Some(interval), Some(uid)) = (option.update_interval, &item.uid)
+                && option.allow_auto_update.unwrap_or(true)
+                && interval > 0
+            {
+                new_map.insert(uid.clone(), interval);
             }
         }
+
         new_map
     }
 
@@ -412,5 +426,41 @@ impl Timer {
             }
         })
         .await;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::Timer;
+    use crate::config::{PrfItem, PrfOption};
+
+    fn remote_profile(uid: &str, allow_auto_update: Option<bool>, update_interval: Option<u64>) -> PrfItem {
+        PrfItem {
+            uid: Some(uid.into()),
+            itype: Some("remote".into()),
+            option: Some(PrfOption {
+                allow_auto_update,
+                update_interval,
+                ..PrfOption::default()
+            }),
+            ..PrfItem::default()
+        }
+    }
+
+    #[test]
+    fn timer_map_only_contains_enabled_profiles_with_positive_intervals() {
+        let items = vec![
+            remote_profile("enabled", Some(true), Some(30)),
+            remote_profile("disabled", Some(false), Some(30)),
+            remote_profile("missing-flag", None, Some(30)),
+            remote_profile("zero-interval", Some(true), Some(0)),
+            remote_profile("missing-interval", Some(true), None),
+        ];
+
+        let map = Timer::gen_map_from_items(&items);
+
+        assert_eq!(map.len(), 2);
+        assert_eq!(map.get("enabled"), Some(&30));
+        assert_eq!(map.get("missing-flag"), Some(&30));
     }
 }

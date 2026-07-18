@@ -1,0 +1,25 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "entry": ["src/polyfills/*.js!"],
+  "project": ["src/**/*.{js,jsx,ts,tsx}!", "scripts/**/*.{js,mjs}!"],
+  "include": [
+    "files",
+    "dependencies",
+    "devDependencies",
+    "unlisted",
+    "unresolved",
+    "binaries",
+    "exports",
+    "types",
+    "duplicates",
+    "cycles"
+  ],
+  "ignoreBinaries": ["rustc"],
+  "ignoreDependencies": ["lint-staged"],
+  "ignoreIssues": {
+    "src/types/generated/**": ["exports", "types"]
+  },
+  "cycles": {
+    "dynamicImports": true
+  }
+}

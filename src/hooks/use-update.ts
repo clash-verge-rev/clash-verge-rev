@@ -3,14 +3,6 @@ import { checkUpdateSafe } from '@/services/update'
 
 import { useVerge } from './use-verge'
 
-export interface UpdateInfo {
-  version: string
-  body: string
-  date: string
-  available: boolean
-  downloadAndInstall: (onEvent?: any) => Promise<void>
-}
-
 const LAST_CHECK_KEY = 'last_check_update'
 
 export const readLastCheckTime = (): number | null => {

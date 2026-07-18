@@ -7,7 +7,7 @@ import { useQuery } from '@/services/query-client'
 import { useVerge } from './use-verge'
 import { useVisibility } from './use-visibility'
 
-export interface SystemState {
+interface SystemState {
   runningMode: 'Sidecar' | 'Service'
   isAdminMode: boolean
   isServiceOk: boolean

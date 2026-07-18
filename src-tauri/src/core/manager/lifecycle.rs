@@ -9,6 +9,13 @@ use clash_verge_logging::{Type, logging};
 use scopeguard::defer;
 use smartstring::alias::String;
 use tauri_plugin_clash_verge_sysinfo;
+#[cfg(target_os = "windows")]
+use tauri_plugin_clash_verge_sysinfo::is_current_app_handle_admin;
+
+#[cfg(any(target_os = "windows", test))]
+const fn should_wait_for_service(tun_enabled: bool, service_ready: bool, is_admin: bool) -> bool {
+    tun_enabled && !service_ready && !is_admin
+}
 
 /// sidecar→service 交接结果
 #[cfg(target_os = "windows")]
@@ -141,9 +148,18 @@ impl CoreManager {
         use crate::{config::Config, constants::timing, core::service};
         use backon::{ConstantBuilder, Retryable as _};
 
-        let needs_service = Config::verge().await.latest_arc().enable_tun_mode.unwrap_or(false);
+        let tun_enabled = Config::verge().await.latest_arc().enable_tun_mode.unwrap_or(false);
+        let service_ready = matches!(SERVICE_MANAGER.current().await, ServiceStatus::Ready);
+        let is_admin = is_current_app_handle_admin(Handle::app_handle());
 
-        if !needs_service {
+        if !should_wait_for_service(tun_enabled, service_ready, is_admin) {
+            if tun_enabled && !service_ready && is_admin {
+                logging!(
+                    info,
+                    Type::Core,
+                    "service unavailable while app is elevated; starting sidecar immediately"
+                );
+            }
             return;
         }
 
@@ -299,5 +315,18 @@ impl CoreManager {
                 HandoffOutcome::Failed
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::should_wait_for_service;
+
+    #[test]
+    fn service_wait_is_only_required_for_non_admin_tun() {
+        assert!(should_wait_for_service(true, false, false));
+        assert!(!should_wait_for_service(true, false, true));
+        assert!(!should_wait_for_service(true, true, false));
+        assert!(!should_wait_for_service(false, false, false));
     }
 }
