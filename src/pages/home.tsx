@@ -1,440 +1,152 @@
-import {
-  DnsOutlined,
-  HelpOutlineRounded,
-  HistoryEduOutlined,
-  RouterOutlined,
-  SettingsOutlined,
-  SpeedOutlined,
-} from '@mui/icons-material'
-import {
-  Box,
-  Button,
-  Checkbox,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  FormControlLabel,
-  FormGroup,
-  Grid,
-  IconButton,
-  Skeleton,
-  Tooltip,
-} from '@mui/material'
-import { useLockFn } from 'ahooks'
-import { Suspense, lazy, useCallback, useMemo, useState } from 'react'
+import React, { useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router'
 
-import { BasePage } from '@/components/base'
-import { ClashModeCard } from '@/components/home/clash-mode-card'
-import { CurrentProxyCard } from '@/components/home/current-proxy-card'
-import { EnhancedCard } from '@/components/home/enhanced-card'
-import { EnhancedTrafficStats } from '@/components/home/enhanced-traffic-stats'
-import { HomeProfileCard } from '@/components/home/home-profile-card'
-import { ProxyTunCard } from '@/components/home/proxy-tun-card'
 import { useProfiles } from '@/hooks/use-profiles'
+import { useSystemProxyState } from '@/hooks/use-system-proxy-state'
+import { useSystemState } from '@/hooks/use-system-state'
+import { useTrafficData } from '@/hooks/use-traffic-data'
 import { useVerge } from '@/hooks/use-verge'
-import { entry_lightweight_mode, openWebUrl } from '@/services/cmds'
+import { useThemeMode } from '@/services/states'
+import parseTraffic from '@/utils/parse-traffic'
 
-const LazyTestCard = lazy(() =>
-  import('@/components/home/test-card').then((module) => ({
-    default: module.TestCard,
-  })),
+// Custom sleek inline SVG icons
+const SettingsIcon = () => (
+  <svg viewBox="0 0 24 24"><path d="M19.14 12.94c.04-.3.06-.61.06-.94 0-.32-.02-.64-.07-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.05.3-.09.63-.09.94s.02.64.07.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/></svg>
 )
-const LazyIpInfoCard = lazy(() =>
-  import('@/components/home/ip-info-card').then((module) => ({
-    default: module.IpInfoCard,
-  })),
+const SpeedUpIcon = () => (
+  <svg viewBox="0 0 24 24"><path d="M4 12l1.41 1.41L11 7.83V20h2V7.83l5.58 5.59L20 12l-8-8-8 8z"/></svg>
 )
-const LazyClashInfoCard = lazy(() =>
-  import('@/components/home/clash-info-card').then((module) => ({
-    default: module.ClashInfoCard,
-  })),
+const SpeedDownIcon = () => (
+  <svg viewBox="0 0 24 24"><path d="M20 12l-1.41-1.41L13 16.17V4h-2v12.17l-5.58-5.59L4 12l8 8 8-8z"/></svg>
 )
-const LazySystemInfoCard = lazy(() =>
-  import('@/components/home/system-info-card').then((module) => ({
-    default: module.SystemInfoCard,
-  })),
-)
-
-// 定义首页卡片设置接口
-interface HomeCardsSettings {
-  profile: boolean
-  proxy: boolean
-  network: boolean
-  mode: boolean
-  traffic: boolean
-  info: boolean
-  clashinfo: boolean
-  systeminfo: boolean
-  test: boolean
-  ip: boolean
-  [key: string]: boolean
-}
-
-// 首页设置对话框组件接口
-interface HomeSettingsDialogProps {
-  open: boolean
-  onClose: () => void
-  homeCards: HomeCardsSettings
-  onSave: (cards: HomeCardsSettings) => void
-}
-
-const serializeCardFlags = (cards: HomeCardsSettings) =>
-  Object.keys(cards)
-    .sort()
-    .map((key) => `${key}:${cards[key] ? 1 : 0}`)
-    .join('|')
-
-// 首页设置对话框组件
-const HomeSettingsDialog = ({
-  open,
-  onClose,
-  homeCards,
-  onSave,
-}: HomeSettingsDialogProps) => {
-  const { t } = useTranslation()
-  const [cards, setCards] = useState<HomeCardsSettings>(homeCards)
-  const { patchVerge } = useVerge()
-
-  const handleToggle = (key: string) => {
-    setCards((prev: HomeCardsSettings) => ({
-      ...prev,
-      [key]: !prev[key],
-    }))
-  }
-
-  const handleSave = async () => {
-    await patchVerge({ home_cards: cards })
-    onSave(cards)
-    onClose()
-  }
-
-  return (
-    <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
-      <DialogTitle>{t('home.page.settings.title')}</DialogTitle>
-      <DialogContent>
-        <FormGroup>
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={cards.profile || false}
-                onChange={() => handleToggle('profile')}
-              />
-            }
-            label={t('home.page.settings.cards.profile')}
-          />
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={cards.proxy || false}
-                onChange={() => handleToggle('proxy')}
-              />
-            }
-            label={t('home.page.settings.cards.currentProxy')}
-          />
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={cards.network || false}
-                onChange={() => handleToggle('network')}
-              />
-            }
-            label={t('home.page.settings.cards.network')}
-          />
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={cards.mode || false}
-                onChange={() => handleToggle('mode')}
-              />
-            }
-            label={t('home.page.settings.cards.proxyMode')}
-          />
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={cards.traffic || false}
-                onChange={() => handleToggle('traffic')}
-              />
-            }
-            label={t('home.page.settings.cards.traffic')}
-          />
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={cards.test || false}
-                onChange={() => handleToggle('test')}
-              />
-            }
-            label={t('home.page.settings.cards.tests')}
-          />
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={cards.ip || false}
-                onChange={() => handleToggle('ip')}
-              />
-            }
-            label={t('home.page.settings.cards.ip')}
-          />
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={cards.clashinfo || false}
-                onChange={() => handleToggle('clashinfo')}
-              />
-            }
-            label={t('home.page.settings.cards.clashInfo')}
-          />
-          <FormControlLabel
-            control={
-              <Checkbox
-                checked={cards.systeminfo || false}
-                onChange={() => handleToggle('systeminfo')}
-              />
-            }
-            label={t('home.page.settings.cards.systemInfo')}
-          />
-        </FormGroup>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>{t('shared.actions.cancel')}</Button>
-        <Button onClick={handleSave} color="primary">
-          {t('shared.actions.save')}
-        </Button>
-      </DialogActions>
-    </Dialog>
-  )
-}
 
 const HomePage = () => {
   const { t } = useTranslation()
-  const { verge } = useVerge()
-  const { current, mutateProfiles } = useProfiles()
+  const mode = useThemeMode()
+  const navigate = useNavigate()
+  const { verge, patchVerge } = useVerge()
+  const { profiles, patchProfiles } = useProfiles()
+  const { indicator: systemProxyIndicator, toggleSystemProxy } = useSystemProxyState()
+  const { isTunModeAvailable } = useSystemState()
 
-  // 设置弹窗的状态
-  const [settingsOpen, setSettingsOpen] = useState(false)
-  const [localHomeCards, setLocalHomeCards] = useState<{
-    value: HomeCardsSettings
-    baseSignature: string
-  } | null>(null)
+  const { response: { data: traffic } } = useTrafficData({ enabled: true })
 
-  // 卡片显示状态
-  const defaultCards = useMemo<HomeCardsSettings>(
-    () => ({
-      info: false,
-      profile: true,
-      proxy: true,
-      network: true,
-      mode: true,
-      traffic: true,
-      clashinfo: true,
-      systeminfo: true,
-      test: true,
-      ip: true,
-    }),
-    [],
-  )
+  const { enable_tun_mode } = verge ?? {}
 
-  const vergeHomeCards = useMemo<HomeCardsSettings | null>(
-    () => (verge?.home_cards as HomeCardsSettings | undefined) ?? null,
-    [verge],
-  )
+  const handleTunToggle = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.checked
+    await patchVerge({ enable_tun_mode: value })
+  }, [patchVerge])
 
-  const remoteHomeCards = useMemo<HomeCardsSettings>(
-    () => vergeHomeCards ?? defaultCards,
-    [defaultCards, vergeHomeCards],
-  )
+  const handleSystemProxyToggle = useCallback(async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.checked
+    await toggleSystemProxy(value)
+  }, [toggleSystemProxy])
 
-  const remoteSignature = useMemo(
-    () => serializeCardFlags(remoteHomeCards),
-    [remoteHomeCards],
-  )
-
-  const pendingLocalCards = useMemo<HomeCardsSettings | null>(() => {
-    if (!localHomeCards) return null
-    return localHomeCards.baseSignature === remoteSignature
-      ? localHomeCards.value
-      : null
-  }, [localHomeCards, remoteSignature])
-
-  const effectiveHomeCards = pendingLocalCards ?? remoteHomeCards
-
-  // 文档链接函数
-  const toGithubDoc = useLockFn(() => {
-    return openWebUrl('https://clash-verge-rev.github.io/index.html')
-  })
-
-  // 新增：打开设置弹窗
-  const openSettings = useCallback(() => {
-    setSettingsOpen(true)
-  }, [])
-
-  const renderCard = useCallback(
-    (cardKey: string, component: React.ReactNode, size: number = 6) => {
-      if (!effectiveHomeCards[cardKey]) return null
-
-      return (
-        <Grid size={size} key={cardKey}>
-          {component}
-        </Grid>
-      )
-    },
-    [effectiveHomeCards],
-  )
-
-  const criticalCards = useMemo(
-    () => [
-      renderCard(
-        'profile',
-        <HomeProfileCard current={current} onProfileUpdated={mutateProfiles} />,
-      ),
-      renderCard('proxy', <CurrentProxyCard />),
-      renderCard('network', <NetworkSettingsCard />),
-      renderCard('mode', <ClashModeEnhancedCard />),
-    ],
-    [current, mutateProfiles, renderCard],
-  )
-
-  // 新增：保存设置时用requestIdleCallback/setTimeout
-  const handleSaveSettings = (newCards: HomeCardsSettings) => {
-    if (window.requestIdleCallback) {
-      window.requestIdleCallback(() =>
-        setLocalHomeCards({
-          value: newCards,
-          baseSignature: remoteSignature,
-        }),
-      )
-    } else {
-      setTimeout(
-        () =>
-          setLocalHomeCards({
-            value: newCards,
-            baseSignature: remoteSignature,
-          }),
-        0,
-      )
+  const handleProfileChange = useCallback(async (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const profileUid = e.target.value
+    if (profileUid) {
+      await patchProfiles({ current: profileUid })
     }
-  }
+  }, [patchProfiles])
 
-  const nonCriticalCards = useMemo(
-    () => [
-      renderCard(
-        'traffic',
-        <EnhancedCard
-          title={t('home.page.cards.trafficStats')}
-          icon={<SpeedOutlined />}
-          iconColor="secondary"
-        >
-          <EnhancedTrafficStats />
-        </EnhancedCard>,
-        12,
-      ),
-      renderCard(
-        'test',
-        <Suspense fallback={<Skeleton variant="rectangular" height={200} />}>
-          <LazyTestCard />
-        </Suspense>,
-      ),
-      renderCard(
-        'ip',
-        <Suspense fallback={<Skeleton variant="rectangular" height={200} />}>
-          <LazyIpInfoCard />
-        </Suspense>,
-      ),
-      renderCard(
-        'clashinfo',
-        <Suspense fallback={<Skeleton variant="rectangular" height={200} />}>
-          <LazyClashInfoCard />
-        </Suspense>,
-      ),
-      renderCard(
-        'systeminfo',
-        <Suspense fallback={<Skeleton variant="rectangular" height={200} />}>
-          <LazySystemInfoCard />
-        </Suspense>,
-      ),
-    ],
-    [t, renderCard],
-  )
-  const dialogKey = useMemo(
-    () => `${serializeCardFlags(effectiveHomeCards)}:${settingsOpen ? 1 : 0}`,
-    [effectiveHomeCards, settingsOpen],
-  )
+  const speedData = useMemo(() => {
+    const [up, upUnit] = parseTraffic(traffic?.up || 0)
+    const [down, downUnit] = parseTraffic(traffic?.down || 0)
+    return { up, upUnit, down, downUnit }
+  }, [traffic])
+
   return (
-    <BasePage
-      title={t('home.page.title')}
-      contentStyle={{ padding: 2 }}
-      header={
-        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-          <Tooltip title={t('home.page.tooltips.lightweightMode')} arrow>
-            <IconButton
-              onClick={async () => await entry_lightweight_mode()}
-              size="small"
-              color="inherit"
-            >
-              <HistoryEduOutlined />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title={t('home.page.tooltips.manual')} arrow>
-            <IconButton onClick={toGithubDoc} size="small" color="inherit">
-              <HelpOutlineRounded />
-            </IconButton>
-          </Tooltip>
-          <Tooltip title={t('home.page.tooltips.settings')} arrow>
-            <IconButton onClick={openSettings} size="small" color="inherit">
-              <SettingsOutlined />
-            </IconButton>
-          </Tooltip>
-        </Box>
-      }
-    >
-      <Grid container spacing={1.5} columns={{ xs: 6, sm: 6, md: 12 }}>
-        {criticalCards}
+    <div className={`mini-container ${mode === 'dark' ? 'theme-dark' : ''}`}>
+      {/* Mini Header */}
+      <header className="mini-header">
+        <div className="mini-logo-container">
+          <svg className="mini-logo" viewBox="0 0 24 24" fill="var(--primary-main, #5b5c9d)">
+            <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/>
+          </svg>
+          <span className="mini-title">Clash Verge Mini</span>
+        </div>
+        <div className="mini-actions">
+          <button 
+            className="mini-btn settings-btn" 
+            title={t('home.page.tooltips.settings')}
+            onClick={() => navigate('/settings')}
+          >
+            <SettingsIcon />
+          </button>
+        </div>
+      </header>
 
-        {nonCriticalCards}
-      </Grid>
+      {/* Speed Card */}
+      <div className="mini-speed-card">
+        <div className="speed-item">
+          <span className="speed-label">
+            <SpeedDownIcon /> {t('home:traffic.legends.download' as any) || 'Download'}
+          </span>
+          <span className="speed-value">{speedData.down} {speedData.downUnit}/s</span>
+        </div>
+        <div className="speed-item">
+          <span className="speed-label">
+            <SpeedUpIcon /> {t('home:traffic.legends.upload' as any) || 'Upload'}
+          </span>
+          <span className="speed-value">{speedData.up} {speedData.upUnit}/s</span>
+        </div>
+      </div>
 
-      {/* 首页设置弹窗 */}
-      <HomeSettingsDialog
-        key={dialogKey}
-        open={settingsOpen}
-        onClose={() => setSettingsOpen(false)}
-        homeCards={effectiveHomeCards}
-        onSave={handleSaveSettings}
-      />
-    </BasePage>
-  )
-}
+      {/* Toggles */}
+      <div className="mini-controls">
+        <div className="mini-control-row">
+          <div className="control-label">
+            <span className="control-title">{t('settings.sections.system.toggles.systemProxy') || 'System Proxy'}</span>
+            <span className="control-desc">Route device traffic</span>
+          </div>
+          <label className="mini-switch">
+            <input 
+              type="checkbox" 
+              checked={!!systemProxyIndicator}
+              onChange={handleSystemProxyToggle}
+            />
+            <span className="slider"></span>
+          </label>
+        </div>
 
-// 增强版网络设置卡片组件
-const NetworkSettingsCard = () => {
-  const { t } = useTranslation()
-  return (
-    <EnhancedCard
-      title={t('home.page.cards.networkSettings')}
-      icon={<DnsOutlined />}
-      iconColor="primary"
-      action={null}
-    >
-      <ProxyTunCard />
-    </EnhancedCard>
-  )
-}
+        <div className="mini-control-row" style={{ opacity: isTunModeAvailable ? 1 : 0.5 }}>
+          <div className="control-label">
+            <span className="control-title">{t('settings.sections.system.toggles.tunMode') || 'TUN Mode'}</span>
+            <span className="control-desc">Virtual network interface</span>
+          </div>
+          <label className="mini-switch">
+            <input 
+              type="checkbox" 
+              checked={!!enable_tun_mode}
+              disabled={!isTunModeAvailable}
+              onChange={handleTunToggle}
+            />
+            <span className="slider"></span>
+          </label>
+        </div>
+      </div>
 
-// 增强版 Clash 模式卡片组件
-const ClashModeEnhancedCard = () => {
-  const { t } = useTranslation()
-  return (
-    <EnhancedCard
-      title={t('home.page.cards.proxyMode')}
-      icon={<RouterOutlined />}
-      iconColor="info"
-      action={null}
-    >
-      <ClashModeCard />
-    </EnhancedCard>
+      {/* Profile Card */}
+      <div className="mini-profile-card">
+        <div className="profile-header">
+          <span className="profile-title">{t('profiles.page.title') || 'Profile'}</span>
+        </div>
+        <div className="profile-select-container">
+          <select 
+            value={profiles?.current || ''} 
+            onChange={handleProfileChange}
+          >
+            {profiles?.items?.map((item) => (
+              <option key={item.uid} value={item.uid}>
+                {item.name || item.file || 'Unnamed Profile'}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+    </div>
   )
 }
 

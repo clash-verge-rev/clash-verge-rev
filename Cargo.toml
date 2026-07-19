@@ -11,14 +11,14 @@ members = [
 resolver = "2"
 
 [profile.release]
-panic = "unwind"
+panic = "abort"
 codegen-units = 1
-lto = "thin"
-opt-level = 3
-debug = 1
-strip = "none"
+lto = true
+opt-level = "z"
+debug = 0
+strip = true
 overflow-checks = false
-split-debuginfo = "unpacked"
+split-debuginfo = "none"
 rpath = false
 
 [profile.dev]

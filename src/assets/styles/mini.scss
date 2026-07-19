@@ -1,0 +1,284 @@
+.mini-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  background: radial-gradient(circle at top right, rgba(91, 92, 157, 0.15), transparent 40%),
+              radial-gradient(circle at bottom left, rgba(24, 103, 192, 0.08), transparent 40%),
+              var(--background-color, #f5f5f5);
+  padding: 16px;
+  box-sizing: border-box;
+  font-family: inherit;
+  overflow: hidden;
+
+  /* Theme variables default (Light) */
+  --text-primary: #1f1f1f;
+  --text-secondary: #666666;
+  --card-bg: rgba(255, 255, 255, 0.55);
+  --card-border: rgba(255, 255, 255, 0.6);
+  --select-bg: rgba(255, 255, 255, 0.7);
+  --select-border: rgba(0, 0, 0, 0.08);
+  --btn-hover: rgba(0, 0, 0, 0.05);
+
+  color: var(--text-primary);
+
+  &.theme-dark {
+    --text-primary: #e0e0e0;
+    --text-secondary: #a0a0a0;
+    --card-bg: rgba(30, 30, 30, 0.55);
+    --card-border: rgba(255, 255, 255, 0.08);
+    --select-bg: rgba(40, 40, 40, 0.7);
+    --select-border: rgba(255, 255, 255, 0.08);
+    --btn-hover: rgba(255, 255, 255, 0.05);
+  }
+}
+
+.mini-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 18px;
+  -webkit-app-region: drag; /* Support Tauri dragging */
+  
+  .mini-logo-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    
+    .mini-logo {
+      width: 22px;
+      height: 22px;
+    }
+    
+    .mini-title {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+    }
+  }
+
+  .mini-actions {
+    display: flex;
+    gap: 6px;
+    -webkit-app-region: no-drag;
+  }
+
+  .mini-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: var(--text-primary);
+    padding: 6px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s, transform 0.2s;
+    
+    &:hover {
+      background-color: var(--btn-hover);
+    }
+    
+    &.settings-btn:hover {
+      transform: rotate(30deg);
+    }
+    
+    svg {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+    }
+  }
+}
+
+.mini-speed-card {
+  background: var(--card-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--card-border);
+  border-radius: 14px;
+  padding: 12px;
+  display: flex;
+  justify-content: space-around;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+
+  .speed-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    
+    .speed-label {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-secondary);
+      margin-bottom: 2px;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      
+      svg {
+        width: 10px;
+        height: 10px;
+        fill: currentColor;
+      }
+    }
+    
+    .speed-value {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--primary-main, #5b5c9d);
+    }
+  }
+}
+
+.mini-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.mini-control-row {
+  background: var(--card-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  padding: 10px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+  
+  .control-label {
+    display: flex;
+    flex-direction: column;
+    
+    .control-title {
+      font-size: 13px;
+      font-weight: 500;
+    }
+    .control-desc {
+      font-size: 10px;
+      color: var(--text-secondary);
+      margin-top: 1px;
+    }
+  }
+}
+
+/* Toggle Switch */
+.mini-switch {
+  position: relative;
+  display: inline-block;
+  width: 40px;
+  height: 22px;
+  
+  input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    
+    &:checked + .slider {
+      background-color: var(--primary-main, #5b5c9d);
+    }
+    &:checked + .slider:before {
+      transform: translateX(18px);
+    }
+  }
+  
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.1);
+    transition: .25s;
+    border-radius: 22px;
+    
+    &:before {
+      position: absolute;
+      content: "";
+      height: 16px;
+      width: 16px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .25s;
+      border-radius: 50%;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+  }
+}
+
+.mini-profile-card {
+  background: var(--card-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--card-border);
+  border-radius: 12px;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.02);
+  
+  .profile-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    
+    .profile-title {
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-secondary);
+    }
+  }
+
+  .profile-select-container {
+    position: relative;
+    width: 100%;
+    
+    select {
+      width: 100%;
+      padding: 8px 10px;
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-primary);
+      background: var(--select-bg);
+      border: 1px solid var(--select-border);
+      border-radius: 8px;
+      appearance: none;
+      cursor: pointer;
+      outline: none;
+      transition: border-color 0.2s;
+      
+      &:focus {
+        border-color: var(--primary-main, #5b5c9d);
+      }
+    }
+    
+    &:after {
+      content: "▼";
+      font-size: 9px;
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
+      opacity: 0.5;
+    }
+  }
+}
+
+@media (max-width: 500px) {
+  .layout-content__left {
+    display: none !important;
+  }
+  .layout-content__right {
+    flex: 1 1 100% !important;
+  }
+}

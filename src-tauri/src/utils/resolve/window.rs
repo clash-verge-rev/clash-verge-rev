@@ -15,11 +15,11 @@ const DARK_BACKGROUND_HEX: &str = "#2E303D";
 const LIGHT_BACKGROUND_HEX: &str = "#F5F5F5";
 
 // 定义默认窗口尺寸常量
-const DEFAULT_WIDTH: f64 = 940.0;
-const DEFAULT_HEIGHT: f64 = 700.0;
+const DEFAULT_WIDTH: f64 = 360.0;
+const DEFAULT_HEIGHT: f64 = 500.0;
 
-const MINIMAL_WIDTH: f64 = 520.0;
-const MINIMAL_HEIGHT: f64 = 520.0;
+const MINIMAL_WIDTH: f64 = 300.0;
+const MINIMAL_HEIGHT: f64 = 400.0;
 
 #[cfg(target_os = "linux")]
 const DEFAULT_DECORATIONS: bool = false;

@@ -1,48 +1,45 @@
-import { styled } from '@mui/material'
-
-const Loading = styled('div')`
-  position: relative;
-  display: flex;
-  height: 100%;
-  min-height: 18px;
-  box-sizing: border-box;
-  align-items: center;
-
-  & > div {
-    box-sizing: border-box;
-    width: 6px;
-    height: 6px;
-    margin: 2px;
-    border-radius: 100%;
-    animation: loading 0.7s -0.15s infinite linear;
-  }
-
-  & > div:nth-child(2n-1) {
-    animation-delay: -0.5s;
-  }
-
-  @keyframes loading {
-    50% {
-      opacity: 0.2;
-      transform: scale(0.75);
-    }
-    100% {
-      opacity: 1;
-      transform: scale(1);
-    }
-  }
-`
-
-const LoadingItem = styled('div')(({ theme }) => ({
-  background: theme.palette.text.secondary,
-}))
+import React from 'react'
 
 export const BaseLoading = () => {
   return (
-    <Loading>
-      <LoadingItem />
-      <LoadingItem />
-      <LoadingItem />
-    </Loading>
+    <div style={{
+      position: 'relative',
+      display: 'flex',
+      height: '100%',
+      minHeight: '18px',
+      boxSizing: 'border-box',
+      alignItems: 'center',
+    }}>
+      <style>{`
+        .loading-dot {
+          box-sizing: border-box;
+          width: 6px;
+          height: 6px;
+          margin: 2px;
+          border-radius: 100%;
+          background: currentColor;
+          animation: loading-anim 0.7s infinite linear;
+        }
+        .loading-dot:nth-child(2) {
+          animation-delay: -0.35s;
+        }
+        .loading-dot:nth-child(3) {
+          animation-delay: -0.5s;
+        }
+        @keyframes loading-anim {
+          50% {
+            opacity: 0.2;
+            transform: scale(0.75);
+          }
+          100% {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+      `}</style>
+      <div className="loading-dot" />
+      <div className="loading-dot" />
+      <div className="loading-dot" />
+    </div>
   )
 }
