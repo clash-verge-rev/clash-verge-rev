@@ -40,18 +40,28 @@ pub async fn save_profile_file(index: String, file_data: Option<String>) -> CmdR
         (path, is_merge, is_script, affects_runtime)
     };
 
-    // 读取原始内容（在释放profiles_guard后进行）
-    let original_content = PrfItem {
-        file: Some(rel_path.clone()),
-        ..Default::default()
-    }
-    .read_file()
-    .await
-    .stringify_err()?;
-
     let profiles_dir = dirs::app_profiles_dir().stringify_err()?;
     let file_path = profiles_dir.join(rel_path.as_str());
     let file_path_str = file_path.to_string_lossy().to_string();
+
+    // 读取原始内容（在释放profiles_guard后进行）
+    let original_existed = fs::try_exists(&file_path).await.map_err(|err| {
+        String::from(format!(
+            "failed to check profile file \"{}\": {err}",
+            file_path.display()
+        ))
+    })?;
+    let original_content = if original_existed {
+        PrfItem {
+            file: Some(rel_path.clone()),
+            ..Default::default()
+        }
+        .read_file()
+        .await
+        .stringify_err()?
+    } else {
+        String::new()
+    };
 
     // 保存新的配置文件
     fs::write(&file_path, &file_data).await.stringify_err()?;
@@ -68,6 +78,7 @@ pub async fn save_profile_file(index: String, file_data: Option<String>) -> CmdR
         &file_path_str,
         &file_path,
         &original_content,
+        original_existed,
         is_merge_file,
         is_script_file,
         affects_runtime,
@@ -83,8 +94,16 @@ pub async fn save_profile_file(index: String, file_data: Option<String>) -> CmdR
     Ok(changes_applied)
 }
 
-async fn restore_original(file_path: &std::path::Path, original_content: &str) -> Result<(), String> {
-    fs::write(file_path, original_content).await.stringify_err()
+async fn restore_original(
+    file_path: &std::path::Path,
+    original_content: &str,
+    original_existed: bool,
+) -> Result<(), String> {
+    if original_existed {
+        fs::write(file_path, original_content).await.stringify_err()
+    } else {
+        fs::remove_file(file_path).await.stringify_err()
+    }
 }
 
 fn profile_affects_runtime(profiles: &IProfiles, index: &str) -> bool {
@@ -112,6 +131,7 @@ async fn handle_saved_profile_file(
     file_path_str: &str,
     file_path: &std::path::Path,
     original_content: &str,
+    original_existed: bool,
     is_merge_file: bool,
     is_script_file: bool,
     affects_runtime: bool,
@@ -138,13 +158,13 @@ async fn handle_saved_profile_file(
         }
         Ok(outcome) => {
             logging!(warn, Type::Config, "[cmd配置save] 文件验证失败: {}", outcome);
-            restore_original(file_path, original_content).await?;
+            restore_original(file_path, original_content, original_existed).await?;
             handle_validation_notice(&outcome, target, file_type);
             return Ok(outcome);
         }
         Err(e) => {
             logging!(error, Type::Config, "[cmd配置save] 验证过程发生错误: {}", e);
-            restore_original(file_path, original_content).await?;
+            restore_original(file_path, original_content, original_existed).await?;
             return Err(e.to_string().into());
         }
     }
@@ -165,13 +185,13 @@ async fn handle_saved_profile_file(
         }
         Ok(outcome) => {
             logging!(warn, Type::Config, "[cmd配置save] 运行时配置应用失败: {}", outcome);
-            restore_original(file_path, original_content).await?;
+            restore_original(file_path, original_content, original_existed).await?;
             handle_validation_notice(&outcome, ValidationNoticeTarget::Runtime, "运行时配置");
             Ok(outcome)
         }
         Err(err) => {
             logging!(error, Type::Config, "[cmd配置save] 运行时配置应用错误: {}", err);
-            restore_original(file_path, original_content).await?;
+            restore_original(file_path, original_content, original_existed).await?;
             Err(err.to_string().into())
         }
     }

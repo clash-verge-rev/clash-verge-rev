@@ -86,7 +86,15 @@ export const BaseSearchBox = ({
 }: SearchProps) => {
   const { t } = useTranslation()
   const onSearchRef = useRef(onSearch)
-  const lastSearchStateRef = useRef<SearchState | null>(null)
+  // 用初始状态初始化，使挂载时的 emitSearch 因状态相同而被跳过，
+  // 从而只在输入内容真正变化时才触发 onSearch（也可避免 StrictMode 下的重复调用）。
+  const lastSearchStateRef = useRef<SearchState | null>({
+    text: value ?? defaultValue ?? '',
+    matchCase: searchState?.matchCase ?? defaultMatchCase,
+    matchWholeWord: searchState?.matchWholeWord ?? defaultMatchWholeWord,
+    useRegularExpression:
+      searchState?.useRegularExpression ?? defaultUseRegularExpression,
+  })
 
   const [text, setText] = useControllableState<string>({
     controlled: value,

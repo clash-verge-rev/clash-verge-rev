@@ -18,6 +18,8 @@ pub async fn patch_clash(patch: &Mapping) -> Result<()> {
         if patch.get("secret").is_some() || patch.get("external-controller").is_some() {
             Config::generate().await?;
             CoreManager::global().restart_core().await?;
+        } else if patch.get("allow-lan").is_some() {
+            CoreManager::global().update_config_checked().await?;
         } else {
             if patch.get("mode").is_some() {
                 tray::Tray::global().update_menu_and_icon().await;

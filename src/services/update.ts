@@ -6,7 +6,7 @@ import {
 
 import { version as appVersion } from '@root/package.json'
 
-export type VersionParts = {
+type VersionParts = {
   main: number[]
   pre: (number | string)[]
 }
@@ -16,33 +16,27 @@ const SEMVER_FULL_REGEX =
 const SEMVER_SEARCH_REGEX =
   /v?\d+(?:\.\d+){1,2}(?:-[0-9A-Za-z.-]+)?(?:\+[0-9A-Za-z.-]+)?/i
 
-export const normalizeVersion = (
-  input: string | null | undefined,
-): string | null => {
+const normalizeVersion = (input: string | null | undefined): string | null => {
   if (typeof input !== 'string') return null
   const trimmed = input.trim()
   if (!trimmed) return null
   return trimmed.replace(/^v/i, '')
 }
 
-export const ensureSemver = (
-  input: string | null | undefined,
-): string | null => {
+const ensureSemver = (input: string | null | undefined): string | null => {
   const normalized = normalizeVersion(input)
   if (!normalized) return null
   return SEMVER_FULL_REGEX.test(normalized) ? normalized : null
 }
 
-export const extractSemver = (
-  input: string | null | undefined,
-): string | null => {
+const extractSemver = (input: string | null | undefined): string | null => {
   if (typeof input !== 'string') return null
   const match = input.match(SEMVER_SEARCH_REGEX)
   if (!match) return null
   return normalizeVersion(match[0])
 }
 
-export const splitVersion = (version: string | null): VersionParts | null => {
+const splitVersion = (version: string | null): VersionParts | null => {
   if (!version) return null
   const [mainPart, preRelease] = version.split('-')
   const main = mainPart
@@ -93,17 +87,14 @@ const compareVersionParts = (a: VersionParts, b: VersionParts): number => {
   return 0
 }
 
-export const compareVersions = (
-  a: string | null,
-  b: string | null,
-): number | null => {
+const compareVersions = (a: string | null, b: string | null): number | null => {
   const partsA = splitVersion(a)
   const partsB = splitVersion(b)
   if (!partsA || !partsB) return null
   return compareVersionParts(partsA, partsB)
 }
 
-export const resolveRemoteVersion = (update: Update): string | null => {
+const resolveRemoteVersion = (update: Update): string | null => {
   const primary = ensureSemver(update.version)
   if (primary) return primary
 

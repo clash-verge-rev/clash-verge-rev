@@ -124,7 +124,8 @@ export const AppDataProvider = ({
 
   useEffect(() => {
     let lastProfileId: string | null = null
-    let lastUpdateTime = 0
+    let lastProfileUpdateTime = 0
+    let lastProxyUpdateTime = 0
     const refreshThrottle = 800
     const cleanupFns: Array<() => void> = []
 
@@ -133,26 +134,24 @@ export const AppDataProvider = ({
       const now = Date.now()
       if (
         lastProfileId === newProfileId &&
-        now - lastUpdateTime < refreshThrottle
+        now - lastProfileUpdateTime < refreshThrottle
       ) {
         return
       }
       lastProfileId = newProfileId
-      lastUpdateTime = now
-      void Promise.allSettled([
-        revalidateQueries([['getProfiles']]),
-        refreshProxy(),
-        refreshProxyProviders(),
-        refreshRules(),
-        refreshRuleProviders(),
-      ])
+      lastProfileUpdateTime = now
+      void revalidateQueries([['getProfiles']])
     }
 
     const handleRefreshProxy = () => {
       const now = Date.now()
-      if (now - lastUpdateTime <= refreshThrottle) return
-      lastUpdateTime = now
+      if (now - lastProxyUpdateTime <= refreshThrottle) return
+      lastProxyUpdateTime = now
       refreshProxy().catch(() => {})
+    }
+
+    const handleRefreshProfiles = () => {
+      void revalidateQueries([['getProfiles']])
     }
 
     const initializeListeners = async () => {
@@ -164,6 +163,16 @@ export const AppDataProvider = ({
         cleanupFns.push(unlistenProfile)
       } catch (error) {
         console.error('[AppDataProvider] 监听 Profile 事件失败:', error)
+      }
+
+      try {
+        const unlistenProfiles = await listen(
+          'verge://refresh-profiles',
+          handleRefreshProfiles,
+        )
+        cleanupFns.push(unlistenProfiles)
+      } catch (error) {
+        console.error('[AppDataProvider] 监听 Profiles 刷新事件失败:', error)
       }
 
       try {
@@ -188,7 +197,7 @@ export const AppDataProvider = ({
         }
       })
     }
-  }, [refreshProxy, refreshProxyProviders, refreshRules, refreshRuleProviders])
+  }, [refreshProxy])
 
   const refreshAll = useCallback(async () => {
     await Promise.all([

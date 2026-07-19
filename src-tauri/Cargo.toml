@@ -83,6 +83,7 @@ tauri-plugin-deep-link = "2.4.9"
 tauri-plugin-window-state = "2.4.1"
 zip = "8.6.0"
 reqwest_dav = "0.3.3"
+serde-xml-rs = "0.6.0"
 aes-gcm = { version = "0.11.0" }
 base64 = "0.22.1"
 getrandom = "0.4.3"
@@ -98,7 +99,7 @@ tauri-plugin-devtools = { version = "2.1.0" }
 tauri-plugin-mihomo = { git = "https://github.com/clash-verge-rev/tauri-plugin-mihomo", branch = "fix/api-robustness" }
 clash_verge_logger = { git = "https://github.com/clash-verge-rev/clash-verge-logger" }
 async-trait = "0.1.89"
-clash_verge_service_ipc = { version = "2.3.2", features = [
+clash_verge_service_ipc = { version = "2.3.3", features = [
   "client",
 ], git = "https://github.com/clash-verge-rev/clash-verge-service-ipc" }
 arc-swap = "1.9.2"
@@ -108,6 +109,7 @@ webpki-roots = "1.0.8"
 rust_iso3166 = "0.2.0"
 # Use the git repo until the next release after v2.0.0.
 dark-light = { git = "https://github.com/rust-dark-light/dark-light" }
+windows-sys.workspace = true
 bytes = "1.12.0"
 tokio-util = { version = "0.7.18", features = ["time"] }
 
