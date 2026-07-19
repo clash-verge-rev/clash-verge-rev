@@ -93,7 +93,7 @@ export async function getRuntimeConfig() {
   return invoke<IConfigData | null>('get_runtime_config')
 }
 
-export async function getRuntimeProxyGroupOrder() {
+async function getRuntimeProxyGroupOrder() {
   return invoke<string[]>('get_runtime_proxy_group_order')
 }
 
