@@ -20,15 +20,19 @@ export const WindowProvider: React.FC<{ children: React.ReactNode }> = ({
   }, [currentWindow])
 
   useEffect(() => {
-    const isWindows = getSystem() === 'windows'
+    if (getSystem() !== 'windows') return
     const handleKeyDown = (event: KeyboardEvent) => {
       if (
-        isWindows &&
         event.ctrlKey &&
+        !event.shiftKey &&
+        !event.altKey &&
+        !event.metaKey &&
         event.key.toLowerCase() === 'w'
       ) {
         event.preventDefault()
-        void close()
+        void close().catch((err) => {
+          console.error('[WindowProvider] Failed to close window:', err)
+        })
       }
     }
 
