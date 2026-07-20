@@ -11,6 +11,7 @@ import {
   rebindMemberOccurrence,
   rebindNode,
   resolveMember,
+  selectGlobalChainNodes,
   selectRuntimeStandaloneNodes,
   toMemberOccurrenceBinding,
   toNodeBinding,
@@ -166,6 +167,30 @@ test('keeps a runtime core node that is absent from GLOBAL as standalone', () =>
   assert.deepEqual(
     selectRuntimeStandaloneNodes(standaloneView, [{ name: 'runtime-only' }]),
     [runtimeOnly],
+  )
+  assert.deepEqual(
+    selectGlobalChainNodes(standaloneView, [{ name: 'runtime-only' }]),
+    [runtimeOnly],
+  )
+})
+
+test('does not expose global-chain candidates without GLOBAL', () => {
+  const runtimeOnly = {
+    ...node,
+    recordId: 'c:0',
+    name: 'runtime-only',
+    source: { kind: 'core', proxyName: 'runtime-only' },
+  }
+  const globalMissingView = {
+    ...view,
+    global: null,
+    records: { 'c:0': runtimeOnly },
+    standalone: ['c:0'],
+  }
+
+  assert.deepEqual(
+    selectGlobalChainNodes(globalMissingView, [{ name: 'runtime-only' }]),
+    [],
   )
 })
 

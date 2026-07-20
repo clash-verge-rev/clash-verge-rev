@@ -205,6 +205,12 @@ export const selectRuntimeStandaloneNodes = (
   )
 }
 
+export const selectGlobalChainNodes = (
+  view: ProxyViewV1,
+  runtimeProxies: unknown,
+) =>
+  view.global === null ? [] : selectRuntimeStandaloneNodes(view, runtimeProxies)
+
 export const toNodeBinding = (node: ProxyNodeView): ProxyNodeBinding => ({
   name: node.name,
   source: node.source,

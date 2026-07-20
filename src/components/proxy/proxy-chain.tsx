@@ -45,7 +45,7 @@ import { TooltipIcon } from '@/components/base'
 import { useRuntimeConfig } from '@/hooks/use-clash'
 import { useAppRefreshers, useProxiesData } from '@/providers/app-data-context'
 import { updateProxyChainConfigInRuntime } from '@/services/cmds'
-import { resolveMember, selectRuntimeStandaloneNodes } from '@/types/proxy-view'
+import { resolveMember, selectGlobalChainNodes } from '@/types/proxy-view'
 import { debugLog } from '@/utils/debug'
 
 import { rebindProxyChainItems, type ProxyChainItem } from './proxy-chain-model'
@@ -276,7 +276,7 @@ export const ProxyChain = ({
     const runtimeProxies = (
       runtimeConfig as RuntimeConfigWithProxySequence | null
     )?.proxies
-    return selectRuntimeStandaloneNodes(proxyView, runtimeProxies)
+    return selectGlobalChainNodes(proxyView, runtimeProxies)
   }, [mode, proxyView, runtimeConfig, selectedGroup])
 
   const currentProxyChain = useMemo(
@@ -409,6 +409,11 @@ export const ProxyChain = ({
       return
     }
 
+    if (mode === 'global' && proxyView?.global === null) {
+      alert(t('proxies.page.chain.connectFailed') || '连接链式代理失败')
+      return
+    }
+
     if (
       currentProxyChain.length < 2 ||
       currentProxyChain.some(({ recordId }) => !recordId)
@@ -455,6 +460,7 @@ export const ProxyChain = ({
     t,
     refreshProxy,
     mode,
+    proxyView,
     selectedGroup,
     onUpdateChain,
   ])
@@ -539,6 +545,7 @@ export const ProxyChain = ({
                   currentProxyChain.some(
                     ({ recordId }) => recordId === undefined,
                   ) ||
+                  (mode === 'global' && proxyView?.global === null) ||
                   (mode !== 'global' && !selectedGroup)))
             }
             color={isConnected ? 'error' : 'success'}

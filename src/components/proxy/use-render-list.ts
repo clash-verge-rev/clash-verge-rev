@@ -7,7 +7,7 @@ import delayManager from '@/services/delay'
 import {
   isInteractableMember,
   resolveMember,
-  selectRuntimeStandaloneNodes,
+  selectGlobalChainNodes,
   type ProxyGroupView,
   type ProxyViewV1,
   type ResolvedProxyMember,
@@ -130,7 +130,7 @@ export const useRenderList = (
       }
     }
     if (!runtimeConfig) return []
-    return selectRuntimeStandaloneNodes(proxyView, runtimeProxies).map(
+    return selectGlobalChainNodes(proxyView, runtimeProxies).map(
       (node, memberIndex) => ({
         memberIndex,
         member: {
