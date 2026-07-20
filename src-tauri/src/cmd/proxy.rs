@@ -43,6 +43,7 @@ pub async fn get_proxy_view() -> CmdResult<ProxyViewV1> {
 
     let mihomo = Handle::mihomo().await;
     let (proxies, providers) = tokio::join!(mihomo.get_proxies(), mihomo.get_proxy_providers(),);
+    drop(mihomo);
     let proxies = proxies.stringify_err()?;
 
     Ok(ProxyViewBuilder::build(ProxyViewInput {
