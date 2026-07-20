@@ -106,6 +106,20 @@ export interface ProxyNodeBinding {
   source?: ProxyNodeView['source']
 }
 
+export type ProxyMemberOccurrenceBinding =
+  | { kind: 'group'; name: string; occurrence: number }
+  | {
+      kind: 'node'
+      name: string
+      source: ProxyNodeView['source']
+      occurrence: number
+    }
+
+export interface InteractableProxyMemberOccurrence {
+  memberIndex: number
+  member: InteractableProxyMember
+}
+
 export const getRecord = (view: ProxyViewV1, recordId: string) =>
   view.records[recordId]
 
@@ -144,6 +158,22 @@ export const memberDetails = (member: ResolvedProxyMember) =>
     : member.kind === 'group'
       ? member.group
       : undefined
+
+export function findCurrentGroupMember(
+  view: ProxyViewV1,
+  group: ProxyGroupView,
+): InteractableProxyMemberOccurrence | undefined {
+  if (!group.now) return undefined
+
+  for (const [memberIndex, memberRef] of group.members.entries()) {
+    const member = resolveMember(view, memberRef)
+    if (isInteractableMember(member) && member.ref.name === group.now) {
+      return { memberIndex, member }
+    }
+  }
+
+  return undefined
+}
 
 export const providerNameOf = (node: ProxyNodeView) =>
   node.source.kind === 'provider' ? node.source.providerName : undefined
@@ -188,6 +218,61 @@ const sameSource = (
   left.proxyName === right.proxyName &&
   (left.kind === 'core' ||
     (right.kind === 'provider' && left.providerName === right.providerName))
+
+const matchesMemberBinding = (
+  member: ResolvedProxyMember,
+  binding: ProxyMemberOccurrenceBinding,
+) =>
+  member.kind === binding.kind &&
+  member.ref.name === binding.name &&
+  (member.kind !== 'node' ||
+    (binding.kind === 'node' && sameSource(member.node.source, binding.source)))
+
+export function toMemberOccurrenceBinding(
+  members: readonly ResolvedProxyMember[],
+  memberIndex: number,
+): ProxyMemberOccurrenceBinding | undefined {
+  const member = members[memberIndex]
+  if (!member || !isInteractableMember(member)) return undefined
+
+  const binding: ProxyMemberOccurrenceBinding =
+    member.kind === 'node'
+      ? {
+          kind: 'node',
+          name: member.ref.name,
+          source: member.node.source,
+          occurrence: 0,
+        }
+      : { kind: 'group', name: member.ref.name, occurrence: 0 }
+
+  for (let index = 0; index < memberIndex; index += 1) {
+    if (matchesMemberBinding(members[index], binding)) {
+      binding.occurrence += 1
+    }
+  }
+
+  return binding
+}
+
+export function rebindMemberOccurrence(
+  members: readonly ResolvedProxyMember[],
+  binding: ProxyMemberOccurrenceBinding,
+): InteractableProxyMemberOccurrence | undefined {
+  let occurrence = 0
+
+  for (const [memberIndex, member] of members.entries()) {
+    if (
+      !isInteractableMember(member) ||
+      !matchesMemberBinding(member, binding)
+    ) {
+      continue
+    }
+    if (occurrence === binding.occurrence) return { memberIndex, member }
+    occurrence += 1
+  }
+
+  return undefined
+}
 
 export function rebindNode(
   candidates: readonly ProxyNodeView[],

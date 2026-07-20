@@ -44,21 +44,18 @@ import {
 } from '@/providers/app-data-context'
 import delayManager from '@/services/delay'
 import {
+  findCurrentGroupMember,
   getRecord,
   isInteractableMember,
   memberDetails,
-  rebindNode,
   resolveMember,
-  toNodeBinding,
   type ProxyGroupView,
-  type ProxyNodeBinding,
   type ResolvedProxyMember,
 } from '@/types/proxy-view'
 import { debugLog } from '@/utils/debug'
 
 // 本地存储的键名
 const STORAGE_KEY_GROUP = 'clash-verge-selected-proxy-group'
-const STORAGE_KEY_PROXY = 'clash-verge-selected-proxy'
 const STORAGE_KEY_SORT_TYPE = 'clash-verge-proxy-sort-type'
 
 const AUTO_CHECK_DEFAULT_INTERVAL_MINUTES = 5
@@ -69,10 +66,6 @@ interface ProxyOption {
   memberIndex: number
   member: ResolvedProxyMember
 }
-
-type SelectedProxy =
-  | { kind: 'group'; name: string }
-  | { kind: 'node'; binding: ProxyNodeBinding }
 
 // 排序类型: 默认 | 按延迟 | 按字母
 type ProxySortType = 0 | 1 | 2
@@ -208,7 +201,6 @@ export const CurrentProxyCard = () => {
   const [delaySortRefresh, setDelaySortRefresh] = useState(0)
 
   const [selectedGroupName, setSelectedGroupName] = useState('')
-  const [selectedProxy, setSelectedProxy] = useState<SelectedProxy | null>()
 
   const autoCheckInProgressRef = useRef(false)
   const latestTimeoutRef = useRef<number>(
@@ -259,60 +251,14 @@ export const CurrentProxyCard = () => {
     [optionsForGroup, selectedGroup],
   )
 
-  const chooseOption = useCallback((option: ProxyOption | undefined) => {
-    if (!option || !isInteractableMember(option.member)) return undefined
-    return option.member.kind === 'node'
-      ? ({ kind: 'node', binding: toNodeBinding(option.member.node) } as const)
-      : ({ kind: 'group', name: option.member.ref.name } as const)
-  }, [])
-
   useEffect(() => {
     if (!proxyView) return
     if (isDirectMode) {
       setSelectedGroupName('DIRECT')
-      const directNode =
-        proxyView.direct === null
-          ? undefined
-          : getRecord(proxyView, proxyView.direct)
-      setSelectedProxy(
-        directNode
-          ? { kind: 'node', binding: toNodeBinding(directNode) }
-          : null,
-      )
       return
     }
     if (isGlobalMode) {
       setSelectedGroupName(proxyView.global?.name ?? 'GLOBAL')
-      const options = optionsForGroup(proxyView.global)
-      setSelectedProxy((previous) => {
-        if (previous === null) return null
-        if (previous?.kind === 'node') {
-          const rebound = rebindNode(
-            options.flatMap(({ member }) =>
-              member.kind === 'node' ? [member.node] : [],
-            ),
-            previous.binding,
-          )
-          return rebound
-            ? { kind: 'node', binding: toNodeBinding(rebound) }
-            : null
-        }
-        if (previous?.kind === 'group') {
-          return options.some(
-            ({ member }) =>
-              member.kind === 'group' && member.ref.name === previous.name,
-          )
-            ? previous
-            : null
-        }
-        return (
-          chooseOption(
-            options.find(
-              ({ member }) => member.ref.name === proxyView.global?.now,
-            ) ?? options.find(({ member }) => isInteractableMember(member)),
-          ) ?? null
-        )
-      })
       return
     }
 
@@ -333,14 +279,11 @@ export const CurrentProxyCard = () => {
         : (primaryGroup?.name ?? '')
     if (nextGroup !== selectedGroupName) {
       setSelectedGroupName(nextGroup)
-      setSelectedProxy(undefined)
       if (nextGroup) writeProfileScopedItem(STORAGE_KEY_GROUP, nextGroup)
     }
   }, [
     isDirectMode,
     isGlobalMode,
-    chooseOption,
-    optionsForGroup,
     proxyView,
     readProfileScopedItem,
     selectableGroups,
@@ -348,52 +291,11 @@ export const CurrentProxyCard = () => {
     writeProfileScopedItem,
   ])
 
-  useEffect(() => {
-    if (!proxyView || isDirectMode || isGlobalMode || !selectedGroup) return
-    setSelectedProxy((previous) => {
-      if (previous === null) return null
-      if (previous?.kind === 'node') {
-        const rebound = rebindNode(
-          unsortedProxyOptions.flatMap(({ member }) =>
-            member.kind === 'node' ? [member.node] : [],
-          ),
-          previous.binding,
-        )
-        return rebound
-          ? { kind: 'node', binding: toNodeBinding(rebound) }
-          : null
-      }
-      if (previous?.kind === 'group') {
-        const current = unsortedProxyOptions.find(
-          ({ member }) =>
-            member.kind === 'group' && member.ref.name === previous.name,
-        )
-        return current ? previous : null
-      }
-      const current = unsortedProxyOptions.find(
-        ({ member }) => member.ref.name === selectedGroup.now,
-      )
-      return chooseOption(
-        current ??
-          unsortedProxyOptions.find(({ member }) =>
-            isInteractableMember(member),
-          ),
-      )
-    })
-  }, [
-    chooseOption,
-    isDirectMode,
-    isGlobalMode,
-    proxyView,
-    selectedGroup,
-    unsortedProxyOptions,
-  ])
-
   const currentOption = useMemo(() => {
-    if (!selectedProxy) return undefined
+    if (!proxyView) return undefined
     if (isDirectMode) {
       const node =
-        proxyView?.direct == null
+        proxyView.direct == null
           ? undefined
           : getRecord(proxyView, proxyView.direct)
       return node
@@ -407,25 +309,10 @@ export const CurrentProxyCard = () => {
           } satisfies ProxyOption)
         : undefined
     }
-    if (selectedProxy.kind === 'group') {
-      return unsortedProxyOptions.find(
-        ({ member }) =>
-          member.kind === 'group' && member.ref.name === selectedProxy.name,
-      )
-    }
-    const rebound = rebindNode(
-      unsortedProxyOptions.flatMap(({ member }) =>
-        member.kind === 'node' ? [member.node] : [],
-      ),
-      selectedProxy.binding,
-    )
-    return rebound
-      ? unsortedProxyOptions.find(
-          ({ member }) =>
-            member.kind === 'node' && member.node.recordId === rebound.recordId,
-        )
+    return selectedGroup
+      ? findCurrentGroupMember(proxyView, selectedGroup)
       : undefined
-  }, [isDirectMode, proxyView, selectedProxy, unsortedProxyOptions])
+  }, [isDirectMode, proxyView, selectedGroup])
 
   latestProxyMemberRef.current = currentOption?.member ?? null
 
@@ -433,25 +320,10 @@ export const CurrentProxyCard = () => {
     (event: SelectChangeEvent<string>) => {
       if (isGlobalMode || isDirectMode) return
       const newGroupName = event.target.value
-      const group = selectableGroups.find(({ name }) => name === newGroupName)
       setSelectedGroupName(newGroupName)
       writeProfileScopedItem(STORAGE_KEY_GROUP, newGroupName)
-      const options = optionsForGroup(group ?? null)
-      setSelectedProxy(
-        chooseOption(
-          options.find(({ member }) => member.ref.name === group?.now) ??
-            options.find(({ member }) => isInteractableMember(member)),
-        ) ?? null,
-      )
     },
-    [
-      chooseOption,
-      isDirectMode,
-      isGlobalMode,
-      optionsForGroup,
-      selectableGroups,
-      writeProfileScopedItem,
-    ],
+    [isDirectMode, isGlobalMode, writeProfileScopedItem],
   )
 
   const optionValue = (option: ProxyOption) =>
@@ -467,26 +339,25 @@ export const CurrentProxyCard = () => {
       const option = unsortedProxyOptions.find(
         (candidate) => optionValue(candidate) === event.target.value,
       )
-      if (!option || !isInteractableMember(option.member)) return
-      const previousProxy = currentOption?.member.ref.name
+      if (!selectedGroup || !option || !isInteractableMember(option.member)) {
+        return
+      }
+      const previousProxy = selectedGroup.now
       const nextName = option.member.ref.name
-      setSelectedProxy(chooseOption(option))
-      if (!isGlobalMode) writeProfileScopedItem(STORAGE_KEY_PROXY, nextName)
       handleSelectChange(
-        selectedGroupName,
+        selectedGroup.name,
         previousProxy,
-        isGlobalMode || isDirectMode,
-      )({ target: { value: nextName } })
+        isGlobalMode,
+      )({
+        target: { value: nextName },
+      })
     },
     [
-      chooseOption,
-      currentOption,
       handleSelectChange,
       isDirectMode,
       isGlobalMode,
-      selectedGroupName,
+      selectedGroup,
       unsortedProxyOptions,
-      writeProfileScopedItem,
     ],
   )
 
