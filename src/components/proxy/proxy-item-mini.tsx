@@ -5,32 +5,46 @@ import { useTranslation } from 'react-i18next'
 import { BaseLoading } from '@/components/base'
 import { useProxyDelayState } from '@/hooks/use-proxy-delay-state'
 import delayManager from '@/services/delay'
+import {
+  memberDetails,
+  providerNameOf,
+  type ProxyGroupView,
+  type ResolvedProxyMember,
+} from '@/types/proxy-view'
 
 interface Props {
-  group: IProxyGroupItem
-  proxy: IProxyItem
+  group: ProxyGroupView
+  member: ResolvedProxyMember
   selected: boolean
   showType?: boolean
-  onClick?: (name: string) => void
+  onClick?: (member: ResolvedProxyMember) => void
 }
 
 // 多列布局
 export const ProxyItemMini = (props: Props) => {
-  const { group, proxy, selected, showType = true, onClick } = props
+  const { group, member, selected, showType = true, onClick } = props
+  const details = memberDetails(member)
+  const unresolved = member.kind === 'unresolved'
+  const name = member.ref.name
+  const type = unresolved ? member.ref.reason : (details?.type ?? '')
+  const provider =
+    member.kind === 'node' ? providerNameOf(member.node) : undefined
+  const now = member.kind === 'group' ? member.group.now : undefined
 
   const { t } = useTranslation()
 
   // -1/<=0 为不显示，-2 为 loading
   const { delayValue, isPreset, timeout, onDelay } = useProxyDelayState(
-    proxy,
+    member,
     group.name,
   )
 
   return (
     <ListItemButton
       dense
-      selected={selected}
-      onClick={() => onClick?.(proxy.name)}
+      disabled={unresolved}
+      selected={!unresolved && selected}
+      onClick={unresolved ? undefined : () => onClick?.(member)}
       sx={[
         {
           height: 56,
@@ -70,10 +84,7 @@ export const ProxyItemMini = (props: Props) => {
         },
       ]}
     >
-      <Box
-        title={`${proxy.name}\n${proxy.now ?? ''}`}
-        sx={{ overflow: 'hidden' }}
-      >
+      <Box title={`${name}\n${now ?? ''}`} sx={{ overflow: 'hidden' }}>
         <Typography
           variant="body2"
           component="div"
@@ -86,7 +97,7 @@ export const ProxyItemMini = (props: Props) => {
             whiteSpace: 'nowrap',
           }}
         >
-          {proxy.name}
+          {name}
         </Typography>
 
         {showType && (
@@ -98,7 +109,7 @@ export const ProxyItemMini = (props: Props) => {
               marginTop: '4px',
             }}
           >
-            {proxy.now && (
+            {now && (
               <Typography
                 variant="body2"
                 component="div"
@@ -112,38 +123,38 @@ export const ProxyItemMini = (props: Props) => {
                   marginRight: '8px',
                 }}
               >
-                {proxy.now}
+                {now}
               </Typography>
             )}
-            {!!proxy.provider && (
+            {!!provider && (
               <TypeBox color="text.secondary" component="span">
-                {proxy.provider}
+                {provider}
               </TypeBox>
             )}
             <TypeBox color="text.secondary" component="span">
-              {proxy.type}
+              {type}
             </TypeBox>
-            {proxy.udp && (
+            {!unresolved && details?.udp && (
               <TypeBox color="text.secondary" component="span">
                 UDP
               </TypeBox>
             )}
-            {proxy.xudp && (
+            {!unresolved && details?.xudp && (
               <TypeBox color="text.secondary" component="span">
                 XUDP
               </TypeBox>
             )}
-            {proxy.tfo && (
+            {!unresolved && details?.tfo && (
               <TypeBox color="text.secondary" component="span">
                 TFO
               </TypeBox>
             )}
-            {proxy.mptcp && (
+            {!unresolved && details?.mptcp && (
               <TypeBox color="text.secondary" component="span">
                 MPTCP
               </TypeBox>
             )}
-            {proxy.smux && (
+            {!unresolved && details?.smux && (
               <TypeBox color="text.secondary" component="span">
                 SMUX
               </TypeBox>
@@ -154,18 +165,18 @@ export const ProxyItemMini = (props: Props) => {
       <Box
         sx={{ ml: 0.5, color: 'primary.main', display: isPreset ? 'none' : '' }}
       >
-        {delayValue === -2 && (
+        {!unresolved && delayValue === -2 && (
           <Widget>
             <BaseLoading />
           </Widget>
         )}
-        {delayValue !== -2 && (
+        {!unresolved && delayValue !== -2 && (
           <Widget
             className="the-check"
             onClick={(e) => {
               e.preventDefault()
               e.stopPropagation()
-              onDelay()
+              void onDelay()
             }}
             sx={({ palette }) => ({
               display: 'none', // hover 时显示
@@ -176,14 +187,14 @@ export const ProxyItemMini = (props: Props) => {
           </Widget>
         )}
 
-        {delayValue >= 0 && (
+        {!unresolved && delayValue >= 0 && (
           // 显示延迟
           <Widget
             className="the-delay"
             onClick={(e) => {
               e.preventDefault()
               e.stopPropagation()
-              onDelay(proxy.provider)
+              void onDelay()
             }}
             sx={({ palette }) => ({
               color: delayManager.formatDelayColor(delayValue, timeout),
@@ -193,7 +204,8 @@ export const ProxyItemMini = (props: Props) => {
             {delayManager.formatDelay(delayValue, timeout)}
           </Widget>
         )}
-        {proxy.type !== 'Direct' &&
+        {!unresolved &&
+          type !== 'Direct' &&
           delayValue !== -2 &&
           delayValue < 0 &&
           selected && (
@@ -204,10 +216,10 @@ export const ProxyItemMini = (props: Props) => {
             />
           )}
       </Box>
-      {group.fixed && group.fixed === proxy.name && (
+      {!unresolved && group.fixed && group.fixed === name && (
         // 展示 fixed 状态
         <span
-          className={proxy.name === group.now ? 'the-pin' : 'the-unpin'}
+          className={name === group.now ? 'the-pin' : 'the-unpin'}
           title={
             group.type === 'URLTest'
               ? t('proxies.page.labels.delayCheckReset')

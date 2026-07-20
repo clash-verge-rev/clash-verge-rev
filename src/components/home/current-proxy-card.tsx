@@ -31,7 +31,6 @@ import { useLockFn } from 'ahooks'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
-import { delayGroup } from 'tauri-plugin-mihomo-api'
 
 import { EnhancedCard } from '@/components/home/enhanced-card'
 import { useProfiles } from '@/hooks/use-profiles'
@@ -45,6 +44,17 @@ import {
   useRulesData,
 } from '@/providers/app-data-context'
 import delayManager from '@/services/delay'
+import {
+  getRecord,
+  isInteractableMember,
+  memberDetails,
+  rebindNode,
+  resolveMember,
+  toNodeBinding,
+  type ProxyGroupView,
+  type ProxyNodeBinding,
+  type ResolvedProxyMember,
+} from '@/types/proxy-view'
 import { debugLog } from '@/utils/debug'
 
 // 本地存储的键名
@@ -57,8 +67,13 @@ const AUTO_CHECK_INITIAL_DELAY_MS = 100
 
 // 代理节点信息接口
 interface ProxyOption {
-  name: string
+  memberIndex: number
+  member: ResolvedProxyMember
 }
+
+type SelectedProxy =
+  | { kind: 'group'; name: string }
+  | { kind: 'node'; binding: ProxyNodeBinding }
 
 // 排序类型: 默认 | 按延迟 | 按字母
 type ProxySortType = 0 | 1 | 2
@@ -111,7 +126,7 @@ export const CurrentProxyCard = () => {
   const { t } = useTranslation()
   const navigate = useNavigate()
   const theme = useTheme()
-  const { proxies } = useProxiesData()
+  const { proxyView } = useProxiesData()
   const { clashConfig } = useClashConfigData()
   const { rules } = useRulesData()
   const { refreshProxy } = useAppRefreshers()
@@ -218,297 +233,293 @@ export const CurrentProxyCard = () => {
     return ''
   }, [rules, normalizePolicyName])
 
-  type ProxyGroupOption = {
-    name: string
-    now: string
-    all: string[]
-    type?: string
-  }
-
-  type ProxyState = {
-    proxyData: {
-      groups: ProxyGroupOption[]
-      records: Record<string, any>
-    }
-    selection: {
-      group: string
-      proxy: string
-    }
-    displayProxy: any
-  }
-
-  const [state, setState] = useState<ProxyState>({
-    proxyData: {
-      groups: [],
-      records: {},
-    },
-    selection: {
-      group: '',
-      proxy: '',
-    },
-    displayProxy: null,
-  })
+  const [selectedGroupName, setSelectedGroupName] = useState('')
+  const [selectedProxy, setSelectedProxy] = useState<SelectedProxy | null>()
 
   const autoCheckInProgressRef = useRef(false)
   const latestTimeoutRef = useRef<number>(
     verge?.default_latency_timeout || 10000,
   )
-  const latestProxyRecordRef = useRef<any | null>(null)
+  const latestProxyMemberRef = useRef<ResolvedProxyMember | null>(null)
 
   useEffect(() => {
     latestTimeoutRef.current = verge?.default_latency_timeout || 10000
   }, [verge?.default_latency_timeout])
 
-  useEffect(() => {
-    if (!state.selection.proxy) {
-      latestProxyRecordRef.current = null
-      return
-    }
-    latestProxyRecordRef.current =
-      state.proxyData.records?.[state.selection.proxy] || null
-  }, [state.selection.proxy, state.proxyData.records])
+  const selectableGroups = useMemo(() => {
+    if (!proxyView) return []
+    const groups = proxyView.groups.filter(
+      (group) =>
+        !group.hidden &&
+        (group.type === 'Selector' || group.type === 'URLTest'),
+    )
+    const matchGroup =
+      proxyView.groups.find(({ name }) => name === matchPolicyName) ??
+      (proxyView.global?.name === matchPolicyName
+        ? proxyView.global
+        : undefined)
+    return matchGroup && !groups.includes(matchGroup)
+      ? [matchGroup, ...groups]
+      : groups
+  }, [matchPolicyName, proxyView])
 
-  // 初始化选择的组
-  useEffect(() => {
-    if (!proxies) return
-
-    const getPrimaryGroupName = () => {
-      if (!proxies?.groups?.length) return ''
-
-      const primaryKeywords = [
-        'auto',
-        'select',
-        'proxy',
-        '节点选择',
-        '自动选择',
-      ]
-      const primaryGroup =
-        proxies.groups.find((group: { name: string }) =>
-          primaryKeywords.some((keyword) =>
-            group.name.toLowerCase().includes(keyword.toLowerCase()),
-          ),
-        ) ||
-        proxies.groups.filter((g: { name: string }) => g.name !== 'GLOBAL')[0]
-
-      return primaryGroup?.name || ''
-    }
-
-    const primaryGroupName = getPrimaryGroupName()
-
-    // 根据模式确定初始组
-    if (isGlobalMode) {
-      setState((prev) => ({
-        ...prev,
-        selection: {
-          ...prev.selection,
-          group: 'GLOBAL',
-        },
-      }))
-    } else if (isDirectMode) {
-      setState((prev) => ({
-        ...prev,
-        selection: {
-          ...prev.selection,
-          group: 'DIRECT',
-        },
-      }))
-    } else {
-      const savedGroup = readProfileScopedItem(STORAGE_KEY_GROUP)
-      setState((prev) => ({
-        ...prev,
-        selection: {
-          ...prev.selection,
-          group: savedGroup || primaryGroupName || '',
-        },
-      }))
-    }
-  }, [isGlobalMode, isDirectMode, proxies, readProfileScopedItem])
-
-  // 监听代理数据变化，更新状态
-  useEffect(() => {
-    if (!proxies) return
-
-    setState((prev) => {
-      const groupsMap = new Map<string, ProxyGroupOption>()
-
-      const registerGroup = (group: any, fallbackName?: string) => {
-        if (!group && !fallbackName) return
-
-        const rawName =
-          typeof group?.name === 'string' && group.name.length > 0
-            ? group.name
-            : fallbackName
-        const name = normalizePolicyName(rawName)
-        if (!name || groupsMap.has(name)) return
-
-        const rawAll = (
-          Array.isArray(group?.all)
-            ? (group.all as Array<string | { name?: string }>)
-            : []
-        ) as Array<string | { name?: string }>
-        const allNames = rawAll
-          .map((item) =>
-            typeof item === 'string'
-              ? normalizePolicyName(item)
-              : normalizePolicyName(item?.name),
-          )
-          .filter((value): value is string => value.length > 0)
-
-        const uniqueAll = Array.from(new Set(allNames))
-        if (uniqueAll.length === 0) return
-
-        groupsMap.set(name, {
-          name,
-          now: normalizePolicyName(group?.now),
-          all: uniqueAll,
-          type: group?.type,
-        })
-      }
-
-      if (matchPolicyName) {
-        const matchGroup =
-          proxies.groups?.find(
-            (g: { name: string }) => g.name === matchPolicyName,
-          ) ||
-          (proxies.global?.name === matchPolicyName ? proxies.global : null) ||
-          proxies.records?.[matchPolicyName]
-        registerGroup(matchGroup, matchPolicyName)
-      }
-
-      ;(proxies.groups || [])
-        .filter(
-          (g: { type?: string; hidden?: boolean }) =>
-            !g?.hidden && (g?.type === 'Selector' || g?.type === 'URLTest'),
-        )
-        .forEach((selectableGroup: any) => {
-          registerGroup(selectableGroup)
-        })
-
-      const filteredGroups = Array.from(groupsMap.values())
-
-      let newProxy = ''
-      let newDisplayProxy = null
-      let newGroup = prev.selection.group
-
-      if (isDirectMode) {
-        newGroup = 'DIRECT'
-        newProxy = 'DIRECT'
-        newDisplayProxy = proxies.records?.DIRECT || { name: 'DIRECT' }
-      } else if (isGlobalMode && proxies.global) {
-        newGroup = 'GLOBAL'
-        newProxy = proxies.global.now || ''
-        newDisplayProxy = proxies.records?.[newProxy] || null
-      } else {
-        const currentGroup = filteredGroups.find(
-          (g: { name: string }) => g.name === prev.selection.group,
-        )
-
-        if (!currentGroup && filteredGroups.length > 0) {
-          const firstGroup = filteredGroups[0]
-          if (firstGroup) {
-            newGroup = firstGroup.name
-            newProxy = firstGroup.now || firstGroup.all[0] || ''
-            newDisplayProxy = proxies.records?.[newProxy] || null
-
-            if (!isGlobalMode && !isDirectMode) {
-              writeProfileScopedItem(STORAGE_KEY_GROUP, newGroup)
-              if (newProxy) {
-                writeProfileScopedItem(STORAGE_KEY_PROXY, newProxy)
-              }
-            }
-          }
-        } else if (currentGroup) {
-          newProxy = currentGroup.now || currentGroup.all[0] || ''
-          newDisplayProxy = proxies.records?.[newProxy] || null
-        }
-      }
-
-      return {
-        proxyData: {
-          groups: filteredGroups,
-          records: proxies.records || {},
-        },
-        selection: {
-          group: newGroup,
-          proxy: newProxy,
-        },
-        displayProxy: newDisplayProxy,
-      }
-    })
+  const selectedGroup = useMemo<ProxyGroupView | null>(() => {
+    if (!proxyView || isDirectMode) return null
+    if (isGlobalMode) return proxyView.global
+    return (
+      selectableGroups.find(({ name }) => name === selectedGroupName) ?? null
+    )
   }, [
-    proxies,
-    isGlobalMode,
     isDirectMode,
-    writeProfileScopedItem,
-    normalizePolicyName,
-    matchPolicyName,
+    isGlobalMode,
+    proxyView,
+    selectableGroups,
+    selectedGroupName,
   ])
 
-  // 处理代理组变更
+  const optionsForGroup = useCallback(
+    (group: ProxyGroupView | null): ProxyOption[] =>
+      proxyView && group
+        ? group.members.map((member, memberIndex) => ({
+            memberIndex,
+            member: resolveMember(proxyView, member),
+          }))
+        : [],
+    [proxyView],
+  )
+
+  const unsortedProxyOptions = useMemo(
+    () => optionsForGroup(selectedGroup),
+    [optionsForGroup, selectedGroup],
+  )
+
+  const chooseOption = useCallback((option: ProxyOption | undefined) => {
+    if (!option || !isInteractableMember(option.member)) return undefined
+    return option.member.kind === 'node'
+      ? ({ kind: 'node', binding: toNodeBinding(option.member.node) } as const)
+      : ({ kind: 'group', name: option.member.ref.name } as const)
+  }, [])
+
+  useEffect(() => {
+    if (!proxyView) return
+    if (isDirectMode) {
+      setSelectedGroupName('DIRECT')
+      const directNode =
+        proxyView.direct === null
+          ? undefined
+          : getRecord(proxyView, proxyView.direct)
+      setSelectedProxy(
+        directNode
+          ? { kind: 'node', binding: toNodeBinding(directNode) }
+          : null,
+      )
+      return
+    }
+    if (isGlobalMode) {
+      setSelectedGroupName(proxyView.global?.name ?? 'GLOBAL')
+      const options = optionsForGroup(proxyView.global)
+      setSelectedProxy((previous) => {
+        if (previous === null) return null
+        if (previous?.kind === 'node') {
+          const rebound = rebindNode(
+            options.flatMap(({ member }) =>
+              member.kind === 'node' ? [member.node] : [],
+            ),
+            previous.binding,
+          )
+          return rebound
+            ? { kind: 'node', binding: toNodeBinding(rebound) }
+            : null
+        }
+        if (previous?.kind === 'group') {
+          return options.some(
+            ({ member }) =>
+              member.kind === 'group' && member.ref.name === previous.name,
+          )
+            ? previous
+            : null
+        }
+        return (
+          chooseOption(
+            options.find(
+              ({ member }) => member.ref.name === proxyView.global?.now,
+            ) ?? options.find(({ member }) => isInteractableMember(member)),
+          ) ?? null
+        )
+      })
+      return
+    }
+
+    const savedGroup = readProfileScopedItem(STORAGE_KEY_GROUP)
+    const primaryKeywords = ['auto', 'select', 'proxy', '节点选择', '自动选择']
+    const primaryGroup =
+      selectableGroups.find((group) =>
+        primaryKeywords.some((keyword) =>
+          group.name.toLowerCase().includes(keyword.toLowerCase()),
+        ),
+      ) ?? selectableGroups[0]
+    const nextGroup = selectableGroups.some(
+      ({ name }) => name === selectedGroupName,
+    )
+      ? selectedGroupName
+      : selectableGroups.some(({ name }) => name === savedGroup)
+        ? savedGroup!
+        : (primaryGroup?.name ?? '')
+    if (nextGroup !== selectedGroupName) {
+      setSelectedGroupName(nextGroup)
+      setSelectedProxy(undefined)
+      if (nextGroup) writeProfileScopedItem(STORAGE_KEY_GROUP, nextGroup)
+    }
+  }, [
+    isDirectMode,
+    isGlobalMode,
+    chooseOption,
+    optionsForGroup,
+    proxyView,
+    readProfileScopedItem,
+    selectableGroups,
+    selectedGroupName,
+    writeProfileScopedItem,
+  ])
+
+  useEffect(() => {
+    if (!proxyView || isDirectMode || isGlobalMode || !selectedGroup) return
+    setSelectedProxy((previous) => {
+      if (previous === null) return null
+      if (previous?.kind === 'node') {
+        const rebound = rebindNode(
+          unsortedProxyOptions.flatMap(({ member }) =>
+            member.kind === 'node' ? [member.node] : [],
+          ),
+          previous.binding,
+        )
+        return rebound
+          ? { kind: 'node', binding: toNodeBinding(rebound) }
+          : null
+      }
+      if (previous?.kind === 'group') {
+        const current = unsortedProxyOptions.find(
+          ({ member }) =>
+            member.kind === 'group' && member.ref.name === previous.name,
+        )
+        return current ? previous : null
+      }
+      const current = unsortedProxyOptions.find(
+        ({ member }) => member.ref.name === selectedGroup.now,
+      )
+      return chooseOption(
+        current ??
+          unsortedProxyOptions.find(({ member }) =>
+            isInteractableMember(member),
+          ),
+      )
+    })
+  }, [
+    chooseOption,
+    isDirectMode,
+    isGlobalMode,
+    proxyView,
+    selectedGroup,
+    unsortedProxyOptions,
+  ])
+
+  const currentOption = useMemo(() => {
+    if (!selectedProxy) return undefined
+    if (isDirectMode) {
+      const node =
+        proxyView?.direct == null
+          ? undefined
+          : getRecord(proxyView, proxyView.direct)
+      return node
+        ? ({
+            memberIndex: 0,
+            member: {
+              kind: 'node',
+              ref: { kind: 'node', name: node.name, recordId: node.recordId },
+              node,
+            },
+          } satisfies ProxyOption)
+        : undefined
+    }
+    if (selectedProxy.kind === 'group') {
+      return unsortedProxyOptions.find(
+        ({ member }) =>
+          member.kind === 'group' && member.ref.name === selectedProxy.name,
+      )
+    }
+    const rebound = rebindNode(
+      unsortedProxyOptions.flatMap(({ member }) =>
+        member.kind === 'node' ? [member.node] : [],
+      ),
+      selectedProxy.binding,
+    )
+    return rebound
+      ? unsortedProxyOptions.find(
+          ({ member }) =>
+            member.kind === 'node' && member.node.recordId === rebound.recordId,
+        )
+      : undefined
+  }, [isDirectMode, proxyView, selectedProxy, unsortedProxyOptions])
+
+  latestProxyMemberRef.current = currentOption?.member ?? null
+
   const handleGroupChange = useCallback(
     (event: SelectChangeEvent<string>) => {
       if (isGlobalMode || isDirectMode) return
-
-      const newGroup = event.target.value
-
-      writeProfileScopedItem(STORAGE_KEY_GROUP, newGroup)
-
-      setState((prev) => {
-        const group = prev.proxyData.groups.find(
-          (g: { name: string }) => g.name === newGroup,
-        )
-        if (group) {
-          return {
-            ...prev,
-            selection: {
-              group: newGroup,
-              proxy: group.now,
-            },
-            displayProxy: prev.proxyData.records[group.now] || null,
-          }
-        }
-        return {
-          ...prev,
-          selection: {
-            ...prev.selection,
-            group: newGroup,
-          },
-        }
-      })
+      const newGroupName = event.target.value
+      const group = selectableGroups.find(({ name }) => name === newGroupName)
+      setSelectedGroupName(newGroupName)
+      writeProfileScopedItem(STORAGE_KEY_GROUP, newGroupName)
+      const options = optionsForGroup(group ?? null)
+      setSelectedProxy(
+        chooseOption(
+          options.find(({ member }) => member.ref.name === group?.now) ??
+            options.find(({ member }) => isInteractableMember(member)),
+        ) ?? null,
+      )
     },
-    [isGlobalMode, isDirectMode, writeProfileScopedItem],
+    [
+      chooseOption,
+      isDirectMode,
+      isGlobalMode,
+      optionsForGroup,
+      selectableGroups,
+      writeProfileScopedItem,
+    ],
   )
 
-  // 处理代理节点变更
+  const optionValue = (option: ProxyOption) =>
+    `${option.memberIndex}:${
+      option.member.kind === 'node'
+        ? option.member.node.recordId
+        : option.member.ref.name
+    }`
+
   const handleProxyChange = useCallback(
     (event: SelectChangeEvent<string>) => {
       if (isDirectMode) return
-
-      const newProxy = event.target.value
-      const currentGroup = state.selection.group
-      const previousProxy = state.selection.proxy
-
-      setState((prev: ProxyState) => ({
-        ...prev,
-        selection: {
-          ...prev.selection,
-          proxy: newProxy,
-        },
-        displayProxy: prev.proxyData.records[newProxy] || null,
-      }))
-
-      if (!isGlobalMode && !isDirectMode) {
-        writeProfileScopedItem(STORAGE_KEY_PROXY, newProxy)
-      }
-
-      const skipConfigSave = isGlobalMode || isDirectMode
-      handleSelectChange(currentGroup, previousProxy, skipConfigSave)(event)
+      const option = unsortedProxyOptions.find(
+        (candidate) => optionValue(candidate) === event.target.value,
+      )
+      if (!option || !isInteractableMember(option.member)) return
+      const previousProxy = currentOption?.member.ref.name
+      const nextName = option.member.ref.name
+      setSelectedProxy(chooseOption(option))
+      if (!isGlobalMode) writeProfileScopedItem(STORAGE_KEY_PROXY, nextName)
+      handleSelectChange(
+        selectedGroupName,
+        previousProxy,
+        isGlobalMode || isDirectMode,
+      )({ target: { value: nextName } })
     },
     [
+      chooseOption,
+      currentOption,
+      handleSelectChange,
       isDirectMode,
       isGlobalMode,
-      state.selection,
-      handleSelectChange,
+      selectedGroupName,
+      unsortedProxyOptions,
       writeProfileScopedItem,
     ],
   )
@@ -518,20 +529,18 @@ export const CurrentProxyCard = () => {
     navigate('/proxies')
   }, [navigate])
 
-  // 获取要显示的代理节点
-  const currentProxy = useMemo(() => {
-    return state.displayProxy
-  }, [state.displayProxy])
+  const currentMember = currentOption?.member
+  const currentProxy = currentMember ? memberDetails(currentMember) : undefined
+  const selectedProxyName = currentMember?.ref.name ?? ''
 
-  // 获取当前节点的延迟（增加非空校验）
   const currentDelay =
-    currentProxy && state.selection.group
-      ? delayManager.getDelayFix(currentProxy, state.selection.group)
+    currentMember && selectedGroupName
+      ? delayManager.getDelayFix(currentMember, selectedGroupName)
       : -1
 
   // 信号图标（增加非空校验）
   const signalInfo =
-    currentProxy && state.selection.group
+    currentProxy && selectedGroupName
       ? getSignalIcon(currentDelay)
       : { icon: <SignalNone />, text: '未初始化', color: 'text.secondary' }
 
@@ -539,13 +548,13 @@ export const CurrentProxyCard = () => {
     if (autoCheckInProgressRef.current) return
     if (isDirectMode) return
 
-    const groupName = state.selection.group
-    const proxyName = state.selection.proxy
+    const groupName = selectedGroupName
+    const proxyName = selectedProxyName
 
     if (!groupName || !proxyName) return
 
-    const proxyRecord = latestProxyRecordRef.current
-    if (!proxyRecord) {
+    const proxyMember = latestProxyMemberRef.current
+    if (!proxyMember || !isInteractableMember(proxyMember)) {
       debugLog(
         `[CurrentProxyCard] 自动延迟检测跳过，组: ${groupName}, 节点: ${proxyName} 未找到`,
       )
@@ -560,12 +569,7 @@ export const CurrentProxyCard = () => {
       debugLog(
         `[CurrentProxyCard] 自动检测当前节点延迟，组: ${groupName}, 节点: ${proxyName}`,
       )
-      await delayManager.checkDelay(
-        proxyRecord.name,
-        groupName,
-        timeout,
-        proxyRecord.provider,
-      )
+      await delayManager.checkDelay(proxyMember, groupName, timeout)
     } catch (error) {
       console.error(
         `[CurrentProxyCard] 自动检测当前节点延迟失败，组: ${groupName}, 节点: ${proxyName}`,
@@ -581,15 +585,15 @@ export const CurrentProxyCard = () => {
   }, [
     isDirectMode,
     refreshProxy,
-    state.selection.group,
-    state.selection.proxy,
+    selectedGroupName,
+    selectedProxyName,
     sortType,
   ])
 
   useEffect(() => {
     if (isDirectMode) return
     if (!autoDelayEnabled) return
-    if (!state.selection.group || !state.selection.proxy) return
+    if (!selectedGroupName || !selectedProxyName) return
 
     let disposed = false
     let intervalTimer: ReturnType<typeof setTimeout> | null = null
@@ -617,23 +621,22 @@ export const CurrentProxyCard = () => {
     checkCurrentProxyDelay,
     autoDelayIntervalMs,
     isDirectMode,
-    state.selection.group,
-    state.selection.proxy,
+    selectedGroupName,
+    selectedProxyName,
     autoDelayEnabled,
   ])
 
   // 自定义渲染选择框中的值
-  const renderProxyValue = (selected: string) => {
-    if (!selected || !state.proxyData.records[selected]) return selected
-
+  const renderProxyValue = () => {
+    if (!currentMember) return selectedProxyName
     const delayValue = delayManager.getDelayFix(
-      state.proxyData.records[selected],
-      state.selection.group,
+      currentMember,
+      selectedGroupName,
     )
 
     return (
       <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-        <Typography noWrap>{selected}</Typography>
+        <Typography noWrap>{selectedProxyName}</Typography>
         <Chip
           size="small"
           label={delayManager.formatDelay(delayValue)}
@@ -652,50 +655,24 @@ export const CurrentProxyCard = () => {
 
   // 延迟测试
   const handleCheckDelay = useLockFn(async () => {
-    const groupName = state.selection.group
+    const groupName = selectedGroupName
     if (!groupName || isDirectMode) return
 
     debugLog(`[CurrentProxyCard] 开始测试所有延迟，组: ${groupName}`)
 
     const timeout = verge?.default_latency_timeout || 10000
 
-    // 获取当前组的所有代理
-    const delayProxies: IProxyItem[] = []
+    const interactable = unsortedProxyOptions
+      .map(({ member }) => member)
+      .filter(isInteractableMember)
+      .filter(({ ref }) => ref.name !== 'DIRECT' && ref.name !== 'REJECT')
 
-    if (isGlobalMode && proxies?.global) {
-      // 全局模式
-      const allProxies = proxies.global.all
-        .filter((p: any) => {
-          const name = typeof p === 'string' ? p : p.name
-          return name !== 'DIRECT' && name !== 'REJECT'
-        })
-        .map((p: any) => (typeof p === 'string' ? p : p.name))
-
-      allProxies.forEach((name: string) => {
-        const proxy = state.proxyData.records[name]
-        delayProxies.push(proxy)
-      })
-    } else {
-      // 规则模式
-      const group = state.proxyData.groups.find((g) => g.name === groupName)
-      if (group) {
-        group.all.forEach((name: string) => {
-          const proxy = state.proxyData.records[name]
-          delayProxies.push(proxy)
-        })
-      }
-    }
-
-    // 测试全部节点
-    if (delayProxies.length > 0) {
+    if (interactable.length > 0) {
       const url = delayManager.getUrl(groupName)
       debugLog(`[CurrentProxyCard] 测试URL: ${url}, 超时: ${timeout}ms`)
 
       try {
-        await Promise.race([
-          delayManager.checkListDelay(delayProxies, groupName, timeout),
-          delayGroup(groupName, url, timeout),
-        ])
+        await delayManager.checkListDelay(interactable, groupName, timeout)
         debugLog(`[CurrentProxyCard] 延迟测试完成，组: ${groupName}`)
       } catch (error) {
         console.error(
@@ -715,10 +692,6 @@ export const CurrentProxyCard = () => {
   const proxyOptions = useMemo(() => {
     const sortWithLatency = (proxiesToSort: ProxyOption[]) => {
       if (!proxiesToSort || sortType === 0) return proxiesToSort
-
-      if (!state.proxyData.records || !state.selection.group) {
-        return proxiesToSort
-      }
 
       const list = [...proxiesToSort]
 
@@ -740,64 +713,34 @@ export const CurrentProxyCard = () => {
         }
 
         list.sort((a, b) => {
-          const recordA = state.proxyData.records[a.name]
-          const recordB = state.proxyData.records[b.name]
-
-          const [ar, av] = recordA
-            ? categorizeDelay(
-                delayManager.getDelayFix(recordA, state.selection.group),
-              )
-            : [6, Number.MAX_SAFE_INTEGER]
-          const [br, bv] = recordB
-            ? categorizeDelay(
-                delayManager.getDelayFix(recordB, state.selection.group),
-              )
-            : [6, Number.MAX_SAFE_INTEGER]
+          const [ar, av] = categorizeDelay(
+            delayManager.getDelayFix(a.member, selectedGroupName),
+          )
+          const [br, bv] = categorizeDelay(
+            delayManager.getDelayFix(b.member, selectedGroupName),
+          )
 
           if (ar !== br) return ar - br
           if (av !== bv) return av - bv
-          return refreshTick >= 0 ? a.name.localeCompare(b.name) : 0
+          return refreshTick >= 0
+            ? a.member.ref.name.localeCompare(b.member.ref.name)
+            : 0
         })
       } else {
-        list.sort((a, b) => a.name.localeCompare(b.name))
+        list.sort((a, b) => a.member.ref.name.localeCompare(b.member.ref.name))
       }
 
       return list
     }
 
     if (isDirectMode) {
-      return [{ name: 'DIRECT' }]
+      return []
     }
-    if (isGlobalMode && proxies?.global) {
-      const options = proxies.global.all
-        .filter((p: any) => {
-          const name = typeof p === 'string' ? p : p.name
-          return name !== 'DIRECT' && name !== 'REJECT'
-        })
-        .map((p: any) => ({
-          name: typeof p === 'string' ? p : p.name,
-        }))
-
-      return sortWithLatency(options)
-    }
-
-    // 规则模式
-    const group = state.selection.group
-      ? state.proxyData.groups.find((g) => g.name === state.selection.group)
-      : null
-
-    if (group) {
-      const options = group.all.map((name) => ({ name }))
-      return sortWithLatency(options)
-    }
-
-    return []
+    return sortWithLatency(unsortedProxyOptions)
   }, [
     isDirectMode,
-    isGlobalMode,
-    proxies,
-    state.proxyData,
-    state.selection.group,
+    unsortedProxyOptions,
+    selectedGroupName,
     sortType,
     delaySortRefresh,
     defaultLatencyTimeout,
@@ -856,7 +799,7 @@ export const CurrentProxyCard = () => {
                 size="small"
                 color="inherit"
                 onClick={handleCheckDelay}
-                disabled={isDirectMode}
+                disabled={isDirectMode || unsortedProxyOptions.length === 0}
               >
                 <NetworkCheckRounded />
               </IconButton>
@@ -885,7 +828,7 @@ export const CurrentProxyCard = () => {
     >
       {isCoreDataPending ? (
         <Box sx={{ py: 4, height: 24 }} />
-      ) : currentProxy ? (
+      ) : currentProxy || (!isDirectMode && selectedGroup) ? (
         <Box>
           {/* 代理节点信息显示 */}
           <Box
@@ -902,7 +845,8 @@ export const CurrentProxyCard = () => {
           >
             <Box>
               <Typography variant="body1" sx={{ fontWeight: 'medium' }}>
-                {currentProxy.name}
+                {currentProxy?.name ??
+                  t('home.components.currentProxy.labels.noActiveNode')}
               </Typography>
 
               <Box
@@ -913,7 +857,7 @@ export const CurrentProxyCard = () => {
                   color="text.secondary"
                   sx={{ mr: 1 }}
                 >
-                  {currentProxy.type}
+                  {currentProxy?.type}
                 </Typography>
                 {isGlobalMode && (
                   <Chip
@@ -932,19 +876,19 @@ export const CurrentProxyCard = () => {
                   />
                 )}
                 {/* 节点特性 */}
-                {currentProxy.udp && (
+                {currentProxy?.udp && (
                   <Chip size="small" label="UDP" variant="outlined" />
                 )}
-                {currentProxy.tfo && (
+                {currentProxy?.tfo && (
                   <Chip size="small" label="TFO" variant="outlined" />
                 )}
-                {currentProxy.xudp && (
+                {currentProxy?.xudp && (
                   <Chip size="small" label="XUDP" variant="outlined" />
                 )}
-                {currentProxy.mptcp && (
+                {currentProxy?.mptcp && (
                   <Chip size="small" label="MPTCP" variant="outlined" />
                 )}
-                {currentProxy.smux && (
+                {currentProxy?.smux && (
                   <Chip size="small" label="SMUX" variant="outlined" />
                 )}
               </Box>
@@ -971,12 +915,12 @@ export const CurrentProxyCard = () => {
             </InputLabel>
             <Select
               labelId="proxy-group-select-label"
-              value={state.selection.group}
+              value={selectedGroupName}
               onChange={handleGroupChange}
               label={t('home.components.currentProxy.labels.group')}
               disabled={isGlobalMode || isDirectMode}
             >
-              {state.proxyData.groups.map((group) => (
+              {selectableGroups.map((group) => (
                 <MenuItem key={group.name} value={group.name}>
                   {group.name}
                 </MenuItem>
@@ -991,7 +935,7 @@ export const CurrentProxyCard = () => {
             </InputLabel>
             <Select
               labelId="proxy-select-label"
-              value={state.selection.proxy}
+              value={currentOption ? optionValue(currentOption) : ''}
               onChange={handleProxyChange}
               label={t('home.components.currentProxy.labels.proxy')}
               disabled={isDirectMode}
@@ -1008,19 +952,19 @@ export const CurrentProxyCard = () => {
             >
               {isDirectMode
                 ? null
-                : proxyOptions.map((proxy) => {
-                    const delayValue =
-                      state.proxyData.records[proxy.name] &&
-                      state.selection.group
-                        ? delayManager.getDelayFix(
-                            state.proxyData.records[proxy.name],
-                            state.selection.group,
-                          )
-                        : -1
+                : proxyOptions.map((option) => {
+                    const interactable = isInteractableMember(option.member)
+                    const delayValue = interactable
+                      ? delayManager.getDelayFix(
+                          option.member,
+                          selectedGroupName,
+                        )
+                      : -1
                     return (
                       <MenuItem
-                        key={proxy.name}
-                        value={proxy.name}
+                        key={optionValue(option)}
+                        value={optionValue(option)}
+                        disabled={!interactable}
                         sx={{
                           display: 'flex',
                           justifyContent: 'space-between',
@@ -1030,18 +974,20 @@ export const CurrentProxyCard = () => {
                         }}
                       >
                         <Typography noWrap sx={{ flex: 1, mr: 1 }}>
-                          {proxy.name}
+                          {option.member.ref.name}
                         </Typography>
-                        <Chip
-                          size="small"
-                          label={delayManager.formatDelay(delayValue)}
-                          color={convertDelayColor(delayValue)}
-                          sx={{
-                            minWidth: '60px',
-                            height: '22px',
-                            flexShrink: 0,
-                          }}
-                        />
+                        {interactable && (
+                          <Chip
+                            size="small"
+                            label={delayManager.formatDelay(delayValue)}
+                            color={convertDelayColor(delayValue)}
+                            sx={{
+                              minWidth: '60px',
+                              height: '22px',
+                              flexShrink: 0,
+                            }}
+                          />
+                        )}
                       </MenuItem>
                     )
                   })}

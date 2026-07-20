@@ -22,22 +22,20 @@ import {
 import { useTranslation } from 'react-i18next'
 
 import { updateProxyChainConfigInRuntime } from '@/services/cmds'
+import {
+  isInteractableMember,
+  type ProxyGroupView,
+  type ResolvedProxyMember,
+} from '@/types/proxy-view'
 
 import { ScrollTopButton } from '../layout/scroll-top-button'
 
-import { ProxyChain } from './proxy-chain'
+import { ProxyChain, type ProxyChainItem } from './proxy-chain'
 import { ProxyRender } from './proxy-render'
 import type { HeadState } from './use-head-state'
 import type { IRenderItem } from './use-render-list'
 
 // ---- Types ----
-
-interface ProxyChainItem {
-  id: string
-  name: string
-  type?: string
-  delay?: number
-}
 
 type VirtualListItem = {
   key: Key
@@ -46,11 +44,7 @@ type VirtualListItem = {
   end: number
 }
 
-interface ProxyGroupOption {
-  name: string
-  type: string
-  all?: unknown[]
-}
+type ProxyGroupOption = ProxyGroupView
 
 // ---- Props ----
 
@@ -201,7 +195,7 @@ function GroupSelectMenu({
               {group.name}
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              {group.type} · {group.all?.length ?? 0} 节点
+              {group.type} · {group.members.length} 节点
             </Typography>
           </Box>
         </MenuItem>
@@ -243,7 +237,7 @@ function ProxyVirtualList({
   onLocation: (group: any) => void
   onCheckAll: (groupName: string) => void
   onHeadState: (groupName: string, patch: Partial<HeadState>) => void
-  onChangeProxy: (group: IProxyGroupItem, proxy: IProxyItem) => void
+  onChangeProxy: (group: ProxyGroupView, member: ResolvedProxyMember) => void
 }) {
   const theme = useTheme()
   const stickyBackground =
@@ -332,7 +326,13 @@ export function ProxyGroupsChain(props: ProxyGroupsChainProps) {
 
   useEffect(() => {
     if (proxyChain.length > 0) {
-      localStorage.setItem('proxy-chain-items', JSON.stringify(proxyChain))
+      const persistedChain = proxyChain.map(({ id, name, type, delay }) => ({
+        id,
+        name,
+        type,
+        delay,
+      }))
+      localStorage.setItem('proxy-chain-items', JSON.stringify(persistedChain))
     } else {
       localStorage.removeItem('proxy-chain-items')
     }
@@ -349,7 +349,7 @@ export function ProxyGroupsChain(props: ProxyGroupsChainProps) {
     if (!activeSelectedGroup) return null
     return (
       availableGroups.find(
-        (group: any) => group.name === activeSelectedGroup,
+        (group: ProxyGroupView) => group.name === activeSelectedGroup,
       ) ?? null
     )
   }, [activeSelectedGroup, availableGroups])
@@ -381,11 +381,12 @@ export function ProxyGroupsChain(props: ProxyGroupsChainProps) {
   }, [])
 
   const handleChangeProxy = useCallback(
-    (_group: IProxyGroupItem, proxy: IProxyItem) => {
+    (_group: ProxyGroupView, member: ResolvedProxyMember) => {
+      if (!isInteractableMember(member) || member.kind !== 'node') return
+      const { node } = member
       // 使用函数式更新来避免状态延迟问题
       setProxyChain((prev) => {
-        // 检查是否已经存在相同名称的代理，防止重复添加
-        if (prev.some((item) => item.name === proxy.name)) {
+        if (prev.some((item) => item.recordId === node.recordId)) {
           const warningMessage = t('proxies.page.chain.duplicateNode')
           setDuplicateWarning({
             open: true,
@@ -396,14 +397,16 @@ export function ProxyGroupsChain(props: ProxyGroupsChainProps) {
 
         // 安全获取延迟数据，如果没有延迟数据则设为 undefined
         const delay =
-          proxy.history && proxy.history.length > 0
-            ? proxy.history[proxy.history.length - 1].delay
+          node.history.length > 0
+            ? node.history[node.history.length - 1].delay
             : undefined
 
         const chainItem: ProxyChainItem = {
-          id: `${proxy.name}_${Date.now()}`,
-          name: proxy.name,
-          type: proxy.type,
+          id: `${node.name}_${Date.now()}`,
+          name: node.name,
+          recordId: node.recordId,
+          source: node.source,
+          type: node.type,
           delay,
         }
 

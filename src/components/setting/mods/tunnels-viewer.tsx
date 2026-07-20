@@ -20,6 +20,11 @@ import { useProxiesData } from '@/providers/app-data-context'
 import { isPortInUse } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
 import {
+  isInteractableMember,
+  resolveMember,
+  type ResolvedProxyMember,
+} from '@/types/proxy-view'
+import {
   formatHostPort,
   isValidPort,
   normalizeHost,
@@ -92,21 +97,27 @@ export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
     })
   }, [draftTunnels])
 
-  const { proxies } = useProxiesData()
+  const { proxyView } = useProxiesData()
 
-  const proxyGroups = useMemo<IProxyGroupItem[]>(() => {
-    return proxies?.groups ?? []
-  }, [proxies])
+  const proxyGroups = useMemo(() => proxyView?.groups ?? [], [proxyView])
 
   const groupNames = useMemo<string[]>(
     () => proxyGroups.map((group) => group.name),
     [proxyGroups],
   )
 
-  const proxyOptions = useMemo<IProxyItem[]>(() => {
+  const proxyOptions = useMemo<
+    Array<{ memberIndex: number; member: ResolvedProxyMember }>
+  >(() => {
+    if (!proxyView) return []
     const group = proxyGroups.find((item) => item.name === values.group)
-    return group?.all ?? []
-  }, [proxyGroups, values.group])
+    return (
+      group?.members.map((member, memberIndex) => ({
+        memberIndex,
+        member: resolveMember(proxyView, member),
+      })) ?? []
+    )
+  }, [proxyGroups, proxyView, values.group])
 
   const handleSave = async () => {
     try {
@@ -395,7 +406,15 @@ export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
                   onChange={(e) => {
                     const nextGroup = e.target.value as string
                     const group = proxyGroups.find((g) => g.name === nextGroup)
-                    const firstProxy = group?.all?.[0].name ?? ''
+                    const firstProxy =
+                      group?.members
+                        .map((member) =>
+                          proxyView ? resolveMember(proxyView, member) : null,
+                        )
+                        .find(
+                          (member): member is ResolvedProxyMember =>
+                            member !== null && isInteractableMember(member),
+                        )?.ref.name ?? ''
 
                     setValues((v) => ({
                       ...v,
@@ -450,9 +469,17 @@ export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
                   <MenuItem value="">
                     {t('settings.sections.clash.form.fields.tunnels.default')}
                   </MenuItem>
-                  {proxyOptions.map((node) => (
-                    <MenuItem key={node.name} value={node.name}>
-                      {node.name}
+                  {proxyOptions.map(({ memberIndex, member }) => (
+                    <MenuItem
+                      key={
+                        member.kind === 'node'
+                          ? `${memberIndex}:${member.node.recordId}`
+                          : `${memberIndex}:${member.ref.name}`
+                      }
+                      value={member.ref.name}
+                      disabled={!isInteractableMember(member)}
+                    >
+                      {member.ref.name}
                     </MenuItem>
                   ))}
                 </Select>

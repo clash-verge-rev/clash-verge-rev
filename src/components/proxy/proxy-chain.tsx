@@ -42,16 +42,35 @@ import {
 } from 'tauri-plugin-mihomo-api'
 
 import { TooltipIcon } from '@/components/base'
+import { useRuntimeConfig } from '@/hooks/use-clash'
 import { useAppRefreshers, useProxiesData } from '@/providers/app-data-context'
 import { updateProxyChainConfigInRuntime } from '@/services/cmds'
+import {
+  getRecord,
+  rebindNode,
+  resolveMember,
+  selectRuntimeStandaloneNodes,
+  type ProxyNodeView,
+} from '@/types/proxy-view'
 import { debugLog } from '@/utils/debug'
 
-interface ProxyChainItem {
+export interface ProxyChainItem {
   id: string
   name: string
+  recordId?: string
+  source?: ProxyNodeView['source']
   type?: string
   delay?: number
 }
+
+type RuntimeConfigWithProxySequence = IConfigData & { proxies?: unknown }
+
+const sourceKey = (source: ProxyNodeView['source'] | undefined) =>
+  source?.kind === 'provider'
+    ? `provider:${source.providerName}:${source.proxyName}`
+    : source
+      ? `core:${source.proxyName}`
+      : ''
 
 interface ParsedChainConfig {
   proxies?: Array<{
@@ -147,6 +166,7 @@ const SortableItem = ({
           : `1px solid ${theme.palette.divider}`,
         boxShadow: isDragging ? theme.shadows[4] : theme.shadows[1],
         transition: 'box-shadow 0.2s, background-color 0.2s',
+        opacity: proxy.recordId === undefined ? 0.55 : undefined,
       }}
     >
       <Box
@@ -254,34 +274,52 @@ export const ProxyChain = ({
   const theme = useTheme()
   const { t } = useTranslation()
   const chainWarning = t('proxies.page.chain.warning')
-  const { proxies } = useProxiesData()
+  const { proxyView } = useProxiesData()
   const { refreshProxy } = useAppRefreshers()
+  const { data: runtimeConfig } = useRuntimeConfig(true)
   const [isConnecting, setIsConnecting] = useState(false)
   const markUnsavedChanges = useCallback(() => {
     onMarkUnsavedChanges?.()
   }, [onMarkUnsavedChanges])
 
   const isConnected = useMemo(() => {
-    if (!proxies || proxyChain.length < 2) {
+    if (!proxyView || proxyChain.length < 2) {
       return false
     }
 
     const lastNode = proxyChain[proxyChain.length - 1]
 
     if (mode === 'global') {
-      return proxies.global?.now === lastNode.name
+      return proxyView.global?.now === lastNode.name
     }
 
-    if (!selectedGroup || !Array.isArray(proxies.groups)) {
+    if (!selectedGroup) {
       return false
     }
 
-    const proxyChainGroup = proxies.groups.find(
-      (group: { name: string }) => group.name === selectedGroup,
+    const proxyChainGroup = proxyView.groups.find(
+      (group) => group.name === selectedGroup,
     )
 
     return proxyChainGroup?.now === lastNode.name
-  }, [proxies, proxyChain, mode, selectedGroup])
+  }, [proxyView, proxyChain, mode, selectedGroup])
+
+  const candidates = useMemo(() => {
+    if (!proxyView) return []
+    if (mode === 'rule' && selectedGroup) {
+      const group = proxyView.groups.find(({ name }) => name === selectedGroup)
+      if (!group) return []
+      return group.members.flatMap((member) => {
+        const resolved = resolveMember(proxyView, member)
+        return resolved.kind === 'node' ? [resolved.node] : []
+      })
+    }
+    if (!runtimeConfig) return undefined
+    const runtimeProxies = (
+      runtimeConfig as RuntimeConfigWithProxySequence | null
+    )?.proxies
+    return selectRuntimeStandaloneNodes(proxyView, runtimeProxies)
+  }, [mode, proxyView, runtimeConfig, selectedGroup])
 
   // 监听链的变化，但排除从配置加载的情况
   const chainLengthRef = useRef(proxyChain.length)
@@ -371,7 +409,7 @@ export const ProxyChain = ({
       return
     }
 
-    if (proxyChain.length < 2) {
+    if (proxyChain.length < 2 || proxyChain.some(({ recordId }) => !recordId)) {
       alert(t('proxies.page.chain.minimumNodes') || '链式代理至少需要2个节点')
       return
     }
@@ -443,46 +481,41 @@ export const ProxyChain = ({
     }
   }, [chainConfigData, onUpdateChain])
 
-  // 定时更新延迟数据
+  // Rebind response-scoped ids and update delays from the same response.
   useEffect(() => {
-    if (!proxies?.records) return
+    if (!proxyView || !candidates) return
+    const currentChain = proxyChainRef.current
+    if (currentChain.length === 0) return
 
-    const updateDelays = () => {
-      const currentChain = proxyChainRef.current
-      if (currentChain.length === 0) return
-
-      const updatedChain = currentChain.map((item) => {
-        const proxyRecord = proxies.records[item.name]
-        if (
-          proxyRecord &&
-          proxyRecord.history &&
-          proxyRecord.history.length > 0
-        ) {
-          const latestDelay =
-            proxyRecord.history[proxyRecord.history.length - 1].delay
-          return { ...item, delay: latestDelay }
-        }
-        return item
+    const updatedChain = currentChain.map((item) => {
+      const rebound = rebindNode(candidates, {
+        name: item.name,
+        source: item.source,
       })
-
-      // 只有在延迟数据确实发生变化时才更新
-      const hasChanged = updatedChain.some(
-        (item, index) => item.delay !== currentChain[index]?.delay,
-      )
-
-      if (hasChanged) {
-        onUpdateChainRef.current(updatedChain)
+      const record =
+        rebound === undefined
+          ? undefined
+          : getRecord(proxyView, rebound.recordId)
+      const delay = record?.history.at(-1)?.delay
+      return {
+        ...item,
+        recordId: rebound?.recordId,
+        source: rebound?.source,
+        type: rebound?.type ?? item.type,
+        delay,
       }
-    }
-
-    // 立即更新一次延迟
-    updateDelays()
-
-    // 设置定时器，每5秒更新一次延迟
-    const interval = setInterval(updateDelays, 5000)
-
-    return () => clearInterval(interval)
-  }, [proxies?.records]) // 只依赖proxies.records
+    })
+    const hasChanged = updatedChain.some((item, index) => {
+      const previous = currentChain[index]
+      return (
+        item.recordId !== previous?.recordId ||
+        sourceKey(item.source) !== sourceKey(previous?.source) ||
+        item.type !== previous?.type ||
+        item.delay !== previous?.delay
+      )
+    })
+    if (hasChanged) onUpdateChainRef.current(updatedChain)
+  }, [candidates, proxyView])
 
   return (
     <Paper
@@ -543,6 +576,7 @@ export const ProxyChain = ({
             disabled={
               isConnecting ||
               proxyChain.length < 2 ||
+              proxyChain.some(({ recordId }) => recordId === undefined) ||
               (mode !== 'global' && !selectedGroup)
             }
             color={isConnected ? 'error' : 'success'}
