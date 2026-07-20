@@ -185,7 +185,9 @@ export const ProviderButton = () => {
           <List sx={{ py: 0, minHeight: 250 }}>
             {providers.map((provider) => {
               const key = provider.name
-              const time = dayjs(provider.updatedAt)
+              const updatedAt = provider.updatedAt
+                ? dayjs(provider.updatedAt)
+                : null
               const isUpdating = updating[key]
 
               // 订阅信息
@@ -264,7 +266,7 @@ export const ProviderButton = () => {
                           noWrap
                         >
                           <small>{t('shared.labels.updateAt')}: </small>
-                          {time.fromNow()}
+                          {updatedAt?.fromNow() ?? '-'}
                         </Typography>
                       </Box>
                     }

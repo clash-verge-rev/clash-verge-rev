@@ -12,6 +12,7 @@ import {
   rebindNode,
   resolveMember,
   selectGlobalChainNodes,
+  selectRuleChainMembers,
   selectRuntimeStandaloneNodes,
   toMemberOccurrenceBinding,
   toNodeBinding,
@@ -192,6 +193,10 @@ test('does not expose global-chain candidates without GLOBAL', () => {
     selectGlobalChainNodes(globalMissingView, [{ name: 'runtime-only' }]),
     [],
   )
+})
+
+test('does not fall back to global nodes when a selected rule group disappears', () => {
+  assert.deepEqual(selectRuleChainMembers(view, 'removed-group'), [])
 })
 
 test('uses the current backend group selection after ids and now change', () => {

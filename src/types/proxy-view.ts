@@ -211,6 +211,19 @@ export const selectGlobalChainNodes = (
 ) =>
   view.global === null ? [] : selectRuntimeStandaloneNodes(view, runtimeProxies)
 
+export const selectRuleChainMembers = (
+  view: ProxyViewV1,
+  groupName: string,
+): Array<{ memberIndex: number; member: ResolvedProxyMember }> => {
+  const group = view.groups.find(({ name }) => name === groupName)
+  if (!group) return []
+
+  return group.members.flatMap((memberRef, memberIndex) => {
+    const member = resolveMember(view, memberRef)
+    return member.kind === 'group' ? [] : [{ memberIndex, member }]
+  })
+}
+
 export const toNodeBinding = (node: ProxyNodeView): ProxyNodeBinding => ({
   name: node.name,
   source: node.source,

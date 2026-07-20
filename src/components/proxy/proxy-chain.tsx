@@ -45,7 +45,10 @@ import { TooltipIcon } from '@/components/base'
 import { useRuntimeConfig } from '@/hooks/use-clash'
 import { useAppRefreshers, useProxiesData } from '@/providers/app-data-context'
 import { updateProxyChainConfigInRuntime } from '@/services/cmds'
-import { resolveMember, selectGlobalChainNodes } from '@/types/proxy-view'
+import {
+  selectGlobalChainNodes,
+  selectRuleChainMembers,
+} from '@/types/proxy-view'
 import { debugLog } from '@/utils/debug'
 
 import { rebindProxyChainItems, type ProxyChainItem } from './proxy-chain-model'
@@ -265,12 +268,9 @@ export const ProxyChain = ({
   const candidates = useMemo(() => {
     if (!proxyView) return []
     if (mode === 'rule' && selectedGroup) {
-      const group = proxyView.groups.find(({ name }) => name === selectedGroup)
-      if (!group) return []
-      return group.members.flatMap((member) => {
-        const resolved = resolveMember(proxyView, member)
-        return resolved.kind === 'node' ? [resolved.node] : []
-      })
+      return selectRuleChainMembers(proxyView, selectedGroup).flatMap(
+        ({ member }) => (member.kind === 'node' ? [member.node] : []),
+      )
     }
     if (!runtimeConfig) return []
     const runtimeProxies = (

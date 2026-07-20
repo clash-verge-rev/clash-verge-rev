@@ -8,6 +8,7 @@ import {
   isInteractableMember,
   resolveMember,
   selectGlobalChainNodes,
+  selectRuleChainMembers,
   type ProxyGroupView,
   type ProxyViewV1,
   type ResolvedProxyMember,
@@ -85,8 +86,10 @@ const groupOccurrences = <T>(list: T[], size: number): T[][] =>
     return acc
   }, [])
 
+const CHAIN_DELAY_GROUP = 'chain-mode'
+
 const virtualGroup = (members: ProxyGroupView['members']): ProxyGroupView => ({
-  name: 'All Proxies',
+  name: CHAIN_DELAY_GROUP,
   type: 'Selector',
   alive: true,
   udp: false,
@@ -121,13 +124,8 @@ export const useRenderList = (
 
   const chainOccurrences = useMemo(() => {
     if (!proxyView || !isChainMode) return []
-    if (mode === 'rule') {
-      const group = proxyView.groups.find(({ name }) => name === selectedGroup)
-      if (group) {
-        return resolveOccurrences(proxyView, group).filter(
-          ({ member }) => member.kind !== 'group',
-        )
-      }
+    if (mode === 'rule' && selectedGroup) {
+      return selectRuleChainMembers(proxyView, selectedGroup)
     }
     if (!runtimeConfig) return []
     return selectGlobalChainNodes(proxyView, runtimeProxies).map(
@@ -155,6 +153,8 @@ export const useRenderList = (
 
   const chainOccurrencesRef = useRef(chainOccurrences)
   chainOccurrencesRef.current = chainOccurrences
+  const chainDelayGroup =
+    mode === 'rule' && selectedGroup ? selectedGroup : CHAIN_DELAY_GROUP
   const chainDelayKey = chainOccurrences
     .map(({ member }) => {
       if (member.kind !== 'node') return `${member.kind}:${member.ref.name}`
@@ -175,13 +175,18 @@ export const useRenderList = (
     const handle = setTimeout(() => {
       const timeout = verge?.default_latency_timeout || 10000
       debugLog(`[ChainMode] 开始计算 ${interactable.length} 个节点的延迟`)
-      void delayManager.checkListDelay(interactable, 'chain-mode', timeout)
+      void delayManager.checkListDelay(interactable, chainDelayGroup, timeout)
     }, 100)
 
     return () => {
       clearTimeout(handle)
     }
-  }, [chainDelayKey, isChainMode, verge?.default_latency_timeout])
+  }, [
+    chainDelayGroup,
+    chainDelayKey,
+    isChainMode,
+    verge?.default_latency_timeout,
+  ])
 
   const groupCacheRef = useRef<Map<string, GroupCache>>(new Map())
   const prevListRef = useRef<IRenderItem[]>([])
@@ -197,7 +202,7 @@ export const useRenderList = (
       const group = selected ?? virtualGroup([])
       const occurrences = filterSort(
         chainOccurrences,
-        selected?.name ?? 'chain-mode',
+        selected?.name ?? CHAIN_DELAY_GROUP,
         '',
         0,
         latencyTimeout,
