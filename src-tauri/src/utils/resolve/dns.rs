@@ -1,4 +1,12 @@
 use clash_verge_logging::{Type, logging};
+use std::path::PathBuf;
+
+fn dns_state_dir() -> anyhow::Result<PathBuf> {
+    // The DNS scripts persist .original_dns.txt relative to their working directory.
+    let dir = crate::utils::dirs::app_home_dir()?;
+    std::fs::create_dir_all(&dir)?;
+    Ok(dir)
+}
 
 pub async fn set_public_dns(dns_server: String) {
     use crate::{core::handle, utils::dirs};
@@ -19,11 +27,18 @@ pub async fn set_public_dns(dns_server: String) {
         return;
     }
     let script = script.to_string_lossy().into_owned();
+    let state_dir = match dns_state_dir() {
+        Ok(dir) => dir,
+        Err(e) => {
+            logging!(error, Type::Config, "Failed to get DNS state directory: {}", e);
+            return;
+        }
+    };
     match app_handle
         .shell()
         .command("bash")
         .args([script, dns_server])
-        .current_dir(resource_dir)
+        .current_dir(state_dir)
         .status()
         .await
     {
@@ -60,11 +75,18 @@ pub async fn restore_public_dns() {
         return;
     }
     let script = script.to_string_lossy().into_owned();
+    let state_dir = match dns_state_dir() {
+        Ok(dir) => dir,
+        Err(e) => {
+            logging!(error, Type::Config, "Failed to get DNS state directory: {}", e);
+            return;
+        }
+    };
     match app_handle
         .shell()
         .command("bash")
         .args([script])
-        .current_dir(resource_dir)
+        .current_dir(state_dir)
         .status()
         .await
     {
