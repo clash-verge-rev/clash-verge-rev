@@ -25,7 +25,6 @@ import { useProxiesData } from '@/providers/app-data-context'
 import { updateProxyChainConfigInRuntime } from '@/services/cmds'
 import {
   isInteractableMember,
-  rebindNode,
   type ProxyGroupView,
   type ResolvedProxyMember,
 } from '@/types/proxy-view'
@@ -420,10 +419,7 @@ export function ProxyGroupsChain(props: ProxyGroupsChainProps) {
         if (
           current.some(
             (item) =>
-              rebindNode([node], {
-                name: item.name,
-                source: item.source,
-              }) !== undefined,
+              item.recordId !== undefined && item.recordId === node.recordId,
           )
         ) {
           const warningMessage = t('proxies.page.chain.duplicateNode')
