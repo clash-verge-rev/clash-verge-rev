@@ -21,16 +21,19 @@ import {
 } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { useProxiesData } from '@/providers/app-data-context'
 import { updateProxyChainConfigInRuntime } from '@/services/cmds'
 import {
   isInteractableMember,
+  rebindNode,
   type ProxyGroupView,
   type ResolvedProxyMember,
 } from '@/types/proxy-view'
 
 import { ScrollTopButton } from '../layout/scroll-top-button'
 
-import { ProxyChain, type ProxyChainItem } from './proxy-chain'
+import { ProxyChain } from './proxy-chain'
+import { type ProxyChainItem, rebindProxyChainItems } from './proxy-chain-model'
 import { ProxyRender } from './proxy-render'
 import type { HeadState } from './use-head-state'
 import type { IRenderItem } from './use-render-list'
@@ -310,6 +313,7 @@ export function ProxyGroupsChain(props: ProxyGroupsChainProps) {
     onGroupSelect,
     onScrollToTop,
   } = props
+  const { proxyView } = useProxiesData()
 
   // Chain-specific state
   const [proxyChain, setProxyChain] = useState<ProxyChainItem[]>(() => {
@@ -324,19 +328,44 @@ export function ProxyGroupsChain(props: ProxyGroupsChainProps) {
     return []
   })
 
+  const candidateNodes = useMemo(
+    () =>
+      renderList.flatMap((item) => {
+        const occurrences = item.memberCol ?? (item.member ? [item.member] : [])
+        return occurrences.flatMap(({ member }) =>
+          member.kind === 'node' ? [member.node] : [],
+        )
+      }),
+    [renderList],
+  )
+
+  const currentProxyChain = useMemo(
+    () =>
+      proxyView
+        ? rebindProxyChainItems(proxyChain, candidateNodes, proxyView)
+        : proxyChain.map((item) => ({
+            ...item,
+            recordId: undefined,
+            delay: undefined,
+          })),
+    [candidateNodes, proxyChain, proxyView],
+  )
+
   useEffect(() => {
-    if (proxyChain.length > 0) {
-      const persistedChain = proxyChain.map(({ id, name, type, delay }) => ({
-        id,
-        name,
-        type,
-        delay,
-      }))
+    if (currentProxyChain.length > 0) {
+      const persistedChain = currentProxyChain.map(
+        ({ id, name, type, delay }) => ({
+          id,
+          name,
+          type,
+          delay,
+        }),
+      )
       localStorage.setItem('proxy-chain-items', JSON.stringify(persistedChain))
     } else {
       localStorage.removeItem('proxy-chain-items')
     }
-  }, [proxyChain])
+  }, [currentProxyChain])
 
   const [ruleMenuAnchor, setRuleMenuAnchor] = useState<null | HTMLElement>(null)
   const [duplicateWarning, setDuplicateWarning] = useState<{
@@ -384,9 +413,19 @@ export function ProxyGroupsChain(props: ProxyGroupsChainProps) {
     (_group: ProxyGroupView, member: ResolvedProxyMember) => {
       if (!isInteractableMember(member) || member.kind !== 'node') return
       const { node } = member
-      // 使用函数式更新来避免状态延迟问题
       setProxyChain((prev) => {
-        if (prev.some((item) => item.recordId === node.recordId)) {
+        const current = proxyView
+          ? rebindProxyChainItems(prev, candidateNodes, proxyView)
+          : prev
+        if (
+          current.some(
+            (item) =>
+              rebindNode([node], {
+                name: item.name,
+                source: item.source,
+              }) !== undefined,
+          )
+        ) {
           const warningMessage = t('proxies.page.chain.duplicateNode')
           setDuplicateWarning({
             open: true,
@@ -410,10 +449,10 @@ export function ProxyGroupsChain(props: ProxyGroupsChainProps) {
           delay,
         }
 
-        return [...prev, chainItem]
+        return [...current, chainItem]
       })
     },
-    [t],
+    [candidateNodes, proxyView, t],
   )
 
   // Render virtual list for chain mode
@@ -458,7 +497,7 @@ export function ProxyGroupsChain(props: ProxyGroupsChainProps) {
 
         <Box sx={{ width: '400px', minWidth: '300px' }}>
           <ProxyChain
-            proxyChain={proxyChain}
+            proxyChain={currentProxyChain}
             onUpdateChain={setProxyChain}
             chainConfigData={chainConfigData}
             mode={mode}

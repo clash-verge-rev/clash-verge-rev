@@ -119,17 +119,6 @@ export const useRenderList = (
     [width, verge?.proxy_layout_column],
   )
 
-  useEffect(() => {
-    if (!proxyView) return
-    if (
-      ((mode === 'rule' || mode === 'script') && !proxyView.groups.length) ||
-      (mode === 'global' && proxyView.global === null)
-    ) {
-      const handle = setTimeout(() => refreshProxy(), 500)
-      return () => clearTimeout(handle)
-    }
-  }, [proxyView, mode, refreshProxy])
-
   const chainOccurrences = useMemo(() => {
     if (!proxyView || !isChainMode) return []
     if (mode === 'rule') {
@@ -183,7 +172,6 @@ export const useRenderList = (
       .filter(isInteractableMember)
     if (interactable.length === 0) return
 
-    delayManager.setGroupListener('chain-mode', refreshProxy)
     const handle = setTimeout(() => {
       const timeout = verge?.default_latency_timeout || 10000
       debugLog(`[ChainMode] 开始计算 ${interactable.length} 个节点的延迟`)
@@ -192,9 +180,8 @@ export const useRenderList = (
 
     return () => {
       clearTimeout(handle)
-      delayManager.removeGroupListener('chain-mode')
     }
-  }, [chainDelayKey, isChainMode, refreshProxy, verge?.default_latency_timeout])
+  }, [chainDelayKey, isChainMode, verge?.default_latency_timeout])
 
   const groupCacheRef = useRef<Map<string, GroupCache>>(new Map())
   const prevListRef = useRef<IRenderItem[]>([])

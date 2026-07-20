@@ -45,32 +45,12 @@ import { TooltipIcon } from '@/components/base'
 import { useRuntimeConfig } from '@/hooks/use-clash'
 import { useAppRefreshers, useProxiesData } from '@/providers/app-data-context'
 import { updateProxyChainConfigInRuntime } from '@/services/cmds'
-import {
-  getRecord,
-  rebindNode,
-  resolveMember,
-  selectRuntimeStandaloneNodes,
-  type ProxyNodeView,
-} from '@/types/proxy-view'
+import { resolveMember, selectRuntimeStandaloneNodes } from '@/types/proxy-view'
 import { debugLog } from '@/utils/debug'
 
-export interface ProxyChainItem {
-  id: string
-  name: string
-  recordId?: string
-  source?: ProxyNodeView['source']
-  type?: string
-  delay?: number
-}
+import { rebindProxyChainItems, type ProxyChainItem } from './proxy-chain-model'
 
 type RuntimeConfigWithProxySequence = IConfigData & { proxies?: unknown }
-
-const sourceKey = (source: ProxyNodeView['source'] | undefined) =>
-  source?.kind === 'provider'
-    ? `provider:${source.providerName}:${source.proxyName}`
-    : source
-      ? `core:${source.proxyName}`
-      : ''
 
 interface ParsedChainConfig {
   proxies?: Array<{
@@ -282,12 +262,45 @@ export const ProxyChain = ({
     onMarkUnsavedChanges?.()
   }, [onMarkUnsavedChanges])
 
+  const candidates = useMemo(() => {
+    if (!proxyView) return []
+    if (mode === 'rule' && selectedGroup) {
+      const group = proxyView.groups.find(({ name }) => name === selectedGroup)
+      if (!group) return []
+      return group.members.flatMap((member) => {
+        const resolved = resolveMember(proxyView, member)
+        return resolved.kind === 'node' ? [resolved.node] : []
+      })
+    }
+    if (!runtimeConfig) return []
+    const runtimeProxies = (
+      runtimeConfig as RuntimeConfigWithProxySequence | null
+    )?.proxies
+    return selectRuntimeStandaloneNodes(proxyView, runtimeProxies)
+  }, [mode, proxyView, runtimeConfig, selectedGroup])
+
+  const currentProxyChain = useMemo(
+    () =>
+      proxyView
+        ? rebindProxyChainItems(proxyChain, candidates, proxyView)
+        : proxyChain.map((item) => ({
+            ...item,
+            recordId: undefined,
+            delay: undefined,
+          })),
+    [candidates, proxyChain, proxyView],
+  )
+
   const isConnected = useMemo(() => {
-    if (!proxyView || proxyChain.length < 2) {
+    if (!proxyView || currentProxyChain.length === 0) {
       return false
     }
 
-    const lastNode = proxyChain[proxyChain.length - 1]
+    const lastNode = currentProxyChain[currentProxyChain.length - 1]
+    if (localStorage.getItem('proxy-chain-exit-node') === lastNode.name) {
+      return true
+    }
+    if (currentProxyChain.length < 2) return false
 
     if (mode === 'global') {
       return proxyView.global?.now === lastNode.name
@@ -302,37 +315,20 @@ export const ProxyChain = ({
     )
 
     return proxyChainGroup?.now === lastNode.name
-  }, [proxyView, proxyChain, mode, selectedGroup])
-
-  const candidates = useMemo(() => {
-    if (!proxyView) return []
-    if (mode === 'rule' && selectedGroup) {
-      const group = proxyView.groups.find(({ name }) => name === selectedGroup)
-      if (!group) return []
-      return group.members.flatMap((member) => {
-        const resolved = resolveMember(proxyView, member)
-        return resolved.kind === 'node' ? [resolved.node] : []
-      })
-    }
-    if (!runtimeConfig) return undefined
-    const runtimeProxies = (
-      runtimeConfig as RuntimeConfigWithProxySequence | null
-    )?.proxies
-    return selectRuntimeStandaloneNodes(proxyView, runtimeProxies)
-  }, [mode, proxyView, runtimeConfig, selectedGroup])
+  }, [proxyView, currentProxyChain, mode, selectedGroup])
 
   // 监听链的变化，但排除从配置加载的情况
-  const chainLengthRef = useRef(proxyChain.length)
+  const chainLengthRef = useRef(currentProxyChain.length)
   useEffect(() => {
     // 只有当链长度发生变化且不是初始加载时，才标记为未保存
     if (
-      chainLengthRef.current !== proxyChain.length &&
+      chainLengthRef.current !== currentProxyChain.length &&
       chainLengthRef.current !== 0
     ) {
       markUnsavedChanges()
     }
-    chainLengthRef.current = proxyChain.length
-  }, [proxyChain.length, markUnsavedChanges])
+    chainLengthRef.current = currentProxyChain.length
+  }, [currentProxyChain.length, markUnsavedChanges])
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -348,23 +344,27 @@ export const ProxyChain = ({
       const { active, over } = event
 
       if (active.id !== over?.id) {
-        const oldIndex = proxyChain.findIndex((item) => item.id === active.id)
-        const newIndex = proxyChain.findIndex((item) => item.id === over?.id)
+        const oldIndex = currentProxyChain.findIndex(
+          (item) => item.id === active.id,
+        )
+        const newIndex = currentProxyChain.findIndex(
+          (item) => item.id === over?.id,
+        )
 
-        onUpdateChain(arrayMove(proxyChain, oldIndex, newIndex))
+        onUpdateChain(arrayMove(currentProxyChain, oldIndex, newIndex))
         markUnsavedChanges()
       }
     },
-    [proxyChain, onUpdateChain, markUnsavedChanges],
+    [currentProxyChain, onUpdateChain, markUnsavedChanges],
   )
 
   const handleRemoveProxy = useCallback(
     (id: string) => {
-      const newChain = proxyChain.filter((item) => item.id !== id)
+      const newChain = currentProxyChain.filter((item) => item.id !== id)
       onUpdateChain(newChain)
       markUnsavedChanges()
     },
-    [proxyChain, onUpdateChain, markUnsavedChanges],
+    [currentProxyChain, onUpdateChain, markUnsavedChanges],
   )
 
   const handleConnect = useCallback(async () => {
@@ -382,9 +382,9 @@ export const ProxyChain = ({
           try {
             await selectNodeForGroup(targetGroup, 'DIRECT')
           } catch {
-            if (proxyChain.length >= 1) {
+            if (currentProxyChain.length >= 1) {
               try {
-                await selectNodeForGroup(targetGroup, proxyChain[0].name)
+                await selectNodeForGroup(targetGroup, currentProxyChain[0].name)
               } catch {
                 // ignore
               }
@@ -409,7 +409,10 @@ export const ProxyChain = ({
       return
     }
 
-    if (proxyChain.length < 2 || proxyChain.some(({ recordId }) => !recordId)) {
+    if (
+      currentProxyChain.length < 2 ||
+      currentProxyChain.some(({ recordId }) => !recordId)
+    ) {
       alert(t('proxies.page.chain.minimumNodes') || '链式代理至少需要2个节点')
       return
     }
@@ -417,13 +420,13 @@ export const ProxyChain = ({
     setIsConnecting(true)
     try {
       // 第一步：保存链式代理配置
-      const chainProxies = proxyChain.map((node) => node.name)
+      const chainProxies = currentProxyChain.map((node) => node.name)
       debugLog('Saving chain config:', chainProxies)
       await updateProxyChainConfigInRuntime(chainProxies)
       debugLog('Chain configuration saved successfully')
 
       // 第二步：连接到代理链的最后一个节点
-      const lastNode = proxyChain[proxyChain.length - 1]
+      const lastNode = currentProxyChain[currentProxyChain.length - 1]
       debugLog(`Connecting to proxy chain, last node: ${lastNode.name}`)
 
       // 根据模式确定使用的代理组名称
@@ -447,7 +450,7 @@ export const ProxyChain = ({
       setIsConnecting(false)
     }
   }, [
-    proxyChain,
+    currentProxyChain,
     isConnected,
     t,
     refreshProxy,
@@ -455,14 +458,6 @@ export const ProxyChain = ({
     selectedGroup,
     onUpdateChain,
   ])
-
-  const proxyChainRef = useRef(proxyChain)
-  const onUpdateChainRef = useRef(onUpdateChain)
-
-  useEffect(() => {
-    proxyChainRef.current = proxyChain
-    onUpdateChainRef.current = onUpdateChain
-  }, [proxyChain, onUpdateChain])
 
   // 处理链式代理配置数据
   useEffect(() => {
@@ -480,42 +475,6 @@ export const ProxyChain = ({
       }
     }
   }, [chainConfigData, onUpdateChain])
-
-  // Rebind response-scoped ids and update delays from the same response.
-  useEffect(() => {
-    if (!proxyView || !candidates) return
-    const currentChain = proxyChainRef.current
-    if (currentChain.length === 0) return
-
-    const updatedChain = currentChain.map((item) => {
-      const rebound = rebindNode(candidates, {
-        name: item.name,
-        source: item.source,
-      })
-      const record =
-        rebound === undefined
-          ? undefined
-          : getRecord(proxyView, rebound.recordId)
-      const delay = record?.history.at(-1)?.delay
-      return {
-        ...item,
-        recordId: rebound?.recordId,
-        source: rebound?.source,
-        type: rebound?.type ?? item.type,
-        delay,
-      }
-    })
-    const hasChanged = updatedChain.some((item, index) => {
-      const previous = currentChain[index]
-      return (
-        item.recordId !== previous?.recordId ||
-        sourceKey(item.source) !== sourceKey(previous?.source) ||
-        item.type !== previous?.type ||
-        item.delay !== previous?.delay
-      )
-    })
-    if (hasChanged) onUpdateChainRef.current(updatedChain)
-  }, [candidates, proxyView])
 
   return (
     <Paper
@@ -545,7 +504,7 @@ export const ProxyChain = ({
           />
         </Box>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          {proxyChain.length > 0 && (
+          {currentProxyChain.length > 0 && (
             <IconButton
               size="small"
               onClick={() => {
@@ -575,16 +534,19 @@ export const ProxyChain = ({
             onClick={handleConnect}
             disabled={
               isConnecting ||
-              proxyChain.length < 2 ||
-              proxyChain.some(({ recordId }) => recordId === undefined) ||
-              (mode !== 'global' && !selectedGroup)
+              (!isConnected &&
+                (currentProxyChain.length < 2 ||
+                  currentProxyChain.some(
+                    ({ recordId }) => recordId === undefined,
+                  ) ||
+                  (mode !== 'global' && !selectedGroup)))
             }
             color={isConnected ? 'error' : 'success'}
             sx={{
               minWidth: 90,
             }}
             title={
-              proxyChain.length < 2
+              !isConnected && currentProxyChain.length < 2
                 ? t('proxies.page.chain.minimumNodes') ||
                   '链式代理至少需要2个节点'
                 : undefined
@@ -600,10 +562,10 @@ export const ProxyChain = ({
       </Box>
 
       <Alert
-        severity={proxyChain.length === 1 ? 'warning' : 'info'}
+        severity={currentProxyChain.length === 1 ? 'warning' : 'info'}
         sx={{ mb: 2 }}
       >
-        {proxyChain.length === 1
+        {currentProxyChain.length === 1
           ? t('proxies.page.chain.minimumNodesHint') ||
             '链式代理至少需要2个节点，请再添加一个节点。'
           : t('proxies.page.chain.instruction') ||
@@ -611,7 +573,7 @@ export const ProxyChain = ({
       </Alert>
 
       <Box sx={{ flex: 1, overflow: 'auto' }}>
-        {proxyChain.length === 0 ? (
+        {currentProxyChain.length === 0 ? (
           <Box
             sx={{
               display: 'flex',
@@ -630,7 +592,7 @@ export const ProxyChain = ({
             onDragEnd={handleDragEnd}
           >
             <SortableContext
-              items={proxyChain.map((proxy) => proxy.id)}
+              items={currentProxyChain.map((proxy) => proxy.id)}
               strategy={verticalListSortingStrategy}
             >
               <Box
@@ -640,18 +602,19 @@ export const ProxyChain = ({
                   p: 1,
                 }}
               >
-                {proxyChain.map((proxy, index) => (
+                {currentProxyChain.map((proxy, index) => (
                   <Box key={proxy.id}>
                     <SortableItem
                       proxy={proxy}
                       index={index}
                       isFirst={index === 0}
                       isLast={
-                        index === proxyChain.length - 1 && proxyChain.length > 1
+                        index === currentProxyChain.length - 1 &&
+                        currentProxyChain.length > 1
                       }
                       onRemove={handleRemoveProxy}
                     />
-                    {index < proxyChain.length - 1 && (
+                    {index < currentProxyChain.length - 1 && (
                       <Box
                         sx={{
                           display: 'flex',

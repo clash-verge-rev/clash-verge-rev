@@ -227,6 +227,10 @@ class DelayManager {
     const name = member.ref.name
     const providerName =
       member.kind === 'node' ? providerNameOf(member.node) : undefined
+    const apiName =
+      member.kind === 'node' && member.node.source.kind === 'provider'
+        ? member.node.source.proxyName
+        : name
     debugLog(
       `[DelayManager] 开始测试延迟，代理: ${name}, 组: ${group}, 超时: ${timeout}ms`,
     )
@@ -247,7 +251,7 @@ class DelayManager {
 
       // 使用Promise.race来实现超时控制
       const result = await Promise.race([
-        this.unifiedDelayCheck(name, url, timeout, providerName),
+        this.unifiedDelayCheck(apiName, url, timeout, providerName),
         timeoutPromise,
       ])
 

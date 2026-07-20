@@ -1,3 +1,4 @@
+/* eslint-disable @eslint-react/set-state-in-effect */
 import { Delete, ExpandLess, ExpandMore } from '@mui/icons-material'
 import {
   Button,
@@ -11,7 +12,14 @@ import {
   Select,
   MenuItem,
 } from '@mui/material'
-import { forwardRef, useImperativeHandle, useState, useMemo } from 'react'
+import {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BaseDialog } from '@/components/base'
@@ -42,6 +50,16 @@ interface TunnelEntry {
   target: string
   proxy?: string
 }
+
+interface TunnelProxyOption {
+  memberIndex: number
+  member: ResolvedProxyMember
+}
+
+const proxyOptionToken = ({ memberIndex, member }: TunnelProxyOption) =>
+  `${memberIndex}:${
+    member.kind === 'node' ? member.node.recordId : member.ref.name
+  }`
 
 export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
   const { t } = useTranslation()
@@ -106,9 +124,7 @@ export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
     [proxyGroups],
   )
 
-  const proxyOptions = useMemo<
-    Array<{ memberIndex: number; member: ResolvedProxyMember }>
-  >(() => {
+  const proxyOptions = useMemo<TunnelProxyOption[]>(() => {
     if (!proxyView) return []
     const group = proxyGroups.find((item) => item.name === values.group)
     return (
@@ -118,6 +134,20 @@ export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
       })) ?? []
     )
   }, [proxyGroups, proxyView, values.group])
+  const proxyOptionsRef = useRef(proxyOptions)
+  proxyOptionsRef.current = proxyOptions
+
+  useEffect(() => {
+    setValues((current) => {
+      if (!current.proxy) return current
+      const selected = proxyOptions.find(
+        (option) =>
+          proxyOptionToken(option) === current.proxy &&
+          isInteractableMember(option.member),
+      )
+      return selected ? current : { ...current, proxy: '' }
+    })
+  }, [proxyOptions])
 
   const handleSave = async () => {
     try {
@@ -183,12 +213,28 @@ export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
       return
     }
 
+    const selectedProxyOption = proxy
+      ? proxyOptionsRef.current.find(
+          (option) =>
+            proxyOptionToken(option) === proxy &&
+            isInteractableMember(option.member),
+        )
+      : undefined
+    if (proxy && !selectedProxyOption) {
+      showNotice.error(
+        'settings.sections.clash.form.fields.tunnels.messages.incomplete',
+      )
+      return
+    }
+
     // 构造新 entry
     const entry: TunnelEntry = {
       network: network === 'tcp+udp' ? ['tcp', 'udp'] : [network],
       address: formatHostPort(localHost, localPort),
       target: formatHostPort(targetHost, targetPort),
-      ...(proxy ? { proxy } : {}),
+      ...(selectedProxyOption
+        ? { proxy: selectedProxyOption.member.ref.name }
+        : {}),
     }
 
     // 写入配置 + 清空输入
@@ -406,20 +452,21 @@ export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
                   onChange={(e) => {
                     const nextGroup = e.target.value as string
                     const group = proxyGroups.find((g) => g.name === nextGroup)
-                    const firstProxy =
-                      group?.members
-                        .map((member) =>
-                          proxyView ? resolveMember(proxyView, member) : null,
-                        )
-                        .find(
-                          (member): member is ResolvedProxyMember =>
-                            member !== null && isInteractableMember(member),
-                        )?.ref.name ?? ''
+                    const options =
+                      proxyView && group
+                        ? group.members.map((member, memberIndex) => ({
+                            memberIndex,
+                            member: resolveMember(proxyView, member),
+                          }))
+                        : []
+                    const firstProxy = options.find(({ member }) =>
+                      isInteractableMember(member),
+                    )
 
                     setValues((v) => ({
                       ...v,
                       group: nextGroup,
-                      proxy: firstProxy, // 组切换时自动选第一条节点
+                      proxy: firstProxy ? proxyOptionToken(firstProxy) : '',
                     }))
                   }}
                 >
@@ -476,7 +523,7 @@ export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
                           ? `${memberIndex}:${member.node.recordId}`
                           : `${memberIndex}:${member.ref.name}`
                       }
-                      value={member.ref.name}
+                      value={proxyOptionToken({ memberIndex, member })}
                       disabled={!isInteractableMember(member)}
                     >
                       {member.ref.name}

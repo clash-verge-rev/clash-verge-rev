@@ -41,7 +41,6 @@ import {
   useClashConfigData,
   useCoreDataStatus,
   useProxiesData,
-  useRulesData,
 } from '@/providers/app-data-context'
 import delayManager from '@/services/delay'
 import {
@@ -128,7 +127,6 @@ export const CurrentProxyCard = () => {
   const theme = useTheme()
   const { proxyView } = useProxiesData()
   const { clashConfig } = useClashConfigData()
-  const { rules } = useRulesData()
   const { refreshProxy } = useAppRefreshers()
   const { isCoreDataPending } = useCoreDataStatus()
   const { verge } = useVerge()
@@ -209,30 +207,6 @@ export const CurrentProxyCard = () => {
   })
   const [delaySortRefresh, setDelaySortRefresh] = useState(0)
 
-  const normalizePolicyName = useCallback(
-    (value?: string | null) => (typeof value === 'string' ? value.trim() : ''),
-    [],
-  )
-
-  const matchPolicyName = useMemo(() => {
-    if (!Array.isArray(rules)) return ''
-    for (let index = rules.length - 1; index >= 0; index -= 1) {
-      const rule = rules[index]
-      if (!rule) continue
-
-      if (
-        typeof rule?.type === 'string' &&
-        rule.type.toUpperCase() === 'MATCH'
-      ) {
-        const policy = normalizePolicyName(rule.proxy)
-        if (policy) {
-          return policy
-        }
-      }
-    }
-    return ''
-  }, [rules, normalizePolicyName])
-
   const [selectedGroupName, setSelectedGroupName] = useState('')
   const [selectedProxy, setSelectedProxy] = useState<SelectedProxy | null>()
 
@@ -248,20 +222,12 @@ export const CurrentProxyCard = () => {
 
   const selectableGroups = useMemo(() => {
     if (!proxyView) return []
-    const groups = proxyView.groups.filter(
+    return proxyView.groups.filter(
       (group) =>
         !group.hidden &&
         (group.type === 'Selector' || group.type === 'URLTest'),
     )
-    const matchGroup =
-      proxyView.groups.find(({ name }) => name === matchPolicyName) ??
-      (proxyView.global?.name === matchPolicyName
-        ? proxyView.global
-        : undefined)
-    return matchGroup && !groups.includes(matchGroup)
-      ? [matchGroup, ...groups]
-      : groups
-  }, [matchPolicyName, proxyView])
+  }, [proxyView])
 
   const selectedGroup = useMemo<ProxyGroupView | null>(() => {
     if (!proxyView || isDirectMode) return null
