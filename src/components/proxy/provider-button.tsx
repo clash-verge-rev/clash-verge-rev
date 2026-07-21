@@ -18,7 +18,7 @@ import {
 } from '@mui/material'
 import { useLockFn } from 'ahooks'
 import dayjs from 'dayjs'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { updateProxyProvider } from 'tauri-plugin-mihomo-api'
 
@@ -48,16 +48,11 @@ const parseExpire = (expire?: number) => {
 export const ProviderButton = () => {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
-  const { proxyProviders } = useProxiesData()
-  const { refreshProxy, refreshProxyProviders } = useAppRefreshers()
+  const { proxyView } = useProxiesData()
+  const { refreshProxy } = useAppRefreshers()
   const [updating, setUpdating] = useState<Record<string, boolean>>({})
-
-  useEffect(() => {
-    refreshProxyProviders().catch(() => {})
-  }, [refreshProxyProviders])
-
-  // 检查是否有提供者
-  const hasProviders = Object.keys(proxyProviders || {}).length > 0
+  const providers = proxyView?.providers ?? []
+  const providerUnavailable = proxyView?.providerState === 'unavailable'
 
   // 更新单个代理提供者
   const updateProvider = useLockFn(async (name: string) => {
@@ -69,7 +64,6 @@ export const ProviderButton = () => {
 
       // 刷新数据
       await refreshProxy()
-      await refreshProxyProviders()
 
       showNotice.success(
         'proxies.feedback.notifications.provider.updateSuccess',
@@ -92,7 +86,7 @@ export const ProviderButton = () => {
   const updateAllProviders = useLockFn(async () => {
     try {
       // 获取所有provider的名称
-      const allProviders = Object.keys(proxyProviders || {})
+      const allProviders = providers.map(({ name }) => name)
       if (allProviders.length === 0) {
         showNotice.info('proxies.feedback.notifications.provider.none')
         return
@@ -122,7 +116,6 @@ export const ProviderButton = () => {
 
       // 刷新数据
       await refreshProxy()
-      await refreshProxyProviders()
 
       showNotice.success('proxies.feedback.notifications.provider.allUpdated')
     } catch (err) {
@@ -139,7 +132,7 @@ export const ProviderButton = () => {
     setOpen(false)
   }
 
-  if (!hasProviders) return null
+  if (providers.length === 0 && !providerUnavailable) return null
 
   return (
     <>
@@ -148,7 +141,17 @@ export const ProviderButton = () => {
         size="small"
         startIcon={<StorageOutlined />}
         onClick={() => setOpen(true)}
-        sx={{ mr: 1 }}
+        disabled={providerUnavailable}
+        color={providerUnavailable ? 'warning' : 'primary'}
+        sx={{
+          mr: 1,
+          ...(providerUnavailable && {
+            '&.Mui-disabled': {
+              color: 'warning.main',
+              borderColor: 'warning.main',
+            },
+          }),
+        }}
       >
         {t('proxies.page.provider.title')}
       </Button>
@@ -180,170 +183,168 @@ export const ProviderButton = () => {
 
         <DialogContent>
           <List sx={{ py: 0, minHeight: 250 }}>
-            {Object.entries(proxyProviders || {})
-              .sort()
-              .map(([key, item]) => {
-                const provider = item
-                const time = dayjs(provider.updatedAt)
-                const isUpdating = updating[key]
+            {providers.map((provider) => {
+              const key = provider.name
+              const updatedAt = provider.updatedAt
+                ? dayjs(provider.updatedAt)
+                : null
+              const isUpdating = updating[key]
 
-                // 订阅信息
-                const sub = provider.subscriptionInfo
-                const hasSubInfo = !!sub
-                const upload = sub?.Upload || 0
-                const download = sub?.Download || 0
-                const total = sub?.Total || 0
-                const expire = sub?.Expire || 0
+              // 订阅信息
+              const sub = provider.subscriptionInfo
+              const hasSubInfo = !!sub
+              const upload = sub?.upload || 0
+              const download = sub?.download || 0
+              const total = sub?.total || 0
+              const expire = sub?.expire || 0
 
-                // 流量使用进度
-                const progress =
-                  total > 0
-                    ? Math.min(
-                        Math.round(((download + upload) * 100) / total) + 1,
-                        100,
-                      )
-                    : 0
+              // 流量使用进度
+              const progress =
+                total > 0
+                  ? Math.min(
+                      Math.round(((download + upload) * 100) / total) + 1,
+                      100,
+                    )
+                  : 0
 
-                return (
-                  <ListItem
-                    key={key}
-                    sx={[
-                      {
-                        p: 0,
-                        mb: '8px',
-                        borderRadius: 2,
-                        overflow: 'hidden',
-                        transition: 'all 0.2s',
-                      },
-                      ({ palette: { mode, primary } }) => {
-                        const bgcolor = mode === 'light' ? '#ffffff' : '#24252f'
-                        const hoverColor =
-                          mode === 'light'
-                            ? alpha(primary.main, 0.1)
-                            : alpha(primary.main, 0.2)
+              return (
+                <ListItem
+                  key={key}
+                  sx={[
+                    {
+                      p: 0,
+                      mb: '8px',
+                      borderRadius: 2,
+                      overflow: 'hidden',
+                      transition: 'all 0.2s',
+                    },
+                    ({ palette: { mode, primary } }) => {
+                      const bgcolor = mode === 'light' ? '#ffffff' : '#24252f'
+                      const hoverColor =
+                        mode === 'light'
+                          ? alpha(primary.main, 0.1)
+                          : alpha(primary.main, 0.2)
 
-                        return {
-                          backgroundColor: bgcolor,
-                          '&:hover': {
-                            backgroundColor: hoverColor,
-                          },
-                        }
-                      },
-                    ]}
-                  >
-                    <ListItemText
-                      sx={{ px: 2, py: 1 }}
-                      primary={
-                        <Box
-                          sx={{
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                          }}
-                        >
-                          <Typography
-                            variant="subtitle1"
-                            component="div"
-                            noWrap
-                            title={key}
-                            sx={{ display: 'flex', alignItems: 'center' }}
-                          >
-                            <span style={{ marginRight: '8px' }}>{key}</span>
-                            <TypeBox component="span">
-                              {provider.proxies.length}
-                            </TypeBox>
-                            <TypeBox component="span">
-                              {provider.vehicleType}
-                            </TypeBox>
-                          </Typography>
-
-                          <Typography
-                            variant="body2"
-                            color="text.secondary"
-                            noWrap
-                          >
-                            <small>{t('shared.labels.updateAt')}: </small>
-                            {time.fromNow()}
-                          </Typography>
-                        </Box>
+                      return {
+                        backgroundColor: bgcolor,
+                        '&:hover': {
+                          backgroundColor: hoverColor,
+                        },
                       }
-                      secondary={
-                        <>
-                          {/* 订阅信息 */}
-                          {hasSubInfo && (
-                            <>
-                              <Box
-                                sx={{
-                                  mb: 1,
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'space-between',
-                                }}
-                              >
-                                <span
-                                  title={t('shared.labels.usedTotal') as string}
-                                >
-                                  {parseTraffic(upload + download)} /{' '}
-                                  {parseTraffic(total)}
-                                </span>
-                                <span
-                                  title={
-                                    t('shared.labels.expireTime') as string
-                                  }
-                                >
-                                  {parseExpire(expire)}
-                                </span>
-                              </Box>
-
-                              {/* 进度条 */}
-                              <LinearProgress
-                                variant="determinate"
-                                value={progress}
-                                sx={{
-                                  height: 6,
-                                  borderRadius: 3,
-                                  opacity: total > 0 ? 1 : 0,
-                                }}
-                              />
-                            </>
-                          )}
-                        </>
-                      }
-                    />
-                    <Divider orientation="vertical" flexItem />
-                    <Box
-                      sx={{
-                        width: 40,
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                      }}
-                    >
-                      <IconButton
-                        size="small"
-                        color="primary"
-                        onClick={() => {
-                          updateProvider(key)
-                        }}
-                        disabled={isUpdating}
+                    },
+                  ]}
+                >
+                  <ListItemText
+                    sx={{ px: 2, py: 1 }}
+                    primary={
+                      <Box
                         sx={{
-                          animation: isUpdating
-                            ? 'spin 1s linear infinite'
-                            : 'none',
-                          '@keyframes spin': {
-                            '0%': { transform: 'rotate(0deg)' },
-                            '100%': { transform: 'rotate(360deg)' },
-                          },
+                          display: 'flex',
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
                         }}
-                        title={t('proxies.page.provider.actions.update')}
-                        aria-label={t('proxies.page.provider.actions.update')}
                       >
-                        <RefreshRounded />
-                      </IconButton>
-                    </Box>
-                  </ListItem>
-                )
-              })}
+                        <Typography
+                          variant="subtitle1"
+                          component="div"
+                          noWrap
+                          title={key}
+                          sx={{ display: 'flex', alignItems: 'center' }}
+                        >
+                          <span style={{ marginRight: '8px' }}>{key}</span>
+                          <TypeBox component="span">
+                            {provider.proxyRecordIds.length}
+                          </TypeBox>
+                          <TypeBox component="span">
+                            {provider.vehicleType}
+                          </TypeBox>
+                        </Typography>
+
+                        <Typography
+                          variant="body2"
+                          color="text.secondary"
+                          noWrap
+                        >
+                          <small>{t('shared.labels.updateAt')}: </small>
+                          {updatedAt?.fromNow() ?? '-'}
+                        </Typography>
+                      </Box>
+                    }
+                    secondary={
+                      <>
+                        {/* 订阅信息 */}
+                        {hasSubInfo && (
+                          <>
+                            <Box
+                              sx={{
+                                mb: 1,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                              }}
+                            >
+                              <span
+                                title={t('shared.labels.usedTotal') as string}
+                              >
+                                {parseTraffic(upload + download)} /{' '}
+                                {parseTraffic(total)}
+                              </span>
+                              <span
+                                title={t('shared.labels.expireTime') as string}
+                              >
+                                {parseExpire(expire)}
+                              </span>
+                            </Box>
+
+                            {/* 进度条 */}
+                            <LinearProgress
+                              variant="determinate"
+                              value={progress}
+                              sx={{
+                                height: 6,
+                                borderRadius: 3,
+                                opacity: total > 0 ? 1 : 0,
+                              }}
+                            />
+                          </>
+                        )}
+                      </>
+                    }
+                  />
+                  <Divider orientation="vertical" flexItem />
+                  <Box
+                    sx={{
+                      width: 40,
+                      display: 'flex',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <IconButton
+                      size="small"
+                      color="primary"
+                      onClick={() => {
+                        updateProvider(key)
+                      }}
+                      disabled={isUpdating}
+                      sx={{
+                        animation: isUpdating
+                          ? 'spin 1s linear infinite'
+                          : 'none',
+                        '@keyframes spin': {
+                          '0%': { transform: 'rotate(0deg)' },
+                          '100%': { transform: 'rotate(360deg)' },
+                        },
+                      }}
+                      title={t('proxies.page.provider.actions.update')}
+                      aria-label={t('proxies.page.provider.actions.update')}
+                    >
+                      <RefreshRounded />
+                    </IconButton>
+                  </Box>
+                </ListItem>
+              )
+            })}
           </List>
         </DialogContent>
 

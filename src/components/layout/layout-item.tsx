@@ -29,10 +29,9 @@ interface Props {
   children: string
   icon: ReactNode[]
   sortable?: SortableProps
-  onPreload?: () => Promise<unknown>
 }
 export const LayoutItem = (props: Props) => {
-  const { to, children, icon, sortable, onPreload } = props
+  const { to, children, icon, sortable } = props
   const { verge } = useVerge()
   const { menu_icon } = verge ?? {}
   const navCollapsed = verge?.collapse_navbar ?? false
@@ -51,16 +50,11 @@ export const LayoutItem = (props: Props) => {
     ? (listeners ?? {})
     : {}
 
-  const handlePreload = useCallback(() => {
-    void onPreload?.().catch(() => {})
-  }, [onPreload])
-
   const handlePointerDown = useCallback(
     (event: PointerEvent<HTMLDivElement>) => {
-      handlePreload()
       onPointerDown?.(event)
     },
-    [handlePreload, onPointerDown],
+    [onPointerDown],
   )
 
   return (
@@ -105,8 +99,6 @@ export const LayoutItem = (props: Props) => {
         ]}
         title={navCollapsed ? children : undefined}
         aria-label={navCollapsed ? children : undefined}
-        onFocus={handlePreload}
-        onMouseEnter={handlePreload}
         onPointerDown={handlePointerDown}
         onClick={() => navigate(to)}
       >

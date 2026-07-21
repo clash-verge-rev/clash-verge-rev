@@ -5,6 +5,8 @@ on:
   workflow_dispatch:
 env:
   HUSKY: 0
+permissions:
+  contents: read
 
 jobs:
   clippy:

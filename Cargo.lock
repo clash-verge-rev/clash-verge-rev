@@ -1072,7 +1072,7 @@ checksum = "c8d4a3bb8b1e0c1050499d1815f5ab16d04f0959b233085fb31653fbfc9d98f9"
 
 [[package]]
 name = "clash-verge"
-version = "2.5.2"
+version = "2.5.3"
 dependencies = [
  "aes-gcm",
  "anyhow",
@@ -1148,6 +1148,7 @@ dependencies = [
  "warp",
  "webpki-roots",
  "windows 0.62.2",
+ "windows-sys 0.61.2",
  "winreg 0.56.0",
  "zip 8.6.0",
 ]

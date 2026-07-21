@@ -322,6 +322,7 @@ const CONTROL_PLANE_KEYS: &[&str] = &[
     "redir-port",
     #[cfg(target_os = "linux")]
     "tproxy-port",
+    "tun",
     "mode",
     "allow-lan",
     "log-level",

@@ -3,6 +3,9 @@ name: Cargo Audit
 on:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 env:
   HUSKY: 0
 
