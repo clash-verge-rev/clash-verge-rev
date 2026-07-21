@@ -19,6 +19,7 @@ import { useTranslation } from 'react-i18next'
 import { useIconCache } from '@/hooks/use-icon-cache'
 import { useVerge } from '@/hooks/use-verge'
 import { useThemeMode } from '@/services/states'
+import type { ResolvedProxyMember } from '@/types/proxy-view'
 
 import { ProxyGroupTools } from './proxy-group-tools'
 import { ProxyHead } from './proxy-head'
@@ -36,7 +37,7 @@ interface RenderProps {
   onHeadState: (groupName: string, patch: Partial<HeadState>) => void
   onChangeProxy: (
     group: IRenderItem['group'],
-    proxy: IRenderItem['proxy'] & { name: string },
+    member: ResolvedProxyMember,
   ) => void
   onGroupToggle?: (group: IRenderItem['group']) => void
 }
@@ -53,7 +54,7 @@ export const ProxyRender = memo(function ProxyRender(props: RenderProps) {
     onGroupToggle,
     isChainMode: _ = false,
   } = props
-  const { type, group, headState, proxy, proxyCol } = item
+  const { type, group, headState, member, memberCol } = item
   const { verge } = useVerge()
   const enable_group_icon = verge?.enable_group_icon ?? true
   const mode = useThemeMode()
@@ -66,22 +67,22 @@ export const ProxyRender = memo(function ProxyRender(props: RenderProps) {
   })
 
   const showType = headState?.showType
-  const proxyColItemsMemo = useMemo(() => {
-    if (type !== 4 || !proxyCol) {
+  const memberColItemsMemo = useMemo(() => {
+    if (type !== 4 || !memberCol) {
       return null
     }
 
-    return proxyCol.map((proxyItem) => (
+    return memberCol.map((occurrence) => (
       <ProxyItemMini
-        key={`${item.key}-${proxyItem?.name ?? 'unknown'}`}
+        key={`${item.key}-${occurrence.memberIndex}`}
         group={group}
-        proxy={proxyItem}
-        selected={group.now === proxyItem?.name}
+        member={occurrence.member}
+        selected={group.now === occurrence.member.ref.name}
         showType={showType}
-        onClick={() => onChangeProxy(group, proxyItem)}
+        onClick={(nextMember) => onChangeProxy(group, nextMember)}
       />
     ))
-  }, [type, proxyCol, item.key, group, showType, onChangeProxy])
+  }, [type, memberCol, item.key, group, showType, onChangeProxy])
 
   if (type === 0) {
     return (
@@ -198,7 +199,7 @@ export const ProxyRender = memo(function ProxyRender(props: RenderProps) {
                   >
                     <Chip
                       size="small"
-                      label={`${group.all.length}`}
+                      label={`${group.members.length}`}
                       sx={{
                         mr: 1,
                         backgroundColor: (theme) =>
@@ -239,11 +240,11 @@ export const ProxyRender = memo(function ProxyRender(props: RenderProps) {
     return (
       <ProxyItem
         group={group}
-        proxy={proxy!}
-        selected={group.now === proxy?.name}
+        member={member!.member}
+        selected={group.now === member?.member.ref.name}
         showType={headState?.showType}
         sx={{ py: 0, pl: 2 }}
-        onClick={() => onChangeProxy(group, proxy!)}
+        onClick={(nextMember) => onChangeProxy(group, nextMember)}
       />
     )
   }
@@ -278,7 +279,7 @@ export const ProxyRender = memo(function ProxyRender(props: RenderProps) {
           gridTemplateColumns: `repeat(${item.col! || 2}, 1fr)`,
         }}
       >
-        {proxyColItemsMemo}
+        {memberColItemsMemo}
       </Box>
     )
   }

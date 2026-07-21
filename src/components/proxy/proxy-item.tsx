@@ -14,14 +14,20 @@ import {
 import { BaseLoading } from '@/components/base'
 import { useProxyDelayState } from '@/hooks/use-proxy-delay-state'
 import delayManager from '@/services/delay'
+import {
+  memberDetails,
+  providerNameOf,
+  type ProxyGroupView,
+  type ResolvedProxyMember,
+} from '@/types/proxy-view'
 
 interface Props {
-  group: IProxyGroupItem
-  proxy: IProxyItem
+  group: ProxyGroupView
+  member: ResolvedProxyMember
   selected: boolean
   showType?: boolean
   sx?: SxProps<Theme>
-  onClick?: (name: string) => void
+  onClick?: (member: ResolvedProxyMember) => void
 }
 
 const Widget = styled(Box)(() => ({
@@ -43,11 +49,18 @@ const TypeBox = styled('span')(({ theme }) => ({
 }))
 
 export const ProxyItem = (props: Props) => {
-  const { group, proxy, selected, showType = true, sx, onClick } = props
+  const { group, member, selected, showType = true, sx, onClick } = props
+  const details = memberDetails(member)
+  const unresolved = member.kind === 'unresolved'
+  const name = member.ref.name
+  const type = unresolved ? member.ref.reason : (details?.type ?? '')
+  const provider =
+    member.kind === 'node' ? providerNameOf(member.node) : undefined
+  const now = member.kind === 'group' ? member.group.now : undefined
 
   // -1/<=0 为不显示，-2 为 loading
   const { delayValue, isPreset, timeout, onDelay } = useProxyDelayState(
-    proxy,
+    member,
     group.name,
   )
 
@@ -55,8 +68,9 @@ export const ProxyItem = (props: Props) => {
     <ListItem sx={sx}>
       <ListItemButton
         dense
-        selected={selected}
-        onClick={() => onClick?.(proxy.name)}
+        disabled={unresolved}
+        selected={!unresolved && selected}
+        onClick={unresolved ? undefined : () => onClick?.(member)}
         sx={[
           { borderRadius: 1 },
           ({ palette: { mode, primary } }) => {
@@ -85,7 +99,7 @@ export const ProxyItem = (props: Props) => {
         ]}
       >
         <ListItemText
-          title={proxy.name}
+          title={name}
           secondary={
             <>
               <Box
@@ -96,18 +110,26 @@ export const ProxyItem = (props: Props) => {
                   color: 'text.primary',
                 }}
               >
-                {proxy.name}
-                {showType && proxy.now && ` - ${proxy.now}`}
+                {name}
+                {showType && now && ` - ${now}`}
               </Box>
-              {showType && !!proxy.provider && (
-                <TypeBox>{proxy.provider}</TypeBox>
+              {showType && !!provider && <TypeBox>{provider}</TypeBox>}
+              {showType && <TypeBox>{type}</TypeBox>}
+              {!unresolved && showType && details?.udp && (
+                <TypeBox>UDP</TypeBox>
               )}
-              {showType && <TypeBox>{proxy.type}</TypeBox>}
-              {showType && proxy.udp && <TypeBox>UDP</TypeBox>}
-              {showType && proxy.xudp && <TypeBox>XUDP</TypeBox>}
-              {showType && proxy.tfo && <TypeBox>TFO</TypeBox>}
-              {showType && proxy.mptcp && <TypeBox>MPTCP</TypeBox>}
-              {showType && proxy.smux && <TypeBox>SMUX</TypeBox>}
+              {!unresolved && showType && details?.xudp && (
+                <TypeBox>XUDP</TypeBox>
+              )}
+              {!unresolved && showType && details?.tfo && (
+                <TypeBox>TFO</TypeBox>
+              )}
+              {!unresolved && showType && details?.mptcp && (
+                <TypeBox>MPTCP</TypeBox>
+              )}
+              {!unresolved && showType && details?.smux && (
+                <TypeBox>SMUX</TypeBox>
+              )}
             </>
           }
         />
@@ -119,19 +141,19 @@ export const ProxyItem = (props: Props) => {
             display: isPreset ? 'none' : '',
           }}
         >
-          {delayValue === -2 && (
+          {!unresolved && delayValue === -2 && (
             <Widget>
               <BaseLoading />
             </Widget>
           )}
 
-          {delayValue !== -2 && (
+          {!unresolved && delayValue !== -2 && (
             <Widget
               className="the-check"
               onClick={(e) => {
                 e.preventDefault()
                 e.stopPropagation()
-                onDelay(proxy.provider)
+                void onDelay()
               }}
               sx={({ palette }) => ({
                 display: 'none', // hover 时显示
@@ -142,14 +164,14 @@ export const ProxyItem = (props: Props) => {
             </Widget>
           )}
 
-          {delayValue > 0 && (
+          {!unresolved && delayValue > 0 && (
             // 显示延迟
             <Widget
               className="the-delay"
               onClick={(e) => {
                 e.preventDefault()
                 e.stopPropagation()
-                onDelay(proxy.provider)
+                void onDelay()
               }}
               sx={({ palette }) => ({
                 color: delayManager.formatDelayColor(delayValue, timeout),
@@ -160,7 +182,7 @@ export const ProxyItem = (props: Props) => {
             </Widget>
           )}
 
-          {delayValue !== -2 && delayValue <= 0 && selected && (
+          {!unresolved && delayValue !== -2 && delayValue <= 0 && selected && (
             // 展示已选择的 icon
             <CheckCircleOutlineRounded
               className="the-icon"

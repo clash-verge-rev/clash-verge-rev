@@ -35,6 +35,14 @@ args = ["knip:report"]
 [tasks.knip-report.windows]
 command = "pnpm.cmd"
 
+[tasks.knip-check]
+description = "Fail on unused frontend code and dependencies"
+command = "pnpm"
+args = ["knip:check"]
+
+[tasks.knip-check.windows]
+command = "pnpm.cmd"
+
 [tasks.lint-staged]
 description = "Run lint-staged for staged files"
 command = "pnpm"
@@ -126,6 +134,6 @@ end
 has_frontend = exec git diff @{u}..HEAD --quiet -- "*.js" "*.jsx" "*.ts" "*.tsx" "*.json" "*.css" "*.scss" "*.html"
 if eq ${has_frontend.code} 1
   cm_run_task typecheck
-  cm_run_task knip-report
+  cm_run_task knip-check
 end
 '''

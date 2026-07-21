@@ -1,3 +1,4 @@
+/* eslint-disable @eslint-react/set-state-in-effect */
 import { Delete, ExpandLess, ExpandMore } from '@mui/icons-material'
 import {
   Button,
@@ -11,7 +12,14 @@ import {
   Select,
   MenuItem,
 } from '@mui/material'
-import { forwardRef, useImperativeHandle, useState, useMemo } from 'react'
+import {
+  forwardRef,
+  useEffect,
+  useImperativeHandle,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BaseDialog } from '@/components/base'
@@ -19,6 +27,14 @@ import { useClash } from '@/hooks/use-clash'
 import { useProxiesData } from '@/providers/app-data-context'
 import { isPortInUse } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
+import {
+  isInteractableMember,
+  rebindMemberOccurrence,
+  resolveMember,
+  toMemberOccurrenceBinding,
+  type ProxyMemberOccurrenceBinding,
+  type ResolvedProxyMember,
+} from '@/types/proxy-view'
 import {
   formatHostPort,
   isValidPort,
@@ -38,20 +54,40 @@ interface TunnelEntry {
   proxy?: string
 }
 
+interface TunnelProxyOption {
+  memberIndex: number
+  member: ResolvedProxyMember
+}
+
+interface TunnelFormValues {
+  localAddr: string
+  localPort: string
+  targetAddr: string
+  targetPort: string
+  network: string
+  group: string
+  proxy: ProxyMemberOccurrenceBinding | null
+}
+
+const proxyOptionToken = ({ memberIndex, member }: TunnelProxyOption) =>
+  `${memberIndex}:${
+    member.kind === 'node' ? member.node.recordId : member.ref.name
+  }`
+
 export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
   const { t } = useTranslation()
   const { clash, mutateClash, patchClash } = useClash()
 
   const [open, setOpen] = useState(false)
   const [expanded, setExpanded] = useState(false)
-  const [values, setValues] = useState({
+  const [values, setValues] = useState<TunnelFormValues>({
     localAddr: '',
     localPort: '',
     targetAddr: '',
     targetPort: '',
     network: 'tcp+udp',
     group: '',
-    proxy: '',
+    proxy: null,
   })
   const [draftTunnels, setDraftTunnels] = useState<TunnelEntry[]>([])
 
@@ -64,7 +100,7 @@ export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
         targetPort: '',
         network: 'tcp+udp',
         group: '',
-        proxy: '',
+        proxy: null,
       }))
       setDraftTunnels(() => clash?.tunnels ?? [])
       setOpen(true)
@@ -92,21 +128,61 @@ export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
     })
   }, [draftTunnels])
 
-  const { proxies } = useProxiesData()
+  const { proxyView } = useProxiesData()
 
-  const proxyGroups = useMemo<IProxyGroupItem[]>(() => {
-    return proxies?.groups ?? []
-  }, [proxies])
+  const proxyGroups = useMemo(() => proxyView?.groups ?? [], [proxyView])
 
   const groupNames = useMemo<string[]>(
     () => proxyGroups.map((group) => group.name),
     [proxyGroups],
   )
 
-  const proxyOptions = useMemo<IProxyItem[]>(() => {
+  const proxyOptions = useMemo<TunnelProxyOption[]>(() => {
+    if (!proxyView) return []
     const group = proxyGroups.find((item) => item.name === values.group)
-    return group?.all ?? []
-  }, [proxyGroups, values.group])
+    return (
+      group?.members.map((member, memberIndex) => ({
+        memberIndex,
+        member: resolveMember(proxyView, member),
+      })) ?? []
+    )
+  }, [proxyGroups, proxyView, values.group])
+  const proxyMembers = useMemo(
+    () => proxyOptions.map(({ member }) => member),
+    [proxyOptions],
+  )
+  const selectedProxyOption = useMemo(
+    () =>
+      values.proxy
+        ? rebindMemberOccurrence(proxyMembers, values.proxy)
+        : undefined,
+    [proxyMembers, values.proxy],
+  )
+  const selectedProxyToken = selectedProxyOption
+    ? proxyOptionToken(selectedProxyOption)
+    : ''
+  const selectedGroupExists =
+    !values.group || proxyGroups.some(({ name }) => name === values.group)
+  const latestProxyStateRef = useRef({
+    binding: values.proxy,
+    options: proxyOptions,
+  })
+  latestProxyStateRef.current = {
+    binding: values.proxy,
+    options: proxyOptions,
+  }
+
+  useEffect(() => {
+    if (selectedGroupExists && (!values.proxy || selectedProxyOption)) return
+    setValues((current) => {
+      if (current.group !== values.group || current.proxy !== values.proxy) {
+        return current
+      }
+      return selectedGroupExists
+        ? { ...current, proxy: null }
+        : { ...current, group: '', proxy: null }
+    })
+  }, [selectedGroupExists, selectedProxyOption, values.group, values.proxy])
 
   const handleSave = async () => {
     try {
@@ -120,8 +196,7 @@ export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
   }
 
   const handleAdd = async () => {
-    const { localAddr, localPort, targetAddr, targetPort, network, proxy } =
-      values
+    const { localAddr, localPort, targetAddr, targetPort, network } = values
 
     // 基础非空校验
     if (!localAddr || !localPort || !targetAddr || !targetPort) {
@@ -172,12 +247,26 @@ export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
       return
     }
 
+    const latestProxyState = latestProxyStateRef.current
+    const latestMembers = latestProxyState.options.map(({ member }) => member)
+    const latestSelectedProxy = latestProxyState.binding
+      ? rebindMemberOccurrence(latestMembers, latestProxyState.binding)
+      : undefined
+    if (latestProxyState.binding && !latestSelectedProxy) {
+      showNotice.error(
+        'settings.sections.clash.form.fields.tunnels.messages.incomplete',
+      )
+      return
+    }
+
     // 构造新 entry
     const entry: TunnelEntry = {
       network: network === 'tcp+udp' ? ['tcp', 'udp'] : [network],
       address: formatHostPort(localHost, localPort),
       target: formatHostPort(targetHost, targetPort),
-      ...(proxy ? { proxy } : {}),
+      ...(latestSelectedProxy
+        ? { proxy: latestSelectedProxy.member.ref.name }
+        : {}),
     }
 
     // 写入配置 + 清空输入
@@ -395,12 +484,27 @@ export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
                   onChange={(e) => {
                     const nextGroup = e.target.value as string
                     const group = proxyGroups.find((g) => g.name === nextGroup)
-                    const firstProxy = group?.all?.[0].name ?? ''
+                    const options =
+                      proxyView && group
+                        ? group.members.map((member, memberIndex) => ({
+                            memberIndex,
+                            member: resolveMember(proxyView, member),
+                          }))
+                        : []
+                    const firstProxy = options.find(({ member }) =>
+                      isInteractableMember(member),
+                    )
+                    const members = options.map(({ member }) => member)
 
                     setValues((v) => ({
                       ...v,
                       group: nextGroup,
-                      proxy: firstProxy, // 组切换时自动选第一条节点
+                      proxy: firstProxy
+                        ? (toMemberOccurrenceBinding(
+                            members,
+                            firstProxy.memberIndex,
+                          ) ?? null)
+                        : null,
                     }))
                   }}
                 >
@@ -437,22 +541,39 @@ export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
                 <Select
                   size="small"
                   sx={{ width: 200, '> div': { py: '7.5px' } }}
-                  value={values.proxy}
+                  value={selectedProxyToken}
                   displayEmpty
-                  onChange={(e) =>
+                  onChange={(e) => {
+                    const token = e.target.value as string
+                    const option = proxyOptions.find(
+                      (candidate) => proxyOptionToken(candidate) === token,
+                    )
                     setValues((v) => ({
                       ...v,
-                      proxy: e.target.value as string,
+                      proxy: option
+                        ? (toMemberOccurrenceBinding(
+                            proxyMembers,
+                            option.memberIndex,
+                          ) ?? null)
+                        : null,
                     }))
-                  }
+                  }}
                   disabled={!values.group} // 没选组就禁用
                 >
                   <MenuItem value="">
                     {t('settings.sections.clash.form.fields.tunnels.default')}
                   </MenuItem>
-                  {proxyOptions.map((node) => (
-                    <MenuItem key={node.name} value={node.name}>
-                      {node.name}
+                  {proxyOptions.map(({ memberIndex, member }) => (
+                    <MenuItem
+                      key={
+                        member.kind === 'node'
+                          ? `${memberIndex}:${member.node.recordId}`
+                          : `${memberIndex}:${member.ref.name}`
+                      }
+                      value={proxyOptionToken({ memberIndex, member })}
+                      disabled={!isInteractableMember(member)}
+                    >
+                      {member.ref.name}
                     </MenuItem>
                   ))}
                 </Select>
