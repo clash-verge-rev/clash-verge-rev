@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
@@ -1020,7 +1018,7 @@ function loadBackendLocales() {
     const localePath = path.join(BACKEND_LOCALES_DIR, entry.name)
     const name = entry.name.replace(/\.(ya?ml)$/i, '')
     const raw = fs.readFileSync(localePath, 'utf8')
-    let data = {}
+    let data
     try {
       const parsed = yaml.load(raw)
       data = isPlainObject(parsed) ? parsed : {}
@@ -1055,6 +1053,7 @@ function ensureBackup(localePath) {
     } catch (error) {
       throw new Error(
         `Failed to recycle existing backup for ${path.basename(localePath)}: ${error.message}`,
+        { cause: error },
       )
     }
   }
@@ -1086,59 +1085,6 @@ function cleanupBackups(backups) {
   backups.clear()
 }
 
-function toModuleIdentifier(namespace, seen) {
-  const RESERVED = new Set([
-    'default',
-    'function',
-    'var',
-    'let',
-    'const',
-    'import',
-    'export',
-    'class',
-    'enum',
-  ])
-
-  const base =
-    namespace.replace(/[^a-zA-Z0-9_$]/g, '_').replace(/^[^a-zA-Z_$]+/, '') ||
-    'ns'
-
-  let candidate = base
-  let counter = 1
-  while (RESERVED.has(candidate) || seen.has(candidate)) {
-    candidate = `${base}_${counter}`
-    counter += 1
-  }
-  seen.add(candidate)
-  return candidate
-}
-
-function regenerateLocaleIndex(localeDir, namespaces) {
-  const seen = new Set()
-  const imports = []
-  const mappings = []
-
-  for (const namespace of namespaces) {
-    const filePath = path.join(localeDir, `${namespace}.json`)
-    if (!fs.existsSync(filePath)) continue
-    const identifier = toModuleIdentifier(namespace, seen)
-    const key = namespace === identifier ? namespace : `'${namespace}'`
-    imports.push(`import ${identifier} from './${namespace}.json'`)
-    mappings.push(`  ${key}: ${identifier},`)
-  }
-
-  const content = `${imports.join('\n')}
-
-const resources = {
-${mappings.join('\n')}
-}
-
-export default resources
-`
-
-  fs.writeFileSync(path.join(localeDir, 'index.ts'), content, 'utf8')
-}
-
 function writeLocale(locale, data, options) {
   const backups = new Map()
   let success = false
@@ -1163,7 +1109,6 @@ function writeLocale(locale, data, options) {
     }
 
     const entries = Object.entries(data)
-    const orderedNamespaces = entries.map(([namespace]) => namespace)
     const existingFiles = new Map(
       locale.files.map((file) => [file.namespace, file.path]),
     )
@@ -1187,11 +1132,6 @@ function writeLocale(locale, data, options) {
       }
     }
 
-    regenerateLocaleIndex(locale.dir, orderedNamespaces)
-    locale.files = orderedNamespaces.map((namespace) => ({
-      namespace,
-      path: path.join(locale.dir, `${namespace}.json`),
-    }))
     success = true
   } finally {
     if (success) {

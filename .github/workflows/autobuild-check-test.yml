@@ -3,6 +3,9 @@ name: Autobuild Check Logic Test
 on:
   workflow_dispatch:
 
+permissions:
+  contents: read
+
 jobs:
   check_autobuild_logic:
     name: Check Autobuild Should Run Logic

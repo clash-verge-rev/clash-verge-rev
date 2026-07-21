@@ -75,6 +75,7 @@ jobs:
         uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ github.ref_name }}
+          target_commitish: ${{ github.sha }}
           name: 'Clash Verge Rev ${{ github.ref_name }}'
           body: 'Draft release, will be updated later.'
           token: ${{ secrets.GITHUB_TOKEN }}

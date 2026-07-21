@@ -19,6 +19,7 @@ import { useTranslation } from 'react-i18next'
 import { useIconCache } from '@/hooks/use-icon-cache'
 import { useVerge } from '@/hooks/use-verge'
 import { useThemeMode } from '@/services/states'
+import type { ResolvedProxyMember } from '@/types/proxy-view'
 
 import { ProxyGroupTools } from './proxy-group-tools'
 import { ProxyHead } from './proxy-head'
@@ -36,7 +37,7 @@ interface RenderProps {
   onHeadState: (groupName: string, patch: Partial<HeadState>) => void
   onChangeProxy: (
     group: IRenderItem['group'],
-    proxy: IRenderItem['proxy'] & { name: string },
+    member: ResolvedProxyMember,
   ) => void
   onGroupToggle?: (group: IRenderItem['group']) => void
 }
@@ -53,7 +54,7 @@ export const ProxyRender = memo(function ProxyRender(props: RenderProps) {
     onGroupToggle,
     isChainMode: _ = false,
   } = props
-  const { type, group, headState, proxy, proxyCol } = item
+  const { type, group, headState, member, memberCol } = item
   const { verge } = useVerge()
   const enable_group_icon = verge?.enable_group_icon ?? true
   const mode = useThemeMode()
@@ -66,22 +67,22 @@ export const ProxyRender = memo(function ProxyRender(props: RenderProps) {
   })
 
   const showType = headState?.showType
-  const proxyColItemsMemo = useMemo(() => {
-    if (type !== 4 || !proxyCol) {
+  const memberColItemsMemo = useMemo(() => {
+    if (type !== 4 || !memberCol) {
       return null
     }
 
-    return proxyCol.map((proxyItem) => (
+    return memberCol.map((occurrence) => (
       <ProxyItemMini
-        key={`${item.key}-${proxyItem?.name ?? 'unknown'}`}
+        key={`${item.key}-${occurrence.memberIndex}`}
         group={group}
-        proxy={proxyItem}
-        selected={group.now === proxyItem?.name}
+        member={occurrence.member}
+        selected={group.now === occurrence.member.ref.name}
         showType={showType}
-        onClick={() => onChangeProxy(group, proxyItem)}
+        onClick={(nextMember) => onChangeProxy(group, nextMember)}
       />
     ))
-  }, [type, proxyCol, item.key, group, showType, onChangeProxy])
+  }, [type, memberCol, item.key, group, showType, onChangeProxy])
 
   if (type === 0) {
     return (
@@ -106,94 +107,115 @@ export const ProxyRender = memo(function ProxyRender(props: RenderProps) {
             onHeadState?.(group.name, { open: !headState?.open })
           }}
         >
-          {enable_group_icon && group.icon?.trim().startsWith('http') && (
-            <img
-              src={iconCachePath === '' ? group.icon : iconCachePath}
-              alt="group icon"
-              width="32px"
-              style={{ marginRight: '12px', borderRadius: '6px' }}
-            />
-          )}
-          {enable_group_icon && group.icon?.trim().startsWith('data') && (
-            <img
-              src={group.icon}
-              alt="group icon"
-              width="32px"
-              style={{ marginRight: '12px', borderRadius: '6px' }}
-            />
-          )}
-          {enable_group_icon && group.icon?.trim().startsWith('<svg') && (
-            <img
-              src={`data:image/svg+xml;base64,${btoa(group.icon)}`}
-              alt="group icon"
-              width="32px"
-            />
-          )}
-          <ListItemText
-            primary={<StyledPrimary>{group.name}</StyledPrimary>}
-            secondary={
+          <Box sx={{ width: '100%' }}>
+            <Box sx={{ display: 'flex', alignItems: 'center', width: '100%' }}>
+              {enable_group_icon && group.icon?.trim().startsWith('http') && (
+                <img
+                  src={iconCachePath === '' ? group.icon : iconCachePath}
+                  alt="group icon"
+                  width="32px"
+                  style={{ marginRight: '12px', borderRadius: '6px' }}
+                />
+              )}
+              {enable_group_icon && group.icon?.trim().startsWith('data') && (
+                <img
+                  src={group.icon}
+                  alt="group icon"
+                  width="32px"
+                  style={{ marginRight: '12px', borderRadius: '6px' }}
+                />
+              )}
+              {enable_group_icon && group.icon?.trim().startsWith('<svg') && (
+                <img
+                  src={`data:image/svg+xml;base64,${btoa(group.icon)}`}
+                  alt="group icon"
+                  width="32px"
+                />
+              )}
+              <ListItemText
+                sx={{ flex: '0 1 auto', minWidth: 0 }}
+                primary={<StyledPrimary>{group.name}</StyledPrimary>}
+                secondary={
+                  <Box
+                    sx={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      pt: '2px',
+                      overflow: 'hidden',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    <Box
+                      component="span"
+                      sx={{
+                        marginTop: '2px',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                      }}
+                    >
+                      <StyledTypeBox>{group.type}</StyledTypeBox>
+                      <StyledSubtitle sx={{ color: 'text.secondary' }}>
+                        {group.now}
+                      </StyledSubtitle>
+                    </Box>
+                  </Box>
+                }
+                slotProps={{
+                  secondary: {
+                    component: 'div',
+                    sx: {
+                      display: 'flex',
+                      alignItems: 'center',
+                      color: '#ccc',
+                    },
+                  },
+                }}
+              />
               <Box
                 sx={{
                   display: 'flex',
                   alignItems: 'center',
-                  pt: '2px',
-                  overflow: 'hidden',
-                  whiteSpace: 'nowrap',
-                }}
-              >
-                <Box
-                  component="span"
-                  sx={{
-                    marginTop: '2px',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                  }}
-                >
-                  <StyledTypeBox>{group.type}</StyledTypeBox>
-                  <StyledSubtitle sx={{ color: 'text.secondary' }}>
-                    {group.now}
-                  </StyledSubtitle>
-                </Box>
-              </Box>
-            }
-            slotProps={{
-              secondary: {
-                component: 'div',
-                sx: { display: 'flex', alignItems: 'center', color: '#ccc' },
-              },
-            }}
-          />
-          <Box sx={{ display: 'flex', alignItems: 'center' }}>
-            <ProxyGroupTools
-              url={group.testUrl}
-              groupName={group.name}
-              headState={headState!}
-              onLocation={() => onLocation(group)}
-              onCheckDelay={() => onCheckAll(group.name)}
-              onHeadState={(p) => onHeadState(group.name, p)}
-            />
-            <Tooltip title={t('proxies.page.labels.proxyCount')} arrow>
-              <div
-                style={{
-                  minWidth: '50px',
-                  display: 'flex',
                   justifyContent: 'end',
-                  alignItems: 'center',
+                  flex: '1 1 auto',
+                  minWidth: 0,
                 }}
               >
-                <Chip
-                  size="small"
-                  label={`${group.all.length}`}
-                  sx={{
-                    mr: 1,
-                    backgroundColor: (theme) =>
-                      alpha(theme.palette.primary.main, 0.1),
-                    color: (theme) => theme.palette.primary.main,
-                  }}
+                <ProxyGroupTools
+                  url={group.testUrl}
+                  groupName={group.name}
+                  headState={headState!}
+                  onLocation={() => onLocation(group)}
+                  onCheckDelay={() => onCheckAll(group.name)}
+                  onHeadState={(p) => onHeadState(group.name, p)}
                 />
-              </div>
-            </Tooltip>
-            {headState?.open ? <ExpandLessRounded /> : <ExpandMoreRounded />}
+                <Tooltip title={t('proxies.page.labels.proxyCount')} arrow>
+                  <div
+                    style={{
+                      minWidth: '50px',
+                      display: 'flex',
+                      justifyContent: 'end',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <Chip
+                      size="small"
+                      label={`${group.members.length}`}
+                      sx={{
+                        mr: 1,
+                        backgroundColor: (theme) =>
+                          alpha(theme.palette.primary.main, 0.1),
+                        color: (theme) => theme.palette.primary.main,
+                      }}
+                    />
+                  </div>
+                </Tooltip>
+                {headState?.open ? (
+                  <ExpandLessRounded />
+                ) : (
+                  <ExpandMoreRounded />
+                )}
+              </Box>
+            </Box>
           </Box>
         </ListItemButton>
       </div>
@@ -218,11 +240,11 @@ export const ProxyRender = memo(function ProxyRender(props: RenderProps) {
     return (
       <ProxyItem
         group={group}
-        proxy={proxy!}
-        selected={group.now === proxy?.name}
+        member={member!.member}
+        selected={group.now === member?.member.ref.name}
         showType={headState?.showType}
         sx={{ py: 0, pl: 2 }}
-        onClick={() => onChangeProxy(group, proxy!)}
+        onClick={(nextMember) => onChangeProxy(group, nextMember)}
       />
     )
   }
@@ -257,7 +279,7 @@ export const ProxyRender = memo(function ProxyRender(props: RenderProps) {
           gridTemplateColumns: `repeat(${item.col! || 2}, 1fr)`,
         }}
       >
-        {proxyColItemsMemo}
+        {memberColItemsMemo}
       </Box>
     )
   }

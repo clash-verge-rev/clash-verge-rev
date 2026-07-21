@@ -3,7 +3,7 @@ import { ReactNode, isValidElement } from 'react'
 
 type NoticeType = 'success' | 'error' | 'info'
 
-export interface NoticeTranslationDescriptor {
+interface NoticeTranslationDescriptor {
   key: string
   params?: Record<string, unknown>
 }

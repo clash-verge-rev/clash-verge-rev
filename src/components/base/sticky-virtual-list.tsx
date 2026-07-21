@@ -279,10 +279,7 @@ export const StickyVirtualList = forwardRef(function StickyVirtualListInner<
                 transform: `translateY(${virtualRow.start}px)`,
                 width: '100%',
                 zIndex: 1,
-                ...(isGroup && {
-                  opacity: 0,
-                  zIndex: -10,
-                }),
+                ...(isGroup && { visibility: 'hidden' }),
               }}
             >
               {isGroup

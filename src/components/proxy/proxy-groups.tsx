@@ -11,7 +11,6 @@ import {
   useRef,
   useState,
 } from 'react'
-import { delayGroup, healthcheckProxyProvider } from 'tauri-plugin-mihomo-api'
 
 import {
   BaseEmpty,
@@ -22,9 +21,13 @@ import {
 import { useProxySelection } from '@/hooks/use-proxy-selection'
 import { useVerge } from '@/hooks/use-verge'
 import { useProxiesData } from '@/providers/app-data-context'
-import { calcuProxies } from '@/services/cmds'
 import delayManager from '@/services/delay'
-import { useQuery } from '@/services/query-client'
+import {
+  isInteractableMember,
+  resolveMember,
+  type ProxyGroupView,
+  type ResolvedProxyMember,
+} from '@/types/proxy-view'
 import { debugLog } from '@/utils/debug'
 
 import {
@@ -58,6 +61,7 @@ function useProxyRenderState(
   activeSelectedGroup: string | null,
 ) {
   const { verge } = useVerge()
+  const { proxyView } = useProxiesData()
   const { renderList, onProxies, onHeadState } = useRenderList(
     mode,
     isChainMode,
@@ -88,45 +92,27 @@ function useProxyRenderState(
     useLockFn(async (groupName: string) => {
       debugLog(`[ProxyGroups] 开始测试所有延迟，组: ${groupName}`)
 
-      const proxies = renderList
-        .filter(
-          (e) => e.group?.name === groupName && (e.type === 2 || e.type === 4),
-        )
-        .flatMap((e) => e.proxyCol || e.proxy!)
-        .filter(Boolean)
+      const group =
+        proxyView?.groups.find(({ name }) => name === groupName) ??
+        (proxyView?.global?.name === groupName ? proxyView.global : undefined)
+      const occurrences =
+        proxyView && group
+          ? group.members.map((member, memberIndex) => ({
+              memberIndex,
+              member: resolveMember(proxyView, member),
+            }))
+          : []
+      const interactable = occurrences
+        .map(({ member }) => member)
+        .filter(isInteractableMember)
 
-      debugLog(`[ProxyGroups] 找到代理数量: ${proxies.length}`)
-
-      const providers = new Set(
-        proxies.map((p) => p!.provider!).filter(Boolean),
-      )
-
-      if (providers.size) {
-        debugLog(`[ProxyGroups] 发现提供者，数量: ${providers.size}`)
-        Promise.allSettled(
-          [...providers].map((p) => healthcheckProxyProvider(p)),
-        ).then(() => {
-          debugLog(`[ProxyGroups] 提供者健康检查完成`)
-          onProxies()
-        })
-      }
-
-      const names = proxies.filter((p) => !p!.provider).map((p) => p!.name)
-      debugLog(`[ProxyGroups] 过滤后需要测试的代理数量: ${names.length}`)
+      debugLog(`[ProxyGroups] 找到代理数量: ${interactable.length}`)
 
       const url = delayManager.getUrl(groupName)
       debugLog(`[ProxyGroups] 测试URL: ${url}, 超时: ${timeout}ms`)
 
       try {
-        await Promise.race([
-          delayManager.checkListDelay(names, groupName, timeout),
-          delayGroup(groupName, url, timeout).then((result) => {
-            debugLog(
-              `[ProxyGroups] getGroupProxyDelays返回结果数量:`,
-              Object.keys(result || {}).length,
-            )
-          }), // 查询group delays 将清除fixed(不关注调用结果)
-        ])
+        await delayManager.checkListDelay(interactable, groupName, timeout)
         debugLog(`[ProxyGroups] 延迟测试完成，组: ${groupName}`)
       } catch (error) {
         console.error(`[ProxyGroups] 延迟测试出错，组: ${groupName}`, error)
@@ -187,16 +173,16 @@ function ChainProxyGroups(props: {
   chainConfigData?: string | null
 }) {
   const { mode, chainConfigData } = props
-  const { proxies: proxiesData } = useProxiesData()
+  const { proxyView } = useProxiesData()
   const [selectedGroup, setSelectedGroup] = useState<string | null>(null)
 
   const availableGroups = useMemo(() => {
-    const groups = proxiesData?.groups
+    const groups = proxyView?.groups
     if (!groups) return []
     return groups.filter(
-      (group: any) => group.type === 'Selector' || group.type === 'URLTest',
+      (group) => group.type === 'Selector' || group.type === 'URLTest',
     )
-  }, [proxiesData?.groups])
+  }, [proxyView?.groups])
 
   const defaultRuleGroup = useMemo(() => {
     if (mode === 'rule' && availableGroups.length > 0) {
@@ -314,16 +300,16 @@ function ChainProxyGroups(props: {
     scrollTopRef.current = 0
   }, [])
 
-  const handleLocation = useStableCallback((group: IProxyGroupItem) => {
+  const handleLocation = useStableCallback((group: ProxyGroupView) => {
     if (!group) return
     const { name, now } = group
 
     const index = renderList.findIndex(
       (item) =>
         item.group?.name === name &&
-        ((item.type === 2 && item.proxy?.name === now) ||
+        ((item.type === 2 && item.member?.member.ref.name === now) ||
           (item.type === 4 &&
-            item.proxyCol?.some((proxy) => proxy.name === now))),
+            item.memberCol?.some(({ member }) => member.ref.name === now))),
     )
 
     if (index >= 0) {
@@ -371,24 +357,56 @@ function NormalProxyGroups(props: { mode: string }) {
     saveScrollPosition,
   } = useProxyRenderState(mode, false, null)
   const renderFirstRef = useRef(true)
+  // 恢复滚动位置期间设为 true，避免程序化滚动触发的 scroll 事件把中间值写回存储
+  const isRestoringRef = useRef(false)
 
   // 目前无法使用 StickyVirtualList 的 initialOffset 值设置初始化，具体原因需排查
   // 从 localStorage 恢复滚动位置
   useLayoutEffect(() => {
     if (renderList.length === 0) return
+    if (!renderFirstRef.current) return
     const node = stickyListRef.current?.getScrollElement()
     if (!node) return
-    if (!renderFirstRef.current) return
 
     const savedPosition = getScrollPosition()
-    if (savedPosition !== undefined) {
-      node.scrollTop = savedPosition
-      if (node.scrollTop === savedPosition) {
-        renderFirstRef.current = false
-      }
-    } else {
-      // The position that hasn't been saved yet during the first render
+    // 未保存过位置或位置为 0（顶部）时无需恢复
+    if (!savedPosition) {
       renderFirstRef.current = false
+      return
+    }
+
+    // 虚拟列表初始使用预估高度，真实高度测量完成后总高度才会稳定。
+    // 尤其是过滤后节点数变少时，预估总高度常常不足以一次性滚动到目标位置，
+    // 因此跨帧重试，直到到达目标位置（或内容确实不够高）为止。
+    isRestoringRef.current = true
+    let rafId = 0
+    let attempts = 0
+    const maxAttempts = 30
+
+    const step = () => {
+      const el = stickyListRef.current?.getScrollElement()
+      if (!el) {
+        isRestoringRef.current = false
+        return
+      }
+
+      el.scrollTop = savedPosition
+      attempts += 1
+
+      const reached = Math.abs(el.scrollTop - savedPosition) <= 1
+      if (reached || attempts >= maxAttempts) {
+        renderFirstRef.current = false
+        isRestoringRef.current = false
+        return
+      }
+
+      rafId = requestAnimationFrame(step)
+    }
+
+    rafId = requestAnimationFrame(step)
+    return () => {
+      cancelAnimationFrame(rafId)
+      isRestoringRef.current = false
     }
   }, [renderList.length, getScrollPosition])
 
@@ -399,6 +417,8 @@ function NormalProxyGroups(props: { mode: string }) {
 
   const handleScroll = useCallback(
     (event: Event) => {
+      // 恢复位置过程中产生的滚动不写回存储，避免中间的钳制值覆盖真实位置
+      if (isRestoringRef.current) return
       const target = event.target as HTMLElement | null
       const nextScrollTop = target?.scrollTop ?? 0
 
@@ -432,24 +452,26 @@ function NormalProxyGroups(props: { mode: string }) {
   })
 
   const handleChangeProxy = useCallback(
-    (group: IProxyGroupItem, proxy: IProxyItem) => {
+    (group: ProxyGroupView, member: ResolvedProxyMember) => {
       if (!['Selector', 'URLTest', 'Fallback'].includes(group.type)) return
+      if (!isInteractableMember(member)) return
 
-      handleProxyGroupChange(group, proxy)
+      handleProxyGroupChange(group, { name: member.ref.name })
     },
     [handleProxyGroupChange],
   )
 
   // 滚到对应的节点
-  const handleLocation = useStableCallback((group: IProxyGroupItem) => {
+  const handleLocation = useStableCallback((group: ProxyGroupView) => {
     if (!group) return
     const { name, now } = group
 
     const index = renderList.findIndex(
       (e) =>
         e.group?.name === name &&
-        ((e.type === 2 && e.proxy?.name === now) ||
-          (e.type === 4 && e.proxyCol?.some((p) => p.name === now))),
+        ((e.type === 2 && e.member?.member.ref.name === now) ||
+          (e.type === 4 &&
+            e.memberCol?.some(({ member }) => member.ref.name === now))),
     )
 
     if (index >= 0) {
@@ -486,7 +508,7 @@ function NormalProxyGroups(props: { mode: string }) {
 
   // 点击代理组改变展开状态，先滚动到sticky的代理组位置，再收起展开状态
   const handleGroupToggle = useCallback(
-    async (group: IProxyGroupItem) => {
+    async (group: ProxyGroupView) => {
       const index = renderList.findIndex(
         (item) => item.type === 0 && item.group.name === group.name,
       )
@@ -513,7 +535,13 @@ function NormalProxyGroups(props: { mode: string }) {
         stickyed={stickyed}
         onLocation={handleLocation}
         onCheckAll={handleCheckAll}
-        onHeadState={onHeadState}
+        onHeadState={async (groupName, patch) => {
+          if (stickyed && patch.filterText !== undefined) {
+            handleGroupLocationByName(groupName)
+            await stickyListRef.current?.waitForScrollEnd()
+          }
+          onHeadState(groupName, patch)
+        }}
         onChangeProxy={handleChangeProxy}
         onGroupToggle={handleGroupToggle}
       />
@@ -524,6 +552,7 @@ function NormalProxyGroups(props: { mode: string }) {
       onHeadState,
       handleLocation,
       handleGroupToggle,
+      handleGroupLocationByName,
     ],
   )
 
@@ -569,17 +598,6 @@ function NormalProxyGroups(props: { mode: string }) {
 
 export const ProxyGroups = (props: Props) => {
   const { mode, isChainMode = false, chainConfigData } = props
-
-  // Drive 3s polling on the shared TQ cache; data is read via granular context below
-  useQuery({
-    queryKey: ['getProxies'],
-    queryFn: calcuProxies,
-    refetchInterval: 3000,
-    refetchIntervalInBackground: false,
-    staleTime: 1500,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
-  })
 
   if (mode === 'direct') {
     return <BaseEmpty textKey="proxies.page.messages.directMode" />
