@@ -44,6 +44,10 @@ impl Handle {
         Self::send_event(FrontendEvent::RefreshVerge);
     }
 
+    pub fn refresh_profiles() {
+        Self::send_event(FrontendEvent::RefreshProfiles);
+    }
+
     pub fn notify_profile_changed(profile_id: &String) {
         Self::send_event(FrontendEvent::ProfileChanged {
             current_profile_id: profile_id,
@@ -86,7 +90,7 @@ impl Handle {
             return;
         }
 
-        NotificationSystem::send_event(event);
+        NotificationSystem::send_event(Self::app_handle().clone(), event);
     }
 }
 

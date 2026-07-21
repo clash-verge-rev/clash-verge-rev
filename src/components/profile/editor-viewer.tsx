@@ -28,7 +28,7 @@ import getSystem from '@/utils/get-system'
 
 const appWindow = getCurrentWebviewWindow()
 
-export type EditorLanguage = 'yaml' | 'javascript' | 'css'
+type EditorLanguage = 'yaml' | 'javascript' | 'css'
 
 export interface EditorViewerProps {
   open: boolean

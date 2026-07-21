@@ -1,48 +1,11 @@
 import { Context, createContext, use } from 'react'
-import {
-  BaseConfig,
-  ProxyProvider,
-  Rule,
-  RuleProvider,
-} from 'tauri-plugin-mihomo-api'
+import { BaseConfig, Rule, RuleProvider } from 'tauri-plugin-mihomo-api'
 
-export interface AppDataContextType {
-  proxies: any
-  clashConfig: BaseConfig
-  rules: Rule[]
-  sysproxy: any
-  runningMode?: string
-  uptime: number
-  proxyProviders: Record<string, ProxyProvider>
-  ruleProviders: Record<string, RuleProvider>
-  systemProxyAddress: string
-  isCoreDataPending: boolean
-
-  refreshProxy: () => Promise<any>
-  refreshClashConfig: () => Promise<any>
-  refreshRules: () => Promise<any>
-  refreshSysproxy: () => Promise<any>
-  refreshProxyProviders: () => Promise<any>
-  refreshRuleProviders: () => Promise<any>
-  refreshAll: () => Promise<any>
-}
-
-export interface ConnectionWithSpeed extends IConnectionsItem {
-  curUpload: number
-  curDownload: number
-}
-
-export interface ConnectionSpeedData {
-  id: string
-  upload: number
-  download: number
-  timestamp: number
-}
+import type { ProxyViewV1 } from '@/types/proxy-view'
 
 export interface ProxiesContextType {
-  proxies: any
-  proxyProviders: Record<string, ProxyProvider | undefined>
-  isProxiesPending: boolean
+  proxyView: ProxyViewV1 | undefined
+  isProxyViewPending: boolean
 }
 
 export interface RulesContextType {
@@ -70,13 +33,12 @@ export interface CoreDataStatusContextType {
 }
 
 export interface RefreshersContextType {
-  refreshProxy: () => Promise<any>
-  refreshClashConfig: () => Promise<any>
-  refreshRules: () => Promise<any>
-  refreshSysproxy: () => Promise<any>
-  refreshProxyProviders: () => Promise<any>
-  refreshRuleProviders: () => Promise<any>
-  refreshAll: () => Promise<any>
+  refreshProxy: () => Promise<unknown>
+  refreshClashConfig: () => Promise<unknown>
+  refreshRules: () => Promise<unknown>
+  refreshSysproxy: () => Promise<unknown>
+  refreshRuleProviders: () => Promise<unknown>
+  refreshAll: () => Promise<unknown>
 }
 
 export const ProxiesContext = createContext<ProxiesContextType | null>(null)
@@ -98,18 +60,8 @@ const useCtx = <T>(ctx: Context<T | null>, hookName: string): T => {
   return v
 }
 
-export const useProxiesData = () => {
-  const { proxies, proxyProviders, isProxiesPending } = useCtx(
-    ProxiesContext,
-    'useProxiesData',
-  )
-
-  return {
-    proxies,
-    proxyProviders: proxyProviders as Record<string, ProxyProvider>,
-    isProxiesPending,
-  }
-}
+export const useProxiesData = (): ProxiesContextType =>
+  useCtx(ProxiesContext, 'useProxiesData')
 
 export const useRulesData = () => {
   const { rules, ruleProviders } = useCtx(RulesContext, 'useRulesData')
@@ -134,27 +86,3 @@ export const useAppRefreshers = (): RefreshersContextType =>
 
 export const useCoreDataStatus = (): CoreDataStatusContextType =>
   useCtx(CoreDataStatusContext, 'useCoreDataStatus')
-
-export const useAppData = (): AppDataContextType => {
-  const { proxies, proxyProviders } = useProxiesData()
-  const { rules, ruleProviders } = useRulesData()
-  const { clashConfig } = useClashConfigData()
-  const { sysproxy, runningMode, systemProxyAddress } = useSystemData()
-  const { uptime } = useUptimeData()
-  const { isCoreDataPending } = useCoreDataStatus()
-  const refreshers = useAppRefreshers()
-
-  return {
-    proxies,
-    clashConfig: clashConfig as BaseConfig,
-    rules,
-    sysproxy,
-    runningMode,
-    uptime,
-    proxyProviders: proxyProviders as Record<string, ProxyProvider>,
-    ruleProviders: ruleProviders as Record<string, RuleProvider>,
-    systemProxyAddress,
-    isCoreDataPending,
-    ...refreshers,
-  }
-}

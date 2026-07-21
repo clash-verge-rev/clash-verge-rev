@@ -91,6 +91,8 @@ export function URI_VLESS(line: string): IProxyVlessConfig {
     uuid,
   }
 
+  proxy.encryption = params.encryption === 'none' ? '' : params.encryption
+
   proxy.tls = (params.security && params.security !== 'none') || undefined
   if (isShadowrocket && parseBool(params.tls) === true) {
     proxy.tls = true
@@ -131,7 +133,10 @@ export function URI_VLESS(line: string): IProxyVlessConfig {
     if (type === 'httpupgrade') {
       network = 'ws'
       httpupgrade = true
-    } else if (type && ['tcp', 'ws', 'http', 'grpc', 'h2'].includes(type)) {
+    } else if (
+      type &&
+      ['tcp', 'ws', 'http', 'grpc', 'h2', 'xhttp'].includes(type)
+    ) {
       network = type as NetworkType
     } else {
       network = 'tcp'
@@ -203,6 +208,19 @@ export function URI_VLESS(line: string): IProxyVlessConfig {
         }
         if (Object.keys(wsOpts).length > 0) {
           proxy['ws-opts'] = wsOpts
+        }
+        break
+      }
+      case 'xhttp': {
+        const xhttpOpts: XHttpOptions = {}
+        const hostVal = getIfNotBlank(host)
+        const pathVal = getIfNotBlank(path)
+        const modeVal = getIfNotBlank(params.mode)
+        if (hostVal) xhttpOpts.host = hostVal
+        if (pathVal) xhttpOpts.path = pathVal
+        if (modeVal) xhttpOpts.mode = modeVal
+        if (Object.keys(xhttpOpts).length > 0) {
+          proxy['xhttp-opts'] = xhttpOpts
         }
         break
       }

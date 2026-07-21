@@ -1,8 +1,8 @@
-import { useEffect, useMemo, useReducer, useRef } from 'react'
-
-import { useVerge } from '@/hooks/use-verge'
 import delayManager from '@/services/delay'
+import { memberDetails } from '@/types/proxy-view'
 import { compileStringMatcher } from '@/utils/search-matcher'
+
+import type { ResolvedMemberOccurrence } from './use-render-list'
 
 // default | delay | alphabet
 export type ProxySortType = 0 | 1 | 2
@@ -13,91 +13,8 @@ export type ProxySearchState = {
   useRegularExpression?: boolean
 }
 
-export default function useFilterSort(
-  proxies: IProxyItem[],
-  groupName: string,
-  filterText: string,
-  sortType: ProxySortType,
-  searchState?: ProxySearchState,
-) {
-  const { verge } = useVerge()
-  const [_, bumpRefresh] = useReducer((count: number) => count + 1, 0)
-  const lastInputRef = useRef<{ text: string; sort: ProxySortType } | null>(
-    null,
-  )
-  const debounceTimerRef = useRef<number | null>(null)
-
-  useEffect(() => {
-    let last = 0
-
-    delayManager.setGroupListener(groupName, () => {
-      // 简单节流
-      const now = Date.now()
-      if (now - last > 666) {
-        last = now
-        bumpRefresh()
-      }
-    })
-
-    return () => {
-      delayManager.removeGroupListener(groupName)
-    }
-  }, [groupName])
-
-  const compute = useMemo(() => {
-    const fp = filterProxies(proxies, groupName, filterText, searchState)
-    const sp = sortProxies(
-      fp,
-      groupName,
-      sortType,
-      verge?.default_latency_timeout,
-    )
-    return sp
-  }, [
-    proxies,
-    groupName,
-    filterText,
-    sortType,
-    searchState,
-    verge?.default_latency_timeout,
-  ])
-
-  const [result, setResult] = useReducer(
-    (_prev: IProxyItem[], next: IProxyItem[]) => next,
-    compute,
-  )
-
-  useEffect(() => {
-    if (debounceTimerRef.current !== null) {
-      window.clearTimeout(debounceTimerRef.current)
-      debounceTimerRef.current = null
-    }
-
-    const prev = lastInputRef.current
-    const stableInputs =
-      prev && prev.text === filterText && prev.sort === sortType
-
-    lastInputRef.current = { text: filterText, sort: sortType }
-
-    const delay = stableInputs ? 0 : 150
-    debounceTimerRef.current = window.setTimeout(() => {
-      setResult(compute)
-      debounceTimerRef.current = null
-    }, delay)
-
-    return () => {
-      if (debounceTimerRef.current !== null) {
-        window.clearTimeout(debounceTimerRef.current)
-        debounceTimerRef.current = null
-      }
-    }
-  }, [compute, filterText, sortType])
-
-  return result
-}
-
 export function filterSort(
-  proxies: IProxyItem[],
+  proxies: ResolvedMemberOccurrence[],
   groupName: string,
   filterText: string,
   sortType: ProxySortType,
@@ -120,7 +37,7 @@ const regex2 = /type=(.*)/i
  * according to the regular conditions
  */
 function filterProxies(
-  proxies: IProxyItem[],
+  proxies: ResolvedMemberOccurrence[],
   groupName: string,
   filterText: string,
   searchState?: ProxySearchState,
@@ -135,8 +52,8 @@ function filterProxies(
     const value =
       symbol2 === 'error' ? 1e5 : symbol2 === 'timeout' ? 3000 : +symbol2
 
-    return proxies.filter((p) => {
-      const delay = delayManager.getDelayFix(p, groupName)
+    return proxies.filter(({ member }) => {
+      const delay = delayManager.getDelayFix(member, groupName)
 
       if (delay < 0) return false
       if (symbol === '=' && symbol2 === 'error') return delay >= 1e5
@@ -152,7 +69,9 @@ function filterProxies(
   const res2 = regex2.exec(query)
   if (res2) {
     const type = res2[1].toLowerCase()
-    return proxies.filter((p) => p.type.toLowerCase().includes(type))
+    return proxies.filter(({ member }) =>
+      (memberDetails(member)?.type ?? '').toLowerCase().includes(type),
+    )
   }
 
   const {
@@ -167,14 +86,14 @@ function filterProxies(
   })
 
   if (!compiled.isValid) return []
-  return proxies.filter((p) => compiled.matcher(p.name))
+  return proxies.filter(({ member }) => compiled.matcher(member.ref.name))
 }
 
 /**
  * sort the proxy
  */
 function sortProxies(
-  proxies: IProxyItem[],
+  proxies: ResolvedMemberOccurrence[],
   groupName: string,
   sortType: ProxySortType,
   latencyTimeout?: number,
@@ -203,8 +122,8 @@ function sortProxies(
     }
 
     list.sort((a, b) => {
-      const ad = delayManager.getDelayFix(a, groupName)
-      const bd = delayManager.getDelayFix(b, groupName)
+      const ad = delayManager.getDelayFix(a.member, groupName)
+      const bd = delayManager.getDelayFix(b.member, groupName)
       const [ar, av] = categorizeDelay(ad)
       const [br, bv] = categorizeDelay(bd)
 
@@ -212,7 +131,7 @@ function sortProxies(
       return av - bv
     })
   } else {
-    list.sort((a, b) => a.name.localeCompare(b.name))
+    list.sort((a, b) => a.member.ref.name.localeCompare(b.member.ref.name))
   }
 
   return list

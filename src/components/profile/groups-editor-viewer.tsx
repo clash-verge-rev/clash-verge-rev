@@ -7,7 +7,11 @@ import {
   useSensor,
   useSensors,
 } from '@dnd-kit/core'
-import { SortableContext, sortableKeyboardCoordinates } from '@dnd-kit/sortable'
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+} from '@dnd-kit/sortable'
 import {
   VerticalAlignBottomRounded,
   VerticalAlignTopRounded,
@@ -285,16 +289,6 @@ export const GroupsEditorViewer = (props: Props) => {
       coordinateGetter: sortableKeyboardCoordinates,
     }),
   )
-  const reorder = (
-    list: IProxyGroupConfig[],
-    startIndex: number,
-    endIndex: number,
-  ) => {
-    const result = Array.from(list)
-    const [removed] = result.splice(startIndex, 1)
-    result.splice(endIndex, 0, removed)
-    return result
-  }
   const onPrependDragEnd = async (event: DragEndEvent) => {
     const { active, over } = event
     if (over) {
@@ -310,7 +304,7 @@ export const GroupsEditorViewer = (props: Props) => {
           }
         })
 
-        setPrependSeq(reorder(prependSeq, activeIndex, overIndex))
+        setPrependSeq(arrayMove(prependSeq, activeIndex, overIndex))
       }
     }
   }
@@ -328,7 +322,7 @@ export const GroupsEditorViewer = (props: Props) => {
             overIndex = index
           }
         })
-        setAppendSeq(reorder(appendSeq, activeIndex, overIndex))
+        setAppendSeq(arrayMove(appendSeq, activeIndex, overIndex))
       }
     }
   }

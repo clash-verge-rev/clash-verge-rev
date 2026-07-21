@@ -89,6 +89,9 @@ const STARTUP_LANGUAGE_SECTIONS = [
   'profiles',
   'proxies',
   'tests',
+  'rules',
+  'connections',
+  'logs',
 ] as const
 
 const localeModules = import.meta.glob<LocaleModule>('@/locales/*/*.json')
@@ -104,14 +107,6 @@ const localeLoaders = Object.entries(localeModules).reduce<
   }
   return acc
 }, {})
-
-export const languages: Record<string, any> = supportedLanguages.reduce(
-  (acc, lang) => {
-    acc[lang] = {}
-    return acc
-  },
-  {} as Record<string, any>,
-)
 
 const loadLanguageSections = async (
   language: string,
@@ -144,9 +139,6 @@ const loadLanguageSections = async (
   }
 }
 
-export const loadLanguage = async (language: string) =>
-  loadLanguageSections(language, STARTUP_LANGUAGE_SECTIONS)
-
 const getLoadedLanguageSections = (language: string) =>
   Object.keys(i18n.getResourceBundle(language, 'translation') ?? {})
 
@@ -159,7 +151,7 @@ i18n.use(initReactI18next).init({
   },
 })
 
-export const ensureLanguageSections = async (
+const ensureLanguageSections = async (
   sections: string | readonly string[],
   language: string = i18n.language || FALLBACK_LANGUAGE,
 ) => {
@@ -185,7 +177,7 @@ export const changeLanguage = async (language: string) => {
   )
 
   await ensureLanguageSections(
-    loadedSections.length ? loadedSections : STARTUP_LANGUAGE_SECTIONS,
+    [...new Set([...loadedSections, ...STARTUP_LANGUAGE_SECTIONS])],
     targetLanguage,
   )
 

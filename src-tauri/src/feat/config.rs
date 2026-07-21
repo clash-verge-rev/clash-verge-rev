@@ -18,6 +18,8 @@ pub async fn patch_clash(patch: &Mapping) -> Result<()> {
         if patch.get("secret").is_some() || patch.get("external-controller").is_some() {
             Config::generate().await?;
             CoreManager::global().restart_core().await?;
+        } else if patch.get("allow-lan").is_some() {
+            CoreManager::global().update_config_checked().await?;
         } else {
             if patch.get("mode").is_some() {
                 tray::Tray::global().update_menu_and_icon().await;
@@ -210,9 +212,6 @@ async fn process_terminated_flags(update_flags: UpdateFlags, patch: &IVerge) -> 
         handle::Handle::refresh_clash();
     }
     if update_flags.contains(UpdateFlags::VERGE_CONFIG) {
-        Config::verge()
-            .await
-            .edit_draft(|d| d.enable_global_hotkey = patch.enable_global_hotkey);
         handle::Handle::refresh_verge();
     }
     if update_flags.contains(UpdateFlags::LAUNCH) {

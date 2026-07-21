@@ -29,6 +29,8 @@ jobs:
     runs-on: ubuntu-latest
     needs: check_commit
     if: ${{ needs.check_commit.outputs.should_run == 'true' }}
+    outputs:
+      release_id: ${{ steps.upload_release.outputs.id }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v7
@@ -102,9 +104,11 @@ jobs:
           EOF
 
       - name: Upload Release
+        id: upload_release
         uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ env.TAG_NAME }}
+          target_commitish: ${{ github.sha }}
           name: 'Clash Verge Rev ${{ env.TAG_CHANNEL }}'
           body_path: release.txt
           prerelease: true
@@ -147,7 +151,7 @@ jobs:
       - name: Install Rust Stable
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: '1.96.0'
+          toolchain: '1.96.1'
           targets: ${{ matrix.target }}
 
       - name: Add Rust Target
@@ -169,15 +173,6 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y libxslt1.1 libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf
-
-      - name: Install x86 OpenSSL (macOS only)
-        if: matrix.target == 'x86_64-apple-darwin'
-        run: |
-          arch -x86_64 brew install openssl@3
-          echo "OPENSSL_DIR=$(brew --prefix openssl@3)" >> $GITHUB_ENV
-          echo "OPENSSL_INCLUDE_DIR=$(brew --prefix openssl@3)/include" >> $GITHUB_ENV
-          echo "OPENSSL_LIB_DIR=$(brew --prefix openssl@3)/lib" >> $GITHUB_ENV
-          echo "PKG_CONFIG_PATH=$(brew --prefix openssl@3)/lib/pkgconfig" >> $GITHUB_ENV
 
       - uses: pnpm/action-setup@v6.0.9
         name: Install pnpm
@@ -214,7 +209,7 @@ jobs:
           echo "Rust target ${{ matrix.target }} installed."
 
       - name: Tauri build for Windows-macOS-Linux
-        uses: tauri-apps/tauri-action@v0
+        uses: tauri-apps/tauri-action@v1
         env:
           NODE_OPTIONS: '--max_old_space_size=4096'
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -227,6 +222,7 @@ jobs:
           APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         with:
+          releaseId: ${{ needs.update_tag.outputs.release_id }}
           tagName: ${{ env.TAG_NAME }}
           releaseName: 'Clash Verge Rev ${{ env.TAG_CHANNEL }}'
           releaseBody: 'More new features are now supported.'
@@ -260,7 +256,7 @@ jobs:
       - name: Install Rust Stable
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: '1.96.0'
+          toolchain: '1.96.1'
           targets: ${{ matrix.target }}
 
       - name: Add Rust Target
@@ -465,7 +461,7 @@ jobs:
 
       - name: Tauri build for Windows
         id: build
-        uses: tauri-apps/tauri-action@v0
+        uses: tauri-apps/tauri-action@v1
         env:
           NODE_OPTIONS: '--max_old_space_size=4096'
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

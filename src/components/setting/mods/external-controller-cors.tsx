@@ -1,7 +1,7 @@
 import { Delete as DeleteIcon, RestartAltRounded } from '@mui/icons-material'
 import { Box, Button, Divider, List, ListItem, TextField } from '@mui/material'
 import { useLockFn, useRequest } from 'ahooks'
-import { forwardRef, useImperativeHandle, useMemo, useState } from 'react'
+import { forwardRef, useImperativeHandle, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BaseDialog, Switch } from '@/components/base'
@@ -72,6 +72,11 @@ interface ClashHeaderConfigingRef {
   close: () => void
 }
 
+interface AllowOriginItem {
+  key: number
+  value: string
+}
+
 export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
   (props, ref) => {
     const { t } = useTranslation()
@@ -84,23 +89,28 @@ export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
       'allow-origins': defaultAllowOrigins,
     } = defaultCorsConfig ?? {}
 
+    const lastKeyRef = useRef(0) // 用于生成唯一的key
+
     // CORS配置状态管理
     const [corsConfig, setCorsConfig] = useState<{
       allowPrivateNetwork: boolean
-      allowOrigins: string[]
+      allowOrigins: AllowOriginItem[]
     }>(() => {
       const cors = clash?.['external-controller-cors']
       const origins = cors?.['allow-origins'] ?? []
       return {
         allowPrivateNetwork: cors?.['allow-private-network'] ?? true,
-        allowOrigins: filterBaseOriginsForUI(origins),
+        allowOrigins: filterBaseOriginsForUI(origins).map((origin) => {
+          lastKeyRef.current += 1
+          return { key: lastKeyRef.current, value: origin }
+        }),
       }
     })
 
     // 处理CORS配置变更
     const handleCorsConfigChange = (
       key: 'allowPrivateNetwork' | 'allowOrigins',
-      value: boolean | string[],
+      value: boolean | AllowOriginItem[],
     ) => {
       setCorsConfig((prev) => ({
         ...prev,
@@ -110,13 +120,17 @@ export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
 
     // 添加新的允许来源
     const handleAddOrigin = () => {
-      handleCorsConfigChange('allowOrigins', [...corsConfig.allowOrigins, ''])
+      lastKeyRef.current += 1
+      handleCorsConfigChange('allowOrigins', [
+        ...corsConfig.allowOrigins,
+        { key: lastKeyRef.current, value: '' },
+      ])
     }
 
     // 更新允许来源列表中的某一项
     const handleUpdateOrigin = (index: number, value: string) => {
       const newOrigins = [...corsConfig.allowOrigins]
-      newOrigins[index] = value
+      newOrigins[index] = { ...newOrigins[index], value }
       handleCorsConfigChange('allowOrigins', newOrigins)
     }
 
@@ -131,7 +145,9 @@ export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
     const { loading, run: saveConfig } = useRequest(
       async () => {
         // 保存时使用完整的源列表（包括开发URL）
-        const fullOrigins = getFullOrigins(corsConfig.allowOrigins)
+        const fullOrigins = getFullOrigins(
+          corsConfig.allowOrigins.map((origin) => origin.value),
+        )
 
         await patchClash({
           'external-controller-cors': {
@@ -160,9 +176,13 @@ export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
       open: () => {
         const cors = clash?.['external-controller-cors']
         const origins = cors?.['allow-origins'] ?? []
+        lastKeyRef.current = 0
         setCorsConfig({
           allowPrivateNetwork: cors?.['allow-private-network'] ?? true,
-          allowOrigins: filterBaseOriginsForUI(origins),
+          allowOrigins: filterBaseOriginsForUI(origins).map((origin) => {
+            lastKeyRef.current += 1
+            return { key: lastKeyRef.current, value: origin }
+          }),
         })
         setOpen(true)
       },
@@ -172,19 +192,6 @@ export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
     const handleSave = useLockFn(async () => {
       await saveConfig()
     })
-
-    const originEntries = useMemo(() => {
-      const counts: Record<string, number> = {}
-      return corsConfig.allowOrigins.map((origin, index) => {
-        const occurrence = (counts[origin] = (counts[origin] ?? 0) + 1)
-        const keyBase = origin || 'origin'
-        return {
-          origin,
-          index,
-          key: `${keyBase}-${occurrence}`,
-        }
-      })
-    }, [corsConfig.allowOrigins])
 
     return (
       <BaseDialog
@@ -256,7 +263,7 @@ export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
               <div style={{ marginBottom: 8, fontWeight: 'bold' }}>
                 {t('settings.sections.externalCors.fields.allowedOrigins')}
               </div>
-              {originEntries.map(({ origin, index, key }) => (
+              {corsConfig.allowOrigins.map(({ key, value: origin }, index) => (
                 <div
                   key={key}
                   style={{

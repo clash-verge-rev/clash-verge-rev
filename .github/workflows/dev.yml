@@ -135,7 +135,7 @@ jobs:
 
       - name: Tauri build
         if: github.event.inputs[matrix.input] == 'true'
-        uses: tauri-apps/tauri-action@v0
+        uses: tauri-apps/tauri-action@v1
         env:
           NODE_OPTIONS: '--max_old_space_size=4096'
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

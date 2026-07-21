@@ -45,7 +45,7 @@ export const setPreloadConfig = (config: IVergeConfig | null) => {
 
 export const getPreloadConfig = () => vergeConfigCache
 
-export const preloadConfig = async () => {
+const preloadConfig = async () => {
   try {
     const config = await getVergeConfig()
     setPreloadConfig(config)
@@ -57,7 +57,7 @@ export const preloadConfig = async () => {
   }
 }
 
-export const preloadLanguage = async (
+const preloadLanguage = async (
   vergeConfig?: IVergeConfig | null,
   loadConfig: () => Promise<IVergeConfig | null> = preloadConfig,
 ) => {

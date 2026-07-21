@@ -1,9 +1,67 @@
 import { Close, CropSquare, FilterNone, Minimize } from '@mui/icons-material'
 import { Box, IconButton } from '@mui/material'
-import { forwardRef, useImperativeHandle } from 'react'
+import {
+  forwardRef,
+  type PointerEvent,
+  useCallback,
+  useImperativeHandle,
+} from 'react'
 
 import { useWindowControls } from '@/hooks/use-window'
 import getSystem from '@/utils/get-system'
+
+const RESIZE_HANDLES = [
+  { direction: 'North', position: 'north' },
+  { direction: 'NorthEast', position: 'north-east' },
+  { direction: 'East', position: 'east' },
+  { direction: 'SouthEast', position: 'south-east' },
+  { direction: 'South', position: 'south' },
+  { direction: 'SouthWest', position: 'south-west' },
+  { direction: 'West', position: 'west' },
+  { direction: 'NorthWest', position: 'north-west' },
+] as const
+
+export const WindowResizeHandles = () => {
+  const { currentWindow, maximized } = useWindowControls()
+
+  const startResizeDragging = useCallback(
+    (event: PointerEvent<HTMLDivElement>) => {
+      if (event.button !== 0) return
+
+      event.preventDefault()
+      const direction = event.currentTarget.dataset.resizeDirection
+      const handle = RESIZE_HANDLES.find((item) => item.direction === direction)
+
+      if (handle) {
+        void currentWindow
+          .startResizeDragging(handle.direction)
+          .catch((error) =>
+            console.warn('[WindowResizeHandles] 调整窗口大小失败:', error),
+          )
+      }
+    },
+    [currentWindow],
+  )
+
+  if (getSystem() !== 'linux' || maximized) return null
+
+  return (
+    <div
+      className="window-resize-handles"
+      data-tauri-drag-region="false"
+      aria-hidden="true"
+    >
+      {RESIZE_HANDLES.map(({ direction, position }) => (
+        <div
+          key={direction}
+          className={`window-resize-handle window-resize-handle--${position}`}
+          data-resize-direction={direction}
+          onPointerDown={startResizeDragging}
+        />
+      ))}
+    </div>
+  )
+}
 
 export const WindowControls = forwardRef(function WindowControls(props, ref) {
   const OS = getSystem()

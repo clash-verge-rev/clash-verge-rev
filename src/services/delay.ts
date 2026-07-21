@@ -1,5 +1,15 @@
-import { delayProxyByName, ProxyDelay } from 'tauri-plugin-mihomo-api'
+import {
+  delayProxyByName,
+  healthcheckNodeInProvider,
+  type ProxyDelay,
+} from 'tauri-plugin-mihomo-api'
 
+import {
+  memberDetails,
+  providerNameOf,
+  type InteractableProxyMember,
+  type ResolvedProxyMember,
+} from '@/types/proxy-view'
 import { debugLog } from '@/utils/debug'
 
 const hashKey = (name: string, group: string) => `${group ?? ''}::${name}`
@@ -181,28 +191,46 @@ class DelayManager {
     return update ? update.delay : -1
   }
 
-  /// 暂时修复provider的节点延迟排序的问题
-  getDelayFix(proxy: IProxyItem, group: string) {
-    if (!proxy.provider) {
-      const update = this.getDelayUpdate(proxy.name, group)
-      if (update && (update.delay >= 0 || update.delay === -2)) {
-        return update.delay
-      }
+  getDelayFix(member: ResolvedProxyMember, group: string) {
+    if (member.kind === 'unresolved') return -1
+    const details = memberDetails(member)
+    const name = member.ref.name
+    const update = this.getDelayUpdate(name, group)
+    if (update && (update.delay >= 0 || update.delay === -2)) {
+      return update.delay
     }
 
-    // 添加 history 属性的安全检查
-    if (proxy.history && proxy.history.length > 0) {
+    if (details?.history && details.history.length > 0) {
       // 0ms以error显示
-      return proxy.history[proxy.history.length - 1].delay || 1e6
+      return details.history[details.history.length - 1].delay || 1e6
     }
     return -1
   }
 
-  async checkDelay(
+  // 统一延迟测试检测
+  async unifiedDelayCheck(
     name: string,
+    url: string,
+    timeout: number,
+    providerName?: string,
+  ) {
+    if (providerName)
+      return healthcheckNodeInProvider(providerName, name, url, timeout)
+    return delayProxyByName(name, url, timeout)
+  }
+
+  async checkDelay(
+    member: InteractableProxyMember,
     group: string,
     timeout: number,
   ): Promise<DelayUpdate> {
+    const name = member.ref.name
+    const providerName =
+      member.kind === 'node' ? providerNameOf(member.node) : undefined
+    const apiName =
+      member.kind === 'node' && member.node.source.kind === 'provider'
+        ? member.node.source.proxyName
+        : name
     debugLog(
       `[DelayManager] 开始测试延迟，代理: ${name}, 组: ${group}, 超时: ${timeout}ms`,
     )
@@ -223,7 +251,7 @@ class DelayManager {
 
       // 使用Promise.race来实现超时控制
       const result = await Promise.race([
-        delayProxyByName(name, url, timeout),
+        this.unifiedDelayCheck(apiName, url, timeout, providerName),
         timeoutPromise,
       ])
 
@@ -250,25 +278,28 @@ class DelayManager {
   }
 
   async checkListDelay(
-    nameList: string[],
+    proxies: InteractableProxyMember[],
     group: string,
     timeout: number,
     concurrency = 36,
   ) {
     debugLog(
-      `[DelayManager] 批量测试延迟开始，组: ${group}, 数量: ${nameList.length}, 并发数: ${concurrency}`,
+      `[DelayManager] 批量测试延迟开始，组: ${group}, 数量: ${proxies.length}, 并发数: ${concurrency}`,
     )
-    const names = nameList.filter(Boolean)
+    const names = proxies.map((member) => member.ref.name)
     // 设置正在延迟测试中
-    names.forEach((name) => this.setDelay(name, group, -2))
+    names.forEach((name) => {
+      this.setDelay(name, group, -2)
+    })
 
     let index = 0
     const startTime = Date.now()
     const listener = this.groupListenerMap.get(group)
 
     const help = async (): Promise<void> => {
-      const currName = names[index++]
-      if (!currName) return
+      const currMember = proxies[index++]
+      if (!currMember) return
+      const currName = currMember.ref.name
 
       try {
         // 确保API调用前状态为测试中
@@ -282,7 +313,7 @@ class DelayManager {
           )
         }
 
-        await this.checkDelay(currName, group, timeout)
+        await this.checkDelay(currMember, group, timeout)
         if (listener) {
           this.queueGroupNotification(group)
         }

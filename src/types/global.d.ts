@@ -162,45 +162,6 @@ interface IFormattedMemoryData {
   is_fresh: boolean
 }
 
-// 增强的类型安全接口定义，确保所有字段必需
-interface ISystemMonitorOverview {
-  traffic: {
-    raw: {
-      up: number
-      down: number
-      up_rate: number
-      down_rate: number
-    }
-    formatted: {
-      up_rate: string
-      down_rate: string
-      total_up: string
-      total_down: string
-    }
-    is_fresh: boolean
-  }
-  memory: {
-    raw: {
-      inuse: number
-      oslimit: number
-      usage_percent: number
-    }
-    formatted: {
-      inuse: string
-      oslimit: string
-      usage_percent: number
-    }
-    is_fresh: boolean
-  }
-  overall_status: 'active' | 'inactive' | 'error' | 'unknown' | 'healthy'
-}
-
-// 类型安全的数据验证器
-interface ISystemMonitorOverviewValidator {
-  validate(data: any): data is ISystemMonitorOverview
-  sanitize(data: any): ISystemMonitorOverview
-}
-
 interface ILogItem {
   type: string
   time?: string
@@ -392,6 +353,12 @@ interface GrpcOptions {
   'grpc-service-name'?: string
 }
 
+interface XHttpOptions {
+  path?: string
+  host?: string
+  mode?: string
+}
+
 interface RealityOptions {
   'public-key'?: string
   'short-id'?: string
@@ -406,7 +373,7 @@ type ClientFingerprint =
   | '360'
   | 'qq'
   | 'random'
-type NetworkType = 'ws' | 'http' | 'h2' | 'grpc' | 'tcp'
+type NetworkType = 'ws' | 'http' | 'h2' | 'grpc' | 'tcp' | 'xhttp'
 type CipherType =
   | 'none'
   | 'auto'
@@ -638,6 +605,7 @@ interface IProxyVlessConfig extends IProxyBaseConfig {
   'h2-opts'?: H2Options
   'grpc-opts'?: GrpcOptions
   'ws-opts'?: WsOptions
+  'xhttp-opts'?: XHttpOptions
   'ws-path'?: string
   'ws-headers'?: {
     [key: string]: string
@@ -647,6 +615,7 @@ interface IProxyVlessConfig extends IProxyBaseConfig {
   servername?: string
   'client-fingerprint'?: ClientFingerprint
   smux?: boolean
+  encryption?: string
 }
 // vmess
 interface IProxyVmessConfig extends IProxyBaseConfig {

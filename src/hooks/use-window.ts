@@ -2,7 +2,7 @@ import { use } from 'react'
 
 import { WindowContext, type WindowContextType } from '@/providers/window'
 
-export const useWindow = () => {
+const useWindow = () => {
   const context = use(WindowContext)
   if (context === undefined) {
     throw new Error('useWindow must be used within WindowProvider')

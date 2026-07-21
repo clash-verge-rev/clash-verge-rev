@@ -1,5 +1,7 @@
-import { useSortable } from '@dnd-kit/sortable'
-import { CSS } from '@dnd-kit/utilities'
+import type {
+  DraggableAttributes,
+  DraggableSyntheticListeners,
+} from '@dnd-kit/core'
 import {
   CheckBoxOutlineBlankRounded,
   CheckBoxRounded,
@@ -16,11 +18,17 @@ import {
   MenuItem,
   Typography,
 } from '@mui/material'
-import { listen } from '@tauri-apps/api/event'
 import { open } from '@tauri-apps/plugin-shell'
 import { useLockFn } from 'ahooks'
 import dayjs from 'dayjs'
-import { useCallback, useEffect, useReducer, useRef, useState } from 'react'
+import {
+  memo,
+  useCallback,
+  useEffect,
+  useReducer,
+  useRef,
+  useState,
+} from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BaseDialog } from '@/components/base'
@@ -49,8 +57,7 @@ const round = keyframes`
   to { transform: rotate(360deg); }
 `
 
-interface Props {
-  id: string
+export interface ProfileItemProps {
   selected: boolean
   activating: boolean
   itemData: IProfileItem
@@ -62,11 +69,15 @@ interface Props {
   batchMode?: boolean
   isSelected?: boolean
   onSelectionChange?: () => void
+  timerUpdateRevision: number
+  completedUpdateRevision: number
+  dragHandleRef: (node: HTMLElement | null) => void
+  dragHandleAttributes: DraggableAttributes
+  dragHandleListeners: DraggableSyntheticListeners
 }
 
-export const ProfileItem = (props: Props) => {
+const ProfileItemBase = (props: ProfileItemProps) => {
   const {
-    id,
     selected,
     activating,
     itemData,
@@ -78,17 +89,12 @@ export const ProfileItem = (props: Props) => {
     batchMode,
     isSelected,
     onSelectionChange,
+    timerUpdateRevision,
+    completedUpdateRevision,
+    dragHandleRef,
+    dragHandleAttributes,
+    dragHandleListeners,
   } = props
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({
-    id,
-  })
 
   const { t } = useTranslation()
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null)
@@ -121,71 +127,75 @@ export const ProfileItem = (props: Props) => {
   const { uid, name = 'Profile', extra, updated = 0, option } = itemData
 
   // 获取下次更新时间的函数
-  const fetchNextUpdateTime = useLockFn(async (forceRefresh = false) => {
-    if (
-      itemData.option?.update_interval &&
-      itemData.option.update_interval > 0
-    ) {
-      try {
-        debugLog(`尝试获取配置 ${itemData.uid} 的下次更新时间`)
+  const fetchNextUpdateTimeCallback = useCallback(
+    async (forceRefresh = false) => {
+      if (
+        itemData.option?.update_interval &&
+        itemData.option.update_interval > 0
+      ) {
+        try {
+          debugLog(`尝试获取配置 ${itemData.uid} 的下次更新时间`)
 
-        // 如果需要强制刷新，先触发Timer.refresh()
-        if (forceRefresh) {
-          // 这里可以通过一个新的API来触发刷新，但目前我们依赖patch_profile中的刷新
-          debugLog(`强制刷新定时器任务`)
-        }
+          // 如果需要强制刷新，先触发Timer.refresh()
+          if (forceRefresh) {
+            // 这里可以通过一个新的API来触发刷新，但目前我们依赖patch_profile中的刷新
+            debugLog(`强制刷新定时器任务`)
+          }
 
-        const nextUpdate = await getNextUpdateTime(itemData.uid)
-        debugLog(`获取到下次更新时间结果:`, nextUpdate)
+          const nextUpdate = await getNextUpdateTime(itemData.uid)
+          debugLog(`获取到下次更新时间结果:`, nextUpdate)
 
-        if (nextUpdate) {
-          const nextUpdateDate = dayjs(nextUpdate * 1000)
-          const now = dayjs()
+          if (nextUpdate) {
+            const nextUpdateDate = dayjs(nextUpdate * 1000)
+            const now = dayjs()
 
-          // 如果已经过期，显示"更新失败"
-          if (nextUpdateDate.isBefore(now)) {
-            setNextUpdateTime(
-              t('profiles.components.profileItem.status.lastUpdateFailed'),
-            )
-          } else {
-            // 否则显示剩余时间
-            const diffMinutes = nextUpdateDate.diff(now, 'minute')
+            // 如果已经过期，显示"更新失败"
+            if (nextUpdateDate.isBefore(now)) {
+              setNextUpdateTime(
+                t('profiles.components.profileItem.status.lastUpdateFailed'),
+              )
+            } else {
+              // 否则显示剩余时间
+              const diffMinutes = nextUpdateDate.diff(now, 'minute')
 
-            if (diffMinutes < 60) {
-              if (diffMinutes <= 0) {
-                setNextUpdateTime(
-                  `${t('profiles.components.profileItem.status.nextUp')} <1m`,
-                )
+              if (diffMinutes < 60) {
+                if (diffMinutes <= 0) {
+                  setNextUpdateTime(
+                    `${t('profiles.components.profileItem.status.nextUp')} <1m`,
+                  )
+                } else {
+                  setNextUpdateTime(
+                    `${t('profiles.components.profileItem.status.nextUp')} ${diffMinutes}m`,
+                  )
+                }
               } else {
+                const hours = Math.floor(diffMinutes / 60)
+                const mins = diffMinutes % 60
                 setNextUpdateTime(
-                  `${t('profiles.components.profileItem.status.nextUp')} ${diffMinutes}m`,
+                  `${t('profiles.components.profileItem.status.nextUp')} ${hours}h ${mins}m`,
                 )
               }
-            } else {
-              const hours = Math.floor(diffMinutes / 60)
-              const mins = diffMinutes % 60
-              setNextUpdateTime(
-                `${t('profiles.components.profileItem.status.nextUp')} ${hours}h ${mins}m`,
-              )
             }
+          } else {
+            debugLog(`返回的下次更新时间为空`)
+            setNextUpdateTime(
+              t('profiles.components.profileItem.status.noSchedule'),
+            )
           }
-        } else {
-          debugLog(`返回的下次更新时间为空`)
-          setNextUpdateTime(
-            t('profiles.components.profileItem.status.noSchedule'),
-          )
+        } catch (err) {
+          console.error(`获取下次更新时间出错:`, err)
+          setNextUpdateTime(t('profiles.components.profileItem.status.unknown'))
         }
-      } catch (err) {
-        console.error(`获取下次更新时间出错:`, err)
-        setNextUpdateTime(t('profiles.components.profileItem.status.unknown'))
+      } else {
+        debugLog(`该配置未设置更新间隔或间隔为0`)
+        setNextUpdateTime(
+          t('profiles.components.profileItem.status.autoUpdateDisabled'),
+        )
       }
-    } else {
-      debugLog(`该配置未设置更新间隔或间隔为0`)
-      setNextUpdateTime(
-        t('profiles.components.profileItem.status.autoUpdateDisabled'),
-      )
-    }
-  })
+    },
+    [itemData.option?.update_interval, itemData.uid, t],
+  )
+  const fetchNextUpdateTime = useLockFn(fetchNextUpdateTimeCallback)
 
   // 切换显示模式的函数
   const toggleUpdateTimeDisplay = (e: React.MouseEvent) => {
@@ -214,40 +224,28 @@ export const ProfileItem = (props: Props) => {
     updated,
   ])
 
-  // 订阅定时器更新事件
+  // 页面统一订阅定时器事件，这里只响应当前配置的更新信号
   useEffect(() => {
-    let disposed = false
-    let unlistenTimerUpdate: (() => void) | undefined
+    if (timerUpdateRevision === 0 || !showNextUpdateRef.current) return
 
-    listen<string>('verge://timer-updated', ({ payload: updatedUid }) => {
-      // 只有当更新的是当前配置时才刷新显示
-      if (updatedUid === itemData.uid && showNextUpdateRef.current) {
-        debugLog(`收到定时器更新事件: uid=${updatedUid}`)
-        if (refreshTimeoutRef.current !== undefined) {
-          clearTimeout(refreshTimeoutRef.current)
-        }
-        refreshTimeoutRef.current = window.setTimeout(() => {
-          fetchNextUpdateTime(true)
-        }, 1000)
-      }
-    })
-      .then((unlisten) => {
-        if (disposed) {
-          unlisten()
-          return
-        }
-        unlistenTimerUpdate = unlisten
-      })
-      .catch(console.error)
+    if (refreshTimeoutRef.current !== undefined) {
+      clearTimeout(refreshTimeoutRef.current)
+    }
+    refreshTimeoutRef.current = window.setTimeout(() => {
+      fetchNextUpdateTime(true)
+    }, 1000)
 
     return () => {
-      disposed = true
       if (refreshTimeoutRef.current !== undefined) {
         clearTimeout(refreshTimeoutRef.current)
       }
-      unlistenTimerUpdate?.()
     }
-  }, [fetchNextUpdateTime, itemData.uid])
+  }, [fetchNextUpdateTime, timerUpdateRevision])
+
+  useEffect(() => {
+    if (completedUpdateRevision === 0 || !showNextUpdateRef.current) return
+    fetchNextUpdateTime()
+  }, [completedUpdateRevision, fetchNextUpdateTime])
 
   // local file mode
   // remote file mode
@@ -605,52 +603,6 @@ export const ProfileItem = (props: Props) => {
     justifyContent: 'space-between',
   }
 
-  // 监听自动更新事件
-  useEffect(() => {
-    let disposed = false
-    let unlisteners: Array<() => void> = []
-
-    Promise.allSettled([
-      listen<{ uid?: string }>('profile-update-started', ({ payload }) => {
-        if (payload.uid === itemData.uid) {
-          setLoading(true)
-        }
-      }),
-      listen<{ uid?: string }>('profile-update-completed', ({ payload }) => {
-        if (payload.uid !== itemData.uid) {
-          return
-        }
-
-        setLoading(false)
-        // 刷新 profile 数据以获取最新的 updated 时间戳
-        void mutateProfiles()
-        // 更新完成后刷新显示
-        if (showNextUpdateRef.current) {
-          fetchNextUpdateTime()
-        }
-      }),
-    ]).then((results) => {
-      const registeredUnlisteners = results.flatMap((result) =>
-        result.status === 'fulfilled' ? [result.value] : [],
-      )
-
-      if (disposed || results.some((result) => result.status === 'rejected')) {
-        registeredUnlisteners.forEach((unlisten) => unlisten())
-        results.forEach((result) => {
-          if (result.status === 'rejected') console.error(result.reason)
-        })
-        return
-      }
-
-      unlisteners = registeredUnlisteners
-    })
-
-    return () => {
-      disposed = true
-      unlisteners.forEach((unlisten) => unlisten())
-    }
-  }, [fetchNextUpdateTime, itemData.uid, mutateProfiles, setLoading])
-
   const handleSaveProfileDocument = useLockFn(async () => {
     const currentValue = profileDocument.value
     if (!(await saveProfileFile(uid, currentValue))) {
@@ -684,14 +636,7 @@ export const ProfileItem = (props: Props) => {
   })
 
   return (
-    <Box
-      sx={{
-        position: 'relative',
-        transform: CSS.Transform.toString(transform),
-        transition,
-        zIndex: isDragging ? 'calc(infinity)' : undefined,
-      }}
-    >
+    <Box sx={{ position: 'relative' }}>
       <ProfileBox
         aria-selected={selected}
         onClick={(e) => {
@@ -756,14 +701,14 @@ export const ProfileItem = (props: Props) => {
               </IconButton>
             )}
             <Box
-              ref={setNodeRef}
+              ref={dragHandleRef}
               sx={{
                 display: 'flex',
                 margin: 'auto 0',
                 ...(batchMode && { marginLeft: '-4px' }),
               }}
-              {...attributes}
-              {...listeners}
+              {...dragHandleAttributes}
+              {...dragHandleListeners}
             >
               <DragIndicatorRounded
                 sx={[
@@ -1040,6 +985,8 @@ export const ProfileItem = (props: Props) => {
     </Box>
   )
 }
+
+export const ProfileItem = memo(ProfileItemBase)
 
 function parseUrl(url?: string) {
   if (!url) return ''

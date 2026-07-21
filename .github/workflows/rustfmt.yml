@@ -7,6 +7,9 @@ name: Check Formatting
 on:
   pull_request:
 
+permissions:
+  contents: read
+
 env:
   HUSKY: 0
 

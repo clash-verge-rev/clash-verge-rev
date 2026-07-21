@@ -36,26 +36,37 @@ import { useProfiles } from '@/hooks/use-profiles'
 import { useVerge } from '@/hooks/use-verge'
 import { entry_lightweight_mode, openWebUrl } from '@/services/cmds'
 
-const LazyTestCard = lazy(() =>
+const preloadTestCard = () =>
   import('@/components/home/test-card').then((module) => ({
     default: module.TestCard,
-  })),
-)
-const LazyIpInfoCard = lazy(() =>
+  }))
+const preloadIpInfoCard = () =>
   import('@/components/home/ip-info-card').then((module) => ({
     default: module.IpInfoCard,
-  })),
-)
-const LazyClashInfoCard = lazy(() =>
+  }))
+const preloadClashInfoCard = () =>
   import('@/components/home/clash-info-card').then((module) => ({
     default: module.ClashInfoCard,
-  })),
-)
-const LazySystemInfoCard = lazy(() =>
+  }))
+const preloadSystemInfoCard = () =>
   import('@/components/home/system-info-card').then((module) => ({
     default: module.SystemInfoCard,
-  })),
-)
+  }))
+
+const LazyTestCard = lazy(preloadTestCard)
+const LazyIpInfoCard = lazy(preloadIpInfoCard)
+const LazyClashInfoCard = lazy(preloadClashInfoCard)
+const LazySystemInfoCard = lazy(preloadSystemInfoCard)
+
+// Used by bootstrap to initiate optional card imports without blocking render.
+// eslint-disable-next-line react-refresh/only-export-components
+export const preloadHomePageCards = () =>
+  Promise.all([
+    preloadTestCard().catch(() => {}),
+    preloadIpInfoCard().catch(() => {}),
+    preloadClashInfoCard().catch(() => {}),
+    preloadSystemInfoCard().catch(() => {}),
+  ])
 
 // 定义首页卡片设置接口
 interface HomeCardsSettings {
