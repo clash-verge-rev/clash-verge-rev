@@ -1,7 +1,4 @@
-use crate::{
-    config::{Config, IVerge},
-    singleton,
-};
+use crate::{config::Config, singleton, utils::server};
 use anyhow::Result;
 use clash_verge_logging::{Type, logging};
 use parking_lot::RwLock;
@@ -133,7 +130,7 @@ impl Sysopt {
             Some(port) => port,
             None => Config::clash().await.latest_arc().get_mixed_port(),
         };
-        let pac_port = IVerge::get_singleton_port();
+        let pac_port = server::embedded_server_port()?;
         // 先 await, 避免持有锁导致的 Send 问题
         let bypass = get_bypass().await;
 
@@ -208,6 +205,7 @@ impl Sysopt {
         defer! {
             self.reset_sysproxy.store(false, Ordering::SeqCst);
         }
+        let _lock = self.update_lock.lock().await;
 
         // close proxy guard
         self.access_guard().write().set_guard_type(GuardType::None);

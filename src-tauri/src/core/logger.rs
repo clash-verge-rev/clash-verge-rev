@@ -18,9 +18,9 @@ use log::{Level, LevelFilter, Record};
 use parking_lot::{Mutex, RwLock};
 
 use crate::{
-    core::service,
+    core::{owner_identity::current_owner_credentials, service},
     singleton,
-    utils::dirs::{self, service_log_dir, sidecar_log_dir},
+    utils::dirs::{self, sidecar_log_dir},
 };
 
 pub struct Logger {
@@ -181,12 +181,15 @@ impl Logger {
 
         // update service writer config
         if service::is_service_ipc_path_exists() && service::is_service_available().await.is_ok() {
-            let service_log_dir = dirs::path_to_str(&service_log_dir()?)?.into();
-            clash_verge_service_ipc::update_writer(&WriterConfig {
-                directory: service_log_dir,
-                max_log_size: log_max_size * 1024,
-                max_log_files: log_max_count,
-            })
+            let credentials = current_owner_credentials()?;
+            clash_verge_service_ipc::update_writer(
+                &credentials,
+                &WriterConfig {
+                    directory: String::new(),
+                    max_log_size: log_max_size * 1024,
+                    max_log_files: log_max_count,
+                },
+            )
             .await?;
         }
 
@@ -224,18 +227,5 @@ impl Logger {
         } else {
             logging!(error, Type::System, "failed to get sidecar file log writer");
         }
-    }
-
-    pub fn service_writer_config(&self) -> Result<WriterConfig> {
-        let service_log_dir = dirs::path_to_str(&service_log_dir()?)?.into();
-        let log_max_size = self.log_max_size.load(Ordering::SeqCst);
-        let log_max_count = self.log_max_count.load(Ordering::SeqCst);
-        let writer_config = WriterConfig {
-            directory: service_log_dir,
-            max_log_size: log_max_size * 1024,
-            max_log_files: log_max_count,
-        };
-
-        Ok(writer_config)
     }
 }

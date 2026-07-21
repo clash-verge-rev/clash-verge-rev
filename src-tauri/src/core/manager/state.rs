@@ -1,16 +1,17 @@
 use super::{CoreManager, RunningMode};
 use crate::{
     AsyncHandler,
-    config::{Config, IClashTemp},
+    config::Config,
     core::{handle, logger::Logger, manager::CLASH_LOGGER, service},
     logging,
-    utils::dirs,
+    utils::{dirs, server},
 };
 use anyhow::Result;
 use clash_verge_logging::Type;
 use compact_str::CompactString;
 use log::Level;
 use scopeguard::defer;
+use tauri_plugin_mihomo::MihomoExt as _;
 use tauri_plugin_shell::ShellExt as _;
 
 #[cfg(target_os = "windows")]
@@ -40,29 +41,37 @@ impl CoreManager {
     pub(super) async fn start_core_by_sidecar(&self) -> Result<()> {
         logging!(info, Type::Core, "Starting core in sidecar mode");
 
+        let sidecar_ipc = dirs::sidecar_ipc_path()?;
+        handle::Handle::app_handle()
+            .mihomo()
+            .write()
+            .await
+            .update_socket_path(dirs::path_to_str(&sidecar_ipc)?.to_owned())?;
         let config_file = Config::generate_file(crate::config::ConfigType::Run).await?;
         let app_handle = handle::Handle::app_handle();
         let clash_core = Config::verge().await.latest_arc().get_valid_clash_core();
         let config_dir = dirs::app_home_dir()?;
 
         #[cfg(unix)]
-        let previous_mask = unsafe { tauri_plugin_clash_verge_sysinfo::libc::umask(0o007) };
-        let (mut rx, child) = app_handle
-            .shell()
-            .sidecar(clash_core.as_str())?
-            .args([
-                "-d",
-                dirs::path_to_str(&config_dir)?,
-                "-f",
-                dirs::path_to_str(&config_file)?,
-                if cfg!(windows) {
-                    "-ext-ctl-pipe"
-                } else {
-                    "-ext-ctl-unix"
-                },
-                &IClashTemp::guard_external_controller_ipc(),
-            ])
-            .spawn()?;
+        let previous_mask = unsafe { tauri_plugin_clash_verge_sysinfo::libc::umask(0o077) };
+        let command = app_handle.shell().sidecar(clash_core.as_str())?.args([
+            "-d",
+            dirs::path_to_str(&config_dir)?,
+            "-f",
+            dirs::path_to_str(&config_file)?,
+            if cfg!(windows) {
+                "-ext-ctl-pipe"
+            } else {
+                "-ext-ctl-unix"
+            },
+            dirs::path_to_str(&sidecar_ipc)?,
+        ]);
+        #[cfg(windows)]
+        let command = command.env(
+            "LISTEN_NAMEDPIPE_SDDL",
+            crate::core::owner_identity::current_user_pipe_sddl()?,
+        );
+        let (mut rx, child) = command.spawn()?;
         #[cfg(target_os = "windows")]
         {
             let job = match create_and_assign_sidecar_job(child.pid()) {
@@ -95,6 +104,7 @@ impl CoreManager {
 
         self.set_running_child_sidecar(child);
         self.set_running_mode(RunningMode::Sidecar);
+        server::set_pac_available(true);
 
         AsyncHandler::spawn(|| async move {
             while let Some(event) = rx.recv().await {
@@ -159,6 +169,7 @@ impl CoreManager {
 
     pub(super) async fn start_core_by_service(&self) -> Result<()> {
         logging!(info, Type::Core, "Starting core in service mode");
+        let service_ipc = dirs::ipc_path()?;
         let config_file = Config::generate_file(crate::config::ConfigType::Run).await?;
 
         // 交接时等待 sidecar 释放 ext-controller 通道。
@@ -169,6 +180,11 @@ impl CoreManager {
             for attempt in 0..timing::SERVICE_START_RETRIES {
                 match service::run_core_by_service(&config_file).await {
                     Ok(()) => {
+                        handle::Handle::app_handle()
+                            .mihomo()
+                            .write()
+                            .await
+                            .update_socket_path(dirs::path_to_str(&service_ipc)?.to_owned())?;
                         self.set_running_mode(RunningMode::Service);
                         return Ok(());
                     }
@@ -192,6 +208,11 @@ impl CoreManager {
         #[cfg(not(target_os = "windows"))]
         {
             service::run_core_by_service(&config_file).await?;
+            handle::Handle::app_handle()
+                .mihomo()
+                .write()
+                .await
+                .update_socket_path(dirs::path_to_str(&service_ipc)?.to_owned())?;
             self.set_running_mode(RunningMode::Service);
             Ok(())
         }
@@ -199,10 +220,8 @@ impl CoreManager {
 
     pub(super) async fn stop_core_by_service(&self) -> Result<()> {
         logging!(info, Type::Core, "Stopping service");
-        defer! {
-            self.set_running_mode(RunningMode::NotRunning);
-        }
         service::stop_core_by_service().await?;
+        self.set_running_mode(RunningMode::NotRunning);
         Ok(())
     }
 }

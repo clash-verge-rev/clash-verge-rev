@@ -1101,6 +1101,7 @@ dependencies = [
  "futures",
  "gethostname",
  "getrandom 0.4.3",
+ "libc",
  "log",
  "nanoid",
  "network-interface",
@@ -1209,19 +1210,21 @@ dependencies = [
 
 [[package]]
 name = "clash_verge_service_ipc"
-version = "2.3.3"
-source = "git+https://github.com/clash-verge-rev/clash-verge-service-ipc#b964ed2992599fadefd589425c1acdabcb875623"
+version = "2.4.0"
 dependencies = [
  "anyhow",
  "compact_str",
  "kode-bridge",
+ "libc",
  "log",
  "once_cell",
  "serde",
  "serde_json",
+ "sha2 0.10.9",
  "strum",
  "strum_macros",
  "tokio",
+ "windows-service",
 ]
 
 [[package]]
@@ -3799,8 +3802,6 @@ dependencies = [
 [[package]]
 name = "kode-bridge"
 version = "0.4.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c462fd5d0886cd98cd74ecafdb44dd3f2b52b30711f07d42cc0f5956f38e706d"
 dependencies = [
  "bytes",
  "futures",
@@ -3822,6 +3823,7 @@ dependencies = [
  "tracing",
  "url",
  "widestring",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -9157,6 +9159,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7781fa89eaf60850ac3d2da7af8e5242a5ea78d1a11c49bf2910bb5a73853eb5"
 dependencies = [
  "windows-link 0.2.1",
+]
+
+[[package]]
+name = "windows-service"
+version = "0.8.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "857224b3b211c6f3616921f081ee54721ee3ad2ace2fac6a6337e032f7b4dcf2"
+dependencies = [
+ "bitflags 2.13.0",
+ "widestring",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]

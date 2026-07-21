@@ -190,6 +190,10 @@ export async function getAutotemProxy() {
   }
 }
 
+export async function getEmbeddedServerPort() {
+  return invoke<number>('get_embedded_server_port')
+}
+
 export async function changeClashCore(clashCore: string) {
   return invoke<string | null>('change_clash_core', { clashCore })
 }

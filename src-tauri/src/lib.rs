@@ -137,6 +137,7 @@ mod app_init {
             cmd::is_port_in_use,
             cmd::get_sys_proxy,
             cmd::get_auto_proxy,
+            cmd::get_embedded_server_port,
             cmd::open_app_dir,
             cmd::open_logs_dir,
             cmd::open_web_url,
@@ -220,6 +221,14 @@ mod app_init {
 }
 
 pub fn run() {
+    #[cfg(all(target_os = "macos", not(debug_assertions), not(test), not(feature = "verge-dev")))]
+    if utils::macos_launch_guard::enforce_before_initialization() == utils::macos_launch_guard::LaunchDisposition::Exit
+    {
+        return;
+    }
+
+    let _ = utils::dirs::init_portable_flag();
+
     if app_init::init_singleton_check().is_err() {
         return;
     }
@@ -228,8 +237,6 @@ pub fn run() {
     utils::linux::workarounds::apply_nvidia_dmabuf_renderer_workaround();
     #[cfg(target_os = "linux")]
     utils::linux::workarounds::apply_wayland_webkit_fix();
-
-    let _ = utils::dirs::init_portable_flag();
 
     let builder = app_init::setup_plugins(tauri::Builder::default())
         .setup(|app| {
@@ -317,6 +324,7 @@ pub fn run() {
             }
 
             logging!(info, Type::System, "应用就绪");
+            crate::utils::server::set_commands_ready();
 
             #[cfg(target_os = "macos")]
             if let Some(window) = _app_handle.get_webview_window("main") {

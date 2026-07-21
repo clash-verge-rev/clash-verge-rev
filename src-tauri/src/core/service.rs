@@ -1,12 +1,16 @@
 use crate::{
-    config::{Config, IClashTemp},
-    core::{logger::Logger, tray::Tray},
+    config::Config,
+    core::{
+        CoreManager, manager::RunningMode, owner_identity::current_owner_credentials,
+        runtime_bundle::collect_runtime_bundle, sysopt::Sysopt, tray::Tray,
+    },
+    process::AsyncHandler,
     utils::dirs,
+    utils::server,
 };
 use anyhow::{Context as _, Result, bail};
 use backon::{ConstantBuilder, Retryable as _};
 use clash_verge_logging::{Type, logging};
-use clash_verge_service_ipc::CoreConfig;
 use compact_str::CompactString;
 use once_cell::sync::Lazy;
 use parking_lot::Mutex;
@@ -17,10 +21,12 @@ use std::{
     future::Future,
     path::{Path, PathBuf},
     process::Command as StdCommand,
-    sync::atomic::{AtomicBool, Ordering},
+    sync::atomic::{AtomicBool, AtomicU64, Ordering},
     time::Duration,
 };
 use tokio::sync::Notify;
+
+static OWNER_MONITOR_GENERATION: AtomicU64 = AtomicU64::new(0);
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ServiceStatus {
@@ -39,107 +45,8 @@ pub struct ServiceManager {
     operation_done: Notify,
 }
 
-#[cfg(not(target_os = "macos"))]
 fn service_core_path(clash_core: &str, bin_ext: &str) -> Result<PathBuf> {
     Ok(current_exe()?.with_file_name(format!("{clash_core}{bin_ext}")))
-}
-
-#[cfg(target_os = "macos")]
-fn service_core_path(clash_core: &str, bin_ext: &str) -> Result<PathBuf> {
-    let binary_name = format!("{clash_core}{bin_ext}");
-    let exe_path = current_exe()?;
-    let candidate = exe_path.with_file_name(&binary_name);
-
-    if !is_macos_app_translocated(&exe_path) {
-        return Ok(candidate);
-    }
-
-    if let Some(stable_path) = stable_macos_core_path_for_translocated_app(&exe_path, &binary_name) {
-        logging!(
-            warn,
-            Type::Service,
-            "macOS App Translocation detected for core path {:?}; using stable installed path {:?}",
-            candidate,
-            stable_path
-        );
-        return Ok(stable_path);
-    }
-
-    // 给用户一个可操作的提示,再 bail 让服务启动失败 —— 避免用临时路径起内核。
-    notify_translocated_core_path();
-    bail!(
-        "macOS App Translocation detected; refusing to start service with temporary core path {:?}",
-        candidate
-    )
-}
-
-/// 发送 translocation 用户提示。**延迟**发送:app 启动期会自动尝试起 core,此时前端的
-/// `verge://notice-message` 监听器(随 React 布局挂载后才注册)可能尚未就绪,而后端 emit
-/// 没有重放队列 —— 立即发会丢失。延迟到前端挂载后再发,既覆盖"启动自动起 core 失败"、
-/// 也兼顾手动启动(错误提示略迟可接受)。复用前端 `set_config::error` 处理器直接展示该消息。
-#[cfg(target_os = "macos")]
-fn notify_translocated_core_path() {
-    crate::process::AsyncHandler::spawn(|| async {
-        tokio::time::sleep(std::time::Duration::from_secs(3)).await;
-        crate::core::handle::Handle::notice_message(
-            "set_config::error",
-            clash_verge_i18n::t!("service.translocatedCorePath").to_string(),
-        );
-    });
-}
-
-#[cfg(target_os = "macos")]
-fn is_macos_app_translocated(path: &Path) -> bool {
-    path.components()
-        .any(|component| component.as_os_str() == "AppTranslocation")
-}
-
-#[cfg(target_os = "macos")]
-fn stable_macos_core_path_for_translocated_app(exe_path: &Path, binary_name: &str) -> Option<PathBuf> {
-    let bundle_name = macos_app_bundle_name(exe_path)?;
-    macos_core_path_in_install_roots(
-        &bundle_name,
-        binary_name,
-        [Path::new("/Applications"), Path::new("/Applications/Utilities")],
-    )
-}
-
-#[cfg(target_os = "macos")]
-fn macos_app_bundle_name(path: &Path) -> Option<std::ffi::OsString> {
-    path.ancestors().find_map(|ancestor| {
-        let is_app_bundle = ancestor
-            .extension()
-            .and_then(|extension| extension.to_str())
-            .is_some_and(|extension| extension.eq_ignore_ascii_case("app"));
-
-        if is_app_bundle {
-            ancestor.file_name().map(std::ffi::OsString::from)
-        } else {
-            None
-        }
-    })
-}
-
-#[cfg(target_os = "macos")]
-fn macos_core_path_in_install_roots<'a>(
-    bundle_name: &std::ffi::OsStr,
-    binary_name: &str,
-    install_roots: impl IntoIterator<Item = &'a Path>,
-) -> Option<PathBuf> {
-    install_roots.into_iter().find_map(|root| {
-        let core_path = root
-            .join(Path::new(bundle_name))
-            .join("Contents")
-            .join("MacOS")
-            .join(binary_name);
-
-        core_path.is_file().then_some(core_path)
-    })
-}
-
-#[cfg(target_os = "macos")]
-const fn macos_cleanup_translocated_desired_state_shell() -> &'static str {
-    "for f in '/var/root/.local/state/clash-verge-service/desired-state.json' '/var/lib/clash-verge-service/desired-state.json'; do if [ -f \"$f\" ] && /usr/bin/grep -q AppTranslocation \"$f\"; then backup=\"$f.apptranslocation.bak\"; if [ -e \"$backup\" ]; then backup=\"$f.apptranslocation.$(/bin/date +%s).bak\"; fi; /bin/mv \"$f\" \"$backup\"; fi; done"
 }
 
 /// 卸载服务前以 root 清理残留 core 和 IPC 套接字。
@@ -405,10 +312,7 @@ fn install_service() -> Result<()> {
     let gid = tauri_plugin_clash_verge_sysinfo::current_gid();
     let prompt = clash_verge_i18n::t!("service.adminInstallPrompt");
     let install_quoted = shell_single_quote(&install_shell);
-    let shell = format!(
-        "{}; sudo CLASH_VERGE_SERVICE_GID={gid} {install_quoted}",
-        macos_cleanup_translocated_desired_state_shell()
-    );
+    let shell = format!("sudo CLASH_VERGE_SERVICE_GID={gid} {install_quoted}");
     let shell = escape_osascript_double_quoted_string(&shell);
     let command = format!(r#"do shell script "{shell}" with administrator privileges with prompt "{prompt}""#);
 
@@ -470,7 +374,7 @@ fn force_reinstall_service() -> Result<()> {
 }
 
 /// 尝试使用服务启动core
-pub(super) async fn start_with_existing_service(config_file: &PathBuf) -> Result<()> {
+pub(super) async fn start_with_existing_service(config_file: &Path) -> Result<()> {
     logging!(info, Type::Service, "尝试使用现有服务启动核心");
 
     let verge_config = Config::verge().await;
@@ -480,32 +384,32 @@ pub(super) async fn start_with_existing_service(config_file: &PathBuf) -> Result
     let bin_ext = if cfg!(windows) { ".exe" } else { "" };
     let bin_path = service_core_path(&clash_core, bin_ext)?;
 
-    let payload = clash_verge_service_ipc::ClashConfig {
-        core_config: CoreConfig {
-            config_path: dirs::path_to_str(config_file)?.into(),
-            core_path: dirs::path_to_str(&bin_path)?.into(),
-            core_ipc_path: IClashTemp::guard_external_controller_ipc(),
-            config_dir: dirs::path_to_str(&dirs::app_home_dir()?)?.into(),
-        },
-        log_config: Logger::global().service_writer_config()?,
-    };
+    let credentials = current_owner_credentials()?;
+    let payload = collect_runtime_bundle(config_file, &bin_path).await?;
 
-    let response = clash_verge_service_ipc::start_clash(&payload)
-        .await
-        .context("无法连接到Clash Verge Service")?;
+    let response = match clash_verge_service_ipc::start_clash(&credentials, &payload).await {
+        Ok(response) => response,
+        Err(error) => {
+            start_owner_monitor();
+            return Err(error).context("无法连接到Clash Verge Service");
+        }
+    };
 
     if response.code > 0 {
         let err_msg = response.message;
         logging!(error, Type::Service, "启动核心失败: {}", err_msg);
+        start_owner_monitor();
         bail!(err_msg);
     }
 
+    server::set_pac_available(true);
+    start_owner_monitor();
     logging!(info, Type::Service, "服务成功启动核心");
     Ok(())
 }
 
 // 以服务启动core
-pub(super) async fn run_core_by_service(config_file: &PathBuf) -> Result<()> {
+pub(super) async fn run_core_by_service(config_file: &Path) -> Result<()> {
     logging!(info, Type::Service, "正在尝试通过服务启动核心");
 
     SERVICE_MANAGER.refresh().await?;
@@ -517,11 +421,15 @@ pub(super) async fn run_core_by_service(config_file: &PathBuf) -> Result<()> {
 pub(super) async fn get_clash_logs_by_service() -> Result<Vec<CompactString>> {
     logging!(info, Type::Service, "正在获取服务模式下的 Clash 日志");
 
-    let response = clash_verge_service_ipc::get_clash_logs()
+    let credentials = current_owner_credentials()?;
+    let response = clash_verge_service_ipc::get_clash_logs(&credentials)
         .await
         .context("无法连接到Clash Verge Service")?;
 
     if response.code > 0 {
+        if response.code == clash_verge_service_ipc::ServiceErrorCode::NotActive as u16 {
+            recover_after_owner_loss(OWNER_MONITOR_GENERATION.load(Ordering::Acquire)).await;
+        }
         let err_msg = response.message;
         logging!(error, Type::Service, "获取服务模式下的 Clash 日志失败: {}", err_msg);
         bail!(err_msg);
@@ -531,15 +439,39 @@ pub(super) async fn get_clash_logs_by_service() -> Result<Vec<CompactString>> {
     Ok(response.data.unwrap_or_default())
 }
 
+pub(crate) async fn get_clash_log_snapshot_by_service() -> Result<String> {
+    let credentials = current_owner_credentials()?;
+    let response = clash_verge_service_ipc::get_clash_log_snapshot(&credentials)
+        .await
+        .context("无法连接到Clash Verge Service")?;
+    if response.code > 0 {
+        bail!(response.message);
+    }
+    let encoded = response.data.context("服务未返回核心日志快照")?;
+    if encoded.len() % 2 != 0 {
+        bail!("服务返回了无效的核心日志快照");
+    }
+    let mut content = Vec::with_capacity(encoded.len() / 2);
+    for offset in (0..encoded.len()).step_by(2) {
+        content.push(u8::from_str_radix(&encoded[offset..offset + 2], 16).context("服务返回了无效的核心日志快照")?);
+    }
+    Ok(String::from_utf8_lossy(&content).into_owned())
+}
+
 /// 通过服务停止core
 pub(super) async fn stop_core_by_service() -> Result<()> {
     logging!(info, Type::Service, "通过服务停止核心 (IPC)");
 
-    let response = clash_verge_service_ipc::stop_clash()
+    let credentials = current_owner_credentials()?;
+    let response = clash_verge_service_ipc::stop_clash(&credentials)
         .await
         .context("无法连接到Clash Verge Service")?;
 
     if response.code > 0 {
+        if response.code == clash_verge_service_ipc::ServiceErrorCode::NotActive as u16 {
+            cancel_owner_monitors();
+            recover_after_owner_loss_while_locked().await;
+        }
         let err_msg = response.message;
         logging!(error, Type::Service, "停止核心失败: {}", err_msg);
         bail!(err_msg);
@@ -547,6 +479,151 @@ pub(super) async fn stop_core_by_service() -> Result<()> {
 
     logging!(info, Type::Service, "服务成功停止核心");
     Ok(())
+}
+
+fn owner_status_requires_recovery(
+    is_active: bool,
+    desired_running: bool,
+    service_state: clash_verge_service_ipc::ServiceLifecycleState,
+    core_pid: Option<u32>,
+    missing_core_samples: u8,
+) -> bool {
+    !is_active
+        || !desired_running
+        || service_state == clash_verge_service_ipc::ServiceLifecycleState::Fatal
+        || (!matches!(
+            service_state,
+            clash_verge_service_ipc::ServiceLifecycleState::Starting
+                | clash_verge_service_ipc::ServiceLifecycleState::RecoveringCore
+        ) && core_pid.is_none()
+            && missing_core_samples >= 3)
+}
+
+fn start_owner_monitor() {
+    let generation = OWNER_MONITOR_GENERATION.fetch_add(1, Ordering::AcqRel) + 1;
+    AsyncHandler::spawn(move || async move {
+        let mut missing_core_samples = 0u8;
+        let mut failed_status_samples = 0u8;
+        loop {
+            tokio::time::sleep(Duration::from_secs(2)).await;
+            if OWNER_MONITOR_GENERATION.load(Ordering::Acquire) != generation {
+                break;
+            }
+            if !matches!(*CoreManager::global().get_running_mode(), RunningMode::Service) {
+                break;
+            }
+            let response = match current_owner_credentials() {
+                Ok(credentials) => clash_verge_service_ipc::get_status(&credentials).await,
+                Err(error) => Err(error),
+            };
+            let response = match response {
+                Ok(response) => response,
+                Err(error) => {
+                    failed_status_samples = failed_status_samples.saturating_add(1);
+                    if failed_status_samples == 3 {
+                        logging!(
+                            warn,
+                            Type::Service,
+                            "service owner status temporarily unavailable; preserving local proxy state: {error:#}"
+                        );
+                    }
+                    continue;
+                }
+            };
+            if response.code == clash_verge_service_ipc::ServiceErrorCode::NotActive as u16 {
+                recover_after_owner_loss(generation).await;
+                break;
+            }
+            if response.code != 0 {
+                failed_status_samples = failed_status_samples.saturating_add(1);
+                if failed_status_samples == 3 {
+                    logging!(
+                        warn,
+                        Type::Service,
+                        "service owner status returned error {}; preserving local proxy state: {}",
+                        response.code,
+                        response.message
+                    );
+                }
+                continue;
+            }
+            let Some(status) = response.data else {
+                failed_status_samples = failed_status_samples.saturating_add(1);
+                if failed_status_samples == 3 {
+                    logging!(
+                        warn,
+                        Type::Service,
+                        "service owner status omitted data; preserving local proxy state"
+                    );
+                }
+                continue;
+            };
+            failed_status_samples = 0;
+            missing_core_samples = if status.core_pid.is_none()
+                && !matches!(
+                    status.service_state,
+                    clash_verge_service_ipc::ServiceLifecycleState::Starting
+                        | clash_verge_service_ipc::ServiceLifecycleState::RecoveringCore
+                ) {
+                missing_core_samples.saturating_add(1)
+            } else {
+                0
+            };
+            if owner_status_requires_recovery(
+                status.is_active,
+                status.desired_core_should_be_running,
+                status.service_state,
+                status.core_pid,
+                missing_core_samples,
+            ) {
+                recover_after_owner_loss(generation).await;
+                break;
+            }
+        }
+    });
+}
+
+fn cancel_owner_monitors() {
+    OWNER_MONITOR_GENERATION.fetch_add(1, Ordering::AcqRel);
+}
+
+async fn recover_after_owner_loss(generation: u64) {
+    let manager = CoreManager::global();
+    let _lifecycle = manager.lifecycle_lock.lock().await;
+    if OWNER_MONITOR_GENERATION.load(Ordering::Acquire) != generation
+        || !matches!(*manager.get_running_mode(), RunningMode::Service)
+    {
+        return;
+    }
+    cancel_owner_monitors();
+    recover_after_owner_loss_while_locked().await;
+}
+
+async fn recover_after_owner_loss_while_locked() {
+    logging!(
+        warn,
+        Type::Service,
+        "service owner lost; clearing local proxy and PAC state"
+    );
+    server::set_pac_available(false);
+    CoreManager::global().set_running_mode(RunningMode::NotRunning);
+    let mut last_error = None;
+    for _ in 0..3 {
+        match Sysopt::global().reset_sysproxy().await {
+            Ok(()) => return,
+            Err(error) => {
+                last_error = Some(error);
+                tokio::time::sleep(Duration::from_millis(100)).await;
+            }
+        }
+    }
+    if let Some(error) = last_error {
+        logging!(
+            error,
+            Type::Service,
+            "failed to clear local proxy after owner loss: {error}"
+        );
+    }
 }
 
 /// 检查服务是否正在运行
@@ -709,55 +786,61 @@ pub static SERVICE_MANAGER: Lazy<ServiceManager> = Lazy::new(|| ServiceManager {
     operation_done: Notify::new(),
 });
 
-#[cfg(all(test, target_os = "macos"))]
+#[cfg(test)]
 mod tests {
-    use super::*;
-    use std::fs;
-
-    fn test_dir(name: &str) -> std::io::Result<PathBuf> {
-        let path = std::env::temp_dir().join(format!("clash-verge-service-path-test-{}-{name}", std::process::id()));
-        let _ = fs::remove_dir_all(&path);
-        fs::create_dir_all(&path)?;
-        Ok(path)
-    }
+    use super::owner_status_requires_recovery;
+    use clash_verge_service_ipc::ServiceLifecycleState;
 
     #[test]
-    fn detects_app_translocation_paths() {
-        let path = Path::new(
-            "/private/var/folders/example/T/AppTranslocation/123/d/Clash Verge.app/Contents/MacOS/Clash Verge",
-        );
-
-        assert!(is_macos_app_translocated(path));
-    }
-
-    #[test]
-    fn extracts_app_bundle_name_from_executable_path() {
-        let path = Path::new("/Applications/Clash Verge.app/Contents/MacOS/Clash Verge");
-
-        assert_eq!(
-            macos_app_bundle_name(path).as_deref(),
-            Some(std::ffi::OsStr::new("Clash Verge.app"))
-        );
-    }
-
-    #[test]
-    fn resolves_existing_core_path_from_install_roots() -> std::io::Result<()> {
-        let root = test_dir("resolve-existing-core-path")?;
-        let core_dir = root.join("Clash Verge.app").join("Contents").join("MacOS");
-        let core_path = core_dir.join("verge-mihomo");
-
-        fs::create_dir_all(&core_dir)?;
-        fs::write(&core_path, b"")?;
-
-        let resolved = macos_core_path_in_install_roots(
-            std::ffi::OsStr::new("Clash Verge.app"),
-            "verge-mihomo",
-            [root.as_path()],
-        );
-
-        assert_eq!(resolved, Some(core_path));
-
-        fs::remove_dir_all(root)?;
-        Ok(())
+    fn owner_loss_or_sustained_missing_core_requires_local_proxy_recovery() {
+        assert!(owner_status_requires_recovery(
+            false,
+            true,
+            ServiceLifecycleState::Running,
+            Some(42),
+            0
+        ));
+        assert!(owner_status_requires_recovery(
+            true,
+            false,
+            ServiceLifecycleState::Running,
+            None,
+            1
+        ));
+        assert!(!owner_status_requires_recovery(
+            true,
+            true,
+            ServiceLifecycleState::Running,
+            None,
+            2
+        ));
+        assert!(owner_status_requires_recovery(
+            true,
+            true,
+            ServiceLifecycleState::Running,
+            None,
+            3
+        ));
+        assert!(!owner_status_requires_recovery(
+            true,
+            true,
+            ServiceLifecycleState::RecoveringCore,
+            None,
+            u8::MAX
+        ));
+        assert!(owner_status_requires_recovery(
+            true,
+            true,
+            ServiceLifecycleState::Fatal,
+            None,
+            0
+        ));
+        assert!(!owner_status_requires_recovery(
+            true,
+            true,
+            ServiceLifecycleState::Running,
+            Some(42),
+            3
+        ));
     }
 }

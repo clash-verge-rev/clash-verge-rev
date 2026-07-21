@@ -37,6 +37,7 @@ import { useVerge } from '@/hooks/use-verge'
 import { useClashConfigData, useSystemData } from '@/providers/app-data-context'
 import {
   getAutotemProxy,
+  getEmbeddedServerPort,
   getNetworkInterfacesInfo,
   getSystemHostname,
   getSystemProxy,
@@ -134,6 +135,13 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
     pac_content: pac_file_content ?? DEFAULT_PAC,
     proxy_host: proxy_host ?? '127.0.0.1',
   })
+  const [embeddedServerPort, setEmbeddedServerPort] = useState<number | null>(
+    null,
+  )
+
+  useEffect(() => {
+    getEmbeddedServerPort().then(setEmbeddedServerPort).catch(console.error)
+  }, [])
 
   const separator = useMemo(() => (isWindows ? ';' : ','), [isWindows])
 
@@ -203,10 +211,10 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
   ])
   const getCurrentPacUrl = useMemo(() => {
     const host = value.proxy_host || '127.0.0.1'
-    // 根据环境判断PAC端口
-    const port = import.meta.env.DEV ? 11233 : 33331
-    return `http://${host}:${port}/commands/pac`
-  }, [value.proxy_host])
+    return embeddedServerPort
+      ? `http://${host}:${embeddedServerPort}/commands/pac`
+      : '-'
+  }, [embeddedServerPort, value.proxy_host])
 
   const bypassError =
     value.enable_bypass_check &&

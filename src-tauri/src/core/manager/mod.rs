@@ -48,7 +48,7 @@ pub struct CoreManager {
     config_update_in_progress: AtomicBool,
     // 串行化 start/stop/restart 和 sidecar→service 交接。
     // 锁序固定为 config_update_in_progress → lifecycle_lock。
-    lifecycle_lock: tokio::sync::Mutex<()>,
+    pub(crate) lifecycle_lock: tokio::sync::Mutex<()>,
     // sidecar→service 交接 watcher 单实例标志。
     #[cfg(target_os = "windows")]
     handoff_watcher_running: AtomicBool,

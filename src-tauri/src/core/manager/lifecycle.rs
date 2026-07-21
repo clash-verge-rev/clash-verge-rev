@@ -67,9 +67,12 @@ impl CoreManager {
             RunningMode::NotRunning | RunningMode::Sidecar => self.start_core_by_sidecar().await,
         };
 
-        // 启动失败时回滚 mode,允许后续重试。
+        // sidecar 启动失败可立即回滚；service 启动失败保持 fail-closed，
+        // 由 owner monitor 确认未运行或失权后再回收状态。
         if result.is_err() {
-            self.set_running_mode(RunningMode::NotRunning);
+            if !matches!(*self.get_running_mode(), RunningMode::Service) {
+                self.set_running_mode(RunningMode::NotRunning);
+            }
             return result;
         }
 

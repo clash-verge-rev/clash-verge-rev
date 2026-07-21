@@ -99,9 +99,9 @@ tauri-plugin-devtools = { version = "2.1.0" }
 tauri-plugin-mihomo = { git = "https://github.com/clash-verge-rev/tauri-plugin-mihomo", branch = "fix/api-robustness" }
 clash_verge_logger = { git = "https://github.com/clash-verge-rev/clash-verge-logger" }
 async-trait = "0.1.89"
-clash_verge_service_ipc = { version = "2.3.3", features = [
+clash_verge_service_ipc = { path = "../../clash-verge-service-ipc", version = "2.4.0", features = [
   "client",
-], git = "https://github.com/clash-verge-rev/clash-verge-service-ipc" }
+] }
 arc-swap = "1.9.2"
 tokio-rustls = "0.26.4"
 rustls = { version = "0.23.41", features = ["ring"] }
@@ -112,6 +112,9 @@ dark-light = { git = "https://github.com/rust-dark-light/dark-light" }
 windows-sys.workspace = true
 bytes = "1.12.0"
 tokio-util = { version = "0.7.18", features = ["time"] }
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 objc2 = "0.6.4"

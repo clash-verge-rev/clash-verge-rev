@@ -3,8 +3,6 @@ use anyhow::Result;
 use async_trait::async_trait;
 use clash_verge_logging::{Type, logging};
 use once_cell::sync::OnceCell;
-#[cfg(unix)]
-use std::iter;
 use std::{fs, path::PathBuf};
 use tauri::Manager as _;
 
@@ -64,6 +62,28 @@ pub fn app_home_dir() -> Result<PathBuf> {
             Err(anyhow::anyhow!("Failed to get the app homedirectory"))
         }
     }
+}
+
+pub fn preinit_app_data_dir() -> Result<PathBuf> {
+    if PORTABLE_FLAG.get().copied().unwrap_or(false) {
+        let executable = std::env::current_exe()?;
+        let parent = executable
+            .parent()
+            .ok_or_else(|| anyhow::anyhow!("portable executable has no parent directory"))?;
+        return Ok(parent.join(".config").join(APP_ID));
+    }
+
+    #[cfg(target_os = "macos")]
+    let root = PathBuf::from(std::env::var_os("HOME").ok_or_else(|| anyhow::anyhow!("HOME is unavailable"))?)
+        .join("Library/Application Support");
+    #[cfg(target_os = "linux")]
+    let root = std::env::var_os("XDG_DATA_HOME")
+        .map(PathBuf::from)
+        .unwrap_or_else(|| PathBuf::from(std::env::var_os("HOME").unwrap_or_default()).join(".local/share"));
+    #[cfg(windows)]
+    let root = PathBuf::from(std::env::var_os("APPDATA").ok_or_else(|| anyhow::anyhow!("APPDATA is unavailable"))?);
+
+    Ok(root.join(APP_ID))
 }
 
 /// get the resources dir
@@ -213,39 +233,57 @@ pub fn get_encryption_key() -> Result<Vec<u8>> {
     }
 }
 
-#[cfg(unix)]
-pub fn ensure_mihomo_safe_dir() -> Option<PathBuf> {
-    iter::once("/tmp")
-        .map(PathBuf::from)
-        .find(|path| path.exists())
-        .or_else(|| {
-            std::env::var_os("HOME").and_then(|home| {
-                let home_config = PathBuf::from(home).join(".config");
-                if home_config.exists() || fs::create_dir_all(&home_config).is_ok() {
-                    Some(home_config)
-                } else {
-                    logging!(error, Type::File, "Failed to create safe directory: {home_config:?}");
-                    None
-                }
-            })
-        })
+pub fn ipc_path() -> Result<PathBuf> {
+    Ok(PathBuf::from(clash_verge_service_ipc::mihomo_ipc_path(
+        &crate::core::owner_identity::current_owner_identity()?,
+    )))
+}
+
+pub fn sidecar_ipc_path() -> Result<PathBuf> {
+    Ok(sidecar_ipc_path_for(
+        &preinit_app_data_dir()?,
+        &crate::core::owner_identity::current_owner_identity()?,
+    ))
 }
 
 #[cfg(unix)]
-pub fn ipc_path() -> Result<PathBuf> {
-    ensure_mihomo_safe_dir()
-        .map(|base_dir| base_dir.join("verge").join("verge-mihomo.sock"))
-        .or_else(|| {
-            app_home_dir()
-                .ok()
-                .map(|dir| dir.join("verge").join("verge-mihomo.sock"))
-        })
-        .ok_or_else(|| anyhow::anyhow!("Failed to determine ipc path"))
+fn sidecar_ipc_path_for(app_root: &std::path::Path, _identity: &clash_verge_service_ipc::OwnerIdentity) -> PathBuf {
+    app_root.join("verge-mihomo.sock")
 }
 
-#[cfg(target_os = "windows")]
-pub fn ipc_path() -> Result<PathBuf> {
-    Ok(PathBuf::from(r"\\.\pipe\verge-mihomo"))
+#[cfg(windows)]
+fn sidecar_ipc_path_for(_app_root: &std::path::Path, identity: &clash_verge_service_ipc::OwnerIdentity) -> PathBuf {
+    PathBuf::from(format!(
+        r"\\.\pipe\verge-mihomo-sidecar-{}",
+        clash_verge_service_ipc::owner_key(identity)
+    ))
+}
+
+#[cfg(all(test, unix))]
+mod ipc_tests {
+    use super::sidecar_ipc_path_for;
+    use clash_verge_service_ipc::OwnerIdentity;
+    use std::path::Path;
+
+    #[test]
+    fn sidecar_ipc_stays_in_the_current_users_app_root() {
+        let identity = OwnerIdentity::Unix { uid: 501, gid: 20 };
+        let path = sidecar_ipc_path_for(
+            Path::new("/Users/test/Library/Application Support/io.github.clash-verge-rev.clash-verge-rev"),
+            &identity,
+        );
+
+        assert_eq!(
+            path,
+            Path::new(
+                "/Users/test/Library/Application Support/io.github.clash-verge-rev.clash-verge-rev/verge-mihomo.sock"
+            )
+        );
+        assert_ne!(
+            path.to_string_lossy(),
+            clash_verge_service_ipc::mihomo_ipc_path(&identity)
+        );
+    }
 }
 #[async_trait]
 pub trait PathBufExec {

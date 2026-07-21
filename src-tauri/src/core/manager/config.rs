@@ -1,9 +1,9 @@
-use super::CoreManager;
+use super::{CoreManager, RunningMode};
 use crate::{
     config::{Config, ConfigType, runtime::IRuntime},
     constants::timing,
     core::{
-        handle,
+        handle, service,
         validate::{CoreConfigValidator, ValidationOutcome, ValidationSkipReason},
     },
     utils::{dirs, help},
@@ -136,6 +136,25 @@ impl CoreManager {
     }
 
     async fn apply_config(&self, path: PathBuf) -> Result<()> {
+        if matches!(*self.get_running_mode(), RunningMode::Service) {
+            let _lifecycle = self.lifecycle_lock.lock().await;
+            if !matches!(*self.get_running_mode(), RunningMode::Service) {
+                Config::runtime().await.discard();
+                return Err(anyhow!("core mode changed while applying service configuration"));
+            }
+            return match service::run_core_by_service(&path).await {
+                Ok(()) => {
+                    Config::runtime().await.apply();
+                    logging!(info, Type::Core, "Configuration materialized and applied by service");
+                    Ok(())
+                }
+                Err(error) => {
+                    Config::runtime().await.discard();
+                    Err(error)
+                }
+            };
+        }
+
         let path = dirs::path_to_str(&path)?;
         match self.reload_config(path).await {
             Ok(_) => {
