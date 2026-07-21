@@ -1,6 +1,3 @@
-import { useEffect, useMemo, useReducer, useRef } from 'react'
-
-import { useVerge } from '@/hooks/use-verge'
 import delayManager from '@/services/delay'
 import { compileStringMatcher } from '@/utils/search-matcher'
 
@@ -11,89 +8,6 @@ export type ProxySearchState = {
   matchCase?: boolean
   matchWholeWord?: boolean
   useRegularExpression?: boolean
-}
-
-export default function useFilterSort(
-  proxies: IProxyItem[],
-  groupName: string,
-  filterText: string,
-  sortType: ProxySortType,
-  searchState?: ProxySearchState,
-) {
-  const { verge } = useVerge()
-  const [_, bumpRefresh] = useReducer((count: number) => count + 1, 0)
-  const lastInputRef = useRef<{ text: string; sort: ProxySortType } | null>(
-    null,
-  )
-  const debounceTimerRef = useRef<number | null>(null)
-
-  useEffect(() => {
-    let last = 0
-
-    delayManager.setGroupListener(groupName, () => {
-      // 简单节流
-      const now = Date.now()
-      if (now - last > 666) {
-        last = now
-        bumpRefresh()
-      }
-    })
-
-    return () => {
-      delayManager.removeGroupListener(groupName)
-    }
-  }, [groupName])
-
-  const compute = useMemo(() => {
-    const fp = filterProxies(proxies, groupName, filterText, searchState)
-    const sp = sortProxies(
-      fp,
-      groupName,
-      sortType,
-      verge?.default_latency_timeout,
-    )
-    return sp
-  }, [
-    proxies,
-    groupName,
-    filterText,
-    sortType,
-    searchState,
-    verge?.default_latency_timeout,
-  ])
-
-  const [result, setResult] = useReducer(
-    (_prev: IProxyItem[], next: IProxyItem[]) => next,
-    compute,
-  )
-
-  useEffect(() => {
-    if (debounceTimerRef.current !== null) {
-      window.clearTimeout(debounceTimerRef.current)
-      debounceTimerRef.current = null
-    }
-
-    const prev = lastInputRef.current
-    const stableInputs =
-      prev && prev.text === filterText && prev.sort === sortType
-
-    lastInputRef.current = { text: filterText, sort: sortType }
-
-    const delay = stableInputs ? 0 : 150
-    debounceTimerRef.current = window.setTimeout(() => {
-      setResult(compute)
-      debounceTimerRef.current = null
-    }, delay)
-
-    return () => {
-      if (debounceTimerRef.current !== null) {
-        window.clearTimeout(debounceTimerRef.current)
-        debounceTimerRef.current = null
-      }
-    }
-  }, [compute, filterText, sortType])
-
-  return result
 }
 
 export function filterSort(

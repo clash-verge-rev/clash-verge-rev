@@ -473,7 +473,6 @@
         "update": "تحديث"
       },
       "messages": {
-        "portableError": "الإصدار المحمول لا يدعم التحديث داخل التطبيق. يرجى التنزيل والاستبدال يدويًا",
         "breakChangeError": "هذا الإصدار هو تحديث رئيسي ولا يدعم التحديث داخل التطبيق. يرجى إلغاء التثبيت وتنزيل الإصدار الجديد وتثبيته يدويًا"
       }
     },
@@ -651,11 +650,6 @@
         "entryLightweightMode": "Entry Lightweight Mode",
         "direct": "الوضع المباشر",
         "reactivateProfiles": "إعادة تنشيط الملفات الشخصية"
-      }
-    },
-    "password": {
-      "prompts": {
-        "enterRoot": "يرجى إدخال كلمة مرور الرووت"
       }
     },
     "networkInterface": {

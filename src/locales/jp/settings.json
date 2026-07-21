@@ -473,7 +473,6 @@
         "update": "更新"
       },
       "messages": {
-        "portableError": "ポータブル版ではアプリケーション内での更新はサポートされていません。手動でダウンロードして置き換えてください。",
         "breakChangeError": "このバージョンは重大な更新であり、アプリケーション内での更新はサポートされていません。アンインストールしてから手動でダウンロードしてインストールしてください。"
       }
     },
@@ -651,11 +650,6 @@
         "entryLightweightMode": "軽量モードに入る",
         "direct": "直接接続モード",
         "reactivateProfiles": "プロファイルを再アクティブ化"
-      }
-    },
-    "password": {
-      "prompts": {
-        "enterRoot": "ルートパスワードを入力してください。"
       }
     },
     "networkInterface": {

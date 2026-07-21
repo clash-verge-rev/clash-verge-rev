@@ -473,7 +473,6 @@
         "update": "Яңарту"
       },
       "messages": {
-        "portableError": "Портатив версиядә кушымта эчендә яңарту хупланмый, кулдан төшереп алыгыз",
         "breakChangeError": "Бу зур яңарту, ул кушымта эчендә яңартылмый. Борып алып ташлап, яңадан урнаштыру сорала."
       }
     },
@@ -651,11 +650,6 @@
         "entryLightweightMode": "Entry Lightweight Mode",
         "direct": "Туры режим",
         "reactivateProfiles": "Профильләрне янәдән активлаштыру"
-      }
-    },
-    "password": {
-      "prompts": {
-        "enterRoot": "root паролен языгыз"
       }
     },
     "networkInterface": {

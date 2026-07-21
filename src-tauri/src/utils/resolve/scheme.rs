@@ -5,7 +5,7 @@ use tauri::Url;
 
 use crate::{
     config::{Config, PrfItem, profiles},
-    core::{CoreManager, handle},
+    core::{CoreManager, handle, timer::Timer},
     utils::help,
 };
 use clash_verge_logging::{Type, logging, logging_error};
@@ -97,8 +97,12 @@ async fn import_subscription(url: &str, name: Option<&String>) {
         return;
     }
 
-    Config::profiles().await.apply();
-    logging_error!(Type::Config, Config::profiles().await.data_arc().save_file().await);
+    if let Err(e) = Config::profiles().await.data_arc().save_file().await {
+        logging!(error, Type::Config, "failed to save imported subscription: {}", e);
+        handle::Handle::notice_message("import_sub_url::error", e.to_string());
+        return;
+    }
+    logging_error!(Type::Timer, Timer::global().refresh().await);
     handle::Handle::notice_message(
         "import_sub_url::ok",
         "", // 空 msg 传入，我们不希望导致 后端-前端-后端 死循环，这里只做提醒。

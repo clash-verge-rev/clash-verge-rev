@@ -37,7 +37,7 @@
         "importSuccess": "Profile imported successfully, please restart if not visible",
         "profileSwitched": "訂閱已切換",
         "profileReactivated": "訂閱已啟用",
-        "switchInterrupted": "配置切換被新的選擇中斷",
+        "switchBusy": "正在切換配置，請稍後重試",
         "batchDeleted": "選取的訂閱已成功刪除"
       },
       "notices": {

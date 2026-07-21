@@ -73,9 +73,9 @@ const InnerConnectionDetail = ({ data, closed, onClose }: InnerProps) => {
   const theme = useTheme()
   const chains = [...data.chains].reverse().join(' / ')
   const rule = rulePayload ? `${data.rule}(${rulePayload})` : data.rule
-  const host = metadata.host
-    ? `${metadata.host}:${metadata.destinationPort}`
-    : `${metadata.remoteDestination}:${metadata.destinationPort}`
+  const hostAddress =
+    metadata.host || metadata.destinationIP || metadata.remoteDestination
+  const host = `${hostAddress}:${metadata.destinationPort}`
   const Destination = metadata.destinationIP
     ? metadata.destinationIP
     : metadata.remoteDestination

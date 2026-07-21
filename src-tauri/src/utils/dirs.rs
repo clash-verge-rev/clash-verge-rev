@@ -114,6 +114,18 @@ pub fn app_logs_dir() -> Result<PathBuf> {
     Ok(app_home_dir()?.join("logs"))
 }
 
+/// service logs dir
+#[cfg(target_os = "macos")]
+pub fn service_logs_root_dir() -> Result<PathBuf> {
+    Ok(app_home_dir()?.join("service-logs"))
+}
+
+/// service logs dir
+#[cfg(not(target_os = "macos"))]
+pub fn service_logs_root_dir() -> Result<PathBuf> {
+    app_logs_dir()
+}
+
 // latest verge log
 pub fn app_latest_log() -> Result<PathBuf> {
     Ok(app_logs_dir()?.join("latest.log"))
@@ -158,7 +170,7 @@ pub fn sidecar_log_dir() -> Result<PathBuf> {
 }
 
 pub fn service_log_dir() -> Result<PathBuf> {
-    let log_dir = app_logs_dir()?.join("service");
+    let log_dir = service_logs_root_dir()?.join("service");
     let _ = std::fs::create_dir_all(&log_dir);
 
     Ok(log_dir)

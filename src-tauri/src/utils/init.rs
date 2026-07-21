@@ -13,7 +13,7 @@ use crate::{
 use anyhow::Result;
 use chrono::{Local, TimeZone as _};
 use clash_verge_logging::Type;
-#[cfg(target_os = "windows")]
+#[cfg(any(target_os = "macos", target_os = "windows"))]
 use std::path::Path;
 use std::{path::PathBuf, str::FromStr as _};
 use tauri_plugin_shell::ShellExt as _;
@@ -46,12 +46,16 @@ async fn delete_snapshot_logs(log_dir: &Path) -> Result<()> {
 /// 删除log文件
 pub async fn delete_log() -> Result<()> {
     let log_dir = dirs::app_logs_dir()?;
-    if !log_dir.exists() {
+    let service_log_dir = dirs::service_log_dir()?;
+
+    if !log_dir.exists() && !service_log_dir.exists() {
         return Ok(());
     }
 
     #[cfg(target_os = "windows")]
-    delete_snapshot_logs(&log_dir).await?;
+    if log_dir.exists() {
+        delete_snapshot_logs(&log_dir).await?;
+    }
 
     let auto_log_clean = {
         let verge = Config::verge().await;
@@ -108,16 +112,164 @@ pub async fn delete_log() -> Result<()> {
         Ok(())
     };
 
-    let mut log_read_dir = fs::read_dir(&log_dir).await?;
-    while let Some(entry) = log_read_dir.next_entry().await? {
-        std::mem::drop(process_file(entry).await);
+    if log_dir.exists() {
+        let mut log_read_dir = fs::read_dir(&log_dir).await?;
+        while let Some(entry) = log_read_dir.next_entry().await? {
+            std::mem::drop(process_file(entry).await);
+        }
     }
 
-    let service_log_dir = log_dir.join("service");
-    let mut service_log_read_dir = fs::read_dir(service_log_dir).await?;
-    while let Some(entry) = service_log_read_dir.next_entry().await? {
-        std::mem::drop(process_file(entry).await);
+    if service_log_dir.exists() {
+        let mut service_log_read_dir = fs::read_dir(service_log_dir).await?;
+        while let Some(entry) = service_log_read_dir.next_entry().await? {
+            std::mem::drop(process_file(entry).await);
+        }
     }
+
+    Ok(())
+}
+
+#[cfg(target_os = "macos")]
+async fn is_logs_dir_writable(log_dir: &Path) -> bool {
+    if !log_dir.is_dir() {
+        logging!(warn, Type::Setup, "macOS logs path is not a directory: {:?}", log_dir);
+        return false;
+    }
+
+    let probe_path = log_dir.join(format!(
+        ".clash-verge-write-test-{}-{}",
+        std::process::id(),
+        Local::now().timestamp_nanos_opt().unwrap_or_default()
+    ));
+
+    match fs::OpenOptions::new()
+        .create_new(true)
+        .write(true)
+        .open(&probe_path)
+        .await
+    {
+        Ok(_) => {
+            if let Err(e) = fs::remove_file(&probe_path).await {
+                logging!(
+                    warn,
+                    Type::Setup,
+                    "failed to remove macOS logs write probe {:?}: {}",
+                    probe_path,
+                    e
+                );
+            }
+            true
+        }
+        Err(e) => {
+            logging!(
+                warn,
+                Type::Setup,
+                "macOS logs directory is not writable {:?}: {}",
+                log_dir,
+                e
+            );
+            false
+        }
+    }
+}
+
+#[cfg(target_os = "macos")]
+fn available_legacy_path(parent: &Path, prefix: &str) -> Result<PathBuf> {
+    let timestamp = Local::now().format("%Y%m%d%H%M%S");
+    let base_name = format!("{prefix}-{timestamp}");
+    let candidate = parent.join(&base_name);
+
+    if !candidate.exists() {
+        return Ok(candidate);
+    }
+
+    for index in 1..100 {
+        let candidate = parent.join(format!("{base_name}-{index}"));
+        if !candidate.exists() {
+            return Ok(candidate);
+        }
+    }
+
+    Err(anyhow::anyhow!(
+        "failed to allocate legacy path under {:?} with prefix {}",
+        parent,
+        prefix
+    ))
+}
+
+#[cfg(target_os = "macos")]
+async fn migrate_legacy_macos_service_logs(log_dir: &Path) -> Result<()> {
+    let legacy_service_dir = log_dir.join("service");
+    if !legacy_service_dir.exists() {
+        return Ok(());
+    }
+
+    let service_logs_root = dirs::service_logs_root_dir()?;
+    fs::create_dir_all(&service_logs_root)
+        .await
+        .map_err(|e| anyhow::anyhow!("Failed to create service logs root {:?}: {}", service_logs_root, e))?;
+
+    let archived_service_dir = available_legacy_path(&service_logs_root, "service.legacy")?;
+    fs::rename(&legacy_service_dir, &archived_service_dir)
+        .await
+        .map_err(|e| {
+            anyhow::anyhow!(
+                "Failed to archive legacy macOS service logs {:?} to {:?}: {}",
+                legacy_service_dir,
+                archived_service_dir,
+                e
+            )
+        })?;
+
+    logging!(
+        info,
+        Type::Setup,
+        "Archived legacy macOS service logs: {:?} -> {:?}",
+        legacy_service_dir,
+        archived_service_dir
+    );
+
+    Ok(())
+}
+
+#[cfg(target_os = "macos")]
+async fn migrate_legacy_macos_logs() -> Result<()> {
+    let log_dir = dirs::app_logs_dir()?;
+
+    if !log_dir.exists() {
+        return Ok(());
+    }
+
+    if is_logs_dir_writable(&log_dir).await {
+        if let Err(e) = migrate_legacy_macos_service_logs(&log_dir).await {
+            logging!(warn, Type::Setup, "Failed to migrate legacy macOS service logs: {}", e);
+        }
+        return Ok(());
+    }
+
+    let app_home = dirs::app_home_dir()?;
+    let archived_log_dir = available_legacy_path(&app_home, "logs.legacy-root")?;
+    fs::rename(&log_dir, &archived_log_dir).await.map_err(|e| {
+        anyhow::anyhow!(
+            "Failed to archive unwritable macOS logs directory {:?} to {:?}: {}",
+            log_dir,
+            archived_log_dir,
+            e
+        )
+    })?;
+
+    logging!(
+        warn,
+        Type::Setup,
+        "Archived unwritable macOS logs directory: {:?} -> {:?}",
+        log_dir,
+        archived_log_dir
+    );
+
+    fs::create_dir_all(&log_dir)
+        .await
+        .map_err(|e| anyhow::anyhow!("Failed to recreate macOS logs directory {:?}: {}", log_dir, e))?;
+    logging!(info, Type::Setup, "Recreated macOS logs directory: {:?}", log_dir);
 
     Ok(())
 }
@@ -236,6 +388,7 @@ async fn ensure_directories() -> Result<()> {
         ("app_home", dirs::app_home_dir()?),
         ("app_profiles", dirs::app_profiles_dir()?),
         ("app_logs", dirs::app_logs_dir()?),
+        ("service_logs", dirs::service_log_dir()?),
     ];
 
     for (name, dir) in directories {
@@ -297,6 +450,9 @@ pub async fn init_config() -> Result<()> {
     // let _ = dirs::init_portable_flag();
 
     // We do not need init_log here anymore due to resolve will to the things
+
+    #[cfg(target_os = "macos")]
+    migrate_legacy_macos_logs().await?;
 
     ensure_directories().await?;
 

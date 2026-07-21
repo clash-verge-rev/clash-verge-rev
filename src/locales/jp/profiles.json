@@ -37,7 +37,7 @@
         "importSuccess": "Profile imported successfully, please restart if not visible",
         "profileSwitched": "プロファイルが切り替えられました。",
         "profileReactivated": "プロファイルが再アクティブ化されました。",
-        "switchInterrupted": "Profile switch interrupted by new selection",
+        "switchBusy": "Profile switch is already in progress",
         "batchDeleted": "選択したプロファイルが正常に削除されました"
       },
       "notices": {

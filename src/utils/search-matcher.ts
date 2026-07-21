@@ -9,7 +9,7 @@ export type CompileStringMatcherResult = {
   isValid: boolean
 }
 
-export const escapeRegex = (value: string) => {
+const escapeRegex = (value: string) => {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
