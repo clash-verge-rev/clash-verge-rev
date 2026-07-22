@@ -362,8 +362,10 @@ export async function listLocalBackup() {
 }
 
 // 获取当前运行模式
+export type RunningMode = 'Service' | 'Sidecar' | 'NotRunning'
+
 export const getRunningMode = async () => {
-  return invoke<string>('get_running_mode')
+  return invoke<RunningMode>('get_running_mode')
 }
 
 // 获取应用运行时间

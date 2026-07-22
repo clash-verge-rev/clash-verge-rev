@@ -1,23 +1,66 @@
 import { useEffect, useRef, useState } from 'react'
 
-import { getRunningMode, isAdmin, isServiceAvailable } from '@/services/cmds'
+import {
+  getRunningMode,
+  getServiceInstallState,
+  isAdmin,
+  isServiceAvailable,
+  type RunningMode,
+  type ServiceInstallState,
+} from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
 import { useQuery } from '@/services/query-client'
+import getSystem from '@/utils/get-system'
 
 import { useVerge } from './use-verge'
 import { useVisibility } from './use-visibility'
 
-interface SystemState {
-  runningMode: 'Sidecar' | 'Service'
+export interface SystemState {
+  runningMode: RunningMode
   isAdminMode: boolean
   isServiceOk: boolean
+  serviceInstallState: ServiceInstallState | null
 }
 
 const defaultSystemState = {
   runningMode: 'Sidecar',
   isAdminMode: false,
   isServiceOk: false,
+  serviceInstallState: null,
 } as SystemState
+
+const isMacos = getSystem() === 'macos'
+
+export const fetchSystemState = async (): Promise<SystemState> => {
+  const [runningMode, isAdminMode, isServiceOk, serviceInstallState] =
+    await Promise.all([
+      getRunningMode(),
+      isAdmin(),
+      isServiceAvailable(),
+      isMacos
+        ? getServiceInstallState().catch(() => null)
+        : Promise.resolve<ServiceInstallState | null>(null),
+    ])
+  return {
+    runningMode,
+    isAdminMode,
+    isServiceOk,
+    serviceInstallState,
+  }
+}
+
+const isServiceChoicePending = (
+  state: ServiceInstallState | null,
+  serviceAvailable: boolean,
+  queryFailed: boolean,
+) =>
+  isMacos &&
+  (queryFailed ||
+    !(
+      state === 'notInstalled' ||
+      state === 'sidecarAllowed' ||
+      (state === 'ready' && serviceAvailable)
+    ))
 
 // Grace period for service initialization during startup
 const STARTUP_GRACE_MS = 10_000
@@ -41,16 +84,10 @@ export function useSystemState() {
     data: systemState = defaultSystemState,
     refetch: mutateSystemState,
     isLoading,
+    error: systemStateError,
   } = useQuery({
     queryKey: ['getSystemState'],
-    queryFn: async () => {
-      const [runningMode, isAdminMode, isServiceOk] = await Promise.all([
-        getRunningMode(),
-        isAdmin(),
-        isServiceAvailable(),
-      ])
-      return { runningMode, isAdminMode, isServiceOk } as SystemState
-    },
+    queryFn: fetchSystemState,
     refetchInterval: pageVisible ? (isStartingUp ? 2000 : 30000) : false,
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
@@ -59,6 +96,11 @@ export function useSystemState() {
   const isSidecarMode = systemState.runningMode === 'Sidecar'
   const isServiceMode = systemState.runningMode === 'Service'
   const isTunModeAvailable = systemState.isAdminMode || systemState.isServiceOk
+  const serviceChoicePending = isServiceChoicePending(
+    systemState.serviceInstallState,
+    systemState.isServiceOk,
+    systemStateError !== undefined,
+  )
 
   const enable_tun_mode = verge?.enable_tun_mode
   const cooldownTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
@@ -70,6 +112,7 @@ export function useSystemState() {
       !disablingTunRef.current &&
       enable_tun_mode &&
       !isTunModeAvailable &&
+      !serviceChoicePending &&
       !isLoading &&
       !isStartingUp
     ) {
@@ -102,7 +145,14 @@ export function useSystemState() {
         disablingTunRef.current = false
       }
     }
-  }, [enable_tun_mode, isTunModeAvailable, patchVerge, isLoading, isStartingUp])
+  }, [
+    enable_tun_mode,
+    isTunModeAvailable,
+    serviceChoicePending,
+    patchVerge,
+    isLoading,
+    isStartingUp,
+  ])
 
   return {
     runningMode: systemState.runningMode,
