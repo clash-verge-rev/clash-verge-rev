@@ -148,7 +148,7 @@ async fn init_silent_updater() {
     //   - macOS/Linux: binary is replaced, we restart the app
     if SilentUpdater::global().try_install_on_startup(app_handle).await {
         logging!(info, Type::Setup, "Update installed at startup, restarting...");
-        app_handle.restart();
+        feat::restart_app().await;
     }
 
     // No pending install — start background check/download loop

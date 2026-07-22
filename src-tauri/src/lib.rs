@@ -447,7 +447,15 @@ pub fn run() {
             // Windows session ending currently reaches Tao as WM_ENDSESSION and
             // destroys the loop without a preventable ExitRequested event.
             if !handle::Handle::global().is_exiting() {
-                feat::quit().await;
+                handle::Handle::global().set_is_exiting();
+                let cleanup_result = feat::clean_session_ending_best_effort().await;
+                logging!(
+                    info,
+                    Type::System,
+                    "Unpreventable session-ending best-effort cleanup returned - core stopped: {}, all cleanup successful: {}",
+                    cleanup_result.core_stopped,
+                    cleanup_result.all_success
+                );
             }
             logging!(info, Type::System, "Application exited");
         }),
