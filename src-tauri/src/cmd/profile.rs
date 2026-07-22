@@ -21,7 +21,6 @@ use clash_verge_logging::{Type, logging, logging_error};
 use scopeguard::defer;
 use smartstring::alias::String;
 use std::sync::atomic::{AtomicBool, Ordering};
-use std::time::Duration;
 
 static CURRENT_SWITCHING_PROFILE: AtomicBool = AtomicBool::new(false);
 
@@ -276,12 +275,14 @@ async fn handle_update_error<E: std::fmt::Display>(
     Ok(ValidationOutcome::invalid_from_message(message))
 }
 
-async fn handle_timeout(current_profile: Option<&String>) -> CmdResult<ValidationOutcome> {
-    let timeout_msg: String = "配置更新超时(30秒)，可能是配置验证或核心通信阻塞".into();
-    logging!(error, Type::Cmd, "{}", timeout_msg);
-    discard_and_restore(current_profile).await?;
-    handle::Handle::notice_message("config_validate::timeout", timeout_msg.clone());
-    Ok(ValidationOutcome::invalid_from_message(timeout_msg))
+async fn run_profile_config_update_transition<Update, UpdateFuture>(
+    update_config: Update,
+) -> anyhow::Result<ValidationOutcome>
+where
+    Update: FnOnce() -> UpdateFuture,
+    UpdateFuture: std::future::Future<Output = anyhow::Result<ValidationOutcome>>,
+{
+    update_config().await
 }
 
 async fn perform_config_update(
@@ -291,14 +292,12 @@ async fn perform_config_update(
     defer! {
         CURRENT_SWITCHING_PROFILE.store(false, Ordering::Release);
     }
-    let update_result =
-        tokio::time::timeout(Duration::from_secs(30), CoreManager::global().update_config_forced()).await;
+    let update_result = run_profile_config_update_transition(|| CoreManager::global().update_config_forced()).await;
 
     match update_result {
-        Ok(Ok(outcome)) if outcome.is_valid() => handle_success(current_value).await,
-        Ok(Ok(outcome)) => handle_validation_failure(outcome, current_profile).await,
-        Ok(Err(e)) => handle_update_error(e, current_profile).await,
-        Err(_) => handle_timeout(current_profile).await,
+        Ok(outcome) if outcome.is_valid() => handle_success(current_value).await,
+        Ok(outcome) => handle_validation_failure(outcome, current_profile).await,
+        Err(e) => handle_update_error(e, current_profile).await,
     }
 }
 
@@ -430,9 +429,32 @@ pub async fn get_next_update_time(uid: String) -> CmdResult<Option<i64>> {
 
 #[cfg(test)]
 mod tests {
-    use super::commit_current_profile;
+    use super::{commit_current_profile, run_profile_config_update_transition};
     use crate::config::{IProfiles, PrfItem};
+    use crate::core::validate::ValidationOutcome;
     use clash_verge_draft::Draft;
+    use std::{
+        sync::{
+            Arc,
+            atomic::{AtomicBool, Ordering},
+        },
+        task::Poll,
+        time::Duration,
+    };
+    use tokio::sync::Barrier;
+
+    struct CancellationProbe {
+        cancelled: Arc<AtomicBool>,
+        completed: Arc<AtomicBool>,
+    }
+
+    impl Drop for CancellationProbe {
+        fn drop(&mut self) {
+            if !self.completed.load(Ordering::Acquire) {
+                self.cancelled.store(true, Ordering::Release);
+            }
+        }
+    }
 
     fn profile(uid: &str) -> PrfItem {
         PrfItem {
@@ -465,6 +487,44 @@ mod tests {
         let committed = profiles.data_arc();
         assert_eq!(committed.current.as_deref(), Some("b"));
         assert!(committed.get_item("new").is_ok());
+        Ok(())
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn profile_config_update_runs_past_former_deadline_without_cancellation() -> anyhow::Result<()> {
+        let update_started = Arc::new(Barrier::new(2));
+        let release_update = Arc::new(Barrier::new(2));
+        let update_cancelled = Arc::new(AtomicBool::new(false));
+        let update_completed = Arc::new(AtomicBool::new(false));
+
+        let mut update = Box::pin(run_profile_config_update_transition({
+            let update_started = Arc::clone(&update_started);
+            let release_update = Arc::clone(&release_update);
+            let update_cancelled = Arc::clone(&update_cancelled);
+            let update_completed = Arc::clone(&update_completed);
+            move || async move {
+                let _probe = CancellationProbe {
+                    cancelled: update_cancelled,
+                    completed: Arc::clone(&update_completed),
+                };
+                update_started.wait().await;
+                release_update.wait().await;
+                update_completed.store(true, Ordering::Release);
+                Ok(ValidationOutcome::Valid)
+            }
+        }));
+
+        assert!(matches!(futures::poll!(update.as_mut()), Poll::Pending));
+        update_started.wait().await;
+        tokio::time::advance(Duration::from_secs(31)).await;
+
+        assert!(matches!(futures::poll!(update.as_mut()), Poll::Pending));
+        assert!(!update_cancelled.load(Ordering::Acquire));
+
+        release_update.wait().await;
+        assert!(update.await?.is_valid());
+        assert!(update_completed.load(Ordering::Acquire));
+        assert!(!update_cancelled.load(Ordering::Acquire));
         Ok(())
     }
 }

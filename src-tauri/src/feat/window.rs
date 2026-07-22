@@ -109,7 +109,7 @@ pub async fn open_or_close_dashboard() {
     logging!(info, Type::Window, "Window toggle result: {result:?}");
 }
 
-pub async fn quit() {
+pub async fn quit() -> clash_verge_signal::ShutdownOutcome {
     logging!(debug, Type::System, "启动退出流程");
     // 设置退出标志
     handle::Handle::global().set_is_exiting();
@@ -132,12 +132,13 @@ pub async fn quit() {
             "set_config::error",
             "Failed to stop the core safely; quit was cancelled",
         );
-        return;
+        return clash_verge_signal::ShutdownOutcome::Canceled;
     }
 
     utils::server::shutdown_embedded_server();
     let app_handle = handle::Handle::app_handle();
     app_handle.exit(if cleanup_result.all_success { 0 } else { 1 });
+    clash_verge_signal::ShutdownOutcome::Committed
 }
 
 pub async fn clean_async() -> CleanupResult {
