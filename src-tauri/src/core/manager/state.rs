@@ -145,7 +145,10 @@ impl CoreManager {
         })
         .await;
         if let Err(readiness_error) = readiness {
-            Sysopt::global().stop_proxy_guard();
+            #[cfg(target_os = "macos")]
+            Sysopt::global().revoke_proxy_cleanup_authority_and_stop_guard().await;
+            #[cfg(not(target_os = "macos"))]
+            Sysopt::global().stop_proxy_guard().await;
             self.set_running_mode(RunningMode::NotRunning);
             server::set_pac_available(false);
             return match child.kill() {
@@ -289,7 +292,10 @@ impl CoreManager {
         let _ = self.take_child_sidecar();
         #[cfg(target_os = "windows")]
         self.set_job_handle(None);
-        Sysopt::global().stop_proxy_guard();
+        #[cfg(target_os = "macos")]
+        Sysopt::global().revoke_proxy_cleanup_authority_and_stop_guard().await;
+        #[cfg(not(target_os = "macos"))]
+        Sysopt::global().stop_proxy_guard().await;
         server::set_pac_available(false);
         self.set_running_mode(RunningMode::NotRunning);
         self.after_core_process();

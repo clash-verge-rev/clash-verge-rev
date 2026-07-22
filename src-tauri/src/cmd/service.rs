@@ -1,4 +1,6 @@
 use super::{CmdResult, StringifyErr as _};
+#[cfg(target_os = "macos")]
+use crate::core::sysopt::Sysopt;
 use crate::core::{
     CoreManager,
     service::{self, SERVICE_MANAGER, ServiceStatus},
@@ -6,6 +8,13 @@ use crate::core::{
 
 async fn execute_service_operation_sync(status: ServiceStatus, op_type: &str) -> CmdResult {
     let _lifecycle = CoreManager::global().lifecycle_lock.lock().await;
+    #[cfg(target_os = "macos")]
+    if matches!(
+        status,
+        ServiceStatus::ReinstallRequired | ServiceStatus::ForceReinstallRequired
+    ) {
+        Sysopt::global().revoke_proxy_cleanup_authority_and_stop_guard().await;
+    }
     SERVICE_MANAGER
         .handle_service_status(status)
         .await
@@ -19,7 +28,10 @@ pub async fn install_service() -> CmdResult {
 
 #[tauri::command]
 pub async fn uninstall_service() -> CmdResult {
-    execute_service_operation_sync(ServiceStatus::UninstallRequired, "Uninstall").await
+    CoreManager::global()
+        .uninstall_service_and_start_sidecar()
+        .await
+        .map_err(|error| format!("Uninstall Service failed: {error:#}").into())
 }
 
 #[tauri::command]

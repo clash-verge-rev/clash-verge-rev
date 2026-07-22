@@ -4,6 +4,8 @@ use crate::module::lightweight;
 use crate::utils;
 use crate::utils::window_manager::WindowManager;
 use clash_verge_logging::{Type, logging};
+#[cfg(target_os = "macos")]
+use tokio::sync::oneshot;
 use tokio::time::{Duration, timeout};
 
 pub async fn open_or_close_dashboard() {
@@ -41,33 +43,42 @@ pub async fn quit() {
 pub async fn clean_async() -> bool {
     logging!(info, Type::System, "开始执行异步清理操作...");
 
-    // 重置系统代理
-    let proxy_task = tokio::task::spawn(async {
-        let sys_proxy_enabled = Config::verge().await.data_arc().enable_system_proxy.unwrap_or(false);
-        if !sys_proxy_enabled {
-            logging!(info, Type::Window, "系统代理未启用，跳过重置");
-            return true;
-        }
+    #[cfg(target_os = "macos")]
+    let (proxy_done_tx, proxy_done_rx) = oneshot::channel();
 
-        logging!(info, Type::Window, "开始重置系统代理...");
-        match timeout(Duration::from_millis(1500), sysopt::Sysopt::global().reset_sysproxy()).await {
-            Ok(Ok(_)) => {
-                logging!(info, Type::Window, "系统代理已重置");
-                true
+    // 重置系统代理
+    let proxy_task = tokio::task::spawn(async move {
+        let result = async {
+            let sys_proxy_enabled = Config::verge().await.data_arc().enable_system_proxy.unwrap_or(false);
+            if !sys_proxy_enabled {
+                logging!(info, Type::Window, "系统代理未启用，跳过重置");
+                return true;
             }
-            Ok(Err(e)) => {
-                logging!(warn, Type::Window, "Warning: 重置系统代理失败: {e}");
-                false
-            }
-            Err(_) => {
-                logging!(warn, Type::Window, "Warning: 重置系统代理超时，继续退出");
-                false
+
+            logging!(info, Type::Window, "开始重置系统代理...");
+            match timeout(Duration::from_millis(1500), sysopt::Sysopt::global().reset_sysproxy()).await {
+                Ok(Ok(_)) => {
+                    logging!(info, Type::Window, "系统代理已重置");
+                    true
+                }
+                Ok(Err(e)) => {
+                    logging!(warn, Type::Window, "Warning: 重置系统代理失败: {e}");
+                    false
+                }
+                Err(_) => {
+                    logging!(warn, Type::Window, "Warning: 重置系统代理超时，继续退出");
+                    false
+                }
             }
         }
+        .await;
+        #[cfg(target_os = "macos")]
+        let _ = proxy_done_tx.send(());
+        result
     });
 
     // 关闭 Tun 模式 + 停止核心服务
-    let core_task = tokio::task::spawn(async {
+    let core_task = tokio::task::spawn(async move {
         logging!(info, Type::System, "disable tun");
         let tun_enabled = Config::verge().await.data_arc().enable_tun_mode.unwrap_or(false);
         if tun_enabled {
@@ -100,6 +111,11 @@ pub async fn clean_async() -> bool {
         let stop_timeout = Duration::from_secs(2);
         #[cfg(not(target_os = "windows"))]
         let stop_timeout = Duration::from_secs(3);
+
+        // macOS stop revokes cleanup authority. Let an authorized quit cleanup
+        // consume it first; a prior owner-loss revocation still makes reset skip.
+        #[cfg(target_os = "macos")]
+        let _ = proxy_done_rx.await;
 
         logging!(info, Type::System, "stop core");
         match timeout(stop_timeout, CoreManager::global().stop_core()).await {

@@ -9,12 +9,10 @@ use crate::{
     utils::server,
 };
 use anyhow::{Context as _, Result, bail};
-use backon::{ConstantBuilder, Retryable as _};
 use clash_verge_logging::{Type, logging};
 use compact_str::CompactString;
 use once_cell::sync::Lazy;
 use parking_lot::Mutex;
-use scopeguard::defer;
 use std::{
     borrow::Cow,
     env::current_exe,
@@ -68,12 +66,6 @@ pub enum ServiceInstallState {
     Unavailable,
 }
 
-impl ServiceInstallState {
-    fn is_available(self) -> bool {
-        self == Self::Ready
-    }
-}
-
 #[cfg(any(target_os = "macos", test))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum CurrentServiceProbe {
@@ -99,6 +91,102 @@ const fn classify_macos_service_install_state(
 
 fn confirmed_service_available<E>(result: std::result::Result<bool, E>) -> bool {
     matches!(result, Ok(true))
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct ServiceVersionReply {
+    code: u16,
+    message: String,
+    version: Option<String>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+enum ServiceVersionCheck {
+    Ready,
+    NeedsReinstall(String),
+}
+
+fn classify_service_version_reply(reply: &ServiceVersionReply) -> ServiceVersionCheck {
+    let expected = clash_verge_service_ipc::VERSION;
+    if reply.code == 0 && reply.version.as_deref() == Some(expected) {
+        return ServiceVersionCheck::Ready;
+    }
+
+    let found = reply.version.as_deref().unwrap_or("<missing>");
+    let detail = if reply.code == 0 {
+        format!("expected {expected}, found {found}")
+    } else {
+        format!(
+            "version query returned code {} ({}) while expecting {expected}",
+            reply.code, reply.message
+        )
+    };
+    ServiceVersionCheck::NeedsReinstall(format!(
+        "Service helper protocol mismatch: {detail}. Choose Reinstall or Repair to continue"
+    ))
+}
+
+async fn probe_service_version_once() -> Result<ServiceVersionReply> {
+    if !is_service_ipc_path_exists() {
+        bail!("service IPC path is not available");
+    }
+
+    let response = clash_verge_service_ipc::get_version().await?;
+    Ok(ServiceVersionReply {
+        code: response.code,
+        message: response.message,
+        version: response.data,
+    })
+}
+
+async fn poll_service_version<F, Fut>(
+    max_attempts: usize,
+    retry_delay: Duration,
+    mut probe: F,
+) -> Result<ServiceVersionReply>
+where
+    F: FnMut() -> Fut,
+    Fut: Future<Output = Result<ServiceVersionReply>>,
+{
+    let mut last_error = None;
+    for attempt in 0..max_attempts {
+        match probe().await {
+            Ok(reply) => return Ok(reply),
+            Err(error) => last_error = Some(error),
+        }
+        if attempt + 1 < max_attempts {
+            tokio::time::sleep(retry_delay).await;
+        }
+    }
+
+    Err(last_error.unwrap_or_else(|| anyhow::anyhow!("service version probe was configured with no attempts")))
+}
+
+fn apply_service_version_reply(manager: &ServiceManager, reply: &ServiceVersionReply) -> Result<()> {
+    match classify_service_version_reply(reply) {
+        ServiceVersionCheck::Ready => {
+            manager.set_status(ServiceStatus::Ready);
+            Ok(())
+        }
+        ServiceVersionCheck::NeedsReinstall(error) => {
+            manager.set_status(ServiceStatus::NeedsReinstall);
+            bail!(error)
+        }
+    }
+}
+
+fn apply_service_version_result(
+    manager: &ServiceManager,
+    result: Result<ServiceVersionReply>,
+    unavailable_context: &'static str,
+) -> Result<()> {
+    match result {
+        Ok(reply) => apply_service_version_reply(manager, &reply),
+        Err(error) => {
+            manager.set_status(ServiceStatus::Unavailable(format!("{unavailable_context}: {error:#}")));
+            Err(error).context(unavailable_context)
+        }
+    }
 }
 
 #[cfg(target_os = "macos")]
@@ -131,8 +219,8 @@ fn macos_service_install_marker_exists() -> std::io::Result<bool> {
 #[cfg(target_os = "macos")]
 async fn detect_macos_service_install_state() -> ServiceInstallState {
     let current = match path_entry_exists_without_follow(Path::new(clash_verge_service_ipc::IPC_PATH)) {
-        Ok(true) => match clash_verge_service_ipc::get_version().await {
-            Ok(response) if response.data.as_deref() == Some(clash_verge_service_ipc::VERSION) => {
+        Ok(true) => match probe_service_version_once().await {
+            Ok(reply) if classify_service_version_reply(&reply) == ServiceVersionCheck::Ready => {
                 CurrentServiceProbe::Ready
             }
             Ok(_) => CurrentServiceProbe::VersionMismatch,
@@ -164,6 +252,7 @@ async fn detect_macos_service_install_state() -> ServiceInstallState {
 
 pub struct ServiceManager {
     status: Mutex<ServiceStatus>,
+    status_generation: AtomicU64,
     operation_running: AtomicBool,
     operation_done: Notify,
 }
@@ -569,21 +658,28 @@ pub(super) async fn run_core_by_service(config_file: &Path) -> Result<()> {
     start_with_existing_service(config_file).await
 }
 
+async fn capture_generation_before<F, Fut, T>(generation: &AtomicU64, operation: F) -> (u64, T)
+where
+    F: FnOnce() -> Fut,
+    Fut: Future<Output = T>,
+{
+    let captured = generation.load(Ordering::Acquire);
+    (captured, operation().await)
+}
+
 pub(super) async fn get_clash_logs_by_service() -> Result<Vec<CompactString>> {
     logging!(info, Type::Service, "正在获取服务模式下的 Clash 日志");
 
     let credentials = current_owner_credentials()?;
-    let response = clash_verge_service_ipc::get_clash_logs(&credentials)
-        .await
-        .context("无法连接到Clash Verge Service")?;
+    let (generation, response) = capture_generation_before(&OWNER_MONITOR_GENERATION, || {
+        clash_verge_service_ipc::get_clash_logs(&credentials)
+    })
+    .await;
+    let response = response.context("无法连接到Clash Verge Service")?;
 
     if response.code > 0 {
         if response.code == clash_verge_service_ipc::ServiceErrorCode::NotActive as u16 {
-            recover_after_owner_loss(
-                OWNER_MONITOR_GENERATION.load(Ordering::Acquire),
-                OwnerRecoveryReason::Displaced,
-            )
-            .await;
+            recover_after_owner_loss(generation, OwnerRecoveryReason::Displaced).await;
         }
         let err_msg = response.message;
         logging!(error, Type::Service, "获取服务模式下的 Clash 日志失败: {}", err_msg);
@@ -596,10 +692,15 @@ pub(super) async fn get_clash_logs_by_service() -> Result<Vec<CompactString>> {
 
 pub(crate) async fn get_clash_log_snapshot_by_service() -> Result<String> {
     let credentials = current_owner_credentials()?;
-    let response = clash_verge_service_ipc::get_clash_log_snapshot(&credentials)
-        .await
-        .context("无法连接到Clash Verge Service")?;
+    let (generation, response) = capture_generation_before(&OWNER_MONITOR_GENERATION, || {
+        clash_verge_service_ipc::get_clash_log_snapshot(&credentials)
+    })
+    .await;
+    let response = response.context("无法连接到Clash Verge Service")?;
     if response.code > 0 {
+        if response.code == clash_verge_service_ipc::ServiceErrorCode::NotActive as u16 {
+            recover_after_owner_loss(generation, OwnerRecoveryReason::Displaced).await;
+        }
         bail!(response.message);
     }
     let encoded = response.data.context("服务未返回核心日志快照")?;
@@ -616,16 +717,28 @@ pub(crate) async fn get_clash_log_snapshot_by_service() -> Result<String> {
 /// 通过服务停止core
 pub(super) async fn stop_core_by_service() -> Result<()> {
     logging!(info, Type::Service, "通过服务停止核心 (IPC)");
+    cancel_owner_monitors();
 
-    let credentials = current_owner_credentials()?;
-    let response = clash_verge_service_ipc::stop_clash(&credentials)
-        .await
-        .context("无法连接到Clash Verge Service")?;
+    let credentials = match current_owner_credentials() {
+        Ok(credentials) => credentials,
+        Err(error) => {
+            start_owner_monitor();
+            return Err(error);
+        }
+    };
+    let response = match clash_verge_service_ipc::stop_clash(&credentials).await {
+        Ok(response) => response,
+        Err(error) => {
+            start_owner_monitor();
+            return Err(error).context("无法连接到Clash Verge Service");
+        }
+    };
 
     if response.code > 0 {
         if response.code == clash_verge_service_ipc::ServiceErrorCode::NotActive as u16 {
-            cancel_owner_monitors();
             recover_after_owner_loss_while_locked(OwnerRecoveryReason::Displaced).await;
+        } else {
+            start_owner_monitor();
         }
         let err_msg = response.message;
         logging!(error, Type::Service, "停止核心失败: {}", err_msg);
@@ -648,9 +761,9 @@ struct OwnerRecoveryPolicy {
     reset_system_proxy: bool,
 }
 
-const fn owner_recovery_policy(reason: OwnerRecoveryReason, is_macos: bool) -> OwnerRecoveryPolicy {
+const fn owner_recovery_policy(_reason: OwnerRecoveryReason, is_macos: bool) -> OwnerRecoveryPolicy {
     OwnerRecoveryPolicy {
-        reset_system_proxy: !is_macos || matches!(reason, OwnerRecoveryReason::SameOwnerFailure),
+        reset_system_proxy: !is_macos,
     }
 }
 
@@ -809,16 +922,53 @@ fn cancel_owner_monitors() {
     OWNER_MONITOR_GENERATION.fetch_add(1, Ordering::AcqRel);
 }
 
+#[cfg(target_os = "macos")]
+pub(crate) fn owner_monitor_generation() -> u64 {
+    OWNER_MONITOR_GENERATION.load(Ordering::Acquire)
+}
+
 async fn recover_after_owner_loss(generation: u64, reason: OwnerRecoveryReason) {
     let manager = CoreManager::global();
+    if !matches!(*manager.get_running_mode(), RunningMode::Service) {
+        return;
+    }
+    #[cfg(target_os = "macos")]
+    let recovery_generation = {
+        let recovery_generation = generation.wrapping_add(1);
+        let claimed = Sysopt::global()
+            .revoke_proxy_cleanup_authority_and_stop_guard_if(|| {
+                claim_owner_recovery_generation(&OWNER_MONITOR_GENERATION, generation).is_some()
+            })
+            .await;
+        if !claimed {
+            return;
+        }
+        recovery_generation
+    };
+    #[cfg(not(target_os = "macos"))]
+    let Some(recovery_generation) = claim_owner_recovery_generation(&OWNER_MONITOR_GENERATION, generation) else {
+        return;
+    };
     let _lifecycle = manager.lifecycle_lock.lock().await;
-    if OWNER_MONITOR_GENERATION.load(Ordering::Acquire) != generation
+    if OWNER_MONITOR_GENERATION.load(Ordering::Acquire) != recovery_generation
         || !matches!(*manager.get_running_mode(), RunningMode::Service)
     {
         return;
     }
-    cancel_owner_monitors();
     recover_after_owner_loss_while_locked(reason).await;
+}
+
+fn claim_owner_recovery_generation(generation: &AtomicU64, captured_generation: u64) -> Option<u64> {
+    let recovery_generation = captured_generation.wrapping_add(1);
+    generation
+        .compare_exchange(
+            captured_generation,
+            recovery_generation,
+            Ordering::AcqRel,
+            Ordering::Acquire,
+        )
+        .ok()
+        .map(|_| recovery_generation)
 }
 
 async fn recover_after_owner_loss_while_locked(reason: OwnerRecoveryReason) {
@@ -827,7 +977,8 @@ async fn recover_after_owner_loss_while_locked(reason: OwnerRecoveryReason) {
         Type::Service,
         "service owner recovery ({reason:?}); clearing local proxy and PAC state"
     );
-    Sysopt::global().stop_proxy_guard();
+    #[cfg(target_os = "macos")]
+    Sysopt::global().revoke_proxy_cleanup_authority_and_stop_guard().await;
     server::set_pac_available(false);
     let manager = CoreManager::global();
     manager.set_running_mode(RunningMode::NotRunning);
@@ -857,27 +1008,55 @@ async fn recover_after_owner_loss_while_locked(reason: OwnerRecoveryReason) {
 }
 
 async fn probe_service_availability() -> Result<bool> {
-    #[cfg(target_os = "macos")]
-    {
-        let state = SERVICE_MANAGER.install_state().await;
-        if !state.is_available() {
-            Ok(false)
-        } else {
-            Ok(clash_verge_service_ipc::connect().await.is_ok())
+    probe_service_availability_with(&SERVICE_MANAGER, true, probe_service_version_once).await
+}
+
+async fn probe_service_availability_with<F, Fut>(
+    manager: &ServiceManager,
+    require_cached_ready: bool,
+    probe: F,
+) -> Result<bool>
+where
+    F: FnOnce() -> Fut,
+    Fut: Future<Output = Result<ServiceVersionReply>>,
+{
+    let captured_generation = {
+        let status = manager.status.lock();
+        if manager.operation_running.load(Ordering::Acquire) {
+            return Ok(false);
         }
+        if require_cached_ready && !matches!(*status, ServiceStatus::Ready) {
+            return Ok(false);
+        }
+        let generation = manager.status_generation.load(Ordering::Acquire);
+        drop(status);
+        generation
+    };
+
+    let result = probe().await;
+    let mut status = manager.status.lock();
+    if manager.operation_running.load(Ordering::Acquire)
+        || manager.status_generation.load(Ordering::Acquire) != captured_generation
+    {
+        return Ok(false);
     }
 
-    #[cfg(not(target_os = "macos"))]
-    {
-        if let Err(error) = Path::metadata(clash_verge_service_ipc::IPC_PATH.as_ref()) {
-            let verge = Config::verge().await;
-            if verge.latest_arc().enable_tun_mode.unwrap_or(false) {
-                logging!(warn, Type::Service, "Some issue with service IPC Path: {error}");
+    manager.status_generation.fetch_add(1, Ordering::AcqRel);
+    match result {
+        Ok(reply) => match classify_service_version_reply(&reply) {
+            ServiceVersionCheck::Ready => {
+                *status = ServiceStatus::Ready;
+                Ok(true)
             }
-            return Err(error.into());
+            ServiceVersionCheck::NeedsReinstall(error) => {
+                *status = ServiceStatus::NeedsReinstall;
+                Err(anyhow::anyhow!(error))
+            }
+        },
+        Err(error) => {
+            *status = ServiceStatus::Unavailable(format!("service availability probe failed: {error:#}"));
+            Err(error).context("service availability probe failed")
         }
-        clash_verge_service_ipc::connect().await?;
-        Ok(true)
     }
 }
 
@@ -888,27 +1067,9 @@ pub async fn is_service_available() -> bool {
 
 async fn wait_for_service_ipc(manager: &ServiceManager) -> Result<()> {
     let config = ServiceManager::config();
+    let result = poll_service_version(config.max_retries, config.retry_delay, probe_service_version_once).await;
 
-    let backoff = ConstantBuilder::default()
-        .with_delay(config.retry_delay)
-        .with_max_times(config.max_retries);
-
-    let result = (|| async {
-        if !is_service_ipc_path_exists() {
-            bail!("IPC path not ready");
-        }
-        clash_verge_service_ipc::connect().await.map(drop)
-    })
-    .retry(backoff)
-    .await;
-
-    if result.is_ok() {
-        manager.set_status(ServiceStatus::Ready);
-    } else {
-        manager.set_status(ServiceStatus::Unavailable("Waiting for service to be available".into()));
-    }
-
-    result
+    apply_service_version_result(manager, result, "service IPC did not become available")
 }
 
 pub fn is_service_ipc_path_exists() -> bool {
@@ -926,11 +1087,7 @@ impl ServiceManager {
 
     #[cfg(not(target_os = "macos"))]
     pub async fn init(&self) -> Result<()> {
-        if let Err(e) = clash_verge_service_ipc::connect().await {
-            self.set_status(ServiceStatus::Unavailable("服务连接失败: {e}".to_string()));
-            return Err(e);
-        }
-        Ok(())
+        apply_service_version_result(self, probe_service_version_once().await, "服务连接失败")
     }
 
     pub async fn current(&self) -> ServiceStatus {
@@ -958,9 +1115,14 @@ impl ServiceManager {
         if !matches!(*status, ServiceStatus::NeedsReinstall | ServiceStatus::Unavailable(_)) {
             bail!("sidecar cannot be allowed from service status {status:?}");
         }
+        self.status_generation.fetch_add(1, Ordering::AcqRel);
         *status = ServiceStatus::SidecarAllowed;
         drop(status);
         Ok(())
+    }
+
+    pub(crate) fn mark_unavailable(&self, reason: impl Into<String>) {
+        self.set_status(ServiceStatus::Unavailable(reason.into()));
     }
 
     #[cfg(target_os = "macos")]
@@ -977,34 +1139,59 @@ impl ServiceManager {
     }
 
     fn set_status(&self, status: ServiceStatus) {
-        *self.status.lock() = status;
+        let mut current = self.status.lock();
+        self.status_generation.fetch_add(1, Ordering::AcqRel);
+        *current = status;
     }
 
-    async fn run_operation(&self, operation: impl Future<Output = Result<()>>) -> Result<()> {
+    async fn run_operation_and_then<Post, PostFuture>(
+        &self,
+        operation: impl Future<Output = Result<()>>,
+        post_operation: Post,
+    ) -> Result<()>
+    where
+        Post: FnOnce() -> PostFuture,
+        PostFuture: Future<Output = Result<()>>,
+    {
         {
+            let _status = self.status.lock();
             if self.operation_running.swap(true, Ordering::AcqRel) {
                 bail!("service operation already running");
             }
-            defer! {
-                self.operation_running.store(false, Ordering::Release);
-                self.operation_done.notify_waiters();
-            }
-
-            operation.await?;
+            self.status_generation.fetch_add(1, Ordering::AcqRel);
         }
+        let operation_completion = scopeguard::guard(self, |manager| {
+            manager.operation_running.store(false, Ordering::Release);
+            manager.operation_done.notify_waiters();
+        });
 
-        Tray::global().update_menu().await
+        let result = operation.await;
+        drop(operation_completion);
+        result?;
+        post_operation().await
+    }
+
+    async fn run_operation(&self, operation: impl Future<Output = Result<()>>) -> Result<()> {
+        self.run_operation_and_then(operation, || async {
+            if let Err(error) = Tray::global().update_menu().await {
+                logging!(
+                    warn,
+                    Type::Service,
+                    "failed to refresh tray after service operation: {error:#}"
+                );
+            }
+            Ok(())
+        })
+        .await
     }
 
     pub async fn refresh(&self) -> Result<()> {
         self.run_operation(async {
-            let status = if clash_verge_service_ipc::is_reinstall_service_needed().await {
-                ServiceStatus::NeedsReinstall
-            } else {
-                ServiceStatus::Ready
-            };
-            self.set_status(status);
-            Ok(())
+            apply_service_version_result(
+                self,
+                probe_service_version_once().await,
+                "failed to refresh service protocol",
+            )
         })
         .await
     }
@@ -1030,15 +1217,16 @@ impl ServiceManager {
                 logging!(info, Type::Service, "需要安装服务，执行安装流程");
                 run_service_command(install_service, "install service")?;
                 wait_for_service_ipc(self).await?;
-                if clash_verge_service_ipc::is_reinstall_service_needed().await {
-                    self.set_status(ServiceStatus::NeedsReinstall);
-                    bail!("installed service version does not match; choose Reinstall to continue");
-                }
             }
             Some(PrivilegedServiceAction::Uninstall) => {
                 logging!(info, Type::Service, "服务需要卸载，执行卸载流程");
-                run_service_command(uninstall_service, "uninstall service")?;
-                self.set_status(ServiceStatus::Unavailable("Service Uninstalled".into()));
+                if let Err(error) = run_service_command(uninstall_service, "uninstall service") {
+                    self.set_status(ServiceStatus::Unavailable(format!(
+                        "Service uninstall failed: {error:#}"
+                    )));
+                    return Err(error);
+                }
+                self.set_status(ServiceStatus::NotInstalled);
             }
             None => match status {
                 ServiceStatus::Checking => bail!("service status is still being checked"),
@@ -1079,6 +1267,7 @@ fn run_service_command(operation: impl FnOnce() -> Result<()>, label: &'static s
 
 pub static SERVICE_MANAGER: Lazy<ServiceManager> = Lazy::new(|| ServiceManager {
     status: Mutex::new(ServiceStatus::Checking),
+    status_generation: AtomicU64::new(0),
     operation_running: AtomicBool::new(false),
     operation_done: Notify::new(),
 });
@@ -1087,10 +1276,16 @@ pub static SERVICE_MANAGER: Lazy<ServiceManager> = Lazy::new(|| ServiceManager {
 mod tests {
     use super::{
         CurrentServiceProbe, OwnerRecoveryReason, PrivilegedServiceAction, ServiceInstallState, ServiceStatus,
-        classify_macos_service_install_state, confirmed_service_available, owner_recovery_policy,
-        owner_status_recovery_reason, privileged_service_action, transport_failure_recovery_reason,
+        ServiceVersionCheck, ServiceVersionReply, apply_service_version_result, capture_generation_before,
+        claim_owner_recovery_generation, classify_macos_service_install_state, classify_service_version_reply,
+        confirmed_service_available, owner_recovery_policy, owner_status_recovery_reason, poll_service_version,
+        privileged_service_action, probe_service_availability_with, transport_failure_recovery_reason,
     };
     use clash_verge_service_ipc::ServiceLifecycleState;
+    use std::{
+        sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering},
+        time::Duration,
+    };
 
     #[test]
     fn owner_loss_reason_distinguishes_displacement_from_same_owner_failure() {
@@ -1125,12 +1320,199 @@ mod tests {
     }
 
     #[test]
-    fn macos_recovery_never_resets_a_displaced_or_ambiguous_owners_proxy() {
-        assert!(!owner_recovery_policy(OwnerRecoveryReason::Displaced, true).reset_system_proxy);
-        assert!(!owner_recovery_policy(OwnerRecoveryReason::TransportFailure, true).reset_system_proxy);
-        assert!(owner_recovery_policy(OwnerRecoveryReason::SameOwnerFailure, true).reset_system_proxy);
-        assert!(owner_recovery_policy(OwnerRecoveryReason::Displaced, false).reset_system_proxy);
-        assert!(owner_recovery_policy(OwnerRecoveryReason::TransportFailure, false).reset_system_proxy);
+    fn macos_recovery_never_resets_machine_wide_proxy() {
+        for reason in [
+            OwnerRecoveryReason::Displaced,
+            OwnerRecoveryReason::SameOwnerFailure,
+            OwnerRecoveryReason::TransportFailure,
+        ] {
+            assert!(!owner_recovery_policy(reason, true).reset_system_proxy);
+            assert!(owner_recovery_policy(reason, false).reset_system_proxy);
+        }
+
+        let generation = AtomicU64::new(7);
+        assert_eq!(claim_owner_recovery_generation(&generation, 7), Some(8));
+        assert_eq!(generation.load(Ordering::Acquire), 8);
+        assert_eq!(claim_owner_recovery_generation(&generation, 7), None);
+    }
+
+    #[test]
+    fn service_version_requires_successful_exact_protocol_reply() {
+        let exact = ServiceVersionReply {
+            code: 0,
+            message: String::new(),
+            version: Some(clash_verge_service_ipc::VERSION.to_owned()),
+        };
+        assert_eq!(classify_service_version_reply(&exact), ServiceVersionCheck::Ready);
+
+        for reply in [
+            ServiceVersionReply {
+                code: 0,
+                message: String::new(),
+                version: Some("2.3.0".to_owned()),
+            },
+            ServiceVersionReply {
+                code: 0,
+                message: String::new(),
+                version: None,
+            },
+            ServiceVersionReply {
+                code: 1,
+                message: "unsupported command".to_owned(),
+                version: Some(clash_verge_service_ipc::VERSION.to_owned()),
+            },
+        ] {
+            let check = classify_service_version_reply(&reply);
+            assert!(matches!(check, ServiceVersionCheck::NeedsReinstall(_)));
+            if let ServiceVersionCheck::NeedsReinstall(error) = check {
+                assert!(error.contains(clash_verge_service_ipc::VERSION));
+                assert!(error.contains("Reinstall") || error.contains("Repair"));
+            }
+        }
+    }
+
+    #[test]
+    fn service_version_result_sets_only_safe_terminal_statuses() {
+        let manager = super::ServiceManager {
+            status: parking_lot::Mutex::new(ServiceStatus::Checking),
+            status_generation: AtomicU64::new(0),
+            operation_running: std::sync::atomic::AtomicBool::new(false),
+            operation_done: tokio::sync::Notify::new(),
+        };
+        let exact = ServiceVersionReply {
+            code: 0,
+            message: String::new(),
+            version: Some(clash_verge_service_ipc::VERSION.to_owned()),
+        };
+        assert!(apply_service_version_result(&manager, Ok(exact), "probe failed").is_ok());
+        assert_eq!(*manager.status.lock(), ServiceStatus::Ready);
+
+        let mismatch = ServiceVersionReply {
+            code: 0,
+            message: String::new(),
+            version: Some("2.3.0".to_owned()),
+        };
+        assert!(apply_service_version_result(&manager, Ok(mismatch), "probe failed").is_err());
+        assert_eq!(*manager.status.lock(), ServiceStatus::NeedsReinstall);
+
+        assert!(
+            apply_service_version_result(&manager, Err(anyhow::anyhow!("IPC path missing")), "probe failed").is_err()
+        );
+        assert!(matches!(*manager.status.lock(), ServiceStatus::Unavailable(_)));
+    }
+
+    #[tokio::test]
+    async fn service_version_poll_retries_transport_then_returns_exact_reply() {
+        let attempts = AtomicUsize::new(0);
+        let result = poll_service_version(2, Duration::ZERO, || async {
+            if attempts.fetch_add(1, Ordering::AcqRel) == 0 {
+                anyhow::bail!("IPC path not ready");
+            }
+            Ok(ServiceVersionReply {
+                code: 0,
+                message: String::new(),
+                version: Some(clash_verge_service_ipc::VERSION.to_owned()),
+            })
+        })
+        .await;
+
+        assert_eq!(attempts.load(Ordering::Acquire), 2);
+        assert!(result.is_ok());
+        let reply = result.unwrap_or_else(|_| ServiceVersionReply {
+            code: 1,
+            message: "probe failed".to_owned(),
+            version: None,
+        });
+        assert_eq!(classify_service_version_reply(&reply), ServiceVersionCheck::Ready);
+    }
+
+    #[tokio::test]
+    async fn stale_availability_probe_cannot_overwrite_a_newer_terminal_status() {
+        let manager = super::ServiceManager {
+            status: parking_lot::Mutex::new(ServiceStatus::Ready),
+            status_generation: AtomicU64::new(0),
+            operation_running: std::sync::atomic::AtomicBool::new(false),
+            operation_done: tokio::sync::Notify::new(),
+        };
+
+        let available = probe_service_availability_with(&manager, false, || async {
+            manager.set_status(ServiceStatus::NotInstalled);
+            Ok(ServiceVersionReply {
+                code: 0,
+                message: String::new(),
+                version: Some(clash_verge_service_ipc::VERSION.to_owned()),
+            })
+        })
+        .await;
+
+        assert!(matches!(available, Ok(false)));
+        assert_eq!(*manager.status.lock(), ServiceStatus::NotInstalled);
+    }
+
+    #[tokio::test]
+    async fn cached_non_ready_availability_gate_and_generation_are_captured_together() {
+        let manager = super::ServiceManager {
+            status: parking_lot::Mutex::new(ServiceStatus::NotInstalled),
+            status_generation: AtomicU64::new(4),
+            operation_running: AtomicBool::new(false),
+            operation_done: tokio::sync::Notify::new(),
+        };
+        let probed = AtomicBool::new(false);
+
+        let available = probe_service_availability_with(&manager, true, || async {
+            probed.store(true, Ordering::Release);
+            Ok(ServiceVersionReply {
+                code: 0,
+                message: String::new(),
+                version: Some(clash_verge_service_ipc::VERSION.to_owned()),
+            })
+        })
+        .await;
+
+        assert!(matches!(available, Ok(false)));
+        assert!(!probed.load(Ordering::Acquire));
+        assert_eq!(*manager.status.lock(), ServiceStatus::NotInstalled);
+        assert_eq!(manager.status_generation.load(Ordering::Acquire), 4);
+    }
+
+    #[tokio::test]
+    async fn service_operation_finishes_before_post_operation_refresh() {
+        let manager = super::ServiceManager {
+            status: parking_lot::Mutex::new(ServiceStatus::Checking),
+            status_generation: AtomicU64::new(0),
+            operation_running: AtomicBool::new(false),
+            operation_done: tokio::sync::Notify::new(),
+        };
+
+        let result = manager
+            .run_operation_and_then(
+                async {
+                    manager.set_status(ServiceStatus::Ready);
+                    Ok(())
+                },
+                || async {
+                    assert!(!manager.operation_running.load(Ordering::Acquire));
+                    assert_eq!(manager.current().await, ServiceStatus::Ready);
+                    Ok(())
+                },
+            )
+            .await;
+
+        assert!(result.is_ok());
+    }
+
+    #[tokio::test]
+    async fn owner_generation_is_captured_before_async_request_runs() {
+        let generation = AtomicU64::new(7);
+        let (captured, response) = capture_generation_before(&generation, || async {
+            generation.store(8, Ordering::Release);
+            "not-active"
+        })
+        .await;
+
+        assert_eq!(captured, 7);
+        assert_eq!(response, "not-active");
+        assert_eq!(generation.load(Ordering::Acquire), 8);
     }
 
     #[test]
@@ -1191,7 +1573,7 @@ mod tests {
     #[test]
     fn checking_is_public_and_unavailable() {
         assert_eq!(ServiceStatus::Checking.install_state(), ServiceInstallState::Checking);
-        assert!(!ServiceInstallState::Checking.is_available());
+        assert_ne!(ServiceInstallState::Checking, ServiceInstallState::Ready);
     }
 
     #[test]

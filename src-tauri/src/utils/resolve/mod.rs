@@ -220,7 +220,12 @@ const fn should_initialize_proxy(core_initialized: bool, final_mode: &crate::cor
 }
 
 pub(super) async fn init_system_proxy() {
-    logging_error!(Type::Setup, sysopt::Sysopt::global().update_sysproxy().await);
+    logging_error!(
+        Type::Setup,
+        sysopt::Sysopt::global()
+            .update_sysproxy_and_claim_if_not_revoked()
+            .await
+    );
 }
 
 pub(super) async fn init_system_proxy_guard() {

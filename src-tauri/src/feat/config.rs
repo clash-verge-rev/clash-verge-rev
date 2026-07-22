@@ -223,8 +223,18 @@ async fn process_terminated_flags(update_flags: UpdateFlags, patch: &IVerge) -> 
         clash_verge_i18n::set_locale(language.as_str());
     }
     if update_flags.contains(UpdateFlags::SYS_PROXY) {
-        sysopt::Sysopt::global().update_sysproxy().await?;
-        sysopt::Sysopt::global().refresh_guard().await;
+        let manager = CoreManager::global();
+        let _lifecycle = manager.lifecycle_lock.lock().await;
+        let sysopt = sysopt::Sysopt::global();
+        if matches!(
+            *manager.get_running_mode(),
+            crate::core::manager::RunningMode::NotRunning
+        ) {
+            sysopt.update_sysproxy().await?;
+        } else {
+            sysopt.update_sysproxy_and_claim_if_not_revoked().await?;
+        }
+        sysopt.refresh_guard().await;
     }
     if update_flags.contains(UpdateFlags::HOTKEY)
         && let Some(hotkeys) = &patch.hotkeys
