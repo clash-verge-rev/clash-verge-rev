@@ -10,6 +10,9 @@ use crate::{
 };
 use anyhow::{Context as _, Result, bail};
 use clash_verge_logging::{Type, logging};
+use clash_verge_service_ipc::{
+    MacosProxyConfig, OwnerSessionProof, ProxyApplyOutcome, StartClashRequest, WriterConfig,
+};
 use compact_str::CompactString;
 use once_cell::sync::Lazy;
 use parking_lot::Mutex;
@@ -25,6 +28,28 @@ use std::{
 use tokio::sync::Notify;
 
 static OWNER_MONITOR_GENERATION: AtomicU64 = AtomicU64::new(0);
+static ACTIVE_SERVICE_SESSION: Lazy<Mutex<Option<OwnerSessionProof>>> = Lazy::new(|| Mutex::new(None));
+
+fn generate_service_session_token() -> Result<String> {
+    let mut bytes = [0_u8; 32];
+    getrandom::fill(&mut bytes).context("failed to generate service owner session")?;
+    Ok(bytes.iter().map(|byte| format!("{byte:02x}")).collect())
+}
+
+pub(crate) fn active_service_session() -> Result<OwnerSessionProof> {
+    ACTIVE_SERVICE_SESSION
+        .lock()
+        .clone()
+        .context("service owner session is not active")
+}
+
+pub(crate) fn clear_active_service_session() {
+    ACTIVE_SERVICE_SESSION.lock().take();
+}
+
+fn session_matches_status(proof: &OwnerSessionProof, is_active: bool, active_generation: Option<u64>) -> bool {
+    is_active && active_generation == Some(proof.generation)
+}
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ServiceStatus {
@@ -611,6 +636,7 @@ const fn privileged_service_action(status: &ServiceStatus) -> Option<PrivilegedS
 /// 尝试使用服务启动core
 pub(super) async fn start_with_existing_service(config_file: &Path) -> Result<()> {
     logging!(info, Type::Service, "尝试使用现有服务启动核心");
+    clear_active_service_session();
 
     let verge_config = Config::verge().await;
     let clash_core = verge_config.latest_arc().get_valid_clash_core();
@@ -620,9 +646,15 @@ pub(super) async fn start_with_existing_service(config_file: &Path) -> Result<()
     let bin_path = service_core_path(&clash_core, bin_ext)?;
 
     let credentials = current_owner_credentials()?;
-    let payload = collect_runtime_bundle(config_file, &bin_path).await?;
+    let runtime = collect_runtime_bundle(config_file, &bin_path).await?;
+    let proposed_session_token = generate_service_session_token()?;
+    let request = StartClashRequest {
+        runtime,
+        proposed_session_token: proposed_session_token.clone(),
+        macos_proxy: None,
+    };
 
-    let response = match clash_verge_service_ipc::start_clash(&credentials, &payload).await {
+    let response = match clash_verge_service_ipc::start_clash(&credentials, &request).await {
         Ok(response) => response,
         Err(error) => {
             start_owner_monitor();
@@ -636,6 +668,12 @@ pub(super) async fn start_with_existing_service(config_file: &Path) -> Result<()
         start_owner_monitor();
         bail!(err_msg);
     }
+
+    let result = response.data.context("Clash Verge Service 未返回会话信息")?;
+    *ACTIVE_SERVICE_SESSION.lock() = Some(OwnerSessionProof {
+        generation: result.session.generation,
+        token: proposed_session_token,
+    });
 
     server::set_pac_available(true);
     start_owner_monitor();
@@ -726,7 +764,14 @@ pub(super) async fn stop_core_by_service() -> Result<()> {
             return Err(error);
         }
     };
-    let response = match clash_verge_service_ipc::stop_clash(&credentials).await {
+    let session = match active_service_session() {
+        Ok(session) => session,
+        Err(error) => {
+            start_owner_monitor();
+            return Err(error);
+        }
+    };
+    let response = match clash_verge_service_ipc::stop_clash(&credentials, &session).await {
         Ok(response) => response,
         Err(error) => {
             start_owner_monitor();
@@ -735,7 +780,12 @@ pub(super) async fn stop_core_by_service() -> Result<()> {
     };
 
     if response.code > 0 {
-        if response.code == clash_verge_service_ipc::ServiceErrorCode::NotActive as u16 {
+        if matches!(
+            response.code,
+            code if code == clash_verge_service_ipc::ServiceErrorCode::NotActive as u16
+                || code == clash_verge_service_ipc::ServiceErrorCode::StaleOwnerSession as u16
+        ) {
+            clear_active_service_session();
             recover_after_owner_loss_while_locked(OwnerRecoveryReason::Displaced).await;
         } else {
             start_owner_monitor();
@@ -745,8 +795,34 @@ pub(super) async fn stop_core_by_service() -> Result<()> {
         bail!(err_msg);
     }
 
+    clear_active_service_session();
     logging!(info, Type::Service, "服务成功停止核心");
     Ok(())
+}
+
+pub(crate) async fn update_writer_by_service(writer: &WriterConfig) -> Result<()> {
+    let credentials = current_owner_credentials()?;
+    let session = active_service_session()?;
+    let response = clash_verge_service_ipc::update_writer(&credentials, &session, writer)
+        .await
+        .context("无法连接到Clash Verge Service")?;
+    if response.code > 0 {
+        bail!(response.message);
+    }
+    Ok(())
+}
+
+#[expect(dead_code, reason = "consumed by the macOS proxy lifecycle in Task 7")]
+pub async fn set_system_proxy_by_service(proxy: &MacosProxyConfig) -> Result<ProxyApplyOutcome> {
+    let credentials = current_owner_credentials()?;
+    let session = active_service_session()?;
+    let response = clash_verge_service_ipc::set_system_proxy(&credentials, &session, proxy)
+        .await
+        .context("无法连接到Clash Verge Service")?;
+    if response.code > 0 {
+        bail!(response.message);
+    }
+    response.data.context("Clash Verge Service 未返回系统代理结果")
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -893,6 +969,13 @@ fn start_owner_monitor() {
                 }
                 continue;
             };
+            let session_matches = active_service_session()
+                .is_ok_and(|proof| session_matches_status(&proof, status.is_active, status.active_generation));
+            if !session_matches {
+                clear_active_service_session();
+                recover_after_owner_loss(generation, OwnerRecoveryReason::Displaced).await;
+                break;
+            }
             failed_status_samples = 0;
             missing_core_samples = if status.core_pid.is_none()
                 && !matches!(
@@ -972,6 +1055,7 @@ fn claim_owner_recovery_generation(generation: &AtomicU64, captured_generation: 
 }
 
 async fn recover_after_owner_loss_while_locked(reason: OwnerRecoveryReason) {
+    clear_active_service_session();
     logging!(
         warn,
         Type::Service,
@@ -1278,14 +1362,38 @@ mod tests {
         CurrentServiceProbe, OwnerRecoveryReason, PrivilegedServiceAction, ServiceInstallState, ServiceStatus,
         ServiceVersionCheck, ServiceVersionReply, apply_service_version_result, capture_generation_before,
         claim_owner_recovery_generation, classify_macos_service_install_state, classify_service_version_reply,
-        confirmed_service_available, owner_recovery_policy, owner_status_recovery_reason, poll_service_version,
-        privileged_service_action, probe_service_availability_with, transport_failure_recovery_reason,
+        confirmed_service_available, generate_service_session_token, owner_recovery_policy,
+        owner_status_recovery_reason, poll_service_version, privileged_service_action, probe_service_availability_with,
+        session_matches_status, transport_failure_recovery_reason,
     };
-    use clash_verge_service_ipc::ServiceLifecycleState;
+    use clash_verge_service_ipc::{OwnerSessionProof, ServiceLifecycleState};
     use std::{
         sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering},
         time::Duration,
     };
+
+    #[test]
+    fn mismatched_active_generation_displaces_local_session() {
+        let proof = OwnerSessionProof {
+            generation: 7,
+            token: "11".repeat(32),
+        };
+        assert!(session_matches_status(&proof, true, Some(7)));
+        assert!(!session_matches_status(&proof, true, Some(8)));
+        assert!(!session_matches_status(&proof, false, Some(7)));
+    }
+
+    #[test]
+    fn generated_service_session_token_is_lower_hex() -> anyhow::Result<()> {
+        let token = generate_service_session_token()?;
+        assert_eq!(token.len(), 64);
+        assert!(
+            token
+                .bytes()
+                .all(|byte| byte.is_ascii_hexdigit() && !byte.is_ascii_uppercase())
+        );
+        Ok(())
+    }
 
     #[test]
     fn owner_loss_reason_distinguishes_displacement_from_same_owner_failure() {

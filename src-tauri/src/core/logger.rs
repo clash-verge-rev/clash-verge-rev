@@ -8,7 +8,6 @@ use std::{
 
 use anyhow::{Result, bail};
 use clash_verge_logging::{Type, logging};
-use clash_verge_service_ipc::WriterConfig;
 use compact_str::CompactString;
 use flexi_logger::{
     Cleanup, Criterion, DeferredNow, FileSpec, LogSpecBuilder, LogSpecification, LoggerHandle,
@@ -18,7 +17,7 @@ use log::{Level, LevelFilter, Record};
 use parking_lot::{Mutex, RwLock};
 
 use crate::{
-    core::{owner_identity::current_owner_credentials, service},
+    core::service,
     singleton,
     utils::dirs::{self, sidecar_log_dir},
 };
@@ -181,15 +180,11 @@ impl Logger {
 
         // update service writer config
         if service::is_service_available().await {
-            let credentials = current_owner_credentials()?;
-            clash_verge_service_ipc::update_writer(
-                &credentials,
-                &WriterConfig {
-                    directory: String::new(),
-                    max_log_size: log_max_size * 1024,
-                    max_log_files: log_max_count,
-                },
-            )
+            service::update_writer_by_service(&clash_verge_service_ipc::WriterConfig {
+                directory: String::new(),
+                max_log_size: log_max_size * 1024,
+                max_log_files: log_max_count,
+            })
             .await?;
         }
 
