@@ -31,12 +31,124 @@ static OWNER_MONITOR_GENERATION: AtomicU64 = AtomicU64::new(0);
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ServiceStatus {
     Ready,
+    NotInstalled,
     NeedsReinstall,
     InstallRequired,
     UninstallRequired,
     ReinstallRequired,
     ForceReinstallRequired,
+    SidecarAllowed,
     Unavailable(String),
+}
+
+impl ServiceStatus {
+    fn install_state(&self) -> ServiceInstallState {
+        match self {
+            Self::Ready => ServiceInstallState::Ready,
+            Self::NotInstalled => ServiceInstallState::NotInstalled,
+            Self::SidecarAllowed => ServiceInstallState::SidecarAllowed,
+            Self::NeedsReinstall | Self::ReinstallRequired | Self::ForceReinstallRequired => {
+                ServiceInstallState::NeedsReinstall
+            }
+            Self::InstallRequired | Self::UninstallRequired | Self::Unavailable(_) => ServiceInstallState::Unavailable,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub enum ServiceInstallState {
+    NotInstalled,
+    Ready,
+    NeedsReinstall,
+    SidecarAllowed,
+    Unavailable,
+}
+
+#[cfg(any(target_os = "macos", test))]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum CurrentServiceProbe {
+    Missing,
+    Ready,
+    VersionMismatch,
+    Unavailable,
+}
+
+#[cfg(any(target_os = "macos", test))]
+fn classify_macos_service_install_state(current: CurrentServiceProbe, has_install_marker: bool) -> ServiceInstallState {
+    match current {
+        CurrentServiceProbe::Ready => ServiceInstallState::Ready,
+        CurrentServiceProbe::VersionMismatch => ServiceInstallState::NeedsReinstall,
+        CurrentServiceProbe::Unavailable => ServiceInstallState::Unavailable,
+        CurrentServiceProbe::Missing if has_install_marker => ServiceInstallState::NeedsReinstall,
+        CurrentServiceProbe::Missing => ServiceInstallState::NotInstalled,
+    }
+}
+
+fn is_service_install_state_available(state: ServiceInstallState) -> bool {
+    state == ServiceInstallState::Ready
+}
+
+#[cfg(target_os = "macos")]
+const MACOS_SERVICE_INSTALL_MARKERS: [&str; 5] = [
+    "/Library/LaunchDaemons/io.github.clash-verge-rev.clash-verge-rev.service.plist",
+    "/Library/PrivilegedHelperTools/io.github.clash-verge-rev.clash-verge-rev.service.bundle",
+    "/Library/LaunchDaemons/io.github.clashverge.helper.plist",
+    "/Library/PrivilegedHelperTools/io.github.clashverge.helper",
+    "/tmp/verge/clash-verge-service.sock",
+];
+
+#[cfg(target_os = "macos")]
+fn path_entry_exists_without_follow(path: &Path) -> std::io::Result<bool> {
+    match std::fs::symlink_metadata(path) {
+        Ok(_) => Ok(true),
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => Ok(false),
+        Err(error) => Err(error),
+    }
+}
+
+#[cfg(target_os = "macos")]
+fn macos_service_install_marker_exists() -> std::io::Result<bool> {
+    for marker in MACOS_SERVICE_INSTALL_MARKERS {
+        if path_entry_exists_without_follow(Path::new(marker))? {
+            return Ok(true);
+        }
+    }
+    Ok(false)
+}
+
+#[cfg(target_os = "macos")]
+async fn detect_macos_service_install_state() -> ServiceInstallState {
+    let current = match path_entry_exists_without_follow(Path::new(clash_verge_service_ipc::IPC_PATH)) {
+        Ok(true) => match clash_verge_service_ipc::get_version().await {
+            Ok(response) if response.data.as_deref() == Some(clash_verge_service_ipc::VERSION) => {
+                CurrentServiceProbe::Ready
+            }
+            Ok(_) => CurrentServiceProbe::VersionMismatch,
+            Err(error) => {
+                logging!(warn, Type::Service, "current service IPC is unavailable: {error:#}");
+                CurrentServiceProbe::Unavailable
+            }
+        },
+        Ok(false) => CurrentServiceProbe::Missing,
+        Err(error) => {
+            logging!(warn, Type::Service, "failed to inspect current service IPC: {error}");
+            CurrentServiceProbe::Unavailable
+        }
+    };
+
+    let markers = match macos_service_install_marker_exists() {
+        Ok(exists) => exists,
+        Err(error) => {
+            logging!(
+                warn,
+                Type::Service,
+                "failed to inspect service install markers: {error}"
+            );
+            return ServiceInstallState::Unavailable;
+        }
+    };
+    classify_macos_service_install_state(current, markers)
 }
 
 pub struct ServiceManager {
@@ -627,18 +739,28 @@ async fn recover_after_owner_loss_while_locked() {
 }
 
 /// 检查服务是否正在运行
-pub async fn is_service_available() -> Result<()> {
-    if let Err(e) = Path::metadata(clash_verge_service_ipc::IPC_PATH.as_ref()) {
-        let verge = Config::verge().await;
-        let verge_last = verge.latest_arc();
-        let is_enable = verge_last.enable_tun_mode.unwrap_or(false);
-        if is_enable {
-            logging!(warn, Type::Service, "Some issue with service IPC Path: {}", e);
+pub async fn is_service_available() -> Result<bool> {
+    #[cfg(target_os = "macos")]
+    {
+        let state = SERVICE_MANAGER.install_state().await;
+        if !is_service_install_state_available(state) {
+            return Ok(false);
         }
-        return Err(e.into());
+        return Ok(clash_verge_service_ipc::connect().await.is_ok());
     }
-    clash_verge_service_ipc::connect().await?;
-    Ok(())
+
+    #[cfg(not(target_os = "macos"))]
+    {
+        if let Err(error) = Path::metadata(clash_verge_service_ipc::IPC_PATH.as_ref()) {
+            let verge = Config::verge().await;
+            if verge.latest_arc().enable_tun_mode.unwrap_or(false) {
+                logging!(warn, Type::Service, "Some issue with service IPC Path: {error}");
+            }
+            return Err(error.into());
+        }
+        clash_verge_service_ipc::connect().await?;
+        Ok(true)
+    }
 }
 
 async fn wait_for_service_ipc(manager: &ServiceManager) -> Result<()> {
@@ -700,6 +822,26 @@ impl ServiceManager {
         }
     }
 
+    pub async fn install_state(&self) -> ServiceInstallState {
+        self.current().await.install_state()
+    }
+
+    pub fn allow_sidecar_for_session(&self) {
+        self.set_status(ServiceStatus::SidecarAllowed);
+    }
+
+    #[cfg(target_os = "macos")]
+    pub async fn detect_macos_startup_status(&self) {
+        let status = match detect_macos_service_install_state().await {
+            ServiceInstallState::Ready => ServiceStatus::Ready,
+            ServiceInstallState::NotInstalled => ServiceStatus::NotInstalled,
+            ServiceInstallState::NeedsReinstall => ServiceStatus::NeedsReinstall,
+            ServiceInstallState::SidecarAllowed => ServiceStatus::SidecarAllowed,
+            ServiceInstallState::Unavailable => ServiceStatus::Unavailable("macOS service detection failed".into()),
+        };
+        self.set_status(status);
+    }
+
     fn set_status(&self, status: ServiceStatus) {
         *self.status.lock() = status;
     }
@@ -740,6 +882,9 @@ impl ServiceManager {
         self.set_status(status.clone());
         match status {
             ServiceStatus::Ready => logging!(info, Type::Service, "服务就绪，直接启动"),
+            ServiceStatus::NotInstalled => {
+                logging!(info, Type::Service, "service is not installed; Sidecar is available");
+            }
             ServiceStatus::NeedsReinstall | ServiceStatus::ReinstallRequired => {
                 logging!(info, Type::Service, "服务需要重装，执行重装流程");
                 run_service_command(reinstall_service, "reinstall service")?;
@@ -770,6 +915,13 @@ impl ServiceManager {
                 logging!(info, Type::Service, "服务不可用: {}，将使用Sidecar模式", reason);
                 bail!("服务不可用: {}", reason);
             }
+            ServiceStatus::SidecarAllowed => {
+                logging!(
+                    info,
+                    Type::Service,
+                    "Sidecar was explicitly allowed for this app session"
+                );
+            }
         }
 
         Ok(())
@@ -788,7 +940,10 @@ pub static SERVICE_MANAGER: Lazy<ServiceManager> = Lazy::new(|| ServiceManager {
 
 #[cfg(test)]
 mod tests {
-    use super::owner_status_requires_recovery;
+    use super::{
+        CurrentServiceProbe, ServiceInstallState, classify_macos_service_install_state,
+        is_service_install_state_available, owner_status_requires_recovery,
+    };
     use clash_verge_service_ipc::ServiceLifecycleState;
 
     #[test]
@@ -842,5 +997,38 @@ mod tests {
             Some(42),
             3
         ));
+    }
+
+    #[test]
+    fn macos_service_evidence_distinguishes_missing_old_and_current_service() {
+        assert_eq!(
+            classify_macos_service_install_state(CurrentServiceProbe::Missing, false),
+            ServiceInstallState::NotInstalled
+        );
+        assert_eq!(
+            classify_macos_service_install_state(CurrentServiceProbe::Missing, true),
+            ServiceInstallState::NeedsReinstall
+        );
+        assert_eq!(
+            classify_macos_service_install_state(CurrentServiceProbe::Ready, true),
+            ServiceInstallState::Ready
+        );
+        assert_eq!(
+            classify_macos_service_install_state(CurrentServiceProbe::VersionMismatch, false),
+            ServiceInstallState::NeedsReinstall
+        );
+        assert_eq!(
+            classify_macos_service_install_state(CurrentServiceProbe::Unavailable, false),
+            ServiceInstallState::Unavailable
+        );
+    }
+
+    #[test]
+    fn only_ready_service_is_available() {
+        assert!(is_service_install_state_available(ServiceInstallState::Ready));
+        assert!(!is_service_install_state_available(ServiceInstallState::NotInstalled));
+        assert!(!is_service_install_state_available(ServiceInstallState::NeedsReinstall));
+        assert!(!is_service_install_state_available(ServiceInstallState::SidecarAllowed));
+        assert!(!is_service_install_state_available(ServiceInstallState::Unavailable));
     }
 }
