@@ -382,6 +382,7 @@ export const uninstallService = async () => {
 }
 
 export type ServiceInstallState =
+  | 'checking'
   | 'notInstalled'
   | 'ready'
   | 'needsReinstall'

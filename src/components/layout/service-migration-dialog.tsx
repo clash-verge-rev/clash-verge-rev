@@ -41,26 +41,44 @@ export const ServiceMigrationDialog = () => {
       } else {
         await reinstallService()
       }
+      await refetch()
+    } catch (error) {
+      showNotice.error(error)
+      setLoading(false)
+      return
+    }
+
+    try {
       await restartCore()
-      await refreshState()
       showNotice.success('layout.components.serviceMigration.success')
     } catch (error) {
       showNotice.error(error)
     } finally {
+      try {
+        await revalidateQueries([['getSystemState'], ['getRunningMode']])
+      } catch (error) {
+        showNotice.error(error)
+      }
       setLoading(false)
     }
   }
 
   const handleContinue = async () => {
     setLoading(true)
+    let startupError: unknown
     try {
       await continueWithSidecar()
+    } catch (error) {
+      startupError = error
+    }
+
+    try {
       await refreshState()
     } catch (error) {
       showNotice.error(error)
-    } finally {
-      setLoading(false)
     }
+    if (startupError) showNotice.error(startupError)
+    setLoading(false)
   }
 
   return (
