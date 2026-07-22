@@ -42,7 +42,7 @@ pub enum ServiceStatus {
 }
 
 impl ServiceStatus {
-    fn install_state(&self) -> ServiceInstallState {
+    const fn install_state(&self) -> ServiceInstallState {
         match self {
             Self::Ready => ServiceInstallState::Ready,
             Self::NotInstalled => ServiceInstallState::NotInstalled,
@@ -75,7 +75,10 @@ enum CurrentServiceProbe {
 }
 
 #[cfg(any(target_os = "macos", test))]
-fn classify_macos_service_install_state(current: CurrentServiceProbe, has_install_marker: bool) -> ServiceInstallState {
+const fn classify_macos_service_install_state(
+    current: CurrentServiceProbe,
+    has_install_marker: bool,
+) -> ServiceInstallState {
     match current {
         CurrentServiceProbe::Ready => ServiceInstallState::Ready,
         CurrentServiceProbe::VersionMismatch => ServiceInstallState::NeedsReinstall,
@@ -745,9 +748,10 @@ pub async fn is_service_available() -> Result<bool> {
     {
         let state = SERVICE_MANAGER.install_state().await;
         if !is_service_install_state_available(state) {
-            return Ok(false);
+            Ok(false)
+        } else {
+            Ok(clash_verge_service_ipc::connect().await.is_ok())
         }
-        return Ok(clash_verge_service_ipc::connect().await.is_ok());
     }
 
     #[cfg(not(target_os = "macos"))]
@@ -802,6 +806,7 @@ impl ServiceManager {
         }
     }
 
+    #[cfg(not(target_os = "macos"))]
     pub async fn init(&self) -> Result<()> {
         if let Err(e) = clash_verge_service_ipc::connect().await {
             self.set_status(ServiceStatus::Unavailable("服务连接失败: {e}".to_string()));

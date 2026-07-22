@@ -24,7 +24,7 @@ enum StartupDecision {
     Wait,
 }
 
-fn startup_decision(status: &ServiceStatus, block_on_service_issue: bool) -> StartupDecision {
+const fn startup_decision(status: &ServiceStatus, block_on_service_issue: bool) -> StartupDecision {
     match status {
         ServiceStatus::Ready => StartupDecision::Service,
         ServiceStatus::NeedsReinstall | ServiceStatus::Unavailable(_) if block_on_service_issue => {
