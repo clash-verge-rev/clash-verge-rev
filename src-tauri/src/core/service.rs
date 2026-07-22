@@ -596,8 +596,8 @@ pub fn is_service_ipc_path_exists() -> bool {
 impl ServiceManager {
     pub const fn config() -> clash_verge_service_ipc::IpcConfig {
         clash_verge_service_ipc::IpcConfig {
-            default_timeout: Duration::from_millis(150),
-            retry_delay: Duration::from_millis(250),
+            default_timeout: Duration::from_millis(1000),
+            retry_delay: Duration::from_millis(500),
             max_retries: 20,
         }
     }
