@@ -6,6 +6,7 @@ pub mod logger;
 pub mod manager;
 mod notification;
 pub(crate) mod owner_identity;
+pub mod proxy_control;
 pub mod proxy_view;
 mod runtime_bundle;
 pub mod service;

@@ -812,8 +812,7 @@ pub(crate) async fn update_writer_by_service(writer: &WriterConfig) -> Result<()
     Ok(())
 }
 
-#[expect(dead_code, reason = "consumed by the macOS proxy lifecycle in Task 7")]
-pub async fn set_system_proxy_by_service(proxy: &MacosProxyConfig) -> Result<ProxyApplyOutcome> {
+pub(super) async fn set_system_proxy_by_service(proxy: &MacosProxyConfig) -> Result<ProxyApplyOutcome> {
     let credentials = current_owner_credentials()?;
     let session = active_service_session()?;
     let response = clash_verge_service_ipc::set_system_proxy(&credentials, &session, proxy)

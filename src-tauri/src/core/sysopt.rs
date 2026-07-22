@@ -96,7 +96,7 @@ const fn proxy_state_after_apply(state: u64, system_proxy_enabled: bool, update:
     }
 }
 
-pub struct Sysopt {
+pub(crate) struct Sysopt {
     update_lock: TokioMutex<()>,
     guard_operation_lock: TokioMutex<()>,
     reset_sysproxy: AtomicBool,
@@ -163,7 +163,7 @@ impl Sysopt {
         }
     }
 
-    pub async fn stop_proxy_guard(&self) {
+    pub(super) async fn stop_proxy_guard(&self) {
         let _operation = self.guard_operation_lock.lock().await;
         self.stop_proxy_guard_locked().await;
     }
@@ -176,11 +176,11 @@ impl Sysopt {
             });
     }
 
-    pub async fn revoke_proxy_cleanup_authority_and_stop_guard(&self) {
+    pub(crate) async fn revoke_proxy_cleanup_authority_and_stop_guard(&self) {
         let _ = self.revoke_proxy_cleanup_authority_and_stop_guard_if(|| true).await;
     }
 
-    pub async fn revoke_proxy_cleanup_authority_and_stop_guard_if<F>(&self, claim_recovery: F) -> bool
+    pub(super) async fn revoke_proxy_cleanup_authority_and_stop_guard_if<F>(&self, claim_recovery: F) -> bool
     where
         F: FnOnce() -> bool,
     {
@@ -201,11 +201,11 @@ impl Sysopt {
     }
 
     #[cfg(target_os = "macos")]
-    pub(crate) fn proxy_cleanup_is_revoked(&self) -> bool {
+    pub(super) fn proxy_cleanup_is_revoked(&self) -> bool {
         proxy_state_is_revoked(self.proxy_cleanup_state.load(Ordering::Acquire))
     }
 
-    pub async fn refresh_guard(&self) {
+    pub(crate) async fn refresh_guard(&self) {
         logging!(info, Type::Core, "Refreshing system proxy guard...");
         let authority_snapshot = self.proxy_cleanup_state.load(Ordering::Acquire);
         if !proxy_guard_refresh_allowed(
@@ -266,24 +266,24 @@ impl Sysopt {
     /// subsequent read of OS-level sysproxy state sees a fully applied
     /// configuration instead of a partially-applied one (e.g. SOCKS already
     /// disabled but HTTP still enabled mid-transition).
-    pub async fn wait_idle(&self) {
+    pub(crate) async fn wait_idle(&self) {
         let _ = self.update_lock.lock().await;
     }
 
     /// init the sysproxy
-    pub async fn update_sysproxy(&self) -> Result<()> {
+    pub(crate) async fn update_sysproxy(&self) -> Result<()> {
         self.update_sysproxy_inner(ProxyAuthorityUpdate::Preserve, || true)
             .await
             .map(|_| ())
     }
 
-    pub async fn update_sysproxy_and_claim_if_not_revoked(&self) -> Result<()> {
+    pub(crate) async fn update_sysproxy_and_claim_if_not_revoked(&self) -> Result<()> {
         self.update_sysproxy_inner(ProxyAuthorityUpdate::ClaimIfNotRevoked, || true)
             .await
             .map(|_| ())
     }
 
-    pub async fn update_sysproxy_and_claim_cleanup_authority_if<F>(&self, claim_still_valid: F) -> Result<bool>
+    pub(super) async fn update_sysproxy_and_claim_cleanup_authority_if<F>(&self, claim_still_valid: F) -> Result<bool>
     where
         F: Fn() -> bool + Send + Sync,
     {
@@ -291,7 +291,7 @@ impl Sysopt {
             .await
     }
 
-    pub async fn allow_future_proxy_claim_after_core_ready_if<F>(&self, claim_still_valid: F) -> bool
+    pub(super) async fn allow_future_proxy_claim_after_core_ready_if<F>(&self, claim_still_valid: F) -> bool
     where
         F: Fn() -> bool,
     {
@@ -425,7 +425,7 @@ impl Sysopt {
     }
 
     /// reset the sysproxy
-    pub async fn reset_sysproxy(&self) -> Result<()> {
+    pub(crate) async fn reset_sysproxy(&self) -> Result<()> {
         if !self.proxy_cleanup_is_allowed() {
             logging!(
                 info,
