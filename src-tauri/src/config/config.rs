@@ -101,6 +101,8 @@ impl Config {
             handle::Handle::notice_message(msg_type, msg_content);
         }
 
+        Self::runtime().await.apply();
+
         {
             let profiles = Self::profiles().await.data_arc();
             // Logging error internally
