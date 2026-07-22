@@ -79,6 +79,7 @@ fn classify_macos_service_install_state(current: CurrentServiceProbe, has_instal
     match current {
         CurrentServiceProbe::Ready => ServiceInstallState::Ready,
         CurrentServiceProbe::VersionMismatch => ServiceInstallState::NeedsReinstall,
+        CurrentServiceProbe::Unavailable if has_install_marker => ServiceInstallState::NeedsReinstall,
         CurrentServiceProbe::Unavailable => ServiceInstallState::Unavailable,
         CurrentServiceProbe::Missing if has_install_marker => ServiceInstallState::NeedsReinstall,
         CurrentServiceProbe::Missing => ServiceInstallState::NotInstalled,
@@ -1020,6 +1021,10 @@ mod tests {
         assert_eq!(
             classify_macos_service_install_state(CurrentServiceProbe::Unavailable, false),
             ServiceInstallState::Unavailable
+        );
+        assert_eq!(
+            classify_macos_service_install_state(CurrentServiceProbe::Unavailable, true),
+            ServiceInstallState::NeedsReinstall
         );
     }
 
