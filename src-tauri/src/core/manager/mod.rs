@@ -101,6 +101,10 @@ impl CoreManager {
             .and_then(|arc| Arc::try_unwrap(arc).ok())
     }
 
+    pub fn get_running_sidecar_pid(&self) -> Option<u32> {
+        self.state.load().child_sidecar.load_full().map(|child| child.pid())
+    }
+
     pub fn get_last_update(&self) -> Option<Arc<Instant>> {
         self.last_update.load_full()
     }
@@ -138,9 +142,9 @@ impl CoreManager {
         self.config_update_in_progress.store(false, Ordering::Release);
     }
 
-    pub async fn init(&self) -> Result<()> {
+    pub async fn init(&self) -> Result<bool> {
         self.start_core().await?;
-        Ok(())
+        Ok(!matches!(*self.get_running_mode(), RunningMode::NotRunning))
     }
 }
 

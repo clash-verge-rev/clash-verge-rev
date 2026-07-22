@@ -1,7 +1,11 @@
 use super::{CmdResult, StringifyErr as _};
-use crate::core::service::{self, SERVICE_MANAGER, ServiceStatus};
+use crate::core::{
+    CoreManager,
+    service::{self, SERVICE_MANAGER, ServiceStatus},
+};
 
 async fn execute_service_operation_sync(status: ServiceStatus, op_type: &str) -> CmdResult {
+    let _lifecycle = CoreManager::global().lifecycle_lock.lock().await;
     SERVICE_MANAGER
         .handle_service_status(status)
         .await
@@ -30,7 +34,7 @@ pub async fn repair_service() -> CmdResult {
 
 #[tauri::command]
 pub async fn is_service_available() -> CmdResult<bool> {
-    service::is_service_available().await.stringify_err()
+    Ok(service::is_service_available().await)
 }
 
 #[tauri::command]
@@ -40,6 +44,8 @@ pub async fn get_service_install_state() -> CmdResult<service::ServiceInstallSta
 
 #[tauri::command]
 pub async fn continue_with_sidecar() -> CmdResult {
-    SERVICE_MANAGER.allow_sidecar_for_session();
-    crate::core::CoreManager::global().start_core().await.stringify_err()
+    crate::core::CoreManager::global()
+        .continue_with_sidecar()
+        .await
+        .stringify_err()
 }

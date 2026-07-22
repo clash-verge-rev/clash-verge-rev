@@ -27,11 +27,26 @@ enum StartupDecision {
 const fn startup_decision(status: &ServiceStatus, block_on_service_issue: bool) -> StartupDecision {
     match status {
         ServiceStatus::Ready => StartupDecision::Service,
-        ServiceStatus::NeedsReinstall | ServiceStatus::Unavailable(_) if block_on_service_issue => {
+        ServiceStatus::Checking | ServiceStatus::NeedsReinstall | ServiceStatus::Unavailable(_)
+            if block_on_service_issue =>
+        {
             StartupDecision::Wait
         }
         _ => StartupDecision::Sidecar,
     }
+}
+
+const fn can_allow_sidecar_for_session(
+    is_macos: bool,
+    running_mode: &RunningMode,
+    service_status: &ServiceStatus,
+) -> bool {
+    is_macos
+        && matches!(running_mode, RunningMode::NotRunning)
+        && matches!(
+            service_status,
+            ServiceStatus::NeedsReinstall | ServiceStatus::Unavailable(_)
+        )
 }
 
 /// sidecar→service 交接结果
@@ -46,8 +61,25 @@ enum HandoffOutcome {
 }
 
 impl CoreManager {
+    fn rollback_failed_start(&self) {
+        crate::core::sysopt::Sysopt::global().stop_proxy_guard();
+        crate::utils::server::set_pac_available(false);
+        self.set_running_mode(RunningMode::NotRunning);
+    }
+
     pub async fn start_core(&self) -> Result<()> {
         let _life = self.lifecycle_lock.lock().await;
+        self.start_core_inner().await
+    }
+
+    pub async fn continue_with_sidecar(&self) -> Result<()> {
+        let _life = self.lifecycle_lock.lock().await;
+        let status = SERVICE_MANAGER.current().await;
+        let mode = self.get_running_mode();
+        if !can_allow_sidecar_for_session(cfg!(target_os = "macos"), &mode, &status) {
+            anyhow::bail!("Sidecar continuation is not allowed from {mode:?} / {status:?}");
+        }
+        SERVICE_MANAGER.allow_sidecar_for_session()?;
         self.start_core_inner().await
     }
 
@@ -68,7 +100,9 @@ impl CoreManager {
             return Ok(());
         }
 
-        if !self.prepare_startup().await {
+        let startup = self.prepare_startup().await;
+        if matches!(startup, StartupDecision::Wait) {
+            self.rollback_failed_start();
             self.after_core_process();
             return Ok(());
         }
@@ -82,17 +116,17 @@ impl CoreManager {
             return Ok(());
         }
 
-        let result = match *self.get_running_mode() {
-            RunningMode::Service => self.start_core_by_service().await,
-            RunningMode::NotRunning | RunningMode::Sidecar => self.start_core_by_sidecar().await,
+        let result = match startup {
+            StartupDecision::Service => self.start_core_by_service().await,
+            StartupDecision::Sidecar => self.start_core_by_sidecar().await,
+            StartupDecision::Wait => Ok(()),
         };
 
-        // sidecar 启动失败可立即回滚；service 启动失败保持 fail-closed，
-        // 由 owner monitor 确认未运行或失权后再回收状态。
+        // No startup failure may leave a locally reported running mode. PAC is
+        // still fail-closed, and any service owner monitor will exit after this
+        // transition instead of treating an unconfirmed core as running.
         if result.is_err() {
-            if !matches!(*self.get_running_mode(), RunningMode::Service) {
-                self.set_running_mode(RunningMode::NotRunning);
-            }
+            self.rollback_failed_start();
             return result;
         }
 
@@ -152,22 +186,14 @@ impl CoreManager {
         Ok(())
     }
 
-    async fn prepare_startup(&self) -> bool {
+    async fn prepare_startup(&self) -> StartupDecision {
         #[cfg(target_os = "windows")]
         self.wait_for_service_if_needed().await;
 
-        match startup_decision(&SERVICE_MANAGER.current().await, cfg!(target_os = "macos")) {
-            StartupDecision::Service => self.set_running_mode(RunningMode::Service),
-            StartupDecision::Sidecar => self.set_running_mode(RunningMode::Sidecar),
-            StartupDecision::Wait => {
-                self.set_running_mode(RunningMode::NotRunning);
-                return false;
-            }
-        }
-        true
+        startup_decision(&SERVICE_MANAGER.current().await, cfg!(target_os = "macos"))
     }
 
-    fn after_core_process(&self) {
+    pub(in crate::core) fn after_core_process(&self) {
         let app_handle = Handle::app_handle();
         tauri_plugin_clash_verge_sysinfo::set_app_core_mode(app_handle, self.get_running_mode().to_string());
     }
@@ -349,8 +375,10 @@ impl CoreManager {
 
 #[cfg(test)]
 mod tests {
-    use super::{StartupDecision, should_wait_for_service, startup_decision};
-    use crate::core::service::ServiceStatus;
+    use super::{
+        CoreManager, StartupDecision, can_allow_sidecar_for_session, should_wait_for_service, startup_decision,
+    };
+    use crate::core::{manager::RunningMode, service::ServiceStatus};
 
     #[test]
     fn macos_waits_for_reinstall_decision_but_missing_service_uses_sidecar() {
@@ -371,6 +399,7 @@ mod tests {
             startup_decision(&ServiceStatus::Unavailable("broken".into()), true),
             StartupDecision::Wait
         );
+        assert_eq!(startup_decision(&ServiceStatus::Checking, true), StartupDecision::Wait);
     }
 
     #[test]
@@ -391,5 +420,45 @@ mod tests {
         assert!(!should_wait_for_service(true, false, true));
         assert!(!should_wait_for_service(true, true, false));
         assert!(!should_wait_for_service(false, false, false));
+    }
+
+    #[test]
+    fn sidecar_session_allowance_is_macos_only_not_running_and_migration_only() {
+        let allowed_statuses = [
+            ServiceStatus::NeedsReinstall,
+            ServiceStatus::Unavailable("offline".into()),
+        ];
+        for status in &allowed_statuses {
+            assert!(can_allow_sidecar_for_session(true, &RunningMode::NotRunning, status));
+            assert!(!can_allow_sidecar_for_session(false, &RunningMode::NotRunning, status));
+            assert!(!can_allow_sidecar_for_session(true, &RunningMode::Service, status));
+            assert!(!can_allow_sidecar_for_session(true, &RunningMode::Sidecar, status));
+        }
+
+        let rejected_statuses = [
+            ServiceStatus::Checking,
+            ServiceStatus::Ready,
+            ServiceStatus::NotInstalled,
+            ServiceStatus::InstallRequired,
+            ServiceStatus::UninstallRequired,
+            ServiceStatus::ReinstallRequired,
+            ServiceStatus::ForceReinstallRequired,
+            ServiceStatus::SidecarAllowed,
+        ];
+        for status in &rejected_statuses {
+            assert!(!can_allow_sidecar_for_session(true, &RunningMode::NotRunning, status));
+        }
+    }
+
+    #[test]
+    fn failed_start_rolls_back_even_from_service_mode() {
+        let manager = CoreManager::default();
+        manager.set_running_mode(RunningMode::Service);
+        manager.rollback_failed_start();
+        assert_eq!(*manager.get_running_mode(), RunningMode::NotRunning);
+
+        manager.set_running_mode(RunningMode::Sidecar);
+        manager.rollback_failed_start();
+        assert_eq!(*manager.get_running_mode(), RunningMode::NotRunning);
     }
 }

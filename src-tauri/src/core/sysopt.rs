@@ -81,6 +81,10 @@ impl Sysopt {
         Arc::clone(&self.guard)
     }
 
+    pub fn stop_proxy_guard(&self) {
+        self.access_guard().write().stop();
+    }
+
     pub async fn refresh_guard(&self) {
         logging!(info, Type::Core, "Refreshing system proxy guard...");
         let verge = Config::verge().await.latest_arc();

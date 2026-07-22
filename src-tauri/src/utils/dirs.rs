@@ -301,10 +301,16 @@ fn sidecar_ipc_path_for(
 
 #[cfg(windows)]
 fn sidecar_ipc_path_for(_app_root: &std::path::Path, identity: &clash_verge_service_ipc::OwnerIdentity) -> PathBuf {
-    PathBuf::from(format!(
-        r"\\.\pipe\verge-mihomo-sidecar-{}",
+    PathBuf::from(sidecar_pipe_name(identity, cfg!(feature = "verge-dev")))
+}
+
+#[cfg(any(windows, test))]
+fn sidecar_pipe_name(identity: &clash_verge_service_ipc::OwnerIdentity, is_dev: bool) -> String {
+    let flavor = if is_dev { "dev" } else { "release" };
+    format!(
+        r"\\.\pipe\verge-mihomo-sidecar-{flavor}-{}",
         clash_verge_service_ipc::owner_key(identity)
-    ))
+    )
 }
 
 #[cfg(all(test, target_os = "linux"))]
@@ -331,14 +337,14 @@ mod ipc_tests {
 mod ipc_tests {
     use super::sidecar_ipc_path_for;
     use clash_verge_service_ipc::OwnerIdentity;
-    use std::{ffi::OsStr, os::unix::ffi::OsStrExt, path::Path};
+    use std::{ffi::OsStr, os::unix::ffi::OsStrExt as _, path::Path};
 
     #[test]
-    fn sidecar_ipc_ignores_long_app_root_and_fits_sockaddr_un() {
+    fn sidecar_ipc_ignores_long_app_root_and_fits_sockaddr_un() -> anyhow::Result<()> {
         let identity = OwnerIdentity::Unix { uid: 501, gid: 20 };
         let app_root =
             Path::new("/Users/support/Library/Application Support/io.github.clash-verge-rev.clash-verge-rev.dev");
-        let path = sidecar_ipc_path_for(app_root, &identity).expect("macOS should provide a per-user temp directory");
+        let path = sidecar_ipc_path_for(app_root, &identity)?;
 
         assert!(!path.starts_with(app_root));
         assert!(path.as_os_str().as_bytes().len() < 104);
@@ -346,11 +352,9 @@ mod ipc_tests {
         assert_eq!(path.file_name(), Some(OsStr::new("verge-mihomo-dev.sock")));
         #[cfg(not(feature = "verge-dev"))]
         assert_eq!(path.file_name(), Some(OsStr::new("verge-mihomo.sock")));
-        assert_eq!(
-            path,
-            sidecar_ipc_path_for(Path::new("/different/root"), &identity).unwrap()
-        );
+        assert_eq!(path, sidecar_ipc_path_for(Path::new("/different/root"), &identity)?);
         assert!(path.parent().is_some_and(Path::is_dir));
+        Ok(())
     }
 }
 
@@ -370,12 +374,14 @@ mod ipc_tests {
         assert_eq!(
             path,
             Path::new(&format!(
-                r"\\.\pipe\verge-mihomo-sidecar-{}",
+                r"\\.\pipe\verge-mihomo-sidecar-{}-{}",
+                if cfg!(feature = "verge-dev") { "dev" } else { "release" },
                 clash_verge_service_ipc::owner_key(&identity)
             ))
         );
     }
 }
+
 #[async_trait]
 pub trait PathBufExec {
     async fn remove_if_exists(&self) -> Result<()>;
@@ -389,5 +395,28 @@ impl PathBufExec for PathBuf {
             logging!(info, Type::File, "Removed file: {:?}", self);
         }
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod windows_pipe_name_tests {
+    use super::sidecar_pipe_name;
+    use clash_verge_service_ipc::OwnerIdentity;
+
+    #[test]
+    fn windows_sidecar_pipe_separates_dev_and_release_for_the_same_owner() {
+        let identity = OwnerIdentity::Windows {
+            sid: "S-1-5-21-1000".to_owned(),
+        };
+        let owner_key = clash_verge_service_ipc::owner_key(&identity);
+
+        assert_eq!(
+            sidecar_pipe_name(&identity, false),
+            format!(r"\\.\pipe\verge-mihomo-sidecar-release-{owner_key}")
+        );
+        assert_eq!(
+            sidecar_pipe_name(&identity, true),
+            format!(r"\\.\pipe\verge-mihomo-sidecar-dev-{owner_key}")
+        );
     }
 }

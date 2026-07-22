@@ -180,7 +180,7 @@ impl Logger {
         *self.sidecar_file_writer.write() = Some(sidecar_writer);
 
         // update service writer config
-        if service::is_service_ipc_path_exists() && service::is_service_available().await.is_ok() {
+        if service::is_service_available().await {
             let credentials = current_owner_credentials()?;
             clash_verge_service_ipc::update_writer(
                 &credentials,

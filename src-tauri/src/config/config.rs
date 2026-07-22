@@ -76,7 +76,7 @@ impl Config {
         // init Tun mode
         let handle = Handle::app_handle();
         let is_admin = is_current_app_handle_admin(handle);
-        let is_service_available = service::is_service_available().await.is_ok();
+        let is_service_available = service::is_service_available().await;
         if !is_admin && !is_service_available {
             let verge = Self::verge().await;
             verge.edit_draft(|d| {

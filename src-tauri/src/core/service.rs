@@ -1,7 +1,7 @@
 use crate::{
     config::Config,
     core::{
-        CoreManager, manager::RunningMode, owner_identity::current_owner_credentials,
+        CoreManager, handle::Handle, manager::RunningMode, owner_identity::current_owner_credentials,
         runtime_bundle::collect_runtime_bundle, sysopt::Sysopt, tray::Tray,
     },
     process::AsyncHandler,
@@ -30,6 +30,7 @@ static OWNER_MONITOR_GENERATION: AtomicU64 = AtomicU64::new(0);
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ServiceStatus {
+    Checking,
     Ready,
     NotInstalled,
     NeedsReinstall,
@@ -44,6 +45,7 @@ pub enum ServiceStatus {
 impl ServiceStatus {
     const fn install_state(&self) -> ServiceInstallState {
         match self {
+            Self::Checking => ServiceInstallState::Checking,
             Self::Ready => ServiceInstallState::Ready,
             Self::NotInstalled => ServiceInstallState::NotInstalled,
             Self::SidecarAllowed => ServiceInstallState::SidecarAllowed,
@@ -58,11 +60,18 @@ impl ServiceStatus {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub enum ServiceInstallState {
+    Checking,
     NotInstalled,
     Ready,
     NeedsReinstall,
     SidecarAllowed,
     Unavailable,
+}
+
+impl ServiceInstallState {
+    fn is_available(self) -> bool {
+        self == Self::Ready
+    }
 }
 
 #[cfg(any(target_os = "macos", test))]
@@ -82,24 +91,22 @@ const fn classify_macos_service_install_state(
     match current {
         CurrentServiceProbe::Ready => ServiceInstallState::Ready,
         CurrentServiceProbe::VersionMismatch => ServiceInstallState::NeedsReinstall,
-        CurrentServiceProbe::Unavailable if has_install_marker => ServiceInstallState::NeedsReinstall,
         CurrentServiceProbe::Unavailable => ServiceInstallState::Unavailable,
         CurrentServiceProbe::Missing if has_install_marker => ServiceInstallState::NeedsReinstall,
         CurrentServiceProbe::Missing => ServiceInstallState::NotInstalled,
     }
 }
 
-fn is_service_install_state_available(state: ServiceInstallState) -> bool {
-    state == ServiceInstallState::Ready
+fn confirmed_service_available<E>(result: std::result::Result<bool, E>) -> bool {
+    matches!(result, Ok(true))
 }
 
 #[cfg(target_os = "macos")]
-const MACOS_SERVICE_INSTALL_MARKERS: [&str; 5] = [
+const MACOS_SERVICE_INSTALL_MARKERS: [&str; 4] = [
     "/Library/LaunchDaemons/io.github.clash-verge-rev.clash-verge-rev.service.plist",
     "/Library/PrivilegedHelperTools/io.github.clash-verge-rev.clash-verge-rev.service.bundle",
     "/Library/LaunchDaemons/io.github.clashverge.helper.plist",
     "/Library/PrivilegedHelperTools/io.github.clashverge.helper",
-    "/tmp/verge/clash-verge-service.sock",
 ];
 
 #[cfg(target_os = "macos")]
@@ -489,6 +496,29 @@ fn force_reinstall_service() -> Result<()> {
     })
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum PrivilegedServiceAction {
+    Install,
+    Uninstall,
+    Reinstall,
+    ForceReinstall,
+}
+
+const fn privileged_service_action(status: &ServiceStatus) -> Option<PrivilegedServiceAction> {
+    match status {
+        ServiceStatus::InstallRequired => Some(PrivilegedServiceAction::Install),
+        ServiceStatus::UninstallRequired => Some(PrivilegedServiceAction::Uninstall),
+        ServiceStatus::ReinstallRequired => Some(PrivilegedServiceAction::Reinstall),
+        ServiceStatus::ForceReinstallRequired => Some(PrivilegedServiceAction::ForceReinstall),
+        ServiceStatus::Checking
+        | ServiceStatus::Ready
+        | ServiceStatus::NotInstalled
+        | ServiceStatus::NeedsReinstall
+        | ServiceStatus::SidecarAllowed
+        | ServiceStatus::Unavailable(_) => None,
+    }
+}
+
 /// 尝试使用服务启动core
 pub(super) async fn start_with_existing_service(config_file: &Path) -> Result<()> {
     logging!(info, Type::Service, "尝试使用现有服务启动核心");
@@ -530,6 +560,11 @@ pub(super) async fn run_core_by_service(config_file: &Path) -> Result<()> {
 
     SERVICE_MANAGER.refresh().await?;
 
+    let status = SERVICE_MANAGER.current().await;
+    if !matches!(status, ServiceStatus::Ready) {
+        bail!("service is not ready after refresh: {status:?}");
+    }
+
     logging!(info, Type::Service, "服务已运行且版本匹配，直接使用");
     start_with_existing_service(config_file).await
 }
@@ -544,7 +579,11 @@ pub(super) async fn get_clash_logs_by_service() -> Result<Vec<CompactString>> {
 
     if response.code > 0 {
         if response.code == clash_verge_service_ipc::ServiceErrorCode::NotActive as u16 {
-            recover_after_owner_loss(OWNER_MONITOR_GENERATION.load(Ordering::Acquire)).await;
+            recover_after_owner_loss(
+                OWNER_MONITOR_GENERATION.load(Ordering::Acquire),
+                OwnerRecoveryReason::Displaced,
+            )
+            .await;
         }
         let err_msg = response.message;
         logging!(error, Type::Service, "获取服务模式下的 Clash 日志失败: {}", err_msg);
@@ -586,7 +625,7 @@ pub(super) async fn stop_core_by_service() -> Result<()> {
     if response.code > 0 {
         if response.code == clash_verge_service_ipc::ServiceErrorCode::NotActive as u16 {
             cancel_owner_monitors();
-            recover_after_owner_loss_while_locked().await;
+            recover_after_owner_loss_while_locked(OwnerRecoveryReason::Displaced).await;
         }
         let err_msg = response.message;
         logging!(error, Type::Service, "停止核心失败: {}", err_msg);
@@ -597,15 +636,35 @@ pub(super) async fn stop_core_by_service() -> Result<()> {
     Ok(())
 }
 
-fn owner_status_requires_recovery(
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum OwnerRecoveryReason {
+    Displaced,
+    SameOwnerFailure,
+    TransportFailure,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct OwnerRecoveryPolicy {
+    reset_system_proxy: bool,
+}
+
+const fn owner_recovery_policy(reason: OwnerRecoveryReason, is_macos: bool) -> OwnerRecoveryPolicy {
+    OwnerRecoveryPolicy {
+        reset_system_proxy: !is_macos || matches!(reason, OwnerRecoveryReason::SameOwnerFailure),
+    }
+}
+
+fn owner_status_recovery_reason(
     is_active: bool,
     desired_running: bool,
     service_state: clash_verge_service_ipc::ServiceLifecycleState,
     core_pid: Option<u32>,
     missing_core_samples: u8,
-) -> bool {
-    !is_active
-        || !desired_running
+) -> Option<OwnerRecoveryReason> {
+    if !is_active {
+        return Some(OwnerRecoveryReason::Displaced);
+    }
+    if !desired_running
         || service_state == clash_verge_service_ipc::ServiceLifecycleState::Fatal
         || (!matches!(
             service_state,
@@ -613,6 +672,35 @@ fn owner_status_requires_recovery(
                 | clash_verge_service_ipc::ServiceLifecycleState::RecoveringCore
         ) && core_pid.is_none()
             && missing_core_samples >= 3)
+    {
+        return Some(OwnerRecoveryReason::SameOwnerFailure);
+    }
+    None
+}
+
+const fn transport_failure_recovery_reason(
+    failed_status_samples: u8,
+    owner_endpoint_available: bool,
+) -> Option<OwnerRecoveryReason> {
+    if failed_status_samples >= 3 && !owner_endpoint_available {
+        Some(OwnerRecoveryReason::TransportFailure)
+    } else {
+        None
+    }
+}
+
+async fn recover_after_sustained_status_failure(generation: u64, failed_status_samples: u8) -> bool {
+    if failed_status_samples < 3 {
+        return false;
+    }
+
+    let owner_endpoint_available = Handle::mihomo().await.get_version().await.is_ok();
+    if let Some(reason) = transport_failure_recovery_reason(failed_status_samples, owner_endpoint_available) {
+        recover_after_owner_loss(generation, reason).await;
+        true
+    } else {
+        false
+    }
 }
 
 fn start_owner_monitor() {
@@ -643,11 +731,17 @@ fn start_owner_monitor() {
                             "service owner status temporarily unavailable; preserving local proxy state: {error:#}"
                         );
                     }
+                    if recover_after_sustained_status_failure(generation, failed_status_samples).await {
+                        break;
+                    }
+                    if failed_status_samples >= 3 {
+                        failed_status_samples = 0;
+                    }
                     continue;
                 }
             };
             if response.code == clash_verge_service_ipc::ServiceErrorCode::NotActive as u16 {
-                recover_after_owner_loss(generation).await;
+                recover_after_owner_loss(generation, OwnerRecoveryReason::Displaced).await;
                 break;
             }
             if response.code != 0 {
@@ -661,6 +755,12 @@ fn start_owner_monitor() {
                         response.message
                     );
                 }
+                if recover_after_sustained_status_failure(generation, failed_status_samples).await {
+                    break;
+                }
+                if failed_status_samples >= 3 {
+                    failed_status_samples = 0;
+                }
                 continue;
             }
             let Some(status) = response.data else {
@@ -671,6 +771,12 @@ fn start_owner_monitor() {
                         Type::Service,
                         "service owner status omitted data; preserving local proxy state"
                     );
+                }
+                if recover_after_sustained_status_failure(generation, failed_status_samples).await {
+                    break;
+                }
+                if failed_status_samples >= 3 {
+                    failed_status_samples = 0;
                 }
                 continue;
             };
@@ -685,14 +791,14 @@ fn start_owner_monitor() {
             } else {
                 0
             };
-            if owner_status_requires_recovery(
+            if let Some(reason) = owner_status_recovery_reason(
                 status.is_active,
                 status.desired_core_should_be_running,
                 status.service_state,
                 status.core_pid,
                 missing_core_samples,
             ) {
-                recover_after_owner_loss(generation).await;
+                recover_after_owner_loss(generation, reason).await;
                 break;
             }
         }
@@ -703,7 +809,7 @@ fn cancel_owner_monitors() {
     OWNER_MONITOR_GENERATION.fetch_add(1, Ordering::AcqRel);
 }
 
-async fn recover_after_owner_loss(generation: u64) {
+async fn recover_after_owner_loss(generation: u64, reason: OwnerRecoveryReason) {
     let manager = CoreManager::global();
     let _lifecycle = manager.lifecycle_lock.lock().await;
     if OWNER_MONITOR_GENERATION.load(Ordering::Acquire) != generation
@@ -712,17 +818,25 @@ async fn recover_after_owner_loss(generation: u64) {
         return;
     }
     cancel_owner_monitors();
-    recover_after_owner_loss_while_locked().await;
+    recover_after_owner_loss_while_locked(reason).await;
 }
 
-async fn recover_after_owner_loss_while_locked() {
+async fn recover_after_owner_loss_while_locked(reason: OwnerRecoveryReason) {
     logging!(
         warn,
         Type::Service,
-        "service owner lost; clearing local proxy and PAC state"
+        "service owner recovery ({reason:?}); clearing local proxy and PAC state"
     );
+    Sysopt::global().stop_proxy_guard();
     server::set_pac_available(false);
-    CoreManager::global().set_running_mode(RunningMode::NotRunning);
+    let manager = CoreManager::global();
+    manager.set_running_mode(RunningMode::NotRunning);
+    manager.after_core_process();
+
+    if !owner_recovery_policy(reason, cfg!(target_os = "macos")).reset_system_proxy {
+        return;
+    }
+
     let mut last_error = None;
     for _ in 0..3 {
         match Sysopt::global().reset_sysproxy().await {
@@ -742,12 +856,11 @@ async fn recover_after_owner_loss_while_locked() {
     }
 }
 
-/// 检查服务是否正在运行
-pub async fn is_service_available() -> Result<bool> {
+async fn probe_service_availability() -> Result<bool> {
     #[cfg(target_os = "macos")]
     {
         let state = SERVICE_MANAGER.install_state().await;
-        if !is_service_install_state_available(state) {
+        if !state.is_available() {
             Ok(false)
         } else {
             Ok(clash_verge_service_ipc::connect().await.is_ok())
@@ -766,6 +879,11 @@ pub async fn is_service_available() -> Result<bool> {
         clash_verge_service_ipc::connect().await?;
         Ok(true)
     }
+}
+
+/// Returns true only when the service probe explicitly confirms availability.
+pub async fn is_service_available() -> bool {
+    confirmed_service_available(probe_service_availability().await)
 }
 
 async fn wait_for_service_ipc(manager: &ServiceManager) -> Result<()> {
@@ -832,13 +950,23 @@ impl ServiceManager {
         self.current().await.install_state()
     }
 
-    pub fn allow_sidecar_for_session(&self) {
-        self.set_status(ServiceStatus::SidecarAllowed);
+    pub fn allow_sidecar_for_session(&self) -> Result<()> {
+        let mut status = self.status.lock();
+        if self.operation_running.load(Ordering::Acquire) {
+            bail!("service operation already running");
+        }
+        if !matches!(*status, ServiceStatus::NeedsReinstall | ServiceStatus::Unavailable(_)) {
+            bail!("sidecar cannot be allowed from service status {status:?}");
+        }
+        *status = ServiceStatus::SidecarAllowed;
+        drop(status);
+        Ok(())
     }
 
     #[cfg(target_os = "macos")]
     pub async fn detect_macos_startup_status(&self) {
         let status = match detect_macos_service_install_state().await {
+            ServiceInstallState::Checking => ServiceStatus::Checking,
             ServiceInstallState::Ready => ServiceStatus::Ready,
             ServiceInstallState::NotInstalled => ServiceStatus::NotInstalled,
             ServiceInstallState::NeedsReinstall => ServiceStatus::NeedsReinstall,
@@ -870,12 +998,13 @@ impl ServiceManager {
 
     pub async fn refresh(&self) -> Result<()> {
         self.run_operation(async {
-            self.apply_service_status(if clash_verge_service_ipc::is_reinstall_service_needed().await {
+            let status = if clash_verge_service_ipc::is_reinstall_service_needed().await {
                 ServiceStatus::NeedsReinstall
             } else {
                 ServiceStatus::Ready
-            })
-            .await
+            };
+            self.set_status(status);
+            Ok(())
         })
         .await
     }
@@ -886,48 +1015,58 @@ impl ServiceManager {
 
     async fn apply_service_status(&self, status: ServiceStatus) -> Result<()> {
         self.set_status(status.clone());
-        match status {
-            ServiceStatus::Ready => logging!(info, Type::Service, "服务就绪，直接启动"),
-            ServiceStatus::NotInstalled => {
-                logging!(info, Type::Service, "service is not installed; Sidecar is available");
-            }
-            ServiceStatus::NeedsReinstall | ServiceStatus::ReinstallRequired => {
+        match privileged_service_action(&status) {
+            Some(PrivilegedServiceAction::Reinstall) => {
                 logging!(info, Type::Service, "服务需要重装，执行重装流程");
                 run_service_command(reinstall_service, "reinstall service")?;
                 wait_for_service_ipc(self).await?;
             }
-            ServiceStatus::ForceReinstallRequired => {
+            Some(PrivilegedServiceAction::ForceReinstall) => {
                 logging!(info, Type::Service, "服务需要强制重装，执行强制重装流程");
                 run_service_command(force_reinstall_service, "force reinstall service")?;
                 wait_for_service_ipc(self).await?;
             }
-            ServiceStatus::InstallRequired => {
+            Some(PrivilegedServiceAction::Install) => {
                 logging!(info, Type::Service, "需要安装服务，执行安装流程");
                 run_service_command(install_service, "install service")?;
                 wait_for_service_ipc(self).await?;
                 if clash_verge_service_ipc::is_reinstall_service_needed().await {
-                    logging!(info, Type::Service, "服务版本不匹配，执行重装流程");
                     self.set_status(ServiceStatus::NeedsReinstall);
-                    run_service_command(reinstall_service, "reinstall service")?;
-                    wait_for_service_ipc(self).await?;
+                    bail!("installed service version does not match; choose Reinstall to continue");
                 }
             }
-            ServiceStatus::UninstallRequired => {
+            Some(PrivilegedServiceAction::Uninstall) => {
                 logging!(info, Type::Service, "服务需要卸载，执行卸载流程");
                 run_service_command(uninstall_service, "uninstall service")?;
                 self.set_status(ServiceStatus::Unavailable("Service Uninstalled".into()));
             }
-            ServiceStatus::Unavailable(reason) => {
-                logging!(info, Type::Service, "服务不可用: {}，将使用Sidecar模式", reason);
-                bail!("服务不可用: {}", reason);
-            }
-            ServiceStatus::SidecarAllowed => {
-                logging!(
-                    info,
-                    Type::Service,
-                    "Sidecar was explicitly allowed for this app session"
-                );
-            }
+            None => match status {
+                ServiceStatus::Checking => bail!("service status is still being checked"),
+                ServiceStatus::Ready => logging!(info, Type::Service, "服务就绪，直接启动"),
+                ServiceStatus::NotInstalled => {
+                    logging!(info, Type::Service, "service is not installed; Sidecar is available");
+                }
+                ServiceStatus::NeedsReinstall => {
+                    bail!("service needs reinstall; explicit authorization is required");
+                }
+                ServiceStatus::Unavailable(reason) => {
+                    logging!(info, Type::Service, "服务不可用: {}，将使用Sidecar模式", reason);
+                    bail!("服务不可用: {}", reason);
+                }
+                ServiceStatus::SidecarAllowed => {
+                    logging!(
+                        info,
+                        Type::Service,
+                        "Sidecar was explicitly allowed for this app session"
+                    );
+                }
+                ServiceStatus::InstallRequired
+                | ServiceStatus::UninstallRequired
+                | ServiceStatus::ReinstallRequired
+                | ServiceStatus::ForceReinstallRequired => {
+                    bail!("invalid privileged service action mapping")
+                }
+            },
         }
 
         Ok(())
@@ -939,7 +1078,7 @@ fn run_service_command(operation: impl FnOnce() -> Result<()>, label: &'static s
 }
 
 pub static SERVICE_MANAGER: Lazy<ServiceManager> = Lazy::new(|| ServiceManager {
-    status: Mutex::new(ServiceStatus::Unavailable("Need Checks".into())),
+    status: Mutex::new(ServiceStatus::Checking),
     operation_running: AtomicBool::new(false),
     operation_done: Notify::new(),
 });
@@ -947,62 +1086,61 @@ pub static SERVICE_MANAGER: Lazy<ServiceManager> = Lazy::new(|| ServiceManager {
 #[cfg(test)]
 mod tests {
     use super::{
-        CurrentServiceProbe, ServiceInstallState, classify_macos_service_install_state,
-        is_service_install_state_available, owner_status_requires_recovery,
+        CurrentServiceProbe, OwnerRecoveryReason, PrivilegedServiceAction, ServiceInstallState, ServiceStatus,
+        classify_macos_service_install_state, confirmed_service_available, owner_recovery_policy,
+        owner_status_recovery_reason, privileged_service_action, transport_failure_recovery_reason,
     };
     use clash_verge_service_ipc::ServiceLifecycleState;
 
     #[test]
-    fn owner_loss_or_sustained_missing_core_requires_local_proxy_recovery() {
-        assert!(owner_status_requires_recovery(
-            false,
-            true,
-            ServiceLifecycleState::Running,
-            Some(42),
-            0
-        ));
-        assert!(owner_status_requires_recovery(
-            true,
-            false,
-            ServiceLifecycleState::Running,
-            None,
-            1
-        ));
-        assert!(!owner_status_requires_recovery(
-            true,
-            true,
-            ServiceLifecycleState::Running,
-            None,
-            2
-        ));
-        assert!(owner_status_requires_recovery(
-            true,
-            true,
-            ServiceLifecycleState::Running,
-            None,
-            3
-        ));
-        assert!(!owner_status_requires_recovery(
-            true,
-            true,
-            ServiceLifecycleState::RecoveringCore,
-            None,
-            u8::MAX
-        ));
-        assert!(owner_status_requires_recovery(
-            true,
-            true,
-            ServiceLifecycleState::Fatal,
-            None,
-            0
-        ));
-        assert!(!owner_status_requires_recovery(
-            true,
-            true,
-            ServiceLifecycleState::Running,
-            Some(42),
-            3
-        ));
+    fn owner_loss_reason_distinguishes_displacement_from_same_owner_failure() {
+        assert_eq!(
+            owner_status_recovery_reason(false, true, ServiceLifecycleState::Running, Some(42), 0),
+            Some(OwnerRecoveryReason::Displaced)
+        );
+        assert_eq!(
+            owner_status_recovery_reason(true, false, ServiceLifecycleState::Running, None, 1),
+            Some(OwnerRecoveryReason::SameOwnerFailure)
+        );
+        assert_eq!(
+            owner_status_recovery_reason(true, true, ServiceLifecycleState::Running, None, 2),
+            None
+        );
+        assert_eq!(
+            owner_status_recovery_reason(true, true, ServiceLifecycleState::Running, None, 3),
+            Some(OwnerRecoveryReason::SameOwnerFailure)
+        );
+        assert_eq!(
+            owner_status_recovery_reason(true, true, ServiceLifecycleState::RecoveringCore, None, u8::MAX),
+            None
+        );
+        assert_eq!(
+            owner_status_recovery_reason(true, true, ServiceLifecycleState::Fatal, None, 0),
+            Some(OwnerRecoveryReason::SameOwnerFailure)
+        );
+        assert_eq!(
+            owner_status_recovery_reason(true, true, ServiceLifecycleState::Running, Some(42), 3),
+            None
+        );
+    }
+
+    #[test]
+    fn macos_recovery_never_resets_a_displaced_or_ambiguous_owners_proxy() {
+        assert!(!owner_recovery_policy(OwnerRecoveryReason::Displaced, true).reset_system_proxy);
+        assert!(!owner_recovery_policy(OwnerRecoveryReason::TransportFailure, true).reset_system_proxy);
+        assert!(owner_recovery_policy(OwnerRecoveryReason::SameOwnerFailure, true).reset_system_proxy);
+        assert!(owner_recovery_policy(OwnerRecoveryReason::Displaced, false).reset_system_proxy);
+        assert!(owner_recovery_policy(OwnerRecoveryReason::TransportFailure, false).reset_system_proxy);
+    }
+
+    #[test]
+    fn sustained_transport_failure_recovers_only_when_owner_endpoint_is_also_unavailable() {
+        assert_eq!(transport_failure_recovery_reason(2, false), None);
+        assert_eq!(transport_failure_recovery_reason(3, true), None);
+        assert_eq!(
+            transport_failure_recovery_reason(3, false),
+            Some(OwnerRecoveryReason::TransportFailure)
+        );
     }
 
     #[test]
@@ -1029,16 +1167,59 @@ mod tests {
         );
         assert_eq!(
             classify_macos_service_install_state(CurrentServiceProbe::Unavailable, true),
-            ServiceInstallState::NeedsReinstall
+            ServiceInstallState::Unavailable
+        );
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn legacy_socket_alone_is_not_install_evidence() {
+        assert!(!super::MACOS_SERVICE_INSTALL_MARKERS.contains(&"/tmp/verge/clash-verge-service.sock"));
+        assert_eq!(
+            classify_macos_service_install_state(CurrentServiceProbe::Missing, false),
+            ServiceInstallState::NotInstalled
         );
     }
 
     #[test]
-    fn only_ready_service_is_available() {
-        assert!(is_service_install_state_available(ServiceInstallState::Ready));
-        assert!(!is_service_install_state_available(ServiceInstallState::NotInstalled));
-        assert!(!is_service_install_state_available(ServiceInstallState::NeedsReinstall));
-        assert!(!is_service_install_state_available(ServiceInstallState::SidecarAllowed));
-        assert!(!is_service_install_state_available(ServiceInstallState::Unavailable));
+    fn only_confirmed_true_service_probe_is_available() {
+        assert!(confirmed_service_available(Ok::<bool, &str>(true)));
+        assert!(!confirmed_service_available(Ok::<bool, &str>(false)));
+        assert!(!confirmed_service_available(Err::<bool, &str>("offline")));
+    }
+
+    #[test]
+    fn checking_is_public_and_unavailable() {
+        assert_eq!(ServiceStatus::Checking.install_state(), ServiceInstallState::Checking);
+        assert!(!ServiceInstallState::Checking.is_available());
+    }
+
+    #[test]
+    fn only_explicit_action_states_map_to_privileged_operations() {
+        assert_eq!(privileged_service_action(&ServiceStatus::Checking), None);
+        assert_eq!(privileged_service_action(&ServiceStatus::Ready), None);
+        assert_eq!(privileged_service_action(&ServiceStatus::NotInstalled), None);
+        assert_eq!(privileged_service_action(&ServiceStatus::NeedsReinstall), None);
+        assert_eq!(privileged_service_action(&ServiceStatus::SidecarAllowed), None);
+        assert_eq!(
+            privileged_service_action(&ServiceStatus::Unavailable("offline".into())),
+            None
+        );
+        assert_eq!(
+            privileged_service_action(&ServiceStatus::InstallRequired),
+            Some(PrivilegedServiceAction::Install)
+        );
+        assert_eq!(
+            privileged_service_action(&ServiceStatus::UninstallRequired),
+            Some(PrivilegedServiceAction::Uninstall)
+        );
+        assert_eq!(
+            privileged_service_action(&ServiceStatus::ReinstallRequired),
+            Some(PrivilegedServiceAction::Reinstall)
+        );
+        assert_eq!(
+            privileged_service_action(&ServiceStatus::ForceReinstallRequired),
+            Some(PrivilegedServiceAction::ForceReinstall)
+        );
     }
 }

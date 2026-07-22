@@ -2,17 +2,49 @@ use super::{CoreManager, RunningMode};
 use crate::{
     AsyncHandler,
     config::Config,
-    core::{handle, logger::Logger, manager::CLASH_LOGGER, service},
+    core::{handle, logger::Logger, manager::CLASH_LOGGER, service, sysopt::Sysopt},
     logging,
     utils::{dirs, server},
 };
-use anyhow::Result;
+use anyhow::{Context as _, Result};
 use clash_verge_logging::Type;
 use compact_str::CompactString;
 use log::Level;
 use scopeguard::defer;
 use tauri_plugin_mihomo::MihomoExt as _;
 use tauri_plugin_shell::ShellExt as _;
+
+const SIDECAR_READINESS_ATTEMPTS: usize = 30;
+const SIDECAR_READINESS_INTERVAL: std::time::Duration = std::time::Duration::from_millis(100);
+const SIDECAR_READINESS_PROBE_TIMEOUT: std::time::Duration = std::time::Duration::from_millis(400);
+
+async fn poll_sidecar_readiness<F, Fut>(
+    max_attempts: usize,
+    retry_delay: std::time::Duration,
+    mut probe: F,
+) -> Result<()>
+where
+    F: FnMut() -> Fut,
+    Fut: std::future::Future<Output = Result<()>>,
+{
+    let mut last_error = None;
+    for attempt in 0..max_attempts {
+        match probe().await {
+            Ok(()) => return Ok(()),
+            Err(error) => last_error = Some(error),
+        }
+        if attempt + 1 < max_attempts {
+            tokio::time::sleep(retry_delay).await;
+        }
+    }
+    Err(last_error
+        .unwrap_or_else(|| anyhow::anyhow!("sidecar readiness was configured with no attempts"))
+        .context("Mihomo API did not become ready"))
+}
+
+fn should_clear_terminated_sidecar(running_mode: &RunningMode, current_pid: Option<u32>, terminated_pid: u32) -> bool {
+    matches!(running_mode, RunningMode::Sidecar) && current_pid == Some(terminated_pid)
+}
 
 #[cfg(target_os = "windows")]
 use {
@@ -40,6 +72,8 @@ impl CoreManager {
 
     pub(super) async fn start_core_by_sidecar(&self) -> Result<()> {
         logging!(info, Type::Core, "Starting core in sidecar mode");
+        server::set_pac_available(false);
+        self.set_running_mode(RunningMode::NotRunning);
 
         let sidecar_ipc = dirs::sidecar_ipc_path()?;
         handle::Handle::app_handle()
@@ -73,8 +107,8 @@ impl CoreManager {
         );
         let (mut rx, child) = command.spawn()?;
         #[cfg(target_os = "windows")]
-        {
-            let job = match create_and_assign_sidecar_job(child.pid()) {
+        let job = {
+            match create_and_assign_sidecar_job(child.pid()) {
                 Ok(job) => job,
                 Err(job_error) => {
                     let pid = child.pid();
@@ -90,9 +124,8 @@ impl CoreManager {
                     logging!(error, Type::Core, "Failed to start sidecar: {error:#}");
                     return Err(error);
                 }
-            };
-            self.set_job_handle(Some(job));
-        }
+            }
+        };
 
         #[cfg(unix)]
         unsafe {
@@ -102,11 +135,34 @@ impl CoreManager {
         let pid = child.pid();
         logging!(trace, Type::Core, "Sidecar started with PID: {}", pid);
 
+        let readiness = poll_sidecar_readiness(SIDECAR_READINESS_ATTEMPTS, SIDECAR_READINESS_INTERVAL, || async {
+            tokio::time::timeout(SIDECAR_READINESS_PROBE_TIMEOUT, async {
+                handle::Handle::mihomo().await.get_version().await
+            })
+            .await
+            .context("Mihomo readiness probe timed out")??;
+            Ok(())
+        })
+        .await;
+        if let Err(readiness_error) = readiness {
+            Sysopt::global().stop_proxy_guard();
+            self.set_running_mode(RunningMode::NotRunning);
+            server::set_pac_available(false);
+            return match child.kill() {
+                Ok(()) => Err(readiness_error),
+                Err(kill_error) => Err(anyhow::anyhow!(
+                    "{readiness_error:#}; failed to terminate unready sidecar PID {pid}: {kill_error:#}"
+                )),
+            };
+        }
+
+        #[cfg(target_os = "windows")]
+        self.set_job_handle(Some(job));
         self.set_running_child_sidecar(child);
         self.set_running_mode(RunningMode::Sidecar);
         server::set_pac_available(true);
 
-        AsyncHandler::spawn(|| async move {
+        AsyncHandler::spawn(move || async move {
             while let Some(event) = rx.recv().await {
                 match event {
                     tauri_plugin_shell::process::CommandEvent::Stdout(line)
@@ -125,6 +181,7 @@ impl CoreManager {
                         };
                         Logger::global().writer_sidecar_log(Level::Info, &message);
                         CLASH_LOGGER.clear_logs().await;
+                        Self::global().clear_terminated_sidecar(pid).await;
                         break;
                     }
                     _ => {}
@@ -138,6 +195,7 @@ impl CoreManager {
     pub(super) fn stop_core_by_sidecar(&self) {
         logging!(info, Type::Core, "Stopping sidecar");
         defer! {
+            server::set_pac_available(false);
             self.set_running_mode(RunningMode::NotRunning);
         }
         if let Some(child) = self.take_child_sidecar() {
@@ -169,8 +227,14 @@ impl CoreManager {
 
     pub(super) async fn start_core_by_service(&self) -> Result<()> {
         logging!(info, Type::Core, "Starting core in service mode");
+        server::set_pac_available(false);
         let service_ipc = dirs::ipc_path()?;
         let config_file = Config::generate_file(crate::config::ConfigType::Run).await?;
+        handle::Handle::app_handle()
+            .mihomo()
+            .write()
+            .await
+            .update_socket_path(dirs::path_to_str(&service_ipc)?.to_owned())?;
 
         // 交接时等待 sidecar 释放 ext-controller 通道。
         #[cfg(target_os = "windows")]
@@ -180,11 +244,6 @@ impl CoreManager {
             for attempt in 0..timing::SERVICE_START_RETRIES {
                 match service::run_core_by_service(&config_file).await {
                     Ok(()) => {
-                        handle::Handle::app_handle()
-                            .mihomo()
-                            .write()
-                            .await
-                            .update_socket_path(dirs::path_to_str(&service_ipc)?.to_owned())?;
                         self.set_running_mode(RunningMode::Service);
                         return Ok(());
                     }
@@ -208,11 +267,6 @@ impl CoreManager {
         #[cfg(not(target_os = "windows"))]
         {
             service::run_core_by_service(&config_file).await?;
-            handle::Handle::app_handle()
-                .mihomo()
-                .write()
-                .await
-                .update_socket_path(dirs::path_to_str(&service_ipc)?.to_owned())?;
             self.set_running_mode(RunningMode::Service);
             Ok(())
         }
@@ -221,8 +275,76 @@ impl CoreManager {
     pub(super) async fn stop_core_by_service(&self) -> Result<()> {
         logging!(info, Type::Core, "Stopping service");
         service::stop_core_by_service().await?;
+        server::set_pac_available(false);
         self.set_running_mode(RunningMode::NotRunning);
         Ok(())
+    }
+
+    async fn clear_terminated_sidecar(&self, terminated_pid: u32) {
+        let _life = self.lifecycle_lock.lock().await;
+        if !should_clear_terminated_sidecar(&self.get_running_mode(), self.get_running_sidecar_pid(), terminated_pid) {
+            return;
+        }
+
+        let _ = self.take_child_sidecar();
+        #[cfg(target_os = "windows")]
+        self.set_job_handle(None);
+        Sysopt::global().stop_proxy_guard();
+        server::set_pac_available(false);
+        self.set_running_mode(RunningMode::NotRunning);
+        self.after_core_process();
+    }
+}
+
+#[cfg(test)]
+mod readiness_tests {
+    use super::{poll_sidecar_readiness, should_clear_terminated_sidecar};
+    use crate::core::manager::RunningMode;
+    use std::{
+        sync::{
+            Arc,
+            atomic::{AtomicUsize, Ordering},
+        },
+        time::Duration,
+    };
+
+    #[tokio::test]
+    async fn sidecar_readiness_poll_is_bounded_and_accepts_a_real_api_response() -> anyhow::Result<()> {
+        let attempts = Arc::new(AtomicUsize::new(0));
+        let probe_attempts = Arc::clone(&attempts);
+        poll_sidecar_readiness(3, Duration::ZERO, move || {
+            let attempt = probe_attempts.fetch_add(1, Ordering::SeqCst) + 1;
+            async move {
+                if attempt == 3 {
+                    Ok(())
+                } else {
+                    Err(anyhow::anyhow!("not ready"))
+                }
+            }
+        })
+        .await?;
+        assert_eq!(attempts.load(Ordering::SeqCst), 3);
+
+        let failed_attempts = Arc::new(AtomicUsize::new(0));
+        let probe_attempts = Arc::clone(&failed_attempts);
+        assert!(
+            poll_sidecar_readiness(3, Duration::ZERO, move || {
+                probe_attempts.fetch_add(1, Ordering::SeqCst);
+                async { Err(anyhow::anyhow!("still unavailable")) }
+            })
+            .await
+            .is_err()
+        );
+        assert_eq!(failed_attempts.load(Ordering::SeqCst), 3);
+        Ok(())
+    }
+
+    #[test]
+    fn only_the_current_sidecar_termination_clears_local_state() {
+        assert!(should_clear_terminated_sidecar(&RunningMode::Sidecar, Some(42), 42));
+        assert!(!should_clear_terminated_sidecar(&RunningMode::Sidecar, Some(43), 42));
+        assert!(!should_clear_terminated_sidecar(&RunningMode::Service, Some(42), 42));
+        assert!(!should_clear_terminated_sidecar(&RunningMode::NotRunning, None, 42));
     }
 }
 
