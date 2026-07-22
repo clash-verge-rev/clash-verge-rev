@@ -892,6 +892,28 @@ async fn recover_after_sustained_status_failure(generation: u64, failed_status_s
     }
 }
 
+async fn recover_after_status_mismatch_with<F, Fut>(
+    session: &Mutex<Option<OwnerSessionProof>>,
+    generation: u64,
+    is_active: bool,
+    active_generation: Option<u64>,
+    recover: F,
+) -> bool
+where
+    F: FnOnce(u64, OwnerRecoveryReason) -> Fut,
+    Fut: Future<Output = ()>,
+{
+    let session_matches = session
+        .lock()
+        .as_ref()
+        .is_some_and(|proof| session_matches_status(proof, is_active, active_generation));
+    if session_matches {
+        return false;
+    }
+    recover(generation, OwnerRecoveryReason::Displaced).await;
+    true
+}
+
 fn start_owner_monitor() {
     let generation = OWNER_MONITOR_GENERATION.fetch_add(1, Ordering::AcqRel) + 1;
     AsyncHandler::spawn(move || async move {
@@ -969,11 +991,15 @@ fn start_owner_monitor() {
                 }
                 continue;
             };
-            let session_matches = active_service_session()
-                .is_ok_and(|proof| session_matches_status(&proof, status.is_active, status.active_generation));
-            if !session_matches {
-                clear_active_service_session();
-                recover_after_owner_loss(generation, OwnerRecoveryReason::Displaced).await;
+            if recover_after_status_mismatch_with(
+                &ACTIVE_SERVICE_SESSION,
+                generation,
+                status.is_active,
+                status.active_generation,
+                recover_after_owner_loss,
+            )
+            .await
+            {
                 break;
             }
             failed_status_samples = 0;
@@ -1381,6 +1407,40 @@ mod tests {
         assert!(session_matches_status(&proof, true, Some(7)));
         assert!(!session_matches_status(&proof, true, Some(8)));
         assert!(!session_matches_status(&proof, false, Some(7)));
+    }
+
+    #[tokio::test]
+    async fn stale_monitor_mismatch_preserves_newer_session_proof() {
+        let generation = AtomicU64::new(8);
+        let recovery_attempted = AtomicBool::new(false);
+        let newer_proof = OwnerSessionProof {
+            generation: 8,
+            token: "22".repeat(32),
+        };
+        let session = parking_lot::Mutex::new(Some(newer_proof.clone()));
+        let generation_for_recovery = &generation;
+        let recovery_attempted_for_recovery = &recovery_attempted;
+        let session_for_recovery = &session;
+
+        let mismatch_recovered = super::recover_after_status_mismatch_with(
+            &session,
+            7,
+            true,
+            Some(7),
+            |captured_generation, reason| async move {
+                recovery_attempted_for_recovery.store(true, Ordering::Release);
+                assert_eq!(reason, OwnerRecoveryReason::Displaced);
+                if claim_owner_recovery_generation(generation_for_recovery, captured_generation).is_some() {
+                    session_for_recovery.lock().take();
+                }
+            },
+        )
+        .await;
+
+        assert!(mismatch_recovered);
+        assert!(recovery_attempted.load(Ordering::Acquire));
+        assert_eq!(generation.load(Ordering::Acquire), 8);
+        assert_eq!(session.lock().as_ref(), Some(&newer_proof));
     }
 
     #[test]
