@@ -35,9 +35,9 @@ struct InstanceRecord {
 
 static SHUTDOWN_SENDER: OnceCell<Mutex<Option<oneshot::Sender<()>>>> = OnceCell::new();
 static EMBEDDED_PORT: OnceCell<u16> = OnceCell::new();
-static INSTANCE_RECORD_PATH: OnceCell<PathBuf> = OnceCell::new();
 static INSTANCE_LOCK: OnceCell<std::fs::File> = OnceCell::new();
-static PAC_AVAILABLE: AtomicBool = AtomicBool::new(true);
+const PAC_INITIAL_AVAILABLE: bool = false;
+static PAC_AVAILABLE: AtomicBool = AtomicBool::new(PAC_INITIAL_AVAILABLE);
 static COMMANDS_READY: AtomicBool = AtomicBool::new(false);
 
 pub async fn check_singleton() -> Result<()> {
@@ -56,33 +56,8 @@ pub async fn check_singleton() -> Result<()> {
         bail!("another app instance is starting");
     }
 
-    let existing = read_instance_record(&record_path).ok();
-    if let Some(record) = existing.as_ref()
-        && notify_existing_instance(record).await
-    {
-        bail!("app exists");
-    }
-
-    let preferred = existing.as_ref().map_or(0, |record| record.port);
-    let listener = match tokio::net::TcpListener::bind(std::net::SocketAddrV4::new(
-        std::net::Ipv4Addr::LOCALHOST,
-        preferred,
-    ))
-    .await
-    {
-        Ok(listener) => listener,
-        Err(_) => {
-            for _ in 0..10 {
-                if let Ok(record) = read_instance_record(&record_path)
-                    && notify_existing_instance(&record).await
-                {
-                    bail!("app exists");
-                }
-                tokio::time::sleep(Duration::from_millis(25)).await;
-            }
-            tokio::net::TcpListener::bind(std::net::SocketAddrV4::new(std::net::Ipv4Addr::LOCALHOST, 0)).await?
-        }
-    };
+    let preferred = read_instance_record(&record_path).ok().map(|record| record.port);
+    let listener = bind_primary_listener(preferred).await?;
     let port = listener.local_addr()?.port();
     let record = InstanceRecord {
         port,
@@ -92,10 +67,25 @@ pub async fn check_singleton() -> Result<()> {
     INSTANCE_LOCK
         .set(lock)
         .map_err(|_| anyhow::anyhow!("singleton lock is already initialized"))?;
-    let _ = INSTANCE_RECORD_PATH.set(record_path);
     let _ = EMBEDDED_PORT.set(port);
     start_embedded_server(listener, record.token);
     Ok(())
+}
+
+async fn bind_primary_listener(preferred: Option<u16>) -> Result<tokio::net::TcpListener> {
+    let preferred_port = preferred.unwrap_or(0);
+    match tokio::net::TcpListener::bind(std::net::SocketAddrV4::new(
+        std::net::Ipv4Addr::LOCALHOST,
+        preferred_port,
+    ))
+    .await
+    {
+        Ok(listener) => Ok(listener),
+        Err(_) if preferred.is_some() => {
+            Ok(tokio::net::TcpListener::bind(std::net::SocketAddrV4::new(std::net::Ipv4Addr::LOCALHOST, 0)).await?)
+        }
+        Err(error) => Err(error.into()),
+    }
 }
 
 async fn notify_existing_instance(record: &InstanceRecord) -> bool {
@@ -244,12 +234,6 @@ pub fn shutdown_embedded_server() {
         && let Some(sender) = sender.lock().take()
     {
         sender.send(()).ok();
-    }
-    if let Some(path) = INSTANCE_RECORD_PATH.get()
-        && let Ok(record) = read_instance_record(path)
-        && EMBEDDED_PORT.get().is_some_and(|port| *port == record.port)
-    {
-        let _ = std::fs::remove_file(path);
     }
 }
 
@@ -410,7 +394,53 @@ fn replace_file_atomic(source: &Path, destination: &Path) -> Result<()> {
 
 #[cfg(test)]
 mod tests {
-    use super::{InstanceRecord, open_instance_lock, read_instance_record, try_lock_instance, write_instance_record};
+    use super::{
+        InstanceRecord, PAC_AVAILABLE, bind_primary_listener, open_instance_lock, read_instance_record,
+        try_lock_instance, write_instance_record,
+    };
+    use std::sync::atomic::Ordering;
+
+    #[test]
+    fn pac_is_fail_closed_before_core_readiness() {
+        assert!(!PAC_AVAILABLE.load(Ordering::Acquire));
+    }
+
+    #[tokio::test]
+    async fn retained_record_supplies_the_next_primarys_preferred_port() -> anyhow::Result<()> {
+        let root = std::env::temp_dir().join(format!("singleton-sticky-port-{}", std::process::id()));
+        let path = root.join("instance.json");
+        let reservation = tokio::net::TcpListener::bind((std::net::Ipv4Addr::LOCALHOST, 0)).await?;
+        let preferred_port = reservation.local_addr()?.port();
+        drop(reservation);
+        write_instance_record(
+            &path,
+            &InstanceRecord {
+                port: preferred_port,
+                token: "stale-token-is-not-authority".to_string(),
+            },
+        )?;
+
+        let hint = read_instance_record(&path).ok().map(|record| record.port);
+        let listener = bind_primary_listener(hint).await?;
+        assert_eq!(listener.local_addr()?.port(), preferred_port);
+        drop(listener);
+        super::shutdown_embedded_server();
+        assert!(path.is_file(), "clean shutdown must retain the private port hint");
+
+        std::fs::remove_dir_all(root)?;
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn occupied_preferred_port_falls_back_without_using_stale_authority() -> anyhow::Result<()> {
+        let occupied = tokio::net::TcpListener::bind((std::net::Ipv4Addr::LOCALHOST, 0)).await?;
+        let preferred_port = occupied.local_addr()?.port();
+
+        let fallback = bind_primary_listener(Some(preferred_port)).await?;
+        assert_ne!(fallback.local_addr()?.port(), preferred_port);
+        assert!(fallback.local_addr()?.ip().is_loopback());
+        Ok(())
+    }
 
     #[cfg(unix)]
     #[test]

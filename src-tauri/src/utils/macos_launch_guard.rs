@@ -1,4 +1,8 @@
-use std::path::{Path, PathBuf};
+use std::{
+    ffi::CStr,
+    os::unix::ffi::OsStrExt as _,
+    path::{Path, PathBuf},
+};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum LaunchLocation {
@@ -56,8 +60,8 @@ pub fn evaluate_install_location_with_roots(
             };
         }
     };
-    let system_root = std::fs::canonicalize(system_applications).ok();
-    let user_root = std::fs::canonicalize(home.join("Applications")).ok();
+    let system_root = canonical_allowed_root(system_applications);
+    let user_root = canonical_allowed_root(&home.join("Applications"));
     let allowed = system_root
         .as_ref()
         .is_some_and(|root| canonical_bundle.starts_with(root))
@@ -73,6 +77,67 @@ pub fn evaluate_install_location_with_roots(
         LaunchLocation::Movable {
             bundle: canonical_bundle,
         }
+    }
+}
+
+fn canonical_allowed_root(path: &Path) -> Option<PathBuf> {
+    let metadata = std::fs::symlink_metadata(path).ok()?;
+    if metadata.file_type().is_symlink() || !metadata.is_dir() {
+        return None;
+    }
+    std::fs::canonicalize(path).ok()
+}
+
+fn current_user_home() -> anyhow::Result<PathBuf> {
+    const DEFAULT_BUFFER_SIZE: usize = 16 * 1024;
+    const MAX_BUFFER_SIZE: usize = 1024 * 1024;
+
+    let uid = unsafe { libc::geteuid() };
+    let configured_size = unsafe { libc::sysconf(libc::_SC_GETPW_R_SIZE_MAX) };
+    let mut buffer_size = if configured_size > 0 {
+        usize::try_from(configured_size).unwrap_or(DEFAULT_BUFFER_SIZE)
+    } else {
+        DEFAULT_BUFFER_SIZE
+    }
+    .max(1024);
+
+    loop {
+        if buffer_size > MAX_BUFFER_SIZE {
+            anyhow::bail!("effective-user home lookup exceeded the maximum buffer size");
+        }
+
+        let mut passwd = std::mem::MaybeUninit::<libc::passwd>::zeroed();
+        let mut result = std::ptr::null_mut();
+        let mut buffer = vec![0_u8; buffer_size];
+        let code = unsafe {
+            libc::getpwuid_r(
+                uid,
+                passwd.as_mut_ptr(),
+                buffer.as_mut_ptr().cast(),
+                buffer.len(),
+                &mut result,
+            )
+        };
+        if code == libc::ERANGE {
+            buffer_size = buffer_size.saturating_mul(2);
+            continue;
+        }
+        if code != 0 {
+            return Err(std::io::Error::from_raw_os_error(code).into());
+        }
+        if result.is_null() {
+            anyhow::bail!("effective user {uid} has no password database entry");
+        }
+
+        let passwd = unsafe { passwd.assume_init() };
+        if passwd.pw_dir.is_null() {
+            anyhow::bail!("effective user {uid} has no home directory");
+        }
+        let home = unsafe { CStr::from_ptr(passwd.pw_dir) };
+        if home.to_bytes().is_empty() {
+            anyhow::bail!("effective user {uid} has an empty home directory");
+        }
+        return Ok(PathBuf::from(std::ffi::OsStr::from_bytes(home.to_bytes())));
     }
 }
 
@@ -100,10 +165,10 @@ pub fn enforce_before_initialization() -> LaunchDisposition {
             return LaunchDisposition::Exit;
         }
     };
-    let home = match std::env::var_os("HOME") {
-        Some(home) => PathBuf::from(home),
-        None => {
-            show_message("无法确定当前用户主目录，应用将退出。");
+    let home = match current_user_home() {
+        Ok(home) => home,
+        Err(error) => {
+            show_message(&format!("无法确定当前用户主目录，应用将退出：{error}"));
             return LaunchDisposition::Exit;
         }
     };
@@ -280,8 +345,10 @@ fn escape_osascript(value: &str) -> String {
 #[cfg(test)]
 mod tests {
     use super::{
-        LaunchLocation, MoveDecision, activate_staged_bundle, evaluate_install_location_with_roots, move_decision,
+        LaunchLocation, MoveDecision, activate_staged_bundle, current_user_home, evaluate_install_location_with_roots,
+        move_decision,
     };
+    use std::{ffi::CStr, os::unix::ffi::OsStrExt as _};
 
     fn executable(bundle: &std::path::Path) -> anyhow::Result<std::path::PathBuf> {
         let executable = bundle.join("Contents/MacOS/clash-verge");
@@ -366,6 +433,40 @@ mod tests {
         ));
         assert!(allowed_exe.is_file());
         std::fs::remove_dir_all(root)?;
+        Ok(())
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn allowed_root_symlink_escape_is_not_authorized() -> anyhow::Result<()> {
+        use std::os::unix::fs::symlink;
+
+        let root = std::env::temp_dir().join(format!("launch-guard-root-link-{}", std::process::id()));
+        let home = root.join("home");
+        let downloads = home.join("Downloads");
+        let system = root.join("SystemApplications");
+        std::fs::create_dir_all(&downloads)?;
+        std::fs::create_dir_all(&system)?;
+        symlink(&downloads, home.join("Applications"))?;
+        let escaped_exe = executable(&home.join("Applications/Clash Verge.app"))?;
+
+        assert!(matches!(
+            evaluate_install_location_with_roots(&escaped_exe, &home, &system),
+            LaunchLocation::Movable { .. }
+        ));
+        std::fs::remove_dir_all(root)?;
+        Ok(())
+    }
+
+    #[test]
+    fn current_home_matches_effective_user_database_entry() -> anyhow::Result<()> {
+        let home = current_user_home()?;
+        let passwd = unsafe { libc::getpwuid(libc::geteuid()) };
+        if passwd.is_null() {
+            anyhow::bail!("effective user has no password database entry");
+        }
+        let expected = unsafe { CStr::from_ptr((*passwd).pw_dir) };
+        assert_eq!(home.as_os_str().as_bytes(), expected.to_bytes());
         Ok(())
     }
 
