@@ -10,7 +10,7 @@ use std::{
     fmt,
     sync::{
         Arc,
-        atomic::{AtomicBool, Ordering},
+        atomic::{AtomicBool, AtomicU64, Ordering},
     },
     time::Instant,
 };
@@ -21,6 +21,36 @@ use crate::singleton;
 use std::os::windows::io::OwnedHandle;
 
 pub(crate) static CLASH_LOGGER: Lazy<Arc<AsyncLogger>> = Lazy::new(|| Arc::new(AsyncLogger::new()));
+
+const CORE_READINESS_ACTIVE_BIT: u64 = 1;
+const CORE_READINESS_GENERATION_STEP: u64 = 1 << 1;
+
+const fn next_active_core_readiness_state(state: u64) -> u64 {
+    (state.wrapping_add(CORE_READINESS_GENERATION_STEP) & !CORE_READINESS_ACTIVE_BIT) | CORE_READINESS_ACTIVE_BIT
+}
+
+const fn inactive_core_readiness_state(state: u64) -> u64 {
+    state.wrapping_add(CORE_READINESS_GENERATION_STEP) & !CORE_READINESS_ACTIVE_BIT
+}
+
+const fn active_core_readiness_generation(state: u64) -> Option<u64> {
+    if state & CORE_READINESS_ACTIVE_BIT != 0 {
+        Some(state)
+    } else {
+        None
+    }
+}
+
+fn claim_core_readiness_generation(state: &AtomicU64, captured_generation: u64) -> bool {
+    state
+        .compare_exchange(
+            captured_generation,
+            inactive_core_readiness_state(captured_generation),
+            Ordering::AcqRel,
+            Ordering::Acquire,
+        )
+        .is_ok()
+}
 
 #[derive(Clone, Copy, Debug, serde::Serialize, PartialEq, Eq)]
 pub enum RunningMode {
@@ -46,6 +76,7 @@ pub struct CoreManager {
     #[cfg(target_os = "windows")]
     job_handle: ArcSwapOption<OwnedHandle>,
     config_update_in_progress: AtomicBool,
+    core_readiness_state: AtomicU64,
     // 串行化 start/stop/restart 和 sidecar→service 交接。
     // 锁序固定为 config_update_in_progress → lifecycle_lock。
     pub(crate) lifecycle_lock: tokio::sync::Mutex<()>,
@@ -77,6 +108,7 @@ impl Default for CoreManager {
             #[cfg(target_os = "windows")]
             job_handle: ArcSwapOption::new(None),
             config_update_in_progress: AtomicBool::new(false),
+            core_readiness_state: AtomicU64::new(0),
             lifecycle_lock: tokio::sync::Mutex::new(()),
             #[cfg(target_os = "windows")]
             handoff_watcher_running: AtomicBool::new(false),
@@ -110,6 +142,9 @@ impl CoreManager {
     }
 
     pub fn set_running_mode(&self, mode: RunningMode) {
+        if matches!(mode, RunningMode::NotRunning) {
+            self.invalidate_core_readiness();
+        }
         let state = self.state.load();
         state.running_mode.store(Arc::new(mode));
     }
@@ -117,6 +152,36 @@ impl CoreManager {
     pub fn set_running_child_sidecar(&self, child: CommandChild) {
         let state = self.state.load();
         state.child_sidecar.store(Some(Arc::new(child)));
+    }
+
+    fn mark_core_ready(&self) -> u64 {
+        let mut current = self.core_readiness_state.load(Ordering::Acquire);
+        loop {
+            let next = next_active_core_readiness_state(current);
+            match self
+                .core_readiness_state
+                .compare_exchange(current, next, Ordering::AcqRel, Ordering::Acquire)
+            {
+                Ok(_) => return next,
+                Err(changed) => current = changed,
+            }
+        }
+    }
+
+    fn current_core_readiness_generation(&self) -> Option<u64> {
+        active_core_readiness_generation(self.core_readiness_state.load(Ordering::Acquire))
+    }
+
+    pub(crate) fn invalidate_core_readiness(&self) {
+        let _ = self
+            .core_readiness_state
+            .fetch_update(Ordering::AcqRel, Ordering::Acquire, |current| {
+                active_core_readiness_generation(current).map(inactive_core_readiness_state)
+            });
+    }
+
+    fn invalidate_core_readiness_if(&self, captured_generation: u64) -> bool {
+        claim_core_readiness_generation(&self.core_readiness_state, captured_generation)
     }
 
     pub fn set_last_update(&self, time: Instant) {

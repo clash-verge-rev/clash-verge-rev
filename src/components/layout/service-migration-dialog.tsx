@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 
 import { BaseDialog } from '@/components/base'
 import { fetchSystemState } from '@/hooks/use-system-state'
+import { useVisibility } from '@/hooks/use-visibility'
 import {
   continueWithSidecar,
   getRunningMode,
@@ -22,6 +23,7 @@ const installStateQueryKey = ['getServiceInstallState'] as const
 
 export const ServiceMigrationDialog = () => {
   const { t } = useTranslation()
+  const pageVisible = useVisibility()
   const [loading, setLoading] = useState(false)
   const [stateRefreshFailed, setStateRefreshFailed] = useState(false)
   const [workflowIncomplete, setWorkflowIncomplete] = useState(false)
@@ -30,6 +32,7 @@ export const ServiceMigrationDialog = () => {
     queryFn: getServiceInstallState,
     enabled: isMacos,
     retry: 1,
+    refetchInterval: pageVisible ? 2000 : false,
   })
   const dialogState = stateRefreshFailed ? 'unavailable' : state
   const open =

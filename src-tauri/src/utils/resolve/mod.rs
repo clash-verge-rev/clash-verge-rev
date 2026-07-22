@@ -10,7 +10,6 @@ use crate::{
         hotkey::Hotkey,
         logger::Logger,
         service::{SERVICE_MANAGER, ServiceManager},
-        sysopt,
         tray::Tray,
     },
     feat,
@@ -65,14 +64,7 @@ pub fn resolve_setup_async() {
         Config::verify_config_initialization().await;
 
         let core_init = AsyncHandler::spawn(|| async {
-            let core_initialized = init_core_manager().await;
-            let manager = CoreManager::global();
-            let _lifecycle = manager.lifecycle_lock.lock().await;
-            let final_mode = manager.get_running_mode();
-            if should_initialize_proxy(core_initialized, &final_mode) {
-                init_system_proxy().await;
-                init_system_proxy_guard().await;
-            }
+            init_core_manager().await;
         });
 
         let _ = futures::join!(
@@ -92,7 +84,6 @@ pub fn resolve_setup_async() {
 }
 
 pub async fn resolve_reset_async() -> Result<(), anyhow::Error> {
-    sysopt::Sysopt::global().reset_sysproxy().await?;
     CoreManager::global().stop_core().await?;
 
     #[cfg(target_os = "macos")]
@@ -215,23 +206,6 @@ pub(super) async fn init_core_manager() -> bool {
     }
 }
 
-const fn should_initialize_proxy(core_initialized: bool, final_mode: &crate::core::manager::RunningMode) -> bool {
-    core_initialized && !matches!(final_mode, crate::core::manager::RunningMode::NotRunning)
-}
-
-pub(super) async fn init_system_proxy() {
-    logging_error!(
-        Type::Setup,
-        sysopt::Sysopt::global()
-            .update_sysproxy_and_claim_if_not_revoked()
-            .await
-    );
-}
-
-pub(super) async fn init_system_proxy_guard() {
-    sysopt::Sysopt::global().refresh_guard().await;
-}
-
 pub(super) async fn refresh_tray_menu() {
     logging_error!(Type::Setup, Tray::global().update_part().await);
 }
@@ -255,20 +229,4 @@ pub fn resolve_done() {
 
 pub fn is_resolve_done() -> bool {
     RESOLVE_DONE.load(Ordering::Acquire)
-}
-
-#[cfg(test)]
-mod tests {
-    use super::should_initialize_proxy;
-    use crate::core::manager::RunningMode;
-
-    #[test]
-    fn proxy_initialization_requires_success_and_a_confirmed_final_core_mode() {
-        assert!(should_initialize_proxy(true, &RunningMode::Sidecar));
-        assert!(should_initialize_proxy(true, &RunningMode::Service));
-        assert!(!should_initialize_proxy(true, &RunningMode::NotRunning));
-        assert!(!should_initialize_proxy(false, &RunningMode::Sidecar));
-        assert!(!should_initialize_proxy(false, &RunningMode::Service));
-        assert!(!should_initialize_proxy(false, &RunningMode::NotRunning));
-    }
 }

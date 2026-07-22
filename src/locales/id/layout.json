@@ -22,7 +22,7 @@
     },
     "serviceMigration": {
       "title": "Service update required",
-      "message": "An older Clash Verge service installation was detected. Reinstall it to use the current secure IPC protocol, or continue with Sidecar for this session.",
+      "message": "An older Clash Verge service installation was detected. Reinstall it to use the current secure IPC protocol, or continue with Sidecar for this session. Exit Clash Verge in every logged-in session before reinstalling.",
       "unavailableMessage": "The installed Clash Verge service could not be reached. Repair it, or continue with Sidecar for this session.",
       "reinstall": "Reinstall service",
       "repair": "Repair service",

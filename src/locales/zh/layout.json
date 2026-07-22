@@ -22,7 +22,7 @@
     },
     "serviceMigration": {
       "title": "需要更新系统服务",
-      "message": "检测到旧版 Clash Verge 系统服务。重新安装后可使用当前安全 IPC 协议，也可以仅在本次会话继续使用 Sidecar。",
+      "message": "检测到旧版 Clash Verge 系统服务。重新安装前，请先退出所有登录会话中仍在运行的旧版 Clash Verge；重新安装后可使用当前安全 IPC 协议，也可以仅在本次会话继续使用 Sidecar。",
       "unavailableMessage": "无法连接已安装的 Clash Verge 系统服务。你可以修复服务，或仅在本次会话继续使用 Sidecar。",
       "reinstall": "重新安装服务",
       "repair": "修复服务",

@@ -1,19 +1,20 @@
 use super::{CmdResult, StringifyErr as _};
-#[cfg(target_os = "macos")]
-use crate::core::sysopt::Sysopt;
 use crate::core::{
     CoreManager,
     service::{self, SERVICE_MANAGER, ServiceStatus},
 };
 
 async fn execute_service_operation_sync(status: ServiceStatus, op_type: &str) -> CmdResult {
-    let _lifecycle = CoreManager::global().lifecycle_lock.lock().await;
-    #[cfg(target_os = "macos")]
+    let manager = CoreManager::global();
+    let _lifecycle = manager.lifecycle_lock.lock().await;
     if matches!(
-        status,
+        &status,
         ServiceStatus::ReinstallRequired | ServiceStatus::ForceReinstallRequired
     ) {
-        Sysopt::global().revoke_proxy_cleanup_authority_and_stop_guard().await;
+        manager
+            .controlled_stop_core_inner()
+            .await
+            .map_err(|error| format!("{op_type} Service failed: {error:#}"))?;
     }
     SERVICE_MANAGER
         .handle_service_status(status)

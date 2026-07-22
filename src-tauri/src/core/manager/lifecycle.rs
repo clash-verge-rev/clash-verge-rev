@@ -3,6 +3,7 @@ use crate::cmd::StringifyErr as _;
 use crate::config::{Config, IVerge};
 use crate::core::handle::Handle;
 use crate::core::manager::CLASH_LOGGER;
+use crate::core::proxy_control;
 use crate::core::service::{SERVICE_MANAGER, ServiceStatus};
 use anyhow::Result;
 use clash_verge_logging::{Type, logging};
@@ -49,42 +50,112 @@ const fn can_allow_sidecar_for_session(
         )
 }
 
-#[cfg(any(target_os = "macos", test))]
-fn proxy_restore_claim_is_valid(
-    expected_mode: &RunningMode,
-    current_mode: &RunningMode,
-    expected_owner_generation: Option<u64>,
-    current_owner_generation: Option<u64>,
-) -> bool {
-    if !matches!(expected_mode, RunningMode::Service | RunningMode::Sidecar) || expected_mode != current_mode {
-        return false;
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+struct ProxyRestoreExpectation {
+    mode: RunningMode,
+    core_readiness_generation: u64,
+    service_owner_generation: Option<u64>,
+}
+
+impl ProxyRestoreExpectation {
+    const fn capture(
+        mode: RunningMode,
+        core_readiness_generation: Option<u64>,
+        service_owner_generation: u64,
+    ) -> Option<Self> {
+        let Some(core_readiness_generation) = core_readiness_generation else {
+            return None;
+        };
+        match mode {
+            RunningMode::Service => Some(Self {
+                mode,
+                core_readiness_generation,
+                service_owner_generation: Some(service_owner_generation),
+            }),
+            RunningMode::Sidecar => Some(Self {
+                mode,
+                core_readiness_generation,
+                service_owner_generation: None,
+            }),
+            RunningMode::NotRunning => None,
+        }
     }
-    !matches!(expected_mode, RunningMode::Service) || expected_owner_generation == current_owner_generation
+
+    fn is_valid(
+        self,
+        current_mode: &RunningMode,
+        current_core_readiness_generation: Option<u64>,
+        current_service_owner_generation: u64,
+    ) -> bool {
+        self.mode == *current_mode
+            && Some(self.core_readiness_generation) == current_core_readiness_generation
+            && self
+                .service_owner_generation
+                .is_none_or(|expected| expected == current_service_owner_generation)
+    }
 }
 
-#[cfg(any(target_os = "macos", test))]
-const fn should_restore_proxy_after_start(running_mode: &RunningMode, cleanup_revoked: bool) -> bool {
-    cleanup_revoked && matches!(running_mode, RunningMode::Service | RunningMode::Sidecar)
+async fn run_controlled_stop_transition<Clear, ClearFuture, Stop, StopFuture>(
+    is_macos: bool,
+    running_mode: RunningMode,
+    clear_proxy: Clear,
+    stop_core: Stop,
+) -> Result<()>
+where
+    Clear: FnOnce() -> ClearFuture,
+    ClearFuture: std::future::Future<Output = Result<()>>,
+    Stop: FnOnce() -> StopFuture,
+    StopFuture: std::future::Future<Output = Result<()>>,
+{
+    if !(matches!(running_mode, RunningMode::NotRunning) || is_macos && matches!(running_mode, RunningMode::Service)) {
+        clear_proxy().await?;
+    }
+    stop_core().await
 }
 
-async fn run_uninstall_transition<
-    Stop,
-    StopFuture,
-    Uninstall,
-    UninstallFuture,
-    Prepare,
-    PrepareFuture,
-    Start,
-    StartFuture,
->(
-    stop: Stop,
+async fn run_core_start_transition<Start, StartFuture, Ready, Apply, ApplyFuture>(
+    start_core: Start,
+    core_is_ready: Ready,
+    apply_proxy: Apply,
+) -> Result<()>
+where
+    Start: FnOnce() -> StartFuture,
+    StartFuture: std::future::Future<Output = Result<()>>,
+    Ready: FnOnce() -> bool,
+    Apply: FnOnce() -> ApplyFuture,
+    ApplyFuture: std::future::Future<Output = Result<()>>,
+{
+    start_core().await?;
+    if core_is_ready() {
+        apply_proxy().await?;
+    }
+    Ok(())
+}
+
+pub(super) async fn run_core_replacement_transition<Stop, StopFuture, Start, StartFuture, Restore, RestoreFuture>(
+    stop_core: Stop,
+    start_core: Start,
+    restore_proxy: Restore,
+) -> Result<()>
+where
+    Stop: FnOnce() -> StopFuture,
+    StopFuture: std::future::Future<Output = Result<()>>,
+    Start: FnOnce() -> StartFuture,
+    StartFuture: std::future::Future<Output = Result<()>>,
+    Restore: FnOnce() -> RestoreFuture,
+    RestoreFuture: std::future::Future<Output = Result<()>>,
+{
+    stop_core().await?;
+    start_core().await?;
+    restore_proxy().await
+}
+
+async fn run_uninstall_transition<Uninstall, UninstallFuture, Prepare, PrepareFuture, Start, StartFuture>(
     uninstall: Uninstall,
     prepare_sidecar: Prepare,
     start_sidecar: Start,
 ) -> Result<()>
 where
-    Stop: FnOnce() -> StopFuture,
-    StopFuture: std::future::Future<Output = Result<()>>,
     Uninstall: FnOnce() -> UninstallFuture,
     UninstallFuture: std::future::Future<Output = Result<()>>,
     Prepare: FnOnce() -> PrepareFuture,
@@ -92,7 +163,6 @@ where
     Start: FnOnce() -> StartFuture,
     StartFuture: std::future::Future<Output = Result<()>>,
 {
-    stop().await?;
     uninstall().await?;
     prepare_sidecar().await?;
     start_sidecar().await
@@ -111,27 +181,20 @@ enum HandoffOutcome {
 
 impl CoreManager {
     async fn rollback_failed_start(&self) {
-        #[cfg(target_os = "macos")]
-        crate::core::sysopt::Sysopt::global()
-            .revoke_proxy_cleanup_authority_and_stop_guard()
-            .await;
-        #[cfg(not(target_os = "macos"))]
-        crate::core::sysopt::Sysopt::global().stop_proxy_guard().await;
+        proxy_control::stop_guard().await;
         crate::utils::server::set_pac_available(false);
+        self.invalidate_core_readiness();
         self.set_running_mode(RunningMode::NotRunning);
     }
 
     pub async fn start_core(&self) -> Result<()> {
         let _life = self.lifecycle_lock.lock().await;
-        self.start_core_inner().await?;
-        #[cfg(target_os = "macos")]
-        if should_restore_proxy_after_start(
-            &self.get_running_mode(),
-            crate::core::sysopt::Sysopt::global().proxy_cleanup_is_revoked(),
-        ) {
-            self.restore_macos_proxy_authority().await?;
-        }
-        Ok(())
+        run_core_start_transition(
+            || self.start_core_inner(),
+            || !matches!(*self.get_running_mode(), RunningMode::NotRunning),
+            || self.apply_proxy_after_start(),
+        )
+        .await
     }
 
     pub async fn continue_with_sidecar(&self) -> Result<()> {
@@ -147,11 +210,7 @@ impl CoreManager {
         if !can_allow_sidecar_for_session(cfg!(target_os = "macos"), &mode, &status) {
             anyhow::bail!("Sidecar continuation is not allowed from {mode:?} / {status:?}");
         }
-        #[cfg(target_os = "macos")]
-        {
-            let sysopt = crate::core::sysopt::Sysopt::global();
-            sysopt.revoke_proxy_cleanup_authority_and_stop_guard().await;
-        }
+        proxy_control::stop_guard().await;
         Config::disable_tun_and_persist().await?;
         Config::generate().await?;
         SERVICE_MANAGER.allow_sidecar_for_session()?;
@@ -160,7 +219,7 @@ impl CoreManager {
             if !matches!(*self.get_running_mode(), RunningMode::Sidecar) {
                 anyhow::bail!("Sidecar did not become ready");
             }
-            self.restore_macos_proxy_authority().await
+            self.apply_proxy_after_start().await
         }
         .await;
         if let Err(error) = &result {
@@ -179,13 +238,9 @@ impl CoreManager {
         }
         let _life = self.lifecycle_lock.lock().await;
 
-        #[cfg(target_os = "macos")]
-        crate::core::sysopt::Sysopt::global()
-            .revoke_proxy_cleanup_authority_and_stop_guard()
-            .await;
+        self.controlled_stop_core_inner().await?;
 
         let result = run_uninstall_transition(
-            || self.stop_core_inner(),
             || async {
                 SERVICE_MANAGER
                     .handle_service_status(ServiceStatus::UninstallRequired)
@@ -200,7 +255,7 @@ impl CoreManager {
                 if !matches!(*self.get_running_mode(), RunningMode::Sidecar) {
                     anyhow::bail!("Sidecar did not become ready after service uninstall");
                 }
-                self.restore_macos_proxy_authority().await
+                self.apply_proxy_after_start().await
             },
         )
         .await;
@@ -219,47 +274,34 @@ impl CoreManager {
         self.after_core_process();
     }
 
-    async fn restore_macos_proxy_authority(&self) -> Result<()> {
-        #[cfg(target_os = "macos")]
-        {
-            let expected_mode = *self.get_running_mode();
-            if !matches!(expected_mode, RunningMode::Service | RunningMode::Sidecar) {
-                anyhow::bail!("cannot restore proxy authority before core readiness");
-            }
-            let expected_owner_generation =
-                matches!(expected_mode, RunningMode::Service).then(crate::core::service::owner_monitor_generation);
-            let system_proxy_enabled = Config::verge().await.latest_arc().enable_system_proxy.unwrap_or(false);
-            let sysopt = crate::core::sysopt::Sysopt::global();
-            if system_proxy_enabled {
-                let claimed = sysopt
-                    .update_sysproxy_and_claim_cleanup_authority_if(|| {
-                        proxy_restore_claim_is_valid(
-                            &expected_mode,
-                            &self.get_running_mode(),
-                            expected_owner_generation,
-                            matches!(expected_mode, RunningMode::Service)
-                                .then(crate::core::service::owner_monitor_generation),
-                        )
-                    })
-                    .await?;
-                if !claimed {
-                    anyhow::bail!("core ownership changed while restoring system proxy authority");
-                }
-                sysopt.refresh_guard().await;
-            } else if !sysopt
-                .allow_future_proxy_claim_after_core_ready_if(|| {
-                    proxy_restore_claim_is_valid(
-                        &expected_mode,
-                        &self.get_running_mode(),
-                        expected_owner_generation,
-                        matches!(expected_mode, RunningMode::Service)
-                            .then(crate::core::service::owner_monitor_generation),
-                    )
-                })
-                .await
-            {
-                anyhow::bail!("core ownership changed while enabling future system proxy updates");
-            }
+    pub(crate) async fn apply_proxy_after_start(&self) -> Result<()> {
+        let expectation = ProxyRestoreExpectation::capture(
+            *self.get_running_mode(),
+            self.current_core_readiness_generation(),
+            crate::core::service::owner_monitor_generation(),
+        )
+        .ok_or_else(|| anyhow::anyhow!("cannot apply system proxy before core readiness"))?;
+        proxy_control::apply().await?;
+        if !expectation.is_valid(
+            self.get_running_mode().as_ref(),
+            self.current_core_readiness_generation(),
+            crate::core::service::owner_monitor_generation(),
+        ) {
+            let clear_result = proxy_control::clear().await;
+            proxy_control::stop_guard().await;
+            clear_result?;
+            anyhow::bail!("core readiness changed while applying system proxy");
+        }
+        proxy_control::refresh_guard().await?;
+        if !expectation.is_valid(
+            self.get_running_mode().as_ref(),
+            self.current_core_readiness_generation(),
+            crate::core::service::owner_monitor_generation(),
+        ) {
+            let clear_result = proxy_control::clear().await;
+            proxy_control::stop_guard().await;
+            clear_result?;
+            anyhow::bail!("core readiness changed while refreshing the system proxy guard");
         }
         Ok(())
     }
@@ -322,16 +364,21 @@ impl CoreManager {
 
     pub async fn stop_core(&self) -> Result<()> {
         let _life = self.lifecycle_lock.lock().await;
-        self.stop_core_inner().await
+        self.controlled_stop_core_inner().await
     }
 
     /// 调用者须已持有 `lifecycle_lock`。
-    async fn stop_core_inner(&self) -> Result<()> {
+    pub(crate) async fn controlled_stop_core_inner(&self) -> Result<()> {
+        let running_mode = *self.get_running_mode();
+        run_controlled_stop_transition(cfg!(target_os = "macos"), running_mode, proxy_control::clear, || {
+            self.stop_core_unprepared_inner()
+        })
+        .await
+    }
+
+    /// 调用者须已持有 `lifecycle_lock`,且已完成受控代理清理。
+    async fn stop_core_unprepared_inner(&self) -> Result<()> {
         CLASH_LOGGER.clear_logs().await;
-        #[cfg(target_os = "macos")]
-        crate::core::sysopt::Sysopt::global()
-            .revoke_proxy_cleanup_authority_and_stop_guard()
-            .await;
         defer! {
             self.after_core_process();
         }
@@ -350,12 +397,18 @@ impl CoreManager {
         // 持锁覆盖 stop+start,避免生命周期操作插入。
         let _life = self.lifecycle_lock.lock().await;
         logging!(info, Type::Core, "Restarting core");
-        self.stop_core_inner().await?;
-        self.start_core_inner().await?;
-        if matches!(*self.get_running_mode(), RunningMode::NotRunning) {
-            anyhow::bail!("core did not become ready after restart");
-        }
-        self.restore_macos_proxy_authority().await
+        run_core_replacement_transition(
+            || self.controlled_stop_core_inner(),
+            || async {
+                self.start_core_inner().await?;
+                if matches!(*self.get_running_mode(), RunningMode::NotRunning) {
+                    anyhow::bail!("core did not become ready after restart");
+                }
+                Ok(())
+            },
+            || self.apply_proxy_after_start(),
+        )
+        .await
     }
 
     pub async fn change_core(&self, clash_core: &String) -> Result<(), String> {
@@ -565,12 +618,19 @@ impl CoreManager {
 #[cfg(test)]
 mod tests {
     use super::{
-        CoreManager, StartupDecision, can_allow_sidecar_for_session, run_uninstall_transition, should_wait_for_service,
-        startup_decision,
+        CoreManager, ProxyRestoreExpectation, StartupDecision, can_allow_sidecar_for_session,
+        run_controlled_stop_transition, run_core_replacement_transition, run_core_start_transition,
+        run_uninstall_transition, should_wait_for_service, startup_decision,
     };
     use crate::core::{manager::RunningMode, service::ServiceStatus};
     use parking_lot::Mutex;
-    use std::{future, sync::Arc};
+    use std::{
+        future,
+        sync::{
+            Arc,
+            atomic::{AtomicBool, Ordering},
+        },
+    };
 
     fn transition_step(
         calls: &Arc<Mutex<Vec<&'static str>>>,
@@ -586,8 +646,8 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn uninstall_transition_is_ordered_and_stops_at_every_failure() {
-        let steps = ["stop", "uninstall", "prepare-sidecar", "start-sidecar"];
+    async fn uninstall_transition_is_ordered_and_short_circuits_at_every_failure() {
+        let steps = ["uninstall", "prepare-sidecar", "start-sidecar"];
 
         for fail_at in std::iter::once(None).chain(steps.map(Some)) {
             let calls = Arc::new(Mutex::new(Vec::new()));
@@ -595,7 +655,6 @@ mod tests {
                 || transition_step(&calls, steps[0], fail_at),
                 || transition_step(&calls, steps[1], fail_at),
                 || transition_step(&calls, steps[2], fail_at),
-                || transition_step(&calls, steps[3], fail_at),
             )
             .await;
 
@@ -605,6 +664,128 @@ mod tests {
             assert_eq!(&*calls.lock(), &steps[..expected_len]);
             assert_eq!(result.is_err(), fail_at.is_some());
         }
+    }
+
+    #[tokio::test]
+    async fn controlled_sidecar_stop_clears_proxy_before_stopping() {
+        let calls = Arc::new(Mutex::new(Vec::new()));
+
+        let result = run_controlled_stop_transition(
+            true,
+            RunningMode::Sidecar,
+            || transition_step(&calls, "proxy_clear", None),
+            || transition_step(&calls, "core_stop", None),
+        )
+        .await;
+
+        assert!(result.is_ok());
+        assert_eq!(&*calls.lock(), &["proxy_clear", "core_stop"]);
+    }
+
+    #[tokio::test]
+    async fn controlled_macos_service_stop_uses_one_helper_transaction() {
+        let calls = Arc::new(Mutex::new(Vec::new()));
+
+        let result = run_controlled_stop_transition(
+            true,
+            RunningMode::Service,
+            || transition_step(&calls, "proxy_clear", None),
+            || transition_step(&calls, "service_stop_with_proxy_clear", None),
+        )
+        .await;
+
+        assert!(result.is_ok());
+        assert_eq!(&*calls.lock(), &["service_stop_with_proxy_clear"]);
+    }
+
+    #[tokio::test]
+    async fn controlled_sidecar_stop_aborts_when_proxy_clear_fails() {
+        let calls = Arc::new(Mutex::new(Vec::new()));
+
+        let result = run_controlled_stop_transition(
+            true,
+            RunningMode::Sidecar,
+            || transition_step(&calls, "proxy_clear", Some("proxy_clear")),
+            || transition_step(&calls, "core_stop", None),
+        )
+        .await;
+
+        assert!(result.is_err());
+        assert_eq!(&*calls.lock(), &["proxy_clear"]);
+    }
+
+    #[tokio::test]
+    async fn controlled_start_applies_proxy_only_after_core_is_ready() {
+        let calls = Arc::new(Mutex::new(Vec::new()));
+
+        let result = run_core_start_transition(
+            || transition_step(&calls, "core_start", None),
+            || true,
+            || transition_step(&calls, "proxy_apply", None),
+        )
+        .await;
+
+        assert!(result.is_ok());
+        assert_eq!(&*calls.lock(), &["core_start", "proxy_apply"]);
+    }
+
+    #[tokio::test]
+    async fn controlled_start_does_not_apply_proxy_without_a_ready_core() {
+        let calls = Arc::new(Mutex::new(Vec::new()));
+
+        let result = run_core_start_transition(
+            || transition_step(&calls, "core_start", None),
+            || false,
+            || transition_step(&calls, "proxy_apply", None),
+        )
+        .await;
+
+        assert!(result.is_ok());
+        assert_eq!(&*calls.lock(), &["core_start"]);
+    }
+
+    #[tokio::test]
+    async fn restart_start_failure_keeps_proxy_direct_guard_stopped_and_pac_unavailable() {
+        let proxy_is_direct = AtomicBool::new(false);
+        let guard_stopped = AtomicBool::new(false);
+        let pac_available = AtomicBool::new(true);
+        let restored_new_core = AtomicBool::new(false);
+
+        let result = run_core_replacement_transition(
+            || {
+                proxy_is_direct.store(true, Ordering::Release);
+                guard_stopped.store(true, Ordering::Release);
+                pac_available.store(false, Ordering::Release);
+                future::ready(Ok(()))
+            },
+            || future::ready(Err(anyhow::anyhow!("new core failed to start"))),
+            || {
+                restored_new_core.store(true, Ordering::Release);
+                future::ready(Ok(()))
+            },
+        )
+        .await;
+
+        assert!(result.is_err());
+        assert!(proxy_is_direct.load(Ordering::Acquire));
+        assert!(guard_stopped.load(Ordering::Acquire));
+        assert!(!pac_available.load(Ordering::Acquire));
+        assert!(!restored_new_core.load(Ordering::Acquire));
+    }
+
+    #[tokio::test]
+    async fn service_config_start_failure_uses_the_same_fail_closed_replacement_order() {
+        let calls = Arc::new(Mutex::new(Vec::new()));
+
+        let result = run_core_replacement_transition(
+            || transition_step(&calls, "controlled-stop", None),
+            || transition_step(&calls, "start-service-config", Some("start-service-config")),
+            || transition_step(&calls, "restore-proxy", None),
+        )
+        .await;
+
+        assert!(result.is_err());
+        assert_eq!(&*calls.lock(), &["controlled-stop", "start-service-config"]);
     }
 
     #[test]
@@ -678,35 +859,21 @@ mod tests {
     }
 
     #[test]
-    fn proxy_restore_claim_requires_same_confirmed_core_generation() {
-        assert!(super::proxy_restore_claim_is_valid(
-            &RunningMode::Sidecar,
-            &RunningMode::Sidecar,
-            None,
-            None
-        ));
-        assert!(super::proxy_restore_claim_is_valid(
-            &RunningMode::Service,
-            &RunningMode::Service,
-            Some(8),
-            Some(8)
-        ));
-        assert!(!super::proxy_restore_claim_is_valid(
-            &RunningMode::Service,
-            &RunningMode::Service,
-            Some(8),
-            Some(9)
-        ));
-        assert!(!super::proxy_restore_claim_is_valid(
-            &RunningMode::Service,
-            &RunningMode::NotRunning,
-            Some(8),
-            Some(8)
-        ));
-        assert!(!super::should_restore_proxy_after_start(&RunningMode::Service, false));
-        assert!(super::should_restore_proxy_after_start(&RunningMode::Service, true));
-        assert!(super::should_restore_proxy_after_start(&RunningMode::Sidecar, true));
-        assert!(!super::should_restore_proxy_after_start(&RunningMode::NotRunning, true));
+    fn proxy_restore_requires_the_same_ready_core_generation() {
+        let sidecar =
+            ProxyRestoreExpectation::capture(RunningMode::Sidecar, Some(20), 8).unwrap_or_else(|| unreachable!());
+        assert!(sidecar.is_valid(&RunningMode::Sidecar, Some(20), 8));
+        assert!(!sidecar.is_valid(&RunningMode::Sidecar, Some(21), 8));
+        assert!(!sidecar.is_valid(&RunningMode::Sidecar, None, 8));
+        assert!(ProxyRestoreExpectation::capture(RunningMode::Sidecar, None, 8).is_none());
+
+        let service =
+            ProxyRestoreExpectation::capture(RunningMode::Service, Some(20), 8).unwrap_or_else(|| unreachable!());
+        assert!(service.is_valid(&RunningMode::Service, Some(20), 8));
+        assert!(!service.is_valid(&RunningMode::Service, Some(20), 9));
+        assert!(!service.is_valid(&RunningMode::NotRunning, Some(20), 8));
+        assert!(ProxyRestoreExpectation::capture(RunningMode::Service, None, 8).is_none());
+        assert!(ProxyRestoreExpectation::capture(RunningMode::NotRunning, Some(20), 8).is_none());
     }
 
     #[tokio::test]

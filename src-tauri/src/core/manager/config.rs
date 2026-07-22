@@ -1,9 +1,13 @@
+#[cfg(target_os = "macos")]
+use super::lifecycle::run_core_replacement_transition;
 use super::{CoreManager, RunningMode};
+#[cfg(not(target_os = "macos"))]
+use crate::core::service;
 use crate::{
     config::{Config, ConfigType, runtime::IRuntime},
     constants::timing,
     core::{
-        handle, service,
+        handle,
         validate::{CoreConfigValidator, ValidationOutcome, ValidationSkipReason},
     },
     utils::{dirs, help},
@@ -142,7 +146,21 @@ impl CoreManager {
                 Config::runtime().await.discard();
                 return Err(anyhow!("core mode changed while applying service configuration"));
             }
-            return match service::run_core_by_service(&path).await {
+            #[cfg(target_os = "macos")]
+            let result = {
+                let result = run_core_replacement_transition(
+                    || self.controlled_stop_core_inner(),
+                    || self.start_core_by_service_with_config(&path),
+                    || self.apply_proxy_after_start(),
+                )
+                .await;
+                self.after_core_process();
+                result
+            };
+            #[cfg(not(target_os = "macos"))]
+            let result = service::run_core_by_service(&path).await;
+
+            return match result {
                 Ok(()) => {
                     Config::runtime().await.apply();
                     logging!(info, Type::Core, "Configuration materialized and applied by service");

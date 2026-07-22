@@ -1,8 +1,8 @@
 use crate::{
     config::Config,
     core::{
-        CoreManager, handle::Handle, manager::RunningMode, owner_identity::current_owner_credentials,
-        runtime_bundle::collect_runtime_bundle, sysopt::Sysopt, tray::Tray,
+        CoreManager, handle::Handle, manager::RunningMode, owner_identity::current_owner_credentials, proxy_control,
+        runtime_bundle::collect_runtime_bundle, tray::Tray,
     },
     process::AsyncHandler,
     utils::dirs,
@@ -108,6 +108,7 @@ const fn classify_macos_service_install_state(
     match current {
         CurrentServiceProbe::Ready => ServiceInstallState::Ready,
         CurrentServiceProbe::VersionMismatch => ServiceInstallState::NeedsReinstall,
+        CurrentServiceProbe::Unavailable if has_install_marker => ServiceInstallState::NeedsReinstall,
         CurrentServiceProbe::Unavailable => ServiceInstallState::Unavailable,
         CurrentServiceProbe::Missing if has_install_marker => ServiceInstallState::NeedsReinstall,
         CurrentServiceProbe::Missing => ServiceInstallState::NotInstalled,
@@ -584,21 +585,14 @@ fn check_output_error(output: &std::process::Output) -> Option<(i32, Cow<'_, str
     Some((code, Cow::Borrowed("Unknown error")))
 }
 
+fn run_reinstall_sequence(uninstall: impl FnOnce() -> Result<()>, install: impl FnOnce() -> Result<()>) -> Result<()> {
+    uninstall().context("failed to uninstall service")?;
+    install().context("failed to install service")
+}
+
 fn reinstall_service() -> Result<()> {
     logging!(info, Type::Service, "reinstall service");
-
-    // 先卸载服务
-    if let Err(err) = uninstall_service() {
-        logging!(warn, Type::Service, "failed to uninstall service: {}", err);
-    }
-
-    // 再安装服务
-    match install_service() {
-        Ok(_) => Ok(()),
-        Err(err) => {
-            bail!(format!("failed to install service: {err}"))
-        }
-    }
+    run_reinstall_sequence(uninstall_service, install_service)
 }
 
 /// 强制重装服务（UI修复按钮）
@@ -785,7 +779,6 @@ pub(super) async fn stop_core_by_service() -> Result<()> {
             code if code == clash_verge_service_ipc::ServiceErrorCode::NotActive as u16
                 || code == clash_verge_service_ipc::ServiceErrorCode::StaleOwnerSession as u16
         ) {
-            clear_active_service_session();
             recover_after_owner_loss_while_locked(OwnerRecoveryReason::Displaced).await;
         } else {
             start_owner_monitor();
@@ -881,6 +874,12 @@ const fn transport_failure_recovery_reason(
         Some(OwnerRecoveryReason::TransportFailure)
     } else {
         None
+    }
+}
+
+fn mark_service_unavailable_after_owner_loss(manager: &ServiceManager, reason: OwnerRecoveryReason) {
+    if matches!(reason, OwnerRecoveryReason::TransportFailure) {
+        manager.mark_unavailable("service control IPC unavailable after sustained transport failure");
     }
 }
 
@@ -1037,7 +1036,6 @@ fn cancel_owner_monitors() {
     OWNER_MONITOR_GENERATION.fetch_add(1, Ordering::AcqRel);
 }
 
-#[cfg(target_os = "macos")]
 pub(crate) fn owner_monitor_generation() -> u64 {
     OWNER_MONITOR_GENERATION.load(Ordering::Acquire)
 }
@@ -1047,23 +1045,10 @@ async fn recover_after_owner_loss(generation: u64, reason: OwnerRecoveryReason) 
     if !matches!(*manager.get_running_mode(), RunningMode::Service) {
         return;
     }
-    #[cfg(target_os = "macos")]
-    let recovery_generation = {
-        let recovery_generation = generation.wrapping_add(1);
-        let claimed = Sysopt::global()
-            .revoke_proxy_cleanup_authority_and_stop_guard_if(|| {
-                claim_owner_recovery_generation(&OWNER_MONITOR_GENERATION, generation).is_some()
-            })
-            .await;
-        if !claimed {
-            return;
-        }
-        recovery_generation
-    };
-    #[cfg(not(target_os = "macos"))]
     let Some(recovery_generation) = claim_owner_recovery_generation(&OWNER_MONITOR_GENERATION, generation) else {
         return;
     };
+    manager.invalidate_core_readiness();
     let _lifecycle = manager.lifecycle_lock.lock().await;
     if OWNER_MONITOR_GENERATION.load(Ordering::Acquire) != recovery_generation
         || !matches!(*manager.get_running_mode(), RunningMode::Service)
@@ -1087,16 +1072,17 @@ fn claim_owner_recovery_generation(generation: &AtomicU64, captured_generation: 
 }
 
 async fn recover_after_owner_loss_while_locked(reason: OwnerRecoveryReason) {
-    clear_active_service_session();
     logging!(
         warn,
         Type::Service,
         "service owner recovery ({reason:?}); clearing local proxy and PAC state"
     );
-    #[cfg(target_os = "macos")]
-    Sysopt::global().revoke_proxy_cleanup_authority_and_stop_guard().await;
+    mark_service_unavailable_after_owner_loss(&SERVICE_MANAGER, reason);
+    proxy_control::stop_guard().await;
     server::set_pac_available(false);
+    clear_active_service_session();
     let manager = CoreManager::global();
+    manager.invalidate_core_readiness();
     manager.set_running_mode(RunningMode::NotRunning);
     manager.after_core_process();
 
@@ -1106,7 +1092,7 @@ async fn recover_after_owner_loss_while_locked(reason: OwnerRecoveryReason) {
 
     let mut last_error = None;
     for _ in 0..3 {
-        match Sysopt::global().reset_sysproxy().await {
+        match proxy_control::clear().await {
             Ok(()) => return,
             Err(error) => {
                 last_error = Some(error);
@@ -1394,9 +1380,10 @@ mod tests {
         CurrentServiceProbe, OwnerRecoveryReason, PrivilegedServiceAction, ServiceInstallState, ServiceStatus,
         ServiceVersionCheck, ServiceVersionReply, apply_service_version_result, capture_generation_before,
         claim_owner_recovery_generation, classify_macos_service_install_state, classify_service_version_reply,
-        confirmed_service_available, generate_service_session_token, owner_recovery_policy,
-        owner_status_recovery_reason, poll_service_version, privileged_service_action, probe_service_availability_with,
-        session_matches_status, transport_failure_recovery_reason,
+        confirmed_service_available, generate_service_session_token, mark_service_unavailable_after_owner_loss,
+        owner_recovery_policy, owner_status_recovery_reason, poll_service_version, privileged_service_action,
+        probe_service_availability_with, run_reinstall_sequence, session_matches_status,
+        transport_failure_recovery_reason,
     };
     use clash_verge_service_ipc::{OwnerSessionProof, ServiceLifecycleState};
     use std::{
@@ -1699,6 +1686,65 @@ mod tests {
         );
     }
 
+    #[tokio::test]
+    async fn only_transport_owner_loss_marks_service_unavailable_and_blocks_stale_probe() {
+        for reason in [OwnerRecoveryReason::Displaced, OwnerRecoveryReason::SameOwnerFailure] {
+            let manager = super::ServiceManager {
+                status: parking_lot::Mutex::new(ServiceStatus::Ready),
+                status_generation: AtomicU64::new(0),
+                operation_running: AtomicBool::new(false),
+                operation_done: tokio::sync::Notify::new(),
+            };
+            mark_service_unavailable_after_owner_loss(&manager, reason);
+            assert_eq!(*manager.status.lock(), ServiceStatus::Ready);
+            assert_eq!(manager.status_generation.load(Ordering::Acquire), 0);
+        }
+
+        let manager = super::ServiceManager {
+            status: parking_lot::Mutex::new(ServiceStatus::Ready),
+            status_generation: AtomicU64::new(0),
+            operation_running: AtomicBool::new(false),
+            operation_done: tokio::sync::Notify::new(),
+        };
+        let available = probe_service_availability_with(&manager, false, || async {
+            mark_service_unavailable_after_owner_loss(&manager, OwnerRecoveryReason::TransportFailure);
+            Ok(ServiceVersionReply {
+                code: 0,
+                message: String::new(),
+                version: Some(clash_verge_service_ipc::VERSION.to_owned()),
+            })
+        })
+        .await;
+
+        assert!(matches!(available, Ok(false)));
+        let status = manager.status.lock().clone();
+        assert!(matches!(
+            status,
+            ServiceStatus::Unavailable(reason) if reason.contains("service control IPC unavailable")
+        ));
+    }
+
+    #[test]
+    fn reinstall_stops_after_uninstall_failure() {
+        let calls = parking_lot::Mutex::new(Vec::new());
+
+        let result = run_reinstall_sequence(
+            || {
+                calls.lock().push("uninstall");
+                anyhow::bail!("authorization cancelled")
+            },
+            || {
+                calls.lock().push("install");
+                Ok(())
+            },
+        );
+
+        assert!(result.is_err());
+        assert_eq!(&*calls.lock(), &["uninstall"]);
+        let error = result.err().map(|error| format!("{error:#}")).unwrap_or_default();
+        assert!(error.contains("authorization cancelled"));
+    }
+
     #[test]
     fn macos_service_evidence_distinguishes_missing_old_and_current_service() {
         assert_eq!(
@@ -1723,7 +1769,7 @@ mod tests {
         );
         assert_eq!(
             classify_macos_service_install_state(CurrentServiceProbe::Unavailable, true),
-            ServiceInstallState::Unavailable
+            ServiceInstallState::NeedsReinstall
         );
     }
 

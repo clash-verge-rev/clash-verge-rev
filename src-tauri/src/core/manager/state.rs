@@ -1,8 +1,10 @@
+#[cfg(test)]
+use super::claim_core_readiness_generation;
 use super::{CoreManager, RunningMode};
 use crate::{
     AsyncHandler,
     config::Config,
-    core::{handle, logger::Logger, manager::CLASH_LOGGER, service, sysopt::Sysopt},
+    core::{handle, logger::Logger, manager::CLASH_LOGGER, proxy_control, service},
     logging,
     utils::{dirs, server},
 };
@@ -11,6 +13,7 @@ use clash_verge_logging::Type;
 use compact_str::CompactString;
 use log::Level;
 use scopeguard::defer;
+use std::path::Path;
 use tauri_plugin_mihomo::MihomoExt as _;
 use tauri_plugin_shell::ShellExt as _;
 
@@ -145,10 +148,8 @@ impl CoreManager {
         })
         .await;
         if let Err(readiness_error) = readiness {
-            #[cfg(target_os = "macos")]
-            Sysopt::global().revoke_proxy_cleanup_authority_and_stop_guard().await;
-            #[cfg(not(target_os = "macos"))]
-            Sysopt::global().stop_proxy_guard().await;
+            proxy_control::stop_guard().await;
+            self.invalidate_core_readiness();
             self.set_running_mode(RunningMode::NotRunning);
             server::set_pac_available(false);
             return match child.kill() {
@@ -162,6 +163,7 @@ impl CoreManager {
         #[cfg(target_os = "windows")]
         self.set_job_handle(Some(job));
         self.set_running_child_sidecar(child);
+        let core_readiness_generation = self.mark_core_ready();
         self.set_running_mode(RunningMode::Sidecar);
         server::set_pac_available(true);
 
@@ -175,6 +177,8 @@ impl CoreManager {
                         CLASH_LOGGER.append_log(message).await;
                     }
                     tauri_plugin_shell::process::CommandEvent::Terminated(term) => {
+                        let manager = Self::global();
+                        let _ = manager.invalidate_core_readiness_if(core_readiness_generation);
                         let message = if let Some(code) = term.code {
                             CompactString::from(format!("Process terminated with code: {}", code))
                         } else if let Some(signal) = term.signal {
@@ -184,7 +188,7 @@ impl CoreManager {
                         };
                         Logger::global().writer_sidecar_log(Level::Info, &message);
                         CLASH_LOGGER.clear_logs().await;
-                        Self::global().clear_terminated_sidecar(pid).await;
+                        manager.clear_terminated_sidecar(pid).await;
                         break;
                     }
                     _ => {}
@@ -239,14 +243,19 @@ impl CoreManager {
             .await
             .update_socket_path(dirs::path_to_str(&service_ipc)?.to_owned())?;
 
+        self.start_core_by_service_with_config(&config_file).await
+    }
+
+    pub(super) async fn start_core_by_service_with_config(&self, config_file: &Path) -> Result<()> {
         // 交接时等待 sidecar 释放 ext-controller 通道。
         #[cfg(target_os = "windows")]
         {
             use crate::constants::timing;
             let mut last_err = None;
             for attempt in 0..timing::SERVICE_START_RETRIES {
-                match service::run_core_by_service(&config_file).await {
+                match service::run_core_by_service(config_file).await {
                     Ok(()) => {
+                        self.mark_core_ready();
                         self.set_running_mode(RunningMode::Service);
                         return Ok(());
                     }
@@ -269,7 +278,8 @@ impl CoreManager {
 
         #[cfg(not(target_os = "windows"))]
         {
-            service::run_core_by_service(&config_file).await?;
+            service::run_core_by_service(config_file).await?;
+            self.mark_core_ready();
             self.set_running_mode(RunningMode::Service);
             Ok(())
         }
@@ -292,11 +302,9 @@ impl CoreManager {
         let _ = self.take_child_sidecar();
         #[cfg(target_os = "windows")]
         self.set_job_handle(None);
-        #[cfg(target_os = "macos")]
-        Sysopt::global().revoke_proxy_cleanup_authority_and_stop_guard().await;
-        #[cfg(not(target_os = "macos"))]
-        Sysopt::global().stop_proxy_guard().await;
+        proxy_control::stop_guard().await;
         server::set_pac_available(false);
+        self.invalidate_core_readiness();
         self.set_running_mode(RunningMode::NotRunning);
         self.after_core_process();
     }
@@ -304,12 +312,12 @@ impl CoreManager {
 
 #[cfg(test)]
 mod readiness_tests {
-    use super::{poll_sidecar_readiness, should_clear_terminated_sidecar};
-    use crate::core::manager::RunningMode;
+    use super::{claim_core_readiness_generation, poll_sidecar_readiness, should_clear_terminated_sidecar};
+    use crate::core::manager::{CoreManager, RunningMode};
     use std::{
         sync::{
             Arc,
-            atomic::{AtomicUsize, Ordering},
+            atomic::{AtomicU64, AtomicUsize, Ordering},
         },
         time::Duration,
     };
@@ -351,6 +359,27 @@ mod readiness_tests {
         assert!(!should_clear_terminated_sidecar(&RunningMode::Sidecar, Some(43), 42));
         assert!(!should_clear_terminated_sidecar(&RunningMode::Service, Some(42), 42));
         assert!(!should_clear_terminated_sidecar(&RunningMode::NotRunning, None, 42));
+    }
+
+    #[test]
+    fn core_readiness_generation_can_only_be_claimed_once() {
+        let generation = AtomicU64::new(7);
+
+        assert!(claim_core_readiness_generation(&generation, 7));
+        assert_eq!(generation.load(Ordering::Acquire), 8);
+        assert!(!claim_core_readiness_generation(&generation, 7));
+    }
+
+    #[test]
+    fn invalidated_core_readiness_cannot_be_recaptured_from_stale_mode() {
+        let manager = CoreManager::default();
+        manager.mark_core_ready();
+        manager.set_running_mode(RunningMode::Service);
+
+        manager.invalidate_core_readiness();
+
+        assert_eq!(*manager.get_running_mode(), RunningMode::Service);
+        assert_eq!(manager.current_core_readiness_generation(), None);
     }
 }
 
