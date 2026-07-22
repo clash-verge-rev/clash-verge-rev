@@ -239,6 +239,15 @@ pub fn ipc_path() -> Result<PathBuf> {
     )))
 }
 
+#[cfg(target_os = "macos")]
+pub fn sidecar_ipc_path() -> Result<PathBuf> {
+    sidecar_ipc_path_for(
+        std::path::Path::new(""),
+        &crate::core::owner_identity::current_owner_identity()?,
+    )
+}
+
+#[cfg(not(target_os = "macos"))]
 pub fn sidecar_ipc_path() -> Result<PathBuf> {
     Ok(sidecar_ipc_path_for(
         &preinit_app_data_dir()?,
@@ -246,9 +255,48 @@ pub fn sidecar_ipc_path() -> Result<PathBuf> {
     ))
 }
 
-#[cfg(unix)]
+#[cfg(target_os = "linux")]
 fn sidecar_ipc_path_for(app_root: &std::path::Path, _identity: &clash_verge_service_ipc::OwnerIdentity) -> PathBuf {
     app_root.join("verge-mihomo.sock")
+}
+
+#[cfg(target_os = "macos")]
+fn sidecar_ipc_path_for(
+    _app_root: &std::path::Path,
+    _identity: &clash_verge_service_ipc::OwnerIdentity,
+) -> Result<PathBuf> {
+    use std::{ffi::OsStr, os::unix::ffi::OsStrExt as _};
+
+    // SAFETY: A null buffer with size zero asks confstr for the required buffer length.
+    let required_len = unsafe { libc::confstr(libc::_CS_DARWIN_USER_TEMP_DIR, std::ptr::null_mut(), 0) };
+    if required_len == 0 {
+        return Err(anyhow::anyhow!("macOS per-user temporary directory is unavailable"));
+    }
+
+    let mut buffer = vec![0_u8; required_len];
+    // SAFETY: buffer is writable for buffer.len() bytes, as required by confstr.
+    let written = unsafe { libc::confstr(libc::_CS_DARWIN_USER_TEMP_DIR, buffer.as_mut_ptr().cast(), buffer.len()) };
+    if written == 0 || written > buffer.len() {
+        return Err(anyhow::anyhow!("failed to read macOS per-user temporary directory"));
+    }
+
+    let root = std::ffi::CStr::from_bytes_until_nul(&buffer)
+        .map_err(|_| anyhow::anyhow!("macOS per-user temporary directory is not NUL-terminated"))?;
+    #[cfg(feature = "verge-dev")]
+    let filename = "verge-mihomo-dev.sock";
+    #[cfg(not(feature = "verge-dev"))]
+    let filename = "verge-mihomo.sock";
+    let path = PathBuf::from(OsStr::from_bytes(root.to_bytes())).join(filename);
+
+    let path_len = path.as_os_str().as_bytes().len();
+    if path_len >= 104 {
+        return Err(anyhow::anyhow!(
+            "macOS Sidecar IPC path is {path_len} bytes, but sockaddr_un.sun_path requires fewer than 104 bytes: {:?}",
+            path,
+        ));
+    }
+
+    Ok(path)
 }
 
 #[cfg(windows)]
@@ -259,29 +307,72 @@ fn sidecar_ipc_path_for(_app_root: &std::path::Path, identity: &clash_verge_serv
     ))
 }
 
-#[cfg(all(test, unix))]
+#[cfg(all(test, target_os = "linux"))]
 mod ipc_tests {
     use super::sidecar_ipc_path_for;
     use clash_verge_service_ipc::OwnerIdentity;
     use std::path::Path;
 
     #[test]
-    fn sidecar_ipc_stays_in_the_current_users_app_root() {
+    fn sidecar_ipc_stays_in_the_app_root() {
         let identity = OwnerIdentity::Unix { uid: 501, gid: 20 };
-        let path = sidecar_ipc_path_for(
-            Path::new("/Users/test/Library/Application Support/io.github.clash-verge-rev.clash-verge-rev"),
-            &identity,
-        );
+        let app_root = Path::new("/home/test/.local/share/io.github.clash-verge-rev.clash-verge-rev");
+        let path = sidecar_ipc_path_for(app_root, &identity);
 
-        assert_eq!(
-            path,
-            Path::new(
-                "/Users/test/Library/Application Support/io.github.clash-verge-rev.clash-verge-rev/verge-mihomo.sock"
-            )
-        );
+        assert_eq!(path, app_root.join("verge-mihomo.sock"));
         assert_ne!(
             path.to_string_lossy(),
             clash_verge_service_ipc::mihomo_ipc_path(&identity)
+        );
+    }
+}
+
+#[cfg(all(test, target_os = "macos"))]
+mod ipc_tests {
+    use super::sidecar_ipc_path_for;
+    use clash_verge_service_ipc::OwnerIdentity;
+    use std::{ffi::OsStr, os::unix::ffi::OsStrExt, path::Path};
+
+    #[test]
+    fn sidecar_ipc_ignores_long_app_root_and_fits_sockaddr_un() {
+        let identity = OwnerIdentity::Unix { uid: 501, gid: 20 };
+        let app_root =
+            Path::new("/Users/support/Library/Application Support/io.github.clash-verge-rev.clash-verge-rev.dev");
+        let path = sidecar_ipc_path_for(app_root, &identity).expect("macOS should provide a per-user temp directory");
+
+        assert!(!path.starts_with(app_root));
+        assert!(path.as_os_str().as_bytes().len() < 104);
+        #[cfg(feature = "verge-dev")]
+        assert_eq!(path.file_name(), Some(OsStr::new("verge-mihomo-dev.sock")));
+        #[cfg(not(feature = "verge-dev"))]
+        assert_eq!(path.file_name(), Some(OsStr::new("verge-mihomo.sock")));
+        assert_eq!(
+            path,
+            sidecar_ipc_path_for(Path::new("/different/root"), &identity).unwrap()
+        );
+        assert!(path.parent().is_some_and(Path::is_dir));
+    }
+}
+
+#[cfg(all(test, windows))]
+mod ipc_tests {
+    use super::sidecar_ipc_path_for;
+    use clash_verge_service_ipc::OwnerIdentity;
+    use std::path::Path;
+
+    #[test]
+    fn sidecar_ipc_uses_the_current_owners_named_pipe() {
+        let identity = OwnerIdentity::Windows {
+            sid: "S-1-5-21-1000".to_owned(),
+        };
+        let path = sidecar_ipc_path_for(Path::new(r"C:\ignored"), &identity);
+
+        assert_eq!(
+            path,
+            Path::new(&format!(
+                r"\\.\pipe\verge-mihomo-sidecar-{}",
+                clash_verge_service_ipc::owner_key(&identity)
+            ))
         );
     }
 }
