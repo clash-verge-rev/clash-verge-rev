@@ -381,12 +381,34 @@ export const uninstallService = async () => {
   return invoke<void>('uninstall_service')
 }
 
+export type ServiceInstallState =
+  | 'notInstalled'
+  | 'ready'
+  | 'needsReinstall'
+  | 'sidecarAllowed'
+  | 'unavailable'
+
+export const getServiceInstallState = async () => {
+  return invoke<ServiceInstallState>('get_service_install_state')
+}
+
+export const reinstallService = async () => {
+  return invoke<void>('reinstall_service')
+}
+
+export const repairService = async () => {
+  return invoke<void>('repair_service')
+}
+
+export const continueWithSidecar = async () => {
+  return invoke<void>('continue_with_sidecar')
+}
+
 // 系统服务是否可用
 export const isServiceAvailable = async () => {
   try {
     return await invoke<boolean>('is_service_available')
-  } catch (error) {
-    console.error('Service check failed:', error)
+  } catch {
     return false
   }
 }
