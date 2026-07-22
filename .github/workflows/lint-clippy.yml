@@ -78,6 +78,11 @@ jobs:
         working-directory: ./src-tauri
         run: cargo clippy-all
 
+      - name: Run Windows security tests
+        if: matrix.os == 'windows-latest' && (github.event_name == 'workflow_dispatch' || steps.check_changes.outputs.rust == 'true')
+        working-directory: ./src-tauri
+        run: cargo test --all-features --target ${{ matrix.target }}
+
       - name: Run Logging Check
         working-directory: ./src-tauri
         shell: bash
