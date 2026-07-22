@@ -322,6 +322,27 @@ fn create_service_core_staging_file(directory: &Path, core_name: &std::ffi::OsSt
 
 #[cfg(any(all(target_os = "macos", feature = "verge-dev"), test))]
 fn service_core_path_for(source: &Path, home: Option<&Path>, stage_for_macos_dev: bool) -> Result<PathBuf> {
+    service_core_path_for_with_publisher(source, home, stage_for_macos_dev, |temporary_path, final_path| {
+        std::fs::rename(temporary_path, final_path).with_context(|| {
+            format!(
+                "failed to publish development Service core {} over {}",
+                temporary_path.display(),
+                final_path.display()
+            )
+        })
+    })
+}
+
+#[cfg(any(all(target_os = "macos", feature = "verge-dev"), test))]
+fn service_core_path_for_with_publisher<F>(
+    source: &Path,
+    home: Option<&Path>,
+    stage_for_macos_dev: bool,
+    publisher: F,
+) -> Result<PathBuf>
+where
+    F: FnOnce(&Path, &Path) -> Result<()>,
+{
     if !stage_for_macos_dev {
         return Ok(source.to_path_buf());
     }
@@ -386,13 +407,7 @@ fn service_core_path_for(source: &Path, home: Option<&Path>, stage_for_macos_dev
             .sync_all()
             .with_context(|| format!("failed to sync temporary Service core {}", temporary_path.display()))?;
         drop(temporary_file);
-        std::fs::rename(&temporary_path, &final_path).with_context(|| {
-            format!(
-                "failed to publish development Service core {} over {}",
-                temporary_path.display(),
-                final_path.display()
-            )
-        })?;
+        publisher(&temporary_path, &final_path)?;
         Ok(())
     })();
 
@@ -1524,11 +1539,12 @@ mod tests {
         claim_owner_recovery_generation, classify_macos_service_install_state, classify_service_version_reply,
         confirmed_service_available, generate_service_session_token, mark_service_unavailable_after_owner_loss,
         owner_recovery_policy, owner_status_recovery_reason, poll_service_version, privileged_service_action,
-        probe_service_availability_with, run_reinstall_sequence, service_core_path_for, session_matches_status,
-        transport_failure_recovery_reason,
+        probe_service_availability_with, run_reinstall_sequence, service_core_path_for,
+        service_core_path_for_with_publisher, session_matches_status, transport_failure_recovery_reason,
     };
     use clash_verge_service_ipc::{OwnerSessionProof, ServiceLifecycleState};
     use std::{
+        cell::Cell,
         path::{Path, PathBuf},
         sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering},
         time::Duration,
@@ -1647,13 +1663,22 @@ mod tests {
         std::fs::write(&source, b"known good core")?;
         let selected = service_core_path_for(&source, Some(&home), true)?;
 
-        std::fs::remove_file(&source)?;
-        let error = match service_core_path_for(&source, Some(&home), true) {
-            Ok(path) => anyhow::bail!("a missing development core selected {}", path.display()),
+        std::fs::write(&source, b"replacement core")?;
+        let publish_attempted = Cell::new(false);
+        let result = service_core_path_for_with_publisher(&source, Some(&home), true, |temporary, final_path| {
+            publish_attempted.set(true);
+            assert_ne!(temporary, final_path, "publisher must receive the temporary path");
+            assert!(std::fs::symlink_metadata(temporary)?.file_type().is_file());
+            assert_eq!(std::fs::read(temporary)?, b"replacement core");
+            anyhow::bail!("injected post-creation publish failure")
+        });
+        let error = match result {
+            Ok(path) => anyhow::bail!("failed publication selected {}", path.display()),
             Err(error) => error.to_string(),
         };
 
-        assert!(error.contains("development Service core source"));
+        assert!(publish_attempted.get());
+        assert!(error.contains("injected post-creation publish failure"));
         assert_eq!(std::fs::read(&selected)?, b"known good core");
         assert!(staging_temporary_entries(&home, "verge-mihomo")?.is_empty());
         Ok(())
