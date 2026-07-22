@@ -38,8 +38,8 @@ fn runtime_group_order(config: Option<&Mapping>) -> Vec<String> {
 #[tauri::command]
 pub async fn get_proxy_view() -> CmdResult<ProxyViewV1> {
     let runtime = Config::runtime().await;
-    let committed_runtime = runtime.data_arc();
-    let runtime_group_order = runtime_group_order(committed_runtime.config.as_ref());
+    let latest_runtime = runtime.latest_arc();
+    let runtime_group_order = runtime_group_order(latest_runtime.config.as_ref());
 
     let mihomo = Handle::mihomo().await;
     let (proxies, providers) = tokio::join!(mihomo.get_proxies(), mihomo.get_proxy_providers(),);
