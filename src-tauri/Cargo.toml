@@ -99,7 +99,7 @@ tauri-plugin-devtools = { version = "2.1.0" }
 tauri-plugin-mihomo = { git = "https://github.com/clash-verge-rev/tauri-plugin-mihomo", branch = "fix/api-robustness" }
 clash_verge_logger = { git = "https://github.com/clash-verge-rev/clash-verge-logger" }
 async-trait = "0.1.89"
-clash_verge_service_ipc = { path = "../../clash-verge-service-ipc", version = "2.4.0", features = [
+clash_verge_service_ipc = { git = "https://github.com/clash-verge-rev/clash-verge-service-ipc.git", rev = "54411d664180bab317903b34881cce1b3dd98d80", version = "2.4.0", features = [
   "client",
 ] }
 arc-swap = "1.9.2"
