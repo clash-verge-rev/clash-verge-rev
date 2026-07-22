@@ -813,9 +813,16 @@ pub(crate) async fn update_writer_by_service(writer: &WriterConfig) -> Result<()
 }
 
 pub(super) async fn set_system_proxy_by_service(proxy: &MacosProxyConfig) -> Result<ProxyApplyOutcome> {
-    let credentials = current_owner_credentials()?;
     let session = active_service_session()?;
-    let response = clash_verge_service_ipc::set_system_proxy(&credentials, &session, proxy)
+    set_system_proxy_by_service_with_session(proxy, &session).await
+}
+
+pub(super) async fn set_system_proxy_by_service_with_session(
+    proxy: &MacosProxyConfig,
+    session: &OwnerSessionProof,
+) -> Result<ProxyApplyOutcome> {
+    let credentials = current_owner_credentials()?;
+    let response = clash_verge_service_ipc::set_system_proxy(&credentials, session, proxy)
         .await
         .context("无法连接到Clash Verge Service")?;
     if response.code > 0 {

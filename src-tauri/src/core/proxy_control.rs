@@ -6,18 +6,93 @@ use crate::{
 };
 use anyhow::{Result, bail, ensure};
 use clash_verge_logging::{Type, logging};
-use clash_verge_service_ipc::{MacosProxyConfig, ProxyApplyOutcome};
+use clash_verge_service_ipc::{MacosProxyConfig, OwnerSessionProof, ProxyApplyOutcome};
 use std::{
+    future::Future,
     sync::atomic::{AtomicU64, Ordering},
     time::Duration,
 };
+use tokio::sync::Mutex;
 
 const LOOPBACK_HOST: &str = "127.0.0.1";
 const MACOS_DEFAULT_BYPASS: &str =
     "127.0.0.1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,localhost,*.local,*.crashlytics.com,<local>";
 const MAX_SERVICE_BYPASS_LEN: usize = 8192;
 
-static SERVICE_GUARD_GENERATION: AtomicU64 = AtomicU64::new(0);
+static SERVICE_PROXY_OPERATIONS: ServiceProxyOperations = ServiceProxyOperations::new();
+
+struct ServiceProxyOperations {
+    guard_generation: AtomicU64,
+    operation_lock: Mutex<()>,
+}
+
+impl ServiceProxyOperations {
+    const fn new() -> Self {
+        Self {
+            guard_generation: AtomicU64::new(0),
+            operation_lock: Mutex::const_new(()),
+        }
+    }
+
+    fn invalidate_guard(&self) -> u64 {
+        self.guard_generation.fetch_add(1, Ordering::AcqRel).wrapping_add(1)
+    }
+
+    async fn run_service_operation<F, Fut, T>(&self, operation: F) -> T
+    where
+        F: FnOnce() -> Fut,
+        Fut: Future<Output = T>,
+    {
+        let _operation = self.operation_lock.lock().await;
+        operation().await
+    }
+
+    async fn run_final_service_operation<F, Fut, T>(&self, operation: F) -> T
+    where
+        F: FnOnce() -> Fut,
+        Fut: Future<Output = T>,
+    {
+        self.invalidate_guard();
+        self.run_service_operation(operation).await
+    }
+
+    async fn cancel_and_drain<F, Fut>(&self, cancel: F) -> u64
+    where
+        F: FnOnce() -> Fut,
+        Fut: Future<Output = ()>,
+    {
+        let generation = self.invalidate_guard();
+        self.run_service_operation(cancel).await;
+        generation
+    }
+
+    async fn run_guard_request<Mode, ActiveProof, Request, RequestFuture>(
+        &self,
+        captured_generation: u64,
+        captured_proof: &OwnerSessionProof,
+        is_service_mode: Mode,
+        active_proof: ActiveProof,
+        request: Request,
+    ) -> Result<bool>
+    where
+        Mode: FnOnce() -> bool,
+        ActiveProof: FnOnce() -> Result<OwnerSessionProof>,
+        Request: FnOnce() -> RequestFuture,
+        RequestFuture: Future<Output = Result<ProxyApplyOutcome>>,
+    {
+        self.run_service_operation(|| async move {
+            if !guard_generation_is_current(&self.guard_generation, captured_generation)
+                || !is_service_mode()
+                || !active_proof().is_ok_and(|active| active == *captured_proof)
+            {
+                return Ok(false);
+            }
+            service_apply_result(request().await?)?;
+            Ok(true)
+        })
+        .await
+    }
+}
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum ProxyBackendRoute {
@@ -111,7 +186,11 @@ pub async fn apply() -> Result<()> {
         ProxyBackendRoute::Service => {
             let verge = Config::verge().await.latest_arc();
             let proxy = current_service_proxy_config(&verge).await?;
-            service_apply_result(service::set_system_proxy_by_service(&proxy).await?)
+            SERVICE_PROXY_OPERATIONS
+                .run_final_service_operation(|| async {
+                    service_apply_result(service::set_system_proxy_by_service(&proxy).await?)
+                })
+                .await
         }
     }
 }
@@ -121,13 +200,19 @@ pub async fn clear() -> Result<()> {
     match proxy_backend_route(cfg!(target_os = "macos"), &running_mode) {
         ProxyBackendRoute::Local => Sysopt::global().reset_sysproxy().await,
         ProxyBackendRoute::Service => {
-            service_apply_result(service::set_system_proxy_by_service(&MacosProxyConfig::Disabled).await?)
+            SERVICE_PROXY_OPERATIONS
+                .run_final_service_operation(|| async {
+                    service_apply_result(service::set_system_proxy_by_service(&MacosProxyConfig::Disabled).await?)
+                })
+                .await
         }
     }
 }
 
 pub async fn refresh_guard() -> Result<()> {
-    let generation = SERVICE_GUARD_GENERATION.fetch_add(1, Ordering::AcqRel).wrapping_add(1);
+    let generation = SERVICE_PROXY_OPERATIONS
+        .cancel_and_drain(|| Sysopt::global().stop_proxy_guard())
+        .await;
     let running_mode = CoreManager::global().get_running_mode();
     if matches!(
         proxy_backend_route(cfg!(target_os = "macos"), &running_mode),
@@ -137,25 +222,30 @@ pub async fn refresh_guard() -> Result<()> {
         return Ok(());
     }
 
-    Sysopt::global().stop_proxy_guard().await;
     let verge = Config::verge().await.latest_arc();
     if !verge.enable_system_proxy.unwrap_or_default() || !verge.enable_proxy_guard.unwrap_or_default() {
         return Ok(());
     }
 
     let proxy = current_service_proxy_config(&verge).await?;
+    let proof = service::active_service_session()?;
     let interval = Duration::from_secs(verge.proxy_guard_duration.unwrap_or(30).max(1));
     AsyncHandler::spawn(move || async move {
         loop {
             tokio::time::sleep(interval).await;
-            if !guard_generation_is_current(&SERVICE_GUARD_GENERATION, generation)
-                || !matches!(*CoreManager::global().get_running_mode(), RunningMode::Service)
-                || service::active_service_session().is_err()
+            match SERVICE_PROXY_OPERATIONS
+                .run_guard_request(
+                    generation,
+                    &proof,
+                    || matches!(*CoreManager::global().get_running_mode(), RunningMode::Service),
+                    service::active_service_session,
+                    || service::set_system_proxy_by_service_with_session(&proxy, &proof),
+                )
+                .await
             {
-                break;
-            }
-            if service::set_system_proxy_by_service(&proxy).await.is_err() {
-                logging!(warn, Type::Core, "failed to refresh system proxy through Service");
+                Ok(true) => {}
+                Ok(false) => break,
+                Err(_) => logging!(warn, Type::Core, "failed to refresh system proxy through Service"),
             }
         }
     });
@@ -163,16 +253,33 @@ pub async fn refresh_guard() -> Result<()> {
 }
 
 pub async fn stop_guard() {
-    SERVICE_GUARD_GENERATION.fetch_add(1, Ordering::AcqRel);
-    Sysopt::global().stop_proxy_guard().await;
+    SERVICE_PROXY_OPERATIONS
+        .cancel_and_drain(|| Sysopt::global().stop_proxy_guard())
+        .await;
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{ProxyBackendRoute, guard_generation_is_current, proxy_backend_route, service_proxy_config};
+    use super::{
+        ProxyBackendRoute, ServiceProxyOperations, guard_generation_is_current, proxy_backend_route,
+        service_proxy_config,
+    };
     use crate::{config::IVerge, core::manager::RunningMode};
-    use clash_verge_service_ipc::MacosProxyConfig;
-    use std::sync::atomic::{AtomicU64, Ordering};
+    use clash_verge_service_ipc::{MacosProxyConfig, OwnerSessionProof, ProxyApplyOutcome};
+    use parking_lot::Mutex;
+    use std::sync::{
+        Arc,
+        atomic::{AtomicBool, AtomicU64, Ordering},
+    };
+    use std::task::Poll;
+    use tokio::sync::Barrier;
+
+    fn proof(generation: u64, token: &str) -> OwnerSessionProof {
+        OwnerSessionProof {
+            generation,
+            token: token.to_owned(),
+        }
+    }
 
     #[test]
     fn only_macos_service_routes_proxy_to_helper() {
@@ -198,6 +305,167 @@ mod tests {
         assert!(guard_generation_is_current(&generation, captured_generation));
         generation.fetch_add(1, Ordering::AcqRel);
         assert!(!guard_generation_is_current(&generation, captured_generation));
+    }
+
+    #[tokio::test]
+    async fn final_service_mutation_finishes_after_in_flight_guard_request() {
+        let operations = Arc::new(ServiceProxyOperations::new());
+        let generation = operations.invalidate_guard();
+        let captured_proof = proof(1, "captured");
+        let active_proof = Arc::new(Mutex::new(captured_proof.clone()));
+        let guard_started = Arc::new(Barrier::new(2));
+        let release_guard = Arc::new(Barrier::new(2));
+        let events = Arc::new(Mutex::new(Vec::new()));
+
+        let guard_task = {
+            let operations = Arc::clone(&operations);
+            let captured_proof = captured_proof.clone();
+            let active_proof = Arc::clone(&active_proof);
+            let guard_started = Arc::clone(&guard_started);
+            let release_guard = Arc::clone(&release_guard);
+            let events = Arc::clone(&events);
+            tokio::spawn(async move {
+                operations
+                    .run_guard_request(
+                        generation,
+                        &captured_proof,
+                        || true,
+                        || Ok(active_proof.lock().clone()),
+                        || async {
+                            events.lock().push("guard-started");
+                            guard_started.wait().await;
+                            release_guard.wait().await;
+                            events.lock().push("guard-finished");
+                            Ok(ProxyApplyOutcome::Applied)
+                        },
+                    )
+                    .await
+            })
+        };
+        guard_started.wait().await;
+
+        let mut final_operation = Box::pin(operations.run_final_service_operation(|| async {
+            events.lock().push("final");
+            Ok::<_, anyhow::Error>(())
+        }));
+        assert!(matches!(futures::poll!(final_operation.as_mut()), Poll::Pending));
+        assert!(!guard_generation_is_current(&operations.guard_generation, generation));
+        release_guard.wait().await;
+
+        assert!(matches!(guard_task.await, Ok(Ok(true))));
+        assert!(matches!(final_operation.await, Ok(())));
+        assert_eq!(&*events.lock(), &["guard-started", "guard-finished", "final"]);
+    }
+
+    #[tokio::test]
+    async fn generation_invalidation_while_guard_waits_prevents_rpc() {
+        let operations = Arc::new(ServiceProxyOperations::new());
+        let generation = operations.invalidate_guard();
+        let captured_proof = proof(1, "captured");
+        let blocker_started = Arc::new(Barrier::new(2));
+        let release_blocker = Arc::new(Barrier::new(2));
+
+        let blocker = {
+            let operations = Arc::clone(&operations);
+            let blocker_started = Arc::clone(&blocker_started);
+            let release_blocker = Arc::clone(&release_blocker);
+            tokio::spawn(async move {
+                operations
+                    .run_service_operation(|| async {
+                        blocker_started.wait().await;
+                        release_blocker.wait().await;
+                    })
+                    .await
+            })
+        };
+        blocker_started.wait().await;
+
+        let rpc_called = AtomicBool::new(false);
+        let mut guard_request = Box::pin(operations.run_guard_request(
+            generation,
+            &captured_proof,
+            || true,
+            || Ok(captured_proof.clone()),
+            || async {
+                rpc_called.store(true, Ordering::Release);
+                Ok(ProxyApplyOutcome::Applied)
+            },
+        ));
+        assert!(matches!(futures::poll!(guard_request.as_mut()), Poll::Pending));
+        operations.invalidate_guard();
+        release_blocker.wait().await;
+
+        assert!(blocker.await.is_ok());
+        assert!(matches!(guard_request.await, Ok(false)));
+        assert!(!rpc_called.load(Ordering::Acquire));
+    }
+
+    #[tokio::test]
+    async fn old_guard_loop_does_not_adopt_replacement_proof() {
+        let operations = Arc::new(ServiceProxyOperations::new());
+        let generation = operations.invalidate_guard();
+        let captured_proof = proof(1, "captured");
+        let replacement_proof = proof(2, "replacement");
+        let active_proof = Mutex::new(captured_proof.clone());
+        let rpc_called = AtomicBool::new(false);
+        let blocker_started = Arc::new(Barrier::new(2));
+        let release_blocker = Arc::new(Barrier::new(2));
+
+        let blocker = {
+            let operations = Arc::clone(&operations);
+            let blocker_started = Arc::clone(&blocker_started);
+            let release_blocker = Arc::clone(&release_blocker);
+            tokio::spawn(async move {
+                operations
+                    .run_service_operation(|| async {
+                        blocker_started.wait().await;
+                        release_blocker.wait().await;
+                    })
+                    .await
+            })
+        };
+        blocker_started.wait().await;
+
+        let mut guard_request = Box::pin(operations.run_guard_request(
+            generation,
+            &captured_proof,
+            || true,
+            || Ok(active_proof.lock().clone()),
+            || async {
+                rpc_called.store(true, Ordering::Release);
+                Ok(ProxyApplyOutcome::Applied)
+            },
+        ));
+        assert!(matches!(futures::poll!(guard_request.as_mut()), Poll::Pending));
+        *active_proof.lock() = replacement_proof;
+        release_blocker.wait().await;
+
+        assert!(blocker.await.is_ok());
+        assert!(matches!(guard_request.await, Ok(false)));
+        assert!(!rpc_called.load(Ordering::Acquire));
+    }
+
+    #[tokio::test]
+    async fn guard_refresh_rejects_direct_fallback() {
+        let operations = ServiceProxyOperations::new();
+        let generation = operations.invalidate_guard();
+        let captured_proof = proof(1, "captured");
+
+        let refreshed = operations
+            .run_guard_request(
+                generation,
+                &captured_proof,
+                || true,
+                || Ok(captured_proof.clone()),
+                || async {
+                    Ok(ProxyApplyOutcome::DirectFallback {
+                        message: "fallback detail".to_owned(),
+                    })
+                },
+            )
+            .await;
+
+        assert!(refreshed.is_err());
     }
 
     #[test]
