@@ -199,7 +199,9 @@ impl CoreManager {
         Ok(())
     }
 
-    pub(super) fn stop_core_by_sidecar(&self) {
+    /// Terminates the sidecar after its caller has successfully cleared the
+    /// system proxy.
+    pub(super) fn stop_core_by_sidecar_unprepared(&self) {
         logging!(info, Type::Core, "Stopping sidecar");
         defer! {
             server::set_pac_available(false);

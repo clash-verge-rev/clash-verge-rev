@@ -9,6 +9,7 @@ use anyhow::Result;
 use clash_verge_logging::{Type, logging};
 use scopeguard::defer;
 use smartstring::alias::String;
+use std::path::Path;
 use tauri_plugin_clash_verge_sysinfo;
 #[cfg(target_os = "windows")]
 use tauri_plugin_clash_verge_sysinfo::is_current_app_handle_admin;
@@ -95,20 +96,25 @@ impl ProxyRestoreExpectation {
     }
 }
 
-async fn run_controlled_stop_transition<Clear, ClearFuture, Stop, StopFuture>(
+async fn run_controlled_stop_transition<StopGuard, StopGuardFuture, Clear, ClearFuture, Stop, StopFuture>(
     is_macos: bool,
     running_mode: RunningMode,
+    stop_guard: StopGuard,
     clear_proxy: Clear,
     stop_core: Stop,
 ) -> Result<()>
 where
+    StopGuard: FnOnce() -> StopGuardFuture,
+    StopGuardFuture: std::future::Future<Output = ()>,
     Clear: FnOnce() -> ClearFuture,
     ClearFuture: std::future::Future<Output = Result<()>>,
     Stop: FnOnce() -> StopFuture,
     StopFuture: std::future::Future<Output = Result<()>>,
 {
-    if !(matches!(running_mode, RunningMode::NotRunning) || is_macos && matches!(running_mode, RunningMode::Service)) {
-        clear_proxy().await?;
+    match running_mode {
+        RunningMode::NotRunning => {}
+        RunningMode::Service if is_macos => stop_guard().await,
+        RunningMode::Service | RunningMode::Sidecar => clear_proxy().await?,
     }
     stop_core().await
 }
@@ -130,6 +136,77 @@ where
         apply_proxy().await?;
     }
     Ok(())
+}
+
+async fn run_ready_core_start_transition<Start, StartFuture, Ready, Apply, ApplyFuture>(
+    start_core: Start,
+    core_is_ready: Ready,
+    apply_proxy: Apply,
+) -> Result<()>
+where
+    Start: FnOnce() -> StartFuture,
+    StartFuture: std::future::Future<Output = Result<()>>,
+    Ready: FnOnce() -> bool,
+    Apply: FnOnce() -> ApplyFuture,
+    ApplyFuture: std::future::Future<Output = Result<()>>,
+{
+    start_core().await?;
+    if !core_is_ready() {
+        anyhow::bail!("core did not become ready after start");
+    }
+    apply_proxy().await
+}
+
+async fn run_sidecar_termination_transition<Clear, ClearFuture, Terminate>(
+    clear_proxy: Clear,
+    terminate_sidecar: Terminate,
+) -> Result<()>
+where
+    Clear: FnOnce() -> ClearFuture,
+    ClearFuture: std::future::Future<Output = Result<()>>,
+    Terminate: FnOnce(),
+{
+    clear_proxy().await?;
+    terminate_sidecar();
+    Ok(())
+}
+
+async fn run_service_config_replacement_transition<
+    StopGuard,
+    StopGuardFuture,
+    Clear,
+    ClearFuture,
+    Stop,
+    StopFuture,
+    Start,
+    StartFuture,
+    Ready,
+    Restore,
+    RestoreFuture,
+>(
+    is_macos: bool,
+    stop_guard: StopGuard,
+    clear_proxy: Clear,
+    stop_core: Stop,
+    start_core: Start,
+    core_is_ready: Ready,
+    restore_proxy: Restore,
+) -> Result<()>
+where
+    StopGuard: FnOnce() -> StopGuardFuture,
+    StopGuardFuture: std::future::Future<Output = ()>,
+    Clear: FnOnce() -> ClearFuture,
+    ClearFuture: std::future::Future<Output = Result<()>>,
+    Stop: FnOnce() -> StopFuture,
+    StopFuture: std::future::Future<Output = Result<()>>,
+    Start: FnOnce() -> StartFuture,
+    StartFuture: std::future::Future<Output = Result<()>>,
+    Ready: FnOnce() -> bool,
+    Restore: FnOnce() -> RestoreFuture,
+    RestoreFuture: std::future::Future<Output = Result<()>>,
+{
+    run_controlled_stop_transition(is_macos, RunningMode::Service, stop_guard, clear_proxy, stop_core).await?;
+    run_ready_core_start_transition(start_core, core_is_ready, restore_proxy).await
 }
 
 pub(super) async fn run_core_replacement_transition<Stop, StopFuture, Start, StartFuture, Restore, RestoreFuture>(
@@ -224,7 +301,11 @@ impl CoreManager {
         .await;
         if let Err(error) = &result {
             SERVICE_MANAGER.mark_unavailable(format!("Sidecar startup failed: {error:#}"));
-            self.rollback_failed_sidecar_transition().await;
+            if let Err(cleanup_error) = self.rollback_failed_sidecar_transition().await {
+                return Err(anyhow::anyhow!(
+                    "Sidecar startup failed: {error:#}; failed to clear proxy before rollback: {cleanup_error:#}"
+                ));
+            }
         }
         result
     }
@@ -260,18 +341,46 @@ impl CoreManager {
         )
         .await;
 
-        if result.is_err() {
-            self.rollback_failed_sidecar_transition().await;
+        if let Err(error) = &result
+            && let Err(cleanup_error) = self.rollback_failed_sidecar_transition().await
+        {
+            return Err(anyhow::anyhow!(
+                "Service uninstall transition failed: {error:#}; failed to clear proxy before rollback: {cleanup_error:#}"
+            ));
         }
         result
     }
 
-    async fn rollback_failed_sidecar_transition(&self) {
+    async fn rollback_failed_sidecar_transition(&self) -> Result<()> {
         if matches!(*self.get_running_mode(), RunningMode::Sidecar) {
-            self.stop_core_by_sidecar();
+            self.stop_sidecar_after_proxy_clear().await?;
         }
         self.rollback_failed_start().await;
         self.after_core_process();
+        Ok(())
+    }
+
+    async fn stop_sidecar_after_proxy_clear(&self) -> Result<()> {
+        run_sidecar_termination_transition(proxy_control::clear, || self.stop_core_by_sidecar_unprepared()).await
+    }
+
+    /// Replaces a Service-owned core while the caller holds `lifecycle_lock`.
+    pub(super) async fn replace_service_core_with_config(&self, config_file: &Path) -> Result<()> {
+        let result = run_service_config_replacement_transition(
+            cfg!(target_os = "macos"),
+            proxy_control::stop_guard,
+            proxy_control::clear,
+            || self.stop_core_unprepared_inner(),
+            || self.start_core_by_service_with_config(config_file),
+            || {
+                matches!(*self.get_running_mode(), RunningMode::Service)
+                    && self.current_core_readiness_generation().is_some()
+            },
+            || self.apply_proxy_after_start(),
+        )
+        .await;
+        self.after_core_process();
+        result
     }
 
     pub(crate) async fn apply_proxy_after_start(&self) -> Result<()> {
@@ -370,9 +479,13 @@ impl CoreManager {
     /// 调用者须已持有 `lifecycle_lock`。
     pub(crate) async fn controlled_stop_core_inner(&self) -> Result<()> {
         let running_mode = *self.get_running_mode();
-        run_controlled_stop_transition(cfg!(target_os = "macos"), running_mode, proxy_control::clear, || {
-            self.stop_core_unprepared_inner()
-        })
+        run_controlled_stop_transition(
+            cfg!(target_os = "macos"),
+            running_mode,
+            proxy_control::stop_guard,
+            proxy_control::clear,
+            || self.stop_core_unprepared_inner(),
+        )
         .await
     }
 
@@ -386,7 +499,7 @@ impl CoreManager {
         match *self.get_running_mode() {
             RunningMode::Service => self.stop_core_by_service().await,
             RunningMode::Sidecar => {
-                self.stop_core_by_sidecar();
+                self.stop_core_by_sidecar_unprepared();
                 Ok(())
             }
             RunningMode::NotRunning => Ok(()),
@@ -587,31 +700,65 @@ impl CoreManager {
             Type::Core,
             "service became ready; handing off from sidecar to service"
         );
-        self.stop_core_by_sidecar();
+        if let Err(error) = self.stop_sidecar_after_proxy_clear().await {
+            logging!(
+                error,
+                Type::Core,
+                "failed to clear proxy before sidecar handoff: {error:#}"
+            );
+            return HandoffOutcome::Failed;
+        }
 
-        match self.start_core_by_service().await {
-            Ok(()) => {
-                logging!(info, Type::Core, "handoff to service mode succeeded");
-                HandoffOutcome::Done
-            }
-            Err(e) => {
+        let service_result = run_ready_core_start_transition(
+            || self.start_core_by_service(),
+            || {
+                matches!(*self.get_running_mode(), RunningMode::Service)
+                    && self.current_core_readiness_generation().is_some()
+            },
+            || self.apply_proxy_after_start(),
+        )
+        .await;
+        let Err(service_error) = service_result else {
+            logging!(info, Type::Core, "handoff to service mode succeeded");
+            return HandoffOutcome::Done;
+        };
+
+        logging!(error, Type::Core, "handoff to service failed: {service_error:#}");
+        if let Err(cleanup_error) = self.controlled_stop_core_inner().await {
+            logging!(
+                error,
+                Type::Core,
+                "failed to stop service before sidecar fallback: {cleanup_error:#}"
+            );
+            return HandoffOutcome::Failed;
+        }
+
+        let sidecar_result = run_ready_core_start_transition(
+            || self.start_core_by_sidecar(),
+            || {
+                matches!(*self.get_running_mode(), RunningMode::Sidecar)
+                    && self.current_core_readiness_generation().is_some()
+            },
+            || self.apply_proxy_after_start(),
+        )
+        .await;
+        if let Err(sidecar_error) = sidecar_result {
+            logging!(error, Type::Core, "sidecar fallback failed: {sidecar_error:#}");
+            if let Err(cleanup_error) = self.rollback_failed_sidecar_transition().await {
                 logging!(
                     error,
                     Type::Core,
-                    "handoff to service failed: {}; restarting sidecar",
-                    e
+                    "failed to clear proxy before sidecar rollback: {cleanup_error:#}"
                 );
-                if let Err(e2) = self.start_core_by_sidecar().await {
-                    logging!(
-                        error,
-                        Type::Core,
-                        "failed to restart sidecar after handoff failure: {}",
-                        e2
-                    );
-                }
-                HandoffOutcome::Failed
             }
+        } else {
+            logging!(
+                info,
+                Type::Core,
+                "sidecar fallback became ready and restored proxy state"
+            );
         }
+        HandoffOutcome::Failed
     }
 }
 
@@ -620,6 +767,7 @@ mod tests {
     use super::{
         CoreManager, ProxyRestoreExpectation, StartupDecision, can_allow_sidecar_for_session,
         run_controlled_stop_transition, run_core_replacement_transition, run_core_start_transition,
+        run_ready_core_start_transition, run_service_config_replacement_transition, run_sidecar_termination_transition,
         run_uninstall_transition, should_wait_for_service, startup_decision,
     };
     use crate::core::{manager::RunningMode, service::ServiceStatus};
@@ -628,9 +776,40 @@ mod tests {
         future,
         sync::{
             Arc,
-            atomic::{AtomicBool, Ordering},
+            atomic::{AtomicBool, AtomicU64, Ordering},
         },
+        task::Poll,
     };
+    use tokio::sync::{Barrier, Mutex as AsyncMutex};
+
+    struct FakeGuardCoordinator {
+        generation: AtomicU64,
+        operation_lock: AsyncMutex<()>,
+    }
+
+    impl FakeGuardCoordinator {
+        const fn new() -> Self {
+            Self {
+                generation: AtomicU64::new(1),
+                operation_lock: AsyncMutex::const_new(()),
+            }
+        }
+
+        async fn run_guard_request(&self, captured_generation: u64, calls: &Mutex<Vec<&'static str>>) -> bool {
+            let _operation = self.operation_lock.lock().await;
+            if self.generation.load(Ordering::Acquire) != captured_generation {
+                return false;
+            }
+            calls.lock().push("guard-reapply");
+            true
+        }
+
+        async fn stop_guard(&self, calls: &Mutex<Vec<&'static str>>) {
+            self.generation.fetch_add(1, Ordering::AcqRel);
+            let _operation = self.operation_lock.lock().await;
+            calls.lock().push("guard-stopped");
+        }
+    }
 
     fn transition_step(
         calls: &Arc<Mutex<Vec<&'static str>>>,
@@ -673,6 +852,7 @@ mod tests {
         let result = run_controlled_stop_transition(
             true,
             RunningMode::Sidecar,
+            || future::ready(()),
             || transition_step(&calls, "proxy_clear", None),
             || transition_step(&calls, "core_stop", None),
         )
@@ -683,19 +863,72 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn controlled_macos_service_stop_uses_one_helper_transaction() {
+    async fn controlled_macos_service_stop_drains_guard_before_one_helper_transaction() {
         let calls = Arc::new(Mutex::new(Vec::new()));
 
         let result = run_controlled_stop_transition(
             true,
             RunningMode::Service,
-            || transition_step(&calls, "proxy_clear", None),
+            || {
+                calls.lock().push("guard-stopped");
+                future::ready(())
+            },
+            || transition_step(&calls, "unexpected-proxy-clear", None),
             || transition_step(&calls, "service_stop_with_proxy_clear", None),
         )
         .await;
 
         assert!(result.is_ok());
-        assert_eq!(&*calls.lock(), &["service_stop_with_proxy_clear"]);
+        assert_eq!(&*calls.lock(), &["guard-stopped", "service_stop_with_proxy_clear"]);
+    }
+
+    #[tokio::test]
+    async fn failed_macos_service_stop_cannot_be_followed_by_a_stale_guard_write() {
+        let coordinator = Arc::new(FakeGuardCoordinator::new());
+        let calls = Arc::new(Mutex::new(Vec::new()));
+        let guard_started = Arc::new(Barrier::new(2));
+        let release_guard = Arc::new(Barrier::new(2));
+        let captured_generation = coordinator.generation.load(Ordering::Acquire);
+
+        let in_flight_guard = {
+            let coordinator = Arc::clone(&coordinator);
+            let calls = Arc::clone(&calls);
+            let guard_started = Arc::clone(&guard_started);
+            let release_guard = Arc::clone(&release_guard);
+            tokio::spawn(async move {
+                let _operation = coordinator.operation_lock.lock().await;
+                calls.lock().push("guard-started");
+                guard_started.wait().await;
+                release_guard.wait().await;
+                calls.lock().push("guard-finished");
+            })
+        };
+        guard_started.wait().await;
+
+        let mut stop = Box::pin(run_controlled_stop_transition(
+            true,
+            RunningMode::Service,
+            || async {
+                coordinator.stop_guard(&calls).await;
+            },
+            || transition_step(&calls, "unexpected-proxy-clear", None),
+            || transition_step(&calls, "service-stop-failed", Some("service-stop-failed")),
+        ));
+        assert!(matches!(futures::poll!(stop.as_mut()), Poll::Pending));
+        release_guard.wait().await;
+
+        assert!(in_flight_guard.await.is_ok());
+        assert!(stop.await.is_err());
+        assert!(!coordinator.run_guard_request(captured_generation, &calls).await);
+        assert_eq!(
+            &*calls.lock(),
+            &[
+                "guard-started",
+                "guard-finished",
+                "guard-stopped",
+                "service-stop-failed"
+            ]
+        );
     }
 
     #[tokio::test]
@@ -705,6 +938,7 @@ mod tests {
         let result = run_controlled_stop_transition(
             true,
             RunningMode::Sidecar,
+            || future::ready(()),
             || transition_step(&calls, "proxy_clear", Some("proxy_clear")),
             || transition_step(&calls, "core_stop", None),
         )
@@ -712,6 +946,113 @@ mod tests {
 
         assert!(result.is_err());
         assert_eq!(&*calls.lock(), &["proxy_clear"]);
+    }
+
+    #[tokio::test]
+    async fn failed_sidecar_transition_rollback_surfaces_clear_failure_without_terminating() {
+        let calls = Arc::new(Mutex::new(Vec::new()));
+        let sidecar_alive = AtomicBool::new(true);
+
+        let result = run_sidecar_termination_transition(
+            || transition_step(&calls, "rollback-proxy-clear", Some("rollback-proxy-clear")),
+            || {
+                sidecar_alive.store(false, Ordering::Release);
+                calls.lock().push("rollback-sidecar-stop");
+            },
+        )
+        .await;
+
+        assert!(matches!(
+            result,
+            Err(error) if error.to_string().contains("rollback-proxy-clear failed")
+        ));
+        assert!(sidecar_alive.load(Ordering::Acquire));
+        assert_eq!(&*calls.lock(), &["rollback-proxy-clear"]);
+    }
+
+    #[tokio::test]
+    async fn handoff_sidecar_cleanup_is_clear_gated_and_ordered() {
+        for fail_at in [None, Some("handoff-proxy-clear")] {
+            let calls = Arc::new(Mutex::new(Vec::new()));
+            let sidecar_alive = AtomicBool::new(true);
+
+            let result = run_sidecar_termination_transition(
+                || transition_step(&calls, "handoff-proxy-clear", fail_at),
+                || {
+                    sidecar_alive.store(false, Ordering::Release);
+                    calls.lock().push("handoff-sidecar-stop");
+                },
+            )
+            .await;
+
+            if fail_at.is_some() {
+                assert!(result.is_err());
+                assert!(sidecar_alive.load(Ordering::Acquire));
+                assert_eq!(&*calls.lock(), &["handoff-proxy-clear"]);
+            } else {
+                assert!(result.is_ok());
+                assert!(!sidecar_alive.load(Ordering::Acquire));
+                assert_eq!(&*calls.lock(), &["handoff-proxy-clear", "handoff-sidecar-stop"]);
+            }
+        }
+    }
+
+    #[tokio::test]
+    async fn handoff_chosen_core_applies_proxy_only_after_required_readiness() {
+        let calls = Arc::new(Mutex::new(Vec::new()));
+
+        let result = run_ready_core_start_transition(
+            || transition_step(&calls, "core-start", None),
+            || {
+                calls.lock().push("core-ready");
+                true
+            },
+            || transition_step(&calls, "proxy-apply", None),
+        )
+        .await;
+
+        assert!(result.is_ok());
+        assert_eq!(&*calls.lock(), &["core-start", "core-ready", "proxy-apply"]);
+    }
+
+    #[tokio::test]
+    async fn handoff_chosen_core_without_readiness_never_applies_proxy() {
+        let calls = Arc::new(Mutex::new(Vec::new()));
+
+        let result = run_ready_core_start_transition(
+            || transition_step(&calls, "core-start", None),
+            || {
+                calls.lock().push("core-not-ready");
+                false
+            },
+            || transition_step(&calls, "unexpected-proxy-apply", None),
+        )
+        .await;
+
+        assert!(result.is_err());
+        assert_eq!(&*calls.lock(), &["core-start", "core-not-ready"]);
+    }
+
+    #[tokio::test]
+    async fn handoff_cleanup_failure_aborts_fallback_and_leaves_service_alive() {
+        let calls = Arc::new(Mutex::new(Vec::new()));
+        let service_alive = AtomicBool::new(true);
+
+        let result = run_controlled_stop_transition(
+            false,
+            RunningMode::Service,
+            || future::ready(()),
+            || transition_step(&calls, "service-proxy-clear", Some("service-proxy-clear")),
+            || {
+                service_alive.store(false, Ordering::Release);
+                transition_step(&calls, "service-stop", None)
+            },
+        )
+        .await;
+
+        assert!(result.is_err());
+        assert!(service_alive.load(Ordering::Acquire));
+        assert_eq!(&*calls.lock(), &["service-proxy-clear"]);
     }
 
     #[tokio::test]
@@ -786,6 +1127,76 @@ mod tests {
 
         assert!(result.is_err());
         assert_eq!(&*calls.lock(), &["controlled-stop", "start-service-config"]);
+    }
+
+    #[tokio::test]
+    async fn service_config_replacement_is_controlled_and_generation_safe_on_every_platform() {
+        for is_macos in [false, true] {
+            let calls = Arc::new(Mutex::new(Vec::new()));
+            let manager = CoreManager::default();
+            let old_readiness_generation = manager.mark_core_ready();
+            manager.set_running_mode(RunningMode::Service);
+            let owner_monitor_generation = AtomicU64::new(1);
+            let old_owner_monitor_generation = owner_monitor_generation.load(Ordering::Acquire);
+
+            let result = run_service_config_replacement_transition(
+                is_macos,
+                || {
+                    calls.lock().push("guard-stopped");
+                    future::ready(())
+                },
+                || transition_step(&calls, "proxy-clear", None),
+                || {
+                    calls.lock().push("helper-stop");
+                    owner_monitor_generation.fetch_add(1, Ordering::AcqRel);
+                    manager.set_running_mode(RunningMode::NotRunning);
+                    future::ready(Ok(()))
+                },
+                || {
+                    calls.lock().push("service-start");
+                    owner_monitor_generation.fetch_add(1, Ordering::AcqRel);
+                    manager.mark_core_ready();
+                    manager.set_running_mode(RunningMode::Service);
+                    if owner_monitor_generation
+                        .compare_exchange(
+                            old_owner_monitor_generation,
+                            old_owner_monitor_generation.wrapping_add(1),
+                            Ordering::AcqRel,
+                            Ordering::Acquire,
+                        )
+                        .is_ok()
+                    {
+                        calls.lock().push("old-monitor-invalidated-readiness");
+                        manager.invalidate_core_readiness();
+                    } else {
+                        calls.lock().push("old-monitor-rejected");
+                    }
+                    future::ready(Ok(()))
+                },
+                || {
+                    calls.lock().push("readiness-checked");
+                    matches!(*manager.get_running_mode(), RunningMode::Service)
+                        && manager.current_core_readiness_generation().is_some()
+                        && manager.current_core_readiness_generation() != Some(old_readiness_generation)
+                },
+                || transition_step(&calls, "proxy-apply", None),
+            )
+            .await;
+
+            assert!(result.is_ok());
+            let expected_preparation = if is_macos { "guard-stopped" } else { "proxy-clear" };
+            assert_eq!(
+                &*calls.lock(),
+                &[
+                    expected_preparation,
+                    "helper-stop",
+                    "service-start",
+                    "old-monitor-rejected",
+                    "readiness-checked",
+                    "proxy-apply",
+                ]
+            );
+        }
     }
 
     #[test]
