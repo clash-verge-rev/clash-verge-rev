@@ -17,6 +17,23 @@ const fn should_wait_for_service(tun_enabled: bool, service_ready: bool, is_admi
     tun_enabled && !service_ready && !is_admin
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum StartupDecision {
+    Service,
+    Sidecar,
+    Wait,
+}
+
+fn startup_decision(status: &ServiceStatus, block_on_service_issue: bool) -> StartupDecision {
+    match status {
+        ServiceStatus::Ready => StartupDecision::Service,
+        ServiceStatus::NeedsReinstall | ServiceStatus::Unavailable(_) if block_on_service_issue => {
+            StartupDecision::Wait
+        }
+        _ => StartupDecision::Sidecar,
+    }
+}
+
 /// sidecar→service 交接结果
 #[cfg(target_os = "windows")]
 enum HandoffOutcome {
@@ -51,7 +68,10 @@ impl CoreManager {
             return Ok(());
         }
 
-        self.prepare_startup().await;
+        if !self.prepare_startup().await {
+            self.after_core_process();
+            return Ok(());
+        }
         defer! {
             self.after_core_process();
         }
@@ -132,13 +152,19 @@ impl CoreManager {
         Ok(())
     }
 
-    async fn prepare_startup(&self) {
+    async fn prepare_startup(&self) -> bool {
         #[cfg(target_os = "windows")]
         self.wait_for_service_if_needed().await;
-        self.set_running_mode(match SERVICE_MANAGER.current().await {
-            ServiceStatus::Ready => RunningMode::Service,
-            _ => RunningMode::Sidecar,
-        });
+
+        match startup_decision(&SERVICE_MANAGER.current().await, cfg!(target_os = "macos")) {
+            StartupDecision::Service => self.set_running_mode(RunningMode::Service),
+            StartupDecision::Sidecar => self.set_running_mode(RunningMode::Sidecar),
+            StartupDecision::Wait => {
+                self.set_running_mode(RunningMode::NotRunning);
+                return false;
+            }
+        }
+        true
     }
 
     fn after_core_process(&self) {
@@ -323,7 +349,41 @@ impl CoreManager {
 
 #[cfg(test)]
 mod tests {
-    use super::should_wait_for_service;
+    use super::{StartupDecision, should_wait_for_service, startup_decision};
+    use crate::core::service::ServiceStatus;
+
+    #[test]
+    fn macos_waits_for_reinstall_decision_but_missing_service_uses_sidecar() {
+        assert_eq!(startup_decision(&ServiceStatus::Ready, true), StartupDecision::Service);
+        assert_eq!(
+            startup_decision(&ServiceStatus::NotInstalled, true),
+            StartupDecision::Sidecar
+        );
+        assert_eq!(
+            startup_decision(&ServiceStatus::SidecarAllowed, true),
+            StartupDecision::Sidecar
+        );
+        assert_eq!(
+            startup_decision(&ServiceStatus::NeedsReinstall, true),
+            StartupDecision::Wait
+        );
+        assert_eq!(
+            startup_decision(&ServiceStatus::Unavailable("broken".into()), true),
+            StartupDecision::Wait
+        );
+    }
+
+    #[test]
+    fn non_macos_keeps_existing_sidecar_fallback() {
+        assert_eq!(
+            startup_decision(&ServiceStatus::NeedsReinstall, false),
+            StartupDecision::Sidecar
+        );
+        assert_eq!(
+            startup_decision(&ServiceStatus::Unavailable("missing".into()), false),
+            StartupDecision::Sidecar
+        );
+    }
 
     #[test]
     fn service_wait_is_only_required_for_non_admin_tun() {

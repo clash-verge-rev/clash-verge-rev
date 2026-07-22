@@ -30,6 +30,16 @@ pub async fn repair_service() -> CmdResult {
 
 #[tauri::command]
 pub async fn is_service_available() -> CmdResult<bool> {
-    service::is_service_available().await.stringify_err()?;
-    Ok(true)
+    service::is_service_available().await.stringify_err()
+}
+
+#[tauri::command]
+pub async fn get_service_install_state() -> CmdResult<service::ServiceInstallState> {
+    Ok(SERVICE_MANAGER.install_state().await)
+}
+
+#[tauri::command]
+pub async fn continue_with_sidecar() -> CmdResult {
+    SERVICE_MANAGER.allow_sidecar_for_session();
+    crate::core::CoreManager::global().start_core().await.stringify_err()
 }
