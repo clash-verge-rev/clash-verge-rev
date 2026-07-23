@@ -195,6 +195,7 @@ export interface TranslationResources {
           }
         }
         serviceMigration: {
+          checkingMessage: string
           continueSidecar: string
           message: string
           reinstall: string

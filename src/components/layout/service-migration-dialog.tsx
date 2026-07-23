@@ -41,6 +41,9 @@ export const ServiceMigrationDialog = () => {
       workflowIncomplete ||
       dialogState === 'needsReinstall' ||
       dialogState === 'unavailable')
+  const showCheckingMessage =
+    loading ||
+    (dialogState !== 'needsReinstall' && dialogState !== 'unavailable')
 
   const refreshInstallState = async () => {
     try {
@@ -175,9 +178,11 @@ export const ServiceMigrationDialog = () => {
     >
       <Alert severity="warning">
         {t(
-          dialogState === 'unavailable'
-            ? 'layout.components.serviceMigration.unavailableMessage'
-            : 'layout.components.serviceMigration.message',
+          showCheckingMessage
+            ? 'layout.components.serviceMigration.checkingMessage'
+            : dialogState === 'unavailable'
+              ? 'layout.components.serviceMigration.unavailableMessage'
+              : 'layout.components.serviceMigration.message',
         )}
       </Alert>
     </BaseDialog>

@@ -1371,7 +1371,10 @@ impl ServiceManager {
         if self.operation_running.load(Ordering::Acquire) {
             bail!("service operation already running");
         }
-        if !matches!(*status, ServiceStatus::NeedsReinstall | ServiceStatus::Unavailable(_)) {
+        if !matches!(
+            *status,
+            ServiceStatus::NeedsReinstall | ServiceStatus::InstallRequired | ServiceStatus::Unavailable(_)
+        ) {
             bail!("sidecar cannot be allowed from service status {status:?}");
         }
         self.status_generation.fetch_add(1, Ordering::AcqRel);
@@ -2111,6 +2114,20 @@ mod tests {
     fn checking_is_public_and_unavailable() {
         assert_eq!(ServiceStatus::Checking.install_state(), ServiceInstallState::Checking);
         assert_ne!(ServiceInstallState::Checking, ServiceInstallState::Ready);
+    }
+
+    #[test]
+    fn failed_install_status_can_be_replaced_with_sidecar_allowance() {
+        let manager = super::ServiceManager {
+            status: parking_lot::Mutex::new(ServiceStatus::InstallRequired),
+            status_generation: AtomicU64::new(0),
+            operation_running: AtomicBool::new(false),
+            operation_done: tokio::sync::Notify::new(),
+        };
+
+        assert!(manager.allow_sidecar_for_session().is_ok());
+        assert_eq!(*manager.status.lock(), ServiceStatus::SidecarAllowed);
+        assert_eq!(manager.status_generation.load(Ordering::Acquire), 1);
     }
 
     #[test]

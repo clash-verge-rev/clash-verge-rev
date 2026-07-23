@@ -44,10 +44,12 @@ const fn can_allow_sidecar_for_session(
     service_status: &ServiceStatus,
 ) -> bool {
     is_macos
-        && matches!(running_mode, RunningMode::NotRunning)
         && matches!(
-            service_status,
-            ServiceStatus::NeedsReinstall | ServiceStatus::Unavailable(_)
+            (running_mode, service_status),
+            (
+                RunningMode::NotRunning,
+                ServiceStatus::NeedsReinstall | ServiceStatus::Unavailable(_)
+            ) | (RunningMode::Sidecar, ServiceStatus::InstallRequired)
         )
 }
 
@@ -1267,6 +1269,15 @@ mod tests {
         for status in &rejected_statuses {
             assert!(!can_allow_sidecar_for_session(true, &RunningMode::NotRunning, status));
         }
+    }
+
+    #[test]
+    fn failed_service_install_can_continue_with_an_existing_sidecar() {
+        assert!(can_allow_sidecar_for_session(
+            true,
+            &RunningMode::Sidecar,
+            &ServiceStatus::InstallRequired,
+        ));
     }
 
     #[test]

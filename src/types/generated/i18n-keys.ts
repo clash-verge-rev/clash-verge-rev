@@ -111,6 +111,7 @@ export const translationKeys = [
   'layout.components.navigation.menu.expandNavBar',
   'layout.components.serviceMigration.title',
   'layout.components.serviceMigration.message',
+  'layout.components.serviceMigration.checkingMessage',
   'layout.components.serviceMigration.unavailableMessage',
   'layout.components.serviceMigration.reinstall',
   'layout.components.serviceMigration.repair',
