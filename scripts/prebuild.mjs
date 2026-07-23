@@ -579,7 +579,7 @@ const resolveServicePermission = async () => {
 // =======================
 const SERVICE_URL_PREFIX =
   'https://github.com/clash-verge-rev/clash-verge-service-ipc/releases/download'
-const SERVICE_VERSION = 'v2.4.0'
+const SERVICE_VERSION = 'v2.5.0'
 
 const SERVICE_BINARIES = [
   'clash-verge-service',

@@ -322,15 +322,40 @@ fn create_service_core_staging_file(directory: &Path, core_name: &std::ffi::OsSt
 
 #[cfg(any(all(target_os = "macos", feature = "verge-dev"), test))]
 fn service_core_path_for(source: &Path, home: Option<&Path>, stage_for_macos_dev: bool) -> Result<PathBuf> {
-    service_core_path_for_with_publisher(source, home, stage_for_macos_dev, |temporary_path, final_path| {
-        std::fs::rename(temporary_path, final_path).with_context(|| {
-            format!(
-                "failed to publish development Service core {} over {}",
-                temporary_path.display(),
-                final_path.display()
-            )
-        })
-    })
+    service_core_path_for_with_publisher(
+        source,
+        home,
+        stage_for_macos_dev,
+        "service-core",
+        |temporary_path, final_path| {
+            std::fs::rename(temporary_path, final_path).with_context(|| {
+                format!(
+                    "failed to publish development Service core {} over {}",
+                    temporary_path.display(),
+                    final_path.display()
+                )
+            })
+        },
+    )
+}
+
+#[cfg(any(all(target_os = "macos", feature = "verge-dev"), test))]
+fn service_tool_path_for(source: &Path, home: Option<&Path>, stage_for_macos_dev: bool) -> Result<PathBuf> {
+    service_core_path_for_with_publisher(
+        source,
+        home,
+        stage_for_macos_dev,
+        "service-tools",
+        |temporary_path, final_path| {
+            std::fs::rename(temporary_path, final_path).with_context(|| {
+                format!(
+                    "failed to publish development Service tool {} over {}",
+                    temporary_path.display(),
+                    final_path.display()
+                )
+            })
+        },
+    )
 }
 
 #[cfg(any(all(target_os = "macos", feature = "verge-dev"), test))]
@@ -338,6 +363,7 @@ fn service_core_path_for_with_publisher<F>(
     source: &Path,
     home: Option<&Path>,
     stage_for_macos_dev: bool,
+    staging_directory_name: &str,
     publisher: F,
 ) -> Result<PathBuf>
 where
@@ -365,7 +391,9 @@ where
     let mut source_file = std::fs::File::open(source)
         .with_context(|| format!("failed to open development Service core source {}", source.display()))?;
 
-    let staging_directory = home.join("Applications/.clash-verge-rev-dev/service-core");
+    let staging_directory = home
+        .join("Applications/.clash-verge-rev-dev")
+        .join(staging_directory_name);
     std::fs::create_dir_all(&staging_directory).with_context(|| {
         format!(
             "failed to create development Service core staging directory {}",
@@ -429,6 +457,20 @@ where
     Ok(final_path)
 }
 
+#[cfg(target_os = "macos")]
+fn macos_service_tool_path(source: &Path) -> Result<PathBuf> {
+    #[cfg(feature = "verge-dev")]
+    {
+        let home = std::env::var_os("HOME")
+            .filter(|value| !value.is_empty())
+            .map(PathBuf::from);
+        service_tool_path_for(source, home.as_deref(), true)
+    }
+
+    #[cfg(not(feature = "verge-dev"))]
+    Ok(source.to_path_buf())
+}
+
 fn service_core_path(clash_core: &str, bin_ext: &str) -> Result<PathBuf> {
     let sibling = current_exe()?.with_file_name(format!("{clash_core}{bin_ext}"));
 
@@ -474,6 +516,12 @@ fn escape_osascript_double_quoted_string(value: &str) -> String {
 #[cfg(target_os = "macos")]
 fn shell_single_quote(value: &str) -> String {
     format!("'{}'", value.replace('\'', r"'\''"))
+}
+
+#[cfg(any(target_os = "macos", test))]
+fn macos_install_shell(install_path: &Path, gid: u32) -> String {
+    let install_quoted = shell_single_quote(&install_path.to_string_lossy());
+    format!("cd /; CLASH_VERGE_SERVICE_GID={gid} {install_quoted}")
 }
 
 #[cfg(target_os = "windows")]
@@ -664,6 +712,7 @@ fn uninstall_service() -> Result<()> {
         bail!(format!("uninstaller not found: {uninstall_path:?}"));
     }
 
+    let uninstall_path = macos_service_tool_path(&uninstall_path)?;
     let uninstall_shell: String = uninstall_path.to_string_lossy().into_owned();
 
     // clash_verge_i18n::sync_locale(Config::verge().await.latest_arc().language.as_deref());
@@ -671,7 +720,7 @@ fn uninstall_service() -> Result<()> {
     let prompt = clash_verge_i18n::t!("service.adminUninstallPrompt");
     // 先清理服务残留,再执行卸载器。
     let uninstall_quoted = shell_single_quote(&uninstall_shell);
-    let shell = format!("{}; sudo {uninstall_quoted}", macos_force_stop_core_shell());
+    let shell = format!("cd /; {}; {uninstall_quoted}", macos_force_stop_core_shell());
     let shell = escape_osascript_double_quoted_string(&shell);
     let command = format!(r#"do shell script "{shell}" with administrator privileges with prompt "{prompt}""#);
 
@@ -700,14 +749,14 @@ fn install_service() -> Result<()> {
         bail!(format!("installer not found: {install_path:?}"));
     }
 
-    let install_shell: String = install_path.to_string_lossy().into_owned();
+    macos_service_tool_path(&binary_path)?;
+    let install_path = macos_service_tool_path(&install_path)?;
 
     // clash_verge_i18n::sync_locale(Config::verge().await.latest_arc().language.as_deref());
 
     let gid = tauri_plugin_clash_verge_sysinfo::current_gid();
     let prompt = clash_verge_i18n::t!("service.adminInstallPrompt");
-    let install_quoted = shell_single_quote(&install_shell);
-    let shell = format!("sudo CLASH_VERGE_SERVICE_GID={gid} {install_quoted}");
+    let shell = macos_install_shell(&install_path, gid);
     let shell = escape_osascript_double_quoted_string(&shell);
     let command = format!(r#"do shell script "{shell}" with administrator privileges with prompt "{prompt}""#);
 
@@ -1540,10 +1589,11 @@ mod tests {
         CurrentServiceProbe, OwnerRecoveryReason, PrivilegedServiceAction, ServiceInstallState, ServiceStatus,
         ServiceVersionCheck, ServiceVersionReply, apply_service_version_result, capture_generation_before,
         claim_owner_recovery_generation, classify_macos_service_install_state, classify_service_version_reply,
-        confirmed_service_available, generate_service_session_token, mark_service_unavailable_after_owner_loss,
-        owner_recovery_policy, owner_status_recovery_reason, poll_service_version, privileged_service_action,
-        probe_service_availability_with, run_reinstall_sequence, service_core_path_for,
-        service_core_path_for_with_publisher, session_matches_status, transport_failure_recovery_reason,
+        confirmed_service_available, generate_service_session_token, macos_install_shell,
+        mark_service_unavailable_after_owner_loss, owner_recovery_policy, owner_status_recovery_reason,
+        poll_service_version, privileged_service_action, probe_service_availability_with, run_reinstall_sequence,
+        service_core_path_for, service_core_path_for_with_publisher, service_tool_path_for, session_matches_status,
+        transport_failure_recovery_reason,
     };
     use clash_verge_service_ipc::{OwnerSessionProof, ServiceLifecycleState};
     use std::{
@@ -1581,6 +1631,10 @@ mod tests {
 
     fn staging_directory(home: &Path) -> PathBuf {
         home.join("Applications/.clash-verge-rev-dev/service-core")
+    }
+
+    fn service_tools_staging_directory(home: &Path) -> PathBuf {
+        home.join("Applications/.clash-verge-rev-dev/service-tools")
     }
 
     fn staging_temporary_entries(home: &Path, core_name: &str) -> anyhow::Result<Vec<PathBuf>> {
@@ -1637,6 +1691,38 @@ mod tests {
 
     #[cfg(unix)]
     #[test]
+    fn development_service_tool_uses_safe_layout_and_executable_bytes() -> anyhow::Result<()> {
+        use std::os::unix::fs::PermissionsExt as _;
+
+        let root = TestDirectory::new("development-service-tool")?;
+        let home = root.path().join("home");
+        let source = root.path().join("clash-verge-service-install");
+        std::fs::write(&source, b"development installer")?;
+
+        let selected = service_tool_path_for(&source, Some(&home), true)?;
+
+        assert_eq!(
+            selected,
+            service_tools_staging_directory(&home).join("clash-verge-service-install")
+        );
+        assert_eq!(std::fs::read(&selected)?, b"development installer");
+        assert_ne!(std::fs::metadata(&selected)?.permissions().mode() & 0o111, 0);
+        Ok(())
+    }
+
+    #[test]
+    fn macos_install_shell_starts_from_root_without_nested_sudo() {
+        let shell = macos_install_shell(Path::new("/safe/service-tools/clash-verge-service-install"), 20);
+
+        assert_eq!(
+            shell,
+            "cd /; CLASH_VERGE_SERVICE_GID=20 '/safe/service-tools/clash-verge-service-install'"
+        );
+        assert!(!shell.contains("sudo"));
+    }
+
+    #[cfg(unix)]
+    #[test]
     fn development_service_core_refresh_atomically_replaces_bytes() -> anyhow::Result<()> {
         let root = TestDirectory::new("refresh")?;
         let home = root.path().join("home");
@@ -1668,13 +1754,19 @@ mod tests {
 
         std::fs::write(&source, b"replacement core")?;
         let publish_attempted = Cell::new(false);
-        let result = service_core_path_for_with_publisher(&source, Some(&home), true, |temporary, final_path| {
-            publish_attempted.set(true);
-            assert_ne!(temporary, final_path, "publisher must receive the temporary path");
-            assert!(std::fs::symlink_metadata(temporary)?.file_type().is_file());
-            assert_eq!(std::fs::read(temporary)?, b"replacement core");
-            anyhow::bail!("injected post-creation publish failure")
-        });
+        let result = service_core_path_for_with_publisher(
+            &source,
+            Some(&home),
+            true,
+            "service-core",
+            |temporary, final_path| {
+                publish_attempted.set(true);
+                assert_ne!(temporary, final_path, "publisher must receive the temporary path");
+                assert!(std::fs::symlink_metadata(temporary)?.file_type().is_file());
+                assert_eq!(std::fs::read(temporary)?, b"replacement core");
+                anyhow::bail!("injected post-creation publish failure")
+            },
+        );
         let error = match result {
             Ok(path) => anyhow::bail!("failed publication selected {}", path.display()),
             Err(error) => error.to_string(),
