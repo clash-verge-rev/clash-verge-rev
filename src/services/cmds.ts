@@ -198,10 +198,6 @@ export async function changeClashCore(clashCore: string) {
   return invoke<string | null>('change_clash_core', { clashCore })
 }
 
-export async function stopCore() {
-  return invoke<void>('stop_core')
-}
-
 export async function restartCore() {
   return invoke<void>('restart_core')
 }

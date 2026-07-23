@@ -32,6 +32,7 @@
     "i18n:format": "node scripts/cleanup-unused-i18n.mjs --align --apply",
     "i18n:types": "node scripts/generate-i18n-keys.mjs",
     "typecheck": "tsc --noEmit",
+    "test:dev-control": "node --test scripts/dev-control.test.mjs",
     "knip:check": "knip",
     "knip:report": "knip --no-exit-code"
   },
@@ -51,7 +52,6 @@
     "@tauri-apps/plugin-dialog": "^2.7.1",
     "@tauri-apps/plugin-fs": "^2.5.1",
     "@tauri-apps/plugin-http": "~2.5.9",
-    "@tauri-apps/plugin-process": "^2.3.1",
     "@tauri-apps/plugin-shell": "2.3.5",
     "@tauri-apps/plugin-updater": "2.10.1",
     "ahooks": "^3.9.7",

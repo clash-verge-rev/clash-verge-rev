@@ -70,9 +70,7 @@ const STARTUP_GRACE_MS = 10_000
  * 包括运行模式、管理员状态、系统服务是否可用
  */
 export function useSystemState() {
-  const { verge, patchVerge } = useVerge()
   const pageVisible = useVisibility()
-  const disablingTunRef = useRef(false)
   const [isStartingUp, setIsStartingUp] = useState(true)
 
   useEffect(() => {
@@ -102,8 +100,27 @@ export function useSystemState() {
     systemStateError !== undefined,
   )
 
-  const enable_tun_mode = verge?.enable_tun_mode
+  return {
+    runningMode: systemState.runningMode,
+    isAdminMode: systemState.isAdminMode,
+    isServiceOk: systemState.isServiceOk,
+    isSidecarMode,
+    isServiceMode,
+    isTunModeAvailable,
+    serviceChoicePending,
+    mutateSystemState,
+    isLoading,
+    isStartingUp,
+  }
+}
+
+export function useTunAvailabilityGuard() {
+  const { verge, patchVerge } = useVerge()
+  const { isTunModeAvailable, serviceChoicePending, isLoading, isStartingUp } =
+    useSystemState()
+  const disablingTunRef = useRef(false)
   const cooldownTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const enable_tun_mode = verge?.enable_tun_mode
 
   useEffect(() => {
     if (enable_tun_mode === undefined) return
@@ -153,15 +170,4 @@ export function useSystemState() {
     isLoading,
     isStartingUp,
   ])
-
-  return {
-    runningMode: systemState.runningMode,
-    isAdminMode: systemState.isAdminMode,
-    isServiceOk: systemState.isServiceOk,
-    isSidecarMode,
-    isServiceMode,
-    isTunModeAvailable,
-    mutateSystemState,
-    isLoading,
-  }
 }
