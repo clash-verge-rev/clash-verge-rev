@@ -1171,7 +1171,7 @@ jobs:
           mkdir -p /tmp/gh-aw/threat-detection
           touch /tmp/gh-aw/threat-detection/detection.log
       - name: Setup Node.js
-        uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6.5.0
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
         with:
           node-version: '24'
           package-manager-cache: false

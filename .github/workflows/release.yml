@@ -229,7 +229,7 @@ jobs:
           sudo apt-get install -y libxslt1.1 libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf
 
       - name: Install Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: '24.18.0'
 
@@ -331,7 +331,7 @@ jobs:
           cache-workspace-crates: true
 
       - name: Install Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: '24.18.0'
 
@@ -467,7 +467,7 @@ jobs:
           cache-workspace-crates: true
 
       - name: Install Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: '24.18.0'
 
@@ -554,7 +554,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Install Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: '24.18.0'
 
@@ -580,7 +580,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Install Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: '24.18.0'
 
@@ -642,7 +642,7 @@ jobs:
         shell: bash
 
       - name: Install Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: '24.18.0'
 

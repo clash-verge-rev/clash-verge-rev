@@ -46,7 +46,7 @@ jobs:
           run_install: false
 
       - name: Install Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: '24.18.0'
 
@@ -180,7 +180,7 @@ jobs:
           run_install: false
 
       - name: Install Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: '24.18.0'
           cache: 'pnpm'
@@ -279,7 +279,7 @@ jobs:
           run_install: false
 
       - name: Install Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: '24.18.0'
           cache: 'pnpm'
@@ -424,7 +424,7 @@ jobs:
           run_install: false
 
       - name: Install Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: '24.18.0'
           cache: 'pnpm'
@@ -526,7 +526,7 @@ jobs:
         shell: bash
 
       - name: Install Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: '24.18.0'
 

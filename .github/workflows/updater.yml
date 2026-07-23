@@ -13,7 +13,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Install Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: '24.18.0'
 
@@ -37,7 +37,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Install Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: '24.18.0'
 
