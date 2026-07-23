@@ -26,7 +26,7 @@ export function buildTauriInvocation(
     args.push('tokio-trace')
   }
   return {
-    command: platform === 'win32' ? 'pnpm.cmd' : 'pnpm',
+    command: 'pnpm',
     args,
     env,
     detached: platform === 'darwin',

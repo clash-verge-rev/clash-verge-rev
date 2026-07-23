@@ -53,11 +53,6 @@ fn windows_current_identity() -> Result<OwnerIdentity> {
 }
 
 #[cfg(windows)]
-pub(crate) fn secure_current_user_file(path: &Path) -> Result<()> {
-    windows_owner::secure_file_path(path, &windows_owner::current_sid()?)
-}
-
-#[cfg(windows)]
 pub(crate) fn create_private_current_user_file(path: &Path) -> Result<std::fs::File> {
     windows_owner::create_private_file(path)
 }
@@ -98,8 +93,7 @@ mod windows_owner {
         ACCESS_ALLOWED_ACE, ACL, DACL_SECURITY_INFORMATION, EqualSid, GetAce, GetSecurityDescriptorControl,
         GetSecurityDescriptorDacl, GetSecurityDescriptorOwner, GetTokenInformation, IsValidSid, IsWellKnownSid,
         OWNER_SECURITY_INFORMATION, PROTECTED_DACL_SECURITY_INFORMATION, PSECURITY_DESCRIPTOR, PSID, SE_DACL_PROTECTED,
-        SECURITY_ATTRIBUTES, SetFileSecurityW, TOKEN_QUERY, TOKEN_USER, TokenUser, WinBuiltinAdministratorsSid,
-        WinLocalSystemSid,
+        SECURITY_ATTRIBUTES, TOKEN_QUERY, TOKEN_USER, TokenUser, WinBuiltinAdministratorsSid, WinLocalSystemSid,
     };
     use windows_sys::Win32::Storage::FileSystem::{
         BY_HANDLE_FILE_INFORMATION, CREATE_NEW, CreateFileW, FILE_ALL_ACCESS, FILE_ATTRIBUTE_DIRECTORY,
@@ -337,22 +331,6 @@ mod windows_owner {
         }
         if unsafe { (*dacl).AceCount } != 3 || !owner_ace || !system_ace || !administrators_ace {
             bail!("current-user file DACL is missing a required principal");
-        }
-        Ok(())
-    }
-
-    pub(super) fn secure_file_path(path: &Path, sid: &str) -> Result<()> {
-        let descriptor = LocalSecurityDescriptor::from_sid(sid)?;
-        let wide = wide_path(path)?;
-        if unsafe {
-            SetFileSecurityW(
-                wide.as_ptr(),
-                DACL_SECURITY_INFORMATION | PROTECTED_DACL_SECURITY_INFORMATION,
-                descriptor.0,
-            )
-        } == 0
-        {
-            return Err(std::io::Error::last_os_error()).context("failed to secure current-user file");
         }
         Ok(())
     }

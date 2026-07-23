@@ -300,31 +300,27 @@ fn open_instance_lock(path: &Path) -> Result<std::fs::File> {
     let parent = path.parent().context("singleton lock has no parent")?;
     std::fs::create_dir_all(parent)?;
     #[cfg(windows)]
-    return crate::core::owner_identity::open_or_create_private_current_user_file(path);
+    {
+        crate::core::owner_identity::open_or_create_private_current_user_file(path)
+    }
 
     #[cfg(unix)]
-    let mut options = std::fs::OpenOptions::new();
-    #[cfg(unix)]
-    options.read(true).write(true).create(true);
-    #[cfg(unix)]
     {
+        let mut options = std::fs::OpenOptions::new();
+        options.read(true).write(true).create(true);
+
         use std::os::unix::fs::OpenOptionsExt as _;
-        options.mode(0o600).custom_flags(libc::O_NOFOLLOW);
-    }
-    #[cfg(unix)]
-    let file = options.open(path)?;
-    #[cfg(unix)]
-    let metadata = file.metadata()?;
-    #[cfg(unix)]
-    if metadata.file_type().is_symlink() || !metadata.is_file() {
-        bail!("singleton lock is not an ordinary file");
-    }
-    #[cfg(unix)]
-    {
         use std::os::unix::fs::PermissionsExt as _;
+        options.mode(0o600).custom_flags(libc::O_NOFOLLOW);
+
+        let file = options.open(path)?;
+        let metadata = file.metadata()?;
+        if metadata.file_type().is_symlink() || !metadata.is_file() {
+            bail!("singleton lock is not an ordinary file");
+        }
         file.set_permissions(std::fs::Permissions::from_mode(0o600))?;
+        Ok(file)
     }
-    Ok(file)
 }
 
 fn try_lock_instance(file: &std::fs::File) -> Result<bool> {
