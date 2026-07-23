@@ -153,6 +153,7 @@ tauri-plugin-updater = "2.10.1"
 [dev-dependencies]
 criterion = { workspace = true }
 tokio = { workspace = true, features = ["test-util"] }
+warp = { version = "0.4.3", features = ["test"] }
 
 [lints]
 workspace = true
