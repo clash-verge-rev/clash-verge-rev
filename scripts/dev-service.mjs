@@ -6,6 +6,8 @@ import { fileURLToPath } from 'node:url'
 
 export const developmentServiceDirectoryEnvironment =
   'CLASH_VERGE_DEV_SERVICE_DIR'
+const developmentServiceInstallerEnvironment =
+  'CLASH_VERGE_DEV_SERVICE_INSTALLER'
 
 const scriptDirectory = dirname(fileURLToPath(import.meta.url))
 const repositoryRoot = resolve(scriptDirectory, '..')
@@ -78,18 +80,31 @@ async function writeInstalledFingerprint(fingerprint) {
   )
 }
 
+export function windowsElevationInvocation(
+  installer,
+  environment = process.env,
+) {
+  const script = [
+    "$ErrorActionPreference = 'Stop'",
+    `$installer = [Environment]::GetEnvironmentVariable('${developmentServiceInstallerEnvironment}', 'Process')`,
+    "if ([string]::IsNullOrWhiteSpace($installer)) { throw 'Development service installer path is missing' }",
+    '$child = Start-Process -FilePath $installer -Verb RunAs -Wait -PassThru -WindowStyle Hidden',
+    'exit $child.ExitCode',
+  ].join('; ')
+  return {
+    command: 'powershell.exe',
+    args: ['-NoLogo', '-NoProfile', '-NonInteractive', '-Command', script],
+    env: {
+      ...environment,
+      [developmentServiceInstallerEnvironment]: installer,
+    },
+  }
+}
+
 async function elevateInstaller(installer, platform) {
   if (platform === 'win32') {
-    const script =
-      '$child = Start-Process -FilePath $args[0] -Verb RunAs -Wait -PassThru -WindowStyle Hidden; exit $child.ExitCode'
-    return run('powershell.exe', [
-      '-NoLogo',
-      '-NoProfile',
-      '-NonInteractive',
-      '-Command',
-      script,
-      installer,
-    ])
+    const invocation = windowsElevationInvocation(installer)
+    return run(invocation.command, invocation.args, { env: invocation.env })
   }
 
   if (platform === 'darwin') {
