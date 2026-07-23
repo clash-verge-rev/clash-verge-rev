@@ -9,6 +9,7 @@ import {
   continueWithSidecar,
   getRunningMode,
   getServiceInstallState,
+  installService,
   reinstallService,
   repairService,
   restartCore,
@@ -16,9 +17,6 @@ import {
 } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
 import { setCacheDataAsync, useQuery } from '@/services/query-client'
-import getSystem from '@/utils/get-system'
-
-const isMacos = getSystem() === 'macos'
 const installStateQueryKey = ['getServiceInstallState'] as const
 
 export const ServiceMigrationDialog = () => {
@@ -30,20 +28,22 @@ export const ServiceMigrationDialog = () => {
   const { data: state } = useQuery({
     queryKey: installStateQueryKey,
     queryFn: getServiceInstallState,
-    enabled: isMacos,
+    enabled: true,
     retry: 1,
     refetchInterval: pageVisible ? 2000 : false,
   })
   const dialogState = stateRefreshFailed ? 'unavailable' : state
   const open =
-    isMacos &&
-    (loading ||
-      workflowIncomplete ||
-      dialogState === 'needsReinstall' ||
-      dialogState === 'unavailable')
+    loading ||
+    workflowIncomplete ||
+    dialogState === 'installRequired' ||
+    dialogState === 'needsReinstall' ||
+    dialogState === 'unavailable'
   const showCheckingMessage =
     loading ||
-    (dialogState !== 'needsReinstall' && dialogState !== 'unavailable')
+    (dialogState !== 'installRequired' &&
+      dialogState !== 'needsReinstall' &&
+      dialogState !== 'unavailable')
 
   const refreshInstallState = async () => {
     try {
@@ -77,7 +77,9 @@ export const ServiceMigrationDialog = () => {
     setWorkflowIncomplete(true)
     let actionSucceeded = false
     try {
-      if (dialogState === 'unavailable') {
+      if (dialogState === 'installRequired') {
+        await installService()
+      } else if (dialogState === 'unavailable') {
         await repairService()
       } else {
         await reinstallService()
@@ -165,9 +167,11 @@ export const ServiceMigrationDialog = () => {
       open={open}
       title={t('layout.components.serviceMigration.title')}
       okBtn={t(
-        dialogState === 'unavailable'
-          ? 'layout.components.serviceMigration.repair'
-          : 'layout.components.serviceMigration.reinstall',
+        dialogState === 'installRequired'
+          ? 'settings.sections.proxyControl.actions.installService'
+          : dialogState === 'unavailable'
+            ? 'layout.components.serviceMigration.repair'
+            : 'layout.components.serviceMigration.reinstall',
       )}
       cancelBtn={t('layout.components.serviceMigration.continueSidecar')}
       disableOk={loading}
@@ -180,7 +184,7 @@ export const ServiceMigrationDialog = () => {
         {t(
           showCheckingMessage
             ? 'layout.components.serviceMigration.checkingMessage'
-            : dialogState === 'unavailable'
+            : dialogState === 'installRequired' || dialogState === 'unavailable'
               ? 'layout.components.serviceMigration.unavailableMessage'
               : 'layout.components.serviceMigration.message',
         )}

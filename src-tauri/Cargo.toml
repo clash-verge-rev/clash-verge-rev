@@ -17,7 +17,11 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 [features]
 default = ["custom-protocol"]
 custom-protocol = ["tauri/custom-protocol"]
-verge-dev = ["clash_verge_logger/color"]
+verge-dev = [
+  "clash_verge_logger/color",
+  "clash_verge_service_ipc/development-channel",
+]
+dev-sidecar = ["verge-dev"]
 tauri-dev = []
 tokio-trace = ["console-subscriber"]
 clippy = ["tauri/test"]
@@ -99,7 +103,7 @@ tauri-plugin-devtools = { version = "2.1.0" }
 tauri-plugin-mihomo = { git = "https://github.com/clash-verge-rev/tauri-plugin-mihomo", branch = "fix/api-robustness" }
 clash_verge_logger = { git = "https://github.com/clash-verge-rev/clash-verge-logger" }
 async-trait = "0.1.89"
-clash_verge_service_ipc = { git = "https://github.com/clash-verge-rev/clash-verge-service-ipc.git", branch = "main", version = "2.5.0", features = [
+clash_verge_service_ipc = { path = "../../clash-verge-service-ipc", version = "2.5.1", features = [
   "client",
 ] }
 arc-swap = "1.9.2"
@@ -143,6 +147,7 @@ objc2-app-kit = { version = "0.3.2", features = [
 deelevate = { workspace = true }
 runas = "=1.2.0"
 winreg = "0.56.0"
+windows-service = "0.8.1"
 windows = { version = "0.62.2", features = ["Win32_Globalization"] }
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]

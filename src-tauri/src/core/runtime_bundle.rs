@@ -225,9 +225,16 @@ mod tests {
         let root = std::env::temp_dir().join(format!("clash-verge-runtime-bundle-outside-{}", std::process::id()));
         std::fs::create_dir_all(&root)?;
         let config = root.join("config.yaml");
+        let outside = root
+            .parent()
+            .ok_or_else(|| anyhow::anyhow!("test root has no parent"))?
+            .join(format!("outside-{}.yaml", std::process::id()));
         std::fs::write(
             &config,
-            "proxy-providers:\n  remote:\n    type: http\n    url: https://example.com/p.yaml\n    path: /tmp/outside.yaml\n",
+            format!(
+                "proxy-providers:\n  remote:\n    type: http\n    url: https://example.com/p.yaml\n    path: {}\n",
+                outside.display()
+            ),
         )?;
         let core = root.join("mihomo");
         std::fs::write(&core, b"core")?;

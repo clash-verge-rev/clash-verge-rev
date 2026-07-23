@@ -263,7 +263,7 @@ const Layout = () => {
     <ThemeProvider theme={theme}>
       {/* 左侧底部窗口控制按钮 */}
       <NoticeManager position={verge?.notice_position} />
-      {OS === 'macos' && <ServiceMigrationDialog />}
+      <ServiceMigrationDialog />
       <div
         style={{
           animation: 'fadeIn 0.5s',

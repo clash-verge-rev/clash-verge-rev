@@ -5,7 +5,6 @@ use crate::{
     core::{
         CoreManager,
         handle::{self, Handle},
-        service::ServiceInstallState,
         tray,
         validate::CoreConfigValidator,
     },
@@ -19,15 +18,13 @@ use clash_verge_draft::Draft;
 use clash_verge_logging::{Type, logging, logging_error};
 use serde_yaml_ng::{Mapping, Value};
 use smartstring::alias::String;
-use std::{collections::HashSet, path::PathBuf};
-use tauri_plugin_clash_verge_sysinfo::is_current_app_handle_admin;
+use std::{
+    collections::HashSet,
+    path::PathBuf,
+    sync::atomic::{AtomicBool, Ordering},
+};
 use tokio::sync::OnceCell;
 use tokio::time::sleep;
-
-#[cfg(not(target_os = "macos"))]
-use crate::core::service;
-#[cfg(target_os = "macos")]
-use crate::core::service::SERVICE_MANAGER;
 
 pub struct Config {
     clash_config: Draft<IClashTemp>,
@@ -36,20 +33,7 @@ pub struct Config {
     runtime_config: Draft<IRuntime>,
 }
 
-const fn should_disable_tun_on_startup(
-    is_macos: bool,
-    is_admin: bool,
-    service_state: ServiceInstallState,
-    service_available: bool,
-) -> bool {
-    if is_admin {
-        return false;
-    }
-    if is_macos {
-        return matches!(service_state, ServiceInstallState::NotInstalled);
-    }
-    !service_available
-}
+static TUN_SESSION_SUPPRESSED: AtomicBool = AtomicBool::new(false);
 
 impl Config {
     pub async fn global() -> &'static Self {
@@ -94,26 +78,27 @@ impl Config {
         let verge = Self::verge().await.latest_arc();
         clash_verge_i18n::sync_locale(verge.language.as_deref());
 
-        // init Tun mode
-        let handle = Handle::app_handle();
-        let is_admin = is_current_app_handle_admin(handle);
-        #[cfg(target_os = "macos")]
-        let (service_state, is_service_available) = {
-            let state = SERVICE_MANAGER.install_state().await;
-            (state, state == ServiceInstallState::Ready)
-        };
-        #[cfg(not(target_os = "macos"))]
-        let (service_state, is_service_available) =
-            (ServiceInstallState::Checking, service::is_service_available().await);
-
-        if should_disable_tun_on_startup(cfg!(target_os = "macos"), is_admin, service_state, is_service_available) {
-            Self::disable_tun_and_persist().await?;
-        }
-
         Ok(())
     }
 
+    pub fn tun_suppressed_for_session() -> bool {
+        TUN_SESSION_SUPPRESSED.load(Ordering::Acquire)
+    }
+
+    pub(crate) async fn suppress_tun_for_session() {
+        TUN_SESSION_SUPPRESSED.store(true, Ordering::Release);
+        Handle::refresh_verge();
+        let _ = tray::Tray::global().update_menu().await;
+    }
+
+    pub(crate) async fn restore_tun_for_session() {
+        TUN_SESSION_SUPPRESSED.store(false, Ordering::Release);
+        Handle::refresh_verge();
+        let _ = tray::Tray::global().update_menu().await;
+    }
+
     pub(crate) async fn disable_tun_and_persist() -> Result<()> {
+        TUN_SESSION_SUPPRESSED.store(false, Ordering::Release);
         let verge = Self::verge().await;
         verge.edit_draft(|draft| {
             draft.enable_tun_mode = Some(false);
@@ -372,59 +357,7 @@ pub enum ConfigType {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::core::service::ServiceInstallState;
     use std::mem;
-
-    #[test]
-    fn macos_preserves_tun_until_service_choice_is_resolved() {
-        for state in [
-            ServiceInstallState::Checking,
-            ServiceInstallState::NeedsReinstall,
-            ServiceInstallState::Unavailable,
-        ] {
-            assert!(!should_disable_tun_on_startup(true, false, state, false));
-        }
-        assert!(should_disable_tun_on_startup(
-            true,
-            false,
-            ServiceInstallState::NotInstalled,
-            false,
-        ));
-        assert!(!should_disable_tun_on_startup(
-            true,
-            true,
-            ServiceInstallState::NotInstalled,
-            false,
-        ));
-        assert!(!should_disable_tun_on_startup(
-            true,
-            false,
-            ServiceInstallState::Ready,
-            true,
-        ));
-    }
-
-    #[test]
-    fn non_macos_tun_startup_policy_is_unchanged() {
-        assert!(should_disable_tun_on_startup(
-            false,
-            false,
-            ServiceInstallState::Checking,
-            false,
-        ));
-        assert!(!should_disable_tun_on_startup(
-            false,
-            false,
-            ServiceInstallState::Checking,
-            true,
-        ));
-        assert!(!should_disable_tun_on_startup(
-            false,
-            true,
-            ServiceInstallState::Checking,
-            false,
-        ));
-    }
 
     #[test]
     #[allow(unused_variables)]

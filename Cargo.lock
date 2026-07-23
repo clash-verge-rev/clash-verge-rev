@@ -1149,6 +1149,7 @@ dependencies = [
  "warp",
  "webpki-roots",
  "windows 0.62.2",
+ "windows-service",
  "windows-sys 0.61.2",
  "winreg 0.56.0",
  "zip 8.6.0",
@@ -1210,8 +1211,7 @@ dependencies = [
 
 [[package]]
 name = "clash_verge_service_ipc"
-version = "2.5.0"
-source = "git+https://github.com/clash-verge-rev/clash-verge-service-ipc.git?branch=main#4dbd144626aaa5657581482bba7687bc3b6b3179"
+version = "2.5.1"
 dependencies = [
  "anyhow",
  "compact_str",
@@ -1228,6 +1228,7 @@ dependencies = [
  "tokio",
  "url",
  "windows-service",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]

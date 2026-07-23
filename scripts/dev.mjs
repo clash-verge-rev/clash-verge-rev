@@ -8,6 +8,11 @@ import {
   requestDevQuit,
   waitForPortClosed,
 } from './dev-control.mjs'
+import {
+  developmentServiceDirectoryEnvironment,
+  ensureDevelopmentService,
+  prepareDevelopmentService,
+} from './dev-service.mjs'
 
 const FORCE_GRACE_MS = 2_000
 const SHUTDOWN_TIMEOUT_MS = 10_000
@@ -20,7 +25,8 @@ export function buildTauriInvocation(
   platform = process.platform,
 ) {
   const env = { ...environment, RUST_BACKTRACE: 'full' }
-  const args = ['exec', 'tauri', 'dev', '-f', 'verge-dev']
+  const features = mode === 'sidecar' ? 'verge-dev,dev-sidecar' : 'verge-dev'
+  const args = ['exec', 'tauri', 'dev', '-f', features]
   if (mode === 'trace') {
     env.RUSTFLAGS = '--cfg tokio_unstable'
     args.push('tokio-trace')
@@ -143,8 +149,8 @@ function sendToParent(message) {
 }
 
 export async function runDevAnchor(mode, dependencies = {}) {
-  if (mode !== 'dev' && mode !== 'trace') {
-    throw new Error('usage: node scripts/dev.mjs --anchor <dev|trace>')
+  if (mode !== 'dev' && mode !== 'trace' && mode !== 'sidecar') {
+    throw new Error('usage: node scripts/dev.mjs --anchor <dev|trace|sidecar>')
   }
 
   const environment = dependencies.environment ?? process.env
@@ -290,8 +296,8 @@ function unsafeAnchorError() {
 }
 
 export async function runDevCommand(mode, dependencies = {}) {
-  if (mode !== 'dev' && mode !== 'trace') {
-    throw new Error('usage: node scripts/dev.mjs <dev|trace>')
+  if (mode !== 'dev' && mode !== 'trace' && mode !== 'sidecar') {
+    throw new Error('usage: node scripts/dev.mjs <dev|trace|sidecar>')
   }
 
   const platform = dependencies.platform ?? process.platform
@@ -524,7 +530,21 @@ async function run() {
   if (process.argv[2] === '--anchor') {
     await runDevAnchor(process.argv[3])
   } else {
-    await runDevCommand(process.argv[2])
+    const requestedMode = process.argv[2]
+    let serviceDirectory
+    if (
+      requestedMode === 'dev' ||
+      requestedMode === 'service' ||
+      requestedMode === 'trace'
+    ) {
+      serviceDirectory = await ensureDevelopmentService()
+    } else if (requestedMode === 'sidecar') {
+      serviceDirectory = await prepareDevelopmentService()
+    }
+    if (serviceDirectory) {
+      process.env[developmentServiceDirectoryEnvironment] = serviceDirectory
+    }
+    await runDevCommand(requestedMode === 'service' ? 'dev' : requestedMode)
   }
 }
 

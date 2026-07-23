@@ -21,6 +21,9 @@ import {
 } from './dev.mjs'
 
 const token = 'ab'.repeat(32)
+const posixOnly = {
+  skip: process.platform === 'win32' ? 'requires POSIX file metadata' : false,
+}
 
 async function withTemporaryDirectory(run) {
   const root = await mkdtemp(join(tmpdir(), 'clash-verge-dev-control-'))
@@ -114,29 +117,33 @@ function flushTasks() {
   return new Promise((resolve) => setImmediate(resolve))
 }
 
-test('private instance record must be an owned 0600 ordinary file', async () => {
-  await withTemporaryDirectory(async (root) => {
-    const recordPath = join(root, 'singleton-instance.json')
-    await writeFile(recordPath, JSON.stringify({ port: 42123, token }), {
-      mode: 0o600,
+test(
+  'private instance record must be an owned 0600 ordinary file',
+  posixOnly,
+  async () => {
+    await withTemporaryDirectory(async (root) => {
+      const recordPath = join(root, 'singleton-instance.json')
+      await writeFile(recordPath, JSON.stringify({ port: 42123, token }), {
+        mode: 0o600,
+      })
+      assert.deepEqual(
+        await readPrivateInstanceRecord(recordPath, process.getuid()),
+        {
+          port: 42123,
+          token,
+        },
+      )
+
+      await chmod(recordPath, 0o644)
+      await assert.rejects(
+        readPrivateInstanceRecord(recordPath, process.getuid()),
+        /0600/,
+      )
     })
-    assert.deepEqual(
-      await readPrivateInstanceRecord(recordPath, process.getuid()),
-      {
-        port: 42123,
-        token,
-      },
-    )
+  },
+)
 
-    await chmod(recordPath, 0o644)
-    await assert.rejects(
-      readPrivateInstanceRecord(recordPath, process.getuid()),
-      /0600/,
-    )
-  })
-})
-
-test('private instance record rejects a symbolic link', async () => {
+test('private instance record rejects a symbolic link', posixOnly, async () => {
   await withTemporaryDirectory(async (root) => {
     const targetPath = join(root, 'target.json')
     const recordPath = join(root, 'singleton-instance.json')
@@ -151,7 +158,7 @@ test('private instance record rejects a symbolic link', async () => {
   })
 })
 
-test('private instance record rejects the wrong owner', async () => {
+test('private instance record rejects the wrong owner', posixOnly, async () => {
   await withTemporaryDirectory(async (root) => {
     const recordPath = join(root, 'singleton-instance.json')
     await writeFile(recordPath, JSON.stringify({ port: 42123, token }), {
@@ -165,7 +172,7 @@ test('private instance record rejects the wrong owner', async () => {
   })
 })
 
-test('private instance record rejects invalid ports', async (t) => {
+test('private instance record rejects invalid ports', posixOnly, async (t) => {
   for (const port of [0, 65536, 1.5, '42123']) {
     await t.test(String(port), async () => {
       await withTemporaryDirectory(async (root) => {
@@ -182,31 +189,35 @@ test('private instance record rejects invalid ports', async (t) => {
   }
 })
 
-test('private instance record rejects tokens outside the lowercase 64-character format', async (t) => {
-  for (const invalidToken of [
-    'ab'.repeat(31),
-    'AB'.repeat(32),
-    'z'.repeat(64),
-  ]) {
-    await t.test(
-      invalidToken.length === 64 ? invalidToken.slice(0, 2) : 'short',
-      async () => {
-        await withTemporaryDirectory(async (root) => {
-          const recordPath = join(root, 'singleton-instance.json')
-          await writeFile(
-            recordPath,
-            JSON.stringify({ port: 42123, token: invalidToken }),
-            { mode: 0o600 },
-          )
-          await assert.rejects(
-            readPrivateInstanceRecord(recordPath, process.getuid()),
-            /token/,
-          )
-        })
-      },
-    )
-  }
-})
+test(
+  'private instance record rejects tokens outside the lowercase 64-character format',
+  posixOnly,
+  async (t) => {
+    for (const invalidToken of [
+      'ab'.repeat(31),
+      'AB'.repeat(32),
+      'z'.repeat(64),
+    ]) {
+      await t.test(
+        invalidToken.length === 64 ? invalidToken.slice(0, 2) : 'short',
+        async () => {
+          await withTemporaryDirectory(async (root) => {
+            const recordPath = join(root, 'singleton-instance.json')
+            await writeFile(
+              recordPath,
+              JSON.stringify({ port: 42123, token: invalidToken }),
+              { mode: 0o600 },
+            )
+            await assert.rejects(
+              readPrivateInstanceRecord(recordPath, process.getuid()),
+              /token/,
+            )
+          })
+        },
+      )
+    }
+  },
+)
 
 test('requestDevQuit posts only to loopback and retries 503', async () => {
   const requests = []
@@ -539,6 +550,18 @@ test('normal dev invocation preserves arguments and remains direct off macOS', (
   assert.equal(invocation.command, 'pnpm')
   assert.deepEqual(invocation.args, ['exec', 'tauri', 'dev', '-f', 'verge-dev'])
   assert.deepEqual(invocation.env, { PATH: '/bin', RUST_BACKTRACE: 'full' })
+  assert.equal(invocation.detached, false)
+})
+
+test('sidecar invocation explicitly enables only the development sidecar feature', () => {
+  const invocation = buildTauriInvocation('sidecar', { PATH: '/bin' }, 'win32')
+  assert.deepEqual(invocation.args, [
+    'exec',
+    'tauri',
+    'dev',
+    '-f',
+    'verge-dev,dev-sidecar',
+  ])
   assert.equal(invocation.detached, false)
 })
 

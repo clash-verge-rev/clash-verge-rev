@@ -10,7 +10,6 @@ import {
 } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
 import { useQuery } from '@/services/query-client'
-import getSystem from '@/utils/get-system'
 
 import { useVerge } from './use-verge'
 import { useVisibility } from './use-visibility'
@@ -29,17 +28,13 @@ const defaultSystemState = {
   serviceInstallState: null,
 } as SystemState
 
-const isMacos = getSystem() === 'macos'
-
 export const fetchSystemState = async (): Promise<SystemState> => {
   const [runningMode, isAdminMode, isServiceOk, serviceInstallState] =
     await Promise.all([
       getRunningMode(),
       isAdmin(),
       isServiceAvailable(),
-      isMacos
-        ? getServiceInstallState().catch(() => null)
-        : Promise.resolve<ServiceInstallState | null>(null),
+      getServiceInstallState().catch(() => null),
     ])
   return {
     runningMode,
@@ -54,13 +49,9 @@ const isServiceChoicePending = (
   serviceAvailable: boolean,
   queryFailed: boolean,
 ) =>
-  isMacos &&
-  (queryFailed ||
-    !(
-      state === 'notInstalled' ||
-      state === 'sidecarAllowed' ||
-      (state === 'ready' && serviceAvailable)
-    ))
+  queryFailed ||
+  state === 'sidecarAllowed' ||
+  !(state === 'notInstalled' || (state === 'ready' && serviceAvailable))
 
 // Grace period for service initialization during startup
 const STARTUP_GRACE_MS = 10_000

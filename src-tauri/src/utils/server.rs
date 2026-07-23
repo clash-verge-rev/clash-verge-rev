@@ -445,10 +445,9 @@ fn replace_file_atomic(source: &Path, destination: &Path) -> Result<()> {
 
 #[cfg(test)]
 mod tests {
-    use super::{
-        InstanceRecord, PAC_AVAILABLE, bind_primary_listener, open_instance_lock, read_instance_record,
-        try_lock_instance, write_instance_record,
-    };
+    use super::{InstanceRecord, PAC_AVAILABLE, bind_primary_listener, read_instance_record, write_instance_record};
+    #[cfg(unix)]
+    use super::{open_instance_lock, try_lock_instance};
     use std::sync::atomic::Ordering;
 
     #[cfg(feature = "verge-dev")]

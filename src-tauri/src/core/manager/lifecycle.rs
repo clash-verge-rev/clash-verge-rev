@@ -26,31 +26,33 @@ enum StartupDecision {
     Wait,
 }
 
-const fn startup_decision(status: &ServiceStatus, block_on_service_issue: bool) -> StartupDecision {
+const fn startup_decision(status: &ServiceStatus, service_required: bool) -> StartupDecision {
     match status {
         ServiceStatus::Ready => StartupDecision::Service,
-        ServiceStatus::Checking | ServiceStatus::NeedsReinstall | ServiceStatus::Unavailable(_)
-            if block_on_service_issue =>
-        {
+        ServiceStatus::NotInstalled if !service_required => StartupDecision::Sidecar,
+        ServiceStatus::SidecarAllowed => StartupDecision::Sidecar,
+        ServiceStatus::Checking
+        | ServiceStatus::NotInstalled
+        | ServiceStatus::NeedsReinstall
+        | ServiceStatus::InstallRequired
+        | ServiceStatus::Unavailable(_) => StartupDecision::Wait,
+        ServiceStatus::UninstallRequired | ServiceStatus::ReinstallRequired | ServiceStatus::ForceReinstallRequired => {
             StartupDecision::Wait
         }
-        _ => StartupDecision::Sidecar,
     }
 }
 
-const fn can_allow_sidecar_for_session(
-    is_macos: bool,
-    running_mode: &RunningMode,
-    service_status: &ServiceStatus,
-) -> bool {
-    is_macos
-        && matches!(
-            (running_mode, service_status),
-            (
-                RunningMode::NotRunning,
-                ServiceStatus::NeedsReinstall | ServiceStatus::Unavailable(_)
-            ) | (RunningMode::Sidecar, ServiceStatus::InstallRequired)
-        )
+const fn can_allow_sidecar_for_session(running_mode: &RunningMode, service_status: &ServiceStatus) -> bool {
+    matches!(
+        (running_mode, service_status),
+        (
+            RunningMode::NotRunning,
+            ServiceStatus::NotInstalled
+                | ServiceStatus::NeedsReinstall
+                | ServiceStatus::InstallRequired
+                | ServiceStatus::Unavailable(_)
+        ) | (RunningMode::Sidecar, ServiceStatus::InstallRequired)
+    )
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -286,11 +288,11 @@ impl CoreManager {
         let _life = self.lifecycle_lock.lock().await;
         let status = SERVICE_MANAGER.current().await;
         let mode = self.get_running_mode();
-        if !can_allow_sidecar_for_session(cfg!(target_os = "macos"), &mode, &status) {
+        if !can_allow_sidecar_for_session(&mode, &status) {
             anyhow::bail!("Sidecar continuation is not allowed from {mode:?} / {status:?}");
         }
         proxy_control::stop_guard().await;
-        Config::disable_tun_and_persist().await?;
+        Config::suppress_tun_for_session().await;
         Config::generate().await?;
         SERVICE_MANAGER.allow_sidecar_for_session()?;
         let result = async {
@@ -547,7 +549,15 @@ impl CoreManager {
         #[cfg(target_os = "windows")]
         self.wait_for_service_if_needed().await;
 
-        startup_decision(&SERVICE_MANAGER.current().await, cfg!(target_os = "macos"))
+        let service_required = Config::verge().await.latest_arc().enable_tun_mode.unwrap_or(false)
+            && !Config::tun_suppressed_for_session();
+        if service_required
+            && matches!(SERVICE_MANAGER.current().await, ServiceStatus::NotInstalled)
+            && SERVICE_MANAGER.require_install_for_session().is_err()
+        {
+            return StartupDecision::Wait;
+        }
+        startup_decision(&SERVICE_MANAGER.current().await, service_required)
     }
 
     pub(in crate::core) fn after_core_process(&self) {
@@ -613,7 +623,8 @@ impl CoreManager {
         use std::time::Instant;
 
         // 仅 TUN 模式需要服务交接
-        let needs_service = Config::verge().await.latest_arc().enable_tun_mode.unwrap_or(false);
+        let needs_service = Config::verge().await.latest_arc().enable_tun_mode.unwrap_or(false)
+            && !Config::tun_suppressed_for_session();
         if !needs_service {
             return;
         }
@@ -693,6 +704,7 @@ impl CoreManager {
         // 持锁后复检运行模式和 TUN 状态
         if !matches!(*self.get_running_mode(), RunningMode::Sidecar)
             || !Config::verge().await.latest_arc().enable_tun_mode.unwrap_or(false)
+            || Config::tun_suppressed_for_session()
         {
             return HandoffOutcome::Done;
         }
@@ -1202,10 +1214,14 @@ mod tests {
     }
 
     #[test]
-    fn macos_waits_for_reinstall_decision_but_missing_service_uses_sidecar() {
+    fn startup_waits_when_a_service_requirement_cannot_be_satisfied() {
         assert_eq!(startup_decision(&ServiceStatus::Ready, true), StartupDecision::Service);
         assert_eq!(
             startup_decision(&ServiceStatus::NotInstalled, true),
+            StartupDecision::Wait
+        );
+        assert_eq!(
+            startup_decision(&ServiceStatus::NotInstalled, false),
             StartupDecision::Sidecar
         );
         assert_eq!(
@@ -1224,14 +1240,14 @@ mod tests {
     }
 
     #[test]
-    fn non_macos_keeps_existing_sidecar_fallback() {
+    fn service_evidence_failures_never_silently_fall_back() {
         assert_eq!(
             startup_decision(&ServiceStatus::NeedsReinstall, false),
-            StartupDecision::Sidecar
+            StartupDecision::Wait
         );
         assert_eq!(
             startup_decision(&ServiceStatus::Unavailable("missing".into()), false),
-            StartupDecision::Sidecar
+            StartupDecision::Wait
         );
     }
 
@@ -1244,37 +1260,37 @@ mod tests {
     }
 
     #[test]
-    fn sidecar_session_allowance_is_macos_only_not_running_and_migration_only() {
+    fn sidecar_session_allowance_is_cross_platform_and_explicit() {
         let allowed_statuses = [
+            ServiceStatus::NotInstalled,
             ServiceStatus::NeedsReinstall,
+            ServiceStatus::InstallRequired,
             ServiceStatus::Unavailable("offline".into()),
         ];
         for status in &allowed_statuses {
-            assert!(can_allow_sidecar_for_session(true, &RunningMode::NotRunning, status));
-            assert!(!can_allow_sidecar_for_session(false, &RunningMode::NotRunning, status));
-            assert!(!can_allow_sidecar_for_session(true, &RunningMode::Service, status));
-            assert!(!can_allow_sidecar_for_session(true, &RunningMode::Sidecar, status));
+            assert!(can_allow_sidecar_for_session(&RunningMode::NotRunning, status));
+            assert!(!can_allow_sidecar_for_session(&RunningMode::Service, status));
+            if !matches!(status, ServiceStatus::InstallRequired) {
+                assert!(!can_allow_sidecar_for_session(&RunningMode::Sidecar, status));
+            }
         }
 
         let rejected_statuses = [
             ServiceStatus::Checking,
             ServiceStatus::Ready,
-            ServiceStatus::NotInstalled,
-            ServiceStatus::InstallRequired,
             ServiceStatus::UninstallRequired,
             ServiceStatus::ReinstallRequired,
             ServiceStatus::ForceReinstallRequired,
             ServiceStatus::SidecarAllowed,
         ];
         for status in &rejected_statuses {
-            assert!(!can_allow_sidecar_for_session(true, &RunningMode::NotRunning, status));
+            assert!(!can_allow_sidecar_for_session(&RunningMode::NotRunning, status));
         }
     }
 
     #[test]
     fn failed_service_install_can_continue_with_an_existing_sidecar() {
         assert!(can_allow_sidecar_for_session(
-            true,
             &RunningMode::Sidecar,
             &ServiceStatus::InstallRequired,
         ));

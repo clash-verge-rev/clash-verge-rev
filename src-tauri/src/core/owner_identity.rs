@@ -559,7 +559,13 @@ mod tests {
         assert!(open_private_current_user_file(&directory).is_err());
 
         let link = root.join("record-link.json");
-        std::os::windows::fs::symlink_file(&private_file, &link)?;
+        if let Err(error) = std::os::windows::fs::symlink_file(&private_file, &link) {
+            if error.raw_os_error() == Some(1314) {
+                std::fs::remove_dir_all(root)?;
+                return Ok(());
+            }
+            return Err(error.into());
+        }
         assert!(open_private_current_user_file(&link).is_err());
 
         std::fs::remove_file(link)?;

@@ -5,6 +5,8 @@
   "scripts": {
     "prepare": "husky || true",
     "dev": "node scripts/dev.mjs dev",
+    "dev:service": "node scripts/dev.mjs service",
+    "dev:sidecar": "node scripts/dev.mjs sidecar",
     "dev:diff": "node scripts/dev.mjs dev",
     "dev:trace": "node scripts/dev.mjs trace",
     "dev:tauri": "cross-env RUST_BACKTRACE=full tauri dev -f tauri-dev",

@@ -11,7 +11,8 @@ use crate::{
 use anyhow::{Context as _, Result, bail};
 use clash_verge_logging::{Type, logging};
 use clash_verge_service_ipc::{
-    MacosProxyConfig, OwnerSessionProof, ProxyApplyOutcome, StartClashRequest, WriterConfig,
+    MIN_REQUIRED_SERVICE_REVISION, MacosProxyConfig, OwnerSessionProof, ProtocolInfo, ProtocolVersion,
+    ProxyApplyOutcome, StartClashRequest, WriterConfig,
 };
 use compact_str::CompactString;
 use once_cell::sync::Lazy;
@@ -71,11 +72,12 @@ impl ServiceStatus {
             Self::Checking => ServiceInstallState::Checking,
             Self::Ready => ServiceInstallState::Ready,
             Self::NotInstalled => ServiceInstallState::NotInstalled,
+            Self::InstallRequired => ServiceInstallState::InstallRequired,
             Self::SidecarAllowed => ServiceInstallState::SidecarAllowed,
             Self::NeedsReinstall | Self::ReinstallRequired | Self::ForceReinstallRequired => {
                 ServiceInstallState::NeedsReinstall
             }
-            Self::InstallRequired | Self::UninstallRequired | Self::Unavailable(_) => ServiceInstallState::Unavailable,
+            Self::UninstallRequired | Self::Unavailable(_) => ServiceInstallState::Unavailable,
         }
     }
 }
@@ -85,13 +87,13 @@ impl ServiceStatus {
 pub enum ServiceInstallState {
     Checking,
     NotInstalled,
+    InstallRequired,
     Ready,
     NeedsReinstall,
     SidecarAllowed,
     Unavailable,
 }
 
-#[cfg(any(target_os = "macos", test))]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum CurrentServiceProbe {
     Missing,
@@ -100,11 +102,7 @@ enum CurrentServiceProbe {
     Unavailable,
 }
 
-#[cfg(any(target_os = "macos", test))]
-const fn classify_macos_service_install_state(
-    current: CurrentServiceProbe,
-    has_install_marker: bool,
-) -> ServiceInstallState {
+const fn classify_service_install_state(current: CurrentServiceProbe, has_install_marker: bool) -> ServiceInstallState {
     match current {
         CurrentServiceProbe::Ready => ServiceInstallState::Ready,
         CurrentServiceProbe::VersionMismatch => ServiceInstallState::NeedsReinstall,
@@ -123,7 +121,7 @@ fn confirmed_service_available<E>(result: std::result::Result<bool, E>) -> bool 
 struct ServiceVersionReply {
     code: u16,
     message: String,
-    version: Option<String>,
+    protocol: Option<ProtocolInfo>,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -133,18 +131,32 @@ enum ServiceVersionCheck {
 }
 
 fn classify_service_version_reply(reply: &ServiceVersionReply) -> ServiceVersionCheck {
-    let expected = clash_verge_service_ipc::VERSION;
-    if reply.code == 0 && reply.version.as_deref() == Some(expected) {
+    let client = ProtocolVersion::current();
+    if reply.code == 0
+        && reply
+            .protocol
+            .as_ref()
+            .is_some_and(|info| info.supports_client(client, MIN_REQUIRED_SERVICE_REVISION))
+    {
         return ServiceVersionCheck::Ready;
     }
 
-    let found = reply.version.as_deref().unwrap_or("<missing>");
     let detail = if reply.code == 0 {
-        format!("expected {expected}, found {found}")
+        match reply.protocol.as_ref() {
+            Some(info) => format!(
+                "client requires epoch {} revision >= {}, service reports epoch {} revision {} (build {})",
+                client.epoch,
+                MIN_REQUIRED_SERVICE_REVISION,
+                info.protocol.epoch,
+                info.protocol.revision,
+                info.build_version
+            ),
+            None => "service did not report protocol information".to_owned(),
+        }
     } else {
         format!(
-            "version query returned code {} ({}) while expecting {expected}",
-            reply.code, reply.message
+            "protocol query returned code {} ({}) while expecting epoch {}",
+            reply.code, reply.message, client.epoch
         )
     };
     ServiceVersionCheck::NeedsReinstall(format!(
@@ -161,7 +173,7 @@ async fn probe_service_version_once() -> Result<ServiceVersionReply> {
     Ok(ServiceVersionReply {
         code: response.code,
         message: response.message,
-        version: response.data,
+        protocol: response.data,
     })
 }
 
@@ -216,14 +228,6 @@ fn apply_service_version_result(
 }
 
 #[cfg(target_os = "macos")]
-const MACOS_SERVICE_INSTALL_MARKERS: [&str; 4] = [
-    "/Library/LaunchDaemons/io.github.clash-verge-rev.clash-verge-rev.service.plist",
-    "/Library/PrivilegedHelperTools/io.github.clash-verge-rev.clash-verge-rev.service.bundle",
-    "/Library/LaunchDaemons/io.github.clashverge.helper.plist",
-    "/Library/PrivilegedHelperTools/io.github.clashverge.helper",
-];
-
-#[cfg(target_os = "macos")]
 fn path_entry_exists_without_follow(path: &Path) -> std::io::Result<bool> {
     match std::fs::symlink_metadata(path) {
         Ok(_) => Ok(true),
@@ -234,18 +238,78 @@ fn path_entry_exists_without_follow(path: &Path) -> std::io::Result<bool> {
 
 #[cfg(target_os = "macos")]
 fn macos_service_install_marker_exists() -> std::io::Result<bool> {
-    for marker in MACOS_SERVICE_INSTALL_MARKERS {
-        if path_entry_exists_without_follow(Path::new(marker))? {
+    let mut markers = vec![
+        format!(
+            "/Library/LaunchDaemons/{}.plist",
+            clash_verge_service_ipc::MACOS_SERVICE_ID
+        ),
+        format!(
+            "/Library/PrivilegedHelperTools/{}.bundle",
+            clash_verge_service_ipc::MACOS_SERVICE_ID
+        ),
+    ];
+    #[cfg(not(feature = "verge-dev"))]
+    markers.extend([
+        "/Library/LaunchDaemons/io.github.clashverge.helper.plist".to_owned(),
+        "/Library/PrivilegedHelperTools/io.github.clashverge.helper".to_owned(),
+    ]);
+    for marker in markers {
+        if path_entry_exists_without_follow(Path::new(&marker))? {
             return Ok(true);
         }
     }
     Ok(false)
 }
 
+#[cfg(windows)]
+fn trusted_service_evidence() -> Result<bool> {
+    use windows_service::{
+        Error as WindowsServiceError,
+        service::ServiceAccess,
+        service_manager::{ServiceManager as WindowsServiceManager, ServiceManagerAccess},
+    };
+
+    const ERROR_SERVICE_DOES_NOT_EXIST: i32 = 1060;
+    let manager = WindowsServiceManager::local_computer(None::<&str>, ServiceManagerAccess::CONNECT)?;
+    match manager.open_service(
+        clash_verge_service_ipc::WINDOWS_SERVICE_NAME,
+        ServiceAccess::QUERY_STATUS,
+    ) {
+        Ok(service) => {
+            drop(service);
+            Ok(true)
+        }
+        Err(WindowsServiceError::Winapi(error)) if error.raw_os_error() == Some(ERROR_SERVICE_DOES_NOT_EXIST) => {
+            Ok(false)
+        }
+        Err(error) => Err(error).context("failed to inspect Windows service registration"),
+    }
+}
+
+#[cfg(target_os = "linux")]
+fn trusted_service_evidence() -> Result<bool> {
+    let unit = format!("{}.service", clash_verge_service_ipc::SERVICE_SLUG);
+    let output = StdCommand::new("systemctl")
+        .args(["show", "--property=LoadState", "--value", &unit])
+        .output()
+        .context("failed to inspect systemd service registration")?;
+    if !output.status.success() {
+        bail!(
+            "systemd service registration probe failed with status {}",
+            output.status
+        );
+    }
+    Ok(String::from_utf8_lossy(&output.stdout).trim() != "not-found")
+}
+
 #[cfg(target_os = "macos")]
-async fn detect_macos_service_install_state() -> ServiceInstallState {
-    let current = match path_entry_exists_without_follow(Path::new(clash_verge_service_ipc::IPC_PATH)) {
-        Ok(true) => match probe_service_version_once().await {
+fn trusted_service_evidence() -> Result<bool> {
+    macos_service_install_marker_exists().context("failed to inspect launchd service registration")
+}
+
+async fn detect_service_install_state() -> ServiceInstallState {
+    let current = if is_service_ipc_path_exists() {
+        match probe_service_version_once().await {
             Ok(reply) if classify_service_version_reply(&reply) == ServiceVersionCheck::Ready => {
                 CurrentServiceProbe::Ready
             }
@@ -254,26 +318,23 @@ async fn detect_macos_service_install_state() -> ServiceInstallState {
                 logging!(warn, Type::Service, "current service IPC is unavailable: {error:#}");
                 CurrentServiceProbe::Unavailable
             }
-        },
-        Ok(false) => CurrentServiceProbe::Missing,
-        Err(error) => {
-            logging!(warn, Type::Service, "failed to inspect current service IPC: {error}");
-            CurrentServiceProbe::Unavailable
         }
+    } else {
+        CurrentServiceProbe::Missing
     };
 
-    let markers = match macos_service_install_marker_exists() {
+    let markers = match trusted_service_evidence() {
         Ok(exists) => exists,
         Err(error) => {
             logging!(
                 warn,
                 Type::Service,
-                "failed to inspect service install markers: {error}"
+                "failed to inspect trusted service evidence: {error:#}"
             );
             return ServiceInstallState::Unavailable;
         }
     };
-    classify_macos_service_install_state(current, markers)
+    classify_service_install_state(current, markers)
 }
 
 pub struct ServiceManager {
@@ -339,7 +400,7 @@ fn service_core_path_for(source: &Path, home: Option<&Path>, stage_for_macos_dev
     )
 }
 
-#[cfg(any(all(target_os = "macos", feature = "verge-dev"), test))]
+#[cfg(any(all(target_os = "macos", feature = "verge-dev"), all(test, unix)))]
 fn service_tool_path_for(source: &Path, home: Option<&Path>, stage_for_macos_dev: bool) -> Result<PathBuf> {
     service_core_path_for_with_publisher(
         source,
@@ -359,6 +420,7 @@ fn service_tool_path_for(source: &Path, home: Option<&Path>, stage_for_macos_dev
 }
 
 #[cfg(any(all(target_os = "macos", feature = "verge-dev"), test))]
+#[cfg_attr(not(unix), allow(unreachable_code, unused_assignments, unused_variables))]
 fn service_core_path_for_with_publisher<F>(
     source: &Path,
     home: Option<&Path>,
@@ -513,7 +575,7 @@ fn escape_osascript_double_quoted_string(value: &str) -> String {
     value.replace('\\', "\\\\").replace('"', "\\\"")
 }
 
-#[cfg(target_os = "macos")]
+#[cfg(any(target_os = "macos", test))]
 fn shell_single_quote(value: &str) -> String {
     format!("'{}'", value.replace('\'', r"'\''"))
 }
@@ -524,6 +586,26 @@ fn macos_install_shell(install_path: &Path, gid: u32) -> String {
     format!("cd /; CLASH_VERGE_SERVICE_GID={gid} {install_quoted}")
 }
 
+fn packaged_service_tool_path(file_name: &str, packaged_path: impl FnOnce() -> Result<PathBuf>) -> Result<PathBuf> {
+    #[cfg(feature = "verge-dev")]
+    {
+        drop(packaged_path);
+        let directory = std::env::var_os("CLASH_VERGE_DEV_SERVICE_DIR")
+            .context("CLASH_VERGE_DEV_SERVICE_DIR is missing from the development session")?;
+        let directory = PathBuf::from(directory);
+        if !directory.is_absolute() {
+            bail!("CLASH_VERGE_DEV_SERVICE_DIR must be an absolute path");
+        }
+        return Ok(directory.join(file_name));
+    }
+
+    #[cfg(not(feature = "verge-dev"))]
+    {
+        let _ = file_name;
+        packaged_path()
+    }
+}
+
 #[cfg(target_os = "windows")]
 fn uninstall_service() -> Result<()> {
     logging!(info, Type::Service, "uninstall service");
@@ -532,8 +614,9 @@ fn uninstall_service() -> Result<()> {
     use runas::Command as RunasCommand;
     use std::os::windows::process::CommandExt as _;
 
-    let binary_path = dirs::service_path()?;
-    let uninstall_path = binary_path.with_file_name("clash-verge-service-uninstall.exe");
+    let uninstall_path = packaged_service_tool_path("clash-verge-service-uninstall.exe", || {
+        Ok(dirs::service_path()?.with_file_name("clash-verge-service-uninstall.exe"))
+    })?;
 
     if !uninstall_path.exists() {
         bail!(format!("uninstaller not found: {uninstall_path:?}"));
@@ -565,8 +648,9 @@ fn install_service() -> Result<()> {
     use runas::Command as RunasCommand;
     use std::os::windows::process::CommandExt as _;
 
-    let binary_path = dirs::service_path()?;
-    let install_path = binary_path.with_file_name("clash-verge-service-install.exe");
+    let install_path = packaged_service_tool_path("clash-verge-service-install.exe", || {
+        Ok(dirs::service_path()?.with_file_name("clash-verge-service-install.exe"))
+    })?;
 
     if !install_path.exists() {
         bail!(format!("installer not found: {install_path:?}"));
@@ -607,7 +691,9 @@ fn install_service() -> Result<()> {
 fn uninstall_service() -> Result<()> {
     logging!(info, Type::Service, "uninstall service");
 
-    let uninstall_path = tauri::utils::platform::current_exe()?.with_file_name("clash-verge-service-uninstall");
+    let uninstall_path = packaged_service_tool_path("clash-verge-service-uninstall", || {
+        Ok(tauri::utils::platform::current_exe()?.with_file_name("clash-verge-service-uninstall"))
+    })?;
 
     if !uninstall_path.exists() {
         bail!(format!("uninstaller not found: {uninstall_path:?}"));
@@ -653,7 +739,9 @@ fn uninstall_service() -> Result<()> {
 fn install_service() -> Result<()> {
     logging!(info, Type::Service, "install service");
 
-    let install_path = tauri::utils::platform::current_exe()?.with_file_name("clash-verge-service-install");
+    let install_path = packaged_service_tool_path("clash-verge-service-install", || {
+        Ok(tauri::utils::platform::current_exe()?.with_file_name("clash-verge-service-install"))
+    })?;
 
     if !install_path.exists() {
         bail!(format!("installer not found: {install_path:?}"));
@@ -705,8 +793,9 @@ fn linux_running_as_root() -> bool {
 fn uninstall_service() -> Result<()> {
     logging!(info, Type::Service, "uninstall service");
 
-    let binary_path = dirs::service_path()?;
-    let uninstall_path = binary_path.with_file_name("clash-verge-service-uninstall");
+    let uninstall_path = packaged_service_tool_path("clash-verge-service-uninstall", || {
+        Ok(dirs::service_path()?.with_file_name("clash-verge-service-uninstall"))
+    })?;
 
     if !uninstall_path.exists() {
         bail!(format!("uninstaller not found: {uninstall_path:?}"));
@@ -742,8 +831,10 @@ fn uninstall_service() -> Result<()> {
 fn install_service() -> Result<()> {
     logging!(info, Type::Service, "install service");
 
-    let binary_path = dirs::service_path()?;
-    let install_path = binary_path.with_file_name("clash-verge-service-install");
+    let binary_path = packaged_service_tool_path("clash-verge-service", dirs::service_path)?;
+    let install_path = packaged_service_tool_path("clash-verge-service-install", || {
+        Ok(dirs::service_path()?.with_file_name("clash-verge-service-install"))
+    })?;
 
     if !install_path.exists() {
         bail!(format!("installer not found: {install_path:?}"));
@@ -791,20 +882,15 @@ fn check_output_error(output: &std::process::Output) -> Option<(i32, Cow<'_, str
     Some((code, Cow::Borrowed("Unknown error")))
 }
 
-fn run_reinstall_sequence(uninstall: impl FnOnce() -> Result<()>, install: impl FnOnce() -> Result<()>) -> Result<()> {
-    uninstall().context("failed to uninstall service")?;
-    install().context("failed to install service")
-}
-
 fn reinstall_service() -> Result<()> {
     logging!(info, Type::Service, "reinstall service");
-    run_reinstall_sequence(uninstall_service, install_service)
+    install_service()
 }
 
 /// 强制重装服务（UI修复按钮）
 fn force_reinstall_service() -> Result<()> {
     logging!(info, Type::Service, "用户请求强制重装服务");
-    reinstall_service().map_err(|err| {
+    install_service().map_err(|err| {
         logging!(error, Type::Service, "强制重装服务失败: {}", err);
         err
     })
@@ -1393,9 +1479,8 @@ impl ServiceManager {
         }
     }
 
-    #[cfg(not(target_os = "macos"))]
     pub async fn init(&self) -> Result<()> {
-        apply_service_version_result(self, probe_service_version_once().await, "服务连接失败")
+        apply_service_version_result(self, probe_service_version_once().await, "service connection failed")
     }
 
     pub async fn current(&self) -> ServiceStatus {
@@ -1422,7 +1507,10 @@ impl ServiceManager {
         }
         if !matches!(
             *status,
-            ServiceStatus::NeedsReinstall | ServiceStatus::InstallRequired | ServiceStatus::Unavailable(_)
+            ServiceStatus::NotInstalled
+                | ServiceStatus::NeedsReinstall
+                | ServiceStatus::InstallRequired
+                | ServiceStatus::Unavailable(_)
         ) {
             bail!("sidecar cannot be allowed from service status {status:?}");
         }
@@ -1432,19 +1520,35 @@ impl ServiceManager {
         Ok(())
     }
 
+    pub fn require_install_for_session(&self) -> Result<()> {
+        let mut status = self.status.lock();
+        if self.operation_running.load(Ordering::Acquire) {
+            bail!("service operation already running");
+        }
+        if matches!(*status, ServiceStatus::NotInstalled) {
+            self.status_generation.fetch_add(1, Ordering::AcqRel);
+            *status = ServiceStatus::InstallRequired;
+        }
+        Ok(())
+    }
+
     pub(crate) fn mark_unavailable(&self, reason: impl Into<String>) {
         self.set_status(ServiceStatus::Unavailable(reason.into()));
     }
 
-    #[cfg(target_os = "macos")]
-    pub async fn detect_macos_startup_status(&self) {
-        let status = match detect_macos_service_install_state().await {
+    pub async fn detect_startup_status(&self) {
+        if cfg!(feature = "dev-sidecar") {
+            self.set_status(ServiceStatus::SidecarAllowed);
+            return;
+        }
+        let status = match detect_service_install_state().await {
             ServiceInstallState::Checking => ServiceStatus::Checking,
             ServiceInstallState::Ready => ServiceStatus::Ready,
             ServiceInstallState::NotInstalled => ServiceStatus::NotInstalled,
+            ServiceInstallState::InstallRequired => ServiceStatus::InstallRequired,
             ServiceInstallState::NeedsReinstall => ServiceStatus::NeedsReinstall,
             ServiceInstallState::SidecarAllowed => ServiceStatus::SidecarAllowed,
-            ServiceInstallState::Unavailable => ServiceStatus::Unavailable("macOS service detection failed".into()),
+            ServiceInstallState::Unavailable => ServiceStatus::Unavailable("service detection failed".into()),
         };
         self.set_status(status);
     }
@@ -1518,16 +1622,19 @@ impl ServiceManager {
                 logging!(info, Type::Service, "服务需要重装，执行重装流程");
                 run_service_command(reinstall_service, "reinstall service")?;
                 wait_for_service_ipc(self).await?;
+                Config::restore_tun_for_session().await;
             }
             Some(PrivilegedServiceAction::ForceReinstall) => {
                 logging!(info, Type::Service, "服务需要强制重装，执行强制重装流程");
                 run_service_command(force_reinstall_service, "force reinstall service")?;
                 wait_for_service_ipc(self).await?;
+                Config::restore_tun_for_session().await;
             }
             Some(PrivilegedServiceAction::Install) => {
                 logging!(info, Type::Service, "需要安装服务，执行安装流程");
                 run_service_command(install_service, "install service")?;
                 wait_for_service_ipc(self).await?;
+                Config::restore_tun_for_session().await;
             }
             Some(PrivilegedServiceAction::Uninstall) => {
                 logging!(info, Type::Service, "服务需要卸载，执行卸载流程");
@@ -1588,20 +1695,35 @@ mod tests {
     use super::{
         CurrentServiceProbe, OwnerRecoveryReason, PrivilegedServiceAction, ServiceInstallState, ServiceStatus,
         ServiceVersionCheck, ServiceVersionReply, apply_service_version_result, capture_generation_before,
-        claim_owner_recovery_generation, classify_macos_service_install_state, classify_service_version_reply,
+        claim_owner_recovery_generation, classify_service_install_state, classify_service_version_reply,
         confirmed_service_available, generate_service_session_token, macos_install_shell,
         mark_service_unavailable_after_owner_loss, owner_recovery_policy, owner_status_recovery_reason,
-        poll_service_version, privileged_service_action, probe_service_availability_with, run_reinstall_sequence,
-        service_core_path_for, service_core_path_for_with_publisher, service_tool_path_for, session_matches_status,
-        transport_failure_recovery_reason,
+        poll_service_version, privileged_service_action, probe_service_availability_with, service_core_path_for,
+        session_matches_status, transport_failure_recovery_reason,
     };
-    use clash_verge_service_ipc::{OwnerSessionProof, ServiceLifecycleState};
+    #[cfg(unix)]
+    use super::{service_core_path_for_with_publisher, service_tool_path_for};
+    use clash_verge_service_ipc::{OwnerSessionProof, ProtocolInfo, ProtocolVersion, ServiceLifecycleState};
+    #[cfg(unix)]
+    use std::cell::Cell;
     use std::{
-        cell::Cell,
         path::{Path, PathBuf},
         sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering},
         time::Duration,
     };
+
+    fn current_protocol() -> ProtocolInfo {
+        ProtocolInfo::current()
+    }
+
+    fn incompatible_protocol() -> ProtocolInfo {
+        let mut info = ProtocolInfo::current();
+        info.protocol = ProtocolVersion {
+            epoch: info.protocol.epoch.saturating_add(1),
+            revision: info.protocol.revision,
+        };
+        info
+    }
 
     static TEST_DIRECTORY_GENERATION: AtomicU64 = AtomicU64::new(0);
 
@@ -1633,10 +1755,12 @@ mod tests {
         home.join("Applications/.clash-verge-rev-dev/service-core")
     }
 
+    #[cfg(unix)]
     fn service_tools_staging_directory(home: &Path) -> PathBuf {
         home.join("Applications/.clash-verge-rev-dev/service-tools")
     }
 
+    #[cfg(unix)]
     fn staging_temporary_entries(home: &Path, core_name: &str) -> anyhow::Result<Vec<PathBuf>> {
         let directory = staging_directory(home);
         if !directory.exists() {
@@ -1910,11 +2034,11 @@ mod tests {
     }
 
     #[test]
-    fn service_version_requires_successful_exact_protocol_reply() {
+    fn service_version_requires_a_compatible_protocol_reply() {
         let exact = ServiceVersionReply {
             code: 0,
             message: String::new(),
-            version: Some(clash_verge_service_ipc::VERSION.to_owned()),
+            protocol: Some(current_protocol()),
         };
         assert_eq!(classify_service_version_reply(&exact), ServiceVersionCheck::Ready);
 
@@ -1922,23 +2046,23 @@ mod tests {
             ServiceVersionReply {
                 code: 0,
                 message: String::new(),
-                version: Some("2.3.0".to_owned()),
+                protocol: Some(incompatible_protocol()),
             },
             ServiceVersionReply {
                 code: 0,
                 message: String::new(),
-                version: None,
+                protocol: None,
             },
             ServiceVersionReply {
                 code: 1,
                 message: "unsupported command".to_owned(),
-                version: Some(clash_verge_service_ipc::VERSION.to_owned()),
+                protocol: Some(current_protocol()),
             },
         ] {
             let check = classify_service_version_reply(&reply);
             assert!(matches!(check, ServiceVersionCheck::NeedsReinstall(_)));
             if let ServiceVersionCheck::NeedsReinstall(error) = check {
-                assert!(error.contains(clash_verge_service_ipc::VERSION));
+                assert!(error.contains("epoch") || error.contains("protocol"));
                 assert!(error.contains("Reinstall") || error.contains("Repair"));
             }
         }
@@ -1955,7 +2079,7 @@ mod tests {
         let exact = ServiceVersionReply {
             code: 0,
             message: String::new(),
-            version: Some(clash_verge_service_ipc::VERSION.to_owned()),
+            protocol: Some(current_protocol()),
         };
         assert!(apply_service_version_result(&manager, Ok(exact), "probe failed").is_ok());
         assert_eq!(*manager.status.lock(), ServiceStatus::Ready);
@@ -1963,7 +2087,7 @@ mod tests {
         let mismatch = ServiceVersionReply {
             code: 0,
             message: String::new(),
-            version: Some("2.3.0".to_owned()),
+            protocol: Some(incompatible_protocol()),
         };
         assert!(apply_service_version_result(&manager, Ok(mismatch), "probe failed").is_err());
         assert_eq!(*manager.status.lock(), ServiceStatus::NeedsReinstall);
@@ -1984,7 +2108,7 @@ mod tests {
             Ok(ServiceVersionReply {
                 code: 0,
                 message: String::new(),
-                version: Some(clash_verge_service_ipc::VERSION.to_owned()),
+                protocol: Some(current_protocol()),
             })
         })
         .await;
@@ -1994,7 +2118,7 @@ mod tests {
         let reply = result.unwrap_or_else(|_| ServiceVersionReply {
             code: 1,
             message: "probe failed".to_owned(),
-            version: None,
+            protocol: None,
         });
         assert_eq!(classify_service_version_reply(&reply), ServiceVersionCheck::Ready);
     }
@@ -2013,7 +2137,7 @@ mod tests {
             Ok(ServiceVersionReply {
                 code: 0,
                 message: String::new(),
-                version: Some(clash_verge_service_ipc::VERSION.to_owned()),
+                protocol: Some(current_protocol()),
             })
         })
         .await;
@@ -2037,7 +2161,7 @@ mod tests {
             Ok(ServiceVersionReply {
                 code: 0,
                 message: String::new(),
-                version: Some(clash_verge_service_ipc::VERSION.to_owned()),
+                protocol: Some(current_protocol()),
             })
         })
         .await;
@@ -2123,7 +2247,7 @@ mod tests {
             Ok(ServiceVersionReply {
                 code: 0,
                 message: String::new(),
-                version: Some(clash_verge_service_ipc::VERSION.to_owned()),
+                protocol: Some(current_protocol()),
             })
         })
         .await;
@@ -2137,50 +2261,29 @@ mod tests {
     }
 
     #[test]
-    fn reinstall_stops_after_uninstall_failure() {
-        let calls = parking_lot::Mutex::new(Vec::new());
-
-        let result = run_reinstall_sequence(
-            || {
-                calls.lock().push("uninstall");
-                anyhow::bail!("authorization cancelled")
-            },
-            || {
-                calls.lock().push("install");
-                Ok(())
-            },
-        );
-
-        assert!(result.is_err());
-        assert_eq!(&*calls.lock(), &["uninstall"]);
-        let error = result.err().map(|error| format!("{error:#}")).unwrap_or_default();
-        assert!(error.contains("authorization cancelled"));
-    }
-
-    #[test]
     fn macos_service_evidence_distinguishes_missing_old_and_current_service() {
         assert_eq!(
-            classify_macos_service_install_state(CurrentServiceProbe::Missing, false),
+            classify_service_install_state(CurrentServiceProbe::Missing, false),
             ServiceInstallState::NotInstalled
         );
         assert_eq!(
-            classify_macos_service_install_state(CurrentServiceProbe::Missing, true),
+            classify_service_install_state(CurrentServiceProbe::Missing, true),
             ServiceInstallState::NeedsReinstall
         );
         assert_eq!(
-            classify_macos_service_install_state(CurrentServiceProbe::Ready, true),
+            classify_service_install_state(CurrentServiceProbe::Ready, true),
             ServiceInstallState::Ready
         );
         assert_eq!(
-            classify_macos_service_install_state(CurrentServiceProbe::VersionMismatch, false),
+            classify_service_install_state(CurrentServiceProbe::VersionMismatch, false),
             ServiceInstallState::NeedsReinstall
         );
         assert_eq!(
-            classify_macos_service_install_state(CurrentServiceProbe::Unavailable, false),
+            classify_service_install_state(CurrentServiceProbe::Unavailable, false),
             ServiceInstallState::Unavailable
         );
         assert_eq!(
-            classify_macos_service_install_state(CurrentServiceProbe::Unavailable, true),
+            classify_service_install_state(CurrentServiceProbe::Unavailable, true),
             ServiceInstallState::NeedsReinstall
         );
     }
@@ -2190,7 +2293,7 @@ mod tests {
     fn legacy_socket_alone_is_not_install_evidence() {
         assert!(!super::MACOS_SERVICE_INSTALL_MARKERS.contains(&"/tmp/verge/clash-verge-service.sock"));
         assert_eq!(
-            classify_macos_service_install_state(CurrentServiceProbe::Missing, false),
+            classify_service_install_state(CurrentServiceProbe::Missing, false),
             ServiceInstallState::NotInstalled
         );
     }
