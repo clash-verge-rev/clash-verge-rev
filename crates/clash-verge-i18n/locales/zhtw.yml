@@ -34,6 +34,26 @@ notifications:
 service:
   adminInstallPrompt: 安裝 Clash Verge 服務需要管理員權限
   adminUninstallPrompt: 卸载 Clash Verge 服務需要管理員權限
+launchGuard:
+  currentExeError: 無法判斷應用程式位置：{error}
+  homeDirError: 無法判斷目前使用者的個人目錄，應用程式將結束：{error}
+  translocated: macOS 正從 App Translocation 暫存路徑執行此應用程式。請在 Finder 中將應用程式手動移至 /Applications 或 ~/Applications，然後重新開啟。
+  rejected: |-
+    此應用程式必須從 Applications 目錄啟動。
+
+    {reason}
+  notInBundle: 可執行檔不在應用程式套件內。
+  canonicalizeBundleError: 無法解析應用程式套件路徑：{error}
+  bundleNameError: 無法判斷應用程式套件名稱，應用程式將結束。
+  replacePrompt: 目標位置已有應用程式：{destination}。是否取代並從 Applications 重新啟動？
+  movePrompt: 為了安全啟動背景服務，需要將應用程式移至 {destination}。是否立即移動並重新啟動？
+  createApplicationsDirError: 無法建立 Applications 目錄：{error}
+  moveFailed: 移動應用程式失敗。請在 Finder 中手動移動後再試一次。
+  replaceFailed: 無法安全取代現有應用程式：{error}
+  relaunchFailed: 應用程式已複製，但無法自動重新啟動。請從 Applications 手動開啟。
+  cancel: 取消
+  move: 移動
+  ok: 好
 tray:
   dashboard: 儀表板
   ruleMode: 規則模式

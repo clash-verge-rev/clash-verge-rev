@@ -34,6 +34,26 @@ notifications:
 service:
   adminInstallPrompt: Clash Verge 서비스 설치에는 관리자 권한이 필요합니다.
   adminUninstallPrompt: Clash Verge 서비스 제거에는 관리자 권한이 필요합니다.
+launchGuard:
+  currentExeError: '애플리케이션 위치를 확인할 수 없습니다: {error}'
+  homeDirError: '현재 사용자의 홈 디렉터리를 확인할 수 없어 애플리케이션을 종료합니다: {error}'
+  translocated: macOS가 임시 App Translocation 경로에서 이 애플리케이션을 실행하고 있습니다. Finder에서 /Applications 또는 ~/Applications로 직접 이동한 후 다시 여십시오.
+  rejected: |-
+    이 애플리케이션은 Applications 디렉터리에서 실행해야 합니다.
+
+    {reason}
+  notInBundle: 실행 파일이 애플리케이션 번들 안에 없습니다.
+  canonicalizeBundleError: '애플리케이션 번들 경로를 확인할 수 없습니다: {error}'
+  bundleNameError: 애플리케이션 번들 이름을 확인할 수 없어 애플리케이션을 종료합니다.
+  replacePrompt: '{destination}에 애플리케이션이 이미 있습니다. 교체하고 Applications에서 다시 실행하시겠습니까?'
+  movePrompt: 백그라운드 서비스를 안전하게 시작하려면 애플리케이션을 {destination}(으)로 이동해야 합니다. 지금 이동하고 다시 실행하시겠습니까?
+  createApplicationsDirError: 'Applications 디렉터리를 만들 수 없습니다: {error}'
+  moveFailed: 애플리케이션을 이동하지 못했습니다. Finder에서 직접 이동한 후 다시 시도하십시오.
+  replaceFailed: '기존 애플리케이션을 안전하게 교체할 수 없습니다: {error}'
+  relaunchFailed: 애플리케이션을 복사했지만 자동으로 다시 실행하지 못했습니다. Applications에서 직접 여십시오.
+  cancel: 취소
+  move: 이동
+  ok: 확인
 tray:
   dashboard: 대시보드
   ruleMode: 규칙 모드

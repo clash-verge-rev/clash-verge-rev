@@ -9,7 +9,13 @@ pub enum LaunchLocation {
     Allowed { bundle: PathBuf },
     Movable { bundle: PathBuf },
     Translocated,
-    Rejected { reason: String },
+    Rejected { reason: LaunchRejectionReason },
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum LaunchRejectionReason {
+    NotInApplicationBundle,
+    CanonicalizeBundleFailed { error: String },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -49,14 +55,16 @@ pub fn evaluate_install_location_with_roots(
             .is_some_and(|extension| extension.eq_ignore_ascii_case("app"))
     }) else {
         return LaunchLocation::Rejected {
-            reason: "executable is not inside an application bundle".to_string(),
+            reason: LaunchRejectionReason::NotInApplicationBundle,
         };
     };
     let canonical_bundle = match std::fs::canonicalize(bundle) {
         Ok(bundle) => bundle,
         Err(error) => {
             return LaunchLocation::Rejected {
-                reason: format!("failed to canonicalize application bundle: {error}"),
+                reason: LaunchRejectionReason::CanonicalizeBundleFailed {
+                    error: error.to_string().into(),
+                },
             };
         }
     };
@@ -158,17 +166,21 @@ pub const fn move_decision(
 }
 
 pub fn enforce_before_initialization() -> LaunchDisposition {
+    clash_verge_i18n::sync_locale(None);
+
     let executable = match std::env::current_exe() {
         Ok(executable) => executable,
         Err(error) => {
-            show_message(&format!("无法确定应用位置：{error}"));
+            let message = clash_verge_i18n::t!("launchGuard.currentExeError").replace("{error}", &error.to_string());
+            show_message(&message);
             return LaunchDisposition::Exit;
         }
     };
     let home = match current_user_home() {
         Ok(home) => home,
         Err(error) => {
-            show_message(&format!("无法确定当前用户主目录，应用将退出：{error}"));
+            let message = clash_verge_i18n::t!("launchGuard.homeDirError").replace("{error}", &error.to_string());
+            show_message(&message);
             return LaunchDisposition::Exit;
         }
     };
@@ -176,13 +188,20 @@ pub fn enforce_before_initialization() -> LaunchDisposition {
     match evaluate_install_location(&executable, &home) {
         LaunchLocation::Allowed { .. } => LaunchDisposition::Continue,
         LaunchLocation::Translocated => {
-            show_message(
-                "macOS 正在从 App Translocation 临时路径运行此应用。请在 Finder 中将应用手动拖到 /Applications 或 ~/Applications 后重新打开。",
-            );
+            show_message(&clash_verge_i18n::t!("launchGuard.translocated"));
             LaunchDisposition::Exit
         }
         LaunchLocation::Rejected { reason } => {
-            show_message(&format!("此应用必须从 Applications 目录启动。\n\n{reason}"));
+            let reason = match reason {
+                LaunchRejectionReason::NotInApplicationBundle => {
+                    clash_verge_i18n::t!("launchGuard.notInBundle").into_owned()
+                }
+                LaunchRejectionReason::CanonicalizeBundleFailed { error } => {
+                    clash_verge_i18n::t!("launchGuard.canonicalizeBundleError").replace("{error}", &error)
+                }
+            };
+            let message = clash_verge_i18n::t!("launchGuard.rejected").replace("{reason}", &reason);
+            show_message(&message);
             LaunchDisposition::Exit
         }
         LaunchLocation::Movable { bundle } => move_and_relaunch(&bundle, &home),
@@ -198,27 +217,24 @@ fn move_and_relaunch(bundle: &Path, home: &Path) -> LaunchDisposition {
         home.join("Applications")
     };
     let Some(bundle_name) = bundle.file_name() else {
-        show_message("无法确定应用包名称，应用将退出。");
+        show_message(&clash_verge_i18n::t!("launchGuard.bundleNameError"));
         return LaunchDisposition::Exit;
     };
     let destination = destination_root.join(bundle_name);
     let exists = destination.exists();
+    let destination_display = destination.display().to_string();
     let prompt = if exists {
-        format!(
-            "目标位置已存在 {}。是否替换并从 Applications 重新启动？",
-            destination.display()
-        )
+        clash_verge_i18n::t!("launchGuard.replacePrompt").replace("{destination}", &destination_display)
     } else {
-        format!(
-            "为了安全启动后台服务，需要将应用移动到 {}。是否现在移动并重新启动？",
-            destination.display()
-        )
+        clash_verge_i18n::t!("launchGuard.movePrompt").replace("{destination}", &destination_display)
     };
     if !confirm(&prompt) {
         return LaunchDisposition::Exit;
     }
     if let Err(error) = std::fs::create_dir_all(&destination_root) {
-        show_message(&format!("无法创建 Applications 目录：{error}"));
+        let message =
+            clash_verge_i18n::t!("launchGuard.createApplicationsDirError").replace("{error}", &error.to_string());
+        show_message(&message);
         return LaunchDisposition::Exit;
     }
     let staging = sibling_swap_path(&destination, "installing");
@@ -231,14 +247,15 @@ fn move_and_relaunch(bundle: &Path, home: &Path) -> LaunchDisposition {
         .status();
     if !copy.is_ok_and(|status| status.success()) {
         let _ = remove_existing_target(&staging);
-        show_message("移动应用失败。请在 Finder 中手动移动后重试。");
+        show_message(&clash_verge_i18n::t!("launchGuard.moveFailed"));
         return LaunchDisposition::Exit;
     }
     let backup = match activate_staged_bundle(&staging, &destination, &backup) {
         Ok(backup) => backup,
         Err(error) => {
             let _ = remove_existing_target(&staging);
-            show_message(&format!("无法安全替换现有应用：{error}"));
+            let message = clash_verge_i18n::t!("launchGuard.replaceFailed").replace("{error}", &error.to_string());
+            show_message(&message);
             return LaunchDisposition::Exit;
         }
     };
@@ -255,7 +272,7 @@ fn move_and_relaunch(bundle: &Path, home: &Path) -> LaunchDisposition {
                 let _ = remove_existing_target(&staging);
             }
         }
-        show_message("应用已复制，但自动重新启动失败。请从 Applications 手动打开。");
+        show_message(&clash_verge_i18n::t!("launchGuard.relaunchFailed"));
         return LaunchDisposition::Exit;
     }
     if let Some(backup) = backup {
@@ -316,22 +333,31 @@ fn path_is_writable(path: &Path) -> bool {
 }
 
 fn confirm(message: &str) -> bool {
+    let cancel_button = clash_verge_i18n::t!("launchGuard.cancel");
+    let move_button = clash_verge_i18n::t!("launchGuard.move");
     let script = format!(
-        "display dialog \"{}\" buttons {{\"取消\", \"移动\"}} default button \"移动\" with icon caution",
-        escape_osascript(message)
+        "display dialog \"{}\" buttons {{\"{}\", \"{}\"}} default button \"{}\" with icon caution",
+        escape_osascript(message),
+        escape_osascript(cancel_button.as_ref()),
+        escape_osascript(move_button.as_ref()),
+        escape_osascript(move_button.as_ref())
     );
+    let selected_button = format!("button returned:{move_button}");
     std::process::Command::new("/usr/bin/osascript")
         .args(["-e", &script])
         .output()
         .is_ok_and(|output| {
-            output.status.success() && String::from_utf8_lossy(&output.stdout).contains("button returned:移动")
+            output.status.success() && String::from_utf8_lossy(&output.stdout).contains(&selected_button)
         })
 }
 
 fn show_message(message: &str) {
+    let ok_button = clash_verge_i18n::t!("launchGuard.ok");
     let script = format!(
-        "display dialog \"{}\" buttons {{\"好\"}} default button \"好\" with icon caution",
-        escape_osascript(message)
+        "display dialog \"{}\" buttons {{\"{}\"}} default button \"{}\" with icon caution",
+        escape_osascript(message),
+        escape_osascript(ok_button.as_ref()),
+        escape_osascript(ok_button.as_ref())
     );
     let _ = std::process::Command::new("/usr/bin/osascript")
         .args(["-e", &script])

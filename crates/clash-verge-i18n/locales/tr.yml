@@ -34,6 +34,26 @@ notifications:
 service:
   adminInstallPrompt: Clash Verge hizmetini kurmak için yönetici ayrıcalıkları gerekir.
   adminUninstallPrompt: Clash Verge hizmetini kaldırmak için yönetici ayrıcalıkları gerekir.
+launchGuard:
+  currentExeError: 'Uygulamanın konumu belirlenemedi: {error}'
+  homeDirError: 'Geçerli kullanıcının ana dizini belirlenemedi. Uygulama kapatılacak: {error}'
+  translocated: macOS bu uygulamayı geçici bir App Translocation yolundan çalıştırıyor. Finder'da uygulamayı elle /Applications veya ~/Applications dizinine taşıyın ve yeniden açın.
+  rejected: |-
+    Bu uygulama bir Applications dizininden başlatılmalıdır.
+
+    {reason}
+  notInBundle: Yürütülebilir dosya bir uygulama paketinin içinde değil.
+  canonicalizeBundleError: 'Uygulama paketinin yolu çözümlenemedi: {error}'
+  bundleNameError: Uygulama paketinin adı belirlenemedi. Uygulama kapatılacak.
+  replacePrompt: '{destination} konumunda zaten bir uygulama var. Değiştirilsin ve Applications üzerinden yeniden başlatılsın mı?'
+  movePrompt: Arka plan hizmetini güvenli şekilde başlatmak için uygulamanın {destination} konumuna taşınması gerekir. Şimdi taşınıp yeniden başlatılsın mı?
+  createApplicationsDirError: 'Applications dizini oluşturulamadı: {error}'
+  moveFailed: Uygulama taşınamadı. Finder'da elle taşıyıp tekrar deneyin.
+  replaceFailed: 'Mevcut uygulama güvenli şekilde değiştirilemedi: {error}'
+  relaunchFailed: Uygulama kopyalandı ancak otomatik olarak yeniden başlatılamadı. Applications üzerinden elle açın.
+  cancel: İptal
+  move: Taşı
+  ok: Tamam
 tray:
   dashboard: Gösterge Paneli
   ruleMode: Kural Modu

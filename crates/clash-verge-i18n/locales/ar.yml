@@ -34,6 +34,26 @@ notifications:
 service:
   adminInstallPrompt: يتطلب تثبيت خدمة Clash Verge صلاحيات المسؤول.
   adminUninstallPrompt: يتطلب إلغاء تثبيت خدمة Clash Verge صلاحيات المسؤول.
+launchGuard:
+  currentExeError: 'تعذر تحديد موقع التطبيق: {error}'
+  homeDirError: 'تعذر تحديد المجلد الرئيسي للمستخدم الحالي. سيتم إنهاء التطبيق: {error}'
+  translocated: يشغّل macOS هذا التطبيق من مسار App Translocation مؤقت. انقله يدويًا في Finder إلى /Applications أو ~/Applications، ثم افتحه مجددًا.
+  rejected: |-
+    يجب تشغيل هذا التطبيق من مجلد Applications.
+
+    {reason}
+  notInBundle: الملف التنفيذي ليس داخل حزمة تطبيق.
+  canonicalizeBundleError: 'تعذر تحديد المسار الفعلي لحزمة التطبيق: {error}'
+  bundleNameError: تعذر تحديد اسم حزمة التطبيق. سيتم إنهاء التطبيق.
+  replacePrompt: يوجد تطبيق بالفعل في {destination}. هل تريد استبداله وإعادة تشغيله من Applications؟
+  movePrompt: لتشغيل خدمة الخلفية بأمان، يجب نقل التطبيق إلى {destination}. هل تريد نقله وإعادة تشغيله الآن؟
+  createApplicationsDirError: 'تعذر إنشاء مجلد Applications: {error}'
+  moveFailed: فشل نقل التطبيق. انقله يدويًا في Finder ثم أعد المحاولة.
+  replaceFailed: 'تعذر استبدال التطبيق الموجود بأمان: {error}'
+  relaunchFailed: تم نسخ التطبيق، ولكن تعذرت إعادة تشغيله تلقائيًا. افتحه يدويًا من Applications.
+  cancel: إلغاء
+  move: نقل
+  ok: موافق
 tray:
   dashboard: لوحة التحكم
   ruleMode: وضع القواعد

@@ -34,6 +34,26 @@ notifications:
 service:
   adminInstallPrompt: نصب سرویس Clash Verge به دسترسی مدیر نیاز دارد.
   adminUninstallPrompt: حذف سرویس Clash Verge به دسترسی مدیر نیاز دارد.
+launchGuard:
+  currentExeError: 'مکان برنامه مشخص نشد: {error}'
+  homeDirError: 'پوشهٔ خانگی کاربر فعلی مشخص نشد. برنامه بسته خواهد شد: {error}'
+  translocated: macOS این برنامه را از یک مسیر موقت App Translocation اجرا می‌کند. آن را در Finder به‌صورت دستی به /Applications یا ~/Applications منتقل کنید و دوباره باز کنید.
+  rejected: |-
+    این برنامه باید از پوشهٔ Applications اجرا شود.
+
+    {reason}
+  notInBundle: فایل اجرایی داخل بستهٔ برنامه نیست.
+  canonicalizeBundleError: 'مسیر بستهٔ برنامه قابل تشخیص نیست: {error}'
+  bundleNameError: نام بستهٔ برنامه مشخص نشد. برنامه بسته خواهد شد.
+  replacePrompt: در {destination} از قبل برنامه‌ای وجود دارد. جایگزین و از Applications دوباره اجرا شود؟
+  movePrompt: برای اجرای امن سرویس پس‌زمینه، برنامه باید به {destination} منتقل شود. اکنون منتقل و دوباره اجرا شود؟
+  createApplicationsDirError: 'پوشهٔ Applications ایجاد نشد: {error}'
+  moveFailed: انتقال برنامه ناموفق بود. آن را در Finder به‌صورت دستی منتقل کنید و دوباره تلاش کنید.
+  replaceFailed: 'برنامهٔ موجود به‌صورت امن جایگزین نشد: {error}'
+  relaunchFailed: برنامه کپی شد، اما اجرای دوبارهٔ خودکار ناموفق بود. آن را به‌صورت دستی از Applications باز کنید.
+  cancel: لغو
+  move: انتقال
+  ok: تأیید
 tray:
   dashboard: داشبورد
   ruleMode: حالت قوانین
