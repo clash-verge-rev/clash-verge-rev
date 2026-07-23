@@ -10,6 +10,7 @@ import { glob } from 'glob'
 import { HttpsProxyAgent } from 'https-proxy-agent'
 import { extract } from 'tar'
 
+import { resolveServiceRelease } from './service-release.mjs'
 import { log_debug, log_error, log_info, log_success } from './utils.mjs'
 
 /**
@@ -577,10 +578,6 @@ const resolveServicePermission = async () => {
 // =======================
 // Other resource resolvers (service, mmdb, geosite, geoip, enableLoopback)
 // =======================
-const SERVICE_URL_PREFIX =
-  'https://github.com/clash-verge-rev/clash-verge-service-ipc/releases/download'
-const SERVICE_VERSION = 'v2.5.1'
-
 const SERVICE_BINARIES = [
   'clash-verge-service',
   'clash-verge-service-install',
@@ -618,9 +615,15 @@ async function resolveServiceBundle() {
     }
   })
 
-  const archiveExt = platform === 'win32' ? 'zip' : 'tar.gz'
-  const archiveFile = `clash-verge-service-ipc-${SERVICE_VERSION}-${SIDECAR_HOST}.${archiveExt}`
-  const downloadURL = `${SERVICE_URL_PREFIX}/${SERVICE_VERSION}/${archiveFile}`
+  const cargoManifest = await fsp.readFile(
+    path.join(cwd, 'src-tauri', 'Cargo.toml'),
+    'utf8',
+  )
+  const { archiveFile, downloadURL } = resolveServiceRelease(
+    cargoManifest,
+    SIDECAR_HOST,
+    platform,
+  )
   const tempDir = path.join(TEMP_DIR, 'clash-verge-service-ipc')
   const tempArchive = path.join(tempDir, archiveFile)
 
