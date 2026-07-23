@@ -10,7 +10,7 @@ export interface ProxyViewV1 {
   providers: ProxyProviderView[]
 }
 
-export interface ProxyCapabilities {
+interface ProxyCapabilities {
   udp: boolean
   xudp: boolean
   tfo: boolean
@@ -18,7 +18,7 @@ export interface ProxyCapabilities {
   smux: boolean
 }
 
-export interface DelayHistory {
+interface DelayHistory {
   time: string
   delay: number
 }
@@ -51,7 +51,7 @@ export interface ProxyNodeView extends ProxyCapabilities {
     | { kind: 'provider'; providerName: string; proxyName: string }
 }
 
-export type ProxyMemberUnresolvedReason =
+type ProxyMemberUnresolvedReason =
   | 'missing'
   | 'ambiguous'
   | 'provider-unavailable'
@@ -65,7 +65,7 @@ export type ProxyMemberRef =
       reason: ProxyMemberUnresolvedReason
     }
 
-export interface ProxyProviderView {
+interface ProxyProviderView {
   name: string
   vehicleType: 'HTTP' | 'File'
   updatedAt?: string
@@ -73,7 +73,7 @@ export interface ProxyProviderView {
   proxyRecordIds: string[]
 }
 
-export interface ProxySubscriptionInfo {
+interface ProxySubscriptionInfo {
   upload: number
   download: number
   total: number
@@ -123,7 +123,7 @@ export interface InteractableProxyMemberOccurrence {
 export const getRecord = (view: ProxyViewV1, recordId: string) =>
   view.records[recordId]
 
-export const findGroup = (view: ProxyViewV1, name: string) =>
+const findGroup = (view: ProxyViewV1, name: string) =>
   view.global?.name === name
     ? view.global
     : view.groups.find((group) => group.name === name)
@@ -178,14 +178,14 @@ export function findCurrentGroupMember(
 export const providerNameOf = (node: ProxyNodeView) =>
   node.source.kind === 'provider' ? node.source.providerName : undefined
 
-export const resolveStandaloneNodes = (view: ProxyViewV1) =>
+const resolveStandaloneNodes = (view: ProxyViewV1) =>
   view.standalone.map((recordId) => {
     const node = getRecord(view, recordId)
     if (!node) throw new Error('Proxy view record not found: ' + recordId)
     return node
   })
 
-export const selectRuntimeStandaloneNodes = (
+const selectRuntimeStandaloneNodes = (
   view: ProxyViewV1,
   runtimeProxies: unknown,
 ) => {
@@ -223,11 +223,6 @@ export const selectRuleChainMembers = (
     return member.kind === 'group' ? [] : [{ memberIndex, member }]
   })
 }
-
-export const toNodeBinding = (node: ProxyNodeView): ProxyNodeBinding => ({
-  name: node.name,
-  source: node.source,
-})
 
 const sameSource = (
   left: ProxyNodeView['source'],
