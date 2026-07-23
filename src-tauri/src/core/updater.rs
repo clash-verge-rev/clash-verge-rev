@@ -130,9 +130,9 @@ fn version_lte(a: &str, b: &str) -> bool {
 /// Map the app's resolved UI language code to an NSIS installer language ID.
 ///
 /// The Windows installer only ships SimpChinese, English and Russian
-/// (`tauri.windows.conf.json` `nsis.languages`), so app languages without a
-/// matching NSIS translation fall back to English (a common default) instead
-/// of leaving the installer to prompt for a language.
+/// (`tauri.windows.conf.json` `nsis.languages`). Languages without a matching
+/// NSIS translation fall back to English; Traditional Chinese ("zhtw") is
+/// mapped to SimpChinese so Chinese users don't get an English installer.
 #[cfg(target_os = "windows")]
 fn nsis_language_id(app_language: &str) -> &'static str {
     match app_language {
