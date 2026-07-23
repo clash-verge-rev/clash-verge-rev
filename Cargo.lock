@@ -1124,7 +1124,7 @@ dependencies = [
  "serde_json",
  "serde_yaml_ng",
  "smartstring",
- "sysproxy 0.5.4 (git+https://github.com/clash-verge-rev/sysproxy-rs)",
+ "sysproxy",
  "tauri",
  "tauri-build",
  "tauri-plugin-autostart",
@@ -1211,7 +1211,7 @@ dependencies = [
 [[package]]
 name = "clash_verge_service_ipc"
 version = "2.5.0"
-source = "git+https://github.com/clash-verge-rev/clash-verge-service-ipc.git?rev=cba4f5d3c8ada6a85c1d380bbd096f47939f47f9#cba4f5d3c8ada6a85c1d380bbd096f47939f47f9"
+source = "git+https://github.com/clash-verge-rev/clash-verge-service-ipc.git?branch=main#25c224a055060f2d1762bc5dfe738beef5ff1119"
 dependencies = [
  "anyhow",
  "compact_str",
@@ -1224,7 +1224,7 @@ dependencies = [
  "sha2 0.10.9",
  "strum",
  "strum_macros",
- "sysproxy 0.5.4 (git+https://github.com/clash-verge-rev/sysproxy-rs?rev=d214eba9f61d655d49a35f6ae17c359f7ad68d79)",
+ "sysproxy",
  "tokio",
  "url",
  "windows-service",
@@ -1994,7 +1994,7 @@ dependencies = [
  "libc",
  "option-ext",
  "redox_users 0.5.2",
- "windows-sys 0.61.2",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -2265,7 +2265,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -3805,7 +3805,7 @@ dependencies = [
 [[package]]
 name = "kode-bridge"
 version = "0.4.1"
-source = "git+https://github.com/clash-verge-rev/kode-bridge.git?tag=v0.4.1#86e26b88023be3d0224214b24de8a5574e1be34b"
+source = "git+https://github.com/clash-verge-rev/kode-bridge.git?branch=dev#6f06abdfcbfe8a8ac040ab68e098298bd9d5e03a"
 dependencies = [
  "bytes",
  "futures",
@@ -4152,7 +4152,7 @@ dependencies = [
  "png 0.18.1",
  "serde",
  "thiserror 2.0.18",
- "windows-sys 0.61.2",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -4319,7 +4319,7 @@ version = "0.50.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7957b9740744892f114936ab4a57b3f487491bbeafaf8083688b16841a4240e5"
 dependencies = [
- "windows-sys 0.61.2",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -5980,7 +5980,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys 0.4.15",
- "windows-sys 0.59.0",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -5993,7 +5993,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys 0.12.1",
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -6052,7 +6052,7 @@ dependencies = [
  "security-framework",
  "security-framework-sys",
  "webpki-root-certs",
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -6677,7 +6677,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "52d1cfed4120b4d927bf7c0f86d2087a4a7d6027c906d9f9d525a80573b9be51"
 dependencies = [
  "libc",
- "windows-sys 0.61.2",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -6880,22 +6880,7 @@ dependencies = [
 [[package]]
 name = "sysproxy"
 version = "0.5.4"
-source = "git+https://github.com/clash-verge-rev/sysproxy-rs?rev=d214eba9f61d655d49a35f6ae17c359f7ad68d79#d214eba9f61d655d49a35f6ae17c359f7ad68d79"
-dependencies = [
- "iptools",
- "log",
- "system-configuration",
- "thiserror 2.0.18",
- "url",
- "windows 0.62.2",
- "winreg 0.55.0",
- "xdg",
-]
-
-[[package]]
-name = "sysproxy"
-version = "0.5.4"
-source = "git+https://github.com/clash-verge-rev/sysproxy-rs#d214eba9f61d655d49a35f6ae17c359f7ad68d79"
+source = "git+https://github.com/clash-verge-rev/sysproxy-rs?branch=main#d214eba9f61d655d49a35f6ae17c359f7ad68d79"
 dependencies = [
  "iptools",
  "log",
@@ -7575,7 +7560,7 @@ dependencies = [
  "getrandom 0.3.4",
  "once_cell",
  "rustix 1.1.4",
- "windows-sys 0.61.2",
+ "windows-sys 0.52.0",
 ]
 
 [[package]]
@@ -8294,7 +8279,7 @@ dependencies = [
  "png 0.18.1",
  "serde",
  "thiserror 2.0.18",
- "windows-sys 0.61.2",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -8396,7 +8381,7 @@ checksum = "f2f6fb2847f6742cd76af783a2a2c49e9375d0a111c7bef6f71cd9e738c72d6e"
 dependencies = [
  "memoffset",
  "tempfile",
- "windows-sys 0.61.2",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]
@@ -9587,7 +9572,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7d6f32a0ff4a9f6f01231eb2059cc85479330739333e0e58cadf03b6af2cca10"
 dependencies = [
  "cfg-if",
- "windows-sys 0.61.2",
+ "windows-sys 0.60.2",
 ]
 
 [[package]]

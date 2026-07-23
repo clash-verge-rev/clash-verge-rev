@@ -71,7 +71,7 @@ reqwest = { version = "0.13.4", features = [
   "form",
 ] }
 regex = "1.12.4"
-sysproxy = { git = "https://github.com/clash-verge-rev/sysproxy-rs", features = [
+sysproxy = { git = "https://github.com/clash-verge-rev/sysproxy-rs", branch = "main", features = [
   "guard",
 ] }
 network-interface = { version = "2.0.5", features = ["serde"] }
@@ -99,7 +99,7 @@ tauri-plugin-devtools = { version = "2.1.0" }
 tauri-plugin-mihomo = { git = "https://github.com/clash-verge-rev/tauri-plugin-mihomo", branch = "fix/api-robustness" }
 clash_verge_logger = { git = "https://github.com/clash-verge-rev/clash-verge-logger" }
 async-trait = "0.1.89"
-clash_verge_service_ipc = { git = "https://github.com/clash-verge-rev/clash-verge-service-ipc.git", rev = "cba4f5d3c8ada6a85c1d380bbd096f47939f47f9", version = "2.5.0", features = [
+clash_verge_service_ipc = { git = "https://github.com/clash-verge-rev/clash-verge-service-ipc.git", branch = "main", version = "2.5.0", features = [
   "client",
 ] }
 arc-swap = "1.9.2"
