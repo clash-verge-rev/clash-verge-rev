@@ -215,7 +215,10 @@ export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
                   allowPrivateNetwork: defaultAllowPrivateNetwork ?? true,
                   allowOrigins: filterBaseOriginsForUI(
                     defaultAllowOrigins ?? [],
-                  ),
+                  ).map((origin) => {
+                    lastKeyRef.current += 1
+                    return { key: lastKeyRef.current, value: origin }
+                  }),
                 })
               }}
             >

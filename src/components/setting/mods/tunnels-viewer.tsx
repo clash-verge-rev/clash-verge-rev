@@ -19,7 +19,6 @@ import {
 } from '@mui/material'
 import {
   forwardRef,
-  useEffect,
   useImperativeHandle,
   useMemo,
   useRef,
@@ -178,7 +177,14 @@ export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
     options: proxyOptions,
   }
 
-  useEffect(() => {
+  const [prevSelectedGroupExists, setPrevSelectedGroupExists] =
+    useState(selectedGroupExists)
+  const [prevSelectedProxyOption, setPrevSelectedProxyOption] =
+    useState(selectedProxyOption)
+  if (
+    prevSelectedGroupExists !== selectedGroupExists ||
+    prevSelectedProxyOption !== selectedProxyOption
+  ) {
     if (selectedGroupExists && (!values.proxy || selectedProxyOption)) return
     setValues((current) => {
       if (current.group !== values.group || current.proxy !== values.proxy) {
@@ -188,7 +194,9 @@ export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
         ? { ...current, proxy: null }
         : { ...current, group: '', proxy: null }
     })
-  }, [selectedGroupExists, selectedProxyOption, values.group, values.proxy])
+    setPrevSelectedGroupExists(selectedGroupExists)
+    setPrevSelectedProxyOption(selectedProxyOption)
+  }
 
   const handleSave = async () => {
     try {
