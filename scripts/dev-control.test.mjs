@@ -15,6 +15,7 @@ import {
 import {
   buildTauriInvocation,
   mirrorChildExit,
+  prepareDevRuntime,
   runDevAnchor,
   runDevCommand,
   terminateDetachedGroup,
@@ -25,6 +26,26 @@ const token = 'ab'.repeat(32)
 const posixOnly = {
   skip: process.platform === 'win32' ? 'requires POSIX file metadata' : false,
 }
+
+test('development startup preserves the installed service state unless service mode is explicit', async () => {
+  for (const mode of ['dev', 'trace', 'sidecar', 'service']) {
+    const calls = []
+    const result = await prepareDevRuntime(mode, {
+      ensureService: async () => {
+        calls.push('ensure')
+        return '/service'
+      },
+      prepareService: async () => {
+        calls.push('prepare')
+        return '/service'
+      },
+    })
+
+    assert.deepEqual(calls, [mode === 'service' ? 'ensure' : 'prepare'])
+    assert.equal(result.mode, mode === 'service' ? 'dev' : mode)
+    assert.equal(result.serviceDirectory, '/service')
+  }
+})
 
 test('Windows elevation passes the installer path outside PowerShell source', () => {
   const installer = String.raw`C:\ssp\path with spaces\clash-verge-service-install.exe`

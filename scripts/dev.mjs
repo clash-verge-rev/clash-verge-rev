@@ -526,25 +526,31 @@ export async function runDevCommand(mode, dependencies = {}) {
   )
 }
 
+export async function prepareDevRuntime(mode, dependencies = {}) {
+  const ensureService = dependencies.ensureService ?? ensureDevelopmentService
+  const prepareService =
+    dependencies.prepareService ?? prepareDevelopmentService
+  let serviceDirectory
+  if (mode === 'service') {
+    serviceDirectory = await ensureService()
+  } else if (mode === 'dev' || mode === 'trace' || mode === 'sidecar') {
+    serviceDirectory = await prepareService()
+  }
+  return {
+    mode: mode === 'service' ? 'dev' : mode,
+    serviceDirectory,
+  }
+}
+
 async function run() {
   if (process.argv[2] === '--anchor') {
     await runDevAnchor(process.argv[3])
   } else {
-    const requestedMode = process.argv[2]
-    let serviceDirectory
-    if (
-      requestedMode === 'dev' ||
-      requestedMode === 'service' ||
-      requestedMode === 'trace'
-    ) {
-      serviceDirectory = await ensureDevelopmentService()
-    } else if (requestedMode === 'sidecar') {
-      serviceDirectory = await prepareDevelopmentService()
-    }
+    const { mode, serviceDirectory } = await prepareDevRuntime(process.argv[2])
     if (serviceDirectory) {
       process.env[developmentServiceDirectoryEnvironment] = serviceDirectory
     }
-    await runDevCommand(requestedMode === 'service' ? 'dev' : requestedMode)
+    await runDevCommand(mode)
   }
 }
 
