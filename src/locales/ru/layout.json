@@ -19,6 +19,29 @@
         "collapseNavBar": "Свернуть панель навигации",
         "expandNavBar": "Развернуть панель навигации"
       }
+    },
+    "serviceMigration": {
+      "title": "Service update required",
+      "message": "An older Clash Verge service installation was detected. Reinstall it to use the current secure IPC protocol, or continue with Sidecar for this session.",
+      "checkingMessage": "Checking the system service status and current running mode. Please wait…",
+      "unavailableMessage": "The required Clash Verge service is not available. Install or repair it, or continue with Sidecar for this session.",
+      "reinstall": "Reinstall service",
+      "repair": "Repair service",
+      "continueSidecar": "Continue with Sidecar",
+      "success": "The Clash Verge service was updated successfully",
+      "errors": {
+        "actionFailed": "Не удалось выполнить операцию со службой",
+        "stateRefreshFailed": "Не удалось обновить состояние службы",
+        "restartFailed": "Не удалось перезапустить ядро",
+        "revalidationFailed": "Не удалось обновить состояние выполнения",
+        "sidecarFailed": "Не удалось продолжить в режиме Sidecar"
+      }
+    }
+  },
+  "feedback": {
+    "errors": {
+      "restartCoreStopFailed": "Не удалось безопасно остановить ядро, поэтому перезапуск отменён",
+      "quitCoreStopFailed": "Не удалось безопасно остановить ядро, поэтому выход отменён"
     }
   }
 }

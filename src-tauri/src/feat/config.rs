@@ -1,6 +1,6 @@
 use crate::{
     config::{Config, IVerge},
-    core::{CoreManager, autostart, handle, hotkey, logger::Logger, sysopt, tray},
+    core::{CoreManager, autostart, handle, hotkey, logger::Logger, tray},
     module::{auto_backup::AutoBackupManager, lightweight},
 };
 use anyhow::Result;
@@ -223,8 +223,9 @@ async fn process_terminated_flags(update_flags: UpdateFlags, patch: &IVerge) -> 
         clash_verge_i18n::set_locale(language.as_str());
     }
     if update_flags.contains(UpdateFlags::SYS_PROXY) {
-        sysopt::Sysopt::global().update_sysproxy().await?;
-        sysopt::Sysopt::global().refresh_guard().await;
+        let manager = CoreManager::global();
+        let _lifecycle = manager.lifecycle_lock.lock().await;
+        manager.apply_proxy_after_start().await?;
     }
     if update_flags.contains(UpdateFlags::HOTKEY)
         && let Some(hotkeys) = &patch.hotkeys

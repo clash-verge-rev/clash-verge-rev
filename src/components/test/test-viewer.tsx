@@ -68,8 +68,12 @@ export const TestViewer = forwardRef<TestViewerRef, Props>(
       formIns.handleSubmit(async (form) => {
         setLoading(true)
         try {
-          if (!form.name) throw new Error('`Name` should not be null')
-          if (!form.url) throw new Error('`Url` should not be null')
+          if (!form.name) {
+            throw new Error(t('tests.modals.test.errors.nameRequired'))
+          }
+          if (!form.url) {
+            throw new Error(t('tests.modals.test.errors.urlRequired'))
+          }
 
           let newList
           let uid
@@ -84,7 +88,7 @@ export const TestViewer = forwardRef<TestViewerRef, Props>(
               'image/svg+xml',
             )
             if (doc.querySelector('parsererror')) {
-              throw new Error('`Icon`svg format error')
+              throw new Error(t('tests.modals.test.errors.invalidSvg'))
             }
           }
 
@@ -95,7 +99,9 @@ export const TestViewer = forwardRef<TestViewerRef, Props>(
             await patchVerge({ test_list: newList })
             onChange(uid)
           } else {
-            if (!form.uid) throw new Error('UID not found')
+            if (!form.uid) {
+              throw new Error(t('tests.modals.test.errors.uidMissing'))
+            }
             uid = form.uid
 
             await patchTestList(uid, form)
@@ -105,7 +111,7 @@ export const TestViewer = forwardRef<TestViewerRef, Props>(
           setLoading(false)
           setTimeout(() => formIns.reset(), 500)
         } catch (err: any) {
-          showNotice.error(err)
+          showNotice.error('tests.modals.test.errors.saveFailed', err)
           setLoading(false)
         }
       }),

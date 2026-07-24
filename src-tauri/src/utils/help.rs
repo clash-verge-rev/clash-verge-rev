@@ -213,8 +213,18 @@ pub fn open_app_latest_log() -> Result<()> {
     open_latest_log(path)
 }
 
-pub fn open_core_latest_log() -> Result<()> {
-    let path = crate::utils::dirs::clash_latest_log()?;
+pub async fn open_core_latest_log() -> Result<()> {
+    let path = if matches!(
+        *crate::core::CoreManager::global().get_running_mode(),
+        crate::core::manager::RunningMode::Service
+    ) {
+        let path = crate::utils::dirs::service_log_dir()?.join("service_latest.log");
+        let snapshot = crate::core::service::get_clash_log_snapshot_by_service().await?;
+        tokio::fs::write(&path, snapshot).await?;
+        path
+    } else {
+        crate::utils::dirs::clash_latest_log()?
+    };
     open_latest_log(path)
 }
 

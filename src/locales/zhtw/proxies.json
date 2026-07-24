@@ -25,7 +25,8 @@
     },
     "labels": {
       "proxyCount": "節點數量",
-      "delayCheckReset": "測試延遲以取消固定"
+      "delayCheckReset": "測試延遲以取消固定",
+      "nodeCount": "{{count}} 個節點"
     },
     "tooltips": {
       "locate": "目前節點",
@@ -40,6 +41,10 @@
     },
     "placeholders": {
       "delayCheckUrl": "延遲測試網址"
+    },
+    "empty": {
+      "noAvailableGroups": "目前沒有可用的代理群組",
+      "noProxies": "目前沒有代理"
     },
     "chain": {
       "header": "鏈式代理設定",

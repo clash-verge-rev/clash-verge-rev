@@ -1,4 +1,5 @@
 import { useLockFn } from 'ahooks'
+import i18n from 'i18next'
 import { getVersion } from 'tauri-plugin-mihomo-api'
 
 import {
@@ -48,10 +49,14 @@ const hasClashInfoPayload = (patch: ClashInfoPatch) =>
 
 const validatePortRange = (port: number) => {
   if (port < 1000) {
-    throw new Error('The port should not < 1000')
+    throw new Error(
+      i18n.t(($) => $.settings.modals.clashPort.messages.portTooLow),
+    )
   }
   if (port > 65535) {
-    throw new Error('The port should not > 65536')
+    throw new Error(
+      i18n.t(($) => $.settings.modals.clashPort.messages.portTooHigh),
+    )
   }
 }
 

@@ -20,6 +20,13 @@
       },
       "fields": {
         "url": "測試網址"
+      },
+      "errors": {
+        "nameRequired": "請輸入名稱",
+        "urlRequired": "請輸入測試連結",
+        "invalidSvg": "圖示不是有效的 SVG",
+        "uidMissing": "缺少測試項目識別碼",
+        "saveFailed": "儲存測試項目失敗"
       }
     }
   },

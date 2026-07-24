@@ -25,7 +25,8 @@
     },
     "labels": {
       "proxyCount": "Proxy Count",
-      "delayCheckReset": "فحص التأخير لإلغاء الثابت"
+      "delayCheckReset": "فحص التأخير لإلغاء الثابت",
+      "nodeCount": "{{count}} عقدة"
     },
     "tooltips": {
       "locate": "الموقع",
@@ -40,6 +41,10 @@
     },
     "placeholders": {
       "delayCheckUrl": "رابط فحص التأخير"
+    },
+    "empty": {
+      "noAvailableGroups": "لا توجد مجموعات وكيل متاحة",
+      "noProxies": "لا توجد وكلاء"
     },
     "chain": {
       "header": "Chain Proxy Config",

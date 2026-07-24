@@ -5,6 +5,7 @@
       "telegram": "Telegram Channel",
       "github": "Github Repo"
     },
+    "actionsGroupLabel": "Settings links",
     "title": "Settings"
   },
   "sections": {
@@ -284,7 +285,9 @@
       "messages": {
         "portInUse": "Port {{port}} is already in use",
         "saved": "Port settings saved",
-        "saveFailed": "Failed to save port settings"
+        "saveFailed": "Failed to save port settings",
+        "portTooLow": "The port must be 1000 or higher",
+        "portTooHigh": "The port must be 65535 or lower"
       }
     },
     "clashCore": {
@@ -429,7 +432,15 @@
         "update": "Update"
       },
       "messages": {
-        "breakChangeError": "This version is a major update and does not support in-app updates. Please uninstall it and manually download and install the new version"
+        "breakChangeError": "This version is a major update and does not support in-app updates. Please uninstall it and manually download and install the new version",
+        "available": "A new version is available"
+      },
+      "alerts": {
+        "note": "Note",
+        "tip": "Tip",
+        "important": "Important",
+        "warning": "Warning",
+        "caution": "Caution"
       }
     },
     "sysproxy": {
@@ -590,6 +601,11 @@
       "messages": {
         "supportedPlaceholders": "Support %host, %port, %secret",
         "placeholderInstruction": "Replace host, port, secret with %host, %port, %secret"
+      },
+      "errors": {
+        "clashInfoUnavailable": "Core connection information is unavailable",
+        "invalidServer": "The core server address \"{{server}}\" is invalid",
+        "openFailed": "Failed to open Web UI"
       }
     },
     "hotkey": {
@@ -617,6 +633,22 @@
     }
   },
   "feedback": {
+    "errors": {
+      "clash": {
+        "configUpdateFailed": "Failed to update core configuration",
+        "modeUpdateFailed": "Failed to change proxy mode",
+        "restartFailed": "Failed to restart the core",
+        "startFailed": "Failed to start the core",
+        "stopFailed": "Failed to stop the core"
+      },
+      "clashService": {
+        "installFailed": "Failed to install the service",
+        "uninstallFailed": "Failed to uninstall the service",
+        "reinstallFailed": "Failed to reinstall the service",
+        "repairFailed": "Failed to repair the service",
+        "sidecarFailed": "Failed to continue with Sidecar"
+      }
+    },
     "notifications": {
       "clash": {
         "restartSuccess": "Clash Core Restarted",

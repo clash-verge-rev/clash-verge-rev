@@ -586,7 +586,7 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
       setOpen(false)
       showNotice.success('settings.modals.dns.messages.saved')
     } catch (err) {
-      showNotice.error(err)
+      showNotice.error('settings.modals.dns.messages.configError', err)
     }
   })
 

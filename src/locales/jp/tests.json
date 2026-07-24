@@ -20,6 +20,13 @@
       },
       "fields": {
         "url": "テストURL"
+      },
+      "errors": {
+        "nameRequired": "名前を入力してください",
+        "urlRequired": "テストURLを入力してください",
+        "invalidSvg": "アイコンが有効なSVGではありません",
+        "uidMissing": "テスト項目の識別子がありません",
+        "saveFailed": "テスト項目の保存に失敗しました"
       }
     }
   },

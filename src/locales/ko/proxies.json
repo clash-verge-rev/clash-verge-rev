@@ -25,7 +25,8 @@
     },
     "labels": {
       "proxyCount": "프록시 개수",
-      "delayCheckReset": "고정 취소를 위한 지연 확인"
+      "delayCheckReset": "고정 취소를 위한 지연 확인",
+      "nodeCount": "노드 {{count}}개"
     },
     "tooltips": {
       "locate": "위치 찾기",
@@ -40,6 +41,10 @@
     },
     "placeholders": {
       "delayCheckUrl": "지연 확인 URL"
+    },
+    "empty": {
+      "noAvailableGroups": "사용 가능한 프록시 그룹이 없습니다",
+      "noProxies": "프록시 없음"
     },
     "chain": {
       "header": "체인 프록시 구성",

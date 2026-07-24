@@ -82,7 +82,9 @@
         "unknown": "Unknown"
       },
       "errors": {
-        "load": "دریافت اطلاعات IP با خطا مواجه شد"
+        "load": "دریافت اطلاعات IP با خطا مواجه شد",
+        "loadWithDetails": "دریافت اطلاعات IP ناموفق بود: {{message}}",
+        "noServices": "هیچ سرویس تشخیص IP در دسترس نیست"
       }
     },
     "currentProxy": {
@@ -96,6 +98,18 @@
         "group": "Group",
         "proxy": "Proxy",
         "noActiveNode": "No active proxy node"
+      },
+      "status": {
+        "testing": "در حال آزمایش",
+        "untested": "آزمایش‌نشده",
+        "error": "خطا",
+        "timeout": "مهلت تمام شد",
+        "latencyHigh": "تأخیر زیاد",
+        "latencyMedium": "تأخیر متوسط",
+        "latencyGood": "تأخیر خوب",
+        "latencyExcellent": "تأخیر عالی",
+        "uninitialized": "مقداردهی نشده",
+        "noProxyNode": "نود پروکسی وجود ندارد"
       }
     },
     "tests": {
@@ -114,7 +128,13 @@
       },
       "patterns": {
         "minutes": "{{time}} Minutes"
-      }
+      },
+      "unknownTime": "زمان نامشخص",
+      "chartStyles": {
+        "smooth": "نرم",
+        "linear": "خطی"
+      },
+      "diagnostics": "نقاط: {{points}} | فشرده: {{compressed}} | FPS: {{fps}}"
     },
     "clashMode": {
       "errors": {

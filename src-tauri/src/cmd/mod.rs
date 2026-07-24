@@ -3,6 +3,12 @@ use smartstring::alias::String;
 
 pub type CmdResult<T = ()> = Result<T, String>;
 
+const USER_ERROR_PREFIX: &str = "CVR_ERROR:";
+
+pub fn coded_error(code: &str, detail: impl std::fmt::Display) -> String {
+    format!("{USER_ERROR_PREFIX}{code}\n{detail}").into()
+}
+
 // Command modules
 pub mod app;
 pub mod backup;
@@ -46,6 +52,10 @@ pub trait StringifyErr<T> {
         F: Fn(&str);
 }
 
+pub trait WithErrorCode<T> {
+    fn with_error_code(self, code: &str) -> CmdResult<T>;
+}
+
 impl<T, E: std::fmt::Display> StringifyErr<T> for Result<T, E> {
     fn stringify_err(self) -> CmdResult<T> {
         self.map_err(|e| e.to_string().into())
@@ -60,5 +70,24 @@ impl<T, E: std::fmt::Display> StringifyErr<T> for Result<T, E> {
             log_fn(&msg);
             msg
         })
+    }
+}
+
+impl<T, E: std::fmt::Display> WithErrorCode<T> for Result<T, E> {
+    fn with_error_code(self, code: &str) -> CmdResult<T> {
+        self.map_err(|error| coded_error(code, error))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::coded_error;
+
+    #[test]
+    fn coded_error_preserves_stable_code_and_diagnostic_detail() {
+        assert_eq!(
+            coded_error("CORE_RESTART_FAILED", "connection refused"),
+            "CVR_ERROR:CORE_RESTART_FAILED\nconnection refused"
+        );
     }
 }

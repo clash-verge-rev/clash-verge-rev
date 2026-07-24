@@ -5,6 +5,7 @@
       "telegram": "کانال تلگرام",
       "github": "مخزن GitHub"
     },
+    "actionsGroupLabel": "پیوندهای تنظیمات",
     "title": "تنظیمات"
   },
   "sections": {
@@ -284,7 +285,9 @@
       "messages": {
         "portInUse": "Port {{port}} is already in use",
         "saved": "Port settings saved",
-        "saveFailed": "Failed to save port settings"
+        "saveFailed": "Failed to save port settings",
+        "portTooLow": "پورت باید ۱۰۰۰ یا بیشتر باشد",
+        "portTooHigh": "پورت باید ۶۵۵۳۵ یا کمتر باشد"
       }
     },
     "clashCore": {
@@ -429,7 +432,15 @@
         "update": "به‌روزرسانی"
       },
       "messages": {
-        "breakChangeError": "این نسخه یک به‌روزرسانی اساسی است و پشتیبانی از به‌روزرسانی درون برنامه را پشتیبانی نمی‌کند. لطفاً پس از حذف، دستی دانلود و نصب کنید."
+        "breakChangeError": "این نسخه یک به‌روزرسانی اساسی است و پشتیبانی از به‌روزرسانی درون برنامه را پشتیبانی نمی‌کند. لطفاً پس از حذف، دستی دانلود و نصب کنید.",
+        "available": "نسخه جدیدی در دسترس است"
+      },
+      "alerts": {
+        "note": "یادداشت",
+        "tip": "نکته",
+        "important": "مهم",
+        "warning": "هشدار",
+        "caution": "احتیاط"
       }
     },
     "sysproxy": {
@@ -590,6 +601,11 @@
       "messages": {
         "supportedPlaceholders": "پشتیبانی از %host، %port و %secret",
         "placeholderInstruction": "جایگزین کردن میزبان، پورت و رمز با %host، %port، %secret"
+      },
+      "errors": {
+        "clashInfoUnavailable": "اطلاعات اتصال هسته در دسترس نیست",
+        "invalidServer": "نشانی سرور هسته «{{server}}» نامعتبر است",
+        "openFailed": "باز کردن رابط وب ناموفق بود"
       }
     },
     "hotkey": {
@@ -617,6 +633,22 @@
     }
   },
   "feedback": {
+    "errors": {
+      "clash": {
+        "configUpdateFailed": "به‌روزرسانی پیکربندی هسته ناموفق بود",
+        "modeUpdateFailed": "تغییر حالت پروکسی ناموفق بود",
+        "restartFailed": "راه‌اندازی مجدد هسته ناموفق بود",
+        "startFailed": "راه‌اندازی هسته ناموفق بود",
+        "stopFailed": "توقف هسته ناموفق بود"
+      },
+      "clashService": {
+        "installFailed": "نصب سرویس ناموفق بود",
+        "uninstallFailed": "حذف سرویس ناموفق بود",
+        "reinstallFailed": "نصب مجدد سرویس ناموفق بود",
+        "repairFailed": "تعمیر سرویس ناموفق بود",
+        "sidecarFailed": "ادامه با Sidecar ناموفق بود"
+      }
+    },
     "notifications": {
       "clash": {
         "restartSuccess": "هسته Clash مجدداً راه‌اندازی شد",

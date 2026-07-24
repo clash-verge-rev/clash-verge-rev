@@ -38,7 +38,10 @@ const SettingPage = () => {
     <BasePage
       title={t('settings.page.title')}
       header={
-        <ButtonGroup variant="contained" aria-label="Basic button group">
+        <ButtonGroup
+          variant="contained"
+          aria-label={t('settings.page.actionsGroupLabel')}
+        >
           <IconButton
             size="medium"
             color="inherit"

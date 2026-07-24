@@ -190,12 +190,12 @@ export async function getAutotemProxy() {
   }
 }
 
-export async function changeClashCore(clashCore: string) {
-  return invoke<string | null>('change_clash_core', { clashCore })
+export async function getEmbeddedServerPort() {
+  return invoke<number>('get_embedded_server_port')
 }
 
-export async function stopCore() {
-  return invoke<void>('stop_core')
+export async function changeClashCore(clashCore: string) {
+  return invoke<string | null>('change_clash_core', { clashCore })
 }
 
 export async function restartCore() {
@@ -358,8 +358,10 @@ export async function listLocalBackup() {
 }
 
 // 获取当前运行模式
+export type RunningMode = 'Service' | 'Sidecar' | 'NotRunning'
+
 export const getRunningMode = async () => {
-  return invoke<string>('get_running_mode')
+  return invoke<RunningMode>('get_running_mode')
 }
 
 // 获取应用运行时间
@@ -377,12 +379,36 @@ export const uninstallService = async () => {
   return invoke<void>('uninstall_service')
 }
 
+export type ServiceInstallState =
+  | 'checking'
+  | 'notInstalled'
+  | 'installRequired'
+  | 'ready'
+  | 'needsReinstall'
+  | 'sidecarAllowed'
+  | 'unavailable'
+
+export const getServiceInstallState = async () => {
+  return invoke<ServiceInstallState>('get_service_install_state')
+}
+
+export const reinstallService = async () => {
+  return invoke<void>('reinstall_service')
+}
+
+export const repairService = async () => {
+  return invoke<void>('repair_service')
+}
+
+export const continueWithSidecar = async () => {
+  return invoke<void>('continue_with_sidecar')
+}
+
 // 系统服务是否可用
 export const isServiceAvailable = async () => {
   try {
     return await invoke<boolean>('is_service_available')
-  } catch (error) {
-    console.error('Service check failed:', error)
+  } catch {
     return false
   }
 }

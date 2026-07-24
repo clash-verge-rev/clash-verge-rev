@@ -24,6 +24,10 @@ export const handleNoticeMessage = (
       showNotice.error(msg)
     },
     'set_config::error': () => showNotice.error(msg),
+    'app_restart::core_stop_failed': () =>
+      showNotice.error('layout.feedback.errors.restartCoreStopFailed'),
+    'app_quit::core_stop_failed': () =>
+      showNotice.error('layout.feedback.errors.quitCoreStopFailed'),
     update_with_clash_proxy: () =>
       showNotice.success(
         'settings.feedback.notifications.updater.withClashProxySuccess',

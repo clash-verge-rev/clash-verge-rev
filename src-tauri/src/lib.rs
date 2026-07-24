@@ -137,6 +137,7 @@ mod app_init {
             cmd::is_port_in_use,
             cmd::get_sys_proxy,
             cmd::get_auto_proxy,
+            cmd::get_embedded_server_port,
             cmd::open_app_dir,
             cmd::open_logs_dir,
             cmd::open_web_url,
@@ -157,6 +158,8 @@ mod app_init {
             cmd::reinstall_service,
             cmd::repair_service,
             cmd::is_service_available,
+            cmd::get_service_install_state,
+            cmd::continue_with_sidecar,
             cmd::get_clash_info,
             cmd::patch_clash_config,
             cmd::patch_clash_mode,
@@ -222,6 +225,14 @@ mod app_init {
 }
 
 pub fn run() {
+    #[cfg(all(target_os = "macos", not(debug_assertions), not(test), not(feature = "verge-dev")))]
+    if utils::macos_launch_guard::enforce_before_initialization() == utils::macos_launch_guard::LaunchDisposition::Exit
+    {
+        return;
+    }
+
+    let _ = utils::dirs::init_portable_flag();
+
     if app_init::init_singleton_check().is_err() {
         return;
     }
@@ -230,8 +241,6 @@ pub fn run() {
     utils::linux::workarounds::apply_nvidia_dmabuf_renderer_workaround();
     #[cfg(target_os = "linux")]
     utils::linux::workarounds::apply_wayland_webkit_fix();
-
-    let _ = utils::dirs::init_portable_flag();
 
     let builder = app_init::setup_plugins(tauri::Builder::default())
         .setup(|app| {
@@ -319,6 +328,7 @@ pub fn run() {
             }
 
             logging!(info, Type::System, "应用就绪");
+            crate::utils::server::set_commands_ready();
 
             #[cfg(target_os = "macos")]
             if let Some(window) = _app_handle.get_webview_window("main") {
@@ -439,7 +449,15 @@ pub fn run() {
             // Windows session ending currently reaches Tao as WM_ENDSESSION and
             // destroys the loop without a preventable ExitRequested event.
             if !handle::Handle::global().is_exiting() {
-                feat::quit().await;
+                handle::Handle::global().set_is_exiting();
+                let cleanup_result = feat::clean_session_ending_best_effort().await;
+                logging!(
+                    info,
+                    Type::System,
+                    "Unpreventable session-ending best-effort cleanup returned - core stopped: {}, all cleanup successful: {}",
+                    cleanup_result.core_stopped,
+                    cleanup_result.all_success
+                );
             }
             logging!(info, Type::System, "Application exited");
         }),
