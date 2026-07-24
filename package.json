@@ -55,7 +55,6 @@
     "@tauri-apps/plugin-fs": "^2.5.1",
     "@tauri-apps/plugin-http": "~2.5.9",
     "@tauri-apps/plugin-shell": "2.3.5",
-    "@tauri-apps/plugin-updater": "2.10.1",
     "ahooks": "^3.9.7",
     "cidr-block": "^2.3.0",
     "dayjs": "1.11.21",

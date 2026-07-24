@@ -15,7 +15,7 @@ import type { Options as ReactMarkdownOptions } from 'react-markdown'
 
 import { BaseDialog, DialogRef } from '@/components/base'
 import { useUpdate } from '@/hooks/use-update'
-import { downloadAndInstallUpdate } from '@/services/cmds'
+import { restartApp, downloadAndInstallUpdate } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
 import { useSetUpdateState, useUpdateState } from '@/services/states'
 
@@ -191,7 +191,7 @@ export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
 
     try {
       await downloadAndInstallUpdate(onChunk, onDownloadFinish)
-      await relaunch()
+      await restartApp()
     } catch (err: any) {
       showNotice.error(err)
     } finally {
