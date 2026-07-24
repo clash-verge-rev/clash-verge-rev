@@ -5,6 +5,7 @@ import {
   getIfNotBlank,
   getIfPresent,
   isPresent,
+  normalizeHost,
   parseBool,
   parseRequiredPort,
   safeDecodeURIComponent,
@@ -72,7 +73,7 @@ function parseVmessQuantumult(content: string): IProxyVmessConfig {
   const proxy: IProxyVmessConfig = {
     name: partitions[0].split('=')[0].trim(),
     type: 'vmess',
-    server: partitions[1],
+    server: normalizeHost(partitions[1]),
     port: parseRequiredPort(partitions[2], 'Invalid vmess uri: invalid port'),
     cipher: getCipher(getIfNotBlank(partitions[3], 'auto')),
     uuid: partitions[4].match(/^"(.*)"$/)?.[1] || '',
@@ -118,7 +119,8 @@ export function URI_VMESS(line: string): IProxyVmessConfig {
   }
 
   const params = parseVmessParams(content, raw)
-  const server = params.add
+  const server =
+    typeof params.add === 'string' ? normalizeHost(params.add) : params.add
   const port = parseRequiredPort(params.port, 'Invalid vmess uri: invalid port')
   const tlsValue = params.tls
   const proxy: IProxyVmessConfig = {

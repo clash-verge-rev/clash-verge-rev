@@ -92,15 +92,19 @@ async function sendTelegramNotification() {
   function sanitizeTelegramHTML(content) {
     // Telegram supports: b, strong, i, em, u, ins, s, strike, del,
     // a, code, pre, blockquote, tg-spoiler, tg-emoji
-    const allowedTags =
-      /^\/?(b|strong|i|em|u|ins|s|strike|del|a|code|pre|blockquote|tg-spoiler|tg-emoji)(\s|>|$)/i
-    return content.replace(/<\/?[^>]*>/g, (tag) => {
-      const inner = tag.replace(/^<\/?/, '').replace(/>$/, '')
-      if (allowedTags.test(inner) || allowedTags.test(tag.slice(1))) {
-        return tag
-      }
-      // Escape unsupported tags so they display as text
-      return tag.replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    const allowedTag =
+      /^<\/?(?:b|strong|i|em|u|ins|s|strike|del|a|code|pre|blockquote|tg-spoiler|tg-emoji)(?:\s[^<>]*)?>$/i
+    // Match a well-formed tag (name first, no nested angle brackets) OR a lone
+    // '<'/'>'. Matching lone brackets is what keeps a stray '<' in the changelog
+    // (e.g. "原始配置 < Merge") from greedily swallowing the next real tag and
+    // leaving its closing tag orphaned ("Unexpected end tag").
+    return content.replace(/<\/?[a-z][^<>]*>|[<>]/gi, (token) => {
+      if (token === '<') return '&lt;'
+      if (token === '>') return '&gt;'
+      // Keep supported tags; escape everything else so it displays as text.
+      return allowedTag.test(token)
+        ? token
+        : token.replace(/</g, '&lt;').replace(/>/g, '&gt;')
     })
   }
 

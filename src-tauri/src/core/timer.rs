@@ -1,4 +1,10 @@
-use crate::{config::Config, feat, process::AsyncHandler, singleton, utils::resolve::is_resolve_done};
+use crate::{
+    config::{Config, PrfItem},
+    feat,
+    process::AsyncHandler,
+    singleton,
+    utils::resolve::is_resolve_done,
+};
 use anyhow::Result;
 use clash_verge_logging::{Type, logging, logging_error};
 use parking_lot::{Mutex, RwLock};
@@ -30,6 +36,24 @@ struct TaskState {
     running: bool,
 }
 
+async fn run_timer_profile_update_transition<Started, Update, UpdateFuture, Finished, Completed, Output>(
+    update_started: Started,
+    update_profile: Update,
+    update_finished: Finished,
+    update_completed: Completed,
+) where
+    Started: FnOnce(),
+    Update: FnOnce() -> UpdateFuture,
+    UpdateFuture: std::future::Future<Output = Output>,
+    Finished: FnOnce(Output),
+    Completed: FnOnce(),
+{
+    update_started();
+    let result = update_profile().await;
+    update_finished(result);
+    update_completed();
+}
+
 impl TaskState {
     const fn new(key: Key, interval_minutes: u64) -> Self {
         Self {
@@ -43,6 +67,7 @@ impl TaskState {
 pub struct Timer {
     command_tx: mpsc::UnboundedSender<TimerCommand>,
     command_rx: Mutex<Option<mpsc::UnboundedReceiver<TimerCommand>>>,
+    refresh_lock: tokio::sync::Mutex<()>,
     pub timer_map: Arc<RwLock<HashMap<String, u64>>>,
     pub initialized: AtomicBool,
 }
@@ -55,6 +80,7 @@ impl Timer {
         Self {
             command_tx,
             command_rx: Mutex::new(Some(command_rx)),
+            refresh_lock: tokio::sync::Mutex::new(()),
             timer_map: Arc::new(RwLock::new(HashMap::new())),
             initialized: AtomicBool::new(false),
         }
@@ -99,11 +125,10 @@ impl Timer {
         }
 
         let cur_timestamp = chrono::Local::now().timestamp();
-        if let Some(items) = Config::profiles().await.latest_arc().get_items() {
+        if let Some(items) = Config::profiles().await.data_arc().get_items() {
             for item in items.iter() {
                 if let Some(option) = item.option.as_ref()
-                    && let Some(allow_auto_update) = option.allow_auto_update
-                    && allow_auto_update
+                    && option.allow_auto_update.unwrap_or(true)
                     && let Some(interval) = option.update_interval
                     && interval > 0
                     && let Some(uid) = item.uid.as_ref()
@@ -121,6 +146,7 @@ impl Timer {
     }
 
     pub async fn refresh(&self) -> Result<()> {
+        let _refresh_guard = self.refresh_lock.lock().await;
         let new_map = self.gen_map().await;
 
         let mut cache = self.timer_map.write();
@@ -144,20 +170,26 @@ impl Timer {
     }
 
     async fn gen_map(&self) -> HashMap<String, u64> {
+        if let Some(items) = Config::profiles().await.data_arc().get_items() {
+            return Self::gen_map_from_items(items);
+        }
+
+        HashMap::new()
+    }
+
+    fn gen_map_from_items(items: &[PrfItem]) -> HashMap<String, u64> {
         let mut new_map = HashMap::new();
 
-        if let Some(items) = Config::profiles().await.latest_arc().get_items() {
-            for item in items.iter() {
-                if let Some(option) = item.option.as_ref()
-                    && let Some(allow_auto_update) = option.allow_auto_update
-                    && let (Some(interval), Some(uid)) = (option.update_interval, &item.uid)
-                    && allow_auto_update
-                    && interval > 0
-                {
-                    new_map.insert(uid.clone(), interval);
-                }
+        for item in items {
+            if let Some(option) = item.option.as_ref()
+                && let (Some(interval), Some(uid)) = (option.update_interval, &item.uid)
+                && option.allow_auto_update.unwrap_or(true)
+                && interval > 0
+            {
+                new_map.insert(uid.clone(), interval);
             }
         }
+
         new_map
     }
 
@@ -372,36 +404,35 @@ impl Timer {
         let task_start = std::time::Instant::now();
         logging!(debug, Type::Timer, "Running timer task for profile: {}", uid);
 
-        match tokio::time::timeout(std::time::Duration::from_secs(40), async {
-            Self::emit_update_event(uid, true);
-
-            let is_current = Config::profiles().await.latest_arc().current.as_ref() == Some(uid);
-            logging!(
-                debug,
-                Type::Timer,
-                "Profile {} is current active profile: {}",
-                uid,
-                is_current
-            );
-
-            feat::update_profile(uid, None, is_current, false, false).await
-        })
-        .await
-        {
-            Ok(Ok(_)) => {
+        run_timer_profile_update_transition(
+            || Self::emit_update_event(uid, true),
+            || async {
+                let is_current = Config::profiles().await.latest_arc().current.as_ref() == Some(uid);
                 logging!(
-                    info,
+                    debug,
                     Type::Timer,
-                    "Timer task completed for uid: {} (took {}ms)",
+                    "Profile {} is current active profile: {}",
                     uid,
-                    task_start.elapsed().as_millis()
+                    is_current
                 );
-            }
-            Ok(Err(e)) => logging_error!(Type::Timer, "Failed to update profile uid {}: {}", uid, e),
-            Err(_) => logging_error!(Type::Timer, "Timer task timed out for uid: {}", uid),
-        }
 
-        Self::emit_update_event(uid, false);
+                feat::update_profile(uid, None, is_current, false, false).await
+            },
+            |result| match result {
+                Ok(_) => {
+                    logging!(
+                        info,
+                        Type::Timer,
+                        "Timer task completed for uid: {} (took {}ms)",
+                        uid,
+                        task_start.elapsed().as_millis()
+                    );
+                }
+                Err(e) => logging_error!(Type::Timer, "Failed to update profile uid {}: {}", uid, e),
+            },
+            || Self::emit_update_event(uid, false),
+        )
+        .await;
     }
 
     async fn wait_until_resolve_done(max_wait: Duration) {
@@ -412,5 +443,125 @@ impl Timer {
             }
         })
         .await;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{Timer, run_timer_profile_update_transition};
+    use crate::config::{PrfItem, PrfOption};
+    use parking_lot::Mutex;
+    use std::{
+        sync::{
+            Arc,
+            atomic::{AtomicBool, Ordering},
+        },
+        task::Poll,
+        time::Duration,
+    };
+    use tokio::sync::Barrier;
+
+    struct CancellationProbe {
+        cancelled: Arc<AtomicBool>,
+        completed: Arc<AtomicBool>,
+    }
+
+    impl Drop for CancellationProbe {
+        fn drop(&mut self) {
+            if !self.completed.load(Ordering::Acquire) {
+                self.cancelled.store(true, Ordering::Release);
+            }
+        }
+    }
+
+    fn remote_profile(uid: &str, allow_auto_update: Option<bool>, update_interval: Option<u64>) -> PrfItem {
+        PrfItem {
+            uid: Some(uid.into()),
+            itype: Some("remote".into()),
+            option: Some(PrfOption {
+                allow_auto_update,
+                update_interval,
+                ..PrfOption::default()
+            }),
+            ..PrfItem::default()
+        }
+    }
+
+    #[test]
+    fn timer_map_only_contains_enabled_profiles_with_positive_intervals() {
+        let items = vec![
+            remote_profile("enabled", Some(true), Some(30)),
+            remote_profile("disabled", Some(false), Some(30)),
+            remote_profile("missing-flag", None, Some(30)),
+            remote_profile("zero-interval", Some(true), Some(0)),
+            remote_profile("missing-interval", Some(true), None),
+        ];
+
+        let map = Timer::gen_map_from_items(&items);
+
+        assert_eq!(map.len(), 2);
+        assert_eq!(map.get("enabled"), Some(&30));
+        assert_eq!(map.get("missing-flag"), Some(&30));
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn timer_profile_update_runs_past_former_deadline_and_pairs_events() -> anyhow::Result<()> {
+        let calls = Arc::new(Mutex::new(Vec::new()));
+        let update_started = Arc::new(Barrier::new(2));
+        let release_update = Arc::new(Barrier::new(2));
+        let update_cancelled = Arc::new(AtomicBool::new(false));
+        let update_completed = Arc::new(AtomicBool::new(false));
+
+        let mut update = Box::pin(run_timer_profile_update_transition(
+            {
+                let calls = Arc::clone(&calls);
+                move || calls.lock().push("update-started")
+            },
+            {
+                let update_started = Arc::clone(&update_started);
+                let release_update = Arc::clone(&release_update);
+                let update_cancelled = Arc::clone(&update_cancelled);
+                let update_completed = Arc::clone(&update_completed);
+                move || async move {
+                    let _probe = CancellationProbe {
+                        cancelled: update_cancelled,
+                        completed: Arc::clone(&update_completed),
+                    };
+                    update_started.wait().await;
+                    release_update.wait().await;
+                    update_completed.store(true, Ordering::Release);
+                    Ok::<(), anyhow::Error>(())
+                }
+            },
+            {
+                let calls = Arc::clone(&calls);
+                move |result: anyhow::Result<()>| {
+                    assert!(result.is_ok());
+                    calls.lock().push("terminal-result");
+                }
+            },
+            {
+                let calls = Arc::clone(&calls);
+                move || calls.lock().push("update-completed")
+            },
+        ));
+
+        assert!(matches!(futures::poll!(update.as_mut()), Poll::Pending));
+        update_started.wait().await;
+        tokio::time::advance(Duration::from_secs(41)).await;
+
+        assert!(matches!(futures::poll!(update.as_mut()), Poll::Pending));
+        assert!(!update_cancelled.load(Ordering::Acquire));
+        assert_eq!(&*calls.lock(), &["update-started"]);
+
+        release_update.wait().await;
+        update.await;
+        assert!(update_completed.load(Ordering::Acquire));
+        assert!(!update_cancelled.load(Ordering::Acquire));
+        assert_eq!(
+            &*calls.lock(),
+            &["update-started", "terminal-result", "update-completed"]
+        );
+        Ok(())
     }
 }

@@ -46,7 +46,7 @@ jobs:
           run_install: false
 
       - name: Install Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: '24.18.0'
 
@@ -108,6 +108,7 @@ jobs:
         uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ env.TAG_NAME }}
+          target_commitish: ${{ github.sha }}
           name: 'Clash Verge Rev ${{ env.TAG_CHANNEL }}'
           body_path: release.txt
           prerelease: true
@@ -150,7 +151,7 @@ jobs:
       - name: Install Rust Stable
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: '1.96.1'
+          toolchain: '1.97.1'
           targets: ${{ matrix.target }}
 
       - name: Add Rust Target
@@ -179,7 +180,7 @@ jobs:
           run_install: false
 
       - name: Install Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: '24.18.0'
           cache: 'pnpm'
@@ -255,7 +256,7 @@ jobs:
       - name: Install Rust Stable
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: '1.96.1'
+          toolchain: '1.97.1'
           targets: ${{ matrix.target }}
 
       - name: Add Rust Target
@@ -278,7 +279,7 @@ jobs:
           run_install: false
 
       - name: Install Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: '24.18.0'
           cache: 'pnpm'
@@ -423,7 +424,7 @@ jobs:
           run_install: false
 
       - name: Install Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: '24.18.0'
           cache: 'pnpm'
@@ -525,7 +526,7 @@ jobs:
         shell: bash
 
       - name: Install Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: '24.18.0'
 

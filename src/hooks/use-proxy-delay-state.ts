@@ -3,6 +3,11 @@ import { useCallback, useEffect, useReducer } from 'react'
 
 import { useVerge } from '@/hooks/use-verge'
 import delayManager, { type DelayUpdate } from '@/services/delay'
+import {
+  isInteractableMember,
+  memberDetails,
+  type ResolvedProxyMember,
+} from '@/types/proxy-view'
 
 const PRESET_PROXY_NAMES = [
   'DIRECT',
@@ -21,42 +26,48 @@ export interface UseProxyDelayState {
   delayValue: number
   isPreset: boolean
   timeout: number
-  onDelay: (providerName?: string) => Promise<void>
+  onDelay: () => Promise<void>
 }
 
 export function useProxyDelayState(
-  proxy: IProxyItem,
+  member: ResolvedProxyMember,
   groupName: string,
 ): UseProxyDelayState {
-  const isPreset = PRESET_PROXY_NAMES.includes(proxy.name)
+  const name = member.ref.name
+  const details = memberDetails(member)
+  const unresolved = member.kind === 'unresolved'
+  const isPreset = unresolved || PRESET_PROXY_NAMES.includes(name)
   const [delayState, setDelayState] = useReducer(identity, INITIAL_DELAY)
   const { verge } = useVerge()
   const timeout = verge?.default_latency_timeout || 10000
 
   useEffect(() => {
     if (isPreset) return
-    delayManager.setListener(proxy.name, groupName, setDelayState)
+    delayManager.setListener(name, groupName, setDelayState)
     return () => {
-      delayManager.removeListener(proxy.name, groupName)
+      delayManager.removeListener(name, groupName)
     }
-  }, [proxy.name, groupName, isPreset])
+  }, [name, groupName, isPreset])
 
   const updateDelay = useCallback(() => {
-    if (!proxy) return
-    const cachedUpdate = delayManager.getDelayUpdate(proxy.name, groupName)
+    if (unresolved) {
+      setDelayState(INITIAL_DELAY)
+      return
+    }
+    const cachedUpdate = delayManager.getDelayUpdate(name, groupName)
     if (cachedUpdate) {
       setDelayState({ ...cachedUpdate })
       return
     }
 
-    const fallbackDelay = delayManager.getDelayFix(proxy, groupName)
+    const fallbackDelay = delayManager.getDelayFix(member, groupName)
     if (fallbackDelay === -1) {
       setDelayState({ delay: -1, updatedAt: 0 })
       return
     }
 
     let updatedAt = 0
-    const history = proxy.history
+    const history = details?.history
     if (history && history.length > 0) {
       const lastRecord = history[history.length - 1]
       const parsed = Date.parse(lastRecord.time)
@@ -66,22 +77,16 @@ export function useProxyDelayState(
     }
 
     setDelayState({ delay: fallbackDelay, updatedAt })
-  }, [proxy, groupName])
+  }, [details?.history, groupName, member, name, unresolved])
 
   useEffect(() => {
     updateDelay()
   }, [updateDelay])
 
-  const onDelay = useLockFn(async (providerName?: string) => {
+  const onDelay = useLockFn(async () => {
+    if (!isInteractableMember(member)) return
     setDelayState({ delay: -2, updatedAt: Date.now() })
-    setDelayState(
-      await delayManager.checkDelay(
-        proxy.name,
-        groupName,
-        timeout,
-        providerName,
-      ),
-    )
+    setDelayState(await delayManager.checkDelay(member, groupName, timeout))
   })
 
   return {

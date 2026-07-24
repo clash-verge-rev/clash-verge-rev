@@ -24,33 +24,26 @@ import {
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import type { CSSProperties } from 'react'
-import {
-  lazy,
-  Suspense,
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Outlet, useLocation, useNavigate } from 'react-router'
+import { Outlet, useNavigate } from 'react-router'
 
 import iconDark from '@/assets/image/icon_dark.svg?react'
 import iconLight from '@/assets/image/icon_light.svg?react'
 import LogoSvg from '@/assets/image/logo.svg?react'
-import { BaseErrorBoundary, BaseLoading } from '@/components/base'
+import { BaseErrorBoundary } from '@/components/base'
 import { LayoutItem } from '@/components/layout/layout-item'
 import { LayoutTraffic } from '@/components/layout/layout-traffic'
 import { NoticeManager } from '@/components/layout/notice-manager'
+import { ServiceMigrationDialog } from '@/components/layout/service-migration-dialog'
 import { UpdateButton } from '@/components/layout/update-button'
 import {
   WindowControls,
   WindowResizeHandles,
 } from '@/components/layout/window-controller'
 import { useI18n } from '@/hooks/use-i18n'
+import { useTunAvailabilityGuard } from '@/hooks/use-system-state'
 import { useVerge } from '@/hooks/use-verge'
-import { useVisibility } from '@/hooks/use-visibility'
 import { useWindowDecorations } from '@/hooks/use-window'
 import { useThemeMode } from '@/services/states'
 import getSystem from '@/utils/get-system'
@@ -62,16 +55,10 @@ import {
   useNavMenuOrder,
 } from './_layout/hooks'
 import { handleNoticeMessage } from './_layout/utils'
-import {
-  navItems,
-  preloadLogsPage,
-  preloadNavigationRoutes,
-} from './_navigation'
+import { navItems } from './_navigation'
 
 import 'dayjs/locale/ru'
 import 'dayjs/locale/zh-cn'
-
-const LogsPage = lazy(() => preloadLogsPage())
 
 type NavItem = (typeof navItems)[number]
 
@@ -107,7 +94,6 @@ const SortableNavMenuItem = ({ item, label }: SortableNavMenuItemProps) => {
     <LayoutItem
       to={item.path}
       icon={item.icon}
-      onPreload={item.preload}
       sortable={{
         setNodeRef,
         attributes,
@@ -135,10 +121,9 @@ const Layout = () => {
   const navCollapsed = verge?.collapse_navbar ?? false
   const { switchLanguage } = useI18n()
   const navigate = useNavigate()
-  const { pathname } = useLocation()
-  const isLogsPage = pathname === '/logs'
-  const pageVisible = useVisibility()
   const themeReady = useMemo(() => Boolean(theme), [theme])
+
+  useTunAvailabilityGuard()
 
   const [menuUnlocked, setMenuUnlocked] = useState(false)
   const [menuContextPosition, setMenuContextPosition] =
@@ -236,19 +221,6 @@ const Layout = () => {
 
   useLoadingOverlay(themeReady)
 
-  useEffect(() => {
-    if (!themeReady || !pageVisible) {
-      return
-    }
-
-    const controller = new AbortController()
-    void preloadNavigationRoutes(controller.signal)
-
-    return () => {
-      controller.abort()
-    }
-  }, [themeReady, pageVisible])
-
   const handleNotice = useCallback(
     (payload: [string, string]) => {
       const [status, msg] = payload
@@ -291,6 +263,7 @@ const Layout = () => {
     <ThemeProvider theme={theme}>
       {/* 左侧底部窗口控制按钮 */}
       <NoticeManager position={verge?.notice_position} />
+      <ServiceMigrationDialog />
       <div
         style={{
           animation: 'fadeIn 0.5s',
@@ -425,12 +398,7 @@ const Layout = () => {
                     return null
                   }
                   return (
-                    <LayoutItem
-                      key={item.path}
-                      to={item.path}
-                      icon={item.icon}
-                      onPreload={item.preload}
-                    >
+                    <LayoutItem key={item.path} to={item.path} icon={item.icon}>
                       {t(item.label)}
                     </LayoutItem>
                   )
@@ -490,34 +458,6 @@ const Layout = () => {
               <BaseErrorBoundary>
                 <Outlet />
               </BaseErrorBoundary>
-              {isLogsPage && (
-                <div
-                  style={{
-                    position: 'absolute',
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                  }}
-                >
-                  <Suspense
-                    fallback={
-                      <Box
-                        sx={{
-                          display: 'flex',
-                          height: '100%',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}
-                      >
-                        <BaseLoading />
-                      </Box>
-                    }
-                  >
-                    <LogsPage />
-                  </Suspense>
-                </div>
-              )}
             </div>
           </div>
         </div>

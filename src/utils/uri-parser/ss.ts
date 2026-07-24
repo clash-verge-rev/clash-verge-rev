@@ -4,6 +4,7 @@ import {
   getCipher,
   getIfNotBlank,
   getIfPresent,
+  normalizeHost,
   parseBoolOrPresence,
   parseQueryString,
   parseRequiredPort,
@@ -37,7 +38,7 @@ export function URI_SS(line: string): IProxyShadowsocksConfig {
   if (portIdx === -1) {
     throw new Error('Invalid ss uri: missing port')
   }
-  const server = serverAndPort.slice(0, portIdx)
+  const server = normalizeHost(serverAndPort.slice(0, portIdx))
   const portRaw = serverAndPort.slice(portIdx + 1)
   const port = parseRequiredPort(portRaw, 'Invalid ss uri: invalid port')
 

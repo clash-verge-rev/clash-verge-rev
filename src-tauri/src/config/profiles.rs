@@ -17,6 +17,7 @@ use serde_yaml_ng::Mapping;
 use smartstring::alias::String;
 use std::{
     collections::{HashMap, HashSet},
+    path::{Component, Path},
     sync::{
         LazyLock,
         atomic::{AtomicU64, Ordering},
@@ -227,6 +228,10 @@ impl IProfiles {
 
     /// update the item value
     pub async fn patch_item(&mut self, uid: &String, item: &PrfItem) -> Result<()> {
+        if let Some(file) = &item.file {
+            Self::validate_profile_file(file)?;
+        }
+
         let mut items = self.items.take().unwrap_or_default();
 
         for each in items.iter_mut() {
@@ -248,6 +253,22 @@ impl IProfiles {
 
         self.items = Some(items);
         bail!("failed to find the profile item \"uid:{uid}\"")
+    }
+
+    fn validate_profile_file(file: &str) -> Result<()> {
+        let mut components = Path::new(file).components();
+        if file.is_empty()
+            || file.contains('/')
+            || file.contains('\\')
+            || !matches!(
+                (components.next(), components.next()),
+                (Some(Component::Normal(_)), None)
+            )
+        {
+            bail!("profile file must be a single filename");
+        }
+
+        Ok(())
     }
 
     /// be used to update the remote item

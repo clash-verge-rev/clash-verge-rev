@@ -562,10 +562,6 @@ impl IVerge {
         patch!(enable_external_controller);
     }
 
-    pub const fn get_singleton_port() -> u16 {
-        crate::constants::network::ports::SINGLETON_SERVER
-    }
-
     /// 获取日志等级
     pub fn get_log_level(&self) -> LevelFilter {
         if let Some(level) = self.app_log_level.as_ref() {
