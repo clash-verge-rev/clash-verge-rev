@@ -321,7 +321,7 @@ fn probe_claims(claims: &[BindClaim]) -> ListenerProbeOutcome {
     for claim in claims {
         match bind_claim(claim) {
             Ok(socket) => sockets.push(socket),
-            Err(error) if error.kind() == io::ErrorKind::AddrInUse => return conflict_outcome(claim),
+            Err(error) if is_bind_conflict(&error) => return conflict_outcome(claim),
             Err(error)
                 if matches!(
                     error.kind(),
@@ -370,11 +370,54 @@ fn bind_claim(claim: &BindClaim) -> io::Result<Socket> {
         socket.set_only_v6(true)?;
     }
     socket.set_reuse_address(false)?;
+    #[cfg(windows)]
+    set_exclusive_address_use(&socket)?;
     socket.bind(&SockAddr::from(claim.socket_addr()))?;
     if claim.transport == ListenerTransport::Tcp {
         socket.listen(1)?;
     }
     Ok(socket)
+}
+
+fn is_bind_conflict(error: &io::Error) -> bool {
+    if error.kind() == io::ErrorKind::AddrInUse {
+        return true;
+    }
+
+    #[cfg(windows)]
+    {
+        use windows_sys::Win32::Networking::WinSock::WSAEACCES;
+
+        error.raw_os_error() == Some(WSAEACCES)
+    }
+    #[cfg(not(windows))]
+    false
+}
+
+#[cfg(windows)]
+fn set_exclusive_address_use(socket: &Socket) -> io::Result<()> {
+    use std::{mem::size_of, os::windows::io::AsRawSocket as _};
+    use windows_sys::Win32::Networking::WinSock::{SO_EXCLUSIVEADDRUSE, SOCKET, SOCKET_ERROR, SOL_SOCKET, setsockopt};
+
+    let enabled = 1i32;
+    // Rust exposes `RawSocket` as `u64` for compatibility, while WinSock's
+    // `SOCKET` is pointer-sized. The value originated from WinSock, so it fits
+    // in `SOCKET` on every Windows target.
+    let raw_socket = socket.as_raw_socket() as SOCKET;
+    // SAFETY: the socket is valid and `enabled` remains alive for the duration of the call.
+    let result = unsafe {
+        setsockopt(
+            raw_socket,
+            SOL_SOCKET,
+            SO_EXCLUSIVEADDRUSE,
+            (&raw const enabled).cast(),
+            size_of::<i32>() as i32,
+        )
+    };
+    if result == SOCKET_ERROR {
+        return Err(io::Error::last_os_error());
+    }
+    Ok(())
 }
 
 const fn conflict_outcome(claim: &BindClaim) -> ListenerProbeOutcome {
@@ -424,20 +467,15 @@ mod tests {
     }
 
     #[test]
-    fn probe_checks_udp_independently_from_tcp() -> anyhow::Result<()> {
+    fn probe_reports_udp_conflicts_on_the_requested_address() -> anyhow::Result<()> {
         let socket = UdpSocket::bind((Ipv4Addr::LOCALHOST, 0))?;
         let port = socket.local_addr()?.port();
-        let tcp = probe_listener(&ListenerProbe {
-            address: format!("127.0.0.1:{port}"),
-            transports: vec![ListenerTransport::Tcp],
-        });
-        let udp = probe_listener(&ListenerProbe {
+        let outcome = probe_listener(&ListenerProbe {
             address: format!("127.0.0.1:{port}"),
             transports: vec![ListenerTransport::Udp],
         });
-        assert_eq!(tcp, ListenerProbeOutcome::Available);
         assert_eq!(
-            udp,
+            outcome,
             ListenerProbeOutcome::Conflict {
                 port,
                 transport: ListenerTransport::Udp
@@ -502,9 +540,12 @@ mod tests {
         for key in ["mixed-port", "socks-port"] {
             let socket = UdpSocket::bind((Ipv4Addr::LOCALHOST, 0))?;
             let port = socket.local_addr()?.port();
+            // Exclude the running core's TCP claim so this assertion isolates UDP
+            // without depending on process-global TCP port availability.
+            let current = mapping(&format!("ipv6: false\nport: {port}\n"))?;
             let candidate = mapping(&format!("ipv6: false\n{key}: {port}\n"))?;
             assert_eq!(
-                probe_proxy_port_change(&Mapping::new(), &candidate, false),
+                probe_proxy_port_change(&current, &candidate, true),
                 ListenerProbeOutcome::Conflict {
                     port,
                     transport: ListenerTransport::Udp

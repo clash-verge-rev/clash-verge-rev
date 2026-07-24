@@ -429,7 +429,7 @@ export async function getNextUpdateTime(uid: string) {
   return invoke<number | null>('get_next_update_time', { uid })
 }
 
-export interface ToggleableProxyPort {
+interface ToggleableProxyPort {
   enabled: boolean
   port: number
 }
