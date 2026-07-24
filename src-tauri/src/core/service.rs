@@ -1184,7 +1184,7 @@ async fn recover_after_sustained_status_failure(generation: u64, failed_status_s
         return false;
     }
 
-    let owner_endpoint_available = Handle::mihomo().await.get_version().await.is_ok();
+    let owner_endpoint_available = Handle::mihomo().get_version().await.is_ok();
     if let Some(reason) = transport_failure_recovery_reason(failed_status_samples, owner_endpoint_available) {
         recover_after_owner_loss(generation, reason).await;
         true
