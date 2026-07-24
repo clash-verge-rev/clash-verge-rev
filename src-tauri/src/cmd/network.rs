@@ -60,6 +60,11 @@ pub async fn get_auto_proxy() -> CmdResult<Mapping> {
     Ok(map)
 }
 
+#[tauri::command]
+pub fn get_embedded_server_port() -> CmdResult<u16> {
+    crate::utils::server::embedded_server_port().stringify_err()
+}
+
 /// 获取系统主机名
 #[tauri::command]
 pub fn get_system_hostname() -> String {

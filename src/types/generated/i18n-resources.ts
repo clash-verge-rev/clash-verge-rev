@@ -194,6 +194,16 @@ export interface TranslationResources {
             unlock: string
           }
         }
+        serviceMigration: {
+          checkingMessage: string
+          continueSidecar: string
+          message: string
+          reinstall: string
+          repair: string
+          success: string
+          title: string
+          unavailableMessage: string
+        }
       }
     }
     logs: {

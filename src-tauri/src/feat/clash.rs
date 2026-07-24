@@ -43,7 +43,6 @@ pub async fn restart_app() {
     // 设置退出标志
     handle::Handle::global().set_is_exiting();
 
-    utils::server::shutdown_embedded_server();
     Config::apply_all_and_save_file().await;
 
     logging!(info, Type::System, "开始异步清理资源");
@@ -53,9 +52,19 @@ pub async fn restart_app() {
         info,
         Type::System,
         "资源清理完成，退出代码: {}",
-        if cleanup_result { 0 } else { 1 }
+        if cleanup_result.all_success { 0 } else { 1 }
     );
 
+    if !cleanup_result.core_stopped {
+        handle::Handle::global().clear_is_exiting();
+        handle::Handle::notice_message(
+            "set_config::error",
+            "Failed to stop the core safely; restart was cancelled",
+        );
+        return;
+    }
+
+    utils::server::shutdown_embedded_server();
     let app_handle = handle::Handle::app_handle();
     app_handle.restart();
 }

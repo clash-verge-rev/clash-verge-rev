@@ -35,6 +35,7 @@ import { BaseErrorBoundary } from '@/components/base'
 import { LayoutItem } from '@/components/layout/layout-item'
 import { LayoutTraffic } from '@/components/layout/layout-traffic'
 import { NoticeManager } from '@/components/layout/notice-manager'
+import { ServiceMigrationDialog } from '@/components/layout/service-migration-dialog'
 import { UpdateButton } from '@/components/layout/update-button'
 import {
   WindowControls,
@@ -262,6 +263,7 @@ const Layout = () => {
     <ThemeProvider theme={theme}>
       {/* 左侧底部窗口控制按钮 */}
       <NoticeManager position={verge?.notice_position} />
+      <ServiceMigrationDialog />
       <div
         style={{
           animation: 'fadeIn 0.5s',

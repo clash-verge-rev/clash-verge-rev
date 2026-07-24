@@ -1,46 +1,33 @@
 import { useCallback } from 'react'
 
-import { restartCore, stopCore, uninstallService } from '@/services/cmds'
+import { uninstallService } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
 
-const executeWithErrorHandling = async (
-  operation: () => Promise<void>,
-  loadingKey: string,
-  successKey?: string,
-) => {
-  try {
-    showNotice.info(loadingKey)
-    await operation()
-    if (successKey) {
-      showNotice.success(successKey)
-    }
-  } catch (err) {
-    showNotice.error(err)
-    throw err
-  }
-}
+import { useSystemState } from './use-system-state'
 
 export const useServiceUninstaller = () => {
-  const uninstallServiceAndRestartCore = useCallback(async () => {
+  const { mutateSystemState } = useSystemState()
+
+  const uninstallServiceAndStartSidecar = useCallback(async () => {
+    let uninstallError: unknown
+    showNotice.info('settings.statuses.clashService.uninstalling')
     try {
-      await executeWithErrorHandling(
-        () => stopCore(),
-        'settings.statuses.clash.stopping',
-      )
-      await executeWithErrorHandling(
-        () => uninstallService(),
-        'settings.statuses.clashService.uninstalling',
+      await uninstallService()
+      showNotice.success(
         'settings.feedback.notifications.clashService.uninstallSuccess',
       )
-    } catch (ignore) {
-    } finally {
-      await executeWithErrorHandling(
-        () => restartCore(),
-        'settings.statuses.clash.restarting',
-        'settings.feedback.notifications.clash.restartSuccess',
-      )
+    } catch (error) {
+      uninstallError = error
     }
-  }, [])
 
-  return { uninstallServiceAndRestartCore }
+    try {
+      await mutateSystemState()
+    } catch (error) {
+      if (!uninstallError) throw error
+    }
+
+    if (uninstallError) throw uninstallError
+  }, [mutateSystemState])
+
+  return { uninstallServiceAndStartSidecar }
 }
