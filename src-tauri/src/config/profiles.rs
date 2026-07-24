@@ -424,6 +424,19 @@ impl IProfiles {
             return Ok(());
         }
 
+        // 如果 items 为空（例如 profiles.yaml 解析失败导致
+        // IProfiles::new() 返回 default），此时无法判断哪些文件是活跃的，
+        // 跳过清理以避免误删用户正在使用的订阅配置文件。
+        // See: https://github.com/clash-verge-rev/clash-verge-rev/issues/7577
+        if self.items.as_ref().map_or(true, |v| v.is_empty()) {
+            logging!(
+                warn,
+                Type::Config,
+                "Profile items 为空，跳过孤儿文件清理以避免误删活跃的配置文件"
+            );
+            return Ok(());
+        }
+
         // 获取所有 active profile 的文件名集合
         let active_files = self.get_all_active_files();
 
