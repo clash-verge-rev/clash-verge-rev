@@ -97,7 +97,7 @@ export const ProxiesEditorViewer = (props: Props) => {
         >
           <SortableContext
             items={filteredPrependSeq.map((x) => {
-              return x.name
+              return x.name ?? ''
             })}
           >
             {filteredPrependSeq.map((item) => {
