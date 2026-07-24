@@ -15,7 +15,7 @@ use self::{
 };
 use crate::utils::dirs;
 use crate::{
-    config::{Config, IVerge, PrfItem},
+    config::{Config, IGatewayMode, IVerge, PrfItem},
     constants,
     utils::tmpl,
 };
@@ -36,6 +36,7 @@ struct ConfigValues {
     socks_enabled: bool,
     http_enabled: bool,
     enable_dns_settings: bool,
+    gateway_mode: Option<IGatewayMode>,
     #[cfg(not(target_os = "windows"))]
     redir_enabled: bool,
     #[cfg(target_os = "linux")]
@@ -116,16 +117,18 @@ async fn get_config_values() -> ConfigValues {
         ref verge_socks_enabled,
         ref verge_http_enabled,
         ref enable_dns_settings,
+        ref gateway_mode,
         ..
     } = **verge_arc;
 
-    let (clash_core, enable_tun, enable_builtin, socks_enabled, http_enabled, enable_dns_settings) = (
+    let (clash_core, enable_tun, enable_builtin, socks_enabled, http_enabled, enable_dns_settings, gateway_mode) = (
         Some(verge_arc.get_valid_clash_core()),
         enable_tun_mode.unwrap_or(false) && !Config::tun_suppressed_for_session(),
         enable_builtin_enhanced.unwrap_or(true),
         verge_socks_enabled.unwrap_or(false),
         verge_http_enabled.unwrap_or(false),
         enable_dns_settings.unwrap_or(false),
+        gateway_mode.clone(),
     );
 
     #[cfg(not(target_os = "windows"))]
@@ -145,6 +148,7 @@ async fn get_config_values() -> ConfigValues {
         socks_enabled,
         http_enabled,
         enable_dns_settings,
+        gateway_mode,
         #[cfg(not(target_os = "windows"))]
         redir_enabled,
         #[cfg(target_os = "linux")]
@@ -694,6 +698,7 @@ pub async fn enhance() -> Result<(Mapping, HashSet<String>, HashMap<String, Resu
         socks_enabled,
         http_enabled,
         enable_dns_settings,
+        gateway_mode,
         #[cfg(not(target_os = "windows"))]
         redir_enabled,
         #[cfg(target_os = "linux")]
@@ -733,7 +738,8 @@ pub async fn enhance() -> Result<(Mapping, HashSet<String>, HashMap<String, Resu
 
     // app 生成项先于手动覆盖。
     let config = apply_builtin_scripts(config, clash_core, enable_builtin).await;
-    let config = use_tun(config, enable_tun);
+    let gateway_enabled = gateway_mode.as_ref().is_some_and(|gateway| gateway.enabled);
+    let config = use_tun(config, enable_tun || gateway_enabled);
     let config = apply_dns_settings(config, enable_dns_settings).await;
 
     // 手动覆盖前锁定 app 权威字段。
@@ -764,6 +770,8 @@ pub async fn enhance() -> Result<(Mapping, HashSet<String>, HashMap<String, Resu
     let config = enforce_control_plane(config, control_plane);
     let config = enforce_dns_ipv6(config, dns_ipv6);
     let config = ensure_lan_bind_address(config);
+    let config = enforce_gateway_transport(config, gateway_mode.as_ref());
+    let config = apply_gateway_device_rules(config, gateway_mode.as_ref());
 
     let config = cleanup_proxy_groups(config);
     let config = use_sort(config);
@@ -774,17 +782,154 @@ pub async fn enhance() -> Result<(Mapping, HashSet<String>, HashMap<String, Resu
     Ok((config, exists_keys_set, result_map))
 }
 
+fn enforce_gateway_transport(mut config: Mapping, gateway: Option<&IGatewayMode>) -> Mapping {
+    let Some(gateway) = gateway.filter(|gateway| gateway.enabled) else {
+        return config;
+    };
+
+    config.insert(Value::from("allow-lan"), Value::from(true));
+    let tun_key = Value::from("tun");
+    let mut tun = config
+        .remove(&tun_key)
+        .and_then(|value| value.as_mapping().cloned())
+        .unwrap_or_default();
+    tun.insert(Value::from("enable"), Value::from(true));
+    tun.insert(Value::from("auto-route"), Value::from(true));
+    tun.insert(Value::from("strict-route"), Value::from(true));
+    tun.insert(Value::from("auto-detect-interface"), Value::from(true));
+    if gateway.hijack_dns {
+        tun.insert(Value::from("dns-hijack"), Value::Sequence(vec![Value::from("any:53")]));
+    }
+    config.insert(tun_key, Value::Mapping(tun));
+    config
+}
+
+fn apply_gateway_device_rules(mut config: Mapping, gateway: Option<&IGatewayMode>) -> Mapping {
+    let Some(gateway) = gateway.filter(|gateway| gateway.enabled) else {
+        return config;
+    };
+    if gateway.device_policies.is_empty() && gateway.devices.is_empty() {
+        return config;
+    }
+
+    let rules_key = Value::from("rules");
+    let existing = config
+        .remove(&rules_key)
+        .and_then(|value| value.as_sequence().cloned())
+        .unwrap_or_default();
+    let mut rules = Vec::new();
+    for device in &gateway.devices {
+        let source_ip = if device.fixed_ip.trim().is_empty() {
+            device.last_ip.trim()
+        } else {
+            device.fixed_ip.trim()
+        };
+        if source_ip.parse::<std::net::IpAddr>().is_err() {
+            continue;
+        }
+        let suffix = if source_ip.contains(':') { "/128" } else { "/32" };
+        let source = format!("{source_ip}{suffix}");
+        if device.internet_blocked {
+            rules.push(Value::from(format!("SRC-IP-CIDR,{source},REJECT")));
+            continue;
+        }
+        for domain in &device.blocked_domains {
+            let domain = domain
+                .trim()
+                .trim_start_matches("*.")
+                .trim_start_matches('.')
+                .to_ascii_lowercase();
+            if domain.is_empty() || domain.contains(',') || domain.contains('/') || domain.contains(char::is_whitespace)
+            {
+                continue;
+            }
+            rules.push(Value::from(format!(
+                "AND,((SRC-IP-CIDR,{source}),(DOMAIN-SUFFIX,{domain})),REJECT"
+            )));
+        }
+        let ports = device
+            .blocked_ports
+            .iter()
+            .filter(|port| **port > 0)
+            .map(u16::to_string)
+            .collect::<Vec<_>>();
+        if !ports.is_empty() {
+            rules.push(Value::from(format!(
+                "AND,((SRC-IP-CIDR,{source}),(DST-PORT,{})),REJECT",
+                ports.join("/")
+            )));
+        }
+    }
+    for device in &gateway.device_policies {
+        if device.source_ip.parse::<std::net::IpAddr>().is_err() || device.policy.trim().is_empty() {
+            continue;
+        }
+        let suffix = if device.source_ip.contains(':') { "/128" } else { "/32" };
+        rules.push(Value::from(format!(
+            "SRC-IP-CIDR,{}{},{},no-resolve",
+            device.source_ip, suffix, device.policy
+        )));
+    }
+    rules.extend(existing);
+    config.insert(rules_key, Value::Sequence(rules));
+    config
+}
+
 #[allow(clippy::expect_used)]
 #[cfg(test)]
 mod tests {
     use super::{
-        ChainItem, ChainType, cleanup_proxy_groups, ensure_lan_bind_address, process_global_items,
-        process_profile_items, use_keys,
+        ChainItem, ChainType, apply_gateway_device_rules, cleanup_proxy_groups, enforce_gateway_transport,
+        ensure_lan_bind_address, process_global_items, process_profile_items, use_keys,
     };
+    use crate::config::{IGatewayDevice, IGatewayDevicePolicy, IGatewayMode};
+    use serde_yaml_ng::Value;
     use std::collections::HashMap;
 
     fn mapping(yaml: &str) -> serde_yaml_ng::Mapping {
         serde_yaml_ng::from_str(yaml).expect("test config should be valid")
+    }
+
+    #[test]
+    fn gateway_forces_tun_and_dns_hijack() {
+        let config = mapping(r#"{allow-lan: false, tun: {enable: false, auto-route: false}}"#);
+        let gateway = IGatewayMode {
+            enabled: true,
+            hijack_dns: true,
+            ..IGatewayMode::default()
+        };
+        let result = enforce_gateway_transport(config, Some(&gateway));
+        assert_eq!(result.get("allow-lan").and_then(Value::as_bool), Some(true));
+        let tun = result.get("tun").and_then(Value::as_mapping).unwrap();
+        assert_eq!(tun.get("enable").and_then(Value::as_bool), Some(true));
+        assert_eq!(tun.get("strict-route").and_then(Value::as_bool), Some(true));
+        assert_eq!(
+            tun.get("dns-hijack").and_then(Value::as_sequence).unwrap(),
+            &[Value::from("any:53")]
+        );
+    }
+
+    #[test]
+    fn gateway_device_rules_precede_profile_rules() {
+        let config = mapping(r#"{rules: ["MATCH,DIRECT"]}"#);
+        let gateway = IGatewayMode {
+            enabled: true,
+            device_policies: vec![IGatewayDevicePolicy {
+                source_ip: "192.168.50.20".into(),
+                policy: "Proxy".into(),
+            }],
+            devices: vec![IGatewayDevice {
+                last_ip: "192.168.50.21".into(),
+                internet_blocked: true,
+                ..IGatewayDevice::default()
+            }],
+            ..IGatewayMode::default()
+        };
+        let result = apply_gateway_device_rules(config, Some(&gateway));
+        let rules = result.get("rules").and_then(Value::as_sequence).unwrap();
+        assert_eq!(rules[0].as_str(), Some("SRC-IP-CIDR,192.168.50.21/32,REJECT"));
+        assert_eq!(rules[1].as_str(), Some("SRC-IP-CIDR,192.168.50.20/32,Proxy,no-resolve"));
+        assert_eq!(rules[2].as_str(), Some("MATCH,DIRECT"));
     }
 
     #[tokio::test]

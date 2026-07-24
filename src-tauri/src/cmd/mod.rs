@@ -13,6 +13,7 @@ pub fn coded_error(code: &str, detail: impl std::fmt::Display) -> String {
 pub mod app;
 pub mod backup;
 pub mod clash;
+pub mod gateway;
 pub mod lightweight;
 pub mod media_unlock_checker;
 pub mod network;
@@ -31,6 +32,7 @@ pub mod webdav;
 pub use app::*;
 pub use backup::*;
 pub use clash::*;
+pub use gateway::*;
 pub use lightweight::*;
 pub use media_unlock_checker::*;
 pub use network::*;

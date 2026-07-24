@@ -6,6 +6,7 @@
         "proxies": "Прокси",
         "profiles": "Профильләр",
         "connections": "Тоташулар",
+        "gateway": "Gateway",
         "rules": "Кагыйдәләр",
         "logs": "Логлар",
         "unlock": "Test",

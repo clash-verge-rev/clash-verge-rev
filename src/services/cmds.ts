@@ -301,6 +301,70 @@ export async function getNetworkInterfacesInfo() {
   return invoke<INetworkInterface[]>('get_network_interfaces_info')
 }
 
+export interface GatewayStatus {
+  supported: boolean
+  forwardingEnabled: boolean
+  platform: string
+}
+
+export async function getGatewayStatus() {
+  return invoke<GatewayStatus>('get_gateway_status')
+}
+
+export async function setGatewayForwarding(
+  enable: boolean,
+  lanInterface: string,
+) {
+  return invoke<GatewayStatus>('set_gateway_forwarding', {
+    enable,
+    lanInterface,
+  })
+}
+
+export interface DhcpReservation {
+  macAddress: string
+  ipAddress: string
+}
+
+export interface DhcpServerConfig {
+  interface: string
+  serverAddress: string
+  poolStart: string
+  poolEnd: string
+  subnetMask: string
+  router: string
+  dns: string
+  leaseTimeSecs: number
+  reservations: DhcpReservation[]
+}
+
+export interface DhcpLease {
+  macAddress: string
+  ipAddress: string
+  hostname: string
+  expiresAt: number
+  lastSeen: number
+}
+
+export interface DhcpServerStatus {
+  running: boolean
+  interface: string
+  listenAddress: string
+  error?: string | null
+  leases: DhcpLease[]
+}
+
+export const getDhcpServerStatus = () =>
+  invoke<DhcpServerStatus>('get_dhcp_server_status')
+
+export const startDhcpServer = (config: DhcpServerConfig) =>
+  invoke<DhcpServerStatus>('start_dhcp_server', { config })
+
+export const stopDhcpServer = () => invoke<DhcpServerStatus>('stop_dhcp_server')
+
+export const clearDhcpLeases = () =>
+  invoke<DhcpServerStatus>('clear_dhcp_leases')
+
 export async function createWebdavBackup() {
   return invoke<void>('create_webdav_backup')
 }

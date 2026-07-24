@@ -2,6 +2,7 @@
 #![recursion_limit = "512"]
 
 mod cmd;
+pub use cmd::run_privileged_dhcp_daemon;
 pub mod config;
 mod constants;
 mod core;
@@ -145,6 +146,12 @@ mod app_init {
             cmd::get_portable_flag,
             cmd::get_network_interfaces,
             cmd::get_system_hostname,
+            cmd::get_gateway_status,
+            cmd::set_gateway_forwarding,
+            cmd::get_dhcp_server_status,
+            cmd::start_dhcp_server,
+            cmd::stop_dhcp_server,
+            cmd::clear_dhcp_leases,
             cmd::restart_app,
             cmd::start_core,
             cmd::stop_core,

@@ -6,6 +6,7 @@
         "proxies": "Proxy",
         "profiles": "Abonnement",
         "connections": "Verbindungen",
+        "gateway": "Gateway",
         "rules": "Regeln",
         "logs": "Protokolle",
         "unlock": "Testen",

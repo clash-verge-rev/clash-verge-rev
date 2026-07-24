@@ -6,6 +6,7 @@
         "proxies": "Vekil'ler",
         "profiles": "Profiller",
         "connections": "Bağlantılar",
+        "gateway": "Gateway",
         "rules": "Kurallar",
         "logs": "Günlükler",
         "unlock": "Test",

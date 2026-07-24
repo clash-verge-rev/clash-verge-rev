@@ -3,6 +3,7 @@ import ForkRightOutlinedIcon from '@mui/icons-material/ForkRightOutlined'
 import HomeOutlinedIcon from '@mui/icons-material/HomeOutlined'
 import LanguageOutlinedIcon from '@mui/icons-material/LanguageOutlined'
 import LockOpenOutlinedIcon from '@mui/icons-material/LockOpenOutlined'
+import RouterOutlinedIcon from '@mui/icons-material/RouterOutlined'
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined'
 import SubjectOutlinedIcon from '@mui/icons-material/SubjectOutlined'
 import WifiOutlinedIcon from '@mui/icons-material/WifiOutlined'
@@ -19,6 +20,7 @@ import UnlockSvg from '@/assets/image/itemicon/unlock.svg?react'
 
 import { navigationItems } from './_navigation-meta'
 import ConnectionsPage from './connections'
+import GatewayPage from './gateway'
 import HomePage from './home'
 import LogsPage from './logs'
 import ProfilePage from './profiles'
@@ -54,6 +56,11 @@ export const navItems: NavigationItem[] = [
     ...navigationItems.connections,
     icon: [<LanguageOutlinedIcon key="mui" />, <ConnectionsSvg key="svg" />],
     Component: ConnectionsPage,
+  },
+  {
+    ...navigationItems.gateway,
+    icon: [<RouterOutlinedIcon key="mui" />, <RouterOutlinedIcon key="svg" />],
+    Component: GatewayPage,
   },
   {
     ...navigationItems.rules,

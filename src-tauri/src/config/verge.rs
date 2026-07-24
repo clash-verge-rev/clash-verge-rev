@@ -1,4 +1,4 @@
-use crate::config::Config;
+use crate::config::{Config, IGatewayMode};
 use crate::{
     config::{DEFAULT_PAC, deserialize_encrypted, serialize_encrypted},
     utils::{dirs, help},
@@ -84,6 +84,9 @@ pub struct IVerge {
 
     /// clash tun mode
     pub enable_tun_mode: Option<bool>,
+
+    /// Transparent gateway and downstream-device management settings.
+    pub gateway_mode: Option<IGatewayMode>,
 
     /// can the app auto startup
     pub enable_auto_launch: Option<bool>,

@@ -37,6 +37,101 @@ export interface TranslationResources {
         title: string
       }
     }
+    gateway: {
+      page: {
+        activeConnections: string
+        blockedDevices: string
+        blockedDomains: string
+        blockedDomainsHelp: string
+        blockedDomainsPlaceholder: string
+        blockedPorts: string
+        blockedPortsHelp: string
+        blockInternet: string
+        cancel: string
+        clearLeases: string
+        clientHelp: string
+        connections: string
+        customName: string
+        description: string
+        destination: string
+        device: string
+        deviceFilter: string
+        deviceGroup: string
+        deviceIcon: string
+        deviceNeedsMac: string
+        deviceNotes: string
+        deviceNotesHelp: string
+        devices: string
+        deviceSaved: string
+        dhcpDescription: string
+        dhcpDns: string
+        dhcpServer: string
+        dhcpWarning: string
+        disabled: string
+        dnsAddress: string
+        download: string
+        editDevice: string
+        empty: string
+        enabled: string
+        fixedIp: string
+        fixedIpAddress: string
+        fixedIpDuplicateError: string
+        fixedIpHelp: string
+        fixedIpPlaceholder: string
+        fixedIpSubnetError: string
+        followRules: string
+        gatewayAddress: string
+        group_family: string
+        group_guest: string
+        group_infrastructure: string
+        group_iot: string
+        group_unknown: string
+        group_work: string
+        hijackDns: string
+        interface: string
+        internetPaused: string
+        internetResumed: string
+        invalidDomains: string
+        invalidPorts: string
+        lastSeen: string
+        leaseHours: string
+        macAddress: string
+        manage: string
+        noConnections: string
+        offline: string
+        online: string
+        onlineDevices: string
+        owner: string
+        pauseInternet: string
+        policy: string
+        poolEnd: string
+        poolStart: string
+        protocol: string
+        proxy: string
+        reconnectForFixedIp: string
+        resumeInternet: string
+        router: string
+        rule: string
+        running: string
+        save: string
+        searchDevices: string
+        selectInterfaceError: string
+        source: string
+        start: string
+        status: string
+        stop: string
+        stopped: string
+        subnetMask: string
+        title: string
+        totalDevices: string
+        totalTraffic: string
+        trafficStatistics: string
+        trusted: string
+        trustedDevice: string
+        untrustedDevices: string
+        upload: string
+      }
+    }
     home: {
       components: {
         clashInfo: {
@@ -205,6 +300,7 @@ export interface TranslationResources {
           }
           tabs: {
             connections: string
+            gateway: string
             home: string
             logs: string
             profiles: string

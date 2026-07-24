@@ -894,6 +894,40 @@ interface IVergeConfig {
   tray_proxy_groups_display_mode?: 'default' | 'inline' | 'disable'
   tray_inline_outbound_modes?: boolean
   enable_tun_mode?: boolean
+  gateway_mode?: {
+    enabled: boolean
+    lan_interface: string
+    gateway_address: string
+    dns_address: string
+    hijack_dns: boolean
+    tun_was_enabled: boolean
+    forwarding_was_enabled: boolean
+    device_policies: { source_ip: string; policy: string }[]
+    devices?: {
+      mac_address: string
+      name: string
+      icon: string
+      fixed_ip: string
+      last_ip?: string
+      last_seen?: number
+      owner?: string
+      group?: string
+      notes?: string
+      trusted?: boolean
+      internet_blocked?: boolean
+      blocked_domains?: string[]
+      blocked_ports?: number[]
+    }[]
+    dhcp: {
+      enabled: boolean
+      pool_start: string
+      pool_end: string
+      subnet_mask: string
+      router: string
+      dns: string
+      lease_time_secs: number
+    }
+  }
   enable_auto_light_weight_mode?: boolean
   auto_light_weight_minutes?: number
   enable_auto_launch?: boolean

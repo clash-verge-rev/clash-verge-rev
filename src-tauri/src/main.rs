@@ -3,6 +3,19 @@
 use std::sync::atomic::{AtomicUsize, Ordering};
 
 fn main() {
+    let args = std::env::args().collect::<Vec<_>>();
+    if args.get(1).is_some_and(|arg| arg == "--dhcp-daemon") {
+        let result = match (args.get(2), args.get(3)) {
+            (Some(config), Some(lease_file)) => app_lib::run_privileged_dhcp_daemon(config, lease_file),
+            _ => Err("missing DHCP daemon arguments".into()),
+        };
+        if let Err(error) = result {
+            eprintln!("{error}");
+            std::process::exit(1);
+        }
+        return;
+    }
+
     let default_parallelism = std::thread::available_parallelism().map(|n| n.get()).unwrap_or(1);
     let worker_limit = std::cmp::min(default_parallelism, 8);
     let blocking_limit = 2 * worker_limit;
