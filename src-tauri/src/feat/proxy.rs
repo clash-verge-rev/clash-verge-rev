@@ -15,7 +15,7 @@ pub async fn toggle_system_proxy() -> bool {
     // 如果当前系统代理即将关闭，且自动关闭连接设置为true，则关闭所有连接
     if current
         && auto_close_connection
-        && let Err(err) = handle::Handle::mihomo().await.close_all_connections().await
+        && let Err(err) = handle::Handle::mihomo().close_all_connections().await
     {
         logging!(error, Type::ProxyMode, "Failed to close all connections: {err}");
     }

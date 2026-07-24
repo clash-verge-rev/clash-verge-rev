@@ -758,7 +758,7 @@ fn is_activation_current(generation: u64) -> bool {
 async fn fetch_proxies_with_timeout() -> Result<Proxies> {
     tokio::time::timeout(MIHOMO_OPERATION_TIMEOUT, async {
         loop {
-            match handle::Handle::mihomo().await.get_proxies().await {
+            match handle::Handle::mihomo().get_proxies().await {
                 Ok(proxies) => return proxies,
                 Err(err) => {
                     logging!(debug, Type::Config, "mihomo proxies are not ready yet: {err}");
@@ -773,10 +773,7 @@ async fn fetch_proxies_with_timeout() -> Result<Proxies> {
 
 async fn select_node_with_timeout(group_name: &String, node: &String) -> Result<()> {
     tokio::time::timeout(MIHOMO_OPERATION_TIMEOUT, async {
-        handle::Handle::mihomo()
-            .await
-            .select_node_for_group(group_name, node)
-            .await
+        handle::Handle::mihomo().select_node_for_group(group_name, node).await
     })
     .await
     .with_context(|| format!("timed out while selecting node [{node}] for group [{group_name}]"))?
@@ -1037,7 +1034,7 @@ mod tests {
                             all: Some(all.iter().map(|node| (*node).to_owned()).collect()),
                             now: now.map(str::to_owned),
                             proxy_type: ProxyType::Selector,
-                            ..Proxy::default()
+                            ..Default::default()
                         },
                     )
                 })

@@ -612,12 +612,10 @@ async fn create_tray_menu(
 
     // TODO: should update tray menu again when it was timeout error
     let (proxy_nodes_data, runtime_proxy_groups_order) = if options.include_proxy_groups {
-        let proxy_nodes_data = tokio::time::timeout(
-            Duration::from_millis(1000),
-            handle::Handle::mihomo().await.get_proxies(),
-        )
-        .await
-        .map_or(None, |res| res.ok());
+        let proxy_nodes_data =
+            tokio::time::timeout(Duration::from_millis(1000), handle::Handle::mihomo().get_proxies())
+                .await
+                .map_or(None, |res| res.ok());
 
         let runtime_proxy_groups_order = cmd::get_runtime_config()
             .await
@@ -976,7 +974,7 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
                 feat::toggle_tun_mode(None).await;
             }
             MenuIds::CLOSE_ALL_CONNECTIONS => {
-                if let Err(err) = handle::Handle::mihomo().await.close_all_connections().await {
+                if let Err(err) = handle::Handle::mihomo().close_all_connections().await {
                     logging!(error, Type::Tray, "Failed to close all connections from tray: {err}");
                 }
             }

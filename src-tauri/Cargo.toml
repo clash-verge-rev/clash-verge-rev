@@ -63,17 +63,9 @@ chrono = "0.4.45"
 boa_engine = "0.21.1"
 once_cell = { version = "1.21.4", features = ["parking_lot"] }
 percent-encoding = "2.3.2"
-reqwest = { version = "0.13.4", features = [
-  "json",
-  "cookies",
-  "gzip",
-  "rustls",
-  "form",
-] }
+reqwest = { version = "0.13.4", features = ["json", "cookies", "gzip", "rustls", "form"] }
 regex = "1.12.4"
-sysproxy = { git = "https://github.com/clash-verge-rev/sysproxy-rs", features = [
-  "guard",
-] }
+sysproxy = { git = "https://github.com/clash-verge-rev/sysproxy-rs", features = ["guard"] }
 network-interface = { version = "2.0.5", features = ["serde"] }
 tauri-plugin-shell = "2.3.5"
 tauri-plugin-dialog = "2.7.1"
@@ -96,7 +88,7 @@ backon = { version = "1.6.0", features = ["tokio-sleep"] }
 tauri-plugin-http = "2.5.9"
 console-subscriber = { version = "0.5.0", optional = true }
 tauri-plugin-devtools = { version = "2.1.0" }
-tauri-plugin-mihomo = { git = "https://github.com/clash-verge-rev/tauri-plugin-mihomo", branch = "fix/api-robustness" }
+tauri-plugin-mihomo = { git = "https://github.com/clash-verge-rev/tauri-plugin-mihomo", branch = "refactor-use-reqwest-ipc" }
 clash_verge_logger = { git = "https://github.com/clash-verge-rev/clash-verge-logger" }
 async-trait = "0.1.89"
 clash_verge_service_ipc = { version = "2.3.3", features = [

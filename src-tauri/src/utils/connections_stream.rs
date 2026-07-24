@@ -75,7 +75,6 @@ pub async fn connect_traffic_stream() -> Result<MihomoWsEventStream<TrafficSpeed
     let (message_tx, message_rx) = mpsc::channel::<InternalWsEvent<TrafficSpeedEvent>>(MIHOMO_WS_STREAM_BUFFER_SIZE);
     // 建立 Mihomo `/traffic` WebSocket 订阅。
     let connection_id = handle::Handle::mihomo()
-        .await
         .ws_traffic({
             let message_tx = message_tx.clone();
             move |message| {
@@ -145,7 +144,6 @@ impl<T> MihomoWsEventStream<T> {
 /// * `connection_id` - 目标连接 ID
 pub async fn disconnect_connection(connection_id: ConnectionId) {
     if let Err(err) = handle::Handle::mihomo()
-        .await
         .disconnect(connection_id, Some(MIHOMO_WS_STREAM_CLOSE_CODE))
         .await
     {

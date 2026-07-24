@@ -41,9 +41,8 @@ pub async fn get_proxy_view() -> CmdResult<ProxyViewV1> {
     let latest_runtime = runtime.latest_arc();
     let runtime_group_order = runtime_group_order(latest_runtime.config.as_ref());
 
-    let mihomo = Handle::mihomo().await;
+    let mihomo = Handle::mihomo();
     let (proxies, providers) = tokio::join!(mihomo.get_proxies(), mihomo.get_proxy_providers(),);
-    drop(mihomo);
     let proxies = proxies.stringify_err()?;
 
     Ok(ProxyViewBuilder::build(ProxyViewInput {

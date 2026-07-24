@@ -19,7 +19,6 @@ pub async fn toggle_proxy_profile(profile_index: String) {
 
 pub async fn switch_proxy_node(group_name: &str, proxy_name: &str) {
     match handle::Handle::mihomo()
-        .await
         .select_node_for_group(group_name, proxy_name)
         .await
     {
@@ -42,7 +41,6 @@ pub async fn switch_proxy_node(group_name: &str, proxy_name: &str) {
     }
 
     match handle::Handle::mihomo()
-        .await
         .select_node_for_group(group_name, proxy_name)
         .await
     {

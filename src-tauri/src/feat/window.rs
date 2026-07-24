@@ -76,7 +76,7 @@ pub async fn clean_async() -> bool {
             logging!(info, Type::System, "send disable tun request to mihomo");
             match timeout(
                 Duration::from_millis(1000),
-                handle::Handle::mihomo().await.patch_base_config(&disable_tun),
+                handle::Handle::mihomo().patch_base_config(&disable_tun),
             )
             .await
             {
