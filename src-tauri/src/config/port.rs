@@ -1,17 +1,18 @@
-use super::{Config, ConfigType, IClashTemp, IVerge};
+use super::{
+    Config, ConfigType, IClashTemp, IVerge,
+    snapshot::{capture_config_files, restore_files},
+};
 use crate::{
     constants::timing,
     core::{
         handle::Handle,
+        listener::ListenerBindScope,
         owner_identity::current_owner_credentials,
         service::{SERVICE_MANAGER, ServiceStatus},
         validate::CoreConfigValidator,
     },
     process::AsyncHandler,
-    utils::{
-        dirs,
-        port::{find_next_available_port, is_tcp_port_in_use},
-    },
+    utils::port::find_next_available_port,
 };
 use anyhow::{Context as _, Result, anyhow, bail};
 use clash_verge_logging::{Type, logging};
@@ -20,9 +21,7 @@ use parking_lot::Mutex;
 use serde_yaml_ng::Value;
 use std::{
     collections::HashSet,
-    io::ErrorKind,
     net::SocketAddr,
-    path::PathBuf,
     str::FromStr as _,
     sync::atomic::{AtomicBool, Ordering},
 };
@@ -31,11 +30,6 @@ use std::{
 struct MixedPortFallback {
     original: u16,
     current: u16,
-}
-
-struct FileSnapshot {
-    path: PathBuf,
-    content: Option<Vec<u8>>,
 }
 
 static PENDING_FALLBACK_NOTICE: Lazy<Mutex<Option<MixedPortFallback>>> = Lazy::new(|| Mutex::new(None));
@@ -55,7 +49,8 @@ impl Config {
         let clash = Self::clash().await.latest_arc();
         let verge = Self::verge().await.latest_arc();
         let selected_port = clash.get_mixed_port();
-        let allow_lan = clash.0.get("allow-lan").and_then(Value::as_bool).unwrap_or(false);
+        let bind_scope =
+            ListenerBindScope::from_mapping(&clash.0).context("failed to derive mixed proxy listener scope")?;
 
         if owned_service_core_uses_port(selected_port).await {
             logging!(
@@ -67,7 +62,8 @@ impl Config {
             return Ok(false);
         }
 
-        let port_in_use = AsyncHandler::spawn_blocking(move || is_tcp_port_in_use(selected_port, allow_lan))
+        let selected_scope = bind_scope.clone();
+        let port_in_use = AsyncHandler::spawn_blocking(move || !selected_scope.mixed_port_is_available(selected_port))
             .await
             .context("mixed proxy port probe task failed")?;
         if !port_in_use {
@@ -76,7 +72,9 @@ impl Config {
 
         let reserved = configured_listener_ports(&clash, &verge);
         let candidate = AsyncHandler::spawn_blocking(move || {
-            find_next_available_port(selected_port, &reserved, |port| !is_tcp_port_in_use(port, allow_lan))
+            find_next_available_port(selected_port, &reserved, |port| {
+                bind_scope.mixed_port_is_available(port)
+            })
         })
         .await
         .context("mixed proxy fallback scan task failed")?
@@ -310,55 +308,9 @@ fn mapping_port(mapping: &serde_yaml_ng::Mapping, key: &str) -> Option<u16> {
     })
 }
 
-async fn capture_files(paths: &[PathBuf]) -> Result<Vec<FileSnapshot>> {
-    let mut snapshots = Vec::with_capacity(paths.len());
-    for path in paths {
-        let content = match tokio::fs::read(path).await {
-            Ok(content) => Some(content),
-            Err(error) if error.kind() == ErrorKind::NotFound => None,
-            Err(error) => {
-                return Err(error).with_context(|| format!("failed to snapshot {}", path.display()));
-            }
-        };
-        snapshots.push(FileSnapshot {
-            path: path.clone(),
-            content,
-        });
-    }
-    Ok(snapshots)
-}
-
-async fn capture_config_files() -> Result<Vec<FileSnapshot>> {
-    let runtime_path = dirs::app_home_dir()?.join(crate::constants::files::RUNTIME_CONFIG);
-    capture_files(&[dirs::clash_path()?, dirs::verge_path()?, runtime_path]).await
-}
-
-async fn restore_files(snapshots: &[FileSnapshot]) -> Result<()> {
-    let mut errors = Vec::new();
-    for snapshot in snapshots {
-        let result = match &snapshot.content {
-            Some(content) => tokio::fs::write(&snapshot.path, content).await,
-            None => match tokio::fs::remove_file(&snapshot.path).await {
-                Ok(()) => Ok(()),
-                Err(error) if error.kind() == ErrorKind::NotFound => Ok(()),
-                Err(error) => Err(error),
-            },
-        };
-        if let Err(error) = result {
-            errors.push(format!("{}: {}", snapshot.path.display(), error));
-        }
-    }
-
-    if errors.is_empty() {
-        Ok(())
-    } else {
-        bail!("{}", errors.join("; "))
-    }
-}
-
 #[cfg(test)]
 mod tests {
-    use super::{capture_files, configured_listener_ports, restore_files};
+    use super::configured_listener_ports;
     use crate::config::{IClashTemp, IVerge};
 
     #[test]
@@ -371,37 +323,5 @@ mod tests {
         assert!(ports.contains(&7895));
         #[cfg(target_os = "linux")]
         assert!(ports.contains(&7896));
-    }
-
-    #[tokio::test]
-    async fn restores_every_configuration_layer_after_partial_write() -> anyhow::Result<()> {
-        let root = std::env::temp_dir().join(format!(
-            "mixed-port-rollback-{}-{}",
-            std::process::id(),
-            std::time::SystemTime::now()
-                .duration_since(std::time::UNIX_EPOCH)?
-                .as_nanos()
-        ));
-        tokio::fs::create_dir_all(&root).await?;
-        let paths = [
-            root.join("config.yaml"),
-            root.join("verge.yaml"),
-            root.join("clash-verge.yaml"),
-        ];
-        for (index, path) in paths.iter().enumerate() {
-            tokio::fs::write(path, format!("original-{index}")).await?;
-        }
-
-        let snapshots = capture_files(&paths).await?;
-        tokio::fs::write(&paths[0], "changed").await?;
-        tokio::fs::write(&paths[1], "changed").await?;
-        tokio::fs::remove_file(&paths[2]).await?;
-        restore_files(&snapshots).await?;
-
-        for (index, path) in paths.iter().enumerate() {
-            assert_eq!(tokio::fs::read_to_string(path).await?, format!("original-{index}"));
-        }
-        tokio::fs::remove_dir_all(root).await?;
-        Ok(())
     }
 }

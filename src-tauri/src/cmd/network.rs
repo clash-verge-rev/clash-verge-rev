@@ -103,8 +103,3 @@ pub fn get_network_interfaces_info() -> CmdResult<Vec<NetworkInterface>> {
 
     Ok(result)
 }
-
-#[tauri::command]
-pub fn is_port_in_use(port: u16) -> bool {
-    crate::utils::port::is_tcp_port_in_use(port, false)
-}

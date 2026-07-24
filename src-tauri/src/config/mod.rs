@@ -6,6 +6,7 @@ mod port;
 mod prfitem;
 pub mod profiles;
 pub mod runtime;
+pub(crate) mod snapshot;
 mod verge;
 
 pub use self::{clash::*, config::*, encrypt::*, prfitem::*, profiles::*, verge::*};
