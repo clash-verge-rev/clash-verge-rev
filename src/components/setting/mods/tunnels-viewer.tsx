@@ -25,7 +25,7 @@ import { useTranslation } from 'react-i18next'
 import { BaseDialog } from '@/components/base'
 import { useClash } from '@/hooks/use-clash'
 import { useProxiesData } from '@/providers/app-data-context'
-import { isPortInUse } from '@/services/cmds'
+import { probeListener, type ListenerTransport } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
 import {
   isInteractableMember,
@@ -59,12 +59,14 @@ interface TunnelProxyOption {
   member: ResolvedProxyMember
 }
 
+type TunnelNetwork = ListenerTransport | 'tcp+udp'
+
 interface TunnelFormValues {
   localAddr: string
   localPort: string
   targetAddr: string
   targetPort: string
-  network: string
+  network: TunnelNetwork
   group: string
   proxy: ProxyMemberOccurrenceBinding | null
 }
@@ -222,14 +224,6 @@ export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
       )
       return
     }
-    const inUse = await isPortInUse(Number(localPort))
-    if (inUse) {
-      showNotice.error('settings.modals.clashPort.messages.portInUse', {
-        port: localPort,
-      })
-      return
-    }
-
     // 目标地址校验 (host)
     const targetHost = normalizeHost(targetAddr)
     if (!targetHost) {
@@ -260,8 +254,10 @@ export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
     }
 
     // 构造新 entry
+    const transports: ListenerTransport[] =
+      network === 'tcp+udp' ? ['tcp', 'udp'] : [network]
     const entry: TunnelEntry = {
-      network: network === 'tcp+udp' ? ['tcp', 'udp'] : [network],
+      network: transports,
       address: formatHostPort(localHost, localPort),
       target: formatHostPort(targetHost, targetPort),
       ...(latestSelectedProxy
@@ -269,8 +265,29 @@ export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
         : {}),
     }
 
+    const candidateTunnels = [...draftTunnels, entry]
+    try {
+      const outcome = await probeListener({
+        address: entry.address,
+        transports,
+      })
+      if (outcome.status === 'conflict') {
+        showNotice.error('settings.modals.clashPort.messages.portInUse', {
+          port: outcome.port,
+        })
+        return
+      }
+      if (outcome.status !== 'available') {
+        showNotice.error(outcome.message)
+        return
+      }
+    } catch (error) {
+      showNotice.error(error)
+      return
+    }
+
     // 写入配置 + 清空输入
-    setDraftTunnels((prev) => [...prev, entry])
+    setDraftTunnels(candidateTunnels)
 
     setValues((v) => ({
       ...v,
@@ -369,7 +386,7 @@ export const TunnelsViewer = forwardRef<TunnelsViewerRef>((_, ref) => {
                   onChange={(e) =>
                     setValues((v) => ({
                       ...v,
-                      network: e.target.value as string,
+                      network: e.target.value as TunnelNetwork,
                     }))
                   }
                 >

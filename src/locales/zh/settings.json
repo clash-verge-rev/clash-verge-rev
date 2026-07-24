@@ -286,6 +286,8 @@
         "portInUse": "端口 {{port}} 已被占用",
         "saved": "端口设置已保存",
         "saveFailed": "端口设置保存失败",
+        "automaticFallback": "端口 {{oldPort}} 已被占用，混合代理端口已自动切换并保存为 {{newPort}}。",
+        "automaticFallbackFailed": "混合代理端口自动切换失败：{{error}}",
         "portTooLow": "端口号不能小于 1000",
         "portTooHigh": "端口号不能大于 65535"
       }

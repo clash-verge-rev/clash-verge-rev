@@ -2,9 +2,11 @@ mod clash;
 #[allow(clippy::module_inception)]
 mod config;
 mod encrypt;
+mod port;
 mod prfitem;
 pub mod profiles;
 pub mod runtime;
+pub(crate) mod snapshot;
 mod verge;
 
 pub use self::{clash::*, config::*, encrypt::*, prfitem::*, profiles::*, verge::*};

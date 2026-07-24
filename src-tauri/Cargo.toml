@@ -59,6 +59,7 @@ serde_json = { workspace = true }
 serde_yaml_ng = { workspace = true }
 smartstring = { workspace = true, features = ["serde"] }
 bitflags = { workspace = true }
+socket2 = { workspace = true }
 warp = { version = "0.4.3", features = ["server"] }
 open = "5.3.6"
 dunce = "1.0.5"
