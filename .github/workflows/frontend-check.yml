@@ -48,7 +48,7 @@ jobs:
         with:
           run_install: false
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         if: steps.check_frontend.outputs.frontend == 'true'
         with:
           node-version: '24.18.0'
@@ -78,6 +78,6 @@ jobs:
         if: steps.check_frontend.outputs.frontend == 'true'
         run: pnpm typecheck
 
-      - name: Report unused frontend code and dependencies
+      - name: Run Knip
         if: steps.check_frontend.outputs.frontend == 'true'
-        run: pnpm knip:report
+        run: pnpm knip:check

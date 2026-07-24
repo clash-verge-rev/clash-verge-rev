@@ -20,6 +20,13 @@
       },
       "fields": {
         "url": "URL Tes"
+      },
+      "errors": {
+        "nameRequired": "Masukkan nama",
+        "urlRequired": "Masukkan URL pengujian",
+        "invalidSvg": "Ikon bukan SVG yang valid",
+        "uidMissing": "Pengenal item pengujian tidak ada",
+        "saveFailed": "Gagal menyimpan item pengujian"
       }
     }
   },

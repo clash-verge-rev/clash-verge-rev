@@ -54,7 +54,7 @@ export const FileInput = (props: Props) => {
       />
 
       <Typography noWrap sx={{ ml: 1 }}>
-        {loading ? 'Loading...' : fileName}
+        {loading ? t('shared.statuses.loading') : fileName}
       </Typography>
     </Box>
   )

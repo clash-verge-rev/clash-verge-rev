@@ -1,23 +1,57 @@
 import { useEffect, useRef, useState } from 'react'
 
-import { getRunningMode, isAdmin, isServiceAvailable } from '@/services/cmds'
+import {
+  getRunningMode,
+  getServiceInstallState,
+  isAdmin,
+  isServiceAvailable,
+  type RunningMode,
+  type ServiceInstallState,
+} from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
 import { useQuery } from '@/services/query-client'
 
 import { useVerge } from './use-verge'
 import { useVisibility } from './use-visibility'
 
-interface SystemState {
-  runningMode: 'Sidecar' | 'Service'
+export interface SystemState {
+  runningMode: RunningMode
   isAdminMode: boolean
   isServiceOk: boolean
+  serviceInstallState: ServiceInstallState | null
 }
 
 const defaultSystemState = {
   runningMode: 'Sidecar',
   isAdminMode: false,
   isServiceOk: false,
+  serviceInstallState: null,
 } as SystemState
+
+export const fetchSystemState = async (): Promise<SystemState> => {
+  const [runningMode, isAdminMode, isServiceOk, serviceInstallState] =
+    await Promise.all([
+      getRunningMode(),
+      isAdmin(),
+      isServiceAvailable(),
+      getServiceInstallState().catch(() => null),
+    ])
+  return {
+    runningMode,
+    isAdminMode,
+    isServiceOk,
+    serviceInstallState,
+  }
+}
+
+const isServiceChoicePending = (
+  state: ServiceInstallState | null,
+  serviceAvailable: boolean,
+  queryFailed: boolean,
+) =>
+  queryFailed ||
+  state === 'sidecarAllowed' ||
+  !(state === 'notInstalled' || (state === 'ready' && serviceAvailable))
 
 // Grace period for service initialization during startup
 const STARTUP_GRACE_MS = 10_000
@@ -27,9 +61,7 @@ const STARTUP_GRACE_MS = 10_000
  * 包括运行模式、管理员状态、系统服务是否可用
  */
 export function useSystemState() {
-  const { verge, patchVerge } = useVerge()
   const pageVisible = useVisibility()
-  const disablingTunRef = useRef(false)
   const [isStartingUp, setIsStartingUp] = useState(true)
 
   useEffect(() => {
@@ -41,16 +73,10 @@ export function useSystemState() {
     data: systemState = defaultSystemState,
     refetch: mutateSystemState,
     isLoading,
+    error: systemStateError,
   } = useQuery({
     queryKey: ['getSystemState'],
-    queryFn: async () => {
-      const [runningMode, isAdminMode, isServiceOk] = await Promise.all([
-        getRunningMode(),
-        isAdmin(),
-        isServiceAvailable(),
-      ])
-      return { runningMode, isAdminMode, isServiceOk } as SystemState
-    },
+    queryFn: fetchSystemState,
     refetchInterval: pageVisible ? (isStartingUp ? 2000 : 30000) : false,
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
@@ -59,9 +85,33 @@ export function useSystemState() {
   const isSidecarMode = systemState.runningMode === 'Sidecar'
   const isServiceMode = systemState.runningMode === 'Service'
   const isTunModeAvailable = systemState.isAdminMode || systemState.isServiceOk
+  const serviceChoicePending = isServiceChoicePending(
+    systemState.serviceInstallState,
+    systemState.isServiceOk,
+    systemStateError !== undefined,
+  )
 
-  const enable_tun_mode = verge?.enable_tun_mode
+  return {
+    runningMode: systemState.runningMode,
+    isAdminMode: systemState.isAdminMode,
+    isServiceOk: systemState.isServiceOk,
+    isSidecarMode,
+    isServiceMode,
+    isTunModeAvailable,
+    serviceChoicePending,
+    mutateSystemState,
+    isLoading,
+    isStartingUp,
+  }
+}
+
+export function useTunAvailabilityGuard() {
+  const { verge, patchVerge } = useVerge()
+  const { isTunModeAvailable, serviceChoicePending, isLoading, isStartingUp } =
+    useSystemState()
+  const disablingTunRef = useRef(false)
   const cooldownTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const enable_tun_mode = verge?.enable_tun_mode
 
   useEffect(() => {
     if (enable_tun_mode === undefined) return
@@ -70,6 +120,7 @@ export function useSystemState() {
       !disablingTunRef.current &&
       enable_tun_mode &&
       !isTunModeAvailable &&
+      !serviceChoicePending &&
       !isLoading &&
       !isStartingUp
     ) {
@@ -102,16 +153,12 @@ export function useSystemState() {
         disablingTunRef.current = false
       }
     }
-  }, [enable_tun_mode, isTunModeAvailable, patchVerge, isLoading, isStartingUp])
-
-  return {
-    runningMode: systemState.runningMode,
-    isAdminMode: systemState.isAdminMode,
-    isServiceOk: systemState.isServiceOk,
-    isSidecarMode,
-    isServiceMode,
+  }, [
+    enable_tun_mode,
     isTunModeAvailable,
-    mutateSystemState,
+    serviceChoicePending,
+    patchVerge,
     isLoading,
-  }
+    isStartingUp,
+  ])
 }

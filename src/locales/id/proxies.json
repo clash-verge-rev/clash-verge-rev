@@ -25,7 +25,8 @@
     },
     "labels": {
       "proxyCount": "Proxy Count",
-      "delayCheckReset": "Periksa keterlambatan untuk membatalkan tetap"
+      "delayCheckReset": "Periksa keterlambatan untuk membatalkan tetap",
+      "nodeCount": "{{count}} node"
     },
     "tooltips": {
       "locate": "Lokasi",
@@ -40,6 +41,10 @@
     },
     "placeholders": {
       "delayCheckUrl": "URL Periksa Keterlambatan"
+    },
+    "empty": {
+      "noAvailableGroups": "Tidak ada grup proxy yang tersedia",
+      "noProxies": "Tidak ada proxy"
     },
     "chain": {
       "header": "Chain Proxy Config",

@@ -25,7 +25,8 @@
     },
     "labels": {
       "proxyCount": "Anzahl der Knoten",
-      "delayCheckReset": "Latenztest durchführen, um Fixierung aufzuheben"
+      "delayCheckReset": "Latenztest durchführen, um Fixierung aufzuheben",
+      "nodeCount": "{{count}} Knoten"
     },
     "tooltips": {
       "locate": "Aktueller Knoten",
@@ -40,6 +41,10 @@
     },
     "placeholders": {
       "delayCheckUrl": "Latenztest-URL"
+    },
+    "empty": {
+      "noAvailableGroups": "Keine Proxy-Gruppen verfügbar",
+      "noProxies": "Keine Proxys"
     },
     "chain": {
       "header": "Chain Proxy Config",

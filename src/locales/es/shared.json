@@ -23,7 +23,8 @@
     "closeAll": "Cerrar todas",
     "clear": "Limpiar",
     "previous": "Previous",
-    "next": "Next"
+    "next": "Next",
+    "check": "Comprobar"
   },
   "labels": {
     "updateAt": "Actualizado el",
@@ -44,7 +45,8 @@
     "enabled": "Habilitado",
     "disabled": "Deshabilitado",
     "saving": "Saving...",
-    "empty": "Vacío"
+    "empty": "Vacío",
+    "loading": "Cargando..."
   },
   "units": {
     "milliseconds": "Milisegundos",
@@ -74,6 +76,14 @@
   },
   "feedback": {
     "errors": {
+      "unexpected": "Algo salió mal",
+      "label": "Error",
+      "unknown": "Error desconocido",
+      "details": "Detalles del error",
+      "stack": "Pila de errores",
+      "componentStack": "Pila de componentes",
+      "trafficUnavailable": "Datos de tráfico no disponibles",
+      "operationFailed": "La operación falló",
       "trafficStats": "Traffic Statistics Error",
       "trafficStatsDescription": "The traffic statistics component encountered an error and has been disabled to prevent crashes."
     },

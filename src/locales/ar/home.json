@@ -82,7 +82,9 @@
         "unknown": "Unknown"
       },
       "errors": {
-        "load": "فشل الحصول على معلومات الـ IP"
+        "load": "فشل الحصول على معلومات الـ IP",
+        "loadWithDetails": "تعذّر الحصول على معلومات IP: {{message}}",
+        "noServices": "لا توجد خدمات كشف IP متاحة"
       }
     },
     "currentProxy": {
@@ -96,6 +98,18 @@
         "group": "Group",
         "proxy": "Proxy",
         "noActiveNode": "No active proxy node"
+      },
+      "status": {
+        "testing": "جارٍ الاختبار",
+        "untested": "لم يُختبر",
+        "error": "خطأ",
+        "timeout": "انتهت المهلة",
+        "latencyHigh": "زمن استجابة مرتفع",
+        "latencyMedium": "زمن استجابة متوسط",
+        "latencyGood": "زمن استجابة جيد",
+        "latencyExcellent": "زمن استجابة ممتاز",
+        "uninitialized": "غير مُهيأ",
+        "noProxyNode": "لا توجد عقدة وكيل"
       }
     },
     "tests": {
@@ -114,7 +128,13 @@
       },
       "patterns": {
         "minutes": "{{time}} Minutes"
-      }
+      },
+      "unknownTime": "وقت غير معروف",
+      "chartStyles": {
+        "smooth": "ناعم",
+        "linear": "خطي"
+      },
+      "diagnostics": "النقاط: {{points}} | مضغوط: {{compressed}} | الإطارات/ث: {{fps}}"
     },
     "clashMode": {
       "errors": {

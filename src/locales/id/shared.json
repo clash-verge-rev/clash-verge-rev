@@ -23,7 +23,8 @@
     "closeAll": "Tutup Semua",
     "clear": "Bersihkan",
     "previous": "Previous",
-    "next": "Next"
+    "next": "Next",
+    "check": "Periksa"
   },
   "labels": {
     "updateAt": "Diperbarui Pada",
@@ -44,7 +45,8 @@
     "enabled": "Diaktifkan",
     "disabled": "Dinonaktifkan",
     "saving": "Saving...",
-    "empty": "Kosong"
+    "empty": "Kosong",
+    "loading": "Memuat..."
   },
   "units": {
     "milliseconds": "milidetik",
@@ -74,6 +76,14 @@
   },
   "feedback": {
     "errors": {
+      "unexpected": "Terjadi kesalahan",
+      "label": "Kesalahan",
+      "unknown": "Kesalahan tidak diketahui",
+      "details": "Detail kesalahan",
+      "stack": "Tumpukan kesalahan",
+      "componentStack": "Tumpukan komponen",
+      "trafficUnavailable": "Data lalu lintas tidak tersedia",
+      "operationFailed": "Operasi gagal",
       "trafficStats": "Traffic Statistics Error",
       "trafficStatsDescription": "The traffic statistics component encountered an error and has been disabled to prevent crashes."
     },

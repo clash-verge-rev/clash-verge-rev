@@ -3,8 +3,6 @@ import { useCallback } from 'react'
 import { installService, restartCore } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
 
-import { useSystemState } from './use-system-state'
-
 const executeWithErrorHandling = async (
   operation: () => Promise<void>,
   loadingKey: string,
@@ -23,8 +21,6 @@ const executeWithErrorHandling = async (
 }
 
 export const useServiceInstaller = () => {
-  const { mutateSystemState } = useSystemState()
-
   const installServiceAndRestartCore = useCallback(async () => {
     await executeWithErrorHandling(
       () => installService(),
@@ -37,8 +33,6 @@ export const useServiceInstaller = () => {
       'settings.statuses.clash.restarting',
       'settings.feedback.notifications.clash.restartSuccess',
     )
-
-    await mutateSystemState()
-  }, [mutateSystemState])
+  }, [])
   return { installServiceAndRestartCore }
 }

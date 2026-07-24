@@ -107,6 +107,12 @@ pnpm run prebuild
 pnpm dev
 ```
 
+`pnpm dev` preserves the Development Channel's installed service state: an
+existing service is used, while a previously uninstalled service remains
+uninstalled and the app starts in Sidecar mode. Use `pnpm dev:service` to
+explicitly install or update the isolated development service before launch,
+or `pnpm dev:sidecar` to force the unprivileged Sidecar workflow.
+
 ## Contributions
 
 Issue and PR welcome!

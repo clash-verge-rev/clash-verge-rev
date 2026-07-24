@@ -23,7 +23,8 @@
     "closeAll": "Барысын да ябу",
     "clear": "Чистарту",
     "previous": "Previous",
-    "next": "Next"
+    "next": "Next",
+    "check": "Тикшерү"
   },
   "labels": {
     "updateAt": "Яңартылган вакыт",
@@ -44,7 +45,8 @@
     "enabled": "Кушылган",
     "disabled": "Сүнгән",
     "saving": "Saving...",
-    "empty": "Буш"
+    "empty": "Буш",
+    "loading": "Йөкләнә..."
   },
   "units": {
     "milliseconds": "Миллисекундлар",
@@ -74,6 +76,14 @@
   },
   "feedback": {
     "errors": {
+      "unexpected": "Нәрсәдер дөрес булмады",
+      "label": "Хата",
+      "unknown": "Билгесез хата",
+      "details": "Хата тәфсилатлары",
+      "stack": "Хата стегы",
+      "componentStack": "Компонент стегы",
+      "trafficUnavailable": "Трафик мәгълүматы юк",
+      "operationFailed": "Операция башкарылмады",
       "trafficStats": "Traffic Statistics Error",
       "trafficStatsDescription": "The traffic statistics component encountered an error and has been disabled to prevent crashes."
     },

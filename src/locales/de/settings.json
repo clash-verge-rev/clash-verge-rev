@@ -5,6 +5,7 @@
       "telegram": "Telegram-Kanal",
       "github": "GitHub-Projektadresse"
     },
+    "actionsGroupLabel": "Einstellungslinks",
     "title": "Einstellungen"
   },
   "sections": {
@@ -284,7 +285,9 @@
       "messages": {
         "portInUse": "Port {{port}} is already in use",
         "saved": "Port settings saved",
-        "saveFailed": "Failed to save port settings"
+        "saveFailed": "Failed to save port settings",
+        "portTooLow": "Der Port muss mindestens 1000 sein",
+        "portTooHigh": "Der Port darf höchstens 65535 sein"
       }
     },
     "clashCore": {
@@ -429,7 +432,15 @@
         "update": "Aktualisieren"
       },
       "messages": {
-        "breakChangeError": "Dies ist eine wichtige Aktualisierung. Die In-App-Aktualisierung wird nicht unterstützt. Bitte deinstallieren Sie die Software und laden Sie die neue Version manuell herunter und installieren Sie sie."
+        "breakChangeError": "Dies ist eine wichtige Aktualisierung. Die In-App-Aktualisierung wird nicht unterstützt. Bitte deinstallieren Sie die Software und laden Sie die neue Version manuell herunter und installieren Sie sie.",
+        "available": "Eine neue Version ist verfügbar"
+      },
+      "alerts": {
+        "note": "Hinweis",
+        "tip": "Tipp",
+        "important": "Wichtig",
+        "warning": "Warnung",
+        "caution": "Achtung"
       }
     },
     "sysproxy": {
@@ -590,6 +601,11 @@
       "messages": {
         "supportedPlaceholders": "Unterstützt %host, %port, %secret",
         "placeholderInstruction": "Verwenden Sie %host, %port, %secret für Host, Port und Zugangsschlüssel"
+      },
+      "errors": {
+        "clashInfoUnavailable": "Verbindungsinformationen des Kerns sind nicht verfügbar",
+        "invalidServer": "Die Kern-Serveradresse „{{server}}“ ist ungültig",
+        "openFailed": "Web-UI konnte nicht geöffnet werden"
       }
     },
     "hotkey": {
@@ -617,6 +633,22 @@
     }
   },
   "feedback": {
+    "errors": {
+      "clash": {
+        "configUpdateFailed": "Kernkonfiguration konnte nicht aktualisiert werden",
+        "modeUpdateFailed": "Proxy-Modus konnte nicht geändert werden",
+        "restartFailed": "Kern konnte nicht neu gestartet werden",
+        "startFailed": "Kern konnte nicht gestartet werden",
+        "stopFailed": "Kern konnte nicht gestoppt werden"
+      },
+      "clashService": {
+        "installFailed": "Dienst konnte nicht installiert werden",
+        "uninstallFailed": "Dienst konnte nicht deinstalliert werden",
+        "reinstallFailed": "Dienst konnte nicht neu installiert werden",
+        "repairFailed": "Dienst konnte nicht repariert werden",
+        "sidecarFailed": "Fortsetzung mit Sidecar fehlgeschlagen"
+      }
+    },
     "notifications": {
       "clash": {
         "restartSuccess": "Clash-Kern wurde neu gestartet",

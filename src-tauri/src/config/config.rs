@@ -5,7 +5,7 @@ use crate::{
     core::{
         CoreManager,
         handle::{self, Handle},
-        service, tray,
+        tray,
         validate::CoreConfigValidator,
     },
     enhance,
@@ -18,8 +18,11 @@ use clash_verge_draft::Draft;
 use clash_verge_logging::{Type, logging, logging_error};
 use serde_yaml_ng::{Mapping, Value};
 use smartstring::alias::String;
-use std::{collections::HashSet, path::PathBuf};
-use tauri_plugin_clash_verge_sysinfo::is_current_app_handle_admin;
+use std::{
+    collections::HashSet,
+    path::PathBuf,
+    sync::atomic::{AtomicBool, Ordering},
+};
 use tokio::sync::OnceCell;
 use tokio::time::sleep;
 
@@ -29,6 +32,8 @@ pub struct Config {
     profiles_config: Draft<IProfiles>,
     runtime_config: Draft<IRuntime>,
 }
+
+static TUN_SESSION_SUPPRESSED: AtomicBool = AtomicBool::new(false);
 
 impl Config {
     pub async fn global() -> &'static Self {
@@ -73,23 +78,35 @@ impl Config {
         let verge = Self::verge().await.latest_arc();
         clash_verge_i18n::sync_locale(verge.language.as_deref());
 
-        // init Tun mode
-        let handle = Handle::app_handle();
-        let is_admin = is_current_app_handle_admin(handle);
-        let is_service_available = service::is_service_available().await.is_ok();
-        if !is_admin && !is_service_available {
-            let verge = Self::verge().await;
-            verge.edit_draft(|d| {
-                d.enable_tun_mode = Some(false);
-            });
-            verge.apply();
-            let _ = tray::Tray::global().update_menu().await;
+        Ok(())
+    }
 
-            // 分离数据获取和异步调用避免Send问题
-            let verge_data = Self::verge().await.latest_arc();
-            logging_error!(Type::Core, verge_data.save_file().await);
-        }
+    pub fn tun_suppressed_for_session() -> bool {
+        TUN_SESSION_SUPPRESSED.load(Ordering::Acquire)
+    }
 
+    pub(crate) async fn suppress_tun_for_session() {
+        TUN_SESSION_SUPPRESSED.store(true, Ordering::Release);
+        Handle::refresh_verge();
+        let _ = tray::Tray::global().update_menu().await;
+    }
+
+    pub(crate) async fn restore_tun_for_session() {
+        TUN_SESSION_SUPPRESSED.store(false, Ordering::Release);
+        Handle::refresh_verge();
+        let _ = tray::Tray::global().update_menu().await;
+    }
+
+    pub(crate) async fn disable_tun_and_persist() -> Result<()> {
+        TUN_SESSION_SUPPRESSED.store(false, Ordering::Release);
+        let verge = Self::verge().await;
+        verge.edit_draft(|draft| {
+            draft.enable_tun_mode = Some(false);
+        });
+        verge.apply();
+        verge.data_arc().save_file().await?;
+        Handle::refresh_verge();
+        let _ = tray::Tray::global().update_menu().await;
         Ok(())
     }
 

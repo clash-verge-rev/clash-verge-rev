@@ -82,7 +82,9 @@
         "unknown": "不明"
       },
       "errors": {
-        "load": "IP情報の取得に失敗しました"
+        "load": "IP情報の取得に失敗しました",
+        "loadWithDetails": "IP情報の取得に失敗しました: {{message}}",
+        "noServices": "利用可能なIP検出サービスがありません"
       }
     },
     "currentProxy": {
@@ -96,6 +98,18 @@
         "group": "プロキシグループ",
         "proxy": "ノード",
         "noActiveNode": "アクティブなプロキシノードがありません。"
+      },
+      "status": {
+        "testing": "テスト中",
+        "untested": "未テスト",
+        "error": "エラー",
+        "timeout": "タイムアウト",
+        "latencyHigh": "遅延が高い",
+        "latencyMedium": "遅延が中程度",
+        "latencyGood": "遅延が良好",
+        "latencyExcellent": "遅延が非常に良好",
+        "uninitialized": "未初期化",
+        "noProxyNode": "プロキシノードがありません"
       }
     },
     "tests": {
@@ -114,7 +128,13 @@
       },
       "patterns": {
         "minutes": "{{time}} Minutes"
-      }
+      },
+      "unknownTime": "不明な時刻",
+      "chartStyles": {
+        "smooth": "スムーズ",
+        "linear": "リニア"
+      },
+      "diagnostics": "データ点: {{points}} | 圧縮後: {{compressed}} | FPS: {{fps}}"
     },
     "clashMode": {
       "errors": {

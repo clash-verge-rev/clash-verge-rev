@@ -82,7 +82,9 @@
         "unknown": "Unbekannt"
       },
       "errors": {
-        "load": "IP-Informationen konnten nicht abgerufen werden"
+        "load": "IP-Informationen konnten nicht abgerufen werden",
+        "loadWithDetails": "IP-Informationen konnten nicht abgerufen werden: {{message}}",
+        "noServices": "Keine IP-Erkennungsdienste verfügbar"
       }
     },
     "currentProxy": {
@@ -96,6 +98,18 @@
         "group": "Proxy-Gruppe",
         "proxy": "Knoten",
         "noActiveNode": "Kein aktiver Proxy-Knoten"
+      },
+      "status": {
+        "testing": "Wird getestet",
+        "untested": "Nicht getestet",
+        "error": "Fehler",
+        "timeout": "Zeitüberschreitung",
+        "latencyHigh": "Hohe Latenz",
+        "latencyMedium": "Mittlere Latenz",
+        "latencyGood": "Gute Latenz",
+        "latencyExcellent": "Ausgezeichnete Latenz",
+        "uninitialized": "Nicht initialisiert",
+        "noProxyNode": "Kein Proxy-Knoten"
       }
     },
     "tests": {
@@ -114,7 +128,13 @@
       },
       "patterns": {
         "minutes": "{{time}} Minutes"
-      }
+      },
+      "unknownTime": "Unbekannte Zeit",
+      "chartStyles": {
+        "smooth": "Weich",
+        "linear": "Linear"
+      },
+      "diagnostics": "Punkte: {{points}} | Komprimiert: {{compressed}} | FPS: {{fps}}"
     },
     "clashMode": {
       "errors": {
