@@ -63,7 +63,7 @@ pub fn evaluate_install_location_with_roots(
         Err(error) => {
             return LaunchLocation::Rejected {
                 reason: LaunchRejectionReason::CanonicalizeBundleFailed {
-                    error: error.to_string().into(),
+                    error: error.to_string(),
                 },
             };
         }

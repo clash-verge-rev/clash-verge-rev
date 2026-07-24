@@ -131,7 +131,7 @@ mod windows_owner {
     pub(super) fn load_or_create_token(app_data_root: &Path, sid: &str) -> Result<String> {
         let token_path = app_data_root.join(OWNER_TOKEN_FILE_NAME);
         let descriptor = LocalSecurityDescriptor::from_sid(sid)?;
-        let mut attributes = SECURITY_ATTRIBUTES {
+        let attributes = SECURITY_ATTRIBUTES {
             nLength: std::mem::size_of::<SECURITY_ATTRIBUTES>() as u32,
             lpSecurityDescriptor: descriptor.0,
             bInheritHandle: 0,
@@ -142,7 +142,7 @@ mod windows_owner {
                 wide.as_ptr(),
                 GENERIC_READ | GENERIC_WRITE | READ_CONTROL | WRITE_DAC,
                 FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-                &mut attributes,
+                &attributes,
                 CREATE_NEW,
                 FILE_ATTRIBUTE_HIDDEN | FILE_FLAG_OPEN_REPARSE_POINT,
                 std::ptr::null_mut(),
@@ -217,7 +217,7 @@ mod windows_owner {
     }
 
     fn create_file(path: &Path, descriptor: &LocalSecurityDescriptor) -> Result<std::fs::File> {
-        let mut attributes = SECURITY_ATTRIBUTES {
+        let attributes = SECURITY_ATTRIBUTES {
             nLength: std::mem::size_of::<SECURITY_ATTRIBUTES>() as u32,
             lpSecurityDescriptor: descriptor.0,
             bInheritHandle: 0,
@@ -228,7 +228,7 @@ mod windows_owner {
                 wide.as_ptr(),
                 GENERIC_READ | GENERIC_WRITE | READ_CONTROL | WRITE_DAC,
                 FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
-                &mut attributes,
+                &attributes,
                 CREATE_NEW,
                 FILE_ATTRIBUTE_NORMAL | FILE_FLAG_OPEN_REPARSE_POINT,
                 std::ptr::null_mut(),

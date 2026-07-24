@@ -673,20 +673,25 @@ impl CoreManager {
         });
     }
 
-    /// 服务就绪后停止 sidecar,再以 service 重启内核
     #[cfg(target_os = "windows")]
-    async fn try_handoff_sidecar_to_service(&self) -> HandoffOutcome {
+    async fn refresh_service_readiness_for_handoff() -> bool {
         use crate::core::service;
 
         // 主动刷新服务状态,避免缓存状态阻止交接
         if !service::is_service_ipc_path_exists() {
-            return HandoffOutcome::NotReady;
+            return false;
         }
         if SERVICE_MANAGER.init().await.is_err() {
-            return HandoffOutcome::NotReady;
+            return false;
         }
         let _ = SERVICE_MANAGER.refresh().await;
-        if !matches!(SERVICE_MANAGER.current().await, ServiceStatus::Ready) {
+        matches!(SERVICE_MANAGER.current().await, ServiceStatus::Ready)
+    }
+
+    /// 服务就绪后停止 sidecar,再以 service 重启内核
+    #[cfg(target_os = "windows")]
+    async fn try_handoff_sidecar_to_service(&self) -> HandoffOutcome {
+        if !Self::refresh_service_readiness_for_handoff().await {
             return HandoffOutcome::NotReady;
         }
 

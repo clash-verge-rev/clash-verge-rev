@@ -1,3 +1,5 @@
+#[cfg(any(target_os = "macos", target_os = "windows"))]
+use crate::utils::dirs;
 use crate::{
     config::Config,
     core::{
@@ -5,7 +7,6 @@ use crate::{
         runtime_bundle::collect_runtime_bundle, tray::Tray,
     },
     process::AsyncHandler,
-    utils::dirs,
     utils::server,
 };
 use anyhow::{Context as _, Result, bail};
@@ -237,8 +238,8 @@ fn path_entry_exists_without_follow(path: &Path) -> std::io::Result<bool> {
 }
 
 #[cfg(target_os = "macos")]
-fn macos_service_install_marker_exists() -> std::io::Result<bool> {
-    let mut markers = vec![
+fn macos_service_install_markers() -> Vec<String> {
+    vec![
         format!(
             "/Library/LaunchDaemons/{}.plist",
             clash_verge_service_ipc::MACOS_SERVICE_ID
@@ -247,13 +248,16 @@ fn macos_service_install_marker_exists() -> std::io::Result<bool> {
             "/Library/PrivilegedHelperTools/{}.bundle",
             clash_verge_service_ipc::MACOS_SERVICE_ID
         ),
-    ];
-    #[cfg(not(feature = "verge-dev"))]
-    markers.extend([
+        #[cfg(not(feature = "verge-dev"))]
         "/Library/LaunchDaemons/io.github.clashverge.helper.plist".to_owned(),
+        #[cfg(not(feature = "verge-dev"))]
         "/Library/PrivilegedHelperTools/io.github.clashverge.helper".to_owned(),
-    ]);
-    for marker in markers {
+    ]
+}
+
+#[cfg(target_os = "macos")]
+fn macos_service_install_marker_exists() -> std::io::Result<bool> {
+    for marker in macos_service_install_markers() {
         if path_entry_exists_without_follow(Path::new(&marker))? {
             return Ok(true);
         }
@@ -596,7 +600,7 @@ fn packaged_service_tool_path(file_name: &str, packaged_path: impl FnOnce() -> R
         if !directory.is_absolute() {
             bail!("CLASH_VERGE_DEV_SERVICE_DIR must be an absolute path");
         }
-        return Ok(directory.join(file_name));
+        Ok(directory.join(file_name))
     }
 
     #[cfg(not(feature = "verge-dev"))]
@@ -1479,6 +1483,7 @@ impl ServiceManager {
         }
     }
 
+    #[cfg(target_os = "windows")]
     pub async fn init(&self) -> Result<()> {
         apply_service_version_result(self, probe_service_version_once().await, "service connection failed")
     }
@@ -1529,6 +1534,7 @@ impl ServiceManager {
             self.status_generation.fetch_add(1, Ordering::AcqRel);
             *status = ServiceStatus::InstallRequired;
         }
+        drop(status);
         Ok(())
     }
 
@@ -2291,7 +2297,11 @@ mod tests {
     #[cfg(target_os = "macos")]
     #[test]
     fn legacy_socket_alone_is_not_install_evidence() {
-        assert!(!super::MACOS_SERVICE_INSTALL_MARKERS.contains(&"/tmp/verge/clash-verge-service.sock"));
+        assert!(
+            !super::macos_service_install_markers()
+                .iter()
+                .any(|marker| marker == "/tmp/verge/clash-verge-service.sock")
+        );
         assert_eq!(
             classify_service_install_state(CurrentServiceProbe::Missing, false),
             ServiceInstallState::NotInstalled
