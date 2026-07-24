@@ -28,7 +28,20 @@
       "reinstall": "Reinstall service",
       "repair": "Repair service",
       "continueSidecar": "Continue with Sidecar",
-      "success": "The Clash Verge service was updated successfully"
+      "success": "The Clash Verge service was updated successfully",
+      "errors": {
+        "actionFailed": "فشلت عملية الخدمة",
+        "stateRefreshFailed": "تعذّر تحديث حالة الخدمة",
+        "restartFailed": "تعذّر إعادة تشغيل النواة",
+        "revalidationFailed": "تعذّر تحديث حالة التشغيل",
+        "sidecarFailed": "تعذّر المتابعة باستخدام Sidecar"
+      }
+    }
+  },
+  "feedback": {
+    "errors": {
+      "restartCoreStopFailed": "تعذّر إيقاف النواة بأمان، لذا أُلغيت إعادة التشغيل",
+      "quitCoreStopFailed": "تعذّر إيقاف النواة بأمان، لذا أُلغي الخروج"
     }
   }
 }

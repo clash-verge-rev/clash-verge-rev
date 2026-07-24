@@ -82,7 +82,9 @@
         "unknown": "Неизвестно"
       },
       "errors": {
-        "load": "Не удалось получить информацию об IP"
+        "load": "Не удалось получить информацию об IP",
+        "loadWithDetails": "Не удалось получить сведения об IP: {{message}}",
+        "noServices": "Нет доступных сервисов определения IP"
       }
     },
     "currentProxy": {
@@ -96,6 +98,18 @@
         "group": "Группа",
         "proxy": "Прокси",
         "noActiveNode": "Нет активного прокси"
+      },
+      "status": {
+        "testing": "Проверка",
+        "untested": "Не проверено",
+        "error": "Ошибка",
+        "timeout": "Тайм-аут",
+        "latencyHigh": "Высокая задержка",
+        "latencyMedium": "Средняя задержка",
+        "latencyGood": "Хорошая задержка",
+        "latencyExcellent": "Отличная задержка",
+        "uninitialized": "Не инициализировано",
+        "noProxyNode": "Нет прокси-узла"
       }
     },
     "tests": {
@@ -114,7 +128,13 @@
       },
       "patterns": {
         "minutes": "{{time}} мин"
-      }
+      },
+      "unknownTime": "Неизвестное время",
+      "chartStyles": {
+        "smooth": "Плавный",
+        "linear": "Линейный"
+      },
+      "diagnostics": "Точки: {{points}} | Сжато: {{compressed}} | Кадры/с: {{fps}}"
     },
     "clashMode": {
       "errors": {

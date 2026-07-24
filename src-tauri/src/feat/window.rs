@@ -128,10 +128,7 @@ pub async fn quit() -> clash_verge_signal::ShutdownOutcome {
 
     if should_abort_exit_after_cleanup(cleanup_result.core_stopped) {
         handle::Handle::global().clear_is_exiting();
-        handle::Handle::notice_message(
-            "set_config::error",
-            "Failed to stop the core safely; quit was cancelled",
-        );
+        handle::Handle::notice_message("app_quit::core_stop_failed", "");
         return clash_verge_signal::ShutdownOutcome::Canceled;
     }
 

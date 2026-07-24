@@ -28,7 +28,20 @@
       "reinstall": "Reinstall service",
       "repair": "Repair service",
       "continueSidecar": "Continue with Sidecar",
-      "success": "The Clash Verge service was updated successfully"
+      "success": "The Clash Verge service was updated successfully",
+      "errors": {
+        "actionFailed": "La operación del servicio falló",
+        "stateRefreshFailed": "No se pudo actualizar el estado del servicio",
+        "restartFailed": "No se pudo reiniciar el núcleo",
+        "revalidationFailed": "No se pudo actualizar el estado de ejecución",
+        "sidecarFailed": "No se pudo continuar con Sidecar"
+      }
+    }
+  },
+  "feedback": {
+    "errors": {
+      "restartCoreStopFailed": "No se pudo detener el núcleo de forma segura, por lo que se canceló el reinicio",
+      "quitCoreStopFailed": "No se pudo detener el núcleo de forma segura, por lo que se canceló la salida"
     }
   }
 }

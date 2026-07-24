@@ -28,7 +28,20 @@
       "reinstall": "Reinstall service",
       "repair": "Repair service",
       "continueSidecar": "Continue with Sidecar",
-      "success": "The Clash Verge service was updated successfully"
+      "success": "The Clash Verge service was updated successfully",
+      "errors": {
+        "actionFailed": "Хезмәт операциясе башкарылмады",
+        "stateRefreshFailed": "Хезмәт халәтен яңартып булмады",
+        "restartFailed": "Ядрону яңадан башлап булмады",
+        "revalidationFailed": "Эшләү халәтен яңартып булмады",
+        "sidecarFailed": "Sidecar белән дәвам итеп булмады"
+      }
+    }
+  },
+  "feedback": {
+    "errors": {
+      "restartCoreStopFailed": "Ядрону иминлек белән туктатып булмады, шуңа күрә яңадан башлау кире кагылды",
+      "quitCoreStopFailed": "Ядрону иминлек белән туктатып булмады, шуңа күрә чыгу кире кагылды"
     }
   }
 }

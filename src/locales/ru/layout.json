@@ -28,7 +28,20 @@
       "reinstall": "Reinstall service",
       "repair": "Repair service",
       "continueSidecar": "Continue with Sidecar",
-      "success": "The Clash Verge service was updated successfully"
+      "success": "The Clash Verge service was updated successfully",
+      "errors": {
+        "actionFailed": "Не удалось выполнить операцию со службой",
+        "stateRefreshFailed": "Не удалось обновить состояние службы",
+        "restartFailed": "Не удалось перезапустить ядро",
+        "revalidationFailed": "Не удалось обновить состояние выполнения",
+        "sidecarFailed": "Не удалось продолжить в режиме Sidecar"
+      }
+    }
+  },
+  "feedback": {
+    "errors": {
+      "restartCoreStopFailed": "Не удалось безопасно остановить ядро, поэтому перезапуск отменён",
+      "quitCoreStopFailed": "Не удалось безопасно остановить ядро, поэтому выход отменён"
     }
   }
 }

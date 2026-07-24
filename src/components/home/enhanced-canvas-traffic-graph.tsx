@@ -380,7 +380,7 @@ export const EnhancedCanvasTrafficGraph = memo(
           // 格式化时间戳
           const timeStr = dataPoint.timestamp
             ? formatTrafficName(dataPoint.timestamp)
-            : '未知时间'
+            : t('home.components.traffic.unknownTime')
 
           // 计算数据点对应的Y坐标位置（用于高亮）
           const { topValue: tvH, bottomValue: bvH } = yScale
@@ -420,7 +420,7 @@ export const EnhancedCanvasTrafficGraph = memo(
           })
         })
       },
-      [displayData, calculateY, yScale],
+      [displayData, calculateY, yScale, t],
     )
 
     // 鼠标离开处理
@@ -1205,7 +1205,11 @@ export const EnhancedCanvasTrafficGraph = memo(
               opacity: 0.7,
             }}
           >
-            {chartStyle === 'bezier' ? 'Smooth' : 'Linear'}
+            {t(
+              chartStyle === 'bezier'
+                ? 'home.components.traffic.chartStyles.smooth'
+                : 'home.components.traffic.chartStyles.linear',
+            )}
           </Box>
 
           {/* 数据统计指示器（左下角） */}
@@ -1220,8 +1224,11 @@ export const EnhancedCanvasTrafficGraph = memo(
               lineHeight: 1.2,
             }}
           >
-            Points: {displayData.length} | Compressed:{' '}
-            {samplerStats.compressedBufferSize} | FPS: {currentFPS}
+            {t('home.components.traffic.diagnostics', {
+              points: displayData.length,
+              compressed: samplerStats.compressedBufferSize,
+              fps: currentFPS,
+            })}
           </Box>
 
           {/* 悬浮提示框 */}

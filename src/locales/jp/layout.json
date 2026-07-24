@@ -28,7 +28,20 @@
       "reinstall": "Reinstall service",
       "repair": "Repair service",
       "continueSidecar": "Continue with Sidecar",
-      "success": "The Clash Verge service was updated successfully"
+      "success": "The Clash Verge service was updated successfully",
+      "errors": {
+        "actionFailed": "サービス操作に失敗しました",
+        "stateRefreshFailed": "サービス状態の更新に失敗しました",
+        "restartFailed": "コアの再起動に失敗しました",
+        "revalidationFailed": "実行状態の更新に失敗しました",
+        "sidecarFailed": "Sidecar での続行に失敗しました"
+      }
+    }
+  },
+  "feedback": {
+    "errors": {
+      "restartCoreStopFailed": "コアを安全に停止できなかったため、再起動をキャンセルしました",
+      "quitCoreStopFailed": "コアを安全に停止できなかったため、終了をキャンセルしました"
     }
   }
 }

@@ -28,7 +28,20 @@
       "reinstall": "Reinstall service",
       "repair": "Repair service",
       "continueSidecar": "Continue with Sidecar",
-      "success": "The Clash Verge service was updated successfully"
+      "success": "The Clash Verge service was updated successfully",
+      "errors": {
+        "actionFailed": "The service operation failed",
+        "stateRefreshFailed": "Failed to refresh the service state",
+        "restartFailed": "Failed to restart the core",
+        "revalidationFailed": "Failed to refresh the running state",
+        "sidecarFailed": "Failed to continue with Sidecar"
+      }
+    }
+  },
+  "feedback": {
+    "errors": {
+      "restartCoreStopFailed": "The core could not be stopped safely, so the restart was cancelled",
+      "quitCoreStopFailed": "The core could not be stopped safely, so quitting was cancelled"
     }
   }
 }

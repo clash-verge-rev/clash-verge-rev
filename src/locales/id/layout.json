@@ -28,7 +28,20 @@
       "reinstall": "Reinstall service",
       "repair": "Repair service",
       "continueSidecar": "Continue with Sidecar",
-      "success": "The Clash Verge service was updated successfully"
+      "success": "The Clash Verge service was updated successfully",
+      "errors": {
+        "actionFailed": "Operasi layanan gagal",
+        "stateRefreshFailed": "Gagal menyegarkan status layanan",
+        "restartFailed": "Gagal memulai ulang core",
+        "revalidationFailed": "Gagal menyegarkan status berjalan",
+        "sidecarFailed": "Gagal melanjutkan dengan Sidecar"
+      }
+    }
+  },
+  "feedback": {
+    "errors": {
+      "restartCoreStopFailed": "Core tidak dapat dihentikan dengan aman, sehingga mulai ulang dibatalkan",
+      "quitCoreStopFailed": "Core tidak dapat dihentikan dengan aman, sehingga keluar dibatalkan"
     }
   }
 }

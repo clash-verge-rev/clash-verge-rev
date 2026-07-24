@@ -63,6 +63,7 @@ interface GroupSelectMenuProps {
   groups: ProxyGroupOption[]
   selectedGroup: string | null
   emptyText: string
+  nodeCountLabel: (count: number) => string
   onClose: () => void
   onSelect: (groupName: string) => void
 }
@@ -162,6 +163,7 @@ function GroupSelectMenu({
   groups,
   selectedGroup,
   emptyText,
+  nodeCountLabel,
   onClose,
   onSelect,
 }: GroupSelectMenuProps) {
@@ -197,7 +199,7 @@ function GroupSelectMenu({
               {group.name}
             </Typography>
             <Typography variant="caption" color="text.secondary">
-              {group.type} · {group.members.length} 节点
+              {group.type} · {nodeCountLabel(group.members.length)}
             </Typography>
           </Box>
         </MenuItem>
@@ -521,7 +523,10 @@ export function ProxyGroupsChain(props: ProxyGroupsChainProps) {
         anchorEl={ruleMenuAnchor}
         groups={availableGroups}
         selectedGroup={activeSelectedGroup}
-        emptyText="暂无可用代理组"
+        emptyText={t('proxies.page.empty.noAvailableGroups')}
+        nodeCountLabel={(count) =>
+          t('proxies.page.labels.nodeCount', { count })
+        }
         onClose={handleGroupMenuClose}
         onSelect={handleGroupSelect}
       />

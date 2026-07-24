@@ -86,7 +86,10 @@ export const ServiceMigrationDialog = () => {
       }
       actionSucceeded = true
     } catch (error) {
-      showNotice.error(error)
+      showNotice.error(
+        'layout.components.serviceMigration.errors.actionFailed',
+        error,
+      )
     }
 
     let initialRefreshSucceeded = false
@@ -94,7 +97,10 @@ export const ServiceMigrationDialog = () => {
       await refreshInstallState()
       initialRefreshSucceeded = true
     } catch (error) {
-      showNotice.error(error)
+      showNotice.error(
+        'layout.components.serviceMigration.errors.stateRefreshFailed',
+        error,
+      )
     }
     if (!actionSucceeded || !initialRefreshSucceeded) {
       setLoading(false)
@@ -106,7 +112,10 @@ export const ServiceMigrationDialog = () => {
       await restartCore()
       restartSucceeded = true
     } catch (error) {
-      showNotice.error(error)
+      showNotice.error(
+        'layout.components.serviceMigration.errors.restartFailed',
+        error,
+      )
     }
 
     let finalRefreshSucceeded = false
@@ -114,14 +123,20 @@ export const ServiceMigrationDialog = () => {
       await refreshInstallState()
       finalRefreshSucceeded = true
     } catch (error) {
-      showNotice.error(error)
+      showNotice.error(
+        'layout.components.serviceMigration.errors.stateRefreshFailed',
+        error,
+      )
     }
     let revalidationSucceeded = false
     try {
       await refreshSystemAndRunning()
       revalidationSucceeded = true
     } catch (error) {
-      showNotice.error(error)
+      showNotice.error(
+        'layout.components.serviceMigration.errors.revalidationFailed',
+        error,
+      )
     }
     if (restartSucceeded && finalRefreshSucceeded && revalidationSucceeded) {
       setWorkflowIncomplete(false)
@@ -145,17 +160,26 @@ export const ServiceMigrationDialog = () => {
       await refreshInstallState()
       installRefreshSucceeded = true
     } catch (error) {
-      showNotice.error(error)
+      showNotice.error(
+        'layout.components.serviceMigration.errors.stateRefreshFailed',
+        error,
+      )
     }
     let revalidationSucceeded = false
     try {
       await refreshSystemAndRunning()
       revalidationSucceeded = true
     } catch (error) {
-      showNotice.error(error)
+      showNotice.error(
+        'layout.components.serviceMigration.errors.revalidationFailed',
+        error,
+      )
     }
     if (startupError) {
-      showNotice.error(startupError)
+      showNotice.error(
+        'layout.components.serviceMigration.errors.sidecarFailed',
+        startupError,
+      )
     } else if (installRefreshSucceeded && revalidationSucceeded) {
       setWorkflowIncomplete(false)
     }

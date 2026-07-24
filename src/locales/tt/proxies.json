@@ -25,7 +25,8 @@
     },
     "labels": {
       "proxyCount": "Proxy Count",
-      "delayCheckReset": "Беркетелгәнне гамәлдән чыгару өчен задержканы тикшерү"
+      "delayCheckReset": "Беркетелгәнне гамәлдән чыгару өчен задержканы тикшерү",
+      "nodeCount": "{{count}} төен"
     },
     "tooltips": {
       "locate": "Урын",
@@ -40,6 +41,10 @@
     },
     "placeholders": {
       "delayCheckUrl": "Задержканы тикшерү URL-ы"
+    },
+    "empty": {
+      "noAvailableGroups": "Кулланырлык прокси төркемнәре юк",
+      "noProxies": "Проксилар юк"
     },
     "chain": {
       "header": "Chain Proxy Config",

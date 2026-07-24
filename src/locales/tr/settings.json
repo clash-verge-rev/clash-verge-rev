@@ -5,6 +5,7 @@
       "telegram": "Telegram Kanalı",
       "github": "Github Repo"
     },
+    "actionsGroupLabel": "Ayar bağlantıları",
     "title": "Ayarlar"
   },
   "sections": {
@@ -284,7 +285,9 @@
       "messages": {
         "portInUse": "Port {{port}} is already in use",
         "saved": "Port settings saved",
-        "saveFailed": "Failed to save port settings"
+        "saveFailed": "Failed to save port settings",
+        "portTooLow": "Bağlantı noktası 1000 veya daha yüksek olmalıdır",
+        "portTooHigh": "Bağlantı noktası 65535 veya daha düşük olmalıdır"
       }
     },
     "clashCore": {
@@ -429,7 +432,15 @@
         "update": "Güncelle"
       },
       "messages": {
-        "breakChangeError": "Bu sürüm büyük bir güncellemedir ve uygulama içi güncellemeleri desteklemez. Lütfen kaldırın ve yeni sürümü manuel olarak indirip kurun"
+        "breakChangeError": "Bu sürüm büyük bir güncellemedir ve uygulama içi güncellemeleri desteklemez. Lütfen kaldırın ve yeni sürümü manuel olarak indirip kurun",
+        "available": "Yeni bir sürüm mevcut"
+      },
+      "alerts": {
+        "note": "Not",
+        "tip": "İpucu",
+        "important": "Önemli",
+        "warning": "Uyarı",
+        "caution": "Dikkat"
       }
     },
     "sysproxy": {
@@ -590,6 +601,11 @@
       "messages": {
         "supportedPlaceholders": "%host, %port, %secret destekler",
         "placeholderInstruction": "Ana bilgisayar, port, sırrı %host, %port, %secret ile değiştirin"
+      },
+      "errors": {
+        "clashInfoUnavailable": "Çekirdek bağlantı bilgisi kullanılamıyor",
+        "invalidServer": "Çekirdek sunucu adresi \"{{server}}\" geçersiz",
+        "openFailed": "Web UI açılamadı"
       }
     },
     "hotkey": {
@@ -617,6 +633,22 @@
     }
   },
   "feedback": {
+    "errors": {
+      "clash": {
+        "configUpdateFailed": "Çekirdek yapılandırması güncellenemedi",
+        "modeUpdateFailed": "Proxy modu değiştirilemedi",
+        "restartFailed": "Çekirdek yeniden başlatılamadı",
+        "startFailed": "Çekirdek başlatılamadı",
+        "stopFailed": "Çekirdek durdurulamadı"
+      },
+      "clashService": {
+        "installFailed": "Hizmet kurulamadı",
+        "uninstallFailed": "Hizmet kaldırılamadı",
+        "reinstallFailed": "Hizmet yeniden kurulamadı",
+        "repairFailed": "Hizmet onarılamadı",
+        "sidecarFailed": "Sidecar ile devam edilemedi"
+      }
+    },
     "notifications": {
       "clash": {
         "restartSuccess": "Clash Çekirdeği Yeniden Başlatıldı",
