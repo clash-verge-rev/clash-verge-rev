@@ -286,6 +286,8 @@
         "portInUse": "Port {{port}} is already in use",
         "saved": "Port settings saved",
         "saveFailed": "Failed to save port settings",
+        "automaticFallback": "ポート {{oldPort}} は使用中です。混合プロキシポートを {{newPort}} に切り替えて保存しました。",
+        "automaticFallbackFailed": "混合プロキシポートの自動切り替えに失敗しました: {{error}}",
         "portTooLow": "ポート番号は 1000 以上である必要があります",
         "portTooHigh": "ポート番号は 65535 以下である必要があります"
       }

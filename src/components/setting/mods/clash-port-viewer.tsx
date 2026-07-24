@@ -14,6 +14,7 @@ import { useTranslation } from 'react-i18next'
 
 import { BaseDialog, Switch } from '@/components/base'
 import { useClashInfo } from '@/hooks/use-clash'
+import { useDisplayedMixedPort } from '@/hooks/use-displayed-mixed-port'
 import { useVerge } from '@/hooks/use-verge'
 import { isPortInUse } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
@@ -31,14 +32,13 @@ const generateRandomPort = () =>
 
 export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
   const { t } = useTranslation()
-  const { clashInfo, patchInfo } = useClashInfo()
+  const { patchInfo } = useClashInfo()
   const { verge, patchVerge } = useVerge()
+  const displayedMixedPort = useDisplayedMixedPort()
   const [open, setOpen] = useState(false)
 
   // Mixed Port
-  const [mixedPort, setMixedPort] = useState(
-    verge?.verge_mixed_port ?? clashInfo?.mixed_port ?? 7897,
-  )
+  const [mixedPort, setMixedPort] = useState(displayedMixedPort)
 
   // 其他端口状态
   const [socksPort, setSocksPort] = useState(verge?.verge_socks_port ?? 7898)
@@ -82,7 +82,7 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
   useImperativeHandle(ref, () => ({
     open: () => {
       originalPortsRef.current = {
-        mixedPort: verge?.verge_mixed_port ?? clashInfo?.mixed_port ?? 7897,
+        mixedPort: displayedMixedPort,
         socksPort: verge?.verge_socks_port ?? 7898,
         socksEnabled: verge?.verge_socks_enabled ?? false,
         httpPort: verge?.verge_port ?? 7899,
@@ -167,9 +167,7 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
             setTproxyPort(original.tproxyPort)
             setTproxyEnabled(original.tproxyEnabled)
           } else {
-            setMixedPort(
-              verge?.verge_mixed_port ?? clashInfo?.mixed_port ?? 7897,
-            )
+            setMixedPort(displayedMixedPort)
             setSocksPort(verge?.verge_socks_port ?? 7898)
             setSocksEnabled(verge?.verge_socks_enabled ?? false)
             setHttpPort(verge?.verge_port ?? 7899)

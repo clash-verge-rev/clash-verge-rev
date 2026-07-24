@@ -5,6 +5,8 @@
 <details>
 <summary><strong> ✨ 新增功能 </strong></summary>
 
+- 新增混合代理端口冲突自动回退：启动时检测端口占用并持久化可用端口，同时统一首页、设置与系统代理中的生效端口显示
+
 </details>
 
 <details>

@@ -286,6 +286,8 @@
         "portInUse": "Port {{port}} is already in use",
         "saved": "Port settings saved",
         "saveFailed": "Failed to save port settings",
+        "automaticFallback": "Port {{oldPort}} was in use. The mixed proxy port was switched to {{newPort}} and saved.",
+        "automaticFallbackFailed": "Automatic mixed proxy port fallback failed: {{error}}",
         "portTooLow": "Порт 1000 дән ким булмаска тиеш",
         "portTooHigh": "Порт 65535 тән артмаска тиеш"
       }
