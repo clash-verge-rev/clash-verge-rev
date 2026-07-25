@@ -13,9 +13,8 @@ import { useTranslation } from 'react-i18next'
 
 import { BaseDialog, Switch } from '@/components/base'
 import { useDisplayedMixedPort } from '@/hooks/use-displayed-mixed-port'
-import { useClashInfo } from '@/hooks/use-clash'
 import { useDefaultVergeConfig, useVerge } from '@/hooks/use-verge'
-import { isPortInUse, saveProxyPorts } from '@/services/cmds'
+import { saveProxyPorts } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
 import getSystem from '@/utils/get-system'
 
@@ -33,8 +32,7 @@ const generateRandomPort = () =>
 
 export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
   const { t } = useTranslation()
-  const { clashInfo, patchInfo } = useClashInfo()
-  const { verge, patchVerge } = useVerge()
+  const { verge } = useVerge()
   const {
     verge_mixed_port: defaultVergeMixedPort,
     verge_socks_port: defaultVergeSocksPort,
