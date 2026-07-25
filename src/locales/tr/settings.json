@@ -286,6 +286,8 @@
         "portInUse": "Port {{port}} is already in use",
         "saved": "Port settings saved",
         "saveFailed": "Failed to save port settings",
+        "automaticFallback": "{{oldPort}} portu kullanımda. Karma proxy portu {{newPort}} olarak değiştirildi ve kaydedildi.",
+        "automaticFallbackFailed": "Karma proxy portu otomatik olarak değiştirilemedi: {{error}}",
         "portTooLow": "Bağlantı noktası 1000 veya daha yüksek olmalıdır",
         "portTooHigh": "Bağlantı noktası 65535 veya daha düşük olmalıdır"
       }

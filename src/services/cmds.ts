@@ -404,14 +404,6 @@ export const continueWithSidecar = async () => {
   return invoke<void>('continue_with_sidecar')
 }
 
-// 系统服务是否可用
-export const isServiceAvailable = async () => {
-  try {
-    return await invoke<boolean>('is_service_available')
-  } catch {
-    return false
-  }
-}
 export const entry_lightweight_mode = async () => {
   return invoke<void>('entry_lightweight_mode')
 }
@@ -429,11 +421,44 @@ export async function getNextUpdateTime(uid: string) {
   return invoke<number | null>('get_next_update_time', { uid })
 }
 
-export const isPortInUse = async (port: number) => {
-  try {
-    return await invoke<boolean>('is_port_in_use', { port })
-  } catch (error) {
-    console.error('检查端口使用状态失败:', error)
-    return false
-  }
+interface ToggleableProxyPort {
+  enabled: boolean
+  port: number
+}
+
+export interface ProxyPortSettings {
+  mixedPort: number
+  socks: ToggleableProxyPort
+  http: ToggleableProxyPort
+  redir: ToggleableProxyPort
+  tproxy: ToggleableProxyPort
+}
+
+export type ListenerTransport = 'tcp' | 'udp'
+
+export interface ListenerProbe {
+  address: string
+  transports: ListenerTransport[]
+}
+
+export type ListenerProbeOutcome =
+  | { status: 'available' }
+  | {
+      status: 'conflict'
+      port: number
+      transport: ListenerTransport
+    }
+  | { status: 'invalid'; message: string }
+  | { status: 'indeterminate'; message: string }
+
+export type SaveProxyPortsOutcome =
+  | { status: 'saved' }
+  | { status: 'conflict'; port: number; transport: ListenerTransport }
+
+export const probeListener = async (request: ListenerProbe) => {
+  return invoke<ListenerProbeOutcome>('probe_listener', { request })
+}
+
+export const saveProxyPorts = async (settings: ProxyPortSettings) => {
+  return invoke<SaveProxyPortsOutcome>('save_proxy_ports', { settings })
 }

@@ -286,6 +286,8 @@
         "portInUse": "Port {{port}} is already in use",
         "saved": "Port settings saved",
         "saveFailed": "Failed to save port settings",
+        "automaticFallback": "Port {{oldPort}} sedang digunakan. Port proxy campuran dialihkan ke {{newPort}} dan disimpan.",
+        "automaticFallbackFailed": "Pengalihan otomatis port proxy campuran gagal: {{error}}",
         "portTooLow": "Port harus 1000 atau lebih tinggi",
         "portTooHigh": "Port harus 65535 atau lebih rendah"
       }

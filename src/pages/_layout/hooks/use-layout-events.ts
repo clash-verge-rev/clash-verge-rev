@@ -45,6 +45,7 @@ export const useLayoutEvents = (
           'getProxyView',
           'getVersion',
           'getClashConfig',
+          'getClashInfo',
           'getClashMode',
           'getRuntimeConfig',
           'getRules',
@@ -60,7 +61,6 @@ export const useLayoutEvents = (
           'getSystemProxy',
           'getAutotemProxy',
           'getRunningMode',
-          'isServiceAvailable',
           'getSystemState',
         ])
       }),

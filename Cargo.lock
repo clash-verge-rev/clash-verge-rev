@@ -1124,6 +1124,7 @@ dependencies = [
  "serde_json",
  "serde_yaml_ng",
  "smartstring",
+ "socket2 0.6.4",
  "sysproxy",
  "tauri",
  "tauri-build",
@@ -1211,8 +1212,8 @@ dependencies = [
 
 [[package]]
 name = "clash_verge_service_ipc"
-version = "2.5.2"
-source = "git+https://github.com/clash-verge-rev/clash-verge-service-ipc.git?tag=v2.5.2#861865de99aa2a2fe8b359f5a2d550dfe5662005"
+version = "2.5.3"
+source = "git+https://github.com/clash-verge-rev/clash-verge-service-ipc.git?tag=v2.5.3#fd229aafae36b0bba547af56167b4ee26cc73a65"
 dependencies = [
  "anyhow",
  "compact_str",
