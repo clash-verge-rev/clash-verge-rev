@@ -17,10 +17,7 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 [features]
 default = ["custom-protocol"]
 custom-protocol = ["tauri/custom-protocol"]
-verge-dev = [
-  "clash_verge_logger/color",
-  "clash_verge_service_ipc/development-channel",
-]
+verge-dev = ["clash_verge_logger/color", "clash_verge_service_ipc/development-channel"]
 dev-sidecar = ["verge-dev"]
 tauri-dev = []
 tokio-trace = ["console-subscriber"]

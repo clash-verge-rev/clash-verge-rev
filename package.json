@@ -130,7 +130,7 @@
       "eslint --fix --max-warnings=0",
       "biome format --write"
     ],
-    "*.{css,scss,json,yaml,yml}": [
+    "*.{css,scss,json}": [
       "biome format --write"
     ]
   },
