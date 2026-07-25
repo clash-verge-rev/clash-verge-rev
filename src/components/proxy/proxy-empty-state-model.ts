@@ -29,7 +29,7 @@ interface ProxyEmptyStateInput {
 const isSubscriptionProfile = (item: { type?: string }): boolean =>
   item.type === 'remote' || item.type === 'local'
 
-export const hasRenderableProxyContent = (
+const hasRenderableProxyContent = (
   proxyView: ProxyViewV1 | undefined,
   mode: string,
   isChainMode: boolean,
