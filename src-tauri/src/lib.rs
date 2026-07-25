@@ -158,7 +158,6 @@ mod app_init {
             cmd::uninstall_service,
             cmd::reinstall_service,
             cmd::repair_service,
-            cmd::is_service_available,
             cmd::get_service_install_state,
             cmd::continue_with_sidecar,
             cmd::get_clash_info,

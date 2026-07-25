@@ -208,7 +208,7 @@ impl Tray {
         let verge = Config::verge().await.latest_arc();
         let system_proxy = verge.enable_system_proxy.as_ref().unwrap_or(&false);
         let tun_mode = verge.enable_tun_mode.as_ref().unwrap_or(&false);
-        let tun_mode_available = is_current_app_handle_admin(app_handle) || service::is_service_available().await;
+        let tun_mode_available = is_current_app_handle_admin(app_handle) || service::SERVICE_MANAGER.is_ready_cached();
         let mode = {
             Config::clash()
                 .await

@@ -404,14 +404,6 @@ export const continueWithSidecar = async () => {
   return invoke<void>('continue_with_sidecar')
 }
 
-// 系统服务是否可用
-export const isServiceAvailable = async () => {
-  try {
-    return await invoke<boolean>('is_service_available')
-  } catch {
-    return false
-  }
-}
 export const entry_lightweight_mode = async () => {
   return invoke<void>('entry_lightweight_mode')
 }

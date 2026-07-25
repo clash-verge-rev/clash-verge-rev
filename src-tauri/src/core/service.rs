@@ -114,10 +114,6 @@ const fn classify_service_install_state(current: CurrentServiceProbe, has_instal
     }
 }
 
-fn confirmed_service_available<E>(result: std::result::Result<bool, E>) -> bool {
-    matches!(result, Ok(true))
-}
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 struct ServiceVersionReply {
     code: u16,
@@ -166,10 +162,6 @@ fn classify_service_version_reply(reply: &ServiceVersionReply) -> ServiceVersion
 }
 
 async fn probe_service_version_once() -> Result<ServiceVersionReply> {
-    if !is_service_ipc_path_exists() {
-        bail!("service IPC path is not available");
-    }
-
     let response = clash_verge_service_ipc::get_version().await?;
     Ok(ServiceVersionReply {
         code: response.code,
@@ -312,21 +304,6 @@ fn trusted_service_evidence() -> Result<bool> {
 }
 
 async fn detect_service_install_state() -> ServiceInstallState {
-    let current = if is_service_ipc_path_exists() {
-        match probe_service_version_once().await {
-            Ok(reply) if classify_service_version_reply(&reply) == ServiceVersionCheck::Ready => {
-                CurrentServiceProbe::Ready
-            }
-            Ok(_) => CurrentServiceProbe::VersionMismatch,
-            Err(error) => {
-                logging!(warn, Type::Service, "current service IPC is unavailable: {error:#}");
-                CurrentServiceProbe::Unavailable
-            }
-        }
-    } else {
-        CurrentServiceProbe::Missing
-    };
-
     let markers = match trusted_service_evidence() {
         Ok(exists) => exists,
         Err(error) => {
@@ -338,6 +315,20 @@ async fn detect_service_install_state() -> ServiceInstallState {
             return ServiceInstallState::Unavailable;
         }
     };
+
+    if !markers {
+        return classify_service_install_state(CurrentServiceProbe::Missing, false);
+    }
+
+    let current = match probe_service_version_once().await {
+        Ok(reply) if classify_service_version_reply(&reply) == ServiceVersionCheck::Ready => CurrentServiceProbe::Ready,
+        Ok(_) => CurrentServiceProbe::VersionMismatch,
+        Err(error) => {
+            logging!(warn, Type::Service, "current service IPC is unavailable: {error:#}");
+            CurrentServiceProbe::Unavailable
+        }
+    };
+
     classify_service_install_state(current, markers)
 }
 
@@ -1405,73 +1396,11 @@ async fn recover_after_owner_loss_while_locked(reason: OwnerRecoveryReason) {
     }
 }
 
-async fn probe_service_availability() -> Result<bool> {
-    probe_service_availability_with(&SERVICE_MANAGER, true, probe_service_version_once).await
-}
-
-async fn probe_service_availability_with<F, Fut>(
-    manager: &ServiceManager,
-    require_cached_ready: bool,
-    probe: F,
-) -> Result<bool>
-where
-    F: FnOnce() -> Fut,
-    Fut: Future<Output = Result<ServiceVersionReply>>,
-{
-    let captured_generation = {
-        let status = manager.status.lock();
-        if manager.operation_running.load(Ordering::Acquire) {
-            return Ok(false);
-        }
-        if require_cached_ready && !matches!(*status, ServiceStatus::Ready) {
-            return Ok(false);
-        }
-        let generation = manager.status_generation.load(Ordering::Acquire);
-        drop(status);
-        generation
-    };
-
-    let result = probe().await;
-    let mut status = manager.status.lock();
-    if manager.operation_running.load(Ordering::Acquire)
-        || manager.status_generation.load(Ordering::Acquire) != captured_generation
-    {
-        return Ok(false);
-    }
-
-    manager.status_generation.fetch_add(1, Ordering::AcqRel);
-    match result {
-        Ok(reply) => match classify_service_version_reply(&reply) {
-            ServiceVersionCheck::Ready => {
-                *status = ServiceStatus::Ready;
-                Ok(true)
-            }
-            ServiceVersionCheck::NeedsReinstall(error) => {
-                *status = ServiceStatus::NeedsReinstall;
-                Err(anyhow::anyhow!(error))
-            }
-        },
-        Err(error) => {
-            *status = ServiceStatus::Unavailable(format!("service availability probe failed: {error:#}"));
-            Err(error).context("service availability probe failed")
-        }
-    }
-}
-
-/// Returns true only when the service probe explicitly confirms availability.
-pub async fn is_service_available() -> bool {
-    confirmed_service_available(probe_service_availability().await)
-}
-
 async fn wait_for_service_ipc(manager: &ServiceManager) -> Result<()> {
     let config = ServiceManager::config();
     let result = poll_service_version(config.max_retries, config.retry_delay, probe_service_version_once).await;
 
     apply_service_version_result(manager, result, "service IPC did not become available")
-}
-
-pub fn is_service_ipc_path_exists() -> bool {
-    Path::new(clash_verge_service_ipc::IPC_PATH).exists()
 }
 
 impl ServiceManager {
@@ -1484,8 +1413,17 @@ impl ServiceManager {
     }
 
     #[cfg(target_os = "windows")]
-    pub async fn init(&self) -> Result<()> {
-        apply_service_version_result(self, probe_service_version_once().await, "service connection failed")
+    pub async fn confirm_ready(&self) -> Result<()> {
+        let reply = probe_service_version_once()
+            .await
+            .context("service readiness probe failed")?;
+        apply_service_version_reply(self, &reply)
+    }
+
+    /// Returns the latest confirmed readiness without performing IPC.
+    pub fn is_ready_cached(&self) -> bool {
+        let status = self.status.lock();
+        !self.operation_running.load(Ordering::Acquire) && matches!(*status, ServiceStatus::Ready)
     }
 
     pub async fn current(&self) -> ServiceStatus {
@@ -1702,10 +1640,9 @@ mod tests {
         CurrentServiceProbe, OwnerRecoveryReason, PrivilegedServiceAction, ServiceInstallState, ServiceStatus,
         ServiceVersionCheck, ServiceVersionReply, apply_service_version_result, capture_generation_before,
         claim_owner_recovery_generation, classify_service_install_state, classify_service_version_reply,
-        confirmed_service_available, generate_service_session_token, macos_install_shell,
-        mark_service_unavailable_after_owner_loss, owner_recovery_policy, owner_status_recovery_reason,
-        poll_service_version, privileged_service_action, probe_service_availability_with, service_core_path_for,
-        session_matches_status, transport_failure_recovery_reason,
+        generate_service_session_token, macos_install_shell, mark_service_unavailable_after_owner_loss,
+        owner_recovery_policy, owner_status_recovery_reason, poll_service_version, privileged_service_action,
+        service_core_path_for, session_matches_status, transport_failure_recovery_reason,
     };
     #[cfg(unix)]
     use super::{service_core_path_for_with_publisher, service_tool_path_for};
@@ -2129,8 +2066,8 @@ mod tests {
         assert_eq!(classify_service_version_reply(&reply), ServiceVersionCheck::Ready);
     }
 
-    #[tokio::test]
-    async fn stale_availability_probe_cannot_overwrite_a_newer_terminal_status() {
+    #[test]
+    fn cached_readiness_reflects_confirmed_state_without_mutating_it() {
         let manager = super::ServiceManager {
             status: parking_lot::Mutex::new(ServiceStatus::Ready),
             status_generation: AtomicU64::new(0),
@@ -2138,44 +2075,28 @@ mod tests {
             operation_done: tokio::sync::Notify::new(),
         };
 
-        let available = probe_service_availability_with(&manager, false, || async {
-            manager.set_status(ServiceStatus::NotInstalled);
-            Ok(ServiceVersionReply {
-                code: 0,
-                message: String::new(),
-                protocol: Some(current_protocol()),
-            })
-        })
-        .await;
+        assert!(manager.is_ready_cached());
+        assert_eq!(*manager.status.lock(), ServiceStatus::Ready);
+        assert_eq!(manager.status_generation.load(Ordering::Acquire), 0);
 
-        assert!(matches!(available, Ok(false)));
+        manager.set_status(ServiceStatus::NotInstalled);
+        assert!(!manager.is_ready_cached());
         assert_eq!(*manager.status.lock(), ServiceStatus::NotInstalled);
+        assert_eq!(manager.status_generation.load(Ordering::Acquire), 1);
     }
 
-    #[tokio::test]
-    async fn cached_non_ready_availability_gate_and_generation_are_captured_together() {
+    #[test]
+    fn cached_readiness_is_false_while_a_service_operation_is_running() {
         let manager = super::ServiceManager {
-            status: parking_lot::Mutex::new(ServiceStatus::NotInstalled),
-            status_generation: AtomicU64::new(4),
-            operation_running: AtomicBool::new(false),
+            status: parking_lot::Mutex::new(ServiceStatus::Ready),
+            status_generation: AtomicU64::new(0),
+            operation_running: AtomicBool::new(true),
             operation_done: tokio::sync::Notify::new(),
         };
-        let probed = AtomicBool::new(false);
 
-        let available = probe_service_availability_with(&manager, true, || async {
-            probed.store(true, Ordering::Release);
-            Ok(ServiceVersionReply {
-                code: 0,
-                message: String::new(),
-                protocol: Some(current_protocol()),
-            })
-        })
-        .await;
-
-        assert!(matches!(available, Ok(false)));
-        assert!(!probed.load(Ordering::Acquire));
-        assert_eq!(*manager.status.lock(), ServiceStatus::NotInstalled);
-        assert_eq!(manager.status_generation.load(Ordering::Acquire), 4);
+        assert!(!manager.is_ready_cached());
+        assert_eq!(*manager.status.lock(), ServiceStatus::Ready);
+        assert_eq!(manager.status_generation.load(Ordering::Acquire), 0);
     }
 
     #[tokio::test]
@@ -2228,8 +2149,8 @@ mod tests {
         );
     }
 
-    #[tokio::test]
-    async fn only_transport_owner_loss_marks_service_unavailable_and_blocks_stale_probe() {
+    #[test]
+    fn only_transport_owner_loss_marks_cached_readiness_unavailable() {
         for reason in [OwnerRecoveryReason::Displaced, OwnerRecoveryReason::SameOwnerFailure] {
             let manager = super::ServiceManager {
                 status: parking_lot::Mutex::new(ServiceStatus::Ready),
@@ -2238,6 +2159,7 @@ mod tests {
                 operation_done: tokio::sync::Notify::new(),
             };
             mark_service_unavailable_after_owner_loss(&manager, reason);
+            assert!(manager.is_ready_cached());
             assert_eq!(*manager.status.lock(), ServiceStatus::Ready);
             assert_eq!(manager.status_generation.load(Ordering::Acquire), 0);
         }
@@ -2248,17 +2170,9 @@ mod tests {
             operation_running: AtomicBool::new(false),
             operation_done: tokio::sync::Notify::new(),
         };
-        let available = probe_service_availability_with(&manager, false, || async {
-            mark_service_unavailable_after_owner_loss(&manager, OwnerRecoveryReason::TransportFailure);
-            Ok(ServiceVersionReply {
-                code: 0,
-                message: String::new(),
-                protocol: Some(current_protocol()),
-            })
-        })
-        .await;
 
-        assert!(matches!(available, Ok(false)));
+        mark_service_unavailable_after_owner_loss(&manager, OwnerRecoveryReason::TransportFailure);
+        assert!(!manager.is_ready_cached());
         let status = manager.status.lock().clone();
         assert!(matches!(
             status,
@@ -2306,13 +2220,6 @@ mod tests {
             classify_service_install_state(CurrentServiceProbe::Missing, false),
             ServiceInstallState::NotInstalled
         );
-    }
-
-    #[test]
-    fn only_confirmed_true_service_probe_is_available() {
-        assert!(confirmed_service_available(Ok::<bool, &str>(true)));
-        assert!(!confirmed_service_available(Ok::<bool, &str>(false)));
-        assert!(!confirmed_service_available(Err::<bool, &str>("offline")));
     }
 
     #[test]

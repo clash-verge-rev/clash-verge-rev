@@ -43,11 +43,6 @@ pub async fn repair_service() -> CmdResult {
 }
 
 #[tauri::command]
-pub async fn is_service_available() -> CmdResult<bool> {
-    Ok(service::is_service_available().await)
-}
-
-#[tauri::command]
 pub async fn get_service_install_state() -> CmdResult<service::ServiceInstallState> {
     Ok(SERVICE_MANAGER.install_state().await)
 }

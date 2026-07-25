@@ -61,7 +61,6 @@ export const useLayoutEvents = (
           'getSystemProxy',
           'getAutotemProxy',
           'getRunningMode',
-          'isServiceAvailable',
           'getSystemState',
         ])
       }),

@@ -179,7 +179,7 @@ impl Logger {
         *self.sidecar_file_writer.write() = Some(sidecar_writer);
 
         // update service writer config
-        if service::is_service_available().await {
+        if service::SERVICE_MANAGER.is_ready_cached() {
             service::update_writer_by_service(&clash_verge_service_ipc::WriterConfig {
                 directory: String::new(),
                 max_log_size: log_max_size * 1024,
