@@ -44,7 +44,28 @@
     },
     "empty": {
       "noAvailableGroups": "Tidak ada grup proxy yang tersedia",
-      "noProxies": "Tidak ada proxy"
+      "noProxies": "Tidak ada proxy",
+      "noSubscriptions": {
+        "title": "Belum ada langganan yang diimpor",
+        "description": "Tidak ada yang dapat ditampilkan di halaman Proksi. Buka halaman Profil untuk mengimpor dan mengaktifkan langganan."
+      },
+      "inactiveSubscription": {
+        "title": "Tidak ada langganan aktif",
+        "description": "Langganan ditemukan, tetapi tidak ada yang sedang aktif. Buka halaman Profil, lalu pilih dan aktifkan langganan."
+      },
+      "coreUnavailable": {
+        "title": "Inti sementara tidak tersedia",
+        "description": "Informasi proksi tidak dapat diambil dari inti. Coba mulai ulang inti. Jika masalah berlanjut, buka folder log dan periksa log inti."
+      },
+      "noProxyInfo": {
+        "title": "Informasi proksi tidak tersedia",
+        "description": "Tidak ada grup atau node proksi yang dapat ditampilkan. Pastikan langganan aktif berisi grup dan node yang valid, atau mulai ulang inti dan periksa log."
+      },
+      "actions": {
+        "openProfiles": "Buka Profil",
+        "restartCore": "Mulai Ulang Inti",
+        "openLogs": "Buka Folder Log"
+      }
     },
     "chain": {
       "header": "Chain Proxy Config",

@@ -44,7 +44,28 @@
     },
     "empty": {
       "noAvailableGroups": "Kullanılabilir proxy grubu yok",
-      "noProxies": "Proxy yok"
+      "noProxies": "Proxy yok",
+      "noSubscriptions": {
+        "title": "İçe aktarılmış abonelik yok",
+        "description": "Proxy sayfasında görüntülenecek içerik yok. Bir aboneliği içe aktarmak ve etkinleştirmek için Profiller sayfasına gidin."
+      },
+      "inactiveSubscription": {
+        "title": "Etkin abonelik yok",
+        "description": "Abonelikler bulundu ancak hiçbiri şu anda etkin değil. Profiller sayfasına gidip bir abonelik seçin ve etkinleştirin."
+      },
+      "coreUnavailable": {
+        "title": "Çekirdek geçici olarak kullanılamıyor",
+        "description": "Proxy bilgileri çekirdekten alınamadı. Çekirdeği yeniden başlatmayı deneyin. Sorun devam ederse günlükler klasörünü açıp çekirdek günlüklerini kontrol edin."
+      },
+      "noProxyInfo": {
+        "title": "Proxy bilgisi yok",
+        "description": "Görüntülenecek proxy grubu veya düğümü yok. Etkin aboneliğin geçerli proxy grupları ve düğümleri içerdiğini doğrulayın ya da çekirdeği yeniden başlatıp günlükleri inceleyin."
+      },
+      "actions": {
+        "openProfiles": "Profillere Git",
+        "restartCore": "Çekirdeği Yeniden Başlat",
+        "openLogs": "Günlükler Klasörünü Aç"
+      }
     },
     "chain": {
       "header": "Chain Proxy Config",
