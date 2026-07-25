@@ -286,6 +286,8 @@
         "portInUse": "Port {{port}} is already in use",
         "saved": "포트 설정이 저장되었습니다",
         "saveFailed": "포트 설정 저장에 실패했습니다",
+        "automaticFallback": "포트 {{oldPort}}이(가) 사용 중입니다. 혼합 프록시 포트를 {{newPort}}(으)로 전환하고 저장했습니다.",
+        "automaticFallbackFailed": "혼합 프록시 포트 자동 전환에 실패했습니다: {{error}}",
         "portTooLow": "포트는 1000 이상이어야 합니다",
         "portTooHigh": "포트는 65535 이하여야 합니다"
       }

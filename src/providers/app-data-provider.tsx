@@ -6,6 +6,7 @@ import {
   getRules,
 } from 'tauri-plugin-mihomo-api'
 
+import { useClashInfo, useRuntimeConfig } from '@/hooks/use-clash'
 import { useVerge } from '@/hooks/use-verge'
 import {
   getAppUptime,
@@ -14,6 +15,7 @@ import {
   getSystemProxy,
 } from '@/services/cmds'
 import { revalidateQueries, useQuery } from '@/services/query-client'
+import { resolveDisplayedMixedPort } from '@/utils/mixed-port'
 
 import {
   ClashConfigContext,
@@ -53,6 +55,8 @@ export const AppDataProvider = ({
   children: React.ReactNode
 }) => {
   const { verge } = useVerge()
+  const { data: runtimeConfig } = useRuntimeConfig()
+  const { clashInfo } = useClashInfo()
 
   const {
     data: proxyView,
@@ -233,17 +237,22 @@ export const AppDataProvider = ({
   )
 
   const systemValue = useMemo(() => {
+    const displayedMixedPort = resolveDisplayedMixedPort({
+      live: clashConfig?.mixedPort,
+      runtime: runtimeConfig?.['mixed-port'],
+      selected: verge?.verge_mixed_port,
+      merge: clashInfo?.mixed_port,
+    })
+
     const calculateSystemProxyAddress = () => {
-      if (!verge || !clashConfig) return '-'
+      if (!verge) return '-'
 
       const isPacMode = verge.proxy_auto_config ?? false
 
       if (isPacMode) {
         // PAC模式：显示我们期望设置的代理地址
         const proxyHost = verge.proxy_host || '127.0.0.1'
-        const proxyPort =
-          verge.verge_mixed_port || clashConfig.mixedPort || 7897
-        return `${proxyHost}:${proxyPort}`
+        return `${proxyHost}:${displayedMixedPort}`
       } else {
         // HTTP代理模式：优先使用系统地址，但如果格式不正确则使用期望地址
         const systemServer = sysproxy?.server
@@ -256,9 +265,7 @@ export const AppDataProvider = ({
         } else {
           // 系统地址无效，返回期望的代理地址
           const proxyHost = verge.proxy_host || '127.0.0.1'
-          const proxyPort =
-            verge.verge_mixed_port || clashConfig.mixedPort || 7897
-          return `${proxyHost}:${proxyPort}`
+          return `${proxyHost}:${displayedMixedPort}`
         }
       }
     }
@@ -268,7 +275,7 @@ export const AppDataProvider = ({
       runningMode,
       systemProxyAddress: calculateSystemProxyAddress(),
     }
-  }, [sysproxy, runningMode, verge, clashConfig])
+  }, [sysproxy, runningMode, verge, clashConfig, runtimeConfig, clashInfo])
 
   const uptimeValue = useMemo(() => ({ uptime: uptimeData || 0 }), [uptimeData])
 
