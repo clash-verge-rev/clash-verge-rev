@@ -536,6 +536,8 @@ export const translationKeys = [
   'settings.modals.clashPort.messages.portInUse',
   'settings.modals.clashPort.messages.saved',
   'settings.modals.clashPort.messages.saveFailed',
+  'settings.modals.clashPort.messages.automaticFallback',
+  'settings.modals.clashPort.messages.automaticFallbackFailed',
   'settings.modals.clashPort.messages.portTooLow',
   'settings.modals.clashPort.messages.portTooHigh',
   'settings.modals.clashCore.variants.release',

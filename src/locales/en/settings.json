@@ -286,6 +286,8 @@
         "portInUse": "Port {{port}} is already in use",
         "saved": "Port settings saved",
         "saveFailed": "Failed to save port settings",
+        "automaticFallback": "Port {{oldPort}} was in use. The mixed proxy port was switched to {{newPort}} and saved.",
+        "automaticFallbackFailed": "Automatic mixed proxy port fallback failed: {{error}}",
         "portTooLow": "The port must be 1000 or higher",
         "portTooHigh": "The port must be 65535 or lower"
       }

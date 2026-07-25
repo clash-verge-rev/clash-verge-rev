@@ -893,6 +893,8 @@ export interface TranslationResources {
             tproxy: string
           }
           messages: {
+            automaticFallback: string
+            automaticFallbackFailed: string
             portInUse: string
             portTooHigh: string
             portTooLow: string

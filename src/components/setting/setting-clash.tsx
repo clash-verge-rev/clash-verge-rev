@@ -9,6 +9,7 @@ import { updateGeo, type LogLevel } from 'tauri-plugin-mihomo-api'
 import { DialogRef, Switch, TooltipIcon } from '@/components/base'
 import { useClash, useDefaultClashConfig } from '@/hooks/use-clash'
 import { useClashLog } from '@/hooks/use-clash-log'
+import { useDisplayedMixedPort } from '@/hooks/use-displayed-mixed-port'
 import { useDefaultVergeConfig, useVerge } from '@/hooks/use-verge'
 import { invoke_uwp_tool } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
@@ -36,6 +37,7 @@ const SettingClash = ({ onError }: Props) => {
 
   const { clash, version, mutateClash, patchClash } = useClash()
   const { verge, patchVerge } = useVerge()
+  const displayedMixedPort = useDisplayedMixedPort()
   const [, setClashLog] = useClashLog()
   const {
     ipv6: defaultIpv6,
@@ -272,7 +274,7 @@ const SettingClash = ({ onError }: Props) => {
           autoComplete="new-password"
           disabled={false}
           size="small"
-          value={verge_mixed_port ?? 7897}
+          value={displayedMixedPort}
           sx={{ width: 100, input: { py: '7.5px', cursor: 'pointer' } }}
           onClick={(e) => {
             portRef.current?.open()
