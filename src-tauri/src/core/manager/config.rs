@@ -11,10 +11,66 @@ use crate::{
 use anyhow::{Result, anyhow};
 use clash_verge_draft::DraftTransaction;
 use clash_verge_logging::{Type, logging};
+use clash_verge_service_ipc::StageRuntimeOutcome;
 use scopeguard::defer;
 use smartstring::alias::String;
 use std::{collections::HashSet, path::PathBuf, time::Instant};
 use tauri_plugin_mihomo::Error as MihomoError;
+
+/// What came back from asking the Service to stage a runtime.
+///
+/// Separated from the decision below so the decision stays a pure function of it: the three
+/// variants are the three ways an attempt can end, and only one of them can lead anywhere other
+/// than replacing the Core.
+#[derive(Debug, PartialEq, Eq)]
+enum StageAttempt {
+    /// The Service that owns the running Core predates staging.
+    Unsupported,
+    /// The request did not come back. The Service is authoritative about its own runtime, so
+    /// without an answer nothing may be assumed about what it did or did not write.
+    Unanswered(String),
+    Answered(StageRuntimeOutcome),
+}
+
+/// How the Core should be made to pick up a configuration.
+#[derive(Debug, PartialEq, Eq)]
+enum ConfigApplication {
+    /// Point the running Core at this path.
+    ReloadFrom(String),
+    /// Stop the Core and start it again from a freshly materialised runtime.
+    ReplaceCore,
+}
+
+/// Decide how to apply a configuration, given how staging went.
+///
+/// Only one branch avoids replacing the Core, and it is the one where the Service said in so many
+/// words that the runtime now matches. Everything else — an older Service, a refusal, a request
+/// that never came back — replaces the Core, which is what this did before staging existed and
+/// what the Service guarantees is still safe after every way of declining.
+fn plan_config_application(attempt: &StageAttempt) -> ConfigApplication {
+    match attempt {
+        StageAttempt::Answered(StageRuntimeOutcome::Staged { config_path }) => {
+            ConfigApplication::ReloadFrom(config_path.into())
+        }
+        StageAttempt::Answered(StageRuntimeOutcome::RestartRequired { reason }) => {
+            logging!(
+                info,
+                Type::Core,
+                "Service declined to stage the runtime ({reason:?}); replacing the core instead"
+            );
+            ConfigApplication::ReplaceCore
+        }
+        StageAttempt::Unanswered(error) => {
+            logging!(
+                warn,
+                Type::Core,
+                "Failed to stage the service runtime, replacing the core instead: {error}"
+            );
+            ConfigApplication::ReplaceCore
+        }
+        StageAttempt::Unsupported => ConfigApplication::ReplaceCore,
+    }
+}
 
 impl CoreManager {
     pub async fn use_default_config(&self, error_key: &str, error_msg: &str) -> Result<()> {
@@ -142,18 +198,64 @@ impl CoreManager {
     ///
     /// Says nothing about drafts: whether the staged Runtime Config is kept follows from
     /// whether this succeeded, and the caller's transaction decides that.
+    ///
+    /// Both modes have the same shape — put the configuration where the Core can read it, ask the
+    /// Core to reload, restart it if that did not work. Only the first step differs: in Sidecar
+    /// mode the Core already reads the app's own directory, while in Service mode the Service has
+    /// to materialise the configuration into the directory it started the Core in.
     async fn apply_config(&self, path: PathBuf) -> Result<()> {
         if matches!(*self.get_running_mode(), RunningMode::Service) {
             let _lifecycle = self.lifecycle_lock.lock().await;
             if !matches!(*self.get_running_mode(), RunningMode::Service) {
                 return Err(anyhow!("core mode changed while applying service configuration"));
             }
-            self.replace_service_core_with_config(&path).await?;
-            logging!(info, Type::Core, "Configuration materialized and applied by service");
-            return Ok(());
+            return self.apply_config_by_service(&path).await;
         }
 
         let path = dirs::path_to_str(&path)?;
+        self.reload_or_restart(path).await
+    }
+
+    /// Apply a configuration in Service mode, staging it in place when that is possible.
+    ///
+    /// Every way of not staging leads to the same place it always led: stop the Core and start it
+    /// again from a freshly materialised runtime. That is what makes declining safe — the Service
+    /// leaves the runtime it could not stage exactly as the running Core left it.
+    ///
+    /// Caller must hold `lifecycle_lock`.
+    async fn apply_config_by_service(&self, path: &std::path::Path) -> Result<()> {
+        if let ConfigApplication::ReloadFrom(staged) = plan_config_application(&self.attempt_staging(path).await) {
+            match self.reload_config(&staged).await {
+                Ok(()) => {
+                    logging!(info, Type::Core, "Configuration staged and applied by service");
+                    return Ok(());
+                }
+                Err(err) => logging!(
+                    warn,
+                    Type::Core,
+                    "Failed to reload the staged service runtime, replacing the core instead: {err}"
+                ),
+            }
+        }
+
+        self.replace_service_core_with_config(path).await?;
+        logging!(info, Type::Core, "Configuration materialized and applied by service");
+        Ok(())
+    }
+
+    /// Ask the Service to stage the runtime, reporting the attempt rather than judging it.
+    async fn attempt_staging(&self, path: &std::path::Path) -> StageAttempt {
+        if !crate::core::service::active_service_supports_runtime_staging() {
+            return StageAttempt::Unsupported;
+        }
+        match crate::core::service::stage_runtime_by_service(path).await {
+            Ok(outcome) => StageAttempt::Answered(outcome),
+            Err(err) => StageAttempt::Unanswered(format!("{err:#}").into()),
+        }
+    }
+
+    /// Reload the Core from `path`, and replace the Core if it will not take it.
+    async fn reload_or_restart(&self, path: &str) -> Result<()> {
         let Err(err) = self.reload_config(path).await else {
             logging!(info, Type::Core, "Configuration applied");
             return Ok(());
@@ -178,5 +280,62 @@ impl CoreManager {
 
     async fn reload_config(&self, path: &str) -> Result<(), MihomoError> {
         handle::Handle::mihomo().await.reload_config(true, path).await
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{ConfigApplication, StageAttempt, plan_config_application};
+    use clash_verge_service_ipc::{StageRejection, StageRuntimeOutcome};
+
+    #[test]
+    fn a_staged_runtime_is_reloaded_from_where_the_service_put_it() {
+        let attempt = StageAttempt::Answered(StageRuntimeOutcome::Staged {
+            config_path: "/service/runtime.generation-1/config.yaml".to_owned(),
+        });
+
+        assert_eq!(
+            plan_config_application(&attempt),
+            ConfigApplication::ReloadFrom("/service/runtime.generation-1/config.yaml".into()),
+            "the core must be pointed at the service's copy, never at the app's own"
+        );
+    }
+
+    #[test]
+    fn a_service_that_declined_makes_the_core_be_replaced() {
+        for reason in [
+            StageRejection::CoreNotRunning,
+            StageRejection::CorePathChanged,
+            StageRejection::RuntimeUnwritable {
+                detail: "held open".to_owned(),
+            },
+        ] {
+            let attempt = StageAttempt::Answered(StageRuntimeOutcome::RestartRequired { reason: reason.clone() });
+
+            assert_eq!(
+                plan_config_application(&attempt),
+                ConfigApplication::ReplaceCore,
+                "declining is an outcome, not an error: {reason:?} must fall back, not fail"
+            );
+        }
+    }
+
+    #[test]
+    fn a_service_too_old_to_stage_makes_the_core_be_replaced() {
+        assert_eq!(
+            plan_config_application(&StageAttempt::Unsupported),
+            ConfigApplication::ReplaceCore,
+            "an installed service without staging must keep working, not demand a reinstall"
+        );
+    }
+
+    #[test]
+    fn a_request_that_never_came_back_makes_the_core_be_replaced() {
+        // Not knowing what the service did is the one case where reloading would be a guess: the
+        // staged path might not exist, or might hold the previous configuration.
+        assert_eq!(
+            plan_config_application(&StageAttempt::Unanswered("connection reset".into())),
+            ConfigApplication::ReplaceCore
+        );
     }
 }

@@ -104,6 +104,8 @@ tauri-plugin-devtools = { version = "2.1.0" }
 tauri-plugin-mihomo = { git = "https://github.com/clash-verge-rev/tauri-plugin-mihomo", branch = "fix/api-robustness" }
 clash_verge_logger = { git = "https://github.com/clash-verge-rev/clash-verge-logger" }
 async-trait = "0.1.89"
+# The pin still names v2.5.3 because v2.6.0 is not pushed yet; `^2.5.3` admits it, and a local
+# `[patch]` supplies it. Move this to the new tag once it exists.
 clash_verge_service_ipc = { git = "https://github.com/clash-verge-rev/clash-verge-service-ipc.git", tag = "v2.5.3", version = "2.5.3", features = [
   "client",
 ] }

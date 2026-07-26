@@ -20,7 +20,8 @@ use crate::{
 use anyhow::{Context as _, Result, bail};
 use clash_verge_logging::{Type, logging};
 use clash_verge_service_ipc::{
-    MacosProxyConfig, OwnerSessionProof, ProxyApplyOutcome, StartClashRequest, WriterConfig,
+    MacosProxyConfig, OwnerSessionProof, ProxyApplyOutcome, RuntimeBundle, StageRuntimeOutcome, StartClashRequest,
+    WriterConfig,
 };
 use compact_str::CompactString;
 use once_cell::sync::Lazy;
@@ -36,7 +37,19 @@ use std::{
 };
 
 static OWNER_MONITOR_GENERATION: AtomicU64 = AtomicU64::new(0);
-static ACTIVE_SERVICE_SESSION: Lazy<Mutex<Option<OwnerSessionProof>>> = Lazy::new(|| Mutex::new(None));
+static ACTIVE_SERVICE_SESSION: Lazy<Mutex<Option<ActiveServiceSession>>> = Lazy::new(|| Mutex::new(None));
+
+/// The Service session that owns the running Core, and what that Service can do.
+///
+/// The capability is learned once, when the Core is started, and discarded with the session
+/// rather than cached globally — it describes *the Service instance that owns this Core*, which
+/// is the only scope where it is safe to act on. A Service upgraded underneath a running Core
+/// does not silently gain abilities the Core it owns was not started under.
+#[derive(Clone)]
+struct ActiveServiceSession {
+    proof: OwnerSessionProof,
+    supports_runtime_staging: bool,
+}
 
 fn generate_service_session_token() -> Result<String> {
     let mut bytes = [0_u8; 32];
@@ -47,12 +60,55 @@ fn generate_service_session_token() -> Result<String> {
 pub(crate) fn active_service_session() -> Result<OwnerSessionProof> {
     ACTIVE_SERVICE_SESSION
         .lock()
-        .clone()
+        .as_ref()
+        .map(|session| session.proof.clone())
         .context("service owner session is not active")
+}
+
+/// Whether the Service that started the running Core can stage a runtime in place.
+///
+/// False for every reason that is not "yes": no session, an older Service, or a protocol query
+/// that did not come back. All of them mean the same thing to the caller — take the slow path.
+pub(crate) fn active_service_supports_runtime_staging() -> bool {
+    ACTIVE_SERVICE_SESSION
+        .lock()
+        .as_ref()
+        .is_some_and(|session| session.supports_runtime_staging)
 }
 
 pub(crate) fn clear_active_service_session() {
     ACTIVE_SERVICE_SESSION.lock().take();
+}
+
+/// Ask the Service whether it speaks the staging half of the protocol.
+///
+/// A failure here is not a failure to start: it only costs the fast path, so it is reported as
+/// "no" and logged rather than propagated.
+async fn probe_runtime_staging_support() -> bool {
+    match clash_verge_service_ipc::get_version().await {
+        Ok(response) if response.code == 0 => response
+            .data
+            .as_ref()
+            .is_some_and(clash_verge_service_ipc::ProtocolInfo::supports_runtime_staging),
+        Ok(response) => {
+            logging!(
+                warn,
+                Type::Service,
+                "服务协议查询返回 {}: {}；配置变更将走重启路径",
+                response.code,
+                response.message
+            );
+            false
+        }
+        Err(error) => {
+            logging!(
+                warn,
+                Type::Service,
+                "无法查询服务协议版本: {error:#}；配置变更将走重启路径"
+            );
+            false
+        }
+    }
 }
 
 fn session_matches_status(proof: &OwnerSessionProof, is_active: bool, active_generation: Option<u64>) -> bool {
@@ -756,20 +812,47 @@ pub(crate) fn run_privileged_service_action(action: PendingAction) -> Result<()>
     tokio::task::block_in_place(operation).with_context(|| format!("{label} failed"))
 }
 
-/// 尝试使用服务启动core
-pub(super) async fn start_with_existing_service(config_file: &Path) -> Result<()> {
-    logging!(info, Type::Service, "尝试使用现有服务启动核心");
-    clear_active_service_session();
-
+/// Describe what the Service should hold, for the Core binary this app would start.
+///
+/// Shared by starting and staging so the two cannot disagree about the binary or about how the
+/// configuration's provider paths are rewritten — a staged bundle naming a different core is
+/// exactly what makes the Service refuse to stage.
+async fn collect_service_runtime_bundle(config_file: &Path) -> Result<RuntimeBundle> {
     let verge_config = Config::verge().await;
     let clash_core = verge_config.latest_arc().get_valid_clash_core();
     drop(verge_config);
 
     let bin_ext = if cfg!(windows) { ".exe" } else { "" };
     let bin_path = service_core_path(&clash_core, bin_ext)?;
+    collect_runtime_bundle(config_file, &bin_path).await
+}
+
+/// Have the Service make the running Core's runtime match `config_file`, without restarting it.
+///
+/// Returns the Service's decision. `RestartRequired` is not an error and callers must not treat
+/// it as one: it means the Core has to be replaced the old way, and the runtime it is using was
+/// left untouched so that is still safe to do.
+pub(super) async fn stage_runtime_by_service(config_file: &Path) -> Result<StageRuntimeOutcome> {
+    let session = active_service_session()?;
+    let credentials = current_owner_credentials()?;
+    let runtime = collect_service_runtime_bundle(config_file).await?;
+
+    let response = clash_verge_service_ipc::stage_runtime(&credentials, &session, &runtime)
+        .await
+        .context("无法连接到Clash Verge Service")?;
+    if response.code > 0 {
+        bail!(response.message);
+    }
+    response.data.context("Clash Verge Service 未返回运行时暂存结果")
+}
+
+/// 尝试使用服务启动core
+pub(super) async fn start_with_existing_service(config_file: &Path) -> Result<()> {
+    logging!(info, Type::Service, "尝试使用现有服务启动核心");
+    clear_active_service_session();
 
     let credentials = current_owner_credentials()?;
-    let runtime = collect_runtime_bundle(config_file, &bin_path).await?;
+    let runtime = collect_service_runtime_bundle(config_file).await?;
     let proposed_session_token = generate_service_session_token()?;
     let request = StartClashRequest {
         runtime,
@@ -793,9 +876,13 @@ pub(super) async fn start_with_existing_service(config_file: &Path) -> Result<()
     }
 
     let result = response.data.context("Clash Verge Service 未返回会话信息")?;
-    *ACTIVE_SERVICE_SESSION.lock() = Some(OwnerSessionProof {
-        generation: result.session.generation,
-        token: proposed_session_token,
+    let supports_runtime_staging = probe_runtime_staging_support().await;
+    *ACTIVE_SERVICE_SESSION.lock() = Some(ActiveServiceSession {
+        proof: OwnerSessionProof {
+            generation: result.session.generation,
+            token: proposed_session_token,
+        },
+        supports_runtime_staging,
     });
 
     // PAC follows the Running Mode; the caller opens it via `core_started(Service)`.
@@ -1066,7 +1153,7 @@ fn session_matches_active_status(is_active: bool, active_generation: Option<u64>
     ACTIVE_SERVICE_SESSION
         .lock()
         .as_ref()
-        .is_some_and(|proof| session_matches_status(proof, is_active, active_generation))
+        .is_some_and(|session| session_matches_status(&session.proof, is_active, active_generation))
 }
 
 fn cancel_owner_monitors() {

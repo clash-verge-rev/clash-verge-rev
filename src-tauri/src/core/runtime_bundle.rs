@@ -1,5 +1,5 @@
 use anyhow::{Context as _, Result, bail};
-use clash_verge_service_ipc::{RuntimeAsset, RuntimeBundle};
+use clash_verge_service_ipc::{RemoteProvider, RuntimeAsset, RuntimeBundle};
 use serde_yaml_ng::Value;
 use std::collections::HashSet;
 use std::path::{Component, Path, PathBuf};
@@ -24,6 +24,7 @@ pub(crate) async fn collect_runtime_bundle(config_file: &Path, core_path: &Path)
     let config_root = std::fs::canonicalize(config_root)?;
     let mut assets = Vec::new();
     let mut destinations = HashSet::new();
+    let mut remote_providers = Vec::new();
 
     collect_provider_assets(
         &mut config,
@@ -31,6 +32,7 @@ pub(crate) async fn collect_runtime_bundle(config_file: &Path, core_path: &Path)
         &config_root,
         &mut destinations,
         &mut assets,
+        &mut remote_providers,
     )?;
     collect_provider_assets(
         &mut config,
@@ -38,6 +40,7 @@ pub(crate) async fn collect_runtime_bundle(config_file: &Path, core_path: &Path)
         &config_root,
         &mut destinations,
         &mut assets,
+        &mut remote_providers,
     )?;
     for filename in GEO_ASSETS {
         let source = config_root.join(filename);
@@ -52,16 +55,25 @@ pub(crate) async fn collect_runtime_bundle(config_file: &Path, core_path: &Path)
     Ok(RuntimeBundle {
         yaml: serde_yaml_ng::to_string(&config).context("failed to serialize service runtime config")?,
         assets,
+        remote_providers,
         core_path: core_path.to_string_lossy().into_owned(),
     })
 }
 
+/// Rewrite one provider section's paths to service-side destinations, and record what each
+/// destination is going to hold.
+///
+/// The two outputs are not the same thing. `assets` are files the app owns and the service copies;
+/// `remote_providers` are files the *core* downloads, which the service never writes and only
+/// needs to recognise — a download cache is reusable exactly while the url that produced it is
+/// unchanged, and the service has no other way to tell.
 fn collect_provider_assets(
     config: &mut Value,
     section: &str,
     config_root: &Path,
     destinations: &mut HashSet<String>,
     assets: &mut Vec<RuntimeAsset>,
+    remote_providers: &mut Vec<RemoteProvider>,
 ) -> Result<()> {
     let Some(providers) = config
         .as_mapping_mut()
@@ -75,9 +87,14 @@ fn collect_provider_assets(
         let Some(raw_path) = provider.get("path").and_then(Value::as_str) else {
             continue;
         };
-        let is_remote = provider.get("url").and_then(Value::as_str).is_some();
-        let destination = if is_remote {
-            provider_destination(config_root, raw_path)?
+        let url = provider.get("url").and_then(Value::as_str).map(str::to_owned);
+        let destination = if let Some(url) = url {
+            let destination = provider_destination(config_root, raw_path)?;
+            remote_providers.push(RemoteProvider {
+                destination: destination.clone(),
+                url,
+            });
+            destination
         } else {
             let source = local_provider_source(config_root, raw_path)?;
             let destination = destination_below_root(config_root, &source)?;
@@ -210,6 +227,18 @@ mod tests {
         );
         assert!(bundle.assets.iter().any(|asset| asset.destination == "Country.mmdb"));
         assert!(!bundle.assets.iter().any(|asset| asset.destination.contains("remote")));
+        // A remote provider is not copied, but it must still be declared: the Service decides
+        // whether the Core's download cache is reusable by comparing the url that produced it,
+        // and an undeclared provider is one it can only ever discard.
+        assert_eq!(
+            bundle
+                .remote_providers
+                .iter()
+                .map(|provider| (provider.destination.as_str(), provider.url.as_str()))
+                .collect::<Vec<_>>(),
+            [("providers/remote.yaml", "https://example.com/p.yaml")],
+            "the declaration must pair the rewritten destination with the url, not the original path"
+        );
         assert!(
             !bundle
                 .assets
