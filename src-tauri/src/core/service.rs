@@ -16,7 +16,6 @@ use crate::{
         tray::Tray,
     },
     process::AsyncHandler,
-    utils::server,
 };
 use anyhow::{Context as _, Result, bail};
 use clash_verge_logging::{Type, logging};
@@ -893,7 +892,7 @@ pub(super) async fn start_with_existing_service(config_file: &Path) -> Result<()
         token: proposed_session_token,
     });
 
-    server::set_pac_available(true);
+    // PAC follows the Running Mode; the caller opens it via `core_started(Service)`.
     start_owner_monitor();
     logging!(info, Type::Service, "服务成功启动核心");
     Ok(())
@@ -1305,12 +1304,8 @@ async fn recover_after_owner_loss_while_locked(reason: OwnerRecoveryReason) {
     );
     mark_service_unavailable_after_owner_loss(&RUN_STATE, reason);
     proxy_control::stop_guard().await;
-    server::set_pac_available(false);
     clear_active_service_session();
-    let manager = CoreManager::global();
-    manager.invalidate_core_readiness();
-    manager.set_running_mode(RunningMode::NotRunning);
-    manager.after_core_process();
+    CoreManager::global().core_stopped();
 
     if !owner_recovery_policy(reason, cfg!(target_os = "macos")).reset_system_proxy {
         return;

@@ -445,7 +445,9 @@ fn replace_file_atomic(source: &Path, destination: &Path) -> Result<()> {
 
 #[cfg(test)]
 mod tests {
-    use super::{InstanceRecord, PAC_AVAILABLE, bind_primary_listener, read_instance_record, write_instance_record};
+    use super::{
+        InstanceRecord, PAC_INITIAL_AVAILABLE, bind_primary_listener, read_instance_record, write_instance_record,
+    };
     #[cfg(unix)]
     use super::{open_instance_lock, try_lock_instance};
     use std::sync::atomic::Ordering;
@@ -459,7 +461,11 @@ mod tests {
     };
     #[test]
     fn pac_is_fail_closed_before_core_readiness() {
-        assert!(!PAC_AVAILABLE.load(Ordering::Acquire));
+        // Asserts the default rather than the live flag: PAC availability is now derived from
+        // the Running Mode by `core::runstate`, so any test that drives a Core transition
+        // legitimately moves the live flag. That the derivation itself can never disagree with
+        // the Running Mode is covered in `core::runstate` against a fake environment.
+        const { assert!(!PAC_INITIAL_AVAILABLE) }
     }
 
     #[cfg(feature = "verge-dev")]

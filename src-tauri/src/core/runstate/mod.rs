@@ -248,13 +248,42 @@ impl<E: RunStateEnv> RunStateStore<E> {
         Arc::clone(&self.mode.load())
     }
 
-    /// Store the Running Mode.
+    /// The Core is now running, and serving, in `mode`.
+    pub fn core_started(&self, mode: RunningMode) {
+        self.enter_mode(mode);
+    }
+
+    /// The Core is no longer running.
+    pub fn core_stopped(&self) {
+        self.enter_mode(RunningMode::NotRunning);
+    }
+
+    /// A start attempt is under way: the Core is not serving yet, whatever the mode says.
     ///
-    /// Stage 2 replaces this with intent-shaped transitions (`core_started`, `service_lost`)
-    /// that also derive PAC availability and the frontend mirror; until then `CoreManager`
-    /// remains responsible for those.
-    pub fn set_mode(&self, mode: RunningMode) {
+    /// Closes the PAC endpoint without disturbing the Running Mode, so a handover cannot
+    /// hand out a PAC script for a proxy port that is between owners.
+    pub fn core_starting(&self) {
+        self.env.set_pac_available(false);
+    }
+
+    /// Move to `mode` and re-derive everything that follows from it.
+    ///
+    /// PAC availability and the outward mirror are derived here and nowhere else, so they
+    /// cannot drift from the Running Mode the way ten hand-paired call sites could.
+    ///
+    /// PAC closes *before* the mode changes and opens *after*, so whatever a concurrent
+    /// reader catches mid-transition is the closed state: being refused a PAC script beats
+    /// being handed one that points at a proxy port between owners.
+    fn enter_mode(&self, mode: RunningMode) {
+        let running = !matches!(mode, RunningMode::NotRunning);
+        if !running {
+            self.env.set_pac_available(false);
+        }
         self.mode.store(Arc::new(mode));
+        if running {
+            self.env.set_pac_available(true);
+        }
+        self.env.publish_mode(mode);
     }
 
     // ─────────────────────────── privileged operations ───────────────────────────
@@ -581,10 +610,85 @@ mod tests {
         let store = with_env(FakeEnv::new());
         assert_eq!(*store.mode_arc(), RunningMode::NotRunning);
 
-        store.set_mode(RunningMode::Service);
+        store.core_started(RunningMode::Service);
 
         assert_eq!(*store.mode_arc(), RunningMode::Service);
         assert_eq!(store.state().mode, RunningMode::Service);
+    }
+
+    #[test]
+    fn starting_the_core_opens_pac_and_mirrors_the_mode() {
+        for mode in [RunningMode::Service, RunningMode::Sidecar] {
+            let store = with_env(FakeEnv::new());
+
+            store.core_started(mode);
+
+            assert_eq!(store.env.pac_available(), Some(true), "{mode} should open PAC");
+            assert_eq!(store.env.published_modes(), vec![mode]);
+        }
+    }
+
+    #[test]
+    fn stopping_the_core_closes_pac_and_mirrors_the_mode() {
+        let store = with_env(FakeEnv::new());
+        store.core_started(RunningMode::Sidecar);
+
+        store.core_stopped();
+
+        assert_eq!(store.state().mode, RunningMode::NotRunning);
+        assert_eq!(store.env.pac_available(), Some(false));
+        assert_eq!(
+            store.env.published_modes(),
+            vec![RunningMode::Sidecar, RunningMode::NotRunning]
+        );
+    }
+
+    #[test]
+    fn a_start_attempt_closes_pac_without_disturbing_the_mode() {
+        // A handover must not hand out a PAC script for a proxy port between owners, but the
+        // Core we are replacing is still the one that is running.
+        let store = with_env(FakeEnv::new());
+        store.core_started(RunningMode::Sidecar);
+
+        store.core_starting();
+
+        assert_eq!(store.env.pac_available(), Some(false));
+        assert_eq!(store.state().mode, RunningMode::Sidecar);
+        assert_eq!(
+            store.env.published_modes(),
+            vec![RunningMode::Sidecar],
+            "a start attempt is not a mode change"
+        );
+    }
+
+    #[test]
+    fn pac_availability_can_never_disagree_with_the_running_mode() {
+        let store = with_env(FakeEnv::new());
+
+        for mode in [
+            RunningMode::Sidecar,
+            RunningMode::NotRunning,
+            RunningMode::Service,
+            RunningMode::NotRunning,
+        ] {
+            store.core_started(mode);
+
+            let running = !matches!(mode, RunningMode::NotRunning);
+            assert_eq!(store.env.pac_available(), Some(running), "mode {mode}");
+            assert_eq!(store.state().mode, mode);
+        }
+    }
+
+    #[test]
+    fn service_health_survives_the_core_stopping() {
+        // Stopping the Core says nothing about whether the Service is installed.
+        let store = with_env(FakeEnv::new());
+        store.observe(ServiceHealth::Ready);
+        store.core_started(RunningMode::Service);
+
+        store.core_stopped();
+
+        assert_eq!(store.state().health, ServiceHealth::Ready);
     }
 
     #[test]

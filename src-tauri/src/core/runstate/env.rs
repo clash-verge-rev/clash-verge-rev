@@ -8,6 +8,7 @@
 use anyhow::Result;
 
 use super::probe::ServiceVersionReply;
+use crate::core::manager::RunningMode;
 
 /// Everything Run State needs from outside itself.
 pub trait RunStateEnv: Send + Sync + 'static {
@@ -22,6 +23,15 @@ pub trait RunStateEnv: Send + Sync + 'static {
 
     /// Whether this app process is running elevated.
     fn is_elevated(&self) -> bool;
+
+    /// Open or close the local PAC endpoint.
+    ///
+    /// Derived from the Running Mode, never set independently: a PAC script that points at a
+    /// proxy port nothing is listening on is worse than no PAC at all.
+    fn set_pac_available(&self, available: bool);
+
+    /// Mirror the Running Mode to observers outside the store, such as the frontend.
+    fn publish_mode(&self, mode: RunningMode);
 }
 
 /// The production adapter: real IPC, real platform registry, real elevation check.
@@ -50,6 +60,18 @@ impl RunStateEnv for RealEnv {
             .get()
             .is_some_and(tauri_plugin_clash_verge_sysinfo::is_current_app_handle_admin)
     }
+
+    fn set_pac_available(&self, available: bool) {
+        crate::utils::server::set_pac_available(available);
+    }
+
+    fn publish_mode(&self, mode: RunningMode) {
+        // Non-panicking for the same reason as `is_elevated`: the Core can stop and start
+        // before the app handle exists, and a missed mirror is better than an abort.
+        if let Some(app_handle) = crate::APP_HANDLE.get() {
+            tauri_plugin_clash_verge_sysinfo::set_app_core_mode(app_handle, mode.to_string());
+        }
+    }
 }
 
 #[cfg(test)]
@@ -61,18 +83,20 @@ mod fake {
     use clash_verge_service_ipc::ProtocolInfo;
     use parking_lot::Mutex;
 
-    use super::{RunStateEnv, ServiceVersionReply};
+    use super::{RunStateEnv, RunningMode, ServiceVersionReply};
 
     /// A scripted stand-in for the machine.
     ///
     /// Defaults to the least capable environment — no Service, no elevation — so a test only
-    /// has to say what it needs.
+    /// has to say what it needs. Outbound effects are recorded rather than performed.
     #[derive(Debug)]
     pub struct FakeEnv {
         version_replies: Mutex<Vec<Result<ServiceVersionReply, String>>>,
         evidence: Result<bool, String>,
         elevated: bool,
         probe_count: Mutex<usize>,
+        pac_available: Mutex<Option<bool>>,
+        published_modes: Mutex<Vec<RunningMode>>,
     }
 
     impl Default for FakeEnv {
@@ -82,6 +106,8 @@ mod fake {
                 evidence: Ok(false),
                 elevated: false,
                 probe_count: Mutex::new(0),
+                pac_available: Mutex::new(None),
+                published_modes: Mutex::new(Vec::new()),
             }
         }
     }
@@ -155,6 +181,18 @@ mod fake {
         pub fn probe_count(&self) -> usize {
             *self.probe_count.lock()
         }
+
+        /// The last PAC availability the store asked for, or `None` if it never asked.
+        #[must_use]
+        pub fn pac_available(&self) -> Option<bool> {
+            *self.pac_available.lock()
+        }
+
+        /// Every Running Mode mirrored outward, in order.
+        #[must_use]
+        pub fn published_modes(&self) -> Vec<RunningMode> {
+            self.published_modes.lock().clone()
+        }
     }
 
     impl RunStateEnv for FakeEnv {
@@ -178,6 +216,14 @@ mod fake {
 
         fn is_elevated(&self) -> bool {
             self.elevated
+        }
+
+        fn set_pac_available(&self, available: bool) {
+            *self.pac_available.lock() = Some(available);
+        }
+
+        fn publish_mode(&self, mode: RunningMode) {
+            self.published_modes.lock().push(mode);
         }
     }
 }

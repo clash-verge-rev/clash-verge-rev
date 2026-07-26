@@ -136,11 +136,26 @@ impl CoreManager {
         self.last_update.load_full()
     }
 
-    pub fn set_running_mode(&self, mode: RunningMode) {
-        if matches!(mode, RunningMode::NotRunning) {
-            self.invalidate_core_readiness();
-        }
-        crate::core::runstate::RUN_STATE.set_mode(mode);
+    /// The Core is now running in `mode`.
+    ///
+    /// Run State derives PAC availability and the outward mode mirror from this; callers must
+    /// not set those alongside.
+    pub fn core_started(&self, mode: RunningMode) {
+        crate::core::runstate::RUN_STATE.core_started(mode);
+    }
+
+    /// The Core is no longer running, for any reason.
+    ///
+    /// Core readiness is invalidated here rather than inside Run State because readiness
+    /// belongs to the process this manager supervises.
+    pub fn core_stopped(&self) {
+        self.invalidate_core_readiness();
+        crate::core::runstate::RUN_STATE.core_stopped();
+    }
+
+    /// A start attempt is under way and the Core is not serving yet.
+    pub fn core_starting(&self) {
+        crate::core::runstate::RUN_STATE.core_starting();
     }
 
     pub fn set_running_child_sidecar(&self, child: CommandChild) {

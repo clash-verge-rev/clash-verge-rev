@@ -6,7 +6,7 @@ use crate::{
     config::Config,
     core::{handle, logger::Logger, manager::CLASH_LOGGER, proxy_control, service},
     logging,
-    utils::{dirs, server},
+    utils::dirs,
 };
 use anyhow::{Context as _, Result};
 use clash_verge_logging::Type;
@@ -75,8 +75,7 @@ impl CoreManager {
 
     pub(super) async fn start_core_by_sidecar(&self) -> Result<()> {
         logging!(info, Type::Core, "Starting core in sidecar mode");
-        server::set_pac_available(false);
-        self.set_running_mode(RunningMode::NotRunning);
+        self.core_stopped();
 
         let sidecar_ipc = dirs::sidecar_ipc_path()?;
         handle::Handle::app_handle()
@@ -149,9 +148,7 @@ impl CoreManager {
         .await;
         if let Err(readiness_error) = readiness {
             proxy_control::stop_guard().await;
-            self.invalidate_core_readiness();
-            self.set_running_mode(RunningMode::NotRunning);
-            server::set_pac_available(false);
+            self.core_stopped();
             return match child.kill() {
                 Ok(()) => Err(readiness_error),
                 Err(kill_error) => Err(anyhow::anyhow!(
@@ -164,8 +161,7 @@ impl CoreManager {
         self.set_job_handle(Some(job));
         self.set_running_child_sidecar(child);
         let core_readiness_generation = self.mark_core_ready();
-        self.set_running_mode(RunningMode::Sidecar);
-        server::set_pac_available(true);
+        self.core_started(RunningMode::Sidecar);
 
         AsyncHandler::spawn(move || async move {
             while let Some(event) = rx.recv().await {
@@ -204,8 +200,7 @@ impl CoreManager {
     pub(super) fn stop_core_by_sidecar_unprepared(&self) {
         logging!(info, Type::Core, "Stopping sidecar");
         defer! {
-            server::set_pac_available(false);
-            self.set_running_mode(RunningMode::NotRunning);
+            self.core_stopped();
         }
         if let Some(child) = self.take_child_sidecar() {
             let pid = child.pid();
@@ -236,7 +231,7 @@ impl CoreManager {
 
     pub(super) async fn start_core_by_service(&self) -> Result<()> {
         logging!(info, Type::Core, "Starting core in service mode");
-        server::set_pac_available(false);
+        self.core_starting();
         let service_ipc = dirs::ipc_path()?;
         let config_file = Config::generate_file(crate::config::ConfigType::Run).await?;
         handle::Handle::app_handle()
@@ -258,7 +253,7 @@ impl CoreManager {
                 match service::run_core_by_service(config_file).await {
                     Ok(()) => {
                         self.mark_core_ready();
-                        self.set_running_mode(RunningMode::Service);
+                        self.core_started(RunningMode::Service);
                         return Ok(());
                     }
                     Err(e) => {
@@ -282,7 +277,7 @@ impl CoreManager {
         {
             service::run_core_by_service(config_file).await?;
             self.mark_core_ready();
-            self.set_running_mode(RunningMode::Service);
+            self.core_started(RunningMode::Service);
             Ok(())
         }
     }
@@ -290,8 +285,7 @@ impl CoreManager {
     pub(super) async fn stop_core_by_service(&self) -> Result<()> {
         logging!(info, Type::Core, "Stopping service");
         service::stop_core_by_service().await?;
-        server::set_pac_available(false);
-        self.set_running_mode(RunningMode::NotRunning);
+        self.core_stopped();
         Ok(())
     }
 
@@ -305,10 +299,7 @@ impl CoreManager {
         #[cfg(target_os = "windows")]
         self.set_job_handle(None);
         proxy_control::stop_guard().await;
-        server::set_pac_available(false);
-        self.invalidate_core_readiness();
-        self.set_running_mode(RunningMode::NotRunning);
-        self.after_core_process();
+        self.core_stopped();
     }
 }
 
@@ -376,7 +367,7 @@ mod readiness_tests {
     fn invalidated_core_readiness_cannot_be_recaptured_from_stale_mode() {
         let manager = CoreManager::default();
         manager.mark_core_ready();
-        manager.set_running_mode(RunningMode::Service);
+        manager.core_started(RunningMode::Service);
 
         manager.invalidate_core_readiness();
 
