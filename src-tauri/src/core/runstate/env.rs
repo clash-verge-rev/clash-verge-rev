@@ -76,6 +76,15 @@ impl RunStateEnv for RealEnv {
     }
 
     fn publish(&self, state: &RunState) {
+        // Reconciling capability is a reaction to the new state, not part of publishing it, so
+        // it is spawned: a transition must not wait on a config write it triggered. It is also
+        // spawned *before* the app-handle gate below, because a Core that stops and starts
+        // before the app handle exists still needs reconciling; the task re-reads the Run
+        // State itself rather than closing over this snapshot.
+        crate::process::AsyncHandler::spawn(|| async {
+            crate::feat::reconcile_tun_availability().await;
+        });
+
         // Non-panicking for the same reason as `is_elevated`: the Core can stop and start
         // before the app handle exists, and a missed notification is better than an abort.
         let Some(app_handle) = crate::APP_HANDLE.get() else {
@@ -83,13 +92,6 @@ impl RunStateEnv for RealEnv {
         };
         tauri_plugin_clash_verge_sysinfo::set_app_core_mode(app_handle, state.mode.to_string());
         crate::core::handle::Handle::notify_run_state(&state.to_view());
-
-        // Reconciling capability is a reaction to the new state, not part of publishing it, so
-        // it is spawned: a transition must not wait on a config write it triggered.
-        let state = state.clone();
-        crate::process::AsyncHandler::spawn(move || async move {
-            crate::feat::reconcile_tun_availability(&state).await;
-        });
     }
 
     fn run_privileged(&self, action: PendingAction) -> Result<()> {

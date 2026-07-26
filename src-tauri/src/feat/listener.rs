@@ -37,14 +37,21 @@ pub async fn save_proxy_ports(settings: ProxyPortSettings) -> Result<SaveProxyPo
         manager.finish_config_update();
     }
 
+    // Read before opening the transaction: rolling back discards whatever draft each layer
+    // holds, so a transaction opened before this `?` would throw away drafts staged by
+    // someone else that this function never touched.
+    let current = current_runtime_mapping().await?;
+
     let clash = Config::clash().await;
     let verge = Config::verge().await;
     let runtime = Config::runtime().await;
     // Every rejection and every failure below leaves the three layers as they were.
     let transaction = DraftTransaction::new(vec![&clash, &verge, &runtime]);
 
-    let current = current_runtime_mapping().await?;
     stage_proxy_ports(&settings).await;
+    // The candidate ports are staged but nothing is serving them yet, so close PAC rather
+    // than hand out a script for a port that is between owners.
+    manager.core_starting();
     Config::generate()
         .await
         .context("failed to generate candidate proxy port configuration")?;
@@ -68,6 +75,7 @@ pub async fn save_proxy_ports(settings: ProxyPortSettings) -> Result<SaveProxyPo
     // From here the drafts alone are no longer enough to undo things: files are on disk and
     // the core may be restarted, so failures restore explicitly as well as rolling back.
     if let Err(error) = Config::generate_file(ConfigType::Run).await {
+        transaction.rollback();
         return match restore_files(&snapshots).await {
             Ok(()) => Err(error).context("failed to persist candidate Runtime Configuration"),
             Err(rollback_error) => Err(anyhow!("{error:#}; configuration rollback failed: {rollback_error:#}")),
@@ -75,6 +83,7 @@ pub async fn save_proxy_ports(settings: ProxyPortSettings) -> Result<SaveProxyPo
     }
 
     if was_running && let Err(activation_error) = manager.restart_core().await {
+        transaction.rollback();
         if let Err(rollback_error) = rollback_proxy_ports(&snapshots, was_running).await {
             return Err(anyhow!(
                 "failed to activate proxy port configuration: {activation_error:#}; \
@@ -95,6 +104,7 @@ pub async fn save_proxy_ports(settings: ProxyPortSettings) -> Result<SaveProxyPo
     }
 
     if let Err(persist_error) = persist_proxy_port_sources().await {
+        transaction.rollback();
         return match rollback_proxy_ports(&snapshots, was_running).await {
             Ok(()) => Err(persist_error),
             Err(rollback_error) => Err(anyhow!(

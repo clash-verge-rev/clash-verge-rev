@@ -1225,13 +1225,14 @@ impl ServiceManager {
     }
 
     async fn apply_service_status(&self, status: ServiceStatus) -> Result<()> {
-        self.set_status(status.clone());
-
-        // `set_status` has already turned a requested action into a Pending Action, so this
-        // reads back the one mapping rather than re-deriving it from the legacy status.
-        let Some(action) = RUN_STATE.state().pending else {
+        // Derived from the caller's own argument, not read back out of the store: an
+        // observation racing in between would clear the pending action and silently turn a
+        // user-authorised install into a no-op.
+        let Some(action) = requested_action(&status) else {
+            self.set_status(status.clone());
             return report_non_actionable_status(status);
         };
+        self.set_status(status);
 
         logging!(info, Type::Service, "running privileged service action {action:?}");
         RUN_STATE.perform(action)?;
@@ -1300,18 +1301,45 @@ where
 
 /// Apply a legacy single-slot status to a Run State, splitting it back into observation and
 /// request. The inverse of [`ServiceStatus::from_run_state`].
-fn record_status<E: RunStateEnv>(store: &RunStateStore<E>, status: ServiceStatus) {
+/// The privileged operation a status is asking for, if any.
+///
+/// A pure function of the status so that a caller can decide what to run without reading the
+/// store back and racing an observation.
+const fn requested_action(status: &ServiceStatus) -> Option<PendingAction> {
     match status {
-        ServiceStatus::InstallRequired => store.request_action(PendingAction::Install),
-        ServiceStatus::UninstallRequired => store.request_action(PendingAction::Uninstall),
-        ServiceStatus::ReinstallRequired => store.request_action(PendingAction::Reinstall),
-        ServiceStatus::ForceReinstallRequired => store.request_action(PendingAction::ForceReinstall),
+        ServiceStatus::InstallRequired => Some(PendingAction::Install),
+        ServiceStatus::UninstallRequired => Some(PendingAction::Uninstall),
+        ServiceStatus::ReinstallRequired => Some(PendingAction::Reinstall),
+        ServiceStatus::ForceReinstallRequired => Some(PendingAction::ForceReinstall),
+        ServiceStatus::Checking
+        | ServiceStatus::Ready
+        | ServiceStatus::NotInstalled
+        | ServiceStatus::NeedsReinstall
+        | ServiceStatus::SidecarAllowed
+        | ServiceStatus::Unavailable(_) => None,
+    }
+}
+
+fn record_status<E: RunStateEnv>(store: &RunStateStore<E>, status: ServiceStatus) {
+    if let Some(action) = requested_action(&status) {
+        store.request_action(action);
+        return;
+    }
+
+    match status {
         ServiceStatus::SidecarAllowed => store.accept_sidecar(),
         ServiceStatus::Checking => store.observe(ServiceHealth::Unknown),
         ServiceStatus::Ready => store.observe(ServiceHealth::Ready),
         ServiceStatus::NotInstalled => store.observe(ServiceHealth::NotInstalled),
         ServiceStatus::NeedsReinstall => store.observe(ServiceHealth::VersionMismatch),
         ServiceStatus::Unavailable(reason) => store.observe(ServiceHealth::Unavailable(reason)),
+        ServiceStatus::InstallRequired
+        | ServiceStatus::UninstallRequired
+        | ServiceStatus::ReinstallRequired
+        | ServiceStatus::ForceReinstallRequired => {
+            // Recorded by the early return above; listed so a new variant still fails to
+            // compile here rather than falling through a catch-all.
+        }
     }
 }
 

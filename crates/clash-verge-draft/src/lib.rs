@@ -194,6 +194,15 @@ impl<'a> DraftTransaction<'a> {
         }
         self.committed = true;
     }
+
+    /// Roll every layer back now, rather than whenever this value happens to drop.
+    ///
+    /// Needed where recovery does more than forget the drafts — restoring files, or
+    /// regenerating them from the committed configuration. Those read the layers, so the
+    /// rollback has to have already happened, not be pending on a later drop.
+    pub fn rollback(self) {
+        drop(self);
+    }
 }
 
 impl Drop for DraftTransaction<'_> {

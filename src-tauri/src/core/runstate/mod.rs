@@ -115,12 +115,16 @@ impl<E: RunStateEnv> RunStateStore<E> {
     pub async fn settled(&self) -> RunState {
         loop {
             let notified = self.operation_done.notified();
+            tokio::pin!(notified);
+            // Register as a waiter *before* checking the flag. `notify_waiters` wakes only
+            // those already registered and leaves no permit behind, so without this an
+            // operation finishing between the check and the await is a wakeup lost for good
+            // — and this future would then wait for some unrelated later operation, or
+            // forever.
+            notified.as_mut().enable();
+
             if !self.operation_running.load(Ordering::Acquire) {
-                let service = self.service.lock().service.clone();
-                // Re-check: an operation may have started while we held the lock.
-                if !self.operation_running.load(Ordering::Acquire) {
-                    return self.snapshot(service);
-                }
+                return self.state();
             }
             notified.await;
         }
@@ -374,8 +378,6 @@ impl<E: RunStateEnv> RunStateStore<E> {
     ///
     /// Only one privileged operation may be in flight; [`Self::settled`] waits on this.
     pub fn begin_operation(&self) -> Result<OperationGuard<'_, E>> {
-        // Taken under the state lock so that a reader cannot observe `operation_running`
-        // flipping between its two checks in `settled`.
         let mut state = self.service.lock();
         if self.operation_running.swap(true, Ordering::AcqRel) {
             bail!("service operation already running");

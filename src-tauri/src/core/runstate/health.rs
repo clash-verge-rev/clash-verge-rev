@@ -316,6 +316,22 @@ mod tests {
     }
 
     #[test]
+    fn tun_is_never_disabled_while_the_core_is_not_running() {
+        // The startup regression this guards: the service is observed as absent before the
+        // startup path has decided whether to install it, and acting on that snapshot both
+        // rewrites the user's setting and removes the prompt that would have fixed it.
+        // `reconcile_tun_availability` refuses to act at all while the mode is NotRunning;
+        // this pins the state that made it dangerous.
+        let stopped = state(ServiceHealth::NotInstalled, false, false);
+
+        assert_eq!(stopped.mode, RunningMode::NotRunning);
+        assert!(
+            stopped.tun_should_be_disabled(true),
+            "the predicate alone says yes, which is why the caller must gate on the mode"
+        );
+    }
+
+    #[test]
     fn tun_is_never_disabled_on_an_unprobed_service() {
         // The old frontend guard waited out a fixed ten seconds to approximate this.
         assert!(!state(ServiceHealth::Unknown, false, false).tun_should_be_disabled(true));

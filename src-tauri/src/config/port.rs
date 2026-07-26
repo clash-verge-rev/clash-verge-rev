@@ -131,9 +131,11 @@ impl Config {
         }
         .await;
 
-        // Files are not part of the transaction, so a failed write is restored explicitly;
-        // the drafts roll back on their own when this returns.
+        // Files are not part of the transaction, so a failed write is restored explicitly.
+        // The drafts are rolled back first: restoring reads the committed configuration, and
+        // must not see a candidate that is being abandoned.
         if let Err(error) = persist_result {
+            transaction.rollback();
             return match restore_files(&snapshots).await {
                 Ok(()) => Err(error),
                 Err(rollback_error) => Err(anyhow!("{error:#}; configuration rollback failed: {rollback_error:#}")),
