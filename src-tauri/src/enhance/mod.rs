@@ -36,6 +36,7 @@ struct ConfigValues {
     socks_enabled: bool,
     http_enabled: bool,
     enable_dns_settings: bool,
+    enable_external_controller: bool,
     #[cfg(not(target_os = "windows"))]
     redir_enabled: bool,
     #[cfg(target_os = "linux")]
@@ -116,8 +117,10 @@ async fn get_config_values() -> ConfigValues {
         ref verge_socks_enabled,
         ref verge_http_enabled,
         ref enable_dns_settings,
+        ref enable_external_controller,
         ..
     } = **verge_arc;
+    let enable_external_controller = enable_external_controller.unwrap_or(false);
 
     let (clash_core, enable_tun, enable_builtin, socks_enabled, http_enabled, enable_dns_settings) = (
         Some(verge_arc.get_valid_clash_core()),
@@ -145,6 +148,7 @@ async fn get_config_values() -> ConfigValues {
         socks_enabled,
         http_enabled,
         enable_dns_settings,
+        enable_external_controller,
         #[cfg(not(target_os = "windows"))]
         redir_enabled,
         #[cfg(target_os = "linux")]
@@ -330,6 +334,32 @@ const CONTROL_PLANE_KEYS: &[&str] = &[
     "unified-delay",
 ];
 
+/// The fields the app owns, held across the stages that apply the user's manual overrides.
+///
+/// Capturing and restoring are one value rather than two calls because the order is a
+/// correctness requirement, not a style: capture must happen after the app has finished
+/// deriving these fields and before any override runs, and restore must happen after every
+/// override. As four separate calls that contract lived only in comments.
+struct AuthoritativeFields {
+    control_plane: Mapping,
+    /// Only tracked when the DNS page owns it; otherwise overrides may set `dns.ipv6` freely.
+    dns_ipv6: Option<Value>,
+}
+
+impl AuthoritativeFields {
+    fn capture(config: &Mapping, enable_dns_settings: bool) -> Self {
+        Self {
+            control_plane: snapshot_control_plane(config),
+            dns_ipv6: enable_dns_settings.then(|| snapshot_dns_ipv6(config)).flatten(),
+        }
+    }
+
+    fn enforce(self, config: Mapping) -> Mapping {
+        let config = enforce_control_plane(config, self.control_plane);
+        enforce_dns_ipv6(config, self.dns_ipv6)
+    }
+}
+
 /// 手动 merge/script 前保存 app 最终控制面值,只记录当前存在的键。
 fn snapshot_control_plane(config: &Mapping) -> Mapping {
     let mut snapshot = Mapping::new();
@@ -440,11 +470,17 @@ async fn process_profile_items(
     (config, exists_keys, result_map)
 }
 
-async fn merge_default_config(
+/// Merge the Application Merge Config over the profile's own configuration.
+///
+/// Every switch it consults is a parameter: it used to read `enable_external_controller`
+/// out of the global config from inside its loop, which made a stage that looks pure depend
+/// on process state and left it untestable.
+fn merge_default_config(
     mut config: Mapping,
     clash_config: Mapping,
     socks_enabled: bool,
     http_enabled: bool,
+    enable_external_controller: bool,
     #[cfg(not(target_os = "windows"))] redir_enabled: bool,
     #[cfg(target_os = "linux")] tproxy_enabled: bool,
 ) -> Mapping {
@@ -496,12 +532,6 @@ async fn merge_default_config(
             }
             // 处理 external-controller 键的开关逻辑
             if key.as_str() == Some("external-controller") {
-                let enable_external_controller = Config::verge()
-                    .await
-                    .latest_arc()
-                    .enable_external_controller
-                    .unwrap_or(false);
-
                 if enable_external_controller {
                     config.insert(key, value);
                 } else {
@@ -694,6 +724,7 @@ pub async fn enhance() -> Result<(Mapping, HashSet<String>, HashMap<String, Resu
         socks_enabled,
         http_enabled,
         enable_dns_settings,
+        enable_external_controller,
         #[cfg(not(target_os = "windows"))]
         redir_enabled,
         #[cfg(target_os = "linux")]
@@ -724,26 +755,20 @@ pub async fn enhance() -> Result<(Mapping, HashSet<String>, HashMap<String, Resu
         clash_config,
         socks_enabled,
         http_enabled,
+        enable_external_controller,
         #[cfg(not(target_os = "windows"))]
         redir_enabled,
         #[cfg(target_os = "linux")]
         tproxy_enabled,
-    )
-    .await;
+    );
 
     // app 生成项先于手动覆盖。
     let config = apply_builtin_scripts(config, clash_core, enable_builtin).await;
     let config = use_tun(config, enable_tun);
     let config = apply_dns_settings(config, enable_dns_settings).await;
 
-    // 手动覆盖前锁定 app 权威字段。
-    let control_plane = snapshot_control_plane(&config);
-    // DNS 页开启时,仅 `dns.ipv6` 跟随 UI;其余 DNS 字段仍可覆盖。
-    let dns_ipv6 = if enable_dns_settings {
-        snapshot_dns_ipv6(&config)
-    } else {
-        None
-    };
+    // 手动覆盖前锁定 app 权威字段,覆盖后由同一个值恢复。
+    let authoritative = AuthoritativeFields::capture(&config, enable_dns_settings);
 
     // 全局手动覆盖。
     let (config, exists_keys, result_map) = process_global_items(
@@ -761,8 +786,7 @@ pub async fn enhance() -> Result<(Mapping, HashSet<String>, HashMap<String, Resu
         process_profile_items(config, exists_keys, result_map, merge_item, script_item, &profile_name).await;
 
     // 手动覆盖后恢复 app 权威字段。
-    let config = enforce_control_plane(config, control_plane);
-    let config = enforce_dns_ipv6(config, dns_ipv6);
+    let config = authoritative.enforce(config);
     let config = ensure_lan_bind_address(config);
 
     let config = cleanup_proxy_groups(config);
@@ -772,6 +796,94 @@ pub async fn enhance() -> Result<(Mapping, HashSet<String>, HashMap<String, Resu
     exists_keys_set.extend(exists_keys);
 
     Ok((config, exists_keys_set, result_map))
+}
+
+#[cfg(test)]
+#[allow(clippy::expect_used, clippy::panic, reason = "tests assert by panicking")]
+mod authoritative_field_tests {
+    use super::{AuthoritativeFields, Mapping, Value};
+
+    fn config_with(pairs: &[(&str, Value)]) -> Mapping {
+        let mut config = Mapping::new();
+        for (key, value) in pairs {
+            config.insert(Value::from(*key), value.clone());
+        }
+        config
+    }
+
+    fn dns_with_ipv6(enabled: bool) -> Value {
+        let mut dns = Mapping::new();
+        dns.insert(Value::from("ipv6"), Value::from(enabled));
+        dns.insert(Value::from("enable"), Value::from(true));
+        Value::Mapping(dns)
+    }
+
+    #[test]
+    fn an_override_cannot_change_a_field_the_app_owns() {
+        let derived = config_with(&[("mode", Value::from("rule")), ("secret", Value::from("ours"))]);
+        let authoritative = AuthoritativeFields::capture(&derived, false);
+
+        let overridden = config_with(&[("mode", Value::from("global")), ("secret", Value::from("theirs"))]);
+        let result = authoritative.enforce(overridden);
+
+        assert_eq!(result.get(Value::from("mode")), Some(&Value::from("rule")));
+        assert_eq!(result.get(Value::from("secret")), Some(&Value::from("ours")));
+    }
+
+    #[test]
+    fn an_override_cannot_introduce_a_field_the_app_left_out() {
+        // The app decided not to expose the external controller; a profile must not re-add it.
+        let derived = Mapping::new();
+        let authoritative = AuthoritativeFields::capture(&derived, false);
+
+        let overridden = config_with(&[("external-controller", Value::from("0.0.0.0:9090"))]);
+        let result = authoritative.enforce(overridden);
+
+        assert!(!result.contains_key(Value::from("external-controller")));
+    }
+
+    #[test]
+    fn fields_the_app_does_not_own_survive_an_override() {
+        let derived = config_with(&[("mode", Value::from("rule"))]);
+        let authoritative = AuthoritativeFields::capture(&derived, false);
+
+        let overridden = config_with(&[("mode", Value::from("global")), ("profile-key", Value::from(1))]);
+        let result = authoritative.enforce(overridden);
+
+        assert_eq!(result.get(Value::from("profile-key")), Some(&Value::from(1)));
+    }
+
+    #[test]
+    fn dns_ipv6_is_only_reclaimed_when_the_dns_page_owns_it() {
+        let derived = config_with(&[("dns", dns_with_ipv6(true))]);
+
+        let owned = AuthoritativeFields::capture(&derived, true);
+        let restored = owned.enforce(config_with(&[("dns", dns_with_ipv6(false))]));
+        assert_eq!(
+            restored.get(Value::from("dns")).and_then(|dns| dns.get("ipv6")),
+            Some(&Value::from(true)),
+            "with the DNS page on, the app's value wins"
+        );
+
+        let unowned = AuthoritativeFields::capture(&derived, false);
+        let left_alone = unowned.enforce(config_with(&[("dns", dns_with_ipv6(false))]));
+        assert_eq!(
+            left_alone.get(Value::from("dns")).and_then(|dns| dns.get("ipv6")),
+            Some(&Value::from(false)),
+            "with the DNS page off, an override may set it"
+        );
+    }
+
+    #[test]
+    fn restoring_dns_ipv6_never_invents_a_dns_block() {
+        let derived = config_with(&[("dns", dns_with_ipv6(true))]);
+        let authoritative = AuthoritativeFields::capture(&derived, true);
+
+        // An override removed DNS entirely; reinstating just `ipv6` would be a half-config.
+        let result = authoritative.enforce(Mapping::new());
+
+        assert!(!result.contains_key(Value::from("dns")));
+    }
 }
 
 #[allow(clippy::expect_used)]
