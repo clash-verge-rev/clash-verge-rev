@@ -101,16 +101,6 @@ function useProxyRenderState(
     [activeSelectedGroup, isChainMode, mode],
   )
 
-  const getGroupHeadState = useCallback(
-    (groupName: string) => {
-      const headItem = renderList.find(
-        (item) => item.type === 1 && item.group?.name === groupName,
-      )
-      return headItem?.headState
-    },
-    [renderList],
-  )
-
   const timeout = verge?.default_latency_timeout || 10000
 
   // 测全部延迟
@@ -143,10 +133,8 @@ function useProxyRenderState(
       } catch (error) {
         console.error(`[ProxyGroups] 延迟测试出错，组: ${groupName}`, error)
       } finally {
-        const headState = getGroupHeadState(groupName)
-        if (headState?.sortType === 1) {
-          onHeadState(groupName, { sortType: headState.sortType })
-        }
+        // Re-sorting is no longer poked from here: the delay store announces that the test
+        // settled and the render list recomputes from that.
         onProxies()
       }
     }),

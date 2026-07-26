@@ -31,7 +31,7 @@ class DelayManager {
   private listenerMap = new Map<string, (update: DelayUpdate) => void>()
 
   // 每个分组的监听
-  private groupListenerMap = new Map<string, () => void>()
+  private groupListenerMap = new Map<string, Set<() => void>>()
 
   private pendingItemUpdates = new Map<string, DelayUpdate[]>()
   private pendingGroupUpdates = new Set<string>()
@@ -90,15 +90,18 @@ class DelayManager {
       this.pendingGroupUpdates = new Set()
 
       groups.forEach((group) => {
-        const listener = this.groupListenerMap.get(group)
-        if (!listener) return
-        try {
-          listener()
-        } catch (error) {
-          console.error(
-            `[DelayManager] 通知分组延迟监听器失败: ${group}`,
-            error,
-          )
+        const listeners = this.groupListenerMap.get(group)
+        if (!listeners) return
+        // Copied before iterating: a listener is free to unsubscribe as it runs.
+        for (const listener of [...listeners]) {
+          try {
+            listener()
+          } catch (error) {
+            console.error(
+              `[DelayManager] 通知分组延迟监听器失败: ${group}`,
+              error,
+            )
+          }
         }
       })
     })
@@ -137,12 +140,27 @@ class DelayManager {
     this.listenerMap.delete(key)
   }
 
-  setGroupListener(group: string, listener: () => void) {
-    this.groupListenerMap.set(group, listener)
-  }
+  /**
+   * Called when a delay test for `group` has settled: once per single test, and once for a
+   * whole batch however many proxies it covered.
+   *
+   * "Settled" rather than "changed" on purpose. Per-proxy display updates are already live
+   * through `setListener`; this exists for the things that must not move while results are
+   * still arriving, chiefly sort order.
+   */
+  /// Returns its own unsubscribe, so two views may watch the same group without one
+  /// silently replacing the other's listener.
+  addGroupListener(group: string, listener: () => void): () => void {
+    const listeners = this.groupListenerMap.get(group) ?? new Set()
+    listeners.add(listener)
+    this.groupListenerMap.set(group, listeners)
 
-  removeGroupListener(group: string) {
-    this.groupListenerMap.delete(group)
+    return () => {
+      const current = this.groupListenerMap.get(group)
+      if (!current) return
+      current.delete(listener)
+      if (current.size === 0) this.groupListenerMap.delete(group)
+    }
   }
 
   setDelay(
@@ -220,7 +238,23 @@ class DelayManager {
     return delayProxyByName(name, url, timeout)
   }
 
+  /**
+   * Test one proxy, then tell the group its ordering may have changed.
+   *
+   * The announcement is the point at which a sorted list is allowed to re-sort. It is
+   * deliberately *not* made per result inside a batch — see `checkListDelay`.
+   */
   async checkDelay(
+    member: InteractableProxyMember,
+    group: string,
+    timeout: number,
+  ): Promise<DelayUpdate> {
+    const update = await this.measureDelay(member, group, timeout)
+    this.queueGroupNotification(group)
+    return update
+  }
+
+  private async measureDelay(
     member: InteractableProxyMember,
     group: string,
     timeout: number,
@@ -295,7 +329,6 @@ class DelayManager {
 
     let index = 0
     const startTime = Date.now()
-    const listener = this.groupListenerMap.get(group)
 
     const help = async (): Promise<void> => {
       const currMember = proxies[index++]
@@ -314,10 +347,10 @@ class DelayManager {
           )
         }
 
-        await this.checkDelay(currMember, group, timeout)
-        if (listener) {
-          this.queueGroupNotification(group)
-        }
+        // Measured without announcing: a sorted list that re-ordered on every result would
+        // reshuffle continuously for the length of the test, with rows moving out from under
+        // the pointer. The group is told once, below, when the batch has settled.
+        await this.measureDelay(currMember, group, timeout)
       } catch (error) {
         console.error(
           `[DelayManager] 批量测试单个代理出错，代理: ${currName}`,
@@ -340,6 +373,7 @@ class DelayManager {
     }
 
     await Promise.all(promiseList)
+    this.queueGroupNotification(group)
     const totalTime = Date.now() - startTime
     debugLog(
       `[DelayManager] 批量测试延迟完成，组: ${group}, 总耗时: ${totalTime}ms`,

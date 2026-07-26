@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef } from 'react'
 
 import { useRuntimeConfig } from '@/hooks/use-clash'
+import { useGroupsDelaySettle } from '@/hooks/use-group-delays'
 import { useVerge } from '@/hooks/use-verge'
 import { useAppRefreshers, useProxiesData } from '@/providers/app-data-context'
 import delayManager from '@/services/delay'
@@ -63,6 +64,9 @@ type GroupCache = {
   headState: HeadState
   col: number
   latencyTimeout: number | undefined
+  /// Sorting reads delays from a store outside React, so without this a cached group keeps
+  /// its old order after a test even when the memo around it recomputes.
+  delaySettle: object
   items: IRenderItem[]
 }
 
@@ -203,6 +207,19 @@ export const useRenderList = (
     verge?.default_latency_timeout,
   ])
 
+  // Every group this list draws, so a test settling in any of them re-sorts that group.
+  const renderedGroupNames = useMemo(() => {
+    if (!proxyView) return []
+    if (isChainMode)
+      return selectedGroup ? [selectedGroup] : [CHAIN_DELAY_GROUP]
+    return mode === 'rule' || mode === 'script'
+      ? proxyView.groups.map(({ name }) => name)
+      : proxyView.global
+        ? [proxyView.global.name]
+        : []
+  }, [isChainMode, mode, proxyView, selectedGroup])
+  const delaySettle = useGroupsDelaySettle(renderedGroupNames)
+
   const groupCacheRef = useRef<Map<string, GroupCache>>(new Map())
   const prevListRef = useRef<IRenderItem[]>([])
 
@@ -259,7 +276,8 @@ export const useRenderList = (
         cached.members === group.members &&
         cached.headState === headState &&
         cached.col === col &&
-        cached.latencyTimeout === latencyTimeout
+        cached.latencyTimeout === latencyTimeout &&
+        cached.delaySettle === delaySettle
       ) {
         return cached.items
       }
@@ -324,6 +342,7 @@ export const useRenderList = (
         headState,
         col,
         latencyTimeout,
+        delaySettle,
         items: ret,
       })
       return ret
@@ -340,6 +359,7 @@ export const useRenderList = (
   }, [
     chainOccurrences,
     col,
+    delaySettle,
     headStates,
     isChainMode,
     latencyTimeout,
