@@ -107,7 +107,6 @@ const fn classify_service_install_state(current: CurrentServiceProbe, has_instal
     match current {
         CurrentServiceProbe::Ready => ServiceInstallState::Ready,
         CurrentServiceProbe::VersionMismatch => ServiceInstallState::NeedsReinstall,
-        CurrentServiceProbe::Unavailable if has_install_marker => ServiceInstallState::NeedsReinstall,
         CurrentServiceProbe::Unavailable => ServiceInstallState::Unavailable,
         CurrentServiceProbe::Missing if has_install_marker => ServiceInstallState::NeedsReinstall,
         CurrentServiceProbe::Missing => ServiceInstallState::NotInstalled,
@@ -304,7 +303,7 @@ fn trusted_service_evidence() -> Result<bool> {
 }
 
 async fn detect_service_install_state() -> ServiceInstallState {
-    let markers = match trusted_service_evidence() {
+    let has_trusted_install_marker = match trusted_service_evidence() {
         Ok(exists) => exists,
         Err(error) => {
             logging!(
@@ -316,7 +315,7 @@ async fn detect_service_install_state() -> ServiceInstallState {
         }
     };
 
-    if !markers {
+    if !has_trusted_install_marker {
         return classify_service_install_state(CurrentServiceProbe::Missing, false);
     }
 
@@ -329,7 +328,7 @@ async fn detect_service_install_state() -> ServiceInstallState {
         }
     };
 
-    classify_service_install_state(current, markers)
+    classify_service_install_state(current, has_trusted_install_marker)
 }
 
 pub struct ServiceManager {
@@ -1412,7 +1411,6 @@ impl ServiceManager {
         }
     }
 
-    #[cfg(target_os = "windows")]
     pub async fn confirm_ready(&self) -> Result<()> {
         let reply = probe_service_version_once()
             .await
@@ -1545,14 +1543,7 @@ impl ServiceManager {
     }
 
     pub async fn refresh(&self) -> Result<()> {
-        self.run_operation(async {
-            apply_service_version_result(
-                self,
-                probe_service_version_once().await,
-                "failed to refresh service protocol",
-            )
-        })
-        .await
+        self.run_operation(async { self.confirm_ready().await }).await
     }
 
     pub async fn handle_service_status(&self, status: ServiceStatus) -> Result<()> {
@@ -2204,7 +2195,7 @@ mod tests {
         );
         assert_eq!(
             classify_service_install_state(CurrentServiceProbe::Unavailable, true),
-            ServiceInstallState::NeedsReinstall
+            ServiceInstallState::Unavailable
         );
     }
 

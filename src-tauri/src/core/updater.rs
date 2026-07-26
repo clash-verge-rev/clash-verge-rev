@@ -127,6 +127,21 @@ fn version_lte(a: &str, b: &str) -> bool {
     true // equal
 }
 
+/// Map the app's resolved UI language code to an NSIS installer language ID.
+///
+/// The Windows installer only ships SimpChinese, English and Russian
+/// (`tauri.windows.conf.json` `nsis.languages`). Languages without a matching
+/// NSIS translation fall back to English; Traditional Chinese ("zhtw") is
+/// mapped to SimpChinese so Chinese users don't get an English installer.
+#[cfg(target_os = "windows")]
+fn nsis_language_id(app_language: &str) -> &'static str {
+    match app_language {
+        "zh" | "zhtw" => "2052", // SimpChinese
+        "ru" => "1049",          // Russian
+        _ => "1033",             // English
+    }
+}
+
 // ─── Startup Install & Cache Management ─────────────────────────────────────
 
 impl SilentUpdater {
@@ -186,7 +201,20 @@ impl SilentUpdater {
 
         // Need a fresh Update object from the server to call install().
         // This is a lightweight HTTP request (< 1s), not a re-download.
-        let update = match app_handle.updater() {
+        //
+        // The updater is built with the app's current language forwarded as
+        // `/LANG=<NSIS-lang-id>`. On Windows the NSIS installer parses this in
+        // `.onInit` (see `packages/windows/installer.nsi`) and sets `$LANGUAGE`
+        // directly, skipping its language-selection dialog so the update starts
+        // without prompting. Other platforms don't run an installer.
+        let updater_builder = app_handle.updater_builder();
+        #[cfg(target_os = "windows")]
+        let updater_builder = {
+            let verge_lang = Config::verge().await.latest_arc().language.clone();
+            let lang_id = nsis_language_id(&clash_verge_i18n::current_language(verge_lang.as_deref()));
+            updater_builder.installer_arg(format!("/LANG={lang_id}"))
+        };
+        let update = match updater_builder.build() {
             Ok(updater) => match updater.check().await {
                 Ok(Some(u)) => u,
                 Ok(None) => {

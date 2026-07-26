@@ -39,7 +39,7 @@ fn resolve_supported_language(language: &str) -> Option<Cow<'static, str>> {
 }
 
 #[inline]
-fn current_language(language: Option<&str>) -> Cow<'static, str> {
+pub fn current_language(language: Option<&str>) -> Cow<'static, str> {
     language
         .filter(|lang| !lang.is_empty())
         .and_then(resolve_supported_language)
