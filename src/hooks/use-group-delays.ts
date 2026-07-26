@@ -1,76 +1,71 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useSyncExternalStore } from 'react'
 
-import delayManager from '@/services/delay'
-import type { ResolvedProxyMember } from '@/types/proxy-view'
+import delayManager, { type DelaySnapshot } from '@/services/delay'
+
+const NO_DELAYS: DelaySnapshot = { of: () => -1 }
 
 /**
- * The delays a list is sorting by, as a value.
+ * The delays a list sorts by, as a value it can depend on.
  *
  * Delays live in a module-level store outside React, so a memo that reads them has nothing
- * React can depend on and goes stale — which is why the two places that sort by delay each
- * grew their own way of forcing a recompute, and why both missed the single-proxy path.
+ * React can see and goes stale — which is why the two places that sorted by delay each grew
+ * their own way of forcing a recompute, and why both missed the single-proxy path.
  *
- * A snapshot rather than a revision counter, deliberately: sorting becomes a pure function of
- * a value it is handed, which the exhaustive-deps rule can see. A counter would have to be
- * listed as a dependency it never reads, and the rule is right to reject that — the code this
- * replaces satisfied it with a `refreshTick >= 0 ? … : 0` ternary whose only job was to make
- * the counter look used.
+ * `useSyncExternalStore` rather than an effect plus state: the value is read during render
+ * while the store notifies from an animation frame, so a settle landing between the two would
+ * otherwise be dropped with nothing left to re-trigger it. It also keeps the identity stable
+ * between settles, which a snapshot rebuilt per render would not — that would re-sort on
+ * every render, which is worse than the hack it replaces.
  *
- * Rebuilt when a test *settles*, not on every measurement: a list re-sorting on each result
- * would reshuffle for the length of a batch, moving rows out from under the pointer. Per-proxy
- * displays stay live on their own subscription and are unaffected.
+ * The store announces when a test *settles*, not on every measurement: a list re-sorting on
+ * each result would reshuffle for the length of a batch, moving rows out from under the
+ * pointer. Per-proxy displays stay live on their own subscription and are unaffected.
  */
-export type DelaySnapshot = {
-  of: (member: ResolvedProxyMember) => number
-}
-
-const snapshotOf = (group: string | null): DelaySnapshot => ({
-  of: (member) => (group ? delayManager.getDelayFix(member, group) : -1),
-})
-
 export const useGroupDelays = (group: string | null): DelaySnapshot => {
-  const [settled, setSettled] = useState(() => ({
-    group,
-    snapshot: snapshotOf(group),
-  }))
+  const subscribe = useCallback(
+    (onSettle: () => void) =>
+      group ? delayManager.addGroupListener(group, onSettle) : () => {},
+    [group],
+  )
+  const read = useCallback(
+    () => (group ? delayManager.groupDelays(group) : NO_DELAYS),
+    [group],
+  )
 
-  useEffect(() => {
-    if (!group) return
-    // A fresh object each time: its identity is what tells a memo to re-sort.
-    return delayManager.addGroupListener(group, () =>
-      setSettled({ group, snapshot: snapshotOf(group) }),
-    )
-  }, [group])
-
-  // Derived rather than written from the effect: switching group must take effect on this
-  // render, and setting state in an effect to achieve that costs an extra render pass.
-  return settled.group === group ? settled.snapshot : snapshotOf(group)
+  return useSyncExternalStore(subscribe, read, read)
 }
 
 /**
- * A value whose identity changes when a delay test settles in any of `groups`.
+ * The delays for several groups at once, keyed by group name.
  *
- * For lists that draw several groups at once and sort each one separately: they do not need
- * to read the delays through a snapshot, only to know that re-sorting is due. Compared by
- * identity, so it is a dependency the exhaustive-deps rule can see.
+ * The map's identity changes whenever any of them settles, but each group's own entry keeps
+ * its identity unless that group settled — so a per-group cache is not thrown away wholesale
+ * because a neighbouring group finished a test.
  */
-export const useGroupsDelaySettle = (groups: readonly string[]): object => {
-  const [settle, setSettle] = useState<object>(() => ({}))
-  // Joined so the effect tracks membership rather than the array identity, which a list
-  // rebuilds on every render.
-  const groupKey = groups.join('\u0000')
+export const useGroupsDelays = (
+  groups: readonly string[],
+): ReadonlyMap<string, DelaySnapshot> => {
+  // Joined so the subscription tracks membership rather than the array identity, which a
+  // list rebuilds on every render.
+  const groupKey = groups.join(' ')
 
-  useEffect(() => {
-    const names = groupKey ? groupKey.split('\u0000') : []
-    if (names.length === 0) return
+  const subscribe = useCallback(
+    (onSettle: () => void) => {
+      const names = groupKey ? groupKey.split(' ') : []
+      const unsubscribes = names.map((name) =>
+        delayManager.addGroupListener(name, onSettle),
+      )
+      return () => {
+        for (const unsubscribe of unsubscribes) unsubscribe()
+      }
+    },
+    [groupKey],
+  )
 
-    const unsubscribes = names.map((name) =>
-      delayManager.addGroupListener(name, () => setSettle({})),
-    )
-    return () => {
-      for (const unsubscribe of unsubscribes) unsubscribe()
-    }
-  }, [groupKey])
+  const read = useCallback(
+    () => delayManager.groupsDelays(groupKey),
+    [groupKey],
+  )
 
-  return settle
+  return useSyncExternalStore(subscribe, read, read)
 }

@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef } from 'react'
 
 import { useRuntimeConfig } from '@/hooks/use-clash'
-import { useGroupsDelaySettle } from '@/hooks/use-group-delays'
+import { useGroupsDelays } from '@/hooks/use-group-delays'
 import { useVerge } from '@/hooks/use-verge'
 import { useAppRefreshers, useProxiesData } from '@/providers/app-data-context'
-import delayManager from '@/services/delay'
+import delayManager, { type DelaySnapshot } from '@/services/delay'
 import {
   isInteractableMember,
   resolveMember,
@@ -64,9 +64,9 @@ type GroupCache = {
   headState: HeadState
   col: number
   latencyTimeout: number | undefined
-  /// Sorting reads delays from a store outside React, so without this a cached group keeps
-  /// its old order after a test even when the memo around it recomputes.
-  delaySettle: object
+  /// This group's own delays. Compared by identity so that a test settling in one group
+  /// does not throw away every other group's sorted order.
+  delays: DelaySnapshot | undefined
   items: IRenderItem[]
 }
 
@@ -218,7 +218,7 @@ export const useRenderList = (
         ? [proxyView.global.name]
         : []
   }, [isChainMode, mode, proxyView, selectedGroup])
-  const delaySettle = useGroupsDelaySettle(renderedGroupNames)
+  const groupDelays = useGroupsDelays(renderedGroupNames)
 
   const groupCacheRef = useRef<Map<string, GroupCache>>(new Map())
   const prevListRef = useRef<IRenderItem[]>([])
@@ -277,7 +277,7 @@ export const useRenderList = (
         cached.headState === headState &&
         cached.col === col &&
         cached.latencyTimeout === latencyTimeout &&
-        cached.delaySettle === delaySettle
+        cached.delays === groupDelays.get(group.name)
       ) {
         return cached.items
       }
@@ -342,7 +342,7 @@ export const useRenderList = (
         headState,
         col,
         latencyTimeout,
-        delaySettle,
+        delays: groupDelays.get(group.name),
         items: ret,
       })
       return ret
@@ -359,7 +359,7 @@ export const useRenderList = (
   }, [
     chainOccurrences,
     col,
-    delaySettle,
+    groupDelays,
     headStates,
     isChainMode,
     latencyTimeout,

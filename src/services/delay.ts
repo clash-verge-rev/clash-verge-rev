@@ -13,6 +13,11 @@ import {
 import { debugLog } from '@/utils/debug'
 import { classifyDelay, DEFAULT_DELAY_TIMEOUT } from '@/utils/delay'
 
+/** A group's delays, handed to sorting as a value it can depend on. */
+export type DelaySnapshot = {
+  of: (member: ResolvedProxyMember) => number
+}
+
 const hashKey = (name: string, group: string) => `${group ?? ''}::${name}`
 
 export interface DelayUpdate {
@@ -32,6 +37,18 @@ class DelayManager {
 
   // 每个分组的监听
   private groupListenerMap = new Map<string, Set<() => void>>()
+  /// A stable handle per group, replaced when that group settles. Consumers compare its
+  /// identity, so it must not be rebuilt on every read.
+  private groupSnapshots = new Map<string, DelaySnapshot>()
+  /// Keyed by the joined group names a consumer asked for; cleared whenever any group
+  /// settles, so the map identity changes while unaffected groups keep theirs.
+  private groupSetSnapshots = new Map<
+    string,
+    ReadonlyMap<string, DelaySnapshot>
+  >()
+  /// Batches in flight per group. A single test that lands inside one must not announce:
+  /// sorting from a half-measured group is the reordering this design exists to avoid.
+  private activeBatches = new Map<string, number>()
 
   private pendingItemUpdates = new Map<string, DelayUpdate[]>()
   private pendingGroupUpdates = new Set<string>()
@@ -108,8 +125,49 @@ class DelayManager {
   }
 
   private queueGroupNotification(group: string) {
+    if ((this.activeBatches.get(group) ?? 0) > 0) return
+    // Dropped so the next read builds a fresh identity. Only this group's snapshot changes;
+    // the set-level map is rebuilt too, but its other entries keep their identities.
+    this.groupSnapshots.delete(group)
+    this.groupSetSnapshots.clear()
     this.pendingGroupUpdates.add(group)
     this.scheduleGroupFlush()
+  }
+
+  /**
+   * A handle to this group's delays whose identity changes only when a test settles.
+   *
+   * Read during render and compared by identity, so it is cached rather than rebuilt: a
+   * fresh object per read would make every consumer recompute on every render.
+   */
+  /**
+   * The delays for a set of groups, keyed by group name.
+   *
+   * Cached so its identity is stable between settles, while each group's own snapshot keeps
+   * its identity unless *that* group settled — which is what lets a per-group cache survive
+   * a test in a neighbouring group.
+   */
+  groupsDelays(groupKey: string): ReadonlyMap<string, DelaySnapshot> {
+    const cached = this.groupSetSnapshots.get(groupKey)
+    if (cached) return cached
+
+    const names = groupKey ? groupKey.split(' ') : []
+    const snapshots = new Map(
+      names.map((name) => [name, this.groupDelays(name)]),
+    )
+    this.groupSetSnapshots.set(groupKey, snapshots)
+    return snapshots
+  }
+
+  groupDelays(group: string): DelaySnapshot {
+    const existing = this.groupSnapshots.get(group)
+    if (existing) return existing
+
+    const snapshot: DelaySnapshot = {
+      of: (member) => this.getDelayFix(member, group),
+    }
+    this.groupSnapshots.set(group, snapshot)
+    return snapshot
   }
 
   setUrl(group: string, url: string) {
@@ -322,6 +380,7 @@ class DelayManager {
       `[DelayManager] 批量测试延迟开始，组: ${group}, 数量: ${proxies.length}, 并发数: ${concurrency}`,
     )
     const names = proxies.map((member) => member.ref.name)
+    this.activeBatches.set(group, (this.activeBatches.get(group) ?? 0) + 1)
     // 设置正在延迟测试中
     names.forEach((name) => {
       this.setDelay(name, group, -2)
@@ -372,8 +431,19 @@ class DelayManager {
       promiseList.push(help())
     }
 
-    await Promise.all(promiseList)
-    this.queueGroupNotification(group)
+    try {
+      await Promise.all(promiseList)
+    } finally {
+      // In a `finally` so a throw cannot leave the group unannounced: the proxies would sit
+      // at -2 and the order would stay stale with nothing later to repair it.
+      const remaining = (this.activeBatches.get(group) ?? 1) - 1
+      if (remaining > 0) {
+        this.activeBatches.set(group, remaining)
+      } else {
+        this.activeBatches.delete(group)
+        this.queueGroupNotification(group)
+      }
+    }
     const totalTime = Date.now() - startTime
     debugLog(
       `[DelayManager] 批量测试延迟完成，组: ${group}, 总耗时: ${totalTime}ms`,

@@ -90,6 +90,37 @@ describe('group settle notifications', () => {
     stop()
   })
 
+  test('a single test inside a running batch waits for the batch', async () => {
+    // The window the batch counter exists for: the per-row delay button and "test all" hold
+    // separate locks, so a user can start one inside the other. Announcing then would sort a
+    // half-measured group, which is the reordering this design is meant to prevent.
+    const proxies = Array.from({ length: 6 }, (_, index) => node(`n${index}`))
+
+    const batch = delayManager.checkListDelay(proxies as never, 'g', 5000, 2)
+    await delayManager.checkDelay(node('single') as never, 'g', 5000)
+    await nextFrame()
+    expect(settles).toBe(0)
+
+    await batch
+    await nextFrame()
+    expect(settles).toBe(1)
+  })
+
+  test('unsubscribing one listener leaves the others subscribed', async () => {
+    let second = 0
+    const stop = delayManager.addGroupListener('g', () => {
+      second += 1
+    })
+
+    unsubscribe()
+    await delayManager.checkDelay(node('a') as never, 'g', 5000)
+    await nextFrame()
+
+    expect(settles).toBe(0)
+    expect(second).toBe(1)
+    stop()
+  })
+
   test('another group is not disturbed', async () => {
     let other = 0
     const stop = delayManager.addGroupListener('other', () => {
