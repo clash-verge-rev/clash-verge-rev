@@ -78,6 +78,10 @@ jobs:
         if: steps.check_frontend.outputs.frontend == 'true'
         run: pnpm typecheck
 
+      - name: Run tests
+        if: steps.check_frontend.outputs.frontend == 'true'
+        run: pnpm test
+
       - name: Run Knip
         if: steps.check_frontend.outputs.frontend == 'true'
         run: pnpm knip:check

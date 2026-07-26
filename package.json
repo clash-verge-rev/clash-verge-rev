@@ -34,6 +34,8 @@
     "i18n:format": "node scripts/cleanup-unused-i18n.mjs --align --apply",
     "i18n:types": "node scripts/generate-i18n-keys.mjs",
     "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "test:dev-control": "node --test scripts/dev-control.test.mjs scripts/service-release.test.mjs",
     "knip:check": "knip",
     "knip:report": "knip --no-exit-code"
@@ -123,7 +125,8 @@
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.59.4",
     "vite": "^8.0.14",
-    "vite-plugin-svgr": "^5.2.0"
+    "vite-plugin-svgr": "^5.2.0",
+    "vitest": "^4.1.10"
   },
   "lint-staged": {
     "*.{ts,tsx,js,mjs}": [
