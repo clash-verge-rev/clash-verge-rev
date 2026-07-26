@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# 验证IPv4地址格式
+# Validate an IPv4 address.
 function is_valid_ipv4() {
     local ip=$1
     local IFS='.'
@@ -18,7 +18,7 @@ function is_valid_ipv4() {
     return 0
 }
 
-# 验证IPv6地址格式
+# Validate an IPv6 address.
 function is_valid_ipv6() {
     local ip=$1
     if [[ ! $ip =~ ^([0-9a-fA-F]{0,4}:){1,7}[0-9a-fA-F]{0,4}$ ]] &&
@@ -28,52 +28,93 @@ function is_valid_ipv6() {
     return 0
 }
 
-# 验证IP地址是否为有效的IPv4或IPv6
+# Validate an IP address as IPv4 or IPv6.
 function is_valid_ip() {
     is_valid_ipv4 "$1" || is_valid_ipv6 "$1"
 }
 
-# 检查参数
-[ $# -lt 1 ] && echo "Usage: $0 <IP address>" && exit 1
-! is_valid_ip "$1" && echo "$1 is not a valid IP address." && exit 1
+# Resolve the network service name for a given device (e.g. en0).
+function network_service_for_device() {
+    local device=$1
+    networksetup -listnetworkserviceorder | awk -v dev="$device" '
+        /^\([0-9]+\) /{service=$0; sub(/^\([0-9]+\) /, "", service)}
+        /\(Hardware Port:/{interface=$NF; sub(/\)/, "", interface); if (interface == dev) {print service; exit}}
+    '
+}
 
-# 获取网络接口和硬件端口
-nic=$(route -n get default | grep "interface" | awk '{print $2}')
-# 从网络服务列表中获取硬件端口
-hardware_port=$(networksetup -listnetworkserviceorder | awk -v dev="$nic" '
-    /^\([0-9]+\) /{port=$0; sub(/^\([0-9]+\) /, "", port)} 
-    /\(Hardware Port:/{interface=$NF;sub(/\)/, "", interface); if (interface == dev) {print port; exit}}
-')
-
-# 获取当前DNS设置
-original_dns=$(networksetup -getdnsservers "$hardware_port")
-
-# 判断当前DNS是否已经等于目标DNS（即我们此前设置的值）。
-# 这种情况常见于 macOS 唤醒后的重复校正：此时绝不能把我们自己写入的值
-# 当作“原始DNS”存回 .original_dns.txt，否则会永久丢失用户真实的DNS配置。
-current_is_target=false
-current_dns_oneline=$(echo "$original_dns" | tr '\n' ' ' | tr -s '[:space:]' ' ' | sed 's/^ *//;s/ *$//')
-if [ "$current_dns_oneline" = "$1" ]; then
-    current_is_target=true
+if [ "$#" -lt 2 ]; then
+    echo "Usage: $0 <IP address> <state directory>"
+    exit 1
 fi
 
-# 检查当前DNS设置是否有效
-is_valid_dns=false
-for ip in $original_dns; do
-    ip=$(echo "$ip" | tr -d '[:space:]')
-    if [ -n "$ip" ] && (is_valid_ipv4 "$ip" || is_valid_ipv6 "$ip"); then
-        is_valid_dns=true
-        break
-    fi
-done
+dns_server=$1
+state_dir=$2
 
-# 更新原始DNS备份：仅当当前DNS不是我们的目标值时才写入，
-# 避免覆盖睡眠前保存的真实DNS状态（见 issue #7593）。
-if [ "$current_is_target" = false ]; then
-    if [ "$is_valid_dns" = false ]; then
-        echo "empty" >.original_dns.txt
-    else
-        echo "$original_dns" >.original_dns.txt
+if ! is_valid_ip "$dns_server"; then
+    echo "$dns_server is not a valid IP address."
+    exit 1
+fi
+
+nic=$(route -n get default 2>/dev/null | awk '/interface/{print $2; exit}')
+if [[ ! $nic =~ ^[a-zA-Z0-9._-]+$ ]]; then
+    echo "Unable to determine a safe default network interface."
+    exit 1
+fi
+
+network_service=$(network_service_for_device "$nic")
+if [ -z "$network_service" ]; then
+    echo "Unable to determine the default network service."
+    exit 1
+fi
+
+umask 077
+if ! mkdir -p "$state_dir"; then
+    echo "Unable to create DNS state directory."
+    exit 1
+fi
+
+# Each network service owns its own state file so that switching the default
+# service (e.g. Wi-Fi -> Ethernet) across a sleep/wake never clobbers the state
+# saved for the previous service.
+service_id=$(printf '%s' "$network_service" | LC_ALL=C LANG=C shasum -a 256 | awk '{print $1}')
+if [[ ! $service_id =~ ^[0-9a-f]{64}$ ]]; then
+    echo "Unable to identify the default network service."
+    exit 1
+fi
+
+state_file="$state_dir/$nic-$service_id.state"
+if [ ! -f "$state_file" ]; then
+    if ! original_dns=$(networksetup -getdnsservers "$network_service"); then
+        echo "Unable to read the original DNS servers."
+        exit 1
+    fi
+
+    saved_dns="empty"
+    for ip in $original_dns; do
+        ip=$(echo "$ip" | tr -d '[:space:]')
+        if [ -n "$ip" ] && is_valid_ip "$ip"; then
+            saved_dns=$original_dns
+            break
+        fi
+    done
+
+    # Write the original DNS state atomically: a temp file is filled first and
+    # then moved into place. Only after a successful move do we touch the live
+    # system DNS, so a crash can never leave us without a usable backup.
+    temporary_state="$state_file.tmp.$$"
+    if ! {
+        printf '%s\n' "$network_service"
+        printf '%s\n' "$saved_dns"
+    } >"$temporary_state"; then
+        rm -f "$temporary_state"
+        echo "Unable to save the original DNS state."
+        exit 1
+    fi
+    if ! mv "$temporary_state" "$state_file"; then
+        rm -f "$temporary_state"
+        echo "Unable to install the original DNS state."
+        exit 1
     fi
 fi
-networksetup -setdnsservers "$hardware_port" "$1"
+
+networksetup -setdnsservers "$network_service" "$dns_server"

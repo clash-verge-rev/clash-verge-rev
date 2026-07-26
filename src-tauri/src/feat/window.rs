@@ -86,9 +86,13 @@ async fn restore_dns_after_core_stop() -> bool {
     )
     .await
     {
-        Ok(_) => {
-            logging!(info, Type::Window, "DNS设置已恢复");
-            true
+        Ok(restored) => {
+            if restored {
+                logging!(info, Type::Window, "DNS设置已恢复");
+            } else {
+                logging!(warn, Type::Window, "Warning: DNS设置恢复失败");
+            }
+            restored
         }
         Err(_) => {
             logging!(warn, Type::Window, "Warning: 恢复DNS设置超时");

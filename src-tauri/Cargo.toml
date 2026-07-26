@@ -122,14 +122,11 @@ libc = "0.2"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 objc2 = "0.6.4"
-block2 = "0.6"
 objc2-foundation = { version = "0.3.2", features = [
   "NSString",
   "NSDictionary",
   "NSAttributedString",
   "NSNotification",
-  "NSOperation",
-  "block2",
 ] }
 objc2-app-kit = { version = "0.3.2", features = [
   "NSAttributedString",
@@ -146,7 +143,6 @@ objc2-app-kit = { version = "0.3.2", features = [
   "NSStringDrawing",
   "NSText",
   "NSWorkspace",
-  "block2",
 ] }
 
 [target.'cfg(windows)'.dependencies]

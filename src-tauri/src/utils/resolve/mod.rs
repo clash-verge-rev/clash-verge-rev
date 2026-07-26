@@ -38,6 +38,9 @@ pub fn init_work_dir_and_logger() -> anyhow::Result<()> {
 }
 
 pub fn resolve_setup_sync() {
+    #[cfg(target_os = "macos")]
+    dns::register_workspace_wake_observer();
+
     AsyncHandler::spawn(|| async {
         AsyncHandler::spawn_blocking(init_scheme);
         AsyncHandler::spawn_blocking(init_embed_server);

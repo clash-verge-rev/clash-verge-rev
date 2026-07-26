@@ -768,6 +768,9 @@ pub async fn enhance() -> Result<(Mapping, HashSet<String>, HashMap<String, Resu
     let config = cleanup_proxy_groups(config);
     let config = use_sort(config);
 
+    #[cfg(target_os = "macos")]
+    tun::reconcile_system_dns(&config);
+
     let mut exists_keys_set = HashSet::new();
     exists_keys_set.extend(exists_keys);
 

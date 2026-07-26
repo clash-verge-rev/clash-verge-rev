@@ -1,8 +1,5 @@
 use serde_yaml_ng::{Mapping, Value};
 
-#[cfg(target_os = "macos")]
-use crate::process::AsyncHandler;
-
 macro_rules! revise {
     ($map: expr, $key: expr, $val: expr) => {
         let ret_key = Value::String($key.into());
@@ -61,27 +58,10 @@ pub fn use_tun(mut config: Mapping, enable: bool) -> Mapping {
             if ipv6_val && !dns_val.contains_key(Value::from("fake-ip-range6")) {
                 revise!(dns_val, "fake-ip-range6", "fdfe:dcba:9876::1/64");
             }
-
-            #[cfg(target_os = "macos")]
-            {
-                AsyncHandler::spawn(move || async move {
-                    crate::utils::resolve::dns::restore_public_dns().await;
-                    crate::utils::resolve::dns::set_public_dns(
-                        crate::utils::resolve::dns::TUN_SYSTEM_DNS_SERVER.to_string(),
-                    )
-                    .await;
-                });
-            }
         }
 
         // 当TUN启用时，将修改后的DNS配置写回
         revise!(config, "dns", dns_val);
-    } else {
-        // TUN未启用时，仅恢复系统DNS，不修改配置文件中的DNS设置
-        #[cfg(target_os = "macos")]
-        AsyncHandler::spawn(move || async move {
-            crate::utils::resolve::dns::restore_public_dns().await;
-        });
     }
 
     // 更新TUN配置
@@ -89,4 +69,54 @@ pub fn use_tun(mut config: Mapping, enable: bool) -> Mapping {
     revise!(config, "tun", tun_val);
 
     config
+}
+
+#[cfg(target_os = "macos")]
+fn should_manage_tun_dns(config: &Mapping) -> bool {
+    let tun_enabled = config
+        .get(Value::from("tun"))
+        .and_then(Value::as_mapping)
+        .and_then(|tun| tun.get(Value::from("enable")))
+        .and_then(Value::as_bool)
+        .unwrap_or(false);
+    let enhanced_mode = config
+        .get(Value::from("dns"))
+        .and_then(Value::as_mapping)
+        .and_then(|dns| dns.get(Value::from("enhanced-mode")))
+        .and_then(Value::as_str)
+        .unwrap_or("fake-ip");
+    tun_enabled && enhanced_mode == "fake-ip"
+}
+
+/// The final runtime config is the source of truth for whether the system DNS
+/// must be managed: it already folds in `enable_tun_mode && !tun_suppressed_for_session()`
+/// (see `enhance::get_config_values`), so reading `tun.enable` here accounts for
+/// session suppression that the stored `verge().enable_tun_mode` alone would miss.
+#[cfg(target_os = "macos")]
+pub(super) fn reconcile_system_dns(config: &Mapping) {
+    crate::utils::resolve::dns::schedule_tun_dns_reconciliation(should_manage_tun_dns(config));
+}
+
+#[cfg(all(test, target_os = "macos"))]
+#[allow(clippy::expect_used)]
+mod tests {
+    use super::should_manage_tun_dns;
+    use serde_yaml_ng::Mapping;
+
+    fn mapping(yaml: &str) -> Mapping {
+        serde_yaml_ng::from_str(yaml).expect("test TUN config should be valid")
+    }
+
+    #[test]
+    fn final_runtime_config_controls_system_dns_management() {
+        assert!(should_manage_tun_dns(&mapping(
+            r"{tun: {enable: true}, dns: {enhanced-mode: fake-ip}}"
+        )));
+        assert!(!should_manage_tun_dns(&mapping(
+            r"{tun: {enable: false}, dns: {enhanced-mode: fake-ip}}"
+        )));
+        assert!(!should_manage_tun_dns(&mapping(
+            r"{tun: {enable: true}, dns: {enhanced-mode: redir-host}}"
+        )));
+    }
 }
