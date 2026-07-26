@@ -42,6 +42,21 @@ export interface IRenderItem {
   testUrl?: string
 }
 
+/**
+ * Whether the list about to be drawn contains anything a user would call content.
+ *
+ * Derived from the list itself rather than predicted beside it. The prediction that used to
+ * live in the empty-state model asked a different question in chain mode — whether any
+ * Selector or URLTest group existed — which is unrelated to what the chain list is actually
+ * built from, so both a false "empty" and a false "not empty" were reachable.
+ *
+ * A group header alone counts only when the group is visible; every other row is content by
+ * definition, including the members of a group that is hidden but expanded.
+ */
+export const hasRenderableItems = (
+  renderList: readonly IRenderItem[],
+): boolean => renderList.some((item) => item.type !== 0 || !item.group.hidden)
+
 type GroupCache = {
   now: string | undefined
   members: ProxyGroupView['members']

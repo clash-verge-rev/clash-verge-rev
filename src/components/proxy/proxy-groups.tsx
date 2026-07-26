@@ -32,13 +32,20 @@ import {
 import { debugLog } from '@/utils/debug'
 
 import { ProxyEmptyState } from './proxy-empty-state'
-import { resolveProxyListState } from './proxy-empty-state-model'
+import {
+  resolveEmptyListReason,
+  resolveProxyListState,
+} from './proxy-empty-state-model'
 import {
   DEFAULT_HOVER_DELAY,
   ProxyGroupNavigator,
 } from './proxy-group-navigator'
 import { ProxyRender } from './proxy-render'
-import { type IRenderItem, useRenderList } from './use-render-list'
+import {
+  hasRenderableItems,
+  type IRenderItem,
+  useRenderList,
+} from './use-render-list'
 
 const ProxyGroupsChain = lazy(() =>
   import('./proxy-groups-chain').then((m) => ({
@@ -56,6 +63,22 @@ interface Props {
   mode: string
   isChainMode?: boolean
   chainConfigData?: string | null
+}
+
+/**
+ * The empty state to draw when the render list turns out to contain nothing.
+ *
+ * Shared by both list components so the observation and its explanation stay together.
+ */
+function useEmptyRenderList() {
+  const { isProxyViewError } = useProxiesData()
+  const { runningMode } = useSystemData()
+
+  return (
+    <ProxyEmptyState
+      reason={resolveEmptyListReason({ runningMode, isProxyViewError })}
+    />
+  )
 }
 
 function useProxyRenderState(
@@ -202,6 +225,7 @@ function ChainProxyGroups(props: {
     getScrollPosition,
     saveScrollPosition,
   } = useProxyRenderState(mode, true, activeSelectedGroup)
+  const emptyList = useEmptyRenderList()
 
   const parentRef = useRef<HTMLDivElement>(null)
   const scrollTopRef = useRef(0)
@@ -323,6 +347,9 @@ function ChainProxyGroups(props: {
     }
   })
 
+  // The list is built; whether it holds anything is now an observation, not a guess.
+  if (!hasRenderableItems(renderList)) return emptyList
+
   return (
     <Suspense fallback={<BaseLoading />}>
       <ProxyGroupsChain
@@ -359,6 +386,7 @@ function NormalProxyGroups(props: { mode: string }) {
     getScrollPosition,
     saveScrollPosition,
   } = useProxyRenderState(mode, false, null)
+  const emptyList = useEmptyRenderList()
   const renderFirstRef = useRef(true)
   // 恢复滚动位置期间设为 true，避免程序化滚动触发的 scroll 事件把中间值写回存储
   const isRestoringRef = useRef(false)
@@ -573,6 +601,9 @@ function NormalProxyGroups(props: { mode: string }) {
     [handleChangeProxy, handleCheckAll, onHeadState, handleLocation],
   )
 
+  // The list is built; whether it holds anything is now an observation, not a guess.
+  if (!hasRenderableItems(renderList)) return emptyList
+
   return (
     <div style={{ position: 'relative', height: '100%' }}>
       <StickyVirtualList
@@ -602,18 +633,14 @@ function NormalProxyGroups(props: { mode: string }) {
 export const ProxyGroups = (props: Props) => {
   const { mode, isChainMode = false, chainConfigData } = props
   const { profiles, isLoading: isProfilesLoading } = useProfiles()
-  const { proxyView, isProxyViewPending, isProxyViewError } = useProxiesData()
-  const { runningMode, isRunningModePending } = useSystemData()
+  const { isProxyViewPending } = useProxiesData()
+  const { isRunningModePending } = useSystemData()
 
   const listState = resolveProxyListState({
     mode,
-    isChainMode,
     profiles,
     isProfilesPending: !profiles && isProfilesLoading,
-    proxyView,
     isProxyViewPending,
-    isProxyViewError,
-    runningMode,
     isRunningModePending,
   })
 
@@ -624,7 +651,8 @@ export const ProxyGroups = (props: Props) => {
       return <BaseLoading />
     case 'empty':
       return <ProxyEmptyState reason={listState.reason} />
-    case 'content':
+    case 'render':
+      // Whether there is anything to draw is the list's own answer, given below.
       return isChainMode ? (
         <ChainProxyGroups mode={mode} chainConfigData={chainConfigData} />
       ) : (
