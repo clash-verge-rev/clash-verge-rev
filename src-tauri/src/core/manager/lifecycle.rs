@@ -591,7 +591,7 @@ impl CoreManager {
             .with_max_times(max_times as usize);
 
         let wait_for_ready = (|| async {
-            if SERVICE_MANAGER.is_ready_cached() {
+            if crate::core::runstate::RUN_STATE.state().service_usable() {
                 return Ok(());
             }
 
@@ -668,7 +668,7 @@ impl CoreManager {
         if SERVICE_MANAGER.confirm_ready().await.is_err() {
             return false;
         }
-        SERVICE_MANAGER.is_ready_cached()
+        crate::core::runstate::RUN_STATE.state().service_usable()
     }
 
     /// 服务就绪后停止 sidecar,再以 service 重启内核

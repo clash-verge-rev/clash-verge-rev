@@ -86,19 +86,13 @@ pub struct CoreManager {
     handoff_watcher_running: AtomicBool,
 }
 
-#[derive(Debug)]
+/// Process-level state owned by `CoreManager`.
+///
+/// Running Mode deliberately does *not* live here — it belongs to `core::runstate`, which
+/// keeps it consistent with Service Health. See `docs/adr/0001-runstate-owns-state-not-lifecycle.md`.
+#[derive(Debug, Default)]
 struct State {
-    running_mode: ArcSwap<RunningMode>,
     child_sidecar: ArcSwapOption<CommandChild>,
-}
-
-impl Default for State {
-    fn default() -> Self {
-        Self {
-            running_mode: ArcSwap::new(Arc::new(RunningMode::NotRunning)),
-            child_sidecar: ArcSwapOption::new(None),
-        }
-    }
 }
 
 impl Default for CoreManager {
@@ -123,7 +117,7 @@ impl CoreManager {
     }
 
     pub fn get_running_mode(&self) -> Arc<RunningMode> {
-        Arc::clone(&self.state.load().running_mode.load())
+        crate::core::runstate::RUN_STATE.mode_arc()
     }
 
     pub fn take_child_sidecar(&self) -> Option<CommandChild> {
@@ -146,8 +140,7 @@ impl CoreManager {
         if matches!(mode, RunningMode::NotRunning) {
             self.invalidate_core_readiness();
         }
-        let state = self.state.load();
-        state.running_mode.store(Arc::new(mode));
+        crate::core::runstate::RUN_STATE.set_mode(mode);
     }
 
     pub fn set_running_child_sidecar(&self, child: CommandChild) {
