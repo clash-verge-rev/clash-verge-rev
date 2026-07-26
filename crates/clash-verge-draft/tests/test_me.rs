@@ -334,7 +334,11 @@ mod transactions {
 
         assert_eq!(**first.data_arc(), 1);
         assert_eq!(**second.data_arc(), "a");
-        assert_eq!(**first.latest_arc(), 1, "the draft itself is gone, not just uncommitted");
+        assert_eq!(
+            **first.latest_arc(),
+            1,
+            "the draft itself is gone, not just uncommitted"
+        );
     }
 
     #[test]

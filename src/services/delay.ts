@@ -11,6 +11,7 @@ import {
   type ResolvedProxyMember,
 } from '@/types/proxy-view'
 import { debugLog } from '@/utils/debug'
+import { classifyDelay, DEFAULT_DELAY_TIMEOUT } from '@/utils/delay'
 
 const hashKey = (name: string, group: string) => `${group ?? ''}::${name}`
 
@@ -345,21 +346,36 @@ class DelayManager {
     )
   }
 
-  formatDelay(delay: number, timeout = 10000) {
-    if (delay === -1) return '-'
-    if (delay === -2) return 'testing'
-    if (delay === 0 || (delay >= timeout && delay <= 1e5)) return 'Timeout'
-    if (delay > 1e5) return 'Error'
-    return `${delay}`
+  formatDelay(delay: number, timeout = DEFAULT_DELAY_TIMEOUT) {
+    switch (classifyDelay(delay, timeout)) {
+      case 'untested':
+        return '-'
+      case 'testing':
+        return 'testing'
+      case 'timeout':
+        return 'Timeout'
+      case 'error':
+        return 'Error'
+      case 'measured':
+        return `${delay}`
+    }
   }
 
-  formatDelayColor(delay: number, timeout = 10000) {
-    if (delay < 0) return ''
-    if (delay === 0 || delay >= timeout) return 'error.main'
-    if (delay >= 10000) return 'error.main'
-    if (delay >= 400) return 'warning.main'
-    if (delay >= 250) return 'primary.main'
-    return 'success.main'
+  formatDelayColor(delay: number, timeout = DEFAULT_DELAY_TIMEOUT) {
+    switch (classifyDelay(delay, timeout)) {
+      case 'untested':
+      case 'testing':
+        return ''
+      case 'timeout':
+      case 'error':
+        return 'error.main'
+      case 'measured':
+        // How a measurement is graded is this widget's own decision; the thresholds differ
+        // from the signal icon's on purpose, because a colour has fewer steps than four bars.
+        if (delay >= 400) return 'warning.main'
+        if (delay >= 250) return 'primary.main'
+        return 'success.main'
+    }
   }
 }
 

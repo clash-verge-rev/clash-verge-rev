@@ -33,6 +33,7 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
 
 import { EnhancedCard } from '@/components/home/enhanced-card'
+import type { ProxySortType } from '@/components/proxy/use-filter-sort'
 import { useProfiles } from '@/hooks/use-profiles'
 import { useProxySelection } from '@/hooks/use-proxy-selection'
 import { useVerge } from '@/hooks/use-verge'
@@ -53,6 +54,7 @@ import {
   type ResolvedProxyMember,
 } from '@/types/proxy-view'
 import { debugLog } from '@/utils/debug'
+import { compareByDelay, DEFAULT_DELAY_TIMEOUT } from '@/utils/delay'
 
 // 本地存储的键名
 const STORAGE_KEY_GROUP = 'clash-verge-selected-proxy-group'
@@ -68,7 +70,6 @@ interface ProxyOption {
 }
 
 // 排序类型: 默认 | 按延迟 | 按字母
-type ProxySortType = 0 | 1 | 2
 
 function convertDelayColor(
   delayValue: number,
@@ -576,28 +577,15 @@ export const CurrentProxyCard = () => {
         const effectiveTimeout =
           typeof defaultLatencyTimeout === 'number' && defaultLatencyTimeout > 0
             ? defaultLatencyTimeout
-            : 10000
-
-        const categorizeDelay = (delay: number): [number, number] => {
-          if (!Number.isFinite(delay)) return [5, Number.MAX_SAFE_INTEGER]
-          if (delay > 1e5) return [4, delay]
-          if (delay === 0 || (delay >= effectiveTimeout && delay <= 1e5)) {
-            return [3, delay || effectiveTimeout]
-          }
-          if (delay < 0) return [5, Number.MAX_SAFE_INTEGER]
-          return [0, delay]
-        }
+            : DEFAULT_DELAY_TIMEOUT
 
         list.sort((a, b) => {
-          const [ar, av] = categorizeDelay(
+          const byDelay = compareByDelay(
             delayManager.getDelayFix(a.member, selectedGroupName),
-          )
-          const [br, bv] = categorizeDelay(
             delayManager.getDelayFix(b.member, selectedGroupName),
+            effectiveTimeout,
           )
-
-          if (ar !== br) return ar - br
-          if (av !== bv) return av - bv
+          if (byDelay !== 0) return byDelay
           return refreshTick >= 0
             ? a.member.ref.name.localeCompare(b.member.ref.name)
             : 0
