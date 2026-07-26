@@ -52,9 +52,15 @@ pub async fn download_and_install_update<R: tauri::Runtime>(
     use_app_proxy: Option<bool>,
     on_event: Channel<UpdateDownloadEvent>,
 ) -> CmdResult<()> {
-    // Reset any stale cancel request from a previous run, then subscribe.
-    let _ = UPDATE_DOWNLOAD_CANCEL.send(false);
+    // Reset any stale cancel request from a previous run.
+    //
+    // Subscribe first, then reset with `send_replace`: `send` returns Err and
+    // does NOT update the value when there are no receivers, so a stale `true`
+    // from a previous cancel could immediately abort this download.
+    // `send_replace` updates the value unconditionally regardless of receiver
+    // count.
     let mut cancel_rx = UPDATE_DOWNLOAD_CANCEL.subscribe();
+    UPDATE_DOWNLOAD_CANCEL.send_replace(false);
 
     let mut builder = webview.updater_builder();
     if use_app_proxy.unwrap_or(false) {

@@ -72,8 +72,12 @@ export const BaseDialog: React.FC<Props> = ({
               {closeBtn}
             </Button>
           )}
-          {!disableCancel && (
-            <Button variant="outlined" onClick={onCancel}>
+          {cancelBtn && (
+            <Button
+              variant="outlined"
+              onClick={onCancel}
+              disabled={disableCancel}
+            >
               {cancelBtn}
             </Button>
           )}

@@ -319,7 +319,7 @@ export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
       onCancel={() => {
         // "Cancel" interrupts an in-flight download; "Close" (onClose) only
         // dismisses the dialog and leaves the download running.
-        void cancelUpdateDownload()
+        void cancelUpdateDownload().catch(() => {})
         setOpen(false)
       }}
       onExtra={() => onUpdate(true)}
