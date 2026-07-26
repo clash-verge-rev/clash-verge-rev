@@ -48,6 +48,15 @@ hardware_port=$(networksetup -listnetworkserviceorder | awk -v dev="$nic" '
 # 获取当前DNS设置
 original_dns=$(networksetup -getdnsservers "$hardware_port")
 
+# 判断当前DNS是否已经等于目标DNS（即我们此前设置的值）。
+# 这种情况常见于 macOS 唤醒后的重复校正：此时绝不能把我们自己写入的值
+# 当作“原始DNS”存回 .original_dns.txt，否则会永久丢失用户真实的DNS配置。
+current_is_target=false
+current_dns_oneline=$(echo "$original_dns" | tr '\n' ' ' | tr -s '[:space:]' ' ' | sed 's/^ *//;s/ *$//')
+if [ "$current_dns_oneline" = "$1" ]; then
+    current_is_target=true
+fi
+
 # 检查当前DNS设置是否有效
 is_valid_dns=false
 for ip in $original_dns; do
@@ -58,10 +67,13 @@ for ip in $original_dns; do
     fi
 done
 
-# 更新DNS设置
-if [ "$is_valid_dns" = false ]; then
-    echo "empty" >.original_dns.txt
-else
-    echo "$original_dns" >.original_dns.txt
+# 更新原始DNS备份：仅当当前DNS不是我们的目标值时才写入，
+# 避免覆盖睡眠前保存的真实DNS状态（见 issue #7593）。
+if [ "$current_is_target" = false ]; then
+    if [ "$is_valid_dns" = false ]; then
+        echo "empty" >.original_dns.txt
+    else
+        echo "$original_dns" >.original_dns.txt
+    fi
 fi
 networksetup -setdnsservers "$hardware_port" "$1"

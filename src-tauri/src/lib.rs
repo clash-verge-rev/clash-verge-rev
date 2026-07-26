@@ -290,6 +290,10 @@ pub fn run() {
                 resolve::resolve_setup_async();
                 resolve::resolve_setup_sync();
                 resolve::init_signal();
+                // macOS 唤醒后重新校正 TUN + fake-ip 所需的系统 DNS（issue #7593）。
+                // 需在主线程注册，setup 闭包即运行于主线程。
+                #[cfg(target_os = "macos")]
+                resolve::dns::register_wake_dns_reconciler();
                 logging!(info, Type::Setup, "初始化已启动");
             })) {
                 log_setup_panic("window-core", panic);

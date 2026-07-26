@@ -66,7 +66,10 @@ pub fn use_tun(mut config: Mapping, enable: bool) -> Mapping {
             {
                 AsyncHandler::spawn(move || async move {
                     crate::utils::resolve::dns::restore_public_dns().await;
-                    crate::utils::resolve::dns::set_public_dns("114.114.114.114".to_string()).await;
+                    crate::utils::resolve::dns::set_public_dns(
+                        crate::utils::resolve::dns::TUN_SYSTEM_DNS_SERVER.to_string(),
+                    )
+                    .await;
                 });
             }
         }
