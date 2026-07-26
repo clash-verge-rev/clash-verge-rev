@@ -1,4 +1,4 @@
-use crate::config::Config;
+use crate::config::MixedPort;
 use anyhow::Result;
 use base64::{Engine as _, engine::general_purpose};
 use reqwest::{
@@ -252,13 +252,7 @@ impl NetworkManager {
         let proxy_url: Option<std::string::String> = match proxy_type {
             ProxyType::None => None,
             ProxyType::Localhost => {
-                let port = {
-                    let verge_port = Config::verge().await.data_arc().verge_mixed_port;
-                    match verge_port {
-                        Some(port) => port,
-                        None => Config::clash().await.data_arc().get_mixed_port(),
-                    }
-                };
+                let port = MixedPort::desired().await;
                 Some(format!("http://127.0.0.1:{port}"))
             }
             ProxyType::System => {

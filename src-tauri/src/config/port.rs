@@ -6,7 +6,7 @@ use crate::{
     constants::timing,
     core::{
         handle::Handle,
-        listener::ListenerBindScope,
+        listener::{ListenerBindScope, MIXED_PORT_KEY, proxy_listener_keys},
         owner_identity::current_owner_credentials,
         service::{SERVICE_MANAGER, ServiceStatus},
         validate::CoreConfigValidator,
@@ -90,7 +90,7 @@ impl Config {
         let runtime = Self::runtime().await;
 
         clash.edit_draft(|draft| {
-            draft.0.insert("mixed-port".into(), new_port.into());
+            draft.0.insert(MIXED_PORT_KEY.into(), new_port.into());
         });
         verge.edit_draft(|draft| {
             draft.verge_mixed_port = Some(new_port);
@@ -278,7 +278,9 @@ async fn owned_service_core_uses_port(port: u16) -> bool {
 
 fn configured_listener_ports(clash: &IClashTemp, verge: &IVerge) -> HashSet<u16> {
     let mut ports = HashSet::new();
-    for key in ["socks-port", "port", "redir-port", "tproxy-port"] {
+    // Every listener except the Mixed Port itself: that is the one being reassigned, so
+    // colliding with its current value is exactly what we are trying to do.
+    for key in proxy_listener_keys().filter(|key| *key != MIXED_PORT_KEY) {
         if let Some(port) = mapping_port(&clash.0, key) {
             ports.insert(port);
         }
@@ -306,6 +308,27 @@ fn mapping_port(mapping: &serde_yaml_ng::Mapping, key: &str) -> Option<u16> {
         Value::Number(port) => port.as_u64().and_then(|port| u16::try_from(port).ok()),
         _ => None,
     })
+}
+
+#[cfg(test)]
+#[allow(clippy::expect_used, clippy::panic, reason = "tests assert by panicking")]
+mod listener_key_tests {
+    use super::{MIXED_PORT_KEY, proxy_listener_keys};
+
+    #[test]
+    fn the_reserved_set_covers_every_listener_but_the_one_being_moved() {
+        let reserved: Vec<_> = proxy_listener_keys().filter(|key| *key != MIXED_PORT_KEY).collect();
+
+        assert!(
+            !reserved.contains(&MIXED_PORT_KEY),
+            "the port being reassigned must not reserve itself"
+        );
+        assert_eq!(
+            reserved.len(),
+            proxy_listener_keys().count() - 1,
+            "every other listener must be reserved, so a new one cannot be forgotten here"
+        );
+    }
 }
 
 #[cfg(test)]

@@ -1,6 +1,6 @@
 use super::resolve;
 use crate::{
-    config::{Config, DEFAULT_PAC},
+    config::{Config, DEFAULT_PAC, MixedPort},
     module::lightweight,
     process::AsyncHandler,
     utils::{dirs, window_manager::WindowManager},
@@ -209,13 +209,11 @@ fn start_embedded_server(listener: tokio::net::TcpListener, token: String) {
             );
         }
         let verge_config = Config::verge().await;
-        let clash_config = Config::clash().await;
         let verge_data = verge_config.data_arc();
-        let clash_data = clash_config.data_arc();
         let pac_content = verge_data.pac_file_content.as_deref().unwrap_or(DEFAULT_PAC);
-        let pac_port = verge_data
-            .verge_mixed_port
-            .unwrap_or_else(|| clash_data.get_mixed_port());
+        // Served per browser request, so this stays a configuration read rather than a
+        // round-trip to the Core. PAC is closed while the Core is between ports anyway.
+        let pac_port = MixedPort::desired().await;
         let processed_content = pac_content.replace("%mixed-port%", &format!("{pac_port}"));
         Ok::<_, warp::Rejection>(
             warp::http::Response::builder()

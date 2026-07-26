@@ -6,7 +6,7 @@ import {
   getRules,
 } from 'tauri-plugin-mihomo-api'
 
-import { useClashInfo, useRuntimeConfig } from '@/hooks/use-clash'
+import { useDisplayedMixedPort } from '@/hooks/use-displayed-mixed-port'
 import { runStateQueryKey } from '@/hooks/use-system-state'
 import { useVerge } from '@/hooks/use-verge'
 import {
@@ -16,7 +16,6 @@ import {
   getSystemProxy,
 } from '@/services/cmds'
 import { revalidateQueries, useQuery } from '@/services/query-client'
-import { resolveDisplayedMixedPort } from '@/utils/mixed-port'
 
 import {
   ClashConfigContext,
@@ -56,8 +55,6 @@ export const AppDataProvider = ({
   children: React.ReactNode
 }) => {
   const { verge } = useVerge()
-  const { data: runtimeConfig } = useRuntimeConfig()
-  const { clashInfo } = useClashInfo()
 
   const {
     data: proxyView,
@@ -241,14 +238,9 @@ export const AppDataProvider = ({
     [clashConfig, isClashConfigPending],
   )
 
-  const systemValue = useMemo(() => {
-    const displayedMixedPort = resolveDisplayedMixedPort({
-      live: clashConfig?.mixedPort,
-      runtime: runtimeConfig?.['mixed-port'],
-      selected: verge?.verge_mixed_port,
-      merge: clashInfo?.mixed_port,
-    })
+  const displayedMixedPort = useDisplayedMixedPort()
 
+  const systemValue = useMemo(() => {
     const calculateSystemProxyAddress = () => {
       if (!verge) return '-'
 
@@ -281,15 +273,7 @@ export const AppDataProvider = ({
       isRunningModePending,
       systemProxyAddress: calculateSystemProxyAddress(),
     }
-  }, [
-    sysproxy,
-    runningMode,
-    isRunningModePending,
-    verge,
-    clashConfig,
-    runtimeConfig,
-    clashInfo,
-  ])
+  }, [sysproxy, runningMode, isRunningModePending, verge, displayedMixedPort])
 
   const uptimeValue = useMemo(() => ({ uptime: uptimeData || 0 }), [uptimeData])
 

@@ -8,8 +8,15 @@ use std::{
     str::FromStr as _,
 };
 
+/// The config key of the Mixed Port, named once so callers stop spelling it out.
+pub(crate) const MIXED_PORT_KEY: &str = "mixed-port";
+
 const PROXY_LISTENERS: [(&str, &str, &[ListenerTransport]); 5] = [
-    ("mixed-port", "mixed", &[ListenerTransport::Tcp, ListenerTransport::Udp]),
+    (
+        MIXED_PORT_KEY,
+        "mixed",
+        &[ListenerTransport::Tcp, ListenerTransport::Udp],
+    ),
     ("socks-port", "socks", &[ListenerTransport::Tcp, ListenerTransport::Udp]),
     ("port", "http", &[ListenerTransport::Tcp]),
     ("redir-port", "redir", &[ListenerTransport::Tcp]),
@@ -19,6 +26,14 @@ const PROXY_LISTENERS: [(&str, &str, &[ListenerTransport]); 5] = [
         &[ListenerTransport::Tcp, ListenerTransport::Udp],
     ),
 ];
+
+/// The config key of every proxy listener.
+///
+/// Callers that need "every listener except one" filter this rather than keeping their own
+/// list, so adding a listener cannot be half-applied.
+pub(crate) fn proxy_listener_keys() -> impl Iterator<Item = &'static str> {
+    PROXY_LISTENERS.iter().map(|(key, _, _)| *key)
+}
 
 #[derive(Debug, Deserialize)]
 #[serde(rename_all = "camelCase")]
