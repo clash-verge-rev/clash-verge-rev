@@ -83,6 +83,13 @@ impl RunStateEnv for RealEnv {
         };
         tauri_plugin_clash_verge_sysinfo::set_app_core_mode(app_handle, state.mode.to_string());
         crate::core::handle::Handle::notify_run_state(&state.to_view());
+
+        // Reconciling capability is a reaction to the new state, not part of publishing it, so
+        // it is spawned: a transition must not wait on a config write it triggered.
+        let state = state.clone();
+        crate::process::AsyncHandler::spawn(move || async move {
+            crate::feat::reconcile_tun_availability(&state).await;
+        });
     }
 
     fn run_privileged(&self, action: PendingAction) -> Result<()> {

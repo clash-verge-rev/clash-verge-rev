@@ -112,6 +112,20 @@ impl RunState {
         )
     }
 
+    /// TUN is switched on but cannot work, and we know that for certain.
+    ///
+    /// "For certain" is the whole difficulty: an unprobed Service, an operation in flight, or a
+    /// decision still sitting in front of the user all mean *not yet known*, and turning TUN
+    /// off on a guess would silently undo something the user asked for. This replaces the fixed
+    /// startup grace period the frontend used to wait out, which guessed at the same thing.
+    #[must_use]
+    pub const fn tun_should_be_disabled(&self, tun_enabled: bool) -> bool {
+        if !tun_enabled || self.tun_capable() {
+            return false;
+        }
+        !matches!(self.health, ServiceHealth::Unknown) && !self.op_in_flight && !self.service_needs_attention()
+    }
+
     /// The shape sent across the IPC seam.
     ///
     /// Carries the derived answers, not just the raw fields, so that no caller on the other
@@ -275,6 +289,61 @@ mod tests {
         assert_eq!(view.service_unavailable_reason, None);
         assert!(view.service_usable);
         assert!(!view.service_needs_attention);
+    }
+
+    #[test]
+    fn tun_is_left_alone_when_the_user_has_not_asked_for_it() {
+        assert!(!state(ServiceHealth::NotInstalled, false, false).tun_should_be_disabled(false));
+    }
+
+    #[test]
+    fn tun_is_left_alone_while_it_still_works() {
+        assert!(!state(ServiceHealth::Ready, false, false).tun_should_be_disabled(true));
+        assert!(!state(ServiceHealth::NotInstalled, true, false).tun_should_be_disabled(true));
+    }
+
+    #[test]
+    fn tun_is_disabled_once_we_know_it_cannot_work() {
+        assert!(state(ServiceHealth::NotInstalled, false, false).tun_should_be_disabled(true));
+    }
+
+    #[test]
+    fn tun_is_never_disabled_while_an_operation_is_in_flight() {
+        // Mid-install the service is not usable, but that says nothing about what it will be
+        // once the operation finishes.
+        assert!(!state(ServiceHealth::Ready, false, true).tun_should_be_disabled(true));
+        assert!(!state(ServiceHealth::NotInstalled, false, true).tun_should_be_disabled(true));
+    }
+
+    #[test]
+    fn tun_is_never_disabled_on_an_unprobed_service() {
+        // The old frontend guard waited out a fixed ten seconds to approximate this.
+        assert!(!state(ServiceHealth::Unknown, false, false).tun_should_be_disabled(true));
+    }
+
+    #[test]
+    fn tun_is_never_disabled_while_a_decision_is_pending() {
+        for health in [
+            ServiceHealth::VersionMismatch,
+            ServiceHealth::Unavailable("boom".into()),
+        ] {
+            assert!(
+                !state(health.clone(), false, false).tun_should_be_disabled(true),
+                "{health:?} is the user's to resolve",
+            );
+        }
+
+        let mut requested = state(ServiceHealth::NotInstalled, false, false);
+        requested.pending = Some(PendingAction::Install);
+        assert!(!requested.tun_should_be_disabled(true));
+    }
+
+    #[test]
+    fn tun_is_disabled_once_the_user_settles_on_sidecar() {
+        let mut settled = state(ServiceHealth::NotInstalled, false, false);
+        settled.sidecar_allowed = true;
+
+        assert!(settled.tun_should_be_disabled(true));
     }
 
     #[test]

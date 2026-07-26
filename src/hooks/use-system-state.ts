@@ -1,14 +1,10 @@
-import { useEffect, useRef } from 'react'
-
 import {
   getRuntimeState,
   type RunState,
   type RunningMode,
 } from '@/services/cmds'
-import { showNotice } from '@/services/notice-service'
 import { useQuery } from '@/services/query-client'
 
-import { useVerge } from './use-verge'
 import { useVisibility } from './use-visibility'
 
 export const runStateQueryKey = ['getRuntimeState'] as const
@@ -64,65 +60,4 @@ export function useSystemState() {
     mutateSystemState,
     isLoading,
   }
-}
-
-export function useTunAvailabilityGuard() {
-  const { verge, patchVerge } = useVerge()
-  const { runState, isTunModeAvailable, isLoading } = useSystemState()
-  // The service reports 'unknown' until it has actually been probed, which replaces the
-  // fixed startup grace period this guard used to wait out before trusting the answer.
-  const serviceUndecided =
-    runState.service === 'unknown' ||
-    runState.opInFlight ||
-    runState.serviceNeedsAttention
-  const disablingTunRef = useRef(false)
-  const cooldownTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-  const enable_tun_mode = verge?.enable_tun_mode
-
-  useEffect(() => {
-    if (enable_tun_mode === undefined) return
-
-    if (
-      !disablingTunRef.current &&
-      enable_tun_mode &&
-      !isTunModeAvailable &&
-      !serviceUndecided &&
-      !isLoading
-    ) {
-      disablingTunRef.current = true
-      patchVerge({ enable_tun_mode: false })
-        .then(() => {
-          showNotice.info(
-            'settings.sections.system.notifications.tunMode.autoDisabled',
-          )
-        })
-        .catch((err) => {
-          console.error('[useVerge] 自动关闭TUN模式失败:', err)
-          showNotice.error(
-            'settings.sections.system.notifications.tunMode.autoDisableFailed',
-          )
-        })
-        .finally(() => {
-          // 避免 verge 数据更新不及时导致重复执行关闭 Tun 模式
-          cooldownTimerRef.current = setTimeout(() => {
-            disablingTunRef.current = false
-            cooldownTimerRef.current = null
-          }, 1000)
-        })
-    }
-
-    return () => {
-      if (cooldownTimerRef.current != null) {
-        clearTimeout(cooldownTimerRef.current)
-        cooldownTimerRef.current = null
-        disablingTunRef.current = false
-      }
-    }
-  }, [
-    enable_tun_mode,
-    isTunModeAvailable,
-    serviceUndecided,
-    patchVerge,
-    isLoading,
-  ])
 }
