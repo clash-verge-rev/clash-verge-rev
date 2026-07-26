@@ -1034,7 +1034,7 @@ mod tests {
                             all: Some(all.iter().map(|node| (*node).to_owned()).collect()),
                             now: now.map(str::to_owned),
                             proxy_type: ProxyType::Selector,
-                            ..Default::default()
+                            ..Proxy::default()
                         },
                     )
                 })
