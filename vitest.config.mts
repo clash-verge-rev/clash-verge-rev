@@ -15,7 +15,10 @@ export default defineConfig({
     OS_PLATFORM: `"${process.platform}"`,
   },
   test: {
-    include: ['tests/**/*.test.ts', 'src/**/*.test.ts'],
+    include: ['tests/**/*.test.ts', 'src/**/*.test.{ts,tsx}'],
+    // Node by default because most tests are pure functions; render tests opt in per file
+    // with `// @vitest-environment jsdom`, so the DOM cost is paid only where it buys
+    // something.
     environment: 'node',
     restoreMocks: true,
   },
