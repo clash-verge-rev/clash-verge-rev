@@ -800,6 +800,377 @@ pub async fn enhance() -> Result<(Mapping, HashSet<String>, HashMap<String, Resu
 
 #[cfg(test)]
 #[allow(clippy::expect_used, clippy::panic, reason = "tests assert by panicking")]
+mod fake_ip_tests {
+    use super::{Mapping, Value, ensure_fake_ip_range6};
+
+    fn dns(pairs: &[(&str, Value)]) -> Mapping {
+        let mut map = Mapping::new();
+        for (key, value) in pairs {
+            map.insert(Value::from(*key), value.clone());
+        }
+        map
+    }
+
+    const RANGE6: &str = "fdfe:dcba:9876::1/64";
+
+    #[test]
+    fn an_ipv6_fake_ip_setup_missing_its_range_gets_one() {
+        let mut config = dns(&[("ipv6", Value::from(true)), ("enhanced-mode", Value::from("fake-ip"))]);
+
+        ensure_fake_ip_range6(&mut config);
+
+        assert_eq!(config.get(Value::from("fake-ip-range6")), Some(&Value::from(RANGE6)));
+    }
+
+    #[test]
+    fn fake_ip_is_the_assumed_mode_when_unstated() {
+        let mut config = dns(&[("ipv6", Value::from(true))]);
+
+        ensure_fake_ip_range6(&mut config);
+
+        assert_eq!(config.get(Value::from("fake-ip-range6")), Some(&Value::from(RANGE6)));
+    }
+
+    #[test]
+    fn a_hand_edited_empty_range_counts_as_missing() {
+        // The reason this is not just a `contains_key` check: YAML edited by hand often
+        // leaves the key present with nothing after the colon.
+        for blank in ["", "   "] {
+            let mut config = dns(&[
+                ("ipv6", Value::from(true)),
+                ("enhanced-mode", Value::from("fake-ip")),
+                ("fake-ip-range6", Value::from(blank)),
+            ]);
+
+            ensure_fake_ip_range6(&mut config);
+
+            assert_eq!(
+                config.get(Value::from("fake-ip-range6")),
+                Some(&Value::from(RANGE6)),
+                "blank range {blank:?} should be filled in"
+            );
+        }
+    }
+
+    #[test]
+    fn an_existing_range_is_never_overwritten() {
+        let mut config = dns(&[
+            ("ipv6", Value::from(true)),
+            ("enhanced-mode", Value::from("fake-ip")),
+            ("fake-ip-range6", Value::from("fc00::1/64")),
+        ]);
+
+        ensure_fake_ip_range6(&mut config);
+
+        assert_eq!(
+            config.get(Value::from("fake-ip-range6")),
+            Some(&Value::from("fc00::1/64"))
+        );
+    }
+
+    #[test]
+    fn nothing_is_added_without_ipv6_or_outside_fake_ip() {
+        let mut without_ipv6 = dns(&[("enhanced-mode", Value::from("fake-ip"))]);
+        ensure_fake_ip_range6(&mut without_ipv6);
+        assert!(!without_ipv6.contains_key(Value::from("fake-ip-range6")));
+
+        let mut redir_host = dns(&[
+            ("ipv6", Value::from(true)),
+            ("enhanced-mode", Value::from("redir-host")),
+        ]);
+        ensure_fake_ip_range6(&mut redir_host);
+        assert!(!redir_host.contains_key(Value::from("fake-ip-range6")));
+    }
+}
+
+#[cfg(test)]
+#[allow(clippy::expect_used, clippy::panic, reason = "tests assert by panicking")]
+mod use_tun_tests {
+    use super::{Mapping, Value, use_tun};
+
+    fn mapping(pairs: &[(&str, Value)]) -> Mapping {
+        let mut map = Mapping::new();
+        for (key, value) in pairs {
+            map.insert(Value::from(*key), value.clone());
+        }
+        map
+    }
+
+    fn tun_of(config: &Mapping) -> &Mapping {
+        config
+            .get(Value::from("tun"))
+            .and_then(Value::as_mapping)
+            .expect("tun should be a mapping")
+    }
+
+    fn dns_of(config: &Mapping) -> Option<&Mapping> {
+        config.get(Value::from("dns")).and_then(Value::as_mapping)
+    }
+
+    #[tokio::test]
+    async fn the_switch_is_written_either_way() {
+        assert_eq!(
+            tun_of(&use_tun(Mapping::new(), true)).get(Value::from("enable")),
+            Some(&Value::from(true))
+        );
+        assert_eq!(
+            tun_of(&use_tun(Mapping::new(), false)).get(Value::from("enable")),
+            Some(&Value::from(false))
+        );
+    }
+
+    #[tokio::test]
+    async fn existing_tun_keys_survive_being_switched_on() {
+        let config = mapping(&[("tun", Value::Mapping(mapping(&[("stack", Value::from("gvisor"))])))]);
+
+        let result = use_tun(config, true);
+
+        assert_eq!(tun_of(&result).get(Value::from("stack")), Some(&Value::from("gvisor")));
+    }
+
+    #[tokio::test]
+    async fn enabling_tun_sets_up_fake_ip_dns() {
+        let result = use_tun(Mapping::new(), true);
+
+        let dns = dns_of(&result).expect("enabling tun should write dns settings");
+        assert_eq!(dns.get(Value::from("enable")), Some(&Value::from(true)));
+        assert_eq!(dns.get(Value::from("enhanced-mode")), Some(&Value::from("fake-ip")));
+        assert_eq!(
+            dns.get(Value::from("fake-ip-range")),
+            Some(&Value::from("198.18.0.1/16"))
+        );
+    }
+
+    #[tokio::test]
+    async fn a_deliberate_redir_host_setup_is_left_alone() {
+        // Only fake-ip DNS is ours to configure; someone who chose redir-host meant it.
+        let config = mapping(&[(
+            "dns",
+            Value::Mapping(mapping(&[("enhanced-mode", Value::from("redir-host"))])),
+        )]);
+
+        let result = use_tun(config, true);
+
+        let dns = dns_of(&result).expect("dns should still be present");
+        assert_eq!(dns.get(Value::from("enhanced-mode")), Some(&Value::from("redir-host")));
+        assert!(!dns.contains_key(Value::from("fake-ip-range")));
+    }
+
+    #[tokio::test]
+    async fn the_ipv6_fake_ip_range_follows_the_top_level_switch() {
+        let with_ipv6 = use_tun(mapping(&[("ipv6", Value::from(true))]), true);
+        let dns = dns_of(&with_ipv6).expect("dns should be written");
+        assert_eq!(dns.get(Value::from("ipv6")), Some(&Value::from(true)));
+        assert_eq!(
+            dns.get(Value::from("fake-ip-range6")),
+            Some(&Value::from("fdfe:dcba:9876::1/64"))
+        );
+
+        let without_ipv6 = use_tun(Mapping::new(), true);
+        let dns = dns_of(&without_ipv6).expect("dns should be written");
+        assert!(!dns.contains_key(Value::from("fake-ip-range6")));
+    }
+
+    #[tokio::test]
+    async fn switching_tun_off_leaves_dns_untouched() {
+        // Turning TUN off must not rewrite DNS the user or profile chose; only the system
+        // resolver is restored, which is not part of the configuration.
+        let config = mapping(&[("dns", Value::Mapping(mapping(&[("enable", Value::from(false))])))]);
+
+        let result = use_tun(config, false);
+
+        let dns = dns_of(&result).expect("dns should be untouched");
+        assert_eq!(dns.get(Value::from("enable")), Some(&Value::from(false)));
+    }
+}
+
+#[cfg(test)]
+#[allow(clippy::expect_used, clippy::panic, reason = "tests assert by panicking")]
+mod use_sort_tests {
+    use super::{Mapping, Value, use_sort};
+
+    #[test]
+    fn every_key_survives_sorting() {
+        let mut config = Mapping::new();
+        for key in ["rules", "mode", "proxies", "not-a-known-field", "log-level"] {
+            config.insert(Value::from(key), Value::from(key));
+        }
+        let expected = config.len();
+
+        let sorted = use_sort(config);
+
+        assert_eq!(sorted.len(), expected, "sorting must not drop or invent keys");
+        for key in ["rules", "mode", "proxies", "not-a-known-field", "log-level"] {
+            assert_eq!(sorted.get(Value::from(key)), Some(&Value::from(key)));
+        }
+    }
+
+    #[test]
+    fn the_bulky_list_fields_are_written_last() {
+        // These are the fields that make a config file unreadable from the top, so they are
+        // pushed below the settings a human actually scans for.
+        let mut config = Mapping::new();
+        config.insert(Value::from("rules"), Value::from("rules"));
+        config.insert(Value::from("mode"), Value::from("rule"));
+
+        let sorted = use_sort(config);
+        let order: Vec<_> = sorted.keys().filter_map(Value::as_str).collect();
+
+        let mode = order.iter().position(|key| *key == "mode");
+        let rules = order.iter().position(|key| *key == "rules");
+        assert!(mode < rules, "expected mode before rules, got {order:?}");
+    }
+
+    #[test]
+    fn sorting_is_stable_when_applied_twice() {
+        let mut config = Mapping::new();
+        for key in ["proxies", "mode", "unknown-key", "rules"] {
+            config.insert(Value::from(key), Value::from(1));
+        }
+
+        let once = use_sort(config);
+        let twice = use_sort(once.clone());
+
+        assert_eq!(once.keys().collect::<Vec<_>>(), twice.keys().collect::<Vec<_>>());
+    }
+}
+
+#[cfg(test)]
+#[allow(clippy::expect_used, clippy::panic, reason = "tests assert by panicking")]
+mod merge_default_config_tests {
+    use super::{Mapping, Value, merge_default_config};
+
+    fn mapping(pairs: &[(&str, Value)]) -> Mapping {
+        let mut map = Mapping::new();
+        for (key, value) in pairs {
+            map.insert(Value::from(*key), value.clone());
+        }
+        map
+    }
+
+    /// Call with every listener enabled, so a test only says what it is turning off.
+    fn merge(config: Mapping, clash_config: Mapping, external_controller: bool) -> Mapping {
+        merge_default_config(
+            config,
+            clash_config,
+            true,
+            true,
+            external_controller,
+            #[cfg(not(target_os = "windows"))]
+            true,
+            #[cfg(target_os = "linux")]
+            true,
+        )
+    }
+
+    fn merge_without_optional_listeners(config: Mapping, clash_config: Mapping) -> Mapping {
+        merge_default_config(
+            config,
+            clash_config,
+            false,
+            false,
+            true,
+            #[cfg(not(target_os = "windows"))]
+            false,
+            #[cfg(target_os = "linux")]
+            false,
+        )
+    }
+
+    #[test]
+    fn the_merge_config_overwrites_the_profile() {
+        let config = mapping(&[("mode", Value::from("rule"))]);
+        let clash_config = mapping(&[("mode", Value::from("global"))]);
+
+        let merged = merge(config, clash_config, true);
+
+        assert_eq!(merged.get(Value::from("mode")), Some(&Value::from("global")));
+    }
+
+    #[test]
+    fn keys_the_merge_config_says_nothing_about_survive() {
+        let config = mapping(&[("profile-only", Value::from(1))]);
+
+        let merged = merge(config, Mapping::new(), true);
+
+        assert_eq!(merged.get(Value::from("profile-only")), Some(&Value::from(1)));
+    }
+
+    #[test]
+    fn a_disabled_listener_is_removed_rather_than_merged() {
+        // Removed, not just skipped: the profile may have asked for the port itself, and a
+        // listener the user switched off must not be opened by the profile's own value.
+        let config = mapping(&[("socks-port", Value::from(7891)), ("port", Value::from(7890))]);
+        let clash_config = mapping(&[("socks-port", Value::from(1080)), ("port", Value::from(8080))]);
+
+        let merged = merge_without_optional_listeners(config, clash_config);
+
+        assert!(!merged.contains_key(Value::from("socks-port")));
+        assert!(!merged.contains_key(Value::from("port")));
+    }
+
+    #[test]
+    fn an_enabled_listener_takes_the_merge_config_value() {
+        let config = mapping(&[("socks-port", Value::from(7891))]);
+        let clash_config = mapping(&[("socks-port", Value::from(1080))]);
+
+        let merged = merge(config, clash_config, true);
+
+        assert_eq!(merged.get(Value::from("socks-port")), Some(&Value::from(1080)));
+    }
+
+    #[test]
+    fn a_disabled_external_controller_is_blanked_rather_than_dropped() {
+        // Blanked, not removed: an absent key lets mihomo fall back to its own default and
+        // listen anyway, which is the opposite of what switching it off means.
+        let clash_config = mapping(&[("external-controller", Value::from("127.0.0.1:9090"))]);
+
+        let merged = merge(Mapping::new(), clash_config, false);
+
+        assert_eq!(
+            merged.get(Value::from("external-controller")),
+            Some(&Value::from("")),
+            "the key must remain, holding an empty value"
+        );
+    }
+
+    #[test]
+    fn an_enabled_external_controller_keeps_its_address() {
+        let clash_config = mapping(&[("external-controller", Value::from("127.0.0.1:9090"))]);
+
+        let merged = merge(Mapping::new(), clash_config, true);
+
+        assert_eq!(
+            merged.get(Value::from("external-controller")),
+            Some(&Value::from("127.0.0.1:9090"))
+        );
+    }
+
+    #[test]
+    fn tun_settings_are_merged_key_by_key_rather_than_replaced() {
+        // The profile's other tun keys have to survive a merge config that sets only one.
+        let config = mapping(&[(
+            "tun",
+            Value::Mapping(mapping(&[
+                ("device", Value::from("utun9")),
+                ("stack", Value::from("system")),
+            ])),
+        )]);
+        let clash_config = mapping(&[("tun", Value::Mapping(mapping(&[("stack", Value::from("gvisor"))])))]);
+
+        let merged = merge(config, clash_config, true);
+
+        let tun = merged
+            .get(Value::from("tun"))
+            .and_then(Value::as_mapping)
+            .expect("tun should still be a mapping");
+        assert_eq!(tun.get(Value::from("device")), Some(&Value::from("utun9")));
+        assert_eq!(tun.get(Value::from("stack")), Some(&Value::from("gvisor")));
+    }
+}
+
+#[cfg(test)]
+#[allow(clippy::expect_used, clippy::panic, reason = "tests assert by panicking")]
 mod authoritative_field_tests {
     use super::{AuthoritativeFields, Mapping, Value};
 
