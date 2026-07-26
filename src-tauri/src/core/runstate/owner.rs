@@ -5,8 +5,9 @@
 //! answers but describes a Core that is gone — and each needs a different response. This is
 //! the decision, separated from the polling and from the recovery it triggers.
 //!
-//! Recovery *actions* deliberately live with the Core lifecycle, not here; see
-//! `docs/adr/0001-runstate-owns-state-not-lifecycle.md`.
+//! Recovery *actions* deliberately live with the Core lifecycle rather than here: this module
+//! decides that the Service can no longer be trusted, and `CoreManager` is what tears the Core
+//! down in response.
 
 use clash_verge_service_ipc::ServiceLifecycleState;
 

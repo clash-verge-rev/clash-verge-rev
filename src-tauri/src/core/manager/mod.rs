@@ -95,7 +95,7 @@ pub struct CoreManager {
 /// Process-level state owned by `CoreManager`.
 ///
 /// Running Mode deliberately does *not* live here — it belongs to `core::runstate`, which
-/// keeps it consistent with Service Health. See `docs/adr/0001-runstate-owns-state-not-lifecycle.md`.
+/// keeps it consistent with Service Health and derives PAC availability from it.
 #[derive(Debug, Default)]
 struct State {
     child_sidecar: ArcSwapOption<CommandChild>,

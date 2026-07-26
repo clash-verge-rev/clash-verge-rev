@@ -5,8 +5,10 @@
 //! conflated the two into one slot, which is why narrowing it for the frontend had to be
 //! lossy. Nothing narrows now: [`RunStateView`] carries both, plus the derived answers.
 //!
-//! See `CONTEXT.md` for the domain terms and `docs/adr/0001-runstate-owns-state-not-lifecycle.md`
-//! for why this module does not own Core lifecycle.
+//! This module owns state only. Starting, stopping and restarting the Core stay in
+//! `CoreManager`: a module that both observes Service Health and drives the Core has no point
+//! at which it is consistent, because a snapshot taken mid-restart would describe a transition
+//! rather than a state.
 
 use crate::core::manager::RunningMode;
 

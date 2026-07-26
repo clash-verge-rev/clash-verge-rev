@@ -1,8 +1,10 @@
 //! Run State — the single answer to "how is the Core running, and what backs it".
 //!
 //! This module owns Service Health, Running Mode, Pending Action and the privileged-operation
-//! lock. It deliberately does **not** own starting, stopping or restarting the Core; see
-//! `docs/adr/0001-runstate-owns-state-not-lifecycle.md`.
+//! lock. It deliberately does **not** own starting, stopping or restarting the Core — those
+//! stay in `CoreManager`, which reports transitions in and reads snapshots back. Merging the
+//! two would leave no point at which the state is consistent, since a snapshot taken
+//! mid-restart would describe a transition rather than a state.
 //!
 //! Reads come in three flavours that differ only in *freshness* — [`RunStateStore::state`]
 //! (cached), [`RunStateStore::settled`] (waits for any in-flight operation) and
