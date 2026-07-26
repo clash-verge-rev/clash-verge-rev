@@ -1151,6 +1151,7 @@ export interface TranslationResources {
           actions: {
             goToRelease: string
             update: string
+            updateViaAppProxy: string
           }
           alerts: {
             caution: string

@@ -431,7 +431,8 @@
       "title": "New Version v{{version}}",
       "actions": {
         "goToRelease": "Go to Release Page",
-        "update": "Update"
+        "update": "Update",
+        "updateViaAppProxy": "Update via App Proxy"
       },
       "messages": {
         "breakChangeError": "This version is a major update and does not support in-app updates. Please uninstall it and manually download and install the new version",

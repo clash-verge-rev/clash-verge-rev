@@ -1147,6 +1147,7 @@ dependencies = [
  "tokio-rustls",
  "tokio-stream",
  "tokio-util",
+ "url",
  "warp",
  "webpki-roots",
  "windows 0.62.2",

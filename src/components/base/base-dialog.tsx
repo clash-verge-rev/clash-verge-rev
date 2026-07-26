@@ -14,15 +14,19 @@ interface Props {
   open: boolean
   okBtn?: ReactNode
   cancelBtn?: ReactNode
+  closeBtn?: ReactNode
+  extraBtn?: ReactNode
   disableEnforceFocus?: boolean
   disableOk?: boolean
   disableCancel?: boolean
+  disableExtra?: boolean
   disableFooter?: boolean
   contentSx?: SxProps<Theme>
   children?: ReactNode
   loading?: boolean
   onOk?: () => void
   onCancel?: () => void
+  onExtra?: () => void
   onClose?: () => void
 }
 
@@ -37,14 +41,18 @@ export const BaseDialog: React.FC<Props> = ({
   children,
   okBtn,
   cancelBtn,
+  closeBtn,
+  extraBtn,
   disableEnforceFocus,
   contentSx,
   disableCancel,
   disableOk,
+  disableExtra,
   disableFooter,
   loading,
   onOk,
   onCancel,
+  onExtra,
   onClose,
 }) => {
   return (
@@ -59,9 +67,23 @@ export const BaseDialog: React.FC<Props> = ({
 
       {!disableFooter && (
         <DialogActions>
+          {closeBtn && (
+            <Button variant="text" onClick={onClose}>
+              {closeBtn}
+            </Button>
+          )}
           {!disableCancel && (
             <Button variant="outlined" onClick={onCancel}>
               {cancelBtn}
+            </Button>
+          )}
+          {extraBtn && (
+            <Button
+              variant="outlined"
+              onClick={onExtra}
+              disabled={disableExtra}
+            >
+              {extraBtn}
             </Button>
           )}
           {!disableOk && (

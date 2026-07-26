@@ -16,7 +16,12 @@ import type { Options as ReactMarkdownOptions } from 'react-markdown'
 
 import { BaseDialog, DialogRef } from '@/components/base'
 import { useUpdate } from '@/hooks/use-update'
-import { restartApp } from '@/services/cmds'
+import { useProxiesData } from '@/providers/app-data-context'
+import {
+  cancelUpdateDownload,
+  downloadAndInstallUpdate,
+  restartApp,
+} from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
 import { useSetUpdateState, useUpdateState } from '@/services/states'
 
@@ -144,6 +149,15 @@ export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
 
   const { updateInfo } = useUpdate()
 
+  // Whether the app's mihomo proxy has at least one node loaded, i.e. whether
+  // "download via app proxy" can actually route traffic. The button is disabled
+  // when mihomo isn't running (proxyView fetch fails) or has no nodes.
+  const { proxyView, isProxyViewError } = useProxiesData()
+  const hasProxyNodes =
+    !isProxyViewError &&
+    !!proxyView &&
+    Object.keys(proxyView.records).length > 0
+
   const [downloaded, setDownloaded] = useState(0)
   const [total, setTotal] = useState(0)
   const downloadedRef = useRef(0)
@@ -188,7 +202,7 @@ export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
     return updateInfo?.body.toLowerCase().includes('break change')
   }, [updateInfo])
 
-  const onUpdate = useLockFn(async () => {
+  const onUpdate = useLockFn(async (useAppProxy: boolean) => {
     if (!updateInfo?.body) return
     if (breakChangeFlag) {
       showNotice.error('settings.modals.update.messages.breakChangeError')
@@ -226,10 +240,13 @@ export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
     }
 
     try {
-      await updateInfo.downloadAndInstall(onDownloadEvent)
+      await downloadAndInstallUpdate(useAppProxy, onDownloadEvent)
       await restartApp()
     } catch (err: any) {
-      showNotice.error(err)
+      // Cancel is a user action, not an error - don't notify for it.
+      if (!String(err).includes('cancelled')) {
+        showNotice.error(err)
+      }
     } finally {
       setUpdateState(false)
       setDownloaded(0)
@@ -289,9 +306,24 @@ export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
       }}
       okBtn={t('settings.modals.update.actions.update')}
       cancelBtn={t('shared.actions.cancel')}
+      closeBtn={t('shared.actions.close')}
+      extraBtn={
+        updateState
+          ? undefined
+          : t('settings.modals.update.actions.updateViaAppProxy')
+      }
+      disableOk={updateState}
+      disableCancel={!updateState}
+      disableExtra={!hasProxyNodes}
       onClose={() => setOpen(false)}
-      onCancel={() => setOpen(false)}
-      onOk={onUpdate}
+      onCancel={() => {
+        // "Cancel" interrupts an in-flight download; "Close" (onClose) only
+        // dismisses the dialog and leaves the download running.
+        void cancelUpdateDownload()
+        setOpen(false)
+      }}
+      onExtra={() => onUpdate(true)}
+      onOk={() => onUpdate(false)}
     >
       <Box
         sx={{

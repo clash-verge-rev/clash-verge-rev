@@ -431,7 +431,8 @@
       "title": "新版本 v{{version}}",
       "actions": {
         "goToRelease": "前往發佈頁面",
-        "update": "更新"
+        "update": "更新",
+        "updateViaAppProxy": "使用本程式代理下載"
       },
       "messages": {
         "breakChangeError": "此版本為重大更新，不支援應用程式內更新，請解除安裝後手動下載安裝",

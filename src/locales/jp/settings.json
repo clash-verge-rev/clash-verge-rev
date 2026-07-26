@@ -431,7 +431,8 @@
       "title": "New Version v{{version}}",
       "actions": {
         "goToRelease": "リリースページに移動",
-        "update": "更新"
+        "update": "更新",
+        "updateViaAppProxy": "アプリプロキシで更新"
       },
       "messages": {
         "breakChangeError": "このバージョンは重大な更新であり、アプリケーション内での更新はサポートされていません。アンインストールしてから手動でダウンロードしてインストールしてください。",

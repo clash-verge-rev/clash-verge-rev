@@ -431,7 +431,8 @@
       "title": "New Version v{{version}}",
       "actions": {
         "goToRelease": "Zur Veröffentlichungsseite gehen",
-        "update": "Aktualisieren"
+        "update": "Aktualisieren",
+        "updateViaAppProxy": "Über App-Proxy aktualisieren"
       },
       "messages": {
         "breakChangeError": "Dies ist eine wichtige Aktualisierung. Die In-App-Aktualisierung wird nicht unterstützt. Bitte deinstallieren Sie die Software und laden Sie die neue Version manuell herunter und installieren Sie sie.",

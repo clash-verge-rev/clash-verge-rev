@@ -431,7 +431,8 @@
       "title": "New Version v{{version}}",
       "actions": {
         "goToRelease": "Ir a la página de lanzamiento",
-        "update": "Actualizar"
+        "update": "Actualizar",
+        "updateViaAppProxy": "Actualizar mediante proxy de la app"
       },
       "messages": {
         "breakChangeError": "Esta es una actualización importante y no se admite la actualización desde dentro de la aplicación. Desinstale e instale manualmente la nueva versión.",

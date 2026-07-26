@@ -431,7 +431,8 @@
       "title": "새 버전 v{{version}}",
       "actions": {
         "goToRelease": "릴리스 페이지로 이동",
-        "update": "업데이트"
+        "update": "업데이트",
+        "updateViaAppProxy": "앱 프록시로 업데이트"
       },
       "messages": {
         "breakChangeError": "이 버전은 메이저 업데이트로 앱 내 업데이트를 지원하지 않습니다. 프로그램을 제거한 뒤 새 버전을 수동으로 설치하세요",

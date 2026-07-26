@@ -431,7 +431,8 @@
       "title": "New Version v{{version}}",
       "actions": {
         "goToRelease": "Релизлар битенә күчү",
-        "update": "Яңарту"
+        "update": "Яңарту",
+        "updateViaAppProxy": "Кушымта прокси аша яңарту"
       },
       "messages": {
         "breakChangeError": "Бу зур яңарту, ул кушымта эчендә яңартылмый. Борып алып ташлап, яңадан урнаштыру сорала.",

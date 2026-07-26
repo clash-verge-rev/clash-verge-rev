@@ -639,6 +639,7 @@ export const translationKeys = [
   'settings.modals.update.title',
   'settings.modals.update.actions.goToRelease',
   'settings.modals.update.actions.update',
+  'settings.modals.update.actions.updateViaAppProxy',
   'settings.modals.update.messages.breakChangeError',
   'settings.modals.update.messages.available',
   'settings.modals.update.alerts.note',
