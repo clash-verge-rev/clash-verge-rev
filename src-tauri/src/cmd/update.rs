@@ -14,8 +14,7 @@ use url::Url;
 // in flight at a time (the update dialog). `download_and_install_update`
 // resets it to `false` before each run so a stale cancel from a previous run
 // can't abort the next one.
-static UPDATE_DOWNLOAD_CANCEL: Lazy<watch::Sender<bool>> =
-    Lazy::new(|| watch::channel(false).0);
+static UPDATE_DOWNLOAD_CANCEL: Lazy<watch::Sender<bool>> = Lazy::new(|| watch::channel(false).0);
 
 /// Progress events streamed from [`download_and_install_update`] to the UI.
 ///
@@ -69,16 +68,11 @@ pub async fn download_and_install_update<R: tauri::Runtime>(
         // used. Setting `.proxy()` alone is therefore sufficient to both use
         // the app proxy and bypass the system proxy.
         let mixed_port = Config::clash().await.latest_arc().get_mixed_port();
-        let proxy_url = Url::parse(&format!("http://127.0.0.1:{mixed_port}"))
-            .map_err(|e| e.to_string())?;
+        let proxy_url = Url::parse(&format!("http://127.0.0.1:{mixed_port}")).map_err(|e| e.to_string())?;
         builder = builder.proxy(proxy_url);
     }
     let updater = builder.build().stringify_err()?;
-    let update = updater
-        .check()
-        .await
-        .stringify_err()?
-        .ok_or("No update available")?;
+    let update = updater.check().await.stringify_err()?.ok_or("No update available")?;
 
     // Download on a separate clone so the `download` future's `&Update` borrow
     // is isolated from the `&Update` the original holds for `install` after the
