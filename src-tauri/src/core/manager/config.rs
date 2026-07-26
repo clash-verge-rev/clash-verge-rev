@@ -9,6 +9,7 @@ use crate::{
     utils::{dirs, help},
 };
 use anyhow::{Result, anyhow};
+use clash_verge_draft::DraftTransaction;
 use clash_verge_logging::{Type, logging};
 use scopeguard::defer;
 use smartstring::alias::String;
@@ -92,13 +93,15 @@ impl CoreManager {
     }
 
     async fn perform_config_update(&self) -> Result<ValidationOutcome> {
+        let runtime = Config::runtime().await;
+        let transaction = DraftTransaction::new(vec![&runtime]);
+
         if let Err(err) = Config::generate().await {
             let message: String = err.to_string().into();
-            Config::runtime().await.discard();
             return Ok(ValidationOutcome::invalid_from_message(message));
         }
 
-        self.apply_generate_config_inner().await
+        self.validate_and_apply(transaction).await
     }
 
     pub(crate) async fn update_runtime_config<F>(&self, f: F) -> Result<ValidationOutcome>
@@ -113,75 +116,62 @@ impl CoreManager {
             self.finish_config_update();
         }
 
-        Config::runtime().await.edit_draft(f);
-        self.apply_generate_config_inner().await
+        let runtime = Config::runtime().await;
+        let transaction = DraftTransaction::new(vec![&runtime]);
+        runtime.edit_draft(f);
+        self.validate_and_apply(transaction).await
     }
 
-    async fn apply_generate_config_inner(&self) -> Result<ValidationOutcome> {
-        match CoreConfigValidator::global().validate_config_outcome().await {
-            Ok(outcome) if outcome.is_valid() => {
-                let run_path = Config::generate_file(ConfigType::Run).await?;
-                self.apply_config(run_path).await?;
-                Ok(ValidationOutcome::Valid)
-            }
-            Ok(outcome) => {
-                Config::runtime().await.discard();
-                Ok(outcome)
-            }
-            Err(e) => {
-                Config::runtime().await.discard();
-                Err(e)
-            }
+    /// Validate the staged Runtime Config and hand it to the Core, committing only if both work.
+    ///
+    /// Takes the transaction rather than opening one, so it covers the staging its callers did.
+    /// Every way out of here other than the last line rolls that staging back.
+    async fn validate_and_apply(&self, transaction: DraftTransaction<'_>) -> Result<ValidationOutcome> {
+        let outcome = CoreConfigValidator::global().validate_config_outcome().await?;
+        if !outcome.is_valid() {
+            return Ok(outcome);
         }
+
+        let run_path = Config::generate_file(ConfigType::Run).await?;
+        self.apply_config(run_path).await?;
+        transaction.commit();
+        Ok(ValidationOutcome::Valid)
     }
 
+    /// Hand the generated configuration to the Core.
+    ///
+    /// Says nothing about drafts: whether the staged Runtime Config is kept follows from
+    /// whether this succeeded, and the caller's transaction decides that.
     async fn apply_config(&self, path: PathBuf) -> Result<()> {
         if matches!(*self.get_running_mode(), RunningMode::Service) {
             let _lifecycle = self.lifecycle_lock.lock().await;
             if !matches!(*self.get_running_mode(), RunningMode::Service) {
-                Config::runtime().await.discard();
                 return Err(anyhow!("core mode changed while applying service configuration"));
             }
-            let result = self.replace_service_core_with_config(&path).await;
-
-            return match result {
-                Ok(()) => {
-                    Config::runtime().await.apply();
-                    logging!(info, Type::Core, "Configuration materialized and applied by service");
-                    Ok(())
-                }
-                Err(error) => {
-                    Config::runtime().await.discard();
-                    Err(error)
-                }
-            };
+            self.replace_service_core_with_config(&path).await?;
+            logging!(info, Type::Core, "Configuration materialized and applied by service");
+            return Ok(());
         }
 
         let path = dirs::path_to_str(&path)?;
-        match self.reload_config(path).await {
+        let Err(err) = self.reload_config(path).await else {
+            logging!(info, Type::Core, "Configuration applied");
+            return Ok(());
+        };
+
+        logging!(
+            warn,
+            Type::Core,
+            "Failed to apply configuration by mihomo api, restart core to apply it, error msg: {err}"
+        );
+        match self.restart_core().await {
             Ok(_) => {
-                Config::runtime().await.apply();
-                logging!(info, Type::Core, "Configuration applied");
+                logging!(info, Type::Core, "Configuration applied after restart");
                 Ok(())
             }
             Err(err) => {
-                logging!(
-                    warn,
-                    Type::Core,
-                    "Failed to apply configuration by mihomo api, restart core to apply it, error msg: {err}"
-                );
-                match self.restart_core().await {
-                    Ok(_) => {
-                        Config::runtime().await.apply();
-                        logging!(info, Type::Core, "Configuration applied after restart");
-                        Ok(())
-                    }
-                    Err(err) => {
-                        logging!(error, Type::Core, "Failed to restart core: {}", err);
-                        Config::runtime().await.discard();
-                        Err(anyhow!("Failed to apply config: {}", err))
-                    }
-                }
+                logging!(error, Type::Core, "Failed to restart core: {}", err);
+                Err(anyhow!("Failed to apply config: {}", err))
             }
         }
     }

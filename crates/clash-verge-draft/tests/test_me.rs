@@ -303,3 +303,74 @@ mod tests {
         assert_eq!(latest.enable_tun_mode, Some(false));
     }
 }
+
+mod transactions {
+    use clash_verge_draft::{Draft, DraftTransaction};
+
+    #[test]
+    fn committing_applies_every_layer() {
+        let first = Draft::new(1_u8);
+        let second = Draft::new("a".to_owned());
+
+        let transaction = DraftTransaction::new(vec![&first, &second]);
+        first.edit_draft(|value| *value = 2);
+        second.edit_draft(|value| *value = "b".to_owned());
+        transaction.commit();
+
+        assert_eq!(**first.data_arc(), 2);
+        assert_eq!(**second.data_arc(), "b");
+    }
+
+    #[test]
+    fn dropping_without_committing_rolls_every_layer_back() {
+        let first = Draft::new(1_u8);
+        let second = Draft::new("a".to_owned());
+
+        {
+            let _transaction = DraftTransaction::new(vec![&first, &second]);
+            first.edit_draft(|value| *value = 2);
+            second.edit_draft(|value| *value = "b".to_owned());
+        }
+
+        assert_eq!(**first.data_arc(), 1);
+        assert_eq!(**second.data_arc(), "a");
+        assert_eq!(**first.latest_arc(), 1, "the draft itself is gone, not just uncommitted");
+    }
+
+    #[test]
+    fn an_early_return_rolls_back_without_the_caller_saying_so() {
+        fn attempt(draft: &Draft<u8>, succeed: bool) -> Result<(), &'static str> {
+            let transaction = DraftTransaction::new(vec![draft]);
+            draft.edit_draft(|value| *value = 9);
+            if !succeed {
+                return Err("failed after editing");
+            }
+            transaction.commit();
+            Ok(())
+        }
+
+        let draft = Draft::new(1_u8);
+        assert!(attempt(&draft, false).is_err());
+        assert_eq!(**draft.data_arc(), 1, "a failed attempt leaves nothing behind");
+
+        assert!(attempt(&draft, true).is_ok());
+        assert_eq!(**draft.data_arc(), 9);
+    }
+
+    #[test]
+    fn a_partly_edited_transaction_still_rolls_back_whole() {
+        // The layer nobody edited must not be left holding a stale draft either.
+        let edited = Draft::new(1_u8);
+        let untouched = Draft::new(5_u8);
+
+        drop(DraftTransaction::new(vec![&edited, &untouched]));
+        edited.edit_draft(|value| *value = 2);
+
+        {
+            let _transaction = DraftTransaction::new(vec![&edited, &untouched]);
+        }
+
+        assert_eq!(**edited.latest_arc(), 1, "the earlier stray draft is cleared too");
+        assert_eq!(**untouched.latest_arc(), 5);
+    }
+}

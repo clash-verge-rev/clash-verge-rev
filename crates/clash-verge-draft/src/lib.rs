@@ -145,3 +145,64 @@ impl<T: Clone> Draft<T> {
         }
     }
 }
+
+/// A draft layer that can be committed or rolled back without knowing what it holds.
+///
+/// Exists so a change spanning several differently-typed layers can be treated as one unit.
+pub trait DraftLayer: Send + Sync {
+    fn apply_draft(&self);
+    fn discard_draft(&self);
+}
+
+impl<T: Clone + Send + Sync> DraftLayer for Draft<T> {
+    #[inline]
+    fn apply_draft(&self) {
+        self.apply();
+    }
+
+    #[inline]
+    fn discard_draft(&self) {
+        self.discard();
+    }
+}
+
+/// Commits a set of draft layers together, or rolls them all back.
+///
+/// Rolls back when dropped, so an early return — a `?`, a `bail!`, a panic — cannot leave a
+/// change half-applied across layers. Committing is the explicit act, because forgetting to
+/// commit costs a retry while forgetting to roll back leaves the app describing a state it is
+/// not in.
+#[must_use = "a transaction that is dropped without committing rolls back"]
+pub struct DraftTransaction<'a> {
+    layers: Vec<&'a dyn DraftLayer>,
+    committed: bool,
+}
+
+impl<'a> DraftTransaction<'a> {
+    /// Begin a transaction over `layers`, which are committed in the order given.
+    pub fn new(layers: Vec<&'a dyn DraftLayer>) -> Self {
+        Self {
+            layers,
+            committed: false,
+        }
+    }
+
+    /// Commit every layer. Consumes the transaction so it cannot be committed twice.
+    pub fn commit(mut self) {
+        for layer in &self.layers {
+            layer.apply_draft();
+        }
+        self.committed = true;
+    }
+}
+
+impl Drop for DraftTransaction<'_> {
+    fn drop(&mut self) {
+        if self.committed {
+            return;
+        }
+        for layer in &self.layers {
+            layer.discard_draft();
+        }
+    }
+}

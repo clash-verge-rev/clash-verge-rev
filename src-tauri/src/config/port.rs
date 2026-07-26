@@ -15,6 +15,7 @@ use crate::{
     utils::port::find_next_available_port,
 };
 use anyhow::{Context as _, Result, anyhow, bail};
+use clash_verge_draft::DraftTransaction;
 use clash_verge_logging::{Type, logging};
 use once_cell::sync::Lazy;
 use parking_lot::Mutex;
@@ -88,6 +89,8 @@ impl Config {
         let clash = Self::clash().await;
         let verge = Self::verge().await;
         let runtime = Self::runtime().await;
+        // Every failure below leaves the three layers as they were, without saying so.
+        let transaction = DraftTransaction::new(vec![&clash, &verge, &runtime]);
 
         clash.edit_draft(|draft| {
             draft.0.insert(MIXED_PORT_KEY.into(), new_port.into());
@@ -96,38 +99,19 @@ impl Config {
             draft.verge_mixed_port = Some(new_port);
         });
 
-        if let Err(error) = Self::generate().await {
-            clash.discard();
-            verge.discard();
-            runtime.discard();
-            return Err(error).context("failed to materialize runtime configuration with fallback port");
-        }
+        Self::generate()
+            .await
+            .context("failed to materialize runtime configuration with fallback port")?;
 
-        let validation = match CoreConfigValidator::global().validate_config_outcome().await {
-            Ok(outcome) => outcome,
-            Err(error) => {
-                clash.discard();
-                verge.discard();
-                runtime.discard();
-                return Err(error).context("failed to validate runtime configuration with fallback port");
-            }
-        };
+        let validation = CoreConfigValidator::global()
+            .validate_config_outcome()
+            .await
+            .context("failed to validate runtime configuration with fallback port")?;
         if !validation.is_valid() {
-            clash.discard();
-            verge.discard();
-            runtime.discard();
             bail!("runtime configuration with fallback port is invalid: {validation}");
         }
 
-        let snapshots = match capture_config_files().await {
-            Ok(snapshots) => snapshots,
-            Err(error) => {
-                clash.discard();
-                verge.discard();
-                runtime.discard();
-                return Err(error);
-            }
-        };
+        let snapshots = capture_config_files().await?;
         let candidate_clash = clash.latest_arc();
         let candidate_verge = verge.latest_arc();
 
@@ -147,19 +131,16 @@ impl Config {
         }
         .await;
 
+        // Files are not part of the transaction, so a failed write is restored explicitly;
+        // the drafts roll back on their own when this returns.
         if let Err(error) = persist_result {
-            clash.discard();
-            verge.discard();
-            runtime.discard();
             return match restore_files(&snapshots).await {
                 Ok(()) => Err(error),
                 Err(rollback_error) => Err(anyhow!("{error:#}; configuration rollback failed: {rollback_error:#}")),
             };
         }
 
-        clash.apply();
-        verge.apply();
-        runtime.apply();
+        transaction.commit();
         record_fallback(old_port, new_port);
         Handle::refresh_clash();
         Handle::refresh_verge();
