@@ -99,32 +99,6 @@ impl ServiceStatus {
             ServiceHealth::Unavailable(reason) => Self::Unavailable(reason.clone()),
         }
     }
-
-    const fn install_state(&self) -> ServiceInstallState {
-        match self {
-            Self::Checking => ServiceInstallState::Checking,
-            Self::Ready => ServiceInstallState::Ready,
-            Self::NotInstalled => ServiceInstallState::NotInstalled,
-            Self::InstallRequired => ServiceInstallState::InstallRequired,
-            Self::SidecarAllowed => ServiceInstallState::SidecarAllowed,
-            Self::NeedsReinstall | Self::ReinstallRequired | Self::ForceReinstallRequired => {
-                ServiceInstallState::NeedsReinstall
-            }
-            Self::UninstallRequired | Self::Unavailable(_) => ServiceInstallState::Unavailable,
-        }
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
-#[serde(rename_all = "camelCase")]
-pub enum ServiceInstallState {
-    Checking,
-    NotInstalled,
-    InstallRequired,
-    Ready,
-    NeedsReinstall,
-    SidecarAllowed,
-    Unavailable,
 }
 
 #[cfg(target_os = "macos")]
@@ -1204,10 +1178,6 @@ impl ServiceManager {
         ServiceStatus::from_run_state(&RUN_STATE.settled().await)
     }
 
-    pub async fn install_state(&self) -> ServiceInstallState {
-        self.current().await.install_state()
-    }
-
     pub fn allow_sidecar_for_session(&self) -> Result<()> {
         RUN_STATE.allow_sidecar_for_session()
     }
@@ -1351,7 +1321,7 @@ pub static SERVICE_MANAGER: ServiceManager = ServiceManager;
 #[allow(clippy::expect_used, clippy::panic, reason = "tests assert by panicking")]
 mod tests {
     use super::{
-        ServiceHealth, ServiceInstallState, ServiceStatus, capture_generation_before, claim_owner_recovery_generation,
+        ServiceHealth, ServiceStatus, capture_generation_before, claim_owner_recovery_generation,
         generate_service_session_token, macos_install_shell, mark_service_unavailable_after_owner_loss,
         owner_recovery_policy, service_core_path_for, session_matches_status,
     };
@@ -1738,12 +1708,6 @@ mod tests {
                 .iter()
                 .any(|marker| marker == "/tmp/verge/clash-verge-service.sock")
         );
-    }
-
-    #[test]
-    fn checking_is_public_and_unavailable() {
-        assert_eq!(ServiceStatus::Checking.install_state(), ServiceInstallState::Checking);
-        assert_ne!(ServiceInstallState::Checking, ServiceInstallState::Ready);
     }
 
     #[test]

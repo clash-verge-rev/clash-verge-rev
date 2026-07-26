@@ -7,11 +7,12 @@ import {
 } from 'tauri-plugin-mihomo-api'
 
 import { useClashInfo, useRuntimeConfig } from '@/hooks/use-clash'
+import { runStateQueryKey } from '@/hooks/use-system-state'
 import { useVerge } from '@/hooks/use-verge'
 import {
   getAppUptime,
   getProxyView,
-  getRunningMode,
+  getRuntimeState,
   getSystemProxy,
 } from '@/services/cmds'
 import { revalidateQueries, useQuery } from '@/services/query-client'
@@ -100,11 +101,13 @@ export const AppDataProvider = ({
     ...TQ_DEFAULTS,
   })
 
-  const { data: runningMode, isPending: isRunningModePending } = useQuery({
-    queryKey: ['getRunningMode'],
-    queryFn: getRunningMode,
+  // Same key as `useSystemState`, so this is the one Run State cache entry, not a second one.
+  const { data: runState, isPending: isRunningModePending } = useQuery({
+    queryKey: runStateQueryKey,
+    queryFn: getRuntimeState,
     ...TQ_DEFAULTS,
   })
+  const runningMode = runState?.mode
 
   const { data: uptimeData } = useQuery({
     queryKey: ['appUptime'],

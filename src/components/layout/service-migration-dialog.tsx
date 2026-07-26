@@ -3,21 +3,19 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BaseDialog } from '@/components/base'
-import { fetchSystemState } from '@/hooks/use-system-state'
+import { runStateQueryKey } from '@/hooks/use-system-state'
 import { useVisibility } from '@/hooks/use-visibility'
 import {
   continueWithSidecar,
-  getRunningMode,
-  getServiceInstallState,
+  getRuntimeState,
   installService,
   reinstallService,
   repairService,
   restartCore,
-  type ServiceInstallState,
+  type RunState,
 } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
 import { setCacheDataAsync, useQuery } from '@/services/query-client'
-const installStateQueryKey = ['getServiceInstallState'] as const
 
 export const ServiceMigrationDialog = () => {
   const { t } = useTranslation()
@@ -25,51 +23,39 @@ export const ServiceMigrationDialog = () => {
   const [loading, setLoading] = useState(false)
   const [stateRefreshFailed, setStateRefreshFailed] = useState(false)
   const [workflowIncomplete, setWorkflowIncomplete] = useState(false)
-  const { data: state } = useQuery({
-    queryKey: installStateQueryKey,
-    queryFn: getServiceInstallState,
+  const { data: runState } = useQuery({
+    queryKey: runStateQueryKey,
+    queryFn: getRuntimeState,
     enabled: true,
     retry: 1,
-    refetchInterval: pageVisible ? 2000 : false,
+    refetchInterval: pageVisible ? 30000 : false,
   })
-  const dialogState = stateRefreshFailed ? 'unavailable' : state
-  const open =
-    loading ||
-    workflowIncomplete ||
-    dialogState === 'installRequired' ||
-    dialogState === 'needsReinstall' ||
-    dialogState === 'unavailable'
-  const showCheckingMessage =
-    loading ||
-    (dialogState !== 'installRequired' &&
-      dialogState !== 'needsReinstall' &&
-      dialogState !== 'unavailable')
+  // Whether the service needs a decision is derived once, in Rust, and travels with the
+  // snapshot; a failed refresh is treated as needing one, since we cannot tell otherwise.
+  const needsDecision =
+    stateRefreshFailed || Boolean(runState?.serviceNeedsAttention)
+  // Which of the three remedies the dialog offers. A refresh we could not complete is
+  // treated as an unreachable service, which is what 'repair' is for.
+  const remedy: 'install' | 'repair' | 'reinstall' =
+    runState?.pendingAction === 'install'
+      ? 'install'
+      : stateRefreshFailed || runState?.service === 'unavailable'
+        ? 'repair'
+        : 'reinstall'
+  const open = loading || workflowIncomplete || needsDecision
+  const showCheckingMessage = loading || !needsDecision
 
-  const refreshInstallState = async () => {
+  // One cache entry to refresh, so there is nothing left to keep coherent by hand.
+  const refreshRunState = async () => {
     try {
-      const data = await getServiceInstallState()
-      await setCacheDataAsync<ServiceInstallState>(installStateQueryKey, data)
+      const data = await getRuntimeState()
+      await setCacheDataAsync<RunState>(runStateQueryKey, data)
       setStateRefreshFailed(false)
       return data
     } catch (error) {
       setStateRefreshFailed(true)
-      await setCacheDataAsync<ServiceInstallState>(
-        installStateQueryKey,
-        'unavailable',
-      )
       throw error
     }
-  }
-
-  const refreshSystemAndRunning = async () => {
-    const [systemState, runningMode] = await Promise.all([
-      fetchSystemState(),
-      getRunningMode(),
-    ])
-    await Promise.all([
-      setCacheDataAsync(['getSystemState'], { ...systemState, runningMode }),
-      setCacheDataAsync(['getRunningMode'], runningMode),
-    ])
   }
 
   const handleServiceAction = async () => {
@@ -77,9 +63,9 @@ export const ServiceMigrationDialog = () => {
     setWorkflowIncomplete(true)
     let actionSucceeded = false
     try {
-      if (dialogState === 'installRequired') {
+      if (remedy === 'install') {
         await installService()
-      } else if (dialogState === 'unavailable') {
+      } else if (remedy === 'repair') {
         await repairService()
       } else {
         await reinstallService()
@@ -94,7 +80,7 @@ export const ServiceMigrationDialog = () => {
 
     let initialRefreshSucceeded = false
     try {
-      await refreshInstallState()
+      await refreshRunState()
       initialRefreshSucceeded = true
     } catch (error) {
       showNotice.error(
@@ -120,7 +106,7 @@ export const ServiceMigrationDialog = () => {
 
     let finalRefreshSucceeded = false
     try {
-      await refreshInstallState()
+      await refreshRunState()
       finalRefreshSucceeded = true
     } catch (error) {
       showNotice.error(
@@ -128,17 +114,7 @@ export const ServiceMigrationDialog = () => {
         error,
       )
     }
-    let revalidationSucceeded = false
-    try {
-      await refreshSystemAndRunning()
-      revalidationSucceeded = true
-    } catch (error) {
-      showNotice.error(
-        'layout.components.serviceMigration.errors.revalidationFailed',
-        error,
-      )
-    }
-    if (restartSucceeded && finalRefreshSucceeded && revalidationSucceeded) {
+    if (restartSucceeded && finalRefreshSucceeded) {
       setWorkflowIncomplete(false)
       showNotice.success('layout.components.serviceMigration.success')
     }
@@ -157,21 +133,11 @@ export const ServiceMigrationDialog = () => {
 
     let installRefreshSucceeded = false
     try {
-      await refreshInstallState()
+      await refreshRunState()
       installRefreshSucceeded = true
     } catch (error) {
       showNotice.error(
         'layout.components.serviceMigration.errors.stateRefreshFailed',
-        error,
-      )
-    }
-    let revalidationSucceeded = false
-    try {
-      await refreshSystemAndRunning()
-      revalidationSucceeded = true
-    } catch (error) {
-      showNotice.error(
-        'layout.components.serviceMigration.errors.revalidationFailed',
         error,
       )
     }
@@ -180,7 +146,7 @@ export const ServiceMigrationDialog = () => {
         'layout.components.serviceMigration.errors.sidecarFailed',
         startupError,
       )
-    } else if (installRefreshSucceeded && revalidationSucceeded) {
+    } else if (installRefreshSucceeded) {
       setWorkflowIncomplete(false)
     }
     setLoading(false)
@@ -191,9 +157,9 @@ export const ServiceMigrationDialog = () => {
       open={open}
       title={t('layout.components.serviceMigration.title')}
       okBtn={t(
-        dialogState === 'installRequired'
+        remedy === 'install'
           ? 'settings.sections.proxyControl.actions.installService'
-          : dialogState === 'unavailable'
+          : remedy === 'repair'
             ? 'layout.components.serviceMigration.repair'
             : 'layout.components.serviceMigration.reinstall',
       )}
@@ -208,9 +174,9 @@ export const ServiceMigrationDialog = () => {
         {t(
           showCheckingMessage
             ? 'layout.components.serviceMigration.checkingMessage'
-            : dialogState === 'installRequired' || dialogState === 'unavailable'
-              ? 'layout.components.serviceMigration.unavailableMessage'
-              : 'layout.components.serviceMigration.message',
+            : remedy === 'reinstall'
+              ? 'layout.components.serviceMigration.message'
+              : 'layout.components.serviceMigration.unavailableMessage',
         )}
       </Alert>
     </BaseDialog>

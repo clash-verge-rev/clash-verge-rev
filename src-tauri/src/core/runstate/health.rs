@@ -2,8 +2,8 @@
 //!
 //! The central distinction: [`ServiceHealth`] is what we *observed* about the Service,
 //! [`PendingAction`] is what this session *asked for*. The legacy `ServiceStatus` enum
-//! conflated the two into one slot, which is why narrowing it to `ServiceInstallState`
-//! had to be lossy.
+//! conflated the two into one slot, which is why narrowing it for the frontend had to be
+//! lossy. Nothing narrows now: [`RunStateView`] carries both, plus the derived answers.
 //!
 //! See `CONTEXT.md` for the domain terms and `docs/adr/0001-runstate-owns-state-not-lifecycle.md`
 //! for why this module does not own Core lifecycle.
@@ -26,8 +26,29 @@ pub enum ServiceHealth {
     Unavailable(String),
 }
 
+impl ServiceHealth {
+    /// The variant name alone, for callers that carry the reason separately.
+    const fn kind(&self) -> &'static str {
+        match self {
+            Self::Unknown => "unknown",
+            Self::Ready => "ready",
+            Self::NotInstalled => "notInstalled",
+            Self::VersionMismatch => "versionMismatch",
+            Self::Unavailable(_) => "unavailable",
+        }
+    }
+
+    fn reason(&self) -> Option<String> {
+        match self {
+            Self::Unavailable(reason) => Some(reason.clone()),
+            _ => None,
+        }
+    }
+}
+
 /// A privileged operation this session asked for against the Service.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
 pub enum PendingAction {
     Install,
     Uninstall,
@@ -71,6 +92,61 @@ impl RunState {
     pub const fn tun_capable(&self) -> bool {
         self.is_admin || self.service_usable()
     }
+
+    /// The Service cannot be used and the user has to choose what to do about it.
+    ///
+    /// A requested action always needs an answer. Otherwise it is only the states where the
+    /// Service is present but unusable: a Service that is simply absent, or a session that has
+    /// already settled on Sidecar, needs nothing from anyone.
+    #[must_use]
+    pub const fn service_needs_attention(&self) -> bool {
+        if self.pending.is_some() {
+            return true;
+        }
+        if self.sidecar_allowed {
+            return false;
+        }
+        matches!(
+            self.health,
+            ServiceHealth::VersionMismatch | ServiceHealth::Unavailable(_)
+        )
+    }
+
+    /// The shape sent across the IPC seam.
+    ///
+    /// Carries the derived answers, not just the raw fields, so that no caller on the other
+    /// side reinvents `tun_capable` or the "needs attention" ladder.
+    #[must_use]
+    pub fn to_view(&self) -> RunStateView {
+        RunStateView {
+            mode: self.mode,
+            service: self.health.kind(),
+            service_unavailable_reason: self.health.reason(),
+            pending_action: self.pending,
+            sidecar_allowed: self.sidecar_allowed,
+            is_admin: self.is_admin,
+            op_in_flight: self.op_in_flight,
+            service_usable: self.service_usable(),
+            tun_capable: self.tun_capable(),
+            service_needs_attention: self.service_needs_attention(),
+        }
+    }
+}
+
+/// The Run State as the frontend sees it.
+#[derive(Debug, Clone, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct RunStateView {
+    pub mode: RunningMode,
+    pub service: &'static str,
+    pub service_unavailable_reason: Option<String>,
+    pub pending_action: Option<PendingAction>,
+    pub sidecar_allowed: bool,
+    pub is_admin: bool,
+    pub op_in_flight: bool,
+    pub service_usable: bool,
+    pub tun_capable: bool,
+    pub service_needs_attention: bool,
 }
 
 /// The service-owned part of the Run State, stored behind one lock.
@@ -139,6 +215,66 @@ mod tests {
         assert!(state(ServiceHealth::NotInstalled, true, false).tun_capable());
         assert!(state(ServiceHealth::Unavailable("boom".into()), true, true).tun_capable());
         assert!(!state(ServiceHealth::NotInstalled, false, false).tun_capable());
+    }
+
+    #[test]
+    fn a_service_that_is_merely_absent_needs_no_decision() {
+        assert!(!state(ServiceHealth::NotInstalled, false, false).service_needs_attention());
+        assert!(!state(ServiceHealth::Ready, false, false).service_needs_attention());
+        assert!(!state(ServiceHealth::Unknown, false, false).service_needs_attention());
+    }
+
+    #[test]
+    fn a_present_but_unusable_service_needs_a_decision() {
+        assert!(state(ServiceHealth::VersionMismatch, false, false).service_needs_attention());
+        assert!(state(ServiceHealth::Unavailable("boom".into()), false, false).service_needs_attention());
+    }
+
+    #[test]
+    fn a_requested_action_always_needs_an_answer() {
+        for action in [
+            PendingAction::Install,
+            PendingAction::Uninstall,
+            PendingAction::Reinstall,
+            PendingAction::ForceReinstall,
+        ] {
+            let mut run_state = state(ServiceHealth::NotInstalled, false, false);
+            run_state.pending = Some(action);
+            assert!(run_state.service_needs_attention(), "{action:?}");
+        }
+    }
+
+    #[test]
+    fn a_session_that_settled_on_sidecar_needs_nothing() {
+        let mut run_state = state(ServiceHealth::VersionMismatch, false, false);
+        run_state.sidecar_allowed = true;
+
+        assert!(!run_state.service_needs_attention());
+    }
+
+    #[test]
+    fn the_view_carries_the_derived_answers_and_the_unavailable_reason() {
+        let mut run_state = state(ServiceHealth::Unavailable("socket refused".into()), true, false);
+        run_state.pending = Some(PendingAction::Reinstall);
+
+        let view = run_state.to_view();
+
+        assert_eq!(view.service, "unavailable");
+        assert_eq!(view.service_unavailable_reason.as_deref(), Some("socket refused"));
+        assert_eq!(view.pending_action, Some(PendingAction::Reinstall));
+        assert!(view.tun_capable, "elevation alone makes TUN possible");
+        assert!(!view.service_usable);
+        assert!(view.service_needs_attention);
+    }
+
+    #[test]
+    fn a_healthy_view_reports_no_unavailable_reason() {
+        let view = state(ServiceHealth::Ready, false, false).to_view();
+
+        assert_eq!(view.service, "ready");
+        assert_eq!(view.service_unavailable_reason, None);
+        assert!(view.service_usable);
+        assert!(!view.service_needs_attention);
     }
 
     #[test]

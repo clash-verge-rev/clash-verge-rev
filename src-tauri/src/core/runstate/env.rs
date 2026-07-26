@@ -7,9 +7,8 @@
 
 use anyhow::Result;
 
-use super::health::PendingAction;
+use super::health::{PendingAction, RunState};
 use super::probe::ServiceVersionReply;
-use crate::core::manager::RunningMode;
 
 /// Everything Run State needs from outside itself.
 pub trait RunStateEnv: Send + Sync + 'static {
@@ -31,8 +30,11 @@ pub trait RunStateEnv: Send + Sync + 'static {
     /// proxy port nothing is listening on is worse than no PAC at all.
     fn set_pac_available(&self, available: bool);
 
-    /// Mirror the Running Mode to observers outside the store, such as the frontend.
-    fn publish_mode(&self, mode: RunningMode);
+    /// Publish the Run State to observers outside the store.
+    ///
+    /// Two of them today: the diagnostic snapshot, which reports the Running Mode, and the
+    /// frontend, which gets the whole thing pushed rather than polling for it.
+    fn publish(&self, state: &RunState);
 
     /// Carry out a privileged operation against the Service.
     ///
@@ -73,12 +75,14 @@ impl RunStateEnv for RealEnv {
         crate::utils::server::set_pac_available(available);
     }
 
-    fn publish_mode(&self, mode: RunningMode) {
+    fn publish(&self, state: &RunState) {
         // Non-panicking for the same reason as `is_elevated`: the Core can stop and start
-        // before the app handle exists, and a missed mirror is better than an abort.
-        if let Some(app_handle) = crate::APP_HANDLE.get() {
-            tauri_plugin_clash_verge_sysinfo::set_app_core_mode(app_handle, mode.to_string());
-        }
+        // before the app handle exists, and a missed notification is better than an abort.
+        let Some(app_handle) = crate::APP_HANDLE.get() else {
+            return;
+        };
+        tauri_plugin_clash_verge_sysinfo::set_app_core_mode(app_handle, state.mode.to_string());
+        crate::core::handle::Handle::notify_run_state(&state.to_view());
     }
 
     fn run_privileged(&self, action: PendingAction) -> Result<()> {
@@ -95,7 +99,8 @@ mod fake {
     use clash_verge_service_ipc::ProtocolInfo;
     use parking_lot::Mutex;
 
-    use super::{PendingAction, RunStateEnv, RunningMode, ServiceVersionReply};
+    use super::{PendingAction, RunState, RunStateEnv, ServiceVersionReply};
+    use crate::core::manager::RunningMode;
 
     /// A scripted stand-in for the machine.
     ///
@@ -108,7 +113,7 @@ mod fake {
         elevated: bool,
         probe_count: Mutex<usize>,
         pac_available: Mutex<Option<bool>>,
-        published_modes: Mutex<Vec<RunningMode>>,
+        published: Mutex<Vec<RunState>>,
         privileged_outcome: Mutex<Result<(), String>>,
         privileged_actions: Mutex<Vec<PendingAction>>,
     }
@@ -121,7 +126,7 @@ mod fake {
                 elevated: false,
                 probe_count: Mutex::new(0),
                 pac_available: Mutex::new(None),
-                published_modes: Mutex::new(Vec::new()),
+                published: Mutex::new(Vec::new()),
                 privileged_outcome: Mutex::new(Ok(())),
                 privileged_actions: Mutex::new(Vec::new()),
             }
@@ -204,10 +209,16 @@ mod fake {
             *self.pac_available.lock()
         }
 
-        /// Every Running Mode mirrored outward, in order.
+        /// Every Running Mode published outward, in order.
         #[must_use]
         pub fn published_modes(&self) -> Vec<RunningMode> {
-            self.published_modes.lock().clone()
+            self.published.lock().iter().map(|state| state.mode).collect()
+        }
+
+        /// Every Run State published outward, in order.
+        #[must_use]
+        pub fn published(&self) -> Vec<RunState> {
+            self.published.lock().clone()
         }
 
         /// Make every privileged operation fail with `reason`.
@@ -251,8 +262,8 @@ mod fake {
             *self.pac_available.lock() = Some(available);
         }
 
-        fn publish_mode(&self, mode: RunningMode) {
-            self.published_modes.lock().push(mode);
+        fn publish(&self, state: &RunState) {
+            self.published.lock().push(state.clone());
         }
 
         fn run_privileged(&self, action: PendingAction) -> Result<()> {

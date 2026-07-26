@@ -32,7 +32,7 @@ use tokio::sync::Notify;
 #[cfg(test)]
 pub use env::FakeEnv;
 pub use env::{RealEnv, RunStateEnv};
-pub use health::{PendingAction, RunState, ServiceHealth};
+pub use health::{PendingAction, RunState, RunStateView, ServiceHealth};
 pub use owner::{OwnerRecoveryReason, OwnerSample, OwnerStep, OwnerWatch};
 pub use probe::{ServiceVersionCheck, ServiceVersionReply, classify_service_version_reply};
 
@@ -221,6 +221,7 @@ impl<E: RunStateEnv> RunStateStore<E> {
         state.service.observe(health);
         state.bump();
         drop(state);
+        self.announce();
     }
 
     /// Record a requested privileged operation without any eligibility check.
@@ -232,6 +233,7 @@ impl<E: RunStateEnv> RunStateStore<E> {
         state.service.request(action);
         state.bump();
         drop(state);
+        self.announce();
     }
 
     /// Accept Sidecar for the rest of this app session without any eligibility check.
@@ -245,6 +247,7 @@ impl<E: RunStateEnv> RunStateStore<E> {
         state.service.allow_sidecar();
         state.bump();
         drop(state);
+        self.announce();
     }
 
     /// Accept Sidecar for the rest of this app session.
@@ -270,6 +273,7 @@ impl<E: RunStateEnv> RunStateStore<E> {
         state.service.allow_sidecar();
         state.bump();
         drop(state);
+        self.announce();
         Ok(())
     }
 
@@ -290,6 +294,7 @@ impl<E: RunStateEnv> RunStateStore<E> {
             state.bump();
         }
         drop(state);
+        self.announce();
         Ok(())
     }
 
@@ -360,7 +365,7 @@ impl<E: RunStateEnv> RunStateStore<E> {
         if running {
             self.env.set_pac_available(true);
         }
-        self.env.publish_mode(mode);
+        self.announce();
     }
 
     // ─────────────────────────── privileged operations ───────────────────────────
@@ -377,6 +382,7 @@ impl<E: RunStateEnv> RunStateStore<E> {
         }
         state.bump();
         drop(state);
+        self.announce();
         Ok(OperationGuard { store: self })
     }
 
@@ -401,6 +407,14 @@ impl<E: RunStateEnv> RunStateStore<E> {
         self.service.lock().generation
     }
 
+    /// Tell the outside world the Run State moved.
+    ///
+    /// Called after every mutation and never while the state lock is held, so a publisher that
+    /// reads back the state cannot deadlock against the writer that triggered it.
+    fn announce(&self) {
+        self.env.publish(&self.state());
+    }
+
     fn snapshot(&self, service: StoredService) -> RunState {
         RunState {
             health: service.health,
@@ -423,6 +437,7 @@ impl<E: RunStateEnv> Drop for OperationGuard<'_, E> {
     fn drop(&mut self) {
         self.store.operation_running.store(false, Ordering::Release);
         self.store.operation_done.notify_waiters();
+        self.store.announce();
     }
 }
 
@@ -828,6 +843,50 @@ mod tests {
             assert_eq!(store.env.pac_available(), Some(running), "mode {mode}");
             assert_eq!(store.state().mode, mode);
         }
+    }
+
+    #[test]
+    fn every_change_is_published_not_just_mode_changes() {
+        // The frontend is pushed to rather than polling, so a health change it would otherwise
+        // wait up to a poll interval to notice has to be announced too.
+        let store = with_env(FakeEnv::new());
+
+        store.observe(ServiceHealth::NotInstalled);
+        store.require_install_for_session().expect("absent service");
+        store.core_started(RunningMode::Sidecar);
+
+        let published = store.env.published();
+        assert_eq!(published.len(), 3, "each change announces exactly once");
+        assert_eq!(published[0].health, ServiceHealth::NotInstalled);
+        assert_eq!(published[1].pending, Some(PendingAction::Install));
+        assert_eq!(published[2].mode, RunningMode::Sidecar);
+    }
+
+    #[test]
+    fn a_no_op_change_announces_nothing() {
+        let store = with_env(FakeEnv::new());
+        store.observe(ServiceHealth::Ready);
+        let published = store.env.published().len();
+
+        store.observe(ServiceHealth::Ready);
+
+        assert_eq!(store.env.published().len(), published);
+    }
+
+    #[test]
+    fn starting_and_finishing_an_operation_are_both_published() {
+        // op_in_flight is part of the snapshot, so the frontend must learn when it clears.
+        let store = with_env(FakeEnv::new());
+        store.observe(ServiceHealth::Ready);
+        let baseline = store.env.published().len();
+
+        let guard = store.begin_operation().expect("slot should be free");
+        drop(guard);
+
+        let published = store.env.published();
+        assert_eq!(published.len(), baseline + 2);
+        assert!(published[baseline].op_in_flight, "the claim is announced");
+        assert!(!published[baseline + 1].op_in_flight, "so is the release");
     }
 
     #[test]

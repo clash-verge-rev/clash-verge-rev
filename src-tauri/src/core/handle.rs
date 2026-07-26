@@ -48,6 +48,17 @@ impl Handle {
         Self::send_event(FrontendEvent::RefreshProfiles);
     }
 
+    /// Push a Run State snapshot to the frontend.
+    ///
+    /// Sent on every transition, so the frontend does not have to poll to notice that the Core
+    /// stopped or that the Service came back.
+    pub fn notify_run_state(state: &crate::core::runstate::RunStateView) {
+        let Ok(state) = serde_json::to_value(state) else {
+            return;
+        };
+        Self::send_event(FrontendEvent::RunStateChanged { state });
+    }
+
     pub fn notify_profile_changed(profile_id: &String) {
         Self::send_event(FrontendEvent::ProfileChanged {
             current_profile_id: profile_id,

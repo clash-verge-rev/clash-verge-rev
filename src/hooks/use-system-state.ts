@@ -1,11 +1,9 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 
 import {
-  getRunningMode,
-  getServiceInstallState,
-  isAdmin,
+  getRuntimeState,
+  type RunState,
   type RunningMode,
-  type ServiceInstallState,
 } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
 import { useQuery } from '@/services/query-client'
@@ -13,100 +11,70 @@ import { useQuery } from '@/services/query-client'
 import { useVerge } from './use-verge'
 import { useVisibility } from './use-visibility'
 
-export interface SystemState {
-  runningMode: RunningMode
-  isAdminMode: boolean
-  isServiceInstallReady: boolean
-  serviceInstallState: ServiceInstallState | null
-}
-
-const defaultSystemState = {
-  runningMode: 'Sidecar',
-  isAdminMode: false,
-  isServiceInstallReady: false,
-  serviceInstallState: null,
-} as SystemState
-
-export const fetchSystemState = async (): Promise<SystemState> => {
-  const [runningMode, isAdminMode, serviceInstallState] = await Promise.all([
-    getRunningMode(),
-    isAdmin(),
-    getServiceInstallState().catch(() => null),
-  ])
-  return {
-    runningMode,
-    isAdminMode,
-    isServiceInstallReady: serviceInstallState === 'ready',
-    serviceInstallState,
-  }
-}
-
-const isServiceChoicePending = (
-  state: ServiceInstallState | null,
-  serviceInstallReady: boolean,
-  queryFailed: boolean,
-) =>
-  queryFailed ||
-  state === 'sidecarAllowed' ||
-  !(state === 'notInstalled' || (state === 'ready' && serviceInstallReady))
-
-// Grace period for service initialization during startup
-const STARTUP_GRACE_MS = 10_000
+export const runStateQueryKey = ['getRuntimeState'] as const
 
 /**
- * 自定义 hook 用于获取系统运行状态
- * 包括运行模式、管理员状态、系统服务是否可用
+ * Until the first snapshot arrives, assume the least capable environment: no service, no
+ * elevation, nothing asked of the user. Guessing "ready" here would flash a usable TUN toggle.
+ */
+const unknownRunState: RunState = {
+  mode: 'NotRunning',
+  service: 'unknown',
+  serviceUnavailableReason: null,
+  pendingAction: null,
+  sidecarAllowed: false,
+  isAdmin: false,
+  opInFlight: false,
+  serviceUsable: false,
+  tunCapable: false,
+  serviceNeedsAttention: false,
+}
+
+/**
+ * The Run State: how the core is running and what backs it.
+ *
+ * One query key, kept fresh by `verge://run-state-changed` rather than polling. Every derived
+ * answer is computed in Rust and travels with the snapshot, so there is exactly one definition
+ * of "TUN can work" in the app.
  */
 export function useSystemState() {
   const pageVisible = useVisibility()
-  const [isStartingUp, setIsStartingUp] = useState(true)
-
-  useEffect(() => {
-    const timer = setTimeout(() => setIsStartingUp(false), STARTUP_GRACE_MS)
-    return () => clearTimeout(timer)
-  }, [])
 
   const {
-    data: systemState = defaultSystemState,
+    data: runState = unknownRunState,
     refetch: mutateSystemState,
     isLoading,
-    error: systemStateError,
   } = useQuery({
-    queryKey: ['getSystemState'],
-    queryFn: fetchSystemState,
-    refetchInterval: pageVisible ? (isStartingUp ? 2000 : 30000) : false,
+    queryKey: runStateQueryKey,
+    queryFn: getRuntimeState,
+    // A safety net only: transitions are pushed, so this is not the primary path.
+    refetchInterval: pageVisible ? 30000 : false,
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
   })
 
-  const isSidecarMode = systemState.runningMode === 'Sidecar'
-  const isServiceMode = systemState.runningMode === 'Service'
-  const isTunModeAvailable =
-    systemState.isAdminMode || systemState.isServiceInstallReady
-  const serviceChoicePending = isServiceChoicePending(
-    systemState.serviceInstallState,
-    systemState.isServiceInstallReady,
-    systemStateError !== undefined,
-  )
-
   return {
-    runningMode: systemState.runningMode,
-    isAdminMode: systemState.isAdminMode,
-    isServiceInstallReady: systemState.isServiceInstallReady,
-    isSidecarMode,
-    isServiceMode,
-    isTunModeAvailable,
-    serviceChoicePending,
+    runState,
+    runningMode: runState.mode as RunningMode,
+    isAdminMode: runState.isAdmin,
+    isSidecarMode: runState.mode === 'Sidecar',
+    isServiceMode: runState.mode === 'Service',
+    isTunModeAvailable: runState.tunCapable,
+    serviceNeedsAttention: runState.serviceNeedsAttention,
     mutateSystemState,
     isLoading,
-    isStartingUp,
   }
 }
 
 export function useTunAvailabilityGuard() {
   const { verge, patchVerge } = useVerge()
-  const { isTunModeAvailable, serviceChoicePending, isLoading, isStartingUp } =
-    useSystemState()
+  const { runState, isTunModeAvailable, isLoading } = useSystemState()
+  // The service reports 'unknown' until it has actually been probed, which replaces the
+  // fixed startup grace period this guard used to wait out before trusting the answer.
+  const serviceUndecided =
+    runState.service === 'unknown' ||
+    runState.opInFlight ||
+    runState.serviceNeedsAttention
   const disablingTunRef = useRef(false)
   const cooldownTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const enable_tun_mode = verge?.enable_tun_mode
@@ -118,9 +86,8 @@ export function useTunAvailabilityGuard() {
       !disablingTunRef.current &&
       enable_tun_mode &&
       !isTunModeAvailable &&
-      !serviceChoicePending &&
-      !isLoading &&
-      !isStartingUp
+      !serviceUndecided &&
+      !isLoading
     ) {
       disablingTunRef.current = true
       patchVerge({ enable_tun_mode: false })
@@ -154,9 +121,8 @@ export function useTunAvailabilityGuard() {
   }, [
     enable_tun_mode,
     isTunModeAvailable,
-    serviceChoicePending,
+    serviceUndecided,
     patchVerge,
     isLoading,
-    isStartingUp,
   ])
 }
