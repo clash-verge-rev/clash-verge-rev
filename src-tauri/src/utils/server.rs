@@ -450,10 +450,11 @@ mod tests {
     };
     #[cfg(unix)]
     use super::{open_instance_lock, try_lock_instance};
-    use std::sync::atomic::Ordering;
 
     #[cfg(feature = "verge-dev")]
     use super::{INSTANCE_TOKEN_HEADER, dev_quit_route, release_dev_quit_latch};
+    #[cfg(feature = "verge-dev")]
+    use std::sync::atomic::Ordering;
     #[cfg(feature = "verge-dev")]
     use std::sync::{
         Arc,

@@ -365,7 +365,7 @@ mod readiness_tests {
 
     #[test]
     fn invalidated_core_readiness_cannot_be_recaptured_from_stale_mode() {
-        let manager = CoreManager::default();
+        let manager = CoreManager::isolated();
         manager.mark_core_ready();
         manager.core_started(RunningMode::Service);
 

@@ -11,11 +11,15 @@
 
 mod env;
 mod health;
+mod owner;
 mod probe;
 
-use std::sync::{
-    Arc,
-    atomic::{AtomicBool, Ordering},
+use std::{
+    sync::{
+        Arc,
+        atomic::{AtomicBool, Ordering},
+    },
+    time::Duration,
 };
 
 use anyhow::{Context as _, Result, bail};
@@ -29,6 +33,7 @@ use tokio::sync::Notify;
 pub use env::FakeEnv;
 pub use env::{RealEnv, RunStateEnv};
 pub use health::{PendingAction, RunState, ServiceHealth};
+pub use owner::{OwnerRecoveryReason, OwnerSample, OwnerStep, OwnerWatch};
 pub use probe::{ServiceVersionCheck, ServiceVersionReply, classify_service_version_reply};
 
 use crate::core::manager::RunningMode;
@@ -37,6 +42,27 @@ use probe::{CurrentServiceProbe, classify_service_health, probe_outcome};
 
 /// The process-wide Run State, observing the real machine.
 pub static RUN_STATE: Lazy<RunStateStore<RealEnv>> = Lazy::new(|| RunStateStore::new(RealEnv));
+
+/// Why a wait for Service readiness ended without a ready Service.
+///
+/// The two are not interchangeable: an unreachable Service told us nothing, so the caller
+/// decides whether silence means unavailable; a rejected one already updated health and must
+/// not have that verdict overwritten with a vaguer one.
+#[derive(Debug)]
+pub enum ReadyWaitError {
+    /// No readable reply within the attempts budget.
+    Unreachable(anyhow::Error),
+    /// The Service answered and we rejected the answer; health records why.
+    Rejected(anyhow::Error),
+}
+
+impl std::fmt::Display for ReadyWaitError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Unreachable(error) | Self::Rejected(error) => write!(formatter, "{error:#}"),
+        }
+    }
+}
 
 /// The service-owned state together with the counter that versions it.
 ///
@@ -111,8 +137,34 @@ impl<E: RunStateEnv> RunStateStore<E> {
             .probe_service_version()
             .await
             .context("service readiness probe failed")?;
+        self.record_reply(&reply)
+    }
 
-        match classify_service_version_reply(&reply) {
+    /// Probe until the Service answers, giving it `attempts` tries `interval` apart.
+    ///
+    /// Only an unreachable Service is worth retrying. A reply we could read is the Service's
+    /// answer — retrying an incompatible version twenty times would just delay telling the
+    /// user to reinstall — so the wait ends on the first readable reply either way.
+    pub async fn await_ready(&self, attempts: usize, interval: Duration) -> Result<RunState, ReadyWaitError> {
+        let mut last_error = None;
+        for attempt in 0..attempts {
+            match self.env.probe_service_version().await {
+                Ok(reply) => return self.record_reply(&reply).map_err(ReadyWaitError::Rejected),
+                Err(error) => last_error = Some(error),
+            }
+            if attempt + 1 < attempts {
+                tokio::time::sleep(interval).await;
+            }
+        }
+
+        Err(ReadyWaitError::Unreachable(last_error.unwrap_or_else(|| {
+            anyhow::anyhow!("service readiness wait was configured with no attempts")
+        })))
+    }
+
+    /// Record a readable reply as an observation, and report whether it was acceptable.
+    fn record_reply(&self, reply: &ServiceVersionReply) -> Result<RunState> {
+        match classify_service_version_reply(reply) {
             ServiceVersionCheck::Ready => {
                 self.observe(ServiceHealth::Ready);
                 Ok(self.state())
@@ -241,6 +293,31 @@ impl<E: RunStateEnv> RunStateStore<E> {
         Ok(())
     }
 
+    /// Carry out a privileged operation and record what it did to the Service.
+    ///
+    /// Only an uninstall has an outcome we can record without asking again: it either removed
+    /// the Service or left it in a state we no longer trust. After an install or repair the
+    /// Service has to be asked whether it came back, which is [`Self::await_ready`]'s job.
+    pub fn perform(&self, action: PendingAction) -> Result<()> {
+        let outcome = self.env.run_privileged(action);
+        if !matches!(action, PendingAction::Uninstall) {
+            return outcome;
+        }
+
+        match outcome {
+            Ok(()) => {
+                self.observe(ServiceHealth::NotInstalled);
+                Ok(())
+            }
+            Err(error) => {
+                self.observe(ServiceHealth::Unavailable(format!(
+                    "Service uninstall failed: {error:#}"
+                )));
+                Err(error)
+            }
+        }
+    }
+
     // ─────────────────────────── running mode ───────────────────────────
 
     /// The Running Mode, shared so hot callers such as the tray do not allocate.
@@ -312,6 +389,12 @@ impl<E: RunStateEnv> RunStateStore<E> {
         self.operation_running.load(Ordering::Acquire)
     }
 
+    /// The environment this store observes, so tests can assert on the effects it recorded.
+    #[cfg(test)]
+    pub const fn env(&self) -> &E {
+        &self.env
+    }
+
     /// Bumped on every state change; lets tests assert that a no-op really was a no-op.
     #[cfg(test)]
     pub fn generation_count(&self) -> u64 {
@@ -351,6 +434,14 @@ mod tests {
 
     fn with_env(env: FakeEnv) -> RunStateStore<FakeEnv> {
         RunStateStore::new(env)
+    }
+
+    fn ready_reply() -> ServiceVersionReply {
+        ServiceVersionReply {
+            code: 0,
+            message: "ok".to_owned(),
+            protocol: Some(clash_verge_service_ipc::ProtocolInfo::current()),
+        }
     }
 
     #[test]
@@ -539,6 +630,66 @@ mod tests {
             "error should explain the mismatch: {error}"
         );
         assert_eq!(store.state().health, ServiceHealth::VersionMismatch);
+    }
+
+    #[tokio::test]
+    async fn awaiting_readiness_retries_a_silent_service_then_accepts_its_reply() {
+        let store = with_env(FakeEnv::new().replying(vec![Err("ipc path not ready".to_owned()), Ok(ready_reply())]));
+
+        let state = store
+            .await_ready(2, Duration::ZERO)
+            .await
+            .expect("the second attempt should succeed");
+
+        assert!(state.service_usable());
+        assert_eq!(store.env.probe_count(), 2, "the first attempt should have been retried");
+    }
+
+    #[tokio::test]
+    async fn awaiting_readiness_gives_up_after_the_last_attempt() {
+        let store = with_env(FakeEnv::new().service_unreachable());
+        store.observe(ServiceHealth::Ready);
+
+        let error = store
+            .await_ready(3, Duration::ZERO)
+            .await
+            .expect_err("a silent service should never become ready");
+
+        assert!(matches!(error, ReadyWaitError::Unreachable(_)));
+        assert_eq!(store.env.probe_count(), 3, "every attempt should have been used");
+        assert_eq!(
+            store.state().health,
+            ServiceHealth::Ready,
+            "silence is the caller's to interpret, not an observation"
+        );
+    }
+
+    #[tokio::test]
+    async fn awaiting_readiness_stops_at_the_first_readable_reply() {
+        // Retrying an incompatible version would only delay telling the user to reinstall.
+        let store = with_env(FakeEnv::new().service_version_mismatch());
+
+        let error = store
+            .await_ready(20, Duration::ZERO)
+            .await
+            .expect_err("an incompatible service is not ready");
+
+        assert!(matches!(error, ReadyWaitError::Rejected(_)));
+        assert_eq!(store.env.probe_count(), 1, "a readable reply ends the wait");
+        assert_eq!(store.state().health, ServiceHealth::VersionMismatch);
+    }
+
+    #[tokio::test]
+    async fn awaiting_readiness_with_no_attempts_is_unreachable_not_ready() {
+        let store = with_env(FakeEnv::new().service_ready());
+
+        let error = store
+            .await_ready(0, Duration::ZERO)
+            .await
+            .expect_err("no attempts cannot confirm anything");
+
+        assert!(matches!(error, ReadyWaitError::Unreachable(_)));
+        assert_eq!(store.env.probe_count(), 0);
     }
 
     #[tokio::test]

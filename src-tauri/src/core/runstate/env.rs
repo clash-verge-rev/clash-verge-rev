@@ -7,6 +7,7 @@
 
 use anyhow::Result;
 
+use super::health::PendingAction;
 use super::probe::ServiceVersionReply;
 use crate::core::manager::RunningMode;
 
@@ -32,6 +33,13 @@ pub trait RunStateEnv: Send + Sync + 'static {
 
     /// Mirror the Running Mode to observers outside the store, such as the frontend.
     fn publish_mode(&self, mode: RunningMode);
+
+    /// Carry out a privileged operation against the Service.
+    ///
+    /// Blocking and platform-specific — SCM, systemd, launchd, elevation prompts — which is
+    /// exactly why it sits behind the seam: the state machine around it can then be exercised
+    /// without installing anything.
+    fn run_privileged(&self, action: PendingAction) -> Result<()>;
 }
 
 /// The production adapter: real IPC, real platform registry, real elevation check.
@@ -72,6 +80,10 @@ impl RunStateEnv for RealEnv {
             tauri_plugin_clash_verge_sysinfo::set_app_core_mode(app_handle, mode.to_string());
         }
     }
+
+    fn run_privileged(&self, action: PendingAction) -> Result<()> {
+        crate::core::service::run_privileged_service_action(action)
+    }
 }
 
 #[cfg(test)]
@@ -83,7 +95,7 @@ mod fake {
     use clash_verge_service_ipc::ProtocolInfo;
     use parking_lot::Mutex;
 
-    use super::{RunStateEnv, RunningMode, ServiceVersionReply};
+    use super::{PendingAction, RunStateEnv, RunningMode, ServiceVersionReply};
 
     /// A scripted stand-in for the machine.
     ///
@@ -97,6 +109,8 @@ mod fake {
         probe_count: Mutex<usize>,
         pac_available: Mutex<Option<bool>>,
         published_modes: Mutex<Vec<RunningMode>>,
+        privileged_outcome: Mutex<Result<(), String>>,
+        privileged_actions: Mutex<Vec<PendingAction>>,
     }
 
     impl Default for FakeEnv {
@@ -108,6 +122,8 @@ mod fake {
                 probe_count: Mutex::new(0),
                 pac_available: Mutex::new(None),
                 published_modes: Mutex::new(Vec::new()),
+                privileged_outcome: Mutex::new(Ok(())),
+                privileged_actions: Mutex::new(Vec::new()),
             }
         }
     }
@@ -193,6 +209,19 @@ mod fake {
         pub fn published_modes(&self) -> Vec<RunningMode> {
             self.published_modes.lock().clone()
         }
+
+        /// Make every privileged operation fail with `reason`.
+        #[must_use]
+        pub fn privileged_operations_fail(self, reason: &str) -> Self {
+            *self.privileged_outcome.lock() = Err(reason.to_owned());
+            self
+        }
+
+        /// Every privileged operation actually attempted, in order.
+        #[must_use]
+        pub fn privileged_actions(&self) -> Vec<PendingAction> {
+            self.privileged_actions.lock().clone()
+        }
     }
 
     impl RunStateEnv for FakeEnv {
@@ -224,6 +253,11 @@ mod fake {
 
         fn publish_mode(&self, mode: RunningMode) {
             self.published_modes.lock().push(mode);
+        }
+
+        fn run_privileged(&self, action: PendingAction) -> Result<()> {
+            self.privileged_actions.lock().push(action);
+            self.privileged_outcome.lock().clone().map_err(|error| anyhow!(error))
         }
     }
 }

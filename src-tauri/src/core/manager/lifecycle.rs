@@ -565,22 +565,15 @@ impl CoreManager {
             return;
         }
 
-        let max_times = timing::SERVICE_WAIT_MAX.as_millis() / timing::SERVICE_WAIT_INTERVAL.as_millis();
-        let backoff = ConstantBuilder::default()
-            .with_delay(timing::SERVICE_WAIT_INTERVAL)
-            .with_max_times(max_times as usize);
+        if crate::core::runstate::RUN_STATE.state().service_usable() {
+            return;
+        }
 
-        let wait_for_ready = (|| async {
-            if crate::core::runstate::RUN_STATE.state().service_usable() {
-                return Ok(());
-            }
-
-            // Probe the service directly. A transient transport failure does not overwrite
-            // the last confirmed install state and is retried within the startup deadline.
-            SERVICE_MANAGER.confirm_ready().await
-        })
-        .retry(backoff);
-        let _ = tokio::time::timeout(timing::SERVICE_WAIT_MAX, wait_for_ready).await;
+        // Failing to become ready is not fatal here: the caller falls back to Sidecar, and a
+        // transient transport failure must not overwrite the last confirmed install state.
+        let attempts = (timing::SERVICE_WAIT_MAX.as_millis() / timing::SERVICE_WAIT_INTERVAL.as_millis()) as usize;
+        let wait = crate::core::runstate::RUN_STATE.await_ready(attempts, timing::SERVICE_WAIT_INTERVAL);
+        let _ = tokio::time::timeout(timing::SERVICE_WAIT_MAX, wait).await;
     }
 
     /// 在窗口内等待服务就绪,再从 sidecar 交接到 service
@@ -1115,7 +1108,7 @@ mod tests {
     async fn service_config_replacement_is_controlled_and_generation_safe_on_every_platform() {
         for is_macos in [false, true] {
             let calls = Arc::new(Mutex::new(Vec::new()));
-            let manager = CoreManager::default();
+            let manager = CoreManager::isolated();
             let old_readiness_generation = manager.mark_core_ready();
             manager.core_started(RunningMode::Service);
             let owner_monitor_generation = AtomicU64::new(1);
@@ -1284,7 +1277,7 @@ mod tests {
 
     #[tokio::test]
     async fn failed_start_rolls_back_even_from_service_mode() {
-        let manager = CoreManager::default();
+        let manager = CoreManager::isolated();
         manager.core_started(RunningMode::Service);
         manager.rollback_failed_start().await;
         assert_eq!(*manager.get_running_mode(), RunningMode::NotRunning);

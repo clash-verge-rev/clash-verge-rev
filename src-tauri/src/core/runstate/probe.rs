@@ -183,6 +183,33 @@ mod tests {
     }
 
     #[test]
+    fn every_rejection_tells_the_user_what_to_do_about_it() {
+        let mut old_epoch = ProtocolInfo::current();
+        old_epoch.protocol.epoch = old_epoch.protocol.epoch.wrapping_add(1);
+
+        for protocol in [None, Some(old_epoch)] {
+            for code in [0, 1] {
+                let reply = ServiceVersionReply {
+                    code,
+                    message: "unsupported command".to_owned(),
+                    protocol: protocol.clone(),
+                };
+                let ServiceVersionCheck::NeedsReinstall(detail) = classify_service_version_reply(&reply) else {
+                    continue;
+                };
+                assert!(
+                    detail.contains("epoch") || detail.contains("protocol"),
+                    "detail should say what mismatched: {detail}"
+                );
+                assert!(
+                    detail.contains("Reinstall") || detail.contains("Repair"),
+                    "detail should name the action that fixes it: {detail}"
+                );
+            }
+        }
+    }
+
+    #[test]
     fn missing_without_evidence_is_not_installed() {
         assert_eq!(
             classify_service_health(CurrentServiceProbe::Missing, false, ""),

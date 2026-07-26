@@ -9,8 +9,8 @@ use crate::{
         owner_identity::current_owner_credentials,
         proxy_control,
         runstate::{
-            PendingAction, RUN_STATE, RealEnv, RunState, RunStateEnv, RunStateStore, ServiceHealth,
-            ServiceVersionCheck, ServiceVersionReply, classify_service_version_reply,
+            OwnerRecoveryReason, OwnerSample, OwnerStep, OwnerWatch, PendingAction, RUN_STATE, ReadyWaitError,
+            RunState, RunStateEnv, RunStateStore, ServiceHealth,
         },
         runtime_bundle::collect_runtime_bundle,
         tray::Tray,
@@ -125,64 +125,6 @@ pub enum ServiceInstallState {
     NeedsReinstall,
     SidecarAllowed,
     Unavailable,
-}
-
-async fn probe_service_version_once() -> Result<ServiceVersionReply> {
-    RealEnv.probe_service_version().await
-}
-
-async fn poll_service_version<F, Fut>(
-    max_attempts: usize,
-    retry_delay: Duration,
-    mut probe: F,
-) -> Result<ServiceVersionReply>
-where
-    F: FnMut() -> Fut,
-    Fut: Future<Output = Result<ServiceVersionReply>>,
-{
-    let mut last_error = None;
-    for attempt in 0..max_attempts {
-        match probe().await {
-            Ok(reply) => return Ok(reply),
-            Err(error) => last_error = Some(error),
-        }
-        if attempt + 1 < max_attempts {
-            tokio::time::sleep(retry_delay).await;
-        }
-    }
-
-    Err(last_error.unwrap_or_else(|| anyhow::anyhow!("service version probe was configured with no attempts")))
-}
-
-fn apply_service_version_reply<E: RunStateEnv>(store: &RunStateStore<E>, reply: &ServiceVersionReply) -> Result<()> {
-    match classify_service_version_reply(reply) {
-        ServiceVersionCheck::Ready => {
-            store.observe(ServiceHealth::Ready);
-            Ok(())
-        }
-        ServiceVersionCheck::NeedsReinstall(error) => {
-            store.observe(ServiceHealth::VersionMismatch);
-            bail!(error)
-        }
-    }
-}
-
-/// Record the outcome of a *polled* readiness wait.
-///
-/// Unlike a single probe, exhausting the retry budget is itself an observation: the Service
-/// had its whole window to answer and did not, so health becomes unavailable.
-fn apply_service_version_result<E: RunStateEnv>(
-    store: &RunStateStore<E>,
-    result: Result<ServiceVersionReply>,
-    unavailable_context: &'static str,
-) -> Result<()> {
-    match result {
-        Ok(reply) => apply_service_version_reply(store, &reply),
-        Err(error) => {
-            store.observe(ServiceHealth::Unavailable(format!("{unavailable_context}: {error:#}")));
-            Err(error).context(unavailable_context)
-        }
-    }
 }
 
 #[cfg(target_os = "macos")]
@@ -827,27 +769,17 @@ fn force_reinstall_service() -> Result<()> {
     })
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum PrivilegedServiceAction {
-    Install,
-    Uninstall,
-    Reinstall,
-    ForceReinstall,
-}
-
-const fn privileged_service_action(status: &ServiceStatus) -> Option<PrivilegedServiceAction> {
-    match status {
-        ServiceStatus::InstallRequired => Some(PrivilegedServiceAction::Install),
-        ServiceStatus::UninstallRequired => Some(PrivilegedServiceAction::Uninstall),
-        ServiceStatus::ReinstallRequired => Some(PrivilegedServiceAction::Reinstall),
-        ServiceStatus::ForceReinstallRequired => Some(PrivilegedServiceAction::ForceReinstall),
-        ServiceStatus::Checking
-        | ServiceStatus::Ready
-        | ServiceStatus::NotInstalled
-        | ServiceStatus::NeedsReinstall
-        | ServiceStatus::SidecarAllowed
-        | ServiceStatus::Unavailable(_) => None,
-    }
+/// Dispatch a privileged operation to the platform implementation.
+///
+/// Blocking work, so it is handed to a blocking thread: the caller is async.
+pub(crate) fn run_privileged_service_action(action: PendingAction) -> Result<()> {
+    let (operation, label): (fn() -> Result<()>, &'static str) = match action {
+        PendingAction::Install => (install_service, "install service"),
+        PendingAction::Uninstall => (uninstall_service, "uninstall service"),
+        PendingAction::Reinstall => (reinstall_service, "reinstall service"),
+        PendingAction::ForceReinstall => (force_reinstall_service, "force reinstall service"),
+    };
+    tokio::task::block_in_place(operation).with_context(|| format!("{label} failed"))
 }
 
 /// 尝试使用服务启动core
@@ -1048,13 +980,6 @@ pub(super) async fn set_system_proxy_by_service_with_session(
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum OwnerRecoveryReason {
-    Displaced,
-    SameOwnerFailure,
-    TransportFailure,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
 struct OwnerRecoveryPolicy {
     reset_system_proxy: bool,
 }
@@ -1062,41 +987,6 @@ struct OwnerRecoveryPolicy {
 const fn owner_recovery_policy(_reason: OwnerRecoveryReason, is_macos: bool) -> OwnerRecoveryPolicy {
     OwnerRecoveryPolicy {
         reset_system_proxy: !is_macos,
-    }
-}
-
-fn owner_status_recovery_reason(
-    is_active: bool,
-    desired_running: bool,
-    service_state: clash_verge_service_ipc::ServiceLifecycleState,
-    core_pid: Option<u32>,
-    missing_core_samples: u8,
-) -> Option<OwnerRecoveryReason> {
-    if !is_active {
-        return Some(OwnerRecoveryReason::Displaced);
-    }
-    if !desired_running
-        || service_state == clash_verge_service_ipc::ServiceLifecycleState::Fatal
-        || (!matches!(
-            service_state,
-            clash_verge_service_ipc::ServiceLifecycleState::Starting
-                | clash_verge_service_ipc::ServiceLifecycleState::RecoveringCore
-        ) && core_pid.is_none()
-            && missing_core_samples >= 3)
-    {
-        return Some(OwnerRecoveryReason::SameOwnerFailure);
-    }
-    None
-}
-
-const fn transport_failure_recovery_reason(
-    failed_status_samples: u8,
-    owner_endpoint_available: bool,
-) -> Option<OwnerRecoveryReason> {
-    if failed_status_samples >= 3 && !owner_endpoint_available {
-        Some(OwnerRecoveryReason::TransportFailure)
-    } else {
-        None
     }
 }
 
@@ -1108,153 +998,101 @@ fn mark_service_unavailable_after_owner_loss<E: RunStateEnv>(store: &RunStateSto
     }
 }
 
-async fn recover_after_sustained_status_failure(generation: u64, failed_status_samples: u8) -> bool {
-    if failed_status_samples < 3 {
-        return false;
-    }
-
-    let owner_endpoint_available = Handle::mihomo().await.get_version().await.is_ok();
-    if let Some(reason) = transport_failure_recovery_reason(failed_status_samples, owner_endpoint_available) {
-        recover_after_owner_loss(generation, reason).await;
-        true
-    } else {
-        false
-    }
-}
-
-async fn recover_after_status_mismatch_with<F, Fut>(
-    session: &Mutex<Option<OwnerSessionProof>>,
-    generation: u64,
-    is_active: bool,
-    active_generation: Option<u64>,
-    recover: F,
-) -> bool
-where
-    F: FnOnce(u64, OwnerRecoveryReason) -> Fut,
-    Fut: Future<Output = ()>,
-{
-    let session_matches = session
-        .lock()
-        .as_ref()
-        .is_some_and(|proof| session_matches_status(proof, is_active, active_generation));
-    if session_matches {
-        return false;
-    }
-    recover(generation, OwnerRecoveryReason::Displaced).await;
-    true
-}
+/// How often the owner monitor samples Service status.
+const OWNER_MONITOR_INTERVAL: Duration = Duration::from_secs(2);
+/// Mirrors `OwnerWatch`'s tolerance, for the log line only.
+const SUSTAINED_OWNER_SAMPLES: u8 = 3;
 
 fn start_owner_monitor() {
     let generation = OWNER_MONITOR_GENERATION.fetch_add(1, Ordering::AcqRel) + 1;
     AsyncHandler::spawn(move || async move {
-        let mut missing_core_samples = 0u8;
-        let mut failed_status_samples = 0u8;
+        let mut watch = OwnerWatch::new();
         loop {
-            tokio::time::sleep(Duration::from_secs(2)).await;
+            tokio::time::sleep(OWNER_MONITOR_INTERVAL).await;
             if OWNER_MONITOR_GENERATION.load(Ordering::Acquire) != generation {
                 break;
             }
             if !matches!(*CoreManager::global().get_running_mode(), RunningMode::Service) {
                 break;
             }
-            let response = match current_owner_credentials() {
-                Ok(credentials) => clash_verge_service_ipc::get_status(&credentials).await,
-                Err(error) => Err(error),
-            };
-            let response = match response {
-                Ok(response) => response,
-                Err(error) => {
-                    failed_status_samples = failed_status_samples.saturating_add(1);
-                    if failed_status_samples == 3 {
-                        logging!(
-                            warn,
-                            Type::Service,
-                            "service owner status temporarily unavailable; preserving local proxy state: {error:#}"
-                        );
-                    }
-                    if recover_after_sustained_status_failure(generation, failed_status_samples).await {
-                        break;
-                    }
-                    if failed_status_samples >= 3 {
-                        failed_status_samples = 0;
-                    }
-                    continue;
-                }
-            };
-            if response.code == clash_verge_service_ipc::ServiceErrorCode::NotActive as u16 {
-                recover_after_owner_loss(generation, OwnerRecoveryReason::Displaced).await;
-                break;
-            }
-            if response.code != 0 {
-                failed_status_samples = failed_status_samples.saturating_add(1);
-                if failed_status_samples == 3 {
+
+            let sample = read_owner_sample().await;
+            let mut step = watch.observe(sample);
+            if matches!(step, OwnerStep::VerifyTransport) {
+                if watch.just_became_sustained() {
                     logging!(
                         warn,
                         Type::Service,
-                        "service owner status returned error {}; preserving local proxy state: {}",
-                        response.code,
-                        response.message
+                        "service owner status unavailable for {SUSTAINED_OWNER_SAMPLES} samples; \
+                         preserving local proxy state while the core endpoint still answers"
                     );
                 }
-                if recover_after_sustained_status_failure(generation, failed_status_samples).await {
-                    break;
-                }
-                if failed_status_samples >= 3 {
-                    failed_status_samples = 0;
-                }
-                continue;
+                let owner_endpoint_available = Handle::mihomo().await.get_version().await.is_ok();
+                step = watch.resolve_transport(owner_endpoint_available);
             }
-            let Some(status) = response.data else {
-                failed_status_samples = failed_status_samples.saturating_add(1);
-                if failed_status_samples == 3 {
-                    logging!(
-                        warn,
-                        Type::Service,
-                        "service owner status omitted data; preserving local proxy state"
-                    );
-                }
-                if recover_after_sustained_status_failure(generation, failed_status_samples).await {
-                    break;
-                }
-                if failed_status_samples >= 3 {
-                    failed_status_samples = 0;
-                }
-                continue;
-            };
-            if recover_after_status_mismatch_with(
-                &ACTIVE_SERVICE_SESSION,
-                generation,
-                status.is_active,
-                status.active_generation,
-                recover_after_owner_loss,
-            )
-            .await
-            {
-                break;
-            }
-            failed_status_samples = 0;
-            missing_core_samples = if status.core_pid.is_none()
-                && !matches!(
-                    status.service_state,
-                    clash_verge_service_ipc::ServiceLifecycleState::Starting
-                        | clash_verge_service_ipc::ServiceLifecycleState::RecoveringCore
-                ) {
-                missing_core_samples.saturating_add(1)
-            } else {
-                0
-            };
-            if let Some(reason) = owner_status_recovery_reason(
-                status.is_active,
-                status.desired_core_should_be_running,
-                status.service_state,
-                status.core_pid,
-                missing_core_samples,
-            ) {
+
+            if let OwnerStep::Recover(reason) = step {
                 recover_after_owner_loss(generation, reason).await;
                 break;
             }
         }
     });
+}
+
+/// Ask the Service who owns it, flattening every unusable answer into one sample.
+///
+/// A transport error, an error code and an empty payload are the same thing to the watch:
+/// we did not learn anything. Only the log line distinguishes them.
+async fn read_owner_sample() -> OwnerSample {
+    let response = match current_owner_credentials() {
+        Ok(credentials) => clash_verge_service_ipc::get_status(&credentials).await,
+        Err(error) => Err(error),
+    };
+
+    let response = match response {
+        Ok(response) => response,
+        Err(error) => {
+            logging!(debug, Type::Service, "service owner status was unreadable: {error:#}");
+            return OwnerSample::Unreadable;
+        }
+    };
+
+    if response.code == clash_verge_service_ipc::ServiceErrorCode::NotActive as u16 {
+        return OwnerSample::NotActive;
+    }
+    if response.code != 0 {
+        logging!(
+            debug,
+            Type::Service,
+            "service owner status returned error {}: {}",
+            response.code,
+            response.message
+        );
+        return OwnerSample::Unreadable;
+    }
+    let Some(status) = response.data else {
+        logging!(debug, Type::Service, "service owner status omitted data");
+        return OwnerSample::Unreadable;
+    };
+
+    // A session that no longer matches is another owner's, whatever the flags say.
+    if !session_matches_active_status(status.is_active, status.active_generation) {
+        return OwnerSample::NotActive;
+    }
+
+    OwnerSample::Status {
+        is_active: status.is_active,
+        desired_core_should_be_running: status.desired_core_should_be_running,
+        service_state: status.service_state,
+        core_pid: status.core_pid,
+    }
+}
+
+fn session_matches_active_status(is_active: bool, active_generation: Option<u64>) -> bool {
+    ACTIVE_SERVICE_SESSION
+        .lock()
+        .as_ref()
+        .is_some_and(|proof| session_matches_status(proof, is_active, active_generation))
 }
 
 fn cancel_owner_monitors() {
@@ -1330,11 +1168,23 @@ async fn recover_after_owner_loss_while_locked(reason: OwnerRecoveryReason) {
     }
 }
 
+/// Wait for a freshly installed or repaired Service to answer.
+///
+/// Silence for the whole budget *is* an observation here — the Service had its window and
+/// never spoke — unlike a single failed probe. A readable but rejected reply already recorded
+/// its own verdict, which must not be flattened into "unavailable".
 async fn wait_for_service_ipc() -> Result<()> {
+    const CONTEXT: &str = "service IPC did not become available";
     let config = ServiceManager::config();
-    let result = poll_service_version(config.max_retries, config.retry_delay, probe_service_version_once).await;
 
-    apply_service_version_result(&RUN_STATE, result, "service IPC did not become available")
+    match RUN_STATE.await_ready(config.max_retries, config.retry_delay).await {
+        Ok(_) => Ok(()),
+        Err(ReadyWaitError::Unreachable(error)) => {
+            RUN_STATE.observe(ServiceHealth::Unavailable(format!("{CONTEXT}: {error:#}")));
+            Err(error).context(CONTEXT)
+        }
+        Err(ReadyWaitError::Rejected(error)) => Err(error).context(CONTEXT),
+    }
 }
 
 impl ServiceManager {
@@ -1379,18 +1229,7 @@ impl ServiceManager {
     }
 
     fn set_status(&self, status: ServiceStatus) {
-        match status {
-            ServiceStatus::InstallRequired => RUN_STATE.request_action(PendingAction::Install),
-            ServiceStatus::UninstallRequired => RUN_STATE.request_action(PendingAction::Uninstall),
-            ServiceStatus::ReinstallRequired => RUN_STATE.request_action(PendingAction::Reinstall),
-            ServiceStatus::ForceReinstallRequired => RUN_STATE.request_action(PendingAction::ForceReinstall),
-            ServiceStatus::SidecarAllowed => RUN_STATE.accept_sidecar(),
-            ServiceStatus::Checking => RUN_STATE.observe(ServiceHealth::Unknown),
-            ServiceStatus::Ready => RUN_STATE.observe(ServiceHealth::Ready),
-            ServiceStatus::NotInstalled => RUN_STATE.observe(ServiceHealth::NotInstalled),
-            ServiceStatus::NeedsReinstall => RUN_STATE.observe(ServiceHealth::VersionMismatch),
-            ServiceStatus::Unavailable(reason) => RUN_STATE.observe(ServiceHealth::Unavailable(reason)),
-        }
+        record_status(&RUN_STATE, status);
     }
 
     async fn run_operation(&self, operation: impl Future<Output = Result<()>>) -> Result<()> {
@@ -1417,66 +1256,53 @@ impl ServiceManager {
 
     async fn apply_service_status(&self, status: ServiceStatus) -> Result<()> {
         self.set_status(status.clone());
-        match privileged_service_action(&status) {
-            Some(PrivilegedServiceAction::Reinstall) => {
-                logging!(info, Type::Service, "服务需要重装，执行重装流程");
-                run_service_command(reinstall_service, "reinstall service")?;
-                wait_for_service_ipc().await?;
-                Config::restore_tun_for_session().await;
-            }
-            Some(PrivilegedServiceAction::ForceReinstall) => {
-                logging!(info, Type::Service, "服务需要强制重装，执行强制重装流程");
-                run_service_command(force_reinstall_service, "force reinstall service")?;
-                wait_for_service_ipc().await?;
-                Config::restore_tun_for_session().await;
-            }
-            Some(PrivilegedServiceAction::Install) => {
-                logging!(info, Type::Service, "需要安装服务，执行安装流程");
-                run_service_command(install_service, "install service")?;
-                wait_for_service_ipc().await?;
-                Config::restore_tun_for_session().await;
-            }
-            Some(PrivilegedServiceAction::Uninstall) => {
-                logging!(info, Type::Service, "服务需要卸载，执行卸载流程");
-                if let Err(error) = run_service_command(uninstall_service, "uninstall service") {
-                    self.set_status(ServiceStatus::Unavailable(format!(
-                        "Service uninstall failed: {error:#}"
-                    )));
-                    return Err(error);
-                }
-                self.set_status(ServiceStatus::NotInstalled);
-            }
-            None => match status {
-                ServiceStatus::Checking => bail!("service status is still being checked"),
-                ServiceStatus::Ready => logging!(info, Type::Service, "服务就绪，直接启动"),
-                ServiceStatus::NotInstalled => {
-                    logging!(info, Type::Service, "service is not installed; Sidecar is available");
-                }
-                ServiceStatus::NeedsReinstall => {
-                    bail!("service needs reinstall; explicit authorization is required");
-                }
-                ServiceStatus::Unavailable(reason) => {
-                    logging!(info, Type::Service, "服务不可用: {}，将使用Sidecar模式", reason);
-                    bail!("服务不可用: {}", reason);
-                }
-                ServiceStatus::SidecarAllowed => {
-                    logging!(
-                        info,
-                        Type::Service,
-                        "Sidecar was explicitly allowed for this app session"
-                    );
-                }
-                ServiceStatus::InstallRequired
-                | ServiceStatus::UninstallRequired
-                | ServiceStatus::ReinstallRequired
-                | ServiceStatus::ForceReinstallRequired => {
-                    bail!("invalid privileged service action mapping")
-                }
-            },
-        }
 
+        // `set_status` has already turned a requested action into a Pending Action, so this
+        // reads back the one mapping rather than re-deriving it from the legacy status.
+        let Some(action) = RUN_STATE.state().pending else {
+            return report_non_actionable_status(status);
+        };
+
+        logging!(info, Type::Service, "running privileged service action {action:?}");
+        RUN_STATE.perform(action)?;
+        if !matches!(action, PendingAction::Uninstall) {
+            wait_for_service_ipc().await?;
+            Config::restore_tun_for_session().await;
+        }
         Ok(())
     }
+}
+
+/// Explain a status that asks for no privileged action, refusing the ones we cannot act on.
+fn report_non_actionable_status(status: ServiceStatus) -> Result<()> {
+    match status {
+        ServiceStatus::Checking => bail!("service status is still being checked"),
+        ServiceStatus::Ready => logging!(info, Type::Service, "服务就绪，直接启动"),
+        ServiceStatus::NotInstalled => {
+            logging!(info, Type::Service, "service is not installed; Sidecar is available");
+        }
+        ServiceStatus::NeedsReinstall => {
+            bail!("service needs reinstall; explicit authorization is required");
+        }
+        ServiceStatus::Unavailable(reason) => {
+            logging!(info, Type::Service, "服务不可用: {}，将使用Sidecar模式", reason);
+            bail!("服务不可用: {}", reason);
+        }
+        ServiceStatus::SidecarAllowed => {
+            logging!(
+                info,
+                Type::Service,
+                "Sidecar was explicitly allowed for this app session"
+            );
+        }
+        ServiceStatus::InstallRequired
+        | ServiceStatus::UninstallRequired
+        | ServiceStatus::ReinstallRequired
+        | ServiceStatus::ForceReinstallRequired => {
+            bail!("a requested action should have been handled as a privileged operation")
+        }
+    }
+    Ok(())
 }
 
 /// Run a privileged operation while holding the Run State operation slot.
@@ -1502,8 +1328,21 @@ where
     post_operation().await
 }
 
-fn run_service_command(operation: impl FnOnce() -> Result<()>, label: &'static str) -> Result<()> {
-    tokio::task::block_in_place(operation).with_context(|| format!("{label} failed"))
+/// Apply a legacy single-slot status to a Run State, splitting it back into observation and
+/// request. The inverse of [`ServiceStatus::from_run_state`].
+fn record_status<E: RunStateEnv>(store: &RunStateStore<E>, status: ServiceStatus) {
+    match status {
+        ServiceStatus::InstallRequired => store.request_action(PendingAction::Install),
+        ServiceStatus::UninstallRequired => store.request_action(PendingAction::Uninstall),
+        ServiceStatus::ReinstallRequired => store.request_action(PendingAction::Reinstall),
+        ServiceStatus::ForceReinstallRequired => store.request_action(PendingAction::ForceReinstall),
+        ServiceStatus::SidecarAllowed => store.accept_sidecar(),
+        ServiceStatus::Checking => store.observe(ServiceHealth::Unknown),
+        ServiceStatus::Ready => store.observe(ServiceHealth::Ready),
+        ServiceStatus::NotInstalled => store.observe(ServiceHealth::NotInstalled),
+        ServiceStatus::NeedsReinstall => store.observe(ServiceHealth::VersionMismatch),
+        ServiceStatus::Unavailable(reason) => store.observe(ServiceHealth::Unavailable(reason)),
+    }
 }
 
 pub static SERVICE_MANAGER: ServiceManager = ServiceManager;
@@ -1512,23 +1351,19 @@ pub static SERVICE_MANAGER: ServiceManager = ServiceManager;
 #[allow(clippy::expect_used, clippy::panic, reason = "tests assert by panicking")]
 mod tests {
     use super::{
-        OwnerRecoveryReason, PrivilegedServiceAction, ServiceHealth, ServiceInstallState, ServiceStatus,
-        ServiceVersionCheck, ServiceVersionReply, apply_service_version_result, capture_generation_before,
-        claim_owner_recovery_generation, classify_service_version_reply, generate_service_session_token,
-        macos_install_shell, mark_service_unavailable_after_owner_loss, owner_recovery_policy,
-        owner_status_recovery_reason, poll_service_version, privileged_service_action, service_core_path_for,
-        session_matches_status, transport_failure_recovery_reason,
+        ServiceHealth, ServiceInstallState, ServiceStatus, capture_generation_before, claim_owner_recovery_generation,
+        generate_service_session_token, macos_install_shell, mark_service_unavailable_after_owner_loss,
+        owner_recovery_policy, service_core_path_for, session_matches_status,
     };
     #[cfg(unix)]
     use super::{service_core_path_for_with_publisher, service_tool_path_for};
-    use crate::core::runstate::{FakeEnv, RunStateStore};
-    use clash_verge_service_ipc::{OwnerSessionProof, ProtocolInfo, ProtocolVersion, ServiceLifecycleState};
+    use crate::core::runstate::{FakeEnv, OwnerRecoveryReason, PendingAction, RunStateStore};
+    use clash_verge_service_ipc::OwnerSessionProof;
     #[cfg(unix)]
     use std::cell::Cell;
     use std::{
         path::{Path, PathBuf},
-        sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering},
-        time::Duration,
+        sync::atomic::{AtomicU64, Ordering},
     };
 
     /// A Run State backed by a scripted environment, so these tests never touch the global.
@@ -1543,19 +1378,6 @@ mod tests {
 
     async fn status_of_settled(store: &RunStateStore<FakeEnv>) -> ServiceStatus {
         ServiceStatus::from_run_state(&store.settled().await)
-    }
-
-    fn current_protocol() -> ProtocolInfo {
-        ProtocolInfo::current()
-    }
-
-    fn incompatible_protocol() -> ProtocolInfo {
-        let mut info = ProtocolInfo::current();
-        info.protocol = ProtocolVersion {
-            epoch: info.protocol.epoch.saturating_add(1),
-            revision: info.protocol.revision,
-        };
-        info
     }
 
     static TEST_DIRECTORY_GENERATION: AtomicU64 = AtomicU64::new(0);
@@ -1771,37 +1593,23 @@ mod tests {
         assert!(!session_matches_status(&proof, false, Some(7)));
     }
 
-    #[tokio::test]
-    async fn stale_monitor_mismatch_preserves_newer_session_proof() {
+    #[test]
+    fn a_stale_monitor_cannot_displace_a_newer_session() {
+        // Sample classification now lives in `core::runstate::owner`; what stays here is the
+        // guard that stops a monitor from a previous Core from tearing down the current one.
         let generation = AtomicU64::new(8);
-        let recovery_attempted = AtomicBool::new(false);
         let newer_proof = OwnerSessionProof {
             generation: 8,
             token: "22".repeat(32),
         };
         let session = parking_lot::Mutex::new(Some(newer_proof.clone()));
-        let generation_for_recovery = &generation;
-        let recovery_attempted_for_recovery = &recovery_attempted;
-        let session_for_recovery = &session;
 
-        let mismatch_recovered = super::recover_after_status_mismatch_with(
-            &session,
-            7,
-            true,
-            Some(7),
-            |captured_generation, reason| async move {
-                recovery_attempted_for_recovery.store(true, Ordering::Release);
-                assert_eq!(reason, OwnerRecoveryReason::Displaced);
-                if claim_owner_recovery_generation(generation_for_recovery, captured_generation).is_some() {
-                    session_for_recovery.lock().take();
-                }
-            },
-        )
-        .await;
+        // A monitor started at generation 7 decides it has been displaced and tries to recover.
+        if claim_owner_recovery_generation(&generation, 7).is_some() {
+            session.lock().take();
+        }
 
-        assert!(mismatch_recovered);
-        assert!(recovery_attempted.load(Ordering::Acquire));
-        assert_eq!(generation.load(Ordering::Acquire), 8);
+        assert_eq!(generation.load(Ordering::Acquire), 8, "the newer generation stands");
         assert_eq!(session.lock().as_ref(), Some(&newer_proof));
     }
 
@@ -1815,38 +1623,6 @@ mod tests {
                 .all(|byte| byte.is_ascii_hexdigit() && !byte.is_ascii_uppercase())
         );
         Ok(())
-    }
-
-    #[test]
-    fn owner_loss_reason_distinguishes_displacement_from_same_owner_failure() {
-        assert_eq!(
-            owner_status_recovery_reason(false, true, ServiceLifecycleState::Running, Some(42), 0),
-            Some(OwnerRecoveryReason::Displaced)
-        );
-        assert_eq!(
-            owner_status_recovery_reason(true, false, ServiceLifecycleState::Running, None, 1),
-            Some(OwnerRecoveryReason::SameOwnerFailure)
-        );
-        assert_eq!(
-            owner_status_recovery_reason(true, true, ServiceLifecycleState::Running, None, 2),
-            None
-        );
-        assert_eq!(
-            owner_status_recovery_reason(true, true, ServiceLifecycleState::Running, None, 3),
-            Some(OwnerRecoveryReason::SameOwnerFailure)
-        );
-        assert_eq!(
-            owner_status_recovery_reason(true, true, ServiceLifecycleState::RecoveringCore, None, u8::MAX),
-            None
-        );
-        assert_eq!(
-            owner_status_recovery_reason(true, true, ServiceLifecycleState::Fatal, None, 0),
-            Some(OwnerRecoveryReason::SameOwnerFailure)
-        );
-        assert_eq!(
-            owner_status_recovery_reason(true, true, ServiceLifecycleState::Running, Some(42), 3),
-            None
-        );
     }
 
     #[test]
@@ -1864,93 +1640,6 @@ mod tests {
         assert_eq!(claim_owner_recovery_generation(&generation, 7), Some(8));
         assert_eq!(generation.load(Ordering::Acquire), 8);
         assert_eq!(claim_owner_recovery_generation(&generation, 7), None);
-    }
-
-    #[test]
-    fn service_version_requires_a_compatible_protocol_reply() {
-        let exact = ServiceVersionReply {
-            code: 0,
-            message: String::new(),
-            protocol: Some(current_protocol()),
-        };
-        assert_eq!(classify_service_version_reply(&exact), ServiceVersionCheck::Ready);
-
-        for reply in [
-            ServiceVersionReply {
-                code: 0,
-                message: String::new(),
-                protocol: Some(incompatible_protocol()),
-            },
-            ServiceVersionReply {
-                code: 0,
-                message: String::new(),
-                protocol: None,
-            },
-            ServiceVersionReply {
-                code: 1,
-                message: "unsupported command".to_owned(),
-                protocol: Some(current_protocol()),
-            },
-        ] {
-            let check = classify_service_version_reply(&reply);
-            assert!(matches!(check, ServiceVersionCheck::NeedsReinstall(_)));
-            if let ServiceVersionCheck::NeedsReinstall(error) = check {
-                assert!(error.contains("epoch") || error.contains("protocol"));
-                assert!(error.contains("Reinstall") || error.contains("Repair"));
-            }
-        }
-    }
-
-    #[test]
-    fn service_version_result_sets_only_safe_terminal_statuses() {
-        let store = fake_store();
-
-        let exact = ServiceVersionReply {
-            code: 0,
-            message: String::new(),
-            protocol: Some(current_protocol()),
-        };
-        assert!(apply_service_version_result(&store, Ok(exact), "probe failed").is_ok());
-        assert_eq!(status_of(&store), ServiceStatus::Ready);
-
-        let mismatch = ServiceVersionReply {
-            code: 0,
-            message: String::new(),
-            protocol: Some(incompatible_protocol()),
-        };
-        assert!(apply_service_version_result(&store, Ok(mismatch), "probe failed").is_err());
-        assert_eq!(status_of(&store), ServiceStatus::NeedsReinstall);
-
-        // Exhausting the whole retry budget *is* an observation, unlike a single probe.
-        assert!(
-            apply_service_version_result(&store, Err(anyhow::anyhow!("IPC path missing")), "probe failed").is_err()
-        );
-        assert!(matches!(status_of(&store), ServiceStatus::Unavailable(_)));
-    }
-
-    #[tokio::test]
-    async fn service_version_poll_retries_transport_then_returns_exact_reply() {
-        let attempts = AtomicUsize::new(0);
-        let result = poll_service_version(2, Duration::ZERO, || async {
-            if attempts.fetch_add(1, Ordering::AcqRel) == 0 {
-                anyhow::bail!("IPC path not ready");
-            }
-            Ok(ServiceVersionReply {
-                code: 0,
-                message: String::new(),
-                protocol: Some(current_protocol()),
-            })
-        })
-        .await;
-
-        assert_eq!(attempts.load(Ordering::Acquire), 2);
-        assert!(result.is_ok());
-        let reply = result.unwrap_or_else(|_| ServiceVersionReply {
-            code: 1,
-            message: "probe failed".to_owned(),
-            protocol: None,
-        });
-        assert_eq!(classify_service_version_reply(&reply), ServiceVersionCheck::Ready);
     }
 
     #[test]
@@ -2016,16 +1705,6 @@ mod tests {
     }
 
     #[test]
-    fn sustained_transport_failure_recovers_only_when_owner_endpoint_is_also_unavailable() {
-        assert_eq!(transport_failure_recovery_reason(2, false), None);
-        assert_eq!(transport_failure_recovery_reason(3, true), None);
-        assert_eq!(
-            transport_failure_recovery_reason(3, false),
-            Some(OwnerRecoveryReason::TransportFailure)
-        );
-    }
-
-    #[test]
     fn only_transport_owner_loss_marks_cached_readiness_unavailable() {
         for reason in [OwnerRecoveryReason::Displaced, OwnerRecoveryReason::SameOwnerFailure] {
             let store = fake_store();
@@ -2081,31 +1760,73 @@ mod tests {
     }
 
     #[test]
-    fn only_explicit_action_states_map_to_privileged_operations() {
-        assert_eq!(privileged_service_action(&ServiceStatus::Checking), None);
-        assert_eq!(privileged_service_action(&ServiceStatus::Ready), None);
-        assert_eq!(privileged_service_action(&ServiceStatus::NotInstalled), None);
-        assert_eq!(privileged_service_action(&ServiceStatus::NeedsReinstall), None);
-        assert_eq!(privileged_service_action(&ServiceStatus::SidecarAllowed), None);
-        assert_eq!(
-            privileged_service_action(&ServiceStatus::Unavailable("offline".into())),
-            None
-        );
-        assert_eq!(
-            privileged_service_action(&ServiceStatus::InstallRequired),
-            Some(PrivilegedServiceAction::Install)
-        );
-        assert_eq!(
-            privileged_service_action(&ServiceStatus::UninstallRequired),
-            Some(PrivilegedServiceAction::Uninstall)
-        );
-        assert_eq!(
-            privileged_service_action(&ServiceStatus::ReinstallRequired),
-            Some(PrivilegedServiceAction::Reinstall)
-        );
-        assert_eq!(
-            privileged_service_action(&ServiceStatus::ForceReinstallRequired),
-            Some(PrivilegedServiceAction::ForceReinstall)
-        );
+    fn only_explicit_action_states_ask_for_a_privileged_operation() {
+        for status in [
+            ServiceStatus::Checking,
+            ServiceStatus::Ready,
+            ServiceStatus::NotInstalled,
+            ServiceStatus::NeedsReinstall,
+            ServiceStatus::SidecarAllowed,
+            ServiceStatus::Unavailable("offline".into()),
+        ] {
+            let store = fake_store();
+            super::record_status(&store, status.clone());
+            assert_eq!(
+                store.state().pending,
+                None,
+                "{status:?} is an observation, not a request"
+            );
+        }
+
+        for (status, expected) in [
+            (ServiceStatus::InstallRequired, PendingAction::Install),
+            (ServiceStatus::UninstallRequired, PendingAction::Uninstall),
+            (ServiceStatus::ReinstallRequired, PendingAction::Reinstall),
+            (ServiceStatus::ForceReinstallRequired, PendingAction::ForceReinstall),
+        ] {
+            let store = fake_store();
+            super::record_status(&store, status.clone());
+            assert_eq!(store.state().pending, Some(expected), "{status:?}");
+        }
+    }
+
+    #[test]
+    fn a_failed_uninstall_leaves_the_service_untrusted_rather_than_absent() {
+        let store = RunStateStore::new(FakeEnv::new().privileged_operations_fail("no authorization"));
+        store.observe(crate::core::runstate::ServiceHealth::Ready);
+
+        let error = store
+            .perform(PendingAction::Uninstall)
+            .expect_err("an unauthorized uninstall should fail");
+
+        assert!(error.to_string().contains("no authorization"));
+        assert!(matches!(status_of(&store), ServiceStatus::Unavailable(_)));
+    }
+
+    #[test]
+    fn a_successful_uninstall_records_an_absent_service() {
+        let store = fake_store();
+        store.observe(crate::core::runstate::ServiceHealth::Ready);
+
+        store
+            .perform(PendingAction::Uninstall)
+            .expect("uninstall should succeed");
+
+        assert_eq!(status_of(&store), ServiceStatus::NotInstalled);
+        assert_eq!(store.env().privileged_actions(), vec![PendingAction::Uninstall]);
+    }
+
+    #[test]
+    fn a_failed_install_does_not_claim_the_service_is_gone() {
+        // Only an uninstall has an outcome we can record without asking the Service again.
+        let store = RunStateStore::new(FakeEnv::new().privileged_operations_fail("elevation refused"));
+        store.observe(crate::core::runstate::ServiceHealth::NotInstalled);
+        super::record_status(&store, ServiceStatus::InstallRequired);
+
+        store
+            .perform(PendingAction::Install)
+            .expect_err("a refused install should fail");
+
+        assert_eq!(status_of(&store), ServiceStatus::InstallRequired);
     }
 }
