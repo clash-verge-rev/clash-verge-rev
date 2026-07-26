@@ -2,7 +2,7 @@ use crate::{Type, core::handle, logging};
 use anyhow::Result;
 use serde::Deserialize;
 use std::time::Duration;
-use tauri_plugin_mihomo::models::ConnectionId;
+use tauri_plugin_mihomo::models::WsConnectionId;
 use tokio::sync::mpsc;
 use tokio::time::Instant;
 
@@ -37,7 +37,7 @@ enum InternalWsEvent<T> {
 /// Mihomo WebSocket 订阅句柄（通用事件流）。
 pub struct MihomoWsEventStream<T> {
     /// 当前订阅连接 ID，用于主动断开。
-    pub connection_id: ConnectionId,
+    pub connection_id: WsConnectionId,
     /// 当前订阅消息接收器。
     receiver: mpsc::Receiver<InternalWsEvent<T>>,
     /// 最近一次收到有效事件的时间戳。
@@ -142,7 +142,7 @@ impl<T> MihomoWsEventStream<T> {
 ///
 /// # Arguments
 /// * `connection_id` - 目标连接 ID
-pub async fn disconnect_connection(connection_id: ConnectionId) {
+pub async fn disconnect_connection(connection_id: WsConnectionId) {
     if let Err(err) = handle::Handle::mihomo()
         .disconnect(connection_id, Some(MIHOMO_WS_STREAM_CLOSE_CODE))
         .await
