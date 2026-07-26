@@ -1,4 +1,3 @@
-import { listen } from '@tauri-apps/api/event'
 import React, { useCallback, useEffect, useMemo, useRef } from 'react'
 import {
   getBaseConfig,
@@ -15,6 +14,7 @@ import {
   getRuntimeState,
   getSystemProxy,
 } from '@/services/cmds'
+import { subscribeVergeEvents } from '@/services/events'
 import { revalidateQueries, useQuery } from '@/services/query-client'
 
 import {
@@ -125,10 +125,7 @@ export const AppDataProvider = ({
     let lastProfileUpdateTime = 0
     let lastProxyUpdateTime = 0
     const refreshThrottle = 800
-    const cleanupFns: Array<() => void> = []
-
-    const handleProfileChanged = (event: { payload: string }) => {
-      const newProfileId = event.payload
+    const handleProfileChanged = (newProfileId: string) => {
       const now = Date.now()
       if (
         lastProfileId === newProfileId &&
@@ -152,49 +149,11 @@ export const AppDataProvider = ({
       void revalidateQueries([['getProfiles']])
     }
 
-    const initializeListeners = async () => {
-      try {
-        const unlistenProfile = await listen<string>(
-          'profile-changed',
-          handleProfileChanged,
-        )
-        cleanupFns.push(unlistenProfile)
-      } catch (error) {
-        console.error('[AppDataProvider] 监听 Profile 事件失败:', error)
-      }
-
-      try {
-        const unlistenProfiles = await listen(
-          'verge://refresh-profiles',
-          handleRefreshProfiles,
-        )
-        cleanupFns.push(unlistenProfiles)
-      } catch (error) {
-        console.error('[AppDataProvider] 监听 Profiles 刷新事件失败:', error)
-      }
-
-      try {
-        const unlistenProxy = await listen(
-          'verge://refresh-proxy-config',
-          handleRefreshProxy,
-        )
-        cleanupFns.push(unlistenProxy)
-      } catch (error) {
-        console.warn('[AppDataProvider] 设置 Tauri 事件监听器失败:', error)
-      }
-    }
-
-    void initializeListeners()
-
-    return () => {
-      cleanupFns.forEach((fn) => {
-        try {
-          fn()
-        } catch (error) {
-          console.error('[DataProvider] Cleanup error:', error)
-        }
-      })
-    }
+    return subscribeVergeEvents({
+      'profile-changed': handleProfileChanged,
+      'verge://refresh-profiles': handleRefreshProfiles,
+      'verge://refresh-proxy-config': handleRefreshProxy,
+    })
   }, [refreshProxy])
 
   const refreshAll = useCallback(async () => {
