@@ -32,7 +32,7 @@ import {
 import { debugLog } from '@/utils/debug'
 
 import { ProxyEmptyState } from './proxy-empty-state'
-import { resolveProxyEmptyState } from './proxy-empty-state-model'
+import { resolveProxyListState } from './proxy-empty-state-model'
 import {
   DEFAULT_HOVER_DELAY,
   ProxyGroupNavigator,
@@ -605,7 +605,7 @@ export const ProxyGroups = (props: Props) => {
   const { proxyView, isProxyViewPending, isProxyViewError } = useProxiesData()
   const { runningMode, isRunningModePending } = useSystemData()
 
-  const emptyState = resolveProxyEmptyState({
+  const listState = resolveProxyListState({
     mode,
     isChainMode,
     profiles,
@@ -617,21 +617,18 @@ export const ProxyGroups = (props: Props) => {
     isRunningModePending,
   })
 
-  if (mode === 'direct') {
-    return <BaseEmpty textKey="proxies.page.messages.directMode" />
+  switch (listState.kind) {
+    case 'direct':
+      return <BaseEmpty textKey="proxies.page.messages.directMode" />
+    case 'loading':
+      return <BaseLoading />
+    case 'empty':
+      return <ProxyEmptyState reason={listState.reason} />
+    case 'content':
+      return isChainMode ? (
+        <ChainProxyGroups mode={mode} chainConfigData={chainConfigData} />
+      ) : (
+        <NormalProxyGroups mode={mode} />
+      )
   }
-
-  if (emptyState === 'loading') {
-    return <BaseLoading />
-  }
-
-  if (emptyState) {
-    return <ProxyEmptyState reason={emptyState} />
-  }
-
-  if (isChainMode) {
-    return <ChainProxyGroups mode={mode} chainConfigData={chainConfigData} />
-  }
-
-  return <NormalProxyGroups mode={mode} />
 }
