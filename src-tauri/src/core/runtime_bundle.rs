@@ -1,4 +1,5 @@
 use anyhow::{Context as _, Result, bail};
+use clash_verge_logging::{Type, logging};
 use clash_verge_service_ipc::{RemoteProvider, RuntimeAsset, RuntimeBundle};
 use serde_yaml_ng::Value;
 use std::collections::HashSet;
@@ -94,35 +95,70 @@ fn collect_provider_assets(
         // with it. Keying off the presence of a `url` used to do that: a `file` provider carrying
         // a stray `url` was treated as remote, its local file left uncopied, and the Core then
         // could not find what the rewritten path pointed at.
+        //
+        // Disagreeing the other way is just as bad, though, and it is why neither branch may fail
+        // the whole bundle over one odd provider. Measured against mihomo v1.19.26: it accepts a
+        // `http` provider with no url, an `inline` provider carrying both a url and a path that
+        // does not exist, and a `file` provider whose path is missing. Refusing any of those here
+        // would turn a configuration the Core is willing to load into one that cannot be applied
+        // at all — including at start, since this is where a Service-mode start gets its bundle.
+        // A provider we cannot classify keeps its path unrewritten and is simply not declared.
         let is_remote = provider.get("type").and_then(Value::as_str) == Some("http");
-        let destination = if is_remote {
-            let url = provider
-                .get("url")
-                .and_then(Value::as_str)
-                .with_context(|| format!("remote provider {name:?} has no url"))?
-                .to_owned();
-            let destination = provider_destination(config_root, raw_path)?;
-            // Remote providers take their destination out of circulation as much as local ones do:
-            // the Service refuses a bundle where one path is claimed both by a file it must copy
-            // and by a file the Core downloads, because the two would overwrite each other.
-            if !destinations.insert(destination.clone()) {
-                bail!("runtime provider destination {destination:?} is claimed more than once");
+        let url = provider.get("url").and_then(Value::as_str).map(str::to_owned);
+        let destination = match (is_remote, url) {
+            (true, Some(url)) => {
+                let destination = provider_destination(config_root, raw_path)?;
+                // Remote providers take their destination out of circulation as much as local ones
+                // do: the Service refuses a bundle where one path is claimed both by a file it must
+                // copy and by a file the Core downloads, because the two would overwrite each
+                // other. Two providers naming the same file *and* the same source are not that —
+                // they are one file with two names for it, which the Service folds.
+                match remote_providers
+                    .iter()
+                    .find(|declared| declared.destination == destination)
+                {
+                    Some(declared) if declared.url == url => {}
+                    Some(_) => {
+                        bail!("runtime provider destination {destination:?} is declared for two different sources")
+                    }
+                    None => {
+                        if !destinations.insert(destination.clone()) {
+                            bail!("runtime provider destination {destination:?} is claimed more than once");
+                        }
+                        remote_providers.push(RemoteProvider {
+                            destination: destination.clone(),
+                            url,
+                        });
+                    }
+                }
+                destination
             }
-            remote_providers.push(RemoteProvider {
-                destination: destination.clone(),
-                url,
-            });
-            destination
-        } else {
-            let source = local_provider_source(config_root, raw_path)?;
-            let destination = destination_below_root(config_root, &source)?;
-            if destinations.insert(destination.clone()) {
-                assets.push(RuntimeAsset {
-                    source: source.to_string_lossy().into_owned(),
-                    destination: destination.clone(),
-                });
+            (true, None) => {
+                logging!(
+                    warn,
+                    Type::Config,
+                    "remote provider {name:?} declares no url; leaving its path to the core"
+                );
+                continue;
             }
-            destination
+            (false, _) => {
+                let Ok(source) = local_provider_source(config_root, raw_path) else {
+                    logging!(
+                        warn,
+                        Type::Config,
+                        "local provider {name:?} is unavailable at {raw_path:?}; leaving its path to the core"
+                    );
+                    continue;
+                };
+                let destination = destination_below_root(config_root, &source)?;
+                if destinations.insert(destination.clone()) {
+                    assets.push(RuntimeAsset {
+                        source: source.to_string_lossy().into_owned(),
+                        destination: destination.clone(),
+                    });
+                }
+                destination
+            }
         };
         provider.insert(Value::String("path".to_owned()), Value::String(destination));
     }
@@ -262,6 +298,85 @@ mod tests {
                 .assets
                 .iter()
                 .any(|asset| asset.destination.contains("geoip.dat"))
+        );
+        std::fs::remove_dir_all(root)?;
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn two_names_for_one_remote_file_are_folded_rather_than_refused() -> anyhow::Result<()> {
+        // The Service folds an identical repeat, so refusing it here would block a configuration
+        // mihomo itself accepts — and this is also where a Service-mode *start* gets its bundle,
+        // so the refusal would stop the core coming up at all.
+        let root = std::env::temp_dir().join(format!("clash-verge-bundle-dup-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&root);
+        std::fs::create_dir_all(&root)?;
+        let config = root.join("config.yaml");
+        std::fs::write(
+            &config,
+            "rule-providers:\n  a:\n    type: http\n    url: https://one.example/x.yaml\n    path: ./rules/x.yaml\n  b:\n    type: http\n    url: https://one.example/x.yaml\n    path: ./rules/x.yaml\n",
+        )?;
+        let core = root.join("mihomo");
+        std::fs::write(&core, b"core")?;
+
+        let bundle = collect_runtime_bundle(&config, &core).await?;
+
+        assert_eq!(bundle.remote_providers.len(), 1, "one file, declared twice");
+        assert_eq!(bundle.remote_providers[0].destination, "rules/x.yaml");
+        std::fs::remove_dir_all(root)?;
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn two_sources_for_one_remote_file_are_refused() -> anyhow::Result<()> {
+        let root = std::env::temp_dir().join(format!("clash-verge-bundle-conflict-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&root);
+        std::fs::create_dir_all(&root)?;
+        let config = root.join("config.yaml");
+        std::fs::write(
+            &config,
+            "rule-providers:\n  a:\n    type: http\n    url: https://one.example/x.yaml\n    path: ./rules/x.yaml\n  b:\n    type: http\n    url: https://two.example/x.yaml\n    path: ./rules/x.yaml\n",
+        )?;
+        let core = root.join("mihomo");
+        std::fs::write(&core, b"core")?;
+
+        let Err(error) = collect_runtime_bundle(&config, &core).await else {
+            anyhow::bail!("two sources cannot own one file");
+        };
+
+        assert!(error.to_string().contains("two different sources"), "{error}");
+        std::fs::remove_dir_all(root)?;
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn an_odd_provider_is_left_alone_instead_of_failing_the_whole_bundle() -> anyhow::Result<()> {
+        // Measured against mihomo v1.19.26: it accepts a `http` provider with no url, and a
+        // non-http provider whose path does not exist. Neither may stop the rest being materialised.
+        let root = std::env::temp_dir().join(format!("clash-verge-bundle-odd-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&root);
+        std::fs::create_dir_all(&root)?;
+        let config = root.join("config.yaml");
+        std::fs::write(
+            &config,
+            "rule-providers:\n  nourl:\n    type: http\n    path: ./rules/nourl.yaml\n  missing:\n    type: inline\n    url: https://one.example/i.yaml\n    path: ./rules/missing.yaml\n  good:\n    type: http\n    url: https://one.example/g.yaml\n    path: ./rules/g.yaml\n",
+        )?;
+        let core = root.join("mihomo");
+        std::fs::write(&core, b"core")?;
+
+        let bundle = collect_runtime_bundle(&config, &core).await?;
+
+        assert_eq!(
+            bundle.remote_providers.len(),
+            1,
+            "only the provider that could be classified is declared"
+        );
+        assert_eq!(bundle.remote_providers[0].destination, "rules/g.yaml");
+        let reserialized: serde_yaml_ng::Value = serde_yaml_ng::from_str(&bundle.yaml)?;
+        assert_eq!(
+            reserialized["rule-providers"]["nourl"]["path"].as_str(),
+            Some("./rules/nourl.yaml"),
+            "an unclassifiable provider keeps the path the core was given"
         );
         std::fs::remove_dir_all(root)?;
         Ok(())

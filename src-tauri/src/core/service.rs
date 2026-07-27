@@ -20,8 +20,8 @@ use crate::{
 use anyhow::{Context as _, Result, bail};
 use clash_verge_logging::{Type, logging};
 use clash_verge_service_ipc::{
-    MacosProxyConfig, OwnerSessionProof, ProxyApplyOutcome, RuntimeBundle, StageRuntimeOutcome, StartClashRequest,
-    WriterConfig,
+    MacosProxyConfig, OwnerSessionProof, ProxyApplyOutcome, RuntimeBundle, ServiceErrorCode, StageRuntimeOutcome,
+    StartClashRequest, WriterConfig,
 };
 use compact_str::CompactString;
 use once_cell::sync::Lazy;
@@ -829,15 +829,21 @@ async fn collect_service_runtime_bundle(config_file: &Path) -> Result<RuntimeBun
 
 /// What asking the Service to stage a runtime produced.
 ///
-/// The distinction is between an answer and the absence of one, and it matters because the two
-/// call for opposite responses. A Service that refused told us something deterministic — the
-/// bundle names an asset it will not accept, or we no longer own the Core — and a fresh start
-/// would be refused for the same reason, so stopping the running Core would only add an outage to
-/// a failure that has already happened. Not hearing back says nothing about whether starting
-/// would work.
+/// A refusal carries its code because only some refusals say anything about starting. "This bundle
+/// names an asset I will not accept" does: a fresh start materialises the same bundle and is
+/// refused the same way, so stopping a working Core would add an outage to a failure that already
+/// happened. "You do not own this Core" does not — `start_clash` proposes a new session rather than
+/// presenting the old one, so starting is exactly how that gets resolved.
 pub(super) enum StageRequest {
-    Refused(CompactString),
+    Refused { code: u16, message: CompactString },
     Answered(StageRuntimeOutcome),
+}
+
+impl StageRequest {
+    /// Whether a refusal is about the bundle, and so would be repeated by starting from it.
+    pub(super) const fn is_about_the_bundle(code: u16) -> bool {
+        code == ServiceErrorCode::InvalidRuntimeAsset as u16 || code == ServiceErrorCode::InvalidInstallLocation as u16
+    }
 }
 
 /// Have the Service make the running Core's runtime match `config_file`, without restarting it.
@@ -854,7 +860,10 @@ pub(super) async fn stage_runtime_by_service(config_file: &Path) -> Result<Stage
         .await
         .context("无法连接到Clash Verge Service")?;
     if response.code > 0 {
-        return Ok(StageRequest::Refused(response.message.into()));
+        return Ok(StageRequest::Refused {
+            code: response.code,
+            message: response.message.into(),
+        });
     }
     response
         .data

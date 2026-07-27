@@ -27,8 +27,13 @@ use tauri_plugin_mihomo::Error as MihomoError;
 enum StageAttempt {
     /// The Service that owns the running Core predates staging.
     Unsupported,
-    /// The Service answered, and its answer was a refusal.
-    Refused(String),
+    /// The Service answered, and its answer was a refusal about the bundle itself — the kind a
+    /// fresh start would run into again, because it would materialise the same bundle.
+    RefusedTheBundle(String),
+    /// The Service answered with a refusal about something other than the bundle: the session, the
+    /// protocol, the request. Starting is how several of those get resolved, so it is not a reason
+    /// to leave the Core where it is.
+    RefusedForAnotherReason(String),
     /// The request did not come back. The Service is authoritative about its own runtime, so
     /// without an answer nothing may be assumed about what it did or did not write.
     Unanswered(String),
@@ -49,10 +54,14 @@ enum ConfigApplication {
 /// Decide how to apply a configuration, given how staging went.
 ///
 /// Two branches avoid replacing the Core, for opposite reasons. One is success. The other is a
-/// refusal: the Service inspected the bundle and would not take it, and a fresh start materialises
-/// the same bundle — so it would fail the same way, having stopped a Core that was working. That is
-/// the one case where the old behaviour was strictly worse and the information to do better only
-/// exists now.
+/// refusal *about the bundle*: the Service inspected it and would not take it, and a fresh start
+/// materialises the same bundle — so it would fail the same way, having stopped a Core that was
+/// working.
+///
+/// The distinction matters more than it looks. A refusal about the session is not a refusal about
+/// the bundle: starting proposes a new session rather than presenting the old one, and the restart
+/// path is also what notices that ownership was lost and clears the system proxy. Treating every
+/// non-zero code alike would skip that.
 ///
 /// Everything else — an older Service, a request that never came back, or a Service that asked to
 /// be restarted — replaces the Core, which is what this did before staging existed and what the
@@ -70,7 +79,15 @@ fn plan_config_application(attempt: &StageAttempt) -> ConfigApplication {
             );
             ConfigApplication::ReplaceCore
         }
-        StageAttempt::Refused(message) => ConfigApplication::Fail(message.clone()),
+        StageAttempt::RefusedTheBundle(message) => ConfigApplication::Fail(message.clone()),
+        StageAttempt::RefusedForAnotherReason(message) => {
+            logging!(
+                warn,
+                Type::Core,
+                "Service refused to stage the runtime ({message}); replacing the core instead"
+            );
+            ConfigApplication::ReplaceCore
+        }
         StageAttempt::Unanswered(error) => {
             logging!(
                 warn,
@@ -272,7 +289,14 @@ impl CoreManager {
         }
         match crate::core::service::stage_runtime_by_service(path).await {
             Ok(StageRequest::Answered(outcome)) => StageAttempt::Answered(outcome),
-            Ok(StageRequest::Refused(message)) => StageAttempt::Refused(message.to_string().into()),
+            Ok(StageRequest::Refused { code, message }) => {
+                let message = message.to_string().into();
+                if StageRequest::is_about_the_bundle(code) {
+                    StageAttempt::RefusedTheBundle(message)
+                } else {
+                    StageAttempt::RefusedForAnotherReason(message)
+                }
+            }
             Err(err) => StageAttempt::Unanswered(format!("{err:#}").into()),
         }
     }
@@ -308,7 +332,7 @@ impl CoreManager {
 
 #[cfg(test)]
 mod tests {
-    use super::{ConfigApplication, StageAttempt, plan_config_application};
+    use super::{ConfigApplication, StageAttempt, StageRequest, plan_config_application};
     use clash_verge_service_ipc::{StageRejection, StageRuntimeOutcome};
 
     #[test]
@@ -353,14 +377,48 @@ mod tests {
     }
 
     #[test]
-    fn a_service_that_refused_leaves_the_core_alone() {
+    fn a_refusal_about_the_bundle_leaves_the_core_alone() {
         // Replacing the core would materialise the same bundle the Service just rejected, so the
         // outage buys nothing: the configuration update fails either way, and this way the user's
         // proxy is still working when it does.
         assert_eq!(
-            plan_config_application(&StageAttempt::Refused("runtime asset is unavailable".into())),
+            plan_config_application(&StageAttempt::RefusedTheBundle("runtime asset is unavailable".into())),
             ConfigApplication::Fail("runtime asset is unavailable".into())
         );
+    }
+
+    #[test]
+    fn a_refusal_about_anything_else_still_replaces_the_core() {
+        // A stale session is the case that matters: starting proposes a new one, so it is the cure
+        // rather than a repeat of the failure — and the restart path is also what notices ownership
+        // was lost and clears the system proxy.
+        assert_eq!(
+            plan_config_application(&StageAttempt::RefusedForAnotherReason("owner session is stale".into())),
+            ConfigApplication::ReplaceCore
+        );
+    }
+
+    #[test]
+    fn only_bundle_codes_count_as_a_refusal_of_the_bundle() {
+        use clash_verge_service_ipc::ServiceErrorCode;
+
+        assert!(StageRequest::is_about_the_bundle(
+            ServiceErrorCode::InvalidRuntimeAsset as u16
+        ));
+        assert!(StageRequest::is_about_the_bundle(
+            ServiceErrorCode::InvalidInstallLocation as u16
+        ));
+        for other in [
+            ServiceErrorCode::StaleOwnerSession,
+            ServiceErrorCode::UnauthorizedOwner,
+            ServiceErrorCode::ProtocolMismatch,
+            ServiceErrorCode::NotActive,
+        ] {
+            assert!(
+                !StageRequest::is_about_the_bundle(other as u16),
+                "{other:?} says nothing about the bundle, so starting must still be tried"
+            );
+        }
     }
 
     #[test]
