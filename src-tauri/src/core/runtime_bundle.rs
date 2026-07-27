@@ -83,13 +83,31 @@ fn collect_provider_assets(
         return Ok(());
     };
 
-    for provider in providers.values_mut().filter_map(Value::as_mapping_mut) {
+    for (name, provider) in providers.iter_mut() {
+        let Some(provider) = provider.as_mapping_mut() else {
+            continue;
+        };
         let Some(raw_path) = provider.get("path").and_then(Value::as_str) else {
             continue;
         };
-        let url = provider.get("url").and_then(Value::as_str).map(str::to_owned);
-        let destination = if let Some(url) = url {
+        // The Core decides what a provider is by its `type`, so anything else here would disagree
+        // with it. Keying off the presence of a `url` used to do that: a `file` provider carrying
+        // a stray `url` was treated as remote, its local file left uncopied, and the Core then
+        // could not find what the rewritten path pointed at.
+        let is_remote = provider.get("type").and_then(Value::as_str) == Some("http");
+        let destination = if is_remote {
+            let url = provider
+                .get("url")
+                .and_then(Value::as_str)
+                .with_context(|| format!("remote provider {name:?} has no url"))?
+                .to_owned();
             let destination = provider_destination(config_root, raw_path)?;
+            // Remote providers take their destination out of circulation as much as local ones do:
+            // the Service refuses a bundle where one path is claimed both by a file it must copy
+            // and by a file the Core downloads, because the two would overwrite each other.
+            if !destinations.insert(destination.clone()) {
+                bail!("runtime provider destination {destination:?} is claimed more than once");
+            }
             remote_providers.push(RemoteProvider {
                 destination: destination.clone(),
                 url,

@@ -827,12 +827,25 @@ async fn collect_service_runtime_bundle(config_file: &Path) -> Result<RuntimeBun
     collect_runtime_bundle(config_file, &bin_path).await
 }
 
+/// What asking the Service to stage a runtime produced.
+///
+/// The distinction is between an answer and the absence of one, and it matters because the two
+/// call for opposite responses. A Service that refused told us something deterministic — the
+/// bundle names an asset it will not accept, or we no longer own the Core — and a fresh start
+/// would be refused for the same reason, so stopping the running Core would only add an outage to
+/// a failure that has already happened. Not hearing back says nothing about whether starting
+/// would work.
+pub(super) enum StageRequest {
+    Refused(CompactString),
+    Answered(StageRuntimeOutcome),
+}
+
 /// Have the Service make the running Core's runtime match `config_file`, without restarting it.
 ///
-/// Returns the Service's decision. `RestartRequired` is not an error and callers must not treat
-/// it as one: it means the Core has to be replaced the old way, and the runtime it is using was
-/// left untouched so that is still safe to do.
-pub(super) async fn stage_runtime_by_service(config_file: &Path) -> Result<StageRuntimeOutcome> {
+/// `Err` means the request did not get an answer. A refusal, and `RestartRequired`, both come back
+/// as `Ok`: neither is a failure of this function, and only the caller can decide what to do about
+/// them.
+pub(super) async fn stage_runtime_by_service(config_file: &Path) -> Result<StageRequest> {
     let session = active_service_session()?;
     let credentials = current_owner_credentials()?;
     let runtime = collect_service_runtime_bundle(config_file).await?;
@@ -841,9 +854,12 @@ pub(super) async fn stage_runtime_by_service(config_file: &Path) -> Result<Stage
         .await
         .context("无法连接到Clash Verge Service")?;
     if response.code > 0 {
-        bail!(response.message);
+        return Ok(StageRequest::Refused(response.message.into()));
     }
-    response.data.context("Clash Verge Service 未返回运行时暂存结果")
+    response
+        .data
+        .map(StageRequest::Answered)
+        .context("Clash Verge Service 未返回运行时暂存结果")
 }
 
 /// 尝试使用服务启动core

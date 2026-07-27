@@ -1,4 +1,5 @@
 use super::{CoreManager, RunningMode};
+use crate::core::service::StageRequest;
 use crate::{
     config::{Config, ConfigType, runtime::IRuntime},
     constants::timing,
@@ -19,13 +20,15 @@ use tauri_plugin_mihomo::Error as MihomoError;
 
 /// What came back from asking the Service to stage a runtime.
 ///
-/// Separated from the decision below so the decision stays a pure function of it: the three
-/// variants are the three ways an attempt can end, and only one of them can lead anywhere other
-/// than replacing the Core.
+/// Separated from the decision below so the decision stays a pure function of it. The variants are
+/// the four ways an attempt can end, and what distinguishes them is how much they let us conclude:
+/// a refusal is the Service's verdict on this bundle, while silence says nothing at all.
 #[derive(Debug, PartialEq, Eq)]
 enum StageAttempt {
     /// The Service that owns the running Core predates staging.
     Unsupported,
+    /// The Service answered, and its answer was a refusal.
+    Refused(String),
     /// The request did not come back. The Service is authoritative about its own runtime, so
     /// without an answer nothing may be assumed about what it did or did not write.
     Unanswered(String),
@@ -39,14 +42,21 @@ enum ConfigApplication {
     ReloadFrom(String),
     /// Stop the Core and start it again from a freshly materialised runtime.
     ReplaceCore,
+    /// Leave the Core alone and report why the configuration cannot be applied.
+    Fail(String),
 }
 
 /// Decide how to apply a configuration, given how staging went.
 ///
-/// Only one branch avoids replacing the Core, and it is the one where the Service said in so many
-/// words that the runtime now matches. Everything else — an older Service, a refusal, a request
-/// that never came back — replaces the Core, which is what this did before staging existed and
-/// what the Service guarantees is still safe after every way of declining.
+/// Two branches avoid replacing the Core, for opposite reasons. One is success. The other is a
+/// refusal: the Service inspected the bundle and would not take it, and a fresh start materialises
+/// the same bundle — so it would fail the same way, having stopped a Core that was working. That is
+/// the one case where the old behaviour was strictly worse and the information to do better only
+/// exists now.
+///
+/// Everything else — an older Service, a request that never came back, or a Service that asked to
+/// be restarted — replaces the Core, which is what this did before staging existed and what the
+/// Service guarantees is still safe after every way of declining.
 fn plan_config_application(attempt: &StageAttempt) -> ConfigApplication {
     match attempt {
         StageAttempt::Answered(StageRuntimeOutcome::Staged { config_path }) => {
@@ -60,6 +70,7 @@ fn plan_config_application(attempt: &StageAttempt) -> ConfigApplication {
             );
             ConfigApplication::ReplaceCore
         }
+        StageAttempt::Refused(message) => ConfigApplication::Fail(message.clone()),
         StageAttempt::Unanswered(error) => {
             logging!(
                 warn,
@@ -224,8 +235,18 @@ impl CoreManager {
     ///
     /// Caller must hold `lifecycle_lock`.
     async fn apply_config_by_service(&self, path: &std::path::Path) -> Result<()> {
-        if let ConfigApplication::ReloadFrom(staged) = plan_config_application(&self.attempt_staging(path).await) {
-            match self.reload_config(&staged).await {
+        match plan_config_application(&self.attempt_staging(path).await) {
+            ConfigApplication::Fail(message) => {
+                // The Service looked at this bundle and would not take it. Replacing the Core would
+                // hand it the same bundle, so the outage would buy nothing.
+                logging!(
+                    warn,
+                    Type::Core,
+                    "Service refused the runtime, leaving the core running: {message}"
+                );
+                return Err(anyhow!("{message}"));
+            }
+            ConfigApplication::ReloadFrom(staged) => match self.reload_config(&staged).await {
                 Ok(()) => {
                     logging!(info, Type::Core, "Configuration staged and applied by service");
                     return Ok(());
@@ -235,7 +256,8 @@ impl CoreManager {
                     Type::Core,
                     "Failed to reload the staged service runtime, replacing the core instead: {err}"
                 ),
-            }
+            },
+            ConfigApplication::ReplaceCore => {}
         }
 
         self.replace_service_core_with_config(path).await?;
@@ -249,7 +271,8 @@ impl CoreManager {
             return StageAttempt::Unsupported;
         }
         match crate::core::service::stage_runtime_by_service(path).await {
-            Ok(outcome) => StageAttempt::Answered(outcome),
+            Ok(StageRequest::Answered(outcome)) => StageAttempt::Answered(outcome),
+            Ok(StageRequest::Refused(message)) => StageAttempt::Refused(message.to_string().into()),
             Err(err) => StageAttempt::Unanswered(format!("{err:#}").into()),
         }
     }
@@ -326,6 +349,17 @@ mod tests {
             plan_config_application(&StageAttempt::Unsupported),
             ConfigApplication::ReplaceCore,
             "an installed service without staging must keep working, not demand a reinstall"
+        );
+    }
+
+    #[test]
+    fn a_service_that_refused_leaves_the_core_alone() {
+        // Replacing the core would materialise the same bundle the Service just rejected, so the
+        // outage buys nothing: the configuration update fails either way, and this way the user's
+        // proxy is still working when it does.
+        assert_eq!(
+            plan_config_application(&StageAttempt::Refused("runtime asset is unavailable".into())),
+            ConfigApplication::Fail("runtime asset is unavailable".into())
         );
     }
 
