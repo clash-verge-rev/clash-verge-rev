@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
 
+import { runStateQueryKey } from '@/hooks/use-system-state'
 import { useAppRefreshers } from '@/providers/app-data-context'
 import { openLogsDir, restartCore } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
@@ -25,7 +26,7 @@ export const ProxyEmptyState = ({ reason }: Props) => {
     setIsRestarting(true)
     try {
       await restartCore()
-      await Promise.all([refreshProxy(), revalidateQuery(['getRunningMode'])])
+      await Promise.all([refreshProxy(), revalidateQuery(runStateQueryKey)])
     } catch (error) {
       showNotice.error(error)
     } finally {

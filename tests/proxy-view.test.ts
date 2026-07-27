@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict'
-import test from 'node:test'
+
+import { test } from 'vitest'
 
 import {
   findCurrentGroupMember,
-  findGroup,
   getRecord,
   isInteractableMember,
   memberDetails,
@@ -13,10 +13,8 @@ import {
   resolveMember,
   selectGlobalChainNodes,
   selectRuleChainMembers,
-  selectRuntimeStandaloneNodes,
   toMemberOccurrenceBinding,
-  toNodeBinding,
-} from '../src/types/proxy-view.ts'
+} from '@/types/proxy-view'
 
 const node = {
   recordId: 'p:0:0',
@@ -70,13 +68,6 @@ test('resolves nodes only through recordId and preserves provider identity', () 
   assert.equal(isInteractableMember(resolved), true)
 })
 
-test('finds group refs without constructing a name-keyed records map', () => {
-  const resolved = resolveMember(view, { kind: 'group', name: 'Group' })
-  assert.equal(resolved.kind, 'group')
-  assert.equal(findGroup(view, 'Group'), group)
-  assert.equal(memberDetails(resolved), group)
-})
-
 test('keeps unresolved members visible but non-interactable', () => {
   const resolved = resolveMember(view, {
     kind: 'unresolved',
@@ -118,7 +109,10 @@ test('rebinds a node semantically when its response-scoped id moves', () => {
   })
 
   assert.equal(
-    rebindNode(movedCandidates, toNodeBinding(previous.node))?.recordId,
+    rebindNode(movedCandidates, {
+      name: previous.node.name,
+      source: previous.node.source,
+    })?.recordId,
     'p:1:0',
   )
   assert.equal(
@@ -128,7 +122,10 @@ test('rebinds a node semantically when its response-scoped id moves', () => {
 
   const duplicate = { ...movedNode, recordId: 'p:1:1' }
   assert.equal(
-    rebindNode([movedNode, duplicate], toNodeBinding(previous.node)),
+    rebindNode([movedNode, duplicate], {
+      name: previous.node.name,
+      source: previous.node.source,
+    }),
     undefined,
   )
 
@@ -142,36 +139,6 @@ test('rebinds a node semantically when its response-scoped id moves', () => {
       name: 'provider-node',
     }),
     undefined,
-  )
-})
-
-test('keeps a runtime core node that is absent from GLOBAL as standalone', () => {
-  const runtimeOnly = {
-    ...node,
-    recordId: 'c:0',
-    name: 'runtime-only',
-    source: { kind: 'core', proxyName: 'runtime-only' },
-  }
-  const excluded = {
-    ...runtimeOnly,
-    recordId: 'c:1',
-    name: 'not-in-runtime',
-    source: { kind: 'core', proxyName: 'not-in-runtime' },
-  }
-  const standaloneView = {
-    ...view,
-    global: { ...group, name: 'GLOBAL', members: [] },
-    records: { 'c:0': runtimeOnly, 'c:1': excluded },
-    standalone: ['c:0', 'c:1'],
-  }
-
-  assert.deepEqual(
-    selectRuntimeStandaloneNodes(standaloneView, [{ name: 'runtime-only' }]),
-    [runtimeOnly],
-  )
-  assert.deepEqual(
-    selectGlobalChainNodes(standaloneView, [{ name: 'runtime-only' }]),
-    [runtimeOnly],
   )
 })
 

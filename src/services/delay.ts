@@ -11,6 +11,12 @@ import {
   type ResolvedProxyMember,
 } from '@/types/proxy-view'
 import { debugLog } from '@/utils/debug'
+import { classifyDelay, DEFAULT_DELAY_TIMEOUT } from '@/utils/delay'
+
+/** A group's delays, handed to sorting as a value it can depend on. */
+export type DelaySnapshot = {
+  of: (member: ResolvedProxyMember) => number
+}
 
 const hashKey = (name: string, group: string) => `${group ?? ''}::${name}`
 
@@ -30,7 +36,19 @@ class DelayManager {
   private listenerMap = new Map<string, (update: DelayUpdate) => void>()
 
   // 每个分组的监听
-  private groupListenerMap = new Map<string, () => void>()
+  private groupListenerMap = new Map<string, Set<() => void>>()
+  /// A stable handle per group, replaced when that group settles. Consumers compare its
+  /// identity, so it must not be rebuilt on every read.
+  private groupSnapshots = new Map<string, DelaySnapshot>()
+  /// Keyed by the joined group names a consumer asked for; cleared whenever any group
+  /// settles, so the map identity changes while unaffected groups keep theirs.
+  private groupSetSnapshots = new Map<
+    string,
+    ReadonlyMap<string, DelaySnapshot>
+  >()
+  /// Batches in flight per group. A single test that lands inside one must not announce:
+  /// sorting from a half-measured group is the reordering this design exists to avoid.
+  private activeBatches = new Map<string, number>()
 
   private pendingItemUpdates = new Map<string, DelayUpdate[]>()
   private pendingGroupUpdates = new Set<string>()
@@ -89,23 +107,67 @@ class DelayManager {
       this.pendingGroupUpdates = new Set()
 
       groups.forEach((group) => {
-        const listener = this.groupListenerMap.get(group)
-        if (!listener) return
-        try {
-          listener()
-        } catch (error) {
-          console.error(
-            `[DelayManager] 通知分组延迟监听器失败: ${group}`,
-            error,
-          )
+        const listeners = this.groupListenerMap.get(group)
+        if (!listeners) return
+        // Copied before iterating: a listener is free to unsubscribe as it runs.
+        for (const listener of [...listeners]) {
+          try {
+            listener()
+          } catch (error) {
+            console.error(
+              `[DelayManager] 通知分组延迟监听器失败: ${group}`,
+              error,
+            )
+          }
         }
       })
     })
   }
 
   private queueGroupNotification(group: string) {
+    if ((this.activeBatches.get(group) ?? 0) > 0) return
+    // Dropped so the next read builds a fresh identity. Only this group's snapshot changes;
+    // the set-level map is rebuilt too, but its other entries keep their identities.
+    this.groupSnapshots.delete(group)
+    this.groupSetSnapshots.clear()
     this.pendingGroupUpdates.add(group)
     this.scheduleGroupFlush()
+  }
+
+  /**
+   * A handle to this group's delays whose identity changes only when a test settles.
+   *
+   * Read during render and compared by identity, so it is cached rather than rebuilt: a
+   * fresh object per read would make every consumer recompute on every render.
+   */
+  /**
+   * The delays for a set of groups, keyed by group name.
+   *
+   * Cached so its identity is stable between settles, while each group's own snapshot keeps
+   * its identity unless *that* group settled — which is what lets a per-group cache survive
+   * a test in a neighbouring group.
+   */
+  groupsDelays(groupKey: string): ReadonlyMap<string, DelaySnapshot> {
+    const cached = this.groupSetSnapshots.get(groupKey)
+    if (cached) return cached
+
+    const names = groupKey ? groupKey.split(' ') : []
+    const snapshots = new Map(
+      names.map((name) => [name, this.groupDelays(name)]),
+    )
+    this.groupSetSnapshots.set(groupKey, snapshots)
+    return snapshots
+  }
+
+  groupDelays(group: string): DelaySnapshot {
+    const existing = this.groupSnapshots.get(group)
+    if (existing) return existing
+
+    const snapshot: DelaySnapshot = {
+      of: (member) => this.getDelayFix(member, group),
+    }
+    this.groupSnapshots.set(group, snapshot)
+    return snapshot
   }
 
   setUrl(group: string, url: string) {
@@ -136,12 +198,27 @@ class DelayManager {
     this.listenerMap.delete(key)
   }
 
-  setGroupListener(group: string, listener: () => void) {
-    this.groupListenerMap.set(group, listener)
-  }
+  /**
+   * Called when a delay test for `group` has settled: once per single test, and once for a
+   * whole batch however many proxies it covered.
+   *
+   * "Settled" rather than "changed" on purpose. Per-proxy display updates are already live
+   * through `setListener`; this exists for the things that must not move while results are
+   * still arriving, chiefly sort order.
+   */
+  /// Returns its own unsubscribe, so two views may watch the same group without one
+  /// silently replacing the other's listener.
+  addGroupListener(group: string, listener: () => void): () => void {
+    const listeners = this.groupListenerMap.get(group) ?? new Set()
+    listeners.add(listener)
+    this.groupListenerMap.set(group, listeners)
 
-  removeGroupListener(group: string) {
-    this.groupListenerMap.delete(group)
+    return () => {
+      const current = this.groupListenerMap.get(group)
+      if (!current) return
+      current.delete(listener)
+      if (current.size === 0) this.groupListenerMap.delete(group)
+    }
   }
 
   setDelay(
@@ -219,7 +296,23 @@ class DelayManager {
     return delayProxyByName(name, url, timeout)
   }
 
+  /**
+   * Test one proxy, then tell the group its ordering may have changed.
+   *
+   * The announcement is the point at which a sorted list is allowed to re-sort. It is
+   * deliberately *not* made per result inside a batch — see `checkListDelay`.
+   */
   async checkDelay(
+    member: InteractableProxyMember,
+    group: string,
+    timeout: number,
+  ): Promise<DelayUpdate> {
+    const update = await this.measureDelay(member, group, timeout)
+    this.queueGroupNotification(group)
+    return update
+  }
+
+  private async measureDelay(
     member: InteractableProxyMember,
     group: string,
     timeout: number,
@@ -287,6 +380,7 @@ class DelayManager {
       `[DelayManager] 批量测试延迟开始，组: ${group}, 数量: ${proxies.length}, 并发数: ${concurrency}`,
     )
     const names = proxies.map((member) => member.ref.name)
+    this.activeBatches.set(group, (this.activeBatches.get(group) ?? 0) + 1)
     // 设置正在延迟测试中
     names.forEach((name) => {
       this.setDelay(name, group, -2)
@@ -294,7 +388,6 @@ class DelayManager {
 
     let index = 0
     const startTime = Date.now()
-    const listener = this.groupListenerMap.get(group)
 
     const help = async (): Promise<void> => {
       const currMember = proxies[index++]
@@ -313,10 +406,10 @@ class DelayManager {
           )
         }
 
-        await this.checkDelay(currMember, group, timeout)
-        if (listener) {
-          this.queueGroupNotification(group)
-        }
+        // Measured without announcing: a sorted list that re-ordered on every result would
+        // reshuffle continuously for the length of the test, with rows moving out from under
+        // the pointer. The group is told once, below, when the batch has settled.
+        await this.measureDelay(currMember, group, timeout)
       } catch (error) {
         console.error(
           `[DelayManager] 批量测试单个代理出错，代理: ${currName}`,
@@ -338,28 +431,55 @@ class DelayManager {
       promiseList.push(help())
     }
 
-    await Promise.all(promiseList)
+    try {
+      await Promise.all(promiseList)
+    } finally {
+      // In a `finally` so a throw cannot leave the group unannounced: the proxies would sit
+      // at -2 and the order would stay stale with nothing later to repair it.
+      const remaining = (this.activeBatches.get(group) ?? 1) - 1
+      if (remaining > 0) {
+        this.activeBatches.set(group, remaining)
+      } else {
+        this.activeBatches.delete(group)
+        this.queueGroupNotification(group)
+      }
+    }
     const totalTime = Date.now() - startTime
     debugLog(
       `[DelayManager] 批量测试延迟完成，组: ${group}, 总耗时: ${totalTime}ms`,
     )
   }
 
-  formatDelay(delay: number, timeout = 10000) {
-    if (delay === -1) return '-'
-    if (delay === -2) return 'testing'
-    if (delay === 0 || (delay >= timeout && delay <= 1e5)) return 'Timeout'
-    if (delay > 1e5) return 'Error'
-    return `${delay}`
+  formatDelay(delay: number, timeout = DEFAULT_DELAY_TIMEOUT) {
+    switch (classifyDelay(delay, timeout)) {
+      case 'untested':
+        return '-'
+      case 'testing':
+        return 'testing'
+      case 'timeout':
+        return 'Timeout'
+      case 'error':
+        return 'Error'
+      case 'measured':
+        return `${delay}`
+    }
   }
 
-  formatDelayColor(delay: number, timeout = 10000) {
-    if (delay < 0) return ''
-    if (delay === 0 || delay >= timeout) return 'error.main'
-    if (delay >= 10000) return 'error.main'
-    if (delay >= 400) return 'warning.main'
-    if (delay >= 250) return 'primary.main'
-    return 'success.main'
+  formatDelayColor(delay: number, timeout = DEFAULT_DELAY_TIMEOUT) {
+    switch (classifyDelay(delay, timeout)) {
+      case 'untested':
+      case 'testing':
+        return ''
+      case 'timeout':
+      case 'error':
+        return 'error.main'
+      case 'measured':
+        // How a measurement is graded is this widget's own decision; the thresholds differ
+        // from the signal icon's on purpose, because a colour has fewer steps than four bars.
+        if (delay >= 400) return 'warning.main'
+        if (delay >= 250) return 'primary.main'
+        return 'success.main'
+    }
   }
 }
 
