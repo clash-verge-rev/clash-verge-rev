@@ -124,7 +124,7 @@
     "sass": "^1.100.0",
     "tar": "^7.5.15",
     "terser": "^5.48.0",
-    "typescript": "^7.0.0",
+    "typescript": "^6.0.3",
     "typescript-eslint": "^8.59.4",
     "vite": "^8.0.14",
     "vite-plugin-svgr": "^5.2.0",
