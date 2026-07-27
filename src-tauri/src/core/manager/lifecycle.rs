@@ -548,7 +548,6 @@ impl CoreManager {
     #[cfg(target_os = "windows")]
     async fn wait_for_service_if_needed(&self) {
         use crate::{config::Config, constants::timing};
-        use backon::{ConstantBuilder, Retryable as _};
 
         let tun_enabled = Config::verge().await.latest_arc().enable_tun_mode.unwrap_or(false);
         let service_ready = matches!(SERVICE_MANAGER.current().await, ServiceStatus::Ready);
