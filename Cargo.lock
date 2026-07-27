@@ -1121,7 +1121,7 @@ dependencies = [
  "clash-verge-signal",
  "clash_verge_logger",
  "clash_verge_service_ipc",
- "compact_str",
+ "compact_str 0.10.0",
  "console-subscriber",
  "criterion",
  "dark-light",
@@ -1211,7 +1211,7 @@ version = "0.1.0"
 name = "clash-verge-logging"
 version = "0.1.0"
 dependencies = [
- "compact_str",
+ "compact_str 0.10.0",
  "flexi_logger",
  "log",
  "tokio",
@@ -1232,7 +1232,7 @@ version = "0.2.2"
 source = "git+https://github.com/clash-verge-rev/clash-verge-logger#e4768e3852c4868ed86e7210df82c1178467820d"
 dependencies = [
  "arraydeque",
- "compact_str",
+ "compact_str 0.9.1",
  "flexi_logger",
  "log",
  "nu-ansi-term",
@@ -1245,7 +1245,7 @@ version = "2.6.0"
 source = "git+https://github.com/clash-verge-rev/clash-verge-service-ipc.git?branch=feat%2Fstage-runtime#fe6a771a35488eb3e8f3a26c901d3a03b5e2953c"
 dependencies = [
  "anyhow",
- "compact_str",
+ "compact_str 0.9.1",
  "kode-bridge",
  "libc",
  "log",
@@ -1350,6 +1350,20 @@ dependencies = [
  "serde",
  "smallvec",
  "static_assertions",
+]
+
+[[package]]
+name = "compact_str"
+version = "0.10.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "79fcda08c33bb58b97008b2cdada6622500e949e060f5913361763121abd2416"
+dependencies = [
+ "castaway",
+ "cfg-if",
+ "itoa",
+ "serde",
+ "static_assertions",
+ "zmij",
 ]
 
 [[package]]
@@ -3369,7 +3383,7 @@ dependencies = [
  "libc",
  "percent-encoding",
  "pin-project-lite",
- "socket2 0.5.10",
+ "socket2 0.6.5",
  "system-configuration",
  "tokio",
  "tower-service",
@@ -5463,7 +5477,7 @@ dependencies = [
  "quinn-udp",
  "rustc-hash",
  "rustls",
- "socket2 0.5.10",
+ "socket2 0.6.5",
  "thiserror 2.0.18",
  "tokio",
  "tracing",
@@ -5501,7 +5515,7 @@ dependencies = [
  "cfg_aliases",
  "libc",
  "once_cell",
- "socket2 0.5.10",
+ "socket2 0.6.5",
  "tracing",
  "windows-sys 0.60.2",
 ]

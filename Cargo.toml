@@ -68,7 +68,7 @@ flexi_logger = "0.31.9"
 log = "0.4.33"
 
 smartstring = { version = "1.0.1" }
-compact_str = { version = "0.9.1", features = ["serde"] }
+compact_str = { version = "0.10.0", features = ["serde"] }
 
 serde = { version = "1.0.229" }
 serde_json = { version = "1.0.151" }
