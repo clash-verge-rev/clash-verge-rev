@@ -2,18 +2,16 @@ import { useSortable } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 import { LanguageRounded } from '@mui/icons-material'
 import { Box, Divider, MenuItem, Menu, styled, alpha } from '@mui/material'
-import { UnlistenFn } from '@tauri-apps/api/event'
 import { useLockFn } from 'ahooks'
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BaseLoading } from '@/components/base'
 import { useIconCache } from '@/hooks/use-icon-cache'
-import { useListen } from '@/hooks/use-listen'
 import { cmdTestDelay } from '@/services/cmds'
 import delayManager from '@/services/delay'
+import { subscribeVergeEvents } from '@/services/events'
 import { showNotice } from '@/services/notice-service'
-import { debugLog } from '@/utils/debug'
 
 import { TestBox } from './test-box'
 
@@ -47,7 +45,6 @@ export const TestItem = ({
   const [delay, setDelay] = useState(-1)
   const { uid, name, icon, url } = itemData
   const iconCachePath = useIconCache({ icon, cacheKey: uid })
-  const { addListener } = useListen()
 
   const onDelay = useCallback(async () => {
     setDelay(-2)
@@ -74,29 +71,10 @@ export const TestItem = ({
     { label: t('shared.actions.delete'), handler: onDelete },
   ]
 
-  useEffect(() => {
-    let unlistenFn: UnlistenFn | null = null
-
-    const setupListener = async () => {
-      if (unlistenFn) {
-        unlistenFn()
-      }
-      unlistenFn = await addListener('verge://test-all', () => {
-        onDelay()
-      })
-    }
-
-    setupListener()
-
-    return () => {
-      if (unlistenFn) {
-        debugLog(
-          `TestItem for ${id} unmounting or url changed, cleaning up test-all listener.`,
-        )
-        unlistenFn()
-      }
-    }
-  }, [url, addListener, onDelay, id])
+  useEffect(
+    () => subscribeVergeEvents({ 'verge://test-all': () => onDelay() }),
+    [url, onDelay],
+  )
 
   return (
     <Box

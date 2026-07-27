@@ -7,11 +7,8 @@ import {
   supportedLanguages,
 } from '@/services/i18n'
 
-import { useVerge } from './use-verge'
-
 export const useI18n = () => {
   const { i18n, t } = useTranslation()
-  const { patchVerge } = useVerge()
   const [isLoading, setIsLoading] = useState(false)
 
   const switchLanguage = useCallback(
@@ -30,17 +27,13 @@ export const useI18n = () => {
       setIsLoading(true)
       try {
         await changeLanguage(targetLanguage)
-
-        if (patchVerge) {
-          await patchVerge({ language: targetLanguage })
-        }
       } catch (error) {
         console.error('Failed to change language:', error)
       } finally {
         setIsLoading(false)
       }
     },
-    [i18n.language, patchVerge],
+    [i18n.language],
   )
 
   return {

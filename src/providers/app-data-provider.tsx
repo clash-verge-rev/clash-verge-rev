@@ -1,4 +1,3 @@
-import { listen } from '@tauri-apps/api/event'
 import React, { useCallback, useEffect, useMemo, useRef } from 'react'
 import {
   getBaseConfig,
@@ -7,13 +6,15 @@ import {
 } from 'tauri-plugin-mihomo-api'
 
 import { useClashInfo, useRuntimeConfig } from '@/hooks/use-clash'
+import { runStateQueryKey } from '@/hooks/use-system-state'
 import { useVerge } from '@/hooks/use-verge'
 import {
   getAppUptime,
   getProxyView,
-  getRunningMode,
+  getRuntimeState,
   getSystemProxy,
 } from '@/services/cmds'
+import { subscribeVergeEvents } from '@/services/events'
 import { revalidateQueries, useQuery } from '@/services/query-client'
 import { resolveDisplayedMixedPort } from '@/utils/mixed-port'
 
@@ -60,6 +61,7 @@ export const AppDataProvider = ({
 
   const {
     data: proxyView,
+    error: proxyViewError,
     isPending: isProxyViewPending,
     refetch: _refetchProxyView,
   } = useQuery({
@@ -99,11 +101,13 @@ export const AppDataProvider = ({
     ...TQ_DEFAULTS,
   })
 
-  const { data: runningMode } = useQuery({
-    queryKey: ['getRunningMode'],
-    queryFn: getRunningMode,
+  // Same key as `useSystemState`, so this is the one Run State cache entry, not a second one.
+  const { data: runState, isPending: isRunningModePending } = useQuery({
+    queryKey: runStateQueryKey,
+    queryFn: getRuntimeState,
     ...TQ_DEFAULTS,
   })
+  const runningMode = runState?.mode
 
   const { data: uptimeData } = useQuery({
     queryKey: ['appUptime'],
@@ -124,10 +128,7 @@ export const AppDataProvider = ({
     let lastProfileUpdateTime = 0
     let lastProxyUpdateTime = 0
     const refreshThrottle = 800
-    const cleanupFns: Array<() => void> = []
-
-    const handleProfileChanged = (event: { payload: string }) => {
-      const newProfileId = event.payload
+    const handleProfileChanged = (newProfileId: string) => {
       const now = Date.now()
       if (
         lastProfileId === newProfileId &&
@@ -151,49 +152,11 @@ export const AppDataProvider = ({
       void revalidateQueries([['getProfiles']])
     }
 
-    const initializeListeners = async () => {
-      try {
-        const unlistenProfile = await listen<string>(
-          'profile-changed',
-          handleProfileChanged,
-        )
-        cleanupFns.push(unlistenProfile)
-      } catch (error) {
-        console.error('[AppDataProvider] 监听 Profile 事件失败:', error)
-      }
-
-      try {
-        const unlistenProfiles = await listen(
-          'verge://refresh-profiles',
-          handleRefreshProfiles,
-        )
-        cleanupFns.push(unlistenProfiles)
-      } catch (error) {
-        console.error('[AppDataProvider] 监听 Profiles 刷新事件失败:', error)
-      }
-
-      try {
-        const unlistenProxy = await listen(
-          'verge://refresh-proxy-config',
-          handleRefreshProxy,
-        )
-        cleanupFns.push(unlistenProxy)
-      } catch (error) {
-        console.warn('[AppDataProvider] 设置 Tauri 事件监听器失败:', error)
-      }
-    }
-
-    void initializeListeners()
-
-    return () => {
-      cleanupFns.forEach((fn) => {
-        try {
-          fn()
-        } catch (error) {
-          console.error('[DataProvider] Cleanup error:', error)
-        }
-      })
-    }
+    return subscribeVergeEvents({
+      'profile-changed': handleProfileChanged,
+      'verge://refresh-profiles': handleRefreshProfiles,
+      'verge://refresh-proxy-config': handleRefreshProxy,
+    })
   }, [refreshProxy])
 
   const refreshAll = useCallback(async () => {
@@ -216,8 +179,9 @@ export const AppDataProvider = ({
     () => ({
       proxyView,
       isProxyViewPending,
+      isProxyViewError: Boolean(proxyViewError),
     }),
-    [proxyView, isProxyViewPending],
+    [proxyView, isProxyViewPending, proxyViewError],
   )
 
   const rulesValue = useMemo(
@@ -236,14 +200,16 @@ export const AppDataProvider = ({
     [clashConfig, isClashConfigPending],
   )
 
-  const systemValue = useMemo(() => {
-    const displayedMixedPort = resolveDisplayedMixedPort({
-      live: clashConfig?.mixedPort,
-      runtime: runtimeConfig?.['mixed-port'],
-      selected: verge?.verge_mixed_port,
-      merge: clashInfo?.mixed_port,
-    })
+  // Resolved from local sources rather than via useDisplayedMixedPort: that hook reads the
+  // ClashConfig context, and this component is the one providing it.
+  const displayedMixedPort = resolveDisplayedMixedPort({
+    live: clashConfig?.mixedPort,
+    runtime: runtimeConfig?.['mixed-port'],
+    selected: verge?.verge_mixed_port,
+    merge: clashInfo?.mixed_port,
+  })
 
+  const systemValue = useMemo(() => {
     const calculateSystemProxyAddress = () => {
       if (!verge) return '-'
 
@@ -273,9 +239,10 @@ export const AppDataProvider = ({
     return {
       sysproxy,
       runningMode,
+      isRunningModePending,
       systemProxyAddress: calculateSystemProxyAddress(),
     }
-  }, [sysproxy, runningMode, verge, clashConfig, runtimeConfig, clashInfo])
+  }, [sysproxy, runningMode, isRunningModePending, verge, displayedMixedPort])
 
   const uptimeValue = useMemo(() => ({ uptime: uptimeData || 0 }), [uptimeData])
 

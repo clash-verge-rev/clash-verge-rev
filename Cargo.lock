@@ -1212,8 +1212,8 @@ dependencies = [
 
 [[package]]
 name = "clash_verge_service_ipc"
-version = "2.5.3"
-source = "git+https://github.com/clash-verge-rev/clash-verge-service-ipc.git?tag=v2.5.3#fd229aafae36b0bba547af56167b4ee26cc73a65"
+version = "2.6.0"
+source = "git+https://github.com/clash-verge-rev/clash-verge-service-ipc.git?branch=feat%2Fstage-runtime#fe6a771a35488eb3e8f3a26c901d3a03b5e2953c"
 dependencies = [
  "anyhow",
  "compact_str",
@@ -3808,7 +3808,7 @@ dependencies = [
 [[package]]
 name = "kode-bridge"
 version = "0.4.2"
-source = "git+https://github.com/clash-verge-rev/kode-bridge.git?branch=dev#fbd9888431cff8fba30934c9fbe1a553fce1ef1b"
+source = "git+https://github.com/clash-verge-rev/kode-bridge.git?branch=dev#9dc3ee4689e46252600b9c1b12d20961fce113b4"
 dependencies = [
  "bytes",
  "futures",

@@ -44,7 +44,28 @@
     },
     "empty": {
       "noAvailableGroups": "No hay grupos de proxy disponibles",
-      "noProxies": "Sin proxies"
+      "noProxies": "Sin proxies",
+      "noSubscriptions": {
+        "title": "No se ha importado ninguna suscripción",
+        "description": "No hay contenido para mostrar en la página de proxies. Ve a Perfiles para importar y activar una suscripción."
+      },
+      "inactiveSubscription": {
+        "title": "No hay ninguna suscripción activa",
+        "description": "Se encontraron suscripciones, pero ninguna está activa. Ve a Perfiles, selecciona una suscripción y actívala."
+      },
+      "coreUnavailable": {
+        "title": "El núcleo no está disponible temporalmente",
+        "description": "No se pudo obtener la información de proxies del núcleo. Intenta reiniciar el núcleo. Si el problema continúa, abre la carpeta de registros y revisa los registros del núcleo."
+      },
+      "noProxyInfo": {
+        "title": "No hay información de proxies disponible",
+        "description": "No hay grupos ni nodos de proxy para mostrar. Comprueba que la suscripción activa contenga grupos y nodos válidos, o reinicia el núcleo y revisa los registros."
+      },
+      "actions": {
+        "openProfiles": "Ir a Perfiles",
+        "restartCore": "Reiniciar núcleo",
+        "openLogs": "Abrir carpeta de registros"
+      }
     },
     "chain": {
       "header": "Chain Proxy Config",

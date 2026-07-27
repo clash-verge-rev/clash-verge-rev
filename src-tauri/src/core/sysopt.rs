@@ -1,4 +1,8 @@
-use crate::{config::Config, singleton, utils::server};
+use crate::{
+    config::{Config, MixedPort},
+    singleton,
+    utils::server,
+};
 use anyhow::Result;
 use clash_verge_logging::{Type, logging};
 use parking_lot::RwLock;
@@ -148,10 +152,9 @@ impl Sysopt {
     pub(super) async fn update_sysproxy(&self) -> Result<()> {
         let _lock = self.update_lock.lock().await;
         let verge = Config::verge().await.latest_arc();
-        let port = match verge.verge_mixed_port {
-            Some(port) => port,
-            None => Config::clash().await.latest_arc().get_mixed_port(),
-        };
+        // Configured, not live: this runs while the Core is being started or restarted, and
+        // asking a Core that is not up yet would only fall back here anyway.
+        let port = MixedPort::desired().await;
         let pac_port = server::embedded_server_port()?;
         // 先 await, 避免持有锁导致的 Send 问题
         let bypass = get_bypass().await;

@@ -17,6 +17,7 @@ use std::{
 };
 use tauri_plugin_shell::process::CommandChild;
 
+use crate::core::runstate::{RUN_STATE, RealEnv, RunStateStore};
 use crate::singleton;
 #[cfg(target_os = "windows")]
 use std::os::windows::io::OwnedHandle;
@@ -72,6 +73,11 @@ impl fmt::Display for RunningMode {
 
 #[derive(Debug)]
 pub struct CoreManager {
+    /// The Run State this manager reports transitions to.
+    ///
+    /// A reference rather than the global directly, so a test can supervise a Core without
+    /// racing every other test for one process-wide Running Mode.
+    run_state: &'static RunStateStore<RealEnv>,
     state: ArcSwap<State>,
     last_update: ArcSwapOption<Instant>,
     #[cfg(target_os = "windows")]
@@ -86,24 +92,19 @@ pub struct CoreManager {
     handoff_watcher_running: AtomicBool,
 }
 
-#[derive(Debug)]
+/// Process-level state owned by `CoreManager`.
+///
+/// Running Mode deliberately does *not* live here — it belongs to `core::runstate`, which
+/// keeps it consistent with Service Health and derives PAC availability from it.
+#[derive(Debug, Default)]
 struct State {
-    running_mode: ArcSwap<RunningMode>,
     child_sidecar: ArcSwapOption<CommandChild>,
-}
-
-impl Default for State {
-    fn default() -> Self {
-        Self {
-            running_mode: ArcSwap::new(Arc::new(RunningMode::NotRunning)),
-            child_sidecar: ArcSwapOption::new(None),
-        }
-    }
 }
 
 impl Default for CoreManager {
     fn default() -> Self {
         Self {
+            run_state: &RUN_STATE,
             state: ArcSwap::new(Arc::new(State::default())),
             last_update: ArcSwapOption::new(None),
             #[cfg(target_os = "windows")]
@@ -122,8 +123,17 @@ impl CoreManager {
         Self::default()
     }
 
+    /// A manager with its own Run State, for tests that must not disturb the process-wide one.
+    #[cfg(test)]
+    fn isolated() -> Self {
+        Self {
+            run_state: Box::leak(Box::new(RunStateStore::new(RealEnv))),
+            ..Self::default()
+        }
+    }
+
     pub fn get_running_mode(&self) -> Arc<RunningMode> {
-        Arc::clone(&self.state.load().running_mode.load())
+        self.run_state.mode_arc()
     }
 
     pub fn take_child_sidecar(&self) -> Option<CommandChild> {
@@ -142,12 +152,26 @@ impl CoreManager {
         self.last_update.load_full()
     }
 
-    pub fn set_running_mode(&self, mode: RunningMode) {
-        if matches!(mode, RunningMode::NotRunning) {
-            self.invalidate_core_readiness();
-        }
-        let state = self.state.load();
-        state.running_mode.store(Arc::new(mode));
+    /// The Core is now running in `mode`.
+    ///
+    /// Run State derives PAC availability and the outward mode mirror from this; callers must
+    /// not set those alongside.
+    pub fn core_started(&self, mode: RunningMode) {
+        self.run_state.core_started(mode);
+    }
+
+    /// The Core is no longer running, for any reason.
+    ///
+    /// Core readiness is invalidated here rather than inside Run State because readiness
+    /// belongs to the process this manager supervises.
+    pub fn core_stopped(&self) {
+        self.invalidate_core_readiness();
+        self.run_state.core_stopped();
+    }
+
+    /// A start attempt is under way and the Core is not serving yet.
+    pub fn core_starting(&self) {
+        self.run_state.core_starting();
     }
 
     pub fn set_running_child_sidecar(&self, child: CommandChild) {

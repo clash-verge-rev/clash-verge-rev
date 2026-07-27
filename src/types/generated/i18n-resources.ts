@@ -508,8 +508,29 @@ export interface TranslationResources {
           warning: string
         }
         empty: {
+          actions: {
+            openLogs: string
+            openProfiles: string
+            restartCore: string
+          }
+          coreUnavailable: {
+            description: string
+            title: string
+          }
+          inactiveSubscription: {
+            description: string
+            title: string
+          }
           noAvailableGroups: string
           noProxies: string
+          noProxyInfo: {
+            description: string
+            title: string
+          }
+          noSubscriptions: {
+            description: string
+            title: string
+          }
         }
         labels: {
           delayCheckReset: string
