@@ -28,7 +28,20 @@
       "reinstall": "Reinstall service",
       "repair": "Repair service",
       "continueSidecar": "Continue with Sidecar",
-      "success": "The Clash Verge service was updated successfully"
+      "success": "The Clash Verge service was updated successfully",
+      "errors": {
+        "actionFailed": "عملیات سرویس ناموفق بود",
+        "stateRefreshFailed": "به‌روزرسانی وضعیت سرویس ناموفق بود",
+        "restartFailed": "راه‌اندازی مجدد هسته ناموفق بود",
+        "revalidationFailed": "به‌روزرسانی وضعیت اجرا ناموفق بود",
+        "sidecarFailed": "ادامه با Sidecar ناموفق بود"
+      }
+    }
+  },
+  "feedback": {
+    "errors": {
+      "restartCoreStopFailed": "هسته را نمی‌توان با ایمنی متوقف کرد، بنابراین راه‌اندازی مجدد لغو شد",
+      "quitCoreStopFailed": "هسته را نمی‌توان با ایمنی متوقف کرد، بنابراین خروج لغو شد"
     }
   }
 }

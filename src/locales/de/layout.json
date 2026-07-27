@@ -28,7 +28,20 @@
       "reinstall": "Reinstall service",
       "repair": "Repair service",
       "continueSidecar": "Continue with Sidecar",
-      "success": "The Clash Verge service was updated successfully"
+      "success": "The Clash Verge service was updated successfully",
+      "errors": {
+        "actionFailed": "Der Dienstvorgang ist fehlgeschlagen",
+        "stateRefreshFailed": "Dienststatus konnte nicht aktualisiert werden",
+        "restartFailed": "Kern konnte nicht neu gestartet werden",
+        "revalidationFailed": "Laufstatus konnte nicht aktualisiert werden",
+        "sidecarFailed": "Fortsetzung mit Sidecar fehlgeschlagen"
+      }
+    }
+  },
+  "feedback": {
+    "errors": {
+      "restartCoreStopFailed": "Der Kern konnte nicht sicher gestoppt werden, daher wurde der Neustart abgebrochen",
+      "quitCoreStopFailed": "Der Kern konnte nicht sicher gestoppt werden, daher wurde das Beenden abgebrochen"
     }
   }
 }

@@ -1,5 +1,5 @@
 use crate::{
-    config::Config,
+    config::{Config, MixedPort},
     core::{CoreManager, handle, tray},
     feat::clean_async,
     process::AsyncHandler,
@@ -57,10 +57,7 @@ pub async fn restart_app() {
 
     if !cleanup_result.core_stopped {
         handle::Handle::global().clear_is_exiting();
-        handle::Handle::notice_message(
-            "set_config::error",
-            "Failed to stop the core safely; restart was cancelled",
-        );
+        handle::Handle::notice_message("app_restart::core_stop_failed", "");
         return;
     }
 
@@ -145,10 +142,7 @@ pub async fn test_delay(url: String) -> anyhow::Result<u32> {
     let verge = Config::verge().await.latest_arc();
     let proxy_enabled = verge.enable_system_proxy.unwrap_or(false) || verge.enable_tun_mode.unwrap_or(false);
     let proxy_port = if proxy_enabled {
-        Some(match verge.verge_mixed_port {
-            Some(p) => p,
-            None => Config::clash().await.data_arc().get_mixed_port(),
-        })
+        Some(MixedPort::desired().await)
     } else {
         None
     };

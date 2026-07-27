@@ -1,9 +1,11 @@
-use std::sync::Arc;
+use crate::core::runstate::{RUN_STATE, RunStateView};
 
-use crate::core::{CoreManager, manager::RunningMode};
-
-/// 获取当前内核运行模式
+/// The whole Run State in one call.
+///
+/// Replaces the separate running-mode and service-install-state commands: they were three
+/// caches on three refresh intervals describing one fact, which the frontend then had to keep
+/// coherent by hand.
 #[tauri::command]
-pub async fn get_running_mode() -> Result<Arc<RunningMode>, String> {
-    Ok(CoreManager::global().get_running_mode())
+pub async fn get_runtime_state() -> Result<RunStateView, String> {
+    Ok(RUN_STATE.settled().await.to_view())
 }

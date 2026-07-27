@@ -25,7 +25,7 @@ import {
   TextSnippetOutlined,
 } from '@mui/icons-material'
 import { Box, Button, Divider, Grid, IconButton, Stack } from '@mui/material'
-import { listen, TauriEvent } from '@tauri-apps/api/event'
+import { TauriEvent } from '@tauri-apps/api/event'
 import { readText } from '@tauri-apps/plugin-clipboard-manager'
 import { readTextFile } from '@tauri-apps/plugin-fs'
 import { useLockFn } from 'ahooks'
@@ -60,6 +60,7 @@ import {
   reorderProfile,
   updateProfile,
 } from '@/services/cmds'
+import { subscribeVergeEvents } from '@/services/events'
 import { showNotice } from '@/services/notice-service'
 import {
   fetchCacheData,
@@ -584,52 +585,32 @@ const ProfilePage = () => {
     [setLoadingCache],
   )
 
-  useEffect(() => {
-    let disposed = false
-    let unlisteners: Array<() => void> = []
-
-    Promise.allSettled([
-      listen<{ uid?: string }>('profile-update-started', ({ payload }) => {
-        if (payload.uid) setLoadingProfiles([payload.uid], true)
+  useEffect(
+    () =>
+      subscribeVergeEvents({
+        'profile-update-started': ({ uid }) => {
+          if (uid) setLoadingProfiles([uid], true)
+        },
+        'profile-update-completed': ({ uid }) => {
+          if (!uid) return
+          setLoadingProfiles([uid], false)
+          setCompletedUpdateRevisions((current) => {
+            const next = new Map(current)
+            next.set(uid, (next.get(uid) ?? 0) + 1)
+            return next
+          })
+          void mutateProfiles()
+        },
+        'verge://timer-updated': (uid) => {
+          setTimerUpdateRevisions((current) => {
+            const next = new Map(current)
+            next.set(uid, (next.get(uid) ?? 0) + 1)
+            return next
+          })
+        },
       }),
-      listen<{ uid?: string }>('profile-update-completed', ({ payload }) => {
-        const { uid } = payload
-        if (!uid) return
-        setLoadingProfiles([uid], false)
-        setCompletedUpdateRevisions((current) => {
-          const next = new Map(current)
-          next.set(uid, (next.get(uid) ?? 0) + 1)
-          return next
-        })
-        void mutateProfiles()
-      }),
-      listen<string>('verge://timer-updated', ({ payload: uid }) => {
-        setTimerUpdateRevisions((current) => {
-          const next = new Map(current)
-          next.set(uid, (next.get(uid) ?? 0) + 1)
-          return next
-        })
-      }),
-    ]).then((results) => {
-      const registeredUnlisteners = results.flatMap((result) =>
-        result.status === 'fulfilled' ? [result.value] : [],
-      )
-      results.forEach((result) => {
-        if (result.status === 'rejected') console.error(result.reason)
-      })
-
-      if (disposed) {
-        registeredUnlisteners.forEach((unlisten) => unlisten())
-      } else {
-        unlisteners = registeredUnlisteners
-      }
-    })
-
-    return () => {
-      disposed = true
-      unlisteners.forEach((unlisten) => unlisten())
-    }
-  }, [mutateProfiles, setLoadingProfiles])
+    [mutateProfiles, setLoadingProfiles],
+  )
 
   const runProfileUpdates = useCallback(
     async (uids: string[]) => {
@@ -835,7 +816,9 @@ const ProfilePage = () => {
                 <IconButton
                   size="small"
                   color="warning"
-                  title="数据异常，点击强制刷新"
+                  title={t(
+                    'profiles.page.feedback.tooltips.forceRefreshStaleData',
+                  )}
                   onClick={onEmergencyRefresh}
                   sx={{
                     animation: 'pulse 2s infinite',

@@ -510,6 +510,21 @@ impl SilentUpdater {
     }
 }
 
+/// Map the app's resolved UI language code to an NSIS installer language ID.
+///
+/// The Windows installer only ships SimpChinese, English and Russian
+/// (`tauri.windows.conf.json` `nsis.languages`). Languages without a matching
+/// NSIS translation fall back to English; Traditional Chinese ("zhtw") is
+/// mapped to SimpChinese so Chinese users don't get an English installer.
+#[cfg(target_os = "windows")]
+fn nsis_language_id(app_language: &str) -> &'static str {
+    match app_language {
+        "zh" | "zhtw" => "2052", // SimpChinese
+        "ru" => "1049",          // Russian
+        _ => "1033",             // English
+    }
+}
+
 const STABLE_ENDPOINTS: [&str; 3] = [
     "https://update.hwdns.net/https://github.com/clash-verge-rev/clash-verge-rev/releases/download/updater/update-proxy.json",
     "https://gh-proxy.org/https://github.com/clash-verge-rev/clash-verge-rev/releases/download/updater/update-proxy.json",
@@ -520,6 +535,8 @@ const AUTOBUILD_ENDPOINTS: [&str; 1] =
     ["https://github.com/clash-verge-rev/clash-verge-rev/releases/download/autobuild/latest.json"];
 
 pub async fn verge_updater(app_handle: &tauri::AppHandle) -> Result<Updater> {
+    let verge_lang = Config::verge().await.latest_arc().language.clone();
+    let lang_id = nsis_language_id(&clash_verge_i18n::current_language(verge_lang.as_deref()));
     let update_channel = Config::verge()
         .await
         .latest_arc()
@@ -534,7 +551,11 @@ pub async fn verge_updater(app_handle: &tauri::AppHandle) -> Result<Updater> {
     for s in endpoint_strs {
         endpoints.push(Url::parse(s)?);
     }
-    let updater = app_handle.updater_builder().endpoints(endpoints)?.build()?;
+    let updater = app_handle
+        .updater_builder()
+        .installer_arg(format!("/LANG={lang_id}"))
+        .endpoints(endpoints)?
+        .build()?;
     Ok(updater)
 }
 

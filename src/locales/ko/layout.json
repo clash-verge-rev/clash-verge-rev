@@ -28,7 +28,20 @@
       "reinstall": "Reinstall service",
       "repair": "Repair service",
       "continueSidecar": "Continue with Sidecar",
-      "success": "The Clash Verge service was updated successfully"
+      "success": "The Clash Verge service was updated successfully",
+      "errors": {
+        "actionFailed": "서비스 작업에 실패했습니다",
+        "stateRefreshFailed": "서비스 상태를 새로 고치지 못했습니다",
+        "restartFailed": "코어를 재시작하지 못했습니다",
+        "revalidationFailed": "실행 상태를 새로 고치지 못했습니다",
+        "sidecarFailed": "Sidecar로 계속하지 못했습니다"
+      }
+    }
+  },
+  "feedback": {
+    "errors": {
+      "restartCoreStopFailed": "코어를 안전하게 중지할 수 없어 재시작이 취소되었습니다",
+      "quitCoreStopFailed": "코어를 안전하게 중지할 수 없어 종료가 취소되었습니다"
     }
   }
 }

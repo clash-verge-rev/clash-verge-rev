@@ -23,7 +23,8 @@
     "closeAll": "모두 닫기",
     "clear": "지우기",
     "previous": "Previous",
-    "next": "Next"
+    "next": "Next",
+    "check": "검사"
   },
   "labels": {
     "updateAt": "업데이트 시간",
@@ -44,7 +45,8 @@
     "enabled": "사용",
     "disabled": "비활성화",
     "saving": "저장 중...",
-    "empty": "비어있음"
+    "empty": "비어있음",
+    "loading": "로드 중..."
   },
   "units": {
     "milliseconds": "밀리초",
@@ -74,6 +76,14 @@
   },
   "feedback": {
     "errors": {
+      "unexpected": "문제가 발생했습니다",
+      "label": "오류",
+      "unknown": "알 수 없는 오류",
+      "details": "오류 세부 정보",
+      "stack": "오류 스택",
+      "componentStack": "컴포넌트 스택",
+      "trafficUnavailable": "트래픽 데이터를 사용할 수 없습니다",
+      "operationFailed": "작업에 실패했습니다",
       "trafficStats": "트래픽 통계 오류",
       "trafficStatsDescription": "트래픽 통계 구성 요소에서 오류가 발생하여 충돌을 방지하기 위해 비활성화되었습니다."
     },

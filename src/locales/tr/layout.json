@@ -28,7 +28,20 @@
       "reinstall": "Reinstall service",
       "repair": "Repair service",
       "continueSidecar": "Continue with Sidecar",
-      "success": "The Clash Verge service was updated successfully"
+      "success": "The Clash Verge service was updated successfully",
+      "errors": {
+        "actionFailed": "Hizmet işlemi başarısız oldu",
+        "stateRefreshFailed": "Hizmet durumu yenilenemedi",
+        "restartFailed": "Çekirdek yeniden başlatılamadı",
+        "revalidationFailed": "Çalışma durumu yenilenemedi",
+        "sidecarFailed": "Sidecar ile devam edilemedi"
+      }
+    }
+  },
+  "feedback": {
+    "errors": {
+      "restartCoreStopFailed": "Çekirdek güvenli biçimde durdurulamadı, bu nedenle yeniden başlatma iptal edildi",
+      "quitCoreStopFailed": "Çekirdek güvenli biçimde durdurulamadı, bu nedenle çıkış iptal edildi"
     }
   }
 }

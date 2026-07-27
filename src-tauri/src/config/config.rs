@@ -111,7 +111,18 @@ impl Config {
     }
 
     pub async fn init_runtime_config() -> Result<()> {
-        let validation_result = Self::generate_and_validate().await?;
+        let fallback_applied = match Self::resolve_startup_mixed_port().await {
+            Ok(applied) => applied,
+            Err(error) => {
+                Self::block_startup_core(&error);
+                return Err(error);
+            }
+        };
+        let validation_result = if fallback_applied {
+            None
+        } else {
+            Self::generate_and_validate().await?
+        };
 
         if let Some((msg_type, msg_content)) = validation_result {
             sleep(timing::STARTUP_ERROR_DELAY).await;
@@ -236,6 +247,10 @@ impl Config {
     }
 
     pub async fn verify_config_initialization() {
+        if Self::startup_core_block_reason().is_some() {
+            return;
+        }
+
         let backoff = ExponentialBuilder::default()
             .with_min_delay(std::time::Duration::from_millis(100))
             .with_max_delay(std::time::Duration::from_secs(2))

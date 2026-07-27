@@ -23,7 +23,8 @@
     "closeAll": "إغلاق الكل",
     "clear": "مسح",
     "previous": "Previous",
-    "next": "Next"
+    "next": "Next",
+    "check": "فحص"
   },
   "labels": {
     "updateAt": "التحديث عند",
@@ -44,7 +45,8 @@
     "enabled": "ممكّن",
     "disabled": "معطّل",
     "saving": "Saving...",
-    "empty": "فارغ"
+    "empty": "فارغ",
+    "loading": "جارٍ التحميل..."
   },
   "units": {
     "milliseconds": "ميلي ثانية",
@@ -74,6 +76,14 @@
   },
   "feedback": {
     "errors": {
+      "unexpected": "حدث خطأ ما",
+      "label": "خطأ",
+      "unknown": "خطأ غير معروف",
+      "details": "تفاصيل الخطأ",
+      "stack": "تتبّع الخطأ",
+      "componentStack": "تتبّع المكوّن",
+      "trafficUnavailable": "بيانات حركة المرور غير متاحة",
+      "operationFailed": "فشلت العملية",
       "trafficStats": "Traffic Statistics Error",
       "trafficStatsDescription": "The traffic statistics component encountered an error and has been disabled to prevent crashes."
     },

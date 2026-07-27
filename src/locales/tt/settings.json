@@ -5,6 +5,7 @@
       "telegram": "Telegram каналы",
       "github": "GitHub репозиториясе"
     },
+    "actionsGroupLabel": "Көйләү сылтамалары",
     "title": "Көйләүләр"
   },
   "sections": {
@@ -284,7 +285,11 @@
       "messages": {
         "portInUse": "Port {{port}} is already in use",
         "saved": "Port settings saved",
-        "saveFailed": "Failed to save port settings"
+        "saveFailed": "Failed to save port settings",
+        "automaticFallback": "Port {{oldPort}} was in use. The mixed proxy port was switched to {{newPort}} and saved.",
+        "automaticFallbackFailed": "Automatic mixed proxy port fallback failed: {{error}}",
+        "portTooLow": "Порт 1000 дән ким булмаска тиеш",
+        "portTooHigh": "Порт 65535 тән артмаска тиеш"
       }
     },
     "clashCore": {
@@ -430,7 +435,15 @@
         "update": "Яңарту"
       },
       "messages": {
-        "breakChangeError": "Бу зур яңарту, ул кушымта эчендә яңартылмый. Борып алып ташлап, яңадан урнаштыру сорала."
+        "breakChangeError": "Бу зур яңарту, ул кушымта эчендә яңартылмый. Борып алып ташлап, яңадан урнаштыру сорала.",
+        "available": "Яңа версия бар"
+      },
+      "alerts": {
+        "note": "Искәрмә",
+        "tip": "Киңәш",
+        "important": "Мөһим",
+        "warning": "Кисәтү",
+        "caution": "Игътибар"
       }
     },
     "sysproxy": {
@@ -591,6 +604,11 @@
       "messages": {
         "supportedPlaceholders": "%host, %port, %secret макросларын хуплау",
         "placeholderInstruction": "Хост, порт, серсүзне %host, %port, %secret белән алмаштырыгыз"
+      },
+      "errors": {
+        "clashInfoUnavailable": "Ядро тоташу мәгълүматы юк",
+        "invalidServer": "Ядро сервер адресы «{{server}}» дөрес түгел",
+        "openFailed": "Web UI ачып булмады"
       }
     },
     "hotkey": {
@@ -618,6 +636,22 @@
     }
   },
   "feedback": {
+    "errors": {
+      "clash": {
+        "configUpdateFailed": "Ядро көйләүләрен яңартып булмады",
+        "modeUpdateFailed": "Прокси режимын үзгәртеп булмады",
+        "restartFailed": "Ядрону яңадан башлап булмады",
+        "startFailed": "Ядрону башлап булмады",
+        "stopFailed": "Ядрону туктатып булмады"
+      },
+      "clashService": {
+        "installFailed": "Хезмәтне урнаштырып булмады",
+        "uninstallFailed": "Хезмәтне бетереп булмады",
+        "reinstallFailed": "Хезмәтне яңадан урнаштырып булмады",
+        "repairFailed": "Хезмәтне төзәтеп булмады",
+        "sidecarFailed": "Sidecar белән дәвам итеп булмады"
+      }
+    },
     "notifications": {
       "clash": {
         "restartSuccess": "Clash ядросы яңадан башланды",

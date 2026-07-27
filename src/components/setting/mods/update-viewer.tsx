@@ -29,11 +29,26 @@ type MarkdownNode = {
 }
 
 const GITHUB_ALERTS = {
-  note: { label: 'Note', color: '#0969da' },
-  tip: { label: 'Tip', color: '#1a7f37' },
-  important: { label: 'Important', color: '#8250df' },
-  warning: { label: 'Warning', color: '#9a6700' },
-  caution: { label: 'Caution', color: '#cf222e' },
+  note: {
+    labelKey: 'settings.modals.update.alerts.note',
+    color: '#0969da',
+  },
+  tip: {
+    labelKey: 'settings.modals.update.alerts.tip',
+    color: '#1a7f37',
+  },
+  important: {
+    labelKey: 'settings.modals.update.alerts.important',
+    color: '#8250df',
+  },
+  warning: {
+    labelKey: 'settings.modals.update.alerts.warning',
+    color: '#9a6700',
+  },
+  caution: {
+    labelKey: 'settings.modals.update.alerts.caution',
+    color: '#cf222e',
+  },
 } as const
 
 type GitHubAlertType = keyof typeof GITHUB_ALERTS
@@ -75,7 +90,7 @@ const findFirstTextNode = (node: MarkdownNode): MarkdownNode | null => {
   return null
 }
 
-const remarkGitHubAlerts = () => {
+const remarkGitHubAlerts = (labels: Record<GitHubAlertType, string>) => {
   const visit = (node: MarkdownNode) => {
     for (const child of node.children ?? []) {
       visit(child)
@@ -110,7 +125,7 @@ const remarkGitHubAlerts = () => {
       children: [
         {
           type: 'text',
-          value: GITHUB_ALERTS[alertType].label,
+          value: labels[alertType],
         },
       ],
     })
@@ -143,12 +158,27 @@ export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
     close: () => setOpen(false),
   }))
 
+  const githubAlertLabels = useMemo(
+    () =>
+      Object.fromEntries(
+        Object.entries(GITHUB_ALERTS).map(([type, alert]) => [
+          type,
+          t(alert.labelKey),
+        ]),
+      ) as Record<GitHubAlertType, string>,
+    [t],
+  )
+  const remarkGitHubAlertsPlugin = useMemo(
+    () => () => remarkGitHubAlerts(githubAlertLabels),
+    [githubAlertLabels],
+  )
+
   const markdownContent = useMemo(() => {
     if (!updateInfo?.body) {
-      return 'New Version is available'
+      return t('settings.modals.update.messages.available')
     }
     return updateInfo?.body
-  }, [updateInfo])
+  }, [t, updateInfo])
 
   const breakChangeFlag = useMemo(() => {
     if (!updateInfo?.body) {
@@ -376,7 +406,7 @@ export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
         {open && (
           <Suspense fallback={<LinearProgress />}>
             <LazyReactMarkdown
-              remarkPlugins={[remarkGitHubAlerts]}
+              remarkPlugins={[remarkGitHubAlertsPlugin]}
               components={{
                 a: ({ ...props }) => {
                   const { children } = props

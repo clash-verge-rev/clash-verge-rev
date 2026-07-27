@@ -1,6 +1,6 @@
 use super::resolve;
 use crate::{
-    config::{Config, DEFAULT_PAC},
+    config::{Config, DEFAULT_PAC, MixedPort},
     module::lightweight,
     process::AsyncHandler,
     utils::{dirs, window_manager::WindowManager},
@@ -209,13 +209,11 @@ fn start_embedded_server(listener: tokio::net::TcpListener, token: String) {
             );
         }
         let verge_config = Config::verge().await;
-        let clash_config = Config::clash().await;
         let verge_data = verge_config.data_arc();
-        let clash_data = clash_config.data_arc();
         let pac_content = verge_data.pac_file_content.as_deref().unwrap_or(DEFAULT_PAC);
-        let pac_port = verge_data
-            .verge_mixed_port
-            .unwrap_or_else(|| clash_data.get_mixed_port());
+        // Served per browser request, so this stays a configuration read rather than a
+        // round-trip to the Core. PAC is closed while the Core is between ports anyway.
+        let pac_port = MixedPort::desired().await;
         let processed_content = pac_content.replace("%mixed-port%", &format!("{pac_port}"));
         Ok::<_, warp::Rejection>(
             warp::http::Response::builder()
@@ -445,13 +443,16 @@ fn replace_file_atomic(source: &Path, destination: &Path) -> Result<()> {
 
 #[cfg(test)]
 mod tests {
-    use super::{InstanceRecord, PAC_AVAILABLE, bind_primary_listener, read_instance_record, write_instance_record};
+    use super::{
+        InstanceRecord, PAC_INITIAL_AVAILABLE, bind_primary_listener, read_instance_record, write_instance_record,
+    };
     #[cfg(unix)]
     use super::{open_instance_lock, try_lock_instance};
-    use std::sync::atomic::Ordering;
 
     #[cfg(feature = "verge-dev")]
     use super::{INSTANCE_TOKEN_HEADER, dev_quit_route, release_dev_quit_latch};
+    #[cfg(feature = "verge-dev")]
+    use std::sync::atomic::Ordering;
     #[cfg(feature = "verge-dev")]
     use std::sync::{
         Arc,
@@ -459,7 +460,11 @@ mod tests {
     };
     #[test]
     fn pac_is_fail_closed_before_core_readiness() {
-        assert!(!PAC_AVAILABLE.load(Ordering::Acquire));
+        // Asserts the default rather than the live flag: PAC availability is now derived from
+        // the Running Mode by `core::runstate`, so any test that drives a Core transition
+        // legitimately moves the live flag. That the derivation itself can never disagree with
+        // the Running Mode is covered in `core::runstate` against a fake environment.
+        const { assert!(!PAC_INITIAL_AVAILABLE) }
     }
 
     #[cfg(feature = "verge-dev")]

@@ -5,6 +5,7 @@
       "telegram": "قناة تيليجرام",
       "github": "مستودع Github"
     },
+    "actionsGroupLabel": "روابط الإعدادات",
     "title": "الإعدادات"
   },
   "sections": {
@@ -284,7 +285,11 @@
       "messages": {
         "portInUse": "Port {{port}} is already in use",
         "saved": "Port settings saved",
-        "saveFailed": "Failed to save port settings"
+        "saveFailed": "Failed to save port settings",
+        "automaticFallback": "المنفذ {{oldPort}} مستخدم. تم تبديل منفذ الوكيل المختلط إلى {{newPort}} وحفظه.",
+        "automaticFallbackFailed": "فشل التبديل التلقائي لمنفذ الوكيل المختلط: {{error}}",
+        "portTooLow": "يجب ألا يقل المنفذ عن 1000",
+        "portTooHigh": "يجب ألا يزيد المنفذ عن 65535"
       }
     },
     "clashCore": {
@@ -430,7 +435,15 @@
         "update": "تحديث"
       },
       "messages": {
-        "breakChangeError": "هذا الإصدار هو تحديث رئيسي ولا يدعم التحديث داخل التطبيق. يرجى إلغاء التثبيت وتنزيل الإصدار الجديد وتثبيته يدويًا"
+        "breakChangeError": "هذا الإصدار هو تحديث رئيسي ولا يدعم التحديث داخل التطبيق. يرجى إلغاء التثبيت وتنزيل الإصدار الجديد وتثبيته يدويًا",
+        "available": "يتوفّر إصدار جديد"
+      },
+      "alerts": {
+        "note": "ملاحظة",
+        "tip": "نصيحة",
+        "important": "مهم",
+        "warning": "تحذير",
+        "caution": "تنبيه"
       }
     },
     "sysproxy": {
@@ -591,6 +604,11 @@
       "messages": {
         "supportedPlaceholders": "يدعم %host و%port و%secret",
         "placeholderInstruction": "استبدل المضيف والمنفذ والمفتاح بـ %host و%port و%secret"
+      },
+      "errors": {
+        "clashInfoUnavailable": "معلومات اتصال النواة غير متاحة",
+        "invalidServer": "عنوان خادم النواة \"{{server}}\" غير صالح",
+        "openFailed": "تعذّر فتح واجهة الويب"
       }
     },
     "hotkey": {
@@ -618,6 +636,22 @@
     }
   },
   "feedback": {
+    "errors": {
+      "clash": {
+        "configUpdateFailed": "تعذّر تحديث إعدادات النواة",
+        "modeUpdateFailed": "تعذّر تغيير وضع الوكيل",
+        "restartFailed": "تعذّر إعادة تشغيل النواة",
+        "startFailed": "تعذّر تشغيل النواة",
+        "stopFailed": "تعذّر إيقاف النواة"
+      },
+      "clashService": {
+        "installFailed": "تعذّر تثبيت الخدمة",
+        "uninstallFailed": "تعذّر إلغاء تثبيت الخدمة",
+        "reinstallFailed": "تعذّر إعادة تثبيت الخدمة",
+        "repairFailed": "تعذّر إصلاح الخدمة",
+        "sidecarFailed": "تعذّر المتابعة باستخدام Sidecar"
+      }
+    },
     "notifications": {
       "clash": {
         "restartSuccess": "تم إعادة تشغيل نواة Clash",

@@ -5,6 +5,7 @@
       "telegram": "Telegramチャンネル",
       "github": "GitHubリポジトリ"
     },
+    "actionsGroupLabel": "設定リンク",
     "title": "設定"
   },
   "sections": {
@@ -284,7 +285,11 @@
       "messages": {
         "portInUse": "Port {{port}} is already in use",
         "saved": "Port settings saved",
-        "saveFailed": "Failed to save port settings"
+        "saveFailed": "Failed to save port settings",
+        "automaticFallback": "ポート {{oldPort}} は使用中です。混合プロキシポートを {{newPort}} に切り替えて保存しました。",
+        "automaticFallbackFailed": "混合プロキシポートの自動切り替えに失敗しました: {{error}}",
+        "portTooLow": "ポート番号は 1000 以上である必要があります",
+        "portTooHigh": "ポート番号は 65535 以下である必要があります"
       }
     },
     "clashCore": {
@@ -430,7 +435,15 @@
         "update": "更新"
       },
       "messages": {
-        "breakChangeError": "このバージョンは重大な更新であり、アプリケーション内での更新はサポートされていません。アンインストールしてから手動でダウンロードしてインストールしてください。"
+        "breakChangeError": "このバージョンは重大な更新であり、アプリケーション内での更新はサポートされていません。アンインストールしてから手動でダウンロードしてインストールしてください。",
+        "available": "新しいバージョンが利用可能です"
+      },
+      "alerts": {
+        "note": "メモ",
+        "tip": "ヒント",
+        "important": "重要",
+        "warning": "警告",
+        "caution": "注意"
       }
     },
     "sysproxy": {
@@ -591,6 +604,11 @@
       "messages": {
         "supportedPlaceholders": "%host, %port, %secretをサポートします。",
         "placeholderInstruction": "%host, %port, %secretを使用してホスト、ポート、アクセスキーを表します。"
+      },
+      "errors": {
+        "clashInfoUnavailable": "コアの接続情報を取得できません",
+        "invalidServer": "コアサーバーアドレス「{{server}}」が無効です",
+        "openFailed": "Web UI を開けませんでした"
       }
     },
     "hotkey": {
@@ -618,6 +636,22 @@
     }
   },
   "feedback": {
+    "errors": {
+      "clash": {
+        "configUpdateFailed": "コア設定の更新に失敗しました",
+        "modeUpdateFailed": "プロキシモードの変更に失敗しました",
+        "restartFailed": "コアの再起動に失敗しました",
+        "startFailed": "コアの起動に失敗しました",
+        "stopFailed": "コアの停止に失敗しました"
+      },
+      "clashService": {
+        "installFailed": "サービスのインストールに失敗しました",
+        "uninstallFailed": "サービスのアンインストールに失敗しました",
+        "reinstallFailed": "サービスの再インストールに失敗しました",
+        "repairFailed": "サービスの修復に失敗しました",
+        "sidecarFailed": "Sidecar での続行に失敗しました"
+      }
+    },
     "notifications": {
       "clash": {
         "restartSuccess": "Clashコアが再起動されました。",

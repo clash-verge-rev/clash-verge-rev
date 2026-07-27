@@ -1,5 +1,6 @@
 import { Button } from '@mui/material'
 import { useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 
 import { DialogRef } from '@/components/base'
 import { useUpdate } from '@/hooks/use-update'
@@ -12,6 +13,7 @@ interface Props {
 
 export const UpdateButton = (props: Props) => {
   const { className } = props
+  const { t } = useTranslation()
   const viewerRef = useRef<DialogRef>(null)
 
   const { updateInfo } = useUpdate()
@@ -29,7 +31,7 @@ export const UpdateButton = (props: Props) => {
         className={className}
         onClick={() => viewerRef.current?.open()}
       >
-        New
+        {t('shared.actions.new')}
       </Button>
     </>
   )

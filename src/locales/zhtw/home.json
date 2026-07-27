@@ -82,7 +82,9 @@
         "unknown": "未知"
       },
       "errors": {
-        "load": "取得 IP 資訊失敗"
+        "load": "取得 IP 資訊失敗",
+        "loadWithDetails": "取得 IP 資訊失敗：{{message}}",
+        "noServices": "目前沒有可用的 IP 偵測服務"
       }
     },
     "currentProxy": {
@@ -96,6 +98,18 @@
         "group": "代理組",
         "proxy": "節點",
         "noActiveNode": "暫無作用中的代理節點"
+      },
+      "status": {
+        "testing": "測試中",
+        "untested": "未測試",
+        "error": "錯誤",
+        "timeout": "逾時",
+        "latencyHigh": "延遲較高",
+        "latencyMedium": "延遲中等",
+        "latencyGood": "延遲良好",
+        "latencyExcellent": "延遲極佳",
+        "uninitialized": "未初始化",
+        "noProxyNode": "無代理節點"
       }
     },
     "tests": {
@@ -114,7 +128,13 @@
       },
       "patterns": {
         "minutes": "{{time}} 分"
-      }
+      },
+      "unknownTime": "未知時間",
+      "chartStyles": {
+        "smooth": "平滑",
+        "linear": "線性"
+      },
+      "diagnostics": "資料點：{{points}} | 壓縮後：{{compressed}} | 影格率：{{fps}}"
     },
     "clashMode": {
       "errors": {

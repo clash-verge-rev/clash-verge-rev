@@ -28,7 +28,16 @@
     "feedback": {
       "errors": {
         "invalidUrl": "Недопустимый URL профиля. Укажите адрес, начинающийся с http:// или https://",
-        "onlyYaml": "Поддерживаются только файлы YAML"
+        "onlyYaml": "Поддерживаются только файлы YAML",
+        "createFailed": "Не удалось создать профиль",
+        "deleteFailed": "Не удалось удалить профиль",
+        "enhanceFailed": "Не удалось повторно активировать профили",
+        "importFailed": "Не удалось импортировать профиль",
+        "openFailed": "Не удалось открыть профиль",
+        "readFailed": "Не удалось прочитать профиль",
+        "reorderFailed": "Не удалось изменить порядок профилей",
+        "switchFailed": "Не удалось переключить профиль",
+        "updateFailed": "Не удалось обновить профиль"
       },
       "notifications": {
         "importRetry": "Не удалось импортировать, повторная попытка через Clash proxy...",
@@ -43,6 +52,9 @@
       "notices": {
         "forceRefreshCompleted": "Принудительное обновление завершено",
         "emergencyRefreshFailed": "Экстренное обновление не удалось: {{message}}"
+      },
+      "tooltips": {
+        "forceRefreshStaleData": "Данные профиля недоступны; нажмите для принудительного обновления"
       }
     },
     "title": "Профили"
@@ -105,12 +117,23 @@
         "type": "Тип",
         "description": "Описание",
         "subscriptionUrl": "URL подписки",
+        "userAgent": "User Agent",
         "httpTimeout": "Тайм-аут HTTP-запроса",
         "updateInterval": "Интервал обновления",
         "useSystemProxy": "Использовать системный прокси для обновления",
         "useClashProxy": "Использовать Clash proxy для обновления",
         "acceptInvalidCerts": "Принимать недействительные сертификаты (ОПАСНО)",
         "allowAutoUpdate": "Разрешить автообновление"
+      },
+      "types": {
+        "remote": "Удалённый",
+        "local": "Локальный"
+      },
+      "errors": {
+        "typeRequired": "Выберите тип профиля",
+        "urlRequired": "Введите URL подписки",
+        "uidMissing": "Отсутствует идентификатор профиля",
+        "saveFailed": "Не удалось сохранить профиль"
       },
       "feedback": {
         "notifications": {
