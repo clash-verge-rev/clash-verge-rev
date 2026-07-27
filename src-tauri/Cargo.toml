@@ -95,7 +95,8 @@ tauri-plugin-devtools = { version = "2.1.0" }
 tauri-plugin-mihomo = { git = "https://github.com/clash-verge-rev/tauri-plugin-mihomo", branch = "refactor-use-reqwest-ipc" }
 clash_verge_logger = { git = "https://github.com/clash-verge-rev/clash-verge-logger" }
 async-trait = "0.1.89"
-clash_verge_service_ipc = { git = "https://github.com/clash-verge-rev/clash-verge-service-ipc.git", tag = "v2.5.3", version = "2.5.3", features = [
+# Tracks a branch until the protocol change it carries is tagged; move this to v2.6.0 then.
+clash_verge_service_ipc = { git = "https://github.com/clash-verge-rev/clash-verge-service-ipc.git", branch = "feat/stage-runtime", version = "2.6.0", features = [
   "client",
 ] }
 arc-swap = "1.9.2"

@@ -360,8 +360,40 @@ export async function listLocalBackup() {
 // 获取当前运行模式
 export type RunningMode = 'Service' | 'Sidecar' | 'NotRunning'
 
-export const getRunningMode = async () => {
-  return invoke<RunningMode>('get_running_mode')
+type ServiceHealth =
+  | 'unknown'
+  | 'ready'
+  | 'notInstalled'
+  | 'versionMismatch'
+  | 'unavailable'
+
+type PendingServiceAction =
+  | 'install'
+  | 'uninstall'
+  | 'reinstall'
+  | 'forceReinstall'
+
+/**
+ * How the core is running and what backs it, as one consistent snapshot.
+ *
+ * The derived answers travel with it — `tunCapable`, `serviceUsable`,
+ * `serviceNeedsAttention` — so nothing here is recomputed from the raw fields.
+ */
+export interface RunState {
+  mode: RunningMode
+  service: ServiceHealth
+  serviceUnavailableReason: string | null
+  pendingAction: PendingServiceAction | null
+  sidecarAllowed: boolean
+  isAdmin: boolean
+  opInFlight: boolean
+  serviceUsable: boolean
+  tunCapable: boolean
+  serviceNeedsAttention: boolean
+}
+
+export const getRuntimeState = async () => {
+  return invoke<RunState>('get_runtime_state')
 }
 
 // 获取应用运行时间
@@ -379,19 +411,6 @@ export const uninstallService = async () => {
   return invoke<void>('uninstall_service')
 }
 
-export type ServiceInstallState =
-  | 'checking'
-  | 'notInstalled'
-  | 'installRequired'
-  | 'ready'
-  | 'needsReinstall'
-  | 'sidecarAllowed'
-  | 'unavailable'
-
-export const getServiceInstallState = async () => {
-  return invoke<ServiceInstallState>('get_service_install_state')
-}
-
 export const reinstallService = async () => {
   return invoke<void>('reinstall_service')
 }
@@ -406,15 +425,6 @@ export const continueWithSidecar = async () => {
 
 export const entry_lightweight_mode = async () => {
   return invoke<void>('entry_lightweight_mode')
-}
-
-export const isAdmin = async () => {
-  try {
-    return await invoke<boolean>('app_is_admin')
-  } catch (error) {
-    console.error('检查管理员权限失败:', error)
-    return false
-  }
 }
 
 export async function getNextUpdateTime(uid: string) {

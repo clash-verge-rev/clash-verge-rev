@@ -2,6 +2,8 @@
 
 ### 🐞 修复问题
 
+修复 macOS 多显示器切换时托盘速率样式不同步
+
 <details>
 <summary><strong> ✨ 新增功能 </strong></summary>
 

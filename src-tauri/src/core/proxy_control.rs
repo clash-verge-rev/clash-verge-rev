@@ -1,5 +1,5 @@
 use crate::{
-    config::{Config, IVerge},
+    config::{Config, IVerge, MixedPort},
     core::{CoreManager, manager::RunningMode, service, sysopt::Sysopt},
     process::AsyncHandler,
     utils::server,
@@ -172,10 +172,8 @@ async fn current_service_proxy_config(verge: &IVerge) -> Result<MacosProxyConfig
     if verge.proxy_auto_config.unwrap_or_default() {
         return service_proxy_config(verge, 0, server::embedded_server_port()?);
     }
-    let mixed_port = match verge.verge_mixed_port {
-        Some(port) => port,
-        None => Config::clash().await.latest_arc().get_mixed_port(),
-    };
+    // Configured: this builds the proxy settings handed to the service alongside a start.
+    let mixed_port = MixedPort::desired().await;
     service_proxy_config(verge, mixed_port, 0)
 }
 

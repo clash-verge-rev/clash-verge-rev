@@ -6,7 +6,7 @@ use crate::{
     constants::timing,
     core::{
         handle::Handle,
-        listener::ListenerBindScope,
+        listener::{ListenerBindScope, MIXED_PORT_KEY, proxy_listener_keys},
         owner_identity::current_owner_credentials,
         service::{SERVICE_MANAGER, ServiceStatus},
         validate::CoreConfigValidator,
@@ -15,6 +15,7 @@ use crate::{
     utils::port::find_next_available_port,
 };
 use anyhow::{Context as _, Result, anyhow, bail};
+use clash_verge_draft::DraftTransaction;
 use clash_verge_logging::{Type, logging};
 use once_cell::sync::Lazy;
 use parking_lot::Mutex;
@@ -88,46 +89,29 @@ impl Config {
         let clash = Self::clash().await;
         let verge = Self::verge().await;
         let runtime = Self::runtime().await;
+        // Every failure below leaves the three layers as they were, without saying so.
+        let transaction = DraftTransaction::new(vec![&clash, &verge, &runtime]);
 
         clash.edit_draft(|draft| {
-            draft.0.insert("mixed-port".into(), new_port.into());
+            draft.0.insert(MIXED_PORT_KEY.into(), new_port.into());
         });
         verge.edit_draft(|draft| {
             draft.verge_mixed_port = Some(new_port);
         });
 
-        if let Err(error) = Self::generate().await {
-            clash.discard();
-            verge.discard();
-            runtime.discard();
-            return Err(error).context("failed to materialize runtime configuration with fallback port");
-        }
+        Self::generate()
+            .await
+            .context("failed to materialize runtime configuration with fallback port")?;
 
-        let validation = match CoreConfigValidator::global().validate_config_outcome().await {
-            Ok(outcome) => outcome,
-            Err(error) => {
-                clash.discard();
-                verge.discard();
-                runtime.discard();
-                return Err(error).context("failed to validate runtime configuration with fallback port");
-            }
-        };
+        let validation = CoreConfigValidator::global()
+            .validate_config_outcome()
+            .await
+            .context("failed to validate runtime configuration with fallback port")?;
         if !validation.is_valid() {
-            clash.discard();
-            verge.discard();
-            runtime.discard();
             bail!("runtime configuration with fallback port is invalid: {validation}");
         }
 
-        let snapshots = match capture_config_files().await {
-            Ok(snapshots) => snapshots,
-            Err(error) => {
-                clash.discard();
-                verge.discard();
-                runtime.discard();
-                return Err(error);
-            }
-        };
+        let snapshots = capture_config_files().await?;
         let candidate_clash = clash.latest_arc();
         let candidate_verge = verge.latest_arc();
 
@@ -147,19 +131,18 @@ impl Config {
         }
         .await;
 
+        // Files are not part of the transaction, so a failed write is restored explicitly.
+        // The drafts are rolled back first: restoring reads the committed configuration, and
+        // must not see a candidate that is being abandoned.
         if let Err(error) = persist_result {
-            clash.discard();
-            verge.discard();
-            runtime.discard();
+            transaction.rollback();
             return match restore_files(&snapshots).await {
                 Ok(()) => Err(error),
                 Err(rollback_error) => Err(anyhow!("{error:#}; configuration rollback failed: {rollback_error:#}")),
             };
         }
 
-        clash.apply();
-        verge.apply();
-        runtime.apply();
+        transaction.commit();
         record_fallback(old_port, new_port);
         Handle::refresh_clash();
         Handle::refresh_verge();
@@ -278,7 +261,9 @@ async fn owned_service_core_uses_port(port: u16) -> bool {
 
 fn configured_listener_ports(clash: &IClashTemp, verge: &IVerge) -> HashSet<u16> {
     let mut ports = HashSet::new();
-    for key in ["socks-port", "port", "redir-port", "tproxy-port"] {
+    // Every listener except the Mixed Port itself: that is the one being reassigned, so
+    // colliding with its current value is exactly what we are trying to do.
+    for key in proxy_listener_keys().filter(|key| *key != MIXED_PORT_KEY) {
         if let Some(port) = mapping_port(&clash.0, key) {
             ports.insert(port);
         }
@@ -306,6 +291,27 @@ fn mapping_port(mapping: &serde_yaml_ng::Mapping, key: &str) -> Option<u16> {
         Value::Number(port) => port.as_u64().and_then(|port| u16::try_from(port).ok()),
         _ => None,
     })
+}
+
+#[cfg(test)]
+#[allow(clippy::expect_used, clippy::panic, reason = "tests assert by panicking")]
+mod listener_key_tests {
+    use super::{MIXED_PORT_KEY, proxy_listener_keys};
+
+    #[test]
+    fn the_reserved_set_covers_every_listener_but_the_one_being_moved() {
+        let reserved: Vec<_> = proxy_listener_keys().filter(|key| *key != MIXED_PORT_KEY).collect();
+
+        assert!(
+            !reserved.contains(&MIXED_PORT_KEY),
+            "the port being reassigned must not reserve itself"
+        );
+        assert_eq!(
+            reserved.len(),
+            proxy_listener_keys().count() - 1,
+            "every other listener must be reserved, so a new one cannot be forgotten here"
+        );
+    }
 }
 
 #[cfg(test)]

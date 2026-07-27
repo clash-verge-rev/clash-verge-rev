@@ -1,5 +1,4 @@
 use crate::config::{IProfilePreview, IVerge};
-use crate::core::service;
 use crate::core::tray::menu_def::TrayAction;
 use crate::module::lightweight;
 use crate::process::AsyncHandler;
@@ -15,7 +14,6 @@ use crate::{
 use clash_verge_limiter::{Limiter, SystemClock, SystemLimiter};
 use clash_verge_logging::logging_error;
 use tauri::tray::{MouseButton, MouseButtonState, TrayIcon, TrayIconBuilder, TrayIconEvent};
-use tauri_plugin_clash_verge_sysinfo::is_current_app_handle_admin;
 use tauri_plugin_mihomo::models::Proxies;
 use tokio::fs;
 
@@ -208,7 +206,7 @@ impl Tray {
         let verge = Config::verge().await.latest_arc();
         let system_proxy = verge.enable_system_proxy.as_ref().unwrap_or(&false);
         let tun_mode = verge.enable_tun_mode.as_ref().unwrap_or(&false);
-        let tun_mode_available = is_current_app_handle_admin(app_handle) || service::SERVICE_MANAGER.is_ready_cached();
+        let tun_mode_available = crate::core::runstate::RUN_STATE.state().tun_capable();
         let mode = {
             Config::clash()
                 .await
