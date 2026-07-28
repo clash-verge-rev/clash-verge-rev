@@ -249,7 +249,7 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
   // 用于YAML编辑模式
   const [yamlContent, setYamlContent] = useReducer(
     (_: string, next: string) => next,
-    '',
+    '{}',
   )
 
   // 从配置对象更新表单值
