@@ -46,7 +46,7 @@ pub async fn save_proxy_ports(settings: ProxyPortSettings) -> Result<SaveProxyPo
     let verge = Config::verge().await;
     let runtime = Config::runtime().await;
     // Every rejection and every failure below leaves the three layers as they were.
-    let transaction = DraftTransaction::new(vec![&clash, &verge, &runtime]);
+    let transaction = DraftTransaction::begin(vec![&clash, &verge, &runtime])?;
 
     stage_proxy_ports(&settings).await;
     // The candidate ports are staged but nothing is serving them yet, so close PAC rather

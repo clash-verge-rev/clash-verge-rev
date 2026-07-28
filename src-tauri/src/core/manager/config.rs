@@ -178,7 +178,7 @@ impl CoreManager {
 
     async fn perform_config_update(&self) -> Result<ValidationOutcome> {
         let runtime = Config::runtime().await;
-        let transaction = DraftTransaction::new(vec![&runtime]);
+        let transaction = DraftTransaction::begin(vec![&runtime])?;
 
         if let Err(err) = Config::generate().await {
             let message: String = err.to_string().into();
@@ -201,7 +201,7 @@ impl CoreManager {
         }
 
         let runtime = Config::runtime().await;
-        let transaction = DraftTransaction::new(vec![&runtime]);
+        let transaction = DraftTransaction::begin(vec![&runtime])?;
         runtime.edit_draft(f);
         self.validate_and_apply(transaction).await
     }

@@ -17,6 +17,8 @@ struct DraftInner<T> {
     data: Mutex<DraftData<T>>,
     data_modifying: AtomicBool,
     data_modify_notify: Notify,
+    /// Held by the one [`DraftTransaction`] currently allowed to stage a change.
+    claimed: AtomicBool,
 }
 
 struct DataModifyPermit<'a>(&'a AtomicBool, &'a Notify);
@@ -42,6 +44,7 @@ impl<T: Clone> Draft<T> {
                 data: Mutex::new((Arc::new(Box::new(data)), None)),
                 data_modifying: AtomicBool::new(false),
                 data_modify_notify: Notify::new(),
+                claimed: AtomicBool::new(false),
             }),
         }
     }
@@ -146,15 +149,30 @@ impl<T: Clone> Draft<T> {
     }
 }
 
-/// A draft layer that can be committed or rolled back without knowing what it holds.
+/// A draft layer that can be claimed, committed or rolled back without knowing what it holds.
 ///
 /// Exists so a change spanning several differently-typed layers can be treated as one unit.
 pub trait DraftLayer: Send + Sync {
+    /// Take exclusive staging rights, or report that someone else holds them.
+    fn try_claim(&self) -> bool;
+    fn release(&self);
     fn apply_draft(&self);
     fn discard_draft(&self);
+    /// Names the layer in a [`DraftBusy`] error. Only ever read by humans.
+    fn layer_name(&self) -> &'static str;
 }
 
 impl<T: Clone + Send + Sync> DraftLayer for Draft<T> {
+    #[inline]
+    fn try_claim(&self) -> bool {
+        self.inner.claimed.compare_exchange(false, true, Acquire, Relaxed).is_ok()
+    }
+
+    #[inline]
+    fn release(&self) {
+        self.inner.claimed.store(false, Release);
+    }
+
     #[inline]
     fn apply_draft(&self) {
         self.apply();
@@ -164,7 +182,27 @@ impl<T: Clone + Send + Sync> DraftLayer for Draft<T> {
     fn discard_draft(&self) {
         self.discard();
     }
+
+    #[inline]
+    fn layer_name(&self) -> &'static str {
+        std::any::type_name::<T>()
+    }
 }
+
+/// Another transaction is already staging a change to one of the layers asked for.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DraftBusy {
+    /// The layer that was already claimed.
+    pub layer: &'static str,
+}
+
+impl std::fmt::Display for DraftBusy {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(formatter, "configuration layer {} is being changed elsewhere", self.layer)
+    }
+}
+
+impl std::error::Error for DraftBusy {}
 
 /// Commits a set of draft layers together, or rolls them all back.
 ///
@@ -172,6 +210,14 @@ impl<T: Clone + Send + Sync> DraftLayer for Draft<T> {
 /// change half-applied across layers. Committing is the explicit act, because forgetting to
 /// commit costs a retry while forgetting to roll back leaves the app describing a state it is
 /// not in.
+///
+/// Beginning one takes exclusive staging rights over every layer, and overlapping with another
+/// transaction is refused rather than allowed to interleave. That is not caution, it is the
+/// only honest option: a layer holds exactly one draft, so a second writer's `edit_draft`
+/// overwrites the first writer's staged value *in place*. There is no version of "roll back
+/// only my edit" that could be implemented — rolling back would discard a change the other
+/// writer is about to commit, and it did: the other writer's `apply` then found no draft, did
+/// nothing at all, and still reported success while its side effect had already happened.
 #[must_use = "a transaction that is dropped without committing rolls back"]
 pub struct DraftTransaction<'a> {
     layers: Vec<&'a dyn DraftLayer>,
@@ -179,12 +225,26 @@ pub struct DraftTransaction<'a> {
 }
 
 impl<'a> DraftTransaction<'a> {
-    /// Begin a transaction over `layers`, which are committed in the order given.
-    pub fn new(layers: Vec<&'a dyn DraftLayer>) -> Self {
-        Self {
+    /// Claim `layers` and begin a transaction over them; they are committed in the order given.
+    ///
+    /// Fails if any layer is already claimed, having released the ones taken so far, so a
+    /// refused attempt leaves nothing held.
+    pub fn begin(layers: Vec<&'a dyn DraftLayer>) -> Result<Self, DraftBusy> {
+        for (index, layer) in layers.iter().enumerate() {
+            if layer.try_claim() {
+                continue;
+            }
+            for claimed in &layers[..index] {
+                claimed.release();
+            }
+            return Err(DraftBusy {
+                layer: layer.layer_name(),
+            });
+        }
+        Ok(Self {
             layers,
             committed: false,
-        }
+        })
     }
 
     /// Commit every layer. Consumes the transaction so it cannot be committed twice.
@@ -207,11 +267,11 @@ impl<'a> DraftTransaction<'a> {
 
 impl Drop for DraftTransaction<'_> {
     fn drop(&mut self) {
-        if self.committed {
-            return;
-        }
         for layer in &self.layers {
-            layer.discard_draft();
+            if !self.committed {
+                layer.discard_draft();
+            }
+            layer.release();
         }
     }
 }

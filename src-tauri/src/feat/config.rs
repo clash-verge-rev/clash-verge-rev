@@ -274,7 +274,12 @@ pub async fn patch_verge(patch: &IVerge, not_save_file: bool) -> Result<()> {
     // an `if let Err(..) { discard() }` the compiler could never reach — leaving the failed
     // edit sitting in the draft, where every later reader saw a value that was never applied
     // and never written to disk.
-    let transaction = DraftTransaction::new(vec![&verge]);
+    //
+    // Claiming the layer is what makes the rollback safe. This function holds its draft across
+    // `process_terminated_flags`, which restarts the Core and can take seconds; a second patch
+    // arriving in that window used to share the one draft slot, and whichever of the two failed
+    // first discarded the other's staged edit too.
+    let transaction = DraftTransaction::begin(vec![&verge])?;
     verge.edit_draft(|d| d.patch_config(patch));
 
     let update_flags = determine_update_flags(patch);
