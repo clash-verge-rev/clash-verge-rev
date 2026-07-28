@@ -404,6 +404,22 @@ mod tests {
         );
     }
 
+    /// Wrap a rejection as the answer the Service would have sent.
+    ///
+    /// The `match` is the point, not the wrapping: it is exhaustive, so a new way for the Service
+    /// to decline cannot be added upstream without this failing to compile — which is what sends
+    /// whoever adds it to the test below to say what it should lead to. `CoreRestarted` reached
+    /// production without one, and inherited its verdict silently.
+    fn declined(reason: StageRejection) -> StageAttempt {
+        match &reason {
+            StageRejection::CoreNotRunning
+            | StageRejection::CorePathChanged
+            | StageRejection::RuntimeUnwritable { .. }
+            | StageRejection::CoreRestarted => {}
+        }
+        StageAttempt::Answered(StageRuntimeOutcome::RestartRequired { reason })
+    }
+
     #[test]
     fn a_service_that_declined_makes_the_core_be_replaced() {
         for reason in [
@@ -412,11 +428,13 @@ mod tests {
             StageRejection::RuntimeUnwritable {
                 detail: "held open".to_owned(),
             },
+            // The service's own watchdog can restart the core mid-staging, which leaves the
+            // generation holding a mixture no manifest describes. Rebuilding it from nothing is
+            // the only answer that does not guess at what is in there.
+            StageRejection::CoreRestarted,
         ] {
-            let attempt = StageAttempt::Answered(StageRuntimeOutcome::RestartRequired { reason: reason.clone() });
-
             assert_eq!(
-                plan_config_application(&attempt),
+                plan_config_application(&declined(reason.clone())),
                 ConfigApplication::ReplaceCore,
                 "declining is an outcome, not an error: {reason:?} must fall back, not fail"
             );
