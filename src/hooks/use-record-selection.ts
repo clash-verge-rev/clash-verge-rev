@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 
-import { useProfiles } from '@/hooks/use-profiles'
+import { recordSelectedNode } from '@/services/cmds'
 
 /**
  * Record which node a group is on, in the profile.
@@ -13,26 +13,16 @@ import { useProfiles } from '@/hooks/use-profiles'
  *
  * Which makes this the rule: a selection the profile does not know about is one the next start
  * will undo. Every path that moves a group has to come through here.
+ *
+ * Only the group and the node are sent. Sending the whole selection list — which is what this
+ * did while it built the array from `useProfiles().current` — made two selections made before
+ * that list refreshed into one overwriting the other, because both were derived from the same
+ * stale snapshot. The merge happens on the backend, against whatever the profile holds by then.
  */
 export const useRecordSelection = () => {
-  const { current, patchCurrent } = useProfiles()
-
-  return useCallback(
-    (groupName: string, proxyName: string) => {
-      if (!current) return
-
-      const selected = current.selected ? [...current.selected] : []
-      const index = selected.findIndex((item) => item.name === groupName)
-      if (index < 0) {
-        selected.push({ name: groupName, now: proxyName })
-      } else {
-        selected[index] = { name: groupName, now: proxyName }
-      }
-
-      patchCurrent({ selected }).catch((error) => {
-        console.error('[Selection] 保存代理选择失败:', error)
-      })
-    },
-    [current, patchCurrent],
-  )
+  return useCallback((groupName: string, proxyName: string) => {
+    recordSelectedNode(groupName, proxyName).catch((error) => {
+      console.error('[Selection] 保存代理选择失败:', error)
+    })
+  }, [])
 }

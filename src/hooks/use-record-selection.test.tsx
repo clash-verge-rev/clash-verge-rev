@@ -4,16 +4,9 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { useRecordSelection } from './use-record-selection'
 
-const patchCurrent = vi.hoisted(() => vi.fn(() => Promise.resolve()))
-const profileItem = vi.hoisted(() => ({
-  value: undefined as
-    | { selected?: Array<{ name: string; now: string }> }
-    | undefined,
-}))
+const recordSelectedNode = vi.hoisted(() => vi.fn(() => Promise.resolve()))
 
-vi.mock('@/hooks/use-profiles', () => ({
-  useProfiles: () => ({ current: profileItem.value, patchCurrent }),
-}))
+vi.mock('@/services/cmds', () => ({ recordSelectedNode }))
 
 const record = (groupName: string, proxyName: string) => {
   const { result } = renderHook(() => useRecordSelection())
@@ -21,65 +14,46 @@ const record = (groupName: string, proxyName: string) => {
 }
 
 beforeEach(() => {
-  patchCurrent.mockClear()
-  profileItem.value = { selected: [] }
+  recordSelectedNode.mockClear()
 })
 
 describe('useRecordSelection', () => {
-  it('records a group that had no selection yet', () => {
+  it('sends only the group and the node', () => {
     record('Proxy', 'Node A')
 
-    expect(patchCurrent).toHaveBeenCalledWith({
-      selected: [{ name: 'Proxy', now: 'Node A' }],
-    })
+    expect(recordSelectedNode).toHaveBeenCalledWith('Proxy', 'Node A')
   })
 
-  it('replaces a group in place rather than appending a second entry', () => {
-    // Two entries for one group would let the stale one win on the next start, depending on
-    // which the reconciler reached first.
-    profileItem.value = { selected: [{ name: 'Proxy', now: 'Node A' }] }
-
-    record('Proxy', 'Node B')
-
-    expect(patchCurrent).toHaveBeenCalledWith({
-      selected: [{ name: 'Proxy', now: 'Node B' }],
-    })
-  })
-
-  it('leaves other groups alone', () => {
-    profileItem.value = {
-      selected: [
-        { name: 'Proxy', now: 'Node A' },
-        { name: 'Fallback', now: 'Node C' },
-      ],
-    }
-
-    record('Proxy', 'Node B')
-
-    expect(patchCurrent).toHaveBeenCalledWith({
-      selected: [
-        { name: 'Proxy', now: 'Node B' },
-        { name: 'Fallback', now: 'Node C' },
-      ],
-    })
-  })
-
-  it('does not mutate the profile it was handed', () => {
-    // `current` comes from the profiles cache; editing it in place would make the next render
-    // compare a value against itself and skip the write.
-    const selected = [{ name: 'Proxy', now: 'Node A' }]
-    profileItem.value = { selected }
-
-    record('Proxy', 'Node B')
-
-    expect(selected).toEqual([{ name: 'Proxy', now: 'Node A' }])
-  })
-
-  it('records nothing when no profile is active', () => {
-    profileItem.value = undefined
-
+  it('does not derive anything from a rendered selection list', () => {
+    // The regression this pins. It used to build the whole list from the profile it had
+    // rendered, so two selections made before that list refreshed were both derived from the
+    // same stale snapshot and the later one dropped the earlier group. Since a core start
+    // re-applies whatever the profile holds, the dropped choice came back on the next restart.
+    // Each call now carries one group, and the backend merges against the current profile.
     record('Proxy', 'Node A')
+    record('Fallback', 'Node C')
 
-    expect(patchCurrent).not.toHaveBeenCalled()
+    expect(recordSelectedNode).toHaveBeenNthCalledWith(1, 'Proxy', 'Node A')
+    expect(recordSelectedNode).toHaveBeenNthCalledWith(2, 'Fallback', 'Node C')
+  })
+
+  it('is stable across renders, so callers may hold it in a dependency array', () => {
+    const { result, rerender } = renderHook(() => useRecordSelection())
+    const first = result.current
+
+    rerender()
+
+    expect(result.current).toBe(first)
+  })
+
+  it('reports a failed write without throwing at the caller', async () => {
+    // Recording runs after the core has already been switched; failing the switch over it would
+    // be wrong, so the caller is never made to handle it.
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+    recordSelectedNode.mockRejectedValueOnce(new Error('no profile'))
+
+    expect(() => record('Proxy', 'Node A')).not.toThrow()
+
+    await vi.waitFor(() => expect(consoleError).toHaveBeenCalled())
   })
 })
