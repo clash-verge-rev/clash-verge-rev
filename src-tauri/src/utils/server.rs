@@ -179,7 +179,10 @@ fn start_embedded_server(listener: tokio::net::TcpListener, token: String) {
     let (shutdown_tx, shutdown_rx) = oneshot::channel();
     let _ = SHUTDOWN_SENDER.set(Mutex::new(Some(shutdown_tx)));
 
+    #[cfg(feature = "verge-dev")]
     let auth = instance_auth(token.clone());
+    #[cfg(not(feature = "verge-dev"))]
+    let auth = instance_auth(token);
 
     let visible = warp::path!("commands" / "visible").and_then(|| async {
         if !COMMANDS_READY.load(Ordering::Acquire) {

@@ -33,7 +33,7 @@ import {
   Typography,
   useTheme,
 } from '@mui/material'
-import yaml from 'js-yaml'
+import * as yaml from 'js-yaml'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {

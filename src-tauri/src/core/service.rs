@@ -423,6 +423,7 @@ where
 }
 
 #[cfg(target_os = "macos")]
+#[cfg_attr(not(feature = "verge-dev"), allow(clippy::unnecessary_wraps))]
 fn macos_service_tool_path(source: &Path) -> Result<PathBuf> {
     #[cfg(feature = "verge-dev")]
     {
