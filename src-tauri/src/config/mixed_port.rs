@@ -28,6 +28,13 @@ impl MixedPort {
     ///
     /// Reads the draft layer, so an edit in progress is visible to the code applying it. Safe
     /// to call before the Core is running, unlike [`Self::effective`].
+    ///
+    /// Reading the draft means a caller that hands this to something *outside* the app — the
+    /// PAC endpoint is the one that does — can name a port the Core has not moved to yet.
+    /// What makes that safe is that the only path staging a listener port,
+    /// `feat::listener::save_proxy_ports`, closes PAC across the staging with `core_starting`
+    /// and reopens it with `core_start_settled`. A second path that stages a listener port
+    /// while the Core is serving would have to do the same.
     pub async fn desired() -> u16 {
         let selected = Config::verge().await.latest_arc().verge_mixed_port;
         // `get_mixed_port` already falls back to the default when the Merge Config is silent.

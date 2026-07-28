@@ -170,8 +170,16 @@ impl CoreManager {
     }
 
     /// A start attempt is under way and the Core is not serving yet.
+    ///
+    /// Must be paired with [`Self::core_start_settled`] on every path out, including the ones
+    /// where the start never happened.
     pub fn core_starting(&self) {
         self.run_state.core_starting();
+    }
+
+    /// The start attempt is over: PAC goes back to following the Running Mode.
+    pub fn core_start_settled(&self) {
+        self.run_state.core_start_settled();
     }
 
     pub fn set_running_child_sidecar(&self, child: CommandChild) {
