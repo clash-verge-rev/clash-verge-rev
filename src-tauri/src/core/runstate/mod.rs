@@ -350,8 +350,25 @@ impl<E: RunStateEnv> RunStateStore<E> {
     ///
     /// Closes the PAC endpoint without disturbing the Running Mode, so a handover cannot
     /// hand out a PAC script for a proxy port that is between owners.
+    ///
+    /// Every caller must pair this with [`Self::core_start_settled`]. A start attempt that
+    /// never happens — a candidate rejected before anything was stopped — otherwise leaves PAC
+    /// closed for a Core that is still serving, and nothing else would ever reopen it: PAC is
+    /// re-derived only when the Running Mode changes, and that is exactly what did not happen.
     pub fn core_starting(&self) {
         self.env.set_pac_available(false);
+    }
+
+    /// The start attempt is over, however it ended: PAC goes back to following the Running Mode.
+    ///
+    /// Idempotent and safe on every path, because it re-derives rather than restores. After a
+    /// start that succeeded the mode is already running and this confirms PAC open; after one
+    /// that was abandoned the mode never moved and this reopens PAC for the Core that kept
+    /// serving; after one that failed and stopped the Core the mode says NotRunning and PAC
+    /// stays shut.
+    pub fn core_start_settled(&self) {
+        let running = !matches!(**self.mode.load(), RunningMode::NotRunning);
+        self.env.set_pac_available(running);
     }
 
     /// Move to `mode` and re-derive everything that follows from it.
@@ -829,6 +846,48 @@ mod tests {
             vec![RunningMode::Sidecar],
             "a start attempt is not a mode change"
         );
+    }
+
+    #[test]
+    fn an_abandoned_start_attempt_reopens_pac_for_the_core_that_kept_running() {
+        // The regression this pins: a proxy-port candidate rejected before anything was
+        // stopped. `core_starting` closed PAC, the Running Mode never moved, and so nothing
+        // would ever re-derive PAC — the Core kept serving while its PAC endpoint stayed shut.
+        for mode in [RunningMode::Service, RunningMode::Sidecar] {
+            let store = with_env(FakeEnv::new());
+            store.core_started(mode);
+            store.core_starting();
+            assert_eq!(store.env.pac_available(), Some(false));
+
+            store.core_start_settled();
+
+            assert_eq!(store.env.pac_available(), Some(true), "{mode} kept serving");
+            assert_eq!(store.state().mode, mode, "an abandoned start is not a mode change");
+        }
+    }
+
+    #[test]
+    fn a_settled_start_leaves_pac_shut_when_no_core_is_running() {
+        let store = with_env(FakeEnv::new());
+        store.core_starting();
+
+        store.core_start_settled();
+
+        assert_eq!(store.env.pac_available(), Some(false));
+    }
+
+    #[test]
+    fn settling_a_start_is_idempotent_and_never_contradicts_the_mode() {
+        // Callers pair this with `core_starting` via a guard that runs on every path, so it
+        // also runs after a start that already opened PAC itself.
+        let store = with_env(FakeEnv::new());
+        store.core_starting();
+        store.core_started(RunningMode::Service);
+
+        store.core_start_settled();
+        store.core_start_settled();
+
+        assert_eq!(store.env.pac_available(), Some(true));
     }
 
     #[test]
