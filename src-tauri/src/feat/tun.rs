@@ -71,7 +71,8 @@ pub async fn reconcile_tun_availability() {
         ..IVerge::default()
     };
 
-    match super::patch_verge(&patch, false).await {
+    // The patch-and-reconcile form would call straight back into here; this is the plain apply.
+    match super::apply_verge_patch(&patch, false).await {
         Ok(()) => Handle::notice_message("tun_mode::auto_disabled", ""),
         // Losing the race for the config layer is not a failure the user can act on: this runs
         // on every Run State transition and again whenever the setting itself is patched, so

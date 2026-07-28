@@ -268,7 +268,29 @@ async fn process_terminated_flags(update_flags: UpdateFlags, patch: &IVerge) -> 
     Ok(())
 }
 
+/// Apply a patch to the app's configuration, then re-check anything it can invalidate.
+///
+/// Today that is TUN, which is a question about the *setting* rather than about the Run State:
+/// no Run State transition follows a TUN patch, so the reconciliation that reacts to those
+/// would never see it. Switching TUN on from the global hotkey is the case that reaches here —
+/// unlike the tray item and the settings switch it is not gated on availability, and the flags
+/// the patch raises are answered by a Core reload that changes no Run State at all. Left alone
+/// the setting stays on and every surface reports TUN as enabled while nothing carries its
+/// traffic.
+///
+/// The reconciliation writes configuration of its own, so it goes through
+/// [`apply_verge_patch`] rather than back through here. That makes the absence of a cycle a
+/// property of the call graph rather than of a runtime early-return.
 pub async fn patch_verge(patch: &IVerge, not_save_file: bool) -> Result<()> {
+    apply_verge_patch(patch, not_save_file).await?;
+    if patch.enable_tun_mode.is_some() {
+        super::reconcile_tun_availability().await;
+    }
+    Ok(())
+}
+
+/// Apply a patch and nothing else. For callers that are themselves a reconciliation.
+pub(super) async fn apply_verge_patch(patch: &IVerge, not_save_file: bool) -> Result<()> {
     let verge = Config::verge().await;
     // Applying the flags can fail, and until now that `?` returned straight out of here past
     // an `if let Err(..) { discard() }` the compiler could never reach — leaving the failed

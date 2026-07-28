@@ -59,7 +59,12 @@ pub async fn toggle_tun_mode(not_save_file: Option<bool>) -> bool {
     {
         Ok(_) => {
             handle::Handle::refresh_verge();
-            enable
+            // Read back rather than returning what was asked for: patching TUN reconciles it
+            // afterwards, and where TUN cannot work that reconciliation turns it straight off
+            // again. This path is not gated on availability — it is the global hotkey — so
+            // reporting the request would tell the caller TUN is on moments before the notice
+            // saying it was disabled.
+            Config::verge().await.latest_arc().enable_tun_mode.unwrap_or(false)
         }
         Err(err) => {
             logging!(error, Type::ProxyMode, "{err}");

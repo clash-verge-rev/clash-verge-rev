@@ -165,7 +165,10 @@ pub trait DraftLayer: Send + Sync {
 impl<T: Clone + Send + Sync> DraftLayer for Draft<T> {
     #[inline]
     fn try_claim(&self) -> bool {
-        self.inner.claimed.compare_exchange(false, true, Acquire, Relaxed).is_ok()
+        self.inner
+            .claimed
+            .compare_exchange(false, true, Acquire, Relaxed)
+            .is_ok()
     }
 
     #[inline]
@@ -198,7 +201,11 @@ pub struct DraftBusy {
 
 impl std::fmt::Display for DraftBusy {
     fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(formatter, "configuration layer {} is being changed elsewhere", self.layer)
+        write!(
+            formatter,
+            "configuration layer {} is being changed elsewhere",
+            self.layer
+        )
     }
 }
 
