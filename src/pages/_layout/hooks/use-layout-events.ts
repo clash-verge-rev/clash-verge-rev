@@ -13,28 +13,39 @@ export const useLayoutEvents = (
       void revalidateQueries(keys.map((key) => [key]))
     }
 
-    return subscribeVergeEvents({
-      'verge://refresh-clash-config': () => {
-        revalidateKeys([
-          'getProxyView',
-          'getVersion',
-          'getClashConfig',
-          'getClashInfo',
-          'getClashMode',
-          'getRuntimeConfig',
-          'getRules',
-          'getRuleProviders',
-        ])
+    return subscribeVergeEvents(
+      {
+        'verge://refresh-clash-config': () => {
+          revalidateKeys([
+            'getProxyView',
+            'getVersion',
+            'getClashConfig',
+            'getClashInfo',
+            'getClashMode',
+            'getRuntimeConfig',
+            'getRules',
+            'getRuleProviders',
+          ])
+        },
+        'verge://refresh-verge-config': () => {
+          revalidateKeys([
+            'getVergeConfig',
+            'getSystemProxy',
+            'getAutotemProxy',
+          ])
+        },
+        // The Run State is pushed, not polled: every transition carries the new snapshot, so it
+        // is written straight into the cache instead of triggering a fetch.
+        'verge://run-state-changed': (payload) => {
+          void setCacheDataAsync<RunState>(runStateQueryKey, payload)
+        },
+        'verge://notice-message': handleNotice,
       },
-      'verge://refresh-verge-config': () => {
-        revalidateKeys(['getVergeConfig', 'getSystemProxy', 'getAutotemProxy'])
-      },
-      // The Run State is pushed, not polled: every transition carries the new snapshot, so it
-      // is written straight into the cache instead of triggering a fetch.
-      'verge://run-state-changed': (payload) => {
-        void setCacheDataAsync<RunState>(runStateQueryKey, payload)
-      },
-      'verge://notice-message': handleNotice,
-    })
+      // The Run State is the one thing here that arrives *only* by event, so it is the one
+      // thing a missed event leaves stale — until the next transition, which during startup can
+      // be a long time. Re-read once the listener is live, so the gap between the first read
+      // and the subscription cannot outlive the subscription.
+      () => revalidateKeys(['getRuntimeState']),
+    )
   }, [handleNotice])
 }
