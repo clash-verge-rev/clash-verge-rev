@@ -37,7 +37,6 @@ interface ProxyChangeRequest {
   groupName: string
   proxyName: string
   previousProxy?: string
-  skipConfigSave: boolean
 }
 
 // 代理选择 Hook
@@ -65,24 +64,16 @@ export const useProxySelection = (options: ProxySelectionOptions = {}) => {
     })
   }, [])
 
-  const persistSelection = useCallback(
-    (groupName: string, proxyName: string, skipConfigSave: boolean) => {
-      if (skipConfigSave) return
-      recordSelection(groupName, proxyName)
-    },
-    [recordSelection],
-  )
-
   const executeChange = useCallback(
     async (request: ProxyChangeRequest) => {
-      const { groupName, proxyName, previousProxy, skipConfigSave } = request
+      const { groupName, proxyName, previousProxy } = request
       debugLog(`[ProxySelection] 代理切换: ${groupName} -> ${proxyName}`)
 
       try {
         await selectNodeForGroup(groupName, proxyName)
         onSuccess?.()
         syncTraySelection()
-        persistSelection(groupName, proxyName, skipConfigSave)
+        recordSelection(groupName, proxyName)
         debugLog(
           `[ProxySelection] 代理和状态同步完成: ${groupName} -> ${proxyName}`,
         )
@@ -102,7 +93,7 @@ export const useProxySelection = (options: ProxySelectionOptions = {}) => {
         onError?.(error)
       }
     },
-    [config, onError, onSuccess, persistSelection, syncTraySelection],
+    [config, onError, onSuccess, recordSelection, syncTraySelection],
   )
 
   const flushChangeQueue = useCallback(async () => {
@@ -124,17 +115,11 @@ export const useProxySelection = (options: ProxySelectionOptions = {}) => {
   }, [executeChange])
 
   const changeProxy = useCallback(
-    (
-      groupName: string,
-      proxyName: string,
-      previousProxy?: string,
-      skipConfigSave: boolean = false,
-    ) => {
+    (groupName: string, proxyName: string, previousProxy?: string) => {
       pendingRequestRef.current = {
         groupName,
         proxyName,
         previousProxy,
-        skipConfigSave,
       }
       void flushChangeQueue()
     },
@@ -142,14 +127,10 @@ export const useProxySelection = (options: ProxySelectionOptions = {}) => {
   )
 
   const handleSelectChange = useCallback(
-    (
-      groupName: string,
-      previousProxy?: string,
-      skipConfigSave: boolean = false,
-    ) =>
+    (groupName: string, previousProxy?: string) =>
       (event: { target: { value: string } }) => {
         const newProxy = event.target.value
-        changeProxy(groupName, newProxy, previousProxy, skipConfigSave)
+        changeProxy(groupName, newProxy, previousProxy)
       },
     [changeProxy],
   )

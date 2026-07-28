@@ -858,6 +858,17 @@ async fn update_tray_after_activation(generation: u64) {
     }
 }
 
+/// Abandon any restoration still in flight.
+///
+/// A restoration reads the profile's selections once and then polls the core until its groups can
+/// be read, which can take seconds. A selection made inside that window is newer than what the
+/// restoration is carrying, so letting it finish would apply the older choice over the user's —
+/// the UI accepts the new node and traffic snaps back to the old one. Bumping the generation is
+/// how every other superseding caller says the same thing.
+pub fn cancel_selected_node_activation() {
+    ACTIVATE_SELECTED_GENERATION.fetch_add(1, Ordering::AcqRel);
+}
+
 /// Record which node a group is on, in the current profile.
 ///
 /// The counterpart of the frontend's `useRecordSelection`, for the selections the backend makes
@@ -867,6 +878,7 @@ async fn update_tray_after_activation(generation: u64) {
 pub async fn record_selected_node(group_name: &str, node: &str) -> Result<()> {
     let group_name = String::from(group_name);
     let node = String::from(node);
+    cancel_selected_node_activation();
     let recorded = Config::profiles()
         .await
         .with_data_modify(move |mut profiles| async move {
