@@ -361,9 +361,17 @@ pub async fn patch_profile(index: String, profile: PrfItem) -> CmdResult {
         false
     };
 
+    // A selection written from the UI or the chain proxy is newer than anything a restore still
+    // in flight captured; without this it would be pushed back to the older node moments later.
+    let records_a_selection = profile.selected.is_some();
+
     profiles_patch_item_safe(&index, &profile)
         .await
         .with_error_code("PROFILE_UPDATE_FAILED")?;
+
+    if records_a_selection {
+        profiles::supersede_selected_activation();
+    }
 
     // 如果更新间隔或允许自动更新变更，异步刷新定时器
     if should_refresh_timer {

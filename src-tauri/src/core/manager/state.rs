@@ -33,7 +33,7 @@ impl CoreManager {
     /// start must not be held up by it. Repeat calls supersede each other, so every start path
     /// may call this without coordinating.
     fn restore_selected_nodes(&self) {
-        if let Err(error) = crate::config::profiles::activate_selected_nodes() {
+        if let Err(error) = crate::config::profiles::restore_selected_nodes() {
             logging!(
                 warn,
                 Type::Core,

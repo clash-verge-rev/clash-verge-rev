@@ -751,6 +751,17 @@ fn reconcile_selected_nodes(
     plan
 }
 
+/// Abandon any activation still in flight.
+///
+/// An activation reads the profile, then polls the core until its groups are readable, then puts
+/// its selections. A choice the user makes inside that window is newer than what the activation
+/// captured, so letting it finish would push the core back to the older node — and the profile,
+/// already holding the newer one, would then disagree with the core. Bumping the generation is
+/// how an activation is told it has been overtaken.
+pub fn supersede_selected_activation() {
+    ACTIVATE_SELECTED_GENERATION.fetch_add(1, Ordering::AcqRel);
+}
+
 fn is_activation_current(generation: u64) -> bool {
     ACTIVATE_SELECTED_GENERATION.load(Ordering::Acquire) == generation
 }
@@ -893,6 +904,8 @@ pub async fn record_selected_node(group_name: &str, node: &str) -> Result<()> {
         .await?;
 
     if recorded {
+        // Newer than anything an activation still in flight captured.
+        supersede_selected_activation();
         handle::Handle::refresh_profiles();
     }
     Ok(())
@@ -942,6 +955,7 @@ async fn activate_selected_nodes_worker(
     profile_uid: String,
     selected: Vec<PrfSelected>,
     generation: u64,
+    repair: SelectionRepair,
 ) -> Result<()> {
     let first_snapshot = fetch_proxies_with_timeout().await?;
     if !is_activation_current(generation) {
@@ -999,7 +1013,7 @@ async fn activate_selected_nodes_worker(
         return Ok(());
     }
 
-    if plan.repaired_count > 0 && is_activation_current(generation) {
+    if repair == SelectionRepair::Prune && plan.repaired_count > 0 && is_activation_current(generation) {
         logging!(
             info,
             Type::Config,
@@ -1012,7 +1026,32 @@ async fn activate_selected_nodes_worker(
     Ok(())
 }
 
+/// Whether an activation may also prune the records it cannot match.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum SelectionRepair {
+    /// Drop records whose group or node the core does not have. Only safe once the configuration
+    /// they belong to is known to be fully loaded, which is true right after a profile switch.
+    Prune,
+    /// Apply what can be applied and leave the records alone.
+    ///
+    /// What a core start needs. A provider-backed group can be empty or absent for seconds after
+    /// the core comes up, and a record pruned on that evidence is gone from `profiles.yaml` for
+    /// good — the provider finishing later cannot bring it back.
+    KeepRecords,
+}
+
 pub fn activate_selected_nodes() -> Result<()> {
+    activate_selected_nodes_with(SelectionRepair::Prune);
+    Ok(())
+}
+
+/// Put the profile's selections back, without pruning what cannot be matched yet.
+pub fn restore_selected_nodes() -> Result<()> {
+    activate_selected_nodes_with(SelectionRepair::KeepRecords);
+    Ok(())
+}
+
+fn activate_selected_nodes_with(repair: SelectionRepair) {
     logging!(info, Type::Config, "starting activating selected nodes");
     let mut active_task = ACTIVATE_SELECTED_TASK.lock();
     let generation = ACTIVATE_SELECTED_GENERATION.fetch_add(1, Ordering::AcqRel) + 1;
@@ -1042,7 +1081,7 @@ pub fn activate_selected_nodes() -> Result<()> {
                 }
                 return Ok(());
             }
-            activate_selected_nodes_worker(current, selected, generation).await
+            activate_selected_nodes_worker(current, selected, generation, repair).await
         }
         .await;
 
@@ -1058,7 +1097,6 @@ pub fn activate_selected_nodes() -> Result<()> {
     });
     *active_task = Some(handle);
     drop(active_task);
-    Ok(())
 }
 
 #[cfg(test)]
@@ -1091,6 +1129,54 @@ mod tests {
                 })
                 .collect::<HashMap<_, _>>(),
         }
+    }
+
+    #[test]
+    fn a_group_missing_from_both_snapshots_is_dropped_from_the_records() {
+        // This is the pruning a profile switch wants and a core start must not do: the record is
+        // gone from the plan, and `persist_reconciled_selected` writes the plan back. Pinned here
+        // because it is why `SelectionRepair` exists — the predicate is right, the question is
+        // only who is entitled to act on it.
+        let saved = vec![selected("provider-group", "saved")];
+        let empty = proxies(vec![]);
+
+        let plan = reconcile_selected_nodes(&saved, Some(&empty), &empty);
+
+        assert!(
+            plan.selected.is_empty(),
+            "a group absent from both looks invalid, so the record is dropped"
+        );
+        assert_eq!(plan.repaired_count, 1, "and dropping it counts as a repair");
+    }
+
+    #[test]
+    fn a_group_missing_from_only_the_second_snapshot_is_kept() {
+        // Absent once is not evidence: only a group that was already absent when the first
+        // snapshot was taken is treated as gone.
+        let saved = vec![selected("provider-group", "saved")];
+        let had_it = proxies(vec![("provider-group", &["saved"], Some("saved"))]);
+        let lost_it = proxies(vec![]);
+
+        let plan = reconcile_selected_nodes(&saved, Some(&had_it), &lost_it);
+
+        assert_eq!(plan.selected, saved);
+        assert_eq!(plan.repaired_count, 0);
+    }
+
+    #[test]
+    fn superseding_an_activation_makes_the_one_in_flight_stand_down() {
+        // What a selection made during a start relies on: the restore that is still polling the
+        // core has to notice it has been overtaken, or it will push the older node back.
+        let generation = ACTIVATE_SELECTED_GENERATION.load(Ordering::Acquire) + 1;
+        ACTIVATE_SELECTED_GENERATION.store(generation, Ordering::Release);
+        assert!(is_activation_current(generation));
+
+        supersede_selected_activation();
+
+        assert!(
+            !is_activation_current(generation),
+            "an activation that has been overtaken must stop before it puts anything"
+        );
     }
 
     #[test]
