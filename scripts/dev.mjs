@@ -336,6 +336,7 @@ export async function runDevCommand(mode, dependencies = {}) {
   let child
   try {
     child = spawnChild(invocation.command, invocation.args, {
+      shell: platform === 'win32',
       env: invocation.env,
       detached: invocation.detached,
       stdio:
