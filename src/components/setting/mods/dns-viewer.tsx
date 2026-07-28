@@ -428,7 +428,7 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
   const updateValuesFromYaml = useCallback(() => {
     try {
       const parsedYaml = yaml.load(yamlContent) as any
-      if (parsedYaml['isInitValue']) return
+      if (!parsedYaml || parsedYaml['isInitValue']) return
 
       skipYamlSyncRef.current = true
       updateValuesFromConfig(parsedYaml)
