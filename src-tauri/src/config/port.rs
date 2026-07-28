@@ -245,7 +245,7 @@ async fn owned_service_core_uses_port(port: u16) -> bool {
         return false;
     }
 
-    match Handle::mihomo().await.get_base_config().await {
+    match Handle::mihomo().get_base_config().await {
         Ok(config) => config.mixed_port == port,
         Err(error) => {
             logging!(

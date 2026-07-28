@@ -235,10 +235,14 @@ export const ProviderButton = () => {
                       secondary={
                         <Box sx={{ display: 'flex' }}>
                           <TypeBox component="span">
-                            {provider.vehicleType}
+                            {typeof provider.vehicleType === 'string'
+                              ? provider.vehicleType
+                              : provider.vehicleType.Unknown}
                           </TypeBox>
                           <TypeBox component="span">
-                            {provider.behavior}
+                            {typeof provider.behavior === 'string'
+                              ? provider.behavior
+                              : provider.behavior.Unknown}
                           </TypeBox>
                         </Box>
                       }

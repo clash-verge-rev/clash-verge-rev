@@ -12,6 +12,7 @@ import {
   requestDevQuit,
   waitForPortClosed,
 } from './dev-control.mjs'
+import { windowsElevationInvocation } from './dev-service.mjs'
 import {
   buildTauriInvocation,
   mirrorChildExit,
@@ -20,7 +21,6 @@ import {
   runDevCommand,
   terminateDetachedGroup,
 } from './dev.mjs'
-import { windowsElevationInvocation } from './dev-service.mjs'
 
 const token = 'ab'.repeat(32)
 const posixOnly = {

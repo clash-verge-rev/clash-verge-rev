@@ -43,7 +43,7 @@ impl MixedPort {
     pub async fn effective() -> u16 {
         let desired = Self::desired().await;
         resolve_effective(
-            || async { Ok(Handle::mihomo().await.get_base_config().await?.mixed_port) },
+            || async { Ok(Handle::mihomo().get_base_config().await?.mixed_port) },
             desired,
         )
         .await

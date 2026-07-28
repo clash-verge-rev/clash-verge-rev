@@ -14,7 +14,7 @@ import {
 } from '@mui/material'
 import { invoke } from '@tauri-apps/api/core'
 import { useLockFn } from 'ahooks'
-import yaml from 'js-yaml'
+import * as yaml from 'js-yaml'
 import type { Ref } from 'react'
 import {
   useCallback,
