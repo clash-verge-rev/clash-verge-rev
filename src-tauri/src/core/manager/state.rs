@@ -29,17 +29,15 @@ impl CoreManager {
     /// directory nothing has ever run in. The app holds the same selections in the profile, so it
     /// is the one that can say for certain.
     ///
-    /// Spawns rather than waits: restoring polls the core until its groups are readable, and a
-    /// start must not be held up by it. Repeat calls supersede each other, so every start path
-    /// may call this without coordinating.
-    fn restore_selected_nodes(&self) {
-        if let Err(error) = crate::config::profiles::restore_selected_nodes() {
-            logging!(
-                warn,
-                Type::Core,
-                "failed to restore the selected nodes after the core started: {error:#}"
-            );
-        }
+    /// Awaited, and deliberately here rather than beside the proxy: the caller enables the system
+    /// proxy as soon as the start returns, and pointing it at a core still on the first entry of
+    /// every group is what this exists to prevent. The wait is bounded — what cannot be put back
+    /// yet keeps being retried in the background — so a core that will not answer delays a start
+    /// instead of blocking it.
+    ///
+    /// Repeat calls supersede each other, so every start path may call this without coordinating.
+    async fn restore_selected_nodes(&self) {
+        crate::config::profiles::restore_selected_nodes().await;
     }
 }
 
@@ -185,7 +183,7 @@ impl CoreManager {
         self.set_running_child_sidecar(child);
         let core_readiness_generation = self.mark_core_ready();
         self.core_started(RunningMode::Sidecar);
-        self.restore_selected_nodes();
+        self.restore_selected_nodes().await;
 
         AsyncHandler::spawn(move || async move {
             while let Some(event) = rx.recv().await {
@@ -276,7 +274,7 @@ impl CoreManager {
                     Ok(()) => {
                         self.mark_core_ready();
                         self.core_started(RunningMode::Service);
-                        self.restore_selected_nodes();
+                        self.restore_selected_nodes().await;
                         return Ok(());
                     }
                     Err(e) => {
@@ -301,7 +299,7 @@ impl CoreManager {
             service::run_core_by_service(config_file).await?;
             self.mark_core_ready();
             self.core_started(RunningMode::Service);
-            self.restore_selected_nodes();
+            self.restore_selected_nodes().await;
             Ok(())
         }
     }

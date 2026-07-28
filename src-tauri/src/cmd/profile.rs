@@ -347,12 +347,6 @@ pub async fn patch_profiles_config_by_profile_index(profile_index: String) -> Cm
 /// 修改某个profile item的
 #[tauri::command]
 pub async fn patch_profile(index: String, profile: PrfItem) -> CmdResult {
-    // A patch carrying selections is the frontend recording a choice the user just made. Any
-    // restoration still polling the core is carrying older selections, so it has to be abandoned
-    // rather than allowed to apply them over this one.
-    if profile.selected.is_some() {
-        profiles::cancel_selected_node_activation();
-    }
     // 保存修改前检查是否有更新 update_interval
     let profiles = Config::profiles().await;
     let should_refresh_timer = if let Ok(old_profile) = profiles.latest_arc().get_item(&index)
