@@ -847,6 +847,57 @@ async fn update_tray_after_activation(generation: u64) {
     }
 }
 
+/// Record which node a group is on, in the current profile.
+///
+/// The counterpart of the frontend's `useRecordSelection`, for the selections the backend makes
+/// on the user's behalf — the tray is the one that does. What the profile holds is what
+/// [`activate_selected_nodes`] re-applies when a core starts, so a selection it never learned
+/// about is one the next start silently undoes.
+pub async fn record_selected_node(group_name: &str, node: &str) -> Result<()> {
+    let group_name = String::from(group_name);
+    let node = String::from(node);
+    let recorded = Config::profiles()
+        .await
+        .with_data_modify(move |mut profiles| async move {
+            let Some(current) = profiles.current.clone() else {
+                return Ok((profiles, false));
+            };
+            let Some(item) = profiles
+                .items
+                .as_mut()
+                .and_then(|items| items.iter_mut().find(|item| item.uid.as_ref() == Some(&current)))
+            else {
+                return Ok((profiles, false));
+            };
+
+            let mut selected = item.selected.clone().unwrap_or_default();
+            match selected
+                .iter_mut()
+                .find(|entry| entry.name.as_ref() == Some(&group_name))
+            {
+                Some(entry) => {
+                    if entry.now.as_ref() == Some(&node) {
+                        return Ok((profiles, false));
+                    }
+                    entry.now = Some(node);
+                }
+                None => selected.push(PrfSelected {
+                    name: Some(group_name),
+                    now: Some(node),
+                }),
+            }
+            item.selected = Some(selected);
+            profiles.save_file().await?;
+            Ok((profiles, true))
+        })
+        .await?;
+
+    if recorded {
+        handle::Handle::refresh_profiles();
+    }
+    Ok(())
+}
+
 async fn persist_reconciled_selected(
     profile_uid: &String,
     original_selected: &[PrfSelected],
