@@ -1066,7 +1066,12 @@ fn activate_selected_nodes_with(repair: SelectionRepair) {
         }
 
         let result = async {
-            let profiles = Config::profiles().await.latest_arc();
+            // Committed, not the draft. A profile switch stages its target before validating
+            // it, and a switch that then fails discards that draft — but an activation which had
+            // already read it would go on to apply the rejected profile's selections to the one
+            // still running. The switch that succeeds commits before it activates, so this is the
+            // same value there.
+            let profiles = Config::profiles().await.data_arc();
             let current = profiles.get_current().context("no current profile running")?.clone();
             let selected = profiles
                 .get_item(&current)
