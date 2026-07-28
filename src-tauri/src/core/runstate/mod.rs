@@ -114,19 +114,26 @@ impl<E: RunStateEnv> RunStateStore<E> {
     }
 
     /// The Run State once any in-flight privileged operation has finished.
+    ///
+    /// The snapshot is the decision, not a separate check before it. Reading the slot twice —
+    /// once to decide whether to wait, once to build the snapshot — leaves a window in which an
+    /// operation claims it, and the snapshot then *describes* that operation instead of waiting
+    /// for it. `prepare_startup` reads this: it would see a requested install as a reason not to
+    /// start, where waiting would have told it whether the install worked.
     pub async fn settled(&self) -> RunState {
         loop {
             let notified = self.operation_done.notified();
             tokio::pin!(notified);
-            // Register as a waiter *before* checking the flag. `notify_waiters` wakes only
+            // Register as a waiter *before* reading the state. `notify_waiters` wakes only
             // those already registered and leaves no permit behind, so without this an
-            // operation finishing between the check and the await is a wakeup lost for good
+            // operation finishing between the read and the await is a wakeup lost for good
             // — and this future would then wait for some unrelated later operation, or
             // forever.
             notified.as_mut().enable();
 
-            if !self.operation_running.load(Ordering::Acquire) {
-                return self.state();
+            let state = self.state();
+            if !state.op_in_flight {
+                return state;
             }
             notified.await;
         }
@@ -643,6 +650,33 @@ mod tests {
         let settled = waiter.await.expect("waiter should not panic");
         assert!(settled.service_usable());
         assert!(!settled.op_in_flight);
+    }
+
+    // Multi-threaded on purpose, so operations really do start and finish underneath the reader.
+    // This is a guard, not a reproducer: the window it protects against was narrow enough that
+    // reverting the fix did not fail this test in six runs. What makes the invariant hold is
+    // that `settled` reads the slot once, inside the snapshot it returns; this fails if someone
+    // reintroduces a separate check before it.
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn a_settled_snapshot_never_describes_an_operation_in_flight() {
+        let store = Arc::new(with_env(FakeEnv::new()));
+        store.observe(ServiceHealth::Ready);
+
+        for _ in 0..64 {
+            let claimer = {
+                let store = Arc::clone(&store);
+                tokio::spawn(async move {
+                    let guard = store.begin_operation();
+                    tokio::task::yield_now().await;
+                    drop(guard);
+                })
+            };
+
+            let settled = store.settled().await;
+            assert!(!settled.op_in_flight, "a settled snapshot describes a settled state");
+
+            claimer.await.expect("the claimer should not panic");
+        }
     }
 
     #[tokio::test]
