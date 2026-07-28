@@ -54,7 +54,7 @@ const RuleItem = (props: Props) => {
           color="text.secondary"
           sx={{ mr: 3, minWidth: 120, display: 'inline-block' }}
         >
-          {value.type}
+          {typeof value.type === 'string' ? value.type : value.type.Unknown}
         </Typography>
 
         <Typography

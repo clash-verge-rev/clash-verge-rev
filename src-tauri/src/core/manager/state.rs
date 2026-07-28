@@ -80,8 +80,6 @@ impl CoreManager {
         let sidecar_ipc = dirs::sidecar_ipc_path()?;
         handle::Handle::app_handle()
             .mihomo()
-            .write()
-            .await
             .update_socket_path(dirs::path_to_str(&sidecar_ipc)?.to_owned())?;
         let config_file = Config::generate_file(crate::config::ConfigType::Run).await?;
         let app_handle = handle::Handle::app_handle();
@@ -139,7 +137,7 @@ impl CoreManager {
 
         let readiness = poll_sidecar_readiness(SIDECAR_READINESS_ATTEMPTS, SIDECAR_READINESS_INTERVAL, || async {
             tokio::time::timeout(SIDECAR_READINESS_PROBE_TIMEOUT, async {
-                handle::Handle::mihomo().await.get_version().await
+                handle::Handle::mihomo().get_version().await
             })
             .await
             .context("Mihomo readiness probe timed out")??;
@@ -236,8 +234,6 @@ impl CoreManager {
         let config_file = Config::generate_file(crate::config::ConfigType::Run).await?;
         handle::Handle::app_handle()
             .mihomo()
-            .write()
-            .await
             .update_socket_path(dirs::path_to_str(&service_ipc)?.to_owned())?;
 
         self.start_core_by_service_with_config(&config_file).await
