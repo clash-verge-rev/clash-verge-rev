@@ -18,6 +18,31 @@ use tauri_plugin_mihomo::MihomoExt as _;
 use tauri_plugin_shell::ShellExt as _;
 
 const SIDECAR_READINESS_ATTEMPTS: usize = 30;
+
+impl CoreManager {
+    /// A core process is up: put back the node selections the user made.
+    ///
+    /// mihomo restores these itself, from the `cache.db` it keeps in the directory it was started
+    /// against — but only when `profile.store-selected` is on and that file survived, and neither
+    /// is something the app can assume. The setting comes from a merge template a user is free to
+    /// replace, and a service older than the durable runtime generation hands every start a
+    /// directory nothing has ever run in. The app holds the same selections in the profile, so it
+    /// is the one that can say for certain.
+    ///
+    /// Spawns rather than waits: restoring polls the core until its groups are readable, and a
+    /// start must not be held up by it. Repeat calls supersede each other, so every start path
+    /// may call this without coordinating.
+    fn restore_selected_nodes(&self) {
+        if let Err(error) = crate::config::profiles::activate_selected_nodes() {
+            logging!(
+                warn,
+                Type::Core,
+                "failed to restore the selected nodes after the core started: {error:#}"
+            );
+        }
+    }
+}
+
 const SIDECAR_READINESS_INTERVAL: std::time::Duration = std::time::Duration::from_millis(100);
 const SIDECAR_READINESS_PROBE_TIMEOUT: std::time::Duration = std::time::Duration::from_millis(400);
 
@@ -160,6 +185,7 @@ impl CoreManager {
         self.set_running_child_sidecar(child);
         let core_readiness_generation = self.mark_core_ready();
         self.core_started(RunningMode::Sidecar);
+        self.restore_selected_nodes();
 
         AsyncHandler::spawn(move || async move {
             while let Some(event) = rx.recv().await {
@@ -250,6 +276,7 @@ impl CoreManager {
                     Ok(()) => {
                         self.mark_core_ready();
                         self.core_started(RunningMode::Service);
+                        self.restore_selected_nodes();
                         return Ok(());
                     }
                     Err(e) => {
@@ -274,6 +301,7 @@ impl CoreManager {
             service::run_core_by_service(config_file).await?;
             self.mark_core_ready();
             self.core_started(RunningMode::Service);
+            self.restore_selected_nodes();
             Ok(())
         }
     }

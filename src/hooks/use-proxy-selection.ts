@@ -5,7 +5,7 @@ import {
   selectNodeForGroup,
 } from 'tauri-plugin-mihomo-api'
 
-import { useProfiles } from '@/hooks/use-profiles'
+import { useRecordSelection } from '@/hooks/use-record-selection'
 import { useVerge } from '@/hooks/use-verge'
 import { syncTrayProxySelection } from '@/services/cmds'
 import { debugLog } from '@/utils/debug'
@@ -42,7 +42,7 @@ interface ProxyChangeRequest {
 
 // 代理选择 Hook
 export const useProxySelection = (options: ProxySelectionOptions = {}) => {
-  const { current, patchCurrent } = useProfiles()
+  const recordSelection = useRecordSelection()
   const { verge } = useVerge()
   const pendingRequestRef = useRef<ProxyChangeRequest | null>(null)
   const isProcessingRef = useRef(false)
@@ -67,22 +67,10 @@ export const useProxySelection = (options: ProxySelectionOptions = {}) => {
 
   const persistSelection = useCallback(
     (groupName: string, proxyName: string, skipConfigSave: boolean) => {
-      if (!current || skipConfigSave) return
-
-      const selected = current.selected ? [...current.selected] : []
-      const index = selected.findIndex((item) => item.name === groupName)
-
-      if (index < 0) {
-        selected.push({ name: groupName, now: proxyName })
-      } else {
-        selected[index] = { name: groupName, now: proxyName }
-      }
-
-      patchCurrent({ selected }).catch((error) => {
-        console.error('[ProxySelection] 保存代理选择失败:', error)
-      })
+      if (skipConfigSave) return
+      recordSelection(groupName, proxyName)
     },
-    [current, patchCurrent],
+    [recordSelection],
   )
 
   const executeChange = useCallback(
