@@ -247,7 +247,7 @@ async fn resolve_proxy_chain_config(chain: Vec<ProxyChainNodeRef>) -> anyhow::Re
         }
         let profile_config = profile_cache
             .get(profile_uid)
-            .expect("profile cache entry is available");
+            .ok_or_else(|| anyhow!("profile cache entry \"{profile_uid}\" is unavailable"))?;
 
         let proxy = find_proxy_in_config(profile_config, &node.name).with_context(|| {
             format!(
@@ -339,6 +339,7 @@ fn sanitize_proxy_for_chain(mut proxy: serde_yaml_ng::Value) -> serde_yaml_ng::V
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod tests {
     use super::{find_proxy_in_config, sanitize_proxy_for_chain};
     use serde_yaml_ng::Value;
@@ -346,13 +347,13 @@ mod tests {
     #[test]
     fn find_proxy_in_config_returns_named_proxy() {
         let config: serde_yaml_ng::Mapping = serde_yaml_ng::from_str(
-            r#"
+            r"
 proxies:
   - name: A
     type: direct
   - name: B
     type: reject
-"#,
+",
         )
         .unwrap();
 
@@ -363,11 +364,11 @@ proxies:
     #[test]
     fn sanitize_proxy_for_chain_removes_existing_dialer_proxy() {
         let proxy: Value = serde_yaml_ng::from_str(
-            r#"
+            r"
 name: A
 type: ss
 dialer-proxy: OLD
-"#,
+",
         )
         .unwrap();
 

@@ -223,6 +223,7 @@ impl IRuntime {
 }
 
 #[cfg(test)]
+#[allow(clippy::unwrap_used)]
 mod tests {
     use super::IRuntime;
     use serde_yaml_ng::{Mapping, Value};
