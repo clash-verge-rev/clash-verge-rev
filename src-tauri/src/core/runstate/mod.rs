@@ -237,16 +237,19 @@ impl<E: RunStateEnv> RunStateStore<E> {
         self.announce();
     }
 
-    /// Record a requested privileged operation without any eligibility check.
+    /// Record an authorised privileged operation and return whether it displaced the session's
+    /// Sidecar allowance.
     ///
-    /// Used when the request came from an explicit user action that has already been
-    /// authorised; the guarded session transitions below are for automatic decisions.
-    pub fn request_action(&self, action: PendingAction) {
+    /// Reading and clearing the allowance in one transition lets the caller safely restore it if
+    /// the operation fails.
+    pub fn request_action(&self, action: PendingAction) -> bool {
         let mut state = self.service.lock();
+        let displaced = state.service.sidecar_allowed;
         state.service.request(action);
         state.bump();
         drop(state);
         self.announce();
+        displaced
     }
 
     /// Accept Sidecar for the rest of this app session without any eligibility check.
@@ -261,6 +264,22 @@ impl<E: RunStateEnv> RunStateStore<E> {
         state.bump();
         drop(state);
         self.announce();
+    }
+
+    /// Restore a displaced Sidecar allowance unless one already exists or the Service is ready.
+    ///
+    /// The check and update are atomic so a restored allowance cannot shadow a newly ready
+    /// Service. Returns whether the allowance was restored.
+    pub fn restore_sidecar_allowance(&self) -> bool {
+        let mut state = self.service.lock();
+        if state.service.sidecar_allowed || matches!(state.service.health, ServiceHealth::Ready) {
+            return false;
+        }
+        state.service.allow_sidecar();
+        state.bump();
+        drop(state);
+        self.announce();
+        true
     }
 
     /// Accept Sidecar for the rest of this app session.
@@ -313,27 +332,25 @@ impl<E: RunStateEnv> RunStateStore<E> {
 
     /// Carry out a privileged operation and record what it did to the Service.
     ///
-    /// Only an uninstall has an outcome we can record without asking again: it either removed
-    /// the Service or left it in a state we no longer trust. After an install or repair the
-    /// Service has to be asked whether it came back, which is [`Self::await_ready`]'s job.
-    pub fn perform(&self, action: PendingAction) -> Result<()> {
+    /// A successful uninstall records an absent Service. Other successes rely on the caller's
+    /// readiness check. Failures re-probe the Service so the request is retired and health
+    /// reflects the machine's current state.
+    pub async fn perform(&self, action: PendingAction) -> Result<()> {
         let outcome = self.env.run_privileged(action);
-        if !matches!(action, PendingAction::Uninstall) {
-            return outcome;
-        }
-
-        match outcome {
-            Ok(()) => {
-                self.observe(ServiceHealth::NotInstalled);
-                Ok(())
-            }
+        match &outcome {
+            Ok(()) if matches!(action, PendingAction::Uninstall) => self.observe(ServiceHealth::NotInstalled),
+            Ok(()) => {}
             Err(error) => {
-                self.observe(ServiceHealth::Unavailable(format!(
-                    "Service uninstall failed: {error:#}"
-                )));
-                Err(error)
+                let health = self.detect_service_health().await;
+                logging!(
+                    warn,
+                    Type::Service,
+                    "privileged service action {action:?} did not complete ({error:#}); service is {health:?}"
+                );
+                self.observe(health);
             }
         }
+        outcome
     }
 
     // ─────────────────────────── running mode ───────────────────────────
