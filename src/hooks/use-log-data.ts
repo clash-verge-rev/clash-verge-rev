@@ -58,6 +58,7 @@ export const useLogData = () => {
     ILogItem[]
   >({
     storageKey: 'mihomo_logs_date',
+    subscriptionPrefix: 'getClashLog',
     buildSubscriptKey: (date) => (enableLog ? `getClashLog-${date}` : null),
     fallbackData: [],
     connect: () => MihomoWebSocket.connect_logs(logLevel),
@@ -130,7 +131,12 @@ export const useLogData = () => {
             })
           }
         },
-        cleanup: clearFlushTimer,
+        cleanup: () => {
+          clearFlushTimer()
+          if (buffer.length > 0) {
+            flush()
+          }
+        },
       }
     },
   })

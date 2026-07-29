@@ -3,13 +3,22 @@ import { type MutableRefObject, useCallback, useEffect, useRef } from 'react'
 import { type Message, type MihomoWebSocket } from 'tauri-plugin-mihomo-api'
 
 import {
+  cleanupSubscriptionKeys,
   getCacheData,
+  registerSubscriptionKey,
   removeCacheData,
   setCacheData,
   useQuery,
 } from '@/services/query-client'
 
 const RECONNECT_DELAY_MS = 1000
+
+type WsLifecycleState =
+  | 'idle'
+  | 'connecting'
+  | 'connected'
+  | 'closing'
+  | 'closed'
 
 interface SharedSubscriptionOwner {
   handleMessage: (data: string) => void
@@ -22,11 +31,11 @@ interface SharedSubscriptionEntry {
   refs: number
   ws: MihomoWebSocket | null
   reconnectTimer: ReturnType<typeof setTimeout> | null
-  connecting: boolean
+  state: WsLifecycleState
+  listenerUnsubscribe: (() => void) | null
   refHolders: Set<MutableRefObject<MihomoWebSocket | null>>
   owners: Set<SharedSubscriptionOwner>
   activeOwner: SharedSubscriptionOwner | null
-  closed: boolean
   connectWs: () => Promise<void>
   scheduleReconnect: () => Promise<void>
 }
@@ -55,12 +64,24 @@ const pickActiveOwner = (entry: SharedSubscriptionEntry) => {
 }
 
 const closeSharedSocket = async (entry: SharedSubscriptionEntry) => {
-  const ws = entry.ws
-  if (!ws) return
+  if (entry.state === 'closing' || entry.state === 'closed') return
 
+  const ws = entry.ws
   entry.ws = null
+  entry.listenerUnsubscribe?.()
+  entry.listenerUnsubscribe = null
+  entry.state = 'closing'
   syncSharedWsRefs(entry)
-  await ws.close()
+
+  if (ws) {
+    try {
+      await ws.close()
+    } catch {
+      // Ignore close errors; the socket may already be closed.
+    }
+  }
+
+  entry.state = 'closed'
 }
 
 const createSharedSubscriptionEntry = (
@@ -70,11 +91,11 @@ const createSharedSubscriptionEntry = (
     refs: 0,
     ws: null,
     reconnectTimer: null,
-    connecting: false,
+    state: 'idle',
+    listenerUnsubscribe: null,
     refHolders: new Set(),
     owners: new Set(),
     activeOwner: null,
-    closed: false,
     connectWs: async () => {},
     scheduleReconnect: async () => {},
   }
@@ -87,30 +108,33 @@ const createSharedSubscriptionEntry = (
   }
 
   entry.connectWs = async () => {
-    if (entry.closed || entry.connecting || entry.ws) return
+    if (entry.state !== 'idle' || entry.ws) return
 
-    entry.connecting = true
+    entry.state = 'connecting'
+    const getState = () => entry.state
     try {
       const ws = await connect()
-      if (entry.closed) {
+      if (getState() === 'closed' || getState() === 'closing') {
         await ws.close()
         return
       }
 
       entry.ws = ws
+      entry.state = 'connected'
       syncSharedWsRefs(entry)
       clearReconnectTimer()
 
       const owner = pickActiveOwner(entry)
       if (owner?.onConnected) {
         await owner.onConnected(ws)
-        if (entry.closed) {
+        if (getState() === 'closed' || getState() === 'closing') {
           await ws.close()
           return
         }
       }
 
-      ws.addListener((msg: Message) => {
+      entry.listenerUnsubscribe = ws.addListener((msg: Message) => {
+        if (entry.state === 'closed' || entry.state === 'closing') return
         if (msg.type !== 'Text') return
         const activeOwner = pickActiveOwner(entry)
         if (!activeOwner) return
@@ -118,23 +142,27 @@ const createSharedSubscriptionEntry = (
         activeOwner.handleMessage(msg.data)
       })
     } catch (ignoreError) {
-      if (!entry.closed && !entry.ws) {
+      if (getState() === 'connecting') {
         clearReconnectTimer()
         entry.reconnectTimer = setTimeout(entry.connectWs, RECONNECT_DELAY_MS)
       }
     } finally {
-      entry.connecting = false
+      if (getState() === 'connecting') {
+        entry.state = 'idle'
+      }
     }
   }
 
   entry.scheduleReconnect = async () => {
-    if (entry.closed) return
+    const getState = () => entry.state
+    if (getState() === 'closed' || getState() === 'closing') return
 
     clearReconnectTimer()
     await closeSharedSocket(entry)
-    if (!entry.closed) {
-      entry.reconnectTimer = setTimeout(entry.connectWs, RECONNECT_DELAY_MS)
-    }
+    if (getState() === 'closed' || getState() === 'closing') return
+
+    entry.state = 'idle'
+    entry.reconnectTimer = setTimeout(entry.connectWs, RECONNECT_DELAY_MS)
   }
 
   return entry
@@ -165,6 +193,12 @@ interface HandlerResult {
 interface UseMihomoWsSubscriptionOptions<T> {
   storageKey: string
   buildSubscriptKey: (date: number) => string | null
+  /**
+   * Prefix used to identify and clean up old subscription cache keys when the
+   * subscription rotates (e.g. "getClashLog"). If omitted, no explicit prefix
+   * cleanup is performed; the bounded cache will still cap total growth.
+   */
+  subscriptionPrefix?: string
   fallbackData: T
   connect: () => Promise<MihomoWebSocket>
   /**
@@ -185,6 +219,7 @@ export const useMihomoWsSubscription = <T>(
   const {
     storageKey,
     buildSubscriptKey,
+    subscriptionPrefix,
     fallbackData,
     connect,
     throttleMs,
@@ -236,6 +271,11 @@ export const useMihomoWsSubscription = <T>(
     if (!entry) {
       entry = createSharedSubscriptionEntry(connect)
       sharedSubscriptions.set(subscriptionCacheKey, entry)
+    }
+
+    if (subscriptionPrefix) {
+      registerSubscriptionKey(subscriptionPrefix, [subscriptionCacheKey])
+      void cleanupSubscriptionKeys(subscriptionPrefix, [subscriptionCacheKey])
     }
 
     entry.refs += 1
@@ -323,11 +363,12 @@ export const useMihomoWsSubscription = <T>(
     void entry.connectWs()
 
     return () => {
+      entry.owners.delete(owner)
+      owner.cleanup?.()
+
       isMounted = false
       entry.refHolders.delete(wsRef)
       wsRef.current = null
-      entry.owners.delete(owner)
-      owner.cleanup?.()
 
       if (entry.activeOwner === owner) {
         entry.activeOwner = null
@@ -337,15 +378,15 @@ export const useMihomoWsSubscription = <T>(
         }
       }
 
-      entry.refs -= 1
+      entry.refs = Math.max(0, entry.refs - 1)
       if (entry.refs <= 0) {
-        entry.closed = true
-        if (entry.reconnectTimer) {
-          clearTimeout(entry.reconnectTimer)
-          entry.reconnectTimer = null
-        }
         sharedSubscriptions.delete(subscriptionCacheKey)
         void closeSharedSocket(entry)
+        if (subscriptionPrefix) {
+          void cleanupSubscriptionKeys(subscriptionPrefix, [
+            subscriptionCacheKey,
+          ])
+        }
       }
     }
     // eslint-disable-next-line react-compiler/react-compiler

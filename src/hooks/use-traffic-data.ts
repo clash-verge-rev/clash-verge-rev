@@ -33,6 +33,7 @@ export const useTrafficData = (options?: { enabled?: boolean }) => {
   } = useTrafficMonitorEnhanced({ subscribe: false, enabled })
   const { response, refresh } = useMihomoWsSubscription<ITrafficItem>({
     storageKey: 'mihomo_traffic_date',
+    subscriptionPrefix: 'getClashTraffic',
     buildSubscriptKey: (date) => (enabled ? `getClashTraffic-${date}` : null),
     fallbackData: FALLBACK_TRAFFIC,
     connect: () => MihomoWebSocket.connect_traffic(),

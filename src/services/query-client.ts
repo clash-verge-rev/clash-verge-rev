@@ -5,6 +5,11 @@ import useSWR, {
   mutate as swrMutate,
 } from 'swr'
 
+import { BoundedMap } from '@/utils/bounded-cache'
+
+const QUERY_CACHE_MAX_SIZE = 1000
+const SWR_CACHE_MAX_SIZE = 2000
+
 type QueryKey = string | readonly unknown[]
 type QueryDataUpdater<T> =
   | T
@@ -35,7 +40,9 @@ type QueryResult<T> = SWRResponse<T> & {
 
 const serializeQueryKey = (queryKey: QueryKey) => unstable_serialize(queryKey)
 
-const queryCache = new Map<string, unknown>()
+const queryCache = new BoundedMap<string, unknown>(QUERY_CACHE_MAX_SIZE)
+
+const subscriptionKeysByPrefix = new Map<string, Set<string>>()
 
 const setCachedData = <T>(queryKey: QueryKey, data: T | undefined) => {
   const cacheKey = serializeQueryKey(queryKey)
@@ -52,6 +59,16 @@ export const swrConfig: SWRConfiguration = {
   errorRetryInterval: 5000,
   revalidateOnFocus: false,
 }
+
+/**
+ * SWR cache provider with a hard size limit. Without this, rotating
+ * WebSocket subscription keys (e.g. `$sub$getClashLog-<timestamp>`) would
+ * grow the SWR in-memory cache without bound.
+ *
+ * Values are typed as `any` because SWR owns the cache state shape internally.
+ */
+export const swrCacheProvider = () =>
+  new BoundedMap<string, any>(SWR_CACHE_MAX_SIZE)
 
 export const getCacheData = <T>(queryKey: QueryKey): T | undefined => {
   return queryCache.get(serializeQueryKey(queryKey)) as T | undefined
@@ -111,6 +128,46 @@ export const removeCacheData = (queryKey: QueryKey) => {
     populateCache: true,
     revalidate: false,
   })
+}
+
+/**
+ * Register a subscription cache key so that old keys of the same prefix can be
+ * cleaned up when the subscription rotates (e.g. `$sub$getClashLog-<timestamp>`).
+ */
+export const registerSubscriptionKey = (prefix: string, queryKey: QueryKey) => {
+  const serializedKey = serializeQueryKey(queryKey)
+  const keys = subscriptionKeysByPrefix.get(prefix) ?? new Set<string>()
+  keys.add(serializedKey)
+  subscriptionKeysByPrefix.set(prefix, keys)
+  return serializedKey
+}
+
+/**
+ * Remove all subscription cache entries for a given prefix except the current
+ * one. This prevents unbounded growth when subscriptions refresh with new
+ * timestamp keys.
+ */
+export const cleanupSubscriptionKeys = (
+  prefix: string,
+  currentKey?: QueryKey,
+) => {
+  const currentSerialized =
+    currentKey === undefined ? undefined : serializeQueryKey(currentKey)
+  const keys = subscriptionKeysByPrefix.get(prefix)
+  if (!keys) return Promise.resolve()
+
+  const cleanups: Promise<unknown>[] = []
+  for (const serializedKey of keys) {
+    if (serializedKey === currentSerialized) continue
+    cleanups.push(removeCacheData(serializedKey))
+  }
+
+  keys.clear()
+  if (currentSerialized !== undefined) {
+    keys.add(currentSerialized)
+  }
+
+  return Promise.all(cleanups)
 }
 
 export const fetchCacheData = async <T>(

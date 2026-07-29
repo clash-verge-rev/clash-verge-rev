@@ -34,6 +34,7 @@ export const useMemoryData = (options?: { enabled?: boolean }) => {
 
   const { response, refresh } = useMihomoWsSubscription<IMemoryUsageItem>({
     storageKey: 'mihomo_memory_date',
+    subscriptionPrefix: 'getClashMemory',
     buildSubscriptKey: (date) => (enabled ? `getClashMemory-${date}` : null),
     fallbackData: FALLBACK_MEMORY_USAGE,
     connect: () => MihomoWebSocket.connect_memory(),

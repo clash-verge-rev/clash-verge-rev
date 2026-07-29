@@ -36,6 +36,8 @@ let connectionData: ConnectionMonitorData = initConnData
 let connectionSummary: ConnectionSummaryData = initConnSummaryData
 let connectionSocket: MihomoWebSocket | null = null
 let connectionConnecting = false
+let connectionClosing = false
+let connectionListenerUnsubscribe: (() => void) | null = null
 let reconnectTimer: ReturnType<typeof setTimeout> | null = null
 let flushTimer: ReturnType<typeof setTimeout> | null = null
 let pendingMessageData: string | null = null
@@ -260,20 +262,29 @@ const clearReconnectTimer = () => {
 }
 
 const closeConnectionSocket = async () => {
+  if (connectionClosing) return
+
   const socket = connectionSocket
   connectionSocket = null
+  connectionListenerUnsubscribe?.()
+  connectionListenerUnsubscribe = null
   if (!socket) return
 
+  connectionClosing = true
   try {
     await socket.close()
   } catch (err) {
     console.warn('Failed to close connection websocket', err)
+  } finally {
+    connectionClosing = false
   }
 }
 
 const scheduleReconnect = () => {
   if (!hasConnectionSubscribers()) return
   if (reconnectTimer) return
+  if (connectionSocket || connectionConnecting || connectionClosing) return
+
   reconnectTimer = window.setTimeout(() => {
     reconnectTimer = null
     void connectConnectionSocket()
@@ -287,7 +298,7 @@ async function reconnectConnectionSocket() {
 }
 
 async function connectConnectionSocket() {
-  if (connectionSocket || connectionConnecting) return
+  if (connectionSocket || connectionConnecting || connectionClosing) return
   if (!hasConnectionSubscribers()) return
 
   clearReconnectTimer()
@@ -295,12 +306,12 @@ async function connectConnectionSocket() {
 
   try {
     const socket = await MihomoWebSocket.connect_connections()
-    if (!hasConnectionSubscribers()) {
+    if (connectionClosing || !hasConnectionSubscribers()) {
       await socket.close()
       return
     }
     connectionSocket = socket
-    socket.addListener((message) => {
+    connectionListenerUnsubscribe = socket.addListener((message) => {
       if (connectionSocket !== socket) return
       if (message.type !== 'Text') return
       if (message.data.startsWith('Websocket error')) {
@@ -311,7 +322,9 @@ async function connectConnectionSocket() {
       enqueueConnectionMessage(message.data)
     })
   } catch {
-    scheduleReconnect()
+    if (!connectionClosing) {
+      scheduleReconnect()
+    }
   } finally {
     connectionConnecting = false
   }
