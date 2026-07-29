@@ -191,7 +191,6 @@ export async function runDevAnchor(mode, dependencies = {}) {
   let inner
   try {
     inner = spawnChild(invocation.command, invocation.args, {
-      shell: platform === 'win32',
       env: invocation.env,
       detached: false,
       stdio: 'inherit',
