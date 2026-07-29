@@ -2,6 +2,8 @@ use std::sync::atomic::{AtomicBool, Ordering};
 
 use anyhow::Result;
 
+#[cfg(target_os = "macos")]
+use crate::core::tun_recovery::TunRecovery;
 use crate::{
     config::Config,
     core::{
@@ -79,6 +81,8 @@ pub fn resolve_setup_async() {
 
         Handle::refresh_clash();
         refresh_tray_menu().await;
+        #[cfg(target_os = "macos")]
+        logging_error!(Type::Setup, TunRecovery::global().init());
         resolve_done();
     });
 }
