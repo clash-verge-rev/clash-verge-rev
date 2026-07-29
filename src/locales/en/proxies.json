@@ -78,7 +78,17 @@
       "disconnectFailed": "Failed to disconnect from proxy chain",
       "duplicateNode": "Proxy node already exists in chain",
       "entryNode": "Entry",
-      "exitNode": "Exit"
+      "exitNode": "Exit",
+      "runtimeApplied": "Runtime applied",
+      "runtimePending": "Runtime not applied",
+      "runtimeFailed": "Runtime apply failed",
+      "runtimeNotConfigured": "Runtime not configured",
+      "testChain": "Test chain",
+      "testingChain": "Testing...",
+      "chainDelay": "Chain {{delay}}ms",
+      "chainTimeout": "Chain timeout",
+      "testChainHint": "Test a restricted site through the complete proxy chain. The configured default latency URL is tried first, followed by fallback targets.",
+      "testChainTarget": "Chain test target: {{host}}"
     },
     "messages": {
       "directMode": "Direct Mode"

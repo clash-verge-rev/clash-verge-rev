@@ -170,6 +170,8 @@ impl CoreManager {
                 config: Some(clash_config.to_owned()),
                 exists_keys: HashSet::new(),
                 chain_logs: Default::default(),
+                proxy_chain_injected: Default::default(),
+                proxy_chain_group_injected: Default::default(),
             }
         });
 

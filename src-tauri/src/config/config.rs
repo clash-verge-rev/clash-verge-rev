@@ -240,6 +240,8 @@ impl Config {
                 config: Some(config),
                 exists_keys,
                 chain_logs: logs,
+                proxy_chain_injected: Default::default(),
+                proxy_chain_group_injected: Default::default(),
             }
         });
 

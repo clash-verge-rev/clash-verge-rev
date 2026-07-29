@@ -21,6 +21,7 @@ import {
 } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { useProfiles } from '@/hooks/use-profiles'
 import { useProxiesData } from '@/providers/app-data-context'
 import { updateProxyChainConfigInRuntime } from '@/services/cmds'
 import {
@@ -315,6 +316,8 @@ export function ProxyGroupsChain(props: ProxyGroupsChainProps) {
     onScrollToTop,
   } = props
   const { proxyView } = useProxiesData()
+  const { profiles } = useProfiles()
+  const currentProfileUid = profiles?.current
 
   // Chain-specific state
   const [proxyChain, setProxyChain] = useState<ProxyChainItem[]>(() => {
@@ -355,11 +358,13 @@ export function ProxyGroupsChain(props: ProxyGroupsChainProps) {
   useEffect(() => {
     if (currentProxyChain.length > 0) {
       const persistedChain = currentProxyChain.map(
-        ({ id, name, type, delay }) => ({
+        ({ id, name, type, delay, source, profileUid }) => ({
           id,
           name,
           type,
           delay,
+          source,
+          profileUid,
         }),
       )
       localStorage.setItem('proxy-chain-items', JSON.stringify(persistedChain))
@@ -443,6 +448,7 @@ export function ProxyGroupsChain(props: ProxyGroupsChainProps) {
           name: node.name,
           recordId: node.recordId,
           source: node.source,
+          profileUid: currentProfileUid,
           type: node.type,
           delay,
         }
@@ -450,7 +456,7 @@ export function ProxyGroupsChain(props: ProxyGroupsChainProps) {
         return [...current, chainItem]
       })
     },
-    [candidateNodes, proxyView, t],
+    [candidateNodes, currentProfileUid, proxyView, t],
   )
 
   // Render virtual list for chain mode

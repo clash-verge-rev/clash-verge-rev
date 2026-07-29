@@ -78,7 +78,17 @@
       "disconnectFailed": "断开链式代理失败",
       "duplicateNode": "该节点已在链式代理表中",
       "entryNode": "入口",
-      "exitNode": "出口"
+      "exitNode": "出口",
+      "runtimeApplied": "Runtime 已生效",
+      "runtimePending": "Runtime 未生效",
+      "runtimeFailed": "Runtime 应用失败",
+      "runtimeNotConfigured": "Runtime 未配置",
+      "testChain": "测试整链",
+      "testingChain": "测试中...",
+      "chainDelay": "整链 {{delay}}ms",
+      "chainTimeout": "整链超时",
+      "testChainHint": "通过当前完整代理链测试受限站点；优先使用设置中的默认延迟测试 URL，失败后自动尝试备用站点",
+      "testChainTarget": "整链测试目标：{{host}}"
     },
     "messages": {
       "directMode": "直连模式"

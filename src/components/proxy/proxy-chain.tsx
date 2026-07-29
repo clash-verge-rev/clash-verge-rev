@@ -21,6 +21,7 @@ import {
   DragIndicator,
   Link,
   LinkOff,
+  Speed,
   WarningRounded,
 } from '@mui/icons-material'
 import {
@@ -30,6 +31,7 @@ import {
   Chip,
   IconButton,
   Paper,
+  Tooltip,
   Typography,
   useTheme,
 } from '@mui/material'
@@ -38,12 +40,14 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   closeAllConnections,
+  delayProxyByName,
   selectNodeForGroup,
 } from 'tauri-plugin-mihomo-api'
 
 import { TooltipIcon } from '@/components/base'
 import { useRuntimeConfig } from '@/hooks/use-clash'
 import { useRecordSelection } from '@/hooks/use-record-selection'
+import { useVerge } from '@/hooks/use-verge'
 import { useAppRefreshers, useProxiesData } from '@/providers/app-data-context'
 import { updateProxyChainConfigInRuntime } from '@/services/cmds'
 import {
@@ -52,9 +56,27 @@ import {
 } from '@/types/proxy-view'
 import { debugLog } from '@/utils/debug'
 
-import { rebindProxyChainItems, type ProxyChainItem } from './proxy-chain-model'
+import {
+  rebindProxyChainItems,
+  toProxyChainPayload,
+  type ProxyChainItem,
+} from './proxy-chain-model'
 
 type RuntimeConfigWithProxySequence = IConfigData & { proxies?: unknown }
+
+const DEFAULT_CHAIN_TEST_URLS = [
+  'https://www.google.com/generate_204',
+  'https://connectivitycheck.gstatic.com/generate_204',
+  'https://www.youtube.com/generate_204',
+]
+
+const testTargetLabel = (url: string) => {
+  try {
+    return new URL(url).hostname
+  } catch {
+    return url
+  }
+}
 
 interface ParsedChainConfig {
   proxies?: Array<{
@@ -95,6 +117,49 @@ const toChainItems = (
     })) || []
   )
 }
+
+const getProxyName = (proxy: unknown) =>
+  typeof proxy === 'object' && proxy !== null && 'name' in proxy
+    ? (proxy as Record<string, unknown>).name
+    : undefined
+
+const getDialerProxy = (proxy: unknown) =>
+  typeof proxy === 'object' && proxy !== null && 'dialer-proxy' in proxy
+    ? (proxy as Record<string, unknown>)['dialer-proxy']
+    : undefined
+
+const extractRuntimeChainNames = (
+  runtimeConfig: RuntimeConfigWithProxySequence | null | undefined,
+  exitNodeName: string | undefined,
+) => {
+  if (!exitNodeName || !Array.isArray(runtimeConfig?.proxies)) return []
+
+  const proxies = runtimeConfig.proxies
+  const chain: string[] = []
+  let currentName: unknown = exitNodeName
+  const seen = new Set<string>()
+
+  while (typeof currentName === 'string' && !seen.has(currentName)) {
+    const currentProxy = proxies.find(
+      (proxy) => getProxyName(proxy) === currentName,
+    )
+    if (!currentProxy) break
+    chain.push(currentName)
+    seen.add(currentName)
+    const dialerProxy = getDialerProxy(currentProxy)
+    if (typeof dialerProxy !== 'string') break
+    currentName = dialerProxy
+  }
+
+  return chain.reverse()
+}
+
+const sameChain = (left: readonly string[], right: readonly string[]) =>
+  left.length === right.length &&
+  left.every((name, index) => name === right[index])
+
+const isResolvableChainItem = (item: ProxyChainItem) =>
+  item.recordId !== undefined || item.profileUid !== undefined
 
 const SortableItem = ({
   proxy,
@@ -257,10 +322,16 @@ export const ProxyChain = ({
   const { t } = useTranslation()
   const chainWarning = t('proxies.page.chain.warning')
   const { proxyView } = useProxiesData()
+  const { verge } = useVerge()
   const { refreshProxy } = useAppRefreshers()
-  const { data: runtimeConfig } = useRuntimeConfig(true)
+  const { data: runtimeConfig, refetch: refreshRuntimeConfig } =
+    useRuntimeConfig(true)
   const [isConnecting, setIsConnecting] = useState(false)
   const recordSelection = useRecordSelection()
+  const [chainApplyError, setChainApplyError] = useState<string | null>(null)
+  const [chainTestDelay, setChainTestDelay] = useState<number | null>(null)
+  const [chainTestUrl, setChainTestUrl] = useState<string | null>(null)
+  const [isTestingChain, setIsTestingChain] = useState(false)
   const markUnsavedChanges = useCallback(() => {
     onMarkUnsavedChanges?.()
   }, [onMarkUnsavedChanges])
@@ -291,17 +362,32 @@ export const ProxyChain = ({
     [candidates, proxyChain, proxyView],
   )
 
-  const isConnected = useMemo(() => {
+  const expectedChainNames = useMemo(
+    () => currentProxyChain.map(({ name }) => name),
+    [currentProxyChain],
+  )
+
+  const runtimeChainNames = useMemo(() => {
+    const lastNode = currentProxyChain.at(-1)
+    return extractRuntimeChainNames(
+      runtimeConfig as RuntimeConfigWithProxySequence | null | undefined,
+      lastNode?.name,
+    )
+  }, [currentProxyChain, runtimeConfig])
+
+  const isRuntimeChainApplied = useMemo(
+    () =>
+      expectedChainNames.length >= 2 &&
+      sameChain(expectedChainNames, runtimeChainNames),
+    [expectedChainNames, runtimeChainNames],
+  )
+
+  const isSelectedExitNode = useMemo(() => {
     if (!proxyView || currentProxyChain.length === 0) {
       return false
     }
 
     const lastNode = currentProxyChain[currentProxyChain.length - 1]
-    if (localStorage.getItem('proxy-chain-exit-node') === lastNode.name) {
-      return true
-    }
-    if (currentProxyChain.length < 2) return false
-
     if (mode === 'global') {
       return proxyView.global?.now === lastNode.name
     }
@@ -316,6 +402,16 @@ export const ProxyChain = ({
 
     return proxyChainGroup?.now === lastNode.name
   }, [proxyView, currentProxyChain, mode, selectedGroup])
+
+  const isConnected = isSelectedExitNode && isRuntimeChainApplied
+
+  const runtimeStatus = chainApplyError
+    ? t('proxies.page.chain.runtimeFailed')
+    : isRuntimeChainApplied
+      ? t('proxies.page.chain.runtimeApplied')
+      : currentProxyChain.length >= 2
+        ? t('proxies.page.chain.runtimePending')
+        : t('proxies.page.chain.runtimeNotConfigured')
 
   // 监听链的变化，但排除从配置加载的情况
   const chainLengthRef = useRef(currentProxyChain.length)
@@ -399,9 +495,13 @@ export const ProxyChain = ({
         localStorage.removeItem('proxy-chain-items')
 
         await closeAllConnections()
+        await refreshRuntimeConfig()
         await refreshProxy()
 
         onUpdateChain([])
+        setChainApplyError(null)
+        setChainTestDelay(null)
+        setChainTestUrl(null)
       } catch (error) {
         console.error('Failed to disconnect from proxy chain:', error)
         alert(t('proxies.page.chain.disconnectFailed'))
@@ -418,7 +518,7 @@ export const ProxyChain = ({
 
     if (
       currentProxyChain.length < 2 ||
-      currentProxyChain.some(({ recordId }) => !recordId)
+      currentProxyChain.some((item) => !isResolvableChainItem(item))
     ) {
       alert(t('proxies.page.chain.minimumNodes'))
       return
@@ -427,21 +527,25 @@ export const ProxyChain = ({
     setIsConnecting(true)
     try {
       // 第一步：保存链式代理配置
-      const chainProxies = currentProxyChain.map((node) => node.name)
-      debugLog('Saving chain config:', chainProxies)
-      await updateProxyChainConfigInRuntime(chainProxies)
-      debugLog('Chain configuration saved successfully')
-
-      // 第二步：连接到代理链的最后一个节点
-      const lastNode = currentProxyChain[currentProxyChain.length - 1]
-      debugLog(`Connecting to proxy chain, last node: ${lastNode.name}`)
-
-      // 根据模式确定使用的代理组名称
+      setChainApplyError(null)
+      setChainTestDelay(null)
+      setChainTestUrl(null)
       if (mode !== 'global' && !selectedGroup) {
         throw new Error('规则模式下必须选择代理组')
       }
 
       const targetGroup = mode === 'global' ? 'GLOBAL' : selectedGroup
+      const chainProxies = toProxyChainPayload(currentProxyChain)
+      debugLog('Saving chain config:', chainProxies)
+      await updateProxyChainConfigInRuntime(
+        chainProxies,
+        targetGroup || 'GLOBAL',
+      )
+      debugLog('Chain configuration saved successfully')
+
+      // 第二步：连接到代理链的最后一个节点
+      const lastNode = currentProxyChain[currentProxyChain.length - 1]
+      debugLog(`Connecting to proxy chain, last node: ${lastNode.name}`)
 
       await selectNodeForGroup(targetGroup || 'GLOBAL', lastNode.name)
       // The chain moves the group like any other selection, so the profile has to learn about
@@ -451,10 +555,12 @@ export const ProxyChain = ({
       localStorage.setItem('proxy-chain-exit-node', lastNode.name)
 
       // 刷新代理信息以更新连接状态
-      refreshProxy()
+      await refreshRuntimeConfig()
+      await refreshProxy()
       debugLog('Successfully connected to proxy chain')
     } catch (error) {
       console.error('Failed to connect to proxy chain:', error)
+      setChainApplyError(error instanceof Error ? error.message : String(error))
       alert(t('proxies.page.chain.connectFailed'))
     } finally {
       setIsConnecting(false)
@@ -469,7 +575,67 @@ export const ProxyChain = ({
     selectedGroup,
     onUpdateChain,
     recordSelection,
+    refreshRuntimeConfig,
   ])
+
+  const handleTestChain = useCallback(async () => {
+    setIsTestingChain(true)
+    setChainTestDelay(null)
+    setChainTestUrl(null)
+    try {
+      const configuredUrl = verge?.default_latency_test?.trim()
+      const targets = [configuredUrl, ...DEFAULT_CHAIN_TEST_URLS].filter(
+        (url, index, urls): url is string =>
+          !!url && urls.indexOf(url) === index,
+      )
+      let lastError: unknown
+      const exitNode = currentProxyChain.at(-1)
+      if (!exitNode) throw new Error('Proxy chain has no exit node')
+      const timeout = verge?.default_latency_timeout || 10000
+      for (const target of targets) {
+        try {
+          const result = await delayProxyByName(exitNode.name, target, timeout)
+          if (result.delay <= 0) {
+            throw new Error(`Chain test timed out: ` + target)
+          }
+          setChainTestDelay(result.delay)
+          setChainTestUrl(target)
+          return
+        } catch (error) {
+          lastError = error
+        }
+      }
+      throw lastError ?? new Error('No chain test target is available')
+    } catch (error) {
+      console.error('Failed to test proxy chain:', error)
+      setChainTestDelay(0)
+    } finally {
+      setIsTestingChain(false)
+    }
+  }, [
+    currentProxyChain,
+    verge?.default_latency_test,
+    verge?.default_latency_timeout,
+  ])
+
+  const handleClearChain = useCallback(async () => {
+    try {
+      await updateProxyChainConfigInRuntime(null)
+      localStorage.removeItem('proxy-chain-group')
+      localStorage.removeItem('proxy-chain-exit-node')
+      localStorage.removeItem('proxy-chain-items')
+      setChainApplyError(null)
+      setChainTestDelay(null)
+      setChainTestUrl(null)
+      onUpdateChain([])
+      await refreshRuntimeConfig()
+      await refreshProxy()
+    } catch (error) {
+      console.error('Failed to clear proxy chain:', error)
+      setChainApplyError(error instanceof Error ? error.message : String(error))
+      alert(t('proxies.page.chain.disconnectFailed'))
+    }
+  }, [onUpdateChain, refreshProxy, refreshRuntimeConfig, t])
 
   // 处理链式代理配置数据
   useEffect(() => {
@@ -501,42 +667,106 @@ export const ProxyChain = ({
       <Box
         sx={{
           display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
+          flexDirection: 'column',
+          alignItems: 'stretch',
+          gap: 1.25,
           mb: 2,
         }}
       >
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
-          <Typography variant="h6">{t('proxies.page.chain.header')}</Typography>
-          <TooltipIcon
-            title={chainWarning}
-            icon={WarningRounded}
-            color="warning"
-            sx={{ p: 0.25 }}
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: 1,
+            minWidth: 0,
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+            <Typography variant="h6" sx={{ lineHeight: 1.35 }}>
+              {t('proxies.page.chain.header')}
+            </Typography>
+            <TooltipIcon
+              title={chainWarning}
+              icon={WarningRounded}
+              color="warning"
+              sx={{ p: 0.25 }}
+            />
+          </Box>
+          <Chip
+            size="small"
+            label={runtimeStatus}
+            color={
+              chainApplyError
+                ? 'error'
+                : isRuntimeChainApplied
+                  ? 'success'
+                  : 'default'
+            }
+            variant={
+              isRuntimeChainApplied || chainApplyError ? 'filled' : 'outlined'
+            }
+            sx={{ flexShrink: 0 }}
           />
         </Box>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-          {currentProxyChain.length > 0 && (
-            <IconButton
-              size="small"
-              onClick={() => {
-                updateProxyChainConfigInRuntime(null)
-                localStorage.removeItem('proxy-chain-group')
-                localStorage.removeItem('proxy-chain-exit-node')
-                localStorage.removeItem('proxy-chain-items')
-                onUpdateChain([])
-              }}
-              sx={{
-                color: theme.palette.error.main,
-                '&:hover': {
-                  backgroundColor: theme.palette.error.light + '20',
-                },
-              }}
-              title={t('proxies.page.actions.clearChainConfig')}
-            >
-              <DeleteIcon fontSize="small" />
-            </IconButton>
-          )}
+        <Box
+          sx={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: 1,
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.75 }}>
+            {isConnected && (
+              <Tooltip
+                title={
+                  chainTestUrl
+                    ? t('proxies.page.chain.testChainTarget', {
+                        host: testTargetLabel(chainTestUrl),
+                      })
+                    : t('proxies.page.chain.testChainHint')
+                }
+              >
+                <span>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    startIcon={<Speed />}
+                    onClick={handleTestChain}
+                    disabled={isTestingChain}
+                  >
+                    {isTestingChain
+                      ? t('proxies.page.chain.testingChain')
+                      : chainTestDelay === null
+                        ? t('proxies.page.chain.testChain')
+                        : chainTestDelay > 0 && chainTestDelay < 10000
+                          ? t('proxies.page.chain.chainDelay', {
+                              delay: chainTestDelay,
+                            })
+                          : t('proxies.page.chain.chainTimeout')}
+                  </Button>
+                </span>
+              </Tooltip>
+            )}
+            {currentProxyChain.length > 0 && (
+              <IconButton
+                size="small"
+                onClick={handleClearChain}
+                sx={{
+                  color: theme.palette.error.main,
+                  '&:hover': {
+                    backgroundColor: theme.palette.error.light + '20',
+                  },
+                }}
+                title={t('proxies.page.actions.clearChainConfig')}
+                disabled={isConnecting}
+              >
+                <DeleteIcon fontSize="small" />
+              </IconButton>
+            )}
+          </Box>
           <Button
             size="small"
             variant="contained"
@@ -547,7 +777,7 @@ export const ProxyChain = ({
               (!isConnected &&
                 (currentProxyChain.length < 2 ||
                   currentProxyChain.some(
-                    ({ recordId }) => recordId === undefined,
+                    (item) => !isResolvableChainItem(item),
                   ) ||
                   (mode === 'global' && proxyView?.global === null) ||
                   (mode !== 'global' && !selectedGroup)))
@@ -555,6 +785,7 @@ export const ProxyChain = ({
             color={isConnected ? 'error' : 'success'}
             sx={{
               minWidth: 90,
+              flexShrink: 0,
             }}
             title={
               !isConnected && currentProxyChain.length < 2
@@ -572,12 +803,20 @@ export const ProxyChain = ({
       </Box>
 
       <Alert
-        severity={currentProxyChain.length === 1 ? 'warning' : 'info'}
+        severity={
+          chainApplyError
+            ? 'error'
+            : currentProxyChain.length === 1
+              ? 'warning'
+              : 'info'
+        }
         sx={{ mb: 2 }}
       >
-        {currentProxyChain.length === 1
-          ? t('proxies.page.chain.minimumNodesHint')
-          : t('proxies.page.chain.instruction')}
+        {chainApplyError
+          ? chainApplyError
+          : currentProxyChain.length === 1
+            ? t('proxies.page.chain.minimumNodesHint')
+            : t('proxies.page.chain.instruction')}
       </Alert>
 
       <Box sx={{ flex: 1, overflow: 'auto' }}>

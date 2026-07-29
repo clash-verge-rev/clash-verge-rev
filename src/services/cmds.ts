@@ -107,9 +107,13 @@ export async function getRuntimeProxyChainConfig(proxyChainExitNode: string) {
   })
 }
 
-export async function updateProxyChainConfigInRuntime(proxyChainConfig: any) {
+export async function updateProxyChainConfigInRuntime(
+  proxyChainConfig: any,
+  targetGroup?: string,
+) {
   return invoke<void>('update_proxy_chain_config_in_runtime', {
     proxyChainConfig,
+    targetGroup,
   })
 }
 

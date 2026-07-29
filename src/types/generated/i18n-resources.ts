@@ -495,6 +495,8 @@ export interface TranslationResources {
           toggleChain: string
         }
         chain: {
+          chainDelay: string
+          chainTimeout: string
           connectFailed: string
           disconnectFailed: string
           duplicateNode: string
@@ -505,6 +507,14 @@ export interface TranslationResources {
           instruction: string
           minimumNodes: string
           minimumNodesHint: string
+          runtimeApplied: string
+          runtimeFailed: string
+          runtimeNotConfigured: string
+          runtimePending: string
+          testChain: string
+          testChainHint: string
+          testChainTarget: string
+          testingChain: string
           warning: string
         }
         empty: {
