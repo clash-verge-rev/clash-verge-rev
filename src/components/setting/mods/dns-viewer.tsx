@@ -246,10 +246,10 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
     hosts: '',
   })
 
-  // 用于YAML编辑模式
+  // 用于YAML编辑模式, 设置初始化值用于 updateValuesFromYaml 方法判断是否更新表格数据，避免覆盖用户自定义的配置
   const [yamlContent, setYamlContent] = useReducer(
     (_: string, next: string) => next,
-    '',
+    '{isInitValue: true}',
   )
 
   // 从配置对象更新表单值
@@ -428,7 +428,7 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
   const updateValuesFromYaml = useCallback(() => {
     try {
       const parsedYaml = yaml.load(yamlContent) as any
-      if (!parsedYaml) return
+      if (!parsedYaml || parsedYaml['isInitValue']) return
 
       skipYamlSyncRef.current = true
       updateValuesFromConfig(parsedYaml)
