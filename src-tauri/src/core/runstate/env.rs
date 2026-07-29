@@ -5,7 +5,7 @@
 //! this trait rather than reaching for globals, the state machine can be exercised without
 //! a running app, an installed Service, or elevation.
 
-use anyhow::Result;
+use anyhow::{Context as _, Result};
 
 use super::health::{PendingAction, RunState};
 use super::probe::ServiceVersionReply;
@@ -19,7 +19,9 @@ pub trait RunStateEnv: Send + Sync + 'static {
     ///
     /// Fails when the registry itself could not be inspected, which is different from
     /// "no installation" and is treated as unavailable rather than not-installed.
-    fn trusted_install_evidence(&self) -> Result<bool>;
+    ///
+    /// Async so blocking systemd and Windows SCM checks can run off the runtime workers.
+    fn trusted_install_evidence(&self) -> impl Future<Output = Result<bool>> + Send;
 
     /// Whether this app process is running elevated.
     fn is_elevated(&self) -> bool;
@@ -58,8 +60,10 @@ impl RunStateEnv for RealEnv {
         })
     }
 
-    fn trusted_install_evidence(&self) -> Result<bool> {
-        crate::core::service::trusted_service_evidence()
+    async fn trusted_install_evidence(&self) -> Result<bool> {
+        tokio::task::spawn_blocking(crate::core::service::trusted_service_evidence)
+            .await
+            .context("service registration probe did not finish")?
     }
 
     fn is_elevated(&self) -> bool {
@@ -259,7 +263,7 @@ mod fake {
             reply.map_err(|error| anyhow!(error))
         }
 
-        fn trusted_install_evidence(&self) -> Result<bool> {
+        async fn trusted_install_evidence(&self) -> Result<bool> {
             self.evidence.clone().map_err(|error| anyhow!(error))
         }
 

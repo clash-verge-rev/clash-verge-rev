@@ -1299,8 +1299,8 @@ impl ServiceManager {
         RUN_STATE.require_install_for_session()
     }
 
-    pub(crate) fn mark_unavailable(&self, reason: impl Into<String>) {
-        self.set_status(ServiceStatus::Unavailable(reason.into()));
+    pub(crate) fn withdraw_sidecar_allowance(&self) -> bool {
+        RUN_STATE.withdraw_sidecar_allowance()
     }
 
     pub async fn detect_startup_status(&self) {
@@ -1308,7 +1308,7 @@ impl ServiceManager {
             RUN_STATE.accept_sidecar();
             return;
         }
-        RUN_STATE.observe(RUN_STATE.detect_service_health().await);
+        RUN_STATE.observe_current_health().await;
     }
 
     fn set_status(&self, status: ServiceStatus) {

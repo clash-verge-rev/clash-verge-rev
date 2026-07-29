@@ -66,18 +66,29 @@ impl std::fmt::Display for ReadyWaitError {
     }
 }
 
-/// The service-owned state together with the counter that versions it.
+/// The service-owned state together with the counters that version it.
 ///
 /// They share one lock so a reader can never see a change without its version bump.
+/// `generation` tracks visible changes; `observation` also tracks assertions that invalidate
+/// older health probes without changing visible state.
 #[derive(Debug, Default)]
 struct VersionedService {
     service: StoredService,
     generation: u64,
+    observation: u64,
 }
 
 impl VersionedService {
+    /// Record a visible change and invalidate older health probes.
     const fn bump(&mut self) {
         self.generation = self.generation.wrapping_add(1);
+        self.observation = self.observation.wrapping_add(1);
+    }
+
+    /// Reserve a revision that invalidates older health probes.
+    const fn next_observation(&mut self) -> u64 {
+        self.observation = self.observation.wrapping_add(1);
+        self.observation
     }
 }
 
@@ -194,7 +205,7 @@ impl<E: RunStateEnv> RunStateStore<E> {
     /// Platform evidence that cannot be inspected is *unavailable*, not *absent* — assuming
     /// "not installed" there would offer the user an install that is already there.
     pub async fn detect_service_health(&self) -> ServiceHealth {
-        let has_marker = match self.env.trusted_install_evidence() {
+        let has_marker = match self.env.trusted_install_evidence().await {
             Ok(exists) => exists,
             Err(error) => {
                 logging!(
@@ -225,10 +236,52 @@ impl<E: RunStateEnv> RunStateStore<E> {
 
     // ─────────────────────────── writes ───────────────────────────
 
+    /// Probe and record Service health unless a newer observation arrived first.
+    ///
+    /// Reserving before I/O prevents slower probes from overwriting later observations, including
+    /// assertions that leave visible state unchanged. Returns the health that remains recorded.
+    pub async fn observe_current_health(&self) -> ServiceHealth {
+        let reservation = self.reserve_health_observation();
+        let health = self.detect_service_health().await;
+        self.commit_reserved_observation(health, reservation)
+    }
+
+    /// Reserve the revision for a health probe.
+    fn reserve_health_observation(&self) -> u64 {
+        self.service.lock().next_observation()
+    }
+
+    /// Commit `health` only if `reservation` is still latest; otherwise return the newer health.
+    ///
+    /// The comparison and write share one lock. A successful commit reuses its reserved revision.
+    fn commit_reserved_observation(&self, health: ServiceHealth, reservation: u64) -> ServiceHealth {
+        let mut state = self.service.lock();
+        if state.observation != reservation {
+            let newer = state.service.health.clone();
+            drop(state);
+            logging!(
+                debug,
+                Type::Service,
+                "discarding a stale service reading of {health:?}; {newer:?} arrived while it ran"
+            );
+            return newer;
+        }
+        if state.service.health == health && state.service.pending.is_none() && !state.service.sidecar_allowed {
+            return health;
+        }
+        state.service.observe(health.clone());
+        state.generation = state.generation.wrapping_add(1);
+        drop(state);
+        self.announce();
+        health
+    }
+
     /// Record an observation about the Service, clearing any request it answers.
     pub fn observe(&self, health: ServiceHealth) {
         let mut state = self.service.lock();
         if state.service.health == health && state.service.pending.is_none() && !state.service.sidecar_allowed {
+            // Reassertion is invisible but must invalidate an older health probe.
+            state.next_observation();
             return;
         }
         state.service.observe(health);
@@ -245,6 +298,11 @@ impl<E: RunStateEnv> RunStateStore<E> {
     pub fn request_action(&self, action: PendingAction) -> bool {
         let mut state = self.service.lock();
         let displaced = state.service.sidecar_allowed;
+        if state.service.pending == Some(action) && !displaced {
+            // Reassertion must prevent an older probe from retiring the request.
+            state.next_observation();
+            return displaced;
+        }
         state.service.request(action);
         state.bump();
         drop(state);
@@ -258,6 +316,8 @@ impl<E: RunStateEnv> RunStateStore<E> {
     pub fn accept_sidecar(&self) {
         let mut state = self.service.lock();
         if state.service.sidecar_allowed && state.service.pending.is_none() {
+            // Reassertion must prevent an older probe from clearing the allowance.
+            state.next_observation();
             return;
         }
         state.service.allow_sidecar();
@@ -272,10 +332,31 @@ impl<E: RunStateEnv> RunStateStore<E> {
     /// Service. Returns whether the allowance was restored.
     pub fn restore_sidecar_allowance(&self) -> bool {
         let mut state = self.service.lock();
-        if state.service.sidecar_allowed || matches!(state.service.health, ServiceHealth::Ready) {
+        if state.service.sidecar_allowed {
+            // Reassertion must prevent an older probe from clearing the allowance.
+            state.next_observation();
+            return false;
+        }
+        if matches!(state.service.health, ServiceHealth::Ready) {
+            // Cached Ready health does not invalidate an in-flight probe.
             return false;
         }
         state.service.allow_sidecar();
+        state.bump();
+        drop(state);
+        self.announce();
+        true
+    }
+
+    /// Revoke an allowance after Sidecar startup fails without changing Service health.
+    ///
+    /// Returns whether the allowance was revoked.
+    pub fn withdraw_sidecar_allowance(&self) -> bool {
+        let mut state = self.service.lock();
+        if !state.service.sidecar_allowed {
+            return false;
+        }
+        state.service.sidecar_allowed = false;
         state.bump();
         drop(state);
         self.announce();
@@ -324,6 +405,9 @@ impl<E: RunStateEnv> RunStateStore<E> {
         {
             state.service.request(PendingAction::Install);
             state.bump();
+        } else if state.service.pending == Some(PendingAction::Install) {
+            // Reassertion must prevent an older probe from clearing the install request.
+            state.next_observation();
         }
         drop(state);
         self.announce();
@@ -341,13 +425,12 @@ impl<E: RunStateEnv> RunStateStore<E> {
             Ok(()) if matches!(action, PendingAction::Uninstall) => self.observe(ServiceHealth::NotInstalled),
             Ok(()) => {}
             Err(error) => {
-                let health = self.detect_service_health().await;
+                let health = self.observe_current_health().await;
                 logging!(
                     warn,
                     Type::Service,
                     "privileged service action {action:?} did not complete ({error:#}); service is {health:?}"
                 );
-                self.observe(health);
             }
         }
         outcome
@@ -502,6 +585,146 @@ mod tests {
             message: "ok".to_owned(),
             protocol: Some(clash_verge_service_ipc::ProtocolInfo::current()),
         }
+    }
+
+    #[tokio::test]
+    async fn a_reading_nothing_overtook_is_recorded() {
+        let store = with_env(FakeEnv::service_ready(FakeEnv::new()));
+
+        let health = store.observe_current_health().await;
+
+        assert_eq!(health, ServiceHealth::Ready);
+        assert_eq!(store.state().health, ServiceHealth::Ready);
+    }
+
+    #[test]
+    fn a_reading_overtaken_by_a_changed_observation_is_discarded() {
+        // A slower earlier probe must not overwrite a newer Ready observation.
+        let store = with_env(FakeEnv::new());
+        let reservation = store.reserve_health_observation();
+        store.observe(ServiceHealth::Ready);
+
+        let recorded = store.commit_reserved_observation(ServiceHealth::NotInstalled, reservation);
+
+        assert_eq!(recorded, ServiceHealth::Ready, "the newer observation is reported back");
+        assert_eq!(store.state().health, ServiceHealth::Ready, "and it is what stands");
+    }
+
+    #[test]
+    fn a_reading_overtaken_by_an_unchanged_observation_is_also_discarded() {
+        // Even an unchanged "still Ready" observation must invalidate an older probe.
+        let store = with_env(FakeEnv::new());
+        store.observe(ServiceHealth::Ready);
+        let reservation = store.reserve_health_observation();
+        let generation = store.generation_count();
+
+        store.observe(ServiceHealth::Ready);
+        assert_eq!(store.generation_count(), generation, "nothing visible changed");
+
+        let recorded = store.commit_reserved_observation(ServiceHealth::NotInstalled, reservation);
+
+        assert_eq!(recorded, ServiceHealth::Ready);
+        assert_eq!(store.state().health, ServiceHealth::Ready);
+    }
+
+    #[test]
+    fn a_reading_overtaken_by_an_already_satisfied_sidecar_restore_is_discarded() {
+        // Reasserting an existing allowance must stop an older probe from clearing it.
+        let store = with_env(FakeEnv::new());
+        store.observe(ServiceHealth::VersionMismatch);
+        store.accept_sidecar();
+        let reservation = store.reserve_health_observation();
+
+        assert!(!store.restore_sidecar_allowance(), "the allowance is already there");
+
+        store.commit_reserved_observation(ServiceHealth::VersionMismatch, reservation);
+
+        assert!(store.state().sidecar_allowed, "the confirmed allowance survives");
+        assert!(!store.state().service_needs_attention());
+    }
+
+    #[test]
+    fn re_requesting_the_same_action_changes_nothing_visible_but_still_orders() {
+        // The same request leaves `generation` unchanged but must invalidate an older probe.
+        let store = with_env(FakeEnv::new());
+        store.observe(ServiceHealth::NotInstalled);
+        store.require_install_for_session().expect("absent service");
+        let generation = store.generation_count();
+        let reservation = store.reserve_health_observation();
+
+        assert!(
+            !store.request_action(PendingAction::Install),
+            "no Sidecar allowance was displaced"
+        );
+        assert_eq!(store.generation_count(), generation, "nothing visible changed");
+
+        store.commit_reserved_observation(ServiceHealth::NotInstalled, reservation);
+
+        assert_eq!(store.state().pending, Some(PendingAction::Install));
+    }
+
+    #[test]
+    fn a_reading_overtaken_by_an_already_pending_install_is_discarded() {
+        // Requiring an existing install request must stop an older probe from clearing it.
+        let store = with_env(FakeEnv::new());
+        store.observe(ServiceHealth::NotInstalled);
+        store.require_install_for_session().expect("absent service");
+        let reservation = store.reserve_health_observation();
+
+        store.require_install_for_session().expect("already requested");
+
+        store.commit_reserved_observation(ServiceHealth::NotInstalled, reservation);
+
+        assert_eq!(store.state().pending, Some(PendingAction::Install));
+        assert!(store.state().service_needs_attention());
+    }
+
+    #[test]
+    fn a_later_reading_supersedes_one_that_is_still_running() {
+        // The last probe started wins regardless of completion order.
+        let store = with_env(FakeEnv::new());
+        store.observe(ServiceHealth::Ready);
+        let first = store.reserve_health_observation();
+        let second = store.reserve_health_observation();
+
+        assert_eq!(
+            store.commit_reserved_observation(ServiceHealth::NotInstalled, first),
+            ServiceHealth::Ready,
+            "the earlier reading is already superseded"
+        );
+        assert_eq!(
+            store.commit_reserved_observation(ServiceHealth::VersionMismatch, second),
+            ServiceHealth::VersionMismatch
+        );
+        assert_eq!(store.state().health, ServiceHealth::VersionMismatch);
+    }
+
+    #[test]
+    fn withdrawing_a_sidecar_allowance_says_nothing_about_the_service() {
+        // A failed Sidecar startup must not change Service health.
+        let store = with_env(FakeEnv::new());
+        store.observe(ServiceHealth::NotInstalled);
+        store.accept_sidecar();
+
+        assert!(store.withdraw_sidecar_allowance());
+
+        assert!(!store.state().sidecar_allowed);
+        assert_eq!(store.state().health, ServiceHealth::NotInstalled, "health is untouched");
+        assert!(
+            !store.state().service_needs_attention(),
+            "an absent Service still asks nothing"
+        );
+    }
+
+    #[test]
+    fn withdrawing_an_allowance_that_was_never_granted_changes_nothing() {
+        let store = with_env(FakeEnv::new());
+        store.observe(ServiceHealth::NotInstalled);
+        let generation = store.generation_count();
+
+        assert!(!store.withdraw_sidecar_allowance());
+
+        assert_eq!(store.generation_count(), generation);
     }
 
     #[test]
