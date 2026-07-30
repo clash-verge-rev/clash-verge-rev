@@ -15,7 +15,7 @@
         "displayLanguageSelector": true,
         "installerIcon": "icons/icon.ico",
         "languages": ["SimpChinese", "English", "Russian"],
-        "installMode": "perMachine",
+        "installMode": "currentUser",
         "template": "./packages/windows/installer.nsi"
       }
     }
