@@ -118,7 +118,8 @@ const createSharedSubscriptionEntry = (
         activeOwner.handleMessage(msg.data)
       })
     } catch (ignoreError) {
-      if (!entry.closed && !entry.ws) {
+      if (!entry.closed) {
+        await closeSharedSocket(entry)
         clearReconnectTimer()
         entry.reconnectTimer = setTimeout(entry.connectWs, RECONNECT_DELAY_MS)
       }
