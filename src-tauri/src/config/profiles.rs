@@ -10,6 +10,7 @@ use crate::{
     },
 };
 use anyhow::{Context as _, Result, bail};
+use clash_verge_draft::Draft;
 use clash_verge_logging::{Type, logging};
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
@@ -434,7 +435,10 @@ impl IProfiles {
     /// 以 app 中的 profile 列表为准，删除不再需要的文件
     pub async fn cleanup_orphaned_files(&self) -> Result<()> {
         let profiles_dir = dirs::app_profiles_dir()?;
+        self.cleanup_orphaned_files_in(&profiles_dir).await
+    }
 
+    pub(super) async fn cleanup_orphaned_files_in(&self, profiles_dir: &Path) -> Result<()> {
         if !profiles_dir.exists() {
             return Ok(());
         }
@@ -443,7 +447,7 @@ impl IProfiles {
         // IProfiles::new() 返回 default），此时无法判断哪些文件是活跃的，
         // 跳过清理以避免误删用户正在使用的订阅配置文件。
         // See: https://github.com/clash-verge-rev/clash-verge-rev/issues/7577
-        if self.items.as_ref().map_or(true, |v| v.is_empty()) {
+        if self.items.as_ref().is_none_or(|v| v.is_empty()) {
             logging!(
                 warn,
                 Type::Config,
@@ -599,8 +603,12 @@ pub async fn profiles_append_item_with_filedata_safe(item: &PrfItem, file_data: 
 }
 
 pub async fn profiles_append_item_safe(item: &mut PrfItem) -> Result<()> {
-    Config::profiles()
-        .await
+    let profiles = Config::profiles().await;
+    profiles_append_item_to_safe(&profiles, item).await
+}
+
+pub(super) async fn profiles_append_item_to_safe(profiles: &Draft<IProfiles>, item: &mut PrfItem) -> Result<()> {
+    profiles
         .with_data_modify(|mut profiles| async move {
             profiles.append_item(item).await?;
             Ok((profiles, ()))
