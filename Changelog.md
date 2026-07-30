@@ -3,6 +3,7 @@
 ### 🐞 修复问题
 
 修复 macOS 多显示器切换时托盘速率样式不同步
+修复 Mihomo API 变更后 inline proxy-provider 被错误过滤的问题，解决节点显示 Unknown 及延迟测试失败的问题
 
 <details>
 <summary><strong> ✨ 新增功能 </strong></summary>
