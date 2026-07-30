@@ -114,10 +114,10 @@ impl<'a> ModuleFilter<'a> {
         };
 
         // 优先检查排除（白名单）
-        if let Some(excludes) = &self.exclude {
-            if excludes.iter().any(|e| module.starts_with(e)) {
-                return true;
-            }
+        if let Some(excludes) = &self.exclude
+            && excludes.iter().any(|e| module.starts_with(e))
+        {
+            return true;
         }
 
         // 再检查阻止（黑名单）
