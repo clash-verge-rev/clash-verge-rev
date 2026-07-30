@@ -81,7 +81,7 @@
     "react-router": "^8.0.0",
     "rehype-raw": "^7.0.0",
     "swr": "^2.4.2",
-    "tauri-plugin-mihomo-api": "clash-verge-rev/tauri-plugin-mihomo#refactor-use-reqwest-ipc",
+    "tauri-plugin-mihomo-api": "github:clash-verge-rev/tauri-plugin-mihomo#refactor-use-reqwest-ipc",
     "types-pac": "^1.0.3",
     "validator": "^13.15.35"
   },
