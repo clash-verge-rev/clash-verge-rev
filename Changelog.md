@@ -3,6 +3,7 @@
 ### 🐞 修复问题
 
 修复 macOS 多显示器切换时托盘速率样式不同步
+修复 WebSocket 在 onConnected 初始化完成前被保存的问题，避免初始化失败后留下无监听且无法重试的无效连接。
 
 <details>
 <summary><strong> ✨ 新增功能 </strong></summary>
