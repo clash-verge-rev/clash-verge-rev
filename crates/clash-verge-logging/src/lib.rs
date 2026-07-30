@@ -97,23 +97,35 @@ pub fn write_sidecar_log(
     let _ = writer.write(now, &record);
 }
 
-pub struct NoModuleFilter<'a>(pub Vec<&'a str>);
+pub struct ModuleFilter<'a> {
+    block: Vec<&'a str>,
+    exclude: Option<Vec<&'a str>>,
+}
 
-impl<'a> NoModuleFilter<'a> {
+impl<'a> ModuleFilter<'a> {
+    pub fn new(block: Vec<&'a str>, exclude: Option<Vec<&'a str>>) -> Self {
+        Self { block, exclude }
+    }
+
     #[inline]
     pub fn filter(&self, record: &Record) -> bool {
-        if let Some(module) = record.module_path() {
-            for blocked in self.0.iter() {
-                if module.len() >= blocked.len() && module.as_bytes()[..blocked.len()] == blocked.as_bytes()[..] {
-                    return false;
-                }
+        let Some(module) = record.module_path() else {
+            return true;
+        };
+
+        // 优先检查排除（白名单）
+        if let Some(excludes) = &self.exclude {
+            if excludes.iter().any(|e| module.starts_with(e)) {
+                return true;
             }
         }
-        true
+
+        // 再检查阻止（黑名单）
+        !self.block.iter().any(|b| module.starts_with(b))
     }
 }
 
-impl<'a> LogLineFilter for NoModuleFilter<'a> {
+impl<'a> LogLineFilter for ModuleFilter<'a> {
     #[inline]
     fn write(
         &self,
