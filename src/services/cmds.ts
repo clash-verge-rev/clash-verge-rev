@@ -125,6 +125,16 @@ export async function syncTrayProxySelection() {
   return invoke<void>('sync_tray_proxy_selection')
 }
 
+/**
+ * Record which node a group is on, in the current profile.
+ *
+ * Group and node, not the whole selection list: the merge happens in the backend against the
+ * profile as it stands, so two selections made in quick succession cannot overwrite each other.
+ */
+export async function recordSelectedNode(groupName: string, node: string) {
+  return invoke<void>('record_selected_node', { groupName, node })
+}
+
 export async function getProxyView(): Promise<ProxyViewV1> {
   const view = await invoke<ProxyViewV1>('get_proxy_view')
   if (view.schemaVersion !== 1) {
@@ -360,8 +370,40 @@ export async function listLocalBackup() {
 // 获取当前运行模式
 export type RunningMode = 'Service' | 'Sidecar' | 'NotRunning'
 
-export const getRunningMode = async () => {
-  return invoke<RunningMode>('get_running_mode')
+type ServiceHealth =
+  | 'unknown'
+  | 'ready'
+  | 'notInstalled'
+  | 'versionMismatch'
+  | 'unavailable'
+
+type PendingServiceAction =
+  | 'install'
+  | 'uninstall'
+  | 'reinstall'
+  | 'forceReinstall'
+
+/**
+ * How the core is running and what backs it, as one consistent snapshot.
+ *
+ * The derived answers travel with it — `tunCapable`, `serviceUsable`,
+ * `serviceNeedsAttention` — so nothing here is recomputed from the raw fields.
+ */
+export interface RunState {
+  mode: RunningMode
+  service: ServiceHealth
+  serviceUnavailableReason: string | null
+  pendingAction: PendingServiceAction | null
+  sidecarAllowed: boolean
+  isAdmin: boolean
+  opInFlight: boolean
+  serviceUsable: boolean
+  tunCapable: boolean
+  serviceNeedsAttention: boolean
+}
+
+export const getRuntimeState = async () => {
+  return invoke<RunState>('get_runtime_state')
 }
 
 // 获取应用运行时间
@@ -379,19 +421,6 @@ export const uninstallService = async () => {
   return invoke<void>('uninstall_service')
 }
 
-export type ServiceInstallState =
-  | 'checking'
-  | 'notInstalled'
-  | 'installRequired'
-  | 'ready'
-  | 'needsReinstall'
-  | 'sidecarAllowed'
-  | 'unavailable'
-
-export const getServiceInstallState = async () => {
-  return invoke<ServiceInstallState>('get_service_install_state')
-}
-
 export const reinstallService = async () => {
   return invoke<void>('reinstall_service')
 }
@@ -404,36 +433,52 @@ export const continueWithSidecar = async () => {
   return invoke<void>('continue_with_sidecar')
 }
 
-// 系统服务是否可用
-export const isServiceAvailable = async () => {
-  try {
-    return await invoke<boolean>('is_service_available')
-  } catch {
-    return false
-  }
-}
 export const entry_lightweight_mode = async () => {
   return invoke<void>('entry_lightweight_mode')
-}
-
-export const isAdmin = async () => {
-  try {
-    return await invoke<boolean>('app_is_admin')
-  } catch (error) {
-    console.error('检查管理员权限失败:', error)
-    return false
-  }
 }
 
 export async function getNextUpdateTime(uid: string) {
   return invoke<number | null>('get_next_update_time', { uid })
 }
 
-export const isPortInUse = async (port: number) => {
-  try {
-    return await invoke<boolean>('is_port_in_use', { port })
-  } catch (error) {
-    console.error('检查端口使用状态失败:', error)
-    return false
-  }
+interface ToggleableProxyPort {
+  enabled: boolean
+  port: number
+}
+
+export interface ProxyPortSettings {
+  mixedPort: number
+  socks: ToggleableProxyPort
+  http: ToggleableProxyPort
+  redir: ToggleableProxyPort
+  tproxy: ToggleableProxyPort
+}
+
+export type ListenerTransport = 'tcp' | 'udp'
+
+export interface ListenerProbe {
+  address: string
+  transports: ListenerTransport[]
+}
+
+export type ListenerProbeOutcome =
+  | { status: 'available' }
+  | {
+      status: 'conflict'
+      port: number
+      transport: ListenerTransport
+    }
+  | { status: 'invalid'; message: string }
+  | { status: 'indeterminate'; message: string }
+
+export type SaveProxyPortsOutcome =
+  | { status: 'saved' }
+  | { status: 'conflict'; port: number; transport: ListenerTransport }
+
+export const probeListener = async (request: ListenerProbe) => {
+  return invoke<ListenerProbeOutcome>('probe_listener', { request })
+}
+
+export const saveProxyPorts = async (settings: ProxyPortSettings) => {
+  return invoke<SaveProxyPortsOutcome>('save_proxy_ports', { settings })
 }

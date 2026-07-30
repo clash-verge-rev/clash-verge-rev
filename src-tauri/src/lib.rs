@@ -24,7 +24,6 @@ use tauri::{AppHandle, Manager as _};
 #[cfg(target_os = "macos")]
 use tauri_plugin_autostart::MacosLauncher;
 use tauri_plugin_deep_link::DeepLinkExt as _;
-use tauri_plugin_mihomo::RejectPolicy;
 
 pub static APP_HANDLE: OnceCell<AppHandle> = OnceCell::new();
 /// Application initialization helper functions
@@ -59,15 +58,6 @@ mod app_init {
                 tauri_plugin_mihomo::Builder::new()
                     .protocol(tauri_plugin_mihomo::models::Protocol::LocalSocket)
                     .socket_path(crate::config::IClashTemp::guard_external_controller_ipc())
-                    .pool_config(
-                        tauri_plugin_mihomo::IpcPoolConfigBuilder::new()
-                            .min_connections(3)
-                            .max_connections(32)
-                            .idle_timeout(std::time::Duration::from_secs(60))
-                            .health_check_interval(std::time::Duration::from_secs(60))
-                            .reject_policy(RejectPolicy::Wait)
-                            .build(),
-                    )
                     .build(),
             );
 
@@ -134,7 +124,8 @@ mod app_init {
             tauri_plugin_clash_verge_sysinfo::commands::get_app_uptime,
             tauri_plugin_clash_verge_sysinfo::commands::app_is_admin,
             tauri_plugin_clash_verge_sysinfo::commands::export_diagnostic_info,
-            cmd::is_port_in_use,
+            cmd::probe_listener,
+            cmd::save_proxy_ports,
             cmd::get_sys_proxy,
             cmd::get_auto_proxy,
             cmd::get_embedded_server_port,
@@ -149,7 +140,7 @@ mod app_init {
             cmd::start_core,
             cmd::stop_core,
             cmd::restart_core,
-            cmd::get_running_mode,
+            cmd::get_runtime_state,
             cmd::get_auto_launch_status,
             cmd::entry_lightweight_mode,
             cmd::exit_lightweight_mode,
@@ -157,8 +148,6 @@ mod app_init {
             cmd::uninstall_service,
             cmd::reinstall_service,
             cmd::repair_service,
-            cmd::is_service_available,
-            cmd::get_service_install_state,
             cmd::continue_with_sidecar,
             cmd::get_clash_info,
             cmd::patch_clash_config,
@@ -175,6 +164,7 @@ mod app_init {
             cmd::invoke_uwp_tool,
             cmd::copy_clash_env,
             cmd::sync_tray_proxy_selection,
+            cmd::record_selected_node,
             cmd::save_dns_config,
             cmd::apply_dns_config,
             cmd::check_dns_config_exists,

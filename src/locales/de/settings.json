@@ -286,6 +286,8 @@
         "portInUse": "Port {{port}} is already in use",
         "saved": "Port settings saved",
         "saveFailed": "Failed to save port settings",
+        "automaticFallback": "Port {{oldPort}} ist belegt. Der gemischte Proxy-Port wurde auf {{newPort}} geändert und gespeichert.",
+        "automaticFallbackFailed": "Der automatische Wechsel des gemischten Proxy-Ports ist fehlgeschlagen: {{error}}",
         "portTooLow": "Der Port muss mindestens 1000 sein",
         "portTooHigh": "Der Port darf höchstens 65535 sein"
       }

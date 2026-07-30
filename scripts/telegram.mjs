@@ -33,7 +33,7 @@ async function sendTelegramNotification() {
   log_info(`Download URL: ${downloadUrl}`)
 
   // 读取发布说明和下载地址
-  let releaseContent = ''
+  let releaseContent
   try {
     releaseContent = readFileSync('release.txt', 'utf-8')
     log_info('成功读取 release.txt 文件')

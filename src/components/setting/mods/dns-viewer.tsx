@@ -14,7 +14,7 @@ import {
 } from '@mui/material'
 import { invoke } from '@tauri-apps/api/core'
 import { useLockFn } from 'ahooks'
-import yaml from 'js-yaml'
+import * as yaml from 'js-yaml'
 import type { Ref } from 'react'
 import {
   useCallback,
@@ -26,7 +26,12 @@ import {
 } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { BaseDialog, DialogRef, MonacoEditor, Switch } from '@/components/base'
+import {
+  BaseDialog,
+  type DialogRef,
+  MonacoEditor,
+  Switch,
+} from '@/components/base'
 import { useClash } from '@/hooks/use-clash'
 import { showNotice } from '@/services/notice-service'
 import { useThemeMode } from '@/services/states'
@@ -49,9 +54,9 @@ function parseNameserverPolicy(str: string): NameserverPolicy {
   if (!str) return result
 
   const ruleRegex = /\s*([^=]+?)\s*=\s*([^,]+)(?:,|$)/g
-  let match: RegExpExecArray | null
+  const matchs = [...str.matchAll(ruleRegex)]
 
-  while ((match = ruleRegex.exec(str)) !== null) {
+  matchs.forEach((match) => {
     const [, domainsPart, serversPart] = match
 
     const domains = [domainsPart.trim()]
@@ -60,7 +65,7 @@ function parseNameserverPolicy(str: string): NameserverPolicy {
     domains.forEach((domain) => {
       result[domain] = servers
     })
-  }
+  })
 
   return result
 }
@@ -246,92 +251,88 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
     hosts: '',
   })
 
-  // 用于YAML编辑模式
+  // 用于YAML编辑模式, 初始化标记：阻止 updateValuesFromYaml 在配置加载前误执行
   const [yamlContent, setYamlContent] = useReducer(
     (_: string, next: string) => next,
-    '',
+    '{ isInitValue: true }',
   )
 
   // 从配置对象更新表单值
-  const updateValuesFromConfig = useCallback(
-    (config: any) => {
-      if (!config) return
+  const updateValuesFromConfig = useCallback((config: any) => {
+    if (!config) return
 
-      const dnsConfig = config.dns || {}
-      const hostsConfig = config.hosts || {}
+    const dnsConfig = config.dns || {}
+    const hostsConfig = config.hosts || {}
 
-      const enhancedMode =
-        dnsConfig['enhanced-mode'] || DEFAULT_DNS_CONFIG['enhanced-mode']
-      const validEnhancedMode =
-        enhancedMode === 'fake-ip' || enhancedMode === 'redir-host'
-          ? enhancedMode
-          : DEFAULT_DNS_CONFIG['enhanced-mode']
+    const enhancedMode =
+      dnsConfig['enhanced-mode'] || DEFAULT_DNS_CONFIG['enhanced-mode']
+    const validEnhancedMode =
+      enhancedMode === 'fake-ip' || enhancedMode === 'redir-host'
+        ? enhancedMode
+        : DEFAULT_DNS_CONFIG['enhanced-mode']
 
-      const fakeIpFilterMode =
-        dnsConfig['fake-ip-filter-mode'] ||
-        DEFAULT_DNS_CONFIG['fake-ip-filter-mode']
-      const validFakeIpFilterMode =
-        fakeIpFilterMode === 'blacklist' || fakeIpFilterMode === 'whitelist'
-          ? fakeIpFilterMode
-          : DEFAULT_DNS_CONFIG['fake-ip-filter-mode']
+    const fakeIpFilterMode =
+      dnsConfig['fake-ip-filter-mode'] ||
+      DEFAULT_DNS_CONFIG['fake-ip-filter-mode']
+    const validFakeIpFilterMode =
+      fakeIpFilterMode === 'blacklist' || fakeIpFilterMode === 'whitelist'
+        ? fakeIpFilterMode
+        : DEFAULT_DNS_CONFIG['fake-ip-filter-mode']
 
-      setValues({
-        enable: dnsConfig.enable ?? DEFAULT_DNS_CONFIG.enable,
-        listen: dnsConfig.listen ?? DEFAULT_DNS_CONFIG.listen,
-        enhancedMode: validEnhancedMode,
-        fakeIpRange:
-          dnsConfig['fake-ip-range'] ?? DEFAULT_DNS_CONFIG['fake-ip-range'],
-        fakeIpRange6:
-          dnsConfig['fake-ip-range6'] ?? DEFAULT_DNS_CONFIG['fake-ip-range6'],
-        fakeIpFilterMode: validFakeIpFilterMode,
-        preferH3: dnsConfig['prefer-h3'] ?? DEFAULT_DNS_CONFIG['prefer-h3'],
-        respectRules:
-          dnsConfig['respect-rules'] ?? DEFAULT_DNS_CONFIG['respect-rules'],
-        useHosts: dnsConfig['use-hosts'] ?? DEFAULT_DNS_CONFIG['use-hosts'],
-        useSystemHosts:
-          dnsConfig['use-system-hosts'] ??
-          DEFAULT_DNS_CONFIG['use-system-hosts'],
-        ipv6: dnsConfig.ipv6 ?? DEFAULT_DNS_CONFIG.ipv6,
-        fakeIpFilter:
-          dnsConfig['fake-ip-filter']?.join(', ') ??
-          DEFAULT_DNS_CONFIG['fake-ip-filter'].join(', '),
-        nameserver:
-          dnsConfig.nameserver?.join(', ') ??
-          DEFAULT_DNS_CONFIG.nameserver.join(', '),
-        fallback:
-          dnsConfig.fallback?.join(', ') ??
-          DEFAULT_DNS_CONFIG.fallback.join(', '),
-        defaultNameserver:
-          dnsConfig['default-nameserver']?.join(', ') ??
-          DEFAULT_DNS_CONFIG['default-nameserver'].join(', '),
-        proxyServerNameserver:
-          dnsConfig['proxy-server-nameserver']?.join(', ') ??
-          (DEFAULT_DNS_CONFIG['proxy-server-nameserver']?.join(', ') || ''),
-        directNameserver:
-          dnsConfig['direct-nameserver']?.join(', ') ??
-          (DEFAULT_DNS_CONFIG['direct-nameserver']?.join(', ') || ''),
-        directNameserverFollowPolicy:
-          dnsConfig['direct-nameserver-follow-policy'] ??
-          DEFAULT_DNS_CONFIG['direct-nameserver-follow-policy'],
-        fallbackGeoip:
-          dnsConfig['fallback-filter']?.geoip ??
-          DEFAULT_DNS_CONFIG['fallback-filter'].geoip,
-        fallbackGeoipCode:
-          dnsConfig['fallback-filter']?.['geoip-code'] ??
-          DEFAULT_DNS_CONFIG['fallback-filter']['geoip-code'],
-        fallbackIpcidr:
-          dnsConfig['fallback-filter']?.ipcidr?.join(', ') ??
-          DEFAULT_DNS_CONFIG['fallback-filter'].ipcidr.join(', '),
-        fallbackDomain:
-          dnsConfig['fallback-filter']?.domain?.join(', ') ??
-          DEFAULT_DNS_CONFIG['fallback-filter'].domain.join(', '),
-        nameserverPolicy:
-          formatNameserverPolicy(dnsConfig['nameserver-policy']) || '',
-        hosts: formatHosts(hostsConfig) || '',
-      })
-    },
-    [setValues],
-  )
+    setValues({
+      enable: dnsConfig.enable ?? DEFAULT_DNS_CONFIG.enable,
+      listen: dnsConfig.listen ?? DEFAULT_DNS_CONFIG.listen,
+      enhancedMode: validEnhancedMode,
+      fakeIpRange:
+        dnsConfig['fake-ip-range'] ?? DEFAULT_DNS_CONFIG['fake-ip-range'],
+      fakeIpRange6:
+        dnsConfig['fake-ip-range6'] ?? DEFAULT_DNS_CONFIG['fake-ip-range6'],
+      fakeIpFilterMode: validFakeIpFilterMode,
+      preferH3: dnsConfig['prefer-h3'] ?? DEFAULT_DNS_CONFIG['prefer-h3'],
+      respectRules:
+        dnsConfig['respect-rules'] ?? DEFAULT_DNS_CONFIG['respect-rules'],
+      useHosts: dnsConfig['use-hosts'] ?? DEFAULT_DNS_CONFIG['use-hosts'],
+      useSystemHosts:
+        dnsConfig['use-system-hosts'] ?? DEFAULT_DNS_CONFIG['use-system-hosts'],
+      ipv6: dnsConfig.ipv6 ?? DEFAULT_DNS_CONFIG.ipv6,
+      fakeIpFilter:
+        dnsConfig['fake-ip-filter']?.join(', ') ??
+        DEFAULT_DNS_CONFIG['fake-ip-filter'].join(', '),
+      nameserver:
+        dnsConfig.nameserver?.join(', ') ??
+        DEFAULT_DNS_CONFIG.nameserver.join(', '),
+      fallback:
+        dnsConfig.fallback?.join(', ') ??
+        DEFAULT_DNS_CONFIG.fallback.join(', '),
+      defaultNameserver:
+        dnsConfig['default-nameserver']?.join(', ') ??
+        DEFAULT_DNS_CONFIG['default-nameserver'].join(', '),
+      proxyServerNameserver:
+        dnsConfig['proxy-server-nameserver']?.join(', ') ??
+        (DEFAULT_DNS_CONFIG['proxy-server-nameserver']?.join(', ') || ''),
+      directNameserver:
+        dnsConfig['direct-nameserver']?.join(', ') ??
+        (DEFAULT_DNS_CONFIG['direct-nameserver']?.join(', ') || ''),
+      directNameserverFollowPolicy:
+        dnsConfig['direct-nameserver-follow-policy'] ??
+        DEFAULT_DNS_CONFIG['direct-nameserver-follow-policy'],
+      fallbackGeoip:
+        dnsConfig['fallback-filter']?.geoip ??
+        DEFAULT_DNS_CONFIG['fallback-filter'].geoip,
+      fallbackGeoipCode:
+        dnsConfig['fallback-filter']?.['geoip-code'] ??
+        DEFAULT_DNS_CONFIG['fallback-filter']['geoip-code'],
+      fallbackIpcidr:
+        dnsConfig['fallback-filter']?.ipcidr?.join(', ') ??
+        DEFAULT_DNS_CONFIG['fallback-filter'].ipcidr.join(', '),
+      fallbackDomain:
+        dnsConfig['fallback-filter']?.domain?.join(', ') ??
+        DEFAULT_DNS_CONFIG['fallback-filter'].domain.join(', '),
+      nameserverPolicy:
+        formatNameserverPolicy(dnsConfig['nameserver-policy']) || '',
+      hosts: formatHosts(hostsConfig) || '',
+    })
+  }, [])
 
   const generateDnsConfig = useCallback(() => {
     const dnsConfig: any = {
@@ -385,7 +386,7 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
     }
 
     setYamlContent(yaml.dump(config, { forceQuotes: true }))
-  }, [generateDnsConfig, setYamlContent, values.hosts])
+  }, [generateDnsConfig, values.hosts])
 
   // 重置为默认值
   const resetToDefaults = useCallback(() => {
@@ -422,13 +423,13 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
     })
 
     updateYamlFromValues()
-  }, [setValues, updateYamlFromValues])
+  }, [updateYamlFromValues])
 
   // 从YAML更新表单值
   const updateValuesFromYaml = useCallback(() => {
     try {
       const parsedYaml = yaml.load(yamlContent) as any
-      if (!parsedYaml) return
+      if (!parsedYaml || parsedYaml.isInitValue) return
 
       skipYamlSyncRef.current = true
       updateValuesFromConfig(parsedYaml)
@@ -488,7 +489,7 @@ export function DnsViewer({ ref }: { ref?: Ref<DialogRef> }) {
       console.error('Failed to initialize DNS config', err)
       resetToDefaults()
     }
-  }, [resetToDefaults, setYamlContent, updateValuesFromConfig])
+  }, [resetToDefaults, updateValuesFromConfig])
 
   useImperativeHandle(
     ref,

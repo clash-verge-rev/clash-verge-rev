@@ -5,6 +5,7 @@ mod state;
 use anyhow::Result;
 use arc_swap::{ArcSwap, ArcSwapOption};
 use clash_verge_logger::AsyncLogger;
+use clash_verge_logging::{Type, logging};
 use once_cell::sync::Lazy;
 use std::{
     fmt,
@@ -16,6 +17,7 @@ use std::{
 };
 use tauri_plugin_shell::process::CommandChild;
 
+use crate::core::runstate::{RUN_STATE, RealEnv, RunStateStore};
 use crate::singleton;
 #[cfg(target_os = "windows")]
 use std::os::windows::io::OwnedHandle;
@@ -71,6 +73,11 @@ impl fmt::Display for RunningMode {
 
 #[derive(Debug)]
 pub struct CoreManager {
+    /// The Run State this manager reports transitions to.
+    ///
+    /// A reference rather than the global directly, so a test can supervise a Core without
+    /// racing every other test for one process-wide Running Mode.
+    run_state: &'static RunStateStore<RealEnv>,
     state: ArcSwap<State>,
     last_update: ArcSwapOption<Instant>,
     #[cfg(target_os = "windows")]
@@ -85,24 +92,19 @@ pub struct CoreManager {
     handoff_watcher_running: AtomicBool,
 }
 
-#[derive(Debug)]
+/// Process-level state owned by `CoreManager`.
+///
+/// Running Mode deliberately does *not* live here — it belongs to `core::runstate`, which
+/// keeps it consistent with Service Health and derives PAC availability from it.
+#[derive(Debug, Default)]
 struct State {
-    running_mode: ArcSwap<RunningMode>,
     child_sidecar: ArcSwapOption<CommandChild>,
-}
-
-impl Default for State {
-    fn default() -> Self {
-        Self {
-            running_mode: ArcSwap::new(Arc::new(RunningMode::NotRunning)),
-            child_sidecar: ArcSwapOption::new(None),
-        }
-    }
 }
 
 impl Default for CoreManager {
     fn default() -> Self {
         Self {
+            run_state: &RUN_STATE,
             state: ArcSwap::new(Arc::new(State::default())),
             last_update: ArcSwapOption::new(None),
             #[cfg(target_os = "windows")]
@@ -121,8 +123,17 @@ impl CoreManager {
         Self::default()
     }
 
+    /// A manager with its own Run State, for tests that must not disturb the process-wide one.
+    #[cfg(test)]
+    fn isolated() -> Self {
+        Self {
+            run_state: Box::leak(Box::new(RunStateStore::new(RealEnv))),
+            ..Self::default()
+        }
+    }
+
     pub fn get_running_mode(&self) -> Arc<RunningMode> {
-        Arc::clone(&self.state.load().running_mode.load())
+        self.run_state.mode_arc()
     }
 
     pub fn take_child_sidecar(&self) -> Option<CommandChild> {
@@ -141,12 +152,34 @@ impl CoreManager {
         self.last_update.load_full()
     }
 
-    pub fn set_running_mode(&self, mode: RunningMode) {
-        if matches!(mode, RunningMode::NotRunning) {
-            self.invalidate_core_readiness();
-        }
-        let state = self.state.load();
-        state.running_mode.store(Arc::new(mode));
+    /// The Core is now running in `mode`.
+    ///
+    /// Run State derives PAC availability and the outward mode mirror from this; callers must
+    /// not set those alongside.
+    pub fn core_started(&self, mode: RunningMode) {
+        self.run_state.core_started(mode);
+    }
+
+    /// The Core is no longer running, for any reason.
+    ///
+    /// Core readiness is invalidated here rather than inside Run State because readiness
+    /// belongs to the process this manager supervises.
+    pub fn core_stopped(&self) {
+        self.invalidate_core_readiness();
+        self.run_state.core_stopped();
+    }
+
+    /// A start attempt is under way and the Core is not serving yet.
+    ///
+    /// Must be paired with [`Self::core_start_settled`] on every path out, including the ones
+    /// where the start never happened.
+    pub fn core_starting(&self) {
+        self.run_state.core_starting();
+    }
+
+    /// The start attempt is over: PAC goes back to following the Running Mode.
+    pub fn core_start_settled(&self) {
+        self.run_state.core_start_settled();
     }
 
     pub fn set_running_child_sidecar(&self, child: CommandChild) {
@@ -199,17 +232,63 @@ impl CoreManager {
         self.job_handle.store(handle.map(Arc::new));
     }
 
-    fn try_start_config_update(&self) -> bool {
+    pub(crate) fn try_start_config_update(&self) -> bool {
         !self.config_update_in_progress.swap(true, Ordering::AcqRel)
     }
 
-    fn finish_config_update(&self) {
+    pub(crate) fn finish_config_update(&self) {
         self.config_update_in_progress.store(false, Ordering::Release);
     }
 
     pub async fn init(&self) -> Result<bool> {
-        self.start_core().await?;
-        Ok(!matches!(*self.get_running_mode(), RunningMode::NotRunning))
+        const MAX_PORT_FALLBACK_RETRIES: usize = 3;
+
+        if let Some(reason) = crate::config::Config::startup_core_block_reason() {
+            anyhow::bail!("core startup blocked after mixed proxy port fallback failure: {reason}");
+        }
+
+        let mut retries = 0;
+        loop {
+            match self.start_core().await {
+                Ok(()) => {
+                    crate::config::Config::notify_startup_mixed_port_fallback();
+                    return Ok(!matches!(*self.get_running_mode(), RunningMode::NotRunning));
+                }
+                Err(start_error) if retries < MAX_PORT_FALLBACK_RETRIES => {
+                    if !matches!(*self.get_running_mode(), RunningMode::NotRunning) {
+                        crate::config::Config::notify_startup_mixed_port_fallback();
+                        return Err(start_error);
+                    }
+                    match crate::config::Config::retry_startup_mixed_port_fallback().await {
+                        Ok(true) => {
+                            retries += 1;
+                            logging!(
+                                warn,
+                                Type::Core,
+                                "Retrying core startup after mixed proxy port fallback ({}/{})",
+                                retries,
+                                MAX_PORT_FALLBACK_RETRIES
+                            );
+                        }
+                        Ok(false) => {
+                            crate::config::Config::notify_startup_mixed_port_fallback();
+                            return Err(start_error);
+                        }
+                        Err(fallback_error) => {
+                            crate::config::Config::block_startup_core(&fallback_error);
+                            return Err(anyhow::anyhow!(
+                                "core startup failed: {start_error:#}; mixed proxy port fallback failed: \
+                                 {fallback_error:#}"
+                            ));
+                        }
+                    }
+                }
+                Err(error) => {
+                    crate::config::Config::notify_startup_mixed_port_fallback();
+                    return Err(error);
+                }
+            }
+        }
     }
 }
 

@@ -44,7 +44,28 @@
     },
     "empty": {
       "noAvailableGroups": "暂无可用代理组",
-      "noProxies": "暂无代理"
+      "noProxies": "暂无代理",
+      "noSubscriptions": {
+        "title": "尚未导入订阅",
+        "description": "代理页没有可展示的内容。请先前往“订阅”页面导入并启用订阅。"
+      },
+      "inactiveSubscription": {
+        "title": "尚未激活订阅",
+        "description": "检测到已有订阅，但当前没有有效订阅被激活。请前往“订阅”页面选择并激活一个订阅。"
+      },
+      "coreUnavailable": {
+        "title": "内核暂不可用",
+        "description": "无法从内核获取代理信息。请尝试重启内核；若问题仍然存在，请打开日志目录检查内核日志。"
+      },
+      "noProxyInfo": {
+        "title": "未获取到代理信息",
+        "description": "当前没有可展示的代理组或节点。请检查当前订阅是否包含有效的代理组和节点，或尝试重启内核并查看日志。"
+      },
+      "actions": {
+        "openProfiles": "前往订阅",
+        "restartCore": "重启内核",
+        "openLogs": "打开日志目录"
+      }
     },
     "chain": {
       "header": "代理链配置",

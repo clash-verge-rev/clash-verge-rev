@@ -33,7 +33,7 @@ const languageOptions = supportedLanguages.map((code) => {
   const labels: { [key: string]: string } = {
     en: 'English',
     ru: 'Русский',
-    zh: '中文',
+    zh: '简体中文',
     fa: 'فارسی',
     tt: 'Татар',
     id: 'Bahasa Indonesia',

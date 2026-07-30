@@ -44,7 +44,28 @@
     },
     "empty": {
       "noAvailableGroups": "No proxy groups are available",
-      "noProxies": "No proxies"
+      "noProxies": "No proxies",
+      "noSubscriptions": {
+        "title": "No subscription imported",
+        "description": "There is nothing to display on the Proxies page. Go to Profiles to import and activate a subscription."
+      },
+      "inactiveSubscription": {
+        "title": "No active subscription",
+        "description": "Subscriptions were found, but none is currently active. Go to Profiles and select one to activate."
+      },
+      "coreUnavailable": {
+        "title": "Core temporarily unavailable",
+        "description": "Proxy information could not be retrieved from the core. Try restarting the core. If the problem persists, open the logs folder and check the core logs."
+      },
+      "noProxyInfo": {
+        "title": "No proxy information available",
+        "description": "There are no proxy groups or nodes to display. Check that the active subscription contains valid proxy groups and nodes, or restart the core and review the logs."
+      },
+      "actions": {
+        "openProfiles": "Go to Profiles",
+        "restartCore": "Restart Core",
+        "openLogs": "Open Logs Folder"
+      }
     },
     "chain": {
       "header": "Chain Proxy Config",
