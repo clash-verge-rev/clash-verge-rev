@@ -97,17 +97,11 @@ const createSharedSubscriptionEntry = (
         return
       }
 
-      entry.ws = ws
-      syncSharedWsRefs(entry)
-      clearReconnectTimer()
-
       const owner = pickActiveOwner(entry)
-      if (owner?.onConnected) {
-        await owner.onConnected(ws)
-        if (entry.closed) {
-          await ws.close()
-          return
-        }
+      await owner?.onConnected?.(ws)
+      if (entry.closed) {
+        await ws.close()
+        return
       }
 
       ws.addListener((msg: Message) => {
@@ -117,9 +111,12 @@ const createSharedSubscriptionEntry = (
 
         activeOwner.handleMessage(msg.data)
       })
+
+      entry.ws = ws
+      syncSharedWsRefs(entry)
+      clearReconnectTimer()
     } catch (ignoreError) {
-      if (!entry.closed) {
-        await closeSharedSocket(entry)
+      if (!entry.closed && !entry.ws) {
         clearReconnectTimer()
         entry.reconnectTimer = setTimeout(entry.connectWs, RECONNECT_DELAY_MS)
       }
