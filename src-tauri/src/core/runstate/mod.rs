@@ -224,7 +224,7 @@ impl<E: RunStateEnv> RunStateStore<E> {
         match self.env.probe_service_version().await {
             Ok(reply) => classify_service_health(probe_outcome(&reply), has_marker, ""),
             Err(error) => {
-                logging!(warn, Type::Service, "current service IPC is unavailable: {error:#}");
+                self.log_current_service_ipc_unavailable(&error);
                 classify_service_health(
                     CurrentServiceProbe::Unavailable,
                     has_marker,
@@ -244,6 +244,18 @@ impl<E: RunStateEnv> RunStateStore<E> {
         let reservation = self.reserve_health_observation();
         let health = self.detect_service_health().await;
         self.commit_reserved_observation(health, reservation)
+    }
+
+    fn log_current_service_ipc_unavailable(&self, error: &anyhow::Error) {
+        if self.should_warn_on_service_ipc_unavailable() {
+            logging!(warn, Type::Service, "current service IPC is unavailable: {error:#}");
+        } else {
+            logging!(debug, Type::Service, "current service IPC is unavailable: {error:#}");
+        }
+    }
+
+    fn should_warn_on_service_ipc_unavailable(&self) -> bool {
+        matches!(*self.mode_arc(), RunningMode::Service)
     }
 
     /// Reserve the revision for a health probe.
@@ -1075,6 +1087,26 @@ mod tests {
 
         assert_eq!(*store.mode_arc(), RunningMode::Service);
         assert_eq!(store.state().mode, RunningMode::Service);
+    }
+
+    #[test]
+    fn unavailable_service_ipc_warns_in_service_mode() {
+        let store = with_env(FakeEnv::new());
+
+        store.core_started(RunningMode::Service);
+
+        assert!(store.should_warn_on_service_ipc_unavailable());
+    }
+
+    #[test]
+    fn unavailable_service_ipc_is_debug_noise_outside_service_mode() {
+        let store = with_env(FakeEnv::new());
+
+        assert!(!store.should_warn_on_service_ipc_unavailable());
+
+        store.core_started(RunningMode::Sidecar);
+
+        assert!(!store.should_warn_on_service_ipc_unavailable());
     }
 
     #[test]
