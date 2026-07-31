@@ -1,6 +1,9 @@
 use clash_verge_logging::{Type, logging};
-use std::path::{Path, PathBuf};
+#[cfg(target_os = "macos")]
+use std::path::Path;
+use std::path::PathBuf;
 
+#[cfg(target_os = "macos")]
 const DNS_STATE_FILE: &str = ".original_dns.txt";
 
 fn dns_state_dir() -> anyhow::Result<PathBuf> {
@@ -10,6 +13,7 @@ fn dns_state_dir() -> anyhow::Result<PathBuf> {
     Ok(dir)
 }
 
+#[cfg(target_os = "macos")]
 fn restore_dns_state_dir(resource_dir: &Path, state_dir: PathBuf) -> PathBuf {
     if resource_dir.join(DNS_STATE_FILE).exists() {
         resource_dir.to_path_buf()
@@ -117,11 +121,13 @@ pub async fn restore_public_dns() {
 
 #[cfg(test)]
 mod tests {
-    use super::restore_dns_state_dir;
 
     #[test]
     #[allow(clippy::expect_used)]
+    #[cfg(target_os = "macos")]
     fn restore_dns_state_dir_defaults_to_app_data_but_honors_legacy_file() {
+        use super::restore_dns_state_dir;
+
         let root = std::env::temp_dir().join(format!("clash-verge-dns-{}", nanoid::nanoid!()));
         let resource_dir = root.join("resources");
         let state_dir = root.join("app-data");
