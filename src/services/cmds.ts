@@ -121,8 +121,11 @@ export async function patchClashMode(payload: string) {
   return invoke<void>('patch_clash_mode', { payload })
 }
 
-export async function syncTrayProxySelection() {
-  return invoke<void>('sync_tray_proxy_selection')
+export async function syncTrayProxySelection(
+  groupName: string,
+  proxyName: string,
+) {
+  return invoke<void>('sync_tray_proxy_selection', { groupName, proxyName })
 }
 
 /**

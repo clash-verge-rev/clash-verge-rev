@@ -7,14 +7,9 @@ use crate::{
         proxy_view::{ProxyViewBuilder, ProxyViewInput, ProxyViewV1},
         tray::Tray,
     },
-    process::AsyncHandler,
 };
-use clash_verge_logging::{Type, logging};
 use serde_yaml_ng::Mapping;
-use std::{
-    collections::HashSet,
-    sync::atomic::{AtomicBool, Ordering},
-};
+use std::collections::HashSet;
 
 /// Record which node a group is on, in the current profile.
 ///
@@ -31,9 +26,6 @@ pub async fn record_selected_node(group_name: String, node: String) -> CmdResult
         .await
         .stringify_err()
 }
-
-static TRAY_SYNC_RUNNING: AtomicBool = AtomicBool::new(false);
-static TRAY_SYNC_PENDING: AtomicBool = AtomicBool::new(false);
 
 fn runtime_group_order(config: Option<&Mapping>) -> Vec<String> {
     let mut seen = HashSet::new();
@@ -70,46 +62,10 @@ pub async fn get_proxy_view() -> CmdResult<ProxyViewV1> {
 
 /// 同步托盘和GUI的代理选择状态
 #[tauri::command]
-pub async fn sync_tray_proxy_selection() -> CmdResult<()> {
-    if TRAY_SYNC_RUNNING
-        .compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire)
-        .is_ok()
-    {
-        AsyncHandler::spawn(move || async move {
-            run_tray_sync_loop().await;
-        });
-    } else {
-        TRAY_SYNC_PENDING.store(true, Ordering::Release);
-    }
-
-    Ok(())
-}
-
-async fn run_tray_sync_loop() {
-    loop {
-        match Tray::global().update_menu().await {
-            Ok(_) => {
-                logging!(info, Type::Cmd, "Tray proxy selection synced successfully");
-            }
-            Err(e) => {
-                logging!(error, Type::Cmd, "Failed to sync tray proxy selection: {e}");
-            }
-        }
-
-        if !TRAY_SYNC_PENDING.swap(false, Ordering::AcqRel) {
-            TRAY_SYNC_RUNNING.store(false, Ordering::Release);
-
-            if TRAY_SYNC_PENDING.swap(false, Ordering::AcqRel)
-                && TRAY_SYNC_RUNNING
-                    .compare_exchange(false, true, Ordering::AcqRel, Ordering::Acquire)
-                    .is_ok()
-            {
-                continue;
-            }
-
-            break;
-        }
-    }
+pub fn sync_tray_proxy_selection(group_name: String, proxy_name: String) -> CmdResult<()> {
+    Tray::global()
+        .update_proxy_selection(&group_name, &proxy_name)
+        .stringify_err()
 }
 
 #[cfg(test)]

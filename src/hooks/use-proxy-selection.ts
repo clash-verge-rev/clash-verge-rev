@@ -58,11 +58,14 @@ export const useProxySelection = (options: ProxySelectionOptions = {}) => {
   )
 
   // 切换节点
-  const syncTraySelection = useCallback(() => {
-    syncTrayProxySelection().catch((error) => {
-      console.error('[ProxySelection] 托盘状态同步失败:', error)
-    })
-  }, [])
+  const syncTraySelection = useCallback(
+    (groupName: string, proxyName: string) => {
+      syncTrayProxySelection(groupName, proxyName).catch((error) => {
+        console.error('[ProxySelection] 托盘状态同步失败:', error)
+      })
+    },
+    [],
+  )
 
   const executeChange = useCallback(
     async (request: ProxyChangeRequest) => {
@@ -72,7 +75,7 @@ export const useProxySelection = (options: ProxySelectionOptions = {}) => {
       try {
         await selectNodeForGroup(groupName, proxyName)
         onSuccess?.()
-        syncTraySelection()
+        syncTraySelection(groupName, proxyName)
         recordSelection(groupName, proxyName)
         debugLog(
           `[ProxySelection] 代理和状态同步完成: ${groupName} -> ${proxyName}`,

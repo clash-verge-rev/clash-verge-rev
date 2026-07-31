@@ -13,6 +13,7 @@ use crate::{
 };
 use clash_verge_limiter::{Limiter, SystemClock, SystemLimiter};
 use clash_verge_logging::logging_error;
+use parking_lot::RwLock;
 use tauri::tray::{MouseButton, MouseButtonState, TrayIcon, TrayIconBuilder, TrayIconEvent};
 use tauri_plugin_mihomo::models::Proxies;
 use tokio::fs;
@@ -38,6 +39,7 @@ use menu_def::{MenuIds, MenuTexts};
 type ProxyMenuItem = (Option<Submenu<Wry>>, Vec<Box<dyn IsMenuItem<Wry>>>);
 
 const TRAY_CLICK_DEBOUNCE_MS: u64 = 300;
+const PROXY_MENU_ITEM_PREFIX: &str = "proxy_";
 pub const TRAY_ID: &str = "clash-verge-rev-tray";
 
 #[derive(Clone, Copy)]
@@ -49,6 +51,19 @@ struct TrayMenuOptions {
 #[derive(Clone)]
 struct TrayState {}
 
+#[derive(Default)]
+struct TrayMenuState {
+    system_proxy: Option<CheckMenuItem<Wry>>,
+    tun_mode: Option<CheckMenuItem<Wry>>,
+    proxy_items: HashMap<(String, String), CheckMenuItem<Wry>>,
+    selected_proxies: HashMap<String, String>,
+}
+
+struct CreatedTrayMenu {
+    menu: tauri::menu::Menu<Wry>,
+    state: TrayMenuState,
+}
+
 enum IconKind {
     Common,
     SysProxy,
@@ -57,6 +72,7 @@ enum IconKind {
 
 pub struct Tray {
     limiter: SystemLimiter,
+    menu_state: RwLock<TrayMenuState>,
     #[cfg(target_os = "macos")]
     speed_controller: speed_task::TraySpeedController,
 }
@@ -130,6 +146,7 @@ impl Default for Tray {
     fn default() -> Self {
         Self {
             limiter: Limiter::new(Duration::from_millis(TRAY_CLICK_DEBOUNCE_MS), SystemClock),
+            menu_state: RwLock::new(TrayMenuState::default()),
             #[cfg(target_os = "macos")]
             speed_controller: speed_task::TraySpeedController::new(),
         }
@@ -222,26 +239,84 @@ impl Tray {
         let profiles_preview = profiles_arc.profiles_preview().unwrap_or_default();
         let is_lightweight_mode = is_in_lightweight_mode();
 
-        logging_error!(
-            Type::Tray,
-            tray.set_menu(Some(
-                create_tray_menu(
-                    app_handle,
-                    Some(mode.as_str()),
-                    *system_proxy,
-                    *tun_mode,
-                    tun_mode_available,
-                    profiles_preview,
-                    TrayMenuOptions {
-                        is_lightweight_mode,
-                        include_proxy_groups,
-                    },
-                )
-                .await?,
-            ))
-        );
+        let CreatedTrayMenu { menu, state } = create_tray_menu(
+            app_handle,
+            Some(mode.as_str()),
+            *system_proxy,
+            *tun_mode,
+            tun_mode_available,
+            profiles_preview,
+            TrayMenuOptions {
+                is_lightweight_mode,
+                include_proxy_groups,
+            },
+        )
+        .await?;
+
+        match tray.set_menu(Some(menu)) {
+            Ok(()) => *self.menu_state.write() = state,
+            Err(error) => logging!(error, Type::Tray, "Failed to set tray menu: {error}"),
+        }
 
         logging!(debug, Type::Tray, "托盘菜单更新成功");
+        Ok(())
+    }
+
+    /// Update only the fixed toggle items. Rebuilding the full native menu here is expensive
+    /// when a profile exposes thousands of proxy nodes, and these settings do not change the
+    /// menu's structure.
+    pub async fn update_toggle_states(&self) -> Result<()> {
+        let verge = Config::verge().await.latest_arc();
+        let system_proxy_enabled = verge.enable_system_proxy.unwrap_or(false);
+        let tun_mode_enabled = verge.enable_tun_mode.unwrap_or(false);
+        let tun_mode_available = crate::core::runstate::RUN_STATE.state().tun_capable();
+
+        let toggle_items = {
+            let state = self.menu_state.read();
+            state.system_proxy.clone().zip(state.tun_mode.clone())
+        };
+        let Some((system_proxy, tun_mode)) = toggle_items else {
+            return self.update_menu().await;
+        };
+
+        logging_error!(Type::Tray, system_proxy.set_checked(system_proxy_enabled));
+        logging_error!(Type::Tray, tun_mode.set_checked(tun_mode_enabled));
+        logging_error!(Type::Tray, tun_mode.set_enabled(tun_mode_available));
+        Ok(())
+    }
+
+    /// Update a proxy selection in-place instead of rebuilding every group and node in the
+    /// native menu. Missing items are expected when proxy groups are hidden or a profile switch
+    /// is already rebuilding the menu, so they are a no-op.
+    pub fn update_proxy_selection(&self, group_name: &str, proxy_name: &str) -> Result<()> {
+        let mut state = self.menu_state.write();
+        let key = (group_name.into(), proxy_name.into());
+        let Some(next_item) = state.proxy_items.get(&key).cloned() else {
+            return Ok(());
+        };
+
+        let previous_name = state.selected_proxies.get(group_name).cloned();
+        if previous_name.as_deref() == Some(proxy_name) {
+            return Ok(());
+        }
+
+        let previous_item = previous_name
+            .as_ref()
+            .and_then(|name| state.proxy_items.get(&(group_name.into(), name.clone())))
+            .cloned();
+
+        if let Some(previous_item) = &previous_item {
+            previous_item.set_checked(false)?;
+        }
+        if let Err(error) = next_item.set_checked(true) {
+            if let Some(previous_item) = previous_item {
+                logging_error!(Type::Tray, previous_item.set_checked(true));
+            }
+            return Err(error.into());
+        }
+
+        state.selected_proxies.insert(group_name.into(), proxy_name.into());
+        drop(state);
         Ok(())
     }
 
@@ -469,6 +544,7 @@ fn create_subcreate_proxy_menu_item(
     proxy_mode: &str,
     proxy_group_order_map: Option<HashMap<String, usize>>,
     proxy_nodes_data: Option<Proxies>,
+    menu_state: &mut TrayMenuState,
 ) -> Vec<Submenu<Wry>> {
     let proxy_submenus: Vec<Submenu<Wry>> = {
         let mut submenus: Vec<(String, usize, Submenu<Wry>)> = Vec::new();
@@ -491,13 +567,16 @@ fn create_subcreate_proxy_menu_item(
                 };
 
                 let now_proxy = group_data.now.as_deref().unwrap_or_default();
+                menu_state
+                    .selected_proxies
+                    .insert(group_name.as_str().into(), now_proxy.into());
 
                 // Create proxy items
                 let group_items: Vec<CheckMenuItem<Wry>> = all_proxies
                     .iter()
                     .filter_map(|proxy_str| {
                         let is_selected = *proxy_str == now_proxy;
-                        let item_id = format!("proxy_{}_{}", group_name, proxy_str);
+                        let item_id = proxy_menu_item_id(group_name, proxy_str);
 
                         // Get delay for display
                         let delay_text = proxy_nodes_data
@@ -514,6 +593,11 @@ fn create_subcreate_proxy_menu_item(
                         let display_text = format!("{}   | {}", proxy_str, delay_text);
 
                         CheckMenuItem::with_id(app_handle, item_id, display_text, true, is_selected, None::<&str>)
+                            .inspect(|item| {
+                                menu_state
+                                    .proxy_items
+                                    .insert((group_name.as_str().into(), proxy_str.as_str().into()), item.clone());
+                            })
                             .map_err(|e| logging!(warn, Type::Tray, "Failed to create proxy menu item: {}", e))
                             .ok()
                     })
@@ -604,8 +688,9 @@ async fn create_tray_menu(
     tun_mode_available: bool,
     profiles_preview: Vec<IProfilePreview<'_>>,
     options: TrayMenuOptions,
-) -> Result<tauri::menu::Menu<Wry>> {
+) -> Result<CreatedTrayMenu> {
     let current_proxy_mode = mode.unwrap_or("");
+    let mut menu_state = TrayMenuState::default();
 
     // TODO: should update tray menu again when it was timeout error
     let (proxy_nodes_data, runtime_proxy_groups_order) = if options.include_proxy_groups {
@@ -741,8 +826,13 @@ async fn create_tray_menu(
     )?;
 
     let (proxies_menu, inline_proxy_items) = if options.include_proxy_groups {
-        let proxy_sub_menus =
-            create_subcreate_proxy_menu_item(app_handle, current_proxy_mode, proxy_group_order_map, proxy_nodes_data);
+        let proxy_sub_menus = create_subcreate_proxy_menu_item(
+            app_handle,
+            current_proxy_mode,
+            proxy_group_order_map,
+            proxy_nodes_data,
+            &mut menu_state,
+        );
 
         match tray_proxy_groups_display_mode {
             "default" => create_proxy_menu_item(app_handle, false, proxy_sub_menus, &texts.proxies)?,
@@ -770,6 +860,8 @@ async fn create_tray_menu(
         tun_mode_enabled,
         hotkeys.get("toggle_tun_mode").copied(),
     )?;
+    menu_state.system_proxy = Some(system_proxy.clone());
+    menu_state.tun_mode = Some(tun_mode.clone());
 
     let close_all_connections = &MenuItem::with_id(
         app_handle,
@@ -888,7 +980,23 @@ async fn create_tray_menu(
     ]);
 
     let menu = tauri::menu::MenuBuilder::new(app_handle).items(&menu_items).build()?;
-    Ok(menu)
+    Ok(CreatedTrayMenu {
+        menu,
+        state: menu_state,
+    })
+}
+
+fn proxy_menu_item_id(group_name: &str, proxy_name: &str) -> std::string::String {
+    format!("{PROXY_MENU_ITEM_PREFIX}{}_{group_name}{proxy_name}", group_name.len())
+}
+
+fn parse_proxy_menu_item_id(id: &str) -> Option<(&str, &str)> {
+    let encoded = id.strip_prefix(PROXY_MENU_ITEM_PREFIX)?;
+    let (group_len, names) = encoded.split_once('_')?;
+    let group_len = group_len.parse::<usize>().ok()?;
+    let group_name = names.get(..group_len)?;
+    let proxy_name = names.get(group_len..)?;
+    Some((group_name, proxy_name))
 }
 
 fn on_tray_icon_event(_tray_icon: &TrayIcon, tray_event: TrayIconEvent) {
@@ -1010,15 +1118,10 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
                 };
                 feat::toggle_proxy_profile(profile_index.into()).await;
             }
-            id if id.starts_with("proxy_") => {
-                // proxy_{group_name}_{proxy_name}
-                let rest = match id.strip_prefix("proxy_") {
-                    Some(r) => r,
-                    None => return,
-                };
-                let (group_name, proxy_name) = match rest.split_once('_') {
-                    Some((g, p)) => (g, p),
-                    None => return,
+            id if id.starts_with(PROXY_MENU_ITEM_PREFIX) => {
+                let Some((group_name, proxy_name)) = parse_proxy_menu_item_id(id) else {
+                    logging!(warn, Type::Tray, "Invalid proxy menu item id: {id}");
+                    return;
                 };
                 feat::switch_proxy_node(group_name, proxy_name).await;
             }
@@ -1030,4 +1133,51 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
         // We dont expected to refresh tray state here
         // as the inner handle function (SHOULD) already takes care of it
     });
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{parse_proxy_menu_item_id, proxy_menu_item_id};
+    use std::collections::HashSet;
+
+    #[test]
+    fn proxy_menu_item_ids_round_trip_names_with_separators() {
+        let id = proxy_menu_item_id("group_with_underscores", "node_with_underscores");
+        assert_eq!(
+            parse_proxy_menu_item_id(&id),
+            Some(("group_with_underscores", "node_with_underscores"))
+        );
+    }
+
+    #[test]
+    fn proxy_menu_item_ids_round_trip_unicode_names() {
+        let id = proxy_menu_item_id("自动选择_日本", "香港_01");
+        assert_eq!(parse_proxy_menu_item_id(&id), Some(("自动选择_日本", "香港_01")));
+    }
+
+    #[test]
+    fn invalid_proxy_menu_item_ids_are_rejected() {
+        assert_eq!(parse_proxy_menu_item_id("proxy_missing-length"), None);
+        assert_eq!(parse_proxy_menu_item_id("proxy_999_too-short"), None);
+        assert_eq!(parse_proxy_menu_item_id("not-a-proxy_1_ab"), None);
+    }
+
+    #[test]
+    fn proxy_menu_item_ids_stay_unique_for_large_menus() {
+        let mut ids = HashSet::new();
+
+        for group_index in 0..100 {
+            for proxy_index in 0..100 {
+                let group_name = format!("group_{group_index}");
+                let proxy_name = format!("node_{proxy_index}");
+                let id = proxy_menu_item_id(&group_name, &proxy_name);
+
+                assert!(ids.insert(id.clone()));
+                assert_eq!(
+                    parse_proxy_menu_item_id(&id),
+                    Some((group_name.as_str(), proxy_name.as_str()))
+                );
+            }
+        }
+    }
 }

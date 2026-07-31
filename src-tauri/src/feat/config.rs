@@ -63,8 +63,9 @@ bitflags! {
         const LANGUAGE = 1 << 11;
         const LOG_LEVEL = 1 << 12;
         const LOG_FILE = 1 << 13;
+        const SYSTRAY_STATE = 1 << 14;
 
-        const GROUP_SYS_TRAY = Self::SYSTRAY_MENU.bits()
+        const GROUP_SYS_TRAY = Self::SYSTRAY_STATE.bits()
                              | Self::SYSTRAY_TOOLTIP.bits()
                              | Self::SYSTRAY_ICON.bits();
      }
@@ -232,6 +233,9 @@ async fn process_terminated_flags(update_flags: UpdateFlags, patch: &IVerge) -> 
     {
         hotkey::Hotkey::global().update(hotkeys.to_owned()).await?;
     }
+    if update_flags.contains(UpdateFlags::SYSTRAY_STATE) {
+        tray::Tray::global().update_toggle_states().await?;
+    }
     if update_flags.contains(UpdateFlags::SYSTRAY_MENU) {
         tray::Tray::global().update_menu().await?;
     }
@@ -323,4 +327,47 @@ pub async fn fetch_verge_config() -> Result<SharedDraft<IVerge>> {
     let draft = Config::verge().await;
     let data = draft.data_arc();
     Ok(data)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{IVerge, UpdateFlags, determine_update_flags};
+
+    #[test]
+    fn system_proxy_toggle_updates_tray_state_without_rebuilding_menu() {
+        let flags = determine_update_flags(&IVerge {
+            enable_system_proxy: Some(true),
+            ..IVerge::default()
+        });
+
+        assert!(flags.contains(UpdateFlags::SYS_PROXY));
+        assert!(flags.contains(UpdateFlags::SYSTRAY_STATE));
+        assert!(flags.contains(UpdateFlags::SYSTRAY_ICON));
+        assert!(flags.contains(UpdateFlags::SYSTRAY_TOOLTIP));
+        assert!(!flags.contains(UpdateFlags::SYSTRAY_MENU));
+    }
+
+    #[test]
+    fn tun_toggle_updates_tray_state_without_rebuilding_menu() {
+        let flags = determine_update_flags(&IVerge {
+            enable_tun_mode: Some(true),
+            ..IVerge::default()
+        });
+
+        assert!(flags.contains(UpdateFlags::CLASH_CONFIG));
+        assert!(flags.contains(UpdateFlags::SYSTRAY_STATE));
+        assert!(flags.contains(UpdateFlags::SYSTRAY_ICON));
+        assert!(flags.contains(UpdateFlags::SYSTRAY_TOOLTIP));
+        assert!(!flags.contains(UpdateFlags::SYSTRAY_MENU));
+    }
+
+    #[test]
+    fn tray_layout_changes_still_rebuild_the_menu() {
+        let flags = determine_update_flags(&IVerge {
+            tray_proxy_groups_display_mode: Some("inline".into()),
+            ..IVerge::default()
+        });
+
+        assert!(flags.contains(UpdateFlags::SYSTRAY_MENU));
+    }
 }

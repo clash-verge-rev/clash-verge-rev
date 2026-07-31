@@ -43,7 +43,10 @@ pub async fn switch_proxy_node(group_name: &str, proxy_name: &str) {
             logging!(info, Type::Tray, "切换代理成功: {} -> {}", group_name, proxy_name);
             record_switched_node(group_name, proxy_name).await;
             let _ = handle::Handle::app_handle().emit("verge://refresh-proxy-config", ());
-            let _ = tray::Tray::global().update_menu().await;
+            logging_error!(
+                Type::Tray,
+                tray::Tray::global().update_proxy_selection(group_name, proxy_name)
+            );
             return;
         }
         Err(err) => {
@@ -65,7 +68,10 @@ pub async fn switch_proxy_node(group_name: &str, proxy_name: &str) {
         Ok(_) => {
             logging!(info, Type::Tray, "代理切换回退成功: {} -> {}", group_name, proxy_name);
             record_switched_node(group_name, proxy_name).await;
-            let _ = tray::Tray::global().update_menu().await;
+            logging_error!(
+                Type::Tray,
+                tray::Tray::global().update_proxy_selection(group_name, proxy_name)
+            );
         }
         Err(err) => {
             logging!(
