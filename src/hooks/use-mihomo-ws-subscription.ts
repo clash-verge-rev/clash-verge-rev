@@ -90,9 +90,12 @@ const createSharedSubscriptionEntry = (
     if (entry.closed || entry.connecting || entry.ws) return
 
     entry.connecting = true
+    let candidateWs: MihomoWebSocket | null = null
     try {
       const ws = await connect()
+      candidateWs = ws
       if (entry.closed) {
+        candidateWs = null
         await ws.close()
         return
       }
@@ -100,6 +103,7 @@ const createSharedSubscriptionEntry = (
       const owner = pickActiveOwner(entry)
       await owner?.onConnected?.(ws)
       if (entry.closed) {
+        candidateWs = null
         await ws.close()
         return
       }
@@ -113,9 +117,18 @@ const createSharedSubscriptionEntry = (
       })
 
       entry.ws = ws
+      candidateWs = null
       syncSharedWsRefs(entry)
       clearReconnectTimer()
     } catch (ignoreError) {
+      const abandonedWs = candidateWs
+      if (abandonedWs) {
+        try {
+          await abandonedWs.close()
+        } catch (closeError) {
+          console.warn('Failed to close abandoned websocket', closeError)
+        }
+      }
       if (!entry.closed && !entry.ws) {
         clearReconnectTimer()
         entry.reconnectTimer = setTimeout(entry.connectWs, RECONNECT_DELAY_MS)
