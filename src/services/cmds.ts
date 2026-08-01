@@ -307,6 +307,48 @@ export async function getSystemHostname() {
   return invoke<string>('get_system_hostname')
 }
 
+export type WslProxySupport =
+  | 'ready'
+  | 'not_windows'
+  | 'not_installed'
+  | 'update_windows'
+  | 'update_wsl'
+  | 'no_distribution'
+  | 'no_wsl2_distribution'
+  | 'no_user_distribution'
+
+export interface WslProxyStatus {
+  support: WslProxySupport
+  integrationEnabled: boolean
+  configurationManaged: boolean
+  configurationReady: boolean
+  autoProxyEnabled: boolean
+  mirroredNetworking: boolean
+  restartRequired: boolean
+  proxyPort: number | null
+  configuredProxyPort: number | null
+  wslVersion: string | null
+  windowsBuild: number | null
+  distributions: {
+    name: string
+    version: number | null
+    running: boolean
+    manageable: boolean
+  }[]
+}
+
+export async function getWslProxyStatus() {
+  return invoke<WslProxyStatus>('get_wsl_proxy_status')
+}
+
+export async function setWslProxyEnabled(enabled: boolean) {
+  return invoke<WslProxyStatus>('set_wsl_proxy_enabled', { enabled })
+}
+
+export async function restartWsl() {
+  return invoke<void>('restart_wsl')
+}
+
 export async function getNetworkInterfacesInfo() {
   return invoke<INetworkInterface[]>('get_network_interfaces_info')
 }

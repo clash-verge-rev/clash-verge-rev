@@ -899,6 +899,8 @@ interface IVergeConfig {
   enable_auto_launch?: boolean
   enable_silent_start?: boolean
   enable_system_proxy?: boolean
+  enable_wsl_proxy?: boolean
+  wsl_proxy_port?: number
   enable_global_hotkey?: boolean
   enable_dns_settings?: boolean
   proxy_auto_config?: boolean
