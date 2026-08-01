@@ -516,19 +516,37 @@ impl CoreManager {
 
     pub async fn change_core(&self, clash_core: &String) -> Result<(), String> {
         if !IVerge::VALID_CLASH_CORES.contains(&clash_core.as_str()) {
-            return Err(format!("Invalid clash core: {}", clash_core).into());
+            return Err(format!("Invalid clash core: {clash_core}").into());
+        }
+
+        if !self.try_start_config_update() {
+            return Err("configuration update is already running".into());
+        }
+        defer! {
+            self.finish_config_update();
         }
 
         let old_core = Config::verge().await.latest_arc().clash_core.clone();
 
-        // 校验器基于已 apply 的配置生成，须先切到新内核
         Config::verge().await.edit_draft(|d| {
             d.clash_core = Some(clash_core.to_owned());
         });
         Config::verge().await.apply();
 
-        // 校验通过才落盘；失败回滚内存态，避免下次启动带着坏内核起
-        if let Err(e) = self.update_config_checked().await {
+        let outcome = self
+            .generate_and_validate_only()
+            .await
+            .map_err(|e| e.to_string())?;
+        if !outcome.is_valid() {
+            Config::verge().await.edit_draft(|d| {
+                d.clash_core = old_core;
+            });
+            Config::verge().await.apply();
+            return Err(outcome.to_string().into());
+        }
+
+        let verge_data = Config::verge().await.latest_arc();
+        if let Err(e) = verge_data.save_file().await {
             Config::verge().await.edit_draft(|d| {
                 d.clash_core = old_core;
             });
@@ -536,8 +554,28 @@ impl CoreManager {
             return Err(e.to_string().into());
         }
 
-        let verge_data = Config::verge().await.latest_arc();
-        verge_data.save_file().await.map_err(|e| e.to_string())?;
+        if let Err(e) = self.restart_core().await {
+            logging!(
+                error,
+                Type::Core,
+                "core restart after change to {clash_core} failed: {e:#}; rolling back"
+            );
+            Config::verge().await.edit_draft(|d| {
+                d.clash_core = old_core.clone();
+            });
+            Config::verge().await.apply();
+            if let Err(gen_err) = Config::generate().await {
+                logging!(error, Type::Core, "rollback generate failed: {gen_err:#}");
+            }
+            if let Err(save_err) = Config::verge().await.latest_arc().save_file().await {
+                logging!(error, Type::Core, "rollback save failed: {save_err:#}");
+            }
+            if let Err(restart_err) = self.restart_core().await {
+                logging!(error, Type::Core, "rollback restart failed: {restart_err:#}");
+            }
+            return Err(e.to_string().into());
+        }
+
         Ok(())
     }
 

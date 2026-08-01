@@ -205,12 +205,11 @@ fn determine_update_flags(patch: &IVerge) -> UpdateFlags {
 
 #[allow(clippy::cognitive_complexity)]
 async fn process_terminated_flags(update_flags: UpdateFlags, patch: &IVerge) -> Result<()> {
-    // Process updates based on flags
     if update_flags.contains(UpdateFlags::RESTART_CORE) {
         Config::generate().await?;
         CoreManager::global().restart_core().await?;
-    }
-    if update_flags.contains(UpdateFlags::CLASH_CONFIG) {
+        handle::Handle::refresh_clash();
+    } else if update_flags.contains(UpdateFlags::CLASH_CONFIG) {
         CoreManager::global().update_config_checked().await?;
         handle::Handle::refresh_clash();
     }
