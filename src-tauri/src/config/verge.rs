@@ -94,6 +94,12 @@ pub struct IVerge {
     /// set system proxy
     pub enable_system_proxy: Option<bool>,
 
+    /// independently expose the mixed proxy port to WSL login shells
+    pub enable_wsl_proxy: Option<bool>,
+
+    /// mixed proxy port last written to the managed WSL environment
+    pub wsl_proxy_port: Option<u16>,
+
     /// enable proxy guard
     pub enable_proxy_guard: Option<bool>,
 
@@ -513,6 +519,8 @@ impl IVerge {
         patch!(verge_port);
         patch!(verge_http_enabled);
         patch!(enable_system_proxy);
+        patch!(enable_wsl_proxy);
+        patch!(wsl_proxy_port);
         patch!(enable_proxy_guard);
         patch!(enable_bypass_check);
         patch!(use_default_bypass);
