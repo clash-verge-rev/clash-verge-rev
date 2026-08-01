@@ -29,7 +29,7 @@ export const SystemInfoCard = () => {
   const { t } = useTranslation()
   const { verge, patchVerge } = useVerge()
   const navigate = useNavigate()
-  const { isAdminMode, isSidecarMode } = useSystemState()
+  const { isAdminMode, isSidecarMode, mutateSystemState } = useSystemState()
   const { installServiceAndRestartCore } = useServiceInstaller()
 
   // 自动检查更新逻辑（lastCheckUpdate 由 useUpdate 统一管理）
@@ -89,11 +89,17 @@ export const SystemInfoCard = () => {
   }, [verge, patchVerge])
 
   // 点击运行模式处理,Sidecar或纯管理员模式允许安装服务
-  const handleRunningModeClick = useCallback(() => {
+  const handleRunningModeClick = useCallback(async () => {
     if (isSidecarMode || (isAdminMode && isSidecarMode)) {
-      installServiceAndRestartCore()
+      await installServiceAndRestartCore()
+      await mutateSystemState()
     }
-  }, [isSidecarMode, isAdminMode, installServiceAndRestartCore])
+  }, [
+    isSidecarMode,
+    isAdminMode,
+    installServiceAndRestartCore,
+    mutateSystemState,
+  ])
 
   // 检查更新
   const onCheckUpdate = useLockFn(async () => {
