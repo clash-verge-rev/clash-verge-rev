@@ -103,6 +103,7 @@
           "external": "외부",
           "webUI": "Web UI",
           "clashCore": "Clash 코어",
+          "smartSettings": "Smart Settings",
           "openUwpTool": "UWP 도구 열기",
           "updateGeoData": "GeoData 업데이트",
           "tunnels": {
@@ -295,7 +296,50 @@
     "clashCore": {
       "variants": {
         "release": "안정 버전",
-        "alpha": "알파 버전"
+        "alpha": "알파 버전",
+        "smart": "Smart Version"
+      },
+      "thirdPartySmart": {
+        "title": "Confirm Third-party Core",
+        "message": "Mihomo Smart is a third-party Smart core provided by vernesong/mihomo, not the default project core. Compatibility, strategy behavior, and update cadence are determined by the third-party core. Confirm to switch and restart the core."
+      }
+    },
+    "smart": {
+      "title": "Smart Settings",
+      "nonSmartCoreWarning": "Mihomo Smart is not the active core. You can save settings now, but model updates and cache cleanup require the Smart core.",
+      "fields": {
+        "strategyAutoSwitch": "Smart Strategy Auto Switch",
+        "groupDowngrade": "Downgrade Smart Groups on Non-Smart Cores",
+        "policyPriority": "Policy Priority",
+        "preferAsn": "Prefer ASN",
+        "useLightgbm": "Enable LightGBM Model",
+        "collectData": "Collect Training Data",
+        "sampleRate": "Data Collection Sample Rate",
+        "autoUpdate": "Auto Update Model",
+        "updateInterval": "Model Update Interval",
+        "modelUrl": "Model Variant",
+        "customModelUrl": "Custom Model URL",
+        "collectorSize": "Data Collector Size",
+        "actions": "Model and Cache"
+      },
+      "modelOptions": {
+        "large": "Large Model Model-large.bin",
+        "middle": "Middle Model Model-middle.bin",
+        "default": "Default Model Model.bin",
+        "custom": "Custom URL"
+      },
+      "actions": {
+        "updateModel": "Check and Update",
+        "clearCache": "Clear Smart Cache"
+      },
+      "messages": {
+        "modelUpdated": "Model updated",
+        "cacheCleared": "Smart cache cleared",
+        "smartCoreRequired": "Switch to Mihomo Smart first"
+      },
+      "confirmClear": {
+        "title": "Confirm Smart Cache Cleanup",
+        "message": "This will clear Smart core cache and training data smart_weight_data.csv. It will not delete the LightGBM model file Model.bin."
       }
     },
     "liteMode": {

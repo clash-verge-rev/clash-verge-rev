@@ -492,7 +492,9 @@ export const CurrentProxyCard = () => {
     return proxyView.groups.filter(
       (group) =>
         !group.hidden &&
-        (group.type === 'Selector' || group.type === 'URLTest'),
+        (group.type === 'Selector' ||
+          group.type === 'URLTest' ||
+          group.type === 'Smart'),
     )
   }, [proxyView])
 

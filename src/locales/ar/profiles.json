@@ -173,12 +173,17 @@
         "filter": "تصفية",
         "excludeFilter": "استبعاد المرشح",
         "excludeType": "استبعاد النوع",
+        "policyPriority": "Policy Priority",
+        "sampleRate": "Sample Rate",
         "includeAll": "تضمين جميع الوكلاء والمزودين",
         "includeAllProxies": "تضمين جميع الوكلاء",
         "includeAllProviders": "تضمين جميع المزودين"
       },
       "toggles": {
         "lazy": "كسول",
+        "useLightgbm": "Use LightGBM",
+        "collectData": "Collect Data",
+        "preferAsn": "Prefer ASN",
         "disableUdp": "تعطيل UDP",
         "hidden": "مخفي"
       },

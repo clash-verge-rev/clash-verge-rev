@@ -173,12 +173,17 @@
         "filter": "필터",
         "excludeFilter": "제외 필터",
         "excludeType": "제외 유형",
+        "policyPriority": "Policy Priority",
+        "sampleRate": "Sample Rate",
         "includeAll": "모든 프록시 및 제공자 포함",
         "includeAllProxies": "모든 프록시 포함",
         "includeAllProviders": "모든 제공자 포함"
       },
       "toggles": {
         "lazy": "지연 로딩",
+        "useLightgbm": "Use LightGBM",
+        "collectData": "Collect Data",
+        "preferAsn": "Prefer ASN",
         "disableUdp": "UDP 비활성화",
         "hidden": "숨김"
       },

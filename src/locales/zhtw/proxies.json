@@ -106,7 +106,8 @@
         "url-test": "根據網址測試延遲選擇代理",
         "fallback": "切換至另一個備用代理",
         "load-balance": "根據負載平衡分配代理",
-        "relay": "根據定義的代理鏈傳送"
+        "relay": "根據定義的代理鏈傳送",
+        "smart": "Select proxy by historical connection quality"
       },
       "policies": {
         "DIRECT": "直接連線 (DIRECT)",

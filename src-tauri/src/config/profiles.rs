@@ -729,10 +729,12 @@ fn reconcile_selected_nodes(
             plan.selected.push(selected_item.clone());
             continue;
         };
+        // Smart cores report type "Smart", which deserializes as ProxyType::Unknown until the
+        // mihomo plugin adds a dedicated variant. Manual fixed nodes still need re-activation.
         let is_selectable_group = matches!(
             &group.proxy_type,
             ProxyType::Selector | ProxyType::URLTest | ProxyType::Fallback | ProxyType::LoadBalance
-        );
+        ) || group.proxy_type.as_str() == "Smart";
         if !is_selectable_group {
             let preferred_node = group
                 .now
@@ -945,6 +947,49 @@ pub async fn record_selected_node(group_name: &str, node: &str) -> Result<()> {
 
     if recorded {
         // Newer than anything an activation still in flight captured.
+        supersede_selected_activation();
+        handle::Handle::refresh_profiles();
+    }
+    Ok(())
+}
+
+/// Drop a group's selection from the current profile.
+///
+/// Used when unfixed a URLTest/Smart group: if the profile still holds the node, the next core
+/// start re-applies it via [`activate_selected_nodes`] and the group is fixed again.
+pub async fn clear_selected_node(group_name: &str) -> Result<()> {
+    let group_name = String::from(group_name);
+    let cleared = Config::profiles()
+        .await
+        .with_data_modify(move |mut profiles| async move {
+            let Some(current) = profiles.current.clone() else {
+                return Ok((profiles, false));
+            };
+            let Some(item) = profiles
+                .items
+                .as_mut()
+                .and_then(|items| items.iter_mut().find(|item| item.uid.as_ref() == Some(&current)))
+            else {
+                return Ok((profiles, false));
+            };
+
+            let Some(selected) = item.selected.as_mut() else {
+                return Ok((profiles, false));
+            };
+            let before = selected.len();
+            selected.retain(|entry| entry.name.as_ref() != Some(&group_name));
+            if selected.len() == before {
+                return Ok((profiles, false));
+            }
+            if selected.is_empty() {
+                item.selected = None;
+            }
+            profiles.save_file().await?;
+            Ok((profiles, true))
+        })
+        .await?;
+
+    if cleared {
         supersede_selected_activation();
         handle::Handle::refresh_profiles();
     }

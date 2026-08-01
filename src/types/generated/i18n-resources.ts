@@ -333,16 +333,21 @@ export interface TranslationResources {
             interval: string
             maxFailedTimes: string
             name: string
+            policyPriority: string
             provider: string
             proxies: string
             routingMark: string
+            sampleRate: string
             type: string
           }
           title: string
           toggles: {
+            collectData: string
             disableUdp: string
             hidden: string
             lazy: string
+            preferAsn: string
+            useLightgbm: string
           }
         }
         logViewer: {
@@ -471,6 +476,7 @@ export interface TranslationResources {
             'load-balance': string
             relay: string
             select: string
+            smart: string
             'url-test': string
           }
         }
@@ -897,9 +903,14 @@ export interface TranslationResources {
           }
         }
         clashCore: {
+          thirdPartySmart: {
+            message: string
+            title: string
+          }
           variants: {
             alpha: string
             release: string
+            smart: string
           }
         }
         clashPort: {
@@ -1093,6 +1104,44 @@ export interface TranslationResources {
           }
           title: string
         }
+        smart: {
+          actions: {
+            clearCache: string
+            updateModel: string
+          }
+          confirmClear: {
+            message: string
+            title: string
+          }
+          fields: {
+            actions: string
+            autoUpdate: string
+            collectData: string
+            collectorSize: string
+            customModelUrl: string
+            groupDowngrade: string
+            modelUrl: string
+            policyPriority: string
+            preferAsn: string
+            sampleRate: string
+            strategyAutoSwitch: string
+            updateInterval: string
+            useLightgbm: string
+          }
+          messages: {
+            cacheCleared: string
+            modelUpdated: string
+            smartCoreRequired: string
+          }
+          modelOptions: {
+            custom: string
+            default: string
+            large: string
+            middle: string
+          }
+          nonSmartCoreWarning: string
+          title: string
+        }
         sysproxy: {
           actions: {
             editPac: string
@@ -1207,6 +1256,7 @@ export interface TranslationResources {
               logLevel: string
               openUwpTool: string
               portConfig: string
+              smartSettings: string
               tunnels: {
                 actions: {
                   add: string

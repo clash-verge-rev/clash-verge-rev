@@ -173,12 +173,17 @@
         "filter": "Фильтр",
         "excludeFilter": "Исключающий фильтр",
         "excludeType": "Тип исключения",
+        "policyPriority": "Policy Priority",
+        "sampleRate": "Sample Rate",
         "includeAll": "Включить все прокси и провайдеры",
         "includeAllProxies": "Включить все прокси",
         "includeAllProviders": "Включить всех провайдеров"
       },
       "toggles": {
         "lazy": "Ленивая загрузка",
+        "useLightgbm": "Use LightGBM",
+        "collectData": "Collect Data",
+        "preferAsn": "Prefer ASN",
         "disableUdp": "Отключить UDP",
         "hidden": "Скрытая"
       },

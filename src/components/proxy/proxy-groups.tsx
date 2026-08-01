@@ -194,7 +194,10 @@ function ChainProxyGroups(props: {
     const groups = proxyView?.groups
     if (!groups) return []
     return groups.filter(
-      (group) => group.type === 'Selector' || group.type === 'URLTest',
+      (group) =>
+        group.type === 'Selector' ||
+        group.type === 'URLTest' ||
+        group.type === 'Smart',
     )
   }, [proxyView?.groups])
 
@@ -460,7 +463,7 @@ function NormalProxyGroups(props: { mode: string }) {
     }
   }, [handleScroll])
 
-  const { handleProxyGroupChange } = useProxySelection({
+  const { clearProxySelection, handleProxyGroupChange } = useProxySelection({
     onSuccess: () => {
       onProxies()
     },
@@ -472,12 +475,22 @@ function NormalProxyGroups(props: { mode: string }) {
 
   const handleChangeProxy = useCallback(
     (group: ProxyGroupView, member: ResolvedProxyMember) => {
-      if (!['Selector', 'URLTest', 'Fallback'].includes(group.type)) return
+      if (!['Selector', 'URLTest', 'Fallback', 'Smart'].includes(group.type))
+        return
       if (!isInteractableMember(member)) return
+
+      if (
+        ['Smart', 'URLTest'].includes(group.type) &&
+        group.now === member.ref.name &&
+        group.fixed === member.ref.name
+      ) {
+        void clearProxySelection(group.name)
+        return
+      }
 
       handleProxyGroupChange(group, { name: member.ref.name })
     },
-    [handleProxyGroupChange],
+    [clearProxySelection, handleProxyGroupChange],
   )
 
   // 滚到对应的节点

@@ -25,6 +25,7 @@ pub enum ChainType {
 #[derive(Debug, Clone)]
 pub enum ChainSupport {
     ClashMeta,
+    /// smart 内核基于 mihomo alpha，共用 alpha 的兼容性脚本
     ClashMetaAlpha,
 }
 
@@ -150,7 +151,7 @@ impl ChainSupport {
         match core {
             Some(core) => matches!(
                 (self, core.as_str()),
-                (Self::ClashMeta, "verge-mihomo") | (Self::ClashMetaAlpha, "verge-mihomo-alpha")
+                (Self::ClashMeta, "verge-mihomo") | (Self::ClashMetaAlpha, "verge-mihomo-alpha" | "verge-mihomo-smart")
             ),
             None => true,
         }

@@ -45,7 +45,7 @@ import {
   useRef,
   useState,
 } from 'react'
-import { Controller, useForm } from 'react-hook-form'
+import { Controller, useForm, useWatch } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 
 import {
@@ -84,6 +84,7 @@ const PROXY_STRATEGY_LABEL_KEYS: Record<string, TranslationKey> = {
   fallback: 'proxies.components.enums.strategies.fallback',
   'load-balance': 'proxies.components.enums.strategies.load-balance',
   relay: 'proxies.components.enums.strategies.relay',
+  smart: 'proxies.components.enums.strategies.smart',
 }
 
 const PROXY_POLICY_LABEL_KEYS: Record<string, TranslationKey> =
@@ -140,6 +141,27 @@ const buildGroupsYaml = (
   )
 }
 
+const cleanGroup = (group: IProxyGroupConfig): IProxyGroupConfig => {
+  const next = Object.fromEntries(
+    Object.entries(group).filter(([, value]) => {
+      if (value === undefined || value === null) return false
+      if (typeof value === 'string') return value.length > 0
+      if (typeof value === 'number') return Number.isFinite(value)
+      if (Array.isArray(value)) return value.length > 0
+      return true
+    }),
+  ) as IProxyGroupConfig
+
+  if (next.type !== 'smart') {
+    delete next['policy-priority']
+    delete next.uselightgbm
+    delete next.collectdata
+    delete next['sample-rate']
+    delete next['prefer-asn']
+  }
+
+  return next
+}
 export const GroupsEditorViewer = (props: Props) => {
   const { mergeUid, proxiesUid, profileUid, property, open, onClose, onSave } =
     props
@@ -175,6 +197,7 @@ export const GroupsEditorViewer = (props: Props) => {
       lazy: true,
     },
   })
+  const selectedGroupType = useWatch({ control, name: 'type' })
   const [groupList, setGroupList] = useState<IProxyGroupConfig[]>([])
   const [proxyPolicyList, setProxyPolicyList] = useState<string[]>([])
   const [proxyProviderList, setProxyProviderList] = useState<string[]>([])
@@ -583,6 +606,7 @@ export const GroupsEditorViewer = (props: Props) => {
                           'fallback',
                           'load-balance',
                           'relay',
+                          'smart',
                         ]}
                         value={field.value}
                         getOptionLabel={translateStrategy}
@@ -719,6 +743,99 @@ export const GroupsEditorViewer = (props: Props) => {
                     </Item>
                   )}
                 />
+                {selectedGroupType === 'smart' && (
+                  <>
+                    <Controller
+                      name="policy-priority"
+                      control={control}
+                      render={({ field }) => (
+                        <Item>
+                          <ListItemText
+                            primary={t(
+                              'profiles.modals.groupsEditor.fields.policyPriority',
+                            )}
+                          />
+                          <TextField
+                            autoComplete="new-password"
+                            placeholder="Premium:0.9;SG:1.3"
+                            size="small"
+                            sx={{ width: 'calc(100% - 150px)' }}
+                            {...field}
+                          />
+                        </Item>
+                      )}
+                    />
+                    <Controller
+                      name="sample-rate"
+                      control={control}
+                      render={({ field }) => (
+                        <Item>
+                          <ListItemText
+                            primary={t(
+                              'profiles.modals.groupsEditor.fields.sampleRate',
+                            )}
+                          />
+                          <TextField
+                            autoComplete="new-password"
+                            placeholder="1"
+                            type="number"
+                            size="small"
+                            sx={{ width: 'calc(100% - 150px)' }}
+                            onChange={(e) => {
+                              field.onChange(
+                                e.target.value === ''
+                                  ? undefined
+                                  : parseFloat(e.target.value),
+                              )
+                            }}
+                          />
+                        </Item>
+                      )}
+                    />
+                    <Controller
+                      name="uselightgbm"
+                      control={control}
+                      render={({ field }) => (
+                        <Item>
+                          <ListItemText
+                            primary={t(
+                              'profiles.modals.groupsEditor.toggles.useLightgbm',
+                            )}
+                          />
+                          <Switch checked={field.value ?? false} {...field} />
+                        </Item>
+                      )}
+                    />
+                    <Controller
+                      name="collectdata"
+                      control={control}
+                      render={({ field }) => (
+                        <Item>
+                          <ListItemText
+                            primary={t(
+                              'profiles.modals.groupsEditor.toggles.collectData',
+                            )}
+                          />
+                          <Switch checked={field.value ?? false} {...field} />
+                        </Item>
+                      )}
+                    />
+                    <Controller
+                      name="prefer-asn"
+                      control={control}
+                      render={({ field }) => (
+                        <Item>
+                          <ListItemText
+                            primary={t(
+                              'profiles.modals.groupsEditor.toggles.preferAsn',
+                            )}
+                          />
+                          <Switch checked={field.value ?? false} {...field} />
+                        </Item>
+                      )}
+                    />
+                  </>
+                )}
                 <Controller
                   name="expected-status"
                   control={control}
@@ -1050,14 +1167,15 @@ export const GroupsEditorViewer = (props: Props) => {
                   onClick={() => {
                     try {
                       validateGroup()
+                      const group = cleanGroup(formIns.getValues())
                       for (const item of [...prependSeq, ...groupList]) {
-                        if (item.name === formIns.getValues().name) {
+                        if (item.name === group.name) {
                           throw new Error(
                             t('profiles.modals.groupsEditor.errors.nameExists'),
                           )
                         }
                       }
-                      setPrependSeq([formIns.getValues(), ...prependSeq])
+                      setPrependSeq([group, ...prependSeq])
                     } catch (err) {
                       showNotice.error(err)
                     }
@@ -1074,14 +1192,15 @@ export const GroupsEditorViewer = (props: Props) => {
                   onClick={() => {
                     try {
                       validateGroup()
+                      const group = cleanGroup(formIns.getValues())
                       for (const item of [...appendSeq, ...groupList]) {
-                        if (item.name === formIns.getValues().name) {
+                        if (item.name === group.name) {
                           throw new Error(
                             t('profiles.modals.groupsEditor.errors.nameExists'),
                           )
                         }
                       }
-                      setAppendSeq([...appendSeq, formIns.getValues()])
+                      setAppendSeq([...appendSeq, group])
                     } catch (err) {
                       showNotice.error(err)
                     }

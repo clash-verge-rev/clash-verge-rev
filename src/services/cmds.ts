@@ -135,6 +135,16 @@ export async function recordSelectedNode(groupName: string, node: string) {
   return invoke<void>('record_selected_node', { groupName, node })
 }
 
+/**
+ * Drop a group's selection from the current profile.
+ *
+ * Pair with unfixed for URLTest/Smart groups: leaving the record would re-fix the node on the
+ * next core start via activate_selected_nodes.
+ */
+export async function clearSelectedNode(groupName: string) {
+  return invoke<void>('clear_selected_node', { groupName })
+}
+
 export async function getProxyView(): Promise<ProxyViewV1> {
   const view = await invoke<ProxyViewV1>('get_proxy_view')
   if (view.schemaVersion !== 1) {
@@ -210,6 +220,14 @@ export async function changeClashCore(clashCore: string) {
 
 export async function restartCore() {
   return invoke<void>('restart_core')
+}
+
+export async function upgradeLightgbmModel() {
+  return invoke<void>('upgrade_lgbm_model')
+}
+
+export async function flushSmartCache() {
+  return invoke<void>('flush_smart_cache')
 }
 
 export async function restartApp() {

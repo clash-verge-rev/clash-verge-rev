@@ -1,5 +1,4 @@
 use super::{CoreManager, RunningMode};
-use crate::cmd::StringifyErr as _;
 use crate::config::{Config, IVerge};
 use crate::core::handle::Handle;
 use crate::core::manager::CLASH_LOGGER;
@@ -517,18 +516,66 @@ impl CoreManager {
 
     pub async fn change_core(&self, clash_core: &String) -> Result<(), String> {
         if !IVerge::VALID_CLASH_CORES.contains(&clash_core.as_str()) {
-            return Err(format!("Invalid clash core: {}", clash_core).into());
+            return Err(format!("Invalid clash core: {clash_core}").into());
         }
+
+        if !self.try_start_config_update() {
+            return Err("configuration update is already running".into());
+        }
+        defer! {
+            self.finish_config_update();
+        }
+
+        let old_core = Config::verge().await.latest_arc().clash_core.clone();
 
         Config::verge().await.edit_draft(|d| {
             d.clash_core = Some(clash_core.to_owned());
         });
         Config::verge().await.apply();
 
-        let verge_data = Config::verge().await.latest_arc();
-        verge_data.save_file().await.map_err(|e| e.to_string())?;
+        let outcome = self
+            .generate_and_validate_only()
+            .await
+            .map_err(|e| e.to_string())?;
+        if !outcome.is_valid() {
+            Config::verge().await.edit_draft(|d| {
+                d.clash_core = old_core;
+            });
+            Config::verge().await.apply();
+            return Err(outcome.to_string().into());
+        }
 
-        self.update_config_checked().await.stringify_err()?;
+        let verge_data = Config::verge().await.latest_arc();
+        if let Err(e) = verge_data.save_file().await {
+            Config::verge().await.edit_draft(|d| {
+                d.clash_core = old_core;
+            });
+            Config::verge().await.apply();
+            return Err(e.to_string().into());
+        }
+
+        if let Err(e) = self.restart_core().await {
+            logging!(
+                error,
+                Type::Core,
+                "core restart after change to {clash_core} failed: {e:#}; rolling back"
+            );
+            Config::verge().await.edit_draft(|d| {
+                d.clash_core = old_core.clone();
+            });
+            Config::verge().await.apply();
+            if let Err(gen_err) = Config::generate().await {
+                logging!(error, Type::Core, "rollback generate failed: {gen_err:#}");
+            }
+            if let Err(save_err) = Config::verge().await.latest_arc().save_file().await {
+                logging!(error, Type::Core, "rollback save failed: {save_err:#}");
+            }
+            if let Err(restart_err) = self.restart_core().await {
+                logging!(error, Type::Core, "rollback restart failed: {restart_err:#}");
+            }
+            return Err(e.to_string().into());
+        }
+
         Ok(())
     }
 

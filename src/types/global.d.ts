@@ -303,7 +303,7 @@ interface ISeqProfileConfig {
 
 interface IProxyGroupConfig {
   name: string
-  type: 'select' | 'url-test' | 'fallback' | 'load-balance' | 'relay'
+  type: 'select' | 'url-test' | 'fallback' | 'load-balance' | 'relay' | 'smart'
   proxies?: string[]
   use?: string[]
   url?: string
@@ -321,6 +321,11 @@ interface IProxyGroupConfig {
   'exclude-filter'?: string
   'exclude-type'?: string
   'expected-status'?: string
+  'policy-priority'?: string
+  uselightgbm?: boolean
+  collectdata?: boolean
+  'sample-rate'?: number
+  'prefer-asn'?: boolean
   hidden?: boolean
   icon?: string
 }
@@ -943,6 +948,17 @@ interface IVergeConfig {
   enable_auto_delay_detection?: boolean
   auto_delay_detection_interval_minutes?: number
   enable_builtin_enhanced?: boolean
+  smart_strategy_auto_switch?: boolean
+  smart_group_downgrade?: boolean
+  smart_policy_priority?: string
+  smart_prefer_asn?: boolean
+  smart_use_lightgbm?: boolean
+  smart_collect_data?: boolean
+  smart_sample_rate?: number
+  smart_lgbm_auto_update?: boolean
+  smart_lgbm_update_interval?: number
+  smart_lgbm_url?: string
+  smart_collector_size?: number
   auto_log_clean?: 0 | 1 | 2 | 3 | 4
   enable_auto_backup_schedule?: boolean
   auto_backup_interval_hours?: number

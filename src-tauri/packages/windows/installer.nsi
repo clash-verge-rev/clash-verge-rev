@@ -566,6 +566,22 @@ FunctionEnd
     !endif
   ${EndIf}
 
+  ; Check if verge-mihomo-smart.exe is running
+  !if "${INSTALLMODE}" == "currentUser"
+    nsis_tauri_utils::FindProcessCurrentUser "verge-mihomo-smart.exe"
+  !else
+    nsis_tauri_utils::FindProcess "verge-mihomo-smart.exe"
+  !endif
+  Pop $R0
+  ${If} $R0 = 0
+    DetailPrint "Kill verge-mihomo-smart.exe..."
+    !if "${INSTALLMODE}" == "currentUser"
+      nsis_tauri_utils::KillProcessCurrentUser "verge-mihomo-smart.exe"
+    !else
+      nsis_tauri_utils::KillProcess "verge-mihomo-smart.exe"
+    !endif
+  ${EndIf}
+
   ; Check if verge-mihomo-alpha.exe is running
   !if "${INSTALLMODE}" == "currentUser"
     nsis_tauri_utils::FindProcessCurrentUser "verge-mihomo-alpha.exe"

@@ -106,7 +106,8 @@
         "url-test": "url-test",
         "fallback": "fallback",
         "load-balance": "load-balance",
-        "relay": "relay"
+        "relay": "relay",
+        "smart": "Select proxy by historical connection quality"
       },
       "policies": {
         "DIRECT": "DIRECT",

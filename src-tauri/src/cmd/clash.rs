@@ -1,6 +1,5 @@
 use super::{CmdResult, WithErrorCode as _, coded_error};
 use crate::feat;
-use crate::utils::{dirs, yaml_emitter};
 use crate::{
     cmd::StringifyErr as _,
     config::{ClashInfo, Config},
@@ -9,6 +8,7 @@ use crate::{
         CoreManager, handle,
         validate::{CoreConfigValidator, ValidationOutcome},
     },
+    utils::{dirs, mihomo_api, yaml_emitter},
 };
 use clash_verge_logging::{Type, logging, logging_error};
 use compact_str::CompactString;
@@ -65,22 +65,10 @@ pub async fn change_clash_core(clash_core: String) -> CmdResult<Option<String>> 
     match CoreManager::global().change_core(&clash_core).await {
         Ok(_) => {
             logging_error!(Type::Core, Config::profiles().await.data_arc().save_file().await);
-
-            // 切换内核后重启内核
-            match CoreManager::global().restart_core().await {
-                Ok(_) => {
-                    logging!(info, Type::Core, "core changed and restarted to {clash_core}");
-                    handle::Handle::notice_message("config_core::change_success", clash_core);
-                    handle::Handle::refresh_clash();
-                    Ok(None)
-                }
-                Err(err) => {
-                    let error_msg: String = format!("Core changed but failed to restart: {err}").into();
-                    handle::Handle::notice_message("config_core::change_error", error_msg.clone());
-                    logging!(error, Type::Core, "{error_msg}");
-                    Ok(Some(coded_error("CORE_CHANGE_FAILED", error_msg)))
-                }
-            }
+            logging!(info, Type::Core, "core changed and restarted to {clash_core}");
+            handle::Handle::notice_message("config_core::change_success", clash_core);
+            handle::Handle::refresh_clash();
+            Ok(None)
         }
         Err(err) => {
             let error_msg: String = err;
@@ -130,6 +118,32 @@ pub async fn restart_core() -> CmdResult {
         handle::Handle::refresh_clash();
     }
     result
+}
+
+/// 清理 Smart 训练数据。保留 LightGBM 模型文件 Model.bin。
+async fn clear_smart_data() -> CmdResult {
+    let app_dir = dirs::app_home_dir().stringify_err()?;
+    let data_path = app_dir.join("smart_weight_data.csv");
+
+    if fs::try_exists(&data_path).await.stringify_err()? {
+        fs::remove_file(&data_path).await.stringify_err()?;
+        logging!(info, Type::Config, "Smart data file removed: {data_path:?}");
+    }
+
+    Ok(())
+}
+
+/// 更新 Smart LightGBM 模型。
+#[tauri::command]
+pub async fn upgrade_lgbm_model() -> CmdResult {
+    mihomo_api::upgrade_lgbm().await
+}
+
+/// 清理 Smart 内核缓存。
+#[tauri::command]
+pub async fn flush_smart_cache() -> CmdResult {
+    mihomo_api::flush_smart_cache().await?;
+    clear_smart_data().await
 }
 
 /// 测试URL延迟

@@ -180,6 +180,12 @@ const META_VERSION_URL =
 const META_URL_PREFIX = `https://github.com/MetaCubeX/mihomo/releases/download`
 let META_VERSION
 
+const SMART_VERSION_URL =
+  'https://github.com/vernesong/mihomo/releases/download/Prerelease-Alpha/version.txt'
+const SMART_URL_PREFIX =
+  'https://github.com/vernesong/mihomo/releases/download/Prerelease-Alpha'
+let SMART_VERSION
+
 const META_ALPHA_MAP = {
   'win32-x64': 'mihomo-windows-amd64-v2',
   'win32-ia32': 'mihomo-windows-386',
@@ -206,6 +212,20 @@ const META_MAP = {
   'linux-arm': 'mihomo-linux-armv7',
   'linux-riscv64': 'mihomo-linux-riscv64',
   'linux-loong64': 'mihomo-linux-loong64',
+}
+
+const SMART_MAP = {
+  'win32-x64': 'mihomo-windows-amd64-v2',
+  'win32-ia32': 'mihomo-windows-386',
+  'win32-arm64': 'mihomo-windows-arm64',
+  'darwin-x64': 'mihomo-darwin-amd64-v1',
+  'darwin-arm64': 'mihomo-darwin-arm64',
+  'linux-x64': 'mihomo-linux-amd64-v2',
+  'linux-ia32': 'mihomo-linux-386',
+  'linux-arm64': 'mihomo-linux-arm64',
+  'linux-arm': 'mihomo-linux-armv7',
+  'linux-riscv64': 'mihomo-linux-riscv64',
+  'linux-loong64': 'mihomo-linux-loong64-abi2',
 }
 
 // =======================
@@ -277,6 +297,40 @@ async function getLatestReleaseVersion() {
   }
 }
 
+async function getLatestSmartVersion() {
+  if (!FORCE) {
+    const cached = await getCachedVersion('SMART_VERSION')
+    if (cached) {
+      SMART_VERSION = cached
+      return
+    }
+  }
+  const options = {}
+  const httpProxy =
+    process.env.HTTP_PROXY ||
+    process.env.http_proxy ||
+    process.env.HTTPS_PROXY ||
+    process.env.https_proxy
+  if (httpProxy) options.agent = new HttpsProxyAgent(httpProxy)
+
+  try {
+    const response = await fetch(SMART_VERSION_URL, {
+      ...options,
+      method: 'GET',
+    })
+    if (!response.ok)
+      throw new Error(
+        `Failed to fetch ${SMART_VERSION_URL}: ${response.status}`,
+      )
+    SMART_VERSION = (await response.text()).trim()
+    log_info(`Latest smart version: ${SMART_VERSION}`)
+    await setCachedVersion('SMART_VERSION', SMART_VERSION)
+  } catch (err) {
+    log_error('Error fetching latest smart version:', err.message)
+    process.exit(1)
+  }
+}
+
 // =======================
 // Validate availability
 // =======================
@@ -285,6 +339,9 @@ if (!META_MAP[`${platform}-${arch}`]) {
 }
 if (!META_ALPHA_MAP[`${platform}-${arch}`]) {
   throw new Error(`clash meta alpha unsupported platform "${platform}-${arch}"`)
+}
+if (!SMART_MAP[`${platform}-${arch}`]) {
+  throw new Error(`smart mihomo unsupported platform "${platform}-${arch}"`)
 }
 
 // =======================
@@ -313,6 +370,21 @@ function clashMeta() {
     exeFile: `${name}${isWin ? '.exe' : ''}`,
     zipFile: `${name}-${META_VERSION}.${urlExt}`,
     downloadURL: `${META_URL_PREFIX}/${META_VERSION}/${name}-${META_VERSION}.${urlExt}`,
+  }
+}
+
+function clashMetaSmart() {
+  const name = SMART_MAP[`${platform}-${arch}`]
+  const isWin = platform === 'win32'
+  const urlExt = isWin ? 'zip' : 'gz'
+  const zipFile = `${name}-${SMART_VERSION}.${urlExt}`
+  const exeFile = isWin ? `${zipFile.replace(/\.zip$/, '')}.exe` : name
+  return {
+    name: 'verge-mihomo-smart',
+    targetFile: `verge-mihomo-smart-${SIDECAR_HOST}${isWin ? '.exe' : ''}`,
+    exeFile,
+    zipFile,
+    downloadURL: `${SMART_URL_PREFIX}/${zipFile}`,
   }
 }
 
@@ -709,6 +781,12 @@ const tasks = [
     name: 'verge-mihomo',
     func: () =>
       getLatestReleaseVersion().then(() => resolveSidecar(clashMeta())),
+    retry: 5,
+  },
+  {
+    name: 'verge-mihomo-smart',
+    func: () =>
+      getLatestSmartVersion().then(() => resolveSidecar(clashMetaSmart())),
     retry: 5,
   },
   { name: 'plugin', func: resolvePlugin, retry: 5, winOnly: true },

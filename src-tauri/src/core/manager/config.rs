@@ -220,6 +220,14 @@ impl CoreManager {
         }
     }
 
+    pub async fn generate_and_validate_only(&self) -> Result<ValidationOutcome> {
+        if let Err(err) = Config::generate().await {
+            let message: String = err.to_string().into();
+            return Ok(ValidationOutcome::invalid_from_message(message));
+        }
+        CoreConfigValidator::global().validate_config_outcome().await
+    }
+
     fn should_update_config(&self) -> bool {
         let now = Instant::now();
         let last = self.get_last_update();

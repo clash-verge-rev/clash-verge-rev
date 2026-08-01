@@ -3,11 +3,12 @@ import {
   closeConnection,
   getConnections,
   selectNodeForGroup,
+  unfixedProxy,
 } from 'tauri-plugin-mihomo-api'
 
 import { useRecordSelection } from '@/hooks/use-record-selection'
 import { useVerge } from '@/hooks/use-verge'
-import { syncTrayProxySelection } from '@/services/cmds'
+import { clearSelectedNode, syncTrayProxySelection } from '@/services/cmds'
 import { debugLog } from '@/utils/debug'
 
 // 缓存连接清理
@@ -61,6 +62,12 @@ export const useProxySelection = (options: ProxySelectionOptions = {}) => {
   const syncTraySelection = useCallback(() => {
     syncTrayProxySelection().catch((error) => {
       console.error('[ProxySelection] 托盘状态同步失败:', error)
+    })
+  }, [])
+
+  const clearPersistedSelection = useCallback((groupName: string) => {
+    clearSelectedNode(groupName).catch((error) => {
+      console.error('[ProxySelection] 清除代理选择保存失败:', error)
     })
   }, [])
 
@@ -142,8 +149,29 @@ export const useProxySelection = (options: ProxySelectionOptions = {}) => {
     [changeProxy],
   )
 
+  const clearProxySelection = useCallback(
+    async (groupName: string) => {
+      debugLog(`[ProxySelection] 取消固定代理: ${groupName}`)
+
+      try {
+        await unfixedProxy(groupName)
+        onSuccess?.()
+        syncTraySelection()
+        // Unfixing must also drop the profile record, otherwise core start
+        // re-applies the old node via activate_selected_nodes and re-fixes it.
+        clearPersistedSelection(groupName)
+        debugLog(`[ProxySelection] 代理固定状态已取消: ${groupName}`)
+      } catch (error) {
+        console.error(`[ProxySelection] 取消固定代理失败: ${groupName}`, error)
+        onError?.(error)
+      }
+    },
+    [clearPersistedSelection, onError, onSuccess, syncTraySelection],
+  )
+
   return {
     changeProxy,
+    clearProxySelection,
     handleSelectChange,
     handleProxyGroupChange,
   }

@@ -147,6 +147,9 @@ fn determine_update_flags(patch: &IVerge) -> UpdateFlags {
     if tun_mode.is_some() {
         update_flags.insert(UpdateFlags::CLASH_CONFIG | UpdateFlags::GROUP_SYS_TRAY);
     }
+    if patch.has_smart_runtime_patch() {
+        update_flags.insert(UpdateFlags::CLASH_CONFIG);
+    }
     if enable_global_hotkey.is_some() || home_cards.is_some() {
         update_flags.insert(UpdateFlags::VERGE_CONFIG);
     }
@@ -202,12 +205,11 @@ fn determine_update_flags(patch: &IVerge) -> UpdateFlags {
 
 #[allow(clippy::cognitive_complexity)]
 async fn process_terminated_flags(update_flags: UpdateFlags, patch: &IVerge) -> Result<()> {
-    // Process updates based on flags
     if update_flags.contains(UpdateFlags::RESTART_CORE) {
         Config::generate().await?;
         CoreManager::global().restart_core().await?;
-    }
-    if update_flags.contains(UpdateFlags::CLASH_CONFIG) {
+        handle::Handle::refresh_clash();
+    } else if update_flags.contains(UpdateFlags::CLASH_CONFIG) {
         CoreManager::global().update_config_checked().await?;
         handle::Handle::refresh_clash();
     }

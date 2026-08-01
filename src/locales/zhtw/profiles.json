@@ -173,12 +173,17 @@
         "filter": "篩選節點",
         "excludeFilter": "排除節點",
         "excludeType": "排除節點類型",
+        "policyPriority": "Policy Priority",
+        "sampleRate": "Sample Rate",
         "includeAll": "包含所有輸出代理、代理集合",
         "includeAllProxies": "包含所有輸出代理",
         "includeAllProviders": "包含所有代理集合"
       },
       "toggles": {
         "lazy": "延遲載入",
+        "useLightgbm": "Use LightGBM",
+        "collectData": "Collect Data",
+        "preferAsn": "Prefer ASN",
         "disableUdp": "停用 UDP",
         "hidden": "隱藏代理組"
       },

@@ -173,12 +173,17 @@
         "filter": "Filter",
         "excludeFilter": "Kecualikan Filter",
         "excludeType": "Kecualikan Jenis",
+        "policyPriority": "Policy Priority",
+        "sampleRate": "Sample Rate",
         "includeAll": "Sertakan Semua Proksi dan Penyedia",
         "includeAllProxies": "Sertakan Semua Proksi",
         "includeAllProviders": "Sertakan Semua Penyedia"
       },
       "toggles": {
         "lazy": "Malas",
+        "useLightgbm": "Use LightGBM",
+        "collectData": "Collect Data",
+        "preferAsn": "Prefer ASN",
         "disableUdp": "Nonaktifkan UDP",
         "hidden": "Tersembunyi"
       },

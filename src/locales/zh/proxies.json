@@ -106,7 +106,8 @@
         "url-test": "根据 URL 测试延迟选择代理",
         "fallback": "不可用时切换到另一个代理",
         "load-balance": "根据负载均衡分配代理",
-        "relay": "根据定义的代理链传递"
+        "relay": "根据定义的代理链传递",
+        "smart": "根据历史质量智能选择代理"
       },
       "policies": {
         "DIRECT": "直接连接 (DIRECT)",

@@ -23,6 +23,7 @@ import { HeaderConfiguration } from './mods/external-controller-cors'
 import { GuardState } from './mods/guard-state'
 import { NetworkInterfaceViewer } from './mods/network-interface-viewer'
 import { SettingItem, SettingList } from './mods/setting-comp'
+import { SmartSettingsViewer } from './mods/smart-settings-viewer'
 import { TunnelsViewer } from './mods/tunnels-viewer'
 import { WebUIViewer } from './mods/web-ui-viewer'
 
@@ -60,6 +61,7 @@ const SettingClash = ({ onError }: Props) => {
   const dnsRef = useRef<DialogRef>(null)
   const corsRef = useRef<DialogRef>(null)
   const tunnelRef = useRef<DialogRef>(null)
+  const smartRef = useRef<DialogRef>(null)
 
   const onSwitchFormat = (_e: any, value: boolean) => value
   const onChangeData = (patch: Partial<IConfigData>) => {
@@ -101,6 +103,7 @@ const SettingClash = ({ onError }: Props) => {
       <DnsViewer ref={dnsRef} />
       <HeaderConfiguration ref={corsRef} />
       <TunnelsViewer ref={tunnelRef} />
+      <SmartSettingsViewer ref={smartRef} />
       <SettingItem
         label={t('settings.sections.clash.form.fields.allowLan')}
         extra={
@@ -265,6 +268,11 @@ const SettingClash = ({ onError }: Props) => {
       >
         <Typography sx={{ py: '7px', pr: 1 }}>{version}</Typography>
       </SettingItem>
+
+      <SettingItem
+        onClick={() => smartRef.current?.open()}
+        label={t('settings.sections.clash.form.fields.smartSettings')}
+      />
 
       {isWIN && (
         <SettingItem

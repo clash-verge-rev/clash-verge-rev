@@ -32,6 +32,14 @@ pub async fn record_selected_node(group_name: String, node: String) -> CmdResult
         .stringify_err()
 }
 
+/// Drop a group's selection from the current profile (e.g. after unfixed URLTest/Smart).
+#[tauri::command]
+pub async fn clear_selected_node(group_name: String) -> CmdResult<()> {
+    crate::config::profiles::clear_selected_node(&group_name)
+        .await
+        .stringify_err()
+}
+
 static TRAY_SYNC_RUNNING: AtomicBool = AtomicBool::new(false);
 static TRAY_SYNC_PENDING: AtomicBool = AtomicBool::new(false);
 

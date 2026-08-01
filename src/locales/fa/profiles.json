@@ -173,12 +173,17 @@
         "filter": "فیلتر",
         "excludeFilter": "فیلتر استثناء",
         "excludeType": "نوع استثناء",
+        "policyPriority": "Policy Priority",
+        "sampleRate": "Sample Rate",
         "includeAll": "شامل همه پروکسی‌ها و ارائه‌دهنده‌ها",
         "includeAllProxies": "شامل همه پروکسی‌ها",
         "includeAllProviders": "شامل همه ارائه‌دهنده‌ها"
       },
       "toggles": {
         "lazy": "تنبل",
+        "useLightgbm": "Use LightGBM",
+        "collectData": "Collect Data",
+        "preferAsn": "Prefer ASN",
         "disableUdp": "غیرفعال کردن UDP",
         "hidden": "مخفی"
       },

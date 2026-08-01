@@ -1,6 +1,7 @@
 mod chain;
 pub mod field;
 mod merge;
+mod runtime;
 mod script;
 pub mod seq;
 mod tun;
@@ -9,13 +10,17 @@ use self::{
     chain::{AsyncChainItemFrom as _, ChainItem, ChainType},
     field::{use_keys, use_lowercase, use_sort},
     merge::use_merge,
+    runtime::apply_core_runtime_settings,
     script::use_script,
     seq::{SeqMap, use_seq},
-    tun::use_tun,
+    tun::{use_smart_tun_route_exclude, use_tun},
 };
 use crate::utils::dirs;
 use crate::{
-    config::{Config, IVerge, PrfItem},
+    config::{
+        Config, DEFAULT_SMART_COLLECTOR_SIZE, DEFAULT_SMART_LGBM_UPDATE_INTERVAL, DEFAULT_SMART_LGBM_URL,
+        DEFAULT_SMART_SAMPLE_RATE, IVerge, PrfItem,
+    },
     constants,
     utils::tmpl,
 };
@@ -31,6 +36,7 @@ type ResultLog = Vec<(String, String)>;
 struct ConfigValues {
     clash_config: Mapping,
     clash_core: Option<String>,
+    smart_settings: SmartSettings,
     enable_tun: bool,
     enable_builtin: bool,
     socks_enabled: bool,
@@ -41,6 +47,22 @@ struct ConfigValues {
     redir_enabled: bool,
     #[cfg(target_os = "linux")]
     tproxy_enabled: bool,
+}
+
+#[derive(Debug, Clone, Default)]
+struct SmartSettings {
+    strategy_auto_switch: bool,
+    group_downgrade: bool,
+    latency_test_url: Option<String>,
+    policy_priority: Option<String>,
+    prefer_asn: bool,
+    use_lightgbm: bool,
+    collect_data: bool,
+    sample_rate: f64,
+    lgbm_auto_update: bool,
+    lgbm_update_interval: u64,
+    lgbm_url: String,
+    collector_size: u64,
 }
 
 #[derive(Debug)]
@@ -118,6 +140,18 @@ async fn get_config_values() -> ConfigValues {
         ref verge_http_enabled,
         ref enable_dns_settings,
         ref enable_external_controller,
+        ref default_latency_test,
+        ref smart_strategy_auto_switch,
+        ref smart_group_downgrade,
+        ref smart_policy_priority,
+        ref smart_prefer_asn,
+        ref smart_use_lightgbm,
+        ref smart_collect_data,
+        ref smart_sample_rate,
+        ref smart_lgbm_auto_update,
+        ref smart_lgbm_update_interval,
+        ref smart_lgbm_url,
+        ref smart_collector_size,
         ..
     } = **verge_arc;
     let enable_external_controller = enable_external_controller.unwrap_or(false);
@@ -137,12 +171,41 @@ async fn get_config_values() -> ConfigValues {
     #[cfg(target_os = "linux")]
     let tproxy_enabled = verge_arc.verge_tproxy_enabled.unwrap_or(false);
 
+    let policy_priority = match smart_policy_priority.as_ref() {
+        Some(value) if value.trim().is_empty() => None,
+        Some(value) => Some(value.trim().into()),
+        None => None,
+    };
+
+    let smart_settings = SmartSettings {
+        strategy_auto_switch: smart_strategy_auto_switch.unwrap_or(true),
+        group_downgrade: smart_group_downgrade.unwrap_or(true),
+        latency_test_url: default_latency_test.clone(),
+        policy_priority,
+        prefer_asn: smart_prefer_asn.unwrap_or(false),
+        use_lightgbm: smart_use_lightgbm.unwrap_or(true),
+        collect_data: smart_collect_data.unwrap_or(false),
+        sample_rate: smart_sample_rate.unwrap_or(DEFAULT_SMART_SAMPLE_RATE).clamp(0.0, 1.0),
+        lgbm_auto_update: smart_lgbm_auto_update.unwrap_or(true),
+        lgbm_update_interval: smart_lgbm_update_interval
+            .unwrap_or(DEFAULT_SMART_LGBM_UPDATE_INTERVAL)
+            .max(1),
+        lgbm_url: smart_lgbm_url
+            .as_ref()
+            .map(|value| value.trim())
+            .filter(|value| !value.is_empty())
+            .unwrap_or(DEFAULT_SMART_LGBM_URL)
+            .into(),
+        collector_size: smart_collector_size.unwrap_or(DEFAULT_SMART_COLLECTOR_SIZE).max(1),
+    };
+
     drop(verge_arc);
     drop(verge);
 
     ConfigValues {
         clash_config,
         clash_core,
+        smart_settings,
         enable_tun,
         enable_builtin,
         socks_enabled,
@@ -547,11 +610,11 @@ fn merge_default_config(
     config
 }
 
-async fn apply_builtin_scripts(mut config: Mapping, clash_core: Option<String>, enable_builtin: bool) -> Mapping {
+async fn apply_builtin_scripts(mut config: Mapping, clash_core: Option<&String>, enable_builtin: bool) -> Mapping {
     if enable_builtin {
         let items: Vec<_> = ChainItem::builtin()
             .into_iter()
-            .filter(|(s, _)| s.is_support(clash_core.as_ref()))
+            .filter(|(s, _)| s.is_support(clash_core))
             .map(|(_, c)| c)
             .collect();
         for item in items {
@@ -719,6 +782,7 @@ pub async fn enhance() -> Result<(Mapping, HashSet<String>, HashMap<String, Resu
     let ConfigValues {
         clash_config,
         clash_core,
+        smart_settings,
         enable_tun,
         enable_builtin,
         socks_enabled,
@@ -763,7 +827,7 @@ pub async fn enhance() -> Result<(Mapping, HashSet<String>, HashMap<String, Resu
     );
 
     // app 生成项先于手动覆盖。
-    let config = apply_builtin_scripts(config, clash_core, enable_builtin).await;
+    let config = apply_builtin_scripts(config, clash_core.as_ref(), enable_builtin).await;
     let config = use_tun(config, enable_tun);
     let config = apply_dns_settings(config, enable_dns_settings).await;
 
@@ -789,7 +853,12 @@ pub async fn enhance() -> Result<(Mapping, HashSet<String>, HashMap<String, Resu
     let config = authoritative.enforce(config);
     let config = ensure_lan_bind_address(config);
 
+    // Smart-only 运行时字段最后收口：
+    // - Smart core: 注入/转换 smart 配置
+    // - 非 Smart core: 剥掉 lgbm/smart group 字段，防止手动覆写塞回来
+    let config = apply_core_runtime_settings(config, clash_core.as_deref(), &smart_settings);
     let config = cleanup_proxy_groups(config);
+    let config = use_smart_tun_route_exclude(config, clash_core.as_deref());
     let config = use_sort(config);
 
     let mut exists_keys_set = HashSet::new();
