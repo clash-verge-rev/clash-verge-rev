@@ -16,11 +16,13 @@
         "systemProxy": "Proksi Sistem"
       },
       "tooltips": {
-        "silentStart": "Mulai program dalam mode latar belakang tanpa menampilkan panel"
+        "silentStart": "Mulai program dalam mode latar belakang tanpa menampilkan panel",
+        "wslProxy": "Configure experimental host proxy sharing for WSL 2"
       },
       "fields": {
         "autoLaunch": "Mulai otomatis",
-        "silentStart": "Mulai senyap"
+        "silentStart": "Mulai senyap",
+        "wslProxy": "WSL Proxy (Experimental)"
       },
       "notifications": {
         "tunMode": {
@@ -314,6 +316,57 @@
       },
       "messages": {
         "autoEnterHint": "When closing the window, LightWeight Mode will be automatically activated after {{n}} minutes"
+      }
+    },
+    "wslProxy": {
+      "title": "WSL Proxy Integration",
+      "actions": {
+        "restart": "Restart WSL",
+        "documentation": "Microsoft WSL documentation",
+        "applyOff": "Apply Off",
+        "reapply": "Reapply"
+      },
+      "fields": {
+        "proxyIntegration": "Use the Windows system proxy in WSL 2",
+        "autoProxy": "WSL autoProxy",
+        "proxyEndpoint": "Direct proxy endpoint",
+        "networkingMode": "Networking mode",
+        "distributions": "Detected distributions",
+        "compatibility": "Compatibility"
+      },
+      "values": {
+        "mirrored": "Mirrored",
+        "other": "NAT or custom",
+        "distribution": "{{name}} (WSL {{version}})",
+        "internalDistribution": "{{name}} (internal, skipped)",
+        "compatibility": "WSL {{version}} · Windows build {{build}}"
+      },
+      "support": {
+        "ready": "This system supports WSL proxy integration.",
+        "notWindows": "WSL proxy integration is available only on Windows.",
+        "notInstalled": "WSL is not installed or is disabled.",
+        "updateWindows": "Windows 11 version 22H2 or newer is required.",
+        "updateWsl": "WSL 2.0 or newer is required. Run wsl --update first.",
+        "noDistribution": "Install a WSL distribution before enabling integration.",
+        "noWsl2Distribution": "No WSL 2 distribution was detected. WSL 1 does not support this integration.",
+        "noUserDistribution": "Only internal container distributions were detected. Install a user WSL 2 distribution first."
+      },
+      "messages": {
+        "scope": "Uses Microsoft's autoProxy support to share the Windows HTTP(S) system proxy with WSL 2. Enabling also selects mirrored networking. Linux files are not modified; container runtimes may still need their own proxy configuration.",
+        "integrationDetail": "Updates %UserProfile%\\.wslconfig and creates a one-time backup before the first change.",
+        "autoProxyDetail": "Kept disabled so the Windows System Proxy switch cannot override the independent WSL choice.",
+        "unmanaged": "WSL has not been explicitly managed yet, so its default autoProxy behavior may still follow the Windows System Proxy. Apply Off to make the disabled state explicit.",
+        "configurationDrift": "The managed WSL configuration no longer matches the current settings or mixed port (configured {{configuredPort}}, current {{currentPort}}).",
+        "tunModeWarning": "This integration is for System Proxy mode. TUN with WSL mirrored networking has known compatibility limitations.",
+        "restartRequired": "The configuration changed while WSL was running. Restart WSL to apply it.",
+        "running": "{{count}} WSL distribution(s) are running. Restart only when it is safe to stop their processes.",
+        "restartConfirmation": "This stops every running WSL distribution and may interrupt terminals, containers, and background work. Restart WSL now?",
+        "loadFailed": "Could not inspect the WSL configuration."
+      },
+      "notifications": {
+        "enabled": "WSL proxy integration enabled",
+        "disabled": "WSL proxy integration disabled",
+        "restarted": "WSL restarted"
       }
     },
     "backup": {

@@ -4,11 +4,15 @@ import { useTranslation } from 'react-i18next'
 import { DialogRef, Switch, TooltipIcon } from '@/components/base'
 import ProxyControlSwitches from '@/components/shared/proxy-control-switches'
 import { useVerge } from '@/hooks/use-verge'
+import getSystem from '@/utils/get-system'
 
 import { GuardState } from './mods/guard-state'
 import { SettingList, SettingItem } from './mods/setting-comp'
 import { SysproxyViewer } from './mods/sysproxy-viewer'
 import { TunViewer } from './mods/tun-viewer'
+import { WslProxyViewer } from './mods/wsl-proxy-viewer'
+
+const OS = getSystem()
 
 interface Props {
   onError?: (err: Error) => void
@@ -23,6 +27,7 @@ const SettingSystem = ({ onError }: Props) => {
 
   const sysproxyRef = useRef<DialogRef>(null)
   const tunRef = useRef<DialogRef>(null)
+  const wslProxyRef = useRef<DialogRef>(null)
 
   const onSwitchFormat = (
     _e: React.ChangeEvent<HTMLInputElement>,
@@ -36,6 +41,7 @@ const SettingSystem = ({ onError }: Props) => {
     <SettingList title={t('settings.sections.system.title')}>
       <SysproxyViewer ref={sysproxyRef} />
       <TunViewer ref={tunRef} />
+      {OS === 'windows' && <WslProxyViewer ref={wslProxyRef} />}
 
       <ProxyControlSwitches
         label={t('settings.sections.system.toggles.tunMode')}
@@ -46,6 +52,14 @@ const SettingSystem = ({ onError }: Props) => {
         label={t('settings.sections.system.toggles.systemProxy')}
         onError={onError}
       />
+
+      {OS === 'windows' && (
+        <SettingItem
+          onClick={() => wslProxyRef.current?.open()}
+          label={t('settings.sections.system.fields.wslProxy')}
+          secondary={t('settings.sections.system.tooltips.wslProxy')}
+        />
+      )}
 
       <SettingItem label={t('settings.sections.system.fields.autoLaunch')}>
         <GuardState

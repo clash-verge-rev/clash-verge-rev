@@ -16,11 +16,13 @@
         "systemProxy": "系统代理"
       },
       "tooltips": {
-        "silentStart": "程序启动时以后台模式运行，不显示程序面板"
+        "silentStart": "程序启动时以后台模式运行，不显示程序面板",
+        "wslProxy": "为 WSL 2 终端配置独立代理"
       },
       "fields": {
         "autoLaunch": "开机自启",
-        "silentStart": "静默启动"
+        "silentStart": "静默启动",
+        "wslProxy": "WSL 代理（实验性）"
       },
       "notifications": {
         "tunMode": {
@@ -314,6 +316,57 @@
       },
       "messages": {
         "autoEnterHint": "关闭窗口后，轻量模式将在 {{n}} 分钟后自动激活"
+      }
+    },
+    "wslProxy": {
+      "title": "WSL 代理集成",
+      "actions": {
+        "restart": "重启 WSL",
+        "documentation": "Microsoft WSL 文档",
+        "applyOff": "应用关闭状态",
+        "reapply": "重新应用"
+      },
+      "fields": {
+        "proxyIntegration": "在 WSL 2 中使用 Clash Verge Rev 代理",
+        "autoProxy": "WSL 自动代理",
+        "proxyEndpoint": "直连代理端点",
+        "networkingMode": "网络模式",
+        "distributions": "检测到的发行版",
+        "compatibility": "兼容性"
+      },
+      "values": {
+        "mirrored": "镜像模式",
+        "other": "NAT 或自定义模式",
+        "distribution": "{{name}}（WSL {{version}}）",
+        "internalDistribution": "{{name}}（内部发行版，已跳过）",
+        "compatibility": "WSL {{version}} · Windows 内部版本 {{build}}"
+      },
+      "support": {
+        "ready": "当前系统支持 WSL 代理集成。",
+        "notWindows": "WSL 代理集成仅适用于 Windows。",
+        "notInstalled": "WSL 尚未安装或未启用。",
+        "updateWindows": "需要 Windows 11 22H2 或更高版本。",
+        "updateWsl": "需要 WSL 2.0 或更高版本，请先运行 wsl --update。",
+        "noDistribution": "请先安装一个 WSL 发行版。",
+        "noWsl2Distribution": "未检测到 WSL 2 发行版；WSL 1 不支持此集成。",
+        "noUserDistribution": "仅检测到容器工具的内部发行版，请先安装一个用户 WSL 2 发行版。"
+      },
+      "messages": {
+        "scope": "让 WSL 2 中的 POSIX 登录 Shell 直接连接 Clash Verge Rev 的混合代理端口，不依赖 Windows 系统代理开关。启用时会选择镜像网络，并在每个用户发行版中安装由应用管理的 Shell 环境。容器工具的内部发行版会被跳过；容器运行时可能仍需单独配置代理。",
+        "integrationDetail": "更新 %UserProfile%\\.wslconfig、创建一次性备份，并在每个 WSL 2 发行版中管理 /etc/profile.d/clash-verge-rev-proxy.sh。",
+        "autoProxyDetail": "保持关闭，避免 Windows 系统代理开关覆盖独立的 WSL 选择。",
+        "unmanaged": "WSL 尚未被明确管理，因此默认 autoProxy 行为仍可能跟随 Windows 系统代理。请应用关闭状态以明确禁用。",
+        "configurationDrift": "托管的 WSL 配置与当前设置或混合端口不一致（已配置 {{configuredPort}}，当前 {{currentPort}}）。",
+        "tunModeWarning": "WSL 直连代理独立于 TUN。TUN 与 WSL 镜像网络的组合存在已知兼容性限制。",
+        "restartRequired": "WSL 运行期间配置已更改，请重启 WSL 以应用设置。",
+        "running": "有 {{count}} 个 WSL 发行版正在运行。请确认可以安全停止其中的进程后再重启。",
+        "restartConfirmation": "此操作会停止所有正在运行的 WSL 发行版，并可能中断终端、容器和后台任务。现在重启 WSL 吗？",
+        "loadFailed": "无法检查 WSL 配置。"
+      },
+      "notifications": {
+        "enabled": "已启用 WSL 代理集成",
+        "disabled": "已禁用 WSL 代理集成",
+        "restarted": "WSL 已重启"
       }
     },
     "backup": {

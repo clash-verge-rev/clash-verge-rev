@@ -1180,6 +1180,57 @@ export interface TranslationResources {
           }
           title: string
         }
+        wslProxy: {
+          actions: {
+            applyOff: string
+            documentation: string
+            reapply: string
+            restart: string
+          }
+          fields: {
+            autoProxy: string
+            compatibility: string
+            distributions: string
+            networkingMode: string
+            proxyEndpoint: string
+            proxyIntegration: string
+          }
+          messages: {
+            autoProxyDetail: string
+            configurationDrift: string
+            integrationDetail: string
+            loadFailed: string
+            restartConfirmation: string
+            restartRequired: string
+            running: string
+            scope: string
+            tunModeWarning: string
+            unmanaged: string
+          }
+          notifications: {
+            disabled: string
+            enabled: string
+            restarted: string
+          }
+          support: {
+            noDistribution: string
+            notInstalled: string
+            notWindows: string
+            noUserDistribution: string
+            noWsl2Distribution: string
+            ready: string
+            updateWindows: string
+            updateWsl: string
+          }
+          title: string
+          values: {
+            compatibility: string
+            distribution: string
+            internalDistribution: string
+            mirrored: string
+            other: string
+          }
+        }
       }
       page: {
         actions: {
@@ -1313,6 +1364,7 @@ export interface TranslationResources {
           fields: {
             autoLaunch: string
             silentStart: string
+            wslProxy: string
           }
           notifications: {
             tunMode: {
@@ -1327,6 +1379,7 @@ export interface TranslationResources {
           }
           tooltips: {
             silentStart: string
+            wslProxy: string
           }
         }
       }
