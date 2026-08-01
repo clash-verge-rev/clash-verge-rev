@@ -438,7 +438,13 @@ fn macos_service_tool_path(source: &Path) -> Result<PathBuf> {
 }
 
 fn service_core_path(clash_core: &str, bin_ext: &str) -> Result<PathBuf> {
-    let sibling = current_exe()?.with_file_name(format!("{clash_core}{bin_ext}"));
+    let sibling = current_exe()
+        .map_err(|error| {
+            anyhow::anyhow!(
+                "failed to locate the current executable while resolving Service core {clash_core:?}: {error}"
+            )
+        })?
+        .with_file_name(format!("{clash_core}{bin_ext}"));
 
     #[cfg(all(target_os = "macos", feature = "verge-dev"))]
     {
@@ -898,7 +904,10 @@ pub(super) async fn start_with_existing_service(config_file: &Path) -> Result<()
         let err_msg = response.message;
         logging!(error, Type::Service, "启动核心失败: {}", err_msg);
         start_owner_monitor();
-        bail!(err_msg);
+        bail!(
+            "failed to start Service core at {}: {err_msg}",
+            request.runtime.core_path
+        );
     }
 
     let result = response.data.context("Clash Verge Service 未返回会话信息")?;
