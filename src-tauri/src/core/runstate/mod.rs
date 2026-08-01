@@ -24,7 +24,7 @@ use std::{
     time::Duration,
 };
 
-use anyhow::{Context as _, Error, Result, bail};
+use anyhow::{Context as _, Result, bail};
 use arc_swap::ArcSwap;
 use backon::{ConstantBuilder, Retryable as _};
 use clash_verge_logging::{Type, logging};
