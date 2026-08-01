@@ -43,6 +43,7 @@ import {
 
 import { TooltipIcon } from '@/components/base'
 import { useRuntimeConfig } from '@/hooks/use-clash'
+import { useRecordSelection } from '@/hooks/use-record-selection'
 import { useAppRefreshers, useProxiesData } from '@/providers/app-data-context'
 import { updateProxyChainConfigInRuntime } from '@/services/cmds'
 import {
@@ -259,6 +260,7 @@ export const ProxyChain = ({
   const { refreshProxy } = useAppRefreshers()
   const { data: runtimeConfig } = useRuntimeConfig(true)
   const [isConnecting, setIsConnecting] = useState(false)
+  const recordSelection = useRecordSelection()
   const markUnsavedChanges = useCallback(() => {
     onMarkUnsavedChanges?.()
   }, [onMarkUnsavedChanges])
@@ -379,10 +381,12 @@ export const ProxyChain = ({
         if (targetGroup) {
           try {
             await selectNodeForGroup(targetGroup, 'DIRECT')
+            recordSelection(targetGroup, 'DIRECT')
           } catch {
             if (currentProxyChain.length >= 1) {
               try {
                 await selectNodeForGroup(targetGroup, currentProxyChain[0].name)
+                recordSelection(targetGroup, currentProxyChain[0].name)
               } catch {
                 // ignore
               }
@@ -440,6 +444,9 @@ export const ProxyChain = ({
       const targetGroup = mode === 'global' ? 'GLOBAL' : selectedGroup
 
       await selectNodeForGroup(targetGroup || 'GLOBAL', lastNode.name)
+      // The chain moves the group like any other selection, so the profile has to learn about
+      // it: what the profile holds is what gets re-applied the next time the core starts.
+      recordSelection(targetGroup || 'GLOBAL', lastNode.name)
       localStorage.setItem('proxy-chain-group', targetGroup || 'GLOBAL')
       localStorage.setItem('proxy-chain-exit-node', lastNode.name)
 
@@ -461,6 +468,7 @@ export const ProxyChain = ({
     proxyView,
     selectedGroup,
     onUpdateChain,
+    recordSelection,
   ])
 
   // 处理链式代理配置数据

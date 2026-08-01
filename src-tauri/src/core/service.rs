@@ -1114,7 +1114,7 @@ fn start_owner_monitor() {
                          preserving local proxy state while the core endpoint still answers"
                     );
                 }
-                let owner_endpoint_available = Handle::mihomo().await.get_version().await.is_ok();
+                let owner_endpoint_available = Handle::mihomo().get_version().await.is_ok();
                 step = watch.resolve_transport(owner_endpoint_available);
             }
 

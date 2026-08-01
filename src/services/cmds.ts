@@ -125,6 +125,26 @@ export async function syncTrayProxySelection() {
   return invoke<void>('sync_tray_proxy_selection')
 }
 
+/**
+ * Record which node a group is on, in the current profile.
+ *
+ * Group and node, not the whole selection list: the merge happens in the backend against the
+ * profile as it stands, so two selections made in quick succession cannot overwrite each other.
+ */
+export async function recordSelectedNode(groupName: string, node: string) {
+  return invoke<void>('record_selected_node', { groupName, node })
+}
+
+/**
+ * Drop a group's selection from the current profile.
+ *
+ * Pair with unfixed for URLTest/Smart groups: leaving the record would re-fix the node on the
+ * next core start via activate_selected_nodes.
+ */
+export async function clearSelectedNode(groupName: string) {
+  return invoke<void>('clear_selected_node', { groupName })
+}
+
 export async function getProxyView(): Promise<ProxyViewV1> {
   const view = await invoke<ProxyViewV1>('get_proxy_view')
   if (view.schemaVersion !== 1) {

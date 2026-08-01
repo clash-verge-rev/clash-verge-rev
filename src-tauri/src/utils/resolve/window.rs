@@ -185,7 +185,7 @@ pub fn on_web_content_process_terminated(webview: &tauri::Webview) {
     // reload 必须与清理同任务、排在其后，否则清理可能误清重载后新页面的订阅（竞态）。
     let webview = webview.clone();
     crate::process::AsyncHandler::spawn(move || async move {
-        if let Err(err) = handle::Handle::mihomo().await.clear_all_ws_connections().await {
+        if let Err(err) = handle::Handle::mihomo().clear_all_ws_connections().await {
             logging!(warn, Type::Window, "清理 Mihomo WebSocket 连接失败: {err}");
         } else {
             logging!(info, Type::Window, "已清理全部 Mihomo WebSocket 连接");

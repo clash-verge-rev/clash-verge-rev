@@ -46,12 +46,21 @@ pub async fn save_proxy_ports(settings: ProxyPortSettings) -> Result<SaveProxyPo
     let verge = Config::verge().await;
     let runtime = Config::runtime().await;
     // Every rejection and every failure below leaves the three layers as they were.
-    let transaction = DraftTransaction::new(vec![&clash, &verge, &runtime]);
+    let transaction = DraftTransaction::begin(vec![&clash, &verge, &runtime])?;
 
     stage_proxy_ports(&settings).await;
     // The candidate ports are staged but nothing is serving them yet, so close PAC rather
-    // than hand out a script for a port that is between owners.
+    // than hand out a script for a port that is between owners. The PAC endpoint resolves the
+    // Mixed Port through the draft layer, so from here until the drafts are committed or rolled
+    // back it would otherwise answer with a port nothing is listening on.
     manager.core_starting();
+    // Most ways out of here are a rejection: the candidate is refused and the Core keeps
+    // serving on its old ports, having never been stopped. Re-deriving PAC from the Running
+    // Mode is what reopens it for that Core — and it is equally correct after a restart that
+    // succeeded, or one that failed and left the Core down.
+    defer! {
+        manager.core_start_settled();
+    }
     Config::generate()
         .await
         .context("failed to generate candidate proxy port configuration")?;

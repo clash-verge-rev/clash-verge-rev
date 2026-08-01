@@ -384,21 +384,16 @@ export const CurrentProxyCard = () => {
       }
       const previousProxy = selectedGroup.now
       const nextName = option.member.ref.name
+      // Recorded like any other selection, global mode included: what the profile holds is
+      // what gets re-applied when a core starts, so a choice it never learns about is undone.
       handleSelectChange(
         selectedGroup.name,
         previousProxy,
-        isGlobalMode,
       )({
         target: { value: nextName },
       })
     },
-    [
-      handleSelectChange,
-      isDirectMode,
-      isGlobalMode,
-      selectedGroup,
-      unsortedProxyOptions,
-    ],
+    [handleSelectChange, isDirectMode, selectedGroup, unsortedProxyOptions],
   )
 
   // 导航到代理页面

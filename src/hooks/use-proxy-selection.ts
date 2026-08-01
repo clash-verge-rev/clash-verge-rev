@@ -6,9 +6,9 @@ import {
   unfixedProxy,
 } from 'tauri-plugin-mihomo-api'
 
-import { useProfiles } from '@/hooks/use-profiles'
+import { useRecordSelection } from '@/hooks/use-record-selection'
 import { useVerge } from '@/hooks/use-verge'
-import { syncTrayProxySelection } from '@/services/cmds'
+import { clearSelectedNode, syncTrayProxySelection } from '@/services/cmds'
 import { debugLog } from '@/utils/debug'
 
 // 缓存连接清理
@@ -38,12 +38,11 @@ interface ProxyChangeRequest {
   groupName: string
   proxyName: string
   previousProxy?: string
-  skipConfigSave: boolean
 }
 
 // 代理选择 Hook
 export const useProxySelection = (options: ProxySelectionOptions = {}) => {
-  const { current, patchCurrent } = useProfiles()
+  const recordSelection = useRecordSelection()
   const { verge } = useVerge()
   const pendingRequestRef = useRef<ProxyChangeRequest | null>(null)
   const isProcessingRef = useRef(false)
@@ -66,52 +65,22 @@ export const useProxySelection = (options: ProxySelectionOptions = {}) => {
     })
   }, [])
 
-  const persistSelection = useCallback(
-    (groupName: string, proxyName: string, skipConfigSave: boolean) => {
-      if (!current || skipConfigSave) return
-
-      const selected = current.selected ? [...current.selected] : []
-      const index = selected.findIndex((item) => item.name === groupName)
-
-      if (index < 0) {
-        selected.push({ name: groupName, now: proxyName })
-      } else {
-        selected[index] = { name: groupName, now: proxyName }
-      }
-
-      patchCurrent({ selected }).catch((error) => {
-        console.error('[ProxySelection] 保存代理选择失败:', error)
-      })
-    },
-    [current, patchCurrent],
-  )
-
-  const removePersistedSelection = useCallback(
-    (groupName: string) => {
-      if (!current?.selected) return
-
-      const selected = current.selected.filter(
-        (item) => item.name !== groupName,
-      )
-      if (selected.length === current.selected.length) return
-
-      patchCurrent({ selected }).catch((error) => {
-        console.error('[ProxySelection] 清除代理选择保存失败:', error)
-      })
-    },
-    [current, patchCurrent],
-  )
+  const clearPersistedSelection = useCallback((groupName: string) => {
+    clearSelectedNode(groupName).catch((error) => {
+      console.error('[ProxySelection] 清除代理选择保存失败:', error)
+    })
+  }, [])
 
   const executeChange = useCallback(
     async (request: ProxyChangeRequest) => {
-      const { groupName, proxyName, previousProxy, skipConfigSave } = request
+      const { groupName, proxyName, previousProxy } = request
       debugLog(`[ProxySelection] 代理切换: ${groupName} -> ${proxyName}`)
 
       try {
         await selectNodeForGroup(groupName, proxyName)
         onSuccess?.()
         syncTraySelection()
-        persistSelection(groupName, proxyName, skipConfigSave)
+        recordSelection(groupName, proxyName)
         debugLog(
           `[ProxySelection] 代理和状态同步完成: ${groupName} -> ${proxyName}`,
         )
@@ -131,7 +100,7 @@ export const useProxySelection = (options: ProxySelectionOptions = {}) => {
         onError?.(error)
       }
     },
-    [config, onError, onSuccess, persistSelection, syncTraySelection],
+    [config, onError, onSuccess, recordSelection, syncTraySelection],
   )
 
   const flushChangeQueue = useCallback(async () => {
@@ -153,17 +122,11 @@ export const useProxySelection = (options: ProxySelectionOptions = {}) => {
   }, [executeChange])
 
   const changeProxy = useCallback(
-    (
-      groupName: string,
-      proxyName: string,
-      previousProxy?: string,
-      skipConfigSave: boolean = false,
-    ) => {
+    (groupName: string, proxyName: string, previousProxy?: string) => {
       pendingRequestRef.current = {
         groupName,
         proxyName,
         previousProxy,
-        skipConfigSave,
       }
       void flushChangeQueue()
     },
@@ -171,14 +134,10 @@ export const useProxySelection = (options: ProxySelectionOptions = {}) => {
   )
 
   const handleSelectChange = useCallback(
-    (
-      groupName: string,
-      previousProxy?: string,
-      skipConfigSave: boolean = false,
-    ) =>
+    (groupName: string, previousProxy?: string) =>
       (event: { target: { value: string } }) => {
         const newProxy = event.target.value
-        changeProxy(groupName, newProxy, previousProxy, skipConfigSave)
+        changeProxy(groupName, newProxy, previousProxy)
       },
     [changeProxy],
   )
@@ -198,14 +157,16 @@ export const useProxySelection = (options: ProxySelectionOptions = {}) => {
         await unfixedProxy(groupName)
         onSuccess?.()
         syncTraySelection()
-        removePersistedSelection(groupName)
+        // Unfixing must also drop the profile record, otherwise core start
+        // re-applies the old node via activate_selected_nodes and re-fixes it.
+        clearPersistedSelection(groupName)
         debugLog(`[ProxySelection] 代理固定状态已取消: ${groupName}`)
       } catch (error) {
         console.error(`[ProxySelection] 取消固定代理失败: ${groupName}`, error)
         onError?.(error)
       }
     },
-    [onError, onSuccess, removePersistedSelection, syncTraySelection],
+    [clearPersistedSelection, onError, onSuccess, syncTraySelection],
   )
 
   return {

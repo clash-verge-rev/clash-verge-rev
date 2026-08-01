@@ -215,7 +215,9 @@ fn start_embedded_server(listener: tokio::net::TcpListener, token: String) {
         let verge_data = verge_config.data_arc();
         let pac_content = verge_data.pac_file_content.as_deref().unwrap_or(DEFAULT_PAC);
         // Served per browser request, so this stays a configuration read rather than a
-        // round-trip to the Core. PAC is closed while the Core is between ports anyway.
+        // round-trip to the Core. It reads the draft layer, which is only correct because
+        // whoever stages a listener port closes this endpoint across the change — see
+        // `MixedPort::desired`. Reaching here at all means the Core is serving.
         let pac_port = MixedPort::desired().await;
         let processed_content = pac_content.replace("%mixed-port%", &format!("{pac_port}"));
         Ok::<_, warp::Rejection>(
