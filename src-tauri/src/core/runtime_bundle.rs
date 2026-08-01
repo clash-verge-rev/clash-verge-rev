@@ -13,6 +13,15 @@ const GEO_ASSETS: &[&str] = &[
     "GeoSite.dat",
 ];
 
+/// Smart-core files that live next to the app config root (sidecar cwd).
+///
+/// Service mode materialises a *copy* of the runtime under a generation directory owned by the
+/// service. Without these, `verge-mihomo-smart` starts without LightGBM/ASN data and either hangs
+/// trying to fetch a model or never becomes IPC-ready — which surfaces as
+/// `Failed to start owner core: wait timeout (os error 258)`. Stock mihomo/alpha do not need them,
+/// which matches "service works for mihomo/alpha, only smart fails".
+const SMART_ASSETS: &[&str] = &["Model.bin", "ASN.mmdb"];
+
 pub(crate) async fn collect_runtime_bundle(config_file: &Path, core_path: &Path) -> Result<RuntimeBundle> {
     let yaml = tokio::fs::read_to_string(config_file)
         .await
@@ -43,13 +52,34 @@ pub(crate) async fn collect_runtime_bundle(config_file: &Path, core_path: &Path)
         &mut assets,
         &mut remote_providers,
     )?;
-    for filename in GEO_ASSETS {
+    for filename in GEO_ASSETS
+        .iter()
+        .chain(SMART_ASSETS.iter())
+    {
         let source = config_root.join(filename);
         if source.is_file() && destinations.insert((*filename).to_string()) {
             assets.push(RuntimeAsset {
                 source: std::fs::canonicalize(&source)?.to_string_lossy().into_owned(),
                 destination: (*filename).to_string(),
             });
+        }
+    }
+
+    // Prefer-asn / lightgbm need these under the service generation dir. Log when smart is selected
+    // but the files are missing so a service-mode start is not a silent hang.
+    if core_path
+        .file_stem()
+        .and_then(|s| s.to_str())
+        .is_some_and(|name| name.contains("smart"))
+    {
+        for filename in SMART_ASSETS {
+            if !config_root.join(filename).is_file() {
+                logging!(
+                    warn,
+                    Type::Config,
+                    "smart service bundle missing {filename} under {config_root:?}; core may hang or fail IPC ready"
+                );
+            }
         }
     }
 
@@ -247,6 +277,8 @@ mod tests {
         std::fs::create_dir_all(root.join("providers"))?;
         std::fs::write(root.join("providers/local.yaml"), b"proxies: []\n")?;
         std::fs::write(root.join("Country.mmdb"), b"geo")?;
+        std::fs::write(root.join("Model.bin"), b"lgbm")?;
+        std::fs::write(root.join("ASN.mmdb"), b"asn")?;
         let config = root.join("config.yaml");
         let absolute_local = root.join("providers/local.yaml");
         let absolute_remote = root.join("providers/remote.yaml");
@@ -280,6 +312,14 @@ mod tests {
                 .any(|asset| asset.destination == "providers/local.yaml")
         );
         assert!(bundle.assets.iter().any(|asset| asset.destination == "Country.mmdb"));
+        assert!(
+            bundle.assets.iter().any(|asset| asset.destination == "Model.bin"),
+            "smart service runtime must copy LightGBM model next to the core"
+        );
+        assert!(
+            bundle.assets.iter().any(|asset| asset.destination == "ASN.mmdb"),
+            "smart service runtime must copy ASN db when present"
+        );
         assert!(!bundle.assets.iter().any(|asset| asset.destination.contains("remote")));
         // A remote provider is not copied, but it must still be declared: the Service decides
         // whether the Core's download cache is reusable by comparing the url that produced it,
