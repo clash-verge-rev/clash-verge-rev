@@ -17,7 +17,11 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 [features]
 default = ["custom-protocol"]
 custom-protocol = ["tauri/custom-protocol"]
-verge-dev = ["clash_verge_logger/color"]
+verge-dev = [
+  "clash_verge_logger/color",
+  "clash_verge_service_ipc/development-channel",
+]
+dev-sidecar = ["verge-dev"]
 tauri-dev = []
 tokio-trace = ["console-subscriber"]
 clippy = ["tauri/test"]
@@ -55,6 +59,7 @@ serde_json = { workspace = true }
 serde_yaml_ng = { workspace = true }
 smartstring = { workspace = true, features = ["serde"] }
 bitflags = { workspace = true }
+socket2 = { workspace = true }
 warp = { version = "0.4.3", features = ["server"] }
 open = "5.3.6"
 dunce = "1.0.5"
@@ -71,7 +76,7 @@ reqwest = { version = "0.13.4", features = [
   "form",
 ] }
 regex = "1.12.4"
-sysproxy = { git = "https://github.com/clash-verge-rev/sysproxy-rs", features = [
+sysproxy = { git = "https://github.com/clash-verge-rev/sysproxy-rs", branch = "main", features = [
   "guard",
 ] }
 network-interface = { version = "2.0.5", features = ["serde"] }
@@ -99,9 +104,9 @@ tauri-plugin-devtools = { version = "2.1.0" }
 tauri-plugin-mihomo = { git = "https://github.com/clash-verge-rev/tauri-plugin-mihomo", branch = "fix/api-robustness" }
 clash_verge_logger = { git = "https://github.com/clash-verge-rev/clash-verge-logger" }
 async-trait = "0.1.89"
-clash_verge_service_ipc = { version = "2.3.3", features = [
+clash_verge_service_ipc = { git = "https://github.com/clash-verge-rev/clash-verge-service-ipc.git", tag = "v2.5.3", version = "2.5.3", features = [
   "client",
-], git = "https://github.com/clash-verge-rev/clash-verge-service-ipc" }
+] }
 arc-swap = "1.9.2"
 tokio-rustls = "0.26.4"
 rustls = { version = "0.23.41", features = ["ring"] }
@@ -112,6 +117,9 @@ dark-light = { git = "https://github.com/rust-dark-light/dark-light" }
 windows-sys.workspace = true
 bytes = "1.12.0"
 tokio-util = { version = "0.7.18", features = ["time"] }
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"
 
 [target.'cfg(target_os = "macos")'.dependencies]
 objc2 = "0.6.4"
@@ -140,6 +148,7 @@ objc2-app-kit = { version = "0.3.2", features = [
 deelevate = { workspace = true }
 runas = "=1.2.0"
 winreg = "0.56.0"
+windows-service = "0.8.1"
 windows = { version = "0.62.2", features = ["Win32_Globalization"] }
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
@@ -149,6 +158,8 @@ tauri-plugin-updater = "2.10.1"
 
 [dev-dependencies]
 criterion = { workspace = true }
+tokio = { workspace = true, features = ["test-util"] }
+warp = { version = "0.4.3", features = ["test"] }
 
 [lints]
 workspace = true

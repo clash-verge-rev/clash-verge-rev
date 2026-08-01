@@ -5,6 +5,7 @@
       "telegram": "Telegram 채널",
       "github": "GitHub 저장소"
     },
+    "actionsGroupLabel": "설정 링크",
     "title": "설정"
   },
   "sections": {
@@ -285,7 +286,11 @@
       "messages": {
         "portInUse": "Port {{port}} is already in use",
         "saved": "포트 설정이 저장되었습니다",
-        "saveFailed": "포트 설정 저장에 실패했습니다"
+        "saveFailed": "포트 설정 저장에 실패했습니다",
+        "automaticFallback": "포트 {{oldPort}}이(가) 사용 중입니다. 혼합 프록시 포트를 {{newPort}}(으)로 전환하고 저장했습니다.",
+        "automaticFallbackFailed": "혼합 프록시 포트 자동 전환에 실패했습니다: {{error}}",
+        "portTooLow": "포트는 1000 이상이어야 합니다",
+        "portTooHigh": "포트는 65535 이하여야 합니다"
       }
     },
     "clashCore": {
@@ -473,7 +478,15 @@
         "update": "업데이트"
       },
       "messages": {
-        "breakChangeError": "이 버전은 메이저 업데이트로 앱 내 업데이트를 지원하지 않습니다. 프로그램을 제거한 뒤 새 버전을 수동으로 설치하세요"
+        "breakChangeError": "이 버전은 메이저 업데이트로 앱 내 업데이트를 지원하지 않습니다. 프로그램을 제거한 뒤 새 버전을 수동으로 설치하세요",
+        "available": "새 버전을 사용할 수 있습니다"
+      },
+      "alerts": {
+        "note": "참고",
+        "tip": "팁",
+        "important": "중요",
+        "warning": "경고",
+        "caution": "주의"
       }
     },
     "sysproxy": {
@@ -634,6 +647,11 @@
       "messages": {
         "supportedPlaceholders": "지원되는 자리표시자: %host, %port, %secret",
         "placeholderInstruction": "host, port, secret을 %host, %port, %secret로 바꿔 입력하세요"
+      },
+      "errors": {
+        "clashInfoUnavailable": "코어 연결 정보를 사용할 수 없습니다",
+        "invalidServer": "코어 서버 주소 \"{{server}}\"이(가) 잘못되었습니다",
+        "openFailed": "Web UI를 열지 못했습니다"
       }
     },
     "hotkey": {
@@ -661,6 +679,22 @@
     }
   },
   "feedback": {
+    "errors": {
+      "clash": {
+        "configUpdateFailed": "코어 구성을 업데이트하지 못했습니다",
+        "modeUpdateFailed": "프록시 모드를 변경하지 못했습니다",
+        "restartFailed": "코어를 재시작하지 못했습니다",
+        "startFailed": "코어를 시작하지 못했습니다",
+        "stopFailed": "코어를 중지하지 못했습니다"
+      },
+      "clashService": {
+        "installFailed": "서비스를 설치하지 못했습니다",
+        "uninstallFailed": "서비스를 제거하지 못했습니다",
+        "reinstallFailed": "서비스를 다시 설치하지 못했습니다",
+        "repairFailed": "서비스를 복구하지 못했습니다",
+        "sidecarFailed": "Sidecar로 계속하지 못했습니다"
+      }
+    },
     "notifications": {
       "clash": {
         "restartSuccess": "Clash 코어가 재시작되었습니다",

@@ -19,6 +19,29 @@
         "collapseNavBar": "收起導覽列",
         "expandNavBar": "展開導覽列"
       }
+    },
+    "serviceMigration": {
+      "title": "需要更新系統服務",
+      "message": "偵測到舊版 Clash Verge 系統服務。重新安裝後可使用目前的安全 IPC 協定，也可以僅在本次工作階段繼續使用 Sidecar。",
+      "checkingMessage": "正在確認系統服務狀態及目前執行模式，請稍候……",
+      "unavailableMessage": "所需的 Clash Verge 系統服務目前不可用。你可以安裝或修復服務，或僅在本次工作階段繼續使用 Sidecar。",
+      "reinstall": "重新安裝服務",
+      "repair": "修復服務",
+      "continueSidecar": "繼續使用 Sidecar",
+      "success": "Clash Verge 系統服務已更新",
+      "errors": {
+        "actionFailed": "服務操作失敗",
+        "stateRefreshFailed": "重新整理服務狀態失敗",
+        "restartFailed": "重啟內核失敗",
+        "revalidationFailed": "重新整理執行狀態失敗",
+        "sidecarFailed": "繼續使用 Sidecar 失敗"
+      }
+    }
+  },
+  "feedback": {
+    "errors": {
+      "restartCoreStopFailed": "無法安全停止內核，已取消重啟",
+      "quitCoreStopFailed": "無法安全停止內核，已取消結束"
     }
   }
 }

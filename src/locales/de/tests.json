@@ -20,6 +20,13 @@
       },
       "fields": {
         "url": "Test-URL"
+      },
+      "errors": {
+        "nameRequired": "Namen eingeben",
+        "urlRequired": "Test-URL eingeben",
+        "invalidSvg": "Das Symbol ist kein gültiges SVG",
+        "uidMissing": "Die Kennung des Testelements fehlt",
+        "saveFailed": "Testelement konnte nicht gespeichert werden"
       }
     }
   },

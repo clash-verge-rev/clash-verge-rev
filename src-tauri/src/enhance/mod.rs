@@ -155,7 +155,7 @@ async fn get_config_values() -> ConfigValues {
 
     let (clash_core, enable_tun, enable_builtin, socks_enabled, http_enabled, enable_dns_settings) = (
         Some(verge_arc.get_valid_clash_core()),
-        enable_tun_mode.unwrap_or(false),
+        enable_tun_mode.unwrap_or(false) && !Config::tun_suppressed_for_session(),
         enable_builtin_enhanced.unwrap_or(true),
         verge_socks_enabled.unwrap_or(false),
         verge_http_enabled.unwrap_or(false),

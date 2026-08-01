@@ -107,6 +107,12 @@ pnpm run prebuild
 pnpm dev
 ```
 
+`pnpm dev` preserves the Development Channel's installed service state: an
+existing service is used, while a previously uninstalled service remains
+uninstalled and the app starts in Sidecar mode. Use `pnpm dev:service` to
+explicitly install or update the isolated development service before launch,
+or `pnpm dev:sidecar` to force the unprivileged Sidecar workflow.
+
 ## Contributions
 
 Issue and PR welcome!
@@ -125,7 +131,3 @@ Clash Verge rev was based on or inspired by these projects and so on:
 ## License
 
 GPL-3.0 License. See [License here](./LICENSE) for details.
-
-<p align="right">
-  <sub><a href="https://sponsorship.forztn.com/github/clash-verge-rev/clash-verge-rev">Supported By ForZTN</a></sub>
-</p>

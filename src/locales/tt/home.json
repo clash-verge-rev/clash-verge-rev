@@ -82,7 +82,9 @@
         "unknown": "Unknown"
       },
       "errors": {
-        "load": "IP мәгълүматын алу мөмкин булмады"
+        "load": "IP мәгълүматын алу мөмкин булмады",
+        "loadWithDetails": "IP мәгълүматын алып булмады: {{message}}",
+        "noServices": "IP ачыклау хезмәтләре юк"
       }
     },
     "currentProxy": {
@@ -96,6 +98,18 @@
         "group": "Group",
         "proxy": "Proxy",
         "noActiveNode": "No active proxy node"
+      },
+      "status": {
+        "testing": "Тикшерелә",
+        "untested": "Тикшерелмәгән",
+        "error": "Хата",
+        "timeout": "Вакыт узды",
+        "latencyHigh": "Зур тоткарлык",
+        "latencyMedium": "Урта тоткарлык",
+        "latencyGood": "Яхшы тоткарлык",
+        "latencyExcellent": "Бик яхшы тоткарлык",
+        "uninitialized": "Әзерләнмәгән",
+        "noProxyNode": "Прокси төене юк"
       }
     },
     "tests": {
@@ -114,7 +128,13 @@
       },
       "patterns": {
         "minutes": "{{time}} Minutes"
-      }
+      },
+      "unknownTime": "Билгесез вакыт",
+      "chartStyles": {
+        "smooth": "Шома",
+        "linear": "Сызыклы"
+      },
+      "diagnostics": "Нокталар: {{points}} | Кысылган: {{compressed}} | FPS: {{fps}}"
     },
     "clashMode": {
       "errors": {

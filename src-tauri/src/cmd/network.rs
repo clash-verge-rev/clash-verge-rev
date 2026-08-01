@@ -5,7 +5,6 @@ use clash_verge_logging::{Type, logging};
 use gethostname::gethostname;
 use network_interface::NetworkInterface;
 use serde_yaml_ng::Mapping;
-use std::net::TcpListener;
 use sysproxy::{Autoproxy, Sysproxy};
 use tauri_plugin_clash_verge_sysinfo;
 
@@ -60,6 +59,11 @@ pub async fn get_auto_proxy() -> CmdResult<Mapping> {
     Ok(map)
 }
 
+#[tauri::command]
+pub fn get_embedded_server_port() -> CmdResult<u16> {
+    crate::utils::server::embedded_server_port().stringify_err()
+}
+
 /// 获取系统主机名
 #[tauri::command]
 pub fn get_system_hostname() -> String {
@@ -98,9 +102,4 @@ pub fn get_network_interfaces_info() -> CmdResult<Vec<NetworkInterface>> {
     }
 
     Ok(result)
-}
-
-#[tauri::command]
-pub fn is_port_in_use(port: u16) -> bool {
-    TcpListener::bind(("127.0.0.1", port)).is_err()
 }

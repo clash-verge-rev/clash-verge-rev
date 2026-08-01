@@ -82,7 +82,9 @@
         "unknown": "Unknown"
       },
       "errors": {
-        "load": "Gagal mendapatkan informasi IP"
+        "load": "Gagal mendapatkan informasi IP",
+        "loadWithDetails": "Gagal mendapatkan info IP: {{message}}",
+        "noServices": "Tidak ada layanan deteksi IP yang tersedia"
       }
     },
     "currentProxy": {
@@ -96,6 +98,18 @@
         "group": "Group",
         "proxy": "Proxy",
         "noActiveNode": "No active proxy node"
+      },
+      "status": {
+        "testing": "Menguji",
+        "untested": "Belum diuji",
+        "error": "Kesalahan",
+        "timeout": "Waktu habis",
+        "latencyHigh": "Latensi tinggi",
+        "latencyMedium": "Latensi sedang",
+        "latencyGood": "Latensi baik",
+        "latencyExcellent": "Latensi sangat baik",
+        "uninitialized": "Belum diinisialisasi",
+        "noProxyNode": "Tidak ada node proxy"
       }
     },
     "tests": {
@@ -114,7 +128,13 @@
       },
       "patterns": {
         "minutes": "{{time}} Minutes"
-      }
+      },
+      "unknownTime": "Waktu tidak diketahui",
+      "chartStyles": {
+        "smooth": "Halus",
+        "linear": "Linier"
+      },
+      "diagnostics": "Titik: {{points}} | Terkompresi: {{compressed}} | FPS: {{fps}}"
     },
     "clashMode": {
       "errors": {

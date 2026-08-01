@@ -5,9 +5,12 @@ pub mod help;
 pub mod init;
 #[cfg(target_os = "linux")]
 pub mod linux;
+#[cfg(target_os = "macos")]
+pub mod macos_launch_guard;
 pub mod mihomo_api;
 pub mod network;
 pub mod notification;
+pub mod port;
 pub mod resolve;
 #[cfg(target_os = "windows")]
 pub mod schtasks;

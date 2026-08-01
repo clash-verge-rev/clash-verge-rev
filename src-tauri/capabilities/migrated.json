@@ -74,7 +74,6 @@
     "global-shortcut:allow-register-all",
     "global-shortcut:allow-unregister",
     "global-shortcut:allow-unregister-all",
-    "process:allow-restart",
     "process:allow-exit",
     "clipboard-manager:allow-read-text",
     "clipboard-manager:allow-write-text",

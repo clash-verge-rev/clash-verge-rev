@@ -82,7 +82,9 @@
         "unknown": "未知"
       },
       "errors": {
-        "load": "获取 IP 信息失败"
+        "load": "获取 IP 信息失败",
+        "loadWithDetails": "获取 IP 信息失败：{{message}}",
+        "noServices": "暂无可用的 IP 检测服务"
       }
     },
     "currentProxy": {
@@ -96,6 +98,18 @@
         "group": "代理组",
         "proxy": "节点",
         "noActiveNode": "暂无激活的代理节点"
+      },
+      "status": {
+        "testing": "测试中",
+        "untested": "未测试",
+        "error": "错误",
+        "timeout": "超时",
+        "latencyHigh": "延迟较高",
+        "latencyMedium": "延迟中等",
+        "latencyGood": "延迟良好",
+        "latencyExcellent": "延迟极佳",
+        "uninitialized": "未初始化",
+        "noProxyNode": "无代理节点"
       }
     },
     "tests": {
@@ -114,7 +128,13 @@
       },
       "patterns": {
         "minutes": "{{time}} 分钟"
-      }
+      },
+      "unknownTime": "未知时间",
+      "chartStyles": {
+        "smooth": "平滑",
+        "linear": "线性"
+      },
+      "diagnostics": "数据点：{{points}} | 压缩后：{{compressed}} | 帧率：{{fps}}"
     },
     "clashMode": {
       "errors": {

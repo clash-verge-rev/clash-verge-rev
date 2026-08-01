@@ -82,7 +82,9 @@
         "unknown": "Bilinmiyor"
       },
       "errors": {
-        "load": "IP bilgisi alınamadı"
+        "load": "IP bilgisi alınamadı",
+        "loadWithDetails": "IP bilgisi alınamadı: {{message}}",
+        "noServices": "Kullanılabilir IP algılama hizmeti yok"
       }
     },
     "currentProxy": {
@@ -96,6 +98,18 @@
         "group": "Grup",
         "proxy": "Vekil",
         "noActiveNode": "Aktif vekil düğümü yok"
+      },
+      "status": {
+        "testing": "Test ediliyor",
+        "untested": "Test edilmedi",
+        "error": "Hata",
+        "timeout": "Zaman aşımı",
+        "latencyHigh": "Yüksek gecikme",
+        "latencyMedium": "Orta gecikme",
+        "latencyGood": "İyi gecikme",
+        "latencyExcellent": "Mükemmel gecikme",
+        "uninitialized": "Başlatılmadı",
+        "noProxyNode": "Proxy düğümü yok"
       }
     },
     "tests": {
@@ -114,7 +128,13 @@
       },
       "patterns": {
         "minutes": "{{time}} Minutes"
-      }
+      },
+      "unknownTime": "Bilinmeyen zaman",
+      "chartStyles": {
+        "smooth": "Yumuşak",
+        "linear": "Doğrusal"
+      },
+      "diagnostics": "Nokta: {{points}} | Sıkıştırılmış: {{compressed}} | FPS: {{fps}}"
     },
     "clashMode": {
       "errors": {

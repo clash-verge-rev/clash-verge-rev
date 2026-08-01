@@ -24,6 +24,10 @@ export const handleNoticeMessage = (
       showNotice.error(msg)
     },
     'set_config::error': () => showNotice.error(msg),
+    'app_restart::core_stop_failed': () =>
+      showNotice.error('layout.feedback.errors.restartCoreStopFailed'),
+    'app_quit::core_stop_failed': () =>
+      showNotice.error('layout.feedback.errors.quitCoreStopFailed'),
     update_with_clash_proxy: () =>
       showNotice.success(
         'settings.feedback.notifications.updater.withClashProxySuccess',
@@ -84,6 +88,18 @@ export const handleNoticeMessage = (
       showNotice.error(
         'settings.feedback.notifications.clash.changeFailed',
         msg,
+      ),
+    'mixed_port::fallback': () => {
+      const [oldPort, newPort] = msg.split(',')
+      showNotice.info('settings.modals.clashPort.messages.automaticFallback', {
+        oldPort,
+        newPort,
+      })
+    },
+    'mixed_port::fallback_error': () =>
+      showNotice.error(
+        'settings.modals.clashPort.messages.automaticFallbackFailed',
+        { error: msg },
       ),
   }
 

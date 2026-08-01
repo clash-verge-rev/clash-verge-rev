@@ -25,7 +25,8 @@
     },
     "labels": {
       "proxyCount": "Anzahl der Knoten",
-      "delayCheckReset": "Latenztest durchführen, um Fixierung aufzuheben"
+      "delayCheckReset": "Latenztest durchführen, um Fixierung aufzuheben",
+      "nodeCount": "{{count}} Knoten"
     },
     "tooltips": {
       "locate": "Aktueller Knoten",
@@ -40,6 +41,31 @@
     },
     "placeholders": {
       "delayCheckUrl": "Latenztest-URL"
+    },
+    "empty": {
+      "noAvailableGroups": "Keine Proxy-Gruppen verfügbar",
+      "noProxies": "Keine Proxys",
+      "noSubscriptions": {
+        "title": "Kein Abonnement importiert",
+        "description": "Auf der Proxy-Seite gibt es nichts anzuzeigen. Öffnen Sie „Abonnement“, um ein Abonnement zu importieren und zu aktivieren."
+      },
+      "inactiveSubscription": {
+        "title": "Kein aktives Abonnement",
+        "description": "Es wurden Abonnements gefunden, aber keines ist derzeit aktiv. Öffnen Sie „Abonnement“, wählen Sie eines aus und aktivieren Sie es."
+      },
+      "coreUnavailable": {
+        "title": "Kern vorübergehend nicht verfügbar",
+        "description": "Die Proxy-Informationen konnten nicht vom Kern abgerufen werden. Starten Sie den Kern neu. Falls das Problem weiterhin besteht, öffnen Sie den Protokollordner und prüfen Sie die Kernprotokolle."
+      },
+      "noProxyInfo": {
+        "title": "Keine Proxy-Informationen verfügbar",
+        "description": "Es gibt keine Proxy-Gruppen oder -Knoten zum Anzeigen. Prüfen Sie, ob das aktive Abonnement gültige Proxy-Gruppen und -Knoten enthält, oder starten Sie den Kern neu und prüfen Sie die Protokolle."
+      },
+      "actions": {
+        "openProfiles": "Zum Abonnement",
+        "restartCore": "Kern neu starten",
+        "openLogs": "Protokollordner öffnen"
+      }
     },
     "chain": {
       "header": "Chain Proxy Config",

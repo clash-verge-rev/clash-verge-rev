@@ -18,9 +18,10 @@ import {
   StickyVirtualList,
   type StickyVirtualListHandle,
 } from '@/components/base'
+import { useProfiles } from '@/hooks/use-profiles'
 import { useProxySelection } from '@/hooks/use-proxy-selection'
 import { useVerge } from '@/hooks/use-verge'
-import { useProxiesData } from '@/providers/app-data-context'
+import { useProxiesData, useSystemData } from '@/providers/app-data-context'
 import delayManager from '@/services/delay'
 import {
   isInteractableMember,
@@ -30,6 +31,8 @@ import {
 } from '@/types/proxy-view'
 import { debugLog } from '@/utils/debug'
 
+import { ProxyEmptyState } from './proxy-empty-state'
+import { resolveProxyEmptyState } from './proxy-empty-state-model'
 import {
   DEFAULT_HOVER_DELAY,
   ProxyGroupNavigator,
@@ -611,9 +614,32 @@ function NormalProxyGroups(props: { mode: string }) {
 
 export const ProxyGroups = (props: Props) => {
   const { mode, isChainMode = false, chainConfigData } = props
+  const { profiles, isLoading: isProfilesLoading } = useProfiles()
+  const { proxyView, isProxyViewPending, isProxyViewError } = useProxiesData()
+  const { runningMode, isRunningModePending } = useSystemData()
+
+  const emptyState = resolveProxyEmptyState({
+    mode,
+    isChainMode,
+    profiles,
+    isProfilesPending: !profiles && isProfilesLoading,
+    proxyView,
+    isProxyViewPending,
+    isProxyViewError,
+    runningMode,
+    isRunningModePending,
+  })
 
   if (mode === 'direct') {
     return <BaseEmpty textKey="proxies.page.messages.directMode" />
+  }
+
+  if (emptyState === 'loading') {
+    return <BaseLoading />
+  }
+
+  if (emptyState) {
+    return <ProxyEmptyState reason={emptyState} />
   }
 
   if (isChainMode) {

@@ -28,7 +28,16 @@
     "feedback": {
       "errors": {
         "invalidUrl": "无效的订阅链接，请输入以 http:// 或 https:// 开头的地址",
-        "onlyYaml": "仅支持 YAML 文件"
+        "onlyYaml": "仅支持 YAML 文件",
+        "createFailed": "创建订阅失败",
+        "deleteFailed": "删除订阅失败",
+        "enhanceFailed": "重新激活订阅失败",
+        "importFailed": "导入订阅失败",
+        "openFailed": "打开订阅失败",
+        "readFailed": "读取订阅失败",
+        "reorderFailed": "调整订阅顺序失败",
+        "switchFailed": "切换订阅失败",
+        "updateFailed": "更新订阅失败"
       },
       "notifications": {
         "importRetry": "订阅导入失败，尝试使用 Clash 代理导入",
@@ -43,6 +52,9 @@
       "notices": {
         "forceRefreshCompleted": "数据已强制刷新",
         "emergencyRefreshFailed": "紧急刷新失败: {{message}}"
+      },
+      "tooltips": {
+        "forceRefreshStaleData": "订阅数据异常，点击强制刷新"
       }
     },
     "title": "订阅"
@@ -105,12 +117,23 @@
         "type": "类型",
         "description": "描述",
         "subscriptionUrl": "订阅链接",
+        "userAgent": "用户代理",
         "httpTimeout": "HTTP 请求超时",
         "updateInterval": "更新间隔",
         "useSystemProxy": "使用系统代理更新",
         "useClashProxy": "使用内核代理更新",
         "acceptInvalidCerts": "允许无效证书（危险）",
         "allowAutoUpdate": "允许自动更新"
+      },
+      "types": {
+        "remote": "远程",
+        "local": "本地"
+      },
+      "errors": {
+        "typeRequired": "请选择订阅类型",
+        "urlRequired": "请输入订阅链接",
+        "uidMissing": "缺少订阅标识",
+        "saveFailed": "保存订阅失败"
       },
       "feedback": {
         "notifications": {

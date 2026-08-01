@@ -28,7 +28,16 @@
     "feedback": {
       "errors": {
         "invalidUrl": "Invalid profile URL. Please enter a URL starting with http:// or https://",
-        "onlyYaml": "YAMLファイルのみサポートされています。"
+        "onlyYaml": "YAMLファイルのみサポートされています。",
+        "createFailed": "プロファイルの作成に失敗しました",
+        "deleteFailed": "プロファイルの削除に失敗しました",
+        "enhanceFailed": "プロファイルの再適用に失敗しました",
+        "importFailed": "プロファイルのインポートに失敗しました",
+        "openFailed": "プロファイルを開けませんでした",
+        "readFailed": "プロファイルの読み込みに失敗しました",
+        "reorderFailed": "プロファイルの並べ替えに失敗しました",
+        "switchFailed": "プロファイルの切り替えに失敗しました",
+        "updateFailed": "プロファイルの更新に失敗しました"
       },
       "notifications": {
         "importRetry": "インポートに失敗しました。Clashプロキシを使用して再試行します...",
@@ -43,6 +52,9 @@
       "notices": {
         "forceRefreshCompleted": "Force refresh completed",
         "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
+      },
+      "tooltips": {
+        "forceRefreshStaleData": "プロファイルデータが利用できません。クリックして強制的に更新します"
       }
     },
     "title": "プロファイル"
@@ -105,12 +117,23 @@
         "type": "タイプ",
         "description": "説明",
         "subscriptionUrl": "サブスクリプションURL",
+        "userAgent": "ユーザーエージェント",
         "httpTimeout": "HTTP Request Timeout",
         "updateInterval": "更新間隔",
         "useSystemProxy": "システムプロキシを使用して更新",
         "useClashProxy": "クラッシュプロキシを使用して更新",
         "acceptInvalidCerts": "Allows Invalid Certificates (Danger)",
         "allowAutoUpdate": "Allow Auto Update"
+      },
+      "types": {
+        "remote": "リモート",
+        "local": "ローカル"
+      },
+      "errors": {
+        "typeRequired": "プロファイルの種類を選択してください",
+        "urlRequired": "サブスクリプションURLを入力してください",
+        "uidMissing": "プロファイル識別子がありません",
+        "saveFailed": "プロファイルの保存に失敗しました"
       },
       "feedback": {
         "notifications": {

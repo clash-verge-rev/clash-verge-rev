@@ -8,7 +8,6 @@ use std::{
 
 use anyhow::{Result, bail};
 use clash_verge_logging::{Type, logging};
-use clash_verge_service_ipc::WriterConfig;
 use compact_str::CompactString;
 use flexi_logger::{
     Cleanup, Criterion, DeferredNow, FileSpec, LogSpecBuilder, LogSpecification, LoggerHandle,
@@ -18,10 +17,14 @@ use log::{Level, LevelFilter, Record};
 use parking_lot::{Mutex, RwLock};
 
 use crate::{
-    core::service,
+    core::{CoreManager, manager::RunningMode, service},
     singleton,
-    utils::dirs::{self, service_log_dir, sidecar_log_dir},
+    utils::dirs::{self, sidecar_log_dir},
 };
+
+const fn should_sync_service_writer(running_mode: RunningMode) -> bool {
+    matches!(running_mode, RunningMode::Service)
+}
 
 pub struct Logger {
     handle: Arc<Mutex<Option<LoggerHandle>>>,
@@ -179,15 +182,17 @@ impl Logger {
         let sidecar_writer = self.generate_sidecar_writer()?;
         *self.sidecar_file_writer.write() = Some(sidecar_writer);
 
-        // update service writer config
-        if service::is_service_ipc_path_exists() && service::is_service_available().await.is_ok() {
-            let service_log_dir = dirs::path_to_str(&service_log_dir()?)?.into();
-            clash_verge_service_ipc::update_writer(&WriterConfig {
-                directory: service_log_dir,
+        // The service writer is auxiliary to the local logger. Synchronize it only
+        // for an active service session and do not roll back local settings on failure.
+        if should_sync_service_writer(*CoreManager::global().get_running_mode())
+            && let Err(error) = service::update_writer_by_service(&clash_verge_service_ipc::WriterConfig {
+                directory: String::new(),
                 max_log_size: log_max_size * 1024,
                 max_log_files: log_max_count,
             })
-            .await?;
+            .await
+        {
+            logging!(warn, Type::Service, "failed to update service writer config: {error:#}");
         }
 
         Ok(())
@@ -225,17 +230,17 @@ impl Logger {
             logging!(error, Type::System, "failed to get sidecar file log writer");
         }
     }
+}
 
-    pub fn service_writer_config(&self) -> Result<WriterConfig> {
-        let service_log_dir = dirs::path_to_str(&service_log_dir()?)?.into();
-        let log_max_size = self.log_max_size.load(Ordering::SeqCst);
-        let log_max_count = self.log_max_count.load(Ordering::SeqCst);
-        let writer_config = WriterConfig {
-            directory: service_log_dir,
-            max_log_size: log_max_size * 1024,
-            max_log_files: log_max_count,
-        };
+#[cfg(test)]
+mod tests {
+    use super::should_sync_service_writer;
+    use crate::core::manager::RunningMode;
 
-        Ok(writer_config)
+    #[test]
+    fn service_writer_sync_requires_service_running_mode() {
+        assert!(should_sync_service_writer(RunningMode::Service));
+        assert!(!should_sync_service_writer(RunningMode::Sidecar));
+        assert!(!should_sync_service_writer(RunningMode::NotRunning));
     }
 }

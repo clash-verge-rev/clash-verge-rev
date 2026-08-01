@@ -1,7 +1,4 @@
-use crate::{
-    config::{Config, IVerge},
-    singleton,
-};
+use crate::{config::Config, singleton, utils::server};
 use anyhow::Result;
 use clash_verge_logging::{Type, logging};
 use parking_lot::RwLock;
@@ -33,8 +30,9 @@ const fn proxy_apply_steps(sys_enabled: bool, auto_enabled: bool) -> [ProxyApply
     }
 }
 
-pub struct Sysopt {
+pub(crate) struct Sysopt {
     update_lock: TokioMutex<()>,
+    guard_operation_lock: TokioMutex<()>,
     reset_sysproxy: AtomicBool,
     inner_proxy: Arc<RwLock<(Sysproxy, Autoproxy)>>,
     guard: Arc<RwLock<GuardMonitor>>,
@@ -44,6 +42,7 @@ impl Default for Sysopt {
     fn default() -> Self {
         Self {
             update_lock: TokioMutex::new(()),
+            guard_operation_lock: TokioMutex::new(()),
             reset_sysproxy: AtomicBool::new(false),
             inner_proxy: Arc::new(RwLock::new((Sysproxy::default(), Autoproxy::default()))),
             guard: Arc::new(RwLock::new(GuardMonitor::new(GuardType::None, Duration::from_secs(30)))),
@@ -84,17 +83,35 @@ impl Sysopt {
         Arc::clone(&self.guard)
     }
 
-    pub async fn refresh_guard(&self) {
+    async fn stop_proxy_guard_locked(&self) {
+        loop {
+            let state = self.access_guard().read().get_state();
+            if state.is_pendding() {
+                tokio::task::yield_now().await;
+                continue;
+            }
+            self.access_guard().write().stop();
+            return;
+        }
+    }
+
+    pub(super) async fn stop_proxy_guard(&self) {
+        let _operation = self.guard_operation_lock.lock().await;
+        self.stop_proxy_guard_locked().await;
+    }
+
+    pub(super) async fn refresh_guard(&self) {
         logging!(info, Type::Core, "Refreshing system proxy guard...");
         let verge = Config::verge().await.latest_arc();
+        let _operation = self.guard_operation_lock.lock().await;
         if !verge.enable_system_proxy.unwrap_or_default() {
             logging!(info, Type::Core, "System proxy is disabled.");
-            self.access_guard().write().stop();
+            self.stop_proxy_guard_locked().await;
             return;
         }
         if !verge.enable_proxy_guard.unwrap_or_default() {
             logging!(info, Type::Core, "System proxy guard is disabled.");
-            self.access_guard().write().stop();
+            self.stop_proxy_guard_locked().await;
             return;
         }
         logging!(
@@ -114,26 +131,28 @@ impl Sysopt {
             let guard = self.access_guard();
             guard.write().start();
         }
+        while self.access_guard().read().get_state().is_pendding() {
+            tokio::task::yield_now().await;
+        }
     }
 
     /// Wait for any in-progress `update_sysproxy` to finish, so that a
     /// subsequent read of OS-level sysproxy state sees a fully applied
     /// configuration instead of a partially-applied one (e.g. SOCKS already
     /// disabled but HTTP still enabled mid-transition).
-    pub async fn wait_idle(&self) {
+    pub(crate) async fn wait_idle(&self) {
         let _ = self.update_lock.lock().await;
     }
 
     /// init the sysproxy
-    pub async fn update_sysproxy(&self) -> Result<()> {
+    pub(super) async fn update_sysproxy(&self) -> Result<()> {
         let _lock = self.update_lock.lock().await;
-
         let verge = Config::verge().await.latest_arc();
         let port = match verge.verge_mixed_port {
             Some(port) => port,
             None => Config::clash().await.latest_arc().get_mixed_port(),
         };
-        let pac_port = IVerge::get_singleton_port();
+        let pac_port = server::embedded_server_port()?;
         // 先 await, 避免持有锁导致的 Send 问题
         let bypass = get_bypass().await;
 
@@ -178,6 +197,7 @@ impl Sysopt {
             (sys.clone(), auto.clone(), guard_type)
         };
 
+        let _guard_operation = self.guard_operation_lock.lock().await;
         self.access_guard().write().set_guard_type(guard_type);
 
         let apply_steps = proxy_apply_steps(sys.enable, auto.enable);
@@ -197,7 +217,7 @@ impl Sysopt {
     }
 
     /// reset the sysproxy
-    pub async fn reset_sysproxy(&self) -> Result<()> {
+    pub(super) async fn reset_sysproxy(&self) -> Result<()> {
         if self
             .reset_sysproxy
             .compare_exchange(false, true, Ordering::SeqCst, Ordering::SeqCst)
@@ -208,9 +228,9 @@ impl Sysopt {
         defer! {
             self.reset_sysproxy.store(false, Ordering::SeqCst);
         }
-
-        // close proxy guard
-        self.access_guard().write().set_guard_type(GuardType::None);
+        let _lock = self.update_lock.lock().await;
+        let _guard_operation = self.guard_operation_lock.lock().await;
+        self.stop_proxy_guard_locked().await;
 
         // 直接关闭所有代理
         let (sys, auto) = {

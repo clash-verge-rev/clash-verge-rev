@@ -835,7 +835,9 @@ const ProfilePage = () => {
                 <IconButton
                   size="small"
                   color="warning"
-                  title="数据异常，点击强制刷新"
+                  title={t(
+                    'profiles.page.feedback.tooltips.forceRefreshStaleData',
+                  )}
                   onClick={onEmergencyRefresh}
                   sx={{
                     animation: 'pulse 2s infinite',

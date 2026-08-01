@@ -1,6 +1,6 @@
 use crate::config::Config;
 use crate::constants::{network, tun as tun_const};
-use crate::utils::dirs::{ipc_path, path_to_str};
+use crate::utils::dirs::{path_to_str, sidecar_ipc_path};
 use crate::utils::{dirs, help};
 use anyhow::Result;
 use clash_verge_logging::{Type, logging};
@@ -326,7 +326,7 @@ impl IClashTemp {
 
     pub fn guard_external_controller_ipc() -> String {
         // 总是使用当前的 IPC 路径，确保配置文件与运行时路径一致
-        ipc_path()
+        sidecar_ipc_path()
             .ok()
             .and_then(|path| path_to_str(&path).ok().map(|s| s.into()))
             .unwrap_or_else(|| {

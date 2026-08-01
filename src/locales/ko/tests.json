@@ -20,6 +20,13 @@
       },
       "fields": {
         "url": "테스트 URL"
+      },
+      "errors": {
+        "nameRequired": "이름을 입력하세요",
+        "urlRequired": "테스트 URL을 입력하세요",
+        "invalidSvg": "아이콘이 유효한 SVG가 아닙니다",
+        "uidMissing": "테스트 항목 식별자가 없습니다",
+        "saveFailed": "테스트 항목을 저장하지 못했습니다"
       }
     }
   },

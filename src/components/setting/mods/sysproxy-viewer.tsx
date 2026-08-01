@@ -32,11 +32,13 @@ import {
   TooltipIcon,
 } from '@/components/base'
 import { EditorViewer } from '@/components/profile/editor-viewer'
+import { useDisplayedMixedPort } from '@/hooks/use-displayed-mixed-port'
 import { useSystemProxyState } from '@/hooks/use-system-proxy-state'
 import { useVerge } from '@/hooks/use-verge'
 import { useClashConfigData, useSystemData } from '@/providers/app-data-context'
 import {
   getAutotemProxy,
+  getEmbeddedServerPort,
   getNetworkInterfacesInfo,
   getSystemHostname,
   getSystemProxy,
@@ -134,6 +136,13 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
     pac_content: pac_file_content ?? DEFAULT_PAC,
     proxy_host: proxy_host ?? '127.0.0.1',
   })
+  const [embeddedServerPort, setEmbeddedServerPort] = useState<number | null>(
+    null,
+  )
+
+  useEffect(() => {
+    getEmbeddedServerPort().then(setEmbeddedServerPort).catch(console.error)
+  }, [])
 
   const separator = useMemo(() => (isWindows ? ';' : ','), [isWindows])
 
@@ -180,33 +189,25 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
   }, [clashConfig?.mixedPort, enabled, value.pac, invalidateProxyState])
 
   const { systemProxyAddress } = useSystemData()
+  const displayedMixedPort = useDisplayedMixedPort()
 
   // 为当前状态计算系统代理地址
   const getSystemProxyAddress = useMemo(() => {
-    if (!clashConfig) return '-'
-
     const isPacMode = value.pac ?? false
 
     if (isPacMode) {
       const host = value.proxy_host || '127.0.0.1'
-      const port = verge?.verge_mixed_port || clashConfig.mixedPort || 7897
-      return `${host}:${port}`
+      return `${host}:${displayedMixedPort}`
     } else {
       return systemProxyAddress
     }
-  }, [
-    value.pac,
-    value.proxy_host,
-    verge?.verge_mixed_port,
-    clashConfig,
-    systemProxyAddress,
-  ])
+  }, [value.pac, value.proxy_host, displayedMixedPort, systemProxyAddress])
   const getCurrentPacUrl = useMemo(() => {
     const host = value.proxy_host || '127.0.0.1'
-    // 根据环境判断PAC端口
-    const port = import.meta.env.DEV ? 11233 : 33331
-    return `http://${host}:${port}/commands/pac`
-  }, [value.proxy_host])
+    return embeddedServerPort
+      ? `http://${host}:${embeddedServerPort}/commands/pac`
+      : '-'
+  }, [embeddedServerPort, value.proxy_host])
 
   const bypassError =
     value.enable_bypass_check &&
@@ -369,7 +370,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
     if (pacContent) {
       pacContent = pacContent.replace(/%proxy_host%/g, value.proxy_host)
       // 将 mixed-port 转换为字符串
-      const mixedPortStr = (clashConfig?.mixedPort || '').toString()
+      const mixedPortStr = displayedMixedPort.toString()
       pacContent = pacContent.replace(/%mixed-port%/g, mixedPortStr)
     }
 
