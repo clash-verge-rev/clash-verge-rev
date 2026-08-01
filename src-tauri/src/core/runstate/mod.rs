@@ -230,7 +230,7 @@ impl<E: RunStateEnv> RunStateStore<E> {
         .retry(
             ConstantBuilder::default()
                 .with_delay(Duration::from_millis(500))
-                .with_max_times(10),
+                .with_max_times(6),
         )
         .notify(|err, dur| {
             logging!(
