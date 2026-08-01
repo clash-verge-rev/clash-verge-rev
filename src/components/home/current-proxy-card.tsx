@@ -16,10 +16,15 @@ import {
   Box,
   Button,
   Chip,
+  ClickAwayListener,
   FormControl,
   IconButton,
   InputLabel,
+  type MenuProps,
   MenuItem,
+  MenuList,
+  Paper,
+  Popper,
   Select,
   type SelectChangeEvent,
   Tooltip,
@@ -63,12 +68,18 @@ const STORAGE_KEY_SORT_TYPE = 'clash-verge-proxy-sort-type'
 
 const AUTO_CHECK_DEFAULT_INTERVAL_MINUTES = 5
 const AUTO_CHECK_INITIAL_DELAY_MS = 100
+const PROXY_MENU_MAX_HEIGHT = 500
 
 // 代理节点信息接口
 interface ProxyOption {
   memberIndex: number
   member: ResolvedProxyMember
+  value: string
+  name: string
+  disabled: boolean
 }
+
+type OpenSelect = 'group' | 'proxy' | null
 
 // 排序类型: 默认 | 按延迟 | 按字母
 
@@ -149,6 +160,230 @@ function getSignalIcon(
     text: translate('home.components.currentProxy.status.latencyExcellent'),
     color: 'success.main',
   }
+}
+
+const optionValue = (memberIndex: number, member: ResolvedProxyMember) =>
+  `${memberIndex}:${
+    member.kind === 'node' ? member.node.recordId : member.ref.name
+  }`
+
+const hasPointerCoordinates = (
+  value: unknown,
+): value is { clientX: number; clientY: number } =>
+  typeof value === 'object' &&
+  value !== null &&
+  'clientX' in value &&
+  typeof value.clientX === 'number' &&
+  'clientY' in value &&
+  typeof value.clientY === 'number'
+
+const eventHitsElement = (event: unknown, element: HTMLElement | null) => {
+  if (!element) return false
+
+  const nativeEvent =
+    typeof event === 'object' && event !== null && 'nativeEvent' in event
+      ? event.nativeEvent
+      : event
+  if (!hasPointerCoordinates(nativeEvent)) return false
+
+  const rect = element.getBoundingClientRect()
+  return (
+    nativeEvent.clientX >= rect.left &&
+    nativeEvent.clientX <= rect.right &&
+    nativeEvent.clientY >= rect.top &&
+    nativeEvent.clientY <= rect.bottom
+  )
+}
+
+const sortProxyOptions = (
+  options: ProxyOption[],
+  sortType: ProxySortType,
+  delayOf: (member: ResolvedProxyMember) => number,
+  latencyTimeout?: number,
+) => {
+  if (sortType === 0) return options
+  if (sortType === 2) {
+    return [...options].sort((a, b) => a.name.localeCompare(b.name))
+  }
+
+  const effectiveTimeout =
+    typeof latencyTimeout === 'number' && latencyTimeout > 0
+      ? latencyTimeout
+      : DEFAULT_DELAY_TIMEOUT
+
+  return options
+    .map((option) => ({ option, delay: delayOf(option.member) }))
+    .sort((a, b) => {
+      const byDelay = compareByDelay(a.delay, b.delay, effectiveTimeout)
+      return byDelay || a.option.name.localeCompare(b.option.name)
+    })
+    .map(({ option }) => option)
+}
+
+interface PersistentProxySelectProps {
+  label: string
+  groupName: string
+  value: string
+  selectedName: string
+  selectedDelay: number
+  options: ProxyOption[]
+  open: boolean
+  disabled: boolean
+  keepOpenRef: React.RefObject<HTMLElement | null>
+  onOpen: () => void
+  onClose: () => void
+  onChange: (value: string) => void
+}
+
+const PersistentProxySelect = ({
+  label,
+  groupName,
+  value,
+  selectedName,
+  selectedDelay,
+  options,
+  open,
+  disabled,
+  keepOpenRef,
+  onOpen,
+  onClose,
+  onChange,
+}: PersistentProxySelectProps) => {
+  const anchorRef = useRef<HTMLDivElement>(null)
+  const listboxId = 'current-proxy-node-listbox'
+  const labelId = 'proxy-select-label'
+
+  useEffect(() => {
+    if (!open) return
+
+    const closeFromKeyboard = (event: KeyboardEvent) => {
+      if (event.key === 'Tab') {
+        onClose()
+      } else if (event.key === 'Escape') {
+        onClose()
+        anchorRef.current
+          ?.querySelector<HTMLElement>('[role="combobox"]')
+          ?.focus()
+      }
+    }
+    document.addEventListener('keydown', closeFromKeyboard)
+    return () => document.removeEventListener('keydown', closeFromKeyboard)
+  }, [onClose, open])
+
+  return (
+    <ClickAwayListener
+      onClickAway={(event) => {
+        if (!open) return
+        const target = event.target
+        if (target instanceof Node && keepOpenRef.current?.contains(target)) {
+          return
+        }
+        onClose()
+      }}
+    >
+      <Box>
+        <FormControl ref={anchorRef} fullWidth variant="outlined" size="small">
+          <InputLabel id={labelId}>{label}</InputLabel>
+          <Select
+            labelId={labelId}
+            value={value}
+            open={false}
+            onOpen={onOpen}
+            label={label}
+            disabled={disabled}
+            renderValue={() => (
+              <Box
+                sx={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                }}
+              >
+                <Typography noWrap>{selectedName}</Typography>
+                <Chip
+                  size="small"
+                  label={delayManager.formatDelay(selectedDelay)}
+                  color={convertDelayColor(selectedDelay)}
+                />
+              </Box>
+            )}
+            SelectDisplayProps={{
+              'aria-controls': open ? listboxId : undefined,
+              'aria-expanded': open ? 'true' : 'false',
+            }}
+          >
+            <MenuItem value={value}>{selectedName}</MenuItem>
+          </Select>
+        </FormControl>
+
+        <Popper
+          open={open}
+          anchorEl={anchorRef.current}
+          placement="bottom-start"
+          sx={{
+            width: anchorRef.current?.clientWidth,
+            zIndex: (theme) => theme.zIndex.modal,
+          }}
+        >
+          <Paper
+            elevation={8}
+            sx={{ maxHeight: PROXY_MENU_MAX_HEIGHT, overflow: 'auto' }}
+          >
+            <MenuList
+              id={listboxId}
+              role="listbox"
+              aria-labelledby={labelId}
+              autoFocusItem
+              variant="selectedMenu"
+            >
+              {options.map((option) => {
+                const selected = option.value === value
+                const delay = option.disabled
+                  ? -1
+                  : delayManager.getDelayFix(option.member, groupName)
+
+                return (
+                  <MenuItem
+                    key={option.value}
+                    role="option"
+                    aria-selected={selected}
+                    selected={selected}
+                    disabled={option.disabled}
+                    onClick={() => {
+                      if (!option.disabled) onChange(option.value)
+                    }}
+                    sx={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      width: '100%',
+                      pr: 1,
+                    }}
+                  >
+                    <Typography noWrap sx={{ flex: 1, mr: 1 }}>
+                      {option.name}
+                    </Typography>
+                    {!option.disabled && (
+                      <Chip
+                        size="small"
+                        label={delayManager.formatDelay(delay)}
+                        color={convertDelayColor(delay)}
+                        sx={{
+                          minWidth: '60px',
+                          height: '22px',
+                          flexShrink: 0,
+                        }}
+                      />
+                    )}
+                  </MenuItem>
+                )
+              })}
+            </MenuList>
+          </Paper>
+        </Popper>
+      </Box>
+    </ClickAwayListener>
+  )
 }
 
 export const CurrentProxyCard = () => {
@@ -237,6 +472,8 @@ export const CurrentProxyCard = () => {
   })
 
   const [selectedGroupName, setSelectedGroupName] = useState('')
+  const [openSelect, setOpenSelect] = useState<OpenSelect>(null)
+  const delayButtonRef = useRef<HTMLButtonElement>(null)
   // Sorting reads delays from a store outside React; this hands them over as a value.
   const delays = useGroupDelays(selectedGroupName || null)
 
@@ -278,10 +515,16 @@ export const CurrentProxyCard = () => {
   const optionsForGroup = useCallback(
     (group: ProxyGroupView | null): ProxyOption[] =>
       proxyView && group
-        ? group.members.map((member, memberIndex) => ({
-            memberIndex,
-            member: resolveMember(proxyView, member),
-          }))
+        ? group.members.map((memberRef, memberIndex) => {
+            const member = resolveMember(proxyView, memberRef)
+            return {
+              memberIndex,
+              member,
+              value: optionValue(memberIndex, member),
+              name: member.ref.name,
+              disabled: !isInteractableMember(member),
+            }
+          })
         : [],
     [proxyView],
   )
@@ -346,7 +589,7 @@ export const CurrentProxyCard = () => {
               ref: { kind: 'node', name: node.name, recordId: node.recordId },
               node,
             },
-          } satisfies ProxyOption)
+          } satisfies Pick<ProxyOption, 'memberIndex' | 'member'>)
         : undefined
     }
     return selectedGroup
@@ -366,18 +609,11 @@ export const CurrentProxyCard = () => {
     [isDirectMode, isGlobalMode, writeProfileScopedItem],
   )
 
-  const optionValue = (option: ProxyOption) =>
-    `${option.memberIndex}:${
-      option.member.kind === 'node'
-        ? option.member.node.recordId
-        : option.member.ref.name
-    }`
-
   const handleProxyChange = useCallback(
-    (event: SelectChangeEvent<string>) => {
+    (value: string) => {
       if (isDirectMode) return
       const option = unsortedProxyOptions.find(
-        (candidate) => optionValue(candidate) === event.target.value,
+        (candidate) => candidate.value === value,
       )
       if (!selectedGroup || !option || !isInteractableMember(option.member)) {
         return
@@ -493,26 +729,6 @@ export const CurrentProxyCard = () => {
     autoDelayEnabled,
   ])
 
-  // 自定义渲染选择框中的值
-  const renderProxyValue = () => {
-    if (!currentMember) return selectedProxyName
-    const delayValue = delayManager.getDelayFix(
-      currentMember,
-      selectedGroupName,
-    )
-
-    return (
-      <Box sx={{ display: 'flex', justifyContent: 'space-between' }}>
-        <Typography noWrap>{selectedProxyName}</Typography>
-        <Chip
-          size="small"
-          label={delayManager.formatDelay(delayValue)}
-          color={convertDelayColor(delayValue)}
-        />
-      </Box>
-    )
-  }
-
   // 排序类型变更
   const handleSortTypeChange = useCallback(() => {
     const newSortType = ((sortType + 1) % 3) as ProxySortType
@@ -552,46 +768,40 @@ export const CurrentProxyCard = () => {
     refreshProxy()
   })
 
-  // 计算要显示的代理选项（增加非空校验）
-  const proxyOptions = useMemo(() => {
-    const sortWithLatency = (proxiesToSort: ProxyOption[]) => {
-      if (!proxiesToSort || sortType === 0) return proxiesToSort
-
-      const list = [...proxiesToSort]
-
-      if (sortType === 1) {
-        const effectiveTimeout =
-          typeof defaultLatencyTimeout === 'number' && defaultLatencyTimeout > 0
-            ? defaultLatencyTimeout
-            : DEFAULT_DELAY_TIMEOUT
-
-        list.sort((a, b) => {
-          const byDelay = compareByDelay(
-            delays.of(a.member),
-            delays.of(b.member),
-            effectiveTimeout,
-          )
-          if (byDelay !== 0) return byDelay
-          return a.member.ref.name.localeCompare(b.member.ref.name)
-        })
-      } else {
-        list.sort((a, b) => a.member.ref.name.localeCompare(b.member.ref.name))
+  const handleGroupMenuClose = useCallback<NonNullable<MenuProps['onClose']>>(
+    (event, reason) => {
+      if (
+        reason === 'backdropClick' &&
+        eventHitsElement(event, delayButtonRef.current)
+      ) {
+        void handleCheckDelay()
+        return
       }
 
-      return list
-    }
+      setOpenSelect(null)
+    },
+    [handleCheckDelay],
+  )
 
-    if (isDirectMode) {
-      return []
-    }
-    return sortWithLatency(unsortedProxyOptions)
-  }, [
-    delays,
-    isDirectMode,
-    unsortedProxyOptions,
-    sortType,
-    defaultLatencyTimeout,
-  ])
+  // 计算要显示的代理选项（增加非空校验）
+  const proxyOptions = useMemo(
+    () =>
+      isDirectMode
+        ? []
+        : sortProxyOptions(
+            unsortedProxyOptions,
+            sortType,
+            delays.of,
+            defaultLatencyTimeout,
+          ),
+    [
+      delays,
+      isDirectMode,
+      unsortedProxyOptions,
+      sortType,
+      defaultLatencyTimeout,
+    ],
+  )
 
   // 获取排序图标
   const getSortIcon = (): React.ReactElement => {
@@ -643,10 +853,14 @@ export const CurrentProxyCard = () => {
           >
             <span>
               <IconButton
+                ref={delayButtonRef}
                 size="small"
                 color="inherit"
                 onClick={handleCheckDelay}
                 disabled={isDirectMode || unsortedProxyOptions.length === 0}
+                aria-label={t(
+                  'home.components.currentProxy.actions.refreshDelay',
+                )}
               >
                 <NetworkCheckRounded />
               </IconButton>
@@ -764,8 +978,11 @@ export const CurrentProxyCard = () => {
               labelId="proxy-group-select-label"
               value={selectedGroupName}
               onChange={handleGroupChange}
+              open={openSelect === 'group'}
+              onOpen={() => setOpenSelect('group')}
               label={t('home.components.currentProxy.labels.group')}
               disabled={isGlobalMode || isDirectMode}
+              MenuProps={{ onClose: handleGroupMenuClose }}
             >
               {selectableGroups.map((group) => (
                 <MenuItem key={group.name} value={group.name}>
@@ -776,70 +993,24 @@ export const CurrentProxyCard = () => {
           </FormControl>
 
           {/* 代理节点选择器 */}
-          <FormControl fullWidth variant="outlined" size="small" sx={{ mb: 0 }}>
-            <InputLabel id="proxy-select-label">
-              {t('home.components.currentProxy.labels.proxy')}
-            </InputLabel>
-            <Select
-              labelId="proxy-select-label"
-              value={currentOption ? optionValue(currentOption) : ''}
-              onChange={handleProxyChange}
-              label={t('home.components.currentProxy.labels.proxy')}
-              disabled={isDirectMode}
-              renderValue={renderProxyValue}
-              MenuProps={{
-                slotProps: {
-                  paper: {
-                    style: {
-                      maxHeight: 500,
-                    },
-                  },
-                },
-              }}
-            >
-              {isDirectMode
-                ? null
-                : proxyOptions.map((option) => {
-                    const interactable = isInteractableMember(option.member)
-                    const delayValue = interactable
-                      ? delayManager.getDelayFix(
-                          option.member,
-                          selectedGroupName,
-                        )
-                      : -1
-                    return (
-                      <MenuItem
-                        key={optionValue(option)}
-                        value={optionValue(option)}
-                        disabled={!interactable}
-                        sx={{
-                          display: 'flex',
-                          justifyContent: 'space-between',
-                          alignItems: 'center',
-                          width: '100%',
-                          pr: 1,
-                        }}
-                      >
-                        <Typography noWrap sx={{ flex: 1, mr: 1 }}>
-                          {option.member.ref.name}
-                        </Typography>
-                        {interactable && (
-                          <Chip
-                            size="small"
-                            label={delayManager.formatDelay(delayValue)}
-                            color={convertDelayColor(delayValue)}
-                            sx={{
-                              minWidth: '60px',
-                              height: '22px',
-                              flexShrink: 0,
-                            }}
-                          />
-                        )}
-                      </MenuItem>
-                    )
-                  })}
-            </Select>
-          </FormControl>
+          <PersistentProxySelect
+            label={t('home.components.currentProxy.labels.proxy')}
+            groupName={selectedGroupName}
+            value={
+              currentOption
+                ? optionValue(currentOption.memberIndex, currentOption.member)
+                : ''
+            }
+            selectedName={selectedProxyName}
+            selectedDelay={currentDelay}
+            options={isDirectMode ? [] : proxyOptions}
+            open={openSelect === 'proxy'}
+            disabled={isDirectMode}
+            keepOpenRef={delayButtonRef}
+            onOpen={() => setOpenSelect('proxy')}
+            onClose={() => setOpenSelect(null)}
+            onChange={handleProxyChange}
+          />
         </Box>
       ) : (
         <Box sx={{ textAlign: 'center', py: 4 }}>

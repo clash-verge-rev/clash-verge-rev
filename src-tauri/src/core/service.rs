@@ -1299,8 +1299,8 @@ impl ServiceManager {
         RUN_STATE.require_install_for_session()
     }
 
-    pub(crate) fn mark_unavailable(&self, reason: impl Into<String>) {
-        self.set_status(ServiceStatus::Unavailable(reason.into()));
+    pub(crate) fn withdraw_sidecar_allowance(&self) -> bool {
+        RUN_STATE.withdraw_sidecar_allowance()
     }
 
     pub async fn detect_startup_status(&self) {
@@ -1308,7 +1308,7 @@ impl ServiceManager {
             RUN_STATE.accept_sidecar();
             return;
         }
-        RUN_STATE.observe(RUN_STATE.detect_service_health().await);
+        RUN_STATE.observe_current_health().await;
     }
 
     fn set_status(&self, status: ServiceStatus) {
@@ -1334,7 +1334,8 @@ impl ServiceManager {
     }
 
     pub async fn handle_service_status(&self, status: ServiceStatus) -> Result<()> {
-        self.run_operation(self.apply_service_status(status)).await
+        // Box the large operation future once instead of carrying it in every calling command.
+        self.run_operation(Box::pin(self.apply_service_status(status))).await
     }
 
     async fn apply_service_status(&self, status: ServiceStatus) -> Result<()> {
@@ -1345,16 +1346,39 @@ impl ServiceManager {
             self.set_status(status.clone());
             return report_non_actionable_status(status);
         };
-        self.set_status(status);
+        // Atomically record the request and capture the Sidecar allowance it clears.
+        let sidecar_allowed_before = RUN_STATE.request_action(action);
 
         logging!(info, Type::Service, "running privileged service action {action:?}");
-        RUN_STATE.perform(action)?;
-        if !matches!(action, PendingAction::Uninstall) {
-            wait_for_service_ipc().await?;
-            Config::restore_tun_for_session().await;
-        }
-        Ok(())
+        run_action_restoring_sidecar(&RUN_STATE, sidecar_allowed_before, async move {
+            RUN_STATE.perform(action).await?;
+            if !matches!(action, PendingAction::Uninstall) {
+                wait_for_service_ipc().await?;
+                Config::restore_tun_for_session().await;
+            }
+            Ok(())
+        })
+        .await
     }
+}
+
+/// Run the full action workflow and restore the session's previous Sidecar allowance on failure.
+///
+/// This includes the readiness wait: an action has not landed until the Service responds.
+async fn run_action_restoring_sidecar<E: RunStateEnv>(
+    store: &RunStateStore<E>,
+    was_allowed: bool,
+    action: impl Future<Output = Result<()>>,
+) -> Result<()> {
+    let outcome = action.await;
+    if outcome.is_err() && was_allowed && store.restore_sidecar_allowance() {
+        logging!(
+            info,
+            Type::Service,
+            "restored the Sidecar this session had already settled on"
+        );
+    }
+    outcome
 }
 
 /// Explain a status that asks for no privileged action, refusing the ones we cannot act on.
@@ -1469,6 +1493,7 @@ mod tests {
     #[cfg(unix)]
     use super::{service_core_path_for_with_publisher, service_tool_path_for};
     use crate::core::runstate::{FakeEnv, OwnerRecoveryReason, PendingAction, RunStateStore};
+    use anyhow::bail;
     use clash_verge_service_ipc::OwnerSessionProof;
     #[cfg(unix)]
     use std::cell::Cell;
@@ -1895,43 +1920,190 @@ mod tests {
         }
     }
 
-    #[test]
-    fn a_failed_uninstall_leaves_the_service_untrusted_rather_than_absent() {
-        let store = RunStateStore::new(FakeEnv::new().privileged_operations_fail("no authorization"));
-        store.observe(crate::core::runstate::ServiceHealth::Ready);
+    #[tokio::test]
+    async fn a_failed_uninstall_asks_the_machine_rather_than_condemning_the_service() {
+        // A cancelled uninstall may leave the Service healthy; use the fresh probe result.
+        let store = RunStateStore::new(
+            FakeEnv::new()
+                .service_ready()
+                .privileged_operations_fail("no authorization"),
+        );
+        store.observe(ServiceHealth::Ready);
 
         let error = store
             .perform(PendingAction::Uninstall)
+            .await
             .expect_err("an unauthorized uninstall should fail");
 
         assert!(error.to_string().contains("no authorization"));
-        assert!(matches!(status_of(&store), ServiceStatus::Unavailable(_)));
+        assert_eq!(status_of(&store), ServiceStatus::Ready);
+        assert!(!store.state().service_needs_attention());
     }
 
-    #[test]
-    fn a_successful_uninstall_records_an_absent_service() {
-        let store = fake_store();
-        store.observe(crate::core::runstate::ServiceHealth::Ready);
+    #[tokio::test]
+    async fn a_failed_uninstall_still_reports_a_service_the_uninstaller_broke() {
+        // A failed uninstaller can still leave the Service registered but unreachable.
+        let store = RunStateStore::new(
+            FakeEnv::new()
+                .service_unreachable()
+                .privileged_operations_fail("uninstaller exited with 1"),
+        );
+        store.observe(ServiceHealth::Ready);
 
         store
             .perform(PendingAction::Uninstall)
+            .await
+            .expect_err("a broken uninstall should fail");
+
+        assert!(matches!(status_of(&store), ServiceStatus::Unavailable(_)));
+        assert!(store.state().service_needs_attention());
+    }
+
+    #[tokio::test]
+    async fn a_successful_uninstall_records_an_absent_service() {
+        let store = fake_store();
+        store.observe(ServiceHealth::Ready);
+
+        store
+            .perform(PendingAction::Uninstall)
+            .await
             .expect("uninstall should succeed");
 
         assert_eq!(status_of(&store), ServiceStatus::NotInstalled);
         assert_eq!(store.env().privileged_actions(), vec![PendingAction::Uninstall]);
     }
 
-    #[test]
-    fn a_failed_install_does_not_claim_the_service_is_gone() {
-        // Only an uninstall has an outcome we can record without asking the Service again.
-        let store = RunStateStore::new(FakeEnv::new().privileged_operations_fail("elevation refused"));
-        store.observe(crate::core::runstate::ServiceHealth::NotInstalled);
+    #[tokio::test]
+    async fn a_cancelled_install_leaves_no_question_for_the_user() {
+        // A cancelled action must retire its request or the attention dialog reopens.
+        let store = RunStateStore::new(FakeEnv::new().privileged_operations_fail("User canceled. (-128)"));
+        store.observe(ServiceHealth::NotInstalled);
         super::record_status(&store, ServiceStatus::InstallRequired);
 
         store
             .perform(PendingAction::Install)
-            .expect_err("a refused install should fail");
+            .await
+            .expect_err("a cancelled install should fail");
 
-        assert_eq!(status_of(&store), ServiceStatus::InstallRequired);
+        assert_eq!(status_of(&store), ServiceStatus::NotInstalled);
+        assert!(
+            !store.state().service_needs_attention(),
+            "a service that is merely absent asks the user nothing"
+        );
+    }
+
+    #[tokio::test]
+    async fn a_failed_install_still_reports_a_service_that_really_is_broken() {
+        // A fresh probe must preserve a real fault left by a failed installer.
+        let store = RunStateStore::new(
+            FakeEnv::new()
+                .service_unreachable()
+                .privileged_operations_fail("installer exited with 1"),
+        );
+        super::record_status(&store, ServiceStatus::ForceReinstallRequired);
+
+        store
+            .perform(PendingAction::ForceReinstall)
+            .await
+            .expect_err("a broken repair should fail");
+
+        assert!(matches!(status_of(&store), ServiceStatus::Unavailable(_)));
+        assert!(store.state().service_needs_attention());
+    }
+
+    /// Build a session where the user already accepted Sidecar for an unhealthy Service.
+    fn store_settled_on_sidecar(env: FakeEnv) -> RunStateStore<FakeEnv> {
+        let store = RunStateStore::new(env);
+        store.observe(ServiceHealth::VersionMismatch);
+        store.accept_sidecar();
+        assert!(!store.state().service_needs_attention(), "the question was answered");
+        store
+    }
+
+    #[tokio::test]
+    async fn a_cancelled_action_gives_back_the_sidecar_the_session_had_settled_on() {
+        // A failed action must restore the Sidecar decision displaced by its request.
+        let store = store_settled_on_sidecar(
+            FakeEnv::new()
+                .service_version_mismatch()
+                .privileged_operations_fail("User canceled. (-128)"),
+        );
+        // Recording the request returns the allowance it displaced.
+        let was_allowed = store.request_action(PendingAction::Install);
+        assert!(was_allowed, "the request displaced the session's answer");
+        assert!(!store.state().sidecar_allowed);
+
+        let outcome = super::run_action_restoring_sidecar(&store, was_allowed, async {
+            store.perform(PendingAction::Install).await
+        })
+        .await;
+
+        assert!(outcome.is_err(), "the failure is still reported to the caller");
+        assert!(store.state().sidecar_allowed);
+        assert!(!store.state().service_needs_attention());
+    }
+
+    #[tokio::test]
+    async fn an_authorised_action_that_never_became_ready_also_gives_the_sidecar_back() {
+        // Roll back the full workflow, including readiness failures after the action succeeds.
+        let store = store_settled_on_sidecar(FakeEnv::new().service_version_mismatch());
+        let was_allowed = store.request_action(PendingAction::Install);
+
+        let outcome = super::run_action_restoring_sidecar(&store, was_allowed, async {
+            store.perform(PendingAction::Install).await?;
+            // Simulate `wait_for_service_ipc` recording health before it fails.
+            store.observe(ServiceHealth::Unavailable("service never answered".to_owned()));
+            bail!("service IPC did not become available")
+        })
+        .await;
+
+        assert!(outcome.is_err());
+        assert!(store.state().sidecar_allowed);
+        assert!(!store.state().service_needs_attention());
+    }
+
+    #[tokio::test]
+    async fn an_action_that_lands_keeps_the_session_on_the_service() {
+        let store = RunStateStore::new(FakeEnv::new().service_ready());
+        store.observe(ServiceHealth::NotInstalled);
+        store.request_action(PendingAction::Install);
+
+        super::run_action_restoring_sidecar(&store, true, async {
+            store.perform(PendingAction::Install).await?;
+            store.observe(ServiceHealth::Ready);
+            Ok(())
+        })
+        .await
+        .expect("the install landed");
+
+        assert!(
+            !store.state().sidecar_allowed,
+            "no fallback is owed to a working Service"
+        );
+        assert_eq!(status_of(&store), ServiceStatus::Ready);
+    }
+
+    #[tokio::test]
+    async fn a_session_that_never_chose_sidecar_is_not_given_one() {
+        let store = RunStateStore::new(FakeEnv::new().service_version_mismatch());
+        store.observe(ServiceHealth::VersionMismatch);
+
+        super::run_action_restoring_sidecar(&store, false, async { bail!("refused") })
+            .await
+            .expect_err("the failure is reported");
+
+        assert!(!store.state().sidecar_allowed);
+        assert!(store.state().service_needs_attention());
+    }
+
+    #[test]
+    fn a_service_that_came_back_ready_is_never_shadowed_by_a_restored_sidecar() {
+        // The atomic ready check prevents Sidecar from shadowing a ready Service.
+        let store = RunStateStore::new(FakeEnv::new().service_ready());
+        store.observe(ServiceHealth::Ready);
+
+        assert!(!store.restore_sidecar_allowance());
+        assert!(!store.state().sidecar_allowed);
+        assert_eq!(status_of(&store), ServiceStatus::Ready);
     }
 }

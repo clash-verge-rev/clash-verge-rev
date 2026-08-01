@@ -287,10 +287,11 @@ impl CoreManager {
         if !can_allow_sidecar_for_session(&mode, &status) {
             anyhow::bail!("Sidecar continuation is not allowed from {mode:?} / {status:?}");
         }
-        proxy_control::stop_guard().await;
         Config::suppress_tun_for_session().await;
         Config::generate().await?;
         SERVICE_MANAGER.allow_sidecar_for_session()?;
+        // Drop the guard last so an earlier failure cannot leave a running Sidecar unguarded.
+        proxy_control::stop_guard().await;
         let result = async {
             self.start_core_inner().await?;
             if !matches!(*self.get_running_mode(), RunningMode::Sidecar) {
@@ -300,7 +301,8 @@ impl CoreManager {
         }
         .await;
         if let Err(error) = &result {
-            SERVICE_MANAGER.mark_unavailable(format!("Sidecar startup failed: {error:#}"));
+            // Revoke only the failed Sidecar allowance; its startup says nothing about Service health.
+            SERVICE_MANAGER.withdraw_sidecar_allowance();
             if let Err(cleanup_error) = self.rollback_failed_sidecar_transition().await {
                 return Err(anyhow::anyhow!(
                     "Sidecar startup failed: {error:#}; failed to clear proxy before rollback: {cleanup_error:#}"
@@ -1262,6 +1264,25 @@ mod tests {
         assert!(can_allow_sidecar_for_session(
             &RunningMode::Sidecar,
             &ServiceStatus::InstallRequired,
+        ));
+    }
+
+    #[test]
+    fn a_sidecar_that_failed_to_start_can_be_tried_again() {
+        // Revoking a failed attempt's allowance keeps retries reachable without changing Service health.
+        for health in [
+            ServiceStatus::NotInstalled,
+            ServiceStatus::NeedsReinstall,
+            ServiceStatus::Unavailable("boom".into()),
+        ] {
+            assert!(
+                can_allow_sidecar_for_session(&RunningMode::NotRunning, &health),
+                "{health:?} must still admit a second attempt"
+            );
+        }
+        assert!(!can_allow_sidecar_for_session(
+            &RunningMode::NotRunning,
+            &ServiceStatus::SidecarAllowed,
         ));
     }
 
