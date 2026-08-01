@@ -99,7 +99,7 @@ clash_verge_service_ipc = { git = "https://github.com/clash-verge-rev/clash-verg
 ] }
 arc-swap = "1.9.2"
 tokio-rustls = "0.26.4"
-rustls = { version = "0.23.42", features = ["ring"] }
+rustls = { version = "0.23.43", features = ["ring"] }
 webpki-roots = "1.0.9"
 rust_iso3166 = "0.2.0"
 # Use the git repo until the next release after v2.0.0.
