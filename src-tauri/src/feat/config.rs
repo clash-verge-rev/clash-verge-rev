@@ -5,7 +5,7 @@ use crate::{
 };
 use anyhow::Result;
 use bitflags::bitflags;
-use clash_verge_draft::SharedDraft;
+use clash_verge_draft::{DraftTransaction, SharedDraft};
 use clash_verge_logging::{Type, logging, logging_error};
 use serde_yaml_ng::Mapping;
 
@@ -272,24 +272,23 @@ async fn process_terminated_flags(update_flags: UpdateFlags, patch: &IVerge) -> 
 }
 
 pub async fn patch_verge(patch: &IVerge, not_save_file: bool) -> Result<()> {
-    Config::verge().await.edit_draft(|d| d.patch_config(patch));
+    let verge = Config::verge().await;
+    // Applying the flags can fail, and until now that `?` returned straight out of here past
+    // an `if let Err(..) { discard() }` the compiler could never reach — leaving the failed
+    // edit sitting in the draft, where every later reader saw a value that was never applied
+    // and never written to disk.
+    let transaction = DraftTransaction::new(vec![&verge]);
+    verge.edit_draft(|d| d.patch_config(patch));
 
     let update_flags = determine_update_flags(patch);
     logging!(debug, Type::Setup, "Determined update flags: {:?}", update_flags);
-    let process_flag_result: std::result::Result<(), anyhow::Error> = {
-        process_terminated_flags(update_flags, patch).await?;
-        Ok(())
-    };
+    process_terminated_flags(update_flags, patch).await?;
+    transaction.commit();
 
-    if let Err(err) = process_flag_result {
-        Config::verge().await.discard();
-        return Err(err);
-    }
-    Config::verge().await.apply();
     logging_error!(Type::Backup, AutoBackupManager::global().refresh_settings().await);
     if !not_save_file {
         // 分离数据获取和异步调用
-        let verge_data = Config::verge().await.data_arc();
+        let verge_data = verge.data_arc();
         logging!(debug, Type::Setup, "Saving Verge configuration to file...");
         verge_data.save_file().await?;
     }

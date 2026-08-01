@@ -24,6 +24,14 @@ export const handleNoticeMessage = (
       showNotice.error(msg)
     },
     'set_config::error': () => showNotice.error(msg),
+    'tun_mode::auto_disabled': () =>
+      showNotice.info(
+        'settings.sections.system.notifications.tunMode.autoDisabled',
+      ),
+    'tun_mode::auto_disable_failed': () =>
+      showNotice.error(
+        'settings.sections.system.notifications.tunMode.autoDisableFailed',
+      ),
     'app_restart::core_stop_failed': () =>
       showNotice.error('layout.feedback.errors.restartCoreStopFailed'),
     'app_quit::core_stop_failed': () =>

@@ -1,5 +1,5 @@
 use crate::{
-    config::{Config, IVerge},
+    config::{Config, IVerge, MixedPort},
     core::handle,
 };
 use clash_verge_logging::{Type, logging};
@@ -77,7 +77,10 @@ pub async fn copy_clash_env() {
         .unwrap_or_else(|| verge_cfg.proxy_host.as_deref().unwrap_or("127.0.0.1"));
 
     let app_handle = handle::Handle::app_handle();
-    let port = verge_cfg.verge_mixed_port.unwrap_or(7897);
+    // The user is about to paste this into a shell, so it has to be the port the Core is
+    // really on — and this path is user-triggered, so a round-trip is affordable. It also
+    // used to fall back to a hardcoded 7897, ignoring the Merge Config entirely.
+    let port = MixedPort::effective().await;
     let http_proxy = format!("http://{ip}:{port}");
     let socks5_proxy = format!("socks5://{ip}:{port}");
 

@@ -9,7 +9,6 @@ use clash_verge_logging::{Type, logging};
 use scopeguard::defer;
 use smartstring::alias::String;
 use std::path::Path;
-use tauri_plugin_clash_verge_sysinfo;
 #[cfg(target_os = "windows")]
 use tauri_plugin_clash_verge_sysinfo::is_current_app_handle_admin;
 
@@ -262,9 +261,7 @@ enum HandoffOutcome {
 impl CoreManager {
     async fn rollback_failed_start(&self) {
         proxy_control::stop_guard().await;
-        crate::utils::server::set_pac_available(false);
-        self.invalidate_core_readiness();
-        self.set_running_mode(RunningMode::NotRunning);
+        self.core_stopped();
     }
 
     pub async fn start_core(&self) -> Result<()> {
@@ -359,7 +356,6 @@ impl CoreManager {
             self.stop_sidecar_after_proxy_clear().await?;
         }
         self.rollback_failed_start().await;
-        self.after_core_process();
         Ok(())
     }
 
@@ -369,7 +365,7 @@ impl CoreManager {
 
     /// Replaces a Service-owned core while the caller holds `lifecycle_lock`.
     pub(super) async fn replace_service_core_with_config(&self, config_file: &Path) -> Result<()> {
-        let result = run_service_config_replacement_transition(
+        run_service_config_replacement_transition(
             cfg!(target_os = "macos"),
             proxy_control::stop_guard,
             proxy_control::clear,
@@ -381,9 +377,7 @@ impl CoreManager {
             },
             || self.apply_proxy_after_start(),
         )
-        .await;
-        self.after_core_process();
-        result
+        .await
     }
 
     pub(crate) async fn apply_proxy_after_start(&self) -> Result<()> {
@@ -438,16 +432,11 @@ impl CoreManager {
         let startup = self.prepare_startup().await;
         if matches!(startup, StartupDecision::Wait) {
             self.rollback_failed_start().await;
-            self.after_core_process();
             return Ok(());
         }
-        defer! {
-            self.after_core_process();
-        }
-
         // 等待服务期间可能进入退出;未真正启动时回滚状态。
         if Handle::global().is_exiting() {
-            self.set_running_mode(RunningMode::NotRunning);
+            self.core_stopped();
             return Ok(());
         }
 
@@ -495,10 +484,6 @@ impl CoreManager {
     /// 调用者须已持有 `lifecycle_lock`,且已完成受控代理清理。
     async fn stop_core_unprepared_inner(&self) -> Result<()> {
         CLASH_LOGGER.clear_logs().await;
-        defer! {
-            self.after_core_process();
-        }
-
         match *self.get_running_mode() {
             RunningMode::Service => self.stop_core_by_service().await,
             RunningMode::Sidecar => {
@@ -569,15 +554,9 @@ impl CoreManager {
         startup_decision(&SERVICE_MANAGER.current().await, service_required)
     }
 
-    pub(in crate::core) fn after_core_process(&self) {
-        let app_handle = Handle::app_handle();
-        tauri_plugin_clash_verge_sysinfo::set_app_core_mode(app_handle, self.get_running_mode().to_string());
-    }
-
     #[cfg(target_os = "windows")]
     async fn wait_for_service_if_needed(&self) {
         use crate::{config::Config, constants::timing};
-        use backon::{ConstantBuilder, Retryable as _};
 
         let tun_enabled = Config::verge().await.latest_arc().enable_tun_mode.unwrap_or(false);
         let service_ready = matches!(SERVICE_MANAGER.current().await, ServiceStatus::Ready);
@@ -594,22 +573,15 @@ impl CoreManager {
             return;
         }
 
-        let max_times = timing::SERVICE_WAIT_MAX.as_millis() / timing::SERVICE_WAIT_INTERVAL.as_millis();
-        let backoff = ConstantBuilder::default()
-            .with_delay(timing::SERVICE_WAIT_INTERVAL)
-            .with_max_times(max_times as usize);
+        if crate::core::runstate::RUN_STATE.state().service_usable() {
+            return;
+        }
 
-        let wait_for_ready = (|| async {
-            if SERVICE_MANAGER.is_ready_cached() {
-                return Ok(());
-            }
-
-            // Probe the service directly. A transient transport failure does not overwrite
-            // the last confirmed install state and is retried within the startup deadline.
-            SERVICE_MANAGER.confirm_ready().await
-        })
-        .retry(backoff);
-        let _ = tokio::time::timeout(timing::SERVICE_WAIT_MAX, wait_for_ready).await;
+        // Failing to become ready is not fatal here: the caller falls back to Sidecar, and a
+        // transient transport failure must not overwrite the last confirmed install state.
+        let attempts = (timing::SERVICE_WAIT_MAX.as_millis() / timing::SERVICE_WAIT_INTERVAL.as_millis()) as usize;
+        let wait = crate::core::runstate::RUN_STATE.await_ready(attempts, timing::SERVICE_WAIT_INTERVAL);
+        let _ = tokio::time::timeout(timing::SERVICE_WAIT_MAX, wait).await;
     }
 
     /// 在窗口内等待服务就绪,再从 sidecar 交接到 service
@@ -677,7 +649,7 @@ impl CoreManager {
         if SERVICE_MANAGER.confirm_ready().await.is_err() {
             return false;
         }
-        SERVICE_MANAGER.is_ready_cached()
+        crate::core::runstate::RUN_STATE.state().service_usable()
     }
 
     /// 服务就绪后停止 sidecar,再以 service 重启内核
@@ -1144,9 +1116,9 @@ mod tests {
     async fn service_config_replacement_is_controlled_and_generation_safe_on_every_platform() {
         for is_macos in [false, true] {
             let calls = Arc::new(Mutex::new(Vec::new()));
-            let manager = CoreManager::default();
+            let manager = CoreManager::isolated();
             let old_readiness_generation = manager.mark_core_ready();
-            manager.set_running_mode(RunningMode::Service);
+            manager.core_started(RunningMode::Service);
             let owner_monitor_generation = AtomicU64::new(1);
             let old_owner_monitor_generation = owner_monitor_generation.load(Ordering::Acquire);
 
@@ -1160,14 +1132,14 @@ mod tests {
                 || {
                     calls.lock().push("helper-stop");
                     owner_monitor_generation.fetch_add(1, Ordering::AcqRel);
-                    manager.set_running_mode(RunningMode::NotRunning);
+                    manager.core_stopped();
                     future::ready(Ok(()))
                 },
                 || {
                     calls.lock().push("service-start");
                     owner_monitor_generation.fetch_add(1, Ordering::AcqRel);
                     manager.mark_core_ready();
-                    manager.set_running_mode(RunningMode::Service);
+                    manager.core_started(RunningMode::Service);
                     if owner_monitor_generation
                         .compare_exchange(
                             old_owner_monitor_generation,
@@ -1313,12 +1285,12 @@ mod tests {
 
     #[tokio::test]
     async fn failed_start_rolls_back_even_from_service_mode() {
-        let manager = CoreManager::default();
-        manager.set_running_mode(RunningMode::Service);
+        let manager = CoreManager::isolated();
+        manager.core_started(RunningMode::Service);
         manager.rollback_failed_start().await;
         assert_eq!(*manager.get_running_mode(), RunningMode::NotRunning);
 
-        manager.set_running_mode(RunningMode::Sidecar);
+        manager.core_started(RunningMode::Sidecar);
         manager.rollback_failed_start().await;
         assert_eq!(*manager.get_running_mode(), RunningMode::NotRunning);
     }

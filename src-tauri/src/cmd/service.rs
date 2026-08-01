@@ -1,7 +1,7 @@
 use super::{CmdResult, WithErrorCode as _};
 use crate::core::{
     CoreManager,
-    service::{self, SERVICE_MANAGER, ServiceStatus},
+    service::{SERVICE_MANAGER, ServiceStatus},
 };
 
 async fn execute_service_operation_sync(status: ServiceStatus, error_code: &str) -> CmdResult {
@@ -40,11 +40,6 @@ pub async fn reinstall_service() -> CmdResult {
 #[tauri::command]
 pub async fn repair_service() -> CmdResult {
     execute_service_operation_sync(ServiceStatus::ForceReinstallRequired, "SERVICE_REPAIR_FAILED").await
-}
-
-#[tauri::command]
-pub async fn get_service_install_state() -> CmdResult<service::ServiceInstallState> {
-    Ok(SERVICE_MANAGER.install_state().await)
 }
 
 #[tauri::command]

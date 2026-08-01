@@ -265,7 +265,7 @@ impl WebDavClient {
 fn parse_webdav_list(xml: &str) -> Result<Vec<ListEntity>, reqwest_dav::Error> {
     // Some WebDAV servers emit RFC 2822's numeric UTC offset instead of HTTP-date's `GMT`.
     let normalized_xml = xml.replace(" +0000</", " GMT</");
-    let multi_status: ListMultiStatus = serde_xml_rs::from_str(&normalized_xml)?;
+    let multi_status: ListMultiStatus = reqwest_dav::re_exports::serde_xml_rs::from_str(&normalized_xml)?;
     multi_status.responses.into_iter().map(ListEntity::try_from).collect()
 }
 

@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef } from 'react'
 
 import { useRuntimeConfig } from '@/hooks/use-clash'
+import { useGroupsDelays } from '@/hooks/use-group-delays'
 import { useVerge } from '@/hooks/use-verge'
 import { useAppRefreshers, useProxiesData } from '@/providers/app-data-context'
-import delayManager from '@/services/delay'
+import delayManager, { type DelaySnapshot } from '@/services/delay'
 import {
   isInteractableMember,
   resolveMember,
@@ -42,12 +43,30 @@ export interface IRenderItem {
   testUrl?: string
 }
 
+/**
+ * Whether the list about to be drawn contains anything a user would call content.
+ *
+ * Derived from the list itself rather than predicted beside it. The prediction that used to
+ * live in the empty-state model asked a different question in chain mode — whether any
+ * Selector or URLTest group existed — which is unrelated to what the chain list is actually
+ * built from, so both a false "empty" and a false "not empty" were reachable.
+ *
+ * A group header alone counts only when the group is visible; every other row is content by
+ * definition, including the members of a group that is hidden but expanded.
+ */
+export const hasRenderableItems = (
+  renderList: readonly IRenderItem[],
+): boolean => renderList.some((item) => item.type !== 0 || !item.group.hidden)
+
 type GroupCache = {
   now: string | undefined
   members: ProxyGroupView['members']
   headState: HeadState
   col: number
   latencyTimeout: number | undefined
+  /// This group's own delays. Compared by identity so that a test settling in one group
+  /// does not throw away every other group's sorted order.
+  delays: DelaySnapshot | undefined
   items: IRenderItem[]
 }
 
@@ -188,6 +207,19 @@ export const useRenderList = (
     verge?.default_latency_timeout,
   ])
 
+  // Every group this list draws, so a test settling in any of them re-sorts that group.
+  const renderedGroupNames = useMemo(() => {
+    if (!proxyView) return []
+    if (isChainMode)
+      return selectedGroup ? [selectedGroup] : [CHAIN_DELAY_GROUP]
+    return mode === 'rule' || mode === 'script'
+      ? proxyView.groups.map(({ name }) => name)
+      : proxyView.global
+        ? [proxyView.global.name]
+        : []
+  }, [isChainMode, mode, proxyView, selectedGroup])
+  const groupDelays = useGroupsDelays(renderedGroupNames)
+
   const groupCacheRef = useRef<Map<string, GroupCache>>(new Map())
   const prevListRef = useRef<IRenderItem[]>([])
 
@@ -244,7 +276,8 @@ export const useRenderList = (
         cached.members === group.members &&
         cached.headState === headState &&
         cached.col === col &&
-        cached.latencyTimeout === latencyTimeout
+        cached.latencyTimeout === latencyTimeout &&
+        cached.delays === groupDelays.get(group.name)
       ) {
         return cached.items
       }
@@ -309,6 +342,7 @@ export const useRenderList = (
         headState,
         col,
         latencyTimeout,
+        delays: groupDelays.get(group.name),
         items: ret,
       })
       return ret
@@ -325,6 +359,7 @@ export const useRenderList = (
   }, [
     chainOccurrences,
     col,
+    groupDelays,
     headStates,
     isChainMode,
     latencyTimeout,

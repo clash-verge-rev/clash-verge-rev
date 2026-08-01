@@ -33,6 +33,8 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router'
 
 import { EnhancedCard } from '@/components/home/enhanced-card'
+import type { ProxySortType } from '@/components/proxy/use-filter-sort'
+import { useGroupDelays } from '@/hooks/use-group-delays'
 import { useProfiles } from '@/hooks/use-profiles'
 import { useProxySelection } from '@/hooks/use-proxy-selection'
 import { useVerge } from '@/hooks/use-verge'
@@ -53,6 +55,7 @@ import {
   type ResolvedProxyMember,
 } from '@/types/proxy-view'
 import { debugLog } from '@/utils/debug'
+import { compareByDelay, DEFAULT_DELAY_TIMEOUT } from '@/utils/delay'
 
 // 本地存储的键名
 const STORAGE_KEY_GROUP = 'clash-verge-selected-proxy-group'
@@ -68,7 +71,6 @@ interface ProxyOption {
 }
 
 // 排序类型: 默认 | 按延迟 | 按字母
-type ProxySortType = 0 | 1 | 2
 
 function convertDelayColor(
   delayValue: number,
@@ -233,9 +235,10 @@ export const CurrentProxyCard = () => {
     const savedSortType = localStorage.getItem(STORAGE_KEY_SORT_TYPE)
     return savedSortType ? (Number(savedSortType) as ProxySortType) : 0
   })
-  const [delaySortRefresh, setDelaySortRefresh] = useState(0)
 
   const [selectedGroupName, setSelectedGroupName] = useState('')
+  // Sorting reads delays from a store outside React; this hands them over as a value.
+  const delays = useGroupDelays(selectedGroupName || null)
 
   const autoCheckInProgressRef = useRef(false)
   const latestTimeoutRef = useRef<number>(
@@ -456,17 +459,8 @@ export const CurrentProxyCard = () => {
     } finally {
       autoCheckInProgressRef.current = false
       refreshProxy()
-      if (sortType === 1) {
-        setDelaySortRefresh((prev) => prev + 1)
-      }
     }
-  }, [
-    isDirectMode,
-    refreshProxy,
-    selectedGroupName,
-    selectedProxyName,
-    sortType,
-  ])
+  }, [isDirectMode, refreshProxy, selectedGroupName, selectedProxyName])
 
   useEffect(() => {
     if (isDirectMode) return
@@ -561,9 +555,6 @@ export const CurrentProxyCard = () => {
     }
 
     refreshProxy()
-    if (sortType === 1) {
-      setDelaySortRefresh((prev) => prev + 1)
-    }
   })
 
   // 计算要显示的代理选项（增加非空校验）
@@ -574,35 +565,19 @@ export const CurrentProxyCard = () => {
       const list = [...proxiesToSort]
 
       if (sortType === 1) {
-        const refreshTick = delaySortRefresh
         const effectiveTimeout =
           typeof defaultLatencyTimeout === 'number' && defaultLatencyTimeout > 0
             ? defaultLatencyTimeout
-            : 10000
-
-        const categorizeDelay = (delay: number): [number, number] => {
-          if (!Number.isFinite(delay)) return [5, Number.MAX_SAFE_INTEGER]
-          if (delay > 1e5) return [4, delay]
-          if (delay === 0 || (delay >= effectiveTimeout && delay <= 1e5)) {
-            return [3, delay || effectiveTimeout]
-          }
-          if (delay < 0) return [5, Number.MAX_SAFE_INTEGER]
-          return [0, delay]
-        }
+            : DEFAULT_DELAY_TIMEOUT
 
         list.sort((a, b) => {
-          const [ar, av] = categorizeDelay(
-            delayManager.getDelayFix(a.member, selectedGroupName),
+          const byDelay = compareByDelay(
+            delays.of(a.member),
+            delays.of(b.member),
+            effectiveTimeout,
           )
-          const [br, bv] = categorizeDelay(
-            delayManager.getDelayFix(b.member, selectedGroupName),
-          )
-
-          if (ar !== br) return ar - br
-          if (av !== bv) return av - bv
-          return refreshTick >= 0
-            ? a.member.ref.name.localeCompare(b.member.ref.name)
-            : 0
+          if (byDelay !== 0) return byDelay
+          return a.member.ref.name.localeCompare(b.member.ref.name)
         })
       } else {
         list.sort((a, b) => a.member.ref.name.localeCompare(b.member.ref.name))
@@ -616,11 +591,10 @@ export const CurrentProxyCard = () => {
     }
     return sortWithLatency(unsortedProxyOptions)
   }, [
+    delays,
     isDirectMode,
     unsortedProxyOptions,
-    selectedGroupName,
     sortType,
-    delaySortRefresh,
     defaultLatencyTimeout,
   ])
 
