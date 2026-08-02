@@ -123,23 +123,32 @@
         "useSystemProxy": "استخدام وكيل النظام",
         "useClashProxy": "استخدام وكيل Clash",
         "acceptInvalidCerts": "قبول الشهادات غير الصالحة (خطر)",
-        "allowAutoUpdate": "Allow Auto Update"
+        "allowAutoUpdate": "Allow Auto Update",
+        "shareLinks": "روابط المشاركة",
+        "shareLinksPlaceholder": "رابط واحد لكل سطر (vless://، trojan://، ss://، ...)"
       },
       "types": {
         "remote": "بعيد",
-        "local": "محلي"
+        "local": "محلي",
+        "links": "روابط المشاركة"
       },
       "errors": {
         "typeRequired": "اختر نوع الملف الشخصي",
         "urlRequired": "أدخل رابط الاشتراك",
         "uidMissing": "مُعرّف الملف الشخصي مفقود",
-        "saveFailed": "تعذّر حفظ الملف الشخصي"
+        "saveFailed": "تعذّر حفظ الملف الشخصي",
+        "noValidLinks": "لم يتم العثور على روابط وكيل صالحة"
       },
       "feedback": {
         "notifications": {
           "creationRetry": "Profile creation failed, retrying with Clash proxy...",
-          "creationSuccess": "Profile creation succeeded with Clash proxy"
+          "creationSuccess": "Profile creation succeeded with Clash proxy",
+          "linksImported": "تم استيراد {{count}} عقدة",
+          "linksImportedWithFailures": "تم استيراد {{imported}} عقدة وتخطي {{failed}}"
         }
+      },
+      "defaults": {
+        "linkProfileName": "العقد المستوردة"
       }
     },
     "proxiesEditor": {

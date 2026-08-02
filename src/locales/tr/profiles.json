@@ -123,23 +123,32 @@
         "useSystemProxy": "Sistem Vekil'ini Kullan",
         "useClashProxy": "Clash Vekil'ini Kullan",
         "acceptInvalidCerts": "Geçersiz Sertifikalara İzin Ver (Tehlikeli)",
-        "allowAutoUpdate": "Allow Auto Update"
+        "allowAutoUpdate": "Allow Auto Update",
+        "shareLinks": "Paylaşım Bağlantıları",
+        "shareLinksPlaceholder": "Her satıra bir bağlantı (vless://, trojan://, ss://, ...)"
       },
       "types": {
         "remote": "Uzak",
-        "local": "Yerel"
+        "local": "Yerel",
+        "links": "Paylaşım Bağlantıları"
       },
       "errors": {
         "typeRequired": "Bir profil türü seçin",
         "urlRequired": "Bir abonelik URL’si girin",
         "uidMissing": "Profil tanımlayıcısı eksik",
-        "saveFailed": "Profil kaydedilemedi"
+        "saveFailed": "Profil kaydedilemedi",
+        "noValidLinks": "Geçerli proxy bağlantısı bulunamadı"
       },
       "feedback": {
         "notifications": {
           "creationRetry": "Profil oluşturma başarısız oldu, Clash vekil ile yeniden deneniyor...",
-          "creationSuccess": "Clash vekil ile profil oluşturma başarılı oldu"
+          "creationSuccess": "Clash vekil ile profil oluşturma başarılı oldu",
+          "linksImported": "{{count}} düğüm içe aktarıldı",
+          "linksImportedWithFailures": "{{imported}} düğüm içe aktarıldı, {{failed}} atlandı"
         }
+      },
+      "defaults": {
+        "linkProfileName": "İçe Aktarılan Düğümler"
       }
     },
     "proxiesEditor": {

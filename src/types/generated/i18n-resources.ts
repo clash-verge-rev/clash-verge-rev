@@ -349,7 +349,11 @@ export interface TranslationResources {
           title: string
         }
         profileForm: {
+          defaults: {
+            linkProfileName: string
+          }
           errors: {
+            noValidLinks: string
             saveFailed: string
             typeRequired: string
             uidMissing: string
@@ -359,6 +363,8 @@ export interface TranslationResources {
             notifications: {
               creationRetry: string
               creationSuccess: string
+              linksImported: string
+              linksImportedWithFailures: string
             }
           }
           fields: {
@@ -366,6 +372,8 @@ export interface TranslationResources {
             allowAutoUpdate: string
             description: string
             httpTimeout: string
+            shareLinks: string
+            shareLinksPlaceholder: string
             subscriptionUrl: string
             type: string
             updateInterval: string
@@ -378,6 +386,7 @@ export interface TranslationResources {
             edit: string
           }
           types: {
+            links: string
             local: string
             remote: string
           }

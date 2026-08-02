@@ -123,23 +123,32 @@
         "useSystemProxy": "시스템 프록시 사용",
         "useClashProxy": "Clash 프록시 사용",
         "acceptInvalidCerts": "잘못된 인증서 허용(위험)",
-        "allowAutoUpdate": "자동 업데이트 허용"
+        "allowAutoUpdate": "자동 업데이트 허용",
+        "shareLinks": "공유 링크",
+        "shareLinksPlaceholder": "한 줄에 링크 하나 (vless://, trojan://, ss:// ...)"
       },
       "types": {
         "remote": "원격",
-        "local": "로컬"
+        "local": "로컬",
+        "links": "공유 링크"
       },
       "errors": {
         "typeRequired": "프로필 유형을 선택하세요",
         "urlRequired": "구독 URL을 입력하세요",
         "uidMissing": "프로필 식별자가 없습니다",
-        "saveFailed": "프로필을 저장하지 못했습니다"
+        "saveFailed": "프로필을 저장하지 못했습니다",
+        "noValidLinks": "유효한 프록시 링크를 찾을 수 없습니다"
       },
       "feedback": {
         "notifications": {
           "creationRetry": "프로필 생성 실패, Clash 프록시로 다시 시도 중...",
-          "creationSuccess": "Clash 프록시로 프로필 생성 성공"
+          "creationSuccess": "Clash 프록시로 프로필 생성 성공",
+          "linksImported": "{{count}}개 노드를 가져왔습니다",
+          "linksImportedWithFailures": "{{imported}}개 노드를 가져오고 {{failed}}개를 건너뛰었습니다"
         }
+      },
+      "defaults": {
+        "linkProfileName": "가져온 노드"
       }
     },
     "proxiesEditor": {

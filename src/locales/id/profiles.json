@@ -123,23 +123,32 @@
         "useSystemProxy": "Gunakan Proksi Sistem",
         "useClashProxy": "Gunakan Proksi Clash",
         "acceptInvalidCerts": "Terima Sertifikat Tidak Valid (Bahaya)",
-        "allowAutoUpdate": "Allow Auto Update"
+        "allowAutoUpdate": "Allow Auto Update",
+        "shareLinks": "Tautan Berbagi",
+        "shareLinksPlaceholder": "Satu tautan per baris (vless://, trojan://, ss://, ...)"
       },
       "types": {
         "remote": "Jarak jauh",
-        "local": "Lokal"
+        "local": "Lokal",
+        "links": "Tautan Berbagi"
       },
       "errors": {
         "typeRequired": "Pilih jenis profil",
         "urlRequired": "Masukkan URL langganan",
         "uidMissing": "Pengenal profil tidak ada",
-        "saveFailed": "Gagal menyimpan profil"
+        "saveFailed": "Gagal menyimpan profil",
+        "noValidLinks": "Tidak ada tautan proxy yang valid ditemukan"
       },
       "feedback": {
         "notifications": {
           "creationRetry": "Profile creation failed, retrying with Clash proxy...",
-          "creationSuccess": "Profile creation succeeded with Clash proxy"
+          "creationSuccess": "Profile creation succeeded with Clash proxy",
+          "linksImported": "{{count}} node diimpor",
+          "linksImportedWithFailures": "{{imported}} node diimpor, {{failed}} dilewati"
         }
+      },
+      "defaults": {
+        "linkProfileName": "Node yang Diimpor"
       }
     },
     "proxiesEditor": {

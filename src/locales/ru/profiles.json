@@ -123,23 +123,32 @@
         "useSystemProxy": "Использовать системный прокси для обновления",
         "useClashProxy": "Использовать Clash proxy для обновления",
         "acceptInvalidCerts": "Принимать недействительные сертификаты (ОПАСНО)",
-        "allowAutoUpdate": "Разрешить автообновление"
+        "allowAutoUpdate": "Разрешить автообновление",
+        "shareLinks": "Ссылки",
+        "shareLinksPlaceholder": "По одной ссылке на строку (vless://, trojan://, ss://, ...)"
       },
       "types": {
         "remote": "Удалённый",
-        "local": "Локальный"
+        "local": "Локальный",
+        "links": "Ссылки"
       },
       "errors": {
         "typeRequired": "Выберите тип профиля",
         "urlRequired": "Введите URL подписки",
         "uidMissing": "Отсутствует идентификатор профиля",
-        "saveFailed": "Не удалось сохранить профиль"
+        "saveFailed": "Не удалось сохранить профиль",
+        "noValidLinks": "Действительные ссылки на прокси не найдены"
       },
       "feedback": {
         "notifications": {
           "creationRetry": "Не удалось создать профиль, повторная попытка через Clash proxy...",
-          "creationSuccess": "Профиль успешно создан через Clash proxy"
+          "creationSuccess": "Профиль успешно создан через Clash proxy",
+          "linksImported": "Импортировано узлов: {{count}}",
+          "linksImportedWithFailures": "Импортировано узлов: {{imported}}, пропущено: {{failed}}"
         }
+      },
+      "defaults": {
+        "linkProfileName": "Импортированные узлы"
       }
     },
     "proxiesEditor": {

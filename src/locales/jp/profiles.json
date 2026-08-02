@@ -123,23 +123,32 @@
         "useSystemProxy": "システムプロキシを使用して更新",
         "useClashProxy": "クラッシュプロキシを使用して更新",
         "acceptInvalidCerts": "Allows Invalid Certificates (Danger)",
-        "allowAutoUpdate": "Allow Auto Update"
+        "allowAutoUpdate": "Allow Auto Update",
+        "shareLinks": "共有リンク",
+        "shareLinksPlaceholder": "1 行に 1 つのリンク（vless://、trojan://、ss:// など）"
       },
       "types": {
         "remote": "リモート",
-        "local": "ローカル"
+        "local": "ローカル",
+        "links": "共有リンク"
       },
       "errors": {
         "typeRequired": "プロファイルの種類を選択してください",
         "urlRequired": "サブスクリプションURLを入力してください",
         "uidMissing": "プロファイル識別子がありません",
-        "saveFailed": "プロファイルの保存に失敗しました"
+        "saveFailed": "プロファイルの保存に失敗しました",
+        "noValidLinks": "有効なプロキシリンクが見つかりません"
       },
       "feedback": {
         "notifications": {
           "creationRetry": "プロファイルの作成に失敗しました。Clashプロキシを使用して再試行します...",
-          "creationSuccess": "Clashプロキシを使用してプロファイルの作成に成功しました。"
+          "creationSuccess": "Clashプロキシを使用してプロファイルの作成に成功しました。",
+          "linksImported": "{{count}} 個のノードをインポートしました",
+          "linksImportedWithFailures": "{{imported}} 個のノードをインポートし、{{failed}} 個をスキップしました"
         }
+      },
+      "defaults": {
+        "linkProfileName": "インポートしたノード"
       }
     },
     "proxiesEditor": {

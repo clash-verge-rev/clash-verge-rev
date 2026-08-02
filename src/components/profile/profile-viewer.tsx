@@ -18,6 +18,10 @@ import { BaseDialog, Switch } from '@/components/base'
 import { useProfiles } from '@/hooks/use-profiles'
 import { createProfile, patchProfile } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
+import {
+  buildProxiesProfileYaml,
+  parseShareLinks,
+} from '@/utils/uri-parser/import-links'
 import { version } from '@root/package.json'
 
 import { FileInput } from './file-input'
@@ -35,6 +39,12 @@ export interface ProfileViewerRef {
 // remote / local
 type ProfileViewerProps = Props & { ref?: Ref<ProfileViewerRef> }
 
+// The dialog adds a UI-only "links" mode on top of the backend profile types.
+// It is converted into a `local` profile (built from the pasted share links) on
+// submit, so it never reaches the backend as a distinct type.
+type ProfileFormType = NonNullable<IProfileItem['type']> | 'links'
+type ProfileFormValues = Omit<IProfileItem, 'type'> & { type?: ProfileFormType }
+
 export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
@@ -45,8 +55,11 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
   // file input
   const fileDataRef = useRef<string | null>(null)
 
+  // pasted share links for the "links" import mode
+  const [linksText, setLinksText] = useState('')
+
   const { control, watch, setValue, reset, handleSubmit, getValues } =
-    useForm<IProfileItem>({
+    useForm<ProfileFormValues>({
       defaultValues: {
         type: 'remote',
         name: '',
@@ -114,9 +127,29 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
           option.user_agent = undefined
         }
 
-        const name = form.name || `${form.type} file`
-        const item = { ...form, name, option }
-        const isRemote = form.type === 'remote'
+        // Links mode: parse the pasted share links into a usable local profile.
+        let importResult: ReturnType<typeof parseShareLinks> | undefined
+        if (form.type === 'links') {
+          importResult = parseShareLinks(linksText)
+          if (importResult.imported === 0) {
+            throw new Error(
+              t('profiles.modals.profileForm.errors.noValidLinks'),
+            )
+          }
+          fileDataRef.current = buildProxiesProfileYaml(importResult.proxies)
+        }
+
+        // 'links' is a UI-only mode; persist it as a normal local profile.
+        const backendType: IProfileItem['type'] =
+          form.type === 'links' ? 'local' : form.type
+
+        const defaultName =
+          form.type === 'links'
+            ? t('profiles.modals.profileForm.defaults.linkProfileName')
+            : `${backendType} file`
+        const name = form.name || defaultName
+        const item = { ...form, type: backendType, name, option }
+        const isRemote = backendType === 'remote'
         const isUpdate = openType === 'edit'
 
         // 判断是否是当前激活的配置
@@ -191,10 +224,29 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
           }
         }
 
+        // Report how many nodes made it in, and how many links were skipped.
+        if (importResult) {
+          if (importResult.failed.length > 0) {
+            showNotice.success(
+              'profiles.modals.profileForm.feedback.notifications.linksImportedWithFailures',
+              {
+                imported: importResult.imported,
+                failed: importResult.failed.length,
+              },
+            )
+          } else {
+            showNotice.success(
+              'profiles.modals.profileForm.feedback.notifications.linksImported',
+              { count: importResult.imported },
+            )
+          }
+        }
+
         // 成功后的操作
         setOpen(false)
         setTimeout(() => reset(), 500)
         fileDataRef.current = null
+        setLinksText('')
 
         // 优化：UI先关闭，异步通知父组件
         setTimeout(() => {
@@ -212,6 +264,7 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
     try {
       setOpen(false)
       fileDataRef.current = null
+      setLinksText('')
       setTimeout(() => reset(), 500)
     } catch (e) {
       console.warn('[ProfileViewer] handleClose error:', e)
@@ -230,6 +283,7 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
   const formType = watch('type')
   const isRemote = formType === 'remote'
   const isLocal = formType === 'local'
+  const isLinks = formType === 'links'
 
   return (
     <BaseDialog
@@ -266,6 +320,11 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
               <MenuItem value="local">
                 {t('profiles.modals.profileForm.types.local')}
               </MenuItem>
+              {openType === 'new' && (
+                <MenuItem value="links">
+                  {t('profiles.modals.profileForm.types.links')}
+                </MenuItem>
+              )}
             </Select>
           </FormControl>
         )}
@@ -297,6 +356,21 @@ export function ProfileViewer({ onChange, ref }: ProfileViewerProps) {
             setValue('name', getValues('name') || file.name)
             fileDataRef.current = val
           }}
+        />
+      )}
+
+      {isLinks && openType === 'new' && (
+        <TextField
+          {...text}
+          multiline
+          minRows={4}
+          maxRows={12}
+          value={linksText}
+          onChange={(e) => setLinksText(e.target.value)}
+          label={t('profiles.modals.profileForm.fields.shareLinks')}
+          placeholder={t(
+            'profiles.modals.profileForm.fields.shareLinksPlaceholder',
+          )}
         />
       )}
 

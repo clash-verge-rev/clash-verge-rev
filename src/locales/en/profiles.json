@@ -123,23 +123,32 @@
         "useSystemProxy": "Use System Proxy",
         "useClashProxy": "Use Clash Proxy",
         "acceptInvalidCerts": "Allows Invalid Certificates (Danger)",
-        "allowAutoUpdate": "Allow Auto Update"
+        "allowAutoUpdate": "Allow Auto Update",
+        "shareLinks": "Share Links",
+        "shareLinksPlaceholder": "One link per line (vless://, trojan://, ss://, ...)"
       },
       "types": {
         "remote": "Remote",
-        "local": "Local"
+        "local": "Local",
+        "links": "Share Links"
       },
       "errors": {
         "typeRequired": "Select a profile type",
         "urlRequired": "Enter a subscription URL",
         "uidMissing": "The profile identifier is missing",
-        "saveFailed": "Failed to save profile"
+        "saveFailed": "Failed to save profile",
+        "noValidLinks": "No valid proxy links found"
       },
       "feedback": {
         "notifications": {
           "creationRetry": "Profile creation failed, retrying with Clash proxy...",
-          "creationSuccess": "Profile creation succeeded with Clash proxy"
+          "creationSuccess": "Profile creation succeeded with Clash proxy",
+          "linksImported": "Imported {{count}} node(s)",
+          "linksImportedWithFailures": "Imported {{imported}} node(s), {{failed}} skipped"
         }
+      },
+      "defaults": {
+        "linkProfileName": "Imported Nodes"
       }
     },
     "proxiesEditor": {

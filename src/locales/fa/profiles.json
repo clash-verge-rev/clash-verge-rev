@@ -123,23 +123,32 @@
         "useSystemProxy": "استفاده از پراکسی سیستم",
         "useClashProxy": "استفاده از پراکسی Clash",
         "acceptInvalidCerts": "پذیرش گواهی‌نامه‌های نامعتبر (خطرناک)",
-        "allowAutoUpdate": "Allow Auto Update"
+        "allowAutoUpdate": "Allow Auto Update",
+        "shareLinks": "لینک‌های اشتراک",
+        "shareLinksPlaceholder": "هر خط یک لینک (vless://، trojan://، ss://، ...)"
       },
       "types": {
         "remote": "از راه دور",
-        "local": "محلی"
+        "local": "محلی",
+        "links": "لینک‌های اشتراک"
       },
       "errors": {
         "typeRequired": "نوع پروفایل را انتخاب کنید",
         "urlRequired": "نشانی اشتراک را وارد کنید",
         "uidMissing": "شناسه پروفایل موجود نیست",
-        "saveFailed": "ذخیره پروفایل ناموفق بود"
+        "saveFailed": "ذخیره پروفایل ناموفق بود",
+        "noValidLinks": "هیچ لینک پروکسی معتبری یافت نشد"
       },
       "feedback": {
         "notifications": {
           "creationRetry": "Profile creation failed, retrying with Clash proxy...",
-          "creationSuccess": "Profile creation succeeded with Clash proxy"
+          "creationSuccess": "Profile creation succeeded with Clash proxy",
+          "linksImported": "{{count}} نود وارد شد",
+          "linksImportedWithFailures": "{{imported}} نود وارد شد، {{failed}} رد شد"
         }
+      },
+      "defaults": {
+        "linkProfileName": "نودهای وارد‌شده"
       }
     },
     "proxiesEditor": {

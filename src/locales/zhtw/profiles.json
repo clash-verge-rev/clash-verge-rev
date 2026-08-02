@@ -123,23 +123,32 @@
         "useSystemProxy": "使用系統代理更新",
         "useClashProxy": "使用內核代理更新",
         "acceptInvalidCerts": "允許無效憑證（危險）",
-        "allowAutoUpdate": "允許自動更新"
+        "allowAutoUpdate": "允許自動更新",
+        "shareLinks": "分享連結",
+        "shareLinksPlaceholder": "每行一個連結（vless://、trojan://、ss:// ……）"
       },
       "types": {
         "remote": "遠端",
-        "local": "本機"
+        "local": "本機",
+        "links": "分享連結"
       },
       "errors": {
         "typeRequired": "請選擇訂閱類型",
         "urlRequired": "請輸入訂閱連結",
         "uidMissing": "缺少訂閱識別碼",
-        "saveFailed": "儲存訂閱失敗"
+        "saveFailed": "儲存訂閱失敗",
+        "noValidLinks": "找不到有效的代理連結"
       },
       "feedback": {
         "notifications": {
           "creationRetry": "訂閱建立失敗，嘗試使用 Clash 代理建立",
-          "creationSuccess": "使用 Clash 代理建立訂閱成功"
+          "creationSuccess": "使用 Clash 代理建立訂閱成功",
+          "linksImported": "已匯入 {{count}} 個節點",
+          "linksImportedWithFailures": "已匯入 {{imported}} 個節點，略過 {{failed}} 個"
         }
+      },
+      "defaults": {
+        "linkProfileName": "匯入的節點"
       }
     },
     "proxiesEditor": {

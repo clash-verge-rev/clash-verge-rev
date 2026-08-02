@@ -123,23 +123,32 @@
         "useSystemProxy": "Usar proxy del sistema para actualizar",
         "useClashProxy": "Usar proxy del núcleo para actualizar",
         "acceptInvalidCerts": "Allows Invalid Certificates (Danger)",
-        "allowAutoUpdate": "Allow Auto Update"
+        "allowAutoUpdate": "Allow Auto Update",
+        "shareLinks": "Enlaces compartidos",
+        "shareLinksPlaceholder": "Un enlace por línea (vless://, trojan://, ss://, ...)"
       },
       "types": {
         "remote": "Remoto",
-        "local": "Local"
+        "local": "Local",
+        "links": "Enlaces compartidos"
       },
       "errors": {
         "typeRequired": "Selecciona un tipo de suscripción",
         "urlRequired": "Introduce una URL de suscripción",
         "uidMissing": "Falta el identificador de la suscripción",
-        "saveFailed": "No se pudo guardar la suscripción"
+        "saveFailed": "No se pudo guardar la suscripción",
+        "noValidLinks": "No se encontraron enlaces de proxy válidos"
       },
       "feedback": {
         "notifications": {
           "creationRetry": "Error al crear la suscripción. Intentando con el proxy de Clash...",
-          "creationSuccess": "Creación de la suscripción con el proxy de Clash exitosa"
+          "creationSuccess": "Creación de la suscripción con el proxy de Clash exitosa",
+          "linksImported": "{{count}} nodos importados",
+          "linksImportedWithFailures": "{{imported}} nodos importados, {{failed}} omitidos"
         }
+      },
+      "defaults": {
+        "linkProfileName": "Nodos importados"
       }
     },
     "proxiesEditor": {

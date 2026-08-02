@@ -123,23 +123,32 @@
         "useSystemProxy": "使用系统代理更新",
         "useClashProxy": "使用内核代理更新",
         "acceptInvalidCerts": "允许无效证书（危险）",
-        "allowAutoUpdate": "允许自动更新"
+        "allowAutoUpdate": "允许自动更新",
+        "shareLinks": "分享链接",
+        "shareLinksPlaceholder": "每行一个链接（vless://、trojan://、ss:// ……）"
       },
       "types": {
         "remote": "远程",
-        "local": "本地"
+        "local": "本地",
+        "links": "分享链接"
       },
       "errors": {
         "typeRequired": "请选择订阅类型",
         "urlRequired": "请输入订阅链接",
         "uidMissing": "缺少订阅标识",
-        "saveFailed": "保存订阅失败"
+        "saveFailed": "保存订阅失败",
+        "noValidLinks": "未找到有效的代理链接"
       },
       "feedback": {
         "notifications": {
           "creationRetry": "订阅创建失败，尝试使用 Clash 代理创建",
-          "creationSuccess": "使用 Clash 代理创建订阅成功"
+          "creationSuccess": "使用 Clash 代理创建订阅成功",
+          "linksImported": "已导入 {{count}} 个节点",
+          "linksImportedWithFailures": "已导入 {{imported}} 个节点，跳过 {{failed}} 个"
         }
+      },
+      "defaults": {
+        "linkProfileName": "导入的节点"
       }
     },
     "proxiesEditor": {

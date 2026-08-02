@@ -123,23 +123,32 @@
         "useSystemProxy": "Systemproxy zur Aktualisierung verwenden",
         "useClashProxy": "Kernel-Proxy zur Aktualisierung verwenden",
         "acceptInvalidCerts": "Allows Invalid Certificates (Danger)",
-        "allowAutoUpdate": "Allow Auto Update"
+        "allowAutoUpdate": "Allow Auto Update",
+        "shareLinks": "Freigabelinks",
+        "shareLinksPlaceholder": "Ein Link pro Zeile (vless://, trojan://, ss://, ...)"
       },
       "types": {
         "remote": "Remote",
-        "local": "Lokal"
+        "local": "Lokal",
+        "links": "Freigabelinks"
       },
       "errors": {
         "typeRequired": "Abonnementtyp auswählen",
         "urlRequired": "Abonnement-URL eingeben",
         "uidMissing": "Die Abonnement-Kennung fehlt",
-        "saveFailed": "Abonnement konnte nicht gespeichert werden"
+        "saveFailed": "Abonnement konnte nicht gespeichert werden",
+        "noValidLinks": "Keine gültigen Proxy-Links gefunden"
       },
       "feedback": {
         "notifications": {
           "creationRetry": "Erstellung des Abonnements fehlgeschlagen. Versuche es mit dem Clash-Proxy erneut...",
-          "creationSuccess": "Erstellung des Abonnements mit Clash-Proxy erfolgreich"
+          "creationSuccess": "Erstellung des Abonnements mit Clash-Proxy erfolgreich",
+          "linksImported": "{{count}} Knoten importiert",
+          "linksImportedWithFailures": "{{imported}} Knoten importiert, {{failed}} übersprungen"
         }
+      },
+      "defaults": {
+        "linkProfileName": "Importierte Knoten"
       }
     },
     "proxiesEditor": {
