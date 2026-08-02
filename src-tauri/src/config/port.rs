@@ -90,7 +90,7 @@ impl Config {
         let verge = Self::verge().await;
         let runtime = Self::runtime().await;
         // Every failure below leaves the three layers as they were, without saying so.
-        let transaction = DraftTransaction::new(vec![&clash, &verge, &runtime]);
+        let transaction = DraftTransaction::begin(vec![&clash, &verge, &runtime])?;
 
         clash.edit_draft(|draft| {
             draft.0.insert(MIXED_PORT_KEY.into(), new_port.into());

@@ -18,6 +18,29 @@ use tauri_plugin_mihomo::MihomoExt as _;
 use tauri_plugin_shell::ShellExt as _;
 
 const SIDECAR_READINESS_ATTEMPTS: usize = 30;
+
+impl CoreManager {
+    /// A core process is up: put back the node selections the user made.
+    ///
+    /// mihomo restores these itself, from the `cache.db` it keeps in the directory it was started
+    /// against — but only when `profile.store-selected` is on and that file survived, and neither
+    /// is something the app can assume. The setting comes from a merge template a user is free to
+    /// replace, and a service older than the durable runtime generation hands every start a
+    /// directory nothing has ever run in. The app holds the same selections in the profile, so it
+    /// is the one that can say for certain.
+    ///
+    /// Awaited, and deliberately here rather than beside the proxy: the caller enables the system
+    /// proxy as soon as the start returns, and pointing it at a core still on the first entry of
+    /// every group is what this exists to prevent. The wait is bounded — what cannot be put back
+    /// yet keeps being retried in the background — so a core that will not answer delays a start
+    /// instead of blocking it.
+    ///
+    /// Repeat calls supersede each other, so every start path may call this without coordinating.
+    async fn restore_selected_nodes(&self) {
+        crate::config::profiles::restore_selected_nodes().await;
+    }
+}
+
 const SIDECAR_READINESS_INTERVAL: std::time::Duration = std::time::Duration::from_millis(100);
 const SIDECAR_READINESS_PROBE_TIMEOUT: std::time::Duration = std::time::Duration::from_millis(400);
 
@@ -88,7 +111,11 @@ impl CoreManager {
 
         #[cfg(unix)]
         let previous_mask = unsafe { tauri_plugin_clash_verge_sysinfo::libc::umask(0o077) };
-        let command = app_handle.shell().sidecar(clash_core.as_str())?.args([
+        let command = app_handle
+            .shell()
+            .sidecar(clash_core.as_str())
+            .map_err(|error| anyhow::anyhow!("failed to build sidecar command for core {clash_core:?}: {error:#}"))?;
+        let command = command.args([
             "-d",
             dirs::path_to_str(&config_dir)?,
             "-f",
@@ -105,7 +132,13 @@ impl CoreManager {
             "LISTEN_NAMEDPIPE_SDDL",
             crate::core::owner_identity::current_user_pipe_sddl()?,
         );
-        let (mut rx, child) = command.spawn()?;
+        let (mut rx, child) = command.spawn().map_err(|error| {
+            anyhow::anyhow!(
+                "failed to start sidecar core {clash_core:?} with config {} and data directory {}: {error:#}",
+                config_file.display(),
+                config_dir.display()
+            )
+        })?;
         #[cfg(target_os = "windows")]
         let job = {
             match create_and_assign_sidecar_job(child.pid()) {
@@ -160,6 +193,7 @@ impl CoreManager {
         self.set_running_child_sidecar(child);
         let core_readiness_generation = self.mark_core_ready();
         self.core_started(RunningMode::Sidecar);
+        self.restore_selected_nodes().await;
 
         AsyncHandler::spawn(move || async move {
             while let Some(event) = rx.recv().await {
@@ -250,6 +284,7 @@ impl CoreManager {
                     Ok(()) => {
                         self.mark_core_ready();
                         self.core_started(RunningMode::Service);
+                        self.restore_selected_nodes().await;
                         return Ok(());
                     }
                     Err(e) => {
@@ -274,6 +309,7 @@ impl CoreManager {
             service::run_core_by_service(config_file).await?;
             self.mark_core_ready();
             self.core_started(RunningMode::Service);
+            self.restore_selected_nodes().await;
             Ok(())
         }
     }

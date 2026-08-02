@@ -1,6 +1,6 @@
 use super::{IClashTemp, IProfiles, IVerge};
 use crate::{
-    config::{PrfItem, profiles_append_item_safe, runtime::IRuntime},
+    config::{PrfItem, profiles_append_item_to_safe, runtime::IRuntime},
     constants::{files, timing},
     core::{
         CoreManager,
@@ -143,13 +143,26 @@ impl Config {
     // Ensure "Merge" and "Script" profile items exist, adding them if missing.
     async fn ensure_default_profile_items() -> Result<()> {
         let profiles = Self::profiles().await;
+        Self::ensure_default_profile_items_for(&profiles).await
+    }
+
+    async fn ensure_default_profile_items_for(profiles: &Draft<IProfiles>) -> Result<()> {
+        if profiles.latest_arc().get_items().is_none() {
+            logging!(
+                warn,
+                Type::Config,
+                "Profile items 无法加载，跳过默认项初始化以保留现有配置文件"
+            );
+            return Ok(());
+        }
+
         if profiles.latest_arc().get_item("Merge").is_err() {
             let merge_item = &mut PrfItem::from_merge(Some("Merge".into()))?;
-            profiles_append_item_safe(merge_item).await?;
+            profiles_append_item_to_safe(profiles, merge_item).await?;
         }
         if profiles.latest_arc().get_item("Script").is_err() {
             let script_item = &mut PrfItem::from_script(Some("Script".into()))?;
-            profiles_append_item_safe(script_item).await?;
+            profiles_append_item_to_safe(profiles, script_item).await?;
         }
         Ok(())
     }
@@ -402,5 +415,30 @@ mod tests {
         let draft = Draft::new(Box::new(IRuntime::new()));
         let box_iruntime_size = std::mem::size_of_val(&draft);
         assert_eq!(box_iruntime_size, std::mem::size_of::<Draft<Box<IRuntime>>>());
+    }
+
+    #[tokio::test]
+    async fn failed_profile_index_survives_startup_without_cleanup() -> Result<()> {
+        let profiles = Draft::new(IProfiles::default());
+        let profiles_dir = std::env::temp_dir().join(format!("clash-verge-profile-cleanup-{}", nanoid::nanoid!()));
+        tokio::fs::create_dir_all(&profiles_dir).await?;
+        let active_profile = profiles_dir.join("Ractive.yaml");
+        tokio::fs::write(&active_profile, "proxies: []").await?;
+
+        Config::ensure_default_profile_items_for(&profiles).await?;
+        profiles.data_arc().cleanup_orphaned_files_in(&profiles_dir).await?;
+
+        let profile_was_preserved = tokio::fs::try_exists(&active_profile).await?;
+        tokio::fs::remove_dir_all(&profiles_dir).await?;
+
+        assert!(
+            profile_was_preserved,
+            "startup must not delete profiles when profiles.yaml could not be loaded"
+        );
+        assert!(
+            profiles.data_arc().get_items().is_none(),
+            "startup must not replace an unreadable profile index with defaults"
+        );
+        Ok(())
     }
 }

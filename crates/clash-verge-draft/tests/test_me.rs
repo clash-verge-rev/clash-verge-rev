@@ -307,12 +307,16 @@ mod tests {
 mod transactions {
     use clash_verge_draft::{Draft, DraftTransaction};
 
+    fn begin<'a>(layers: Vec<&'a dyn clash_verge_draft::DraftLayer>) -> DraftTransaction<'a> {
+        DraftTransaction::begin(layers).expect("no other transaction should hold these layers")
+    }
+
     #[test]
     fn committing_applies_every_layer() {
         let first = Draft::new(1_u8);
         let second = Draft::new("a".to_owned());
 
-        let transaction = DraftTransaction::new(vec![&first, &second]);
+        let transaction = begin(vec![&first, &second]);
         first.edit_draft(|value| *value = 2);
         second.edit_draft(|value| *value = "b".to_owned());
         transaction.commit();
@@ -327,7 +331,7 @@ mod transactions {
         let second = Draft::new("a".to_owned());
 
         {
-            let _transaction = DraftTransaction::new(vec![&first, &second]);
+            let _transaction = begin(vec![&first, &second]);
             first.edit_draft(|value| *value = 2);
             second.edit_draft(|value| *value = "b".to_owned());
         }
@@ -344,7 +348,7 @@ mod transactions {
     #[test]
     fn an_early_return_rolls_back_without_the_caller_saying_so() {
         fn attempt(draft: &Draft<u8>, succeed: bool) -> Result<(), &'static str> {
-            let transaction = DraftTransaction::new(vec![draft]);
+            let transaction = begin(vec![draft]);
             draft.edit_draft(|value| *value = 9);
             if !succeed {
                 return Err("failed after editing");
@@ -367,14 +371,77 @@ mod transactions {
         let edited = Draft::new(1_u8);
         let untouched = Draft::new(5_u8);
 
-        drop(DraftTransaction::new(vec![&edited, &untouched]));
+        drop(begin(vec![&edited, &untouched]));
         edited.edit_draft(|value| *value = 2);
 
         {
-            let _transaction = DraftTransaction::new(vec![&edited, &untouched]);
+            let _transaction = begin(vec![&edited, &untouched]);
         }
 
         assert_eq!(**edited.latest_arc(), 1, "the earlier stray draft is cleared too");
         assert_eq!(**untouched.latest_arc(), 5);
+    }
+}
+
+mod transaction_exclusivity {
+    use clash_verge_draft::{Draft, DraftTransaction};
+
+    #[test]
+    fn a_second_transaction_over_a_claimed_layer_is_refused() {
+        let draft = Draft::new(1_u8);
+        let _held = DraftTransaction::begin(vec![&draft]).expect("the first claim should succeed");
+
+        let refused = DraftTransaction::begin(vec![&draft]);
+
+        assert!(refused.is_err(), "a layer may only be staged by one transaction");
+    }
+
+    #[test]
+    fn a_refused_transaction_leaves_the_layers_it_did_claim_free() {
+        // Claiming is all-or-nothing: a caller that failed on the third layer must not keep
+        // the first two, or the next attempt would be refused for a transaction that no
+        // longer exists.
+        let first = Draft::new(1_u8);
+        let second = Draft::new(2_u8);
+        let _contended = DraftTransaction::begin(vec![&second]).expect("the first claim should succeed");
+
+        assert!(DraftTransaction::begin(vec![&first, &second]).is_err());
+
+        drop(DraftTransaction::begin(vec![&first]).expect("the layer that was rolled off must be free"));
+    }
+
+    #[test]
+    fn a_layer_is_free_again_once_its_transaction_ends() {
+        let draft = Draft::new(1_u8);
+
+        drop(DraftTransaction::begin(vec![&draft]).expect("first"));
+        let committed = DraftTransaction::begin(vec![&draft]).expect("free after a rollback");
+        committed.commit();
+
+        drop(DraftTransaction::begin(vec![&draft]).expect("free after a commit"));
+    }
+
+    #[test]
+    fn an_overlapping_writer_can_no_longer_discard_a_staged_edit() {
+        // The regression this pins. A holds a transaction across a slow side effect; B starts,
+        // stages its own edit over the one draft slot, fails, and rolls back. Before layers
+        // were claimed, B's rollback cleared the single draft, A's commit then found nothing to
+        // apply and did nothing at all — while A's caller was told it had succeeded and A's own
+        // side effect had already happened.
+        let verge = Draft::new(String::from("committed"));
+
+        let transaction_a = DraftTransaction::begin(vec![&verge]).expect("A claims the layer");
+        verge.edit_draft(|value| *value = String::from("A-wants-this"));
+
+        let transaction_b = DraftTransaction::begin(vec![&verge]);
+        assert!(transaction_b.is_err(), "B must be refused rather than share the slot");
+
+        transaction_a.commit();
+
+        assert_eq!(
+            **verge.data_arc(),
+            "A-wants-this",
+            "A's edit must survive an overlapping writer"
+        );
     }
 }

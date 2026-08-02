@@ -155,6 +155,8 @@ pub enum ProxyProviderVehicleType {
     Http,
     #[serde(rename = "File")]
     File,
+    #[serde(rename = "Inline")]
+    Inline,
 }
 
 #[derive(Debug, PartialEq, Eq, Serialize)]
@@ -307,6 +309,7 @@ fn build_provider_records(
         let vehicle_type = match vehicle_type {
             VehicleType::HTTP => ProxyProviderVehicleType::Http,
             VehicleType::File => ProxyProviderVehicleType::File,
+            VehicleType::Inline => ProxyProviderVehicleType::Inline,
             _ => continue,
         };
         let provider_index = views.len();

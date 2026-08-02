@@ -94,18 +94,16 @@ tauri-plugin-devtools = { version = "2.1.0" }
 tauri-plugin-mihomo = { git = "https://github.com/clash-verge-rev/tauri-plugin-mihomo", branch = "refactor-use-reqwest-ipc" }
 clash_verge_logger = { git = "https://github.com/clash-verge-rev/clash-verge-logger" }
 async-trait = "0.1.91"
-# Tracks a branch until the protocol change it carries is tagged; move this to v2.6.0 then.
-clash_verge_service_ipc = { git = "https://github.com/clash-verge-rev/clash-verge-service-ipc.git", branch = "feat/stage-runtime", version = "2.6.0", features = [
+clash_verge_service_ipc = { git = "https://github.com/clash-verge-rev/clash-verge-service-ipc.git", tag = "v2.6.1", version = "2.6.1", features = [
   "client",
 ] }
 arc-swap = "1.9.2"
 tokio-rustls = "0.26.4"
-rustls = { version = "0.23.42", features = ["ring"] }
+rustls = { version = "0.23.43", features = ["ring"] }
 webpki-roots = "1.0.9"
 rust_iso3166 = "0.2.0"
 # Use the git repo until the next release after v2.0.0.
 dark-light = { git = "https://github.com/rust-dark-light/dark-light" }
-windows-sys.workspace = true
 bytes = "1.12.1"
 tokio-util = { version = "0.7.19", features = ["time"] }
 semver = "1.0.28"
@@ -142,6 +140,7 @@ runas = "=1.2.0"
 winreg = "0.56.0"
 windows-service = "0.8.1"
 windows = { version = "0.62.2", features = ["Win32_Globalization"] }
+windows-sys.workspace = true
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-autostart = "2.5.1"
