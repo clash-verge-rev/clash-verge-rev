@@ -4,7 +4,7 @@
 
   "features": {
     "ghcr.io/devcontainers/features/node:1": {
-      "version": "20"
+      "version": "24.18.1"
     },
     "ghcr.io/devcontainers/features/rust:1": {
       "version": "latest",
