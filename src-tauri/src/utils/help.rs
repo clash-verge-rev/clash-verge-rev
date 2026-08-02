@@ -256,7 +256,12 @@ pub fn snapshot_path(original_path: &Path) -> Result<PathBuf> {
         .ok_or_else(|| anyhow!("Invalid log path"))?
         .join("temp");
 
-    std::fs::create_dir_all(&temp_dir)?;
+    std::fs::create_dir_all(&temp_dir).map_err(|error| {
+        anyhow!(
+            "failed to create log snapshot directory {}: {error}",
+            temp_dir.display()
+        )
+    })?;
 
     let temp_path = temp_dir.join(format!(
         "{}_{}.log",
@@ -264,7 +269,13 @@ pub fn snapshot_path(original_path: &Path) -> Result<PathBuf> {
         chrono::Local::now().format("%Y-%m-%d_%H-%M-%S")
     ));
 
-    std::fs::copy(original_path, &temp_path)?;
+    std::fs::copy(original_path, &temp_path).map_err(|error| {
+        anyhow!(
+            "failed to copy log snapshot from {} to {}: {error}",
+            original_path.display(),
+            temp_path.display()
+        )
+    })?;
 
     Ok(temp_path)
 }

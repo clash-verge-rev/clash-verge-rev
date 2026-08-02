@@ -111,7 +111,11 @@ impl CoreManager {
 
         #[cfg(unix)]
         let previous_mask = unsafe { tauri_plugin_clash_verge_sysinfo::libc::umask(0o077) };
-        let command = app_handle.shell().sidecar(clash_core.as_str())?.args([
+        let command = app_handle
+            .shell()
+            .sidecar(clash_core.as_str())
+            .map_err(|error| anyhow::anyhow!("failed to build sidecar command for core {clash_core:?}: {error:#}"))?;
+        let command = command.args([
             "-d",
             dirs::path_to_str(&config_dir)?,
             "-f",
@@ -128,7 +132,13 @@ impl CoreManager {
             "LISTEN_NAMEDPIPE_SDDL",
             crate::core::owner_identity::current_user_pipe_sddl()?,
         );
-        let (mut rx, child) = command.spawn()?;
+        let (mut rx, child) = command.spawn().map_err(|error| {
+            anyhow::anyhow!(
+                "failed to start sidecar core {clash_core:?} with config {} and data directory {}: {error:#}",
+                config_file.display(),
+                config_dir.display()
+            )
+        })?;
         #[cfg(target_os = "windows")]
         let job = {
             match create_and_assign_sidecar_job(child.pid()) {
