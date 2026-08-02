@@ -11,7 +11,7 @@ import WifiTetheringOffRounded from '@mui/icons-material/WifiTetheringOffRounded
 import WifiTetheringRounded from '@mui/icons-material/WifiTetheringRounded'
 import { Box, IconButton, type SxProps, TextField } from '@mui/material'
 import { useDebounceFn } from 'ahooks'
-import { memo, useEffect } from 'react'
+import { memo, useState, useEffect } from 'react'
 import { flushSync } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 
@@ -34,6 +34,28 @@ interface Props {
 }
 
 export const ProxyGroupTools = memo(function ProxyGroupTools(props: Props) {
+  const { onCheckDelay: triggerAutoCheck } = props
+
+  const [isAutoRefresh, setIsAutoRefresh] = useState(false)
+
+  useEffect(() => {
+    let timer: ReturnType<typeof setInterval>
+
+    if (isAutoRefresh) {
+      // triggers an immediate check when toggeld on
+      triggerAutoCheck()
+
+      // loop every 5 sec
+      timer = setInterval(() => {
+        triggerAutoCheck()
+      }, 10000)
+    }
+
+    return () => {
+      if (timer) clearInterval(timer)
+    }
+  }, [isAutoRefresh, triggerAutoCheck])
+
   const {
     sx,
     url,
@@ -147,6 +169,31 @@ export const ProxyGroupTools = memo(function ProxyGroupTools(props: Props) {
       >
         <MyLocationRounded fontSize="inherit" />
       </IconButton>
+
+      <div
+        onClick={(e) => {
+          e.preventDefault()
+          e.stopPropagation()
+          setIsAutoRefresh(!isAutoRefresh)
+        }}
+        style={{
+          cursor: 'pointer',
+          fontSize: '11px',
+          fontWeight: 'bold',
+          color: isAutoRefresh ? '#4caf50' : 'gray',
+          display: 'flex',
+          alignItems: 'center',
+          padding: '0 8px',
+          userSelect: 'none',
+          border: `1px solid ${isAutoRefresh ? '#4caf50' : 'gray'}`,
+          borderRadius: '4px',
+          marginRight: '8px',
+          height: '24px',
+        }}
+        title={isAutoRefresh ? 'Stop Auto Refresh' : 'Start Auto Refresh'}
+      >
+        {isAutoRefresh ? 'LIVE 10s' : 'AUTO OFF'}
+      </div>
 
       <IconButton
         size="small"
