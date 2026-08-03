@@ -266,6 +266,16 @@ impl CoreManager {
     }
 
     pub async fn start_core(&self) -> Result<()> {
+        if !self.try_start_config_update() {
+            anyhow::bail!("configuration update is already running");
+        }
+        defer! {
+            self.finish_config_update();
+        }
+        self.start_core_during_config_update().await
+    }
+
+    pub(crate) async fn start_core_during_config_update(&self) -> Result<()> {
         let _life = self.lifecycle_lock.lock().await;
         run_core_start_transition(
             || self.start_core_inner(),
@@ -498,6 +508,16 @@ impl CoreManager {
     }
 
     pub async fn restart_core(&self) -> Result<()> {
+        if !self.try_start_config_update() {
+            anyhow::bail!("configuration update is already running");
+        }
+        defer! {
+            self.finish_config_update();
+        }
+        self.restart_core_during_config_update().await
+    }
+
+    pub(crate) async fn restart_core_during_config_update(&self) -> Result<()> {
         // 持锁覆盖 stop+start,避免生命周期操作插入。
         let _life = self.lifecycle_lock.lock().await;
         logging!(info, Type::Core, "Restarting core");

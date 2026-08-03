@@ -1,6 +1,6 @@
 #[cfg(test)]
 use super::claim_core_readiness_generation;
-use super::{CoreManager, RunningMode};
+use super::{CoreManager, PROFILE_SELECTIONS_PENDING_COMMIT, RunningMode};
 use crate::{
     AsyncHandler,
     config::Config,
@@ -37,6 +37,12 @@ impl CoreManager {
     ///
     /// Repeat calls supersede each other, so every start path may call this without coordinating.
     async fn restore_selected_nodes(&self) {
+        if PROFILE_SELECTIONS_PENDING_COMMIT
+            .try_with(|pending| *pending)
+            .unwrap_or(false)
+        {
+            return;
+        }
         crate::config::profiles::restore_selected_nodes().await;
     }
 }

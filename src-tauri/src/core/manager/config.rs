@@ -1,7 +1,7 @@
-use super::{CoreManager, RunningMode};
+use super::{CoreManager, PROFILE_SELECTIONS_PENDING_COMMIT, RunningMode};
 use crate::core::service::StageRequest;
 use crate::{
-    config::{Config, ConfigType, runtime::IRuntime},
+    config::{Config, ConfigType, IProfiles, runtime::IRuntime},
     constants::timing,
     core::{
         handle,
@@ -53,6 +53,14 @@ enum ConfigApplication {
     ReplaceCore,
     /// Leave the Core alone and report why the configuration cannot be applied.
     Fail(String),
+}
+
+pub(crate) struct ConfigUpdateGuard<'a>(&'a CoreManager);
+
+impl Drop for ConfigUpdateGuard<'_> {
+    fn drop(&mut self) {
+        self.0.finish_config_update();
+    }
 }
 
 /// Decide how to apply a configuration, given how staging went.
@@ -208,7 +216,57 @@ impl CoreManager {
             self.set_last_update(Instant::now());
         }
 
-        self.perform_config_update().await
+        self.perform_config_update(None).await
+    }
+
+    pub(crate) async fn update_config_forced_with_profiles(
+        &self,
+        candidate: &IProfiles,
+        rollback: &IProfiles,
+    ) -> Result<std::result::Result<ConfigUpdateGuard<'_>, ValidationOutcome>> {
+        if handle::Handle::global().is_exiting() {
+            return Ok(Err(ValidationOutcome::Skipped {
+                reason: ValidationSkipReason::Exiting,
+            }));
+        }
+        if !self.try_start_config_update() {
+            return Ok(Err(ValidationOutcome::Busy));
+        }
+        let guard = ConfigUpdateGuard(self);
+        self.set_last_update(Instant::now());
+        crate::config::profiles::supersede_selected_activation();
+
+        let outcome = match PROFILE_SELECTIONS_PENDING_COMMIT
+            .scope(true, self.perform_config_update(Some(candidate)))
+            .await
+        {
+            Ok(outcome) => outcome,
+            Err(error) => {
+                self.restore_profile_config(rollback).await?;
+                return Err(error);
+            }
+        };
+        if !outcome.is_valid() {
+            crate::config::profiles::restore_selected_nodes().await;
+            return Ok(Err(outcome));
+        }
+        match candidate.save_file().await {
+            Ok(()) => Ok(Ok(guard)),
+            Err(error) => {
+                self.restore_profile_config(rollback).await?;
+                Err(error)
+            }
+        }
+    }
+
+    async fn restore_profile_config(&self, profiles: &IProfiles) -> Result<()> {
+        let outcome = self.perform_config_update(Some(profiles)).await?;
+        if outcome.is_valid() {
+            crate::config::profiles::restore_selected_nodes().await;
+            Ok(())
+        } else {
+            Err(anyhow!("failed to restore previous Core configuration: {outcome}"))
+        }
     }
 
     pub async fn update_config_checked(&self) -> Result<()> {
@@ -234,11 +292,15 @@ impl CoreManager {
         true
     }
 
-    async fn perform_config_update(&self) -> Result<ValidationOutcome> {
+    async fn perform_config_update(&self, profiles: Option<&IProfiles>) -> Result<ValidationOutcome> {
         let runtime = Config::runtime().await;
         let transaction = DraftTransaction::begin(vec![&runtime])?;
 
-        if let Err(err) = Config::generate().await {
+        let generate = match profiles {
+            Some(profiles) => Config::generate_with_profiles(profiles).await,
+            None => Config::generate().await,
+        };
+        if let Err(err) = generate {
             let message: String = err.to_string().into();
             return Ok(ValidationOutcome::invalid_from_message(message));
         }
@@ -360,7 +422,7 @@ impl CoreManager {
             Type::Core,
             "Failed to apply configuration by mihomo api, restart core to apply it, error msg: {err}"
         );
-        match self.restart_core().await {
+        match self.restart_core_during_config_update().await {
             Ok(_) => {
                 logging!(info, Type::Core, "Configuration applied after restart");
                 Ok(())

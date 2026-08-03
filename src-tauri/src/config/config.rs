@@ -244,7 +244,12 @@ impl Config {
     }
 
     pub async fn generate() -> Result<()> {
-        let (mut config, exists_keys, logs) = enhance::enhance().await?;
+        let profiles = Self::profiles().await.latest_arc();
+        Self::generate_with_profiles(&profiles).await
+    }
+
+    pub(crate) async fn generate_with_profiles(profiles: &IProfiles) -> Result<()> {
+        let (mut config, exists_keys, logs) = enhance::enhance(profiles).await?;
 
         sanitize_tunnels_proxy(&mut config);
 
@@ -300,6 +305,7 @@ impl Config {
         });
 
         let save_profiles_task = AsyncHandler::spawn(|| async {
+            let _profile_write = super::profiles::PROFILE_WRITE_LOCK.lock().await;
             let profiles = Self::profiles().await;
             profiles.apply();
             logging_error!(Type::Config, profiles.data_arc().save_file().await);

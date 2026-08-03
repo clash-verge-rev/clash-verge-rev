@@ -4,9 +4,10 @@ use clash_verge_logging::{Type, logging};
 use nanoid::nanoid;
 use serde::{Serialize, de::DeserializeOwned};
 use serde_yaml_ng::{Mapping, Value};
-#[cfg(target_os = "windows")]
-use std::path::Path;
-use std::{path::PathBuf, str::FromStr};
+use std::{
+    path::{Path, PathBuf},
+    str::FromStr,
+};
 
 /// read data from yaml as struct T
 pub async fn read_yaml<T: DeserializeOwned>(path: &PathBuf) -> Result<T> {
@@ -70,6 +71,16 @@ pub async fn save_yaml<T: Serialize + Sync>(path: &PathBuf, data: &T, prefix: Op
         .await
         .with_context(|| format!("failed to save file \"{}\"", path.display()))?;
     tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+    Ok(())
+}
+
+pub async fn save_yaml_atomic<T: Serialize + Sync>(path: &Path, data: &T, prefix: Option<&str>) -> Result<()> {
+    let temporary = path.with_extension("delete.tmp");
+    save_yaml(&temporary, data, prefix).await?;
+    if let Err(error) = super::server::replace_file_atomic(&temporary, path) {
+        let _ = tokio::fs::remove_file(&temporary).await;
+        return Err(error).with_context(|| format!("failed to replace file \"{}\"", path.display()));
+    }
     Ok(())
 }
 

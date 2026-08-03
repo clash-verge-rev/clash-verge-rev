@@ -91,7 +91,7 @@ pub async fn save_proxy_ports(settings: ProxyPortSettings) -> Result<SaveProxyPo
         };
     }
 
-    if was_running && let Err(activation_error) = manager.restart_core().await {
+    if was_running && let Err(activation_error) = manager.restart_core_during_config_update().await {
         transaction.rollback();
         if let Err(rollback_error) = rollback_proxy_ports(&snapshots, was_running).await {
             return Err(anyhow!(
@@ -233,9 +233,9 @@ async fn rollback_proxy_ports(snapshots: &[FileSnapshot], was_running: bool) -> 
     let lifecycle_result = if was_running {
         let manager = CoreManager::global();
         if matches!(*manager.get_running_mode(), RunningMode::NotRunning) {
-            manager.start_core().await
+            manager.start_core_during_config_update().await
         } else {
-            manager.restart_core().await
+            manager.restart_core_during_config_update().await
         }
     } else {
         Ok(())

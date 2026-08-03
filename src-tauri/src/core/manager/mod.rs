@@ -24,6 +24,10 @@ use std::os::windows::io::OwnedHandle;
 
 pub(crate) static CLASH_LOGGER: Lazy<Arc<AsyncLogger>> = Lazy::new(|| Arc::new(AsyncLogger::new()));
 
+tokio::task_local! {
+    static PROFILE_SELECTIONS_PENDING_COMMIT: bool;
+}
+
 const CORE_READINESS_ACTIVE_BIT: u64 = 1;
 const CORE_READINESS_GENERATION_STEP: u64 = 1 << 1;
 

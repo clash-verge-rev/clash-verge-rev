@@ -28,6 +28,8 @@ use std::{
 use tauri_plugin_mihomo::models::{Proxies, ProxyType};
 use tokio::{fs, task::JoinHandle};
 
+pub(crate) static PROFILE_WRITE_LOCK: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
+
 /// Regex to check profile file names, eg.
 /// R12345678.yaml (remote)
 /// L12345678.yaml (local)
@@ -88,6 +90,23 @@ pub struct CleanupResult {
     pub failed_deletions: usize,
 }
 
+pub(crate) struct ProfileDeletePlan {
+    files: Vec<String>,
+}
+
+impl ProfileDeletePlan {
+    pub(crate) async fn cleanup(self) {
+        let Ok(dir) = dirs::app_profiles_dir() else {
+            return;
+        };
+        for file in self.files {
+            if let Err(error) = dir.join(file.as_str()).remove_if_exists().await {
+                logging!(warn, Type::Config, "清理已删除订阅文件失败: {file} - {error}");
+            }
+        }
+    }
+}
+
 macro_rules! patch {
     ($lv: expr, $rv: expr, $key: tt) => {
         if ($rv.$key).is_some() {
@@ -130,7 +149,7 @@ impl IProfiles {
     }
 
     pub async fn save_file(&self) -> Result<()> {
-        help::save_yaml(&dirs::profiles_path()?, self, Some("# Profiles Config for Clash Verge")).await
+        help::save_yaml_atomic(&dirs::profiles_path()?, self, Some("# Profiles Config for Clash Verge")).await
     }
 
     /// 只修改current，valid和chain
@@ -331,40 +350,32 @@ impl IProfiles {
         self.save_file().await
     }
 
-    /// delete item
-    /// if delete the current then return true
-    pub async fn delete_item(&mut self, uid: &String) -> Result<bool> {
-        let current = self.current.as_ref().unwrap_or(uid);
-        let current = current.clone();
-        let delete_uids = {
-            let item = self.get_item(uid)?;
-            let option = item.option.as_ref();
-            option.map_or(Vec::new(), |op| {
-                [
-                    op.merge.clone(),
-                    op.script.clone(),
-                    op.rules.clone(),
-                    op.proxies.clone(),
-                    op.groups.clone(),
-                ]
-                .into_iter()
-                .collect::<Vec<_>>()
-            })
-        };
+    pub(crate) fn plan_delete_item(&mut self, uid: &String) -> Result<(bool, ProfileDeletePlan)> {
+        let current = self.current.as_ref().unwrap_or(uid).clone();
+        let delete_uids = self.get_item(uid)?.option.as_ref().map_or_else(Vec::new, |op| {
+            [
+                op.merge.clone(),
+                op.script.clone(),
+                op.rules.clone(),
+                op.proxies.clone(),
+                op.groups.clone(),
+            ]
+            .into_iter()
+            .collect::<Vec<_>>()
+        });
         let mut items = self.items.take().unwrap_or_default();
+        let mut files = Vec::new();
 
-        // remove the main item (if exists) and delete its file
         if let Some(file) = Self::take_item_file_by_uid(&mut items, Some(uid.as_str())) {
-            let _ = dirs::app_profiles_dir()?.join(file.as_str()).remove_if_exists().await;
+            files.push(file);
         }
 
         for delete_uid in delete_uids {
             if let Some(file) = Self::take_item_file_by_uid(&mut items, delete_uid.as_deref()) {
-                let _ = dirs::app_profiles_dir()?.join(file.as_str()).remove_if_exists().await;
+                files.push(file);
             }
         }
 
-        // delete the original uid
         if current == *uid {
             self.current = None;
             for item in items.iter() {
@@ -376,8 +387,7 @@ impl IProfiles {
         }
 
         self.items = Some(items);
-        self.save_file().await?;
-        Ok(current == *uid)
+        Ok((current == *uid, ProfileDeletePlan { files }))
     }
 
     /// 获取current指向的订阅内容
@@ -626,16 +636,6 @@ pub async fn profiles_patch_item_safe(index: &String, item: &PrfItem) -> Result<
         .await
 }
 
-pub async fn profiles_delete_item_safe(index: &String) -> Result<bool> {
-    Config::profiles()
-        .await
-        .with_data_modify(|mut profiles| async move {
-            let deleted = profiles.delete_item(index).await?;
-            Ok((profiles, deleted))
-        })
-        .await
-}
-
 pub async fn profiles_reorder_safe(active_id: &String, over_id: &String) -> Result<()> {
     Config::profiles()
         .await
@@ -795,9 +795,8 @@ fn reconcile_selected_nodes(
 /// already holding the newer one, would then disagree with the core. Bumping the generation is
 /// how an activation is told it has been overtaken.
 ///
-/// Called *after* the profile is written, which is the only placement that needs to exist: an
-/// activation that read the older profile is cancelled by this, and one starting afterwards reads
-/// the newer one and needs no cancelling.
+/// Called after a newer selection is written, or before a candidate Core transition whose caller
+/// will reactivate whichever Profiles snapshot ultimately commits.
 pub fn supersede_selected_activation() {
     ACTIVATE_SELECTED_GENERATION.fetch_add(1, Ordering::AcqRel);
 }
@@ -1276,6 +1275,39 @@ fn activate_selected_nodes_with(repair: SelectionRepair) -> tokio::sync::oneshot
 mod tests {
     use super::*;
     use tauri_plugin_mihomo::models::Proxy;
+
+    fn deletion_item(uid: &str, kind: &str, file: &str, merge: Option<&str>) -> PrfItem {
+        PrfItem {
+            uid: Some(uid.into()),
+            itype: Some(kind.into()),
+            file: Some(file.into()),
+            option: merge.map(|uid| PrfOption {
+                merge: Some(uid.into()),
+                ..PrfOption::default()
+            }),
+            ..PrfItem::default()
+        }
+    }
+
+    #[test]
+    fn delete_plan_defers_files_and_selects_replacement() -> Result<()> {
+        let mut profiles = IProfiles {
+            current: Some("a".into()),
+            items: Some(vec![
+                deletion_item("a", "remote", "a.yaml", Some("owned")),
+                deletion_item("owned", "merge", "owned.yaml", None),
+                deletion_item("b", "local", "b.yaml", None),
+            ]),
+        };
+
+        let (should_update, plan) = profiles.plan_delete_item(&"a".into())?;
+
+        assert!(should_update);
+        assert_eq!(profiles.current.as_deref(), Some("b"));
+        assert_eq!(plan.files, vec![String::from("a.yaml"), String::from("owned.yaml")]);
+        assert!(profiles.get_item("owned").is_err());
+        Ok(())
+    }
 
     fn selected(group: &str, node: &str) -> PrfSelected {
         PrfSelected {
