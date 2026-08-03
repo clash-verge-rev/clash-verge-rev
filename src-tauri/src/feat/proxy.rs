@@ -1,5 +1,5 @@
 use crate::{
-    config::{Config, IVerge},
+    config::{Config, IVerge, MixedPort},
     core::handle,
 };
 use clash_verge_logging::{Type, logging};
@@ -15,7 +15,7 @@ pub async fn toggle_system_proxy() -> bool {
     // 如果当前系统代理即将关闭，且自动关闭连接设置为true，则关闭所有连接
     if current
         && auto_close_connection
-        && let Err(err) = handle::Handle::mihomo().await.close_all_connections().await
+        && let Err(err) = handle::Handle::mihomo().close_all_connections().await
     {
         logging!(error, Type::ProxyMode, "Failed to close all connections: {err}");
     }
@@ -59,7 +59,12 @@ pub async fn toggle_tun_mode(not_save_file: Option<bool>) -> bool {
     {
         Ok(_) => {
             handle::Handle::refresh_verge();
-            enable
+            // Read back rather than returning what was asked for: patching TUN reconciles it
+            // afterwards, and where TUN cannot work that reconciliation turns it straight off
+            // again. This path is not gated on availability — it is the global hotkey — so
+            // reporting the request would tell the caller TUN is on moments before the notice
+            // saying it was disabled.
+            Config::verge().await.latest_arc().enable_tun_mode.unwrap_or(false)
         }
         Err(err) => {
             logging!(error, Type::ProxyMode, "{err}");
@@ -77,7 +82,10 @@ pub async fn copy_clash_env() {
         .unwrap_or_else(|| verge_cfg.proxy_host.as_deref().unwrap_or("127.0.0.1"));
 
     let app_handle = handle::Handle::app_handle();
-    let port = verge_cfg.verge_mixed_port.unwrap_or(7897);
+    // The user is about to paste this into a shell, so it has to be the port the Core is
+    // really on — and this path is user-triggered, so a round-trip is affordable. It also
+    // used to fall back to a hardcoded 7897, ignoring the Merge Config entirely.
+    let port = MixedPort::effective().await;
     let http_proxy = format!("http://{ip}:{port}");
     let socks5_proxy = format!("socks5://{ip}:{port}");
 

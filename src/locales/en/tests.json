@@ -20,6 +20,13 @@
       },
       "fields": {
         "url": "Test URL"
+      },
+      "errors": {
+        "nameRequired": "Enter a name",
+        "urlRequired": "Enter a test URL",
+        "invalidSvg": "The icon is not valid SVG",
+        "uidMissing": "The test item identifier is missing",
+        "saveFailed": "Failed to save test item"
       }
     }
   },

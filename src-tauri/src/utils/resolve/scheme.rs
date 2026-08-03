@@ -97,7 +97,7 @@ async fn import_subscription(url: &str, name: Option<&String>) {
         return;
     }
 
-    if let Err(e) = Config::profiles().await.data_arc().save_file().await {
+    if let Err(e) = profiles::profiles_save_file_safe().await {
         logging!(error, Type::Config, "failed to save imported subscription: {}", e);
         handle::Handle::notice_message("import_sub_url::error", e.to_string());
         return;

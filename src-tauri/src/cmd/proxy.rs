@@ -16,6 +16,22 @@ use std::{
     sync::atomic::{AtomicBool, Ordering},
 };
 
+/// Record which node a group is on, in the current profile.
+///
+/// Takes the group and the node rather than the whole selection list, and merges them into the
+/// profile on this side. The frontend used to send the list it had rendered, which made two
+/// selections made before that list refreshed into one overwriting the other: both were built
+/// from the same stale array, and the later write dropped the earlier group's choice. Since a
+/// core start re-applies whatever the profile holds, the dropped one then came back on restart.
+///
+/// The tray already recorded this way. Now there is one way.
+#[tauri::command]
+pub async fn record_selected_node(group_name: String, node: String) -> CmdResult<()> {
+    crate::config::profiles::record_selected_node(&group_name, &node)
+        .await
+        .stringify_err()
+}
+
 static TRAY_SYNC_RUNNING: AtomicBool = AtomicBool::new(false);
 static TRAY_SYNC_PENDING: AtomicBool = AtomicBool::new(false);
 
@@ -38,12 +54,11 @@ fn runtime_group_order(config: Option<&Mapping>) -> Vec<String> {
 #[tauri::command]
 pub async fn get_proxy_view() -> CmdResult<ProxyViewV1> {
     let runtime = Config::runtime().await;
-    let committed_runtime = runtime.data_arc();
-    let runtime_group_order = runtime_group_order(committed_runtime.config.as_ref());
+    let latest_runtime = runtime.latest_arc();
+    let runtime_group_order = runtime_group_order(latest_runtime.config.as_ref());
 
-    let mihomo = Handle::mihomo().await;
+    let mihomo = Handle::mihomo();
     let (proxies, providers) = tokio::join!(mihomo.get_proxies(), mihomo.get_proxy_providers(),);
-    drop(mihomo);
     let proxies = proxies.stringify_err()?;
 
     Ok(ProxyViewBuilder::build(ProxyViewInput {

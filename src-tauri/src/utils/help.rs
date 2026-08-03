@@ -4,9 +4,10 @@ use clash_verge_logging::{Type, logging};
 use nanoid::nanoid;
 use serde::{Serialize, de::DeserializeOwned};
 use serde_yaml_ng::{Mapping, Value};
-#[cfg(target_os = "windows")]
-use std::path::Path;
-use std::{path::PathBuf, str::FromStr};
+use std::{
+    path::{Path, PathBuf},
+    str::FromStr,
+};
 
 /// read data from yaml as struct T
 pub async fn read_yaml<T: DeserializeOwned>(path: &PathBuf) -> Result<T> {
@@ -70,6 +71,16 @@ pub async fn save_yaml<T: Serialize + Sync>(path: &PathBuf, data: &T, prefix: Op
         .await
         .with_context(|| format!("failed to save file \"{}\"", path.display()))?;
     tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+    Ok(())
+}
+
+pub async fn save_yaml_atomic<T: Serialize + Sync>(path: &Path, data: &T, prefix: Option<&str>) -> Result<()> {
+    let temporary = path.with_extension("delete.tmp");
+    save_yaml(&temporary, data, prefix).await?;
+    if let Err(error) = super::server::replace_file_atomic(&temporary, path) {
+        let _ = tokio::fs::remove_file(&temporary).await;
+        return Err(error).with_context(|| format!("failed to replace file \"{}\"", path.display()));
+    }
     Ok(())
 }
 
@@ -213,8 +224,18 @@ pub fn open_app_latest_log() -> Result<()> {
     open_latest_log(path)
 }
 
-pub fn open_core_latest_log() -> Result<()> {
-    let path = crate::utils::dirs::clash_latest_log()?;
+pub async fn open_core_latest_log() -> Result<()> {
+    let path = if matches!(
+        *crate::core::CoreManager::global().get_running_mode(),
+        crate::core::manager::RunningMode::Service
+    ) {
+        let path = crate::utils::dirs::service_log_dir()?.join("service_latest.log");
+        let snapshot = crate::core::service::get_clash_log_snapshot_by_service().await?;
+        tokio::fs::write(&path, snapshot).await?;
+        path
+    } else {
+        crate::utils::dirs::clash_latest_log()?
+    };
     open_latest_log(path)
 }
 
@@ -246,7 +267,12 @@ pub fn snapshot_path(original_path: &Path) -> Result<PathBuf> {
         .ok_or_else(|| anyhow!("Invalid log path"))?
         .join("temp");
 
-    std::fs::create_dir_all(&temp_dir)?;
+    std::fs::create_dir_all(&temp_dir).map_err(|error| {
+        anyhow!(
+            "failed to create log snapshot directory {}: {error}",
+            temp_dir.display()
+        )
+    })?;
 
     let temp_path = temp_dir.join(format!(
         "{}_{}.log",
@@ -254,7 +280,13 @@ pub fn snapshot_path(original_path: &Path) -> Result<PathBuf> {
         chrono::Local::now().format("%Y-%m-%d_%H-%M-%S")
     ));
 
-    std::fs::copy(original_path, &temp_path)?;
+    std::fs::copy(original_path, &temp_path).map_err(|error| {
+        anyhow!(
+            "failed to copy log snapshot from {} to {}: {error}",
+            original_path.display(),
+            temp_path.display()
+        )
+    })?;
 
     Ok(temp_path)
 }

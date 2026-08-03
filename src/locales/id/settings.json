@@ -5,6 +5,7 @@
       "telegram": "Saluran Telegram",
       "github": "Repositori Github"
     },
+    "actionsGroupLabel": "Tautan pengaturan",
     "title": "Pengaturan"
   },
   "sections": {
@@ -284,7 +285,11 @@
       "messages": {
         "portInUse": "Port {{port}} is already in use",
         "saved": "Port settings saved",
-        "saveFailed": "Failed to save port settings"
+        "saveFailed": "Failed to save port settings",
+        "automaticFallback": "Port {{oldPort}} sedang digunakan. Port proxy campuran dialihkan ke {{newPort}} dan disimpan.",
+        "automaticFallbackFailed": "Pengalihan otomatis port proxy campuran gagal: {{error}}",
+        "portTooLow": "Port harus 1000 atau lebih tinggi",
+        "portTooHigh": "Port harus 65535 atau lebih rendah"
       }
     },
     "clashCore": {
@@ -429,7 +434,15 @@
         "update": "Perbarui"
       },
       "messages": {
-        "breakChangeError": "Versi ini adalah pembaruan besar dan tidak mendukung pembaruan dalam aplikasi. Harap hapus instalasi dan unduh serta instal versi baru secara manual"
+        "breakChangeError": "Versi ini adalah pembaruan besar dan tidak mendukung pembaruan dalam aplikasi. Harap hapus instalasi dan unduh serta instal versi baru secara manual",
+        "available": "Versi baru tersedia"
+      },
+      "alerts": {
+        "note": "Catatan",
+        "tip": "Tips",
+        "important": "Penting",
+        "warning": "Peringatan",
+        "caution": "Perhatian"
       }
     },
     "sysproxy": {
@@ -590,6 +603,11 @@
       "messages": {
         "supportedPlaceholders": "Dukung %host, %port, %secret",
         "placeholderInstruction": "Ganti host, port, rahasia dengan %host, %port, %secret"
+      },
+      "errors": {
+        "clashInfoUnavailable": "Informasi koneksi core tidak tersedia",
+        "invalidServer": "Alamat server core \"{{server}}\" tidak valid",
+        "openFailed": "Gagal membuka Web UI"
       }
     },
     "hotkey": {
@@ -617,6 +635,22 @@
     }
   },
   "feedback": {
+    "errors": {
+      "clash": {
+        "configUpdateFailed": "Gagal memperbarui konfigurasi core",
+        "modeUpdateFailed": "Gagal mengubah mode proxy",
+        "restartFailed": "Gagal memulai ulang core",
+        "startFailed": "Gagal memulai core",
+        "stopFailed": "Gagal menghentikan core"
+      },
+      "clashService": {
+        "installFailed": "Gagal memasang layanan",
+        "uninstallFailed": "Gagal mencopot layanan",
+        "reinstallFailed": "Gagal memasang ulang layanan",
+        "repairFailed": "Gagal memperbaiki layanan",
+        "sidecarFailed": "Gagal melanjutkan dengan Sidecar"
+      }
+    },
     "notifications": {
       "clash": {
         "restartSuccess": "Core Clash Dimulai Ulang",

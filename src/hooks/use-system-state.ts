@@ -1,116 +1,62 @@
-import { useEffect, useRef, useState } from 'react'
-
-import { getRunningMode, isAdmin, isServiceAvailable } from '@/services/cmds'
-import { showNotice } from '@/services/notice-service'
+import {
+  getRuntimeState,
+  type RunState,
+  type RunningMode,
+} from '@/services/cmds'
 import { useQuery } from '@/services/query-client'
 
-import { useVerge } from './use-verge'
 import { useVisibility } from './use-visibility'
 
-interface SystemState {
-  runningMode: 'Sidecar' | 'Service'
-  isAdminMode: boolean
-  isServiceOk: boolean
-}
-
-const defaultSystemState = {
-  runningMode: 'Sidecar',
-  isAdminMode: false,
-  isServiceOk: false,
-} as SystemState
-
-// Grace period for service initialization during startup
-const STARTUP_GRACE_MS = 10_000
+export const runStateQueryKey = ['getRuntimeState'] as const
 
 /**
- * 自定义 hook 用于获取系统运行状态
- * 包括运行模式、管理员状态、系统服务是否可用
+ * Until the first snapshot arrives, assume the least capable environment: no service, no
+ * elevation, nothing asked of the user. Guessing "ready" here would flash a usable TUN toggle.
+ */
+const unknownRunState: RunState = {
+  mode: 'NotRunning',
+  service: 'unknown',
+  serviceUnavailableReason: null,
+  pendingAction: null,
+  sidecarAllowed: false,
+  isAdmin: false,
+  opInFlight: false,
+  serviceUsable: false,
+  tunCapable: false,
+  serviceNeedsAttention: false,
+}
+
+/**
+ * The Run State: how the core is running and what backs it.
+ *
+ * One query key, kept fresh by `verge://run-state-changed` rather than polling. Every derived
+ * answer is computed in Rust and travels with the snapshot, so there is exactly one definition
+ * of "TUN can work" in the app.
  */
 export function useSystemState() {
-  const { verge, patchVerge } = useVerge()
   const pageVisible = useVisibility()
-  const disablingTunRef = useRef(false)
-  const [isStartingUp, setIsStartingUp] = useState(true)
-
-  useEffect(() => {
-    const timer = setTimeout(() => setIsStartingUp(false), STARTUP_GRACE_MS)
-    return () => clearTimeout(timer)
-  }, [])
 
   const {
-    data: systemState = defaultSystemState,
+    data: runState = unknownRunState,
     refetch: mutateSystemState,
     isLoading,
   } = useQuery({
-    queryKey: ['getSystemState'],
-    queryFn: async () => {
-      const [runningMode, isAdminMode, isServiceOk] = await Promise.all([
-        getRunningMode(),
-        isAdmin(),
-        isServiceAvailable(),
-      ])
-      return { runningMode, isAdminMode, isServiceOk } as SystemState
-    },
-    refetchInterval: pageVisible ? (isStartingUp ? 2000 : 30000) : false,
+    queryKey: runStateQueryKey,
+    queryFn: getRuntimeState,
+    // A safety net only: transitions are pushed, so this is not the primary path.
+    refetchInterval: pageVisible ? 30000 : false,
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
   })
 
-  const isSidecarMode = systemState.runningMode === 'Sidecar'
-  const isServiceMode = systemState.runningMode === 'Service'
-  const isTunModeAvailable = systemState.isAdminMode || systemState.isServiceOk
-
-  const enable_tun_mode = verge?.enable_tun_mode
-  const cooldownTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  useEffect(() => {
-    if (enable_tun_mode === undefined) return
-
-    if (
-      !disablingTunRef.current &&
-      enable_tun_mode &&
-      !isTunModeAvailable &&
-      !isLoading &&
-      !isStartingUp
-    ) {
-      disablingTunRef.current = true
-      patchVerge({ enable_tun_mode: false })
-        .then(() => {
-          showNotice.info(
-            'settings.sections.system.notifications.tunMode.autoDisabled',
-          )
-        })
-        .catch((err) => {
-          console.error('[useVerge] 自动关闭TUN模式失败:', err)
-          showNotice.error(
-            'settings.sections.system.notifications.tunMode.autoDisableFailed',
-          )
-        })
-        .finally(() => {
-          // 避免 verge 数据更新不及时导致重复执行关闭 Tun 模式
-          cooldownTimerRef.current = setTimeout(() => {
-            disablingTunRef.current = false
-            cooldownTimerRef.current = null
-          }, 1000)
-        })
-    }
-
-    return () => {
-      if (cooldownTimerRef.current != null) {
-        clearTimeout(cooldownTimerRef.current)
-        cooldownTimerRef.current = null
-        disablingTunRef.current = false
-      }
-    }
-  }, [enable_tun_mode, isTunModeAvailable, patchVerge, isLoading, isStartingUp])
-
   return {
-    runningMode: systemState.runningMode,
-    isAdminMode: systemState.isAdminMode,
-    isServiceOk: systemState.isServiceOk,
-    isSidecarMode,
-    isServiceMode,
-    isTunModeAvailable,
+    runState,
+    runningMode: runState.mode as RunningMode,
+    isAdminMode: runState.isAdmin,
+    isSidecarMode: runState.mode === 'Sidecar',
+    isServiceMode: runState.mode === 'Service',
+    isTunModeAvailable: runState.tunCapable,
+    serviceNeedsAttention: runState.serviceNeedsAttention,
     mutateSystemState,
     isLoading,
   }

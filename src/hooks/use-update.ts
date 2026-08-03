@@ -1,4 +1,4 @@
-import { setCacheData, useQuery } from '@/services/query-client'
+import { fetchCacheData, setCacheData, useQuery } from '@/services/query-client'
 import { checkUpdateSafe } from '@/services/update'
 
 import { useVerge } from './use-verge'
@@ -30,17 +30,15 @@ export const useUpdate = (enabled: boolean = true) => {
   // Otherwise, respect the auto_check_update setting (or default to true if null/undefined for manual triggers)
   const shouldCheck = enabled && auto_check_update !== false
 
-  const {
-    data: updateInfo,
-    refetch: checkUpdate,
-    isFetching: isValidating,
-  } = useQuery({
+  const fetchUpdate = async () => {
+    const result = await checkUpdateSafe()
+    updateLastCheckTime()
+    return result
+  }
+
+  const { data: updateInfo, isFetching: isValidating } = useQuery({
     queryKey: ['checkUpdate'],
-    queryFn: async () => {
-      const result = await checkUpdateSafe()
-      updateLastCheckTime()
-      return result
-    },
+    queryFn: fetchUpdate,
     enabled: shouldCheck,
     retry: 2,
     staleTime: 60 * 60 * 1000,
@@ -48,6 +46,11 @@ export const useUpdate = (enabled: boolean = true) => {
     refetchIntervalInBackground: false,
     refetchOnWindowFocus: false,
   })
+
+  const checkUpdate = async () => {
+    const data = await fetchCacheData(['checkUpdate'], fetchUpdate)
+    return { data }
+  }
 
   // Shared last check timestamp
   const { data: lastCheckUpdate } = useQuery({

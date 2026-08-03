@@ -28,7 +28,16 @@
     "feedback": {
       "errors": {
         "invalidUrl": "Invalid profile URL. Please enter a URL starting with http:// or https://",
-        "onlyYaml": "Only YAML Files Supported"
+        "onlyYaml": "Only YAML Files Supported",
+        "createFailed": "Failed to create profile",
+        "deleteFailed": "Failed to delete profile",
+        "enhanceFailed": "Failed to reactivate profiles",
+        "importFailed": "Failed to import profile",
+        "openFailed": "Failed to open profile",
+        "readFailed": "Failed to read profile",
+        "reorderFailed": "Failed to reorder profiles",
+        "switchFailed": "Failed to switch profile",
+        "updateFailed": "Failed to update profile"
       },
       "notifications": {
         "importRetry": "Import failed, retrying with Clash proxy...",
@@ -43,6 +52,9 @@
       "notices": {
         "forceRefreshCompleted": "Force refresh completed",
         "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
+      },
+      "tooltips": {
+        "forceRefreshStaleData": "Profile data is unavailable; click to force a refresh"
       }
     },
     "title": "Profiles"
@@ -105,12 +117,23 @@
         "type": "Type",
         "description": "Descriptions",
         "subscriptionUrl": "Subscription URL",
+        "userAgent": "User Agent",
         "httpTimeout": "HTTP Request Timeout",
         "updateInterval": "Update Interval",
         "useSystemProxy": "Use System Proxy",
         "useClashProxy": "Use Clash Proxy",
         "acceptInvalidCerts": "Allows Invalid Certificates (Danger)",
         "allowAutoUpdate": "Allow Auto Update"
+      },
+      "types": {
+        "remote": "Remote",
+        "local": "Local"
+      },
+      "errors": {
+        "typeRequired": "Select a profile type",
+        "urlRequired": "Enter a subscription URL",
+        "uidMissing": "The profile identifier is missing",
+        "saveFailed": "Failed to save profile"
       },
       "feedback": {
         "notifications": {

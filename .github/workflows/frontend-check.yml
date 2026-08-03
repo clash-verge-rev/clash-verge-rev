@@ -48,10 +48,10 @@ jobs:
         with:
           run_install: false
 
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         if: steps.check_frontend.outputs.frontend == 'true'
         with:
-          node-version: '24.18.0'
+          node-version: '24.18.1'
           cache: 'pnpm'
 
       - name: Restore pnpm cache
@@ -78,6 +78,10 @@ jobs:
         if: steps.check_frontend.outputs.frontend == 'true'
         run: pnpm typecheck
 
-      - name: Report unused frontend code and dependencies
+      - name: Run tests
         if: steps.check_frontend.outputs.frontend == 'true'
-        run: pnpm knip:report
+        run: pnpm test
+
+      - name: Run Knip
+        if: steps.check_frontend.outputs.frontend == 'true'
+        run: pnpm knip:check

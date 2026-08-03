@@ -82,7 +82,9 @@
         "unknown": "Unknown"
       },
       "errors": {
-        "load": "Failed to get IP info"
+        "load": "Failed to get IP info",
+        "loadWithDetails": "Failed to get IP info: {{message}}",
+        "noServices": "No IP detection services are available"
       }
     },
     "currentProxy": {
@@ -96,6 +98,18 @@
         "group": "Group",
         "proxy": "Proxy",
         "noActiveNode": "No active proxy node"
+      },
+      "status": {
+        "testing": "Testing",
+        "untested": "Not tested",
+        "error": "Error",
+        "timeout": "Timeout",
+        "latencyHigh": "High latency",
+        "latencyMedium": "Moderate latency",
+        "latencyGood": "Good latency",
+        "latencyExcellent": "Excellent latency",
+        "uninitialized": "Not initialized",
+        "noProxyNode": "No proxy node"
       }
     },
     "tests": {
@@ -114,7 +128,13 @@
       },
       "patterns": {
         "minutes": "{{time}} Minutes"
-      }
+      },
+      "unknownTime": "Unknown time",
+      "chartStyles": {
+        "smooth": "Smooth",
+        "linear": "Linear"
+      },
+      "diagnostics": "Points: {{points}} | Compressed: {{compressed}} | FPS: {{fps}}"
     },
     "clashMode": {
       "errors": {

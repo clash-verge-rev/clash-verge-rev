@@ -27,7 +27,7 @@ import {
   styled,
 } from '@mui/material'
 import { useLockFn } from 'ahooks'
-import yaml from 'js-yaml'
+import * as yaml from 'js-yaml'
 import {
   startTransition,
   useCallback,

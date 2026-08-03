@@ -46,9 +46,9 @@ jobs:
           run_install: false
 
       - name: Install Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
-          node-version: '24.18.0'
+          node-version: '24.18.1'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -151,7 +151,7 @@ jobs:
       - name: Install Rust Stable
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: '1.96.1'
+          toolchain: '1.97.1'
           targets: ${{ matrix.target }}
 
       - name: Add Rust Target
@@ -180,9 +180,9 @@ jobs:
           run_install: false
 
       - name: Install Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
-          node-version: '24.18.0'
+          node-version: '24.18.1'
           cache: 'pnpm'
 
       - name: Pnpm Cache
@@ -256,7 +256,7 @@ jobs:
       - name: Install Rust Stable
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: '1.96.1'
+          toolchain: '1.97.1'
           targets: ${{ matrix.target }}
 
       - name: Add Rust Target
@@ -279,9 +279,9 @@ jobs:
           run_install: false
 
       - name: Install Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
-          node-version: '24.18.0'
+          node-version: '24.18.1'
           cache: 'pnpm'
 
       - name: Pnpm Cache
@@ -424,9 +424,9 @@ jobs:
           run_install: false
 
       - name: Install Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
-          node-version: '24.18.0'
+          node-version: '24.18.1'
           cache: 'pnpm'
 
       - name: Pnpm Cache
@@ -526,9 +526,9 @@ jobs:
         shell: bash
 
       - name: Install Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
-          node-version: '24.18.0'
+          node-version: '24.18.1'
 
       - uses: pnpm/action-setup@v6.0.9
         name: Install pnpm

@@ -262,7 +262,9 @@ export const ProxyRender = memo(function ProxyRender(props: RenderProps) {
         }}
       >
         <InboxRounded sx={{ fontSize: '2.5em', color: 'inherit' }} />
-        <Typography sx={{ color: 'inherit' }}>No Proxies</Typography>
+        <Typography sx={{ color: 'inherit' }}>
+          {t('proxies.page.empty.noProxies')}
+        </Typography>
       </Box>
     )
   }

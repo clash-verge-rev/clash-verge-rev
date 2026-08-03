@@ -27,6 +27,7 @@ import type { CSSProperties } from 'react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Outlet, useNavigate } from 'react-router'
+import { MihomoWebSocket } from 'tauri-plugin-mihomo-api'
 
 import iconDark from '@/assets/image/icon_dark.svg?react'
 import iconLight from '@/assets/image/icon_light.svg?react'
@@ -35,6 +36,7 @@ import { BaseErrorBoundary } from '@/components/base'
 import { LayoutItem } from '@/components/layout/layout-item'
 import { LayoutTraffic } from '@/components/layout/layout-traffic'
 import { NoticeManager } from '@/components/layout/notice-manager'
+import { ServiceMigrationDialog } from '@/components/layout/service-migration-dialog'
 import { UpdateButton } from '@/components/layout/update-button'
 import {
   WindowControls,
@@ -120,6 +122,24 @@ const Layout = () => {
   const { switchLanguage } = useI18n()
   const navigate = useNavigate()
   const themeReady = useMemo(() => Boolean(theme), [theme])
+
+  // 开发环境下检测 MihomoWebSocket 的所有实例
+  useEffect(() => {
+    let id: number
+    if (import.meta.env.DEV) {
+      id = setInterval(() => {
+        MihomoWebSocket.get_all_instances().then((list) => {
+          console.log('Mihomo ws instances', list)
+        })
+      }, 1000)
+    }
+
+    return () => {
+      if (id) {
+        clearInterval(id)
+      }
+    }
+  }, [])
 
   const [menuUnlocked, setMenuUnlocked] = useState(false)
   const [menuContextPosition, setMenuContextPosition] =
@@ -259,6 +279,7 @@ const Layout = () => {
     <ThemeProvider theme={theme}>
       {/* 左侧底部窗口控制按钮 */}
       <NoticeManager position={verge?.notice_position} />
+      <ServiceMigrationDialog />
       <div
         style={{
           animation: 'fadeIn 0.5s',

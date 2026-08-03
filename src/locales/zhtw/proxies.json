@@ -25,7 +25,8 @@
     },
     "labels": {
       "proxyCount": "節點數量",
-      "delayCheckReset": "測試延遲以取消固定"
+      "delayCheckReset": "測試延遲以取消固定",
+      "nodeCount": "{{count}} 個節點"
     },
     "tooltips": {
       "locate": "目前節點",
@@ -40,6 +41,31 @@
     },
     "placeholders": {
       "delayCheckUrl": "延遲測試網址"
+    },
+    "empty": {
+      "noAvailableGroups": "目前沒有可用的代理群組",
+      "noProxies": "目前沒有代理",
+      "noSubscriptions": {
+        "title": "尚未匯入訂閱",
+        "description": "代理頁沒有可顯示的內容。請先前往「訂閱」頁面匯入並啟用訂閱。"
+      },
+      "inactiveSubscription": {
+        "title": "尚未啟用訂閱",
+        "description": "偵測到已有訂閱，但目前沒有有效訂閱被啟用。請前往「訂閱」頁面選擇並啟用一個訂閱。"
+      },
+      "coreUnavailable": {
+        "title": "核心暫時無法使用",
+        "description": "無法從核心取得代理資訊。請嘗試重新啟動核心；若問題仍然存在，請開啟日誌目錄檢查核心日誌。"
+      },
+      "noProxyInfo": {
+        "title": "未取得代理資訊",
+        "description": "目前沒有可顯示的代理群組或節點。請檢查目前訂閱是否包含有效的代理群組和節點，或嘗試重新啟動核心並查看日誌。"
+      },
+      "actions": {
+        "openProfiles": "前往訂閱",
+        "restartCore": "重新啟動核心",
+        "openLogs": "開啟日誌目錄"
+      }
     },
     "chain": {
       "header": "鏈式代理設定",

@@ -1,17 +1,82 @@
-use super::{CoreManager, RunningMode};
+#[cfg(test)]
+use super::claim_core_readiness_generation;
+use super::{CoreManager, PROFILE_SELECTIONS_PENDING_COMMIT, RunningMode};
 use crate::{
     AsyncHandler,
-    config::{Config, IClashTemp},
-    core::{handle, logger::Logger, manager::CLASH_LOGGER, service},
+    config::Config,
+    core::{handle, logger::Logger, manager::CLASH_LOGGER, proxy_control, service},
     logging,
     utils::dirs,
 };
-use anyhow::Result;
+use anyhow::{Context as _, Result};
 use clash_verge_logging::Type;
 use compact_str::CompactString;
 use log::Level;
 use scopeguard::defer;
+use std::path::Path;
+use tauri_plugin_mihomo::MihomoExt as _;
 use tauri_plugin_shell::ShellExt as _;
+
+const SIDECAR_READINESS_ATTEMPTS: usize = 30;
+
+impl CoreManager {
+    /// A core process is up: put back the node selections the user made.
+    ///
+    /// mihomo restores these itself, from the `cache.db` it keeps in the directory it was started
+    /// against — but only when `profile.store-selected` is on and that file survived, and neither
+    /// is something the app can assume. The setting comes from a merge template a user is free to
+    /// replace, and a service older than the durable runtime generation hands every start a
+    /// directory nothing has ever run in. The app holds the same selections in the profile, so it
+    /// is the one that can say for certain.
+    ///
+    /// Awaited, and deliberately here rather than beside the proxy: the caller enables the system
+    /// proxy as soon as the start returns, and pointing it at a core still on the first entry of
+    /// every group is what this exists to prevent. The wait is bounded — what cannot be put back
+    /// yet keeps being retried in the background — so a core that will not answer delays a start
+    /// instead of blocking it.
+    ///
+    /// Repeat calls supersede each other, so every start path may call this without coordinating.
+    async fn restore_selected_nodes(&self) {
+        if PROFILE_SELECTIONS_PENDING_COMMIT
+            .try_with(|pending| *pending)
+            .unwrap_or(false)
+        {
+            return;
+        }
+        crate::config::profiles::restore_selected_nodes().await;
+    }
+}
+
+const SIDECAR_READINESS_INTERVAL: std::time::Duration = std::time::Duration::from_millis(100);
+const SIDECAR_READINESS_PROBE_TIMEOUT: std::time::Duration = std::time::Duration::from_millis(400);
+
+async fn poll_sidecar_readiness<F, Fut>(
+    max_attempts: usize,
+    retry_delay: std::time::Duration,
+    mut probe: F,
+) -> Result<()>
+where
+    F: FnMut() -> Fut,
+    Fut: std::future::Future<Output = Result<()>>,
+{
+    let mut last_error = None;
+    for attempt in 0..max_attempts {
+        match probe().await {
+            Ok(()) => return Ok(()),
+            Err(error) => last_error = Some(error),
+        }
+        if attempt + 1 < max_attempts {
+            tokio::time::sleep(retry_delay).await;
+        }
+    }
+    Err(last_error
+        .unwrap_or_else(|| anyhow::anyhow!("sidecar readiness was configured with no attempts"))
+        .context("Mihomo API did not become ready"))
+}
+
+fn should_clear_terminated_sidecar(running_mode: &RunningMode, current_pid: Option<u32>, terminated_pid: u32) -> bool {
+    matches!(running_mode, RunningMode::Sidecar) && current_pid == Some(terminated_pid)
+}
 
 #[cfg(target_os = "windows")]
 use {
@@ -39,33 +104,50 @@ impl CoreManager {
 
     pub(super) async fn start_core_by_sidecar(&self) -> Result<()> {
         logging!(info, Type::Core, "Starting core in sidecar mode");
+        self.core_stopped();
 
+        let sidecar_ipc = dirs::sidecar_ipc_path()?;
+        handle::Handle::app_handle()
+            .mihomo()
+            .update_socket_path(dirs::path_to_str(&sidecar_ipc)?.to_owned())?;
         let config_file = Config::generate_file(crate::config::ConfigType::Run).await?;
         let app_handle = handle::Handle::app_handle();
         let clash_core = Config::verge().await.latest_arc().get_valid_clash_core();
         let config_dir = dirs::app_home_dir()?;
 
         #[cfg(unix)]
-        let previous_mask = unsafe { tauri_plugin_clash_verge_sysinfo::libc::umask(0o007) };
-        let (mut rx, child) = app_handle
+        let previous_mask = unsafe { tauri_plugin_clash_verge_sysinfo::libc::umask(0o077) };
+        let command = app_handle
             .shell()
-            .sidecar(clash_core.as_str())?
-            .args([
-                "-d",
-                dirs::path_to_str(&config_dir)?,
-                "-f",
-                dirs::path_to_str(&config_file)?,
-                if cfg!(windows) {
-                    "-ext-ctl-pipe"
-                } else {
-                    "-ext-ctl-unix"
-                },
-                &IClashTemp::guard_external_controller_ipc(),
-            ])
-            .spawn()?;
+            .sidecar(clash_core.as_str())
+            .map_err(|error| anyhow::anyhow!("failed to build sidecar command for core {clash_core:?}: {error:#}"))?;
+        let command = command.args([
+            "-d",
+            dirs::path_to_str(&config_dir)?,
+            "-f",
+            dirs::path_to_str(&config_file)?,
+            if cfg!(windows) {
+                "-ext-ctl-pipe"
+            } else {
+                "-ext-ctl-unix"
+            },
+            dirs::path_to_str(&sidecar_ipc)?,
+        ]);
+        #[cfg(windows)]
+        let command = command.env(
+            "LISTEN_NAMEDPIPE_SDDL",
+            crate::core::owner_identity::current_user_pipe_sddl()?,
+        );
+        let (mut rx, child) = command.spawn().map_err(|error| {
+            anyhow::anyhow!(
+                "failed to start sidecar core {clash_core:?} with config {} and data directory {}: {error:#}",
+                config_file.display(),
+                config_dir.display()
+            )
+        })?;
         #[cfg(target_os = "windows")]
-        {
-            let job = match create_and_assign_sidecar_job(child.pid()) {
+        let job = {
+            match create_and_assign_sidecar_job(child.pid()) {
                 Ok(job) => job,
                 Err(job_error) => {
                     let pid = child.pid();
@@ -81,9 +163,8 @@ impl CoreManager {
                     logging!(error, Type::Core, "Failed to start sidecar: {error:#}");
                     return Err(error);
                 }
-            };
-            self.set_job_handle(Some(job));
-        }
+            }
+        };
 
         #[cfg(unix)]
         unsafe {
@@ -93,10 +174,34 @@ impl CoreManager {
         let pid = child.pid();
         logging!(trace, Type::Core, "Sidecar started with PID: {}", pid);
 
-        self.set_running_child_sidecar(child);
-        self.set_running_mode(RunningMode::Sidecar);
+        let readiness = poll_sidecar_readiness(SIDECAR_READINESS_ATTEMPTS, SIDECAR_READINESS_INTERVAL, || async {
+            tokio::time::timeout(SIDECAR_READINESS_PROBE_TIMEOUT, async {
+                handle::Handle::mihomo().get_version().await
+            })
+            .await
+            .context("Mihomo readiness probe timed out")??;
+            Ok(())
+        })
+        .await;
+        if let Err(readiness_error) = readiness {
+            proxy_control::stop_guard().await;
+            self.core_stopped();
+            return match child.kill() {
+                Ok(()) => Err(readiness_error),
+                Err(kill_error) => Err(anyhow::anyhow!(
+                    "{readiness_error:#}; failed to terminate unready sidecar PID {pid}: {kill_error:#}"
+                )),
+            };
+        }
 
-        AsyncHandler::spawn(|| async move {
+        #[cfg(target_os = "windows")]
+        self.set_job_handle(Some(job));
+        self.set_running_child_sidecar(child);
+        let core_readiness_generation = self.mark_core_ready();
+        self.core_started(RunningMode::Sidecar);
+        self.restore_selected_nodes().await;
+
+        AsyncHandler::spawn(move || async move {
             while let Some(event) = rx.recv().await {
                 match event {
                     tauri_plugin_shell::process::CommandEvent::Stdout(line)
@@ -106,6 +211,8 @@ impl CoreManager {
                         CLASH_LOGGER.append_log(message).await;
                     }
                     tauri_plugin_shell::process::CommandEvent::Terminated(term) => {
+                        let manager = Self::global();
+                        let _ = manager.invalidate_core_readiness_if(core_readiness_generation);
                         let message = if let Some(code) = term.code {
                             CompactString::from(format!("Process terminated with code: {}", code))
                         } else if let Some(signal) = term.signal {
@@ -115,6 +222,7 @@ impl CoreManager {
                         };
                         Logger::global().writer_sidecar_log(Level::Info, &message);
                         CLASH_LOGGER.clear_logs().await;
+                        manager.clear_terminated_sidecar(pid).await;
                         break;
                     }
                     _ => {}
@@ -125,10 +233,12 @@ impl CoreManager {
         Ok(())
     }
 
-    pub(super) fn stop_core_by_sidecar(&self) {
+    /// Terminates the sidecar after its caller has successfully cleared the
+    /// system proxy.
+    pub(super) fn stop_core_by_sidecar_unprepared(&self) {
         logging!(info, Type::Core, "Stopping sidecar");
         defer! {
-            self.set_running_mode(RunningMode::NotRunning);
+            self.core_stopped();
         }
         if let Some(child) = self.take_child_sidecar() {
             let pid = child.pid();
@@ -159,17 +269,28 @@ impl CoreManager {
 
     pub(super) async fn start_core_by_service(&self) -> Result<()> {
         logging!(info, Type::Core, "Starting core in service mode");
+        self.core_starting();
+        let service_ipc = dirs::ipc_path()?;
         let config_file = Config::generate_file(crate::config::ConfigType::Run).await?;
+        handle::Handle::app_handle()
+            .mihomo()
+            .update_socket_path(dirs::path_to_str(&service_ipc)?.to_owned())?;
 
+        self.start_core_by_service_with_config(&config_file).await
+    }
+
+    pub(super) async fn start_core_by_service_with_config(&self, config_file: &Path) -> Result<()> {
         // 交接时等待 sidecar 释放 ext-controller 通道。
         #[cfg(target_os = "windows")]
         {
             use crate::constants::timing;
             let mut last_err = None;
             for attempt in 0..timing::SERVICE_START_RETRIES {
-                match service::run_core_by_service(&config_file).await {
+                match service::run_core_by_service(config_file).await {
                     Ok(()) => {
-                        self.set_running_mode(RunningMode::Service);
+                        self.mark_core_ready();
+                        self.core_started(RunningMode::Service);
+                        self.restore_selected_nodes().await;
                         return Ok(());
                     }
                     Err(e) => {
@@ -191,19 +312,105 @@ impl CoreManager {
 
         #[cfg(not(target_os = "windows"))]
         {
-            service::run_core_by_service(&config_file).await?;
-            self.set_running_mode(RunningMode::Service);
+            service::run_core_by_service(config_file).await?;
+            self.mark_core_ready();
+            self.core_started(RunningMode::Service);
+            self.restore_selected_nodes().await;
             Ok(())
         }
     }
 
     pub(super) async fn stop_core_by_service(&self) -> Result<()> {
         logging!(info, Type::Core, "Stopping service");
-        defer! {
-            self.set_running_mode(RunningMode::NotRunning);
-        }
         service::stop_core_by_service().await?;
+        self.core_stopped();
         Ok(())
+    }
+
+    async fn clear_terminated_sidecar(&self, terminated_pid: u32) {
+        let _life = self.lifecycle_lock.lock().await;
+        if !should_clear_terminated_sidecar(&self.get_running_mode(), self.get_running_sidecar_pid(), terminated_pid) {
+            return;
+        }
+
+        let _ = self.take_child_sidecar();
+        #[cfg(target_os = "windows")]
+        self.set_job_handle(None);
+        proxy_control::stop_guard().await;
+        self.core_stopped();
+    }
+}
+
+#[cfg(test)]
+mod readiness_tests {
+    use super::{claim_core_readiness_generation, poll_sidecar_readiness, should_clear_terminated_sidecar};
+    use crate::core::manager::{CoreManager, RunningMode};
+    use std::{
+        sync::{
+            Arc,
+            atomic::{AtomicU64, AtomicUsize, Ordering},
+        },
+        time::Duration,
+    };
+
+    #[tokio::test]
+    async fn sidecar_readiness_poll_is_bounded_and_accepts_a_real_api_response() -> anyhow::Result<()> {
+        let attempts = Arc::new(AtomicUsize::new(0));
+        let probe_attempts = Arc::clone(&attempts);
+        poll_sidecar_readiness(3, Duration::ZERO, move || {
+            let attempt = probe_attempts.fetch_add(1, Ordering::SeqCst) + 1;
+            async move {
+                if attempt == 3 {
+                    Ok(())
+                } else {
+                    Err(anyhow::anyhow!("not ready"))
+                }
+            }
+        })
+        .await?;
+        assert_eq!(attempts.load(Ordering::SeqCst), 3);
+
+        let failed_attempts = Arc::new(AtomicUsize::new(0));
+        let probe_attempts = Arc::clone(&failed_attempts);
+        assert!(
+            poll_sidecar_readiness(3, Duration::ZERO, move || {
+                probe_attempts.fetch_add(1, Ordering::SeqCst);
+                async { Err(anyhow::anyhow!("still unavailable")) }
+            })
+            .await
+            .is_err()
+        );
+        assert_eq!(failed_attempts.load(Ordering::SeqCst), 3);
+        Ok(())
+    }
+
+    #[test]
+    fn only_the_current_sidecar_termination_clears_local_state() {
+        assert!(should_clear_terminated_sidecar(&RunningMode::Sidecar, Some(42), 42));
+        assert!(!should_clear_terminated_sidecar(&RunningMode::Sidecar, Some(43), 42));
+        assert!(!should_clear_terminated_sidecar(&RunningMode::Service, Some(42), 42));
+        assert!(!should_clear_terminated_sidecar(&RunningMode::NotRunning, None, 42));
+    }
+
+    #[test]
+    fn core_readiness_generation_can_only_be_claimed_once() {
+        let generation = AtomicU64::new(7);
+
+        assert!(claim_core_readiness_generation(&generation, 7));
+        assert_eq!(generation.load(Ordering::Acquire), 8);
+        assert!(!claim_core_readiness_generation(&generation, 7));
+    }
+
+    #[test]
+    fn invalidated_core_readiness_cannot_be_recaptured_from_stale_mode() {
+        let manager = CoreManager::isolated();
+        manager.mark_core_ready();
+        manager.core_started(RunningMode::Service);
+
+        manager.invalidate_core_readiness();
+
+        assert_eq!(*manager.get_running_mode(), RunningMode::Service);
+        assert_eq!(manager.current_core_readiness_generation(), None);
     }
 }
 

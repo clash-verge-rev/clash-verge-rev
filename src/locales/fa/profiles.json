@@ -28,7 +28,16 @@
     "feedback": {
       "errors": {
         "invalidUrl": "Invalid profile URL. Please enter a URL starting with http:// or https://",
-        "onlyYaml": "فقط فایل‌های YAML پشتیبانی می‌شوند"
+        "onlyYaml": "فقط فایل‌های YAML پشتیبانی می‌شوند",
+        "createFailed": "ایجاد پروفایل ناموفق بود",
+        "deleteFailed": "حذف پروفایل ناموفق بود",
+        "enhanceFailed": "فعال‌سازی مجدد پروفایل‌ها ناموفق بود",
+        "importFailed": "وارد کردن پروفایل ناموفق بود",
+        "openFailed": "باز کردن پروفایل ناموفق بود",
+        "readFailed": "خواندن پروفایل ناموفق بود",
+        "reorderFailed": "تغییر ترتیب پروفایل‌ها ناموفق بود",
+        "switchFailed": "تعویض پروفایل ناموفق بود",
+        "updateFailed": "به‌روزرسانی پروفایل ناموفق بود"
       },
       "notifications": {
         "importRetry": "Import failed, retrying with Clash proxy...",
@@ -43,6 +52,9 @@
       "notices": {
         "forceRefreshCompleted": "Force refresh completed",
         "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
+      },
+      "tooltips": {
+        "forceRefreshStaleData": "داده‌های پروفایل در دسترس نیست؛ برای به‌روزرسانی اجباری کلیک کنید"
       }
     },
     "title": "پروفایل‌ها"
@@ -105,12 +117,23 @@
         "type": "نوع",
         "description": "توضیحات",
         "subscriptionUrl": "آدرس اشتراک",
+        "userAgent": "عامل کاربر",
         "httpTimeout": "HTTP Request Timeout",
         "updateInterval": "فاصله زمانی به‌روزرسانی",
         "useSystemProxy": "استفاده از پراکسی سیستم",
         "useClashProxy": "استفاده از پراکسی Clash",
         "acceptInvalidCerts": "پذیرش گواهی‌نامه‌های نامعتبر (خطرناک)",
         "allowAutoUpdate": "Allow Auto Update"
+      },
+      "types": {
+        "remote": "از راه دور",
+        "local": "محلی"
+      },
+      "errors": {
+        "typeRequired": "نوع پروفایل را انتخاب کنید",
+        "urlRequired": "نشانی اشتراک را وارد کنید",
+        "uidMissing": "شناسه پروفایل موجود نیست",
+        "saveFailed": "ذخیره پروفایل ناموفق بود"
       },
       "feedback": {
         "notifications": {

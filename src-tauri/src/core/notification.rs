@@ -9,11 +9,13 @@ pub enum FrontendEvent<'a> {
     RefreshClash,
     RefreshVerge,
     RefreshProfiles,
+    RefreshProxyConfig,
     NoticeMessage { status: &'a str, message: String },
     ProfileChanged { current_profile_id: &'a String },
     TimerUpdated { profile_index: &'a String },
     ProfileUpdateStarted { uid: &'a String },
     ProfileUpdateCompleted { uid: &'a String },
+    RunStateChanged { state: serde_json::Value },
 }
 
 #[derive(Debug)]
@@ -31,6 +33,7 @@ impl NotificationSystem {
             FrontendEvent::RefreshClash => ("verge://refresh-clash-config", Ok(json!("yes"))),
             FrontendEvent::RefreshVerge => ("verge://refresh-verge-config", Ok(json!("yes"))),
             FrontendEvent::RefreshProfiles => ("verge://refresh-profiles", Ok(json!("yes"))),
+            FrontendEvent::RefreshProxyConfig => ("verge://refresh-proxy-config", Ok(serde_json::Value::Null)),
             FrontendEvent::NoticeMessage { status, message } => {
                 ("verge://notice-message", serde_json::to_value((status, message)))
             }
@@ -38,6 +41,7 @@ impl NotificationSystem {
             FrontendEvent::TimerUpdated { profile_index } => ("verge://timer-updated", Ok(json!(profile_index))),
             FrontendEvent::ProfileUpdateStarted { uid } => ("profile-update-started", Ok(json!({ "uid": uid }))),
             FrontendEvent::ProfileUpdateCompleted { uid } => ("profile-update-completed", Ok(json!({ "uid": uid }))),
+            FrontendEvent::RunStateChanged { state } => ("verge://run-state-changed", Ok(state)),
         }
     }
 
