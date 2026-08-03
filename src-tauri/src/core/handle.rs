@@ -3,7 +3,6 @@ use smartstring::alias::String;
 use std::sync::atomic::{AtomicBool, Ordering};
 use tauri::AppHandle;
 use tauri_plugin_mihomo::{Mihomo, MihomoExt as _};
-use tokio::sync::RwLockReadGuard;
 
 use super::notification::{FrontendEvent, NotificationSystem};
 
@@ -32,8 +31,8 @@ impl Handle {
         APP_HANDLE.get().expect("App handle not initialized")
     }
 
-    pub async fn mihomo() -> RwLockReadGuard<'static, Mihomo> {
-        Self::app_handle().mihomo().read().await
+    pub fn mihomo() -> &'static Mihomo {
+        Self::app_handle().mihomo()
     }
 
     pub fn refresh_clash() {
@@ -46,6 +45,10 @@ impl Handle {
 
     pub fn refresh_profiles() {
         Self::send_event(FrontendEvent::RefreshProfiles);
+    }
+
+    pub fn refresh_proxy_config() {
+        Self::send_event(FrontendEvent::RefreshProxyConfig);
     }
 
     /// Push a Run State snapshot to the frontend.

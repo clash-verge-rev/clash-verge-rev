@@ -24,6 +24,10 @@ use std::os::windows::io::OwnedHandle;
 
 pub(crate) static CLASH_LOGGER: Lazy<Arc<AsyncLogger>> = Lazy::new(|| Arc::new(AsyncLogger::new()));
 
+tokio::task_local! {
+    static PROFILE_SELECTIONS_PENDING_COMMIT: bool;
+}
+
 const CORE_READINESS_ACTIVE_BIT: u64 = 1;
 const CORE_READINESS_GENERATION_STEP: u64 = 1 << 1;
 
@@ -170,8 +174,16 @@ impl CoreManager {
     }
 
     /// A start attempt is under way and the Core is not serving yet.
+    ///
+    /// Must be paired with [`Self::core_start_settled`] on every path out, including the ones
+    /// where the start never happened.
     pub fn core_starting(&self) {
         self.run_state.core_starting();
+    }
+
+    /// The start attempt is over: PAC goes back to following the Running Mode.
+    pub fn core_start_settled(&self) {
+        self.run_state.core_start_settled();
     }
 
     pub fn set_running_child_sidecar(&self, child: CommandChild) {

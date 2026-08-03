@@ -45,17 +45,24 @@ type VergeEventHandlers = {
  * Registration is asynchronous, so a subscription can resolve after the caller has already
  * torn down; that is tracked here rather than at each call site, where it was implemented
  * four different ways and omitted in one of them.
+ *
+ * `onSubscribed` runs once every listener is live. Anything whose state arrives only by event
+ * needs it: between the first read and the listener being registered there is a gap, and a
+ * transition landing in it is not queued anywhere — it is simply missed, and the next event is
+ * whenever the backend happens to move again. Re-reading at that point closes the gap without
+ * going back to polling for it.
  */
 export const subscribeVergeEvents = (
   handlers: VergeEventHandlers,
+  onSubscribed?: () => void,
 ): (() => void) => {
   let disposed = false
   const unlisteners: UnlistenFn[] = []
 
-  for (const [name, handler] of Object.entries(handlers)) {
-    if (!handler) continue
+  const registrations = Object.entries(handlers).map(([name, handler]) => {
+    if (!handler) return Promise.resolve()
 
-    listen(name, ({ payload }) => {
+    return listen(name, ({ payload }) => {
       ;(handler as (payload: unknown) => void)(payload)
     })
       .then((unlisten) => {
@@ -69,6 +76,13 @@ export const subscribeVergeEvents = (
       .catch((error) => {
         console.error(`[events] failed to subscribe to ${name}:`, error)
       })
+  })
+
+  if (onSubscribed) {
+    void Promise.all(registrations).then(() => {
+      if (disposed) return
+      onSubscribed()
+    })
   }
 
   return () => {

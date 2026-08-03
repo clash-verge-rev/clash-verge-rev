@@ -130,6 +130,7 @@ pub async fn restore_webdav_backup(filename: String) -> Result<()> {
     let value = backup_storage_path.clone();
     let file = AsyncHandler::spawn_blocking(move || std::fs::File::open(&value)).await??;
     let mut zip = zip::ZipArchive::new(file)?;
+    let _profile_write = crate::config::profiles::PROFILE_WRITE_LOCK.lock().await;
     zip.extract(app_home_dir()?)?;
     let res = finalize_restored_verge_config(webdav_url, webdav_username, webdav_password).await;
     // Finally remove the temp file (attempt cleanup even if finalize fails)
@@ -313,6 +314,7 @@ pub async fn restore_local_backup(filename: String) -> Result<()> {
 
     let file = AsyncHandler::spawn_blocking(move || std::fs::File::open(&target_path)).await??;
     let mut zip = zip::ZipArchive::new(file)?;
+    let _profile_write = crate::config::profiles::PROFILE_WRITE_LOCK.lock().await;
     zip.extract(app_home_dir()?)?;
     finalize_restored_verge_config(webdav_url, webdav_username, webdav_password).await?;
     Ok(())

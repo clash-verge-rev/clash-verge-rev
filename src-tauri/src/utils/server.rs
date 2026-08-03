@@ -179,7 +179,10 @@ fn start_embedded_server(listener: tokio::net::TcpListener, token: String) {
     let (shutdown_tx, shutdown_rx) = oneshot::channel();
     let _ = SHUTDOWN_SENDER.set(Mutex::new(Some(shutdown_tx)));
 
+    #[cfg(feature = "verge-dev")]
     let auth = instance_auth(token.clone());
+    #[cfg(not(feature = "verge-dev"))]
+    let auth = instance_auth(token);
 
     let visible = warp::path!("commands" / "visible").and_then(|| async {
         if !COMMANDS_READY.load(Ordering::Acquire) {
@@ -212,7 +215,9 @@ fn start_embedded_server(listener: tokio::net::TcpListener, token: String) {
         let verge_data = verge_config.data_arc();
         let pac_content = verge_data.pac_file_content.as_deref().unwrap_or(DEFAULT_PAC);
         // Served per browser request, so this stays a configuration read rather than a
-        // round-trip to the Core. PAC is closed while the Core is between ports anyway.
+        // round-trip to the Core. It reads the draft layer, which is only correct because
+        // whoever stages a listener port closes this endpoint across the change — see
+        // `MixedPort::desired`. Reaching here at all means the Core is serving.
         let pac_port = MixedPort::desired().await;
         let processed_content = pac_content.replace("%mixed-port%", &format!("{pac_port}"));
         Ok::<_, warp::Rejection>(
@@ -409,18 +414,18 @@ fn write_instance_record(path: &Path, record: &InstanceRecord) -> Result<()> {
         file.set_permissions(std::fs::Permissions::from_mode(0o600))?;
     }
     drop(file);
-    replace_file_atomic(&temporary, path)?;
+    replace_file_atomic(&temporary, path).context("failed to replace singleton record")?;
     Ok(())
 }
 
 #[cfg(not(windows))]
-fn replace_file_atomic(source: &Path, destination: &Path) -> Result<()> {
+pub(crate) fn replace_file_atomic(source: &Path, destination: &Path) -> Result<()> {
     std::fs::rename(source, destination)?;
     Ok(())
 }
 
 #[cfg(windows)]
-fn replace_file_atomic(source: &Path, destination: &Path) -> Result<()> {
+pub(crate) fn replace_file_atomic(source: &Path, destination: &Path) -> Result<()> {
     use std::os::windows::ffi::OsStrExt as _;
     use windows_sys::Win32::Storage::FileSystem::{MOVEFILE_REPLACE_EXISTING, MOVEFILE_WRITE_THROUGH, MoveFileExW};
 
@@ -436,7 +441,7 @@ fn replace_file_atomic(source: &Path, destination: &Path) -> Result<()> {
         )
     } == 0
     {
-        return Err(std::io::Error::last_os_error()).context("failed to replace singleton record");
+        return Err(std::io::Error::last_os_error().into());
     }
     Ok(())
 }

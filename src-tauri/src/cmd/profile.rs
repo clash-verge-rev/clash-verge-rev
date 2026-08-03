@@ -6,7 +6,7 @@ use crate::{
     config::{
         Config, IProfiles, PrfItem, PrfOption,
         profiles::{
-            profiles_append_item_with_filedata_safe, profiles_delete_item_safe, profiles_patch_item_safe,
+            PROFILE_WRITE_LOCK, profiles_append_item_with_filedata_safe, profiles_patch_item_safe,
             profiles_reorder_safe, profiles_save_file_safe,
         },
         profiles_append_item_safe,
@@ -153,13 +153,44 @@ pub async fn update_profile(index: String, option: Option<PrfOption>) -> CmdResu
 /// 删除配置文件
 #[tauri::command]
 pub async fn delete_profile(index: String) -> CmdResult {
-    // 使用Send-safe helper函数
-    let should_update = profiles_delete_item_safe(&index)
+    let profile_write_guard = PROFILE_WRITE_LOCK.lock().await;
+
+    let profiles = Config::profiles().await;
+    let result = profiles
+        .with_data_modify(|mut candidate| async move {
+            let original = candidate.clone();
+            let (should_update, plan) = candidate.plan_delete_item(&index)?;
+            let guard = if should_update {
+                match CoreManager::global()
+                    .update_config_forced_with_profiles(&candidate, &original)
+                    .await?
+                {
+                    Ok(guard) => Some(guard),
+                    Err(outcome) => return Ok((original, Err(outcome))),
+                }
+            } else {
+                candidate.save_file().await?;
+                None
+            };
+            let current = candidate.current.clone();
+            plan.cleanup().await;
+            Ok((candidate, Ok((should_update, current, guard))))
+        })
         .await
         .with_error_code("PROFILE_DELETE_FAILED")?;
-    profiles_save_file_safe()
-        .await
-        .with_error_code("PROFILE_DELETE_FAILED")?;
+    let (should_update, current, config_update_guard) = match result {
+        Ok(result) => result,
+        Err(outcome) => {
+            handle_validation_notice(&outcome, ValidationNoticeTarget::Runtime, "运行时配置");
+            return Err(coded_error("PROFILE_DELETE_FAILED", outcome));
+        }
+    };
+    if should_update {
+        logging_error!(Type::Config, profiles::activate_selected_nodes());
+    }
+    drop(config_update_guard);
+    drop(profile_write_guard);
+
     if let Err(e) = Tray::global().update_tooltip().await {
         logging!(warn, Type::Cmd, "Warning: 异步更新托盘提示失败: {e}");
     }
@@ -168,28 +199,13 @@ pub async fn delete_profile(index: String) -> CmdResult {
         logging!(warn, Type::Cmd, "Warning: 异步更新托盘菜单失败: {e}");
     }
     if should_update {
-        match CoreManager::global().update_config_forced().await {
-            Ok(outcome) if outcome.is_valid() => {
-                handle::Handle::refresh_clash();
-                // 发送配置变更通知
-                logging!(info, Type::Cmd, "[删除订阅] 发送配置变更通知: {}", index);
-                handle::Handle::notify_profile_changed(&index);
-            }
-            Ok(outcome) => {
-                logging!(warn, Type::Cmd, "删除订阅后更新配置失败: {}", outcome);
-                handle_validation_notice(&outcome, ValidationNoticeTarget::Runtime, "运行时配置");
-                return Err(coded_error("PROFILE_DELETE_FAILED", outcome));
-            }
-            Err(e) => {
-                logging!(error, Type::Cmd, "{}", e);
-                return Err(coded_error("PROFILE_DELETE_FAILED", e));
-            }
+        handle::Handle::refresh_clash();
+        if let Some(current) = current.as_ref() {
+            logging!(info, Type::Cmd, "[删除订阅] 发送配置变更通知: {}", current);
+            handle::Handle::notify_profile_changed(current);
         }
     }
-    Timer::global()
-        .refresh()
-        .await
-        .with_error_code("PROFILE_DELETE_FAILED")?;
+    logging_error!(Type::Timer, Timer::global().refresh().await);
     Ok(())
 }
 
@@ -316,6 +332,7 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<ValidationO
         logging!(info, Type::Cmd, "当前正在切换配置，放弃请求");
         return Ok(ValidationOutcome::Busy);
     }
+    let _profile_write_guard = PROFILE_WRITE_LOCK.lock().await;
 
     let target_profile = profiles.current.as_ref();
 
@@ -361,9 +378,17 @@ pub async fn patch_profile(index: String, profile: PrfItem) -> CmdResult {
         false
     };
 
+    // A selection written from the UI or the chain proxy is newer than anything a restore still
+    // in flight captured; without this it would be pushed back to the older node moments later.
+    let records_a_selection = profile.selected.is_some();
+
     profiles_patch_item_safe(&index, &profile)
         .await
         .with_error_code("PROFILE_UPDATE_FAILED")?;
+
+    if records_a_selection {
+        profiles::supersede_selected_activation();
+    }
 
     // 如果更新间隔或允许自动更新变更，异步刷新定时器
     if should_refresh_timer {

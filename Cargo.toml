@@ -56,9 +56,9 @@ tauri-plugin-clash-verge-sysinfo = { path = "crates/tauri-plugin-clash-verge-sys
 tauri = { version = "2.11.5" }
 tauri-plugin-clipboard-manager = "2.3.2"
 parking_lot = { version = "0.12.5", features = ["hardware-lock-elision"] }
-anyhow = "1.0.103"
+anyhow = "1.0.104"
 criterion = { version = "0.8.2", features = ["async_tokio"] }
-tokio = { version = "1.52.3", features = [
+tokio = { version = "1.53.1", features = [
   "rt-multi-thread",
   "macros",
   "time",
@@ -68,13 +68,13 @@ flexi_logger = "0.31.9"
 log = "0.4.33"
 
 smartstring = { version = "1.0.1" }
-compact_str = { version = "0.9.1", features = ["serde"] }
+compact_str = { version = "0.10.0", features = ["serde"] }
 
-serde = { version = "1.0.228" }
-serde_json = { version = "1.0.150" }
+serde = { version = "1.0.229" }
+serde_json = { version = "1.0.151" }
 serde_yaml_ng = { version = "0.10.0" }
-bitflags = { version = "2.13.0" }
-socket2 = "0.6.4"
+bitflags = { version = "2.13.1" }
+socket2 = "0.6.5"
 
 # *** For Windows platform only ***
 deelevate = "0.2.0"

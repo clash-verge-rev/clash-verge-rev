@@ -4,7 +4,7 @@ use crate::feat;
 use crate::utils::{dirs, yaml_emitter};
 use crate::{
     cmd::StringifyErr as _,
-    config::{ClashInfo, Config},
+    config::{ClashInfo, Config, profiles::profiles_save_file_safe},
     constants,
     core::{
         CoreManager, handle,
@@ -65,7 +65,7 @@ pub async fn change_clash_core(clash_core: String) -> CmdResult<Option<String>> 
 
     match CoreManager::global().change_core(&clash_core).await {
         Ok(_) => {
-            logging_error!(Type::Core, Config::profiles().await.data_arc().save_file().await);
+            logging_error!(Type::Core, profiles_save_file_safe().await);
 
             // 切换内核后重启内核
             match CoreManager::global().restart_core().await {
@@ -108,7 +108,7 @@ pub async fn start_core() -> CmdResult {
 /// 关闭核心
 #[tauri::command]
 pub async fn stop_core() -> CmdResult {
-    logging_error!(Type::Core, Config::profiles().await.data_arc().save_file().await);
+    logging_error!(Type::Core, profiles_save_file_safe().await);
     let result = CoreManager::global()
         .stop_core()
         .await
@@ -122,7 +122,7 @@ pub async fn stop_core() -> CmdResult {
 /// 重启核心
 #[tauri::command]
 pub async fn restart_core() -> CmdResult {
-    logging_error!(Type::Core, Config::profiles().await.data_arc().save_file().await);
+    logging_error!(Type::Core, profiles_save_file_safe().await);
     let result = CoreManager::global()
         .restart_core()
         .await

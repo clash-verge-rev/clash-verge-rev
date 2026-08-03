@@ -10,6 +10,7 @@ use crate::{
     },
 };
 use anyhow::{Context as _, Result, bail};
+use clash_verge_draft::Draft;
 use clash_verge_logging::{Type, logging};
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
@@ -22,10 +23,12 @@ use std::{
         LazyLock,
         atomic::{AtomicU64, Ordering},
     },
-    time::Duration,
+    time::{Duration, Instant},
 };
 use tauri_plugin_mihomo::models::{Proxies, ProxyType};
 use tokio::{fs, task::JoinHandle};
+
+pub(crate) static PROFILE_WRITE_LOCK: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
 
 /// Regex to check profile file names, eg.
 /// R12345678.yaml (remote)
@@ -47,6 +50,21 @@ static ACTIVATE_SELECTED_GENERATION: AtomicU64 = AtomicU64::new(0);
 // lock acquisition, connection-pool waiting, and local-socket connection establishment.
 const MIHOMO_OPERATION_TIMEOUT: Duration = Duration::from_secs(10);
 const SELECTED_NODES_RECHECK_DELAY: Duration = Duration::from_secs(1);
+/// How long a restore keeps trying to put back selections the core has not loaded yet.
+///
+/// A provider-backed group is present but empty until its provider finishes loading, which on a
+/// cold start is exactly when restoring runs. Bounded rather than indefinite because a record
+/// naming a node the profile genuinely no longer has looks identical from here, and would
+/// otherwise be retried for the life of the process.
+const SELECTED_NODES_SETTLE_DEADLINE: Duration = Duration::from_secs(30);
+/// How often a restore looks again while waiting for those groups.
+const SELECTED_NODES_SETTLE_INTERVAL: Duration = Duration::from_secs(1);
+/// How long a start waits for the selections that *can* be put back before carrying on.
+///
+/// Covers a healthy core answering one query and a handful of selects. Past that the start
+/// proceeds: the remaining groups need the core to finish loading, which is not something a
+/// start can usefully wait for.
+const SELECTED_NODES_FIRST_PASS_BUDGET: Duration = Duration::from_secs(3);
 
 /// Define the `profiles.yaml` schema
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
@@ -70,6 +88,23 @@ pub struct CleanupResult {
     pub total_files: usize,
     pub deleted_files: usize,
     pub failed_deletions: usize,
+}
+
+pub(crate) struct ProfileDeletePlan {
+    files: Vec<String>,
+}
+
+impl ProfileDeletePlan {
+    pub(crate) async fn cleanup(self) {
+        let Ok(dir) = dirs::app_profiles_dir() else {
+            return;
+        };
+        for file in self.files {
+            if let Err(error) = dir.join(file.as_str()).remove_if_exists().await {
+                logging!(warn, Type::Config, "清理已删除订阅文件失败: {file} - {error}");
+            }
+        }
+    }
 }
 
 macro_rules! patch {
@@ -114,7 +149,7 @@ impl IProfiles {
     }
 
     pub async fn save_file(&self) -> Result<()> {
-        help::save_yaml(&dirs::profiles_path()?, self, Some("# Profiles Config for Clash Verge")).await
+        help::save_yaml_atomic(&dirs::profiles_path()?, self, Some("# Profiles Config for Clash Verge")).await
     }
 
     /// 只修改current，valid和chain
@@ -315,40 +350,32 @@ impl IProfiles {
         self.save_file().await
     }
 
-    /// delete item
-    /// if delete the current then return true
-    pub async fn delete_item(&mut self, uid: &String) -> Result<bool> {
-        let current = self.current.as_ref().unwrap_or(uid);
-        let current = current.clone();
-        let delete_uids = {
-            let item = self.get_item(uid)?;
-            let option = item.option.as_ref();
-            option.map_or(Vec::new(), |op| {
-                [
-                    op.merge.clone(),
-                    op.script.clone(),
-                    op.rules.clone(),
-                    op.proxies.clone(),
-                    op.groups.clone(),
-                ]
-                .into_iter()
-                .collect::<Vec<_>>()
-            })
-        };
+    pub(crate) fn plan_delete_item(&mut self, uid: &String) -> Result<(bool, ProfileDeletePlan)> {
+        let current = self.current.as_ref().unwrap_or(uid).clone();
+        let delete_uids = self.get_item(uid)?.option.as_ref().map_or_else(Vec::new, |op| {
+            [
+                op.merge.clone(),
+                op.script.clone(),
+                op.rules.clone(),
+                op.proxies.clone(),
+                op.groups.clone(),
+            ]
+            .into_iter()
+            .collect::<Vec<_>>()
+        });
         let mut items = self.items.take().unwrap_or_default();
+        let mut files = Vec::new();
 
-        // remove the main item (if exists) and delete its file
         if let Some(file) = Self::take_item_file_by_uid(&mut items, Some(uid.as_str())) {
-            let _ = dirs::app_profiles_dir()?.join(file.as_str()).remove_if_exists().await;
+            files.push(file);
         }
 
         for delete_uid in delete_uids {
             if let Some(file) = Self::take_item_file_by_uid(&mut items, delete_uid.as_deref()) {
-                let _ = dirs::app_profiles_dir()?.join(file.as_str()).remove_if_exists().await;
+                files.push(file);
             }
         }
 
-        // delete the original uid
         if current == *uid {
             self.current = None;
             for item in items.iter() {
@@ -360,8 +387,7 @@ impl IProfiles {
         }
 
         self.items = Some(items);
-        self.save_file().await?;
-        Ok(current == *uid)
+        Ok((current == *uid, ProfileDeletePlan { files }))
     }
 
     /// 获取current指向的订阅内容
@@ -419,8 +445,24 @@ impl IProfiles {
     /// 以 app 中的 profile 列表为准，删除不再需要的文件
     pub async fn cleanup_orphaned_files(&self) -> Result<()> {
         let profiles_dir = dirs::app_profiles_dir()?;
+        self.cleanup_orphaned_files_in(&profiles_dir).await
+    }
 
+    pub(super) async fn cleanup_orphaned_files_in(&self, profiles_dir: &Path) -> Result<()> {
         if !profiles_dir.exists() {
+            return Ok(());
+        }
+
+        // 如果 items 为空（例如 profiles.yaml 解析失败导致
+        // IProfiles::new() 返回 default），此时无法判断哪些文件是活跃的，
+        // 跳过清理以避免误删用户正在使用的订阅配置文件。
+        // See: https://github.com/clash-verge-rev/clash-verge-rev/issues/7577
+        if self.items.as_ref().is_none_or(|v| v.is_empty()) {
+            logging!(
+                warn,
+                Type::Config,
+                "Profile items 为空，跳过孤儿文件清理以避免误删活跃的配置文件"
+            );
             return Ok(());
         }
 
@@ -571,8 +613,12 @@ pub async fn profiles_append_item_with_filedata_safe(item: &PrfItem, file_data: 
 }
 
 pub async fn profiles_append_item_safe(item: &mut PrfItem) -> Result<()> {
-    Config::profiles()
-        .await
+    let profiles = Config::profiles().await;
+    profiles_append_item_to_safe(&profiles, item).await
+}
+
+pub(super) async fn profiles_append_item_to_safe(profiles: &Draft<IProfiles>, item: &mut PrfItem) -> Result<()> {
+    profiles
         .with_data_modify(|mut profiles| async move {
             profiles.append_item(item).await?;
             Ok((profiles, ()))
@@ -586,16 +632,6 @@ pub async fn profiles_patch_item_safe(index: &String, item: &PrfItem) -> Result<
         .with_data_modify(|mut profiles| async move {
             profiles.patch_item(index, item).await?;
             Ok((profiles, ()))
-        })
-        .await
-}
-
-pub async fn profiles_delete_item_safe(index: &String) -> Result<bool> {
-    Config::profiles()
-        .await
-        .with_data_modify(|mut profiles| async move {
-            let deleted = profiles.delete_item(index).await?;
-            Ok((profiles, deleted))
         })
         .await
 }
@@ -751,6 +787,20 @@ fn reconcile_selected_nodes(
     plan
 }
 
+/// Abandon any activation still in flight.
+///
+/// An activation reads the profile, then polls the core until its groups are readable, then puts
+/// its selections. A choice the user makes inside that window is newer than what the activation
+/// captured, so letting it finish would push the core back to the older node — and the profile,
+/// already holding the newer one, would then disagree with the core. Bumping the generation is
+/// how an activation is told it has been overtaken.
+///
+/// Called after a newer selection is written, or before a candidate Core transition whose caller
+/// will reactivate whichever Profiles snapshot ultimately commits.
+pub fn supersede_selected_activation() {
+    ACTIVATE_SELECTED_GENERATION.fetch_add(1, Ordering::AcqRel);
+}
+
 fn is_activation_current(generation: u64) -> bool {
     ACTIVATE_SELECTED_GENERATION.load(Ordering::Acquire) == generation
 }
@@ -758,7 +808,7 @@ fn is_activation_current(generation: u64) -> bool {
 async fn fetch_proxies_with_timeout() -> Result<Proxies> {
     tokio::time::timeout(MIHOMO_OPERATION_TIMEOUT, async {
         loop {
-            match handle::Handle::mihomo().await.get_proxies().await {
+            match handle::Handle::mihomo().get_proxies().await {
                 Ok(proxies) => return proxies,
                 Err(err) => {
                     logging!(debug, Type::Config, "mihomo proxies are not ready yet: {err}");
@@ -773,10 +823,7 @@ async fn fetch_proxies_with_timeout() -> Result<Proxies> {
 
 async fn select_node_with_timeout(group_name: &String, node: &String) -> Result<()> {
     tokio::time::timeout(MIHOMO_OPERATION_TIMEOUT, async {
-        handle::Handle::mihomo()
-            .await
-            .select_node_for_group(group_name, node)
-            .await
+        handle::Handle::mihomo().select_node_for_group(group_name, node).await
     })
     .await
     .with_context(|| format!("timed out while selecting node [{node}] for group [{group_name}]"))?
@@ -850,6 +897,59 @@ async fn update_tray_after_activation(generation: u64) {
     }
 }
 
+/// Record which node a group is on, in the current profile.
+///
+/// The counterpart of the frontend's `useRecordSelection`, for the selections the backend makes
+/// on the user's behalf — the tray is the one that does. What the profile holds is what
+/// [`activate_selected_nodes`] re-applies when a core starts, so a selection it never learned
+/// about is one the next start silently undoes.
+pub async fn record_selected_node(group_name: &str, node: &str) -> Result<()> {
+    let group_name = String::from(group_name);
+    let node = String::from(node);
+    let recorded = Config::profiles()
+        .await
+        .with_data_modify(move |mut profiles| async move {
+            let Some(current) = profiles.current.clone() else {
+                return Ok((profiles, false));
+            };
+            let Some(item) = profiles
+                .items
+                .as_mut()
+                .and_then(|items| items.iter_mut().find(|item| item.uid.as_ref() == Some(&current)))
+            else {
+                return Ok((profiles, false));
+            };
+
+            let mut selected = item.selected.clone().unwrap_or_default();
+            match selected
+                .iter_mut()
+                .find(|entry| entry.name.as_ref() == Some(&group_name))
+            {
+                Some(entry) => {
+                    if entry.now.as_ref() == Some(&node) {
+                        return Ok((profiles, false));
+                    }
+                    entry.now = Some(node);
+                }
+                None => selected.push(PrfSelected {
+                    name: Some(group_name),
+                    now: Some(node),
+                }),
+            }
+            item.selected = Some(selected);
+            profiles.save_file().await?;
+            Ok((profiles, true))
+        })
+        .await?;
+
+    if recorded {
+        // Newer than anything an activation still in flight captured.
+        supersede_selected_activation();
+        handle::Handle::refresh_profiles();
+    }
+    Ok(())
+}
+
 async fn persist_reconciled_selected(
     profile_uid: &String,
     original_selected: &[PrfSelected],
@@ -890,10 +990,104 @@ async fn persist_reconciled_selected(
     Ok(())
 }
 
+/// The recorded selections the core is not currently on.
+///
+/// Deliberately "is the core on it" rather than "did we send a select": a group whose provider
+/// has not loaded is present but empty, a `select` can fail while the core is still settling, and
+/// a group that was already correct never produces an activation at all. Only the running state
+/// tells those apart.
+fn unsettled_selections(selected: &[PrfSelected], proxies: &Proxies) -> Vec<String> {
+    selected
+        .iter()
+        .filter_map(|item| {
+            let (Some(group_name), Some(node)) = (&item.name, &item.now) else {
+                return None;
+            };
+            match proxies.proxies.get(group_name.as_str()) {
+                Some(group) if group.now.as_deref() == Some(node.as_str()) => None,
+                _ => Some(group_name.clone()),
+            }
+        })
+        .collect()
+}
+
+/// Keep putting back the selections the core could not be moved to yet.
+///
+/// The single re-check a profile switch needs is enough there, because a switch happens once the
+/// configuration is loaded. A core start is the opposite case: the groups a restore is trying to
+/// put back may not exist yet. Without this the restore reported success having applied nothing,
+/// and the group stayed on the first entry of its `proxies:` list — the outcome restoring exists
+/// to prevent.
+///
+/// Only ever reached with [`SelectionRepair::KeepRecords`]: a profile switch is entitled to
+/// conclude that a group it cannot see is gone, so it has nothing to wait for.
+async fn settle_pending_selections(selected: &[PrfSelected], completed: &mut HashMap<String, String>, generation: u64) {
+    let deadline = Instant::now() + SELECTED_NODES_SETTLE_DEADLINE;
+    loop {
+        tokio::time::sleep(SELECTED_NODES_SETTLE_INTERVAL).await;
+        if !is_activation_current(generation) {
+            return;
+        }
+        let Ok(snapshot) = fetch_proxies_with_timeout().await else {
+            // Unreachable core: the deadline still applies, so this cannot spin forever.
+            if Instant::now() >= deadline {
+                return;
+            }
+            continue;
+        };
+        if !is_activation_current(generation) {
+            return;
+        }
+
+        let pending = unsettled_selections(selected, &snapshot);
+        if pending.is_empty() {
+            return;
+        }
+        if Instant::now() >= deadline {
+            logging!(
+                warn,
+                Type::Config,
+                "gave up putting back {} selected node(s) the core never loaded: {}",
+                pending.len(),
+                pending.iter().map(String::as_str).collect::<Vec<_>>().join(", ")
+            );
+            return;
+        }
+
+        let plan = reconcile_selected_nodes(selected, None, &snapshot);
+        if apply_activations(&plan.activations, completed, generation)
+            .await
+            .is_none()
+        {
+            return;
+        }
+        if is_activation_current(generation) {
+            handle::Handle::refresh_clash();
+        }
+    }
+}
+
+/// Fires once the selections that could be applied have been.
+///
+/// Dropping it without firing releases the waiter too: every way the worker can end early is a
+/// way of saying "nothing more is coming", and a start that waits forever for one of them would
+/// be a worse failure than the one this exists to prevent.
+struct FirstPassSignal(Option<tokio::sync::oneshot::Sender<()>>);
+
+impl FirstPassSignal {
+    fn notify(&mut self) {
+        if let Some(sender) = self.0.take() {
+            let _ = sender.send(());
+        }
+    }
+}
+
 async fn activate_selected_nodes_worker(
     profile_uid: String,
     selected: Vec<PrfSelected>,
     generation: u64,
+    repair: SelectionRepair,
+    mut first_pass_done: FirstPassSignal,
 ) -> Result<()> {
     let first_snapshot = fetch_proxies_with_timeout().await?;
     if !is_activation_current(generation) {
@@ -951,6 +1145,14 @@ async fn activate_selected_nodes_worker(
         return Ok(());
     }
 
+    if repair == SelectionRepair::KeepRecords {
+        // Everything the core could be moved to has been. Whoever is waiting to point traffic
+        // here may go; what is left needs the core to finish loading and cannot be waited on.
+        first_pass_done.notify();
+        settle_pending_selections(&selected, &mut completed_activations, generation).await;
+        return Ok(());
+    }
+
     if plan.repaired_count > 0 && is_activation_current(generation) {
         logging!(
             info,
@@ -964,13 +1166,64 @@ async fn activate_selected_nodes_worker(
     Ok(())
 }
 
+/// Whether an activation may also prune the records it cannot match.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum SelectionRepair {
+    /// Drop records whose group or node the core does not have. Only safe once the configuration
+    /// they belong to is known to be fully loaded, which is true right after a profile switch.
+    Prune,
+    /// Apply what can be applied and leave the records alone.
+    ///
+    /// What a core start needs. A provider-backed group can be empty or absent for seconds after
+    /// the core comes up, and a record pruned on that evidence is gone from `profiles.yaml` for
+    /// good — the provider finishing later cannot bring it back.
+    KeepRecords,
+}
+
 pub fn activate_selected_nodes() -> Result<()> {
+    // The first-pass signal is for callers that wait; a profile switch does not, and dropping
+    // the receiver simply makes the send a no-op.
+    drop(activate_selected_nodes_with(SelectionRepair::Prune));
+    Ok(())
+}
+
+/// Put the profile's selections back before anything is pointed at the core.
+///
+/// Awaited, unlike a profile switch's activation, because the caller enables the system proxy as
+/// soon as this returns: a proxy pointed at a core still sitting on the first entry of every
+/// group is the outcome restoring exists to prevent. Bounded so that a core which will not answer
+/// delays a start rather than blocking it — the selections keep being retried either way, and
+/// being proxied through the wrong node beats not being proxied at all.
+///
+/// TUN is deliberately not covered, because it cannot be: it is configured in the core's own
+/// file, so it is carrying traffic from the moment the process starts, before anything here could
+/// run. What puts a TUN user on the right node from the first packet is the core's own
+/// `cache.db`, which is why the service keeps an owner's runtime generation across restarts.
+pub async fn restore_selected_nodes() {
+    let first_pass = activate_selected_nodes_with(SelectionRepair::KeepRecords);
+    if tokio::time::timeout(SELECTED_NODES_FIRST_PASS_BUDGET, first_pass)
+        .await
+        .is_err()
+    {
+        logging!(
+            warn,
+            Type::Config,
+            "starting without having put the selected nodes back yet; still trying"
+        );
+    }
+}
+
+fn activate_selected_nodes_with(repair: SelectionRepair) -> tokio::sync::oneshot::Receiver<()> {
     logging!(info, Type::Config, "starting activating selected nodes");
     let mut active_task = ACTIVATE_SELECTED_TASK.lock();
     let generation = ACTIVATE_SELECTED_GENERATION.fetch_add(1, Ordering::AcqRel) + 1;
     let previous_task = active_task.take();
+    let (first_pass_sender, first_pass_done) = tokio::sync::oneshot::channel();
 
     let handle = tokio::spawn(async move {
+        // Held for the whole task so that every exit — superseded, no profile, an error — drops
+        // it and releases anyone waiting. Only the worker fires it deliberately.
+        let first_pass = FirstPassSignal(Some(first_pass_sender));
         if let Some(previous_task) = previous_task {
             let _ = previous_task.await;
         }
@@ -979,7 +1232,12 @@ pub fn activate_selected_nodes() -> Result<()> {
         }
 
         let result = async {
-            let profiles = Config::profiles().await.latest_arc();
+            // Committed, not the draft. A profile switch stages its target before validating
+            // it, and a switch that then fails discards that draft — but an activation which had
+            // already read it would go on to apply the rejected profile's selections to the one
+            // still running. The switch that succeeds commits before it activates, so this is the
+            // same value there.
+            let profiles = Config::profiles().await.data_arc();
             let current = profiles.get_current().context("no current profile running")?.clone();
             let selected = profiles
                 .get_item(&current)
@@ -994,7 +1252,7 @@ pub fn activate_selected_nodes() -> Result<()> {
                 }
                 return Ok(());
             }
-            activate_selected_nodes_worker(current, selected, generation).await
+            activate_selected_nodes_worker(current, selected, generation, repair, first_pass).await
         }
         .await;
 
@@ -1010,13 +1268,46 @@ pub fn activate_selected_nodes() -> Result<()> {
     });
     *active_task = Some(handle);
     drop(active_task);
-    Ok(())
+    first_pass_done
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use tauri_plugin_mihomo::models::Proxy;
+
+    fn deletion_item(uid: &str, kind: &str, file: &str, merge: Option<&str>) -> PrfItem {
+        PrfItem {
+            uid: Some(uid.into()),
+            itype: Some(kind.into()),
+            file: Some(file.into()),
+            option: merge.map(|uid| PrfOption {
+                merge: Some(uid.into()),
+                ..PrfOption::default()
+            }),
+            ..PrfItem::default()
+        }
+    }
+
+    #[test]
+    fn delete_plan_defers_files_and_selects_replacement() -> Result<()> {
+        let mut profiles = IProfiles {
+            current: Some("a".into()),
+            items: Some(vec![
+                deletion_item("a", "remote", "a.yaml", Some("owned")),
+                deletion_item("owned", "merge", "owned.yaml", None),
+                deletion_item("b", "local", "b.yaml", None),
+            ]),
+        };
+
+        let (should_update, plan) = profiles.plan_delete_item(&"a".into())?;
+
+        assert!(should_update);
+        assert_eq!(profiles.current.as_deref(), Some("b"));
+        assert_eq!(plan.files, vec![String::from("a.yaml"), String::from("owned.yaml")]);
+        assert!(profiles.get_item("owned").is_err());
+        Ok(())
+    }
 
     fn selected(group: &str, node: &str) -> PrfSelected {
         PrfSelected {
@@ -1043,6 +1334,115 @@ mod tests {
                 })
                 .collect::<HashMap<_, _>>(),
         }
+    }
+
+    #[test]
+    fn a_group_the_core_has_not_loaded_is_still_unsettled() {
+        // The regression this pins. A provider-backed group is present but empty until its
+        // provider loads, which on a cold start is exactly when restoring runs. Reconciling
+        // produces no activation for it, so a restore that stopped after one re-check reported
+        // success having left the group on the first entry of its `proxies:` list.
+        let saved = vec![selected("provider-group", "saved")];
+        let unloaded = proxies(vec![("provider-group", &[], None)]);
+
+        assert!(
+            reconcile_selected_nodes(&saved, Some(&unloaded), &unloaded)
+                .activations
+                .is_empty(),
+            "nothing can be activated while the group is empty"
+        );
+        assert_eq!(
+            unsettled_selections(&saved, &unloaded),
+            vec![String::from("provider-group")],
+            "so the restore must keep looking rather than call it done"
+        );
+    }
+
+    #[test]
+    fn a_group_the_core_is_already_on_is_settled() {
+        let saved = vec![selected("Proxy", "Node A")];
+        let loaded = proxies(vec![("Proxy", &["Node A", "Node B"], Some("Node A"))]);
+
+        assert!(
+            unsettled_selections(&saved, &loaded).is_empty(),
+            "a group already on its node needs nothing, even though it produces no activation"
+        );
+    }
+
+    #[test]
+    fn a_group_on_the_wrong_node_is_unsettled() {
+        // Covers a `select` that failed transiently: the group is loaded, the node exists, and
+        // the core is simply not on it. Retrying is the only thing that fixes that.
+        let saved = vec![selected("Proxy", "Node A")];
+        let wrong = proxies(vec![("Proxy", &["Node A", "Node B"], Some("Node B"))]);
+
+        assert_eq!(unsettled_selections(&saved, &wrong), vec![String::from("Proxy")]);
+    }
+
+    #[test]
+    fn a_record_without_a_group_or_node_is_not_waited_on() {
+        // A malformed record cannot be satisfied by waiting, and holding the settle loop open
+        // for it would delay giving up on everything else.
+        let malformed = vec![
+            PrfSelected {
+                name: Some("Proxy".into()),
+                now: None,
+            },
+            PrfSelected {
+                name: None,
+                now: Some("Node A".into()),
+            },
+        ];
+
+        assert!(unsettled_selections(&malformed, &proxies(vec![])).is_empty());
+    }
+
+    #[test]
+    fn a_group_missing_from_both_snapshots_is_dropped_from_the_records() {
+        // This is the pruning a profile switch wants and a core start must not do: the record is
+        // gone from the plan, and `persist_reconciled_selected` writes the plan back. Pinned here
+        // because it is why `SelectionRepair` exists — the predicate is right, the question is
+        // only who is entitled to act on it.
+        let saved = vec![selected("provider-group", "saved")];
+        let empty = proxies(vec![]);
+
+        let plan = reconcile_selected_nodes(&saved, Some(&empty), &empty);
+
+        assert!(
+            plan.selected.is_empty(),
+            "a group absent from both looks invalid, so the record is dropped"
+        );
+        assert_eq!(plan.repaired_count, 1, "and dropping it counts as a repair");
+    }
+
+    #[test]
+    fn a_group_missing_from_only_the_second_snapshot_is_kept() {
+        // Absent once is not evidence: only a group that was already absent when the first
+        // snapshot was taken is treated as gone.
+        let saved = vec![selected("provider-group", "saved")];
+        let had_it = proxies(vec![("provider-group", &["saved"], Some("saved"))]);
+        let lost_it = proxies(vec![]);
+
+        let plan = reconcile_selected_nodes(&saved, Some(&had_it), &lost_it);
+
+        assert_eq!(plan.selected, saved);
+        assert_eq!(plan.repaired_count, 0);
+    }
+
+    #[test]
+    fn superseding_an_activation_makes_the_one_in_flight_stand_down() {
+        // What a selection made during a start relies on: the restore that is still polling the
+        // core has to notice it has been overtaken, or it will push the older node back.
+        let generation = ACTIVATE_SELECTED_GENERATION.load(Ordering::Acquire) + 1;
+        ACTIVATE_SELECTED_GENERATION.store(generation, Ordering::Release);
+        assert!(is_activation_current(generation));
+
+        supersede_selected_activation();
+
+        assert!(
+            !is_activation_current(generation),
+            "an activation that has been overtaken must stop before it puts anything"
+        );
     }
 
     #[test]

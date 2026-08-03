@@ -34,14 +34,15 @@ export const ServiceMigrationDialog = () => {
   // snapshot; a failed refresh is treated as needing one, since we cannot tell otherwise.
   const needsDecision =
     stateRefreshFailed || Boolean(runState?.serviceNeedsAttention)
-  // Which of the three remedies the dialog offers. A refresh we could not complete is
-  // treated as an unreachable service, which is what 'repair' is for.
+  // Treat refresh failures as unreachable; an absent Service still needs install after a failed Sidecar attempt.
   const remedy: 'install' | 'repair' | 'reinstall' =
     runState?.pendingAction === 'install'
       ? 'install'
       : stateRefreshFailed || runState?.service === 'unavailable'
         ? 'repair'
-        : 'reinstall'
+        : runState?.service === 'notInstalled'
+          ? 'install'
+          : 'reinstall'
   const open = loading || workflowIncomplete || needsDecision
   const showCheckingMessage = loading || !needsDecision
 

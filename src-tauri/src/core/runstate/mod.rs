@@ -66,18 +66,29 @@ impl std::fmt::Display for ReadyWaitError {
     }
 }
 
-/// The service-owned state together with the counter that versions it.
+/// The service-owned state together with the counters that version it.
 ///
 /// They share one lock so a reader can never see a change without its version bump.
+/// `generation` tracks visible changes; `observation` also tracks assertions that invalidate
+/// older health probes without changing visible state.
 #[derive(Debug, Default)]
 struct VersionedService {
     service: StoredService,
     generation: u64,
+    observation: u64,
 }
 
 impl VersionedService {
+    /// Record a visible change and invalidate older health probes.
     const fn bump(&mut self) {
         self.generation = self.generation.wrapping_add(1);
+        self.observation = self.observation.wrapping_add(1);
+    }
+
+    /// Reserve a revision that invalidates older health probes.
+    const fn next_observation(&mut self) -> u64 {
+        self.observation = self.observation.wrapping_add(1);
+        self.observation
     }
 }
 
@@ -114,19 +125,26 @@ impl<E: RunStateEnv> RunStateStore<E> {
     }
 
     /// The Run State once any in-flight privileged operation has finished.
+    ///
+    /// The snapshot is the decision, not a separate check before it. Reading the slot twice —
+    /// once to decide whether to wait, once to build the snapshot — leaves a window in which an
+    /// operation claims it, and the snapshot then *describes* that operation instead of waiting
+    /// for it. `prepare_startup` reads this: it would see a requested install as a reason not to
+    /// start, where waiting would have told it whether the install worked.
     pub async fn settled(&self) -> RunState {
         loop {
             let notified = self.operation_done.notified();
             tokio::pin!(notified);
-            // Register as a waiter *before* checking the flag. `notify_waiters` wakes only
+            // Register as a waiter *before* reading the state. `notify_waiters` wakes only
             // those already registered and leaves no permit behind, so without this an
-            // operation finishing between the check and the await is a wakeup lost for good
+            // operation finishing between the read and the await is a wakeup lost for good
             // — and this future would then wait for some unrelated later operation, or
             // forever.
             notified.as_mut().enable();
 
-            if !self.operation_running.load(Ordering::Acquire) {
-                return self.state();
+            let state = self.state();
+            if !state.op_in_flight {
+                return state;
             }
             notified.await;
         }
@@ -187,7 +205,7 @@ impl<E: RunStateEnv> RunStateStore<E> {
     /// Platform evidence that cannot be inspected is *unavailable*, not *absent* — assuming
     /// "not installed" there would offer the user an install that is already there.
     pub async fn detect_service_health(&self) -> ServiceHealth {
-        let has_marker = match self.env.trusted_install_evidence() {
+        let has_marker = match self.env.trusted_install_evidence().await {
             Ok(exists) => exists,
             Err(error) => {
                 logging!(
@@ -218,10 +236,52 @@ impl<E: RunStateEnv> RunStateStore<E> {
 
     // ─────────────────────────── writes ───────────────────────────
 
+    /// Probe and record Service health unless a newer observation arrived first.
+    ///
+    /// Reserving before I/O prevents slower probes from overwriting later observations, including
+    /// assertions that leave visible state unchanged. Returns the health that remains recorded.
+    pub async fn observe_current_health(&self) -> ServiceHealth {
+        let reservation = self.reserve_health_observation();
+        let health = self.detect_service_health().await;
+        self.commit_reserved_observation(health, reservation)
+    }
+
+    /// Reserve the revision for a health probe.
+    fn reserve_health_observation(&self) -> u64 {
+        self.service.lock().next_observation()
+    }
+
+    /// Commit `health` only if `reservation` is still latest; otherwise return the newer health.
+    ///
+    /// The comparison and write share one lock. A successful commit reuses its reserved revision.
+    fn commit_reserved_observation(&self, health: ServiceHealth, reservation: u64) -> ServiceHealth {
+        let mut state = self.service.lock();
+        if state.observation != reservation {
+            let newer = state.service.health.clone();
+            drop(state);
+            logging!(
+                debug,
+                Type::Service,
+                "discarding a stale service reading of {health:?}; {newer:?} arrived while it ran"
+            );
+            return newer;
+        }
+        if state.service.health == health && state.service.pending.is_none() && !state.service.sidecar_allowed {
+            return health;
+        }
+        state.service.observe(health.clone());
+        state.generation = state.generation.wrapping_add(1);
+        drop(state);
+        self.announce();
+        health
+    }
+
     /// Record an observation about the Service, clearing any request it answers.
     pub fn observe(&self, health: ServiceHealth) {
         let mut state = self.service.lock();
         if state.service.health == health && state.service.pending.is_none() && !state.service.sidecar_allowed {
+            // Reassertion is invisible but must invalidate an older health probe.
+            state.next_observation();
             return;
         }
         state.service.observe(health);
@@ -230,16 +290,24 @@ impl<E: RunStateEnv> RunStateStore<E> {
         self.announce();
     }
 
-    /// Record a requested privileged operation without any eligibility check.
+    /// Record an authorised privileged operation and return whether it displaced the session's
+    /// Sidecar allowance.
     ///
-    /// Used when the request came from an explicit user action that has already been
-    /// authorised; the guarded session transitions below are for automatic decisions.
-    pub fn request_action(&self, action: PendingAction) {
+    /// Reading and clearing the allowance in one transition lets the caller safely restore it if
+    /// the operation fails.
+    pub fn request_action(&self, action: PendingAction) -> bool {
         let mut state = self.service.lock();
+        let displaced = state.service.sidecar_allowed;
+        if state.service.pending == Some(action) && !displaced {
+            // Reassertion must prevent an older probe from retiring the request.
+            state.next_observation();
+            return displaced;
+        }
         state.service.request(action);
         state.bump();
         drop(state);
         self.announce();
+        displaced
     }
 
     /// Accept Sidecar for the rest of this app session without any eligibility check.
@@ -248,12 +316,51 @@ impl<E: RunStateEnv> RunStateStore<E> {
     pub fn accept_sidecar(&self) {
         let mut state = self.service.lock();
         if state.service.sidecar_allowed && state.service.pending.is_none() {
+            // Reassertion must prevent an older probe from clearing the allowance.
+            state.next_observation();
             return;
         }
         state.service.allow_sidecar();
         state.bump();
         drop(state);
         self.announce();
+    }
+
+    /// Restore a displaced Sidecar allowance unless one already exists or the Service is ready.
+    ///
+    /// The check and update are atomic so a restored allowance cannot shadow a newly ready
+    /// Service. Returns whether the allowance was restored.
+    pub fn restore_sidecar_allowance(&self) -> bool {
+        let mut state = self.service.lock();
+        if state.service.sidecar_allowed {
+            // Reassertion must prevent an older probe from clearing the allowance.
+            state.next_observation();
+            return false;
+        }
+        if matches!(state.service.health, ServiceHealth::Ready) {
+            // Cached Ready health does not invalidate an in-flight probe.
+            return false;
+        }
+        state.service.allow_sidecar();
+        state.bump();
+        drop(state);
+        self.announce();
+        true
+    }
+
+    /// Revoke an allowance after Sidecar startup fails without changing Service health.
+    ///
+    /// Returns whether the allowance was revoked.
+    pub fn withdraw_sidecar_allowance(&self) -> bool {
+        let mut state = self.service.lock();
+        if !state.service.sidecar_allowed {
+            return false;
+        }
+        state.service.sidecar_allowed = false;
+        state.bump();
+        drop(state);
+        self.announce();
+        true
     }
 
     /// Accept Sidecar for the rest of this app session.
@@ -298,6 +405,9 @@ impl<E: RunStateEnv> RunStateStore<E> {
         {
             state.service.request(PendingAction::Install);
             state.bump();
+        } else if state.service.pending == Some(PendingAction::Install) {
+            // Reassertion must prevent an older probe from clearing the install request.
+            state.next_observation();
         }
         drop(state);
         self.announce();
@@ -306,27 +416,24 @@ impl<E: RunStateEnv> RunStateStore<E> {
 
     /// Carry out a privileged operation and record what it did to the Service.
     ///
-    /// Only an uninstall has an outcome we can record without asking again: it either removed
-    /// the Service or left it in a state we no longer trust. After an install or repair the
-    /// Service has to be asked whether it came back, which is [`Self::await_ready`]'s job.
-    pub fn perform(&self, action: PendingAction) -> Result<()> {
+    /// A successful uninstall records an absent Service. Other successes rely on the caller's
+    /// readiness check. Failures re-probe the Service so the request is retired and health
+    /// reflects the machine's current state.
+    pub async fn perform(&self, action: PendingAction) -> Result<()> {
         let outcome = self.env.run_privileged(action);
-        if !matches!(action, PendingAction::Uninstall) {
-            return outcome;
-        }
-
-        match outcome {
-            Ok(()) => {
-                self.observe(ServiceHealth::NotInstalled);
-                Ok(())
-            }
+        match &outcome {
+            Ok(()) if matches!(action, PendingAction::Uninstall) => self.observe(ServiceHealth::NotInstalled),
+            Ok(()) => {}
             Err(error) => {
-                self.observe(ServiceHealth::Unavailable(format!(
-                    "Service uninstall failed: {error:#}"
-                )));
-                Err(error)
+                let health = self.observe_current_health().await;
+                logging!(
+                    warn,
+                    Type::Service,
+                    "privileged service action {action:?} did not complete ({error:#}); service is {health:?}"
+                );
             }
         }
+        outcome
     }
 
     // ─────────────────────────── running mode ───────────────────────────
@@ -350,8 +457,25 @@ impl<E: RunStateEnv> RunStateStore<E> {
     ///
     /// Closes the PAC endpoint without disturbing the Running Mode, so a handover cannot
     /// hand out a PAC script for a proxy port that is between owners.
+    ///
+    /// Every caller must pair this with [`Self::core_start_settled`]. A start attempt that
+    /// never happens — a candidate rejected before anything was stopped — otherwise leaves PAC
+    /// closed for a Core that is still serving, and nothing else would ever reopen it: PAC is
+    /// re-derived only when the Running Mode changes, and that is exactly what did not happen.
     pub fn core_starting(&self) {
         self.env.set_pac_available(false);
+    }
+
+    /// The start attempt is over, however it ended: PAC goes back to following the Running Mode.
+    ///
+    /// Idempotent and safe on every path, because it re-derives rather than restores. After a
+    /// start that succeeded the mode is already running and this confirms PAC open; after one
+    /// that was abandoned the mode never moved and this reopens PAC for the Core that kept
+    /// serving; after one that failed and stopped the Core the mode says NotRunning and PAC
+    /// stays shut.
+    pub fn core_start_settled(&self) {
+        let running = !matches!(**self.mode.load(), RunningMode::NotRunning);
+        self.env.set_pac_available(running);
     }
 
     /// Move to `mode` and re-derive everything that follows from it.
@@ -461,6 +585,146 @@ mod tests {
             message: "ok".to_owned(),
             protocol: Some(clash_verge_service_ipc::ProtocolInfo::current()),
         }
+    }
+
+    #[tokio::test]
+    async fn a_reading_nothing_overtook_is_recorded() {
+        let store = with_env(FakeEnv::service_ready(FakeEnv::new()));
+
+        let health = store.observe_current_health().await;
+
+        assert_eq!(health, ServiceHealth::Ready);
+        assert_eq!(store.state().health, ServiceHealth::Ready);
+    }
+
+    #[test]
+    fn a_reading_overtaken_by_a_changed_observation_is_discarded() {
+        // A slower earlier probe must not overwrite a newer Ready observation.
+        let store = with_env(FakeEnv::new());
+        let reservation = store.reserve_health_observation();
+        store.observe(ServiceHealth::Ready);
+
+        let recorded = store.commit_reserved_observation(ServiceHealth::NotInstalled, reservation);
+
+        assert_eq!(recorded, ServiceHealth::Ready, "the newer observation is reported back");
+        assert_eq!(store.state().health, ServiceHealth::Ready, "and it is what stands");
+    }
+
+    #[test]
+    fn a_reading_overtaken_by_an_unchanged_observation_is_also_discarded() {
+        // Even an unchanged "still Ready" observation must invalidate an older probe.
+        let store = with_env(FakeEnv::new());
+        store.observe(ServiceHealth::Ready);
+        let reservation = store.reserve_health_observation();
+        let generation = store.generation_count();
+
+        store.observe(ServiceHealth::Ready);
+        assert_eq!(store.generation_count(), generation, "nothing visible changed");
+
+        let recorded = store.commit_reserved_observation(ServiceHealth::NotInstalled, reservation);
+
+        assert_eq!(recorded, ServiceHealth::Ready);
+        assert_eq!(store.state().health, ServiceHealth::Ready);
+    }
+
+    #[test]
+    fn a_reading_overtaken_by_an_already_satisfied_sidecar_restore_is_discarded() {
+        // Reasserting an existing allowance must stop an older probe from clearing it.
+        let store = with_env(FakeEnv::new());
+        store.observe(ServiceHealth::VersionMismatch);
+        store.accept_sidecar();
+        let reservation = store.reserve_health_observation();
+
+        assert!(!store.restore_sidecar_allowance(), "the allowance is already there");
+
+        store.commit_reserved_observation(ServiceHealth::VersionMismatch, reservation);
+
+        assert!(store.state().sidecar_allowed, "the confirmed allowance survives");
+        assert!(!store.state().service_needs_attention());
+    }
+
+    #[test]
+    fn re_requesting_the_same_action_changes_nothing_visible_but_still_orders() {
+        // The same request leaves `generation` unchanged but must invalidate an older probe.
+        let store = with_env(FakeEnv::new());
+        store.observe(ServiceHealth::NotInstalled);
+        store.require_install_for_session().expect("absent service");
+        let generation = store.generation_count();
+        let reservation = store.reserve_health_observation();
+
+        assert!(
+            !store.request_action(PendingAction::Install),
+            "no Sidecar allowance was displaced"
+        );
+        assert_eq!(store.generation_count(), generation, "nothing visible changed");
+
+        store.commit_reserved_observation(ServiceHealth::NotInstalled, reservation);
+
+        assert_eq!(store.state().pending, Some(PendingAction::Install));
+    }
+
+    #[test]
+    fn a_reading_overtaken_by_an_already_pending_install_is_discarded() {
+        // Requiring an existing install request must stop an older probe from clearing it.
+        let store = with_env(FakeEnv::new());
+        store.observe(ServiceHealth::NotInstalled);
+        store.require_install_for_session().expect("absent service");
+        let reservation = store.reserve_health_observation();
+
+        store.require_install_for_session().expect("already requested");
+
+        store.commit_reserved_observation(ServiceHealth::NotInstalled, reservation);
+
+        assert_eq!(store.state().pending, Some(PendingAction::Install));
+        assert!(store.state().service_needs_attention());
+    }
+
+    #[test]
+    fn a_later_reading_supersedes_one_that_is_still_running() {
+        // The last probe started wins regardless of completion order.
+        let store = with_env(FakeEnv::new());
+        store.observe(ServiceHealth::Ready);
+        let first = store.reserve_health_observation();
+        let second = store.reserve_health_observation();
+
+        assert_eq!(
+            store.commit_reserved_observation(ServiceHealth::NotInstalled, first),
+            ServiceHealth::Ready,
+            "the earlier reading is already superseded"
+        );
+        assert_eq!(
+            store.commit_reserved_observation(ServiceHealth::VersionMismatch, second),
+            ServiceHealth::VersionMismatch
+        );
+        assert_eq!(store.state().health, ServiceHealth::VersionMismatch);
+    }
+
+    #[test]
+    fn withdrawing_a_sidecar_allowance_says_nothing_about_the_service() {
+        // A failed Sidecar startup must not change Service health.
+        let store = with_env(FakeEnv::new());
+        store.observe(ServiceHealth::NotInstalled);
+        store.accept_sidecar();
+
+        assert!(store.withdraw_sidecar_allowance());
+
+        assert!(!store.state().sidecar_allowed);
+        assert_eq!(store.state().health, ServiceHealth::NotInstalled, "health is untouched");
+        assert!(
+            !store.state().service_needs_attention(),
+            "an absent Service still asks nothing"
+        );
+    }
+
+    #[test]
+    fn withdrawing_an_allowance_that_was_never_granted_changes_nothing() {
+        let store = with_env(FakeEnv::new());
+        store.observe(ServiceHealth::NotInstalled);
+        let generation = store.generation_count();
+
+        assert!(!store.withdraw_sidecar_allowance());
+
+        assert_eq!(store.generation_count(), generation);
     }
 
     #[test]
@@ -626,6 +890,33 @@ mod tests {
         let settled = waiter.await.expect("waiter should not panic");
         assert!(settled.service_usable());
         assert!(!settled.op_in_flight);
+    }
+
+    // Multi-threaded on purpose, so operations really do start and finish underneath the reader.
+    // This is a guard, not a reproducer: the window it protects against was narrow enough that
+    // reverting the fix did not fail this test in six runs. What makes the invariant hold is
+    // that `settled` reads the slot once, inside the snapshot it returns; this fails if someone
+    // reintroduces a separate check before it.
+    #[tokio::test(flavor = "multi_thread", worker_threads = 2)]
+    async fn a_settled_snapshot_never_describes_an_operation_in_flight() {
+        let store = Arc::new(with_env(FakeEnv::new()));
+        store.observe(ServiceHealth::Ready);
+
+        for _ in 0..64 {
+            let claimer = {
+                let store = Arc::clone(&store);
+                tokio::spawn(async move {
+                    let guard = store.begin_operation();
+                    tokio::task::yield_now().await;
+                    drop(guard);
+                })
+            };
+
+            let settled = store.settled().await;
+            assert!(!settled.op_in_flight, "a settled snapshot describes a settled state");
+
+            claimer.await.expect("the claimer should not panic");
+        }
     }
 
     #[tokio::test]
@@ -829,6 +1120,48 @@ mod tests {
             vec![RunningMode::Sidecar],
             "a start attempt is not a mode change"
         );
+    }
+
+    #[test]
+    fn an_abandoned_start_attempt_reopens_pac_for_the_core_that_kept_running() {
+        // The regression this pins: a proxy-port candidate rejected before anything was
+        // stopped. `core_starting` closed PAC, the Running Mode never moved, and so nothing
+        // would ever re-derive PAC — the Core kept serving while its PAC endpoint stayed shut.
+        for mode in [RunningMode::Service, RunningMode::Sidecar] {
+            let store = with_env(FakeEnv::new());
+            store.core_started(mode);
+            store.core_starting();
+            assert_eq!(store.env.pac_available(), Some(false));
+
+            store.core_start_settled();
+
+            assert_eq!(store.env.pac_available(), Some(true), "{mode} kept serving");
+            assert_eq!(store.state().mode, mode, "an abandoned start is not a mode change");
+        }
+    }
+
+    #[test]
+    fn a_settled_start_leaves_pac_shut_when_no_core_is_running() {
+        let store = with_env(FakeEnv::new());
+        store.core_starting();
+
+        store.core_start_settled();
+
+        assert_eq!(store.env.pac_available(), Some(false));
+    }
+
+    #[test]
+    fn settling_a_start_is_idempotent_and_never_contradicts_the_mode() {
+        // Callers pair this with `core_starting` via a guard that runs on every path, so it
+        // also runs after a start that already opened PAC itself.
+        let store = with_env(FakeEnv::new());
+        store.core_starting();
+        store.core_started(RunningMode::Service);
+
+        store.core_start_settled();
+        store.core_start_settled();
+
+        assert_eq!(store.env.pac_available(), Some(true));
     }
 
     #[test]

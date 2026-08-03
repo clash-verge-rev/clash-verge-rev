@@ -46,12 +46,21 @@ pub async fn save_proxy_ports(settings: ProxyPortSettings) -> Result<SaveProxyPo
     let verge = Config::verge().await;
     let runtime = Config::runtime().await;
     // Every rejection and every failure below leaves the three layers as they were.
-    let transaction = DraftTransaction::new(vec![&clash, &verge, &runtime]);
+    let transaction = DraftTransaction::begin(vec![&clash, &verge, &runtime])?;
 
     stage_proxy_ports(&settings).await;
     // The candidate ports are staged but nothing is serving them yet, so close PAC rather
-    // than hand out a script for a port that is between owners.
+    // than hand out a script for a port that is between owners. The PAC endpoint resolves the
+    // Mixed Port through the draft layer, so from here until the drafts are committed or rolled
+    // back it would otherwise answer with a port nothing is listening on.
     manager.core_starting();
+    // Most ways out of here are a rejection: the candidate is refused and the Core keeps
+    // serving on its old ports, having never been stopped. Re-deriving PAC from the Running
+    // Mode is what reopens it for that Core — and it is equally correct after a restart that
+    // succeeded, or one that failed and left the Core down.
+    defer! {
+        manager.core_start_settled();
+    }
     Config::generate()
         .await
         .context("failed to generate candidate proxy port configuration")?;
@@ -82,7 +91,7 @@ pub async fn save_proxy_ports(settings: ProxyPortSettings) -> Result<SaveProxyPo
         };
     }
 
-    if was_running && let Err(activation_error) = manager.restart_core().await {
+    if was_running && let Err(activation_error) = manager.restart_core_during_config_update().await {
         transaction.rollback();
         if let Err(rollback_error) = rollback_proxy_ports(&snapshots, was_running).await {
             return Err(anyhow!(
@@ -224,9 +233,9 @@ async fn rollback_proxy_ports(snapshots: &[FileSnapshot], was_running: bool) -> 
     let lifecycle_result = if was_running {
         let manager = CoreManager::global();
         if matches!(*manager.get_running_mode(), RunningMode::NotRunning) {
-            manager.start_core().await
+            manager.start_core_during_config_update().await
         } else {
-            manager.restart_core().await
+            manager.restart_core_during_config_update().await
         }
     } else {
         Ok(())
