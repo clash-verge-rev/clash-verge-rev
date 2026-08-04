@@ -1,5 +1,4 @@
 use chrono::Local;
-use rust_iso3166;
 
 pub fn get_local_date_string() -> String {
     let now = Local::now();
