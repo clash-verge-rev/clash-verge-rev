@@ -249,6 +249,10 @@ pub struct IVerge {
     /// 自动进入轻量模式的延迟（分钟）
     pub auto_light_weight_minutes: Option<u64>,
 
+    /// 当前是否处于轻量模式（持久化，重启后恢复）
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub in_light_weight_mode: Option<bool>,
+
     /// 启用代理页面自动滚动
     pub enable_hover_jump_navigator: Option<bool>,
 
@@ -551,6 +555,7 @@ impl IVerge {
         patch!(tray_inline_outbound_modes);
         patch!(enable_auto_light_weight_mode);
         patch!(auto_light_weight_minutes);
+        patch!(in_light_weight_mode);
         patch!(enable_dns_settings);
         patch!(home_cards);
         patch!(enable_external_controller);
