@@ -1,8 +1,5 @@
 use serde_yaml_ng::{Mapping, Value};
 
-#[cfg(target_os = "macos")]
-use crate::process::AsyncHandler;
-
 macro_rules! revise {
     ($map: expr, $key: expr, $val: expr) => {
         let ret_key = Value::String($key.into());
@@ -61,24 +58,10 @@ pub fn use_tun(mut config: Mapping, enable: bool) -> Mapping {
             if ipv6_val && !dns_val.contains_key(Value::from("fake-ip-range6")) {
                 revise!(dns_val, "fake-ip-range6", "fdfe:dcba:9876::1/64");
             }
-
-            #[cfg(target_os = "macos")]
-            {
-                AsyncHandler::spawn(move || async move {
-                    crate::utils::resolve::dns::restore_public_dns().await;
-                    crate::utils::resolve::dns::set_public_dns("114.114.114.114".to_string()).await;
-                });
-            }
         }
 
         // 当TUN启用时，将修改后的DNS配置写回
         revise!(config, "dns", dns_val);
-    } else {
-        // TUN未启用时，仅恢复系统DNS，不修改配置文件中的DNS设置
-        #[cfg(target_os = "macos")]
-        AsyncHandler::spawn(move || async move {
-            crate::utils::resolve::dns::restore_public_dns().await;
-        });
     }
 
     // 更新TUN配置
@@ -86,4 +69,63 @@ pub fn use_tun(mut config: Mapping, enable: bool) -> Mapping {
     revise!(config, "tun", tun_val);
 
     config
+}
+
+#[cfg(any(target_os = "macos", test))]
+fn should_override_system_dns(config: &Mapping) -> bool {
+    let tun_enabled = config
+        .get("tun")
+        .and_then(|tun| tun.get("enable"))
+        .and_then(Value::as_bool)
+        == Some(true);
+    let Some(dns) = config.get("dns") else {
+        return false;
+    };
+
+    tun_enabled
+        && dns.get("enable").and_then(Value::as_bool) == Some(true)
+        && dns.get("enhanced-mode").and_then(Value::as_str) == Some("fake-ip")
+}
+
+#[cfg(target_os = "macos")]
+pub(super) async fn reconcile_system_dns(config: &Mapping) {
+    crate::utils::resolve::dns::restore_public_dns().await;
+    if should_override_system_dns(config) {
+        crate::utils::resolve::dns::set_public_dns("114.114.114.114".to_string()).await;
+    }
+}
+
+#[cfg(test)]
+#[allow(clippy::expect_used, reason = "tests assert by panicking")]
+mod tests {
+    use super::should_override_system_dns;
+    use serde_yaml_ng::Mapping;
+
+    #[test]
+    fn final_config_decides_whether_macos_dns_is_overridden() {
+        let cases = [
+            ("tun: {enable: true}\ndns: {enable: true, enhanced-mode: fake-ip}", true),
+            (
+                "tun: {enable: true}\ndns: {enable: true, enhanced-mode: redir-host}",
+                false,
+            ),
+            (
+                "tun: {enable: true}\ndns: {enable: false, enhanced-mode: fake-ip}",
+                false,
+            ),
+            (
+                "tun: {enable: false}\ndns: {enable: true, enhanced-mode: fake-ip}",
+                false,
+            ),
+            (
+                "tun: {enable: true}\ndns: {enable: true, enhanced-mode: unknown}",
+                false,
+            ),
+        ];
+
+        for (yaml, expected) in cases {
+            let config: Mapping = serde_yaml_ng::from_str(yaml).expect("test config should be valid");
+            assert_eq!(should_override_system_dns(&config), expected, "config: {yaml}");
+        }
+    }
 }
