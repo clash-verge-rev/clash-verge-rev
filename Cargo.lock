@@ -1118,6 +1118,7 @@ dependencies = [
  "clash-verge-i18n",
  "clash-verge-limiter",
  "clash-verge-logging",
+ "clash-verge-media-unlock",
  "clash-verge-signal",
  "clash_verge_logger",
  "clash_verge_service_ipc",
@@ -1146,7 +1147,6 @@ dependencies = [
  "reqwest 0.13.4",
  "reqwest_dav",
  "runas",
- "rust_iso3166",
  "rustls",
  "scopeguard",
  "serde",
@@ -1214,6 +1214,21 @@ dependencies = [
  "compact_str",
  "flexi_logger",
  "log",
+ "tokio",
+]
+
+[[package]]
+name = "clash-verge-media-unlock"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "clash-verge-logging",
+ "log",
+ "regex",
+ "reqwest 0.13.4",
+ "rust_iso3166",
+ "serde",
+ "serde_json",
  "tokio",
 ]
 
