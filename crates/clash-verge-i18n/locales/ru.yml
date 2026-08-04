@@ -8,12 +8,12 @@ notifications:
     body: Переключено на {mode}.
   systemProxyToggled:
     title: Системный прокси
-    'on': System proxy has been enabled.
-    'off': System proxy has been disabled.
+    'on': Системный прокси включён.
+    'off': Системный прокси отключён.
   tunModeToggled:
     title: Режим TUN
-    'on': TUN mode has been enabled.
-    'off': TUN mode has been disabled.
+    'on': Режим TUN включён.
+    'off': Режим TUN отключён.
   lightweightModeEntered:
     title: Легкий режим
     body: Включен легкий режим.
@@ -27,10 +27,10 @@ notifications:
     title: Приложение скрыто
     body: Clash Verge работает в фоновом режиме.
   updateReady:
-    title: Clash Verge Update
-    body: A new version (v{version}) has been downloaded and is ready to install.
-    installNow: Install Now
-    later: Later
+    title: Обновление Clash Verge
+    body: Новая версия (v{version}) скачана и готова к установке.
+    installNow: Установить сейчас
+    later: Позже
 service:
   adminInstallPrompt: Для установки службы Clash Verge требуются права администратора.
   adminUninstallPrompt: Для удаления службы Clash Verge требуются права администратора.
