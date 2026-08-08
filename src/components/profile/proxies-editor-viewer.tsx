@@ -48,6 +48,7 @@ import { useThemeMode } from '@/services/states'
 import type { MonacoEditorInstance } from '@/types/monaco'
 import getSystem from '@/utils/get-system'
 import parseUri from '@/utils/uri-parser'
+import { parseYamlSafe } from '@/utils/yaml'
 
 interface Props {
   profileUid: string
@@ -275,7 +276,7 @@ export const ProxiesEditorViewer = (props: Props) => {
   const fetchProfile = useCallback(async () => {
     const data = await readProfileFile(profileUid)
 
-    const originProxiesObj = yaml.load(data) as {
+    const originProxiesObj = parseYamlSafe(data) as {
       proxies: IProxyConfig[]
     } | null
 
@@ -284,7 +285,7 @@ export const ProxiesEditorViewer = (props: Props) => {
 
   const fetchContent = useCallback(async () => {
     const data = await readProfileFile(property)
-    const obj = yaml.load(data) as ISeqProfileConfig | null
+    const obj = parseYamlSafe(data) as ISeqProfileConfig | null
 
     setPrependSeq(obj?.prepend || [])
     setAppendSeq(obj?.append || [])
@@ -299,7 +300,7 @@ export const ProxiesEditorViewer = (props: Props) => {
       return
     }
 
-    const obj = yaml.load(currData) as ISeqProfileConfig | null
+    const obj = parseYamlSafe(currData) as ISeqProfileConfig | null
     startTransition(() => {
       setPrependSeq(obj?.prepend ?? [])
       setAppendSeq(obj?.append ?? [])

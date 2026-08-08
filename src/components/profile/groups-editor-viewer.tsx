@@ -65,6 +65,7 @@ import { useThemeMode } from '@/services/states'
 import type { TranslationKey } from '@/types/generated/i18n-keys'
 import type { MonacoEditorInstance } from '@/types/monaco'
 import getSystem from '@/utils/get-system'
+import { parseYamlSafe } from '@/utils/yaml'
 
 interface Props {
   proxiesUid: string
@@ -328,7 +329,7 @@ export const GroupsEditorViewer = (props: Props) => {
   }
   const fetchContent = useCallback(async () => {
     const data = await readProfileFile(property)
-    const obj = yaml.load(data) as ISeqProfileConfig | null
+    const obj = parseYamlSafe(data) as ISeqProfileConfig | null
 
     setPrependSeq(obj?.prepend || [])
     setAppendSeq(obj?.append || [])
@@ -352,7 +353,7 @@ export const GroupsEditorViewer = (props: Props) => {
       return
     }
 
-    const obj = yaml.load(currData) as ISeqProfileConfig | null
+    const obj = parseYamlSafe(currData) as ISeqProfileConfig | null
     startTransition(() => {
       setPrependSeq(obj?.prepend ?? [])
       setAppendSeq(obj?.append ?? [])
@@ -391,13 +392,15 @@ export const GroupsEditorViewer = (props: Props) => {
   const fetchProxyPolicy = useCallback(async () => {
     const data = await readProfileFile(profileUid)
     const proxiesData = await readProfileFile(proxiesUid)
-    const originGroupsObj = yaml.load(data) as {
+    const originGroupsObj = parseYamlSafe(data) as {
       'proxy-groups': IProxyGroupConfig[]
     } | null
 
-    const originProxiesObj = yaml.load(data) as { proxies: [] } | null
+    const originProxiesObj = parseYamlSafe(data) as { proxies: [] } | null
     const originProxies = originProxiesObj?.proxies || []
-    const moreProxiesObj = yaml.load(proxiesData) as ISeqProfileConfig | null
+    const moreProxiesObj = parseYamlSafe(
+      proxiesData,
+    ) as ISeqProfileConfig | null
     const morePrependProxies = moreProxiesObj?.prepend || []
     const moreAppendProxies = moreProxiesObj?.append || []
     const moreDeleteProxies = normalizeDeleteSeq(moreProxiesObj?.delete)
@@ -437,21 +440,21 @@ export const GroupsEditorViewer = (props: Props) => {
     const mergeData = await readProfileFile(mergeUid)
     const globalMergeData = await readProfileFile('Merge')
 
-    const originGroupsObj = yaml.load(data) as {
+    const originGroupsObj = parseYamlSafe(data) as {
       'proxy-groups': IProxyGroupConfig[]
     } | null
 
-    const originProviderObj = yaml.load(data) as {
+    const originProviderObj = parseYamlSafe(data) as {
       'proxy-providers': Record<string, unknown>
     } | null
     const originProvider = originProviderObj?.['proxy-providers'] || {}
 
-    const moreProviderObj = yaml.load(mergeData) as {
+    const moreProviderObj = parseYamlSafe(mergeData) as {
       'proxy-providers': Record<string, unknown>
     } | null
     const moreProvider = moreProviderObj?.['proxy-providers'] || {}
 
-    const globalProviderObj = yaml.load(globalMergeData) as {
+    const globalProviderObj = parseYamlSafe(globalMergeData) as {
       'proxy-providers': Record<string, unknown>
     } | null
     const globalProvider = globalProviderObj?.['proxy-providers'] || {}

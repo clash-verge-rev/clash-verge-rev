@@ -52,6 +52,7 @@ import type { TranslationKey } from '@/types/generated/i18n-keys'
 import type { MonacoEditorInstance } from '@/types/monaco'
 import getSystem from '@/utils/get-system'
 import { isValidIpCidr } from '@/utils/network'
+import { parseYamlSafe } from '@/utils/yaml'
 
 interface Props {
   groupsUid: string
@@ -409,7 +410,7 @@ export const RulesEditorViewer = (props: Props) => {
   const fetchContent = useCallback(async () => {
     hasLoadedSeqConfigRef.current = false
     const data = await readProfileFile(property)
-    const obj = yaml.load(data) as ISeqProfileConfig | null
+    const obj = parseYamlSafe(data) as ISeqProfileConfig | null
 
     setPrependSeq(obj?.prepend || [])
     setAppendSeq(obj?.append || [])
@@ -425,7 +426,7 @@ export const RulesEditorViewer = (props: Props) => {
       return
     }
 
-    const obj = yaml.load(currData) as ISeqProfileConfig | null
+    const obj = parseYamlSafe(currData) as ISeqProfileConfig | null
     startTransition(() => {
       setPrependSeq(obj?.prepend ?? [])
       setAppendSeq(obj?.append ?? [])
@@ -482,13 +483,13 @@ export const RulesEditorViewer = (props: Props) => {
     const mergeData = await readProfileFile(mergeUid) // merge配置文件
     const globalMergeData = await readProfileFile('Merge') // global merge配置文件
 
-    const rulesObj = yaml.load(data) as { rules: [] } | null
+    const rulesObj = parseYamlSafe(data) as { rules: [] } | null
 
-    const originGroupsObj = yaml.load(data) as {
+    const originGroupsObj = parseYamlSafe(data) as {
       'proxy-groups': IProxyGroupConfig[]
     } | null
     const originGroups = originGroupsObj?.['proxy-groups'] || []
-    const moreGroupsObj = yaml.load(groupsData) as ISeqProfileConfig | null
+    const moreGroupsObj = parseYamlSafe(groupsData) as ISeqProfileConfig | null
     const rawPrependGroups = moreGroupsObj?.['prepend']
     const morePrependGroups = Array.isArray(rawPrependGroups)
       ? (rawPrependGroups as IProxyGroupConfig[])
@@ -514,29 +515,29 @@ export const RulesEditorViewer = (props: Props) => {
       moreAppendGroups,
     )
 
-    const originRuleSetObj = yaml.load(data) as {
+    const originRuleSetObj = parseYamlSafe(data) as {
       'rule-providers': Record<string, unknown>
     } | null
     const originRuleSet = originRuleSetObj?.['rule-providers'] || {}
-    const moreRuleSetObj = yaml.load(mergeData) as {
+    const moreRuleSetObj = parseYamlSafe(mergeData) as {
       'rule-providers': Record<string, unknown>
     } | null
     const moreRuleSet = moreRuleSetObj?.['rule-providers'] || {}
-    const globalRuleSetObj = yaml.load(globalMergeData) as {
+    const globalRuleSetObj = parseYamlSafe(globalMergeData) as {
       'rule-providers': Record<string, unknown>
     } | null
     const globalRuleSet = globalRuleSetObj?.['rule-providers'] || {}
     const ruleSet = Object.assign({}, originRuleSet, moreRuleSet, globalRuleSet)
 
-    const originSubRuleObj = yaml.load(data) as {
+    const originSubRuleObj = parseYamlSafe(data) as {
       'sub-rules': Record<string, unknown>
     } | null
     const originSubRule = originSubRuleObj?.['sub-rules'] || {}
-    const moreSubRuleObj = yaml.load(mergeData) as {
+    const moreSubRuleObj = parseYamlSafe(mergeData) as {
       'sub-rules': Record<string, unknown>
     } | null
     const moreSubRule = moreSubRuleObj?.['sub-rules'] || {}
-    const globalSubRuleObj = yaml.load(globalMergeData) as {
+    const globalSubRuleObj = parseYamlSafe(globalMergeData) as {
       'sub-rules': Record<string, unknown>
     } | null
     const globalSubRule = globalSubRuleObj?.['sub-rules'] || {}
