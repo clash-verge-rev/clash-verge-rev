@@ -6,7 +6,7 @@ import { load, LoadOptions } from 'js-yaml'
 export function parseYamlSafe(input: string, options?: LoadOptions) {
   try {
     const rs = load(input, options)
-    return rs === undefined ? null : rs
+    return rs ?? null
   } catch (ignore) {
     return null
   }
