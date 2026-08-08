@@ -67,7 +67,7 @@ tokio = { version = "1.53.1", features = [
   "time",
   "sync",
 ] }
-flexi_logger = "0.31.9"
+flexi_logger = "0.31.10"
 log = "0.4.33"
 regex = "1.13.1"
 reqwest = { version = "0.13.4", features = ["json", "cookies", "gzip", "rustls", "form"] }
