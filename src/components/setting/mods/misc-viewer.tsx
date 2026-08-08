@@ -38,46 +38,38 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
     autoLogClean?: number
     defaultLatencyTimeout?: number
   }>({})
-  const {
-    app_log_level: defaultAppLogLevel,
-    app_log_max_size: defaultAppLogMaxSize,
-    app_log_max_count: defaultAppLogMaxCount,
-    auto_close_connection: defaultAutoCloseConnection,
-    auto_check_update: defaultAutoCheckUpdate,
-    enable_builtin_enhanced: defaultEnableBuiltinEnhanced,
-    proxy_layout_column: defaultProxyLayoutColumn,
-    enable_auto_delay_detection: defaultEnableAutoDelayDetection,
-    auto_delay_detection_interval_minutes:
-      defaultAutoDelayDetectionIntervalMinutes,
-    default_latency_test: defaultDefaultLatencyTest,
-    auto_log_clean: defaultAutoLogClean,
-    default_latency_timeout: defaultDefaultLatencyTimeout,
-  } = useDefaultVergeConfig() ?? {}
+  const defaultVerge = useDefaultVergeConfig()
 
   useImperativeHandle(ref, () => ({
     open: () => {
       setOpen(true)
       setValues({
-        appLogLevel: verge?.app_log_level ?? defaultAppLogLevel,
-        appLogMaxSize: verge?.app_log_max_size ?? defaultAppLogMaxSize,
-        appLogMaxCount: verge?.app_log_max_count ?? defaultAppLogMaxCount,
+        appLogLevel: verge?.app_log_level ?? defaultVerge?.app_log_level,
+        appLogMaxSize:
+          verge?.app_log_max_size ?? defaultVerge?.app_log_max_size,
+        appLogMaxCount:
+          verge?.app_log_max_count ?? defaultVerge?.app_log_max_count,
         autoCloseConnection:
-          verge?.auto_close_connection ?? defaultAutoCloseConnection,
-        autoCheckUpdate: verge?.auto_check_update ?? defaultAutoCheckUpdate,
+          verge?.auto_close_connection ?? defaultVerge?.auto_close_connection,
+        autoCheckUpdate:
+          verge?.auto_check_update ?? defaultVerge?.auto_check_update,
         enableBuiltinEnhanced:
-          verge?.enable_builtin_enhanced ?? defaultEnableBuiltinEnhanced,
+          verge?.enable_builtin_enhanced ??
+          defaultVerge?.enable_builtin_enhanced,
         proxyLayoutColumn:
-          verge?.proxy_layout_column ?? defaultProxyLayoutColumn,
+          verge?.proxy_layout_column ?? defaultVerge?.proxy_layout_column,
         enableAutoDelayDetection:
-          verge?.enable_auto_delay_detection ?? defaultEnableAutoDelayDetection,
+          verge?.enable_auto_delay_detection ??
+          defaultVerge?.enable_auto_delay_detection,
         autoDelayDetectionIntervalMinutes:
           verge?.auto_delay_detection_interval_minutes ??
-          defaultAutoDelayDetectionIntervalMinutes,
+          defaultVerge?.auto_delay_detection_interval_minutes,
         defaultLatencyTest:
-          verge?.default_latency_test ?? defaultDefaultLatencyTest,
-        autoLogClean: verge?.auto_log_clean ?? defaultAutoLogClean,
+          verge?.default_latency_test ?? defaultVerge?.default_latency_test,
+        autoLogClean: verge?.auto_log_clean ?? defaultVerge?.auto_log_clean,
         defaultLatencyTimeout:
-          verge?.default_latency_timeout ?? defaultDefaultLatencyTimeout,
+          verge?.default_latency_timeout ??
+          defaultVerge?.default_latency_timeout,
       })
     },
     close: () => setOpen(false),
@@ -125,19 +117,20 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
             startIcon={<RestartAltRounded />}
             onClick={() => {
               setValues({
-                appLogLevel: defaultAppLogLevel,
-                appLogMaxSize: defaultAppLogMaxSize,
-                appLogMaxCount: defaultAppLogMaxCount,
-                autoCloseConnection: defaultAutoCloseConnection,
-                autoCheckUpdate: defaultAutoCheckUpdate,
-                enableBuiltinEnhanced: defaultEnableBuiltinEnhanced,
-                proxyLayoutColumn: defaultProxyLayoutColumn,
-                enableAutoDelayDetection: defaultEnableAutoDelayDetection,
+                appLogLevel: defaultVerge?.app_log_level,
+                appLogMaxSize: defaultVerge?.app_log_max_size,
+                appLogMaxCount: defaultVerge?.app_log_max_count,
+                autoCloseConnection: defaultVerge?.auto_close_connection,
+                autoCheckUpdate: defaultVerge?.auto_check_update,
+                enableBuiltinEnhanced: defaultVerge?.enable_builtin_enhanced,
+                proxyLayoutColumn: defaultVerge?.proxy_layout_column,
+                enableAutoDelayDetection:
+                  defaultVerge?.enable_auto_delay_detection,
                 autoDelayDetectionIntervalMinutes:
-                  defaultAutoDelayDetectionIntervalMinutes,
-                defaultLatencyTest: defaultDefaultLatencyTest,
-                autoLogClean: defaultAutoLogClean,
-                defaultLatencyTimeout: defaultDefaultLatencyTimeout,
+                  defaultVerge?.auto_delay_detection_interval_minutes,
+                defaultLatencyTest: defaultVerge?.default_latency_test,
+                autoLogClean: defaultVerge?.auto_log_clean,
+                defaultLatencyTimeout: defaultVerge?.default_latency_timeout,
               })
             }}
           >
@@ -156,7 +149,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
         <ListItem sx={{ padding: '5px 2px' }}>
           <SettingListItemText
             label={t('settings.modals.misc.fields.appLogLevel')}
-            modified={values.appLogLevel !== defaultAppLogLevel}
+            modified={values.appLogLevel !== defaultVerge?.app_log_level}
           />
           <Select
             size="small"
@@ -180,7 +173,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
         <ListItem sx={{ padding: '5px 2px' }}>
           <SettingListItemText
             label={t('settings.modals.misc.fields.appLogMaxSize')}
-            modified={values.appLogMaxSize !== defaultAppLogMaxSize}
+            modified={values.appLogMaxSize !== defaultVerge?.app_log_max_size}
             sx={{ maxWidth: 'fit-content' }}
           />
           <TextField
@@ -213,7 +206,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
         <ListItem sx={{ padding: '5px 2px' }}>
           <SettingListItemText
             label={t('settings.modals.misc.fields.appLogMaxCount')}
-            modified={values.appLogMaxCount !== defaultAppLogMaxCount}
+            modified={values.appLogMaxCount !== defaultVerge?.app_log_max_count}
             sx={{ maxWidth: 'fit-content' }}
           />
           <TextField
@@ -246,7 +239,9 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
         <ListItem sx={{ padding: '5px 2px' }}>
           <SettingListItemText
             label={t('settings.modals.misc.fields.autoCloseConnections')}
-            modified={values.autoCloseConnection !== defaultAutoCloseConnection}
+            modified={
+              values.autoCloseConnection !== defaultVerge?.auto_close_connection
+            }
             sx={{ maxWidth: 'fit-content' }}
           />
           <TooltipIcon
@@ -266,7 +261,9 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
         <ListItem sx={{ padding: '5px 2px' }}>
           <SettingListItemText
             label={t('settings.modals.misc.fields.autoCheckUpdate')}
-            modified={values.autoCheckUpdate !== defaultAutoCheckUpdate}
+            modified={
+              values.autoCheckUpdate !== defaultVerge?.auto_check_update
+            }
           />
           <Switch
             edge="end"
@@ -281,7 +278,8 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
           <SettingListItemText
             label={t('settings.modals.misc.fields.enableBuiltinEnhanced')}
             modified={
-              values.enableBuiltinEnhanced !== defaultEnableBuiltinEnhanced
+              values.enableBuiltinEnhanced !==
+              defaultVerge?.enable_builtin_enhanced
             }
             sx={{ maxWidth: 'fit-content' }}
           />
@@ -302,7 +300,9 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
         <ListItem sx={{ padding: '5px 2px' }}>
           <SettingListItemText
             label={t('settings.modals.misc.fields.proxyLayoutColumns')}
-            modified={values.proxyLayoutColumn !== defaultProxyLayoutColumn}
+            modified={
+              values.proxyLayoutColumn !== defaultVerge?.proxy_layout_column
+            }
           />
           <Select
             size="small"
@@ -329,7 +329,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
         <ListItem sx={{ padding: '5px 2px' }}>
           <SettingListItemText
             label={t('settings.modals.misc.fields.autoLogClean')}
-            modified={values.autoLogClean !== defaultAutoLogClean}
+            modified={values.autoLogClean !== defaultVerge?.auto_log_clean}
           />
           <Select
             size="small"
@@ -385,7 +385,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
             label={t('settings.modals.misc.fields.autoDelayDetection')}
             modified={
               values.enableAutoDelayDetection !==
-              defaultEnableAutoDelayDetection
+              defaultVerge?.enable_auto_delay_detection
             }
             sx={{ maxWidth: 'fit-content' }}
           />
@@ -408,7 +408,7 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
             label={t('settings.modals.misc.fields.autoDelayDetectionInterval')}
             modified={
               values.autoDelayDetectionIntervalMinutes !==
-              defaultAutoDelayDetectionIntervalMinutes
+              defaultVerge?.auto_delay_detection_interval_minutes
             }
             sx={{ maxWidth: 'fit-content' }}
           />
@@ -446,7 +446,9 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
         <ListItem sx={{ padding: '5px 2px' }}>
           <SettingListItemText
             label={t('settings.modals.misc.fields.defaultLatencyTest')}
-            modified={values.defaultLatencyTest !== defaultDefaultLatencyTest}
+            modified={
+              values.defaultLatencyTest !== defaultVerge?.default_latency_test
+            }
             sx={{ maxWidth: 'fit-content' }}
           />
           <TooltipIcon
@@ -472,7 +474,8 @@ export const MiscViewer = forwardRef<DialogRef>((props, ref) => {
           <SettingListItemText
             label={t('settings.modals.misc.fields.defaultLatencyTimeout')}
             modified={
-              values.defaultLatencyTimeout !== defaultDefaultLatencyTimeout
+              values.defaultLatencyTimeout !==
+              defaultVerge?.default_latency_timeout
             }
           />
           <TextField

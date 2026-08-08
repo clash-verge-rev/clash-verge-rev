@@ -36,12 +36,8 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
   const [enableController, setEnableController] = useState(
     verge?.enable_external_controller ?? false,
   )
-  const {
-    'external-controller': defaultExternalController,
-    secret: defaultSecret,
-  } = useDefaultClashConfig() || {}
-  const { enable_external_controller: defaultEnableExternalController } =
-    useDefaultVergeConfig() ?? {}
+  const defalutClash = useDefaultClashConfig()
+  const defaultVerge = useDefaultVergeConfig()
 
   // 对话框打开时初始化配置
   useImperativeHandle(ref, () => ({
@@ -131,9 +127,11 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
             color="warning"
             startIcon={<RestartAltRounded />}
             onClick={() => {
-              setEnableController(defaultEnableExternalController ?? false)
-              setController(defaultExternalController ?? '')
-              setSecret(defaultSecret ?? '')
+              setEnableController(
+                defaultVerge?.enable_external_controller ?? false,
+              )
+              setController(defalutClash?.['external-controller'] ?? '')
+              setSecret(defalutClash?.secret ?? '')
             }}
           >
             {t('shared.actions.resetToDefault')}
@@ -166,7 +164,9 @@ export function ControllerViewer({ ref }: { ref?: Ref<DialogRef> }) {
         >
           <SettingListItemText
             label={t('settings.sections.externalController.fields.enable')}
-            modified={enableController !== defaultEnableExternalController}
+            modified={
+              enableController !== defaultVerge?.enable_external_controller
+            }
           />
           <Switch
             edge="end"

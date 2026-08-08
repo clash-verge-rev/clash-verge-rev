@@ -33,17 +33,7 @@ const generateRandomPort = () =>
 export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
   const { t } = useTranslation()
   const { verge } = useVerge()
-  const {
-    verge_mixed_port: defaultVergeMixedPort,
-    verge_socks_port: defaultVergeSocksPort,
-    verge_socks_enabled: defaultVergeSocksEnabled,
-    verge_port: defaultVergeHttpPort,
-    verge_http_enabled: defaultVergeHttpEnabled,
-    verge_redir_port: defaultVergeRedirPort,
-    verge_redir_enabled: defaultVergeRedirEnabled,
-    verge_tproxy_port: defaultVergeTproxyPort,
-    verge_tproxy_enabled: defaultVergeTproxyEnabled,
-  } = useDefaultVergeConfig() ?? {}
+  const defaultVerge = useDefaultVergeConfig()
   const displayedMixedPort = useDisplayedMixedPort()
   const [open, setOpen] = useState(false)
 
@@ -166,7 +156,7 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
         <ListItem sx={{ padding: '4px 0', minHeight: 36 }}>
           <SettingListItemText
             label={t('settings.modals.clashPort.fields.mixed')}
-            modified={mixedPort !== defaultVergeMixedPort}
+            modified={mixedPort !== defaultVerge?.verge_mixed_port}
             slotProps={{ primary: { sx: { fontSize: 12 } } }}
           />
           <div style={{ display: 'flex', alignItems: 'center' }}>
@@ -181,7 +171,8 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
             <IconButton
               size="small"
               onClick={() =>
-                defaultVergeMixedPort && setMixedPort(defaultVergeMixedPort)
+                defaultVerge?.verge_mixed_port &&
+                setMixedPort(defaultVerge.verge_mixed_port)
               }
               title={t('shared.actions.resetToDefault')}
               sx={{ mr: 0.5 }}
@@ -210,8 +201,8 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
           <SettingListItemText
             label={t('settings.modals.clashPort.fields.socks')}
             modified={
-              socksEnabled !== defaultVergeSocksEnabled ||
-              (socksEnabled && socksPort !== defaultVergeSocksPort)
+              socksEnabled !== defaultVerge?.verge_socks_enabled ||
+              (socksEnabled && socksPort !== defaultVerge?.verge_socks_port)
             }
             slotProps={{ primary: { sx: { fontSize: 12 } } }}
           />
@@ -228,7 +219,8 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
             <IconButton
               size="small"
               onClick={() =>
-                defaultVergeSocksPort && setSocksPort(defaultVergeSocksPort)
+                defaultVerge?.verge_socks_port &&
+                setSocksPort(defaultVerge.verge_socks_port)
               }
               title={t('shared.actions.resetToDefault')}
               sx={{ mr: 0.5 }}
@@ -259,8 +251,8 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
           <SettingListItemText
             label={t('settings.modals.clashPort.fields.http')}
             modified={
-              httpEnabled !== defaultVergeHttpEnabled ||
-              (httpEnabled && httpPort !== defaultVergeHttpPort)
+              httpEnabled !== defaultVerge?.verge_http_enabled ||
+              (httpEnabled && httpPort !== defaultVerge?.verge_port)
             }
             slotProps={{ primary: { sx: { fontSize: 12 } } }}
           />
@@ -277,7 +269,7 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
             <IconButton
               size="small"
               onClick={() =>
-                defaultVergeHttpPort && setHttpPort(defaultVergeHttpPort)
+                defaultVerge?.verge_port && setHttpPort(defaultVerge.verge_port)
               }
               title={t('shared.actions.resetToDefault')}
               sx={{ mr: 0.5 }}
@@ -309,8 +301,8 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
             <SettingListItemText
               label={t('settings.modals.clashPort.fields.redir')}
               modified={
-                redirEnabled !== defaultVergeRedirEnabled ||
-                (redirEnabled && redirPort !== defaultVergeRedirPort)
+                redirEnabled !== defaultVerge?.verge_redir_enabled ||
+                (redirEnabled && redirPort !== defaultVerge?.verge_redir_port)
               }
               slotProps={{ primary: { sx: { fontSize: 12 } } }}
             />
@@ -327,7 +319,8 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
               <IconButton
                 size="small"
                 onClick={() =>
-                  defaultVergeRedirPort && setRedirPort(defaultVergeRedirPort)
+                  defaultVerge?.verge_redir_port &&
+                  setRedirPort(defaultVerge.verge_redir_port)
                 }
                 title={t('shared.actions.resetToDefault')}
                 sx={{ mr: 0.5 }}
@@ -360,8 +353,9 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
             <SettingListItemText
               label={t('settings.modals.clashPort.fields.tproxy')}
               modified={
-                tproxyEnabled !== defaultVergeTproxyEnabled ||
-                (tproxyEnabled && tproxyPort !== defaultVergeTproxyPort)
+                tproxyEnabled !== defaultVerge?.verge_tproxy_enabled ||
+                (tproxyEnabled &&
+                  tproxyPort !== defaultVerge?.verge_tproxy_port)
               }
               slotProps={{ primary: { sx: { fontSize: 12 } } }}
             />
@@ -378,8 +372,8 @@ export const ClashPortViewer = forwardRef<ClashPortViewerRef>((_, ref) => {
               <IconButton
                 size="small"
                 onClick={() =>
-                  defaultVergeTproxyPort &&
-                  setTproxyPort(defaultVergeTproxyPort)
+                  defaultVerge?.verge_tproxy_port &&
+                  setTproxyPort(defaultVerge.verge_tproxy_port)
                 }
                 title={t('shared.actions.resetToDefault')}
                 sx={{ mr: 0.5 }}

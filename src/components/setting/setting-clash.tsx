@@ -45,18 +45,7 @@ const SettingClash = ({ onError }: Props) => {
     'log-level': defaultLogLevel,
     'unified-delay': defaultUnifiedDelay,
   } = useDefaultClashConfig() ?? {}
-  const {
-    enable_dns_settings: defaultEnableDnsSettings,
-    verge_mixed_port: defaultVergeMixedPort,
-    verge_socks_port: defaultVergeSocksPort,
-    verge_socks_enabled: defaultVergeSocksEnabled,
-    verge_port: defaultVergeHttpPort,
-    verge_http_enabled: defaultVergeHttpEnabled,
-    verge_redir_port: defaultVergeRedirPort,
-    verge_redir_enabled: defaultVergeRedirEnabled,
-    verge_tproxy_port: defaultVergeTproxyPort,
-    verge_tproxy_enabled: defaultVergeTproxyEnabled,
-  } = useDefaultVergeConfig() ?? {}
+  const defaultVerge = useDefaultVergeConfig()
 
   const {
     ipv6,
@@ -165,7 +154,7 @@ const SettingClash = ({ onError }: Props) => {
             onClick={() => dnsRef.current?.open()}
           />
         }
-        modified={dnsSettingsEnabled !== defaultEnableDnsSettings}
+        modified={dnsSettingsEnabled !== defaultVerge?.enable_dns_settings}
       >
         <Switch
           edge="end"
@@ -258,16 +247,19 @@ const SettingClash = ({ onError }: Props) => {
       <SettingItem
         label={t('settings.sections.clash.form.fields.portConfig')}
         modified={
-          verge_mixed_port !== defaultVergeMixedPort ||
-          (verge_socks_enabled && verge_socks_port !== defaultVergeSocksPort) ||
-          verge_socks_enabled !== defaultVergeSocksEnabled ||
-          (verge_http_enabled && verge_http_port !== defaultVergeHttpPort) ||
-          verge_http_enabled !== defaultVergeHttpEnabled ||
-          (verge_redir_enabled && verge_redir_port !== defaultVergeRedirPort) ||
-          verge_redir_enabled !== defaultVergeRedirEnabled ||
+          verge_mixed_port !== defaultVerge?.verge_mixed_port ||
+          (verge_socks_enabled &&
+            verge_socks_port !== defaultVerge?.verge_socks_port) ||
+          verge_socks_enabled !== defaultVerge?.verge_socks_enabled ||
+          (verge_http_enabled &&
+            verge_http_port !== defaultVerge?.verge_port) ||
+          verge_http_enabled !== defaultVerge?.verge_http_enabled ||
+          (verge_redir_enabled &&
+            verge_redir_port !== defaultVerge?.verge_redir_port) ||
+          verge_redir_enabled !== defaultVerge?.verge_redir_enabled ||
           (verge_tproxy_enabled &&
-            verge_tproxy_port !== defaultVergeTproxyPort) ||
-          verge_tproxy_enabled !== defaultVergeTproxyEnabled
+            verge_tproxy_port !== defaultVerge?.verge_tproxy_port) ||
+          verge_tproxy_enabled !== defaultVerge?.verge_tproxy_enabled
         }
       >
         <TextField

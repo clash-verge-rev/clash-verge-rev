@@ -19,7 +19,7 @@ export function WebUIViewer({ ref }: { ref?: Ref<DialogRef> }) {
 
   const { clashInfo } = useClashInfo()
   const { verge, patchVerge, mutateVerge } = useVerge()
-  const { web_ui_list: defaultWebUIList } = useDefaultVergeConfig() ?? {}
+  const defaultVerge = useDefaultVergeConfig()
 
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState(false)
@@ -125,10 +125,12 @@ export function WebUIViewer({ ref }: { ref?: Ref<DialogRef> }) {
               onClick={() => {
                 mutateVerge(
                   (old) =>
-                    old ? { ...old, web_ui_list: defaultWebUIList ?? [] } : old,
+                    old
+                      ? { ...old, web_ui_list: defaultVerge?.web_ui_list ?? [] }
+                      : old,
                   false,
                 )
-                patchVerge({ web_ui_list: defaultWebUIList ?? [] })
+                patchVerge({ web_ui_list: defaultVerge?.web_ui_list ?? [] })
               }}
             >
               {t('shared.actions.resetToDefault')}

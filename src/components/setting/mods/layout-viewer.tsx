@@ -53,24 +53,7 @@ const getIcons = async (icon_dir: string, name: string) => {
 export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
   const { t } = useTranslation()
   const { verge, patchVerge, mutateVerge } = useVerge()
-  const {
-    traffic_graph: defaultTrafficGraph,
-    enable_memory_usage: defaultEnableMemoryUsage,
-    enable_group_icon: defaultEnableGroupIcon,
-    pause_render_traffic_stats_on_blur: defaultPauseRenderTrafficStatsOnBlur,
-    notice_position: defaultNoticePosition,
-    enable_hover_jump_navigator: defaultEnableHoverJumpNavigator,
-    hover_jump_navigator_delay: defaultHoverJumpNavigatorDelay,
-    menu_icon: defaultMenuIcon,
-    collapse_navbar: defaultCollapseNavbar,
-    tray_icon: defaultTrayIcon,
-    enable_tray_speed: defaultEnableTraySpeed,
-    tray_proxy_groups_display_mode: defaultProxyGroupsDisplayMode,
-    tray_inline_outbound_modes: defaultTrayInlineOutboundModes,
-    common_tray_icon: defaultCommonTrayIcon,
-    sysproxy_tray_icon: defaultSysproxyTrayIcon,
-    tun_tray_icon: defaultTunTrayIcon,
-  } = useDefaultVergeConfig() ?? {}
+  const defaultVerge = useDefaultVergeConfig()
 
   const [open, setOpen] = useState(false)
   const [commonIcon, setCommonIcon] = useState('')
@@ -151,48 +134,52 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
                 old
                   ? {
                       ...old,
-                      traffic_graph: defaultTrafficGraph,
-                      enable_memory_usage: defaultEnableMemoryUsage,
-                      enable_group_icon: defaultEnableGroupIcon,
+                      traffic_graph: defaultVerge?.traffic_graph,
+                      enable_memory_usage: defaultVerge?.enable_memory_usage,
+                      enable_group_icon: defaultVerge?.enable_group_icon,
                       pause_render_traffic_stats_on_blur:
-                        defaultPauseRenderTrafficStatsOnBlur,
-                      notice_position: defaultNoticePosition,
+                        defaultVerge?.pause_render_traffic_stats_on_blur,
+                      notice_position: defaultVerge?.notice_position,
                       enable_hover_jump_navigator:
-                        defaultEnableHoverJumpNavigator,
+                        defaultVerge?.enable_hover_jump_navigator,
                       hover_jump_navigator_delay:
-                        defaultHoverJumpNavigatorDelay,
-                      menu_icon: defaultMenuIcon,
-                      collapse_navbar: defaultCollapseNavbar,
-                      tray_icon: defaultTrayIcon,
-                      enable_tray_speed: defaultEnableTraySpeed,
+                        defaultVerge?.hover_jump_navigator_delay,
+                      menu_icon: defaultVerge?.menu_icon,
+                      collapse_navbar: defaultVerge?.collapse_navbar,
+                      tray_icon: defaultVerge?.tray_icon,
+                      enable_tray_speed: defaultVerge?.enable_tray_speed,
                       tray_proxy_groups_display_mode:
-                        defaultProxyGroupsDisplayMode,
+                        defaultVerge?.tray_proxy_groups_display_mode,
                       tray_inline_outbound_modes:
-                        defaultTrayInlineOutboundModes,
-                      common_tray_icon: defaultCommonTrayIcon,
-                      sysproxy_tray_icon: defaultSysproxyTrayIcon,
-                      tun_tray_icon: defaultTunTrayIcon,
+                        defaultVerge?.tray_inline_outbound_modes,
+                      common_tray_icon: defaultVerge?.common_tray_icon,
+                      sysproxy_tray_icon: defaultVerge?.sysproxy_tray_icon,
+                      tun_tray_icon: defaultVerge?.tun_tray_icon,
                     }
                   : old,
               )
               patchVerge({
-                traffic_graph: defaultTrafficGraph,
-                enable_memory_usage: defaultEnableMemoryUsage,
-                enable_group_icon: defaultEnableGroupIcon,
+                traffic_graph: defaultVerge?.traffic_graph,
+                enable_memory_usage: defaultVerge?.enable_memory_usage,
+                enable_group_icon: defaultVerge?.enable_group_icon,
                 pause_render_traffic_stats_on_blur:
-                  defaultPauseRenderTrafficStatsOnBlur,
-                notice_position: defaultNoticePosition,
-                enable_hover_jump_navigator: defaultEnableHoverJumpNavigator,
-                hover_jump_navigator_delay: defaultHoverJumpNavigatorDelay,
-                menu_icon: defaultMenuIcon,
-                collapse_navbar: defaultCollapseNavbar,
-                tray_icon: defaultTrayIcon,
-                enable_tray_speed: defaultEnableTraySpeed,
-                tray_proxy_groups_display_mode: defaultProxyGroupsDisplayMode,
-                tray_inline_outbound_modes: defaultTrayInlineOutboundModes,
-                common_tray_icon: defaultCommonTrayIcon,
-                sysproxy_tray_icon: defaultSysproxyTrayIcon,
-                tun_tray_icon: defaultTunTrayIcon,
+                  defaultVerge?.pause_render_traffic_stats_on_blur,
+                notice_position: defaultVerge?.notice_position,
+                enable_hover_jump_navigator:
+                  defaultVerge?.enable_hover_jump_navigator,
+                hover_jump_navigator_delay:
+                  defaultVerge?.hover_jump_navigator_delay,
+                menu_icon: defaultVerge?.menu_icon,
+                collapse_navbar: defaultVerge?.collapse_navbar,
+                tray_icon: defaultVerge?.tray_icon,
+                enable_tray_speed: defaultVerge?.enable_tray_speed,
+                tray_proxy_groups_display_mode:
+                  defaultVerge?.tray_proxy_groups_display_mode,
+                tray_inline_outbound_modes:
+                  defaultVerge?.tray_inline_outbound_modes,
+                common_tray_icon: defaultVerge?.common_tray_icon,
+                sysproxy_tray_icon: defaultVerge?.sysproxy_tray_icon,
+                tun_tray_icon: defaultVerge?.tun_tray_icon,
               })
             }}
           >
@@ -229,7 +216,7 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
         <Item>
           <SettingListItemText
             label={t('settings.components.verge.layout.fields.trafficGraph')}
-            modified={verge?.traffic_graph !== defaultTrafficGraph}
+            modified={verge?.traffic_graph !== defaultVerge?.traffic_graph}
           />
           <GuardState
             value={verge?.traffic_graph ?? true}
@@ -246,7 +233,9 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
         <Item>
           <SettingListItemText
             label={t('settings.components.verge.layout.fields.memoryUsage')}
-            modified={verge?.enable_memory_usage !== defaultEnableMemoryUsage}
+            modified={
+              verge?.enable_memory_usage !== defaultVerge?.enable_memory_usage
+            }
           />
           <GuardState
             value={verge?.enable_memory_usage ?? true}
@@ -263,7 +252,9 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
         <Item>
           <SettingListItemText
             label={t('settings.components.verge.layout.fields.proxyGroupIcon')}
-            modified={verge?.enable_group_icon !== defaultEnableGroupIcon}
+            modified={
+              verge?.enable_group_icon !== defaultVerge?.enable_group_icon
+            }
           />
           <GuardState
             value={verge?.enable_group_icon ?? true}
@@ -284,7 +275,7 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
             )}
             modified={
               verge?.pause_render_traffic_stats_on_blur !==
-              defaultPauseRenderTrafficStatsOnBlur
+              defaultVerge?.pause_render_traffic_stats_on_blur
             }
           />
           <GuardState
@@ -306,7 +297,7 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
         <Item>
           <SettingListItemText
             label={t('settings.components.verge.layout.fields.toastPosition')}
-            modified={verge?.notice_position !== defaultNoticePosition}
+            modified={verge?.notice_position !== defaultVerge?.notice_position}
           />
           <GuardState
             value={verge?.notice_position ?? 'top-right'}
@@ -345,7 +336,7 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
             label={t('settings.components.verge.layout.fields.hoverNavigator')}
             modified={
               verge?.enable_hover_jump_navigator !==
-              defaultEnableHoverJumpNavigator
+              defaultVerge?.enable_hover_jump_navigator
             }
             extra={
               <TooltipIcon
@@ -375,7 +366,7 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
             )}
             modified={
               verge?.hover_jump_navigator_delay !==
-              defaultHoverJumpNavigatorDelay
+              defaultVerge?.hover_jump_navigator_delay
             }
             extra={
               <TooltipIcon
@@ -430,7 +421,7 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
         <Item>
           <SettingListItemText
             label={t('settings.components.verge.layout.fields.navIcon')}
-            modified={verge?.menu_icon !== defaultMenuIcon}
+            modified={verge?.menu_icon !== defaultVerge?.menu_icon}
           />
           <GuardState
             value={verge?.menu_icon ?? 'monochrome'}
@@ -456,7 +447,7 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
         <Item>
           <SettingListItemText
             label={t('settings.components.verge.layout.fields.collapseNavBar')}
-            modified={verge?.collapse_navbar !== defaultCollapseNavbar}
+            modified={verge?.collapse_navbar !== defaultVerge?.collapse_navbar}
           />
           <GuardState
             value={verge?.collapse_navbar ?? false}
@@ -474,7 +465,7 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
           <Item>
             <SettingListItemText
               label={t('settings.components.verge.layout.fields.trayIcon')}
-              modified={verge?.tray_icon !== defaultTrayIcon}
+              modified={verge?.tray_icon !== defaultVerge?.tray_icon}
             />
             <GuardState
               value={verge?.tray_icon ?? 'monochrome'}
@@ -505,7 +496,9 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
               label={t(
                 'settings.components.verge.layout.fields.enableTraySpeed',
               )}
-              modified={verge?.enable_tray_speed !== defaultEnableTraySpeed}
+              modified={
+                verge?.enable_tray_speed !== defaultVerge?.enable_tray_speed
+              }
             />
             <GuardState
               value={verge?.enable_tray_speed ?? false}
@@ -546,7 +539,7 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
             )}
             modified={
               verge?.tray_proxy_groups_display_mode !==
-              defaultProxyGroupsDisplayMode
+              defaultVerge?.tray_proxy_groups_display_mode
             }
           />
           <GuardState
@@ -586,7 +579,7 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
             )}
             modified={
               verge?.tray_inline_outbound_modes !==
-              defaultTrayInlineOutboundModes
+              defaultVerge?.tray_inline_outbound_modes
             }
           />
           <GuardState
@@ -604,7 +597,9 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
         <Item>
           <SettingListItemText
             label={t('settings.components.verge.layout.fields.commonTrayIcon')}
-            modified={verge?.common_tray_icon !== defaultCommonTrayIcon}
+            modified={
+              verge?.common_tray_icon !== defaultVerge?.common_tray_icon
+            }
           />
           <GuardState
             value={verge?.common_tray_icon}
@@ -658,7 +653,9 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
             label={t(
               'settings.components.verge.layout.fields.systemProxyTrayIcon',
             )}
-            modified={verge?.sysproxy_tray_icon !== defaultSysproxyTrayIcon}
+            modified={
+              verge?.sysproxy_tray_icon !== defaultVerge?.sysproxy_tray_icon
+            }
           />
           <GuardState
             value={verge?.sysproxy_tray_icon}
@@ -709,7 +706,7 @@ export const LayoutViewer = forwardRef<DialogRef>((_, ref) => {
         <Item>
           <SettingListItemText
             label={t('settings.components.verge.layout.fields.tunTrayIcon')}
-            modified={verge?.tun_tray_icon !== defaultTunTrayIcon}
+            modified={verge?.tun_tray_icon !== defaultVerge?.tun_tray_icon}
           />
           <GuardState
             value={verge?.tun_tray_icon}

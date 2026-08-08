@@ -143,10 +143,7 @@ const ProxyControlSwitches = ({
   const { uninstallServiceAndStartSidecar } = useServiceUninstaller()
   const { indicator: systemProxyIndicator, toggleSystemProxy } =
     useSystemProxyState()
-  const {
-    enable_system_proxy: defaultEnableSystemProxy,
-    enable_tun_mode: defaultEnableTunMode,
-  } = useDefaultVergeConfig() ?? {}
+  const defaultVerge = useDefaultVergeConfig()
   const { runState, isTunModeAvailable, mutateSystemState } = useSystemState()
   // Offer to uninstall only a service that is actually there and working.
   const isServiceInstallReady = runState.serviceUsable
@@ -203,7 +200,7 @@ const ProxyControlSwitches = ({
           onToggle={(value) => toggleSystemProxy(value)}
           onError={onError}
           highlight={systemProxyIndicator}
-          defaultActive={defaultEnableSystemProxy}
+          defaultActive={defaultVerge?.enable_system_proxy}
         />
       )}
 
@@ -217,7 +214,7 @@ const ProxyControlSwitches = ({
           onError={onError}
           disabled={!isTunModeAvailable}
           highlight={enable_tun_mode || false}
-          defaultActive={defaultEnableTunMode}
+          defaultActive={defaultVerge?.enable_tun_mode}
           extraIcons={
             <>
               {!isTunModeAvailable && (
