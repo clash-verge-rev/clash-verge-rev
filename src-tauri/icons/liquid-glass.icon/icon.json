@@ -6,6 +6,10 @@
     {
       "layers": [
         {
+          "blend-mode": "normal",
+          "fill": "automatic",
+          "glass": true,
+          "hidden": false,
           "image-name": "ClashVerge.svg",
           "name": "ClashVerge",
           "position": {
