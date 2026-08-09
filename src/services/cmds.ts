@@ -121,9 +121,11 @@ export async function patchClashMode(payload: string) {
   return invoke<void>('patch_clash_mode', { payload })
 }
 
-export async function syncTrayProxySelection() {
+export async function refreshTrayProxyMenu() {
   return invoke<void>('sync_tray_proxy_selection')
 }
+
+export const syncTrayProxySelection = refreshTrayProxyMenu
 
 /**
  * Record which node a group is on, in the current profile.

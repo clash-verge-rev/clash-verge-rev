@@ -4,6 +4,7 @@ import {
   type ProxyDelay,
 } from 'tauri-plugin-mihomo-api'
 
+import { refreshTrayProxyMenu } from '@/services/cmds'
 import {
   memberDetails,
   providerNameOf,
@@ -124,7 +125,7 @@ class DelayManager {
     })
   }
 
-  private queueGroupNotification(group: string) {
+  private settleGroup(group: string) {
     if ((this.activeBatches.get(group) ?? 0) > 0) return
     // Dropped so the next read builds a fresh identity. Only this group's snapshot changes;
     // the set-level map is rebuilt too, but its other entries keep their identities.
@@ -132,6 +133,9 @@ class DelayManager {
     this.groupSetSnapshots.clear()
     this.pendingGroupUpdates.add(group)
     this.scheduleGroupFlush()
+    void refreshTrayProxyMenu().catch((error) => {
+      console.error('[DelayManager] Failed to refresh tray proxy menu', error)
+    })
   }
 
   /**
@@ -308,7 +312,7 @@ class DelayManager {
     timeout: number,
   ): Promise<DelayUpdate> {
     const update = await this.measureDelay(member, group, timeout)
-    this.queueGroupNotification(group)
+    this.settleGroup(group)
     return update
   }
 
@@ -441,7 +445,7 @@ class DelayManager {
         this.activeBatches.set(group, remaining)
       } else {
         this.activeBatches.delete(group)
-        this.queueGroupNotification(group)
+        this.settleGroup(group)
       }
     }
     const totalTime = Date.now() - startTime

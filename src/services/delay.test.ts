@@ -1,14 +1,20 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 
+const { refreshTrayProxyMenu } = vi.hoisted(() => ({
+  refreshTrayProxyMenu: vi.fn(async () => {}),
+}))
+
 /**
- * The delay API is the only thing stubbed. What is under test is when the manager announces
- * that a group has settled — the granularity that decides whether a sorted list re-orders
+ * The external delay and tray APIs are stubbed. What is under test is when the manager settles
+ * a group — the granularity that decides whether a sorted list re-orders and the tray refreshes
  * once per test or once per result.
  */
 vi.mock('tauri-plugin-mihomo-api', () => ({
   delayProxyByName: vi.fn(async () => ({ delay: 120 })),
   healthcheckNodeInProvider: vi.fn(async () => ({ delay: 120 })),
 }))
+
+vi.mock('@/services/cmds', () => ({ refreshTrayProxyMenu }))
 
 import type { ResolvedProxyMember } from '@/types/proxy-view'
 
@@ -34,6 +40,7 @@ let unsubscribe: () => void
 
 beforeEach(() => {
   settles = 0
+  refreshTrayProxyMenu.mockClear()
   unsubscribe = delayManager.addGroupListener('g', () => {
     settles += 1
   })
@@ -51,6 +58,7 @@ describe('group settle notifications', () => {
     await nextFrame()
 
     expect(settles).toBe(1)
+    expect(refreshTrayProxyMenu).toHaveBeenCalledTimes(1)
   })
 
   test('a batch settles the group once, however many proxies it covered', async () => {
@@ -63,6 +71,7 @@ describe('group settle notifications', () => {
     await nextFrame()
 
     expect(settles).toBe(1)
+    expect(refreshTrayProxyMenu).toHaveBeenCalledTimes(1)
   })
 
   test('an unsubscribed listener stops being called', async () => {
@@ -100,10 +109,12 @@ describe('group settle notifications', () => {
     await delayManager.checkDelay(node('single') as never, 'g', 5000)
     await nextFrame()
     expect(settles).toBe(0)
+    expect(refreshTrayProxyMenu).not.toHaveBeenCalled()
 
     await batch
     await nextFrame()
     expect(settles).toBe(1)
+    expect(refreshTrayProxyMenu).toHaveBeenCalledTimes(1)
   })
 
   test('unsubscribing one listener leaves the others subscribed', async () => {
