@@ -73,6 +73,7 @@ export const ProxiesEditorViewer = (props: Props) => {
   const [prependSeq, setPrependSeq] = useState<IProxyConfig[]>([])
   const [appendSeq, setAppendSeq] = useState<IProxyConfig[]>([])
   const [deleteSeq, setDeleteSeq] = useState<string[]>([])
+  const hasLoadedSeqConfigRef = useRef(false)
 
   // 节点的 name 会被用作 SortableContext 的 item id、React key 以及拖拽排序的
   // 依据。当 name 为空/null（例如高级模式下粘贴了缺少 name 的节点）时，
@@ -284,36 +285,58 @@ export const ProxiesEditorViewer = (props: Props) => {
   }, [profileUid])
 
   const fetchContent = useCallback(async () => {
+    hasLoadedSeqConfigRef.current = false
     const data = await readProfileFile(property)
-    const obj = parseYamlSafe(data) as ISeqProfileConfig | null
+    const obj = parseYamlSafe(data) as ISeqProfileConfig | null | undefined
+
+    setPrevData(data)
+    setCurrData(data)
+
+    if (obj === undefined) {
+      setVisualization(false)
+      return
+    }
 
     setPrependSeq(obj?.prepend || [])
     setAppendSeq(obj?.append || [])
     setDeleteSeq(obj?.delete || [])
-
-    setPrevData(data)
-    setCurrData(data)
+    hasLoadedSeqConfigRef.current = true
   }, [property])
 
-  useEffect(() => {
-    if (currData === '' || visualization !== true) {
+  const handleVisualizationToggle = () => {
+    if (visualization) {
+      setVisualization(false)
       return
     }
 
-    const obj = parseYamlSafe(currData) as ISeqProfileConfig | null
+    const obj = parseYamlSafe(currData) as ISeqProfileConfig | null | undefined
+    if (obj === undefined) {
+      hasLoadedSeqConfigRef.current = false
+      return
+    }
+
+    hasLoadedSeqConfigRef.current = true
     startTransition(() => {
       setPrependSeq(obj?.prepend ?? [])
       setAppendSeq(obj?.append ?? [])
       setDeleteSeq(obj?.delete ?? [])
     })
-  }, [currData, visualization])
+    setVisualization(true)
+  }
 
   useEffect(() => {
-    if (!(prependSeq && appendSeq && deleteSeq)) {
+    if (
+      !hasLoadedSeqConfigRef.current ||
+      !(prependSeq && appendSeq && deleteSeq)
+    ) {
       return
     }
 
     const serialize = () => {
+      if (!hasLoadedSeqConfigRef.current) {
+        return
+      }
+
       try {
         setCurrData(
           yaml.dump(
@@ -387,9 +410,7 @@ export const ProxiesEditorViewer = (props: Props) => {
               <Button
                 variant="contained"
                 size="small"
-                onClick={() => {
-                  setVisualization((prev) => !prev)
-                }}
+                onClick={handleVisualizationToggle}
               >
                 {visualization
                   ? t('shared.editorModes.advanced')

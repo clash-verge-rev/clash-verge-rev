@@ -182,6 +182,7 @@ export const GroupsEditorViewer = (props: Props) => {
   const [prependSeq, setPrependSeq] = useState<IProxyGroupConfig[]>([])
   const [appendSeq, setAppendSeq] = useState<IProxyGroupConfig[]>([])
   const [deleteSeq, setDeleteSeq] = useState<string[]>([])
+  const hasLoadedSeqConfigRef = useRef(false)
 
   const filteredPrependSeq = useMemo(
     () => prependSeq.filter((group) => match(group.name)),
@@ -328,8 +329,17 @@ export const GroupsEditorViewer = (props: Props) => {
     }
   }
   const fetchContent = useCallback(async () => {
+    hasLoadedSeqConfigRef.current = false
     const data = await readProfileFile(property)
-    const obj = parseYamlSafe(data) as ISeqProfileConfig | null
+    const obj = parseYamlSafe(data) as ISeqProfileConfig | null | undefined
+
+    setPrevData(data)
+    setCurrData(data)
+
+    if (obj === undefined) {
+      setVisualization(false)
+      return
+    }
 
     setPrependSeq(obj?.prepend || [])
     setAppendSeq(obj?.append || [])
@@ -343,17 +353,22 @@ export const GroupsEditorViewer = (props: Props) => {
       }
       return normalized
     })
-
-    setPrevData(data)
-    setCurrData(data)
+    hasLoadedSeqConfigRef.current = true
   }, [property])
 
-  useEffect(() => {
-    if (currData === '' || visualization !== true) {
+  const handleVisualizationToggle = () => {
+    if (visualization) {
+      setVisualization(false)
       return
     }
 
-    const obj = parseYamlSafe(currData) as ISeqProfileConfig | null
+    const obj = parseYamlSafe(currData) as ISeqProfileConfig | null | undefined
+    if (obj === undefined) {
+      hasLoadedSeqConfigRef.current = false
+      return
+    }
+
+    hasLoadedSeqConfigRef.current = true
     startTransition(() => {
       setPrependSeq(obj?.prepend ?? [])
       setAppendSeq(obj?.append ?? [])
@@ -368,12 +383,17 @@ export const GroupsEditorViewer = (props: Props) => {
         return normalized
       })
     })
-  }, [currData, visualization])
+    setVisualization(true)
+  }
 
   // 优化：异步处理大数据yaml.dump，避免UI卡死
   useEffect(() => {
-    if (prependSeq && appendSeq && deleteSeq) {
+    if (hasLoadedSeqConfigRef.current && prependSeq && appendSeq && deleteSeq) {
       const serialize = () => {
+        if (!hasLoadedSeqConfigRef.current) {
+          return
+        }
+
         try {
           setCurrData(buildGroupsYaml(prependSeq, appendSeq, deleteSeq))
         } catch (e) {
@@ -539,9 +559,7 @@ export const GroupsEditorViewer = (props: Props) => {
               <Button
                 variant="contained"
                 size="small"
-                onClick={() => {
-                  setVisualization((prev) => !prev)
-                }}
+                onClick={handleVisualizationToggle}
               >
                 {visualization
                   ? t('shared.editorModes.advanced')

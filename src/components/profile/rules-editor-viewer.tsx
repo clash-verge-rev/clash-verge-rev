@@ -410,29 +410,42 @@ export const RulesEditorViewer = (props: Props) => {
   const fetchContent = useCallback(async () => {
     hasLoadedSeqConfigRef.current = false
     const data = await readProfileFile(property)
-    const obj = parseYamlSafe(data) as ISeqProfileConfig | null
+    const obj = parseYamlSafe(data) as ISeqProfileConfig | null | undefined
+
+    setPrevData(data)
+    setCurrData(data)
+
+    if (obj === undefined) {
+      setVisualization(false)
+      return
+    }
 
     setPrependSeq(obj?.prepend || [])
     setAppendSeq(obj?.append || [])
     setDeleteSeq(obj?.delete || [])
-
-    setPrevData(data)
-    setCurrData(data)
     hasLoadedSeqConfigRef.current = true
   }, [property])
 
-  useEffect(() => {
-    if (currData === '' || visualization !== true) {
+  const handleVisualizationToggle = () => {
+    if (visualization) {
+      setVisualization(false)
       return
     }
 
-    const obj = parseYamlSafe(currData) as ISeqProfileConfig | null
+    const obj = parseYamlSafe(currData) as ISeqProfileConfig | null | undefined
+    if (obj === undefined) {
+      hasLoadedSeqConfigRef.current = false
+      return
+    }
+
+    hasLoadedSeqConfigRef.current = true
     startTransition(() => {
       setPrependSeq(obj?.prepend ?? [])
       setAppendSeq(obj?.append ?? [])
       setDeleteSeq(obj?.delete ?? [])
     })
-  }, [currData, visualization])
+    setVisualization(true)
+  }
 
   // 优化：异步处理大数据yaml.dump，避免UI卡死
   useEffect(() => {
@@ -610,9 +623,7 @@ export const RulesEditorViewer = (props: Props) => {
               <Button
                 variant="contained"
                 size="small"
-                onClick={() => {
-                  setVisualization((prev) => !prev)
-                }}
+                onClick={handleVisualizationToggle}
               >
                 {visualization
                   ? t('shared.editorModes.advanced')
