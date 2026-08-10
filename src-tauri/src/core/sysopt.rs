@@ -34,6 +34,51 @@ const fn proxy_apply_steps(sys_enabled: bool, auto_enabled: bool) -> [ProxyApply
     }
 }
 
+/// What the OS currently holds, as far as we can prove it.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum OsProxyState {
+    /// Both proxy reads succeeded and reported disabled.
+    Clean,
+    /// A proxy is enabled or its state is unknown.
+    DirtyOrUnknown,
+}
+
+/// Treat failed reads as dirty so stale proxies are never skipped.
+fn classify_os_proxy_state(sysproxy_enabled: Result<bool>, autoproxy_enabled: Result<bool>) -> OsProxyState {
+    match (sysproxy_enabled, autoproxy_enabled) {
+        (Ok(false), Ok(false)) => OsProxyState::Clean,
+        _ => OsProxyState::DirtyOrUnknown,
+    }
+}
+
+/// Read proxy state without invoking privileged `networksetup` writes.
+fn read_os_proxy_state() -> OsProxyState {
+    let sysproxy_enabled = Sysproxy::get_system_proxy()
+        .map(|current| current.enable)
+        .map_err(anyhow::Error::from);
+    let autoproxy_enabled = Autoproxy::get_auto_proxy()
+        .map(|current| current.enable)
+        .map_err(anyhow::Error::from);
+
+    if let Err(err) = &sysproxy_enabled {
+        logging!(warn, Type::Core, "failed to read system proxy state: {err:#}");
+    }
+    if let Err(err) = &autoproxy_enabled {
+        logging!(warn, Type::Core, "failed to read auto proxy state: {err:#}");
+    }
+
+    classify_os_proxy_state(sysproxy_enabled, autoproxy_enabled)
+}
+
+async fn current_os_proxy_state() -> OsProxyState {
+    tokio::task::spawn_blocking(read_os_proxy_state)
+        .await
+        .unwrap_or_else(|join_error| {
+            logging!(warn, Type::Core, "failed to read OS proxy state: {join_error}");
+            OsProxyState::DirtyOrUnknown
+        })
+}
+
 pub(crate) struct Sysopt {
     update_lock: TokioMutex<()>,
     guard_operation_lock: TokioMutex<()>,
@@ -201,7 +246,17 @@ impl Sysopt {
         };
 
         let _guard_operation = self.guard_operation_lock.lock().await;
-        self.access_guard().write().set_guard_type(guard_type);
+
+        // Only macOS reads exactly the state its disable path writes. A running guard can still
+        // race this check until stop-and-wait support is added.
+        if cfg!(target_os = "macos")
+            && !sys.enable
+            && !auto.enable
+            && current_os_proxy_state().await == OsProxyState::Clean
+        {
+            self.access_guard().write().set_guard_type(guard_type);
+            return Ok(());
+        }
 
         let apply_steps = proxy_apply_steps(sys.enable, auto.enable);
 
@@ -216,6 +271,8 @@ impl Sysopt {
         })
         .await??;
 
+        // Never point the guard at a target that failed to reach the OS.
+        self.access_guard().write().set_guard_type(guard_type);
         Ok(())
     }
 
@@ -243,6 +300,11 @@ impl Sysopt {
             (sys.clone(), auto.clone())
         };
 
+        // Avoid a privileged write when macOS is already clean.
+        if cfg!(target_os = "macos") && current_os_proxy_state().await == OsProxyState::Clean {
+            return Ok(());
+        }
+
         tokio::task::spawn_blocking(move || -> Result<()> {
             sys.set_system_proxy()?;
             auto.set_auto_proxy()?;
@@ -256,7 +318,48 @@ impl Sysopt {
 
 #[cfg(test)]
 mod tests {
-    use super::{ProxyApplyStep, proxy_apply_steps};
+    use super::{OsProxyState, ProxyApplyStep, classify_os_proxy_state, proxy_apply_steps};
+
+    #[test]
+    fn os_is_clean_only_when_both_reads_succeed_and_report_disabled() {
+        assert_eq!(classify_os_proxy_state(Ok(false), Ok(false)), OsProxyState::Clean);
+        assert_eq!(
+            classify_os_proxy_state(Ok(true), Ok(false)),
+            OsProxyState::DirtyOrUnknown
+        );
+        assert_eq!(
+            classify_os_proxy_state(Ok(false), Ok(true)),
+            OsProxyState::DirtyOrUnknown
+        );
+        assert_eq!(
+            classify_os_proxy_state(Ok(true), Ok(true)),
+            OsProxyState::DirtyOrUnknown
+        );
+    }
+
+    #[test]
+    fn a_failed_read_never_counts_as_clean() {
+        assert_eq!(
+            classify_os_proxy_state(Err(anyhow::anyhow!("read failed")), Ok(false)),
+            OsProxyState::DirtyOrUnknown
+        );
+        assert_eq!(
+            classify_os_proxy_state(Ok(false), Err(anyhow::anyhow!("read failed"))),
+            OsProxyState::DirtyOrUnknown
+        );
+        assert_eq!(
+            classify_os_proxy_state(Err(anyhow::anyhow!("a")), Err(anyhow::anyhow!("b"))),
+            OsProxyState::DirtyOrUnknown
+        );
+        assert_eq!(
+            classify_os_proxy_state(Err(anyhow::anyhow!("read failed")), Ok(true)),
+            OsProxyState::DirtyOrUnknown
+        );
+        assert_eq!(
+            classify_os_proxy_state(Ok(true), Err(anyhow::anyhow!("read failed"))),
+            OsProxyState::DirtyOrUnknown
+        );
+    }
 
     #[test]
     fn pure_sysproxy_mode_clears_pac_before_enabling_global_proxy() {
