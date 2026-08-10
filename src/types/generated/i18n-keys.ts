@@ -760,6 +760,8 @@ export const translationKeys = [
   'settings.feedback.errors.clashService.reinstallFailed',
   'settings.feedback.errors.clashService.repairFailed',
   'settings.feedback.errors.clashService.sidecarFailed',
+  'settings.feedback.errors.sysproxy.privilegeRequired',
+  'settings.feedback.errors.sysproxy.directFallback',
   'settings.feedback.notifications.clash.restartSuccess',
   'settings.feedback.notifications.clash.versionUpdated',
   'settings.feedback.notifications.clash.alreadyLatestVersion',

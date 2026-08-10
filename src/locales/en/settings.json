@@ -649,6 +649,10 @@
         "reinstallFailed": "Failed to reinstall the service",
         "repairFailed": "Failed to repair the service",
         "sidecarFailed": "Failed to continue with Sidecar"
+      },
+      "sysproxy": {
+        "privilegeRequired": "Cannot set the system proxy: macOS refused the change for lack of privileges. Install the Clash Verge service; an administrator can also turn off the administrator-password requirement for system-wide settings, in the advanced options of System Settings → Privacy & Security.",
+        "directFallback": "Failed to set the system proxy; traffic has been switched back to a direct connection."
       }
     },
     "notifications": {

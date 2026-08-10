@@ -16,6 +16,21 @@ function renderedDetail(): string | undefined {
   return typeof slot === 'string' ? slot : undefined
 }
 
+/** Return the rendered failure notice fields. */
+function renderedExplanation() {
+  const notices = getSnapshotNotices()
+  const i18n = notices[notices.length - 1]?.i18n
+  const readString = (value: unknown) =>
+    typeof value === 'string' ? value : undefined
+
+  return {
+    outerKey: i18n?.key,
+    explanationKey: readString(i18n?.params?.prefixKey),
+    prefix: readString(i18n?.params?.prefix),
+    detail: readString(i18n?.params?.message),
+  }
+}
+
 afterEach(() => {
   getSnapshotNotices().forEach((notice) => hideNotice(notice.id))
 })
@@ -55,6 +70,95 @@ describe('command failures reaching a notice', () => {
     })
 
     expect(renderedDetail()).toContain('disk full')
+  })
+})
+
+describe('system proxy failures the user can be told about', () => {
+  it('explains a fallback to a direct connection', () => {
+    showNotice.error({
+      code: 'SYSPROXY_DIRECT_FALLBACK',
+      detail: 'service could not set the proxy',
+    })
+
+    expect(renderedExplanation()).toEqual({
+      outerKey: 'shared.feedback.notices.prefixedRaw',
+      explanationKey: 'settings.feedback.errors.sysproxy.directFallback',
+      prefix: undefined,
+      detail: 'service could not set the proxy',
+    })
+  })
+
+  it('explains a refused privileged write', () => {
+    showNotice.error({
+      code: 'SYSPROXY_PRIVILEGE_REQUIRED',
+      detail: 'admin privileges required to modify system proxy',
+    })
+
+    expect(renderedExplanation()).toEqual({
+      outerKey: 'shared.feedback.notices.prefixedRaw',
+      explanationKey: 'settings.feedback.errors.sysproxy.privilegeRequired',
+      prefix: undefined,
+      detail: 'admin privileges required to modify system proxy',
+    })
+  })
+
+  it('explains the cause even when the caller names the operation', () => {
+    showNotice.error(
+      'layout.components.serviceMigration.errors.restartFailed',
+      {
+        code: 'SYSPROXY_PRIVILEGE_REQUIRED',
+        detail: 'admin privileges required to modify system proxy',
+      },
+    )
+
+    expect(renderedExplanation()).toEqual({
+      outerKey: 'shared.feedback.notices.prefixedRaw',
+      explanationKey: 'settings.feedback.errors.sysproxy.privilegeRequired',
+      prefix: undefined,
+      detail: 'admin privileges required to modify system proxy',
+    })
+  })
+
+  it('leaves the caller key in place for a code nothing explains', () => {
+    showNotice.error(
+      'layout.components.serviceMigration.errors.restartFailed',
+      {
+        code: 'SOME_UNMAPPED_CODE',
+        detail: 'connection refused',
+      },
+    )
+
+    expect(renderedExplanation()).toEqual({
+      outerKey: 'shared.feedback.notices.prefixedRaw',
+      explanationKey: 'layout.components.serviceMigration.errors.restartFailed',
+      prefix: undefined,
+      detail: 'connection refused',
+    })
+  })
+
+  it('leaves literal caller text in place, mapped code or not', () => {
+    showNotice.error('Could not reconnect the profile', {
+      code: 'SYSPROXY_PRIVILEGE_REQUIRED',
+      detail: 'admin privileges required to modify system proxy',
+    })
+
+    expect(renderedExplanation()).toEqual({
+      outerKey: 'shared.feedback.notices.prefixedRaw',
+      explanationKey: undefined,
+      prefix: 'Could not reconnect the profile',
+      detail: 'admin privileges required to modify system proxy',
+    })
+  })
+
+  it('falls back to the generic message for a code nothing maps', () => {
+    showNotice.error({ code: 'SYSPROXY_NOT_A_REAL_CODE', detail: 'boom' })
+
+    expect(renderedExplanation()).toEqual({
+      outerKey: 'shared.feedback.notices.prefixedRaw',
+      explanationKey: 'shared.feedback.errors.operationFailed',
+      prefix: undefined,
+      detail: 'boom',
+    })
   })
 })
 

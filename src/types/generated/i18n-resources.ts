@@ -796,6 +796,10 @@ export interface TranslationResources {
             sidecarFailed: string
             uninstallFailed: string
           }
+          sysproxy: {
+            directFallback: string
+            privilegeRequired: string
+          }
         }
         notifications: {
           clash: {

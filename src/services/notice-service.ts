@@ -1,6 +1,8 @@
 import i18n from 'i18next'
 import { ReactNode, isValidElement } from 'react'
 
+import type { TranslationKey } from '@/types/generated/i18n-keys'
+
 type NoticeType = 'success' | 'error' | 'info'
 
 interface NoticeTranslationDescriptor {
@@ -45,7 +47,8 @@ const DEFAULT_DURATIONS: Readonly<Record<NoticeType, number>> = {
 }
 
 const TRANSLATION_KEY_PATTERN = /^[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)+$/
-const CODED_ERROR_TRANSLATION_KEYS: Readonly<Record<string, string>> = {
+/** Localized explanation for each stable failure code. */
+const CODED_ERROR_TRANSLATION_KEYS: Readonly<Record<string, TranslationKey>> = {
   CLASH_CONFIG_UPDATE_FAILED:
     'settings.feedback.errors.clash.configUpdateFailed',
   CLASH_MODE_UPDATE_FAILED: 'settings.feedback.errors.clash.modeUpdateFailed',
@@ -69,6 +72,9 @@ const CODED_ERROR_TRANSLATION_KEYS: Readonly<Record<string, string>> = {
   SERVICE_SIDECAR_FAILED: 'settings.feedback.errors.clashService.sidecarFailed',
   SERVICE_UNINSTALL_FAILED:
     'settings.feedback.errors.clashService.uninstallFailed',
+  SYSPROXY_DIRECT_FALLBACK: 'settings.feedback.errors.sysproxy.directFallback',
+  SYSPROXY_PRIVILEGE_REQUIRED:
+    'settings.feedback.errors.sysproxy.privilegeRequired',
 }
 
 let nextId = 0
@@ -255,10 +261,11 @@ export function errorDetail(input: unknown): string {
 function parseCommandFailure(input: unknown) {
   if (!isCommandFailure(input) || !input.code) return undefined
 
+  const explanation = CODED_ERROR_TRANSLATION_KEYS[input.code]
   return {
-    translationKey:
-      CODED_ERROR_TRANSLATION_KEYS[input.code] ??
-      'shared.feedback.errors.operationFailed',
+    translationKey: explanation ?? 'shared.feedback.errors.operationFailed',
+    /** Whether this code has a specific explanation. */
+    explained: explanation !== undefined,
     detail: input.detail.trim() || undefined,
   }
 }
@@ -327,12 +334,17 @@ function normalizeNoticeMessage(
   if (typeof message === 'string') {
     if (rawDetail !== undefined) {
       if (shouldUseTranslationKey(message, params)) {
+        // A mapped cause outranks a translation key that only names the operation.
+        const prefixKey = parsedRawError?.explained
+          ? parsedRawError.translationKey
+          : message
+
         return {
           i18n: {
             key: 'shared.feedback.notices.prefixedRaw',
             params: {
               ...(params ?? {}),
-              prefixKey: message,
+              prefixKey,
               message: rawDetail,
             },
           },
