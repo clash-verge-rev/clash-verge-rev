@@ -614,45 +614,29 @@ async fn create_tray_menu(
                 .await
                 .map_or(None, |res| res.ok());
 
-        let runtime_proxy_groups_order = cmd::get_runtime_config()
-            .await
-            .map_err(|e| {
-                logging!(
-                    error,
-                    Type::Cmd,
-                    "Failed to fetch runtime proxy groups for tray menu: {e}"
-                );
-            })
-            .ok()
-            .flatten()
-            .map(|config| {
-                config
-                    .get("proxy-groups")
-                    .and_then(|groups| groups.as_sequence())
-                    .map(|groups| {
-                        groups
-                            .iter()
-                            .filter_map(|group| group.get("name"))
-                            .filter_map(|name| name.as_str())
-                            .map(|name| name.into())
-                            .collect::<Vec<String>>()
-                    })
-                    .unwrap_or_default()
-            });
+        let runtime = Config::runtime().await.latest_arc();
+        let runtime_proxy_groups_order = runtime.config.as_ref().map(|config| {
+            config
+                .get("proxy-groups")
+                .and_then(|groups| groups.as_sequence())
+                .map(|groups| {
+                    groups
+                        .iter()
+                        .filter_map(|group| group.get("name"))
+                        .filter_map(|name| name.as_str())
+                        .enumerate()
+                        .map(|(index, name)| (name.into(), index))
+                        .collect::<HashMap<String, usize>>()
+                })
+                .unwrap_or_default()
+        });
 
         (proxy_nodes_data, runtime_proxy_groups_order)
     } else {
         (None, None)
     };
 
-    let proxy_group_order_map: Option<HashMap<smartstring::SmartString<smartstring::LazyCompact>, usize>> =
-        runtime_proxy_groups_order.as_ref().map(|group_names| {
-            group_names
-                .iter()
-                .enumerate()
-                .map(|(index, name)| (name.clone(), index))
-                .collect::<HashMap<String, usize>>()
-        });
+    let proxy_group_order_map = runtime_proxy_groups_order;
 
     let verge_settings = Config::verge().await.latest_arc();
     let tray_proxy_groups_display_mode = verge_settings
