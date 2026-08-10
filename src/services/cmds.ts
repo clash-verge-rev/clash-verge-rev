@@ -1,6 +1,7 @@
 import { invoke } from '@tauri-apps/api/core'
 import dayjs from 'dayjs'
 
+import type { CommandFailure } from '@/services/notice-service'
 import { showNotice } from '@/services/notice-service'
 import type { ProxyViewV1 } from '@/types/proxy-view'
 import { debugLog } from '@/utils/debug'
@@ -205,7 +206,7 @@ export async function getEmbeddedServerPort() {
 }
 
 export async function changeClashCore(clashCore: string) {
-  return invoke<string | null>('change_clash_core', { clashCore })
+  return invoke<CommandFailure | null>('change_clash_core', { clashCore })
 }
 
 export async function restartCore() {

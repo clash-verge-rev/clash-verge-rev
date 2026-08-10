@@ -1,5 +1,4 @@
 use super::{CoreManager, RunningMode};
-use crate::cmd::StringifyErr as _;
 use crate::config::{Config, IVerge};
 use crate::core::handle::Handle;
 use crate::core::manager::CLASH_LOGGER;
@@ -548,7 +547,7 @@ impl CoreManager {
         let verge_data = Config::verge().await.latest_arc();
         verge_data.save_file().await.map_err(|e| e.to_string())?;
 
-        self.update_config_checked().await.stringify_err()?;
+        self.update_config_checked().await.map_err(|e| e.to_string())?;
         Ok(())
     }
 

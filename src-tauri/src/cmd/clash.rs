@@ -1,4 +1,4 @@
-use super::{CmdResult, WithErrorCode as _, coded_error, proxy_aware_coded_error};
+use super::{CmdResult, CommandFailure, WithErrorCode as _, coded_error, proxy_aware_coded_error};
 use crate::feat;
 use crate::utils::{dirs, yaml_emitter};
 use crate::{
@@ -59,7 +59,7 @@ pub async fn get_clash_mode() -> CmdResult<Option<String>> {
 
 /// 切换Clash核心
 #[tauri::command]
-pub async fn change_clash_core(clash_core: String) -> CmdResult<Option<String>> {
+pub async fn change_clash_core(clash_core: String) -> CmdResult<Option<CommandFailure>> {
     logging!(info, Type::Config, "changing core to {clash_core}");
 
     match CoreManager::global().change_core(&clash_core).await {
@@ -83,7 +83,7 @@ pub async fn change_clash_core(clash_core: String) -> CmdResult<Option<String>> 
             }
         }
         Err(err) => {
-            let error_msg: String = err;
+            let error_msg = err;
             logging!(error, Type::Core, "failed to change core: {error_msg}");
             handle::Handle::notice_message("config_core::change_error", error_msg.clone());
             Ok(Some(coded_error("CORE_CHANGE_FAILED", error_msg)))

@@ -1,26 +1,77 @@
 use anyhow::Result;
 use smartstring::alias::String;
 
-pub type CmdResult<T = ()> = Result<T, String>;
+pub type CmdResult<T = ()> = Result<T, CommandFailure>;
 
-const USER_ERROR_PREFIX: &str = "CVR_ERROR:";
+/// Structured command failure returned to the frontend.
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
+pub struct CommandFailure {
+    /// Stable frontend identifier, when classified.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub code: Option<std::string::String>,
+    /// Human-readable diagnostic detail.
+    pub detail: std::string::String,
+}
 
-pub fn coded_error(code: &str, detail: impl std::fmt::Display) -> String {
-    format!("{USER_ERROR_PREFIX}{code}\n{detail}").into()
+impl CommandFailure {
+    /// A failure with a stable code.
+    pub fn coded(code: &str, detail: impl std::fmt::Display) -> Self {
+        Self {
+            code: Some(code.to_owned()),
+            detail: detail.to_string(),
+        }
+    }
+
+    /// A failure with nothing to classify it by.
+    pub fn plain(detail: impl std::fmt::Display) -> Self {
+        Self {
+            code: None,
+            detail: detail.to_string(),
+        }
+    }
+}
+
+/// Preserve plain-string failures without inventing a code.
+impl From<&str> for CommandFailure {
+    fn from(detail: &str) -> Self {
+        Self::plain(detail)
+    }
+}
+
+impl From<std::string::String> for CommandFailure {
+    fn from(detail: std::string::String) -> Self {
+        Self { code: None, detail }
+    }
+}
+
+impl From<String> for CommandFailure {
+    fn from(detail: String) -> Self {
+        Self::plain(detail)
+    }
+}
+
+impl std::fmt::Display for CommandFailure {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str(&self.detail)
+    }
+}
+
+pub fn coded_error(code: &str, detail: impl std::fmt::Display) -> CommandFailure {
+    CommandFailure::coded(code, detail)
 }
 
 /// Prefer an actionable proxy classification over the operation's fallback code.
-pub fn proxy_aware_coded_error(error: &anyhow::Error, fallback: &str) -> String {
+pub fn proxy_aware_coded_error(error: &anyhow::Error, fallback: &str) -> CommandFailure {
     let code =
         crate::core::proxy_control::SysproxyFailure::from_chain(error).map_or(fallback, |failure| failure.code());
-    coded_error(code, format_args!("{error:#}"))
+    CommandFailure::coded(code, format_args!("{error:#}"))
 }
 
 /// Preserve uncoded failures unless the chain contains a proxy classification.
-pub fn proxy_aware_error(error: &anyhow::Error) -> String {
+pub fn proxy_aware_error(error: &anyhow::Error) -> CommandFailure {
     match crate::core::proxy_control::SysproxyFailure::from_chain(error) {
-        Some(failure) => coded_error(failure.code(), format_args!("{error:#}")),
-        None => format!("{error:#}").into(),
+        Some(failure) => CommandFailure::coded(failure.code(), format_args!("{error:#}")),
+        None => CommandFailure::plain(format_args!("{error:#}")),
     }
 }
 
@@ -75,7 +126,7 @@ pub trait WithErrorCode<T> {
 
 impl<T, E: std::fmt::Display> StringifyErr<T> for Result<T, E> {
     fn stringify_err(self) -> CmdResult<T> {
-        self.map_err(|e| e.to_string().into())
+        self.map_err(CommandFailure::plain)
     }
 
     fn stringify_err_log<F>(self, log_fn: F) -> CmdResult<T>
@@ -83,9 +134,9 @@ impl<T, E: std::fmt::Display> StringifyErr<T> for Result<T, E> {
         F: Fn(&str),
     {
         self.map_err(|e| {
-            let msg = String::from(e.to_string());
-            log_fn(&msg);
-            msg
+            let failure = CommandFailure::plain(e);
+            log_fn(&failure.detail);
+            failure
         })
     }
 }
@@ -93,13 +144,13 @@ impl<T, E: std::fmt::Display> StringifyErr<T> for Result<T, E> {
 impl<T, E: std::fmt::Display> WithErrorCode<T> for Result<T, E> {
     fn with_error_code(self, code: &str) -> CmdResult<T> {
         // Alternate formatting expands the full `anyhow` context chain.
-        self.map_err(|error| coded_error(code, format_args!("{error:#}")))
+        self.map_err(|error| CommandFailure::coded(code, format_args!("{error:#}")))
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{WithErrorCode as _, coded_error, proxy_aware_coded_error, proxy_aware_error};
+    use super::{CommandFailure, WithErrorCode as _, coded_error, proxy_aware_coded_error, proxy_aware_error};
     use crate::core::proxy_control::SysproxyFailure;
     use anyhow::Context as _;
 
@@ -107,7 +158,10 @@ mod tests {
     fn coded_error_preserves_stable_code_and_diagnostic_detail() {
         assert_eq!(
             coded_error("CORE_RESTART_FAILED", "connection refused"),
-            "CVR_ERROR:CORE_RESTART_FAILED\nconnection refused"
+            CommandFailure {
+                code: Some("CORE_RESTART_FAILED".to_owned()),
+                detail: "connection refused".to_owned(),
+            }
         );
     }
 
@@ -117,12 +171,17 @@ mod tests {
             .context("failed to reach the mihomo core")
             .context("failed to restart the core");
 
-        let detail = source.with_error_code("CORE_RESTART_FAILED").err().unwrap_or_default();
+        let failure = source
+            .with_error_code("CORE_RESTART_FAILED")
+            .err()
+            .unwrap_or_else(|| CommandFailure::plain("the call should have failed"));
 
         assert_eq!(
-            detail,
-            "CVR_ERROR:CORE_RESTART_FAILED\n\
-             failed to restart the core: failed to reach the mihomo core: connection refused"
+            failure,
+            CommandFailure {
+                code: Some("CORE_RESTART_FAILED".to_owned()),
+                detail: "failed to restart the core: failed to reach the mihomo core: connection refused".to_owned(),
+            }
         );
     }
 
@@ -130,9 +189,18 @@ mod tests {
     fn with_error_code_leaves_plain_display_errors_untouched() {
         let source: Result<(), &str> = Err("plain failure");
 
-        let detail = source.with_error_code("PROFILE_READ_FAILED").err().unwrap_or_default();
+        let failure = source
+            .with_error_code("PROFILE_READ_FAILED")
+            .err()
+            .unwrap_or_else(|| CommandFailure::plain("the call should have failed"));
 
-        assert_eq!(detail, "CVR_ERROR:PROFILE_READ_FAILED\nplain failure");
+        assert_eq!(
+            failure,
+            CommandFailure {
+                code: Some("PROFILE_READ_FAILED".to_owned()),
+                detail: "plain failure".to_owned(),
+            }
+        );
     }
 
     #[test]
@@ -143,12 +211,9 @@ mod tests {
 
         let reported = proxy_aware_coded_error(&failure, "CORE_RESTART_FAILED");
 
-        assert!(
-            reported.starts_with("CVR_ERROR:SYSPROXY_PRIVILEGE_REQUIRED\n"),
-            "{reported}"
-        );
-        assert!(reported.contains("failed to restart the core"), "{reported}");
-        assert!(reported.contains("admin privileges"), "{reported}");
+        assert_eq!(reported.code.as_deref(), Some("SYSPROXY_PRIVILEGE_REQUIRED"));
+        assert!(reported.detail.contains("failed to restart the core"), "{reported:?}");
+        assert!(reported.detail.contains("admin privileges"), "{reported:?}");
     }
 
     #[test]
@@ -159,7 +224,10 @@ mod tests {
 
         assert_eq!(
             reported,
-            "CVR_ERROR:CORE_START_FAILED\nfailed to start the core: connection refused"
+            CommandFailure {
+                code: Some("CORE_START_FAILED".to_owned()),
+                detail: "failed to start the core: connection refused".to_owned(),
+            }
         );
     }
 
@@ -169,8 +237,13 @@ mod tests {
 
         let reported = proxy_aware_error(&failure);
 
-        assert!(!reported.starts_with("CVR_ERROR:"), "{reported}");
-        assert_eq!(reported, "failed to save the configuration: disk full");
+        assert_eq!(
+            reported,
+            CommandFailure {
+                code: None,
+                detail: "failed to save the configuration: disk full".to_owned(),
+            }
+        );
     }
 
     #[test]
@@ -182,11 +255,28 @@ mod tests {
 
         let reported = proxy_aware_error(&failure);
 
+        assert_eq!(reported.code.as_deref(), Some("SYSPROXY_DIRECT_FALLBACK"));
         assert!(
-            reported.starts_with("CVR_ERROR:SYSPROXY_DIRECT_FALLBACK\n"),
-            "{reported}"
+            reported.detail.contains("failed to apply the verge patch"),
+            "{reported:?}"
         );
-        assert!(reported.contains("failed to apply the verge patch"), "{reported}");
-        assert!(reported.contains("service could not set the proxy"), "{reported}");
+        assert!(
+            reported.detail.contains("service could not set the proxy"),
+            "{reported:?}"
+        );
+    }
+
+    #[test]
+    fn the_serialised_shape_is_what_the_frontend_reads() {
+        assert_eq!(
+            serde_json::to_value(CommandFailure::coded("CORE_START_FAILED", "connection refused"))
+                .unwrap_or(serde_json::Value::Null),
+            serde_json::json!({ "code": "CORE_START_FAILED", "detail": "connection refused" })
+        );
+
+        assert_eq!(
+            serde_json::to_value(CommandFailure::plain("disk full")).unwrap_or(serde_json::Value::Null),
+            serde_json::json!({ "detail": "disk full" })
+        );
     }
 }

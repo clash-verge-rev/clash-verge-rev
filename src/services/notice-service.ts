@@ -45,7 +45,6 @@ const DEFAULT_DURATIONS: Readonly<Record<NoticeType, number>> = {
 }
 
 const TRANSLATION_KEY_PATTERN = /^[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)+$/
-const CODED_ERROR_PATTERN = /^CVR_ERROR:([A-Z0-9_]+)(?:\n([\s\S]*))?$/
 const CODED_ERROR_TRANSLATION_KEYS: Readonly<Record<string, string>> = {
   CLASH_CONFIG_UPDATE_FAILED:
     'settings.feedback.errors.clash.configUpdateFailed',
@@ -98,6 +97,14 @@ function parseNoticeExtras(extras: NoticeExtra[]): ParsedNoticeExtras {
     if (typeof extra === 'number' && duration === undefined) {
       duration = extra
       continue
+    }
+
+    // Parse command failures before generic translation params.
+    if (isCommandFailure(extra)) {
+      if (!raw) {
+        raw = extra
+        continue
+      }
     }
 
     if (isPlainRecord(extra)) {
@@ -210,6 +217,7 @@ function extractDisplayText(input: unknown): string | undefined {
   if (input instanceof Error) {
     return input.message || input.name
   }
+  if (isCommandFailure(input)) return input.detail
   if (typeof input === 'object' && input !== null) {
     const maybeMessage = (input as { message?: unknown }).message
     if (typeof maybeMessage === 'string') return maybeMessage
@@ -221,16 +229,37 @@ function extractDisplayText(input: unknown): string | undefined {
   }
 }
 
-function parseCodedError(input?: string) {
-  if (!input) return undefined
-  const match = input.match(CODED_ERROR_PATTERN)
-  if (!match) return undefined
+/** What a failed Tauri command reports. */
+export interface CommandFailure {
+  /** Stable identifier for the kind of failure, when the backend could classify it. */
+  code?: string
+  /** Human-readable diagnostic detail. */
+  detail: string
+}
+
+function isCommandFailure(input: unknown): input is CommandFailure {
+  if (typeof input !== 'object' || input === null) return false
+  const candidate = input as Partial<CommandFailure>
+  return (
+    typeof candidate.detail === 'string' &&
+    (candidate.code === undefined || typeof candidate.code === 'string')
+  )
+}
+
+/** Extract display text from a structured or legacy failure. */
+export function errorDetail(input: unknown): string {
+  return extractDisplayText(input) ?? ''
+}
+
+/** Parse a classified command failure for notice rendering. */
+function parseCommandFailure(input: unknown) {
+  if (!isCommandFailure(input) || !input.code) return undefined
 
   return {
     translationKey:
-      CODED_ERROR_TRANSLATION_KEYS[match[1]] ??
+      CODED_ERROR_TRANSLATION_KEYS[input.code] ??
       'shared.feedback.errors.operationFailed',
-    detail: match[2]?.trim(),
+    detail: input.detail.trim() || undefined,
   }
 }
 
@@ -240,7 +269,7 @@ function normalizeNoticeMessage(
   raw?: unknown,
 ): { message?: ReactNode; i18n?: NoticeTranslationDescriptor } {
   const rawText = raw !== undefined ? extractDisplayText(raw) : undefined
-  const parsedRawError = parseCodedError(rawText)
+  const parsedRawError = parseCommandFailure(raw)
   const rawDetail = parsedRawError?.detail ?? rawText
 
   if (isValidElement(message)) {
@@ -275,7 +304,7 @@ function normalizeNoticeMessage(
     }
   }
 
-  const parsedMessageError = parseCodedError(extractDisplayText(message))
+  const parsedMessageError = parseCommandFailure(message)
   if (parsedMessageError) {
     if (!parsedMessageError.detail) {
       return {
