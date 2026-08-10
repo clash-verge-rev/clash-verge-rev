@@ -9,6 +9,21 @@ pub fn coded_error(code: &str, detail: impl std::fmt::Display) -> String {
     format!("{USER_ERROR_PREFIX}{code}\n{detail}").into()
 }
 
+/// Prefer an actionable proxy classification over the operation's fallback code.
+pub fn proxy_aware_coded_error(error: &anyhow::Error, fallback: &str) -> String {
+    let code =
+        crate::core::proxy_control::SysproxyFailure::from_chain(error).map_or(fallback, |failure| failure.code());
+    coded_error(code, format_args!("{error:#}"))
+}
+
+/// Preserve uncoded failures unless the chain contains a proxy classification.
+pub fn proxy_aware_error(error: &anyhow::Error) -> String {
+    match crate::core::proxy_control::SysproxyFailure::from_chain(error) {
+        Some(failure) => coded_error(failure.code(), format_args!("{error:#}")),
+        None => format!("{error:#}").into(),
+    }
+}
+
 // Command modules
 pub mod app;
 pub mod backup;
@@ -84,7 +99,8 @@ impl<T, E: std::fmt::Display> WithErrorCode<T> for Result<T, E> {
 
 #[cfg(test)]
 mod tests {
-    use super::{WithErrorCode as _, coded_error};
+    use super::{WithErrorCode as _, coded_error, proxy_aware_coded_error, proxy_aware_error};
+    use crate::core::proxy_control::SysproxyFailure;
     use anyhow::Context as _;
 
     #[test]
@@ -117,5 +133,60 @@ mod tests {
         let detail = source.with_error_code("PROFILE_READ_FAILED").err().unwrap_or_default();
 
         assert_eq!(detail, "CVR_ERROR:PROFILE_READ_FAILED\nplain failure");
+    }
+
+    #[test]
+    fn a_classification_outranks_the_code_naming_the_operation() {
+        let failure = anyhow::Error::new(sysproxy::Error::RequiresAdminPrivileges)
+            .context(SysproxyFailure::PrivilegeRequired)
+            .context("failed to restart the core");
+
+        let reported = proxy_aware_coded_error(&failure, "CORE_RESTART_FAILED");
+
+        assert!(
+            reported.starts_with("CVR_ERROR:SYSPROXY_PRIVILEGE_REQUIRED\n"),
+            "{reported}"
+        );
+        assert!(reported.contains("failed to restart the core"), "{reported}");
+        assert!(reported.contains("admin privileges"), "{reported}");
+    }
+
+    #[test]
+    fn without_a_classification_the_callers_code_is_used() {
+        let failure = anyhow::anyhow!("connection refused").context("failed to start the core");
+
+        let reported = proxy_aware_coded_error(&failure, "CORE_START_FAILED");
+
+        assert_eq!(
+            reported,
+            "CVR_ERROR:CORE_START_FAILED\nfailed to start the core: connection refused"
+        );
+    }
+
+    #[test]
+    fn commands_that_report_plain_text_stay_uncoded_without_a_classification() {
+        let failure = anyhow::anyhow!("disk full").context("failed to save the configuration");
+
+        let reported = proxy_aware_error(&failure);
+
+        assert!(!reported.starts_with("CVR_ERROR:"), "{reported}");
+        assert_eq!(reported, "failed to save the configuration: disk full");
+    }
+
+    #[test]
+    fn commands_that_report_plain_text_still_carry_a_classification() {
+        let failure = anyhow::Error::new(SysproxyFailure::DirectFallback {
+            detail: "service could not set the proxy".to_owned(),
+        })
+        .context("failed to apply the verge patch");
+
+        let reported = proxy_aware_error(&failure);
+
+        assert!(
+            reported.starts_with("CVR_ERROR:SYSPROXY_DIRECT_FALLBACK\n"),
+            "{reported}"
+        );
+        assert!(reported.contains("failed to apply the verge patch"), "{reported}");
+        assert!(reported.contains("service could not set the proxy"), "{reported}");
     }
 }

@@ -1,4 +1,4 @@
-use super::{CmdResult, WithErrorCode as _, coded_error};
+use super::{CmdResult, WithErrorCode as _, coded_error, proxy_aware_coded_error};
 use crate::feat;
 use crate::utils::{dirs, yaml_emitter};
 use crate::{
@@ -97,7 +97,7 @@ pub async fn start_core() -> CmdResult {
     let result = CoreManager::global()
         .start_core()
         .await
-        .with_error_code("CORE_START_FAILED");
+        .map_err(|error| proxy_aware_coded_error(&error, "CORE_START_FAILED"));
     if result.is_ok() {
         handle::Handle::refresh_clash();
     }
@@ -125,7 +125,7 @@ pub async fn restart_core() -> CmdResult {
     let result = CoreManager::global()
         .restart_core()
         .await
-        .with_error_code("CORE_RESTART_FAILED");
+        .map_err(|error| proxy_aware_coded_error(&error, "CORE_RESTART_FAILED"));
     if result.is_ok() {
         handle::Handle::refresh_clash();
     }

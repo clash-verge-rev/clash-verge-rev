@@ -4,7 +4,7 @@ use crate::{
     process::AsyncHandler,
     utils::server,
 };
-use anyhow::{Result, bail, ensure};
+use anyhow::{Result, ensure};
 use clash_verge_logging::{Type, logging};
 use clash_verge_service_ipc::{MacosProxyConfig, OwnerSessionProof, ProxyApplyOutcome};
 use std::{
@@ -13,6 +13,67 @@ use std::{
     time::Duration,
 };
 use tokio::sync::Mutex;
+
+/// Actionable system-proxy failure attached to an `anyhow` chain.
+///
+/// Classification remains downcastable while the original error stays available for diagnostics.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum SysproxyFailure {
+    /// A local `networksetup` write lacked privileges.
+    PrivilegeRequired,
+    /// The service failed to apply the proxy and attempted direct fallback.
+    DirectFallback { detail: String },
+}
+
+impl SysproxyFailure {
+    /// Stable frontend error code.
+    #[inline]
+    pub const fn code(&self) -> &'static str {
+        match self {
+            Self::PrivilegeRequired => "SYSPROXY_PRIVILEGE_REQUIRED",
+            Self::DirectFallback { .. } => "SYSPROXY_DIRECT_FALLBACK",
+        }
+    }
+
+    /// Find a classification using `anyhow`'s context-aware downcast.
+    #[inline]
+    pub fn from_chain(error: &anyhow::Error) -> Option<&Self> {
+        error.downcast_ref::<Self>()
+    }
+}
+
+impl std::fmt::Display for SysproxyFailure {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::PrivilegeRequired => f.write_str("system proxy write requires elevated privileges"),
+            Self::DirectFallback { detail } => {
+                write!(f, "system proxy failed and fell back to direct: {detail}")
+            }
+        }
+    }
+}
+
+impl std::error::Error for SysproxyFailure {}
+
+/// Classify local macOS proxy failures without replacing their source chain.
+fn classify_local_failure(error: anyhow::Error) -> anyhow::Error {
+    if !cfg!(target_os = "macos") {
+        return error;
+    }
+
+    let refused = error.chain().any(|cause| {
+        matches!(
+            cause.downcast_ref::<sysproxy::Error>(),
+            Some(sysproxy::Error::RequiresAdminPrivileges)
+        )
+    });
+
+    if refused {
+        error.context(SysproxyFailure::PrivilegeRequired)
+    } else {
+        error
+    }
+}
 
 const LOOPBACK_HOST: &str = "127.0.0.1";
 const MACOS_DEFAULT_BYPASS: &str =
@@ -161,7 +222,10 @@ fn service_proxy_config(verge: &IVerge, mixed_port: u16, pac_port: u16) -> Resul
 fn service_apply_result(outcome: ProxyApplyOutcome) -> Result<()> {
     match outcome {
         ProxyApplyOutcome::Applied | ProxyApplyOutcome::NotRequested => Ok(()),
-        ProxyApplyOutcome::DirectFallback { message } => bail!(message),
+        // Preserve the direct-fallback classification.
+        ProxyApplyOutcome::DirectFallback { message } => {
+            Err(SysproxyFailure::DirectFallback { detail: message }.into())
+        }
     }
 }
 
@@ -180,7 +244,7 @@ async fn current_service_proxy_config(verge: &IVerge) -> Result<MacosProxyConfig
 pub async fn apply() -> Result<()> {
     let running_mode = CoreManager::global().get_running_mode();
     match proxy_backend_route(cfg!(target_os = "macos"), &running_mode) {
-        ProxyBackendRoute::Local => Sysopt::global().update_sysproxy().await,
+        ProxyBackendRoute::Local => Sysopt::global().update_sysproxy().await.map_err(classify_local_failure),
         ProxyBackendRoute::Service => {
             let verge = Config::verge().await.latest_arc();
             let proxy = current_service_proxy_config(&verge).await?;
@@ -196,7 +260,7 @@ pub async fn apply() -> Result<()> {
 pub async fn clear() -> Result<()> {
     let running_mode = CoreManager::global().get_running_mode();
     match proxy_backend_route(cfg!(target_os = "macos"), &running_mode) {
-        ProxyBackendRoute::Local => Sysopt::global().reset_sysproxy().await,
+        ProxyBackendRoute::Local => Sysopt::global().reset_sysproxy().await.map_err(classify_local_failure),
         ProxyBackendRoute::Service => {
             SERVICE_PROXY_OPERATIONS
                 .run_final_service_operation(|| async {
@@ -497,5 +561,94 @@ mod tests {
                 url: "http://127.0.0.1:3333/commands/pac".to_owned()
             }
         );
+    }
+
+    use super::{SysproxyFailure, classify_local_failure};
+
+    fn wrapped_privilege_failure() -> anyhow::Error {
+        anyhow::Error::new(sysproxy::Error::RequiresAdminPrivileges).context("failed to apply the system proxy")
+    }
+
+    fn classified_privilege_failure() -> anyhow::Error {
+        wrapped_privilege_failure().context(SysproxyFailure::PrivilegeRequired)
+    }
+
+    #[test]
+    fn a_classification_survives_the_anyhow_layers_above_it() {
+        let classified = classified_privilege_failure()
+            .context("failed to apply system proxy after start")
+            .context("failed to restart the core");
+
+        assert_eq!(
+            SysproxyFailure::from_chain(&classified).map(SysproxyFailure::code),
+            Some("SYSPROXY_PRIVILEGE_REQUIRED")
+        );
+    }
+
+    #[test]
+    fn classifying_keeps_the_original_failure_underneath() {
+        let classified = classified_privilege_failure();
+
+        assert!(
+            classified.chain().any(|cause| matches!(
+                cause.downcast_ref::<sysproxy::Error>(),
+                Some(sysproxy::Error::RequiresAdminPrivileges)
+            )),
+            "the original error must survive classification: {classified:#}"
+        );
+        assert!(format!("{classified:#}").contains("failed to apply the system proxy"));
+    }
+
+    #[test]
+    fn an_unrelated_failure_is_left_alone() {
+        let untouched = classify_local_failure(anyhow::anyhow!("port already in use"));
+
+        assert!(SysproxyFailure::from_chain(&untouched).is_none());
+        assert_eq!(format!("{untouched:#}"), "port already in use");
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn a_refused_write_is_classified_on_macos() {
+        let classified = classify_local_failure(wrapped_privilege_failure());
+
+        assert!(matches!(
+            SysproxyFailure::from_chain(&classified),
+            Some(SysproxyFailure::PrivilegeRequired)
+        ));
+
+        assert!(
+            classified.chain().any(|cause| matches!(
+                cause.downcast_ref::<sysproxy::Error>(),
+                Some(sysproxy::Error::RequiresAdminPrivileges)
+            )),
+            "classifying must keep the original failure reachable: {classified:#}"
+        );
+        assert!(format!("{classified:#}").contains("failed to apply the system proxy"));
+    }
+
+    #[cfg(not(target_os = "macos"))]
+    #[test]
+    fn nothing_is_classified_off_macos() {
+        let classified = classify_local_failure(wrapped_privilege_failure());
+
+        assert!(SysproxyFailure::from_chain(&classified).is_none());
+    }
+
+    #[test]
+    fn a_direct_fallback_reports_that_traffic_may_be_going_direct() {
+        let outcome = ProxyApplyOutcome::DirectFallback {
+            message: "service could not set the proxy".to_owned(),
+        };
+
+        let error = super::service_apply_result(outcome)
+            .err()
+            .unwrap_or_else(|| anyhow::anyhow!("a fallback outcome must be reported as a failure"));
+
+        assert_eq!(
+            SysproxyFailure::from_chain(&error).map(SysproxyFailure::code),
+            Some("SYSPROXY_DIRECT_FALLBACK")
+        );
+        assert!(format!("{error:#}").contains("service could not set the proxy"));
     }
 }

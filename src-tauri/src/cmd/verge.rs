@@ -1,4 +1,4 @@
-use super::CmdResult;
+use super::{CmdResult, proxy_aware_error};
 use crate::{cmd::StringifyErr as _, config::IVerge, feat};
 use clash_verge_draft::SharedDraft;
 
@@ -11,5 +11,7 @@ pub async fn get_verge_config() -> CmdResult<SharedDraft<IVerge>> {
 /// 修改Verge配置
 #[tauri::command]
 pub async fn patch_verge_config(payload: IVerge) -> CmdResult {
-    feat::patch_verge(&payload, false).await.stringify_err()
+    feat::patch_verge(&payload, false)
+        .await
+        .map_err(|error| proxy_aware_error(&error))
 }
