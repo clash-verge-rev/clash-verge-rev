@@ -14,6 +14,9 @@ pub struct IRuntime {
     pub exists_keys: HashSet<String>,
     // TODO 或许可以用 FixMap 来存储以提升效率
     pub chain_logs: HashMap<String, Vec<(String, String)>>,
+    /// 记录当前由链式代理 UI 设置过 dialer-proxy 的代理节点名称，
+    /// 用于在断开链式代理时精确清理，避免误删扩展脚本 / merge 设置的 dialer-proxy
+    pub chain_dialer_proxies: HashSet<String>,
 }
 
 impl IRuntime {
@@ -112,16 +115,23 @@ impl IRuntime {
             return;
         };
 
+        // Step 1: 仅清理由链式代理 UI 上一次设置的 dialer-proxy，
+        // 保留扩展脚本 / merge 等外部来源设置的 dialer-proxy
         if let Some(Value::Sequence(proxies)) = config.get_mut("proxies") {
-            proxies.iter_mut().for_each(|proxy| {
-                if let Some(proxy) = proxy.as_mapping_mut()
-                    && proxy.get("dialer-proxy").is_some()
+            for proxy in proxies.iter_mut() {
+                if let Some(proxy_map) = proxy.as_mapping_mut()
+                    && let Some(name) = proxy_map.get("name").and_then(|v| v.as_str()).map(|s| String::from(s))
+                    && self.chain_dialer_proxies.contains(&name)
                 {
-                    proxy.remove("dialer-proxy");
+                    proxy_map.remove("dialer-proxy");
                 }
-            });
+            }
         }
 
+        // 重置追踪集合
+        self.chain_dialer_proxies.clear();
+
+        // Step 2: 根据新的链式代理配置设置 dialer-proxy
         if let Some(Value::Sequence(dialer_proxies)) = proxy_chain_config
             && let Some(Value::Sequence(proxies)) = config.get_mut("proxies")
         {
@@ -132,6 +142,10 @@ impl IRuntime {
                     && let Some(dialer_proxy) = dialer_proxies.get(i - 1)
                 {
                     proxy.insert("dialer-proxy".into(), dialer_proxy.to_owned());
+                    // 记录此节点由链式代理 UI 管理
+                    if let Some(name) = proxy.get("name").and_then(|v| v.as_str()) {
+                        self.chain_dialer_proxies.insert(String::from(name));
+                    }
                 }
             }
         }
