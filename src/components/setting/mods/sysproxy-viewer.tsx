@@ -3,7 +3,6 @@ import {
   Autocomplete,
   Box,
   Button,
-  Chip,
   InputAdornment,
   List,
   ListItem,
@@ -48,6 +47,12 @@ import { showNotice } from '@/services/notice-service'
 import { debugLog } from '@/utils/debug'
 import getSystem from '@/utils/get-system'
 
+import {
+  materializeBypass,
+  normalizeBypass,
+  splitBypass,
+} from './sysproxy-bypass'
+
 const sleep = (ms: number) =>
   new Promise<void>((resolve) => {
     setTimeout(resolve, ms)
@@ -90,11 +95,14 @@ const getValidReg = (isWindows: boolean) => {
   return new RegExp(rValid)
 }
 
-const splitBypass = (value?: string) =>
-  (value ?? '')
-    .split(/[,\n;\r]+/)
-    .map((item) => item.trim())
-    .filter(Boolean)
+const settingRowSx = {
+  padding: '5px 2px',
+  overflow: 'visible',
+  '& .MuiListItemText-primary': {
+    lineHeight: 1.5,
+    overflow: 'visible',
+  },
+} as const
 
 export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
   const { t } = useTranslation()
@@ -126,27 +134,8 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
     proxy_host,
   } = verge ?? {}
 
-  const [value, setValue] = useState({
-    guard: enable_proxy_guard,
-    enable_bypass_check: enable_bypass_check ?? true,
-    bypass: system_proxy_bypass,
-    duration: proxy_guard_duration ?? 10,
-    use_default: use_default_bypass ?? true,
-    pac: proxy_auto_config,
-    pac_content: pac_file_content ?? DEFAULT_PAC,
-    proxy_host: proxy_host ?? '127.0.0.1',
-  })
-  const [embeddedServerPort, setEmbeddedServerPort] = useState<number | null>(
-    null,
-  )
-
-  useEffect(() => {
-    getEmbeddedServerPort().then(setEmbeddedServerPort).catch(console.error)
-  }, [])
-
   const separator = useMemo(() => (isWindows ? ';' : ','), [isWindows])
-
-  const defaultBypass = () => {
+  const defaultBypassValue = useMemo(() => {
     if (isWindows) {
       return 'localhost;127.*;192.168.*;10.*;172.16.*;172.17.*;172.18.*;172.19.*;172.20.*;172.21.*;172.22.*;172.23.*;172.24.*;172.25.*;172.26.*;172.27.*;172.28.*;172.29.*;172.30.*;172.31.*;<local>'
     }
@@ -154,7 +143,35 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
       return 'localhost,127.0.0.1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,::1'
     }
     return '127.0.0.1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,localhost,*.local,*.crashlytics.com,<local>'
-  }
+  }, [isWindows, systemName])
+  const defaultBypassItems = useMemo(
+    () => splitBypass(defaultBypassValue),
+    [defaultBypassValue],
+  )
+  const initialUseDefault = use_default_bypass ?? true
+
+  const [value, setValue] = useState(() => ({
+    guard: enable_proxy_guard,
+    enable_bypass_check: enable_bypass_check ?? true,
+    bypass: materializeBypass(
+      system_proxy_bypass,
+      defaultBypassItems,
+      separator,
+      initialUseDefault,
+    ),
+    duration: proxy_guard_duration ?? 10,
+    pac: proxy_auto_config,
+    pac_content: pac_file_content ?? DEFAULT_PAC,
+    proxy_host: proxy_host ?? '127.0.0.1',
+  }))
+
+  const [embeddedServerPort, setEmbeddedServerPort] = useState<number | null>(
+    null,
+  )
+
+  useEffect(() => {
+    getEmbeddedServerPort().then(setEmbeddedServerPort).catch(console.error)
+  }, [])
 
   const prevMixedPortRef = useRef(clashConfig?.mixedPort)
 
@@ -210,10 +227,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
   }, [embeddedServerPort, value.proxy_host])
 
   const bypassError =
-    value.enable_bypass_check &&
-    !value.pac &&
-    !value.use_default &&
-    value.bypass
+    value.enable_bypass_check && !value.pac && value.bypass
       ? !validReg.test(value.bypass)
       : false
 
@@ -234,13 +248,18 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
 
   useImperativeHandle(ref, () => ({
     open: () => {
+      const nextUseDefault = use_default_bypass ?? true
       setOpen(true)
       setValue({
         guard: enable_proxy_guard,
         enable_bypass_check: enable_bypass_check ?? true,
-        bypass: system_proxy_bypass,
+        bypass: materializeBypass(
+          system_proxy_bypass,
+          defaultBypassItems,
+          separator,
+          nextUseDefault,
+        ),
         duration: proxy_guard_duration ?? 10,
-        use_default: use_default_bypass ?? true,
         pac: proxy_auto_config,
         pac_content: pac_file_content ?? DEFAULT_PAC,
         proxy_host: proxy_host ?? '127.0.0.1',
@@ -310,6 +329,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
   }
 
   const onSave = useLockFn(async () => {
+    const normalizedBypass = normalizeBypass(value.bypass, separator)
     if (value.duration < 1) {
       showNotice.error('settings.modals.sysproxy.messages.durationTooShort')
       return
@@ -317,7 +337,6 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
     if (
       value.enable_bypass_check &&
       !value.pac &&
-      !value.use_default &&
       value.bypass &&
       !validReg.test(value.bypass)
     ) {
@@ -356,14 +375,14 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
     if (value.duration !== proxy_guard_duration) {
       patch.proxy_guard_duration = value.duration
     }
-    if (value.bypass !== system_proxy_bypass) {
-      patch.system_proxy_bypass = value.bypass
+    if (!value.pac && normalizedBypass !== system_proxy_bypass) {
+      patch.system_proxy_bypass = normalizedBypass
     }
     if (value.pac !== proxy_auto_config) {
       patch.proxy_auto_config = value.pac
     }
-    if (value.use_default !== use_default_bypass) {
-      patch.use_default_bypass = value.use_default
+    if (!value.pac && use_default_bypass !== false) {
+      patch.use_default_bypass = false
     }
 
     let pacContent = value.pac_content
@@ -397,8 +416,9 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
       value.pac !== proxy_auto_config ||
       proxyHost !== proxy_host ||
       pacContent !== pac_file_content ||
-      value.bypass !== system_proxy_bypass ||
-      value.use_default !== use_default_bypass
+      (!value.pac &&
+        (normalizedBypass !== system_proxy_bypass ||
+          use_default_bypass !== false))
 
     Promise.resolve().then(async () => {
       try {
@@ -491,7 +511,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
             </FlexBox>
           )}
         </BaseFieldset>
-        <ListItem sx={{ padding: '5px 2px' }}>
+        <ListItem sx={settingRowSx}>
           <ListItemText
             primary={t('settings.modals.sysproxy.fields.proxyHost')}
           />
@@ -518,7 +538,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
             }}
           />
         </ListItem>
-        <ListItem sx={{ padding: '5px 2px' }}>
+        <ListItem sx={settingRowSx}>
           <ListItemText
             primary={t('settings.modals.sysproxy.fields.usePacMode')}
           />
@@ -530,7 +550,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
           />
         </ListItem>
 
-        <ListItem sx={{ padding: '5px 2px' }}>
+        <ListItem sx={settingRowSx}>
           <ListItemText
             primary={t('settings.modals.sysproxy.fields.proxyGuard')}
             sx={{ maxWidth: 'fit-content' }}
@@ -548,7 +568,7 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
           />
         </ListItem>
 
-        <ListItem sx={{ padding: '5px 2px' }}>
+        <ListItem sx={settingRowSx}>
           <ListItemText
             primary={t('settings.modals.sysproxy.fields.guardDuration')}
           />
@@ -571,95 +591,84 @@ export const SysproxyViewer = forwardRef<DialogRef>((props, ref) => {
           />
         </ListItem>
         {!value.pac && (
-          <ListItem sx={{ padding: '5px 2px' }}>
-            <ListItemText
-              primary={t(
-                'settings.modals.sysproxy.fields.alwaysUseDefaultBypass',
+          <>
+            <BaseSplitChipEditor
+              value={value.bypass ?? ''}
+              separator={separator}
+              disabled={!enabled}
+              error={bypassError}
+              helperText={
+                bypassError
+                  ? t('settings.modals.sysproxy.messages.invalidBypass')
+                  : undefined
+              }
+              placeholder="localhost"
+              ariaLabel={t('settings.modals.sysproxy.fields.proxyBypass')}
+              onChange={(nextValue) => {
+                setValue((v) => ({ ...v, bypass: nextValue }))
+              }}
+              renderHeader={(modeToggle) => (
+                <ListItem sx={settingRowSx}>
+                  <ListItemText
+                    primary={t('settings.modals.sysproxy.fields.proxyBypass')}
+                  />
+                  <Button
+                    size="small"
+                    variant="text"
+                    disabled={
+                      !enabled ||
+                      normalizeBypass(value.bypass, separator) ===
+                        defaultBypassValue
+                    }
+                    onClick={() =>
+                      setValue((current) => ({
+                        ...current,
+                        bypass: defaultBypassValue,
+                      }))
+                    }
+                    sx={{ marginLeft: 'auto', whiteSpace: 'nowrap' }}
+                  >
+                    {t(
+                      'settings.modals.sysproxy.actions.restoreSystemDefaults',
+                    )}
+                  </Button>
+                  {modeToggle}
+                </ListItem>
               )}
             />
-            <Switch
-              edge="end"
-              disabled={!enabled}
-              checked={value.use_default}
-              onChange={(_, e) => {
-                if (!e && !value.bypass) {
-                  const nextBypass = defaultBypass()
-                  setValue((v) => ({
-                    ...v,
-                    use_default: e,
-                    // 当取消选择use_default且当前bypass为空时，填充默认值
-                    bypass: nextBypass,
-                  }))
-                  return
-                }
-                setValue((v) => ({ ...v, use_default: e }))
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'flex-end',
+                minHeight: 36,
+                padding: '0 2px 5px',
               }}
-            />
-          </ListItem>
-        )}
-
-        {!value.pac && (
-          <ListItem sx={{ padding: '5px 2px' }}>
-            <ListItemText
-              primary={t('settings.modals.sysproxy.fields.enableBypassCheck')}
-            />
-            <Switch
-              edge="end"
-              disabled={!enabled}
-              checked={value.enable_bypass_check}
-              onChange={(_, e) =>
-                setValue((v) => ({ ...v, enable_bypass_check: e }))
-              }
-            />
-          </ListItem>
-        )}
-
-        {!value.pac && !value.use_default && (
-          <BaseSplitChipEditor
-            value={value.bypass ?? ''}
-            separator={separator}
-            disabled={!enabled}
-            error={bypassError}
-            helperText={
-              bypassError
-                ? t('settings.modals.sysproxy.messages.invalidBypass')
-                : undefined
-            }
-            placeholder="localhost"
-            ariaLabel={t('settings.modals.sysproxy.fields.proxyBypass')}
-            onChange={(nextValue) => {
-              setValue((v) => ({ ...v, bypass: nextValue }))
-            }}
-            renderHeader={(modeToggle) => (
-              <ListItem sx={{ padding: '5px 2px' }}>
-                <ListItemText
-                  primary={t('settings.modals.sysproxy.fields.proxyBypass')}
-                />
-                {modeToggle ? (
-                  <Box sx={{ marginLeft: 'auto' }}>{modeToggle}</Box>
-                ) : null}
-              </ListItem>
-            )}
-          />
-        )}
-
-        {!value.pac && value.use_default && (
-          <>
-            <ListItemText
-              primary={t('settings.modals.sysproxy.fields.bypass')}
-            />
-            <Box sx={{ padding: '0 2px 5px' }}>
-              <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
-                {splitBypass(defaultBypass()).map((item) => (
-                  <Chip key={item} label={item} size="small" />
-                ))}
-              </Box>
+            >
+              <Typography variant="body2" color="text.secondary">
+                {t('settings.modals.sysproxy.fields.enableBypassCheck')}
+              </Typography>
+              <TooltipIcon
+                title={t('settings.modals.sysproxy.tooltips.bypassCheck')}
+                sx={{ opacity: 0.7 }}
+              />
+              <Switch
+                edge="end"
+                disabled={!enabled}
+                checked={value.enable_bypass_check}
+                onChange={(_, checked) =>
+                  setValue((current) => ({
+                    ...current,
+                    enable_bypass_check: checked,
+                  }))
+                }
+              />
             </Box>
           </>
         )}
 
         {value.pac && (
-          <ListItem sx={{ padding: '5px 2px', alignItems: 'start' }}>
+          <ListItem sx={{ ...settingRowSx, alignItems: 'flex-start' }}>
             <ListItemText
               primary={t('settings.modals.sysproxy.fields.pacScriptContent')}
               sx={{ padding: '3px 0' }}

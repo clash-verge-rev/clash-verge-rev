@@ -459,13 +459,14 @@
         "proxyGuard": "Proxy Guard",
         "guardDuration": "Guard Duration",
         "alwaysUseDefaultBypass": "Always use Default Bypass",
-        "enableBypassCheck": "Validate Proxy Bypass Format",
-        "proxyBypass": "Proxy Bypass Settings: ",
+        "enableBypassCheck": "Check Bypass Entry Format",
+        "proxyBypass": "Proxy Bypass",
         "bypass": "Bypass: ",
         "pacScriptContent": "PAC Script Content"
       },
       "tooltips": {
-        "proxyGuard": "Enable to prevent other software from modifying the operating system's proxy settings"
+        "proxyGuard": "Enable to prevent other software from modifying the operating system's proxy settings",
+        "bypassCheck": "When enabled, each proxy bypass entry is checked against system requirements when saving. Invalid formats are reported and prevent saving."
       },
       "messages": {
         "durationTooShort": "Proxy Daemon Duration Cannot be Less than 1 Second",
@@ -473,7 +474,8 @@
         "invalidProxyHost": "Invalid Proxy Host Format"
       },
       "actions": {
-        "editPac": "Edit PAC"
+        "editPac": "Edit PAC",
+        "restoreSystemDefaults": "Restore System Defaults"
       }
     },
     "tun": {

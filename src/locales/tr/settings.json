@@ -459,13 +459,14 @@
         "proxyGuard": "Vekil Koruyucusu",
         "guardDuration": "Koruma Süresi",
         "alwaysUseDefaultBypass": "Her Zaman Varsayılan Baypas Kullan",
-        "enableBypassCheck": "Proxy baypas biçimini doğrula",
-        "proxyBypass": "Vekil Baypas Ayarları: ",
+        "enableBypassCheck": "Baypas Girdisi Biçimini Denetle",
+        "proxyBypass": "Proxy Baypası",
         "bypass": "Baypas: ",
         "pacScriptContent": "PAC Betiği İçeriği"
       },
       "tooltips": {
-        "proxyGuard": "Diğer yazılımların işletim sisteminin vekil ayarlarını değiştirmesini önlemek için etkinleştirin"
+        "proxyGuard": "Diğer yazılımların işletim sisteminin vekil ayarlarını değiştirmesini önlemek için etkinleştirin",
+        "bypassCheck": "Etkinleştirildiğinde, kaydetme sırasında her proxy baypas girdisinin sistem gereksinimlerine uygunluğu denetlenir. Geçersiz biçimler bildirilir ve kaydetme engellenir."
       },
       "messages": {
         "durationTooShort": "Vekil Koruyucu Süresi 1 Saniyeden Az Olamaz",
@@ -473,7 +474,8 @@
         "invalidProxyHost": "Geçersiz Vekil Sunucusu Formatı"
       },
       "actions": {
-        "editPac": "Düzenle PAC"
+        "editPac": "Düzenle PAC",
+        "restoreSystemDefaults": "Sistem Varsayılanlarını Geri Yükle"
       }
     },
     "tun": {

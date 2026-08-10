@@ -459,13 +459,14 @@
         "proxyGuard": "Guardia del proxy del sistema",
         "guardDuration": "Intervalo de guardia del proxy",
         "alwaysUseDefaultBypass": "Siempre usar la lista de omisión predeterminada",
-        "enableBypassCheck": "Validar formato de bypass de proxy",
-        "proxyBypass": "Configuración de omisión del proxy: ",
+        "enableBypassCheck": "Comprobar formato de las entradas",
+        "proxyBypass": "Omisión del proxy",
         "bypass": "Omisión actual: ",
         "pacScriptContent": "Contenido del script PAC"
       },
       "tooltips": {
-        "proxyGuard": "Habilite esta opción para evitar que otros programas modifiquen la configuración del proxy del sistema operativo."
+        "proxyGuard": "Habilite esta opción para evitar que otros programas modifiquen la configuración del proxy del sistema operativo.",
+        "bypassCheck": "Al activarlo, al guardar se comprueba que cada entrada de omisión del proxy cumpla los requisitos del sistema. Los formatos no válidos se notifican e impiden guardar."
       },
       "messages": {
         "durationTooShort": "El intervalo de tiempo del daemon de proxy no puede ser menor de 1 segundo",
@@ -473,7 +474,8 @@
         "invalidProxyHost": "Formato de host del proxy no válido"
       },
       "actions": {
-        "editPac": "Editar PAC"
+        "editPac": "Editar PAC",
+        "restoreSystemDefaults": "Restaurar valores del sistema"
       }
     },
     "tun": {

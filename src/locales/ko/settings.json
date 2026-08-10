@@ -459,13 +459,14 @@
         "proxyGuard": "프록시 가드",
         "guardDuration": "가드 지속시간",
         "alwaysUseDefaultBypass": "기본 우회 주소 항상 사용",
-        "enableBypassCheck": "프록시 우회 형식 검증",
-        "proxyBypass": "프록시 우회 설정: ",
+        "enableBypassCheck": "우회 항목 형식 검사",
+        "proxyBypass": "프록시 우회",
         "bypass": "우회: ",
         "pacScriptContent": "PAC 스크립트 내용"
       },
       "tooltips": {
-        "proxyGuard": "다른 소프트웨어가 운영 체제의 프록시 설정을 변경하지 못하도록 방지합니다"
+        "proxyGuard": "다른 소프트웨어가 운영 체제의 프록시 설정을 변경하지 못하도록 방지합니다",
+        "bypassCheck": "활성화하면 저장할 때 각 프록시 우회 항목이 시스템 요구 사항에 맞는지 검사합니다. 형식이 올바르지 않으면 알림을 표시하고 저장하지 않습니다."
       },
       "messages": {
         "durationTooShort": "프록시 데몬 지속시간은 1초 미만일 수 없습니다",
@@ -473,7 +474,8 @@
         "invalidProxyHost": "잘못된 프록시 호스트 형식"
       },
       "actions": {
-        "editPac": "PAC 편집"
+        "editPac": "PAC 편집",
+        "restoreSystemDefaults": "시스템 기본값 복원"
       }
     },
     "tun": {

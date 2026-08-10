@@ -1096,6 +1096,7 @@ export interface TranslationResources {
         sysproxy: {
           actions: {
             editPac: string
+            restoreSystemDefaults: string
           }
           fields: {
             alwaysUseDefaultBypass: string
@@ -1121,6 +1122,7 @@ export interface TranslationResources {
           }
           title: string
           tooltips: {
+            bypassCheck: string
             proxyGuard: string
           }
         }

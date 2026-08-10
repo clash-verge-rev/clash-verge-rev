@@ -459,13 +459,14 @@
         "proxyGuard": "システムプロキシガード",
         "guardDuration": "プロキシガード間隔",
         "alwaysUseDefaultBypass": "常にデフォルトのバイパスを使用",
-        "enableBypassCheck": "プロキシバイパス形式を検証",
-        "proxyBypass": "プロキシバイパス設定：",
+        "enableBypassCheck": "バイパス項目の形式を確認",
+        "proxyBypass": "プロキシバイパス",
         "bypass": "現在のバイパス：",
         "pacScriptContent": "PACスクリプト内容"
       },
       "tooltips": {
-        "proxyGuard": "他のソフトウェアがオペレーティングシステムのプロキシ設定を変更するのを防ぐために有効にします。"
+        "proxyGuard": "他のソフトウェアがオペレーティングシステムのプロキシ設定を変更するのを防ぐために有効にします。",
+        "bypassCheck": "有効にすると、保存時に各プロキシバイパス項目がシステム要件を満たしているか確認します。形式が無効な場合は警告を表示し、保存を中止します。"
       },
       "messages": {
         "durationTooShort": "プロキシデーモンの間隔は1秒以上に設定する必要があります。",
@@ -473,7 +474,8 @@
         "invalidProxyHost": "プロキシホストの形式が無効です"
       },
       "actions": {
-        "editPac": "編集 PAC"
+        "editPac": "編集 PAC",
+        "restoreSystemDefaults": "システム既定値に戻す"
       }
     },
     "tun": {

@@ -459,13 +459,14 @@
         "proxyGuard": "系统代理守卫",
         "guardDuration": "代理守卫间隔",
         "alwaysUseDefaultBypass": "始终使用默认绕过",
-        "enableBypassCheck": "验证代理绕过格式",
-        "proxyBypass": "代理绕过设置：",
+        "enableBypassCheck": "检查绕过项格式",
+        "proxyBypass": "代理绕过",
         "bypass": "当前绕过：",
         "pacScriptContent": "PAC 脚本内容"
       },
       "tooltips": {
-        "proxyGuard": "开启以防止其他软件修改操作系统的代理设置"
+        "proxyGuard": "开启以防止其他软件修改操作系统的代理设置",
+        "bypassCheck": "开启后，保存时检查每个代理绕过项是否符合系统要求；格式无效时会提示并阻止保存。"
       },
       "messages": {
         "durationTooShort": "代理守护间隔时间不得低于 1 秒",
@@ -473,7 +474,8 @@
         "invalidProxyHost": "代理主机格式无效"
       },
       "actions": {
-        "editPac": "编辑 PAC"
+        "editPac": "编辑 PAC",
+        "restoreSystemDefaults": "恢复系统默认"
       }
     },
     "tun": {

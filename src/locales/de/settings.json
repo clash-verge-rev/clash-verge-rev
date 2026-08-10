@@ -459,13 +459,14 @@
         "proxyGuard": "Systemproxy-Schutz",
         "guardDuration": "Proxy-Schutz-Intervall",
         "alwaysUseDefaultBypass": "Immer die Standard-Umgehung verwenden",
-        "enableBypassCheck": "Proxy-Bypass-Format prüfen",
-        "proxyBypass": "Proxy-Umgehungseinstellungen: ",
+        "enableBypassCheck": "Format der Umgehungseinträge prüfen",
+        "proxyBypass": "Proxy-Umgehung",
         "bypass": "Aktuelle Umgehung: ",
         "pacScriptContent": "PAC-Skriptinhalt"
       },
       "tooltips": {
-        "proxyGuard": "Aktivieren Sie diese Option, um zu verhindern, dass andere Software die Proxy-Einstellungen des Betriebssystems ändert."
+        "proxyGuard": "Aktivieren Sie diese Option, um zu verhindern, dass andere Software die Proxy-Einstellungen des Betriebssystems ändert.",
+        "bypassCheck": "Wenn aktiviert, wird beim Speichern geprüft, ob jeder Proxy-Umgehungseintrag den Systemanforderungen entspricht. Ungültige Formate werden gemeldet und verhindern das Speichern."
       },
       "messages": {
         "durationTooShort": "Das Intervall des Proxy-Daemons darf nicht weniger als 1 Sekunde betragen.",
@@ -473,7 +474,8 @@
         "invalidProxyHost": "Ungültiges Format für den Proxy-Host"
       },
       "actions": {
-        "editPac": "Bearbeiten PAC"
+        "editPac": "Bearbeiten PAC",
+        "restoreSystemDefaults": "Systemstandard wiederherstellen"
       }
     },
     "tun": {

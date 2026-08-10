@@ -459,13 +459,14 @@
         "proxyGuard": "Penjaga Proksi",
         "guardDuration": "Durasi Penjagaan",
         "alwaysUseDefaultBypass": "Selalu gunakan Bypass Default",
-        "enableBypassCheck": "Validasi format bypass proksi",
-        "proxyBypass": "Pengaturan Bypass Proksi: ",
+        "enableBypassCheck": "Periksa Format Entri Bypass",
+        "proxyBypass": "Bypass Proksi",
         "bypass": "Bypass: ",
         "pacScriptContent": "Konten Skrip PAC"
       },
       "tooltips": {
-        "proxyGuard": "Aktifkan untuk mencegah perangkat lunak lain mengubah pengaturan proksi sistem operasi"
+        "proxyGuard": "Aktifkan untuk mencegah perangkat lunak lain mengubah pengaturan proksi sistem operasi",
+        "bypassCheck": "Jika diaktifkan, saat menyimpan setiap entri bypass proksi akan diperiksa terhadap persyaratan sistem. Format yang tidak valid akan dilaporkan dan mencegah penyimpanan."
       },
       "messages": {
         "durationTooShort": "Durasi Daemon Proksi Tidak Boleh Kurang dari 1 Detik",
@@ -473,7 +474,8 @@
         "invalidProxyHost": "Format Host Proksi Tidak Valid"
       },
       "actions": {
-        "editPac": "Ubah PAC"
+        "editPac": "Ubah PAC",
+        "restoreSystemDefaults": "Pulihkan Bawaan Sistem"
       }
     },
     "tun": {
