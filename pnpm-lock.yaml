@@ -235,8 +235,8 @@ importers:
         specifier: ^30.0.0
         version: 30.0.1
       knip:
-        specifier: 6.32.0
-        version: 6.32.0
+        specifier: 6.32.1
+        version: 6.32.1
       lint-staged:
         specifier: ^17.0.5
         version: 17.3.0
@@ -3096,8 +3096,8 @@ packages:
   keyv@4.5.4:
     resolution: {integrity: sha512-oxVHkHR/EJf2CNXnWxRLW6mg7JyCCUcG0DtEGmL2ctUo1PNTin1PUil+r/+4r5MpVgC/fn1kjsx7mjSujKqIpw==}
 
-  knip@6.32.0:
-    resolution: {integrity: sha512-KDX9OmmOFmlvmxTkrx6Z0GHISMut+pXMSKR8eg84bovaxJKx2NdQD4JYCXveSbvieRe107W6vCD2xCpmz0qBYA==}
+  knip@6.32.1:
+    resolution: {integrity: sha512-mIiIHMTJVUgSlz0mxEgPt7wg8DmfbCp1Txqab3WpbMCJF7YHvHtC9jeAHHXfISMl72N8WzhyG71SQlaqCOGZtg==}
     engines: {node: ^20.19.0 || >=22.12.0}
     hasBin: true
 
@@ -3792,7 +3792,7 @@ packages:
     engines: {node: '>=18'}
 
   tauri-plugin-mihomo-api@https://codeload.github.com/clash-verge-rev/tauri-plugin-mihomo/tar.gz/0a97faea2cba28501a51f17cba5aac42c8353adb:
-    resolution: {gitHosted: true, integrity: sha512-aI6n9rtpdHdl+OLGApVuPl+0MzxE/ebyiMhueQck+tL0f5fS80kTUPaC63AiUhjEszfILxd7lC56fiIeanlLUw==, tarball: https://codeload.github.com/clash-verge-rev/tauri-plugin-mihomo/tar.gz/0a97faea2cba28501a51f17cba5aac42c8353adb}
+    resolution: {gitHosted: true, tarball: https://codeload.github.com/clash-verge-rev/tauri-plugin-mihomo/tar.gz/0a97faea2cba28501a51f17cba5aac42c8353adb}
     version: 0.5.5
 
   terser@5.49.0:
@@ -7128,7 +7128,7 @@ snapshots:
     dependencies:
       json-buffer: 3.0.1
 
-  knip@6.32.0:
+  knip@6.32.1:
     dependencies:
       fdir: 6.5.0(picomatch@4.0.5)
       formatly: 0.3.0
