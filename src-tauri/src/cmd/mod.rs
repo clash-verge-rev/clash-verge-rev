@@ -77,13 +77,15 @@ impl<T, E: std::fmt::Display> StringifyErr<T> for Result<T, E> {
 
 impl<T, E: std::fmt::Display> WithErrorCode<T> for Result<T, E> {
     fn with_error_code(self, code: &str) -> CmdResult<T> {
-        self.map_err(|error| coded_error(code, error))
+        // Alternate formatting expands the full `anyhow` context chain.
+        self.map_err(|error| coded_error(code, format_args!("{error:#}")))
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::coded_error;
+    use super::{WithErrorCode as _, coded_error};
+    use anyhow::Context as _;
 
     #[test]
     fn coded_error_preserves_stable_code_and_diagnostic_detail() {
@@ -91,5 +93,29 @@ mod tests {
             coded_error("CORE_RESTART_FAILED", "connection refused"),
             "CVR_ERROR:CORE_RESTART_FAILED\nconnection refused"
         );
+    }
+
+    #[test]
+    fn with_error_code_preserves_whole_anyhow_context_chain() {
+        let source: anyhow::Result<()> = Err(anyhow::anyhow!("connection refused"))
+            .context("failed to reach the mihomo core")
+            .context("failed to restart the core");
+
+        let detail = source.with_error_code("CORE_RESTART_FAILED").err().unwrap_or_default();
+
+        assert_eq!(
+            detail,
+            "CVR_ERROR:CORE_RESTART_FAILED\n\
+             failed to restart the core: failed to reach the mihomo core: connection refused"
+        );
+    }
+
+    #[test]
+    fn with_error_code_leaves_plain_display_errors_untouched() {
+        let source: Result<(), &str> = Err("plain failure");
+
+        let detail = source.with_error_code("PROFILE_READ_FAILED").err().unwrap_or_default();
+
+        assert_eq!(detail, "CVR_ERROR:PROFILE_READ_FAILED\nplain failure");
     }
 }
