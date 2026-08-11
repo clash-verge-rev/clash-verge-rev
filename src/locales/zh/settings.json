@@ -652,7 +652,8 @@
       },
       "sysproxy": {
         "privilegeRequired": "无法设置系统代理：macOS 以权限不足为由拒绝了这次修改。请安装 Clash Verge 服务；管理员也可以在系统设置 → 隐私与安全性的高级选项中，关闭访问系统范围设置需要管理员密码的要求。",
-        "directFallback": "系统代理设置失败，已回退为直连。"
+        "directFallback": "系统代理设置失败，已回退为直连。",
+        "guardStopped": "系统代理守卫连续多次失败后已停止，系统代理不再被自动维持。"
       }
     },
     "notifications": {

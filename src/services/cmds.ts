@@ -412,6 +412,7 @@ export type FailedOperation =
   | 'systemProxyEnable'
   | 'systemProxyDisable'
   | 'systemProxyRestore'
+  | 'systemProxyGuard'
 
 /** Latest unresolved failure for one stable code. */
 export interface PendingFailure {

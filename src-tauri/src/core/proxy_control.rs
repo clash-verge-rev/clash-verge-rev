@@ -8,7 +8,11 @@ use crate::{
         sysopt::Sysopt,
     },
     process::AsyncHandler,
-    utils::server,
+    utils::{
+        notification::{NotificationEvent, needs_system_notification, notify_event},
+        server,
+        window_manager::WindowManager,
+    },
 };
 use anyhow::{Result, ensure};
 use clash_verge_logging::{Type, logging};
@@ -29,6 +33,8 @@ pub enum SysproxyFailure {
     PrivilegeRequired,
     /// The service failed to apply the proxy and attempted direct fallback.
     DirectFallback { detail: String },
+    /// The proxy guard stopped after repeated failures.
+    GuardStopped { detail: String },
 }
 
 impl SysproxyFailure {
@@ -38,6 +44,7 @@ impl SysproxyFailure {
         match self {
             Self::PrivilegeRequired => "SYSPROXY_PRIVILEGE_REQUIRED",
             Self::DirectFallback { .. } => "SYSPROXY_DIRECT_FALLBACK",
+            Self::GuardStopped { .. } => "SYSPROXY_GUARD_STOPPED",
         }
     }
 
@@ -54,6 +61,9 @@ impl std::fmt::Display for SysproxyFailure {
             Self::PrivilegeRequired => f.write_str("system proxy write requires elevated privileges"),
             Self::DirectFallback { detail } => {
                 write!(f, "system proxy failed and fell back to direct: {detail}")
+            }
+            Self::GuardStopped { detail } => {
+                write!(f, "system proxy guard stopped after repeated failures: {detail}")
             }
         }
     }
@@ -131,6 +141,17 @@ impl ServiceProxyOperations {
         let generation = self.invalidate_guard();
         self.run_service_operation(cancel).await;
         generation
+    }
+
+    /// Record under the operation lock only for the current guard generation.
+    async fn record_if_current<Record>(&self, captured_generation: u64, record: Record) -> bool
+    where
+        Record: FnOnce() -> bool,
+    {
+        self.run_service_operation(|| async move {
+            guard_generation_is_current(&self.guard_generation, captured_generation) && record()
+        })
+        .await
     }
 
     async fn run_guard_request<Mode, ActiveProof, Request, RequestFuture>(
@@ -308,11 +329,13 @@ pub async fn refresh_guard() -> Result<()> {
         ProxyBackendRoute::Local
     ) {
         Sysopt::global().refresh_guard().await;
+        notification::retire_guard_failures();
         return Ok(());
     }
 
     let verge = Config::verge().await.latest_arc();
     if !verge.enable_system_proxy.unwrap_or_default() || !verge.enable_proxy_guard.unwrap_or_default() {
+        notification::retire_guard_failures();
         return Ok(());
     }
 
@@ -320,6 +343,7 @@ pub async fn refresh_guard() -> Result<()> {
     let proof = service::active_service_session()?;
     let interval = Duration::from_secs(verge.proxy_guard_duration.unwrap_or(30).max(1));
     AsyncHandler::spawn(move || async move {
+        let mut consecutive_failures = 0u32;
         loop {
             tokio::time::sleep(interval).await;
             match SERVICE_PROXY_OPERATIONS
@@ -333,13 +357,49 @@ pub async fn refresh_guard() -> Result<()> {
                 )
                 .await
             {
-                Ok(true) => {}
+                Ok(true) => consecutive_failures = 0,
                 Ok(false) => break,
-                Err(_) => logging!(warn, Type::Core, "failed to refresh system proxy through Service"),
+                Err(error) => {
+                    consecutive_failures += 1;
+                    logging!(
+                        warn,
+                        Type::Core,
+                        "failed to refresh system proxy through Service ({}/{}): {:#}",
+                        consecutive_failures,
+                        GUARD_FAILURES_BEFORE_STOPPING,
+                        error
+                    );
+                    if consecutive_failures >= GUARD_FAILURES_BEFORE_STOPPING {
+                        report_guard_stopped(generation, &error).await;
+                        break;
+                    }
+                }
             }
         }
     });
+    // Retire only after the replacement guard starts successfully.
+    notification::retire_guard_failures();
     Ok(())
+}
+
+/// Consecutive failures allowed before the guard stops.
+const GUARD_FAILURES_BEFORE_STOPPING: u32 = 3;
+
+/// Report that the current guard stopped.
+async fn report_guard_stopped(captured_generation: u64, error: &anyhow::Error) {
+    let stopped = anyhow::Error::new(SysproxyFailure::GuardStopped {
+        detail: format!("{error:#}"),
+    });
+    // Do not publish a late failure from a replaced guard.
+    let recorded = SERVICE_PROXY_OPERATIONS
+        .record_if_current(captured_generation, || {
+            report_failure(FailedOperation::SystemProxyGuard, &stopped)
+        })
+        .await;
+
+    if recorded && needs_system_notification(WindowManager::get_main_window_state()) {
+        notify_event(NotificationEvent::SystemProxyGuardStopped).await;
+    }
 }
 
 pub async fn stop_guard() {
@@ -571,6 +631,60 @@ mod tests {
             .await;
 
         assert!(refreshed.is_err());
+    }
+
+    #[tokio::test]
+    async fn a_replaced_guard_does_not_get_to_report_its_last_failure() {
+        let operations = ServiceProxyOperations::new();
+        let generation = operations.invalidate_guard();
+        operations.invalidate_guard();
+
+        assert!(!operations.record_if_current(generation, || true).await);
+    }
+
+    #[tokio::test]
+    async fn a_report_waiting_on_the_lock_says_nothing_if_it_is_invalidated_meanwhile() {
+        // The generation check must happen after acquiring the operation lock.
+        let operations = Arc::new(ServiceProxyOperations::new());
+        let generation = operations.invalidate_guard();
+        let blocker_started = Arc::new(Barrier::new(2));
+        let release_blocker = Arc::new(Barrier::new(2));
+
+        let blocker = {
+            let operations = Arc::clone(&operations);
+            let blocker_started = Arc::clone(&blocker_started);
+            let release_blocker = Arc::clone(&release_blocker);
+            tokio::spawn(async move {
+                operations
+                    .run_service_operation(|| async {
+                        blocker_started.wait().await;
+                        release_blocker.wait().await;
+                    })
+                    .await
+            })
+        };
+        blocker_started.wait().await;
+
+        let recorded = AtomicBool::new(false);
+        let mut report = Box::pin(operations.record_if_current(generation, || {
+            recorded.store(true, Ordering::Release);
+            true
+        }));
+        assert!(matches!(futures::poll!(report.as_mut()), Poll::Pending));
+        operations.invalidate_guard();
+        release_blocker.wait().await;
+
+        assert!(blocker.await.is_ok());
+        assert!(!report.await);
+        assert!(!recorded.load(Ordering::Acquire));
+    }
+
+    #[tokio::test]
+    async fn a_current_guard_still_reports() {
+        let operations = ServiceProxyOperations::new();
+        let generation = operations.invalidate_guard();
+
+        assert!(operations.record_if_current(generation, || true).await);
     }
 
     #[test]

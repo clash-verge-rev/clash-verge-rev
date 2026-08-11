@@ -2,8 +2,8 @@ use crate::{
     config::{Config, IVerge, MixedPort},
     core::{handle, notification::FailedOperation, proxy_control},
     utils::{
-        notification::{NotificationEvent, notify_event},
-        window_manager::{WindowManager, WindowState},
+        notification::{NotificationEvent, needs_system_notification, notify_event},
+        window_manager::WindowManager,
     },
 };
 use clash_verge_logging::{Type, logging};
@@ -61,14 +61,6 @@ const fn toggle_operation(requested: bool) -> FailedOperation {
         FailedOperation::SystemProxyEnable
     } else {
         FailedOperation::SystemProxyDisable
-    }
-}
-
-/// Whether no window can currently show the failure.
-const fn needs_system_notification(state: WindowState) -> bool {
-    match state {
-        WindowState::Hidden | WindowState::Minimized | WindowState::NotExist => true,
-        WindowState::VisibleFocused | WindowState::VisibleUnfocused => false,
     }
 }
 
@@ -156,22 +148,12 @@ pub async fn copy_clash_env() {
 
 #[cfg(test)]
 mod tests {
-    use super::{needs_system_notification, toggle_operation};
-    use crate::{core::notification::FailedOperation, utils::window_manager::WindowState};
+    use super::toggle_operation;
+    use crate::core::notification::FailedOperation;
 
     #[test]
     fn a_failed_toggle_records_which_way_the_user_was_asking() {
         assert_eq!(toggle_operation(true), FailedOperation::SystemProxyEnable);
         assert_eq!(toggle_operation(false), FailedOperation::SystemProxyDisable);
-    }
-
-    #[test]
-    fn a_system_notification_is_sent_exactly_where_the_window_cannot_speak() {
-        assert!(needs_system_notification(WindowState::Hidden));
-        assert!(needs_system_notification(WindowState::Minimized));
-        assert!(needs_system_notification(WindowState::NotExist));
-
-        assert!(!needs_system_notification(WindowState::VisibleFocused));
-        assert!(!needs_system_notification(WindowState::VisibleUnfocused));
     }
 }

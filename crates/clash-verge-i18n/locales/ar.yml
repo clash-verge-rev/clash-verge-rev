@@ -13,6 +13,9 @@ notifications:
   systemProxyFailed:
     title: وكيل النظام
     body: تعذّر ضبط وكيل النظام. افتح Clash Verge لمعرفة السبب.
+  systemProxyGuardStopped:
+    title: حارس وكيل النظام
+    body: توقف بعد عدة إخفاقات متتالية. افتح Clash Verge لمعرفة السبب.
   tunModeToggled:
     title: وضع TUN
     'on': TUN mode has been enabled.

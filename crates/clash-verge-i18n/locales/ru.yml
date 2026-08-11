@@ -13,6 +13,9 @@ notifications:
   systemProxyFailed:
     title: Системный прокси
     body: Не удалось настроить системный прокси. Откройте Clash Verge, чтобы узнать причину.
+  systemProxyGuardStopped:
+    title: Страж системного прокси
+    body: Остановлен после нескольких неудач подряд. Откройте Clash Verge, чтобы узнать причину.
   tunModeToggled:
     title: Режим TUN
     'on': Режим TUN включён.

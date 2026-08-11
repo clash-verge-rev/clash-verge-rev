@@ -33,6 +33,7 @@ pub enum FailedOperation {
     SystemProxyEnable,
     SystemProxyDisable,
     SystemProxyRestore,
+    SystemProxyGuard,
 }
 
 impl FailedOperation {
@@ -42,6 +43,8 @@ impl FailedOperation {
             Self::SystemProxyEnable => enabled,
             Self::SystemProxyDisable => !enabled,
             Self::SystemProxyRestore => true,
+            // Only replacing or stopping the guard resolves its failure.
+            Self::SystemProxyGuard => false,
         }
     }
 }
@@ -85,7 +88,15 @@ impl FailureTable {
         failures
     }
 
-    /// Return whether any entry was retired.
+    /// Return whether a guard failure was retired.
+    fn retire_guard(&self) -> bool {
+        let mut entries = self.entries.lock();
+        let before = entries.len();
+        entries.retain(|_, failure| failure.operation != FailedOperation::SystemProxyGuard);
+        before != entries.len()
+    }
+
+    /// Return whether any proxy failure was retired.
     fn retire_system_proxy(&self, enabled: bool) -> bool {
         let mut entries = self.entries.lock();
         let before = entries.len();
@@ -105,6 +116,13 @@ pub fn record_failure(operation: FailedOperation, code: &str, detail: impl Into<
 /// Return unresolved failures oldest first without clearing them.
 pub fn pending_failures() -> Vec<PendingFailure> {
     PENDING_FAILURES.snapshot()
+}
+
+/// Retire guard failures after replacement or shutdown.
+pub fn retire_guard_failures() {
+    if PENDING_FAILURES.retire_guard() {
+        notify_pending_failures_changed();
+    }
 }
 
 /// Retire failures resolved by the resulting proxy state.
@@ -277,6 +295,36 @@ mod tests {
         assert!(!table.retire_system_proxy(false));
         assert!(table.retire_system_proxy(true));
         assert!(table.snapshot().is_empty());
+    }
+
+    #[test]
+    fn a_stopped_guard_is_retired_by_a_guard_starting_again_and_not_by_an_apply() {
+        let table = table();
+        table.record(
+            FailedOperation::SystemProxyGuard,
+            "SYSPROXY_GUARD_STOPPED",
+            "gave up".into(),
+        );
+
+        assert!(!table.retire_system_proxy(true));
+        assert!(!table.retire_system_proxy(false));
+        assert_eq!(table.snapshot().len(), 1);
+
+        assert!(table.retire_guard());
+        assert!(table.snapshot().is_empty());
+    }
+
+    #[test]
+    fn retiring_a_guard_leaves_everything_else_alone() {
+        let table = table();
+        table.record(
+            FailedOperation::SystemProxyEnable,
+            "SYSPROXY_PRIVILEGE_REQUIRED",
+            "refused".into(),
+        );
+
+        assert!(!table.retire_guard());
+        assert_eq!(table.snapshot().len(), 1);
     }
 
     #[test]

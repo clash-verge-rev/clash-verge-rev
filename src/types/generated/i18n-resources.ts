@@ -798,6 +798,7 @@ export interface TranslationResources {
           }
           sysproxy: {
             directFallback: string
+            guardStopped: string
             privilegeRequired: string
           }
         }

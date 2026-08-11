@@ -151,6 +151,20 @@ describe('system proxy failures the user can be told about', () => {
     })
   })
 
+  it('explains a guard that gave up', () => {
+    showNotice.error({
+      code: 'SYSPROXY_GUARD_STOPPED',
+      detail: 'service refused three times running',
+    })
+
+    expect(renderedExplanation()).toEqual({
+      outerKey: 'shared.feedback.notices.prefixedRaw',
+      explanationKey: 'settings.feedback.errors.sysproxy.guardStopped',
+      prefix: undefined,
+      detail: 'service refused three times running',
+    })
+  })
+
   it('falls back to the generic message for a code nothing maps', () => {
     showNotice.error({ code: 'SYSPROXY_NOT_A_REAL_CODE', detail: 'boom' })
 
