@@ -1,6 +1,12 @@
 use clash_verge_logging::{Type, logging};
+use once_cell::sync::Lazy;
+use parking_lot::Mutex;
 use serde_json::json;
 use smartstring::alias::String;
+use std::{
+    collections::HashMap,
+    sync::atomic::{AtomicU64, Ordering},
+};
 
 use tauri::{AppHandle, Emitter as _, Manager as _, WebviewWindow};
 
@@ -16,6 +22,99 @@ pub enum FrontendEvent<'a> {
     ProfileUpdateStarted { uid: &'a String },
     ProfileUpdateCompleted { uid: &'a String },
     RunStateChanged { state: serde_json::Value },
+    PendingFailuresChanged,
+}
+
+/// Operation associated with a pending failure.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub enum FailedOperation {
+    SystemProxyRestore,
+}
+
+impl FailedOperation {
+    /// Whether a successful proxy apply resolves this operation's failure.
+    const fn retired_by_system_proxy_success(self) -> bool {
+        match self {
+            Self::SystemProxyRestore => true,
+        }
+    }
+}
+
+/// Latest unresolved failure for one stable code.
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct PendingFailure {
+    /// Stable code used as the table key.
+    pub code: String,
+    /// Full diagnostic context chain.
+    pub detail: String,
+    pub operation: FailedOperation,
+    /// Monotonic identity for repeated failures under the same code.
+    pub sequence: u64,
+}
+
+/// Non-destructive pending state, indexed by stable code.
+#[derive(Debug, Default)]
+struct FailureTable {
+    entries: Mutex<HashMap<String, PendingFailure>>,
+    sequence: AtomicU64,
+}
+
+impl FailureTable {
+    fn record(&self, operation: FailedOperation, code: &str, detail: String) {
+        // Sequence assignment and replacement must share one ordering lock.
+        let mut entries = self.entries.lock();
+        let failure = PendingFailure {
+            code: code.into(),
+            detail,
+            operation,
+            sequence: self.sequence.fetch_add(1, Ordering::AcqRel).wrapping_add(1),
+        };
+        entries.insert(code.into(), failure);
+    }
+
+    fn snapshot(&self) -> Vec<PendingFailure> {
+        let mut failures: Vec<PendingFailure> = self.entries.lock().values().cloned().collect();
+        failures.sort_by_key(|failure| failure.sequence);
+        failures
+    }
+
+    /// Return whether any entry was retired.
+    fn retire_system_proxy(&self) -> bool {
+        let mut entries = self.entries.lock();
+        let before = entries.len();
+        entries.retain(|_, failure| !failure.operation.retired_by_system_proxy_success());
+        before != entries.len()
+    }
+}
+
+static PENDING_FAILURES: Lazy<FailureTable> = Lazy::new(FailureTable::default);
+
+/// Record a classified failure, replacing whatever was recorded under the same code.
+pub fn record_failure(operation: FailedOperation, code: &str, detail: impl Into<String>) {
+    PENDING_FAILURES.record(operation, code, detail.into());
+    notify_pending_failures_changed();
+}
+
+/// Return unresolved failures oldest first without clearing them.
+pub fn pending_failures() -> Vec<PendingFailure> {
+    PENDING_FAILURES.snapshot()
+}
+
+/// Forget what a system proxy applying cleanly has just disproved.
+pub fn retire_system_proxy_failures() {
+    if PENDING_FAILURES.retire_system_proxy() {
+        notify_pending_failures_changed();
+    }
+}
+
+/// Nudge the window to reread pending state; the event carries no payload.
+fn notify_pending_failures_changed() {
+    let Some(app_handle) = crate::APP_HANDLE.get() else {
+        return;
+    };
+    NotificationSystem::send_event(app_handle.clone(), FrontendEvent::PendingFailuresChanged);
 }
 
 #[derive(Debug)]
@@ -42,6 +141,7 @@ impl NotificationSystem {
             FrontendEvent::ProfileUpdateStarted { uid } => ("profile-update-started", Ok(json!({ "uid": uid }))),
             FrontendEvent::ProfileUpdateCompleted { uid } => ("profile-update-completed", Ok(json!({ "uid": uid }))),
             FrontendEvent::RunStateChanged { state } => ("verge://run-state-changed", Ok(state)),
+            FrontendEvent::PendingFailuresChanged => ("verge://pending-failures-changed", Ok(serde_json::Value::Null)),
         }
     }
 
@@ -59,5 +159,93 @@ impl NotificationSystem {
         }) {
             logging!(warn, Type::Frontend, "Failed to dispatch event on main thread: {err}");
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{FailedOperation, FailureTable};
+
+    fn table() -> FailureTable {
+        FailureTable::default()
+    }
+
+    #[test]
+    fn reading_does_not_clear() {
+        let table = table();
+        table.record(
+            FailedOperation::SystemProxyRestore,
+            "SYSPROXY_PRIVILEGE_REQUIRED",
+            "refused".into(),
+        );
+
+        assert_eq!(table.snapshot(), table.snapshot());
+        assert_eq!(table.snapshot().len(), 1);
+    }
+
+    #[test]
+    fn a_code_keeps_only_its_most_recent_failure() {
+        let table = table();
+        table.record(
+            FailedOperation::SystemProxyRestore,
+            "SYSPROXY_PRIVILEGE_REQUIRED",
+            "first".into(),
+        );
+        table.record(
+            FailedOperation::SystemProxyRestore,
+            "SYSPROXY_PRIVILEGE_REQUIRED",
+            "second".into(),
+        );
+
+        let failures = table.snapshot();
+        assert_eq!(failures.len(), 1);
+        assert_eq!(failures[0].detail, "second");
+    }
+
+    #[test]
+    fn a_new_failure_under_a_known_code_gets_a_new_sequence() {
+        let table = table();
+        table.record(
+            FailedOperation::SystemProxyRestore,
+            "SYSPROXY_DIRECT_FALLBACK",
+            "a".into(),
+        );
+        let first = table.snapshot()[0].sequence;
+        table.record(
+            FailedOperation::SystemProxyRestore,
+            "SYSPROXY_DIRECT_FALLBACK",
+            "b".into(),
+        );
+
+        assert!(table.snapshot()[0].sequence > first);
+    }
+
+    #[test]
+    fn failures_are_reported_oldest_first() {
+        let table = table();
+        table.record(FailedOperation::SystemProxyRestore, "FIRST", "a".into());
+        table.record(FailedOperation::SystemProxyRestore, "SECOND", "b".into());
+
+        let failures = table.snapshot();
+        let codes: Vec<&str> = failures.iter().map(|failure| failure.code.as_str()).collect();
+        assert_eq!(codes, ["FIRST", "SECOND"]);
+    }
+
+    #[test]
+    fn a_working_proxy_retires_what_it_disproves() {
+        let table = table();
+        table.record(
+            FailedOperation::SystemProxyRestore,
+            "SYSPROXY_PRIVILEGE_REQUIRED",
+            "refused".into(),
+        );
+
+        assert!(table.retire_system_proxy());
+        assert!(table.snapshot().is_empty());
+    }
+
+    #[test]
+    fn retiring_nothing_reports_nothing() {
+        assert!(!table().retire_system_proxy());
     }
 }

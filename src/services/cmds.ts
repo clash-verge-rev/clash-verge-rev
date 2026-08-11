@@ -407,6 +407,25 @@ export const getRuntimeState = async () => {
   return invoke<RunState>('get_runtime_state')
 }
 
+/** Operation associated with a pending failure. */
+export type FailedOperation = 'systemProxyRestore'
+
+/** Latest unresolved failure for one stable code. */
+export interface PendingFailure {
+  /** Stable table key. */
+  code: string
+  /** Full diagnostic chain. */
+  detail: string
+  operation: FailedOperation
+  /** Identity for repeated failures under the same code. */
+  sequence: number
+}
+
+/** Read unresolved failures without consuming them. */
+export const getPendingFailures = async () => {
+  return invoke<PendingFailure[]>('get_pending_failures')
+}
+
 // 获取应用运行时间
 export const getAppUptime = async () => {
   return invoke<number>('get_app_uptime')

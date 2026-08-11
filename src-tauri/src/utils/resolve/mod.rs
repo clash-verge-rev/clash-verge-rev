@@ -9,6 +9,8 @@ use crate::{
         handle::Handle,
         hotkey::Hotkey,
         logger::Logger,
+        notification::FailedOperation,
+        proxy_control,
         service::{SERVICE_MANAGER, ServiceManager},
         tray::Tray,
     },
@@ -194,6 +196,8 @@ pub(super) async fn init_core_manager() -> bool {
     match CoreManager::global().init().await {
         Ok(initialized) => initialized,
         Err(error) => {
+            // Persist startup failures because no window may be listening yet.
+            proxy_control::report_failure(FailedOperation::SystemProxyRestore, &error);
             logging!(error, Type::Setup, "core manager initialization failed: {error:#}");
             false
         }

@@ -53,6 +53,7 @@ import {
   useLayoutEvents,
   useLoadingOverlay,
   useNavMenuOrder,
+  usePendingFailures,
 } from './_layout/hooks'
 import { handleNoticeMessage } from './_layout/utils'
 import { navItems } from './_navigation'
@@ -250,6 +251,7 @@ const Layout = () => {
   )
 
   useLayoutEvents(handleNotice)
+  usePendingFailures()
 
   useEffect(() => {
     if (language) {

@@ -1,6 +1,12 @@
 use crate::{
     config::{Config, IVerge, MixedPort},
-    core::{CoreManager, manager::RunningMode, service, sysopt::Sysopt},
+    core::{
+        CoreManager,
+        manager::RunningMode,
+        notification::{self, FailedOperation},
+        service,
+        sysopt::Sysopt,
+    },
     process::AsyncHandler,
     utils::server,
 };
@@ -241,9 +247,17 @@ async fn current_service_proxy_config(verge: &IVerge) -> Result<MacosProxyConfig
     service_proxy_config(verge, mixed_port, 0)
 }
 
+/// Record a classified proxy failure with its full diagnostic chain.
+pub fn report_failure(operation: FailedOperation, error: &anyhow::Error) {
+    let Some(failure) = SysproxyFailure::from_chain(error) else {
+        return;
+    };
+    notification::record_failure(operation, failure.code(), format!("{error:#}"));
+}
+
 pub async fn apply() -> Result<()> {
     let running_mode = CoreManager::global().get_running_mode();
-    match proxy_backend_route(cfg!(target_os = "macos"), &running_mode) {
+    let result = match proxy_backend_route(cfg!(target_os = "macos"), &running_mode) {
         ProxyBackendRoute::Local => Sysopt::global().update_sysproxy().await.map_err(classify_local_failure),
         ProxyBackendRoute::Service => {
             let verge = Config::verge().await.latest_arc();
@@ -254,7 +268,12 @@ pub async fn apply() -> Result<()> {
                 })
                 .await
         }
+    };
+    // Any successful apply resolves earlier proxy failures.
+    if result.is_ok() {
+        notification::retire_system_proxy_failures();
     }
+    result
 }
 
 pub async fn clear() -> Result<()> {
@@ -563,7 +582,7 @@ mod tests {
         );
     }
 
-    use super::{SysproxyFailure, classify_local_failure};
+    use super::{FailedOperation, SysproxyFailure, classify_local_failure};
 
     fn wrapped_privilege_failure() -> anyhow::Error {
         anyhow::Error::new(sysproxy::Error::RequiresAdminPrivileges).context("failed to apply the system proxy")
@@ -633,6 +652,32 @@ mod tests {
         let classified = classify_local_failure(wrapped_privilege_failure());
 
         assert!(SysproxyFailure::from_chain(&classified).is_none());
+    }
+
+    #[test]
+    fn only_a_classified_failure_is_worth_recording() {
+        let before = crate::core::notification::pending_failures().len();
+        super::report_failure(
+            FailedOperation::SystemProxyRestore,
+            &anyhow::anyhow!("port already in use"),
+        );
+        assert_eq!(crate::core::notification::pending_failures().len(), before);
+
+        super::report_failure(
+            FailedOperation::SystemProxyRestore,
+            &classified_privilege_failure().context("failed to apply system proxy after start"),
+        );
+
+        let recorded = crate::core::notification::pending_failures();
+        let failure = recorded
+            .iter()
+            .find(|failure| failure.code == "SYSPROXY_PRIVILEGE_REQUIRED")
+            .unwrap_or_else(|| unreachable!("a classified failure must be recorded"));
+        assert!(
+            failure.detail.contains("failed to apply system proxy after start"),
+            "{failure:?}"
+        );
+        assert!(failure.detail.contains("admin privileges"), "{failure:?}");
     }
 
     #[test]
