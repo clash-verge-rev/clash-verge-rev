@@ -37,7 +37,8 @@
       },
       "actions": {
         "installService": "نصب سرویس",
-        "uninstallService": "حذف سرویس"
+        "uninstallService": "حذف سرویس",
+        "switchToServiceMode": "رفتن به حالت سرویس"
       },
       "fields": {
         "systemProxy": "پراکسی سیستم",

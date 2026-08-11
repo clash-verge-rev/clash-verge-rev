@@ -37,7 +37,8 @@
       },
       "actions": {
         "installService": "Instal Layanan",
-        "uninstallService": "Uninstall Service"
+        "uninstallService": "Uninstall Service",
+        "switchToServiceMode": "Beralih ke mode layanan"
       },
       "fields": {
         "systemProxy": "Proksi Sistem",

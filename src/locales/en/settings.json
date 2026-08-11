@@ -37,7 +37,8 @@
       },
       "actions": {
         "installService": "Install Service",
-        "uninstallService": "Uninstall Service"
+        "uninstallService": "Uninstall Service",
+        "switchToServiceMode": "Switch to service mode"
       },
       "fields": {
         "systemProxy": "System Proxy",

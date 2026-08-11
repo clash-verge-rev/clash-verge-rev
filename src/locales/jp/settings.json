@@ -37,7 +37,8 @@
       },
       "actions": {
         "installService": "サービスをインストール",
-        "uninstallService": "サービスのアンインストール"
+        "uninstallService": "サービスのアンインストール",
+        "switchToServiceMode": "サービスモードに切り替え"
       },
       "fields": {
         "systemProxy": "システムプロキシ",

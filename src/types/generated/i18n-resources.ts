@@ -1303,6 +1303,7 @@ export interface TranslationResources {
         proxyControl: {
           actions: {
             installService: string
+            switchToServiceMode: string
             uninstallService: string
           }
           fields: {

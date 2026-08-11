@@ -37,7 +37,8 @@
       },
       "actions": {
         "installService": "서비스 설치",
-        "uninstallService": "서비스 제거"
+        "uninstallService": "서비스 제거",
+        "switchToServiceMode": "서비스 모드로 전환"
       },
       "fields": {
         "systemProxy": "시스템 프록시",

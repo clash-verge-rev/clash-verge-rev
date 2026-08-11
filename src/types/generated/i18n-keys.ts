@@ -397,6 +397,7 @@ export const translationKeys = [
   'settings.sections.proxyControl.tooltips.tunUnavailable',
   'settings.sections.proxyControl.actions.installService',
   'settings.sections.proxyControl.actions.uninstallService',
+  'settings.sections.proxyControl.actions.switchToServiceMode',
   'settings.sections.proxyControl.fields.systemProxy',
   'settings.sections.proxyControl.fields.tunMode',
   'settings.sections.externalController.title',

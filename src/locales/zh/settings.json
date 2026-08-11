@@ -37,7 +37,8 @@
       },
       "actions": {
         "installService": "安装服务",
-        "uninstallService": "卸载服务"
+        "uninstallService": "卸载服务",
+        "switchToServiceMode": "切换到服务模式"
       },
       "fields": {
         "systemProxy": "系统代理",

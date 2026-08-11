@@ -37,7 +37,8 @@
       },
       "actions": {
         "installService": "Хезмәтне урнаштыру",
-        "uninstallService": "Uninstall Service"
+        "uninstallService": "Uninstall Service",
+        "switchToServiceMode": "Хезмәт режимына күчү"
       },
       "fields": {
         "systemProxy": "Системалы прокси",

@@ -37,7 +37,8 @@
       },
       "actions": {
         "installService": "Instalar servicio",
-        "uninstallService": "Desinstalar servicio"
+        "uninstallService": "Desinstalar servicio",
+        "switchToServiceMode": "Cambiar al modo de servicio"
       },
       "fields": {
         "systemProxy": "Proxy del sistema",

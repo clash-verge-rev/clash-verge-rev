@@ -110,9 +110,7 @@ it('shows the same code again when it has failed again', async () => {
   table = [failure(2, 'refused again')]
   onTableChanged?.()
 
-  await waitFor(() =>
-    expect(shownDetails()).toEqual(['refused', 'refused again']),
-  )
+  await waitFor(() => expect(shownDetails()).toEqual(['refused again']))
 })
 
 it('reads when the window takes focus', async () => {

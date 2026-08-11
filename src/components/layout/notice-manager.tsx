@@ -2,17 +2,24 @@ import { CloseRounded } from '@mui/icons-material'
 import {
   Snackbar,
   Alert,
+  Button,
   IconButton,
   Box,
+  Stack,
   type SnackbarOrigin,
 } from '@mui/material'
+import { useLockFn } from 'ahooks'
 import React, { useCallback, useMemo, useSyncExternalStore } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { restartCore } from '@/services/cmds'
+import type { NoticeActionCode } from '@/services/notice-service'
 import {
   boundNoticeText,
+  noticeActionFor,
   subscribeNotices,
   hideNotice,
+  hideNoticesForCode,
   getSnapshotNotices,
   showNotice,
 } from '@/services/notice-service'
@@ -146,6 +153,52 @@ const resolveNoticeCopyText = (
   )
 }
 
+/** Run the recovery mapped to a classified failure. */
+const runNoticeAction = async (code: NoticeActionCode) => {
+  switch (code) {
+    case 'SYSPROXY_SIDECAR_WHILE_SERVICE_READY':
+      await restartCore()
+  }
+}
+
+interface NoticeActionButtonProps {
+  code: NoticeActionCode
+  label: TranslationKey
+}
+
+/** Lock recovery actions that may prompt for a password. */
+const NoticeActionButton: React.FC<NoticeActionButtonProps> = ({
+  code,
+  label,
+}) => {
+  const { t } = useTranslation()
+  const [running, setRunning] = React.useState(false)
+
+  const run = useLockFn(async () => {
+    setRunning(true)
+    try {
+      await runNoticeAction(code)
+      // Remove any same-code replacement created while recovery ran.
+      hideNoticesForCode(code)
+    } catch (error) {
+      showNotice.error(error)
+    } finally {
+      setRunning(false)
+    }
+  })
+
+  return (
+    <Button
+      size="small"
+      color="inherit"
+      disabled={running}
+      onClick={() => void run()}
+    >
+      {t(label)}
+    </Button>
+  )
+}
+
 interface NoticeManagerProps {
   position?: NoticePosition | null
 }
@@ -223,13 +276,28 @@ export const NoticeManager: React.FC<NoticeManagerProps> = ({ position }) => {
               void handleNoticeCopy(notice)
             }}
             action={
-              <IconButton
-                size="small"
-                color="inherit"
-                onClick={() => handleClose(notice.id)}
+              <Stack
+                direction="row"
+                spacing={0.5}
+                sx={{ alignItems: 'center' }}
               >
-                <CloseRounded fontSize="inherit" />
-              </IconButton>
+                {(() => {
+                  const action = noticeActionFor(notice.code)
+                  return action ? (
+                    <NoticeActionButton
+                      code={action.code}
+                      label={action.label}
+                    />
+                  ) : null
+                })()}
+                <IconButton
+                  size="small"
+                  color="inherit"
+                  onClick={() => handleClose(notice.id)}
+                >
+                  <CloseRounded fontSize="inherit" />
+                </IconButton>
+              </Stack>
             }
           >
             {resolveNoticeMessage(notice, t)}

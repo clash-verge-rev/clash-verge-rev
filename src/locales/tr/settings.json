@@ -37,7 +37,8 @@
       },
       "actions": {
         "installService": "Hizmeti Kur",
-        "uninstallService": "Uninstall Service"
+        "uninstallService": "Uninstall Service",
+        "switchToServiceMode": "Hizmet moduna geç"
       },
       "fields": {
         "systemProxy": "Sistem Vekil'i",

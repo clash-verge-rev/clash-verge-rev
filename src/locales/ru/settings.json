@@ -37,7 +37,8 @@
       },
       "actions": {
         "installService": "Установить службу",
-        "uninstallService": "Удалить службу"
+        "uninstallService": "Удалить службу",
+        "switchToServiceMode": "Переключиться в режим службы"
       },
       "fields": {
         "systemProxy": "Системный прокси",

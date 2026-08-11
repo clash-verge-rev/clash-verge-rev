@@ -37,7 +37,8 @@
       },
       "actions": {
         "installService": "تثبيت الخدمة ",
-        "uninstallService": "Uninstall Service"
+        "uninstallService": "Uninstall Service",
+        "switchToServiceMode": "التبديل إلى وضع الخدمة"
       },
       "fields": {
         "systemProxy": "وكيل النظام",

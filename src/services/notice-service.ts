@@ -2,6 +2,7 @@ import i18n from 'i18next'
 import { ReactNode, isValidElement } from 'react'
 
 import type { TranslationKey } from '@/types/generated/i18n-keys'
+import getSystem from '@/utils/get-system'
 
 type NoticeType = 'success' | 'error' | 'info'
 
@@ -16,7 +17,18 @@ interface NoticeItem {
   readonly duration: number
   readonly message?: ReactNode
   readonly i18n?: NoticeTranslationDescriptor
+  /** Stable classified failure code. */
+  readonly code?: string
   timerId?: ReturnType<typeof setTimeout>
+}
+
+/** Failure codes with frontend recovery actions. */
+export type NoticeActionCode = 'SYSPROXY_SIDECAR_WHILE_SERVICE_READY'
+
+/** Recovery offered by a classified notice. */
+export interface NoticeAction {
+  readonly code: NoticeActionCode
+  readonly label: TranslationKey
 }
 
 type NoticeContent = unknown
@@ -92,6 +104,8 @@ interface ParsedNoticeExtras {
   params?: Record<string, unknown>
   raw?: unknown
   duration?: number
+  /** Code extracted before translation parameters are flattened. */
+  nestedCode?: string
 }
 
 function parseNoticeExtras(extras: NoticeExtra[]): ParsedNoticeExtras {
@@ -142,7 +156,12 @@ function parseNoticeExtras(extras: NoticeExtra[]): ParsedNoticeExtras {
     }
   }
 
-  return { params: params && readableParams(params), raw, duration }
+  return {
+    params: params && readableParams(params),
+    raw,
+    duration,
+    nestedCode: nestedFailureCode(params),
+  }
 }
 
 /** Replace structured failures in translation params with readable detail. */
@@ -157,6 +176,17 @@ function readableParams(
   )
 }
 
+/** Find a classified failure nested in translation parameters. */
+function nestedFailureCode(
+  source?: Record<string, unknown>,
+): string | undefined {
+  if (!source) return undefined
+  for (const value of Object.values(source)) {
+    if (isCommandFailure(value) && value.code) return value.code
+  }
+  return undefined
+}
+
 function resolveDuration(type: NoticeType, override?: number) {
   return override ?? DEFAULT_DURATIONS[type]
 }
@@ -165,7 +195,11 @@ function buildNotice(
   id: number,
   type: NoticeType,
   duration: number,
-  payload: { message?: ReactNode; i18n?: NoticeTranslationDescriptor },
+  payload: {
+    message?: ReactNode
+    i18n?: NoticeTranslationDescriptor
+    code?: string
+  },
   timerId?: ReturnType<typeof setTimeout>,
 ): NoticeItem {
   return {
@@ -174,6 +208,23 @@ function buildNotice(
     duration,
     timerId,
     ...payload,
+  }
+}
+
+/** Return the macOS recovery action for a classified failure. */
+export function noticeActionFor(
+  code: string | undefined,
+): NoticeAction | undefined {
+  if (!code || getSystem() !== 'macos') return undefined
+
+  switch (code) {
+    case 'SYSPROXY_SIDECAR_WHILE_SERVICE_READY':
+      return {
+        code,
+        label: 'settings.sections.proxyControl.actions.switchToServiceMode',
+      }
+    default:
+      return undefined
   }
 }
 
@@ -429,8 +480,13 @@ const baseShowNotice = (
   ...extras: NoticeExtra[]
 ): number => {
   const id = nextId++
-  const { params, raw, duration } = parseNoticeExtras(extras)
-  const effectiveDuration = resolveDuration(type, duration)
+  const { params, raw, duration, nestedCode } = parseNoticeExtras(extras)
+  // Accept codes from raw, direct, or interpolated failures.
+  const code = failureCode(raw) ?? failureCode(message) ?? nestedCode
+  // Keep actionable notices until explicitly dismissed.
+  const effectiveDuration = noticeActionFor(code)
+    ? 0
+    : resolveDuration(type, duration)
   const timerId =
     effectiveDuration > 0
       ? setTimeout(() => hideNotice(id), effectiveDuration)
@@ -441,13 +497,27 @@ const baseShowNotice = (
     id,
     type,
     effectiveDuration,
-    normalizedMessage,
+    { ...normalizedMessage, code },
     timerId,
   )
+
+  // Replace older notices for the same failure code.
+  if (code) {
+    notices
+      .filter((existing) => existing.code === code)
+      .forEach((existing) => {
+        if (existing.timerId) clearTimeout(existing.timerId)
+      })
+    notices = notices.filter((existing) => existing.code !== code)
+  }
 
   notices = [...notices, notice]
   notifySubscribers()
   return id
+}
+
+function failureCode(input: unknown): string | undefined {
+  return isCommandFailure(input) ? input.code : undefined
 }
 
 /**
@@ -470,6 +540,19 @@ export const showNotice: ShowNotice = Object.assign(baseShowNotice, {
   info: (message: NoticeContent, ...extras: NoticeExtra[]) =>
     baseShowNotice('info', message, ...extras),
 })
+
+/** Drop every notice reporting `code`. */
+export function hideNoticesForCode(code: string) {
+  notices
+    .filter((notice) => notice.code === code)
+    .forEach((notice) => {
+      if (notice.timerId) clearTimeout(notice.timerId)
+    })
+  const remaining = notices.filter((notice) => notice.code !== code)
+  if (remaining.length === notices.length) return
+  notices = remaining
+  notifySubscribers()
+}
 
 export function hideNotice(id: number) {
   const notice = notices.find((candidate) => candidate.id === id)
