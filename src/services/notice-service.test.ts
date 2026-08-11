@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it } from 'vitest'
 
 import {
+  boundNoticeText,
   errorDetail,
   getSnapshotNotices,
   hideNotice,
@@ -159,6 +160,40 @@ describe('system proxy failures the user can be told about', () => {
       prefix: undefined,
       detail: 'boom',
     })
+  })
+})
+
+describe('boundNoticeText', () => {
+  it('leaves text that fits exactly at the limit alone', () => {
+    const exact = 'x'.repeat(500)
+
+    expect(boundNoticeText(exact)).toBe(exact)
+  })
+
+  it('marks text it had to shorten', () => {
+    expect(boundNoticeText('x'.repeat(501))).toBe(`${'x'.repeat(500)}…`)
+  })
+
+  it('does not cut a surrogate pair in half', () => {
+    expect(boundNoticeText('🙂'.repeat(600))).toBe(`${'🙂'.repeat(500)}…`)
+  })
+
+  it('does not mistake a long message for a translation key', () => {
+    const message = `a.${'b'.repeat(400)}`
+    showNotice.error(message)
+
+    expect(renderedExplanation()).toEqual({
+      outerKey: 'shared.feedback.notices.raw',
+      explanationKey: undefined,
+      prefix: undefined,
+      detail: message,
+    })
+  })
+
+  it('does not leave a space before the ellipsis', () => {
+    expect(boundNoticeText(`${'x'.repeat(498)}  yyy`)).toBe(
+      `${'x'.repeat(498)}…`,
+    )
   })
 })
 

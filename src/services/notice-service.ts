@@ -139,7 +139,19 @@ function parseNoticeExtras(extras: NoticeExtra[]): ParsedNoticeExtras {
     }
   }
 
-  return { params, raw, duration }
+  return { params: params && readableParams(params), raw, duration }
+}
+
+/** Replace structured failures in translation params with readable detail. */
+function readableParams(
+  source: Record<string, unknown>,
+): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(source).map(([key, value]) => [
+      key,
+      isCommandFailure(value) ? value.detail : value,
+    ]),
+  )
 }
 
 function resolveDuration(type: NoticeType, override?: number) {
@@ -191,6 +203,23 @@ function isPlainRecord(value: unknown): value is Record<string, unknown> {
   return proto === Object.prototype || proto === null
 }
 
+/** Maximum code points rendered in a notice. */
+const MAX_RENDERED_TEXT_CHARS = 500
+
+/** Bound resolved display text by code point and append an ellipsis when truncated. */
+export function boundNoticeText(text: string): string {
+  let end = 0
+  let counted = 0
+  for (const codePoint of text) {
+    if (counted === MAX_RENDERED_TEXT_CHARS) {
+      return `${text.slice(0, end).trimEnd()}…`
+    }
+    end += codePoint.length
+    counted += 1
+  }
+  return text
+}
+
 function createRawDescriptor(message: string): NoticeTranslationDescriptor {
   return {
     key: 'shared.feedback.notices.raw',
@@ -198,8 +227,13 @@ function createRawDescriptor(message: string): NoticeTranslationDescriptor {
   }
 }
 
+/** Messages longer than any real translation key are treated as raw text. */
+const MAX_TRANSLATION_KEY_CHARS = 200
+
 function isLikelyTranslationKey(key: string) {
-  return TRANSLATION_KEY_PATTERN.test(key)
+  return (
+    key.length <= MAX_TRANSLATION_KEY_CHARS && TRANSLATION_KEY_PATTERN.test(key)
+  )
 }
 
 function shouldUseTranslationKey(
@@ -284,7 +318,7 @@ function normalizeNoticeMessage(
   }
 
   if (isMaybeTranslationDescriptor(message)) {
-    const originalParams = message.params ?? {}
+    const originalParams = readableParams(message.params ?? {})
     const mergedParams = Object.keys(params ?? {}).length
       ? { ...originalParams, ...params }
       : { ...originalParams }
