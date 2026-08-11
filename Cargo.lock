@@ -1362,7 +1362,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "117725a109d387c937a1533ce01b450cbde6b88abceea8473c4d7a85853cda3c"
 dependencies = [
  "lazy_static",
- "windows-sys 0.59.0",
+ "windows-sys 0.48.0",
 ]
 
 [[package]]
@@ -3405,7 +3405,7 @@ dependencies = [
  "libc",
  "percent-encoding",
  "pin-project-lite",
- "socket2 0.6.5",
+ "socket2 0.5.10",
  "system-configuration",
  "tokio",
  "tower-service",
@@ -3425,7 +3425,7 @@ dependencies = [
  "js-sys",
  "log",
  "wasm-bindgen",
- "windows-core 0.62.2",
+ "windows-core 0.61.2",
 ]
 
 [[package]]
@@ -4838,7 +4838,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7d8fae84b431384b68627d0f9b3b1245fcf9f46f6c0e3dc902e9dce64edd1967"
 dependencies = [
  "libc",
- "windows-sys 0.61.2",
+ "windows-sys 0.45.0",
 ]
 
 [[package]]
@@ -5512,7 +5512,7 @@ dependencies = [
  "quinn-udp",
  "rustc-hash",
  "rustls",
- "socket2 0.6.5",
+ "socket2 0.5.10",
  "thiserror 2.0.19",
  "tokio",
  "tracing",
@@ -5551,7 +5551,7 @@ dependencies = [
  "cfg_aliases",
  "libc",
  "once_cell",
- "socket2 0.6.5",
+ "socket2 0.5.10",
  "tracing",
  "windows-sys 0.61.2",
 ]
@@ -5995,7 +5995,7 @@ checksum = "b96d6b6c505282b007a9b009f2aa38b2fd0359b81a0430ceacc60f69ade4c6a0"
 dependencies = [
  "libc",
  "security-framework-sys",
- "which",
+ "which 4.4.2",
  "windows-sys 0.48.0",
 ]
 
@@ -7018,7 +7018,7 @@ dependencies = [
 [[package]]
 name = "sysproxy"
 version = "0.5.5"
-source = "git+https://github.com/clash-verge-rev/sysproxy-rs?branch=main#ca49be5eabcdcc0bae7606e2ed2ff387084f7e81"
+source = "git+https://github.com/clash-verge-rev/sysproxy-rs?branch=main#90db88115782cbbf7c527c3c09346260ad2dd939"
 dependencies = [
  "iptools",
  "log",
@@ -7026,6 +7026,7 @@ dependencies = [
  "thiserror 2.0.19",
  "tokio",
  "url",
+ "which 8.0.5",
  "windows 0.62.2",
  "winreg 0.55.0",
  "xdg",
@@ -9064,6 +9065,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "which"
+version = "8.0.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8f3ef584124b911bcc3875c2f1472e80f24361ceb789bd1c62b3e9a3df9ff43c"
+dependencies = [
+ "libc",
+]
+
+[[package]]
 name = "widestring"
 version = "1.2.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -9091,7 +9101,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.61.2",
+ "windows-sys 0.48.0",
 ]
 
 [[package]]
