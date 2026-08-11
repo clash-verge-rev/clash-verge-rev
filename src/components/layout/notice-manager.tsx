@@ -153,8 +153,8 @@ const resolveNoticeCopyText = (
   )
 }
 
-/** Whether recovery resolved the source notice. */
-type ActionOutcome = 'dismiss' | 'keep'
+/** Whether the button should dismiss its source notice. */
+type ActionOutcome = 'dismiss' | 'leave'
 
 /** Run the recovery mapped to a classified failure. */
 const runNoticeAction = async (
@@ -164,11 +164,18 @@ const runNoticeAction = async (
     case 'SYSPROXY_PRIVILEGE_REQUIRED':
       // Keep the install offer only if installation itself fails.
       await installService()
+      // Remove the stale offer before restart can publish a same-code failure.
+      hideNoticesForCode(code)
       await restartIntoService()
-      return 'dismiss'
+      return 'leave'
     case 'SYSPROXY_SIDECAR_WHILE_SERVICE_READY':
-      return (await restartIntoService()) ? 'dismiss' : 'keep'
+      return (await restartIntoService()) ? 'dismiss' : 'leave'
   }
+}
+
+/** Explain that the original proxy request still needs attention. */
+const reportWhatIsLeftToDo = () => {
+  showNotice.info('settings.sections.proxyControl.messages.installedCheckProxy')
 }
 
 /** Restart, report the resulting runtime mode, and return whether it reached the service. */
@@ -182,10 +189,7 @@ const restartIntoService = async (): Promise<boolean> => {
   const runState = await getRuntimeState()
 
   if (runState.mode === 'Service') {
-    // The failed proxy request was rolled back; leave its direction to the user.
-    showNotice.info(
-      'settings.sections.proxyControl.messages.installedCheckProxy',
-    )
+    reportWhatIsLeftToDo()
     return true
   }
 

@@ -11,6 +11,9 @@ pub struct CommandFailure {
     pub code: Option<std::string::String>,
     /// Human-readable diagnostic detail.
     pub detail: std::string::String,
+    /// Requested operation when known by the command.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub operation: Option<crate::core::notification::FailedOperation>,
 }
 
 impl CommandFailure {
@@ -19,6 +22,7 @@ impl CommandFailure {
         Self {
             code: Some(code.to_owned()),
             detail: detail.to_string(),
+            operation: None,
         }
     }
 
@@ -27,7 +31,15 @@ impl CommandFailure {
         Self {
             code: None,
             detail: detail.to_string(),
+            operation: None,
         }
+    }
+
+    /// Attach the requested operation when known.
+    #[must_use]
+    pub const fn asking_for(mut self, operation: Option<crate::core::notification::FailedOperation>) -> Self {
+        self.operation = operation;
+        self
     }
 }
 
@@ -40,7 +52,11 @@ impl From<&str> for CommandFailure {
 
 impl From<std::string::String> for CommandFailure {
     fn from(detail: std::string::String) -> Self {
-        Self { code: None, detail }
+        Self {
+            code: None,
+            detail,
+            operation: None,
+        }
     }
 }
 
@@ -161,6 +177,7 @@ mod tests {
             CommandFailure {
                 code: Some("CORE_RESTART_FAILED".to_owned()),
                 detail: "connection refused".to_owned(),
+                operation: None,
             }
         );
     }
@@ -181,6 +198,7 @@ mod tests {
             CommandFailure {
                 code: Some("CORE_RESTART_FAILED".to_owned()),
                 detail: "failed to restart the core: failed to reach the mihomo core: connection refused".to_owned(),
+                operation: None,
             }
         );
     }
@@ -199,6 +217,7 @@ mod tests {
             CommandFailure {
                 code: Some("PROFILE_READ_FAILED".to_owned()),
                 detail: "plain failure".to_owned(),
+                operation: None,
             }
         );
     }
@@ -227,6 +246,7 @@ mod tests {
             CommandFailure {
                 code: Some("CORE_START_FAILED".to_owned()),
                 detail: "failed to start the core: connection refused".to_owned(),
+                operation: None,
             }
         );
     }
@@ -242,6 +262,7 @@ mod tests {
             CommandFailure {
                 code: None,
                 detail: "failed to save the configuration: disk full".to_owned(),
+                operation: None,
             }
         );
     }
@@ -263,6 +284,27 @@ mod tests {
         assert!(
             reported.detail.contains("service could not set the proxy"),
             "{reported:?}"
+        );
+    }
+
+    #[test]
+    fn a_command_that_knows_the_request_can_say_which_way_it_went() {
+        let asking_on = CommandFailure::coded("SYSPROXY_PRIVILEGE_REQUIRED", "refused")
+            .asking_for(Some(crate::core::notification::FailedOperation::SystemProxyEnable));
+
+        assert_eq!(
+            serde_json::to_value(asking_on).unwrap_or(serde_json::Value::Null),
+            serde_json::json!({
+                "code": "SYSPROXY_PRIVILEGE_REQUIRED",
+                "detail": "refused",
+                "operation": "systemProxyEnable",
+            })
+        );
+
+        assert_eq!(
+            serde_json::to_value(CommandFailure::coded("CORE_START_FAILED", "no").asking_for(None))
+                .unwrap_or(serde_json::Value::Null),
+            serde_json::json!({ "code": "CORE_START_FAILED", "detail": "no" })
         );
     }
 

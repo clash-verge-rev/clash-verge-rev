@@ -341,6 +341,16 @@ it('does not go on to restart when the install itself failed', async () => {
   ).toBeTruthy()
 })
 
+it('remembers which way the user was asking, for whoever acts on it next', () => {
+  showNotice.error({
+    code: 'SYSPROXY_PRIVILEGE_REQUIRED',
+    detail: 'admin privileges required to modify system proxy',
+    operation: 'systemProxyEnable',
+  })
+
+  expect(getSnapshotNotices().at(-1)?.operation).toBe('systemProxyEnable')
+})
+
 it('copies the whole detail, not the shortened one', async () => {
   const detail = `${'x'.repeat(4000)} tail`
   showNotice.error({ code: 'SERVICE_INSTALL_FAILED', detail })

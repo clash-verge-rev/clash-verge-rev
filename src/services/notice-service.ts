@@ -1,6 +1,7 @@
 import i18n from 'i18next'
 import { ReactNode, isValidElement } from 'react'
 
+import type { FailedOperation } from '@/services/cmds'
 import type { TranslationKey } from '@/types/generated/i18n-keys'
 import getSystem from '@/utils/get-system'
 
@@ -19,6 +20,8 @@ interface NoticeItem {
   readonly i18n?: NoticeTranslationDescriptor
   /** Stable classified failure code. */
   readonly code?: string
+  /** Requested operation when known. */
+  readonly operation?: FailedOperation
   timerId?: ReturnType<typeof setTimeout>
 }
 
@@ -201,6 +204,7 @@ function buildNotice(
     message?: ReactNode
     i18n?: NoticeTranslationDescriptor
     code?: string
+    operation?: FailedOperation
   },
   timerId?: ReturnType<typeof setTimeout>,
 ): NoticeItem {
@@ -334,6 +338,8 @@ function extractDisplayText(input: unknown): string | undefined {
 export interface CommandFailure {
   /** Stable identifier for the kind of failure, when the backend could classify it. */
   code?: string
+  /** Requested operation when known by the command. */
+  operation?: FailedOperation
   /** Human-readable diagnostic detail. */
   detail: string
 }
@@ -490,6 +496,7 @@ const baseShowNotice = (
   const { params, raw, duration, nestedCode } = parseNoticeExtras(extras)
   // Accept codes from raw, direct, or interpolated failures.
   const code = failureCode(raw) ?? failureCode(message) ?? nestedCode
+  const operation = failureOperation(raw) ?? failureOperation(message)
   // Keep actionable notices until explicitly dismissed.
   const effectiveDuration = noticeActionFor(code)
     ? 0
@@ -504,7 +511,7 @@ const baseShowNotice = (
     id,
     type,
     effectiveDuration,
-    { ...normalizedMessage, code },
+    { ...normalizedMessage, code, operation },
     timerId,
   )
 
@@ -525,6 +532,10 @@ const baseShowNotice = (
 
 function failureCode(input: unknown): string | undefined {
   return isCommandFailure(input) ? input.code : undefined
+}
+
+function failureOperation(input: unknown): FailedOperation | undefined {
+  return isCommandFailure(input) ? input.operation : undefined
 }
 
 /**
