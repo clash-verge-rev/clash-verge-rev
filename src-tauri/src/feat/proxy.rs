@@ -1,13 +1,17 @@
 use crate::{
     config::{Config, IVerge, MixedPort},
-    core::handle,
+    core::{handle, notification::FailedOperation, proxy_control},
+    utils::{
+        notification::{NotificationEvent, notify_event},
+        window_manager::{WindowManager, WindowState},
+    },
 };
 use clash_verge_logging::{Type, logging};
 use std::env;
 use tauri_plugin_clipboard_manager::ClipboardExt as _;
 
-/// Toggle system proxy on/off
-pub async fn toggle_system_proxy() -> bool {
+/// Toggle system proxy, returning `None` when it does not change.
+pub async fn toggle_system_proxy() -> Option<bool> {
     let verge = Config::verge().await;
     let current = verge.latest_arc().enable_system_proxy.unwrap_or(false);
     let auto_close_connection = verge.latest_arc().auto_close_connection.unwrap_or(false);
@@ -33,12 +37,38 @@ pub async fn toggle_system_proxy() -> bool {
     match patch_result {
         Ok(_) => {
             handle::Handle::refresh_verge();
-            requested
+            Some(requested)
         }
         Err(err) => {
-            logging!(error, Type::ProxyMode, "{err}");
-            current
+            logging!(error, Type::ProxyMode, "{err:#}");
+            report_toggle_failure(requested, &err).await;
+            None
         }
+    }
+}
+
+/// Persist a classified failure and notify when no window can show it.
+async fn report_toggle_failure(requested: bool, error: &anyhow::Error) {
+    let recorded = proxy_control::report_failure(toggle_operation(requested), error);
+
+    if recorded && needs_system_notification(WindowManager::get_main_window_state()) {
+        notify_event(NotificationEvent::SystemProxyFailed).await;
+    }
+}
+
+const fn toggle_operation(requested: bool) -> FailedOperation {
+    if requested {
+        FailedOperation::SystemProxyEnable
+    } else {
+        FailedOperation::SystemProxyDisable
+    }
+}
+
+/// Whether no window can currently show the failure.
+const fn needs_system_notification(state: WindowState) -> bool {
+    match state {
+        WindowState::Hidden | WindowState::Minimized | WindowState::NotExist => true,
+        WindowState::VisibleFocused | WindowState::VisibleUnfocused => false,
     }
 }
 
@@ -67,7 +97,7 @@ pub async fn toggle_tun_mode(not_save_file: Option<bool>) -> bool {
             Config::verge().await.latest_arc().enable_tun_mode.unwrap_or(false)
         }
         Err(err) => {
-            logging!(error, Type::ProxyMode, "{err}");
+            logging!(error, Type::ProxyMode, "{err:#}");
             current
         }
     }
@@ -121,5 +151,27 @@ pub async fn copy_clash_env() {
 
     if clipboard.write_text(&export_text).is_err() {
         logging!(error, Type::ProxyMode, "Failed to write to clipboard");
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{needs_system_notification, toggle_operation};
+    use crate::{core::notification::FailedOperation, utils::window_manager::WindowState};
+
+    #[test]
+    fn a_failed_toggle_records_which_way_the_user_was_asking() {
+        assert_eq!(toggle_operation(true), FailedOperation::SystemProxyEnable);
+        assert_eq!(toggle_operation(false), FailedOperation::SystemProxyDisable);
+    }
+
+    #[test]
+    fn a_system_notification_is_sent_exactly_where_the_window_cannot_speak() {
+        assert!(needs_system_notification(WindowState::Hidden));
+        assert!(needs_system_notification(WindowState::Minimized));
+        assert!(needs_system_notification(WindowState::NotExist));
+
+        assert!(!needs_system_notification(WindowState::VisibleFocused));
+        assert!(!needs_system_notification(WindowState::VisibleUnfocused));
     }
 }

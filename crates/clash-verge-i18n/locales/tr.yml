@@ -10,6 +10,9 @@ notifications:
     title: Sistem Vekil'i
     'on': System proxy has been enabled.
     'off': System proxy has been disabled.
+  systemProxyFailed:
+    title: Sistem Vekili
+    body: Sistem vekil sunucusu ayarlanamadı. Nedenini görmek için Clash Verge'i açın.
   tunModeToggled:
     title: TUN Modu
     'on': TUN mode has been enabled.

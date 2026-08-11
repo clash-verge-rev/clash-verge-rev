@@ -10,6 +10,9 @@ notifications:
     title: Proksi Sistem
     'on': System proxy has been enabled.
     'off': System proxy has been disabled.
+  systemProxyFailed:
+    title: Proxy Sistem
+    body: Proxy sistem tidak dapat diatur. Buka Clash Verge untuk melihat alasannya.
   tunModeToggled:
     title: Mode TUN
     'on': TUN mode has been enabled.

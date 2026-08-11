@@ -408,7 +408,10 @@ export const getRuntimeState = async () => {
 }
 
 /** Operation associated with a pending failure. */
-export type FailedOperation = 'systemProxyRestore'
+export type FailedOperation =
+  | 'systemProxyEnable'
+  | 'systemProxyDisable'
+  | 'systemProxyRestore'
 
 /** Latest unresolved failure for one stable code. */
 export interface PendingFailure {

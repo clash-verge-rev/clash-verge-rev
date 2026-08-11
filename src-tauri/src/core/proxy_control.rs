@@ -137,6 +137,7 @@ impl ServiceProxyOperations {
         &self,
         captured_generation: u64,
         captured_proof: &OwnerSessionProof,
+        requested: &MacosProxyConfig,
         is_service_mode: Mode,
         active_proof: ActiveProof,
         request: Request,
@@ -154,7 +155,7 @@ impl ServiceProxyOperations {
             {
                 return Ok(false);
             }
-            service_apply_result(request().await?)?;
+            service_apply_result(requested, request().await?)?;
             Ok(true)
         })
         .await
@@ -225,10 +226,11 @@ fn service_proxy_config(verge: &IVerge, mixed_port: u16, pac_port: u16) -> Resul
     }
 }
 
-fn service_apply_result(outcome: ProxyApplyOutcome) -> Result<()> {
+fn service_apply_result(requested: &MacosProxyConfig, outcome: ProxyApplyOutcome) -> Result<()> {
     match outcome {
         ProxyApplyOutcome::Applied | ProxyApplyOutcome::NotRequested => Ok(()),
-        // Preserve the direct-fallback classification.
+        // Direct fallback satisfies a disable request.
+        ProxyApplyOutcome::DirectFallback { .. } if matches!(requested, MacosProxyConfig::Disabled) => Ok(()),
         ProxyApplyOutcome::DirectFallback { message } => {
             Err(SysproxyFailure::DirectFallback { detail: message }.into())
         }
@@ -247,31 +249,34 @@ async fn current_service_proxy_config(verge: &IVerge) -> Result<MacosProxyConfig
     service_proxy_config(verge, mixed_port, 0)
 }
 
-/// Record a classified proxy failure with its full diagnostic chain.
-pub fn report_failure(operation: FailedOperation, error: &anyhow::Error) {
+/// Record a classified proxy failure and return whether it was accepted.
+pub fn report_failure(operation: FailedOperation, error: &anyhow::Error) -> bool {
     let Some(failure) = SysproxyFailure::from_chain(error) else {
-        return;
+        return false;
     };
     notification::record_failure(operation, failure.code(), format!("{error:#}"));
+    true
 }
 
 pub async fn apply() -> Result<()> {
     let running_mode = CoreManager::global().get_running_mode();
+    // Use the pre-apply snapshot when retiring matching failures.
+    let verge = Config::verge().await.latest_arc();
+    let enabled = verge.enable_system_proxy.unwrap_or_default();
     let result = match proxy_backend_route(cfg!(target_os = "macos"), &running_mode) {
         ProxyBackendRoute::Local => Sysopt::global().update_sysproxy().await.map_err(classify_local_failure),
         ProxyBackendRoute::Service => {
-            let verge = Config::verge().await.latest_arc();
             let proxy = current_service_proxy_config(&verge).await?;
             SERVICE_PROXY_OPERATIONS
                 .run_final_service_operation(|| async {
-                    service_apply_result(service::set_system_proxy_by_service(&proxy).await?)
+                    service_apply_result(&proxy, service::set_system_proxy_by_service(&proxy).await?)
                 })
                 .await
         }
     };
     // Any successful apply resolves earlier proxy failures.
     if result.is_ok() {
-        notification::retire_system_proxy_failures();
+        notification::retire_system_proxy_failures(enabled);
     }
     result
 }
@@ -283,7 +288,10 @@ pub async fn clear() -> Result<()> {
         ProxyBackendRoute::Service => {
             SERVICE_PROXY_OPERATIONS
                 .run_final_service_operation(|| async {
-                    service_apply_result(service::set_system_proxy_by_service(&MacosProxyConfig::Disabled).await?)
+                    service_apply_result(
+                        &MacosProxyConfig::Disabled,
+                        service::set_system_proxy_by_service(&MacosProxyConfig::Disabled).await?,
+                    )
                 })
                 .await
         }
@@ -318,6 +326,7 @@ pub async fn refresh_guard() -> Result<()> {
                 .run_guard_request(
                     generation,
                     &proof,
+                    &proxy,
                     || matches!(*CoreManager::global().get_running_mode(), RunningMode::Service),
                     service::active_service_session,
                     || service::set_system_proxy_by_service_with_session(&proxy, &proof),
@@ -354,6 +363,15 @@ mod tests {
     };
     use std::task::Poll;
     use tokio::sync::Barrier;
+
+    /// Proxy state maintained by a running guard.
+    fn guarded_proxy() -> MacosProxyConfig {
+        MacosProxyConfig::Global {
+            host: "127.0.0.1".to_owned(),
+            port: 7897,
+            bypass: "localhost".to_owned(),
+        }
+    }
 
     fn proof(generation: u64, token: &str) -> OwnerSessionProof {
         OwnerSessionProof {
@@ -410,6 +428,7 @@ mod tests {
                     .run_guard_request(
                         generation,
                         &captured_proof,
+                        &guarded_proxy(),
                         || true,
                         || Ok(active_proof.lock().clone()),
                         || async {
@@ -462,9 +481,11 @@ mod tests {
         blocker_started.wait().await;
 
         let rpc_called = AtomicBool::new(false);
+        let guarded = guarded_proxy();
         let mut guard_request = Box::pin(operations.run_guard_request(
             generation,
             &captured_proof,
+            &guarded,
             || true,
             || Ok(captured_proof.clone()),
             || async {
@@ -507,9 +528,11 @@ mod tests {
         };
         blocker_started.wait().await;
 
+        let guarded = guarded_proxy();
         let mut guard_request = Box::pin(operations.run_guard_request(
             generation,
             &captured_proof,
+            &guarded,
             || true,
             || Ok(active_proof.lock().clone()),
             || async {
@@ -536,6 +559,7 @@ mod tests {
             .run_guard_request(
                 generation,
                 &captured_proof,
+                &guarded_proxy(),
                 || true,
                 || Ok(captured_proof.clone()),
                 || async {
@@ -657,16 +681,16 @@ mod tests {
     #[test]
     fn only_a_classified_failure_is_worth_recording() {
         let before = crate::core::notification::pending_failures().len();
-        super::report_failure(
+        assert!(!super::report_failure(
             FailedOperation::SystemProxyRestore,
             &anyhow::anyhow!("port already in use"),
-        );
+        ));
         assert_eq!(crate::core::notification::pending_failures().len(), before);
 
-        super::report_failure(
+        assert!(super::report_failure(
             FailedOperation::SystemProxyRestore,
             &classified_privilege_failure().context("failed to apply system proxy after start"),
-        );
+        ));
 
         let recorded = crate::core::notification::pending_failures();
         let failure = recorded
@@ -681,12 +705,21 @@ mod tests {
     }
 
     #[test]
+    fn a_disable_that_ended_up_direct_is_what_was_asked_for() {
+        let outcome = ProxyApplyOutcome::DirectFallback {
+            message: "first attempt failed".to_owned(),
+        };
+
+        assert!(super::service_apply_result(&MacosProxyConfig::Disabled, outcome).is_ok());
+    }
+
+    #[test]
     fn a_direct_fallback_reports_that_traffic_may_be_going_direct() {
         let outcome = ProxyApplyOutcome::DirectFallback {
             message: "service could not set the proxy".to_owned(),
         };
 
-        let error = super::service_apply_result(outcome)
+        let error = super::service_apply_result(&guarded_proxy(), outcome)
             .err()
             .unwrap_or_else(|| anyhow::anyhow!("a fallback outcome must be reported as a failure"));
 

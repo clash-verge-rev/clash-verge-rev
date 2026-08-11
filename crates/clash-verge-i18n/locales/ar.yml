@@ -10,6 +10,9 @@ notifications:
     title: وكيل النظام
     'on': System proxy has been enabled.
     'off': System proxy has been disabled.
+  systemProxyFailed:
+    title: وكيل النظام
+    body: تعذّر ضبط وكيل النظام. افتح Clash Verge لمعرفة السبب.
   tunModeToggled:
     title: وضع TUN
     'on': TUN mode has been enabled.

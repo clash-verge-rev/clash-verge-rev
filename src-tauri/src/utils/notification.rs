@@ -10,6 +10,8 @@ pub enum NotificationEvent<'a> {
         mode: &'a str,
     },
     SystemProxyToggled(bool),
+    /// A proxy change failed while no window could report it.
+    SystemProxyFailed,
     TunModeToggled(bool),
     LightweightModeEntered,
     ProfilesReactivated,
@@ -46,6 +48,11 @@ pub async fn notify_event<'a>(event: NotificationEvent<'a>) {
             };
 
             let body = clash_verge_i18n::t!(key);
+            notify(title, body);
+        }
+        NotificationEvent::SystemProxyFailed => {
+            let title = clash_verge_i18n::t!("notifications.systemProxyFailed.title");
+            let body = clash_verge_i18n::t!("notifications.systemProxyFailed.body");
             notify(title, body);
         }
         NotificationEvent::TunModeToggled(enabled) => {

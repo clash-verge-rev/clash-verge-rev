@@ -26,16 +26,21 @@ pub enum FrontendEvent<'a> {
 }
 
 /// Operation associated with a pending failure.
+#[allow(clippy::enum_variant_names)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub enum FailedOperation {
+    SystemProxyEnable,
+    SystemProxyDisable,
     SystemProxyRestore,
 }
 
 impl FailedOperation {
-    /// Whether a successful proxy apply resolves this operation's failure.
-    const fn retired_by_system_proxy_success(self) -> bool {
+    /// Whether reaching `enabled` resolves this operation's failure.
+    const fn retired_by_system_proxy_success(self, enabled: bool) -> bool {
         match self {
+            Self::SystemProxyEnable => enabled,
+            Self::SystemProxyDisable => !enabled,
             Self::SystemProxyRestore => true,
         }
     }
@@ -81,10 +86,10 @@ impl FailureTable {
     }
 
     /// Return whether any entry was retired.
-    fn retire_system_proxy(&self) -> bool {
+    fn retire_system_proxy(&self, enabled: bool) -> bool {
         let mut entries = self.entries.lock();
         let before = entries.len();
-        entries.retain(|_, failure| !failure.operation.retired_by_system_proxy_success());
+        entries.retain(|_, failure| !failure.operation.retired_by_system_proxy_success(enabled));
         before != entries.len()
     }
 }
@@ -102,9 +107,9 @@ pub fn pending_failures() -> Vec<PendingFailure> {
     PENDING_FAILURES.snapshot()
 }
 
-/// Forget what a system proxy applying cleanly has just disproved.
-pub fn retire_system_proxy_failures() {
-    if PENDING_FAILURES.retire_system_proxy() {
+/// Retire failures resolved by the resulting proxy state.
+pub fn retire_system_proxy_failures(enabled: bool) {
+    if PENDING_FAILURES.retire_system_proxy(enabled) {
         notify_pending_failures_changed();
     }
 }
@@ -240,12 +245,42 @@ mod tests {
             "refused".into(),
         );
 
-        assert!(table.retire_system_proxy());
+        assert!(table.retire_system_proxy(false));
+        assert!(table.snapshot().is_empty());
+    }
+
+    #[test]
+    fn a_users_request_is_retired_only_by_reaching_the_state_they_asked_for() {
+        let table = table();
+        table.record(
+            FailedOperation::SystemProxyDisable,
+            "SYSPROXY_PRIVILEGE_REQUIRED",
+            "refused".into(),
+        );
+
+        assert!(!table.retire_system_proxy(true));
+        assert_eq!(table.snapshot().len(), 1);
+
+        assert!(table.retire_system_proxy(false));
+        assert!(table.snapshot().is_empty());
+    }
+
+    #[test]
+    fn a_failed_enable_is_retired_by_the_proxy_coming_on() {
+        let table = table();
+        table.record(
+            FailedOperation::SystemProxyEnable,
+            "SYSPROXY_DIRECT_FALLBACK",
+            "fell back".into(),
+        );
+
+        assert!(!table.retire_system_proxy(false));
+        assert!(table.retire_system_proxy(true));
         assert!(table.snapshot().is_empty());
     }
 
     #[test]
     fn retiring_nothing_reports_nothing() {
-        assert!(!table().retire_system_proxy());
+        assert!(!table().retire_system_proxy(true));
     }
 }
