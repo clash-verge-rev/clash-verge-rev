@@ -4,6 +4,7 @@ use crate::{
         CoreManager,
         manager::RunningMode,
         notification::{self, FailedOperation},
+        runstate::RUN_STATE,
         service,
         sysopt::Sysopt,
     },
@@ -22,7 +23,7 @@ use std::{
     sync::atomic::{AtomicU64, Ordering},
     time::Duration,
 };
-use tokio::sync::Mutex;
+use tokio::{sync::Mutex, time::timeout};
 
 /// Actionable system-proxy failure attached to an `anyhow` chain.
 ///
@@ -33,6 +34,8 @@ pub enum SysproxyFailure {
     PrivilegeRequired,
     /// The service failed to apply the proxy and attempted direct fallback.
     DirectFallback { detail: String },
+    /// A ready service can replace the refused sidecar write.
+    SidecarWhileServiceReady,
     /// The proxy guard stopped after repeated failures.
     GuardStopped { detail: String },
 }
@@ -44,6 +47,7 @@ impl SysproxyFailure {
         match self {
             Self::PrivilegeRequired => "SYSPROXY_PRIVILEGE_REQUIRED",
             Self::DirectFallback { .. } => "SYSPROXY_DIRECT_FALLBACK",
+            Self::SidecarWhileServiceReady => "SYSPROXY_SIDECAR_WHILE_SERVICE_READY",
             Self::GuardStopped { .. } => "SYSPROXY_GUARD_STOPPED",
         }
     }
@@ -62,6 +66,9 @@ impl std::fmt::Display for SysproxyFailure {
             Self::DirectFallback { detail } => {
                 write!(f, "system proxy failed and fell back to direct: {detail}")
             }
+            Self::SidecarWhileServiceReady => {
+                f.write_str("system proxy write was refused locally while the service was ready")
+            }
             Self::GuardStopped { detail } => {
                 write!(f, "system proxy guard stopped after repeated failures: {detail}")
             }
@@ -73,21 +80,45 @@ impl std::error::Error for SysproxyFailure {}
 
 /// Classify local macOS proxy failures without replacing their source chain.
 fn classify_local_failure(error: anyhow::Error) -> anyhow::Error {
-    if !cfg!(target_os = "macos") {
+    if !was_refused_locally(&error) {
         return error;
     }
+    error.context(SysproxyFailure::PrivilegeRequired)
+}
 
-    let refused = error.chain().any(|cause| {
-        matches!(
-            cause.downcast_ref::<sysproxy::Error>(),
-            Some(sysproxy::Error::RequiresAdminPrivileges)
-        )
-    });
+/// Whether macOS refused a local proxy write.
+fn was_refused_locally(error: &anyhow::Error) -> bool {
+    cfg!(target_os = "macos")
+        && error.chain().any(|cause| {
+            matches!(
+                cause.downcast_ref::<sysproxy::Error>(),
+                Some(sysproxy::Error::RequiresAdminPrivileges)
+            )
+        })
+}
 
-    if refused {
-        error.context(SysproxyFailure::PrivilegeRequired)
-    } else {
-        error
+/// Distinguish a misplaced sidecar from a missing privileged service.
+async fn classify_local_apply_failure(error: anyhow::Error) -> anyhow::Error {
+    // Preserve any existing, more specific classification.
+    if SysproxyFailure::from_chain(&error).is_some() || !was_refused_locally(&error) {
+        return error;
+    }
+    let probed = timeout(SERVICE_PROBE_TIMEOUT, RUN_STATE.probe())
+        .await
+        .ok()
+        .and_then(|probe| probe.ok())
+        .map(|fresh| fresh.service_usable());
+    error.context(refusal_classification(probed))
+}
+
+/// Bound the diagnostic service probe.
+const SERVICE_PROBE_TIMEOUT: Duration = Duration::from_secs(2);
+
+/// Classify a refusal from a fresh service probe only.
+const fn refusal_classification(service_usable: Option<bool>) -> SysproxyFailure {
+    match service_usable {
+        Some(true) => SysproxyFailure::SidecarWhileServiceReady,
+        Some(false) | None => SysproxyFailure::PrivilegeRequired,
     }
 }
 
@@ -285,7 +316,10 @@ pub async fn apply() -> Result<()> {
     let verge = Config::verge().await.latest_arc();
     let enabled = verge.enable_system_proxy.unwrap_or_default();
     let result = match proxy_backend_route(cfg!(target_os = "macos"), &running_mode) {
-        ProxyBackendRoute::Local => Sysopt::global().update_sysproxy().await.map_err(classify_local_failure),
+        ProxyBackendRoute::Local => match Sysopt::global().update_sysproxy().await {
+            Ok(()) => Ok(()),
+            Err(error) => Err(classify_local_apply_failure(error).await),
+        },
         ProxyBackendRoute::Service => {
             let proxy = current_service_proxy_config(&verge).await?;
             SERVICE_PROXY_OPERATIONS
@@ -816,6 +850,18 @@ mod tests {
             "{failure:?}"
         );
         assert!(failure.detail.contains("admin privileges"), "{failure:?}");
+    }
+
+    #[test]
+    fn a_refusal_only_blames_the_sidecar_when_a_probe_actually_answered() {
+        use super::refusal_classification;
+
+        assert_eq!(
+            refusal_classification(Some(true)),
+            SysproxyFailure::SidecarWhileServiceReady
+        );
+        assert_eq!(refusal_classification(Some(false)), SysproxyFailure::PrivilegeRequired);
+        assert_eq!(refusal_classification(None), SysproxyFailure::PrivilegeRequired);
     }
 
     #[test]

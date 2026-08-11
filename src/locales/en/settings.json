@@ -653,7 +653,8 @@
       "sysproxy": {
         "privilegeRequired": "Cannot set the system proxy: macOS refused the change for lack of privileges. Install the Clash Verge service; an administrator can also turn off the administrator-password requirement for system-wide settings, in the advanced options of System Settings → Privacy & Security.",
         "directFallback": "Failed to set the system proxy; traffic has been switched back to a direct connection.",
-        "guardStopped": "The system proxy guard stopped after failing several times running. The system proxy is no longer being kept in place."
+        "guardStopped": "The system proxy guard stopped after failing several times running. The system proxy is no longer being kept in place.",
+        "sidecarWhileServiceReady": "The system proxy could not be set because the core is still running as a Sidecar, although the Clash Verge service is ready. Restart the core to switch to service mode."
       }
     },
     "notifications": {

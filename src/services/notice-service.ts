@@ -74,6 +74,8 @@ const CODED_ERROR_TRANSLATION_KEYS: Readonly<Record<string, TranslationKey>> = {
     'settings.feedback.errors.clashService.uninstallFailed',
   SYSPROXY_DIRECT_FALLBACK: 'settings.feedback.errors.sysproxy.directFallback',
   SYSPROXY_GUARD_STOPPED: 'settings.feedback.errors.sysproxy.guardStopped',
+  SYSPROXY_SIDECAR_WHILE_SERVICE_READY:
+    'settings.feedback.errors.sysproxy.sidecarWhileServiceReady',
   SYSPROXY_PRIVILEGE_REQUIRED:
     'settings.feedback.errors.sysproxy.privilegeRequired',
 }

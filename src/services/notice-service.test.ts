@@ -151,6 +151,21 @@ describe('system proxy failures the user can be told about', () => {
     })
   })
 
+  it('explains a core running in the wrong place', () => {
+    showNotice.error({
+      code: 'SYSPROXY_SIDECAR_WHILE_SERVICE_READY',
+      detail: 'admin privileges required to modify system proxy',
+    })
+
+    expect(renderedExplanation()).toEqual({
+      outerKey: 'shared.feedback.notices.prefixedRaw',
+      explanationKey:
+        'settings.feedback.errors.sysproxy.sidecarWhileServiceReady',
+      prefix: undefined,
+      detail: 'admin privileges required to modify system proxy',
+    })
+  })
+
   it('explains a guard that gave up', () => {
     showNotice.error({
       code: 'SYSPROXY_GUARD_STOPPED',

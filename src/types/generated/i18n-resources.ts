@@ -800,6 +800,7 @@ export interface TranslationResources {
             directFallback: string
             guardStopped: string
             privilegeRequired: string
+            sidecarWhileServiceReady: string
           }
         }
         notifications: {
