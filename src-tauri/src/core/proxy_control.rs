@@ -164,14 +164,15 @@ impl ServiceProxyOperations {
         self.run_service_operation(operation).await
     }
 
-    async fn cancel_and_drain<F, Fut>(&self, cancel: F) -> u64
+    /// Invalidate the guard generation and wait for cancellation.
+    async fn cancel_and_drain<F, Fut, T>(&self, cancel: F) -> (u64, T)
     where
         F: FnOnce() -> Fut,
-        Fut: Future<Output = ()>,
+        Fut: Future<Output = T>,
     {
         let generation = self.invalidate_guard();
-        self.run_service_operation(cancel).await;
-        generation
+        let cancelled = self.run_service_operation(cancel).await;
+        (generation, cancelled)
     }
 
     /// Record under the operation lock only for the current guard generation.
@@ -310,6 +311,24 @@ pub fn report_failure(operation: FailedOperation, error: &anyhow::Error) -> bool
     true
 }
 
+/// Drain any local guard before writing through the service.
+async fn apply_through_service<Drain, DrainFuture, Write, WriteFuture>(
+    drain_local_guard: Drain,
+    write: Write,
+) -> Result<()>
+where
+    Drain: FnOnce() -> DrainFuture,
+    DrainFuture: Future<Output = bool>,
+    Write: FnOnce() -> WriteFuture,
+    WriteFuture: Future<Output = Result<()>>,
+{
+    ensure!(
+        drain_local_guard().await,
+        "the system proxy guard did not stop in time; not writing the system proxy through the service"
+    );
+    write().await
+}
+
 pub async fn apply() -> Result<()> {
     let running_mode = CoreManager::global().get_running_mode();
     // Use the pre-apply snapshot when retiring matching failures.
@@ -322,11 +341,17 @@ pub async fn apply() -> Result<()> {
         },
         ProxyBackendRoute::Service => {
             let proxy = current_service_proxy_config(&verge).await?;
-            SERVICE_PROXY_OPERATIONS
-                .run_final_service_operation(|| async {
-                    service_apply_result(&proxy, service::set_system_proxy_by_service(&proxy).await?)
-                })
-                .await
+            apply_through_service(
+                || Sysopt::global().stop_proxy_guard(),
+                || async {
+                    SERVICE_PROXY_OPERATIONS
+                        .run_final_service_operation(|| async {
+                            service_apply_result(&proxy, service::set_system_proxy_by_service(&proxy).await?)
+                        })
+                        .await
+                },
+            )
+            .await
         }
     };
     // Any successful apply resolves earlier proxy failures.
@@ -354,7 +379,7 @@ pub async fn clear() -> Result<()> {
 }
 
 pub async fn refresh_guard() -> Result<()> {
-    let generation = SERVICE_PROXY_OPERATIONS
+    let (generation, _drained) = SERVICE_PROXY_OPERATIONS
         .cancel_and_drain(|| Sysopt::global().stop_proxy_guard())
         .await;
     let running_mode = CoreManager::global().get_running_mode();
@@ -362,8 +387,10 @@ pub async fn refresh_guard() -> Result<()> {
         proxy_backend_route(cfg!(target_os = "macos"), &running_mode),
         ProxyBackendRoute::Local
     ) {
-        Sysopt::global().refresh_guard().await;
-        notification::retire_guard_failures();
+        // Retire the warning only after a guard is enforcing.
+        if Sysopt::global().refresh_guard().await {
+            notification::retire_guard_failures();
+        }
         return Ok(());
     }
 
@@ -436,10 +463,12 @@ async fn report_guard_stopped(captured_generation: u64, error: &anyhow::Error) {
     }
 }
 
-pub async fn stop_guard() {
+/// Stop the local guard and report whether it drained.
+pub async fn stop_guard() -> bool {
     SERVICE_PROXY_OPERATIONS
         .cancel_and_drain(|| Sysopt::global().stop_proxy_guard())
-        .await;
+        .await
+        .1
 }
 
 #[cfg(test)]
@@ -721,6 +750,43 @@ mod tests {
         assert!(operations.record_if_current(generation, || true).await);
     }
 
+    async fn record_service_apply(drained: bool, write_succeeds: bool) -> (Vec<&'static str>, bool) {
+        let calls = Mutex::new(Vec::new());
+        let result = super::apply_through_service(
+            || {
+                calls.lock().push("drain");
+                async move { drained }
+            },
+            || {
+                calls.lock().push("write");
+                async move {
+                    if write_succeeds {
+                        Ok(())
+                    } else {
+                        anyhow::bail!("the helper refused")
+                    }
+                }
+            },
+        )
+        .await;
+        (calls.into_inner(), result.is_ok())
+    }
+
+    #[tokio::test]
+    async fn the_service_writes_only_once_the_local_guard_is_gone() {
+        assert_eq!(record_service_apply(true, true).await, (vec!["drain", "write"], true));
+    }
+
+    #[tokio::test]
+    async fn a_write_the_service_refused_is_still_a_failure() {
+        assert_eq!(record_service_apply(true, false).await, (vec!["drain", "write"], false));
+    }
+
+    #[tokio::test]
+    async fn a_local_guard_that_would_not_stop_keeps_root_from_writing() {
+        assert_eq!(record_service_apply(false, true).await, (vec!["drain"], false));
+    }
+
     #[test]
     fn service_proxy_config_forces_loopback_targets_and_bounds_bypass() {
         let verge = IVerge {
@@ -796,6 +862,23 @@ mod tests {
 
         assert!(SysproxyFailure::from_chain(&untouched).is_none());
         assert_eq!(format!("{untouched:#}"), "port already in use");
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn a_refusal_wrapped_in_write_progress_is_still_classified() {
+        let wrapped = anyhow::Error::new(sysproxy::Error::ProxyWrite {
+            progress: sysproxy::WriteProgress::new(0, 7),
+            source: Box::new(sysproxy::Error::RequiresAdminPrivileges),
+        })
+        .context("failed to apply the system proxy");
+
+        let classified = classify_local_failure(wrapped);
+
+        assert!(matches!(
+            SysproxyFailure::from_chain(&classified),
+            Some(SysproxyFailure::PrivilegeRequired)
+        ));
     }
 
     #[cfg(target_os = "macos")]

@@ -34,40 +34,102 @@ const fn proxy_apply_steps(sys_enabled: bool, auto_enabled: bool) -> [ProxyApply
     }
 }
 
+/// Maximum guard drain time before OS state is unknown.
+const GUARD_DRAIN_TIMEOUT: Duration = Duration::from_secs(10);
+
+/// Guard state after a failed proxy write.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum GuardRecovery {
+    /// No write is known to have landed.
+    Restore,
+    /// A partial write left no authoritative target.
+    StandDown,
+}
+
+/// Choose recovery from positive evidence that a write landed.
+fn guard_recovery(error: &anyhow::Error, earlier_step_completed: bool) -> GuardRecovery {
+    // A completed earlier setter is evidence outside the current error.
+    if earlier_step_completed {
+        return GuardRecovery::StandDown;
+    }
+    match error.downcast_ref::<sysproxy::Error>() {
+        Some(sysproxy::Error::ProxyWrite { progress, .. }) if !progress.nothing_written() => GuardRecovery::StandDown,
+        _ => GuardRecovery::Restore,
+    }
+}
+
 /// What the OS currently holds, as far as we can prove it.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum OsProxyState {
-    /// Both proxy reads succeeded and reported disabled.
+    /// Every protocol and PAC entry read back disabled.
     Clean,
     /// A proxy is enabled or its state is unknown.
     DirtyOrUnknown,
 }
 
-/// Treat failed reads as dirty so stale proxies are never skipped.
-fn classify_os_proxy_state(sysproxy_enabled: Result<bool>, autoproxy_enabled: Result<bool>) -> OsProxyState {
-    match (sysproxy_enabled, autoproxy_enabled) {
-        (Ok(false), Ok(false)) => OsProxyState::Clean,
+/// Treat failed or enabled snapshots as dirty.
+fn classify_os_proxy_state(snapshot: Result<bool>) -> OsProxyState {
+    match snapshot {
+        Ok(true) => OsProxyState::Clean,
         _ => OsProxyState::DirtyOrUnknown,
     }
 }
 
-/// Read proxy state without invoking privileged `networksetup` writes.
+/// Read proxy state without invoking privileged writes.
+#[cfg(target_os = "macos")]
 fn read_os_proxy_state() -> OsProxyState {
-    let sysproxy_enabled = Sysproxy::get_system_proxy()
-        .map(|current| current.enable)
-        .map_err(anyhow::Error::from);
-    let autoproxy_enabled = Autoproxy::get_auto_proxy()
-        .map(|current| current.enable)
+    // Use the per-protocol snapshot rather than the synthesized proxy view.
+    let all_disabled = Sysproxy::snapshot()
+        .map(|snapshot| snapshot.is_all_disabled())
         .map_err(anyhow::Error::from);
 
-    if let Err(err) = &sysproxy_enabled {
-        logging!(warn, Type::Core, "failed to read system proxy state: {err:#}");
-    }
-    if let Err(err) = &autoproxy_enabled {
-        logging!(warn, Type::Core, "failed to read auto proxy state: {err:#}");
+    if let Err(err) = &all_disabled {
+        logging!(warn, Type::Core, "failed to read OS proxy snapshot: {err:#}");
     }
 
-    classify_os_proxy_state(sysproxy_enabled, autoproxy_enabled)
+    classify_os_proxy_state(all_disabled)
+}
+
+/// Other platforms cannot prove the per-protocol state is clean.
+#[cfg(not(target_os = "macos"))]
+fn read_os_proxy_state() -> OsProxyState {
+    classify_os_proxy_state(Err(anyhow::anyhow!("per-protocol proxy snapshots are macOS only")))
+}
+
+/// Disable, drain a racing guard if needed, then disable again.
+async fn disable_until_the_last_write_is_ours<Disable, DisableFuture, Drain, DrainFuture>(
+    drained: bool,
+    disable: Disable,
+    drain_again: Drain,
+) -> Result<()>
+where
+    Disable: Fn() -> DisableFuture,
+    DisableFuture: std::future::Future<Output = Result<()>>,
+    Drain: FnOnce() -> DrainFuture,
+    DrainFuture: std::future::Future<Output = bool>,
+{
+    disable().await?;
+    if drained {
+        return Ok(());
+    }
+
+    // The final disable must happen after the last in-flight guard write.
+    if !drain_again().await {
+        anyhow::bail!(
+            "the system proxy guard did not finish within {GUARD_DRAIN_TIMEOUT:?}; the OS proxy state is unknown"
+        );
+    }
+    disable().await
+}
+
+/// Force both proxy kinds off, in one blocking hop.
+async fn disable_all_proxies(sys: Sysproxy, auto: Autoproxy) -> Result<()> {
+    tokio::task::spawn_blocking(move || -> Result<()> {
+        sys.set_system_proxy()?;
+        auto.set_auto_proxy()?;
+        Ok(())
+    })
+    .await?
 }
 
 async fn current_os_proxy_state() -> OsProxyState {
@@ -132,36 +194,41 @@ impl Sysopt {
         Arc::clone(&self.guard)
     }
 
-    async fn stop_proxy_guard_locked(&self) {
-        loop {
-            let state = self.access_guard().read().get_state();
-            if state.is_pendding() {
-                tokio::task::yield_now().await;
-                continue;
-            }
-            self.access_guard().write().stop();
-            return;
+    /// Stop the guard and return whether it drained.
+    async fn stop_proxy_guard_locked(&self) -> bool {
+        // Drop the parking_lot read guard before awaiting.
+        let idle = self.access_guard().read().shutdown();
+        let drained = idle.wait_timeout(GUARD_DRAIN_TIMEOUT).await;
+        if !drained {
+            logging!(
+                warn,
+                Type::Core,
+                "the system proxy guard did not finish within {GUARD_DRAIN_TIMEOUT:?}"
+            );
         }
+        drained
     }
 
-    pub(super) async fn stop_proxy_guard(&self) {
+    /// Stop the guard before handing OS proxy ownership elsewhere.
+    pub(super) async fn stop_proxy_guard(&self) -> bool {
         let _operation = self.guard_operation_lock.lock().await;
-        self.stop_proxy_guard_locked().await;
+        self.stop_proxy_guard_locked().await
     }
 
-    pub(super) async fn refresh_guard(&self) {
+    /// Reconcile guard state with configuration and report success.
+    pub(super) async fn refresh_guard(&self) -> bool {
         logging!(info, Type::Core, "Refreshing system proxy guard...");
         let verge = Config::verge().await.latest_arc();
         let _operation = self.guard_operation_lock.lock().await;
         if !verge.enable_system_proxy.unwrap_or_default() {
             logging!(info, Type::Core, "System proxy is disabled.");
-            self.stop_proxy_guard_locked().await;
-            return;
+            let _drained = self.stop_proxy_guard_locked().await;
+            return true;
         }
         if !verge.enable_proxy_guard.unwrap_or_default() {
             logging!(info, Type::Core, "System proxy guard is disabled.");
-            self.stop_proxy_guard_locked().await;
-            return;
+            let _drained = self.stop_proxy_guard_locked().await;
+            return true;
         }
         logging!(
             info,
@@ -178,10 +245,38 @@ impl Sysopt {
         logging!(info, Type::Core, "Starting system proxy guard...");
         {
             let guard = self.access_guard();
-            guard.write().start();
+            if !guard.read().start() {
+                logging!(
+                    warn,
+                    Type::Core,
+                    "the system proxy guard refused to start; a previous run has not finished"
+                );
+            }
         }
         while self.access_guard().read().get_state().is_pendding() {
             tokio::task::yield_now().await;
+        }
+        // `start()` false may also mean a guard was already running.
+        !self.access_guard().read().get_state().is_stopped()
+    }
+
+    /// Restore or stand down a previously running guard after failure.
+    fn recover_guard_after_failure(&self, error: &anyhow::Error, earlier_step_completed: bool, was_running: bool) {
+        match guard_recovery(error, earlier_step_completed) {
+            GuardRecovery::Restore if was_running => {
+                let restarted = self.access_guard().read().start();
+                if !restarted {
+                    logging!(
+                        warn,
+                        Type::Core,
+                        "the system proxy guard refused to start again after a failed write; it is not running"
+                    );
+                }
+            }
+            GuardRecovery::Restore => {}
+            GuardRecovery::StandDown => {
+                self.access_guard().write().set_guard_type(GuardType::None);
+            }
         }
     }
 
@@ -247,8 +342,19 @@ impl Sysopt {
 
         let _guard_operation = self.guard_operation_lock.lock().await;
 
-        // Only macOS reads exactly the state its disable path writes. A running guard can still
-        // race this check until stop-and-wait support is added.
+        // Drain the guard before any OS read or write.
+        let guard_was_running = !self.access_guard().read().get_state().is_stopped();
+        let idle = self.access_guard().read().shutdown();
+        let drained = idle.wait_timeout(GUARD_DRAIN_TIMEOUT).await;
+        if !drained {
+            // A pending guard write makes OS state unknown.
+            self.access_guard().write().set_guard_type(GuardType::None);
+            anyhow::bail!(
+                "the system proxy guard did not finish within {GUARD_DRAIN_TIMEOUT:?}; the OS proxy state is unknown"
+            );
+        }
+
+        // Only macOS reads exactly the state its disable path writes.
         if cfg!(target_os = "macos")
             && !sys.enable
             && !auto.enable
@@ -260,16 +366,33 @@ impl Sysopt {
 
         let apply_steps = proxy_apply_steps(sys.enable, auto.enable);
 
-        tokio::task::spawn_blocking(move || -> Result<()> {
-            for step in apply_steps {
-                match step {
-                    ProxyApplyStep::Autoproxy => auto.set_auto_proxy()?,
-                    ProxyApplyStep::Sysproxy => sys.set_system_proxy()?,
+        // Track whether an earlier setter already changed the OS.
+        let applied = tokio::task::spawn_blocking(move || {
+            for (index, step) in apply_steps.into_iter().enumerate() {
+                let written = match step {
+                    ProxyApplyStep::Autoproxy => auto.set_auto_proxy(),
+                    ProxyApplyStep::Sysproxy => sys.set_system_proxy(),
+                };
+                if let Err(error) = written {
+                    return Err((index > 0, anyhow::Error::from(error)));
                 }
             }
             Ok(())
         })
-        .await??;
+        .await;
+
+        match applied {
+            Ok(Ok(())) => {}
+            Ok(Err((earlier_step_completed, error))) => {
+                self.recover_guard_after_failure(&error, earlier_step_completed, guard_was_running);
+                return Err(error);
+            }
+            Err(join_error) => {
+                let error = anyhow::Error::from(join_error).context("the system proxy write task did not finish");
+                self.recover_guard_after_failure(&error, false, guard_was_running);
+                return Err(error);
+            }
+        }
 
         // Never point the guard at a target that failed to reach the OS.
         self.access_guard().write().set_guard_type(guard_type);
@@ -290,7 +413,7 @@ impl Sysopt {
         }
         let _lock = self.update_lock.lock().await;
         let _guard_operation = self.guard_operation_lock.lock().await;
-        self.stop_proxy_guard_locked().await;
+        let drained = self.stop_proxy_guard_locked().await;
 
         // 直接关闭所有代理
         let (sys, auto) = {
@@ -300,63 +423,138 @@ impl Sysopt {
             (sys.clone(), auto.clone())
         };
 
-        // Avoid a privileged write when macOS is already clean.
-        if cfg!(target_os = "macos") && current_os_proxy_state().await == OsProxyState::Clean {
+        // Skip the privileged write only after the guard drained and macOS is clean.
+        if cfg!(target_os = "macos") && drained && current_os_proxy_state().await == OsProxyState::Clean {
             return Ok(());
         }
 
-        tokio::task::spawn_blocking(move || -> Result<()> {
-            sys.set_system_proxy()?;
-            auto.set_auto_proxy()?;
-            Ok(())
-        })
-        .await??;
-
-        Ok(())
+        disable_until_the_last_write_is_ours(
+            drained,
+            || disable_all_proxies(sys.clone(), auto.clone()),
+            || self.stop_proxy_guard_locked(),
+        )
+        .await
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{OsProxyState, ProxyApplyStep, classify_os_proxy_state, proxy_apply_steps};
+    use super::{
+        GuardRecovery, OsProxyState, ProxyApplyStep, classify_os_proxy_state, disable_until_the_last_write_is_ours,
+        guard_recovery, proxy_apply_steps,
+    };
+    use parking_lot::Mutex;
+    use std::collections::VecDeque;
+
+    async fn record_disable_sequence(
+        drained: bool,
+        second_drain: bool,
+        disable_answers: &[bool],
+    ) -> (Vec<&'static str>, bool) {
+        let calls = Mutex::new(Vec::new());
+        let remaining = Mutex::new(disable_answers.iter().copied().collect::<VecDeque<bool>>());
+        let result = disable_until_the_last_write_is_ours(
+            drained,
+            || {
+                calls.lock().push("disable");
+                let succeeds = remaining.lock().pop_front().unwrap_or(true);
+                async move {
+                    if succeeds {
+                        Ok(())
+                    } else {
+                        anyhow::bail!("networksetup refused")
+                    }
+                }
+            },
+            || {
+                calls.lock().push("drain");
+                async move { second_drain }
+            },
+        )
+        .await;
+        (calls.into_inner(), result.is_ok())
+    }
+
+    #[tokio::test]
+    async fn a_drained_guard_needs_only_one_write() {
+        assert_eq!(
+            record_disable_sequence(true, true, &[true]).await,
+            (vec!["disable"], true)
+        );
+    }
+
+    #[tokio::test]
+    async fn a_write_that_raced_the_guard_is_repeated_after_it_finishes() {
+        assert_eq!(
+            record_disable_sequence(false, true, &[true, true]).await,
+            (vec!["disable", "drain", "disable"], true)
+        );
+    }
+
+    #[tokio::test]
+    async fn a_second_write_that_fails_on_its_own_is_still_reported() {
+        assert_eq!(
+            record_disable_sequence(false, true, &[true, false]).await,
+            (vec!["disable", "drain", "disable"], false)
+        );
+    }
+
+    #[tokio::test]
+    async fn a_guard_that_never_finishes_is_reported_rather_than_written_over() {
+        assert_eq!(
+            record_disable_sequence(false, false, &[true]).await,
+            (vec!["disable", "drain"], false)
+        );
+    }
+
+    #[tokio::test]
+    async fn a_refused_write_stops_before_waiting_on_anything() {
+        assert_eq!(
+            record_disable_sequence(false, true, &[false]).await,
+            (vec!["disable"], false)
+        );
+    }
 
     #[test]
-    fn os_is_clean_only_when_both_reads_succeed_and_report_disabled() {
-        assert_eq!(classify_os_proxy_state(Ok(false), Ok(false)), OsProxyState::Clean);
-        assert_eq!(
-            classify_os_proxy_state(Ok(true), Ok(false)),
-            OsProxyState::DirtyOrUnknown
-        );
-        assert_eq!(
-            classify_os_proxy_state(Ok(false), Ok(true)),
-            OsProxyState::DirtyOrUnknown
-        );
-        assert_eq!(
-            classify_os_proxy_state(Ok(true), Ok(true)),
-            OsProxyState::DirtyOrUnknown
-        );
+    fn a_failure_with_nothing_written_leaves_the_old_guard_worth_restoring() {
+        let refused = anyhow::Error::new(sysproxy::Error::RequiresAdminPrivileges);
+
+        assert_eq!(guard_recovery(&refused, false), GuardRecovery::Restore);
+    }
+
+    #[test]
+    fn only_evidence_that_a_write_landed_stands_the_guard_down() {
+        let nothing_written = anyhow::Error::new(sysproxy::Error::ProxyWrite {
+            progress: sysproxy::WriteProgress::new(0, 7),
+            source: Box::new(sysproxy::Error::RequiresAdminPrivileges),
+        });
+        let something_written = anyhow::Error::new(sysproxy::Error::ProxyWrite {
+            progress: sysproxy::WriteProgress::new(3, 7),
+            source: Box::new(sysproxy::Error::RequiresAdminPrivileges),
+        });
+
+        assert_eq!(guard_recovery(&nothing_written, false), GuardRecovery::Restore);
+        assert_eq!(guard_recovery(&something_written, false), GuardRecovery::StandDown);
+    }
+
+    #[test]
+    fn a_step_that_already_finished_stands_the_guard_down_whatever_the_error_says() {
+        let refused = anyhow::Error::new(sysproxy::Error::RequiresAdminPrivileges);
+
+        assert_eq!(guard_recovery(&refused, false), GuardRecovery::Restore);
+        assert_eq!(guard_recovery(&refused, true), GuardRecovery::StandDown);
+    }
+
+    #[test]
+    fn only_a_snapshot_that_says_everything_is_off_reads_as_clean() {
+        assert_eq!(classify_os_proxy_state(Ok(true)), OsProxyState::Clean);
+        assert_eq!(classify_os_proxy_state(Ok(false)), OsProxyState::DirtyOrUnknown);
     }
 
     #[test]
     fn a_failed_read_never_counts_as_clean() {
         assert_eq!(
-            classify_os_proxy_state(Err(anyhow::anyhow!("read failed")), Ok(false)),
-            OsProxyState::DirtyOrUnknown
-        );
-        assert_eq!(
-            classify_os_proxy_state(Ok(false), Err(anyhow::anyhow!("read failed"))),
-            OsProxyState::DirtyOrUnknown
-        );
-        assert_eq!(
-            classify_os_proxy_state(Err(anyhow::anyhow!("a")), Err(anyhow::anyhow!("b"))),
-            OsProxyState::DirtyOrUnknown
-        );
-        assert_eq!(
-            classify_os_proxy_state(Err(anyhow::anyhow!("read failed")), Ok(true)),
-            OsProxyState::DirtyOrUnknown
-        );
-        assert_eq!(
-            classify_os_proxy_state(Ok(true), Err(anyhow::anyhow!("read failed"))),
+            classify_os_proxy_state(Err(anyhow::anyhow!("read failed"))),
             OsProxyState::DirtyOrUnknown
         );
     }

@@ -4,7 +4,7 @@ use crate::core::handle::Handle;
 use crate::core::manager::CLASH_LOGGER;
 use crate::core::proxy_control;
 use crate::core::service::{SERVICE_MANAGER, ServiceStatus};
-use anyhow::Result;
+use anyhow::{Result, ensure};
 use clash_verge_logging::{Type, logging};
 use scopeguard::defer;
 use smartstring::alias::String;
@@ -124,7 +124,7 @@ async fn run_controlled_stop_transition<StopGuard, StopGuardFuture, Clear, Clear
 ) -> Result<()>
 where
     StopGuard: FnOnce() -> StopGuardFuture,
-    StopGuardFuture: std::future::Future<Output = ()>,
+    StopGuardFuture: std::future::Future<Output = bool>,
     Clear: FnOnce() -> ClearFuture,
     ClearFuture: std::future::Future<Output = Result<()>>,
     Stop: FnOnce() -> StopFuture,
@@ -132,9 +132,15 @@ where
 {
     match (running_mode, proxy_intent) {
         (RunningMode::NotRunning, _) => {}
-        // Stop the guard but leave proxy state for the service to overwrite.
-        (RunningMode::Sidecar, ProxyStopIntent::HandOverToService) => stop_guard().await,
-        (RunningMode::Service, _) if is_macos => stop_guard().await,
+        // Do not hand the OS to another owner while the old guard may still write.
+        (RunningMode::Sidecar, ProxyStopIntent::HandOverToService) => ensure!(
+            stop_guard().await,
+            "the system proxy guard did not stop in time; not handing the proxy to the service"
+        ),
+        (RunningMode::Service, _) if is_macos => ensure!(
+            stop_guard().await,
+            "the system proxy guard did not stop in time; not stopping the service-owned core"
+        ),
         (RunningMode::Service | RunningMode::Sidecar, _) => clear_proxy().await?,
     }
     stop_core().await
@@ -215,7 +221,7 @@ async fn run_service_config_replacement_transition<
 ) -> Result<()>
 where
     StopGuard: FnOnce() -> StopGuardFuture,
-    StopGuardFuture: std::future::Future<Output = ()>,
+    StopGuardFuture: std::future::Future<Output = bool>,
     Clear: FnOnce() -> ClearFuture,
     ClearFuture: std::future::Future<Output = Result<()>>,
     Stop: FnOnce() -> StopFuture,
@@ -842,10 +848,11 @@ mod tests {
             true
         }
 
-        async fn stop_guard(&self, calls: &Mutex<Vec<&'static str>>) {
+        async fn stop_guard(&self, calls: &Mutex<Vec<&'static str>>) -> bool {
             self.generation.fetch_add(1, Ordering::AcqRel);
             let _operation = self.operation_lock.lock().await;
             calls.lock().push("guard-stopped");
+            true
         }
     }
 
@@ -891,7 +898,7 @@ mod tests {
             true,
             RunningMode::Sidecar,
             ProxyStopIntent::Clear,
-            || future::ready(()),
+            || future::ready(true),
             || transition_step(&calls, "proxy_clear", None),
             || transition_step(&calls, "core_stop", None),
         )
@@ -935,7 +942,7 @@ mod tests {
             ProxyStopIntent::HandOverToService,
             || {
                 calls.lock().push("guard-stopped");
-                future::ready(())
+                future::ready(true)
             },
             || transition_step(&calls, "unexpected-proxy-clear", None),
             || transition_step(&calls, "core_stop", None),
@@ -947,6 +954,29 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn a_guard_that_would_not_stop_keeps_the_core_where_it_is() {
+        for (mode, intent) in [
+            (RunningMode::Sidecar, ProxyStopIntent::HandOverToService),
+            (RunningMode::Service, ProxyStopIntent::Clear),
+        ] {
+            let calls = Arc::new(Mutex::new(Vec::new()));
+
+            let result = run_controlled_stop_transition(
+                true,
+                mode,
+                intent,
+                || future::ready(false),
+                || transition_step(&calls, "proxy_clear", None),
+                || transition_step(&calls, "core_stop", None),
+            )
+            .await;
+
+            assert!(result.is_err(), "{mode:?} {intent:?}");
+            assert!(calls.lock().is_empty(), "{mode:?} {intent:?}: {:?}", &*calls.lock());
+        }
+    }
+
+    #[tokio::test]
     async fn a_sidecar_handed_over_still_stops_even_when_a_user_space_clear_would_fail() {
         let calls = Arc::new(Mutex::new(Vec::new()));
 
@@ -954,7 +984,7 @@ mod tests {
             true,
             RunningMode::Sidecar,
             ProxyStopIntent::HandOverToService,
-            || future::ready(()),
+            || future::ready(true),
             || transition_step(&calls, "proxy_clear", Some("proxy_clear")),
             || transition_step(&calls, "core_stop", None),
         )
@@ -973,7 +1003,7 @@ mod tests {
                 is_macos,
                 RunningMode::Sidecar,
                 ProxyStopIntent::Clear,
-                || future::ready(()),
+                || future::ready(true),
                 || transition_step(&calls, "proxy_clear", None),
                 || transition_step(&calls, "core_stop", None),
             )
@@ -994,7 +1024,7 @@ mod tests {
             ProxyStopIntent::Clear,
             || {
                 calls.lock().push("guard-stopped");
-                future::ready(())
+                future::ready(true)
             },
             || transition_step(&calls, "unexpected-proxy-clear", None),
             || transition_step(&calls, "service_stop_with_proxy_clear", None),
@@ -1032,9 +1062,7 @@ mod tests {
             true,
             RunningMode::Service,
             ProxyStopIntent::Clear,
-            || async {
-                coordinator.stop_guard(&calls).await;
-            },
+            || coordinator.stop_guard(&calls),
             || transition_step(&calls, "unexpected-proxy-clear", None),
             || transition_step(&calls, "service-stop-failed", Some("service-stop-failed")),
         ));
@@ -1063,7 +1091,7 @@ mod tests {
             true,
             RunningMode::Sidecar,
             ProxyStopIntent::Clear,
-            || future::ready(()),
+            || future::ready(true),
             || transition_step(&calls, "proxy_clear", Some("proxy_clear")),
             || transition_step(&calls, "core_stop", None),
         )
@@ -1167,7 +1195,7 @@ mod tests {
             false,
             RunningMode::Service,
             ProxyStopIntent::Clear,
-            || future::ready(()),
+            || future::ready(true),
             || transition_step(&calls, "service-proxy-clear", Some("service-proxy-clear")),
             || {
                 service_alive.store(false, Ordering::Release);
@@ -1269,7 +1297,7 @@ mod tests {
                 is_macos,
                 || {
                     calls.lock().push("guard-stopped");
-                    future::ready(())
+                    future::ready(true)
                 },
                 || transition_step(&calls, "proxy-clear", None),
                 || {
