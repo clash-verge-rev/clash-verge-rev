@@ -1310,6 +1310,10 @@ export interface TranslationResources {
             systemProxy: string
             tunMode: string
           }
+          messages: {
+            installedCheckProxy: string
+            installedCoreNotOnService: string
+          }
           tooltips: {
             systemProxy: string
             tunMode: string

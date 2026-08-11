@@ -43,6 +43,10 @@
       "fields": {
         "systemProxy": "システムプロキシ",
         "tunMode": "仮想ネットワークカードモード"
+      },
+      "messages": {
+        "installedCheckProxy": "サービスをインストールし、コアはサービス経由で動作しています。システムプロキシのスイッチを確認し、先ほどの変更が反映されていなければやり直してください。",
+        "installedCoreNotOnService": "サービスはインストールされましたが、コアはサービス経由で動作していません。コアの状態を確認してからやり直してください。"
       }
     },
     "externalController": {

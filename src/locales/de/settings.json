@@ -43,6 +43,10 @@
       "fields": {
         "systemProxy": "Systemproxy",
         "tunMode": "Virtual Network Interface-Modus"
+      },
+      "messages": {
+        "installedCheckProxy": "Der Dienst ist installiert und der Kern läuft über ihn. Prüfen Sie den Systemproxy-Schalter und wiederholen Sie Ihre Änderung, falls sie nicht übernommen wurde.",
+        "installedCoreNotOnService": "Der Dienst ist installiert, der Kern läuft aber nicht über ihn. Prüfen Sie den Kern und versuchen Sie es erneut."
       }
     },
     "externalController": {

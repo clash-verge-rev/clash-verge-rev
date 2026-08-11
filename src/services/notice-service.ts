@@ -23,7 +23,9 @@ interface NoticeItem {
 }
 
 /** Failure codes with frontend recovery actions. */
-export type NoticeActionCode = 'SYSPROXY_SIDECAR_WHILE_SERVICE_READY'
+export type NoticeActionCode =
+  | 'SYSPROXY_PRIVILEGE_REQUIRED'
+  | 'SYSPROXY_SIDECAR_WHILE_SERVICE_READY'
 
 /** Recovery offered by a classified notice. */
 export interface NoticeAction {
@@ -218,6 +220,11 @@ export function noticeActionFor(
   if (!code || getSystem() !== 'macos') return undefined
 
   switch (code) {
+    case 'SYSPROXY_PRIVILEGE_REQUIRED':
+      return {
+        code,
+        label: 'settings.sections.proxyControl.actions.installService',
+      }
     case 'SYSPROXY_SIDECAR_WHILE_SERVICE_READY':
       return {
         code,

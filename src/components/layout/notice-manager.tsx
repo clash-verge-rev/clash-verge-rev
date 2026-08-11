@@ -12,7 +12,7 @@ import { useLockFn } from 'ahooks'
 import React, { useCallback, useMemo, useSyncExternalStore } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { restartCore } from '@/services/cmds'
+import { getRuntimeState, installService, restartCore } from '@/services/cmds'
 import type { NoticeActionCode } from '@/services/notice-service'
 import {
   boundNoticeText,
@@ -153,12 +153,54 @@ const resolveNoticeCopyText = (
   )
 }
 
+/** Whether recovery resolved the source notice. */
+type ActionOutcome = 'dismiss' | 'keep'
+
 /** Run the recovery mapped to a classified failure. */
-const runNoticeAction = async (code: NoticeActionCode) => {
+const runNoticeAction = async (
+  code: NoticeActionCode,
+): Promise<ActionOutcome> => {
   switch (code) {
+    case 'SYSPROXY_PRIVILEGE_REQUIRED':
+      // Keep the install offer only if installation itself fails.
+      await installService()
+      await restartIntoService()
+      return 'dismiss'
     case 'SYSPROXY_SIDECAR_WHILE_SERVICE_READY':
-      await restartCore()
+      return (await restartIntoService()) ? 'dismiss' : 'keep'
   }
+}
+
+/** Restart, report the resulting runtime mode, and return whether it reached the service. */
+const restartIntoService = async (): Promise<boolean> => {
+  try {
+    await restartCore()
+  } catch (error) {
+    showNotice.error(error)
+  }
+
+  const runState = await getRuntimeState()
+
+  if (runState.mode === 'Service') {
+    // The failed proxy request was rolled back; leave its direction to the user.
+    showNotice.info(
+      'settings.sections.proxyControl.messages.installedCheckProxy',
+    )
+    return true
+  }
+
+  if (runState.mode === 'Sidecar' && runState.serviceUsable) {
+    showNotice.error({
+      code: 'SYSPROXY_SIDECAR_WHILE_SERVICE_READY',
+      detail: '',
+    })
+    return false
+  }
+
+  showNotice.error(
+    'settings.sections.proxyControl.messages.installedCoreNotOnService',
+  )
+  return false
 }
 
 interface NoticeActionButtonProps {
@@ -177,9 +219,9 @@ const NoticeActionButton: React.FC<NoticeActionButtonProps> = ({
   const run = useLockFn(async () => {
     setRunning(true)
     try {
-      await runNoticeAction(code)
-      // Remove any same-code replacement created while recovery ran.
-      hideNoticesForCode(code)
+      if ((await runNoticeAction(code)) === 'dismiss') {
+        hideNoticesForCode(code)
+      }
     } catch (error) {
       showNotice.error(error)
     } finally {

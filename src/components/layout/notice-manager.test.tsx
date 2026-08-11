@@ -20,8 +20,14 @@ import { NoticeManager } from './notice-manager'
 
 const writeText = vi.fn((_text: string) => Promise.resolve())
 const restartCore = vi.hoisted(() => vi.fn(() => Promise.resolve()))
+const installService = vi.hoisted(() => vi.fn(() => Promise.resolve()))
+const getRuntimeState = vi.hoisted(() => vi.fn())
 
-vi.mock('@/services/cmds', () => ({ restartCore }))
+vi.mock('@/services/cmds', () => ({
+  restartCore,
+  installService,
+  getRuntimeState,
+}))
 vi.mock('@/utils/get-system', () => ({ default: () => 'macos' }))
 
 beforeAll(async () => {
@@ -51,6 +57,10 @@ beforeAll(async () => {
 afterEach(() => {
   restartCore.mockClear()
   restartCore.mockImplementation(() => Promise.resolve())
+  installService.mockClear()
+  installService.mockImplementation(() => Promise.resolve())
+  getRuntimeState.mockReset()
+  getRuntimeState.mockResolvedValue({ mode: 'Service', serviceUsable: true })
   cleanup()
   getSnapshotNotices().forEach((notice) => hideNotice(notice.id))
   writeText.mockClear()
@@ -120,11 +130,18 @@ it('offers to fix a core running in the wrong place, and stops offering once it 
   )
 
   await waitFor(() => expect(restartCore).toHaveBeenCalledOnce())
-  await waitFor(() => expect(screen.queryAllByRole('alert')).toHaveLength(0))
+  await waitFor(() =>
+    expect(
+      screen.queryByRole('button', {
+        name: 'settings.sections.proxyControl.actions.switchToServiceMode',
+      }),
+    ).toBeNull(),
+  )
 })
 
-it('keeps the notice when the fix itself fails', async () => {
+it('keeps the offer when the restart did not reach the service', async () => {
   restartCore.mockRejectedValue({ code: 'CORE_RESTART_FAILED', detail: 'no' })
+  getRuntimeState.mockResolvedValue({ mode: 'Sidecar', serviceUsable: true })
   showNotice.error({
     code: 'SYSPROXY_SIDECAR_WHILE_SERVICE_READY',
     detail: 'admin privileges required to modify system proxy',
@@ -137,7 +154,7 @@ it('keeps the notice when the fix itself fails', async () => {
     }),
   )
 
-  await waitFor(() => expect(restartCore).toHaveBeenCalledOnce())
+  await waitFor(() => expect(getRuntimeState).toHaveBeenCalledOnce())
   expect(
     screen.getByRole('button', {
       name: 'settings.sections.proxyControl.actions.switchToServiceMode',
@@ -210,7 +227,13 @@ it('dismisses by code, so a replacement does not survive the fix', async () => {
   })
   finishRestart?.()
 
-  await waitFor(() => expect(screen.queryAllByRole('alert')).toHaveLength(0))
+  await waitFor(() =>
+    expect(
+      screen.queryByRole('button', {
+        name: 'settings.sections.proxyControl.actions.switchToServiceMode',
+      }),
+    ).toBeNull(),
+  )
 })
 
 it('shows one notice per code, replacing rather than stacking', async () => {
@@ -220,6 +243,102 @@ it('shows one notice per code, replacing rather than stacking', async () => {
 
   expect(screen.getAllByRole('alert')).toHaveLength(1)
   expect(screen.getByRole('alert').textContent).toContain('second')
+})
+
+const clickInstall = () =>
+  fireEvent.click(
+    screen.getByRole('button', {
+      name: 'settings.sections.proxyControl.actions.installService',
+    }),
+  )
+
+const showRefusal = () =>
+  showNotice.error({
+    code: 'SYSPROXY_PRIVILEGE_REQUIRED',
+    detail: 'admin privileges required to modify system proxy',
+  })
+
+it('installs the service, restarts into it, and says what is left to do', async () => {
+  showRefusal()
+  render(<NoticeManager />)
+
+  clickInstall()
+
+  await waitFor(() => expect(installService).toHaveBeenCalledOnce())
+  await waitFor(() => expect(restartCore).toHaveBeenCalledOnce())
+  await waitFor(() =>
+    expect(
+      screen
+        .getAllByRole('alert')
+        .some((alert) =>
+          alert.textContent?.includes(
+            'settings.sections.proxyControl.messages.installedCheckProxy',
+          ),
+        ),
+    ).toBe(true),
+  )
+})
+
+it('checks what actually happened rather than trusting the restart', async () => {
+  restartCore.mockRejectedValue({ code: 'CORE_RESTART_FAILED', detail: 'no' })
+  getRuntimeState.mockResolvedValue({ mode: 'Sidecar', serviceUsable: true })
+  showRefusal()
+  render(<NoticeManager />)
+
+  clickInstall()
+
+  await waitFor(() =>
+    expect(
+      screen.getByRole('button', {
+        name: 'settings.sections.proxyControl.actions.switchToServiceMode',
+      }),
+    ).toBeTruthy(),
+  )
+  expect(
+    screen.queryByRole('button', {
+      name: 'settings.sections.proxyControl.actions.installService',
+    }),
+  ).toBeNull()
+})
+
+it('says so plainly when the core did not end up on the service', async () => {
+  getRuntimeState.mockResolvedValue({ mode: 'Sidecar', serviceUsable: false })
+  showRefusal()
+  render(<NoticeManager />)
+
+  clickInstall()
+
+  await waitFor(() =>
+    expect(
+      screen
+        .getAllByRole('alert')
+        .some((alert) =>
+          alert.textContent?.includes(
+            'settings.sections.proxyControl.messages.installedCoreNotOnService',
+          ),
+        ),
+    ).toBe(true),
+  )
+})
+
+it('does not go on to restart when the install itself failed', async () => {
+  installService.mockRejectedValue({
+    code: 'SERVICE_INSTALL_FAILED',
+    detail: 'user cancelled',
+  })
+  showRefusal()
+  render(<NoticeManager />)
+
+  clickInstall()
+
+  await waitFor(() => expect(installService).toHaveBeenCalledOnce())
+  expect(restartCore).not.toHaveBeenCalled()
+  expect(getRuntimeState).not.toHaveBeenCalled()
+  expect(
+    screen.getByRole('button', {
+      name: 'settings.sections.proxyControl.actions.installService',
+    }),
+  ).toBeTruthy()
 })
 
 it('copies the whole detail, not the shortened one', async () => {

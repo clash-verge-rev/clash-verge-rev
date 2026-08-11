@@ -43,6 +43,10 @@
       "fields": {
         "systemProxy": "وكيل النظام",
         "tunMode": "وضع TUN"
+      },
+      "messages": {
+        "installedCheckProxy": "تم تثبيت الخدمة والنواة تعمل من خلالها. تحقّق من مفتاح وكيل النظام وأعد التغيير إن لم يُطبَّق.",
+        "installedCoreNotOnService": "تم تثبيت الخدمة، لكن النواة لا تعمل من خلالها. تحقّق من النواة ثم أعد المحاولة."
       }
     },
     "externalController": {

@@ -43,6 +43,10 @@
       "fields": {
         "systemProxy": "Sistem Vekil'i",
         "tunMode": "Tun Modu"
+      },
+      "messages": {
+        "installedCheckProxy": "Hizmet kuruldu ve çekirdek onun üzerinden çalışıyor. Sistem vekil sunucusu anahtarını denetleyin; değişikliğiniz uygulanmadıysa yeniden yapın.",
+        "installedCoreNotOnService": "Hizmet kuruldu ancak çekirdek onun üzerinden çalışmıyor. Çekirdeği denetleyip yeniden deneyin."
       }
     },
     "externalController": {

@@ -43,6 +43,10 @@
       "fields": {
         "systemProxy": "System Proxy",
         "tunMode": "Tun Mode"
+      },
+      "messages": {
+        "installedCheckProxy": "The service is installed and the core is running through it. Check the system proxy switch and make your change again if it did not take.",
+        "installedCoreNotOnService": "The service is installed, but the core is not running through it. Check the core and try again."
       }
     },
     "externalController": {

@@ -43,6 +43,10 @@
       "fields": {
         "systemProxy": "Proksi Sistem",
         "tunMode": "Mode Tun (NIC Virtual)"
+      },
+      "messages": {
+        "installedCheckProxy": "Layanan terpasang dan inti berjalan melaluinya. Periksa sakelar proxy sistem dan ulangi perubahan Anda jika belum diterapkan.",
+        "installedCoreNotOnService": "Layanan terpasang, tetapi inti tidak berjalan melaluinya. Periksa inti lalu coba lagi."
       }
     },
     "externalController": {
