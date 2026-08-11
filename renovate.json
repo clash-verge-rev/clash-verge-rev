@@ -44,6 +44,12 @@
       "description": "Group all GitHub Actions updates into a single PR",
       "matchManagers": ["github-actions"],
       "groupName": "github actions"
+    },
+    {
+      "description": "Skip TypeScript 7.0 series",
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["typescript"],
+      "allowedVersions": "<7.0.0 || >=7.1.0"
     }
   ],
   "postUpdateOptions": ["pnpmDedupe"],
