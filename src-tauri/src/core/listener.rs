@@ -384,7 +384,10 @@ fn bind_claim(claim: &BindClaim) -> io::Result<Socket> {
     if claim.address.is_ipv6() {
         socket.set_only_v6(true)?;
     }
-    socket.set_reuse_address(false)?;
+    // Unix can retain closed TCP connections after the previous listener exits.
+    // Ignore that transient state without allowing concurrent listeners.
+    // SO_REUSEPORT is intentionally never enabled; Windows stays exclusive below.
+    socket.set_reuse_address(reuse_address_for_probe(claim.transport))?;
     #[cfg(windows)]
     set_exclusive_address_use(&socket)?;
     socket.bind(&SockAddr::from(claim.socket_addr()))?;
@@ -392,6 +395,10 @@ fn bind_claim(claim: &BindClaim) -> io::Result<Socket> {
         socket.listen(1)?;
     }
     Ok(socket)
+}
+
+const fn reuse_address_for_probe(transport: ListenerTransport) -> bool {
+    cfg!(unix) && matches!(transport, ListenerTransport::Tcp)
 }
 
 fn is_bind_conflict(error: &io::Error) -> bool {
