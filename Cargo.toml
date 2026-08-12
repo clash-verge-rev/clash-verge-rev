@@ -2,6 +2,7 @@
 members = [
   "src-tauri",
   "crates/clash-verge-draft",
+  "crates/clash-verge-media-unlock",
   "crates/clash-verge-logging",
   "crates/clash-verge-signal",
   "crates/tauri-plugin-clash-verge-sysinfo",
@@ -47,6 +48,7 @@ split-debuginfo = "unpacked"
 
 [workspace.dependencies]
 clash-verge-draft = { path = "crates/clash-verge-draft" }
+clash-verge-media-unlock = { path = "crates/clash-verge-media-unlock" }
 clash-verge-logging = { path = "crates/clash-verge-logging" }
 clash-verge-signal = { path = "crates/clash-verge-signal" }
 clash-verge-i18n = { path = "crates/clash-verge-i18n" }
@@ -57,6 +59,7 @@ tauri = { version = "2.11.5" }
 tauri-plugin-clipboard-manager = "2.3.2"
 parking_lot = { version = "0.12.5", features = ["hardware-lock-elision"] }
 anyhow = "1.0.104"
+chrono = "0.4.45"
 criterion = { version = "0.8.2", features = ["async_tokio"] }
 tokio = { version = "1.53.1", features = [
   "rt-multi-thread",
@@ -64,8 +67,11 @@ tokio = { version = "1.53.1", features = [
   "time",
   "sync",
 ] }
-flexi_logger = "0.31.9"
+flexi_logger = "0.31.10"
 log = "0.4.33"
+regex = "1.13.1"
+reqwest = { version = "0.13.4", features = ["json", "cookies", "gzip", "rustls", "form"] }
+rust_iso3166 = "0.2.0"
 
 smartstring = { version = "1.0.1" }
 compact_str = { version = "0.10.0", features = ["serde"] }

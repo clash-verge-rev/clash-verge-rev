@@ -52,6 +52,7 @@ import type { TranslationKey } from '@/types/generated/i18n-keys'
 import type { MonacoEditorInstance } from '@/types/monaco'
 import getSystem from '@/utils/get-system'
 import { isValidIpCidr } from '@/utils/network'
+import { parseYamlSafe } from '@/utils/yaml'
 
 interface Props {
   groupsUid: string
@@ -421,29 +422,42 @@ export const RulesEditorViewer = (props: Props) => {
   const fetchContent = useCallback(async () => {
     hasLoadedSeqConfigRef.current = false
     const data = await readProfileFile(property)
-    const obj = yaml.load(data) as ISeqProfileConfig | null
+    const obj = parseYamlSafe(data) as ISeqProfileConfig | null | undefined
+
+    setPrevData(data)
+    setCurrData(data)
+
+    if (obj === undefined) {
+      setVisualization(false)
+      return
+    }
 
     setPrependSeq(obj?.prepend || [])
     setAppendSeq(obj?.append || [])
     setDeleteSeq(obj?.delete || [])
-
-    setPrevData(data)
-    setCurrData(data)
     hasLoadedSeqConfigRef.current = true
   }, [property])
 
-  useEffect(() => {
-    if (currData === '' || visualization !== true) {
+  const handleVisualizationToggle = () => {
+    if (visualization) {
+      setVisualization(false)
       return
     }
 
-    const obj = yaml.load(currData) as ISeqProfileConfig | null
+    const obj = parseYamlSafe(currData) as ISeqProfileConfig | null | undefined
+    if (obj === undefined) {
+      hasLoadedSeqConfigRef.current = false
+      return
+    }
+
+    hasLoadedSeqConfigRef.current = true
     startTransition(() => {
       setPrependSeq(obj?.prepend ?? [])
       setAppendSeq(obj?.append ?? [])
       setDeleteSeq(obj?.delete ?? [])
     })
-  }, [currData, visualization])
+    setVisualization(true)
+  }
 
   // 优化：异步处理大数据yaml.dump，避免UI卡死
   useEffect(() => {
@@ -494,13 +508,13 @@ export const RulesEditorViewer = (props: Props) => {
     const mergeData = await readProfileFile(mergeUid) // merge配置文件
     const globalMergeData = await readProfileFile('Merge') // global merge配置文件
 
-    const rulesObj = yaml.load(data) as { rules: [] } | null
+    const rulesObj = parseYamlSafe(data) as { rules: [] } | null
 
-    const originGroupsObj = yaml.load(data) as {
+    const originGroupsObj = parseYamlSafe(data) as {
       'proxy-groups': IProxyGroupConfig[]
     } | null
     const originGroups = originGroupsObj?.['proxy-groups'] || []
-    const moreGroupsObj = yaml.load(groupsData) as ISeqProfileConfig | null
+    const moreGroupsObj = parseYamlSafe(groupsData) as ISeqProfileConfig | null
     const rawPrependGroups = moreGroupsObj?.['prepend']
     const morePrependGroups = Array.isArray(rawPrependGroups)
       ? (rawPrependGroups as IProxyGroupConfig[])
@@ -526,29 +540,29 @@ export const RulesEditorViewer = (props: Props) => {
       moreAppendGroups,
     )
 
-    const originRuleSetObj = yaml.load(data) as {
+    const originRuleSetObj = parseYamlSafe(data) as {
       'rule-providers': Record<string, unknown>
     } | null
     const originRuleSet = originRuleSetObj?.['rule-providers'] || {}
-    const moreRuleSetObj = yaml.load(mergeData) as {
+    const moreRuleSetObj = parseYamlSafe(mergeData) as {
       'rule-providers': Record<string, unknown>
     } | null
     const moreRuleSet = moreRuleSetObj?.['rule-providers'] || {}
-    const globalRuleSetObj = yaml.load(globalMergeData) as {
+    const globalRuleSetObj = parseYamlSafe(globalMergeData) as {
       'rule-providers': Record<string, unknown>
     } | null
     const globalRuleSet = globalRuleSetObj?.['rule-providers'] || {}
     const ruleSet = Object.assign({}, originRuleSet, moreRuleSet, globalRuleSet)
 
-    const originSubRuleObj = yaml.load(data) as {
+    const originSubRuleObj = parseYamlSafe(data) as {
       'sub-rules': Record<string, unknown>
     } | null
     const originSubRule = originSubRuleObj?.['sub-rules'] || {}
-    const moreSubRuleObj = yaml.load(mergeData) as {
+    const moreSubRuleObj = parseYamlSafe(mergeData) as {
       'sub-rules': Record<string, unknown>
     } | null
     const moreSubRule = moreSubRuleObj?.['sub-rules'] || {}
-    const globalSubRuleObj = yaml.load(globalMergeData) as {
+    const globalSubRuleObj = parseYamlSafe(globalMergeData) as {
       'sub-rules': Record<string, unknown>
     } | null
     const globalSubRule = globalSubRuleObj?.['sub-rules'] || {}
@@ -621,9 +635,7 @@ export const RulesEditorViewer = (props: Props) => {
               <Button
                 variant="contained"
                 size="small"
-                onClick={() => {
-                  setVisualization((prev) => !prev)
-                }}
+                onClick={handleVisualizationToggle}
               >
                 {visualization
                   ? t('shared.editorModes.advanced')

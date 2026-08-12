@@ -138,6 +138,12 @@ impl IProfiles {
                     if item.uid.is_none() {
                         item.uid = Some(help::get_uid("d").into());
                     }
+                    if item.itype.as_deref() == Some("remote") {
+                        item.option
+                            .get_or_insert_with(PrfOption::default)
+                            .allow_auto_update
+                            .get_or_insert(true);
+                    }
                 }
                 profiles
             }
