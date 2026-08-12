@@ -1,5 +1,6 @@
 use crate::{
     config::{Config, MixedPort},
+    core::proxy_control::SystemProxyStateUnknown,
     singleton,
     utils::server,
 };
@@ -37,24 +38,39 @@ const fn proxy_apply_steps(sys_enabled: bool, auto_enabled: bool) -> [ProxyApply
 /// Maximum guard drain time before OS state is unknown.
 const GUARD_DRAIN_TIMEOUT: Duration = Duration::from_secs(10);
 
-/// Guard state after a failed proxy write.
+/// Authoritative OS state after a failed proxy write.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-enum GuardRecovery {
+enum AuthoritativeState {
     /// No write is known to have landed.
-    Restore,
-    /// A partial write left no authoritative target.
-    StandDown,
+    Unchanged,
+    /// A partial write left no known target.
+    Unknown,
 }
 
-/// Choose recovery from positive evidence that a write landed.
-fn guard_recovery(error: &anyhow::Error, earlier_step_completed: bool) -> GuardRecovery {
+/// Choose state from reliable evidence that a write landed.
+fn authoritative_state(error: &anyhow::Error, earlier_step_completed: bool) -> AuthoritativeState {
+    // Linux setter success is not reliable write evidence.
+    authoritative_state_from(!cfg!(target_os = "linux"), error, earlier_step_completed)
+}
+
+/// Testable form with explicit write-evidence reliability.
+fn authoritative_state_from(
+    write_evidence_is_reliable: bool,
+    error: &anyhow::Error,
+    earlier_step_completed: bool,
+) -> AuthoritativeState {
+    if !write_evidence_is_reliable {
+        return AuthoritativeState::Unchanged;
+    }
     // A completed earlier setter is evidence outside the current error.
     if earlier_step_completed {
-        return GuardRecovery::StandDown;
+        return AuthoritativeState::Unknown;
     }
     match error.downcast_ref::<sysproxy::Error>() {
-        Some(sysproxy::Error::ProxyWrite { progress, .. }) if !progress.nothing_written() => GuardRecovery::StandDown,
-        _ => GuardRecovery::Restore,
+        Some(sysproxy::Error::ProxyWrite { progress, .. }) if !progress.nothing_written() => {
+            AuthoritativeState::Unknown
+        }
+        _ => AuthoritativeState::Unchanged,
     }
 }
 
@@ -122,14 +138,69 @@ where
     disable().await
 }
 
+/// Return the first failure after logging every attempted write.
+fn first_failure<const N: usize>(attempts: [(&'static str, Result<()>); N]) -> Result<()> {
+    let mut first: Option<anyhow::Error> = None;
+    for (what, outcome) in attempts {
+        let Err(error) = outcome else { continue };
+        logging!(warn, Type::Core, "failed to turn the {what} off: {error:#}");
+        if first.is_none() {
+            first = Some(error);
+        }
+    }
+    first.map_or(Ok(()), Err)
+}
+
+/// Attempt to disable both proxy kinds even if the first fails.
+fn disable_both<Global, Pac>(disable_global: Global, disable_pac: Pac) -> Result<()>
+where
+    Global: FnOnce() -> Result<()>,
+    Pac: FnOnce() -> Result<()>,
+{
+    let global = disable_global();
+    let pac = disable_pac();
+    first_failure([("global proxy", global), ("PAC", pac)])
+}
+
 /// Force both proxy kinds off, in one blocking hop.
 async fn disable_all_proxies(sys: Sysproxy, auto: Autoproxy) -> Result<()> {
-    tokio::task::spawn_blocking(move || -> Result<()> {
-        sys.set_system_proxy()?;
-        auto.set_auto_proxy()?;
-        Ok(())
+    tokio::task::spawn_blocking(move || {
+        disable_both(
+            || sys.set_system_proxy().map_err(anyhow::Error::from),
+            || auto.set_auto_proxy().map_err(anyhow::Error::from),
+        )
     })
     .await?
+}
+
+/// Reconcile OS and guard state while preserving the original failure.
+async fn recover_from_failed_write<Guard, Compensate, CompensateFuture>(
+    error: anyhow::Error,
+    earlier_step_completed: bool,
+    recover_guard: Guard,
+    compensate: Compensate,
+) -> anyhow::Error
+where
+    Guard: FnOnce(AuthoritativeState),
+    Compensate: FnOnce() -> CompensateFuture,
+    CompensateFuture: std::future::Future<Output = Result<()>>,
+{
+    let state = authoritative_state(&error, earlier_step_completed);
+    recover_guard(state);
+
+    match state {
+        AuthoritativeState::Unchanged => error,
+        AuthoritativeState::Unknown => {
+            if let Err(compensation) = compensate().await {
+                logging!(
+                    warn,
+                    Type::Core,
+                    "failed to force the system proxy off after a partial write: {compensation:#}"
+                );
+            }
+            error.context(SystemProxyStateUnknown)
+        }
+    }
 }
 
 async fn current_os_proxy_state() -> OsProxyState {
@@ -260,10 +331,27 @@ impl Sysopt {
         !self.access_guard().read().get_state().is_stopped()
     }
 
-    /// Restore or stand down a previously running guard after failure.
-    fn recover_guard_after_failure(&self, error: &anyhow::Error, earlier_step_completed: bool, was_running: bool) {
-        match guard_recovery(error, earlier_step_completed) {
-            GuardRecovery::Restore if was_running => {
+    /// Recover OS and guard state after a failed write.
+    async fn recover_from_failed_write(
+        &self,
+        error: anyhow::Error,
+        earlier_step_completed: bool,
+        guard_was_running: bool,
+        off: (Sysproxy, Autoproxy),
+    ) -> anyhow::Error {
+        recover_from_failed_write(
+            error,
+            earlier_step_completed,
+            |state| self.recover_guard_after_failure(state, guard_was_running),
+            || disable_all_proxies(off.0, off.1),
+        )
+        .await
+    }
+
+    /// Reconcile the guard with the authoritative state.
+    fn recover_guard_after_failure(&self, state: AuthoritativeState, was_running: bool) {
+        match state {
+            AuthoritativeState::Unchanged if was_running => {
                 let restarted = self.access_guard().read().start();
                 if !restarted {
                     logging!(
@@ -273,8 +361,8 @@ impl Sysopt {
                     );
                 }
             }
-            GuardRecovery::Restore => {}
-            GuardRecovery::StandDown => {
+            AuthoritativeState::Unchanged => {}
+            AuthoritativeState::Unknown => {
                 self.access_guard().write().set_guard_type(GuardType::None);
             }
         }
@@ -366,6 +454,14 @@ impl Sysopt {
 
         let apply_steps = proxy_apply_steps(sys.enable, auto.enable);
 
+        // Prepare the disabled state used to compensate a partial write.
+        let compensation = {
+            let (mut off_sys, mut off_auto) = (sys.clone(), auto.clone());
+            off_sys.enable = false;
+            off_auto.enable = false;
+            (off_sys, off_auto)
+        };
+
         // Track whether an earlier setter already changed the OS.
         let applied = tokio::task::spawn_blocking(move || {
             for (index, step) in apply_steps.into_iter().enumerate() {
@@ -384,13 +480,15 @@ impl Sysopt {
         match applied {
             Ok(Ok(())) => {}
             Ok(Err((earlier_step_completed, error))) => {
-                self.recover_guard_after_failure(&error, earlier_step_completed, guard_was_running);
-                return Err(error);
+                return Err(self
+                    .recover_from_failed_write(error, earlier_step_completed, guard_was_running, compensation)
+                    .await);
             }
             Err(join_error) => {
                 let error = anyhow::Error::from(join_error).context("the system proxy write task did not finish");
-                self.recover_guard_after_failure(&error, false, guard_was_running);
-                return Err(error);
+                return Err(self
+                    .recover_from_failed_write(error, false, guard_was_running, compensation)
+                    .await);
             }
         }
 
@@ -440,8 +538,9 @@ impl Sysopt {
 #[cfg(test)]
 mod tests {
     use super::{
-        GuardRecovery, OsProxyState, ProxyApplyStep, classify_os_proxy_state, disable_until_the_last_write_is_ours,
-        guard_recovery, proxy_apply_steps,
+        AuthoritativeState, OsProxyState, ProxyApplyStep, SystemProxyStateUnknown, authoritative_state,
+        authoritative_state_from, classify_os_proxy_state, disable_both, disable_until_the_last_write_is_ours,
+        first_failure, proxy_apply_steps, recover_from_failed_write,
     };
     use parking_lot::Mutex;
     use std::collections::VecDeque;
@@ -473,6 +572,142 @@ mod tests {
         )
         .await;
         (calls.into_inner(), result.is_ok())
+    }
+
+    fn failure_text(result: anyhow::Result<()>) -> std::string::String {
+        result.map_or_else(|error| format!("{error:#}"), |()| "no failure".to_owned())
+    }
+
+    #[test]
+    fn every_proxy_kind_is_attempted_even_after_one_of_them_failed() {
+        let attempted = Mutex::new(Vec::new());
+
+        let failed = disable_both(
+            || {
+                attempted.lock().push("global proxy");
+                Err(anyhow::anyhow!("global refused"))
+            },
+            || {
+                attempted.lock().push("PAC");
+                Err(anyhow::anyhow!("PAC refused"))
+            },
+        );
+
+        assert_eq!(&*attempted.lock(), &["global proxy", "PAC"]);
+        assert_eq!(failure_text(failed), "global refused");
+    }
+
+    #[test]
+    fn a_later_failure_is_still_reported_when_the_first_one_succeeded() {
+        let failed = first_failure([("global proxy", Ok(())), ("PAC", Err(anyhow::anyhow!("PAC refused")))]);
+
+        assert_eq!(failure_text(failed), "PAC refused");
+    }
+
+    #[test]
+    fn nothing_is_reported_when_every_kind_went_through() {
+        assert!(first_failure([("global proxy", Ok(())), ("PAC", Ok(()))]).is_ok());
+    }
+
+    struct Recovery {
+        guard_told: Option<AuthoritativeState>,
+        compensated: bool,
+        state_unknown: bool,
+        message: String,
+    }
+
+    async fn record_recovery(error: anyhow::Error, earlier_step_completed: bool, compensation_works: bool) -> Recovery {
+        let guard_told = Mutex::new(None);
+        let compensated = Mutex::new(false);
+        let recovered = recover_from_failed_write(
+            error,
+            earlier_step_completed,
+            |state| *guard_told.lock() = Some(state),
+            || {
+                *compensated.lock() = true;
+                async move {
+                    if compensation_works {
+                        Ok(())
+                    } else {
+                        anyhow::bail!("the compensation was refused too")
+                    }
+                }
+            },
+        )
+        .await;
+
+        Recovery {
+            guard_told: *guard_told.lock(),
+            compensated: *compensated.lock(),
+            state_unknown: SystemProxyStateUnknown::is_in(&recovered),
+            message: format!("{recovered:#}"),
+        }
+    }
+
+    fn refused() -> anyhow::Error {
+        anyhow::Error::new(sysproxy::Error::ProxyWrite {
+            progress: sysproxy::WriteProgress::new(0, 7),
+            source: Box::new(sysproxy::Error::RequiresAdminPrivileges),
+        })
+    }
+
+    fn partly_written() -> anyhow::Error {
+        anyhow::Error::new(sysproxy::Error::ProxyWrite {
+            progress: sysproxy::WriteProgress::new(3, 7),
+            source: Box::new(sysproxy::Error::RequiresAdminPrivileges),
+        })
+    }
+
+    #[tokio::test]
+    async fn a_failure_that_wrote_nothing_is_not_compensated_for() {
+        let recovery = record_recovery(refused(), false, true).await;
+
+        assert!(!recovery.compensated);
+        assert_eq!(recovery.guard_told, Some(AuthoritativeState::Unchanged));
+        assert!(!recovery.state_unknown);
+    }
+
+    #[cfg(target_os = "linux")]
+    #[tokio::test]
+    async fn nothing_on_linux_ever_reaches_the_destructive_row() {
+        for earlier_step_completed in [false, true] {
+            let recovery = record_recovery(partly_written(), earlier_step_completed, true).await;
+
+            assert!(!recovery.compensated, "{earlier_step_completed}");
+            assert_eq!(recovery.guard_told, Some(AuthoritativeState::Unchanged));
+            assert!(!recovery.state_unknown);
+        }
+    }
+
+    #[cfg(not(target_os = "linux"))]
+    #[tokio::test]
+    async fn a_failure_that_wrote_something_forces_the_proxy_off() {
+        let recovery = record_recovery(partly_written(), false, true).await;
+
+        assert!(recovery.compensated);
+        assert_eq!(recovery.guard_told, Some(AuthoritativeState::Unknown));
+        assert!(recovery.state_unknown);
+    }
+
+    #[cfg(not(target_os = "linux"))]
+    #[tokio::test]
+    async fn a_compensation_that_fails_does_not_replace_the_diagnosis() {
+        let recovery = record_recovery(partly_written(), false, false).await;
+
+        assert!(recovery.compensated);
+        assert!(recovery.message.contains("admin privileges"));
+        assert!(!recovery.message.contains("the compensation was refused too"));
+        assert!(recovery.state_unknown);
+    }
+
+    #[cfg(not(target_os = "linux"))]
+    #[tokio::test]
+    async fn an_earlier_setter_that_finished_reaches_the_second_row_too() {
+        let recovery = record_recovery(refused(), true, true).await;
+
+        assert!(recovery.compensated);
+        assert_eq!(recovery.guard_told, Some(AuthoritativeState::Unknown));
+        assert!(recovery.state_unknown);
     }
 
     #[tokio::test]
@@ -519,9 +754,10 @@ mod tests {
     fn a_failure_with_nothing_written_leaves_the_old_guard_worth_restoring() {
         let refused = anyhow::Error::new(sysproxy::Error::RequiresAdminPrivileges);
 
-        assert_eq!(guard_recovery(&refused, false), GuardRecovery::Restore);
+        assert_eq!(authoritative_state(&refused, false), AuthoritativeState::Unchanged);
     }
 
+    #[cfg(not(target_os = "linux"))]
     #[test]
     fn only_evidence_that_a_write_landed_stands_the_guard_down() {
         let nothing_written = anyhow::Error::new(sysproxy::Error::ProxyWrite {
@@ -533,16 +769,64 @@ mod tests {
             source: Box::new(sysproxy::Error::RequiresAdminPrivileges),
         });
 
-        assert_eq!(guard_recovery(&nothing_written, false), GuardRecovery::Restore);
-        assert_eq!(guard_recovery(&something_written, false), GuardRecovery::StandDown);
+        assert_eq!(
+            authoritative_state(&nothing_written, false),
+            AuthoritativeState::Unchanged
+        );
+        assert_eq!(
+            authoritative_state(&something_written, false),
+            AuthoritativeState::Unknown
+        );
     }
 
+    #[cfg(not(target_os = "linux"))]
     #[test]
     fn a_step_that_already_finished_stands_the_guard_down_whatever_the_error_says() {
         let refused = anyhow::Error::new(sysproxy::Error::RequiresAdminPrivileges);
 
-        assert_eq!(guard_recovery(&refused, false), GuardRecovery::Restore);
-        assert_eq!(guard_recovery(&refused, true), GuardRecovery::StandDown);
+        assert_eq!(authoritative_state(&refused, false), AuthoritativeState::Unchanged);
+        assert_eq!(authoritative_state(&refused, true), AuthoritativeState::Unknown);
+    }
+
+    #[test]
+    fn where_a_successful_setter_proves_nothing_no_failure_is_destructive() {
+        let strongest_evidence = anyhow::Error::new(sysproxy::Error::ProxyWrite {
+            progress: sysproxy::WriteProgress::new(3, 7),
+            source: Box::new(sysproxy::Error::RequiresAdminPrivileges),
+        });
+
+        for earlier_step_completed in [false, true] {
+            assert_eq!(
+                authoritative_state_from(false, &strongest_evidence, earlier_step_completed),
+                AuthoritativeState::Unchanged,
+                "{earlier_step_completed}"
+            );
+        }
+    }
+
+    #[test]
+    fn where_it_proves_something_both_kinds_of_evidence_count() {
+        let nothing_written = anyhow::Error::new(sysproxy::Error::ProxyWrite {
+            progress: sysproxy::WriteProgress::new(0, 7),
+            source: Box::new(sysproxy::Error::RequiresAdminPrivileges),
+        });
+        let partly_written = anyhow::Error::new(sysproxy::Error::ProxyWrite {
+            progress: sysproxy::WriteProgress::new(3, 7),
+            source: Box::new(sysproxy::Error::RequiresAdminPrivileges),
+        });
+
+        assert_eq!(
+            authoritative_state_from(true, &nothing_written, false),
+            AuthoritativeState::Unchanged
+        );
+        assert_eq!(
+            authoritative_state_from(true, &partly_written, false),
+            AuthoritativeState::Unknown
+        );
+        assert_eq!(
+            authoritative_state_from(true, &nothing_written, true),
+            AuthoritativeState::Unknown
+        );
     }
 
     #[test]

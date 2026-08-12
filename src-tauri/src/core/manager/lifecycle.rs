@@ -343,16 +343,16 @@ impl CoreManager {
             self.apply_proxy_after_start().await
         }
         .await;
-        if let Err(error) = &result {
+        if let Err(error) = result {
             // Revoke only the failed Sidecar allowance; its startup says nothing about Service health.
             SERVICE_MANAGER.withdraw_sidecar_allowance();
             if let Err(cleanup_error) = self.rollback_failed_sidecar_transition().await {
-                return Err(anyhow::anyhow!(
-                    "Sidecar startup failed: {error:#}; failed to clear proxy before rollback: {cleanup_error:#}"
-                ));
+                return Err(proxy_control::rollback_failure(error, cleanup_error)
+                    .context("failed to clear the proxy before rolling back"));
             }
+            return Err(error);
         }
-        result
+        Ok(())
     }
 
     pub async fn uninstall_service_and_start_sidecar(&self) -> Result<()> {
@@ -386,14 +386,14 @@ impl CoreManager {
         )
         .await;
 
-        if let Err(error) = &result
-            && let Err(cleanup_error) = self.rollback_failed_sidecar_transition().await
-        {
-            return Err(anyhow::anyhow!(
-                "Service uninstall transition failed: {error:#}; failed to clear proxy before rollback: {cleanup_error:#}"
-            ));
+        if let Err(error) = result {
+            if let Err(cleanup_error) = self.rollback_failed_sidecar_transition().await {
+                return Err(proxy_control::rollback_failure(error, cleanup_error)
+                    .context("failed to clear the proxy before rolling back"));
+            }
+            return Err(error);
         }
-        result
+        Ok(())
     }
 
     async fn rollback_failed_sidecar_transition(&self) -> Result<()> {
@@ -583,9 +583,10 @@ impl CoreManager {
         .await
     }
 
-    pub async fn change_core(&self, clash_core: &String) -> Result<(), String> {
+    /// Switch the core binary and reload configuration.
+    pub async fn change_core(&self, clash_core: &String) -> Result<()> {
         if !IVerge::VALID_CLASH_CORES.contains(&clash_core.as_str()) {
-            return Err(format!("Invalid clash core: {}", clash_core).into());
+            anyhow::bail!("invalid clash core: {clash_core}");
         }
 
         Config::verge().await.edit_draft(|d| {
@@ -594,10 +595,8 @@ impl CoreManager {
         Config::verge().await.apply();
 
         let verge_data = Config::verge().await.latest_arc();
-        verge_data.save_file().await.map_err(|e| e.to_string())?;
-
-        self.update_config_checked().await.map_err(|e| e.to_string())?;
-        Ok(())
+        verge_data.save_file().await?;
+        self.update_config_checked().await
     }
 
     async fn prepare_startup(&self) -> StartupDecision {

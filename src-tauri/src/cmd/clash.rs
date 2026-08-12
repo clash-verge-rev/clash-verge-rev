@@ -1,4 +1,4 @@
-use super::{CmdResult, CommandFailure, WithErrorCode as _, coded_error, proxy_aware_coded_error};
+use super::{CmdResult, CommandFailure, WithErrorCode as _, proxy_aware_coded_error, proxy_aware_error};
 use crate::feat;
 use crate::utils::{dirs, yaml_emitter};
 use crate::{
@@ -34,7 +34,7 @@ pub async fn get_clash_info() -> CmdResult<ClashInfo> {
 pub async fn patch_clash_config(payload: Mapping) -> CmdResult {
     feat::patch_clash(&payload)
         .await
-        .with_error_code("CLASH_CONFIG_UPDATE_FAILED")
+        .map_err(|error| proxy_aware_coded_error(&error, "CLASH_CONFIG_UPDATE_FAILED"))
 }
 
 /// 修改Clash模式
@@ -75,18 +75,19 @@ pub async fn change_clash_core(clash_core: String) -> CmdResult<Option<CommandFa
                     Ok(None)
                 }
                 Err(err) => {
-                    let error_msg: String = format!("Core changed but failed to restart: {err}").into();
+                    let failed = err.context("core changed but failed to restart");
+                    let error_msg: String = format!("{failed:#}").into();
                     handle::Handle::notice_message("config_core::change_error", error_msg.clone());
                     logging!(error, Type::Core, "{error_msg}");
-                    Ok(Some(coded_error("CORE_CHANGE_FAILED", error_msg)))
+                    Ok(Some(proxy_aware_coded_error(&failed, "CORE_CHANGE_FAILED")))
                 }
             }
         }
         Err(err) => {
-            let error_msg = err;
+            let error_msg: String = format!("{err:#}").into();
             logging!(error, Type::Core, "failed to change core: {error_msg}");
-            handle::Handle::notice_message("config_core::change_error", error_msg.clone());
-            Ok(Some(coded_error("CORE_CHANGE_FAILED", error_msg)))
+            handle::Handle::notice_message("config_core::change_error", error_msg);
+            Ok(Some(proxy_aware_coded_error(&err, "CORE_CHANGE_FAILED")))
         }
     }
 }
@@ -111,7 +112,7 @@ pub async fn stop_core() -> CmdResult {
     let result = CoreManager::global()
         .stop_core()
         .await
-        .with_error_code("CORE_STOP_FAILED");
+        .map_err(|error| proxy_aware_coded_error(&error, "CORE_STOP_FAILED"));
     if result.is_ok() {
         handle::Handle::refresh_clash();
     }
@@ -195,26 +196,20 @@ pub async fn apply_dns_config(apply: bool) -> CmdResult {
         });
 
         // 应用新配置
-        CoreManager::global()
-            .update_config_checked()
-            .await
-            .stringify_err_log(|err| {
-                let err = format!("Failed to apply config with DNS: {err}");
-                logging!(error, Type::Config, "{err}");
-            })?;
+        CoreManager::global().update_config_checked().await.map_err(|error| {
+            logging!(error, Type::Config, "failed to apply the config with DNS: {error:#}");
+            proxy_aware_error(&error)
+        })?;
 
         logging!(info, Type::Config, "DNS config successfully applied");
     } else {
         // 当关闭DNS设置时，重新生成配置（不加载DNS配置文件）
         logging!(info, Type::Config, "DNS settings disabled, regenerating config");
 
-        CoreManager::global()
-            .update_config_checked()
-            .await
-            .stringify_err_log(|err| {
-                let err = format!("Failed to apply regenerated config: {err}");
-                logging!(error, Type::Config, "{err}");
-            })?;
+        CoreManager::global().update_config_checked().await.map_err(|error| {
+            logging!(error, Type::Config, "failed to apply the regenerated config: {error:#}");
+            proxy_aware_error(&error)
+        })?;
 
         logging!(info, Type::Config, "Config regenerated successfully");
     }

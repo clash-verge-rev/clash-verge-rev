@@ -1,6 +1,6 @@
 use crate::{
     config::{Config, IClashTemp, IProfiles, IVerge},
-    core::backup,
+    core::{backup, proxy_control::SystemProxyStateUnknown},
     process::AsyncHandler,
     utils::{
         dirs::{PathBufExec as _, app_home_dir, local_backup_dir, verge_path},
@@ -63,6 +63,10 @@ async fn finalize_restored_verge_config(
     // Use not_save_file = true to avoid extra I/O (we already persisted the restored file).
     if let Err(err) = super::patch_verge(&restored, true).await {
         logging!(error, Type::Backup, "Failed to apply restored verge config: {err:#?}");
+        // Propagate unknown proxy state; ordinary side-effect failures stay logged.
+        if SystemProxyStateUnknown::is_in(&err) {
+            return Err(err);
+        }
     }
     Ok(())
 }

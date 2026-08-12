@@ -78,6 +78,48 @@ impl std::fmt::Display for SysproxyFailure {
 
 impl std::error::Error for SysproxyFailure {}
 
+/// Marker for a partially applied system proxy write.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct SystemProxyStateUnknown;
+
+impl SystemProxyStateUnknown {
+    /// Whether this marker appears in the error chain.
+    #[inline]
+    pub fn is_in(error: &anyhow::Error) -> bool {
+        error.downcast_ref::<Self>().is_some()
+    }
+}
+
+impl std::fmt::Display for SystemProxyStateUnknown {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.write_str("the system proxy was left partly applied; turning it off was attempted")
+    }
+}
+
+impl std::error::Error for SystemProxyStateUnknown {}
+
+/// Whether the error carries a frontend-mappable classification.
+#[inline]
+fn carries_a_mappable_code(error: &anyhow::Error) -> bool {
+    SysproxyFailure::from_chain(error).is_some()
+}
+
+/// Combine a cause with rollback failure without hiding actionable classifications.
+pub fn rollback_failure(caused_by: anyhow::Error, rollback: anyhow::Error) -> anyhow::Error {
+    let state_unknown = SystemProxyStateUnknown::is_in(&caused_by) || SystemProxyStateUnknown::is_in(&rollback);
+
+    let combined = if carries_a_mappable_code(&caused_by) || !carries_a_mappable_code(&rollback) {
+        caused_by.context(format!("the rollback that followed also failed: {rollback:#}"))
+    } else {
+        rollback.context(format!("this rollback followed an earlier failure: {caused_by:#}"))
+    };
+
+    if state_unknown && !SystemProxyStateUnknown::is_in(&combined) {
+        return combined.context(SystemProxyStateUnknown);
+    }
+    combined
+}
+
 /// Classify local macOS proxy failures without replacing their source chain.
 fn classify_local_failure(error: anyhow::Error) -> anyhow::Error {
     if !was_refused_locally(&error) {
@@ -945,6 +987,80 @@ mod tests {
         );
         assert_eq!(refusal_classification(Some(false)), SysproxyFailure::PrivilegeRequired);
         assert_eq!(refusal_classification(None), SysproxyFailure::PrivilegeRequired);
+    }
+
+    use super::{SystemProxyStateUnknown, rollback_failure};
+
+    fn mappable() -> anyhow::Error {
+        anyhow::anyhow!("networksetup refused").context(SysproxyFailure::PrivilegeRequired)
+    }
+
+    #[test]
+    fn a_rollback_that_can_be_explained_becomes_the_source() {
+        let combined = rollback_failure(anyhow::anyhow!("could not write the file"), mappable());
+
+        assert!(SysproxyFailure::from_chain(&combined).is_some());
+        assert!(format!("{combined:#}").contains("could not write the file"));
+    }
+
+    #[test]
+    fn the_causing_error_stays_the_source_when_it_is_the_one_that_can_be_explained() {
+        let combined = rollback_failure(mappable(), anyhow::anyhow!("could not restore the file"));
+
+        assert!(matches!(
+            SysproxyFailure::from_chain(&combined),
+            Some(SysproxyFailure::PrivilegeRequired)
+        ));
+        assert!(format!("{combined:#}").contains("could not restore the file"));
+    }
+
+    #[test]
+    fn a_state_marker_does_not_outrank_a_code_but_is_not_lost_to_it() {
+        let combined = rollback_failure(
+            anyhow::anyhow!("half applied").context(SystemProxyStateUnknown),
+            mappable(),
+        );
+
+        assert!(SysproxyFailure::from_chain(&combined).is_some());
+        assert!(SystemProxyStateUnknown::is_in(&combined));
+    }
+
+    #[test]
+    fn a_state_marker_on_the_source_is_left_where_it_is() {
+        let combined = rollback_failure(
+            mappable().context(SystemProxyStateUnknown),
+            anyhow::anyhow!("could not restore the file"),
+        );
+
+        assert!(SystemProxyStateUnknown::is_in(&combined));
+        assert!(SysproxyFailure::from_chain(&combined).is_some());
+    }
+
+    #[test]
+    fn with_both_mappable_the_causing_error_wins() {
+        let combined = rollback_failure(
+            mappable(),
+            anyhow::anyhow!("the service could not set it").context(SysproxyFailure::DirectFallback {
+                detail: "fell back to direct".to_owned(),
+            }),
+        );
+
+        assert!(matches!(
+            SysproxyFailure::from_chain(&combined),
+            Some(SysproxyFailure::PrivilegeRequired)
+        ));
+        assert!(format!("{combined:#}").contains("fell back to direct"));
+    }
+
+    #[test]
+    fn with_neither_mappable_the_causing_error_is_kept() {
+        let combined = rollback_failure(anyhow::anyhow!("persisting failed"), anyhow::anyhow!("rollback failed"));
+
+        assert!(SysproxyFailure::from_chain(&combined).is_none());
+        assert_eq!(
+            format!("{combined:#}"),
+            "the rollback that followed also failed: rollback failed: persisting failed"
+        );
     }
 
     #[test]
