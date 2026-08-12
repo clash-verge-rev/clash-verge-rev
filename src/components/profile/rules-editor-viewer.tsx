@@ -315,6 +315,12 @@ export const RulesEditorViewer = (props: Props) => {
                   onDelete={() => {
                     setPrependSeq(prependSeq.filter((v) => v !== item))
                   }}
+                  onAppend={() => {
+                    setAppendSeq((prev) =>
+                      prev.includes(item) ? prev : [...prev, item],
+                    )
+                    setPrependSeq(prependSeq.filter((v) => v !== item))
+                  }}
                 />
               )
             })}
@@ -362,6 +368,12 @@ export const RulesEditorViewer = (props: Props) => {
                   type="append"
                   ruleRaw={item}
                   onDelete={() => {
+                    setAppendSeq(appendSeq.filter((v) => v !== item))
+                  }}
+                  onPrepend={() => {
+                    setPrependSeq((prev) =>
+                      prev.includes(item) ? prev : [...prev, item],
+                    )
                     setAppendSeq(appendSeq.filter((v) => v !== item))
                   }}
                 />
