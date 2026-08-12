@@ -74,41 +74,48 @@ fn authoritative_state_from(
     }
 }
 
-/// What the OS currently holds, as far as we can prove it.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum OsProxyState {
-    /// Every protocol and PAC entry read back disabled.
-    Clean,
-    /// A proxy is enabled or its state is unknown.
-    DirtyOrUnknown,
+    AlreadyApplied,
+    DifferentOrUnknown,
 }
 
-/// Treat failed or enabled snapshots as dirty.
-fn classify_os_proxy_state(snapshot: Result<bool>) -> OsProxyState {
-    match snapshot {
-        Ok(true) => OsProxyState::Clean,
-        _ => OsProxyState::DirtyOrUnknown,
+fn target_is_already_in_place(snapshot: &sysproxy::ProxySnapshot, sys: &Sysproxy, auto: &Autoproxy) -> bool {
+    if auto.enable {
+        // PAC writes bypass state too.
+        snapshot.matches_pac(auto) && snapshot.bypass_matches(&sys.bypass)
+    } else if sys.enable {
+        snapshot.matches_global(sys)
+    } else {
+        // Bypass state is inert while every proxy is disabled.
+        snapshot.is_all_disabled()
     }
 }
 
-/// Read proxy state without invoking privileged writes.
+/// Treat failed reads as different so writes are skipped only with proof.
+fn classify_os_proxy_state(snapshot: Result<bool>) -> OsProxyState {
+    match snapshot {
+        Ok(true) => OsProxyState::AlreadyApplied,
+        _ => OsProxyState::DifferentOrUnknown,
+    }
+}
+
 #[cfg(target_os = "macos")]
-fn read_os_proxy_state() -> OsProxyState {
+fn read_os_proxy_state(sys: &Sysproxy, auto: &Autoproxy) -> OsProxyState {
     // Use the per-protocol snapshot rather than the synthesized proxy view.
-    let all_disabled = Sysproxy::snapshot()
-        .map(|snapshot| snapshot.is_all_disabled())
+    let already_applied = Sysproxy::snapshot()
+        .map(|snapshot| target_is_already_in_place(&snapshot, sys, auto))
         .map_err(anyhow::Error::from);
 
-    if let Err(err) = &all_disabled {
+    if let Err(err) = &already_applied {
         logging!(warn, Type::Core, "failed to read OS proxy snapshot: {err:#}");
     }
 
-    classify_os_proxy_state(all_disabled)
+    classify_os_proxy_state(already_applied)
 }
 
-/// Other platforms cannot prove the per-protocol state is clean.
 #[cfg(not(target_os = "macos"))]
-fn read_os_proxy_state() -> OsProxyState {
+fn read_os_proxy_state(_sys: &Sysproxy, _auto: &Autoproxy) -> OsProxyState {
     classify_os_proxy_state(Err(anyhow::anyhow!("per-protocol proxy snapshots are macOS only")))
 }
 
@@ -203,12 +210,12 @@ where
     }
 }
 
-async fn current_os_proxy_state() -> OsProxyState {
-    tokio::task::spawn_blocking(read_os_proxy_state)
+async fn current_os_proxy_state(sys: Sysproxy, auto: Autoproxy) -> OsProxyState {
+    tokio::task::spawn_blocking(move || read_os_proxy_state(&sys, &auto))
         .await
         .unwrap_or_else(|join_error| {
             logging!(warn, Type::Core, "failed to read OS proxy state: {join_error}");
-            OsProxyState::DirtyOrUnknown
+            OsProxyState::DifferentOrUnknown
         })
 }
 
@@ -442,11 +449,9 @@ impl Sysopt {
             );
         }
 
-        // Only macOS reads exactly the state its disable path writes.
+        // Skip writes only when macOS exactly matches the target.
         if cfg!(target_os = "macos")
-            && !sys.enable
-            && !auto.enable
-            && current_os_proxy_state().await == OsProxyState::Clean
+            && current_os_proxy_state(sys.clone(), auto.clone()).await == OsProxyState::AlreadyApplied
         {
             self.access_guard().write().set_guard_type(guard_type);
             return Ok(());
@@ -521,8 +526,11 @@ impl Sysopt {
             (sys.clone(), auto.clone())
         };
 
-        // Skip the privileged write only after the guard drained and macOS is clean.
-        if cfg!(target_os = "macos") && drained && current_os_proxy_state().await == OsProxyState::Clean {
+        // The match is trustworthy only after the guard drained.
+        if cfg!(target_os = "macos")
+            && drained
+            && current_os_proxy_state(sys.clone(), auto.clone()).await == OsProxyState::AlreadyApplied
+        {
             return Ok(());
         }
 
@@ -540,10 +548,11 @@ mod tests {
     use super::{
         AuthoritativeState, OsProxyState, ProxyApplyStep, SystemProxyStateUnknown, authoritative_state,
         authoritative_state_from, classify_os_proxy_state, disable_both, disable_until_the_last_write_is_ours,
-        first_failure, proxy_apply_steps, recover_from_failed_write,
+        first_failure, proxy_apply_steps, recover_from_failed_write, target_is_already_in_place,
     };
     use parking_lot::Mutex;
     use std::collections::VecDeque;
+    use sysproxy::{Autoproxy, Sysproxy};
 
     async fn record_disable_sequence(
         drained: bool,
@@ -829,17 +838,180 @@ mod tests {
         );
     }
 
-    #[test]
-    fn only_a_snapshot_that_says_everything_is_off_reads_as_clean() {
-        assert_eq!(classify_os_proxy_state(Ok(true)), OsProxyState::Clean);
-        assert_eq!(classify_os_proxy_state(Ok(false)), OsProxyState::DirtyOrUnknown);
+    fn holding_global(port: u16) -> sysproxy::ProxySnapshot {
+        let endpoint = || sysproxy::ProxyEndpoint {
+            host: "127.0.0.1".to_owned(),
+            port,
+            enable: true,
+            switched_on: true,
+        };
+        sysproxy::ProxySnapshot {
+            socks: endpoint(),
+            http: endpoint(),
+            https: endpoint(),
+            auto: sysproxy::Autoproxy {
+                url: std::string::String::new(),
+                enable: false,
+            },
+            auto_switched_on: false,
+            bypass: "localhost".to_owned(),
+        }
+    }
+
+    fn holding_nothing() -> sysproxy::ProxySnapshot {
+        let off = || sysproxy::ProxyEndpoint {
+            host: std::string::String::new(),
+            port: 0,
+            enable: false,
+            switched_on: false,
+        };
+        sysproxy::ProxySnapshot {
+            socks: off(),
+            http: off(),
+            https: off(),
+            auto: sysproxy::Autoproxy {
+                url: std::string::String::new(),
+                enable: false,
+            },
+            auto_switched_on: false,
+            bypass: std::string::String::new(),
+        }
+    }
+
+    fn global_target(port: u16) -> Sysproxy {
+        Sysproxy {
+            enable: true,
+            host: "127.0.0.1".to_owned(),
+            port,
+            bypass: "localhost".to_owned(),
+        }
+    }
+
+    fn pac_mode_target() -> Sysproxy {
+        Sysproxy {
+            enable: false,
+            ..global_target(7897)
+        }
+    }
+
+    fn pac_off() -> Autoproxy {
+        Autoproxy {
+            url: std::string::String::new(),
+            enable: false,
+        }
     }
 
     #[test]
-    fn a_failed_read_never_counts_as_clean() {
+    fn a_proxy_the_os_already_points_at_needs_no_write() {
+        assert!(target_is_already_in_place(
+            &holding_global(7897),
+            &global_target(7897),
+            &pac_off()
+        ));
+    }
+
+    #[test]
+    fn a_proxy_pointing_at_a_different_port_still_has_to_be_written() {
+        assert!(!target_is_already_in_place(
+            &holding_global(7897),
+            &global_target(7898),
+            &pac_off()
+        ));
+    }
+
+    #[test]
+    fn a_pac_target_asks_the_pac_question_and_not_the_global_one() {
+        let pac = Autoproxy {
+            url: "http://127.0.0.1:33333/commands/pac".to_owned(),
+            enable: true,
+        };
+        let mut os_holds_pac = holding_nothing();
+        os_holds_pac.auto = pac.clone();
+        os_holds_pac.auto_switched_on = true;
+        os_holds_pac.bypass = "localhost".to_owned();
+
+        assert!(target_is_already_in_place(&os_holds_pac, &pac_mode_target(), &pac));
+    }
+
+    #[test]
+    fn a_pac_target_whose_bypass_changed_still_has_to_be_written() {
+        let pac = Autoproxy {
+            url: "http://127.0.0.1:33333/commands/pac".to_owned(),
+            enable: true,
+        };
+        let mut os_holds_pac = holding_nothing();
+        os_holds_pac.auto = pac.clone();
+        os_holds_pac.auto_switched_on = true;
+        os_holds_pac.bypass = "localhost,example.com".to_owned();
+
+        assert!(!target_is_already_in_place(&os_holds_pac, &pac_mode_target(), &pac));
+    }
+
+    #[test]
+    fn a_switch_left_on_over_nothing_is_not_already_disabled() {
+        let mut stranded = holding_nothing();
+        stranded.http = sysproxy::ProxyEndpoint {
+            host: std::string::String::new(),
+            port: 0,
+            enable: false,
+            switched_on: true,
+        };
+
+        assert!(!target_is_already_in_place(
+            &stranded,
+            &Sysproxy {
+                enable: false,
+                ..global_target(7897)
+            },
+            &pac_off()
+        ));
+    }
+
+    #[test]
+    fn a_target_of_nothing_does_not_ask_about_the_bypass_list() {
+        let mut os_holds_nothing = holding_nothing();
+        os_holds_nothing.bypass = "something.else".to_owned();
+
+        assert!(target_is_already_in_place(
+            &os_holds_nothing,
+            &Sysproxy {
+                enable: false,
+                ..global_target(7897)
+            },
+            &pac_off()
+        ));
+    }
+
+    #[test]
+    fn a_target_of_nothing_asks_whether_the_os_holds_nothing() {
+        let nothing_wanted = Sysproxy {
+            enable: false,
+            ..global_target(7897)
+        };
+
+        assert!(target_is_already_in_place(
+            &holding_nothing(),
+            &nothing_wanted,
+            &pac_off()
+        ));
+        assert!(!target_is_already_in_place(
+            &holding_global(7897),
+            &nothing_wanted,
+            &pac_off()
+        ));
+    }
+
+    #[test]
+    fn only_a_snapshot_that_agrees_with_the_target_skips_the_write() {
+        assert_eq!(classify_os_proxy_state(Ok(true)), OsProxyState::AlreadyApplied);
+        assert_eq!(classify_os_proxy_state(Ok(false)), OsProxyState::DifferentOrUnknown);
+    }
+
+    #[test]
+    fn a_failed_read_never_counts_as_agreement() {
         assert_eq!(
             classify_os_proxy_state(Err(anyhow::anyhow!("read failed"))),
-            OsProxyState::DirtyOrUnknown
+            OsProxyState::DifferentOrUnknown
         );
     }
 
