@@ -31,8 +31,8 @@ pub async fn restart_clash_core() {
             handle::Handle::notice_message("set_config::ok", "ok");
         }
         Err(err) => {
-            handle::Handle::notice_message("set_config::error", format!("{err}"));
-            logging!(error, Type::Core, "{err}");
+            handle::Handle::notice_message("set_config::error", format!("{err:#}"));
+            logging!(error, Type::Core, "{err:#}");
         }
     }
 }

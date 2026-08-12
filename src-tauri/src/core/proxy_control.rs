@@ -344,7 +344,15 @@ async fn current_service_proxy_config(verge: &IVerge) -> Result<MacosProxyConfig
     service_proxy_config(verge, mixed_port, 0)
 }
 
-/// Record a classified proxy failure and return whether it was accepted.
+/// Return whether a classified failure remains pending.
+pub fn is_reportable(error: &anyhow::Error) -> bool {
+    is_reportable_given(error, notification::has_pending_failure)
+}
+
+fn is_reportable_given(error: &anyhow::Error, still_pending: impl FnOnce(&str) -> bool) -> bool {
+    SysproxyFailure::from_chain(error).is_some_and(|failure| still_pending(failure.code()))
+}
+
 pub fn report_failure(operation: FailedOperation, error: &anyhow::Error) -> bool {
     let Some(failure) = SysproxyFailure::from_chain(error) else {
         return false;
@@ -369,6 +377,45 @@ where
         "the system proxy guard did not stop in time; not writing the system proxy through the service"
     );
     write().await
+}
+
+#[derive(Debug)]
+enum TableEffect<'a> {
+    Retire { enabled: bool },
+    File(FailedOperation, &'a anyhow::Error),
+    Nothing,
+}
+
+/// A successful clear does not resolve a failed request to enable the proxy.
+fn clear_table_effect(result: &Result<()>) -> TableEffect<'_> {
+    match result {
+        Err(error) if SysproxyFailure::from_chain(error).is_some() => {
+            TableEffect::File(notification::what_was_asked(), error)
+        }
+        Ok(()) | Err(_) => TableEffect::Nothing,
+    }
+}
+
+fn settle_table<Retire, File>(effect: TableEffect<'_>, retire: Retire, file: File)
+where
+    Retire: FnOnce(bool),
+    File: FnOnce(FailedOperation, &anyhow::Error),
+{
+    match effect {
+        TableEffect::Retire { enabled } => retire(enabled),
+        TableEffect::File(operation, error) => file(operation, error),
+        TableEffect::Nothing => {}
+    }
+}
+
+fn table_effect(result: &Result<()>, enabled: bool) -> TableEffect<'_> {
+    match result {
+        Ok(()) => TableEffect::Retire { enabled },
+        Err(error) if SysproxyFailure::from_chain(error).is_some() => {
+            TableEffect::File(notification::what_was_asked(), error)
+        }
+        Err(_) => TableEffect::Nothing,
+    }
 }
 
 pub async fn apply() -> Result<()> {
@@ -396,14 +443,31 @@ pub async fn apply() -> Result<()> {
             .await
         }
     };
-    // Any successful apply resolves earlier proxy failures.
-    if result.is_ok() {
-        notification::retire_system_proxy_failures(enabled);
-    }
+    // Settle failures where every proxy-apply path converges.
+    settle_table(
+        table_effect(&result, enabled),
+        notification::retire_system_proxy_failures,
+        |operation, error| {
+            report_failure(operation, error);
+        },
+    );
     result
 }
 
 pub async fn clear() -> Result<()> {
+    let result = clear_inner().await;
+    // Clear failures must be filed even when a restart aborts before apply.
+    settle_table(
+        clear_table_effect(&result),
+        notification::retire_system_proxy_failures,
+        |operation, error| {
+            report_failure(operation, error);
+        },
+    );
+    result
+}
+
+async fn clear_inner() -> Result<()> {
     let running_mode = CoreManager::global().get_running_mode();
     match proxy_backend_route(cfg!(target_os = "macos"), &running_mode) {
         ProxyBackendRoute::Local => Sysopt::global().reset_sysproxy().await.map_err(classify_local_failure),
@@ -989,10 +1053,102 @@ mod tests {
         assert_eq!(refusal_classification(None), SysproxyFailure::PrivilegeRequired);
     }
 
-    use super::{SystemProxyStateUnknown, rollback_failure};
+    use super::{SystemProxyStateUnknown, is_reportable_given, rollback_failure};
 
     fn mappable() -> anyhow::Error {
         anyhow::anyhow!("networksetup refused").context(SysproxyFailure::PrivilegeRequired)
+    }
+
+    fn record_settlement(effect: super::TableEffect<'_>) -> Vec<String> {
+        let events = Mutex::new(Vec::new());
+        super::settle_table(
+            effect,
+            |enabled| events.lock().push(format!("retire:{enabled}")),
+            |operation, _| events.lock().push(format!("file:{operation:?}")),
+        );
+        events.into_inner()
+    }
+
+    #[test]
+    fn each_effect_reaches_the_table_it_names() {
+        assert_eq!(
+            record_settlement(super::TableEffect::Retire { enabled: true }),
+            vec!["retire:true"]
+        );
+        assert_eq!(
+            record_settlement(super::TableEffect::File(
+                FailedOperation::SystemProxyRestore,
+                &mappable()
+            )),
+            vec!["file:SystemProxyRestore"]
+        );
+        assert!(record_settlement(super::TableEffect::Nothing).is_empty());
+    }
+
+    #[test]
+    fn a_clear_files_its_failure_and_says_nothing_when_it_works() {
+        assert!(matches!(
+            super::clear_table_effect(&Err(mappable())),
+            super::TableEffect::File(FailedOperation::SystemProxyRestore, _)
+        ));
+        assert!(matches!(
+            super::clear_table_effect(&Ok(())),
+            super::TableEffect::Nothing
+        ));
+        assert!(matches!(
+            super::clear_table_effect(&Err(anyhow::anyhow!("the core was already gone"))),
+            super::TableEffect::Nothing
+        ));
+    }
+
+    #[test]
+    fn a_clean_apply_retires_in_the_direction_it_reached() {
+        assert!(matches!(
+            super::table_effect(&Ok(()), true),
+            super::TableEffect::Retire { enabled: true }
+        ));
+        assert!(matches!(
+            super::table_effect(&Ok(()), false),
+            super::TableEffect::Retire { enabled: false }
+        ));
+    }
+
+    #[test]
+    fn a_failure_that_can_be_explained_is_filed_here_as_a_restore() {
+        assert!(matches!(
+            super::table_effect(&Err(mappable()), true),
+            super::TableEffect::File(FailedOperation::SystemProxyRestore, _)
+        ));
+    }
+
+    #[tokio::test]
+    async fn a_failure_is_filed_as_whatever_the_caller_declared() {
+        let (applied, cleared) = super::notification::asking_for(FailedOperation::SystemProxyEnable, async {
+            let (apply_error, clear_error) = (mappable(), mappable());
+            (
+                format!("{:?}", super::table_effect(&Err(apply_error), true)),
+                format!("{:?}", super::clear_table_effect(&Err(clear_error))),
+            )
+        })
+        .await;
+
+        assert!(applied.contains("File(SystemProxyEnable"), "{applied}");
+        assert!(cleared.contains("File(SystemProxyEnable"), "{cleared}");
+    }
+
+    #[test]
+    fn telling_the_user_to_look_needs_something_there_to_find() {
+        assert!(is_reportable_given(&mappable(), |_| true));
+        assert!(!is_reportable_given(&mappable(), |_| false));
+        assert!(!is_reportable_given(&anyhow::anyhow!("the core exited"), |_| true));
+    }
+
+    #[test]
+    fn a_failure_with_nothing_to_say_is_not_filed() {
+        assert!(matches!(
+            super::table_effect(&Err(anyhow::anyhow!("the core exited immediately")), true),
+            super::TableEffect::Nothing
+        ));
     }
 
     #[test]

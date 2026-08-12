@@ -1,6 +1,10 @@
 use crate::{
     config::{Config, IVerge, MixedPort},
-    core::{handle, notification::FailedOperation, proxy_control},
+    core::{
+        handle,
+        notification::{self, FailedOperation},
+        proxy_control,
+    },
     utils::{
         notification::{NotificationEvent, needs_system_notification, notify_event},
         window_manager::WindowManager,
@@ -25,12 +29,15 @@ pub async fn toggle_system_proxy() -> Option<bool> {
     }
 
     let requested = !current;
-    let patch_result = super::patch_verge(
-        &IVerge {
-            enable_system_proxy: Some(requested),
-            ..IVerge::default()
-        },
-        false,
+    let patch_result = notification::asking_for(
+        toggle_operation(requested),
+        Box::pin(super::patch_verge(
+            &IVerge {
+                enable_system_proxy: Some(requested),
+                ..IVerge::default()
+            },
+            false,
+        )),
     )
     .await;
 
@@ -41,15 +48,15 @@ pub async fn toggle_system_proxy() -> Option<bool> {
         }
         Err(err) => {
             logging!(error, Type::ProxyMode, "{err:#}");
-            report_toggle_failure(requested, &err).await;
+            report_toggle_failure(&err).await;
             None
         }
     }
 }
 
-/// Persist a classified failure and notify when no window can show it.
-async fn report_toggle_failure(requested: bool, error: &anyhow::Error) {
-    let recorded = proxy_control::report_failure(toggle_operation(requested), error);
+/// Notify only when a classified failure remains pending.
+async fn report_toggle_failure(error: &anyhow::Error) {
+    let recorded = proxy_control::is_reportable(error);
 
     if recorded && needs_system_notification(WindowManager::get_main_window_state()) {
         notify_event(NotificationEvent::SystemProxyFailed).await;
