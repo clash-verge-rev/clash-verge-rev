@@ -233,8 +233,11 @@ export interface TranslationResources {
         }
         sysproxyPrivilege: {
           alternative: string
+          applying: string
+          installing: string
           later: string
           message: string
+          restarting: string
           serviceReadyMessage: string
           title: string
         }

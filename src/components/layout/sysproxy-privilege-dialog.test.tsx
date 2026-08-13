@@ -199,6 +199,67 @@ it('checks what actually happened rather than trusting the restart', async () =>
   )
 })
 
+const deferred = () => {
+  let resolve!: () => void
+  const promise = new Promise<void>((r) => {
+    resolve = r
+  })
+  return { promise, resolve }
+}
+
+it('says which part of the wait it is in, rather than looking stuck', async () => {
+  const installing = deferred()
+  const restarting = deferred()
+  const applying = deferred()
+  installService.mockImplementation(() => installing.promise)
+  restartCore.mockImplementation(() => restarting.promise)
+  patchVergeConfig.mockImplementation(() => applying.promise)
+
+  await showing('SYSPROXY_PRIVILEGE_REQUIRED')
+  clickPrimary('settings.sections.proxyControl.actions.installService')
+
+  await screen.findByText('layout.components.sysproxyPrivilege.installing')
+  installing.resolve()
+
+  await screen.findByText('layout.components.sysproxyPrivilege.restarting')
+  restarting.resolve()
+
+  await screen.findByText('layout.components.sysproxyPrivilege.applying')
+  applying.resolve()
+
+  await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+})
+
+it('does not claim to be installing when only a restart is needed', async () => {
+  const restarting = deferred()
+  restartCore.mockImplementation(() => restarting.promise)
+
+  await showing('SYSPROXY_SIDECAR_WHILE_SERVICE_READY')
+  clickPrimary('settings.sections.proxyControl.actions.switchToServiceMode')
+
+  await screen.findByText('layout.components.sysproxyPrivilege.restarting')
+  expect(
+    screen.queryByText('layout.components.sysproxyPrivilege.installing'),
+  ).toBeNull()
+  restarting.resolve()
+})
+
+it('offers no way out while the installer is holding a password prompt', async () => {
+  const installing = deferred()
+  installService.mockImplementation(() => installing.promise)
+
+  await showing('SYSPROXY_PRIVILEGE_REQUIRED')
+  clickPrimary('settings.sections.proxyControl.actions.installService')
+
+  await screen.findByText('layout.components.sysproxyPrivilege.installing')
+  expect(
+    screen.queryByRole('button', {
+      name: 'layout.components.sysproxyPrivilege.later',
+    }),
+  ).toBeNull()
+  installing.resolve()
+})
+
 it('closes once the core is on the service, whatever the table still says', async () => {
   await showing('SYSPROXY_PRIVILEGE_REQUIRED')
 

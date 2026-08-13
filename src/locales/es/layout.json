@@ -42,7 +42,10 @@
       "message": "macOS rechazó el cambio por falta de permisos. Al instalar el servicio de Clash Verge, este aplicará los cambios de proxy como administrador y este aviso no volverá a aparecer.",
       "serviceReadyMessage": "El servicio de Clash Verge está listo, pero el núcleo sigue ejecutándose como sidecar, por eso se rechazó la configuración del proxy. Cambiar al modo servicio lo resuelve sin reinstalar.",
       "alternative": "Otra opción: desactiva «requerir contraseña de administrador para acceder a los ajustes de todo el sistema» en Ajustes del Sistema → Privacidad y seguridad → Avanzado.",
-      "later": "Más tarde"
+      "later": "Más tarde",
+      "installing": "Instalando el servicio del sistema. Puede pedir una contraseña de administrador.",
+      "restarting": "Servicio instalado. Reiniciando el núcleo a través de él…",
+      "applying": "Aplicando tu cambio de proxy del sistema…"
     }
   },
   "feedback": {

@@ -1,4 +1,4 @@
-import { Alert, Typography } from '@mui/material'
+import { Alert, LinearProgress, Typography } from '@mui/material'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -32,21 +32,31 @@ const stateToRestore = (operation: FailedOperation): boolean | undefined => {
   }
 }
 
+type Step = 'idle' | 'installing' | 'restarting' | 'applying'
+
+const STEP_MESSAGE = {
+  installing: 'layout.components.sysproxyPrivilege.installing',
+  restarting: 'layout.components.sysproxyPrivilege.restarting',
+  applying: 'layout.components.sysproxyPrivilege.applying',
+} as const
+
 /** Guide recovery from a refused system-proxy write. */
 export const SysproxyPrivilegeDialog = () => {
   const { t } = useTranslation()
   const { failure, dismiss } = useDialogFailure()
-  const [loading, setLoading] = useState(false)
+  const [step, setStep] = useState<Step>('idle')
+  const loading = step !== 'idle'
 
   const remedy = failure ? remedyFor(failure.code) : 'installAndRestart'
   const restoring = failure ? stateToRestore(failure.operation) : undefined
 
   const handleFix = async () => {
-    setLoading(true)
     try {
       if (remedy === 'installAndRestart') {
+        setStep('installing')
         await installService()
       }
+      setStep('restarting')
       await restartCore()
 
       // Verify that restart actually moved the core into the service.
@@ -54,6 +64,7 @@ export const SysproxyPrivilegeDialog = () => {
       if (runState.mode === 'Service') {
         // Retry the original request now that the service can apply it.
         if (restoring !== undefined) {
+          setStep('applying')
           await patchVergeConfig({ enable_system_proxy: restoring })
         }
         showNotice.success(
@@ -71,7 +82,7 @@ export const SysproxyPrivilegeDialog = () => {
     } catch (error) {
       showNotice.error(error)
     } finally {
-      setLoading(false)
+      setStep('idle')
     }
   }
 
@@ -85,21 +96,24 @@ export const SysproxyPrivilegeDialog = () => {
           : 'settings.sections.proxyControl.actions.switchToServiceMode',
       )}
       cancelBtn={t('layout.components.sysproxyPrivilege.later')}
-      disableOk={loading}
+      // Keep the primary spinner visible; only cancellation is unavailable.
       disableCancel={loading}
       loading={loading}
       onOk={() => void handleFix()}
       onCancel={dismiss}
       onClose={dismiss}
     >
-      <Alert severity="warning" sx={{ mb: 1.5 }}>
+      <Alert severity={loading ? 'info' : 'warning'} sx={{ mb: 1.5 }}>
         {t(
-          remedy === 'installAndRestart'
-            ? 'layout.components.sysproxyPrivilege.message'
-            : 'layout.components.sysproxyPrivilege.serviceReadyMessage',
+          step !== 'idle'
+            ? STEP_MESSAGE[step]
+            : remedy === 'installAndRestart'
+              ? 'layout.components.sysproxyPrivilege.message'
+              : 'layout.components.sysproxyPrivilege.serviceReadyMessage',
         )}
       </Alert>
-      {remedy === 'installAndRestart' && (
+      {loading && <LinearProgress />}
+      {!loading && remedy === 'installAndRestart' && (
         <Typography variant="body2" color="text.secondary">
           {t('layout.components.sysproxyPrivilege.alternative')}
         </Typography>
