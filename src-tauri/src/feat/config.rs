@@ -211,9 +211,6 @@ async fn process_terminated_flags(update_flags: UpdateFlags, patch: &IVerge) -> 
         CoreManager::global().update_config_checked().await?;
         handle::Handle::refresh_clash();
     }
-    if update_flags.contains(UpdateFlags::VERGE_CONFIG) {
-        handle::Handle::refresh_verge();
-    }
     if update_flags.contains(UpdateFlags::LAUNCH) {
         autostart::update_launch().await?;
     }
@@ -223,13 +220,9 @@ async fn process_terminated_flags(update_flags: UpdateFlags, patch: &IVerge) -> 
         clash_verge_i18n::set_locale(language.as_str());
     }
     if update_flags.contains(UpdateFlags::SYS_PROXY) {
-        {
-            let manager = CoreManager::global();
-            let _lifecycle = manager.lifecycle_lock.lock().await;
-            manager.apply_proxy_after_start().await?;
-        }
-        // Notify readers after apply succeeds and the lifecycle lock is released.
-        handle::Handle::refresh_verge();
+        let manager = CoreManager::global();
+        let _lifecycle = manager.lifecycle_lock.lock().await;
+        manager.apply_proxy_after_start().await?;
     }
     if update_flags.contains(UpdateFlags::HOTKEY)
         && let Some(hotkeys) = &patch.hotkeys
@@ -317,6 +310,7 @@ pub(super) async fn apply_verge_patch(patch: &IVerge, not_save_file: bool) -> Re
         // Commit the safe state after a user-requested proxy patch partly lands.
         verge.edit_draft(|d| d.enable_system_proxy = Some(false));
         transaction.commit();
+        announce_verge_change();
         // Persist the forced-off value even when the original patch was pre-saved.
         let unsaved = verge.data_arc().save_file().await.err();
         return Err(match unsaved {
@@ -327,6 +321,7 @@ pub(super) async fn apply_verge_patch(patch: &IVerge, not_save_file: bool) -> Re
         });
     }
     transaction.commit();
+    announce_verge_change();
 
     logging_error!(Type::Backup, AutoBackupManager::global().refresh_settings().await);
     if !not_save_file {
@@ -336,6 +331,10 @@ pub(super) async fn apply_verge_patch(patch: &IVerge, not_save_file: bool) -> Re
         verge_data.save_file().await?;
     }
     Ok(())
+}
+
+fn announce_verge_change() {
+    handle::Handle::refresh_verge();
 }
 
 /// Whether a user proxy patch may commit disabled after a partial write.

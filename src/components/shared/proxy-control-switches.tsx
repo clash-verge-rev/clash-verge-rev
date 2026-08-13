@@ -33,7 +33,8 @@ interface SwitchRowProps {
   infoTitle: string
   onInfoClick?: () => void
   extraIcons?: React.ReactNode
-  onToggle: (value: boolean) => Promise<void>
+  /** Return false to roll back without reporting an error. */
+  onToggle: (value: boolean) => Promise<boolean | void>
   onError?: (err: Error) => void
   highlight?: boolean
 }
@@ -67,6 +68,9 @@ const SwitchRow = ({
     pendingRef.current = true
     setChecked(value)
     onToggle(value)
+      .then((applied) => {
+        if (applied === false) setChecked(active)
+      })
       .catch((err: any) => {
         setChecked(active)
         onError?.(err)
@@ -148,10 +152,7 @@ const ProxyControlSwitches = ({
         reason: 'tunNeedsService',
         restore: { enable_tun_mode: value },
       })
-      // Reject so the optimistic switch rolls back until recovery applies it.
-      throw new Error(
-        t('settings.sections.proxyControl.tooltips.tunUnavailable'),
-      )
+      return false
     }
     mutateVerge({ ...verge, enable_tun_mode: value }, false)
     await patchVerge({ enable_tun_mode: value })

@@ -8,6 +8,7 @@ import {
 } from '@testing-library/react'
 import { afterEach, expect, it, vi } from 'vitest'
 
+import { getSnapshotNotices, hideNotice } from '@/services/notice-service'
 import {
   clearServiceRequest,
   getServiceRequest,
@@ -58,6 +59,7 @@ afterEach(() => {
   isTunModeAvailable.current = false
   tunEnabled.current = false
   clearServiceRequest()
+  getSnapshotNotices().forEach((notice) => hideNotice(notice.id))
   cleanup()
 })
 
@@ -123,4 +125,21 @@ it('does not ask for a service in order to turn TUN off', async () => {
     expect(patchVerge).toHaveBeenCalledWith({ enable_tun_mode: false }),
   )
   expect(getServiceRequest()).toBeNull()
+})
+
+it('says nothing beside the dialog it just opened', async () => {
+  const onError = vi.fn()
+  render(
+    <ProxyControlSwitches
+      label="settings.sections.system.toggles.tunMode"
+      onError={onError}
+    />,
+  )
+
+  flip()
+
+  await waitFor(() => expect(getServiceRequest()).not.toBeNull())
+  await waitFor(() => expect(theSwitch().checked).toBe(false))
+  expect(onError).not.toHaveBeenCalled()
+  expect(getSnapshotNotices()).toEqual([])
 })
