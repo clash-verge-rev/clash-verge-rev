@@ -89,34 +89,47 @@ describe('system proxy failures the user can be told about', () => {
     })
   })
 
-  it('explains a refused privileged write', () => {
+  it('explains a guard that gave up', () => {
     showNotice.error({
-      code: 'SYSPROXY_PRIVILEGE_REQUIRED',
-      detail: 'admin privileges required to modify system proxy',
+      code: 'SYSPROXY_GUARD_STOPPED',
+      detail: 'the proxy could not be reasserted',
     })
 
     expect(renderedExplanation()).toEqual({
       outerKey: 'shared.feedback.notices.prefixedRaw',
-      explanationKey: 'settings.feedback.errors.sysproxy.privilegeRequired',
+      explanationKey: 'settings.feedback.errors.sysproxy.guardStopped',
       prefix: undefined,
+      detail: 'the proxy could not be reasserted',
+    })
+  })
+
+  it('says nothing at all about a failure a dialog is already reporting', () => {
+    showNotice.error({
+      code: 'SYSPROXY_PRIVILEGE_REQUIRED',
       detail: 'admin privileges required to modify system proxy',
     })
+    showNotice.error({
+      code: 'SYSPROXY_SIDECAR_WHILE_SERVICE_READY',
+      detail: 'the core is still a sidecar',
+    })
+
+    expect(getSnapshotNotices()).toEqual([])
   })
 
   it('explains the cause even when the caller names the operation', () => {
     showNotice.error(
       'layout.components.serviceMigration.errors.restartFailed',
       {
-        code: 'SYSPROXY_PRIVILEGE_REQUIRED',
-        detail: 'admin privileges required to modify system proxy',
+        code: 'SYSPROXY_GUARD_STOPPED',
+        detail: 'the proxy could not be reasserted',
       },
     )
 
     expect(renderedExplanation()).toEqual({
       outerKey: 'shared.feedback.notices.prefixedRaw',
-      explanationKey: 'settings.feedback.errors.sysproxy.privilegeRequired',
+      explanationKey: 'settings.feedback.errors.sysproxy.guardStopped',
       prefix: undefined,
-      detail: 'admin privileges required to modify system proxy',
+      detail: 'the proxy could not be reasserted',
     })
   })
 
@@ -139,30 +152,15 @@ describe('system proxy failures the user can be told about', () => {
 
   it('leaves literal caller text in place, mapped code or not', () => {
     showNotice.error('Could not reconnect the profile', {
-      code: 'SYSPROXY_PRIVILEGE_REQUIRED',
-      detail: 'admin privileges required to modify system proxy',
+      code: 'SYSPROXY_GUARD_STOPPED',
+      detail: 'the proxy could not be reasserted',
     })
 
     expect(renderedExplanation()).toEqual({
       outerKey: 'shared.feedback.notices.prefixedRaw',
       explanationKey: undefined,
       prefix: 'Could not reconnect the profile',
-      detail: 'admin privileges required to modify system proxy',
-    })
-  })
-
-  it('explains a core running in the wrong place', () => {
-    showNotice.error({
-      code: 'SYSPROXY_SIDECAR_WHILE_SERVICE_READY',
-      detail: 'admin privileges required to modify system proxy',
-    })
-
-    expect(renderedExplanation()).toEqual({
-      outerKey: 'shared.feedback.notices.prefixedRaw',
-      explanationKey:
-        'settings.feedback.errors.sysproxy.sidecarWhileServiceReady',
-      prefix: undefined,
-      detail: 'admin privileges required to modify system proxy',
+      detail: 'the proxy could not be reasserted',
     })
   })
 

@@ -116,234 +116,31 @@ it('renders a failure inside a descriptor, not [object Object]', () => {
   expect(noticeText()).toBe('Backup failed: webdav returned 401')
 })
 
-it('offers to fix a core running in the wrong place, and stops offering once it is fixed', async () => {
-  showNotice.error({
-    code: 'SYSPROXY_SIDECAR_WHILE_SERVICE_READY',
-    detail: 'admin privileges required to modify system proxy',
-  })
-  render(<NoticeManager />)
-
-  fireEvent.click(
-    screen.getByRole('button', {
-      name: 'settings.sections.proxyControl.actions.switchToServiceMode',
-    }),
-  )
-
-  await waitFor(() => expect(restartCore).toHaveBeenCalledOnce())
-  await waitFor(() =>
-    expect(
-      screen.queryByRole('button', {
-        name: 'settings.sections.proxyControl.actions.switchToServiceMode',
-      }),
-    ).toBeNull(),
-  )
-})
-
-it('keeps the offer when the restart did not reach the service', async () => {
-  restartCore.mockRejectedValue({ code: 'CORE_RESTART_FAILED', detail: 'no' })
-  getRuntimeState.mockResolvedValue({ mode: 'Sidecar', serviceUsable: true })
-  showNotice.error({
-    code: 'SYSPROXY_SIDECAR_WHILE_SERVICE_READY',
-    detail: 'admin privileges required to modify system proxy',
-  })
-  render(<NoticeManager />)
-
-  fireEvent.click(
-    screen.getByRole('button', {
-      name: 'settings.sections.proxyControl.actions.switchToServiceMode',
-    }),
-  )
-
-  await waitFor(() => expect(getRuntimeState).toHaveBeenCalledOnce())
-  expect(
-    screen.getByRole('button', {
-      name: 'settings.sections.proxyControl.actions.switchToServiceMode',
-    }),
-  ).toBeTruthy()
-})
-
-it('does not let a notice offering a fix expire while the user reads it', () => {
-  showNotice.error({
-    code: 'SYSPROXY_SIDECAR_WHILE_SERVICE_READY',
-    detail: 'admin privileges required to modify system proxy',
-  })
-
-  expect(getSnapshotNotices().at(-1)?.duration).toBe(0)
-})
-
 it('leaves the ordinary lifetime alone where there is nothing to offer', () => {
   showNotice.error({ code: 'CORE_START_FAILED', detail: 'connection refused' })
 
   expect(getSnapshotNotices().at(-1)?.duration).toBeGreaterThan(0)
 })
 
-it('does not offer a fix it has none for', async () => {
-  showNotice.error({ code: 'CORE_START_FAILED', detail: 'connection refused' })
-  render(<NoticeManager />)
-
-  expect(screen.getAllByRole('button')).toHaveLength(1)
-})
-
-it('finds the code a caller interpolated into its own message', async () => {
+it('finds the code a caller interpolated into its own message', () => {
   showNotice.error('settings.modals.backup.messages.backupFailed', {
-    error: {
-      code: 'SYSPROXY_SIDECAR_WHILE_SERVICE_READY',
-      detail: 'webdav returned 401',
-    },
+    error: { code: 'SYSPROXY_GUARD_STOPPED', detail: 'the guard gave up' },
   })
-  render(<NoticeManager />)
 
-  expect(
-    screen.getByRole('button', {
-      name: 'settings.sections.proxyControl.actions.switchToServiceMode',
-    }),
-  ).toBeTruthy()
+  expect(getSnapshotNotices().at(-1)?.code).toBe('SYSPROXY_GUARD_STOPPED')
 })
-
-it('dismisses by code, so a replacement does not survive the fix', async () => {
-  let finishRestart: (() => void) | undefined
-  restartCore.mockImplementationOnce(
-    () =>
-      new Promise<void>((resolve) => {
-        finishRestart = () => resolve()
-      }),
-  )
-  showNotice.error({
-    code: 'SYSPROXY_SIDECAR_WHILE_SERVICE_READY',
-    detail: 'first',
-  })
-  render(<NoticeManager />)
-
-  fireEvent.click(
-    screen.getByRole('button', {
-      name: 'settings.sections.proxyControl.actions.switchToServiceMode',
-    }),
-  )
-  await waitFor(() => expect(restartCore).toHaveBeenCalledOnce())
-
-  showNotice.error({
-    code: 'SYSPROXY_SIDECAR_WHILE_SERVICE_READY',
-    detail: 'second',
-  })
-  finishRestart?.()
-
-  await waitFor(() =>
-    expect(
-      screen.queryByRole('button', {
-        name: 'settings.sections.proxyControl.actions.switchToServiceMode',
-      }),
-    ).toBeNull(),
-  )
-})
-
 it('shows one notice per code, replacing rather than stacking', async () => {
-  showNotice.error({ code: 'SYSPROXY_PRIVILEGE_REQUIRED', detail: 'first' })
-  showNotice.error({ code: 'SYSPROXY_PRIVILEGE_REQUIRED', detail: 'second' })
+  showNotice.error({ code: 'SYSPROXY_GUARD_STOPPED', detail: 'first' })
+  showNotice.error({ code: 'SYSPROXY_GUARD_STOPPED', detail: 'second' })
   render(<NoticeManager />)
 
   expect(screen.getAllByRole('alert')).toHaveLength(1)
   expect(screen.getByRole('alert').textContent).toContain('second')
 })
 
-const clickInstall = () =>
-  fireEvent.click(
-    screen.getByRole('button', {
-      name: 'settings.sections.proxyControl.actions.installService',
-    }),
-  )
-
-const showRefusal = () =>
-  showNotice.error({
-    code: 'SYSPROXY_PRIVILEGE_REQUIRED',
-    detail: 'admin privileges required to modify system proxy',
-  })
-
-it('installs the service, restarts into it, and says what is left to do', async () => {
-  showRefusal()
-  render(<NoticeManager />)
-
-  clickInstall()
-
-  await waitFor(() => expect(installService).toHaveBeenCalledOnce())
-  await waitFor(() => expect(restartCore).toHaveBeenCalledOnce())
-  await waitFor(() =>
-    expect(
-      screen
-        .getAllByRole('alert')
-        .some((alert) =>
-          alert.textContent?.includes(
-            'settings.sections.proxyControl.messages.installedCheckProxy',
-          ),
-        ),
-    ).toBe(true),
-  )
-})
-
-it('checks what actually happened rather than trusting the restart', async () => {
-  restartCore.mockRejectedValue({ code: 'CORE_RESTART_FAILED', detail: 'no' })
-  getRuntimeState.mockResolvedValue({ mode: 'Sidecar', serviceUsable: true })
-  showRefusal()
-  render(<NoticeManager />)
-
-  clickInstall()
-
-  await waitFor(() =>
-    expect(
-      screen.getByRole('button', {
-        name: 'settings.sections.proxyControl.actions.switchToServiceMode',
-      }),
-    ).toBeTruthy(),
-  )
-  expect(
-    screen.queryByRole('button', {
-      name: 'settings.sections.proxyControl.actions.installService',
-    }),
-  ).toBeNull()
-})
-
-it('says so plainly when the core did not end up on the service', async () => {
-  getRuntimeState.mockResolvedValue({ mode: 'Sidecar', serviceUsable: false })
-  showRefusal()
-  render(<NoticeManager />)
-
-  clickInstall()
-
-  await waitFor(() =>
-    expect(
-      screen
-        .getAllByRole('alert')
-        .some((alert) =>
-          alert.textContent?.includes(
-            'settings.sections.proxyControl.messages.installedCoreNotOnService',
-          ),
-        ),
-    ).toBe(true),
-  )
-})
-
-it('does not go on to restart when the install itself failed', async () => {
-  installService.mockRejectedValue({
-    code: 'SERVICE_INSTALL_FAILED',
-    detail: 'user cancelled',
-  })
-  showRefusal()
-  render(<NoticeManager />)
-
-  clickInstall()
-
-  await waitFor(() => expect(installService).toHaveBeenCalledOnce())
-  expect(restartCore).not.toHaveBeenCalled()
-  expect(getRuntimeState).not.toHaveBeenCalled()
-  expect(
-    screen.getByRole('button', {
-      name: 'settings.sections.proxyControl.actions.installService',
-    }),
-  ).toBeTruthy()
-})
-
 it('remembers which way the user was asking, for whoever acts on it next', () => {
   showNotice.error({
-    code: 'SYSPROXY_PRIVILEGE_REQUIRED',
+    code: 'SYSPROXY_GUARD_STOPPED',
     detail: 'admin privileges required to modify system proxy',
     operation: 'systemProxyEnable',
   })

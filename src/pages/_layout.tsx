@@ -37,6 +37,7 @@ import { LayoutItem } from '@/components/layout/layout-item'
 import { LayoutTraffic } from '@/components/layout/layout-traffic'
 import { NoticeManager } from '@/components/layout/notice-manager'
 import { ServiceMigrationDialog } from '@/components/layout/service-migration-dialog'
+import { SysproxyPrivilegeDialog } from '@/components/layout/sysproxy-privilege-dialog'
 import { UpdateButton } from '@/components/layout/update-button'
 import {
   WindowControls,
@@ -282,6 +283,7 @@ const Layout = () => {
       {/* 左侧底部窗口控制按钮 */}
       <NoticeManager position={verge?.notice_position} />
       <ServiceMigrationDialog />
+      <SysproxyPrivilegeDialog />
       <div
         style={{
           animation: 'fadeIn 0.5s',

@@ -231,6 +231,13 @@ export interface TranslationResources {
           title: string
           unavailableMessage: string
         }
+        sysproxyPrivilege: {
+          alternative: string
+          later: string
+          message: string
+          serviceReadyMessage: string
+          title: string
+        }
       }
       feedback: {
         errors: {

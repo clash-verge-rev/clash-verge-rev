@@ -1,11 +1,11 @@
 // @vitest-environment jsdom
-import { cleanup, renderHook, waitFor } from '@testing-library/react'
+import { act, cleanup, renderHook, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, expect, it, vi } from 'vitest'
 
 import type { PendingFailure } from '@/services/cmds'
 import { getSnapshotNotices, hideNotice } from '@/services/notice-service'
 
-import { usePendingFailures } from './use-pending-failures'
+import { useDialogFailure, usePendingFailures } from './use-pending-failures'
 
 const getPendingFailures = vi.hoisted(() => vi.fn())
 const onFocusChanged = vi.hoisted(() => vi.fn())
@@ -34,9 +34,16 @@ vi.mock('@/services/events', () => ({
 }))
 
 const failure = (sequence: number, detail: string): PendingFailure => ({
-  code: 'SYSPROXY_PRIVILEGE_REQUIRED',
+  code: 'SYSPROXY_GUARD_STOPPED',
   detail,
-  operation: 'systemProxyRestore',
+  operation: 'systemProxyGuard',
+  sequence,
+})
+
+const dialogFailure = (sequence: number): PendingFailure => ({
+  code: 'SYSPROXY_PRIVILEGE_REQUIRED',
+  detail: 'refused',
+  operation: 'systemProxyEnable',
   sequence,
 })
 
@@ -172,4 +179,50 @@ it('ignores losing focus', async () => {
   focusListener?.({ payload: false })
 
   expect(getPendingFailures).toHaveBeenCalledTimes(1)
+})
+
+it('leaves a failure the dialog owns out of the toasts', async () => {
+  table = [dialogFailure(1), failure(2, 'guard gave up')]
+  renderHook(() => usePendingFailures())
+  onSubscribed?.()
+
+  await waitFor(() => expect(shownDetails()).toEqual(['guard gave up']))
+})
+
+it('offers the dialog the failure it owns, and nothing else', async () => {
+  table = [failure(1, 'guard gave up'), dialogFailure(2)]
+  const { result } = renderHook(() => useDialogFailure())
+  onSubscribed?.()
+
+  await waitFor(() =>
+    expect(result.current.failure?.code).toBe('SYSPROXY_PRIVILEGE_REQUIRED'),
+  )
+})
+
+it('keeps a dismissed dialog closed while the table still holds the failure', async () => {
+  table = [dialogFailure(1)]
+  const { result } = renderHook(() => useDialogFailure())
+  onSubscribed?.()
+  await waitFor(() => expect(result.current.failure).not.toBeNull())
+
+  act(() => result.current.dismiss())
+  expect(result.current.failure).toBeNull()
+
+  focusListener?.({ payload: true })
+  await waitFor(() => expect(getPendingFailures).toHaveBeenCalledTimes(2))
+  expect(result.current.failure).toBeNull()
+})
+
+it('opens again when the same code fails again', async () => {
+  table = [dialogFailure(1)]
+  const { result } = renderHook(() => useDialogFailure())
+  onSubscribed?.()
+  await waitFor(() => expect(result.current.failure).not.toBeNull())
+  act(() => result.current.dismiss())
+  expect(result.current.failure).toBeNull()
+
+  table = [dialogFailure(2)]
+  onTableChanged?.()
+
+  await waitFor(() => expect(result.current.failure?.sequence).toBe(2))
 })

@@ -36,6 +36,13 @@
         "revalidationFailed": "刷新运行状态失败",
         "sidecarFailed": "继续使用 Sidecar 失败"
       }
+    },
+    "sysproxyPrivilege": {
+      "title": "无法设置系统代理",
+      "message": "macOS 以权限不足为由拒绝了这次修改。安装 Clash Verge 系统服务后，代理设置将由服务以管理员身份完成，之后不会再出现这个提示。",
+      "serviceReadyMessage": "Clash Verge 系统服务已就绪，但内核仍以 Sidecar 运行，因此设置系统代理时被拒绝。切换到服务模式即可解决，无需重新安装。",
+      "alternative": "另一种办法：在系统设置 → 隐私与安全性 → 高级中，关闭「访问系统范围设置需要管理员密码」。",
+      "later": "稍后再说"
     }
   },
   "feedback": {

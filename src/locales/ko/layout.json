@@ -36,6 +36,13 @@
         "revalidationFailed": "실행 상태를 새로 고치지 못했습니다",
         "sidecarFailed": "Sidecar로 계속하지 못했습니다"
       }
+    },
+    "sysproxyPrivilege": {
+      "title": "시스템 프록시를 설정할 수 없음",
+      "message": "macOS가 권한 부족을 이유로 이 변경을 거부했습니다. Clash Verge 서비스를 설치하면 서비스가 관리자 권한으로 프록시를 설정하며, 이 알림은 다시 나타나지 않습니다.",
+      "serviceReadyMessage": "Clash Verge 서비스는 준비되었지만 코어가 아직 sidecar로 실행 중이어서 시스템 프록시 설정이 거부되었습니다. 서비스 모드로 전환하면 재설치 없이 해결됩니다.",
+      "alternative": "다른 방법: 시스템 설정 → 개인정보 보호 및 보안 → 고급에서 시스템 전체 설정에 관리자 암호를 요구하는 옵션을 끄십시오.",
+      "later": "나중에"
     }
   },
   "feedback": {

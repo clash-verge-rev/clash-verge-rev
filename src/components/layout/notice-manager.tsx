@@ -2,24 +2,18 @@ import { CloseRounded } from '@mui/icons-material'
 import {
   Snackbar,
   Alert,
-  Button,
   IconButton,
   Box,
   Stack,
   type SnackbarOrigin,
 } from '@mui/material'
-import { useLockFn } from 'ahooks'
 import React, { useCallback, useMemo, useSyncExternalStore } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { getRuntimeState, installService, restartCore } from '@/services/cmds'
-import type { NoticeActionCode } from '@/services/notice-service'
 import {
   boundNoticeText,
-  noticeActionFor,
   subscribeNotices,
   hideNotice,
-  hideNoticesForCode,
   getSnapshotNotices,
   showNotice,
 } from '@/services/notice-service'
@@ -153,98 +147,6 @@ const resolveNoticeCopyText = (
   )
 }
 
-/** Whether the button should dismiss its source notice. */
-type ActionOutcome = 'dismiss' | 'leave'
-
-/** Run the recovery mapped to a classified failure. */
-const runNoticeAction = async (
-  code: NoticeActionCode,
-): Promise<ActionOutcome> => {
-  switch (code) {
-    case 'SYSPROXY_PRIVILEGE_REQUIRED':
-      // Keep the install offer only if installation itself fails.
-      await installService()
-      // Remove the stale offer before restart can publish a same-code failure.
-      hideNoticesForCode(code)
-      await restartIntoService()
-      return 'leave'
-    case 'SYSPROXY_SIDECAR_WHILE_SERVICE_READY':
-      return (await restartIntoService()) ? 'dismiss' : 'leave'
-  }
-}
-
-/** Explain that the original proxy request still needs attention. */
-const reportWhatIsLeftToDo = () => {
-  showNotice.info('settings.sections.proxyControl.messages.installedCheckProxy')
-}
-
-/** Restart, report the resulting runtime mode, and return whether it reached the service. */
-const restartIntoService = async (): Promise<boolean> => {
-  try {
-    await restartCore()
-  } catch (error) {
-    showNotice.error(error)
-  }
-
-  const runState = await getRuntimeState()
-
-  if (runState.mode === 'Service') {
-    reportWhatIsLeftToDo()
-    return true
-  }
-
-  if (runState.mode === 'Sidecar' && runState.serviceUsable) {
-    showNotice.error({
-      code: 'SYSPROXY_SIDECAR_WHILE_SERVICE_READY',
-      detail: '',
-    })
-    return false
-  }
-
-  showNotice.error(
-    'settings.sections.proxyControl.messages.installedCoreNotOnService',
-  )
-  return false
-}
-
-interface NoticeActionButtonProps {
-  code: NoticeActionCode
-  label: TranslationKey
-}
-
-/** Lock recovery actions that may prompt for a password. */
-const NoticeActionButton: React.FC<NoticeActionButtonProps> = ({
-  code,
-  label,
-}) => {
-  const { t } = useTranslation()
-  const [running, setRunning] = React.useState(false)
-
-  const run = useLockFn(async () => {
-    setRunning(true)
-    try {
-      if ((await runNoticeAction(code)) === 'dismiss') {
-        hideNoticesForCode(code)
-      }
-    } catch (error) {
-      showNotice.error(error)
-    } finally {
-      setRunning(false)
-    }
-  })
-
-  return (
-    <Button
-      size="small"
-      color="inherit"
-      disabled={running}
-      onClick={() => void run()}
-    >
-      {t(label)}
-    </Button>
-  )
-}
-
 interface NoticeManagerProps {
   position?: NoticePosition | null
 }
@@ -327,15 +229,6 @@ export const NoticeManager: React.FC<NoticeManagerProps> = ({ position }) => {
                 spacing={0.5}
                 sx={{ alignItems: 'center' }}
               >
-                {(() => {
-                  const action = noticeActionFor(notice.code)
-                  return action ? (
-                    <NoticeActionButton
-                      code={action.code}
-                      label={action.label}
-                    />
-                  ) : null
-                })()}
                 <IconButton
                   size="small"
                   color="inherit"

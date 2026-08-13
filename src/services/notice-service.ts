@@ -3,7 +3,6 @@ import { ReactNode, isValidElement } from 'react'
 
 import type { FailedOperation } from '@/services/cmds'
 import type { TranslationKey } from '@/types/generated/i18n-keys'
-import getSystem from '@/utils/get-system'
 
 type NoticeType = 'success' | 'error' | 'info'
 
@@ -25,16 +24,14 @@ interface NoticeItem {
   timerId?: ReturnType<typeof setTimeout>
 }
 
-/** Failure codes with frontend recovery actions. */
-export type NoticeActionCode =
-  | 'SYSPROXY_PRIVILEGE_REQUIRED'
-  | 'SYSPROXY_SIDECAR_WHILE_SERVICE_READY'
+/** Failures owned by the recovery dialog. */
+const CODES_A_DIALOG_REPORTS = new Set<string>([
+  'SYSPROXY_PRIVILEGE_REQUIRED',
+  'SYSPROXY_SIDECAR_WHILE_SERVICE_READY',
+])
 
-/** Recovery offered by a classified notice. */
-export interface NoticeAction {
-  readonly code: NoticeActionCode
-  readonly label: TranslationKey
-}
+export const isReportedByDialog = (code: string | undefined): boolean =>
+  code !== undefined && CODES_A_DIALOG_REPORTS.has(code)
 
 type NoticeContent = unknown
 
@@ -214,28 +211,6 @@ function buildNotice(
     duration,
     timerId,
     ...payload,
-  }
-}
-
-/** Return the macOS recovery action for a classified failure. */
-export function noticeActionFor(
-  code: string | undefined,
-): NoticeAction | undefined {
-  if (!code || getSystem() !== 'macos') return undefined
-
-  switch (code) {
-    case 'SYSPROXY_PRIVILEGE_REQUIRED':
-      return {
-        code,
-        label: 'settings.sections.proxyControl.actions.installService',
-      }
-    case 'SYSPROXY_SIDECAR_WHILE_SERVICE_READY':
-      return {
-        code,
-        label: 'settings.sections.proxyControl.actions.switchToServiceMode',
-      }
-    default:
-      return undefined
   }
 }
 
@@ -497,10 +472,9 @@ const baseShowNotice = (
   // Accept codes from raw, direct, or interpolated failures.
   const code = failureCode(raw) ?? failureCode(message) ?? nestedCode
   const operation = failureOperation(raw) ?? failureOperation(message)
-  // Keep actionable notices until explicitly dismissed.
-  const effectiveDuration = noticeActionFor(code)
-    ? 0
-    : resolveDuration(type, duration)
+  // Suppress duplicate toasts while preserving the caller's id contract.
+  if (isReportedByDialog(code)) return id
+  const effectiveDuration = resolveDuration(type, duration)
   const timerId =
     effectiveDuration > 0
       ? setTimeout(() => hideNotice(id), effectiveDuration)
@@ -558,19 +532,6 @@ export const showNotice: ShowNotice = Object.assign(baseShowNotice, {
   info: (message: NoticeContent, ...extras: NoticeExtra[]) =>
     baseShowNotice('info', message, ...extras),
 })
-
-/** Drop every notice reporting `code`. */
-export function hideNoticesForCode(code: string) {
-  notices
-    .filter((notice) => notice.code === code)
-    .forEach((notice) => {
-      if (notice.timerId) clearTimeout(notice.timerId)
-    })
-  const remaining = notices.filter((notice) => notice.code !== code)
-  if (remaining.length === notices.length) return
-  notices = remaining
-  notifySubscribers()
-}
 
 export function hideNotice(id: number) {
   const notice = notices.find((candidate) => candidate.id === id)
