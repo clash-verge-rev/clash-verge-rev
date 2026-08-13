@@ -45,7 +45,9 @@
       "later": "Daha sonra",
       "installing": "Sistem hizmeti kuruluyor. Yönetici parolası istenebilir.",
       "restarting": "Hizmet kuruldu. Çekirdek onun üzerinden yeniden başlatılıyor…",
-      "applying": "Sistem proxy değişikliğiniz uygulanıyor…"
+      "applying": "Sistem proxy değişikliğiniz uygulanıyor…",
+      "tunTitle": "TUN modu sistem hizmetine ihtiyaç duyar",
+      "tunMessage": "TUN modunun ağ trafiğini üstlenebilmesi için Clash Verge sistem hizmeti gerekir. Kurulum tamamlandığında TUN modu sizin için açılacaktır."
     }
   },
   "feedback": {

@@ -146,6 +146,8 @@ export const translationKeys = [
   'layout.components.sysproxyPrivilege.installing',
   'layout.components.sysproxyPrivilege.restarting',
   'layout.components.sysproxyPrivilege.applying',
+  'layout.components.sysproxyPrivilege.tunTitle',
+  'layout.components.sysproxyPrivilege.tunMessage',
   'layout.feedback.errors.restartCoreStopFailed',
   'layout.feedback.errors.quitCoreStopFailed',
   'logs.page.title',

@@ -45,7 +45,9 @@
       "later": "Más tarde",
       "installing": "Instalando el servicio del sistema. Puede pedir una contraseña de administrador.",
       "restarting": "Servicio instalado. Reiniciando el núcleo a través de él…",
-      "applying": "Aplicando tu cambio de proxy del sistema…"
+      "applying": "Aplicando tu cambio de proxy del sistema…",
+      "tunTitle": "El modo TUN necesita el servicio del sistema",
+      "tunMessage": "El modo TUN necesita el servicio del sistema de Clash Verge para gestionar el tráfico de red. Una vez instalado, se activará el modo TUN por ti."
     }
   },
   "feedback": {

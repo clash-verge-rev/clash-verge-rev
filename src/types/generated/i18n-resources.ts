@@ -240,6 +240,8 @@ export interface TranslationResources {
           restarting: string
           serviceReadyMessage: string
           title: string
+          tunMessage: string
+          tunTitle: string
         }
       }
       feedback: {

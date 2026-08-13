@@ -1,5 +1,5 @@
 import { Alert, LinearProgress, Typography } from '@mui/material'
-import { useState } from 'react'
+import { useState, useSyncExternalStore } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BaseDialog } from '@/components/base'
@@ -10,27 +10,56 @@ import {
   patchVergeConfig,
   restartCore,
   type FailedOperation,
+  type PendingFailure,
 } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
+import {
+  clearServiceRequest,
+  getServiceRequest,
+  subscribeServiceRequest,
+  type ServiceRequest,
+  type ServiceRequestReason,
+} from '@/services/service-request'
 
 type Remedy = 'installAndRestart' | 'restartOnly'
 
-const remedyFor = (code: string): Remedy =>
-  code === 'SYSPROXY_SIDECAR_WHILE_SERVICE_READY'
-    ? 'restartOnly'
-    : 'installAndRestart'
+const remedyFor = (reason: ServiceRequestReason): Remedy =>
+  reason === 'sysproxySidecarReady' ? 'restartOnly' : 'installAndRestart'
 
-const stateToRestore = (operation: FailedOperation): boolean | undefined => {
+const EXPLANATION = {
+  sysproxyRefused: 'layout.components.sysproxyPrivilege.message',
+  sysproxySidecarReady:
+    'layout.components.sysproxyPrivilege.serviceReadyMessage',
+  tunNeedsService: 'layout.components.sysproxyPrivilege.tunMessage',
+} as const
+
+const TITLE = {
+  sysproxyRefused: 'layout.components.sysproxyPrivilege.title',
+  sysproxySidecarReady: 'layout.components.sysproxyPrivilege.title',
+  tunNeedsService: 'layout.components.sysproxyPrivilege.tunTitle',
+} as const
+
+const stateToRestore = (
+  operation: FailedOperation,
+): Partial<IVergeConfig> | undefined => {
   switch (operation) {
     case 'systemProxyEnable':
-      return true
+      return { enable_system_proxy: true }
     case 'systemProxyDisable':
-      return false
+      return { enable_system_proxy: false }
     case 'systemProxyRestore':
     case 'systemProxyGuard':
       return undefined
   }
 }
+
+const asServiceRequest = (failure: PendingFailure): ServiceRequest => ({
+  reason:
+    failure.code === 'SYSPROXY_SIDECAR_WHILE_SERVICE_READY'
+      ? 'sysproxySidecarReady'
+      : 'sysproxyRefused',
+  restore: stateToRestore(failure.operation),
+})
 
 type Step = 'idle' | 'installing' | 'restarting' | 'applying'
 
@@ -44,11 +73,21 @@ const STEP_MESSAGE = {
 export const SysproxyPrivilegeDialog = () => {
   const { t } = useTranslation()
   const { failure, dismiss } = useDialogFailure()
+  const asked = useSyncExternalStore(subscribeServiceRequest, getServiceRequest)
   const [step, setStep] = useState<Step>('idle')
   const loading = step !== 'idle'
 
-  const remedy = failure ? remedyFor(failure.code) : 'installAndRestart'
-  const restoring = failure ? stateToRestore(failure.operation) : undefined
+  // Prefer the request the user just made over a pending failure.
+  const request = asked ?? (failure ? asServiceRequest(failure) : null)
+
+  const reason = request?.reason ?? 'sysproxyRefused'
+  const remedy = remedyFor(reason)
+  const restoring = request?.restore
+
+  const close = () => {
+    clearServiceRequest()
+    dismiss()
+  }
 
   const handleFix = async () => {
     try {
@@ -65,15 +104,14 @@ export const SysproxyPrivilegeDialog = () => {
         // Retry the original request now that the service can apply it.
         if (restoring !== undefined) {
           setStep('applying')
-          await patchVergeConfig({ enable_system_proxy: restoring })
+          await patchVergeConfig(restoring)
         }
         showNotice.success(
           restoring === undefined
             ? 'settings.sections.proxyControl.messages.installedCheckProxy'
             : 'settings.sections.proxyControl.messages.installedProxyRestored',
         )
-        // Close after the service remedy succeeds; the proxy request may remain pending.
-        dismiss()
+        close()
       } else {
         showNotice.error(
           'settings.sections.proxyControl.messages.installedCoreNotOnService',
@@ -88,8 +126,8 @@ export const SysproxyPrivilegeDialog = () => {
 
   return (
     <BaseDialog
-      open={Boolean(failure)}
-      title={t('layout.components.sysproxyPrivilege.title')}
+      open={Boolean(request)}
+      title={t(TITLE[reason])}
       okBtn={t(
         remedy === 'installAndRestart'
           ? 'settings.sections.proxyControl.actions.installService'
@@ -100,20 +138,14 @@ export const SysproxyPrivilegeDialog = () => {
       disableCancel={loading}
       loading={loading}
       onOk={() => void handleFix()}
-      onCancel={dismiss}
-      onClose={dismiss}
+      onCancel={close}
+      onClose={close}
     >
       <Alert severity={loading ? 'info' : 'warning'} sx={{ mb: 1.5 }}>
-        {t(
-          step !== 'idle'
-            ? STEP_MESSAGE[step]
-            : remedy === 'installAndRestart'
-              ? 'layout.components.sysproxyPrivilege.message'
-              : 'layout.components.sysproxyPrivilege.serviceReadyMessage',
-        )}
+        {t(step !== 'idle' ? STEP_MESSAGE[step] : EXPLANATION[reason])}
       </Alert>
       {loading && <LinearProgress />}
-      {!loading && remedy === 'installAndRestart' && (
+      {!loading && reason === 'sysproxyRefused' && (
         <Typography variant="body2" color="text.secondary">
           {t('layout.components.sysproxyPrivilege.alternative')}
         </Typography>

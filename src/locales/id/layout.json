@@ -45,7 +45,9 @@
       "later": "Nanti",
       "installing": "Memasang layanan sistem. Kata sandi administrator mungkin diminta.",
       "restarting": "Layanan terpasang. Memulai ulang core melaluinya…",
-      "applying": "Menerapkan perubahan proxy sistem Anda…"
+      "applying": "Menerapkan perubahan proxy sistem Anda…",
+      "tunTitle": "Mode TUN memerlukan layanan sistem",
+      "tunMessage": "Mode TUN memerlukan layanan sistem Clash Verge untuk mengambil alih lalu lintas jaringan. Setelah terpasang, mode TUN akan diaktifkan untuk Anda."
     }
   },
   "feedback": {

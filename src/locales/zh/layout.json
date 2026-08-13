@@ -45,7 +45,9 @@
       "later": "稍后再说",
       "installing": "正在安装系统服务，可能会请求管理员密码，请稍候……",
       "restarting": "服务已安装，正在通过服务重启内核……",
-      "applying": "正在重新应用系统代理……"
+      "applying": "正在重新应用系统代理……",
+      "tunTitle": "TUN 模式需要系统服务",
+      "tunMessage": "TUN 模式需要 Clash Verge 系统服务才能接管网络流量。安装完成后会自动为你开启 TUN 模式。"
     }
   },
   "feedback": {

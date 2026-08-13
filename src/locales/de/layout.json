@@ -45,7 +45,9 @@
       "later": "Später",
       "installing": "Der Systemdienst wird installiert. Möglicherweise wird ein Administratorkennwort verlangt.",
       "restarting": "Dienst installiert. Der Kern wird darüber neu gestartet…",
-      "applying": "Ihre Systemproxy-Änderung wird angewendet…"
+      "applying": "Ihre Systemproxy-Änderung wird angewendet…",
+      "tunTitle": "Der TUN-Modus benötigt den Systemdienst",
+      "tunMessage": "Der TUN-Modus benötigt den Clash-Verge-Systemdienst, um den Netzwerkverkehr zu übernehmen. Nach der Installation wird der TUN-Modus für Sie eingeschaltet."
     }
   },
   "feedback": {

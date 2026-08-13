@@ -1,5 +1,4 @@
 import {
-  BuildRounded,
   DeleteForeverRounded,
   PauseCircleOutlineRounded,
   PlayCircleOutlineRounded,
@@ -8,18 +7,18 @@ import {
 } from '@mui/icons-material'
 import { Box, Typography, alpha, useTheme } from '@mui/material'
 import { useLockFn } from 'ahooks'
-import React, { useCallback, useRef, useState } from 'react'
+import React, { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { DialogRef, Switch, TooltipIcon } from '@/components/base'
 import { SysproxyViewer } from '@/components/setting/mods/sysproxy-viewer'
 import { TunViewer } from '@/components/setting/mods/tun-viewer'
-import { useServiceInstaller } from '@/hooks/use-service-installer'
 import { useServiceUninstaller } from '@/hooks/use-service-uninstaller'
 import { useSystemProxyState } from '@/hooks/use-system-proxy-state'
 import { useSystemState } from '@/hooks/use-system-state'
 import { useVerge } from '@/hooks/use-verge'
 import { showNotice } from '@/services/notice-service'
+import { requestService } from '@/services/service-request'
 
 interface ProxySwitchProps {
   label?: string
@@ -131,11 +130,10 @@ const ProxyControlSwitches = ({
 }: ProxySwitchProps) => {
   const { t } = useTranslation()
   const { verge, mutateVerge, patchVerge } = useVerge()
-  const { installServiceAndRestartCore } = useServiceInstaller()
   const { uninstallServiceAndStartSidecar } = useServiceUninstaller()
   const { indicator: systemProxyIndicator, toggleSystemProxy } =
     useSystemProxyState()
-  const { runState, isTunModeAvailable, mutateSystemState } = useSystemState()
+  const { runState, isTunModeAvailable } = useSystemState()
   // Offer to uninstall only a service that is actually there and working.
   const isServiceInstallReady = runState.serviceUsable
 
@@ -144,29 +142,20 @@ const ProxyControlSwitches = ({
 
   const { enable_tun_mode } = verge ?? {}
 
-  const showErrorNotice = useCallback(
-    (msg: string) => showNotice.error(msg),
-    [],
-  )
-
   const handleTunToggle = async (value: boolean) => {
-    if (!isTunModeAvailable) {
-      const msgKey = 'settings.sections.proxyControl.tooltips.tunUnavailable'
-      showErrorNotice(msgKey)
-      throw new Error(t(msgKey))
+    if (value && !isTunModeAvailable) {
+      requestService({
+        reason: 'tunNeedsService',
+        restore: { enable_tun_mode: value },
+      })
+      // Reject so the optimistic switch rolls back until recovery applies it.
+      throw new Error(
+        t('settings.sections.proxyControl.tooltips.tunUnavailable'),
+      )
     }
     mutateVerge({ ...verge, enable_tun_mode: value }, false)
     await patchVerge({ enable_tun_mode: value })
   }
-
-  const onInstallService = useLockFn(async () => {
-    try {
-      await installServiceAndRestartCore()
-      await mutateSystemState()
-    } catch (err) {
-      showNotice.error(err)
-    }
-  })
 
   const onUninstallService = useLockFn(async () => {
     try {
@@ -202,29 +191,17 @@ const ProxyControlSwitches = ({
           onInfoClick={() => tunRef.current?.open()}
           onToggle={handleTunToggle}
           onError={onError}
-          disabled={!isTunModeAvailable}
           highlight={enable_tun_mode || false}
           extraIcons={
             <>
               {!isTunModeAvailable && (
-                <>
-                  <TooltipIcon
-                    title={t(
-                      'settings.sections.proxyControl.tooltips.tunUnavailable',
-                    )}
-                    icon={WarningRounded}
-                    sx={{ color: 'warning.main', ml: 1 }}
-                  />
-                  <TooltipIcon
-                    title={t(
-                      'settings.sections.proxyControl.actions.installService',
-                    )}
-                    icon={BuildRounded}
-                    color="primary"
-                    onClick={onInstallService}
-                    sx={{ ml: 1 }}
-                  />
-                </>
+                <TooltipIcon
+                  title={t(
+                    'settings.sections.proxyControl.tooltips.tunUnavailable',
+                  )}
+                  icon={WarningRounded}
+                  sx={{ color: 'warning.main', ml: 1 }}
+                />
               )}
               {isServiceInstallReady && (
                 <TooltipIcon

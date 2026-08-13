@@ -1,5 +1,6 @@
 // @vitest-environment jsdom
 import {
+  act,
   cleanup,
   fireEvent,
   render,
@@ -12,6 +13,7 @@ import { afterEach, beforeAll, expect, it, vi } from 'vitest'
 
 import type { PendingFailure } from '@/services/cmds'
 import { getSnapshotNotices, hideNotice } from '@/services/notice-service'
+import { clearServiceRequest, requestService } from '@/services/service-request'
 
 const reported = (key: string) =>
   getSnapshotNotices().some(
@@ -86,6 +88,7 @@ afterEach(() => {
   patchVergeConfig.mockClear()
   patchVergeConfig.mockImplementation(() => Promise.resolve())
   onSubscribed = undefined
+  clearServiceRequest()
   cleanup()
   getSnapshotNotices().forEach((notice) => hideNotice(notice.id))
 })
@@ -301,4 +304,47 @@ it('closes on “later” without touching the machine', async () => {
   await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
   expect(installService).not.toHaveBeenCalled()
   expect(restartCore).not.toHaveBeenCalled()
+})
+
+it('answers a switch that asked outright, with no failure to go on', async () => {
+  getPendingFailures.mockResolvedValue([])
+  render(<SysproxyPrivilegeDialog />)
+  onSubscribed?.()
+
+  act(() =>
+    requestService({
+      reason: 'tunNeedsService',
+      restore: { enable_tun_mode: true },
+    }),
+  )
+
+  await screen.findByText('layout.components.sysproxyPrivilege.tunMessage')
+  clickPrimary('settings.sections.proxyControl.actions.installService')
+
+  await waitFor(() => expect(installService).toHaveBeenCalledOnce())
+  await waitFor(() =>
+    expect(patchVergeConfig).toHaveBeenCalledWith({ enable_tun_mode: true }),
+  )
+  await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+})
+
+it('shows what the user is doing now over what the table still holds', async () => {
+  await showing('SYSPROXY_PRIVILEGE_REQUIRED')
+
+  act(() => requestService({ reason: 'tunNeedsService' }))
+
+  await screen.findByText('layout.components.sysproxyPrivilege.tunMessage')
+})
+
+it('changes nothing when a switch asked without saying what for', async () => {
+  getPendingFailures.mockResolvedValue([])
+  render(<SysproxyPrivilegeDialog />)
+  onSubscribed?.()
+
+  act(() => requestService({ reason: 'tunNeedsService' }))
+  await screen.findByRole('dialog')
+  clickPrimary('settings.sections.proxyControl.actions.installService')
+
+  await waitFor(() => expect(restartCore).toHaveBeenCalledOnce())
+  expect(patchVergeConfig).not.toHaveBeenCalled()
 })
