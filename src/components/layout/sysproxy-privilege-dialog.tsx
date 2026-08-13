@@ -36,6 +36,8 @@ export const SysproxyPrivilegeDialog = () => {
         showNotice.success(
           'settings.sections.proxyControl.messages.installedCheckProxy',
         )
+        // Close after the service remedy succeeds; the proxy request may remain pending.
+        dismiss()
       } else {
         showNotice.error(
           'settings.sections.proxyControl.messages.installedCoreNotOnService',

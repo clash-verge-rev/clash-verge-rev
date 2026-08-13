@@ -156,6 +156,24 @@ it('checks what actually happened rather than trusting the restart', async () =>
   )
 })
 
+it('closes once the core is on the service, whatever the table still says', async () => {
+  await showing('SYSPROXY_PRIVILEGE_REQUIRED')
+
+  clickPrimary('settings.sections.proxyControl.actions.installService')
+
+  await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull())
+})
+
+it('stays open when the core did not reach the service', async () => {
+  getRuntimeState.mockResolvedValue({ mode: 'Sidecar', serviceUsable: false })
+  await showing('SYSPROXY_PRIVILEGE_REQUIRED')
+
+  clickPrimary('settings.sections.proxyControl.actions.installService')
+
+  await waitFor(() => expect(restartCore).toHaveBeenCalledOnce())
+  expect(screen.getByRole('dialog')).toBeTruthy()
+})
+
 it('does not go on to restart when the install itself failed', async () => {
   installService.mockRejectedValue({
     code: 'SERVICE_INSTALL_FAILED',
