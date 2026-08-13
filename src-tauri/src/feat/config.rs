@@ -223,9 +223,13 @@ async fn process_terminated_flags(update_flags: UpdateFlags, patch: &IVerge) -> 
         clash_verge_i18n::set_locale(language.as_str());
     }
     if update_flags.contains(UpdateFlags::SYS_PROXY) {
-        let manager = CoreManager::global();
-        let _lifecycle = manager.lifecycle_lock.lock().await;
-        manager.apply_proxy_after_start().await?;
+        {
+            let manager = CoreManager::global();
+            let _lifecycle = manager.lifecycle_lock.lock().await;
+            manager.apply_proxy_after_start().await?;
+        }
+        // Notify readers after apply succeeds and the lifecycle lock is released.
+        handle::Handle::refresh_verge();
     }
     if update_flags.contains(UpdateFlags::HOTKEY)
         && let Some(hotkeys) = &patch.hotkeys

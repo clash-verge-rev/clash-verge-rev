@@ -42,10 +42,8 @@ pub async fn toggle_system_proxy() -> Option<bool> {
     .await;
 
     match patch_result {
-        Ok(_) => {
-            handle::Handle::refresh_verge();
-            Some(requested)
-        }
+        // Patch processing refreshes every caller.
+        Ok(_) => Some(requested),
         Err(err) => {
             logging!(error, Type::ProxyMode, "{err:#}");
             report_toggle_failure(&err).await;
