@@ -34,15 +34,10 @@ fn get_signature_type(path: &str) -> SignatureType {
 fn force_signature_to_adhoc(path: &str) -> Result<()> {
     use std::process::Command;
 
-    let output = Command::new("codesign").args(["-s", "-", "-f", path]).output();
+    let status = Command::new("codesign").args(["-s", "-", "-f", path]).status()?;
 
-    let Ok(output) = output else {
-        return Err(anyhow::anyhow!("Failed to force signature to adhoc"));
-    };
-
-    let stderr = String::from_utf8_lossy(&output.stderr);
-    if !stderr.is_empty() {
-        return Err(anyhow::anyhow!("Failed to force signature to adhoc: {}", stderr));
+    if !status.success() {
+        anyhow::bail!("Failed to force signature to adhoc");
     }
 
     Ok(())
