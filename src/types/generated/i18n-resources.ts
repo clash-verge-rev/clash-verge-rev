@@ -1320,6 +1320,7 @@ export interface TranslationResources {
           messages: {
             installedCheckProxy: string
             installedCoreNotOnService: string
+            installedProxyRestored: string
           }
           tooltips: {
             systemProxy: string

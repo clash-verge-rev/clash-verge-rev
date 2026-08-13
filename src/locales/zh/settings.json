@@ -46,7 +46,8 @@
       },
       "messages": {
         "installedCheckProxy": "服务已安装，内核已通过服务运行。请检查系统代理开关，若刚才的改动未生效请重新操作一次。",
-        "installedCoreNotOnService": "服务已安装，但内核未通过服务运行。请检查内核状态后重试。"
+        "installedCoreNotOnService": "服务已安装，但内核未通过服务运行。请检查内核状态后重试。",
+        "installedProxyRestored": "服务已安装，内核已通过服务运行，刚才的系统代理改动已重新应用。"
       }
     },
     "externalController": {

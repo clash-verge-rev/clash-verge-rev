@@ -46,7 +46,8 @@
       },
       "messages": {
         "installedCheckProxy": "Hizmet kuruldu ve çekirdek onun üzerinden çalışıyor. Sistem vekil sunucusu anahtarını denetleyin; değişikliğiniz uygulanmadıysa yeniden yapın.",
-        "installedCoreNotOnService": "Hizmet kuruldu ancak çekirdek onun üzerinden çalışmıyor. Çekirdeği denetleyip yeniden deneyin."
+        "installedCoreNotOnService": "Hizmet kuruldu ancak çekirdek onun üzerinden çalışmıyor. Çekirdeği denetleyip yeniden deneyin.",
+        "installedProxyRestored": "Hizmet kuruldu, çekirdek onun üzerinden çalışıyor ve sistem proxy değişikliğiniz uygulandı."
       }
     },
     "externalController": {

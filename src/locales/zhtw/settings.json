@@ -46,7 +46,8 @@
       },
       "messages": {
         "installedCheckProxy": "服務已安裝，內核已透過服務執行。請檢查系統代理開關，若剛才的變更未生效請重新操作一次。",
-        "installedCoreNotOnService": "服務已安裝，但內核未透過服務執行。請檢查內核狀態後重試。"
+        "installedCoreNotOnService": "服務已安裝，但內核未透過服務執行。請檢查內核狀態後重試。",
+        "installedProxyRestored": "服務已安裝，核心已透過服務執行，剛才的系統代理變更已重新套用。"
       }
     },
     "externalController": {

@@ -407,6 +407,7 @@ export const translationKeys = [
   'settings.sections.proxyControl.fields.tunMode',
   'settings.sections.proxyControl.messages.installedCheckProxy',
   'settings.sections.proxyControl.messages.installedCoreNotOnService',
+  'settings.sections.proxyControl.messages.installedProxyRestored',
   'settings.sections.externalController.title',
   'settings.sections.externalController.fields.enable',
   'settings.sections.externalController.fields.address',

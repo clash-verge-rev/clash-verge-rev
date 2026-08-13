@@ -46,7 +46,8 @@
       },
       "messages": {
         "installedCheckProxy": "서비스가 설치되었고 코어가 서비스를 통해 실행 중입니다. 시스템 프록시 스위치를 확인하고, 방금 한 변경이 적용되지 않았다면 다시 시도하십시오.",
-        "installedCoreNotOnService": "서비스는 설치되었지만 코어가 서비스를 통해 실행되고 있지 않습니다. 코어 상태를 확인한 뒤 다시 시도하십시오."
+        "installedCoreNotOnService": "서비스는 설치되었지만 코어가 서비스를 통해 실행되고 있지 않습니다. 코어 상태를 확인한 뒤 다시 시도하십시오.",
+        "installedProxyRestored": "서비스가 설치되었고 코어가 서비스를 통해 실행되며, 시스템 프록시 변경 사항이 적용되었습니다."
       }
     },
     "externalController": {

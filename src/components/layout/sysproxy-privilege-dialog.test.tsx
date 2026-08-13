@@ -32,6 +32,7 @@ const restartCore = vi.hoisted(() => vi.fn(() => Promise.resolve()))
 const installService = vi.hoisted(() => vi.fn(() => Promise.resolve()))
 const getRuntimeState = vi.hoisted(() => vi.fn())
 const getPendingFailures = vi.hoisted(() => vi.fn())
+const patchVergeConfig = vi.hoisted(() => vi.fn(() => Promise.resolve()))
 const onFocusChanged = vi.hoisted(() => vi.fn(() => Promise.resolve(() => {})))
 
 vi.mock('@/services/cmds', () => ({
@@ -39,6 +40,7 @@ vi.mock('@/services/cmds', () => ({
   installService,
   getRuntimeState,
   getPendingFailures,
+  patchVergeConfig,
 }))
 vi.mock('@tauri-apps/api/window', () => ({
   getCurrentWindow: () => ({ onFocusChanged }),
@@ -55,10 +57,13 @@ vi.mock('@/services/events', () => ({
   },
 }))
 
-const failure = (code: string): PendingFailure => ({
+const failure = (
+  code: string,
+  operation: PendingFailure['operation'] = 'systemProxyEnable',
+): PendingFailure => ({
   code,
   detail: 'admin privileges required to modify system proxy',
-  operation: 'systemProxyEnable',
+  operation,
   sequence: 1,
 })
 
@@ -78,13 +83,18 @@ afterEach(() => {
   getRuntimeState.mockReset()
   getRuntimeState.mockResolvedValue({ mode: 'Service', serviceUsable: true })
   getPendingFailures.mockReset()
+  patchVergeConfig.mockClear()
+  patchVergeConfig.mockImplementation(() => Promise.resolve())
   onSubscribed = undefined
   cleanup()
   getSnapshotNotices().forEach((notice) => hideNotice(notice.id))
 })
 
-const showing = async (code: string) => {
-  getPendingFailures.mockResolvedValue([failure(code)])
+const showing = async (
+  code: string,
+  operation: PendingFailure['operation'] = 'systemProxyEnable',
+) => {
+  getPendingFailures.mockResolvedValue([failure(code, operation)])
   render(<SysproxyPrivilegeDialog />)
   onSubscribed?.()
   await screen.findByRole('dialog')
@@ -118,13 +128,46 @@ it('offers only a restart when the service is already there', async () => {
   ).toBeNull()
 })
 
-it('installs the service, restarts into it, and says what is left to do', async () => {
+it('installs the service, restarts into it, and makes the request again', async () => {
   await showing('SYSPROXY_PRIVILEGE_REQUIRED')
 
   clickPrimary('settings.sections.proxyControl.actions.installService')
 
   await waitFor(() => expect(installService).toHaveBeenCalledOnce())
   await waitFor(() => expect(restartCore).toHaveBeenCalledOnce())
+  await waitFor(() =>
+    expect(patchVergeConfig).toHaveBeenCalledWith({
+      enable_system_proxy: true,
+    }),
+  )
+  await waitFor(() =>
+    expect(
+      reported(
+        'settings.sections.proxyControl.messages.installedProxyRestored',
+      ),
+    ).toBe(true),
+  )
+})
+
+it('replays the direction that was asked for, not always “on”', async () => {
+  await showing('SYSPROXY_PRIVILEGE_REQUIRED', 'systemProxyDisable')
+
+  clickPrimary('settings.sections.proxyControl.actions.installService')
+
+  await waitFor(() =>
+    expect(patchVergeConfig).toHaveBeenCalledWith({
+      enable_system_proxy: false,
+    }),
+  )
+})
+
+it('changes nothing when nobody asked for a proxy state', async () => {
+  await showing('SYSPROXY_PRIVILEGE_REQUIRED', 'systemProxyRestore')
+
+  clickPrimary('settings.sections.proxyControl.actions.installService')
+
+  await waitFor(() => expect(restartCore).toHaveBeenCalledOnce())
+  expect(patchVergeConfig).not.toHaveBeenCalled()
   await waitFor(() =>
     expect(
       reported('settings.sections.proxyControl.messages.installedCheckProxy'),

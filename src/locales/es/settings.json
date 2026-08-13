@@ -46,7 +46,8 @@
       },
       "messages": {
         "installedCheckProxy": "El servicio está instalado y el núcleo se ejecuta a través de él. Revise el interruptor del proxy del sistema y repita el cambio si no se aplicó.",
-        "installedCoreNotOnService": "El servicio está instalado, pero el núcleo no se ejecuta a través de él. Revise el núcleo e inténtelo de nuevo."
+        "installedCoreNotOnService": "El servicio está instalado, pero el núcleo no se ejecuta a través de él. Revise el núcleo e inténtelo de nuevo.",
+        "installedProxyRestored": "El servicio está instalado, el núcleo se ejecuta a través de él y se ha aplicado tu cambio de proxy del sistema."
       }
     },
     "externalController": {

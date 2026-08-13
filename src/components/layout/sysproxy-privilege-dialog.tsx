@@ -4,7 +4,13 @@ import { useTranslation } from 'react-i18next'
 
 import { BaseDialog } from '@/components/base'
 import { useDialogFailure } from '@/pages/_layout/hooks'
-import { getRuntimeState, installService, restartCore } from '@/services/cmds'
+import {
+  getRuntimeState,
+  installService,
+  patchVergeConfig,
+  restartCore,
+  type FailedOperation,
+} from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
 
 type Remedy = 'installAndRestart' | 'restartOnly'
@@ -14,6 +20,18 @@ const remedyFor = (code: string): Remedy =>
     ? 'restartOnly'
     : 'installAndRestart'
 
+const stateToRestore = (operation: FailedOperation): boolean | undefined => {
+  switch (operation) {
+    case 'systemProxyEnable':
+      return true
+    case 'systemProxyDisable':
+      return false
+    case 'systemProxyRestore':
+    case 'systemProxyGuard':
+      return undefined
+  }
+}
+
 /** Guide recovery from a refused system-proxy write. */
 export const SysproxyPrivilegeDialog = () => {
   const { t } = useTranslation()
@@ -21,6 +39,7 @@ export const SysproxyPrivilegeDialog = () => {
   const [loading, setLoading] = useState(false)
 
   const remedy = failure ? remedyFor(failure.code) : 'installAndRestart'
+  const restoring = failure ? stateToRestore(failure.operation) : undefined
 
   const handleFix = async () => {
     setLoading(true)
@@ -33,8 +52,14 @@ export const SysproxyPrivilegeDialog = () => {
       // Verify that restart actually moved the core into the service.
       const runState = await getRuntimeState()
       if (runState.mode === 'Service') {
+        // Retry the original request now that the service can apply it.
+        if (restoring !== undefined) {
+          await patchVergeConfig({ enable_system_proxy: restoring })
+        }
         showNotice.success(
-          'settings.sections.proxyControl.messages.installedCheckProxy',
+          restoring === undefined
+            ? 'settings.sections.proxyControl.messages.installedCheckProxy'
+            : 'settings.sections.proxyControl.messages.installedProxyRestored',
         )
         // Close after the service remedy succeeds; the proxy request may remain pending.
         dismiss()
