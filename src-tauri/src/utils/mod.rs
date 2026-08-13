@@ -1,4 +1,6 @@
 #[cfg(target_os = "macos")]
+pub mod codesign;
+#[cfg(target_os = "macos")]
 pub mod connections_stream;
 pub mod dirs;
 pub mod help;

@@ -12,6 +12,7 @@ use smartstring::alias::String;
 /// ### `verge.yaml` schema
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
 pub struct IVerge {
+    pub force_signature_to_adhoc: Option<bool>,
     /// app log level
     /// silent | error | warn | info | debug | trace
     pub app_log_level: Option<String>,
@@ -381,6 +382,7 @@ impl IVerge {
 
     pub fn template() -> Self {
         Self {
+            force_signature_to_adhoc: Some(false),
             app_log_max_size: Some(128),
             app_log_max_count: Some(8),
             clash_core: Some("verge-mihomo".into()),

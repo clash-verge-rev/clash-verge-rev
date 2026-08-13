@@ -307,6 +307,7 @@ function clashMeta() {
   const name = META_MAP[`${platform}-${arch}`]
   const isWin = platform === 'win32'
   const urlExt = isWin ? 'zip' : 'gz'
+  META_VERSION = 'v1.19.26'
   return {
     name: 'verge-mihomo',
     targetFile: `verge-mihomo-${SIDECAR_HOST}${isWin ? '.exe' : ''}`,

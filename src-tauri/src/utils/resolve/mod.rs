@@ -47,6 +47,7 @@ pub fn resolve_setup_sync() {
 pub fn resolve_setup_async() {
     AsyncHandler::spawn(|| async {
         logging!(info, Type::ClashVergeRev, "Version: {}", env!("CARGO_PKG_VERSION"));
+        resolve_sidecar_signature();
 
         #[cfg(target_os = "macos")]
         resolve_dock_show().await;
@@ -215,6 +216,13 @@ pub(super) async fn resolve_dock_show() {
     if is_silent_start {
         Handle::global().set_activation_policy_accessory();
     }
+}
+
+#[cfg(target_os = "macos")]
+pub(super) fn resolve_sidecar_signature() {
+    use crate::utils::codesign::force_sign_core_adhoc;
+
+    logging_error!(Type::Setup, force_sign_core_adhoc());
 }
 
 pub fn resolve_done() {
