@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use crate::core::handle;
+use crate::{core::handle, utils::window_manager::WindowState};
 use clash_verge_i18n;
 use tauri_plugin_notification::NotificationExt as _;
 
@@ -10,12 +10,24 @@ pub enum NotificationEvent<'a> {
         mode: &'a str,
     },
     SystemProxyToggled(bool),
+    /// A proxy change failed while no window could report it.
+    SystemProxyFailed,
+    /// The system proxy guard stopped.
+    SystemProxyGuardStopped,
     TunModeToggled(bool),
     LightweightModeEntered,
     ProfilesReactivated,
     AppQuit,
     #[cfg(target_os = "macos")]
     AppHidden,
+}
+
+/// Whether no app window can currently show the failure.
+pub const fn needs_system_notification(state: WindowState) -> bool {
+    match state {
+        WindowState::Hidden | WindowState::Minimized | WindowState::NotExist => true,
+        WindowState::VisibleFocused | WindowState::VisibleUnfocused => false,
+    }
 }
 
 fn notify(title: Cow<'_, str>, body: Cow<'_, str>) {
@@ -46,6 +58,16 @@ pub async fn notify_event<'a>(event: NotificationEvent<'a>) {
             };
 
             let body = clash_verge_i18n::t!(key);
+            notify(title, body);
+        }
+        NotificationEvent::SystemProxyFailed => {
+            let title = clash_verge_i18n::t!("notifications.systemProxyFailed.title");
+            let body = clash_verge_i18n::t!("notifications.systemProxyFailed.body");
+            notify(title, body);
+        }
+        NotificationEvent::SystemProxyGuardStopped => {
+            let title = clash_verge_i18n::t!("notifications.systemProxyGuardStopped.title");
+            let body = clash_verge_i18n::t!("notifications.systemProxyGuardStopped.body");
             notify(title, body);
         }
         NotificationEvent::TunModeToggled(enabled) => {
@@ -79,5 +101,21 @@ pub async fn notify_event<'a>(event: NotificationEvent<'a>) {
             let body = clash_verge_i18n::t!("notifications.appHidden.body");
             notify(title, body);
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::needs_system_notification;
+    use crate::utils::window_manager::WindowState;
+
+    #[test]
+    fn a_system_notification_is_sent_exactly_where_the_window_cannot_speak() {
+        assert!(needs_system_notification(WindowState::Hidden));
+        assert!(needs_system_notification(WindowState::Minimized));
+        assert!(needs_system_notification(WindowState::NotExist));
+
+        assert!(!needs_system_notification(WindowState::VisibleFocused));
+        assert!(!needs_system_notification(WindowState::VisibleUnfocused));
     }
 }

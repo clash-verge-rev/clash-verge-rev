@@ -1,6 +1,9 @@
 import i18n from 'i18next'
 import { ReactNode, isValidElement } from 'react'
 
+import type { FailedOperation } from '@/services/cmds'
+import type { TranslationKey } from '@/types/generated/i18n-keys'
+
 type NoticeType = 'success' | 'error' | 'info'
 
 interface NoticeTranslationDescriptor {
@@ -14,8 +17,21 @@ interface NoticeItem {
   readonly duration: number
   readonly message?: ReactNode
   readonly i18n?: NoticeTranslationDescriptor
+  /** Stable classified failure code. */
+  readonly code?: string
+  /** Requested operation when known. */
+  readonly operation?: FailedOperation
   timerId?: ReturnType<typeof setTimeout>
 }
+
+/** Failures owned by the recovery dialog. */
+const CODES_A_DIALOG_REPORTS = new Set<string>([
+  'SYSPROXY_PRIVILEGE_REQUIRED',
+  'SYSPROXY_SIDECAR_WHILE_SERVICE_READY',
+])
+
+export const isReportedByDialog = (code: string | undefined): boolean =>
+  code !== undefined && CODES_A_DIALOG_REPORTS.has(code)
 
 type NoticeContent = unknown
 
@@ -45,8 +61,8 @@ const DEFAULT_DURATIONS: Readonly<Record<NoticeType, number>> = {
 }
 
 const TRANSLATION_KEY_PATTERN = /^[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)+$/
-const CODED_ERROR_PATTERN = /^CVR_ERROR:([A-Z0-9_]+)(?:\n([\s\S]*))?$/
-const CODED_ERROR_TRANSLATION_KEYS: Readonly<Record<string, string>> = {
+/** Localized explanation for each stable failure code. */
+const CODED_ERROR_TRANSLATION_KEYS: Readonly<Record<string, TranslationKey>> = {
   CLASH_CONFIG_UPDATE_FAILED:
     'settings.feedback.errors.clash.configUpdateFailed',
   CLASH_MODE_UPDATE_FAILED: 'settings.feedback.errors.clash.modeUpdateFailed',
@@ -70,6 +86,12 @@ const CODED_ERROR_TRANSLATION_KEYS: Readonly<Record<string, string>> = {
   SERVICE_SIDECAR_FAILED: 'settings.feedback.errors.clashService.sidecarFailed',
   SERVICE_UNINSTALL_FAILED:
     'settings.feedback.errors.clashService.uninstallFailed',
+  SYSPROXY_DIRECT_FALLBACK: 'settings.feedback.errors.sysproxy.directFallback',
+  SYSPROXY_GUARD_STOPPED: 'settings.feedback.errors.sysproxy.guardStopped',
+  SYSPROXY_SIDECAR_WHILE_SERVICE_READY:
+    'settings.feedback.errors.sysproxy.sidecarWhileServiceReady',
+  SYSPROXY_PRIVILEGE_REQUIRED:
+    'settings.feedback.errors.sysproxy.privilegeRequired',
 }
 
 let nextId = 0
@@ -84,6 +106,8 @@ interface ParsedNoticeExtras {
   params?: Record<string, unknown>
   raw?: unknown
   duration?: number
+  /** Code extracted before translation parameters are flattened. */
+  nestedCode?: string
 }
 
 function parseNoticeExtras(extras: NoticeExtra[]): ParsedNoticeExtras {
@@ -98,6 +122,14 @@ function parseNoticeExtras(extras: NoticeExtra[]): ParsedNoticeExtras {
     if (typeof extra === 'number' && duration === undefined) {
       duration = extra
       continue
+    }
+
+    // Parse command failures before generic translation params.
+    if (isCommandFailure(extra)) {
+      if (!raw) {
+        raw = extra
+        continue
+      }
     }
 
     if (isPlainRecord(extra)) {
@@ -126,7 +158,35 @@ function parseNoticeExtras(extras: NoticeExtra[]): ParsedNoticeExtras {
     }
   }
 
-  return { params, raw, duration }
+  return {
+    params: params && readableParams(params),
+    raw,
+    duration,
+    nestedCode: nestedFailureCode(params),
+  }
+}
+
+/** Replace structured failures in translation params with readable detail. */
+function readableParams(
+  source: Record<string, unknown>,
+): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(source).map(([key, value]) => [
+      key,
+      isCommandFailure(value) ? value.detail : value,
+    ]),
+  )
+}
+
+/** Find a classified failure nested in translation parameters. */
+function nestedFailureCode(
+  source?: Record<string, unknown>,
+): string | undefined {
+  if (!source) return undefined
+  for (const value of Object.values(source)) {
+    if (isCommandFailure(value) && value.code) return value.code
+  }
+  return undefined
 }
 
 function resolveDuration(type: NoticeType, override?: number) {
@@ -137,7 +197,12 @@ function buildNotice(
   id: number,
   type: NoticeType,
   duration: number,
-  payload: { message?: ReactNode; i18n?: NoticeTranslationDescriptor },
+  payload: {
+    message?: ReactNode
+    i18n?: NoticeTranslationDescriptor
+    code?: string
+    operation?: FailedOperation
+  },
   timerId?: ReturnType<typeof setTimeout>,
 ): NoticeItem {
   return {
@@ -178,6 +243,23 @@ function isPlainRecord(value: unknown): value is Record<string, unknown> {
   return proto === Object.prototype || proto === null
 }
 
+/** Maximum code points rendered in a notice. */
+const MAX_RENDERED_TEXT_CHARS = 500
+
+/** Bound resolved display text by code point and append an ellipsis when truncated. */
+export function boundNoticeText(text: string): string {
+  let end = 0
+  let counted = 0
+  for (const codePoint of text) {
+    if (counted === MAX_RENDERED_TEXT_CHARS) {
+      return `${text.slice(0, end).trimEnd()}…`
+    }
+    end += codePoint.length
+    counted += 1
+  }
+  return text
+}
+
 function createRawDescriptor(message: string): NoticeTranslationDescriptor {
   return {
     key: 'shared.feedback.notices.raw',
@@ -185,8 +267,13 @@ function createRawDescriptor(message: string): NoticeTranslationDescriptor {
   }
 }
 
+/** Messages longer than any real translation key are treated as raw text. */
+const MAX_TRANSLATION_KEY_CHARS = 200
+
 function isLikelyTranslationKey(key: string) {
-  return TRANSLATION_KEY_PATTERN.test(key)
+  return (
+    key.length <= MAX_TRANSLATION_KEY_CHARS && TRANSLATION_KEY_PATTERN.test(key)
+  )
 }
 
 function shouldUseTranslationKey(
@@ -210,6 +297,7 @@ function extractDisplayText(input: unknown): string | undefined {
   if (input instanceof Error) {
     return input.message || input.name
   }
+  if (isCommandFailure(input)) return input.detail
   if (typeof input === 'object' && input !== null) {
     const maybeMessage = (input as { message?: unknown }).message
     if (typeof maybeMessage === 'string') return maybeMessage
@@ -221,16 +309,40 @@ function extractDisplayText(input: unknown): string | undefined {
   }
 }
 
-function parseCodedError(input?: string) {
-  if (!input) return undefined
-  const match = input.match(CODED_ERROR_PATTERN)
-  if (!match) return undefined
+/** What a failed Tauri command reports. */
+export interface CommandFailure {
+  /** Stable identifier for the kind of failure, when the backend could classify it. */
+  code?: string
+  /** Requested operation when known by the command. */
+  operation?: FailedOperation
+  /** Human-readable diagnostic detail. */
+  detail: string
+}
 
+function isCommandFailure(input: unknown): input is CommandFailure {
+  if (typeof input !== 'object' || input === null) return false
+  const candidate = input as Partial<CommandFailure>
+  return (
+    typeof candidate.detail === 'string' &&
+    (candidate.code === undefined || typeof candidate.code === 'string')
+  )
+}
+
+/** Extract display text from a structured or legacy failure. */
+export function errorDetail(input: unknown): string {
+  return extractDisplayText(input) ?? ''
+}
+
+/** Parse a classified command failure for notice rendering. */
+function parseCommandFailure(input: unknown) {
+  if (!isCommandFailure(input) || !input.code) return undefined
+
+  const explanation = CODED_ERROR_TRANSLATION_KEYS[input.code]
   return {
-    translationKey:
-      CODED_ERROR_TRANSLATION_KEYS[match[1]] ??
-      'shared.feedback.errors.operationFailed',
-    detail: match[2]?.trim(),
+    translationKey: explanation ?? 'shared.feedback.errors.operationFailed',
+    /** Whether this code has a specific explanation. */
+    explained: explanation !== undefined,
+    detail: input.detail.trim() || undefined,
   }
 }
 
@@ -240,7 +352,7 @@ function normalizeNoticeMessage(
   raw?: unknown,
 ): { message?: ReactNode; i18n?: NoticeTranslationDescriptor } {
   const rawText = raw !== undefined ? extractDisplayText(raw) : undefined
-  const parsedRawError = parseCodedError(rawText)
+  const parsedRawError = parseCommandFailure(raw)
   const rawDetail = parsedRawError?.detail ?? rawText
 
   if (isValidElement(message)) {
@@ -248,7 +360,7 @@ function normalizeNoticeMessage(
   }
 
   if (isMaybeTranslationDescriptor(message)) {
-    const originalParams = message.params ?? {}
+    const originalParams = readableParams(message.params ?? {})
     const mergedParams = Object.keys(params ?? {}).length
       ? { ...originalParams, ...params }
       : { ...originalParams }
@@ -275,7 +387,7 @@ function normalizeNoticeMessage(
     }
   }
 
-  const parsedMessageError = parseCodedError(extractDisplayText(message))
+  const parsedMessageError = parseCommandFailure(message)
   if (parsedMessageError) {
     if (!parsedMessageError.detail) {
       return {
@@ -298,12 +410,17 @@ function normalizeNoticeMessage(
   if (typeof message === 'string') {
     if (rawDetail !== undefined) {
       if (shouldUseTranslationKey(message, params)) {
+        // A mapped cause outranks a translation key that only names the operation.
+        const prefixKey = parsedRawError?.explained
+          ? parsedRawError.translationKey
+          : message
+
         return {
           i18n: {
             key: 'shared.feedback.notices.prefixedRaw',
             params: {
               ...(params ?? {}),
-              prefixKey: message,
+              prefixKey,
               message: rawDetail,
             },
           },
@@ -351,7 +468,12 @@ const baseShowNotice = (
   ...extras: NoticeExtra[]
 ): number => {
   const id = nextId++
-  const { params, raw, duration } = parseNoticeExtras(extras)
+  const { params, raw, duration, nestedCode } = parseNoticeExtras(extras)
+  // Accept codes from raw, direct, or interpolated failures.
+  const code = failureCode(raw) ?? failureCode(message) ?? nestedCode
+  const operation = failureOperation(raw) ?? failureOperation(message)
+  // Suppress duplicate toasts while preserving the caller's id contract.
+  if (isReportedByDialog(code)) return id
   const effectiveDuration = resolveDuration(type, duration)
   const timerId =
     effectiveDuration > 0
@@ -363,13 +485,31 @@ const baseShowNotice = (
     id,
     type,
     effectiveDuration,
-    normalizedMessage,
+    { ...normalizedMessage, code, operation },
     timerId,
   )
+
+  // Replace older notices for the same failure code.
+  if (code) {
+    notices
+      .filter((existing) => existing.code === code)
+      .forEach((existing) => {
+        if (existing.timerId) clearTimeout(existing.timerId)
+      })
+    notices = notices.filter((existing) => existing.code !== code)
+  }
 
   notices = [...notices, notice]
   notifySubscribers()
   return id
+}
+
+function failureCode(input: unknown): string | undefined {
+  return isCommandFailure(input) ? input.code : undefined
+}
+
+function failureOperation(input: unknown): FailedOperation | undefined {
+  return isCommandFailure(input) ? input.operation : undefined
 }
 
 /**

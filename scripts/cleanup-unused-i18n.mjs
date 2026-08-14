@@ -2,7 +2,7 @@ import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
 
-import yaml from 'js-yaml'
+import * as yaml from 'js-yaml'
 import ts from 'typescript'
 
 const __filename = fileURLToPath(import.meta.url)
