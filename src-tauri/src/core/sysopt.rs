@@ -80,6 +80,7 @@ enum OsProxyState {
     DifferentOrUnknown,
 }
 
+#[cfg(any(target_os = "macos", test))]
 fn target_is_already_in_place(snapshot: &sysproxy::ProxySnapshot, sys: &Sysproxy, auto: &Autoproxy) -> bool {
     if auto.enable {
         // PAC writes bypass state too.
@@ -622,6 +623,7 @@ mod tests {
         guard_told: Option<AuthoritativeState>,
         compensated: bool,
         state_unknown: bool,
+        #[cfg(not(target_os = "linux"))]
         message: String,
     }
 
@@ -649,6 +651,7 @@ mod tests {
             guard_told: *guard_told.lock(),
             compensated: *compensated.lock(),
             state_unknown: SystemProxyStateUnknown::is_in(&recovered),
+            #[cfg(not(target_os = "linux"))]
             message: format!("{recovered:#}"),
         }
     }
