@@ -30,7 +30,7 @@ const CODES_A_DIALOG_REPORTS = new Set<string>([
   'SYSPROXY_SIDECAR_WHILE_SERVICE_READY',
 ])
 
-export const isReportedByDialog = (code: string | undefined): boolean =>
+const isReportedByDialog = (code: string | undefined): boolean =>
   code !== undefined && CODES_A_DIALOG_REPORTS.has(code)
 
 type NoticeContent = unknown
