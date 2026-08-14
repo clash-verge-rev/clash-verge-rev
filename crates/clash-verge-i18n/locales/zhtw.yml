@@ -8,8 +8,8 @@ notifications:
     body: 已切換至 {mode}。
   systemProxyToggled:
     title: 系統代理
-    'on': System proxy has been enabled.
-    'off': System proxy has been disabled.
+    'on': 系統代理已啟用。
+    'off': 系統代理已關閉。
   systemProxyFailed:
     title: 系統代理
     body: 系統代理設定失敗。開啟 Clash Verge 查看原因。
@@ -18,8 +18,8 @@ notifications:
     body: 連續多次失敗後已停止守衛。開啟 Clash Verge 查看原因。
   tunModeToggled:
     title: 虛擬網路介面卡模式
-    'on': TUN mode has been enabled.
-    'off': TUN mode has been disabled.
+    'on': 虛擬網路介面卡模式已啟用。
+    'off': 虛擬網路介面卡模式已關閉。
   lightweightModeEntered:
     title: 輕量模式
     body: 已進入輕量模式。
@@ -33,13 +33,13 @@ notifications:
     title: 應用已隱藏
     body: Clash Verge 正在背景執行。
   updateReady:
-    title: Clash Verge Update
-    body: A new version (v{version}) has been downloaded and is ready to install.
-    installNow: Install Now
-    later: Later
+    title: Clash Verge 更新
+    body: 新版本（v{version}）已下載完成，是否立即安裝？
+    installNow: 立即安裝
+    later: 稍後
 service:
   adminInstallPrompt: 安裝 Clash Verge 服務需要管理員權限
-  adminUninstallPrompt: 卸载 Clash Verge 服務需要管理員權限
+  adminUninstallPrompt: 解除安裝 Clash Verge 服務需要管理員權限
 launchGuard:
   currentExeError: 無法判斷應用程式位置：{error}
   homeDirError: 無法判斷目前使用者的個人目錄，應用程式將結束：{error}
