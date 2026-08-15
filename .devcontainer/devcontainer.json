@@ -92,6 +92,7 @@
     "TAURI_DEV_WATCHER_IGNORE_FILE": ".taurignore"
   },
 
+  "containerUser": "vscode",
   "remoteUser": "vscode",
   "workspaceFolder": "/workspaces/clash-verge-rev",
   "shutdownAction": "stopContainer"
