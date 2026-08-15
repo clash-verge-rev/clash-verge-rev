@@ -82,10 +82,10 @@ export const useProxySelection = (options: ProxySelectionOptions = {}) => {
         onSuccess?.()
         syncTraySelection()
         if (isFixed) {
-          clearSelection(groupName)
+          await clearSelection(groupName)
           debugLog(`[ProxySelection] 代理和状态同步完成: ${groupName}`)
         } else {
-          recordSelection(groupName, proxyName)
+          await recordSelection(groupName, proxyName)
           debugLog(
             `[ProxySelection] 代理和状态同步完成: ${groupName} -> ${proxyName}`,
           )
@@ -150,9 +150,9 @@ export const useProxySelection = (options: ProxySelectionOptions = {}) => {
   )
 
   const handleSelectChange = useCallback(
-    (groupName: string, previousProxy?: string) =>
+    (groupName: string, previousProxy?: string, fixed?: string) =>
       (event: { target: { value: string } }) => {
-        changeProxy(groupName, event.target.value, previousProxy)
+        changeProxy(groupName, event.target.value, previousProxy, fixed)
       },
     [changeProxy],
   )

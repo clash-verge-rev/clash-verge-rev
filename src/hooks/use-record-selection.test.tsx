@@ -28,6 +28,27 @@ describe('useClearSelection', () => {
     expect(clearSelectedNode).toHaveBeenCalledWith('Proxy')
   })
 
+  it('resolves after the clear request finishes', async () => {
+    let resolveClear!: () => void
+    clearSelectedNode.mockImplementationOnce(
+      () => new Promise<void>((resolve) => (resolveClear = resolve)),
+    )
+    const { result } = renderHook(() => useClearSelection())
+
+    const clear = result.current('Proxy')
+    let settled = false
+    clear.then(() => {
+      settled = true
+    })
+
+    await Promise.resolve()
+    expect(settled).toBe(false)
+
+    resolveClear()
+    await clear
+    expect(settled).toBe(true)
+  })
+
   it('reports a failed clear without throwing at the caller', async () => {
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
     clearSelectedNode.mockRejectedValueOnce(new Error('no profile'))
