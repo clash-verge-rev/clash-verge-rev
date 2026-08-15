@@ -956,6 +956,45 @@ pub async fn record_selected_node(group_name: &str, node: &str) -> Result<()> {
     Ok(())
 }
 
+fn remove_selected_node(selected: &mut Vec<PrfSelected>, group_name: &str) -> bool {
+    let original_len = selected.len();
+    selected.retain(|entry| entry.name.as_deref() != Some(group_name));
+    selected.len() != original_len
+}
+
+pub async fn clear_selected_node(group_name: &str) -> Result<()> {
+    let cleared = Config::profiles()
+        .await
+        .with_data_modify(move |mut profiles| async move {
+            let Some(current) = profiles.current.clone() else {
+                return Ok((profiles, false));
+            };
+            let Some(item) = profiles
+                .items
+                .as_mut()
+                .and_then(|items| items.iter_mut().find(|item| item.uid.as_ref() == Some(&current)))
+            else {
+                return Ok((profiles, false));
+            };
+
+            let mut selected = item.selected.clone().unwrap_or_default();
+            if !remove_selected_node(&mut selected, group_name) {
+                return Ok((profiles, false));
+            }
+
+            item.selected = (!selected.is_empty()).then_some(selected);
+            profiles.save_file().await?;
+            Ok((profiles, true))
+        })
+        .await?;
+
+    if cleared {
+        supersede_selected_activation();
+        handle::Handle::refresh_profiles();
+    }
+    Ok(())
+}
+
 async fn persist_reconciled_selected(
     profile_uid: &String,
     original_selected: &[PrfSelected],
@@ -1320,6 +1359,22 @@ mod tests {
             name: Some(group.into()),
             now: Some(node.into()),
         }
+    }
+
+    #[test]
+    fn removes_only_the_requested_group_selection() {
+        let mut selections = vec![selected("Proxy", "Node A"), selected("Fallback", "Node B")];
+
+        assert!(remove_selected_node(&mut selections, "Proxy"));
+        assert_eq!(selections, vec![selected("Fallback", "Node B")]);
+    }
+
+    #[test]
+    fn removing_a_missing_group_is_idempotent() {
+        let mut selections = vec![selected("Proxy", "Node A")];
+
+        assert!(!remove_selected_node(&mut selections, "Missing"));
+        assert_eq!(selections, vec![selected("Proxy", "Node A")]);
     }
 
     fn proxies(groups: Vec<(&str, &[&str], Option<&str>)>) -> Proxies {

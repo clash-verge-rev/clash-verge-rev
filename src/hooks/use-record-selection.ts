@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 
-import { recordSelectedNode } from '@/services/cmds'
+import { clearSelectedNode, recordSelectedNode } from '@/services/cmds'
 
 /**
  * Record which node a group is on, in the profile.
@@ -23,6 +23,17 @@ export const useRecordSelection = () => {
   return useCallback((groupName: string, proxyName: string) => {
     recordSelectedNode(groupName, proxyName).catch((error) => {
       console.error('[Selection] 保存代理选择失败:', error)
+    })
+  }, [])
+}
+
+/**
+ * Forget the persisted node selection for a group after its runtime fixed node is released.
+ */
+export const useClearSelection = () => {
+  return useCallback((groupName: string) => {
+    clearSelectedNode(groupName).catch((error) => {
+      console.error('[Selection] 清除代理选择失败:', error)
     })
   }, [])
 }

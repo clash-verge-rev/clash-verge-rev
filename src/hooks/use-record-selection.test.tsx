@@ -2,11 +2,12 @@
 import { renderHook } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { useRecordSelection } from './use-record-selection'
+import { useClearSelection, useRecordSelection } from './use-record-selection'
 
 const recordSelectedNode = vi.hoisted(() => vi.fn(() => Promise.resolve()))
+const clearSelectedNode = vi.hoisted(() => vi.fn(() => Promise.resolve()))
 
-vi.mock('@/services/cmds', () => ({ recordSelectedNode }))
+vi.mock('@/services/cmds', () => ({ clearSelectedNode, recordSelectedNode }))
 
 const record = (groupName: string, proxyName: string) => {
   const { result } = renderHook(() => useRecordSelection())
@@ -15,6 +16,28 @@ const record = (groupName: string, proxyName: string) => {
 
 beforeEach(() => {
   recordSelectedNode.mockClear()
+  clearSelectedNode.mockClear()
+})
+
+describe('useClearSelection', () => {
+  it('sends only the group name', () => {
+    const { result } = renderHook(() => useClearSelection())
+
+    result.current('Proxy')
+
+    expect(clearSelectedNode).toHaveBeenCalledWith('Proxy')
+  })
+
+  it('reports a failed clear without throwing at the caller', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+    clearSelectedNode.mockRejectedValueOnce(new Error('no profile'))
+    const { result } = renderHook(() => useClearSelection())
+
+    expect(() => result.current('Proxy')).not.toThrow()
+
+    await vi.waitFor(() => expect(consoleError).toHaveBeenCalled())
+    consoleError.mockRestore()
+  })
 })
 
 describe('useRecordSelection', () => {
