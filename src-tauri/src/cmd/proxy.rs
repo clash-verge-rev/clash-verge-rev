@@ -34,8 +34,8 @@ pub async fn record_selected_node(group_name: String, node: String) -> CmdResult
 
 /// Forget the persisted node selection for a proxy group in the current profile.
 #[tauri::command]
-pub async fn clear_selected_node(group_name: String) -> CmdResult<()> {
-    crate::config::profiles::clear_selected_node(&group_name)
+pub async fn forget_selected_node(group_name: String) -> CmdResult<()> {
+    crate::config::profiles::forget_selected_node(&group_name)
         .await
         .stringify_err()
 }

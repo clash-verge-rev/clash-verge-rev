@@ -7,7 +7,7 @@ import {
 } from 'tauri-plugin-mihomo-api'
 
 import {
-  useClearSelection,
+  useForgetSelection,
   useRecordSelection,
 } from '@/hooks/use-record-selection'
 import { useVerge } from '@/hooks/use-verge'
@@ -47,7 +47,7 @@ interface ProxyChangeRequest {
 // 代理选择 Hook
 export const useProxySelection = (options: ProxySelectionOptions = {}) => {
   const recordSelection = useRecordSelection()
-  const clearSelection = useClearSelection()
+  const forgetSelection = useForgetSelection()
   const { verge } = useVerge()
   const pendingRequestRef = useRef<ProxyChangeRequest | null>(null)
   const isProcessingRef = useRef(false)
@@ -82,7 +82,7 @@ export const useProxySelection = (options: ProxySelectionOptions = {}) => {
         onSuccess?.()
         syncTraySelection()
         if (isFixed) {
-          await clearSelection(groupName)
+          await forgetSelection(groupName)
           debugLog(`[ProxySelection] 代理和状态同步完成: ${groupName}`)
         } else {
           await recordSelection(groupName, proxyName)
@@ -104,7 +104,7 @@ export const useProxySelection = (options: ProxySelectionOptions = {}) => {
     },
     [
       autoCloseConnection,
-      clearSelection,
+      forgetSelection,
       enableConnectionCleanup,
       onError,
       onSuccess,

@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 
-import { clearSelectedNode, recordSelectedNode } from '@/services/cmds'
+import { forgetSelectedNode, recordSelectedNode } from '@/services/cmds'
 
 /**
  * Record which node a group is on, in the profile.
@@ -32,10 +32,10 @@ export const useRecordSelection = () => {
 /**
  * Forget the persisted node selection for a group after its runtime fixed node is released.
  */
-export const useClearSelection = () => {
+export const useForgetSelection = () => {
   return useCallback(async (groupName: string) => {
     try {
-      await clearSelectedNode(groupName)
+      await forgetSelectedNode(groupName)
     } catch (error) {
       console.error('[Selection] 清除代理选择失败:', error)
     }

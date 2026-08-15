@@ -962,7 +962,7 @@ fn remove_selected_node(selected: &mut Vec<PrfSelected>, group_name: &str) -> bo
     selected.len() != original_len
 }
 
-pub async fn clear_selected_node(group_name: &str) -> Result<()> {
+pub async fn forget_selected_node(group_name: &str) -> Result<()> {
     let cleared = Config::profiles()
         .await
         .with_data_modify(move |mut profiles| async move {

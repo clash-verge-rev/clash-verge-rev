@@ -2,12 +2,12 @@
 import { renderHook } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { useClearSelection, useRecordSelection } from './use-record-selection'
+import { useForgetSelection, useRecordSelection } from './use-record-selection'
 
 const recordSelectedNode = vi.hoisted(() => vi.fn(() => Promise.resolve()))
-const clearSelectedNode = vi.hoisted(() => vi.fn(() => Promise.resolve()))
+const forgetSelectedNode = vi.hoisted(() => vi.fn(() => Promise.resolve()))
 
-vi.mock('@/services/cmds', () => ({ clearSelectedNode, recordSelectedNode }))
+vi.mock('@/services/cmds', () => ({ forgetSelectedNode, recordSelectedNode }))
 
 const record = (groupName: string, proxyName: string) => {
   const { result } = renderHook(() => useRecordSelection())
@@ -16,43 +16,43 @@ const record = (groupName: string, proxyName: string) => {
 
 beforeEach(() => {
   recordSelectedNode.mockClear()
-  clearSelectedNode.mockClear()
+  forgetSelectedNode.mockClear()
 })
 
-describe('useClearSelection', () => {
+describe('useForgetSelection', () => {
   it('sends only the group name', () => {
-    const { result } = renderHook(() => useClearSelection())
+    const { result } = renderHook(() => useForgetSelection())
 
     result.current('Proxy')
 
-    expect(clearSelectedNode).toHaveBeenCalledWith('Proxy')
+    expect(forgetSelectedNode).toHaveBeenCalledWith('Proxy')
   })
 
   it('resolves after the clear request finishes', async () => {
-    let resolveClear!: () => void
-    clearSelectedNode.mockImplementationOnce(
-      () => new Promise<void>((resolve) => (resolveClear = resolve)),
+    let resolveForget!: () => void
+    forgetSelectedNode.mockImplementationOnce(
+      () => new Promise<void>((resolve) => (resolveForget = resolve)),
     )
-    const { result } = renderHook(() => useClearSelection())
+    const { result } = renderHook(() => useForgetSelection())
 
-    const clear = result.current('Proxy')
+    const forget = result.current('Proxy')
     let settled = false
-    clear.then(() => {
+    forget.then(() => {
       settled = true
     })
 
     await Promise.resolve()
     expect(settled).toBe(false)
 
-    resolveClear()
-    await clear
+    resolveForget()
+    await forget
     expect(settled).toBe(true)
   })
 
   it('reports a failed clear without throwing at the caller', async () => {
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
-    clearSelectedNode.mockRejectedValueOnce(new Error('no profile'))
-    const { result } = renderHook(() => useClearSelection())
+    forgetSelectedNode.mockRejectedValueOnce(new Error('no profile'))
+    const { result } = renderHook(() => useForgetSelection())
 
     expect(() => result.current('Proxy')).not.toThrow()
 
