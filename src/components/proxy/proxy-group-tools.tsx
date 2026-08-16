@@ -102,6 +102,7 @@ export const ProxyGroupTools = memo(function ProxyGroupTools(props: Props) {
       {textState === 'filter' && (
         <Box sx={{ flex: '1 1 auto' }}>
           <BaseSearchBox
+            autoFocus
             defaultValue={filterText}
             matchCase={filterMatchCase}
             matchWholeWord={filterMatchWholeWord}
