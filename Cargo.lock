@@ -1256,8 +1256,8 @@ dependencies = [
 
 [[package]]
 name = "clash_verge_service_ipc"
-version = "2.6.1"
-source = "git+https://github.com/clash-verge-rev/clash-verge-service-ipc.git?tag=v2.6.1#10edb52ec071520f14ce78654e401e4246127d75"
+version = "2.6.2"
+source = "git+https://github.com/clash-verge-rev/clash-verge-service-ipc.git?tag=v2.6.2#edf7cb57811d4e572f1e2d607472cb87bd421ef4"
 dependencies = [
  "anyhow",
  "compact_str",
@@ -1267,7 +1267,7 @@ dependencies = [
  "once_cell",
  "serde",
  "serde_json",
- "sha2 0.10.9",
+ "sha2 0.11.0",
  "strum",
  "strum_macros",
  "sysproxy",
