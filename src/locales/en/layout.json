@@ -36,6 +36,18 @@
         "revalidationFailed": "Failed to refresh the running state",
         "sidecarFailed": "Failed to continue with Sidecar"
       }
+    },
+    "sysproxyPrivilege": {
+      "title": "Could not set the system proxy",
+      "message": "macOS refused the change for lack of privileges. Installing the Clash Verge service lets it make proxy changes as an administrator, and this prompt will not come back.",
+      "serviceReadyMessage": "The Clash Verge service is ready, but the core is still running as a sidecar, which is why setting the system proxy was refused. Switching to service mode fixes it — no reinstall needed.",
+      "alternative": "Alternatively, turn off “require an administrator password to access system-wide settings” in System Settings → Privacy & Security → Advanced.",
+      "later": "Later",
+      "installing": "Installing the system service. This may ask for an administrator password.",
+      "restarting": "Service installed. Restarting the core through it…",
+      "applying": "Applying your system proxy change…",
+      "tunTitle": "TUN mode needs the system service",
+      "tunMessage": "TUN mode needs the Clash Verge system service to take over network traffic. Once it is installed, TUN mode will be turned on for you."
     }
   },
   "feedback": {

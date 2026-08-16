@@ -37,11 +37,17 @@
       },
       "actions": {
         "installService": "서비스 설치",
-        "uninstallService": "서비스 제거"
+        "uninstallService": "서비스 제거",
+        "switchToServiceMode": "서비스 모드로 전환"
       },
       "fields": {
         "systemProxy": "시스템 프록시",
         "tunMode": "TUN 모드"
+      },
+      "messages": {
+        "installedCheckProxy": "서비스가 설치되었고 코어가 서비스를 통해 실행 중입니다. 시스템 프록시 스위치를 확인하고, 방금 한 변경이 적용되지 않았다면 다시 시도하십시오.",
+        "installedCoreNotOnService": "서비스는 설치되었지만 코어가 서비스를 통해 실행되고 있지 않습니다. 코어 상태를 확인한 뒤 다시 시도하십시오.",
+        "installedProxyRestored": "서비스가 설치되었고 코어가 서비스를 통해 실행되며, 시스템 프록시 변경 사항이 적용되었습니다."
       }
     },
     "externalController": {
@@ -649,6 +655,12 @@
         "reinstallFailed": "서비스를 다시 설치하지 못했습니다",
         "repairFailed": "서비스를 복구하지 못했습니다",
         "sidecarFailed": "Sidecar로 계속하지 못했습니다"
+      },
+      "sysproxy": {
+        "privilegeRequired": "시스템 프록시를 설정할 수 없습니다: 권한이 부족하여 macOS가 변경을 거부했습니다. Clash Verge 서비스를 설치하십시오. 관리자라면 시스템 설정 → 개인 정보 보호 및 보안의 고급 옵션에서, 시스템 전체 설정에 관리자 암호를 요구하는 설정을 끌 수도 있습니다.",
+        "directFallback": "시스템 프록시 설정에 실패하여 직접 연결로 되돌렸습니다.",
+        "guardStopped": "시스템 프록시 가드가 연속으로 실패하여 중지되었습니다. 시스템 프록시가 더 이상 자동으로 유지되지 않습니다.",
+        "sidecarWhileServiceReady": "시스템 프록시를 설정하지 못했습니다: Clash Verge 서비스는 준비되었지만 코어가 아직 Sidecar로 실행 중입니다. 코어를 재시작하면 서비스 모드로 전환됩니다."
       }
     },
     "notifications": {

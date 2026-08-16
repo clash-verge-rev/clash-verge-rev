@@ -5,7 +5,7 @@ pub mod hotkey;
 pub mod listener;
 pub mod logger;
 pub mod manager;
-mod notification;
+pub mod notification;
 pub(crate) mod owner_identity;
 pub mod proxy_control;
 pub mod proxy_view;

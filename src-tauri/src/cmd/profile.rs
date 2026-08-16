@@ -350,7 +350,6 @@ pub async fn patch_profiles_config(profiles: IProfiles) -> CmdResult<ValidationO
 }
 
 /// 根据profile name修改profiles
-#[tauri::command]
 pub async fn patch_profiles_config_by_profile_index(profile_index: String) -> CmdResult<ValidationOutcome> {
     logging!(info, Type::Cmd, "切换配置到: {}", profile_index);
 

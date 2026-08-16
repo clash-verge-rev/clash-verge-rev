@@ -10,17 +10,6 @@ macro_rules! revise {
     };
 }
 
-// if key not exists then append value
-#[allow(unused_macros)]
-macro_rules! append {
-    ($map: expr, $key: expr, $val: expr) => {
-        let ret_key = Value::String($key.into());
-        if !$map.contains_key(&ret_key) {
-            $map.insert(ret_key, Value::from($val));
-        }
-    };
-}
-
 pub fn use_tun(mut config: Mapping, enable: bool) -> Mapping {
     let tun_key = Value::from("tun");
     let tun_val = config.get(&tun_key);

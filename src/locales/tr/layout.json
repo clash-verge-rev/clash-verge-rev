@@ -36,6 +36,18 @@
         "revalidationFailed": "Çalışma durumu yenilenemedi",
         "sidecarFailed": "Sidecar ile devam edilemedi"
       }
+    },
+    "sysproxyPrivilege": {
+      "title": "Sistem proxy'si ayarlanamadı",
+      "message": "macOS bu değişikliği yetersiz yetki nedeniyle reddetti. Clash Verge hizmeti kurulduktan sonra proxy ayarlarını hizmet yönetici olarak uygular ve bu uyarı bir daha görünmez.",
+      "serviceReadyMessage": "Clash Verge hizmeti hazır, ancak çekirdek hâlâ sidecar olarak çalıştığından sistem proxy'si ayarlanamadı. Hizmet moduna geçmek sorunu yeniden kurulum gerekmeden çözer.",
+      "alternative": "Alternatif olarak Sistem Ayarları → Gizlilik ve Güvenlik → Gelişmiş bölümünde sistem genelindeki ayarlar için yönetici parolası isteyen seçeneği kapatın.",
+      "later": "Daha sonra",
+      "installing": "Sistem hizmeti kuruluyor. Yönetici parolası istenebilir.",
+      "restarting": "Hizmet kuruldu. Çekirdek onun üzerinden yeniden başlatılıyor…",
+      "applying": "Sistem proxy değişikliğiniz uygulanıyor…",
+      "tunTitle": "TUN modu sistem hizmetine ihtiyaç duyar",
+      "tunMessage": "TUN modunun ağ trafiğini üstlenebilmesi için Clash Verge sistem hizmeti gerekir. Kurulum tamamlandığında TUN modu sizin için açılacaktır."
     }
   },
   "feedback": {

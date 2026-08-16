@@ -25,6 +25,8 @@ interface VergeEvents {
   'verge://timer-updated': string
   /** How the core is running changed; carries the whole snapshot. */
   'verge://run-state-changed': RunState
+  /** Pending failures changed; reread the table. */
+  'verge://pending-failures-changed': null
   /** Which profile is active changed. */
   'profile-changed': string
   'profile-update-started': { uid?: string }

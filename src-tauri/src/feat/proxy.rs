@@ -1,13 +1,21 @@
 use crate::{
     config::{Config, IVerge, MixedPort},
-    core::handle,
+    core::{
+        handle,
+        notification::{self, FailedOperation},
+        proxy_control,
+    },
+    utils::{
+        notification::{NotificationEvent, needs_system_notification, notify_event},
+        window_manager::WindowManager,
+    },
 };
 use clash_verge_logging::{Type, logging};
 use std::env;
 use tauri_plugin_clipboard_manager::ClipboardExt as _;
 
-/// Toggle system proxy on/off
-pub async fn toggle_system_proxy() -> bool {
+/// Toggle system proxy, returning `None` when it does not change.
+pub async fn toggle_system_proxy() -> Option<bool> {
     let verge = Config::verge().await;
     let current = verge.latest_arc().enable_system_proxy.unwrap_or(false);
     let auto_close_connection = verge.latest_arc().auto_close_connection.unwrap_or(false);
@@ -21,24 +29,43 @@ pub async fn toggle_system_proxy() -> bool {
     }
 
     let requested = !current;
-    let patch_result = super::patch_verge(
-        &IVerge {
-            enable_system_proxy: Some(requested),
-            ..IVerge::default()
-        },
-        false,
+    let patch_result = notification::asking_for(
+        toggle_operation(requested),
+        Box::pin(super::patch_verge(
+            &IVerge {
+                enable_system_proxy: Some(requested),
+                ..IVerge::default()
+            },
+            false,
+        )),
     )
     .await;
 
     match patch_result {
-        Ok(_) => {
-            handle::Handle::refresh_verge();
-            requested
-        }
+        // Patch processing refreshes every caller.
+        Ok(_) => Some(requested),
         Err(err) => {
-            logging!(error, Type::ProxyMode, "{err}");
-            current
+            logging!(error, Type::ProxyMode, "{err:#}");
+            report_toggle_failure(&err).await;
+            None
         }
+    }
+}
+
+/// Notify only when a classified failure remains pending.
+async fn report_toggle_failure(error: &anyhow::Error) {
+    let recorded = proxy_control::is_reportable(error);
+
+    if recorded && needs_system_notification(WindowManager::get_main_window_state()) {
+        notify_event(NotificationEvent::SystemProxyFailed).await;
+    }
+}
+
+const fn toggle_operation(requested: bool) -> FailedOperation {
+    if requested {
+        FailedOperation::SystemProxyEnable
+    } else {
+        FailedOperation::SystemProxyDisable
     }
 }
 
@@ -67,7 +94,7 @@ pub async fn toggle_tun_mode(not_save_file: Option<bool>) -> bool {
             Config::verge().await.latest_arc().enable_tun_mode.unwrap_or(false)
         }
         Err(err) => {
-            logging!(error, Type::ProxyMode, "{err}");
+            logging!(error, Type::ProxyMode, "{err:#}");
             current
         }
     }
@@ -121,5 +148,17 @@ pub async fn copy_clash_env() {
 
     if clipboard.write_text(&export_text).is_err() {
         logging!(error, Type::ProxyMode, "Failed to write to clipboard");
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::toggle_operation;
+    use crate::core::notification::FailedOperation;
+
+    #[test]
+    fn a_failed_toggle_records_which_way_the_user_was_asking() {
+        assert_eq!(toggle_operation(true), FailedOperation::SystemProxyEnable);
+        assert_eq!(toggle_operation(false), FailedOperation::SystemProxyDisable);
     }
 }

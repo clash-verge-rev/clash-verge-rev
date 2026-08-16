@@ -10,8 +10,6 @@ use tauri_plugin_mihomo::models::WsConnectionId;
 
 /// 托盘速率流异常后的重连间隔。
 const TRAY_SPEED_RETRY_DELAY: Duration = Duration::from_secs(1);
-/// 托盘速率流运行时的空闲轮询间隔。
-const TRAY_SPEED_IDLE_POLL_INTERVAL: Duration = Duration::from_millis(200);
 /// 托盘速率流在此时间内收不到有效数据时，触发重连并降级到 0/0。
 const TRAY_SPEED_STALE_TIMEOUT: Duration = Duration::from_secs(5);
 
@@ -88,9 +86,7 @@ impl TraySpeedController {
 
                 loop {
                     let next_state = speed_stream
-                        .next_event(TRAY_SPEED_IDLE_POLL_INTERVAL, TRAY_SPEED_STALE_TIMEOUT, || {
-                            handle::Handle::global().is_exiting()
-                        })
+                        .next_event(TRAY_SPEED_STALE_TIMEOUT, || handle::Handle::global().is_exiting())
                         .await;
 
                     match next_state {

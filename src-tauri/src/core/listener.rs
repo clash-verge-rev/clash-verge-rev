@@ -1,5 +1,7 @@
 use anyhow::{Context as _, Result, anyhow, bail};
 #[cfg(target_os = "macos")]
+use clash_verge_logging::{Type as LogType, logging};
+#[cfg(target_os = "macos")]
 use network_interface::{NetworkInterface, NetworkInterfaceConfig as _};
 use serde::{Deserialize, Serialize};
 use serde_yaml_ng::{Mapping, Value};
@@ -380,14 +382,25 @@ fn bind_claim(claim: &BindClaim) -> io::Result<Vec<Socket>> {
         // Hold every overlapping form while probing so they still report a conflict.
         let mut guard_addresses = if claim.address.is_unspecified() {
             NetworkInterface::show()
-                .unwrap_or_default()
+                .unwrap_or_else(|error| {
+                    // Losing the interface list shrinks the guard to loopback — say so.
+                    logging!(
+                        warn,
+                        LogType::Network,
+                        "unable to enumerate interfaces while probing {}; \
+                         only loopback guards the wildcard claim: {error}",
+                        claim.socket_addr()
+                    );
+                    Vec::new()
+                })
                 .into_iter()
                 .flat_map(|interface| interface.addr)
                 .map(|address| address.ip())
                 .filter(|candidate| {
+                    // Link-local addresses are the likeliest to vanish mid-probe.
                     candidate.is_ipv4() == claim.address.is_ipv4()
                         && match candidate {
-                            IpAddr::V4(address) => !address.is_unspecified(),
+                            IpAddr::V4(address) => !address.is_unspecified() && !address.is_link_local(),
                             IpAddr::V6(address) => !address.is_unspecified() && !address.is_unicast_link_local(),
                         }
                 })
@@ -409,18 +422,25 @@ fn bind_claim(claim: &BindClaim) -> io::Result<Vec<Socket>> {
         guard_addresses.sort_unstable();
         guard_addresses.dedup();
         for address in guard_addresses {
-            sockets.push(bind_socket(&BindClaim::new(
-                claim.name,
-                address,
-                claim.port,
-                claim.transport,
-            ))?);
+            match bind_socket(&BindClaim::new(claim.name, address, claim.port, claim.transport)) {
+                Ok(socket) => sockets.push(socket),
+                // Only a conflict proves the port is taken; a vanished guard address proves nothing.
+                Err(error) if is_bind_conflict(&error) => return Err(error),
+                Err(_) => {}
+            }
         }
     }
 
     let socket = bind_socket(claim)?;
     if claim.transport == ListenerTransport::Tcp {
         socket.listen(1)?;
+    }
+    #[cfg(windows)]
+    if claim.transport == ListenerTransport::Tcp
+        && !claim.address.is_unspecified()
+        && windows_wildcard_tcp_listener_exists(claim.address, claim.port)?
+    {
+        return Err(io::ErrorKind::AddrInUse.into());
     }
     sockets.push(socket);
     Ok(sockets)
@@ -491,6 +511,107 @@ fn set_exclusive_address_use(socket: &Socket) -> io::Result<()> {
     Ok(())
 }
 
+#[cfg(windows)]
+fn windows_wildcard_tcp_listener_exists(address: IpAddr, port: u16) -> io::Result<bool> {
+    use windows_sys::Win32::{
+        NetworkManagement::IpHelper::{MIB_TCP6ROW_OWNER_PID, MIB_TCPROW_OWNER_PID},
+        Networking::WinSock::{AF_INET, AF_INET6},
+    };
+
+    let family = match address {
+        IpAddr::V4(_) => u32::from(AF_INET),
+        IpAddr::V6(_) => u32::from(AF_INET6),
+    };
+    let table = windows_tcp_listener_table(family)?;
+    match address {
+        IpAddr::V4(_) => Ok(windows_tcp_listener_rows::<MIB_TCPROW_OWNER_PID>(&table)?
+            .iter()
+            .any(|row| row.dwLocalAddr == 0 && windows_tcp_port(row.dwLocalPort) == port)),
+        IpAddr::V6(_) => Ok(windows_tcp_listener_rows::<MIB_TCP6ROW_OWNER_PID>(&table)?
+            .iter()
+            .any(|row| row.ucLocalAddr == [0; 16] && windows_tcp_port(row.dwLocalPort) == port)),
+    }
+}
+
+#[cfg(windows)]
+fn windows_tcp_listener_table(family: u32) -> io::Result<Vec<u32>> {
+    use std::{mem::size_of, ptr::null_mut};
+    use windows_sys::Win32::{
+        Foundation::ERROR_INSUFFICIENT_BUFFER,
+        NetworkManagement::IpHelper::{GetExtendedTcpTable, TCP_TABLE_OWNER_PID_LISTENER},
+    };
+
+    let mut byte_count = 0;
+    // SAFETY: a null table is the documented size-query form; `byte_count` is writable.
+    let status = unsafe {
+        GetExtendedTcpTable(
+            null_mut(),
+            &raw mut byte_count,
+            0,
+            family,
+            TCP_TABLE_OWNER_PID_LISTENER,
+            0,
+        )
+    };
+    if status != ERROR_INSUFFICIENT_BUFFER {
+        return Err(io::Error::from_raw_os_error(status.cast_signed()));
+    }
+
+    loop {
+        let word_count = (byte_count as usize).div_ceil(size_of::<u32>());
+        let mut table = vec![0u32; word_count];
+        // SAFETY: `table` has at least `byte_count` writable bytes and the API updates
+        // `byte_count` when the listener table grows between calls.
+        let status = unsafe {
+            GetExtendedTcpTable(
+                table.as_mut_ptr().cast(),
+                &raw mut byte_count,
+                0,
+                family,
+                TCP_TABLE_OWNER_PID_LISTENER,
+                0,
+            )
+        };
+        match status {
+            0 => return Ok(table),
+            ERROR_INSUFFICIENT_BUFFER => {}
+            error => return Err(io::Error::from_raw_os_error(error.cast_signed())),
+        }
+    }
+}
+
+#[cfg(windows)]
+fn windows_tcp_listener_rows<Row>(table: &[u32]) -> io::Result<&[Row]> {
+    use std::mem::{align_of, size_of, size_of_val};
+
+    let Some((&row_count, _)) = table.split_first() else {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidData,
+            "Windows returned an empty TCP listener table",
+        ));
+    };
+    let row_count = row_count as usize;
+    let required_bytes = row_count
+        .checked_mul(size_of::<Row>())
+        .and_then(|rows| size_of::<u32>().checked_add(rows))
+        .ok_or_else(|| io::Error::new(io::ErrorKind::InvalidData, "Windows TCP listener table is too large"))?;
+    if required_bytes > size_of_val(table) || align_of::<Row>() > align_of::<u32>() {
+        return Err(io::Error::new(
+            io::ErrorKind::InvalidData,
+            "Windows returned a malformed TCP listener table",
+        ));
+    }
+
+    // SAFETY: the size and alignment checks above cover `row_count` complete rows;
+    // the API places them immediately after its u32 entry count.
+    Ok(unsafe { std::slice::from_raw_parts(table.as_ptr().add(1).cast(), row_count) })
+}
+
+#[cfg(windows)]
+const fn windows_tcp_port(raw_port: u32) -> u16 {
+    u16::from_be(raw_port as u16)
+}
+
 const fn conflict_outcome(claim: &BindClaim) -> ListenerProbeOutcome {
     ListenerProbeOutcome::Conflict {
         port: claim.port,
@@ -524,6 +645,41 @@ mod tests {
 
     fn mapping(yaml: &str) -> anyhow::Result<Mapping> {
         Ok(serde_yaml_ng::from_str(yaml)?)
+    }
+
+    /// The wildcard claim only reaches conflicts through the enumerated guards.
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn probe_reports_interface_tcp_listener_conflicts_for_the_wildcard_address() -> anyhow::Result<()> {
+        use network_interface::{NetworkInterface, NetworkInterfaceConfig as _};
+        use std::net::IpAddr;
+
+        let Some(address) = NetworkInterface::show()?
+            .into_iter()
+            .flat_map(|interface| interface.addr)
+            .map(|address| address.ip())
+            .find(|address| match address {
+                IpAddr::V4(address) => !address.is_loopback() && !address.is_unspecified() && !address.is_link_local(),
+                IpAddr::V6(_) => false,
+            })
+        else {
+            // A host with no routable IPv4 address cannot host this conflict.
+            return Ok(());
+        };
+
+        let listener = TcpListener::bind((address, 0))?;
+        let port = listener.local_addr()?.port();
+        assert_eq!(
+            probe_listener(&ListenerProbe {
+                address: format!("0.0.0.0:{port}"),
+                transports: vec![ListenerTransport::Tcp],
+            }),
+            ListenerProbeOutcome::Conflict {
+                port,
+                transport: ListenerTransport::Tcp
+            }
+        );
+        Ok(())
     }
 
     #[test]

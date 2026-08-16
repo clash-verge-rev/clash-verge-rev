@@ -10,6 +10,12 @@ notifications:
     title: 系統代理
     'on': 系統代理已啟用。
     'off': 系統代理已關閉。
+  systemProxyFailed:
+    title: 系統代理
+    body: 系統代理設定失敗。開啟 Clash Verge 查看原因。
+  systemProxyGuardStopped:
+    title: 系統代理守衛
+    body: 連續多次失敗後已停止守衛。開啟 Clash Verge 查看原因。
   tunModeToggled:
     title: 虛擬網路介面卡模式
     'on': 虛擬網路介面卡模式已啟用。

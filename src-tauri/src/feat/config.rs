@@ -1,6 +1,6 @@
 use crate::{
     config::{Config, IVerge},
-    core::{CoreManager, autostart, handle, hotkey, logger::Logger, tray},
+    core::{CoreManager, autostart, handle, hotkey, logger::Logger, proxy_control::SystemProxyStateUnknown, tray},
     module::{auto_backup::AutoBackupManager, lightweight},
 };
 use anyhow::Result;
@@ -211,9 +211,6 @@ async fn process_terminated_flags(update_flags: UpdateFlags, patch: &IVerge) -> 
         CoreManager::global().update_config_checked().await?;
         handle::Handle::refresh_clash();
     }
-    if update_flags.contains(UpdateFlags::VERGE_CONFIG) {
-        handle::Handle::refresh_verge();
-    }
     if update_flags.contains(UpdateFlags::LAUNCH) {
         autostart::update_launch().await?;
     }
@@ -306,8 +303,25 @@ pub(super) async fn apply_verge_patch(patch: &IVerge, not_save_file: bool) -> Re
 
     let update_flags = determine_update_flags(patch);
     logging!(debug, Type::Setup, "Determined update flags: {:?}", update_flags);
-    process_terminated_flags(update_flags, patch).await?;
+    if let Err(error) = process_terminated_flags(update_flags, patch).await {
+        if !may_commit_system_proxy_disabled(patch, &error) {
+            return Err(error);
+        }
+        // Commit the safe state after a user-requested proxy patch partly lands.
+        verge.edit_draft(|d| d.enable_system_proxy = Some(false));
+        transaction.commit();
+        announce_verge_change();
+        // Persist the forced-off value even when the original patch was pre-saved.
+        let unsaved = verge.data_arc().save_file().await.err();
+        return Err(match unsaved {
+            Some(save) => error.context(format!(
+                "the system proxy state became unknown and the disabled safety value could not be saved: {save:#}"
+            )),
+            None => error,
+        });
+    }
     transaction.commit();
+    announce_verge_change();
 
     logging_error!(Type::Backup, AutoBackupManager::global().refresh_settings().await);
     if !not_save_file {
@@ -319,8 +333,69 @@ pub(super) async fn apply_verge_patch(patch: &IVerge, not_save_file: bool) -> Re
     Ok(())
 }
 
+fn announce_verge_change() {
+    handle::Handle::refresh_verge();
+}
+
+/// Whether a user proxy patch may commit disabled after a partial write.
+fn may_commit_system_proxy_disabled(patch: &IVerge, error: &anyhow::Error) -> bool {
+    patch.enable_system_proxy.is_some() && SystemProxyStateUnknown::is_in(error)
+}
+
 pub async fn fetch_verge_config() -> Result<SharedDraft<IVerge>> {
     let draft = Config::verge().await;
     let data = draft.data_arc();
     Ok(data)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{IVerge, SystemProxyStateUnknown, may_commit_system_proxy_disabled};
+
+    fn state_unknown() -> anyhow::Error {
+        anyhow::anyhow!("networksetup refused")
+            .context(SystemProxyStateUnknown)
+            .context("failed to apply the system proxy")
+    }
+
+    #[test]
+    fn the_user_turning_the_proxy_on_gets_it_committed_as_off_when_the_os_ended_up_unknown() {
+        let patch = IVerge {
+            enable_system_proxy: Some(true),
+            ..IVerge::default()
+        };
+
+        assert!(may_commit_system_proxy_disabled(&patch, &state_unknown()));
+    }
+
+    #[test]
+    fn a_patch_about_something_else_never_rewrites_the_proxy_setting() {
+        let patch = IVerge {
+            enable_tun_mode: Some(true),
+            ..IVerge::default()
+        };
+
+        assert!(!may_commit_system_proxy_disabled(&patch, &state_unknown()));
+    }
+
+    #[test]
+    fn nothing_is_committed_when_nothing_is_known_to_have_been_written() {
+        let patch = IVerge {
+            enable_system_proxy: Some(true),
+            ..IVerge::default()
+        };
+        let refused = anyhow::anyhow!("networksetup refused").context("failed to apply the system proxy");
+
+        assert!(!may_commit_system_proxy_disabled(&patch, &refused));
+    }
+
+    #[test]
+    fn turning_the_proxy_off_and_failing_that_way_still_commits_off() {
+        let patch = IVerge {
+            enable_system_proxy: Some(false),
+            ..IVerge::default()
+        };
+
+        assert!(may_commit_system_proxy_disabled(&patch, &state_unknown()));
+    }
 }
