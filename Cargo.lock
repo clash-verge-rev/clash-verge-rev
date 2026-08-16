@@ -1146,6 +1146,7 @@ dependencies = [
  "regex",
  "reqwest 0.13.4",
  "reqwest_dav",
+ "rfd",
  "runas",
  "rustls",
  "scopeguard",

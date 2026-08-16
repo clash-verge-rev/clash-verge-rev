@@ -31,11 +31,10 @@ mod app_init {
     use super::*;
 
     /// Initialize singleton monitoring for other instances
-    pub fn init_singleton_check() -> Result<()> {
+    pub fn init_singleton_check() -> Result<server::SingletonDisposition> {
         AsyncHandler::block_on(async move {
             logging!(info, Type::Setup, "开始检查单例实例...");
-            server::check_singleton().await?;
-            Ok(())
+            server::check_singleton().await
         })
     }
 
@@ -213,17 +212,40 @@ mod app_init {
     }
 }
 
-pub fn run() {
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum StartupAction {
+    Continue,
+    ExitSuccess,
+    ExitFailure,
+}
+
+fn handle_singleton_startup(
+    result: Result<server::SingletonDisposition>,
+    report_error: impl FnOnce(&anyhow::Error),
+) -> StartupAction {
+    match result {
+        Ok(server::SingletonDisposition::Primary) => StartupAction::Continue,
+        Ok(server::SingletonDisposition::Secondary) => StartupAction::ExitSuccess,
+        Err(error) => {
+            report_error(&error);
+            StartupAction::ExitFailure
+        }
+    }
+}
+
+pub fn run() -> std::process::ExitCode {
     #[cfg(all(target_os = "macos", not(debug_assertions), not(test), not(feature = "verge-dev")))]
     if utils::macos_launch_guard::enforce_before_initialization() == utils::macos_launch_guard::LaunchDisposition::Exit
     {
-        return;
+        return std::process::ExitCode::SUCCESS;
     }
 
     let _ = utils::dirs::init_portable_flag();
 
-    if app_init::init_singleton_check().is_err() {
-        return;
+    match handle_singleton_startup(app_init::init_singleton_check(), utils::startup::report_error) {
+        StartupAction::Continue => {}
+        StartupAction::ExitSuccess => return std::process::ExitCode::SUCCESS,
+        StartupAction::ExitFailure => return std::process::ExitCode::FAILURE,
     }
 
     #[cfg(target_os = "linux")]
@@ -483,4 +505,30 @@ pub fn run() {
         },
         _ => {}
     });
+    std::process::ExitCode::SUCCESS
+}
+
+#[cfg(test)]
+mod startup_tests {
+    use super::{StartupAction, handle_singleton_startup};
+    use crate::utils::server::SingletonDisposition;
+    use std::cell::Cell;
+
+    #[test]
+    fn secondary_instance_exits_quietly_and_successfully() {
+        let reported = Cell::new(false);
+        let action = handle_singleton_startup(Ok(SingletonDisposition::Secondary), |_| reported.set(true));
+
+        assert_eq!(action, StartupAction::ExitSuccess);
+        assert!(!reported.get());
+    }
+
+    #[test]
+    fn fatal_singleton_error_is_reported_and_fails_startup() {
+        let reported = Cell::new(false);
+        let action = handle_singleton_startup(Err(anyhow::anyhow!("listener failed")), |_| reported.set(true));
+
+        assert_eq!(action, StartupAction::ExitFailure);
+        assert!(reported.get());
+    }
 }
