@@ -66,22 +66,22 @@ export const useProxySelection = (options: ProxySelectionOptions = {}) => {
   const executeChange = useCallback(
     async (request: ProxyChangeRequest) => {
       const { groupName, proxyName, previousProxy, fixed } = request
-      const isFixed = fixed === proxyName
-      if (isFixed) {
+      const isFixedProxy = fixed === proxyName
+      if (isFixedProxy) {
         debugLog(`[ProxySelection] 代理取消固定: ${groupName} -> ${proxyName}`)
       } else {
         debugLog(`[ProxySelection] 代理切换: ${groupName} -> ${proxyName}`)
       }
 
       try {
-        if (isFixed) {
+        if (isFixedProxy) {
           await unfixedProxy(groupName)
         } else {
           await selectNodeForGroup(groupName, proxyName)
         }
         onSuccess?.()
         syncTraySelection()
-        if (isFixed) {
+        if (isFixedProxy) {
           await forgetSelection(groupName)
           debugLog(`[ProxySelection] 代理和状态同步完成: ${groupName}`)
         } else {
