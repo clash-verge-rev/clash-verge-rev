@@ -971,7 +971,7 @@ mod tests {
             .await;
 
             assert!(result.is_err(), "{mode:?} {intent:?}");
-            assert!(calls.lock().is_empty(), "{mode:?} {intent:?}: {:?}", &*calls.lock());
+            assert!(calls.lock().is_empty(), "{mode:?} {intent:?}: {:?}", *calls.lock());
         }
     }
 
