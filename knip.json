@@ -1,7 +1,7 @@
 {
   "$schema": "https://unpkg.com/knip@6/schema.json",
   "entry": ["src/polyfills/*.js!"],
-  "project": ["src/**/*.{js,jsx,ts,tsx}!", "scripts/**/*.{js,mjs}!"],
+  "project": ["src/**/*.{js,jsx,ts,tsx,sass,scss}!", "scripts/**/*.{js,mjs}!"],
   "include": [
     "files",
     "dependencies",

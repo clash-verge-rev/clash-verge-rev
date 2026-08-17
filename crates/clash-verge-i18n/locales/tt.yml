@@ -10,6 +10,12 @@ notifications:
     title: Системалы прокси
     'on': System proxy has been enabled.
     'off': System proxy has been disabled.
+  systemProxyFailed:
+    title: Система проксие
+    body: Система проксиен көйләп булмады. Сәбәбен күрер өчен Clash Verge'ны ачыгыз.
+  systemProxyGuardStopped:
+    title: Система проксие сакчысы
+    body: Берничә тапкыр рәттән уңышсыз булгач туктады. Сәбәбен күрер өчен Clash Verge'ны ачыгыз.
   tunModeToggled:
     title: TUN режимы
     'on': TUN mode has been enabled.

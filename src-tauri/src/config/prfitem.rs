@@ -109,7 +109,6 @@ pub struct PrfOption {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub danger_accept_invalid_certs: Option<bool>,
 
-    #[serde(default = "default_allow_auto_update")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub allow_auto_update: Option<bool>,
 
@@ -577,12 +576,6 @@ impl PrfItem {
     pub fn current_groups(&self) -> Option<&String> {
         self.option.as_ref().and_then(|o| o.groups.as_ref())
     }
-}
-
-// 向前兼容，默认为订阅启用自动更新
-#[allow(clippy::unnecessary_wraps)]
-const fn default_allow_auto_update() -> Option<bool> {
-    Some(true)
 }
 
 fn allow_auto_update_enabled(option: Option<&PrfOption>) -> bool {

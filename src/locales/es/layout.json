@@ -36,6 +36,18 @@
         "revalidationFailed": "No se pudo actualizar el estado de ejecución",
         "sidecarFailed": "No se pudo continuar con Sidecar"
       }
+    },
+    "sysproxyPrivilege": {
+      "title": "No se pudo configurar el proxy del sistema",
+      "message": "macOS rechazó el cambio por falta de permisos. Al instalar el servicio de Clash Verge, este aplicará los cambios de proxy como administrador y este aviso no volverá a aparecer.",
+      "serviceReadyMessage": "El servicio de Clash Verge está listo, pero el núcleo sigue ejecutándose como sidecar, por eso se rechazó la configuración del proxy. Cambiar al modo servicio lo resuelve sin reinstalar.",
+      "alternative": "Otra opción: desactiva «requerir contraseña de administrador para acceder a los ajustes de todo el sistema» en Ajustes del Sistema → Privacidad y seguridad → Avanzado.",
+      "later": "Más tarde",
+      "installing": "Instalando el servicio del sistema. Puede pedir una contraseña de administrador.",
+      "restarting": "Servicio instalado. Reiniciando el núcleo a través de él…",
+      "applying": "Aplicando tu cambio de proxy del sistema…",
+      "tunTitle": "El modo TUN necesita el servicio del sistema",
+      "tunMessage": "El modo TUN necesita el servicio del sistema de Clash Verge para gestionar el tráfico de red. Una vez instalado, se activará el modo TUN por ti."
     }
   },
   "feedback": {

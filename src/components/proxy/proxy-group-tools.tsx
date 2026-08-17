@@ -1,8 +1,8 @@
 import AccessTimeRounded from '@mui/icons-material/AccessTimeRounded'
-import FilterAltOffRounded from '@mui/icons-material/FilterAltOffRounded'
-import FilterAltRounded from '@mui/icons-material/FilterAltRounded'
 import MyLocationRounded from '@mui/icons-material/MyLocationRounded'
 import NetworkCheckRounded from '@mui/icons-material/NetworkCheckRounded'
+import SearchOffRounded from '@mui/icons-material/SearchOffRounded'
+import SearchRounded from '@mui/icons-material/SearchRounded'
 import SortByAlphaRounded from '@mui/icons-material/SortByAlphaRounded'
 import SortRounded from '@mui/icons-material/SortRounded'
 import VisibilityOffRounded from '@mui/icons-material/VisibilityOffRounded'
@@ -251,9 +251,9 @@ export const ProxyGroupTools = memo(function ProxyGroupTools(props: Props) {
         }}
       >
         {textState === 'filter' ? (
-          <FilterAltRounded fontSize="inherit" />
+          <SearchOffRounded fontSize="inherit" />
         ) : (
-          <FilterAltOffRounded fontSize="inherit" />
+          <SearchRounded fontSize="inherit" />
         )}
       </IconButton>
     </Box>

@@ -1,11 +1,10 @@
 use super::{CoreManager, RunningMode};
-use crate::cmd::StringifyErr as _;
 use crate::config::{Config, IVerge};
 use crate::core::handle::Handle;
 use crate::core::manager::CLASH_LOGGER;
 use crate::core::proxy_control;
 use crate::core::service::{SERVICE_MANAGER, ServiceStatus};
-use anyhow::Result;
+use anyhow::{Result, ensure};
 use clash_verge_logging::{Type, logging};
 use scopeguard::defer;
 use smartstring::alias::String;
@@ -23,6 +22,22 @@ enum StartupDecision {
     Service,
     Sidecar,
     Wait,
+}
+
+/// Proxy action captured before a controlled stop.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum ProxyStopIntent {
+    Clear,
+    /// Let the service overwrite the inherited proxy state.
+    HandOverToService,
+}
+
+/// Select whether a controlled stop clears or hands over proxy state.
+const fn proxy_stop_intent(is_macos: bool, running_mode: RunningMode, decision: StartupDecision) -> ProxyStopIntent {
+    match (is_macos, running_mode, decision) {
+        (true, RunningMode::Sidecar, StartupDecision::Service) => ProxyStopIntent::HandOverToService,
+        _ => ProxyStopIntent::Clear,
+    }
 }
 
 const fn startup_decision(status: &ServiceStatus, service_required: bool) -> StartupDecision {
@@ -102,22 +117,31 @@ impl ProxyRestoreExpectation {
 async fn run_controlled_stop_transition<StopGuard, StopGuardFuture, Clear, ClearFuture, Stop, StopFuture>(
     is_macos: bool,
     running_mode: RunningMode,
+    proxy_intent: ProxyStopIntent,
     stop_guard: StopGuard,
     clear_proxy: Clear,
     stop_core: Stop,
 ) -> Result<()>
 where
     StopGuard: FnOnce() -> StopGuardFuture,
-    StopGuardFuture: std::future::Future<Output = ()>,
+    StopGuardFuture: std::future::Future<Output = bool>,
     Clear: FnOnce() -> ClearFuture,
     ClearFuture: std::future::Future<Output = Result<()>>,
     Stop: FnOnce() -> StopFuture,
     StopFuture: std::future::Future<Output = Result<()>>,
 {
-    match running_mode {
-        RunningMode::NotRunning => {}
-        RunningMode::Service if is_macos => stop_guard().await,
-        RunningMode::Service | RunningMode::Sidecar => clear_proxy().await?,
+    match (running_mode, proxy_intent) {
+        (RunningMode::NotRunning, _) => {}
+        // Do not hand the OS to another owner while the old guard may still write.
+        (RunningMode::Sidecar, ProxyStopIntent::HandOverToService) => ensure!(
+            stop_guard().await,
+            "the system proxy guard did not stop in time; not handing the proxy to the service"
+        ),
+        (RunningMode::Service, _) if is_macos => ensure!(
+            stop_guard().await,
+            "the system proxy guard did not stop in time; not stopping the service-owned core"
+        ),
+        (RunningMode::Service | RunningMode::Sidecar, _) => clear_proxy().await?,
     }
     stop_core().await
 }
@@ -197,7 +221,7 @@ async fn run_service_config_replacement_transition<
 ) -> Result<()>
 where
     StopGuard: FnOnce() -> StopGuardFuture,
-    StopGuardFuture: std::future::Future<Output = ()>,
+    StopGuardFuture: std::future::Future<Output = bool>,
     Clear: FnOnce() -> ClearFuture,
     ClearFuture: std::future::Future<Output = Result<()>>,
     Stop: FnOnce() -> StopFuture,
@@ -208,7 +232,15 @@ where
     Restore: FnOnce() -> RestoreFuture,
     RestoreFuture: std::future::Future<Output = Result<()>>,
 {
-    run_controlled_stop_transition(is_macos, RunningMode::Service, stop_guard, clear_proxy, stop_core).await?;
+    run_controlled_stop_transition(
+        is_macos,
+        RunningMode::Service,
+        ProxyStopIntent::Clear,
+        stop_guard,
+        clear_proxy,
+        stop_core,
+    )
+    .await?;
     run_ready_core_start_transition(start_core, core_is_ready, restore_proxy).await
 }
 
@@ -311,16 +343,16 @@ impl CoreManager {
             self.apply_proxy_after_start().await
         }
         .await;
-        if let Err(error) = &result {
+        if let Err(error) = result {
             // Revoke only the failed Sidecar allowance; its startup says nothing about Service health.
             SERVICE_MANAGER.withdraw_sidecar_allowance();
             if let Err(cleanup_error) = self.rollback_failed_sidecar_transition().await {
-                return Err(anyhow::anyhow!(
-                    "Sidecar startup failed: {error:#}; failed to clear proxy before rollback: {cleanup_error:#}"
-                ));
+                return Err(proxy_control::rollback_failure(error, cleanup_error)
+                    .context("failed to clear the proxy before rolling back"));
             }
+            return Err(error);
         }
-        result
+        Ok(())
     }
 
     pub async fn uninstall_service_and_start_sidecar(&self) -> Result<()> {
@@ -354,14 +386,14 @@ impl CoreManager {
         )
         .await;
 
-        if let Err(error) = &result
-            && let Err(cleanup_error) = self.rollback_failed_sidecar_transition().await
-        {
-            return Err(anyhow::anyhow!(
-                "Service uninstall transition failed: {error:#}; failed to clear proxy before rollback: {cleanup_error:#}"
-            ));
+        if let Err(error) = result {
+            if let Err(cleanup_error) = self.rollback_failed_sidecar_transition().await {
+                return Err(proxy_control::rollback_failure(error, cleanup_error)
+                    .context("failed to clear the proxy before rolling back"));
+            }
+            return Err(error);
         }
-        result
+        Ok(())
     }
 
     async fn rollback_failed_sidecar_transition(&self) -> Result<()> {
@@ -483,15 +515,30 @@ impl CoreManager {
 
     /// 调用者须已持有 `lifecycle_lock`。
     pub(crate) async fn controlled_stop_core_inner(&self) -> Result<()> {
+        self.controlled_stop_core_with_intent(ProxyStopIntent::Clear).await
+    }
+
+    /// 调用者须已持有 `lifecycle_lock`。
+    async fn controlled_stop_core_with_intent(&self, proxy_intent: ProxyStopIntent) -> Result<()> {
         let running_mode = *self.get_running_mode();
         run_controlled_stop_transition(
             cfg!(target_os = "macos"),
             running_mode,
+            proxy_intent,
             proxy_control::stop_guard,
             proxy_control::clear,
             || self.stop_core_unprepared_inner(),
         )
         .await
+    }
+
+    /// Capture handoff intent before stopping; startup state may change afterward.
+    async fn proxy_stop_intent(&self) -> ProxyStopIntent {
+        let running_mode = *self.get_running_mode();
+        if !cfg!(target_os = "macos") || !matches!(running_mode, RunningMode::Sidecar) {
+            return ProxyStopIntent::Clear;
+        }
+        proxy_stop_intent(cfg!(target_os = "macos"), running_mode, self.prepare_startup().await)
     }
 
     /// 调用者须已持有 `lifecycle_lock`,且已完成受控代理清理。
@@ -521,8 +568,9 @@ impl CoreManager {
         // 持锁覆盖 stop+start,避免生命周期操作插入。
         let _life = self.lifecycle_lock.lock().await;
         logging!(info, Type::Core, "Restarting core");
+        let proxy_intent = self.proxy_stop_intent().await;
         run_core_replacement_transition(
-            || self.controlled_stop_core_inner(),
+            || self.controlled_stop_core_with_intent(proxy_intent),
             || async {
                 self.start_core_inner().await?;
                 if matches!(*self.get_running_mode(), RunningMode::NotRunning) {
@@ -535,9 +583,10 @@ impl CoreManager {
         .await
     }
 
-    pub async fn change_core(&self, clash_core: &String) -> Result<(), String> {
+    /// Switch the core binary and reload configuration.
+    pub async fn change_core(&self, clash_core: &String) -> Result<()> {
         if !IVerge::VALID_CLASH_CORES.contains(&clash_core.as_str()) {
-            return Err(format!("Invalid clash core: {}", clash_core).into());
+            anyhow::bail!("invalid clash core: {clash_core}");
         }
 
         Config::verge().await.edit_draft(|d| {
@@ -546,10 +595,8 @@ impl CoreManager {
         Config::verge().await.apply();
 
         let verge_data = Config::verge().await.latest_arc();
-        verge_data.save_file().await.map_err(|e| e.to_string())?;
-
-        self.update_config_checked().await.stringify_err()?;
-        Ok(())
+        verge_data.save_file().await?;
+        self.update_config_checked().await
     }
 
     async fn prepare_startup(&self) -> StartupDecision {
@@ -761,7 +808,7 @@ impl CoreManager {
 #[cfg(test)]
 mod tests {
     use super::{
-        CoreManager, ProxyRestoreExpectation, StartupDecision, can_allow_sidecar_for_session,
+        CoreManager, ProxyRestoreExpectation, ProxyStopIntent, StartupDecision, can_allow_sidecar_for_session,
         run_controlled_stop_transition, run_core_replacement_transition, run_core_start_transition,
         run_ready_core_start_transition, run_service_config_replacement_transition, run_sidecar_termination_transition,
         run_uninstall_transition, should_wait_for_service, startup_decision,
@@ -800,10 +847,11 @@ mod tests {
             true
         }
 
-        async fn stop_guard(&self, calls: &Mutex<Vec<&'static str>>) {
+        async fn stop_guard(&self, calls: &Mutex<Vec<&'static str>>) -> bool {
             self.generation.fetch_add(1, Ordering::AcqRel);
             let _operation = self.operation_lock.lock().await;
             calls.lock().push("guard-stopped");
+            true
         }
     }
 
@@ -848,7 +896,8 @@ mod tests {
         let result = run_controlled_stop_transition(
             true,
             RunningMode::Sidecar,
-            || future::ready(()),
+            ProxyStopIntent::Clear,
+            || future::ready(true),
             || transition_step(&calls, "proxy_clear", None),
             || transition_step(&calls, "core_stop", None),
         )
@@ -858,6 +907,112 @@ mod tests {
         assert_eq!(&*calls.lock(), &["proxy_clear", "core_stop"]);
     }
 
+    #[test]
+    fn only_a_macos_sidecar_on_its_way_to_the_service_leaves_the_proxy_alone() {
+        use super::proxy_stop_intent;
+
+        assert_eq!(
+            proxy_stop_intent(true, RunningMode::Sidecar, StartupDecision::Service),
+            ProxyStopIntent::HandOverToService
+        );
+
+        for (is_macos, mode, decision) in [
+            (true, RunningMode::Sidecar, StartupDecision::Sidecar),
+            (true, RunningMode::Sidecar, StartupDecision::Wait),
+            (true, RunningMode::Service, StartupDecision::Service),
+            (true, RunningMode::NotRunning, StartupDecision::Service),
+            (false, RunningMode::Sidecar, StartupDecision::Service),
+        ] {
+            assert_eq!(
+                proxy_stop_intent(is_macos, mode, decision),
+                ProxyStopIntent::Clear,
+                "{is_macos} {mode:?} {decision:?}"
+            );
+        }
+    }
+
+    #[tokio::test]
+    async fn a_sidecar_handed_to_the_service_stops_its_guard_and_leaves_the_proxy_alone() {
+        let calls = Arc::new(Mutex::new(Vec::new()));
+
+        let result = run_controlled_stop_transition(
+            true,
+            RunningMode::Sidecar,
+            ProxyStopIntent::HandOverToService,
+            || {
+                calls.lock().push("guard-stopped");
+                future::ready(true)
+            },
+            || transition_step(&calls, "unexpected-proxy-clear", None),
+            || transition_step(&calls, "core_stop", None),
+        )
+        .await;
+
+        assert!(result.is_ok());
+        assert_eq!(&*calls.lock(), &["guard-stopped", "core_stop"]);
+    }
+
+    #[tokio::test]
+    async fn a_guard_that_would_not_stop_keeps_the_core_where_it_is() {
+        for (mode, intent) in [
+            (RunningMode::Sidecar, ProxyStopIntent::HandOverToService),
+            (RunningMode::Service, ProxyStopIntent::Clear),
+        ] {
+            let calls = Arc::new(Mutex::new(Vec::new()));
+
+            let result = run_controlled_stop_transition(
+                true,
+                mode,
+                intent,
+                || future::ready(false),
+                || transition_step(&calls, "proxy_clear", None),
+                || transition_step(&calls, "core_stop", None),
+            )
+            .await;
+
+            assert!(result.is_err(), "{mode:?} {intent:?}");
+            assert!(calls.lock().is_empty(), "{mode:?} {intent:?}: {:?}", *calls.lock());
+        }
+    }
+
+    #[tokio::test]
+    async fn a_sidecar_handed_over_still_stops_even_when_a_user_space_clear_would_fail() {
+        let calls = Arc::new(Mutex::new(Vec::new()));
+
+        let result = run_controlled_stop_transition(
+            true,
+            RunningMode::Sidecar,
+            ProxyStopIntent::HandOverToService,
+            || future::ready(true),
+            || transition_step(&calls, "proxy_clear", Some("proxy_clear")),
+            || transition_step(&calls, "core_stop", None),
+        )
+        .await;
+
+        assert!(result.is_ok());
+        assert_eq!(&*calls.lock(), &["core_stop"]);
+    }
+
+    #[tokio::test]
+    async fn an_ordinary_sidecar_stop_still_clears_even_off_macos() {
+        for is_macos in [true, false] {
+            let calls = Arc::new(Mutex::new(Vec::new()));
+
+            let result = run_controlled_stop_transition(
+                is_macos,
+                RunningMode::Sidecar,
+                ProxyStopIntent::Clear,
+                || future::ready(true),
+                || transition_step(&calls, "proxy_clear", None),
+                || transition_step(&calls, "core_stop", None),
+            )
+            .await;
+
+            assert!(result.is_ok());
+            assert_eq!(&*calls.lock(), &["proxy_clear", "core_stop"]);
+        }
+    }
+
     #[tokio::test]
     async fn controlled_macos_service_stop_drains_guard_before_one_helper_transaction() {
         let calls = Arc::new(Mutex::new(Vec::new()));
@@ -865,9 +1020,10 @@ mod tests {
         let result = run_controlled_stop_transition(
             true,
             RunningMode::Service,
+            ProxyStopIntent::Clear,
             || {
                 calls.lock().push("guard-stopped");
-                future::ready(())
+                future::ready(true)
             },
             || transition_step(&calls, "unexpected-proxy-clear", None),
             || transition_step(&calls, "service_stop_with_proxy_clear", None),
@@ -904,9 +1060,8 @@ mod tests {
         let mut stop = Box::pin(run_controlled_stop_transition(
             true,
             RunningMode::Service,
-            || async {
-                coordinator.stop_guard(&calls).await;
-            },
+            ProxyStopIntent::Clear,
+            || coordinator.stop_guard(&calls),
             || transition_step(&calls, "unexpected-proxy-clear", None),
             || transition_step(&calls, "service-stop-failed", Some("service-stop-failed")),
         ));
@@ -934,7 +1089,8 @@ mod tests {
         let result = run_controlled_stop_transition(
             true,
             RunningMode::Sidecar,
-            || future::ready(()),
+            ProxyStopIntent::Clear,
+            || future::ready(true),
             || transition_step(&calls, "proxy_clear", Some("proxy_clear")),
             || transition_step(&calls, "core_stop", None),
         )
@@ -1037,7 +1193,8 @@ mod tests {
         let result = run_controlled_stop_transition(
             false,
             RunningMode::Service,
-            || future::ready(()),
+            ProxyStopIntent::Clear,
+            || future::ready(true),
             || transition_step(&calls, "service-proxy-clear", Some("service-proxy-clear")),
             || {
                 service_alive.store(false, Ordering::Release);
@@ -1139,7 +1296,7 @@ mod tests {
                 is_macos,
                 || {
                     calls.lock().push("guard-stopped");
-                    future::ready(())
+                    future::ready(true)
                 },
                 || transition_step(&calls, "proxy-clear", None),
                 || {

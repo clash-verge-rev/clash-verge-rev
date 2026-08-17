@@ -40,7 +40,7 @@ jobs:
         run: bash ./scripts/extract_update_logs.sh
         shell: bash
 
-      - uses: pnpm/action-setup@v6.0.9
+      - uses: pnpm/action-setup@v6.0.10
         name: Install pnpm
         with:
           run_install: false
@@ -48,7 +48,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v7
         with:
-          node-version: '24.18.1'
+          node-version: '24.19.0'
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
@@ -174,7 +174,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libxslt1.1 libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf
 
-      - uses: pnpm/action-setup@v6.0.9
+      - uses: pnpm/action-setup@v6.0.10
         name: Install pnpm
         with:
           run_install: false
@@ -182,7 +182,7 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v7
         with:
-          node-version: '24.18.1'
+          node-version: '24.19.0'
           cache: 'pnpm'
 
       - name: Pnpm Cache
@@ -274,14 +274,14 @@ jobs:
           cache-workspace-crates: true
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v6.0.9
+        uses: pnpm/action-setup@v6.0.10
         with:
           run_install: false
 
       - name: Install Node
         uses: actions/setup-node@v7
         with:
-          node-version: '24.18.1'
+          node-version: '24.19.0'
           cache: 'pnpm'
 
       - name: Pnpm Cache
@@ -419,14 +419,14 @@ jobs:
           cache-workspace-crates: true
 
       - name: Install pnpm
-        uses: pnpm/action-setup@v6.0.9
+        uses: pnpm/action-setup@v6.0.10
         with:
           run_install: false
 
       - name: Install Node
         uses: actions/setup-node@v7
         with:
-          node-version: '24.18.1'
+          node-version: '24.19.0'
           cache: 'pnpm'
 
       - name: Pnpm Cache
@@ -528,9 +528,9 @@ jobs:
       - name: Install Node
         uses: actions/setup-node@v7
         with:
-          node-version: '24.18.1'
+          node-version: '24.19.0'
 
-      - uses: pnpm/action-setup@v6.0.9
+      - uses: pnpm/action-setup@v6.0.10
         name: Install pnpm
         with:
           run_install: false

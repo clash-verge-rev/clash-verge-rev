@@ -613,7 +613,10 @@ fn uninstall_service() -> Result<()> {
     let status = if linux_running_as_root() {
         StdCommand::new(&uninstall_path).status()?
     } else {
-        let result = StdCommand::new(&elevator).arg(&uninstall_path).status()?;
+        let result = StdCommand::new(&elevator)
+            .arg("--disable-internal-agent")
+            .arg(&uninstall_path)
+            .status()?;
 
         // 如果 pkexec 执行失败，回退到 sudo
         if !result.success() && elevator.contains("pkexec") {
@@ -661,7 +664,10 @@ fn install_service() -> Result<()> {
     let output = if linux_running_as_root() {
         StdCommand::new(&install_path).output()?
     } else {
-        let result = StdCommand::new(&elevator).arg(&install_path).output()?;
+        let result = StdCommand::new(&elevator)
+            .arg("--disable-internal-agent")
+            .arg(&install_path)
+            .output()?;
 
         // 如果 pkexec 执行失败，回退到 sudo
         if !result.status.success() && elevator.contains("pkexec") {
@@ -1286,8 +1292,8 @@ async fn wait_for_service_ipc() -> Result<()> {
 impl ServiceManager {
     pub const fn config() -> clash_verge_service_ipc::IpcConfig {
         clash_verge_service_ipc::IpcConfig {
-            default_timeout: Duration::from_millis(150),
-            retry_delay: Duration::from_millis(250),
+            default_timeout: Duration::from_millis(1000),
+            retry_delay: Duration::from_millis(500),
             max_retries: 20,
         }
     }

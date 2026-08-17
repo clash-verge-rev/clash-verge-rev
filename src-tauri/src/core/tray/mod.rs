@@ -607,58 +607,51 @@ async fn create_tray_menu(
 ) -> Result<tauri::menu::Menu<Wry>> {
     let current_proxy_mode = mode.unwrap_or("");
 
+    let mut verge_settings = Config::verge().await.latest_arc();
+    let fetch_proxy_groups =
+        options.include_proxy_groups && verge_settings.tray_proxy_groups_display_mode.as_deref() != Some("disable");
+
     // TODO: should update tray menu again when it was timeout error
-    let (proxy_nodes_data, runtime_proxy_groups_order) = if options.include_proxy_groups {
+    let (proxy_nodes_data, runtime_proxy_groups_order) = if fetch_proxy_groups {
         let proxy_nodes_data =
             tokio::time::timeout(Duration::from_millis(1000), handle::Handle::mihomo().get_proxies())
                 .await
                 .map_or(None, |res| res.ok());
 
-        let runtime_proxy_groups_order = cmd::get_runtime_config()
-            .await
-            .map_err(|e| {
-                logging!(
-                    error,
-                    Type::Cmd,
-                    "Failed to fetch runtime proxy groups for tray menu: {e}"
-                );
-            })
-            .ok()
-            .flatten()
-            .map(|config| {
-                config
-                    .get("proxy-groups")
-                    .and_then(|groups| groups.as_sequence())
-                    .map(|groups| {
-                        groups
-                            .iter()
-                            .filter_map(|group| group.get("name"))
-                            .filter_map(|name| name.as_str())
-                            .map(|name| name.into())
-                            .collect::<Vec<String>>()
-                    })
-                    .unwrap_or_default()
-            });
+        let runtime = Config::runtime().await.latest_arc();
+        let runtime_proxy_groups_order = runtime.config.as_ref().map(|config| {
+            config
+                .get("proxy-groups")
+                .and_then(|groups| groups.as_sequence())
+                .map(|groups| {
+                    groups
+                        .iter()
+                        .filter_map(|group| group.get("name"))
+                        .filter_map(|name| name.as_str())
+                        .enumerate()
+                        .map(|(index, name)| (name.into(), index))
+                        .collect::<HashMap<String, usize>>()
+                })
+                .unwrap_or_default()
+        });
 
         (proxy_nodes_data, runtime_proxy_groups_order)
     } else {
         (None, None)
     };
 
-    let proxy_group_order_map: Option<HashMap<smartstring::SmartString<smartstring::LazyCompact>, usize>> =
-        runtime_proxy_groups_order.as_ref().map(|group_names| {
-            group_names
-                .iter()
-                .enumerate()
-                .map(|(index, name)| (name.clone(), index))
-                .collect::<HashMap<String, usize>>()
-        });
+    if fetch_proxy_groups {
+        verge_settings = Config::verge().await.latest_arc();
+    }
 
-    let verge_settings = Config::verge().await.latest_arc();
     let tray_proxy_groups_display_mode = verge_settings
         .tray_proxy_groups_display_mode
         .as_deref()
         .unwrap_or("default");
+    let include_proxy_groups = options.include_proxy_groups && tray_proxy_groups_display_mode != "disable";
+
+    let proxy_group_order_map = runtime_proxy_groups_order;
+
     let show_outbound_modes_inline = verge_settings.tray_inline_outbound_modes.unwrap_or(false);
 
     let version = env!("CARGO_PKG_VERSION");
@@ -740,7 +733,7 @@ async fn create_tray_menu(
         &profile_menu_items_refs,
     )?;
 
-    let (proxies_menu, inline_proxy_items) = if options.include_proxy_groups {
+    let (proxies_menu, inline_proxy_items) = if include_proxy_groups {
         let proxy_sub_menus =
             create_subcreate_proxy_menu_item(app_handle, current_proxy_mode, proxy_group_order_map, proxy_nodes_data);
 
@@ -965,7 +958,7 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
                 };
             }
             MenuIds::SYSTEM_PROXY => {
-                feat::toggle_system_proxy().await;
+                let _ = feat::toggle_system_proxy().await;
             }
             MenuIds::TUN_MODE => {
                 feat::toggle_tun_mode(None).await;

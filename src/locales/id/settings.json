@@ -37,11 +37,17 @@
       },
       "actions": {
         "installService": "Instal Layanan",
-        "uninstallService": "Uninstall Service"
+        "uninstallService": "Uninstall Service",
+        "switchToServiceMode": "Beralih ke mode layanan"
       },
       "fields": {
         "systemProxy": "Proksi Sistem",
         "tunMode": "Mode Tun (NIC Virtual)"
+      },
+      "messages": {
+        "installedCheckProxy": "Layanan terpasang dan inti berjalan melaluinya. Periksa sakelar proxy sistem dan ulangi perubahan Anda jika belum diterapkan.",
+        "installedCoreNotOnService": "Layanan terpasang, tetapi inti tidak berjalan melaluinya. Periksa inti lalu coba lagi.",
+        "installedProxyRestored": "Layanan telah dipasang, core berjalan melaluinya, dan perubahan proxy sistem Anda telah diterapkan."
       }
     },
     "externalController": {
@@ -649,6 +655,12 @@
         "reinstallFailed": "Gagal memasang ulang layanan",
         "repairFailed": "Gagal memperbaiki layanan",
         "sidecarFailed": "Gagal melanjutkan dengan Sidecar"
+      },
+      "sysproxy": {
+        "privilegeRequired": "Tidak dapat mengatur proxy sistem: macOS menolak perubahan ini karena hak akses tidak mencukupi. Pasang layanan Clash Verge; jika Anda administrator, Anda juga dapat mematikan keharusan kata sandi administrator untuk pengaturan seluruh sistem di opsi lanjutan Pengaturan Sistem → Privasi & Keamanan.",
+        "directFallback": "Gagal mengatur proxy sistem; lalu lintas dikembalikan ke koneksi langsung.",
+        "guardStopped": "Penjaga proxy sistem berhenti setelah gagal beberapa kali berturut-turut. Proxy sistem tidak lagi dipertahankan secara otomatis.",
+        "sidecarWhileServiceReady": "Proxy sistem tidak dapat diatur: layanan Clash Verge sudah siap, tetapi inti masih berjalan sebagai Sidecar. Mulai ulang inti untuk beralih ke mode layanan."
       }
     },
     "notifications": {
