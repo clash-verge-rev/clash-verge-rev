@@ -23,7 +23,7 @@ use std::{
     path::PathBuf,
     sync::atomic::{AtomicBool, Ordering},
 };
-use tokio::sync::OnceCell;
+use tokio::sync::{Mutex, MutexGuard, OnceCell};
 use tokio::time::sleep;
 
 pub struct Config {
@@ -34,6 +34,7 @@ pub struct Config {
 }
 
 static TUN_SESSION_SUPPRESSED: AtomicBool = AtomicBool::new(false);
+static CONFIG_WRITE_LOCK: Mutex<()> = Mutex::const_new(());
 
 impl Config {
     pub async fn global() -> &'static Self {
@@ -64,6 +65,11 @@ impl Config {
 
     pub async fn runtime() -> Draft<IRuntime> {
         Self::global().await.runtime_config.clone()
+    }
+
+    /// Serialize transactions that share configuration draft layers.
+    pub(crate) async fn lock_config_write() -> MutexGuard<'static, ()> {
+        CONFIG_WRITE_LOCK.lock().await
     }
 
     /// 初始化订阅

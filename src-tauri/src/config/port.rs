@@ -47,6 +47,7 @@ impl Config {
     }
 
     async fn resolve_startup_mixed_port_inner() -> Result<bool> {
+        let _config_write = Self::lock_config_write().await;
         let clash = Self::clash().await.latest_arc();
         let verge = Self::verge().await.latest_arc();
         let selected_port = clash.get_mixed_port();
@@ -89,7 +90,7 @@ impl Config {
         let clash = Self::clash().await;
         let verge = Self::verge().await;
         let runtime = Self::runtime().await;
-        // Every failure below leaves the three layers as they were, without saying so.
+        // Roll back all three drafts if fallback fails.
         let transaction = DraftTransaction::begin(vec![&clash, &verge, &runtime])?;
 
         clash.edit_draft(|draft| {
@@ -131,9 +132,7 @@ impl Config {
         }
         .await;
 
-        // Files are not part of the transaction, so a failed write is restored explicitly.
-        // The drafts are rolled back first: restoring reads the committed configuration, and
-        // must not see a candidate that is being abandoned.
+        // Restore files after rollback so regeneration sees committed values.
         if let Err(error) = persist_result {
             transaction.rollback();
             return match restore_files(&snapshots).await {
@@ -210,7 +209,7 @@ fn report_fallback_error(message: String) {
     });
 }
 
-// Only service-managed cores can survive into this startup phase; this app has not spawned its sidecar yet.
+// Only a service-managed core can still be running during startup.
 async fn owned_service_core_uses_port(port: u16) -> bool {
     if !matches!(SERVICE_MANAGER.current().await, ServiceStatus::Ready) {
         return false;
@@ -261,8 +260,7 @@ async fn owned_service_core_uses_port(port: u16) -> bool {
 
 fn configured_listener_ports(clash: &IClashTemp, verge: &IVerge) -> HashSet<u16> {
     let mut ports = HashSet::new();
-    // Every listener except the Mixed Port itself: that is the one being reassigned, so
-    // colliding with its current value is exactly what we are trying to do.
+    // Exclude the Mixed Port because it is being reassigned.
     for key in proxy_listener_keys().filter(|key| *key != MIXED_PORT_KEY) {
         if let Some(port) = mapping_port(&clash.0, key) {
             ports.insert(port);

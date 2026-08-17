@@ -30,6 +30,7 @@ pub async fn probe_listener(request: ListenerProbe) -> Result<ListenerProbeOutco
 #[allow(clippy::cognitive_complexity)]
 pub async fn save_proxy_ports(settings: ProxyPortSettings) -> Result<SaveProxyPortsOutcome> {
     settings.validate()?;
+    let _config_write = Config::lock_config_write().await;
     let manager = CoreManager::global();
     if !manager.try_start_config_update() {
         bail!("configuration update is already running");
@@ -38,27 +39,19 @@ pub async fn save_proxy_ports(settings: ProxyPortSettings) -> Result<SaveProxyPo
         manager.finish_config_update();
     }
 
-    // Read before opening the transaction: rolling back discards whatever draft each layer
-    // holds, so a transaction opened before this `?` would throw away drafts staged by
-    // someone else that this function never touched.
+    // Read first because transaction rollback discards all claimed drafts.
     let current = current_runtime_mapping().await?;
 
     let clash = Config::clash().await;
     let verge = Config::verge().await;
     let runtime = Config::runtime().await;
-    // Every rejection and every failure below leaves the three layers as they were.
+    // Roll back all three drafts if the candidate is rejected or fails.
     let transaction = DraftTransaction::begin(vec![&clash, &verge, &runtime])?;
 
     stage_proxy_ports(&settings).await;
-    // The candidate ports are staged but nothing is serving them yet, so close PAC rather
-    // than hand out a script for a port that is between owners. The PAC endpoint resolves the
-    // Mixed Port through the draft layer, so from here until the drafts are committed or rolled
-    // back it would otherwise answer with a port nothing is listening on.
+    // Hide PAC while the staged ports are not yet serving traffic.
     manager.core_starting();
-    // Most ways out of here are a rejection: the candidate is refused and the Core keeps
-    // serving on its old ports, having never been stopped. Re-deriving PAC from the Running
-    // Mode is what reopens it for that Core — and it is equally correct after a restart that
-    // succeeded, or one that failed and left the Core down.
+    // Recompute PAC state after every exit path.
     defer! {
         manager.core_start_settled();
     }
@@ -82,8 +75,7 @@ pub async fn save_proxy_ports(settings: ProxyPortSettings) -> Result<SaveProxyPo
     }
 
     let snapshots = capture_config_files().await?;
-    // From here the drafts alone are no longer enough to undo things: files are on disk and
-    // the core may be restarted, so failures restore explicitly as well as rolling back.
+    // Once files change, failures must restore both files and drafts.
     if let Err(error) = Config::generate_file(ConfigType::Run).await {
         transaction.rollback();
         return match restore_files(&snapshots).await {
@@ -210,10 +202,7 @@ async fn persist_proxy_port_sources() -> Result<()> {
     Ok(())
 }
 
-/// Roll the drafts back *now*, rather than on the way out.
-///
-/// The transaction discards when it drops, but rollback has to regenerate files from the
-/// committed configuration first, so the drafts must be gone before that happens.
+/// Discard candidate drafts before restoring files from committed configuration.
 async fn discard_proxy_port_drafts() {
     Config::clash().await.discard();
     Config::verge().await.discard();
