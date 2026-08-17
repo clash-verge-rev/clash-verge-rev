@@ -356,6 +356,27 @@ impl IProfiles {
         self.save_file().await
     }
 
+    /// Raise intervals below `min_minutes`. `None`/`0` mean "never auto-update", left alone.
+    /// Returns how many changed so the caller can skip a pointless write.
+    pub fn raise_short_update_intervals(&mut self, min_minutes: u64) -> usize {
+        let mut raised = 0;
+
+        for item in self.items.iter_mut().flatten() {
+            let Some(option) = item.option.as_mut() else {
+                continue;
+            };
+            if option
+                .update_interval
+                .is_some_and(|interval| (1..min_minutes).contains(&interval))
+            {
+                option.update_interval = Some(min_minutes);
+                raised += 1;
+            }
+        }
+
+        raised
+    }
+
     pub(crate) fn plan_delete_item(&mut self, uid: &String) -> Result<(bool, ProfileDeletePlan)> {
         let current = self.current.as_ref().unwrap_or(uid).clone();
         let delete_uids = self.get_item(uid)?.option.as_ref().map_or_else(Vec::new, |op| {
@@ -1293,6 +1314,58 @@ mod tests {
             }),
             ..PrfItem::default()
         }
+    }
+
+    fn interval_item(uid: &str, update_interval: Option<u64>) -> PrfItem {
+        PrfItem {
+            uid: Some(uid.into()),
+            itype: Some("remote".into()),
+            option: Some(PrfOption {
+                update_interval,
+                ..PrfOption::default()
+            }),
+            ..PrfItem::default()
+        }
+    }
+
+    #[test]
+    fn raising_intervals_only_touches_those_scheduled_too_often() {
+        let mut profiles = IProfiles {
+            current: None,
+            items: Some(vec![
+                interval_item("too-often", Some(60)),
+                interval_item("just-under", Some(1439)),
+                interval_item("at-floor", Some(1440)),
+                interval_item("relaxed", Some(4320)),
+                // raising these would switch auto-update on
+                interval_item("disabled-by-zero", Some(0)),
+                interval_item("disabled-by-absence", None),
+                PrfItem {
+                    uid: Some("no-option".into()),
+                    option: None,
+                    ..PrfItem::default()
+                },
+            ]),
+        };
+
+        assert_eq!(profiles.raise_short_update_intervals(1440), 2);
+
+        let intervals: Vec<Option<u64>> = profiles
+            .items
+            .iter()
+            .flatten()
+            .map(|item| item.option.as_ref().and_then(|o| o.update_interval))
+            .collect();
+        assert_eq!(
+            intervals,
+            vec![Some(1440), Some(1440), Some(1440), Some(4320), Some(0), None, None]
+        );
+
+        assert_eq!(
+            profiles.raise_short_update_intervals(1440),
+            0,
+            "a second pass must be a no-op, so re-running the migration cannot churn the file"
+        );
     }
 
     #[test]

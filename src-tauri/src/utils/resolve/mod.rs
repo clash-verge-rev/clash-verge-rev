@@ -48,6 +48,10 @@ pub fn resolve_setup_async() {
     AsyncHandler::spawn(|| async {
         logging!(info, Type::ClashVergeRev, "Version: {}", env!("CARGO_PKG_VERSION"));
 
+        // Ahead of the window and init_timer: anything saved or deep-link-imported after the app
+        // is up is a deliberate choice. Config files already exist (init_work_dir_and_logger).
+        logging_error!(Type::Setup, init::migrate_short_update_intervals().await);
+
         #[cfg(target_os = "macos")]
         resolve_dock_show().await;
         init_startup_script().await;

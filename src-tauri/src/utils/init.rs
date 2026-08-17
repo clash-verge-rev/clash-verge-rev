@@ -232,6 +232,52 @@ async fn migrate_legacy_macos_service_logs(log_dir: &Path) -> Result<()> {
     Ok(())
 }
 
+/// Raise existing sub-floor update intervals, once per install.
+///
+/// One-off repair, not a standing rule — the UI warns about shorter intervals but still saves
+/// them, so the marker is written even when nothing needed raising.
+pub async fn migrate_short_update_intervals() -> Result<()> {
+    let marker = dirs::update_interval_migrated_path()?;
+    if fs::try_exists(&marker).await? {
+        return Ok(());
+    }
+
+    // Same order as every other writer holding it (lock, then draft permit): save_file runs
+    // inside the closure, ahead of the optimistic check, so a racing restore can't be undone.
+    let _profile_write = crate::config::profiles::PROFILE_WRITE_LOCK.lock().await;
+
+    let min = constants::profile::MIN_UPDATE_INTERVAL;
+    let raised = Config::profiles()
+        .await
+        .with_data_modify(|mut profiles: IProfiles| async move {
+            // `IProfiles::new` normalises items to Some when it read the file, and returns a
+            // bare default() when it failed. A failed load also raises zero — without this the
+            // marker would burn the one shot on profiles nobody managed to load.
+            if profiles.items.is_none() {
+                anyhow::bail!("profiles.yaml was not loaded; refusing to record the migration as done");
+            }
+            let raised = profiles.raise_short_update_intervals(min);
+            if raised > 0 {
+                profiles.save_file().await?;
+            }
+            Ok((profiles, raised))
+        })
+        .await?;
+
+    if raised > 0 {
+        logging!(
+            info,
+            Type::Setup,
+            "已将 {} 个订阅的自动更新间隔提升到 {} 分钟",
+            raised,
+            min
+        );
+    }
+
+    fs::write(&marker, b"").await?;
+    Ok(())
+}
+
 #[cfg(target_os = "macos")]
 async fn migrate_legacy_macos_logs() -> Result<()> {
     let log_dir = dirs::app_logs_dir()?;

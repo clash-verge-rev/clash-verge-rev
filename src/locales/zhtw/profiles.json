@@ -135,6 +135,9 @@
         "uidMissing": "缺少訂閱識別碼",
         "saveFailed": "儲存訂閱失敗"
       },
+      "warnings": {
+        "frequentUpdate": "間隔過短會頻繁觸發核心重新載入並中斷現有連線，建議使用預設值 {{minutes}} 分鐘（24 小時）"
+      },
       "feedback": {
         "notifications": {
           "creationRetry": "訂閱建立失敗，嘗試使用 Clash 代理建立",

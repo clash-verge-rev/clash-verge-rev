@@ -135,6 +135,9 @@
         "uidMissing": "Профиль билгесе юк",
         "saveFailed": "Профильне саклап булмады"
       },
+      "warnings": {
+        "frequentUpdate": "Кыска аралык ядрәне еш яңадан йөкли һәм актив тоташуларны өзә. {{minutes}} минут (24 сәгать) тәкъдим ителә."
+      },
       "feedback": {
         "notifications": {
           "creationRetry": "Profile creation failed, retrying with Clash proxy...",

@@ -233,6 +233,7 @@ export const translationKeys = [
   'profiles.modals.profileForm.errors.urlRequired',
   'profiles.modals.profileForm.errors.uidMissing',
   'profiles.modals.profileForm.errors.saveFailed',
+  'profiles.modals.profileForm.warnings.frequentUpdate',
   'profiles.modals.profileForm.feedback.notifications.creationRetry',
   'profiles.modals.profileForm.feedback.notifications.creationSuccess',
   'profiles.modals.proxiesEditor.title',
