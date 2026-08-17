@@ -30,6 +30,7 @@ vi.mock('@/hooks/use-verge', () => ({
     mutateVerge,
     patchVerge,
   }),
+  useDefaultVergeConfig: () => ({ enable_tun_mode: false }),
 }))
 vi.mock('@/hooks/use-system-state', () => ({
   useSystemState: () => ({
