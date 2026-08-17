@@ -1,6 +1,6 @@
 use crate::{
     config::{
-        Config, ConfigType,
+        Config, ConfigType, MixedPort,
         snapshot::{FileSnapshot, capture_config_files, restore_files},
     },
     core::{
@@ -19,7 +19,7 @@ use crate::{
 use anyhow::{Context as _, Result, anyhow, bail};
 use clash_verge_draft::DraftTransaction;
 use clash_verge_logging::{Type, logging};
-use scopeguard::defer;
+use scopeguard::{ScopeGuard, defer, guard};
 
 pub async fn probe_listener(request: ListenerProbe) -> Result<ListenerProbeOutcome> {
     AsyncHandler::spawn_blocking(move || probe_listener_sync(&request))
@@ -55,6 +55,11 @@ pub async fn save_proxy_ports(settings: ProxyPortSettings) -> Result<SaveProxyPo
     defer! {
         manager.core_start_settled();
     }
+    // A user-picked port ends the startup fallback, but only once the save lands: until then the
+    // Core still serves the borrowed port, so every failing exit must put it back or the system
+    // proxy and PAC point at a dead port. Declared after the PAC guard so it restores first.
+    let borrowed_port = guard(MixedPort::session_fallback(), restore_borrowed_port);
+    MixedPort::clear_session_fallback();
     Config::generate()
         .await
         .context("failed to generate candidate proxy port configuration")?;
@@ -86,6 +91,9 @@ pub async fn save_proxy_ports(settings: ProxyPortSettings) -> Result<SaveProxyPo
 
     if was_running && let Err(activation_error) = manager.restart_core_during_config_update().await {
         transaction.rollback();
+        // Ahead of the rollback, not on scope exit: restarting the old core re-applies the system
+        // proxy from `MixedPort::desired()`, which must already name the borrowed port.
+        restore_borrowed_port(*borrowed_port);
         if let Err(rollback_error) = rollback_proxy_ports(&snapshots, was_running).await {
             return Err(rollback_failure(activation_error, rollback_error)
                 .context("failed to activate the proxy port configuration"));
@@ -105,6 +113,7 @@ pub async fn save_proxy_ports(settings: ProxyPortSettings) -> Result<SaveProxyPo
 
     if let Err(persist_error) = persist_proxy_port_sources().await {
         transaction.rollback();
+        restore_borrowed_port(*borrowed_port);
         return match rollback_proxy_ports(&snapshots, was_running).await {
             Ok(()) => Err(persist_error),
             Err(rollback_error) => Err(rollback_failure(persist_error, rollback_error)),
@@ -112,10 +121,20 @@ pub async fn save_proxy_ports(settings: ProxyPortSettings) -> Result<SaveProxyPo
     }
 
     transaction.commit();
+    // The save landed, so the port the app had borrowed is now irrelevant.
+    let _ = ScopeGuard::into_inner(borrowed_port);
     Handle::refresh_clash();
     Handle::refresh_verge();
     logging!(info, Type::Config, "Proxy port configuration applied and persisted");
     Ok(SaveProxyPortsOutcome::Saved)
+}
+
+/// Put back the port a startup fallback had borrowed, after a save failed to replace it.
+fn restore_borrowed_port(previous: Option<u16>) {
+    match previous {
+        Some(port) => MixedPort::set_session_fallback(port),
+        None => MixedPort::clear_session_fallback(),
+    }
 }
 
 async fn current_runtime_mapping() -> Result<serde_yaml_ng::Mapping> {

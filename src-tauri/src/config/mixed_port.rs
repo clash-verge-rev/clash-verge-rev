@@ -1,16 +1,10 @@
 //! Resolving the Mixed Port.
 //!
-//! Two different questions were being asked with one answer:
-//!
-//! - *What have we configured?* — the user's selection, else the Merge Config. Everything that
-//!   writes configuration or decides what to start needs this, and it has to be answerable
-//!   before the Core exists.
-//! - *What is the Core actually serving on?* — what the Core reports, else what we configured.
-//!   Anything that points a client at the proxy wants this, because the two can differ: a
-//!   startup fallback moves the port, and a hand-edited Core config can move it too.
-//!
-//! Before, six call sites hand-copied the first chain (one of them skipping the Merge Config
-//! entirely) and the frontend hand-copied a version of the second.
+//! Two questions, deliberately kept apart because the answers can differ:
+//! [`MixedPort::desired`] — what we configured, answerable before the Core exists;
+//! [`MixedPort::effective`] — what the Core reports it is serving on.
+
+use std::sync::atomic::{AtomicU16, Ordering};
 
 use anyhow::Result;
 
@@ -20,33 +14,49 @@ use crate::core::handle::Handle;
 /// The port mihomo listens on when nothing else is configured.
 pub const DEFAULT_MIXED_PORT: u16 = 7897;
 
+/// The port a startup fallback moved this session to, or 0 for none.
+///
+/// Never persisted: the user's port stays in `verge.yaml` and `config.yaml` so the next launch
+/// asks for it again. Persisting it instead made a once-blocked port climb on every launch.
+static SESSION_FALLBACK: AtomicU16 = AtomicU16::new(0);
+
 /// Resolving the Mixed Port.
 pub struct MixedPort;
 
 impl MixedPort {
-    /// The Mixed Port the app has configured.
+    /// Read by [`Self::desired`] and by runtime config generation — the two places that decide
+    /// what the Core is asked to listen on.
+    pub(crate) fn session_fallback() -> Option<u16> {
+        match SESSION_FALLBACK.load(Ordering::Acquire) {
+            0 => None,
+            port => Some(port),
+        }
+    }
+
+    pub(crate) fn set_session_fallback(port: u16) {
+        SESSION_FALLBACK.store(port, Ordering::Release);
+    }
+
+    pub(crate) fn clear_session_fallback() {
+        SESSION_FALLBACK.store(0, Ordering::Release);
+    }
+
+    /// The Mixed Port the app has configured. Safe before the Core exists.
     ///
-    /// Reads the draft layer, so an edit in progress is visible to the code applying it. Safe
-    /// to call before the Core is running, unlike [`Self::effective`].
-    ///
-    /// Reading the draft means a caller that hands this to something *outside* the app — the
-    /// PAC endpoint is the one that does — can name a port the Core has not moved to yet.
-    /// What makes that safe is that the only path staging a listener port,
-    /// `feat::listener::save_proxy_ports`, closes PAC across the staging with `core_starting`
-    /// and reopens it with `core_start_settled`. A second path that stages a listener port
-    /// while the Core is serving would have to do the same.
+    /// Reads the draft layer, so this can name a port the Core has not moved to yet — which
+    /// matters because the PAC endpoint hands it outside the app. Safe only because
+    /// `feat::listener::save_proxy_ports` closes PAC across the staging (`core_starting` /
+    /// `core_start_settled`); any other path staging a listener port must do the same.
     pub async fn desired() -> u16 {
         let selected = Config::verge().await.latest_arc().verge_mixed_port;
         // `get_mixed_port` already falls back to the default when the Merge Config is silent.
         let merged = Config::clash().await.latest_arc().get_mixed_port();
-        resolve_desired(selected, merged)
+        resolve_desired(Self::session_fallback(), selected, merged)
     }
 
     /// The Mixed Port the Core is actually serving on.
     ///
-    /// Costs one round-trip to the Core, so it belongs on paths a user triggers rather than on
-    /// paths served per request. Falls back to [`Self::desired`] when the Core cannot be asked,
-    /// which is the right answer whenever the Core is not running anyway.
+    /// Costs a round-trip, so use it on user-triggered paths, not per-request ones.
     pub async fn effective() -> u16 {
         let desired = Self::desired().await;
         resolve_effective(
@@ -57,11 +67,12 @@ impl MixedPort {
     }
 }
 
-/// Prefer what the user selected, else what the Merge Config resolved to.
-const fn resolve_desired(selected: Option<u16>, merged: u16) -> u16 {
-    match selected {
-        Some(port) => port,
-        None => merged,
+/// Fallback first — it is the only value not written down, so the files still name the port the
+/// user asked for while this session serves another.
+const fn resolve_desired(session_fallback: Option<u16>, selected: Option<u16>, merged: u16) -> u16 {
+    match (session_fallback, selected) {
+        (Some(port), _) | (None, Some(port)) => port,
+        (None, None) => merged,
     }
 }
 
@@ -85,17 +96,21 @@ mod tests {
 
     #[test]
     fn a_selected_port_wins_over_the_merge_config() {
-        assert_eq!(resolve_desired(Some(9000), 7897), 9000);
+        assert_eq!(resolve_desired(None, Some(9000), 7897), 9000);
     }
 
     #[test]
     fn the_merge_config_answers_when_nothing_is_selected() {
-        assert_eq!(resolve_desired(None, 8080), 8080);
+        assert_eq!(resolve_desired(None, None, 8080), 8080);
+    }
+
+    #[test]
+    fn a_session_fallback_outranks_the_port_still_written_down() {
+        assert_eq!(resolve_desired(Some(7900), Some(7897), 7897), 7900);
     }
 
     #[tokio::test]
     async fn a_reporting_core_overrides_what_we_configured() {
-        // This is the startup-fallback case: we asked for 7897 and the Core landed on 7898.
         assert_eq!(resolve_effective(|| async { Ok(7898) }, 7897).await, 7898);
     }
 

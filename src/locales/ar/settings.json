@@ -292,7 +292,7 @@
         "portInUse": "Port {{port}} is already in use",
         "saved": "Port settings saved",
         "saveFailed": "Failed to save port settings",
-        "automaticFallback": "المنفذ {{oldPort}} مستخدم. تم تبديل منفذ الوكيل المختلط إلى {{newPort}} وحفظه.",
+        "automaticFallback": "المنفذ {{oldPort}} مستخدم، لذا تعمل هذه الجلسة على {{newPort}}. لم يتغيّر إعدادك وسيُعاد تجربة {{oldPort}} عند التشغيل التالي.",
         "automaticFallbackFailed": "فشل التبديل التلقائي لمنفذ الوكيل المختلط: {{error}}",
         "portTooLow": "يجب ألا يقل المنفذ عن 1000",
         "portTooHigh": "يجب ألا يزيد المنفذ عن 65535"
