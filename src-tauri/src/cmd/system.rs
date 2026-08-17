@@ -2,6 +2,21 @@ use crate::core::{
     notification::{self, PendingFailure},
     runstate::{RUN_STATE, RunStateView},
 };
+use dark_light::{Mode as SystemTheme, detect as detect_system_theme};
+
+/// Read the current desktop appearance from the platform theme source.
+/// On Linux, dark-light reads org.freedesktop.appearance/color-scheme
+/// through XDG Desktop Portal.
+#[tauri::command]
+pub fn get_system_theme() -> Result<Option<&'static str>, String> {
+    detect_system_theme()
+        .map(|theme| match theme {
+            SystemTheme::Dark => Some("dark"),
+            SystemTheme::Light => Some("light"),
+            SystemTheme::Unspecified => None,
+        })
+        .map_err(|err| err.to_string())
+}
 
 /// The whole Run State in one call.
 ///

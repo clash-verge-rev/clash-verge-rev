@@ -277,6 +277,10 @@ export async function getSystemInfo() {
   return invoke<SystemInfo>('get_system_info')
 }
 
+export async function getSystemTheme() {
+  return invoke<'dark' | 'light' | null>('get_system_theme')
+}
+
 export async function copyIconFile(
   path: string,
   name: 'common' | 'sysproxy' | 'tun',

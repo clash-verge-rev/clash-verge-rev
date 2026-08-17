@@ -8,6 +8,7 @@ import { useEffect, useMemo } from 'react'
 
 import { useVerge } from '@/hooks/use-verge'
 import { defaultDarkTheme, defaultTheme } from '@/pages/_theme'
+import { getSystemTheme } from '@/services/cmds'
 import { useSetThemeMode, useThemeMode } from '@/services/states'
 
 const CSS_INJECTION_SCOPE_ROOT = '[data-css-injection-root]'
@@ -87,29 +88,34 @@ export const useCustomTheme = () => {
 
     let isMounted = true
 
-    const timerId = setTimeout(() => {
+    const syncSystemTheme = () => {
       if (!isMounted) return
-      appWindow
-        .theme()
+
+      getSystemTheme()
         .then((systemTheme) => {
           if (isMounted && systemTheme) {
             setMode(systemTheme)
           }
         })
         .catch((err) => {
-          console.error('Failed to get initial system theme:', err)
+          console.error('Failed to read system theme:', err)
         })
-    }, 0)
+    }
 
-    const unlistenPromise = appWindow.onThemeChanged(({ payload }) => {
-      if (isMounted) {
-        setMode(payload)
-      }
+    void syncSystemTheme()
+
+    // Some Linux desktop/portal combinations do not reliably propagate
+    // Tauri ThemeChanged events to the webview. Query the platform theme
+    // periodically as a fallback.
+    const pollId = setInterval(syncSystemTheme, 2000)
+
+    const unlistenPromise = appWindow.onThemeChanged(() => {
+      void syncSystemTheme()
     })
 
     return () => {
       isMounted = false
-      clearTimeout(timerId)
+      clearInterval(pollId)
       unlistenPromise
         .then((unlistenFn) => {
           if (typeof unlistenFn === 'function') {
