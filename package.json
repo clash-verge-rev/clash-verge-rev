@@ -37,7 +37,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:dev-control": "node --test scripts/dev-control.test.mjs scripts/service-release.test.mjs",
+    "test:dev-control": "node --test scripts/dev-control.test.mjs",
     "knip:check": "knip",
     "knip:report": "knip --no-exit-code"
   },

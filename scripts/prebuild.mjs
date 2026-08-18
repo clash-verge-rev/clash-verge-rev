@@ -58,6 +58,9 @@ const ARCH_MAP = {
 const arg1 = process.argv.slice(2)[0]
 const arg2 = process.argv.slice(2)[1]
 const target = arg1 === '--force' || arg1 === '-f' ? arg2 : arg1
+if (process.env.CI && !target) {
+  throw new Error('prebuild requires an explicit target triple in CI')
+}
 const { platform, arch } = target
   ? { platform: PLATFORM_MAP[target], arch: ARCH_MAP[target] }
   : process
