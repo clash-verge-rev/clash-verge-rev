@@ -30,19 +30,11 @@ use tokio::{fs, task::JoinHandle};
 
 pub(crate) static PROFILE_WRITE_LOCK: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
 
-/// Regex to check profile file names, eg.
-/// R12345678.yaml (remote)
-/// L12345678.yaml (local)
-/// m12345678.yaml (merge)
-/// s12345678.js (script)
-/// r12345678.yaml (rules)
-/// p12345678.yaml (proxies)
-/// g12345678.yaml (groups)
+/// Matches generated profile files such as `R12345678.yaml` or `s12345678.js`.
 #[allow(clippy::unwrap_used)]
 static REGEX_PROFILE_FILE: LazyLock<regex::Regex> =
     LazyLock::new(|| regex::Regex::new(r"^(?:[RLmrpg][a-zA-Z0-9]+\.yaml|s[a-zA-Z0-9]+\.js)$").unwrap());
 
-// activate selected nodes task handle
 static ACTIVATE_SELECTED_TASK: LazyLock<Mutex<Option<JoinHandle<()>>>> = LazyLock::new(|| Mutex::new(None));
 static ACTIVATE_SELECTED_GENERATION: AtomicU64 = AtomicU64::new(0);
 
@@ -50,29 +42,18 @@ static ACTIVATE_SELECTED_GENERATION: AtomicU64 = AtomicU64::new(0);
 // lock acquisition, connection-pool waiting, and local-socket connection establishment.
 const MIHOMO_OPERATION_TIMEOUT: Duration = Duration::from_secs(10);
 const SELECTED_NODES_RECHECK_DELAY: Duration = Duration::from_secs(1);
-/// How long a restore keeps trying to put back selections the core has not loaded yet.
-///
-/// A provider-backed group is present but empty until its provider finishes loading, which on a
-/// cold start is exactly when restoring runs. Bounded rather than indefinite because a record
-/// naming a node the profile genuinely no longer has looks identical from here, and would
-/// otherwise be retried for the life of the process.
+/// Bounds retries while provider-backed groups finish loading.
 const SELECTED_NODES_SETTLE_DEADLINE: Duration = Duration::from_secs(30);
 /// How often a restore looks again while waiting for those groups.
 const SELECTED_NODES_SETTLE_INTERVAL: Duration = Duration::from_secs(1);
-/// How long a start waits for the selections that *can* be put back before carrying on.
-///
-/// Covers a healthy core answering one query and a handful of selects. Past that the start
-/// proceeds: the remaining groups need the core to finish loading, which is not something a
-/// start can usefully wait for.
+/// Bounds startup waiting; remaining selections continue restoring in the background.
 const SELECTED_NODES_FIRST_PASS_BUDGET: Duration = Duration::from_secs(3);
 
 /// Define the `profiles.yaml` schema
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
 pub struct IProfiles {
-    /// same as PrfConfig.current
     pub current: Option<String>,
 
-    /// profile list
     pub items: Option<Vec<PrfItem>>,
 }
 
@@ -116,7 +97,6 @@ macro_rules! patch {
 }
 
 impl IProfiles {
-    // Helper to find and remove an item by uid from the items vec, returning its file name (if any).
     fn take_item_file_by_uid(items: &mut Vec<PrfItem>, target_uid: Option<&str>) -> Option<String> {
         let index = items.iter().position(|item| item.uid.as_deref() == target_uid)?;
         items.remove(index).file
@@ -178,12 +158,10 @@ impl IProfiles {
         self.current.as_ref()
     }
 
-    /// get items ref
     pub const fn get_items(&self) -> Option<&Vec<PrfItem>> {
         self.items.as_ref()
     }
 
-    /// find the item by the uid
     pub fn get_item(&self, uid: impl AsRef<str>) -> Result<&PrfItem> {
         let uid_str = uid.as_ref();
 
@@ -200,17 +178,12 @@ impl IProfiles {
         bail!("failed to get the profile item \"uid:{}\"", uid_str);
     }
 
-    /// append new item
-    /// if the file_data is some
-    /// then should save the data to file
     pub async fn append_item(&mut self, item: &mut PrfItem) -> Result<()> {
         let uid = &item.uid;
         if uid.is_none() {
             bail!("the uid should not be null");
         }
 
-        // save the file data
-        // move the field value after save
         if let Some(file_data) = item.file_data.take() {
             if item.file.is_none() {
                 bail!("the file should not be null");
@@ -242,7 +215,6 @@ impl IProfiles {
         Ok(())
     }
 
-    /// reorder items
     pub async fn reorder(&mut self, active_id: &String, over_id: &String) -> Result<()> {
         let mut items = self.items.take().unwrap_or_default();
         let mut old_index = None;
@@ -267,7 +239,6 @@ impl IProfiles {
         self.save_file().await
     }
 
-    /// update the item value
     pub async fn patch_item(&mut self, uid: &String, item: &PrfItem) -> Result<()> {
         if let Some(file) = &item.file {
             Self::validate_profile_file(file)?;
@@ -312,14 +283,12 @@ impl IProfiles {
         Ok(())
     }
 
-    /// be used to update the remote item
-    /// only patch `updated` `extra` `file_data`
+    /// Updates fields returned by a remote profile refresh.
     pub async fn update_item(&mut self, uid: &String, item: &mut PrfItem) -> Result<()> {
         if self.items.is_none() {
             self.items = Some(vec![]);
         }
 
-        // find the item
         let _ = self.get_item(uid)?;
 
         if let Some(items) = self.items.as_mut() {
@@ -331,14 +300,11 @@ impl IProfiles {
                     each.updated = item.updated;
                     each.home = item.home.to_owned();
                     each.option = PrfOption::merge(each.option.as_ref(), item.option.as_ref());
-                    // save the file data
-                    // move the field value after save
                     if let Some(file_data) = item.file_data.take() {
                         let file = each.file.take();
                         let file =
                             file.unwrap_or_else(|| item.file.take().unwrap_or_else(|| format!("{}.yaml", uid).into()));
 
-                        // the file must exists
                         each.file = Some(file.clone());
 
                         let path = dirs::app_profiles_dir()?.join(file.as_str());
@@ -434,12 +400,10 @@ impl IProfiles {
         }
     }
 
-    /// 判断profile是否是current指向的
     pub fn is_current_profile_index(&self, index: &String) -> bool {
         self.current.as_ref() == Some(index)
     }
 
-    /// 获取所有的profiles(uid，名称, 是否为 current)
     pub fn profiles_preview(&self) -> Option<Vec<IProfilePreview<'_>>> {
         self.items.as_ref().map(|items| {
             items
@@ -457,7 +421,6 @@ impl IProfiles {
         })
     }
 
-    /// 通过 uid 获取名称
     pub fn get_name_by_uid(&self, uid: &String) -> Option<&String> {
         if let Some(items) = &self.items {
             for item in items {
@@ -480,10 +443,8 @@ impl IProfiles {
             return Ok(());
         }
 
-        // 如果 items 为空（例如 profiles.yaml 解析失败导致
-        // IProfiles::new() 返回 default），此时无法判断哪些文件是活跃的，
-        // 跳过清理以避免误删用户正在使用的订阅配置文件。
-        // See: https://github.com/clash-verge-rev/clash-verge-rev/issues/7577
+        // An empty list may mean loading failed, so it is not safe evidence that every file is orphaned.
+        // https://github.com/clash-verge-rev/clash-verge-rev/issues/7577
         if self.items.as_ref().is_none_or(|v| v.is_empty()) {
             logging!(
                 warn,
@@ -493,13 +454,10 @@ impl IProfiles {
             return Ok(());
         }
 
-        // 获取所有 active profile 的文件名集合
         let active_files = self.get_all_active_files();
 
-        // 添加全局扩展配置文件到保护列表
         let protected_files = self.get_protected_global_files();
 
-        // 扫描 profiles 目录下的所有文件
         let mut total_files = 0;
         let mut deleted_files = 0;
         let mut failed_deletions = 0;
@@ -517,13 +475,11 @@ impl IProfiles {
             if let Some(file_name) = path.file_name().and_then(|n| n.to_str())
                 && Self::is_profile_file(file_name)
             {
-                // 检查是否为全局扩展文件
                 if protected_files.contains(file_name) {
                     logging!(debug, Type::Config, "保护全局扩展配置文件: {file_name}");
                     continue;
                 }
 
-                // 检查是否为活跃文件
                 if !active_files.contains(file_name) {
                     match path.to_path_buf().remove_if_exists().await {
                         Ok(_) => {
@@ -557,7 +513,6 @@ impl IProfiles {
         Ok(())
     }
 
-    /// 不删除全局扩展配置
     fn get_protected_global_files(&self) -> HashSet<String> {
         let mut protected_files = HashSet::new();
 
@@ -567,23 +522,19 @@ impl IProfiles {
         protected_files
     }
 
-    /// 获取所有 active profile 关联的文件名
     fn get_all_active_files(&self) -> HashSet<&str> {
         let mut active_files: HashSet<&str> = HashSet::new();
 
         if let Some(items) = &self.items {
             for item in items {
-                // 收集所有类型 profile 的文件
                 if let Some(file) = &item.file {
                     active_files.insert(file);
                 }
 
-                // 对于主 profile 类型（remote/local），还需要收集其关联的扩展文件
                 if let Some(itype) = &item.itype
                     && (itype == "remote" || itype == "local")
                     && let Some(option) = &item.option
                 {
-                    // 收集关联的扩展文件
                     if let Some(merge_uid) = &option.merge
                         && let Ok(merge_item) = self.get_item(merge_uid)
                         && let Some(file) = &merge_item.file
@@ -625,13 +576,12 @@ impl IProfiles {
         active_files
     }
 
-    /// 检查文件名是否符合 profile 文件的命名规则
     fn is_profile_file(filename: &str) -> bool {
         REGEX_PROFILE_FILE.is_match(filename)
     }
 }
 
-// 特殊的Send-safe helper函数，完全避免跨await持有guard
+// These helpers avoid holding a parking_lot guard across `await`.
 use crate::config::Config;
 
 pub async fn profiles_append_item_with_filedata_safe(item: &PrfItem, file_data: Option<String>) -> Result<()> {
@@ -814,16 +764,7 @@ fn reconcile_selected_nodes(
     plan
 }
 
-/// Abandon any activation still in flight.
-///
-/// An activation reads the profile, then polls the core until its groups are readable, then puts
-/// its selections. A choice the user makes inside that window is newer than what the activation
-/// captured, so letting it finish would push the core back to the older node — and the profile,
-/// already holding the newer one, would then disagree with the core. Bumping the generation is
-/// how an activation is told it has been overtaken.
-///
-/// Called after a newer selection is written, or before a candidate Core transition whose caller
-/// will reactivate whichever Profiles snapshot ultimately commits.
+/// Cancels restoration so it cannot overwrite a newer selection or profile snapshot.
 pub fn supersede_selected_activation() {
     ACTIVATE_SELECTED_GENERATION.fetch_add(1, Ordering::AcqRel);
 }
@@ -924,12 +865,7 @@ async fn update_tray_after_activation(generation: u64) {
     }
 }
 
-/// Record which node a group is on, in the current profile.
-///
-/// The counterpart of the frontend's `useRecordSelection`, for the selections the backend makes
-/// on the user's behalf — the tray is the one that does. What the profile holds is what
-/// [`activate_selected_nodes`] re-applies when a core starts, so a selection it never learned
-/// about is one the next start silently undoes.
+/// Records a backend-made selection so the next core start restores it.
 pub async fn record_selected_node(group_name: &str, node: &str) -> Result<()> {
     let group_name = String::from(group_name);
     let node = String::from(node);
@@ -970,7 +906,6 @@ pub async fn record_selected_node(group_name: &str, node: &str) -> Result<()> {
         .await?;
 
     if recorded {
-        // Newer than anything an activation still in flight captured.
         supersede_selected_activation();
         handle::Handle::refresh_profiles();
     }
@@ -1056,12 +991,7 @@ async fn persist_reconciled_selected(
     Ok(())
 }
 
-/// The recorded selections the core is not currently on.
-///
-/// Deliberately "is the core on it" rather than "did we send a select": a group whose provider
-/// has not loaded is present but empty, a `select` can fail while the core is still settling, and
-/// a group that was already correct never produces an activation at all. Only the running state
-/// tells those apart.
+/// Returns recorded selections whose groups have not reached the requested node.
 fn unsettled_selections(selected: &[PrfSelected], proxies: &Proxies) -> Vec<String> {
     selected
         .iter()
@@ -1077,16 +1007,7 @@ fn unsettled_selections(selected: &[PrfSelected], proxies: &Proxies) -> Vec<Stri
         .collect()
 }
 
-/// Keep putting back the selections the core could not be moved to yet.
-///
-/// The single re-check a profile switch needs is enough there, because a switch happens once the
-/// configuration is loaded. A core start is the opposite case: the groups a restore is trying to
-/// put back may not exist yet. Without this the restore reported success having applied nothing,
-/// and the group stayed on the first entry of its `proxies:` list — the outcome restoring exists
-/// to prevent.
-///
-/// Only ever reached with [`SelectionRepair::KeepRecords`]: a profile switch is entitled to
-/// conclude that a group it cannot see is gone, so it has nothing to wait for.
+/// Retries selections while provider-backed groups finish loading.
 async fn settle_pending_selections(selected: &[PrfSelected], completed: &mut HashMap<String, String>, generation: u64) {
     let deadline = Instant::now() + SELECTED_NODES_SETTLE_DEADLINE;
     loop {
@@ -1133,11 +1054,7 @@ async fn settle_pending_selections(selected: &[PrfSelected], completed: &mut Has
     }
 }
 
-/// Fires once the selections that could be applied have been.
-///
-/// Dropping it without firing releases the waiter too: every way the worker can end early is a
-/// way of saying "nothing more is coming", and a start that waits forever for one of them would
-/// be a worse failure than the one this exists to prevent.
+/// Releases the first-pass waiter even when restoration exits early.
 struct FirstPassSignal(Option<tokio::sync::oneshot::Sender<()>>);
 
 impl FirstPassSignal {
@@ -1212,8 +1129,7 @@ async fn activate_selected_nodes_worker(
     }
 
     if repair == SelectionRepair::KeepRecords {
-        // Everything the core could be moved to has been. Whoever is waiting to point traffic
-        // here may go; what is left needs the core to finish loading and cannot be waited on.
+        // Remaining selections depend on provider loading and continue in the background.
         first_pass_done.notify();
         settle_pending_selections(&selected, &mut completed_activations, generation).await;
         return Ok(());
@@ -1235,14 +1151,9 @@ async fn activate_selected_nodes_worker(
 /// Whether an activation may also prune the records it cannot match.
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 pub enum SelectionRepair {
-    /// Drop records whose group or node the core does not have. Only safe once the configuration
-    /// they belong to is known to be fully loaded, which is true right after a profile switch.
+    /// Prune records after a fully loaded profile switch.
     Prune,
-    /// Apply what can be applied and leave the records alone.
-    ///
-    /// What a core start needs. A provider-backed group can be empty or absent for seconds after
-    /// the core comes up, and a record pruned on that evidence is gone from `profiles.yaml` for
-    /// good — the provider finishing later cannot bring it back.
+    /// Preserve records during startup while provider-backed groups may still be absent.
     KeepRecords,
 }
 
@@ -1253,18 +1164,7 @@ pub fn activate_selected_nodes() -> Result<()> {
     Ok(())
 }
 
-/// Put the profile's selections back before anything is pointed at the core.
-///
-/// Awaited, unlike a profile switch's activation, because the caller enables the system proxy as
-/// soon as this returns: a proxy pointed at a core still sitting on the first entry of every
-/// group is the outcome restoring exists to prevent. Bounded so that a core which will not answer
-/// delays a start rather than blocking it — the selections keep being retried either way, and
-/// being proxied through the wrong node beats not being proxied at all.
-///
-/// TUN is deliberately not covered, because it cannot be: it is configured in the core's own
-/// file, so it is carrying traffic from the moment the process starts, before anything here could
-/// run. What puts a TUN user on the right node from the first packet is the core's own
-/// `cache.db`, which is why the service keeps an owner's runtime generation across restarts.
+/// Restores available selections before the system proxy points at the core, then retries the rest.
 pub async fn restore_selected_nodes() {
     let first_pass = activate_selected_nodes_with(SelectionRepair::KeepRecords);
     if tokio::time::timeout(SELECTED_NODES_FIRST_PASS_BUDGET, first_pass)
@@ -1287,8 +1187,7 @@ fn activate_selected_nodes_with(repair: SelectionRepair) -> tokio::sync::oneshot
     let (first_pass_sender, first_pass_done) = tokio::sync::oneshot::channel();
 
     let handle = tokio::spawn(async move {
-        // Held for the whole task so that every exit — superseded, no profile, an error — drops
-        // it and releases anyone waiting. Only the worker fires it deliberately.
+        // Dropping this releases the startup waiter on every early exit.
         let first_pass = FirstPassSignal(Some(first_pass_sender));
         if let Some(previous_task) = previous_task {
             let _ = previous_task.await;
@@ -1298,11 +1197,7 @@ fn activate_selected_nodes_with(repair: SelectionRepair) -> tokio::sync::oneshot
         }
 
         let result = async {
-            // Committed, not the draft. A profile switch stages its target before validating
-            // it, and a switch that then fails discards that draft — but an activation which had
-            // already read it would go on to apply the rejected profile's selections to the one
-            // still running. The switch that succeeds commits before it activates, so this is the
-            // same value there.
+            // A draft may be a profile switch that has not passed validation yet.
             let profiles = Config::profiles().await.data_arc();
             let current = profiles.get_current().context("no current profile running")?.clone();
             let selected = profiles

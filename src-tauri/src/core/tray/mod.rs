@@ -156,7 +156,6 @@ impl Tray {
                 logging!(info, Type::Tray, "System tray created successfully");
             }
             Err(e) => {
-                // Don't return error, let application continue running without tray
                 logging!(
                     warn,
                     Type::Tray,
@@ -167,7 +166,6 @@ impl Tray {
         Ok(())
     }
 
-    /// 更新托盘点击行为
     pub async fn update_click_behavior(&self) -> Result<()> {
         if handle::Handle::global().is_exiting() {
             logging!(debug, Type::Tray, "应用正在退出，跳过托盘点击行为更新");
@@ -187,7 +185,6 @@ impl Tray {
         Ok(())
     }
 
-    /// 更新托盘菜单
     pub async fn update_menu(&self) -> Result<()> {
         if handle::Handle::global().is_exiting() {
             logging!(debug, Type::Tray, "应用正在退出，跳过托盘菜单更新");
@@ -245,7 +242,6 @@ impl Tray {
         Ok(())
     }
 
-    /// 更新托盘图标
     pub async fn update_icon(&self, verge: &IVerge) -> Result<()> {
         if handle::Handle::global().is_exiting() {
             logging!(debug, Type::Tray, "应用正在退出，跳过托盘图标更新");
@@ -278,7 +274,6 @@ impl Tray {
         Ok(())
     }
 
-    /// 更新托盘提示
     pub async fn update_tooltip(&self) -> Result<()> {
         if handle::Handle::global().is_exiting() {
             logging!(debug, Type::Tray, "应用正在退出，跳过托盘提示更新");
@@ -309,7 +304,6 @@ impl Tray {
             }
         }
 
-        // Get localized strings before using them
         let sys_proxy_text = clash_verge_i18n::t!("tray.tooltip.systemProxy");
         let tun_text = clash_verge_i18n::t!("tray.tooltip.tun");
         let profile_text = clash_verge_i18n::t!("tray.tooltip.profile");
@@ -413,7 +407,6 @@ impl Tray {
         allow
     }
 
-    /// 根据配置统一更新托盘速率采集任务状态（macOS）
     #[cfg(target_os = "macos")]
     pub fn update_speed_task(&self, enable_tray_speed: bool) {
         self.speed_controller.update_task(enable_tray_speed);
@@ -476,7 +469,6 @@ fn create_subcreate_proxy_menu_item(
         // TODO: 应用启动时，内核还未启动完全，无法获取代理节点信息
         if let Some(proxy_nodes_data) = proxy_nodes_data {
             for (group_name, group_data) in proxy_nodes_data.proxies.iter() {
-                // Filter groups based on mode and hidden flag
                 let should_show = match proxy_mode {
                     "global" => group_name == "GLOBAL",
                     _ => group_name != "GLOBAL",
@@ -492,14 +484,12 @@ fn create_subcreate_proxy_menu_item(
 
                 let now_proxy = group_data.now.as_deref().unwrap_or_default();
 
-                // Create proxy items
                 let group_items: Vec<CheckMenuItem<Wry>> = all_proxies
                     .iter()
                     .filter_map(|proxy_str| {
                         let is_selected = *proxy_str == now_proxy;
                         let item_id = format!("proxy_{}_{}", group_name, proxy_str);
 
-                        // Get delay for display
                         let delay_text = proxy_nodes_data
                             .proxies
                             .get(proxy_str)
@@ -565,7 +555,6 @@ fn create_proxy_menu_item(
     proxy_submenus: Vec<Submenu<Wry>>,
     proxies_text: &str,
 ) -> Result<ProxyMenuItem> {
-    // 创建代理主菜单
     let (proxies_submenu, inline_proxy_items) = if show_proxy_groups_inline {
         (
             None,
@@ -660,9 +649,7 @@ async fn create_tray_menu(
 
     let profile_menu_items: Vec<CheckMenuItem<Wry>> = create_profile_menu_item(app_handle, profiles_preview)?;
 
-    // Pre-fetch all localized strings
     let texts = MenuTexts::new();
-    // Convert to references only when needed
     let profile_menu_items_refs: Vec<&dyn IsMenuItem<Wry>> = profile_menu_items
         .iter()
         .map(|item| item as &dyn IsMenuItem<Wry>)
@@ -842,7 +829,6 @@ async fn create_tray_menu(
 
     let separator = &PredefinedMenuItem::separator(app_handle)?;
 
-    // 动态构建菜单项
     let mut menu_items: Vec<&dyn IsMenuItem<Wry>> = vec![open_window, separator];
 
     if show_outbound_modes_inline {
@@ -857,7 +843,6 @@ async fn create_tray_menu(
 
     menu_items.extend_from_slice(&[separator, profiles]);
 
-    // 如果有代理节点，添加代理节点菜单
     match tray_proxy_groups_display_mode {
         "default" => {
             menu_items.extend(proxies_menu.iter().map(|item| item as &dyn IsMenuItem<_>));
@@ -898,7 +883,6 @@ fn on_tray_icon_event(_tray_icon: &TrayIcon, tray_event: TrayIconEvent) {
         ..
     } = tray_event
     {
-        // 添加防抖检查，防止快速连击
         #[allow(clippy::use_self)]
         if !Tray::global().should_handle_tray_click() {
             return;
@@ -942,12 +926,10 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
     AsyncHandler::spawn(|| async move {
         match event.id.as_ref() {
             mode @ (MenuIds::RULE_MODE | MenuIds::GLOBAL_MODE | MenuIds::DIRECT_MODE) => {
-                // Removing the the "tray_" prefix and "_mode" suffix
                 if let Some(stripped) = mode.strip_prefix("tray_")
                     && let Some(final_mode) = stripped.strip_suffix("_mode")
                 {
                     logging!(info, Type::ProxyMode, "Switch Proxy Mode To: {}", final_mode);
-                    // 错误已在 change_clash_mode 内部记录，此处显式忽略返回值
                     let _ = feat::change_clash_mode(final_mode.into()).await;
                 }
             }
@@ -1004,7 +986,6 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
                 feat::toggle_proxy_profile(profile_index.into()).await;
             }
             id if id.starts_with("proxy_") => {
-                // proxy_{group_name}_{proxy_name}
                 let rest = match id.strip_prefix("proxy_") {
                     Some(r) => r,
                     None => return,
@@ -1019,8 +1000,5 @@ fn on_menu_event(_: &AppHandle, event: MenuEvent) {
                 logging!(debug, Type::Tray, "Unhandled tray menu event: {:?}", event.id);
             }
         }
-
-        // We dont expected to refresh tray state here
-        // as the inner handle function (SHOULD) already takes care of it
     });
 }

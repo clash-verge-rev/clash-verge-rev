@@ -6,27 +6,20 @@ use tauri_plugin_mihomo::models::WsConnectionId;
 use tokio::sync::mpsc;
 use tokio::time::Instant;
 
-/// Mihomo WebSocket 流的有界队列容量，避免异常场景下内存无限增长。
+/// Bounds memory use if the consumer falls behind the WebSocket.
 const MIHOMO_WS_STREAM_BUFFER_SIZE: usize = 8;
-/// 断开 Mihomo WebSocket 连接时使用的关闭码（RFC 6455 标准正常关闭）。
 const MIHOMO_WS_STREAM_CLOSE_CODE: u64 = 1000;
 
-/// `/traffic` 即时速率事件（字节/秒）。
 #[derive(Debug, Clone, Copy)]
 pub struct TrafficSpeedEvent {
     pub up: u64,
     pub down: u64,
 }
 
-/// Mihomo WebSocket 流消费状态。
 pub enum StreamConsumeState<T> {
-    /// 收到一条业务事件。
     Event(T),
-    /// 连接关闭或消息流结束。
     Closed,
-    /// 在超时时间内未收到有效事件，需要重连。
     Stale,
-    /// 上层请求退出消费循环。
     ExitRequested,
 }
 
@@ -34,13 +27,9 @@ enum InternalWsEvent<T> {
     Data(T),
 }
 
-/// Mihomo WebSocket 订阅句柄（通用事件流）。
 pub struct MihomoWsEventStream<T> {
-    /// 当前订阅连接 ID，用于主动断开。
     pub connection_id: WsConnectionId,
-    /// 当前订阅消息接收器。
     receiver: mpsc::Receiver<InternalWsEvent<T>>,
-    /// 最近一次收到有效事件的时间戳。
     last_valid_event_at: Instant,
 }
 
@@ -61,19 +50,15 @@ fn parse_traffic_event(data: &[u8]) -> Option<InternalWsEvent<TrafficSpeedEvent>
 fn try_send_internal_event<T>(message_tx: &mpsc::Sender<InternalWsEvent<T>>, event: InternalWsEvent<T>) {
     if let Err(err) = message_tx.try_send(event) {
         match err {
-            // 队列满时丢弃本次事件，下一次事件会继续覆盖更新。
+            // A later real-time sample supersedes one dropped from a full queue.
             tokio::sync::mpsc::error::TrySendError::Full(_) => {}
-            // 任务已结束时通道可能关闭，忽略即可。
             tokio::sync::mpsc::error::TrySendError::Closed(_) => {}
         }
     }
 }
 
-/// 建立 `/traffic` WebSocket 订阅（通用流）。
 pub async fn connect_traffic_stream() -> Result<MihomoWsEventStream<TrafficSpeedEvent>> {
-    // 使用有界 mpsc 通道承接回调事件，限制消息积压上限。
     let (message_tx, message_rx) = mpsc::channel::<InternalWsEvent<TrafficSpeedEvent>>(MIHOMO_WS_STREAM_BUFFER_SIZE);
-    // 建立 Mihomo `/traffic` WebSocket 订阅。
     let connection_id = handle::Handle::mihomo()
         .ws_traffic({
             let message_tx = message_tx.clone();
@@ -93,11 +78,6 @@ pub async fn connect_traffic_stream() -> Result<MihomoWsEventStream<TrafficSpeed
 }
 
 impl<T> MihomoWsEventStream<T> {
-    /// 等待下一次可用事件或结束状态。
-    ///
-    /// # Arguments
-    /// * `stale_timeout` - 无有效事件超时时间
-    /// * `should_exit` - 上层退出判定函数
     pub async fn next_event<F>(&mut self, stale_timeout: Duration, should_exit: F) -> StreamConsumeState<T>
     where
         F: Fn() -> bool,
@@ -132,10 +112,6 @@ impl<T> MihomoWsEventStream<T> {
     }
 }
 
-/// 断开指定 Mihomo WebSocket 连接。
-///
-/// # Arguments
-/// * `connection_id` - 目标连接 ID
 pub async fn disconnect_connection(connection_id: WsConnectionId) {
     if let Err(err) = handle::Handle::mihomo()
         .disconnect(connection_id, Some(MIHOMO_WS_STREAM_CLOSE_CODE))

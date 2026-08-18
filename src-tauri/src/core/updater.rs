@@ -34,8 +34,6 @@ impl SilentUpdater {
     }
 }
 
-// ─── Disk Cache ───────────────────────────────────────────────────────────────
-
 #[derive(Serialize, Deserialize)]
 struct UpdateCacheMeta {
     version: String,
@@ -95,10 +93,7 @@ impl SilentUpdater {
     }
 }
 
-// ─── Version Comparison ───────────────────────────────────────────────────────
-
-/// Returns true if version `a` <= version `b` using semver-like comparison.
-/// Strips leading 'v', splits on '.', handles pre-release suffixes.
+/// Compares numeric version components after stripping `v` and prerelease suffixes.
 fn version_lte(a: &str, b: &str) -> bool {
     let parse = |v: &str| -> Vec<u64> {
         v.trim_start_matches('v')
@@ -127,12 +122,7 @@ fn version_lte(a: &str, b: &str) -> bool {
     true // equal
 }
 
-/// Map the app's resolved UI language code to an NSIS installer language ID.
-///
-/// The Windows installer only ships SimpChinese, English and Russian
-/// (`tauri.windows.conf.json` `nsis.languages`). Languages without a matching
-/// NSIS translation fall back to English; Traditional Chinese ("zhtw") is
-/// mapped to SimpChinese so Chinese users don't get an English installer.
+/// Maps UI language to one of the three NSIS translations, defaulting to English.
 #[cfg(target_os = "windows")]
 fn nsis_language_id(app_language: &str) -> &'static str {
     match app_language {
@@ -142,12 +132,8 @@ fn nsis_language_id(app_language: &str) -> &'static str {
     }
 }
 
-// ─── Startup Install & Cache Management ─────────────────────────────────────
-
 impl SilentUpdater {
-    /// Called at app startup. If a cached update exists and is newer than the current version,
-    /// attempt to install it immediately (before the main app initializes).
-    /// Returns true if install was triggered (app should relaunch), false otherwise.
+    /// Installs a newer cached update before normal startup, if the user confirms.
     pub async fn try_install_on_startup(&self, app_handle: &tauri::AppHandle) -> bool {
         let current_version = env!("CARGO_PKG_VERSION");
 
@@ -178,14 +164,12 @@ impl SilentUpdater {
             current_version
         );
 
-        // Ask user for confirmation — they can skip and use the app normally.
-        // The cache is preserved so next launch will ask again.
+        // Preserve the cache when skipped so the next launch asks again.
         if !Self::ask_user_to_install(app_handle, cached_version).await {
             logging!(info, Type::System, "User skipped update install, starting normally");
             return false;
         }
 
-        // Read cached bytes
         let bytes = match Self::read_cache_bytes() {
             Ok(b) => b,
             Err(e) => {
@@ -199,14 +183,8 @@ impl SilentUpdater {
             }
         };
 
-        // Need a fresh Update object from the server to call install().
-        // This is a lightweight HTTP request (< 1s), not a re-download.
-        //
-        // The updater is built with the app's current language forwarded as
-        // `/LANG=<NSIS-lang-id>`. On Windows the NSIS installer parses this in
-        // `.onInit` (see `packages/windows/installer.nsi`) and sets `$LANGUAGE`
-        // directly, skipping its language-selection dialog so the update starts
-        // without prompting. Other platforms don't run an installer.
+        // Refresh metadata without re-downloading. Windows receives `/LANG` to suppress the
+        // NSIS language dialog; see `packages/windows/installer.nsi`.
         let updater_builder = app_handle.updater_builder();
         #[cfg(target_os = "windows")]
         let updater_builder = {
@@ -245,8 +223,7 @@ impl SilentUpdater {
             }
         };
 
-        // Verify the server's version matches the cached version.
-        // If server now has a newer version, our cached bytes are stale.
+        // A changed server version invalidates the cached bytes.
         if update.version != *cached_version {
             logging!(
                 info,
@@ -262,11 +239,9 @@ impl SilentUpdater {
         let version = update.version.clone();
         logging!(info, Type::System, "Installing cached update v{version} at startup...");
 
-        // Show splash window so user knows the app is updating, not frozen
         Self::show_update_splash(app_handle, &version);
 
-        // install() is sync and may hang (known bug #2558), so run with a timeout.
-        // On Windows, NSIS takes over the process so install() may never return — that's OK.
+        // `install()` may hang (#2558); on Windows NSIS can take over without returning.
         let install_result = tokio::task::spawn_blocking({
             let bytes = bytes.clone();
             let update = update.clone();
@@ -305,7 +280,6 @@ impl SilentUpdater {
             }
         };
 
-        // Close splash window if install failed and app continues normally
         if !success {
             Self::close_update_splash(app_handle);
         }
@@ -314,11 +288,7 @@ impl SilentUpdater {
     }
 }
 
-// ─── User Confirmation Dialog ────────────────────────────────────────────────
-
 impl SilentUpdater {
-    /// Show a native dialog asking the user to install or skip the update.
-    /// Returns true if user chose to install, false if they chose to skip.
     async fn ask_user_to_install(app_handle: &tauri::AppHandle, version: &str) -> bool {
         use tauri_plugin_dialog::{DialogExt as _, MessageDialogButtons, MessageDialogKind};
 
@@ -343,12 +313,8 @@ impl SilentUpdater {
     }
 }
 
-// ─── Update Splash Window ────────────────────────────────────────────────────
-
 impl SilentUpdater {
-    /// Show a small centered splash window indicating update is being installed.
-    /// Injects HTML via eval() after window creation so it doesn't depend on any
-    /// external file in the bundle.
+    /// Uses injected HTML so the splash has no bundled-file dependency.
     fn show_update_splash(app_handle: &tauri::AppHandle, version: &str) {
         use tauri::{WebviewUrl, WebviewWindowBuilder};
 
@@ -405,7 +371,7 @@ impl SilentUpdater {
             "#
         );
 
-        // Retry eval a few times — the webview may not be ready immediately
+        // The new webview may not accept evaluation immediately.
         std::thread::spawn(move || {
             for i in 0..10 {
                 std::thread::sleep(std::time::Duration::from_millis(100 * (i + 1)));
@@ -418,7 +384,6 @@ impl SilentUpdater {
         logging!(info, Type::System, "Update splash window shown");
     }
 
-    /// Close the update splash window (e.g. after install failure).
     fn close_update_splash(app_handle: &tauri::AppHandle) {
         use tauri::Manager as _;
         if let Some(window) = app_handle.get_webview_window("update-splash") {
@@ -427,8 +392,6 @@ impl SilentUpdater {
         }
     }
 }
-
-// ─── Background Check and Download ───────────────────────────────────────────
 
 impl SilentUpdater {
     async fn check_and_download(&self, app_handle: &tauri::AppHandle) -> Result<()> {
@@ -535,8 +498,6 @@ impl SilentUpdater {
 mod tests {
     use super::*;
 
-    // ─── version_lte tests ──────────────────────────────────────────────────
-
     #[test]
     fn test_version_equal() {
         assert!(version_lte("2.4.7", "2.4.7"));
@@ -565,10 +526,8 @@ mod tests {
 
     #[test]
     fn test_version_with_prerelease() {
-        // "2.4.8-alpha" → numeric part is still "2.4.8"
         assert!(version_lte("2.4.7", "2.4.8-alpha"));
         assert!(version_lte("2.4.8-alpha", "2.4.8"));
-        // Both have same numeric part, so equal → true
         assert!(version_lte("2.4.8-alpha", "2.4.8-beta"));
     }
 
@@ -578,8 +537,6 @@ mod tests {
         assert!(!version_lte("2.4.1", "2.4"));
         assert!(version_lte("2.4.0", "2.4"));
     }
-
-    // ─── Cache metadata tests ───────────────────────────────────────────────
 
     #[test]
     fn test_cache_meta_serialize_roundtrip() {

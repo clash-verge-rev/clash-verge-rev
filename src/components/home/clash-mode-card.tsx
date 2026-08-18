@@ -63,12 +63,9 @@ export const ClashModeCard = () => {
   const { isCoreDataPending } = useCoreDataStatus()
   const { refreshClashConfig } = useAppRefreshers()
 
-  // 点击后到后端确认前的乐观模式，使按钮立即响应
   const [optimisticMode, setOptimisticMode] = useState<ClashMode | null>(null)
 
-  // 主源：mihomo /configs 的实时 mode（最准，但依赖严格反序列化，可能整体失败）
   const controllerMode = toClashMode(clashConfig?.mode)
-  // 主源不可用时，启用两个容错兜底来源
   const needFallback = !controllerMode
   const { data: runtimeConfig, isPending: isRuntimeConfigPending } =
     useRuntimeConfig(needFallback)
@@ -78,9 +75,7 @@ export const ClashModeCard = () => {
     isPending: isBackendModePending,
     refetch: refetchBackendMode,
   } = useClashMode(needFallback)
-  // backendMode（已保存 clash 配置）在每次切换时都会被 change_clash_mode 同步更新，
-  // 而 runtimeMode（生成的运行时配置）在 API 切换后不会刷新、可能陈旧，
-  // 因此优先用 backendMode，避免陈旧 runtime mode 遮住新值。
+  // Saved config is refreshed on mode changes; runtime config may be stale.
   const fallbackMode = toClashMode(backendMode) ?? runtimeMode
 
   const resolvedMode = controllerMode ?? fallbackMode
@@ -92,37 +87,29 @@ export const ClashModeCard = () => {
       ? '\u00A0'
       : t('home.components.clashMode.errors.communication')
 
-  // 切换模式的处理函数：乐观更新 + 真实失败回滚并提示
   const onChangeMode = useLockFn(async (mode: ClashMode) => {
     if (mode === currentMode) return
     if (verge?.auto_close_connection) {
       closeAllConnections()
     }
 
-    // 乐观置为目标模式，按钮立即反映点击
     setOptimisticMode(mode)
     try {
-      // patchClashMode 现在会在后端 PATCH 失败时 reject
       await patchClashMode(mode)
     } catch (error) {
-      // 真实失败：回滚乐观状态并提示用户
       setOptimisticMode(null)
       showNotice.error(error)
       return
     }
 
-    // 成功：写穿主源缓存，使实时 mode 立即反映新值——即使随后的 /configs refetch
-    // 失败（TanStack 会保留旧 data），controllerMode 也不会再压过新值导致闪回。
-    // 若主源从未成功过（old 为 undefined）则保持不动，改由兜底来源反映。
+    // Write through the live cache to avoid flashing the old mode during refetch.
     setCacheData<BaseConfig>(['getClashConfig'], (old) =>
       old ? { ...old, mode } : old,
     )
-    // 刷新主源与兜底源以与后端对齐，待数据落地后再清除乐观状态
     await Promise.allSettled([refreshClashConfig(), refetchBackendMode()])
     setOptimisticMode(null)
   })
 
-  // 按钮样式
   const buttonStyles = (mode: ClashMode) => ({
     cursor: 'pointer',
     px: 2,
@@ -159,7 +146,6 @@ export const ClashModeCard = () => {
         : {},
   })
 
-  // 描述样式
   const descriptionStyles = {
     width: '95%',
     textAlign: 'center',
@@ -176,7 +162,6 @@ export const ClashModeCard = () => {
 
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', width: '100%' }}>
-      {/* 模式选择按钮组 */}
       <Stack
         direction="row"
         spacing={1}
@@ -209,7 +194,6 @@ export const ClashModeCard = () => {
         ))}
       </Stack>
 
-      {/* 说明文本区域 */}
       <Box
         sx={{
           width: '100%',

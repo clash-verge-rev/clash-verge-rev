@@ -17,14 +17,11 @@ interface NoticeItem {
   readonly duration: number
   readonly message?: ReactNode
   readonly i18n?: NoticeTranslationDescriptor
-  /** Stable classified failure code. */
   readonly code?: string
-  /** Requested operation when known. */
   readonly operation?: FailedOperation
   timerId?: ReturnType<typeof setTimeout>
 }
 
-/** Failures owned by the recovery dialog. */
 const CODES_A_DIALOG_REPORTS = new Set<string>([
   'SYSPROXY_PRIVILEGE_REQUIRED',
   'SYSPROXY_SIDECAR_WHILE_SERVICE_READY',
@@ -61,7 +58,6 @@ const DEFAULT_DURATIONS: Readonly<Record<NoticeType, number>> = {
 }
 
 const TRANSLATION_KEY_PATTERN = /^[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)+$/
-/** Localized explanation for each stable failure code. */
 const CODED_ERROR_TRANSLATION_KEYS: Readonly<Record<string, TranslationKey>> = {
   CLASH_CONFIG_UPDATE_FAILED:
     'settings.feedback.errors.clash.configUpdateFailed',
@@ -106,7 +102,6 @@ interface ParsedNoticeExtras {
   params?: Record<string, unknown>
   raw?: unknown
   duration?: number
-  /** Code extracted before translation parameters are flattened. */
   nestedCode?: string
 }
 
@@ -166,7 +161,6 @@ function parseNoticeExtras(extras: NoticeExtra[]): ParsedNoticeExtras {
   }
 }
 
-/** Replace structured failures in translation params with readable detail. */
 function readableParams(
   source: Record<string, unknown>,
 ): Record<string, unknown> {
@@ -178,7 +172,6 @@ function readableParams(
   )
 }
 
-/** Find a classified failure nested in translation parameters. */
 function nestedFailureCode(
   source?: Record<string, unknown>,
 ): string | undefined {
@@ -243,10 +236,8 @@ function isPlainRecord(value: unknown): value is Record<string, unknown> {
   return proto === Object.prototype || proto === null
 }
 
-/** Maximum code points rendered in a notice. */
 const MAX_RENDERED_TEXT_CHARS = 500
 
-/** Bound resolved display text by code point and append an ellipsis when truncated. */
 export function boundNoticeText(text: string): string {
   let end = 0
   let counted = 0
@@ -267,7 +258,6 @@ function createRawDescriptor(message: string): NoticeTranslationDescriptor {
   }
 }
 
-/** Messages longer than any real translation key are treated as raw text. */
 const MAX_TRANSLATION_KEY_CHARS = 200
 
 function isLikelyTranslationKey(key: string) {
@@ -309,13 +299,9 @@ function extractDisplayText(input: unknown): string | undefined {
   }
 }
 
-/** What a failed Tauri command reports. */
 export interface CommandFailure {
-  /** Stable identifier for the kind of failure, when the backend could classify it. */
   code?: string
-  /** Requested operation when known by the command. */
   operation?: FailedOperation
-  /** Human-readable diagnostic detail. */
   detail: string
 }
 
@@ -328,19 +314,16 @@ function isCommandFailure(input: unknown): input is CommandFailure {
   )
 }
 
-/** Extract display text from a structured or legacy failure. */
 export function errorDetail(input: unknown): string {
   return extractDisplayText(input) ?? ''
 }
 
-/** Parse a classified command failure for notice rendering. */
 function parseCommandFailure(input: unknown) {
   if (!isCommandFailure(input) || !input.code) return undefined
 
   const explanation = CODED_ERROR_TRANSLATION_KEYS[input.code]
   return {
     translationKey: explanation ?? 'shared.feedback.errors.operationFailed',
-    /** Whether this code has a specific explanation. */
     explained: explanation !== undefined,
     detail: input.detail.trim() || undefined,
   }
@@ -513,16 +496,8 @@ function failureOperation(input: unknown): FailedOperation | undefined {
 }
 
 /**
- * Shows a global notice; `showNotice.success / error / info` are the usual entry points.
- *
- * - `message`: i18n key string, `{ key, params }`, ReactNode, Error/any value (message is extracted)
- * - `extras` parsed left-to-right: first plain object is i18n params; next value is raw payload; first number overrides duration (ms, 0 = persistent; defaults: success 3000 / info 5000 / error 8000)
- * - Returns a notice id for manual closing via `hideNotice(id)`
- *
- * @example showNotice.success("profiles.page.feedback.notifications.batchDeleted");
- * @example showNotice.error(err); // pass an Error directly
- * @example showNotice.error("shared.feedback.notifications.common.refreshFailed", err); // Simply pass an Error directly; but we recommend using { err } with i18n key and placeholders.
- * @example showNotice.error("profiles.page.feedback.errors.invalidUrl", { url }, 4000);
+ * Shows a global notice. Extras are parsed as i18n params, raw payload, then duration;
+ * returns an ID accepted by `hideNotice`.
  */
 export const showNotice: ShowNotice = Object.assign(baseShowNotice, {
   success: (message: NoticeContent, ...extras: NoticeExtra[]) =>

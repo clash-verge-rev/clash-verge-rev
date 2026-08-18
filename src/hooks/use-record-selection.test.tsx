@@ -69,11 +69,7 @@ describe('useRecordSelection', () => {
   })
 
   it('does not derive anything from a rendered selection list', () => {
-    // The regression this pins. It used to build the whole list from the profile it had
-    // rendered, so two selections made before that list refreshed were both derived from the
-    // same stale snapshot and the later one dropped the earlier group. Since a core start
-    // re-applies whatever the profile holds, the dropped choice came back on the next restart.
-    // Each call now carries one group, and the backend merges against the current profile.
+    // Pair-wise writes let the backend merge concurrent choices against fresh state.
     record('Proxy', 'Node A')
     record('Fallback', 'Node C')
 
@@ -91,8 +87,7 @@ describe('useRecordSelection', () => {
   })
 
   it('reports a failed write without throwing at the caller', async () => {
-    // Recording runs after the core has already been switched; failing the switch over it would
-    // be wrong, so the caller is never made to handle it.
+    // Persistence failure cannot roll back a core selection that already succeeded.
     const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
     recordSelectedNode.mockRejectedValueOnce(new Error('no profile'))
 

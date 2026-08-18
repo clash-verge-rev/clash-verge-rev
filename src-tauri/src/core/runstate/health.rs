@@ -3,19 +3,13 @@
 
 use crate::core::manager::RunningMode;
 
-/// Last observed Service state.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub enum ServiceHealth {
-    /// Not probed yet.
     #[default]
     Unknown,
-    /// Installed, reachable, and speaking a compatible protocol.
     Ready,
-    /// No trusted installation evidence on this machine.
     NotInstalled,
-    /// Installed but speaking an incompatible protocol; needs reinstall.
     VersionMismatch,
-    /// Installed but unusable, with the reason we recorded.
     Unavailable(String),
 }
 
@@ -38,7 +32,6 @@ impl ServiceHealth {
     }
 }
 
-/// Requested privileged Service operation.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub enum PendingAction {
@@ -48,7 +41,6 @@ pub enum PendingAction {
     ForceReinstall,
 }
 
-/// Snapshot used for Core availability decisions.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RunState {
     pub health: ServiceHealth,
@@ -61,26 +53,22 @@ pub struct RunState {
 }
 
 impl RunState {
-    /// Whether the last probe observed a ready Service; ignores in-flight operations.
     #[must_use]
     pub const fn service_ready(&self) -> bool {
         matches!(self.health, ServiceHealth::Ready)
     }
 
-    /// Whether the Service is ready and not mid-operation.
     #[must_use]
     pub const fn service_usable(&self) -> bool {
         self.service_ready() && !self.op_in_flight
     }
 
-    /// Whether elevation or a usable Service can support TUN.
     #[must_use]
     pub const fn tun_capable(&self) -> bool {
         self.is_admin || self.service_usable()
     }
 
-    /// Whether the user must resolve a pending request or a present-but-unusable Service.
-    /// In-flight, absent, and accepted-Sidecar states need no decision.
+    /// In-flight, absent, and accepted-Sidecar states require no user decision.
     #[must_use]
     pub const fn service_needs_attention(&self) -> bool {
         if self.op_in_flight {
@@ -98,7 +86,6 @@ impl RunState {
         )
     }
 
-    /// Whether enabled TUN is certainly unusable and may be disabled.
     /// Unknown, in-flight, and attention-required states are inconclusive.
     #[must_use]
     pub const fn tun_should_be_disabled(&self, tun_enabled: bool) -> bool {
@@ -108,14 +95,12 @@ impl RunState {
         !matches!(self.health, ServiceHealth::Unknown) && !self.op_in_flight && !self.service_needs_attention()
     }
 
-    /// Whether startup must suppress TUN for a confirmed absent Service.
-    /// Present-but-broken Services remain in the repair flow.
+    /// Present-but-broken services remain in the repair flow rather than suppressing TUN.
     #[must_use]
     pub const fn startup_tun_should_be_disabled(&self, tun_enabled: bool) -> bool {
         matches!(self.health, ServiceHealth::NotInstalled) && self.tun_should_be_disabled(tun_enabled)
     }
 
-    /// Frontend view with derived availability decisions.
     #[must_use]
     pub fn to_view(&self) -> RunStateView {
         RunStateView {
@@ -133,7 +118,6 @@ impl RunState {
     }
 }
 
-/// Frontend Run State.
 #[derive(Debug, Clone, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RunStateView {
@@ -159,20 +143,17 @@ pub(super) struct StoredService {
 }
 
 impl StoredService {
-    /// Record an observation, clearing any request it answers.
     pub fn observe(&mut self, health: ServiceHealth) {
         self.health = health;
         self.pending = None;
         self.sidecar_allowed = false;
     }
 
-    /// Record a requested privileged operation, preserving the last observation.
     pub const fn request(&mut self, action: PendingAction) {
         self.pending = Some(action);
         self.sidecar_allowed = false;
     }
 
-    /// Record that the user accepted Sidecar for this session.
     pub const fn allow_sidecar(&mut self) {
         self.pending = None;
         self.sidecar_allowed = true;

@@ -20,45 +20,34 @@ use tauri::Url;
 pub struct PrfItem {
     pub uid: Option<String>,
 
-    /// profile item type
     /// enum value: remote | local | script | merge
     #[serde(rename = "type")]
     pub itype: Option<String>,
 
-    /// profile name
     pub name: Option<String>,
 
-    /// profile file
     pub file: Option<String>,
 
-    /// profile description
     #[serde(skip_serializing_if = "Option::is_none")]
     pub desc: Option<String>,
 
-    /// source url
     #[serde(skip_serializing_if = "Option::is_none")]
     pub url: Option<String>,
 
-    /// selected information
     #[serde(skip_serializing_if = "Option::is_none")]
     pub selected: Option<Vec<PrfSelected>>,
 
-    /// subscription user info
     #[serde(skip_serializing_if = "Option::is_none")]
     pub extra: Option<PrfExtra>,
 
-    /// updated time
     pub updated: Option<usize>,
 
-    /// some options of the item
     #[serde(skip_serializing_if = "Option::is_none")]
     pub option: Option<PrfOption>,
 
-    /// profile web page url
     #[serde(skip_serializing_if = "Option::is_none")]
     pub home: Option<String>,
 
-    /// the file data
     #[serde(skip)]
     pub file_data: Option<String>,
 }
@@ -79,32 +68,23 @@ pub struct PrfExtra {
 
 #[derive(Default, Debug, Clone, Deserialize, Serialize, PartialEq, Eq)]
 pub struct PrfOption {
-    /// for `remote` profile's http request
-    /// see issue #13
     #[serde(skip_serializing_if = "Option::is_none")]
     pub user_agent: Option<String>,
 
-    /// for `remote` profile
-    /// use system proxy
     #[serde(skip_serializing_if = "Option::is_none")]
     pub with_proxy: Option<bool>,
 
-    /// for `remote` profile
-    /// use self proxy
     #[serde(skip_serializing_if = "Option::is_none")]
     pub self_proxy: Option<bool>,
 
     #[serde(skip_serializing_if = "Option::is_none")]
     pub update_interval: Option<u64>,
 
-    /// for `remote` profile
     /// HTTP request timeout in seconds
     /// default is 60 seconds
     #[serde(skip_serializing_if = "Option::is_none")]
     pub timeout_seconds: Option<u64>,
 
-    /// for `remote` profile
-    /// disable certificate validation
     /// default is `false`
     #[serde(skip_serializing_if = "Option::is_none")]
     pub danger_accept_invalid_certs: Option<bool>,
@@ -151,8 +131,7 @@ impl PrfOption {
 }
 
 impl PrfItem {
-    /// From partial item
-    /// must contain `itype`
+    /// Builds an item from a partial value that must include `itype`.
     pub async fn from(item: &Self, file_data: Option<String>) -> Result<Self> {
         if item.itype.is_none() {
             bail!("type should not be null");
@@ -183,8 +162,6 @@ impl PrfItem {
         }
     }
 
-    /// ## Local type
-    /// create a new item from name/desc
     pub async fn from_local(
         name: String,
         desc: String,
@@ -250,8 +227,6 @@ impl PrfItem {
         })
     }
 
-    /// ## Remote type
-    /// create a new item from url
     pub async fn from_url(
         url: &str,
         name: Option<&String>,
@@ -271,7 +246,6 @@ impl PrfItem {
         let mut proxies = option.and_then(|o| o.proxies.clone());
         let mut groups = option.and_then(|o| o.groups.clone());
 
-        // 选择代理类型
         let proxy_type = if self_proxy {
             ProxyType::Localhost
         } else if with_proxy {
@@ -282,7 +256,6 @@ impl PrfItem {
 
         let url = fix_dirty_url(url)?;
 
-        // 使用网络管理器发送请求
         let resp = match NetworkManager::new()
             .get_with_interrupt(
                 url.as_str(),
@@ -307,7 +280,6 @@ impl PrfItem {
 
         let header = resp.headers();
 
-        // parse the Subscription UserInfo
         let extra;
         'extra: {
             for (k, v) in header.iter() {
@@ -330,7 +302,6 @@ impl PrfItem {
             extra = None;
         }
 
-        // parse the Content-Disposition
         let filename = match header.get("Content-Disposition") {
             Some(value) => {
                 let filename = format!("{value:?}");
@@ -380,10 +351,8 @@ impl PrfItem {
             .unwrap_or_else(|| filename.map(|s| s.into()).unwrap_or_else(|| "Remote File".into()));
         let data = resp.text_with_charset()?;
 
-        // process the charset "UTF-8 with BOM"
         let data = data.trim_start_matches('\u{feff}');
 
-        // check the data whether the valid yaml format
         let yaml = serde_yaml_ng::from_str::<Mapping>(data).context("the remote profile data is invalid yaml")?;
 
         if !yaml.contains_key("proxies") && !yaml.contains_key("proxy-providers") {
@@ -441,8 +410,6 @@ impl PrfItem {
         })
     }
 
-    /// ## Merge type (enhance)
-    /// create the enhanced item by using `merge` rule
     pub fn from_merge(uid: Option<String>) -> Result<Self> {
         let (id, template) = if let Some(uid) = uid {
             (uid, tmpl::ITEM_MERGE.into())
@@ -461,8 +428,6 @@ impl PrfItem {
         })
     }
 
-    /// ## Script type (enhance)
-    /// create the enhanced item by using javascript quick.js
     pub fn from_script(uid: Option<String>) -> Result<Self> {
         let id = if let Some(uid) = uid {
             uid
@@ -480,7 +445,6 @@ impl PrfItem {
         })
     }
 
-    /// ## Rules type (enhance)
     pub fn from_rules() -> Result<Self> {
         let uid = help::get_uid("r").into();
         let file = format!("{uid}.yaml").into(); // yaml ext
@@ -495,7 +459,6 @@ impl PrfItem {
         })
     }
 
-    /// ## Proxies type (enhance)
     pub fn from_proxies() -> Result<Self> {
         let uid = help::get_uid("p").into();
         let file = format!("{uid}.yaml").into(); // yaml ext
@@ -510,7 +473,6 @@ impl PrfItem {
         })
     }
 
-    /// ## Groups type (enhance)
     pub fn from_groups() -> Result<Self> {
         let uid = help::get_uid("g").into();
         let file = format!("{uid}.yaml").into(); // yaml ext
@@ -525,7 +487,6 @@ impl PrfItem {
         })
     }
 
-    /// get the file data
     pub async fn read_file(&self) -> Result<String> {
         let file = self
             .file
@@ -538,7 +499,6 @@ impl PrfItem {
         Ok(content.into())
     }
 
-    /// save the file data
     pub async fn save_file(&self, data: String) -> Result<()> {
         let file = self
             .file
@@ -552,27 +512,22 @@ impl PrfItem {
 }
 
 impl PrfItem {
-    /// 获取current指向的订阅的merge
     pub fn current_merge(&self) -> Option<&String> {
         self.option.as_ref().and_then(|o| o.merge.as_ref())
     }
 
-    /// 获取current指向的订阅的script
     pub fn current_script(&self) -> Option<&String> {
         self.option.as_ref().and_then(|o| o.script.as_ref())
     }
 
-    /// 获取current指向的订阅的rules
     pub fn current_rules(&self) -> Option<&String> {
         self.option.as_ref().and_then(|o| o.rules.as_ref())
     }
 
-    /// 获取current指向的订阅的proxies
     pub fn current_proxies(&self) -> Option<&String> {
         self.option.as_ref().and_then(|o| o.proxies.as_ref())
     }
 
-    /// 获取current指向的订阅的groups
     pub fn current_groups(&self) -> Option<&String> {
         self.option.as_ref().and_then(|o| o.groups.as_ref())
     }

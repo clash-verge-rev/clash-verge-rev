@@ -5,7 +5,6 @@ import { compileStringMatcher } from '@/utils/search-matcher'
 
 import type { ResolvedMemberOccurrence } from './use-render-list'
 
-// default | delay | alphabet
 export type ProxySortType = 0 | 1 | 2
 
 export type ProxySearchState = {
@@ -27,16 +26,9 @@ export function filterSort(
   return sp
 }
 
-/**
- * 可以通过延迟数/节点类型 过滤
- */
 const regex1 = /delay([=<>])(\d+|timeout|error)/i
 const regex2 = /type=(.*)/i
 
-/**
- * filter the proxy
- * according to the regular conditions
- */
 function filterProxies(
   proxies: ResolvedMemberOccurrence[],
   groupName: string,
@@ -90,9 +82,6 @@ function filterProxies(
   return proxies.filter(({ member }) => compiled.matcher(member.ref.name))
 }
 
-/**
- * sort the proxy
- */
 function sortProxies(
   proxies: ResolvedMemberOccurrence[],
   groupName: string,

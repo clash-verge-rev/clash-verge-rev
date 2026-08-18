@@ -11,9 +11,6 @@ type Platform =
   | 'cygwin'
   | 'netbsd'
 
-/**
- * defines in `vite.config.ts`
- */
 declare const OS_PLATFORM: Platform
 
 type ValidationOutcome =
@@ -21,9 +18,6 @@ type ValidationOutcome =
   | { status: 'invalid'; kind: string; message: string }
   | { status: 'skipped'; reason: string }
 
-/**
- * Some interface for clash api
- */
 interface IConfigData {
   port: number
   mode: string
@@ -213,12 +207,7 @@ interface IConnectionSetting {
   layout: 'table' | 'list'
 }
 
-/**
- * Some interface for command
- */
-
 interface IClashInfo {
-  // status: string;
   mixed_port?: number // clash mixed port
   socks_port?: number // clash socks port
   redir_port?: number // clash redir port
@@ -890,7 +879,6 @@ interface IVergeConfig {
   sysproxy_tray_icon?: boolean
   tun_tray_icon?: boolean
   enable_tray_speed?: boolean
-  // enable_tray_icon?: boolean;
   tray_proxy_groups_display_mode?: 'default' | 'inline' | 'disable'
   tray_inline_outbound_modes?: boolean
   enable_tun_mode?: boolean
@@ -980,7 +968,6 @@ interface IWebDavConfig {
   password: string
 }
 
-// Traffic monitor types
 interface ITrafficDataPoint {
   up: number
   down: number

@@ -8,17 +8,15 @@ pub fn get_local_date_string() -> String {
 pub fn country_code_to_emoji(country_code: &str) -> String {
     let uc = country_code.to_ascii_uppercase();
 
-    // 长度校验：仅允许 2 或 3
     match uc.len() {
         2 => {
-            // 校验是否是合法 alpha2
             if rust_iso3166::from_alpha2(&uc).is_none() {
                 return String::new();
             }
             alpha2_to_emoji(&uc)
         }
         3 => {
-            // 转换并校验 alpha3
+            // Regional indicators require the alpha-2 form.
             match rust_iso3166::from_alpha3(&uc) {
                 Some(c) => {
                     let alpha2 = c.alpha2.to_ascii_uppercase();

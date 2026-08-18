@@ -9,10 +9,7 @@ import { useVisibility } from './use-visibility'
 
 export const runStateQueryKey = ['getRuntimeState'] as const
 
-/**
- * Until the first snapshot arrives, assume the least capable environment: no service, no
- * elevation, nothing asked of the user. Guessing "ready" here would flash a usable TUN toggle.
- */
+/** Fail closed until the first snapshot so TUN never flashes as available. */
 const unknownRunState: RunState = {
   mode: 'NotRunning',
   service: 'unknown',
@@ -26,13 +23,7 @@ const unknownRunState: RunState = {
   serviceNeedsAttention: false,
 }
 
-/**
- * The Run State: how the core is running and what backs it.
- *
- * One query key, kept fresh by `verge://run-state-changed` rather than polling. Every derived
- * answer is computed in Rust and travels with the snapshot, so there is exactly one definition
- * of "TUN can work" in the app.
- */
+/** Event-driven run state; Rust owns all derived availability decisions. */
 export function useSystemState() {
   const pageVisible = useVisibility()
 
@@ -43,7 +34,7 @@ export function useSystemState() {
   } = useQuery({
     queryKey: runStateQueryKey,
     queryFn: getRuntimeState,
-    // A safety net only: transitions are pushed, so this is not the primary path.
+    // A safety net only; transitions normally arrive by event.
     refetchInterval: pageVisible ? 30000 : false,
     refetchOnWindowFocus: true,
     refetchOnReconnect: true,
