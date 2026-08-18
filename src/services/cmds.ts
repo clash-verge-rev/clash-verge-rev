@@ -136,6 +136,11 @@ export async function recordSelectedNode(groupName: string, node: string) {
   return invoke<void>('record_selected_node', { groupName, node })
 }
 
+/** Forget the persisted node selection for one proxy group in the current profile. */
+export async function forgetSelectedNode(groupName: string) {
+  return invoke<void>('forget_selected_node', { groupName })
+}
+
 export async function getProxyView(): Promise<ProxyViewV1> {
   const view = await invoke<ProxyViewV1>('get_proxy_view')
   if (view.schemaVersion !== 1) {

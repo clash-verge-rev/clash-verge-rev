@@ -1,6 +1,6 @@
 import { useCallback } from 'react'
 
-import { recordSelectedNode } from '@/services/cmds'
+import { forgetSelectedNode, recordSelectedNode } from '@/services/cmds'
 
 /**
  * Record which node a group is on, in the profile.
@@ -20,9 +20,24 @@ import { recordSelectedNode } from '@/services/cmds'
  * stale snapshot. The merge happens on the backend, against whatever the profile holds by then.
  */
 export const useRecordSelection = () => {
-  return useCallback((groupName: string, proxyName: string) => {
-    recordSelectedNode(groupName, proxyName).catch((error) => {
+  return useCallback(async (groupName: string, proxyName: string) => {
+    try {
+      await recordSelectedNode(groupName, proxyName)
+    } catch (error) {
       console.error('[Selection] 保存代理选择失败:', error)
-    })
+    }
+  }, [])
+}
+
+/**
+ * Forget the persisted node selection for a group after its runtime fixed node is released.
+ */
+export const useForgetSelection = () => {
+  return useCallback(async (groupName: string) => {
+    try {
+      await forgetSelectedNode(groupName)
+    } catch (error) {
+      console.error('[Selection] 清除代理选择失败:', error)
+    }
   }, [])
 }

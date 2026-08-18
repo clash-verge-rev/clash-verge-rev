@@ -32,6 +32,14 @@ pub async fn record_selected_node(group_name: String, node: String) -> CmdResult
         .stringify_err()
 }
 
+/// Forget the persisted node selection for a proxy group in the current profile.
+#[tauri::command]
+pub async fn forget_selected_node(group_name: String) -> CmdResult<()> {
+    crate::config::profiles::forget_selected_node(&group_name)
+        .await
+        .stringify_err()
+}
+
 static TRAY_SYNC_RUNNING: AtomicBool = AtomicBool::new(false);
 static TRAY_SYNC_PENDING: AtomicBool = AtomicBool::new(false);
 

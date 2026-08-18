@@ -623,6 +623,7 @@ export const CurrentProxyCard = () => {
       handleSelectChange(
         selectedGroup.name,
         previousProxy,
+        selectedGroup.fixed,
       )({
         target: { value: nextName },
       })

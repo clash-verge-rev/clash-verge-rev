@@ -2,11 +2,12 @@
 import { renderHook } from '@testing-library/react'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { useRecordSelection } from './use-record-selection'
+import { useForgetSelection, useRecordSelection } from './use-record-selection'
 
 const recordSelectedNode = vi.hoisted(() => vi.fn(() => Promise.resolve()))
+const forgetSelectedNode = vi.hoisted(() => vi.fn(() => Promise.resolve()))
 
-vi.mock('@/services/cmds', () => ({ recordSelectedNode }))
+vi.mock('@/services/cmds', () => ({ forgetSelectedNode, recordSelectedNode }))
 
 const record = (groupName: string, proxyName: string) => {
   const { result } = renderHook(() => useRecordSelection())
@@ -15,6 +16,49 @@ const record = (groupName: string, proxyName: string) => {
 
 beforeEach(() => {
   recordSelectedNode.mockClear()
+  forgetSelectedNode.mockClear()
+})
+
+describe('useForgetSelection', () => {
+  it('sends only the group name', () => {
+    const { result } = renderHook(() => useForgetSelection())
+
+    result.current('Proxy')
+
+    expect(forgetSelectedNode).toHaveBeenCalledWith('Proxy')
+  })
+
+  it('resolves after the clear request finishes', async () => {
+    let resolveForget!: () => void
+    forgetSelectedNode.mockImplementationOnce(
+      () => new Promise<void>((resolve) => (resolveForget = resolve)),
+    )
+    const { result } = renderHook(() => useForgetSelection())
+
+    const forget = result.current('Proxy')
+    let settled = false
+    forget.then(() => {
+      settled = true
+    })
+
+    await Promise.resolve()
+    expect(settled).toBe(false)
+
+    resolveForget()
+    await forget
+    expect(settled).toBe(true)
+  })
+
+  it('reports a failed clear without throwing at the caller', async () => {
+    const consoleError = vi.spyOn(console, 'error').mockImplementation(() => {})
+    forgetSelectedNode.mockRejectedValueOnce(new Error('no profile'))
+    const { result } = renderHook(() => useForgetSelection())
+
+    expect(() => result.current('Proxy')).not.toThrow()
+
+    await vi.waitFor(() => expect(consoleError).toHaveBeenCalled())
+    consoleError.mockRestore()
+  })
 })
 
 describe('useRecordSelection', () => {
