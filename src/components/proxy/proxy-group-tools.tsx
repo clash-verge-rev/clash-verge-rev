@@ -208,7 +208,7 @@ export const ProxyGroupTools = memo(function ProxyGroupTools(props: Props) {
           onHeadState({
             textState: textState === 'url' ? null : 'url',
           })
-          setTimeout(() => inputRef.current?.focus(), 0)
+          setTimeout(() => inputRef.current?.focus())
         }}
       >
         {textState === 'url' ? (
@@ -253,7 +253,7 @@ export const ProxyGroupTools = memo(function ProxyGroupTools(props: Props) {
             // eslint-disable-next-line @eslint-react/dom-no-flush-sync
             flushSync(() => onHeadState({ open: true }))
           onHeadState({ textState: textState === 'filter' ? null : 'filter' })
-          setTimeout(() => inputRef.current?.focus(), 0)
+          setTimeout(() => inputRef.current?.focus())
         }}
       >
         {textState === 'filter' ? (
