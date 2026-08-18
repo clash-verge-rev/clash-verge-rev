@@ -783,6 +783,9 @@ pub async fn enhance(profiles: &IProfiles) -> Result<(Mapping, HashSet<String>, 
     let config = cleanup_proxy_groups(config);
     let config = use_sort(config);
 
+    #[cfg(target_os = "macos")]
+    tun::reconcile_system_dns(&config).await;
+
     let mut exists_keys_set = HashSet::new();
     exists_keys_set.extend(exists_keys);
 
