@@ -1,6 +1,7 @@
 use crate::{
-    config::Config,
+    config::{Config, IVerge},
     core::{timer::Timer, tray::Tray},
+    feat,
     process::AsyncHandler,
 };
 
@@ -82,10 +83,12 @@ pub async fn auto_lightweight_boot() -> Result<()> {
     let verge_config = Config::verge().await;
     let is_enable_auto = verge_config.data_arc().enable_auto_light_weight_mode.unwrap_or(false);
     let is_silent_start = verge_config.data_arc().enable_silent_start.unwrap_or(false);
+    let was_in_light_weight = verge_config.data_arc().in_light_weight_mode.unwrap_or(false);
+    drop(verge_config);
     if is_enable_auto {
         enable_auto_light_weight_mode().await;
     }
-    if is_silent_start {
+    if is_silent_start || was_in_light_weight {
         entry_lightweight_mode().await;
     }
     Ok(())
@@ -117,6 +120,7 @@ pub async fn entry_lightweight_mode() -> bool {
     record_state_and_log(LightweightState::In);
     WindowManager::destroy_main_window();
     cancel_light_weight_timer();
+    persist_light_weight_mode(true).await;
     refresh_lightweight_tray_state().await;
     true
 }
@@ -144,8 +148,20 @@ pub async fn exit_lightweight_mode() -> bool {
     }
     cancel_light_weight_timer();
     record_state_and_log(LightweightState::Normal);
+    persist_light_weight_mode(false).await;
     refresh_lightweight_tray_state().await;
     true
+}
+
+/// 将轻量模式的运行状态持久化到 verge 配置，重启后可恢复
+async fn persist_light_weight_mode(enabled: bool) {
+    let patch = IVerge {
+        in_light_weight_mode: Some(enabled),
+        ..IVerge::default()
+    };
+    if let Err(e) = feat::patch_verge(&patch, false).await {
+        logging!(error, Type::Lightweight, "持久化轻量模式状态失败: {e}");
+    }
 }
 
 #[cfg(target_os = "macos")]

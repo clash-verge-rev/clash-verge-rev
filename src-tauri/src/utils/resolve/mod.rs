@@ -203,8 +203,10 @@ pub(super) async fn refresh_tray_menu() {
 }
 
 pub(super) async fn init_window() {
-    let is_silent_start = Config::verge().await.data_arc().enable_silent_start.unwrap_or(false);
-    WindowManager::create_window(!is_silent_start).await;
+    let verge = Config::verge().await.data_arc();
+    let is_silent_start = verge.enable_silent_start.unwrap_or(false);
+    let was_in_light_weight = verge.in_light_weight_mode.unwrap_or(false);
+    WindowManager::create_window(!(is_silent_start || was_in_light_weight)).await;
 }
 
 #[cfg(target_os = "macos")]
