@@ -45,7 +45,7 @@ fn runtime_group_order(config: Option<&Mapping>) -> Vec<String> {
         .filter_map(|group| group.get("name"))
         .filter_map(|name| name.as_str())
         .filter(|name| !name.is_empty() && *name != "GLOBAL")
-        .filter(|name| seen.insert((*name).to_owned()))
+        .filter(|name| seen.insert(*name))
         .map(str::to_owned)
         .collect()
 }
