@@ -382,7 +382,7 @@ impl CoreConfigValidator {
             } else if let Some(code) = status.code() {
                 format!("验证进程异常退出，退出码: {code}").into()
             } else {
-                "验证进程被终止".into()
+                "验证进程被终止，请检查是否有安全软件阻止了内核运行，或电脑 CPU/运行环境是否支持该内核程序。".into()
             };
 
             logging!(info, Type::Validate, "-------- 验证结束 --------");
