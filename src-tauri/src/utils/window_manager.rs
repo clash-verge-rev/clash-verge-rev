@@ -230,12 +230,16 @@ impl WindowManager {
         // 内容就绪再显示，避免白屏闪烁。reload 成功才 defer，失败则走下方直接显示。
         #[allow(unused_mut)]
         let mut defer_show_to_page_load = false;
-        #[cfg(target_os = "macos")]
         if crate::utils::resolve::window::take_webview_needs_reload() {
             logging!(info, Type::Window, "渲染进程曾被系统终止，激活窗口前重载页面");
             match window.reload() {
                 Ok(()) => defer_show_to_page_load = true,
-                Err(e) => logging!(warn, Type::Window, "重载页面失败，退回直接显示: {}", e),
+                Err(e) => {
+                    // 标记已被 take 走，reload 又失败——不还回去的话待重载状态就此丢失，
+                    // 后续再激活也不会重试，页面会一直空白到应用重启。
+                    logging!(warn, Type::Window, "重载页面失败，保留待重载标记并退回直接显示: {}", e);
+                    crate::utils::resolve::window::mark_webview_needs_reload();
+                }
             }
         }
 

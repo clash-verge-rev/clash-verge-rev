@@ -54,6 +54,14 @@ pub fn resolve_setup_async() {
         init_startup_script().await;
         let config_initialized = init_verge_config_before_window().await;
         init_window().await;
+
+        // Windows：渲染进程存活探测。
+        // macOS 走 wry 的 on_web_content_process_terminate 回调（见 lib.rs），
+        // 但该回调属于 wry 的 WebViewBuilderExtDarwin，Windows 上不存在等价项，
+        // 因此改由存活探测触发同一套恢复逻辑。窗口建好后再启动。
+        #[cfg(windows)]
+        window::start_renderer_liveness_watchdog();
+
         init_resources().await;
         if let Err(e) = init::init_dns_config().await {
             logging!(warn, Type::Setup, "DNS config initialization failed: {}", e);

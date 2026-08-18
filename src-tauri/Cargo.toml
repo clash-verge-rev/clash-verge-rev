@@ -141,6 +141,9 @@ deelevate = { workspace = true }
 runas = "=1.2.0"
 winreg = "0.56.0"
 windows = { version = "0.62.2", features = ["Win32_Globalization"] }
+# 渲染进程存活探测需要按 --type=renderer 识别 WebView2 子进程, 用到 cmd()/parent()。
+# 已在依赖树中(经 tauri 等传递引入), 此处仅显式声明以便直接使用。
+sysinfo = { version = "0.39", default-features = false, features = ["system"] }
 
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-autostart = "2.5.1"

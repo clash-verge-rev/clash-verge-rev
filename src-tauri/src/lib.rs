@@ -459,8 +459,11 @@ pub fn run() {
                 event_handlers::handle_window_close(&event);
             }
             tauri::WindowEvent::Focused(focused) => {
-                // 兜底：原生取消最小化只触发 Focused、不走 activate_window（macOS）
-                #[cfg(target_os = "macos")]
+                // 兜底：原生取消最小化只触发 Focused、不走 activate_window。
+                // macOS 与 Windows 都有这条路径——Windows 上从任务栏恢复最小化时，
+                // 应用自己的 activate_window 不会被调用，待重载标记没人取走，
+                // 页面会一直停在渲染进程死亡时的空白状态。
+                #[cfg(any(target_os = "macos", windows))]
                 if focused {
                     crate::utils::resolve::window::reload_main_window_if_needed();
                 }

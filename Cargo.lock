@@ -1123,6 +1123,7 @@ dependencies = [
  "serde_json",
  "serde_yaml_ng",
  "smartstring",
+ "sysinfo",
  "sysproxy",
  "tauri",
  "tauri-build",
