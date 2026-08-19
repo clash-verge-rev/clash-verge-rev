@@ -1,4 +1,4 @@
-use reqwest::Client;
+use reqwest::{Client, Version};
 
 use super::UnlockItem;
 
@@ -9,7 +9,7 @@ pub(super) async fn check_gemini(client: &Client) -> UnlockItem {
     let url = "https://gemini.google.com";
     let failed = || UnlockItem::checked("Gemini", "Failed", None);
 
-    let response = match client.get(url).send().await {
+    let response = match client.get(url).version(Version::HTTP_11).send().await {
         Ok(r) => r,
         Err(_) => return failed(),
     };
