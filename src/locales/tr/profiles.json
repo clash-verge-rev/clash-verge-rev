@@ -28,7 +28,16 @@
     "feedback": {
       "errors": {
         "invalidUrl": "Invalid profile URL. Please enter a URL starting with http:// or https://",
-        "onlyYaml": "Yalnızca YAML Dosyaları Desteklenir"
+        "onlyYaml": "Yalnızca YAML Dosyaları Desteklenir",
+        "createFailed": "Profil oluşturulamadı",
+        "deleteFailed": "Profil silinemedi",
+        "enhanceFailed": "Profiller yeniden etkinleştirilemedi",
+        "importFailed": "Profil içe aktarılamadı",
+        "openFailed": "Profil açılamadı",
+        "readFailed": "Profil okunamadı",
+        "reorderFailed": "Profiller yeniden sıralanamadı",
+        "switchFailed": "Profil değiştirilemedi",
+        "updateFailed": "Profil güncellenemedi"
       },
       "notifications": {
         "importRetry": "İçe aktarma başarısız oldu, Clash vekil ile yeniden deneniyor...",
@@ -43,6 +52,9 @@
       "notices": {
         "forceRefreshCompleted": "Force refresh completed",
         "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
+      },
+      "tooltips": {
+        "forceRefreshStaleData": "Profil verileri kullanılamıyor; zorla yenilemek için tıklayın"
       }
     },
     "title": "Profiller"
@@ -105,12 +117,26 @@
         "type": "Tip",
         "description": "Açıklamalar",
         "subscriptionUrl": "Abonelik URL'si",
+        "userAgent": "Kullanıcı Aracısı",
         "httpTimeout": "HTTP Request Timeout",
         "updateInterval": "Güncelleme Aralığı",
         "useSystemProxy": "Sistem Vekil'ini Kullan",
         "useClashProxy": "Clash Vekil'ini Kullan",
         "acceptInvalidCerts": "Geçersiz Sertifikalara İzin Ver (Tehlikeli)",
         "allowAutoUpdate": "Allow Auto Update"
+      },
+      "types": {
+        "remote": "Uzak",
+        "local": "Yerel"
+      },
+      "errors": {
+        "typeRequired": "Bir profil türü seçin",
+        "urlRequired": "Bir abonelik URL’si girin",
+        "uidMissing": "Profil tanımlayıcısı eksik",
+        "saveFailed": "Profil kaydedilemedi"
+      },
+      "warnings": {
+        "frequentUpdate": "Kısa bir aralık çekirdeği o sıklıkta yeniden yükler ve mevcut bağlantıları koparır. {{minutes}} dakika (24 saat) önerilir."
       },
       "feedback": {
         "notifications": {

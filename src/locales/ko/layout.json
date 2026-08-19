@@ -19,6 +19,41 @@
         "collapseNavBar": "Collapse navigation bar",
         "expandNavBar": "Expand navigation bar"
       }
+    },
+    "serviceMigration": {
+      "title": "Service update required",
+      "message": "An older Clash Verge service installation was detected. Reinstall it to use the current secure IPC protocol, or continue with Sidecar for this session.",
+      "checkingMessage": "Checking the system service status and current running mode. Please wait…",
+      "unavailableMessage": "The required Clash Verge service is not available. Install or repair it, or continue with Sidecar for this session.",
+      "reinstall": "Reinstall service",
+      "repair": "Repair service",
+      "continueSidecar": "Continue with Sidecar",
+      "success": "The Clash Verge service was updated successfully",
+      "errors": {
+        "actionFailed": "서비스 작업에 실패했습니다",
+        "stateRefreshFailed": "서비스 상태를 새로 고치지 못했습니다",
+        "restartFailed": "코어를 재시작하지 못했습니다",
+        "revalidationFailed": "실행 상태를 새로 고치지 못했습니다",
+        "sidecarFailed": "Sidecar로 계속하지 못했습니다"
+      }
+    },
+    "sysproxyPrivilege": {
+      "title": "시스템 프록시를 설정할 수 없음",
+      "message": "macOS가 권한 부족을 이유로 이 변경을 거부했습니다. Clash Verge 서비스를 설치하면 서비스가 관리자 권한으로 프록시를 설정하며, 이 알림은 다시 나타나지 않습니다.",
+      "serviceReadyMessage": "Clash Verge 서비스는 준비되었지만 코어가 아직 sidecar로 실행 중이어서 시스템 프록시 설정이 거부되었습니다. 서비스 모드로 전환하면 재설치 없이 해결됩니다.",
+      "alternative": "다른 방법: 시스템 설정 → 개인정보 보호 및 보안 → 고급에서 시스템 전체 설정에 관리자 암호를 요구하는 옵션을 끄십시오.",
+      "later": "나중에",
+      "installing": "시스템 서비스를 설치하는 중입니다. 관리자 암호를 요청할 수 있습니다.",
+      "restarting": "서비스가 설치되었습니다. 서비스를 통해 코어를 다시 시작하는 중…",
+      "applying": "시스템 프록시 변경 사항을 적용하는 중…",
+      "tunTitle": "TUN 모드에는 시스템 서비스가 필요합니다",
+      "tunMessage": "TUN 모드가 네트워크 트래픽을 처리하려면 Clash Verge 시스템 서비스가 필요합니다. 설치가 끝나면 TUN 모드가 자동으로 켜집니다."
+    }
+  },
+  "feedback": {
+    "errors": {
+      "restartCoreStopFailed": "코어를 안전하게 중지할 수 없어 재시작이 취소되었습니다",
+      "quitCoreStopFailed": "코어를 안전하게 중지할 수 없어 종료가 취소되었습니다"
     }
   }
 }

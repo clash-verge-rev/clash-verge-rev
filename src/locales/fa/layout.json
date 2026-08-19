@@ -19,6 +19,41 @@
         "collapseNavBar": "Collapse navigation bar",
         "expandNavBar": "Expand navigation bar"
       }
+    },
+    "serviceMigration": {
+      "title": "Service update required",
+      "message": "An older Clash Verge service installation was detected. Reinstall it to use the current secure IPC protocol, or continue with Sidecar for this session.",
+      "checkingMessage": "Checking the system service status and current running mode. Please wait…",
+      "unavailableMessage": "The required Clash Verge service is not available. Install or repair it, or continue with Sidecar for this session.",
+      "reinstall": "Reinstall service",
+      "repair": "Repair service",
+      "continueSidecar": "Continue with Sidecar",
+      "success": "The Clash Verge service was updated successfully",
+      "errors": {
+        "actionFailed": "عملیات سرویس ناموفق بود",
+        "stateRefreshFailed": "به‌روزرسانی وضعیت سرویس ناموفق بود",
+        "restartFailed": "راه‌اندازی مجدد هسته ناموفق بود",
+        "revalidationFailed": "به‌روزرسانی وضعیت اجرا ناموفق بود",
+        "sidecarFailed": "ادامه با Sidecar ناموفق بود"
+      }
+    },
+    "sysproxyPrivilege": {
+      "title": "تنظیم پروکسی سیستم ممکن نشد",
+      "message": "macOS این تغییر را به دلیل نبود دسترسی رد کرد. با نصب سرویس Clash Verge، تغییرات پروکسی توسط سرویس و با دسترسی مدیر انجام می‌شود و این پیام دیگر نمایش داده نمی‌شود.",
+      "serviceReadyMessage": "سرویس Clash Verge آماده است، اما هسته هنوز به‌صورت sidecar اجرا می‌شود و به همین دلیل تنظیم پروکسی رد شد. تغییر به حالت سرویس آن را حل می‌کند و نیازی به نصب مجدد نیست.",
+      "alternative": "راه دیگر: در تنظیمات سیستم ← حریم خصوصی و امنیت ← پیشرفته، گزینهٔ نیاز به گذرواژهٔ مدیر برای تنظیمات سراسری را خاموش کنید.",
+      "later": "بعداً",
+      "installing": "در حال نصب سرویس سیستم. ممکن است گذرواژهٔ مدیر خواسته شود.",
+      "restarting": "سرویس نصب شد. هسته از طریق آن راه‌اندازی مجدد می‌شود…",
+      "applying": "در حال اعمال تغییر پروکسی سیستم…",
+      "tunTitle": "حالت TUN به سرویس سیستم نیاز دارد",
+      "tunMessage": "حالت TUN برای در دست گرفتن ترافیک شبکه به سرویس سیستم Clash Verge نیاز دارد. پس از نصب، حالت TUN برای شما روشن می‌شود."
+    }
+  },
+  "feedback": {
+    "errors": {
+      "restartCoreStopFailed": "هسته را نمی‌توان با ایمنی متوقف کرد، بنابراین راه‌اندازی مجدد لغو شد",
+      "quitCoreStopFailed": "هسته را نمی‌توان با ایمنی متوقف کرد، بنابراین خروج لغو شد"
     }
   }
 }

@@ -10,6 +10,12 @@ notifications:
     title: システムプロキシ
     'on': System proxy has been enabled.
     'off': System proxy has been disabled.
+  systemProxyFailed:
+    title: システムプロキシ
+    body: システムプロキシを設定できませんでした。理由は Clash Verge を開いて確認してください。
+  systemProxyGuardStopped:
+    title: システムプロキシガード
+    body: 連続して失敗したため停止しました。理由は Clash Verge を開いて確認してください。
   tunModeToggled:
     title: TUN モード
     'on': TUN mode has been enabled.
@@ -34,7 +40,26 @@ notifications:
 service:
   adminInstallPrompt: Clash Verge サービスのインストールには管理者権限が必要です。
   adminUninstallPrompt: Clash Verge サービスのアンインストールには管理者権限が必要です。
-  translocatedCorePath: Clash Verge is running from a temporary (App Translocation) path and can't locate the core. Please move Clash Verge into the Applications folder and reopen it.
+launchGuard:
+  currentExeError: アプリケーションの場所を確認できませんでした：{error}
+  homeDirError: 現在のユーザーのホームディレクトリを確認できないため、アプリケーションを終了します：{error}
+  translocated: macOS が一時的な App Translocation パスからこのアプリケーションを実行しています。Finder で /Applications または ~/Applications に手動で移動してから、もう一度開いてください。
+  rejected: |-
+    このアプリケーションは Applications ディレクトリから起動する必要があります。
+
+    {reason}
+  notInBundle: 実行ファイルがアプリケーションバンドル内にありません。
+  canonicalizeBundleError: アプリケーションバンドルのパスを解決できませんでした：{error}
+  bundleNameError: アプリケーションバンドル名を確認できないため、アプリケーションを終了します。
+  replacePrompt: '{destination} には既にアプリケーションがあります。置き換えて Applications から再起動しますか？'
+  movePrompt: バックグラウンドサービスを安全に起動するには、アプリケーションを {destination} に移動する必要があります。今すぐ移動して再起動しますか？
+  createApplicationsDirError: Applications ディレクトリを作成できませんでした：{error}
+  moveFailed: アプリケーションを移動できませんでした。Finder で手動で移動してから、もう一度お試しください。
+  replaceFailed: 既存のアプリケーションを安全に置き換えられませんでした：{error}
+  relaunchFailed: アプリケーションはコピーされましたが、自動的に再起動できませんでした。Applications から手動で開いてください。
+  cancel: キャンセル
+  move: 移動
+  ok: OK
 tray:
   dashboard: ダッシュボード
   ruleMode: ルールモード

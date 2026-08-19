@@ -1,11 +1,15 @@
-import { useCallback, useMemo, useRef } from 'react'
+import { useCallback, useRef } from 'react'
 import {
   closeConnection,
   getConnections,
   selectNodeForGroup,
+  unfixedProxy,
 } from 'tauri-plugin-mihomo-api'
 
-import { useProfiles } from '@/hooks/use-profiles'
+import {
+  useForgetSelection,
+  useRecordSelection,
+} from '@/hooks/use-record-selection'
 import { useVerge } from '@/hooks/use-verge'
 import { syncTrayProxySelection } from '@/services/cmds'
 import { debugLog } from '@/utils/debug'
@@ -37,26 +41,20 @@ interface ProxyChangeRequest {
   groupName: string
   proxyName: string
   previousProxy?: string
-  skipConfigSave: boolean
+  fixed?: string
 }
 
 // 代理选择 Hook
 export const useProxySelection = (options: ProxySelectionOptions = {}) => {
-  const { current, patchCurrent } = useProfiles()
+  const recordSelection = useRecordSelection()
+  const forgetSelection = useForgetSelection()
   const { verge } = useVerge()
   const pendingRequestRef = useRef<ProxyChangeRequest | null>(null)
   const isProcessingRef = useRef(false)
 
   const { onSuccess, onError, enableConnectionCleanup = true } = options
 
-  // 缓存
-  const config = useMemo(
-    () => ({
-      autoCloseConnection: verge?.auto_close_connection ?? false,
-      enableConnectionCleanup,
-    }),
-    [verge?.auto_close_connection, enableConnectionCleanup],
-  )
+  const autoCloseConnection = verge?.auto_close_connection ?? false
 
   // 切换节点
   const syncTraySelection = useCallback(() => {
@@ -65,45 +63,35 @@ export const useProxySelection = (options: ProxySelectionOptions = {}) => {
     })
   }, [])
 
-  const persistSelection = useCallback(
-    (groupName: string, proxyName: string, skipConfigSave: boolean) => {
-      if (!current || skipConfigSave) return
-
-      const selected = current.selected ? [...current.selected] : []
-      const index = selected.findIndex((item) => item.name === groupName)
-
-      if (index < 0) {
-        selected.push({ name: groupName, now: proxyName })
-      } else {
-        selected[index] = { name: groupName, now: proxyName }
-      }
-
-      patchCurrent({ selected }).catch((error) => {
-        console.error('[ProxySelection] 保存代理选择失败:', error)
-      })
-    },
-    [current, patchCurrent],
-  )
-
   const executeChange = useCallback(
     async (request: ProxyChangeRequest) => {
-      const { groupName, proxyName, previousProxy, skipConfigSave } = request
-      debugLog(`[ProxySelection] 代理切换: ${groupName} -> ${proxyName}`)
+      const { groupName, proxyName, previousProxy, fixed } = request
+      const isFixedProxy = fixed === proxyName
+      if (isFixedProxy) {
+        debugLog(`[ProxySelection] 代理取消固定: ${groupName} -> ${proxyName}`)
+      } else {
+        debugLog(`[ProxySelection] 代理切换: ${groupName} -> ${proxyName}`)
+      }
 
       try {
-        await selectNodeForGroup(groupName, proxyName)
+        if (isFixedProxy) {
+          await unfixedProxy(groupName)
+        } else {
+          await selectNodeForGroup(groupName, proxyName)
+        }
         onSuccess?.()
         syncTraySelection()
-        persistSelection(groupName, proxyName, skipConfigSave)
-        debugLog(
-          `[ProxySelection] 代理和状态同步完成: ${groupName} -> ${proxyName}`,
-        )
+        if (isFixedProxy) {
+          await forgetSelection(groupName)
+          debugLog(`[ProxySelection] 代理和状态同步完成: ${groupName}`)
+        } else {
+          await recordSelection(groupName, proxyName)
+          debugLog(
+            `[ProxySelection] 代理和状态同步完成: ${groupName} -> ${proxyName}`,
+          )
+        }
 
-        if (
-          config.enableConnectionCleanup &&
-          config.autoCloseConnection &&
-          previousProxy
-        ) {
+        if (enableConnectionCleanup && autoCloseConnection && previousProxy) {
           void cleanupConnections(previousProxy)
         }
       } catch (error) {
@@ -114,7 +102,15 @@ export const useProxySelection = (options: ProxySelectionOptions = {}) => {
         onError?.(error)
       }
     },
-    [config, onError, onSuccess, persistSelection, syncTraySelection],
+    [
+      autoCloseConnection,
+      forgetSelection,
+      enableConnectionCleanup,
+      onError,
+      onSuccess,
+      recordSelection,
+      syncTraySelection,
+    ],
   )
 
   const flushChangeQueue = useCallback(async () => {
@@ -140,13 +136,13 @@ export const useProxySelection = (options: ProxySelectionOptions = {}) => {
       groupName: string,
       proxyName: string,
       previousProxy?: string,
-      skipConfigSave: boolean = false,
+      fixed?: string,
     ) => {
       pendingRequestRef.current = {
         groupName,
         proxyName,
         previousProxy,
-        skipConfigSave,
+        fixed,
       }
       void flushChangeQueue()
     },
@@ -154,21 +150,19 @@ export const useProxySelection = (options: ProxySelectionOptions = {}) => {
   )
 
   const handleSelectChange = useCallback(
-    (
-      groupName: string,
-      previousProxy?: string,
-      skipConfigSave: boolean = false,
-    ) =>
+    (groupName: string, previousProxy?: string, fixed?: string) =>
       (event: { target: { value: string } }) => {
-        const newProxy = event.target.value
-        changeProxy(groupName, newProxy, previousProxy, skipConfigSave)
+        changeProxy(groupName, event.target.value, previousProxy, fixed)
       },
     [changeProxy],
   )
 
   const handleProxyGroupChange = useCallback(
-    (group: { name: string; now?: string }, proxy: { name: string }) => {
-      changeProxy(group.name, proxy.name, group.now)
+    (
+      group: { name: string; now?: string; fixed?: string },
+      proxy: { name: string },
+    ) => {
+      changeProxy(group.name, proxy.name, group.now, group.fixed)
     },
     [changeProxy],
   )

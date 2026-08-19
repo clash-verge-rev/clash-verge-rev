@@ -1,5 +1,4 @@
 import { alpha, Box, Button, LinearProgress } from '@mui/material'
-import { relaunch } from '@tauri-apps/plugin-process'
 import { open as openUrl } from '@tauri-apps/plugin-shell'
 import type { DownloadEvent } from '@tauri-apps/plugin-updater'
 import { useLockFn } from 'ahooks'
@@ -17,6 +16,7 @@ import type { Options as ReactMarkdownOptions } from 'react-markdown'
 
 import { BaseDialog, DialogRef } from '@/components/base'
 import { useUpdate } from '@/hooks/use-update'
+import { restartApp } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
 import { useSetUpdateState, useUpdateState } from '@/services/states'
 
@@ -30,11 +30,26 @@ type MarkdownNode = {
 }
 
 const GITHUB_ALERTS = {
-  note: { label: 'Note', color: '#0969da' },
-  tip: { label: 'Tip', color: '#1a7f37' },
-  important: { label: 'Important', color: '#8250df' },
-  warning: { label: 'Warning', color: '#9a6700' },
-  caution: { label: 'Caution', color: '#cf222e' },
+  note: {
+    labelKey: 'settings.modals.update.alerts.note',
+    color: '#0969da',
+  },
+  tip: {
+    labelKey: 'settings.modals.update.alerts.tip',
+    color: '#1a7f37',
+  },
+  important: {
+    labelKey: 'settings.modals.update.alerts.important',
+    color: '#8250df',
+  },
+  warning: {
+    labelKey: 'settings.modals.update.alerts.warning',
+    color: '#9a6700',
+  },
+  caution: {
+    labelKey: 'settings.modals.update.alerts.caution',
+    color: '#cf222e',
+  },
 } as const
 
 type GitHubAlertType = keyof typeof GITHUB_ALERTS
@@ -43,6 +58,8 @@ const GITHUB_ALERT_PATTERN =
   /^\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\][\t ]*\n?/i
 const GITHUB_ALERT_CLASS_PATTERN =
   /markdown-alert-(note|tip|important|warning|caution)/
+
+const shouldShowReleaseNotes = (language: string) => language === 'zh'
 
 const LazyReactMarkdown = lazy(async () => {
   const [{ default: ReactMarkdown }, { default: rehypeRaw }] =
@@ -76,7 +93,7 @@ const findFirstTextNode = (node: MarkdownNode): MarkdownNode | null => {
   return null
 }
 
-const remarkGitHubAlerts = () => {
+const remarkGitHubAlerts = (labels: Record<GitHubAlertType, string>) => {
   const visit = (node: MarkdownNode) => {
     for (const child of node.children ?? []) {
       visit(child)
@@ -111,7 +128,7 @@ const remarkGitHubAlerts = () => {
       children: [
         {
           type: 'text',
-          value: GITHUB_ALERTS[alertType].label,
+          value: labels[alertType],
         },
       ],
     })
@@ -121,7 +138,7 @@ const remarkGitHubAlerts = () => {
 }
 
 export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
 
   const [open, setOpen] = useState(false)
   const updateState = useUpdateState()
@@ -144,12 +161,31 @@ export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
     close: () => setOpen(false),
   }))
 
+  const githubAlertLabels = useMemo(
+    () =>
+      Object.fromEntries(
+        Object.entries(GITHUB_ALERTS).map(([type, alert]) => [
+          type,
+          t(alert.labelKey),
+        ]),
+      ) as Record<GitHubAlertType, string>,
+    [t],
+  )
+  const remarkGitHubAlertsPlugin = useMemo(
+    () => () => remarkGitHubAlerts(githubAlertLabels),
+    [githubAlertLabels],
+  )
+
+  const activeLanguage = i18n.resolvedLanguage ?? i18n.language
   const markdownContent = useMemo(() => {
     if (!updateInfo?.body) {
-      return 'New Version is available'
+      return t('settings.modals.update.messages.available')
+    }
+    if (!shouldShowReleaseNotes(activeLanguage)) {
+      return t('settings.modals.update.messages.available')
     }
     return updateInfo?.body
-  }, [updateInfo])
+  }, [activeLanguage, t, updateInfo])
 
   const breakChangeFlag = useMemo(() => {
     if (!updateInfo?.body) {
@@ -197,7 +233,7 @@ export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
 
     try {
       await updateInfo.downloadAndInstall(onDownloadEvent)
-      await relaunch()
+      await restartApp()
     } catch (err: any) {
       showNotice.error(err)
     } finally {
@@ -382,7 +418,7 @@ export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
         {open && (
           <Suspense fallback={<LinearProgress />}>
             <LazyReactMarkdown
-              remarkPlugins={[remarkGitHubAlerts]}
+              remarkPlugins={[remarkGitHubAlertsPlugin]}
               components={{
                 a: ({ ...props }) => {
                   const { children } = props

@@ -1,9 +1,6 @@
 name: Release Build
 
 on:
-  # ! 为了避免重复发布版本，应当通过独特 git tag 触发。
-  # ! 不再使用 workflow_dispatch 触发。
-  # workflow_dispatch:
   push:
     # -rc tag 时预览发布, 跳过 telegram 通知、跳过 winget 提交、跳过 latest.json 文件更新
     tags:
@@ -14,7 +11,6 @@ env:
   RUST_BACKTRACE: short
   HUSKY: 0
 concurrency:
-  # only allow per workflow per commit (and not pr) to run at a time
   group: '${{ github.workflow }} - ${{ github.head_ref || github.ref }}'
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
@@ -205,7 +201,7 @@ jobs:
       - name: Install Rust Stable
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: '1.96.1'
+          toolchain: '1.97.1'
           targets: ${{ matrix.target }}
 
       - name: Add Rust Target
@@ -229,9 +225,9 @@ jobs:
           sudo apt-get install -y libxslt1.1 libwebkit2gtk-4.1-dev libayatana-appindicator3-dev librsvg2-dev patchelf
 
       - name: Install Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
-          node-version: '24.18.0'
+          node-version: '24.19.0'
 
       - uses: pnpm/action-setup@v6
         name: Install pnpm
@@ -245,7 +241,6 @@ jobs:
 
       - name: Add Rust Target
         run: |
-          # Ensure cross target is installed for the pinned toolchain; fallback without explicit toolchain if needed
           rustup target add ${{ matrix.target }} --toolchain 1.95.0 || rustup target add ${{ matrix.target }}
           rustup target list --installed
           echo "Rust target ${{ matrix.target }} installed."
@@ -313,7 +308,7 @@ jobs:
       - name: Install Rust Stable
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: '1.96.1'
+          toolchain: '1.97.1'
           targets: ${{ matrix.target }}
 
       - name: Add Rust Target
@@ -331,9 +326,9 @@ jobs:
           cache-workspace-crates: true
 
       - name: Install Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
-          node-version: '24.18.0'
+          node-version: '24.19.0'
 
       - name: Install pnpm
         uses: pnpm/action-setup@v6
@@ -391,7 +386,6 @@ jobs:
 
       - name: Add Rust Target
         run: |
-          # Ensure cross target is installed for the pinned toolchain; fallback without explicit toolchain if needed
           rustup target add ${{ matrix.target }} --toolchain 1.95.0 || rustup target add ${{ matrix.target }}
           rustup target list --installed
           echo "Rust target ${{ matrix.target }} installed."
@@ -449,7 +443,7 @@ jobs:
       - name: Install Rust Stable
         uses: dtolnay/rust-toolchain@master
         with:
-          toolchain: '1.96.1'
+          toolchain: '1.97.1'
           targets: ${{ matrix.target }}
 
       - name: Add Rust Target
@@ -467,9 +461,9 @@ jobs:
           cache-workspace-crates: true
 
       - name: Install Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
-          node-version: '24.18.0'
+          node-version: '24.19.0'
 
       - uses: pnpm/action-setup@v6
         name: Install pnpm
@@ -490,7 +484,6 @@ jobs:
 
       - name: Add Rust Target
         run: |
-          # Ensure cross target is installed for the pinned toolchain; fallback without explicit toolchain if needed
           rustup target add ${{ matrix.target }} --toolchain 1.95.0 || rustup target add ${{ matrix.target }}
           rustup target list --installed
           echo "Rust target ${{ matrix.target }} installed."
@@ -554,9 +547,9 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Install Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
-          node-version: '24.18.0'
+          node-version: '24.19.0'
 
       - uses: pnpm/action-setup@v6
         name: Install pnpm
@@ -580,9 +573,9 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Install Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
-          node-version: '24.18.0'
+          node-version: '24.19.0'
 
       - uses: pnpm/action-setup@v6
         name: Install pnpm
@@ -642,9 +635,9 @@ jobs:
         shell: bash
 
       - name: Install Node
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
-          node-version: '24.18.0'
+          node-version: '24.19.0'
 
       - uses: pnpm/action-setup@v6
         name: Install pnpm

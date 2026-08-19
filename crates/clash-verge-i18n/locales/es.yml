@@ -10,6 +10,12 @@ notifications:
     title: Proxy del sistema
     'on': System proxy has been enabled.
     'off': System proxy has been disabled.
+  systemProxyFailed:
+    title: Proxy del sistema
+    body: No se pudo establecer el proxy del sistema. Abra Clash Verge para ver por qué.
+  systemProxyGuardStopped:
+    title: Guardián del proxy del sistema
+    body: Detenido tras varios fallos seguidos. Abra Clash Verge para ver por qué.
   tunModeToggled:
     title: Modo TUN
     'on': TUN mode has been enabled.
@@ -34,7 +40,26 @@ notifications:
 service:
   adminInstallPrompt: Instalar el servicio de Clash Verge requiere privilegios de administrador.
   adminUninstallPrompt: Desinstalar el servicio de Clash Verge requiere privilegios de administrador.
-  translocatedCorePath: Clash Verge is running from a temporary (App Translocation) path and can't locate the core. Please move Clash Verge into the Applications folder and reopen it.
+launchGuard:
+  currentExeError: 'No se pudo determinar la ubicación de la aplicación: {error}'
+  homeDirError: 'No se pudo determinar la carpeta de inicio del usuario actual. La aplicación se cerrará: {error}'
+  translocated: macOS está ejecutando esta aplicación desde una ruta temporal de App Translocation. Muévela manualmente en Finder a /Applications o ~/Applications y vuelve a abrirla.
+  rejected: |-
+    Esta aplicación debe iniciarse desde una carpeta Applications.
+
+    {reason}
+  notInBundle: El archivo ejecutable no está dentro de un paquete de aplicación.
+  canonicalizeBundleError: 'No se pudo resolver la ruta del paquete de la aplicación: {error}'
+  bundleNameError: No se pudo determinar el nombre del paquete de la aplicación. La aplicación se cerrará.
+  replacePrompt: Ya existe una aplicación en {destination}. ¿Quieres reemplazarla y reiniciarla desde Applications?
+  movePrompt: Para iniciar el servicio en segundo plano de forma segura, la aplicación debe moverse a {destination}. ¿Quieres moverla y reiniciarla ahora?
+  createApplicationsDirError: 'No se pudo crear la carpeta Applications: {error}'
+  moveFailed: No se pudo mover la aplicación. Muévela manualmente en Finder e inténtalo de nuevo.
+  replaceFailed: 'No se pudo reemplazar de forma segura la aplicación existente: {error}'
+  relaunchFailed: La aplicación se copió, pero no se pudo reiniciar automáticamente. Ábrela manualmente desde Applications.
+  cancel: Cancelar
+  move: Mover
+  ok: Aceptar
 tray:
   dashboard: Panel
   ruleMode: Modo de reglas

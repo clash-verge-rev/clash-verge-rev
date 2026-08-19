@@ -8,12 +8,18 @@ notifications:
     body: Переключено на {mode}.
   systemProxyToggled:
     title: Системный прокси
-    'on': System proxy has been enabled.
-    'off': System proxy has been disabled.
+    'on': Системный прокси включён.
+    'off': Системный прокси отключён.
+  systemProxyFailed:
+    title: Системный прокси
+    body: Не удалось настроить системный прокси. Откройте Clash Verge, чтобы узнать причину.
+  systemProxyGuardStopped:
+    title: Страж системного прокси
+    body: Остановлен после нескольких неудач подряд. Откройте Clash Verge, чтобы узнать причину.
   tunModeToggled:
     title: Режим TUN
-    'on': TUN mode has been enabled.
-    'off': TUN mode has been disabled.
+    'on': Режим TUN включён.
+    'off': Режим TUN отключён.
   lightweightModeEntered:
     title: Легкий режим
     body: Включен легкий режим.
@@ -27,14 +33,33 @@ notifications:
     title: Приложение скрыто
     body: Clash Verge работает в фоновом режиме.
   updateReady:
-    title: Clash Verge Update
-    body: A new version (v{version}) has been downloaded and is ready to install.
-    installNow: Install Now
-    later: Later
+    title: Обновление Clash Verge
+    body: Новая версия (v{version}) скачана и готова к установке.
+    installNow: Установить сейчас
+    later: Позже
 service:
   adminInstallPrompt: Для установки службы Clash Verge требуются права администратора.
   adminUninstallPrompt: Для удаления службы Clash Verge требуются права администратора.
-  translocatedCorePath: Clash Verge is running from a temporary (App Translocation) path and can't locate the core. Please move Clash Verge into the Applications folder and reopen it.
+launchGuard:
+  currentExeError: 'Не удалось определить расположение приложения: {error}'
+  homeDirError: 'Не удалось определить домашний каталог текущего пользователя. Приложение будет закрыто: {error}'
+  translocated: macOS запускает это приложение из временного пути App Translocation. Переместите его вручную в Finder в /Applications или ~/Applications, затем откройте снова.
+  rejected: |-
+    Это приложение необходимо запускать из каталога Applications.
+
+    {reason}
+  notInBundle: Исполняемый файл не находится внутри пакета приложения.
+  canonicalizeBundleError: 'Не удалось определить путь к пакету приложения: {error}'
+  bundleNameError: Не удалось определить имя пакета приложения. Приложение будет закрыто.
+  replacePrompt: В {destination} уже есть приложение. Заменить его и перезапустить из Applications?
+  movePrompt: Для безопасного запуска фоновой службы приложение необходимо переместить в {destination}. Переместить и перезапустить сейчас?
+  createApplicationsDirError: 'Не удалось создать каталог Applications: {error}'
+  moveFailed: Не удалось переместить приложение. Переместите его вручную в Finder и повторите попытку.
+  replaceFailed: 'Не удалось безопасно заменить существующее приложение: {error}'
+  relaunchFailed: Приложение скопировано, но его не удалось перезапустить автоматически. Откройте его вручную из Applications.
+  cancel: Отмена
+  move: Переместить
+  ok: ОК
 tray:
   dashboard: Панель
   ruleMode: Режим правил

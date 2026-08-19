@@ -5,6 +5,7 @@
       "telegram": "کانال تلگرام",
       "github": "مخزن GitHub"
     },
+    "actionsGroupLabel": "پیوندهای تنظیمات",
     "title": "تنظیمات"
   },
   "sections": {
@@ -36,11 +37,17 @@
       },
       "actions": {
         "installService": "نصب سرویس",
-        "uninstallService": "حذف سرویس"
+        "uninstallService": "حذف سرویس",
+        "switchToServiceMode": "رفتن به حالت سرویس"
       },
       "fields": {
         "systemProxy": "پراکسی سیستم",
         "tunMode": "Tun (کارت شبکه مجازی)"
+      },
+      "messages": {
+        "installedCheckProxy": "سرویس نصب شد و هسته از طریق آن اجرا می‌شود. کلید پراکسی سیستم را بررسی کنید و اگر تغییر شما اعمال نشده، دوباره انجامش دهید.",
+        "installedCoreNotOnService": "سرویس نصب شد، اما هسته از طریق آن اجرا نمی‌شود. وضعیت هسته را بررسی کنید و دوباره تلاش کنید.",
+        "installedProxyRestored": "سرویس نصب شد، هسته از طریق آن اجرا می‌شود و تغییر پروکسی سیستم شما اعمال شد."
       }
     },
     "externalController": {
@@ -284,7 +291,11 @@
       "messages": {
         "portInUse": "Port {{port}} is already in use",
         "saved": "Port settings saved",
-        "saveFailed": "Failed to save port settings"
+        "saveFailed": "Failed to save port settings",
+        "automaticFallback": "پورت {{oldPort}} در حال استفاده بود، بنابراین این اجرا از {{newPort}} استفاده می‌کند. تنظیم شما تغییر نکرده و در اجرای بعدی {{oldPort}} دوباره امتحان می‌شود.",
+        "automaticFallbackFailed": "تغییر خودکار پورت پراکسی ترکیبی ناموفق بود: {{error}}",
+        "portTooLow": "پورت باید ۱۰۰۰ یا بیشتر باشد",
+        "portTooHigh": "پورت باید ۶۵۵۳۵ یا کمتر باشد"
       }
     },
     "clashCore": {
@@ -429,7 +440,15 @@
         "update": "به‌روزرسانی"
       },
       "messages": {
-        "breakChangeError": "این نسخه یک به‌روزرسانی اساسی است و پشتیبانی از به‌روزرسانی درون برنامه را پشتیبانی نمی‌کند. لطفاً پس از حذف، دستی دانلود و نصب کنید."
+        "breakChangeError": "این نسخه یک به‌روزرسانی اساسی است و پشتیبانی از به‌روزرسانی درون برنامه را پشتیبانی نمی‌کند. لطفاً پس از حذف، دستی دانلود و نصب کنید.",
+        "available": "نسخه جدیدی در دسترس است"
+      },
+      "alerts": {
+        "note": "یادداشت",
+        "tip": "نکته",
+        "important": "مهم",
+        "warning": "هشدار",
+        "caution": "احتیاط"
       }
     },
     "sysproxy": {
@@ -590,6 +609,11 @@
       "messages": {
         "supportedPlaceholders": "پشتیبانی از %host، %port و %secret",
         "placeholderInstruction": "جایگزین کردن میزبان، پورت و رمز با %host، %port، %secret"
+      },
+      "errors": {
+        "clashInfoUnavailable": "اطلاعات اتصال هسته در دسترس نیست",
+        "invalidServer": "نشانی سرور هسته «{{server}}» نامعتبر است",
+        "openFailed": "باز کردن رابط وب ناموفق بود"
       }
     },
     "hotkey": {
@@ -617,6 +641,28 @@
     }
   },
   "feedback": {
+    "errors": {
+      "clash": {
+        "configUpdateFailed": "به‌روزرسانی پیکربندی هسته ناموفق بود",
+        "modeUpdateFailed": "تغییر حالت پروکسی ناموفق بود",
+        "restartFailed": "راه‌اندازی مجدد هسته ناموفق بود",
+        "startFailed": "راه‌اندازی هسته ناموفق بود",
+        "stopFailed": "توقف هسته ناموفق بود"
+      },
+      "clashService": {
+        "installFailed": "نصب سرویس ناموفق بود",
+        "uninstallFailed": "حذف سرویس ناموفق بود",
+        "reinstallFailed": "نصب مجدد سرویس ناموفق بود",
+        "repairFailed": "تعمیر سرویس ناموفق بود",
+        "sidecarFailed": "ادامه با Sidecar ناموفق بود"
+      },
+      "sysproxy": {
+        "privilegeRequired": "تنظیم پراکسی سیستم ممکن نیست: macOS به دلیل نداشتن دسترسی، این تغییر را رد کرد. سرویس Clash Verge را نصب کنید؛ اگر مدیر هستید می‌توانید در گزینه‌های پیشرفتهٔ تنظیمات سیستم ← حریم خصوصی و امنیت، الزام رمز مدیر برای تنظیمات سراسری سیستم را نیز خاموش کنید.",
+        "directFallback": "تنظیم پراکسی سیستم ناموفق بود؛ ترافیک به اتصال مستقیم بازگردانده شد.",
+        "guardStopped": "نگهبان پراکسی سیستم پس از چند شکست پیاپی متوقف شد. پراکسی سیستم دیگر به‌طور خودکار نگه داشته نمی‌شود.",
+        "sidecarWhileServiceReady": "تنظیم پراکسی سیستم ممکن نشد: سرویس Clash Verge آماده است اما هسته هنوز به‌صورت Sidecar اجرا می‌شود. برای رفتن به حالت سرویس، هسته را دوباره راه‌اندازی کنید."
+      }
+    },
     "notifications": {
       "clash": {
         "restartSuccess": "هسته Clash مجدداً راه‌اندازی شد",

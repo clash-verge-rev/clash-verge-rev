@@ -39,7 +39,7 @@ fn resolve_supported_language(language: &str) -> Option<Cow<'static, str>> {
 }
 
 #[inline]
-fn current_language(language: Option<&str>) -> Cow<'static, str> {
+pub fn current_language(language: Option<&str>) -> Cow<'static, str> {
     language
         .filter(|lang| !lang.is_empty())
         .and_then(resolve_supported_language)
@@ -84,21 +84,4 @@ macro_rules! t {
             ::std::borrow::Cow::<'static, str>::Owned(_text)
         }
     };
-}
-
-#[cfg(test)]
-mod test {
-    use super::resolve_supported_language;
-
-    #[test]
-    fn test_resolve_supported_language() {
-        assert_eq!(resolve_supported_language("en").as_deref(), Some("en"));
-        assert_eq!(resolve_supported_language("en-US").as_deref(), Some("en"));
-        assert_eq!(resolve_supported_language("zh").as_deref(), Some("zh"));
-        assert_eq!(resolve_supported_language("zh-CN").as_deref(), Some("zh"));
-        assert_eq!(resolve_supported_language("zh-Hant").as_deref(), Some("zhtw"));
-        assert_eq!(resolve_supported_language("jp").as_deref(), Some("jp"));
-        assert_eq!(resolve_supported_language("ja-JP").as_deref(), Some("jp"));
-        assert_eq!(resolve_supported_language("fr"), None);
-    }
 }

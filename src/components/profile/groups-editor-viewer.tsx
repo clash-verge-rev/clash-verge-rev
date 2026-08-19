@@ -36,7 +36,7 @@ import {
   cancelIdleCallback,
   requestIdleCallback,
 } from 'foxact/request-idle-callback'
-import yaml from 'js-yaml'
+import * as yaml from 'js-yaml'
 import {
   startTransition,
   useCallback,
@@ -65,6 +65,7 @@ import { useThemeMode } from '@/services/states'
 import type { TranslationKey } from '@/types/generated/i18n-keys'
 import type { MonacoEditorInstance } from '@/types/monaco'
 import getSystem from '@/utils/get-system'
+import { parseYamlSafe } from '@/utils/yaml'
 
 interface Props {
   proxiesUid: string
@@ -181,6 +182,7 @@ export const GroupsEditorViewer = (props: Props) => {
   const [prependSeq, setPrependSeq] = useState<IProxyGroupConfig[]>([])
   const [appendSeq, setAppendSeq] = useState<IProxyGroupConfig[]>([])
   const [deleteSeq, setDeleteSeq] = useState<string[]>([])
+  const hasLoadedSeqConfigRef = useRef(false)
 
   const filteredPrependSeq = useMemo(
     () => prependSeq.filter((group) => match(group.name)),
@@ -327,8 +329,17 @@ export const GroupsEditorViewer = (props: Props) => {
     }
   }
   const fetchContent = useCallback(async () => {
+    hasLoadedSeqConfigRef.current = false
     const data = await readProfileFile(property)
-    const obj = yaml.load(data) as ISeqProfileConfig | null
+    const obj = parseYamlSafe(data) as ISeqProfileConfig | null | undefined
+
+    setPrevData(data)
+    setCurrData(data)
+
+    if (obj === undefined) {
+      setVisualization(false)
+      return
+    }
 
     setPrependSeq(obj?.prepend || [])
     setAppendSeq(obj?.append || [])
@@ -342,17 +353,22 @@ export const GroupsEditorViewer = (props: Props) => {
       }
       return normalized
     })
-
-    setPrevData(data)
-    setCurrData(data)
+    hasLoadedSeqConfigRef.current = true
   }, [property])
 
-  useEffect(() => {
-    if (currData === '' || visualization !== true) {
+  const handleVisualizationToggle = () => {
+    if (visualization) {
+      setVisualization(false)
       return
     }
 
-    const obj = yaml.load(currData) as ISeqProfileConfig | null
+    const obj = parseYamlSafe(currData) as ISeqProfileConfig | null | undefined
+    if (obj === undefined) {
+      hasLoadedSeqConfigRef.current = false
+      return
+    }
+
+    hasLoadedSeqConfigRef.current = true
     startTransition(() => {
       setPrependSeq(obj?.prepend ?? [])
       setAppendSeq(obj?.append ?? [])
@@ -367,12 +383,17 @@ export const GroupsEditorViewer = (props: Props) => {
         return normalized
       })
     })
-  }, [currData, visualization])
+    setVisualization(true)
+  }
 
   // 优化：异步处理大数据yaml.dump，避免UI卡死
   useEffect(() => {
-    if (prependSeq && appendSeq && deleteSeq) {
+    if (hasLoadedSeqConfigRef.current && prependSeq && appendSeq && deleteSeq) {
       const serialize = () => {
+        if (!hasLoadedSeqConfigRef.current) {
+          return
+        }
+
         try {
           setCurrData(buildGroupsYaml(prependSeq, appendSeq, deleteSeq))
         } catch (e) {
@@ -391,13 +412,15 @@ export const GroupsEditorViewer = (props: Props) => {
   const fetchProxyPolicy = useCallback(async () => {
     const data = await readProfileFile(profileUid)
     const proxiesData = await readProfileFile(proxiesUid)
-    const originGroupsObj = yaml.load(data) as {
+    const originGroupsObj = parseYamlSafe(data) as {
       'proxy-groups': IProxyGroupConfig[]
     } | null
 
-    const originProxiesObj = yaml.load(data) as { proxies: [] } | null
+    const originProxiesObj = parseYamlSafe(data) as { proxies: [] } | null
     const originProxies = originProxiesObj?.proxies || []
-    const moreProxiesObj = yaml.load(proxiesData) as ISeqProfileConfig | null
+    const moreProxiesObj = parseYamlSafe(
+      proxiesData,
+    ) as ISeqProfileConfig | null
     const morePrependProxies = moreProxiesObj?.prepend || []
     const moreAppendProxies = moreProxiesObj?.append || []
     const moreDeleteProxies = normalizeDeleteSeq(moreProxiesObj?.delete)
@@ -437,21 +460,21 @@ export const GroupsEditorViewer = (props: Props) => {
     const mergeData = await readProfileFile(mergeUid)
     const globalMergeData = await readProfileFile('Merge')
 
-    const originGroupsObj = yaml.load(data) as {
+    const originGroupsObj = parseYamlSafe(data) as {
       'proxy-groups': IProxyGroupConfig[]
     } | null
 
-    const originProviderObj = yaml.load(data) as {
+    const originProviderObj = parseYamlSafe(data) as {
       'proxy-providers': Record<string, unknown>
     } | null
     const originProvider = originProviderObj?.['proxy-providers'] || {}
 
-    const moreProviderObj = yaml.load(mergeData) as {
+    const moreProviderObj = parseYamlSafe(mergeData) as {
       'proxy-providers': Record<string, unknown>
     } | null
     const moreProvider = moreProviderObj?.['proxy-providers'] || {}
 
-    const globalProviderObj = yaml.load(globalMergeData) as {
+    const globalProviderObj = parseYamlSafe(globalMergeData) as {
       'proxy-providers': Record<string, unknown>
     } | null
     const globalProvider = globalProviderObj?.['proxy-providers'] || {}
@@ -536,9 +559,7 @@ export const GroupsEditorViewer = (props: Props) => {
               <Button
                 variant="contained"
                 size="small"
-                onClick={() => {
-                  setVisualization((prev) => !prev)
-                }}
+                onClick={handleVisualizationToggle}
               >
                 {visualization
                   ? t('shared.editorModes.advanced')

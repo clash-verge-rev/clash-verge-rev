@@ -20,6 +20,13 @@
       },
       "fields": {
         "url": "Test URL'si"
+      },
+      "errors": {
+        "nameRequired": "Bir ad girin",
+        "urlRequired": "Bir test URL’si girin",
+        "invalidSvg": "Simge geçerli bir SVG değil",
+        "uidMissing": "Test öğesi tanımlayıcısı eksik",
+        "saveFailed": "Test öğesi kaydedilemedi"
       }
     }
   },

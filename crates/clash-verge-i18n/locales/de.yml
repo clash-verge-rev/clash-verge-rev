@@ -10,6 +10,12 @@ notifications:
     title: Systemproxy
     'on': System proxy has been enabled.
     'off': System proxy has been disabled.
+  systemProxyFailed:
+    title: Systemproxy
+    body: Der Systemproxy konnte nicht gesetzt werden. Öffnen Sie Clash Verge, um zu sehen, warum.
+  systemProxyGuardStopped:
+    title: Systemproxy-Wächter
+    body: Nach mehreren Fehlversuchen in Folge gestoppt. Öffnen Sie Clash Verge, um zu sehen, warum.
   tunModeToggled:
     title: TUN-Modus
     'on': TUN mode has been enabled.
@@ -34,7 +40,26 @@ notifications:
 service:
   adminInstallPrompt: Für die Installation des Clash-Verge-Dienstes sind Administratorrechte erforderlich.
   adminUninstallPrompt: Für die Deinstallation des Clash-Verge-Dienstes sind Administratorrechte erforderlich.
-  translocatedCorePath: Clash Verge is running from a temporary (App Translocation) path and can't locate the core. Please move Clash Verge into the Applications folder and reopen it.
+launchGuard:
+  currentExeError: 'Der Speicherort der Anwendung konnte nicht ermittelt werden: {error}'
+  homeDirError: 'Das Benutzerverzeichnis des aktuellen Benutzers konnte nicht ermittelt werden. Die Anwendung wird beendet: {error}'
+  translocated: macOS führt diese Anwendung aus einem temporären App-Translocation-Pfad aus. Verschieben Sie sie im Finder manuell nach /Applications oder ~/Applications und öffnen Sie sie anschließend erneut.
+  rejected: |-
+    Diese Anwendung muss aus einem Applications-Ordner gestartet werden.
+
+    {reason}
+  notInBundle: Die ausführbare Datei befindet sich nicht in einem Anwendungspaket.
+  canonicalizeBundleError: 'Der Pfad des Anwendungspakets konnte nicht aufgelöst werden: {error}'
+  bundleNameError: Der Name des Anwendungspakets konnte nicht ermittelt werden. Die Anwendung wird beendet.
+  replacePrompt: Unter {destination} ist bereits eine Anwendung vorhanden. Soll sie ersetzt und aus Applications neu gestartet werden?
+  movePrompt: Damit der Hintergrunddienst sicher gestartet werden kann, muss die Anwendung nach {destination} verschoben werden. Jetzt verschieben und neu starten?
+  createApplicationsDirError: 'Der Applications-Ordner konnte nicht erstellt werden: {error}'
+  moveFailed: Die Anwendung konnte nicht verschoben werden. Verschieben Sie sie im Finder manuell und versuchen Sie es erneut.
+  replaceFailed: 'Die vorhandene Anwendung konnte nicht sicher ersetzt werden: {error}'
+  relaunchFailed: Die Anwendung wurde kopiert, konnte aber nicht automatisch neu gestartet werden. Öffnen Sie sie manuell aus Applications.
+  cancel: Abbrechen
+  move: Verschieben
+  ok: OK
 tray:
   dashboard: Übersicht
   ruleMode: Regelmodus

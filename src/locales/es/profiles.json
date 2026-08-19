@@ -28,7 +28,16 @@
     "feedback": {
       "errors": {
         "invalidUrl": "Invalid profile URL. Please enter a URL starting with http:// or https://",
-        "onlyYaml": "Solo se admiten archivos YAML"
+        "onlyYaml": "Solo se admiten archivos YAML",
+        "createFailed": "No se pudo crear la suscripción",
+        "deleteFailed": "No se pudo eliminar la suscripción",
+        "enhanceFailed": "No se pudieron reactivar las suscripciones",
+        "importFailed": "No se pudo importar la suscripción",
+        "openFailed": "No se pudo abrir la suscripción",
+        "readFailed": "No se pudo leer la suscripción",
+        "reorderFailed": "No se pudo reordenar las suscripciones",
+        "switchFailed": "No se pudo cambiar de suscripción",
+        "updateFailed": "No se pudo actualizar la suscripción"
       },
       "notifications": {
         "importRetry": "Error al importar la suscripción. Intentando con el proxy de Clash...",
@@ -43,6 +52,9 @@
       "notices": {
         "forceRefreshCompleted": "Force refresh completed",
         "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
+      },
+      "tooltips": {
+        "forceRefreshStaleData": "Los datos de la suscripción no están disponibles; haz clic para forzar una actualización"
       }
     },
     "title": "Suscripciones"
@@ -105,12 +117,26 @@
         "type": "Tipo",
         "description": "Descripción",
         "subscriptionUrl": "Enlace de suscripción",
+        "userAgent": "Agente de usuario",
         "httpTimeout": "HTTP Request Timeout",
         "updateInterval": "Intervalo de actualización",
         "useSystemProxy": "Usar proxy del sistema para actualizar",
         "useClashProxy": "Usar proxy del núcleo para actualizar",
         "acceptInvalidCerts": "Allows Invalid Certificates (Danger)",
         "allowAutoUpdate": "Allow Auto Update"
+      },
+      "types": {
+        "remote": "Remoto",
+        "local": "Local"
+      },
+      "errors": {
+        "typeRequired": "Selecciona un tipo de suscripción",
+        "urlRequired": "Introduce una URL de suscripción",
+        "uidMissing": "Falta el identificador de la suscripción",
+        "saveFailed": "No se pudo guardar la suscripción"
+      },
+      "warnings": {
+        "frequentUpdate": "Un intervalo corto recarga el núcleo con esa frecuencia y corta las conexiones existentes. Se recomiendan {{minutes}} minutos (24 horas)."
       },
       "feedback": {
         "notifications": {

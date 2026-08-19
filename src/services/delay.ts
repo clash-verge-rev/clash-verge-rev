@@ -11,6 +11,11 @@ import {
   type ResolvedProxyMember,
 } from '@/types/proxy-view'
 import { debugLog } from '@/utils/debug'
+import { classifyDelay, DEFAULT_DELAY_TIMEOUT } from '@/utils/delay'
+
+export type DelaySnapshot = {
+  of: (member: ResolvedProxyMember) => number
+}
 
 const hashKey = (name: string, group: string) => `${group ?? ''}::${name}`
 
@@ -26,11 +31,17 @@ class DelayManager {
   private cache = new Map<string, DelayUpdate>()
   private urlMap = new Map<string, string>()
 
-  // 每个节点的监听
   private listenerMap = new Map<string, (update: DelayUpdate) => void>()
 
-  // 每个分组的监听
-  private groupListenerMap = new Map<string, () => void>()
+  private groupListenerMap = new Map<string, Set<() => void>>()
+  // Consumers compare snapshot identity; replace it only when the group settles.
+  private groupSnapshots = new Map<string, DelaySnapshot>()
+  private groupSetSnapshots = new Map<
+    string,
+    ReadonlyMap<string, DelaySnapshot>
+  >()
+  // Suppress sort notifications until every measurement in a group batch settles.
+  private activeBatches = new Map<string, number>()
 
   private pendingItemUpdates = new Map<string, DelayUpdate[]>()
   private pendingGroupUpdates = new Set<string>()
@@ -89,23 +100,55 @@ class DelayManager {
       this.pendingGroupUpdates = new Set()
 
       groups.forEach((group) => {
-        const listener = this.groupListenerMap.get(group)
-        if (!listener) return
-        try {
-          listener()
-        } catch (error) {
-          console.error(
-            `[DelayManager] 通知分组延迟监听器失败: ${group}`,
-            error,
-          )
+        const listeners = this.groupListenerMap.get(group)
+        if (!listeners) return
+        // Copied before iterating: a listener is free to unsubscribe as it runs.
+        for (const listener of [...listeners]) {
+          try {
+            listener()
+          } catch (error) {
+            console.error(
+              `[DelayManager] 通知分组延迟监听器失败: ${group}`,
+              error,
+            )
+          }
         }
       })
     })
   }
 
   private queueGroupNotification(group: string) {
+    if ((this.activeBatches.get(group) ?? 0) > 0) return
+    // Invalidate the set wrapper while retaining unaffected per-group identities.
+    this.groupSnapshots.delete(group)
+    this.groupSetSnapshots.clear()
     this.pendingGroupUpdates.add(group)
     this.scheduleGroupFlush()
+  }
+
+  /** Cached set snapshot for `useSyncExternalStore` identity comparisons. */
+  groupsDelays(groupKey: string): ReadonlyMap<string, DelaySnapshot> {
+    const cached = this.groupSetSnapshots.get(groupKey)
+    if (cached) return cached
+
+    const names = groupKey ? groupKey.split(' ') : []
+    const snapshots = new Map(
+      names.map((name) => [name, this.groupDelays(name)]),
+    )
+    this.groupSetSnapshots.set(groupKey, snapshots)
+    return snapshots
+  }
+
+  /** Cached group snapshot whose identity changes only when that group settles. */
+  groupDelays(group: string): DelaySnapshot {
+    const existing = this.groupSnapshots.get(group)
+    if (existing) return existing
+
+    const snapshot: DelaySnapshot = {
+      of: (member) => this.getDelayFix(member, group),
+    }
+    this.groupSnapshots.set(group, snapshot)
+    return snapshot
   }
 
   setUrl(group: string, url: string) {
@@ -118,7 +161,6 @@ class DelayManager {
     debugLog(
       `[DelayManager] 获取测试URL，组: ${group}, URL: ${url || '未设置'}`,
     )
-    // 如果未设置URL，返回默认URL
     return url || 'http://cp.cloudflare.com/generate_204'
   }
 
@@ -136,12 +178,18 @@ class DelayManager {
     this.listenerMap.delete(key)
   }
 
-  setGroupListener(group: string, listener: () => void) {
-    this.groupListenerMap.set(group, listener)
-  }
+  /** Multiple views may subscribe independently; notifications occur only after settle. */
+  addGroupListener(group: string, listener: () => void): () => void {
+    const listeners = this.groupListenerMap.get(group) ?? new Set()
+    listeners.add(listener)
+    this.groupListenerMap.set(group, listeners)
 
-  removeGroupListener(group: string) {
-    this.groupListenerMap.delete(group)
+    return () => {
+      const current = this.groupListenerMap.get(group)
+      if (!current) return
+      current.delete(listener)
+      if (current.size === 0) this.groupListenerMap.delete(group)
+    }
   }
 
   setDelay(
@@ -201,13 +249,11 @@ class DelayManager {
     }
 
     if (details?.history && details.history.length > 0) {
-      // 0ms以error显示
       return details.history[details.history.length - 1].delay || 1e6
     }
     return -1
   }
 
-  // 统一延迟测试检测
   async unifiedDelayCheck(
     name: string,
     url: string,
@@ -219,7 +265,18 @@ class DelayManager {
     return delayProxyByName(name, url, timeout)
   }
 
+  /** A single test may notify immediately; a batch defers notification until it settles. */
   async checkDelay(
+    member: InteractableProxyMember,
+    group: string,
+    timeout: number,
+  ): Promise<DelayUpdate> {
+    const update = await this.measureDelay(member, group, timeout)
+    this.queueGroupNotification(group)
+    return update
+  }
+
+  private async measureDelay(
     member: InteractableProxyMember,
     group: string,
     timeout: number,
@@ -235,7 +292,6 @@ class DelayManager {
       `[DelayManager] 开始测试延迟，代理: ${name}, 组: ${group}, 超时: ${timeout}ms`,
     )
 
-    // 先将状态设置为测试中
     this.setDelay(name, group, -2)
 
     const startTime = Date.now()
@@ -244,18 +300,15 @@ class DelayManager {
       const url = this.getUrl(group)
       debugLog(`[DelayManager] 调用API测试延迟，代理: ${name}, URL: ${url}`)
 
-      // 设置超时处理, delay = 0 为超时
       const timeoutPromise = new Promise<ProxyDelay>((resolve) => {
         setTimeout(() => resolve({ delay: 0 }), timeout)
       })
 
-      // 使用Promise.race来实现超时控制
       const result = await Promise.race([
         this.unifiedDelayCheck(apiName, url, timeout, providerName),
         timeoutPromise,
       ])
 
-      // 确保至少显示500ms的加载动画
       const elapsedTime = Date.now() - startTime
       if (elapsedTime < 500) {
         await new Promise((resolve) => setTimeout(resolve, 500 - elapsedTime))
@@ -267,7 +320,6 @@ class DelayManager {
 
       return this.setDelay(name, group, delay, { elapsed })
     } catch (error) {
-      // 确保至少显示500ms的加载动画
       await new Promise((resolve) => setTimeout(resolve, 500))
       console.error(`[DelayManager] 延迟测试出错，代理: ${name}`, error)
       const delay = 1e6 // error
@@ -287,14 +339,13 @@ class DelayManager {
       `[DelayManager] 批量测试延迟开始，组: ${group}, 数量: ${proxies.length}, 并发数: ${concurrency}`,
     )
     const names = proxies.map((member) => member.ref.name)
-    // 设置正在延迟测试中
+    this.activeBatches.set(group, (this.activeBatches.get(group) ?? 0) + 1)
     names.forEach((name) => {
       this.setDelay(name, group, -2)
     })
 
     let index = 0
     const startTime = Date.now()
-    const listener = this.groupListenerMap.get(group)
 
     const help = async (): Promise<void> => {
       const currMember = proxies[index++]
@@ -302,34 +353,28 @@ class DelayManager {
       const currName = currMember.ref.name
 
       try {
-        // 确保API调用前状态为测试中
         this.setDelay(currName, group, -2)
 
-        // 添加一些随机延迟，避免所有请求同时发出和返回
+        // Stagger requests so a batch does not hit the core at once.
         if (index > 1) {
-          // 第一个不延迟，保持响应性
           await new Promise((resolve) =>
             setTimeout(resolve, Math.random() * 200),
           )
         }
 
-        await this.checkDelay(currMember, group, timeout)
-        if (listener) {
-          this.queueGroupNotification(group)
-        }
+        // Do not reorder a list around the pointer while batch results are arriving.
+        await this.measureDelay(currMember, group, timeout)
       } catch (error) {
         console.error(
           `[DelayManager] 批量测试单个代理出错，代理: ${currName}`,
           error,
         )
-        // 设置为错误状态
         this.setDelay(currName, group, 1e6)
       }
 
       return help()
     }
 
-    // 限制并发数，避免发送太多请求
     const actualConcurrency = Math.min(concurrency, names.length, 10)
     debugLog(`[DelayManager] 实际并发数: ${actualConcurrency}`)
 
@@ -338,28 +383,53 @@ class DelayManager {
       promiseList.push(help())
     }
 
-    await Promise.all(promiseList)
+    try {
+      await Promise.all(promiseList)
+    } finally {
+      // Always release the batch and notify; otherwise failures leave stale sort state.
+      const remaining = (this.activeBatches.get(group) ?? 1) - 1
+      if (remaining > 0) {
+        this.activeBatches.set(group, remaining)
+      } else {
+        this.activeBatches.delete(group)
+        this.queueGroupNotification(group)
+      }
+    }
     const totalTime = Date.now() - startTime
     debugLog(
       `[DelayManager] 批量测试延迟完成，组: ${group}, 总耗时: ${totalTime}ms`,
     )
   }
 
-  formatDelay(delay: number, timeout = 10000) {
-    if (delay === -1) return '-'
-    if (delay === -2) return 'testing'
-    if (delay === 0 || (delay >= timeout && delay <= 1e5)) return 'Timeout'
-    if (delay > 1e5) return 'Error'
-    return `${delay}`
+  formatDelay(delay: number, timeout = DEFAULT_DELAY_TIMEOUT) {
+    switch (classifyDelay(delay, timeout)) {
+      case 'untested':
+        return '-'
+      case 'testing':
+        return 'testing'
+      case 'timeout':
+        return 'Timeout'
+      case 'error':
+        return 'Error'
+      case 'measured':
+        return `${delay}`
+    }
   }
 
-  formatDelayColor(delay: number, timeout = 10000) {
-    if (delay < 0) return ''
-    if (delay === 0 || delay >= timeout) return 'error.main'
-    if (delay >= 10000) return 'error.main'
-    if (delay >= 400) return 'warning.main'
-    if (delay >= 250) return 'primary.main'
-    return 'success.main'
+  formatDelayColor(delay: number, timeout = DEFAULT_DELAY_TIMEOUT) {
+    switch (classifyDelay(delay, timeout)) {
+      case 'untested':
+      case 'testing':
+        return ''
+      case 'timeout':
+      case 'error':
+        return 'error.main'
+      case 'measured':
+        // Colour and signal bars intentionally use different grading thresholds.
+        if (delay >= 400) return 'warning.main'
+        if (delay >= 250) return 'primary.main'
+        return 'success.main'
+    }
   }
 }
 

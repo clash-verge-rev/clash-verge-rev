@@ -5,6 +5,7 @@
       "telegram": "Canal de Telegram",
       "github": "Dirección del proyecto en GitHub"
     },
+    "actionsGroupLabel": "Enlaces de configuración",
     "title": "Ajustes"
   },
   "sections": {
@@ -36,11 +37,17 @@
       },
       "actions": {
         "installService": "Instalar servicio",
-        "uninstallService": "Desinstalar servicio"
+        "uninstallService": "Desinstalar servicio",
+        "switchToServiceMode": "Cambiar al modo de servicio"
       },
       "fields": {
         "systemProxy": "Proxy del sistema",
         "tunMode": "Modo de interfaz virtual (TUN)"
+      },
+      "messages": {
+        "installedCheckProxy": "El servicio está instalado y el núcleo se ejecuta a través de él. Revise el interruptor del proxy del sistema y repita el cambio si no se aplicó.",
+        "installedCoreNotOnService": "El servicio está instalado, pero el núcleo no se ejecuta a través de él. Revise el núcleo e inténtelo de nuevo.",
+        "installedProxyRestored": "El servicio está instalado, el núcleo se ejecuta a través de él y se ha aplicado tu cambio de proxy del sistema."
       }
     },
     "externalController": {
@@ -284,7 +291,11 @@
       "messages": {
         "portInUse": "Port {{port}} is already in use",
         "saved": "Port settings saved",
-        "saveFailed": "Failed to save port settings"
+        "saveFailed": "Failed to save port settings",
+        "automaticFallback": "El puerto {{oldPort}} está en uso, por lo que esta sesión usa {{newPort}}. Tu configuración no ha cambiado y se volverá a intentar {{oldPort}} en el próximo inicio.",
+        "automaticFallbackFailed": "Error al cambiar automáticamente el puerto proxy mixto: {{error}}",
+        "portTooLow": "El puerto debe ser 1000 o superior",
+        "portTooHigh": "El puerto debe ser 65535 o inferior"
       }
     },
     "clashCore": {
@@ -429,7 +440,15 @@
         "update": "Actualizar"
       },
       "messages": {
-        "breakChangeError": "Esta es una actualización importante y no se admite la actualización desde dentro de la aplicación. Desinstale e instale manualmente la nueva versión."
+        "breakChangeError": "Esta es una actualización importante y no se admite la actualización desde dentro de la aplicación. Desinstale e instale manualmente la nueva versión.",
+        "available": "Hay una nueva versión disponible"
+      },
+      "alerts": {
+        "note": "Nota",
+        "tip": "Consejo",
+        "important": "Importante",
+        "warning": "Advertencia",
+        "caution": "Precaución"
       }
     },
     "sysproxy": {
@@ -590,6 +609,11 @@
       "messages": {
         "supportedPlaceholders": "Soporta %host, %port, %secret",
         "placeholderInstruction": "Utilice %host, %port, %secret para representar el host, el puerto y la clave de acceso."
+      },
+      "errors": {
+        "clashInfoUnavailable": "La información de conexión del núcleo no está disponible",
+        "invalidServer": "La dirección del servidor del núcleo «{{server}}» no es válida",
+        "openFailed": "No se pudo abrir la interfaz web"
       }
     },
     "hotkey": {
@@ -617,6 +641,28 @@
     }
   },
   "feedback": {
+    "errors": {
+      "clash": {
+        "configUpdateFailed": "No se pudo actualizar la configuración del núcleo",
+        "modeUpdateFailed": "No se pudo cambiar el modo de proxy",
+        "restartFailed": "No se pudo reiniciar el núcleo",
+        "startFailed": "No se pudo iniciar el núcleo",
+        "stopFailed": "No se pudo detener el núcleo"
+      },
+      "clashService": {
+        "installFailed": "No se pudo instalar el servicio",
+        "uninstallFailed": "No se pudo desinstalar el servicio",
+        "reinstallFailed": "No se pudo reinstalar el servicio",
+        "repairFailed": "No se pudo reparar el servicio",
+        "sidecarFailed": "No se pudo continuar con Sidecar"
+      },
+      "sysproxy": {
+        "privilegeRequired": "No se puede establecer el proxy del sistema: macOS rechazó el cambio por falta de permisos. Instale el servicio de Clash Verge; si es administrador, también puede desactivar la exigencia de contraseña de administrador para los ajustes de todo el sistema en las opciones avanzadas de Ajustes del Sistema → Privacidad y seguridad.",
+        "directFallback": "No se pudo establecer el proxy del sistema; el tráfico volvió a una conexión directa.",
+        "guardStopped": "El guardián del proxy del sistema se detuvo tras varios fallos seguidos. El proxy del sistema ya no se mantiene automáticamente.",
+        "sidecarWhileServiceReady": "No se pudo establecer el proxy del sistema: el servicio de Clash Verge está listo, pero el núcleo sigue ejecutándose como Sidecar. Reinicie el núcleo para cambiar al modo de servicio."
+      }
+    },
     "notifications": {
       "clash": {
         "restartSuccess": "Núcleo de Clash reiniciado",

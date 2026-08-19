@@ -16,6 +16,21 @@ use std::{
     sync::atomic::{AtomicBool, Ordering},
 };
 
+/// Merges one selection pair into fresh backend state to avoid stale-list overwrites.
+#[tauri::command]
+pub async fn record_selected_node(group_name: String, node: String) -> CmdResult<()> {
+    crate::config::profiles::record_selected_node(&group_name, &node)
+        .await
+        .stringify_err()
+}
+
+#[tauri::command]
+pub async fn forget_selected_node(group_name: String) -> CmdResult<()> {
+    crate::config::profiles::forget_selected_node(&group_name)
+        .await
+        .stringify_err()
+}
+
 static TRAY_SYNC_RUNNING: AtomicBool = AtomicBool::new(false);
 static TRAY_SYNC_PENDING: AtomicBool = AtomicBool::new(false);
 
@@ -30,7 +45,7 @@ fn runtime_group_order(config: Option<&Mapping>) -> Vec<String> {
         .filter_map(|group| group.get("name"))
         .filter_map(|name| name.as_str())
         .filter(|name| !name.is_empty() && *name != "GLOBAL")
-        .filter(|name| seen.insert((*name).to_owned()))
+        .filter(|name| seen.insert(*name))
         .map(str::to_owned)
         .collect()
 }
@@ -38,12 +53,11 @@ fn runtime_group_order(config: Option<&Mapping>) -> Vec<String> {
 #[tauri::command]
 pub async fn get_proxy_view() -> CmdResult<ProxyViewV1> {
     let runtime = Config::runtime().await;
-    let committed_runtime = runtime.data_arc();
-    let runtime_group_order = runtime_group_order(committed_runtime.config.as_ref());
+    let latest_runtime = runtime.latest_arc();
+    let runtime_group_order = runtime_group_order(latest_runtime.config.as_ref());
 
-    let mihomo = Handle::mihomo().await;
+    let mihomo = Handle::mihomo();
     let (proxies, providers) = tokio::join!(mihomo.get_proxies(), mihomo.get_proxy_providers(),);
-    drop(mihomo);
     let proxies = proxies.stringify_err()?;
 
     Ok(ProxyViewBuilder::build(ProxyViewInput {
@@ -53,7 +67,6 @@ pub async fn get_proxy_view() -> CmdResult<ProxyViewV1> {
     }))
 }
 
-/// 同步托盘和GUI的代理选择状态
 #[tauri::command]
 pub async fn sync_tray_proxy_selection() -> CmdResult<()> {
     if TRAY_SYNC_RUNNING

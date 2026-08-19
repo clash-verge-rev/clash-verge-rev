@@ -10,6 +10,12 @@ notifications:
     title: Proksi Sistem
     'on': System proxy has been enabled.
     'off': System proxy has been disabled.
+  systemProxyFailed:
+    title: Proxy Sistem
+    body: Proxy sistem tidak dapat diatur. Buka Clash Verge untuk melihat alasannya.
+  systemProxyGuardStopped:
+    title: Penjaga Proxy Sistem
+    body: Berhenti setelah gagal beberapa kali berturut-turut. Buka Clash Verge untuk melihat alasannya.
   tunModeToggled:
     title: Mode TUN
     'on': TUN mode has been enabled.
@@ -34,7 +40,26 @@ notifications:
 service:
   adminInstallPrompt: Menginstal layanan Clash Verge memerlukan hak administrator.
   adminUninstallPrompt: Menghapus instalasi layanan Clash Verge memerlukan hak administrator.
-  translocatedCorePath: Clash Verge is running from a temporary (App Translocation) path and can't locate the core. Please move Clash Verge into the Applications folder and reopen it.
+launchGuard:
+  currentExeError: 'Lokasi aplikasi tidak dapat ditentukan: {error}'
+  homeDirError: 'Direktori beranda pengguna saat ini tidak dapat ditentukan. Aplikasi akan ditutup: {error}'
+  translocated: macOS menjalankan aplikasi ini dari jalur App Translocation sementara. Pindahkan secara manual di Finder ke /Applications atau ~/Applications, lalu buka kembali.
+  rejected: |-
+    Aplikasi ini harus dijalankan dari direktori Applications.
+
+    {reason}
+  notInBundle: Berkas yang dapat dijalankan tidak berada di dalam bundel aplikasi.
+  canonicalizeBundleError: 'Jalur bundel aplikasi tidak dapat diuraikan: {error}'
+  bundleNameError: Nama bundel aplikasi tidak dapat ditentukan. Aplikasi akan ditutup.
+  replacePrompt: Sudah ada aplikasi di {destination}. Ganti dan jalankan ulang dari Applications?
+  movePrompt: Agar layanan latar belakang dapat dimulai dengan aman, aplikasi harus dipindahkan ke {destination}. Pindahkan dan jalankan ulang sekarang?
+  createApplicationsDirError: 'Direktori Applications tidak dapat dibuat: {error}'
+  moveFailed: Aplikasi gagal dipindahkan. Pindahkan secara manual di Finder lalu coba lagi.
+  replaceFailed: 'Aplikasi yang ada tidak dapat diganti dengan aman: {error}'
+  relaunchFailed: Aplikasi telah disalin, tetapi tidak dapat dijalankan ulang secara otomatis. Buka secara manual dari Applications.
+  cancel: Batal
+  move: Pindahkan
+  ok: OK
 tray:
   dashboard: Dasbor
   ruleMode: Mode Aturan

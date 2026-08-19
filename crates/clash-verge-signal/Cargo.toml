@@ -7,7 +7,7 @@ rust-version = "1.91"
 [dependencies]
 clash-verge-logging = { workspace = true }
 log = { workspace = true }
-tokio = { workspace = true }
+tokio = { workspace = true, features = ["signal"] }
 
 [lints]
 workspace = true

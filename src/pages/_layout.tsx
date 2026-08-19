@@ -35,6 +35,8 @@ import { BaseErrorBoundary } from '@/components/base'
 import { LayoutItem } from '@/components/layout/layout-item'
 import { LayoutTraffic } from '@/components/layout/layout-traffic'
 import { NoticeManager } from '@/components/layout/notice-manager'
+import { ServiceMigrationDialog } from '@/components/layout/service-migration-dialog'
+import { SysproxyPrivilegeDialog } from '@/components/layout/sysproxy-privilege-dialog'
 import { UpdateButton } from '@/components/layout/update-button'
 import {
   WindowControls,
@@ -51,6 +53,7 @@ import {
   useLayoutEvents,
   useLoadingOverlay,
   useNavMenuOrder,
+  usePendingFailures,
 } from './_layout/hooks'
 import { handleNoticeMessage } from './_layout/utils'
 import { navItems } from './_navigation'
@@ -230,6 +233,7 @@ const Layout = () => {
   )
 
   useLayoutEvents(handleNotice)
+  usePendingFailures()
 
   useEffect(() => {
     if (language) {
@@ -259,6 +263,8 @@ const Layout = () => {
     <ThemeProvider theme={theme}>
       {/* 左侧底部窗口控制按钮 */}
       <NoticeManager position={verge?.notice_position} />
+      <ServiceMigrationDialog />
+      <SysproxyPrivilegeDialog />
       <div
         style={{
           animation: 'fadeIn 0.5s',

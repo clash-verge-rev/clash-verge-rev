@@ -1,49 +1,70 @@
 use crate::{
-    config::{Config, IVerge},
-    core::handle,
+    config::{Config, IVerge, MixedPort},
+    core::{
+        handle,
+        notification::{self, FailedOperation},
+        proxy_control,
+    },
+    utils::{
+        notification::{NotificationEvent, needs_system_notification, notify_event},
+        window_manager::WindowManager,
+    },
 };
 use clash_verge_logging::{Type, logging};
 use std::env;
 use tauri_plugin_clipboard_manager::ClipboardExt as _;
 
-/// Toggle system proxy on/off
-pub async fn toggle_system_proxy() -> bool {
+pub async fn toggle_system_proxy() -> Option<bool> {
     let verge = Config::verge().await;
     let current = verge.latest_arc().enable_system_proxy.unwrap_or(false);
     let auto_close_connection = verge.latest_arc().auto_close_connection.unwrap_or(false);
 
-    // 如果当前系统代理即将关闭，且自动关闭连接设置为true，则关闭所有连接
     if current
         && auto_close_connection
-        && let Err(err) = handle::Handle::mihomo().await.close_all_connections().await
+        && let Err(err) = handle::Handle::mihomo().close_all_connections().await
     {
         logging!(error, Type::ProxyMode, "Failed to close all connections: {err}");
     }
 
     let requested = !current;
-    let patch_result = super::patch_verge(
-        &IVerge {
-            enable_system_proxy: Some(requested),
-            ..IVerge::default()
-        },
-        false,
+    let patch_result = notification::asking_for(
+        toggle_operation(requested),
+        Box::pin(super::patch_verge(
+            &IVerge {
+                enable_system_proxy: Some(requested),
+                ..IVerge::default()
+            },
+            false,
+        )),
     )
     .await;
 
     match patch_result {
-        Ok(_) => {
-            handle::Handle::refresh_verge();
-            requested
-        }
+        Ok(_) => Some(requested),
         Err(err) => {
-            logging!(error, Type::ProxyMode, "{err}");
-            current
+            logging!(error, Type::ProxyMode, "{err:#}");
+            report_toggle_failure(&err).await;
+            None
         }
     }
 }
 
-/// Toggle TUN mode on/off
-/// Returns the updated toggle state
+async fn report_toggle_failure(error: &anyhow::Error) {
+    let recorded = proxy_control::is_reportable(error);
+
+    if recorded && needs_system_notification(WindowManager::get_main_window_state()) {
+        notify_event(NotificationEvent::SystemProxyFailed).await;
+    }
+}
+
+const fn toggle_operation(requested: bool) -> FailedOperation {
+    if requested {
+        FailedOperation::SystemProxyEnable
+    } else {
+        FailedOperation::SystemProxyDisable
+    }
+}
+
 pub async fn toggle_tun_mode(not_save_file: Option<bool>) -> bool {
     let current = Config::verge().await.latest_arc().enable_tun_mode.unwrap_or(false);
     let enable = !current;
@@ -59,16 +80,16 @@ pub async fn toggle_tun_mode(not_save_file: Option<bool>) -> bool {
     {
         Ok(_) => {
             handle::Handle::refresh_verge();
-            enable
+            // Reconciliation may immediately disable unavailable TUN; report the resulting state.
+            Config::verge().await.latest_arc().enable_tun_mode.unwrap_or(false)
         }
         Err(err) => {
-            logging!(error, Type::ProxyMode, "{err}");
+            logging!(error, Type::ProxyMode, "{err:#}");
             current
         }
     }
 }
 
-/// Copy proxy environment variables to clipboard
 pub async fn copy_clash_env() {
     let env_ip = env::var("CLASH_VERGE_REV_IP").ok();
     let verge_cfg = Config::verge().await.latest_arc();
@@ -77,7 +98,8 @@ pub async fn copy_clash_env() {
         .unwrap_or_else(|| verge_cfg.proxy_host.as_deref().unwrap_or("127.0.0.1"));
 
     let app_handle = handle::Handle::app_handle();
-    let port = verge_cfg.verge_mixed_port.unwrap_or(7897);
+    // Clipboard output must use the core's live port, including merge-config overrides.
+    let port = MixedPort::effective().await;
     let http_proxy = format!("http://{ip}:{port}");
     let socks5_proxy = format!("socks5://{ip}:{port}");
 

@@ -25,7 +25,8 @@
     },
     "labels": {
       "proxyCount": "프록시 개수",
-      "delayCheckReset": "고정 취소를 위한 지연 확인"
+      "delayCheckReset": "고정 취소를 위한 지연 확인",
+      "nodeCount": "노드 {{count}}개"
     },
     "tooltips": {
       "locate": "위치 찾기",
@@ -40,6 +41,31 @@
     },
     "placeholders": {
       "delayCheckUrl": "지연 확인 URL"
+    },
+    "empty": {
+      "noAvailableGroups": "사용 가능한 프록시 그룹이 없습니다",
+      "noProxies": "프록시 없음",
+      "noSubscriptions": {
+        "title": "가져온 구독이 없습니다",
+        "description": "프록시 페이지에 표시할 내용이 없습니다. 프로필 페이지에서 구독을 가져와 활성화하세요."
+      },
+      "inactiveSubscription": {
+        "title": "활성화된 구독이 없습니다",
+        "description": "구독이 있지만 현재 활성화된 구독이 없습니다. 프로필 페이지에서 구독을 선택하고 활성화하세요."
+      },
+      "coreUnavailable": {
+        "title": "코어를 일시적으로 사용할 수 없습니다",
+        "description": "코어에서 프록시 정보를 가져오지 못했습니다. 코어를 재시작해 보세요. 문제가 계속되면 로그 폴더를 열어 코어 로그를 확인하세요."
+      },
+      "noProxyInfo": {
+        "title": "프록시 정보를 가져오지 못했습니다",
+        "description": "표시할 프록시 그룹이나 노드가 없습니다. 활성 구독에 유효한 프록시 그룹과 노드가 포함되어 있는지 확인하거나 코어를 재시작하고 로그를 확인하세요."
+      },
+      "actions": {
+        "openProfiles": "프로필로 이동",
+        "restartCore": "코어 재시작",
+        "openLogs": "로그 폴더 열기"
+      }
     },
     "chain": {
       "header": "체인 프록시 구성",

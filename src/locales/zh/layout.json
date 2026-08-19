@@ -19,6 +19,41 @@
         "collapseNavBar": "收起导航栏",
         "expandNavBar": "展开导航栏"
       }
+    },
+    "serviceMigration": {
+      "title": "需要更新系统服务",
+      "message": "检测到旧版 Clash Verge 系统服务。重新安装后可使用当前安全 IPC 协议，也可以仅在本次会话继续使用 Sidecar。",
+      "checkingMessage": "正在确认系统服务状态及当前运行模式，请稍候……",
+      "unavailableMessage": "所需的 Clash Verge 系统服务当前不可用。你可以安装或修复服务，或仅在本次会话继续使用 Sidecar。",
+      "reinstall": "重新安装服务",
+      "repair": "修复服务",
+      "continueSidecar": "继续使用 Sidecar",
+      "success": "Clash Verge 系统服务已更新",
+      "errors": {
+        "actionFailed": "服务操作失败",
+        "stateRefreshFailed": "刷新服务状态失败",
+        "restartFailed": "重启内核失败",
+        "revalidationFailed": "刷新运行状态失败",
+        "sidecarFailed": "继续使用 Sidecar 失败"
+      }
+    },
+    "sysproxyPrivilege": {
+      "title": "无法设置系统代理",
+      "message": "macOS 以权限不足为由拒绝了这次修改。安装 Clash Verge 系统服务后，代理设置将由服务以管理员身份完成，之后不会再出现这个提示。",
+      "serviceReadyMessage": "Clash Verge 系统服务已就绪，但内核仍以 Sidecar 运行，因此设置系统代理时被拒绝。切换到服务模式即可解决，无需重新安装。",
+      "alternative": "另一种办法：在系统设置 → 隐私与安全性 → 高级中，关闭「访问系统范围设置需要管理员密码」。",
+      "later": "稍后再说",
+      "installing": "正在安装系统服务，可能会请求管理员密码，请稍候……",
+      "restarting": "服务已安装，正在通过服务重启内核……",
+      "applying": "正在重新应用系统代理……",
+      "tunTitle": "TUN 模式需要系统服务",
+      "tunMessage": "TUN 模式需要 Clash Verge 系统服务才能接管网络流量。安装完成后会自动为你开启 TUN 模式。"
+    }
+  },
+  "feedback": {
+    "errors": {
+      "restartCoreStopFailed": "无法安全停止内核，已取消重启",
+      "quitCoreStopFailed": "无法安全停止内核，已取消退出"
     }
   }
 }

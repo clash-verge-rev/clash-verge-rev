@@ -10,6 +10,12 @@ notifications:
     title: Sistem Vekil'i
     'on': System proxy has been enabled.
     'off': System proxy has been disabled.
+  systemProxyFailed:
+    title: Sistem Vekili
+    body: Sistem vekil sunucusu ayarlanamadı. Nedenini görmek için Clash Verge'i açın.
+  systemProxyGuardStopped:
+    title: Sistem Vekili Koruması
+    body: Art arda birkaç başarısızlıktan sonra durdu. Nedenini görmek için Clash Verge'i açın.
   tunModeToggled:
     title: TUN Modu
     'on': TUN mode has been enabled.
@@ -34,7 +40,26 @@ notifications:
 service:
   adminInstallPrompt: Clash Verge hizmetini kurmak için yönetici ayrıcalıkları gerekir.
   adminUninstallPrompt: Clash Verge hizmetini kaldırmak için yönetici ayrıcalıkları gerekir.
-  translocatedCorePath: Clash Verge is running from a temporary (App Translocation) path and can't locate the core. Please move Clash Verge into the Applications folder and reopen it.
+launchGuard:
+  currentExeError: 'Uygulamanın konumu belirlenemedi: {error}'
+  homeDirError: 'Geçerli kullanıcının ana dizini belirlenemedi. Uygulama kapatılacak: {error}'
+  translocated: macOS bu uygulamayı geçici bir App Translocation yolundan çalıştırıyor. Finder'da uygulamayı elle /Applications veya ~/Applications dizinine taşıyın ve yeniden açın.
+  rejected: |-
+    Bu uygulama bir Applications dizininden başlatılmalıdır.
+
+    {reason}
+  notInBundle: Yürütülebilir dosya bir uygulama paketinin içinde değil.
+  canonicalizeBundleError: 'Uygulama paketinin yolu çözümlenemedi: {error}'
+  bundleNameError: Uygulama paketinin adı belirlenemedi. Uygulama kapatılacak.
+  replacePrompt: '{destination} konumunda zaten bir uygulama var. Değiştirilsin ve Applications üzerinden yeniden başlatılsın mı?'
+  movePrompt: Arka plan hizmetini güvenli şekilde başlatmak için uygulamanın {destination} konumuna taşınması gerekir. Şimdi taşınıp yeniden başlatılsın mı?
+  createApplicationsDirError: 'Applications dizini oluşturulamadı: {error}'
+  moveFailed: Uygulama taşınamadı. Finder'da elle taşıyıp tekrar deneyin.
+  replaceFailed: 'Mevcut uygulama güvenli şekilde değiştirilemedi: {error}'
+  relaunchFailed: Uygulama kopyalandı ancak otomatik olarak yeniden başlatılamadı. Applications üzerinden elle açın.
+  cancel: İptal
+  move: Taşı
+  ok: Tamam
 tray:
   dashboard: Gösterge Paneli
   ruleMode: Kural Modu

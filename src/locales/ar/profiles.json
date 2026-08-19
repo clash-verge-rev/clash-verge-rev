@@ -28,7 +28,16 @@
     "feedback": {
       "errors": {
         "invalidUrl": "Invalid profile URL. Please enter a URL starting with http:// or https://",
-        "onlyYaml": "لا يتم دعم سوى ملفات YAML"
+        "onlyYaml": "لا يتم دعم سوى ملفات YAML",
+        "createFailed": "تعذّر إنشاء الملف الشخصي",
+        "deleteFailed": "تعذّر حذف الملف الشخصي",
+        "enhanceFailed": "تعذّر إعادة تفعيل الملفات الشخصية",
+        "importFailed": "تعذّر استيراد الملف الشخصي",
+        "openFailed": "تعذّر فتح الملف الشخصي",
+        "readFailed": "تعذّر قراءة الملف الشخصي",
+        "reorderFailed": "تعذّر إعادة ترتيب الملفات الشخصية",
+        "switchFailed": "تعذّر تبديل الملف الشخصي",
+        "updateFailed": "تعذّر تحديث الملف الشخصي"
       },
       "notifications": {
         "importRetry": "Import failed, retrying with Clash proxy...",
@@ -43,6 +52,9 @@
       "notices": {
         "forceRefreshCompleted": "Force refresh completed",
         "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
+      },
+      "tooltips": {
+        "forceRefreshStaleData": "بيانات الملف الشخصي غير متاحة؛ انقر للتحديث القسري"
       }
     },
     "title": "الملفات الشخصية"
@@ -105,12 +117,26 @@
         "type": "النوع",
         "description": "الوصف",
         "subscriptionUrl": "رابط الاشتراك",
+        "userAgent": "وكيل المستخدم",
         "httpTimeout": "HTTP Request Timeout",
         "updateInterval": "فاصل التحديث",
         "useSystemProxy": "استخدام وكيل النظام",
         "useClashProxy": "استخدام وكيل Clash",
         "acceptInvalidCerts": "قبول الشهادات غير الصالحة (خطر)",
         "allowAutoUpdate": "Allow Auto Update"
+      },
+      "types": {
+        "remote": "بعيد",
+        "local": "محلي"
+      },
+      "errors": {
+        "typeRequired": "اختر نوع الملف الشخصي",
+        "urlRequired": "أدخل رابط الاشتراك",
+        "uidMissing": "مُعرّف الملف الشخصي مفقود",
+        "saveFailed": "تعذّر حفظ الملف الشخصي"
+      },
+      "warnings": {
+        "frequentUpdate": "الفاصل الزمني القصير يعيد تحميل النواة بشكل متكرر ويقطع الاتصالات النشطة. يُنصح بـ {{minutes}} دقيقة (24 ساعة)."
       },
       "feedback": {
         "notifications": {

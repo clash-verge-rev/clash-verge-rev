@@ -81,7 +81,7 @@ export const LayoutItem = (props: Props) => {
             '&:active': draggable ? { cursor: 'grabbing' } : {},
             '& .MuiListItemText-primary': {
               color: 'text.primary',
-              fontWeight: '500',
+              fontWeight: '700',
             },
           },
           ({ palette: { mode, primary } }) => {

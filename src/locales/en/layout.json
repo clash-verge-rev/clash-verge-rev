@@ -19,6 +19,41 @@
         "collapseNavBar": "Collapse navigation bar",
         "expandNavBar": "Expand navigation bar"
       }
+    },
+    "serviceMigration": {
+      "title": "Service update required",
+      "message": "An older Clash Verge service installation was detected. Reinstall it to use the current secure IPC protocol, or continue with Sidecar for this session.",
+      "checkingMessage": "Checking the system service status and current running mode. Please wait…",
+      "unavailableMessage": "The required Clash Verge service is not available. Install or repair it, or continue with Sidecar for this session.",
+      "reinstall": "Reinstall service",
+      "repair": "Repair service",
+      "continueSidecar": "Continue with Sidecar",
+      "success": "The Clash Verge service was updated successfully",
+      "errors": {
+        "actionFailed": "The service operation failed",
+        "stateRefreshFailed": "Failed to refresh the service state",
+        "restartFailed": "Failed to restart the core",
+        "revalidationFailed": "Failed to refresh the running state",
+        "sidecarFailed": "Failed to continue with Sidecar"
+      }
+    },
+    "sysproxyPrivilege": {
+      "title": "Could not set the system proxy",
+      "message": "macOS refused the change for lack of privileges. Installing the Clash Verge service lets it make proxy changes as an administrator, and this prompt will not come back.",
+      "serviceReadyMessage": "The Clash Verge service is ready, but the core is still running as a sidecar, which is why setting the system proxy was refused. Switching to service mode fixes it — no reinstall needed.",
+      "alternative": "Alternatively, turn off “require an administrator password to access system-wide settings” in System Settings → Privacy & Security → Advanced.",
+      "later": "Later",
+      "installing": "Installing the system service. This may ask for an administrator password.",
+      "restarting": "Service installed. Restarting the core through it…",
+      "applying": "Applying your system proxy change…",
+      "tunTitle": "TUN mode needs the system service",
+      "tunMessage": "TUN mode needs the Clash Verge system service to take over network traffic. Once it is installed, TUN mode will be turned on for you."
+    }
+  },
+  "feedback": {
+    "errors": {
+      "restartCoreStopFailed": "The core could not be stopped safely, so the restart was cancelled",
+      "quitCoreStopFailed": "The core could not be stopped safely, so quitting was cancelled"
     }
   }
 }

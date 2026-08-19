@@ -14,6 +14,8 @@
     "shared/**"
   ],
   "rangeStrategy": "replace",
+  "prCreation": "not-pending",
+  "internalChecksFilter": "strict",
   "packageRules": [
     {
       "matchUpdateTypes": ["patch"],
@@ -44,6 +46,17 @@
       "description": "Group all GitHub Actions updates into a single PR",
       "matchManagers": ["github-actions"],
       "groupName": "github actions"
+    },
+    {
+      "description": "Skip TypeScript 7.0 series",
+      "matchManagers": ["npm"],
+      "matchPackageNames": ["typescript"],
+      "allowedVersions": "<7.0.0 || >=7.1.0"
+    },
+    {
+      "description": "Prevent project from supply chain attack",
+      "matchDatasources": ["npm"],
+      "minimumReleaseAge": "1 days"
     }
   ],
   "postUpdateOptions": ["pnpmDedupe"],

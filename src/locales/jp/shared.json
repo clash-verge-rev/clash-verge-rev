@@ -23,7 +23,8 @@
     "closeAll": "すべて閉じる",
     "clear": "クリア",
     "previous": "Previous",
-    "next": "Next"
+    "next": "Next",
+    "check": "検査"
   },
   "labels": {
     "updateAt": "更新日時",
@@ -44,7 +45,8 @@
     "enabled": "有効",
     "disabled": "無効",
     "saving": "Saving...",
-    "empty": "空っぽ"
+    "empty": "空っぽ",
+    "loading": "読み込み中..."
   },
   "units": {
     "milliseconds": "ミリ秒",
@@ -74,6 +76,14 @@
   },
   "feedback": {
     "errors": {
+      "unexpected": "問題が発生しました",
+      "label": "エラー",
+      "unknown": "不明なエラー",
+      "details": "エラーの詳細",
+      "stack": "エラースタック",
+      "componentStack": "コンポーネントスタック",
+      "trafficUnavailable": "トラフィックデータを利用できません",
+      "operationFailed": "操作に失敗しました",
       "trafficStats": "Traffic Statistics Error",
       "trafficStatsDescription": "The traffic statistics component encountered an error and has been disabled to prevent crashes."
     },
@@ -99,7 +109,7 @@
         "failed": "プロファイル設定の検証に失敗しました。プロファイル設定ファイルを確認してください。変更は取り消されました。エラー詳細：",
         "bootFailed": "起動時のプロファイル設定の検証に失敗しました。デフォルト設定で起動しました。プロファイル設定ファイルを確認してください。エラー詳細：",
         "coreChangeFailed": "コアを切り替える際の設定検証に失敗しました。デフォルト設定で起動しました。プロファイル設定ファイルを確認してください。エラー詳細：",
-        "processTerminated": "検証プロセスが中断されました。"
+        "processTerminated": "検証プロセスが中断されました。セキュリティソフトウェアがコアの実行を妨げていないか、またはコンピューターの CPU／実行環境がコアプログラムに対応しているかを確認してください。"
       },
       "script": {
         "syntaxError": "スクリプトの構文エラーがあります。変更は取り消されました。",

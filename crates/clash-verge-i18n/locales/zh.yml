@@ -10,6 +10,12 @@ notifications:
     title: 系统代理
     'on': 系统代理已启用。
     'off': 系统代理已禁用。
+  systemProxyFailed:
+    title: 系统代理
+    body: 系统代理设置失败。打开 Clash Verge 查看原因。
+  systemProxyGuardStopped:
+    title: 系统代理守卫
+    body: 连续多次失败后已停止守卫。打开 Clash Verge 查看原因。
   tunModeToggled:
     title: TUN 模式
     'on': TUN 模式已开启。
@@ -34,7 +40,26 @@ notifications:
 service:
   adminInstallPrompt: 安装 Clash Verge 服务需要管理员权限
   adminUninstallPrompt: 卸载 Clash Verge 服务需要管理员权限
-  translocatedCorePath: 检测到 Clash Verge 从临时路径（App Translocation）运行，无法定位内核。请将 Clash Verge 移动到「应用程序」文件夹后重新打开。
+launchGuard:
+  currentExeError: 无法确定应用位置：{error}
+  homeDirError: 无法确定当前用户主目录，应用将退出：{error}
+  translocated: macOS 正在从 App Translocation 临时路径运行此应用。请在 Finder 中将应用手动拖到 /Applications 或 ~/Applications 后重新打开。
+  rejected: |-
+    此应用必须从 Applications 目录启动。
+
+    {reason}
+  notInBundle: 可执行文件不在应用包内。
+  canonicalizeBundleError: 无法解析应用包路径：{error}
+  bundleNameError: 无法确定应用包名称，应用将退出。
+  replacePrompt: 目标位置已存在应用：{destination}。是否替换并从 Applications 重新启动？
+  movePrompt: 为了安全启动后台服务，需要将应用移动到 {destination}。是否现在移动并重新启动？
+  createApplicationsDirError: 无法创建 Applications 目录：{error}
+  moveFailed: 移动应用失败。请在 Finder 中手动移动后重试。
+  replaceFailed: 无法安全替换现有应用：{error}
+  relaunchFailed: 应用已复制，但自动重新启动失败。请从 Applications 手动打开。
+  cancel: 取消
+  move: 移动
+  ok: 好
 tray:
   dashboard: 仪表板
   ruleMode: 规则模式

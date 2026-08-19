@@ -19,6 +19,41 @@
         "collapseNavBar": "Свернуть панель навигации",
         "expandNavBar": "Развернуть панель навигации"
       }
+    },
+    "serviceMigration": {
+      "title": "Service update required",
+      "message": "An older Clash Verge service installation was detected. Reinstall it to use the current secure IPC protocol, or continue with Sidecar for this session.",
+      "checkingMessage": "Checking the system service status and current running mode. Please wait…",
+      "unavailableMessage": "The required Clash Verge service is not available. Install or repair it, or continue with Sidecar for this session.",
+      "reinstall": "Reinstall service",
+      "repair": "Repair service",
+      "continueSidecar": "Continue with Sidecar",
+      "success": "The Clash Verge service was updated successfully",
+      "errors": {
+        "actionFailed": "Не удалось выполнить операцию со службой",
+        "stateRefreshFailed": "Не удалось обновить состояние службы",
+        "restartFailed": "Не удалось перезапустить ядро",
+        "revalidationFailed": "Не удалось обновить состояние выполнения",
+        "sidecarFailed": "Не удалось продолжить в режиме Sidecar"
+      }
+    },
+    "sysproxyPrivilege": {
+      "title": "Не удалось настроить системный прокси",
+      "message": "macOS отклонила изменение из-за нехватки прав. После установки службы Clash Verge настройки прокси будет применять служба с правами администратора, и это сообщение больше не появится.",
+      "serviceReadyMessage": "Служба Clash Verge готова, но ядро всё ещё работает как sidecar, поэтому в настройке системного прокси отказано. Переключение в режим службы решает проблему без переустановки.",
+      "alternative": "Другой вариант: отключите «требовать пароль администратора для доступа к общесистемным настройкам» в Системных настройках → Конфиденциальность и безопасность → Дополнительно.",
+      "later": "Позже",
+      "installing": "Устанавливается системная служба. Может потребоваться пароль администратора.",
+      "restarting": "Служба установлена. Ядро перезапускается через неё…",
+      "applying": "Применяется изменение системного прокси…",
+      "tunTitle": "Для режима TUN нужна системная служба",
+      "tunMessage": "Режиму TUN нужна системная служба Clash Verge, чтобы взять сетевой трафик на себя. После установки режим TUN будет включён автоматически."
+    }
+  },
+  "feedback": {
+    "errors": {
+      "restartCoreStopFailed": "Не удалось безопасно остановить ядро, поэтому перезапуск отменён",
+      "quitCoreStopFailed": "Не удалось безопасно остановить ядро, поэтому выход отменён"
     }
   }
 }

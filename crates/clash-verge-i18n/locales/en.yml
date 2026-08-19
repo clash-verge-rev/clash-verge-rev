@@ -10,6 +10,12 @@ notifications:
     title: System Proxy
     'on': System proxy has been enabled.
     'off': System proxy has been disabled.
+  systemProxyFailed:
+    title: System Proxy
+    body: The system proxy could not be set. Open Clash Verge to see why.
+  systemProxyGuardStopped:
+    title: System Proxy Guard
+    body: The guard stopped after failing several times running. Open Clash Verge to see why.
   tunModeToggled:
     title: TUN Mode
     'on': TUN mode has been enabled.
@@ -34,7 +40,26 @@ notifications:
 service:
   adminInstallPrompt: Installing the Clash Verge service requires administrator privileges.
   adminUninstallPrompt: Uninstalling the Clash Verge service requires administrator privileges.
-  translocatedCorePath: Clash Verge is running from a temporary (App Translocation) path and can't locate the core. Please move Clash Verge into the Applications folder and reopen it.
+launchGuard:
+  currentExeError: 'Unable to determine the application location: {error}'
+  homeDirError: 'Unable to determine the current user''s home directory. The application will exit: {error}'
+  translocated: macOS is running this application from a temporary App Translocation path. In Finder, move it manually to /Applications or ~/Applications, then reopen it.
+  rejected: |-
+    This application must be launched from an Applications directory.
+
+    {reason}
+  notInBundle: The executable is not inside an application bundle.
+  canonicalizeBundleError: 'Unable to resolve the application bundle path: {error}'
+  bundleNameError: Unable to determine the application bundle name. The application will exit.
+  replacePrompt: An application already exists at {destination}. Replace it and relaunch from Applications?
+  movePrompt: To start the background service safely, the application must be moved to {destination}. Move and relaunch it now?
+  createApplicationsDirError: 'Unable to create the Applications directory: {error}'
+  moveFailed: Failed to move the application. Move it manually in Finder and try again.
+  replaceFailed: 'Unable to replace the existing application safely: {error}'
+  relaunchFailed: The application was copied, but it could not be relaunched automatically. Open it manually from Applications.
+  cancel: Cancel
+  move: Move
+  ok: OK
 tray:
   dashboard: Dashboard
   ruleMode: Rule Mode

@@ -1,5 +1,4 @@
 import {
-  BuildRounded,
   DeleteForeverRounded,
   PauseCircleOutlineRounded,
   PlayCircleOutlineRounded,
@@ -8,18 +7,18 @@ import {
 } from '@mui/icons-material'
 import { Box, Typography, alpha, useTheme } from '@mui/material'
 import { useLockFn } from 'ahooks'
-import React, { useCallback, useRef, useState } from 'react'
+import React, { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { DialogRef, Switch, TooltipIcon } from '@/components/base'
 import { SysproxyViewer } from '@/components/setting/mods/sysproxy-viewer'
 import { TunViewer } from '@/components/setting/mods/tun-viewer'
-import { useServiceInstaller } from '@/hooks/use-service-installer'
 import { useServiceUninstaller } from '@/hooks/use-service-uninstaller'
 import { useSystemProxyState } from '@/hooks/use-system-proxy-state'
 import { useSystemState } from '@/hooks/use-system-state'
 import { useVerge } from '@/hooks/use-verge'
 import { showNotice } from '@/services/notice-service'
+import { requestService } from '@/services/service-request'
 
 interface ProxySwitchProps {
   label?: string
@@ -34,7 +33,8 @@ interface SwitchRowProps {
   infoTitle: string
   onInfoClick?: () => void
   extraIcons?: React.ReactNode
-  onToggle: (value: boolean) => Promise<void>
+  /** Return false to roll back without reporting an error. */
+  onToggle: (value: boolean) => Promise<boolean | void>
   onError?: (err: Error) => void
   highlight?: boolean
 }
@@ -68,6 +68,9 @@ const SwitchRow = ({
     pendingRef.current = true
     setChecked(value)
     onToggle(value)
+      .then((applied) => {
+        if (applied === false) setChecked(active)
+      })
       .catch((err: any) => {
         setChecked(active)
         onError?.(err)
@@ -131,49 +134,33 @@ const ProxyControlSwitches = ({
 }: ProxySwitchProps) => {
   const { t } = useTranslation()
   const { verge, mutateVerge, patchVerge } = useVerge()
-  const { installServiceAndRestartCore } = useServiceInstaller()
-  const { uninstallServiceAndRestartCore } = useServiceUninstaller()
+  const { uninstallServiceAndStartSidecar } = useServiceUninstaller()
   const { indicator: systemProxyIndicator, toggleSystemProxy } =
     useSystemProxyState()
-  const { isServiceOk, isTunModeAvailable, mutateSystemState } =
-    useSystemState()
+  const { runState, isTunModeAvailable } = useSystemState()
+  // Offer to uninstall only a service that is actually there and working.
+  const isServiceInstallReady = runState.serviceUsable
 
   const sysproxyRef = useRef<DialogRef>(null)
   const tunRef = useRef<DialogRef>(null)
 
   const { enable_tun_mode } = verge ?? {}
 
-  const showErrorNotice = useCallback(
-    (msg: string) => showNotice.error(msg),
-    [],
-  )
-
   const handleTunToggle = async (value: boolean) => {
-    if (!isTunModeAvailable) {
-      const msgKey = 'settings.sections.proxyControl.tooltips.tunUnavailable'
-      showErrorNotice(msgKey)
-      throw new Error(t(msgKey))
+    if (value && !isTunModeAvailable) {
+      requestService({
+        reason: 'tunNeedsService',
+        restore: { enable_tun_mode: value },
+      })
+      return false
     }
     mutateVerge({ ...verge, enable_tun_mode: value }, false)
     await patchVerge({ enable_tun_mode: value })
   }
 
-  const onInstallService = useLockFn(async () => {
-    try {
-      await installServiceAndRestartCore()
-      await mutateSystemState()
-    } catch (err) {
-      showNotice.error(err)
-    }
-  })
-
   const onUninstallService = useLockFn(async () => {
     try {
-      if (verge?.enable_tun_mode) {
-        await handleTunToggle(false)
-      }
-      await uninstallServiceAndRestartCore()
-      await mutateSystemState()
+      await uninstallServiceAndStartSidecar()
     } catch (err) {
       showNotice.error(err)
     }
@@ -205,31 +192,19 @@ const ProxyControlSwitches = ({
           onInfoClick={() => tunRef.current?.open()}
           onToggle={handleTunToggle}
           onError={onError}
-          disabled={!isTunModeAvailable}
           highlight={enable_tun_mode || false}
           extraIcons={
             <>
               {!isTunModeAvailable && (
-                <>
-                  <TooltipIcon
-                    title={t(
-                      'settings.sections.proxyControl.tooltips.tunUnavailable',
-                    )}
-                    icon={WarningRounded}
-                    sx={{ color: 'warning.main', ml: 1 }}
-                  />
-                  <TooltipIcon
-                    title={t(
-                      'settings.sections.proxyControl.actions.installService',
-                    )}
-                    icon={BuildRounded}
-                    color="primary"
-                    onClick={onInstallService}
-                    sx={{ ml: 1 }}
-                  />
-                </>
+                <TooltipIcon
+                  title={t(
+                    'settings.sections.proxyControl.tooltips.tunUnavailable',
+                  )}
+                  icon={WarningRounded}
+                  sx={{ color: 'warning.main', ml: 1 }}
+                />
               )}
-              {isServiceOk && (
+              {isServiceInstallReady && (
                 <TooltipIcon
                   title={t(
                     'settings.sections.proxyControl.actions.uninstallService',

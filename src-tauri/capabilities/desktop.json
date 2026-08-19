@@ -12,7 +12,6 @@
     "updater:default",
     "updater:allow-check",
     "updater:allow-download-and-install",
-    "process:allow-restart",
     "deep-link:default",
     "autostart:allow-enable",
     "autostart:allow-disable",

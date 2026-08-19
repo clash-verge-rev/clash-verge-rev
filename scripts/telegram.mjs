@@ -32,8 +32,7 @@ async function sendTelegramNotification() {
   log_info(`Target channel: ${chatId}`)
   log_info(`Download URL: ${downloadUrl}`)
 
-  // 读取发布说明和下载地址
-  let releaseContent = ''
+  let releaseContent
   try {
     releaseContent = readFileSync('release.txt', 'utf-8')
     log_info('成功读取 release.txt 文件')
@@ -42,7 +41,6 @@ async function sendTelegramNotification() {
     releaseContent = '更多新功能现已支持，详细更新日志请查看发布页面。'
   }
 
-  // Markdown 转换为 HTML
   function convertMarkdownToTelegramHTML(content) {
     // Strip stray HTML tags and markdown bold from heading text
     const cleanHeading = (text) =>
@@ -88,19 +86,16 @@ async function sendTelegramNotification() {
       .replace(/<br\s*\/?>/g, '\n')
   }
 
-  // Strip HTML tags not supported by Telegram and escape stray angle brackets
   function sanitizeTelegramHTML(content) {
-    // Telegram supports: b, strong, i, em, u, ins, s, strike, del,
-    // a, code, pre, blockquote, tg-spoiler, tg-emoji
-    const allowedTags =
-      /^\/?(b|strong|i|em|u|ins|s|strike|del|a|code|pre|blockquote|tg-spoiler|tg-emoji)(\s|>|$)/i
-    return content.replace(/<\/?[^>]*>/g, (tag) => {
-      const inner = tag.replace(/^<\/?/, '').replace(/>$/, '')
-      if (allowedTags.test(inner) || allowedTags.test(tag.slice(1))) {
-        return tag
-      }
-      // Escape unsupported tags so they display as text
-      return tag.replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    const allowedTag =
+      /^<\/?(?:b|strong|i|em|u|ins|s|strike|del|a|code|pre|blockquote|tg-spoiler|tg-emoji)(?:\s[^<>]*)?>$/i
+    // Match tags or lone brackets separately so stray changelog text cannot swallow a real tag.
+    return content.replace(/<\/?[a-z][^<>]*>|[<>]/gi, (token) => {
+      if (token === '<') return '&lt;'
+      if (token === '>') return '&gt;'
+      return allowedTag.test(token)
+        ? token
+        : token.replace(/</g, '&lt;').replace(/>/g, '&gt;')
     })
   }
 
@@ -114,7 +109,6 @@ async function sendTelegramNotification() {
   const releaseTag = isAutobuild ? 'autobuild' : `v${version}`
   const content = `<b>🎉 <a href="https://github.com/clash-verge-rev/clash-verge-rev/releases/tag/${releaseTag}">Clash Verge Rev v${version}</a> ${releaseTitle}</b>\n\n${formattedContent}`
 
-  // 发送到 Telegram
   try {
     await axios.post(
       `https://api.telegram.org/bot${process.env.TELEGRAM_BOT_TOKEN}/sendMessage`,
@@ -140,7 +134,6 @@ async function sendTelegramNotification() {
   }
 }
 
-// 执行函数
 sendTelegramNotification().catch((error) => {
   log_error('脚本执行失败:', error)
   process.exit(1)

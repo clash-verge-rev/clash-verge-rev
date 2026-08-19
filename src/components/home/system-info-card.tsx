@@ -29,10 +29,9 @@ export const SystemInfoCard = () => {
   const { t } = useTranslation()
   const { verge, patchVerge } = useVerge()
   const navigate = useNavigate()
-  const { isAdminMode, isSidecarMode } = useSystemState()
+  const { isAdminMode, isSidecarMode, mutateSystemState } = useSystemState()
   const { installServiceAndRestartCore } = useServiceInstaller()
 
-  // 自动检查更新逻辑（lastCheckUpdate 由 useUpdate 统一管理）
   const { checkUpdate: triggerCheckUpdate, lastCheckUpdate } = useUpdate(true)
 
   const [osInfo, setOsInfo] = useState('')
@@ -42,7 +41,6 @@ export const SystemInfoCard = () => {
     [lastCheckUpdate],
   )
 
-  // 初始化系统信息
   useEffect(() => {
     getSystemInfo()
       .then((info) => {
@@ -61,7 +59,6 @@ export const SystemInfoCard = () => {
       .catch(console.error)
   }, [])
 
-  // 如果启用了自动检查更新但没有记录，设置当前时间并延迟检查
   useEffect(() => {
     if (!verge?.auto_check_update) return
     if (readLastCheckTime() !== null) return
@@ -73,12 +70,10 @@ export const SystemInfoCard = () => {
     return () => window.clearTimeout(timeoutId)
   }, [verge?.auto_check_update, triggerCheckUpdate])
 
-  // 导航到设置页面
   const goToSettings = useCallback(() => {
     navigate('/settings')
   }, [navigate])
 
-  // 切换自启动状态
   const toggleAutoLaunch = useCallback(async () => {
     if (!verge) return
     try {
@@ -88,14 +83,18 @@ export const SystemInfoCard = () => {
     }
   }, [verge, patchVerge])
 
-  // 点击运行模式处理,Sidecar或纯管理员模式允许安装服务
-  const handleRunningModeClick = useCallback(() => {
+  const handleRunningModeClick = useCallback(async () => {
     if (isSidecarMode || (isAdminMode && isSidecarMode)) {
-      installServiceAndRestartCore()
+      await installServiceAndRestartCore()
+      await mutateSystemState()
     }
-  }, [isSidecarMode, isAdminMode, installServiceAndRestartCore])
+  }, [
+    isSidecarMode,
+    isAdminMode,
+    installServiceAndRestartCore,
+    mutateSystemState,
+  ])
 
-  // 检查更新
   const onCheckUpdate = useLockFn(async () => {
     try {
       const result = await triggerCheckUpdate()
@@ -113,16 +112,13 @@ export const SystemInfoCard = () => {
     }
   })
 
-  // 是否启用自启动
   const autoLaunchEnabled = useMemo(
     () => verge?.enable_auto_launch || false,
     [verge],
   )
 
-  // 运行模式样式
   const runningModeStyle = useMemo(
     () => ({
-      // Sidecar或纯管理员模式允许安装服务
       cursor:
         isSidecarMode || (isAdminMode && isSidecarMode) ? 'pointer' : 'default',
       textDecoration:
@@ -137,10 +133,8 @@ export const SystemInfoCard = () => {
     [isSidecarMode, isAdminMode],
   )
 
-  // 获取模式图标和文本
   const getModeIcon = () => {
     if (isAdminMode) {
-      // 判断是否为组合模式（管理员+服务）
       if (!isSidecarMode) {
         return (
           <>
@@ -178,10 +172,8 @@ export const SystemInfoCard = () => {
     }
   }
 
-  // 获取模式文本
   const getModeText = () => {
     if (isAdminMode) {
-      // 判断是否同时处于服务模式
       if (!isSidecarMode) {
         return t('home.components.systemInfo.badges.adminServiceMode')
       }
@@ -193,7 +185,6 @@ export const SystemInfoCard = () => {
     }
   }
 
-  // 只有当verge存在时才渲染内容
   if (!verge) return null
 
   return (

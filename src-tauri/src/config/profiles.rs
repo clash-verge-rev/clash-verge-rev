@@ -10,6 +10,7 @@ use crate::{
     },
 };
 use anyhow::{Context as _, Result, bail};
+use clash_verge_draft::Draft;
 use clash_verge_logging::{Type, logging};
 use parking_lot::Mutex;
 use serde::{Deserialize, Serialize};
@@ -22,24 +23,18 @@ use std::{
         LazyLock,
         atomic::{AtomicU64, Ordering},
     },
-    time::Duration,
+    time::{Duration, Instant},
 };
 use tauri_plugin_mihomo::models::{Proxies, ProxyType};
 use tokio::{fs, task::JoinHandle};
 
-/// Regex to check profile file names, eg.
-/// R12345678.yaml (remote)
-/// L12345678.yaml (local)
-/// m12345678.yaml (merge)
-/// s12345678.js (script)
-/// r12345678.yaml (rules)
-/// p12345678.yaml (proxies)
-/// g12345678.yaml (groups)
+pub(crate) static PROFILE_WRITE_LOCK: tokio::sync::Mutex<()> = tokio::sync::Mutex::const_new(());
+
+/// Matches generated profile files such as `R12345678.yaml` or `s12345678.js`.
 #[allow(clippy::unwrap_used)]
 static REGEX_PROFILE_FILE: LazyLock<regex::Regex> =
     LazyLock::new(|| regex::Regex::new(r"^(?:[RLmrpg][a-zA-Z0-9]+\.yaml|s[a-zA-Z0-9]+\.js)$").unwrap());
 
-// activate selected nodes task handle
 static ACTIVATE_SELECTED_TASK: LazyLock<Mutex<Option<JoinHandle<()>>>> = LazyLock::new(|| Mutex::new(None));
 static ACTIVATE_SELECTED_GENERATION: AtomicU64 = AtomicU64::new(0);
 
@@ -47,14 +42,18 @@ static ACTIVATE_SELECTED_GENERATION: AtomicU64 = AtomicU64::new(0);
 // lock acquisition, connection-pool waiting, and local-socket connection establishment.
 const MIHOMO_OPERATION_TIMEOUT: Duration = Duration::from_secs(10);
 const SELECTED_NODES_RECHECK_DELAY: Duration = Duration::from_secs(1);
+/// Bounds retries while provider-backed groups finish loading.
+const SELECTED_NODES_SETTLE_DEADLINE: Duration = Duration::from_secs(30);
+/// How often a restore looks again while waiting for those groups.
+const SELECTED_NODES_SETTLE_INTERVAL: Duration = Duration::from_secs(1);
+/// Bounds startup waiting; remaining selections continue restoring in the background.
+const SELECTED_NODES_FIRST_PASS_BUDGET: Duration = Duration::from_secs(3);
 
 /// Define the `profiles.yaml` schema
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
 pub struct IProfiles {
-    /// same as PrfConfig.current
     pub current: Option<String>,
 
-    /// profile list
     pub items: Option<Vec<PrfItem>>,
 }
 
@@ -72,6 +71,23 @@ pub struct CleanupResult {
     pub failed_deletions: usize,
 }
 
+pub(crate) struct ProfileDeletePlan {
+    files: Vec<String>,
+}
+
+impl ProfileDeletePlan {
+    pub(crate) async fn cleanup(self) {
+        let Ok(dir) = dirs::app_profiles_dir() else {
+            return;
+        };
+        for file in self.files {
+            if let Err(error) = dir.join(file.as_str()).remove_if_exists().await {
+                logging!(warn, Type::Config, "清理已删除订阅文件失败: {file} - {error}");
+            }
+        }
+    }
+}
+
 macro_rules! patch {
     ($lv: expr, $rv: expr, $key: tt) => {
         if ($rv.$key).is_some() {
@@ -81,7 +97,6 @@ macro_rules! patch {
 }
 
 impl IProfiles {
-    // Helper to find and remove an item by uid from the items vec, returning its file name (if any).
     fn take_item_file_by_uid(items: &mut Vec<PrfItem>, target_uid: Option<&str>) -> Option<String> {
         let index = items.iter().position(|item| item.uid.as_deref() == target_uid)?;
         items.remove(index).file
@@ -103,6 +118,12 @@ impl IProfiles {
                     if item.uid.is_none() {
                         item.uid = Some(help::get_uid("d").into());
                     }
+                    if item.itype.as_deref() == Some("remote") {
+                        item.option
+                            .get_or_insert_with(PrfOption::default)
+                            .allow_auto_update
+                            .get_or_insert(true);
+                    }
                 }
                 profiles
             }
@@ -114,7 +135,7 @@ impl IProfiles {
     }
 
     pub async fn save_file(&self) -> Result<()> {
-        help::save_yaml(&dirs::profiles_path()?, self, Some("# Profiles Config for Clash Verge")).await
+        help::save_yaml_atomic(&dirs::profiles_path()?, self, Some("# Profiles Config for Clash Verge")).await
     }
 
     /// 只修改current，valid和chain
@@ -137,12 +158,10 @@ impl IProfiles {
         self.current.as_ref()
     }
 
-    /// get items ref
     pub const fn get_items(&self) -> Option<&Vec<PrfItem>> {
         self.items.as_ref()
     }
 
-    /// find the item by the uid
     pub fn get_item(&self, uid: impl AsRef<str>) -> Result<&PrfItem> {
         let uid_str = uid.as_ref();
 
@@ -159,17 +178,12 @@ impl IProfiles {
         bail!("failed to get the profile item \"uid:{}\"", uid_str);
     }
 
-    /// append new item
-    /// if the file_data is some
-    /// then should save the data to file
     pub async fn append_item(&mut self, item: &mut PrfItem) -> Result<()> {
         let uid = &item.uid;
         if uid.is_none() {
             bail!("the uid should not be null");
         }
 
-        // save the file data
-        // move the field value after save
         if let Some(file_data) = item.file_data.take() {
             if item.file.is_none() {
                 bail!("the file should not be null");
@@ -201,7 +215,6 @@ impl IProfiles {
         Ok(())
     }
 
-    /// reorder items
     pub async fn reorder(&mut self, active_id: &String, over_id: &String) -> Result<()> {
         let mut items = self.items.take().unwrap_or_default();
         let mut old_index = None;
@@ -226,7 +239,6 @@ impl IProfiles {
         self.save_file().await
     }
 
-    /// update the item value
     pub async fn patch_item(&mut self, uid: &String, item: &PrfItem) -> Result<()> {
         if let Some(file) = &item.file {
             Self::validate_profile_file(file)?;
@@ -271,14 +283,12 @@ impl IProfiles {
         Ok(())
     }
 
-    /// be used to update the remote item
-    /// only patch `updated` `extra` `file_data`
+    /// Updates fields returned by a remote profile refresh.
     pub async fn update_item(&mut self, uid: &String, item: &mut PrfItem) -> Result<()> {
         if self.items.is_none() {
             self.items = Some(vec![]);
         }
 
-        // find the item
         let _ = self.get_item(uid)?;
 
         if let Some(items) = self.items.as_mut() {
@@ -290,14 +300,11 @@ impl IProfiles {
                     each.updated = item.updated;
                     each.home = item.home.to_owned();
                     each.option = PrfOption::merge(each.option.as_ref(), item.option.as_ref());
-                    // save the file data
-                    // move the field value after save
                     if let Some(file_data) = item.file_data.take() {
                         let file = each.file.take();
                         let file =
                             file.unwrap_or_else(|| item.file.take().unwrap_or_else(|| format!("{}.yaml", uid).into()));
 
-                        // the file must exists
                         each.file = Some(file.clone());
 
                         let path = dirs::app_profiles_dir()?.join(file.as_str());
@@ -315,40 +322,53 @@ impl IProfiles {
         self.save_file().await
     }
 
-    /// delete item
-    /// if delete the current then return true
-    pub async fn delete_item(&mut self, uid: &String) -> Result<bool> {
-        let current = self.current.as_ref().unwrap_or(uid);
-        let current = current.clone();
-        let delete_uids = {
-            let item = self.get_item(uid)?;
-            let option = item.option.as_ref();
-            option.map_or(Vec::new(), |op| {
-                [
-                    op.merge.clone(),
-                    op.script.clone(),
-                    op.rules.clone(),
-                    op.proxies.clone(),
-                    op.groups.clone(),
-                ]
-                .into_iter()
-                .collect::<Vec<_>>()
-            })
-        };
-        let mut items = self.items.take().unwrap_or_default();
+    /// Raise intervals below `min_minutes`. `None`/`0` mean "never auto-update", left alone.
+    /// Returns how many changed so the caller can skip a pointless write.
+    pub fn raise_short_update_intervals(&mut self, min_minutes: u64) -> usize {
+        let mut raised = 0;
 
-        // remove the main item (if exists) and delete its file
+        for item in self.items.iter_mut().flatten() {
+            let Some(option) = item.option.as_mut() else {
+                continue;
+            };
+            if option
+                .update_interval
+                .is_some_and(|interval| (1..min_minutes).contains(&interval))
+            {
+                option.update_interval = Some(min_minutes);
+                raised += 1;
+            }
+        }
+
+        raised
+    }
+
+    pub(crate) fn plan_delete_item(&mut self, uid: &String) -> Result<(bool, ProfileDeletePlan)> {
+        let current = self.current.as_ref().unwrap_or(uid).clone();
+        let delete_uids = self.get_item(uid)?.option.as_ref().map_or_else(Vec::new, |op| {
+            [
+                op.merge.clone(),
+                op.script.clone(),
+                op.rules.clone(),
+                op.proxies.clone(),
+                op.groups.clone(),
+            ]
+            .into_iter()
+            .collect::<Vec<_>>()
+        });
+        let mut items = self.items.take().unwrap_or_default();
+        let mut files = Vec::new();
+
         if let Some(file) = Self::take_item_file_by_uid(&mut items, Some(uid.as_str())) {
-            let _ = dirs::app_profiles_dir()?.join(file.as_str()).remove_if_exists().await;
+            files.push(file);
         }
 
         for delete_uid in delete_uids {
             if let Some(file) = Self::take_item_file_by_uid(&mut items, delete_uid.as_deref()) {
-                let _ = dirs::app_profiles_dir()?.join(file.as_str()).remove_if_exists().await;
+                files.push(file);
             }
         }
 
-        // delete the original uid
         if current == *uid {
             self.current = None;
             for item in items.iter() {
@@ -360,8 +380,7 @@ impl IProfiles {
         }
 
         self.items = Some(items);
-        self.save_file().await?;
-        Ok(current == *uid)
+        Ok((current == *uid, ProfileDeletePlan { files }))
     }
 
     /// 获取current指向的订阅内容
@@ -381,12 +400,10 @@ impl IProfiles {
         }
     }
 
-    /// 判断profile是否是current指向的
     pub fn is_current_profile_index(&self, index: &String) -> bool {
         self.current.as_ref() == Some(index)
     }
 
-    /// 获取所有的profiles(uid，名称, 是否为 current)
     pub fn profiles_preview(&self) -> Option<Vec<IProfilePreview<'_>>> {
         self.items.as_ref().map(|items| {
             items
@@ -404,7 +421,6 @@ impl IProfiles {
         })
     }
 
-    /// 通过 uid 获取名称
     pub fn get_name_by_uid(&self, uid: &String) -> Option<&String> {
         if let Some(items) = &self.items {
             for item in items {
@@ -419,18 +435,29 @@ impl IProfiles {
     /// 以 app 中的 profile 列表为准，删除不再需要的文件
     pub async fn cleanup_orphaned_files(&self) -> Result<()> {
         let profiles_dir = dirs::app_profiles_dir()?;
+        self.cleanup_orphaned_files_in(&profiles_dir).await
+    }
 
+    pub(super) async fn cleanup_orphaned_files_in(&self, profiles_dir: &Path) -> Result<()> {
         if !profiles_dir.exists() {
             return Ok(());
         }
 
-        // 获取所有 active profile 的文件名集合
+        // An empty list may mean loading failed, so it is not safe evidence that every file is orphaned.
+        // https://github.com/clash-verge-rev/clash-verge-rev/issues/7577
+        if self.items.as_ref().is_none_or(|v| v.is_empty()) {
+            logging!(
+                warn,
+                Type::Config,
+                "Profile items 为空，跳过孤儿文件清理以避免误删活跃的配置文件"
+            );
+            return Ok(());
+        }
+
         let active_files = self.get_all_active_files();
 
-        // 添加全局扩展配置文件到保护列表
         let protected_files = self.get_protected_global_files();
 
-        // 扫描 profiles 目录下的所有文件
         let mut total_files = 0;
         let mut deleted_files = 0;
         let mut failed_deletions = 0;
@@ -448,13 +475,11 @@ impl IProfiles {
             if let Some(file_name) = path.file_name().and_then(|n| n.to_str())
                 && Self::is_profile_file(file_name)
             {
-                // 检查是否为全局扩展文件
                 if protected_files.contains(file_name) {
                     logging!(debug, Type::Config, "保护全局扩展配置文件: {file_name}");
                     continue;
                 }
 
-                // 检查是否为活跃文件
                 if !active_files.contains(file_name) {
                     match path.to_path_buf().remove_if_exists().await {
                         Ok(_) => {
@@ -488,7 +513,6 @@ impl IProfiles {
         Ok(())
     }
 
-    /// 不删除全局扩展配置
     fn get_protected_global_files(&self) -> HashSet<String> {
         let mut protected_files = HashSet::new();
 
@@ -498,23 +522,19 @@ impl IProfiles {
         protected_files
     }
 
-    /// 获取所有 active profile 关联的文件名
     fn get_all_active_files(&self) -> HashSet<&str> {
         let mut active_files: HashSet<&str> = HashSet::new();
 
         if let Some(items) = &self.items {
             for item in items {
-                // 收集所有类型 profile 的文件
                 if let Some(file) = &item.file {
                     active_files.insert(file);
                 }
 
-                // 对于主 profile 类型（remote/local），还需要收集其关联的扩展文件
                 if let Some(itype) = &item.itype
                     && (itype == "remote" || itype == "local")
                     && let Some(option) = &item.option
                 {
-                    // 收集关联的扩展文件
                     if let Some(merge_uid) = &option.merge
                         && let Ok(merge_item) = self.get_item(merge_uid)
                         && let Some(file) = &merge_item.file
@@ -556,13 +576,12 @@ impl IProfiles {
         active_files
     }
 
-    /// 检查文件名是否符合 profile 文件的命名规则
     fn is_profile_file(filename: &str) -> bool {
         REGEX_PROFILE_FILE.is_match(filename)
     }
 }
 
-// 特殊的Send-safe helper函数，完全避免跨await持有guard
+// These helpers avoid holding a parking_lot guard across `await`.
 use crate::config::Config;
 
 pub async fn profiles_append_item_with_filedata_safe(item: &PrfItem, file_data: Option<String>) -> Result<()> {
@@ -571,8 +590,12 @@ pub async fn profiles_append_item_with_filedata_safe(item: &PrfItem, file_data: 
 }
 
 pub async fn profiles_append_item_safe(item: &mut PrfItem) -> Result<()> {
-    Config::profiles()
-        .await
+    let profiles = Config::profiles().await;
+    profiles_append_item_to_safe(&profiles, item).await
+}
+
+pub(super) async fn profiles_append_item_to_safe(profiles: &Draft<IProfiles>, item: &mut PrfItem) -> Result<()> {
+    profiles
         .with_data_modify(|mut profiles| async move {
             profiles.append_item(item).await?;
             Ok((profiles, ()))
@@ -586,16 +609,6 @@ pub async fn profiles_patch_item_safe(index: &String, item: &PrfItem) -> Result<
         .with_data_modify(|mut profiles| async move {
             profiles.patch_item(index, item).await?;
             Ok((profiles, ()))
-        })
-        .await
-}
-
-pub async fn profiles_delete_item_safe(index: &String) -> Result<bool> {
-    Config::profiles()
-        .await
-        .with_data_modify(|mut profiles| async move {
-            let deleted = profiles.delete_item(index).await?;
-            Ok((profiles, deleted))
         })
         .await
 }
@@ -751,6 +764,11 @@ fn reconcile_selected_nodes(
     plan
 }
 
+/// Cancels restoration so it cannot overwrite a newer selection or profile snapshot.
+pub fn supersede_selected_activation() {
+    ACTIVATE_SELECTED_GENERATION.fetch_add(1, Ordering::AcqRel);
+}
+
 fn is_activation_current(generation: u64) -> bool {
     ACTIVATE_SELECTED_GENERATION.load(Ordering::Acquire) == generation
 }
@@ -758,7 +776,7 @@ fn is_activation_current(generation: u64) -> bool {
 async fn fetch_proxies_with_timeout() -> Result<Proxies> {
     tokio::time::timeout(MIHOMO_OPERATION_TIMEOUT, async {
         loop {
-            match handle::Handle::mihomo().await.get_proxies().await {
+            match handle::Handle::mihomo().get_proxies().await {
                 Ok(proxies) => return proxies,
                 Err(err) => {
                     logging!(debug, Type::Config, "mihomo proxies are not ready yet: {err}");
@@ -773,10 +791,7 @@ async fn fetch_proxies_with_timeout() -> Result<Proxies> {
 
 async fn select_node_with_timeout(group_name: &String, node: &String) -> Result<()> {
     tokio::time::timeout(MIHOMO_OPERATION_TIMEOUT, async {
-        handle::Handle::mihomo()
-            .await
-            .select_node_for_group(group_name, node)
-            .await
+        handle::Handle::mihomo().select_node_for_group(group_name, node).await
     })
     .await
     .with_context(|| format!("timed out while selecting node [{node}] for group [{group_name}]"))?
@@ -850,6 +865,92 @@ async fn update_tray_after_activation(generation: u64) {
     }
 }
 
+/// Records a backend-made selection so the next core start restores it.
+pub async fn record_selected_node(group_name: &str, node: &str) -> Result<()> {
+    let group_name = String::from(group_name);
+    let node = String::from(node);
+    let recorded = Config::profiles()
+        .await
+        .with_data_modify(move |mut profiles| async move {
+            let Some(current) = profiles.current.clone() else {
+                return Ok((profiles, false));
+            };
+            let Some(item) = profiles
+                .items
+                .as_mut()
+                .and_then(|items| items.iter_mut().find(|item| item.uid.as_ref() == Some(&current)))
+            else {
+                return Ok((profiles, false));
+            };
+
+            let mut selected = item.selected.clone().unwrap_or_default();
+            match selected
+                .iter_mut()
+                .find(|entry| entry.name.as_ref() == Some(&group_name))
+            {
+                Some(entry) => {
+                    if entry.now.as_ref() == Some(&node) {
+                        return Ok((profiles, false));
+                    }
+                    entry.now = Some(node);
+                }
+                None => selected.push(PrfSelected {
+                    name: Some(group_name),
+                    now: Some(node),
+                }),
+            }
+            item.selected = Some(selected);
+            profiles.save_file().await?;
+            Ok((profiles, true))
+        })
+        .await?;
+
+    if recorded {
+        supersede_selected_activation();
+        handle::Handle::refresh_profiles();
+    }
+    Ok(())
+}
+
+fn remove_selected_node(selected: &mut Vec<PrfSelected>, group_name: &str) -> bool {
+    let original_len = selected.len();
+    selected.retain(|entry| entry.name.as_deref() != Some(group_name));
+    selected.len() != original_len
+}
+
+pub async fn forget_selected_node(group_name: &str) -> Result<()> {
+    let cleared = Config::profiles()
+        .await
+        .with_data_modify(move |mut profiles| async move {
+            let Some(current) = profiles.current.clone() else {
+                return Ok((profiles, false));
+            };
+            let Some(item) = profiles
+                .items
+                .as_mut()
+                .and_then(|items| items.iter_mut().find(|item| item.uid.as_ref() == Some(&current)))
+            else {
+                return Ok((profiles, false));
+            };
+
+            let mut selected = item.selected.clone().unwrap_or_default();
+            if !remove_selected_node(&mut selected, group_name) {
+                return Ok((profiles, false));
+            }
+
+            item.selected = (!selected.is_empty()).then_some(selected);
+            profiles.save_file().await?;
+            Ok((profiles, true))
+        })
+        .await?;
+
+    if cleared {
+        supersede_selected_activation();
+        handle::Handle::refresh_profiles();
+    }
+    Ok(())
+}
+
 async fn persist_reconciled_selected(
     profile_uid: &String,
     original_selected: &[PrfSelected],
@@ -890,10 +991,86 @@ async fn persist_reconciled_selected(
     Ok(())
 }
 
+/// Returns recorded selections whose groups have not reached the requested node.
+fn unsettled_selections(selected: &[PrfSelected], proxies: &Proxies) -> Vec<String> {
+    selected
+        .iter()
+        .filter_map(|item| {
+            let (Some(group_name), Some(node)) = (&item.name, &item.now) else {
+                return None;
+            };
+            match proxies.proxies.get(group_name.as_str()) {
+                Some(group) if group.now.as_deref() == Some(node.as_str()) => None,
+                _ => Some(group_name.clone()),
+            }
+        })
+        .collect()
+}
+
+/// Retries selections while provider-backed groups finish loading.
+async fn settle_pending_selections(selected: &[PrfSelected], completed: &mut HashMap<String, String>, generation: u64) {
+    let deadline = Instant::now() + SELECTED_NODES_SETTLE_DEADLINE;
+    loop {
+        tokio::time::sleep(SELECTED_NODES_SETTLE_INTERVAL).await;
+        if !is_activation_current(generation) {
+            return;
+        }
+        let Ok(snapshot) = fetch_proxies_with_timeout().await else {
+            // Unreachable core: the deadline still applies, so this cannot spin forever.
+            if Instant::now() >= deadline {
+                return;
+            }
+            continue;
+        };
+        if !is_activation_current(generation) {
+            return;
+        }
+
+        let pending = unsettled_selections(selected, &snapshot);
+        if pending.is_empty() {
+            return;
+        }
+        if Instant::now() >= deadline {
+            logging!(
+                warn,
+                Type::Config,
+                "gave up putting back {} selected node(s) the core never loaded: {}",
+                pending.len(),
+                pending.iter().map(String::as_str).collect::<Vec<_>>().join(", ")
+            );
+            return;
+        }
+
+        let plan = reconcile_selected_nodes(selected, None, &snapshot);
+        if apply_activations(&plan.activations, completed, generation)
+            .await
+            .is_none()
+        {
+            return;
+        }
+        if is_activation_current(generation) {
+            handle::Handle::refresh_clash();
+        }
+    }
+}
+
+/// Releases the first-pass waiter even when restoration exits early.
+struct FirstPassSignal(Option<tokio::sync::oneshot::Sender<()>>);
+
+impl FirstPassSignal {
+    fn notify(&mut self) {
+        if let Some(sender) = self.0.take() {
+            let _ = sender.send(());
+        }
+    }
+}
+
 async fn activate_selected_nodes_worker(
     profile_uid: String,
     selected: Vec<PrfSelected>,
     generation: u64,
+    repair: SelectionRepair,
+    mut first_pass_done: FirstPassSignal,
 ) -> Result<()> {
     let first_snapshot = fetch_proxies_with_timeout().await?;
     if !is_activation_current(generation) {
@@ -951,6 +1128,13 @@ async fn activate_selected_nodes_worker(
         return Ok(());
     }
 
+    if repair == SelectionRepair::KeepRecords {
+        // Remaining selections depend on provider loading and continue in the background.
+        first_pass_done.notify();
+        settle_pending_selections(&selected, &mut completed_activations, generation).await;
+        return Ok(());
+    }
+
     if plan.repaired_count > 0 && is_activation_current(generation) {
         logging!(
             info,
@@ -964,13 +1148,47 @@ async fn activate_selected_nodes_worker(
     Ok(())
 }
 
+/// Whether an activation may also prune the records it cannot match.
+#[derive(Clone, Copy, PartialEq, Eq, Debug)]
+pub enum SelectionRepair {
+    /// Prune records after a fully loaded profile switch.
+    Prune,
+    /// Preserve records during startup while provider-backed groups may still be absent.
+    KeepRecords,
+}
+
 pub fn activate_selected_nodes() -> Result<()> {
+    // The first-pass signal is for callers that wait; a profile switch does not, and dropping
+    // the receiver simply makes the send a no-op.
+    drop(activate_selected_nodes_with(SelectionRepair::Prune));
+    Ok(())
+}
+
+/// Restores available selections before the system proxy points at the core, then retries the rest.
+pub async fn restore_selected_nodes() {
+    let first_pass = activate_selected_nodes_with(SelectionRepair::KeepRecords);
+    if tokio::time::timeout(SELECTED_NODES_FIRST_PASS_BUDGET, first_pass)
+        .await
+        .is_err()
+    {
+        logging!(
+            warn,
+            Type::Config,
+            "starting without having put the selected nodes back yet; still trying"
+        );
+    }
+}
+
+fn activate_selected_nodes_with(repair: SelectionRepair) -> tokio::sync::oneshot::Receiver<()> {
     logging!(info, Type::Config, "starting activating selected nodes");
     let mut active_task = ACTIVATE_SELECTED_TASK.lock();
     let generation = ACTIVATE_SELECTED_GENERATION.fetch_add(1, Ordering::AcqRel) + 1;
     let previous_task = active_task.take();
+    let (first_pass_sender, first_pass_done) = tokio::sync::oneshot::channel();
 
     let handle = tokio::spawn(async move {
+        // Dropping this releases the startup waiter on every early exit.
+        let first_pass = FirstPassSignal(Some(first_pass_sender));
         if let Some(previous_task) = previous_task {
             let _ = previous_task.await;
         }
@@ -979,7 +1197,8 @@ pub fn activate_selected_nodes() -> Result<()> {
         }
 
         let result = async {
-            let profiles = Config::profiles().await.latest_arc();
+            // A draft may be a profile switch that has not passed validation yet.
+            let profiles = Config::profiles().await.data_arc();
             let current = profiles.get_current().context("no current profile running")?.clone();
             let selected = profiles
                 .get_item(&current)
@@ -994,7 +1213,7 @@ pub fn activate_selected_nodes() -> Result<()> {
                 }
                 return Ok(());
             }
-            activate_selected_nodes_worker(current, selected, generation).await
+            activate_selected_nodes_worker(current, selected, generation, repair, first_pass).await
         }
         .await;
 
@@ -1010,7 +1229,7 @@ pub fn activate_selected_nodes() -> Result<()> {
     });
     *active_task = Some(handle);
     drop(active_task);
-    Ok(())
+    first_pass_done
 }
 
 #[cfg(test)]
@@ -1018,11 +1237,112 @@ mod tests {
     use super::*;
     use tauri_plugin_mihomo::models::Proxy;
 
+    fn deletion_item(uid: &str, kind: &str, file: &str, merge: Option<&str>) -> PrfItem {
+        PrfItem {
+            uid: Some(uid.into()),
+            itype: Some(kind.into()),
+            file: Some(file.into()),
+            option: merge.map(|uid| PrfOption {
+                merge: Some(uid.into()),
+                ..PrfOption::default()
+            }),
+            ..PrfItem::default()
+        }
+    }
+
+    fn interval_item(uid: &str, update_interval: Option<u64>) -> PrfItem {
+        PrfItem {
+            uid: Some(uid.into()),
+            itype: Some("remote".into()),
+            option: Some(PrfOption {
+                update_interval,
+                ..PrfOption::default()
+            }),
+            ..PrfItem::default()
+        }
+    }
+
+    #[test]
+    fn raising_intervals_only_touches_those_scheduled_too_often() {
+        let mut profiles = IProfiles {
+            current: None,
+            items: Some(vec![
+                interval_item("too-often", Some(60)),
+                interval_item("just-under", Some(1439)),
+                interval_item("at-floor", Some(1440)),
+                interval_item("relaxed", Some(4320)),
+                // raising these would switch auto-update on
+                interval_item("disabled-by-zero", Some(0)),
+                interval_item("disabled-by-absence", None),
+                PrfItem {
+                    uid: Some("no-option".into()),
+                    option: None,
+                    ..PrfItem::default()
+                },
+            ]),
+        };
+
+        assert_eq!(profiles.raise_short_update_intervals(1440), 2);
+
+        let intervals: Vec<Option<u64>> = profiles
+            .items
+            .iter()
+            .flatten()
+            .map(|item| item.option.as_ref().and_then(|o| o.update_interval))
+            .collect();
+        assert_eq!(
+            intervals,
+            vec![Some(1440), Some(1440), Some(1440), Some(4320), Some(0), None, None]
+        );
+
+        assert_eq!(
+            profiles.raise_short_update_intervals(1440),
+            0,
+            "a second pass must be a no-op, so re-running the migration cannot churn the file"
+        );
+    }
+
+    #[test]
+    fn delete_plan_defers_files_and_selects_replacement() -> Result<()> {
+        let mut profiles = IProfiles {
+            current: Some("a".into()),
+            items: Some(vec![
+                deletion_item("a", "remote", "a.yaml", Some("owned")),
+                deletion_item("owned", "merge", "owned.yaml", None),
+                deletion_item("b", "local", "b.yaml", None),
+            ]),
+        };
+
+        let (should_update, plan) = profiles.plan_delete_item(&"a".into())?;
+
+        assert!(should_update);
+        assert_eq!(profiles.current.as_deref(), Some("b"));
+        assert_eq!(plan.files, vec![String::from("a.yaml"), String::from("owned.yaml")]);
+        assert!(profiles.get_item("owned").is_err());
+        Ok(())
+    }
+
     fn selected(group: &str, node: &str) -> PrfSelected {
         PrfSelected {
             name: Some(group.into()),
             now: Some(node.into()),
         }
+    }
+
+    #[test]
+    fn removes_only_the_requested_group_selection() {
+        let mut selections = vec![selected("Proxy", "Node A"), selected("Fallback", "Node B")];
+
+        assert!(remove_selected_node(&mut selections, "Proxy"));
+        assert_eq!(selections, vec![selected("Fallback", "Node B")]);
+    }
+
+    #[test]
+    fn removing_a_missing_group_is_idempotent() {
+        let mut selections = vec![selected("Proxy", "Node A")];
+
+        assert!(!remove_selected_node(&mut selections, "Missing"));
+        assert_eq!(selections, vec![selected("Proxy", "Node A")]);
     }
 
     fn proxies(groups: Vec<(&str, &[&str], Option<&str>)>) -> Proxies {
@@ -1043,6 +1363,115 @@ mod tests {
                 })
                 .collect::<HashMap<_, _>>(),
         }
+    }
+
+    #[test]
+    fn a_group_the_core_has_not_loaded_is_still_unsettled() {
+        // The regression this pins. A provider-backed group is present but empty until its
+        // provider loads, which on a cold start is exactly when restoring runs. Reconciling
+        // produces no activation for it, so a restore that stopped after one re-check reported
+        // success having left the group on the first entry of its `proxies:` list.
+        let saved = vec![selected("provider-group", "saved")];
+        let unloaded = proxies(vec![("provider-group", &[], None)]);
+
+        assert!(
+            reconcile_selected_nodes(&saved, Some(&unloaded), &unloaded)
+                .activations
+                .is_empty(),
+            "nothing can be activated while the group is empty"
+        );
+        assert_eq!(
+            unsettled_selections(&saved, &unloaded),
+            vec![String::from("provider-group")],
+            "so the restore must keep looking rather than call it done"
+        );
+    }
+
+    #[test]
+    fn a_group_the_core_is_already_on_is_settled() {
+        let saved = vec![selected("Proxy", "Node A")];
+        let loaded = proxies(vec![("Proxy", &["Node A", "Node B"], Some("Node A"))]);
+
+        assert!(
+            unsettled_selections(&saved, &loaded).is_empty(),
+            "a group already on its node needs nothing, even though it produces no activation"
+        );
+    }
+
+    #[test]
+    fn a_group_on_the_wrong_node_is_unsettled() {
+        // Covers a `select` that failed transiently: the group is loaded, the node exists, and
+        // the core is simply not on it. Retrying is the only thing that fixes that.
+        let saved = vec![selected("Proxy", "Node A")];
+        let wrong = proxies(vec![("Proxy", &["Node A", "Node B"], Some("Node B"))]);
+
+        assert_eq!(unsettled_selections(&saved, &wrong), vec![String::from("Proxy")]);
+    }
+
+    #[test]
+    fn a_record_without_a_group_or_node_is_not_waited_on() {
+        // A malformed record cannot be satisfied by waiting, and holding the settle loop open
+        // for it would delay giving up on everything else.
+        let malformed = vec![
+            PrfSelected {
+                name: Some("Proxy".into()),
+                now: None,
+            },
+            PrfSelected {
+                name: None,
+                now: Some("Node A".into()),
+            },
+        ];
+
+        assert!(unsettled_selections(&malformed, &proxies(vec![])).is_empty());
+    }
+
+    #[test]
+    fn a_group_missing_from_both_snapshots_is_dropped_from_the_records() {
+        // This is the pruning a profile switch wants and a core start must not do: the record is
+        // gone from the plan, and `persist_reconciled_selected` writes the plan back. Pinned here
+        // because it is why `SelectionRepair` exists — the predicate is right, the question is
+        // only who is entitled to act on it.
+        let saved = vec![selected("provider-group", "saved")];
+        let empty = proxies(vec![]);
+
+        let plan = reconcile_selected_nodes(&saved, Some(&empty), &empty);
+
+        assert!(
+            plan.selected.is_empty(),
+            "a group absent from both looks invalid, so the record is dropped"
+        );
+        assert_eq!(plan.repaired_count, 1, "and dropping it counts as a repair");
+    }
+
+    #[test]
+    fn a_group_missing_from_only_the_second_snapshot_is_kept() {
+        // Absent once is not evidence: only a group that was already absent when the first
+        // snapshot was taken is treated as gone.
+        let saved = vec![selected("provider-group", "saved")];
+        let had_it = proxies(vec![("provider-group", &["saved"], Some("saved"))]);
+        let lost_it = proxies(vec![]);
+
+        let plan = reconcile_selected_nodes(&saved, Some(&had_it), &lost_it);
+
+        assert_eq!(plan.selected, saved);
+        assert_eq!(plan.repaired_count, 0);
+    }
+
+    #[test]
+    fn superseding_an_activation_makes_the_one_in_flight_stand_down() {
+        // What a selection made during a start relies on: the restore that is still polling the
+        // core has to notice it has been overtaken, or it will push the older node back.
+        let generation = ACTIVATE_SELECTED_GENERATION.load(Ordering::Acquire) + 1;
+        ACTIVATE_SELECTED_GENERATION.store(generation, Ordering::Release);
+        assert!(is_activation_current(generation));
+
+        supersede_selected_activation();
+
+        assert!(
+            !is_activation_current(generation),
+            "an activation that has been overtaken must stop before it puts anything"
+        );
     }
 
     #[test]

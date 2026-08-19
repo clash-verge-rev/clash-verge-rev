@@ -20,10 +20,6 @@ interface State {
   showDetails: boolean
 }
 
-/**
- * 流量统计专用错误边界组件
- * 处理图表和流量统计组件的错误，提供优雅的降级体验
- */
 export class TrafficErrorBoundary extends Component<Props, State> {
   private retryCount = 0
   private maxRetries = 3
@@ -39,7 +35,6 @@ export class TrafficErrorBoundary extends Component<Props, State> {
   }
 
   static getDerivedStateFromError(error: Error): Partial<State> {
-    // 更新状态以显示降级UI
     return { hasError: true, error }
   }
 
@@ -51,17 +46,14 @@ export class TrafficErrorBoundary extends Component<Props, State> {
       errorInfo,
     })
 
-    // 调用错误回调
     if (this.props.onError) {
       this.props.onError(error, errorInfo)
     }
 
-    // 发送错误到监控系统（如果有的话）
     this.reportError(error, errorInfo)
   }
 
   private reportError = (error: Error, errorInfo: ErrorInfo) => {
-    // 这里可以集成错误监控服务
     const errorReport = {
       message: error.message,
       stack: error.stack,
@@ -72,8 +64,6 @@ export class TrafficErrorBoundary extends Component<Props, State> {
     }
 
     console.error('[TrafficErrorBoundary] 错误报告:', errorReport)
-    // TODO: 发送到错误监控服务
-    // sendErrorReport(errorReport);
   }
 
   private handleRetry = () => {
@@ -104,12 +94,10 @@ export class TrafficErrorBoundary extends Component<Props, State> {
 
   render() {
     if (this.state.hasError) {
-      // 如果提供了自定义降级组件，使用它
       if (this.props.fallbackComponent) {
         return this.props.fallbackComponent
       }
 
-      // 默认错误UI
       return (
         <TrafficErrorFallback
           error={this.state.error}
@@ -129,9 +117,6 @@ export class TrafficErrorBoundary extends Component<Props, State> {
   }
 }
 
-/**
- * 错误降级UI组件
- */
 interface TrafficErrorFallbackProps {
   error: Error | null
   errorInfo: ErrorInfo | null
@@ -189,8 +174,10 @@ const TrafficErrorFallback: React.FC<TrafficErrorFallbackProps> = ({
 
       <Alert severity="error" sx={{ mb: 2, maxWidth: 400 }}>
         <Typography variant="body2">
-          <strong>Error:</strong>{' '}
-          {error instanceof Error ? error.message : 'Unknown error'}
+          <strong>{t('shared.feedback.errors.label')}:</strong>{' '}
+          {error instanceof Error
+            ? error.message
+            : t('shared.feedback.errors.unknown')}
         </Typography>
         {retryCount > 0 && (
           <Typography variant="caption" sx={{ mt: 1, display: 'block' }}>
@@ -239,7 +226,7 @@ const TrafficErrorFallback: React.FC<TrafficErrorFallbackProps> = ({
           }}
         >
           <Typography variant="subtitle2" gutterBottom>
-            Error Details:
+            {t('shared.feedback.errors.details')}:
           </Typography>
           <Typography
             variant="caption"
@@ -258,7 +245,7 @@ const TrafficErrorFallback: React.FC<TrafficErrorFallbackProps> = ({
           {errorInfo?.componentStack && (
             <>
               <Typography variant="subtitle2" gutterBottom sx={{ mt: 2 }}>
-                Component Stack:
+                {t('shared.feedback.errors.componentStack')}:
               </Typography>
               <Typography
                 variant="caption"
@@ -281,13 +268,11 @@ const TrafficErrorFallback: React.FC<TrafficErrorFallbackProps> = ({
   )
 }
 
-/**
- * 轻量级流量统计错误边界
- * 用于小型流量显示组件，提供最小化的错误UI
- */
 export const LightweightTrafficErrorBoundary: React.FC<{
   children: ReactNode
 }> = ({ children }) => {
+  const { t } = useTranslation()
+
   return (
     <TrafficErrorBoundary
       fallbackComponent={
@@ -304,7 +289,9 @@ export const LightweightTrafficErrorBoundary: React.FC<{
           }}
         >
           <ErrorOutlineRounded sx={{ mr: 1, fontSize: 20 }} />
-          <Typography variant="caption">Traffic data unavailable</Typography>
+          <Typography variant="caption">
+            {t('shared.feedback.errors.trafficUnavailable')}
+          </Typography>
         </Box>
       }
     >

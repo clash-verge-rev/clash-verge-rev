@@ -102,7 +102,6 @@ const ProfileItemBase = (props: ProfileItemProps) => {
   const loadingCache = useLoadingCache()
   const setLoadingCache = useSetLoadingCache()
 
-  // 新增状态：是否显示下次更新时间
   const [showNextUpdate, setShowNextUpdate] = useState(false)
   const showNextUpdateRef = useRef(false)
   const [nextUpdateTime, setNextUpdateTime] = useState('')
@@ -126,7 +125,6 @@ const ProfileItemBase = (props: ProfileItemProps) => {
 
   const { uid, name = 'Profile', extra, updated = 0, option } = itemData
 
-  // 获取下次更新时间的函数
   const fetchNextUpdateTimeCallback = useCallback(
     async (forceRefresh = false) => {
       if (
@@ -136,9 +134,7 @@ const ProfileItemBase = (props: ProfileItemProps) => {
         try {
           debugLog(`尝试获取配置 ${itemData.uid} 的下次更新时间`)
 
-          // 如果需要强制刷新，先触发Timer.refresh()
           if (forceRefresh) {
-            // 这里可以通过一个新的API来触发刷新，但目前我们依赖patch_profile中的刷新
             debugLog(`强制刷新定时器任务`)
           }
 
@@ -149,13 +145,11 @@ const ProfileItemBase = (props: ProfileItemProps) => {
             const nextUpdateDate = dayjs(nextUpdate * 1000)
             const now = dayjs()
 
-            // 如果已经过期，显示"更新失败"
             if (nextUpdateDate.isBefore(now)) {
               setNextUpdateTime(
                 t('profiles.components.profileItem.status.lastUpdateFailed'),
               )
             } else {
-              // 否则显示剩余时间
               const diffMinutes = nextUpdateDate.diff(now, 'minute')
 
               if (diffMinutes < 60) {
@@ -197,7 +191,6 @@ const ProfileItemBase = (props: ProfileItemProps) => {
   )
   const fetchNextUpdateTime = useLockFn(fetchNextUpdateTimeCallback)
 
-  // 切换显示模式的函数
   const toggleUpdateTimeDisplay = (e: React.MouseEvent) => {
     e.stopPropagation()
 
@@ -212,7 +205,6 @@ const ProfileItemBase = (props: ProfileItemProps) => {
     showNextUpdateRef.current = showNextUpdate
   }, [showNextUpdate])
 
-  // 当组件加载或更新间隔变化时更新下次更新时间
   useEffect(() => {
     if (showNextUpdate) {
       fetchNextUpdateTime()
@@ -224,7 +216,6 @@ const ProfileItemBase = (props: ProfileItemProps) => {
     updated,
   ])
 
-  // 页面统一订阅定时器事件，这里只响应当前配置的更新信号
   useEffect(() => {
     if (timerUpdateRevision === 0 || !showNextUpdateRef.current) return
 
@@ -247,9 +238,6 @@ const ProfileItemBase = (props: ProfileItemProps) => {
     fetchNextUpdateTime()
   }, [completedUpdateRevision, fetchNextUpdateTime])
 
-  // local file mode
-  // remote file mode
-  // remote file mode
   const hasUrl = !!itemData.url
   const hasExtra = !!extra // only subscription url has extra info
   const hasHome = !!itemData.home // only subscription url has home page
@@ -265,7 +253,6 @@ const ProfileItemBase = (props: ProfileItemProps) => {
 
   const loading = loadingCache.has(itemData.uid)
 
-  // interval update fromNow field
   const [, forceRefresh] = useReducer((value: number) => value + 1, 0)
   useEffect(() => {
     if (!hasUrl) return
@@ -275,7 +262,6 @@ const ProfileItemBase = (props: ProfileItemProps) => {
     const handler = () => {
       const now = Date.now()
       const lastUpdate = updated * 1000
-      // 大于一天的不管
       if (now - lastUpdate >= 24 * 36e5) return
 
       const wait = now - lastUpdate >= 36e5 ? 30e5 : 5e4
@@ -394,7 +380,6 @@ const ProfileItemBase = (props: ProfileItemProps) => {
     setAnchorEl(null)
     setLoading(true)
 
-    // 根据类型设置初始更新选项
     const option: Partial<IProfileOption> = {}
     if (type === 0) {
       option.with_proxy = false
@@ -410,15 +395,11 @@ const ProfileItemBase = (props: ProfileItemProps) => {
     }
 
     try {
-      // 调用后端更新（后端会自动处理回退逻辑）
       const payload = Object.keys(option).length > 0 ? option : undefined
       await updateProfile(itemData.uid, payload)
 
-      // 更新成功，刷新列表
       void mutateProfiles()
     } catch {
-      // 更新完全失败（包括后端的回退尝试）
-      // 不需要做处理，后端会通过事件通知系统发送错误
     } finally {
       setLoading(false)
     }
@@ -522,7 +503,6 @@ const ProfileItemBase = (props: ProfileItemProps) => {
       handler: () => {
         setAnchorEl(null)
         if (batchMode) {
-          // If in batch mode, just toggle selection instead of showing delete confirmation
           if (onSelectionChange) {
             onSelectionChange()
           }
@@ -584,7 +564,6 @@ const ProfileItemBase = (props: ProfileItemProps) => {
       handler: () => {
         setAnchorEl(null)
         if (batchMode) {
-          // If in batch mode, just toggle selection instead of showing delete confirmation
           if (onSelectionChange) {
             onSelectionChange()
           }
@@ -640,7 +619,6 @@ const ProfileItemBase = (props: ProfileItemProps) => {
       <ProfileBox
         aria-selected={selected}
         onClick={(e) => {
-          // 如果正在激活中，阻止重复点击
           if (activating) {
             e.preventDefault()
             e.stopPropagation()
@@ -662,10 +640,8 @@ const ProfileItemBase = (props: ProfileItemProps) => {
               display: 'flex',
               justifyContent: 'center',
               alignItems: 'center',
-              top: 10,
-              left: 10,
-              right: 10,
-              bottom: 2,
+              inset: 0,
+              borderRadius: 'inherit',
               zIndex: 10,
               backdropFilter: 'blur(2px)',
               backgroundColor: 'rgba(0, 0, 0, 0.1)',
@@ -736,7 +712,6 @@ const ProfileItemBase = (props: ProfileItemProps) => {
             </Typography>
           </Box>
 
-          {/* only if has url can it be updated */}
           {hasUrl && (
             <IconButton
               title={t('shared.actions.refresh')}
@@ -752,7 +727,6 @@ const ProfileItemBase = (props: ProfileItemProps) => {
               disabled={loading}
               onClick={(e) => {
                 e.stopPropagation()
-                // 如果正在激活或加载中，阻止更新操作
                 if (activating || loading) {
                   return
                 }
@@ -763,7 +737,6 @@ const ProfileItemBase = (props: ProfileItemProps) => {
             </IconButton>
           )}
         </Box>
-        {/* the second line show url's info or description */}
         <Box sx={boxStyle}>
           {
             <>
@@ -826,7 +799,6 @@ const ProfileItemBase = (props: ProfileItemProps) => {
             </>
           }
         </Box>
-        {/* the third line show extra info or last updated time */}
         {hasExtra ? (
           <Box sx={{ ...boxStyle, fontSize: 14 }}>
             <span title={t('shared.labels.usedTotal')}>

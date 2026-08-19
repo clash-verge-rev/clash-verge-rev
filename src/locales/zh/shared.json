@@ -23,7 +23,8 @@
     "closeAll": "关闭全部",
     "clear": "清除",
     "previous": "上一页",
-    "next": "下一页"
+    "next": "下一页",
+    "check": "检测"
   },
   "labels": {
     "updateAt": "更新于",
@@ -44,7 +45,8 @@
     "enabled": "已启用",
     "disabled": "未启用",
     "saving": "保存中...",
-    "empty": "空空如也"
+    "empty": "空空如也",
+    "loading": "加载中..."
   },
   "units": {
     "milliseconds": "毫秒",
@@ -74,6 +76,14 @@
   },
   "feedback": {
     "errors": {
+      "unexpected": "出现了一些问题",
+      "label": "错误",
+      "unknown": "未知错误",
+      "details": "错误详情",
+      "stack": "错误堆栈",
+      "componentStack": "组件堆栈",
+      "trafficUnavailable": "流量数据暂不可用",
+      "operationFailed": "操作失败",
       "trafficStats": "流量统计错误",
       "trafficStatsDescription": "流量统计组件发生错误，为防止崩溃已暂时停用。"
     },
@@ -99,7 +109,7 @@
         "failed": "订阅配置校验失败，请检查订阅配置文件，变更已撤销，错误详情：",
         "bootFailed": "启动订阅配置校验失败，已使用默认配置启动；请检查订阅配置文件，错误详情：",
         "coreChangeFailed": "切换内核时配置校验失败，已使用默认配置启动；请检查订阅配置文件，错误详情：",
-        "processTerminated": "验证进程被终止"
+        "processTerminated": "验证进程被终止，请检查是否有安全软件阻止了内核运行，或电脑 CPU/运行环境是否支持该内核程序。"
       },
       "script": {
         "syntaxError": "脚本语法错误，变更已撤销",

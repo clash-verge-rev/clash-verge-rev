@@ -9,8 +9,7 @@ use crate::{
         handle::Handle,
         hotkey::Hotkey,
         logger::Logger,
-        service::{SERVICE_MANAGER, ServiceManager, is_service_ipc_path_exists},
-        sysopt,
+        service::{SERVICE_MANAGER, ServiceManager},
         tray::Tray,
     },
     feat,
@@ -32,7 +31,6 @@ pub fn init_work_dir_and_logger() -> anyhow::Result<()> {
     AsyncHandler::block_on(async {
         init_work_config().await;
         logging!(info, Type::Setup, "Initializing logger");
-        // #[cfg(not(feature = "tokio-trace"))]
         Logger::global().init().await?;
         Ok(())
     })
@@ -49,11 +47,16 @@ pub fn resolve_setup_async() {
     AsyncHandler::spawn(|| async {
         logging!(info, Type::ClashVergeRev, "Version: {}", env!("CARGO_PKG_VERSION"));
 
+        // Migrate before windows or timers can change the loaded config.
+        logging_error!(Type::Setup, init::migrate_short_update_intervals().await);
+
         #[cfg(target_os = "macos")]
         resolve_dock_show().await;
         init_startup_script().await;
+        init_service_manager().await;
         let config_initialized = init_verge_config_before_window().await;
         init_window().await;
+        feat::reconcile_startup_tun_availability().await;
         init_resources().await;
         if let Err(e) = init::init_dns_config().await {
             logging!(warn, Type::Setup, "DNS config initialization failed: {}", e);
@@ -64,10 +67,7 @@ pub fn resolve_setup_async() {
         Config::verify_config_initialization().await;
 
         let core_init = AsyncHandler::spawn(|| async {
-            init_service_manager().await;
             init_core_manager().await;
-            init_system_proxy().await;
-            init_system_proxy_guard().await;
         });
 
         let _ = futures::join!(
@@ -87,7 +87,6 @@ pub fn resolve_setup_async() {
 }
 
 pub async fn resolve_reset_async() -> Result<(), anyhow::Error> {
-    sysopt::Sysopt::global().reset_sysproxy().await?;
     CoreManager::global().stop_core().await?;
 
     #[cfg(target_os = "macos")]
@@ -125,7 +124,6 @@ pub(super) async fn init_timer() {
 }
 
 pub(super) async fn init_hotkey() {
-    // if hotkey is not use by global, skip init it
     let skip_register_hotkeys = !Config::verge().await.latest_arc().enable_global_hotkey.unwrap_or(true);
     logging_error!(Type::Setup, Hotkey::global().init(skip_register_hotkeys).await);
 }
@@ -146,16 +144,12 @@ async fn init_silent_updater() {
 
     let app_handle = Handle::app_handle();
 
-    // Check for cached update and attempt install before main app initialization.
-    // If install succeeds:
-    //   - Windows: NSIS takes over and the process exits automatically
-    //   - macOS/Linux: binary is replaced, we restart the app
+    // Install cached updates before starting background checks.
     if SilentUpdater::global().try_install_on_startup(app_handle).await {
         logging!(info, Type::Setup, "Update installed at startup, restarting...");
-        app_handle.restart();
+        feat::restart_app().await;
     }
 
-    // No pending install — start background check/download loop
     let app_handle = app_handle.clone();
     tokio::spawn(async move {
         SilentUpdater::global().start_background_check(app_handle).await;
@@ -190,21 +184,18 @@ pub(super) async fn init_verge_config_before_window() -> bool {
 
 pub(super) async fn init_service_manager() {
     clash_verge_service_ipc::set_config(Some(ServiceManager::config())).await;
-    if is_service_ipc_path_exists() && SERVICE_MANAGER.init().await.is_ok() {
-        logging_error!(Type::Setup, SERVICE_MANAGER.refresh().await);
+
+    SERVICE_MANAGER.detect_startup_status().await;
+}
+
+pub(super) async fn init_core_manager() -> bool {
+    match CoreManager::global().init().await {
+        Ok(initialized) => initialized,
+        Err(error) => {
+            logging!(error, Type::Setup, "core manager initialization failed: {error:#}");
+            false
+        }
     }
-}
-
-pub(super) async fn init_core_manager() {
-    logging_error!(Type::Setup, CoreManager::global().init().await);
-}
-
-pub(super) async fn init_system_proxy() {
-    logging_error!(Type::Setup, sysopt::Sysopt::global().update_sysproxy().await);
-}
-
-pub(super) async fn init_system_proxy_guard() {
-    sysopt::Sysopt::global().refresh_guard().await;
 }
 
 pub(super) async fn refresh_tray_menu() {

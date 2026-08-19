@@ -23,7 +23,8 @@
     "closeAll": "Барысын да ябу",
     "clear": "Чистарту",
     "previous": "Previous",
-    "next": "Next"
+    "next": "Next",
+    "check": "Тикшерү"
   },
   "labels": {
     "updateAt": "Яңартылган вакыт",
@@ -44,7 +45,8 @@
     "enabled": "Кушылган",
     "disabled": "Сүнгән",
     "saving": "Saving...",
-    "empty": "Буш"
+    "empty": "Буш",
+    "loading": "Йөкләнә..."
   },
   "units": {
     "milliseconds": "Миллисекундлар",
@@ -74,6 +76,14 @@
   },
   "feedback": {
     "errors": {
+      "unexpected": "Нәрсәдер дөрес булмады",
+      "label": "Хата",
+      "unknown": "Билгесез хата",
+      "details": "Хата тәфсилатлары",
+      "stack": "Хата стегы",
+      "componentStack": "Компонент стегы",
+      "trafficUnavailable": "Трафик мәгълүматы юк",
+      "operationFailed": "Операция башкарылмады",
       "trafficStats": "Traffic Statistics Error",
       "trafficStatsDescription": "The traffic statistics component encountered an error and has been disabled to prevent crashes."
     },
@@ -99,7 +109,7 @@
         "failed": "Язылу көйләү тикшерүе уңышсыз, көйләү файлын тикшерегез, үзгәрешләр кире кайтарылды, хата:",
         "bootFailed": "Йөкләү вакытында көйләү тикшерүе уңышсыз, стандарт көйләү кулланылды, көйләү файлын тикшерегез, хата:",
         "coreChangeFailed": "Ядро алыштырганда көйләү тикшерүе уңышсыз, стандарт көйләү кулланылды, көйләү файлын тикшерегез, хата:",
-        "processTerminated": "Тикшерү процессы туктатылды"
+        "processTerminated": "Тикшерү процессы туктатылды. Иминлек программасы үзәкнең эшләвенә комачауламыймы һәм компьютерның CPU/эш мохите үзәк программасын эшләтә аламы икәнен тикшерегез."
       },
       "script": {
         "syntaxError": "Скрипт синтаксик хатасы, үзгәрешләр кире кайтарылды",

@@ -28,7 +28,16 @@
     "feedback": {
       "errors": {
         "invalidUrl": "Invalid profile URL. Please enter a URL starting with http:// or https://",
-        "onlyYaml": "Hanya File YAML yang Didukung"
+        "onlyYaml": "Hanya File YAML yang Didukung",
+        "createFailed": "Gagal membuat profil",
+        "deleteFailed": "Gagal menghapus profil",
+        "enhanceFailed": "Gagal mengaktifkan ulang profil",
+        "importFailed": "Gagal mengimpor profil",
+        "openFailed": "Gagal membuka profil",
+        "readFailed": "Gagal membaca profil",
+        "reorderFailed": "Gagal mengurutkan ulang profil",
+        "switchFailed": "Gagal beralih profil",
+        "updateFailed": "Gagal memperbarui profil"
       },
       "notifications": {
         "importRetry": "Import failed, retrying with Clash proxy...",
@@ -43,6 +52,9 @@
       "notices": {
         "forceRefreshCompleted": "Force refresh completed",
         "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
+      },
+      "tooltips": {
+        "forceRefreshStaleData": "Data profil tidak tersedia; klik untuk menyegarkan paksa"
       }
     },
     "title": "Profil"
@@ -105,12 +117,26 @@
         "type": "Jenis",
         "description": "Deskripsi",
         "subscriptionUrl": "URL Langganan",
+        "userAgent": "User Agent",
         "httpTimeout": "HTTP Request Timeout",
         "updateInterval": "Interval Pembaruan",
         "useSystemProxy": "Gunakan Proksi Sistem",
         "useClashProxy": "Gunakan Proksi Clash",
         "acceptInvalidCerts": "Terima Sertifikat Tidak Valid (Bahaya)",
         "allowAutoUpdate": "Allow Auto Update"
+      },
+      "types": {
+        "remote": "Jarak jauh",
+        "local": "Lokal"
+      },
+      "errors": {
+        "typeRequired": "Pilih jenis profil",
+        "urlRequired": "Masukkan URL langganan",
+        "uidMissing": "Pengenal profil tidak ada",
+        "saveFailed": "Gagal menyimpan profil"
+      },
+      "warnings": {
+        "frequentUpdate": "Interval yang singkat membuat inti dimuat ulang sesering itu dan memutus koneksi yang aktif. Disarankan {{minutes}} menit (24 jam)."
       },
       "feedback": {
         "notifications": {

@@ -19,6 +19,41 @@
         "collapseNavBar": "Collapse navigation bar",
         "expandNavBar": "Expand navigation bar"
       }
+    },
+    "serviceMigration": {
+      "title": "Service update required",
+      "message": "An older Clash Verge service installation was detected. Reinstall it to use the current secure IPC protocol, or continue with Sidecar for this session.",
+      "checkingMessage": "Checking the system service status and current running mode. Please wait…",
+      "unavailableMessage": "The required Clash Verge service is not available. Install or repair it, or continue with Sidecar for this session.",
+      "reinstall": "Reinstall service",
+      "repair": "Repair service",
+      "continueSidecar": "Continue with Sidecar",
+      "success": "The Clash Verge service was updated successfully",
+      "errors": {
+        "actionFailed": "Hizmet işlemi başarısız oldu",
+        "stateRefreshFailed": "Hizmet durumu yenilenemedi",
+        "restartFailed": "Çekirdek yeniden başlatılamadı",
+        "revalidationFailed": "Çalışma durumu yenilenemedi",
+        "sidecarFailed": "Sidecar ile devam edilemedi"
+      }
+    },
+    "sysproxyPrivilege": {
+      "title": "Sistem proxy'si ayarlanamadı",
+      "message": "macOS bu değişikliği yetersiz yetki nedeniyle reddetti. Clash Verge hizmeti kurulduktan sonra proxy ayarlarını hizmet yönetici olarak uygular ve bu uyarı bir daha görünmez.",
+      "serviceReadyMessage": "Clash Verge hizmeti hazır, ancak çekirdek hâlâ sidecar olarak çalıştığından sistem proxy'si ayarlanamadı. Hizmet moduna geçmek sorunu yeniden kurulum gerekmeden çözer.",
+      "alternative": "Alternatif olarak Sistem Ayarları → Gizlilik ve Güvenlik → Gelişmiş bölümünde sistem genelindeki ayarlar için yönetici parolası isteyen seçeneği kapatın.",
+      "later": "Daha sonra",
+      "installing": "Sistem hizmeti kuruluyor. Yönetici parolası istenebilir.",
+      "restarting": "Hizmet kuruldu. Çekirdek onun üzerinden yeniden başlatılıyor…",
+      "applying": "Sistem proxy değişikliğiniz uygulanıyor…",
+      "tunTitle": "TUN modu sistem hizmetine ihtiyaç duyar",
+      "tunMessage": "TUN modunun ağ trafiğini üstlenebilmesi için Clash Verge sistem hizmeti gerekir. Kurulum tamamlandığında TUN modu sizin için açılacaktır."
+    }
+  },
+  "feedback": {
+    "errors": {
+      "restartCoreStopFailed": "Çekirdek güvenli biçimde durdurulamadı, bu nedenle yeniden başlatma iptal edildi",
+      "quitCoreStopFailed": "Çekirdek güvenli biçimde durdurulamadı, bu nedenle çıkış iptal edildi"
     }
   }
 }

@@ -10,6 +10,12 @@ notifications:
     title: Системалы прокси
     'on': System proxy has been enabled.
     'off': System proxy has been disabled.
+  systemProxyFailed:
+    title: Система проксие
+    body: Система проксиен көйләп булмады. Сәбәбен күрер өчен Clash Verge'ны ачыгыз.
+  systemProxyGuardStopped:
+    title: Система проксие сакчысы
+    body: Берничә тапкыр рәттән уңышсыз булгач туктады. Сәбәбен күрер өчен Clash Verge'ны ачыгыз.
   tunModeToggled:
     title: TUN режимы
     'on': TUN mode has been enabled.
@@ -34,7 +40,26 @@ notifications:
 service:
   adminInstallPrompt: Clash Verge хезмәтен урнаштыру өчен администратор хокуклары кирәк.
   adminUninstallPrompt: Clash Verge хезмәтен бетерү өчен администратор хокуклары кирәк.
-  translocatedCorePath: Clash Verge is running from a temporary (App Translocation) path and can't locate the core. Please move Clash Verge into the Applications folder and reopen it.
+launchGuard:
+  currentExeError: 'Кушымтаның урнашу урынын билгеләп булмады: {error}'
+  homeDirError: 'Хәзерге кулланучының өй каталогын билгеләп булмады. Кушымта ябылачак: {error}'
+  translocated: macOS бу кушымтаны вакытлы App Translocation юлыннан эшләтә. Finder аша аны /Applications яки ~/Applications каталогына кулдан күчерегез һәм яңадан ачыгыз.
+  rejected: |-
+    Бу кушымта Applications каталогыннан эшләтелергә тиеш.
+
+    {reason}
+  notInBundle: Башкарылучы файл кушымта пакетында түгел.
+  canonicalizeBundleError: 'Кушымта пакетының юлын билгеләп булмады: {error}'
+  bundleNameError: Кушымта пакетының исемен билгеләп булмады. Кушымта ябылачак.
+  replacePrompt: '{destination} урынында кушымта бар инде. Аны алыштырып, Applications аша яңадан эшләтергәме?'
+  movePrompt: Фон хезмәтен имин эшләтү өчен кушымтаны {destination} урынына күчерергә кирәк. Хәзер күчереп, яңадан эшләтергәме?
+  createApplicationsDirError: 'Applications каталогын төзеп булмады: {error}'
+  moveFailed: Кушымтаны күчереп булмады. Аны Finder аша кулдан күчереп, кабатлап карагыз.
+  replaceFailed: 'Булган кушымтаны имин алыштырып булмады: {error}'
+  relaunchFailed: Кушымта күчерелде, ләкин автоматик рәвештә яңадан эшләтеп булмады. Аны Applications аша кулдан ачыгыз.
+  cancel: Баш тарту
+  move: Күчерү
+  ok: Ярый
 tray:
   dashboard: Идарә панеле
   ruleMode: Кагыйдә режимы

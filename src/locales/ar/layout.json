@@ -19,6 +19,41 @@
         "collapseNavBar": "Collapse navigation bar",
         "expandNavBar": "Expand navigation bar"
       }
+    },
+    "serviceMigration": {
+      "title": "Service update required",
+      "message": "An older Clash Verge service installation was detected. Reinstall it to use the current secure IPC protocol, or continue with Sidecar for this session.",
+      "checkingMessage": "Checking the system service status and current running mode. Please wait…",
+      "unavailableMessage": "The required Clash Verge service is not available. Install or repair it, or continue with Sidecar for this session.",
+      "reinstall": "Reinstall service",
+      "repair": "Repair service",
+      "continueSidecar": "Continue with Sidecar",
+      "success": "The Clash Verge service was updated successfully",
+      "errors": {
+        "actionFailed": "فشلت عملية الخدمة",
+        "stateRefreshFailed": "تعذّر تحديث حالة الخدمة",
+        "restartFailed": "تعذّر إعادة تشغيل النواة",
+        "revalidationFailed": "تعذّر تحديث حالة التشغيل",
+        "sidecarFailed": "تعذّر المتابعة باستخدام Sidecar"
+      }
+    },
+    "sysproxyPrivilege": {
+      "title": "تعذّر ضبط وكيل النظام",
+      "message": "رفض macOS هذا التغيير لعدم كفاية الصلاحيات. بعد تثبيت خدمة Clash Verge ستتولى الخدمة تطبيق إعدادات الوكيل بصلاحيات المسؤول، ولن يظهر هذا التنبيه مجددًا.",
+      "serviceReadyMessage": "خدمة Clash Verge جاهزة، لكن النواة ما زالت تعمل كـ sidecar، ولهذا رُفض ضبط وكيل النظام. التبديل إلى وضع الخدمة يحل المشكلة دون إعادة تثبيت.",
+      "alternative": "بديل آخر: عطّل خيار طلب كلمة مرور المسؤول للوصول إلى الإعدادات على مستوى النظام من إعدادات النظام ← الخصوصية والأمان ← خيارات متقدمة.",
+      "later": "لاحقًا",
+      "installing": "جارٍ تثبيت خدمة النظام. قد يُطلب منك كلمة مرور المسؤول.",
+      "restarting": "تم تثبيت الخدمة. جارٍ إعادة تشغيل النواة من خلالها…",
+      "applying": "جارٍ تطبيق تغيير وكيل النظام…",
+      "tunTitle": "يحتاج وضع TUN إلى خدمة النظام",
+      "tunMessage": "يحتاج وضع TUN إلى خدمة نظام Clash Verge للتحكم في حركة الشبكة. بعد التثبيت سيتم تشغيل وضع TUN تلقائيًا."
+    }
+  },
+  "feedback": {
+    "errors": {
+      "restartCoreStopFailed": "تعذّر إيقاف النواة بأمان، لذا أُلغيت إعادة التشغيل",
+      "quitCoreStopFailed": "تعذّر إيقاف النواة بأمان، لذا أُلغي الخروج"
     }
   }
 }

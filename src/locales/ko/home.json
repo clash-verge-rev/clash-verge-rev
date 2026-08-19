@@ -82,7 +82,9 @@
         "unknown": "알 수 없음"
       },
       "errors": {
-        "load": "IP 정보를 가져오지 못했습니다"
+        "load": "IP 정보를 가져오지 못했습니다",
+        "loadWithDetails": "IP 정보를 가져오지 못했습니다: {{message}}",
+        "noServices": "사용 가능한 IP 감지 서비스가 없습니다"
       }
     },
     "currentProxy": {
@@ -96,6 +98,18 @@
         "group": "그룹",
         "proxy": "프록시",
         "noActiveNode": "활성 프록시 노드 없음"
+      },
+      "status": {
+        "testing": "테스트 중",
+        "untested": "테스트 안 함",
+        "error": "오류",
+        "timeout": "시간 초과",
+        "latencyHigh": "지연 높음",
+        "latencyMedium": "지연 보통",
+        "latencyGood": "지연 양호",
+        "latencyExcellent": "지연 매우 우수",
+        "uninitialized": "초기화되지 않음",
+        "noProxyNode": "프록시 노드 없음"
       }
     },
     "tests": {
@@ -114,7 +128,13 @@
       },
       "patterns": {
         "minutes": "{{time}}분"
-      }
+      },
+      "unknownTime": "알 수 없는 시간",
+      "chartStyles": {
+        "smooth": "부드럽게",
+        "linear": "선형"
+      },
+      "diagnostics": "데이터 점: {{points}} | 압축됨: {{compressed}} | FPS: {{fps}}"
     },
     "clashMode": {
       "errors": {

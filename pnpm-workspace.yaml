@@ -1,3 +1,4 @@
+enablePrePostScripts: false
 allowBuilds:
   "@parcel/watcher": true
   core-js: true

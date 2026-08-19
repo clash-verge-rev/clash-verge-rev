@@ -20,6 +20,13 @@
       },
       "fields": {
         "url": "测试地址"
+      },
+      "errors": {
+        "nameRequired": "请输入名称",
+        "urlRequired": "请输入测试链接",
+        "invalidSvg": "图标不是有效的 SVG",
+        "uidMissing": "缺少测试项标识",
+        "saveFailed": "保存测试项失败"
       }
     }
   },

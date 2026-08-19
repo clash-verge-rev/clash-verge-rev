@@ -28,7 +28,16 @@
     "feedback": {
       "errors": {
         "invalidUrl": "Invalid profile URL. Please enter a URL starting with http:// or https://",
-        "onlyYaml": "Nur YAML-Dateien werden unterstützt"
+        "onlyYaml": "Nur YAML-Dateien werden unterstützt",
+        "createFailed": "Abonnement konnte nicht erstellt werden",
+        "deleteFailed": "Abonnement konnte nicht gelöscht werden",
+        "enhanceFailed": "Abonnements konnten nicht erneut aktiviert werden",
+        "importFailed": "Abonnement konnte nicht importiert werden",
+        "openFailed": "Abonnement konnte nicht geöffnet werden",
+        "readFailed": "Abonnement konnte nicht gelesen werden",
+        "reorderFailed": "Abonnements konnten nicht neu angeordnet werden",
+        "switchFailed": "Abonnement konnte nicht gewechselt werden",
+        "updateFailed": "Abonnement konnte nicht aktualisiert werden"
       },
       "notifications": {
         "importRetry": "Import des Abonnements fehlgeschlagen. Versuche es mit dem Clash-Proxy erneut...",
@@ -43,6 +52,9 @@
       "notices": {
         "forceRefreshCompleted": "Force refresh completed",
         "emergencyRefreshFailed": "Emergency refresh failed: {{message}}"
+      },
+      "tooltips": {
+        "forceRefreshStaleData": "Abonnementdaten sind nicht verfügbar; zum erzwungenen Aktualisieren klicken"
       }
     },
     "title": "Abonnement"
@@ -105,12 +117,26 @@
         "type": "Typ",
         "description": "Beschreibung",
         "subscriptionUrl": "Abonnement-Link",
+        "userAgent": "User Agent",
         "httpTimeout": "HTTP Request Timeout",
         "updateInterval": "Aktualisierungsintervall",
         "useSystemProxy": "Systemproxy zur Aktualisierung verwenden",
         "useClashProxy": "Kernel-Proxy zur Aktualisierung verwenden",
         "acceptInvalidCerts": "Allows Invalid Certificates (Danger)",
         "allowAutoUpdate": "Allow Auto Update"
+      },
+      "types": {
+        "remote": "Remote",
+        "local": "Lokal"
+      },
+      "errors": {
+        "typeRequired": "Abonnementtyp auswählen",
+        "urlRequired": "Abonnement-URL eingeben",
+        "uidMissing": "Die Abonnement-Kennung fehlt",
+        "saveFailed": "Abonnement konnte nicht gespeichert werden"
+      },
+      "warnings": {
+        "frequentUpdate": "Ein kurzes Intervall lädt den Kern entsprechend häufig neu und trennt bestehende Verbindungen. Empfohlen werden {{minutes}} Minuten (24 Stunden)."
       },
       "feedback": {
         "notifications": {

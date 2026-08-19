@@ -23,7 +23,8 @@
     "closeAll": "Cerrar todas",
     "clear": "Limpiar",
     "previous": "Previous",
-    "next": "Next"
+    "next": "Next",
+    "check": "Comprobar"
   },
   "labels": {
     "updateAt": "Actualizado el",
@@ -44,7 +45,8 @@
     "enabled": "Habilitado",
     "disabled": "Deshabilitado",
     "saving": "Saving...",
-    "empty": "Vacío"
+    "empty": "Vacío",
+    "loading": "Cargando..."
   },
   "units": {
     "milliseconds": "Milisegundos",
@@ -74,6 +76,14 @@
   },
   "feedback": {
     "errors": {
+      "unexpected": "Algo salió mal",
+      "label": "Error",
+      "unknown": "Error desconocido",
+      "details": "Detalles del error",
+      "stack": "Pila de errores",
+      "componentStack": "Pila de componentes",
+      "trafficUnavailable": "Datos de tráfico no disponibles",
+      "operationFailed": "La operación falló",
       "trafficStats": "Traffic Statistics Error",
       "trafficStatsDescription": "The traffic statistics component encountered an error and has been disabled to prevent crashes."
     },
@@ -99,7 +109,7 @@
         "failed": "Error de validación de la configuración de la suscripción. Compruebe el archivo de configuración de la suscripción. Los cambios se han deshecho. Detalles del error: ",
         "bootFailed": "Error de validación de la configuración de la suscripción de arranque. Se ha iniciado con la configuración predeterminada. Compruebe el archivo de configuración de la suscripción. Detalles del error: ",
         "coreChangeFailed": "Error de validación de la configuración al cambiar el núcleo. Se ha iniciado con la configuración predeterminada. Compruebe el archivo de configuración de la suscripción. Detalles del error: ",
-        "processTerminated": "Proceso de validación terminado"
+        "processTerminated": "El proceso de validación ha terminado. Compruebe si algún software de seguridad impide que se ejecute el núcleo o si la CPU y el entorno de ejecución del equipo son compatibles con el programa del núcleo."
       },
       "script": {
         "syntaxError": "Error de sintaxis en el script. Los cambios se han deshecho",

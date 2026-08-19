@@ -6,13 +6,11 @@ use serde_yaml_ng::Mapping;
 use smartstring::alias::String;
 use std::collections::{HashMap, HashSet};
 
-/// 获取运行时配置
 #[tauri::command]
 pub async fn get_runtime_config() -> CmdResult<Option<Mapping>> {
     Ok(Config::runtime().await.latest_arc().config.clone())
 }
 
-/// 获取运行时YAML配置
 #[tauri::command]
 pub async fn get_runtime_yaml() -> CmdResult<String> {
     let runtime = Config::runtime().await;
@@ -29,13 +27,11 @@ pub async fn get_runtime_yaml() -> CmdResult<String> {
         .stringify_err()
 }
 
-/// 获取运行时存在的键
 #[tauri::command]
 pub async fn get_runtime_exists() -> CmdResult<HashSet<String>> {
     Ok(Config::runtime().await.latest_arc().exists_keys.clone())
 }
 
-/// 获取运行时日志
 #[tauri::command]
 pub async fn get_runtime_logs() -> CmdResult<HashMap<String, Vec<(String, String)>>> {
     Ok(Config::runtime().await.latest_arc().chain_logs.clone())
@@ -72,7 +68,6 @@ pub async fn get_runtime_proxy_chain_config(proxy_chain_exit_node: String) -> Cm
             .find(|proxy| proxy.get("name").map(|x| x.as_str()) == proxy_name)
             && !proxies_chain.is_empty()
         {
-            // 添加第一个节点
             proxies_chain.push(entry_proxy.to_owned());
         }
 
@@ -91,7 +86,6 @@ pub async fn get_runtime_proxy_chain_config(proxy_chain_exit_node: String) -> Cm
     }
 }
 
-/// 更新运行时链式代理配置
 #[tauri::command]
 pub async fn update_proxy_chain_config_in_runtime(proxy_chain_config: Option<serde_yaml_ng::Value>) -> CmdResult<()> {
     match CoreManager::global()

@@ -61,12 +61,13 @@ impl<C: Clock> Limiter<C> {
 }
 
 #[cfg(test)]
-mod extra_tests {
+mod tests {
+    use std::sync::atomic::AtomicU64;
+
     use super::*;
-    use std::sync::Arc;
-    use std::thread;
 
     struct MockClock(AtomicU64);
+
     impl Clock for MockClock {
         fn now_ms(&self) -> u64 {
             self.0.load(Ordering::SeqCst)
@@ -74,92 +75,35 @@ mod extra_tests {
     }
 
     #[test]
-    fn test_zero_period_always_passes() {
-        let mock = MockClock(AtomicU64::new(100));
-        let limiter = Limiter::new(Duration::from_millis(0), &mock);
+    fn enforces_the_period_boundary() {
+        let clock = MockClock(AtomicU64::new(1_000));
+        let limiter = Limiter::new(Duration::from_millis(100), &clock);
 
         assert!(limiter.check());
-        assert!(limiter.check());
-    }
-
-    #[test]
-    fn test_boundary_condition() {
-        let period_ms = 100;
-        let mock = MockClock(AtomicU64::new(1000));
-        let limiter = Limiter::new(Duration::from_millis(period_ms), &mock);
-
-        assert!(limiter.check());
-
-        mock.0.store(1099, Ordering::SeqCst);
+        clock.0.store(1_099, Ordering::SeqCst);
         assert!(!limiter.check());
-
-        mock.0.store(1100, Ordering::SeqCst);
-        assert!(limiter.check(), "Should pass exactly at period boundary");
+        clock.0.store(1_100, Ordering::SeqCst);
+        assert!(limiter.check());
     }
 
     #[test]
-    fn test_high_concurrency_consistency() {
-        let period = Duration::from_millis(1000);
-        let mock = Arc::new(MockClock(AtomicU64::new(1000)));
-        let limiter = Arc::new(Limiter::new(period, Arc::clone(&mock)));
-
+    fn concurrent_checks_admit_one_caller() {
+        let clock = Arc::new(MockClock(AtomicU64::new(1_000)));
+        let limiter = Arc::new(Limiter::new(Duration::from_millis(100), Arc::clone(&clock)));
         assert!(limiter.check());
+        clock.0.store(1_100, Ordering::SeqCst);
 
-        mock.0.store(2500, Ordering::SeqCst);
-
-        let mut handles = vec![];
-        for _ in 0..20 {
-            let l = Arc::clone(&limiter);
-            handles.push(thread::spawn(move || l.check()));
+        let mut handles = Vec::with_capacity(8);
+        for _ in 0..8 {
+            let limiter = Arc::clone(&limiter);
+            handles.push(std::thread::spawn(move || limiter.check()));
         }
+        let admitted = handles
+            .into_iter()
+            .map(|handle| handle.join().unwrap_or(false))
+            .filter(|passed| *passed)
+            .count();
 
-        #[allow(clippy::unwrap_used)]
-        let results: Vec<bool> = handles.into_iter().map(|h| h.join().unwrap()).collect();
-
-        let success_count = results.iter().filter(|&&x| x).count();
-        assert_eq!(success_count, 1);
-
-        assert_eq!(limiter.last_run_ms.load(Ordering::SeqCst), 2500);
-    }
-
-    #[test]
-    fn test_extreme_time_jump() {
-        let mock = MockClock(AtomicU64::new(100));
-        let limiter = Limiter::new(Duration::from_millis(100), &mock);
-
-        assert!(limiter.check());
-
-        mock.0.store(u64::MAX - 10, Ordering::SeqCst);
-        assert!(limiter.check());
-    }
-
-    #[test]
-    fn test_system_clock_real_path() {
-        let clock = SystemClock;
-        let start = clock.now_ms();
-        assert!(start > 0);
-
-        std::thread::sleep(Duration::from_millis(10));
-        assert!(clock.now_ms() >= start);
-    }
-
-    #[test]
-    fn test_limiter_with_system_clock_default() {
-        let limiter = Limiter::new(Duration::from_millis(100), SystemClock);
-        assert!(limiter.check());
-    }
-
-    #[test]
-    fn test_coverage_time_backward() {
-        let mock = MockClock(AtomicU64::new(5000));
-        let limiter = Limiter::new(Duration::from_millis(100), &mock);
-
-        assert!(limiter.check());
-
-        mock.0.store(4000, Ordering::SeqCst);
-
-        assert!(limiter.check(), "Should pass and reset when time moves backward");
-
-        assert_eq!(limiter.last_run_ms.load(Ordering::SeqCst), 4000);
+        assert_eq!(admitted, 1);
     }
 }

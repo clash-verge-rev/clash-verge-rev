@@ -5,6 +5,7 @@
       "telegram": "Telegram каналы",
       "github": "GitHub репозиториясе"
     },
+    "actionsGroupLabel": "Көйләү сылтамалары",
     "title": "Көйләүләр"
   },
   "sections": {
@@ -36,11 +37,17 @@
       },
       "actions": {
         "installService": "Хезмәтне урнаштыру",
-        "uninstallService": "Uninstall Service"
+        "uninstallService": "Uninstall Service",
+        "switchToServiceMode": "Хезмәт режимына күчү"
       },
       "fields": {
         "systemProxy": "Системалы прокси",
         "tunMode": "Tun режимы (виртуаль челтәр адаптеры)"
+      },
+      "messages": {
+        "installedCheckProxy": "Хезмәт урнаштырылды, ядро хезмәт аша эшли. Система проксие тоткычын тикшерегез; үзгәреш эшләмәгән булса, кабатлагыз.",
+        "installedCoreNotOnService": "Хезмәт урнаштырылды, әмма ядро хезмәт аша эшләми. Ядро халәтен тикшереп кабат карагыз.",
+        "installedProxyRestored": "Хезмәт урнаштырылды, үзәк аның аша эшли, һәм система прокси үзгәрешегез кулланылды."
       }
     },
     "externalController": {
@@ -284,7 +291,11 @@
       "messages": {
         "portInUse": "Port {{port}} is already in use",
         "saved": "Port settings saved",
-        "saveFailed": "Failed to save port settings"
+        "saveFailed": "Failed to save port settings",
+        "automaticFallback": "Port {{oldPort}} was in use, so this session runs on {{newPort}}. Your setting is unchanged and {{oldPort}} is retried on the next start.",
+        "automaticFallbackFailed": "Automatic mixed proxy port fallback failed: {{error}}",
+        "portTooLow": "Порт 1000 дән ким булмаска тиеш",
+        "portTooHigh": "Порт 65535 тән артмаска тиеш"
       }
     },
     "clashCore": {
@@ -429,7 +440,15 @@
         "update": "Яңарту"
       },
       "messages": {
-        "breakChangeError": "Бу зур яңарту, ул кушымта эчендә яңартылмый. Борып алып ташлап, яңадан урнаштыру сорала."
+        "breakChangeError": "Бу зур яңарту, ул кушымта эчендә яңартылмый. Борып алып ташлап, яңадан урнаштыру сорала.",
+        "available": "Яңа версия бар"
+      },
+      "alerts": {
+        "note": "Искәрмә",
+        "tip": "Киңәш",
+        "important": "Мөһим",
+        "warning": "Кисәтү",
+        "caution": "Игътибар"
       }
     },
     "sysproxy": {
@@ -590,6 +609,11 @@
       "messages": {
         "supportedPlaceholders": "%host, %port, %secret макросларын хуплау",
         "placeholderInstruction": "Хост, порт, серсүзне %host, %port, %secret белән алмаштырыгыз"
+      },
+      "errors": {
+        "clashInfoUnavailable": "Ядро тоташу мәгълүматы юк",
+        "invalidServer": "Ядро сервер адресы «{{server}}» дөрес түгел",
+        "openFailed": "Web UI ачып булмады"
       }
     },
     "hotkey": {
@@ -617,6 +641,28 @@
     }
   },
   "feedback": {
+    "errors": {
+      "clash": {
+        "configUpdateFailed": "Ядро көйләүләрен яңартып булмады",
+        "modeUpdateFailed": "Прокси режимын үзгәртеп булмады",
+        "restartFailed": "Ядрону яңадан башлап булмады",
+        "startFailed": "Ядрону башлап булмады",
+        "stopFailed": "Ядрону туктатып булмады"
+      },
+      "clashService": {
+        "installFailed": "Хезмәтне урнаштырып булмады",
+        "uninstallFailed": "Хезмәтне бетереп булмады",
+        "reinstallFailed": "Хезмәтне яңадан урнаштырып булмады",
+        "repairFailed": "Хезмәтне төзәтеп булмады",
+        "sidecarFailed": "Sidecar белән дәвам итеп булмады"
+      },
+      "sysproxy": {
+        "privilegeRequired": "Система проксиен көйләп булмый: хокуклар җитмәгәнгә күрә macOS бу үзгәрешне кире какты. Clash Verge хезмәтен урнаштырыгыз; әгәр сез администратор булсагыз, Система көйләнмәләре → Шәхсилек вә иминлек бүлегенең өстәмә параметрларында, система дәрәҗәсендәге көйләнмәләр өчен администратор паролен таләп итүне сүндерә аласыз.",
+        "directFallback": "Система проксиен көйләү уңышсыз булды; трафик туры тоташуга кайтарылды.",
+        "guardStopped": "Система проксие сакчысы берничә тапкыр рәттән уңышсыз булганнан соң туктады. Система проксие бүтән автоматик рәвештә саклап торылмый.",
+        "sidecarWhileServiceReady": "Система проксиен көйләп булмады: Clash Verge хезмәте әзер, әмма ядро һаман Sidecar буларак эшли. Хезмәт режимына күчәр өчен ядрону яңадан эшләтегез."
+      }
+    },
     "notifications": {
       "clash": {
         "restartSuccess": "Clash ядросы яңадан башланды",

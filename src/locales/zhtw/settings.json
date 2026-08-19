@@ -5,6 +5,7 @@
       "telegram": "Telegram 頻道",
       "github": "GitHub 專案位址"
     },
+    "actionsGroupLabel": "設定相關連結",
     "title": "設定"
   },
   "sections": {
@@ -36,11 +37,17 @@
       },
       "actions": {
         "installService": "安裝服務",
-        "uninstallService": "解除安裝服務"
+        "uninstallService": "解除安裝服務",
+        "switchToServiceMode": "切換到服務模式"
       },
       "fields": {
         "systemProxy": "系統代理",
         "tunMode": "虛擬網路介面卡模式"
+      },
+      "messages": {
+        "installedCheckProxy": "服務已安裝，內核已透過服務執行。請檢查系統代理開關，若剛才的變更未生效請重新操作一次。",
+        "installedCoreNotOnService": "服務已安裝，但內核未透過服務執行。請檢查內核狀態後重試。",
+        "installedProxyRestored": "服務已安裝，核心已透過服務執行，剛才的系統代理變更已重新套用。"
       }
     },
     "externalController": {
@@ -284,7 +291,11 @@
       "messages": {
         "portInUse": "Port {{port}} is already in use",
         "saved": "連結埠設定已儲存",
-        "saveFailed": "連結埠設定儲存失敗"
+        "saveFailed": "連結埠設定儲存失敗",
+        "automaticFallback": "連結埠 {{oldPort}} 已被佔用，本次執行改用 {{newPort}}。設定未變更，下次啟動會重新嘗試 {{oldPort}}。",
+        "automaticFallbackFailed": "混合代理連結埠自動切換失敗：{{error}}",
+        "portTooLow": "連結埠不能小於 1000",
+        "portTooHigh": "連結埠不能大於 65535"
       }
     },
     "clashCore": {
@@ -429,7 +440,15 @@
         "update": "更新"
       },
       "messages": {
-        "breakChangeError": "此版本為重大更新，不支援應用程式內更新，請解除安裝後手動下載安裝"
+        "breakChangeError": "此版本為重大更新，不支援應用程式內更新，請解除安裝後手動下載安裝",
+        "available": "有新版本可用"
+      },
+      "alerts": {
+        "note": "備註",
+        "tip": "提示",
+        "important": "重要",
+        "warning": "警告",
+        "caution": "注意"
       }
     },
     "sysproxy": {
@@ -590,6 +609,11 @@
       "messages": {
         "supportedPlaceholders": "支援 %host, %port, %secret",
         "placeholderInstruction": "使用 %host, %port, %secret 表示 主機, 連接埠, 存取金鑰"
+      },
+      "errors": {
+        "clashInfoUnavailable": "內核連線資訊暫時無法取得",
+        "invalidServer": "內核伺服器位址「{{server}}」無效",
+        "openFailed": "開啟 Web UI 失敗"
       }
     },
     "hotkey": {
@@ -617,6 +641,28 @@
     }
   },
   "feedback": {
+    "errors": {
+      "clash": {
+        "configUpdateFailed": "更新內核設定失敗",
+        "modeUpdateFailed": "切換代理模式失敗",
+        "restartFailed": "重啟內核失敗",
+        "startFailed": "啟動內核失敗",
+        "stopFailed": "停止內核失敗"
+      },
+      "clashService": {
+        "installFailed": "安裝服務失敗",
+        "uninstallFailed": "解除安裝服務失敗",
+        "reinstallFailed": "重新安裝服務失敗",
+        "repairFailed": "修復服務失敗",
+        "sidecarFailed": "繼續使用 Sidecar 失敗"
+      },
+      "sysproxy": {
+        "privilegeRequired": "無法設定系統代理：macOS 以權限不足為由拒絕了這次修改。請安裝 Clash Verge 服務；管理者也可以在系統設定 → 隱私權與安全性的進階選項中，關閉存取系統層級設定需要管理者密碼的要求。",
+        "directFallback": "系統代理設定失敗，已回退為直連。",
+        "guardStopped": "系統代理守衛連續多次失敗後已停止，系統代理不再被自動維持。",
+        "sidecarWhileServiceReady": "系統代理設定失敗：Clash Verge 服務已就緒，但內核仍以 Sidecar 執行。重新啟動內核即可切換到服務模式。"
+      }
+    },
     "notifications": {
       "clash": {
         "restartSuccess": "已重啟 Clash 內核",

@@ -23,7 +23,8 @@
     "closeAll": "關閉全部",
     "clear": "清除",
     "previous": "上一頁",
-    "next": "下一頁"
+    "next": "下一頁",
+    "check": "檢測"
   },
   "labels": {
     "updateAt": "更新於",
@@ -44,7 +45,8 @@
     "enabled": "已啟用",
     "disabled": "已停用",
     "saving": "儲存中...",
-    "empty": "空空如也"
+    "empty": "空空如也",
+    "loading": "載入中..."
   },
   "units": {
     "milliseconds": "毫秒",
@@ -74,6 +76,14 @@
   },
   "feedback": {
     "errors": {
+      "unexpected": "發生了一些問題",
+      "label": "錯誤",
+      "unknown": "未知錯誤",
+      "details": "錯誤詳情",
+      "stack": "錯誤堆疊",
+      "componentStack": "元件堆疊",
+      "trafficUnavailable": "流量資料暫時無法使用",
+      "operationFailed": "操作失敗",
       "trafficStats": "流量統計錯誤",
       "trafficStatsDescription": "流量統計元件發生錯誤，已停用以避免當機。"
     },
@@ -99,7 +109,7 @@
         "failed": "訂閱配置校驗失敗，請檢查訂閱配置文件，變更已撤銷，錯誤詳情：",
         "bootFailed": "啟動訂閱配置校驗失敗，已使用預設配置啟動；請檢查訂閱配置文件，錯誤詳情：",
         "coreChangeFailed": "切換內核時配置校驗失敗，已使用預設配置啟動；請檢查訂閱配置文件，錯誤詳情：",
-        "processTerminated": "驗證程序被終止"
+        "processTerminated": "驗證程序被終止，請檢查是否有安全軟體阻止了內核執行，或電腦的 CPU／執行環境是否支援該內核程式。"
       },
       "script": {
         "syntaxError": "指令碼語法錯誤，變更已撤銷",
