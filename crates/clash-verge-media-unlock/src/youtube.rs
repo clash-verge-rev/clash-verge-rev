@@ -5,9 +5,11 @@ use clash_verge_logging::{Type, logging};
 
 use super::UnlockItem;
 
+pub(crate) const YOUTUBE_PREMIUM_NAME: &str = "YouTube Premium";
+
 pub(super) async fn check_youtube_premium(client: &Client) -> UnlockItem {
     let url = "https://www.youtube.com/premium?hl=en";
-    let item = |status: &str, region: Option<String>| UnlockItem::checked("YouTube Premium", status, region);
+    let item = |status: &str, region: Option<String>| UnlockItem::checked(YOUTUBE_PREMIUM_NAME, status, region);
 
     match client.get(url).send().await {
         Ok(response) => {

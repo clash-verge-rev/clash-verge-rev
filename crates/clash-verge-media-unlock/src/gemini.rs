@@ -2,12 +2,13 @@ use reqwest::{Client, Version};
 
 use super::UnlockItem;
 
+pub(crate) const GEMINI_NAME: &str = "Gemini";
 const BLOCKED_CODES: [&str; 9] = ["CHN", "RUS", "BLR", "CUB", "IRN", "PRK", "SYR", "HKG", "MAC"];
 const REGION_MARKER: &str = ",2,1,200,\"";
 
 pub(super) async fn check_gemini(client: &Client) -> UnlockItem {
     let url = "https://gemini.google.com";
-    let failed = || UnlockItem::checked("Gemini", "Failed", None);
+    let failed = || UnlockItem::checked(GEMINI_NAME, "Failed", None);
 
     let response = match client.get(url).version(Version::HTTP_11).send().await {
         Ok(r) => r,
@@ -29,7 +30,7 @@ pub(super) async fn check_gemini(client: &Client) -> UnlockItem {
     match country_code {
         Some(code) => {
             let status = if BLOCKED_CODES.contains(&code) { "No" } else { "Yes" };
-            UnlockItem::checked_region("Gemini", status, code)
+            UnlockItem::checked_region(GEMINI_NAME, status, code)
         }
         None => failed(),
     }

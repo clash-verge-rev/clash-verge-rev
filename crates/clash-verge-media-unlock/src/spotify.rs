@@ -2,6 +2,8 @@ use reqwest::{Client, Url};
 
 use super::UnlockItem;
 
+pub(crate) const SPOTIFY_NAME: &str = "Spotify";
+
 pub(super) async fn check_spotify(client: &Client) -> UnlockItem {
     let url = "https://www.spotify.com/api/content/v1/country-selector?platform=web&format=json";
 
@@ -14,9 +16,9 @@ pub(super) async fn check_spotify(client: &Client) -> UnlockItem {
             let region = extract_region(&final_url).or_else(|| extract_region_from_body(&body));
             let status = determine_status(status_code.as_u16(), &body);
 
-            UnlockItem::checked("Spotify", status, region)
+            UnlockItem::checked(SPOTIFY_NAME, status, region)
         }
-        Err(_) => UnlockItem::checked("Spotify", "Failed", None),
+        Err(_) => UnlockItem::checked(SPOTIFY_NAME, "Failed", None),
     }
 }
 

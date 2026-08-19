@@ -5,6 +5,8 @@ use reqwest::Client;
 
 use super::UnlockItem;
 
+pub(crate) const TIKTOK_NAME: &str = "TikTok";
+
 pub(super) async fn check_tiktok(client: &Client) -> UnlockItem {
     let trace_url = "https://www.tiktok.com/cdn-cgi/trace";
 
@@ -37,7 +39,7 @@ pub(super) async fn check_tiktok(client: &Client) -> UnlockItem {
         }
     }
 
-    UnlockItem::checked("TikTok", status, region)
+    UnlockItem::checked(TIKTOK_NAME, status, region)
 }
 
 fn determine_status(status: u16, body: &str) -> &'static str {

@@ -4,6 +4,10 @@ use reqwest::Client;
 
 use super::UnlockItem;
 
+pub(crate) const CHATGPT_IOS_NAME: &str = "ChatGPT iOS";
+pub(crate) const CHATGPT_WEB_NAME: &str = "ChatGPT Web";
+
+// TODO: remove ios check
 pub(super) async fn check_chatgpt_combined(client: &Client) -> Vec<UnlockItem> {
     let mut results = Vec::new();
 

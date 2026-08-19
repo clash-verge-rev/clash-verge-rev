@@ -6,6 +6,8 @@ use reqwest::{Client, cookie::Jar};
 
 use super::UnlockItem;
 
+pub(crate) const BAHAMUT_ANIME_NAME: &str = "Bahamut Anime";
+
 pub(super) async fn check_bahamut_anime(client: &Client) -> UnlockItem {
     let cookie_store = Arc::new(Jar::default());
 
@@ -53,7 +55,7 @@ pub(super) async fn check_bahamut_anime(client: &Client) -> UnlockItem {
     };
 
     if device_id.is_empty() {
-        return UnlockItem::checked("Bahamut Anime", "Failed", None);
+        return UnlockItem::checked(BAHAMUT_ANIME_NAME, "Failed", None);
     }
 
     let url = format!("https://ani.gamer.com.tw/ajax/token.php?adID=89422&sn=37783&device={device_id}");
@@ -73,7 +75,7 @@ pub(super) async fn check_bahamut_anime(client: &Client) -> UnlockItem {
     };
 
     if token_result.is_none() {
-        return UnlockItem::checked("Bahamut Anime", "No", None);
+        return UnlockItem::checked(BAHAMUT_ANIME_NAME, "No", None);
     }
 
     let region = match client_with_cookies.get("https://ani.gamer.com.tw/").send().await {
@@ -98,5 +100,5 @@ pub(super) async fn check_bahamut_anime(client: &Client) -> UnlockItem {
         Err(_) => None,
     };
 
-    UnlockItem::checked("Bahamut Anime", "Yes", region)
+    UnlockItem::checked(BAHAMUT_ANIME_NAME, "Yes", region)
 }

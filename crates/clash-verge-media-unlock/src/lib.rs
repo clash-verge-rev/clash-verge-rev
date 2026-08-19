@@ -47,6 +47,7 @@ fn single_result(item: UnlockItem) -> UnlockResults {
     vec![item]
 }
 
+// TODO add a custom client parameter
 pub async fn check_media_unlock() -> Result<Vec<UnlockItem>, String> {
     let client = match Client::builder()
         .use_rustls_tls()

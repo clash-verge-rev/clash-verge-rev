@@ -5,10 +5,10 @@ use clash_verge_logging::{Type, logging};
 
 use super::UnlockItem;
 
-const NETFLIX: &str = "Netflix";
+pub(crate) const NETFLIX_NAME: &str = "Netflix";
 
 fn netflix_item(status: impl Into<String>, region: Option<String>) -> UnlockItem {
-    UnlockItem::checked(NETFLIX, status, region)
+    UnlockItem::checked(NETFLIX_NAME, status, region)
 }
 
 pub(super) async fn check_netflix(client: &Client) -> UnlockItem {
@@ -81,11 +81,11 @@ pub(super) async fn check_netflix(client: &Client) -> UnlockItem {
                     let parts: Vec<&str> = location_str.split('/').collect();
                     if parts.len() >= 4 {
                         let region_code = parts[3].split('-').next().unwrap_or("unknown");
-                        return UnlockItem::checked_region(NETFLIX, "Yes", region_code);
+                        return UnlockItem::checked_region(NETFLIX_NAME, "Yes", region_code);
                     }
                 }
 
-                UnlockItem::checked_region(NETFLIX, "Yes", "us")
+                UnlockItem::checked_region(NETFLIX_NAME, "Yes", "us")
             }
             Err(e) => {
                 logging!(error, Type::Network, "获取Netflix区域信息失败: {e}");
@@ -113,7 +113,7 @@ async fn check_netflix_cdn(client: &Client) -> UnlockItem {
                         && let Some(location) = targets[0].get("location")
                         && let Some(country) = location.get("country").and_then(|c| c.as_str())
                     {
-                        return UnlockItem::checked_region(NETFLIX, "Yes", country);
+                        return UnlockItem::checked_region(NETFLIX_NAME, "Yes", country);
                     }
 
                     netflix_item("Unknown", None)
