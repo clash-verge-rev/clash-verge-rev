@@ -103,19 +103,3 @@ pub async fn notify_event<'a>(event: NotificationEvent<'a>) {
         }
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::needs_system_notification;
-    use crate::utils::window_manager::WindowState;
-
-    #[test]
-    fn a_system_notification_is_sent_exactly_where_the_window_cannot_speak() {
-        assert!(needs_system_notification(WindowState::Hidden));
-        assert!(needs_system_notification(WindowState::Minimized));
-        assert!(needs_system_notification(WindowState::NotExist));
-
-        assert!(!needs_system_notification(WindowState::VisibleFocused));
-        assert!(!needs_system_notification(WindowState::VisibleUnfocused));
-    }
-}

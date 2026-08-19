@@ -393,6 +393,9 @@ export interface TranslationResources {
             local: string
             remote: string
           }
+          warnings: {
+            frequentUpdate: string
+          }
         }
         proxiesEditor: {
           actions: {

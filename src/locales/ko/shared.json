@@ -109,7 +109,7 @@
         "failed": "설정 검증 실패",
         "bootFailed": "부팅 설정 검증 실패",
         "coreChangeFailed": "코어 변경 설정 검증 실패",
-        "processTerminated": "설정 검증 프로세스 종료됨"
+        "processTerminated": "설정 검증 프로세스가 종료되었습니다. 보안 소프트웨어가 코어 실행을 차단하고 있는지 또는 컴퓨터의 CPU 및 실행 환경이 코어 프로그램을 지원하는지 확인하세요."
       },
       "script": {
         "syntaxError": "스크립트 구문 오류",

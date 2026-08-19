@@ -61,13 +61,8 @@ pub(crate) async fn collect_runtime_bundle(config_file: &Path, core_path: &Path)
     })
 }
 
-/// Rewrite one provider section's paths to service-side destinations, and record what each
-/// destination is going to hold.
-///
-/// The two outputs are not the same thing. `assets` are files the app owns and the service copies;
-/// `remote_providers` are files the *core* downloads, which the service never writes and only
-/// needs to recognise — a download cache is reusable exactly while the url that produced it is
-/// unchanged, and the service has no other way to tell.
+/// Rewrites provider paths and records copied assets separately from core-downloaded providers.
+/// Remote URLs let the service decide whether a core download cache remains reusable.
 fn collect_provider_assets(
     config: &mut Value,
     section: &str,
@@ -91,28 +86,13 @@ fn collect_provider_assets(
         let Some(raw_path) = provider.get("path").and_then(Value::as_str) else {
             continue;
         };
-        // The Core decides what a provider is by its `type`, so anything else here would disagree
-        // with it. Keying off the presence of a `url` used to do that: a `file` provider carrying
-        // a stray `url` was treated as remote, its local file left uncopied, and the Core then
-        // could not find what the rewritten path pointed at.
-        //
-        // Disagreeing the other way is just as bad, though, and it is why neither branch may fail
-        // the whole bundle over one odd provider. Measured against mihomo v1.19.26: it accepts a
-        // `http` provider with no url, an `inline` provider carrying both a url and a path that
-        // does not exist, and a `file` provider whose path is missing. Refusing any of those here
-        // would turn a configuration the Core is willing to load into one that cannot be applied
-        // at all — including at start, since this is where a Service-mode start gets its bundle.
-        // A provider we cannot classify keeps its path unrewritten and is simply not declared.
+        // Match mihomo's `type` classification and leave malformed-but-accepted providers untouched.
         let is_remote = provider.get("type").and_then(Value::as_str) == Some("http");
         let url = provider.get("url").and_then(Value::as_str).map(str::to_owned);
         let destination = match (is_remote, url) {
             (true, Some(url)) => {
                 let destination = provider_destination(config_root, raw_path)?;
-                // Remote providers take their destination out of circulation as much as local ones
-                // do: the Service refuses a bundle where one path is claimed both by a file it must
-                // copy and by a file the Core downloads, because the two would overwrite each
-                // other. Two providers naming the same file *and* the same source are not that —
-                // they are one file with two names for it, which the Service folds.
+                // Reserve remote destinations too; copied and downloaded files must not collide.
                 match remote_providers
                     .iter()
                     .find(|declared| declared.destination == destination)
@@ -281,9 +261,7 @@ mod tests {
         );
         assert!(bundle.assets.iter().any(|asset| asset.destination == "Country.mmdb"));
         assert!(!bundle.assets.iter().any(|asset| asset.destination.contains("remote")));
-        // A remote provider is not copied, but it must still be declared: the Service decides
-        // whether the Core's download cache is reusable by comparing the url that produced it,
-        // and an undeclared provider is one it can only ever discard.
+        // Remote declarations preserve service-side cache reuse.
         assert_eq!(
             bundle
                 .remote_providers
@@ -305,9 +283,7 @@ mod tests {
 
     #[tokio::test]
     async fn two_names_for_one_remote_file_are_folded_rather_than_refused() -> anyhow::Result<()> {
-        // The Service folds an identical repeat, so refusing it here would block a configuration
-        // mihomo itself accepts — and this is also where a Service-mode *start* gets its bundle,
-        // so the refusal would stop the core coming up at all.
+        // Identical repeats are one service-side file and are safe to fold.
         let root = std::env::temp_dir().join(format!("clash-verge-bundle-dup-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&root);
         std::fs::create_dir_all(&root)?;
@@ -351,8 +327,7 @@ mod tests {
 
     #[tokio::test]
     async fn an_odd_provider_is_left_alone_instead_of_failing_the_whole_bundle() -> anyhow::Result<()> {
-        // Measured against mihomo v1.19.26: it accepts a `http` provider with no url, and a
-        // non-http provider whose path does not exist. Neither may stop the rest being materialised.
+        // Odd providers accepted by mihomo must not block the rest of the bundle.
         let root = std::env::temp_dir().join(format!("clash-verge-bundle-odd-{}", std::process::id()));
         let _ = std::fs::remove_dir_all(&root);
         std::fs::create_dir_all(&root)?;

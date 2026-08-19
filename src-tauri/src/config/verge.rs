@@ -12,175 +12,127 @@ use smartstring::alias::String;
 /// ### `verge.yaml` schema
 #[derive(Default, Debug, Clone, Deserialize, Serialize)]
 pub struct IVerge {
-    /// app log level
     /// silent | error | warn | info | debug | trace
     pub app_log_level: Option<String>,
 
-    /// app log max size in KB
+    /// Maximum app log size in KiB.
     pub app_log_max_size: Option<u64>,
 
-    /// app log max count
     pub app_log_max_count: Option<usize>,
 
-    // i18n
     pub language: Option<String>,
 
     /// `light` or `dark` or `system`
     pub theme_mode: Option<String>,
 
-    /// tray click event
     pub tray_event: Option<String>,
 
-    /// copy env type
     pub env_type: Option<String>,
 
-    /// start page
     pub start_page: Option<String>,
-    /// startup script path
     pub startup_script: Option<String>,
 
-    /// enable traffic graph default is true
     pub traffic_graph: Option<bool>,
 
     /// show memory info (only for Clash Meta)
     pub enable_memory_usage: Option<bool>,
 
-    /// enable group icon
     #[serde(skip_serializing_if = "Option::is_none")]
     pub enable_group_icon: Option<bool>,
 
-    /// pause render traffic stats on blur
     pub pause_render_traffic_stats_on_blur: Option<bool>,
 
-    /// common tray icon
     #[serde(skip_serializing_if = "Option::is_none")]
     pub common_tray_icon: Option<bool>,
 
-    /// tray icon
     #[cfg(target_os = "macos")]
     #[serde(skip_serializing_if = "Option::is_none")]
     pub tray_icon: Option<String>,
 
-    /// menu icon
     #[serde(skip_serializing_if = "Option::is_none")]
     pub menu_icon: Option<String>,
 
-    /// menu order
     #[serde(skip_serializing_if = "Option::is_none")]
     pub menu_order: Option<Vec<String>>,
 
-    /// toast / notice position on screen
     #[serde(skip_serializing_if = "Option::is_none")]
     pub notice_position: Option<String>,
 
-    /// collapse navigation bar
     pub collapse_navbar: Option<bool>,
 
-    /// sysproxy tray icon
     pub sysproxy_tray_icon: Option<bool>,
 
-    /// tun tray icon
     pub tun_tray_icon: Option<bool>,
 
-    /// clash tun mode
     pub enable_tun_mode: Option<bool>,
 
-    /// can the app auto startup
     pub enable_auto_launch: Option<bool>,
 
-    /// not show the window on launch
     pub enable_silent_start: Option<bool>,
 
-    /// set system proxy
     pub enable_system_proxy: Option<bool>,
 
-    /// enable proxy guard
     pub enable_proxy_guard: Option<bool>,
 
-    /// enable bypass format check
     pub enable_bypass_check: Option<bool>,
 
     /// enable dns settings - this controls whether dns_config.yaml is applied
     pub enable_dns_settings: Option<bool>,
 
-    /// always use default bypass
     pub use_default_bypass: Option<bool>,
 
-    /// set system proxy bypass
     pub system_proxy_bypass: Option<String>,
 
-    /// proxy guard duration
     pub proxy_guard_duration: Option<u64>,
 
-    /// use pac mode
     pub proxy_auto_config: Option<bool>,
 
-    /// pac script content
     pub pac_file_content: Option<String>,
 
-    /// proxy host address
     pub proxy_host: Option<String>,
 
-    /// theme setting
     pub theme_setting: Option<IVergeTheme>,
 
-    /// web ui list
     pub web_ui_list: Option<Vec<String>>,
 
-    /// clash core path
     #[serde(skip_serializing_if = "Option::is_none")]
     pub clash_core: Option<String>,
 
-    /// hotkey map
     /// format: {func},{key}
     #[serde(skip_serializing_if = "Option::is_none")]
     pub hotkeys: Option<Vec<String>>,
 
-    /// enable global hotkey
     pub enable_global_hotkey: Option<bool>,
 
-    /// 首页卡片设置
-    /// 控制首页各个卡片的显示和隐藏
     pub home_cards: Option<serde_json::Value>,
 
-    /// 切换代理时自动关闭连接
     pub auto_close_connection: Option<bool>,
 
-    /// 是否自动检查更新
     pub auto_check_update: Option<bool>,
 
-    /// 默认的延迟测试连接
     pub default_latency_test: Option<String>,
 
-    /// 默认的延迟测试超时时间
     pub default_latency_timeout: Option<i16>,
 
-    /// 是否自动检测当前节点延迟
     pub enable_auto_delay_detection: Option<bool>,
 
     /// 自动检测当前节点延迟的间隔（分钟）
     pub auto_delay_detection_interval_minutes: Option<u64>,
 
-    /// 是否使用内部的脚本支持，默认为真
     pub enable_builtin_enhanced: Option<bool>,
 
-    /// proxy 页面布局 列数
     pub proxy_layout_column: Option<u8>,
 
-    /// 测试站列表
     pub test_list: Option<Vec<IVergeTestItem>>,
 
-    /// 日志清理
     /// 0: 不清理; 1: 1天；2: 7天; 3: 30天; 4: 90天
     pub auto_log_clean: Option<i32>,
 
-    /// Enable scheduled automatic backups
     pub enable_auto_backup_schedule: Option<bool>,
 
     /// Automatic backup interval in hours
     pub auto_backup_interval_hours: Option<u64>,
 
-    /// Create backups automatically when critical configs change
     pub auto_backup_on_change: Option<bool>,
 
     /// verge 的各种 port 用于覆盖 clash 的各种 port
@@ -206,7 +158,6 @@ pub struct IVerge {
 
     pub verge_http_enabled: Option<bool>,
 
-    /// WebDAV 配置 (加密存储)
     #[serde(
         serialize_with = "serialize_encrypted",
         deserialize_with = "deserialize_encrypted",
@@ -215,7 +166,6 @@ pub struct IVerge {
     )]
     pub webdav_url: Option<String>,
 
-    /// WebDAV 用户名 (加密存储)
     #[serde(
         serialize_with = "serialize_encrypted",
         deserialize_with = "deserialize_encrypted",
@@ -224,7 +174,6 @@ pub struct IVerge {
     )]
     pub webdav_username: Option<String>,
 
-    /// WebDAV 密码 (加密存储)
     #[serde(
         serialize_with = "serialize_encrypted",
         deserialize_with = "deserialize_encrypted",
@@ -236,26 +185,20 @@ pub struct IVerge {
     #[cfg(target_os = "macos")]
     pub enable_tray_speed: Option<bool>,
 
-    // pub enable_tray_icon: Option<bool>,
-    /// show proxy groups directly on tray root menu
     #[serde(skip_serializing_if = "Option::is_none")]
     pub tray_proxy_groups_display_mode: Option<String>,
-    /// show outbound modes directly on tray root menu
     pub tray_inline_outbound_modes: Option<bool>,
 
-    /// 自动进入轻量模式
     pub enable_auto_light_weight_mode: Option<bool>,
 
     /// 自动进入轻量模式的延迟（分钟）
     pub auto_light_weight_minutes: Option<u64>,
 
-    /// 启用代理页面自动滚动
     pub enable_hover_jump_navigator: Option<bool>,
 
     /// 代理页面自动滚动延迟（毫秒）
     pub hover_jump_navigator_delay: Option<u64>,
 
-    /// 启用外部控制器
     pub enable_external_controller: Option<bool>,
 }
 
@@ -284,10 +227,8 @@ pub struct IVergeTheme {
 }
 
 impl IVerge {
-    /// 有效的clash核心名称
     pub const VALID_CLASH_CORES: &'static [&'static str] = &["verge-mihomo", "verge-mihomo-alpha"];
 
-    /// 验证并修正配置文件中的clash_core值
     pub async fn validate_and_fix_config() -> Result<()> {
         let config_path = dirs::verge_path()?;
         let mut config = match help::read_yaml::<Self>(&config_path).await {
@@ -319,7 +260,6 @@ impl IVerge {
             needs_fix = true;
         }
 
-        // 修正后保存配置
         if needs_fix {
             logging!(info, Type::Config, "正在保存修正后的配置文件...");
             help::save_yaml(&config_path, &config, Some("# Clash Verge Config")).await?;
@@ -333,7 +273,6 @@ impl IVerge {
         Ok(())
     }
 
-    /// 配置修正后重新加载配置
     async fn reload_config_after_fix(updated_config: Self) -> Result<()> {
         logging!(
             info,
@@ -359,7 +298,6 @@ impl IVerge {
         match dirs::verge_path() {
             Ok(path) => match help::read_yaml::<Self>(&path).await {
                 Ok(mut config) => {
-                    // compatibility
                     if let Some(start_page) = config.start_page.clone()
                         && start_page == "/home"
                     {
@@ -446,7 +384,6 @@ impl IVerge {
             webdav_password: None,
             #[cfg(target_os = "macos")]
             enable_tray_speed: Some(false),
-            // enable_tray_icon: Some(true),
             tray_proxy_groups_display_mode: Some("default".into()),
             tray_inline_outbound_modes: Some(false),
             enable_global_hotkey: Some(true),
@@ -464,13 +401,10 @@ impl IVerge {
         }
     }
 
-    /// Save IVerge App Config
     pub async fn save_file(&self) -> Result<()> {
         help::save_yaml(&dirs::verge_path()?, &self, Some("# Clash Verge Config")).await
     }
 
-    /// patch verge config
-    /// only save to file
     #[allow(clippy::cognitive_complexity)]
     pub fn patch_config(&mut self, patch: &Self) {
         macro_rules! patch {
@@ -557,7 +491,6 @@ impl IVerge {
         patch!(webdav_password);
         #[cfg(target_os = "macos")]
         patch!(enable_tray_speed);
-        // patch!(enable_tray_icon);
         patch!(tray_proxy_groups_display_mode);
         patch!(tray_inline_outbound_modes);
         patch!(enable_auto_light_weight_mode);
@@ -567,7 +500,6 @@ impl IVerge {
         patch!(enable_external_controller);
     }
 
-    /// 获取日志等级
     pub fn get_log_level(&self) -> LevelFilter {
         if let Some(level) = self.app_log_level.as_ref() {
             match level.to_lowercase().as_str() {

@@ -41,7 +41,6 @@ pub enum SysproxyFailure {
 }
 
 impl SysproxyFailure {
-    /// Stable frontend error code.
     #[inline]
     pub const fn code(&self) -> &'static str {
         match self {
@@ -52,7 +51,6 @@ impl SysproxyFailure {
         }
     }
 
-    /// Find a classification using `anyhow`'s context-aware downcast.
     #[inline]
     pub fn from_chain(error: &anyhow::Error) -> Option<&Self> {
         error.downcast_ref::<Self>()
@@ -83,7 +81,6 @@ impl std::error::Error for SysproxyFailure {}
 pub struct SystemProxyStateUnknown;
 
 impl SystemProxyStateUnknown {
-    /// Whether this marker appears in the error chain.
     #[inline]
     pub fn is_in(error: &anyhow::Error) -> bool {
         error.downcast_ref::<Self>().is_some()
@@ -98,7 +95,6 @@ impl std::fmt::Display for SystemProxyStateUnknown {
 
 impl std::error::Error for SystemProxyStateUnknown {}
 
-/// Whether the error carries a frontend-mappable classification.
 #[inline]
 fn carries_a_mappable_code(error: &anyhow::Error) -> bool {
     SysproxyFailure::from_chain(error).is_some()
@@ -120,7 +116,6 @@ pub fn rollback_failure(caused_by: anyhow::Error, rollback: anyhow::Error) -> an
     combined
 }
 
-/// Classify local macOS proxy failures without replacing their source chain.
 fn classify_local_failure(error: anyhow::Error) -> anyhow::Error {
     if !was_refused_locally(&error) {
         return error;
@@ -128,7 +123,6 @@ fn classify_local_failure(error: anyhow::Error) -> anyhow::Error {
     error.context(SysproxyFailure::PrivilegeRequired)
 }
 
-/// Whether macOS refused a local proxy write.
 fn was_refused_locally(error: &anyhow::Error) -> bool {
     cfg!(target_os = "macos")
         && error.chain().any(|cause| {
@@ -141,7 +135,6 @@ fn was_refused_locally(error: &anyhow::Error) -> bool {
 
 /// Distinguish a misplaced sidecar from a missing privileged service.
 async fn classify_local_apply_failure(error: anyhow::Error) -> anyhow::Error {
-    // Preserve any existing, more specific classification.
     if SysproxyFailure::from_chain(&error).is_some() || !was_refused_locally(&error) {
         return error;
     }
@@ -153,7 +146,6 @@ async fn classify_local_apply_failure(error: anyhow::Error) -> anyhow::Error {
     error.context(refusal_classification(probed))
 }
 
-/// Bound the diagnostic service probe.
 const SERVICE_PROBE_TIMEOUT: Duration = Duration::from_secs(2);
 
 /// Classify a refusal from a fresh service probe only.
@@ -206,7 +198,6 @@ impl ServiceProxyOperations {
         self.run_service_operation(operation).await
     }
 
-    /// Invalidate the guard generation and wait for cancellation.
     async fn cancel_and_drain<F, Fut, T>(&self, cancel: F) -> (u64, T)
     where
         F: FnOnce() -> Fut,
@@ -217,7 +208,6 @@ impl ServiceProxyOperations {
         (generation, cancelled)
     }
 
-    /// Record under the operation lock only for the current guard generation.
     async fn record_if_current<Record>(&self, captured_generation: u64, record: Record) -> bool
     where
         Record: FnOnce() -> bool,
@@ -339,12 +329,10 @@ async fn current_service_proxy_config(verge: &IVerge) -> Result<MacosProxyConfig
     if verge.proxy_auto_config.unwrap_or_default() {
         return service_proxy_config(verge, 0, server::embedded_server_port()?);
     }
-    // Configured: this builds the proxy settings handed to the service alongside a start.
     let mixed_port = MixedPort::desired().await;
     service_proxy_config(verge, mixed_port, 0)
 }
 
-/// Return whether a classified failure remains pending.
 pub fn is_reportable(error: &anyhow::Error) -> bool {
     is_reportable_given(error, notification::has_pending_failure)
 }
@@ -549,10 +537,8 @@ pub async fn refresh_guard() -> Result<()> {
     Ok(())
 }
 
-/// Consecutive failures allowed before the guard stops.
 const GUARD_FAILURES_BEFORE_STOPPING: u32 = 3;
 
-/// Report that the current guard stopped.
 async fn report_guard_stopped(captured_generation: u64, error: &anyhow::Error) {
     let stopped = anyhow::Error::new(SysproxyFailure::GuardStopped {
         detail: format!("{error:#}"),
@@ -569,7 +555,6 @@ async fn report_guard_stopped(captured_generation: u64, error: &anyhow::Error) {
     }
 }
 
-/// Stop the local guard and report whether it drained.
 pub async fn stop_guard() -> bool {
     SERVICE_PROXY_OPERATIONS
         .cancel_and_drain(|| Sysopt::global().stop_proxy_guard())
@@ -593,7 +578,6 @@ mod tests {
     use std::task::Poll;
     use tokio::sync::Barrier;
 
-    /// Proxy state maintained by a running guard.
     fn guarded_proxy() -> MacosProxyConfig {
         MacosProxyConfig::Global {
             host: "127.0.0.1".to_owned(),

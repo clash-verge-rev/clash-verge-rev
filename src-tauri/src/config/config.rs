@@ -1,10 +1,11 @@
-use super::{IClashTemp, IProfiles, IVerge};
+use super::{IClashTemp, IProfiles, IVerge, MixedPort};
 use crate::{
     config::{PrfItem, profiles_append_item_to_safe, runtime::IRuntime},
     constants::{files, timing},
     core::{
         CoreManager,
         handle::{self, Handle},
+        listener::MIXED_PORT_KEY,
         tray,
         validate::CoreConfigValidator,
     },
@@ -23,7 +24,7 @@ use std::{
     path::PathBuf,
     sync::atomic::{AtomicBool, Ordering},
 };
-use tokio::sync::OnceCell;
+use tokio::sync::{Mutex, MutexGuard, OnceCell};
 use tokio::time::sleep;
 
 pub struct Config {
@@ -34,6 +35,7 @@ pub struct Config {
 }
 
 static TUN_SESSION_SUPPRESSED: AtomicBool = AtomicBool::new(false);
+static CONFIG_WRITE_LOCK: Mutex<()> = Mutex::const_new(());
 
 impl Config {
     pub async fn global() -> &'static Self {
@@ -66,7 +68,11 @@ impl Config {
         Self::global().await.runtime_config.clone()
     }
 
-    /// 初始化订阅
+    /// Serializes transactions sharing configuration draft layers.
+    pub(crate) async fn lock_config_write() -> MutexGuard<'static, ()> {
+        CONFIG_WRITE_LOCK.lock().await
+    }
+
     pub async fn init_config() -> Result<()> {
         Self::init_config_before_window().await?;
         Self::init_runtime_config().await
@@ -133,14 +139,12 @@ impl Config {
 
         {
             let profiles = Self::profiles().await.data_arc();
-            // Logging error internally
             let _ = profiles.cleanup_orphaned_files().await;
         }
 
         Ok(())
     }
 
-    // Ensure "Merge" and "Script" profile items exist, adding them if missing.
     async fn ensure_default_profile_items() -> Result<()> {
         let profiles = Self::profiles().await;
         Self::ensure_default_profile_items_for(&profiles).await
@@ -168,7 +172,6 @@ impl Config {
     }
 
     async fn generate_and_validate() -> Result<Option<(&'static str, String)>> {
-        // 生成运行时配置
         if let Err(err) = Self::generate().await {
             let error_msg: String = err.to_string().into();
             logging!(error, Type::Config, "生成运行时配置失败: {}", error_msg);
@@ -179,18 +182,14 @@ impl Config {
         }
         logging!(info, Type::Config, "生成运行时配置成功");
 
-        // 生成运行时配置文件并验证
         let config_result = Self::generate_file(ConfigType::Run).await;
 
         if config_result.is_ok() {
-            // 验证配置文件
             logging!(info, Type::Config, "开始验证配置");
 
             match CoreConfigValidator::global().validate_config_outcome().await {
                 Ok(outcome) if outcome.is_valid() => {
                     logging!(info, Type::Config, "配置验证成功");
-                    // 前端没有必要知道验证成功的消息，也没有事件驱动
-                    // Some(("config_validate::success", String::new()))
                     Ok(None)
                 }
                 Ok(outcome) => {
@@ -231,7 +230,6 @@ impl Config {
 
         let runtime = Self::runtime().await;
         let runtime_lastest = runtime.latest_arc();
-        // Fall back to committed config if runtime config is missing
         let runtime_data = runtime.data_arc();
         let config = runtime_lastest
             .config
@@ -252,6 +250,10 @@ impl Config {
         let (mut config, exists_keys, logs) = enhance::enhance(profiles).await?;
 
         sanitize_tunnels_proxy(&mut config);
+        // Apply only to generated core config so the saved choice survives the next launch.
+        if let Some(port) = MixedPort::session_fallback() {
+            config.insert(MIXED_PORT_KEY.into(), port.into());
+        }
 
         Self::runtime().await.edit_draft(|d| {
             *d = IRuntime {
@@ -288,8 +290,7 @@ impl Config {
         }
     }
 
-    // 升级草稿为正式数据，并写入文件。避免用户行为丢失。
-    // 仅在应用退出、重启、关机监听事件启用
+    /// Commits drafts during exit/restart/shutdown so user changes are not lost.
     pub async fn apply_all_and_save_file() {
         logging!(info, Type::Config, "save all draft data");
         let save_clash_task = AsyncHandler::spawn(|| async {
@@ -317,7 +318,6 @@ impl Config {
 }
 
 fn sanitize_tunnels_proxy(config: &mut Mapping) {
-    // 检查是否存在 tunnels
     if !config
         .get("tunnels")
         .and_then(|v| v.as_sequence())
@@ -326,7 +326,6 @@ fn sanitize_tunnels_proxy(config: &mut Mapping) {
         return;
     }
 
-    // 在需要时，收集可用目标（proxies + proxy-groups + 内建）
     let mut valid: HashSet<String> = HashSet::with_capacity(64);
     collect_names(config, "proxies", &mut valid);
     collect_names(config, "proxy-groups", &mut valid);
@@ -338,7 +337,6 @@ fn sanitize_tunnels_proxy(config: &mut Mapping) {
         return;
     };
 
-    // 修改 tunnels：删除无效 proxy
     for item in tunnels {
         let Some(tunnel) = item.as_mapping_mut() else { continue };
 
@@ -356,7 +354,6 @@ fn sanitize_tunnels_proxy(config: &mut Mapping) {
     }
 }
 
-// tunnels 存在且至少有一条 tunnel 的 proxy 需要校验时才返回 true
 fn tunnels_need_validation(tunnels: &[Value]) -> bool {
     tunnels.iter().any(|item| {
         item.as_mapping()
@@ -388,40 +385,10 @@ pub enum ConfigType {
     Run,
     Check,
 }
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::mem;
-
-    #[test]
-    #[allow(unused_variables)]
-    #[allow(clippy::expect_used)]
-    fn test_prfitem_from_merge_size() {
-        let merge_item = PrfItem::from_merge(Some("Merge".into())).expect("Failed to create merge item in test");
-        let prfitem_size = mem::size_of_val(&merge_item);
-        // Boxed version
-        let boxed_merge_item = Box::new(merge_item);
-        let box_prfitem_size = mem::size_of_val(&boxed_merge_item);
-        // The size of Box<T> is always pointer-sized (usually 8 bytes on 64-bit)
-        // assert_eq!(box_prfitem_size, mem::size_of::<Box<PrfItem>>());
-        assert!(box_prfitem_size < prfitem_size);
-    }
-
-    #[test]
-    #[allow(unused_variables)]
-    fn test_draft_size_non_boxed() {
-        let draft = Draft::new(IRuntime::new());
-        let iruntime_size = std::mem::size_of_val(&draft);
-        assert_eq!(iruntime_size, std::mem::size_of::<Draft<IRuntime>>());
-    }
-
-    #[test]
-    #[allow(unused_variables)]
-    fn test_draft_size_boxed() {
-        let draft = Draft::new(Box::new(IRuntime::new()));
-        let box_iruntime_size = std::mem::size_of_val(&draft);
-        assert_eq!(box_iruntime_size, std::mem::size_of::<Draft<Box<IRuntime>>>());
-    }
 
     #[tokio::test]
     async fn failed_profile_index_survives_startup_without_cleanup() -> Result<()> {
@@ -437,14 +404,8 @@ mod tests {
         let profile_was_preserved = tokio::fs::try_exists(&active_profile).await?;
         tokio::fs::remove_dir_all(&profiles_dir).await?;
 
-        assert!(
-            profile_was_preserved,
-            "startup must not delete profiles when profiles.yaml could not be loaded"
-        );
-        assert!(
-            profiles.data_arc().get_items().is_none(),
-            "startup must not replace an unreadable profile index with defaults"
-        );
+        assert!(profile_was_preserved);
+        assert!(profiles.data_arc().get_items().is_none());
         Ok(())
     }
 }

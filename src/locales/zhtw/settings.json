@@ -292,7 +292,7 @@
         "portInUse": "Port {{port}} is already in use",
         "saved": "連結埠設定已儲存",
         "saveFailed": "連結埠設定儲存失敗",
-        "automaticFallback": "連結埠 {{oldPort}} 已被佔用，混合代理連結埠已自動切換並儲存為 {{newPort}}。",
+        "automaticFallback": "連結埠 {{oldPort}} 已被佔用，本次執行改用 {{newPort}}。設定未變更，下次啟動會重新嘗試 {{oldPort}}。",
         "automaticFallbackFailed": "混合代理連結埠自動切換失敗：{{error}}",
         "portTooLow": "連結埠不能小於 1000",
         "portTooHigh": "連結埠不能大於 65535"

@@ -42,16 +42,23 @@ static COMMANDS_READY: AtomicBool = AtomicBool::new(false);
 #[cfg(feature = "verge-dev")]
 static DEV_QUIT_REQUESTED: AtomicBool = AtomicBool::new(false);
 
-pub async fn check_singleton() -> Result<()> {
-    let record_path = instance_record_path()?;
-    let lock = open_instance_lock(&record_path.with_file_name(INSTANCE_LOCK_FILE))?;
-    if !try_lock_instance(&lock)? {
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum SingletonDisposition {
+    Primary,
+    Secondary,
+}
+
+pub async fn check_singleton() -> Result<SingletonDisposition> {
+    let record_path = instance_record_path().context("failed to resolve singleton instance record path")?;
+    let lock = open_instance_lock(&record_path.with_file_name(INSTANCE_LOCK_FILE))
+        .context("failed to initialize singleton lock")?;
+    if !try_lock_instance(&lock).context("failed to acquire singleton lock")? {
         let deadline = std::time::Instant::now() + Duration::from_secs(20);
         while std::time::Instant::now() < deadline {
             if let Ok(record) = read_instance_record(&record_path)
                 && notify_existing_instance(&record).await
             {
-                bail!("app exists");
+                return Ok(SingletonDisposition::Secondary);
             }
             tokio::time::sleep(Duration::from_millis(50)).await;
         }
@@ -59,19 +66,24 @@ pub async fn check_singleton() -> Result<()> {
     }
 
     let preferred = read_instance_record(&record_path).ok().map(|record| record.port);
-    let listener = bind_primary_listener(preferred).await?;
-    let port = listener.local_addr()?.port();
+    let listener = bind_primary_listener(preferred)
+        .await
+        .context("failed to reserve embedded server port")?;
+    let port = listener
+        .local_addr()
+        .context("failed to read embedded server address")?
+        .port();
     let record = InstanceRecord {
         port,
-        token: random_token()?,
+        token: random_token().context("failed to generate singleton instance token")?,
     };
-    write_instance_record(&record_path, &record)?;
+    write_instance_record(&record_path, &record).context("failed to persist singleton instance record")?;
     INSTANCE_LOCK
         .set(lock)
         .map_err(|_| anyhow::anyhow!("singleton lock is already initialized"))?;
     let _ = EMBEDDED_PORT.set(port);
     start_embedded_server(listener, record.token);
-    Ok(())
+    Ok(SingletonDisposition::Primary)
 }
 
 async fn bind_primary_listener(preferred: Option<u16>) -> Result<tokio::net::TcpListener> {

@@ -54,7 +54,6 @@ import {
   deleteProfile,
   enhanceProfiles,
   getProfiles,
-  //restartCore,
   getRuntimeLogs,
   importProfile,
   reorderProfile,
@@ -121,7 +120,6 @@ interface ProfileSwitchRequest {
   force: boolean
 }
 
-// 记录profile切换状态
 const debugProfileSwitch = (action: string, profile: string, extra?: any) => {
   const timestamp = new Date().toISOString().substring(11, 23)
   debugLog(`[Profile-Debug][${timestamp}] ${action}: ${profile}`, extra || '')
@@ -146,7 +144,6 @@ const ProfilePage = () => {
     Map<string, number>
   >(() => new Map())
 
-  // Batch selection states
   const [batchMode, setBatchMode] = useState(false)
   const [selectedProfiles, setSelectedProfiles] = useState<Set<string>>(
     () => new Set(),
@@ -223,18 +220,14 @@ const ProfilePage = () => {
     }
   }, [addListener, mutateProfiles])
 
-  // 添加紧急恢复功能
   const onEmergencyRefresh = useLockFn(async () => {
     debugLog('[紧急刷新] 开始强制刷新所有数据')
 
     try {
-      // 只失效 profiles 相关 query，不影响 WS 订阅、IP 缓存等其他 query
       await revalidateQueries([['getProfiles'], ['getRuntimeLogs']])
 
-      // 强制重新获取配置数据
       await mutateProfiles()
 
-      // 等待状态稳定后增强配置
       await new Promise((resolve) => setTimeout(resolve, 500))
       await onEnhance(false)
 
@@ -263,7 +256,6 @@ const ProfilePage = () => {
   const viewerRef = useRef<ProfileViewerRef>(null)
   const configRef = useRef<DialogRef>(null)
 
-  // distinguish type
   const profileItems = useMemo(() => {
     const items = profiles.items || []
 
@@ -278,7 +270,6 @@ const ProfilePage = () => {
 
   const onImport = async () => {
     if (!url) return
-    // 校验url是否为http/https
     if (!/^https?:\/\//i.test(url)) {
       showNotice.error('profiles.page.feedback.errors.invalidUrl')
       return
@@ -291,7 +282,6 @@ const ProfilePage = () => {
       await performRobustRefresh()
     }
     try {
-      // 尝试正常导入
       await importProfile(url)
       await handleImportSuccess('shared.feedback.notifications.importSuccess')
     } catch (initialErr) {
@@ -305,7 +295,6 @@ const ProfilePage = () => {
 
       showNotice.info('profiles.page.feedback.notifications.importRetry')
       try {
-        // 使用自身代理尝试导入
         await importProfile(url, {
           with_proxy: false,
           self_proxy: true,
@@ -314,7 +303,6 @@ const ProfilePage = () => {
           'shared.feedback.notifications.importWithClashProxy',
         )
       } catch (retryErr) {
-        // 回退导入也失败
         showNotice.error(
           'profiles.page.feedback.notifications.importFail',
           retryErr,
@@ -326,8 +314,7 @@ const ProfilePage = () => {
     }
   }
 
-  // 强化的刷新策略
-  // maxRetries 设为 1：useProfiles 内部 useQuery 已配置 retry:3，业务层只需 1 次额外重试
+  // `useProfiles` already retries three times; add only one business-level retry.
   const performRobustRefresh = async () => {
     let retryCount = 0
     const maxRetries = 1
@@ -337,10 +324,8 @@ const ProfilePage = () => {
       try {
         debugLog(`[导入刷新] 第${retryCount + 1}次尝试刷新配置数据`)
 
-        // 强制刷新，绕过所有缓存
         await mutateProfiles()
 
-        // 等待状态稳定
         await new Promise((resolve) =>
           setTimeout(resolve, baseDelay * (retryCount + 1)),
         )
@@ -356,10 +341,8 @@ const ProfilePage = () => {
       }
     }
 
-    // 所有重试失败后的最后尝试
     console.warn(`[导入刷新] 常规刷新失败，尝试清除缓存重新获取`)
     try {
-      // 清除缓存并重新获取
       await fetchCacheData(['getProfiles'], getProfiles)
       await onEnhance(false)
       showNotice.error(
@@ -566,7 +549,6 @@ const ProfilePage = () => {
     }
   })
 
-  // 更新所有订阅
   const loadingCache = useLoadingCache()
   const setLoadingCache = useSetLoadingCache()
   const setLoadingProfiles = useCallback(
@@ -643,7 +625,6 @@ const ProfilePage = () => {
         await Promise.allSettled(Array.from({ length: active }, worker))
       } finally {
         setLoadingProfiles(uids, false)
-        // 避免长时间批量更新后列表数据过晚刷新
         void mutateProfiles()
       }
     },
@@ -664,11 +645,9 @@ const ProfilePage = () => {
     if (text) setUrl(text)
   }
 
-  // Batch selection functions
   const toggleBatchMode = () => {
     setBatchMode(!batchMode)
     if (!batchMode) {
-      // Entering batch mode - clear previous selections
       setSelectedProfiles(new Set())
     }
   }
@@ -701,11 +680,11 @@ const ProfilePage = () => {
 
   const getSelectionState = () => {
     if (selectedProfiles.size === 0) {
-      return 'none' // 无选择
+      return 'none'
     } else if (selectedProfiles.size === profileItems.length) {
-      return 'all' // 全选
+      return 'all'
     } else {
-      return 'partial' // 部分选择
+      return 'partial'
     }
   }
 
@@ -713,7 +692,6 @@ const ProfilePage = () => {
     if (selectedProfiles.size === 0) return
 
     try {
-      // Get all currently activating profiles
       const currentActivating =
         profiles.current && selectedProfiles.has(profiles.current)
           ? [profiles.current]
@@ -721,7 +699,6 @@ const ProfilePage = () => {
 
       setActivatings((prev) => [...new Set([...prev, ...currentActivating])])
 
-      // Delete all selected profiles
       for (const uid of selectedProfiles) {
         await deleteProfile(uid)
       }
@@ -729,12 +706,10 @@ const ProfilePage = () => {
       await mutateProfiles()
       await mutateLogs()
 
-      // If any deleted profile was current, enhance profiles
       if (currentActivating.length > 0) {
         await onEnhance(false)
       }
 
-      // Clear selections and exit batch mode
       setSelectedProfiles(new Set())
       setBatchMode(false)
 
@@ -835,7 +810,6 @@ const ProfilePage = () => {
               )}
             </>
           ) : (
-            // Batch mode header
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
               <IconButton
                 size="small"
@@ -995,8 +969,6 @@ const ProfilePage = () => {
                       onSave={async (prev, curr) => {
                         if (prev !== curr && profiles.current === item.uid) {
                           await onEnhance(false)
-                          //  await restartCore();
-                          //   Notice.success(t("settings.feedback.notifications.clash.restartSuccess"), 1000);
                         }
                       }}
                       onDelete={() => {
@@ -1053,7 +1025,6 @@ const ProfilePage = () => {
         ref={viewerRef}
         onChange={async (isActivating) => {
           mutateProfiles()
-          // 只有更改当前激活的配置时才触发全局重新加载
           if (isActivating) {
             await onEnhance(false)
           }

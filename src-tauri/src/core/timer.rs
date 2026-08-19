@@ -25,15 +25,40 @@ use tokio_stream::StreamExt as _;
 use tokio_util::time::{DelayQueue, delay_queue::Key};
 
 enum TimerCommand {
-    Apply(HashMap<String, u64>),
+    Apply(HashMap<String, TaskSchedule>),
     RunNow(String),
     TaskFinished(String),
+}
+
+/// Next update is due at `updated + interval`, but the queue only takes a delay from now.
+#[derive(Debug, PartialEq, Eq)]
+struct TaskSchedule {
+    interval_minutes: u64,
+    first_delay: Duration,
+}
+
+impl TaskSchedule {
+    /// No recorded `updated` -> full interval. Deadline already past -> `ZERO`, fires at once.
+    fn new(interval_minutes: u64, updated: Option<usize>, now: i64) -> Self {
+        let full = Timer::interval_duration(interval_minutes);
+        let elapsed = updated
+            .filter(|updated| *updated > 0)
+            .map_or(0, |updated| now.saturating_sub(updated as i64).max(0) as u64);
+
+        Self {
+            interval_minutes,
+            first_delay: full.saturating_sub(Duration::from_secs(elapsed)),
+        }
+    }
 }
 
 struct TaskState {
     key: Option<Key>,
     interval_minutes: u64,
     running: bool,
+    /// Disabled mid-update. Entry outlives removal so re-enabling reuses the `running` guard
+    /// instead of building a fresh state that would fire a second update at zero delay.
+    retired: bool,
 }
 
 async fn run_timer_profile_update_transition<Started, Update, UpdateFuture, Finished, Completed, Output>(
@@ -60,6 +85,7 @@ impl TaskState {
             key: Some(key),
             interval_minutes,
             running: false,
+            retired: false,
         }
     }
 }
@@ -124,6 +150,8 @@ impl Timer {
             }
         }
 
+        // Redundant with first_delay == ZERO, kept as the immediate path; mark_task_running
+        // no-ops whichever of the two arrives second.
         let cur_timestamp = chrono::Local::now().timestamp();
         if let Some(items) = Config::profiles().await.data_arc().get_items() {
             for item in items.iter() {
@@ -147,7 +175,13 @@ impl Timer {
 
     pub async fn refresh(&self) -> Result<()> {
         let _refresh_guard = self.refresh_lock.lock().await;
-        let new_map = self.gen_map().await;
+        let new_schedule = self.gen_map().await;
+        // Cache intervals only: first_delay shrinks every second, so comparing it would make
+        // every refresh look like a change.
+        let new_map: HashMap<String, u64> = new_schedule
+            .iter()
+            .map(|(uid, schedule)| (uid.clone(), schedule.interval_minutes))
+            .collect();
 
         let mut cache = self.timer_map.write();
         if *cache == new_map {
@@ -161,15 +195,15 @@ impl Timer {
             "Refreshing timer tasks map, count: {}",
             new_map.len()
         );
-        *cache = new_map.clone();
+        *cache = new_map;
         drop(cache);
 
-        let _ = self.command_tx.send(TimerCommand::Apply(new_map));
+        let _ = self.command_tx.send(TimerCommand::Apply(new_schedule));
 
         Ok(())
     }
 
-    async fn gen_map(&self) -> HashMap<String, u64> {
+    async fn gen_map(&self) -> HashMap<String, TaskSchedule> {
         if let Some(items) = Config::profiles().await.data_arc().get_items() {
             return Self::gen_map_from_items(items);
         }
@@ -177,7 +211,8 @@ impl Timer {
         HashMap::new()
     }
 
-    fn gen_map_from_items(items: &[PrfItem]) -> HashMap<String, u64> {
+    fn gen_map_from_items(items: &[PrfItem]) -> HashMap<String, TaskSchedule> {
+        let now = chrono::Local::now().timestamp();
         let mut new_map = HashMap::new();
 
         for item in items {
@@ -186,7 +221,7 @@ impl Timer {
                 && option.allow_auto_update.unwrap_or(true)
                 && interval > 0
             {
-                new_map.insert(uid.clone(), interval);
+                new_map.insert(uid.clone(), TaskSchedule::new(interval, item.updated, now));
             }
         }
 
@@ -228,7 +263,7 @@ impl Timer {
     fn apply_timer_map(
         queue: &mut DelayQueue<String>,
         tasks: &mut HashMap<String, TaskState>,
-        new_map: HashMap<String, u64>,
+        new_map: HashMap<String, TaskSchedule>,
     ) {
         tasks.retain(|uid, state| {
             if new_map.contains_key(uid) {
@@ -238,21 +273,36 @@ impl Timer {
             if let Some(key) = state.key.take() {
                 queue.remove(&key);
             }
+
+            if state.running {
+                state.retired = true;
+                logging!(
+                    debug,
+                    Type::Timer,
+                    "Retiring timer task once its in-flight update reports back: uid={}",
+                    uid
+                );
+                return true;
+            }
+
             logging!(debug, Type::Timer, "Removed timer task for uid={}", uid);
             false
         });
 
-        for (uid, interval_minutes) in new_map {
+        for (uid, schedule) in new_map {
             let Some(state) = tasks.get_mut(&uid) else {
-                Self::insert_task(queue, tasks, uid, interval_minutes);
+                Self::insert_task(queue, tasks, uid, &schedule);
                 continue;
             };
 
-            if state.interval_minutes == interval_minutes {
+            // Re-enabled before retirement took effect; finish_task re-arms it.
+            state.retired = false;
+
+            if state.interval_minutes == schedule.interval_minutes {
                 continue;
             }
 
-            Self::update_task_interval(queue, &uid, state, interval_minutes);
+            Self::update_task_interval(queue, &uid, state, &schedule);
         }
     }
 
@@ -260,34 +310,36 @@ impl Timer {
         queue: &mut DelayQueue<String>,
         tasks: &mut HashMap<String, TaskState>,
         uid: String,
-        interval_minutes: u64,
+        schedule: &TaskSchedule,
     ) {
-        let key = Self::schedule_task(queue, &uid, interval_minutes);
+        let key = Self::schedule_task(queue, &uid, schedule.first_delay);
         logging!(
             debug,
             Type::Timer,
-            "Added timer task: uid={}, interval={}min",
+            "Added timer task: uid={}, interval={}min, first fire in {}s",
             uid,
-            interval_minutes
+            schedule.interval_minutes,
+            schedule.first_delay.as_secs()
         );
-        tasks.insert(uid, TaskState::new(key, interval_minutes));
+        tasks.insert(uid, TaskState::new(key, schedule.interval_minutes));
     }
 
-    fn update_task_interval(queue: &mut DelayQueue<String>, uid: &str, state: &mut TaskState, interval_minutes: u64) {
-        state.interval_minutes = interval_minutes;
+    fn update_task_interval(queue: &mut DelayQueue<String>, uid: &str, state: &mut TaskState, schedule: &TaskSchedule) {
+        state.interval_minutes = schedule.interval_minutes;
 
         if let Some(key) = state.key.as_ref() {
-            queue.reset(key, Self::interval_duration(interval_minutes));
+            queue.reset(key, schedule.first_delay);
         } else if !state.running {
-            state.key = Some(Self::schedule_task(queue, uid, interval_minutes));
+            state.key = Some(Self::schedule_task(queue, uid, schedule.first_delay));
         }
 
         logging!(
             debug,
             Type::Timer,
-            "Updated timer task interval: uid={}, interval={}min",
+            "Updated timer task interval: uid={}, interval={}min, next fire in {}s",
             uid,
-            interval_minutes
+            schedule.interval_minutes,
+            schedule.first_delay.as_secs()
         );
     }
 
@@ -353,7 +405,21 @@ impl Timer {
         };
 
         state.running = false;
-        let key = Self::schedule_task(queue, &uid, state.interval_minutes);
+
+        if state.retired {
+            tasks.remove(&uid);
+            logging!(
+                debug,
+                Type::Timer,
+                "Dropped retired timer task now that its update finished: uid={}",
+                uid
+            );
+            return;
+        }
+
+        // Full interval, not from `updated`: a failed run leaves `updated` in the past, so
+        // counting from it would retry at zero delay and spin.
+        let key = Self::schedule_task(queue, &uid, Self::interval_duration(state.interval_minutes));
         state.key = Some(key);
     }
 
@@ -370,8 +436,8 @@ impl Timer {
         Duration::from_secs(interval_minutes.saturating_mul(60))
     }
 
-    fn schedule_task(queue: &mut DelayQueue<String>, uid: &str, interval_minutes: u64) -> Key {
-        queue.insert(String::from(uid), Self::interval_duration(interval_minutes))
+    fn schedule_task(queue: &mut DelayQueue<String>, uid: &str, delay: Duration) -> Key {
+        queue.insert(String::from(uid), delay)
     }
 
     pub async fn get_next_update_time(&self, uid: &str) -> Option<i64> {
@@ -448,9 +514,11 @@ impl Timer {
 
 #[cfg(test)]
 mod tests {
-    use super::{Timer, run_timer_profile_update_transition};
+    use super::{TaskSchedule, Timer, run_timer_profile_update_transition};
     use crate::config::{PrfItem, PrfOption};
     use parking_lot::Mutex;
+    use smartstring::alias::String;
+    use std::collections::HashMap;
     use std::{
         sync::{
             Arc,
@@ -460,6 +528,8 @@ mod tests {
         time::Duration,
     };
     use tokio::sync::Barrier;
+    use tokio_stream::StreamExt as _;
+    use tokio_util::time::DelayQueue;
 
     struct CancellationProbe {
         cancelled: Arc<AtomicBool>,
@@ -500,8 +570,181 @@ mod tests {
         let map = Timer::gen_map_from_items(&items);
 
         assert_eq!(map.len(), 2);
-        assert_eq!(map.get("enabled"), Some(&30));
-        assert_eq!(map.get("missing-flag"), Some(&30));
+        assert_eq!(map.get("enabled").map(|s| s.interval_minutes), Some(30));
+        assert_eq!(map.get("missing-flag").map(|s| s.interval_minutes), Some(30));
+    }
+
+    #[test]
+    fn first_fire_counts_from_the_last_update_not_from_now() {
+        const NOW: i64 = 1_700_000_000;
+        const HOUR: u64 = 60;
+
+        let fresh = TaskSchedule::new(HOUR, Some(NOW as usize), NOW);
+        assert_eq!(
+            fresh.first_delay,
+            Duration::from_secs(3600),
+            "a profile updated this instant waits the whole interval"
+        );
+
+        let half_elapsed = TaskSchedule::new(HOUR, Some((NOW - 1800) as usize), NOW);
+        assert_eq!(
+            half_elapsed.first_delay,
+            Duration::from_secs(1800),
+            "half the interval already spent leaves half of it, not a fresh hour"
+        );
+
+        // Guards the reported bug: raising an interval used to push the deadline a full
+        // interval past the raise while the UI still reported `updated + interval`.
+        let raised = TaskSchedule::new(1440, Some((NOW - 1439 * 60) as usize), NOW);
+        assert_eq!(raised.first_delay, Duration::from_secs(60));
+
+        let overdue = TaskSchedule::new(HOUR, Some((NOW - 7200) as usize), NOW);
+        assert_eq!(
+            overdue.first_delay,
+            Duration::ZERO,
+            "a deadline already past fires as soon as the queue is drained"
+        );
+
+        for unknown in [None, Some(0)] {
+            assert_eq!(
+                TaskSchedule::new(HOUR, unknown, NOW).first_delay,
+                Duration::from_secs(3600),
+                "with no recorded update there is no deadline to count from"
+            );
+        }
+
+        let skewed = TaskSchedule::new(HOUR, Some((NOW + 9999) as usize), NOW);
+        assert_eq!(
+            skewed.first_delay,
+            Duration::from_secs(3600),
+            "a timestamp in the future must not extend the delay past one interval"
+        );
+    }
+
+    /// Polled, not awaited: a not-yet-due entry would park the test on the paused clock.
+    async fn take_expired(queue: &mut DelayQueue<String>) -> Option<String> {
+        match futures::poll!(Box::pin(queue.next())) {
+            Poll::Ready(Some(expired)) => Some(expired.into_inner()),
+            _ => None,
+        }
+    }
+
+    /// What `run_expired_task` does, minus spawning the real update.
+    fn mark_running(tasks: &mut HashMap<String, super::TaskState>, uid: &str) {
+        assert!(tasks.contains_key(uid), "task {uid} must exist before it can run");
+
+        if let Some(state) = tasks.get_mut(uid) {
+            state.key = None;
+            state.running = true;
+        }
+    }
+
+    /// Empty queue reports `Ready(None)`, not `Pending`, so both count as "nothing due".
+    async fn nothing_due(queue: &mut DelayQueue<String>) -> bool {
+        matches!(
+            futures::poll!(Box::pin(queue.next())),
+            Poll::Pending | Poll::Ready(None)
+        )
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn queue_fires_at_the_remaining_time_then_waits_a_whole_interval() {
+        const NOW: i64 = 1_700_000_000;
+
+        let mut queue = DelayQueue::new();
+        let mut tasks = HashMap::new();
+
+        // 1439min into a 1440min interval: due in a minute, not a day.
+        let mut map = HashMap::new();
+        map.insert(
+            String::from("uid"),
+            TaskSchedule::new(1440, Some((NOW - 1439 * 60) as usize), NOW),
+        );
+        Timer::apply_timer_map(&mut queue, &mut tasks, map);
+
+        tokio::time::advance(Duration::from_secs(61)).await;
+        assert_eq!(
+            take_expired(&mut queue).await.as_deref(),
+            Some("uid"),
+            "the raised interval must fire one minute in, not a full day in"
+        );
+
+        // After it reports back, the next one is a whole interval away.
+        mark_running(&mut tasks, "uid");
+        Timer::finish_task(&mut queue, &mut tasks, String::from("uid"));
+
+        tokio::time::advance(Duration::from_secs(1439 * 60)).await;
+        assert!(
+            nothing_due(&mut queue).await,
+            "a finished task waits the whole interval, not the remainder of the old one"
+        );
+
+        tokio::time::advance(Duration::from_secs(120)).await;
+        assert_eq!(take_expired(&mut queue).await.as_deref(), Some("uid"));
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn disabling_a_profile_mid_update_cannot_start_a_second_one() {
+        const NOW: i64 = 1_700_000_000;
+
+        let mut queue = DelayQueue::new();
+        let mut tasks = HashMap::new();
+        // Overdue: every re-insert would land at zero delay.
+        let schedule = || TaskSchedule::new(60, Some((NOW - 7200) as usize), NOW);
+
+        let mut map = HashMap::new();
+        map.insert(String::from("uid"), schedule());
+        Timer::apply_timer_map(&mut queue, &mut tasks, map);
+        assert_eq!(take_expired(&mut queue).await.as_deref(), Some("uid"));
+        mark_running(&mut tasks, "uid");
+
+        // Toggled off then on while the run is still in flight.
+        Timer::apply_timer_map(&mut queue, &mut tasks, HashMap::new());
+        let mut back_on = HashMap::new();
+        back_on.insert(String::from("uid"), schedule());
+        Timer::apply_timer_map(&mut queue, &mut tasks, back_on);
+
+        assert!(
+            tasks.get("uid").is_some_and(|state| state.running),
+            "the entry must survive the toggle so the in-flight run is still accounted for"
+        );
+        assert!(
+            nothing_due(&mut queue).await,
+            "re-enabling must not queue a second run alongside the one already going"
+        );
+
+        // Original run reports back, re-arms exactly once.
+        Timer::finish_task(&mut queue, &mut tasks, String::from("uid"));
+        tokio::time::advance(Duration::from_secs(3601)).await;
+        assert_eq!(take_expired(&mut queue).await.as_deref(), Some("uid"));
+        assert!(nothing_due(&mut queue).await, "exactly one key, no orphan");
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn a_profile_disabled_mid_update_is_dropped_when_it_reports_back() {
+        const NOW: i64 = 1_700_000_000;
+
+        let mut queue = DelayQueue::new();
+        let mut tasks = HashMap::new();
+
+        let mut map = HashMap::new();
+        map.insert(
+            String::from("uid"),
+            TaskSchedule::new(60, Some((NOW - 7200) as usize), NOW),
+        );
+        Timer::apply_timer_map(&mut queue, &mut tasks, map);
+        assert_eq!(take_expired(&mut queue).await.as_deref(), Some("uid"));
+        mark_running(&mut tasks, "uid");
+
+        Timer::apply_timer_map(&mut queue, &mut tasks, HashMap::new());
+        Timer::finish_task(&mut queue, &mut tasks, String::from("uid"));
+
+        assert!(
+            tasks.is_empty(),
+            "a task retired mid-update must not outlive the update"
+        );
+        tokio::time::advance(Duration::from_secs(7200)).await;
+        assert!(nothing_due(&mut queue).await, "and must never be scheduled again");
     }
 
     #[tokio::test(start_paused = true)]

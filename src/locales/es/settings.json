@@ -292,7 +292,7 @@
         "portInUse": "Port {{port}} is already in use",
         "saved": "Port settings saved",
         "saveFailed": "Failed to save port settings",
-        "automaticFallback": "El puerto {{oldPort}} está en uso. El puerto proxy mixto se cambió a {{newPort}} y se guardó.",
+        "automaticFallback": "El puerto {{oldPort}} está en uso, por lo que esta sesión usa {{newPort}}. Tu configuración no ha cambiado y se volverá a intentar {{oldPort}} en el próximo inicio.",
         "automaticFallbackFailed": "Error al cambiar automáticamente el puerto proxy mixto: {{error}}",
         "portTooLow": "El puerto debe ser 1000 o superior",
         "portTooHigh": "El puerto debe ser 65535 o inferior"

@@ -34,17 +34,13 @@ export const useLayoutEvents = (
             'getAutotemProxy',
           ])
         },
-        // The Run State is pushed, not polled: every transition carries the new snapshot, so it
-        // is written straight into the cache instead of triggering a fetch.
+        // Transitions carry the full run-state snapshot, so write it directly to cache.
         'verge://run-state-changed': (payload) => {
           void setCacheDataAsync<RunState>(runStateQueryKey, payload)
         },
         'verge://notice-message': handleNotice,
       },
-      // The Run State is the one thing here that arrives *only* by event, so it is the one
-      // thing a missed event leaves stale — until the next transition, which during startup can
-      // be a long time. Re-read once the listener is live, so the gap between the first read
-      // and the subscription cannot outlive the subscription.
+      // Re-read event-only state after subscribing to close the initial race window.
       () => revalidateKeys(['getRuntimeState']),
     )
   }, [handleNotice])

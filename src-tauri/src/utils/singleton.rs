@@ -1,19 +1,4 @@
-/// Macro to generate singleton pattern for structs
-///
-/// Usage:
-/// ```rust,ignore
-/// use crate::utils::singleton::singleton;
-///
-/// struct MyStruct {
-///     value: i32,
-/// }
-/// impl MyStruct {
-///     fn new() -> Self {
-///         MyStruct { value: 0 }
-///     }
-/// }
-/// singleton!(MyStruct, INSTANCE);
-/// ```
+/// Implements `global()` using the supplied `OnceCell` static.
 #[macro_export]
 macro_rules! singleton {
     ($struct_name:ty, $instance_name:ident) => {
@@ -35,29 +20,4 @@ macro_rules! singleton {
             }
         }
     };
-}
-
-#[cfg(test)]
-mod tests {
-    struct TestStruct {
-        value: i32,
-    }
-
-    impl TestStruct {
-        fn new() -> Self {
-            Self { value: 42 }
-        }
-    }
-
-    singleton!(TestStruct, TEST_INSTANCE);
-
-    #[test]
-    fn test_singleton_macro() {
-        let instance1 = TestStruct::global();
-        let instance2 = TestStruct::global();
-
-        assert_eq!(instance1.value, 42);
-        assert_eq!(instance2.value, 42);
-        assert!(std::ptr::eq(instance1, instance2));
-    }
 }

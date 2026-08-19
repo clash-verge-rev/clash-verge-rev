@@ -9,30 +9,23 @@ import { useClash, useDefaultClashConfig } from '@/hooks/use-clash'
 import { restartCore } from '@/services/cmds'
 import { showNotice } from '@/services/notice-service'
 
-// 定义开发环境的URL列表
-// 这些URL在开发模式下会被自动包含在允许的来源中
-// 在生产环境中，这些URL会被过滤掉
-// 这样可以确保在生产环境中不会意外暴露开发环境的URL
+// Development origins must never be persisted into production configuration.
 const DEV_URLS = [
   'tauri://localhost',
   'http://tauri.localhost',
   'http://localhost:3000',
 ]
 
-// 获取完整的源列表，包括开发URL
 const getFullOrigins = (origins: string[]) => {
-  // 合并现有源和开发URL，并去重
   const allOrigins = [...origins, ...DEV_URLS]
   const uniqueOrigins = [...new Set(allOrigins)]
   return uniqueOrigins
 }
 
-// 过滤基础URL(确保后续添加)
 const filterBaseOriginsForUI = (origins: string[]) => {
   return origins.filter((origin: string) => !DEV_URLS.includes(origin.trim()))
 }
 
-// 统一使用的按钮样式
 const buttonStyle = {
   borderRadius: '8px',
   textTransform: 'none',
@@ -47,7 +40,6 @@ const buttonStyle = {
   },
 }
 
-// 添加按钮样式
 const addButtonStyle = {
   ...buttonStyle,
   backgroundColor: '#4CAF50',
@@ -57,7 +49,6 @@ const addButtonStyle = {
   },
 }
 
-// 删除按钮样式
 const deleteButtonStyle = {
   ...buttonStyle,
   backgroundColor: '#FF5252',
@@ -91,7 +82,6 @@ export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
 
     const lastKeyRef = useRef(0) // 用于生成唯一的key
 
-    // CORS配置状态管理
     const [corsConfig, setCorsConfig] = useState<{
       allowPrivateNetwork: boolean
       allowOrigins: AllowOriginItem[]
@@ -107,7 +97,6 @@ export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
       }
     })
 
-    // 处理CORS配置变更
     const handleCorsConfigChange = (
       key: 'allowPrivateNetwork' | 'allowOrigins',
       value: boolean | AllowOriginItem[],
@@ -118,7 +107,6 @@ export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
       }))
     }
 
-    // 添加新的允许来源
     const handleAddOrigin = () => {
       lastKeyRef.current += 1
       handleCorsConfigChange('allowOrigins', [
@@ -127,24 +115,20 @@ export const HeaderConfiguration = forwardRef<ClashHeaderConfigingRef>(
       ])
     }
 
-    // 更新允许来源列表中的某一项
     const handleUpdateOrigin = (index: number, value: string) => {
       const newOrigins = [...corsConfig.allowOrigins]
       newOrigins[index] = { ...newOrigins[index], value }
       handleCorsConfigChange('allowOrigins', newOrigins)
     }
 
-    // 删除允许来源列表中的某一项
     const handleDeleteOrigin = (index: number) => {
       const newOrigins = [...corsConfig.allowOrigins]
       newOrigins.splice(index, 1)
       handleCorsConfigChange('allowOrigins', newOrigins)
     }
 
-    // 保存配置请求
     const { loading, run: saveConfig } = useRequest(
       async () => {
-        // 保存时使用完整的源列表（包括开发URL）
         const fullOrigins = getFullOrigins(
           corsConfig.allowOrigins.map((origin) => origin.value),
         )

@@ -17,12 +17,10 @@ import parseTraffic from '@/utils/parse-traffic'
 
 import { TrafficGraph, type TrafficRef } from './traffic-graph'
 
-// setup the traffic
 export const LayoutTraffic = () => {
   const { t } = useTranslation()
   const { verge } = useVerge()
 
-  // whether hide traffic graph
   const trafficGraph = verge?.traffic_graph ?? true
   const displayMemory = verge?.enable_memory_usage ?? true
 
@@ -36,7 +34,6 @@ export const LayoutTraffic = () => {
     response: { data: memory },
   } = useMemoryData({ enabled: displayMemory && pageVisible })
 
-  // 监听数据变化，为图表添加数据点
   useEffect(() => {
     if (trafficRef.current) {
       trafficRef.current.appendData({
@@ -48,7 +45,6 @@ export const LayoutTraffic = () => {
     }
   }, [traffic])
 
-  // 使用parseTraffic统一处理转换，保持与首页一致的显示格式
   const [up, upUnit] = parseTraffic(traffic?.up || 0)
   const [down, downUnit] = parseTraffic(traffic?.down || 0)
   const [inuse, inuseUnit] = parseTraffic(memory?.inuse || 0)
@@ -96,7 +92,6 @@ export const LayoutTraffic = () => {
             {...boxStyle}
             sx={{
               ...boxStyle.sx,
-              // opacity: traffic?.is_fresh ? 1 : 0.6,
             }}
           >
             <ArrowUpwardRounded
@@ -114,7 +109,6 @@ export const LayoutTraffic = () => {
             {...boxStyle}
             sx={{
               ...boxStyle.sx,
-              // opacity: traffic?.is_fresh ? 1 : 0.6,
             }}
           >
             <ArrowDownwardRounded
@@ -134,12 +128,9 @@ export const LayoutTraffic = () => {
               sx={{
                 ...boxStyle.sx,
                 cursor: 'auto',
-                // opacity: memory?.is_fresh ? 1 : 0.6,
               }}
               color={'disabled'}
-              onClick={async () => {
-                // isDebug && (await gc());
-              }}
+              onClick={async () => {}}
             >
               <MemoryRounded {...iconStyle} />
               <Typography {...valStyle}>{inuse}</Typography>
