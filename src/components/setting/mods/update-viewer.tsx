@@ -58,6 +58,8 @@ const GITHUB_ALERT_PATTERN =
 const GITHUB_ALERT_CLASS_PATTERN =
   /markdown-alert-(note|tip|important|warning|caution)/
 
+const shouldShowReleaseNotes = (language: string) => language === 'zh'
+
 const LazyReactMarkdown = lazy(async () => {
   const [{ default: ReactMarkdown }, { default: rehypeRaw }] =
     await Promise.all([import('react-markdown'), import('rehype-raw')])
@@ -135,7 +137,7 @@ const remarkGitHubAlerts = (labels: Record<GitHubAlertType, string>) => {
 }
 
 export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
 
   const [open, setOpen] = useState(false)
   const updateState = useUpdateState()
@@ -173,12 +175,16 @@ export function UpdateViewer({ ref }: { ref?: Ref<DialogRef> }) {
     [githubAlertLabels],
   )
 
+  const activeLanguage = i18n.resolvedLanguage ?? i18n.language
   const markdownContent = useMemo(() => {
     if (!updateInfo?.body) {
       return t('settings.modals.update.messages.available')
     }
+    if (!shouldShowReleaseNotes(activeLanguage)) {
+      return t('settings.modals.update.messages.available')
+    }
     return updateInfo?.body
-  }, [t, updateInfo])
+  }, [activeLanguage, t, updateInfo])
 
   const breakChangeFlag = useMemo(() => {
     if (!updateInfo?.body) {

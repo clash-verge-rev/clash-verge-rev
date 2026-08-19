@@ -109,7 +109,7 @@
         "failed": "Abonelik yapılandırması doğrulaması başarısız oldu. Lütfen abonelik yapılandırma dosyasını kontrol edin; değişiklikler geri alındı.",
         "bootFailed": "Başlangıç abonelik yapılandırması doğrulaması başarısız oldu. Varsayılan yapılandırma ile başlatıldı; lütfen abonelik yapılandırma dosyasını kontrol edin.",
         "coreChangeFailed": "Çekirdek değiştirilirken yapılandırma doğrulaması başarısız oldu. Varsayılan yapılandırma ile başlatıldı; lütfen abonelik yapılandırma dosyasını kontrol edin.",
-        "processTerminated": "Doğrulama işlemi sonlandırıldı."
+        "processTerminated": "Doğrulama işlemi sonlandırıldı. Güvenlik yazılımının çekirdeğin çalışmasını engelleyip engellemediğini veya bilgisayarınızın CPU ve çalışma ortamının çekirdek programını destekleyip desteklemediğini kontrol edin."
       },
       "script": {
         "syntaxError": "Betik sözdizimi hatası, değişiklikler geri alındı",

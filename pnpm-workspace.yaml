@@ -1,3 +1,4 @@
+enablePrePostScripts: false
 allowBuilds:
   "@parcel/watcher": true
   core-js: true
@@ -6,4 +7,3 @@ allowBuilds:
   unrs-resolver: true
 minimumReleaseAgeExclude:
   - dayjs@1.11.21
-  - jsdom@30.0.0

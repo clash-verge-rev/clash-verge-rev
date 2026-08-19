@@ -36,8 +36,6 @@ impl SilentUpdater {
     }
 }
 
-// ─── Disk Cache ───────────────────────────────────────────────────────────────
-
 #[derive(Serialize, Deserialize)]
 struct UpdateCacheMeta {
     version: String,
@@ -100,9 +98,7 @@ impl SilentUpdater {
 // ─── Startup Install & Cache Management ─────────────────────────────────────
 
 impl SilentUpdater {
-    /// Called at app startup. If a cached update exists and is newer than the current version,
-    /// attempt to install it immediately (before the main app initializes).
-    /// Returns true if install was triggered (app should relaunch), false otherwise.
+    /// Installs a newer cached update before normal startup, if the user confirms.
     pub async fn try_install_on_startup(&self, app_handle: &tauri::AppHandle) -> bool {
         let meta = match Self::read_cache_meta() {
             Ok(meta) => meta,
@@ -187,8 +183,7 @@ impl SilentUpdater {
         // Show splash window so user knows the app is updating, not frozen
         Self::show_update_splash(app_handle, cached_version_str);
 
-        // install() is sync and may hang (known bug #2558), so run with a timeout.
-        // On Windows, NSIS takes over the process so install() may never return — that's OK.
+        // `install()` may hang (#2558); on Windows NSIS can take over without returning.
         let install_result = tokio::task::spawn_blocking({
             let bytes = bytes.clone();
             let update = update.clone();
@@ -231,7 +226,6 @@ impl SilentUpdater {
             }
         };
 
-        // Close splash window if install failed and app continues normally
         if !success {
             Self::close_update_splash(app_handle);
         }
@@ -294,11 +288,7 @@ impl SilentUpdater {
     }
 }
 
-// ─── User Confirmation Dialog ────────────────────────────────────────────────
-
 impl SilentUpdater {
-    /// Show a native dialog asking the user to install or skip the update.
-    /// Returns true if user chose to install, false if they chose to skip.
     async fn ask_user_to_install(app_handle: &tauri::AppHandle, version: &str) -> bool {
         use tauri_plugin_dialog::{DialogExt as _, MessageDialogButtons, MessageDialogKind};
 
@@ -323,12 +313,8 @@ impl SilentUpdater {
     }
 }
 
-// ─── Update Splash Window ────────────────────────────────────────────────────
-
 impl SilentUpdater {
-    /// Show a small centered splash window indicating update is being installed.
-    /// Injects HTML via eval() after window creation so it doesn't depend on any
-    /// external file in the bundle.
+    /// Uses injected HTML so the splash has no bundled-file dependency.
     fn show_update_splash(app_handle: &tauri::AppHandle, version: &str) {
         use tauri::{WebviewUrl, WebviewWindowBuilder};
 
@@ -385,7 +371,7 @@ impl SilentUpdater {
             "#
         );
 
-        // Retry eval a few times — the webview may not be ready immediately
+        // The new webview may not accept evaluation immediately.
         std::thread::spawn(move || {
             for i in 0..10 {
                 std::thread::sleep(std::time::Duration::from_millis(100 * (i + 1)));
@@ -398,7 +384,6 @@ impl SilentUpdater {
         logging!(info, Type::System, "Update splash window shown");
     }
 
-    /// Close the update splash window (e.g. after install failure).
     fn close_update_splash(app_handle: &tauri::AppHandle) {
         use tauri::Manager as _;
         if let Some(window) = app_handle.get_webview_window("update-splash") {
@@ -407,8 +392,6 @@ impl SilentUpdater {
         }
     }
 }
-
-// ─── Background Check and Download ───────────────────────────────────────────
 
 impl SilentUpdater {
     async fn check_and_download(&self, app_handle: &tauri::AppHandle) -> Result<()> {

@@ -13,7 +13,6 @@ import {
 import { debugLog } from '@/utils/debug'
 import { classifyDelay, DEFAULT_DELAY_TIMEOUT } from '@/utils/delay'
 
-/** A group's delays, handed to sorting as a value it can depend on. */
 export type DelaySnapshot = {
   of: (member: ResolvedProxyMember) => number
 }
@@ -32,22 +31,16 @@ class DelayManager {
   private cache = new Map<string, DelayUpdate>()
   private urlMap = new Map<string, string>()
 
-  // 每个节点的监听
   private listenerMap = new Map<string, (update: DelayUpdate) => void>()
 
-  // 每个分组的监听
   private groupListenerMap = new Map<string, Set<() => void>>()
-  /// A stable handle per group, replaced when that group settles. Consumers compare its
-  /// identity, so it must not be rebuilt on every read.
+  // Consumers compare snapshot identity; replace it only when the group settles.
   private groupSnapshots = new Map<string, DelaySnapshot>()
-  /// Keyed by the joined group names a consumer asked for; cleared whenever any group
-  /// settles, so the map identity changes while unaffected groups keep theirs.
   private groupSetSnapshots = new Map<
     string,
     ReadonlyMap<string, DelaySnapshot>
   >()
-  /// Batches in flight per group. A single test that lands inside one must not announce:
-  /// sorting from a half-measured group is the reordering this design exists to avoid.
+  // Suppress sort notifications until every measurement in a group batch settles.
   private activeBatches = new Map<string, number>()
 
   private pendingItemUpdates = new Map<string, DelayUpdate[]>()
@@ -126,27 +119,14 @@ class DelayManager {
 
   private queueGroupNotification(group: string) {
     if ((this.activeBatches.get(group) ?? 0) > 0) return
-    // Dropped so the next read builds a fresh identity. Only this group's snapshot changes;
-    // the set-level map is rebuilt too, but its other entries keep their identities.
+    // Invalidate the set wrapper while retaining unaffected per-group identities.
     this.groupSnapshots.delete(group)
     this.groupSetSnapshots.clear()
     this.pendingGroupUpdates.add(group)
     this.scheduleGroupFlush()
   }
 
-  /**
-   * A handle to this group's delays whose identity changes only when a test settles.
-   *
-   * Read during render and compared by identity, so it is cached rather than rebuilt: a
-   * fresh object per read would make every consumer recompute on every render.
-   */
-  /**
-   * The delays for a set of groups, keyed by group name.
-   *
-   * Cached so its identity is stable between settles, while each group's own snapshot keeps
-   * its identity unless *that* group settled — which is what lets a per-group cache survive
-   * a test in a neighbouring group.
-   */
+  /** Cached set snapshot for `useSyncExternalStore` identity comparisons. */
   groupsDelays(groupKey: string): ReadonlyMap<string, DelaySnapshot> {
     const cached = this.groupSetSnapshots.get(groupKey)
     if (cached) return cached
@@ -159,6 +139,7 @@ class DelayManager {
     return snapshots
   }
 
+  /** Cached group snapshot whose identity changes only when that group settles. */
   groupDelays(group: string): DelaySnapshot {
     const existing = this.groupSnapshots.get(group)
     if (existing) return existing
@@ -180,7 +161,6 @@ class DelayManager {
     debugLog(
       `[DelayManager] 获取测试URL，组: ${group}, URL: ${url || '未设置'}`,
     )
-    // 如果未设置URL，返回默认URL
     return url || 'http://cp.cloudflare.com/generate_204'
   }
 
@@ -198,16 +178,7 @@ class DelayManager {
     this.listenerMap.delete(key)
   }
 
-  /**
-   * Called when a delay test for `group` has settled: once per single test, and once for a
-   * whole batch however many proxies it covered.
-   *
-   * "Settled" rather than "changed" on purpose. Per-proxy display updates are already live
-   * through `setListener`; this exists for the things that must not move while results are
-   * still arriving, chiefly sort order.
-   */
-  /// Returns its own unsubscribe, so two views may watch the same group without one
-  /// silently replacing the other's listener.
+  /** Multiple views may subscribe independently; notifications occur only after settle. */
   addGroupListener(group: string, listener: () => void): () => void {
     const listeners = this.groupListenerMap.get(group) ?? new Set()
     listeners.add(listener)
@@ -278,13 +249,11 @@ class DelayManager {
     }
 
     if (details?.history && details.history.length > 0) {
-      // 0ms以error显示
       return details.history[details.history.length - 1].delay || 1e6
     }
     return -1
   }
 
-  // 统一延迟测试检测
   async unifiedDelayCheck(
     name: string,
     url: string,
@@ -296,12 +265,7 @@ class DelayManager {
     return delayProxyByName(name, url, timeout)
   }
 
-  /**
-   * Test one proxy, then tell the group its ordering may have changed.
-   *
-   * The announcement is the point at which a sorted list is allowed to re-sort. It is
-   * deliberately *not* made per result inside a batch — see `checkListDelay`.
-   */
+  /** A single test may notify immediately; a batch defers notification until it settles. */
   async checkDelay(
     member: InteractableProxyMember,
     group: string,
@@ -328,7 +292,6 @@ class DelayManager {
       `[DelayManager] 开始测试延迟，代理: ${name}, 组: ${group}, 超时: ${timeout}ms`,
     )
 
-    // 先将状态设置为测试中
     this.setDelay(name, group, -2)
 
     const startTime = Date.now()
@@ -337,18 +300,15 @@ class DelayManager {
       const url = this.getUrl(group)
       debugLog(`[DelayManager] 调用API测试延迟，代理: ${name}, URL: ${url}`)
 
-      // 设置超时处理, delay = 0 为超时
       const timeoutPromise = new Promise<ProxyDelay>((resolve) => {
         setTimeout(() => resolve({ delay: 0 }), timeout)
       })
 
-      // 使用Promise.race来实现超时控制
       const result = await Promise.race([
         this.unifiedDelayCheck(apiName, url, timeout, providerName),
         timeoutPromise,
       ])
 
-      // 确保至少显示500ms的加载动画
       const elapsedTime = Date.now() - startTime
       if (elapsedTime < 500) {
         await new Promise((resolve) => setTimeout(resolve, 500 - elapsedTime))
@@ -360,7 +320,6 @@ class DelayManager {
 
       return this.setDelay(name, group, delay, { elapsed })
     } catch (error) {
-      // 确保至少显示500ms的加载动画
       await new Promise((resolve) => setTimeout(resolve, 500))
       console.error(`[DelayManager] 延迟测试出错，代理: ${name}`, error)
       const delay = 1e6 // error
@@ -381,7 +340,6 @@ class DelayManager {
     )
     const names = proxies.map((member) => member.ref.name)
     this.activeBatches.set(group, (this.activeBatches.get(group) ?? 0) + 1)
-    // 设置正在延迟测试中
     names.forEach((name) => {
       this.setDelay(name, group, -2)
     })
@@ -395,34 +353,28 @@ class DelayManager {
       const currName = currMember.ref.name
 
       try {
-        // 确保API调用前状态为测试中
         this.setDelay(currName, group, -2)
 
-        // 添加一些随机延迟，避免所有请求同时发出和返回
+        // Stagger requests so a batch does not hit the core at once.
         if (index > 1) {
-          // 第一个不延迟，保持响应性
           await new Promise((resolve) =>
             setTimeout(resolve, Math.random() * 200),
           )
         }
 
-        // Measured without announcing: a sorted list that re-ordered on every result would
-        // reshuffle continuously for the length of the test, with rows moving out from under
-        // the pointer. The group is told once, below, when the batch has settled.
+        // Do not reorder a list around the pointer while batch results are arriving.
         await this.measureDelay(currMember, group, timeout)
       } catch (error) {
         console.error(
           `[DelayManager] 批量测试单个代理出错，代理: ${currName}`,
           error,
         )
-        // 设置为错误状态
         this.setDelay(currName, group, 1e6)
       }
 
       return help()
     }
 
-    // 限制并发数，避免发送太多请求
     const actualConcurrency = Math.min(concurrency, names.length, 10)
     debugLog(`[DelayManager] 实际并发数: ${actualConcurrency}`)
 
@@ -434,8 +386,7 @@ class DelayManager {
     try {
       await Promise.all(promiseList)
     } finally {
-      // In a `finally` so a throw cannot leave the group unannounced: the proxies would sit
-      // at -2 and the order would stay stale with nothing later to repair it.
+      // Always release the batch and notify; otherwise failures leave stale sort state.
       const remaining = (this.activeBatches.get(group) ?? 1) - 1
       if (remaining > 0) {
         this.activeBatches.set(group, remaining)
@@ -474,8 +425,7 @@ class DelayManager {
       case 'error':
         return 'error.main'
       case 'measured':
-        // How a measurement is graded is this widget's own decision; the thresholds differ
-        // from the signal icon's on purpose, because a colour has fewer steps than four bars.
+        // Colour and signal bars intentionally use different grading thresholds.
         if (delay >= 400) return 'warning.main'
         if (delay >= 250) return 'primary.main'
         return 'success.main'

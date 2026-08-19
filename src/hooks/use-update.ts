@@ -19,15 +19,10 @@ export const updateLastCheckTime = (timestamp?: number): number => {
   return now
 }
 
-// --- useUpdate hook ---
-
 export const useUpdate = (enabled: boolean = true) => {
   const { verge } = useVerge()
   const { auto_check_update } = verge || {}
 
-  // Determine if we should check for updates
-  // If enabled is explicitly false, don't check
-  // Otherwise, respect the auto_check_update setting (or default to true if null/undefined for manual triggers)
   const shouldCheck = enabled && auto_check_update !== false
 
   const fetchUpdate = async () => {
@@ -52,7 +47,6 @@ export const useUpdate = (enabled: boolean = true) => {
     return { data }
   }
 
-  // Shared last check timestamp
   const { data: lastCheckUpdate } = useQuery({
     queryKey: [LAST_CHECK_KEY],
     queryFn: readLastCheckTime,

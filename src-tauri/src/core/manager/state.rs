@@ -1,6 +1,6 @@
 #[cfg(test)]
 use super::claim_core_readiness_generation;
-use super::{CoreManager, RunningMode};
+use super::{CoreManager, PROFILE_SELECTIONS_PENDING_COMMIT, RunningMode};
 use crate::{
     AsyncHandler,
     config::Config,
@@ -20,23 +20,15 @@ use tauri_plugin_shell::ShellExt as _;
 const SIDECAR_READINESS_ATTEMPTS: usize = 30;
 
 impl CoreManager {
-    /// A core process is up: put back the node selections the user made.
-    ///
-    /// mihomo restores these itself, from the `cache.db` it keeps in the directory it was started
-    /// against — but only when `profile.store-selected` is on and that file survived, and neither
-    /// is something the app can assume. The setting comes from a merge template a user is free to
-    /// replace, and a service older than the durable runtime generation hands every start a
-    /// directory nothing has ever run in. The app holds the same selections in the profile, so it
-    /// is the one that can say for certain.
-    ///
-    /// Awaited, and deliberately here rather than beside the proxy: the caller enables the system
-    /// proxy as soon as the start returns, and pointing it at a core still on the first entry of
-    /// every group is what this exists to prevent. The wait is bounded — what cannot be put back
-    /// yet keeps being retried in the background — so a core that will not answer delays a start
-    /// instead of blocking it.
-    ///
-    /// Repeat calls supersede each other, so every start path may call this without coordinating.
+    /// Restores profile selections before callers enable the system proxy.
+    /// The bounded first pass continues in the background, and later calls supersede earlier ones.
     async fn restore_selected_nodes(&self) {
+        if PROFILE_SELECTIONS_PENDING_COMMIT
+            .try_with(|pending| *pending)
+            .unwrap_or(false)
+        {
+            return;
+        }
         crate::config::profiles::restore_selected_nodes().await;
     }
 }
@@ -463,8 +455,7 @@ mod tests {
         time::{Duration, Instant},
     };
 
-    // 起一个长命子进程用于验证 Job Object 的生命周期绑定。
-    // 直接使用 System32 下的 ping.exe，避免 cmd 中间层。
+    // Use ping directly as a long-lived process without a cmd.exe intermediary.
     fn spawn_long_lived() -> Result<Child> {
         let child = Command::new("ping")
             .args(["-n", "999", "127.0.0.1"])
@@ -474,7 +465,6 @@ mod tests {
         Ok(child)
     }
 
-    // 在超时内轮询子进程是否退出，返回是否已退出。
     fn wait_until_exited(child: &mut Child, timeout: Duration) -> Result<bool> {
         let deadline = Instant::now() + timeout;
         loop {
@@ -488,21 +478,17 @@ mod tests {
         }
     }
 
-    // 成功路径：进程被分配进 Job Object 后仍存活；drop Job 句柄触发
-    // KILL_ON_JOB_CLOSE，进程应在超时内被 OS 终止。
     #[test]
     fn job_kills_child_on_handle_drop() -> Result<()> {
         let mut child = spawn_long_lived()?;
 
         let job = create_and_assign_sidecar_job(child.id())?;
 
-        // 分配后进程应仍在运行。
         assert!(
             child.try_wait()?.is_none(),
             "child should still be running after being assigned to the job"
         );
 
-        // 关闭 Job 句柄，OS 应连带终止其成员进程。
         drop(job);
 
         assert!(
@@ -513,10 +499,9 @@ mod tests {
         Ok(())
     }
 
-    // 失败路径：对一个不存在的 PID 调用时 OpenProcess 应失败，函数返回 Err。
     #[test]
     fn returns_err_for_invalid_pid() {
-        // PID 必须为 4 的倍数且极不可能存在；0xFFFF_FFFC 对应不到真实进程。
+        // Windows PIDs are multiples of four; this one is effectively impossible.
         let result = create_and_assign_sidecar_job(0xFFFF_FFFC);
         assert!(result.is_err(), "expected Err for a non-existent PID");
     }

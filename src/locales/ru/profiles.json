@@ -71,7 +71,7 @@
     "menu": {
       "home": "Главная",
       "select": "Выбрать",
-      "shareQrCode": "Share QR Code",
+      "shareQrCode": "Поделиться QR-кодом",
       "editInfo": "Изменить информацию",
       "editFile": "Изменить файл",
       "editRules": "Редактировать правила",
@@ -134,6 +134,9 @@
         "urlRequired": "Введите URL подписки",
         "uidMissing": "Отсутствует идентификатор профиля",
         "saveFailed": "Не удалось сохранить профиль"
+      },
+      "warnings": {
+        "frequentUpdate": "Короткий интервал часто перезагружает ядро и обрывает активные соединения. Рекомендуется {{minutes}} минут (24 часа)."
       },
       "feedback": {
         "notifications": {
@@ -203,7 +206,7 @@
       "title": "Консоль скрипта"
     },
     "qrViewer": {
-      "title": "Subscription QR Code"
+      "title": "QR-код подписки"
     }
   }
 }

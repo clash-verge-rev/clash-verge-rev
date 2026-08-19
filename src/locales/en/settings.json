@@ -37,11 +37,17 @@
       },
       "actions": {
         "installService": "Install Service",
-        "uninstallService": "Uninstall Service"
+        "uninstallService": "Uninstall Service",
+        "switchToServiceMode": "Switch to service mode"
       },
       "fields": {
         "systemProxy": "System Proxy",
         "tunMode": "Tun Mode"
+      },
+      "messages": {
+        "installedCheckProxy": "The service is installed and the core is running through it. Check the system proxy switch and make your change again if it did not take.",
+        "installedCoreNotOnService": "The service is installed, but the core is not running through it. Check the core and try again.",
+        "installedProxyRestored": "The service is installed, the core is running through it, and your system proxy change has been applied."
       }
     },
     "externalController": {
@@ -286,7 +292,7 @@
         "portInUse": "Port {{port}} is already in use",
         "saved": "Port settings saved",
         "saveFailed": "Failed to save port settings",
-        "automaticFallback": "Port {{oldPort}} was in use. The mixed proxy port was switched to {{newPort}} and saved.",
+        "automaticFallback": "Port {{oldPort}} was in use, so this session runs on {{newPort}}. Your setting is unchanged and {{oldPort}} is retried on the next start.",
         "automaticFallbackFailed": "Automatic mixed proxy port fallback failed: {{error}}",
         "portTooLow": "The port must be 1000 or higher",
         "portTooHigh": "The port must be 65535 or lower"
@@ -650,6 +656,12 @@
         "reinstallFailed": "Failed to reinstall the service",
         "repairFailed": "Failed to repair the service",
         "sidecarFailed": "Failed to continue with Sidecar"
+      },
+      "sysproxy": {
+        "privilegeRequired": "Cannot set the system proxy: macOS refused the change for lack of privileges. Install the Clash Verge service; an administrator can also turn off the administrator-password requirement for system-wide settings, in the advanced options of System Settings → Privacy & Security.",
+        "directFallback": "Failed to set the system proxy; traffic has been switched back to a direct connection.",
+        "guardStopped": "The system proxy guard stopped after failing several times running. The system proxy is no longer being kept in place.",
+        "sidecarWhileServiceReady": "The system proxy could not be set because the core is still running as a Sidecar, although the Clash Verge service is ready. Restart the core to switch to service mode."
       }
     },
     "notifications": {

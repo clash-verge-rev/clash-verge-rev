@@ -1,12 +1,9 @@
-use super::{
-    Config, ConfigType, IClashTemp, IVerge,
-    snapshot::{capture_config_files, restore_files},
-};
+use super::{Config, ConfigType, IClashTemp, IVerge, MixedPort};
 use crate::{
     constants::timing,
     core::{
         handle::Handle,
-        listener::{ListenerBindScope, MIXED_PORT_KEY, proxy_listener_keys},
+        listener::{ListenerBindScope, ListenerProbeOutcome, MIXED_PORT_KEY, proxy_listener_keys},
         owner_identity::current_owner_credentials,
         service::{SERVICE_MANAGER, ServiceStatus},
         validate::CoreConfigValidator,
@@ -47,9 +44,12 @@ impl Config {
     }
 
     async fn resolve_startup_mixed_port_inner() -> Result<bool> {
+        let _config_write = Self::lock_config_write().await;
         let clash = Self::clash().await.latest_arc();
         let verge = Self::verge().await.latest_arc();
-        let selected_port = clash.get_mixed_port();
+        // A retry must re-examine the port this session actually tried, not the one still named
+        // on disk, or it keeps picking the same replacement instead of walking past it.
+        let selected_port = MixedPort::session_fallback().unwrap_or_else(|| clash.get_mixed_port());
         let bind_scope =
             ListenerBindScope::from_mapping(&clash.0).context("failed to derive mixed proxy listener scope")?;
 
@@ -64,11 +64,24 @@ impl Config {
         }
 
         let selected_scope = bind_scope.clone();
-        let port_in_use = AsyncHandler::spawn_blocking(move || !selected_scope.mixed_port_is_available(selected_port))
+        let outcome = AsyncHandler::spawn_blocking(move || selected_scope.probe_mixed_port(selected_port))
             .await
             .context("mixed proxy port probe task failed")?;
-        if !port_in_use {
-            return Ok(false);
+        // Only a proven conflict may move the port; an answer the probe could not reach is not
+        // evidence. A `Conflict` here also means the probe confirmed something is serving.
+        match outcome {
+            ListenerProbeOutcome::Conflict { .. } => {}
+            ListenerProbeOutcome::Available => return Ok(false),
+            ListenerProbeOutcome::Invalid { message } | ListenerProbeOutcome::Indeterminate { message } => {
+                logging!(
+                    warn,
+                    Type::Setup,
+                    "Could not establish whether mixed proxy port {} is free ({}); keeping it",
+                    selected_port,
+                    message
+                );
+                return Ok(false);
+            }
         }
 
         let reserved = configured_listener_ports(&clash, &verge);
@@ -85,20 +98,41 @@ impl Config {
         Ok(true)
     }
 
+    /// Move this session onto `new_port` without touching what is on disk.
+    ///
+    /// Only the Runtime Configuration changes — the Core is its only reader and it is rebuilt
+    /// every launch. `config.yaml` and `verge.yaml` keep naming `old_port` so the next launch
+    /// asks for it again.
     async fn apply_startup_mixed_port_fallback(old_port: u16, new_port: u16) -> Result<()> {
-        let clash = Self::clash().await;
-        let verge = Self::verge().await;
         let runtime = Self::runtime().await;
-        // Every failure below leaves the three layers as they were, without saying so.
-        let transaction = DraftTransaction::begin(vec![&clash, &verge, &runtime])?;
+        let transaction = DraftTransaction::begin(vec![&runtime])?;
 
-        clash.edit_draft(|draft| {
-            draft.0.insert(MIXED_PORT_KEY.into(), new_port.into());
-        });
-        verge.edit_draft(|draft| {
-            draft.verge_mixed_port = Some(new_port);
-        });
+        // On a later hop the uncommitted transaction restores the Runtime Config to the previous
+        // hop, so restore the override to match rather than dropping to what is on disk.
+        let previous_port = MixedPort::session_fallback();
+        MixedPort::set_session_fallback(new_port);
+        if let Err(error) = Self::stage_fallback_runtime().await {
+            match previous_port {
+                Some(port) => MixedPort::set_session_fallback(port),
+                None => MixedPort::clear_session_fallback(),
+            }
+            return Err(error);
+        }
 
+        transaction.commit();
+        record_fallback(old_port, new_port);
+        Handle::refresh_clash();
+        logging!(
+            warn,
+            Type::Config,
+            "Mixed proxy port {} is externally occupied; serving on {} for this session only",
+            old_port,
+            new_port
+        );
+        Ok(())
+    }
+
+    async fn stage_fallback_runtime() -> Result<()> {
         Self::generate()
             .await
             .context("failed to materialize runtime configuration with fallback port")?;
@@ -111,48 +145,9 @@ impl Config {
             bail!("runtime configuration with fallback port is invalid: {validation}");
         }
 
-        let snapshots = capture_config_files().await?;
-        let candidate_clash = clash.latest_arc();
-        let candidate_verge = verge.latest_arc();
-
-        let persist_result = async {
-            candidate_clash
-                .save_config()
-                .await
-                .context("failed to persist Application Merge Configuration")?;
-            candidate_verge
-                .save_file()
-                .await
-                .context("failed to persist selected mixed proxy port")?;
-            Self::generate_file(ConfigType::Run)
-                .await
-                .context("failed to persist Runtime Configuration")?;
-            Ok::<(), anyhow::Error>(())
-        }
-        .await;
-
-        // Files are not part of the transaction, so a failed write is restored explicitly.
-        // The drafts are rolled back first: restoring reads the committed configuration, and
-        // must not see a candidate that is being abandoned.
-        if let Err(error) = persist_result {
-            transaction.rollback();
-            return match restore_files(&snapshots).await {
-                Ok(()) => Err(error),
-                Err(rollback_error) => Err(anyhow!("{error:#}; configuration rollback failed: {rollback_error:#}")),
-            };
-        }
-
-        transaction.commit();
-        record_fallback(old_port, new_port);
-        Handle::refresh_clash();
-        Handle::refresh_verge();
-        logging!(
-            warn,
-            Type::Config,
-            "Mixed proxy port {} is externally occupied; switched to {} and persisted all configuration layers",
-            old_port,
-            new_port
-        );
+        Self::generate_file(ConfigType::Run)
+            .await
+            .context("failed to write Runtime Configuration")?;
         Ok(())
     }
 
@@ -210,9 +205,16 @@ fn report_fallback_error(message: String) {
     });
 }
 
-// Only service-managed cores can survive into this startup phase; this app has not spawned its sidecar yet.
+// Only a service-managed core can still be running during startup. Every exit here decides
+// whether the app may renumber a port the user chose, so each one logs why.
 async fn owned_service_core_uses_port(port: u16) -> bool {
-    if !matches!(SERVICE_MANAGER.current().await, ServiceStatus::Ready) {
+    let service_status = SERVICE_MANAGER.current().await;
+    if !matches!(service_status, ServiceStatus::Ready) {
+        logging!(
+            info,
+            Type::Service,
+            "Service is {service_status:?}, so no managed core can hold mixed proxy port {port}"
+        );
         return false;
     }
 
@@ -239,9 +241,26 @@ async fn owned_service_core_uses_port(port: u16) -> bool {
         }
     };
     let Some(status) = response.data else {
+        logging!(
+            warn,
+            Type::Service,
+            "Service returned no status while checking mixed proxy port {port}"
+        );
         return false;
     };
     if response.code > 0 || !status.is_active || status.core_pid.is_none() {
+        // Normal after a clean quit: the service drops the owner session and forgets the core, so
+        // it can no longer vouch for whatever holds the port. This guard only covers dirty exits.
+        logging!(
+            info,
+            Type::Service,
+            "Service no longer tracks a core for this owner (code {}, active {}, pid {:?}); \
+             mixed proxy port {} is unattributed",
+            response.code,
+            status.is_active,
+            status.core_pid,
+            port
+        );
         return false;
     }
 
@@ -261,8 +280,7 @@ async fn owned_service_core_uses_port(port: u16) -> bool {
 
 fn configured_listener_ports(clash: &IClashTemp, verge: &IVerge) -> HashSet<u16> {
     let mut ports = HashSet::new();
-    // Every listener except the Mixed Port itself: that is the one being reassigned, so
-    // colliding with its current value is exactly what we are trying to do.
+    // Exclude the Mixed Port because it is being reassigned.
     for key in proxy_listener_keys().filter(|key| *key != MIXED_PORT_KEY) {
         if let Some(port) = mapping_port(&clash.0, key) {
             ports.insert(port);

@@ -1,35 +1,19 @@
-//! Run State value types.
-//!
-//! The central distinction: [`ServiceHealth`] is what we *observed* about the Service,
-//! [`PendingAction`] is what this session *asked for*. The legacy `ServiceStatus` enum
-//! conflated the two into one slot, which is why narrowing it for the frontend had to be
-//! lossy. Nothing narrows now: [`RunStateView`] carries both, plus the derived answers.
-//!
-//! This module owns state only. Starting, stopping and restarting the Core stay in
-//! `CoreManager`: a module that both observes Service Health and drives the Core has no point
-//! at which it is consistent, because a snapshot taken mid-restart would describe a transition
-//! rather than a state.
+//! Run State separates observed Service health from session intent.
+//! Core lifecycle remains in `CoreManager`.
 
 use crate::core::manager::RunningMode;
 
-/// What was last observed about the Service. A fact about the machine, never a request.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub enum ServiceHealth {
-    /// Not probed yet.
     #[default]
     Unknown,
-    /// Installed, reachable, and speaking a compatible protocol.
     Ready,
-    /// No trusted installation evidence on this machine.
     NotInstalled,
-    /// Installed but speaking an incompatible protocol; needs reinstall.
     VersionMismatch,
-    /// Installed but unusable, with the reason we recorded.
     Unavailable(String),
 }
 
 impl ServiceHealth {
-    /// The variant name alone, for callers that carry the reason separately.
     const fn kind(&self) -> &'static str {
         match self {
             Self::Unknown => "unknown",
@@ -48,7 +32,6 @@ impl ServiceHealth {
     }
 }
 
-/// A privileged operation this session asked for against the Service.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub enum PendingAction {
@@ -58,10 +41,6 @@ pub enum PendingAction {
     ForceReinstall,
 }
 
-/// The single consistent answer to "how is the Core running, and what backs it".
-///
-/// Every question about Core availability is answered by a method here, so that no
-/// caller writes its own formula. Construct one via `RunStateStore::state`/`settled`/`probe`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct RunState {
     pub health: ServiceHealth,
@@ -74,39 +53,22 @@ pub struct RunState {
 }
 
 impl RunState {
-    /// The Service reported itself ready the last time we looked.
-    ///
-    /// Says nothing about in-flight operations — prefer [`Self::service_usable`] when
-    /// deciding whether to rely on the Service right now.
     #[must_use]
     pub const fn service_ready(&self) -> bool {
         matches!(self.health, ServiceHealth::Ready)
     }
 
-    /// The Service can be relied upon right now: ready, and not mid-operation.
     #[must_use]
     pub const fn service_usable(&self) -> bool {
         self.service_ready() && !self.op_in_flight
     }
 
-    /// TUN mode can work right now — either the app is elevated, or the Service backs it.
     #[must_use]
     pub const fn tun_capable(&self) -> bool {
         self.is_admin || self.service_usable()
     }
 
-    /// The Service cannot be used and the user has to choose what to do about it.
-    ///
-    /// A requested action always needs an answer — unless it is already being carried out,
-    /// which is a report of progress rather than a question. The legacy status could not tell
-    /// the two apart because readers blocked until the operation finished and so never saw the
-    /// request at all; now that every transition is pushed, an install started from the
-    /// settings page would otherwise raise the migration dialog on top of it, and an uninstall
-    /// would raise one offering to reinstall the very Service being removed.
-    ///
-    /// Otherwise it is only the states where the Service is present but unusable: a Service
-    /// that is simply absent, or a session that has already settled on Sidecar, needs nothing
-    /// from anyone.
+    /// In-flight, absent, and accepted-Sidecar states require no user decision.
     #[must_use]
     pub const fn service_needs_attention(&self) -> bool {
         if self.op_in_flight {
@@ -124,12 +86,7 @@ impl RunState {
         )
     }
 
-    /// TUN is switched on but cannot work, and we know that for certain.
-    ///
-    /// "For certain" is the whole difficulty: an unprobed Service, an operation in flight, or a
-    /// decision still sitting in front of the user all mean *not yet known*, and turning TUN
-    /// off on a guess would silently undo something the user asked for. This replaces the fixed
-    /// startup grace period the frontend used to wait out, which guessed at the same thing.
+    /// Unknown, in-flight, and attention-required states are inconclusive.
     #[must_use]
     pub const fn tun_should_be_disabled(&self, tun_enabled: bool) -> bool {
         if !tun_enabled || self.tun_capable() {
@@ -138,10 +95,12 @@ impl RunState {
         !matches!(self.health, ServiceHealth::Unknown) && !self.op_in_flight && !self.service_needs_attention()
     }
 
-    /// The shape sent across the IPC seam.
-    ///
-    /// Carries the derived answers, not just the raw fields, so that no caller on the other
-    /// side reinvents `tun_capable` or the "needs attention" ladder.
+    /// Present-but-broken services remain in the repair flow rather than suppressing TUN.
+    #[must_use]
+    pub const fn startup_tun_should_be_disabled(&self, tun_enabled: bool) -> bool {
+        matches!(self.health, ServiceHealth::NotInstalled) && self.tun_should_be_disabled(tun_enabled)
+    }
+
     #[must_use]
     pub fn to_view(&self) -> RunStateView {
         RunStateView {
@@ -159,7 +118,6 @@ impl RunState {
     }
 }
 
-/// The Run State as the frontend sees it.
 #[derive(Debug, Clone, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct RunStateView {
@@ -175,11 +133,8 @@ pub struct RunStateView {
     pub service_needs_attention: bool,
 }
 
-/// The service-owned part of the Run State, stored behind one lock.
-///
-/// At most one of `pending` / `sidecar_allowed` is set at a time; the transitions in
-/// [`super::RunStateStore`] maintain that, mirroring the single-slot semantics the legacy
-/// `ServiceStatus` had.
+/// Service state protected by one lock.
+/// `pending` and `sidecar_allowed` are mutually exclusive.
 #[derive(Debug, Clone, Default, PartialEq, Eq)]
 pub(super) struct StoredService {
     pub health: ServiceHealth,
@@ -188,20 +143,17 @@ pub(super) struct StoredService {
 }
 
 impl StoredService {
-    /// Record an observation, clearing any request it answers.
     pub fn observe(&mut self, health: ServiceHealth) {
         self.health = health;
         self.pending = None;
         self.sidecar_allowed = false;
     }
 
-    /// Record a requested privileged operation, preserving the last observation.
     pub const fn request(&mut self, action: PendingAction) {
         self.pending = Some(action);
         self.sidecar_allowed = false;
     }
 
-    /// Record that the user accepted Sidecar for this session.
     pub const fn allow_sidecar(&mut self) {
         self.pending = None;
         self.sidecar_allowed = true;
@@ -278,11 +230,6 @@ mod tests {
 
     #[test]
     fn an_operation_under_way_is_never_a_decision_to_put_to_the_user() {
-        // The regression this pins: an install or uninstall started from the settings page
-        // pushes its pending action to the frontend the moment it is requested. Readers used
-        // to block until the operation finished and so never saw it; now that every transition
-        // is pushed, treating it as a decision raises the migration dialog on top of an
-        // operation already running — and for an uninstall, one offering to reinstall.
         for health in [
             ServiceHealth::Unknown,
             ServiceHealth::Ready,
@@ -347,20 +294,61 @@ mod tests {
     }
 
     #[test]
+    fn startup_tun_is_disabled_only_for_a_confirmed_absent_service() {
+        assert!(
+            state(ServiceHealth::NotInstalled, false, false).startup_tun_should_be_disabled(true),
+            "a non-elevated reinstall must not keep an unusable TUN setting"
+        );
+
+        for health in [
+            ServiceHealth::Unknown,
+            ServiceHealth::Ready,
+            ServiceHealth::VersionMismatch,
+            ServiceHealth::Unavailable("socket refused".into()),
+        ] {
+            assert!(
+                !state(health.clone(), false, false).startup_tun_should_be_disabled(true),
+                "{health:?} is not proof that the Service was removed"
+            );
+        }
+    }
+
+    #[test]
+    fn startup_leaves_a_present_but_broken_service_to_the_runtime_reconciler() {
+        for health in [
+            ServiceHealth::VersionMismatch,
+            ServiceHealth::Unavailable("socket refused".into()),
+        ] {
+            let mut settled = state(health.clone(), false, false);
+            settled.sidecar_allowed = true;
+
+            assert!(settled.tun_should_be_disabled(true), "{health:?}");
+            assert!(!settled.startup_tun_should_be_disabled(true), "{health:?}");
+        }
+    }
+
+    #[test]
+    fn startup_tun_is_kept_when_disabled_elevated_or_still_undecided() {
+        assert!(!state(ServiceHealth::NotInstalled, false, false).startup_tun_should_be_disabled(false));
+        assert!(!state(ServiceHealth::NotInstalled, true, false).startup_tun_should_be_disabled(true));
+        assert!(!state(ServiceHealth::NotInstalled, false, true).startup_tun_should_be_disabled(true));
+
+        let mut requested = state(ServiceHealth::NotInstalled, false, false);
+        requested.pending = Some(PendingAction::Install);
+        assert!(
+            !requested.startup_tun_should_be_disabled(true),
+            "an install the user has still to answer is not a settled absence"
+        );
+    }
+
+    #[test]
     fn tun_is_never_disabled_while_an_operation_is_in_flight() {
-        // Mid-install the service is not usable, but that says nothing about what it will be
-        // once the operation finishes.
         assert!(!state(ServiceHealth::Ready, false, true).tun_should_be_disabled(true));
         assert!(!state(ServiceHealth::NotInstalled, false, true).tun_should_be_disabled(true));
     }
 
     #[test]
-    fn tun_is_never_disabled_while_the_core_is_not_running() {
-        // The startup regression this guards: the service is observed as absent before the
-        // startup path has decided whether to install it, and acting on that snapshot both
-        // rewrites the user's setting and removes the prompt that would have fixed it.
-        // `reconcile_tun_availability` refuses to act at all while the mode is NotRunning;
-        // this pins the state that made it dangerous.
+    fn runtime_tun_reconciliation_waits_until_the_core_is_running() {
         let stopped = state(ServiceHealth::NotInstalled, false, false);
 
         assert_eq!(stopped.mode, RunningMode::NotRunning);
@@ -372,7 +360,6 @@ mod tests {
 
     #[test]
     fn tun_is_never_disabled_on_an_unprobed_service() {
-        // The old frontend guard waited out a fixed ten seconds to approximate this.
         assert!(!state(ServiceHealth::Unknown, false, false).tun_should_be_disabled(true));
     }
 
@@ -424,7 +411,6 @@ mod tests {
         assert_eq!(stored.pending, None);
         assert!(stored.sidecar_allowed);
 
-        // The observation survives both requests.
         assert_eq!(stored.health, ServiceHealth::NotInstalled);
     }
 }

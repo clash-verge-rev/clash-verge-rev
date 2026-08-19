@@ -37,11 +37,17 @@
       },
       "actions": {
         "installService": "Hizmeti Kur",
-        "uninstallService": "Uninstall Service"
+        "uninstallService": "Uninstall Service",
+        "switchToServiceMode": "Hizmet moduna geç"
       },
       "fields": {
         "systemProxy": "Sistem Vekil'i",
         "tunMode": "Tun Modu"
+      },
+      "messages": {
+        "installedCheckProxy": "Hizmet kuruldu ve çekirdek onun üzerinden çalışıyor. Sistem vekil sunucusu anahtarını denetleyin; değişikliğiniz uygulanmadıysa yeniden yapın.",
+        "installedCoreNotOnService": "Hizmet kuruldu ancak çekirdek onun üzerinden çalışmıyor. Çekirdeği denetleyip yeniden deneyin.",
+        "installedProxyRestored": "Hizmet kuruldu, çekirdek onun üzerinden çalışıyor ve sistem proxy değişikliğiniz uygulandı."
       }
     },
     "externalController": {
@@ -286,7 +292,7 @@
         "portInUse": "Port {{port}} is already in use",
         "saved": "Port settings saved",
         "saveFailed": "Failed to save port settings",
-        "automaticFallback": "{{oldPort}} portu kullanımda. Karma proxy portu {{newPort}} olarak değiştirildi ve kaydedildi.",
+        "automaticFallback": "{{oldPort}} portu kullanımda olduğu için bu oturum {{newPort}} portunu kullanıyor. Ayarınız değişmedi ve sonraki başlatmada {{oldPort}} yeniden denenecek.",
         "automaticFallbackFailed": "Karma proxy portu otomatik olarak değiştirilemedi: {{error}}",
         "portTooLow": "Bağlantı noktası 1000 veya daha yüksek olmalıdır",
         "portTooHigh": "Bağlantı noktası 65535 veya daha düşük olmalıdır"
@@ -650,6 +656,12 @@
         "reinstallFailed": "Hizmet yeniden kurulamadı",
         "repairFailed": "Hizmet onarılamadı",
         "sidecarFailed": "Sidecar ile devam edilemedi"
+      },
+      "sysproxy": {
+        "privilegeRequired": "Sistem vekil sunucusu ayarlanamıyor: macOS yetki yetersizliği nedeniyle değişikliği reddetti. Clash Verge hizmetini kurun; yöneticiyseniz Sistem Ayarları → Gizlilik ve Güvenlik bölümündeki gelişmiş seçeneklerden, sistem genelindeki ayarlar için yönetici parolası zorunluluğunu da kapatabilirsiniz.",
+        "directFallback": "Sistem vekil sunucusu ayarlanamadı; trafik doğrudan bağlantıya geri döndürüldü.",
+        "guardStopped": "Sistem vekil sunucusu koruması art arda birkaç başarısızlıktan sonra durdu. Sistem vekil sunucusu artık otomatik olarak korunmuyor.",
+        "sidecarWhileServiceReady": "Sistem vekil sunucusu ayarlanamadı: Clash Verge hizmeti hazır ancak çekirdek hâlâ Sidecar olarak çalışıyor. Hizmet moduna geçmek için çekirdeği yeniden başlatın."
       }
     },
     "notifications": {

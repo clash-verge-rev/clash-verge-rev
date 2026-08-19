@@ -37,11 +37,17 @@
       },
       "actions": {
         "installService": "サービスをインストール",
-        "uninstallService": "サービスのアンインストール"
+        "uninstallService": "サービスのアンインストール",
+        "switchToServiceMode": "サービスモードに切り替え"
       },
       "fields": {
         "systemProxy": "システムプロキシ",
         "tunMode": "仮想ネットワークカードモード"
+      },
+      "messages": {
+        "installedCheckProxy": "サービスをインストールし、コアはサービス経由で動作しています。システムプロキシのスイッチを確認し、先ほどの変更が反映されていなければやり直してください。",
+        "installedCoreNotOnService": "サービスはインストールされましたが、コアはサービス経由で動作していません。コアの状態を確認してからやり直してください。",
+        "installedProxyRestored": "サービスがインストールされ、コアはサービス経由で動作しており、システムプロキシの変更が適用されました。"
       }
     },
     "externalController": {
@@ -286,7 +292,7 @@
         "portInUse": "Port {{port}} is already in use",
         "saved": "Port settings saved",
         "saveFailed": "Failed to save port settings",
-        "automaticFallback": "ポート {{oldPort}} は使用中です。混合プロキシポートを {{newPort}} に切り替えて保存しました。",
+        "automaticFallback": "ポート {{oldPort}} が使用中のため、今回は {{newPort}} で動作します。設定は変更されておらず、次回起動時に {{oldPort}} を再試行します。",
         "automaticFallbackFailed": "混合プロキシポートの自動切り替えに失敗しました: {{error}}",
         "portTooLow": "ポート番号は 1000 以上である必要があります",
         "portTooHigh": "ポート番号は 65535 以下である必要があります"
@@ -650,6 +656,12 @@
         "reinstallFailed": "サービスの再インストールに失敗しました",
         "repairFailed": "サービスの修復に失敗しました",
         "sidecarFailed": "Sidecar での続行に失敗しました"
+      },
+      "sysproxy": {
+        "privilegeRequired": "システムプロキシを設定できません: 権限が不足しているため macOS が変更を拒否しました。Clash Verge サービスをインストールしてください。管理者であれば、システム設定 → プライバシーとセキュリティの詳細オプションで、システム全体の設定に管理者パスワードを要求する設定をオフにすることもできます。",
+        "directFallback": "システムプロキシの設定に失敗したため、直接接続に戻しました。",
+        "guardStopped": "システムプロキシガードが連続して失敗したため停止しました。システムプロキシは自動的に維持されなくなりました。",
+        "sidecarWhileServiceReady": "システムプロキシを設定できませんでした: Clash Verge サービスは準備できていますが、コアはまだ Sidecar で動作しています。コアを再起動するとサービスモードに切り替わります。"
       }
     },
     "notifications": {

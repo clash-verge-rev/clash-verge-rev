@@ -21,8 +21,9 @@ pub static PORTABLE_FLAG: OnceCell<bool> = OnceCell::new();
 pub static CLASH_CONFIG: &str = "config.yaml";
 pub static VERGE_CONFIG: &str = "verge.yaml";
 pub static PROFILE_YAML: &str = "profiles.yaml";
+/// Marks that the one-shot raise of too-short auto-update intervals has already run.
+pub static UPDATE_INTERVAL_MIGRATED: &str = ".update-interval-migrated";
 
-/// init portable flag
 pub fn init_portable_flag() -> Result<()> {
     use tauri::utils::platform::current_exe;
 
@@ -38,7 +39,6 @@ pub fn init_portable_flag() -> Result<()> {
     Ok(())
 }
 
-/// get the verge app home dir
 pub fn app_home_dir() -> Result<PathBuf> {
     use tauri::utils::platform::current_exe;
 
@@ -52,7 +52,7 @@ pub fn app_home_dir() -> Result<PathBuf> {
         return Ok(PathBuf::from(app_dir).join(".config").join(APP_ID));
     }
 
-    // 避免在Handle未初始化时崩溃
+    // Directory helpers can run before the Tauri handle is initialized.
     let app_handle = handle::Handle::app_handle();
 
     match app_handle.path().data_dir() {
@@ -86,9 +86,7 @@ pub fn preinit_app_data_dir() -> Result<PathBuf> {
     Ok(root.join(APP_ID))
 }
 
-/// get the resources dir
 pub fn app_resources_dir() -> Result<PathBuf> {
-    // 避免在Handle未初始化时崩溃
     let app_handle = handle::Handle::app_handle();
 
     match app_handle.path().resource_dir() {
@@ -100,12 +98,10 @@ pub fn app_resources_dir() -> Result<PathBuf> {
     }
 }
 
-/// profiles dir
 pub fn app_profiles_dir() -> Result<PathBuf> {
     Ok(app_home_dir()?.join("profiles"))
 }
 
-/// icons dir
 pub fn app_icons_dir() -> Result<PathBuf> {
     Ok(app_home_dir()?.join("icons"))
 }
@@ -129,29 +125,24 @@ pub fn find_target_icons(target: &str) -> Result<Option<String>> {
     icon_path.map(|path| path_to_str(&path).map(|s| s.into())).transpose()
 }
 
-/// logs dir
 pub fn app_logs_dir() -> Result<PathBuf> {
     Ok(app_home_dir()?.join("logs"))
 }
 
-/// service logs dir
 #[cfg(target_os = "macos")]
 pub fn service_logs_root_dir() -> Result<PathBuf> {
     Ok(app_home_dir()?.join("service-logs"))
 }
 
-/// service logs dir
 #[cfg(not(target_os = "macos"))]
 pub fn service_logs_root_dir() -> Result<PathBuf> {
     app_logs_dir()
 }
 
-// latest verge log
 pub fn app_latest_log() -> Result<PathBuf> {
     Ok(app_logs_dir()?.join("latest.log"))
 }
 
-/// local backups dir
 pub fn local_backup_dir() -> Result<PathBuf> {
     let dir = app_home_dir()?.join(BACKUP_DIR);
     fs::create_dir_all(&dir)?;
@@ -168,6 +159,10 @@ pub fn verge_path() -> Result<PathBuf> {
 
 pub fn profiles_path() -> Result<PathBuf> {
     Ok(app_home_dir()?.join(PROFILE_YAML))
+}
+
+pub fn update_interval_migrated_path() -> Result<PathBuf> {
+    Ok(app_home_dir()?.join(UPDATE_INTERVAL_MIGRATED))
 }
 
 #[cfg(target_os = "macos")]
@@ -216,18 +211,14 @@ pub fn get_encryption_key() -> Result<Vec<u8>> {
     let key_path = app_dir.join(".encryption_key");
 
     if key_path.exists() {
-        // Read existing key
         fs::read(&key_path).map_err(|e| anyhow::anyhow!("Failed to read encryption key: {}", e))
     } else {
-        // Generate and save new key
         let mut key = vec![0u8; 32];
         getrandom::fill(&mut key)?;
 
-        // Ensure directory exists
         if let Some(parent) = key_path.parent() {
             fs::create_dir_all(parent).map_err(|e| anyhow::anyhow!("Failed to create key directory: {}", e))?;
         }
-        // Save key
         fs::write(&key_path, &key).map_err(|e| anyhow::anyhow!("Failed to save encryption key: {}", e))?;
         Ok(key)
     }

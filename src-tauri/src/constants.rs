@@ -43,6 +43,11 @@ pub mod timing {
     pub const SERVICE_START_RETRY_DELAY: Duration = Duration::from_millis(300);
 }
 
+pub mod profile {
+    /// Floor, in minutes, for how often a profile may auto-update (24 hours).
+    pub const MIN_UPDATE_INTERVAL: u64 = 1440;
+}
+
 pub mod files {
     pub const RUNTIME_CONFIG: &str = "clash-verge.yaml";
     pub const CHECK_CONFIG: &str = "clash-verge-check.yaml";

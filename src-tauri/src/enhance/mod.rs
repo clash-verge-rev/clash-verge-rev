@@ -15,7 +15,7 @@ use self::{
 };
 use crate::utils::dirs;
 use crate::{
-    config::{Config, IVerge, PrfItem},
+    config::{Config, IProfiles, IVerge, PrfItem},
     constants,
     utils::tmpl,
 };
@@ -157,25 +157,18 @@ async fn get_config_values() -> ConfigValues {
 }
 
 #[allow(clippy::cognitive_complexity)]
-async fn collect_profile_items() -> Result<ProfileItems> {
-    let profiles = Config::profiles().await;
-    let profiles_arc = profiles.latest_arc();
-    drop(profiles);
-
-    let current_profile_uid = match profiles_arc.get_current().cloned() {
+async fn collect_profile_items(profiles: &IProfiles) -> Result<ProfileItems> {
+    let current_profile_uid = match profiles.get_current().cloned() {
         Some(uid) => uid,
-        None => {
-            drop(profiles_arc);
-            return Ok(ProfileItems::default());
-        }
+        None => return Ok(ProfileItems::default()),
     };
 
-    let current = profiles_arc
+    let current = profiles
         .current_mapping()
         .await
         .with_context(|| format!("failed to read current profile \"{current_profile_uid}\""))?;
 
-    let current_item = match profiles_arc.get_item(&current_profile_uid) {
+    let current_item = match profiles.get_item(&current_profile_uid) {
         Ok(item) => item,
         Err(err) => {
             return Err(err).with_context(|| format!("failed to get current profile \"{current_profile_uid}\""));
@@ -200,37 +193,35 @@ async fn collect_profile_items() -> Result<ProfileItems> {
     let name = current_item.name.clone().unwrap_or_default();
 
     let (merge_item, script_item, rules_item, proxies_item, groups_item, global_merge, global_script) = tokio::join!(
-        chain_item_or_default(profiles_arc.get_item(&merge_uid).ok(), || ChainItem {
+        chain_item_or_default(profiles.get_item(&merge_uid).ok(), || ChainItem {
             uid: "".into(),
             data: ChainType::Merge(Mapping::new()),
         },),
-        chain_item_or_default(profiles_arc.get_item(&script_uid).ok(), || ChainItem {
+        chain_item_or_default(profiles.get_item(&script_uid).ok(), || ChainItem {
             uid: "".into(),
             data: ChainType::Script(tmpl::ITEM_SCRIPT.into()),
         },),
-        chain_item_or_default(profiles_arc.get_item(&rules_uid).ok(), || ChainItem {
+        chain_item_or_default(profiles.get_item(&rules_uid).ok(), || ChainItem {
             uid: "".into(),
             data: ChainType::Rules(SeqMap::default()),
         },),
-        chain_item_or_default(profiles_arc.get_item(&proxies_uid).ok(), || ChainItem {
+        chain_item_or_default(profiles.get_item(&proxies_uid).ok(), || ChainItem {
             uid: "".into(),
             data: ChainType::Proxies(SeqMap::default()),
         },),
-        chain_item_or_default(profiles_arc.get_item(&groups_uid).ok(), || ChainItem {
+        chain_item_or_default(profiles.get_item(&groups_uid).ok(), || ChainItem {
             uid: "".into(),
             data: ChainType::Groups(SeqMap::default()),
         },),
-        chain_item_or_default(profiles_arc.get_item("Merge").ok(), || ChainItem {
+        chain_item_or_default(profiles.get_item("Merge").ok(), || ChainItem {
             uid: "Merge".into(),
             data: ChainType::Merge(Mapping::new()),
         },),
-        chain_item_or_default(profiles_arc.get_item("Script").ok(), || ChainItem {
+        chain_item_or_default(profiles.get_item("Script").ok(), || ChainItem {
             uid: "Script".into(),
             data: ChainType::Script(tmpl::ITEM_SCRIPT.into()),
         },),
     );
-
-    drop(profiles_arc);
 
     Ok(ProfileItems {
         config: current,
@@ -530,12 +521,10 @@ fn merge_default_config(
                     continue;
                 }
             }
-            // 处理 external-controller 键的开关逻辑
             if key.as_str() == Some("external-controller") {
                 if enable_external_controller {
                     config.insert(key, value);
                 } else {
-                    // 如果禁用了外部控制器，设置为空字符串
                     config.insert(key, "".into());
                 }
             } else {
@@ -665,7 +654,7 @@ fn ensure_fake_ip_range6(dns: &mut Mapping) {
         .map(|m| m == "fake-ip")
         .unwrap_or(true);
 
-    // 缺失或为空字符串（可能来自手动编辑的 YAML）时都需要补充
+    // Hand-edited YAML may leave the key present but empty.
     let range6_missing = dns
         .get("fake-ip-range6")
         .and_then(|v| v.as_str())
@@ -711,10 +700,8 @@ async fn apply_dns_settings(mut config: Mapping, enable_dns_settings: bool) -> M
     config
 }
 
-/// Enhance mode
-/// 返回最终订阅、该订阅包含的键、和script执行的结果
-pub async fn enhance() -> Result<(Mapping, HashSet<String>, HashMap<String, ResultLog>)> {
-    // gather config values
+/// Returns the enhanced profile, its original keys, and script logs.
+pub async fn enhance(profiles: &IProfiles) -> Result<(Mapping, HashSet<String>, HashMap<String, ResultLog>)> {
     let cfg_vals = get_config_values().await;
     let ConfigValues {
         clash_config,
@@ -731,8 +718,7 @@ pub async fn enhance() -> Result<(Mapping, HashSet<String>, HashMap<String, Resu
         tproxy_enabled,
     } = cfg_vals;
 
-    // collect profile items
-    let profile = collect_profile_items().await?;
+    let profile = collect_profile_items(profiles).await?;
     let config = profile.config;
     let merge_item = profile.merge_item;
     let script_item = profile.script_item;
@@ -745,11 +731,9 @@ pub async fn enhance() -> Result<(Mapping, HashSet<String>, HashMap<String, Resu
 
     let result_map = HashMap::new();
 
-    // 顺序项先于手动覆盖。
     let config = process_seq_items(config, rules_item, proxies_item, groups_item);
     let exists_keys = use_keys(&config).collect::<Vec<_>>();
 
-    // merge default clash config
     let config = merge_default_config(
         config,
         clash_config,
@@ -762,15 +746,12 @@ pub async fn enhance() -> Result<(Mapping, HashSet<String>, HashMap<String, Resu
         tproxy_enabled,
     );
 
-    // app 生成项先于手动覆盖。
     let config = apply_builtin_scripts(config, clash_core, enable_builtin).await;
     let config = use_tun(config, enable_tun);
     let config = apply_dns_settings(config, enable_dns_settings).await;
 
-    // 手动覆盖前锁定 app 权威字段,覆盖后由同一个值恢复。
     let authoritative = AuthoritativeFields::capture(&config, enable_dns_settings);
 
-    // 全局手动覆盖。
     let (config, exists_keys, result_map) = process_global_items(
         config,
         exists_keys,
@@ -781,11 +762,9 @@ pub async fn enhance() -> Result<(Mapping, HashSet<String>, HashMap<String, Resu
     )
     .await;
 
-    // 当前 profile 手动覆盖。
     let (config, exists_keys, result_map) =
         process_profile_items(config, exists_keys, result_map, merge_item, script_item, &profile_name).await;
 
-    // 手动覆盖后恢复 app 权威字段。
     let config = authoritative.enforce(config);
     let config = ensure_lan_bind_address(config);
 

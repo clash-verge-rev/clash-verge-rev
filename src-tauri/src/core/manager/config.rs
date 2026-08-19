@@ -1,7 +1,7 @@
-use super::{CoreManager, RunningMode};
+use super::{CoreManager, PROFILE_SELECTIONS_PENDING_COMMIT, RunningMode};
 use crate::core::service::StageRequest;
 use crate::{
-    config::{Config, ConfigType, runtime::IRuntime},
+    config::{Config, ConfigType, IProfiles, runtime::IRuntime},
     constants::timing,
     core::{
         handle,
@@ -22,54 +22,36 @@ use std::{
 };
 use tauri_plugin_mihomo::Error as MihomoError;
 
-/// What came back from asking the Service to stage a runtime.
-///
-/// Separated from the decision below so the decision stays a pure function of it. The variants are
-/// the four ways an attempt can end, and what distinguishes them is how much they let us conclude:
-/// a refusal is the Service's verdict on this bundle, while silence says nothing at all.
+/// A staging result separated from the policy that acts on it.
 #[derive(Debug, Clone, PartialEq, Eq)]
 enum StageAttempt {
-    /// The Service that owns the running Core predates staging.
     Unsupported,
-    /// The Service answered, and its answer was a refusal about the bundle itself — the kind a
-    /// fresh start would run into again, because it would materialise the same bundle.
+    /// Restarting would present the same rejected bundle.
     RefusedTheBundle(String),
-    /// The Service answered with a refusal about something other than the bundle: the session, the
-    /// protocol, the request. Starting is how several of those get resolved, so it is not a reason
-    /// to leave the Core where it is.
+    /// A new service session may resolve this refusal.
     RefusedForAnotherReason(String),
-    /// The request did not come back. The Service is authoritative about its own runtime, so
-    /// without an answer nothing may be assumed about what it did or did not write.
+    /// The service may have staged the bundle without delivering its reply.
     Unanswered(String),
     Answered(StageRuntimeOutcome),
 }
 
-/// How the Core should be made to pick up a configuration.
 #[derive(Debug, PartialEq, Eq)]
 enum ConfigApplication {
-    /// Point the running Core at this path.
     ReloadFrom(String),
-    /// Stop the Core and start it again from a freshly materialised runtime.
     ReplaceCore,
-    /// Leave the Core alone and report why the configuration cannot be applied.
     Fail(String),
 }
 
-/// Decide how to apply a configuration, given how staging went.
-///
-/// Two branches avoid replacing the Core, for opposite reasons. One is success. The other is a
-/// refusal *about the bundle*: the Service inspected it and would not take it, and a fresh start
-/// materialises the same bundle — so it would fail the same way, having stopped a Core that was
-/// working.
-///
-/// The distinction matters more than it looks. A refusal about the session is not a refusal about
-/// the bundle: starting proposes a new session rather than presenting the old one, and the restart
-/// path is also what notices that ownership was lost and clears the system proxy. Treating every
-/// non-zero code alike would skip that.
-///
-/// Everything else — an older Service, a request that never came back, or a Service that asked to
-/// be restarted — replaces the Core, which is what this did before staging existed and what the
-/// Service guarantees is still safe after every way of declining.
+pub(crate) struct ConfigUpdateGuard<'a>(&'a CoreManager);
+
+impl Drop for ConfigUpdateGuard<'_> {
+    fn drop(&mut self) {
+        self.0.finish_config_update();
+    }
+}
+
+/// Avoids replacing a working core only when the service staged successfully or rejected the
+/// bundle itself; session-level failures may be repaired by replacement.
 fn plan_config_application(attempt: &StageAttempt) -> ConfigApplication {
     match attempt {
         StageAttempt::Answered(StageRuntimeOutcome::Staged { config_path }) => {
@@ -104,7 +86,6 @@ fn plan_config_application(attempt: &StageAttempt) -> ConfigApplication {
     }
 }
 
-/// One round trip to the Service, classified but not judged.
 async fn ask_to_stage(path: &std::path::Path) -> StageAttempt {
     match crate::core::service::stage_runtime_by_service(path).await {
         Ok(StageRequest::Answered(outcome)) => StageAttempt::Answered(outcome),
@@ -120,21 +101,8 @@ async fn ask_to_stage(path: &std::path::Path) -> StageAttempt {
     }
 }
 
-/// Ask once, and ask again only when the first attempt came back silent.
-///
-/// Silence is the one answer that has to be resolved rather than acted on. The Service commits the
-/// generation before it replies, so a reply that never arrives can leave `config.yaml` already
-/// replaced while this side concludes nothing happened — and the Service restarts a Core that dies
-/// later from exactly that file. Treating silence as "nothing happened" is therefore a guess, and
-/// the expensive half of it is silent: the Core keeps running the previous configuration until
-/// something restarts it, and then it does not.
-///
-/// Asking again is cheap precisely where it matters. Staging plans against the manifest it wrote,
-/// so a bundle that already landed copies nothing and answers in milliseconds; and because the
-/// Service holds its lifecycle lock for the whole operation, a second ask that overtakes a first
-/// one still in flight waits for it rather than interleaving with it. `confirm_within` is what
-/// keeps that wait from being the caller's problem — past it, the answer has stopped being worth
-/// more than the fallback, which is where a second silence goes anyway.
+/// Confirms one silent request because the service may commit before its reply is lost.
+/// Re-staging an already committed bundle is idempotent and bounded by `confirm_within`.
 async fn stage_with_confirmation<Ask, Fut>(confirm_within: Duration, ask: Ask) -> StageAttempt
 where
     Ask: Fn() -> Fut,
@@ -208,7 +176,57 @@ impl CoreManager {
             self.set_last_update(Instant::now());
         }
 
-        self.perform_config_update().await
+        self.perform_config_update(None).await
+    }
+
+    pub(crate) async fn update_config_forced_with_profiles(
+        &self,
+        candidate: &IProfiles,
+        rollback: &IProfiles,
+    ) -> Result<std::result::Result<ConfigUpdateGuard<'_>, ValidationOutcome>> {
+        if handle::Handle::global().is_exiting() {
+            return Ok(Err(ValidationOutcome::Skipped {
+                reason: ValidationSkipReason::Exiting,
+            }));
+        }
+        if !self.try_start_config_update() {
+            return Ok(Err(ValidationOutcome::Busy));
+        }
+        let guard = ConfigUpdateGuard(self);
+        self.set_last_update(Instant::now());
+        crate::config::profiles::supersede_selected_activation();
+
+        let outcome = match PROFILE_SELECTIONS_PENDING_COMMIT
+            .scope(true, self.perform_config_update(Some(candidate)))
+            .await
+        {
+            Ok(outcome) => outcome,
+            Err(error) => {
+                self.restore_profile_config(rollback).await?;
+                return Err(error);
+            }
+        };
+        if !outcome.is_valid() {
+            crate::config::profiles::restore_selected_nodes().await;
+            return Ok(Err(outcome));
+        }
+        match candidate.save_file().await {
+            Ok(()) => Ok(Ok(guard)),
+            Err(error) => {
+                self.restore_profile_config(rollback).await?;
+                Err(error)
+            }
+        }
+    }
+
+    async fn restore_profile_config(&self, profiles: &IProfiles) -> Result<()> {
+        let outcome = self.perform_config_update(Some(profiles)).await?;
+        if outcome.is_valid() {
+            crate::config::profiles::restore_selected_nodes().await;
+            Ok(())
+        } else {
+            Err(anyhow!("failed to restore previous Core configuration: {outcome}"))
+        }
     }
 
     pub async fn update_config_checked(&self) -> Result<()> {
@@ -234,11 +252,15 @@ impl CoreManager {
         true
     }
 
-    async fn perform_config_update(&self) -> Result<ValidationOutcome> {
+    async fn perform_config_update(&self, profiles: Option<&IProfiles>) -> Result<ValidationOutcome> {
         let runtime = Config::runtime().await;
         let transaction = DraftTransaction::begin(vec![&runtime])?;
 
-        if let Err(err) = Config::generate().await {
+        let generate = match profiles {
+            Some(profiles) => Config::generate_with_profiles(profiles).await,
+            None => Config::generate().await,
+        };
+        if let Err(err) = generate {
             let message: String = err.to_string().into();
             return Ok(ValidationOutcome::invalid_from_message(message));
         }
@@ -264,10 +286,7 @@ impl CoreManager {
         self.validate_and_apply(transaction).await
     }
 
-    /// Validate the staged Runtime Config and hand it to the Core, committing only if both work.
-    ///
-    /// Takes the transaction rather than opening one, so it covers the staging its callers did.
-    /// Every way out of here other than the last line rolls that staging back.
+    /// Validates and applies the caller's transaction, committing only on success.
     async fn validate_and_apply(&self, transaction: DraftTransaction<'_>) -> Result<ValidationOutcome> {
         let outcome = CoreConfigValidator::global().validate_config_outcome().await?;
         if !outcome.is_valid() {
@@ -280,15 +299,7 @@ impl CoreManager {
         Ok(ValidationOutcome::Valid)
     }
 
-    /// Hand the generated configuration to the Core.
-    ///
-    /// Says nothing about drafts: whether the staged Runtime Config is kept follows from
-    /// whether this succeeded, and the caller's transaction decides that.
-    ///
-    /// Both modes have the same shape — put the configuration where the Core can read it, ask the
-    /// Core to reload, restart it if that did not work. Only the first step differs: in Sidecar
-    /// mode the Core already reads the app's own directory, while in Service mode the Service has
-    /// to materialise the configuration into the directory it started the Core in.
+    /// Applies a generated configuration through the active core owner.
     async fn apply_config(&self, path: PathBuf) -> Result<()> {
         if matches!(*self.get_running_mode(), RunningMode::Service) {
             let _lifecycle = self.lifecycle_lock.lock().await;
@@ -302,18 +313,12 @@ impl CoreManager {
         self.reload_or_restart(path).await
     }
 
-    /// Apply a configuration in Service mode, staging it in place when that is possible.
-    ///
-    /// Every way of not staging leads to the same place it always led: stop the Core and start it
-    /// again from a freshly materialised runtime. That is what makes declining safe — the Service
-    /// leaves the runtime it could not stage exactly as the running Core left it.
-    ///
+    /// Applies through the service, replacing the core when in-place staging is unavailable.
     /// Caller must hold `lifecycle_lock`.
     async fn apply_config_by_service(&self, path: &std::path::Path) -> Result<()> {
         match plan_config_application(&self.attempt_staging(path).await) {
             ConfigApplication::Fail(message) => {
-                // The Service looked at this bundle and would not take it. Replacing the Core would
-                // hand it the same bundle, so the outage would buy nothing.
+                // Replacement would hand the service the same rejected bundle.
                 logging!(
                     warn,
                     Type::Core,
@@ -340,7 +345,6 @@ impl CoreManager {
         Ok(())
     }
 
-    /// Ask the Service to stage the runtime, reporting the attempt rather than judging it.
     async fn attempt_staging(&self, path: &std::path::Path) -> StageAttempt {
         if !crate::core::service::active_service_supports_runtime_staging() {
             return StageAttempt::Unsupported;
@@ -360,14 +364,14 @@ impl CoreManager {
             Type::Core,
             "Failed to apply configuration by mihomo api, restart core to apply it, error msg: {err}"
         );
-        match self.restart_core().await {
+        match self.restart_core_during_config_update().await {
             Ok(_) => {
                 logging!(info, Type::Core, "Configuration applied after restart");
                 Ok(())
             }
             Err(err) => {
-                logging!(error, Type::Core, "Failed to restart core: {}", err);
-                Err(anyhow!("Failed to apply config: {}", err))
+                logging!(error, Type::Core, "Failed to restart core: {err:#}");
+                Err(err.context("failed to apply the configuration"))
             }
         }
     }
@@ -404,12 +408,7 @@ mod tests {
         );
     }
 
-    /// Wrap a rejection as the answer the Service would have sent.
-    ///
-    /// The `match` is the point, not the wrapping: it is exhaustive, so a new way for the Service
-    /// to decline cannot be added upstream without this failing to compile — which is what sends
-    /// whoever adds it to the test below to say what it should lead to. `CoreRestarted` reached
-    /// production without one, and inherited its verdict silently.
+    /// Exhaustively maps every service rejection into the policy under test.
     fn declined(reason: StageRejection) -> StageAttempt {
         match &reason {
             StageRejection::CoreNotRunning
@@ -428,9 +427,7 @@ mod tests {
             StageRejection::RuntimeUnwritable {
                 detail: "held open".to_owned(),
             },
-            // The service's own watchdog can restart the core mid-staging, which leaves the
-            // generation holding a mixture no manifest describes. Rebuilding it from nothing is
-            // the only answer that does not guess at what is in there.
+            // A watchdog restart mid-staging can leave a generation that no manifest describes.
             StageRejection::CoreRestarted,
         ] {
             assert_eq!(
@@ -452,9 +449,7 @@ mod tests {
 
     #[test]
     fn a_refusal_about_the_bundle_leaves_the_core_alone() {
-        // Replacing the core would materialise the same bundle the Service just rejected, so the
-        // outage buys nothing: the configuration update fails either way, and this way the user's
-        // proxy is still working when it does.
+        // Keep the working core when replacement would present the same rejected bundle.
         assert_eq!(
             plan_config_application(&StageAttempt::RefusedTheBundle("runtime asset is unavailable".into())),
             ConfigApplication::Fail("runtime asset is unavailable".into())
@@ -463,9 +458,7 @@ mod tests {
 
     #[test]
     fn a_refusal_about_anything_else_still_replaces_the_core() {
-        // A stale session is the case that matters: starting proposes a new one, so it is the cure
-        // rather than a repeat of the failure — and the restart path is also what notices ownership
-        // was lost and clears the system proxy.
+        // A new session can repair stale ownership and clear the inherited system proxy.
         assert_eq!(
             plan_config_application(&StageAttempt::RefusedForAnotherReason("owner session is stale".into())),
             ConfigApplication::ReplaceCore
@@ -497,8 +490,7 @@ mod tests {
 
     #[test]
     fn a_request_that_never_came_back_makes_the_core_be_replaced() {
-        // Not knowing what the service did is the one case where reloading would be a guess: the
-        // staged path might not exist, or might hold the previous configuration.
+        // Silence gives no trustworthy path to reload.
         assert_eq!(
             plan_config_application(&StageAttempt::Unanswered("connection reset".into())),
             ConfigApplication::ReplaceCore
@@ -507,8 +499,7 @@ mod tests {
 
     #[tokio::test]
     async fn an_answer_is_taken_at_its_word_and_not_asked_for_twice() {
-        // Staging is only idempotent in what it writes, not in what it costs: a second ask after a
-        // perfectly good answer would re-send the whole bundle for nothing.
+        // Do not pay for a confirmation after a conclusive answer.
         for answer in [
             staged(),
             StageAttempt::Answered(StageRuntimeOutcome::RestartRequired {
@@ -531,9 +522,7 @@ mod tests {
 
     #[tokio::test]
     async fn silence_is_resolved_by_asking_again_rather_than_assumed() {
-        // The case this exists for: the service committed the generation and the reply was lost.
-        // Asking again reaches a service that has already done the work, so the second answer is
-        // the truth the first one failed to deliver — and it keeps the core off the replace path.
+        // Confirm a committed generation whose first reply was lost.
         let asks = Cell::new(0);
         let outcome = stage_with_confirmation(CONFIRM_WITHIN, || {
             asks.set(asks.get() + 1);
@@ -577,8 +566,7 @@ mod tests {
 
     #[tokio::test(start_paused = true)]
     async fn a_second_ask_that_keeps_working_is_not_waited_out() {
-        // A service still copying assets is why the deadline exists: the answer would be worth
-        // having, but not at the cost of leaving the user's configuration unapplied indefinitely.
+        // Do not wait indefinitely for a service still copying assets.
         let asks = Cell::new(0);
         let started = tokio::time::Instant::now();
         let outcome = stage_with_confirmation(CONFIRM_WITHIN, || async {

@@ -37,11 +37,17 @@
       },
       "actions": {
         "installService": "تثبيت الخدمة ",
-        "uninstallService": "Uninstall Service"
+        "uninstallService": "Uninstall Service",
+        "switchToServiceMode": "التبديل إلى وضع الخدمة"
       },
       "fields": {
         "systemProxy": "وكيل النظام",
         "tunMode": "وضع TUN"
+      },
+      "messages": {
+        "installedCheckProxy": "تم تثبيت الخدمة والنواة تعمل من خلالها. تحقّق من مفتاح وكيل النظام وأعد التغيير إن لم يُطبَّق.",
+        "installedCoreNotOnService": "تم تثبيت الخدمة، لكن النواة لا تعمل من خلالها. تحقّق من النواة ثم أعد المحاولة.",
+        "installedProxyRestored": "تم تثبيت الخدمة، وتعمل النواة من خلالها، وتم تطبيق تغيير وكيل النظام الخاص بك."
       }
     },
     "externalController": {
@@ -286,7 +292,7 @@
         "portInUse": "Port {{port}} is already in use",
         "saved": "Port settings saved",
         "saveFailed": "Failed to save port settings",
-        "automaticFallback": "المنفذ {{oldPort}} مستخدم. تم تبديل منفذ الوكيل المختلط إلى {{newPort}} وحفظه.",
+        "automaticFallback": "المنفذ {{oldPort}} مستخدم، لذا تعمل هذه الجلسة على {{newPort}}. لم يتغيّر إعدادك وسيُعاد تجربة {{oldPort}} عند التشغيل التالي.",
         "automaticFallbackFailed": "فشل التبديل التلقائي لمنفذ الوكيل المختلط: {{error}}",
         "portTooLow": "يجب ألا يقل المنفذ عن 1000",
         "portTooHigh": "يجب ألا يزيد المنفذ عن 65535"
@@ -650,6 +656,12 @@
         "reinstallFailed": "تعذّر إعادة تثبيت الخدمة",
         "repairFailed": "تعذّر إصلاح الخدمة",
         "sidecarFailed": "تعذّر المتابعة باستخدام Sidecar"
+      },
+      "sysproxy": {
+        "privilegeRequired": "تعذّر ضبط وكيل النظام: رفض macOS التغيير لعدم كفاية الصلاحيات. ثبّت خدمة Clash Verge؛ وإن كنت مسؤولًا فيمكنك أيضًا إيقاف اشتراط كلمة سر المسؤول للإعدادات على مستوى النظام من الخيارات المتقدمة في إعدادات النظام ← الخصوصية والأمان.",
+        "directFallback": "تعذّر ضبط وكيل النظام؛ تمت إعادة حركة البيانات إلى اتصال مباشر.",
+        "guardStopped": "توقف حارس وكيل النظام بعد عدة إخفاقات متتالية. لم يعد وكيل النظام يُحفَظ تلقائيًا.",
+        "sidecarWhileServiceReady": "تعذّر ضبط وكيل النظام: خدمة Clash Verge جاهزة لكن النواة ما زالت تعمل بوضع Sidecar. أعد تشغيل النواة للتبديل إلى وضع الخدمة."
       }
     },
     "notifications": {

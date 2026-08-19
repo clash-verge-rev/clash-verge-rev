@@ -24,6 +24,10 @@ use std::os::windows::io::OwnedHandle;
 
 pub(crate) static CLASH_LOGGER: Lazy<Arc<AsyncLogger>> = Lazy::new(|| Arc::new(AsyncLogger::new()));
 
+tokio::task_local! {
+    static PROFILE_SELECTIONS_PENDING_COMMIT: bool;
+}
+
 const CORE_READINESS_ACTIVE_BIT: u64 = 1;
 const CORE_READINESS_GENERATION_STEP: u64 = 1 << 1;
 
@@ -276,10 +280,9 @@ impl CoreManager {
                         }
                         Err(fallback_error) => {
                             crate::config::Config::block_startup_core(&fallback_error);
-                            return Err(anyhow::anyhow!(
-                                "core startup failed: {start_error:#}; mixed proxy port fallback failed: \
-                                 {fallback_error:#}"
-                            ));
+                            return Err(start_error.context(format!(
+                                "the mixed proxy port fallback did not rescue core startup: {fallback_error:#}"
+                            )));
                         }
                     }
                 }

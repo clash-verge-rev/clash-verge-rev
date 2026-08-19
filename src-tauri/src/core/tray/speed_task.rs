@@ -8,14 +8,9 @@ use std::time::Duration;
 use tauri::async_runtime::JoinHandle;
 use tauri_plugin_mihomo::models::WsConnectionId;
 
-/// 托盘速率流异常后的重连间隔。
 const TRAY_SPEED_RETRY_DELAY: Duration = Duration::from_secs(1);
-/// 托盘速率流运行时的空闲轮询间隔。
-const TRAY_SPEED_IDLE_POLL_INTERVAL: Duration = Duration::from_millis(200);
-/// 托盘速率流在此时间内收不到有效数据时，触发重连并降级到 0/0。
 const TRAY_SPEED_STALE_TIMEOUT: Duration = Duration::from_secs(5);
 
-/// macOS 托盘速率任务控制器。
 #[derive(Clone)]
 pub struct TraySpeedController {
     speed_task: Arc<Mutex<Option<JoinHandle<()>>>>,
@@ -44,13 +39,11 @@ impl TraySpeedController {
         }
     }
 
-    /// 启动托盘速率采集后台任务（基于 `/traffic` WebSocket 流）。
     fn start_task(&self) {
         if handle::Handle::global().is_exiting() {
             return;
         }
 
-        // 关键步骤：托盘不可用时不启动速率任务，避免无效连接重试。
         if !Self::has_main_tray() {
             logging!(warn, Type::Tray, "托盘不可用，跳过启动托盘速率任务");
             return;
@@ -88,9 +81,7 @@ impl TraySpeedController {
 
                 loop {
                     let next_state = speed_stream
-                        .next_event(TRAY_SPEED_IDLE_POLL_INTERVAL, TRAY_SPEED_STALE_TIMEOUT, || {
-                            handle::Handle::global().is_exiting()
-                        })
+                        .next_event(TRAY_SPEED_STALE_TIMEOUT, || handle::Handle::global().is_exiting())
                         .await;
 
                     match next_state {
@@ -115,7 +106,7 @@ impl TraySpeedController {
                     break;
                 }
 
-                // Stale 分支在内层 loop 中已重置为 0/0；此处兜底 Closed 分支（流被远端关闭）。
+                // `Stale` already reset the display; this covers remote close.
                 Self::apply_tray_speed(0, 0);
                 tokio::time::sleep(TRAY_SPEED_RETRY_DELAY).await;
             }
@@ -126,17 +117,12 @@ impl TraySpeedController {
         *guard = Some(task);
     }
 
-    /// 停止托盘速率采集后台任务并清除速率显示。
     fn stop_task(&self) {
-        // 取出任务句柄，与 speed_connection_id 一同传入清理任务。
         let task = self.speed_task.lock().take();
         let speed_connection_id = Arc::clone(&self.speed_connection_id);
 
         AsyncHandler::spawn(move || async move {
-            // 关键步骤：先等待 abort 完成，再断开 WebSocket 连接。
-            // 若直接 abort 后立即 disconnect，任务可能已通过 take 取走 connection_id
-            // 但尚未完成断开，导致 connection_id 丢失、连接泄漏。
-            // await task handle 可保证原任务已退出，connection_id 不再被占用。
+            // Await abort before disconnect so the task cannot consume and lose the connection ID.
             if let Some(task) = task {
                 task.abort();
                 let _ = task.await;

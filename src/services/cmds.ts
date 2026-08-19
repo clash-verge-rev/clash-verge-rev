@@ -1,6 +1,7 @@
 import { Channel, invoke } from '@tauri-apps/api/core'
 import dayjs from 'dayjs'
 
+import type { CommandFailure } from '@/services/notice-service'
 import { showNotice } from '@/services/notice-service'
 import type { ProxyViewV1 } from '@/types/proxy-view'
 import { debugLog } from '@/utils/debug'
@@ -82,13 +83,11 @@ export async function getClashInfo() {
   return invoke<IClashInfo | null>('get_clash_info')
 }
 
-// Fault-tolerant current proxy mode read (does not depend on mihomo /configs
-// strict BaseConfig deserialization); used as a fallback for the home mode card.
+// Fallback mode read independent of strict mihomo `/configs` deserialization.
 export async function getClashMode() {
   return invoke<string | null>('get_clash_mode')
 }
 
-// Get runtime config which controlled by verge
 export async function getRuntimeConfig() {
   return invoke<IConfigData | null>('get_runtime_config')
 }
@@ -125,14 +124,13 @@ export async function syncTrayProxySelection() {
   return invoke<void>('sync_tray_proxy_selection')
 }
 
-/**
- * Record which node a group is on, in the current profile.
- *
- * Group and node, not the whole selection list: the merge happens in the backend against the
- * profile as it stands, so two selections made in quick succession cannot overwrite each other.
- */
+/** Sends one selection pair so the backend can merge against current profile state. */
 export async function recordSelectedNode(groupName: string, node: string) {
   return invoke<void>('record_selected_node', { groupName, node })
+}
+
+export async function forgetSelectedNode(groupName: string) {
+  return invoke<void>('forget_selected_node', { groupName })
 }
 
 export async function getProxyView(): Promise<ProxyViewV1> {
@@ -205,7 +203,7 @@ export async function getEmbeddedServerPort() {
 }
 
 export async function changeClashCore(clashCore: string) {
-  return invoke<string | null>('change_clash_core', { clashCore })
+  return invoke<CommandFailure | null>('change_clash_core', { clashCore })
 }
 
 export async function restartCore() {
@@ -367,7 +365,6 @@ export async function listLocalBackup() {
   return invoke<ILocalBackupFile[]>('list_local_backup')
 }
 
-// 获取当前运行模式
 export type RunningMode = 'Service' | 'Sidecar' | 'NotRunning'
 
 type ServiceHealth =
@@ -383,12 +380,7 @@ type PendingServiceAction =
   | 'reinstall'
   | 'forceReinstall'
 
-/**
- * How the core is running and what backs it, as one consistent snapshot.
- *
- * The derived answers travel with it — `tunCapable`, `serviceUsable`,
- * `serviceNeedsAttention` — so nothing here is recomputed from the raw fields.
- */
+/** Consistent core/service snapshot with backend-derived availability flags. */
 export interface RunState {
   mode: RunningMode
   service: ServiceHealth
@@ -406,17 +398,31 @@ export const getRuntimeState = async () => {
   return invoke<RunState>('get_runtime_state')
 }
 
-// 获取应用运行时间
+export type FailedOperation =
+  | 'systemProxyEnable'
+  | 'systemProxyDisable'
+  | 'systemProxyRestore'
+  | 'systemProxyGuard'
+
+export interface PendingFailure {
+  code: string
+  detail: string
+  operation: FailedOperation
+  sequence: number
+}
+
+export const getPendingFailures = async () => {
+  return invoke<PendingFailure[]>('get_pending_failures')
+}
+
 export const getAppUptime = async () => {
   return invoke<number>('get_app_uptime')
 }
 
-// 安装系统服务
 export const installService = async () => {
   return invoke<void>('install_service')
 }
 
-// 卸载系统服务
 export const uninstallService = async () => {
   return invoke<void>('uninstall_service')
 }

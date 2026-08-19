@@ -135,6 +135,9 @@
         "uidMissing": "Profil tanımlayıcısı eksik",
         "saveFailed": "Profil kaydedilemedi"
       },
+      "warnings": {
+        "frequentUpdate": "Kısa bir aralık çekirdeği o sıklıkta yeniden yükler ve mevcut bağlantıları koparır. {{minutes}} dakika (24 saat) önerilir."
+      },
       "feedback": {
         "notifications": {
           "creationRetry": "Profil oluşturma başarısız oldu, Clash vekil ile yeniden deneniyor...",

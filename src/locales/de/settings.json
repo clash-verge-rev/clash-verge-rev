@@ -37,11 +37,17 @@
       },
       "actions": {
         "installService": "Service installieren",
-        "uninstallService": "Dienst deinstallieren"
+        "uninstallService": "Dienst deinstallieren",
+        "switchToServiceMode": "In den Dienstmodus wechseln"
       },
       "fields": {
         "systemProxy": "Systemproxy",
         "tunMode": "Virtual Network Interface-Modus"
+      },
+      "messages": {
+        "installedCheckProxy": "Der Dienst ist installiert und der Kern läuft über ihn. Prüfen Sie den Systemproxy-Schalter und wiederholen Sie Ihre Änderung, falls sie nicht übernommen wurde.",
+        "installedCoreNotOnService": "Der Dienst ist installiert, der Kern läuft aber nicht über ihn. Prüfen Sie den Kern und versuchen Sie es erneut.",
+        "installedProxyRestored": "Der Dienst ist installiert, der Kern läuft darüber, und Ihre Systemproxy-Änderung wurde angewendet."
       }
     },
     "externalController": {
@@ -286,7 +292,7 @@
         "portInUse": "Port {{port}} is already in use",
         "saved": "Port settings saved",
         "saveFailed": "Failed to save port settings",
-        "automaticFallback": "Port {{oldPort}} ist belegt. Der gemischte Proxy-Port wurde auf {{newPort}} geändert und gespeichert.",
+        "automaticFallback": "Port {{oldPort}} ist belegt, daher läuft diese Sitzung auf {{newPort}}. Die Einstellung bleibt unverändert und {{oldPort}} wird beim nächsten Start erneut versucht.",
         "automaticFallbackFailed": "Der automatische Wechsel des gemischten Proxy-Ports ist fehlgeschlagen: {{error}}",
         "portTooLow": "Der Port muss mindestens 1000 sein",
         "portTooHigh": "Der Port darf höchstens 65535 sein"
@@ -650,6 +656,12 @@
         "reinstallFailed": "Dienst konnte nicht neu installiert werden",
         "repairFailed": "Dienst konnte nicht repariert werden",
         "sidecarFailed": "Fortsetzung mit Sidecar fehlgeschlagen"
+      },
+      "sysproxy": {
+        "privilegeRequired": "Systemproxy kann nicht gesetzt werden: macOS hat die Änderung mangels Berechtigung abgelehnt. Installieren Sie den Clash-Verge-Dienst; als Administrator können Sie in den erweiterten Optionen unter Systemeinstellungen → Datenschutz & Sicherheit auch die Passwortpflicht für systemweite Einstellungen deaktivieren.",
+        "directFallback": "Systemproxy konnte nicht gesetzt werden; der Datenverkehr wurde auf eine direkte Verbindung zurückgesetzt.",
+        "guardStopped": "Der Systemproxy-Wächter wurde nach mehreren Fehlversuchen in Folge gestoppt. Der Systemproxy wird nicht mehr automatisch aufrechterhalten.",
+        "sidecarWhileServiceReady": "Der Systemproxy konnte nicht gesetzt werden: Der Clash-Verge-Dienst ist bereit, der Kern läuft aber noch als Sidecar. Starten Sie den Kern neu, um in den Dienstmodus zu wechseln."
       }
     },
     "notifications": {

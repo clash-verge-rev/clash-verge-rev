@@ -135,6 +135,9 @@
         "uidMissing": "شناسه پروفایل موجود نیست",
         "saveFailed": "ذخیره پروفایل ناموفق بود"
       },
+      "warnings": {
+        "frequentUpdate": "بازهٔ کوتاه باعث بارگذاری مکرر هسته و قطع اتصال‌های فعال می‌شود. {{minutes}} دقیقه (۲۴ ساعت) توصیه می‌شود."
+      },
       "feedback": {
         "notifications": {
           "creationRetry": "Profile creation failed, retrying with Clash proxy...",

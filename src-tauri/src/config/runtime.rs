@@ -9,8 +9,7 @@ const PATCH_CONFIG_INNER: [&str; 5] = ["allow-lan", "ipv6", "log-level", "unifie
 #[derive(Default, Clone)]
 pub struct IRuntime {
     pub config: Option<Mapping>,
-    // 记录在订阅中（包括merge和script生成的）出现过的keys
-    // 这些keys不一定都生效
+    // Keys seen in the profile pipeline, including merge and script output.
     pub exists_keys: HashSet<String>,
     // TODO 或许可以用 FixMap 来存储以提升效率
     pub chain_logs: HashMap<String, Vec<(String, String)>>,
@@ -22,7 +21,6 @@ impl IRuntime {
         Self::default()
     }
 
-    // 这里只更改 allow-lan | ipv6 | log-level | tun | tunnels
     #[inline]
     pub fn patch_config(&mut self, patch: &Mapping) {
         let config = if let Some(config) = self.config.as_mut() {
@@ -56,54 +54,7 @@ impl IRuntime {
         }
     }
 
-    /// 更新链式代理配置
-    ///
-    /// 该函数更新 `proxies` 和 `proxy-groups` 配置，并处理链式代理的修改或(传入 None )删除。
-    ///
-    /// 配置示例：
-    ///
-    /// ```json
-    /// {
-    ///     "proxies": [
-    ///         {
-    ///             "name": "入口节点",
-    ///             "type": "xxx",
-    ///             "server": "xxx",
-    ///             "port": "xxx",
-    ///             "ports": "xxx",
-    ///             "password": "xxx",
-    ///             "skip-cert-verify": "xxx"
-    ///         },
-    ///         {
-    ///             "name": "hop_node_1_xxxx",
-    ///             "type": "xxx",
-    ///             "server": "xxx",
-    ///             "port": "xxx",
-    ///             "ports": "xxx",
-    ///             "password": "xxx",
-    ///             "skip-cert-verify": "xxx",
-    ///             "dialer-proxy": "入口节点"
-    ///         },
-    ///         {
-    ///             "name": "出口节点",
-    ///             "type": "xxx",
-    ///             "server": "xxx",
-    ///             "port": "xxx",
-    ///             "ports": "xxx",
-    ///             "password": "xxx",
-    ///             "skip-cert-verify": "xxx",
-    ///             "dialer-proxy": "hop_node_1_xxxx"
-    ///         }
-    ///     ],
-    ///     "proxy-groups": [
-    ///         {
-    ///             "name": "proxy_chain",
-    ///             "type": "select",
-    ///             "proxies": ["出口节点"]
-    ///         }
-    ///     ]
-    /// }
-    /// ```
+    /// Rebuilds `dialer-proxy` links from an ordered proxy chain, or removes them for `None`.
     #[inline]
     pub fn update_proxy_chain_config(&mut self, proxy_chain_config: Option<Value>) {
         let config = if let Some(config) = self.config.as_mut() {

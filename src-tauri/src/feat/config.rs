@@ -1,6 +1,6 @@
 use crate::{
     config::{Config, IVerge},
-    core::{CoreManager, autostart, handle, hotkey, logger::Logger, tray},
+    core::{CoreManager, autostart, handle, hotkey, logger::Logger, proxy_control::SystemProxyStateUnknown, tray},
     module::{auto_backup::AutoBackupManager, lightweight},
 };
 use anyhow::Result;
@@ -8,6 +8,7 @@ use bitflags::bitflags;
 use clash_verge_draft::{DraftTransaction, SharedDraft};
 use clash_verge_logging::{Type, logging, logging_error};
 use serde_yaml_ng::Mapping;
+use tokio::sync::MutexGuard;
 
 /// Patch Clash configuration
 pub async fn patch_clash(patch: &Mapping) -> Result<()> {
@@ -211,9 +212,6 @@ async fn process_terminated_flags(update_flags: UpdateFlags, patch: &IVerge) -> 
         CoreManager::global().update_config_checked().await?;
         handle::Handle::refresh_clash();
     }
-    if update_flags.contains(UpdateFlags::VERGE_CONFIG) {
-        handle::Handle::refresh_verge();
-    }
     if update_flags.contains(UpdateFlags::LAUNCH) {
         autostart::update_launch().await?;
     }
@@ -268,19 +266,9 @@ async fn process_terminated_flags(update_flags: UpdateFlags, patch: &IVerge) -> 
     Ok(())
 }
 
-/// Apply a patch to the app's configuration, then re-check anything it can invalidate.
+/// Apply a patch, then reconcile TUN when its setting changes.
 ///
-/// Today that is TUN, which is a question about the *setting* rather than about the Run State:
-/// no Run State transition follows a TUN patch, so the reconciliation that reacts to those
-/// would never see it. Switching TUN on from the global hotkey is the case that reaches here —
-/// unlike the tray item and the settings switch it is not gated on availability, and the flags
-/// the patch raises are answered by a Core reload that changes no Run State at all. Left alone
-/// the setting stays on and every surface reports TUN as enabled while nothing carries its
-/// traffic.
-///
-/// The reconciliation writes configuration of its own, so it goes through
-/// [`apply_verge_patch`] rather than back through here. That makes the absence of a cycle a
-/// property of the call graph rather than of a runtime early-return.
+/// TUN patches do not always produce a Run State transition, so reconciliation is explicit.
 pub async fn patch_verge(patch: &IVerge, not_save_file: bool) -> Result<()> {
     apply_verge_patch(patch, not_save_file).await?;
     if patch.enable_tun_mode.is_some() {
@@ -289,25 +277,45 @@ pub async fn patch_verge(patch: &IVerge, not_save_file: bool) -> Result<()> {
     Ok(())
 }
 
-/// Apply a patch and nothing else. For callers that are themselves a reconciliation.
+/// Apply a patch without post-update reconciliation.
 pub(super) async fn apply_verge_patch(patch: &IVerge, not_save_file: bool) -> Result<()> {
+    let config_write = Config::lock_config_write().await;
+    apply_verge_patch_locked(&config_write, patch, not_save_file).await
+}
+
+/// Apply a patch with the shared configuration write lock already held.
+/// Callers must pass the guard returned by [`Config::lock_config_write`].
+pub(super) async fn apply_verge_patch_locked(
+    _config_write: &MutexGuard<'_, ()>,
+    patch: &IVerge,
+    not_save_file: bool,
+) -> Result<()> {
     let verge = Config::verge().await;
-    // Applying the flags can fail, and until now that `?` returned straight out of here past
-    // an `if let Err(..) { discard() }` the compiler could never reach — leaving the failed
-    // edit sitting in the draft, where every later reader saw a value that was never applied
-    // and never written to disk.
-    //
-    // Claiming the layer is what makes the rollback safe. This function holds its draft across
-    // `process_terminated_flags`, which restarts the Core and can take seconds; a second patch
-    // arriving in that window used to share the one draft slot, and whichever of the two failed
-    // first discarded the other's staged edit too.
+    // Hold the claim across side effects so concurrent transactions cannot share this draft.
     let transaction = DraftTransaction::begin(vec![&verge])?;
     verge.edit_draft(|d| d.patch_config(patch));
 
     let update_flags = determine_update_flags(patch);
     logging!(debug, Type::Setup, "Determined update flags: {:?}", update_flags);
-    process_terminated_flags(update_flags, patch).await?;
+    if let Err(error) = process_terminated_flags(update_flags, patch).await {
+        if !may_commit_system_proxy_disabled(patch, &error) {
+            return Err(error);
+        }
+        // Commit the safe state after a user-requested proxy patch partly lands.
+        verge.edit_draft(|d| d.enable_system_proxy = Some(false));
+        transaction.commit();
+        announce_verge_change();
+        // Persist the forced-off value even when the original patch was pre-saved.
+        let unsaved = verge.data_arc().save_file().await.err();
+        return Err(match unsaved {
+            Some(save) => error.context(format!(
+                "the system proxy state became unknown and the disabled safety value could not be saved: {save:#}"
+            )),
+            None => error,
+        });
+    }
     transaction.commit();
+    announce_verge_change();
 
     logging_error!(Type::Backup, AutoBackupManager::global().refresh_settings().await);
     if !not_save_file {
@@ -319,8 +327,69 @@ pub(super) async fn apply_verge_patch(patch: &IVerge, not_save_file: bool) -> Re
     Ok(())
 }
 
+fn announce_verge_change() {
+    handle::Handle::refresh_verge();
+}
+
+/// Whether a user proxy patch may commit disabled after a partial write.
+fn may_commit_system_proxy_disabled(patch: &IVerge, error: &anyhow::Error) -> bool {
+    patch.enable_system_proxy.is_some() && SystemProxyStateUnknown::is_in(error)
+}
+
 pub async fn fetch_verge_config() -> Result<SharedDraft<IVerge>> {
     let draft = Config::verge().await;
     let data = draft.data_arc();
     Ok(data)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{IVerge, SystemProxyStateUnknown, may_commit_system_proxy_disabled};
+
+    fn state_unknown() -> anyhow::Error {
+        anyhow::anyhow!("networksetup refused")
+            .context(SystemProxyStateUnknown)
+            .context("failed to apply the system proxy")
+    }
+
+    #[test]
+    fn the_user_turning_the_proxy_on_gets_it_committed_as_off_when_the_os_ended_up_unknown() {
+        let patch = IVerge {
+            enable_system_proxy: Some(true),
+            ..IVerge::default()
+        };
+
+        assert!(may_commit_system_proxy_disabled(&patch, &state_unknown()));
+    }
+
+    #[test]
+    fn a_patch_about_something_else_never_rewrites_the_proxy_setting() {
+        let patch = IVerge {
+            enable_tun_mode: Some(true),
+            ..IVerge::default()
+        };
+
+        assert!(!may_commit_system_proxy_disabled(&patch, &state_unknown()));
+    }
+
+    #[test]
+    fn nothing_is_committed_when_nothing_is_known_to_have_been_written() {
+        let patch = IVerge {
+            enable_system_proxy: Some(true),
+            ..IVerge::default()
+        };
+        let refused = anyhow::anyhow!("networksetup refused").context("failed to apply the system proxy");
+
+        assert!(!may_commit_system_proxy_disabled(&patch, &refused));
+    }
+
+    #[test]
+    fn turning_the_proxy_off_and_failing_that_way_still_commits_off() {
+        let patch = IVerge {
+            enable_system_proxy: Some(false),
+            ..IVerge::default()
+        };
+
+        assert!(may_commit_system_proxy_disabled(&patch, &state_unknown()));
+    }
 }
