@@ -170,12 +170,25 @@ where
     first_failure([("global proxy", global), ("PAC", pac)])
 }
 
+/// Treats a missing network service as a completed disable: with nothing to write to, the
+/// requested "no proxy" state already holds. Turning a proxy on must still fail.
+fn tolerate_missing_network_service(enabling: bool, outcome: sysproxy::Result<()>) -> Result<()> {
+    match outcome {
+        #[cfg(target_os = "macos")]
+        Err(sysproxy::Error::NoActiveNetworkService) if !enabling => {
+            logging!(warn, Type::Core, "no active network service, nothing to turn off");
+            Ok(())
+        }
+        other => other.map_err(anyhow::Error::from),
+    }
+}
+
 /// Force both proxy kinds off, in one blocking hop.
 async fn disable_all_proxies(sys: Sysproxy, auto: Autoproxy) -> Result<()> {
     tokio::task::spawn_blocking(move || {
         disable_both(
-            || sys.set_system_proxy().map_err(anyhow::Error::from),
-            || auto.set_auto_proxy().map_err(anyhow::Error::from),
+            || tolerate_missing_network_service(sys.enable, sys.set_system_proxy()),
+            || tolerate_missing_network_service(auto.enable, auto.set_auto_proxy()),
         )
     })
     .await?
@@ -472,11 +485,11 @@ impl Sysopt {
         let applied = tokio::task::spawn_blocking(move || {
             for (index, step) in apply_steps.into_iter().enumerate() {
                 let written = match step {
-                    ProxyApplyStep::Autoproxy => auto.set_auto_proxy(),
-                    ProxyApplyStep::Sysproxy => sys.set_system_proxy(),
+                    ProxyApplyStep::Autoproxy => tolerate_missing_network_service(auto.enable, auto.set_auto_proxy()),
+                    ProxyApplyStep::Sysproxy => tolerate_missing_network_service(sys.enable, sys.set_system_proxy()),
                 };
                 if let Err(error) = written {
-                    return Err((index > 0, anyhow::Error::from(error)));
+                    return Err((index > 0, error));
                 }
             }
             Ok(())
