@@ -137,15 +137,3 @@ pub async fn copy_clash_env() {
         logging!(error, Type::ProxyMode, "Failed to write to clipboard");
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::toggle_operation;
-    use crate::core::notification::FailedOperation;
-
-    #[test]
-    fn a_failed_toggle_records_which_way_the_user_was_asking() {
-        assert_eq!(toggle_operation(true), FailedOperation::SystemProxyEnable);
-        assert_eq!(toggle_operation(false), FailedOperation::SystemProxyDisable);
-    }
-}

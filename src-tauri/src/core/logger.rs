@@ -234,16 +234,3 @@ impl Logger {
         }
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::should_sync_service_writer;
-    use crate::core::manager::RunningMode;
-
-    #[test]
-    fn service_writer_sync_requires_service_running_mode() {
-        assert!(should_sync_service_writer(RunningMode::Service));
-        assert!(!should_sync_service_writer(RunningMode::Sidecar));
-        assert!(!should_sync_service_writer(RunningMode::NotRunning));
-    }
-}

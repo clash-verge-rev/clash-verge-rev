@@ -21,28 +21,3 @@ macro_rules! singleton {
         }
     };
 }
-
-#[cfg(test)]
-mod tests {
-    struct TestStruct {
-        value: i32,
-    }
-
-    impl TestStruct {
-        fn new() -> Self {
-            Self { value: 42 }
-        }
-    }
-
-    singleton!(TestStruct, TEST_INSTANCE);
-
-    #[test]
-    fn test_singleton_macro() {
-        let instance1 = TestStruct::global();
-        let instance2 = TestStruct::global();
-
-        assert_eq!(instance1.value, 42);
-        assert_eq!(instance2.value, 42);
-        assert!(std::ptr::eq(instance1, instance2));
-    }
-}

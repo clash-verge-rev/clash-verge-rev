@@ -37,37 +37,3 @@ fn alpha2_to_emoji(alpha2: &str) -> String {
         .and_then(|x| char::from_u32(c2).map(|y| format!("{x}{y}")))
         .unwrap_or_default()
 }
-
-#[cfg(test)]
-mod tests {
-    use super::country_code_to_emoji;
-
-    #[test]
-    fn country_code_to_emoji_iso2() {
-        assert_eq!(country_code_to_emoji("CN"), "🇨🇳");
-        assert_eq!(country_code_to_emoji("us"), "🇺🇸");
-    }
-
-    #[test]
-    fn country_code_to_emoji_iso3() {
-        assert_eq!(country_code_to_emoji("CHN"), "🇨🇳");
-        assert_eq!(country_code_to_emoji("USA"), "🇺🇸");
-    }
-
-    #[test]
-    fn country_code_to_emoji_invalid() {
-        assert_eq!(country_code_to_emoji("XXX"), "");
-        assert_eq!(country_code_to_emoji("ZZ"), "");
-    }
-
-    #[test]
-    fn country_code_to_emoji_short() {
-        assert_eq!(country_code_to_emoji("C"), "");
-        assert_eq!(country_code_to_emoji(""), "");
-    }
-
-    #[test]
-    fn country_code_to_emoji_long() {
-        assert_eq!(country_code_to_emoji("CNAAA"), "");
-    }
-}

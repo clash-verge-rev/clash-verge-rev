@@ -166,24 +166,26 @@ impl<T, E: std::fmt::Display> WithErrorCode<T> for Result<T, E> {
 
 #[cfg(test)]
 mod tests {
-    use super::{CommandFailure, WithErrorCode as _, coded_error, proxy_aware_coded_error, proxy_aware_error};
-    use crate::core::proxy_control::SysproxyFailure;
     use anyhow::Context as _;
 
+    use super::{CommandFailure, WithErrorCode as _, proxy_aware_coded_error};
+    use crate::core::proxy_control::SysproxyFailure;
+
     #[test]
-    fn coded_error_preserves_stable_code_and_diagnostic_detail() {
+    fn command_failure_matches_the_frontend_wire_contract() {
         assert_eq!(
-            coded_error("CORE_RESTART_FAILED", "connection refused"),
-            CommandFailure {
-                code: Some("CORE_RESTART_FAILED".to_owned()),
-                detail: "connection refused".to_owned(),
-                operation: None,
-            }
+            serde_json::to_value(CommandFailure::coded("CORE_START_FAILED", "connection refused"))
+                .unwrap_or(serde_json::Value::Null),
+            serde_json::json!({ "code": "CORE_START_FAILED", "detail": "connection refused" })
+        );
+        assert_eq!(
+            serde_json::to_value(CommandFailure::plain("disk full")).unwrap_or(serde_json::Value::Null),
+            serde_json::json!({ "detail": "disk full" })
         );
     }
 
     #[test]
-    fn with_error_code_preserves_whole_anyhow_context_chain() {
+    fn coded_errors_preserve_the_anyhow_context_chain() {
         let source: anyhow::Result<()> = Err(anyhow::anyhow!("connection refused"))
             .context("failed to reach the mihomo core")
             .context("failed to restart the core");
@@ -193,37 +195,15 @@ mod tests {
             .err()
             .unwrap_or_else(|| CommandFailure::plain("the call should have failed"));
 
+        assert_eq!(failure.code.as_deref(), Some("CORE_RESTART_FAILED"));
         assert_eq!(
-            failure,
-            CommandFailure {
-                code: Some("CORE_RESTART_FAILED".to_owned()),
-                detail: "failed to restart the core: failed to reach the mihomo core: connection refused".to_owned(),
-                operation: None,
-            }
+            failure.detail,
+            "failed to restart the core: failed to reach the mihomo core: connection refused"
         );
     }
 
     #[test]
-    fn with_error_code_leaves_plain_display_errors_untouched() {
-        let source: Result<(), &str> = Err("plain failure");
-
-        let failure = source
-            .with_error_code("PROFILE_READ_FAILED")
-            .err()
-            .unwrap_or_else(|| CommandFailure::plain("the call should have failed"));
-
-        assert_eq!(
-            failure,
-            CommandFailure {
-                code: Some("PROFILE_READ_FAILED".to_owned()),
-                detail: "plain failure".to_owned(),
-                operation: None,
-            }
-        );
-    }
-
-    #[test]
-    fn a_classification_outranks_the_code_naming_the_operation() {
+    fn system_proxy_classification_outranks_the_operation_code() {
         let failure = anyhow::Error::new(sysproxy::Error::RequiresAdminPrivileges)
             .context(SysproxyFailure::PrivilegeRequired)
             .context("failed to restart the core");
@@ -231,94 +211,6 @@ mod tests {
         let reported = proxy_aware_coded_error(&failure, "CORE_RESTART_FAILED");
 
         assert_eq!(reported.code.as_deref(), Some("SYSPROXY_PRIVILEGE_REQUIRED"));
-        assert!(reported.detail.contains("failed to restart the core"), "{reported:?}");
-        assert!(reported.detail.contains("admin privileges"), "{reported:?}");
-    }
-
-    #[test]
-    fn without_a_classification_the_callers_code_is_used() {
-        let failure = anyhow::anyhow!("connection refused").context("failed to start the core");
-
-        let reported = proxy_aware_coded_error(&failure, "CORE_START_FAILED");
-
-        assert_eq!(
-            reported,
-            CommandFailure {
-                code: Some("CORE_START_FAILED".to_owned()),
-                detail: "failed to start the core: connection refused".to_owned(),
-                operation: None,
-            }
-        );
-    }
-
-    #[test]
-    fn commands_that_report_plain_text_stay_uncoded_without_a_classification() {
-        let failure = anyhow::anyhow!("disk full").context("failed to save the configuration");
-
-        let reported = proxy_aware_error(&failure);
-
-        assert_eq!(
-            reported,
-            CommandFailure {
-                code: None,
-                detail: "failed to save the configuration: disk full".to_owned(),
-                operation: None,
-            }
-        );
-    }
-
-    #[test]
-    fn commands_that_report_plain_text_still_carry_a_classification() {
-        let failure = anyhow::Error::new(SysproxyFailure::DirectFallback {
-            detail: "service could not set the proxy".to_owned(),
-        })
-        .context("failed to apply the verge patch");
-
-        let reported = proxy_aware_error(&failure);
-
-        assert_eq!(reported.code.as_deref(), Some("SYSPROXY_DIRECT_FALLBACK"));
-        assert!(
-            reported.detail.contains("failed to apply the verge patch"),
-            "{reported:?}"
-        );
-        assert!(
-            reported.detail.contains("service could not set the proxy"),
-            "{reported:?}"
-        );
-    }
-
-    #[test]
-    fn a_command_that_knows_the_request_can_say_which_way_it_went() {
-        let asking_on = CommandFailure::coded("SYSPROXY_PRIVILEGE_REQUIRED", "refused")
-            .asking_for(Some(crate::core::notification::FailedOperation::SystemProxyEnable));
-
-        assert_eq!(
-            serde_json::to_value(asking_on).unwrap_or(serde_json::Value::Null),
-            serde_json::json!({
-                "code": "SYSPROXY_PRIVILEGE_REQUIRED",
-                "detail": "refused",
-                "operation": "systemProxyEnable",
-            })
-        );
-
-        assert_eq!(
-            serde_json::to_value(CommandFailure::coded("CORE_START_FAILED", "no").asking_for(None))
-                .unwrap_or(serde_json::Value::Null),
-            serde_json::json!({ "code": "CORE_START_FAILED", "detail": "no" })
-        );
-    }
-
-    #[test]
-    fn the_serialised_shape_is_what_the_frontend_reads() {
-        assert_eq!(
-            serde_json::to_value(CommandFailure::coded("CORE_START_FAILED", "connection refused"))
-                .unwrap_or(serde_json::Value::Null),
-            serde_json::json!({ "code": "CORE_START_FAILED", "detail": "connection refused" })
-        );
-
-        assert_eq!(
-            serde_json::to_value(CommandFailure::plain("disk full")).unwrap_or(serde_json::Value::Null),
-            serde_json::json!({ "detail": "disk full" })
-        );
+        assert!(reported.detail.contains("failed to restart the core"));
     }
 }

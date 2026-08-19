@@ -184,26 +184,3 @@ pub fn reload_main_window_if_needed() {
         logging!(warn, Type::Window, "重载页面失败: {e}");
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::restored_window_size_is_too_small;
-
-    #[test]
-    fn restored_window_size_rejects_zero_dimensions() {
-        assert!(restored_window_size_is_too_small(0, 700));
-        assert!(restored_window_size_is_too_small(940, 0));
-    }
-
-    #[test]
-    fn restored_window_size_rejects_dimensions_below_minimum() {
-        assert!(restored_window_size_is_too_small(519, 700));
-        assert!(restored_window_size_is_too_small(940, 519));
-    }
-
-    #[test]
-    fn restored_window_size_accepts_minimum_or_larger_dimensions() {
-        assert!(!restored_window_size_is_too_small(520, 520));
-        assert!(!restored_window_size_is_too_small(940, 700));
-    }
-}

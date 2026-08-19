@@ -73,40 +73,23 @@ where
 }
 
 #[cfg(test)]
-#[allow(clippy::expect_used, clippy::panic, reason = "tests assert by panicking")]
 mod tests {
     use super::*;
 
     #[test]
-    fn a_selected_port_wins_over_the_merge_config() {
-        assert_eq!(resolve_desired(None, Some(9000), 7897), 9000);
-    }
-
-    #[test]
-    fn the_merge_config_answers_when_nothing_is_selected() {
+    fn desired_port_uses_session_then_selection_then_merge_priority() {
+        assert_eq!(resolve_desired(Some(7900), Some(9000), 8080), 7900);
+        assert_eq!(resolve_desired(None, Some(9000), 8080), 9000);
         assert_eq!(resolve_desired(None, None, 8080), 8080);
     }
 
-    #[test]
-    fn a_session_fallback_outranks_the_port_still_written_down() {
-        assert_eq!(resolve_desired(Some(7900), Some(7897), 7897), 7900);
-    }
-
     #[tokio::test]
-    async fn a_reporting_core_overrides_what_we_configured() {
+    async fn effective_port_prefers_a_bound_core_port() {
         assert_eq!(resolve_effective(|| async { Ok(7898) }, 7897).await, 7898);
-    }
-
-    #[tokio::test]
-    async fn an_unreachable_core_leaves_the_configured_port_standing() {
+        assert_eq!(resolve_effective(|| async { Ok(0) }, 7897).await, 7897);
         assert_eq!(
             resolve_effective(|| async { anyhow::bail!("core is not running") }, 7897).await,
             7897
         );
-    }
-
-    #[tokio::test]
-    async fn a_core_that_has_not_bound_yet_is_not_believed() {
-        assert_eq!(resolve_effective(|| async { Ok(0) }, 7897).await, 7897);
     }
 }

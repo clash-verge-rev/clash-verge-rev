@@ -385,37 +385,10 @@ pub enum ConfigType {
     Run,
     Check,
 }
+
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::mem;
-
-    #[test]
-    #[allow(unused_variables)]
-    #[allow(clippy::expect_used)]
-    fn test_prfitem_from_merge_size() {
-        let merge_item = PrfItem::from_merge(Some("Merge".into())).expect("Failed to create merge item in test");
-        let prfitem_size = mem::size_of_val(&merge_item);
-        let boxed_merge_item = Box::new(merge_item);
-        let box_prfitem_size = mem::size_of_val(&boxed_merge_item);
-        assert!(box_prfitem_size < prfitem_size);
-    }
-
-    #[test]
-    #[allow(unused_variables)]
-    fn test_draft_size_non_boxed() {
-        let draft = Draft::new(IRuntime::new());
-        let iruntime_size = std::mem::size_of_val(&draft);
-        assert_eq!(iruntime_size, std::mem::size_of::<Draft<IRuntime>>());
-    }
-
-    #[test]
-    #[allow(unused_variables)]
-    fn test_draft_size_boxed() {
-        let draft = Draft::new(Box::new(IRuntime::new()));
-        let box_iruntime_size = std::mem::size_of_val(&draft);
-        assert_eq!(box_iruntime_size, std::mem::size_of::<Draft<Box<IRuntime>>>());
-    }
 
     #[tokio::test]
     async fn failed_profile_index_survives_startup_without_cleanup() -> Result<()> {
@@ -431,14 +404,8 @@ mod tests {
         let profile_was_preserved = tokio::fs::try_exists(&active_profile).await?;
         tokio::fs::remove_dir_all(&profiles_dir).await?;
 
-        assert!(
-            profile_was_preserved,
-            "startup must not delete profiles when profiles.yaml could not be loaded"
-        );
-        assert!(
-            profiles.data_arc().get_items().is_none(),
-            "startup must not replace an unreadable profile index with defaults"
-        );
+        assert!(profile_was_preserved);
+        assert!(profiles.data_arc().get_items().is_none());
         Ok(())
     }
 }

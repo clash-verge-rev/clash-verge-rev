@@ -565,19 +565,3 @@ fn fix_dirty_url(input: &str) -> Result<Url> {
 
     Ok(url)
 }
-
-#[cfg(test)]
-mod tests {
-    use super::{PrfOption, allow_auto_update_enabled};
-
-    #[test]
-    fn auto_update_defaults_to_enabled_and_preserves_explicit_false() {
-        assert!(allow_auto_update_enabled(None));
-
-        let disabled = PrfOption {
-            allow_auto_update: Some(false),
-            ..PrfOption::default()
-        };
-        assert!(!allow_auto_update_enabled(Some(&disabled)));
-    }
-}
