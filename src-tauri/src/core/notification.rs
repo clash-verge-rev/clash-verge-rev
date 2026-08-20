@@ -16,13 +16,30 @@ pub enum FrontendEvent<'a> {
     RefreshVerge,
     RefreshProfiles,
     RefreshProxyConfig,
-    NoticeMessage { status: &'a str, message: String },
-    ProfileChanged { current_profile_id: &'a String },
-    TimerUpdated { profile_index: &'a String },
-    ProfileUpdateStarted { uid: &'a String },
-    ProfileUpdateCompleted { uid: &'a String },
-    RunStateChanged { state: serde_json::Value },
+    NoticeMessage {
+        status: &'a str,
+        message: String,
+    },
+    ProfileChanged {
+        current_profile_id: &'a String,
+    },
+    TimerUpdated {
+        profile_index: &'a String,
+    },
+    ProfileUpdateStarted {
+        uid: &'a String,
+    },
+    ProfileUpdateCompleted {
+        uid: &'a String,
+    },
+    RunStateChanged {
+        state: serde_json::Value,
+    },
     PendingFailuresChanged,
+    #[cfg(target_os = "linux")]
+    ThemeChanged {
+        theme: tauri::Theme,
+    },
 }
 
 /// Operation associated with a pending failure.
@@ -279,6 +296,8 @@ impl NotificationSystem {
             FrontendEvent::ProfileUpdateCompleted { uid } => ("profile-update-completed", Ok(json!({ "uid": uid }))),
             FrontendEvent::RunStateChanged { state } => ("verge://run-state-changed", Ok(state)),
             FrontendEvent::PendingFailuresChanged => ("verge://pending-failures-changed", Ok(serde_json::Value::Null)),
+            #[cfg(target_os = "linux")]
+            FrontendEvent::ThemeChanged { theme } => ("tauri://theme-changed", serde_json::to_value(theme)),
         }
     }
 
