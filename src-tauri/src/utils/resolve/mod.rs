@@ -6,7 +6,7 @@ use crate::{
     config::Config,
     core::{
         CoreManager, Timer,
-        handle::{self, Handle},
+        handle::Handle,
         hotkey::Hotkey,
         logger::Logger,
         service::{SERVICE_MANAGER, ServiceManager},
@@ -126,7 +126,7 @@ pub(crate) fn watch_linux_theme_changed() {
                     dark_light::Mode::Unspecified => tauri::Theme::Light, // fallback to light
                 };
                 notification::NotificationSystem::send_event(
-                    handle::Handle::app_handle().clone(),
+                    Handle::app_handle().clone(),
                     notification::FrontendEvent::ThemeChanged { theme },
                 );
             }
