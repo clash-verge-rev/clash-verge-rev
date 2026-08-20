@@ -170,12 +170,25 @@ where
     first_failure([("global proxy", global), ("PAC", pac)])
 }
 
+/// Treats a missing network service as a completed disable: with nothing to write to, the
+/// requested "no proxy" state already holds. Turning a proxy on must still fail.
+fn tolerate_missing_network_service(_enabling: bool, outcome: sysproxy::Result<()>) -> Result<()> {
+    match outcome {
+        #[cfg(target_os = "macos")]
+        Err(sysproxy::Error::NoActiveNetworkService) if !_enabling => {
+            logging!(warn, Type::Core, "no active network service, nothing to turn off");
+            Ok(())
+        }
+        other => other.map_err(anyhow::Error::from),
+    }
+}
+
 /// Force both proxy kinds off, in one blocking hop.
 async fn disable_all_proxies(sys: Sysproxy, auto: Autoproxy) -> Result<()> {
     tokio::task::spawn_blocking(move || {
         disable_both(
-            || sys.set_system_proxy().map_err(anyhow::Error::from),
-            || auto.set_auto_proxy().map_err(anyhow::Error::from),
+            || tolerate_missing_network_service(sys.enable, sys.set_system_proxy()),
+            || tolerate_missing_network_service(auto.enable, auto.set_auto_proxy()),
         )
     })
     .await?
@@ -242,24 +255,32 @@ impl Default for Sysopt {
 
 #[cfg(target_os = "windows")]
 static DEFAULT_BYPASS: &str = "localhost;127.*;192.168.*;10.*;172.16.*;172.17.*;172.18.*;172.19.*;172.20.*;172.21.*;172.22.*;172.23.*;172.24.*;172.25.*;172.26.*;172.27.*;172.28.*;172.29.*;172.30.*;172.31.*;<local>";
+#[cfg(target_os = "windows")]
+static BYPASS_SEPARATOR: &str = ";";
 #[cfg(target_os = "linux")]
 static DEFAULT_BYPASS: &str = "localhost,127.0.0.1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,::1";
+#[cfg(any(target_os = "linux", target_os = "macos"))]
+static BYPASS_SEPARATOR: &str = ",";
 #[cfg(target_os = "macos")]
 static DEFAULT_BYPASS: &str =
     "127.0.0.1,192.168.0.0/16,10.0.0.0/8,172.16.0.0/12,localhost,*.local,*.crashlytics.com,<local>";
+
+fn format_bypass(use_default: bool, custom_bypass: &str) -> String {
+    if custom_bypass.is_empty() {
+        DEFAULT_BYPASS.into()
+    } else if use_default {
+        format!("{DEFAULT_BYPASS}{BYPASS_SEPARATOR}{custom_bypass}").into()
+    } else {
+        custom_bypass.into()
+    }
+}
 
 async fn get_bypass() -> String {
     let verge = Config::verge().await.latest_arc();
     let use_default = verge.use_default_bypass.unwrap_or(true);
     let custom_bypass = verge.system_proxy_bypass.as_deref().unwrap_or("");
 
-    if custom_bypass.is_empty() {
-        DEFAULT_BYPASS.into()
-    } else if use_default {
-        format!("{DEFAULT_BYPASS},{custom_bypass}").into()
-    } else {
-        custom_bypass.into()
-    }
+    format_bypass(use_default, custom_bypass)
 }
 
 singleton!(Sysopt, SYSOPT);
@@ -472,11 +493,11 @@ impl Sysopt {
         let applied = tokio::task::spawn_blocking(move || {
             for (index, step) in apply_steps.into_iter().enumerate() {
                 let written = match step {
-                    ProxyApplyStep::Autoproxy => auto.set_auto_proxy(),
-                    ProxyApplyStep::Sysproxy => sys.set_system_proxy(),
+                    ProxyApplyStep::Autoproxy => tolerate_missing_network_service(auto.enable, auto.set_auto_proxy()),
+                    ProxyApplyStep::Sysproxy => tolerate_missing_network_service(sys.enable, sys.set_system_proxy()),
                 };
                 if let Err(error) = written {
-                    return Err((index > 0, anyhow::Error::from(error)));
+                    return Err((index > 0, error));
                 }
             }
             Ok(())
@@ -547,13 +568,41 @@ impl Sysopt {
 #[cfg(test)]
 mod tests {
     use super::{
-        AuthoritativeState, OsProxyState, ProxyApplyStep, SystemProxyStateUnknown, authoritative_state,
-        authoritative_state_from, classify_os_proxy_state, disable_both, disable_until_the_last_write_is_ours,
-        first_failure, proxy_apply_steps, recover_from_failed_write, target_is_already_in_place,
+        AuthoritativeState, BYPASS_SEPARATOR, DEFAULT_BYPASS, OsProxyState, ProxyApplyStep, SystemProxyStateUnknown,
+        authoritative_state, authoritative_state_from, classify_os_proxy_state, disable_both,
+        disable_until_the_last_write_is_ours, first_failure, format_bypass, proxy_apply_steps,
+        recover_from_failed_write, target_is_already_in_place,
     };
     use parking_lot::Mutex;
     use std::collections::VecDeque;
     use sysproxy::{Autoproxy, Sysproxy};
+
+    #[test]
+    fn empty_custom_bypass_uses_defaults() {
+        assert_eq!(format_bypass(false, ""), DEFAULT_BYPASS);
+    }
+
+    #[test]
+    fn custom_bypass_can_replace_defaults() {
+        assert_eq!(format_bypass(false, "example.com"), "example.com");
+    }
+
+    #[test]
+    fn default_and_custom_bypass_use_platform_separator() {
+        assert_eq!(
+            format_bypass(true, "example.com"),
+            format!("{DEFAULT_BYPASS}{BYPASS_SEPARATOR}example.com")
+        );
+    }
+
+    #[cfg(target_os = "windows")]
+    #[test]
+    fn windows_default_and_custom_bypass_use_semicolon() {
+        assert_eq!(
+            format_bypass(true, "example.com"),
+            format!("{DEFAULT_BYPASS};example.com")
+        );
+    }
 
     async fn record_disable_sequence(
         drained: bool,

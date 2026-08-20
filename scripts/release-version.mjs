@@ -20,13 +20,6 @@
  *   pnpm release-version autobuild-latest
  *   pnpm release-version deploytest
  *
- * The script will:
- *   - Validate and normalize the version argument
- *   - Update the version field in package.json
- *   - Update the version field in src-tauri/Cargo.toml
- *   - Update the version field in src-tauri/tauri.conf.json
- *
- * Errors are logged and the process exits with code 1 on failure.
  */
 
 import { execSync } from 'child_process'
@@ -35,10 +28,6 @@ import path from 'path'
 
 import { program } from 'commander'
 
-/**
- * 获取当前 git 短 commit hash
- * @returns {string}
- */
 function getGitShortCommit() {
   try {
     return execSync('git rev-parse --short HEAD').toString().trim()
@@ -48,10 +37,6 @@ function getGitShortCommit() {
   }
 }
 
-/**
- * 获取最新 Tauri 相关提交的短 hash
- * @returns {string}
- */
 function getLatestTauriCommit() {
   try {
     const fullHash = execSync(
@@ -73,13 +58,7 @@ function getLatestTauriCommit() {
   }
 }
 
-/**
- * 生成短时间戳（格式：MMDD）或带 commit（格式：MMDD.cc39b27）
- * 使用 Asia/Shanghai 时区
- * @param {boolean} withCommit 是否带 commit
- * @param {boolean} useTauriCommit 是否使用 Tauri 相关的 commit（仅当 withCommit 为 true 时有效）
- * @returns {string}
- */
+/** Generates `MMDD`, optionally followed by a commit, in the Asia/Shanghai timezone. */
 function generateShortTimestamp(withCommit = false, useTauriCommit = false) {
   const now = new Date()
 
@@ -102,41 +81,22 @@ function generateShortTimestamp(withCommit = false, useTauriCommit = false) {
   return `${month}${day}`
 }
 
-/**
- * 验证版本号格式
- * @param {string} version
- * @returns {boolean}
- */
 function isValidVersion(version) {
   return /^v?\d+\.\d+\.\d+(-(alpha|beta|rc)(\.\d+)?)?(\+[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*)?$/i.test(
     version,
   )
 }
 
-/**
- * 标准化版本号
- * @param {string} version
- * @returns {string}
- */
 function normalizeVersion(version) {
   return version.startsWith('v') ? version : `v${version}`
 }
 
-/**
- * 提取基础版本号（去掉所有 -tag 和 +build 部分）
- * @param {string} version
- * @returns {string}
- */
 function getBaseVersion(version) {
   let base = version.replace(/-(alpha|beta|rc)(\.\d+)?/i, '')
   base = base.replace(/\+[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*/g, '')
   return base
 }
 
-/**
- * 更新 package.json 版本号
- * @param {string} newVersion
- */
 async function updatePackageVersion(newVersion) {
   const _dirname = process.cwd()
   const packageJsonPath = path.join(_dirname, 'package.json')
@@ -165,10 +125,6 @@ async function updatePackageVersion(newVersion) {
   }
 }
 
-/**
- * 更新 Cargo.toml 版本号
- * @param {string} newVersion
- */
 async function updateCargoVersion(newVersion) {
   const _dirname = process.cwd()
   const cargoTomlPath = path.join(_dirname, 'src-tauri', 'Cargo.toml')
@@ -197,10 +153,6 @@ async function updateCargoVersion(newVersion) {
   }
 }
 
-/**
- * 更新 tauri.conf.json 版本号
- * @param {string} newVersion
- */
 async function updateTauriConfigVersion(newVersion) {
   const _dirname = process.cwd()
   const tauriConfigPath = path.join(_dirname, 'src-tauri', 'tauri.conf.json')
@@ -216,7 +168,6 @@ async function updateTauriConfigVersion(newVersion) {
       tauriConfig.version,
     )
 
-    // 使用完整版本信息，包含build metadata
     tauriConfig.version = versionWithoutV
 
     await fs.writeFile(
@@ -233,9 +184,6 @@ async function updateTauriConfigVersion(newVersion) {
   }
 }
 
-/**
- * 获取当前版本号
- */
 async function getCurrentVersion() {
   const _dirname = process.cwd()
   const packageJsonPath = path.join(_dirname, 'package.json')
@@ -249,9 +197,6 @@ async function getCurrentVersion() {
   }
 }
 
-/**
- * 主函数
- */
 async function main(versionArg) {
   if (!versionArg) {
     console.error('Error: Version argument is required')
@@ -274,16 +219,11 @@ async function main(versionArg) {
       const baseVersion = getBaseVersion(currentVersion)
 
       if (versionArg.toLowerCase() === 'autobuild') {
-        // 格式: 2.3.0+autobuild.1004.cc39b27
-        // 使用 Tauri 相关的最新 commit hash
         newVersion = `${baseVersion}+autobuild.${generateShortTimestamp(true, true)}`
       } else if (versionArg.toLowerCase() === 'autobuild-latest') {
-        // 格式: 2.3.0+autobuild.1004.a1b2c3d (使用最新 Tauri 提交)
         const latestTauriCommit = getLatestTauriCommit()
         newVersion = `${baseVersion}+autobuild.${generateShortTimestamp()}.${latestTauriCommit}`
       } else if (versionArg.toLowerCase() === 'deploytest') {
-        // 格式: 2.3.0+deploytest.1004.cc39b27
-        // 使用 Tauri 相关的最新 commit hash
         newVersion = `${baseVersion}+deploytest.${generateShortTimestamp(true, true)}`
       } else {
         newVersion = `${baseVersion}-${versionArg.toLowerCase()}`

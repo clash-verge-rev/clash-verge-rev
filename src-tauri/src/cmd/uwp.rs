@@ -1,6 +1,5 @@
 use crate::cmd::CmdResult;
 
-/// Platform-specific implementation for UWP functionality
 #[cfg(windows)]
 mod platform {
     use crate::cmd::CmdResult;
@@ -12,7 +11,6 @@ mod platform {
     }
 }
 
-/// Stub implementation for non-Windows platforms
 #[cfg(not(windows))]
 mod platform {
     use super::CmdResult;
@@ -23,7 +21,6 @@ mod platform {
     }
 }
 
-/// Command exposed to Tauri
 #[tauri::command]
 pub async fn invoke_uwp_tool() -> CmdResult {
     platform::invoke_uwp_tool()

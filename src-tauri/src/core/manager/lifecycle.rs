@@ -24,15 +24,12 @@ enum StartupDecision {
     Wait,
 }
 
-/// Proxy action captured before a controlled stop.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 enum ProxyStopIntent {
     Clear,
-    /// Let the service overwrite the inherited proxy state.
     HandOverToService,
 }
 
-/// Select whether a controlled stop clears or hands over proxy state.
 const fn proxy_stop_intent(is_macos: bool, running_mode: RunningMode, decision: StartupDecision) -> ProxyStopIntent {
     match (is_macos, running_mode, decision) {
         (true, RunningMode::Sidecar, StartupDecision::Service) => ProxyStopIntent::HandOverToService,
@@ -280,14 +277,10 @@ where
     start_sidecar().await
 }
 
-/// sidecar→service 交接结果
 #[cfg(target_os = "windows")]
 enum HandoffOutcome {
-    /// 服务尚未就绪
     NotReady,
-    /// 已完成或无需交接
     Done,
-    /// 交接失败并已回退
     Failed,
 }
 
@@ -408,7 +401,6 @@ impl CoreManager {
         run_sidecar_termination_transition(proxy_control::clear, || self.stop_core_by_sidecar_unprepared()).await
     }
 
-    /// Replaces a Service-owned core while the caller holds `lifecycle_lock`.
     pub(super) async fn replace_service_core_with_config(&self, config_file: &Path) -> Result<()> {
         run_service_config_replacement_transition(
             cfg!(target_os = "macos"),
@@ -457,14 +449,11 @@ impl CoreManager {
         Ok(())
     }
 
-    /// 调用者须已持有 `lifecycle_lock`。
     async fn start_core_inner(&self) -> Result<()> {
-        // 退出中不再启动新内核。
         if Handle::global().is_exiting() {
             return Ok(());
         }
 
-        // 已有内核运行时保持幂等,重启请走 restart_core。
         if !matches!(*self.get_running_mode(), RunningMode::NotRunning) {
             logging!(
                 info,
@@ -479,7 +468,6 @@ impl CoreManager {
             self.rollback_failed_start().await;
             return Ok(());
         }
-        // 等待服务期间可能进入退出;未真正启动时回滚状态。
         if Handle::global().is_exiting() {
             self.core_stopped();
             return Ok(());
@@ -491,15 +479,12 @@ impl CoreManager {
             StartupDecision::Wait => Ok(()),
         };
 
-        // No startup failure may leave a locally reported running mode. PAC is
-        // still fail-closed, and any service owner monitor will exit after this
-        // transition instead of treating an unconfirmed core as running.
+        // A failed start must not leave a locally reported running mode.
         if result.is_err() {
             self.rollback_failed_start().await;
             return result;
         }
 
-        // 回退 sidecar 后,后台等待服务就绪再交接
         #[cfg(target_os = "windows")]
         if matches!(*self.get_running_mode(), RunningMode::Sidecar) {
             self.spawn_service_handoff_watcher().await;
@@ -513,12 +498,10 @@ impl CoreManager {
         self.controlled_stop_core_inner().await
     }
 
-    /// 调用者须已持有 `lifecycle_lock`。
     pub(crate) async fn controlled_stop_core_inner(&self) -> Result<()> {
         self.controlled_stop_core_with_intent(ProxyStopIntent::Clear).await
     }
 
-    /// 调用者须已持有 `lifecycle_lock`。
     async fn controlled_stop_core_with_intent(&self, proxy_intent: ProxyStopIntent) -> Result<()> {
         let running_mode = *self.get_running_mode();
         run_controlled_stop_transition(
@@ -532,7 +515,6 @@ impl CoreManager {
         .await
     }
 
-    /// Capture handoff intent before stopping; startup state may change afterward.
     async fn proxy_stop_intent(&self) -> ProxyStopIntent {
         let running_mode = *self.get_running_mode();
         if !cfg!(target_os = "macos") || !matches!(running_mode, RunningMode::Sidecar) {
@@ -541,7 +523,6 @@ impl CoreManager {
         proxy_stop_intent(cfg!(target_os = "macos"), running_mode, self.prepare_startup().await)
     }
 
-    /// 调用者须已持有 `lifecycle_lock`,且已完成受控代理清理。
     async fn stop_core_unprepared_inner(&self) -> Result<()> {
         CLASH_LOGGER.clear_logs().await;
         match *self.get_running_mode() {
@@ -565,7 +546,6 @@ impl CoreManager {
     }
 
     pub(crate) async fn restart_core_during_config_update(&self) -> Result<()> {
-        // 持锁覆盖 stop+start,避免生命周期操作插入。
         let _life = self.lifecycle_lock.lock().await;
         logging!(info, Type::Core, "Restarting core");
         let proxy_intent = self.proxy_stop_intent().await;
@@ -583,7 +563,6 @@ impl CoreManager {
         .await
     }
 
-    /// Switch the core binary and reload configuration.
     pub async fn change_core(&self, clash_core: &String) -> Result<()> {
         if !IVerge::VALID_CLASH_CORES.contains(&clash_core.as_str()) {
             anyhow::bail!("invalid clash core: {clash_core}");
@@ -644,7 +623,6 @@ impl CoreManager {
         let _ = tokio::time::timeout(timing::SERVICE_WAIT_MAX, wait).await;
     }
 
-    /// 在窗口内等待服务就绪,再从 sidecar 交接到 service
     #[cfg(target_os = "windows")]
     async fn spawn_service_handoff_watcher(&self) {
         use crate::constants::timing;
@@ -652,14 +630,12 @@ impl CoreManager {
         use std::sync::atomic::Ordering;
         use std::time::Instant;
 
-        // 仅 TUN 模式需要服务交接
         let needs_service = Config::verge().await.latest_arc().enable_tun_mode.unwrap_or(false)
             && !Config::tun_suppressed_for_session();
         if !needs_service {
             return;
         }
 
-        // 单实例,避免并发交接
         if self.handoff_watcher_running.swap(true, Ordering::AcqRel) {
             return;
         }
@@ -684,14 +660,11 @@ impl CoreManager {
                 }
                 tokio::time::sleep(timing::SERVICE_HANDOFF_INTERVAL).await;
 
-                // 模式已变更时退出
                 if !matches!(*manager.get_running_mode(), RunningMode::Sidecar) {
                     break;
                 }
                 match manager.try_handoff_sidecar_to_service().await {
-                    // 已交接或无需交接
                     HandoffOutcome::Done => break,
-                    // 已回退 sidecar,停止重试
                     HandoffOutcome::Failed => {
                         logging!(warn, Type::Core, "handoff attempt failed; staying in sidecar mode");
                         break;
@@ -705,21 +678,18 @@ impl CoreManager {
 
     #[cfg(target_os = "windows")]
     async fn refresh_service_readiness_for_handoff() -> bool {
-        // 主动刷新服务状态,避免缓存状态阻止交接
         if SERVICE_MANAGER.confirm_ready().await.is_err() {
             return false;
         }
         crate::core::runstate::RUN_STATE.state().service_usable()
     }
 
-    /// 服务就绪后停止 sidecar,再以 service 重启内核
     #[cfg(target_os = "windows")]
     async fn try_handoff_sidecar_to_service(&self) -> HandoffOutcome {
         if !Self::refresh_service_readiness_for_handoff().await {
             return HandoffOutcome::NotReady;
         }
 
-        // 先抢 config 锁;失败则让位给正在进行的更新。
         if !self.try_start_config_update() {
             return HandoffOutcome::NotReady;
         }
@@ -727,10 +697,9 @@ impl CoreManager {
             self.finish_config_update();
         }
 
-        // 再取 lifecycle 锁;锁序固定为 config→lifecycle。
+        // Lock order is config then lifecycle.
         let _life = self.lifecycle_lock.lock().await;
 
-        // 持锁后复检运行模式和 TUN 状态
         if !matches!(*self.get_running_mode(), RunningMode::Sidecar)
             || !Config::verge().await.latest_arc().enable_tun_mode.unwrap_or(false)
             || Config::tun_suppressed_for_session()

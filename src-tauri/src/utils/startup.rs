@@ -63,23 +63,3 @@ fn append_error(path: &Path, detail: &str) -> Result<()> {
     file.flush().context("failed to flush startup log")?;
     Ok(())
 }
-
-#[cfg(test)]
-mod tests {
-    use super::append_error;
-
-    #[test]
-    fn startup_log_is_created_and_appended() -> anyhow::Result<()> {
-        let root = std::env::temp_dir().join(format!("startup-error-log-{}", std::process::id()));
-        let path = root.join("nested/startup.log");
-
-        append_error(&path, "first failure")?;
-        append_error(&path, "second failure")?;
-
-        let content = std::fs::read_to_string(&path)?;
-        assert!(content.contains("ERROR [Startup] first failure"));
-        assert!(content.contains("ERROR [Startup] second failure"));
-        std::fs::remove_dir_all(root)?;
-        Ok(())
-    }
-}

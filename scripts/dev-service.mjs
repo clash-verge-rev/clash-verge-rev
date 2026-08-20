@@ -80,7 +80,7 @@ async function writeInstalledFingerprint(fingerprint) {
   )
 }
 
-export function windowsElevationInvocation(
+function windowsElevationInvocation(
   installer,
   environment = process.env,
 ) {

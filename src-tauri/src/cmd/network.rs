@@ -8,7 +8,6 @@ use serde_yaml_ng::Mapping;
 use sysproxy::{Autoproxy, Sysproxy};
 use tauri_plugin_clash_verge_sysinfo;
 
-/// get the system proxy
 #[tauri::command]
 pub async fn get_sys_proxy() -> CmdResult<Mapping> {
     logging!(debug, Type::Network, "异步获取系统代理配置");
@@ -38,7 +37,6 @@ pub async fn get_sys_proxy() -> CmdResult<Mapping> {
     Ok(map)
 }
 
-/// 获取自动代理配置
 #[tauri::command]
 pub async fn get_auto_proxy() -> CmdResult<Mapping> {
     Sysopt::global().wait_idle().await;
@@ -64,28 +62,22 @@ pub fn get_embedded_server_port() -> CmdResult<u16> {
     crate::utils::server::embedded_server_port().stringify_err()
 }
 
-/// 获取系统主机名
 #[tauri::command]
 pub fn get_system_hostname() -> String {
-    // 获取系统主机名，处理可能的非UTF-8字符
     match gethostname().into_string() {
         Ok(name) => name,
         Err(os_string) => {
-            // 对于包含非UTF-8的主机名，使用调试格式化
             let fallback = format!("{os_string:?}");
-            // 去掉可能存在的引号
             fallback.trim_matches('"').to_string()
         }
     }
 }
 
-/// 获取网络接口列表
 #[tauri::command]
 pub fn get_network_interfaces() -> Vec<String> {
     tauri_plugin_clash_verge_sysinfo::list_network_interfaces()
 }
 
-/// 获取网络接口详细信息
 #[tauri::command]
 pub fn get_network_interfaces_info() -> CmdResult<Vec<NetworkInterface>> {
     use network_interface::{NetworkInterface, NetworkInterfaceConfig as _};

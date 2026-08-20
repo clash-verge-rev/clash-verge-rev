@@ -2,17 +2,13 @@ import { context, getOctokit } from '@actions/github'
 
 import { resolveUpdateLog, resolveUpdateLogDefault } from './updatelog.mjs'
 
-// Add stable update JSON filenames
 const UPDATE_TAG_NAME = 'updater'
 const UPDATE_JSON_FILE = 'update.json'
 const UPDATE_JSON_PROXY = 'update-proxy.json'
-// Add alpha update JSON filenames
 const ALPHA_TAG_NAME = 'updater-alpha'
 const ALPHA_UPDATE_JSON_FILE = 'update.json'
 const ALPHA_UPDATE_JSON_PROXY = 'update-proxy.json'
 
-/// generate update.json
-/// upload to update tag's release asset
 async function resolveUpdater() {
   if (process.env.GITHUB_TOKEN === undefined) {
     throw new Error('GITHUB_TOKEN is required')
@@ -21,7 +17,6 @@ async function resolveUpdater() {
   const options = { owner: context.repo.owner, repo: context.repo.repo }
   const github = getOctokit(process.env.GITHUB_TOKEN)
 
-  // Fetch all tags using pagination
   let allTags = []
   let page = 1
   const perPage = 100
@@ -35,7 +30,6 @@ async function resolveUpdater() {
 
     allTags = allTags.concat(pageTags)
 
-    // Break if we received fewer tags than requested (last page)
     if (pageTags.length < perPage) {
       break
     }
@@ -46,12 +40,9 @@ async function resolveUpdater() {
   const tags = allTags
   console.log(`Retrieved ${tags.length} tags in total`)
 
-  // More flexible tag detection with regex patterns
-  const stableTagRegex = /^v\d+\.\d+\.\d+$/ // Matches vX.Y.Z format
-  // const preReleaseRegex = /^v\d+\.\d+\.\d+-(alpha|beta|rc|pre)/i; // Matches vX.Y.Z-alpha/beta/rc format
-  const preReleaseRegex = /^(alpha|beta|rc|pre)$/i // Matches exact alpha/beta/rc/pre tags
+  const stableTagRegex = /^v\d+\.\d+\.\d+$/
+  const preReleaseRegex = /^(alpha|beta|rc|pre)$/i
 
-  // Get the latest stable tag and pre-release tag
   const stableTag = tags.find((t) => stableTagRegex.test(t.name))
   const preReleaseTag = tags.find((t) => preReleaseRegex.test(t.name))
 
@@ -63,18 +54,15 @@ async function resolveUpdater() {
   )
   console.log()
 
-  // Process stable release
   if (stableTag) {
     await processRelease(github, options, stableTag, false)
   }
 
-  // Process pre-release if found
   if (preReleaseTag) {
     await processRelease(github, options, preReleaseTag, true)
   }
 }
 
-// Process a release (stable or alpha) and generate update files
 async function processRelease(github, options, tag, isAlpha) {
   if (!tag) return
 
@@ -129,67 +117,55 @@ async function processRelease(github, options, tag, isAlpha) {
     const promises = release.assets.map(async (asset) => {
       const { name, browser_download_url } = asset
 
-      // Process all the platform URL and signature data
-      // win64 url
       if (name.endsWith('x64-setup.exe')) {
         updateData.platforms['windows-x86_64'].url = browser_download_url
         updateData.platforms['windows-x86_64-nsis'].url = browser_download_url
       }
-      // win64 signature
       if (name.endsWith('x64-setup.exe.sig')) {
         const sig = await getSignature(browser_download_url)
         updateData.platforms['windows-x86_64'].signature = sig
         updateData.platforms['windows-x86_64-nsis'].signature = sig
       }
-      // win32 url
       if (name.endsWith('x86-setup.exe')) {
         updateData.platforms['windows-x86'].url = browser_download_url
         updateData.platforms['windows-x86-nsis'].url = browser_download_url
         updateData.platforms['windows-i686-nsis'].url = browser_download_url
       }
-      // win32 signature
       if (name.endsWith('x86-setup.exe.sig')) {
         const sig = await getSignature(browser_download_url)
         updateData.platforms['windows-x86'].signature = sig
         updateData.platforms['windows-x86-nsis'].signature = sig
         updateData.platforms['windows-i686-nsis'].signature = sig
       }
-      // win arm url
       if (name.endsWith('arm64-setup.exe')) {
         updateData.platforms['windows-aarch64'].url = browser_download_url
         updateData.platforms['windows-aarch64-nsis'].url = browser_download_url
       }
-      // win arm signature
       if (name.endsWith('arm64-setup.exe.sig')) {
         const sig = await getSignature(browser_download_url)
         updateData.platforms['windows-aarch64'].signature = sig
         updateData.platforms['windows-aarch64-nsis'].signature = sig
       }
 
-      // darwin url (intel)
       if (name.endsWith('.app.tar.gz') && !name.includes('aarch')) {
         updateData.platforms['darwin-x86_64'].url = browser_download_url
         updateData.platforms['darwin-x86_64-app'].url = browser_download_url
       }
-      // darwin signature (intel)
       if (name.endsWith('.app.tar.gz.sig') && !name.includes('aarch')) {
         const sig = await getSignature(browser_download_url)
         updateData.platforms['darwin-x86_64'].signature = sig
         updateData.platforms['darwin-x86_64-app'].signature = sig
       }
-      // darwin url (aarch)
       if (name.endsWith('aarch64.app.tar.gz')) {
         updateData.platforms['darwin-aarch64'].url = browser_download_url
         updateData.platforms['darwin-aarch64-app'].url = browser_download_url
       }
-      // darwin signature (aarch)
       if (name.endsWith('aarch64.app.tar.gz.sig')) {
         const sig = await getSignature(browser_download_url)
         updateData.platforms['darwin-aarch64'].signature = sig
         updateData.platforms['darwin-aarch64-app'].signature = sig
       }
 
-      // Linux x86
       if (name.endsWith('i386.deb')) {
         updateData.platforms['linux-x86'].url = browser_download_url
         updateData.platforms['linux-x86-deb'].url = browser_download_url
@@ -213,7 +189,6 @@ async function processRelease(github, options, tag, isAlpha) {
         updateData.platforms['linux-i686-rpm'].signature = sig
       }
 
-      // Linux x86_64
       if (name.endsWith('amd64.deb')) {
         updateData.platforms['linux-x86_64'].url = browser_download_url
         updateData.platforms['linux-x86_64-deb'].url = browser_download_url
@@ -231,7 +206,6 @@ async function processRelease(github, options, tag, isAlpha) {
         updateData.platforms['linux-x86_64-rpm'].signature = sig
       }
 
-      // Linux aarch64
       if (name.endsWith('arm64.deb')) {
         updateData.platforms['linux-aarch64'].url = browser_download_url
         updateData.platforms['linux-aarch64-deb'].url = browser_download_url
@@ -249,7 +223,6 @@ async function processRelease(github, options, tag, isAlpha) {
         updateData.platforms['linux-aarch64-rpm'].signature = sig
       }
 
-      // Linux armv7
       if (name.endsWith('armhf.deb')) {
         updateData.platforms['linux-armv7'].url = browser_download_url
         updateData.platforms['linux-armv7-deb'].url = browser_download_url
@@ -271,8 +244,6 @@ async function processRelease(github, options, tag, isAlpha) {
     await Promise.allSettled(promises)
     console.log(updateData)
 
-    // maybe should test the signature as well
-    // delete the null field
     Object.entries(updateData.platforms).forEach(([key, value]) => {
       if (!value.url) {
         console.log(`[Error]: failed to parse release for "${key}"`)
@@ -280,7 +251,6 @@ async function processRelease(github, options, tag, isAlpha) {
       }
     })
 
-    // Generate a proxy update file for accelerated GitHub resources
     const updateDataNew = JSON.parse(JSON.stringify(updateData))
 
     Object.entries(updateDataNew.platforms).forEach(([key, value]) => {
@@ -292,7 +262,6 @@ async function processRelease(github, options, tag, isAlpha) {
       }
     })
 
-    // Get the appropriate updater release based on isAlpha flag
     const releaseTag = isAlpha ? ALPHA_TAG_NAME : UPDATE_TAG_NAME
     console.log(
       `Processing ${isAlpha ? 'alpha' : 'stable'} release:`,
@@ -303,7 +272,6 @@ async function processRelease(github, options, tag, isAlpha) {
       let updateRelease
 
       try {
-        // Try to get the existing release
         const response = await github.rest.repos.getReleaseByTag({
           ...options,
           tag: releaseTag,
@@ -313,7 +281,6 @@ async function processRelease(github, options, tag, isAlpha) {
           `Found existing ${releaseTag} release with ID: ${updateRelease.id}`,
         )
       } catch (error) {
-        // If release doesn't exist, create it
         if (error.status === 404) {
           console.log(
             `Release with tag ${releaseTag} not found, creating new release...`,
@@ -332,16 +299,13 @@ async function processRelease(github, options, tag, isAlpha) {
             `Created new ${releaseTag} release with ID: ${updateRelease.id}`,
           )
         } else {
-          // If it's another error, throw it
           throw error
         }
       }
 
-      // File names based on release type
       const jsonFile = isAlpha ? ALPHA_UPDATE_JSON_FILE : UPDATE_JSON_FILE
       const proxyFile = isAlpha ? ALPHA_UPDATE_JSON_PROXY : UPDATE_JSON_PROXY
 
-      // Delete existing assets with these names
       for (const asset of updateRelease.assets) {
         if (asset.name === jsonFile) {
           await github.rest.repos.deleteReleaseAsset({
@@ -357,7 +321,6 @@ async function processRelease(github, options, tag, isAlpha) {
         }
       }
 
-      // Upload new assets
       await github.rest.repos.uploadReleaseAsset({
         ...options,
         release_id: updateRelease.id,
@@ -390,7 +353,6 @@ async function processRelease(github, options, tag, isAlpha) {
   }
 }
 
-// get the signature file content
 async function getSignature(url) {
   const response = await fetch(url, {
     method: 'GET',

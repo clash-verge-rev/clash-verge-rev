@@ -24,7 +24,6 @@ import { useQuery } from '@/services/query-client'
 
 import { EnhancedCard } from './enhanced-card'
 
-// 定义刷新时间（秒）
 const IP_REFRESH_SECONDS = 300
 const COUNTDOWN_TICK_INTERVAL = 5_000
 const IP_INFO_CACHE_KEY = 'cv_ip_info_cache'
@@ -54,7 +53,6 @@ const InfoItem = memo(({ label, value }: { label: string; value?: string }) => (
   </Box>
 ))
 
-// 获取国旗表情
 const getCountryFlag = (countryCode: string | undefined) => {
   if (!countryCode) return ''
   const codePoints = countryCode
@@ -97,16 +95,12 @@ const IPInfoCardContainer = forwardRef<HTMLElement, React.PropsWithChildren>(
   },
 )
 
-// IP信息卡片组件
 export const IpInfoCard = () => {
   const { t } = useTranslation()
   const [showIp, setShowIp] = useState(false)
   const appWindow = useMemo(() => getCurrentWebviewWindow(), [])
 
-  // track ip info card has been in viewport or not
-  // hasIntersected default to false, and will be true once the card is in viewport
-  // and will never be false again afterwards (unless resetIntersected is called or
-  // the component is unmounted)
+  // Once intersected, refreshes stay enabled until unmount.
   const [containerRef, hasIntersected, _resetIntersected] = useIntersection({
     rootMargin: '0px',
   })
@@ -118,7 +112,6 @@ export const IpInfoCard = () => {
 
   const { data: ipInfo, error, isLoading, refetch: mutate } = useIPInfo()
 
-  // function useEffectEvent
   const onCountdownTick = useEffectEvent(async () => {
     const now = Date.now()
     const ts = ipInfo?.lastFetchTs
@@ -131,35 +124,22 @@ export const IpInfoCard = () => {
 
     if (remaining <= 0) {
       if (
-        // has intersected at least once
-        // this avoids unncessary revalidation if user never scrolls down,
-        // then we will only load initially once.
         hasIntersected &&
-        // is online
         navigator.onLine &&
-        // there is no ongoing revalidation already scheduled
         countdown.type !== 'revalidating' &&
-        // window is visible
         (await appWindow.isVisible())
       ) {
         setCountdown({ type: 'revalidating' })
-        // we do not care about the result of mutate here. after mutate is done,
-        // simply wait for next interval tick with `setCountdown({ type: "countdown", ... })`
         try {
           await mutate()
         } finally {
-          // in case mutate throws error, we still need to reset the countdown state
           setCountdown({
             type: 'countdown',
             remainingSeconds: IP_REFRESH_SECONDS,
           })
         }
       } else {
-        // do nothing. we even skip "setCountdown" to reduce re-renders
-        //
-        // but the remaining time still <= 0, and setInterval is not stopped, this
-        // callback will still be regularly triggered, as soon as the window is visible
-        // or network online again, we mutate() immediately in the following tick.
+        // Keep the expired state so the next eligible tick refreshes immediately.
       }
     } else {
       setCountdown({
@@ -169,14 +149,10 @@ export const IpInfoCard = () => {
     }
   })
 
-  // Countdown / refresh scheduler — updates UI every 1s and triggers immediate revalidation when expired
   useEffect(() => {
     let timer: number | null = null
 
-    // Do not add document.hidden check here as it is not reliable in Tauri.
-    //
-    // Thank god IntersectionObserver is a DOM API that relies on DOM/webview
-    // instead of Tauri, which is reliable enough.
+    // Prefer DOM intersection state; Tauri visibility is unreliable on some platforms.
     if (hasIntersected) {
       console.debug(
         'IP info card has entered the viewport, starting the countdown interval.',
@@ -188,25 +164,17 @@ export const IpInfoCard = () => {
       )
     }
 
-    // This will fire when the window is minimized or restored
     document.addEventListener('visibilitychange', onVisibilityChange)
-    // Tauri's visibility change detection is actually broken on some platforms:
-    // https://github.com/tauri-apps/tauri/issues/10592
-    //
-    // It is working on macOS though (tested).
-    // So at least we should try to pause countdown on supported platforms to
-    // reduce power consumption.
+    // Best-effort power saving; see https://github.com/tauri-apps/tauri/issues/10592.
     function onVisibilityChange() {
       if (document.hidden) {
         console.debug('Document hidden, pause the interval')
-        // Pause the timer
         if (timer != null) {
           clearInterval(timer)
           timer = null
         }
       } else if (hasIntersected) {
         console.debug('Document visible, resume the interval')
-        // Resume the timer only when previous one is cleared
         if (timer == null) {
           timer = window.setInterval(onCountdownTick, COUNTDOWN_TICK_INTERVAL)
         }
@@ -274,7 +242,6 @@ export const IpInfoCard = () => {
               overflow: 'hidden',
             }}
           >
-            {/* 左侧：国家和IP地址 */}
             <Box sx={{ width: '40%', overflow: 'hidden' }}>
               <Box
                 sx={{
@@ -358,7 +325,6 @@ export const IpInfoCard = () => {
               />
             </Box>
 
-            {/* 右侧：组织、ISP和位置信息 */}
             <Box sx={{ width: '60%', overflow: 'auto' }}>
               <InfoItem
                 label={t('home.components.ipInfo.labels.isp')}

@@ -65,11 +65,6 @@ interface Props {
   chainConfigData?: string | null
 }
 
-/**
- * The empty state to draw when the render list turns out to contain nothing.
- *
- * Shared by both list components so the observation and its explanation stay together.
- */
 function useEmptyRenderList() {
   const { isProxyViewError } = useProxiesData()
   const { runningMode } = useSystemData()
@@ -103,7 +98,6 @@ function useProxyRenderState(
 
   const timeout = verge?.default_latency_timeout || 10000
 
-  // 测全部延迟
   const handleCheckAll = useStableCallback(
     useLockFn(async (groupName: string) => {
       debugLog(`[ProxyGroups] 开始测试所有延迟，组: ${groupName}`)
@@ -133,8 +127,6 @@ function useProxyRenderState(
       } catch (error) {
         console.error(`[ProxyGroups] 延迟测试出错，组: ${groupName}`, error)
       } finally {
-        // Re-sorting is no longer poked from here: the delay store announces that the test
-        // settled and the render list recomputes from that.
         onProxies()
       }
     }),
@@ -254,7 +246,6 @@ function ChainProxyGroups(props: {
   const virtualItems = virtualizer.getVirtualItems()
   const activeStickyIndex = activeStickyIndexRef.current
 
-  // 从 localStorage 恢复滚动位置
   useLayoutEffect(() => {
     if (renderList.length === 0) return
     const node = parentRef.current
@@ -335,7 +326,6 @@ function ChainProxyGroups(props: {
     }
   })
 
-  // The list is built; whether it holds anything is now an observation, not a guess.
   if (!hasRenderableItems(renderList)) return emptyList
 
   return (
@@ -376,11 +366,9 @@ function NormalProxyGroups(props: { mode: string }) {
   } = useProxyRenderState(mode, false, null)
   const emptyList = useEmptyRenderList()
   const renderFirstRef = useRef(true)
-  // 恢复滚动位置期间设为 true，避免程序化滚动触发的 scroll 事件把中间值写回存储
+  // Do not persist intermediate positions produced while restoring virtual scroll.
   const isRestoringRef = useRef(false)
 
-  // 目前无法使用 StickyVirtualList 的 initialOffset 值设置初始化，具体原因需排查
-  // 从 localStorage 恢复滚动位置
   useLayoutEffect(() => {
     if (renderList.length === 0) return
     if (!renderFirstRef.current) return
@@ -388,15 +376,12 @@ function NormalProxyGroups(props: { mode: string }) {
     if (!node) return
 
     const savedPosition = getScrollPosition()
-    // 未保存过位置或位置为 0（顶部）时无需恢复
     if (!savedPosition) {
       renderFirstRef.current = false
       return
     }
 
-    // 虚拟列表初始使用预估高度，真实高度测量完成后总高度才会稳定。
-    // 尤其是过滤后节点数变少时，预估总高度常常不足以一次性滚动到目标位置，
-    // 因此跨帧重试，直到到达目标位置（或内容确实不够高）为止。
+    // Retry across frames until virtual-list measurements can reach the saved offset.
     isRestoringRef.current = true
     let rafId = 0
     let attempts = 0
@@ -436,7 +421,6 @@ function NormalProxyGroups(props: { mode: string }) {
 
   const handleScroll = useCallback(
     (event: Event) => {
-      // 恢复位置过程中产生的滚动不写回存储，避免中间的钳制值覆盖真实位置
       if (isRestoringRef.current) return
       const target = event.target as HTMLElement | null
       const nextScrollTop = target?.scrollTop ?? 0
@@ -480,7 +464,6 @@ function NormalProxyGroups(props: { mode: string }) {
     [handleProxyGroupChange],
   )
 
-  // 滚到对应的节点
   const handleLocation = useStableCallback((group: ProxyGroupView) => {
     if (!group) return
     const { name, now } = group
@@ -501,7 +484,6 @@ function NormalProxyGroups(props: { mode: string }) {
     }
   })
 
-  // 定位到指定的代理组
   const handleGroupLocationByName = useCallback(
     (groupName: string) => {
       const index = renderList.findIndex(
@@ -525,7 +507,6 @@ function NormalProxyGroups(props: { mode: string }) {
     return Array.from(new Set(names))
   }, [renderList])
 
-  // 点击代理组改变展开状态，先滚动到sticky的代理组位置，再收起展开状态
   const handleGroupToggle = useCallback(
     async (group: ProxyGroupView) => {
       const index = renderList.findIndex(
@@ -589,7 +570,6 @@ function NormalProxyGroups(props: { mode: string }) {
     [handleChangeProxy, handleCheckAll, onHeadState, handleLocation],
   )
 
-  // The list is built; whether it holds anything is now an observation, not a guess.
   if (!hasRenderableItems(renderList)) return emptyList
 
   return (
@@ -605,7 +585,6 @@ function NormalProxyGroups(props: { mode: string }) {
         renderItem={renderProxyItem}
       />
 
-      {/* 代理组导航栏 */}
       {mode === 'rule' && (
         <ProxyGroupNavigator
           proxyGroupNames={proxyGroupNames}
@@ -640,7 +619,6 @@ export const ProxyGroups = (props: Props) => {
     case 'empty':
       return <ProxyEmptyState reason={listState.reason} />
     case 'render':
-      // Whether there is anything to draw is the list's own answer, given below.
       return isChainMode ? (
         <ChainProxyGroups mode={mode} chainConfigData={chainConfigData} />
       ) : (

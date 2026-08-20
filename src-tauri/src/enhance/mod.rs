@@ -521,12 +521,10 @@ fn merge_default_config(
                     continue;
                 }
             }
-            // 处理 external-controller 键的开关逻辑
             if key.as_str() == Some("external-controller") {
                 if enable_external_controller {
                     config.insert(key, value);
                 } else {
-                    // 如果禁用了外部控制器，设置为空字符串
                     config.insert(key, "".into());
                 }
             } else {
@@ -656,7 +654,7 @@ fn ensure_fake_ip_range6(dns: &mut Mapping) {
         .map(|m| m == "fake-ip")
         .unwrap_or(true);
 
-    // 缺失或为空字符串（可能来自手动编辑的 YAML）时都需要补充
+    // Hand-edited YAML may leave the key present but empty.
     let range6_missing = dns
         .get("fake-ip-range6")
         .and_then(|v| v.as_str())
@@ -702,10 +700,8 @@ async fn apply_dns_settings(mut config: Mapping, enable_dns_settings: bool) -> M
     config
 }
 
-/// Enhance mode
-/// 返回最终订阅、该订阅包含的键、和script执行的结果
+/// Returns the enhanced profile, its original keys, and script logs.
 pub async fn enhance(profiles: &IProfiles) -> Result<(Mapping, HashSet<String>, HashMap<String, ResultLog>)> {
-    // gather config values
     let cfg_vals = get_config_values().await;
     let ConfigValues {
         clash_config,
@@ -722,7 +718,6 @@ pub async fn enhance(profiles: &IProfiles) -> Result<(Mapping, HashSet<String>, 
         tproxy_enabled,
     } = cfg_vals;
 
-    // collect profile items
     let profile = collect_profile_items(profiles).await?;
     let config = profile.config;
     let merge_item = profile.merge_item;
@@ -736,11 +731,9 @@ pub async fn enhance(profiles: &IProfiles) -> Result<(Mapping, HashSet<String>, 
 
     let result_map = HashMap::new();
 
-    // 顺序项先于手动覆盖。
     let config = process_seq_items(config, rules_item, proxies_item, groups_item);
     let exists_keys = use_keys(&config).collect::<Vec<_>>();
 
-    // merge default clash config
     let config = merge_default_config(
         config,
         clash_config,
@@ -753,15 +746,12 @@ pub async fn enhance(profiles: &IProfiles) -> Result<(Mapping, HashSet<String>, 
         tproxy_enabled,
     );
 
-    // app 生成项先于手动覆盖。
     let config = apply_builtin_scripts(config, clash_core, enable_builtin).await;
     let config = use_tun(config, enable_tun);
     let config = apply_dns_settings(config, enable_dns_settings).await;
 
-    // 手动覆盖前锁定 app 权威字段,覆盖后由同一个值恢复。
     let authoritative = AuthoritativeFields::capture(&config, enable_dns_settings);
 
-    // 全局手动覆盖。
     let (config, exists_keys, result_map) = process_global_items(
         config,
         exists_keys,
@@ -772,11 +762,9 @@ pub async fn enhance(profiles: &IProfiles) -> Result<(Mapping, HashSet<String>, 
     )
     .await;
 
-    // 当前 profile 手动覆盖。
     let (config, exists_keys, result_map) =
         process_profile_items(config, exists_keys, result_map, merge_item, script_item, &profile_name).await;
 
-    // 手动覆盖后恢复 app 权威字段。
     let config = authoritative.enforce(config);
     let config = ensure_lan_bind_address(config);
 

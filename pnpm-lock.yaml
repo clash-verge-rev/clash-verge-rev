@@ -150,9 +150,6 @@ importers:
       '@tauri-apps/cli':
         specifier: 2.11.4
         version: 2.11.4
-      '@testing-library/react':
-        specifier: ^16.3.2
-        version: 16.3.2(@testing-library/dom@10.4.1)(@types/react-dom@19.2.4(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@types/lodash-es':
         specifier: ^4.17.12
         version: 4.17.12
@@ -231,9 +228,6 @@ importers:
       jiti:
         specifier: ^2.7.0
         version: 2.7.0
-      jsdom:
-        specifier: ^30.0.0
-        version: 30.0.1
       knip:
         specifier: 6.32.1
         version: 6.32.1

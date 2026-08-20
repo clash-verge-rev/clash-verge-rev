@@ -203,7 +203,6 @@ jobs:
 
       - name: Add Rust Target
         run: |
-          # Ensure cross target is installed for the pinned toolchain; fallback without explicit toolchain if needed
           rustup target add ${{ matrix.target }} --toolchain 1.95.0 || rustup target add ${{ matrix.target }}
           rustup target list --installed
           echo "Rust target ${{ matrix.target }} installed."
@@ -230,7 +229,6 @@ jobs:
           prerelease: true
           tauriScript: pnpm
           args: --target ${{ matrix.target }}
-          # includeUpdaterJson: true
 
   autobuild-arm-linux:
     name: Autobuild ARM Linux
@@ -346,7 +344,6 @@ jobs:
 
       - name: Add Rust Target
         run: |
-          # Ensure cross target is installed for the pinned toolchain; fallback without explicit toolchain if needed
           rustup target add ${{ matrix.target }} --toolchain 1.95.0 || rustup target add ${{ matrix.target }}
           rustup target list --installed
           echo "Rust target ${{ matrix.target }} installed."
@@ -454,7 +451,6 @@ jobs:
 
       - name: Add Rust Target
         run: |
-          # Ensure cross target is installed for the pinned toolchain; fallback without explicit toolchain if needed
           rustup target add ${{ matrix.target }} --toolchain 1.95.0 || rustup target add ${{ matrix.target }}
           rustup target list --installed
           echo "Rust target ${{ matrix.target }} installed."
@@ -470,7 +466,6 @@ jobs:
         with:
           tauriScript: pnpm
           args: --target ${{ matrix.target }}
-          # includeUpdaterJson: true
 
       - name: Rename
         run: |

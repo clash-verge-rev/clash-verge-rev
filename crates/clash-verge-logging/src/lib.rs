@@ -62,7 +62,6 @@ impl fmt::Display for Type {
 
 #[macro_export]
 macro_rules! logging {
-    // 不带 print 参数的版本（默认不打印）
     ($level:ident, $type:expr, $($arg:tt)*) => {
         log::$level!(target: "app", "{} {}", $type, format_args!($($arg)*))
     };
@@ -70,14 +69,12 @@ macro_rules! logging {
 
 #[macro_export]
 macro_rules! logging_error {
-    // Handle Result<T, E>
     ($type:expr, $expr:expr) => {
         if let Err(err) = $expr {
             log::error!(target: "app", "[{}] {}", $type, err);
         }
     };
 
-    // Handle formatted message: always print to stdout and log as error
     ($type:expr, $fmt:literal $(, $arg:expr)*) => {
         log::error!(target: "app", "[{}] {}", $type, format_args!($fmt $(, $arg)*));
     };
@@ -113,14 +110,12 @@ impl<'a> ModuleFilter<'a> {
             return true;
         };
 
-        // 优先检查排除（白名单）
         if let Some(excludes) = &self.exclude
             && excludes.iter().any(|e| module.starts_with(e))
         {
             return true;
         }
 
-        // 再检查阻止（黑名单）
         !self.block.iter().any(|b| module.starts_with(b))
     }
 }

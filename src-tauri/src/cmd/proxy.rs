@@ -16,15 +16,7 @@ use std::{
     sync::atomic::{AtomicBool, Ordering},
 };
 
-/// Record which node a group is on, in the current profile.
-///
-/// Takes the group and the node rather than the whole selection list, and merges them into the
-/// profile on this side. The frontend used to send the list it had rendered, which made two
-/// selections made before that list refreshed into one overwriting the other: both were built
-/// from the same stale array, and the later write dropped the earlier group's choice. Since a
-/// core start re-applies whatever the profile holds, the dropped one then came back on restart.
-///
-/// The tray already recorded this way. Now there is one way.
+/// Merges one selection pair into fresh backend state to avoid stale-list overwrites.
 #[tauri::command]
 pub async fn record_selected_node(group_name: String, node: String) -> CmdResult<()> {
     crate::config::profiles::record_selected_node(&group_name, &node)
@@ -32,7 +24,6 @@ pub async fn record_selected_node(group_name: String, node: String) -> CmdResult
         .stringify_err()
 }
 
-/// Forget the persisted node selection for a proxy group in the current profile.
 #[tauri::command]
 pub async fn forget_selected_node(group_name: String) -> CmdResult<()> {
     crate::config::profiles::forget_selected_node(&group_name)
@@ -54,7 +45,7 @@ fn runtime_group_order(config: Option<&Mapping>) -> Vec<String> {
         .filter_map(|group| group.get("name"))
         .filter_map(|name| name.as_str())
         .filter(|name| !name.is_empty() && *name != "GLOBAL")
-        .filter(|name| seen.insert((*name).to_owned()))
+        .filter(|name| seen.insert(*name))
         .map(str::to_owned)
         .collect()
 }
@@ -76,7 +67,6 @@ pub async fn get_proxy_view() -> CmdResult<ProxyViewV1> {
     }))
 }
 
-/// 同步托盘和GUI的代理选择状态
 #[tauri::command]
 pub async fn sync_tray_proxy_selection() -> CmdResult<()> {
     if TRAY_SYNC_RUNNING
