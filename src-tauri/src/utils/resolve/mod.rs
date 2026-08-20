@@ -1,7 +1,6 @@
 use std::sync::atomic::{AtomicBool, Ordering};
 
 use anyhow::Result;
-use tauri::Emitter as _;
 
 use crate::{
     config::Config,
