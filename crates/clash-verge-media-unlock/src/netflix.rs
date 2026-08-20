@@ -1,5 +1,7 @@
-use reqwest::Client;
-use serde_json::Value;
+use std::time::Duration;
+
+use reqwest::{Client, StatusCode};
+use serde::Deserialize;
 
 use clash_verge_logging::{Type, logging};
 
@@ -7,126 +9,119 @@ use super::UnlockItem;
 
 pub(crate) const NETFLIX_NAME: &str = "Netflix";
 
-fn netflix_item(status: impl Into<String>, region: Option<String>) -> UnlockItem {
-    UnlockItem::checked(NETFLIX_NAME, status, region)
+const TIMEOUT: Duration = Duration::from_secs(30);
+
+#[derive(Deserialize)]
+struct FastResponse {
+    targets: Vec<FastTarget>,
+}
+
+#[derive(Deserialize)]
+struct FastTarget {
+    location: FastLocation,
+}
+
+#[derive(Deserialize)]
+struct FastLocation {
+    country: String,
+}
+
+fn item(status: impl Into<String>) -> UnlockItem {
+    UnlockItem::checked(NETFLIX_NAME, status, None)
 }
 
 pub(super) async fn check_netflix(client: &Client) -> UnlockItem {
-    let cdn_result = check_netflix_cdn(client).await;
-    if cdn_result.status == "Yes" {
-        return cdn_result;
+    let cdn = check_netflix_cdn(client).await;
+    if cdn.status == "Yes" || cdn.status.starts_with("No") {
+        return cdn;
     }
 
-    let url1 = "https://www.netflix.com/title/81280792";
-    let url2 = "https://www.netflix.com/title/70143836";
+    let (r1, r2) = tokio::join!(check_title(client, "81280792"), check_title(client, "70143836"),);
 
-    let result1 = client
-        .get(url1)
-        .timeout(std::time::Duration::from_secs(30))
+    let (Ok(status1), Ok(status2)) = (r1, r2) else {
+        return item("Failed");
+    };
+
+    if status1 == StatusCode::NOT_FOUND && status2 == StatusCode::NOT_FOUND {
+        return item("Originals Only");
+    }
+
+    if status1 == StatusCode::FORBIDDEN || status2 == StatusCode::FORBIDDEN {
+        return item("No");
+    }
+
+    if [status1, status2]
+        .iter()
+        .any(|s| matches!(*s, StatusCode::OK | StatusCode::MOVED_PERMANENTLY))
+    {
+        return check_region(client).await;
+    }
+
+    item(format!("Failed (状态码: {status1}_{status2})"))
+}
+
+async fn check_title(client: &Client, id: &str) -> reqwest::Result<StatusCode> {
+    client
+        .get(format!("https://www.netflix.com/title/{id}"))
+        .timeout(TIMEOUT)
         .send()
-        .await;
+        .await
+        .map(|res| res.status())
+}
 
-    if let Err(e) = &result1 {
-        logging!(error, Type::Network, "Netflix请求错误: {e}");
-        return netflix_item("Failed", None);
-    }
-
-    let result2 = client
-        .get(url2)
-        .timeout(std::time::Duration::from_secs(30))
+async fn check_region(client: &Client) -> UnlockItem {
+    let response = match client
+        .get("https://www.netflix.com/title/80018499")
+        .timeout(TIMEOUT)
         .send()
-        .await;
-
-    if let Err(e) = &result2 {
-        logging!(error, Type::Network, "Netflix请求错误: {e}");
-        return netflix_item("Failed", None);
-    }
-
-    let status1 = match result1 {
-        Ok(response) => response.status().as_u16(),
+        .await
+    {
+        Ok(res) => res,
         Err(e) => {
-            logging!(error, Type::Network, "Failed to get Netflix response 1: {}", e);
-            return netflix_item("Failed", None);
+            logging!(error, Type::Network, "获取 Netflix 区域信息失败: {e}");
+            return item("Yes (但无法获取区域)");
         }
     };
 
-    let status2 = match result2 {
-        Ok(response) => response.status().as_u16(),
-        Err(e) => {
-            logging!(error, Type::Network, "Failed to get Netflix response 2: {}", e);
-            return netflix_item("Failed", None);
-        }
-    };
+    let region = response
+        .headers()
+        .get("location")
+        .and_then(|v| v.to_str().ok())
+        .and_then(|location| location.split('/').nth(3))
+        .and_then(|region| region.split('-').next())
+        .filter(|region| !region.is_empty())
+        .unwrap_or("us");
 
-    if status1 == 404 && status2 == 404 {
-        return netflix_item("Originals Only", None);
-    }
-
-    if status1 == 403 || status2 == 403 {
-        return netflix_item("No", None);
-    }
-
-    if status1 == 200 || status1 == 301 || status2 == 200 || status2 == 301 {
-        let test_url = "https://www.netflix.com/title/80018499";
-        match client
-            .get(test_url)
-            .timeout(std::time::Duration::from_secs(30))
-            .send()
-            .await
-        {
-            Ok(response) => {
-                if let Some(location) = response.headers().get("location")
-                    && let Ok(location_str) = location.to_str()
-                {
-                    let parts: Vec<&str> = location_str.split('/').collect();
-                    if parts.len() >= 4 {
-                        let region_code = parts[3].split('-').next().unwrap_or("unknown");
-                        return UnlockItem::checked_region(NETFLIX_NAME, "Yes", region_code);
-                    }
-                }
-
-                UnlockItem::checked_region(NETFLIX_NAME, "Yes", "us")
-            }
-            Err(e) => {
-                logging!(error, Type::Network, "获取Netflix区域信息失败: {e}");
-                netflix_item("Yes (但无法获取区域)", None)
-            }
-        }
-    } else {
-        netflix_item(format!("Failed (状态码: {status1}_{status2}"), None)
-    }
+    UnlockItem::checked_region(NETFLIX_NAME, "Yes", region)
 }
 
 async fn check_netflix_cdn(client: &Client) -> UnlockItem {
-    let url = "https://api.fast.com/netflix/speedtest/v2?https=true&token=YXNkZmFzZGxmbnNkYWZoYXNkZmhrYWxm&urlCount=5";
-
-    match client.get(url).timeout(std::time::Duration::from_secs(30)).send().await {
-        Ok(response) => {
-            if response.status().as_u16() == 403 {
-                return netflix_item("No (IP Banned By Netflix)", None);
-            }
-
-            match response.json::<Value>().await {
-                Ok(data) => {
-                    if let Some(targets) = data.get("targets").and_then(|t| t.as_array())
-                        && !targets.is_empty()
-                        && let Some(location) = targets[0].get("location")
-                        && let Some(country) = location.get("country").and_then(|c| c.as_str())
-                    {
-                        return UnlockItem::checked_region(NETFLIX_NAME, "Yes", country);
-                    }
-
-                    netflix_item("Unknown", None)
-                }
-                Err(e) => {
-                    logging!(error, Type::Network, "解析Fast.com API响应失败: {e}");
-                    netflix_item("Failed (解析错误)", None)
-                }
-            }
-        }
+    let response = match client
+        .get("https://api.fast.com/netflix/speedtest/v2?https=true&token=YXNkZmFzZGxmbnNkYWZoYXNkZmhrYWxm&urlCount=5")
+        .timeout(TIMEOUT)
+        .send()
+        .await
+    {
+        Ok(res) => res,
         Err(e) => {
-            logging!(error, Type::Network, "Fast.com API请求失败: {e}");
-            netflix_item("Failed (CDN API)", None)
+            logging!(error, Type::Network, "Fast.com API 请求失败: {e}");
+            return item("Failed (CDN API)");
+        }
+    };
+
+    if response.status() == StatusCode::FORBIDDEN {
+        return item("No (IP Banned By Netflix)");
+    }
+
+    match response.json::<FastResponse>().await {
+        Ok(data) => data
+            .targets
+            .first()
+            .map(|target| UnlockItem::checked_region(NETFLIX_NAME, "Yes", &target.location.country))
+            .unwrap_or_else(|| item("Unknown")),
+        Err(e) => {
+            logging!(error, Type::Network, "解析 Fast.com API 响应失败: {e}");
+            item("Failed (解析错误)")
         }
     }
 }

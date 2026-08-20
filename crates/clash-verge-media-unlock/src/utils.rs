@@ -1,4 +1,5 @@
 use chrono::Local;
+use reqwest::{Client, StatusCode};
 
 pub fn get_local_date_string() -> String {
     let now = Local::now();
@@ -36,4 +37,37 @@ fn alpha2_to_emoji(alpha2: &str) -> String {
     char::from_u32(c1)
         .and_then(|x| char::from_u32(c2).map(|y| format!("{x}{y}")))
         .unwrap_or_default()
+}
+
+pub(crate) async fn get_text(client: &Client, url: &str) -> Option<String> {
+    client.get(url).send().await.ok()?.text().await.ok()
+}
+
+pub(crate) async fn get_trace_location(client: &Client, url: &str) -> Option<String> {
+    get_text(client, url)
+        .await?
+        .lines()
+        .find_map(|line| line.strip_prefix("loc="))
+        .map(str::to_owned)
+}
+
+pub(crate) fn extract_quoted_field<'a>(body: &'a str, key: &str) -> Option<&'a str> {
+    let (_, rest) = body.split_once(&format!(r#""{key}""#))?;
+    let value = rest.split_once(':')?.1.trim_start();
+    let value = value.strip_prefix('"')?;
+
+    Some(value.split_once('"')?.0)
+}
+
+pub(crate) fn classify_restricted_status(status: StatusCode) -> Option<&'static str> {
+    if matches!(
+        status,
+        StatusCode::FORBIDDEN | StatusCode::UNAVAILABLE_FOR_LEGAL_REASONS
+    ) {
+        Some("No")
+    } else if !status.is_success() {
+        Some("Failed")
+    } else {
+        None
+    }
 }

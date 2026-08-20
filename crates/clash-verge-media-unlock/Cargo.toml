@@ -7,7 +7,6 @@ edition = "2024"
 clash-verge-logging = { workspace = true }
 chrono = { workspace = true }
 log = { workspace = true }
-regex = { workspace = true }
 reqwest = { workspace = true }
 rust_iso3166 = { workspace = true }
 serde = { workspace = true, features = ["derive"] }

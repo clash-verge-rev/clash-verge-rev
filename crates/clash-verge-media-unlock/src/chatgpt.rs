@@ -1,6 +1,6 @@
-use std::collections::HashMap;
-
 use reqwest::Client;
+
+use crate::utils::{get_text, get_trace_location};
 
 use super::UnlockItem;
 
@@ -9,76 +9,40 @@ pub(crate) const CHATGPT_WEB_NAME: &str = "ChatGPT Web";
 
 // TODO: remove ios check
 pub(super) async fn check_chatgpt_combined(client: &Client) -> Vec<UnlockItem> {
-    let mut results = Vec::new();
+    let region = get_trace_location(client, "https://chat.openai.com/cdn-cgi/trace")
+        .await
+        .map(|loc| UnlockItem::region_label(&loc));
 
-    let url_country = "https://chat.openai.com/cdn-cgi/trace";
-    let result_country = client.get(url_country).send().await;
+    let ios_status = get_text(client, "https://ios.chat.openai.com/")
+        .await
+        .map(|body| {
+            let body = body.to_ascii_lowercase();
 
-    let region = match result_country {
-        Ok(response) => {
-            if let Ok(body) = response.text().await {
-                let mut map = HashMap::new();
-                for line in body.lines() {
-                    if let Some(index) = line.find('=') {
-                        let key = &line[..index];
-                        let value = &line[index + 1..];
-                        map.insert(key.to_string(), value.to_string());
-                    }
-                }
-
-                map.get("loc").map(|loc| UnlockItem::region_label(loc))
-            } else {
-                None
-            }
-        }
-        Err(_) => None,
-    };
-
-    let url_ios = "https://ios.chat.openai.com/";
-    let result_ios = client.get(url_ios).send().await;
-
-    let ios_status = match result_ios {
-        Ok(response) => {
-            if let Ok(body) = response.text().await {
-                let body_lower = body.to_lowercase();
-                if body_lower.contains("you may be connected to a disallowed isp") {
-                    "Disallowed ISP"
-                } else if body_lower.contains("request is not allowed. please try again later.") {
-                    "Yes"
-                } else if body_lower.contains("sorry, you have been blocked") {
-                    "Blocked"
-                } else {
-                    "Failed"
-                }
+            if body.contains("you may be connected to a disallowed isp") {
+                "Disallowed ISP"
+            } else if body.contains("request is not allowed. please try again later.") {
+                "Yes"
+            } else if body.contains("sorry, you have been blocked") {
+                "Blocked"
             } else {
                 "Failed"
             }
-        }
-        Err(_) => "Failed",
-    };
+        })
+        .unwrap_or("Failed");
 
-    let url_web = "https://api.openai.com/compliance/cookie_requirements";
-    let result_web = client.get(url_web).send().await;
-
-    let web_status = match result_web {
-        Ok(response) => {
-            if let Ok(body) = response.text().await {
-                let body_lower = body.to_lowercase();
-                if body_lower.contains("unsupported_country") {
-                    "Unsupported Country/Region"
-                } else {
-                    "Yes"
-                }
+    let web_status = get_text(client, "https://api.openai.com/compliance/cookie_requirements")
+        .await
+        .map(|body| {
+            if body.to_ascii_lowercase().contains("unsupported_country") {
+                "Unsupported Country/Region"
             } else {
-                "Failed"
+                "Yes"
             }
-        }
-        Err(_) => "Failed",
-    };
+        })
+        .unwrap_or("Failed");
 
-    results.push(UnlockItem::checked("ChatGPT iOS", ios_status, region.clone()));
-
-    results.push(UnlockItem::checked("ChatGPT Web", web_status, region));
-
-    results
+    vec![
+        UnlockItem::checked(CHATGPT_IOS_NAME, ios_status, region.clone()),
+        UnlockItem::checked(CHATGPT_WEB_NAME, web_status, region),
+    ]
 }

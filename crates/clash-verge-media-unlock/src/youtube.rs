@@ -1,61 +1,67 @@
-use regex::Regex;
-use reqwest::Client;
+use reqwest::{Client, StatusCode};
 
-use clash_verge_logging::{Type, logging};
+use crate::utils::extract_quoted_field;
 
 use super::UnlockItem;
 
 pub(crate) const YOUTUBE_PREMIUM_NAME: &str = "YouTube Premium";
 
 pub(super) async fn check_youtube_premium(client: &Client) -> UnlockItem {
-    let url = "https://www.youtube.com/premium?hl=en";
-    let item = |status: &str, region: Option<String>| UnlockItem::checked(YOUTUBE_PREMIUM_NAME, status, region);
+    let Ok(response) = client.get("https://www.youtube.com/premium?hl=en").send().await else {
+        return UnlockItem::checked(YOUTUBE_PREMIUM_NAME, "Failed", None);
+    };
 
-    match client.get(url).send().await {
-        Ok(response) => {
-            let status_code = response.status().as_u16();
+    let status = response.status();
 
-            if let Ok(body) = response.text().await {
-                let body_lower = body.to_ascii_lowercase();
-                let region = [
-                    r#"id=["']country-code["'][^>]*>\s*([A-Za-z]{2,3})\s*<"#,
-                    r#""GL"\s*:\s*"([A-Za-z]{2})""#,
-                    r#""countryCode"\s*:\s*"([A-Za-z]{2})""#,
-                    r#""country_code"\s*:\s*"([A-Za-z]{2})""#,
-                ]
-                .iter()
-                .find_map(|pattern| match Regex::new(pattern) {
-                    Ok(re) => re
-                        .captures(&body)
-                        .and_then(|caps| caps.get(1))
-                        .map(|m| m.as_str().trim().to_ascii_uppercase()),
-                    Err(e) => {
-                        logging!(error, Type::Network, "Failed to compile YouTube Premium regex: {}", e);
-                        None
-                    }
-                })
-                .map(|country_code| UnlockItem::region_label(&country_code));
+    let Ok(body) = response.text().await else {
+        return UnlockItem::checked(YOUTUBE_PREMIUM_NAME, "Failed", None);
+    };
 
-                let status = if body_lower.contains("youtube premium is not available in your country")
-                    || body_lower.contains("premium is not available in your country")
-                    || body_lower.contains("premium is not available in your region")
-                {
-                    "No"
-                } else if (200..300).contains(&status_code)
-                    && (body_lower.contains("youtube premium")
-                        || body_lower.contains("ad-free")
-                        || body_lower.contains(r#""browseid":"spunlimited""#))
-                {
-                    "Yes"
-                } else {
-                    "Failed"
-                };
+    let region = extract_region(&body).map(|code| UnlockItem::region_label(&code));
 
-                item(status, region)
-            } else {
-                item("Failed", None)
-            }
-        }
-        Err(_) => item("Failed", None),
+    UnlockItem::checked(YOUTUBE_PREMIUM_NAME, determine_status(status, &body), region)
+}
+
+fn determine_status(status: StatusCode, body: &str) -> &'static str {
+    let body = body.to_ascii_lowercase();
+
+    if [
+        "youtube premium is not available in your country",
+        "premium is not available in your country",
+        "premium is not available in your region",
+    ]
+    .iter()
+    .any(|text| body.contains(text))
+    {
+        return "No";
     }
+
+    if status.is_success()
+        && ["youtube premium", "ad-free", r#""browseid":"spunlimited""#]
+            .iter()
+            .any(|text| body.contains(text))
+    {
+        "Yes"
+    } else {
+        "Failed"
+    }
+}
+
+fn extract_region(body: &str) -> Option<String> {
+    ["GL", "countryCode", "country_code"]
+        .iter()
+        .find_map(|key| extract_quoted_field(body, key))
+        .or_else(|| extract_country_code(body))
+        .map(str::to_ascii_uppercase)
+}
+
+fn extract_country_code(body: &str) -> Option<&str> {
+    let rest = body
+        .split_once(r#"id="country-code""#)
+        .or_else(|| body.split_once("id='country-code'"))?
+        .1;
+
+    let value = rest.split_once('>')?.1.split_once('<')?.0.trim();
+
+    (!value.is_empty()).then_some(value)
 }
