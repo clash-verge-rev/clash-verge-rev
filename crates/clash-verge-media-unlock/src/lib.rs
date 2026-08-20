@@ -53,7 +53,7 @@ impl UnlockCheck {
         Self::TikTok,
     ];
 
-    fn all() -> &'static [Self] {
+    const fn all() -> &'static [Self] {
         Self::ALL
     }
 
@@ -61,7 +61,7 @@ impl UnlockCheck {
         Self::all().iter().copied().find(|check| check.name() == name)
     }
 
-    fn name(self) -> &'static str {
+    const fn name(self) -> &'static str {
         match self {
             Self::BilibiliChinaMainland => bilibili::BILIBILI_CHINA_MAINLAND_NAME,
             Self::BilibiliHkMcTw => bilibili::BILIBILI_HK_MC_TW_NAME,
