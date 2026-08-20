@@ -1,17 +1,5 @@
 use serde::{Deserialize, Serialize};
 
-use crate::bahamut;
-use crate::bilibili;
-use crate::chatgpt;
-use crate::claude;
-use crate::disney_plus;
-use crate::gemini;
-use crate::netflix;
-use crate::prime_video;
-use crate::spotify;
-use crate::tiktok;
-use crate::youtube;
-
 use super::utils::{country_code_to_emoji, get_local_date_string};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -54,27 +42,4 @@ impl UnlockItem {
     pub fn status(&self) -> &str {
         &self.status
     }
-}
-
-const AVAILABLE_UNLOCK_ITEM_NAMES: [&str; 13] = [
-    bilibili::BILIBILI_CHINA_MAINLAND_NAME,
-    bilibili::BILIBILI_HK_MC_TW_NAME,
-    chatgpt::CHATGPT_IOS_NAME,
-    chatgpt::CHATGPT_WEB_NAME,
-    claude::CLAUDE_NAME,
-    gemini::GEMINI_NAME,
-    youtube::YOUTUBE_PREMIUM_NAME,
-    bahamut::BAHAMUT_ANIME_NAME,
-    netflix::NETFLIX_NAME,
-    disney_plus::DISNEY_NAME,
-    prime_video::PRIME_VIDEO_NAME,
-    spotify::SPOTIFY_NAME,
-    tiktok::TIKTOK_NAME,
-];
-
-pub fn default_unlock_items() -> Vec<UnlockItem> {
-    AVAILABLE_UNLOCK_ITEM_NAMES
-        .iter()
-        .map(|name| UnlockItem::pending(name))
-        .collect()
 }

@@ -124,17 +124,6 @@ const UnlockPage = () => {
         return item
       })
 
-      const mergedNameSet = new Set(
-        merged.map((item) => normalizeUnlockName(item.name)),
-      )
-      normalizedExisting.forEach((item) => {
-        const normalizedName = normalizeUnlockName(item.name)
-        if (!mergedNameSet.has(normalizedName)) {
-          merged.push(item)
-          mergedNameSet.add(normalizedName)
-        }
-      })
-
       return merged
     },
     [],
@@ -204,7 +193,6 @@ const UnlockPage = () => {
       const { items: storedItems, time: storedTime } = loadResultsFromStorage()
 
       if (storedItems && storedItems.length > 0) {
-        setUnlockItems(sortItemsByName(storedItems))
         await getUnlockItems(storedItems, storedTime)
       } else {
         await getUnlockItems()
@@ -253,31 +241,24 @@ const UnlockPage = () => {
   const checkSingleMedia = useLockFn(async (name: string) => {
     try {
       setLoadingItems((prev) => [...prev, name])
-      const result = await invokeWithTimeout<UnlockItem[]>('check_media_unlock')
-      const dedupedResult = dedupeUnlockItems(result)
-
-      const normalizedTargetName = normalizeUnlockName(name)
-      const targetItem = dedupedResult.find(
-        (item: UnlockItem) =>
-          normalizeUnlockName(item.name) === normalizedTargetName,
+      const result = await invokeWithTimeout<UnlockItem>(
+        'check_media_unlock_item',
+        { name },
       )
+      const normalizedTargetName = normalizeUnlockName(name)
 
-      if (targetItem) {
+      setUnlockItems((items) => {
         const updatedItems = sortItemsByName(
-          dedupeUnlockItems(
-            unlockItems.map((item: UnlockItem) =>
-              normalizeUnlockName(item.name) === normalizedTargetName
-                ? targetItem
-                : item,
-            ),
+          items.map((item) =>
+            normalizeUnlockName(item.name) === normalizedTargetName
+              ? result
+              : item,
           ),
         )
 
-        setUnlockItems(updatedItems)
-        const currentTime = new Date().toLocaleString()
-
-        saveResultsToStorage(updatedItems, currentTime)
-      }
+        saveResultsToStorage(updatedItems, new Date().toLocaleString())
+        return updatedItems
+      })
 
       setLoadingItems((prev) => prev.filter((item) => item !== name))
     } catch (err: any) {
@@ -339,7 +320,7 @@ const UnlockPage = () => {
           <Button
             variant="contained"
             size="small"
-            disabled={isCheckingAll}
+            disabled={isCheckingAll || loadingItems.length > 0}
             onClick={checkAllMedia}
             startIcon={
               isCheckingAll ? (

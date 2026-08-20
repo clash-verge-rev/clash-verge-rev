@@ -10,3 +10,8 @@ pub async fn get_unlock_items() -> Result<Vec<UnlockItem>, String> {
 pub async fn check_media_unlock() -> Result<Vec<UnlockItem>, String> {
     clash_verge_media_unlock::check_media_unlock().await
 }
+
+#[command]
+pub async fn check_media_unlock_item(name: String) -> Result<UnlockItem, String> {
+    clash_verge_media_unlock::check_media_unlock_item(&name).await
+}
