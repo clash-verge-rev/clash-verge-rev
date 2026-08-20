@@ -172,10 +172,10 @@ where
 
 /// Treats a missing network service as a completed disable: with nothing to write to, the
 /// requested "no proxy" state already holds. Turning a proxy on must still fail.
-fn tolerate_missing_network_service(enabling: bool, outcome: sysproxy::Result<()>) -> Result<()> {
+fn tolerate_missing_network_service(_enabling: bool, outcome: sysproxy::Result<()>) -> Result<()> {
     match outcome {
         #[cfg(target_os = "macos")]
-        Err(sysproxy::Error::NoActiveNetworkService) if !enabling => {
+        Err(sysproxy::Error::NoActiveNetworkService) if !_enabling => {
             logging!(warn, Type::Core, "no active network service, nothing to turn off");
             Ok(())
         }
