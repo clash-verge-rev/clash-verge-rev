@@ -1,12 +1,13 @@
 use std::sync::atomic::{AtomicBool, Ordering};
 
 use anyhow::Result;
+use tauri::Emitter as _;
 
 use crate::{
     config::Config,
     core::{
         CoreManager, Timer,
-        handle::Handle,
+        handle::{self, Handle},
         hotkey::Hotkey,
         logger::Logger,
         service::{SERVICE_MANAGER, ServiceManager},
@@ -40,6 +41,8 @@ pub fn resolve_setup_sync() {
     AsyncHandler::spawn(|| async {
         AsyncHandler::spawn_blocking(init_scheme);
         AsyncHandler::spawn_blocking(init_embed_server);
+        #[cfg(target_os = "linux")]
+        AsyncHandler::spawn_blocking(watch_linux_theme_changed);
     });
 }
 
@@ -109,6 +112,30 @@ pub async fn resolve_scheme(param: &str) -> Result<()> {
 
 pub(super) fn init_embed_server() {
     server::embed_server();
+}
+
+#[cfg(target_os = "linux")]
+pub(crate) fn watch_linux_theme_changed() {
+    match dark_light::subscribe() {
+        Ok(watcher) => {
+            for mode in watcher.iter() {
+                use crate::core::notification;
+
+                let theme = match mode {
+                    dark_light::Mode::Light => tauri::Theme::Light,
+                    dark_light::Mode::Dark => tauri::Theme::Dark,
+                    dark_light::Mode::Unspecified => tauri::Theme::Light, // fallback to light
+                };
+                notification::NotificationSystem::send_event(
+                    handle::Handle::app_handle().clone(),
+                    notification::FrontendEvent::ThemeChanged { theme },
+                );
+            }
+        }
+        Err(e) => {
+            logging_error!(Type::Setup, "Fail to watch linux theme changed: {}", e);
+        }
+    }
 }
 
 pub(super) async fn init_resources() {

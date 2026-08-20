@@ -23,6 +23,7 @@ pub enum FrontendEvent<'a> {
     ProfileUpdateCompleted { uid: &'a String },
     RunStateChanged { state: serde_json::Value },
     PendingFailuresChanged,
+    ThemeChanged { theme: tauri::Theme },
 }
 
 /// Operation associated with a pending failure.
@@ -279,6 +280,7 @@ impl NotificationSystem {
             FrontendEvent::ProfileUpdateCompleted { uid } => ("profile-update-completed", Ok(json!({ "uid": uid }))),
             FrontendEvent::RunStateChanged { state } => ("verge://run-state-changed", Ok(state)),
             FrontendEvent::PendingFailuresChanged => ("verge://pending-failures-changed", Ok(serde_json::Value::Null)),
+            FrontendEvent::ThemeChanged { theme } => ("tauri://theme-changed", serde_json::to_value(theme)),
         }
     }
 

@@ -103,8 +103,7 @@ arc-swap = "1.9.2"
 tokio-rustls = "0.26.4"
 rustls = { version = "0.23.43", features = ["ring"] }
 webpki-roots = "1.0.9"
-# Use the git repo until the next release after v2.0.0.
-dark-light = { git = "https://github.com/rust-dark-light/dark-light" }
+dark-light = "3.0.0"
 bytes = "1.12.1"
 tokio-util = { version = "0.7.19", features = ["time"] }
 
