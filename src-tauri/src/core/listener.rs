@@ -230,6 +230,10 @@ fn proxy_claims(config: &Mapping) -> Result<Vec<BindClaim>> {
     let addresses = proxy_bind_addresses(config)?;
     let mut claims = Vec::new();
     for (key, name, transports) in PROXY_LISTENERS {
+        #[cfg(target_os = "windows")]
+        if matches!(key, "redir-port" | "tproxy-port") {
+            continue;
+        }
         let Some(port) = mapping_port(config, key)? else {
             continue;
         };
