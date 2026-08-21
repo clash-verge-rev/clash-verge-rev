@@ -252,7 +252,7 @@ pub fn run() -> std::process::ExitCode {
     }
 
     #[cfg(target_os = "linux")]
-    utils::linux::workarounds::apply_nvidia_dmabuf_renderer_workaround();
+    utils::linux::workarounds::apply_gpu_dmabuf_renderer_workaround();
     #[cfg(target_os = "linux")]
     utils::linux::workarounds::apply_wayland_webkit_fix();
 
