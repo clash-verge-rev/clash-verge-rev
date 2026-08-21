@@ -21,6 +21,8 @@ mod youtube;
 
 pub use types::UnlockItem;
 
+const MAX_CONCURRENT_CHECKS: usize = 4;
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 enum UnlockCheck {
     BilibiliChinaMainland,
@@ -110,10 +112,14 @@ where
     F: Fn(&UnlockItem) + Send,
 {
     let mut tasks = JoinSet::new();
-
-    for &check in UnlockCheck::ALL {
+    let mut checks = UnlockCheck::ALL.iter().copied();
+    let spawn = |tasks: &mut JoinSet<UnlockItem>, check: UnlockCheck| {
         let client = client.clone();
         tasks.spawn(async move { check.check_with_timeout(&client).await });
+    };
+
+    for check in checks.by_ref().take(MAX_CONCURRENT_CHECKS) {
+        spawn(&mut tasks, check);
     }
 
     let mut results = Vec::new();
@@ -124,6 +130,10 @@ where
                 results.push(item);
             }
             Err(e) => logging!(error, Type::Network, "任务执行失败: {e}"),
+        }
+
+        if let Some(check) = checks.next() {
+            spawn(&mut tasks, check);
         }
     }
 
