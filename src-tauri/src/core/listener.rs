@@ -352,9 +352,8 @@ fn claims_overlap(left: &BindClaim, right: &BindClaim) -> bool {
 /// rebind it at once (measured on macOS 26). "Is anything answering?" survives that asymmetry;
 /// "can I bind?" does not.
 ///
-/// Restrictions, both deliberate: a wildcard claim can be blocked by a listener on any address, so
-/// one refused connection cannot clear it — leaving `allow-lan` setups exposed to the same false
-/// positive. UDP has no lingering state, so a refused UDP bind is always a live socket.
+/// Restrictions, both deliberate: every concrete guard for a wildcard claim must be checked before
+/// it can be cleared. UDP has no lingering state, so a refused UDP bind is always a live socket.
 fn nothing_is_serving(claim: &BindClaim) -> bool {
     const ANSWER_TIMEOUT: std::time::Duration = std::time::Duration::from_millis(200);
 
@@ -477,12 +476,17 @@ fn bind_claim(claim: &BindClaim) -> io::Result<Vec<Socket>> {
         }
         guard_addresses.sort_unstable();
         guard_addresses.dedup();
+        let mut stale_guard = false;
         for address in guard_addresses {
-            match bind_socket(&BindClaim::new(claim.name, address, claim.port, claim.transport)) {
+            let guard_claim = BindClaim::new(claim.name, address, claim.port, claim.transport);
+            match bind_socket(&guard_claim) {
                 Ok(socket) => sockets.push(socket),
                 // Only a conflict proves the port is taken; a vanished guard address proves nothing.
                 Err(error) if is_bind_conflict(&error) => {
-                    // The caller only sees the claim, so name the address that actually lost.
+                    if nothing_is_serving(&guard_claim) {
+                        stale_guard = true;
+                        continue;
+                    }
                     logging!(
                         warn,
                         LogType::Network,
@@ -496,6 +500,9 @@ fn bind_claim(claim: &BindClaim) -> io::Result<Vec<Socket>> {
                 }
                 Err(_) => {}
             }
+        }
+        if stale_guard {
+            return Ok(sockets);
         }
     }
 
