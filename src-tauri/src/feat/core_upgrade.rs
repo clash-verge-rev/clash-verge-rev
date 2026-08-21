@@ -99,6 +99,11 @@ pub async fn upgrade_core(force: bool) -> Result<CoreUpgradeReport> {
         }
         // Renaming one hard link over the other succeeds without consuming the name.
         let _ = std::fs::remove_file(&rollback);
+        // Redundant once the rollback link exists; without one it is the only copy left.
+        #[cfg(windows)]
+        if restorable {
+            let _ = std::fs::remove_file(target.with_extension("old"));
+        }
         return Err(error);
     }
     let _ = std::fs::remove_file(&rollback);
