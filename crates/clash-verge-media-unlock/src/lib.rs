@@ -118,6 +118,13 @@ fn build_client() -> Result<Client, String> {
 
 // TODO add a custom client parameter
 pub async fn check_media_unlock() -> Result<Vec<UnlockItem>, String> {
+    check_media_unlock_with_callback(|_| {}).await
+}
+
+pub async fn check_media_unlock_with_callback<F>(on_complete: F) -> Result<Vec<UnlockItem>, String>
+where
+    F: Fn(&UnlockItem) + Send,
+{
     let mut tasks = JoinSet::new();
     let client = Arc::new(build_client()?);
 
@@ -130,7 +137,10 @@ pub async fn check_media_unlock() -> Result<Vec<UnlockItem>, String> {
     let mut results = Vec::new();
     while let Some(res) = tasks.join_next().await {
         match res {
-            Ok(item) => results.push(item),
+            Ok(item) => {
+                on_complete(&item);
+                results.push(item);
+            }
             Err(e) => logging!(error, Type::Network, "任务执行失败: {e}"),
         }
     }

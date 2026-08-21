@@ -19,7 +19,7 @@ import {
   alpha,
   useTheme,
 } from '@mui/material'
-import { invoke } from '@tauri-apps/api/core'
+import { Channel, invoke } from '@tauri-apps/api/core'
 import { useLockFn } from 'ahooks'
 import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -219,21 +219,45 @@ const UnlockPage = () => {
 
   // 执行全部项目检测
   const checkAllMedia = useLockFn(async () => {
+    let acceptResults = true
+    const onComplete = new Channel<UnlockItem>((result) => {
+      if (!acceptResults) return
+
+      const normalizedTargetName = normalizeUnlockName(result.name)
+      setUnlockItems((items) =>
+        items.map((item) =>
+          normalizeUnlockName(item.name) === normalizedTargetName
+            ? result
+            : item,
+        ),
+      )
+      setLoadingItems((items) =>
+        items.filter(
+          (name) => normalizeUnlockName(name) !== normalizedTargetName,
+        ),
+      )
+    })
+
     try {
       setIsCheckingAll(true)
-      const result = await invokeWithTimeout<UnlockItem[]>('check_media_unlock')
+      setLoadingItems(unlockItems.map((item) => item.name))
+      const result = await invokeWithTimeout<UnlockItem[]>(
+        'check_media_unlock',
+        { onComplete },
+      )
       const sortedItems = sortItemsByName(dedupeUnlockItems(result))
 
       setUnlockItems(sortedItems)
       const currentTime = new Date().toLocaleString()
 
       saveResultsToStorage(sortedItems, currentTime)
-
-      setIsCheckingAll(false)
     } catch (err: any) {
-      setIsCheckingAll(false)
       showNotice.error('tests.unlock.page.messages.detectionTimeout', err)
       console.error('Failed to check media unlock:', err)
+    } finally {
+      acceptResults = false
+      setLoadingItems([])
+      setIsCheckingAll(false)
     }
   })
 
@@ -320,7 +344,11 @@ const UnlockPage = () => {
           <Button
             variant="contained"
             size="small"
-            disabled={isCheckingAll || loadingItems.length > 0}
+            disabled={
+              unlockItems.length === 0 ||
+              isCheckingAll ||
+              loadingItems.length > 0
+            }
             onClick={checkAllMedia}
             startIcon={
               isCheckingAll ? (
