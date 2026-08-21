@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::time::Duration;
 
 use reqwest::Client;
 use tokio::task::JoinSet;
@@ -53,12 +53,8 @@ impl UnlockCheck {
         Self::TikTok,
     ];
 
-    const fn all() -> &'static [Self] {
-        Self::ALL
-    }
-
     fn from_name(name: &str) -> Option<Self> {
-        Self::all().iter().copied().find(|check| check.name() == name)
+        Self::ALL.iter().copied().find(|check| check.name() == name)
     }
 
     const fn name(self) -> &'static str {
@@ -94,44 +90,30 @@ impl UnlockCheck {
             Self::TikTok => tiktok::check_tiktok(client).await,
         }
     }
+
+    async fn check_with_timeout(self, client: &Client) -> UnlockItem {
+        tokio::time::timeout(Duration::from_secs(15), self.check(client))
+            .await
+            .unwrap_or_else(|_| UnlockItem::checked(self.name(), "Failed", None))
+    }
 }
 
 pub fn default_unlock_items() -> Vec<UnlockItem> {
-    UnlockCheck::all()
+    UnlockCheck::ALL
         .iter()
         .map(|check| UnlockItem::pending(check.name()))
         .collect()
 }
 
-fn build_client() -> Result<Client, String> {
-    Client::builder()
-        .use_rustls_tls()
-        .user_agent("Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36")
-        .timeout(std::time::Duration::from_secs(30))
-        .danger_accept_invalid_certs(true)
-        .danger_accept_invalid_hostnames(true)
-        .tcp_keepalive(std::time::Duration::from_secs(60))
-        .connection_verbose(true)
-        .build()
-        .map_err(|error| format!("创建HTTP客户端失败: {error}"))
-}
-
-// TODO add a custom client parameter
-pub async fn check_media_unlock() -> Result<Vec<UnlockItem>, String> {
-    check_media_unlock_with_callback(|_| {}).await
-}
-
-pub async fn check_media_unlock_with_callback<F>(on_complete: F) -> Result<Vec<UnlockItem>, String>
+pub async fn check_media_unlock<F>(client: &Client, on_complete: F) -> Vec<UnlockItem>
 where
     F: Fn(&UnlockItem) + Send,
 {
     let mut tasks = JoinSet::new();
-    let client = Arc::new(build_client()?);
 
-    for check in UnlockCheck::all() {
-        let client = Arc::clone(&client);
-        let check = *check;
-        tasks.spawn(async move { check.check(&client).await });
+    for &check in UnlockCheck::ALL {
+        let client = client.clone();
+        tasks.spawn(async move { check.check_with_timeout(&client).await });
     }
 
     let mut results = Vec::new();
@@ -145,12 +127,11 @@ where
         }
     }
 
-    Ok(results)
+    results
 }
 
-pub async fn check_media_unlock_item(name: &str) -> Result<UnlockItem, String> {
+pub async fn check_media_unlock_item(client: &Client, name: &str) -> Result<UnlockItem, String> {
     let check = UnlockCheck::from_name(name).ok_or_else(|| format!("未知的流媒体检测项目: {name}"))?;
-    let client = build_client()?;
 
-    Ok(check.check(&client).await)
+    Ok(check.check_with_timeout(client).await)
 }

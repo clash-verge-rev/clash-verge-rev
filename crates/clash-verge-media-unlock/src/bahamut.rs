@@ -1,11 +1,11 @@
-use std::sync::Arc;
-
-use reqwest::{Client, cookie::Jar};
+use reqwest::{Client, header::USER_AGENT};
 use serde::Deserialize;
 
 use super::UnlockItem;
 
 pub(crate) const BAHAMUT_ANIME_NAME: &str = "Bahamut Anime";
+const BAHAMUT_USER_AGENT: &str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) \
+                                  AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
 
 #[derive(Deserialize)]
 struct DeviceResponse {
@@ -13,21 +13,8 @@ struct DeviceResponse {
 }
 
 pub(super) async fn check_bahamut_anime(client: &Client) -> UnlockItem {
-    let client = Client::builder()
-        .use_rustls_tls()
-        .user_agent(
-            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) \
-             AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-        )
-        .cookie_provider(Arc::new(Jar::default()))
-        .build()
-        .unwrap_or_else(|_| client.clone());
-
-    let device = client
-        .get("https://ani.gamer.com.tw/ajax/getdeviceid.php")
-        .send()
-        .await
-        .ok();
+    let get = |url: &str| client.get(url).header(USER_AGENT, BAHAMUT_USER_AGENT);
+    let device = get("https://ani.gamer.com.tw/ajax/getdeviceid.php").send().await.ok();
 
     let device = match device {
         Some(res) => res.json::<DeviceResponse>().await.ok(),
@@ -43,7 +30,7 @@ pub(super) async fn check_bahamut_anime(client: &Client) -> UnlockItem {
         device.deviceid
     );
 
-    let unlocked = match client.get(token_url).send().await {
+    let unlocked = match get(&token_url).send().await {
         Ok(res) => res.text().await.is_ok_and(|body| body.contains("animeSn")),
         Err(_) => false,
     };
@@ -52,7 +39,7 @@ pub(super) async fn check_bahamut_anime(client: &Client) -> UnlockItem {
         return UnlockItem::checked(BAHAMUT_ANIME_NAME, "No", None);
     }
 
-    let region = match client.get("https://ani.gamer.com.tw/").send().await {
+    let region = match get("https://ani.gamer.com.tw/").send().await {
         Ok(res) => res.text().await.ok().and_then(|body| {
             body.split_once("data-geo=\"")
                 .and_then(|(_, rest)| rest.split_once('"'))

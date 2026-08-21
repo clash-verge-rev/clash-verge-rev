@@ -37,9 +37,4 @@ impl UnlockItem {
             check_time: None,
         }
     }
-
-    #[cfg(test)]
-    pub fn status(&self) -> &str {
-        &self.status
-    }
 }
