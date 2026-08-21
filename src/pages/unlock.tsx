@@ -21,7 +21,7 @@ import {
 } from '@mui/material'
 import { Channel, invoke } from '@tauri-apps/api/core'
 import { useLockFn } from 'ahooks'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { BaseEmpty, BasePage } from '@/components/base'
@@ -94,6 +94,7 @@ const UnlockPage = () => {
   const theme = useTheme()
 
   const [unlockItems, setUnlockItems] = useState<UnlockItem[]>([])
+  const unlockItemsRef = useRef<UnlockItem[]>([])
   const [isCheckingAll, setIsCheckingAll] = useState(false)
   const [loadingItems, setLoadingItems] = useState<string[]>([])
 
@@ -127,7 +128,11 @@ const UnlockPage = () => {
           return matchedItem ? { ...matchedItem, name: item.name } : item
         })
 
-        setUnlockItems(mergedItems.sort((a, b) => a.name.localeCompare(b.name)))
+        const sortedItems = mergedItems.sort((a, b) =>
+          a.name.localeCompare(b.name),
+        )
+        unlockItemsRef.current = sortedItems
+        setUnlockItems(sortedItems)
       } catch (err: any) {
         console.error('Failed to get unlock items:', err)
       }
@@ -137,9 +142,11 @@ const UnlockPage = () => {
   // 执行全部项目检测
   const checkAllMedia = useLockFn(async () => {
     const onComplete = new Channel<UnlockItem>((result) => {
-      setUnlockItems((items) =>
-        items.map((item) => (item.name === result.name ? result : item)),
+      const updatedItems = unlockItemsRef.current.map((item) =>
+        item.name === result.name ? result : item,
       )
+      unlockItemsRef.current = updatedItems
+      setUnlockItems(updatedItems)
       setLoadingItems((items) => items.filter((name) => name !== result.name))
     })
 
@@ -151,6 +158,7 @@ const UnlockPage = () => {
       })
       const sortedItems = result.sort((a, b) => a.name.localeCompare(b.name))
 
+      unlockItemsRef.current = sortedItems
       setUnlockItems(sortedItems)
       saveResultsToStorage(sortedItems)
     } catch (err: any) {
@@ -163,16 +171,17 @@ const UnlockPage = () => {
   })
 
   // 检测单个流媒体服务
-  const checkSingleMedia = useLockFn(async (name: string) => {
-    setLoadingItems([name])
+  const checkSingleMedia = async (name: string) => {
+    setLoadingItems((items) => [...items, name])
     try {
       const result = await invoke<UnlockItem>('check_media_unlock_item', {
         name,
       })
-      const updatedItems = unlockItems.map((item) =>
+      const updatedItems = unlockItemsRef.current.map((item) =>
         item.name === name ? result : item,
       )
 
+      unlockItemsRef.current = updatedItems
       setUnlockItems(updatedItems)
       saveResultsToStorage(updatedItems)
     } catch (err: any) {
@@ -183,9 +192,9 @@ const UnlockPage = () => {
       )
       console.error(`Failed to check ${name}:`, err)
     } finally {
-      setLoadingItems([])
+      setLoadingItems((items) => items.filter((item) => item !== name))
     }
-  })
+  }
 
   // 状态颜色
   const getStatusColor = (status: string) => {
@@ -312,7 +321,9 @@ const UnlockPage = () => {
                           size="small"
                           variant="outlined"
                           color="primary"
-                          disabled={loadingItems.length > 0 || isCheckingAll}
+                          disabled={
+                            loadingItems.includes(item.name) || isCheckingAll
+                          }
                           sx={{
                             minWidth: '32px',
                             width: '32px',
