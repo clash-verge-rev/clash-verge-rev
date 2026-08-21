@@ -316,4 +316,66 @@ impl NetworkManager {
             Err(err) => Err(err),
         }
     }
+
+    async fn get_bytes_with_tls_mode(
+        &self,
+        url: &str,
+        proxy_type: ProxyType,
+        timeout_secs: Option<u64>,
+        max_bytes: usize,
+        tls_root_mode: TlsRootMode,
+    ) -> Result<Vec<u8>> {
+        let client = self
+            .create_request_with_tls_mode(proxy_type, timeout_secs, None, false, tls_root_mode)
+            .await?;
+
+        let mut response = client
+            .get(url)
+            .send()
+            .await
+            .map_err(|e| Self::context_reqwest_error(e, "Request failed"))?;
+
+        let status = response.status();
+        if !status.is_success() {
+            anyhow::bail!("request failed with status {status}");
+        }
+
+        let mut body = Vec::new();
+        while let Some(chunk) = response
+            .chunk()
+            .await
+            .map_err(|e| Self::context_reqwest_error(e, "Failed to read response body"))?
+        {
+            if body.len() + chunk.len() > max_bytes {
+                anyhow::bail!("response exceeded the {max_bytes} byte limit");
+            }
+            body.extend_from_slice(&chunk);
+        }
+
+        Ok(body)
+    }
+
+    /// Downloads a binary body, mirroring the TLS fallback of [`Self::get_with_interrupt`].
+    pub async fn get_bytes_with_interrupt(
+        &self,
+        url: &str,
+        proxy_type: ProxyType,
+        timeout_secs: Option<u64>,
+        max_bytes: usize,
+    ) -> Result<Vec<u8>> {
+        let platform_result = self
+            .get_bytes_with_tls_mode(url, proxy_type, timeout_secs, max_bytes, TlsRootMode::PlatformVerifier)
+            .await;
+
+        match platform_result {
+            Ok(body) => Ok(body),
+            Err(err) if Self::should_retry_with_static_webpki_roots(&err) => self
+                .get_bytes_with_tls_mode(url, proxy_type, timeout_secs, max_bytes, TlsRootMode::StaticWebpkiRoots)
+                .await
+                .map_err(|fallback_err| {
+                    fallback_err.context("static webpki roots fallback failed after platform TLS verifier failed")
+                }),
+            Err(err) => Err(err),
+        }
+    }
 }

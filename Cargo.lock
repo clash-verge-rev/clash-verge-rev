@@ -1128,6 +1128,7 @@ dependencies = [
  "dark-light",
  "deelevate",
  "dunce",
+ "flate2",
  "flexi_logger",
  "futures",
  "gethostname",

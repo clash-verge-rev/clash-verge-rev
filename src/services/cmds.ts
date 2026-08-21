@@ -210,6 +210,17 @@ export async function restartCore() {
   return invoke<void>('restart_core')
 }
 
+export interface CoreUpgradeReport {
+  /** False when the managed core was already at the latest version. */
+  upgraded: boolean
+  from: string
+  to: string
+}
+
+export async function upgradeClashCore(force = false) {
+  return invoke<CoreUpgradeReport>('upgrade_clash_core', { force })
+}
+
 export async function restartApp() {
   return invoke<void>('restart_app')
 }
