@@ -1,4 +1,4 @@
-use reqwest::{Client, Version};
+use reqwest::Client;
 
 use super::UnlockItem;
 
@@ -7,12 +7,7 @@ const BLOCKED_CODES: [&str; 9] = ["CHN", "RUS", "BLR", "CUB", "IRN", "PRK", "SYR
 const REGION_MARKER: &str = ",2,1,200,\"";
 
 pub(super) async fn check_gemini(client: &Client) -> UnlockItem {
-    let Ok(response) = client
-        .get("https://gemini.google.com")
-        .version(Version::HTTP_11)
-        .send()
-        .await
-    else {
+    let Ok(response) = client.get("https://gemini.google.com").send().await else {
         return UnlockItem::checked(GEMINI_NAME, "Failed", None);
     };
 
