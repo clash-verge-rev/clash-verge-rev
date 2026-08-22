@@ -8,7 +8,7 @@
       "packageManager": "pnpm"
     },
     "ghcr.io/devcontainers/features/rust:1": {
-      "version": "1.96",
+      "version": "1.95.0",
       "profile": "default"
     },
     "ghcr.io/devcontainers/features/git:1": {},
